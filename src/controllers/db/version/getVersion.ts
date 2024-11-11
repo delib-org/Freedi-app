@@ -6,7 +6,7 @@ export async function getVersionFromDB(): Promise<string | undefined> {
 	try {
 		const versionRef = doc(FireStore, "version", "version");
 		const versionDB = await getDoc(versionRef);
-		if (!versionDB.exists()) throw new Error("version not found");
+		if (!versionDB.exists()) return undefined;
 		const version = versionDB.data().version;
 		if (!version) {
 			console.warn("version not found");
@@ -30,11 +30,7 @@ export function listenToVersionFromDB(): Unsubscribe {
 
 		return onSnapshot(versionRef, (versionDB) => {
 			try {
-				if (!versionDB.exists()) {
-					console.warn("version not found");
-					return undefined
-				}
-
+				if (!versionDB.exists()) return;
 				const version = versionDB.data().version;
 				if (!version) console.warn("version not found");
 
