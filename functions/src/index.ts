@@ -46,7 +46,12 @@ import { updateApprovalResults } from './fn_approval';
 import { setImportanceToStatement } from './fn_importance';
 import { updateAgrees } from './fn_agree';
 import { setUserSettings } from './fn_users';
-import "dotenv/config";
+
+require('dotenv').config()
+
+const express = require('express');
+
+const app = express();
 
 initializeApp();
 export const db = getFirestore();
@@ -80,7 +85,7 @@ exports.updateNotifications = onDocumentCreated(
 
 //evaluations and results
 exports.newEvaluation = onDocumentCreated(
-	`/${Collections.evaluations}/{evaluationId}`,
+	{ document: `/${Collections.evaluations}/{evaluationId}` },
 	newEvaluation
 );
 exports.deleteEvaluation = onDocumentDeleted(
@@ -142,3 +147,5 @@ exports.checkForSimilarStatements = onRequest(
 // exports.maintainDeliberativeElement = onRequest(cors, maintainDeliberativeElement);
 // exports.maintainStatements = onRequest(cors, maintainStatement);
 // exports.maintainSubscriptionToken = onRequest(cors, maintainSubscriptionToken);
+
+exports.app = onRequest(cors, app);
