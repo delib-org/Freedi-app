@@ -226,7 +226,19 @@ const StatementMain: FC = () => {
 						/>
 					)}
 
-					<StatementHeader
+				<StatementHeader
+					statement={statement}
+					statementSubscription={statementSubscription}
+					topParentStatement={topParentStatement}
+					screen={screen ?? Screen.CHAT}
+					setShowAskPermission={setShowAskPermission}
+					role={role}
+				/>
+				<MapProvider>
+					<FollowMeToast role={role} statement={statement} />
+
+					<SwitchScreens
+						screen={screen}
 						statement={statement}
 						statementSubscription={statementSubscription}
 						topParentStatement={topParentStatement}
