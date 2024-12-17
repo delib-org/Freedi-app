@@ -1,7 +1,7 @@
 import React, { FC, useState } from 'react';
 
 // Third party imports
-import { Role, Screen, Statement, StatementSubscription } from 'delib-npm';
+import { Statement } from 'delib-npm';
 import { useLocation } from 'react-router-dom';
 
 // Helpers
@@ -19,12 +19,9 @@ import { logOut } from '@/controllers/db/auth';
 import StatementTopNav from '../nav/top/StatementTopNav';
 
 interface Props {
-  screen: Screen;
-  statement: Statement | undefined;
-  statementSubscription: StatementSubscription | undefined;
-  topParentStatement: Statement | undefined;
-  role: Role | undefined;
-  setShowAskPermission: React.Dispatch<React.SetStateAction<boolean>>;
+    statement: Statement | undefined;
+    topParentStatement: Statement | undefined;
+    setShowAskPermission: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const StatementHeader: FC<Props> = ({
