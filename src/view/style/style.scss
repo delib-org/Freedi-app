@@ -10,6 +10,9 @@
 
 
 :root {
+  writing-mode: horizontal-tb;
+  direction: ltr;
+  text-orientation: mixed;
   // --- MAIN COLORS ---
   --mainBackground: #1f5895;
   --statementBackground: #f2f6ff;
@@ -112,6 +115,11 @@
 
   //wights
   --wight-medium: 400;
+
+
+
+
+
 
 
   //FIGMA LIBRARY COLORS
@@ -310,7 +318,7 @@
 
   //text
   --text-headline: #232f4a;
-  --text-description:#191E29;
+  --text-description: #191E29;
   --text-paragraph: #57688f;
   --text-paragraph-light: #818fad;
   --text-paragraph-lightest: #a4aec5;
@@ -334,7 +342,7 @@
   --text-crimson-contrast: #ff5b9c;
 
   --wrapper-max-width: 75ch;
-  --wrapper:75ch;
+  --wrapper: 75ch;
 }
 
 * {
@@ -399,9 +407,9 @@ b {
   padding: 10px;
 }
 
-.simple-wrapper{
-  width:var(--wrapper);
-  margin:auto;
+.simple-wrapper {
+  width: var(--wrapper);
+  margin: auto;
 }
 
 .wrapper {
