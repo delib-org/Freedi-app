@@ -2,8 +2,6 @@ import { Collections, Statement, StatementSettings, QuestionSettings } from "del
 import { doc, setDoc } from "firebase/firestore";
 import { FireStore } from "../config";
 
-
-
 interface SetStatementSettingsProps {
 	statement: Statement,
 	property: keyof StatementSettings | keyof QuestionSettings,
@@ -13,7 +11,7 @@ interface SetStatementSettingsProps {
 
 export function setStatementSettingToDB({ statement, property, newValue, settingsSection }: SetStatementSettingsProps) {
 	try {
-		console.log({ [property]: newValue })
+
 		const statementSettingsRef = doc(FireStore, Collections.statementsSettings, statement.statementId);
 		setDoc(statementSettingsRef, {
 			[settingsSection]: {

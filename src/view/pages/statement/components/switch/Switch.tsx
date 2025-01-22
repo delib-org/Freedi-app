@@ -52,7 +52,6 @@ function SwitchScreen({ statement, role }: SwitchScreenProps): ReactNode {
 		screen = 'main';
 	}
 
-
 	switch (screen) {
 		case 'chat':
 			return <Chat />;

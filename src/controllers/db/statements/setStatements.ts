@@ -27,7 +27,6 @@ import {
 } from "@/view/pages/statement/components/vote/statementVoteCont";
 import { getRandomColor } from "@/view/pages/statement/components/vote/votingColors";
 
-
 export const updateStatementParents = async (
 	statement: Statement,
 	parentStatement: Statement,
@@ -246,7 +245,6 @@ export const setStatementToDB = async ({
 			await Promise.all(statementPromises);
 		}
 
-
 		return statement.statementId;
 	} catch (error) {
 		console.error(error);
@@ -369,7 +367,6 @@ export function createStatement({
 		return undefined;
 	}
 }
-
 
 interface UpdateStatementProps {
 	text: string;

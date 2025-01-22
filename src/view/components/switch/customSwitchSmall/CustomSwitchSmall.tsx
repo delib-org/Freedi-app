@@ -3,7 +3,6 @@ import "./CustomSwitchSmall.scss";
 import VisuallyHidden from "../../accessibility/toScreenReaders/VisuallyHidden";
 import BackgroundImage from "./customSwitchSmallBackground.svg";
 
-
 import { useLanguage } from "@/controllers/hooks/useLanguages";
 
 interface Props {

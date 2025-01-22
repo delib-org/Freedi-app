@@ -5,7 +5,6 @@ import Button, { ButtonType } from '@/view/components/buttons/button/Button';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/controllers/hooks/useLanguages';
 
-
 interface Props {
 	statement: Statement
 }

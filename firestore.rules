@@ -35,7 +35,7 @@ service cloud.firestore {
 
 
       allow read;
-      allow update: if request.auth.uid != null && !hasProtectedFieldChanges(resource.data, request.resource.data);
+      allow update: if request.auth.uid != null && !hasProtectedFieldChanges(resource.data, request.resource.data) ||  (isAdmin(statementId) || isCreator());
       allow create: if request.auth.uid != null;
       allow delete: if request.auth.uid != null &&  (isAdmin(statementId) || isCreator());
     }
@@ -98,10 +98,27 @@ service cloud.firestore {
      
       allow write: if request.auth.uid == request.resource.data.user.uid;
     }
-    match /statementsSubscribe/{statementSubId=**}{
-      allow read;
-      allow write: if request.auth.uid != null;
-    }
+    match /statementsSubscribe/{statementSubId=**} {
+      function isSubscriber() {
+          return request.auth.uid != null && 
+                resource.data.userId == request.auth.uid;
+      }
+
+      function isStatementAdmin(statementId) {
+          let subId = string(request.auth.uid) + '--' + cleanPath(string(statementId));
+          let subscription = get(/databases/$(database)/documents/statementsSubscribe/$(subId)).data;
+          return subscription != null && subscription.role == 'admin';
+      }
+
+      allow read: if request.auth.uid != null;
+      allow create: if request.auth.uid != null;
+      allow update: if request.auth.uid != null && 
+                      (isSubscriber() || 
+                      isStatementAdmin(resource.data.statementId));
+      allow delete: if request.auth.uid != null && 
+                      (isSubscriber() || 
+                      isStatementAdmin(resource.data.statementId));
+  }
     
     match /statementsSignatures/{signatureId=**}{
       allow read: if request.auth.uid != null;
