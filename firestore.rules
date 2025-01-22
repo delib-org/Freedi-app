@@ -29,9 +29,15 @@ service cloud.firestore {
         ));
       }
 
+      function isCreator() {
+        return request.auth.uid != null &&  resource.data.creatorId == request.auth.uid;
+      }
+
+
       allow read;
       allow update: if request.auth.uid != null && !hasProtectedFieldChanges(resource.data, request.resource.data);
       allow create: if request.auth.uid != null;
+      allow delete: if request.auth.uid != null &&  (isAdmin(statementId) || isCreator());
     }
      
      match /statementsSettings/{statementId=**}{
