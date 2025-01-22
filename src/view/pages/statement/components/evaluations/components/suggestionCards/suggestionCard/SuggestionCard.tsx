@@ -69,7 +69,7 @@ const SuggestionCard: FC<Props> = ({
 	const [isCardMenuOpen, setIsCardMenuOpen] = useState(false);
 
 	useEffect(() => {
-		if (sort !== Screen.OPTIONS_RANDOM && sort !== Screen.QUESTIONS_RANDOM) {
+		if (sort !== Screen.OPTIONS_RANDOM && sort !== Screen.QUESTIONS_RANDOM && sort !== "random") {
 			sortSubStatements(siblingStatements, sort, 30);
 		}
 	}, [statement?.consensus]);
