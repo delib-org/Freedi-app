@@ -21,6 +21,7 @@ const SuggestionCards: FC = () => {
 	const subStatements = useSelector(statementSubsSelector(statement?.statementId)).filter((sub: Statement) => sub.statementType === StatementType.option);
 
 	useEffect(() => {
+
 		const { totalHeight: _totalHeight } = sortSubStatements(subStatements, sort, 30);
 		setTotalHeight(_totalHeight);
 	}, [sort]);
@@ -36,11 +37,6 @@ const SuggestionCards: FC = () => {
 		}
 	}, [currentStage, questionType]);
 
-	if (!subStatements) {
-		return (
-			<EmptyScreen setShowModal={() => { return }} />
-		);
-	}
 
 	useEffect(() => {
 		const _totalHeight = subStatements.reduce((acc: number, sub: Statement) => {
@@ -50,6 +46,12 @@ const SuggestionCards: FC = () => {
 		setTotalHeight(_totalHeight);
 		sortSubStatements(subStatements, sort, 30);
 	}, [subStatements.length]);
+
+	if (!subStatements) {
+		return (
+			<EmptyScreen setShowModal={() => { return }} />
+		);
+	}
 
 	return (
 		<div className={styles["suggestions-wrapper"]} style={{ height: `${totalHeight + 100}px` }}>

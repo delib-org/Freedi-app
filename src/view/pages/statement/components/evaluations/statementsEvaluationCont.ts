@@ -13,6 +13,8 @@ export function sortSubStatements(
 	gap = 30
 ): { totalHeight: number } {
 	try {
+		console.log("sortSubStatements", subStatements.length, sort);
+		console.trace('Stack trace:');
 		const dispatch = store.dispatch;
 		let _subStatements = [...subStatements];
 		switch (sort) {
