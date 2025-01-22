@@ -2,6 +2,7 @@ import React, { useState, ChangeEvent } from 'react';
 import styles from './Input.module.scss';
 import { useLanguage } from '@/controllers/hooks/useLanguages';
 import CloseIcon from '@/assets/icons/close.svg?react';
+
 interface SearchInputProps {
 	label?: string;
 	placeholder?: string;

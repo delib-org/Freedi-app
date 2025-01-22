@@ -16,7 +16,6 @@ const AdvancedSettings: FC<StatementSettingsProps> = ({
 }) => {
 	const { t } = useLanguage();
 
-
 	const statementSettings: StatementSettings = getStatementSettings(statement);
 	const {
 		inVotingGetOnlyResults = false,
@@ -31,10 +30,8 @@ const AdvancedSettings: FC<StatementSettingsProps> = ({
 	} = statementSettings;
 
 	function handleAdvancedSettingChange(property: keyof StatementSettings, newValue: boolean) {
-		console.log(newValue)
+
 		setStatementSettingToDB({ statement, property, newValue, settingsSection: 'statementSettings' });
-
-
 	}
 
 	return (
