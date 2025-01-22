@@ -28,7 +28,7 @@ const QuestionSettings: FC<StatementSettingsProps> = ({
 		if (statement.statementType !== StatementType.question) return null;
 
 		function handleSetDocumentQuestion(isDocument: boolean) {
-			console.log(isDocument);
+
 			setStatementSettingToDB({
 				statement,
 				property: "isDocument",
