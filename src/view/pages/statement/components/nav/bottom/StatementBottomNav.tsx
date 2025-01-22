@@ -20,6 +20,7 @@ import { userSettingsSelector } from "@/model/users/userSlice";
 import StartHere from "@/view/components/startHere/StartHere";
 import { StatementContext } from "../../../StatementCont";
 import { sortItems } from "./StatementBottomNavModal";
+import { useLanguage } from "@/controllers/hooks/useLanguages";
 
 interface Props {
 	showNav?: boolean;
@@ -29,6 +30,7 @@ const StatementBottomNav: FC<Props> = () => {
 
 	const { statementId } = useParams();
 	const { statement, setNewStatementType, handleSetNewStatement } = useContext(StatementContext);
+	const { dir } = useLanguage();
 
 	const timesRemainToLearnAddOption = useSelector(userSettingsSelector)?.learning?.addOptions || 0;
 
@@ -65,7 +67,7 @@ const StatementBottomNav: FC<Props> = () => {
 						: "statement-bottom-nav"
 				}
 			>
-				<div className="add-option-button-wrapper">
+				<div className={`add-option-button-wrapper ${dir === "ltr" ? "add-option-button-wrapper--ltr" : ""}`}>
 
 					<button
 						className="add-option-button"
