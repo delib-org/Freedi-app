@@ -41,6 +41,10 @@ $addOptionSize: 60px;
         justify-content: space-between;
         width: 100%;
 
+        &--ltr {
+            flex-direction: row-reverse;
+        }
+
 
         .add-option-button {
             width: $addOptionSize;
