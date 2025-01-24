@@ -1,7 +1,6 @@
 {
 	"projects": {
 		"test": "freedi-test",
-		"dev": "freedi-test",
 		"prod": "synthesistalyaron"
 	},
 	"targets": {

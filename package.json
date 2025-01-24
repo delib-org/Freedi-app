@@ -4,6 +4,7 @@
 	"version": "5.4",
 	"type": "module",
 	"scripts": {
+		"preview": "vite preview",
 		"clean": "rm -rf node_modules package-lock.json dist && git rm -r --cache . && git reset && npm install && npm run build",
 		"dev": "vite --open",
 		"dev:h": "vite --host",
@@ -16,7 +17,6 @@
 		"lint": "eslint --fix \"src/**/*.{js,jsx,ts,tsx}\"",
 		"typecheck": "tsc",
 		"check-all": "npm-run-all lint typecheck build",
-		"preview": "vite preview",
 		"deploy:h": "npm run build && firebase use prod && firebase deploy --only hosting:prod",
 		"deploy:h:dev": "npm run build:dev && firebase use dev && firebase deploy --only hosting:dev",
 		"deploy:h:test": "npm run build:test && firebase use test && firebase deploy --only hosting:test",

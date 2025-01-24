@@ -1,5 +1,7 @@
 vite.config.ts.timestamp-*
 .firebase/
+.firebaserc
+firebase.json
 
 .env*
 node_modules/
