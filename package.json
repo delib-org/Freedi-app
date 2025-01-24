@@ -1,7 +1,7 @@
 {
-	"name": "delib-5",
+	"name": "freedi-app",
 	"private": true,
-	"version": "1.0.1",
+	"version": "5.4",
 	"type": "module",
 	"scripts": {
 		"clean": "rm -rf node_modules package-lock.json dist && git rm -r --cache . && git reset && npm install && npm run build",
@@ -22,9 +22,10 @@
 		"deploy:h:test": "npm run build:test && firebase use test && firebase deploy --only hosting:test",
 		"deploy:f": "cd functions && npm run build && firebase use prod && firebase deploy --only functions",
 		"deploy:f:dev": "cd functions && npm run build && firebase use dev && firebase deploy --only functions",
+		"deploy:f:test": "cd functions && npm run build && firebase use test && firebase deploy --only functions",
 		"deploy": "npm run deploy:h && npm run deploy:f",
 		"deploy:dev": "npm run deploy:h:dev && npm run deploy:f",
-		"deploy:test": "npm run deploy:h:test && npm run deploy:f"
+		"deploy:test": "npm run deploy:h:test && npm run deploy:f:test"
 	},
 	"dependencies": {
 		"@dagrejs/dagre": "^1.0.4",

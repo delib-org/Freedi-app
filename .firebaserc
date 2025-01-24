@@ -1,0 +1,25 @@
+{
+	"projects": {
+		"test": "freedi-test",
+		"dev": "freedi-test",
+		"prod": "synthesistalyaron"
+	},
+	"targets": {
+		"synthesistalyaron": {
+			"hosting": {
+				"prod": [
+					"synthesistalyaron"
+				]
+			}
+		},
+		"freedi-test": {
+			"hosting": {
+				"test": [
+					"freedi-test"
+				]
+			}
+		}
+	},
+	"etags": {},
+	"dataconnectEmulatorConfig": {}
+}
