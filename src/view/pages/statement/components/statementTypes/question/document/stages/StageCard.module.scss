@@ -1,0 +1,32 @@
+.card {
+
+	padding: var(--padding) var(--padding) 3rem var(--padding);
+	background-color: white;
+
+
+	p {
+		color: var(--text);
+	}
+
+	ul {
+		list-style-type: none;
+		padding: 0;
+
+		li {
+			color: var(--text);
+			margin: .2rem .7rem .2rem .5rem;
+		}
+	}
+
+	.seeMore {
+		padding: 1rem .5rem .7rem 0;
+	}
+
+	a {
+		color: navy;
+
+		.active {
+			color: blue;
+		}
+	}
+}

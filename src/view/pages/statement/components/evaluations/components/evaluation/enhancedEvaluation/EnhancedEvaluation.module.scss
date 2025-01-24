@@ -2,19 +2,26 @@
 
   display: grid;
   grid-template-columns: auto 1fr auto;
-  gap: 0.5rem;
   grid-template-rows: auto auto;
+  gap: 0.5rem;
+
+
+  @media screen and (max-width: 500px) {
+    width: fit-content;
+    margin: auto;
+    margin-top: 1rem;
+  }
 
 
   .evaluation-thumbs {
-    
+
     display: flex;
     flex-direction: row-reverse;
     width: fit-content;
     // direction: ltr; // Default direction
     gap: 0.5rem;
 
-  
+
 
     .evaluation-thumb {
       transition: all 0.3s;
@@ -34,38 +41,26 @@
         opacity: 1;
       }
 
-      // &:first-child {
-      //   border-top-left-radius: 2rem;
-      //   border-bottom-left-radius: 2rem;
-      //   padding-left: 0.8rem;
-      //   padding-right: 0.8rem;
-      // }
-
-      // &:last-child {
-      //   border-top-right-radius: 2rem;
-      //   border-bottom-right-radius: 2rem;
-      //   padding-left: 0.8rem;
-      //   padding-right: 0.8rem;
-      // }
     }
   }
 
   .evaluation-score {
-   
+
     display: flex;
-    gap:0.2rem;
+    gap: 0.2rem;
     align-items: center;
     justify-content: center;
-    color:var(--text-paragraph-light);
+    color: var(--text-body);
     // direction: ltr;
-  
+
   }
 
-  .evaluation-explain{
+  .explain {
     justify-content: space-between;
-    color:var(--text-paragraph-light);
-    &--ltr{
-     flex-direction: row-reverse;
+    color: var(--text-label);
+
+    &--ltr {
+      flex-direction: row-reverse;
     }
   }
 
@@ -79,14 +74,14 @@
     font-size: 0.8rem;
 
 
-    
+
   }
 
   .total-evaluators {
     direction: ltr;
   }
 
- 
+
 
 
   .evaluation-explain {
@@ -100,6 +95,6 @@
   }
 }
 
-.active{
+.active {
   transform: scale(1.1);
 }

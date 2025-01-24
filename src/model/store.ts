@@ -1,15 +1,16 @@
 import { configureStore } from "@reduxjs/toolkit";
-import { statementsSlicer } from "./statements/statementsSlice";
-import { userSlicer } from "./users/userSlice";
 import { evaluationsSlicer } from "./evaluations/evaluationsSlice";
-import { votesSlicer } from "./vote/votesSlice";
+import { historySlice } from "./history/HistorySlice";
+import { initLocationSlice } from "./location/locationSlice";
+import { notificationsSlicer } from "./notifications/notificationsSlice";
 import { resultsSlice } from "./results/resultsSlice";
 import { roomsSlice } from "./rooms/roomsSlice";
-import { timersSlice } from "./timers/timersSlice";
-import { initLocationSlice } from "./location/locationSlice";
-import { historySlice } from "./history/HistorySlice";
 import { statementMetaData } from "./statements/statementsMetaSlice";
-import { notificationsSlicer } from "./notifications/notificationsSlice";
+import { statementsSlicer } from "./statements/statementsSlice";
+import { timersSlice } from "./timers/timersSlice";
+import { userSlicer } from "./users/userSlice";
+import { votesSlicer } from "./vote/votesSlice";
+import { choseBySlice } from "./choseBy/choseBySlice";
 
 export const store = configureStore({
 	reducer: {
@@ -24,6 +25,7 @@ export const store = configureStore({
 		initLocation: initLocationSlice.reducer,
 		history: historySlice.reducer,
 		notifications: notificationsSlicer.reducer,
+		choseBys: choseBySlice.reducer,
 	},
 });
 

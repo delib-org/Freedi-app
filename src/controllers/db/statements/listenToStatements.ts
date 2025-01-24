@@ -8,9 +8,11 @@ import {
 	StatementSchema,
 	DeliberativeElement,
 } from "delib-npm";
+import { Unsubscribe } from "firebase/auth";
 import { and, collection, doc, limit, onSnapshot, or, orderBy, query, where } from "firebase/firestore";
 
 // Redux Store
+import { FireStore } from "../config";
 import {
 	deleteStatement,
 	removeMembership,
@@ -20,10 +22,8 @@ import {
 	setStatements,
 } from "@/model/statements/statementsSlice";
 import { AppDispatch, store } from "@/model/store";
-import { FireStore } from "../config";
 
 // Helpers
-import { Unsubscribe } from "firebase/auth";
 
 export const listenToStatementSubscription = (statementId: string, user: User, dispatch: AppDispatch): Unsubscribe => {
 	try {
@@ -104,8 +104,9 @@ export const listenToStatement = (
 	}
 };
 
-export const listenToSubStatements = (statementId: string | undefined, dispatch: AppDispatch): Unsubscribe => {
+export const listenToSubStatements = (statementId: string | undefined): Unsubscribe => {
 	try {
+		const dispatch = store.dispatch;
 		if (!statementId) throw new Error("Statement id is undefined");
 		const statementsRef = collection(FireStore, Collections.statements);
 		const q = query(
@@ -159,7 +160,7 @@ export const listenToSubStatements = (statementId: string | undefined, dispatch:
 export const listenToMembers = (dispatch: AppDispatch) => (statementId: string) => {
 	try {
 		const membersRef = collection(FireStore, Collections.statementsSubscribe);
-		const q = query(membersRef, where("statementId", "==", statementId), orderBy("createdAt", "desc"));
+		const q = query(membersRef, where("statementId", "==", statementId), where("statement.statementType", "!=", StatementType.document), orderBy("createdAt", "desc"));
 
 		return onSnapshot(q, (subsDB) => {
 			subsDB.docChanges().forEach((change) => {

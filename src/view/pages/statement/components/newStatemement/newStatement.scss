@@ -1,0 +1,15 @@
+.newStatement {
+    position: relative;
+    width: 95vw;
+    height: fit-content;
+    max-width: 75ch;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1rem;
+    background-color: white;
+    border-radius: 5px;
+
+
+}

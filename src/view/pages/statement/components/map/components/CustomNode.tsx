@@ -1,11 +1,11 @@
+import { Statement } from 'delib-npm';
 import { useEffect, useState } from 'react';
 
 // Third party
-import { Handle, NodeProps } from 'reactflow';
 import { useNavigate } from 'react-router-dom';
+import { Handle, NodeProps } from 'reactflow';
 
 // Hooks
-import { useMapContext } from '@/controllers/hooks/useMap';
 
 // Icons
 import PlusIcon from '@/assets/icons/plusIcon.svg?react';
@@ -15,8 +15,8 @@ import {
 	calculateFontSize,
 	statementTitleToDisplay,
 } from '@/controllers/general/helpers';
+import { useMapContext } from '@/controllers/hooks/useMap';
 import useStatementColor from '@/controllers/hooks/useStatementColor';
-import { Statement } from 'delib-npm';
 
 const nodeStyle = (
 	parentStatement: Statement | 'top',
@@ -46,12 +46,12 @@ export default function CustomNode({ data }: NodeProps) {
 
 	const { result, parentStatement } = data;
 
-	const { statementId, statement, deliberativeElement, isResult } =
+	const { statementId, statement } =
 		result.top as Statement;
 
 	const { shortVersion: nodeTitle } = statementTitleToDisplay(statement, 80);
 
-	const statementColor = useStatementColor({ deliberativeElement, isResult });
+	const statementColor = useStatementColor({ statement: result.top });
 
 	const { mapContext, setMapContext } = useMapContext();
 

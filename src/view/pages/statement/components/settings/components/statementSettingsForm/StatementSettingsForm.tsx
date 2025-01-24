@@ -1,34 +1,33 @@
-import { Dispatch, FC } from 'react';
+import { Role, Statement, StatementSubscription } from 'delib-npm';
+import { Dispatch, FC, useState } from 'react';
 
 // Third party imports
 import { useNavigate, useParams } from 'react-router-dom';
-import { Role, Statement, StatementSubscription } from 'delib-npm';
 
 // Firestore functions
 
 // Custom components
-import UploadImage from '@/view/components/uploadImage/UploadImage';
-import DisplayResultsBy from './../../components/displayResultsBy/DisplayResultsBy';
-import ResultsRange from './../../components/resultsRange/ResultsRange';
-import GetVoters from './../../components/GetVoters';
-import GetEvaluators from './../../components/GetEvaluators';
-import SubScreensToDisplay from '../tabsToDisplaySwitches/SubScreensToDisplay';
-
-// Hooks & Helpers
-import { handleSetStatement } from './../../statementSettingsCont';
-import { useLanguage } from '@/controllers/hooks/useLanguages';
-import TitleAndDescription from './../../components/titleAndDescription/TitleAndDescription';
+import QuestionSettings from '../QuestionSettings/QuestionSettings';
 import AdvancedSettings from './../../components/advancedSettings/AdvancedSettings';
+import ChoseBySettings from '../choseBy/ChoseBySettings';
+import GetEvaluators from './../../components/GetEvaluators';
+import GetVoters from './../../components/GetVoters';
 import MembersSettings from './../../components/membership/MembersSettings';
 import SectionTitle from './../../components/sectionTitle/SectionTitle';
+import TitleAndDescription from './../../components/titleAndDescription/TitleAndDescription';
+import { setNewStatement } from './../../statementSettingsCont';
+import { useLanguage } from '@/controllers/hooks/useLanguages';
+import UploadImage from '@/view/components/uploadImage/UploadImage';
+
+// Hooks & Helpers
 import './StatementSettingsForm.scss';
 
 // icons
 import SaveIcon from '@/assets/icons/save.svg?react';
-import QuestionSettings from '../QuestionSettings/QuestionSettings';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { createSelector } from '@reduxjs/toolkit';
 import { RootState } from '@/model/store';
+import Loader from '@/view/components/loaders/Loader';
 
 interface StatementSettingsFormProps {
 	statement: Statement;
@@ -41,40 +40,49 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 	parentStatement,
 	setStatementToEdit,
 }) => {
-	try {
-		// * Hooks * //
-		const navigate = useNavigate();
-		const { statementId } = useParams();
-		const { t } = useLanguage();
+	const imageUrl = statement.imagesURL?.main ?? '';
 
-		// Selector to get the statement memberships
-		const statementMembershipSelector = (statementId: string | undefined) =>
-			createSelector(
-				(state: RootState) => state.statements.statementMembership,
-				(memberships) =>
-					memberships.filter(
-						(membership: StatementSubscription) =>
-							membership.statementId === statementId
-					)
-			);
+	// * Hooks * //
+	const navigate = useNavigate();
+	const { statementId } = useParams();
+	const { t } = useLanguage();
 
-		const members: StatementSubscription[] = useAppSelector(
-			statementMembershipSelector(statementId)
+	const [image, setImage] = useState<string>(imageUrl);
+	const [loading, setLoading] = useState<boolean>(false);
+
+	// Selector to get the statement memberships
+	const statementMembershipSelector = (statementId: string | undefined) =>
+		createSelector(
+			(state: RootState) => state.statements.statementMembership,
+			(memberships) =>
+				memberships.filter(
+					(membership: StatementSubscription) =>
+						membership.statementId === statementId
+				)
 		);
 
-		const joinedMembers = members.filter((member) => member.role !== Role.banned).map(m => m.user);
+	const members: StatementSubscription[] = useAppSelector(
+		statementMembershipSelector(statementId)
+	);
+
+	try {
+		const joinedMembers = members
+			.filter((member) => member.role !== Role.banned)
+			.map((m) => m.user);
 
 		// * Functions * //
 		const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
 			e.preventDefault();
-
-			await handleSetStatement({
+			setLoading(true);
+			const newStatement = await setNewStatement({
 				navigate,
 				statementId,
 				statement,
 				parentStatement,
 			});
-			
+			setLoading(false);
+			if (!newStatement) throw new Error('No new statement');
+			navigate(`/statement/${newStatement.statementId}`);
 		};
 
 		const isNewStatement = !statementId;
@@ -83,6 +91,8 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 			statement,
 			setStatementToEdit,
 		} as const;
+
+		if (loading) return <div className='statement-settings-form'><div className='loader-box'><Loader /></div></div>;
 
 		return (
 			<form
@@ -96,23 +106,32 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 				/>
 				<SectionTitle title={t('General Settings')} />
 				<section className='switches-area'>
-					<SubScreensToDisplay {...statementSettingsProps} />
+
 					<AdvancedSettings {...statementSettingsProps} />
 				</section>
-				<DisplayResultsBy {...statementSettingsProps} />
-				<ResultsRange {...statementSettingsProps} />
+				<ChoseBySettings {...statementSettingsProps} />
 
 				{!isNewStatement && (
 					<>
-						<UploadImage {...statementSettingsProps} />
+						<UploadImage
+							statement={statementSettingsProps.statement}
+							image={image}
+							setImage={setImage}
+						/>
 						<QuestionSettings {...statementSettingsProps} />
 						<SectionTitle title={t('Members')} />
-						<MembersSettings setStatementToEdit={setStatementToEdit} statement={statement} />
+						<MembersSettings
+							setStatementToEdit={setStatementToEdit}
+							statement={statement}
+						/>
 						<section className='get-members-area'>
-							<GetVoters statementId={statementId!} joinedMembers={joinedMembers} />
+							<GetVoters
+								statementId={statementId}
+								joinedMembers={joinedMembers}
+							/>
 						</section>
 						<section className='get-members-area'>
-							<GetEvaluators statementId={statementId!} />
+							<GetEvaluators statementId={statementId} />
 						</section>
 					</>
 				)}
@@ -120,7 +139,7 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 				<button
 					type='submit'
 					className='submit-button'
-					aria-label="Submit button"
+					aria-label='Submit button'
 					data-cy='settings-statement-submit-btn'
 				>
 					<SaveIcon />

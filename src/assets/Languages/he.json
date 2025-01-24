@@ -39,6 +39,7 @@
   "Division into rooms": "חלוקה לחדרים",
   "Dont agree": "אני לא מסכים/ה",
   "Edit Text": "עריכת טקסט",
+  "Upload Image": "העלאת תמונה",
   "Enable Sub-Conversations": "לאפשר תת-שיחות",
   "Evaluated": "העריכו",
   "Enhanced Evaluation": "הערכה מגוונת",
@@ -188,7 +189,33 @@
   "Continue with this suggestion": "המשך/י עם הפתרון הזה",
   "Back": "חזרה",
   "Disagree": "מתנגד/ת",
-  "Type your message here...": "הקלד/י את ההודעה שלך כאן..."
+  "Type your message here...": "הקלד/י את ההודעה שלך כאן...",
+  "How to evaluate and select top options": "איך להעריך ולבחור את האופציות המובילות",
+  "By Consensus": "על פי מידת ההסכמה",
+  "By Majority": "ברוב",
+  "By most liked": "על פי הרוב",
+  "By sum liked - disliked": "אהבו - לא אהבו",
+  "Method of selecting leading options": "שיטת בחירת האופציות המובילות",
+  "Top results": "תוצאות מובילות",
+  "Above specific value": "מעל ערך מסוים",
+  "Value": "ערך",
+  "Options Selection Criteria": "קריטריוני בחירת אופציות",
+  "Needs": "צרכים",
+  "Summary": "סיכום",
+  "Explanation": "הסבר",
+  "needs": "צרכים",
+  "summary": "סיכום",
+  "explanation": "הסבר",
+  "questions": "שאלות",
+  "suggestions": "הצעות",
+  "Selected Options": "אופציות נבחרות",
+  "No suggestion so far": "עדיין אין הצעות",
+  "Stage": "שלב",
+  "Answers": "תשובות",
+  "Navigational elements": "רכיבי ניווט",
+  "Document Question": "שאלה מורכבת",
+  "Simple Question": "שאלה פשוטה"
+
 
 
 

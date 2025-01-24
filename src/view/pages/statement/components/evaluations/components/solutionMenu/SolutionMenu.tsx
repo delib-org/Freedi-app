@@ -1,23 +1,23 @@
+import { Statement, StatementType } from "delib-npm";
 import { FC, useEffect } from "react";
-import Menu from "@/view/components/menu/Menu";
-import MenuOption from "@/view/components/menu/MenuOption";
-import EditIcon from "@/assets/icons/editIcon.svg?react";
 import DeleteIcon from "@/assets/icons/delete.svg?react";
-import QuestionMarkIcon from '@/assets/icons/questionIcon.svg?react';
+import EditIcon from "@/assets/icons/editIcon.svg?react";
 import LightBulbIcon from "@/assets/icons/lightBulbIcon.svg?react";
-import { DeliberativeElement, Statement } from "delib-npm";
-import { useLanguage } from "@/controllers/hooks/useLanguages";
+import QuestionMarkIcon from '@/assets/icons/questionIcon.svg?react';
 import { deleteStatementFromDB } from "@/controllers/db/statements/deleteStatements";
 import { updateIsQuestion } from "@/controllers/db/statements/setStatements";
+import { useLanguage } from "@/controllers/hooks/useLanguages";
+import Menu from "@/view/components/menu/Menu";
+import MenuOption from "@/view/components/menu/MenuOption";
 
 interface Props {
-  statement: Statement;
-  isAuthorized: boolean;
-  isCardMenuOpen: boolean;
-  setIsCardMenuOpen: (isOpen: boolean) => void;
-  isEdit: boolean;
-  setIsEdit: (isEdit: boolean) => void;
-  handleSetOption: () => void;
+	statement: Statement;
+	isAuthorized: boolean;
+	isCardMenuOpen: boolean;
+	setIsCardMenuOpen: (isOpen: boolean) => void;
+	isEdit: boolean;
+	setIsEdit: (isEdit: boolean) => void;
+	handleSetOption: () => void;
 }
 
 const SolutionMenu: FC<Props> = ({
@@ -31,8 +31,8 @@ const SolutionMenu: FC<Props> = ({
 }) => {
 	const { t } = useLanguage();
 
-	const isOption = statement.deliberativeElement === DeliberativeElement.option;
-	const isResearch = statement.deliberativeElement === DeliberativeElement.research;
+	const isOption = statement.statementType === StatementType.option;
+	const isResearch = statement.statementType === StatementType.question;
 
 	if (!isAuthorized) return null;
 

@@ -1,35 +1,43 @@
 import { Statement } from "delib-npm";
 import { FC } from "react";
-import SimpleEvaluation from "./simpleEvaluation/SimpleEvaluation";
 import EnhancedEvaluation from "./enhancedEvaluation/EnhancedEvaluation";
+import SimpleEvaluation from "./simpleEvaluation/SimpleEvaluation";
 
 interface EvaluationProps {
-  parentStatement: Statement;
-  statement: Statement;
+	parentStatement: Statement | undefined;
+	statement: Statement;
 }
 
 const Evaluation: FC<EvaluationProps> = ({ parentStatement, statement }) => {
-  
-	const shouldDisplayScore: boolean = parentStatement.statementSettings
-		?.showEvaluation
-		? parentStatement.statementSettings?.showEvaluation
-		: false;
 
-	if (parentStatement.statementSettings?.enhancedEvaluation) {
+	try {
+		if (!parentStatement) throw new Error('parentStatement is not defined');
+
+		const shouldDisplayScore: boolean = parentStatement.statementSettings
+			?.showEvaluation
+			? parentStatement.statementSettings?.showEvaluation
+			: false;
+
+		if (parentStatement.statementSettings?.enhancedEvaluation) {
+			return (
+				<EnhancedEvaluation
+					statement={statement}
+					shouldDisplayScore={shouldDisplayScore}
+				/>
+			);
+		}
+
 		return (
-			<EnhancedEvaluation
+			<SimpleEvaluation
 				statement={statement}
 				shouldDisplayScore={shouldDisplayScore}
 			/>
 		);
+	} catch (error) {
+		console.error(error);
+		
+return null;
 	}
-
-	return (
-		<SimpleEvaluation
-			statement={statement}
-			shouldDisplayScore={shouldDisplayScore}
-		/>
-	);
 };
 
 export default Evaluation;

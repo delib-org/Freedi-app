@@ -5,12 +5,11 @@ import {
 	StatementSubscription,
 	User
 } from "delib-npm";
-import { store } from "@/model/store";
-import { NavigateFunction } from "react-router-dom";
-import { logOut } from "../db/auth";
-import { setUser } from "@/model/users/userSlice";
 import { ZodError, ZodIssue } from "zod";
+import { logOut } from "../db/auth";
 import { HistoryTracker } from "@/model/history/HistorySlice";
+import { store } from "@/model/store";
+import { setUser } from "@/model/users/userSlice";
 
 export function updateArray<T>(
 	currentArray: Array<T>,
@@ -24,7 +23,6 @@ export function updateArray<T>(
 			throw new Error(`Item doesn't have property ${updateByProperty}`);
 		}
 
-		//find in array;
 		const index = arrayTemp.findIndex(
 			(item) => item[updateByProperty] === newItem[updateByProperty],
 		);
@@ -57,7 +55,8 @@ export function isAuthorized(
 		if (!statement) throw new Error("No statement");
 
 		const user = store.getState().user.user;
-		if (!user || !user.uid) throw new Error("No user");
+		if (!user?.uid) throw new Error("No user");
+
 		if (statement.creatorId === user.uid) return true;
 
 		if (parentStatementCreatorId === user.uid) return true;
@@ -70,7 +69,7 @@ export function isAuthorized(
 			return true;
 		}
 
-		if (authorizedRoles && authorizedRoles.includes(role)) return true;
+		if (authorizedRoles?.includes(role)) return true;
 
 		return false;
 	} catch (error) {
@@ -86,31 +85,6 @@ export function isAdmin(role: Role | undefined): boolean {
 	return false;
 }
 
-export function navigateToStatementTab(
-	statement: Statement,
-	navigate: NavigateFunction,
-) {
-	try {
-		if (!statement) throw new Error("No statement");
-		if (!navigate) throw new Error("No navigate function");
-
-		// If chat is a sub screen, navigate to chat.
-		// Otherwise, navigate to the first sub screen.
-
-		const tab = statement.subScreens?.includes(Screen.CHAT)
-			? Screen.CHAT
-			: statement.subScreens
-				? statement.subScreens[0]
-				: Screen.SETTINGS;
-
-		navigate(`/statement/${statement.statementId}/${tab}`, {
-			state: { from: window.location.pathname },
-		});
-	} catch (error) {
-		console.error(error);
-	}
-}
-
 export function getInitials(fullName: string) {
 	// Split the full name into words
 	const words = fullName.split(" ");
@@ -119,8 +93,7 @@ export function getInitials(fullName: string) {
 	let initials = "";
 
 	// Iterate through each word and append the first letter to the initials string
-	for (let i = 0; i < words.length; i++) {
-		const word = words[i];
+	for (const word of words) {
 		if (word.length > 0) {
 			initials += word[0].toUpperCase();
 		}
@@ -160,7 +133,7 @@ export const statementTitleToDisplay = (
 //function which check if the statement can be linked to children
 
 export function getPastelColor() {
-	return `hsl(${360 * Math.random()},100%,75%)` || "red";
+	return `hsl(${360 * Math.random()},100%,75%)`;
 }
 
 export function calculateFontSize(text: string, maxSize = 6, minSize = 14) {
@@ -227,7 +200,7 @@ export function getStatementSubscriptionId(
 	user: User,
 ): string | undefined {
 	try {
-		if (!user || !user.uid) throw new Error("No user");
+		if (!user?.uid) throw new Error("No user");
 		if (!statementId) throw new Error("No statementId");
 
 		return `${user.uid}--${statementId}`;
@@ -327,7 +300,7 @@ export function getTime(time: number): string {
 		return `${timeDay}/${timeMonth}/${timeYear} ${hours}:${minutes?.toString().length === 1 ? "0" + minutes : minutes}`;
 	} else if (currentDay !== timeDay && currentMonth === timeMonth && currentYear === timeYear) {
 		return `${timeDay}/${timeMonth} ${hours}:${minutes?.toString().length === 1 ? "0" + minutes : minutes}`;
-		
+
 	} else if (currentDay === timeDay && currentMonth === timeMonth && currentYear === timeYear) {
 		return `${hours}:${minutes?.toString().length === 1 ? "0" + minutes : minutes}`;
 	}
@@ -339,28 +312,39 @@ export function truncateString(text: string, maxLength = 20): string {
 	return text.length > maxLength ? text.slice(0, maxLength) + "..." : text;
 }
 
-export function processHistory({statementId, pathname }:HistoryTracker, state:HistoryTracker[]):HistoryTracker[] {
+export function processHistory({ statementId, pathname }: HistoryTracker, state: HistoryTracker[]): HistoryTracker[] {
 	try {
-	
+
 		const newHistory = [...state];
 
 		//add statement id to history only if it is not already there
-		if(newHistory.length === 0) return [{statementId, pathname}];
-		if(pathname === state[state.length - 1]?.pathname) return newHistory;
-		
+		if (newHistory.length === 0) return [{ statementId, pathname }];
+		if (pathname === state[state.length - 1]?.pathname) return newHistory;
+
 		//in case the the user only navigate between the screens of the statement, just update the pathname
-		if(!statementId) return [...state, {pathname }]
-		if(newHistory[newHistory.length - 1].statementId === statementId){
+		if (!statementId) return [...state, { pathname }]
+		if (newHistory[newHistory.length - 1].statementId === statementId) {
 			newHistory[newHistory.length - 1].pathname = pathname;
-			
+
 			return newHistory;
 		} else {
-			return [...state, {statementId, pathname }];
+			return [...state, { statementId, pathname }];
 		}
 
 	} catch (error) {
 		console.error(error);
-		
+
 		return state;
 	}
+}
+
+export function getRandomUID(numberOfChars = 12): string {
+
+	const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-0123456789";
+	let randomString = "";
+	for (let i = 0; i < numberOfChars; i++) {
+		randomString += chars.charAt(Math.floor(Math.random() * chars.length));
+	}
+
+	return randomString;
 }

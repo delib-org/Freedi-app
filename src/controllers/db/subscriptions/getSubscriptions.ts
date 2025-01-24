@@ -7,8 +7,6 @@ import {
 	StatementSubscriptionSchema,
 	User,
 } from "delib-npm";
-import { AppDispatch, store } from "@/model/store";
-import { FireStore } from "../config";
 import {
 	collection,
 	doc,
@@ -23,17 +21,18 @@ import {
 	where,
 	Unsubscribe,
 } from "firebase/firestore";
+import { updateDoc } from "firebase/firestore";
+import { FireStore } from "../config";
+import { getStatementFromDB } from "../statements/getStatement";
+import { listenToStatement } from "../statements/listenToStatements";
+import { getStatementSubscriptionId } from "@/controllers/general/helpers";
 import {
 	deleteSubscribedStatement,
 	setStatementSubscription,
 	setStatementsSubscription,
 } from "@/model/statements/statementsSlice";
+import { AppDispatch, store } from "@/model/store";
 import { listenedStatements } from "@/view/pages/home/Home";
-
-import { getStatementSubscriptionId } from "@/controllers/general/helpers";
-import { getStatementFromDB } from "../statements/getStatement";
-import { listenToStatement } from "../statements/listenToStatements";
-import { updateDoc } from "firebase/firestore";
 
 export const listenToStatementSubSubscriptions = (
 	statementId: string,
@@ -106,13 +105,21 @@ export function listenToStatementSubscriptions(numberOfStatements = 30): () => v
 
 					const statementSubscription = change.doc.data() as StatementSubscription;
 					if (!Array.isArray(statementSubscription.statement.results)) {
-						
+
 						const subscriptionRef = doc(FireStore, Collections.statementsSubscribe, statementSubscription.statementsSubscribeId)
 						updateDoc(subscriptionRef, { "statement.results": [] })
 						statementSubscription.statement.results = [];
 					}
 
-					StatementSubscriptionSchema.parse(statementSubscription);
+					const results = StatementSubscriptionSchema.safeParse(statementSubscription);
+					if (results.success === false) {
+						console.info(statementSubscription)
+						console.error(results.error);
+						throw new Error("Statement subscription schema error");
+					}
+
+					//prevent listening to a document statement
+					if(statementSubscription.statement.statementType === "document") return;
 
 					if (change.type === "added") {
 
@@ -159,7 +166,7 @@ export function listenToStatementSubscriptions(numberOfStatements = 30): () => v
 
 };
 
-export async function getStatmentsSubsciptions(): Promise<StatementSubscription[]>{
+export async function getStatmentsSubsciptions(): Promise<StatementSubscription[]> {
 	try {
 		const user = store.getState().user.user;
 		if (!user) throw new Error("User not logged in");

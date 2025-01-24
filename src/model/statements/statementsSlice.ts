@@ -1,18 +1,18 @@
 /* eslint-disable indent */
 import { createSlice, PayloadAction, createSelector } from "@reduxjs/toolkit";
-import { RootState, store } from "../store";
 
 // Third party imports
 
 import {
 	DeliberativeElement,
-	Screen,
 	Statement,
 	StatementSubscription,
-	StatementType} from "delib-npm";
+	StatementType
+} from "delib-npm";
 
 // Helpers
 import { updateArray } from "../../controllers/general/helpers";
+import { RootState, store } from "../store";
 
 enum StatementScreen {
 	chat = "chat",
@@ -232,31 +232,6 @@ export const statementsSlicer = createSlice({
 				console.error(error);
 			}
 		},
-		toggleSubscreen: (
-			state,
-			action: PayloadAction<{ statement: Statement; screen: Screen }>,
-		) => {
-			try {
-
-				const { statement, screen } = action.payload;
-				const _statement = state.statements.find(
-					(st) => st.statementId === statement.statementId,
-				);
-				if (!_statement) throw new Error("statement not found");
-				const subScreens = _statement?.subScreens;
-				if (subScreens?.length === 0 || subScreens === undefined)
-					throw new Error("no sub screens");
-				if (subScreens.includes(screen)) {
-					_statement.subScreens = subScreens.filter(
-						(subScreen) => subScreen !== screen,
-					);
-				} else {
-					_statement.subScreens = [...subScreens, screen];
-				}
-			} catch (error) {
-				console.error(error);
-			}
-		},
 
 		setMembership: (
 			state,
@@ -327,7 +302,6 @@ export const {
 	deleteSubscribedStatement,
 	setStatementOrder,
 	setScreen,
-	toggleSubscreen,
 	setStatementElementHight,
 	setMembership,
 	removeMembership,
@@ -340,7 +314,7 @@ export const totalMessageBoxesSelector = (state: RootState) => state.statements.
 
 export const screenSelector = (state: RootState) => state.statements.screen;
 
-export const statementSelectorById = (statementId: string) => (state: RootState) => {
+export const statementSelectorById = (statementId: string | undefined) => (state: RootState) => {
 	return state.statements.statements.find((statement) => statement.statementId === statementId);
 
 }
@@ -357,14 +331,14 @@ export const statementsChildSelector =
 export const subStatementsByTopParentIdMemo = (statementId: string | undefined) => createSelector(
 	[statementsSelector],
 	(statements) =>
-		statements.filter((statement) => statement.topParentId === statementId)
+		statements.filter((statement) => statement.topParentId === statementId && statement.statementType !== StatementType.document)
 );
 
 export const statementDescendantsSelector = createSelector(
 	[statementsSelector, (_state, statementId: string) => statementId],
-	(statements, statementId) => 
-	  statements.filter(statement => statement.parents?.includes(statementId))
-  );
+	(statements, statementId) =>
+		statements.filter(statement => statement.parents?.includes(statementId))
+);
 
 export const statementsRoomSolutions =
 	(statementId: string | undefined) => (state: RootState) =>
@@ -372,7 +346,7 @@ export const statementsRoomSolutions =
 			.filter(
 				(statement) =>
 					statement.parentId === statementId &&
-					statement.statementType === StatementType.result,
+					statement.statementType === StatementType.option,
 			)
 			.sort((a, b) => a.createdAt - b.createdAt);
 export const statementsSubscriptionsSelector = (
@@ -486,7 +460,7 @@ export const subscriptionParentStatementSelector = (parentId: string) =>
 			statementSubscription.filter((sub) => sub.statement.topParentId === parentId)
 	);
 
-export const myStatementsByStatementIdSelector = (statementId: string) => {
+export const myStatementsByStatementIdSelector = (statementId: string | undefined) => {
 	const user = store.getState().user.user;
 
 	return createSelector(
@@ -496,7 +470,7 @@ export const myStatementsByStatementIdSelector = (statementId: string) => {
 	);
 }
 
-export const statementsOfMultiStepSelectorByStatementId = (statementId: string) => createSelector(
+export const statementsOfMultiStepSelectorByStatementId = (statementId: string | undefined) => createSelector(
 	(state: RootState) => state.statements.statements,
 	(statements) => statements.filter((st) => st.isInMultiStage && st.parentId === statementId)
 );

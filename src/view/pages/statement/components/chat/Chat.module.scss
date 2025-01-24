@@ -1,0 +1,22 @@
+.chat {
+
+  position: relative;
+
+  display: grid;
+  grid-template-rows: 1fr auto;
+
+
+}
+
+.wrapper {
+  overflow-y: auto;
+  flex: 1;
+  padding-bottom: 30px;
+}
+
+.input {
+  width: 100%;
+
+
+  flex-shrink: 0;
+}

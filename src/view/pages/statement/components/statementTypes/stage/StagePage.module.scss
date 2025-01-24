@@ -1,0 +1,31 @@
+.stage {
+
+	display: flex;
+	flex-direction: column;
+	overflow-y: auto;
+}
+
+.wrapper {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	max-width: var(--wrapper);
+	width: 100vw;
+	margin: auto;
+
+	flex: 1;
+}
+
+.bottomNav {
+	position: fixed;
+	bottom: 0px;
+	left: 50%;
+	transform: translateX(-50%);
+	max-width: var(--wrapper);
+	width: 90vw;
+
+	@media screen and (max-width: 600px) {
+		width: 100vw;
+
+	}
+}

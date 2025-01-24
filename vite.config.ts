@@ -62,6 +62,13 @@ const manifestPlugin: Partial<VitePWAOptions> = {
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
 	return {
+		css: {
+			preprocessorOptions: {
+				scss: {
+					api: 'modern-compiler',
+				},
+			},
+		},
 		plugins: [
 			react(),
 			VitePWA(manifestPlugin),
@@ -77,12 +84,5 @@ export default defineConfig(({ mode }) => {
 		define: {
 			'process.env': process.env,
 		},
-		css: {
-			preprocessorOptions: {
-				scss: {
-					api: 'modern'
-				}
-			}
-		}
 	};
 });

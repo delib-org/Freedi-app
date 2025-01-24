@@ -1,35 +1,36 @@
-import { ChangeEvent, FC, useEffect, useState } from 'react';
+import { Statement, StatementType } from 'delib-npm';
+import { ChangeEvent, FC, useEffect, useRef, useState } from 'react';
 
 // Third Party Imports
-import { Statement, User } from 'delib-npm';
 
 // Redux Store
-import { useAppSelector } from '@/controllers/hooks/reduxHooks';
-import { statementSubscriptionSelector } from '@/model/statements/statementsSlice';
-import { store } from '@/model/store';
-
-// Helper functions
-import { isAuthorized } from '@/controllers/general/helpers';
-
-// Hooks
-import useStatementColor from '@/controllers/hooks/useStatementColor';
-
-// Custom Components
-import EditTitle from '@/view/components/edit/EditTitle';
 import StatementChatMore from '../StatementChatMore';
 import UserAvatar from '../userAvatar/UserAvatar';
 import AddQuestionIcon from '@/assets/icons/addQuestion.svg?react';
+import DeleteIcon from '@/assets/icons/delete.svg?react';
 import EditIcon from '@/assets/icons/editIcon.svg?react';
 import LightBulbIcon from '@/assets/icons/lightBulbIcon.svg?react';
 import QuestionMarkIcon from '@/assets/icons/questionIcon.svg?react';
-import DeleteIcon from '@/assets/icons/delete.svg?react';
 import SaveTextIcon from '@/assets/icons/SaveTextIcon.svg';
+import UploadImageIcon from '@/assets/icons/updateIcon.svg?react';
 import {
 	setStatementIsOption,
 	updateIsQuestion,
 	updateStatementText,
 } from '@/controllers/db/statements/setStatements';
+import { isAuthorized } from '@/controllers/general/helpers';
+import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { useLanguage } from '@/controllers/hooks/useLanguages';
+import useStatementColor from '@/controllers/hooks/useStatementColor';
+import { statementSubscriptionSelector } from '@/model/statements/statementsSlice';
+import { store } from '@/model/store';
+
+// Helper functions
+
+// Hooks
+
+// Custom Components
+import EditTitle from '@/view/components/edit/EditTitle';
 import Menu from '@/view/components/menu/Menu';
 import MenuOption from '@/view/components/menu/MenuOption';
 import CreateStatementModal from '@/view/pages/statement/components/createStatementModal/CreateStatementModal';
@@ -37,8 +38,8 @@ import CreateStatementModal from '@/view/pages/statement/components/createStatem
 import './ChatMessageCard.scss';
 import { deleteStatementFromDB } from '@/controllers/db/statements/deleteStatements';
 import Evaluation from '../../../evaluations/components/evaluation/Evaluation';
-import { DeliberativeElement } from 'delib-npm/dist/models/statementsModels';
 import useAutoFocus from '@/controllers/hooks/useAutoFocus ';
+import UploadImage from '@/view/components/uploadImage/UploadImage';
 
 export interface NewQuestion {
 	statement: Statement;
@@ -47,22 +48,23 @@ export interface NewQuestion {
 }
 
 interface ChatMessageCardProps {
-	parentStatement: Statement;
+	parentStatement: Statement | undefined;
 	statement: Statement;
-	showImage: (statement: User | null) => void;
-	index: number;
+
 	previousStatement: Statement | undefined;
 }
 
 const ChatMessageCard: FC<ChatMessageCardProps> = ({
 	parentStatement,
 	statement,
-	showImage,
 	previousStatement,
 }) => {
+
+	const imageUrl = statement.imagesURL?.main ?? '';
+	const [image, setImage] = useState<string>(imageUrl);
 	// Hooks
-	const { deliberativeElement, isResult } = statement;
-	const statementColor = useStatementColor({ deliberativeElement, isResult });
+	const { statementType } = statement;
+	const statementColor = useStatementColor({ statement });
 	const { t, dir } = useLanguage();
 
 	// Redux store
@@ -79,24 +81,26 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
 		`${statement?.statement}\n${statement.description}`
 	);
 
+	const fileInputRef = useRef<HTMLInputElement | null>(null);
+
 	// Variables
 	const creatorId = statement.creatorId;
 	const _isAuthorized = isAuthorized(
 		statement,
 		statementSubscription,
-		parentStatement.creatorId
+		parentStatement?.creatorId
 	);
 	const isMe = userId === creatorId;
-	const isQuestion = deliberativeElement === DeliberativeElement.research;
-	const isOption = deliberativeElement === DeliberativeElement.option;
-	const isStatement = deliberativeElement === DeliberativeElement.general;
+	const isQuestion = statementType === StatementType.question;
+	const isOption = statementType === StatementType.option;
+	const isStatement = statementType === StatementType.statement;
 	const textareaRef = useAutoFocus(isEdit);
 
 	const isPreviousFromSameAuthor = previousStatement?.creatorId === creatorId;
 
 	const isAlignedLeft = (isMe && dir === 'ltr') || (!isMe && dir === 'rtl');
 
-	const shouldLinkToChildren = parentStatement.hasChildren;
+	const shouldLinkToChildren = parentStatement?.hasChildren;
 
 	// Focus the textarea when in edit mode
 	useEffect(() => {
@@ -115,7 +119,7 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
 
 	function handleSetOption() {
 		try {
-			if (statement.deliberativeElement === DeliberativeElement.option) {
+			if (statement.statementType === StatementType.option) {
 				const cancelOption = window.confirm(
 					'Are you sure you want to cancel this option?'
 				);
@@ -151,8 +155,11 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
 	}
 
 	const isGeneral =
-		statement.deliberativeElement === DeliberativeElement.general ||
-		statement.deliberativeElement === undefined;
+		statement.statementType === StatementType.statement ||
+		statement.statementType === undefined;
+
+	if (!statement) return null;
+	if (!parentStatement) return null;
 
 	return (
 		<div
@@ -160,7 +167,7 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
 		>
 			{!isPreviousFromSameAuthor && (
 				<div className='user'>
-					<UserAvatar user={statement.creator} showImage={showImage} />
+					<UserAvatar user={statement.creator} />
 					<span>{statement.creator.displayName}</span>
 				</div>
 			)}
@@ -228,6 +235,13 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
 						)}
 						{_isAuthorized && (
 							<MenuOption
+								label={t('Upload Image')}
+								icon={<UploadImageIcon />}
+								onOptionClick={() => fileInputRef.current?.click()}
+							/>
+						)}
+						{_isAuthorized && (
+							<MenuOption
 								isOptionSelected={isOption}
 								icon={<LightBulbIcon />}
 								label={
@@ -267,12 +281,24 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
 						)}
 					</Menu>
 				</div>
+
+				<div style={{ display: image ? 'flex' : 'none' }}>
+					<UploadImage
+						statement={statement}
+						fileInputRef={fileInputRef}
+						image={image}
+						setImage={setImage}
+					/>
+				</div>
+
 				<div className='bottom-icons'>
-					<StatementChatMore statement={statement} />
+					<div className='chat-more-element'>
+						<StatementChatMore statement={statement} />
+					</div>
 					<Evaluation parentStatement={parentStatement} statement={statement} />
 					{shouldLinkToChildren && (
 						<button
-							className='add-question-btn'
+							className='add-question-btn more-question'
 							aria-label='Add question button'
 							onClick={() => setIsNewStatementModalOpen(true)}
 						>

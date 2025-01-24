@@ -1,45 +1,44 @@
-import { Statement, Screen } from "delib-npm";
+import { Statement, SortType } from "delib-npm";
 
 import {
 	EnhancedEvaluationThumb,
 	enhancedEvaluationsThumbs,
 } from "./components/evaluation/enhancedEvaluation/EnhancedEvaluationModel";
-import { store } from "@/model/store";
 import { updateStatementTop } from "@/model/statements/statementsSlice";
+import { store } from "@/model/store";
 
 export function sortSubStatements(
 	subStatements: Statement[],
 	sort: string | undefined,
 	gap = 30
-): {totalHeight:number} {
+): { totalHeight: number } {
 	try {
+		console.log("sortSubStatements", subStatements.length, sort);
+		console.trace('Stack trace:');
 		const dispatch = store.dispatch;
 		let _subStatements = [...subStatements];
 		switch (sort) {
-		case Screen.OPTIONS_CONSENSUS:
-		case Screen.QUESTIONS_CONSENSUS:
-			_subStatements = subStatements.sort(
-				(a: Statement, b: Statement) => b.consensus - a.consensus,
-			);
-			break;
-		case Screen.OPTIONS_NEW:
-		case Screen.QUESTIONS_NEW:
-			_subStatements = subStatements.sort(
-				(a: Statement, b: Statement) => b.createdAt - a.createdAt,
-			);
-			break;
-		case Screen.OPTIONS_RANDOM:
-		case Screen.QUESTIONS_RANDOM:
-			_subStatements = subStatements.sort(() => Math.random() - 0.5);
-			break;
-		case Screen.OPTIONS_UPDATED:
-		case Screen.QUESTIONS_UPDATED:
-			_subStatements = subStatements.sort(
-				(a: Statement, b: Statement) => b.lastUpdate - a.lastUpdate,
-			);
-			break;
+			case SortType.accepted:
+				_subStatements = subStatements.sort(
+					(a: Statement, b: Statement) => b.consensus - a.consensus,
+				);
+				break;
+			case SortType.newest:
+				_subStatements = subStatements.sort(
+					(a: Statement, b: Statement) => b.createdAt - a.createdAt,
+				);
+				break;
+
+			case SortType.random:
+				_subStatements = subStatements.sort(() => Math.random() - 0.5);
+				break;
+			case SortType.mostUpdated:
+				_subStatements = subStatements.sort(
+					(a: Statement, b: Statement) => b.lastUpdate - a.lastUpdate,
+				);
+				break;
 		}
-		
+
 		let totalHeight = gap;
 		const updates: { statementId: string; top: number }[] = _subStatements.map((subStatement) => {
 			try {
@@ -48,7 +47,7 @@ export function sortSubStatements(
 					top: totalHeight,
 				};
 				totalHeight += (subStatement.elementHight || 0) + gap;
-				
+
 				return update;
 
 			} catch (error) {
@@ -57,11 +56,11 @@ export function sortSubStatements(
 		}).filter((update) => update !== undefined) as { statementId: string; top: number }[];
 		dispatch(updateStatementTop(updates));
 
-		return {totalHeight}
+		return { totalHeight }
 	} catch (error) {
 		console.error(error);
-		
-		return {totalHeight:0};
+
+		return { totalHeight: 0 };
 
 	}
 }

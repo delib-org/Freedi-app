@@ -1,6 +1,6 @@
-import { useLanguage } from "@/controllers/hooks/useLanguages";
 import Button, { ButtonType } from "../buttons/button/Button";
 import Modal from "../modal/Modal";
+import { useLanguage } from "@/controllers/hooks/useLanguages";
 import "./TermsOfUse.scss";
 
 interface Props {
@@ -8,7 +8,7 @@ interface Props {
 	agreement: string;
 }
 
-export default function TermsOfUse({ handleAgreement, agreement }: Props) {
+export default function TermsOfUse({ handleAgreement, agreement }: Readonly<Props>) {
 	const { t } = useLanguage();
 
 	return (

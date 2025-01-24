@@ -1,44 +1,43 @@
-import { FC, useEffect, useRef, useState } from "react";
+import { Screen, Statement, StatementType } from 'delib-npm';
+import { FC, useEffect, useRef, useState } from 'react';
 
 // Third Party
-import { Screen, Statement, StatementType, User } from "delib-npm";
 
 // Redux Store
-import { useAppDispatch, useAppSelector } from "@/controllers/hooks/reduxHooks";
+import { useParams } from 'react-router-dom';
+import StatementChatMore from '../../../../chat/components/StatementChatMore';
+import CreateStatementModal from '../../../../createStatementModal/CreateStatementModal';
+import { sortSubStatements } from '../../../statementsEvaluationCont';
+import Evaluation from '../../evaluation/Evaluation';
+import SolutionMenu from '../../solutionMenu/SolutionMenu';
+import AddQuestionIcon from '@/assets/icons/addQuestion.svg?react';
+import { setStatementIsOption } from '@/controllers/db/statements/setStatements';
+import { isAuthorized } from '@/controllers/general/helpers';
+import { useAppDispatch, useAppSelector } from '@/controllers/hooks/reduxHooks';
+import { useLanguage } from '@/controllers/hooks/useLanguages';
+import useStatementColor, {
+	StyleProps,
+} from '@/controllers/hooks/useStatementColor';
 import {
 	setStatementElementHight,
 	statementSubscriptionSelector,
-} from "@/model/statements/statementsSlice";
+} from '@/model/statements/statementsSlice';
 
 // Helpers
-import { isAuthorized } from "@/controllers/general/helpers";
 
 // Hooks
-import useStatementColor, {
-	StyleProps,
-} from "@/controllers/hooks/useStatementColor";
 
 // Custom Components
 
-import { setStatementIsOption } from "@/controllers/db/statements/setStatements";
-import { useLanguage } from "@/controllers/hooks/useLanguages";
-import EditTitle from "@/view/components/edit/EditTitle";
+import EditTitle from '@/view/components/edit/EditTitle';
 
-import IconButton from "@/view/components/iconButton/IconButton";
-import StatementChatMore from "../../../../chat/components/StatementChatMore";
-import AddQuestionIcon from "@/assets/icons/addQuestion.svg?react";
-import CreateStatementModal from "../../../../createStatementModal/CreateStatementModal";
-import Evaluation from "../../evaluation/Evaluation";
-import "./SuggestionCard.scss";
-import SolutionMenu from "../../solutionMenu/SolutionMenu";
-import { sortSubStatements } from "../../../statementsEvaluationCont";
-import { useParams } from "react-router-dom";
+import IconButton from '@/view/components/iconButton/IconButton';
+import './SuggestionCard.scss';
 
 interface Props {
-  statement: Statement;
-  siblingStatements: Statement[];
-  parentStatement: Statement;
-  showImage: (talker: User | null) => void;
+	statement: Statement | undefined;
+	siblingStatements: Statement[];
+	parentStatement: Statement | undefined;
 }
 
 const SuggestionCard: FC<Props> = ({
@@ -47,18 +46,16 @@ const SuggestionCard: FC<Props> = ({
 	statement,
 }) => {
 	// Hooks
-	if(!parentStatement) console.error("parentStatement is not defined")
+	if (!parentStatement) console.error('parentStatement is not defined');
 
 	const { t, dir } = useLanguage();
 	const { sort } = useParams();
 
 	// Redux Store
 	const dispatch = useAppDispatch();
-	const {deliberativeElement, isResult} = statement;
-	const statementColor: StyleProps = useStatementColor({ deliberativeElement, isResult });
-	
+
 	const statementSubscription = useAppSelector(
-		statementSubscriptionSelector(statement.statementId)
+		statementSubscriptionSelector(statement?.statementId)
 	);
 
 	// Use Refs
@@ -68,14 +65,30 @@ const SuggestionCard: FC<Props> = ({
 
 	const [isEdit, setIsEdit] = useState(false);
 	const [shouldShowAddSubQuestionModal, setShouldShowAddSubQuestionModal] =
-    useState(false);
+		useState(false);
 	const [isCardMenuOpen, setIsCardMenuOpen] = useState(false);
+
+	useEffect(() => {
+		if (sort !== Screen.OPTIONS_RANDOM && sort !== Screen.QUESTIONS_RANDOM && sort !== "random") {
+			sortSubStatements(siblingStatements, sort, 30);
+		}
+	}, [statement?.consensus]);
+
+	useEffect(() => {
+		sortSubStatements(siblingStatements, sort, 30);
+	}, [statement?.elementHight]);
+
+	if (!statement) return null;
 
 	const _isAuthorized = isAuthorized(
 		statement,
 		statementSubscription,
-		parentStatement.creatorId
+		parentStatement?.creatorId
 	);
+
+	const statementColor: StyleProps = useStatementColor({
+		statement
+	});
 
 	useEffect(() => {
 		const element = elementRef.current;
@@ -91,21 +104,11 @@ const SuggestionCard: FC<Props> = ({
 		}
 	}, [elementRef.current?.clientHeight]);
 
-	useEffect(() => {
-		if (sort !== Screen.OPTIONS_RANDOM && sort !== Screen.QUESTIONS_RANDOM) {
-			sortSubStatements(siblingStatements, sort, 30);
-		}
-	}, [statement.consensus]);
-
-	useEffect(() => {
-		sortSubStatements(siblingStatements, sort, 30);
-	}, [statement.elementHight]);
-
 	function handleSetOption() {
 		try {
-			if (statement.statementType === "option") {
+			if (statement?.statementType === 'option') {
 				const cancelOption = window.confirm(
-					"Are you sure you want to cancel this option?"
+					'Are you sure you want to cancel this option?'
 				);
 				if (cancelOption) {
 					setStatementIsOption(statement);
@@ -119,43 +122,44 @@ const SuggestionCard: FC<Props> = ({
 	}
 
 	const statementAge = new Date().getTime() - statement.createdAt;
+	const hasChildren = parentStatement?.statementSettings?.hasChildren;
 
 	return (
 		<div
 			className={
 				statementAge < 10000
-					? "statement-evaluation-card statement-evaluation-card--new"
-					: "statement-evaluation-card"
+					? 'statement-evaluation-card statement-evaluation-card--new'
+					: 'statement-evaluation-card'
 			}
 			style={{
 				top: `${statement.top || 0}px`,
-				borderLeft: `8px solid ${statementColor.backgroundColor || "white"}`,
+				borderLeft: `8px solid ${statement.isChosen ? "var(--approve)" : statementColor.backgroundColor || 'white'}`,
 				color: statementColor.color,
-				flexDirection: dir === "ltr" ? "row" : "row-reverse",
+				flexDirection: dir === 'ltr' ? 'row' : 'row-reverse',
 			}}
 			ref={elementRef}
 			id={statement.statementId}
 		>
 			<div
-				className="selected-option"
+				className='selected-option'
 				style={{
-					backgroundColor: statement.selected
-						? statementColor.backgroundColor
-						: "",
+					backgroundColor: statement.selected === true
+						? "var(--approve)"
+						: '',
 				}}
 			>
 				<div
 					style={{
 						color: statementColor.color,
-						display: statement.selected ? "block" : "none",
+						display: statement.selected ? 'block' : 'none',
 					}}
 				>
-					{t("Selected")}
+					{t('Selected')}
 				</div>
 			</div>
-			<div className="main">
-				<div className="info">
-					<div className="text">
+			<div className='main'>
+				<div className='info'>
+					<div className='text'>
 						<EditTitle
 							statement={statement}
 							isEdit={isEdit}
@@ -163,7 +167,7 @@ const SuggestionCard: FC<Props> = ({
 							isTextArea={true}
 						/>
 					</div>
-					<div className="more">
+					<div className='more'>
 						<SolutionMenu
 							statement={statement}
 							isAuthorized={_isAuthorized}
@@ -175,17 +179,22 @@ const SuggestionCard: FC<Props> = ({
 						/>
 					</div>
 				</div>
-				
-				<div className="actions">
-					{statement.hasChildren && (
-						<div className="chat">
+
+				<div className='actions'>
+					{hasChildren && (
+						<div className='chat chat-more-element'>
 							<StatementChatMore statement={statement} />
 						</div>
 					)}
-					<Evaluation parentStatement={parentStatement} statement={statement} />
-					{parentStatement.hasChildren && (
+					<div className='evolution-element'>
+						<Evaluation
+							parentStatement={parentStatement}
+							statement={statement}
+						/>
+					</div>
+					{hasChildren && (
 						<IconButton
-							className="add-sub-question-button"
+							className='add-sub-question-button more-question'
 							onClick={() => setShouldShowAddSubQuestionModal(true)}
 						>
 							<AddQuestionIcon />

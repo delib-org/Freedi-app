@@ -1,26 +1,19 @@
-import {
-	Statement,
-	NavObject,
-	Vote,
-	Evaluation,
-	Screen,
-} from "delib-npm";
+import { Statement, Vote, Evaluation, Screen } from 'delib-npm';
 
 // Helpers
-import { getVoters } from "@/controllers/db/vote/getVotes";
-import { getEvaluations } from "@/controllers/db/evaluation/getEvaluation";
-import { navigateToStatementTab } from "@/controllers/general/helpers";
-import {
-	createStatement,
-	setStatementToDB,
-	updateStatement,
-} from "@/controllers/db/statements/setStatements";
+import { StatementSettings, StatementType } from 'delib-npm/dist/models/statementsModels';
+import { NavigateFunction } from 'react-router-dom';
 import {
 	defaultResultsSettings,
 	defaultStatementSettings,
 } from './emptyStatementModel';
-import { NavigateFunction } from 'react-router-dom';
-import { DeliberativeElement } from "delib-npm/dist/models/statementsModels";
+import { getEvaluations } from '@/controllers/db/evaluation/getEvaluation';
+import {
+	createStatement,
+	setStatementToDB,
+	updateStatement,
+} from '@/controllers/db/statements/setStatements';
+import { getVoters } from '@/controllers/db/vote/getVotes';
 
 // Get users that voted on options in this statement
 export async function handleGetVoters(
@@ -52,7 +45,7 @@ export async function handleGetNonVoters(
 
 		setClicked(true);
 	} catch (error) {
-		console.error("Error fetching non-voters:", error);
+		console.error('Error fetching non-voters:', error);
 	}
 }
 
@@ -68,44 +61,20 @@ export async function handleGetEvaluators(
 	setClicked(true);
 }
 
-// Check if sub-page is checked in stored statement
-export function isSubPageChecked(
-	statement: Statement | undefined,
-	navObj: NavObject
-): boolean {
-	try {
-		//in case of a new statement
-		if (!statement) {
-			if (navObj.default === false) return false;
-			else return true;
-		}
-
-		//in case of an existing statement
-		const { subScreens } = statement;
-		if (!subScreens) return true;
-		if (subScreens.includes(navObj.link)) return true;
-
-		return false;
-	} catch (error) {
-		console.error(error);
-
-		return true;
-	}
+interface SetNewStatementParams {
+	navigate: NavigateFunction;
+	statementId: string | undefined;
+	statement: Statement;
+	parentStatement?: Statement | 'top';
+	statementType?: StatementType;
 }
 
-interface HandleSetStatementParams {
-  navigate: NavigateFunction;
-  statementId: string | undefined;
-  statement: Statement;
-  parentStatement?: Statement | "top";
-}
-
-export async function handleSetStatement({
-	navigate,
+export async function setNewStatement({
 	statementId,
 	statement,
-	parentStatement = "top",
-}: HandleSetStatementParams) {
+	parentStatement = 'top',
+	statementType = StatementType.group,
+}: SetNewStatementParams): Promise<Statement | undefined> {
 	try {
 		// If statement title is empty, don't save
 		if (!statement.statement) return;
@@ -118,7 +87,6 @@ export async function handleSetStatement({
 			enableAddVotingOption,
 			enhancedEvaluation,
 			showEvaluation,
-			subScreens,
 			membership,
 		} = getSetStatementData(statement);
 
@@ -127,9 +95,8 @@ export async function handleSetStatement({
 			const newStatement = createStatement({
 				text: statement.statement,
 				description: statement.description,
-				subScreens,
-				deliberativeElement:DeliberativeElement.research,
-				parentStatement: "top",
+				statementType,
+				parentStatement: 'top',
 				resultsBy,
 				numberOfResults,
 				hasChildren,
@@ -139,29 +106,27 @@ export async function handleSetStatement({
 				showEvaluation,
 				membership,
 			});
-			if (!newStatement) throw new Error("newStatement had error in creating");
+
+			if (!newStatement) throw new Error('newStatement had error in creating');
 
 			await setStatementToDB({
-				parentStatement: "top",
+				parentStatement: 'top',
 				statement: newStatement,
 				addSubscription: true,
 			});
-			navigateToStatementTab(newStatement, navigate);
 
-			return;
+			return newStatement;
 		}
 
 		// If statementId, user is on Settings tab in statement page
 		else {
 			// update statement
-			if (!statement) throw new Error("statement is undefined");
+			if (!statement) throw new Error('statement is undefined');
 
 			const newStatement = updateStatement({
 				statement,
 				text: statement.statement,
-				description: statement.description || "",
-				subScreens: subScreens,
-				deliberativeElement:statement.deliberativeElement || DeliberativeElement.general,
+				description: statement.description ?? '',
 				resultsBy,
 				numberOfResults,
 				hasChildren,
@@ -171,25 +136,26 @@ export async function handleSetStatement({
 				showEvaluation,
 				membership,
 			});
-			if (!newStatement) throw new Error("newStatement had not been updated");
+			if (!newStatement) throw new Error('newStatement had not been updated');
 
 			await setStatementToDB({
 				parentStatement,
 				statement: newStatement,
 				addSubscription: true,
 			});
-			navigateToStatementTab(newStatement, navigate);
 
-			return;
+			return newStatement;
 		}
 	} catch (error) {
 		console.error(error);
+
+		return undefined;
 	}
 }
 
 export const getStatementSettings = (statement: Statement) => {
-	const statementSettings =
-    statement.statementSettings ?? defaultStatementSettings;
+	const statementSettings: StatementSettings =
+		statement.statementSettings ?? defaultStatementSettings;
 
 	return {
 		enableAddEvaluationOption: Boolean(
@@ -206,20 +172,14 @@ export const getStatementSettings = (statement: Statement) => {
 		enableNavigationalElements: Boolean(
 			statementSettings.enableNavigationalElements
 		),
+		hasChat: Boolean(statementSettings.hasChat),
+		hasChildren: Boolean(statementSettings.hasChildren),
 	};
-};
-
-const getStatementSubScreens = (statement: Statement) => {
-	const defaultSubScreens = [Screen.CHAT, Screen.OPTIONS];
-	const subScreens = statement.subScreens ?? defaultSubScreens;
-
-	// don't allow setting sub-screens as an empty array
-	return subScreens.length === 0 ? defaultSubScreens : subScreens;
 };
 
 const getSetStatementData = (statement: Statement) => {
 	const { resultsBy, numberOfResults } =
-    statement.resultsSettings ?? defaultResultsSettings;
+		statement.resultsSettings ?? defaultResultsSettings;
 	const {
 		enableAddEvaluationOption,
 		enableAddVotingOption,
@@ -229,7 +189,7 @@ const getSetStatementData = (statement: Statement) => {
 
 	return {
 		hasChildren: Boolean(statement.hasChildren),
-		subScreens: getStatementSubScreens(statement),
+
 		resultsBy,
 		numberOfResults,
 		enableAddEvaluationOption,
@@ -241,69 +201,61 @@ const getSetStatementData = (statement: Statement) => {
 };
 
 interface ToggleSubScreenParams {
-  subScreens: Screen[];
-  screenLink: Screen;
-  statement: Statement;
+	subScreens: Screen[];
+	screenLink: Screen;
+	statement: Statement;
 }
 
 export const toggleSubScreen = ({
-	subScreens,
-	screenLink,
+
 	statement,
 }: ToggleSubScreenParams): Statement => {
-	const checked = subScreens.includes(screenLink) ?? false;
-	const newSubScreens = checked
-		? subScreens.filter((subScreen) => subScreen !== screenLink)
-		: [...subScreens, screenLink];
 
 	return {
-		...statement,
-		subScreens: newSubScreens,
+		...statement
 	};
 };
 
 interface CreateStatementFromModalParams {
-  title: string;
-  description: string;
-  isOptionSelected: boolean;
-  parentStatement: Statement | "top";
-  isSendToStoreTemp?: boolean;
+	title: string;
+	description: string;
+	isOptionSelected: boolean;
+	parentStatement: Statement | 'top';
+	isSendToStoreTemp?: boolean;
+	statementType?: StatementType;
 }
 
 export async function createStatementFromModal({
 	title,
 	description,
-	isOptionSelected,
-	parentStatement
+	parentStatement,
+	statementType
 }: CreateStatementFromModalParams) {
 	try {
-		if (!title) throw new Error("title is undefined");
-		if(!parentStatement) throw new Error("Parent statement is missing")
+		if (!title) throw new Error('title is undefined');
+		if (!parentStatement) throw new Error('Parent statement is missing');
 		const newStatement = createStatement({
 			...defaultStatementSettings,
 			hasChildren: true,
 			text: title,
 			description,
 			parentStatement,
-			deliberativeElement: isOptionSelected
-				? DeliberativeElement.option
-				: DeliberativeElement.research
+			statementType: statementType || StatementType.group,
 		});
 
-		if (!newStatement) throw new Error("newStatement was not created");
+		if (!newStatement) throw new Error('newStatement was not created');
 
 		await setStatementToDB({
 			statement: newStatement,
-			parentStatement: parentStatement === "top" ? "top" : parentStatement,
+			parentStatement: parentStatement === 'top' ? 'top' : parentStatement,
 			addSubscription: true,
 		});
 
 		await setStatementToDB({
 			statement: newStatement,
-			parentStatement: parentStatement === 'top' ? "top" : parentStatement,
+			parentStatement: parentStatement === 'top' ? 'top' : parentStatement,
 			addSubscription: true,
 		});
-		
 	} catch (error) {
 		console.error(error);
 	}

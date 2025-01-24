@@ -1,118 +1,86 @@
 // custom components
-import Checkbox from '@/view/components/checkbox/Checkbox';
 
 // HELPERS
-import { useLanguage } from '@/controllers/hooks/useLanguages';
 import { FC } from 'react';
 import { StatementSettingsProps } from '../../settingsTypeHelpers';
 import { getStatementSettings } from '../../statementSettingsCont';
+import { useLanguage } from '@/controllers/hooks/useLanguages';
+import Checkbox from '@/view/components/checkbox/Checkbox';
 import './AdvancedSettings.scss';
+import { StatementSettings } from 'delib-npm';
+import { setStatementSettingToDB } from '@/controllers/db/statementSettings/setStatementSettings';
 
 const AdvancedSettings: FC<StatementSettingsProps> = ({
 	statement,
-	setStatementToEdit,
+	// setStatementToEdit,
 }) => {
 	const { t } = useLanguage();
 
-	const hasChildren = statement.hasChildren ?? true;
-
-	const statementSettings = getStatementSettings(statement);
+	const statementSettings: StatementSettings = getStatementSettings(statement);
 	const {
-		inVotingGetOnlyResults,
-		enhancedEvaluation,
-		showEvaluation,
-		enableAddVotingOption,
-		enableAddEvaluationOption,
-		enableSimilaritiesSearch,
-		enableNavigationalElements,
+		inVotingGetOnlyResults = false,
+		enhancedEvaluation = false,
+		showEvaluation = false,
+		enableAddVotingOption = false,
+		enableAddEvaluationOption = false,
+		enableSimilaritiesSearch = false,
+		enableNavigationalElements = false,
+		hasChat = false,
+		hasChildren = false
 	} = statementSettings;
 
-	const setStatementSetting = (
-		key: keyof typeof statementSettings,
-		newValue: boolean
-	) => {
-		setStatementToEdit({
-			...statement,
-			statementSettings: {
-				...statementSettings,
-				[key]: newValue,
-			},
-		});
-	};
+	function handleAdvancedSettingChange(property: keyof StatementSettings, newValue: boolean) {
+
+		setStatementSettingToDB({ statement, property, newValue, settingsSection: 'statementSettings' });
+	}
 
 	return (
 		<div className='advanced-settings'>
 			<h3 className='title'>{t('Advanced')}</h3>
 			<Checkbox
+				label={'Chat'}
+				isChecked={hasChat}
+				onChange={(checked) => handleAdvancedSettingChange('hasChat', checked)}
+			/>
+			<Checkbox
 				label={'Enable Sub-Conversations'}
 				isChecked={hasChildren}
-				toggleSelection={() => {
-					setStatementToEdit({
-						...statement,
-						hasChildren: !hasChildren,
-					});
-				}}
+				onChange={(checked) => handleAdvancedSettingChange('hasChildren', checked)}
 			/>
 			<Checkbox
 				label={'Enhanced Evaluation'}
 				isChecked={enhancedEvaluation}
-				toggleSelection={() => {
-					setStatementSetting('enhancedEvaluation', !enhancedEvaluation);
-				}}
+				onChange={(checked) => handleAdvancedSettingChange('enhancedEvaluation', checked)}
 			/>
 			<Checkbox
 				label={'Show Evaluations results'}
 				isChecked={showEvaluation}
-				toggleSelection={() => {
-					setStatementSetting('showEvaluation', !showEvaluation);
-				}}
+				onChange={(checked) => handleAdvancedSettingChange('showEvaluation', checked)}
 			/>
 			<Checkbox
 				label={'Allow participants to contribute options to the voting page'}
 				isChecked={enableAddVotingOption}
-				toggleSelection={() => {
-					setStatementSetting('enableAddVotingOption', !enableAddVotingOption);
-				}}
+				onChange={(checked) => handleAdvancedSettingChange('enableAddVotingOption', checked)}
 			/>
 			<Checkbox
 				label='Allow participants to contribute options to the evaluation page'
 				isChecked={enableAddEvaluationOption}
-				toggleSelection={() => {
-					setStatementSetting(
-						'enableAddEvaluationOption',
-						!enableAddEvaluationOption
-					);
-				}}
+				onChange={(checked) => handleAdvancedSettingChange('enableAddEvaluationOption', checked)}
 			/>
 			<Checkbox
 				label='In Voting page, show only the results of the top options'
 				isChecked={inVotingGetOnlyResults}
-				toggleSelection={() => {
-					setStatementSetting(
-						'inVotingGetOnlyResults',
-						!inVotingGetOnlyResults
-					);
-				}}
+				onChange={(checked) => handleAdvancedSettingChange('inVotingGetOnlyResults', checked)}
 			/>
 			<Checkbox
 				label='Allow similarity search'
 				isChecked={enableSimilaritiesSearch}
-				toggleSelection={() => {
-					setStatementSetting(
-						'enableSimilaritiesSearch',
-						!enableSimilaritiesSearch
-					);
-				}}
+				onChange={(checked) => handleAdvancedSettingChange('enableSimilaritiesSearch', checked)}
 			/>
 			<Checkbox
-				label='Allow removal of navigational elements'
+				label='Navigational elements'
 				isChecked={enableNavigationalElements}
-				toggleSelection={() => {
-					setStatementSetting(
-						'enableNavigationalElements',
-						!enableNavigationalElements
-					);
-				}}
+				onChange={(checked) => handleAdvancedSettingChange('enableNavigationalElements', checked)}
 			/>
 		</div>
 	);

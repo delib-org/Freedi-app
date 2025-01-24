@@ -10,15 +10,16 @@ $addOptionSize: 60px;
     z-index: 5;
     display: flex;
     justify-content: space-between;
+    align-items: center;
     bottom: 0px;
     z-index: 10;
     padding: 5px 5px 30px 5px;
     // background-color: teal;
-
+    background: rgb(252, 252, 252);
+    background: linear-gradient(180deg, rgba(252, 252, 252, 0) 0%, rgba(255, 255, 255, 0.8687850140056023) 37%, rgba(255, 255, 255, 1) 100%);
 
     &--show {
-        background: rgb(252, 252, 252);
-        background: linear-gradient(180deg, rgba(252, 252, 252, 0) 0%, rgba(255, 255, 255, 0.8687850140056023) 37%, rgba(255, 255, 255, 1) 100%);
+
         animation: showSortMenu 750ms linear 0s 1 forwards normal;
     }
 
@@ -35,6 +36,14 @@ $addOptionSize: 60px;
 
     .add-option-button-wrapper {
         position: relative;
+        top: 0px;
+        display: flex;
+        justify-content: space-between;
+        width: 100%;
+
+        &--ltr {
+            flex-direction: row-reverse;
+        }
 
 
         .add-option-button {
@@ -184,12 +193,12 @@ $addOptionSize: 60px;
         }
 
         .sort-button {
-            width: 48px;
-            height: 48px;
+            width: 51px;
+            height: 51px;
             display: flex;
             align-items: center;
             justify-content: center;
-            background-color: var(--btn-fab);
+            background-color: var(--question);
             color: white;
             box-shadow: 2px 2px 5px var(--shadow);
             border-radius: 50%;

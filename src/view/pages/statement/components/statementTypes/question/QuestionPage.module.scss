@@ -1,0 +1,15 @@
+.wrapper {
+	display: flex;
+	flex-direction: column;
+	margin: auto;
+	max-width: var(--wrapper);
+}
+
+.stagesWrapper {
+
+	// padding: var(--padding);
+	background-color: white;
+	display: flex;
+	flex-direction: column;
+	border-radius: var(--radius);
+}

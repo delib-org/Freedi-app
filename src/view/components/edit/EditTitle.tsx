@@ -1,3 +1,4 @@
+import { Statement } from 'delib-npm';
 import {
 	ChangeEvent,
 	Dispatch,
@@ -9,28 +10,28 @@ import {
 } from 'react';
 
 // Third party
-import { Statement } from 'delib-npm';
 
 // Statements Helpers
+import Text from '../text/Text';
+import styles from './EditTitle.module.scss';
+import Save from '@/assets/icons/saveIcon.svg?react';
 import { updateStatementText } from '@/controllers/db/statements/setStatements';
 
 // Styles
-import Save from '@/assets/icons/saveIcon.svg?react';
-import styles from './EditTitle.module.scss';
 
 // Custom components
 import { useLanguage } from '@/controllers/hooks/useLanguages';
-import Text from '../text/Text';
 
 interface Props {
 	statement: Statement | undefined;
 	isEdit: boolean;
 	setEdit: Dispatch<SetStateAction<boolean>>;
 	isTextArea?: boolean;
-	onlyTitle?: boolean;
+	useTitle?: boolean;
+	useDescription?: boolean;
 }
 
-const EditTitle: FC<Props> = ({ statement, isEdit, setEdit, isTextArea }) => {
+const EditTitle: FC<Props> = ({ useTitle = true, useDescription = true, statement, isEdit, setEdit, isTextArea }) => {
 	const [description, setDescription] = useState(statement?.description || '');
 	const [title, setTitle] = useState(statement?.statement || '');
 
@@ -80,8 +81,8 @@ const EditTitle: FC<Props> = ({ statement, isEdit, setEdit, isTextArea }) => {
 		return (
 			<div style={{ direction: direction, textAlign: align }}>
 				<Text
-					statement={statement.statement}
-					description={statement.description}
+					statement={useTitle ? statement.statement : undefined}
+					description={useDescription ? statement.description : undefined}
 				/>
 			</div>
 		);
@@ -114,7 +115,7 @@ const EditTitle: FC<Props> = ({ statement, isEdit, setEdit, isTextArea }) => {
 						style={{ direction: direction, textAlign: align }}
 						className={styles.input}
 						type='text'
-						value={title}
+						defaultValue={title}
 						onChange={handleChange}
 						onKeyUp={handleEnter}
 						data-cy='edit-title-input'

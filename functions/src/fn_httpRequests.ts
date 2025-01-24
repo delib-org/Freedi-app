@@ -1,9 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable indent */
 import { Collections, DeliberativeElement, StatementType } from "delib-npm";
 import { db } from ".";
 import { Query } from "firebase-admin/firestore";
-
-
-
 
 export const getUserOptions = async (req: any, res: any) => {
     // cors(req, res, async () => {
@@ -12,10 +11,12 @@ export const getUserOptions = async (req: any, res: any) => {
         const parentId = req.query.parentId;
         if (!parentId) {
             res.status(400).send({ error: "parentId is required", ok: false });
+
             return;
         }
         if (!userId) {
             res.status(400).send({ error: "userId is required", ok: false });
+
             return;
         }
 
@@ -24,36 +25,35 @@ export const getUserOptions = async (req: any, res: any) => {
         const statements = userOptionsDB.docs.map((doc) => doc.data());
 
         res.send({ statements, ok: true });
+
         return;
 
     } catch (error: any) {
         res.status(500).send({ error: error.message, ok: false });
+
         return;
     }
 
 }
 
 export const getRandomStatements = async (req: any, res: any) => {
-
-
     try {
 
         const parentId = req.query.parentId;
         let limit = Number(req.query.limit) || 10 as number;
         if (limit > 50) limit = 50;
 
-
         if (!parentId) {
             res.status(400).send({ error: "parentId is required", ok: false });
+
             return;
         }
 
-
         if (!parentId) {
             res.status(400).send({ error: "parentId is required", ok: false });
+
             return;
         }
-
 
         const allSolutionStatementsRef = db.collection(Collections.statements);
         const q: Query = allSolutionStatementsRef.where("parentId", "==", parentId).where("statementType", "in", ["result", "option"]);
@@ -68,6 +68,7 @@ export const getRandomStatements = async (req: any, res: any) => {
 
     } catch (error: any) {
         res.status(500).send({ error: error.message, ok: false });
+
         return;
     }
     // })
@@ -83,6 +84,7 @@ export const getTopStatements = async (req: any, res: any) => {
 
         if (!parentId) {
             res.status(400).send({ error: "parentId is required", ok: false });
+
             return;
         }
 
@@ -92,10 +94,12 @@ export const getTopStatements = async (req: any, res: any) => {
         const topSolutions = topSolutionsDB.docs.map((doc) => doc.data());
 
         res.send({ topSolutions, ok: true });
+
         return;
 
     } catch (error: any) {
         res.status(500).send({ error: error.message, ok: false });
+
         return;
     }
     // })
@@ -110,6 +114,7 @@ export async function hashPassword(req: any, res: any) {
         // else --> res.send({ok:false, error:error.message})
     } catch (error: any) {
         res.status(500).send({ error: error.message, ok: false });
+
         return;
     }
 }
@@ -123,6 +128,7 @@ export async function checkPassword(req: any, res: any) {
         // else --> res.send({ok:false})
     } catch (error: any) {
         res.status(500).send({ error: error.message, ok: false });
+
         return;
     }
 }
@@ -142,6 +148,7 @@ export async function maintainRole(req: any, res: any) {
         res.send({ ok: true });
     } catch (error: any) {
         res.status(500).send({ error: error.message, ok: false });
+
         return;
     }
 }
@@ -166,14 +173,13 @@ export async function maintainDeliberativeElement(req: any, res: any) {
             } else {
                 batch.update(ref, { deliberativeElement: DeliberativeElement.general });
             }
-
-
         });
 
         await batch.commit();
         res.send({ ok: true });
     } catch (error: any) {
         res.status(500).send({ error: error.message, ok: false });
+
         return;
     }
 }
@@ -191,13 +197,12 @@ export async function maintainStatement(req: any, res: any) {
             batch.update(ref, { "resultsSettings.resultsBy": "topOptions" });
         });
 
-
         const subRef = db.collection(Collections.statements);
         const q2 = subRef.where('statement.results', '!=', []);
         const subsDB = await q2.get();
 
         //update statementType to deliberativeElements
-let count = 0;
+        let count = 0;
         subsDB.docs.forEach((doc) => {
             const ref = statementsRef.doc(doc.id);
             batch.update(ref, { 'statement.results': [] });
@@ -208,6 +213,32 @@ let count = 0;
         res.send({ ok: true, count });
     } catch (error: any) {
         res.status(500).send({ error: error.message, ok: false });
+
         return;
+    }
+}
+
+export async function maintainSubscriptionToken(req: any, res: any) {
+    try {
+        const subscriptionRef = db.collection(Collections.statementsSubscribe)
+
+        const subscriptionsDB = await subscriptionRef.get();
+        const batch = db.batch();
+        let count = 0;
+        subscriptionsDB.docs.forEach((doc) => {
+            const ref = subscriptionRef.doc(doc.id);
+            if (typeof doc.data().token === "string") {
+                count++;
+                batch.update(ref, { token: [doc.data().token] });
+            }
+
+        });
+        await batch.commit();
+        res.send({ ok: true, size: subscriptionsDB.size, changed: count });
+    } catch (error: any) {
+        res.status(500).send({ error: error.message, ok: false });
+
+        return;
+
     }
 }

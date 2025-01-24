@@ -1,48 +1,49 @@
-import { FC, useEffect, useState } from "react";
+import { createSelector } from '@reduxjs/toolkit';
+import { FC, useEffect, useState } from 'react';
 
 // Third party imports
-import { useNavigate, useParams } from "react-router-dom";
-import { User, Role, Screen, Access } from "delib-npm";
+import { useSelector } from 'react-redux';
+import { useParams } from 'react-router-dom';
 
 // firestore
-import { getIsSubscribed } from "@/controllers/db/subscriptions/getSubscriptions";
+import EnableNotifications from '../../components/enableNotifications/EnableNotifications';
+import ProfileImage from '../../components/profileImage/ProfileImage';
+import LoadingPage from '../loadingPage/LoadingPage';
+import Page404 from '../page404/Page404';
+import UnAuthorizedPage from '../unAuthorizedPage/UnAuthorizedPage';
+import StatementHeader from './components/header/StatementHeader';
+import NewStatement from './components/newStatemement/newStatement';
+import Switch from './components/switch/Switch';
+import { StatementContext } from './StatementCont';
+import { listenToEvaluations } from '@/controllers/db/evaluation/getEvaluation';
 import {
 	listenToStatement,
 	listenToStatementSubscription,
 	listenToAllDescendants,
 	listenToSubStatements,
-} from "@/controllers/db/statements/listenToStatements";
+} from '@/controllers/db/statements/listenToStatements';
+import { getIsSubscribed } from '@/controllers/db/subscriptions/getSubscriptions';
 import {
 	updateSubscriberForStatementSubStatements,
 	setStatementSubscriptionToDB,
-} from "@/controllers/db/subscriptions/setSubscriptions";
-
-import { listenToEvaluations } from "@/controllers/db/evaluation/getEvaluation";
+} from '@/controllers/db/subscriptions/setSubscriptions';
 
 // Redux Store
-import { useAppDispatch, useAppSelector } from "@/controllers/hooks/reduxHooks";
-import { RootState } from "@/model/store";
-import { userSelector } from "@/model/users/userSlice";
-import { useSelector } from "react-redux";
+import { listenToUserSettings } from '@/controllers/db/users/getUserDB';
+import { statementTitleToDisplay } from '@/controllers/general/helpers';
+import { useIsAuthorized } from '@/controllers/hooks/authHooks';
+import { useAppDispatch } from '@/controllers/hooks/reduxHooks';
+import { MapProvider } from '@/controllers/hooks/useMap';
+import { RootState } from '@/model/store';
+import { userSelector } from '@/model/users/userSlice';
 
 // Hooks & Helpers
-import { MapProvider } from "@/controllers/hooks/useMap";
-import { statementTitleToDisplay } from "@/controllers/general/helpers";
-import { availableScreen } from "./StatementCont";
-import { useIsAuthorized } from "@/controllers/hooks/authHooks";
 
 // Custom components
-import LoadingPage from "../loadingPage/LoadingPage";
-import Page404 from "../page404/Page404";
-import UnAuthorizedPage from "../unAuthorizedPage/UnAuthorizedPage";
-import ProfileImage from "../../components/profileImage/ProfileImage";
-import StatementHeader from "./components/header/StatementHeader";
-import SwitchScreens from "./components/SwitchScreens";
-import EnableNotifications from "../../components/enableNotifications/EnableNotifications";
-import AskPermission from "@/view/components/askPermission/AskPermission";
-import FollowMeToast from "./components/followMeToast/FollowMeToast";
-import { listenToUserSettings } from "@/controllers/db/users/getUserDB";
-import { createSelector } from "@reduxjs/toolkit";
+import AskPermission from '@/view/components/askPermission/AskPermission';
+// import FollowMeToast from "./components/followMeToast/FollowMeToast";
+import Modal from '@/view/components/modal/Modal';
+import { Access, Role, StatementType, User } from 'delib-npm';
 
 // Create selectors
 export const subStatementsSelector = createSelector(
@@ -57,38 +58,28 @@ export const subStatementsSelector = createSelector(
 const StatementMain: FC = () => {
 	// Hooks
 	const { statementId } = useParams();
-	const page = useParams().page as Screen;
-	const navigate = useNavigate();
 
 	//TODO:create a check with the parent statement if subscribes. if not subscribed... go according to the rules of authorization
-	const {
-		error,
-		isAuthorized,
-		loading,
-		statementSubscription,
-		statement,
-		topParentStatement,
-		role,
-	} = useIsAuthorized(statementId);
+	const { error, isAuthorized, loading, statement, topParentStatement, role } =
+		useIsAuthorized(statementId);
 
 	// Redux store
 	const dispatch = useAppDispatch();
 	const user = useSelector(userSelector);
-
-	const subStatements = useAppSelector((state: RootState) =>
-		subStatementsSelector(state, statementId)
-	);
 
 	// Use states
 	const [talker, setTalker] = useState<User | null>(null);
 	const [showAskPermission, setShowAskPermission] = useState<boolean>(false);
 	const [askNotifications, setAskNotifications] = useState(false);
 	const [isStatementNotFound, setIsStatementNotFound] = useState(false);
+	const [showNewStatement, setShowNewStatement] = useState<boolean>(false);
+	const [newStatementType, setNewStatementType] = useState<StatementType>(
+		StatementType.group
+	);
 
 	// const [_, setPasswordCheck] = useState<boolean>(false)
 
 	// Constants
-	const screen = availableScreen(statement, statementSubscription, page);
 
 	const handleShowTalker = (_talker: User | null) => {
 		if (!talker) {
@@ -98,12 +89,16 @@ const StatementMain: FC = () => {
 		}
 	};
 
-	//in case the url is of undefined screen, navigate to the first available screen
-	useEffect(() => {
-		if (screen && screen !== page) {
-			navigate(`/statement/${statementId}/${screen}`);
+	function handleSetNewStatement(showPopup?: boolean) {
+		if (showPopup === undefined) {
+			setShowNewStatement(!showNewStatement);
+
+			return;
 		}
-	}, [screen]);
+		setShowNewStatement(showPopup);
+	}
+
+	//in case the url is of undefined screen, navigate to the first available screen
 
 	useEffect(() => {
 		if (statement && screen) {
@@ -145,7 +140,7 @@ const StatementMain: FC = () => {
 			unSubUserSettings = listenToUserSettings();
 			unSubAllDescendants = listenToAllDescendants(statementId); //used for map
 			unSubEvaluations = listenToEvaluations(dispatch, statementId, user?.uid);
-			unSubSubStatements = listenToSubStatements(statementId, dispatch); //TODO: check if this is needed. It can be integrated under listenToAllDescendants
+			unSubSubStatements = listenToSubStatements(statementId); //TODO: check if this is needed. It can be integrated under listenToAllDescendants
 
 			unSubStatementSubscription = listenToStatementSubscription(
 				statementId,
@@ -204,47 +199,54 @@ const StatementMain: FC = () => {
 
 	if (isAuthorized)
 		return (
-			<div className="page">
-				{showAskPermission && <AskPermission showFn={setShowAskPermission} />}
-				{talker && (
-					<button
-						onClick={() => {
-							handleShowTalker(null);
-						}}
-					>
-						<ProfileImage user={talker} />
-					</button>
-				)}
-				{askNotifications && (
-					<EnableNotifications
+			<StatementContext.Provider
+				value={{
+					statement,
+					talker,
+					handleShowTalker,
+					role,
+					handleSetNewStatement,
+					setNewStatementType,
+					newStatementType,
+				}}
+			>
+				<div className='page'>
+					{showAskPermission && <AskPermission showFn={setShowAskPermission} />}
+					{talker && (
+						<button
+							onClick={() => {
+								handleShowTalker(null);
+							}}
+						>
+							<ProfileImage />
+						</button>
+					)}
+					{askNotifications && (
+						<EnableNotifications
+							statement={statement}
+							setAskNotifications={setAskNotifications}
+							setShowAskPermission={setShowAskPermission}
+						/>
+					)}
+					{showNewStatement && (
+						<Modal
+							closeModal={(e) => {
+								if (e.target === e.currentTarget) setShowNewStatement(false);
+							}}
+						>
+							<NewStatement />
+						</Modal>
+					)}
+					<StatementHeader
 						statement={statement}
-						setAskNotifications={setAskNotifications}
+						topParentStatement={topParentStatement}
 						setShowAskPermission={setShowAskPermission}
 					/>
-				)}
-
-				<StatementHeader
-					statement={statement}
-					statementSubscription={statementSubscription}
-					topParentStatement={topParentStatement}
-					screen={screen ?? Screen.CHAT}
-					showAskPermission={showAskPermission}
-					setShowAskPermission={setShowAskPermission}
-					role={role}
-				/>
-				<MapProvider>
-					<FollowMeToast role={role} statement={statement} />
-
-					<SwitchScreens
-						screen={screen}
-						statement={statement}
-						statementSubscription={statementSubscription}
-						subStatements={subStatements}
-						handleShowTalker={handleShowTalker}
-						setShowAskPermission={setShowAskPermission}
-					/>
-				</MapProvider>
-			</div>
+					<MapProvider>
+						<Switch />
+					</MapProvider>
+				</div>
+			</StatementContext.Provider>
 		);
 
 	return <UnAuthorizedPage />;

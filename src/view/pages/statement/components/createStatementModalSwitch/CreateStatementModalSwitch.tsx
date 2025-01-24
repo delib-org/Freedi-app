@@ -1,7 +1,7 @@
 import { Statement, StatementType } from 'delib-npm';
 import React from 'react';
-import SimilarStatementsSuggestion from '../SimilarStatementsSuggestion/SimilarStatementsSuggestion';
 import CreateStatementModal from '../createStatementModal/CreateStatementModal';
+import SimilarStatementsSuggestion from '../newStatemement/newStatement';
 
 interface CreateStatementModalSwitchProps {
 	useSimilarStatements: boolean;
@@ -10,7 +10,7 @@ interface CreateStatementModalSwitchProps {
 	isMultiStage: boolean;
 	parentStatement: Statement;
 	allowedTypes?: StatementType[];
-	
+
 }
 
 export default function CreateStatementModalSwitch({
@@ -23,12 +23,7 @@ export default function CreateStatementModalSwitch({
 
 }: CreateStatementModalSwitchProps) {
 	return useSimilarStatements ? (
-		<SimilarStatementsSuggestion
-			setShowModal={setShowModal}
-			isQuestion={isQuestion}
-			parentStatement={parentStatement}
-			isSendToStoreTemp={isMultiStage}
-		/>
+		<SimilarStatementsSuggestion />
 	) : (
 		<CreateStatementModal
 			parentStatement={parentStatement}

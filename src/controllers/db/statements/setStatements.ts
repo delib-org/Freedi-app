@@ -1,13 +1,9 @@
 // Firestore
-import { Timestamp, doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
-
-// Third Party Imports
-import { z } from "zod";
 import {
 	Access,
 	Membership,
 	ResultsBy,
-	Screen,
+	StageType,
 	Statement,
 	StatementSchema,
 	StatementType,
@@ -15,18 +11,21 @@ import {
 	writeZodError,
 } from "delib-npm";
 import { Collections, Role } from "delib-npm";
+import { Timestamp, doc, getDoc, setDoc, updateDoc, writeBatch } from "firebase/firestore";
+
+// Third Party Imports
+import { z } from "zod";
 import { FireStore } from "../config";
-import { store } from "@/model/store";
 import { setStatementSubscriptionNotificationToDB } from "../notifications/notifications";
+import { setNewRoomSettingsToDB } from "../rooms/setRooms";
 import { setStatementSubscriptionToDB } from "../subscriptions/setSubscriptions";
-import { getRandomColor } from "@/view/pages/statement/components/vote/votingColors";
+import { getRandomUID } from "@/controllers/general/helpers";
+import { store } from "@/model/store";
 import {
 	getExistingOptionColors,
 	getSiblingOptionsByParentId,
 } from "@/view/pages/statement/components/vote/statementVoteCont";
-import { allowedScreens } from "@/controllers/general/screens";
-import { setNewRoomSettingsToDB } from "../rooms/setRooms";
-import { DeliberativeElement } from "delib-npm/dist/models/statementsModels";
+import { getRandomColor } from "@/view/pages/statement/components/vote/votingColors";
 
 export const updateStatementParents = async (
 	statement: Statement,
@@ -59,13 +58,13 @@ export const updateStatementParents = async (
 
 const TextSchema = z.string().min(2);
 
-export function setSubStatementToDB(statement: Statement, title: string, description?: string) {
+export function setSubStatementToDB(statement: Statement, title: string, description?: string, statementType?: StatementType) {
 	try {
 		const newSubStatement = createStatement({
 			text: title,
 			description: description,
 			parentStatement: statement,
-			deliberativeElement:DeliberativeElement.option,
+			statementType: statementType || StatementType.statement,
 			enableAddEvaluationOption: true,
 			enableAddVotingOption: true,
 			enhancedEvaluation: true,
@@ -76,13 +75,64 @@ export function setSubStatementToDB(statement: Statement, title: string, descrip
 			membership: statement.membership,
 		});
 
-		if(!newSubStatement) throw new Error("New newSubStatement is undefined");
+		if (!newSubStatement) throw new Error("New newSubStatement is undefined");
 
 		const newSubStatementRef = doc(FireStore, Collections.statements, newSubStatement.statementId);
 		setDoc(newSubStatementRef, newSubStatement);
 	} catch (error) {
 		console.error(error);
-		
+
+	}
+}
+
+export async function saveStatementToDB({
+	text,
+	description,
+	parentStatement,
+	statementType,
+	enableAddEvaluationOption,
+	enableAddVotingOption,
+	enhancedEvaluation,
+	showEvaluation,
+	resultsBy,
+	numberOfResults,
+	hasChildren,
+	membership,
+	stageType
+}: CreateStatementProps): Promise<Statement | undefined> {
+	try {
+		const statement = createStatement({
+			text,
+			description,
+			parentStatement,
+			statementType,
+			enableAddEvaluationOption,
+			enableAddVotingOption,
+			enhancedEvaluation,
+			showEvaluation,
+			resultsBy,
+			numberOfResults,
+			hasChildren,
+			membership,
+			stageType
+
+		});
+
+		if (!statement) throw new Error("Statement is undefined");
+
+		setStatementToDB({
+			statement,
+			parentStatement,
+			addSubscription: true,
+		});
+
+		return statement;
+
+	} catch (error) {
+		console.error(error);
+
+		return undefined;
+
 	}
 }
 
@@ -110,7 +160,7 @@ export const setStatementToDB = async ({
 		const parentId =
 			parentStatement === "top"
 				? "top"
-				: statement.parentId ;
+				: statement.parentId;
 
 		statement.statementType =
 			statement.statementId === undefined
@@ -119,7 +169,7 @@ export const setStatementToDB = async ({
 
 		statement.creatorId = statement?.creator?.uid || user.uid;
 		statement.creator = statement?.creator || user;
-		statement.statementId = statement?.statementId || crypto.randomUUID();
+		statement.statementId = statement?.statementId || getRandomUID();
 		statement.parentId = parentId;
 		statement.topParentId =
 			parentStatement === "top"
@@ -127,7 +177,6 @@ export const setStatementToDB = async ({
 				: statement?.topParentId ||
 				parentStatement?.topParentId ||
 				"top";
-		statement.subScreens = allowedScreens(statement, statement.subScreens);
 
 		const siblingOptions = getSiblingOptionsByParentId(
 			parentId,
@@ -204,28 +253,27 @@ export const setStatementToDB = async ({
 	}
 };
 
-interface CreateStatementProps {
+export interface CreateStatementProps {
 	text: string;
 	description?: string;
 	parentStatement: Statement | "top";
-	subScreens?: Screen[];
-	deliberativeElement: DeliberativeElement;
-	enableAddEvaluationOption: boolean;
-	enableAddVotingOption: boolean;
-	enhancedEvaluation: boolean;
-	showEvaluation: boolean;
+	statementType: StatementType;
+	enableAddEvaluationOption?: boolean;
+	enableAddVotingOption?: boolean;
+	enhancedEvaluation?: boolean;
+	showEvaluation?: boolean;
 	resultsBy?: ResultsBy;
 	numberOfResults?: number;
-	hasChildren: boolean;
+	hasChildren?: boolean;
 	membership?: Membership;
-	
+	stageType?: StageType;
 }
+
 export function createStatement({
 	text,
 	description,
 	parentStatement,
-	subScreens = [Screen.CHAT, Screen.OPTIONS, Screen.VOTE],
-	deliberativeElement,
+	statementType,
 	enableAddEvaluationOption = true,
 	enableAddVotingOption = true,
 	enhancedEvaluation = true,
@@ -233,15 +281,17 @@ export function createStatement({
 	resultsBy = ResultsBy.topOptions,
 	numberOfResults = 1,
 	hasChildren = true,
-	membership
+	membership,
+	stageType
 }: CreateStatementProps): Statement | undefined {
 	try {
-		
+
 		const storeState = store.getState();
 		const user = storeState.user.user;
 		if (!user) throw new Error("User is undefined");
+		if (!statementType) throw new Error("Statement type is undefined");
 
-		const statementId = crypto.randomUUID();
+		const statementId = getRandomUID();
 
 		const parentId =
 			parentStatement !== "top" ? parentStatement?.statementId : "top";
@@ -265,7 +315,8 @@ export function createStatement({
 
 		const newStatement: Statement = {
 			statement: text,
-			description: description || "",
+			description: description ?? "",
+			statementType,
 			statementId,
 			parentId,
 			parents,
@@ -278,7 +329,7 @@ export function createStatement({
 				showEvaluation,
 				enableAddEvaluationOption,
 				enableAddVotingOption,
-				subScreens,
+				hasChildren
 			},
 			defaultLanguage: user.defaultLanguage || "en",
 			createdAt: Timestamp.now().toMillis(),
@@ -296,15 +347,17 @@ export function createStatement({
 				agreement: 0,
 			},
 			results: [],
-			subScreens,
 		};
 
-		newStatement.subScreens = allowedScreens(newStatement, newStatement.subScreens);
-		if(deliberativeElement) newStatement.deliberativeElement = deliberativeElement;
-
 		const results = StatementSchema.safeParse(newStatement);
-		if(results.success === false) {
-			writeZodError(results.error, newStatement);
+		if (results.success === false) {
+			console.error(results.error);
+			throw new Error("Statement schema error");
+		}
+
+		if (stageType) {
+			newStatement.stageType = stageType;
+			newStatement.statementType = StatementType.stage;
 		}
 
 		return newStatement;
@@ -319,8 +372,7 @@ interface UpdateStatementProps {
 	text: string;
 	description?: string;
 	statement: Statement;
-	subScreens?: Screen[];
-	deliberativeElement?: DeliberativeElement;
+	statementType?: StatementType;
 	enableAddEvaluationOption: boolean;
 	enableAddVotingOption: boolean;
 	enhancedEvaluation: boolean;
@@ -334,8 +386,7 @@ export function updateStatement({
 	text,
 	description,
 	statement,
-	subScreens = [Screen.CHAT],
-	deliberativeElement,
+	statementType,
 	enableAddEvaluationOption,
 	enableAddVotingOption,
 	enhancedEvaluation,
@@ -371,34 +422,22 @@ export function updateStatement({
 			};
 		}
 
-		subScreens = allowedScreens(statement, subScreens);
-
 		newStatement.statementSettings = updateStatementSettings({
 			statement,
 			enableAddEvaluationOption,
 			enableAddVotingOption,
 			enhancedEvaluation,
 			showEvaluation,
-			subScreens,
 		});
 
 		newStatement.hasChildren = hasChildren;
 		newStatement.membership = membership || statement.membership || { access: Access.open };
 
-		if (deliberativeElement)
-			newStatement.deliberativeElement = deliberativeElement;
-
-		newStatement.subScreens =
-			subScreens !== undefined
-				? subScreens
-				: statement.subScreens || [
-					Screen.CHAT,
-					Screen.OPTIONS,
-					Screen.VOTE,
-				];
+		if (statementType)
+			newStatement.statementType = statementType;
 
 		const results = StatementSchema.safeParse(newStatement);
-		if(results.success === false) {
+		if (results.success === false) {
 			writeZodError(results.error, newStatement);
 		}
 
@@ -415,7 +454,6 @@ interface UpdateStatementSettingsReturnType {
 	enableAddVotingOption?: boolean;
 	enhancedEvaluation?: boolean;
 	showEvaluation?: boolean;
-	subScreens?: Screen[];
 }
 
 interface UpdateStatementSettingsParams {
@@ -424,8 +462,6 @@ interface UpdateStatementSettingsParams {
 	enableAddVotingOption: boolean;
 	enhancedEvaluation: boolean;
 	showEvaluation: boolean;
-	subScreens: Screen[] | undefined;
-
 }
 
 function updateStatementSettings({
@@ -433,16 +469,12 @@ function updateStatementSettings({
 	enableAddEvaluationOption,
 	enableAddVotingOption,
 	enhancedEvaluation,
-	showEvaluation,
-	subScreens,
-
+	showEvaluation
 }: UpdateStatementSettingsParams): UpdateStatementSettingsReturnType {
 	try {
 		if (!statement) throw new Error("Statement is undefined");
 		if (!statement.statementSettings)
 			throw new Error("Statement settings is undefined");
-
-		subScreens = allowedScreens(statement, subScreens);
 
 		return {
 			...statement.statementSettings,
@@ -450,7 +482,6 @@ function updateStatementSettings({
 			showEvaluation,
 			enableAddEvaluationOption,
 			enableAddVotingOption,
-			subScreens,
 		};
 	} catch (error) {
 		console.error(error);
@@ -459,7 +490,6 @@ function updateStatementSettings({
 			showEvaluation: true,
 			enableAddEvaluationOption: true,
 			enableAddVotingOption: true,
-			subScreens: [Screen.CHAT],
 		};
 	}
 }
@@ -483,7 +513,7 @@ export async function updateStatementText(
 		);
 
 		const newStatement = {
-			statement:title,
+			statement: title,
 			description,
 			lastUpdate: Timestamp.now().toMillis(),
 		};
@@ -491,8 +521,10 @@ export async function updateStatementText(
 	} catch (error) { }
 }
 
-export async function setStatementIsOption(statement: Statement) {
+export async function setStatementIsOption(statement: Statement | undefined) {
 	try {
+		if (!statement) throw new Error("Statement is undefined");
+
 		const statementRef = doc(
 			FireStore,
 			Collections.statements,
@@ -500,7 +532,7 @@ export async function setStatementIsOption(statement: Statement) {
 		);
 
 		//get current statement
-		
+
 		const statementDB = await getDoc(statementRef)
 
 		if (!statementDB.exists()) throw new Error("Statement not found");
@@ -524,14 +556,14 @@ export async function setStatementIsOption(statement: Statement) {
 				statement.statementId,
 			);
 
-			if (statement.deliberativeElement === DeliberativeElement.option) {
+			if (statement.statementType === StatementType.option) {
 				await updateDoc(statementRef, {
-					deliberativeElement: DeliberativeElement.general,
+					statementType: StatementType.statement
 				});
 			} else {
 
 				await updateDoc(statementRef, {
-					deliberativeElement: DeliberativeElement.option,
+					statementType: StatementType.option
 				});
 			}
 		} catch (error) {
@@ -590,14 +622,14 @@ export async function updateIsQuestion(statement: Statement) {
 		const parentStatement = parentStatementDB.data() as Statement;
 		StatementSchema.parse(parentStatement);
 
-		let { deliberativeElement } = statement;
-		if (deliberativeElement === DeliberativeElement.research)
-			deliberativeElement = DeliberativeElement.general;
+		let { statementType } = statement;
+		if (statementType === StatementType.question)
+			statementType = StatementType.statement;
 		else {
-			deliberativeElement = DeliberativeElement.research;
+			statementType = StatementType.question;
 		}
 
-		const newStatementType = { deliberativeElement };
+		const newStatementType = { statementType };
 		await updateDoc(statementRef, newStatementType);
 	} catch (error) {
 		console.error(error);
@@ -643,6 +675,28 @@ export async function setFollowMeDB(
 		} else {
 			await updateDoc(statementRef, { followMe: "" });
 		}
+	} catch (error) {
+		console.error(error);
+	}
+}
+
+export async function updateStatementsOrderToDB(statements: Statement[]) {
+	try {
+		const batch = writeBatch(FireStore);
+
+		for (const statement of statements) {
+			StatementSchema.parse(statement);
+
+			const statementRef = doc(
+				FireStore,
+				Collections.statements,
+				statement.statementId
+			);
+
+			batch.update(statementRef, { order: statement.order });
+		}
+
+		await batch.commit();
 	} catch (error) {
 		console.error(error);
 	}

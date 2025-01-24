@@ -1,59 +1,53 @@
-import { FC, useEffect, useState } from 'react';
+import { QuestionStage, Statement } from 'delib-npm';
+import { FC, useContext, useEffect, useState } from 'react';
 
 // Third party imports
-import { QuestionStage, QuestionType, Statement, StatementType } from 'delib-npm';
 
 // Redux
+// import CreateStatementModalSwitch from '../createStatementModalSwitch/CreateStatementModalSwitch';
+import StatementBottomNav from '../nav/bottom/StatementBottomNav';
+import { getStagesInfo } from '../settings/components/QuestionSettings/QuestionStageRadioBtn/QuestionStageRadioBtn';
+import StatementInfo from './components/info/StatementInfo';
+import VotingArea from './components/votingArea/VotingArea';
+import { getTotalVoters } from './statementVoteCont';
+import HandIcon from '@/assets/icons/handIcon.svg?react';
+import X from '@/assets/icons/x.svg?react';
+import { getToVoteOnParent } from '@/controllers/db/vote/getVotes';
 import { useAppDispatch } from '@/controllers/hooks/reduxHooks';
 
 // Statements helpers
-import { getToVoteOnParent } from '@/controllers/db/vote/getVotes';
 import { setVoteToStore } from '@/model/vote/votesSlice';
-import { getTotalVoters } from './statementVoteCont';
 
 // Custom components
+import Button from '@/view/components/buttons/button/Button';
 import Modal from '@/view/components/modal/Modal';
-import HandIcon from '@/assets/icons/handIcon.svg?react';
-import StatementInfo from './components/info/StatementInfo';
-import StatementBottomNav from '../nav/bottom/StatementBottomNav';
 import './StatementVote.scss';
-import X from '@/assets/icons/x.svg?react';
 
 // Helpers
-import VotingArea from './components/votingArea/VotingArea';
-import { getStagesInfo } from '../settings/components/QuestionSettings/QuestionStageRadioBtn/QuestionStageRadioBtn';
 import Toast from '@/view/components/toast/Toast';
 import { useLanguage } from '@/controllers/hooks/useLanguages';
-import Button from '@/view/components/buttons/button/Button';
-import CreateStatementModalSwitch from '../createStatementModalSwitch/CreateStatementModalSwitch';
+import { StatementContext } from '../../StatementCont';
 
-interface Props {
-	statement: Statement;
-	subStatements: Statement[];
-	
-}
 let getVoteFromDB = false;
 
-const StatementVote: FC<Props> = ({
-	statement,
-	subStatements,
-	
-}) => {
+const StatementVote: FC = () => {
 	// * Hooks * //
 	const dispatch = useAppDispatch();
 	const { t } = useLanguage();
+	const { statement } = useContext(StatementContext);
+	const subStatements: Statement[] = [];
 
-	const currentStage = statement.questionSettings?.currentStage;
+	const currentStage = statement?.questionSettings?.currentStage;
 	const isCurrentStageVoting = currentStage === QuestionStage.voting;
 	const stageInfo = getStagesInfo(currentStage);
 	const toastMessage = stageInfo ? stageInfo.message : '';
-	const useSearchForSimilarStatements =
-		statement.statementSettings?.enableSimilaritiesSearch || false;
+	// const useSearchForSimilarStatements =
+	// 	statement?.statementSettings?.enableSimilaritiesSearch || false;
 
 	// * Use State * //
 	const [showMultiStageMessage, setShowMultiStageMessage] =
 		useState(isCurrentStageVoting);
-	const [isCreateStatementModalOpen, setIsCreateStatementModalOpen] =
+	const [isCreateStatementModalOpen] =
 		useState(false);
 	const [isStatementInfoModalOpen, setIsStatementInfoModalOpen] =
 		useState(false);
@@ -61,12 +55,10 @@ const StatementVote: FC<Props> = ({
 
 	// * Variables * //
 	const totalVotes = getTotalVoters(statement);
-	const isMuliStage =
-		statement.questionSettings?.questionType === QuestionType.multipleSteps;
 
 	useEffect(() => {
 		if (!getVoteFromDB) {
-			getToVoteOnParent(statement.statementId, updateStoreWithVoteCB);
+			getToVoteOnParent(statement?.statementId, updateStoreWithVoteCB);
 			getVoteFromDB = true;
 		}
 	}, []);
@@ -102,22 +94,22 @@ const StatementVote: FC<Props> = ({
 					<VotingArea
 						totalVotes={totalVotes}
 						setShowInfo={setIsStatementInfoModalOpen}
-						statement={statement}
 						subStatements={subStatements}
 						setStatementInfo={setStatementInfo}
 					/>
 				</div>
 
 				{isCreateStatementModalOpen && (
-					<CreateStatementModalSwitch
-						allowedTypes={[StatementType.option]}
-						isMultiStage={isMuliStage}
-						useSimilarStatements={useSearchForSimilarStatements}
-						parentStatement={statement}
-						isQuestion={false}
-						setShowModal={setIsCreateStatementModalOpen}
-					
-					/>
+					null
+					// <CreateStatementModalSwitch
+					// 	allowedTypes={[StatementType.option]}
+					// 	isMultiStage={isMuliStage}
+					// 	useSimilarStatements={useSearchForSimilarStatements}
+					// 	parentStatement={statement}
+					// 	isQuestion={false}
+					// 	setShowModal={setIsCreateStatementModalOpen}
+
+					// />
 				)}
 				{isStatementInfoModalOpen && (
 					<Modal>
@@ -129,10 +121,7 @@ const StatementVote: FC<Props> = ({
 				)}
 			</div>
 			<div className='page__footer'>
-				<StatementBottomNav
-					setShowModal={setIsCreateStatementModalOpen}
-					statement={statement}
-				/>
+				<StatementBottomNav />
 			</div>
 		</>
 	);

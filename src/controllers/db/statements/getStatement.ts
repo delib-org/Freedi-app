@@ -1,4 +1,11 @@
 import {
+	Collections,
+	DeliberativeElement,
+	Statement,
+	StatementSchema,
+	StatementType,
+} from 'delib-npm';
+import {
 	and,
 	collection,
 	doc,
@@ -10,13 +17,6 @@ import {
 } from 'firebase/firestore';
 
 // Third party imports
-import {
-	Collections,
-	DeliberativeElement,
-	Statement,
-	StatementSchema,
-	StatementType,
-} from 'delib-npm';
 
 // Helpers
 // import { listenedStatements } from "../../../view/pages/home/Home";
@@ -45,14 +45,14 @@ export async function getStatementDepth(
 	try {
 		const statements: Statement[][] = [[statement]];
 
-		//level 1 is allready in store
+		//level 1 is already in store
 		//find second level
-		const levleOneStatements: Statement[] = subStatements.filter(
+		const levelOneStatements: Statement[] = subStatements.filter(
 			(s) =>
 				s.parentId === statement.statementId &&
-				s.statementType === StatementType.result
+				s.statementType !== StatementType.statement
 		);
-		statements.push(levleOneStatements);
+		statements.push(levelOneStatements);
 
 		//get the next levels
 
@@ -93,6 +93,7 @@ export async function getStatementDepth(
 						where('deliberativeElement', '==', DeliberativeElement.option),
 						where('deliberativeElement', '==', DeliberativeElement.research)
 					),
+					where("statementType", "!=", "document"),
 					where('parentId', '==', statement.statementId)
 				)
 			);

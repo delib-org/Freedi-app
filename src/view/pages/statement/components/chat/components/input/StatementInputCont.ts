@@ -1,5 +1,5 @@
+import { Statement, StatementType, User } from "delib-npm";
 import { defaultStatementSettings } from "./../../../settings/emptyStatementModel";
-import { DeliberativeElement, Statement, User } from "delib-npm";
 import {
 	createStatement,
 	setStatementToDB,
@@ -28,8 +28,8 @@ export function handleAddStatement(
 			hasChildren: true,
 			text: title,
 			description,
-			parentStatement: statement,
-			deliberativeElement: DeliberativeElement.general,
+			statementType: StatementType.statement,
+			parentStatement: statement
 		});
 		if (!newStatement) throw new Error("No statement was created");
 

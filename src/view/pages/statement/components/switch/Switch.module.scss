@@ -1,0 +1,33 @@
+.inner {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	width: 100vw;
+}
+
+.header {
+
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	width: 100%;
+	box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.1);
+
+	h1 {
+		width: 100%;
+		text-align: start;
+		max-width: 40rem;
+		margin: .5rem 0;
+		line-height: 2rem;
+
+		@media screen and (max-width: 600px) {
+			padding: 0px 20px;
+		}
+	}
+}
+
+.main {
+
+	width: 100vw;
+	scroll-behavior: smooth;
+}
