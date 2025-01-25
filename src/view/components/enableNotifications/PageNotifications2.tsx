@@ -5,11 +5,10 @@ import Green1 from '@/assets/icons/green1.svg';
 import Elipse3 from '@/assets/icons/Group 2.svg';
 import Rectangle from '@/assets/icons/Rectangle 3.svg';
 import xicon from '@/assets/icons/x-icon.svg';
-import sentence from '@/assets/images/Enable the Notifications button to grant permission.svg';
 import link from '@/assets/images/Frame 1171276040.svg';
 import resetpermission from '@/assets/images/reset permission.png';
 import rectangleText from '@/assets/images/Snackbar2page.svg';
-import pointer1 from '@/assets/images/woman pointing.svg';
+import pointer1 from '@/assets/images/woman.png';
 import { Statement } from 'delib-npm';
 
 interface Props {
@@ -74,7 +73,7 @@ export default function PageNotifications2({
 								</div>
 							</div>
 							<div className='popup-body'>
-								<img src={sentence} alt='Sentence' className='desktop-image' />
+								<h2>Enable the Notifications button to grant permission</h2>
 								<img
 									src={rectangleText}
 									alt='Rectangle'

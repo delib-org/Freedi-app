@@ -37,11 +37,8 @@ import { MapProvider } from '@/controllers/hooks/useMap';
 import { RootState } from '@/model/store';
 import { userSelector } from '@/model/users/userSlice';
 
-// Hooks & Helpers
-
 // Custom components
 import AskPermission from '@/view/components/askPermission/AskPermission';
-// import FollowMeToast from "./components/followMeToast/FollowMeToast";
 import Modal from '@/view/components/modal/Modal';
 import { Access, Role, StatementType, User } from 'delib-npm';
 

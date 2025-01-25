@@ -1,30 +1,27 @@
-import { useEffect, useState, useRef } from "react";
-
-// Redux Store
+import { useEffect } from "react";
 import IconButton from "../iconButton/IconButton";
 import AccessibilityIcon from "@/assets/icons/accessibilityIcon.svg?react";
-import { updateUserFontSize } from "@/controllers/db/users/setUsersDB";
 import { useAppDispatch, useAppSelector } from "@/controllers/hooks/reduxHooks";
 import { defaultFontSize } from "@/model/fonts/fontsModel";
 import {
 	colorContrastSelector,
 	fontSizeSelector,
-	increaseFontSize,
 	setColorContrast,
 	userSelector,
 } from "@/model/users/userSlice";
-
-// Icons
 import "./Accessibility.scss";
 import { colorMappings } from "./colorContrast";
+import { useAutoClose } from "@/controllers/hooks/useAutoClose";
+import { useFontSize } from "@/controllers/hooks/useFontSize";
 
-const Accessibility = () => {
+export default function Accessibility() {
+	const { isOpen, handleOpen } = useAutoClose(5000);
 	const dispatch = useAppDispatch();
 	const fontSize = useAppSelector(fontSizeSelector);
 	const user = useAppSelector(userSelector);
 	const colorContrast = useAppSelector(colorContrastSelector);
 
-	const accessibilityPanel = useRef<HTMLDivElement>(null);
+	const { currentFontSize, handleChangeFontSize } = useFontSize(fontSize || defaultFontSize, !!user);
 
 	useEffect(() => {
 		Object.entries(colorMappings).forEach(([key, contrastKey]) => {
@@ -35,84 +32,36 @@ const Accessibility = () => {
 		});
 	}, [colorContrast]);
 
-	const handleToggleContrast = (isContrast:boolean) => {
-		dispatch(setColorContrast(isContrast));
-	};
-
-	const [isOpen, setIsOpen] = useState(false);
-	const [_fontSize, setFontSize] = useState(fontSize || defaultFontSize);
-
-	useEffect(() => {
-		// document.documentElement.style.fontSize = fontSize + "px";
-		document.documentElement.style.fontSize = fontSize + "px";
-	}, [fontSize]);
-
-	function handleChangeFontSize(number: number) {
-		if (!user) {
-			//get current font size from body
-
-			//update body font size
-			// document.documentElement.style.fontSize = `${_fontSize + number}px`;
-			document.body.style.fontSize = `${_fontSize + number}px`;
-			setFontSize(_fontSize + number);
-		} else {
-			updateUserFontSize(fontSize + number);
-			dispatch(increaseFontSize(number));
-		}
-	}
-
-	function handleOpen() {
-		if (isOpen) {
-			// If it's not open, open it and start the timer to close it after 2 seconds
-			setIsOpen(false);
-		} else {
-			// If it's already open, close it immediately
-			setIsOpen(true);
-			setTimeout(() => {
-				setIsOpen(false);
-			}, 14000);
-		}
-	}
-
-	const accessibilityPanelWidth = accessibilityPanel.current?.offsetWidth || 0;
-
 	return (
-		<div
-			className="accessibility"
-			style={
-				!isOpen ? { left: `${-accessibilityPanelWidth}px` } : { left: "0rem" }
-			}
-		>
+		<div className={`accessibility ${isOpen ? 'is-open' : ''}`}>
 			<button className="accessibility-button" onClick={handleOpen}>
 				<AccessibilityIcon />
 			</button>
 
-			<div className="accessibility-panel" ref={accessibilityPanel}>
+			<div className="accessibility-panel">
 				<div className="accessibility-panel__fonts">
 					<IconButton
 						className="change-font-size-button"
 						onClick={() => handleChangeFontSize(1)}
 					>
-            +
+						+
 					</IconButton>
-					<div className="accessibility__fonts__size" role="status">
-						{user ? fontSize : _fontSize}px
-					</div>
+					<output className="accessibility__fonts__size">
+						{currentFontSize}px
+					</output>
 					<IconButton
 						className="change-font-size-button"
 						onClick={() => handleChangeFontSize(-1)}
 					>
-            -
+						-
 					</IconButton>
 					<span dir="ltr">Fonts:</span>
 				</div>
 				<div className="accessibility-panel__contrast">
-					<button onClick={()=>handleToggleContrast(true)}>High contrast</button>
-					<button onClick={()=>handleToggleContrast(false)}>Light Contrast</button>
+					<button onClick={() => dispatch(setColorContrast(true))}>High contrast</button>
+					<button onClick={() => dispatch(setColorContrast(false))}>Light Contrast</button>
 				</div>
 			</div>
 		</div>
 	);
-};
-
-export default Accessibility;
+}

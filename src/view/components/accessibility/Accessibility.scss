@@ -1,64 +1,69 @@
 .accessibility {
-    display: flex;
-    position: fixed;
-    z-index: 1000;
-    top: 30vh;
-    left: 0px;
-    box-shadow: 4px 4px 12px rgba(0, 0, 0, 0.44);
-    border-radius: 0px 100px 100px 0px;
-    transition: all 0.5s ease-in-out;
-    direction: rtl;
+	display: flex;
+	position: fixed;
+	z-index: 1000;
+	top: 30vh;
+	left: 3rem;
+	transform: translateX(-100%);
+	box-shadow: 4px 4px 12px rgba(0, 0, 0, 0.44);
+	border-radius: 0px 100px 100px 0px;
+	transition: transform 0.5s ease-in-out;
+	direction: rtl;
 
-    .accessibility-panel {
-        display: flex;
-        width: 12rem;
-        flex-direction: column;
-        background-color: white;
-        padding: 0.3rem;
-        gap: 10px;
+	&.is-open {
+		transform: translateX(-20%);
+	}
 
-        &__fonts {
-            background-color: teal;
-        }
+	.accessibility-panel {
+		display: flex;
+		width: 12rem;
+		flex-direction: column;
+		background-color: white;
+		padding: 0.3rem;
+		gap: 10px;
 
-        &__contrast{
-            background-color: tomato;
-        }
+		&__fonts {
+			background-color: teal;
+		}
 
-        >* {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            user-select: none;
-        }
+		&__contrast {
+			background-color: tomato;
+		}
 
-        .change-font-size-button {
-            background-color: rgb(186, 186, 186);
-            width: 2.2rem;
-            height: 2.2rem;
-            border-radius: 10rem;
-            cursor: pointer;
-            user-select: none;
-            color: white;
-            font-size: 1.5rem;
-        }
-    }
+		> * {
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			user-select: none;
+		}
 
-    .accessibility-button {
-        color: white;
-        padding: 0.4rem;
-        border-radius: 0px 10rem 10rem 0px;
-        background-color: black;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        user-select: none;
-        cursor: pointer;
+		.change-font-size-button {
+			background-color: rgb(186, 186, 186);
+			width: 2.2rem;
+			height: 2.2rem;
+			border-radius: 10rem;
+			cursor: pointer;
+			user-select: none;
+			color: white;
+			font-size: 1.5rem;
+		}
+	}
 
-        svg {
-            width: 2rem;
-            height: 2rem;
-            margin-inline-start: 1ch;
-        }
-    }
+	.accessibility-button {
+		color: white;
+		padding: 0.4rem;
+		border-radius: 0px 10rem 10rem 0px;
+		background-color: black;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		user-select: none;
+		cursor: pointer;
+
+		svg {
+			width: 2rem;
+			height: 2rem;
+			margin-inline-start: 1ch;
+		}
+	}
 }
