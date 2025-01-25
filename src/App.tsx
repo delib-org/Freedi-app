@@ -1,6 +1,6 @@
 import { Agreement } from 'delib-npm';
 import { Unsubscribe } from 'firebase/auth';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 
 // Third party imports
 import { useDispatch } from 'react-redux';
@@ -16,7 +16,6 @@ import {
 } from './controllers/db/notifications/notifications';
 import { getSignature } from './controllers/db/users/getUserDB';
 import { updateUserAgreement } from './controllers/db/users/setUsersDB';
-import { listenToVersionFromDB } from './controllers/db/version/getVersion';
 import { useAppSelector } from './controllers/hooks/reduxHooks';
 import { LanguagesEnum, useLanguage } from './controllers/hooks/useLanguages';
 import { setHistory } from './model/history/HistorySlice';
@@ -67,12 +66,6 @@ export default function App() {
 		);
 
 		return () => authUnsubscribe();
-	}, []);
-
-	useEffect(() => {
-		const unsubscribeToVersion = listenToVersionFromDB();
-
-		return () => unsubscribeToVersion();
 	}, []);
 
 	useEffect(() => {
@@ -153,18 +146,13 @@ export default function App() {
 	}
 
 	return (
-		<div>
+		<Suspense fallback={<div>Loading...</div>}>
 			<Accessibility />
 
 			<Outlet />
 			{showSignAgreement && (
 				<TermsOfUse handleAgreement={handleAgreement} agreement={agreement} />
 			)}
-		</div>
+		</Suspense>
 	);
 }
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-// export const install: { deferredPrompt: any } = {
-// 	deferredPrompt: {} as Event,
-// };

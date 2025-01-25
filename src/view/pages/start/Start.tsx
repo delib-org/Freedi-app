@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import MoreLeft from '../../../assets/icons/moreLeft.svg?react';
 import MoreRight from '../../../assets/icons/moreRight.svg?react';
@@ -7,31 +6,20 @@ import Logo from '../../../assets/logo/106 x 89 SVG.svg?react';
 import GoogleLoginButton from '../../components/buttons/GoogleLoginButton';
 import EnterNameModal from '../../components/enterNameModal/EnterNameModal';
 import styles from './Start.module.scss';
-
-// firestore functions
-
-// Third Party Libraries
-
-// Redux
 import StartPageImage from '@/assets/images/StartPageImage.png';
-
-// icons
-
-// Constants
 import { LANGUAGES } from '@/constants/Languages';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import useDirection from '@/controllers/hooks/useDirection';
 import { LanguagesEnum, useLanguage } from '@/controllers/hooks/useLanguages';
 import {
 	selectInitLocation,
-	versionSelector,
 } from '@/model/location/locationSlice';
 import { userSelector } from '@/model/users/userSlice';
+import packageJson from '../../../../package.json';
 
 const Start = () => {
 	const navigate = useNavigate();
 	const user = useAppSelector(userSelector);
-	const version = useSelector(versionSelector);
 	const initLocation = useAppSelector(selectInitLocation);
 	const [shouldShowNameModal, setShouldShowNameModal] = useState(false);
 	const savedLang = localStorage.getItem('lang');
@@ -39,6 +27,7 @@ const Start = () => {
 
 	const { t, changeLanguage } = useLanguage();
 	const defaultLang = 'he';
+	const version = packageJson.version;
 
 	useEffect(() => {
 		if (!savedLang) {

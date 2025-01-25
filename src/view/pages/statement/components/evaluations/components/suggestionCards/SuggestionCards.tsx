@@ -37,7 +37,6 @@ const SuggestionCards: FC = () => {
 		}
 	}, [currentStage, questionType]);
 
-
 	useEffect(() => {
 		const _totalHeight = subStatements.reduce((acc: number, sub: Statement) => {
 			return acc + (sub.elementHight || 200) + 30;

@@ -19,16 +19,16 @@ const Checkbox: FC<CheckboxProps> = ({
 	onChange,
 }: CheckboxProps) => {
 	const { t } = useLanguage();
-	const [_isChecked, setIsChecked] = useState(isChecked);
+	const [checked, setChecked] = useState(isChecked);
 
 	const handleChange = () => {
-		setIsChecked(!_isChecked);
-		onChange(!_isChecked);
+		setChecked(!checked);
+		onChange(!checked);
 	};
 
 	return (
-		<div
-			className={`checkbox ${_isChecked ? "checked" : ""}`}
+		<button
+			className={`checkbox ${checked ? "checked" : ""}`}
 			onClick={handleChange}
 		>
 			<label
@@ -44,19 +44,19 @@ const Checkbox: FC<CheckboxProps> = ({
 						e.preventDefault();
 					}
 				}}
-				aria-label={_isChecked ? "Uncheck" : "Check"}
+				aria-label={checked ? "Uncheck" : "Check"}
 			>
-				{_isChecked ? <CheckboxCheckedIcon /> : <CheckboxEmptyIcon />}
+				{checked ? <CheckboxCheckedIcon /> : <CheckboxEmptyIcon />}
 			</button>
 			<input
 				type="checkbox"
 				name={name}
 				id={`checkbox-${label}`}
-				checked={_isChecked}
+				checked={checked}
 				onChange={handleChange}
 			/>
 			<div className="checkbox-label">{t(label)}</div>
-		</div>
+		</button>
 	);
 };
 
