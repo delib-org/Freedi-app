@@ -26,16 +26,17 @@ const CustomSwitchSmall: FC<Props> = ({
 }) => {
 
 	const { dir } = useLanguage();
-	const [_checked, _setChecked] = useState<boolean>(checked);
+	const [isChecked, setIsChecked] = useState(checked);
+
 	const handleChange = () => {
-		_setChecked(!_checked);
-		setChecked(!_checked);
+		setIsChecked(!isChecked);
+		setChecked(!isChecked);
 	};
 
 	//checked means multi-stage question
 
 	return (
-		<div className="custom-switch-small" onClick={handleChange}>
+		<button className="custom-switch-small" onClick={handleChange}>
 			<div
 				className={dir === "rtl" ? "background" : "background background--ltr"}
 				style={{ backgroundImage: `url(${BackgroundImage})` }}
@@ -47,10 +48,10 @@ const CustomSwitchSmall: FC<Props> = ({
 					{imageChecked}
 				</div>
 				<button
-					className={`ball ball-switch ball-switch--${_checked ? "checked" : "unchecked"}`}
+					className={`ball ball-switch ball-switch--${isChecked ? "checked" : "unchecked"}`}
 					type="button"
-					style={{ left: `${_checked ? 0 : 4.15}rem` }}
-					aria-label={_checked ? "Turn off" : "Turn on"}
+					style={{ left: `${isChecked ? 0 : 4.15}rem` }}
+					aria-label={isChecked ? "Turn off" : "Turn on"}
 					onKeyDown={(e) => {
 						if (e.key === 'Enter' || e.key === ' ') {
 							e.preventDefault();
@@ -58,10 +59,10 @@ const CustomSwitchSmall: FC<Props> = ({
 						}
 					}}
 				>
-					{_checked ? imageChecked : imageUnchecked}
+					{isChecked ? imageChecked : imageUnchecked}
 				</button>
 			</div>
-			<div className="text">{_checked ? textChecked : textUnchecked}</div>
+			<div className="text">{isChecked ? textChecked : textUnchecked}</div>
 			<label htmlFor={`toggleSwitchSimple-${label}`}>
 				<VisuallyHidden labelName={label} />
 			</label>
@@ -71,11 +72,11 @@ const CustomSwitchSmall: FC<Props> = ({
 				id={`toggleSwitchSimple-${label}`}
 				className="switch-input"
 				onChange={handleChange}
-				value={_checked ? "on" : "off"}
-				checked={_checked}
+				value={isChecked ? "on" : "off"}
+				checked={isChecked}
 				data-cy={`toggleSwitch-input-${label}`}
 			/>
-		</div>
+		</button>
 	);
 };
 

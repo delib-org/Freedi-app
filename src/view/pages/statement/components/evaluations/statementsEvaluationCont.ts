@@ -1,11 +1,11 @@
-import { Statement, SortType } from "delib-npm";
+import { Statement, SortType } from 'delib-npm';
 
 import {
 	EnhancedEvaluationThumb,
 	enhancedEvaluationsThumbs,
-} from "./components/evaluation/enhancedEvaluation/EnhancedEvaluationModel";
-import { updateStatementTop } from "@/model/statements/statementsSlice";
-import { store } from "@/model/store";
+} from './components/evaluation/enhancedEvaluation/EnhancedEvaluationModel';
+import { updateStatementTop } from '@/model/statements/statementsSlice';
+import { store } from '@/model/store';
 
 export function sortSubStatements(
 	subStatements: Statement[],
@@ -13,19 +13,17 @@ export function sortSubStatements(
 	gap = 30
 ): { totalHeight: number } {
 	try {
-		console.log("sortSubStatements", subStatements.length, sort);
-		console.trace('Stack trace:');
 		const dispatch = store.dispatch;
 		let _subStatements = [...subStatements];
 		switch (sort) {
 			case SortType.accepted:
 				_subStatements = subStatements.sort(
-					(a: Statement, b: Statement) => b.consensus - a.consensus,
+					(a: Statement, b: Statement) => b.consensus - a.consensus
 				);
 				break;
 			case SortType.newest:
 				_subStatements = subStatements.sort(
-					(a: Statement, b: Statement) => b.createdAt - a.createdAt,
+					(a: Statement, b: Statement) => b.createdAt - a.createdAt
 				);
 				break;
 
@@ -34,41 +32,44 @@ export function sortSubStatements(
 				break;
 			case SortType.mostUpdated:
 				_subStatements = subStatements.sort(
-					(a: Statement, b: Statement) => b.lastUpdate - a.lastUpdate,
+					(a: Statement, b: Statement) => b.lastUpdate - a.lastUpdate
 				);
 				break;
 		}
 
 		let totalHeight = gap;
-		const updates: { statementId: string; top: number }[] = _subStatements.map((subStatement) => {
-			try {
-				const update = {
-					statementId: subStatement.statementId,
-					top: totalHeight,
-				};
-				totalHeight += (subStatement.elementHight || 0) + gap;
+		const updates: { statementId: string; top: number }[] = _subStatements
+			.map((subStatement) => {
+				try {
+					const update = {
+						statementId: subStatement.statementId,
+						top: totalHeight,
+					};
+					totalHeight += (subStatement.elementHight || 0) + gap;
 
-				return update;
-
-			} catch (error) {
-				console.error(error);
-			}
-		}).filter((update) => update !== undefined) as { statementId: string; top: number }[];
+					return update;
+				} catch (error) {
+					console.error(error);
+				}
+			})
+			.filter((update) => update !== undefined) as {
+			statementId: string;
+			top: number;
+		}[];
 		dispatch(updateStatementTop(updates));
 
-		return { totalHeight }
+		return { totalHeight };
 	} catch (error) {
 		console.error(error);
 
 		return { totalHeight: 0 };
-
 	}
 }
 
 const defaultThumb = enhancedEvaluationsThumbs[2];
 
 export const getEvaluationThumbIdByScore = (
-	evaluationScore: number | undefined,
+	evaluationScore: number | undefined
 ): string => {
 	if (evaluationScore === undefined) return defaultThumb.id;
 
@@ -111,7 +112,7 @@ export const getEvaluationThumbsToDisplay = ({
 
 	const selectedThumbId = getEvaluationThumbIdByScore(evaluationScore);
 	const selectedThumb = enhancedEvaluationsThumbs.find(
-		(evaluationThumb) => evaluationThumb.id === selectedThumbId,
+		(evaluationThumb) => evaluationThumb.id === selectedThumbId
 	);
 
 	return [selectedThumb || defaultThumb];

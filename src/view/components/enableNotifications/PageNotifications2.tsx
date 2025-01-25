@@ -9,7 +9,7 @@ import sentence from '@/assets/images/Enable the Notifications button to grant p
 import link from '@/assets/images/Frame 1171276040.svg';
 import resetpermission from '@/assets/images/reset permission.png';
 import rectangleText from '@/assets/images/Snackbar2page.svg';
-import pointer1 from '@/assets/images/woman pointing.svg';
+import pointer1 from '@/assets/images/woman.png';
 import { Statement } from 'delib-npm';
 
 interface Props {
