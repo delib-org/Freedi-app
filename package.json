@@ -28,23 +28,19 @@
 		"deploy:test": "npm run deploy:h:test && npm run deploy:f:test"
 	},
 	"dependencies": {
-		"@dagrejs/dagre": "^1.0.4",
 		"@reduxjs/toolkit": "^1.9.5",
 		"delib-npm": "^5.4.77",
-		"eslint-plugin-import": "^2.29.1",
 		"firebase": "^11.0.2",
-		"firebase-functions": "^6.1.0",
 		"react": "^18.2.0",
 		"react-dom": "^18.2.0",
 		"react-redux": "^8.1.1",
 		"react-router-dom": "^6.28.0",
-		"reactflow": "^11.11.1",
-		"sass": "^1.81.0",
-		"zod": "^3.21.4"
+		"reactflow": "^11.11.1"
 	},
 	"devDependencies": {
 		"@types/react": "^18.2.14",
 		"@types/react-dom": "^18.2.6",
+		"eslint-plugin-import": "^2.29.1",
 		"@typescript-eslint/eslint-plugin": "^5.62.0",
 		"@typescript-eslint/parser": "^5.62.0",
 		"@vitejs/plugin-react-swc": "^3.3.2",
@@ -58,7 +54,10 @@
 		"prettier": "^3.1.1",
 		"typescript": "5.1.x",
 		"vite": "^5.4.14",
+		"sass": "^1.81.0",
 		"vite-plugin-svgr": "^4.2.0",
-		"workbox-window": "^7.1.0"
+		"@dagrejs/dagre": "^1.0.4",
+		"firebase-functions": "^6.1.0",
+		"zod": "^3.21.4"
 	}
 }

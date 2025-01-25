@@ -2,9 +2,10 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react-swc';
 import svgr from 'vite-plugin-svgr';
 import path from 'path';
+import pkg from './package.json';
 
 // https://vitejs.dev/config/
-export default defineConfig(({ mode }) => {
+export default defineConfig(() => {
 	return {
 		css: {
 			preprocessorOptions: {
@@ -21,6 +22,18 @@ export default defineConfig(({ mode }) => {
 		},
 		define: {
 			'process.env': process.env,
+			'process.env.VITE_APP_VERSION': JSON.stringify(pkg.version),
+		},
+		build: {
+			rollupOptions: {
+				output: {
+					manualChunks: {
+						'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+						statement: ['./src/view/pages/statement/StatementMain'],
+					},
+				},
+			},
+			chunkSizeWarningLimit: 500,
 		},
 	};
 });

@@ -15,7 +15,6 @@ interface Props {
 	onNext: () => void;
 	setAskNotifications: React.Dispatch<React.SetStateAction<boolean>>;
 	statement: Statement | undefined;
-	setShowAskPermission: React.Dispatch<React.SetStateAction<boolean>>;
 }
 export default function PageNotifications1({
 	onNext,

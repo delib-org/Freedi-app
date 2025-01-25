@@ -1,18 +1,19 @@
-// Third party imports
+import { lazy } from 'react';
 import { createBrowserRouter } from 'react-router-dom';
 
 // Custom components
-import App from './App';
-import ErrorPage from './view/pages/error/ErrorPage';
-import Home from './view/pages/home/Home';
-import AddStatement from './view/pages/home/main/addStatement/AddStatement';
-import HomeMain from './view/pages/home/main/HomeMain';
-import LoginPage from './view/pages/login/LoginFirst';
-import MemberRejection from './view/pages/memberRejection/MemberRejection';
-import Page401 from './view/pages/page401/Page401';
-import Page404 from './view/pages/page404/Page404';
-import Start from './view/pages/start/Start';
-import StatementMain from './view/pages/statement/StatementMain';
+
+const App = lazy(() => import('./App'));
+const ErrorPage = lazy(() => import('./view/pages/error/ErrorPage'));
+const Home = lazy(() => import('./view/pages/home/Home'));
+const AddStatement = lazy(() => import('./view/pages/home/main/addStatement/AddStatement'));
+const HomeMain = lazy(() => import('./view/pages/home/main/HomeMain'));
+const LoginPage = lazy(() => import('./view/pages/login/LoginFirst'));
+const MemberRejection = lazy(() => import('./view/pages/memberRejection/MemberRejection'));
+const Page401 = lazy(() => import('./view/pages/page401/Page401'));
+const Page404 = lazy(() => import('./view/pages/page404/Page404'));
+const Start = lazy(() => import('./view/pages/start/Start'));
+const StatementMain = lazy(() => import('./view/pages/statement/StatementMain'));
 
 const routes = [
 	{
