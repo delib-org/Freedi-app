@@ -36,10 +36,6 @@ import {
 	getTopStatements,
 	getUserOptions,
 	hashPassword,
-	// maintainDeliberativeElement,
-	// maintainRole,
-	// maintainStatement,
-	// maintainSubscriptionToken,
 } from './fn_httpRequests';
 import { onRequest } from 'firebase-functions/v2/https';
 import { findSimilarStatements } from './fn_findSimilarStatements';
@@ -52,13 +48,6 @@ import { updateSettings } from './fn_statementsSettings';
 
 initializeApp();
 export const db = getFirestore();
-
-// update subscribers when statement is updated
-//statements
-// exports.updateSubscribedListeners = onDocumentUpdated(
-//     `/${Collections.statements}/{statementId}`,
-//     updateSubscribedListenersCB,
-// );
 
 exports.setUserSettings = onDocumentCreated(
 	`/${Collections.users}/{userId}`,
@@ -85,7 +74,10 @@ exports.updateNotifications = onDocumentCreated(
 
 //evaluations and results
 
-exports.onSetChoseBySettings = onDocumentWritten(`/${Collections.choseBy}/{statementId}`, updateChosenOptions);
+exports.onSetChoseBySettings = onDocumentWritten(
+	`/${Collections.choseBy}/{statementId}`,
+	updateChosenOptions
+);
 
 exports.newEvaluation = onDocumentCreated(
 	{ document: `/${Collections.evaluations}/{evaluationId}` },
@@ -107,8 +99,6 @@ exports.updateResultsSettings = onDocumentWritten(
 
 //votes
 exports.addVote = onDocumentWritten('/votes/{voteId}', updateVote);
-
-// exports.removeVote = onDocumentDeleted('/votes/{voteId}', removeVote);
 
 //timers
 exports.cleanTimers = onSchedule('every day 00:00', cleanOldTimers);
@@ -150,29 +140,22 @@ exports.updateStatementWithViews = onDocumentCreated(
 );
 
 //statements settings
-exports.writeStatementSettings = onDocumentWritten(`/${Collections.statementsSettings}/{statementId}`, updateSettings);
-
+exports.writeStatementSettings = onDocumentWritten(
+	`/${Collections.statementsSettings}/{statementId}`,
+	updateSettings
+);
 
 //http requests
 const isProduction = process.env.NODE_ENV === 'production';
 
 console.info('isProduction', isProduction);
 const cors = {
-	cors: [
-		'https://delib-5.web.app',
-		'https://freedi.tech',
-		'https://delib.web.app',
-		'https://delib-testing.web.app/',
-	],
+	cors: ['https://freedi-test.web.app/'],
 };
 
-exports.getRandomStatements = onRequest(cors, getRandomStatements); //first evaluation
-exports.getTopStatements = onRequest(cors, getTopStatements); //second evaluation
-exports.getUserOptions = onRequest(cors, getUserOptions); //suggestions
+exports.getRandomStatements = onRequest(cors, getRandomStatements);
+exports.getTopStatements = onRequest(cors, getTopStatements);
+exports.getUserOptions = onRequest(cors, getUserOptions);
 exports.checkPassword = onRequest(cors, checkPassword);
 exports.hashPassword = onRequest(cors, hashPassword);
 exports.checkForSimilarStatements = onRequest(cors, findSimilarStatements);
-// exports.maintainRoles = onRequest(cors, maintainRole);
-// exports.maintainDeliberativeElement = onRequest(cors, maintainDeliberativeElement);
-// exports.maintainStatements = onRequest(cors, maintainStatement);
-// exports.maintainSubscriptionToken = onRequest(cors, maintainSubscriptionToken);

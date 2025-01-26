@@ -24,7 +24,7 @@
 		"deploy:f:dev": "cd functions && npm run build && firebase use dev && firebase deploy --only functions",
 		"deploy:f:test": "cd functions && npm run build && firebase use test && firebase deploy --only functions",
 		"deploy": "npm run deploy:h && npm run deploy:f",
-		"deploy:dev": "npm run deploy:h:dev && npm run deploy:f",
+		"deploy:dev": "npm run deploy:h:dev && npm run deploy:f:dev",
 		"deploy:test": "npm run deploy:h:test && npm run deploy:f:test"
 	},
 	"dependencies": {
@@ -35,7 +35,8 @@
 		"react-dom": "^18.2.0",
 		"react-redux": "^8.1.1",
 		"react-router-dom": "^6.28.0",
-		"reactflow": "^11.11.1"
+		"reactflow": "^11.11.1",
+		"zod": "^3.21.4"
 	},
 	"devDependencies": {
 		"@types/react": "^18.2.14",
@@ -57,7 +58,6 @@
 		"sass": "^1.81.0",
 		"vite-plugin-svgr": "^4.2.0",
 		"@dagrejs/dagre": "^1.0.4",
-		"firebase-functions": "^6.1.0",
-		"zod": "^3.21.4"
+		"firebase-functions": "^6.1.0"
 	}
 }
