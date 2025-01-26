@@ -23,20 +23,22 @@ cd functions && npm install
 
 2. Set up Firebase:
 
+3. Configure Firebase project:
+
+- Create project at [Firebase Console](https://console.firebase.google.com/)
+-
+
 ```bash
 firebase login
 firebase init emulators
 ```
 
-3. Configure Firebase project:
-
-- Create project at [Firebase Console](https://console.firebase.google.com/)
 - Create `.firebaserc` and `firebase.json` files in the root project
 - Set up `.firebaserc` according to template in "firebase-config-files.txt", replace your_project_id with the project id from your new firebase project
 - Run `firebase use your_project_id` to select the new project
 - Set up your `firebase.json` file by copying the template from "firebase-config-files.txt". You do not have to adjust any attributes
 
-4. Create environment files:
+1. Create environment files:
    `.env.development` (`.env.testing` will be provided by the project leader if needed):
 
 ```env
