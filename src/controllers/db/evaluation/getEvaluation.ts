@@ -1,5 +1,4 @@
-import { Collections, Evaluation, User, UserSchema } from "delib-npm";
-import { Unsubscribe } from "firebase/auth";
+import { Unsubscribe, User } from 'firebase/auth';
 import {
 	collection,
 	onSnapshot,
@@ -8,44 +7,36 @@ import {
 	doc,
 	getDocs,
 	getDoc,
-} from "firebase/firestore";
-import { FireStore } from "../config";
-import { EvaluationSchema } from "@/model/evaluations/evaluationModel";
-import { setEvaluationToStore } from "@/model/evaluations/evaluationsSlice";
-import { AppDispatch } from "@/model/store";
+} from 'firebase/firestore';
+import { FireStore } from '../config';
+import { setEvaluationToStore } from '@/model/evaluations/evaluationsSlice';
+import { AppDispatch } from '@/model/store';
+import { Collections } from '@/types/enums';
+import { UserSchema } from '@/types/user';
+import { parse } from 'valibot';
+import { Evaluation, EvaluationSchema } from '@/types/evaluation';
 
 export const listenToEvaluations = (
 	dispatch: AppDispatch,
 	parentId: string,
-	evaluatorId: string | undefined,
+	evaluatorId: string | undefined
 ): Unsubscribe => {
 	try {
-	
 		const evaluationsRef = collection(FireStore, Collections.evaluations);
 
-		if (!evaluatorId) throw new Error("User is undefined");
+		if (!evaluatorId) throw new Error('User is undefined');
 
 		const q = query(
 			evaluationsRef,
-			where("parentId", "==", parentId),
-			where("evaluatorId", "==", evaluatorId),
+			where('parentId', '==', parentId),
+			where('evaluatorId', '==', evaluatorId)
 		);
 
 		return onSnapshot(q, (evaluationsDB) => {
 			try {
 				evaluationsDB.forEach((evaluationDB) => {
 					try {
-						//set evaluation to store
-						const { success } = EvaluationSchema.safeParse(
-							evaluationDB.data(),
-						);
-
-						if (!success)
-							throw new Error(
-								"evaluationDB is not valid in listenToEvaluations()",
-							);
-
-						const evaluation = evaluationDB.data() as Evaluation;
+						const evaluation = parse(EvaluationSchema, evaluationDB.data());
 
 						dispatch(setEvaluationToStore(evaluation));
 					} catch (error) {
@@ -60,21 +51,20 @@ export const listenToEvaluations = (
 		console.error(error);
 
 		// eslint-disable-next-line @typescript-eslint/no-empty-function
-		return () => { };
+		return () => {};
 	}
 };
 
 export async function getEvaluations(parentId: string): Promise<Evaluation[]> {
 	try {
 		const evaluationsRef = collection(FireStore, Collections.evaluations);
-		const q = query(evaluationsRef, where("parentId", "==", parentId));
+		const q = query(evaluationsRef, where('parentId', '==', parentId));
 
 		const evaluationsDB = await getDocs(q);
 		const evaluatorsIds = new Set<string>();
 		const evaluations = evaluationsDB.docs
 			.map((evaluationDB) => {
-				const evaluation = evaluationDB.data() as Evaluation;
-				EvaluationSchema.parse(evaluation);
+				const evaluation = parse(EvaluationSchema, evaluationDB.data());
 
 				if (!evaluatorsIds.has(evaluation.evaluatorId)) {
 					//prevent duplicate evaluators
@@ -92,7 +82,7 @@ export async function getEvaluations(parentId: string): Promise<Evaluation[]> {
 					const evaluatorRef = doc(
 						FireStore,
 						Collections.users,
-						evaluation.evaluatorId,
+						evaluation.evaluatorId
 					);
 					const promise = getDoc(evaluatorRef);
 
@@ -103,16 +93,16 @@ export async function getEvaluations(parentId: string): Promise<Evaluation[]> {
 
 		const evaluatorsDB = await Promise.all(evaluatorsPromise);
 		const evaluators = evaluatorsDB.map((evaluatorDB) => {
-			const evaluator = evaluatorDB?.data() as User;
-			UserSchema.parse(evaluator);
-			
+			const evaluator = parse(UserSchema, evaluatorDB?.data());
+
 			return evaluator;
-		}) as User[];
+		});
 
 		evaluations.forEach((evaluation) => {
 			const evaluator = evaluators.find(
-				(evaluator) => evaluator?.uid === evaluation.evaluatorId,
+				(evaluator) => evaluator?.uid === evaluation.evaluatorId
 			);
+
 			if (evaluator) evaluation.evaluator = evaluator;
 		});
 
