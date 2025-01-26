@@ -10,6 +10,7 @@ import { FireStore } from '../config';
 import { Collections } from '@/types/enums';
 import { Statement, StatementSchema } from '@/types/statement';
 import { parse } from 'valibot';
+import { ResultsBy } from '@/types/results';
 
 export async function getResultsDB(statement: Statement): Promise<Statement[]> {
 	try {
@@ -45,11 +46,9 @@ async function getTopOptionsDB(statement: Statement): Promise<Statement[]> {
 		);
 		const topOptionsSnap = await getDocs(q);
 
-		const topOptions = topOptionsSnap.docs.map(
-			(doc) => doc.data() as Statement
+		const topOptions = topOptionsSnap.docs.map((doc) =>
+			parse(StatementSchema, doc.data())
 		);
-
-		z.array(StatementSchema).parse(topOptions);
 
 		return topOptions;
 	} catch (error) {

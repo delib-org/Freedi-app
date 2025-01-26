@@ -40,7 +40,9 @@ import { userSelector } from '@/model/users/userSlice';
 // Custom components
 import AskPermission from '@/view/components/askPermission/AskPermission';
 import Modal from '@/view/components/modal/Modal';
-import { Access, Role, StatementType, User } from 'delib-npm';
+import { StatementType, Access } from '@/types/enums';
+import { Role } from '@/types/user';
+import { User } from 'firebase/auth';
 
 // Create selectors
 export const subStatementsSelector = createSelector(

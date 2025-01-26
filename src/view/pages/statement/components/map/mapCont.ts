@@ -1,36 +1,29 @@
-import { Statement, ResultsBy, Results, DeliberativeElement } from "delib-npm";
-import { getResultsDB } from "@/controllers/db/results/getResults";
+import { getResultsDB } from '@/controllers/db/results/getResults';
+import { DeliberativeElement } from '@/types/enums';
+import { ResultsBy, Results } from '@/types/results';
+import { Statement } from '@/types/statement';
 
 export async function getResults(
 	statement: Statement,
 	subStatements: Statement[],
 	resultsBy: ResultsBy,
-	numberOfResults: number,
+	numberOfResults: number
 ): Promise<Results> {
 	try {
-		// const { results } = statement;
-
 		const result: Results = { top: statement, sub: [] };
 
-		switch (resultsBy) {
-		case ResultsBy.topOptions:
-			result.sub = [
-				...getResultsByOptions(subStatements, numberOfResults),
-			];
-			break;
-		default:
+		if (resultsBy === ResultsBy.topOptions) {
+			result.sub = [...getResultsByOptions(subStatements, numberOfResults)];
+		} else {
 			result.sub = [];
 		}
 
-		const subResultsPromises = result.sub.map(
-			async (subResult: Results) => {
-				const subStatement = subResult.top;
-				const subResults: Statement[] =
-                    await getResultsDB(subStatement);
+		const subResultsPromises = result.sub.map(async (subResult: Results) => {
+			const subStatement = subResult.top;
+			const subResults: Statement[] = await getResultsDB(subStatement);
 
-				return subResults;
-			},
-		);
+			return subResults;
+		});
 
 		const resultsStatements = await Promise.all(subResultsPromises);
 
@@ -53,7 +46,7 @@ export async function getResults(
 }
 function getResultsByOptions(
 	subStatements: Statement[],
-	numberOfResults: number,
+	numberOfResults: number
 ): Results[] {
 	try {
 		const maxOptions: Statement[] = subStatements
@@ -73,39 +66,3 @@ function getResultsByOptions(
 		return [];
 	}
 }
-
-// function getResultsByVotes(
-//     statement: Statement,
-//     subStatements: Statement[],
-// ): Results[] {
-//     try {
-//         const maxVoteKey = getTopVoteStatementId(statement);
-//         if (!maxVoteKey) return [];
-//         const maxVoteStatement: Statement | undefined = subStatements.find(
-//             (subStatement) => subStatement.statementId === maxVoteKey,
-//         );
-//         if (!maxVoteStatement) return [];
-//         const result: Results = { top: maxVoteStatement, sub: [] };
-
-//         return [result];
-//     } catch (error) {
-//         console.error(error);
-
-//         return [];
-//     }
-// }
-
-// function getTopVoteStatementId(statement: Statement): string | undefined {
-//     try {
-//         const { selections } = statement;
-//         if (!selections) return undefined;
-
-//         const maxVoteKey = maxKeyInObject(selections);
-
-//         return maxVoteKey;
-//     } catch (error) {
-//         console.error(error);
-
-//         return undefined;
-//     }
-// }

@@ -118,3 +118,43 @@ export enum StageType {
 	summary = 'summary',
 	other = 'other',
 }
+
+export enum Screen {
+	TEAM = 'team',
+	DOC = 'doc',
+	HOME = 'home',
+	STATEMENT = 'statement',
+	CHAT = 'chat',
+	OPTIONS = 'options',
+	VOTE = 'vote',
+	GROUPS = 'groups',
+	SETTINGS = 'settings',
+	MASS_QUESTIONS = 'mass-questions',
+	QUESTIONS_MASS = 'questions-mass',
+	OPTIONS_CONSENSUS = 'options-consensus',
+	OPTIONS_NEW = 'options-new',
+	OPTIONS_RANDOM = 'options-random',
+	OPTIONS_UPDATED = 'options-updated',
+	VOTES_CONSENSUS = 'votes-consensus',
+	VOTESֹֹֹ_VOTED = 'votes-voted',
+	VOTES_NEW = 'votes-new',
+	VOTES_RANDOM = 'votes-random',
+	VOTES_UPDATED = 'votes-updated',
+	ADMIN_CHOOSE = 'admin-choose',
+	ADMIN_DIVIDE = 'admin-divide',
+	QUESTIONS = 'questions',
+	QUESTIONS_NEW = 'questions-new',
+	QUESTIONS_RANDOM = 'questions-random',
+	QUESTIONS_UPDATED = 'questions-updated',
+	QUESTIONS_CONSENSUS = 'questions-consensus',
+	INFO = 'info',
+	PROCESS = 'process',
+	EXPLANATION = 'explanation',
+}
+
+export enum SortType {
+	newest = 'newest',
+	mostUpdated = 'mostUpdated',
+	random = 'random',
+	accepted = 'accepted',
+}

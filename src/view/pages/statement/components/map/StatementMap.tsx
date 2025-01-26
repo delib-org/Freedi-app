@@ -12,7 +12,7 @@ import { isAdmin } from "@/controllers/general/helpers";
 import {
 	FilterType,
 	filterByStatementType,
-	sortStatementsByHirarrchy as sortStatementsByHierarchy,
+	sortStatementsByHierarchy as sortStatementsByHierarchy,
 } from "@/controllers/general/sorting";
 
 // Helpers
@@ -28,7 +28,7 @@ import {
 import Modal from "@/view/components/modal/Modal";
 
 interface Props {
-  statement: Statement;
+	statement: Statement;
 }
 
 const StatementMap: FC<Props> = ({ statement }) => {

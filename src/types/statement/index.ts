@@ -24,9 +24,12 @@ import {
 	DocumentImportanceSchema,
 	MembershipSchema,
 	StepSchema,
+	UserDataSchema,
 	UserSchema,
 } from '../user';
 import { StatementEvaluationSchema } from '../evaluation';
+import { ResultsSettingsSchema } from '../results';
+import { QuestionSettingsSchema } from '../question';
 
 const SimpleStatementSchema = object({
 	statementId: string(),
@@ -38,6 +41,9 @@ const SimpleStatementSchema = object({
 	consensus: number(),
 	voted: optional(number()),
 });
+
+export type SimpleStatement = InferInput<typeof SimpleStatementSchema>;
+export type SimpleStatementOutput = InferOutput<typeof SimpleStatementSchema>;
 
 export const StatementSettingsSchema = object({
 	subScreens: optional(array(string())),
@@ -55,8 +61,8 @@ export const StatementSettingsSchema = object({
 	hasChildren: optional(boolean()),
 });
 
-export type SimpleStatement = InferInput<typeof SimpleStatementSchema>;
-export type SimpleStatementOutput = InferOutput<typeof SimpleStatementSchema>;
+export type StatementSettings = InferOutput<typeof StatementSettingsSchema>;
+
 export const StatementSchema = object({
 	allowAnonymousLogin: optional(boolean()),
 	statement: string(),
@@ -150,3 +156,16 @@ export const StatementSchema = object({
 
 export type Statement = InferInput<typeof StatementSchema>;
 export type StatementOutput = InferOutput<typeof StatementSchema>;
+
+export const StatementMetaDataSchema = object({
+	lastUpdate: number(),
+	numberOfMembers: optional(number()),
+	numberOfEvaluators: optional(number()),
+	numberOfEvaluatedStatements: optional(number()),
+	numberOfFirstSuggesters: optional(number()),
+	numberOfFirstEvaluators: optional(number()),
+	numberOfSecondEvaluators: optional(number()),
+	statementId: string(),
+});
+
+export type StatementMetaData = InferOutput<typeof StatementMetaDataSchema>;
