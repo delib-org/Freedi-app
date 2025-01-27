@@ -222,6 +222,7 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
 						setIsOpen={setIsCardMenuOpen}
 						isMenuOpen={isCardMenuOpen}
 						iconColor='var(--icon-blue)'
+						isCardMenu={true}
 					>
 						{_isAuthorized && (
 							<MenuOption

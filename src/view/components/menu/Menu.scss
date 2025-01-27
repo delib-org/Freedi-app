@@ -1,5 +1,6 @@
 .menu {
     position: relative;
+
     .menu-content {
         position: absolute;
         display: flex;
@@ -9,12 +10,21 @@
         z-index: 5;
 
         &.ltr {
-            right: 0;
+            left: 0px;
+
+            &--card-menu {
+                right: 10px;
+            }
         }
 
         &.rtl {
             left: 0;
+
+            &--card-menu {
+                left: 10px;
+            }
         }
+
     }
 }
 

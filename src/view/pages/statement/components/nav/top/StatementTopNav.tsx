@@ -71,7 +71,7 @@ const StatementTopNav: FC<Props> = ({
 
 	function handleNavigation(path: string) {
 		if (path === "settings") setIsHeaderMenuOpen(false);
-		if (statement && statement.statementId)
+		if (statement?.statementId)
 			navigate(`/statement/${statement.statementId}/${path}`);
 	}
 
@@ -83,6 +83,7 @@ const StatementTopNav: FC<Props> = ({
 		>
 			<div className={styles.wrapper}>
 				{allowNavigation && (
+
 					<HeaderMenu
 						setIsHeaderMenuOpen={setIsHeaderMenuOpen}
 						isHeaderMenuOpen={isHeaderMenuOpen}
@@ -96,6 +97,7 @@ const StatementTopNav: FC<Props> = ({
 						menuIconStyle={menuIconStyle}
 						t={t}
 					/>
+
 				)}
 				<NavButtons
 					statement={statement}
@@ -120,7 +122,7 @@ interface NavigationButtonsProps {
 	headerStyle: { color: string; backgroundColor: string };
 }
 
-function NavigationButtons({ screen, handleNavigation, headerStyle, statement }: NavigationButtonsProps) {
+function NavigationButtons({ screen, handleNavigation, headerStyle, statement }: Readonly<NavigationButtonsProps>) {
 	const { hasChat } = statement?.statementSettings || { hasChat: false };
 	if (!hasChat) return null;
 
@@ -128,28 +130,19 @@ function NavigationButtons({ screen, handleNavigation, headerStyle, statement }:
 		<>
 			{(() => {
 				switch (screen) {
-					case 'chat':
-						return (
-							<button onClick={() => handleNavigation("main")}>
-								<MainIcon color={headerStyle.color} />
-							</button>
-						);
+
 					case "main":
 						return (
 							<button onClick={() => handleNavigation("chat")}>
 								<Chat color={headerStyle.color} />
 							</button>
 						);
+					case 'chat':
 					case "settings":
+					default:
 						return (
 							<button onClick={() => handleNavigation("main")}>
 								<MainIcon color={headerStyle.color} />
-							</button>
-						);
-					default:
-						return (
-							<button onClick={() => handleNavigation("chat")}>
-								<Chat color={headerStyle.color} />
 							</button>
 						);
 				}
@@ -168,7 +161,7 @@ interface NavButtonsProps {
 	statement?: Statement;
 }
 
-function NavButtons({ screen, handleNavigation, headerStyle, allowNavigation, permission, handleToggleNotifications, statement }: NavButtonsProps) {
+function NavButtons({ screen, handleNavigation, headerStyle, allowNavigation, permission, handleToggleNotifications, statement }: Readonly<NavButtonsProps>) {
 
 	return (
 		<>
@@ -200,35 +193,34 @@ function NavButtons({ screen, handleNavigation, headerStyle, allowNavigation, pe
 	);
 }
 
-function HeaderMenu(
-	{
-		setIsHeaderMenuOpen,
-		isHeaderMenuOpen,
-		headerStyle,
-		handleShare,
-		handleLogout,
-		handleFollowMe,
-		handleInvitePanel,
-		handleNavigation,
-		isAdmin,
-		menuIconStyle,
-		t
-	}: {
-		setIsHeaderMenuOpen: (value: boolean) => void;
-		isHeaderMenuOpen: boolean;
-		headerStyle: { color: string; backgroundColor: string };
-		handleShare: () => void;
-		handleLogout: () => void;
-		handleFollowMe: () => void;
-		handleInvitePanel: () => void;
-		handleNavigation: (path: string) => void;
-		isAdmin: boolean;
-		menuIconStyle: { color: string; width: string };
-		t: (key: string) => string;
-	}
-) {
+function HeaderMenu({
+	setIsHeaderMenuOpen,
+	isHeaderMenuOpen,
+	headerStyle,
+	handleShare,
+	handleLogout,
+	handleFollowMe,
+	handleInvitePanel,
+	handleNavigation,
+	isAdmin,
+	menuIconStyle,
+	t
+}: Readonly<{
+	setIsHeaderMenuOpen: (value: boolean) => void;
+	isHeaderMenuOpen: boolean;
+	headerStyle: { color: string; backgroundColor: string };
+	handleShare: () => void;
+	handleLogout: () => void;
+	handleFollowMe: () => void;
+	handleInvitePanel: () => void;
+	handleNavigation: (path: string) => void;
+	isAdmin: boolean;
+	menuIconStyle: { color: string; width: string };
+	t: (key: string) => string;
+}>) {
 	return (
 		<div className={styles.button}>
+
 			<Menu
 				setIsOpen={setIsHeaderMenuOpen}
 				isMenuOpen={isHeaderMenuOpen}

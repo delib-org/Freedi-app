@@ -14,8 +14,6 @@ const StartHere: FC<Props> = ({ setShow }) => {
 		decreesUserSettingsLearningRemain({ addOption: true });
 	}
 
-	console.log(dir)
-
 	return (
 		<button onClick={handleCloseModal} className={`${styles["start-here"]} ${dir === "ltr" ? styles["start-here--ltr"] : ""}`}>
 			<div className={styles.text}>{t("Add new option here")}</div>
