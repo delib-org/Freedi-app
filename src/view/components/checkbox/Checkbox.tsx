@@ -26,37 +26,42 @@ const Checkbox: FC<CheckboxProps> = ({
 		onChange(!checked);
 	};
 
+	const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+		if (e.key === "Enter" || e.key === " ") {
+			e.preventDefault();
+			handleChange();
+		}
+	};
+
 	return (
-		<button
+		<div
 			className={`checkbox ${checked ? "checked" : ""}`}
 			onClick={handleChange}
+			onKeyDown={handleKeyDown}
+			role="checkbox"
+			aria-checked={checked}
+			tabIndex={0}
 		>
-			<label
-				htmlFor={`checkbox-${label}`}
-			>
+			<label htmlFor={`checkbox-${label}`}>
 				<VisuallyHidden labelName={t(label)} />
 			</label>
-			<button
-				type="button"
+			<div
 				className="checkbox-icon"
-				onKeyDown={(e: React.KeyboardEvent<HTMLButtonElement>) => {
-					if (e.key === "Enter") {
-						e.preventDefault();
-					}
-				}}
-				aria-label={checked ? "Uncheck" : "Check"}
+				aria-hidden="true"
 			>
 				{checked ? <CheckboxCheckedIcon /> : <CheckboxEmptyIcon />}
-			</button>
+			</div>
 			<input
 				type="checkbox"
 				name={name}
 				id={`checkbox-${label}`}
 				checked={checked}
 				onChange={handleChange}
+				tabIndex={-1}
+				style={{ position: 'absolute', opacity: 0, pointerEvents: 'none' }}
 			/>
 			<div className="checkbox-label">{t(label)}</div>
-		</button>
+		</div>
 	);
 };
 
