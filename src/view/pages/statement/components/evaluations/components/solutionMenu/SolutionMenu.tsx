@@ -9,6 +9,7 @@ import { updateIsQuestion } from "@/controllers/db/statements/setStatements";
 import { useLanguage } from "@/controllers/hooks/useLanguages";
 import Menu from "@/view/components/menu/Menu";
 import MenuOption from "@/view/components/menu/MenuOption";
+import styles from "./SolutionMenu.module.scss";
 
 interface Props {
 	statement: Statement;
@@ -34,21 +35,24 @@ const SolutionMenu: FC<Props> = ({
 	const isOption = statement.statementType === StatementType.option;
 	const isResearch = statement.statementType === StatementType.question;
 
-	if (!isAuthorized) return null;
-
 	useEffect(() => {
 		if (isCardMenuOpen) {
-			setTimeout(() => {
+			const timer = setTimeout(() => {
 				setIsCardMenuOpen(false);
-			}, 5000);
+			}, 35000);
+			return () => clearTimeout(timer);
 		}
 	}, [isCardMenuOpen]);
 
+	if (!isAuthorized) return null;
+
 	return (
+
 		<Menu
 			setIsOpen={setIsCardMenuOpen}
 			isMenuOpen={isCardMenuOpen}
 			iconColor="#5899E0"
+			isCardMenu={true}
 		>
 			{isAuthorized && (
 				<MenuOption
@@ -101,6 +105,7 @@ const SolutionMenu: FC<Props> = ({
 				/>
 			)}
 		</Menu>
+
 	);
 };
 
