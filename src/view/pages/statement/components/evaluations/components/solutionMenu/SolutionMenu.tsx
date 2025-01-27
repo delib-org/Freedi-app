@@ -9,7 +9,6 @@ import { updateIsQuestion } from "@/controllers/db/statements/setStatements";
 import { useLanguage } from "@/controllers/hooks/useLanguages";
 import Menu from "@/view/components/menu/Menu";
 import MenuOption from "@/view/components/menu/MenuOption";
-import styles from "./SolutionMenu.module.scss";
 
 interface Props {
 	statement: Statement;
@@ -40,7 +39,8 @@ const SolutionMenu: FC<Props> = ({
 			const timer = setTimeout(() => {
 				setIsCardMenuOpen(false);
 			}, 35000);
-			return () => clearTimeout(timer);
+			
+return () => clearTimeout(timer);
 		}
 	}, [isCardMenuOpen]);
 

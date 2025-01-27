@@ -51,7 +51,7 @@ const StatementTopNav: FC<Props> = ({
 	handleShare,
 }) => {
 	//hooks
-	const { t, dir } = useLanguage();
+	const { t } = useLanguage();
 	const navigate = useNavigate();
 	const { screen } = useParams();
 	const { role } = useContext(StatementContext);
