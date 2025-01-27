@@ -23,6 +23,10 @@ $addOptionSize: 60px;
         animation: showSortMenu 750ms linear 0s 1 forwards normal;
     }
 
+    &--ltr {
+        flex-direction: row-reverse;
+    }
+
     @keyframes showSortMenu {
         0% {
             opacity: 0;
