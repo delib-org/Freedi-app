@@ -6,10 +6,11 @@ import "./Menu.scss";
 import { useLanguage } from "@/controllers/hooks/useLanguages";
 
 interface MenuProps extends ComponentProps<"div"> {
-    iconColor: string;
-    isMenuOpen: boolean;
-    setIsOpen: (isOpen: boolean) => void;
+	iconColor: string;
+	isMenuOpen: boolean;
+	setIsOpen: (isOpen: boolean) => void;
 	isHamburger?: boolean;
+	isCardMenu?: boolean;
 }
 
 const Menu: FC<MenuProps> = ({
@@ -18,21 +19,22 @@ const Menu: FC<MenuProps> = ({
 	setIsOpen,
 	children,
 	isHamburger = false,
+	isCardMenu = false
 }) => {
 	const { dir } = useLanguage();
 
 	if (!children) {
 		return null;
 	}
-   
+
 	return (
 		<div className="menu">
 			<IconButton onClick={() => setIsOpen(!isMenuOpen)}>
-				{isHamburger?<BurgerIcon style={{color: iconColor}} />:<EllipsisIcon style={{ color: iconColor }} />}
+				{isHamburger ? <BurgerIcon style={{ color: iconColor }} /> : <EllipsisIcon style={{ color: iconColor }} />}
 			</IconButton>
 
 			{isMenuOpen && (
-				<div className={`menu-content ${dir}`}>
+				<div className={`menu-content  ${dir}${isCardMenu ? "--card-menu" : ""}`}>
 					{children}
 					<button
 						className="invisibleBackground"
