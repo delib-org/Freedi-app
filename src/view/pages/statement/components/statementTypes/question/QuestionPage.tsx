@@ -8,10 +8,8 @@ const QuestionPage = () => {
 	const isDocument: boolean | undefined = statement?.questionSettings?.isDocument;
 
 	if (isDocument) return <Document />
-	
-return <SimpleQuestion />
+	return <SimpleQuestion />
 
-	return null
 }
 
 export default QuestionPage
