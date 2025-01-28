@@ -7,8 +7,8 @@ import {
 export default async function toggleNotifications(
 	statement: Statement | undefined,
 	permission: boolean,
-	setShowAskPermission: (show: boolean) => void,
 	t: (key: string) => string,
+	setShowAskPermission?: (show: boolean) => void,
 ) {
 	try {
 		if (!statement)
@@ -16,7 +16,7 @@ export default async function toggleNotifications(
 
 		const isPermitted = await getUserPermissionToNotifications(t);
 
-		if (!isPermitted) return setShowAskPermission(true);
+		if (!isPermitted && setShowAskPermission) return setShowAskPermission(true);
 
 		setStatementSubscriptionNotificationToDB(statement, !permission);
 	} catch (error) {

@@ -18,7 +18,7 @@ const StageCard: FC<Props> = ({ statement }) => {
 
 	function suggestNewSuggestion(ev: React.MouseEvent<HTMLButtonElement>) {
 		ev.stopPropagation()
-		navigate(`/statement/${statement.statementId}/main`)
+		navigate(`/stage/${statement.statementId}`)
 	}
 
 	return (
@@ -30,12 +30,12 @@ const StageCard: FC<Props> = ({ statement }) => {
 					<h4>{t("Selected Options")}</h4>
 					<ul>
 						{chosen.map((opt: SimpleStatement) => (
-							<NavLink key={opt.statementId} to={`/statement/${opt.statementId}`}><li >{opt.statement}{opt.description ? ":" : ""} {opt.description}</li></NavLink>
+							<NavLink key={opt.statementId} to={`/stage/${opt.statementId}`}><li >{opt.statement}{opt.description ? ":" : ""} {opt.description}</li></NavLink>
 						))}
 					</ul>
 				</>
 			}
-			<NavLink to={`/statement/${statement.statementId}/main`} ><p className={styles.seeMore}>See more...</p></NavLink>
+			<NavLink to={`/stage/${statement.statementId}`} ><p className={styles.seeMore}>See more...</p></NavLink>
 			<div className="btns">
 				<Button text="Add Suggestion" buttonType={ButtonType.SECONDARY} onClick={suggestNewSuggestion} />
 			</div>

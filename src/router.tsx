@@ -1,5 +1,6 @@
 import { lazy } from 'react';
 import { createBrowserRouter } from 'react-router-dom';
+import Stage from './view/pages/stage/Stage';
 
 // Custom components
 
@@ -76,6 +77,11 @@ const routes = [
 						errorElement: <ErrorPage />,
 					},
 				],
+			},
+			{
+				path: "stage/:stageId",
+				element: <Stage />,
+				errorElement: <ErrorPage />,
 			},
 			{
 				path: 'statement-an/:anonymous/:statementId/:page',

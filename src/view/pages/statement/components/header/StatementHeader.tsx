@@ -20,12 +20,14 @@ import useToken from '@/controllers/hooks/useToken';
 interface Props {
 	statement: Statement | undefined;
 	topParentStatement: Statement | undefined;
-	setShowAskPermission: React.Dispatch<React.SetStateAction<boolean>>;
+	parentStatement?: Statement | undefined;
+	setShowAskPermission?: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const StatementHeader: FC<Props> = ({
 	statement,
 	topParentStatement,
+	parentStatement,
 	setShowAskPermission,
 }) => {
 	// Hooks
@@ -63,7 +65,7 @@ const StatementHeader: FC<Props> = ({
 		}
 	}
 	function handleToggleNotifications() {
-		toggleNotifications(statement, permission, setShowAskPermission, t);
+		toggleNotifications(statement, permission, t, setShowAskPermission);
 		setIsHeaderMenuOpen(false);
 	}
 
@@ -88,6 +90,7 @@ const StatementHeader: FC<Props> = ({
 		<div className={`page__header ${dir}`}>
 			<StatementTopNav
 				statement={statement}
+				parentStatement={parentStatement}
 				handleShare={handleShare}
 				handleFollowMe={handleFollowMe}
 				handleToggleNotifications={handleToggleNotifications}

@@ -29,6 +29,7 @@ import { StatementContext } from '../../../StatementCont';
 
 interface Props {
 	statement?: Statement;
+	parentStatement?: Statement;
 	handleShare: () => void;
 	handleFollowMe: () => void;
 	handleToggleNotifications: () => void;
@@ -41,6 +42,7 @@ interface Props {
 
 const StatementTopNav: FC<Props> = ({
 	statement,
+	parentStatement,
 	setIsHeaderMenuOpen,
 	handleToggleNotifications,
 	handleLogout,
@@ -63,8 +65,9 @@ const StatementTopNav: FC<Props> = ({
 	};
 
 	if (!statement) return null;
+	const _statement = parentStatement || statement;
 
-	const enableNavigationalElements = Boolean(statement?.statementSettings?.enableNavigationalElements)
+	const enableNavigationalElements = Boolean(_statement?.statementSettings?.enableNavigationalElements)
 
 	const isAdmin = role === Role.admin;
 	const allowNavigation = enableNavigationalElements || isAdmin;
@@ -101,6 +104,7 @@ const StatementTopNav: FC<Props> = ({
 				)}
 				<NavButtons
 					statement={statement}
+					parentStatement={parentStatement}
 					screen={screen}
 					handleNavigation={handleNavigation}
 					headerStyle={headerStyle}
@@ -117,12 +121,14 @@ export default StatementTopNav;
 
 interface NavigationButtonsProps {
 	statement?: Statement;
+	parentStatement?: Statement;
 	screen: string | undefined;
 	handleNavigation: (path: string) => void;
 	headerStyle: { color: string; backgroundColor: string };
 }
 
 function NavigationButtons({ screen, handleNavigation, headerStyle, statement }: Readonly<NavigationButtonsProps>) {
+
 	const { hasChat } = statement?.statementSettings || { hasChat: false };
 	if (!hasChat) return null;
 
@@ -152,6 +158,7 @@ function NavigationButtons({ screen, handleNavigation, headerStyle, statement }:
 }
 
 interface NavButtonsProps {
+	parentStatement?: Statement;
 	screen: string | undefined;
 	handleNavigation: (path: string) => void;
 	headerStyle: { color: string; backgroundColor: string };
@@ -161,11 +168,11 @@ interface NavButtonsProps {
 	statement?: Statement;
 }
 
-function NavButtons({ screen, handleNavigation, headerStyle, allowNavigation, permission, handleToggleNotifications, statement }: Readonly<NavButtonsProps>) {
+function NavButtons({ screen, handleNavigation, headerStyle, allowNavigation, permission, handleToggleNotifications, statement, parentStatement }: Readonly<NavButtonsProps>) {
 
 	return (
 		<>
-			{allowNavigation && <NavigationButtons statement={statement} screen={screen} handleNavigation={handleNavigation} headerStyle={headerStyle} />}
+			{allowNavigation && <NavigationButtons statement={parentStatement || statement} screen={screen} handleNavigation={handleNavigation} headerStyle={headerStyle} />}
 			<button onClick={handleToggleNotifications}>
 				{permission ? (
 					<BellIcon color={headerStyle.color} />

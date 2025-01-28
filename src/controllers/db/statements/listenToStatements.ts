@@ -8,8 +8,8 @@ import {
 	StatementSchema,
 	DeliberativeElement,
 } from "delib-npm";
-import { Unsubscribe } from "firebase/auth";
-import { and, collection, doc, limit, onSnapshot, or, orderBy, query, where } from "firebase/firestore";
+
+import { and, collection, doc, limit, onSnapshot, or, orderBy, query, Unsubscribe, where } from "firebase/firestore";
 
 // Redux Store
 import { FireStore } from "../config";
@@ -40,21 +40,17 @@ export const listenToStatementSubscription = (statementId: string, user: User, d
 
 				const { role } = statementSubscription;
 
-				//TODO: remove this after 2024-06-06
-				const deprecated = new Date("2024-06-06").getTime();
-
 				//@ts-ignore
 				if (role === "statement-creator") {
 					statementSubscription.role = Role.admin;
 				}
-				if (role === undefined && new Date().getTime() < deprecated) {
+				if (role === undefined) {
 					statementSubscription.role = Role.member;
 				} else if (role === undefined) {
 					statementSubscription.role = Role.unsubscribed;
 					console.info("Role is undefined. Setting role to unsubscribed");
 				}
 
-				// StatementSubscriptionSchema.parse(statementSubscription);
 
 				dispatch(setStatementSubscription(statementSubscription));
 			} catch (error) {
@@ -70,11 +66,12 @@ export const listenToStatementSubscription = (statementId: string, user: User, d
 };
 
 export const listenToStatement = (
-	statementId: string,
+	statementId: string | undefined,
 	setIsStatementNotFound?: React.Dispatch<React.SetStateAction<boolean>>
 ): Unsubscribe => {
 	try {
 		const dispatch = store.dispatch;
+		if (!statementId) throw new Error("Statement id is undefined");
 		const statementRef = doc(FireStore, Collections.statements, statementId);
 
 		return onSnapshot(
@@ -124,7 +121,7 @@ export const listenToSubStatements = (statementId: string | undefined): Unsubscr
 				const statement = change.doc.data() as Statement;
 
 				if (change.type === "added") {
-					
+
 					if (isFirstCall) {
 						startStatements.push(statement);
 					} else {
@@ -133,12 +130,12 @@ export const listenToSubStatements = (statementId: string | undefined): Unsubscr
 				}
 
 				if (change.type === "modified") {
-					
+
 					dispatch(setStatement(statement));
 				}
 
 				if (change.type === "removed") {
-					
+
 					dispatch(deleteStatement(statement.statementId));
 				}
 
@@ -271,12 +268,12 @@ export function listenToAllSubStatements(statementId: string, numberOfLastMessag
 				if (statement.statementId === statementId) return;
 
 				switch (change.type) {
-				case "added":
-					store.dispatch(setStatement(statement));
-					break;
-				case "removed":
-					store.dispatch(deleteStatement(statement.statementId));
-					break;
+					case "added":
+						store.dispatch(setStatement(statement));
+						break;
+					case "removed":
+						store.dispatch(deleteStatement(statement.statementId));
+						break;
 				}
 			});
 
@@ -298,9 +295,9 @@ export function listenToAllDescendants(statementId: string): Unsubscribe {
 					where("deliberativeElement", "==", DeliberativeElement.research)
 				),
 				where("parents", "array-contains", statementId)
-			),limit(100)
+			), limit(100)
 		);
-		
+
 		return onSnapshot(q, (statementsDB) => {
 			statementsDB.docChanges().forEach((change) => {
 				const statement = change.doc.data() as Statement;
@@ -316,7 +313,7 @@ export function listenToAllDescendants(statementId: string): Unsubscribe {
 
 	} catch (error) {
 		console.error(error);
-		
+
 		return (): void => { return; };
 	}
 }

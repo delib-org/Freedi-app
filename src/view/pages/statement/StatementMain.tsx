@@ -1,5 +1,5 @@
 import { createSelector } from '@reduxjs/toolkit';
-import { FC, useEffect, useState } from 'react';
+import { FC, useEffect, useMemo, useState } from 'react';
 
 // Third party imports
 import { useSelector } from 'react-redux';
@@ -190,23 +190,25 @@ const StatementMain: FC = () => {
 		}
 	}, [statement]);
 
+	const contextValue = useMemo(() => ({
+		statement,
+		talker,
+		handleShowTalker,
+		role,
+		handleSetNewStatement,
+		setNewStatementType,
+		newStatementType,
+	}), [statement, talker, role, handleShowTalker, handleSetNewStatement, setNewStatementType, newStatementType]);
+
 	if (isStatementNotFound) return <Page404 />;
 	if (error) return <UnAuthorizedPage />;
 	if (loading) return <LoadingPage />;
 
-	if (isAuthorized)
+	if (isAuthorized) {
+
+
 		return (
-			<StatementContext.Provider
-				value={{
-					statement,
-					talker,
-					handleShowTalker,
-					role,
-					handleSetNewStatement,
-					setNewStatementType,
-					newStatementType,
-				}}
-			>
+			<StatementContext.Provider value={contextValue}>
 				<div className='page'>
 					{showAskPermission && <AskPermission showFn={setShowAskPermission} />}
 					{talker && (
@@ -245,6 +247,7 @@ const StatementMain: FC = () => {
 				</div>
 			</StatementContext.Provider>
 		);
+	}
 
 	return <UnAuthorizedPage />;
 };
