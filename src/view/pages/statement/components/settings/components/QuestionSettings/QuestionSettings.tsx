@@ -11,6 +11,7 @@ import DocumentIcon from "@/assets/icons/document.svg?react";
 import SimpleIcon from "@/assets/icons/navQuestionsIcon.svg?react";
 
 import { setStatementSettingToDB } from "@/controllers/db/statementSettings/setStatementSettings";
+import QuestionSelector from "@/view/components/questionSelector/QuestionSelector";
 
 const QuestionSettings: FC<StatementSettingsProps> = ({
 	statement,
@@ -37,15 +38,7 @@ const QuestionSettings: FC<StatementSettingsProps> = ({
 			<div className="question-settings">
 				<SectionTitle title="Question Settings" />
 
-				<CustomSwitchSmall
-					label="Document Question"
-					checked={questionSettings?.questionType === QuestionType.document || false}
-					setChecked={handleSetDocumentQuestion}
-					textChecked={t("Document Question")}
-					imageChecked={<DocumentIcon />}
-					imageUnchecked={<SimpleIcon />}
-					textUnchecked={t("Simple Question")}
-				/>
+				<QuestionSelector />
 			</div>
 		);
 

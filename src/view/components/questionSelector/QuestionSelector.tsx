@@ -1,43 +1,49 @@
-import React, { useState } from 'react';
+import React, { FC, useState } from 'react';
 import { FileText, HelpCircle, Users } from 'lucide-react';
 import styles from './QuestionSelector.module.scss';
+import { QuestionType } from 'delib-npm';
+
 
 interface Stage {
+	id: number;
 	icon: React.FC<React.SVGProps<SVGSVGElement>>;
 	title: string;
-	type: 'question' | 'document' | 'consensus';
+	type: QuestionType;
 	content: {
 		title: string;
 		description: string;
 	};
 }
 
-const QuestionSelector: React.FC = () => {
+const QuestionSelector: FC = () => {
 	const [currentStage, setCurrentStage] = useState(0);
 
 	const stages: Stage[] = [
 		{
+			id: 1,
 			icon: HelpCircle,
 			title: 'Simple Question',
-			type: 'question',
+			type: QuestionType.simple,
 			content: {
 				title: 'Simple Question Stage',
 				description: 'Ask a straightforward question to get started'
 			}
 		},
 		{
+			id: 2,
 			icon: FileText,
 			title: 'Document',
-			type: 'document',
+			type: QuestionType.document,
 			content: {
 				title: 'Document Stage',
 				description: 'Review and analyze relevant documentation'
 			}
 		},
 		{
+			id: 3,
 			icon: Users,
 			title: 'Mass Consensus',
-			type: 'consensus',
+			type: QuestionType.massConsensus,
 			content: {
 				title: 'Mass Consensus Stage',
 				description: 'Gather and evaluate collective input'
@@ -74,7 +80,7 @@ const QuestionSelector: React.FC = () => {
 		<div className={styles.container}>
 			<div className={styles.stagesContainer}>
 				{stages.map((stage, index) => (
-					<div key={index} className={styles.stageItem}>
+					<div key={stage.id} className={styles.stageItem}>
 						<button
 							className={getStageClassName(index, stage.type)}
 							onClick={() => setCurrentStage(index)}
