@@ -38,11 +38,12 @@
         display: flex;
         justify-content: center;
         align-items: center;
-        
+
         &__btn {
-         position: relative;
+          position: relative;
           min-width: 32px;
           color: white;
+
           .redCircle {
             position: absolute;
             top: -7px;
@@ -115,7 +116,7 @@
 }
 
 .main-wrap {
-  gap: 0;
+  gap: 1rem;
 }
 
 .home-page {
