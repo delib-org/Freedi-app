@@ -1,0 +1,92 @@
+[debug] [2025-01-29T10:52:37.886Z] ----------------------------------------------------------------------
+[debug] [2025-01-29T10:52:37.889Z] Command:       D:\programing\node\node.exe C:\Users\danie\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js emulators:start --only hosting:dev,firestore,auth,functions,storage
+[debug] [2025-01-29T10:52:37.890Z] CLI Version:   13.29.2
+[debug] [2025-01-29T10:52:37.890Z] Platform:      win32
+[debug] [2025-01-29T10:52:37.890Z] Node Version:  v22.11.0
+[debug] [2025-01-29T10:52:37.890Z] Time:          Wed Jan 29 2025 12:52:37 GMT+0200 (שעון ישראל (חורף))
+[debug] [2025-01-29T10:52:37.891Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2025-01-29T10:52:38.141Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-01-29T10:52:38.141Z] > authorizing via signed-in user (daniel.cherno9@gmail.com)
+[debug] [2025-01-29T10:52:40.881Z] java version "21.0.6" 2025-01-21 LTS
+
+[debug] [2025-01-29T10:52:40.881Z] Java(TM) SE Runtime Environment (build 21.0.6+8-LTS-188)
+Java HotSpot(TM) 64-Bit Server VM (build 21.0.6+8-LTS-188, mixed mode, sharing)
+
+[debug] [2025-01-29T10:52:40.919Z] Parsed Java major version: 21
+[info] i  emulators: Starting emulators: auth, functions, firestore, hosting, storage {"metadata":{"emulator":{"name":"hub"},"message":"Starting emulators: auth, functions, firestore, hosting, storage"}}
+[debug] [2025-01-29T10:52:40.935Z] [logging] Logging Emulator only supports listening on one address (127.0.0.1). Not listening on ::1
+[debug] [2025-01-29T10:52:40.935Z] [auth] Authentication Emulator only supports listening on one address (127.0.0.1). Not listening on ::1
+[debug] [2025-01-29T10:52:40.935Z] [firestore] Firestore Emulator only supports listening on one address (127.0.0.1). Not listening on ::1
+[debug] [2025-01-29T10:52:40.935Z] [firestore.websocket] websocket server for firestore only supports listening on one address (127.0.0.1). Not listening on ::1
+[debug] [2025-01-29T10:52:40.935Z] [hosting] Hosting Emulator only supports listening on one address (127.0.0.1). Not listening on ::1
+[debug] [2025-01-29T10:52:40.936Z] [storage] Storage Emulator only supports listening on one address (127.0.0.1). Not listening on ::1
+[debug] [2025-01-29T10:52:40.936Z] assigned listening specs for emulators {"user":{"hub":[{"address":"127.0.0.1","family":"IPv4","port":4400},{"address":"::1","family":"IPv6","port":4400}],"ui":[{"address":"127.0.0.1","family":"IPv4","port":5002},{"address":"::1","family":"IPv6","port":5002}],"logging":[{"address":"127.0.0.1","family":"IPv4","port":4500}],"auth":[{"address":"127.0.0.1","family":"IPv4","port":9099}],"firestore":[{"address":"127.0.0.1","family":"IPv4","port":8080}],"firestore.websocket":[{"address":"127.0.0.1","family":"IPv4","port":9150}],"hosting":[{"address":"127.0.0.1","family":"IPv4","port":5000}],"storage":[{"address":"127.0.0.1","family":"IPv4","port":9199}]},"metadata":{"message":"assigned listening specs for emulators"}}
+[debug] [2025-01-29T10:52:40.940Z] [hub] writing locator at C:\Users\danie\AppData\Local\Temp\hub-freedi-cherno.json
+[debug] [2025-01-29T10:52:40.950Z] [functions] Functions Emulator only supports listening on one address (127.0.0.1). Not listening on ::1
+[debug] [2025-01-29T10:52:40.950Z] [eventarc] Eventarc Emulator only supports listening on one address (127.0.0.1). Not listening on ::1
+[debug] [2025-01-29T10:52:40.950Z] [tasks] Cloud Tasks Emulator only supports listening on one address (127.0.0.1). Not listening on ::1
+[debug] [2025-01-29T10:52:40.950Z] late-assigned ports for functions and eventarc emulators {"user":{"hub":[{"address":"127.0.0.1","family":"IPv4","port":4400},{"address":"::1","family":"IPv6","port":4400}],"ui":[{"address":"127.0.0.1","family":"IPv4","port":5002},{"address":"::1","family":"IPv6","port":5002}],"logging":[{"address":"127.0.0.1","family":"IPv4","port":4500}],"auth":[{"address":"127.0.0.1","family":"IPv4","port":9099}],"firestore":[{"address":"127.0.0.1","family":"IPv4","port":8080}],"firestore.websocket":[{"address":"127.0.0.1","family":"IPv4","port":9150}],"hosting":[{"address":"127.0.0.1","family":"IPv4","port":5000}],"storage":[{"address":"127.0.0.1","family":"IPv4","port":9199}],"functions":[{"address":"127.0.0.1","family":"IPv4","port":5001}],"eventarc":[{"address":"127.0.0.1","family":"IPv4","port":9299}],"tasks":[{"address":"127.0.0.1","family":"IPv4","port":9499}]},"metadata":{"message":"late-assigned ports for functions and eventarc emulators"}}
+[warn] !  functions: The following emulators are not running, calls to these services from the Functions emulator will affect production: apphosting, database, pubsub, dataconnect {"metadata":{"emulator":{"name":"functions"},"message":"The following emulators are not running, calls to these services from the Functions emulator will affect production: \u001b[1mapphosting, database, pubsub, dataconnect\u001b[22m"}}
+[debug] [2025-01-29T10:52:40.955Z] defaultcredentials: writing to file C:\Users\danie\AppData\Roaming\firebase\daniel_cherno9_gmail.com_application_default_credentials.json
+[debug] [2025-01-29T10:52:40.957Z] Setting GAC to C:\Users\danie\AppData\Roaming\firebase\daniel_cherno9_gmail.com_application_default_credentials.json {"metadata":{"emulator":{"name":"functions"},"message":"Setting GAC to C:\\Users\\danie\\AppData\\Roaming\\firebase\\daniel_cherno9_gmail.com_application_default_credentials.json"}}
+[debug] [2025-01-29T10:52:40.959Z] Checked if tokens are valid: true, expires at: 1738151553006
+[debug] [2025-01-29T10:52:40.959Z] Checked if tokens are valid: true, expires at: 1738151553006
+[debug] [2025-01-29T10:52:40.960Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/freedi-cherno/adminSdkConfig [none]
+[debug] [2025-01-29T10:52:41.340Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/freedi-cherno/adminSdkConfig 200
+[debug] [2025-01-29T10:52:41.340Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/freedi-cherno/adminSdkConfig {"projectId":"freedi-cherno","storageBucket":"freedi-cherno.firebasestorage.app"}
+[debug] [2025-01-29T10:52:41.370Z] Ignoring unsupported arg: auto_download {"metadata":{"emulator":{"name":"firestore"},"message":"Ignoring unsupported arg: auto_download"}}
+[debug] [2025-01-29T10:52:41.370Z] Ignoring unsupported arg: single_project_mode_error {"metadata":{"emulator":{"name":"firestore"},"message":"Ignoring unsupported arg: single_project_mode_error"}}
+[debug] [2025-01-29T10:52:41.370Z] Starting Firestore Emulator with command {"binary":"java","args":["-Dgoogle.cloud_firestore.debug_log_level=FINE","-Duser.language=en","-jar","C:\\Users\\danie\\.cache\\firebase\\emulators\\cloud-firestore-emulator-v1.19.8.jar","--host","127.0.0.1","--port",8080,"--websocket_port",9150,"--project_id","freedi-cherno","--rules","D:\\programing\\freedi\\Freedi-app\\firestore.rules","--single_project_mode",true,"--functions_emulator","127.0.0.1:5001"],"optionalArgs":["port","webchannel_port","host","rules","websocket_port","functions_emulator","seed_from_export","project_id","single_project_mode"],"joinArgs":false,"shell":false,"port":8080} {"metadata":{"emulator":{"name":"firestore"},"message":"Starting Firestore Emulator with command {\"binary\":\"java\",\"args\":[\"-Dgoogle.cloud_firestore.debug_log_level=FINE\",\"-Duser.language=en\",\"-jar\",\"C:\\\\Users\\\\danie\\\\.cache\\\\firebase\\\\emulators\\\\cloud-firestore-emulator-v1.19.8.jar\",\"--host\",\"127.0.0.1\",\"--port\",8080,\"--websocket_port\",9150,\"--project_id\",\"freedi-cherno\",\"--rules\",\"D:\\\\programing\\\\freedi\\\\Freedi-app\\\\firestore.rules\",\"--single_project_mode\",true,\"--functions_emulator\",\"127.0.0.1:5001\"],\"optionalArgs\":[\"port\",\"webchannel_port\",\"host\",\"rules\",\"websocket_port\",\"functions_emulator\",\"seed_from_export\",\"project_id\",\"single_project_mode\"],\"joinArgs\":false,\"shell\":false,\"port\":8080}"}}
+[info] i  firestore: Firestore Emulator logging to firestore-debug.log {"metadata":{"emulator":{"name":"firestore"},"message":"Firestore Emulator logging to \u001b[1mfirestore-debug.log\u001b[22m"}}
+[info] +  firestore: Firestore Emulator UI websocket is running on 9150. {"metadata":{"emulator":{"name":"firestore"},"message":"Firestore Emulator UI websocket is running on 9150."}}
+[debug] [2025-01-29T10:52:48.892Z] Ignoring unsupported arg: port {"metadata":{"emulator":{"name":"storage"},"message":"Ignoring unsupported arg: port"}}
+[debug] [2025-01-29T10:52:49.923Z] Temp file directory for storage emulator: C:\Users\danie\AppData\Local\Temp/firebase/storage/blobs {"metadata":{"emulator":{"name":"storage"},"message":"Temp file directory for storage emulator: C:\\Users\\danie\\AppData\\Local\\Temp/firebase/storage/blobs"}}
+[debug] [2025-01-29T10:52:49.927Z] Checked if tokens are valid: true, expires at: 1738151553006
+[debug] [2025-01-29T10:52:49.927Z] Checked if tokens are valid: true, expires at: 1738151553006
+[debug] [2025-01-29T10:52:49.927Z] >>> [apiv2][query] GET https://firebasehosting.googleapis.com/v1beta1/projects/freedi-cherno/sites 
+[debug] [2025-01-29T10:52:51.243Z] <<< [apiv2][status] GET https://firebasehosting.googleapis.com/v1beta1/projects/freedi-cherno/sites 200
+[debug] [2025-01-29T10:52:51.244Z] <<< [apiv2][body] GET https://firebasehosting.googleapis.com/v1beta1/projects/freedi-cherno/sites {"sites":[{"name":"projects/freedi-cherno/sites/freedi-cherno","defaultUrl":"https://freedi-cherno.web.app","type":"DEFAULT_SITE"}]}
+[debug] [2025-01-29T10:52:51.244Z] Checked if tokens are valid: true, expires at: 1738151553006
+[debug] [2025-01-29T10:52:51.244Z] Checked if tokens are valid: true, expires at: 1738151553006
+[debug] [2025-01-29T10:52:51.244Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/freedi-cherno/webApps/-/config [none]
+[debug] [2025-01-29T10:52:51.989Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/freedi-cherno/webApps/-/config 200
+[debug] [2025-01-29T10:52:51.989Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/freedi-cherno/webApps/-/config {"projectId":"freedi-cherno","appId":"1:835152064213:web:02bcf989c76aa428ac3c5c","storageBucket":"freedi-cherno.firebasestorage.app","apiKey":"AIzaSyAtkiOdmrhCOVRm1q26n0eA9IIRSPTcRrU","authDomain":"freedi-cherno.firebaseapp.com","messagingSenderId":"835152064213","measurementId":"G-05C0KF3PSS"}
+[debug] [2025-01-29T10:52:51.994Z] Checked if tokens are valid: true, expires at: 1738151553006
+[debug] [2025-01-29T10:52:51.994Z] Checked if tokens are valid: true, expires at: 1738151553006
+[debug] [2025-01-29T10:52:51.995Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/freedi-cherno [none]
+[debug] [2025-01-29T10:52:52.217Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/freedi-cherno 200
+[debug] [2025-01-29T10:52:52.217Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/freedi-cherno {"projectId":"freedi-cherno","projectNumber":"835152064213","displayName":"freedi-cherno","name":"projects/freedi-cherno","resources":{"hostingSite":"freedi-cherno"},"state":"ACTIVE","etag":"1_2ab4c5e7-7554-4262-8c47-0fcc95426661"}
+[debug] [2025-01-29T10:52:52.218Z] Specified "public" directory "dist" does not exist; Deploy to Hosting site "dev" may fail or be empty.
+[info] i  hosting[dev]: Serving hosting files from: dist {"metadata":{"emulator":{"name":"hosting"},"message":"Serving hosting files from: \u001b[1mdist\u001b[22m"}}
+[info] +  hosting[dev]: Local server: http://127.0.0.1:5000 {"metadata":{"emulator":{"name":"hosting"},"message":"Local server: \u001b[4m\u001b[1mhttp://127.0.0.1:5000\u001b[22m\u001b[24m"}}
+[info] i  functions: Watching "D:\programing\freedi\Freedi-app\functions" for Cloud Functions... {"metadata":{"emulator":{"name":"functions"},"message":"Watching \"D:\\programing\\freedi\\Freedi-app\\functions\" for Cloud Functions..."}}
+[error] !!  functions: Failed to load function definition from source: FirebaseError: `runtime` field is required but was not found in firebase.json or package.json.
+To fix this, add the following lines to the `functions` section of your firebase.json:
+"runtime": "nodejs22" or set the "engine" field in package.json
+ {"metadata":{"emulator":{"name":"functions"},"message":"Failed to load function definition from source: FirebaseError: `runtime` field is required but was not found in firebase.json or package.json.\nTo fix this, add the following lines to the `functions` section of your firebase.json:\n\"runtime\": \"nodejs22\" or set the \"engine\" field in package.json\n"}}
+[debug] [2025-01-29T10:52:52.330Z] Could not find VSCode notification endpoint: FetchError: request to http://localhost:40001/vscode/notify failed, reason: . If you are not running the Firebase Data Connect VSCode extension, this is expected and not an issue.
+[info] 
+┌─────────────────────────────────────────────────────────────┐
+│ ✔  All emulators ready! It is now safe to connect your app. │
+│ i  View Emulator UI at http://127.0.0.1:5002/               │
+└─────────────────────────────────────────────────────────────┘
+
+┌────────────────┬────────────────┬─────────────────────────────────┐
+│ Emulator       │ Host:Port      │ View in Emulator UI             │
+├────────────────┼────────────────┼─────────────────────────────────┤
+│ Authentication │ 127.0.0.1:9099 │ http://127.0.0.1:5002/auth      │
+├────────────────┼────────────────┼─────────────────────────────────┤
+│ Functions      │ 127.0.0.1:5001 │ http://127.0.0.1:5002/functions │
+├────────────────┼────────────────┼─────────────────────────────────┤
+│ Firestore      │ 127.0.0.1:8080 │ http://127.0.0.1:5002/firestore │
+├────────────────┼────────────────┼─────────────────────────────────┤
+│ Hosting        │ 127.0.0.1:5000 │ n/a                             │
+├────────────────┼────────────────┼─────────────────────────────────┤
+│ Storage        │ 127.0.0.1:9199 │ http://127.0.0.1:5002/storage   │
+└────────────────┴────────────────┴─────────────────────────────────┘
+  Emulator Hub running at 127.0.0.1:4400
+  Other reserved ports: 4500, 9150
+
+Issues? Report them at https://github.com/firebase/firebase-tools/issues and attach the *-debug.log files.
+ 
