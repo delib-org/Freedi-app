@@ -16,6 +16,6 @@ export default function useClickOutside(ref: React.RefObject<HTMLElement>, onCli
             document.removeEventListener("touchstart", handleClickOutside);
         };
 
-    }, [    ]);
+    }, [ref, onClickOutside]);
 
 }

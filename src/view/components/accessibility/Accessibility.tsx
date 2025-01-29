@@ -36,8 +36,8 @@ export default function Accessibility() {
 
 	const handleClickOutside = useCallback(() => {
 		if (isOpen) handleOpen();
-	  }, [isOpen, handleOpen]);
-	  useClickOutside(accessibilityRef, handleClickOutside);
+	}, [isOpen, handleOpen]);
+	useClickOutside(accessibilityRef, handleClickOutside);
 
 	return (
 		<div ref={accessibilityRef} className={`accessibility ${isOpen ? 'is-open' : ''}`}>
