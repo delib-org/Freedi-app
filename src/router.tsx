@@ -1,5 +1,6 @@
-import { lazy } from 'react';
+import { lazy, Suspense } from 'react';
 import { createBrowserRouter } from 'react-router';
+import LoadingPage from "./view/pages/loadingPage/LoadingPage"; // Adjust the import path as needed
 
 // Custom components
 const App = lazy(() => import('./App'));
@@ -15,90 +16,86 @@ const Start = lazy(() => import('./view/pages/start/Start'));
 const StatementMain = lazy(() => import('./view/pages/statement/StatementMain'));
 const Stage = lazy(() => import('./view/pages/stage/Stage'));
 
-// Fallback component for hydration
-const HydrationFallback = () => <div>Loading...</div>;
-
 export const router = createBrowserRouter([
 	{
 		path: '/',
-		element: <App />,
-		errorElement: <ErrorPage />,
-		HydrateFallback: HydrationFallback,
+		element: <Suspense fallback={<LoadingPage />}><App /></Suspense>,
+		errorElement: <Suspense fallback={<LoadingPage />}><ErrorPage /></Suspense>,
 		children: [
 			{
 				index: true,
-				element: <Start />,
-				errorElement: <ErrorPage />,
+				element: <Suspense fallback={<LoadingPage />}><Start /></Suspense>,
+				errorElement: <Suspense fallback={<LoadingPage />}><ErrorPage /></Suspense>,
 			},
 			{
 				path: 'home',
-				element: <Home />,
-				errorElement: <ErrorPage />,
+				element: <Suspense fallback={<LoadingPage />}><Home /></Suspense>,
+				errorElement: <Suspense fallback={<LoadingPage />}><ErrorPage /></Suspense>,
 				children: [
 					{
 						index: true,
-						element: <HomeMain />,
+						element: <Suspense fallback={<LoadingPage />}><HomeMain /></Suspense>,
 					},
 					{
 						path: 'addStatement',
-						element: <AddStatement />,
+						element: <Suspense fallback={<LoadingPage />}><AddStatement /></Suspense>,
 					},
 				],
 			},
 			{
 				path: 'member-rejection',
-				element: <MemberRejection />,
+				element: <Suspense fallback={<LoadingPage />}><MemberRejection /></Suspense>,
 			},
 			{
 				path: 'login-first',
-				element: <LoginPage />,
+				element: <Suspense fallback={<LoadingPage />}><LoginPage /></Suspense>,
 			},
 			{
 				path: 'statement/:statementId',
-				element: <StatementMain />,
+				element: <Suspense fallback={<LoadingPage />}><StatementMain /></Suspense>,
 				children: [
 					{
 						path: ':screen',
-						element: <StatementMain />,
+						element: <Suspense fallback={<LoadingPage />}><StatementMain /></Suspense>,
 					},
 				],
 			},
 			{
 				path: 'statement/:statementId/:page',
-				element: <StatementMain />,
+				element: <Suspense fallback={<LoadingPage />}><StatementMain /></Suspense>,
 				children: [
 					{
 						path: ':sort',
-						element: <StatementMain />,
+						element: <Suspense fallback={<LoadingPage />}><StatementMain /></Suspense>,
 					},
 				],
 			},
 			{
 				path: 'stage/:stageId',
-				element: <Stage />,
+				element: <Suspense fallback={<LoadingPage />}><Stage /></Suspense>,
 			},
 			{
 				path: 'statement-an/:anonymous/:statementId/:page',
-				element: <StatementMain />,
+				element: <Suspense fallback={<LoadingPage />}><StatementMain /></Suspense>,
 				children: [
 					{
 						path: ':sort',
-						element: <StatementMain />,
+						element: <Suspense fallback={<LoadingPage />}><StatementMain /></Suspense>,
 					},
 				],
 			},
 			{
 				path: '401',
-				element: <Page401 />,
+				element: <Suspense fallback={<LoadingPage />}><Page401 /></Suspense>,
 			},
 		],
 	},
 	{
 		path: '404',
-		element: <Page404 />,
+		element: <Suspense fallback={<LoadingPage />}><Page404 /></Suspense>,
 	},
 	{
 		path: '*',
-		element: <Page404 />,
+		element: <Suspense fallback={<LoadingPage />}><Page404 /></Suspense>,
 	},
 ]);
