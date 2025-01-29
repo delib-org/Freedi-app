@@ -51,7 +51,6 @@ export const listenToStatementSubscription = (statementId: string, user: User, d
 					console.info("Role is undefined. Setting role to unsubscribed");
 				}
 
-
 				dispatch(setStatementSubscription(statementSubscription));
 			} catch (error) {
 				console.error(error);

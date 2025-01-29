@@ -9,7 +9,6 @@ const Stage = () => {
 
 	if (loading) return <div>Loading...</div>
 
-
 	return (
 		<div>
 			<StatementHeader statement={stage} topParentStatement={topParentStatement} parentStatement={parentStatement} />

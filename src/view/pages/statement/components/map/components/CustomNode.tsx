@@ -2,7 +2,7 @@ import { Statement } from 'delib-npm';
 import { useEffect, useState } from 'react';
 
 // Third party
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { Handle, NodeProps } from 'reactflow';
 
 // Hooks

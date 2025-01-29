@@ -1,5 +1,5 @@
 import { FC, useContext } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation } from "react-router";
 import FollowMeIcon from "../../../../components/icons/FollowMeIcon";
 import { setFollowMeDB } from "@/controllers/db/statements/setStatements";
 import { isAdmin } from "@/controllers/general/helpers";
@@ -32,7 +32,7 @@ const FollowMeToast: FC = () => {
 	//if the follow me is empty, turn off the follow me toast
 	if (
 		topParentStatement?.followMe === "" ||
-        topParentStatement?.followMe === undefined
+		topParentStatement?.followMe === undefined
 	)
 		return null;
 

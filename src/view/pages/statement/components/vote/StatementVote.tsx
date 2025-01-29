@@ -4,7 +4,6 @@ import { FC, useContext, useEffect, useState } from 'react';
 // Third party imports
 
 // Redux
-// import CreateStatementModalSwitch from '../createStatementModalSwitch/CreateStatementModalSwitch';
 import StatementBottomNav from '../nav/bottom/StatementBottomNav';
 import { getStagesInfo } from '../settings/components/QuestionSettings/QuestionStageRadioBtn/QuestionStageRadioBtn';
 import StatementInfo from './components/info/StatementInfo';
@@ -41,8 +40,6 @@ const StatementVote: FC = () => {
 	const isCurrentStageVoting = currentStage === QuestionStage.voting;
 	const stageInfo = getStagesInfo(currentStage);
 	const toastMessage = stageInfo ? stageInfo.message : '';
-	// const useSearchForSimilarStatements =
-	// 	statement?.statementSettings?.enableSimilaritiesSearch || false;
 
 	// * Use State * //
 	const [showMultiStageMessage, setShowMultiStageMessage] =
@@ -82,8 +79,6 @@ const StatementVote: FC = () => {
 								text={t('Got it')}
 								iconOnRight={true}
 								icon={<X />}
-								bckColor='var(--crimson)'
-								color='var(--white)'
 								onClick={() => setShowMultiStageMessage(false)}
 							/>
 						</Toast>

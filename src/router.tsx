@@ -1,9 +1,7 @@
 import { lazy } from 'react';
-import { createBrowserRouter } from 'react-router-dom';
-import Stage from './view/pages/stage/Stage';
+import { createBrowserRouter } from 'react-router';
 
 // Custom components
-
 const App = lazy(() => import('./App'));
 const ErrorPage = lazy(() => import('./view/pages/error/ErrorPage'));
 const Home = lazy(() => import('./view/pages/home/Home'));
@@ -15,15 +13,20 @@ const Page401 = lazy(() => import('./view/pages/page401/Page401'));
 const Page404 = lazy(() => import('./view/pages/page404/Page404'));
 const Start = lazy(() => import('./view/pages/start/Start'));
 const StatementMain = lazy(() => import('./view/pages/statement/StatementMain'));
+const Stage = lazy(() => import('./view/pages/stage/Stage'));
 
-const routes = [
+// Fallback component for hydration
+const HydrationFallback = () => <div>Loading...</div>;
+
+export const router = createBrowserRouter([
 	{
 		path: '/',
 		element: <App />,
 		errorElement: <ErrorPage />,
+		HydrateFallback: HydrationFallback,
 		children: [
 			{
-				path: '',
+				index: true,
 				element: <Start />,
 				errorElement: <ErrorPage />,
 			},
@@ -33,65 +36,54 @@ const routes = [
 				errorElement: <ErrorPage />,
 				children: [
 					{
-						path: '',
+						index: true,
 						element: <HomeMain />,
-						errorElement: <ErrorPage />,
 					},
 					{
 						path: 'addStatement',
 						element: <AddStatement />,
-						errorElement: <ErrorPage />,
 					},
 				],
 			},
 			{
 				path: 'member-rejection',
 				element: <MemberRejection />,
-				errorElement: <ErrorPage />,
 			},
 			{
 				path: 'login-first',
 				element: <LoginPage />,
-				errorElement: <ErrorPage />,
 			},
 			{
 				path: 'statement/:statementId',
 				element: <StatementMain />,
-				errorElement: <ErrorPage />,
 				children: [
 					{
 						path: ':screen',
 						element: <StatementMain />,
-						errorElement: <ErrorPage />,
 					},
 				],
 			},
 			{
 				path: 'statement/:statementId/:page',
 				element: <StatementMain />,
-				errorElement: <ErrorPage />,
 				children: [
 					{
 						path: ':sort',
 						element: <StatementMain />,
-						errorElement: <ErrorPage />,
 					},
 				],
 			},
 			{
-				path: "stage/:stageId",
+				path: 'stage/:stageId',
 				element: <Stage />,
-				errorElement: <ErrorPage />,
 			},
 			{
 				path: 'statement-an/:anonymous/:statementId/:page',
 				element: <StatementMain />,
-				errorElement: <ErrorPage />,
 				children: [
 					{
 						path: ':sort',
 						element: <StatementMain />,
-						errorElement: <ErrorPage />,
 					},
 				],
 			},
@@ -108,16 +100,5 @@ const routes = [
 	{
 		path: '*',
 		element: <Page404 />,
-		errorElement: <ErrorPage />,
 	},
-];
-
-export const router = createBrowserRouter(routes, {
-	future: {
-		v7_partialHydration: true,
-		v7_normalizeFormMethod: true,
-		v7_fetcherPersist: true,
-		v7_skipActionErrorRevalidation: true,
-		v7_relativeSplatPath: true,
-	},
-});
+]);

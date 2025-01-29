@@ -1,11 +1,11 @@
-import { QuestionStage, QuestionType, Statement, StatementType } from "delib-npm";
+import { QuestionStage, Statement, StatementType } from "delib-npm";
 import { FC, useEffect, useState } from "react";
 
 // Third party imports
 
 // Custom Components
 
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import CreateStatementModalSwitch from "../createStatementModalSwitch/CreateStatementModalSwitch";
 import StatementBottomNav from "../nav/bottom/StatementBottomNav";
 import { getStagesInfo } from "../settings/components/QuestionSettings/QuestionStageRadioBtn/QuestionStageRadioBtn";
@@ -32,49 +32,48 @@ const StatementEvaluationPage: FC<StatementEvaluationPageProps> = ({
 	statement,
 	questions = false,
 }) => {
+
+	// Hooks
+
+	const navigate = useNavigate();
+	const { t } = useLanguage();
+	const isMultiStage = false;
+
+	const currentStage = statement.questionSettings?.currentStage;
+	const stageInfo = getStagesInfo(currentStage);
+	const useSearchForSimilarStatements =
+		statement.statementSettings?.enableSimilaritiesSearch || false;
+
+	// Use States
+	const [showModal, setShowModal] = useState(false);
+	const [showToast, setShowToast] = useState(false);
+	const [showExplanation, setShowExplanation] = useState<boolean>(
+		currentStage === QuestionStage.explanation && isMultiStage && !questions
+	);
+
+	useEffect(() => {
+		if (questions) {
+			setShowToast(false);
+		}
+	}, [questions]);
+
+	useEffect(() => {
+		if (!showToast && !questions) {
+			setShowToast(true);
+		}
+		if (
+			currentStage === QuestionStage.explanation &&
+			isMultiStage &&
+			!questions
+		) {
+			setShowExplanation(true);
+		}
+		if (currentStage === QuestionStage.voting && !questions) {
+			//redirect us react router dom to voting page
+			navigate(`/statement/${statement.statementId}/vote`);
+		}
+	}, [statement.questionSettings?.currentStage, questions]);
 	try {
-		// Hooks
-
-		const navigate = useNavigate();
-		const { t } = useLanguage();
-		const isMultiStage =
-			statement.questionSettings?.questionType === QuestionType.multipleSteps;
-
-		const currentStage = statement.questionSettings?.currentStage;
-		const stageInfo = getStagesInfo(currentStage);
-		const useSearchForSimilarStatements =
-			statement.statementSettings?.enableSimilaritiesSearch || false;
-
-		// Use States
-		const [showModal, setShowModal] = useState(false);
-		const [showToast, setShowToast] = useState(false);
-		const [showExplanation, setShowExplanation] = useState(
-			currentStage === QuestionStage.explanation && isMultiStage && !questions
-		);
-
-		useEffect(() => {
-			if (questions) {
-				setShowToast(false);
-			}
-		}, [questions]);
-
-		useEffect(() => {
-			if (!showToast && !questions) {
-				setShowToast(true);
-			}
-			if (
-				currentStage === QuestionStage.explanation &&
-				isMultiStage &&
-				!questions
-			) {
-				setShowExplanation(true);
-			}
-			if (currentStage === QuestionStage.voting && !questions) {
-				//redirect us react router dom to voting page
-				navigate(`/statement/${statement.statementId}/vote`);
-			}
-		}, [statement.questionSettings?.currentStage, questions]);
-
 		const message = stageInfo ? stageInfo.message : false;
 
 		return (
@@ -122,23 +121,6 @@ const StatementEvaluationPage: FC<StatementEvaluationPageProps> = ({
 		function getToastButtons(questionStage: QuestionStage | undefined) {
 			try {
 				switch (questionStage) {
-					case QuestionStage.voting:
-					case QuestionStage.firstEvaluation:
-					case QuestionStage.secondEvaluation:
-					case QuestionStage.finished:
-					case QuestionStage.explanation:
-						return (
-							<Button
-								text={t("Close")}
-								iconOnRight={false}
-								onClick={() => {
-									setShowToast(false);
-								}}
-								icon={<X />}
-								color="white"
-								bckColor="var(--crimson)"
-							/>
-						);
 					case QuestionStage.suggestion:
 						return (
 							<>
@@ -149,8 +131,6 @@ const StatementEvaluationPage: FC<StatementEvaluationPageProps> = ({
 										setShowToast(false);
 									}}
 									icon={<X />}
-									color="white"
-									bckColor="var(--crimson)"
 								/>
 								<Button
 									text={t("Add a solution")}
@@ -160,11 +140,14 @@ const StatementEvaluationPage: FC<StatementEvaluationPageProps> = ({
 										setShowModal(true);
 									}}
 									icon={<LightBulbIcon />}
-									color="white"
-									bckColor="var(--green)"
 								/>
 							</>
 						);
+					case QuestionStage.voting:
+					case QuestionStage.firstEvaluation:
+					case QuestionStage.secondEvaluation:
+					case QuestionStage.finished:
+					case QuestionStage.explanation:
 					default:
 						return (
 							<Button
@@ -174,8 +157,6 @@ const StatementEvaluationPage: FC<StatementEvaluationPageProps> = ({
 									setShowToast(false);
 								}}
 								icon={<X />}
-								color="white"
-								bckColor="var(--crimson)"
 							/>
 						);
 				}

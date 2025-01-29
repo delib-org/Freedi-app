@@ -2,7 +2,7 @@
 import { Statement } from "delib-npm";
 import { FC, useEffect } from "react";
 
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import "./MainCard.scss";
 
 //img
@@ -11,7 +11,7 @@ import ImgThumb from "@/assets/images/ImgThumb.png";
 import { listenToAllSubStatements } from "@/controllers/db/statements/listenToStatements";
 import { getLastElements } from "@/controllers/general/helpers";
 import { useAppSelector } from "@/controllers/hooks/reduxHooks";
-import {  subStatementsByTopParentIdMemo} from "@/model/statements/statementsSlice";
+import { subStatementsByTopParentIdMemo } from "@/model/statements/statementsSlice";
 import Text from "@/view/components/text/Text";
 import StatementChatMore from "@/view/pages/statement/components/chat/components/StatementChatMore";
 
@@ -55,7 +55,7 @@ const MainCard: FC<Props> = ({ statement }) => {
             className="main-card__img"
           ></div>
           <StatementChatMore statement={statement} />
-        </div>  
+        </div>
         <Text statement={statement.statement} description={description} />
       </Link>
       <div className="main-card__updates">

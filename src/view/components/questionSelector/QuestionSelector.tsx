@@ -3,7 +3,7 @@ import { FileText, HelpCircle, Users } from 'lucide-react';
 import styles from './QuestionSelector.module.scss';
 
 interface Stage {
-	icon: React.FC<any>;
+	icon: React.FC<React.SVGProps<SVGSVGElement>>;
 	title: string;
 	type: 'question' | 'document' | 'consensus';
 	content: {
@@ -52,18 +52,21 @@ const QuestionSelector: React.FC = () => {
 	const getStageClassName = (index: number, type: Stage['type']) => {
 		const baseClass = styles.stageCircle;
 		const activeClass = styles[`stageCircle--${type}`];
+
 		return `${baseClass} ${index === currentStage ? activeClass : ''}`;
 	};
 
 	const getStageTitleClassName = (index: number, type: Stage['type']) => {
 		const baseClass = styles.stageTitle;
 		const activeClass = styles[`stageTitle--${type}`];
+
 		return `${baseClass} ${index === currentStage ? activeClass : ''}`;
 	};
 
 	const getIconClassName = (index: number, type: Stage['type']) => {
 		const baseClass = styles.icon;
 		const activeClass = styles[`icon--${type}`];
+
 		return `${baseClass} ${index === currentStage ? activeClass : ''}`;
 	};
 

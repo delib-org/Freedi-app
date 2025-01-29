@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams } from "react-router";
 import { useAppSelector } from "./reduxHooks";
 import {
 	hasTokenSelector,
@@ -28,7 +28,6 @@ const useNotificationPermission = (token: string) => {
 	try {
 		if (!statementId) throw new Error("No statementId found in useNotificationPermission");
 		if (!token) return false;
-
 
 		return permission;
 	} catch (error) {

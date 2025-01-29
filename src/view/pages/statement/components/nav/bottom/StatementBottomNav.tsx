@@ -3,7 +3,7 @@ import { FC, useContext, useState } from "react";
 
 // Third party libraries
 import { useSelector } from "react-redux";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams } from "react-router";
 
 // Icons
 import AgreementIcon from "@/assets/icons/agreementIcon.svg?react";

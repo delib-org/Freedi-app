@@ -1,5 +1,5 @@
 import CustomSwitchSmall from "@/view/components/switch/customSwitchSmall/CustomSwitchSmall";
-import { StatementType } from "delib-npm";
+import { QuestionType, StatementType } from "delib-npm";
 import { FC } from "react";
 import { StatementSettingsProps } from "../../settingsTypeHelpers";
 import SectionTitle from "../sectionTitle/SectionTitle";
@@ -27,8 +27,8 @@ const QuestionSettings: FC<StatementSettingsProps> = ({
 
 			setStatementSettingToDB({
 				statement,
-				property: "isDocument",
-				newValue: isDocument,
+				property: "questionType",
+				newValue: isDocument ? QuestionType.document : QuestionType.simple,
 				settingsSection: "questionSettings",
 			});
 		}
@@ -39,7 +39,7 @@ const QuestionSettings: FC<StatementSettingsProps> = ({
 
 				<CustomSwitchSmall
 					label="Document Question"
-					checked={questionSettings?.isDocument || false}
+					checked={questionSettings?.questionType === QuestionType.document || false}
 					setChecked={handleSetDocumentQuestion}
 					textChecked={t("Document Question")}
 					imageChecked={<DocumentIcon />}

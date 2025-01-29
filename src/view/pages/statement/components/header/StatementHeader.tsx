@@ -2,7 +2,7 @@ import { Statement } from 'delib-npm';
 import React, { FC, useState } from 'react';
 
 // Third party imports
-import { useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router';
 
 // Helpers
 import StatementTopNav from '../nav/top/StatementTopNav';

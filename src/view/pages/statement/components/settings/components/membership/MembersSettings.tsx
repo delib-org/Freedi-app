@@ -11,7 +11,7 @@ import { collection, getDocs } from "firebase/firestore";
 import { Dispatch, FC, useEffect, useState } from "react";
 
 // Third party imports
-import { useParams } from "react-router-dom";
+import { useParams } from "react-router";
 
 // Redux Store
 import { FireStore } from "../../../../../../../controllers/db/config";

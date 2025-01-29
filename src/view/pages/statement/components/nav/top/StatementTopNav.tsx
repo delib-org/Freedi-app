@@ -1,6 +1,6 @@
 import { Role, Statement } from 'delib-npm';
 import { FC, useContext } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router';
 import Back from '../../header/Back';
 import HomeButton from '../../header/HomeButton';
 import styles from './StatementTopNav.module.scss';

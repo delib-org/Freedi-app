@@ -4,8 +4,8 @@ import { FireStore } from "../config";
 
 interface SetStatementSettingsProps {
 	statement: Statement,
-	property: keyof StatementSettings | keyof QuestionSettings,
-	newValue: boolean,
+	property: keyof (StatementSettings & QuestionSettings),
+	newValue: boolean | string,
 	settingsSection: keyof Statement
 }
 

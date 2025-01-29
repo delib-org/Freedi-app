@@ -6,7 +6,7 @@ import {
 	signInAnonymously,
 	Unsubscribe,
 } from 'firebase/auth';
-import { NavigateFunction } from 'react-router-dom';
+import { NavigateFunction } from 'react-router';
 import { auth } from './config';
 
 // Helper functions

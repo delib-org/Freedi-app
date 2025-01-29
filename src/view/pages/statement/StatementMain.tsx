@@ -3,7 +3,7 @@ import { FC, useEffect, useMemo, useState } from 'react';
 
 // Third party imports
 import { useSelector } from 'react-redux';
-import { useParams } from 'react-router-dom';
+import { useParams } from 'react-router';
 
 // firestore
 import EnableNotifications from '../../components/enableNotifications/EnableNotifications';
@@ -205,7 +205,6 @@ const StatementMain: FC = () => {
 	if (loading) return <LoadingPage />;
 
 	if (isAuthorized) {
-
 
 		return (
 			<StatementContext.Provider value={contextValue}>

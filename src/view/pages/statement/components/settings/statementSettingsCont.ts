@@ -2,7 +2,7 @@ import { Statement, Vote, Evaluation, Screen } from 'delib-npm';
 
 // Helpers
 import { StatementSettings, StatementType } from 'delib-npm/dist/models/statementsModels';
-import { NavigateFunction } from 'react-router-dom';
+import { NavigateFunction } from 'react-router';
 import {
 	defaultResultsSettings,
 	defaultStatementSettings,

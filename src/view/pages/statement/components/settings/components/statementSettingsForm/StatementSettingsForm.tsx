@@ -2,7 +2,7 @@ import { Role, Statement, StatementSubscription } from 'delib-npm';
 import { Dispatch, FC, useState } from 'react';
 
 // Third party imports
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router';
 
 // Firestore functions
 

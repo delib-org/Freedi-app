@@ -3,7 +3,7 @@ import { statementSelector } from "@/model/statements/statementsSlice";
 import { Statement } from "delib-npm";
 import { useEffect } from "react";
 import { useSelector } from "react-redux";
-import { useParams } from "react-router-dom";
+import { useParams } from "react-router";
 import { Unsubscribe } from "firebase/firestore";
 
 export function useStageVM(): { stage: Statement | undefined, parentStatement: Statement | undefined } {
@@ -12,7 +12,7 @@ export function useStageVM(): { stage: Statement | undefined, parentStatement: S
 	const parentStatement = useSelector(statementSelector(statement?.parentId));
 
 	useEffect(() => {
-		let unsubscribe: Unsubscribe = () => { };
+		let unsubscribe: Unsubscribe = () => { return; };
 		if (!statement) {
 			unsubscribe = listenToStatement(stageId);
 		}
@@ -23,18 +23,15 @@ export function useStageVM(): { stage: Statement | undefined, parentStatement: S
 	}, [statement?.statementId]);
 
 	useEffect(() => {
-		let unsubscribe: Unsubscribe = () => { };
+		let unsubscribe: Unsubscribe = () => { return; };
 		if (statement && !parentStatement) {
 			unsubscribe = listenToStatement(statement.parentId);
 		}
+
 		return () => {
 			unsubscribe();
 		}
 	}, [parentStatement?.statementId, statement?.statementId]);
-
-
-
-
 
 	try {
 		if (!stageId) throw new Error("No stageId found in URL");
@@ -42,6 +39,7 @@ export function useStageVM(): { stage: Statement | undefined, parentStatement: S
 		return { stage: statement, parentStatement };
 	} catch (error) {
 		console.error(error);
+
 		return { stage: undefined, parentStatement: undefined };
 	}
 }

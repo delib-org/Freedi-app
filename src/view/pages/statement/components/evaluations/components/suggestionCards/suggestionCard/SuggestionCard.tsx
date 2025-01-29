@@ -4,7 +4,7 @@ import { FC, useEffect, useRef, useState } from 'react';
 // Third Party
 
 // Redux Store
-import { useParams } from 'react-router-dom';
+import { useParams } from 'react-router';
 import StatementChatMore from '../../../../chat/components/StatementChatMore';
 import CreateStatementModal from '../../../../createStatementModal/CreateStatementModal';
 import { sortSubStatements } from '../../../statementsEvaluationCont';

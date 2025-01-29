@@ -1,6 +1,6 @@
 import { DeliberativeElement, Statement } from 'delib-npm';
 import React, { FC, useContext } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams } from 'react-router';
 import OptionBar from '../optionBar/OptionBar';
 import './VotingArea.scss';
 import { getSortedVotingOptions, isVerticalOptionBar } from './VotingAreaCont';
