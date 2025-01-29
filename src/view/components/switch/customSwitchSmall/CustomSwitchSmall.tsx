@@ -2,7 +2,6 @@ import React, { FC, useState } from "react";
 import "./CustomSwitchSmall.scss";
 import VisuallyHidden from "../../accessibility/toScreenReaders/VisuallyHidden";
 import BackgroundImage from "./customSwitchSmallBackground.svg";
-
 import { useLanguage } from "@/controllers/hooks/useLanguages";
 
 interface Props {
@@ -24,7 +23,6 @@ const CustomSwitchSmall: FC<Props> = ({
 	imageUnchecked,
 	setChecked,
 }) => {
-
 	const { dir } = useLanguage();
 	const [isChecked, setIsChecked] = useState(checked);
 
@@ -33,36 +31,50 @@ const CustomSwitchSmall: FC<Props> = ({
 		setChecked(!isChecked);
 	};
 
-	//checked means multi-stage question
+	const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+		if (e.key === 'Enter' || e.key === ' ') {
+			e.preventDefault();
+			handleChange();
+		}
+	};
 
 	return (
-		<button className="custom-switch-small" onClick={handleChange}>
+		<div
+			className="custom-switch-small"
+			onClick={handleChange}
+			onKeyDown={handleKeyDown}
+			role="switch"
+			aria-checked={isChecked}
+			tabIndex={0}
+		>
 			<div
 				className={dir === "rtl" ? "background" : "background background--ltr"}
 				style={{ backgroundImage: `url(${BackgroundImage})` }}
 			>
-				<div className="ball ball-background" style={{ left: "4.15rem" }}>
+				<div
+					className="ball ball-background"
+					style={{ left: "4.15rem" }}
+					aria-hidden="true"
+				>
 					{imageUnchecked}
 				</div>
-				<div className="ball ball-background ball-background-off">
+				<div
+					className="ball ball-background ball-background-off"
+					aria-hidden="true"
+				>
 					{imageChecked}
 				</div>
-				<button
+				<div
 					className={`ball ball-switch ball-switch--${isChecked ? "checked" : "unchecked"}`}
-					type="button"
 					style={{ left: `${isChecked ? 0 : 4.15}rem` }}
-					aria-label={isChecked ? "Turn off" : "Turn on"}
-					onKeyDown={(e) => {
-						if (e.key === 'Enter' || e.key === ' ') {
-							e.preventDefault();
-							handleChange();
-						}
-					}}
+					aria-hidden="true"
 				>
 					{isChecked ? imageChecked : imageUnchecked}
-				</button>
+				</div>
 			</div>
-			<div className="text">{isChecked ? textChecked : textUnchecked}</div>
+			<div className="text" aria-hidden="true">
+				{isChecked ? textChecked : textUnchecked}
+			</div>
 			<label htmlFor={`toggleSwitchSimple-${label}`}>
 				<VisuallyHidden labelName={label} />
 			</label>
@@ -75,8 +87,10 @@ const CustomSwitchSmall: FC<Props> = ({
 				value={isChecked ? "on" : "off"}
 				checked={isChecked}
 				data-cy={`toggleSwitch-input-${label}`}
+				tabIndex={-1}
+				style={{ position: 'absolute', opacity: 0, pointerEvents: 'none' }}
 			/>
-		</button>
+		</div>
 	);
 };
 

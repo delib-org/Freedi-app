@@ -5,17 +5,17 @@ import { decreesUserSettingsLearningRemain } from "@/controllers/db/learning/set
 import { useLanguage } from "@/controllers/hooks/useLanguages";
 
 interface Props {
-  setShow: React.Dispatch<React.SetStateAction<boolean>>;
+	setShow: React.Dispatch<React.SetStateAction<boolean>>;
 }
 const StartHere: FC<Props> = ({ setShow }) => {
-	const {t} = useLanguage();
+	const { t, dir } = useLanguage();
 	function handleCloseModal() {
 		setShow(false);
 		decreesUserSettingsLearningRemain({ addOption: true });
 	}
-	
+
 	return (
-		<button onClick={handleCloseModal} className={styles.wrapper}>
+		<button onClick={handleCloseModal} className={`${styles["start-here"]} ${dir === "ltr" ? styles["start-here--ltr"] : ""}`}>
 			<div className={styles.text}>{t("Add new option here")}</div>
 			<img className={styles.img} src={PointDown} alt="start here pointer" />
 		</button>

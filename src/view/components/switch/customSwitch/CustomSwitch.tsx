@@ -1,15 +1,14 @@
-// CustomSwitch.js
 import { useLanguage } from "@/controllers/hooks/useLanguages";
 import { FC } from "react";
 import "./CustomSwitch.scss";
 import VisuallyHidden from "../../accessibility/toScreenReaders/VisuallyHidden";
 
 interface Props {
-    label: string;
-    name: string;
-    checked: boolean;
-    children: JSX.Element;
-    setChecked: (checked: boolean) => void;
+	label: string;
+	name: string;
+	checked: boolean;
+	children: JSX.Element;
+	setChecked: (checked: boolean) => void;
 }
 
 const CustomSwitch: FC<Props> = ({
@@ -25,20 +24,29 @@ const CustomSwitch: FC<Props> = ({
 		setChecked(!checked);
 	};
 
+	const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+		if (e.key === "Enter" || e.key === " ") {
+			e.preventDefault();
+			handleChange();
+		}
+	};
+
 	return (
-		<div className={`custom-switch ${checked ? "checked" : ""}`} >
-			<button className="tag" onClick={handleChange} aria-label="custom switch" type="button">
+		<div
+			className={`custom-switch ${checked ? "checked" : ""}`}
+			role="switch"
+			aria-checked={checked}
+			tabIndex={0}
+			onClick={handleChange}
+			onKeyDown={handleKeyDown}
+			data-cy={`toggleSwitch-${name}`}
+		>
+			<div className="tag" aria-hidden="true">
 				{children}
-			</button>
-			<button
-				className="label"
-				onClick={handleChange}
-				data-cy={`toggleSwitch-${name}`}
-				type='button'
-				
-			>
+			</div>
+			<div className="label">
 				{t(label)}
-			</button>
+			</div>
 			<label htmlFor={`toggleSwitch-${name}`}>
 				<VisuallyHidden labelName={label} />
 			</label>
@@ -51,6 +59,8 @@ const CustomSwitch: FC<Props> = ({
 				value={checked ? "on" : "off"}
 				checked={checked}
 				data-cy={`toggleSwitch-input-${name}`}
+				tabIndex={-1}
+				style={{ position: 'absolute', opacity: 0, pointerEvents: 'none' }}
 			/>
 		</div>
 	);
