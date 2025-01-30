@@ -29,9 +29,9 @@ import {
 import { StatementEvaluationSchema } from '../evaluation';
 import { ResultsSettingsSchema } from '../results';
 import { QuestionSettingsSchema } from '../question';
-import { getRandomUID } from '@/controllers/general/helpers';
 import { AgreeSchema } from '../agreement';
 import { StageType } from '../stage';
+import { getRandomUID } from '../helpers';
 
 const SimpleStatementSchema = object({
 	statementId: string(),

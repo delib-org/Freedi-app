@@ -15,10 +15,11 @@ import {
 } from '@/view/pages/statement/components/vote/statementVoteCont';
 import { getRandomColor } from '@/view/pages/statement/components/vote/votingColors';
 import { Statement, StatementSchema } from '@/types/statement';
-import { Collections, StatementType, Access, StageType } from '@/types/enums';
+import { Collections, StatementType, Access } from '@/types/enums';
 import { UserSchema, Membership } from '@/types/user';
 import { number, parse, string } from 'valibot';
 import { ResultsBy } from '@/types/results';
+import { StageType } from '@/types/stage';
 
 export const updateStatementParents = async (
 	statement: Statement,

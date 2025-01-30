@@ -53,3 +53,14 @@ export function maxKeyInObject(obj: { [key: string]: number }): string {
 
 	return maxKey;
 }
+
+export function getRandomUID(numberOfChars = 12): string {
+	const chars =
+		'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-0123456789';
+	let randomString = '';
+	for (let i = 0; i < numberOfChars; i++) {
+		randomString += chars.charAt(Math.floor(Math.random() * chars.length));
+	}
+
+	return randomString;
+}

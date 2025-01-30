@@ -80,7 +80,7 @@ export async function setAdminsToNewStatement(ev: any) {
 					userAskedForNotification: adminSub.userAskedForNotification || false,
 				};
 
-				const result = parse(StatementSubscriptionSchema, newSubscription);
+				parse(StatementSubscriptionSchema, newSubscription);
 
 				await db
 					.collection(Collections.statementsSubscribe)

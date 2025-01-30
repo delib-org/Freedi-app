@@ -333,14 +333,3 @@ export function processHistory(
 		return state;
 	}
 }
-
-export function getRandomUID(numberOfChars = 12): string {
-	const chars =
-		'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-0123456789';
-	let randomString = '';
-	for (let i = 0; i < numberOfChars; i++) {
-		randomString += chars.charAt(Math.floor(Math.random() * chars.length));
-	}
-
-	return randomString;
-}
