@@ -1,6 +1,8 @@
 import { lazy, Suspense } from 'react';
 import { createBrowserRouter } from 'react-router';
 import LoadingPage from "./view/pages/loadingPage/LoadingPage"; // Adjust the import path as needed
+import InitialQuestion from './view/pages/massConsensus/initialQuestion/InitialQuestion';
+import { MassConsensusPageUrls } from './view/pages/massConsensus/model/massConsensusModel';
 
 // Custom components
 const App = lazy(() => import('./App'));
@@ -15,6 +17,7 @@ const Page404 = lazy(() => import('./view/pages/page404/Page404'));
 const Start = lazy(() => import('./view/pages/start/Start'));
 const StatementMain = lazy(() => import('./view/pages/statement/StatementMain'));
 const Stage = lazy(() => import('./view/pages/stage/Stage'));
+const Introduction = lazy(() => import('./view/pages/massConsensus/introduction/Introduction'));
 
 export const router = createBrowserRouter([
 	{
@@ -89,6 +92,19 @@ export const router = createBrowserRouter([
 				element: <Suspense fallback={<LoadingPage />}><Page401 /></Suspense>,
 			},
 		],
+	},
+	{
+		path: 'mass-consensus/:statementId',
+		children: [
+			{
+				path: MassConsensusPageUrls.Introduction,
+				element: <Suspense fallback={<LoadingPage />}><Introduction /></Suspense>,
+			},
+			{
+				path: MassConsensusPageUrls.InitialQuestion,
+				element: <Suspense fallback={<LoadingPage />}><InitialQuestion /></Suspense>,
+			},
+		]
 	},
 	{
 		path: '404',

@@ -49,6 +49,7 @@ import { updateAgrees } from './fn_agree';
 import { setUserSettings } from './fn_users';
 import { updateStatementWithViews } from './fn_views';
 import { updateSettings } from './fn_statementsSettings';
+import { getInitialMCData } from './fn_massConsensus';
 
 initializeApp();
 export const db = getFirestore();
@@ -157,14 +158,18 @@ exports.writeStatementSettings = onDocumentWritten(`/${Collections.statementsSet
 const isProduction = process.env.NODE_ENV === 'production';
 
 console.info('isProduction', isProduction);
-const cors = {
-	cors: [
-		'https://delib-5.web.app',
-		'https://freedi.tech',
-		'https://delib.web.app',
-		'https://delib-testing.web.app/',
-	],
-};
+// const cors = {
+// 	cors: [
+// 		'https://delib-5.web.app',
+// 		'https://freedi.tech',
+// 		'https://delib.web.app',
+// 		'https://delib-testing.web.app/',
+// 		'http://localhost:5173',     // Add your local development port
+// 		'http://localhost:5000',     // Firebase hosting local
+// 		'http://localhost:5001'      // Firebase functions local
+// 	],
+// };
+const cors = require('cors');
 
 exports.getRandomStatements = onRequest(cors, getRandomStatements); //first evaluation
 exports.getTopStatements = onRequest(cors, getTopStatements); //second evaluation
@@ -176,3 +181,9 @@ exports.checkForSimilarStatements = onRequest(cors, findSimilarStatements);
 // exports.maintainDeliberativeElement = onRequest(cors, maintainDeliberativeElement);
 // exports.maintainStatements = onRequest(cors, maintainStatement);
 // exports.maintainSubscriptionToken = onRequest(cors, maintainSubscriptionToken);
+exports.massConsensusGetInitialData = onRequest(cors, getInitialMCData);
+exports.massConsensusGetInitialData = onRequest((req, res) => {
+	return cors()(req, res, () => {
+		return getInitialMCData(req, res);
+	});
+});

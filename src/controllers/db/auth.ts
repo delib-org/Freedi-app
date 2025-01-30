@@ -70,6 +70,7 @@ export const listenToAuth =
 
 						// User is signed in
 						const user = { ...userFB };
+						console.info("user is signed in")
 						if (!user.displayName)
 							user.displayName =
 								localStorage.getItem('displayName') ??
