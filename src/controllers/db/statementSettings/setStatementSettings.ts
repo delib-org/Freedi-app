@@ -1,4 +1,4 @@
-import { Collections, Statement, StatementSettings, QuestionSettings } from "delib-npm";
+import { Collections, Statement, StatementSettings, QuestionSettings, QuestionType } from "delib-npm";
 import { doc, setDoc } from "firebase/firestore";
 import { FireStore } from "../config";
 
@@ -16,6 +16,21 @@ export function setStatementSettingToDB({ statement, property, newValue, setting
 		setDoc(statementSettingsRef, {
 			[settingsSection]: {
 				[property]: newValue
+			}
+		}, { merge: true });
+	} catch (error) {
+		console.error(error);
+
+	}
+}
+
+export function updateQuestionType({ statement, newValue }: { statement: Statement, newValue: QuestionType }) {
+	try {
+
+		const statementSettingsRef = doc(FireStore, Collections.statementsSettings, statement.statementId);
+		setDoc(statementSettingsRef, {
+			questionSettings: {
+				questionType: newValue
 			}
 		}, { merge: true });
 	} catch (error) {
