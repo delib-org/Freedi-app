@@ -34,7 +34,6 @@ export function handleAddStatement(
 		setStatementToDB({
 			statement: newStatement,
 			parentStatement: statement,
-			addSubscription: false,
 		});
 	} catch (error) {
 		console.error(error);

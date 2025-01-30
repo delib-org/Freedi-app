@@ -7,9 +7,7 @@ import {
 	writeBatch,
 } from 'firebase/firestore';
 import { FireStore } from '../config';
-import { setNewRoomSettingsToDB } from '../rooms/setRooms';
-import { setStatementSubscriptionToDB } from '../subscriptions/setSubscriptions';
-import { getRandomUID, writeZodError } from '@/controllers/general/helpers';
+import { getRandomUID } from '@/controllers/general/helpers';
 import { store } from '@/model/store';
 import {
 	getExistingOptionColors,
@@ -18,7 +16,7 @@ import {
 import { getRandomColor } from '@/view/pages/statement/components/vote/votingColors';
 import { Statement, StatementSchema } from '@/types/statement';
 import { Collections, StatementType, Access, StageType } from '@/types/enums';
-import { UserSchema, Role, Membership } from '@/types/user';
+import { UserSchema, Membership } from '@/types/user';
 import { number, parse, string } from 'valibot';
 import { ResultsBy } from '@/types/results';
 
@@ -120,7 +118,6 @@ export async function saveStatementToDB({
 		setStatementToDB({
 			statement,
 			parentStatement,
-			addSubscription: true,
 		});
 
 		return statement;
@@ -134,13 +131,11 @@ export async function saveStatementToDB({
 interface SetStatementToDBParams {
 	statement: Statement;
 	parentStatement: Statement | 'top';
-	addSubscription: boolean;
 }
 
 export const setStatementToDB = async ({
 	statement,
 	parentStatement,
-	addSubscription = true,
 }: SetStatementToDBParams): Promise<string | undefined> => {
 	try {
 		if (!statement) throw new Error('Statement is undefined');
@@ -215,9 +210,6 @@ export const setStatementToDB = async ({
 		});
 
 		statementPromises.push(statementPromise);
-
-		//add roomSettings
-		setNewRoomSettingsToDB(statement.statementId);
 
 		//add subscription
 		await Promise.all(statementPromises);

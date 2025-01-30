@@ -112,7 +112,6 @@ export async function setNewStatement({
 			await setStatementToDB({
 				parentStatement: 'top',
 				statement: newStatement,
-				addSubscription: true,
 			});
 
 			return newStatement;
@@ -141,7 +140,6 @@ export async function setNewStatement({
 			await setStatementToDB({
 				parentStatement,
 				statement: newStatement,
-				addSubscription: true,
 			});
 
 			return newStatement;
@@ -246,13 +244,11 @@ export async function createStatementFromModal({
 		await setStatementToDB({
 			statement: newStatement,
 			parentStatement: parentStatement === 'top' ? 'top' : parentStatement,
-			addSubscription: true,
 		});
 
 		await setStatementToDB({
 			statement: newStatement,
 			parentStatement: parentStatement === 'top' ? 'top' : parentStatement,
-			addSubscription: true,
 		});
 	} catch (error) {
 		console.error(error);

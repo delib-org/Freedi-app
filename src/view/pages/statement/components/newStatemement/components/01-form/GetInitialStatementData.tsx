@@ -42,7 +42,6 @@ export default function GetInitialStatementData() {
 			setStatementToDB({
 				parentStatement: statement,
 				statement: newStatement,
-				addSubscription: true,
 			});
 
 			handleSetNewStatement(false);

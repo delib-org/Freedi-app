@@ -2,8 +2,7 @@ import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { FireStore } from '../config';
 import { store } from '@/model/store';
 import { Collections } from '@/types/enums';
-import { UserSchema, Agreement, AgreementSchema } from '@/types/user';
-import { User } from 'firebase/auth';
+import { UserSchema, Agreement, AgreementSchema, User } from '@/types/user';
 import { parse } from 'valibot';
 
 export async function setUserToDB(user: User) {

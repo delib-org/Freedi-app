@@ -94,7 +94,14 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 			setStatementToEdit,
 		} as const;
 
-		if (loading) return <div className='statement-settings-form'><div className='loader-box'><Loader /></div></div>;
+		if (loading)
+			return (
+				<div className='statement-settings-form'>
+					<div className='loader-box'>
+						<Loader />
+					</div>
+				</div>
+			);
 
 		return (
 			<form
@@ -108,7 +115,6 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 				/>
 				<SectionTitle title={t('General Settings')} />
 				<section className='switches-area'>
-
 					<AdvancedSettings {...statementSettingsProps} />
 				</section>
 				<ChoseBySettings {...statementSettingsProps} />
@@ -122,10 +128,7 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 						/>
 						<QuestionSettings {...statementSettingsProps} />
 						<SectionTitle title={t('Members')} />
-						<MembersSettings
-							setStatementToEdit={setStatementToEdit}
-							statement={statement}
-						/>
+						<MembersSettings statement={statement} />
 						<section className='get-members-area'>
 							<GetVoters
 								statementId={statementId}

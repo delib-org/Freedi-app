@@ -1,4 +1,4 @@
-import { Dispatch, FC, useEffect, useState } from 'react';
+import { FC, useEffect, useState } from 'react';
 import { createSelector } from '@reduxjs/toolkit';
 import { collection, getDocs } from 'firebase/firestore';
 
@@ -82,7 +82,7 @@ const MembersSettings: FC<MembersSettingsProps> = ({ statement }) => {
 				<ShareIcon />
 			</button>
 			<div className='upload-waiting-list'>
-				<SetWaitingList statement={statement} />
+				<SetWaitingList />
 			</div>
 			<div className='title'>
 				{t('Joined members')} ({`${userCount}`})

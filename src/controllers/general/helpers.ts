@@ -5,8 +5,7 @@ import { setUser } from '@/model/users/userSlice';
 import { Screen } from '@/types/enums';
 import { Statement } from '@/types/statement';
 import { StatementSubscription } from '@/types/statement/subscription';
-import { Role } from '@/types/user';
-import { User } from 'firebase/auth';
+import { Role, User } from '@/types/user';
 
 export function updateArray<T>(
 	currentArray: Array<T>,

@@ -1,4 +1,4 @@
-import { Unsubscribe, User } from 'firebase/auth';
+import { Unsubscribe } from 'firebase/auth';
 import {
 	collection,
 	onSnapshot,

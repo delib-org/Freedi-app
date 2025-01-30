@@ -39,10 +39,11 @@ const StatementVote: FC = () => {
 	// * Use State * //
 	const [showMultiStageMessage, setShowMultiStageMessage] =
 		useState(isCurrentStageVoting);
-	const [isCreateStatementModalOpen] = useState(false);
 	const [isStatementInfoModalOpen, setIsStatementInfoModalOpen] =
 		useState(false);
-	const [statementInfo, setStatementInfo] = useState<Statement | null>(null);
+	const [statementInfo, setStatementInfo] = useState<Statement | undefined>(
+		undefined
+	);
 
 	// * Variables * //
 	const totalVotes = getTotalVoters(statement);
@@ -89,19 +90,6 @@ const StatementVote: FC = () => {
 						setStatementInfo={setStatementInfo}
 					/>
 				</div>
-
-				{isCreateStatementModalOpen &&
-					null
-					// <CreateStatementModalSwitch
-					// 	allowedTypes={[StatementType.option]}
-					// 	isMultiStage={isMuliStage}
-					// 	useSimilarStatements={useSearchForSimilarStatements}
-					// 	parentStatement={statement}
-					// 	isQuestion={false}
-					// 	setShowModal={setIsCreateStatementModalOpen}
-
-					// />
-				}
 				{isStatementInfoModalOpen && (
 					<Modal>
 						<StatementInfo

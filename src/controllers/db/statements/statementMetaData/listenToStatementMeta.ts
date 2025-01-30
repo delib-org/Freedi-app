@@ -1,11 +1,10 @@
 import { Dispatch } from '@reduxjs/toolkit';
 import { Unsubscribe, doc, onSnapshot } from 'firebase/firestore';
 import { FireStore } from '@/controllers/db/config';
-import { writeZodError } from '@/controllers/general/helpers';
 import { setStatementMetaData } from '@/model/statements/statementsMetaSlice';
 import { store } from '@/model/store';
 import { Collections } from '@/types/enums';
-import { StatementMetaData, StatementMetaDataSchema } from '@/types/statement';
+import { StatementMetaDataSchema } from '@/types/statement';
 import { parse } from 'valibot';
 
 export function listenToStatementMetaData(statementId: string): Unsubscribe {

@@ -1,16 +1,12 @@
 import { doc, updateDoc, setDoc, Timestamp, getDoc } from 'firebase/firestore';
 import { FireStore } from '../config';
 import { getUserFromFirebase } from '../users/usersGeneral';
-import {
-	getStatementSubscriptionId,
-	writeZodError,
-} from '@/controllers/general/helpers';
+import { getStatementSubscriptionId } from '@/controllers/general/helpers';
 import { store } from '@/model/store';
 import { Collections } from '@/types/enums';
 import { Statement, StatementSchema } from '@/types/statement';
 import { StatementSubscriptionSchema } from '@/types/statement/subscription';
-import { Role } from '@/types/user';
-import { User } from 'firebase/auth';
+import { Role, User } from '@/types/user';
 import { parse } from 'valibot';
 
 export async function setStatementSubscriptionToDB(

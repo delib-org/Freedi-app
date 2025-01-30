@@ -1,7 +1,7 @@
 import { createSlice } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
 import { RootState } from '../store';
-import { updateArray, writeZodError } from '@/controllers/general/helpers';
+import { updateArray } from '@/controllers/general/helpers';
 import { StatementMetaData, StatementMetaDataSchema } from '@/types/statement';
 import { parse } from 'valibot';
 

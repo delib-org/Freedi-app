@@ -9,7 +9,7 @@ import { Statement } from '@/types/statement';
 import { DeliberativeElement } from '@/types/enums';
 
 interface VotingAreaProps {
-	setStatementInfo: React.Dispatch<React.SetStateAction<Statement | null>>;
+	setStatementInfo: React.Dispatch<React.SetStateAction<Statement | undefined>>;
 	subStatements: Statement[];
 	setShowInfo: React.Dispatch<React.SetStateAction<boolean>>;
 	totalVotes: number;
