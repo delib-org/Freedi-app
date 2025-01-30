@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import IconButton from "../iconButton/IconButton";
 import AccessibilityIcon from "@/assets/icons/accessibilityIcon.svg?react";
 import { useAppDispatch, useAppSelector } from "@/controllers/hooks/reduxHooks";
@@ -13,6 +13,7 @@ import "./Accessibility.scss";
 import { colorMappings } from "./colorContrast";
 import { useAutoClose } from "@/controllers/hooks/useAutoClose";
 import { useFontSize } from "@/controllers/hooks/useFontSize";
+import useClickOutside from "@/controllers/hooks/useClickOutside";
 
 export default function Accessibility() {
 	const { isOpen, handleOpen } = useAutoClose(5000);
@@ -20,6 +21,7 @@ export default function Accessibility() {
 	const fontSize = useAppSelector(fontSizeSelector);
 	const user = useAppSelector(userSelector);
 	const colorContrast = useAppSelector(colorContrastSelector);
+	const accessibilityRef = useRef<HTMLDivElement>(null);
 
 	const { currentFontSize, handleChangeFontSize } = useFontSize(fontSize || defaultFontSize, !!user);
 
@@ -32,8 +34,13 @@ export default function Accessibility() {
 		});
 	}, [colorContrast]);
 
+	const handleClickOutside = useCallback(() => {
+		if (isOpen) handleOpen();
+	}, [isOpen, handleOpen]);
+	useClickOutside(accessibilityRef, handleClickOutside);
+
 	return (
-		<div className={`accessibility ${isOpen ? 'is-open' : ''}`}>
+		<div ref={accessibilityRef} className={`accessibility ${isOpen ? 'is-open' : ''}`}>
 			<button className="accessibility-button" onClick={handleOpen}>
 				<AccessibilityIcon />
 			</button>
