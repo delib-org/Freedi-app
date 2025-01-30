@@ -1,21 +1,12 @@
-import { Statement } from 'delib-npm';
 import React, { FC, useState } from 'react';
-
-// Third party imports
 import { useLocation } from 'react-router-dom';
-
-// Helpers
 import StatementTopNav from '../nav/top/StatementTopNav';
 import InvitePanel from './invitePanel/InvitePanel';
 import { logOut } from '@/controllers/db/auth';
-import toggleNotifications from '@/controllers/db/notifications/notificationsHelpers';
-
-// Hooks
-
 import { setFollowMeDB } from '@/controllers/db/statements/setStatements';
 import { useLanguage } from '@/controllers/hooks/useLanguages';
-import useNotificationPermission from '@/controllers/hooks/useNotificationPermission';
 import useToken from '@/controllers/hooks/useToken';
+import { Statement } from '@/types/statement';
 
 interface Props {
 	statement: Statement | undefined;
@@ -30,10 +21,6 @@ const StatementHeader: FC<Props> = ({
 }) => {
 	// Hooks
 	const { pathname } = useLocation();
-
-	const token = useToken();
-
-	const permission = useNotificationPermission(token);
 	const [isHeaderMenuOpen, setIsHeaderMenuOpen] = useState(false);
 	const [showInvitationPanel, setShowInvitationPanel] = useState(false);
 
@@ -62,10 +49,6 @@ const StatementHeader: FC<Props> = ({
 			setIsHeaderMenuOpen(false);
 		}
 	}
-	function handleToggleNotifications() {
-		toggleNotifications(statement, permission, setShowAskPermission, t);
-		setIsHeaderMenuOpen(false);
-	}
 
 	function handleInvitePanel() {
 		try {
@@ -90,11 +73,9 @@ const StatementHeader: FC<Props> = ({
 				statement={statement}
 				handleShare={handleShare}
 				handleFollowMe={handleFollowMe}
-				handleToggleNotifications={handleToggleNotifications}
 				handleInvitePanel={handleInvitePanel}
 				handleLogout={handleLogout}
 				setIsHeaderMenuOpen={setIsHeaderMenuOpen}
-				permission={permission}
 				isHeaderMenuOpen={isHeaderMenuOpen}
 			/>
 			{showInvitationPanel && (

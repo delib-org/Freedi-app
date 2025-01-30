@@ -1,14 +1,15 @@
-import { Statement, StatementType } from "delib-npm";
-import { FC, useEffect } from "react";
-import DeleteIcon from "@/assets/icons/delete.svg?react";
-import EditIcon from "@/assets/icons/editIcon.svg?react";
-import LightBulbIcon from "@/assets/icons/lightBulbIcon.svg?react";
+import { FC, useEffect } from 'react';
+import DeleteIcon from '@/assets/icons/delete.svg?react';
+import EditIcon from '@/assets/icons/editIcon.svg?react';
+import LightBulbIcon from '@/assets/icons/lightBulbIcon.svg?react';
 import QuestionMarkIcon from '@/assets/icons/questionIcon.svg?react';
-import { deleteStatementFromDB } from "@/controllers/db/statements/deleteStatements";
-import { updateIsQuestion } from "@/controllers/db/statements/setStatements";
-import { useLanguage } from "@/controllers/hooks/useLanguages";
-import Menu from "@/view/components/menu/Menu";
-import MenuOption from "@/view/components/menu/MenuOption";
+import { deleteStatementFromDB } from '@/controllers/db/statements/deleteStatements';
+import { updateIsQuestion } from '@/controllers/db/statements/setStatements';
+import { useLanguage } from '@/controllers/hooks/useLanguages';
+import Menu from '@/view/components/menu/Menu';
+import MenuOption from '@/view/components/menu/MenuOption';
+import { Statement } from '@/types/statement';
+import { StatementType } from '@/types/enums';
 
 interface Props {
 	statement: Statement;
@@ -39,24 +40,23 @@ const SolutionMenu: FC<Props> = ({
 			const timer = setTimeout(() => {
 				setIsCardMenuOpen(false);
 			}, 35000);
-			
-return () => clearTimeout(timer);
+
+			return () => clearTimeout(timer);
 		}
 	}, [isCardMenuOpen]);
 
 	if (!isAuthorized) return null;
 
 	return (
-
 		<Menu
 			setIsOpen={setIsCardMenuOpen}
 			isMenuOpen={isCardMenuOpen}
-			iconColor="#5899E0"
+			iconColor='#5899E0'
 			isCardMenu={true}
 		>
 			{isAuthorized && (
 				<MenuOption
-					label={t("Edit Text")}
+					label={t('Edit Text')}
 					icon={<EditIcon />}
 					onOptionClick={() => {
 						setIsEdit(!isEdit);
@@ -68,11 +68,7 @@ return () => clearTimeout(timer);
 				<MenuOption
 					isOptionSelected={isOption}
 					icon={<LightBulbIcon />}
-					label={
-						isOption
-							? t("Unmark as a Solution")
-							: t("Mark as a Solution")
-					}
+					label={isOption ? t('Unmark as a Solution') : t('Mark as a Solution')}
 					onOptionClick={() => {
 						handleSetOption();
 						setIsCardMenuOpen(false);
@@ -84,9 +80,7 @@ return () => clearTimeout(timer);
 					isOptionSelected={isResearch}
 					icon={<QuestionMarkIcon />}
 					label={
-						isResearch
-							? t('Unmark as a Question')
-							: t('Mark as a Question')
+						isResearch ? t('Unmark as a Question') : t('Mark as a Question')
 					}
 					onOptionClick={() => {
 						updateIsQuestion(statement);
@@ -96,7 +90,7 @@ return () => clearTimeout(timer);
 			)}
 			{isAuthorized && (
 				<MenuOption
-					label={t("Delete")}
+					label={t('Delete')}
 					icon={<DeleteIcon />}
 					onOptionClick={() => {
 						deleteStatementFromDB(statement, isAuthorized);
@@ -105,7 +99,6 @@ return () => clearTimeout(timer);
 				/>
 			)}
 		</Menu>
-
 	);
 };
 

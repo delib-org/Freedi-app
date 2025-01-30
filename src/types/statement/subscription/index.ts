@@ -6,12 +6,13 @@ import {
 	optional,
 	array,
 	InferInput,
+	enum_,
 } from 'valibot';
-import { UserSchema } from '../../user';
+import { Role, UserSchema } from '../../user';
 import { StatementSchema } from '..';
 
 export const StatementSubscriptionSchema = object({
-	role: string(), // Simplified from enum
+	role: enum_(Role),
 	userId: string(),
 	statementId: string(),
 	lastUpdate: number(),

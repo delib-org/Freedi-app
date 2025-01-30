@@ -2,11 +2,11 @@ import { logOut } from '../db/auth';
 import { HistoryTracker } from '@/model/history/HistorySlice';
 import { store } from '@/model/store';
 import { setUser } from '@/model/users/userSlice';
+import { Screen } from '@/types/enums';
 import { Statement } from '@/types/statement';
 import { StatementSubscription } from '@/types/statement/subscription';
 import { Role } from '@/types/user';
 import { User } from 'firebase/auth';
-import { Role } from 'firebase/vertexai';
 
 export function updateArray<T>(
 	currentArray: Array<T>,
@@ -240,20 +240,6 @@ export function getFirstName(fullName: string) {
 		console.error(error);
 
 		return '';
-	}
-}
-
-export function writeZodError(error: ZodError, object: unknown): void {
-	try {
-		error.issues.forEach((issue: ZodIssue) => {
-			console.error(
-				`Error at ${issue.path.join('.')}: ${issue.message} (${issue.code})`
-			);
-
-			console.info('Object sent:', object);
-		});
-	} catch (error) {
-		console.error(error);
 	}
 }
 
