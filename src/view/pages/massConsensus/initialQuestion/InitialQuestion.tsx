@@ -1,9 +1,12 @@
 import HeaderMassConsensus from "../headerMassConsensus/HeaderMassConsensus"
+import { MassConsensusPageUrls } from "../model/massConsensusModel"
+import { useParamsLanguage } from "../useParamsLang/UseParamsLanguge"
 
 const InitialQuestion = () => {
+	const { dir } = useParamsLanguage()
 	return (
-		<div>
-			<HeaderMassConsensus backTo="introduction" />
+		<div style={{ direction: dir }}>
+			<HeaderMassConsensus backTo={MassConsensusPageUrls.Introduction} />
 		</div>
 	)
 }
