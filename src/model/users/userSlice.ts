@@ -15,9 +15,6 @@ export enum Status {
 interface UserState {
 	user: User | null;
 	status: Status;
-	askToSubscribeToNotifications: {
-		show: boolean;
-	};
 	colorContrast: boolean;
 	userSettings: UserSettings | null;
 }
@@ -25,9 +22,6 @@ interface UserState {
 // Define the initial state using that type
 const initialState: UserState = {
 	user: null,
-	askToSubscribeToNotifications: {
-		show: false,
-	},
 	status: Status.idle,
 	colorContrast: false,
 	userSettings: null,
@@ -55,9 +49,6 @@ export const userSlicer = createSlice({
 			} catch (error) {
 				console.error(error);
 			}
-		},
-		showAskNotifications: (state, action: PayloadAction<boolean>) => {
-			state.askToSubscribeToNotifications.show = action.payload;
 		},
 		increaseFontSize: (state, action: PayloadAction<number>) => {
 			try {
@@ -126,8 +117,6 @@ export const {
 // Other code such as selectors can use the imported `RootState` type
 export const userSelector = (state: RootState) => state.user.user;
 export const statusSelector = (state: RootState) => state.user.status;
-export const askToSubscribeToNotificationsSelector = (state: RootState) =>
-	state.user.askToSubscribeToNotifications;
 export const fontSizeSelector = (state: RootState) =>
 	state.user.user?.fontSize || defaultFontSize;
 export const colorContrastSelector = (state: RootState) =>

@@ -71,11 +71,9 @@ export enum StepType {
 export enum Collections {
 	statements = 'statements',
 	statementsSettings = 'statementsSettings',
-	inAppNotifications = 'inAppNotifications',
 	statementsMetaData = 'statementsMeta',
 	statementsPasswords = 'statementsPasswords',
 	statementsSubscribe = 'statementsSubscribe',
-	statementsNotifications = 'statementsNotifications',
 	choseBy = 'choseBy',
 	participants = 'participants',
 	rooms = 'rooms',

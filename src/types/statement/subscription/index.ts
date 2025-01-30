@@ -2,7 +2,6 @@ import {
 	object,
 	string,
 	number,
-	boolean,
 	optional,
 	array,
 	enum_,
@@ -27,14 +26,6 @@ export const StatementSubscriptionSchema = object({
 export type StatementSubscription = InferOutput<
 	typeof StatementSubscriptionSchema
 >;
-
-export const StatementSubscriptionNotificationSchema = object({
-	statementId: string(),
-	userId: string(),
-	subscribed: boolean(),
-	token: string(),
-	notification: optional(boolean()),
-});
 
 export function getStatementSubscriptionId(
 	statementId: string,

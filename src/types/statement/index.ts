@@ -71,7 +71,6 @@ export const StatementSettingsSchema = object({
 	showEvaluation: optional(boolean()),
 	inVotingGetOnlyResults: optional(boolean()),
 	enableSimilaritiesSearch: optional(boolean()),
-	enableNotifications: optional(boolean()),
 	enableNavigationalElements: optional(boolean()),
 	show: optional(boolean()),
 	deliberationType: optional(enum_(DeliberationType)),

@@ -405,12 +405,6 @@ export const statementSubsSelectorMemo = createSelector(
 		return sts;
 	}
 );
-
-export const statementNotificationSelector =
-	(statementId: string | undefined) => (state: RootState) =>
-		state.statements.statementSubscription.find(
-			(statementSub) => statementSub.statementId === statementId
-		)?.notification || false;
 export const statementSubscriptionSelector =
 	(statementId: string | undefined) => (state: RootState) =>
 		state.statements.statementSubscription.find(
