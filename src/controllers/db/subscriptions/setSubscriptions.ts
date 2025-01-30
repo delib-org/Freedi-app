@@ -11,8 +11,7 @@ import { parse } from 'valibot';
 
 export async function setStatementSubscriptionToDB(
 	statement: Statement,
-	role: Role = Role.member,
-	userAskedForNotification = false
+	role: Role = Role.member
 ) {
 	try {
 		const user = store.getState().user.user;
@@ -30,12 +29,6 @@ export async function setStatementSubscriptionToDB(
 			Collections.statementsSubscribe,
 			statementsSubscribeId
 		);
-
-		if (userAskedForNotification) {
-			return await updateDoc(statementsSubscribeRef, {
-				userAskedForNotification: true,
-			});
-		}
 
 		//check if user is already subscribed
 		const statementSubscription = await getDoc(statementsSubscribeRef);

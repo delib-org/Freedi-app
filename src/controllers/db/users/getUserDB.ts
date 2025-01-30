@@ -68,15 +68,13 @@ export function listenToUserSettings(): Unsubscribe {
 		const userSettingsRef = doc(FireStore, Collections.usersSettings, user.uid);
 
 		return onSnapshot(userSettingsRef, (settingsDB) => {
-			const userSettings = parse(userSettingsSchema, settingsDB.data());
-
-			if (userSettings) {
-				store.dispatch(setUserSettings(userSettings));
-
+			if (!settingsDB.data()) {
+				store.dispatch(setUserSettings(null));
 				return;
 			}
 
-			store.dispatch(setUserSettings(null));
+			const userSettings = parse(userSettingsSchema, settingsDB.data());
+			store.dispatch(setUserSettings(userSettings));
 		});
 	} catch (error) {
 		console.error(error);

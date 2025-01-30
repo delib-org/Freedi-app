@@ -100,7 +100,7 @@ async function isAuthorizedFn(
 			statementSubscription?.role !== Role.banned
 		) {
 			if (!statementSubscription) {
-				setStatementSubscriptionToDB(statement, Role.member, false);
+				setStatementSubscriptionToDB(statement, Role.member);
 			}
 
 			return true;

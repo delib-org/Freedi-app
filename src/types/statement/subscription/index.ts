@@ -19,11 +19,9 @@ export const StatementSubscriptionSchema = object({
 	createdAt: optional(number()),
 	statementsSubscribeId: string(),
 	statement: StatementSchema,
-	notification: boolean(),
 	token: optional(array(string())),
 	totalSubStatementsRead: optional(number()),
 	user: UserSchema,
-	userAskedForNotification: boolean(),
 });
 
 export type StatementSubscription = InferOutput<

@@ -38,9 +38,7 @@ export async function setAdminsToNewStatement(ev: any) {
 			lastUpdate: Date.now(),
 			statement,
 			statementsSubscribeId: newStatementSubscriptionId,
-			notification: false,
 			user: statement.creator,
-			userAskedForNotification: false,
 		};
 		parse(StatementSubscriptionSchema, newSubscription);
 
@@ -75,9 +73,7 @@ export async function setAdminsToNewStatement(ev: any) {
 					lastUpdate: Date.now(),
 					statement,
 					statementsSubscribeId,
-					notification: adminSub.notification || false,
 					user: adminSub.user,
-					userAskedForNotification: adminSub.userAskedForNotification || false,
 				};
 
 				parse(StatementSubscriptionSchema, newSubscription);

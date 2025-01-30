@@ -7,7 +7,6 @@ import {
 	writeBatch,
 } from 'firebase/firestore';
 import { FireStore } from '../config';
-import { getRandomUID } from '@/controllers/general/helpers';
 import { store } from '@/model/store';
 import {
 	getExistingOptionColors,
@@ -20,6 +19,7 @@ import { UserSchema, Membership } from '@/types/user';
 import { number, parse, string } from 'valibot';
 import { ResultsBy } from '@/types/results';
 import { StageType } from '@/types/stage';
+import { getRandomUID } from '@/types/helpers';
 
 export const updateStatementParents = async (
 	statement: Statement,
