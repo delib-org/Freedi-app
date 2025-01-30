@@ -1,19 +1,4 @@
-import { User, UserSchema } from '../user';
-import * as v from 'valibot';
-export function parseUserFromFirebase(user: any | undefined): User | undefined {
-	try {
-		if (!user) throw new Error('user is missing');
-
-		let { displayName, email, photoURL, uid, isAnonymous } = user;
-		if (isAnonymous) displayName = 'Anonymous';
-
-		v.parse(UserSchema, { displayName, email, photoURL, uid, isAnonymous });
-		return { displayName, email, photoURL, uid, isAnonymous };
-	} catch (error) {
-		console.error(error);
-		return undefined;
-	}
-}
+import { Role } from '../user';
 
 export function updateArray<T>(
 	currentArray: Array<T>,
@@ -47,4 +32,24 @@ export function updateArray<T>(
 
 		return currentArray;
 	}
+}
+
+export function isMember(role: Role | undefined): boolean {
+	if (role === Role.admin || role === Role.member || role === Role.creator)
+		return true;
+	return false;
+}
+
+export function maxKeyInObject(obj: { [key: string]: number }): string {
+	let maxKey = Object.keys(obj)[0];
+	let maxValue = obj[maxKey];
+
+	for (const key in obj) {
+		if (obj[key] > maxValue) {
+			maxValue = obj[key];
+			maxKey = key;
+		}
+	}
+
+	return maxKey;
 }

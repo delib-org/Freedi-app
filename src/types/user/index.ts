@@ -50,14 +50,6 @@ export const DocumentImportanceSchema = object({
 
 export type DocumentImportance = InferInput<typeof DocumentImportanceSchema>;
 
-export const AgreeSchema = object({
-	agree: optional(number()),
-	disagree: optional(number()),
-	avgAgree: optional(number()),
-});
-
-export type Agree = InferInput<typeof AgreeSchema>;
-
 export const MembershipSchema = object({
 	adminApproveMembers: optional(boolean()),
 	access: optional(enum_(Access)),
@@ -95,9 +87,9 @@ export const userSettingsSchema = object({
 	userId: string(),
 	fontSize: optional(number()),
 	color: optional(string()),
-	defaultLanguage: enum_(Languages),
+	defaultLanguage: optional(enum_(Languages)),
 	ent: optional(nullable(AgreementSchema)),
-	role: enum_(Role),
+	role: optional(enum_(Role)),
 	learning: optional(
 		object({
 			evaluation: optional(number()),

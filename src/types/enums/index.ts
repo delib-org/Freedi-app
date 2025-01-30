@@ -107,18 +107,6 @@ export enum Collections {
 	statementSegments = 'statementSegments',
 }
 
-export enum StageType {
-	explanation = 'explanation',
-	questions = 'questions',
-	needs = 'needs',
-	suggestions = 'suggestions',
-	hypothesis = 'hypothesis',
-	voting = 'voting',
-	conclusion = 'conclusion',
-	summary = 'summary',
-	other = 'other',
-}
-
 export enum Screen {
 	TEAM = 'team',
 	DOC = 'doc',

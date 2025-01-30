@@ -20,8 +20,8 @@ import { resetStatements } from '@/model/statements/statementsSlice';
 import { AppDispatch, store } from '@/model/store';
 import { setFontSize, setUser } from '@/model/users/userSlice';
 import { resetVotes } from '@/model/vote/votesSlice';
-import { parseUserFromFirebase } from '@/types/helpers';
-import { User } from '@/types/user';
+import { User, UserSchema } from '@/types/user';
+import { parse } from 'valibot';
 
 export function googleLogin() {
 	const provider = new GoogleAuthProvider();
@@ -69,23 +69,23 @@ export const listenToAuth =
 				}
 				if (userFB) {
 					// User is signed in
-					const user = { ...userFB };
+					const user = parse(UserSchema, userFB);
+
 					if (!user.displayName)
 						user.displayName =
 							localStorage.getItem('displayName') ??
 							`Anonymous ${Math.floor(Math.random() * 10000)}`;
-					const _user = parseUserFromFirebase(user);
 
-					if (_user?.isAnonymous) {
-						_user.displayName =
+					if (user?.isAnonymous) {
+						user.displayName =
 							sessionStorage.getItem('displayName') ??
 							`Anonymous ${Math.floor(Math.random() * 10000)}`;
 					}
 
 					// console.info("User is signed in")
-					if (!_user) throw new Error('user is undefined');
+					if (!user) throw new Error('user is undefined');
 
-					const userDB = (await setUserToDB(_user)) as User;
+					const userDB = (await setUserToDB(user)) as User;
 
 					const fontSize = userDB.fontSize ? userDB.fontSize : defaultFontSize;
 

@@ -29,10 +29,12 @@ export class StageClass {
 				if (!newStage) throw new Error('Could not create stage');
 				stages.push(newStage);
 			});
-			return stages;
+			
+return stages;
 		} catch (error) {
 			console.error(error);
-			return [];
+			
+return [];
 		}
 	}
 
@@ -50,10 +52,12 @@ export class StageClass {
 				description: '',
 			});
 			if (!newStage) throw new Error('Could not create stage');
-			return newStage;
+			
+return newStage;
 		} catch (error) {
 			console.error(error);
-			return undefined;
+			
+return undefined;
 		}
 	}
 

@@ -1,4 +1,3 @@
-import { Collections } from 'delib-npm';
 import {
 	deleteEvaluation,
 	newEvaluation,
@@ -7,11 +6,7 @@ import {
 } from './fn_evaluation';
 import { updateResultsSettings } from './fn_results';
 import { updateDocumentSignatures } from './fn_signatures';
-import {
-	updateParentWithNewMessageCB,
-
-	// updateSubscribedListenersCB,
-} from './fn_statements';
+import { updateParentWithNewMessageCB } from './fn_statements';
 import { updateVote } from './fn_vote';
 
 import {
@@ -26,7 +21,6 @@ import { onSchedule } from 'firebase-functions/v2/scheduler';
 // The Firebase Admin SDK to access Firestore.
 import { initializeApp } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
-import { sendNotificationsCB } from './fn_notifications';
 import { cleanOldTimers } from './fn_timers';
 import { setAdminsToNewStatement } from './fn_roles';
 import { updateStatementNumberOfMembers } from './fn_subscriptions';
@@ -45,6 +39,7 @@ import { updateAgrees } from './fn_agree';
 import { setUserSettings } from './fn_users';
 import { updateStatementWithViews } from './fn_views';
 import { updateSettings } from './fn_statementsSettings';
+import { Collections } from '../../src/types/enums';
 
 initializeApp();
 export const db = getFirestore();
@@ -66,14 +61,7 @@ exports.updateMembers = onDocumentWritten(
 	updateStatementNumberOfMembers
 );
 
-//notifications
-exports.updateNotifications = onDocumentCreated(
-	`/${Collections.statements}/{statementId}`,
-	sendNotificationsCB
-);
-
 //evaluations and results
-
 exports.onSetChoseBySettings = onDocumentWritten(
 	`/${Collections.choseBy}/{statementId}`,
 	updateChosenOptions

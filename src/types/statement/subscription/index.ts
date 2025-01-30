@@ -5,10 +5,10 @@ import {
 	boolean,
 	optional,
 	array,
-	InferInput,
 	enum_,
+	InferOutput,
 } from 'valibot';
-import { Role, UserSchema } from '../../user';
+import { Role, User, UserSchema } from '../../user';
 import { StatementSchema } from '..';
 
 export const StatementSubscriptionSchema = object({
@@ -26,7 +26,7 @@ export const StatementSubscriptionSchema = object({
 	userAskedForNotification: boolean(),
 });
 
-export type StatementSubscription = InferInput<
+export type StatementSubscription = InferOutput<
 	typeof StatementSubscriptionSchema
 >;
 
@@ -37,3 +37,20 @@ export const StatementSubscriptionNotificationSchema = object({
 	token: string(),
 	notification: optional(boolean()),
 });
+
+export function getStatementSubscriptionId(
+	statementId: string,
+	user: User
+): string | undefined {
+	return `${user.uid}--${statementId}`;
+}
+
+export const StatementViewSchema = object({
+	statementId: string(),
+	userId: string(),
+	viewed: number(),
+	lastViewed: number(),
+	parentDocumentId: string(),
+});
+
+export type StatementView = InferOutput<typeof StatementViewSchema>;

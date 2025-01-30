@@ -9,18 +9,15 @@ import {
 	any,
 	enum_,
 	InferOutput,
-	InferInput,
 	parse,
 } from 'valibot';
 import {
 	DeliberationType,
 	DeliberativeElement,
 	DocumentType,
-	StageType,
 	StatementType,
 } from '../enums';
 import {
-	AgreeSchema,
 	DocumentApprovalSchema,
 	DocumentImportanceSchema,
 	MembershipSchema,
@@ -33,6 +30,8 @@ import { StatementEvaluationSchema } from '../evaluation';
 import { ResultsSettingsSchema } from '../results';
 import { QuestionSettingsSchema } from '../question';
 import { getRandomUID } from '@/controllers/general/helpers';
+import { AgreeSchema } from '../agreement';
+import { StageType } from '../stage';
 
 const SimpleStatementSchema = object({
 	statementId: string(),
@@ -45,8 +44,24 @@ const SimpleStatementSchema = object({
 	voted: optional(number()),
 });
 
-export type SimpleStatement = InferInput<typeof SimpleStatementSchema>;
-export type SimpleStatementOutput = InferOutput<typeof SimpleStatementSchema>;
+export type SimpleStatement = InferOutput<typeof SimpleStatementSchema>;
+
+export function statementToSimpleStatement(
+	statement: Statement
+): SimpleStatement {
+	const simple: SimpleStatement = {
+		statementId: statement.statementId,
+		statement: statement.statement,
+		description: statement.description,
+		creatorId: statement.creatorId,
+		creator: statement.creator,
+		parentId: statement.parentId,
+		consensus: statement.consensus,
+		voted: statement.voted || 0,
+	};
+
+	return simple;
+}
 
 export const StatementSettingsSchema = object({
 	subScreens: optional(array(string())),
@@ -157,8 +172,7 @@ export const StatementSchema = object({
 	statementSettings: optional(StatementSettingsSchema),
 });
 
-export type Statement = InferInput<typeof StatementSchema>;
-export type StatementOutput = InferOutput<typeof StatementSchema>;
+export type Statement = InferOutput<typeof StatementSchema>;
 
 export const StatementMetaDataSchema = object({
 	lastUpdate: number(),
@@ -210,6 +224,7 @@ export function createBasicStatement({
 		return parse(StatementSchema, newStatement);
 	} catch (error) {
 		console.error(error);
+
 		return undefined;
 	}
 }
