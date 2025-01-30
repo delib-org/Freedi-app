@@ -1,11 +1,8 @@
-import { Statement } from "delib-npm";
 import { useRef, FC } from "react";
 
 //Custom components
 import Button from "../../../view/components/buttons/button/Button";
 import UploadFileIcon from "../../../view/components/icons/UploadFileIcon";
-
-// import { SetWaitingListCont } from "./SetWaitingListCont";
 
 //Styles
 import styles from "./setWaitingList.module.scss"

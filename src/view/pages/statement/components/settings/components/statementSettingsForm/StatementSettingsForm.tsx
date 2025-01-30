@@ -1,4 +1,3 @@
-import { Role, Statement, StatementSubscription } from 'delib-npm';
 import { Dispatch, FC, useState } from 'react';
 
 // Third party imports
@@ -28,6 +27,9 @@ import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { createSelector } from '@reduxjs/toolkit';
 import { RootState } from '@/model/store';
 import Loader from '@/view/components/loaders/Loader';
+import { Statement } from '@/types/statement';
+import { StatementSubscription } from '@/types/statement/subscription';
+import { Role } from '@/types/user';
 
 interface StatementSettingsFormProps {
 	statement: Statement;
