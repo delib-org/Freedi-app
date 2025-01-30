@@ -7,7 +7,7 @@ export function handleSubmitInfo(
 		title: string;
 		description: string;
 	},
-	statement: Statement,
+	statement: Statement | undefined,
 	setEdit: React.Dispatch<React.SetStateAction<boolean>>,
 	setShowInfo: React.Dispatch<React.SetStateAction<boolean>>
 ) {

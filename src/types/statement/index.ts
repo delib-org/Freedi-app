@@ -10,6 +10,7 @@ import {
 	enum_,
 	InferOutput,
 	InferInput,
+	parse,
 } from 'valibot';
 import {
 	DeliberationType,
@@ -24,12 +25,14 @@ import {
 	DocumentImportanceSchema,
 	MembershipSchema,
 	StepSchema,
+	User,
 	UserDataSchema,
 	UserSchema,
 } from '../user';
 import { StatementEvaluationSchema } from '../evaluation';
 import { ResultsSettingsSchema } from '../results';
 import { QuestionSettingsSchema } from '../question';
+import { getRandomUID } from '@/controllers/general/helpers';
 
 const SimpleStatementSchema = object({
 	statementId: string(),
@@ -169,3 +172,44 @@ export const StatementMetaDataSchema = object({
 });
 
 export type StatementMetaData = InferOutput<typeof StatementMetaDataSchema>;
+
+interface CreateBasicStatementProps {
+	parentStatement: Statement;
+	user: User;
+	stageType?: StageType;
+	statementType?: StatementType;
+	statement: string;
+	description?: string;
+}
+export function createBasicStatement({
+	parentStatement,
+	user,
+	stageType,
+	statementType,
+	statement,
+	description,
+}: CreateBasicStatementProps): Statement | undefined {
+	try {
+		const newStatement: Statement = {
+			statement: statement,
+			description: description ?? '',
+			statementType: statementType ?? StatementType.statement,
+			parentId: parentStatement.statementId,
+			stageType: stageType ?? StageType.explanation,
+			creatorId: user.uid,
+			creator: user,
+			consensus: 0,
+			voted: 0,
+			statementId: getRandomUID(),
+			topParentId: parentStatement.topParentId || parentStatement.statementId,
+			parents: parentStatement.parents ? [...parentStatement.parents] : [],
+			lastUpdate: new Date().getTime(),
+			createdAt: new Date().getTime(),
+		};
+
+		return parse(StatementSchema, newStatement);
+	} catch (error) {
+		console.error(error);
+		return undefined;
+	}
+}

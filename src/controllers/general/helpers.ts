@@ -43,7 +43,7 @@ export function updateArray<T>(
 }
 
 export function isAuthorized(
-	statement: Statement,
+	statement: Statement | undefined,
 	statementSubscription: StatementSubscription | undefined,
 	parentStatementCreatorId?: string | undefined,
 	authorizedRoles?: Array<Role>

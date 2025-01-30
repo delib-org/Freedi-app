@@ -1,4 +1,4 @@
-import { Unsubscribe, User } from 'firebase/auth';
+import { Unsubscribe } from 'firebase/auth';
 import {
 	and,
 	collection,
@@ -25,7 +25,7 @@ import { AppDispatch, store } from '@/model/store';
 import { Collections, StatementType, DeliberativeElement } from '@/types/enums';
 import { Statement, StatementSchema } from '@/types/statement';
 import { StatementSubscription } from '@/types/statement/subscription';
-import { Role } from '@/types/user';
+import { Role, User } from '@/types/user';
 import { parse } from 'valibot';
 
 // Helpers

@@ -1,4 +1,3 @@
-import { Statement } from 'delib-npm';
 import { FC, useEffect, useState } from 'react';
 
 // Third party imports
@@ -22,6 +21,7 @@ import {
 // Custom components
 import Loader from '@/view/components/loaders/Loader';
 import { listenToChoseBy } from '@/controllers/db/choseBy/getChoseBy';
+import { Statement } from '@/types/statement';
 
 const StatementSettings: FC = () => {
 	// * Hooks * //

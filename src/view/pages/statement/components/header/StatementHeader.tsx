@@ -1,24 +1,18 @@
-import React, { FC, useState } from 'react';
+import { FC, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import StatementTopNav from '../nav/top/StatementTopNav';
 import InvitePanel from './invitePanel/InvitePanel';
 import { logOut } from '@/controllers/db/auth';
 import { setFollowMeDB } from '@/controllers/db/statements/setStatements';
 import { useLanguage } from '@/controllers/hooks/useLanguages';
-import useToken from '@/controllers/hooks/useToken';
 import { Statement } from '@/types/statement';
 
 interface Props {
 	statement: Statement | undefined;
 	topParentStatement: Statement | undefined;
-	setShowAskPermission: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-const StatementHeader: FC<Props> = ({
-	statement,
-	topParentStatement,
-	setShowAskPermission,
-}) => {
+const StatementHeader: FC<Props> = ({ statement, topParentStatement }) => {
 	// Hooks
 	const { pathname } = useLocation();
 	const [isHeaderMenuOpen, setIsHeaderMenuOpen] = useState(false);
