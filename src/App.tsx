@@ -27,6 +27,7 @@ import { updateAgreementToStore, userSelector } from './model/users/userSlice';
 // Custom components
 import Accessibility from './view/components/accessibility/Accessibility';
 import TermsOfUse from './view/components/termsOfUse/TermsOfUse';
+import Dropdown from './model/Dropdown';
 
 // Helpers
 
@@ -148,7 +149,7 @@ export default function App() {
 	return (
 		<Suspense fallback={<div>Loading...</div>}>
 			<Accessibility />
-
+		<Dropdown ></Dropdown>
 			<Outlet />
 			{showSignAgreement && (
 				<TermsOfUse handleAgreement={handleAgreement} agreement={agreement} />
