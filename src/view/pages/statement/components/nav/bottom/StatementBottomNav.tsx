@@ -21,6 +21,7 @@ import StartHere from "@/view/components/startHere/StartHere";
 import { StatementContext } from "../../../StatementCont";
 import { sortItems } from "./StatementBottomNavModal";
 import { useLanguage } from "@/controllers/hooks/useLanguages";
+import { useClickOutside } from "@/controllers/hooks/useClickOutside";
 
 interface Props {
 	showNav?: boolean;
@@ -39,6 +40,10 @@ const StatementBottomNav: FC<Props> = () => {
 
 	const statementColor = useStatementColor({ statement });
 
+	const sortMenuRef = useClickOutside<HTMLDivElement>(() => {
+		setShowSorting(false);
+	  });
+
 	//used to check if the user can add a new option in voting and in evaluation screens
 
 	function handleCreateNewOption() {
@@ -53,7 +58,8 @@ const StatementBottomNav: FC<Props> = () => {
 
 	};
 
-	function handleSortingClick() {
+	function handleSortingClick(e: React.MouseEvent) {
+		e.stopPropagation();
 		setShowSorting(!showSorting);
 	}
 
@@ -66,6 +72,7 @@ const StatementBottomNav: FC<Props> = () => {
 						? "statement-bottom-nav statement-bottom-nav--show"
 						: "statement-bottom-nav"
 				}
+				ref={sortMenuRef}
 			>
 				<div className={`add-option-button-wrapper ${dir === "ltr" ? "add-option-button-wrapper--ltr" : ""}`}>
 

@@ -1,13 +1,17 @@
 import { FC, ReactNode } from "react";
 import "./Modal.scss";
+import { useClickOutside } from "@/controllers/hooks/useClickOutside";
 
 interface Props {
 	className?: string;
 	children: ReactNode;
-	closeModal?: (e: React.MouseEvent<HTMLDivElement> | React.KeyboardEvent<HTMLDivElement>) => void;
+	closeModal?: (e?: React.MouseEvent<HTMLDivElement> | React.KeyboardEvent<HTMLDivElement>) => void;
 }
 
 const Modal: FC<Props> = ({ children, className = "", closeModal }) => {
+	const modalRef = useClickOutside(() => {
+		closeModal && closeModal();
+	  });
 
 	const handleContentClick = (e: React.MouseEvent<HTMLDivElement> | React.KeyboardEvent<HTMLDivElement>) => {
 		e.stopPropagation();
@@ -26,6 +30,7 @@ const Modal: FC<Props> = ({ children, className = "", closeModal }) => {
 			tabIndex={0}
 		>
 			<div
+				ref={modalRef}
 				className="modal-content"
 				onClick={handleContentClick}
 				onKeyDown={(e) => {

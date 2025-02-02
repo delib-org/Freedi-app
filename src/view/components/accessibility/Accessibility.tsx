@@ -13,15 +13,20 @@ import "./Accessibility.scss";
 import { colorMappings } from "./colorContrast";
 import { useAutoClose } from "@/controllers/hooks/useAutoClose";
 import { useFontSize } from "@/controllers/hooks/useFontSize";
+import { useClickOutside } from "@/controllers/hooks/useClickOutside";
 
 export default function Accessibility() {
-	const { isOpen, handleOpen } = useAutoClose(5000);
+	const { isOpen, handleOpen, setIsOpen } = useAutoClose(5000);
 	const dispatch = useAppDispatch();
 	const fontSize = useAppSelector(fontSizeSelector);
 	const user = useAppSelector(userSelector);
 	const colorContrast = useAppSelector(colorContrastSelector);
 
 	const { currentFontSize, handleChangeFontSize } = useFontSize(fontSize || defaultFontSize, !!user);
+
+	const accessibilityRef = useClickOutside(() => {
+		setIsOpen(false);
+	});
 
 	useEffect(() => {
 		Object.entries(colorMappings).forEach(([key, contrastKey]) => {
@@ -33,7 +38,10 @@ export default function Accessibility() {
 	}, [colorContrast]);
 
 	return (
-		<div className={`accessibility ${isOpen ? 'is-open' : ''}`}>
+		<div
+			ref={accessibilityRef}
+			className={`accessibility ${isOpen ? 'is-open' : ''}`}
+		>
 			<button className="accessibility-button" onClick={handleOpen}>
 				<AccessibilityIcon />
 			</button>

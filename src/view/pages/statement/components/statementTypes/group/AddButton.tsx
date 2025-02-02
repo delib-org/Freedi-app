@@ -4,13 +4,25 @@ import PlusIcon from "@/assets/icons/plusIcon.svg?react";
 import AddDocumentIcon from "@/assets/icons/document.svg?react";
 import AddClusterIcon from "@/assets/icons/net-clusters.svg?react";
 import AddSubGroupIcon from "@/assets/icons/team-group.svg?react";
+import { useClickOutside } from '@/controllers/hooks/useClickOutside';
 
 export default function AddButton() {
 	const [actionsOpen, setActionsOpen] = React.useState(false)
 
-	const onclick = () => {
-		setActionsOpen(!actionsOpen)
-	}
+	const actionsRef = useClickOutside(() => {
+		setActionsOpen(false);
+	  });
+
+	  const toggleActions = (e: React.MouseEvent) => {
+		e.stopPropagation();
+		setActionsOpen(!actionsOpen);
+	  };
+
+	  const handleActionClick = (action: () => void) => (e: React.MouseEvent) => {
+		e.stopPropagation();
+		action();
+		setActionsOpen(false);
+	  };
 
 	const addDocumentAction = () => {
 		return;
@@ -25,21 +37,21 @@ export default function AddButton() {
 	}
 
 	return (
-		<div className='actions'>
+		<div className='actions' ref={actionsRef}>
 			{actionsOpen && <>
-				<IconButton onClick={addDocumentAction} className="action-btn">
+				<IconButton onClick={handleActionClick(addDocumentAction)} className="action-btn">
 					<AddDocumentIcon />
 				</IconButton>
-				<IconButton onClick={addClusterAction} className="action-btn">
+				<IconButton onClick={handleActionClick(addClusterAction)} className="action-btn">
 					<AddClusterIcon />
 				</IconButton>
-				<IconButton onClick={addSubGroupAction} className="action-btn">
+				<IconButton onClick={handleActionClick(addSubGroupAction)} className="action-btn">
 					<AddSubGroupIcon />
 				</IconButton>
 				<button className='invisibleBackground' onClick={() => setActionsOpen(false)}></button>
 			</>}
 
-			<IconButton onClick={onclick} className="plus-button">
+			<IconButton onClick={toggleActions} className="plus-button">
 				<PlusIcon />
 			</IconButton>
 		</div>

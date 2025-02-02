@@ -20,5 +20,5 @@ export const useAutoClose = (autoCloseDelay = 5000) => {
 		return () => clearTimeout(timeoutRef.current);
 	}, []);
 
-	return { isOpen, handleOpen };
+	return { isOpen, handleOpen, setIsOpen };
 };

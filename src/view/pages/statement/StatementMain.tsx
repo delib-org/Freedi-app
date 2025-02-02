@@ -227,9 +227,7 @@ const StatementMain: FC = () => {
 					)}
 					{showNewStatement && (
 						<Modal
-							closeModal={(e) => {
-								if (e.target === e.currentTarget) setShowNewStatement(false);
-							}}
+							closeModal={() => setShowNewStatement(false)}
 						>
 							<NewStatement />
 						</Modal>
