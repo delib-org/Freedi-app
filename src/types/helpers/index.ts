@@ -37,6 +37,7 @@ export function updateArray<T>(
 export function isMember(role: Role | undefined): boolean {
 	if (role === Role.admin || role === Role.member || role === Role.creator)
 		return true;
+
 	return false;
 }
 

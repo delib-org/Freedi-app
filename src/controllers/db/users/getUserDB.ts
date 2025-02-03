@@ -70,6 +70,7 @@ export function listenToUserSettings(): Unsubscribe {
 		return onSnapshot(userSettingsRef, (settingsDB) => {
 			if (!settingsDB.data()) {
 				store.dispatch(setUserSettings(null));
+
 				return;
 			}
 
