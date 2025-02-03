@@ -1,4 +1,3 @@
-import { Statement } from 'delib-npm';
 import {
 	ChangeEvent,
 	Dispatch,
@@ -8,19 +7,12 @@ import {
 	useRef,
 	useState,
 } from 'react';
-
-// Third party
-
-// Statements Helpers
 import Text from '../text/Text';
 import styles from './EditTitle.module.scss';
 import Save from '@/assets/icons/saveIcon.svg?react';
 import { updateStatementText } from '@/controllers/db/statements/setStatements';
-
-// Styles
-
-// Custom components
 import { useLanguage } from '@/controllers/hooks/useLanguages';
+import { Statement } from '@/types/statement';
 
 interface Props {
 	statement: Statement | undefined;
@@ -31,7 +23,14 @@ interface Props {
 	useDescription?: boolean;
 }
 
-const EditTitle: FC<Props> = ({ useTitle = true, useDescription = true, statement, isEdit, setEdit, isTextArea }) => {
+const EditTitle: FC<Props> = ({
+	useTitle = true,
+	useDescription = true,
+	statement,
+	isEdit,
+	setEdit,
+	isTextArea,
+}) => {
 	const [description, setDescription] = useState(statement?.description || '');
 	const [title, setTitle] = useState(statement?.statement || '');
 
@@ -44,8 +43,6 @@ const EditTitle: FC<Props> = ({ useTitle = true, useDescription = true, statemen
 			inputRef.current.focus();
 		}
 	}, [isEdit]);
-
-	if (!statement) return null;
 
 	const { dir: direction } = useLanguage();
 	const align = direction === 'ltr' ? 'left' : 'right';
@@ -78,6 +75,8 @@ const EditTitle: FC<Props> = ({ useTitle = true, useDescription = true, statemen
 	}
 
 	if (!isEdit) {
+		if (!statement) return null;
+
 		return (
 			<div style={{ direction: direction, textAlign: align }}>
 				<Text

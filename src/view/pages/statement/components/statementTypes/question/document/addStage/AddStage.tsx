@@ -2,9 +2,10 @@ import { FC, useContext, useState } from 'react';
 import { useLanguage } from '@/controllers/hooks/useLanguages'
 import styles from './AddStage.module.scss'
 import Button, { ButtonType } from '@/view/components/buttons/button/Button'
-import { StageType, StatementType } from 'delib-npm';
 import { saveStatementToDB } from '@/controllers/db/statements/setStatements';
 import { StatementContext } from '@/view/pages/statement/StatementCont';
+import { StatementType } from '@/types/enums';
+import { StageType } from '@/types/stage';
 
 interface AddStageProps {
 	setShowAddStage: (showAddStage: boolean) => void

@@ -9,11 +9,8 @@ import ChatIcon from "@/assets/icons/roundedChatDotIcon.svg?react";
 // Statements functions
 import { useAppSelector } from "@/controllers/hooks/reduxHooks";
 import { statementSubscriptionSelector } from "@/model/statements/statementsSlice";
-
-// Third party
-import { Statement, StatementSubscription } from "delib-npm";
-
-// Redux
+import { Statement } from "@/types/statement";
+import { StatementSubscription } from "@/types/statement/subscription";
 
 interface Props {
 	statement: Statement;
@@ -42,7 +39,7 @@ const StatementChatMore: FC<Props> = ({ statement }) => {
 			}
 		>
 			<div className="icon">
-			{messages}
+				{messages}
 				{messages - messagesRead > 0 && (
 					<div className="redCircle">
 						{messages - messagesRead < 10
@@ -51,7 +48,7 @@ const StatementChatMore: FC<Props> = ({ statement }) => {
 					</div>
 				)}
 				<ChatIcon />
-				
+
 			</div>
 		</button>
 	);

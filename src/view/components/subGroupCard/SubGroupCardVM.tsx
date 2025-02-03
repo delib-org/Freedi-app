@@ -1,8 +1,8 @@
-import { Statement } from "delib-npm";
 import DocumentIcon from '@/assets/icons/document.svg?react';
 import GroupIcon from '@/assets/icons/group.svg?react';
-import { ReactElement } from "react";
-import useStatementColor from "@/controllers/hooks/useStatementColor";
+import { ReactElement } from 'react';
+import useStatementColor from '@/controllers/hooks/useStatementColor';
+import { Statement } from '@/types/statement';
 
 type StatementType = 'group' | 'question' | 'document';
 
@@ -23,22 +23,24 @@ const getIconByType = (type: StatementType): ReactElement => {
 	}
 };
 
-export default function useSubGroupCard(statement: Statement): SubGroupCardReturn {
+export default function useSubGroupCard(
+	statement: Statement
+): SubGroupCardReturn {
 	const { backgroundColor } = useStatementColor({ statement });
 
 	try {
 		return {
 			Icon: getIconByType(statement.statementType as StatementType),
 			backgroundColor,
-			text: statement.statement
+			text: statement.statement,
 		};
 	} catch (error) {
 		console.error('Error in useSubGroupCard:', error);
-		
-return {
+
+		return {
 			Icon: <DocumentIcon />,
 			backgroundColor: 'var(--header-home)',
-			text: ''
+			text: '',
 		};
 	}
 }

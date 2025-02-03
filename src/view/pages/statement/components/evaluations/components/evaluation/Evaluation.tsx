@@ -1,7 +1,7 @@
-import { Statement } from "delib-npm";
 import { FC } from "react";
 import EnhancedEvaluation from "./enhancedEvaluation/EnhancedEvaluation";
 import SimpleEvaluation from "./simpleEvaluation/SimpleEvaluation";
+import { Statement } from "@/types/statement";
 
 interface EvaluationProps {
 	parentStatement: Statement | undefined;
@@ -35,8 +35,8 @@ const Evaluation: FC<EvaluationProps> = ({ parentStatement, statement }) => {
 		);
 	} catch (error) {
 		console.error(error);
-		
-return null;
+
+		return null;
 	}
 };
 
