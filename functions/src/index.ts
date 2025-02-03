@@ -45,7 +45,7 @@ export const db = getFirestore();
 
 // Common config for functions
 const functionConfig = {
-	region: 'europe-west1',
+	region: 'me-west1',
 	timeoutSeconds: 300,
 };
 
