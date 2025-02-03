@@ -17,6 +17,13 @@
 			"ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
 			"rewrites": [
 				{
+					"source": "/getRandomStatements2",
+					"function": {
+						"functionId": "getRandomStatements2",
+						"region": "us-central1"
+					}
+				},
+				{
 					"source": "**",
 					"destination": "/index.html"
 				}
@@ -27,6 +34,13 @@
 			"public": "dist",
 			"ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
 			"rewrites": [
+				{
+					"source": "/getRandomStatements2",
+					"function": {
+						"functionId": "getRandomStatements2",
+						"region": "us-central1"
+					}
+				},
 				{
 					"source": "**",
 					"destination": "/index.html"
