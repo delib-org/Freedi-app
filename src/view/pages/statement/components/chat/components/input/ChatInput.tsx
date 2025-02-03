@@ -1,4 +1,4 @@
-import { FC, useState, useEffect, useRef } from 'react';
+import React, { FC, useState, useEffect, useRef } from 'react';
 import styles from './ChatInput.module.scss';
 // Third Party Imports
 

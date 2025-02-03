@@ -1,4 +1,4 @@
-import { useRef, FC } from 'react';
+import React, { useRef, FC } from 'react';
 
 //Custom components
 import Button from '../../../view/components/buttons/button/Button';
@@ -14,6 +14,7 @@ const SetWaitingList: FC = () => {
 	const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
 		const files = event.target.files;
 		if (files && files.length > 0) {
+			console.error('File uploaded');
 		}
 	};
 

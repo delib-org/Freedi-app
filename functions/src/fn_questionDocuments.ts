@@ -40,6 +40,7 @@ export async function createStagesForQuestionDocument(
 		return;
 	} catch (error) {
 		console.error(error);
+		
 		return;
 	}
 }

@@ -1,4 +1,4 @@
-import { useContext } from 'react';
+import { FormEvent, useContext } from 'react';
 import { NewStatementContext } from '../../newStatementCont';
 import styles from './GetInitialStatementData.module.scss';
 import {
@@ -20,7 +20,7 @@ export default function GetInitialStatementData() {
 	const { newStatementType, handleSetNewStatement, statement } =
 		useContext(StatementContext);
 
-	const handleSubmit = async (ev: React.FormEvent<HTMLFormElement>) => {
+	const handleSubmit = async (ev: FormEvent<HTMLFormElement>) => {
 		ev.preventDefault();
 		try {
 			const form = new FormData(ev.target as HTMLFormElement);

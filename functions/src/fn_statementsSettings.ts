@@ -76,9 +76,11 @@ export async function updateSettings(e: any) {
 				});
 			}
 		}
+		
 		return;
 	} catch (error) {
 		logger.error(error);
+		
 		return;
 	}
 }

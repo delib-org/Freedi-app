@@ -56,12 +56,14 @@ export function agreeDisagreeDifferences(
 	try {
 		const diffDisagree = Math.min(agreeBefore, 0) - Math.min(agreeAfter, 0);
 		const diffAgree = Math.max(agreeAfter, 0) - Math.max(agreeBefore, 0);
+		
 		return {
 			diffInAgree: diffAgree,
 			diffInDisagree: diffDisagree,
 		};
 	} catch (error) {
 		console.error(error);
+		
 		return {
 			diffInAgree: 0,
 			diffInDisagree: 0,

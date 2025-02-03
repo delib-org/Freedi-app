@@ -24,7 +24,6 @@ import { getFirestore } from 'firebase-admin/firestore';
 import { setAdminsToNewStatement } from './fn_roles';
 import { updateStatementNumberOfMembers } from './fn_subscriptions';
 import {
-	checkPassword,
 	getRandomStatements,
 	getTopStatements,
 	getUserOptions,
@@ -71,7 +70,6 @@ const wrapHttpFunction = (handler: any) => {
 exports.getRandomStatements = wrapHttpFunction(getRandomStatements);
 exports.getTopStatements = wrapHttpFunction(getTopStatements);
 exports.getUserOptions = wrapHttpFunction(getUserOptions);
-exports.checkPassword = wrapHttpFunction(checkPassword);
 exports.hashPassword = wrapHttpFunction(hashPassword);
 exports.checkForSimilarStatements = wrapHttpFunction(findSimilarStatements);
 

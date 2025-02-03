@@ -1,4 +1,3 @@
-/* eslint-disable indent */
 import { createSlice, PayloadAction, createSelector } from '@reduxjs/toolkit';
 
 // Helpers

@@ -1,4 +1,4 @@
-import { FC, useEffect, useRef, useState } from 'react';
+import React, { FC, useEffect, useRef, useState } from 'react';
 
 // Styles
 import Button, { ButtonType } from '../buttons/button/Button';

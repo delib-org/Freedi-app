@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 
 export const useAutoClose = (autoCloseDelay = 5000) => {
 	const [isOpen, setIsOpen] = useState(false);
-	const timeoutRef = useRef<NodeJS.Timeout>();
+	const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
 
 	const handleOpen = () => {
 		if (isOpen) {

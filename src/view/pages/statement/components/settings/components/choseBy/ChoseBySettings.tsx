@@ -1,8 +1,4 @@
-import { FC, useEffect, useState } from 'react';
-
-// Custom components
-
-// Third party imports
+import { ChangeEvent, FC, MouseEvent, TouchEvent, useEffect, useState } from 'react';
 import { useLanguage } from '@/controllers/hooks/useLanguages';
 import RadioButtonWithLabel from '@/view/components/radioButtonWithLabel/RadioButtonWithLabel';
 import styles from './ChoseBySettings.module.scss';
@@ -51,9 +47,9 @@ const ChoseBySettings: FC<StatementSettingsProps> = ({ statement }) => {
 				value: choseBy?.number ?? 0,
 			});
 		}
-	}, [choseBy?.cutoffType]);
+	}, [choseBy, dispatch]);
 
-	function handleEvaluationChange(e: React.ChangeEvent<HTMLInputElement>) {
+	function handleEvaluationChange(e: ChangeEvent<HTMLInputElement>) {
 		if (!e.target.id) return;
 		if (!choseBy) return;
 		const newChoseBy = {
@@ -64,7 +60,7 @@ const ChoseBySettings: FC<StatementSettingsProps> = ({ statement }) => {
 		setChoseByToDB(newChoseBy);
 	}
 
-	function handleCutoffChange(e: React.ChangeEvent<HTMLInputElement>) {
+	function handleCutoffChange(e: ChangeEvent<HTMLInputElement>) {
 		if (!e.target.id) return;
 		if (!choseBy) return;
 
@@ -79,9 +75,9 @@ const ChoseBySettings: FC<StatementSettingsProps> = ({ statement }) => {
 
 	function handleRangeChange(
 		e:
-			| React.ChangeEvent<HTMLInputElement>
-			| React.MouseEvent<HTMLInputElement>
-			| React.TouchEvent<HTMLInputElement>
+			| ChangeEvent<HTMLInputElement>
+			| MouseEvent<HTMLInputElement>
+			| TouchEvent<HTMLInputElement>
 	) {
 		if (!choseBy) return;
 

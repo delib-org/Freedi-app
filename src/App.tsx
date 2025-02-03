@@ -1,5 +1,5 @@
 import { Unsubscribe } from 'firebase/auth';
-import { useEffect, useState, Suspense } from 'react';
+import React, { useEffect, useState, Suspense } from 'react';
 
 // Third party imports
 import { useDispatch } from 'react-redux';

@@ -1,4 +1,3 @@
-/* eslint-disable indent */
 import { FC } from "react";
 import "./StatementChatMore.scss";
 

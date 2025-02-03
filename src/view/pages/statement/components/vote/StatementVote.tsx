@@ -50,14 +50,12 @@ const StatementVote: FC = () => {
 
 	useEffect(() => {
 		if (!getVoteFromDB) {
-			getToVoteOnParent(statement?.statementId, updateStoreWithVoteCB);
+			getToVoteOnParent(statement?.statementId, (option: Statement) =>
+				dispatch(setVoteToStore(option))
+			);
 			getVoteFromDB = true;
 		}
-	}, []);
-
-	function updateStoreWithVoteCB(option: Statement) {
-		dispatch(setVoteToStore(option));
-	}
+	}, [statement?.statementId, dispatch]);
 
 	return (
 		<>

@@ -1,4 +1,4 @@
-import { FC } from 'react';
+import { FC, ReactNode } from 'react';
 import './QuestionStageRadioBtn.scss';
 import ArrowUp from '@/assets/icons/arrowUpIcon.svg?react';
 import EvaluationsIcon from '@/assets/icons/evaluations2Icon.svg?react';
@@ -11,6 +11,7 @@ import { useLanguage } from '@/controllers/hooks/useLanguages';
 import { statementMetaDataSelector } from '@/model/statements/statementsMetaSlice';
 import { QuestionStage } from '@/types/enums';
 import { Statement } from '@/types/statement';
+import { getStageInfo } from './helpers';
 
 interface Props {
 	stage: QuestionStage;
@@ -71,44 +72,9 @@ const QuestionStageRadioBtn: FC<Props> = ({ stage, statement }) => {
 
 export default QuestionStageRadioBtn;
 
-export function getStageInfo(
-	stage: QuestionStage,
-	isSelected = true
-): {
-	backgroundColor: string;
-	btnBackgroundColor: string;
-	stageInfo: StageInfo | undefined;
-	error?: boolean;
-} {
-	try {
-		const stageInfo: StageInfo | undefined = getStagesInfo(stage);
-		if (!stageInfo) throw new Error('Stage info not found');
-
-		const backgroundColor = stageInfo
-			? `var(${stageInfo.color})`
-			: 'var(--green)';
-		const btnBackgroundColor = stageInfo
-			? isSelected
-				? `var(${stageInfo.color})`
-				: '#DCE7FF'
-			: '#DCE7FF';
-
-		return { backgroundColor, btnBackgroundColor, stageInfo };
-	} catch (error) {
-		console.error(error);
-
-		return {
-			backgroundColor: 'var(--green)',
-			btnBackgroundColor: '#DCE7FF',
-			stageInfo: undefined,
-			error: true,
-		};
-	}
-}
-
 export interface StageInfo {
 	name: string;
-	icon: JSX.Element;
+	icon: ReactNode;
 	color: string;
 	message: string | undefined;
 }

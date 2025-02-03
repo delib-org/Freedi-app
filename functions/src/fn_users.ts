@@ -17,9 +17,11 @@ export async function setUserSettings(e: any) {
 
 		const userSettingsRef = db.doc(`${Collections.usersSettings}/${uid}`);
 		await userSettingsRef.set(userSettings);
+		
 		return;
 	} catch (error) {
 		console.error(error);
+		
 		return;
 	}
 }

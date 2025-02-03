@@ -81,8 +81,7 @@ export const listenToStatementSubSubscriptions = (
 		});
 	} catch (error) {
 		console.error(error);
-
-		// eslint-disable-next-line @typescript-eslint/no-empty-function
+		 
 		return () => {};
 	}
 };
@@ -171,15 +170,14 @@ export function listenToStatementSubscriptions(
 		});
 	} catch (error) {
 		console.error('Listen to statement subscriptions error', error);
-
-		// eslint-disable-next-line @typescript-eslint/no-empty-function
+		 
 		return () => {};
 	}
 }
 
 export async function getStatmentsSubsciptions(): Promise<
 	StatementSubscription[]
-> {
+	> {
 	try {
 		const user = store.getState().user.user;
 		if (!user) throw new Error('User not logged in');
@@ -474,8 +472,7 @@ export function getNewStatementsFromSubscriptions(): Unsubscribe {
 		});
 	} catch (error) {
 		console.error(error);
-
-		// eslint-disable-next-line @typescript-eslint/no-empty-function
+		 
 		return () => {};
 	}
 }

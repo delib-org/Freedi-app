@@ -30,11 +30,11 @@ export class StageClass {
 				stages.push(newStage);
 			});
 			
-return stages;
+			return stages;
 		} catch (error) {
 			console.error(error);
 			
-return [];
+			return [];
 		}
 	}
 
@@ -53,11 +53,11 @@ return [];
 			});
 			if (!newStage) throw new Error('Could not create stage');
 			
-return newStage;
+			return newStage;
 		} catch (error) {
 			console.error(error);
 			
-return undefined;
+			return undefined;
 		}
 	}
 

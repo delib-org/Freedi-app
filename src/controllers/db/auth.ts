@@ -54,59 +54,59 @@ export function signAnonymously() {
 }
 export const listenToAuth =
 	(dispatch: AppDispatch) =>
-	(
-		isAnonymous: boolean,
-		navigate: NavigateFunction,
-		initialUrl: string
-	): Unsubscribe => {
-		return onAuthStateChanged(auth, async (userFB) => {
-			try {
-				if (!userFB && isAnonymous !== true) {
-					navigate('/');
-				}
-				if (isAnonymous && !userFB) {
-					signAnonymously();
-				}
-				if (userFB) {
+		(
+			isAnonymous: boolean,
+			navigate: NavigateFunction,
+			initialUrl: string
+		): Unsubscribe => {
+			return onAuthStateChanged(auth, async (userFB) => {
+				try {
+					if (!userFB && isAnonymous !== true) {
+						navigate('/');
+					}
+					if (isAnonymous && !userFB) {
+						signAnonymously();
+					}
+					if (userFB) {
 					// User is signed in
-					const user = parse(UserSchema, userFB);
+						const user = parse(UserSchema, userFB);
 
-					if (!user.displayName)
-						user.displayName =
+						if (!user.displayName)
+							user.displayName =
 							localStorage.getItem('displayName') ??
 							`Anonymous ${Math.floor(Math.random() * 10000)}`;
 
-					if (user?.isAnonymous) {
-						user.displayName =
+						if (user?.isAnonymous) {
+							user.displayName =
 							sessionStorage.getItem('displayName') ??
 							`Anonymous ${Math.floor(Math.random() * 10000)}`;
-					}
+						}
 
-					// console.info("User is signed in")
-					if (!user) throw new Error('user is undefined');
+						// console.info("User is signed in")
+						if (!user) throw new Error('user is undefined');
 
-					const userDB = (await setUserToDB(user)) as User;
+						const userDB = (await setUserToDB(user)) as User;
 
-					const fontSize = userDB.fontSize ? userDB.fontSize : defaultFontSize;
+						const fontSize = userDB.fontSize ? userDB.fontSize : defaultFontSize;
 
-					dispatch(setFontSize(fontSize));
+						dispatch(setFontSize(fontSize));
 
-					document.body.style.fontSize = fontSize + 'px';
+						document.body.style.fontSize = fontSize + 'px';
 
-					if (!userDB) throw new Error('userDB is undefined');
-					dispatch(setUser(userDB));
+						if (!userDB) throw new Error('userDB is undefined');
+						dispatch(setUser(userDB));
 
-					if (initialUrl) navigate(initialUrl);
-				} else {
+						if (initialUrl) navigate(initialUrl);
+					} else {
 					// User is not logged in.
-					dispatch(resetStatements());
-					dispatch(resetEvaluations());
-					dispatch(resetVotes());
-					dispatch(resetResults());
-					dispatch(setUser(null));
+						dispatch(resetStatements());
+						dispatch(resetEvaluations());
+						dispatch(resetVotes());
+						dispatch(resetResults());
+						dispatch(setUser(null));
+					}
+				} catch (error) {
+					console.error(error);
 				}
-			} catch (error) {
-				console.error(error);
-			}
-		});
-	};
+			});
+		};

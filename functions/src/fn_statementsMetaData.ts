@@ -27,8 +27,6 @@ export async function addOrRemoveMemberFromStatementDB(
 			`${Collections.statementsMetaData}/${statementId}`
 		);
 		const statementMetaData = await statementRef.get();
-		if (!statementMetaData.exists) {
-		}
 		statementRef.set(
 			{
 				numberOfMembers: FieldValue.increment(increment),
@@ -37,9 +35,11 @@ export async function addOrRemoveMemberFromStatementDB(
 			},
 			{ merge: true }
 		);
+
 		return;
 	} catch (error) {
 		logger.error('error updating statement with number of members', error);
+
 		return;
 	}
 }

@@ -356,7 +356,6 @@ async function updateParentStatementWithChosenOptions(
 			parentStatement.statementType === StatementType.stage &&
 			parentStatement.stageType === StageType.suggestions
 		) {
-			console.log('updating parent statement', parentStatement.statement);
 			await db
 				.collection(Collections.statements)
 				.doc(parentStatement.parentId)
@@ -404,8 +403,9 @@ async function choseTopOptions(
 		await batch2.commit();
 
 		return sortedOptions;
-	} catch (error: any) {
-		console.error(`At choseTopOptions ${error.message}`);
+	} catch (error) {
+		console.error(`At choseTopOptions ${error}`);
+
 		return undefined;
 	}
 }
@@ -428,6 +428,7 @@ function getSortedOptions(
 				(b.evaluation?.sumEvaluations ?? 0)
 		);
 	}
+
 	return statements;
 }
 
@@ -450,6 +451,7 @@ async function optionsChosenByMethod(
 			.get();
 
 		const statements = statementsDB.docs.map((doc) => doc.data() as Statement);
+
 		return statements;
 	} else if (cutoffType === CutoffType.cutoffValue) {
 		const statementsDB = await statementsRef
@@ -460,6 +462,7 @@ async function optionsChosenByMethod(
 
 		return statements;
 	}
+
 	return undefined;
 }
 
@@ -471,5 +474,6 @@ function getEvaluationQuery(choseByEvaluationType: ChoseByEvaluationType) {
 	} else if (choseByEvaluationType === ChoseByEvaluationType.likesDislikes) {
 		return 'evaluation.sumEvaluations';
 	}
+
 	return 'consensus';
 }
