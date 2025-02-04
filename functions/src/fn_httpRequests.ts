@@ -34,8 +34,8 @@ export const getUserOptions = async (req: Request, res: Response) => {
 		res.send({ statements, ok: true });
 
 		return;
-	} catch (error: any) {
-		res.status(500).send({ error: error.message, ok: false });
+	} catch (error) {
+		res.status(500).send({ error: error, ok: false });
 
 		return;
 	}
@@ -73,8 +73,8 @@ export const getRandomStatements = async (req: Request, res: Response) => {
 		const randomStatements = allSolutionStatements.splice(0, limit);
 
 		res.send({ randomStatements, ok: true });
-	} catch (error: any) {
-		res.status(500).send({ error: error.message, ok: false });
+	} catch (error) {
+		res.status(500).send({ error: error, ok: false });
 
 		return;
 	}
@@ -114,19 +114,6 @@ export const getTopStatements = async (req: Request, res: Response) => {
 	// })
 };
 
-export async function hashPassword(_: Request, res: Response) {
-	try {
-		//req -> {password}
-		//set hash password in the statementPassword collection
-		// if(ok) --> res.send({ok:true, error:null})
-		// else --> res.send({ok:false, error:error.message})
-	} catch (error: any) {
-		res.status(500).send({ error: error.message, ok: false });
-
-		return;
-	}
-}
-
 export async function maintainRole(_: Request, res: Response) {
 	try {
 		const subscriptionsRef = db.collection(Collections.statementsSubscribe);
@@ -140,8 +127,8 @@ export async function maintainRole(_: Request, res: Response) {
 		});
 		await batch.commit();
 		res.send({ ok: true });
-	} catch (error: any) {
-		res.status(500).send({ error: error.message, ok: false });
+	} catch (error) {
+		res.status(500).send({ error: error, ok: false });
 
 		return;
 	}
@@ -175,8 +162,8 @@ export async function maintainDeliberativeElement(_: Request, res: Response) {
 
 		await batch.commit();
 		res.send({ ok: true });
-	} catch (error: any) {
-		res.status(500).send({ error: error.message, ok: false });
+	} catch (error) {
+		res.status(500).send({ error: error, ok: false });
 
 		return;
 	}
@@ -213,8 +200,8 @@ export async function maintainStatement(_: Request, res: Response) {
 
 		await batch.commit();
 		res.send({ ok: true, count });
-	} catch (error: any) {
-		res.status(500).send({ error: error.message, ok: false });
+	} catch (error) {
+		res.status(500).send({ error: error, ok: false });
 
 		return;
 	}

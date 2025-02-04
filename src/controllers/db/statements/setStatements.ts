@@ -474,7 +474,9 @@ export async function updateStatementText(
 			lastUpdate: Timestamp.now().toMillis(),
 		};
 		await updateDoc(statementRef, newStatement);
-	} catch (error) {}
+	} catch (error) {
+		console.error(error);
+	}
 }
 
 export async function setStatementIsOption(statement: Statement | undefined) {

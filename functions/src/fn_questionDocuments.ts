@@ -40,7 +40,7 @@ export async function createStagesForQuestionDocument(
 		return;
 	} catch (error) {
 		console.error(error);
-		
+
 		return;
 	}
 }
@@ -56,9 +56,7 @@ export async function deleteStagesForQuestionDocument(
 		.get();
 
 	//if stages exists, delete them
-
 	if (stagesDB.docs.length > 0) {
-		console.log('deleting stages', stagesDB.docs.length);
 		const batch = db.batch();
 		stagesDB.docs.forEach((stage) => {
 			batch.delete(stage.ref);

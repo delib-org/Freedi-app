@@ -1,9 +1,12 @@
 import { db } from './index';
 import { isEqualObjects } from './helpers';
 import { createStagesForQuestionDocument } from './fn_questionDocuments';
-import { logger } from 'firebase-functions/v1';
+import { Change, logger } from 'firebase-functions/v1';
 import { Collections } from '../../src/types/enums';
-import { Statement } from '../../src/types/statement';
+import { Statement, StatementSchema } from '../../src/types/statement';
+import { DocumentSnapshot } from 'firebase-admin/firestore';
+import { FirestoreEvent } from 'firebase-functions/firestore';
+import { parse } from 'valibot';
 
 /**
  * Statement Settings Security Model
@@ -36,16 +39,23 @@ import { Statement } from '../../src/types/statement';
  * - [Add other protected settings fields here]
  */
 
-export async function updateSettings(e: any) {
-	try {
-		//get statement after update and before update
+export async function updateSettings(
+	e: FirestoreEvent<
+		Change<DocumentSnapshot> | undefined,
+		{
+			statementId: string;
+		}
+	>
+) {
+	if (!e.data) return;
 
+	try {
 		const statementId = e.params.statementId;
 
 		if (!statementId) throw new Error('No statementId provided');
 
-		const before = e.data.before.data() as Statement | undefined;
-		const after = e.data.after.data() as Statement | undefined;
+		const before = parse(StatementSchema, e.data.before.data());
+		const after = parse(StatementSchema, e.data.after.data());
 
 		//Update question settings
 		if (!isEqualObjects(before?.questionSettings, after?.questionSettings)) {
@@ -76,11 +86,11 @@ export async function updateSettings(e: any) {
 				});
 			}
 		}
-		
+
 		return;
 	} catch (error) {
 		logger.error(error);
-		
+
 		return;
 	}
 }

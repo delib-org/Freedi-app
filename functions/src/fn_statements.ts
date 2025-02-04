@@ -1,40 +1,53 @@
 import { logger } from 'firebase-functions';
-import { Timestamp, FieldValue } from 'firebase-admin/firestore';
+import {
+	Timestamp,
+	FieldValue,
+	QueryDocumentSnapshot,
+} from 'firebase-admin/firestore';
 import { db } from './index';
 import { Collections } from '../../src/types/enums';
-import { Statement } from '../../src/types/statement';
+import { StatementSchema } from '../../src/types/statement';
+import { FirestoreEvent } from 'firebase-functions/firestore';
+import { parse } from 'valibot';
 
-export async function updateSubscribedListenersCB(event: any) {
-	//get statement
-	const { statementId } = event.params;
+// TODO: Where is this used?
+// export async function updateSubscribedListenersCB(event: any) {
+// 	//get statement
+// 	const { statementId } = event.params;
+// 	//get all subscribers to this statement
+// 	const subscribersRef = db.collection(Collections.statementsSubscribe);
+// 	const q = subscribersRef.where('statementId', '==', statementId);
+// 	const subscribersDB = await q.get();
+// 	//update all subscribers
+// 	subscribersDB.docs.forEach((doc: any) => {
+// 		try {
+// 			const subscriberId = doc.data().statementsSubscribeId;
+// 			if (!subscriberId) throw new Error('subscriberId not found');
 
-	//get all subscribers to this statement
-	const subscribersRef = db.collection(Collections.statementsSubscribe);
-	const q = subscribersRef.where('statementId', '==', statementId);
-	const subscribersDB = await q.get();
+// 			db.doc(`statementsSubscribe/${subscriberId}`).set(
+// 				{
+// 					lastUpdate: Timestamp.now().toMillis(),
+// 				},
+// 				{ merge: true }
+// 			);
+// 		} catch (error) {
+// 			logger.error('error updating subscribers', error);
+// 		}
+// 	});
+// }
 
-	//update all subscribers
-	subscribersDB.docs.forEach((doc: any) => {
-		try {
-			const subscriberId = doc.data().statementsSubscribeId;
-			if (!subscriberId) throw new Error('subscriberId not found');
-
-			db.doc(`statementsSubscribe/${subscriberId}`).set(
-				{
-					lastUpdate: Timestamp.now().toMillis(),
-				},
-				{ merge: true }
-			);
-		} catch (error) {
-			logger.error('error updating subscribers', error);
+export async function updateParentWithNewMessageCB(
+	e: FirestoreEvent<
+		QueryDocumentSnapshot | undefined,
+		{
+			statementId: string;
 		}
-	});
-}
-
-export async function updateParentWithNewMessageCB(e: any) {
+	>
+) {
+	if (!e.data) return;
 	try {
 		//get parentId
-		const _statement = e.data.data() as Statement;
+		const _statement = parse(StatementSchema, e.data.data());
 		const { parentId, topParentId, statementId, statement } = _statement;
 
 		if (parentId === 'top') return;

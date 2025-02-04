@@ -1,16 +1,22 @@
-import { logger } from 'firebase-functions/v1';
+import { Change, logger } from 'firebase-functions/v1';
 import { db } from './index';
-import { FieldValue } from 'firebase-admin/firestore';
+import { DocumentSnapshot, FieldValue } from 'firebase-admin/firestore';
 import { Collections } from '../../src/types/enums';
-import { Statement } from '../../src/types/statement';
+import { Statement, StatementSchema } from '../../src/types/statement';
 import { maxKeyInObject } from '../../src/types/helpers';
+import { FirestoreEvent } from 'firebase-functions/firestore';
+import { parse } from 'valibot';
 
-export async function updateVote(event: any) {
+export async function updateVote(
+	event: FirestoreEvent<Change<DocumentSnapshot> | undefined>
+) {
+	if (!event?.data) return;
+
 	try {
-		const newVote = event.data.after.data();
+		const newVote = parse(StatementSchema, event.data.after.data());
 		const { statementId: newVoteOptionId } = newVote;
 		if (event.data.before.data() !== undefined) {
-			const previousVote = event.data.before.data();
+			const previousVote = parse(StatementSchema, event.data.before.data());
 
 			const previousVoteOptionId = previousVote.statementId;
 
@@ -51,7 +57,7 @@ export async function updateVote(event: any) {
 			.where('selected', '==', true)
 			.get();
 
-		previousResultsDB.forEach((resultDB: any) => {
+		previousResultsDB.forEach((resultDB) => {
 			const result = resultDB.data() as Statement;
 			const docRef = db.doc(`${Collections.statements}/${result.statementId}`);
 			batch.update(docRef, { selected: false });

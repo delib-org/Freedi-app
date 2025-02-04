@@ -346,12 +346,6 @@ async function updateParentStatementWithChosenOptions(
 
 		// If this is a statement under question and the stage is suggestions,
 		// then update also the question (which is the parent of the stage)
-		console.log(
-			parentStatement.parentId,
-			'will update parent statement?',
-			parentStatement.statementType,
-			parentStatement.stageType
-		);
 		if (
 			parentStatement.statementType === StatementType.stage &&
 			parentStatement.stageType === StageType.suggestions

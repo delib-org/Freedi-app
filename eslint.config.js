@@ -18,6 +18,7 @@ export default [
 				...globals.browser,
 				...globals.es6,
 				...globals.node,
+				...globals.jest,
 			},
 			parser: tseslint.parser,
 			parserOptions: {
@@ -64,6 +65,14 @@ export default [
 			'no-console': ['error', { allow: ['warn', 'error', 'info'] }],
 			indent: ['error', 'tab', { SwitchCase: 1 }],
 			'no-multiple-empty-lines': ['error', { max: 1, maxEOF: 0, maxBOF: 0 }],
+		},
+	},
+	{
+		files: ['**/*.{test,spec}.{ts,tsx}'],
+		languageOptions: {
+			globals: {
+				...globals.jest,
+			},
 		},
 	},
 ];
