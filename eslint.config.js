@@ -68,11 +68,16 @@ export default [
 		},
 	},
 	{
-		files: ['**/*.{test,spec}.{ts,tsx}'],
+		files: ['src/**/__tests__/**/*.ts', 'src/**/?(*.)+(spec|test).ts'],
 		languageOptions: {
+			parser: tseslint.parser,
 			globals: {
 				...globals.jest,
+				...globals.node,
 			},
+		},
+		rules: {
+			'no-undef': 'off',
 		},
 	},
 ];

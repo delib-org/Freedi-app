@@ -3,7 +3,7 @@ import { isEqualObjects } from './helpers';
 import { createStagesForQuestionDocument } from './fn_questionDocuments';
 import { Change, logger } from 'firebase-functions/v1';
 import { Collections } from '../../src/types/enums';
-import { Statement, StatementSchema } from '../../src/types/statement';
+import { StatementSchema } from '../../src/types/statement';
 import { DocumentSnapshot } from 'firebase-admin/firestore';
 import { FirestoreEvent } from 'firebase-functions/firestore';
 import { parse } from 'valibot';

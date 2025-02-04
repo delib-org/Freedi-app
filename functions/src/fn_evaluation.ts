@@ -35,7 +35,7 @@ export async function newEvaluation(event) {
 		if (!statementId) throw new Error('statementId is not defined');
 
 		//add one evaluator to statement, and add evaluation to statement
-		const statement = await _updateStatementEvaluation({
+		const statement = await updateStatementEvaluation({
 			statementId,
 			evaluationDiff: statementEvaluation.evaluation,
 			addEvaluator: 1,
@@ -68,7 +68,7 @@ export async function deleteEvaluation(event) {
 		if (!statementId) throw new Error('statementId is not defined');
 
 		//add one evaluator to statement
-		const statement = await _updateStatementEvaluation({
+		const statement = await updateStatementEvaluation({
 			statementId,
 			evaluationDiff: -1 * evaluation,
 			addEvaluator: -1,
@@ -97,7 +97,7 @@ export async function updateEvaluation(event) {
 		if (!statementId) throw new Error('statementId is not defined');
 
 		//get statement
-		const statement = await _updateStatementEvaluation({
+		const statement = await updateStatementEvaluation({
 			statementId,
 			evaluationDiff,
 			action: ActionTypes.update,
@@ -143,7 +143,7 @@ function calcAgreement(
 	}
 }
 
-interface UpdateStatementEvaluation {
+interface UpdateStatementEvaluationProps {
 	statementId: string;
 	evaluationDiff: number;
 	addEvaluator?: number;
@@ -151,15 +151,14 @@ interface UpdateStatementEvaluation {
 	newEvaluation: number;
 	oldEvaluation: number;
 }
-
-async function _updateStatementEvaluation({
+async function updateStatementEvaluation({
 	statementId,
 	evaluationDiff,
 	addEvaluator = 0,
 	action,
 	newEvaluation,
 	oldEvaluation,
-}: UpdateStatementEvaluation): Promise<Statement | undefined> {
+}: UpdateStatementEvaluationProps): Promise<Statement | undefined> {
 	try {
 		if (!statementId) throw new Error('statementId is not defined');
 		parse(number(), evaluationDiff);
@@ -170,63 +169,45 @@ async function _updateStatementEvaluation({
 			action,
 		});
 
-		const _statement: Statement = await db.runTransaction(
-			async (transaction) => {
-				const statementRef = db
-					.collection(Collections.statements)
-					.doc(statementId);
-				const statementDB = await transaction.get(statementRef);
-				const statement = parse(StatementSchema, statementDB.data());
+		return await db.runTransaction(async (transaction) => {
+			const statementRef = db
+				.collection(Collections.statements)
+				.doc(statementId);
+			const statementDB = await transaction.get(statementRef);
+			const statement = parse(StatementSchema, statementDB.data());
 
-				//for legacy peruses, we need to parse the statement to the new schema
+			const evaluation = statement.evaluation || {
+				agreement: statement.consensus || 0,
+				sumEvaluations: evaluationDiff,
+				numberOfEvaluators: statement.totalEvaluators || 1,
+				sumPro: proConDiff.proDiff,
+				sumCon: proConDiff.conDiff,
+			};
 
-				if (!statement.evaluation) {
-					statement.evaluation = {
-						agreement: statement.consensus || 0,
-						sumEvaluations: evaluationDiff,
-						numberOfEvaluators: statement.totalEvaluators || 1,
-						sumPro: proConDiff.proDiff,
-						sumCon: proConDiff.conDiff,
-					};
-					transaction.update(statementRef, {
-						evaluation: statement.evaluation,
-					});
-				} else {
-					statement.evaluation.sumEvaluations += evaluationDiff;
-					statement.evaluation.numberOfEvaluators += addEvaluator;
-					statement.evaluation.sumPro
-						? (statement.evaluation.sumPro += proConDiff.proDiff)
-						: (statement.evaluation.sumPro = proConDiff.proDiff);
-					statement.evaluation.sumCon
-						? (statement.evaluation.sumCon += proConDiff.conDiff)
-						: (statement.evaluation.sumCon = proConDiff.conDiff);
-				}
-
-				const newSumEvaluations = statement.evaluation.sumEvaluations;
-				const newNumberOfEvaluators = statement.evaluation.numberOfEvaluators;
-
-				const agreement = calcAgreement(
-					newSumEvaluations,
-					newNumberOfEvaluators
-				);
-				statement.evaluation.agreement = agreement;
-				statement.consensus = agreement;
-
-				transaction.update(statementRef, {
-					totalEvaluators: FieldValue.increment(addEvaluator),
-					consensus: agreement,
-					evaluation: statement.evaluation,
-					proSum: FieldValue.increment(proConDiff.proDiff),
-					conSum: FieldValue.increment(proConDiff.conDiff),
-				});
-
-				const _st = await statementRef.get();
-
-				return _st.data() as Statement;
+			if (statement.evaluation) {
+				evaluation.sumEvaluations += evaluationDiff;
+				evaluation.numberOfEvaluators += addEvaluator;
+				evaluation.sumPro = (evaluation.sumPro || 0) + proConDiff.proDiff;
+				evaluation.sumCon = (evaluation.sumCon || 0) + proConDiff.conDiff;
 			}
-		);
 
-		return _statement;
+			const agreement = calcAgreement(
+				evaluation.sumEvaluations,
+				evaluation.numberOfEvaluators
+			);
+
+			evaluation.agreement = agreement;
+
+			transaction.update(statementRef, {
+				totalEvaluators: FieldValue.increment(addEvaluator),
+				consensus: agreement,
+				evaluation,
+				proSum: FieldValue.increment(proConDiff.proDiff),
+				conSum: FieldValue.increment(proConDiff.conDiff),
+			});
+
+			return (await statementRef.get()).data() as Statement;
+		});
 	} catch (error) {
 		logger.error(error);
 

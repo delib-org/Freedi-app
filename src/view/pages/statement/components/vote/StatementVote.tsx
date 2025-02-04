@@ -72,8 +72,6 @@ const StatementVote: FC = () => {
 								text={t('Got it')}
 								iconOnRight={true}
 								icon={<X />}
-								bckColor='var(--crimson)'
-								color='var(--white)'
 								onClick={() => setShowMultiStageMessage(false)}
 							/>
 						</Toast>

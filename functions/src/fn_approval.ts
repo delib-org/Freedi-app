@@ -1,21 +1,34 @@
-import { logger } from 'firebase-functions/v1';
+import { Change, logger } from 'firebase-functions/v1';
 import { db } from '.';
-import { Approval } from '../../src/types/approval';
+import { ApprovalSchema } from '../../src/types/approval';
 import { Collections } from '../../src/types/enums';
 import { DocumentApproval } from '../../src/types/user';
 import { Statement } from '../../src/types/statement';
 import { number, parse } from 'valibot';
+import { DocumentSnapshot } from 'firebase-admin/firestore';
+import { FirestoreEvent } from 'firebase-functions/firestore';
 
-export async function updateApprovalResults(event: any) {
+export async function updateApprovalResults(
+	event: FirestoreEvent<
+		Change<DocumentSnapshot> | undefined,
+		{
+			approvalId: string;
+		}
+	>
+) {
+	if (!event.data) return;
+
 	try {
 		const action: Action | undefined = getAction(event);
+
 		if (!action) throw new Error('No action found');
-		const eventData =
-			(event.data.after.data() as Approval) ||
-			(event.data.before.data() as Approval);
+
+		const approveAfterData = parse(ApprovalSchema, event.data.after.data());
+		const approveBeforeData = parse(ApprovalSchema, event.data.before.data());
+
+		const eventData = approveAfterData || approveBeforeData;
+
 		const { statementId, documentId, userId } = eventData;
-		const approveAfterData = event.data.after.data() as Approval;
-		const approveBeforeData = event.data.before.data() as Approval;
 
 		let approvedDiff = 0;
 		let approvingUserDiff = 0;
@@ -168,7 +181,16 @@ export enum Action {
 	update = 'update',
 }
 
-export function getAction(event: any): Action | undefined {
+export function getAction(
+	event: FirestoreEvent<
+		Change<DocumentSnapshot> | undefined,
+		{
+			approvalId: string;
+		}
+	>
+): Action | undefined {
+	if (!event.data) return;
+
 	try {
 		if (!event.data.after && !event.data.before)
 			throw new Error('No data before or after');
