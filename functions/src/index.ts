@@ -42,7 +42,7 @@ initializeApp();
 export const db = getFirestore();
 
 // Common config for functions
-const functionConfig = {
+export const functionConfig = {
 	region: 'me-west1',
 	timeoutSeconds: 300,
 };
