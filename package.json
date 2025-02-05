@@ -40,6 +40,7 @@
 	"devDependencies": {
 		"@dagrejs/dagre": "^1.0.4",
 		"@eslint/js": "^9.18.0",
+		"@types/jest": "^29.5.14",
 		"@types/node": "^22.10.7",
 		"@types/react": "^18.3.18",
 		"@types/react-dom": "^18.3.5",
