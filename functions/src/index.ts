@@ -36,16 +36,11 @@ import { updateStatementWithViews } from './fn_views';
 import { updateSettings } from './fn_statementsSettings';
 import { Collections } from '../../src/types/enums';
 import { Request, Response } from 'firebase-functions/v1';
+import { functionConfig } from '../../src/types/firebase';
 
 // Initialize Firebase
 initializeApp();
 export const db = getFirestore();
-
-// Common config for functions
-export const functionConfig = {
-	region: 'me-west1',
-	timeoutSeconds: 300,
-};
 
 // HTTP function wrapper with error handling
 const wrapHttpFunction = (
