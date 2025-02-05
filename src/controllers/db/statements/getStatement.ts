@@ -1,11 +1,4 @@
 import {
-	Collections,
-	DeliberativeElement,
-	Statement,
-	StatementSchema,
-	StatementType,
-} from 'delib-npm';
-import {
 	and,
 	collection,
 	doc,
@@ -15,12 +8,10 @@ import {
 	query,
 	where,
 } from 'firebase/firestore';
-
-// Third party imports
-
-// Helpers
-// import { listenedStatements } from "../../../view/pages/home/Home";
 import { FireStore } from '../config';
+import { Collections, StatementType, DeliberativeElement } from '@/types/enums';
+import { Statement, StatementSchema } from '@/types/statement';
+import { parse } from 'valibot';
 
 export async function getStatementFromDB(
 	statementId: string
@@ -93,15 +84,14 @@ export async function getStatementDepth(
 						where('deliberativeElement', '==', DeliberativeElement.option),
 						where('deliberativeElement', '==', DeliberativeElement.research)
 					),
-					where("statementType", "!=", "document"),
+					where('statementType', '!=', 'document'),
 					where('parentId', '==', statement.statementId)
 				)
 			);
 			const statementsDB = await getDocs(q);
 
 			statementsDB.forEach((doc) => {
-				const statement = doc.data() as Statement;
-				StatementSchema.parse(statement);
+				const statement = parse(StatementSchema, doc.data());
 
 				subStatements.push(statement);
 			});
@@ -132,11 +122,9 @@ export async function getChildStatements(
 		);
 		const statementsDB = await getDocs(q);
 
-		const subStatements = statementsDB.docs.map((doc) => {
-			StatementSchema.parse(doc.data());
-
-			return doc.data() as Statement;
-		});
+		const subStatements = statementsDB.docs.map((doc) =>
+			parse(StatementSchema, doc.data())
+		);
 
 		return subStatements;
 	} catch (error) {

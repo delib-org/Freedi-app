@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import './UploadImage.scss';
-import { Statement } from 'delib-npm';
 import { setImageLocally } from './uploadImageCont';
+import { Statement } from '@/types/statement';
 
 interface Props {
-	readonly statement: Statement;
+	readonly statement: Statement | undefined;
 	readonly fileInputRef?: React.RefObject<HTMLInputElement> | null;
 	readonly image: string;
 	readonly setImage: React.Dispatch<React.SetStateAction<string>>;

@@ -1,4 +1,3 @@
-import { Statement } from "delib-npm";
 import React, { FC, SetStateAction } from "react";
 
 // Third Party Imports
@@ -10,13 +9,14 @@ import SmileIcon from "@/assets/icons/smileIcon.svg?react";
 
 // Statement helpers
 import { setEvaluationToDB } from "@/controllers/db/evaluation/setEvaluation";
+import { Statement } from "@/types/statement";
 
 interface ThumbProps {
-    evaluation: number;
-    upDown: "up" | "down";
-    statement: Statement;
-    setConVote: React.Dispatch<SetStateAction<number>>;
-    setProVote: React.Dispatch<SetStateAction<number>>;
+	evaluation: number;
+	upDown: "up" | "down";
+	statement: Statement;
+	setConVote: React.Dispatch<SetStateAction<number>>;
+	setProVote: React.Dispatch<SetStateAction<number>>;
 }
 
 const Thumb: FC<ThumbProps> = ({

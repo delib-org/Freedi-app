@@ -1,5 +1,4 @@
 import CustomSwitchSmall from "@/view/components/switch/customSwitchSmall/CustomSwitchSmall";
-import { StatementType } from "delib-npm";
 import { FC } from "react";
 import { StatementSettingsProps } from "../../settingsTypeHelpers";
 import SectionTitle from "../sectionTitle/SectionTitle";
@@ -11,6 +10,7 @@ import DocumentIcon from "@/assets/icons/document.svg?react";
 import SimpleIcon from "@/assets/icons/navQuestionsIcon.svg?react";
 
 import { setStatementSettingToDB } from "@/controllers/db/statementSettings/setStatementSettings";
+import { StatementType } from "@/types/enums";
 
 const QuestionSettings: FC<StatementSettingsProps> = ({
 	statement,

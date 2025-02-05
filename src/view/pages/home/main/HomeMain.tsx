@@ -3,7 +3,6 @@ import "@/view/style/homePage.scss"
 
 // Third party libraries
 import { useNavigate } from "react-router-dom";
-import { Statement } from "delib-npm";
 
 // Redux store
 import MainCard from "./mainCard/MainCard";
@@ -14,6 +13,7 @@ import { statementsSelector } from "@/model/statements/statementsSlice";
 // Custom components
 import Footer from "@/view/components/footer/Footer";
 import PeopleLoader from "@/view/components/loaders/PeopleLoader";
+import { Statement } from "@/types/statement";
 
 const HomeMain = () => {
 	// Hooks

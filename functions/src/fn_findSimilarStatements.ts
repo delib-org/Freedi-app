@@ -1,10 +1,10 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { Collections, Statement } from 'delib-npm';
 import { Response, onInit } from 'firebase-functions/v1';
 import { Request } from 'firebase-functions/v2/https';
 import { db } from '.';
 import 'dotenv/config';
-
+import { Collections } from '../../src/types/enums';
+import { Statement } from '../../src/types/statement';
 
 export async function findSimilarStatements(
 	request: Request,
@@ -26,7 +26,6 @@ export async function findSimilarStatements(
 		statement: subStatement.statement,
 		id: subStatement.statementId,
 	}));
-	
 
 	if (statementsText.length === 0) {
 		response.status(200).send([]);
@@ -38,13 +37,10 @@ export async function findSimilarStatements(
 		statementsText.map((s) => s.statement),
 		userInput
 	);
-	
 
 	const similarStatementsIds = statementsText
 		.filter((subStatement) => genAiResponse.includes(subStatement.statement))
 		.map((subStatement) => subStatement.id);
-
-	
 
 	response.status(200).send(similarStatementsIds);
 }
@@ -56,15 +52,12 @@ onInit(() => {
 		if (!process.env.GOOGLE_API_KEY) {
 			throw new Error('Missing GOOGLE_API_KEY environment variable');
 		}
-		
+
 		genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
 	} catch (error) {
 		console.error('Error initializing GenAI', error);
 	}
-
 });
-
-
 
 export async function runGenAI(allStatements: string[], userInput: string) {
 	try {
@@ -76,8 +69,6 @@ export async function runGenAI(allStatements: string[], userInput: string) {
 		Consider a match if the sentence shares at least 60% similarity in meaning the user input.
 		Give answer back in this json format: { strings: ['string1', 'string2', ...] }
 		`;
-
-		
 
 		const result = await model.generateContent(prompt);
 
@@ -91,7 +82,6 @@ export async function runGenAI(allStatements: string[], userInput: string) {
 		return [];
 	}
 }
-
 
 function extractAndParseJsonString(input: string): { strings: string[] } {
 	try {

@@ -1,21 +1,21 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from 'react';
 
-// note for code review: what about making the function a generic type: <T extends HTMLElement> (requires null checks and correct type writing)
-export default function useClickOutside(ref: React.RefObject<HTMLElement>, onClickOutside: () => void) {
-    useEffect(() => {
-        function handleClickOutside(event: MouseEvent | TouchEvent) {
-            if (!(event.target instanceof Node) || !ref.current) return
-            if (!ref.current.contains(event.target)) onClickOutside();
-        }
+function useClickOutside(handler: () => void) {
+	const ref = useRef<HTMLDivElement>(null);
 
-        document.addEventListener("mousedown", handleClickOutside);
-        document.addEventListener("touchstart", handleClickOutside);
+	useEffect(() => {
+		const handleClickOutside = (event: MouseEvent) => {
+			if (ref.current && !ref.current.contains(event.target as Node)) {
+				handler();
+			}
+		};
 
-        return () => {
-            document.removeEventListener("mousedown", handleClickOutside);
-            document.removeEventListener("touchstart", handleClickOutside);
-        };
+		document.addEventListener('mousedown', handleClickOutside);
 
-    }, [ref, onClickOutside]);
+		return () => document.removeEventListener('mousedown', handleClickOutside);
+	}, [handler]);
 
+	return ref;
 }
+
+export default useClickOutside;
