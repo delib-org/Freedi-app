@@ -1,12 +1,11 @@
-import React, { FC } from 'react';
-import { handleGetEvaluators } from '../statementSettingsCont';
-import MembersChipsList from './membership/membersChipsList/MembersChipList';
-import { useLanguage } from '@/controllers/hooks/useLanguages';
-import { Evaluation } from '@/types/evaluation';
-import { User } from '@/types/user';
+import { Evaluation, User } from "delib-npm";
+import React, { FC } from "react";
+import { handleGetEvaluators } from "../statementSettingsCont";
+import MembersChipsList from "./membership/membersChipsList/MembersChipList";
+import { useLanguage } from "@/controllers/hooks/useLanguages";
 
 interface GetEvaluatorsProps {
-	statementId: string;
+    statementId: string;
 }
 
 const GetEvaluators: FC<GetEvaluatorsProps> = ({ statementId }) => {
@@ -24,17 +23,17 @@ const GetEvaluators: FC<GetEvaluatorsProps> = ({ statementId }) => {
 	};
 
 	const members = evaluators.flatMap(
-		(evaluator) => evaluator.evaluator as User
+		(evaluator) => evaluator.evaluator as User,
 	);
 
 	return (
 		<>
 			<button
-				type='button'
-				className='evaluators-button form-button'
+				type="button"
+				className="evaluators-button form-button"
 				onClick={getEvaluations}
 			>
-				{t('Get Evaluators')}
+				{t("Get Evaluators")}
 			</button>
 
 			{clicked && (
@@ -42,12 +41,14 @@ const GetEvaluators: FC<GetEvaluatorsProps> = ({ statementId }) => {
 					{members.length > 0 && (
 						<>
 							<span>
-								{evaluators.length} {t('Evaluated')}
+								{evaluators.length} {t("Evaluated")}
 							</span>
 							<MembersChipsList members={members} />
 						</>
 					)}
-					{members.length === 0 && <div>{t('No evaluators found')}</div>}
+					{members.length === 0 && (
+						<div>{t("No evaluators found")}</div>
+					)}
 				</>
 			)}
 		</>

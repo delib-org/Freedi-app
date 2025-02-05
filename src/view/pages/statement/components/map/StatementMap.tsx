@@ -1,4 +1,9 @@
+import { Results, Role, Statement, StatementType } from "delib-npm";
 import { useState, FC, useEffect } from "react";
+
+// Third party imports
+
+// Custom Components
 import { useSelector } from "react-redux";
 import { ReactFlowProvider } from "reactflow";
 import CreateStatementModal from "../createStatementModal/CreateStatementModal";
@@ -7,8 +12,12 @@ import { isAdmin } from "@/controllers/general/helpers";
 import {
 	FilterType,
 	filterByStatementType,
-	sortStatementsByHierarchy,
+	sortStatementsByHirarrchy as sortStatementsByHierarchy,
 } from "@/controllers/general/sorting";
+
+// Helpers
+
+// Hooks
 import { useAppSelector } from "@/controllers/hooks/reduxHooks";
 import { useLanguage } from "@/controllers/hooks/useLanguages";
 import { useMapContext } from "@/controllers/hooks/useMap";
@@ -17,13 +26,9 @@ import {
 	statementSubscriptionSelector,
 } from "@/model/statements/statementsSlice";
 import Modal from "@/view/components/modal/Modal";
-import { StatementType } from "@/types/enums";
-import { Results } from "@/types/results";
-import { Statement } from "@/types/statement";
-import { Role } from "@/types/user";
 
 interface Props {
-	statement: Statement;
+  statement: Statement;
 }
 
 const StatementMap: FC<Props> = ({ statement }) => {

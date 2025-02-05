@@ -1,4 +1,10 @@
+import { QuestionStage, Statement } from 'delib-npm';
 import { FC, useContext, useEffect, useState } from 'react';
+
+// Third party imports
+
+// Redux
+// import CreateStatementModalSwitch from '../createStatementModalSwitch/CreateStatementModalSwitch';
 import StatementBottomNav from '../nav/bottom/StatementBottomNav';
 import { getStagesInfo } from '../settings/components/QuestionSettings/QuestionStageRadioBtn/QuestionStageRadioBtn';
 import StatementInfo from './components/info/StatementInfo';
@@ -8,6 +14,8 @@ import HandIcon from '@/assets/icons/handIcon.svg?react';
 import X from '@/assets/icons/x.svg?react';
 import { getToVoteOnParent } from '@/controllers/db/vote/getVotes';
 import { useAppDispatch } from '@/controllers/hooks/reduxHooks';
+
+// Statements helpers
 import { setVoteToStore } from '@/model/vote/votesSlice';
 
 // Custom components
@@ -19,8 +27,6 @@ import './StatementVote.scss';
 import Toast from '@/view/components/toast/Toast';
 import { useLanguage } from '@/controllers/hooks/useLanguages';
 import { StatementContext } from '../../StatementCont';
-import { Statement } from '@/types/statement';
-import { QuestionStage } from '@/types/enums';
 
 let getVoteFromDB = false;
 
@@ -35,15 +41,17 @@ const StatementVote: FC = () => {
 	const isCurrentStageVoting = currentStage === QuestionStage.voting;
 	const stageInfo = getStagesInfo(currentStage);
 	const toastMessage = stageInfo ? stageInfo.message : '';
+	// const useSearchForSimilarStatements =
+	// 	statement?.statementSettings?.enableSimilaritiesSearch || false;
 
 	// * Use State * //
 	const [showMultiStageMessage, setShowMultiStageMessage] =
 		useState(isCurrentStageVoting);
+	const [isCreateStatementModalOpen] =
+		useState(false);
 	const [isStatementInfoModalOpen, setIsStatementInfoModalOpen] =
 		useState(false);
-	const [statementInfo, setStatementInfo] = useState<Statement | undefined>(
-		undefined
-	);
+	const [statementInfo, setStatementInfo] = useState<Statement | null>(null);
 
 	// * Variables * //
 	const totalVotes = getTotalVoters(statement);
@@ -90,6 +98,19 @@ const StatementVote: FC = () => {
 						setStatementInfo={setStatementInfo}
 					/>
 				</div>
+
+				{isCreateStatementModalOpen && (
+					null
+					// <CreateStatementModalSwitch
+					// 	allowedTypes={[StatementType.option]}
+					// 	isMultiStage={isMuliStage}
+					// 	useSimilarStatements={useSearchForSimilarStatements}
+					// 	parentStatement={statement}
+					// 	isQuestion={false}
+					// 	setShowModal={setIsCreateStatementModalOpen}
+
+					// />
+				)}
 				{isStatementInfoModalOpen && (
 					<Modal>
 						<StatementInfo

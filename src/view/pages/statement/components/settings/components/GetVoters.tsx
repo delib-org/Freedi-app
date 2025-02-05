@@ -1,9 +1,8 @@
-import React, { FC, useEffect } from 'react';
-import { handleGetVoters } from '../statementSettingsCont';
-import MembersChipsList from './membership/membersChipsList/MembersChipList';
-import { useLanguage } from '@/controllers/hooks/useLanguages';
-import { Vote } from '@/types/vote';
-import { User } from '@/types/user';
+import { User, Vote } from "delib-npm";
+import React, { FC, useEffect } from "react";
+import { handleGetVoters } from "../statementSettingsCont";
+import MembersChipsList from "./membership/membersChipsList/MembersChipList";
+import { useLanguage } from "@/controllers/hooks/useLanguages";
 
 interface GetVotersProps {
 	statementId: string;
@@ -41,12 +40,12 @@ const GetVoters: FC<GetVotersProps> = ({ statementId, joinedMembers }) => {
 	return (
 		<>
 			<button
-				type='button'
-				className='voters-button form-button'
+				type="button"
+				className="voters-button form-button"
 				onClick={getVoters}
 				tabIndex={0}
 			>
-				{t('Get Voters')}
+				{t("Get Voters")}
 			</button>
 
 			{clickedVoters && (
@@ -54,23 +53,23 @@ const GetVoters: FC<GetVotersProps> = ({ statementId, joinedMembers }) => {
 					{voters.length > 0 ? (
 						<>
 							<span>
-								{voters.length} {t('Voted')}
+								{voters.length} {t("Voted")}
 							</span>
 							<MembersChipsList members={voters.map((v) => v.voter as User)} />
 						</>
 					) : (
-						<div>{t('No voters found')}</div>
+						<div>{t("No voters found")}</div>
 					)}
 				</>
 			)}
 
 			<button
-				type='button'
-				className='voters-button form-button'
+				type="button"
+				className="voters-button form-button"
 				onClick={() => setClickedNonVoters(!clickedNonVoters)}
 				tabIndex={0}
 			>
-				{t('Get Non Voters')}
+				{t("Get Non Voters")}
 			</button>
 
 			{clickedNonVoters && (
@@ -78,12 +77,12 @@ const GetVoters: FC<GetVotersProps> = ({ statementId, joinedMembers }) => {
 					{nonVoters.length > 0 ? (
 						<>
 							<span>
-								{nonVoters.length} {t('Did Not Vote')}
+								{nonVoters.length} {t("Did Not Vote")}
 							</span>
 							<MembersChipsList members={nonVoters} />
 						</>
 					) : (
-						<div>{t('No non-voters found')}</div>
+						<div>{t("No non-voters found")}</div>
 					)}
 				</>
 			)}

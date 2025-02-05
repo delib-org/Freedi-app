@@ -1,10 +1,12 @@
-import { createSlice } from '@reduxjs/toolkit';
-import { RootState } from '../store';
-import { Results } from '@/types/results';
+import { createSlice } from "@reduxjs/toolkit";
+
+// import type { PayloadAction } from '@reduxjs/toolkit'
+import { Results } from "delib-npm";
+import { RootState } from "../store";
 
 // Define a type for the slice state
 interface ResultsState {
-	results: Results[];
+    results: Results[];
 }
 
 // Define the initial state using that type
@@ -13,7 +15,7 @@ const initialState: ResultsState = {
 };
 
 export const resultsSlice = createSlice({
-	name: 'results',
+	name: "results",
 
 	// `createSlice` will infer the state type from the `initialState` argument
 	initialState,
@@ -46,7 +48,7 @@ export const { setResults, resetResults } = resultsSlice.actions;
 
 // Other code such as selectors can use the imported `RootState` type
 export const resultSelector =
-	(statementId: string | undefined) => (state: RootState) =>
-		state.results.results.find(
-			(result) => result.top.statementId === statementId
-		);
+    (statementId: string | undefined) => (state: RootState) =>
+    	state.results.results.find(
+    		(result) => result.top.statementId === statementId,
+    	);

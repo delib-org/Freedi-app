@@ -6,4 +6,3 @@ firebase.json
 .env*
 node_modules/
 dist/
-*.log

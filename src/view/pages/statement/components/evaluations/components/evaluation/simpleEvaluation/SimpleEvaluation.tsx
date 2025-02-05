@@ -1,14 +1,25 @@
+// Third Party Imports
+import { Statement } from "delib-npm";
 import { FC, useEffect, useState } from "react";
+
+// Custom components
+
+// Redux Store
 import { useAppSelector } from "@/controllers/hooks/reduxHooks";
+
+// Statement helpers
 import useDirection from "@/controllers/hooks/useDirection";
 import { evaluationSelector } from "@/model/evaluations/evaluationsSlice";
+
+// Custom Hooks
 import Thumb from "@/view/components/thumb/Thumb";
+
+//css
 import "./SimpleEvaluation.scss";
-import { Statement } from "@/types/statement";
 
 interface Props {
-	statement: Statement;
-	shouldDisplayScore?: boolean;
+    statement: Statement;
+    shouldDisplayScore?: boolean;
 }
 
 const SimpleEvaluation: FC<Props> = ({

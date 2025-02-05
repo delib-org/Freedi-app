@@ -8,6 +8,7 @@ import IconButton from '../../components/iconButton/IconButton';
 import Menu from '../../components/menu/Menu';
 import MenuOption from '../../components/menu/MenuOption';
 import InvitationModal from './main/invitationModal/InvitationModal';
+import NotificationHeader from './NotificatiosHeader';
 import DisconnectIcon from '@/assets/icons/disconnectIcon.svg?react';
 import InstallIcon from '@/assets/icons/installIcon.svg?react';
 import InvitationIcon from '@/assets/icons/invitation.svg?react';
@@ -72,6 +73,7 @@ export default function HomeHeader() {
 	return (
 		<div className={`homePage__header ${dir}`}>
 			<div className='homePage__header__wrapper'>
+				<NotificationHeader />
 				<h1 className='homePage__header__wrapper__title'>FreeDi</h1>
 				<div className='homePage__header__wrapper__icons'>
 					{isInstallable && (

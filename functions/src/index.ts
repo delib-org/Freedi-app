@@ -1,3 +1,4 @@
+import { Collections } from 'delib-npm';
 import {
 	deleteEvaluation,
 	newEvaluation,
@@ -6,7 +7,11 @@ import {
 } from './fn_evaluation';
 import { updateResultsSettings } from './fn_results';
 import { updateDocumentSignatures } from './fn_signatures';
-import { updateParentWithNewMessageCB } from './fn_statements';
+import {
+	updateParentWithNewMessageCB,
+
+	// updateSubscribedListenersCB,
+} from './fn_statements';
 import { updateVote } from './fn_vote';
 
 import {
@@ -16,11 +21,13 @@ import {
 	onDocumentDeleted,
 } from 'firebase-functions/v2/firestore';
 
-import { onRequest } from 'firebase-functions/v2/https';
+import { onSchedule } from 'firebase-functions/v2/scheduler';
 
 // The Firebase Admin SDK to access Firestore.
 import { initializeApp } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
+import { sendNotificationsCB } from './fn_notifications';
+import { cleanOldTimers } from './fn_timers';
 import { setAdminsToNewStatement } from './fn_roles';
 import { updateStatementNumberOfMembers } from './fn_subscriptions';
 import {
@@ -29,7 +36,12 @@ import {
 	getTopStatements,
 	getUserOptions,
 	hashPassword,
+	// maintainDeliberativeElement,
+	// maintainRole,
+	// maintainStatement,
+	// maintainSubscriptionToken,
 } from './fn_httpRequests';
+import { onRequest } from 'firebase-functions/v2/https';
 import { findSimilarStatements } from './fn_findSimilarStatements';
 import { updateApprovalResults } from './fn_approval';
 import { setImportanceToStatement } from './fn_importance';
@@ -37,284 +49,130 @@ import { updateAgrees } from './fn_agree';
 import { setUserSettings } from './fn_users';
 import { updateStatementWithViews } from './fn_views';
 import { updateSettings } from './fn_statementsSettings';
-import { Collections } from '../../src/types/enums';
 
-// Initialize Firebase
 initializeApp();
 export const db = getFirestore();
 
-// Common config for functions
-const functionConfig = {
-	region: 'me-west1',
-	timeoutSeconds: 300,
-};
+// update subscribers when statement is updated
+//statements
+// exports.updateSubscribedListeners = onDocumentUpdated(
+//     `/${Collections.statements}/{statementId}`,
+//     updateSubscribedListenersCB,
+// );
 
-// HTTP function wrapper with error handling
-const wrapHttpFunction = (handler: any) => {
-	return onRequest(
-		{
-			...functionConfig,
-			cors: ['https://freedi-test.web.app'],
-		},
-		async (req, res) => {
-			try {
-				await handler(req, res);
-			} catch (error) {
-				console.error('Error in HTTP function:', error);
-				res.status(500).send('Internal Server Error');
-			}
-		}
-	);
-};
-
-// HTTP Functions
-exports.getRandomStatements = wrapHttpFunction(getRandomStatements);
-exports.getTopStatements = wrapHttpFunction(getTopStatements);
-exports.getUserOptions = wrapHttpFunction(getUserOptions);
-exports.checkPassword = wrapHttpFunction(checkPassword);
-exports.hashPassword = wrapHttpFunction(hashPassword);
-exports.checkForSimilarStatements = wrapHttpFunction(findSimilarStatements);
-
-// Firestore Triggers
 exports.setUserSettings = onDocumentCreated(
-	{
-		document: `/${Collections.users}/{userId}`,
-		...functionConfig,
-	},
-	async (event) => {
-		try {
-			await setUserSettings(event);
-		} catch (error) {
-			console.error('Error in setUserSettings:', error);
-			throw error;
-		}
-	}
+	`/${Collections.users}/{userId}`,
+	setUserSettings
 );
 
 exports.updateParentWithNewMessage = onDocumentCreated(
-	{
-		document: `/${Collections.statements}/{statementId}`,
-		...functionConfig,
-	},
-	async (event) => {
-		try {
-			await updateParentWithNewMessageCB(event);
-		} catch (error) {
-			console.error('Error in updateParentWithNewMessage:', error);
-			throw error;
-		}
-	}
+	`/${Collections.statements}/{statementId}`,
+	updateParentWithNewMessageCB
 );
 
+//update statements with the amount of  members
+//TODO: There is a problem. because the subscription contain also the full-statement, every time something in the statement is updated, the subscription is updated as well.
 exports.updateMembers = onDocumentWritten(
-	{
-		document: `/${Collections.statementsSubscribe}/{subscriptionId}`,
-		...functionConfig,
-	},
-	async (event) => {
-		try {
-			await updateStatementNumberOfMembers(event);
-		} catch (error) {
-			console.error('Error in updateMembers:', error);
-			throw error;
-		}
-	}
+	`/${Collections.statementsSubscribe}/{subscriptionId}`,
+	updateStatementNumberOfMembers
 );
 
-exports.onSetChoseBySettings = onDocumentWritten(
-	{
-		document: `/${Collections.choseBy}/{statementId}`,
-		...functionConfig,
-	},
-	async (event) => {
-		try {
-			await updateChosenOptions(event);
-		} catch (error) {
-			console.error('Error in onSetChoseBySettings:', error);
-			throw error;
-		}
-	}
+//notifications
+exports.updateNotifications = onDocumentCreated(
+	`/${Collections.statements}/{statementId}`,
+	sendNotificationsCB
 );
+
+//evaluations and results
+
+exports.onSetChoseBySettings = onDocumentWritten(`/${Collections.choseBy}/{statementId}`, updateChosenOptions);
 
 exports.newEvaluation = onDocumentCreated(
-	{
-		document: `/${Collections.evaluations}/{evaluationId}`,
-		...functionConfig,
-	},
-	async (event) => {
-		try {
-			await newEvaluation(event);
-		} catch (error) {
-			console.error('Error in newEvaluation:', error);
-			throw error;
-		}
-	}
+	{ document: `/${Collections.evaluations}/{evaluationId}` },
+	newEvaluation
 );
-
 exports.deleteEvaluation = onDocumentDeleted(
-	{
-		document: `/${Collections.evaluations}/{evaluationId}`,
-		...functionConfig,
-	},
-	async (event) => {
-		try {
-			await deleteEvaluation(event);
-		} catch (error) {
-			console.error('Error in deleteEvaluation:', error);
-			throw error;
-		}
-	}
+	`/${Collections.evaluations}/{evaluationId}`,
+	deleteEvaluation
 );
 
 exports.updateEvaluation = onDocumentUpdated(
-	{
-		document: `/${Collections.evaluations}/{evaluationId}`,
-		...functionConfig,
-	},
-	async (event) => {
-		try {
-			await updateEvaluation(event);
-		} catch (error) {
-			console.error('Error in updateEvaluation:', error);
-			throw error;
-		}
-	}
+	`/${Collections.evaluations}/{evaluationId}`,
+	updateEvaluation
 );
-
 exports.updateResultsSettings = onDocumentWritten(
-	{
-		document: `${Collections.resultsTriggers}/{statementId}`,
-		...functionConfig,
-	},
-	async (event) => {
-		try {
-			await updateResultsSettings(event);
-		} catch (error) {
-			console.error('Error in updateResultsSettings:', error);
-			throw error;
-		}
-	}
+	`${Collections.resultsTriggers}/{statementId}`,
+	updateResultsSettings
 );
 
-exports.addVote = onDocumentWritten(
-	{
-		document: '/votes/{voteId}',
-		...functionConfig,
-	},
-	async (event) => {
-		try {
-			await updateVote(event);
-		} catch (error) {
-			console.error('Error in addVote:', error);
-			throw error;
-		}
-	}
-);
+//votes
+exports.addVote = onDocumentWritten('/votes/{voteId}', updateVote);
 
+// exports.removeVote = onDocumentDeleted('/votes/{voteId}', removeVote);
+
+//timers
+exports.cleanTimers = onSchedule('every day 00:00', cleanOldTimers);
+
+//roles
 exports.setAdminsToNewStatement = onDocumentCreated(
-	{
-		document: `/${Collections.statements}/{statementId}`,
-		...functionConfig,
-	},
-	async (event) => {
-		try {
-			await setAdminsToNewStatement(event);
-		} catch (error) {
-			console.error('Error in setAdminsToNewStatement:', error);
-			throw error;
-		}
-	}
+	`/${Collections.statements}/{statementId}`,
+	setAdminsToNewStatement
 );
 
+//approval
 exports.updateDocumentApproval = onDocumentWritten(
-	{
-		document: `/${Collections.approval}/{approvalId}`,
-		...functionConfig,
-	},
-	async (event) => {
-		try {
-			await updateApprovalResults(event);
-		} catch (error) {
-			console.error('Error in updateDocumentApproval:', error);
-			throw error;
-		}
-	}
+	`/${Collections.approval}/{approvalId}`,
+	updateApprovalResults
 );
 
+//importance
 exports.setImportanceToStatement = onDocumentWritten(
-	{
-		document: `/${Collections.importance}/{importanceId}`,
-		...functionConfig,
-	},
-	async (event) => {
-		try {
-			await setImportanceToStatement(event);
-		} catch (error) {
-			console.error('Error in setImportanceToStatement:', error);
-			throw error;
-		}
-	}
+	`/${Collections.importance}/{importanceId}`,
+	setImportanceToStatement
 );
 
+//agree/disagree
 exports.updateAgrees = onDocumentWritten(
-	{
-		document: `/${Collections.agrees}/{agreeId}`,
-		...functionConfig,
-	},
-	async (event) => {
-		try {
-			await updateAgrees(event);
-		} catch (error) {
-			console.error('Error in updateAgrees:', error);
-			throw error;
-		}
-	}
+	`/${Collections.agrees}/{agreeId}`,
+	updateAgrees
 );
 
+//signatures
 exports.updateDocumentSignatures = onDocumentWritten(
-	{
-		document: `/${Collections.signatures}/{signatureId}`,
-		...functionConfig,
-	},
-	async (event) => {
-		try {
-			await updateDocumentSignatures(event);
-		} catch (error) {
-			console.error('Error in updateDocumentSignatures:', error);
-			throw error;
-		}
-	}
+	`/${Collections.signatures}/{signatureId}`,
+	updateDocumentSignatures
 );
 
+//views
 exports.updateStatementWithViews = onDocumentCreated(
-	{
-		document: `/${Collections.statementViews}/{viewId}`,
-		...functionConfig,
-	},
-	async (event) => {
-		try {
-			await updateStatementWithViews(event);
-		} catch (error) {
-			console.error('Error in updateStatementWithViews:', error);
-			throw error;
-		}
-	}
+	`/${Collections.statementViews}/{viewId}`,
+	updateStatementWithViews
 );
 
-exports.writeStatementSettings = onDocumentWritten(
-	{
-		document: `/${Collections.statementsSettings}/{statementId}`,
-		...functionConfig,
-	},
-	async (event) => {
-		try {
-			await updateSettings(event);
-		} catch (error) {
-			console.error('Error in writeStatementSettings:', error);
-			throw error;
-		}
-	}
-);
+//statements settings
+exports.writeStatementSettings = onDocumentWritten(`/${Collections.statementsSettings}/{statementId}`, updateSettings);
 
+
+//http requests
 const isProduction = process.env.NODE_ENV === 'production';
+
 console.info('isProduction', isProduction);
+const cors = {
+	cors: [
+		'https://delib-5.web.app',
+		'https://freedi.tech',
+		'https://delib.web.app',
+		'https://delib-testing.web.app/',
+	],
+};
+
+exports.getRandomStatements = onRequest(cors, getRandomStatements); //first evaluation
+exports.getTopStatements = onRequest(cors, getTopStatements); //second evaluation
+exports.getUserOptions = onRequest(cors, getUserOptions); //suggestions
+exports.checkPassword = onRequest(cors, checkPassword);
+exports.hashPassword = onRequest(cors, hashPassword);
+exports.checkForSimilarStatements = onRequest(cors, findSimilarStatements);
+// exports.maintainRoles = onRequest(cors, maintainRole);
+// exports.maintainDeliberativeElement = onRequest(cors, maintainDeliberativeElement);
+// exports.maintainStatements = onRequest(cors, maintainStatement);
+// exports.maintainSubscriptionToken = onRequest(cors, maintainSubscriptionToken);

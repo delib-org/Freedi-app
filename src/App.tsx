@@ -1,3 +1,4 @@
+import { Agreement } from 'delib-npm';
 import { Unsubscribe } from 'firebase/auth';
 import { useEffect, useState, Suspense } from 'react';
 
@@ -9,6 +10,10 @@ import { Outlet, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { listenToAuth, logOut } from './controllers/db/auth';
 
 // Redux Store
+import {
+	listenToInAppNotifications,
+	onLocalMessage,
+} from './controllers/db/notifications/notifications';
 import { getSignature } from './controllers/db/users/getUserDB';
 import { updateUserAgreement } from './controllers/db/users/setUsersDB';
 import { useAppSelector } from './controllers/hooks/reduxHooks';
@@ -22,7 +27,6 @@ import { updateAgreementToStore, userSelector } from './model/users/userSlice';
 // Custom components
 import Accessibility from './view/components/accessibility/Accessibility';
 import TermsOfUse from './view/components/termsOfUse/TermsOfUse';
-import { Agreement } from './types/user';
 
 // Helpers
 
@@ -74,6 +78,8 @@ export default function App() {
 				return;
 			}
 
+			const unsubscribeToLocalMessages = await onLocalMessage();
+
 			if (user.agreement?.date) {
 				setShowSignAgreement(false);
 			} else {
@@ -84,6 +90,8 @@ export default function App() {
 				setAgreement(agreement.text);
 				setShowSignAgreement(true);
 			}
+
+			return unsubscribeToLocalMessages;
 		};
 
 		return () => {
@@ -96,6 +104,8 @@ export default function App() {
 			return;
 		}
 
+		const unsubscribeToInAppNotifications = listenToInAppNotifications();
+
 		if (user.agreement?.date) {
 			setShowSignAgreement(false);
 		} else {
@@ -106,6 +116,10 @@ export default function App() {
 			setAgreement(agreement.text);
 			setShowSignAgreement(true);
 		}
+
+		return () => {
+			return unsubscribeToInAppNotifications();
+		};
 	}, [user]);
 
 	async function handleAgreement(agree: boolean, text: string) {

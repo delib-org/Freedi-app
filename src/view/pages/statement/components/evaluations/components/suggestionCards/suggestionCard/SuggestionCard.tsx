@@ -1,4 +1,9 @@
+import { Screen, Statement, StatementType } from 'delib-npm';
 import { FC, useEffect, useRef, useState } from 'react';
+
+// Third Party
+
+// Redux Store
 import { useParams } from 'react-router-dom';
 import StatementChatMore from '../../../../chat/components/StatementChatMore';
 import CreateStatementModal from '../../../../createStatementModal/CreateStatementModal';
@@ -17,11 +22,17 @@ import {
 	setStatementElementHight,
 	statementSubscriptionSelector,
 } from '@/model/statements/statementsSlice';
+
+// Helpers
+
+// Hooks
+
+// Custom Components
+
 import EditTitle from '@/view/components/edit/EditTitle';
+
 import IconButton from '@/view/components/iconButton/IconButton';
 import './SuggestionCard.scss';
-import { Screen, StatementType } from '@/types/enums';
-import { Statement } from '@/types/statement';
 
 interface Props {
 	statement: Statement | undefined;
@@ -58,11 +69,7 @@ const SuggestionCard: FC<Props> = ({
 	const [isCardMenuOpen, setIsCardMenuOpen] = useState(false);
 
 	useEffect(() => {
-		if (
-			sort !== Screen.OPTIONS_RANDOM &&
-			sort !== Screen.QUESTIONS_RANDOM &&
-			sort !== 'random'
-		) {
+		if (sort !== Screen.OPTIONS_RANDOM && sort !== Screen.QUESTIONS_RANDOM && sort !== "random") {
 			sortSubStatements(siblingStatements, sort, 30);
 		}
 	}, [statement?.consensus]);
@@ -80,7 +87,7 @@ const SuggestionCard: FC<Props> = ({
 	);
 
 	const statementColor: StyleProps = useStatementColor({
-		statement,
+		statement
 	});
 
 	useEffect(() => {
@@ -126,7 +133,7 @@ const SuggestionCard: FC<Props> = ({
 			}
 			style={{
 				top: `${statement.top || 0}px`,
-				borderLeft: `8px solid ${statement.isChosen ? 'var(--approve)' : statementColor.backgroundColor || 'white'}`,
+				borderLeft: `8px solid ${statement.isChosen ? "var(--approve)" : statementColor.backgroundColor || 'white'}`,
 				color: statementColor.color,
 				flexDirection: dir === 'ltr' ? 'row' : 'row-reverse',
 			}}
@@ -136,7 +143,9 @@ const SuggestionCard: FC<Props> = ({
 			<div
 				className='selected-option'
 				style={{
-					backgroundColor: statement.selected === true ? 'var(--approve)' : '',
+					backgroundColor: statement.selected === true
+						? "var(--approve)"
+						: '',
 				}}
 			>
 				<div

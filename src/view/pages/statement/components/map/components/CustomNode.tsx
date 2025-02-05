@@ -1,3 +1,4 @@
+import { Statement } from 'delib-npm';
 import { useEffect, useState } from 'react';
 
 // Third party
@@ -16,7 +17,6 @@ import {
 } from '@/controllers/general/helpers';
 import { useMapContext } from '@/controllers/hooks/useMap';
 import useStatementColor from '@/controllers/hooks/useStatementColor';
-import { Statement } from '@/types/statement';
 
 const nodeStyle = (
 	parentStatement: Statement | 'top',
@@ -46,7 +46,8 @@ export default function CustomNode({ data }: NodeProps) {
 
 	const { result, parentStatement } = data;
 
-	const { statementId, statement } = result.top as Statement;
+	const { statementId, statement } =
+		result.top as Statement;
 
 	const { shortVersion: nodeTitle } = statementTitleToDisplay(statement, 80);
 

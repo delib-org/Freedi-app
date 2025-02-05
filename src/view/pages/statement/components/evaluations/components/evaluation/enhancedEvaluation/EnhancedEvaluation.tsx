@@ -1,17 +1,18 @@
-import { FC } from 'react';
-import { getEvaluationThumbIdByScore } from '../../../statementsEvaluationCont';
-import styles from './EnhancedEvaluation.module.scss';
+import { Statement } from "delib-npm";
+import { FC } from "react";
+
+import { getEvaluationThumbIdByScore } from "../../../statementsEvaluationCont";
+import styles from "./EnhancedEvaluation.module.scss";
 import {
 	enhancedEvaluationsThumbs,
 	EnhancedEvaluationThumb,
-} from './EnhancedEvaluationModel';
-import { setEvaluationToDB } from '@/controllers/db/evaluation/setEvaluation';
-import { decreesUserSettingsLearningRemain } from '@/controllers/db/learning/setLearning';
-import { useAppSelector } from '@/controllers/hooks/reduxHooks';
-import { useLanguage } from '@/controllers/hooks/useLanguages';
-import { evaluationSelector } from '@/model/evaluations/evaluationsSlice';
-import { userSettingsSelector } from '@/model/users/userSlice';
-import { Statement } from '@/types/statement';
+} from "./EnhancedEvaluationModel";
+import { setEvaluationToDB } from "@/controllers/db/evaluation/setEvaluation";
+import { decreesUserSettingsLearningRemain } from "@/controllers/db/learning/setLearning";
+import { useAppSelector } from "@/controllers/hooks/reduxHooks";
+import { useLanguage } from "@/controllers/hooks/useLanguages";
+import { evaluationSelector } from "@/model/evaluations/evaluationsSlice";
+import { userSettingsSelector } from "@/model/users/userSlice";
 
 interface EnhancedEvaluationProps {
 	statement: Statement;
@@ -37,11 +38,17 @@ const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({
 	};
 
 	return (
-		<div className={styles['enhanced-evaluation']}>
-			<div className={`${styles['evaluation-score']} con-element`}>
+		<div
+			className={`${styles[`enhanced-evaluation`]}`}
+		// className={styles[`enhanced-evaluation] ${dir === "ltr" ? "mirrorReverse" : ""}`]}
+		>
+
+			<div className={`${styles["evaluation-score"]} con-element`}>
 				{shouldDisplayScore === true ? sumCon : null}
 			</div>
-			<div className={styles['evaluation-thumbs']}>
+			<div
+				className={styles["evaluation-thumbs"]}
+			>
 				{enhancedEvaluationsThumbs.map((evaluationThumb) => (
 					<EvaluationThumb
 						key={evaluationThumb.id}
@@ -52,24 +59,21 @@ const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({
 				))}
 			</div>
 			<div
-				className={`${styles['evaluation-score']} ${statement.consensus < 0 ? 'negative' : ''}`}
+				className={`${styles[`evaluation-score`]} ${statement.consensus < 0 ? "negative" : ""}`}
 			>
 				{shouldDisplayScore && <span>{sumPro}</span>}
-				{numberOfEvaluators && numberOfEvaluators > 0 ? (
-					<span className={styles['total-evaluators']}>
-						{' '}
-						({numberOfEvaluators})
-					</span>
+				{(numberOfEvaluators && numberOfEvaluators > 0) ? (
+					<span className={styles["total-evaluators"]}> ({numberOfEvaluators})</span>
 				) : null}
+
 			</div>
 			<div />
 			<div className={styles.explain}>
-				{learningEvaluation > 0 && (
-					<div className={`${styles['evaluation-explain']}`}>
-						<span>{t('Disagree')}</span>
-						<span>{t('Agree')}</span>
-					</div>
-				)}
+				{learningEvaluation > 0 && (<div className={`${styles["evaluation-explain"]}`}>
+					<span>{t("Disagree")}</span>
+					<span>{t("Agree")}</span>
+				</div>)
+				}
 			</div>
 			<div />
 		</div>
@@ -100,7 +104,7 @@ const EvaluationThumb: FC<EvaluationThumbProps> = ({
 
 	return (
 		<button
-			className={`${styles['evaluation-thumb']} ${isThumbActive ? styles.active : ''}`}
+			className={`${styles["evaluation-thumb"]} ${isThumbActive ? styles.active : ""}`}
 			style={{
 				backgroundColor: isThumbActive
 					? evaluationThumb.colorSelected

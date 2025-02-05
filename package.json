@@ -21,42 +21,43 @@
 		"deploy:h:dev": "npm run build:dev && firebase use dev && firebase deploy --only hosting:dev",
 		"deploy:h:test": "npm run build:test && firebase use test && firebase deploy --only hosting:test",
 		"deploy:f": "cd functions && npm run build && firebase use prod && firebase deploy --only functions",
-		"deploy:f:dev": "cd functions && firebase use dev && firebase deploy --only functions",
-		"deploy:f:test": "cd functions && firebase use test && firebase deploy --only functions",
+		"deploy:f:dev": "cd functions && npm run build && firebase use dev && firebase deploy --only functions",
+		"deploy:f:test": "cd functions && npm run build && firebase use test && firebase deploy --only functions",
 		"deploy": "npm run deploy:h && npm run deploy:f",
-		"deploy:dev": "npm run deploy:h:dev && npm run deploy:f:dev",
+		"deploy:dev": "npm run deploy:h:dev && npm run deploy:f",
 		"deploy:test": "npm run deploy:h:test && npm run deploy:f:test"
 	},
 	"dependencies": {
 		"@reduxjs/toolkit": "^1.9.5",
+		"delib-npm": "^5.4.77",
 		"firebase": "^11.0.2",
 		"react": "^18.2.0",
 		"react-dom": "^18.2.0",
 		"react-redux": "^8.1.1",
 		"react-router-dom": "^6.28.0",
-		"reactflow": "^11.11.1",
-		"valibot": "^1.0.0-beta.14"
+		"reactflow": "^11.11.1"
 	},
 	"devDependencies": {
-		"@dagrejs/dagre": "^1.0.4",
 		"@types/react": "^18.2.14",
 		"@types/react-dom": "^18.2.6",
+		"eslint-plugin-import": "^2.29.1",
 		"@typescript-eslint/eslint-plugin": "^5.62.0",
 		"@typescript-eslint/parser": "^5.62.0",
 		"@vitejs/plugin-react-swc": "^3.3.2",
 		"eslint": "^8.57.0",
 		"eslint-config-prettier": "^8.7.0",
 		"eslint-import-resolver-typescript": "^3.7.0",
-		"eslint-plugin-import": "^2.29.1",
 		"eslint-plugin-jsx-a11y": "^6.10.0",
 		"eslint-plugin-prettier": "^5.1.3",
 		"eslint-plugin-react": "^7.33.2",
-		"firebase-functions": "^6.1.0",
 		"npm-run-all2": "^7.0.1",
 		"prettier": "^3.1.1",
-		"sass": "^1.81.0",
 		"typescript": "5.1.x",
 		"vite": "^5.4.14",
-		"vite-plugin-svgr": "^4.2.0"
+		"sass": "^1.81.0",
+		"vite-plugin-svgr": "^4.2.0",
+		"@dagrejs/dagre": "^1.0.4",
+		"firebase-functions": "^6.1.0",
+		"zod": "^3.21.4"
 	}
 }

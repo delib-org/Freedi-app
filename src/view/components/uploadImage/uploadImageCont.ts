@@ -1,7 +1,7 @@
+import { Statement } from 'delib-npm';
 import { compressImage } from './compressImage';
 import { uploadImageToStorage } from '@/controllers/db/images/setImages';
 import { updateStatementMainImage } from '@/controllers/db/statements/setStatements';
-import { Statement } from '@/types/statement';
 
 export async function setImageLocally(
 	file: File,
@@ -9,7 +9,7 @@ export async function setImageLocally(
 	setImage: React.Dispatch<React.SetStateAction<string>>,
 	setProgress: React.Dispatch<React.SetStateAction<number>>
 ) {
-	setImage('');
+	setImage("");
 
 	if (file) {
 		const img = new Image();

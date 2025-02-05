@@ -1,3 +1,4 @@
+import { Role, Statement, StatementType } from 'delib-npm';
 import { ReactNode, useContext } from 'react';
 import { useParams } from 'react-router-dom';
 import { StatementContext } from '../../StatementCont';
@@ -9,9 +10,6 @@ import styles from './Switch.module.scss';
 import QuestionPage from '../statementTypes/question/QuestionPage';
 import StagePage from '../statementTypes/stage/StagePage';
 import { useSwitchMV } from './SwitchMV';
-import { StatementType } from '@/types/enums';
-import { Role } from '@/types/user';
-import { Statement } from '@/types/statement';
 
 const Switch = () => {
 	const { statement, role } = useContext(StatementContext);
@@ -22,13 +20,11 @@ const Switch = () => {
 			<FollowMeToast />
 			<div className={styles.inner}>
 				<div className={styles.header}>
-					<h1>
-						{statement?.statementType === StatementType.stage
-							? parentStatement?.statement
-							: statement?.statement}
-					</h1>
+					<h1>{statement?.statementType === StatementType.stage ? parentStatement?.statement : statement?.statement}</h1>
 				</div>
-				<div className={styles.main}>
+				<div
+					className={styles.main}
+				>
 					<div className={styles.statement}>
 						<SwitchScreen statement={statement} role={role} />
 					</div>
@@ -61,27 +57,30 @@ function SwitchScreen({ statement, role }: SwitchScreenProps): ReactNode {
 			return <Chat />;
 		case 'settings':
 			return <StatementSettings />;
-		case 'main':
+		case "main":
 			return <SwitchStatementType statement={statement} />;
 		default:
 			return <SwitchStatementType statement={statement} />;
 	}
 }
 
-function SwitchStatementType({
-	statement,
-}: {
-	statement: Statement | undefined;
-}): ReactNode {
+function SwitchStatementType({ statement }: { statement: Statement | undefined }): ReactNode {
+
 	const statementType = statement?.statementType;
 
 	switch (statementType) {
 		case StatementType.group:
-			return <GroupPage />;
+			return (
+				<GroupPage />
+			);
 		case StatementType.question:
-			return <QuestionPage />;
+			return (
+				<QuestionPage />
+			);
 		case StatementType.stage:
-			return <StagePage />;
+			return (
+				<StagePage />
+			);
 		default:
 			return null;
 	}

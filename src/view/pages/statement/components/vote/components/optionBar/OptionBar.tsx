@@ -16,7 +16,12 @@ import { setVoteToDB } from '@/controllers/db/vote/setVote';
 import { statementTitleToDisplay } from '@/controllers/general/helpers';
 import { parentVoteSelector, setVoteToStore } from '@/model/vote/votesSlice';
 
-export const OptionBar: FC<OptionBarProps> = ({
+interface OptionBarExtendedProps extends OptionBarProps {
+	isVertical: boolean;
+	screenWidth: number;
+}
+
+export const OptionBar: FC<OptionBarExtendedProps> = ({
 	option,
 	totalVotes,
 	statement,

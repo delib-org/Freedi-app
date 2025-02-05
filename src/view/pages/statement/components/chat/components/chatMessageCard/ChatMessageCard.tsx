@@ -1,4 +1,9 @@
+import { Statement, StatementType } from 'delib-npm';
 import { ChangeEvent, FC, useEffect, useRef, useState } from 'react';
+
+// Third Party Imports
+
+// Redux Store
 import StatementChatMore from '../StatementChatMore';
 import UserAvatar from '../userAvatar/UserAvatar';
 import AddQuestionIcon from '@/assets/icons/addQuestion.svg?react';
@@ -19,17 +24,22 @@ import { useLanguage } from '@/controllers/hooks/useLanguages';
 import useStatementColor from '@/controllers/hooks/useStatementColor';
 import { statementSubscriptionSelector } from '@/model/statements/statementsSlice';
 import { store } from '@/model/store';
+
+// Helper functions
+
+// Hooks
+
+// Custom Components
 import EditTitle from '@/view/components/edit/EditTitle';
 import Menu from '@/view/components/menu/Menu';
 import MenuOption from '@/view/components/menu/MenuOption';
 import CreateStatementModal from '@/view/pages/statement/components/createStatementModal/CreateStatementModal';
+
 import './ChatMessageCard.scss';
 import { deleteStatementFromDB } from '@/controllers/db/statements/deleteStatements';
 import Evaluation from '../../../evaluations/components/evaluation/Evaluation';
 import useAutoFocus from '@/controllers/hooks/useAutoFocus ';
 import UploadImage from '@/view/components/uploadImage/UploadImage';
-import { StatementType } from '@/types/enums';
-import { Statement } from '@/types/statement';
 
 export interface NewQuestion {
 	statement: Statement;
@@ -49,6 +59,7 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
 	statement,
 	previousStatement,
 }) => {
+
 	const imageUrl = statement.imagesURL?.main ?? '';
 	const [image, setImage] = useState<string>(imageUrl);
 	// Hooks

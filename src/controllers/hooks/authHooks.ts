@@ -1,17 +1,20 @@
-import { useState, useEffect } from 'react';
-import { getStatementFromDB } from '../db/statements/getStatement';
-import { getTopParentSubscriptionFromDByStatement } from '../db/subscriptions/getSubscriptions';
-import { setStatementSubscriptionToDB } from '../db/subscriptions/setSubscriptions';
-import { useAppSelector } from './reduxHooks';
+// import { onAuthStateChanged } from 'firebase/auth';
+import {
+	Access,
+	Role,
+	Statement,
+	StatementSubscription,
+} from "delib-npm";
+import { useState, useEffect } from "react";
+import { getStatementFromDB } from "../db/statements/getStatement";
+import {  getTopParentSubscriptionFromDByStatement } from "../db/subscriptions/getSubscriptions";
+import { setStatementSubscriptionToDB } from "../db/subscriptions/setSubscriptions";
+import { useAppSelector } from "./reduxHooks";
 import {
 	statementSelector,
 	statementSubscriptionSelector,
-} from '@/model/statements/statementsSlice';
-import { store } from '@/model/store';
-import { Access } from '@/types/enums';
-import { Statement } from '@/types/statement';
-import { StatementSubscription } from '@/types/statement/subscription';
-import { Role } from '@/types/user';
+} from "@/model/statements/statementsSlice";
+import { store } from "@/model/store";
 
 const useAuth = () => {
 	const [isLogged, setIsLogged] = useState(false);
@@ -38,7 +41,7 @@ export function useIsAuthorized(statementId: string | undefined): {
 	//TODO:create a check with the parent statement if subscribes. if not subscribed... go according to the rules of authorization
 
 	const statementSubscription = useAppSelector(
-		statementSubscriptionSelector(statementId)
+		statementSubscriptionSelector(statementId),
 	);
 	const role = statementSubscription?.role || Role.unsubscribed;
 	const statement = useAppSelector(statementSelector(statementId));
@@ -64,6 +67,7 @@ export function useIsAuthorized(statementId: string | undefined): {
 				setError(true);
 			}
 		});
+
 	}, [statement, statementSubscription]);
 
 	useEffect(() => {
@@ -72,7 +76,7 @@ export function useIsAuthorized(statementId: string | undefined): {
 			getStatementFromDB(statement.topParentId).then((_topParentStatement) => {
 				if (_topParentStatement) {
 					setTopParentStatement(_topParentStatement);
-				}
+				};
 			});
 	}, [statement, topParentStatement]);
 
@@ -87,22 +91,17 @@ export function useIsAuthorized(statementId: string | undefined): {
 	};
 }
 
-async function isAuthorizedFn(
-	statement: Statement | undefined,
-	statementSubscription: StatementSubscription | undefined
-): Promise<boolean> {
+async function isAuthorizedFn(statement: Statement | undefined, statementSubscription: StatementSubscription | undefined): Promise<boolean> {
 	try {
+
 		if (!statement) return false;
 
 		//in case the statement is open
-		if (
-			statement.membership?.access === Access.open &&
-			statementSubscription?.role !== Role.banned
-		) {
+		if (statement.membership?.access === Access.open && statementSubscription?.role !== Role.banned) {
 			if (!statementSubscription) {
-				setStatementSubscriptionToDB(statement, Role.member);
+				setStatementSubscriptionToDB(statement, Role.member, false);
 			}
-
+			
 			return true;
 
 			//if the statement is close
@@ -110,32 +109,30 @@ async function isAuthorizedFn(
 			//if the user is the creator or admin or member allow
 			if (isAllowed(statement, statementSubscription?.role)) {
 				return true;
-			} else {
+			}
+			else {
 				//if the user is not subscribed to the statement, but subscribed to the top parent statement allow
-				const parentSubscription =
-					await getTopParentSubscriptionFromDByStatement(statement);
+				const parentSubscription = await getTopParentSubscriptionFromDByStatement(statement);
 				if (isAllowed(statement, parentSubscription?.role)) {
 					return true;
 				}
-
+				
 				return false;
 			}
 		}
-
+		
 		return false;
-	} catch (e) {
-		console.error(e);
 
+	} catch (e) {
+
+		console.error(e);
+		
 		return false;
 	}
 }
 
 function isAllowed(statement: Statement, role?: Role): boolean {
-	if (
-		role === Role.admin ||
-		role === Role.member ||
-		statement.creatorId === store.getState().user.user?.uid
-	) {
+	if (role === Role.admin || role === Role.member || statement.creatorId === store.getState().user.user?.uid) {
 		return true;
 	} else {
 		return false;

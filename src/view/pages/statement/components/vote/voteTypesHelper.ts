@@ -1,4 +1,4 @@
-import { Statement } from '@/types/statement';
+import { Statement } from 'delib-npm';
 
 export interface OptionsBarsProps {
 	setStatementInfo: React.Dispatch<React.SetStateAction<Statement | null>>;
@@ -14,9 +14,7 @@ export interface OptionBarProps {
 	totalVotes: number;
 	statement: Statement;
 	order: number;
-	setStatementInfo: React.Dispatch<React.SetStateAction<Statement | undefined>>;
+	setStatementInfo: React.Dispatch<React.SetStateAction<Statement | null>>;
 	setShowInfo: React.Dispatch<React.SetStateAction<boolean>>;
 	optionsCount: number;
-	isVertical: boolean;
-	screenWidth: number;
 }

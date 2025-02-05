@@ -1,3 +1,4 @@
+import { parseUserFromFirebase, User } from 'delib-npm';
 import {
 	signInWithPopup,
 	GoogleAuthProvider,
@@ -20,8 +21,6 @@ import { resetStatements } from '@/model/statements/statementsSlice';
 import { AppDispatch, store } from '@/model/store';
 import { setFontSize, setUser } from '@/model/users/userSlice';
 import { resetVotes } from '@/model/vote/votesSlice';
-import { User, UserSchema } from '@/types/user';
-import { parse } from 'valibot';
 
 export function googleLogin() {
 	const provider = new GoogleAuthProvider();
@@ -54,59 +53,60 @@ export function signAnonymously() {
 }
 export const listenToAuth =
 	(dispatch: AppDispatch) =>
-	(
-		isAnonymous: boolean,
-		navigate: NavigateFunction,
-		initialUrl: string
-	): Unsubscribe => {
-		return onAuthStateChanged(auth, async (userFB) => {
-			try {
-				if (!userFB && isAnonymous !== true) {
-					navigate('/');
-				}
-				if (isAnonymous && !userFB) {
-					signAnonymously();
-				}
-				if (userFB) {
-					// User is signed in
-					const user = parse(UserSchema, userFB);
-
-					if (!user.displayName)
-						user.displayName =
-							localStorage.getItem('displayName') ??
-							`Anonymous ${Math.floor(Math.random() * 10000)}`;
-
-					if (user?.isAnonymous) {
-						user.displayName =
-							sessionStorage.getItem('displayName') ??
-							`Anonymous ${Math.floor(Math.random() * 10000)}`;
+		(
+			isAnonymous: boolean,
+			navigate: NavigateFunction,
+			initialUrl: string
+		): Unsubscribe => {
+			return onAuthStateChanged(auth, async (userFB) => {
+				try {
+					if (!userFB && isAnonymous !== true) {
+						navigate('/');
 					}
+					if (isAnonymous && !userFB) {
+						signAnonymously();
+					}
+					if (userFB) {
 
-					// console.info("User is signed in")
-					if (!user) throw new Error('user is undefined');
+						// User is signed in
+						const user = { ...userFB };
+						if (!user.displayName)
+							user.displayName =
+								localStorage.getItem('displayName') ??
+								`Anonymous ${Math.floor(Math.random() * 10000)}`;
+						const _user = parseUserFromFirebase(user);
 
-					const userDB = (await setUserToDB(user)) as User;
+						if (_user?.isAnonymous) {
+							_user.displayName =
+								sessionStorage.getItem('displayName') ??
+								`Anonymous ${Math.floor(Math.random() * 10000)}`;
+						}
 
-					const fontSize = userDB.fontSize ? userDB.fontSize : defaultFontSize;
+						// console.info("User is signed in")
+						if (!_user) throw new Error('user is undefined');
 
-					dispatch(setFontSize(fontSize));
+						const userDB = (await setUserToDB(_user)) as User;
 
-					document.body.style.fontSize = fontSize + 'px';
+						const fontSize = userDB.fontSize ? userDB.fontSize : defaultFontSize;
 
-					if (!userDB) throw new Error('userDB is undefined');
-					dispatch(setUser(userDB));
+						dispatch(setFontSize(fontSize));
 
-					if (initialUrl) navigate(initialUrl);
-				} else {
-					// User is not logged in.
-					dispatch(resetStatements());
-					dispatch(resetEvaluations());
-					dispatch(resetVotes());
-					dispatch(resetResults());
-					dispatch(setUser(null));
+						document.body.style.fontSize = fontSize + 'px';
+
+						if (!userDB) throw new Error('userDB is undefined');
+						dispatch(setUser(userDB));
+
+						if (initialUrl) navigate(initialUrl);
+					} else {
+						// User is not logged in.
+						dispatch(resetStatements());
+						dispatch(resetEvaluations());
+						dispatch(resetVotes());
+						dispatch(resetResults());
+						dispatch(setUser(null));
+					}
+				} catch (error) {
+					console.error(error);
 				}
-			} catch (error) {
-				console.error(error);
-			}
-		});
-	};
+			});
+		};

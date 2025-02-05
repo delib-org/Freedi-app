@@ -1,21 +1,22 @@
-import { FC, useEffect, useState } from 'react';
-import { setInvitationToDB } from '../../../../../../controllers/db/invitations/setInvitation';
-import { handleCloseInviteModal } from '../../../../../../controllers/general/helpers';
-import XIcon from '../../../../../components/icons/XIcon';
-import InviteModal from '../../../../../components/modal/InviteModal';
-import styles from './InvitePanel.module.scss';
-import InvitePanelBox from './InvitePanelBox';
-import { Invitation } from '@/types/invitation';
+import { Invitation } from "delib-npm";
+import { FC, useEffect, useState } from "react";
+import { setInvitationToDB } from "../../../../../../controllers/db/invitations/setInvitation";
+
+import { handleCloseInviteModal } from "../../../../../../controllers/general/helpers";
+import XIcon from "../../../../../components/icons/XIcon";
+import InviteModal from "../../../../../components/modal/InviteModal";
+import styles from "./InvitePanel.module.scss";
+import InvitePanelBox from "./InvitePanelBox";
 
 interface Props {
-	setShowModal: (show: boolean) => void;
-	statementId?: string;
-	pathname: string;
+  setShowModal: (show: boolean) => void;
+  statementId?: string;
+  pathname: string;
 }
 
 const InvitePanel: FC<Props> = ({ setShowModal, statementId, pathname }) => {
 	try {
-		if (!statementId) throw new Error('StatementId is missing');
+		if (!statementId) throw new Error("StatementId is missing");
 
 		const [invitationNumberArr, setInvitationNumberArr] = useState<number[]>(
 			[]
@@ -25,7 +26,7 @@ const InvitePanel: FC<Props> = ({ setShowModal, statementId, pathname }) => {
 			setInvitationToDB({ statementId, pathname }).then(
 				(invitation: Invitation | undefined) => {
 					try {
-						if (!invitation) throw new Error('No invitation found in DB');
+						if (!invitation) throw new Error("No invitation found in DB");
 
 						invitationNumberToArray(invitation?.number);
 					} catch (error) {
@@ -50,8 +51,8 @@ const InvitePanel: FC<Props> = ({ setShowModal, statementId, pathname }) => {
 			<InviteModal>
 				<div className={styles.panel}>
 					<div className={styles.panel__boxWrapper}>
-						{invitationNumberArr.map((number, i) => {
-							return <InvitePanelBox number={number} key={i} />;
+						{invitationNumberArr.map((number,i) => {
+							return <InvitePanelBox number={number} key={i}/>;
 						})}
 					</div>
 					<button onClick={() => handleCloseInviteModal(setShowModal)}>
@@ -62,7 +63,7 @@ const InvitePanel: FC<Props> = ({ setShowModal, statementId, pathname }) => {
 		);
 	} catch (error) {
 		console.error(error);
-
+		
 		return null;
 	}
 };

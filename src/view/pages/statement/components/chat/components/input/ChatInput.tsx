@@ -1,3 +1,4 @@
+import { Statement } from 'delib-npm';
 import { FC, useState, useEffect, useRef } from 'react';
 import styles from './ChatInput.module.scss';
 // Third Party Imports
@@ -12,7 +13,6 @@ import { useLanguage } from '@/controllers/hooks/useLanguages';
 import useStatementColor from '@/controllers/hooks/useStatementColor';
 import { userSelector } from '@/model/users/userSlice';
 import SendIcon from '@/view/components/icons/SendIcon';
-import { Statement } from '@/types/statement';
 
 interface Props {
 	statement: Statement;
@@ -81,14 +81,15 @@ const ChatInput: FC<Props> = ({ statement }) => {
 			<form
 				onSubmit={(e) => handleSubmitInput(e)}
 				name='theForm'
+
 				style={{ flexDirection: direction }}
 			>
 				<textarea
 					style={{
 						borderTop: `2px solid ${statementColor.backgroundColor}`,
 						minHeight: '40px', // Add minimum height
-						resize: 'none', // Prevent manual resizing since we're handling it
-						overflow: 'hidden', // Hide scrollbar since we're auto-expanding
+						resize: 'none',    // Prevent manual resizing since we're handling it
+						overflow: 'hidden' // Hide scrollbar since we're auto-expanding
 					}}
 					data-cy='statement-chat-input'
 					className='page__footer__form__input'
@@ -99,8 +100,9 @@ const ChatInput: FC<Props> = ({ statement }) => {
 					value={message}
 					onInput={adjustTextareaHeight}
 					onChange={(e) => {
-						setMessage(e.target.value);
+						setMessage(e.target.value)
 						adjustTextareaHeight(); // Call height adjustment on change
+
 					}}
 					required
 					placeholder={t('Type your message here...')}

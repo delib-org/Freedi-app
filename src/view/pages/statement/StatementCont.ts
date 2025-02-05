@@ -1,7 +1,5 @@
-import { StatementType } from '@/types/enums';
-import { Statement } from '@/types/statement';
-import { Role, User } from '@/types/user';
-import { createContext } from 'react';
+import { Statement, User, Role, StatementType } from "delib-npm";
+import { createContext } from "react";
 
 interface StatementContextProps {
 	statement: Statement | undefined;
@@ -13,18 +11,18 @@ interface StatementContextProps {
 	newStatementType: StatementType; //used to determine the type of the new statement when created
 }
 
-export const StatementContext = createContext<StatementContextProps>({
-	statement: undefined,
-	talker: null,
-	role: undefined,
-	handleSetNewStatement: () => {
-		return;
+export const StatementContext = createContext<StatementContextProps>(
+	{
+		statement: undefined,
+		talker: null,
+		role: undefined,
+		handleSetNewStatement: () => { return },
+		handleShowTalker: () => {
+			return;
+		},
+		setNewStatementType: () => {
+			return;
+		},
+		newStatementType: StatementType.group,
 	},
-	handleShowTalker: () => {
-		return;
-	},
-	setNewStatementType: () => {
-		return;
-	},
-	newStatementType: StatementType.group,
-});
+);

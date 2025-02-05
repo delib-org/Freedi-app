@@ -1,8 +1,14 @@
+import { Role, Statement } from 'delib-npm';
 import { FC, useContext } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Back from '../../header/Back';
 import HomeButton from '../../header/HomeButton';
 import styles from './StatementTopNav.module.scss';
+// Third party imports
+
+// Helpers
+import BellIcon from '@/assets/icons/bellIcon.svg?react';
+import BellSlashIcon from '@/assets/icons/bellSlashIcon.svg?react';
 import Chat from '@/assets/icons/chatTop.svg?react';
 import DisconnectIcon from '@/assets/icons/disconnectIcon.svg?react';
 import MainIcon from '@/assets/icons/evaluations2Icon.svg?react';
@@ -13,28 +19,34 @@ import ShareIcon from '@/assets/icons/shareIcon.svg?react';
 import View from '@/assets/icons/view.svg?react';
 import { useLanguage } from '@/controllers/hooks/useLanguages';
 import useStatementColor from '@/controllers/hooks/useStatementColor.ts';
+
+//icons
+
+//components
 import Menu from '@/view/components/menu/Menu';
 import MenuOption from '@/view/components/menu/MenuOption';
 import { StatementContext } from '../../../StatementCont';
-import { Statement } from '@/types/statement';
-import { Role } from '@/types/user';
 
 interface Props {
 	statement?: Statement;
 	handleShare: () => void;
 	handleFollowMe: () => void;
+	handleToggleNotifications: () => void;
 	handleInvitePanel: () => void;
 	handleLogout: () => void;
 	setIsHeaderMenuOpen: (value: boolean) => void;
 	isHeaderMenuOpen: boolean;
+	permission: boolean;
 }
 
 const StatementTopNav: FC<Props> = ({
 	statement,
 	setIsHeaderMenuOpen,
+	handleToggleNotifications,
 	handleLogout,
 	handleFollowMe,
 	handleInvitePanel,
+	permission,
 	isHeaderMenuOpen,
 	handleShare,
 }) => {
@@ -52,15 +64,13 @@ const StatementTopNav: FC<Props> = ({
 
 	if (!statement) return null;
 
-	const enableNavigationalElements = Boolean(
-		statement?.statementSettings?.enableNavigationalElements
-	);
+	const enableNavigationalElements = Boolean(statement?.statementSettings?.enableNavigationalElements)
 
 	const isAdmin = role === Role.admin;
 	const allowNavigation = enableNavigationalElements || isAdmin;
 
 	function handleNavigation(path: string) {
-		if (path === 'settings') setIsHeaderMenuOpen(false);
+		if (path === "settings") setIsHeaderMenuOpen(false);
 		if (statement?.statementId)
 			navigate(`/statement/${statement.statementId}/${path}`);
 	}
@@ -68,11 +78,12 @@ const StatementTopNav: FC<Props> = ({
 	return (
 		<nav
 			className={styles.nav}
-			data-cy='statement-nav'
+			data-cy="statement-nav"
 			style={{ backgroundColor: headerStyle.backgroundColor }}
 		>
 			<div className={styles.wrapper}>
 				{allowNavigation && (
+
 					<HeaderMenu
 						setIsHeaderMenuOpen={setIsHeaderMenuOpen}
 						isHeaderMenuOpen={isHeaderMenuOpen}
@@ -86,6 +97,7 @@ const StatementTopNav: FC<Props> = ({
 						menuIconStyle={menuIconStyle}
 						t={t}
 					/>
+
 				)}
 				<NavButtons
 					statement={statement}
@@ -93,6 +105,8 @@ const StatementTopNav: FC<Props> = ({
 					handleNavigation={handleNavigation}
 					headerStyle={headerStyle}
 					allowNavigation={allowNavigation}
+					permission={permission}
+					handleToggleNotifications={handleToggleNotifications}
 				/>
 			</div>
 		</nav>
@@ -108,12 +122,7 @@ interface NavigationButtonsProps {
 	headerStyle: { color: string; backgroundColor: string };
 }
 
-function NavigationButtons({
-	screen,
-	handleNavigation,
-	headerStyle,
-	statement,
-}: Readonly<NavigationButtonsProps>) {
+function NavigationButtons({ screen, handleNavigation, headerStyle, statement }: Readonly<NavigationButtonsProps>) {
 	const { hasChat } = statement?.statementSettings || { hasChat: false };
 	if (!hasChat) return null;
 
@@ -121,24 +130,25 @@ function NavigationButtons({
 		<>
 			{(() => {
 				switch (screen) {
-					case 'main':
+
+					case "main":
 						return (
-							<button onClick={() => handleNavigation('chat')}>
+							<button onClick={() => handleNavigation("chat")}>
 								<Chat color={headerStyle.color} />
 							</button>
 						);
 					case 'chat':
-					case 'settings':
+					case "settings":
 					default:
 						return (
-							<button onClick={() => handleNavigation('main')}>
+							<button onClick={() => handleNavigation("main")}>
 								<MainIcon color={headerStyle.color} />
 							</button>
 						);
 				}
 			})()}
 		</>
-	);
+	)
 }
 
 interface NavButtonsProps {
@@ -146,38 +156,40 @@ interface NavButtonsProps {
 	handleNavigation: (path: string) => void;
 	headerStyle: { color: string; backgroundColor: string };
 	allowNavigation: boolean;
+	permission: boolean;
+	handleToggleNotifications: () => void;
 	statement?: Statement;
 }
 
-function NavButtons({
-	screen,
-	handleNavigation,
-	headerStyle,
-	allowNavigation,
-	statement,
-}: Readonly<NavButtonsProps>) {
+function NavButtons({ screen, handleNavigation, headerStyle, allowNavigation, permission, handleToggleNotifications, statement }: Readonly<NavButtonsProps>) {
+
 	return (
 		<>
-			{allowNavigation && (
-				<NavigationButtons
-					statement={statement}
-					screen={screen}
-					handleNavigation={handleNavigation}
-					headerStyle={headerStyle}
-				/>
-			)}
+			{allowNavigation && <NavigationButtons statement={statement} screen={screen} handleNavigation={handleNavigation} headerStyle={headerStyle} />}
+			<button onClick={handleToggleNotifications}>
+				{permission ? (
+					<BellIcon color={headerStyle.color} />
+				) : (
+					<BellSlashIcon color={headerStyle.color} />
+				)}
+			</button>
 			<button>
 				<View color={headerStyle.color} />
 			</button>
-			{allowNavigation && (
-				<button className={styles.home}>
-					<HomeButton headerColor={headerStyle} />
-				</button>
-			)}
-			{allowNavigation && (
-				<Back statement={statement} headerColor={headerStyle} />
-			)}
+			{
+				allowNavigation && (
+					<button className={styles.home}>
+						<HomeButton headerColor={headerStyle} />
+					</button>
+				)
+			}
+			{
+				allowNavigation && (
+					<Back statement={statement} headerColor={headerStyle} />
+				)
+			}
 		</>
+
 	);
 }
 
@@ -192,7 +204,7 @@ function HeaderMenu({
 	handleNavigation,
 	isAdmin,
 	menuIconStyle,
-	t,
+	t
 }: Readonly<{
 	setIsHeaderMenuOpen: (value: boolean) => void;
 	isHeaderMenuOpen: boolean;
@@ -208,6 +220,7 @@ function HeaderMenu({
 }>) {
 	return (
 		<div className={styles.button}>
+
 			<Menu
 				setIsOpen={setIsHeaderMenuOpen}
 				isMenuOpen={isHeaderMenuOpen}
@@ -239,11 +252,11 @@ function HeaderMenu({
 						<MenuOption
 							label={t('Settings')}
 							icon={<SettingsIcon style={menuIconStyle} />}
-							onOptionClick={() => handleNavigation('settings')}
+							onOptionClick={() => handleNavigation("settings")}
 						/>
 					</>
 				)}
 			</Menu>
 		</div>
-	);
+	)
 }

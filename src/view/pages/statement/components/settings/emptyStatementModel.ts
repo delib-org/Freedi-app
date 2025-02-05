@@ -1,6 +1,4 @@
-import { Screen, StatementType } from '@/types/enums';
-import { ResultsBy } from '@/types/results';
-import { Statement } from '@/types/statement';
+import { ResultsBy, Screen, Statement, StatementType } from 'delib-npm';
 
 export const defaultStatementSettings = {
 	enhancedEvaluation: true,

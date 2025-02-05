@@ -1,6 +1,6 @@
-import { Statement } from '@/types/statement';
+import { Statement } from "delib-npm";
 
 export interface StatementSettingsProps {
-	statement: Statement;
-	setStatementToEdit: (statement: Statement) => void;
+    statement: Statement;
+    setStatementToEdit: (statement: Statement) => void;
 }

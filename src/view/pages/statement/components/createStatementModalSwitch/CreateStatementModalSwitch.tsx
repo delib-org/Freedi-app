@@ -1,8 +1,7 @@
+import { Statement, StatementType } from 'delib-npm';
 import React from 'react';
 import CreateStatementModal from '../createStatementModal/CreateStatementModal';
 import SimilarStatementsSuggestion from '../newStatemement/newStatement';
-import { StatementType } from '@/types/enums';
-import { Statement } from '@/types/statement';
 
 interface CreateStatementModalSwitchProps {
 	useSimilarStatements: boolean;
