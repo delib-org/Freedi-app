@@ -1,19 +1,18 @@
-/* eslint-disable indent */
-import { Statement } from "delib-npm";
-import { FC, useEffect } from "react";
+import { FC, useEffect } from 'react';
 
-import { Link } from "react-router-dom";
-import "./MainCard.scss";
+import { Link } from 'react-router-dom';
+import './MainCard.scss';
 
 //img
-import UpdateMainCard from "./updateMainCard/UpdateMainCard";
-import ImgThumb from "@/assets/images/ImgThumb.png";
-import { listenToAllSubStatements } from "@/controllers/db/statements/listenToStatements";
-import { getLastElements } from "@/controllers/general/helpers";
-import { useAppSelector } from "@/controllers/hooks/reduxHooks";
-import {  subStatementsByTopParentIdMemo} from "@/model/statements/statementsSlice";
-import Text from "@/view/components/text/Text";
-import StatementChatMore from "@/view/pages/statement/components/chat/components/StatementChatMore";
+import UpdateMainCard from './updateMainCard/UpdateMainCard';
+import ImgThumb from '@/assets/images/ImgThumb.png';
+import { listenToAllSubStatements } from '@/controllers/db/statements/listenToStatements';
+import { getLastElements } from '@/controllers/general/helpers';
+import { useAppSelector } from '@/controllers/hooks/reduxHooks';
+import { subStatementsByTopParentIdMemo } from '@/model/statements/statementsSlice';
+import Text from '@/view/components/text/Text';
+import StatementChatMore from '@/view/pages/statement/components/chat/components/StatementChatMore';
+import { Statement } from '@/types/statement';
 
 interface Props {
   statement: Statement;
@@ -42,23 +41,23 @@ const MainCard: FC<Props> = ({ statement }) => {
   }, []);
 
   return (
-    <div className="main-card">
+    <div className='main-card'>
       <Link
         to={`/statement/${statement.statementId}/chat`}
-        className="main-card__link"
+        className='main-card__link'
       >
-        <div className="main-card__content">
+        <div className='main-card__content'>
           <div
             style={{
-              backgroundImage: `url(${statementImgUrl ? statementImgUrl : ImgThumb})`,
+              backgroundImage: `url(${statementImgUrl ?? ImgThumb})`,
             }}
-            className="main-card__img"
+            className='main-card__img'
           ></div>
           <StatementChatMore statement={statement} />
-        </div>  
+        </div>
         <Text statement={statement.statement} description={description} />
       </Link>
-      <div className="main-card__updates">
+      <div className='main-card__updates'>
         {subStatements.map((subStatement: Statement) => (
           <UpdateMainCard
             key={subStatement.statementId}

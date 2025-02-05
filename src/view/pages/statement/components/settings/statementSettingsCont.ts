@@ -1,7 +1,3 @@
-import { Statement, Vote, Evaluation, Screen } from 'delib-npm';
-
-// Helpers
-import { StatementSettings, StatementType } from 'delib-npm/dist/models/statementsModels';
 import { NavigateFunction } from 'react-router-dom';
 import {
 	defaultResultsSettings,
@@ -14,6 +10,10 @@ import {
 	updateStatement,
 } from '@/controllers/db/statements/setStatements';
 import { getVoters } from '@/controllers/db/vote/getVotes';
+import { StatementType } from '@/types/enums';
+import { Evaluation } from '@/types/evaluation';
+import { Statement, StatementSettings } from '@/types/statement';
+import { Vote } from '@/types/vote';
 
 // Get users that voted on options in this statement
 export async function handleGetVoters(
@@ -112,7 +112,6 @@ export async function setNewStatement({
 			await setStatementToDB({
 				parentStatement: 'top',
 				statement: newStatement,
-				addSubscription: true,
 			});
 
 			return newStatement;
@@ -141,7 +140,6 @@ export async function setNewStatement({
 			await setStatementToDB({
 				parentStatement,
 				statement: newStatement,
-				addSubscription: true,
 			});
 
 			return newStatement;
@@ -207,12 +205,10 @@ interface ToggleSubScreenParams {
 }
 
 export const toggleSubScreen = ({
-
 	statement,
 }: ToggleSubScreenParams): Statement => {
-
 	return {
-		...statement
+		...statement,
 	};
 };
 
@@ -229,7 +225,7 @@ export async function createStatementFromModal({
 	title,
 	description,
 	parentStatement,
-	statementType
+	statementType,
 }: CreateStatementFromModalParams) {
 	try {
 		if (!title) throw new Error('title is undefined');
@@ -248,13 +244,11 @@ export async function createStatementFromModal({
 		await setStatementToDB({
 			statement: newStatement,
 			parentStatement: parentStatement === 'top' ? 'top' : parentStatement,
-			addSubscription: true,
 		});
 
 		await setStatementToDB({
 			statement: newStatement,
 			parentStatement: parentStatement === 'top' ? 'top' : parentStatement,
-			addSubscription: true,
 		});
 	} catch (error) {
 		console.error(error);

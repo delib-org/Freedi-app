@@ -1,13 +1,7 @@
 import { createSelector } from '@reduxjs/toolkit';
-import { FC, useEffect, useState } from 'react';
-
-// Third party imports
+import { FC, useEffect, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
-
-// firestore
-import EnableNotifications from '../../components/enableNotifications/EnableNotifications';
-import ProfileImage from '../../components/profileImage/ProfileImage';
 import LoadingPage from '../loadingPage/LoadingPage';
 import Page404 from '../page404/Page404';
 import UnAuthorizedPage from '../unAuthorizedPage/UnAuthorizedPage';
@@ -36,11 +30,9 @@ import { useAppDispatch } from '@/controllers/hooks/reduxHooks';
 import { MapProvider } from '@/controllers/hooks/useMap';
 import { RootState } from '@/model/store';
 import { userSelector } from '@/model/users/userSlice';
-
-// Custom components
-import AskPermission from '@/view/components/askPermission/AskPermission';
 import Modal from '@/view/components/modal/Modal';
-import { Access, Role, StatementType, User } from 'delib-npm';
+import { StatementType, Access } from '@/types/enums';
+import { Role, User } from '@/types/user';
 
 // Create selectors
 export const subStatementsSelector = createSelector(
@@ -66,8 +58,6 @@ const StatementMain: FC = () => {
 
 	// Use states
 	const [talker, setTalker] = useState<User | null>(null);
-	const [showAskPermission, setShowAskPermission] = useState<boolean>(false);
-	const [askNotifications, setAskNotifications] = useState(false);
 	const [isStatementNotFound, setIsStatementNotFound] = useState(false);
 	const [showNewStatement, setShowNewStatement] = useState<boolean>(false);
 	const [newStatementType, setNewStatementType] = useState<StatementType>(
@@ -190,41 +180,35 @@ const StatementMain: FC = () => {
 		}
 	}, [statement]);
 
+	const contextValue = useMemo(
+		() => ({
+			statement,
+			talker,
+			handleShowTalker,
+			role,
+			handleSetNewStatement,
+			setNewStatementType,
+			newStatementType,
+		}),
+		[
+			statement,
+			talker,
+			role,
+			handleShowTalker,
+			handleSetNewStatement,
+			setNewStatementType,
+			newStatementType,
+		]
+	);
+
 	if (isStatementNotFound) return <Page404 />;
 	if (error) return <UnAuthorizedPage />;
 	if (loading) return <LoadingPage />;
 
-	if (isAuthorized)
+	if (isAuthorized) {
 		return (
-			<StatementContext.Provider
-				value={{
-					statement,
-					talker,
-					handleShowTalker,
-					role,
-					handleSetNewStatement,
-					setNewStatementType,
-					newStatementType,
-				}}
-			>
+			<StatementContext.Provider value={contextValue}>
 				<div className='page'>
-					{showAskPermission && <AskPermission showFn={setShowAskPermission} />}
-					{talker && (
-						<button
-							onClick={() => {
-								handleShowTalker(null);
-							}}
-						>
-							<ProfileImage />
-						</button>
-					)}
-					{askNotifications && (
-						<EnableNotifications
-							statement={statement}
-							setAskNotifications={setAskNotifications}
-							setShowAskPermission={setShowAskPermission}
-						/>
-					)}
 					{showNewStatement && (
 						<Modal
 							closeModal={(e) => {
@@ -237,7 +221,6 @@ const StatementMain: FC = () => {
 					<StatementHeader
 						statement={statement}
 						topParentStatement={topParentStatement}
-						setShowAskPermission={setShowAskPermission}
 					/>
 					<MapProvider>
 						<Switch />
@@ -245,6 +228,7 @@ const StatementMain: FC = () => {
 				</div>
 			</StatementContext.Provider>
 		);
+	}
 
 	return <UnAuthorizedPage />;
 };
