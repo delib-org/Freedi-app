@@ -20,8 +20,6 @@ export default function GetInitialStatementData() {
 	const { newStatementType, newQuestionType, handleSetNewStatement, statement } =
 		useContext(StatementContext);
 
-	console.log("newStatementType", newStatementType, "questionType", newQuestionType);
-
 	const handleSubmit = async (ev: FormEvent<HTMLFormElement>) => {
 		ev.preventDefault();
 		try {

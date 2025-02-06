@@ -25,7 +25,7 @@ export default function GroupPage() {
 	);
 
 	function handleAddStatement(newStatementType: StatementType, questionType?: QuestionType) {
-		console.log(questionType);
+
 		setNewStatementType(newStatementType);
 		if (questionType) {
 			setNewQuestionType(questionType);
