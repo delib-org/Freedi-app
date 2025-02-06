@@ -1,6 +1,5 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { Response, onInit } from 'firebase-functions/v1';
-import { Request } from 'firebase-functions/v2/https';
+import { Response, onInit, Request } from 'firebase-functions/v1';
 import { db } from '.';
 import 'dotenv/config';
 import { Collections } from '../../src/types/enums';

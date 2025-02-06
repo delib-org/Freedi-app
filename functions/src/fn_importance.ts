@@ -1,12 +1,18 @@
-import { logger } from 'firebase-functions/v1';
+import { Change, logger } from 'firebase-functions/v1';
 import { db } from '.';
 import { FieldValue } from 'firebase-admin/firestore';
 import { Importance } from '../../src/types/agreement';
 import { Collections } from '../../src/types/enums';
 import { StatementSchema } from '../../src/types/statement';
 import { parse } from 'valibot';
+import { FirestoreEvent } from 'firebase-functions/firestore';
+import { DocumentSnapshot } from 'firebase-functions/v1/firestore';
 
-export async function setImportanceToStatement(event: any) {
+export async function setImportanceToStatement(
+	event: FirestoreEvent<Change<DocumentSnapshot> | undefined> | undefined
+) {
+	if (!event?.data) return;
+
 	try {
 		const importanceBeforeData = event.data.before.data() as
 			| Importance
@@ -22,6 +28,7 @@ export async function setImportanceToStatement(event: any) {
 			if (importanceBeforeData && importanceAfterData) return 0;
 			if (importanceBeforeData) return -1;
 			if (importanceAfterData) return 1;
+
 			return 0;
 		})();
 
@@ -36,18 +43,17 @@ export async function setImportanceToStatement(event: any) {
 			importanceBeforeData?.parentId || importanceAfterData?.parentId;
 		if (!sectionId) throw new Error('No section id found');
 
+		// TODO: This is not used
 		//get all user importance ratings in the section
-		const importances = await db
-			.collection(Collections.importance)
-			.where('parentId', '==', sectionId)
-			.get();
-
-		let sumImportances = 0;
-
-		importances.forEach((imp) => {
-			const impData = imp.data() as Importance;
-			sumImportances += impData.importance;
-		});
+		// const importances = await db
+		// 	.collection(Collections.importance)
+		// 	.where('parentId', '==', sectionId)
+		// 	.get();
+		// let sumImportances = 0;
+		// importances.forEach((imp) => {
+		// 	const impData = imp.data() as Importance;
+		// 	sumImportances += impData.importance;
+		// });
 
 		const diffImportance = importanceAfter - importanceBefore;
 
@@ -78,6 +84,7 @@ export async function setImportanceToStatement(event: any) {
 		return;
 	} catch (error) {
 		logger.error(error);
+
 		return;
 	}
 }

@@ -1,4 +1,4 @@
-import { Dispatch, FC, useState } from 'react';
+import { Dispatch, FC, FormEvent, useState } from 'react';
 
 // Third party imports
 import { useNavigate, useParams } from 'react-router-dom';
@@ -73,7 +73,7 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 			.map((m) => m.user);
 
 		// * Functions * //
-		const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+		const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
 			e.preventDefault();
 			setLoading(true);
 			const newStatement = await setNewStatement({

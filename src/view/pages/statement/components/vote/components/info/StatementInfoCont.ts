@@ -1,15 +1,16 @@
 import { updateStatementText } from '@/controllers/db/statements/setStatements';
 import { Statement } from '@/types/statement';
+import { FormEvent, Dispatch, SetStateAction } from 'react';
 
 export function handleSubmitInfo(
-	e: React.FormEvent<HTMLFormElement>,
+	e: FormEvent<HTMLFormElement>,
 	formData: {
 		title: string;
 		description: string;
 	},
 	statement: Statement | undefined,
-	setEdit: React.Dispatch<React.SetStateAction<boolean>>,
-	setShowInfo: React.Dispatch<React.SetStateAction<boolean>>
+	setEdit: Dispatch<SetStateAction<boolean>>,
+	setShowInfo: Dispatch<SetStateAction<boolean>>
 ) {
 	e.preventDefault();
 	try {

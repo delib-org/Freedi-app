@@ -1,4 +1,5 @@
 import { Statement } from '@/types/statement';
+import React from 'react';
 
 export interface OptionsBarsProps {
 	setStatementInfo: React.Dispatch<React.SetStateAction<Statement | null>>;

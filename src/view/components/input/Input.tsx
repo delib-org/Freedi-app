@@ -37,7 +37,7 @@ const Input: React.FC<SearchInputProps> = ({
 		<div className={styles.container}>
 			<div
 				className={`${styles.label} ${dir === "ltr" ? styles["label--ltr"] : styles["label--rtl"]
-					}`}
+				}`}
 			>
 				{label}
 			</div>

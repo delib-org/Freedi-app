@@ -41,16 +41,17 @@ export default function Home() {
 
 	useEffect(() => {
 
-		// eslint-disable-next-line @typescript-eslint/no-empty-function
 		let unsubscribe: () => void = () => { };
-		// eslint-disable-next-line @typescript-eslint/no-empty-function
+
 		let updatesUnsubscribe: () => void = () => { };
 		try {
 			if (user) {
 				unsubscribe = listenToStatementSubscriptions(30);
 				updatesUnsubscribe = getNewStatementsFromSubscriptions();
 			}
-		} catch (error) { }
+		} catch (error) {
+			console.error(error);
+		}
 
 		return () => {
 			if (unsubscribe) {
@@ -67,7 +68,7 @@ export default function Home() {
 
 	return (
 		<main className="page slide-in">
-			{displayHeader && <HomeHeader />}     
+			{displayHeader && <HomeHeader />}
 			<Outlet />
 		</main>
 	);

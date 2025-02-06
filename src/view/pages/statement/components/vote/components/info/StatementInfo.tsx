@@ -1,4 +1,4 @@
-import { FC, useState } from 'react';
+import { Dispatch, FC, SetStateAction, useState } from 'react';
 import { handleSubmitInfo } from './StatementInfoCont';
 
 //image
@@ -18,7 +18,7 @@ import { Statement } from '@/types/statement';
 
 interface Props {
 	statement: Statement | undefined;
-	setShowInfo: React.Dispatch<React.SetStateAction<boolean>>;
+	setShowInfo: Dispatch<SetStateAction<boolean>>;
 }
 
 const StatementInfo: FC<Props> = ({ statement, setShowInfo }) => {

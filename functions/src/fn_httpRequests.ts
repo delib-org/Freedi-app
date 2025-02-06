@@ -5,8 +5,9 @@ import {
 	DeliberativeElement,
 	StatementType,
 } from '../../src/types/enums';
+import { Request, Response } from 'firebase-functions/v1';
 
-export const getUserOptions = async (req: any, res: any) => {
+export const getUserOptions = async (req: Request, res: Response) => {
 	// cors(req, res, async () => {
 	try {
 		const userId = req.query.userId;
@@ -33,14 +34,14 @@ export const getUserOptions = async (req: any, res: any) => {
 		res.send({ statements, ok: true });
 
 		return;
-	} catch (error: any) {
-		res.status(500).send({ error: error.message, ok: false });
+	} catch (error) {
+		res.status(500).send({ error: error, ok: false });
 
 		return;
 	}
 };
 
-export const getRandomStatements = async (req: any, res: any) => {
+export const getRandomStatements = async (req: Request, res: Response) => {
 	try {
 		const parentId = req.query.parentId;
 		let limit = Number(req.query.limit) || (10 as number);
@@ -72,15 +73,15 @@ export const getRandomStatements = async (req: any, res: any) => {
 		const randomStatements = allSolutionStatements.splice(0, limit);
 
 		res.send({ randomStatements, ok: true });
-	} catch (error: any) {
-		res.status(500).send({ error: error.message, ok: false });
+	} catch (error) {
+		res.status(500).send({ error: error, ok: false });
 
 		return;
 	}
 	// })
 };
 
-export const getTopStatements = async (req: any, res: any) => {
+export const getTopStatements = async (req: Request, res: Response) => {
 	// cors(req, res, async () => {
 	try {
 		const parentId = req.query.parentId;
@@ -105,41 +106,15 @@ export const getTopStatements = async (req: any, res: any) => {
 		res.send({ topSolutions, ok: true });
 
 		return;
-	} catch (error: any) {
-		res.status(500).send({ error: error.message, ok: false });
+	} catch (error) {
+		res.status(500).send({ error: error, ok: false });
 
 		return;
 	}
 	// })
 };
 
-export async function hashPassword(req: any, res: any) {
-	try {
-		//req -> {password}
-		//set hash password in the statementPassword collection
-		// if(ok) --> res.send({ok:true, error:null})
-		// else --> res.send({ok:false, error:error.message})
-	} catch (error: any) {
-		res.status(500).send({ error: error.message, ok: false });
-
-		return;
-	}
-}
-
-export async function checkPassword(req: any, res: any) {
-	try {
-		//req -> {password}
-		//get hash password form the statementPassword collection
-		// if(true) --> res.send({ok:true})
-		// else --> res.send({ok:false})
-	} catch (error: any) {
-		res.status(500).send({ error: error.message, ok: false });
-
-		return;
-	}
-}
-
-export async function maintainRole(req: any, res: any) {
+export async function maintainRole(_: Request, res: Response) {
 	try {
 		const subscriptionsRef = db.collection(Collections.statementsSubscribe);
 		const q = subscriptionsRef.where('role', '==', 'statement-creator');
@@ -152,14 +127,14 @@ export async function maintainRole(req: any, res: any) {
 		});
 		await batch.commit();
 		res.send({ ok: true });
-	} catch (error: any) {
-		res.status(500).send({ error: error.message, ok: false });
+	} catch (error) {
+		res.status(500).send({ error: error, ok: false });
 
 		return;
 	}
 }
 
-export async function maintainDeliberativeElement(req: any, res: any) {
+export async function maintainDeliberativeElement(_: Request, res: Response) {
 	try {
 		const statementsRef = db.collection(Collections.statements);
 		const q = statementsRef.where('statementType', '!=', 'aa');
@@ -187,14 +162,14 @@ export async function maintainDeliberativeElement(req: any, res: any) {
 
 		await batch.commit();
 		res.send({ ok: true });
-	} catch (error: any) {
-		res.status(500).send({ error: error.message, ok: false });
+	} catch (error) {
+		res.status(500).send({ error: error, ok: false });
 
 		return;
 	}
 }
 
-export async function maintainStatement(req: any, res: any) {
+export async function maintainStatement(_: Request, res: Response) {
 	try {
 		const statementsRef = db.collection(Collections.statements);
 		const q = statementsRef.where(
@@ -225,14 +200,14 @@ export async function maintainStatement(req: any, res: any) {
 
 		await batch.commit();
 		res.send({ ok: true, count });
-	} catch (error: any) {
-		res.status(500).send({ error: error.message, ok: false });
+	} catch (error) {
+		res.status(500).send({ error: error, ok: false });
 
 		return;
 	}
 }
 
-export async function maintainSubscriptionToken(req: any, res: any) {
+export async function maintainSubscriptionToken(_: Request, res: Response) {
 	try {
 		const subscriptionRef = db.collection(Collections.statementsSubscribe);
 
@@ -248,8 +223,8 @@ export async function maintainSubscriptionToken(req: any, res: any) {
 		});
 		await batch.commit();
 		res.send({ ok: true, size: subscriptionsDB.size, changed: count });
-	} catch (error: any) {
-		res.status(500).send({ error: error.message, ok: false });
+	} catch (error) {
+		res.status(500).send({ error: error, ok: false });
 
 		return;
 	}

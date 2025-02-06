@@ -1,4 +1,4 @@
-import { FC, useContext, useEffect, useState } from 'react';
+import { DragEvent, FC, useContext, useEffect, useState } from 'react';
 import { StatementContext } from '../../../../StatementCont';
 import styles from './Document.module.scss';
 import Button, { ButtonType } from '@/view/components/buttons/button/Button';
@@ -25,10 +25,10 @@ const Document: FC = () => {
 
 	useEffect(() => {
 		setStages(initialStages);
-	}, [initialStages.length]);
+	}, [initialStages.length, initialStages]);
 
 	const handleDragStart = (
-		e: React.DragEvent<HTMLDivElement>,
+		e: DragEvent<HTMLDivElement>,
 		index: number
 	): void => {
 		setDraggedIndex(index);
@@ -38,13 +38,13 @@ const Document: FC = () => {
 		e.dataTransfer.setData('text/plain', '');
 	};
 
-	const handleDragOver = (e: React.DragEvent<HTMLDivElement>): void => {
+	const handleDragOver = (e: DragEvent<HTMLDivElement>): void => {
 		e.preventDefault();
 		e.dataTransfer.dropEffect = 'move';
 	};
 
 	const handleDrop = (
-		e: React.DragEvent<HTMLDivElement>,
+		e: DragEvent<HTMLDivElement>,
 		dropIndex: number
 	): void => {
 		e.preventDefault();

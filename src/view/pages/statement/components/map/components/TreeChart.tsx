@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import React, { MouseEvent, useCallback, useEffect, useState } from 'react';
 
 // Styles
 import '@/view/pages/statement/components/createStatementModal/CreateStatementModal.scss';
@@ -24,7 +24,7 @@ import { useMapContext } from '../../../../../../controllers/hooks/useMap';
 import Modal from '../../../../../components/modal/Modal';
 import {
 	createInitialNodesAndEdges,
-	getLayoutedElements,
+	getLayoutElements,
 } from '../mapHelpers/customNodeCont';
 import CustomNode from './CustomNode';
 import MapCancelIcon from '@/assets/icons/MapCancelIcon.svg';
@@ -80,7 +80,7 @@ export default function TreeChart({ descendants, isAdmin }: Readonly<Props>) {
 		const { nodes: createdNodes, edges: createdEdges } =
 			createInitialNodesAndEdges(descendants[0]);
 
-		const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(
+		const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutElements(
 			createdNodes,
 			createdEdges,
 			mapContext.nodeHeight,
@@ -112,16 +112,16 @@ export default function TreeChart({ descendants, isAdmin }: Readonly<Props>) {
 			}));
 
 			const { nodes: layoutedNodes, edges: layoutedEdges } =
-				getLayoutedElements(nodes, edges, height, width, direction);
+				getLayoutElements(nodes, edges, height, width, direction);
 
 			setNodes([...layoutedNodes]);
 			setEdges([...layoutedEdges]);
 		},
-		[nodes, edges]
+		[nodes, edges, setEdges, setMapContext, setNodes]
 	);
 
 	const onNodeDragStop = async (
-		_: React.MouseEvent<Element, MouseEvent>,
+		_: MouseEvent,
 		node: Node
 	) => {
 		const intersections = getIntersectingNodes(node).map((n) => n.id);
@@ -138,7 +138,7 @@ export default function TreeChart({ descendants, isAdmin }: Readonly<Props>) {
 	};
 
 	const onNodeDrag = useCallback(
-		(_: React.MouseEvent<Element, MouseEvent>, node: Node) => {
+		(_: MouseEvent, node: Node) => {
 			setEdges([]);
 
 			const intersections = getIntersectingNodes(node).find((n) => n.id);
@@ -150,7 +150,7 @@ export default function TreeChart({ descendants, isAdmin }: Readonly<Props>) {
 				}))
 			);
 		},
-		[]
+		[getIntersectingNodes, setEdges, setNodes]
 	);
 
 	const onSave = useCallback(() => {
@@ -174,7 +174,7 @@ export default function TreeChart({ descendants, isAdmin }: Readonly<Props>) {
 		};
 
 		restoreFlow();
-	}, [setNodes]);
+	}, [setNodes, setEdges]);
 
 	const handleMoveStatement = async (move: boolean) => {
 		if (move) {

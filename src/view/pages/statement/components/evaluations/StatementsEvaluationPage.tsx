@@ -83,8 +83,6 @@ const StatementEvaluationPage: FC<StatementEvaluationPageProps> = ({
 				iconOnRight={false}
 				onClick={() => setShowToast(false)}
 				icon={<X />}
-				color='white'
-				bckColor='var(--crimson)'
 			/>
 		);
 
@@ -108,8 +106,6 @@ const StatementEvaluationPage: FC<StatementEvaluationPageProps> = ({
 								setShowModal(true);
 							}}
 							icon={<LightBulbIcon />}
-							color='white'
-							bckColor='var(--green)'
 						/>
 					</>
 				);

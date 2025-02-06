@@ -5,7 +5,6 @@ import {
 	updateEvaluation,
 } from './fn_evaluation';
 import { updateResultsSettings } from './fn_results';
-import { updateDocumentSignatures } from './fn_signatures';
 import { updateParentWithNewMessageCB } from './fn_statements';
 import { updateVote } from './fn_vote';
 
@@ -24,11 +23,9 @@ import { getFirestore } from 'firebase-admin/firestore';
 import { setAdminsToNewStatement } from './fn_roles';
 import { updateStatementNumberOfMembers } from './fn_subscriptions';
 import {
-	checkPassword,
 	getRandomStatements,
 	getTopStatements,
 	getUserOptions,
-	hashPassword,
 } from './fn_httpRequests';
 import { findSimilarStatements } from './fn_findSimilarStatements';
 import { updateApprovalResults } from './fn_approval';
@@ -38,19 +35,17 @@ import { setUserSettings } from './fn_users';
 import { updateStatementWithViews } from './fn_views';
 import { updateSettings } from './fn_statementsSettings';
 import { Collections } from '../../src/types/enums';
+import { Request, Response } from 'firebase-functions/v1';
+import { functionConfig } from '../../src/types/firebase';
 
 // Initialize Firebase
 initializeApp();
 export const db = getFirestore();
 
-// Common config for functions
-const functionConfig = {
-	region: 'me-west1',
-	timeoutSeconds: 300,
-};
-
 // HTTP function wrapper with error handling
-const wrapHttpFunction = (handler: any) => {
+const wrapHttpFunction = (
+	handler: (req: Request, res: Response) => Promise<void>
+) => {
 	return onRequest(
 		{
 			...functionConfig,
@@ -71,8 +66,6 @@ const wrapHttpFunction = (handler: any) => {
 exports.getRandomStatements = wrapHttpFunction(getRandomStatements);
 exports.getTopStatements = wrapHttpFunction(getTopStatements);
 exports.getUserOptions = wrapHttpFunction(getUserOptions);
-exports.checkPassword = wrapHttpFunction(checkPassword);
-exports.hashPassword = wrapHttpFunction(hashPassword);
 exports.checkForSimilarStatements = wrapHttpFunction(findSimilarStatements);
 
 // Firestore Triggers
@@ -266,21 +259,6 @@ exports.updateAgrees = onDocumentWritten(
 			await updateAgrees(event);
 		} catch (error) {
 			console.error('Error in updateAgrees:', error);
-			throw error;
-		}
-	}
-);
-
-exports.updateDocumentSignatures = onDocumentWritten(
-	{
-		document: `/${Collections.signatures}/{signatureId}`,
-		...functionConfig,
-	},
-	async (event) => {
-		try {
-			await updateDocumentSignatures(event);
-		} catch (error) {
-			console.error('Error in updateDocumentSignatures:', error);
 			throw error;
 		}
 	}

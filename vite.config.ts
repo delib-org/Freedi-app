@@ -7,14 +7,12 @@ import pkg from './package.json';
 // https://vitejs.dev/config/
 export default defineConfig(() => {
 	return {
-		css: {
-			preprocessorOptions: {
-				scss: {
-					api: 'modern-compiler',
-				},
-			},
-		},
-		plugins: [react(), svgr({ include: '**/*.svg?react' })],
+		plugins: [
+			react(),
+			svgr({
+				include: '**/*.svg?react',
+			}),
+		],
 		resolve: {
 			alias: {
 				'@': path.resolve(__dirname, './src'),
