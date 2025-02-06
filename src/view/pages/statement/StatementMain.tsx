@@ -33,6 +33,7 @@ import { userSelector } from '@/model/users/userSlice';
 import Modal from '@/view/components/modal/Modal';
 import { StatementType, Access } from '@/types/enums';
 import { Role, User } from '@/types/user';
+import { QuestionType } from '@/types/question';
 
 // Create selectors
 export const subStatementsSelector = createSelector(
@@ -60,9 +61,8 @@ const StatementMain: FC = () => {
 	const [talker, setTalker] = useState<User | null>(null);
 	const [isStatementNotFound, setIsStatementNotFound] = useState(false);
 	const [showNewStatement, setShowNewStatement] = useState<boolean>(false);
-	const [newStatementType, setNewStatementType] = useState<StatementType>(
-		StatementType.group
-	);
+	const [newStatementType, setNewStatementType] = useState<StatementType>(StatementType.group);
+	const [newQuestionType, setNewQuestionType] = useState<QuestionType>(QuestionType.multiStage);
 
 	// const [_, setPasswordCheck] = useState<boolean>(false)
 
@@ -188,6 +188,7 @@ const StatementMain: FC = () => {
 			role,
 			handleSetNewStatement,
 			setNewStatementType,
+			setNewQuestionType,
 			newStatementType,
 		}),
 		[
@@ -197,7 +198,9 @@ const StatementMain: FC = () => {
 			handleShowTalker,
 			handleSetNewStatement,
 			setNewStatementType,
+			setNewQuestionType,
 			newStatementType,
+			newQuestionType
 		]
 	);
 

@@ -17,15 +17,17 @@ export default function GetInitialStatementData() {
 	const { t } = useLanguage();
 	const { title, description, setTitle, setDescription } =
 		useContext(NewStatementContext);
-	const { newStatementType, handleSetNewStatement, statement } =
+	const { newStatementType, newQuestionType, handleSetNewStatement, statement } =
 		useContext(StatementContext);
+
+	console.log("newStatementType", newStatementType, "questionType", newQuestionType);
 
 	const handleSubmit = async (ev: FormEvent<HTMLFormElement>) => {
 		ev.preventDefault();
 		try {
 			const form = new FormData(ev.target as HTMLFormElement);
 			const title = form.get('title') as string;
-			const description = form.get('description')?.toString() || '';
+			const description = (form.get('description') as string) || '';
 			setTitle(title.toString());
 			setDescription(description);
 
@@ -36,6 +38,7 @@ export default function GetInitialStatementData() {
 				text: title,
 				description,
 				statementType: newStatementType,
+				questionType: newQuestionType,
 			});
 			if (!newStatement) throw new Error('newStatement is not defined');
 
@@ -59,7 +62,7 @@ export default function GetInitialStatementData() {
 	return (
 		<>
 			<h4>{t('Compose your suggestion')}</h4>
-			<p>{newStatementType}</p>
+			<p>{newStatementType}:{newQuestionType}</p>
 			<form className={styles.form} onSubmit={handleSubmit}>
 				<Input
 					label={titleLabel}
