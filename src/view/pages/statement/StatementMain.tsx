@@ -190,6 +190,7 @@ const StatementMain: FC = () => {
 			setNewStatementType,
 			setNewQuestionType,
 			newStatementType,
+			newQuestionType,
 		}),
 		[
 			statement,
