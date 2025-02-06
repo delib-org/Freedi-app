@@ -1,5 +1,5 @@
 import { useLanguage } from "@/controllers/hooks/useLanguages";
-import { FC } from "react";
+import React, { FC, ReactNode } from "react";
 import "./CustomSwitch.scss";
 import VisuallyHidden from "../../accessibility/toScreenReaders/VisuallyHidden";
 
@@ -7,7 +7,7 @@ interface Props {
 	label: string;
 	name: string;
 	checked: boolean;
-	children: JSX.Element;
+	children: ReactNode;
 	setChecked: (checked: boolean) => void;
 }
 

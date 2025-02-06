@@ -1,4 +1,4 @@
-import { FC } from 'react';
+import { FC, MouseEvent } from 'react';
 import styles from './StageCard.module.scss';
 import Button, { ButtonType } from '@/view/components/buttons/button/Button';
 import { NavLink, useNavigate } from 'react-router-dom';
@@ -17,7 +17,7 @@ const StageCard: FC<Props> = ({ statement }) => {
 
 	const chosen = statement.results || [];
 
-	function suggestNewSuggestion(ev: React.MouseEvent<HTMLButtonElement>) {
+	function suggestNewSuggestion(ev: MouseEvent<HTMLButtonElement>) {
 		ev.stopPropagation();
 		navigate(`/statement/${statement.statementId}/main`);
 	}

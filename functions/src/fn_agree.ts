@@ -1,16 +1,27 @@
-import { logger } from 'firebase-functions/v1';
+import { Change, logger } from 'firebase-functions/v1';
 import { db } from '.';
-import { Agree, AgreeDisagree } from '../../src/types/agreement';
+import { Agree, AgreeDisagree, AgreeSchema } from '../../src/types/agreement';
 import { Collections } from '../../src/types/enums';
+import { DocumentSnapshot } from 'firebase-admin/firestore';
+import { FirestoreEvent } from 'firebase-functions/firestore';
+import { parse } from 'valibot';
 
-export async function updateAgrees(event: any) {
+export async function updateAgrees(
+	event: FirestoreEvent<
+		Change<DocumentSnapshot> | undefined,
+		{
+			agreeId: string;
+		}
+	>
+) {
+	if (!event.data) return;
+
 	try {
-		const agreeAfterData = event.data.after.data() as AgreeDisagree | undefined;
-		const agreeBeforeData = event.data.before.data() as
-			| AgreeDisagree
-			| undefined;
-		const agreeAfter: number = agreeAfterData?.agree || 0;
-		const agreeBefore: number = agreeBeforeData?.agree || 0;
+		const agreeAfterData = parse(AgreeSchema, event.data.after.data());
+		const agreeBeforeData = parse(AgreeSchema, event.data.before.data());
+
+		const agreeAfter: number = agreeAfterData?.agree ?? 0;
+		const agreeBefore: number = agreeBeforeData?.agree ?? 0;
 
 		const { diffInAgree, diffInDisagree } = agreeDisagreeDifferences(
 			agreeBefore,
@@ -56,12 +67,14 @@ export function agreeDisagreeDifferences(
 	try {
 		const diffDisagree = Math.min(agreeBefore, 0) - Math.min(agreeAfter, 0);
 		const diffAgree = Math.max(agreeAfter, 0) - Math.max(agreeBefore, 0);
+
 		return {
 			diffInAgree: diffAgree,
 			diffInDisagree: diffDisagree,
 		};
 	} catch (error) {
 		console.error(error);
+
 		return {
 			diffInAgree: 0,
 			diffInDisagree: 0,

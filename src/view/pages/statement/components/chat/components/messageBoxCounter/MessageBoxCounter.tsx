@@ -8,7 +8,6 @@ const MessageBoxCounter = () => {
     const totalMessageBoxes = useSelector((state: RootState) => totalMessageBoxesSelector(state));
 
     // Disable eslint rule for the next line
-    // eslint-disable-next-line no-console
 
     return (
         <div>

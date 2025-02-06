@@ -3,21 +3,23 @@ import { isProduction } from '@/controllers/general/helpers';
 import { setCurrentMultiStepOptions } from '@/model/statements/statementsSlice';
 import { store } from '@/model/store';
 import { Statement, StatementSchema } from '@/types/statement';
+import { functionConfig } from '@/types/firebase';
 
 // TODO: Change urls bellow to match new environment
 export async function getFirstEvaluationOptions(
 	statement: Statement | undefined
 ): Promise<void> {
 	try {
+		const projectId = import.meta.env.VITE_FIREBASE_PROJECT_ID;
 		if (!statement) return;
 		const dispatch = store.dispatch;
 		const urlBase = isProduction()
 			? 'qeesi7aziq-uc.a.run.app'
-			: 'http://localhost:5001/synthesistalyaron/us-central1';
+			: `http://localhost:5001/${projectId}/${functionConfig.region}`;
 
 		const url = isProduction()
 			? `https://getRandomStatements-${urlBase}`
-			: 'http://localhost:5001/synthesistalyaron/us-central1/getRandomStatements';
+			: `http://localhost:5001/${projectId}/${functionConfig.region}/getRandomStatements`;
 
 		const response = await fetch(
 			`${url}?parentId=${statement.statementId}&limit=6`

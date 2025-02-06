@@ -1,14 +1,30 @@
-import { logger } from 'firebase-functions';
+import { Change, logger } from 'firebase-functions';
 import { addOrRemoveMemberFromStatementDB } from './fn_statementsMetaData';
-import { StatementSubscription } from '../../src/types/statement/subscription';
+import { StatementSubscriptionSchema } from '../../src/types/statement/subscription';
 import { isMember } from '../../src/types/helpers';
+import { DocumentSnapshot } from 'firebase-admin/firestore';
+import { FirestoreEvent } from 'firebase-functions/firestore';
+import { parse } from 'valibot';
 
-export async function updateStatementNumberOfMembers(event: any) {
+export async function updateStatementNumberOfMembers(
+	event: FirestoreEvent<
+		Change<DocumentSnapshot> | undefined,
+		{
+			subscriptionId: string;
+		}
+	>
+) {
+	if (!event.data) return;
 	try {
-		const statementsSubscribeBefore =
-			event.data.before.data() as StatementSubscription;
-		const statementsSubscribeAfter =
-			event.data.after.data() as StatementSubscription;
+		const statementsSubscribeBefore = parse(
+			StatementSubscriptionSchema,
+			event.data.before.data()
+		);
+
+		const statementsSubscribeAfter = parse(
+			StatementSubscriptionSchema,
+			event.data.after.data()
+		);
 
 		const roleBefore = statementsSubscribeBefore
 			? statementsSubscribeBefore.role
@@ -34,7 +50,16 @@ export async function updateStatementNumberOfMembers(event: any) {
 		);
 
 		//inner functions
-		function getEventType(event: any): 'new' | 'update' | 'delete' {
+		function getEventType(
+			event: FirestoreEvent<
+				Change<DocumentSnapshot> | undefined,
+				{
+					subscriptionId: string;
+				}
+			>
+		): 'new' | 'update' | 'delete' {
+			if (!event.data) return 'delete';
+
 			const beforeSnapshot = event.data.before;
 			const afterSnapshot = event.data.after;
 

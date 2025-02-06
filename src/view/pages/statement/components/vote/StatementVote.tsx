@@ -1,6 +1,6 @@
 import { FC, useContext, useEffect, useState } from 'react';
 import StatementBottomNav from '../nav/bottom/StatementBottomNav';
-import { getStagesInfo } from '../settings/components/QuestionSettings/QuestionStageRadioBtn/QuestionStageRadioBtn';
+import { getStepsInfo } from '../settings/components/QuestionSettings/QuestionStageRadioBtn/QuestionStageRadioBtn';
 import StatementInfo from './components/info/StatementInfo';
 import VotingArea from './components/votingArea/VotingArea';
 import { getTotalVoters } from './statementVoteCont';
@@ -20,7 +20,7 @@ import Toast from '@/view/components/toast/Toast';
 import { useLanguage } from '@/controllers/hooks/useLanguages';
 import { StatementContext } from '../../StatementCont';
 import { Statement } from '@/types/statement';
-import { QuestionStage } from '@/types/enums';
+import { QuestionStep } from '@/types/question';
 
 let getVoteFromDB = false;
 
@@ -31,14 +31,14 @@ const StatementVote: FC = () => {
 	const { statement } = useContext(StatementContext);
 	const subStatements: Statement[] = [];
 
-	const currentStage = statement?.questionSettings?.currentStage;
-	const isCurrentStageVoting = currentStage === QuestionStage.voting;
-	const stageInfo = getStagesInfo(currentStage);
+	const currentStep = statement?.questionSettings?.currentStep;
+	const isCurrentStepVoting = currentStep === QuestionStep.voting;
+	const stageInfo = getStepsInfo(currentStep);
 	const toastMessage = stageInfo ? stageInfo.message : '';
 
 	// * Use State * //
 	const [showMultiStageMessage, setShowMultiStageMessage] =
-		useState(isCurrentStageVoting);
+		useState(isCurrentStepVoting);
 	const [isStatementInfoModalOpen, setIsStatementInfoModalOpen] =
 		useState(false);
 	const [statementInfo, setStatementInfo] = useState<Statement | undefined>(
@@ -50,14 +50,12 @@ const StatementVote: FC = () => {
 
 	useEffect(() => {
 		if (!getVoteFromDB) {
-			getToVoteOnParent(statement?.statementId, updateStoreWithVoteCB);
+			getToVoteOnParent(statement?.statementId, (option: Statement) =>
+				dispatch(setVoteToStore(option))
+			);
 			getVoteFromDB = true;
 		}
-	}, []);
-
-	function updateStoreWithVoteCB(option: Statement) {
-		dispatch(setVoteToStore(option));
-	}
+	}, [statement?.statementId, dispatch]);
 
 	return (
 		<>
@@ -74,8 +72,6 @@ const StatementVote: FC = () => {
 								text={t('Got it')}
 								iconOnRight={true}
 								icon={<X />}
-								bckColor='var(--crimson)'
-								color='var(--white)'
 								onClick={() => setShowMultiStageMessage(false)}
 							/>
 						</Toast>

@@ -27,6 +27,7 @@ import { Statement, StatementSchema } from '@/types/statement';
 import { StatementSubscription } from '@/types/statement/subscription';
 import { Role, User } from '@/types/user';
 import { parse } from 'valibot';
+import React from 'react';
 
 // Helpers
 
@@ -78,7 +79,6 @@ export const listenToStatementSubscription = (
 	} catch (error) {
 		console.error(error);
 
-		// eslint-disable-next-line @typescript-eslint/no-empty-function
 		return () => {};
 	}
 };
@@ -113,7 +113,6 @@ export const listenToStatement = (
 		console.error(error);
 		if (setIsStatementNotFound) setIsStatementNotFound(true);
 
-		// eslint-disable-next-line @typescript-eslint/no-empty-function
 		return () => {};
 	}
 };
@@ -165,7 +164,6 @@ export const listenToSubStatements = (
 	} catch (error) {
 		console.error(error);
 
-		// eslint-disable-next-line @typescript-eslint/no-empty-function
 		return () => {};
 	}
 };

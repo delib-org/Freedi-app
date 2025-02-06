@@ -17,7 +17,8 @@
 		"prettier.singleQuote": true,
 		"prettier.useTabs": true,
 		"eslint.enable": true,
-		"eslint.validate": ["javascript", "html", "typescript"],
+		"eslint.useFlatConfig": true,
+		"eslint.validate": ["javascript", "typescript", "html", "typescriptreact"],
 		"[typescriptreact]": {
 			"editor.defaultFormatter": "vscode.typescript-language-features",
 		},

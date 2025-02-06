@@ -14,12 +14,13 @@ import { StatementType } from '@/types/enums';
 import { Evaluation } from '@/types/evaluation';
 import { Statement, StatementSettings } from '@/types/statement';
 import { Vote } from '@/types/vote';
+import { Dispatch, SetStateAction } from 'react';
 
 // Get users that voted on options in this statement
 export async function handleGetVoters(
 	parentId: string | undefined,
-	setVoters: React.Dispatch<React.SetStateAction<Vote[]>>,
-	setClicked: React.Dispatch<React.SetStateAction<boolean>>
+	setVoters: Dispatch<SetStateAction<Vote[]>>,
+	setClicked: Dispatch<SetStateAction<boolean>>
 ) {
 	if (!parentId) return;
 	const voters = await getVoters(parentId);
@@ -30,8 +31,8 @@ export async function handleGetVoters(
 //Get users that did not vote on options in this statement
 export async function handleGetNonVoters(
 	parentId: string | undefined,
-	setNonVoters: React.Dispatch<React.SetStateAction<Vote[]>>,
-	setClicked: React.Dispatch<React.SetStateAction<boolean>>
+	setNonVoters: Dispatch<SetStateAction<Vote[]>>,
+	setClicked: Dispatch<SetStateAction<boolean>>
 ) {
 	if (!parentId) return;
 
@@ -52,8 +53,8 @@ export async function handleGetNonVoters(
 // Get users that evaluated on options in this statement
 export async function handleGetEvaluators(
 	parentId: string | undefined,
-	setEvaluators: React.Dispatch<React.SetStateAction<Evaluation[]>>,
-	setClicked: React.Dispatch<React.SetStateAction<boolean>>
+	setEvaluators: Dispatch<SetStateAction<Evaluation[]>>,
+	setClicked: Dispatch<SetStateAction<boolean>>
 ) {
 	if (!parentId) return;
 	const evaluators = await getEvaluations(parentId);

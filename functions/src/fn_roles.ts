@@ -8,8 +8,18 @@ import {
 import { Role } from '../../src/types/user';
 import { Collections } from '../../src/types/enums';
 import { parse } from 'valibot';
+import { QueryDocumentSnapshot } from 'firebase-admin/firestore';
+import { FirestoreEvent } from 'firebase-functions/firestore';
+import { StatementSchema } from '../../src/types/statement';
 
-export async function setAdminsToNewStatement(ev: any) {
+export async function setAdminsToNewStatement(
+	ev: FirestoreEvent<
+		QueryDocumentSnapshot | undefined,
+		{
+			statementId: string;
+		}
+	>
+) {
 	//Caution: This function grants administrative privileges to statement creators throughout the entire statement hierarchy. This approach has potential drawbacks:
 
 	//Administrative Overhead: Exponentially increasing admin counts can strain database resources.
@@ -20,9 +30,11 @@ export async function setAdminsToNewStatement(ev: any) {
 	//Future Enhancement: Implement a more scalable and secure solution for managing administrative rights.
 	// Tal Yaron, Deliberation Team, 3rd May 2024
 
+	if (!ev.data) return;
+
 	try {
 		//get parent statement ID
-		const statement = ev.data.data();
+		const statement = parse(StatementSchema, ev.data.data());
 
 		//subscribe the creator to the new statement
 		const newStatementSubscriptionId = getStatementSubscriptionId(
@@ -55,7 +67,9 @@ export async function setAdminsToNewStatement(ev: any) {
 			.where('statementId', '==', parentId)
 			.where('role', '==', Role.admin)
 			.get();
-		const adminsSubscriptions = adminsDB.docs.map((doc: any) => doc.data());
+		const adminsSubscriptions = adminsDB.docs.map((doc) =>
+			parse(StatementSubscriptionSchema, doc.data())
+		);
 
 		//subscribe the admins to the new statement
 		adminsSubscriptions.forEach(async (adminSub: StatementSubscription) => {

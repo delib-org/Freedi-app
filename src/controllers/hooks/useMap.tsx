@@ -7,6 +7,7 @@ import {
 	FC,
 	useMemo,
 	SetStateAction,
+	ReactNode,
 } from 'react';
 import { Position } from 'reactflow';
 
@@ -30,7 +31,7 @@ export const useMapContext = (): MapProps => {
 
 // Create a provider component
 interface MapProviderProps {
-	children: React.ReactNode;
+	children: ReactNode;
 }
 
 interface MapProviderState {
