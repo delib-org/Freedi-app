@@ -1,8 +1,10 @@
-import { object, boolean, optional, enum_, InferOutput } from 'valibot';
+import { object, boolean, optional, enum_, InferOutput, array } from 'valibot';
 
 export enum QuestionType {
-	singleStep = 'single-step',
-	multipleSteps = 'multiple-steps',
+	singleStep = 'single-step', //deprecated
+	multipleSteps = 'multiple-steps', //deprecated
+	massConsensus = 'mass-consensus',
+	multiStage = 'multi-stage',
 }
 
 export enum QuestionStagesType {
@@ -16,13 +18,26 @@ export enum QuestionStage {
 	secondEvaluation = 'secondEvaluation',
 	voting = 'voting',
 	finished = 'finished',
+	other = 'other',
+}
+
+export enum QuestionStep {
+	explanation = 'explanation',
+	suggestion = 'suggestion',
+	randomEvaluation = 'random-evaluation',
+	topEvaluation = 'top-evaluation',
+	voting = 'voting',
+	finished = 'finished',
+	other = 'other',
 }
 
 export const QuestionSettingsSchema = object({
-	isDocument: optional(boolean()),
-	questionType: optional(enum_(QuestionType)),
+	questionType: optional(enum_(QuestionType)), //deprecated
 	steps: optional(enum_(QuestionStagesType)),
-	currentStage: optional(enum_(QuestionStage)),
+	stepsAllowed: optional(array(enum_(QuestionStep))),
+	stages: optional(array(enum_(QuestionStage))),
+	currentStep: optional(enum_(QuestionStep)),
+	currentStage: optional(enum_(QuestionStage)), //deprecated
 });
 
 export type QuestionSettings = InferOutput<typeof QuestionSettingsSchema>;
