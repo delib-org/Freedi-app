@@ -2,7 +2,7 @@ import { FC, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import CreateStatementModalSwitch from '../createStatementModalSwitch/CreateStatementModalSwitch';
 import StatementBottomNav from '../nav/bottom/StatementBottomNav';
-import { getStagesInfo } from '../settings/components/QuestionSettings/QuestionStageRadioBtn/QuestionStageRadioBtn';
+import { getStepsInfo } from '../settings/components/QuestionSettings/QuestionStageRadioBtn/QuestionStageRadioBtn';
 import StatementInfo from '../vote/components/info/StatementInfo';
 import Description from './components/description/Description';
 import SuggestionCards from './components/suggestionCards/SuggestionCards';
@@ -37,7 +37,7 @@ const StatementEvaluationPage: FC<StatementEvaluationPageProps> = ({
 			statement.questionSettings?.questionType === QuestionType.multipleSteps;
 
 		const currentStage = statement.questionSettings?.currentStage;
-		const stageInfo = getStagesInfo(currentStage);
+		const stageInfo = getStepsInfo(currentStage);
 		const useSearchForSimilarStatements =
 			statement.statementSettings?.enableSimilaritiesSearch || false;
 

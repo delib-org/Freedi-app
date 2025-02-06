@@ -1,4 +1,4 @@
-import { object, boolean, optional, enum_, InferOutput, array } from 'valibot';
+import { object, optional, enum_, InferOutput, array } from 'valibot';
 
 export enum QuestionType {
 	singleStep = 'single-step', //deprecated

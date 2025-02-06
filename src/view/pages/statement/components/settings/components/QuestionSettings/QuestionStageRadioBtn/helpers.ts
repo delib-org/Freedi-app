@@ -1,17 +1,17 @@
-import { QuestionStage } from '@/types/enums';
-import { StageInfo, getStagesInfo } from './QuestionStageRadioBtn';
+import { StepInfo, getStepsInfo } from './QuestionStageRadioBtn';
+import { QuestionStep } from '@/types/question';
 
-export function getStageInfo(
-	stage: QuestionStage,
+export function getStepInfo(
+	step: QuestionStep,
 	isSelected = true
 ): {
 	backgroundColor: string;
 	btnBackgroundColor: string;
-	stageInfo: StageInfo | undefined;
+	stageInfo: StepInfo | undefined;
 	error?: boolean;
 } {
 	try {
-		const stageInfo: StageInfo | undefined = getStagesInfo(stage);
+		const stageInfo: StepInfo | undefined = getStepsInfo(step);
 		if (!stageInfo) throw new Error('Stage info not found');
 
 		const backgroundColor = stageInfo
