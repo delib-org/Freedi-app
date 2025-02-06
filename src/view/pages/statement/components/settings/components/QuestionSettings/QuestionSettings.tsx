@@ -9,8 +9,9 @@ import "./QuestionSettings.scss";
 import DocumentIcon from "@/assets/icons/document.svg?react";
 import SimpleIcon from "@/assets/icons/navQuestionsIcon.svg?react";
 
-import { setStatementSettingToDB } from "@/controllers/db/statementSettings/setStatementSettings";
+import { setQuestionTypeToDB } from "@/controllers/db/statementSettings/setStatementSettings";
 import { StatementType } from "@/types/enums";
+import { QuestionType } from "@/types/question";
 
 const QuestionSettings: FC<StatementSettingsProps> = ({
 	statement,
@@ -23,13 +24,11 @@ const QuestionSettings: FC<StatementSettingsProps> = ({
 	try {
 		const { questionSettings } = statement;
 
-		function handleSetDocumentQuestion(isDocument: boolean) {
+		function handleQuestionType(isDocument: boolean) {
 
-			setStatementSettingToDB({
+			setQuestionTypeToDB({
 				statement,
-				property: "isDocument",
-				newValue: isDocument,
-				settingsSection: "questionSettings",
+				questionType: isDocument ? QuestionType.multiStage : QuestionType.massConsensus,
 			});
 		}
 
@@ -39,8 +38,8 @@ const QuestionSettings: FC<StatementSettingsProps> = ({
 
 				<CustomSwitchSmall
 					label="Document Question"
-					checked={questionSettings?.isDocument || false}
-					setChecked={handleSetDocumentQuestion}
+					checked={questionSettings?.questionType === QuestionType.multiStage || false}
+					setChecked={handleQuestionType}
 					textChecked={t("Document Question")}
 					imageChecked={<DocumentIcon />}
 					imageUnchecked={<SimpleIcon />}

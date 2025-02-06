@@ -20,6 +20,7 @@ import { number, parse, string } from 'valibot';
 import { ResultsBy } from '@/types/results';
 import { StageType } from '@/types/stage';
 import { getRandomUID } from '@/types/helpers';
+import { QuestionStage, QuestionType } from '@/types/question';
 
 export const updateStatementParents = async (
 	statement: Statement,
@@ -228,6 +229,8 @@ export interface CreateStatementProps {
 	description?: string;
 	parentStatement: Statement | 'top';
 	statementType: StatementType;
+	questionType?: QuestionType;
+	questionStages?: QuestionStage[];
 	enableAddEvaluationOption?: boolean;
 	enableAddVotingOption?: boolean;
 	enhancedEvaluation?: boolean;
@@ -244,6 +247,8 @@ export function createStatement({
 	description,
 	parentStatement,
 	statementType,
+	questionType,
+	questionStages = [],
 	enableAddEvaluationOption = true,
 	enableAddVotingOption = true,
 	enhancedEvaluation = true,
@@ -314,12 +319,18 @@ export function createStatement({
 			results: [],
 		};
 
-		parse(StatementSchema, newStatement);
-
 		if (stageType) {
 			newStatement.stageType = stageType;
 			newStatement.statementType = StatementType.stage;
 		}
+
+		if (newStatement.statementType === StatementType.question) {
+			newStatement.questionSettings = {
+				questionType: questionType ?? QuestionType.multiStage,
+				stages: [...questionStages],
+			};
+		}
+		parse(StatementSchema, newStatement);
 
 		return newStatement;
 	} catch (error) {

@@ -1,21 +1,21 @@
 import { doc, updateDoc } from 'firebase/firestore';
 import { FireStore } from '@/controllers/db/config';
 import { QuestionStage, Collections, QuestionType } from '@/types/enums';
-import { QuestionSettings } from '@/types/question';
+import { QuestionSettings, QuestionStep } from '@/types/question';
 
 interface SetStatementStageParams {
 	statementId: string;
-	stage: QuestionStage;
+	step: QuestionStep;
 }
 export async function setQuestionStage({
 	statementId,
-	stage = QuestionStage.suggestion,
+	step = QuestionStep.suggestion,
 }: SetStatementStageParams) {
 	try {
 		if (!statementId) throw new Error('Statement ID is undefined');
 		const statementRef = doc(FireStore, Collections.statements, statementId);
 		const questionSettings: QuestionSettings = {
-			currentStage: stage,
+			currentStep: step,
 			questionType: QuestionType.multipleSteps,
 		};
 		await updateDoc(statementRef, { questionSettings });
