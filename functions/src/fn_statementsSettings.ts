@@ -1,6 +1,5 @@
 import { db } from './index';
 import { isEqualObjects } from './helpers';
-import { createStagesForQuestionDocument } from './fn_questionDocuments';
 import { Change, logger } from 'firebase-functions/v1';
 import { Collections } from '../../src/types/enums';
 import { StatementSchema } from '../../src/types/statement';
@@ -64,15 +63,6 @@ export async function updateSettings(
 				db.collection(Collections.statements).doc(statementId).update({
 					questionSettings: after.questionSettings,
 				});
-			}
-
-			//if question is a document, create stages
-			if (
-				!before?.questionSettings?.isDocument &&
-				after?.questionSettings?.isDocument
-			) {
-				//create stages for the question-document
-				createStagesForQuestionDocument(statementId);
 			}
 		}
 

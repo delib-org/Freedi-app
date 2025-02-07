@@ -11,7 +11,7 @@ import importPlugin from 'eslint-plugin-import';
 export default [
 	{ ignores: ['dist'] },
 	{
-		files: ['**/*.{ts,tsx}'],
+		files: ['**/*.{ts,tsx}', 'functions/**/*.{ts,tsx}'],
 		languageOptions: {
 			ecmaVersion: 2020,
 			globals: {
@@ -23,6 +23,7 @@ export default [
 			parser: tseslint.parser,
 			parserOptions: {
 				projectService: true,
+				project: ['./tsconfig.json', './functions/tsconfig.json'],
 			},
 		},
 		plugins: {
@@ -62,7 +63,7 @@ export default [
 			'no-duplicate-case': 'error',
 			'newline-before-return': 'error',
 			'import/newline-after-import': ['error', { count: 1 }],
-			'no-console': ['error', { allow: ['warn', 'error', 'info'] }],
+			'no-console': ['error', { allow: ['error', 'info'] }],
 			indent: ['error', 'tab', { SwitchCase: 1 }],
 			'no-multiple-empty-lines': ['error', { max: 1, maxEOF: 0, maxBOF: 0 }],
 		},
