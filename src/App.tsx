@@ -31,7 +31,7 @@ export default function App() {
 	const location = useLocation();
 	const navigate = useNavigate();
 	const dispatch = useDispatch();
-	const { statementId, anonymous } = useParams();
+	const { statementId } = useParams();
 	const { changeLanguage, t } = useLanguage();
 
 	// Redux Store
@@ -56,7 +56,6 @@ export default function App() {
 
 	useEffect(() => {
 		const authUnsubscribe: Unsubscribe = listenToAuth(dispatch)(
-			anonymous === 'true',
 			navigate,
 			initLocation
 		);

@@ -20,11 +20,11 @@ import { resetStatements } from '@/model/statements/statementsSlice';
 import { AppDispatch, store } from '@/model/store';
 import { setFontSize, setUser } from '@/model/users/userSlice';
 import { resetVotes } from '@/model/vote/votesSlice';
-import { User, UserSchema } from '@/types/user';
-import { parse } from 'valibot';
+import { User } from '@/types/user';
 
 export function googleLogin() {
 	const provider = new GoogleAuthProvider();
+
 	signInWithPopup(auth, provider)
 		.then(() => {
 			console.info('user signed in with google ');
@@ -54,30 +54,23 @@ export function signAnonymously() {
 }
 export const listenToAuth =
 	(dispatch: AppDispatch) =>
-	(
-		isAnonymous: boolean,
-		navigate: NavigateFunction,
-		initialUrl: string
-	): Unsubscribe => {
+	(navigate: NavigateFunction, initialUrl: string): Unsubscribe => {
 		return onAuthStateChanged(auth, async (userFB) => {
 			try {
 				if (!userFB) {
-					if (isAnonymous) {
-						signAnonymously();
-					} else {
-						dispatch(resetStatements());
-						dispatch(resetEvaluations());
-						dispatch(resetVotes());
-						dispatch(resetResults());
-						dispatch(setUser(null));
-						navigate('/');
-					}
+					dispatch(resetStatements());
+					dispatch(resetEvaluations());
+					dispatch(resetVotes());
+					dispatch(resetResults());
+					dispatch(setUser(null));
+					navigate('/');
 					return;
 				}
 
 				const userCopy = { ...userFB };
 
 				const defaultDisplayName = `Anonymous ${Math.floor(Math.random() * 10000)}`;
+
 				userCopy.displayName = userCopy.isAnonymous
 					? (sessionStorage.getItem('displayName') ?? defaultDisplayName)
 					: (localStorage.getItem('displayName') ?? defaultDisplayName);
