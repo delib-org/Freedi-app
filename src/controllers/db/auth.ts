@@ -54,59 +54,46 @@ export function signAnonymously() {
 }
 export const listenToAuth =
 	(dispatch: AppDispatch) =>
-		(
-			isAnonymous: boolean,
-			navigate: NavigateFunction,
-			initialUrl: string
-		): Unsubscribe => {
-			return onAuthStateChanged(auth, async (userFB) => {
-				try {
-					if (!userFB && isAnonymous !== true) {
-						navigate('/');
-					}
-					if (isAnonymous && !userFB) {
+	(
+		isAnonymous: boolean,
+		navigate: NavigateFunction,
+		initialUrl: string
+	): Unsubscribe => {
+		return onAuthStateChanged(auth, async (userFB) => {
+			try {
+				if (!userFB) {
+					if (isAnonymous) {
 						signAnonymously();
-					}
-					if (userFB) {
-					// User is signed in
-						const user = parse(UserSchema, userFB);
-
-						if (!user.displayName)
-							user.displayName =
-							localStorage.getItem('displayName') ??
-							`Anonymous ${Math.floor(Math.random() * 10000)}`;
-
-						if (user?.isAnonymous) {
-							user.displayName =
-							sessionStorage.getItem('displayName') ??
-							`Anonymous ${Math.floor(Math.random() * 10000)}`;
-						}
-
-						// console.info("User is signed in")
-						if (!user) throw new Error('user is undefined');
-
-						const userDB = (await setUserToDB(user)) as User;
-
-						const fontSize = userDB.fontSize ? userDB.fontSize : defaultFontSize;
-
-						dispatch(setFontSize(fontSize));
-
-						document.body.style.fontSize = fontSize + 'px';
-
-						if (!userDB) throw new Error('userDB is undefined');
-						dispatch(setUser(userDB));
-
-						if (initialUrl) navigate(initialUrl);
 					} else {
-					// User is not logged in.
 						dispatch(resetStatements());
 						dispatch(resetEvaluations());
 						dispatch(resetVotes());
 						dispatch(resetResults());
 						dispatch(setUser(null));
+						navigate('/');
 					}
-				} catch (error) {
-					console.error(error);
+					return;
 				}
-			});
-		};
+
+				const userCopy = { ...userFB };
+
+				const defaultDisplayName = `Anonymous ${Math.floor(Math.random() * 10000)}`;
+				userCopy.displayName = userCopy.isAnonymous
+					? (sessionStorage.getItem('displayName') ?? defaultDisplayName)
+					: (localStorage.getItem('displayName') ?? defaultDisplayName);
+
+				const userDB = (await setUserToDB(userCopy)) as User;
+				if (!userDB) throw new Error('userDB is undefined');
+
+				const fontSize = userDB.fontSize || defaultFontSize;
+				document.body.style.fontSize = `${fontSize}px`;
+
+				dispatch(setFontSize(fontSize));
+				dispatch(setUser(userDB));
+
+				if (initialUrl) navigate(initialUrl);
+			} catch (error) {
+				console.error(error);
+			}
+		});
+	};

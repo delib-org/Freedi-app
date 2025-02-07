@@ -64,7 +64,15 @@ export default [
 			'newline-before-return': 'error',
 			'import/newline-after-import': ['error', { count: 1 }],
 			'no-console': ['error', { allow: ['error', 'info'] }],
-			indent: ['error', 'tab', { SwitchCase: 1 }],
+			indent: [
+				'error',
+				'tab',
+				{
+					SwitchCase: 1,
+					ignoredNodes: ['PropertyDefinition'],
+					tabSize: 4,
+				},
+			],
 			'no-multiple-empty-lines': ['error', { max: 1, maxEOF: 0, maxBOF: 0 }],
 		},
 	},
