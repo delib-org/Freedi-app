@@ -194,6 +194,8 @@ const StatementMain: FC = () => {
 		handleSetNewStatement,
 		setNewStatementType,
 		newStatementType,
+		setNewQuestionType,
+		newQuestionType,
 	}), [statement, talker, role, handleShowTalker, handleSetNewStatement, setNewStatementType, newStatementType]);
 
 	if (isStatementNotFound) return <Page404 />;
