@@ -76,6 +76,7 @@ export enum Collections {
 	statementsMetaData = 'statementsMeta',
 	statementsPasswords = 'statementsPasswords',
 	statementsSubscribe = 'statementsSubscribe',
+	massConsensus = 'massConsensus',
 	choseBy = 'choseBy',
 	participants = 'participants',
 	rooms = 'rooms',
@@ -145,4 +146,11 @@ export enum SortType {
 	mostUpdated = 'mostUpdated',
 	random = 'random',
 	accepted = 'accepted',
+}
+
+export enum MassConsensusPageUrls {
+	Introduction = "introduction",
+	InitialQuestion = "initial-question",
+	Question = "question",
+	FinalQuestion = "ff"
 }

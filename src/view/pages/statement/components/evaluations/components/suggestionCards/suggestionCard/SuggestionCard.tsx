@@ -75,8 +75,6 @@ const SuggestionCard: FC<Props> = ({
 		sortSubStatements(siblingStatements, sort, 30);
 	}, [statement?.elementHight]);
 
-	if (!statement) return null;
-
 	const _isAuthorized = isAuthorized(
 		statement,
 		statementSubscription,
@@ -120,6 +118,8 @@ const SuggestionCard: FC<Props> = ({
 
 	const statementAge = new Date().getTime() - statement.createdAt;
 	const hasChildren = parentStatement?.statementSettings?.hasChildren;
+
+	if (!statement) return null;
 
 	return (
 		<div

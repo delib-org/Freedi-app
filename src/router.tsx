@@ -2,7 +2,7 @@ import { lazy, Suspense } from 'react';
 import { createBrowserRouter } from 'react-router';
 import LoadingPage from "./view/pages/loadingPage/LoadingPage"; // Adjust the import path as needed
 import InitialQuestion from './view/pages/massConsensus/initialQuestion/InitialQuestion';
-import { MassConsensusPageUrls } from './view/pages/massConsensus/model/massConsensusModel';
+import { MassConsensusPageUrls } from './types/enums';
 
 // Custom components
 const App = lazy(() => import('./App'));
