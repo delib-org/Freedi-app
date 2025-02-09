@@ -3,22 +3,21 @@ import { FC } from "react";
 import { StatementSettingsProps } from "../../settingsTypeHelpers";
 import SectionTitle from "../sectionTitle/SectionTitle";
 import "./QuestionSettings.scss";
-
-import QuestionSelector from "@/view/components/questionSelector/QuestionSelector";
-
 import { setQuestionTypeToDB } from "@/controllers/db/statementSettings/setStatementSettings";
 import { StatementType } from "@/types/enums";
 import { QuestionType } from "@/types/question";
+import { useLanguage } from "@/controllers/hooks/useLanguages";
+import DocumentIcon from "@/assets/icons/paper.svg?react";
+import SimpleIcon from "@/assets/icons/navQuestionsIcon.svg?react";
 
 const QuestionSettings: FC<StatementSettingsProps> = ({
 	statement,
 	// setStatementToEdit,
 }) => {
-	if (statement.statementType !== StatementType.question) return null;
-
-	return (
-		<div className="question-settings">
-			<SectionTitle title="Question Settings" />
+	const { t } = useLanguage();
+	try {
+		const { questionSettings } = statement;
+		if (statement.statementType !== StatementType.question) return null;
 
 		function handleQuestionType(isDocument: boolean) {
 

@@ -149,18 +149,11 @@ interface NavButtonsProps {
 	statement?: Statement;
 }
 
-function NavButtons({ screen, handleNavigation, headerStyle, allowNavigation, permission, handleToggleNotifications, statement, parentStatement }: Readonly<NavButtonsProps>) {
+function NavButtons({ screen, handleNavigation, headerStyle, allowNavigation, statement, parentStatement }: Readonly<NavButtonsProps>) {
 
 	return (
 		<>
 			{allowNavigation && <NavigationButtons statement={parentStatement || statement} screen={screen} handleNavigation={handleNavigation} headerStyle={headerStyle} />}
-			<button onClick={handleToggleNotifications}>
-				{permission ? (
-					<BellIcon color={headerStyle.color} />
-				) : (
-					<BellSlashIcon color={headerStyle.color} />
-				)}
-			</button>
 			<button>
 				<View color={headerStyle.color} />
 			</button>

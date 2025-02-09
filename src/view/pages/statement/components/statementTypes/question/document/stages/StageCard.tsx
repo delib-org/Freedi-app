@@ -17,7 +17,7 @@ const StageCard: FC<Props> = ({ statement }) => {
 
 	const chosen = statement.results || [];
 
-	function suggestNewSuggestion(ev: React.MouseEvent<HTMLButtonElement>) {
+	function suggestNewSuggestion(ev: MouseEvent<HTMLButtonElement>) {
 		ev.stopPropagation()
 		navigate(`/stage/${statement.statementId}`)
 	}
@@ -43,7 +43,7 @@ const StageCard: FC<Props> = ({ statement }) => {
 						))}
 					</ul>
 				</>
-			}
+			)}
 			<NavLink to={`/stage/${statement.statementId}`} ><p className={styles.seeMore}>See more...</p></NavLink>
 			<div className="btns">
 				<Button text="Add Suggestion" buttonType={ButtonType.SECONDARY} onClick={suggestNewSuggestion} />

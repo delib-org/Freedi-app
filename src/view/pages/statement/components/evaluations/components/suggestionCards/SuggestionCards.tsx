@@ -1,4 +1,3 @@
-import { Statement, StatementType } from "delib-npm";
 import { FC, useContext, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { useParams } from "react-router";
@@ -8,6 +7,8 @@ import styles from "./SuggestionCards.module.scss";
 import { statementSubsSelector } from "@/model/statements/statementsSlice";
 import { StatementContext } from "@/view/pages/statement/StatementCont";
 import EmptyScreen from "../emptyScreen/EmptyScreen";
+import { Statement } from "@/types/statement";
+import { StatementType } from "@/types/enums";
 
 const SuggestionCards: FC = () => {
 	const { sort } = useParams();
@@ -25,7 +26,6 @@ const SuggestionCards: FC = () => {
 		);
 		setTotalHeight(_totalHeight);
 	}, [sort]);
-
 
 	useEffect(() => {
 		const _totalHeight = subStatements.reduce((acc: number, sub: Statement) => {

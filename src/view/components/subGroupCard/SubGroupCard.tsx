@@ -1,4 +1,3 @@
-import { Statement, StatementType } from 'delib-npm'
 import { FC } from 'react'
 import styles from './SubGroupCard.module.scss'
 import { Link, NavLink } from 'react-router';
