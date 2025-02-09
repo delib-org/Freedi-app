@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import "@/view/style/homePage.scss"
 
 // Third party libraries
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 
 // Redux store
 import MainCard from "./mainCard/MainCard";

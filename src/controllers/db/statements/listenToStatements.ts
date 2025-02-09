@@ -11,8 +11,6 @@ import {
 	where,
 } from 'firebase/firestore';
 
-import { and, collection, doc, limit, onSnapshot, or, orderBy, query, Unsubscribe, where } from "firebase/firestore";
-
 // Redux Store
 import { FireStore } from '../config';
 import {
@@ -57,15 +55,9 @@ export const listenToStatementSubscription = (
 
 				const { role } = statementSubscription;
 
-				//TODO: remove this after 2024-06-06
-				const deprecated = new Date('2024-06-06').getTime();
-
 				//@ts-ignore
 				if (role === 'statement-creator') {
 					statementSubscription.role = Role.admin;
-				}
-				if (role === undefined) {
-					statementSubscription.role = Role.member;
 				} else if (role === undefined) {
 					statementSubscription.role = Role.unsubscribed;
 					console.info('Role is undefined. Setting role to unsubscribed');
@@ -79,7 +71,7 @@ export const listenToStatementSubscription = (
 	} catch (error) {
 		console.error(error);
 
-		return () => {};
+		return () => { };
 	}
 };
 
@@ -114,7 +106,7 @@ export const listenToStatement = (
 		console.error(error);
 		if (setIsStatementNotFound) setIsStatementNotFound(true);
 
-		return () => {};
+		return () => { };
 	}
 };
 
@@ -165,7 +157,7 @@ export const listenToSubStatements = (
 	} catch (error) {
 		console.error(error);
 
-		return () => {};
+		return () => { };
 	}
 };
 
