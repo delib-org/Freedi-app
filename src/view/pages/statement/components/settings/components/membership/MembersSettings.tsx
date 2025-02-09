@@ -3,7 +3,7 @@ import { createSelector } from '@reduxjs/toolkit';
 import { collection, getDocs } from 'firebase/firestore';
 
 // Third party imports
-import { useParams } from 'react-router-dom';
+import { useParams } from "react-router";
 
 // Redux Store
 import { FireStore } from '../../../../../../../controllers/db/config';

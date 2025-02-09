@@ -9,39 +9,58 @@ export async function findSimilarStatements(
 	request: Request,
 	response: Response
 ) {
-	const parsedBody = JSON.parse(request.body);
-	const { statementId, userInput } = parsedBody;
+	try {
+		const parsedBody = request.body;
+		console.log(parsedBody);
+		const { statementId, userInput, generateIfNeeded } = parsedBody;
+		console.log(statementId, userInput, generateIfNeeded);
 
-	const ref = db.collection(Collections.statements);
-	const query = ref.where('parentId', '==', statementId);
+		const ref = db.collection(Collections.statements);
+		const query = ref.where('parentId', '==', statementId);
 
-	const subStatementsDB = await query.get();
+		const subStatementsDB = await query.get();
 
-	const subStatements = subStatementsDB.docs.map((doc) =>
-		doc.data()
-	) as Statement[];
+		const subStatements = subStatementsDB.docs.map((doc) =>
+			doc.data()
+		) as Statement[];
 
-	const statementsText = subStatements.map((subStatement) => ({
-		statement: subStatement.statement,
-		id: subStatement.statementId,
-	}));
+		const statementsText = subStatements.map((subStatement) => ({
+			statement: subStatement.statement,
+			id: subStatement.statementId,
+		}));
 
-	if (statementsText.length === 0) {
-		response.status(200).send([]);
+		if (statementsText.length === 0) {
+			const similarStatements = await generateSimilar(userInput);
+			response.status(200).send(similarStatements);
 
+			return;
+		}
+
+		const genAiResponse = await runGenAI(
+			statementsText.map((s) => s.statement),
+			userInput,
+			generateIfNeeded
+		);
+
+		console.log(`first genAiResponse: ${genAiResponse}`);
+
+		const similarStatementsIds = statementsText
+			.filter((subStatement) => genAiResponse.includes(subStatement.statement))
+			.map((subStatement) => subStatement.id);
+
+		if (similarStatementsIds.length === 0) {
+			const similarStatements = await generateSimilar(userInput);
+			response.status(200).send(similarStatements);
+
+			return;
+		}
+
+		response.status(200).send(similarStatementsIds);
+	} catch (error: any) {
+		response.status(500).send({ error: error.message, ok: false });
+		console.error(error.message, { error });
 		return;
 	}
-
-	const genAiResponse = await runGenAI(
-		statementsText.map((s) => s.statement),
-		userInput
-	);
-
-	const similarStatementsIds = statementsText
-		.filter((subStatement) => genAiResponse.includes(subStatement.statement))
-		.map((subStatement) => subStatement.id);
-
-	response.status(200).send(similarStatementsIds);
 }
 
 let genAI: GoogleGenerativeAI;
@@ -58,8 +77,9 @@ onInit(() => {
 	}
 });
 
-export async function runGenAI(allStatements: string[], userInput: string) {
+export async function runGenAI(allStatements: string[], userInput: string, generateIfNeeded?: boolean) {
 	try {
+		console.log("runGenAI 2", allStatements, userInput, generateIfNeeded);
 		const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
 		const prompt = `
@@ -72,6 +92,31 @@ export async function runGenAI(allStatements: string[], userInput: string) {
 		const result = await model.generateContent(prompt);
 
 		const response = result.response;
+		console.log("results:", response);
+		const text = response.text();
+
+		return extractAndParseJsonString(text).strings;
+	} catch (error) {
+		console.error('Error running GenAI', error);
+
+		return [];
+	}
+}
+
+export async function generateSimilar(userInput: string) {
+	try {
+		console.log("runGenAI 2", userInput,);
+		const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+
+		const prompt = `
+		create 5 similar sentences to the user input '${userInput}'.
+		Give answer back in this json format: { strings: ['string1', 'string2', ...] }
+		`;
+
+		const result = await model.generateContent(prompt);
+
+		const response = result.response;
+		console.log("results:", response);
 		const text = response.text();
 
 		return extractAndParseJsonString(text).strings;

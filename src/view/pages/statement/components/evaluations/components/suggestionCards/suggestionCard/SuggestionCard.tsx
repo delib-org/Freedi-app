@@ -1,5 +1,9 @@
 import { FC, useEffect, useRef, useState } from 'react';
-import { useParams } from 'react-router-dom';
+
+// Third Party
+
+// Redux Store
+import { useParams } from 'react-router';
 import StatementChatMore from '../../../../chat/components/StatementChatMore';
 import CreateStatementModal from '../../../../createStatementModal/CreateStatementModal';
 import { sortSubStatements } from '../../../statementsEvaluationCont';
@@ -71,8 +75,6 @@ const SuggestionCard: FC<Props> = ({
 		sortSubStatements(siblingStatements, sort, 30);
 	}, [statement?.elementHight]);
 
-	if (!statement) return null;
-
 	const _isAuthorized = isAuthorized(
 		statement,
 		statementSubscription,
@@ -116,6 +118,8 @@ const SuggestionCard: FC<Props> = ({
 
 	const statementAge = new Date().getTime() - statement.createdAt;
 	const hasChildren = parentStatement?.statementSettings?.hasChildren;
+
+	if (!statement) return null;
 
 	return (
 		<div

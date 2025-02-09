@@ -55,21 +55,13 @@ export const listenToStatementSubscription = (
 
 				const { role } = statementSubscription;
 
-				//TODO: remove this after 2024-06-06
-				const deprecated = new Date('2024-06-06').getTime();
-
 				//@ts-ignore
 				if (role === 'statement-creator') {
 					statementSubscription.role = Role.admin;
-				}
-				if (role === undefined && new Date().getTime() < deprecated) {
-					statementSubscription.role = Role.member;
 				} else if (role === undefined) {
 					statementSubscription.role = Role.unsubscribed;
 					console.info('Role is undefined. Setting role to unsubscribed');
 				}
-
-				// StatementSubscriptionSchema.parse(statementSubscription);
 
 				dispatch(setStatementSubscription(statementSubscription));
 			} catch (error) {
@@ -79,16 +71,17 @@ export const listenToStatementSubscription = (
 	} catch (error) {
 		console.error(error);
 
-		return () => {};
+		return () => { };
 	}
 };
 
 export const listenToStatement = (
-	statementId: string,
+	statementId: string | undefined,
 	setIsStatementNotFound?: React.Dispatch<React.SetStateAction<boolean>>
 ): Unsubscribe => {
 	try {
 		const dispatch = store.dispatch;
+		if (!statementId) throw new Error("Statement id is undefined");
 		const statementRef = doc(FireStore, Collections.statements, statementId);
 
 		return onSnapshot(
@@ -113,7 +106,7 @@ export const listenToStatement = (
 		console.error(error);
 		if (setIsStatementNotFound) setIsStatementNotFound(true);
 
-		return () => {};
+		return () => { };
 	}
 };
 
@@ -164,7 +157,7 @@ export const listenToSubStatements = (
 	} catch (error) {
 		console.error(error);
 
-		return () => {};
+		return () => { };
 	}
 };
 

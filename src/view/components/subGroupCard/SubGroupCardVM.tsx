@@ -1,10 +1,11 @@
-import DocumentIcon from '@/assets/icons/document.svg?react';
-import GroupIcon from '@/assets/icons/group.svg?react';
 import { ReactElement } from 'react';
 import useStatementColor from '@/controllers/hooks/useStatementColor';
 import { Statement } from '@/types/statement';
+import { QuestionType, StatementType } from '@/types/enums';
 
-type StatementType = 'group' | 'question' | 'document';
+import DocumentIcon from '@/assets/icons/document.svg?react';
+import QuestionIcon from '@/assets/icons/navQuestionsIcon.svg?react';
+import GroupIcon from '@/assets/icons/group.svg?react';
 
 interface SubGroupCardReturn {
 	Icon: ReactElement;
@@ -12,12 +13,12 @@ interface SubGroupCardReturn {
 	text: string;
 }
 
-const getIconByType = (type: StatementType): ReactElement => {
-	switch (type) {
-		case 'group':
+const getIconByType = (statementType: StatementType, questionType?: QuestionType): ReactElement => {
+	switch (statementType) {
+		case StatementType.group:
 			return <GroupIcon />;
-		case 'question':
-		case 'document':
+		case StatementType.question:
+			return questionType === QuestionType.massConsensus ? <DocumentIcon /> : <QuestionIcon />;
 		default:
 			return <DocumentIcon />;
 	}
@@ -30,7 +31,7 @@ export default function useSubGroupCard(
 
 	try {
 		return {
-			Icon: getIconByType(statement.statementType as StatementType),
+			Icon: getIconByType(statement.statementType as StatementType, statement.questionSettings?.questionType),
 			backgroundColor,
 			text: statement.statement,
 		};

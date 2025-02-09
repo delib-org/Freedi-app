@@ -1,5 +1,5 @@
 import { FC } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import BackArrowIcon from '@/assets/icons/chevronLeftIcon.svg?react';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { StyleProps } from '@/controllers/hooks/useStatementColor';

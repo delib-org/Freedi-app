@@ -2,7 +2,7 @@ import { FC } from "react";
 import "./StatementChatMore.scss";
 
 // Icons
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import ChatIcon from "@/assets/icons/roundedChatDotIcon.svg?react";
 
 // Statements functions

@@ -1,5 +1,5 @@
 import { ReactNode, useContext } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams } from 'react-router';
 import { StatementContext } from '../../StatementCont';
 import Chat from '../chat/Chat';
 import FollowMeToast from '../followMeToast/FollowMeToast';
@@ -43,7 +43,7 @@ interface SwitchScreenProps {
 	role: Role | undefined;
 }
 
-function SwitchScreen({ statement, role }: SwitchScreenProps): ReactNode {
+function SwitchScreen({ statement, role }: Readonly<SwitchScreenProps>): ReactNode {
 	let { screen } = useParams();
 	const { hasChat } = statement?.statementSettings || { hasChat: false };
 
@@ -70,9 +70,9 @@ function SwitchScreen({ statement, role }: SwitchScreenProps): ReactNode {
 
 function SwitchStatementType({
 	statement,
-}: {
+}: Readonly<{
 	statement: Statement | undefined;
-}): ReactNode {
+}>): ReactNode {
 	const statementType = statement?.statementType;
 
 	switch (statementType) {

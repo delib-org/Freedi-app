@@ -1,0 +1,155 @@
+// Variables
+$color-question-bg: #A7F3D0;
+$color-question-text: #047857;
+$color-document-bg: #BFDBFE;
+$color-document-text: #1D4ED8;
+$color-consensus-bg: #DDD6FE;
+$color-consensus-text: #6D28D9;
+$color-inactive: #E5E7EB;
+$color-inactive-text: #6B7280;
+
+// Mixins
+@mixin stage-variant($bg-color, $text-color) {
+	background-color: $bg-color;
+
+	.icon {
+		color: $text-color;
+	}
+}
+
+// Container styles
+.container {
+	width: 100%;
+	max-width: 500px;
+	margin: 0 auto;
+	padding: 24px;
+}
+
+.stagesContainer {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 32px;
+}
+
+// Stage item styles
+.stageItem {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+}
+
+.stageCircle {
+	width: 64px;
+	height: 64px;
+	border-radius: 50%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	cursor: pointer;
+	transition: all 0.3s ease;
+	background-color: $color-inactive;
+
+	&:hover {
+		transform: scale(1.05);
+	}
+
+	&--question {
+		background-color: $color-question-bg;
+	}
+
+	&--document {
+		background-color: $color-document-bg;
+	}
+
+	&--consensus {
+		background-color: $color-consensus-bg;
+	}
+}
+
+// Icon styles
+.icon {
+	width: 24px;
+	height: 24px;
+	color: $color-inactive-text;
+	transition: color 0.3s ease;
+
+	&--question {
+		color: $color-question-text;
+	}
+
+	&--document {
+		color: $color-document-text;
+	}
+
+	&--consensus {
+		color: $color-consensus-text;
+	}
+}
+
+// Title styles
+.stageTitle {
+	margin-top: 8px;
+	font-size: 14px;
+	font-weight: 500;
+	color: $color-inactive-text;
+	transition: color 0.3s ease;
+
+	&--question {
+		color: $color-question-text;
+	}
+
+	&--document {
+		color: $color-document-text;
+	}
+
+	&--consensus {
+		color: $color-consensus-text;
+	}
+}
+
+// Button styles
+.buttonContainer {
+	display: flex;
+	justify-content: center;
+}
+
+.button {
+	padding: 8px 24px;
+	background-color: #333;
+	color: white;
+	border: none;
+	border-radius: 8px;
+	cursor: pointer;
+	transition: background-color 0.2s ease;
+	font-size: 16px;
+
+	&:hover {
+		background-color: #444;
+	}
+
+	&:active {
+		transform: translateY(1px);
+	}
+}
+
+// Content card styles
+.contentCard {
+	margin-top: 32px;
+	padding: 24px;
+	background-color: white;
+	border-radius: 8px;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.contentTitle {
+	font-size: 18px;
+	font-weight: 600;
+	color: #333;
+	margin-bottom: 12px;
+}
+
+.contentText {
+	color: #666;
+	line-height: 1.5;
+}

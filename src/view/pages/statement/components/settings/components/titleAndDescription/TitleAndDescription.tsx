@@ -6,7 +6,7 @@ import { useLanguage } from '@/controllers/hooks/useLanguages';
 import './TitleAndDescription.scss';
 import VisuallyHidden from '@/view/components/accessibility/toScreenReaders/VisuallyHidden';
 import Button, { ButtonType } from '@/view/components/buttons/button/Button';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 
 const TitleAndDescription: FC<StatementSettingsProps> = ({
 	statement,
@@ -81,7 +81,7 @@ const TitleAndDescription: FC<StatementSettingsProps> = ({
 					buttonType={ButtonType.SECONDARY}
 					aria-label='Cancel button'
 					data-cy='settings-statement-cancel-btn'
-					onClick={() => navigate('/home')}
+					onClick={() => { navigate('/home'); }}
 				/>
 			</div>
 		</div>
