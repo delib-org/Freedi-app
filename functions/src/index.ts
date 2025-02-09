@@ -33,7 +33,6 @@ import { setImportanceToStatement } from './fn_importance';
 import { updateAgrees } from './fn_agree';
 import { setUserSettings } from './fn_users';
 import { updateStatementWithViews } from './fn_views';
-import { updateSettings } from './fn_statementsSettings';
 import { getInitialMCData } from './fn_massConsensus';
 import { Collections } from '../../src/types/enums';
 import { Request, Response } from 'firebase-functions/v1';
@@ -280,29 +279,14 @@ exports.updateStatementWithViews = onDocumentCreated(
 	}
 );
 
-exports.writeStatementSettings = onDocumentWritten(
-	{
-		document: `/${Collections.statementsSettings}/{statementId}`,
-		...functionConfig,
-	},
-	async (event) => {
-		try {
-			await updateSettings(event);
-		} catch (error) {
-			console.error('Error in writeStatementSettings:', error);
-			throw error;
-		}
-	}
-);
+
 
 const isProduction = process.env.NODE_ENV === 'production';
 console.info('isProduction', isProduction);
+const cors = { cors: ["https://delib-5.web.app", "https://freedi.tech", "https://delib.web.app"] }
 
 exports.massConsensusGetInitialData = onRequest(cors, getInitialMCData);
-exports.massConsensusGetInitialData = onRequest((req, res) => {
-	exports.checkForSimilarStatements = onRequest(cors, findSimilarStatements);
-	exports.hashPassword = onRequest(cors, hashPassword);
-	exports.getUserOptions = onRequest(cors, getUserOptions); //suggestions
-	exports.checkPassword = onRequest(cors, checkPassword);
-	exports.getTopStatements = onRequest(cors, getTopStatements); //second evaluation
-	exports.getRandomStatements = onRequest(cors, getRandomStatements); //first evaluation
+exports.checkForSimilarStatements = onRequest(cors, findSimilarStatements);
+exports.getUserOptions = onRequest(cors, getUserOptions); //suggestions
+exports.getTopStatements = onRequest(cors, getTopStatements); //second evaluation
+exports.getRandomStatements = onRequest(cors, getRandomStatements); //first evaluation

@@ -1,6 +1,6 @@
-import { Collections } from "delib-npm";
 import { db } from ".";
 import { logger } from "firebase-functions/v1";
+import { Collections } from "../../src/types/enums";
 
 export const getInitialMCData = async (req: any, res: any) => {
 	try {
