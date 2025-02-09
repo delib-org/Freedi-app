@@ -1,11 +1,5 @@
 import { object, optional, enum_, InferOutput, array } from 'valibot';
-
-export enum QuestionType {
-	singleStep = 'single-step', //deprecated
-	multipleSteps = 'multiple-steps', //deprecated
-	massConsensus = 'mass-consensus',
-	multiStage = 'multi-stage',
-}
+import { QuestionType } from '../enums';
 
 export enum QuestionStagesType {
 	singleStage = 'singleStage',

@@ -118,13 +118,6 @@ export async function updateEvaluation(event) {
 
 //inner functions
 
-function calcAgreement(
-	newSumEvaluations: number,
-	numberOfEvaluators: number
-): number {
-	// agreement calculations (social choice theory)
-	// The aim of the consensus calculation is to give statement with more positive evaluation and less negative evaluations,
-	// while letting small groups with higher consensus an upper hand, over large groups with a lot of negative evaluations.
 function calcAgreement(newSumEvaluations: number, numberOfEvaluators: number): number {
 	/**
 * Consensus Calculation Formula

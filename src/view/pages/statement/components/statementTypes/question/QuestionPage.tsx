@@ -1,18 +1,18 @@
 import { useContext } from 'react';
 import { StatementContext } from '../../../StatementCont';
-import Document from './document/Document';
+
 import SimpleQuestion from './simpleQuestion/SimpleQuestion';
 import { QuestionType } from '@/types/enums';
+import MassConsensus from './massConsesus/MassConsensus';
 
 const QuestionPage = () => {
 	const { statement } = useContext(StatementContext);
-	const isDocument: boolean | undefined = statement?.questionSettings?.questionType === QuestionType.document;
+	const massConsensus: boolean | undefined = statement?.questionSettings?.questionType === QuestionType.massConsensus;
 
-	if (isDocument) return <Document />
-	
-return <SimpleQuestion />
+	if (massConsensus) return <MassConsensus />
 
-	return <SimpleQuestion />;
+	return <SimpleQuestion />
+
 };
 
 export default QuestionPage;

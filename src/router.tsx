@@ -97,6 +97,10 @@ export const router = createBrowserRouter([
 		path: 'mass-consensus/:statementId',
 		children: [
 			{
+				index: true, // This will be the default route
+				element: <Suspense fallback={<LoadingPage />}><Introduction /></Suspense>,
+			},
+			{
 				path: MassConsensusPageUrls.Introduction,
 				element: <Suspense fallback={<LoadingPage />}><Introduction /></Suspense>,
 			},

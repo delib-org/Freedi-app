@@ -5,16 +5,14 @@ import { useParams } from "react-router";
 export function useIntroductionMV() {
 
 	const { statementId } = useParams<{ statementId: string }>();
+	console.log(statementId)
 
 	const [statement, setStatement] = useState<Statement | null>(null);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 
-
-
 	useEffect(() => {
 		if (!statementId) return;
-		console.log(statementId)
 
 		setLoading(true);
 		const prodEndPoint =
@@ -22,7 +20,6 @@ export function useIntroductionMV() {
 		const localEndPoint = `http://localhost:5001/delib-v3-dev/us-central1/massConsensusGetInitialData`;
 		const requestUrl = (location.hostname !== 'localhost') ? prodEndPoint : localEndPoint;
 		console.log(requestUrl)
-
 
 		fetch(`${requestUrl}?statementId=${statementId}`)
 			.then(res => res.json())
@@ -39,4 +36,3 @@ export function useIntroductionMV() {
 
 	return { statement, loading, error };
 }
-

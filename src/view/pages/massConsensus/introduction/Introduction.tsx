@@ -1,4 +1,3 @@
-
 import { useIntroductionMV } from './IntroductionMV';
 import styles from './Introduction.module.scss';
 import { Link } from 'react-router';
@@ -10,6 +9,8 @@ const Introduction = () => {
 
 	const { statement, loading, error } = useIntroductionMV();
 	const { dir, lang } = useParamsLanguage();
+
+	console.log(statement)
 
 	if (error) return <div>{error}</div>
 	if (loading) return <div>Loading...</div>

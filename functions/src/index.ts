@@ -37,7 +37,7 @@ import { updateSettings } from './fn_statementsSettings';
 import { getInitialMCData } from './fn_massConsensus';
 import { Collections } from '../../src/types/enums';
 import { Request, Response } from 'firebase-functions/v1';
-import { functionConfig } from '../../src/types/firebase';
+import { functionConfig } from '../../src/types/firebase/configFunctions';
 
 // Initialize Firebase
 initializeApp();
@@ -300,9 +300,9 @@ console.info('isProduction', isProduction);
 
 exports.massConsensusGetInitialData = onRequest(cors, getInitialMCData);
 exports.massConsensusGetInitialData = onRequest((req, res) => {
-exports.checkForSimilarStatements = onRequest(cors, findSimilarStatements);
-exports.hashPassword = onRequest(cors, hashPassword);
-exports.getUserOptions = onRequest(cors, getUserOptions); //suggestions
-exports.checkPassword = onRequest(cors, checkPassword);
-exports.getTopStatements = onRequest(cors, getTopStatements); //second evaluation
-exports.getRandomStatements = onRequest(cors, getRandomStatements); //first evaluation
+	exports.checkForSimilarStatements = onRequest(cors, findSimilarStatements);
+	exports.hashPassword = onRequest(cors, hashPassword);
+	exports.getUserOptions = onRequest(cors, getUserOptions); //suggestions
+	exports.checkPassword = onRequest(cors, checkPassword);
+	exports.getTopStatements = onRequest(cors, getTopStatements); //second evaluation
+	exports.getRandomStatements = onRequest(cors, getRandomStatements); //first evaluation
