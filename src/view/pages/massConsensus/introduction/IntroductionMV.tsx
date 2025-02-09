@@ -1,11 +1,10 @@
-import { Statement } from "delib-npm";
+import { Statement } from "@/types/statement";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router";
 
 export function useIntroductionMV() {
 
 	const { statementId } = useParams<{ statementId: string }>();
-	console.log(statementId)
 
 	const [statement, setStatement] = useState<Statement | null>(null);
 	const [loading, setLoading] = useState(true);
@@ -19,7 +18,6 @@ export function useIntroductionMV() {
 			`https://massConsensusGetInitialData-qeesi7aziq-uc.a.run.app`;
 		const localEndPoint = `http://localhost:5001/delib-v3-dev/us-central1/massConsensusGetInitialData`;
 		const requestUrl = (location.hostname !== 'localhost') ? prodEndPoint : localEndPoint;
-		console.log(requestUrl)
 
 		fetch(`${requestUrl}?statementId=${statementId}`)
 			.then(res => res.json())
