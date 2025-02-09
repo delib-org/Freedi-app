@@ -1,6 +1,6 @@
 import "./page404.scss";
 import { useDispatch } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import img404 from "@/assets/images/404.png";
 
 //images
@@ -15,7 +15,7 @@ import { setInitLocation } from "@/model/location/locationSlice";
 const Page404 = () => {
 	const navigate = useNavigate();
 	const dispatch = useDispatch();
-	const {t} = useLanguage();
+	const { t } = useLanguage();
 
 	function handleGoHome() {
 		dispatch(setInitLocation("/home"));

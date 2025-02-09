@@ -1,7 +1,13 @@
 import { createSelector } from '@reduxjs/toolkit';
 import { FC, useEffect, useMemo, useState } from 'react';
+
+// Third party imports
 import { useSelector } from 'react-redux';
-import { useParams } from 'react-router-dom';
+import { useParams } from 'react-router';
+
+// firestore
+import EnableNotifications from '../../components/enableNotifications/EnableNotifications';
+import ProfileImage from '../../components/profileImage/ProfileImage';
 import LoadingPage from '../loadingPage/LoadingPage';
 import Page404 from '../page404/Page404';
 import UnAuthorizedPage from '../unAuthorizedPage/UnAuthorizedPage';
@@ -180,36 +186,22 @@ const StatementMain: FC = () => {
 		}
 	}, [statement]);
 
-	const contextValue = useMemo(
-		() => ({
-			statement,
-			talker,
-			handleShowTalker,
-			role,
-			handleSetNewStatement,
-			setNewStatementType,
-			setNewQuestionType,
-			newStatementType,
-			newQuestionType,
-		}),
-		[
-			statement,
-			talker,
-			role,
-			handleShowTalker,
-			handleSetNewStatement,
-			setNewStatementType,
-			setNewQuestionType,
-			newStatementType,
-			newQuestionType
-		]
-	);
+	const contextValue = useMemo(() => ({
+		statement,
+		talker,
+		handleShowTalker,
+		role,
+		handleSetNewStatement,
+		setNewStatementType,
+		newStatementType,
+	}), [statement, talker, role, handleShowTalker, handleSetNewStatement, setNewStatementType, newStatementType]);
 
 	if (isStatementNotFound) return <Page404 />;
 	if (error) return <UnAuthorizedPage />;
 	if (loading) return <LoadingPage />;
 
 	if (isAuthorized) {
+
 		return (
 			<StatementContext.Provider value={contextValue}>
 				<div className='page'>

@@ -1,5 +1,10 @@
-import { FC, useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { Statement } from 'delib-npm';
+import React, { FC, useState } from 'react';
+
+// Third party imports
+import { useLocation } from 'react-router';
+
+// Helpers
 import StatementTopNav from '../nav/top/StatementTopNav';
 import InvitePanel from './invitePanel/InvitePanel';
 import { logOut } from '@/controllers/db/auth';
@@ -10,9 +15,16 @@ import { Statement } from '@/types/statement';
 interface Props {
 	statement: Statement | undefined;
 	topParentStatement: Statement | undefined;
+	parentStatement?: Statement | undefined;
+	setShowAskPermission?: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-const StatementHeader: FC<Props> = ({ statement, topParentStatement }) => {
+const StatementHeader: FC<Props> = ({
+	statement,
+	topParentStatement,
+	parentStatement,
+	setShowAskPermission,
+}) => {
 	// Hooks
 	const { pathname } = useLocation();
 	const [isHeaderMenuOpen, setIsHeaderMenuOpen] = useState(false);
@@ -43,6 +55,10 @@ const StatementHeader: FC<Props> = ({ statement, topParentStatement }) => {
 			setIsHeaderMenuOpen(false);
 		}
 	}
+	function handleToggleNotifications() {
+		toggleNotifications(statement, permission, t, setShowAskPermission);
+		setIsHeaderMenuOpen(false);
+	}
 
 	function handleInvitePanel() {
 		try {
@@ -65,6 +81,7 @@ const StatementHeader: FC<Props> = ({ statement, topParentStatement }) => {
 		<div className={`page__header ${dir}`}>
 			<StatementTopNav
 				statement={statement}
+				parentStatement={parentStatement}
 				handleShare={handleShare}
 				handleFollowMe={handleFollowMe}
 				handleInvitePanel={handleInvitePanel}

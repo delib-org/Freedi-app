@@ -1,4 +1,7 @@
-import { NavigateFunction } from 'react-router-dom';
+
+// Helpers
+import { StatementSettings, StatementType } from 'delib-npm/dist/models/statementsModels';
+import { NavigateFunction } from 'react-router';
 import {
 	defaultResultsSettings,
 	defaultStatementSettings,

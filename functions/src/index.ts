@@ -34,6 +34,7 @@ import { updateAgrees } from './fn_agree';
 import { setUserSettings } from './fn_users';
 import { updateStatementWithViews } from './fn_views';
 import { updateSettings } from './fn_statementsSettings';
+import { getInitialMCData } from './fn_massConsensus';
 import { Collections } from '../../src/types/enums';
 import { Request, Response } from 'firebase-functions/v1';
 import { functionConfig } from '../../src/types/firebase';
@@ -296,3 +297,12 @@ exports.writeStatementSettings = onDocumentWritten(
 
 const isProduction = process.env.NODE_ENV === 'production';
 console.info('isProduction', isProduction);
+
+exports.massConsensusGetInitialData = onRequest(cors, getInitialMCData);
+exports.massConsensusGetInitialData = onRequest((req, res) => {
+exports.checkForSimilarStatements = onRequest(cors, findSimilarStatements);
+exports.hashPassword = onRequest(cors, hashPassword);
+exports.getUserOptions = onRequest(cors, getUserOptions); //suggestions
+exports.checkPassword = onRequest(cors, checkPassword);
+exports.getTopStatements = onRequest(cors, getTopStatements); //second evaluation
+exports.getRandomStatements = onRequest(cors, getRandomStatements); //first evaluation

@@ -1,10 +1,10 @@
 import { FC } from 'react';
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 import HomeIcon from '@/assets/icons/homeIcon.svg?react';
 import { StyleProps } from '@/controllers/hooks/useStatementColor';
 
 interface Props {
-    headerColor: StyleProps;
+	headerColor: StyleProps;
 }
 const HomeButton: FC<Props> = ({ headerColor }) => {
 	return (

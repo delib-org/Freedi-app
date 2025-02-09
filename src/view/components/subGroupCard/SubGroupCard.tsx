@@ -1,6 +1,7 @@
-import { FC } from 'react';
-import styles from './SubGroupCard.module.scss';
-import { Link, NavLink } from 'react-router-dom';
+import { Statement, StatementType } from 'delib-npm'
+import { FC } from 'react'
+import styles from './SubGroupCard.module.scss'
+import { Link, NavLink } from 'react-router';
 import useSubGroupCard from './SubGroupCardVM';
 import { useLanguage } from '@/controllers/hooks/useLanguages';
 import { Statement } from '@/types/statement';

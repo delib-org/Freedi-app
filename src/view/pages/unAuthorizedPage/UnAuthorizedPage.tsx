@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 import './unAuthorizedPage.scss';
 import unAuthImage from '@/assets/images/secure-private-by-design.svg';
 

@@ -65,3 +65,18 @@ export function setQuestionTypeToDB({
 		console.error(error);
 	}
 }
+
+export function updateQuestionType({ statement, newValue }: { statement: Statement, newValue: QuestionType }) {
+	try {
+
+		const statementSettingsRef = doc(FireStore, Collections.statementsSettings, statement.statementId);
+		setDoc(statementSettingsRef, {
+			questionSettings: {
+				questionType: newValue
+			}
+		}, { merge: true });
+	} catch (error) {
+		console.error(error);
+
+	}
+}

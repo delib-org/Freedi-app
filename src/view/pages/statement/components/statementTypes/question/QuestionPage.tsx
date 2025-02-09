@@ -6,10 +6,11 @@ import { QuestionType } from '@/types/enums';
 
 const QuestionPage = () => {
 	const { statement } = useContext(StatementContext);
-	const isDocument: boolean | undefined =
-		statement?.questionSettings?.questionType === QuestionType.multipleSteps;
+	const isDocument: boolean | undefined = statement?.questionSettings?.questionType === QuestionType.document;
 
-	if (isDocument) return <Document />;
+	if (isDocument) return <Document />
+	
+return <SimpleQuestion />
 
 	return <SimpleQuestion />;
 };

@@ -11,6 +11,8 @@ import {
 	where,
 } from 'firebase/firestore';
 
+import { and, collection, doc, limit, onSnapshot, or, orderBy, query, Unsubscribe, where } from "firebase/firestore";
+
 // Redux Store
 import { FireStore } from '../config';
 import {
@@ -62,14 +64,12 @@ export const listenToStatementSubscription = (
 				if (role === 'statement-creator') {
 					statementSubscription.role = Role.admin;
 				}
-				if (role === undefined && new Date().getTime() < deprecated) {
+				if (role === undefined) {
 					statementSubscription.role = Role.member;
 				} else if (role === undefined) {
 					statementSubscription.role = Role.unsubscribed;
 					console.info('Role is undefined. Setting role to unsubscribed');
 				}
-
-				// StatementSubscriptionSchema.parse(statementSubscription);
 
 				dispatch(setStatementSubscription(statementSubscription));
 			} catch (error) {
@@ -84,11 +84,12 @@ export const listenToStatementSubscription = (
 };
 
 export const listenToStatement = (
-	statementId: string,
+	statementId: string | undefined,
 	setIsStatementNotFound?: React.Dispatch<React.SetStateAction<boolean>>
 ): Unsubscribe => {
 	try {
 		const dispatch = store.dispatch;
+		if (!statementId) throw new Error("Statement id is undefined");
 		const statementRef = doc(FireStore, Collections.statements, statementId);
 
 		return onSnapshot(

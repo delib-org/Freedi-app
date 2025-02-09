@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 
 // Third party imports
-import { Outlet, useLocation, useParams } from "react-router-dom";
+import { Outlet, useLocation, useParams } from "react-router";
 
 // Redux Store
 import HomeHeader from "./HomeHeader";

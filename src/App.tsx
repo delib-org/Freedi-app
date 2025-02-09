@@ -3,7 +3,7 @@ import React, { useEffect, useState, Suspense } from 'react';
 
 // Third party imports
 import { useDispatch } from 'react-redux';
-import { Outlet, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { Outlet, useLocation, useNavigate, useParams } from 'react-router';
 
 // Firebase functions
 import { listenToAuth, logOut } from './controllers/db/auth';

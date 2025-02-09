@@ -125,6 +125,50 @@ function calcAgreement(
 	// agreement calculations (social choice theory)
 	// The aim of the consensus calculation is to give statement with more positive evaluation and less negative evaluations,
 	// while letting small groups with higher consensus an upper hand, over large groups with a lot of negative evaluations.
+function calcAgreement(newSumEvaluations: number, numberOfEvaluators: number): number {
+	/**
+* Consensus Calculation Formula
+* ============================
+* Formula: Agreement = (sumOption/nOption) * sqrt(nTotal)
+* 
+* Purpose:
+* This formula is designed to find the most agreed-upon option in a system where:
+* - There are infinite possible options
+* - Each option can be evaluated on a scale from -1 to +1
+* - We need to balance between average rating and participation level
+* 
+* Components:
+* -----------
+* 1. Average Rating: (sumOption/nOption)
+*    - sumOption: Sum of all evaluations for this specific option
+*    - nOption: Number of evaluators for this specific option
+*    - Provides a score between -1 (complete disagreement) to +1 (complete agreement)
+* 
+* 2. Participation Weight: sqrt(nTotal)
+*    - nTotal: Total number of evaluators across ALL options
+*    - Using square root provides balanced weighting:
+*      - Gives more weight to options with broader participation
+*      - Prevents overshadowing new options with few evaluations
+* 
+* Why This Works:
+* --------------
+* - Balances quality (average rating) with quantity (participation)
+* - Prevents small groups from dominating with extreme ratings
+* - Gives new options a fair chance while still rewarding broad consensus
+* - Allows fair comparison between:
+*   - Popular options with many evaluations
+*   - Niche options with few but positive evaluations
+*   - New options that haven't been heavily evaluated yet
+* 
+* Example Scenarios:
+* -----------------
+* Option A: 100 people rated +0.5 average
+* Option B: 2 people rated +1 average
+* Option C: 50 people rated +0.7 average
+* 
+* The formula will balance these factors to find true consensus rather than
+* just highest average or most votes.
+*/
 	try {
 		parse(number(), newSumEvaluations);
 		parse(number(), numberOfEvaluators);

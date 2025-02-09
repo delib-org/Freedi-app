@@ -17,11 +17,13 @@ import Text from '@/view/components/text/Text';
 import { Statement } from '@/types/statement';
 
 interface Props {
-	statement: Statement | undefined;
-	setShowInfo: Dispatch<SetStateAction<boolean>>;
+	statement: Statement | null;
+	setShowInfo: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const StatementInfo: FC<Props> = ({ statement, setShowInfo }) => {
+
+
 	// Hooks
 	const { t } = useLanguage();
 
@@ -29,17 +31,18 @@ const StatementInfo: FC<Props> = ({ statement, setShowInfo }) => {
 	const statementSubscription = useAppSelector(
 		statementSubscriptionSelector(statement?.statementId)
 	);
-	const parentStatement = useAppSelector(
-		statementSelector(statement?.parentId)
-	);
+	const parentStatement = useAppSelector(statementSelector(statement?.parentId));
 
 	// Use State
 	const [isInEditMode, setIsInEditMode] = useState(false);
 	const [formData, setFormData] = useState({
-		title: statement?.statement ?? '',
-		description: statement?.description ?? '',
+		title: statement?.statement || "",
+		description: statement?.description || "",
 	});
 
+
+
+	if (!statement) return null;
 	const _isAuthorized = isAuthorized(
 		statement,
 		statementSubscription,
