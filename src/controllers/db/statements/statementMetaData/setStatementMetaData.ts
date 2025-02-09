@@ -14,7 +14,7 @@ export async function setQuestionStage({
 	try {
 		if (!statementId) throw new Error('Statement ID is undefined');
 		const statementRef = doc(FireStore, Collections.statements, statementId);
-		const questionSettings: QuestionSettings = { currentStage: stage, questionType: QuestionType.document }
+		const questionSettings: QuestionSettings = { currentStep: step, questionType: QuestionType.multiStage };
 		await updateDoc(statementRef, { questionSettings });
 	} catch (error) {
 		console.error(error);
@@ -27,7 +27,7 @@ interface SetStatementTypeProps {
 	stage: QuestionStage;
 }
 
-export async function setQuestionType({ statementId, type = QuestionType.simple, stage = QuestionStage.suggestion }: SetStatementTypeProps) {
+export async function setQuestionType({ statementId, type = QuestionType.multiStage, stage = QuestionStage.suggestion }: SetStatementTypeProps) {
 	try {
 		if (!statementId) throw new Error('Statement ID is undefined');
 		const statementRef = doc(FireStore, Collections.statements, statementId);

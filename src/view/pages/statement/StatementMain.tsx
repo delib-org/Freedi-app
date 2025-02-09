@@ -6,8 +6,6 @@ import { useSelector } from 'react-redux';
 import { useParams } from 'react-router';
 
 // firestore
-import EnableNotifications from '../../components/enableNotifications/EnableNotifications';
-import ProfileImage from '../../components/profileImage/ProfileImage';
 import LoadingPage from '../loadingPage/LoadingPage';
 import Page404 from '../page404/Page404';
 import UnAuthorizedPage from '../unAuthorizedPage/UnAuthorizedPage';
@@ -37,9 +35,8 @@ import { MapProvider } from '@/controllers/hooks/useMap';
 import { RootState } from '@/model/store';
 import { userSelector } from '@/model/users/userSlice';
 import Modal from '@/view/components/modal/Modal';
-import { StatementType, Access } from '@/types/enums';
+import { StatementType, Access, QuestionType } from '@/types/enums';
 import { Role, User } from '@/types/user';
-import { QuestionType } from '@/types/question';
 
 // Create selectors
 export const subStatementsSelector = createSelector(
@@ -97,7 +94,7 @@ const StatementMain: FC = () => {
 		if (statement && screen) {
 			//set navigator tab title
 			const { shortVersion } = statementTitleToDisplay(statement.statement, 15);
-			document.title = `FreeDi - ${shortVersion}-${screen}`;
+			document.title = `FreeDi - ${shortVersion}`;
 		}
 	}, [statement, screen]);
 

@@ -1,5 +1,4 @@
-import { StatementType } from '@/types/enums';
-import { QuestionType } from '@/types/question';
+import { QuestionType, StatementType } from '@/types/enums';
 import { Statement } from '@/types/statement';
 import { Role, User } from '@/types/user';
 import { createContext } from 'react';

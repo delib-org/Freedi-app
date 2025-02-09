@@ -3,6 +3,7 @@ import GroupIcon from '@/assets/icons/group.svg?react';
 import { ReactElement } from 'react';
 import useStatementColor from '@/controllers/hooks/useStatementColor';
 import { Statement } from '@/types/statement';
+import { QuestionType } from '@/types/enums';
 
 type StatementType = 'group' | 'question' | 'document';
 
@@ -12,14 +13,17 @@ interface SubGroupCardReturn {
 	text: string;
 }
 
-const getIconByType = (type: StatementType): ReactElement => {
-	switch (type) {
-		case 'group':
-			return <GroupIcon />;
-		case 'question':
-		case 'document':
-		default:
+const getIconByType = (statementType: StatementType, questionType?: QuestionType): ReactElement => {
+	if (statementType === 'group') {
+		return <GroupIcon />;
+	} else if (statementType === 'question') {
+		if (questionType === QuestionType.massConsensus) {
 			return <DocumentIcon />;
+		} else {
+			return <DocumentIcon />;
+		}
+	} else {
+		return <DocumentIcon />;
 	}
 };
 
