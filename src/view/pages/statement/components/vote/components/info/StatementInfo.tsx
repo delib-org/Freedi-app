@@ -18,11 +18,10 @@ import { Statement } from '@/types/statement';
 
 interface Props {
 	statement: Statement | null;
-	setShowInfo: React.Dispatch<React.SetStateAction<boolean>>;
+	setShowInfo: Dispatch<SetStateAction<boolean>>;
 }
 
 const StatementInfo: FC<Props> = ({ statement, setShowInfo }) => {
-
 
 	// Hooks
 	const { t } = useLanguage();
@@ -39,8 +38,6 @@ const StatementInfo: FC<Props> = ({ statement, setShowInfo }) => {
 		title: statement?.statement || "",
 		description: statement?.description || "",
 	});
-
-
 
 	if (!statement) return null;
 	const _isAuthorized = isAuthorized(

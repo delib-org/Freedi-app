@@ -1,25 +1,19 @@
-import { QuestionStage, Statement, StatementType } from "delib-npm";
 import { FC, useEffect, useState } from "react";
-
-// Third party imports
-
-// Custom Components
-
 import { useNavigate } from "react-router";
 import CreateStatementModalSwitch from "../createStatementModalSwitch/CreateStatementModalSwitch";
 import StatementBottomNav from "../nav/bottom/StatementBottomNav";
-import { getStagesInfo } from "../settings/components/QuestionSettings/QuestionStageRadioBtn/QuestionStageRadioBtn";
 import StatementInfo from "../vote/components/info/StatementInfo";
 import Description from "./components/description/Description";
 import SuggestionCards from "./components/suggestionCards/SuggestionCards";
 import styles from "./statementEvaluationsPage.module.scss";
 import LightBulbIcon from "@/assets/icons/lightBulbIcon.svg?react";
 import X from "@/assets/icons/x.svg?react";
-import { getTitle } from "@/controllers/general/helpers";
 import { useLanguage } from "@/controllers/hooks/useLanguages";
 import Button from "@/view/components/buttons/button/Button";
 import Modal from "@/view/components/modal/Modal";
 import Toast from "@/view/components/toast/Toast";
+import { Statement } from "@/types/statement";
+import { QuestionStep, StatementType } from "@/types/enums";
 
 interface StatementEvaluationPageProps {
 	statement: Statement;
@@ -39,8 +33,7 @@ const StatementEvaluationPage: FC<StatementEvaluationPageProps> = ({
 	const { t } = useLanguage();
 	const isMultiStage = false;
 
-	const currentStage = statement.questionSettings?.currentStage;
-	const stageInfo = getStagesInfo(currentStage);
+	const currentStep = statement.questionSettings?.currentStep;
 	const useSearchForSimilarStatements =
 		statement.statementSettings?.enableSimilaritiesSearch || false;
 
@@ -48,7 +41,7 @@ const StatementEvaluationPage: FC<StatementEvaluationPageProps> = ({
 	const [showModal, setShowModal] = useState(false);
 	const [showToast, setShowToast] = useState(false);
 	const [showExplanation, setShowExplanation] = useState<boolean>(
-		currentStage === QuestionStage.explanation && isMultiStage && !questions
+		currentStep === QuestionStep.explanation && isMultiStage && !questions
 	);
 
 	useEffect(() => {
@@ -62,19 +55,19 @@ const StatementEvaluationPage: FC<StatementEvaluationPageProps> = ({
 			setShowToast(true);
 		}
 		if (
-			currentStage === QuestionStage.explanation &&
+			currentStep === QuestionStep.explanation &&
 			isMultiStage &&
 			!questions
 		) {
 			setShowExplanation(true);
 		}
-		if (currentStage === QuestionStage.voting && !questions) {
+		if (currentStep === QuestionStep.voting && !questions) {
 			//redirect us react router dom to voting page
 			navigate(`/statement/${statement.statementId}/vote`);
 		}
-	}, [statement.questionSettings?.currentStage, questions]);
+	}, [statement.questionSettings?.currentStep, questions]);
 	try {
-		const message = stageInfo ? stageInfo.message : false;
+		const message = currentStep || false;
 
 		return (
 			<>
@@ -87,7 +80,7 @@ const StatementEvaluationPage: FC<StatementEvaluationPageProps> = ({
 								show={showToast}
 								setShow={setShowToast}
 							>
-								{getToastButtons(currentStep, setShowToast, setShowModal)}
+								{getToastButtons(currentStep)}
 							</Toast>
 						)}
 						<Description />
@@ -118,10 +111,10 @@ const StatementEvaluationPage: FC<StatementEvaluationPageProps> = ({
 			</>
 		);
 
-		function getToastButtons(questionStage: QuestionStage | undefined) {
+		function getToastButtons(questionStage: QuestionStep | undefined) {
 			try {
 				switch (questionStage) {
-					case QuestionStage.suggestion:
+					case QuestionStep.suggestion:
 						return (
 							<>
 								<Button
@@ -143,11 +136,9 @@ const StatementEvaluationPage: FC<StatementEvaluationPageProps> = ({
 								/>
 							</>
 						);
-					case QuestionStage.voting:
-					case QuestionStage.firstEvaluation:
-					case QuestionStage.secondEvaluation:
-					case QuestionStage.finished:
-					case QuestionStage.explanation:
+					case QuestionStep.voting:
+					case QuestionStep.finished:
+					case QuestionStep.explanation:
 					default:
 						return (
 							<Button

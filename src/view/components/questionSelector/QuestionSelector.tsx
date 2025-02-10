@@ -7,7 +7,6 @@ import { updateQuestionType } from '@/controllers/db/statementSettings/setStatem
 import { Link } from 'react-router';
 import { MassConsensusPageUrls } from '@/view/pages/massConsensus/model/massConsensusModel';
 
-
 const QuestionSelector: FC = () => {
 	const { statement } = useContext(StatementContext);
 	const { t, currentLanguage } = useLanguage();

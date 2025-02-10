@@ -1,4 +1,3 @@
-import { Statement } from "delib-npm";
 import { FC, useEffect } from "react";
 import { Link } from "react-router";
 import { getStatementFromDB } from "@/controllers/db/statements/getStatement";

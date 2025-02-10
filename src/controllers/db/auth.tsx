@@ -3,8 +3,7 @@ import {
 	GoogleAuthProvider,
 	onAuthStateChanged,
 	signInAnonymously,
-	Unsubscribe,
-	UserCredential,
+	Unsubscribe
 } from 'firebase/auth';
 import { NavigateFunction } from 'react-router';
 import { auth } from './config';
@@ -76,7 +75,7 @@ const handleUserSignIn = async (
 	initialUrl: string
 ): Promise<void> => {
 	const dispatch = store.dispatch;
-	console.log(userFB)
+
 	const user = parse(UserSchema, userFB);
 	if (!user) {
 		throw new Error('Invalid user data');
@@ -103,6 +102,7 @@ const handleUserSignIn = async (
 	}
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function convertUserFBToUser(userFB: any): User {
 	return {
 		uid: userFB.uid,

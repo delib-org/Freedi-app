@@ -1,4 +1,4 @@
-import { object, string, optional, nullable, number, boolean } from 'valibot';
+import { object, string, optional, nullable, number, boolean, InferOutput } from 'valibot';
 
 export const NotificationSchema = object({
 	userId: string(),
@@ -11,3 +11,5 @@ export const NotificationSchema = object({
 	read: boolean(),
 	notificationId: string(),
 });
+
+export type NotificationType = InferOutput<typeof NotificationSchema>;

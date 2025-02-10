@@ -157,3 +157,13 @@ export enum MassConsensusPageUrls {
 	voting = "voting",
 	leaveFeedback = "leave-feedback",
 }
+
+export enum QuestionStep {
+	explanation = 'explanation',
+	suggestion = 'suggestion',
+	randomEvaluation = 'random-evaluation',
+	topEvaluation = 'top-evaluation',
+	voting = 'voting',
+	finished = 'finished',
+	other = 'other',
+}
