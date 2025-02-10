@@ -16,6 +16,7 @@
 		"prettier.jsxSingleQuote": true,
 		"prettier.singleQuote": true,
 		"prettier.useTabs": true,
+		"prettier.tabWidth": 4,
 		"eslint.enable": true,
 		"eslint.useFlatConfig": true,
 		"cSpell.words": ["Millis", "valibot"],

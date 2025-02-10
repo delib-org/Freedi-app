@@ -1,15 +1,13 @@
 import {
-	signInWithPopup,
 	GoogleAuthProvider,
 	onAuthStateChanged,
 	signInAnonymously,
+	signInWithPopup,
 	Unsubscribe,
 } from 'firebase/auth';
 import { NavigateFunction } from 'react-router-dom';
-import { auth } from './config';
 
 // Helper functions
-import { setUserToDB } from './users/setUsersDB';
 
 // Redux store imports
 import { resetEvaluations } from '@/model/evaluations/evaluationsSlice';
@@ -21,6 +19,9 @@ import { AppDispatch, store } from '@/model/store';
 import { setFontSize, setUser } from '@/model/users/userSlice';
 import { resetVotes } from '@/model/vote/votesSlice';
 import { User } from '@/types/user';
+
+import { auth } from './config';
+import { setUserToDB } from './users/setUsersDB';
 
 export function googleLogin() {
 	const provider = new GoogleAuthProvider();
@@ -64,6 +65,7 @@ export const listenToAuth =
 					dispatch(resetResults());
 					dispatch(setUser(null));
 					navigate('/');
+
 					return;
 				}
 
@@ -72,11 +74,15 @@ export const listenToAuth =
 				const defaultDisplayName = `Anonymous ${Math.floor(Math.random() * 10000)}`;
 
 				userCopy.displayName = userCopy.isAnonymous
-					? (sessionStorage.getItem('displayName') ?? defaultDisplayName)
-					: (localStorage.getItem('displayName') ?? defaultDisplayName);
+					? (sessionStorage.getItem('displayName') ??
+						defaultDisplayName)
+					: (localStorage.getItem('displayName') ??
+						defaultDisplayName);
 
 				const userDB = (await setUserToDB(userCopy)) as User;
-				if (!userDB) throw new Error('userDB is undefined');
+				if (!userDB) {
+					throw new Error('userDB is undefined');
+				}
 
 				const fontSize = userDB.fontSize || defaultFontSize;
 				document.body.style.fontSize = `${fontSize}px`;
@@ -84,7 +90,9 @@ export const listenToAuth =
 				dispatch(setFontSize(fontSize));
 				dispatch(setUser(userDB));
 
-				if (initialUrl) navigate(initialUrl);
+				if (initialUrl) {
+					navigate(initialUrl);
+				}
 			} catch (error) {
 				console.error(error);
 			}
