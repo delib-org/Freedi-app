@@ -8,7 +8,7 @@ import {
 } from 'firebase/firestore';
 import { FireStore } from '../config';
 import { getUserFromFirebase } from '../users/usersGeneral';
-import { store } from '@/model/store';
+import { store } from '@/redux/store';
 import { Collections } from '@/types/enums';
 import { Statement, StatementSchema } from '@/types/statement';
 import { getVoteId, Vote, VoteSchema } from '@/types/vote';

@@ -7,7 +7,7 @@ import {
 	writeBatch,
 } from 'firebase/firestore';
 import { FireStore } from '../config';
-import { store } from '@/model/store';
+import { store } from '@/redux/store';
 import {
 	getExistingOptionColors,
 	getSiblingOptionsByParentId,

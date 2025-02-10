@@ -1,6 +1,6 @@
 import { doc, runTransaction } from 'firebase/firestore';
 import { FireStore } from '../config';
-import { store } from '@/model/store';
+import { store } from '@/redux/store';
 import { Collections } from '@/types/enums';
 
 export async function decreesUserSettingsLearningRemain({

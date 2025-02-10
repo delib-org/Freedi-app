@@ -16,7 +16,7 @@ import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 
 // Hooks & Helpers
 import { useLanguage } from '@/controllers/hooks/useLanguages';
-import { RootState } from '@/model/store';
+import { RootState } from '@/redux/store';
 import './MembersSettings.scss';
 import { Collections } from '@/types/enums';
 import { Statement } from '@/types/statement';

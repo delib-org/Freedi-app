@@ -14,7 +14,7 @@ import { useLanguage } from '@/controllers/hooks/useLanguages';
 import {
 	setStatement,
 	statementSelector,
-} from '@/model/statements/statementsSlice';
+} from '@/redux/statements/statementsSlice';
 
 // Hooks & Helpers
 

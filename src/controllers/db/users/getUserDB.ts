@@ -1,7 +1,7 @@
 import { doc, getDoc, onSnapshot, Unsubscribe } from 'firebase/firestore';
 import { FireStore } from '../config';
-import { store } from '@/model/store';
-import { setUserSettings } from '@/model/users/userSlice';
+import { store } from '@/redux/store';
+import { setUserSettings } from '@/redux/users/userSlice';
 import { Collections } from '@/types/enums';
 import { Agreement, User, UserSchema, userSettingsSchema } from '@/types/user';
 import { parse } from 'valibot';

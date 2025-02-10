@@ -2,14 +2,14 @@ import * as React from "react";
 import { createRoot } from "react-dom/client";
 import "./view/style/style.scss";
 import { RouterProvider } from "react-router";
-import { store } from "./model/store";
+import { store } from "./redux/store";
 import { Provider } from "react-redux";
 import { router } from "./router";
 import {
 	LanguageProvider,
 	LanguagesEnum,
 } from "./controllers/hooks/useLanguages";
-import { setInitLocation } from "./model/location/locationSlice";
+import { setInitLocation } from "./redux/location/locationSlice";
 
 const root = createRoot(document.getElementById("root")!);
 

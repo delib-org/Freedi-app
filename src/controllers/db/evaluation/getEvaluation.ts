@@ -9,8 +9,8 @@ import {
 	getDoc,
 } from 'firebase/firestore';
 import { FireStore } from '../config';
-import { setEvaluationToStore } from '@/model/evaluations/evaluationsSlice';
-import { AppDispatch } from '@/model/store';
+import { setEvaluationToStore } from '@/redux/evaluations/evaluationsSlice';
+import { AppDispatch } from '@/redux/store';
 import { Collections } from '@/types/enums';
 import { UserSchema } from '@/types/user';
 import { parse } from 'valibot';
@@ -49,8 +49,8 @@ export const listenToEvaluations = (
 		});
 	} catch (error) {
 		console.error(error);
-		 
-		return () => {};
+
+		return () => { };
 	}
 };
 

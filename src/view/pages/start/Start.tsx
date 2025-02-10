@@ -13,8 +13,8 @@ import useDirection from '@/controllers/hooks/useDirection';
 import { LanguagesEnum, useLanguage } from '@/controllers/hooks/useLanguages';
 import {
 	selectInitLocation,
-} from '@/model/location/locationSlice';
-import { userSelector } from '@/model/users/userSlice';
+} from '@/redux/location/locationSlice';
+import { userSelector } from '@/redux/users/userSlice';
 import packageJson from '../../../../package.json';
 
 const Start = () => {

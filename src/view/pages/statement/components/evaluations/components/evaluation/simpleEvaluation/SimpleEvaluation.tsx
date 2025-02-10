@@ -1,7 +1,7 @@
 import { FC, useEffect, useState } from "react";
 import { useAppSelector } from "@/controllers/hooks/reduxHooks";
 import useDirection from "@/controllers/hooks/useDirection";
-import { evaluationSelector } from "@/model/evaluations/evaluationsSlice";
+import { evaluationSelector } from "@/redux/evaluations/evaluationsSlice";
 import Thumb from "@/view/components/thumb/Thumb";
 import "./SimpleEvaluation.scss";
 import { Statement } from "@/types/statement";

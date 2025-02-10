@@ -15,7 +15,7 @@ import UpdateIcon from '@/assets/icons/updateIcon.svg?react';
 import { decreesUserSettingsLearningRemain } from '@/controllers/db/learning/setLearning';
 import useStatementColor from '@/controllers/hooks/useStatementColor';
 import './StatementBottomNav.scss';
-import { userSettingsSelector } from '@/model/users/userSlice';
+import { userSettingsSelector } from '@/redux/users/userSlice';
 import StartHere from '@/view/components/startHere/StartHere';
 import { StatementContext } from '../../../StatementCont';
 import { sortItems } from './StatementBottomNavModal';

@@ -1,4 +1,4 @@
-import { setStatement, statementSelector } from "@/model/statements/statementsSlice";
+import { setStatement, statementSelector } from "@/redux/statements/statementsSlice";
 import { Statement } from "@/types/statement";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";

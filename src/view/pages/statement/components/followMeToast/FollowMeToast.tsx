@@ -5,7 +5,7 @@ import { setFollowMeDB } from "@/controllers/db/statements/setStatements";
 import { isAdmin } from "@/controllers/general/helpers";
 import { useAppSelector } from "@/controllers/hooks/reduxHooks";
 import { useLanguage } from "@/controllers/hooks/useLanguages";
-import { statementSelector } from "@/model/statements/statementsSlice";
+import { statementSelector } from "@/redux/statements/statementsSlice";
 import "./FollowMeToast.scss";
 import { StatementContext } from "../../StatementCont";
 

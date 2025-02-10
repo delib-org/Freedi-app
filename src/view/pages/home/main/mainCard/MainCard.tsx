@@ -8,7 +8,7 @@ import ImgThumb from "@/assets/images/ImgThumb.png";
 import { listenToAllSubStatements } from "@/controllers/db/statements/listenToStatements";
 import { getLastElements } from "@/controllers/general/helpers";
 import { useAppSelector } from "@/controllers/hooks/reduxHooks";
-import { subStatementsByTopParentIdMemo } from "@/model/statements/statementsSlice";
+import { subStatementsByTopParentIdMemo } from "@/redux/statements/statementsSlice";
 import Text from "@/view/components/text/Text";
 import StatementChatMore from "@/view/pages/statement/components/chat/components/StatementChatMore";
 
@@ -27,8 +27,8 @@ const MainCard: FC<Props> = ({ statement }) => {
   const statementImgUrl = statement.imagesURL?.main;
   const description =
     statement.description && statement.description.length > 30
-    	? `${statement.description.slice(0, 144)} ...`
-    	: statement.description;
+      ? `${statement.description.slice(0, 144)} ...`
+      : statement.description;
 
   useEffect(() => {
     const unsub = listenToAllSubStatements(statement.statementId);

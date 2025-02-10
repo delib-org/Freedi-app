@@ -1,4 +1,4 @@
-import { statementSubsSelector } from '@/model/statements/statementsSlice';
+import { statementSubsSelector } from '@/redux/statements/statementsSlice';
 import styles from './GroupPage.module.scss';
 import Button from '@/view/components/buttons/button/Button';
 import { useContext } from 'react';

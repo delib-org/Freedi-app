@@ -12,14 +12,14 @@ import { auth } from './config';
 import { setUserToDB } from './users/setUsersDB';
 
 // Redux store imports
-import { resetEvaluations } from '@/model/evaluations/evaluationsSlice';
+import { resetEvaluations } from '@/redux/evaluations/evaluationsSlice';
 import { defaultFontSize } from '@/model/fonts/fontsModel';
-import { setInitLocation } from '@/model/location/locationSlice';
-import { resetResults } from '@/model/results/resultsSlice';
-import { resetStatements } from '@/model/statements/statementsSlice';
-import { AppDispatch, store } from '@/model/store';
-import { setFontSize, setUser } from '@/model/users/userSlice';
-import { resetVotes } from '@/model/vote/votesSlice';
+import { setInitLocation } from '@/redux/location/locationSlice';
+import { resetResults } from '@/redux/results/resultsSlice';
+import { resetStatements } from '@/redux/statements/statementsSlice';
+import { AppDispatch, store } from '@/redux/store';
+import { setFontSize, setUser } from '@/redux/users/userSlice';
+import { resetVotes } from '@/redux/vote/votesSlice';
 import { User, UserSchema } from '@/types/user';
 import { parse } from 'valibot';
 
@@ -68,18 +68,18 @@ export const listenToAuth =
 						signAnonymously();
 					}
 					if (userFB) {
-					// User is signed in
+						// User is signed in
 						const user = parse(UserSchema, userFB);
 
 						if (!user.displayName)
 							user.displayName =
-							localStorage.getItem('displayName') ??
-							`Anonymous ${Math.floor(Math.random() * 10000)}`;
+								localStorage.getItem('displayName') ??
+								`Anonymous ${Math.floor(Math.random() * 10000)}`;
 
 						if (user?.isAnonymous) {
 							user.displayName =
-							sessionStorage.getItem('displayName') ??
-							`Anonymous ${Math.floor(Math.random() * 10000)}`;
+								sessionStorage.getItem('displayName') ??
+								`Anonymous ${Math.floor(Math.random() * 10000)}`;
 						}
 
 						// console.info("User is signed in")
@@ -98,7 +98,7 @@ export const listenToAuth =
 
 						if (initialUrl) navigate(initialUrl);
 					} else {
-					// User is not logged in.
+						// User is not logged in.
 						dispatch(resetStatements());
 						dispatch(resetEvaluations());
 						dispatch(resetVotes());

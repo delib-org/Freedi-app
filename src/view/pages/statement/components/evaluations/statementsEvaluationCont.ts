@@ -2,8 +2,8 @@ import {
 	EnhancedEvaluationThumb,
 	enhancedEvaluationsThumbs,
 } from './components/evaluation/enhancedEvaluation/EnhancedEvaluationModel';
-import { updateStatementTop } from '@/model/statements/statementsSlice';
-import { store } from '@/model/store';
+import { updateStatementTop } from '@/redux/statements/statementsSlice';
+import { store } from '@/redux/store';
 import { SortType } from '@/types/enums';
 import { Statement } from '@/types/statement';
 
@@ -53,9 +53,9 @@ export function sortSubStatements(
 				}
 			})
 			.filter((update) => update !== undefined) as {
-			statementId: string;
-			top: number;
-		}[];
+				statementId: string;
+				top: number;
+			}[];
 		dispatch(updateStatementTop(updates));
 
 		return { totalHeight };

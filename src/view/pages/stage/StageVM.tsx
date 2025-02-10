@@ -1,5 +1,5 @@
 import { listenToStatement } from "@/controllers/db/statements/listenToStatements";
-import { statementSelector } from "@/model/statements/statementsSlice";
+import { statementSelector } from "@/redux/statements/statementsSlice";
 import { Statement } from "delib-npm";
 import { useEffect } from "react";
 import { useSelector } from "react-redux";

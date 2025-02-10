@@ -12,7 +12,7 @@ import { useLanguage } from '@/controllers/hooks/useLanguages';
 import {
 	statementSelector,
 	statementSubscriptionSelector,
-} from '@/model/statements/statementsSlice';
+} from '@/redux/statements/statementsSlice';
 import Text from '@/view/components/text/Text';
 import { Statement } from '@/types/statement';
 

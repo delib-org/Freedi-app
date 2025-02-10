@@ -14,7 +14,7 @@ import { getBarWidth } from './OptionBarCont';
 import { getStatementFromDB } from '@/controllers/db/statements/getStatement';
 import { setVoteToDB } from '@/controllers/db/vote/setVote';
 import { statementTitleToDisplay } from '@/controllers/general/helpers';
-import { parentVoteSelector, setVoteToStore } from '@/model/vote/votesSlice';
+import { parentVoteSelector, setVoteToStore } from '@/redux/vote/votesSlice';
 
 export const OptionBar: FC<OptionBarProps> = ({
 	option,

@@ -21,8 +21,8 @@ import {
 	deleteSubscribedStatement,
 	setStatementSubscription,
 	setStatementsSubscription,
-} from '@/model/statements/statementsSlice';
-import { AppDispatch, store } from '@/model/store';
+} from '@/redux/statements/statementsSlice';
+import { AppDispatch, store } from '@/redux/store';
 import { listenedStatements } from '@/view/pages/home/Home';
 import { Collections } from '@/types/enums';
 import { Statement, StatementSchema } from '@/types/statement';
@@ -81,8 +81,8 @@ export const listenToStatementSubSubscriptions = (
 		});
 	} catch (error) {
 		console.error(error);
-		 
-		return () => {};
+
+		return () => { };
 	}
 };
 
@@ -170,14 +170,14 @@ export function listenToStatementSubscriptions(
 		});
 	} catch (error) {
 		console.error('Listen to statement subscriptions error', error);
-		 
-		return () => {};
+
+		return () => { };
 	}
 }
 
 export async function getStatmentsSubsciptions(): Promise<
 	StatementSubscription[]
-	> {
+> {
 	try {
 		const user = store.getState().user.user;
 		if (!user) throw new Error('User not logged in');
@@ -472,7 +472,7 @@ export function getNewStatementsFromSubscriptions(): Unsubscribe {
 		});
 	} catch (error) {
 		console.error(error);
-		 
-		return () => {};
+
+		return () => { };
 	}
 }

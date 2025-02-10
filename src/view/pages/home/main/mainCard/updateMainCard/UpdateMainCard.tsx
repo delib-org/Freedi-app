@@ -7,7 +7,7 @@ import { useAppDispatch, useAppSelector } from "@/controllers/hooks/reduxHooks";
 import {
 	setStatement,
 	statementSelectorById,
-} from '@/model/statements/statementsSlice';
+} from '@/redux/statements/statementsSlice';
 import { Statement } from '@/types/statement';
 
 interface Props {
