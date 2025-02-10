@@ -1,8 +1,8 @@
 import { Dispatch } from '@reduxjs/toolkit';
 import { Unsubscribe, doc, onSnapshot } from 'firebase/firestore';
 import { FireStore } from '@/controllers/db/config';
-import { setStatementMetaData } from '@/model/statements/statementsMetaSlice';
-import { store } from '@/model/store';
+import { setStatementMetaData } from '@/redux/statements/statementsMetaSlice';
+import { store } from '@/redux/store';
 import { Collections } from '@/types/enums';
 import { StatementMetaDataSchema } from '@/types/statement';
 import { parse } from 'valibot';

@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
 
 // Third party imports
-import { Outlet, useLocation, useParams } from "react-router-dom";
+import { Outlet, useLocation, useParams } from "react-router";
 
 // Redux Store
 import HomeHeader from "./HomeHeader";
 import { getNewStatementsFromSubscriptions, listenToStatementSubscriptions } from "@/controllers/db/subscriptions/getSubscriptions";
 import { useAppSelector } from "@/controllers/hooks/reduxHooks";
-import { userSelector } from "@/model/users/userSlice";
+import { userSelector } from "@/redux/users/userSlice";
 
 // Helpers
 

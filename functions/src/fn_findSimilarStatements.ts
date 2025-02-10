@@ -5,43 +5,67 @@ import 'dotenv/config';
 import { Collections } from '../../src/types/enums';
 import { Statement } from '../../src/types/statement';
 
+
 export async function findSimilarStatements(
 	request: Request,
 	response: Response
 ) {
-	const parsedBody = JSON.parse(request.body);
-	const { statementId, userInput } = parsedBody;
+	try {
+		const parsedBody = request.body;
 
-	const ref = db.collection(Collections.statements);
-	const query = ref.where('parentId', '==', statementId);
+		const { statementId, userInput, generateIfNeeded = 6 } = parsedBody;
+		//generateIfNeeded is a boolean that indicates if we should generate similar statements if no similar statements are found
 
-	const subStatementsDB = await query.get();
 
-	const subStatements = subStatementsDB.docs.map((doc) =>
-		doc.data()
-	) as Statement[];
+		const ref = db.collection(Collections.statements);
+		const query = ref.where('parentId', '==', statementId);
 
-	const statementsText = subStatements.map((subStatement) => ({
-		statement: subStatement.statement,
-		id: subStatement.statementId,
-	}));
+		const subStatementsDB = await query.get();
 
-	if (statementsText.length === 0) {
-		response.status(200).send([]);
+		const subStatements = subStatementsDB.docs.map((doc) =>
+			doc.data()
+		) as Statement[];
 
+		const statementsText = subStatements.map((subStatement) => ({
+			statement: subStatement.statement,
+			id: subStatement.statementId,
+		}));
+
+		if (statementsText.length === 0) {
+			const similarStatements = await generateSimilar(userInput);
+			response.status(200).send(similarStatements);
+
+			return;
+		}
+
+		const genAiResponse = await runGenAI(
+			statementsText.map((s) => s.statement),
+			userInput,
+			generateIfNeeded,
+			5
+		);
+
+		const similarStatementsIds = statementsText
+			.filter((subStatement) => genAiResponse.includes(subStatement.statement))
+			.map((s) => s.id);
+
+		const similarStatements = similarStatementsIds.map((id) => subStatements.find((subStatement) => subStatement.statementId === id)).filter((s) => s !== undefined);
+
+		const remainingSimilarStatements = 5 - similarStatements.length;
+
+		if (remainingSimilarStatements > 0) {
+
+			const generated = await generateSimilar(userInput, remainingSimilarStatements);
+			response.status(200).send({ optionsInDB: similarStatements, optionsGenerated: generated, userOption: userInput, ok: true });
+			return;
+		}
+
+		response.status(200).send({ optionsInDB: similarStatements, ok: true, userOption: userInput });
+	} catch (error: any) {
+		response.status(500).send({ error: error.message, ok: false });
+		console.error(error.message, { error });
 		return;
 	}
-
-	const genAiResponse = await runGenAI(
-		statementsText.map((s) => s.statement),
-		userInput
-	);
-
-	const similarStatementsIds = statementsText
-		.filter((subStatement) => genAiResponse.includes(subStatement.statement))
-		.map((subStatement) => subStatement.id);
-
-	response.status(200).send(similarStatementsIds);
 }
 
 let genAI: GoogleGenerativeAI;
@@ -58,12 +82,13 @@ onInit(() => {
 	}
 });
 
-export async function runGenAI(allStatements: string[], userInput: string) {
+export async function runGenAI(allStatements: string[], userInput: string, generateIfNeeded?: boolean, numberOfSimilarStatements: number = 6) {
 	try {
+		console.log("runGenAI 2", allStatements, userInput, generateIfNeeded);
 		const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
 		const prompt = `
-		Find the sentences in the following strings:  ${allStatements},  that are similar to the user input '${userInput}'. 
+		Find up to ${numberOfSimilarStatements} sentences in the following strings:  ${allStatements},  that are similar to the user input '${userInput}'. 
 		The use Input can be either in English or in Hebrew. Look for similar strings to the user input in both languages.
 		Consider a match if the sentence shares at least 60% similarity in meaning the user input.
 		Give answer back in this json format: { strings: ['string1', 'string2', ...] }
@@ -72,6 +97,30 @@ export async function runGenAI(allStatements: string[], userInput: string) {
 		const result = await model.generateContent(prompt);
 
 		const response = result.response;
+		const text = response.text();
+
+		return extractAndParseJsonString(text).strings;
+	} catch (error) {
+		console.error('Error running GenAI', error);
+
+		return [];
+	}
+}
+
+export async function generateSimilar(userInput: string, remainingSimilarStatements: number = 5) {
+	try {
+		console.log("runGenAI 2", userInput,);
+		const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+
+		const prompt = `
+		create ${remainingSimilarStatements} similar sentences to the user input '${userInput}'.
+		Give answer back in this json format: { strings: ['string1', 'string2', ...] }
+		`;
+
+		const result = await model.generateContent(prompt);
+
+		const response = result.response;
+		console.log("results:", response);
 		const text = response.text();
 
 		return extractAndParseJsonString(text).strings;

@@ -1,7 +1,11 @@
 import { createSelector } from '@reduxjs/toolkit';
 import { FC, useEffect, useMemo, useState } from 'react';
+
+// Third party imports
 import { useSelector } from 'react-redux';
-import { useParams } from 'react-router-dom';
+import { useParams } from 'react-router';
+
+// firestore
 import LoadingPage from '../loadingPage/LoadingPage';
 import Page404 from '../page404/Page404';
 import UnAuthorizedPage from '../unAuthorizedPage/UnAuthorizedPage';
@@ -28,10 +32,10 @@ import { statementTitleToDisplay } from '@/controllers/general/helpers';
 import { useIsAuthorized } from '@/controllers/hooks/authHooks';
 import { useAppDispatch } from '@/controllers/hooks/reduxHooks';
 import { MapProvider } from '@/controllers/hooks/useMap';
-import { RootState } from '@/model/store';
-import { userSelector } from '@/model/users/userSlice';
+import { RootState } from '@/redux/store';
+import { userSelector } from '@/redux/users/userSlice';
 import Modal from '@/view/components/modal/Modal';
-import { StatementType, Access } from '@/types/enums';
+import { StatementType, Access, QuestionType } from '@/types/enums';
 import { Role, User } from '@/types/user';
 
 // Create selectors
@@ -60,9 +64,8 @@ const StatementMain: FC = () => {
 	const [talker, setTalker] = useState<User | null>(null);
 	const [isStatementNotFound, setIsStatementNotFound] = useState(false);
 	const [showNewStatement, setShowNewStatement] = useState<boolean>(false);
-	const [newStatementType, setNewStatementType] = useState<StatementType>(
-		StatementType.group
-	);
+	const [newStatementType, setNewStatementType] = useState<StatementType>(StatementType.group);
+	const [newQuestionType, setNewQuestionType] = useState<QuestionType>(QuestionType.multiStage);
 
 	// const [_, setPasswordCheck] = useState<boolean>(false)
 
@@ -91,7 +94,7 @@ const StatementMain: FC = () => {
 		if (statement && screen) {
 			//set navigator tab title
 			const { shortVersion } = statementTitleToDisplay(statement.statement, 15);
-			document.title = `FreeDi - ${shortVersion}-${screen}`;
+			document.title = `FreeDi - ${shortVersion}`;
 		}
 	}, [statement, screen]);
 
@@ -180,32 +183,24 @@ const StatementMain: FC = () => {
 		}
 	}, [statement]);
 
-	const contextValue = useMemo(
-		() => ({
-			statement,
-			talker,
-			handleShowTalker,
-			role,
-			handleSetNewStatement,
-			setNewStatementType,
-			newStatementType,
-		}),
-		[
-			statement,
-			talker,
-			role,
-			handleShowTalker,
-			handleSetNewStatement,
-			setNewStatementType,
-			newStatementType,
-		]
-	);
+	const contextValue = useMemo(() => ({
+		statement,
+		talker,
+		handleShowTalker,
+		role,
+		handleSetNewStatement,
+		setNewStatementType,
+		newStatementType,
+		setNewQuestionType,
+		newQuestionType,
+	}), [statement, talker, role, handleShowTalker, handleSetNewStatement, setNewStatementType, newStatementType]);
 
 	if (isStatementNotFound) return <Page404 />;
 	if (error) return <UnAuthorizedPage />;
 	if (loading) return <LoadingPage />;
 
 	if (isAuthorized) {
+
 		return (
 			<StatementContext.Provider value={contextValue}>
 				<div className='page'>
@@ -220,6 +215,7 @@ const StatementMain: FC = () => {
 					)}
 					<StatementHeader
 						statement={statement}
+						parentStatement={undefined}
 						topParentStatement={topParentStatement}
 					/>
 					<MapProvider>

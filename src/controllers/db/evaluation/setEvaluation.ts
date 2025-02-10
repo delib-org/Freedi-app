@@ -1,6 +1,6 @@
 import { Timestamp, doc, setDoc } from 'firebase/firestore';
 import { FireStore } from '../config';
-import { store } from '@/model/store';
+import { store } from '@/redux/store';
 import { Statement } from '@/types/statement';
 import { number, parse } from 'valibot';
 import { Collections } from '@/types/enums';

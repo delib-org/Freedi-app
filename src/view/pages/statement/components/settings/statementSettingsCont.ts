@@ -1,4 +1,5 @@
-import { NavigateFunction } from 'react-router-dom';
+// Helpers
+import { NavigateFunction } from 'react-router';
 import {
 	defaultResultsSettings,
 	defaultStatementSettings,

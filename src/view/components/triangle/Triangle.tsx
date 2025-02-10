@@ -3,7 +3,7 @@ import { useSelector } from 'react-redux';
 import Dot from './dot/Dot';
 import styles from './Triangle.module.scss';
 import { useLanguage } from '@/controllers/hooks/useLanguages';
-import { statementOptionsSelector } from '@/model/statements/statementsSlice';
+import { statementOptionsSelector } from '@/redux/statements/statementsSlice';
 import { Statement } from '@/types/statement';
 
 interface Props {

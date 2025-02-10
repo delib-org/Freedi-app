@@ -1,4 +1,4 @@
-import { statementSubsSelector } from '@/model/statements/statementsSlice';
+import { statementSubsSelector } from '@/redux/statements/statementsSlice';
 import styles from './GroupPage.module.scss';
 import Button from '@/view/components/buttons/button/Button';
 import { useContext } from 'react';
@@ -7,11 +7,12 @@ import { StatementContext } from '../../../StatementCont';
 import './groupPage.scss';
 import AddButton from './AddButton';
 import SubGroupCard from '@/view/components/subGroupCard/SubGroupCard';
-import { StatementType } from '@/types/enums';
+import { QuestionType, StatementType } from '@/types/enums';
 
 export default function GroupPage() {
-	const { handleSetNewStatement, setNewStatementType, statement } =
+	const { handleSetNewStatement, setNewStatementType, statement, setNewQuestionType } =
 		useContext(StatementContext);
+
 	const subStatements = useSelector(
 		statementSubsSelector(statement?.statementId)
 	);
@@ -22,8 +23,13 @@ export default function GroupPage() {
 		(sub) => sub.statementType === StatementType.question
 	);
 
-	function handleAddStatement(newStatementType: StatementType) {
+	function handleAddStatement(newStatementType: StatementType, questionType?: QuestionType) {
+
 		setNewStatementType(newStatementType);
+		if (questionType) {
+			setNewQuestionType(questionType);
+
+		}
 		handleSetNewStatement(true);
 	}
 
@@ -49,8 +55,12 @@ export default function GroupPage() {
 						onClick={() => handleAddStatement(StatementType.group)}
 					></Button>
 					<Button
+						text='add mass consensus'
+						onClick={() => handleAddStatement(StatementType.question, QuestionType.massConsensus)}
+					></Button>
+					<Button
 						text='add question'
-						onClick={() => handleAddStatement(StatementType.question)}
+						onClick={() => handleAddStatement(StatementType.question, QuestionType.multiStage)}
 					></Button>
 				</div>
 				<AddButton />

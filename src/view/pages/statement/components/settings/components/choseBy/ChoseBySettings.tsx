@@ -5,7 +5,7 @@ import styles from './ChoseBySettings.module.scss';
 import { StatementSettingsProps } from '../../settingsTypeHelpers';
 
 import { useDispatch, useSelector } from 'react-redux';
-import { choseBySelector, setChoseBy } from '@/model/choseBy/choseBySlice';
+import { choseBySelector, setChoseBy } from '@/redux/choseBy/choseBySlice';
 import { setChoseByToDB } from '@/controllers/db/choseBy/setChoseBy';
 import { ChoseBy, ChoseByEvaluationType, CutoffType } from '@/types/choseBy';
 

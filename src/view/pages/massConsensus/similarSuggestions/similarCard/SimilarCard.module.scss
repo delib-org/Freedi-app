@@ -1,0 +1,21 @@
+.similar-card {
+	background-color: wheat;
+	padding: 1rem;
+	cursor: pointer;
+	user-select: none;
+	transition: all 0.1s;
+	font-size: 1.2rem;
+
+	&:hover {
+		transform: scale(1.01);
+	}
+
+	&--userStatement {
+		font-size: 1.5rem;
+		background-color: rgb(240, 163, 163);
+	}
+
+	&--selected {
+		background-color: rgb(163, 240, 163);
+	}
+}

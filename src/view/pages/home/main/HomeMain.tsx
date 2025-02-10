@@ -2,13 +2,13 @@ import { useEffect, useState } from "react";
 import "@/view/style/homePage.scss"
 
 // Third party libraries
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 
 // Redux store
 import MainCard from "./mainCard/MainCard";
 import bike from "@/assets/images/bike.png";
 import { useAppSelector } from "@/controllers/hooks/reduxHooks";
-import { statementsSelector } from "@/model/statements/statementsSlice";
+import { statementsSelector } from "@/redux/statements/statementsSlice";
 
 // Custom components
 import Footer from "@/view/components/footer/Footer";

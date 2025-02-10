@@ -1,8 +1,8 @@
 import { doc, setDoc } from 'firebase/firestore';
 import { FireStore } from '../config';
-import { QuestionSettings, QuestionType } from '@/types/question';
+import { QuestionSettings, } from '@/types/question';
 import { Statement, StatementSettings } from '@/types/statement';
-import { Collections } from '@/types/enums';
+import { Collections, QuestionType } from '@/types/enums';
 
 interface SetStatementSettingsProps {
 	statement: Statement;
@@ -63,5 +63,20 @@ export function setQuestionTypeToDB({
 		);
 	} catch (error) {
 		console.error(error);
+	}
+}
+
+export function updateQuestionType({ statement, newValue }: { statement: Statement, newValue: QuestionType }) {
+	try {
+
+		const statementSettingsRef = doc(FireStore, Collections.statementsSettings, statement.statementId);
+		setDoc(statementSettingsRef, {
+			questionSettings: {
+				questionType: newValue
+			}
+		}, { merge: true });
+	} catch (error) {
+		console.error(error);
+
 	}
 }

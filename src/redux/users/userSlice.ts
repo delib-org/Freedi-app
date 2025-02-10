@@ -1,6 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
-import { defaultFontSize } from '../fonts/fontsModel';
+import { defaultFontSize } from '../../model/fonts/fontsModel';
 import { RootState } from '../store';
 import { UserSettings, UserSchema, Agreement, User } from '@/types/user';
 import { parse } from 'valibot';

@@ -1,6 +1,6 @@
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { FireStore } from '../config';
-import { store } from '@/model/store';
+import { store } from '@/redux/store';
 import { Collections } from '@/types/enums';
 import { UserSchema, Agreement, AgreementSchema, User } from '@/types/user';
 import { parse } from 'valibot';
