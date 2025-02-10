@@ -14,7 +14,7 @@
 		"build:dev": "tsc && vite build --mode development",
 		"build:test": "tsc && vite build --mode testing",
 		"dev:all": "npm-run-all -p dev deve devf",
-		"lint": "eslint",
+		"lint": "eslint --fix",
 		"typecheck": "tsc",
 		"check-all": "npm-run-all lint typecheck build",
 		"deploy:h": "npm run build && firebase use prod && firebase deploy --only hosting:prod",

@@ -93,20 +93,21 @@ export async function updateParentWithNewMessageCB(
 	}
 }
 
-
 export async function getQuestionOptions(req: Request, res: Response) {
 	try {
 		const { statementId } = req.query;
 		if (!statementId) throw new Error('statementId is required');
 
 		const ref = db.collection(Collections.statements);
-		const query = ref.where('parentId', '==', statementId).where('statementType', '==', StatementType.option);
+		const query = ref
+			.where('parentId', '==', statementId)
+			.where('statementType', '==', StatementType.option);
 		const optionsDB = await query.get();
 		const options = optionsDB.docs.map((doc) => doc.data()) as Statement[];
 
 		res.status(200).send({ options, ok: true });
-	} catch (error: any) {
+	} catch (error) {
 		console.error(error);
-		res.status(500).send({ error: error.message, ok: false });
+		res.status(500).send({ error: error, ok: false });
 	}
 }

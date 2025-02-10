@@ -5,7 +5,6 @@ import 'dotenv/config';
 import { Collections } from '../../src/types/enums';
 import { Statement } from '../../src/types/statement';
 
-
 export async function findSimilarStatements(
 	request: Request,
 	response: Response
@@ -15,7 +14,6 @@ export async function findSimilarStatements(
 
 		const { statementId, userInput, generateIfNeeded = 6 } = parsedBody;
 		//generateIfNeeded is a boolean that indicates if we should generate similar statements if no similar statements are found
-
 
 		const ref = db.collection(Collections.statements);
 		const query = ref.where('parentId', '==', statementId);
@@ -46,24 +44,45 @@ export async function findSimilarStatements(
 		);
 
 		const similarStatementsIds = statementsText
-			.filter((subStatement) => genAiResponse.includes(subStatement.statement))
+			.filter((subStatement) =>
+				genAiResponse.includes(subStatement.statement)
+			)
 			.map((s) => s.id);
 
-		const similarStatements = similarStatementsIds.map((id) => subStatements.find((subStatement) => subStatement.statementId === id)).filter((s) => s !== undefined);
+		const similarStatements = similarStatementsIds
+			.map((id) =>
+				subStatements.find(
+					(subStatement) => subStatement.statementId === id
+				)
+			)
+			.filter((s) => s !== undefined);
 
 		const remainingSimilarStatements = 5 - similarStatements.length;
 
 		if (remainingSimilarStatements > 0) {
+			const generated = await generateSimilar(
+				userInput,
+				remainingSimilarStatements
+			);
+			response.status(200).send({
+				optionsInDB: similarStatements,
+				optionsGenerated: generated,
+				userOption: userInput,
+				ok: true,
+			});
 
-			const generated = await generateSimilar(userInput, remainingSimilarStatements);
-			response.status(200).send({ optionsInDB: similarStatements, optionsGenerated: generated, userOption: userInput, ok: true });
 			return;
 		}
 
-		response.status(200).send({ optionsInDB: similarStatements, ok: true, userOption: userInput });
-	} catch (error: any) {
-		response.status(500).send({ error: error.message, ok: false });
-		console.error(error.message, { error });
+		response.status(200).send({
+			optionsInDB: similarStatements,
+			ok: true,
+			userOption: userInput,
+		});
+	} catch (error) {
+		response.status(500).send({ error: error, ok: false });
+		console.error('error', { error });
+
 		return;
 	}
 }
@@ -82,9 +101,13 @@ onInit(() => {
 	}
 });
 
-export async function runGenAI(allStatements: string[], userInput: string, generateIfNeeded?: boolean, numberOfSimilarStatements: number = 6) {
+export async function runGenAI(
+	allStatements: string[],
+	userInput: string,
+	generateIfNeeded?: boolean,
+	numberOfSimilarStatements: number = 6
+) {
 	try {
-		console.log("runGenAI 2", allStatements, userInput, generateIfNeeded);
 		const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
 		const prompt = `
@@ -107,9 +130,11 @@ export async function runGenAI(allStatements: string[], userInput: string, gener
 	}
 }
 
-export async function generateSimilar(userInput: string, remainingSimilarStatements: number = 5) {
+export async function generateSimilar(
+	userInput: string,
+	remainingSimilarStatements: number = 5
+) {
 	try {
-		console.log("runGenAI 2", userInput,);
 		const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
 		const prompt = `
@@ -120,7 +145,6 @@ export async function generateSimilar(userInput: string, remainingSimilarStateme
 		const result = await model.generateContent(prompt);
 
 		const response = result.response;
-		console.log("results:", response);
 		const text = response.text();
 
 		return extractAndParseJsonString(text).strings;

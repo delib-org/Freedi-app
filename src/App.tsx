@@ -55,8 +55,9 @@ export default function App() {
 	}, []);
 
 	useEffect(() => {
-		const authUnsubscribe: Unsubscribe = listenToAuth(dispatch)(
+		const authUnsubscribe: Unsubscribe = listenToAuth(
 			navigate,
+			false,
 			initLocation
 		);
 
