@@ -9,11 +9,13 @@ import SimilarCard from './similarCard/SimilarCard';
 import { Statement } from '@/types/statement';
 import { GeneratedStatement } from '@/types/massConsensus/massConsensusModel';
 import styles from './SimilarSuggestions.module.scss';
+import { useSimilarSuggestions } from './SimilarSuggestionVM';
 
 const SimilarSuggestions = () => {
 	const navigate = useNavigate();
 	const { dir } = useParamsLanguage();
 	const { statementId } = useParams<{ statementId: string }>();
+	const { handleSetSuggestionToDB } = useSimilarSuggestions();
 	const similarSuggestions = useSelector(selectSimilarStatements);
 
 	const [selected, setSelected] = React.useState<number | null>(null);
@@ -36,10 +38,10 @@ const SimilarSuggestions = () => {
 					<SimilarCard key={index} statement={suggestion} isUserStatement={index === 0} selected={selected !== null && selected === index} index={index} handleSelect={handleSelect} />
 				))}
 			</div>
-			{selected !== null && <div className="btns">
+			<div className="btns">
 				<button className='btn btn--secondary btn--large' onClick={() => navigate(`/mass-consensus/${statementId}/${MassConsensusPageUrls.initialQuestion}`)}>Back</button>
-				<button className='btn btn--primary btn--large' onClick={() => navigate(`/mass-consensus/${statementId}/${MassConsensusPageUrls.randomSuggestions}`)}>Next</button>
-			</div>}
+				{selected !== null && <button className='btn btn--primary btn--large' onClick={() => handleSetSuggestionToDB(similarSuggestions[selected])}>Next</button>}
+			</div>
 
 		</div>
 	)

@@ -1,16 +1,28 @@
+import { listenToAuth, signAnonymously } from "@/controllers/db/auth";
 import { setStatement, statementSelector } from "@/redux/statements/statementsSlice";
+import { userSelector } from "@/redux/users/userSlice";
 import { Statement } from "@/types/statement";
+
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useParams } from "react-router";
+import { useNavigate, useParams } from "react-router";
 
 export function useIntroductionMV() {
 	const dispatch = useDispatch();
-
+	const navigate = useNavigate();
 	const { statementId } = useParams<{ statementId: string }>();
 	const statement = useSelector(statementSelector(statementId));
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
+	const user = useSelector(userSelector);
+
+	useEffect(() => {
+		listenToAuth(navigate, true, `/mass-consensus/${statementId}/introduction`);
+	}, []);
+
+	useEffect(() => {
+		if (!user) signAnonymously();
+	}, [user]);
 
 	useEffect(() => {
 		if (!statementId) return;
