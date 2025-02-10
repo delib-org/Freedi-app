@@ -73,6 +73,7 @@ export default function AddButton() {
 					{actions.map(({ key, action, icon }) => (
 						<IconButton
 							key={key}
+
 							onClick={() => handleAction(action)}
 						>
 							{icon}

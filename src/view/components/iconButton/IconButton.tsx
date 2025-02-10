@@ -1,17 +1,14 @@
 import { ComponentProps, FC } from "react";
 import "./IconButton.scss";
 
-interface IconButtonProps extends ComponentProps<'button'> {
-	isSubAction?: boolean;
-}
-
-const IconButton: FC<IconButtonProps> = ({
+const IconButton: FC<ComponentProps<"button">>  = ({
 	className = "action-btn",
+	
 	...props
 }) => {
 	return (
 		<button
-			className={`icon-button  ${className}`}
+			className={`icon-button ${className}`}
 			aria-label="Icon button"
 			{...props}
 		/>
