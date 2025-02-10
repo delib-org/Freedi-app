@@ -37,8 +37,8 @@ const SimilarSuggestions = () => {
 				))}
 			</div>
 			{selected !== null && <div className="btns">
-				<button className='btn' onClick={() => navigate(`/mass-consensus/${statementId}/${MassConsensusPageUrls.initialQuestion}`)}>Back</button>
-				<button className='btn' onClick={() => navigate(`/mass-consensus/${statementId}/${MassConsensusPageUrls.randomSuggestions}`)}>Next</button>
+				<button className='btn btn--secondary btn--large' onClick={() => navigate(`/mass-consensus/${statementId}/${MassConsensusPageUrls.initialQuestion}`)}>Back</button>
+				<button className='btn btn--primary btn--large' onClick={() => navigate(`/mass-consensus/${statementId}/${MassConsensusPageUrls.randomSuggestions}`)}>Next</button>
 			</div>}
 
 		</div>

@@ -163,11 +163,13 @@
 
 
   //buttons
+  --btn-primary: #5f88e5;
   --btn-primary-default: #5f88e5;
   --btn-primary-hover: #80a0ea;
   --btn-primary-selected: #285edc;
   --btn-primary-disabled: #e2e6ee;
 
+  --btn-secondary: #5f88e5;
   --btn-secondary-default: #5f88e5;
   --btn-secondary-hover: #80a0ea;
   --btn-secondary-selected-border: #285edc;
@@ -184,11 +186,13 @@
   --btn-orange-selected: #ea4715;
 
   //buttons-contrast
+  --brn-primary-contrast: #165bfa;
   --btn-primary-default-contrast: #165bfa;
   --btn-primary-hover-contrast: #467cfb;
   --btn-primary-selected-contrast: #0544d7;
   --btn-primary-disabled-contrast: #dce0ea;
 
+  ----btn-secondary-contrast: #165bfa;
   --btn-secondary-default-contrast: #165bfa;
   --btn-secondary-hover-contrast: #467cfb;
   --btn-secondary-selected-border-contrast: #0544d7;
