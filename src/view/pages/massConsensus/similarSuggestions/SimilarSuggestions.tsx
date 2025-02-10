@@ -5,12 +5,22 @@ import HeaderMassConsensus from '../headerMassConsensus/HeaderMassConsensus';
 import { MassConsensusPageUrls } from '@/types/enums';
 import { useSelector } from 'react-redux';
 import { selectSimilarStatements } from '@/redux/massConsensus/massConsensusSlice';
+import SimilarCard from './similarCard/SimilarCard';
+import { Statement } from '@/types/statement';
+import { GeneratedStatement } from '@/types/massConsensus/massConsensusModel';
+import styles from './SimilarSuggestions.module.scss';
 
 const SimilarSuggestions = () => {
 	const navigate = useNavigate();
 	const { dir } = useParamsLanguage();
 	const { statementId } = useParams<{ statementId: string }>();
 	const similarSuggestions = useSelector(selectSimilarStatements);
+
+	const [selected, setSelected] = React.useState<number | null>(null);
+
+	function handleSelect(index: number) {
+		setSelected(index);
+	}
 
 	useEffect(() => {
 
@@ -21,11 +31,15 @@ const SimilarSuggestions = () => {
 		<div style={{ direction: dir }}>
 			<HeaderMassConsensus backTo={MassConsensusPageUrls.initialQuestion} />
 			<h3>Similar Suggestions</h3>
-			<ul>
-				{similarSuggestions.map((suggestion, index) => (
-					<li key={index}>{suggestion.statement}</li>
+			<div className={styles["similar-suggestions__wrapper"]}>
+				{similarSuggestions.map((suggestion: Statement | GeneratedStatement, index: number) => (
+					<SimilarCard key={index} statement={suggestion} isUserStatement={index === 0} selected={selected !== null && selected === index} index={index} handleSelect={handleSelect} />
 				))}
-			</ul>
+			</div>
+			{selected !== null && <div className="btns">
+				<button className='btn' onClick={() => navigate(`/mass-consensus/${statementId}/${MassConsensusPageUrls.initialQuestion}`)}>Back</button>
+				<button className='btn' onClick={() => navigate(`/mass-consensus/${statementId}/${MassConsensusPageUrls.randomSuggestions}`)}>Next</button>
+			</div>}
 
 		</div>
 	)

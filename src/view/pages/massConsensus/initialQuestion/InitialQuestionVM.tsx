@@ -20,8 +20,8 @@ export function useInitialQuestion(): InitialQuestionVM {
 		ev.preventDefault();
 		setLoading(true);
 		const userInput = ev.currentTarget.userInput.value;
-		const { optionsInDB, optionsGenerated } = await getSimilarStatements(statementId, userInput)
-		dispatch(setSimilarStatements([...optionsInDB, ...optionsGenerated]));
+		const { optionsInDB, optionsGenerated, userOption } = await getSimilarStatements(statementId, userInput)
+		dispatch(setSimilarStatements([...[userOption], ...optionsInDB, ...optionsGenerated]));
 		setReady(true);
 		setLoading(false);
 
@@ -48,11 +48,11 @@ async function getSimilarStatements(statementId: string, userInput: string) {
 			}),
 		});
 		const data = await response.json();
-		const { optionsInDB, optionsGenerated } = data;
-
+		const { optionsInDB, optionsGenerated, userOption } = data;
+		const _userOption = { statement: userOption, statementId: null };
 		const _optionsGenerated = optionsGenerated.map((option: string) => ({ statement: option, statementId: null }));
 
-		return { optionsInDB, optionsGenerated: _optionsGenerated };
+		return { optionsInDB, optionsGenerated: _optionsGenerated, userOption: _userOption };
 	} catch (error) {
 		console.error('Error:', error);
 	}
