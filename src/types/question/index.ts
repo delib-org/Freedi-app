@@ -1,13 +1,13 @@
-import { object, string, optional, nullable, number, boolean } from 'valibot';
+import { object, optional, enum_, InferOutput, array } from 'valibot';
+import { QuestionStage, QuestionStagesType, QuestionStep, QuestionType } from '../enums';
 
-export const NotificationSchema = object({
-	userId: string(),
-	parentId: string(),
-	parentStatement: optional(string()),
-	text: string(),
-	creatorName: string(),
-	creatorImage: optional(nullable(string())),
-	createdAt: number(),
-	read: boolean(),
-	notificationId: string(),
+export const QuestionSettingsSchema = object({
+	questionType: optional(enum_(QuestionType)), //deprecated
+	steps: optional(enum_(QuestionStagesType)),
+	stepsAllowed: optional(array(enum_(QuestionStep))),
+	stages: optional(array(enum_(QuestionStage))),
+	currentStep: optional(enum_(QuestionStep)),
+	currentStage: optional(enum_(QuestionStage)), //deprecated
 });
+
+export type QuestionSettings = InferOutput<typeof QuestionSettingsSchema>;

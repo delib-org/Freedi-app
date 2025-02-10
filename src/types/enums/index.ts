@@ -106,6 +106,7 @@ export enum Collections {
 	signUsers = 'signUsers',
 	statementViews = 'statementViews',
 	statementSegments = 'statementSegments',
+	inAppNotifications = 'inAppNotifications',
 }
 
 export enum Screen {

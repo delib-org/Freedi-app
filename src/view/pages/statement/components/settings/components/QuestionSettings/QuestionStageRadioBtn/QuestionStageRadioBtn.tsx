@@ -11,7 +11,7 @@ import { useLanguage } from '@/controllers/hooks/useLanguages';
 import { statementMetaDataSelector } from '@/redux/statements/statementsMetaSlice';
 import { Statement } from '@/types/statement';
 import { getStepInfo } from './helpers';
-import { QuestionStep } from '@/types/question';
+import { QuestionStep } from '@/types/enums';
 
 interface Props {
 	step: QuestionStep;

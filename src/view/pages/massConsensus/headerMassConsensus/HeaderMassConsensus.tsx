@@ -1,8 +1,8 @@
 import { Link, useParams } from 'react-router';
 import BackIcon from '../../../../assets/icons/chevronLeftIcon.svg?react';
 import styles from './HeaderMassConsensus.module.scss';
-import { MassConsensusPageUrls } from '../model/massConsensusModel';
 import { useParamsLanguage } from '../useParamsLang/UseParamsLanguge';
+import { MassConsensusPageUrls } from '@/types/enums';
 
 const HeaderMassConsensus = ({ backTo, backToApp }: { backTo: MassConsensusPageUrls, backToApp?: boolean }) => {
 	const { statementId } = useParams<{ statementId: string }>();

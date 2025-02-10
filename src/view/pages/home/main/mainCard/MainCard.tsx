@@ -1,4 +1,3 @@
-import { Statement } from "delib-npm";
 import { FC, useEffect } from "react";
 import { Link } from "react-router";
 import styles from "./MainCard.module.scss";
@@ -11,9 +10,10 @@ import { useAppSelector } from "@/controllers/hooks/reduxHooks";
 import { subStatementsByTopParentIdMemo } from "@/redux/statements/statementsSlice";
 import Text from "@/view/components/text/Text";
 import StatementChatMore from "@/view/pages/statement/components/chat/components/StatementChatMore";
+import { Statement } from "@/types/statement";
 
 interface Props {
-  statement: Statement;
+	statement: Statement;
 }
 
 const MainCard: FC<Props> = ({ statement }) => {
@@ -26,13 +26,13 @@ const MainCard: FC<Props> = ({ statement }) => {
 	const subStatements = getLastElements(_subStatements, 7) as Statement[];
 	const statementImgUrl = statement.imagesURL?.main;
 	const description =
-    statement.description && statement.description.length > 30
-    	? `${statement.description.slice(0, 144)} ...`
-    	: statement.description;
+		statement.description && statement.description.length > 30
+			? `${statement.description.slice(0, 144)} ...`
+			: statement.description;
 
 	useEffect(() => {
 		const unsub = listenToAllSubStatements(statement.statementId);
-		
+
 		return () => {
 			unsub();
 		};

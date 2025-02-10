@@ -1,4 +1,5 @@
-import { Statement, StatementType } from "delib-npm";
+import { StatementType } from "@/types/enums";
+import { Statement } from "@/types/statement";
 
 export function styleSwitch(statement: Statement) {
 	const { statementType } = statement;

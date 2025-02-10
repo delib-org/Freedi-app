@@ -215,6 +215,7 @@ const StatementMain: FC = () => {
 					)}
 					<StatementHeader
 						statement={statement}
+						parentStatement={undefined}
 						topParentStatement={topParentStatement}
 					/>
 					<MapProvider>

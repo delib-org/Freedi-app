@@ -1,5 +1,5 @@
+import { QuestionStep } from '@/types/enums';
 import { StepInfo, getStepsInfo } from './QuestionStageRadioBtn';
-import { QuestionStep } from '@/types/question';
 
 export function getStepInfo(
 	step: QuestionStep,

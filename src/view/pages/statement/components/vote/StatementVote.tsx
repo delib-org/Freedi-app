@@ -20,7 +20,7 @@ import Toast from '@/view/components/toast/Toast';
 import { useLanguage } from '@/controllers/hooks/useLanguages';
 import { StatementContext } from '../../StatementCont';
 import { Statement } from '@/types/statement';
-import { QuestionStep } from '@/types/question';
+import { QuestionStep } from '@/types/enums';
 
 let getVoteFromDB = false;
 
