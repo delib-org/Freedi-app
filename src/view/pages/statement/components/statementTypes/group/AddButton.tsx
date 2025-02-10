@@ -72,7 +72,6 @@ export default function AddButton() {
 				<>
 					{actions.map(({ key, action, icon }) => (
 						<IconButton
-							isSubAction
 							key={key}
 							onClick={() => handleAction(action)}
 						>

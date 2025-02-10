@@ -6,13 +6,12 @@ interface IconButtonProps extends ComponentProps<'button'> {
 }
 
 const IconButton: FC<IconButtonProps> = ({
-	className = "",
-	isSubAction = false,
+	className = "action-btn",
 	...props
 }) => {
 	return (
 		<button
-			className={`icon-button ${isSubAction ? "action-btn" : ""} ${className}`}
+			className={`icon-button  ${className}`}
 			aria-label="Icon button"
 			{...props}
 		/>
