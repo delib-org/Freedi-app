@@ -5,7 +5,7 @@ import Button, { ButtonType } from '@/view/components/buttons/button/Button';
 import Modal from '@/view/components/modal/Modal';
 import AddStage from './addStage/AddStage';
 import { useSelector } from 'react-redux';
-import { statementSubsSelector } from '@/model/statements/statementsSlice';
+import { statementSubsSelector } from '@/redux/statements/statementsSlice';
 import StageCard from './stages/StageCard';
 import { updateStatementsOrderToDB } from '@/controllers/db/statements/setStatements';
 import { Statement } from '@/types/statement';

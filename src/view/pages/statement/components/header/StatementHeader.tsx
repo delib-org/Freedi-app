@@ -1,10 +1,5 @@
-import { Statement } from 'delib-npm';
 import React, { FC, useState } from 'react';
-
-// Third party imports
 import { useLocation } from 'react-router';
-
-// Helpers
 import StatementTopNav from '../nav/top/StatementTopNav';
 import InvitePanel from './invitePanel/InvitePanel';
 import { logOut } from '@/controllers/db/auth';
@@ -15,15 +10,13 @@ import { Statement } from '@/types/statement';
 interface Props {
 	statement: Statement | undefined;
 	topParentStatement: Statement | undefined;
-	parentStatement?: Statement | undefined;
-	setShowAskPermission?: React.Dispatch<React.SetStateAction<boolean>>;
+	parentStatement: Statement | undefined;
 }
 
 const StatementHeader: FC<Props> = ({
 	statement,
 	topParentStatement,
-	parentStatement,
-	setShowAskPermission,
+	parentStatement
 }) => {
 	// Hooks
 	const { pathname } = useLocation();
@@ -54,10 +47,6 @@ const StatementHeader: FC<Props> = ({
 		} finally {
 			setIsHeaderMenuOpen(false);
 		}
-	}
-	function handleToggleNotifications() {
-		toggleNotifications(statement, permission, t, setShowAskPermission);
-		setIsHeaderMenuOpen(false);
 	}
 
 	function handleInvitePanel() {

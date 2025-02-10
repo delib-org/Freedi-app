@@ -4,7 +4,7 @@ import { useParams } from "react-router";
 import { sortSubStatements } from "../../statementsEvaluationCont";
 import SuggestionCard from "./suggestionCard/SuggestionCard";
 import styles from "./SuggestionCards.module.scss";
-import { statementSubsSelector } from "@/model/statements/statementsSlice";
+import { statementSubsSelector } from "@/redux/statements/statementsSlice";
 import { StatementContext } from "@/view/pages/statement/StatementCont";
 import EmptyScreen from "../emptyScreen/EmptyScreen";
 import { Statement } from "@/types/statement";

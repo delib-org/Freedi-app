@@ -25,7 +25,7 @@ import './StatementSettingsForm.scss';
 import SaveIcon from '@/assets/icons/save.svg?react';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { createSelector } from '@reduxjs/toolkit';
-import { RootState } from '@/model/store';
+import { RootState } from '@/redux/store';
 import Loader from '@/view/components/loaders/Loader';
 import { Statement } from '@/types/statement';
 import { StatementSubscription } from '@/types/statement/subscription';

@@ -7,7 +7,7 @@ import {
 	writeBatch,
 } from 'firebase/firestore';
 import { FireStore } from '../config';
-import { store } from '@/model/store';
+import { store } from '@/redux/store';
 import {
 	getExistingOptionColors,
 	getSiblingOptionsByParentId,
@@ -136,8 +136,11 @@ interface SetStatementToDBParams {
 
 export const setStatementToDB = async ({
 	statement,
-	parentStatement,
-}: SetStatementToDBParams): Promise<string | undefined> => {
+	parentStatement
+}: SetStatementToDBParams): Promise<{
+	statementId: string,
+	statement: Statement
+} | undefined> => {
 	try {
 		if (!statement) throw new Error('Statement is undefined');
 		if (!parentStatement) throw new Error('Parent statement is undefined');
@@ -215,7 +218,7 @@ export const setStatementToDB = async ({
 		//add subscription
 		await Promise.all(statementPromises);
 
-		return statement.statementId;
+		return { statementId: statement.statementId, statement };
 	} catch (error) {
 		console.error(error);
 

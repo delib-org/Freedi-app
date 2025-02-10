@@ -7,7 +7,7 @@ import MemberAdmin from '@/assets/icons/memberAdmin.svg?react';
 import MemberRemove from '@/assets/icons/memberRemove.svg?react';
 import { updateMemberRole } from '@/controllers/db/subscriptions/setSubscriptions';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
-import { userSelector } from '@/model/users/userSlice';
+import { userSelector } from '@/redux/users/userSlice';
 import { StatementSubscription } from '@/types/statement/subscription';
 import { Role } from '@/types/user';
 

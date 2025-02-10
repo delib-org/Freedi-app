@@ -1,10 +1,10 @@
 import { listenToStatement } from "@/controllers/db/statements/listenToStatements";
-import { statementSelector } from "@/model/statements/statementsSlice";
-import { Statement } from "delib-npm";
+import { statementSelector } from "@/redux/statements/statementsSlice";
 import { useEffect } from "react";
 import { useSelector } from "react-redux";
 import { useParams } from "react-router";
 import { Unsubscribe } from "firebase/firestore";
+import { Statement } from "@/types/statement";
 
 export function useStageVM(): { stage: Statement | undefined, parentStatement: Statement | undefined } {
 	const { stageId } = useParams<{ stageId: string }>();

@@ -20,8 +20,8 @@ import {
 	setStatement,
 	setStatementSubscription,
 	setStatements,
-} from '@/model/statements/statementsSlice';
-import { AppDispatch, store } from '@/model/store';
+} from '@/redux/statements/statementsSlice';
+import { AppDispatch, store } from '@/redux/store';
 import { Collections, StatementType, DeliberativeElement } from '@/types/enums';
 import { Statement, StatementSchema } from '@/types/statement';
 import { StatementSubscription } from '@/types/statement/subscription';

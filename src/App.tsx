@@ -13,9 +13,9 @@ import { getSignature } from './controllers/db/users/getUserDB';
 import { updateUserAgreement } from './controllers/db/users/setUsersDB';
 import { useAppSelector } from './controllers/hooks/reduxHooks';
 import { LanguagesEnum, useLanguage } from './controllers/hooks/useLanguages';
-import { setHistory } from './model/history/HistorySlice';
-import { selectInitLocation } from './model/location/locationSlice';
-import { updateAgreementToStore, userSelector } from './model/users/userSlice';
+import { setHistory } from './redux/history/HistorySlice';
+import { selectInitLocation } from './redux/location/locationSlice';
+import { updateAgreementToStore, userSelector } from './redux/users/userSlice';
 
 // Type
 
@@ -55,9 +55,9 @@ export default function App() {
 	}, []);
 
 	useEffect(() => {
-		const authUnsubscribe: Unsubscribe = listenToAuth(dispatch)(
-			anonymous === 'true',
+		const authUnsubscribe: Unsubscribe = listenToAuth(
 			navigate,
+			anonymous === 'true',
 			initLocation
 		);
 

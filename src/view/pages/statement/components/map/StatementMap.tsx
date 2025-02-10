@@ -15,7 +15,7 @@ import { useMapContext } from "@/controllers/hooks/useMap";
 import {
 	statementDescendantsSelector,
 	statementSubscriptionSelector,
-} from "@/model/statements/statementsSlice";
+} from "@/redux/statements/statementsSlice";
 import Modal from "@/view/components/modal/Modal";
 import { StatementType } from "@/types/enums";
 import { Results } from "@/types/results";

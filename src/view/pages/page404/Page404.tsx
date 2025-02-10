@@ -10,7 +10,7 @@ import Cloud1 from "@/assets/images/Cloud1.png";
 import Cloud2 from "@/assets/images/Cloud2.png";
 import Cloud3 from "@/assets/images/Cloud3.png";
 import { useLanguage } from "@/controllers/hooks/useLanguages";
-import { setInitLocation } from "@/model/location/locationSlice";
+import { setInitLocation } from "@/redux/location/locationSlice";
 
 const Page404 = () => {
 	const navigate = useNavigate();

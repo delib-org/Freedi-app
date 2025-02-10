@@ -1,7 +1,7 @@
 import * as v from 'valibot';
 import { isProduction } from '@/controllers/general/helpers';
-import { setCurrentMultiStepOptions } from '@/model/statements/statementsSlice';
-import { store } from '@/model/store';
+import { setCurrentMultiStepOptions } from '@/redux/statements/statementsSlice';
+import { store } from '@/redux/store';
 import { Statement, StatementSchema } from '@/types/statement';
 import { functionConfig } from '@/types/firebase/configFunctions';
 

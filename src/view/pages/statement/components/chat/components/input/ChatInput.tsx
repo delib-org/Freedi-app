@@ -10,7 +10,7 @@ import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import useDirection from '@/controllers/hooks/useDirection';
 import { useLanguage } from '@/controllers/hooks/useLanguages';
 import useStatementColor from '@/controllers/hooks/useStatementColor';
-import { userSelector } from '@/model/users/userSlice';
+import { userSelector } from '@/redux/users/userSlice';
 import SendIcon from '@/view/components/icons/SendIcon';
 import { Statement } from '@/types/statement';
 

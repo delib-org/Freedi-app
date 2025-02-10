@@ -20,7 +20,7 @@ import useStatementColor, {
 import {
 	setStatementElementHight,
 	statementSubscriptionSelector,
-} from '@/model/statements/statementsSlice';
+} from '@/redux/statements/statementsSlice';
 import EditTitle from '@/view/components/edit/EditTitle';
 import IconButton from '@/view/components/iconButton/IconButton';
 import './SuggestionCard.scss';

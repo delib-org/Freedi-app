@@ -4,6 +4,7 @@ import Text from "@/view/components/text/Text";
 import StatementChatMore from "@/view/pages/statement/components/chat/components/StatementChatMore";
 import "./ResultsNode.scss";
 import { Statement } from "@/types/statement";
+import { styleSwitch } from "./ResultsNodeCont";
 
 interface Props {
 	statement: Statement;

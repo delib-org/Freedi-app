@@ -9,8 +9,8 @@ import { setEvaluationToDB } from '@/controllers/db/evaluation/setEvaluation';
 import { decreesUserSettingsLearningRemain } from '@/controllers/db/learning/setLearning';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { useLanguage } from '@/controllers/hooks/useLanguages';
-import { evaluationSelector } from '@/model/evaluations/evaluationsSlice';
-import { userSettingsSelector } from '@/model/users/userSlice';
+import { evaluationSelector } from '@/redux/evaluations/evaluationsSlice';
+import { userSettingsSelector } from '@/redux/users/userSlice';
 import { Statement } from '@/types/statement';
 
 interface EnhancedEvaluationProps {

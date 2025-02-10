@@ -1,0 +1,9 @@
+.similar-suggestions {
+	&__wrapper {
+		display: grid;
+		grid-template-columns: repeat(2, 1fr);
+		max-width: 75ch;
+		margin: auto;
+		gap: 1rem;
+	}
+}

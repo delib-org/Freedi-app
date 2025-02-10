@@ -2,7 +2,7 @@ import { getStatementFromDB } from '@/controllers/db/statements/getStatement';
 import {
 	setStatement,
 	statementSelectorById,
-} from '@/model/statements/statementsSlice';
+} from '@/redux/statements/statementsSlice';
 import { useContext, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useParams } from 'react-router';

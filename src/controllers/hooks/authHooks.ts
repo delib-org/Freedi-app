@@ -6,8 +6,8 @@ import { useAppSelector } from './reduxHooks';
 import {
 	statementSelector,
 	statementSubscriptionSelector,
-} from '@/model/statements/statementsSlice';
-import { store } from '@/model/store';
+} from '@/redux/statements/statementsSlice';
+import { store } from '@/redux/store';
 import { Access } from '@/types/enums';
 import { Statement } from '@/types/statement';
 import { StatementSubscription } from '@/types/statement/subscription';

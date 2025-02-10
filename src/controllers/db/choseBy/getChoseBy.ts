@@ -1,7 +1,7 @@
 import { FireStore } from '../config';
 import { onSnapshot, Unsubscribe, doc } from 'firebase/firestore';
-import { setChoseBy } from '@/model/choseBy/choseBySlice';
-import { store } from '@/model/store';
+import { setChoseBy } from '@/redux/choseBy/choseBySlice';
+import { store } from '@/redux/store';
 import { Collections } from '@/types/enums';
 import { ChoseBy, defaultChoseBySettings } from '@/types/choseBy';
 

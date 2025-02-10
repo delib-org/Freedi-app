@@ -1,4 +1,3 @@
-import { Statement } from "delib-npm";
 import { FC, useEffect } from "react";
 import { Link } from "react-router";
 import { getStatementFromDB } from "@/controllers/db/statements/getStatement";
@@ -7,7 +6,7 @@ import { useAppDispatch, useAppSelector } from "@/controllers/hooks/reduxHooks";
 import {
 	setStatement,
 	statementSelectorById,
-} from '@/model/statements/statementsSlice';
+} from '@/redux/statements/statementsSlice';
 import { Statement } from '@/types/statement';
 
 interface Props {

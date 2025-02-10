@@ -1,7 +1,7 @@
 import { doc, updateDoc } from 'firebase/firestore';
 import { FireStore } from '@/controllers/db/config';
-import { QuestionStage, Collections, QuestionType } from '@/types/enums';
-import { QuestionSettings, QuestionStep } from '@/types/question';
+import { QuestionStage, Collections, QuestionType, QuestionStep } from '@/types/enums';
+import { QuestionSettings } from '@/types/question';
 
 interface SetStatementStageParams {
 	statementId: string;

@@ -5,7 +5,7 @@ import { pricingPlans } from "./pricingModel";
 import pricingImg from "@/assets/images/pricing.png";
 
 import { useAppSelector } from "@/controllers/hooks/reduxHooks";
-import { userSelector } from "@/model/users/userSlice";
+import { userSelector } from "@/redux/users/userSlice";
 
 import "./PricingPlan.scss";
 

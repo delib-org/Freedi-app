@@ -106,6 +106,7 @@ export enum Collections {
 	signUsers = 'signUsers',
 	statementViews = 'statementViews',
 	statementSegments = 'statementSegments',
+	inAppNotifications = 'inAppNotifications',
 }
 
 export enum Screen {
@@ -149,8 +150,21 @@ export enum SortType {
 }
 
 export enum MassConsensusPageUrls {
-	Introduction = "introduction",
-	InitialQuestion = "initial-question",
-	Question = "question",
-	FinalQuestion = "ff"
+	introduction = "introduction",
+	initialQuestion = "initial-question",
+	similarSuggestions = "similar-suggestions",
+	randomSuggestions = "random-suggestions",
+	topSuggestions = "top-suggestions",
+	voting = "voting",
+	leaveFeedback = "leave-feedback",
+}
+
+export enum QuestionStep {
+	explanation = 'explanation',
+	suggestion = 'suggestion',
+	randomEvaluation = 'random-evaluation',
+	topEvaluation = 'top-evaluation',
+	voting = 'voting',
+	finished = 'finished',
+	other = 'other',
 }

@@ -5,15 +5,17 @@ import 'dotenv/config';
 import { Collections } from '../../src/types/enums';
 import { Statement } from '../../src/types/statement';
 
+
 export async function findSimilarStatements(
 	request: Request,
 	response: Response
 ) {
 	try {
 		const parsedBody = request.body;
-		console.log(parsedBody);
-		const { statementId, userInput, generateIfNeeded } = parsedBody;
-		console.log(statementId, userInput, generateIfNeeded);
+
+		const { statementId, userInput, generateIfNeeded = 6 } = parsedBody;
+		//generateIfNeeded is a boolean that indicates if we should generate similar statements if no similar statements are found
+
 
 		const ref = db.collection(Collections.statements);
 		const query = ref.where('parentId', '==', statementId);
@@ -39,23 +41,26 @@ export async function findSimilarStatements(
 		const genAiResponse = await runGenAI(
 			statementsText.map((s) => s.statement),
 			userInput,
-			generateIfNeeded
+			generateIfNeeded,
+			5
 		);
-
-		console.log(`first genAiResponse: ${genAiResponse}`);
 
 		const similarStatementsIds = statementsText
 			.filter((subStatement) => genAiResponse.includes(subStatement.statement))
-			.map((subStatement) => subStatement.id);
+			.map((s) => s.id);
 
-		if (similarStatementsIds.length === 0) {
-			const similarStatements = await generateSimilar(userInput);
-			response.status(200).send(similarStatements);
+		const similarStatements = similarStatementsIds.map((id) => subStatements.find((subStatement) => subStatement.statementId === id)).filter((s) => s !== undefined);
 
+		const remainingSimilarStatements = 5 - similarStatements.length;
+
+		if (remainingSimilarStatements > 0) {
+
+			const generated = await generateSimilar(userInput, remainingSimilarStatements);
+			response.status(200).send({ optionsInDB: similarStatements, optionsGenerated: generated, userOption: userInput, ok: true });
 			return;
 		}
 
-		response.status(200).send(similarStatementsIds);
+		response.status(200).send({ optionsInDB: similarStatements, ok: true, userOption: userInput });
 	} catch (error: any) {
 		response.status(500).send({ error: error.message, ok: false });
 		console.error(error.message, { error });
@@ -77,13 +82,13 @@ onInit(() => {
 	}
 });
 
-export async function runGenAI(allStatements: string[], userInput: string, generateIfNeeded?: boolean) {
+export async function runGenAI(allStatements: string[], userInput: string, generateIfNeeded?: boolean, numberOfSimilarStatements: number = 6) {
 	try {
 		console.log("runGenAI 2", allStatements, userInput, generateIfNeeded);
 		const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
 		const prompt = `
-		Find the sentences in the following strings:  ${allStatements},  that are similar to the user input '${userInput}'. 
+		Find up to ${numberOfSimilarStatements} sentences in the following strings:  ${allStatements},  that are similar to the user input '${userInput}'. 
 		The use Input can be either in English or in Hebrew. Look for similar strings to the user input in both languages.
 		Consider a match if the sentence shares at least 60% similarity in meaning the user input.
 		Give answer back in this json format: { strings: ['string1', 'string2', ...] }
@@ -92,7 +97,6 @@ export async function runGenAI(allStatements: string[], userInput: string, gener
 		const result = await model.generateContent(prompt);
 
 		const response = result.response;
-		console.log("results:", response);
 		const text = response.text();
 
 		return extractAndParseJsonString(text).strings;
@@ -103,13 +107,13 @@ export async function runGenAI(allStatements: string[], userInput: string, gener
 	}
 }
 
-export async function generateSimilar(userInput: string) {
+export async function generateSimilar(userInput: string, remainingSimilarStatements: number = 5) {
 	try {
 		console.log("runGenAI 2", userInput,);
 		const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
 		const prompt = `
-		create 5 similar sentences to the user input '${userInput}'.
+		create ${remainingSimilarStatements} similar sentences to the user input '${userInput}'.
 		Give answer back in this json format: { strings: ['string1', 'string2', ...] }
 		`;
 
