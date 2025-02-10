@@ -97,6 +97,13 @@ button {
     color: var(--btn-secondary);
     border: 2px solid var(--btn-secondary);
   }
+
+  &--disabled {
+    background-color: var(--btn-disabled);
+    color: var(--btn-disabled-text);
+    cursor: not-allowed;
+    border: 1px solid var(--btn-disabled);
+  }
 }
 
 .buttonOutlineWhite {

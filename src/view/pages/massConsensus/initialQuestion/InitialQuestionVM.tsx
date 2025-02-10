@@ -18,8 +18,11 @@ export function useInitialQuestion(): InitialQuestionVM {
 
 	async function handleSetInitialSuggestion(ev: React.FormEvent<HTMLFormElement>) {
 		ev.preventDefault();
-		setLoading(true);
+
 		const userInput = ev.currentTarget.userInput.value;
+		if (!userInput) return;
+		setLoading(true);
+
 		const { optionsInDB, optionsGenerated, userOption } = await getSimilarStatements(statementId, userInput)
 		dispatch(setSimilarStatements([...[userOption], ...optionsInDB, ...optionsGenerated]));
 		setReady(true);

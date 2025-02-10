@@ -3,7 +3,7 @@ import HeaderMassConsensus from "../headerMassConsensus/HeaderMassConsensus"
 import { useParamsLanguage } from "../useParamsLang/UseParamsLanguge"
 import { useSelector } from "react-redux";
 import { statementSelector } from "@/redux/statements/statementsSlice";
-import { useEffect } from "react";
+import { KeyboardEvent, useEffect, useState } from "react";
 import { useInitialQuestion } from "./InitialQuestionVM";
 import { MassConsensusPageUrls } from "@/types/enums";
 import Loader from "@/view/components/loaders/Loader";
@@ -13,6 +13,7 @@ const InitialQuestion = () => {
 	const { dir } = useParamsLanguage();
 	const { statementId } = useParams<{ statementId: string }>();
 	const statement = useSelector(statementSelector(statementId));
+	const [enableButton, setEnableButton] = useState(false);
 	const { handleSetInitialSuggestion, ready, loading } = useInitialQuestion();
 
 	useEffect(() => {
@@ -23,6 +24,15 @@ const InitialQuestion = () => {
 		if (ready) navigate(`/mass-consensus/${statementId}/${MassConsensusPageUrls.similarSuggestions}`)
 	}, [ready])
 
+	function handleEnableButton(ev: KeyboardEvent<HTMLInputElement>) {
+		if (ev.currentTarget.value.length > 0) {
+			setEnableButton(true);
+		} else {
+			setEnableButton(false);
+		}
+
+	}
+
 	return (
 		<div style={{ direction: dir }}>
 			<HeaderMassConsensus backTo={MassConsensusPageUrls.introduction} />
@@ -30,9 +40,9 @@ const InitialQuestion = () => {
 			<form onSubmit={handleSetInitialSuggestion}>
 				<div>
 					<label htmlFor="option">Option</label>
-					<input type="text" name="userInput" />
+					<input type="text" name="userInput" onKeyUp={handleEnableButton} />
 				</div>
-				<button className="btn" type="submit">Submit</button>
+				<button className={`btn btn--primary btn--large ${!enableButton ? "btn--disabled" : ""}`} type="submit">Submit</button>
 			</form>
 			{loading && <Loader />}
 		</div>
