@@ -10,8 +10,6 @@ const Introduction = () => {
 	const { statement, loading, error } = useIntroductionMV();
 	const { dir, lang } = useParamsLanguage();
 
-	console.log('statement', statement)
-
 	if (error) return <div>{error}</div>
 	if (loading) return <div>Loading...</div>
 

@@ -5,7 +5,7 @@ import {
 	updateEvaluation,
 } from './fn_evaluation';
 import { updateResultsSettings } from './fn_results';
-import { updateParentWithNewMessageCB } from './fn_statements';
+import { getQuestionOptions, updateParentWithNewMessageCB } from './fn_statements';
 import { updateVote } from './fn_vote';
 
 import {
@@ -290,3 +290,4 @@ exports.checkForSimilarStatements = onRequest(cors, findSimilarStatements);
 exports.getUserOptions = onRequest(cors, getUserOptions); //suggestions
 exports.getTopStatements = onRequest(cors, getTopStatements); //second evaluation
 exports.getRandomStatements = onRequest(cors, getRandomStatements); //first evaluation
+exports.getQuestionOptions = onRequest(cors, getQuestionOptions); //first evaluation
