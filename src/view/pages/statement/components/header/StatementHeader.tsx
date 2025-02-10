@@ -1,5 +1,5 @@
-import { FC, useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import React, { FC, useState } from 'react';
+import { useLocation } from 'react-router';
 import StatementTopNav from '../nav/top/StatementTopNav';
 import InvitePanel from './invitePanel/InvitePanel';
 import { logOut } from '@/controllers/db/auth';
@@ -10,9 +10,14 @@ import { Statement } from '@/types/statement';
 interface Props {
 	statement: Statement | undefined;
 	topParentStatement: Statement | undefined;
+	parentStatement: Statement | undefined;
 }
 
-const StatementHeader: FC<Props> = ({ statement, topParentStatement }) => {
+const StatementHeader: FC<Props> = ({
+	statement,
+	topParentStatement,
+	parentStatement
+}) => {
 	// Hooks
 	const { pathname } = useLocation();
 	const [isHeaderMenuOpen, setIsHeaderMenuOpen] = useState(false);
@@ -65,6 +70,7 @@ const StatementHeader: FC<Props> = ({ statement, topParentStatement }) => {
 		<div className={`page__header ${dir}`}>
 			<StatementTopNav
 				statement={statement}
+				parentStatement={parentStatement}
 				handleShare={handleShare}
 				handleFollowMe={handleFollowMe}
 				handleInvitePanel={handleInvitePanel}

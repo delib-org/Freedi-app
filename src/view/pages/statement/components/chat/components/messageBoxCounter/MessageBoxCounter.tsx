@@ -1,6 +1,6 @@
 import { useSelector } from 'react-redux';
-import { totalMessageBoxesSelector } from '@/model/statements/statementsSlice';
-import { RootState } from '@/model/store';
+import { totalMessageBoxesSelector } from '@/redux/statements/statementsSlice';
+import { RootState } from '@/redux/store';
 import './message-box-counter.scss';
 
 const MessageBoxCounter = () => {

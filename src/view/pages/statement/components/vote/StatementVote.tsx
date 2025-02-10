@@ -8,7 +8,7 @@ import HandIcon from '@/assets/icons/handIcon.svg?react';
 import X from '@/assets/icons/x.svg?react';
 import { getToVoteOnParent } from '@/controllers/db/vote/getVotes';
 import { useAppDispatch } from '@/controllers/hooks/reduxHooks';
-import { setVoteToStore } from '@/model/vote/votesSlice';
+import { setVoteToStore } from '@/redux/vote/votesSlice';
 
 // Custom components
 import Button from '@/view/components/buttons/button/Button';
@@ -20,7 +20,7 @@ import Toast from '@/view/components/toast/Toast';
 import { useLanguage } from '@/controllers/hooks/useLanguages';
 import { StatementContext } from '../../StatementCont';
 import { Statement } from '@/types/statement';
-import { QuestionStep } from '@/types/question';
+import { QuestionStep } from '@/types/enums';
 
 let getVoteFromDB = false;
 

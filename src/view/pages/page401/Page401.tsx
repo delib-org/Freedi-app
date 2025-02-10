@@ -1,7 +1,7 @@
 import "./page401.scss";
 import { useDispatch } from "react-redux";
-import { useNavigate } from "react-router-dom";
-import { setInitLocation } from "@/model/location/locationSlice";
+import { useNavigate } from "react-router";
+import { setInitLocation } from "@/redux/location/locationSlice";
 
 const Page401 = () => {
 	const navigate = useNavigate();
@@ -25,10 +25,10 @@ const Page401 = () => {
 				alt="Dog tangled in cables"
 			/>
 			<p className="page401__stamp">
-                From the Institute for Deliberative Democracy
+				From the Institute for Deliberative Democracy
 			</p>
 			<button className="page401__btn" onClick={handleGoHome}>
-                Go to Homepage
+				Go to Homepage
 			</button>
 		</div>
 	);

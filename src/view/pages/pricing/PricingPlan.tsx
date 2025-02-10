@@ -1,11 +1,11 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import RadioBox from "../../components/radioBox/RadioBox";
 import { pricingPlans } from "./pricingModel";
 import pricingImg from "@/assets/images/pricing.png";
 
 import { useAppSelector } from "@/controllers/hooks/reduxHooks";
-import { userSelector } from "@/model/users/userSlice";
+import { userSelector } from "@/redux/users/userSlice";
 
 import "./PricingPlan.scss";
 
@@ -40,8 +40,8 @@ export default function PricingPlan() {
 				<h1 className="title">Pricing plans</h1>
 				<img src={pricingImg} alt="pricing-illustration" width="40%" />
 				<p className="text">
-                    Select the appropriate plan to maximize your performance and
-                    get better results
+					Select the appropriate plan to maximize your performance and
+					get better results
 				</p>
 				<div className="radio-boxes-container">
 					{pricingPlans.map((item) => (
@@ -73,7 +73,7 @@ export default function PricingPlan() {
 												<b>{item.from}</b>
 											</>
 										)}{" "}
-                                        participants
+										participants
 									</p>
 									<p className="price">
 										{item.price === "free"
@@ -89,7 +89,7 @@ export default function PricingPlan() {
 					className="choose-plan-button"
 					onClick={handleChoosePlan}
 				>
-                    Choose your plan
+					Choose your plan
 				</button>
 			</div>
 		</div>

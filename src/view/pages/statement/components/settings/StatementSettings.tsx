@@ -1,7 +1,7 @@
 import { FC, useEffect, useState } from 'react';
 
 // Third party imports
-import { useParams } from 'react-router-dom';
+import { useParams } from 'react-router';
 
 // Redux Store
 import StatementSettingsForm from './components/statementSettingsForm/StatementSettingsForm';
@@ -14,7 +14,7 @@ import { useLanguage } from '@/controllers/hooks/useLanguages';
 import {
 	setStatement,
 	statementSelector,
-} from '@/model/statements/statementsSlice';
+} from '@/redux/statements/statementsSlice';
 
 // Hooks & Helpers
 

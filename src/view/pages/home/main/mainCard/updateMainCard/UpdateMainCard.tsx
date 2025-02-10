@@ -1,12 +1,12 @@
-import { FC, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { getStatementFromDB } from '@/controllers/db/statements/getStatement';
-import { getTime, truncateString } from '@/controllers/general/helpers';
-import { useAppDispatch, useAppSelector } from '@/controllers/hooks/reduxHooks';
+import { FC, useEffect } from "react";
+import { Link } from "react-router";
+import { getStatementFromDB } from "@/controllers/db/statements/getStatement";
+import { getTime, truncateString } from "@/controllers/general/helpers";
+import { useAppDispatch, useAppSelector } from "@/controllers/hooks/reduxHooks";
 import {
 	setStatement,
 	statementSelectorById,
-} from '@/model/statements/statementsSlice';
+} from '@/redux/statements/statementsSlice';
 import { Statement } from '@/types/statement';
 
 interface Props {
@@ -15,8 +15,8 @@ interface Props {
 
 const UpdateMainCard: FC<Props> = ({ statement }) => {
 	try {
-		if (!statement) throw new Error('No statement');
-		if (!statement.parentId) throw new Error('No parent id');
+		if (!statement) throw new Error("No statement");
+		if (!statement.parentId) throw new Error("No parent id");
 		const dispatch = useAppDispatch();
 		const parentStatement = useAppSelector(
 			statementSelectorById(statement.parentId)

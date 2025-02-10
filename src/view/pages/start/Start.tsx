@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import MoreLeft from '../../../assets/icons/moreLeft.svg?react';
 import MoreRight from '../../../assets/icons/moreRight.svg?react';
 import Logo from '../../../assets/logo/106 x 89 SVG.svg?react';
@@ -13,8 +13,8 @@ import useDirection from '@/controllers/hooks/useDirection';
 import { LanguagesEnum, useLanguage } from '@/controllers/hooks/useLanguages';
 import {
 	selectInitLocation,
-} from '@/model/location/locationSlice';
-import { userSelector } from '@/model/users/userSlice';
+} from '@/redux/location/locationSlice';
+import { userSelector } from '@/redux/users/userSlice';
 import packageJson from '../../../../package.json';
 
 const Start = () => {

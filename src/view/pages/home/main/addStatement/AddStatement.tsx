@@ -1,5 +1,5 @@
 // Third party imports
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 
 // Custom components
 import BackArrowIcon from "@/assets/icons/chevronLeftIcon.svg?react";

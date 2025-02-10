@@ -1,0 +1,84 @@
+// MainCard.module.scss
+.mainCard {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  height: fit-content;
+  min-height: 296px;
+  min-width: 340px;
+  width: 100%;
+  border-radius: 0.25rem;
+  padding: 0.5rem;
+  left: 0.121rem;
+  position: relative;
+  background-color: white;
+
+
+}
+
+.content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  max-width: 75ch;
+  margin: auto;
+
+  &Text {
+
+    max-width: 45ch;
+    margin: 1rem auto 1rem auto;
+  }
+}
+
+.img {
+  height: 170px;
+  width: 100%;
+  background-position: center;
+  background-size: contain;
+  background-repeat: no-repeat;
+  display: flex;
+
+  margin: 1rem 1.7rem 1rem 0;
+}
+
+.updates {
+  max-width: 45ch;
+  margin: auto;
+  font-size: 0.95rem;
+  line-height: 1.7rem;
+
+  .time {
+    color: rgba(191, 207, 242, 0.828);
+    padding: 0px 1rem;
+    font-size: 0.9rem;
+  }
+}
+
+.notify {
+  display: flex;
+  flex-wrap: wrap;
+  background-image: url(/src/assets/images/Notify.png);
+  width: 30px;
+  height: 30px;
+}
+
+.text {
+  display: flex;
+  flex-flow: column;
+  width: 40px;
+  color: rgba(191, 207, 242, 0.877);
+}
+
+.link {
+  color: rgba(129, 143, 173, 0.932);
+  width: 100%;
+  text-decoration: none;
+}
+
+// Mobile styles
+@media (max-width: 768px) {
+  .mainCard {
+    width: 95%;
+  }
+}

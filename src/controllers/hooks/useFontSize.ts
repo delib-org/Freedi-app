@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAppDispatch } from '@/controllers/hooks/reduxHooks';
-import { increaseFontSize } from '@/model/users/userSlice';
+import { increaseFontSize } from '@/redux/users/userSlice';
 import { updateUserFontSize } from '@/controllers/db/users/setUsersDB';
 
 export const useFontSize = (initialSize: number, isUser: boolean) => {

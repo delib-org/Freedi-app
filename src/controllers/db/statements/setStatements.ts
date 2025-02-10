@@ -7,20 +7,19 @@ import {
 	writeBatch,
 } from 'firebase/firestore';
 import { FireStore } from '../config';
-import { store } from '@/model/store';
+import { store } from '@/redux/store';
 import {
 	getExistingOptionColors,
 	getSiblingOptionsByParentId,
 } from '@/view/pages/statement/components/vote/statementVoteCont';
 import { getRandomColor } from '@/view/pages/statement/components/vote/votingColors';
 import { Statement, StatementSchema } from '@/types/statement';
-import { Collections, StatementType, Access } from '@/types/enums';
+import { Collections, StatementType, Access, QuestionStage, QuestionType } from '@/types/enums';
 import { UserSchema, Membership } from '@/types/user';
 import { number, parse, string } from 'valibot';
 import { ResultsBy } from '@/types/results';
 import { StageType } from '@/types/stage';
 import { getRandomUID } from '@/types/helpers';
-import { QuestionStage, QuestionType } from '@/types/question';
 
 export const updateStatementParents = async (
 	statement: Statement,
@@ -137,8 +136,11 @@ interface SetStatementToDBParams {
 
 export const setStatementToDB = async ({
 	statement,
-	parentStatement,
-}: SetStatementToDBParams): Promise<string | undefined> => {
+	parentStatement
+}: SetStatementToDBParams): Promise<{
+	statementId: string,
+	statement: Statement
+} | undefined> => {
 	try {
 		if (!statement) throw new Error('Statement is undefined');
 		if (!parentStatement) throw new Error('Parent statement is undefined');
@@ -216,7 +218,7 @@ export const setStatementToDB = async ({
 		//add subscription
 		await Promise.all(statementPromises);
 
-		return statement.statementId;
+		return { statementId: statement.statementId, statement };
 	} catch (error) {
 		console.error(error);
 

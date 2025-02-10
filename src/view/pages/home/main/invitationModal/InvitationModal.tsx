@@ -1,5 +1,5 @@
 import React, { FC, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import styles from "./InvitationModal.module.scss";
 import InvitationModalInputBoxWrapper from "./InvitationModalInputBoxWrapper";
 import {

@@ -8,6 +8,8 @@ import { statementsSlicer } from './statements/statementsSlice';
 import { userSlicer } from './users/userSlice';
 import { votesSlicer } from './vote/votesSlice';
 import { choseBySlice } from './choseBy/choseBySlice';
+import { massConsensusSlice } from './massConsensus/massConsensusSlice';
+import { notificationsSlicer } from './notificationsSlice/notificationsSlice';
 
 export const store = configureStore({
 	reducer: {
@@ -20,6 +22,8 @@ export const store = configureStore({
 		initLocation: initLocationSlice.reducer,
 		history: historySlice.reducer,
 		choseBys: choseBySlice.reducer,
+		massConsensus: massConsensusSlice.reducer,
+		notifications: notificationsSlicer.reducer,
 	},
 });
 

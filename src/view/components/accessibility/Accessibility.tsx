@@ -8,7 +8,7 @@ import {
 	fontSizeSelector,
 	setColorContrast,
 	userSelector,
-} from '@/model/users/userSlice';
+} from '@/redux/users/userSlice';
 import './Accessibility.scss';
 import { colorMappings } from './colorContrast';
 import { useAutoClose } from '@/controllers/hooks/useAutoClose';

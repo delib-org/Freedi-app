@@ -1,4 +1,4 @@
-import { store } from '@/model/store';
+import { store } from '@/redux/store';
 import { User } from '@/types/user';
 
 export function getUserFromFirebase(): User | null {
