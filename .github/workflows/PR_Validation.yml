@@ -20,11 +20,12 @@ jobs:
                   node-version: ${{ matrix.node-version }}
                   cache: 'npm'
 
-            - name: Install dependencies
-              run: |
-                  npm install
-                  cd functions
-                  npm install
+            - name: Install root dependencies
+              run: npm install
+
+            - name: Install functions dependencies
+              working-directory: ./functions
+              run: npm install
 
             - name: Run ESLint
               run: npm run lint
