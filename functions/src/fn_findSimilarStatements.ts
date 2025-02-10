@@ -56,11 +56,11 @@ export async function findSimilarStatements(
 		if (remainingSimilarStatements > 0) {
 
 			const generated = await generateSimilar(userInput, remainingSimilarStatements);
-			response.status(200).send({ optionsInDB: similarStatements, optionsGenerated: generated, ok: true });
+			response.status(200).send({ optionsInDB: similarStatements, optionsGenerated: generated, userOption: { statement: userInput, statementId: null }, ok: true });
 			return;
 		}
 
-		response.status(200).send({ options: similarStatements, ok: true, similarStatements, similarStatementsIds });
+		response.status(200).send({ optionsInDB: similarStatements, ok: true, userOption: { statement: userInput, statementId: null } });
 	} catch (error: any) {
 		response.status(500).send({ error: error.message, ok: false });
 		console.error(error.message, { error });

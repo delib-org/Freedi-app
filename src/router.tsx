@@ -3,6 +3,8 @@ import { createBrowserRouter } from 'react-router';
 import LoadingPage from "./view/pages/loadingPage/LoadingPage"; // Adjust the import path as needed
 import InitialQuestion from './view/pages/massConsensus/initialQuestion/InitialQuestion';
 import { MassConsensusPageUrls } from './types/enums';
+import RandomSuggestions from './view/pages/massConsensus/randomSuggestions/RandomSuggestions';
+import SimilarSuggestions from './view/pages/massConsensus/similarSuggestions/SimilarSuggestions';
 
 // Custom components
 const App = lazy(() => import('./App'));
@@ -101,13 +103,21 @@ export const router = createBrowserRouter([
 				element: <Suspense fallback={<LoadingPage />}><Introduction /></Suspense>,
 			},
 			{
-				path: MassConsensusPageUrls.Introduction,
+				path: MassConsensusPageUrls.introduction,
 				element: <Suspense fallback={<LoadingPage />}><Introduction /></Suspense>,
 			},
 			{
-				path: MassConsensusPageUrls.InitialQuestion,
+				path: MassConsensusPageUrls.initialQuestion,
 				element: <Suspense fallback={<LoadingPage />}><InitialQuestion /></Suspense>,
 			},
+			{
+				path: MassConsensusPageUrls.similarSuggestions,
+				element: <Suspense fallback={<LoadingPage />}><SimilarSuggestions /></Suspense>,
+			},
+			{
+				path: MassConsensusPageUrls.randomSuggestions,
+				element: <Suspense fallback={<LoadingPage />}><RandomSuggestions /></Suspense>,
+			}
 		]
 	},
 	{

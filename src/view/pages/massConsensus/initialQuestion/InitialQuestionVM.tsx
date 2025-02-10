@@ -1,15 +1,42 @@
-import React, { useEffect } from 'react';
+import { setSimilarStatements } from '@/redux/massConsensus/massConsensusSlice';
+import React, { useState } from 'react';
+import { useDispatch } from 'react-redux';
 import { useParams } from 'react-router';
 
-export function useInitialQuestion() {
+interface InitialQuestionVM {
+	handleSetInitialSuggestion: (ev: React.FormEvent<HTMLFormElement>) => Promise<void>;
+	ready: boolean;
+	loading: boolean;
+}
 
+export function useInitialQuestion(): InitialQuestionVM {
+	const dispatch = useDispatch();
 	const { statementId } = useParams<{ statementId: string }>();
 
-	function handleSetInitialSuggestion(ev: React.FormEvent<HTMLFormElement>) {
-		ev.preventDefault();
-		const userInput = ev.currentTarget.userInput.value;
+	const [ready, setReady] = useState(false);
+	const [loading, setLoading] = useState(false);
 
-		fetch(`http://localhost:5001/delib-v3-dev/us-central1/checkForSimilarStatements`, {
+	async function handleSetInitialSuggestion(ev: React.FormEvent<HTMLFormElement>) {
+		ev.preventDefault();
+		setLoading(true);
+		const userInput = ev.currentTarget.userInput.value;
+		const { optionsInDB, optionsGenerated } = await getSimilarStatements(statementId, userInput)
+		dispatch(setSimilarStatements([...optionsInDB, ...optionsGenerated]));
+		setReady(true);
+		setLoading(false);
+
+	}
+
+	return {
+		handleSetInitialSuggestion,
+		ready,
+		loading
+	}
+}
+
+async function getSimilarStatements(statementId: string, userInput: string) {
+	try {
+		const response = await fetch(`http://localhost:5001/delib-v3-dev/us-central1/checkForSimilarStatements`, {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',
@@ -19,21 +46,14 @@ export function useInitialQuestion() {
 				userInput,
 				generateIfNeeded: true
 			}),
-		})
-			.then((response) => response.json())
-			.then((data) => console.log(data))
-			.catch((error) => console.error('Error:', error));
+		});
+		const data = await response.json();
+		const { optionsInDB, optionsGenerated } = data;
 
-	}
+		const _optionsGenerated = optionsGenerated.map((option: string) => ({ statement: option, statementId: null }));
 
-	useEffect(() => {
-		fetch(`http://localhost:5001/delib-v3-dev/us-central1/getQuestionOptions?statementId=${statementId}`)
-			.then((response) => response.json())
-			.then((data) => console.log(data))
-			.catch((error) => console.error('Error:', error));
-	}, [statementId]);
-
-	return {
-		handleSetInitialSuggestion
+		return { optionsInDB, optionsGenerated: _optionsGenerated };
+	} catch (error) {
+		console.error('Error:', error);
 	}
 }
