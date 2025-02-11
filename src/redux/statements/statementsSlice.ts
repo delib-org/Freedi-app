@@ -4,7 +4,7 @@ import { createSlice, PayloadAction, createSelector } from '@reduxjs/toolkit';
 import { updateArray } from '../../controllers/general/helpers';
 import { RootState, store } from '../store';
 import { StatementType, DeliberativeElement } from '@/types/enums';
-import { Statement } from '@/types/statement';
+import { Statement } from '@/types/statement/statementTypes';
 import { StatementSubscription } from '@/types/statement/subscription';
 
 enum StatementScreen {

@@ -3,7 +3,7 @@ import styles from './SubGroupCard.module.scss'
 import { Link, NavLink } from 'react-router';
 import useSubGroupCard from './SubGroupCardVM';
 import { useLanguage } from '@/controllers/hooks/useLanguages';
-import { Statement } from '@/types/statement';
+import { Statement } from '@/types/statement/statementTypes';
 import { StatementType } from '@/types/enums';
 
 interface Props {

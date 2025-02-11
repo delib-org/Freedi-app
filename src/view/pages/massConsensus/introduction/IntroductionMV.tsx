@@ -1,7 +1,7 @@
 import { listenToAuth, signAnonymously } from "@/controllers/db/auth";
 import { setStatement, statementSelector } from "@/redux/statements/statementsSlice";
 import { userSelector } from "@/redux/users/userSlice";
-import { Statement } from "@/types/statement";
+import { Statement } from "@/types/statement/statementTypes";
 
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";

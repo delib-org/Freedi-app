@@ -1,7 +1,7 @@
 import { doc, setDoc } from 'firebase/firestore';
 import { FireStore } from '../config';
 import { QuestionSettings, } from '@/types/question';
-import { Statement, StatementSettings } from '@/types/statement';
+import { Statement, StatementSettings } from '@/types/statement/statementTypes';
 import { Collections, QuestionType } from '@/types/enums';
 
 interface SetStatementSettingsProps {

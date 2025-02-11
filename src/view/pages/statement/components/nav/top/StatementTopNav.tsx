@@ -16,7 +16,7 @@ import useStatementColor from '@/controllers/hooks/useStatementColor.ts';
 import Menu from '@/view/components/menu/Menu';
 import MenuOption from '@/view/components/menu/MenuOption';
 import { StatementContext } from '../../../StatementCont';
-import { Statement } from '@/types/statement';
+import { Statement } from '@/types/statement/statementTypes';
 import { Role } from '@/types/user';
 
 interface Props {

@@ -2,7 +2,7 @@ import { Change, logger } from 'firebase-functions/v1';
 import { db } from './index';
 import { DocumentSnapshot, FieldValue } from 'firebase-admin/firestore';
 import { Collections } from '../../src/types/enums';
-import { Statement, StatementSchema } from '../../src/types/statement';
+import { Statement, StatementSchema } from '../../src/types/statement/statementTypes';
 import { maxKeyInObject } from '../../src/types/helpers';
 import { FirestoreEvent } from 'firebase-functions/firestore';
 import { parse } from 'valibot';

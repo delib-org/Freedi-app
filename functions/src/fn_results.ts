@@ -1,6 +1,6 @@
 import { Change, logger } from 'firebase-functions/v1';
 import { db } from './index';
-import { Statement, StatementSchema } from '../../src/types/statement';
+import { Statement, StatementSchema } from '../../src/types/statement/statementTypes';
 import { Collections } from '../../src/types/enums';
 import { DocumentSnapshot } from 'firebase-admin/firestore';
 import { FirestoreEvent } from 'firebase-functions/firestore';

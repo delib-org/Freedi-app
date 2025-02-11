@@ -2,7 +2,7 @@ import React, { FC } from 'react';
 import { handleGetEvaluators } from '../statementSettingsCont';
 import MembersChipsList from './membership/membersChipsList/MembersChipList';
 import { useLanguage } from '@/controllers/hooks/useLanguages';
-import { Evaluation } from '@/types/evaluation';
+import { Evaluation } from '@/types/evaluation/evaluationTypes';
 import { User } from '@/types/user';
 
 interface GetEvaluatorsProps {

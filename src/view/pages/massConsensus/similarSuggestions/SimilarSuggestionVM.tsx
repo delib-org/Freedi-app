@@ -3,7 +3,7 @@ import { getStatementFromDB } from "@/controllers/db/statements/getStatement";
 import { createStatement, setStatementToDB } from "@/controllers/db/statements/setStatements";
 import { MassConsensusPageUrls, StatementType } from "@/types/enums";
 import { GeneratedStatement } from "@/types/massConsensus/massConsensusModel";
-import { Statement } from "@/types/statement";
+import { Statement } from "@/types/statement/statementTypes";
 import { useNavigate, useParams } from "react-router";
 
 export function useSimilarSuggestions() {

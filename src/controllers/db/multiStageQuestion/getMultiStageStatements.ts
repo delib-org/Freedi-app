@@ -2,7 +2,7 @@ import * as v from 'valibot';
 import { isProduction } from '@/controllers/general/helpers';
 import { setCurrentMultiStepOptions } from '@/redux/statements/statementsSlice';
 import { store } from '@/redux/store';
-import { Statement, StatementSchema } from '@/types/statement';
+import { Statement, StatementSchema } from '@/types/statement/statementTypes';
 import { functionConfig } from '@/types/firebase/configFunctions';
 
 // TODO: Change urls bellow to match new environment

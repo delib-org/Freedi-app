@@ -10,7 +10,7 @@ import {
 } from 'firebase/firestore';
 import { FireStore } from '../config';
 import { Collections, StatementType, DeliberativeElement } from '@/types/enums';
-import { Statement, StatementSchema } from '@/types/statement';
+import { Statement, StatementSchema } from '@/types/statement/statementTypes';
 import { parse } from 'valibot';
 
 export async function getStatementFromDB(

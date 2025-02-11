@@ -1,7 +1,7 @@
 import { getResultsDB } from '@/controllers/db/results/getResults';
 import { DeliberativeElement } from '@/types/enums';
 import { ResultsBy, Results } from '@/types/results';
-import { Statement } from '@/types/statement';
+import { Statement } from '@/types/statement/statementTypes';
 
 export async function getResults(
 	statement: Statement,

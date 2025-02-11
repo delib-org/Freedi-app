@@ -10,7 +10,7 @@ import { Collections } from '../../src/types/enums';
 import { parse } from 'valibot';
 import { QueryDocumentSnapshot } from 'firebase-admin/firestore';
 import { FirestoreEvent } from 'firebase-functions/firestore';
-import { StatementSchema } from '../../src/types/statement';
+import { StatementSchema } from '../../src/types/statement/statementTypes';
 
 export async function setAdminsToNewStatement(
 	ev: FirestoreEvent<

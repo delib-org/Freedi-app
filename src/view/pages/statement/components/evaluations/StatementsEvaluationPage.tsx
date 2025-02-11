@@ -12,7 +12,7 @@ import { useLanguage } from "@/controllers/hooks/useLanguages";
 import Button from "@/view/components/buttons/button/Button";
 import Modal from "@/view/components/modal/Modal";
 import Toast from "@/view/components/toast/Toast";
-import { Statement } from "@/types/statement";
+import { Statement } from "@/types/statement/statementTypes";
 import { QuestionStep, StatementType } from "@/types/enums";
 
 interface StatementEvaluationPageProps {

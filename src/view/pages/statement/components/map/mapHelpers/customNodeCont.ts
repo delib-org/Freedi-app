@@ -1,5 +1,5 @@
 import { Results } from '@/types/results';
-import { Statement } from '@/types/statement';
+import { Statement } from '@/types/statement/statementTypes';
 import dagre from '@dagrejs/dagre';
 import { Edge, Node, Position } from 'reactflow';
 

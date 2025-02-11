@@ -17,7 +17,7 @@ import { statementSubsSelector } from '@/redux/statements/statementsSlice';
 import { userSelector } from '@/redux/users/userSlice';
 import Description from '../evaluations/components/description/Description';
 import { StatementType } from '@/types/enums';
-import { Statement } from '@/types/statement';
+import { Statement } from '@/types/statement/statementTypes';
 
 let firstTime = true;
 let numberOfSubStatements = 0;
