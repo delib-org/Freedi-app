@@ -22,7 +22,7 @@
 			"@/*": ["src/*"]
 		}
 	},
-	"include": ["src"],
+	"include": ["src", "./functions/src"],
 	"exclude": ["node_modules"],
 	"references": [
 		{

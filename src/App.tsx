@@ -31,7 +31,7 @@ export default function App() {
 	const location = useLocation();
 	const navigate = useNavigate();
 	const dispatch = useDispatch();
-	const { statementId, anonymous } = useParams();
+	const { statementId } = useParams();
 	const { changeLanguage, t } = useLanguage();
 
 	// Redux Store
@@ -57,7 +57,7 @@ export default function App() {
 	useEffect(() => {
 		const authUnsubscribe: Unsubscribe = listenToAuth(
 			navigate,
-			anonymous === 'true',
+			false,
 			initLocation
 		);
 
@@ -113,7 +113,10 @@ export default function App() {
 			if (!text) throw new Error('text is empty');
 			if (agree) {
 				setShowSignAgreement(false);
-				const agreement: Agreement | undefined = getSignature('basic', t);
+				const agreement: Agreement | undefined = getSignature(
+					'basic',
+					t
+				);
 				if (!agreement) throw new Error('agreement not found');
 				agreement.text = text;
 
@@ -137,7 +140,10 @@ export default function App() {
 
 			<Outlet />
 			{showSignAgreement && (
-				<TermsOfUse handleAgreement={handleAgreement} agreement={agreement} />
+				<TermsOfUse
+					handleAgreement={handleAgreement}
+					agreement={agreement}
+				/>
 			)}
 		</Suspense>
 	);

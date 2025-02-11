@@ -1,57 +1,69 @@
-import { FC } from "react";
-import UrlParser from "../edit/URLParse";
-import styles from "./Text.module.scss";
+import { FC } from 'react';
+import UrlParser from '../edit/URLParse';
+import styles from './Text.module.scss';
 
 interface Props {
-  statement?: string;
-  description?: string;
+	statement?: string;
+	description?: string;
 }
 const Text: FC<Props> = ({ statement, description }) => {
 	try {
 		if (!statement && !description) return null;
 
-		const textId = `${Math.random()}`.replace(".", "");
+		const textId = `${Math.random()}`.replace('.', '');
 
 		//convert sentences, divided by /n to paragraphs
 		const paragraphs = !description
-			? ""
+			? ''
 			: description
-				.split("\n")
-				.filter((p) => p)
-				.map((paragraph: string, i: number) => {
+					.split('\n')
+					.filter((p) => p)
+					.map((paragraph: string, i: number) => {
+						//if paragraph has * at some point and has some * at some other point make the string between the * bold
+						if (paragraph.includes('*')) {
+							const boldedParagraph = paragraph
+								.split('*')
+								.map((p, i) => {
+									if (i % 2 === 1)
+										return (
+											<b key={`${textId}--${i}`}>
+												<UrlParser text={p} />
+											</b>
+										);
 
-					//if paragraph has * at some point and has some * at some other point make the string between the * bold
-					if (paragraph.includes("*")) {
-						const boldedParagraph = paragraph.split("*").map((p, i) => {
-							if (i % 2 === 1) return <b key={`${textId}--${i}`}><UrlParser text={p}/></b>;
+									return p;
+								});
 
-							return p;
-						});
+							return (
+								<p
+									className={`${styles['p--bold']} ${styles.p}`}
+									key={`${textId}--${i}`}
+								>
+									{boldedParagraph}
+								</p>
+							);
+						}
 
 						return (
-							<p className={`${styles["p--bold"]} ${styles.p}`} key={`${textId}--${i}`}>
-								{boldedParagraph}
+							<p className={styles.p} key={`${textId}--${i}`}>
+								<UrlParser text={paragraph} />
 							</p>
 						);
-					}
-
-					return (
-						<p className={styles.p} key={`${textId}--${i}`}>
-							<UrlParser text={paragraph}/>
-						</p>
-					);
-				});
+					});
 
 		return (
 			<>
-				{statement && <span className="statement"><UrlParser text={statement}/></span>}
-				{(description && paragraphs.length > 0) && (
+				{statement && (
+					<span className='statement'>
+						<UrlParser text={statement} />
+					</span>
+				)}
+				{description && paragraphs.length > 0 && (
 					<div className={styles.text}>{paragraphs}</div>
 				)}
 			</>
 		);
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	} catch (error: any) {
+	} catch (error) {
 		console.error(error);
 
 		return null;

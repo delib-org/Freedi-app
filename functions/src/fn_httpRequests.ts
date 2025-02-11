@@ -61,34 +61,36 @@ export const getRandomStatements = async (req: Request, res: Response) => {
 
 		const allSolutionStatementsRef = db.collection(Collections.statements);
 
-
-
 		const q: Query = allSolutionStatementsRef
 			.where('parentId', '==', parentId)
-			.where('statementType', "==", StatementType.option)
+			.where('statementType', '==', StatementType.option)
 			.orderBy('evaluation.viewed', 'asc')
 			.orderBy('evaluation.evaluationRandomNumber', 'desc')
 			.limit(limit);
 
 		const randomStatementsDB = await q.get();
 
-		const randomStatements = randomStatementsDB.docs.map((doc) => doc.data());
+		const randomStatements = randomStatementsDB.docs.map((doc) =>
+			doc.data()
+		);
 
 		//update number of viewed
 		const batch = db.batch();
 		randomStatementsDB.docs.forEach((doc) => {
 			const ref = allSolutionStatementsRef.doc(doc.id);
 			const data = doc.data();
-			batch.update(ref, { 'evaluation.viewed': data.evaluation.viewed + 1, 'evaluation.evaluationRandomNumber': Math.random() });
+			batch.update(ref, {
+				'evaluation.viewed': data.evaluation.viewed + 1,
+				'evaluation.evaluationRandomNumber': Math.random(),
+			});
 		});
 		await batch.commit();
-
 
 		//TODO: change the random number of each statement
 
 		res.status(200).send({ randomStatements, ok: true });
-	} catch (error: any) {
-		res.status(500).send({ error: error.message, ok: false });
+	} catch (error) {
+		res.status(500).send({ error: error, ok: false });
 
 		return;
 	}
@@ -159,7 +161,9 @@ export async function maintainDeliberativeElement(_: Request, res: Response) {
 		statementsDB.docs.forEach((doc) => {
 			const ref = statementsRef.doc(doc.id);
 			if (doc.data().statementType === 'option') {
-				batch.update(ref, { deliberativeElement: DeliberativeElement.option });
+				batch.update(ref, {
+					deliberativeElement: DeliberativeElement.option,
+				});
 			} else if (doc.data().statementType === 'result') {
 				batch.update(ref, {
 					deliberativeElement: DeliberativeElement.option,
@@ -170,7 +174,9 @@ export async function maintainDeliberativeElement(_: Request, res: Response) {
 					deliberativeElement: DeliberativeElement.research,
 				});
 			} else {
-				batch.update(ref, { deliberativeElement: DeliberativeElement.general });
+				batch.update(ref, {
+					deliberativeElement: DeliberativeElement.general,
+				});
 			}
 		});
 
