@@ -44,7 +44,7 @@ export const getUserOptions = async (req: Request, res: Response) => {
 export const getRandomStatements = async (req: Request, res: Response) => {
 	try {
 		const parentId = req.query.parentId;
-		let limit = Number(req.query.limit) || (10 as number);
+		let limit = Number(req.query.limit) || (6 as number);
 		if (limit > 50) limit = 50;
 
 		if (!parentId) {
@@ -60,21 +60,37 @@ export const getRandomStatements = async (req: Request, res: Response) => {
 		}
 
 		const allSolutionStatementsRef = db.collection(Collections.statements);
+
+
+
 		const q: Query = allSolutionStatementsRef
 			.where('parentId', '==', parentId)
-			.where('statementType', 'in', ['result', 'option']);
-		const allSolutionStatementsDB = await q.get();
-		const allSolutionStatements = allSolutionStatementsDB.docs.map((doc) =>
-			doc.data()
-		);
+			.where('statementType', "==", StatementType.option)
+			.orderBy('evaluation.viewed', 'asc')
+			.orderBy('evaluation.evaluationRandomNumber', 'desc')
+			.limit(limit);
 
-		//randomize the statements and return the first 10 (or limit give by the client)
-		allSolutionStatements.sort(() => Math.random() - 0.5);
-		const randomStatements = allSolutionStatements.splice(0, limit);
+		const randomStatementsDB = await q.get();
 
-		res.send({ randomStatements, ok: true });
-	} catch (error) {
-		res.status(500).send({ error: error, ok: false });
+		const randomStatements = randomStatementsDB.docs.map((doc) => doc.data());
+
+		//update number of viewed
+		const batch = db.batch();
+		randomStatementsDB.docs.forEach((doc) => {
+			const ref = allSolutionStatementsRef.doc(doc.id);
+			const data = doc.data();
+			batch.update(ref, { 'evaluation.viewed': data.evaluation.viewed + 1, 'evaluation.evaluationRandomNumber': Math.random() });
+		});
+		await batch.commit();
+
+		const st = randomStatements.map((s) => ({ text: s.statement, viewed: s.evaluation.viewed, rnd: s.evaluation.evaluationRandomNumber }));
+
+
+		//TODO: change the random number of each statement
+
+		res.status(200).send({ st, randomStatements, ok: true, numberOfOptions: randomStatements.length });
+	} catch (error: any) {
+		res.status(500).send({ error: error.message, ok: false });
 
 		return;
 	}

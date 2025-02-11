@@ -3,7 +3,7 @@ import { db } from '.';
 import { ApprovalSchema } from '../../src/types/approval';
 import { Collections } from '../../src/types/enums';
 import { DocumentApproval } from '../../src/types/user';
-import { Statement } from '../../src/types/statement';
+import { Statement } from '../../src/types/statement/statementTypes';
 import { number, parse } from 'valibot';
 import { DocumentSnapshot } from 'firebase-admin/firestore';
 import { FirestoreEvent } from 'firebase-functions/firestore';

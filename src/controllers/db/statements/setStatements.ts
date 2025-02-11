@@ -13,7 +13,7 @@ import {
 	getSiblingOptionsByParentId,
 } from '@/view/pages/statement/components/vote/statementVoteCont';
 import { getRandomColor } from '@/view/pages/statement/components/vote/votingColors';
-import { Statement, StatementSchema } from '@/types/statement';
+import { Statement, StatementSchema } from '@/types/statement/statementTypes';
 import { Collections, StatementType, Access, QuestionStage, QuestionType } from '@/types/enums';
 import { UserSchema, Membership } from '@/types/user';
 import { number, parse, string } from 'valibot';
@@ -317,6 +317,8 @@ export function createStatement({
 				numberOfEvaluators: 0,
 				sumEvaluations: 0,
 				agreement: 0,
+				evaluationRandomNumber: Math.random(),
+				viewed: 0
 			},
 			results: [],
 		};

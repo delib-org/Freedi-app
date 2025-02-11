@@ -19,7 +19,7 @@ import { useLanguage } from '@/controllers/hooks/useLanguages';
 import { RootState } from '@/redux/store';
 import './MembersSettings.scss';
 import { Collections } from '@/types/enums';
-import { Statement } from '@/types/statement';
+import { Statement } from '@/types/statement/statementTypes';
 import { StatementSubscription } from '@/types/statement/subscription';
 import { Role } from '@/types/user';
 

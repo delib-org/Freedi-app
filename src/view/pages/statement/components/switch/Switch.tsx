@@ -11,7 +11,7 @@ import StagePage from '../statementTypes/stage/StagePage';
 import { useSwitchMV } from './SwitchMV';
 import { StatementType } from '@/types/enums';
 import { Role } from '@/types/user';
-import { Statement } from '@/types/statement';
+import { Statement } from '@/types/statement/statementTypes';
 
 const Switch = () => {
 	const { statement, role } = useContext(StatementContext);

@@ -2,14 +2,14 @@ import { Change, logger } from 'firebase-functions/v1';
 import { db } from './index';
 import { DocumentSnapshot, FieldValue } from 'firebase-admin/firestore';
 import { FirestoreEvent } from 'firebase-functions/firestore';
-import { Evaluation } from '../../src/types/evaluation';
+import { Evaluation } from '../../src/types/evaluation/evaluationTypes';
 import { User } from '../../src/types/user';
 import { number, parse } from 'valibot';
 import {
 	Statement,
 	StatementSchema,
 	statementToSimpleStatement,
-} from '../../src/types/statement';
+} from '../../src/types/statement/statementTypes';
 import { Collections, StatementType } from '../../src/types/enums';
 import {
 	ChoseBy,

@@ -25,7 +25,7 @@ import {
 import { AppDispatch, store } from '@/redux/store';
 import { listenedStatements } from '@/view/pages/home/Home';
 import { Collections } from '@/types/enums';
-import { Statement, StatementSchema } from '@/types/statement';
+import { Statement, StatementSchema } from '@/types/statement/statementTypes';
 import {
 	StatementSubscription,
 	StatementSubscriptionSchema,
@@ -177,7 +177,7 @@ export function listenToStatementSubscriptions(
 
 export async function getStatmentsSubsciptions(): Promise<
 	StatementSubscription[]
-	> {
+> {
 	try {
 		const user = store.getState().user.user;
 		if (!user) throw new Error('User not logged in');

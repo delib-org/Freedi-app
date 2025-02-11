@@ -1,5 +1,5 @@
 import { DeliberativeElement, Screen } from '@/types/enums';
-import { Statement } from '@/types/statement';
+import { Statement } from '@/types/statement/statementTypes';
 
 // Updates the displayed options with how many votes each option has from the parent statement
 export function setSelectionsToOptions(

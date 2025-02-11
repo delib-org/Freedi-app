@@ -1,6 +1,6 @@
 import { ReactElement } from 'react';
 import useStatementColor from '@/controllers/hooks/useStatementColor';
-import { Statement } from '@/types/statement';
+import { Statement } from '@/types/statement/statementTypes';
 import { QuestionType, StatementType } from '@/types/enums';
 
 import DocumentIcon from '@/assets/icons/document.svg?react';

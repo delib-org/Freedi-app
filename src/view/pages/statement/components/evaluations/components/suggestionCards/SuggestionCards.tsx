@@ -7,7 +7,7 @@ import styles from "./SuggestionCards.module.scss";
 import { statementSubsSelector } from "@/redux/statements/statementsSlice";
 import { StatementContext } from "@/view/pages/statement/StatementCont";
 import EmptyScreen from "../emptyScreen/EmptyScreen";
-import { Statement } from "@/types/statement";
+import { Statement } from "@/types/statement/statementTypes";
 import { StatementType } from "@/types/enums";
 
 const SuggestionCards: FC = () => {
