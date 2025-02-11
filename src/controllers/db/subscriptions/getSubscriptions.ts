@@ -177,7 +177,7 @@ export function listenToStatementSubscriptions(
 
 export async function getStatmentsSubsciptions(): Promise<
 	StatementSubscription[]
-> {
+	> {
 	try {
 		const user = store.getState().user.user;
 		if (!user) throw new Error('User not logged in');
