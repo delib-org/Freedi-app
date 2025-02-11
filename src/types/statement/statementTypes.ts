@@ -26,7 +26,7 @@ import {
 	UserDataSchema,
 	UserSchema,
 } from '../user';
-import { StatementEvaluationSchema } from '../evaluation';
+import { StatementEvaluationSchema } from '../evaluation/evaluationTypes';
 import { ResultsSettingsSchema } from '../results';
 import { QuestionSettingsSchema } from '../question';
 import { AgreeSchema } from '../agreement';

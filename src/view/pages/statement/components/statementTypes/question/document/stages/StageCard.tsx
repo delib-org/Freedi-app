@@ -4,7 +4,7 @@ import Button, { ButtonType } from '@/view/components/buttons/button/Button';
 import { NavLink, useNavigate } from 'react-router';
 import { useLanguage } from '@/controllers/hooks/useLanguages';
 import { StageClass } from '@/types/stage';
-import { SimpleStatement, Statement } from '@/types/statement';
+import { SimpleStatement, Statement } from '@/types/statement/statementTypes';
 
 interface Props {
 	statement: Statement;

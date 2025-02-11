@@ -12,8 +12,8 @@ import {
 } from '@/controllers/db/statements/setStatements';
 import { getVoters } from '@/controllers/db/vote/getVotes';
 import { StatementType } from '@/types/enums';
-import { Evaluation } from '@/types/evaluation';
-import { Statement, StatementSettings } from '@/types/statement';
+import { Evaluation } from '@/types/evaluation/evaluationTypes';
+import { Statement, StatementSettings } from '@/types/statement/statementTypes';
 import { Vote } from '@/types/vote';
 import { Dispatch, SetStateAction } from 'react';
 

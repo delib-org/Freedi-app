@@ -1,7 +1,7 @@
 import { createSlice } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
 import { RootState } from '../store';
-import { Statement } from '@/types/statement';
+import { Statement } from '@/types/statement/statementTypes';
 import { GeneratedStatement } from '@/types/massConsensus/massConsensusModel';
 
 export enum Status {

@@ -3,7 +3,7 @@ import { Response, onInit, Request } from 'firebase-functions/v1';
 import { db } from '.';
 import 'dotenv/config';
 import { Collections } from '../../src/types/enums';
-import { Statement } from '../../src/types/statement';
+import { Statement } from '../../src/types/statement/statementTypes';
 
 
 export async function findSimilarStatements(

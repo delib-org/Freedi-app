@@ -1,10 +1,10 @@
 import { Timestamp, doc, setDoc } from 'firebase/firestore';
 import { FireStore } from '../config';
 import { store } from '@/redux/store';
-import { Statement } from '@/types/statement';
+import { Statement } from '@/types/statement/statementTypes';
 import { number, parse } from 'valibot';
 import { Collections } from '@/types/enums';
-import { EvaluationSchema } from '@/types/evaluation';
+import { EvaluationSchema } from '@/types/evaluation/evaluationTypes';
 
 export async function setEvaluationToDB(
 	statement: Statement,

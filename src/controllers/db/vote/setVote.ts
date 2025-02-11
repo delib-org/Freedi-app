@@ -2,7 +2,7 @@ import { Timestamp, doc, getDoc, setDoc } from 'firebase/firestore';
 import { FireStore } from '../config';
 import { store } from '@/redux/store';
 import { Collections } from '@/types/enums';
-import { Statement } from '@/types/statement';
+import { Statement } from '@/types/statement/statementTypes';
 import { getVoteId, Vote, VoteSchema } from '@/types/vote';
 import { User } from '@/types/user';
 import { parse } from 'valibot';

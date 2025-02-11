@@ -2,7 +2,7 @@ import { createSlice } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
 import { RootState } from '../store';
 import { updateArray } from '@/controllers/general/helpers';
-import { StatementMetaData, StatementMetaDataSchema } from '@/types/statement';
+import { StatementMetaData, StatementMetaDataSchema } from '@/types/statement/statementTypes';
 import { parse } from 'valibot';
 
 // Define a type for the slice state

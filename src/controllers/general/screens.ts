@@ -1,5 +1,5 @@
 import { Screen } from '@/types/enums';
-import { Statement } from '@/types/statement';
+import { Statement } from '@/types/statement/statementTypes';
 
 export function allowedScreens(
 	statement: Statement | undefined,

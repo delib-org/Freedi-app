@@ -5,7 +5,7 @@ import {
 import { updateStatementTop } from '@/redux/statements/statementsSlice';
 import { store } from '@/redux/store';
 import { SortType } from '@/types/enums';
-import { Statement } from '@/types/statement';
+import { Statement } from '@/types/statement/statementTypes';
 
 export function sortSubStatements(
 	subStatements: Statement[],

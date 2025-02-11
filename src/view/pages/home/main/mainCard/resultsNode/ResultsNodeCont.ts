@@ -1,5 +1,5 @@
 import { StatementType } from "@/types/enums";
-import { Statement } from "@/types/statement";
+import { Statement } from "@/types/statement/statementTypes";
 
 export function styleSwitch(statement: Statement) {
 	const { statementType } = statement;

@@ -1,5 +1,5 @@
 import { GeneratedStatement } from '@/types/massConsensus/massConsensusModel'
-import { Statement } from '@/types/statement'
+import { Statement } from '@/types/statement/statementTypes'
 import { FC } from 'react'
 import styles from './SimilarCard.module.scss';
 

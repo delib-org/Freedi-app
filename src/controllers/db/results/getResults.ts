@@ -8,7 +8,7 @@ import {
 } from 'firebase/firestore';
 import { FireStore } from '../config';
 import { Collections } from '@/types/enums';
-import { Statement, StatementSchema } from '@/types/statement';
+import { Statement, StatementSchema } from '@/types/statement/statementTypes';
 import { parse } from 'valibot';
 import { ResultsBy } from '@/types/results';
 

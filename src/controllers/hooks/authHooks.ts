@@ -9,7 +9,7 @@ import {
 } from '@/redux/statements/statementsSlice';
 import { store } from '@/redux/store';
 import { Access } from '@/types/enums';
-import { Statement } from '@/types/statement';
+import { Statement } from '@/types/statement/statementTypes';
 import { StatementSubscription } from '@/types/statement/subscription';
 import { Role } from '@/types/user';
 

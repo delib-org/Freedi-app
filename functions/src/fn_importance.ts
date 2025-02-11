@@ -3,7 +3,7 @@ import { db } from '.';
 import { FieldValue } from 'firebase-admin/firestore';
 import { Importance } from '../../src/types/agreement';
 import { Collections } from '../../src/types/enums';
-import { StatementSchema } from '../../src/types/statement';
+import { StatementSchema } from '../../src/types/statement/statementTypes';
 import { parse } from 'valibot';
 import { FirestoreEvent } from 'firebase-functions/firestore';
 import { DocumentSnapshot } from 'firebase-functions/v1/firestore';

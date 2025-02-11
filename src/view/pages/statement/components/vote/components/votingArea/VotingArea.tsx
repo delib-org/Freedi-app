@@ -5,7 +5,7 @@ import './VotingArea.scss';
 import { getSortedVotingOptions, isVerticalOptionBar } from './VotingAreaCont';
 import useWindowDimensions from '@/controllers/hooks/useWindowDimentions';
 import { StatementContext } from '@/view/pages/statement/StatementCont';
-import { Statement } from '@/types/statement';
+import { Statement } from '@/types/statement/statementTypes';
 import { DeliberativeElement } from '@/types/enums';
 
 interface VotingAreaProps {

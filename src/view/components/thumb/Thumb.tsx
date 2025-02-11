@@ -9,7 +9,7 @@ import SmileIcon from "@/assets/icons/smileIcon.svg?react";
 
 // Statement helpers
 import { setEvaluationToDB } from "@/controllers/db/evaluation/setEvaluation";
-import { Statement } from "@/types/statement";
+import { Statement } from "@/types/statement/statementTypes";
 
 interface ThumbProps {
 	evaluation: number;

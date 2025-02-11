@@ -23,7 +23,7 @@ import {
 } from '@/redux/statements/statementsSlice';
 import { AppDispatch, store } from '@/redux/store';
 import { Collections, StatementType, DeliberativeElement } from '@/types/enums';
-import { Statement, StatementSchema } from '@/types/statement';
+import { Statement, StatementSchema } from '@/types/statement/statementTypes';
 import { StatementSubscription } from '@/types/statement/subscription';
 import { Role, User } from '@/types/user';
 import { parse } from 'valibot';

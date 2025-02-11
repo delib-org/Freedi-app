@@ -1,5 +1,5 @@
 import { StatementType } from '../enums';
-import { createBasicStatement, Statement } from '../statement';
+import { createBasicStatement, Statement } from '../statement/statementTypes';
 
 export enum StageType {
 	explanation = 'explanation',
@@ -29,11 +29,11 @@ export class StageClass {
 				if (!newStage) throw new Error('Could not create stage');
 				stages.push(newStage);
 			});
-			
+
 			return stages;
 		} catch (error) {
 			console.error(error);
-			
+
 			return [];
 		}
 	}
@@ -52,11 +52,11 @@ export class StageClass {
 				description: '',
 			});
 			if (!newStage) throw new Error('Could not create stage');
-			
+
 			return newStage;
 		} catch (error) {
 			console.error(error);
-			
+
 			return undefined;
 		}
 	}
