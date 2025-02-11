@@ -1,7 +1,11 @@
 import { createSelector } from '@reduxjs/toolkit';
 import { FC, useEffect, useMemo, useState } from 'react';
+
+// Third party imports
 import { useSelector } from 'react-redux';
-import { useParams } from 'react-router-dom';
+import { useParams } from 'react-router';
+
+// firestore
 import LoadingPage from '../loadingPage/LoadingPage';
 import Page404 from '../page404/Page404';
 import UnAuthorizedPage from '../unAuthorizedPage/UnAuthorizedPage';
@@ -31,9 +35,8 @@ import { MapProvider } from '@/controllers/hooks/useMap';
 import { RootState } from '@/model/store';
 import { userSelector } from '@/model/users/userSlice';
 import Modal from '@/view/components/modal/Modal';
-import { StatementType, Access } from '@/types/enums';
+import { StatementType, Access, QuestionType } from '@/types/enums';
 import { Role, User } from '@/types/user';
-import { QuestionType } from '@/types/question';
 
 // Create selectors
 export const subStatementsSelector = createSelector(
@@ -91,7 +94,7 @@ const StatementMain: FC = () => {
 		if (statement && screen) {
 			//set navigator tab title
 			const { shortVersion } = statementTitleToDisplay(statement.statement, 15);
-			document.title = `FreeDi - ${shortVersion}-${screen}`;
+			document.title = `FreeDi - ${shortVersion}`;
 		}
 	}, [statement, screen]);
 
@@ -180,36 +183,24 @@ const StatementMain: FC = () => {
 		}
 	}, [statement]);
 
-	const contextValue = useMemo(
-		() => ({
-			statement,
-			talker,
-			handleShowTalker,
-			role,
-			handleSetNewStatement,
-			setNewStatementType,
-			setNewQuestionType,
-			newStatementType,
-			newQuestionType,
-		}),
-		[
-			statement,
-			talker,
-			role,
-			handleShowTalker,
-			handleSetNewStatement,
-			setNewStatementType,
-			setNewQuestionType,
-			newStatementType,
-			newQuestionType
-		]
-	);
+	const contextValue = useMemo(() => ({
+		statement,
+		talker,
+		handleShowTalker,
+		role,
+		handleSetNewStatement,
+		setNewStatementType,
+		newStatementType,
+		setNewQuestionType,
+		newQuestionType,
+	}), [statement, talker, role, handleShowTalker, handleSetNewStatement, setNewStatementType, newStatementType]);
 
 	if (isStatementNotFound) return <Page404 />;
 	if (error) return <UnAuthorizedPage />;
 	if (loading) return <LoadingPage />;
 
 	if (isAuthorized) {
+
 		return (
 			<StatementContext.Provider value={contextValue}>
 				<div className='page'>

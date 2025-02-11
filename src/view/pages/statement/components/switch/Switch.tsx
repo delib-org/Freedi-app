@@ -1,5 +1,5 @@
 import { ReactNode, useContext } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams } from 'react-router';
 import { StatementContext } from '../../StatementCont';
 import Chat from '../chat/Chat';
 import FollowMeToast from '../followMeToast/FollowMeToast';

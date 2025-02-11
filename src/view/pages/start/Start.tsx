@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import MoreLeft from '../../../assets/icons/moreLeft.svg?react';
 import MoreRight from '../../../assets/icons/moreRight.svg?react';
 import Logo from '../../../assets/logo/106 x 89 SVG.svg?react';

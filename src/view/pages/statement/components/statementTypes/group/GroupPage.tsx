@@ -7,8 +7,7 @@ import { StatementContext } from '../../../StatementCont';
 import './groupPage.scss';
 import AddButton from './AddButton';
 import SubGroupCard from '@/view/components/subGroupCard/SubGroupCard';
-import { StatementType } from '@/types/enums';
-import { QuestionType } from '@/types/question';
+import { QuestionType, StatementType } from '@/types/enums';
 
 export default function GroupPage() {
 	const { handleSetNewStatement, setNewStatementType, statement, setNewQuestionType } =

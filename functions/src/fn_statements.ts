@@ -1,14 +1,17 @@
 import { logger } from 'firebase-functions';
+
 import {
 	Timestamp,
 	FieldValue,
 	QueryDocumentSnapshot,
 } from 'firebase-admin/firestore';
 import { db } from './index';
-import { Collections } from '../../src/types/enums';
-import { StatementSchema } from '../../src/types/statement';
+import { Collections, StatementType } from '../../src/types/enums';
+import { Statement, StatementSchema } from '../../src/types/statement';
 import { FirestoreEvent } from 'firebase-functions/firestore';
 import { parse } from 'valibot';
+import { Request } from 'firebase-functions/https';
+import { Response } from 'firebase-functions/v1';
 
 // TODO: Where is this used?
 // export async function updateSubscribedListenersCB(event: any) {
@@ -87,5 +90,23 @@ export async function updateParentWithNewMessageCB(
 		logger.error(error);
 
 		return;
+	}
+}
+
+
+export async function getQuestionOptions(req: Request, res: Response) {
+	try {
+		const { statementId } = req.query;
+		if (!statementId) throw new Error('statementId is required');
+
+		const ref = db.collection(Collections.statements);
+		const query = ref.where('parentId', '==', statementId).where('statementType', '==', StatementType.option);
+		const optionsDB = await query.get();
+		const options = optionsDB.docs.map((doc) => doc.data()) as Statement[];
+
+		res.status(200).send({ options, ok: true });
+	} catch (error: any) {
+		console.error(error);
+		res.status(500).send({ error: error.message, ok: false });
 	}
 }

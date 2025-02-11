@@ -1,7 +1,7 @@
 import { Dispatch, FC, FormEvent, useState } from 'react';
 
 // Third party imports
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router';
 
 // Firestore functions
 

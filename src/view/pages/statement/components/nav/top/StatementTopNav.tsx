@@ -1,5 +1,5 @@
 import { FC, useContext } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router';
 import Back from '../../header/Back';
 import HomeButton from '../../header/HomeButton';
 import styles from './StatementTopNav.module.scss';
@@ -21,6 +21,7 @@ import { Role } from '@/types/user';
 
 interface Props {
 	statement?: Statement;
+	parentStatement?: Statement;
 	handleShare: () => void;
 	handleFollowMe: () => void;
 	handleInvitePanel: () => void;
@@ -31,6 +32,7 @@ interface Props {
 
 const StatementTopNav: FC<Props> = ({
 	statement,
+	parentStatement,
 	setIsHeaderMenuOpen,
 	handleLogout,
 	handleFollowMe,
@@ -51,10 +53,9 @@ const StatementTopNav: FC<Props> = ({
 	};
 
 	if (!statement) return null;
+	const _statement = parentStatement || statement;
 
-	const enableNavigationalElements = Boolean(
-		statement?.statementSettings?.enableNavigationalElements
-	);
+	const enableNavigationalElements = Boolean(_statement?.statementSettings?.enableNavigationalElements)
 
 	const isAdmin = role === Role.admin;
 	const allowNavigation = enableNavigationalElements || isAdmin;
@@ -89,6 +90,7 @@ const StatementTopNav: FC<Props> = ({
 				)}
 				<NavButtons
 					statement={statement}
+					parentStatement={parentStatement}
 					screen={screen}
 					handleNavigation={handleNavigation}
 					headerStyle={headerStyle}
@@ -103,17 +105,14 @@ export default StatementTopNav;
 
 interface NavigationButtonsProps {
 	statement?: Statement;
+	parentStatement?: Statement;
 	screen: string | undefined;
 	handleNavigation: (path: string) => void;
 	headerStyle: { color: string; backgroundColor: string };
 }
 
-function NavigationButtons({
-	screen,
-	handleNavigation,
-	headerStyle,
-	statement,
-}: Readonly<NavigationButtonsProps>) {
+function NavigationButtons({ screen, handleNavigation, headerStyle, statement }: Readonly<NavigationButtonsProps>) {
+
 	const { hasChat } = statement?.statementSettings || { hasChat: false };
 	if (!hasChat) return null;
 
@@ -142,6 +141,7 @@ function NavigationButtons({
 }
 
 interface NavButtonsProps {
+	parentStatement?: Statement;
 	screen: string | undefined;
 	handleNavigation: (path: string) => void;
 	headerStyle: { color: string; backgroundColor: string };
@@ -149,23 +149,11 @@ interface NavButtonsProps {
 	statement?: Statement;
 }
 
-function NavButtons({
-	screen,
-	handleNavigation,
-	headerStyle,
-	allowNavigation,
-	statement,
-}: Readonly<NavButtonsProps>) {
+function NavButtons({ screen, handleNavigation, headerStyle, allowNavigation, statement, parentStatement }: Readonly<NavButtonsProps>) {
+
 	return (
 		<>
-			{allowNavigation && (
-				<NavigationButtons
-					statement={statement}
-					screen={screen}
-					handleNavigation={handleNavigation}
-					headerStyle={headerStyle}
-				/>
-			)}
+			{allowNavigation && <NavigationButtons statement={parentStatement || statement} screen={screen} handleNavigation={handleNavigation} headerStyle={headerStyle} />}
 			<button>
 				<View color={headerStyle.color} />
 			</button>

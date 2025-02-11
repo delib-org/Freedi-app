@@ -37,8 +37,10 @@ export enum membersAllowed {
 }
 
 export enum QuestionType {
-	singleStep = 'single-step',
-	multipleSteps = 'multiple-steps',
+	singleStep = 'single-step', //deprecated
+	multipleSteps = 'multiple-steps', //deprecated
+	massConsensus = 'mass-consensus',
+	multiStage = 'multi-stage',
 }
 
 export enum QuestionStagesType {
@@ -74,6 +76,7 @@ export enum Collections {
 	statementsMetaData = 'statementsMeta',
 	statementsPasswords = 'statementsPasswords',
 	statementsSubscribe = 'statementsSubscribe',
+	massConsensus = 'massConsensus',
 	choseBy = 'choseBy',
 	participants = 'participants',
 	rooms = 'rooms',
@@ -143,4 +146,11 @@ export enum SortType {
 	mostUpdated = 'mostUpdated',
 	random = 'random',
 	accepted = 'accepted',
+}
+
+export enum MassConsensusPageUrls {
+	Introduction = "introduction",
+	InitialQuestion = "initial-question",
+	Question = "question",
+	FinalQuestion = "ff"
 }

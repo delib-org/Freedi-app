@@ -1,0 +1,16 @@
+.headerMC {
+	display: flex;
+	justify-content: start;
+	background-color: var(--question);
+	width: 100%;
+
+	.back {
+		padding: 1rem;
+		color: white;
+
+		&--ltr {
+			transform: rotate(180deg);
+		}
+	}
+
+}
