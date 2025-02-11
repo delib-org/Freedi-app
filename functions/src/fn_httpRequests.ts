@@ -83,12 +83,10 @@ export const getRandomStatements = async (req: Request, res: Response) => {
 		});
 		await batch.commit();
 
-		const st = randomStatements.map((s) => ({ text: s.statement, viewed: s.evaluation.viewed, rnd: s.evaluation.evaluationRandomNumber }));
-
 
 		//TODO: change the random number of each statement
 
-		res.status(200).send({ st, randomStatements, ok: true, numberOfOptions: randomStatements.length });
+		res.status(200).send({ randomStatements, ok: true });
 	} catch (error: any) {
 		res.status(500).send({ error: error.message, ok: false });
 
