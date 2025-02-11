@@ -1,6 +1,8 @@
 import { useCallback, useEffect } from 'react';
 import IconButton from '../iconButton/IconButton';
 import AccessibilityIcon from '@/assets/icons/accessibilityIcon.svg?react';
+import HighContrastIcon from '@/assets/icons/highContrast.svg?react';
+import LightContrastIcon from '@/assets/icons/lightContrast.svg?react';
 import { useAppDispatch, useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { defaultFontSize } from '@/model/fonts/fontsModel';
 import {
@@ -23,7 +25,7 @@ export default function Accessibility() {
 	const colorContrast = useAppSelector(colorContrastSelector);
 
 	// * Hooks * //
-	const { isOpen, handleOpen } = useAutoClose(5000);
+	const { isOpen, handleOpen } = useAutoClose(10000);
 
 	const handleClickOutside = useCallback(() => {
 		if (isOpen) handleOpen();
@@ -58,27 +60,26 @@ export default function Accessibility() {
 				<div className='accessibility-panel__fonts'>
 					<IconButton
 						className='change-font-size-button'
-						onClick={() => handleChangeFontSize(1)}
+						onClick={() => handleChangeFontSize(2)}
 					>
 						+
 					</IconButton>
 					<output className='accessibility__fonts__size'>
-						{currentFontSize}px
+						Aa
 					</output>
 					<IconButton
 						className='change-font-size-button'
-						onClick={() => handleChangeFontSize(-1)}
+						onClick={() => handleChangeFontSize(-2)}
 					>
 						-
 					</IconButton>
-					<span dir='ltr'>Fonts:</span>
 				</div>
 				<div className='accessibility-panel__contrast'>
 					<button onClick={() => dispatch(setColorContrast(true))}>
-						High contrast
+						<HighContrastIcon /> High contrast
 					</button>
-					<button onClick={() => dispatch(setColorContrast(false))}>
-						Light Contrast
+					<button onClick={() => dispatch(setColorContrast(false))} style={{backgroundColor: "var(--btn-primary-disabled)"}}>
+						<LightContrastIcon /> Light contrast
 					</button>
 				</div>
 			</div>
