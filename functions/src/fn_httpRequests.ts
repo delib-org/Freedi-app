@@ -99,7 +99,7 @@ export const getTopStatements = async (req: Request, res: Response) => {
 	// cors(req, res, async () => {
 	try {
 		const parentId = req.query.parentId;
-		let limit = Number(req.query.limit) || (10 as number);
+		let limit = Number(req.query.limit) || (6 as number);
 		if (limit > 50) limit = 50;
 
 		if (!parentId) {
@@ -111,7 +111,7 @@ export const getTopStatements = async (req: Request, res: Response) => {
 		const topSolutionsRef = db.collection(Collections.statements);
 		const q: Query = topSolutionsRef
 			.where('parentId', '==', parentId)
-			.where('statementType', 'in', ['result', 'option'])
+			.where('statementType', '==', StatementType.option)
 			.orderBy('consensus', 'desc')
 			.limit(limit);
 		const topSolutionsDB = await q.get();
