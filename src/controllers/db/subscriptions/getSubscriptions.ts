@@ -25,7 +25,7 @@ import {
 import { AppDispatch, store } from '@/redux/store';
 import { listenedStatements } from '@/view/pages/home/Home';
 import { Collections } from '@/types/enums';
-import { Statement, StatementSchema } from '@/types/statement';
+import { Statement, StatementSchema } from '@/types/statement/statementTypes';
 import {
 	StatementSubscription,
 	StatementSubscriptionSchema,

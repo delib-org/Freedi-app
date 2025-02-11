@@ -19,7 +19,7 @@ import {
 import Modal from "@/view/components/modal/Modal";
 import { StatementType } from "@/types/enums";
 import { Results } from "@/types/results";
-import { Statement } from "@/types/statement";
+import { Statement } from "@/types/statement/statementTypes";
 import { Role } from "@/types/user";
 
 interface Props {

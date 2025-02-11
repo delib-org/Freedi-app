@@ -1,7 +1,7 @@
 import { logger } from 'firebase-functions/v1';
 import { db } from '.';
 import { Collections } from '../../src/types/enums';
-import { Statement } from '../../src/types/statement';
+import { Statement } from '../../src/types/statement/statementTypes';
 import { StatementView } from '../../src/types/statement/subscription';
 
 //@ts-ignore

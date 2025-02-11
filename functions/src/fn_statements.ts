@@ -7,7 +7,7 @@ import {
 } from 'firebase-admin/firestore';
 import { db } from './index';
 import { Collections, StatementType } from '../../src/types/enums';
-import { Statement, StatementSchema } from '../../src/types/statement';
+import { Statement, StatementSchema } from '../../src/types/statement/statementTypes';
 import { FirestoreEvent } from 'firebase-functions/firestore';
 import { parse } from 'valibot';
 import { Request } from 'firebase-functions/https';

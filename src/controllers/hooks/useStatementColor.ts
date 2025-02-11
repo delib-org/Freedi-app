@@ -1,5 +1,5 @@
 import { StatementType } from '@/types/enums';
-import { Statement } from '@/types/statement';
+import { Statement } from '@/types/statement/statementTypes';
 import { useEffect, useState } from 'react';
 
 export interface StyleProps {

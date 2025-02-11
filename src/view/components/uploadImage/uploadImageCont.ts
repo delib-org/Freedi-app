@@ -1,7 +1,7 @@
 import { compressImage } from './compressImage';
 import { uploadImageToStorage } from '@/controllers/db/images/setImages';
 import { updateStatementMainImage } from '@/controllers/db/statements/setStatements';
-import { Statement } from '@/types/statement';
+import { Statement } from '@/types/statement/statementTypes';
 import React from 'react';
 
 export async function setImageLocally(

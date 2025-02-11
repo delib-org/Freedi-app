@@ -4,7 +4,7 @@ import { getUserFromFirebase } from '../users/usersGeneral';
 import { getStatementSubscriptionId } from '@/controllers/general/helpers';
 import { store } from '@/redux/store';
 import { Collections } from '@/types/enums';
-import { Statement, StatementSchema } from '@/types/statement';
+import { Statement, StatementSchema } from '@/types/statement/statementTypes';
 import { StatementSubscriptionSchema } from '@/types/statement/subscription';
 import { Role, User } from '@/types/user';
 import { parse } from 'valibot';

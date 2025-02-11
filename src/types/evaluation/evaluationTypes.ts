@@ -38,6 +38,8 @@ export const StatementEvaluationSchema = object({
 	numberOfEvaluators: number(),
 	sumPro: optional(number()),
 	sumCon: optional(number()),
+	viewed: optional(number()),
+	evaluationRandomNumber: optional(number()),
 });
 
 export type StatementEvaluation = InferOutput<typeof StatementEvaluationSchema>;

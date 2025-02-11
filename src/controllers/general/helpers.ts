@@ -3,7 +3,7 @@ import { HistoryTracker } from '@/redux/history/HistorySlice';
 import { store } from '@/redux/store';
 import { setUser } from '@/redux/users/userSlice';
 import { Screen } from '@/types/enums';
-import { Statement } from '@/types/statement';
+import { Statement } from '@/types/statement/statementTypes';
 import { StatementSubscription } from '@/types/statement/subscription';
 import { Role, User } from '@/types/user';
 

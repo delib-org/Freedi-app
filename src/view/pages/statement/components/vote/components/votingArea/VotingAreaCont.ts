@@ -1,4 +1,4 @@
-import { Statement } from '@/types/statement';
+import { Statement } from '@/types/statement/statementTypes';
 import {
 	setSelectionsToOptions,
 	sortOptionsIndex,

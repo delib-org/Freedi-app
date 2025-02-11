@@ -14,7 +14,7 @@ import { AppDispatch } from '@/redux/store';
 import { Collections } from '@/types/enums';
 import { UserSchema } from '@/types/user';
 import { parse } from 'valibot';
-import { Evaluation, EvaluationSchema } from '@/types/evaluation';
+import { Evaluation, EvaluationSchema } from '@/types/evaluation/evaluationTypes';
 
 export const listenToEvaluations = (
 	dispatch: AppDispatch,

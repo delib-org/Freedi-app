@@ -10,7 +10,7 @@ import { useAppSelector } from "@/controllers/hooks/reduxHooks";
 import { subStatementsByTopParentIdMemo } from "@/redux/statements/statementsSlice";
 import Text from "@/view/components/text/Text";
 import StatementChatMore from "@/view/pages/statement/components/chat/components/StatementChatMore";
-import { Statement } from "@/types/statement";
+import { Statement } from "@/types/statement/statementTypes";
 
 interface Props {
 	statement: Statement;

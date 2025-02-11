@@ -1,7 +1,7 @@
 import { FC } from "react";
 import EnhancedEvaluation from "./enhancedEvaluation/EnhancedEvaluation";
 import SimpleEvaluation from "./simpleEvaluation/SimpleEvaluation";
-import { Statement } from "@/types/statement";
+import { Statement } from "@/types/statement/statementTypes";
 
 interface EvaluationProps {
 	parentStatement: Statement | undefined;
