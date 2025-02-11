@@ -6,8 +6,7 @@ import AddClusterIcon from "@/assets/icons/net-clusters.svg?react";
 import AddSubQuestionIcon from "@/assets/icons/questionIcon.svg?react";
 import AddSubGroupIcon from "@/assets/icons/team-group.svg?react";
 import { StatementContext } from '../../../StatementCont';
-import { StatementType } from '@/types/enums';
-import { QuestionType } from '@/types/question';
+import { QuestionType, StatementType } from '@/types/enums';
 
 export default function AddButton() {
 	const [actionsOpen, setActionsOpen] = React.useState(false);
