@@ -3,7 +3,8 @@ import {
 	GoogleAuthProvider,
 	onAuthStateChanged,
 	signInAnonymously,
-	Unsubscribe
+	Unsubscribe,
+	User as FirebaseUser,
 } from 'firebase/auth';
 import { NavigateFunction } from 'react-router';
 import { auth } from './config';
@@ -82,13 +83,15 @@ const handleUserSignIn = async (
 	}
 
 	if (!user.displayName) {
-		user.displayName = localStorage.getItem('displayName') ?? generateAnonymousName();
+		user.displayName =
+			localStorage.getItem('displayName') ?? generateAnonymousName();
 	}
 	if (user.isAnonymous) {
-		user.displayName = sessionStorage.getItem('displayName') ?? generateAnonymousName();
+		user.displayName =
+			sessionStorage.getItem('displayName') ?? generateAnonymousName();
 	}
 
-	const userDB = await setUserToDB(user) as User;
+	const userDB = (await setUserToDB(user)) as User;
 	if (!userDB) {
 		throw new Error('Failed to save user to database');
 	}
@@ -102,8 +105,7 @@ const handleUserSignIn = async (
 	}
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function convertUserFBToUser(userFB: any): User {
+function convertUserFBToUser(userFB: FirebaseUser): User {
 	return {
 		uid: userFB.uid,
 		displayName: userFB.displayName || generateAnonymousName(),
@@ -114,7 +116,7 @@ function convertUserFBToUser(userFB: any): User {
 }
 
 export const listenToAuth = (
-	navigate: NavigateFunction,  // Now passed as a parameter
+	navigate: NavigateFunction, // Now passed as a parameter
 	isAnonymous: boolean,
 	initialUrl: string
 ): Unsubscribe => {
@@ -130,7 +132,11 @@ export const listenToAuth = (
 
 				return;
 			}
-			await handleUserSignIn(convertUserFBToUser(userFB), navigate, initialUrl);
+			await handleUserSignIn(
+				convertUserFBToUser(userFB),
+				navigate,
+				initialUrl
+			);
 		} catch (error) {
 			console.error('Authentication error:', error);
 		}
