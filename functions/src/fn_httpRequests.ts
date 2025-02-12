@@ -86,7 +86,7 @@ export const getRandomStatements = async (req: Request, res: Response) => {
 
 		//TODO: change the random number of each statement
 
-		res.status(200).send({ randomStatements, ok: true });
+		res.status(200).send({ randomSuggestions: randomStatements, ok: true });
 	} catch (error: any) {
 		res.status(500).send({ error: error.message, ok: false });
 
@@ -102,22 +102,24 @@ export const getTopStatements = async (req: Request, res: Response) => {
 		let limit = Number(req.query.limit) || (6 as number);
 		if (limit > 50) limit = 50;
 
+		console.log("limit and paretnId:", limit, parentId)
+
 		if (!parentId) {
 			res.status(400).send({ error: 'parentId is required', ok: false });
 
 			return;
 		}
 
-		const topSolutionsRef = db.collection(Collections.statements);
-		const q: Query = topSolutionsRef
+		const topSuggestionsRef = db.collection(Collections.statements);
+		const q: Query = topSuggestionsRef
 			.where('parentId', '==', parentId)
 			.where('statementType', '==', StatementType.option)
 			.orderBy('consensus', 'desc')
 			.limit(limit);
-		const topSolutionsDB = await q.get();
-		const topSolutions = topSolutionsDB.docs.map((doc) => doc.data());
+		const topSuggestionsDB = await q.get();
+		const topSuggestions = topSuggestionsDB.docs.map((doc) => doc.data());
 
-		res.send({ topSolutions, ok: true });
+		res.send({ topSuggestions, ok: true });
 
 		return;
 	} catch (error) {
