@@ -1,11 +1,15 @@
+import { userSelector } from "@/redux/users/userSlice";
+import { MassConsensusPageUrls } from "@/types/enums";
 import { Statement } from "@/types/statement";
 import { useEffect, useState } from "react";
-import { useParams } from "react-router";
+import { useSelector } from "react-redux";
+import { useNavigate, useParams } from "react-router";
 
 const useTopSuggestions = () => {
-
+    const navigate = useNavigate();
+    const user = useSelector(userSelector);
     const { statementId } = useParams<{ statementId: string }>();
-    const [ suggestions, setSuggestions ] = useState<Statement[]>([])
+    const [suggestions, setSuggestions] = useState<Statement[]>([])
 
     useEffect(() => {
         fetch(`http://localhost:5001/delib-v3-dev/us-central1/getQuestionOptions?statementId=${statementId}`)
@@ -17,7 +21,11 @@ const useTopSuggestions = () => {
 
     }, [statementId]);
 
-    return ( { suggestions, statementId })
+    useEffect(() => {
+        if (!user) navigate(`/mass-consensus/${statementId}/${MassConsensusPageUrls.introduction}`)
+    }, [user]);
+
+    return ({ suggestions, statementId })
 }
 
 export default useTopSuggestions;
