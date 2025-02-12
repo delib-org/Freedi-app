@@ -1,9 +1,9 @@
-import { setStatements } from "@/redux/statements/statementsSlice";
+import { setMassConsensusStatements, setStatements } from "@/redux/statements/statementsSlice";
 import { userSelector } from "@/redux/users/userSlice";
 import { MassConsensusPageUrls } from "@/types/enums";
 import { SelectionFunction } from "@/types/evaluation/evaluationTypes";
 import { Statement } from "@/types/statement";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useParams } from "react-router";
 
@@ -30,17 +30,8 @@ export function useRandomSuggestions() {
 					return response.json();
 				})
 				.then((data) => {
-					console.log(data)
-					const options = data.statements.map((st: Statement) => ({
-						...st,
-						evaluation: {
-							...st.evaluation,
-							selectionFunction: SelectionFunction.random,
-						}
-					}))
 
-					setStatements(options);
-					dispatch(setStatements(options));
+					dispatch(setMassConsensusStatements({ statements: data.statements, selectionFunction: SelectionFunction.random }));
 
 				})
 				.catch((error) => {
