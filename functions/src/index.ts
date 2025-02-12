@@ -5,7 +5,10 @@ import {
 	updateEvaluation,
 } from './fn_evaluation';
 import { updateResultsSettings } from './fn_results';
-import { getQuestionOptions, updateParentWithNewMessageCB } from './fn_statements';
+import {
+	getQuestionOptions,
+	updateParentWithNewMessageCB,
+} from './fn_statements';
 import { updateVote } from './fn_vote';
 
 import {
@@ -67,6 +70,7 @@ exports.getRandomStatements = wrapHttpFunction(getRandomStatements);
 exports.getTopStatements = wrapHttpFunction(getTopStatements);
 exports.getUserOptions = wrapHttpFunction(getUserOptions);
 exports.checkForSimilarStatements = wrapHttpFunction(findSimilarStatements);
+exports.massConsensusGetInitialData = wrapHttpFunction(getInitialMCData);
 
 // Firestore Triggers
 exports.setUserSettings = onDocumentCreated(
@@ -279,11 +283,15 @@ exports.updateStatementWithViews = onDocumentCreated(
 	}
 );
 
-
-
 const isProduction = process.env.NODE_ENV === 'production';
 console.info('isProduction', isProduction);
-const cors = { cors: ["https://delib-5.web.app", "https://freedi.tech", "https://delib.web.app"] }
+const cors = {
+	cors: [
+		'https://delib-5.web.app',
+		'https://freedi.tech',
+		'https://delib.web.app',
+	],
+};
 
 exports.massConsensusGetInitialData = onRequest(cors, getInitialMCData);
 exports.checkForSimilarStatements = onRequest(cors, findSimilarStatements);
