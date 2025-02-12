@@ -13,9 +13,10 @@ import { SelectionFunction } from "@/types/evaluation";
 
 interface Props {
 	propSort?: SortType
+	selectionFunction?: SelectionFunction
 }
 
-const SuggestionCards: FC<Props> = ({ propSort }) => {
+const SuggestionCards: FC<Props> = ({ propSort, selectionFunction }) => {
 	const { sort: _sort, statementId } = useParams();
 	const sort = propSort || _sort || SortType.accepted;
 
@@ -24,17 +25,12 @@ const SuggestionCards: FC<Props> = ({ propSort }) => {
 
 	const [totalHeight, setTotalHeight] = useState(0);
 
-	const subStatements = useSelector(statementSubsSelector(statement?.statementId))
-		.filter((sub: Statement) => sub.statementType === StatementType.option && sub.evaluation?.selectionFunction === SelectionFunction.top);
+	const _subStatements = useSelector(statementSubsSelector(statement?.statementId))
+		.filter((sub: Statement) => sub.statementType === StatementType.option);
 
-	const reduxSubStatements = useSelector(
-		statementSubsSelector(statement?.statementId)
-	).filter((sub: Statement) => sub.statementType === StatementType.option);
+	console.log(selectionFunction)
 
-	const subStatements = useMemo(
-		() => randomSubStatements ?? reduxSubStatements,
-		[randomSubStatements, reduxSubStatements]
-	);
+	const subStatements = selectionFunction ? _subStatements.filter((sub: Statement) => sub.evaluation.selectionFunction === selectionFunction) : _subStatements
 
 	useEffect(() => {
 		if (!statement) getStatementFromDB(statementId).then((statement: Statement) => dispatch(setStatement(statement)))
@@ -78,7 +74,7 @@ const SuggestionCards: FC<Props> = ({ propSort }) => {
 				return (
 					<SuggestionCard
 						key={statementSub.statementId}
-						parentStatement={randomSubStatements ? statementSub : statement}
+						parentStatement={statement}
 						siblingStatements={subStatements}
 						statement={statementSub}
 					/>

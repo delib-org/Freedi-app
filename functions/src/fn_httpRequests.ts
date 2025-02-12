@@ -86,7 +86,7 @@ export const getRandomStatements = async (req: Request, res: Response) => {
 
 		//TODO: change the random number of each statement
 
-		res.status(200).send({ randomStatements, ok: true });
+		res.status(200).send({ statements: randomStatements, ok: true });
 	} catch (error: any) {
 		res.status(500).send({ error: error.message, ok: false });
 
