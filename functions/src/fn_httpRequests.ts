@@ -101,9 +101,9 @@ export const getTopStatements = async (req: Request, res: Response) => {
 			.orderBy('consensus', 'desc')
 			.limit(limit);
 		const topSolutionsDB = await q.get();
-		const topSolutions = topSolutionsDB.docs.map((doc) => doc.data());
+		const statements = topSolutionsDB.docs.map((doc) => doc.data());
 
-		res.send({ topSolutions, ok: true });
+		res.send({ statements, ok: true });
 
 		return;
 	} catch (error) {

@@ -1,4 +1,4 @@
-import { MassConsensusPageUrls } from "@/types/enums";
+import { MassConsensusPageUrls, SortType } from "@/types/enums";
 import SuggestionCards from "../../statement/components/evaluations/components/suggestionCards/SuggestionCards";
 import HeaderMassConsensus from "../headerMassConsensus/HeaderMassConsensus";
 import useTopSuggestions from "./TopSuggestionVM";
@@ -13,7 +13,7 @@ const TopSuggestions = () => {
         <div>
             <HeaderMassConsensus backTo={MassConsensusPageUrls.randomSuggestions} />
             <h2>please rate the top suggestions</h2>
-            <SuggestionCards outerSubStatement={suggestions} />
+            <SuggestionCards propSort={SortType.random} />
             <div className="btns">
                 <Link to={`/mass-consensus/${statementId}/${MassConsensusPageUrls.voting}?lang=${lang}`}>
                     <button className="btn btn--agree">skip</button>

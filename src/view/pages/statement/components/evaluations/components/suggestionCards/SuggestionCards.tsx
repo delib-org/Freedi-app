@@ -1,35 +1,35 @@
-import { FC, useContext, useEffect, useState } from "react";
+import { FC, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useParams } from "react-router";
 import { sortSubStatements } from "../../statementsEvaluationCont";
 import SuggestionCard from "./suggestionCard/SuggestionCard";
 import styles from "./SuggestionCards.module.scss";
-import { setStatement, statementSelector, statementSubsSelector } from "@/redux/statements/statementsSlice";
-import { StatementContext } from "@/view/pages/statement/StatementCont";
 import EmptyScreen from "../emptyScreen/EmptyScreen";
 import { Statement } from "@/types/statement";
-import { StatementType } from "@/types/enums";
+import { SortType, StatementType } from "@/types/enums";
 import { getStatementFromDB } from "@/controllers/db/statements/getStatement";
+import { setStatement, statementSelector, statementSubsSelector } from "@/redux/statements/statementsSlice";
+import { SelectionFunction } from "@/types/evaluation";
 
-interface Props{
-	outerSubStatement?: Statement[];
+interface Props {
+	propSort?: SortType
 }
 
-const SuggestionCards: FC<Props> = ({outerSubStatement}) => {
-	const { sort, statementId } = useParams();
-	const dispatch = useDispatch();
-	//const { statement } = useContext(StatementContext);
-	const statement = useSelector(statementSelector(statementId))
-	console.log(statement)
+const SuggestionCards: FC<Props> = ({ propSort }) => {
+	const { sort: _sort, statementId } = useParams();
+	const sort = propSort || _sort || SortType.accepted;
 
-	
+	const dispatch = useDispatch();
+	const statement = useSelector(statementSelector(statementId))
+
 	const [totalHeight, setTotalHeight] = useState(0);
 
-	const subStatements = outerSubStatement? outerSubStatement : useSelector(statementSubsSelector(statement?.statementId)).filter((sub: Statement) => sub.statementType === StatementType.option);
+	const subStatements = useSelector(statementSubsSelector(statement?.statementId))
+		.filter((sub: Statement) => sub.statementType === StatementType.option && sub.evaluation?.selectionFunction === SelectionFunction.top);
 
 	useEffect(() => {
 		if (!statement) getStatementFromDB(statementId).then((statement: Statement) => dispatch(setStatement(statement)))
-	},([statement]))
+	}, ([statement]))
 
 	useEffect(() => {
 		const { totalHeight: _totalHeight } = sortSubStatements(
@@ -57,7 +57,7 @@ const SuggestionCards: FC<Props> = ({outerSubStatement}) => {
 			/>
 		);
 	}
-	
+
 	if (!statement) return null
 
 	return (
