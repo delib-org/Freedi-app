@@ -5,6 +5,7 @@ import {
 	boolean,
 	optional,
 	InferOutput,
+	enum_,
 } from 'valibot';
 import { UserSchema } from '../user';
 
@@ -32,6 +33,12 @@ export const EvaluatorSchema = object({
 
 export type Evaluator = InferOutput<typeof EvaluatorSchema>;
 
+export enum SelectionFunction {
+	random = 'random',
+	top = 'top',
+	vote = 'vote',
+}
+
 export const StatementEvaluationSchema = object({
 	sumEvaluations: number(),
 	agreement: number(),
@@ -40,6 +47,7 @@ export const StatementEvaluationSchema = object({
 	sumCon: optional(number()),
 	viewed: optional(number()),
 	evaluationRandomNumber: optional(number()),
+	selectionFunction: optional(enum_(SelectionFunction)), // it is used for selecting in mass consensus random, voting and top suggestions
 });
 
 export type StatementEvaluation = InferOutput<typeof StatementEvaluationSchema>;

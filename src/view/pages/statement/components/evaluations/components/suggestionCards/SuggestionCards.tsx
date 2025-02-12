@@ -1,26 +1,31 @@
-import { FC, useContext, useEffect, useMemo, useState } from "react";
-import { useSelector } from "react-redux";
+import { FC, useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { useParams } from "react-router";
 import { sortSubStatements } from "../../statementsEvaluationCont";
 import SuggestionCard from "./suggestionCard/SuggestionCard";
 import styles from "./SuggestionCards.module.scss";
-import { statementSubsSelector } from "@/redux/statements/statementsSlice";
-import { StatementContext } from "@/view/pages/statement/StatementCont";
 import EmptyScreen from "../emptyScreen/EmptyScreen";
-import { Statement } from "@/types/statement/statementTypes";
-import { StatementType } from "@/types/enums";
+import { Statement } from "@/types/statement";
+import { SortType, StatementType } from "@/types/enums";
+import { getStatementFromDB } from "@/controllers/db/statements/getStatement";
+import { setStatement, statementSelector, statementSubsSelector } from "@/redux/statements/statementsSlice";
+import { SelectionFunction } from "@/types/evaluation";
 
 interface Props {
-	randomSubStatements?: Statement[];
+	propSort?: SortType
 }
 
-const SuggestionCards: FC<Props> = ({ randomSubStatements }) => {
-	const { sort } = useParams();
-	const { statement } = useContext(StatementContext);
+const SuggestionCards: FC<Props> = ({ propSort }) => {
+	const { sort: _sort, statementId } = useParams();
+	const sort = propSort || _sort || SortType.accepted;
+
+	const dispatch = useDispatch();
+	const statement = useSelector(statementSelector(statementId))
 
 	const [totalHeight, setTotalHeight] = useState(0);
 
-	// const subStatements = useSelector(statementSubsSelector(statement?.statementId)).filter((sub: Statement) => sub.statementType === StatementType.option);
+	const subStatements = useSelector(statementSubsSelector(statement?.statementId))
+		.filter((sub: Statement) => sub.statementType === StatementType.option && sub.evaluation?.selectionFunction === SelectionFunction.top);
 
 	const reduxSubStatements = useSelector(
 		statementSubsSelector(statement?.statementId)
@@ -30,6 +35,10 @@ const SuggestionCards: FC<Props> = ({ randomSubStatements }) => {
 		() => randomSubStatements ?? reduxSubStatements,
 		[randomSubStatements, reduxSubStatements]
 	);
+
+	useEffect(() => {
+		if (!statement) getStatementFromDB(statementId).then((statement: Statement) => dispatch(setStatement(statement)))
+	}, ([statement]))
 
 	useEffect(() => {
 		const { totalHeight: _totalHeight } = sortSubStatements(
@@ -58,9 +67,7 @@ const SuggestionCards: FC<Props> = ({ randomSubStatements }) => {
 		);
 	}
 
-	subStatements.forEach(statement => {
-		console.log(statement.statement)
-	});
+	if (!statement) return null
 
 	return (
 		<div
