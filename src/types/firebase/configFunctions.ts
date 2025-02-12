@@ -1,4 +1,4 @@
 export const functionConfig = {
-	region: 'me-west1',
+	region: 'us-central1',
 	timeoutSeconds: 300,
 };

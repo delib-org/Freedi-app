@@ -6,6 +6,7 @@ import { RootState, store } from '../store';
 import { StatementType, DeliberativeElement } from '@/types/enums';
 import { Statement } from '@/types/statement/statementTypes';
 import { StatementSubscription } from '@/types/statement/subscription';
+import { SelectionFunction } from '@/types/evaluation/evaluationTypes';
 
 enum StatementScreen {
 	chat = 'chat',
@@ -67,6 +68,32 @@ export const statementsSlicer = createSlice({
 			} catch (error) {
 				console.error(error);
 			}
+		},
+		setMassConsensusStatements: (state, action: PayloadAction<{ statements: Statement[], selectionFunction: SelectionFunction }>) => {
+			const statements = action.payload.statements.map((st: Statement) => ({
+				...st,
+				evaluation: {
+					...st.evaluation,
+					selectionFunction: action.payload.selectionFunction,
+				}
+			}));
+
+			const previousSelectedStatements: Statement[] = state.statements.filter(
+				(st) => st.evaluation.selectionFunction === action.payload.selectionFunction
+			).map((st) => ({
+				...st,
+				evaluation: {
+					...st.evaluation,
+					selectionFunction: undefined,
+				}
+			}));
+
+			previousSelectedStatements.forEach((st) => {
+				state.statements = updateArray(state.statements, st, 'statementId');
+			});
+			statements.forEach((st) => {
+				state.statements = updateArray(state.statements, st, 'statementId');
+			});
 		},
 		setStatements: (state, action: PayloadAction<Statement[]>) => {
 			try {
@@ -288,6 +315,7 @@ export const {
 	removeMembership,
 	resetStatements,
 	setCurrentMultiStepOptions,
+	setMassConsensusStatements
 } = statementsSlicer.actions;
 
 // statements

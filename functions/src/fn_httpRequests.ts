@@ -88,9 +88,9 @@ export const getRandomStatements = async (req: Request, res: Response) => {
 
 		//TODO: change the random number of each statement
 
-		res.status(200).send({ randomStatements, ok: true });
-	} catch (error) {
-		res.status(500).send({ error: error, ok: false });
+		res.status(200).send({ statements: randomStatements, ok: true });
+	} catch (error: any) {
+		res.status(500).send({ error: error.message, ok: false });
 
 		return;
 	}
@@ -117,9 +117,9 @@ export const getTopStatements = async (req: Request, res: Response) => {
 			.orderBy('consensus', 'desc')
 			.limit(limit);
 		const topSolutionsDB = await q.get();
-		const topSolutions = topSolutionsDB.docs.map((doc) => doc.data());
+		const statements = topSolutionsDB.docs.map((doc) => doc.data());
 
-		res.send({ topSolutions, ok: true });
+		res.send({ statements, ok: true });
 
 		return;
 	} catch (error) {
