@@ -3,8 +3,9 @@ import BackIcon from '../../../../assets/icons/chevronLeftIcon.svg?react';
 import styles from './HeaderMassConsensus.module.scss';
 import { useParamsLanguage } from '../useParamsLang/UseParamsLanguge';
 import { MassConsensusPageUrls } from '@/types/enums';
+import { HomeIcon } from 'lucide-react';
 
-const HeaderMassConsensus = ({ backTo, backToApp }: { backTo: MassConsensusPageUrls, backToApp?: boolean }) => {
+const HeaderMassConsensus = ({ backTo, backToApp, title, isIntro }: { backTo: MassConsensusPageUrls, backToApp?: boolean, title?: string, isIntro?: boolean }) => {
 	const { statementId } = useParams<{ statementId: string }>();
 	const { dir, lang } = useParamsLanguage();
 
@@ -15,7 +16,12 @@ const HeaderMassConsensus = ({ backTo, backToApp }: { backTo: MassConsensusPageU
 				to={backToApp ? `/statement/${statementId}` : `/mass-consensus/${statementId}/${backTo}?lang=${lang}`}>
 				<BackIcon />
 			</Link>
-
+			<h1 className={styles.title}>{title}</h1>
+			{isIntro? "":<Link className={`${styles.home}`}
+						to={backToApp ? `/statement/${statementId}` : `/mass-consensus/${statementId}/${backTo}?lang=${lang}`}>
+					<HomeIcon />
+				</Link>
+			}
 		</div >
 	)
 }

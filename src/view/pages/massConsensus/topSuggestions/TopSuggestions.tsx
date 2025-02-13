@@ -11,7 +11,7 @@ const TopSuggestions = () => {
 
     return (
         <div>
-            <HeaderMassConsensus backTo={MassConsensusPageUrls.randomSuggestions} />
+            <HeaderMassConsensus title="leading suggestion evaluation" backTo={MassConsensusPageUrls.randomSuggestions} />
             <h2>please rate the top suggestions</h2>
             <SuggestionCards propSort={SortType.random} />
             <div className="btns">
