@@ -1,15 +1,18 @@
-import React, { FC, useContext } from 'react';
+import React, { FC } from 'react';
 import { useParams } from 'react-router';
 import OptionBar from '../optionBar/OptionBar';
 import './VotingArea.scss';
 import { getSortedVotingOptions, isVerticalOptionBar } from './VotingAreaCont';
 import useWindowDimensions from '@/controllers/hooks/useWindowDimentions';
-import { StatementContext } from '@/view/pages/statement/StatementCont';
 import { Statement } from '@/types/statement/statementTypes';
 import { DeliberativeElement } from '@/types/enums';
+import { useSelector } from 'react-redux';
+import { statementSelectorById } from '@/redux/statements/statementsSlice';
 
 interface VotingAreaProps {
-	setStatementInfo: React.Dispatch<React.SetStateAction<Statement | undefined>>;
+	setStatementInfo: React.Dispatch<
+		React.SetStateAction<Statement | undefined>
+	>;
 	subStatements: Statement[];
 	setShowInfo: React.Dispatch<React.SetStateAction<boolean>>;
 	totalVotes: number;
@@ -21,8 +24,8 @@ const VotingArea: FC<VotingAreaProps> = ({
 	setShowInfo,
 	totalVotes,
 }) => {
-	const { sort } = useParams();
-	const { statement } = useContext(StatementContext);
+	const { statementId, sort } = useParams();
+	const statement = useSelector(statementSelectorById(statementId));
 	const { width } = useWindowDimensions();
 
 	if (!statement) return null;
@@ -30,8 +33,8 @@ const VotingArea: FC<VotingAreaProps> = ({
 	const _options = statement?.statementSettings?.inVotingGetOnlyResults
 		? subStatements.filter((st) => st.isResult)
 		: subStatements.filter(
-			(st) => st.deliberativeElement === DeliberativeElement.option
-		);
+				(st) => st.deliberativeElement === DeliberativeElement.option
+			);
 
 	const options = getSortedVotingOptions({
 		statement,
