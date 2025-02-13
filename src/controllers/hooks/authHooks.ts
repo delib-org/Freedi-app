@@ -12,6 +12,8 @@ import { Access } from '@/types/enums';
 import { Statement } from '@/types/statement/statementTypes';
 import { StatementSubscription } from '@/types/statement/subscription';
 import { Role } from '@/types/user';
+import { useSelector } from 'react-redux';
+import { userSelector } from '@/redux/users/userSlice';
 
 const useAuth = () => {
 	const [isLogged, setIsLogged] = useState(false);
@@ -40,6 +42,7 @@ export function useIsAuthorized(statementId: string | undefined): {
 	const statementSubscription = useAppSelector(
 		statementSubscriptionSelector(statementId)
 	);
+	const user = useSelector(userSelector);
 	const role = statementSubscription?.role || Role.unsubscribed;
 	const statement = useAppSelector(statementSelector(statementId));
 	const [topParentStatement, setTopParentStatement] = useState<
@@ -50,7 +53,7 @@ export function useIsAuthorized(statementId: string | undefined): {
 	const [error, setError] = useState<boolean>(false);
 
 	useEffect(() => {
-		if (!statement) return;
+		if (!statement || !user) return;
 
 		// if statment close, and !member or admin -> show password
 
@@ -64,7 +67,7 @@ export function useIsAuthorized(statementId: string | undefined): {
 				setError(true);
 			}
 		});
-	}, [statement, statementSubscription]);
+	}, [user, statement, statementSubscription]);
 
 	useEffect(() => {
 		if (!statement) return;

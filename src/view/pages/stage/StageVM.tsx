@@ -7,14 +7,15 @@ import { Unsubscribe } from "firebase/firestore";
 import { Statement } from "@/types/statement/statementTypes";
 
 export function useStageVM(): { stage: Statement | undefined, parentStatement: Statement | undefined } {
-	const { stageId } = useParams<{ stageId: string }>();
-	const statement = useSelector(statementSelector(stageId));
+	const { statementId } = useParams<{ statementId: string }>();
+
+	const statement = useSelector(statementSelector(statementId));
 	const parentStatement = useSelector(statementSelector(statement?.parentId));
 
 	useEffect(() => {
 		let unsubscribe: Unsubscribe = () => { return; };
 		if (!statement) {
-			unsubscribe = listenToStatement(stageId);
+			unsubscribe = listenToStatement(statementId);
 		}
 
 		return () => {
@@ -34,7 +35,7 @@ export function useStageVM(): { stage: Statement | undefined, parentStatement: S
 	}, [parentStatement?.statementId, statement?.statementId]);
 
 	try {
-		if (!stageId) throw new Error("No stageId found in URL");
+		if (!statementId) throw new Error("No statementId found in URL");
 
 		return { stage: statement, parentStatement };
 	} catch (error) {

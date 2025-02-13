@@ -32,7 +32,7 @@ const SuggestionCards: FC<Props> = ({ propSort, selectionFunction }) => {
 
 	useEffect(() => {
 		if (!statement) getStatementFromDB(statementId).then((statement: Statement) => dispatch(setStatement(statement)))
-	}, ([statement]))
+	}, ([statement, statement?.statementId, dispatch]));
 
 	useEffect(() => {
 		const { totalHeight: _totalHeight } = sortSubStatements(

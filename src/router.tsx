@@ -77,7 +77,7 @@ export const router = createBrowserRouter([
 				],
 			},
 			{
-				path: 'stage/:stageId',
+				path: 'stage/:statementId',
 				element: <Suspense fallback={<LoadingPage />}><Stage /></Suspense>,
 			},
 			{
