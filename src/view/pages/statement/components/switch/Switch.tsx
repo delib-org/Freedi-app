@@ -6,12 +6,12 @@ import FollowMeToast from '../followMeToast/FollowMeToast';
 import StatementSettings from '../settings/StatementSettings';
 import GroupPage from '../statementTypes/group/GroupPage';
 import styles from './Switch.module.scss';
-import QuestionPage from '../statementTypes/question/QuestionPage';
 import StagePage from '../statementTypes/stage/StagePage';
 import { useSwitchMV } from './SwitchMV';
 import { StatementType } from '@/types/enums';
 import { Role } from '@/types/user';
 import { Statement } from '@/types/statement/statementTypes';
+import Document from '../statementTypes/question/document/Document';
 
 const Switch = () => {
 	const { statement, role } = useContext(StatementContext);
@@ -79,7 +79,7 @@ function SwitchStatementType({
 		case StatementType.group:
 			return <GroupPage />;
 		case StatementType.question:
-			return <QuestionPage />;
+			return <Document />;
 		case StatementType.stage:
 			return <StagePage />;
 		default:

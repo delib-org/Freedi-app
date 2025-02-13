@@ -25,10 +25,10 @@ const SuggestionCards: FC<Props> = ({ propSort, selectionFunction }) => {
 
 	const [totalHeight, setTotalHeight] = useState(0);
 
-	const _subStatements = useSelector(statementSubsSelector(statement?.statementId))
-		.filter((sub: Statement) => sub.statementType === StatementType.option);
+	const _subStatements = useSelector(statementSubsSelector(statement?.statementId));
+	const filteredSubStatements = _subStatements.filter((sub: Statement) => sub.statementType === StatementType.option);
 
-	const subStatements = selectionFunction ? _subStatements.filter((sub: Statement) => sub.evaluation.selectionFunction === selectionFunction) : _subStatements
+	const subStatements = selectionFunction ? filteredSubStatements.filter((sub: Statement) => sub.evaluation.selectionFunction === selectionFunction) : filteredSubStatements;
 
 	useEffect(() => {
 		if (!statement) getStatementFromDB(statementId).then((statement: Statement) => dispatch(setStatement(statement)))

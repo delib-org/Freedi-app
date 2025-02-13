@@ -13,19 +13,14 @@ import { StatementType } from '@/types/enums';
 
 const Document: FC = () => {
 	const { statement } = useContext(StatementContext);
-	const initialStages = useSelector(
+	const stages = useSelector(
 		statementSubsSelector(statement?.statementId)
 	)
 		.filter((sub: Statement) => sub.statementType === StatementType.stage)
 		.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
-	const [stages, setStages] = useState<Statement[]>(initialStages);
 	const [showAddStage, setShowAddStage] = useState<boolean>(false);
 	const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
-
-	useEffect(() => {
-		setStages(initialStages);
-	}, [initialStages.length, initialStages]);
 
 	const handleDragStart = (
 		e: DragEvent<HTMLDivElement>,
@@ -60,7 +55,6 @@ const Document: FC = () => {
 		});
 		updateStatementsOrderToDB(newStages);
 
-		setStages(newStages);
 		setDraggedIndex(null);
 	};
 
