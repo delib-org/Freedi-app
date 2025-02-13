@@ -3,48 +3,21 @@
 	width: 100%;
 
 	.actions {
+		--button-size: 2.5rem;
+		--main-button-size: 3.125rem;
+		--radius: 8rem;
+		--button-gap: 3rem;
+
 		position: fixed;
-		bottom: 10vh;
-		right: 20vw;
-
-		.action-btn {
-			position: fixed;
-			right: 30vw;
-			bottom: 10vh;
-			background: #5899e0;
-			width: 2.5rem;
-			height: 2.5rem;
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			flex-direction: column;
-			border-radius: 50%;
-			box-shadow: 0px 10px 30px 0px rgba(52, 103, 157, 0.108);
-			user-select: none;
-			cursor: pointer;
-			z-index: 2;
-
-			svg {
-				color: white;
-				width: 1rem;
-				height: 1rem;
-			}
-		}
-
-		.action-btn:nth-child(2) {
-			bottom: 19vh;
-			right: 27vw;
-		}
-
-		.action-btn:nth-child(3) {
-			bottom: 22vh;
-			right: 20vw;
-		}
+		bottom: 4rem;
+		right: 2rem;
 
 		.plus-button {
+			position: relative;
+			z-index: 10;
 			background: #5899e0;
-			width: 3.125rem;
-			height: 3.125rem;
+			width: var(--main-button-size);
+			height: var(--main-button-size);
 			display: flex;
 			align-items: center;
 			justify-content: center;
@@ -53,7 +26,6 @@
 			box-shadow: 0px 10px 30px 0px rgba(52, 103, 157, 0.108);
 			user-select: none;
 			cursor: pointer;
-			z-index: 2;
 
 			svg {
 				color: white;
@@ -65,9 +37,67 @@
 				box-shadow: 0px 10px 50px 0px #4f5478b2;
 			}
 		}
+
+		.action-btn {
+			position: absolute;
+			background: #5899e0;
+			width: var(--button-size);
+			height: var(--button-size);
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			flex-direction: column;
+			border-radius: 50%;
+			box-shadow: 0px 10px 30px 0px rgba(52, 103, 157, 0.108);
+			user-select: none;
+			cursor: pointer;
+			transition: all 0.3s ease-in-out;
+			z-index: 9999;
+			svg {
+				color: white;
+				width: 1rem;
+				height: 1rem;
+			}
+
+			&:nth-child(1) {
+				transform: translate(
+					calc(var(--radius) * -0.5),
+					calc(var(--radius) * -0.866)
+				);
+			}
+
+			&:nth-child(2) {
+				transform: translate(
+					calc(var(--radius) * -0.866),
+					calc(var(--radius) * -0.5)
+				);
+			}
+
+			&:nth-child(3) {
+				transform: translate(calc(var(--radius) * -1), 0);
+			}
+
+			&:nth-child(4) {
+				transform: translate(
+					calc(var(--radius) * -0.866),
+					calc(var(--radius) * 0.5)
+				);
+			}
+		}
+
+		@media (max-width: 768px) {
+			--radius: 6rem;
+			--button-size: 2rem;
+			--main-button-size: 2.5rem;
+		}
+
+		@media (max-width: 480px) {
+			--radius: 4rem;
+			--button-size: 1.75rem;
+			--main-button-size: 2.25rem;
+		}
 	}
 }
-
 .invisibleBackground {
 	position: fixed;
 	top: 0;
