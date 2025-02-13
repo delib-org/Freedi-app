@@ -1,12 +1,10 @@
 import {
 	setMassConsensusStatements,
-	setStatements,
 	statementSubsSelector,
 } from '@/redux/statements/statementsSlice';
 import { userSelector } from '@/redux/users/userSlice';
 import { MassConsensusPageUrls } from '@/types/enums';
 import { SelectionFunction } from '@/types/evaluation';
-import { Statement } from '@/types/statement/statementTypes';
 
 import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';

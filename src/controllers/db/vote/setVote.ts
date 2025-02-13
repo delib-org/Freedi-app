@@ -36,7 +36,6 @@ export async function setVoteToDB(option: Statement) {
 		}
 
 		const parsedVote = parse(VoteSchema, vote);
-
 		await setDoc(voteRef, parsedVote, { merge: true });
 	} catch (error) {
 		console.error(error);
