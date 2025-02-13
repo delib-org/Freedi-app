@@ -1,4 +1,4 @@
-import {  useState } from 'react';
+import { useState } from 'react';
 import { VotingSuggestionsMV } from './VotingSuggestionsMV';
 import { Statement } from '@/types/statement/statementTypes';
 import VotingArea from '../../statement/components/vote/components/votingArea/VotingArea';
@@ -22,6 +22,7 @@ const VotingSuggestions = () => {
 				setShowInfo={setIsStatementInfoModalOpen}
 				subStatements={subStatements}
 				setStatementInfo={setStatementInfo}
+				isMassConsensus={true}
 			></VotingArea>
 
 			{isStatementInfoModalOpen && (
