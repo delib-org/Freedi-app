@@ -13,10 +13,13 @@ import { StatementType } from '@/types/enums';
 
 const Document: FC = () => {
 	const { statement } = useContext(StatementContext);
-	const stages = useSelector(
+	const _stages = useSelector(
 		statementSubsSelector(statement?.statementId)
-	)
-		.filter((sub: Statement) => sub.statementType === StatementType.stage)
+	) as Statement[];
+
+	const statementStage = { ...statement, statement: "פתרונות לשאלה" }
+	const stages = [..._stages, statementStage as Statement]
+		.filter((sub: Statement) => sub.statementType === StatementType.stage || sub.statementId === statement?.statementId)
 		.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
 	const [showAddStage, setShowAddStage] = useState<boolean>(false);
@@ -94,6 +97,7 @@ const Document: FC = () => {
 						<StageCard statement={stage} />
 					</div>
 				))}
+
 			</div>
 		</div>
 	);
