@@ -28,8 +28,6 @@ const SuggestionCards: FC<Props> = ({ propSort, selectionFunction }) => {
 	const _subStatements = useSelector(statementSubsSelector(statement?.statementId))
 		.filter((sub: Statement) => sub.statementType === StatementType.option);
 
-	console.log(selectionFunction)
-
 	const subStatements = selectionFunction ? _subStatements.filter((sub: Statement) => sub.evaluation.selectionFunction === selectionFunction) : _subStatements
 
 	useEffect(() => {

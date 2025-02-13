@@ -1,8 +1,8 @@
-import { setMassConsensusStatements, setStatements } from "@/redux/statements/statementsSlice";
+import { setMassConsensusStatements } from "@/redux/statements/statementsSlice";
 import { userSelector } from "@/redux/users/userSlice";
 import { MassConsensusPageUrls } from "@/types/enums";
 import { SelectionFunction } from "@/types/evaluation/evaluationTypes";
-import { Statement } from "@/types/statement";
+
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useParams } from "react-router";
