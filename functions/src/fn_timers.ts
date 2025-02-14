@@ -1,6 +1,6 @@
 import { logger } from 'firebase-functions/v1';
 import { db } from './index';
-import { Collections } from '../../src/types/enums';
+import { Collections } from '../../src/types/TypeEnums';
 
 export async function cleanOldTimers() {
 	try {
@@ -19,7 +19,9 @@ export async function cleanOldTimers() {
 					await doc.ref.delete();
 					logger.log(`Deleted timer with ID: ${doc.id}`);
 				} catch (error) {
-					logger.error(`Error deleting timer with ID: ${doc.id}: ${error}`);
+					logger.error(
+						`Error deleting timer with ID: ${doc.id}: ${error}`
+					);
 				}
 			});
 		}

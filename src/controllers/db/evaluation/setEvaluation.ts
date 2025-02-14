@@ -1,10 +1,10 @@
 import { Timestamp, doc, setDoc } from 'firebase/firestore';
 import { FireStore } from '../config';
 import { store } from '@/redux/store';
-import { Statement } from '@/types/statement/statementTypes';
+import { Statement } from '@/types/statement/Statement';
 import { number, parse } from 'valibot';
-import { Collections } from '@/types/enums';
-import { EvaluationSchema } from '@/types/evaluation/evaluationTypes';
+import { Collections } from '@/types/TypeEnums';
+import { EvaluationSchema } from '@/types/evaluation/Evaluation';
 
 export async function setEvaluationToDB(
 	statement: Statement,
@@ -29,7 +29,11 @@ export async function setEvaluationToDB(
 
 		//set evaluation to db
 
-		const evaluationRef = doc(FireStore, Collections.evaluations, evaluationId);
+		const evaluationRef = doc(
+			FireStore,
+			Collections.evaluations,
+			evaluationId
+		);
 		const evaluationData = {
 			parentId,
 			evaluationId,

@@ -1,10 +1,10 @@
-import { FC } from "react";
-import { useDispatch } from "react-redux";
-import { useNavigate } from "react-router";
-import styles from "./InAppNotification.module.scss";
-import { NotificationType } from "@/types/notification/notificationsType";
-import { updateNotificationRead } from "@/controllers/db/notifications/setNotifications";
-import { deleteInAppNotificationsByParentId } from "@/redux/notificationsSlice/notificationsSlice";
+import { FC } from 'react';
+import { useDispatch } from 'react-redux';
+import { useNavigate } from 'react-router';
+import styles from './InAppNotification.module.scss';
+import { NotificationType } from '@/types/notification/Notification';
+import { updateNotificationRead } from '@/controllers/db/notifications/setNotifications';
+import { deleteInAppNotificationsByParentId } from '@/redux/notificationsSlice/notificationsSlice';
 
 interface Props {
 	notification: NotificationType;
@@ -20,7 +20,7 @@ const InAppNotification: FC<Props> = ({ notification }) => {
 	}
 
 	function getInitials(name: string) {
-		const nameArray = name.split(" ");
+		const nameArray = name.split(' ');
 
 		return (
 			nameArray[0].charAt(0).toUpperCase() +
@@ -30,25 +30,30 @@ const InAppNotification: FC<Props> = ({ notification }) => {
 
 	const parentStatement =
 		notification.parentStatement && notification.parentStatement.length > 50
-			? notification.parentStatement.slice(0, 50) + "..."
+			? notification.parentStatement.slice(0, 50) + '...'
 			: notification.parentStatement;
 	const text =
 		notification.text.length > 50
-			? notification.text.slice(0, 50) + "..."
+			? notification.text.slice(0, 50) + '...'
 			: notification.text;
 
 	return (
 		<button
-			aria-label="Notification"
+			aria-label='Notification'
 			className={styles.notification}
 			onClick={() =>
-				handleUpdateRead(notification.notificationId, notification.parentId)
+				handleUpdateRead(
+					notification.notificationId,
+					notification.parentId
+				)
 			}
 		>
 			{notification.creatorImage ? (
 				<div
 					className={styles.image}
-					style={{ backgroundImage: `url(${notification.creatorImage})` }}
+					style={{
+						backgroundImage: `url(${notification.creatorImage})`,
+					}}
 				></div>
 			) : (
 				<div className={styles.image}>

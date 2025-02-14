@@ -13,13 +13,19 @@ import {
 	getSiblingOptionsByParentId,
 } from '@/view/pages/statement/components/vote/statementVoteCont';
 import { getRandomColor } from '@/view/pages/statement/components/vote/votingColors';
-import { Statement, StatementSchema } from '@/types/statement/statementTypes';
-import { Collections, StatementType, Access, QuestionStage, QuestionType } from '@/types/enums';
-import { UserSchema, Membership } from '@/types/user';
+import { Statement, StatementSchema } from '@/types/statement/Statement';
+import {
+	Collections,
+	StatementType,
+	Access,
+	QuestionStage,
+	QuestionType,
+} from '@/types/TypeEnums';
+import { UserSchema, Membership } from '@/types/user/User';
 import { number, parse, string } from 'valibot';
-import { ResultsBy } from '@/types/results';
-import { StageType } from '@/types/stage';
-import { getRandomUID } from '@/types/helpers';
+import { ResultsBy } from '@/types/results/Results';
+import { StageType } from '@/types/stage/Stage';
+import { getRandomUID } from '@/types/TypeUtils';
 
 export const updateStatementParents = async (
 	statement: Statement,
@@ -37,7 +43,10 @@ export const updateStatementParents = async (
 
 		const newStatement = {
 			parentId: parentStatement.statementId,
-			parents: [parentStatement.parents, parentStatement.statementId].flat(1),
+			parents: [
+				parentStatement.parents,
+				parentStatement.statementId,
+			].flat(1),
 			topParentId: parentStatement.topParentId,
 		};
 
@@ -69,7 +78,8 @@ export function setSubStatementToDB(
 			membership: statement.membership,
 		});
 
-		if (!newSubStatement) throw new Error('New newSubStatement is undefined');
+		if (!newSubStatement)
+			throw new Error('New newSubStatement is undefined');
 
 		const newSubStatementRef = doc(
 			FireStore,
@@ -136,11 +146,14 @@ interface SetStatementToDBParams {
 
 export const setStatementToDB = async ({
 	statement,
-	parentStatement
-}: SetStatementToDBParams): Promise<{
-	statementId: string,
-	statement: Statement
-} | undefined> => {
+	parentStatement,
+}: SetStatementToDBParams): Promise<
+	| {
+			statementId: string;
+			statement: Statement;
+	  }
+	| undefined
+> => {
 	try {
 		if (!statement) throw new Error('Statement is undefined');
 		if (!parentStatement) throw new Error('Parent statement is undefined');
@@ -167,7 +180,9 @@ export const setStatementToDB = async ({
 		statement.topParentId =
 			parentStatement === 'top'
 				? statement.statementId
-				: statement?.topParentId || parentStatement?.topParentId || 'top';
+				: statement?.topParentId ||
+					parentStatement?.topParentId ||
+					'top';
 
 		const siblingOptions = getSiblingOptionsByParentId(
 			parentId,
@@ -272,12 +287,16 @@ export function createStatement({
 		const parentId =
 			parentStatement !== 'top' ? parentStatement?.statementId : 'top';
 		const parentsSet: Set<string> =
-			parentStatement !== 'top' ? new Set(parentStatement?.parents) : new Set();
+			parentStatement !== 'top'
+				? new Set(parentStatement?.parents)
+				: new Set();
 		parentsSet.add(parentId);
 		const parents: string[] = [...parentsSet];
 
 		const topParentId =
-			parentStatement !== 'top' ? parentStatement?.topParentId : statementId;
+			parentStatement !== 'top'
+				? parentStatement?.topParentId
+				: statementId;
 
 		const siblingOptions = getSiblingOptionsByParentId(
 			parentId,
@@ -318,7 +337,7 @@ export function createStatement({
 				sumEvaluations: 0,
 				agreement: 0,
 				evaluationRandomNumber: Math.random(),
-				viewed: 0
+				viewed: 0,
 			},
 			results: [],
 		};
@@ -389,7 +408,8 @@ export function updateStatement({
 			};
 		}
 		if (numberOfResults && newStatement.resultsSettings)
-			newStatement.resultsSettings.numberOfResults = Number(numberOfResults);
+			newStatement.resultsSettings.numberOfResults =
+				Number(numberOfResults);
 		else if (numberOfResults && !newStatement.resultsSettings) {
 			newStatement.resultsSettings = {
 				resultsBy: ResultsBy.topOptions,
@@ -473,7 +493,10 @@ export async function updateStatementText(
 		if (!title) throw new Error('New title is undefined');
 		if (!statement) throw new Error('Statement is undefined');
 
-		if (statement.statement === title && statement.description === description)
+		if (
+			statement.statement === title &&
+			statement.description === description
+		)
 			return;
 
 		parse(StatementSchema, statement);
@@ -543,7 +566,11 @@ export async function setStatementIsOption(statement: Statement | undefined) {
 export async function setStatementGroupToDB(statement: Statement) {
 	try {
 		const statementId = statement.statementId;
-		const statementRef = doc(FireStore, Collections.statements, statementId);
+		const statementRef = doc(
+			FireStore,
+			Collections.statements,
+			statementId
+		);
 		await setDoc(
 			statementRef,
 			{ statementType: StatementType.statement },

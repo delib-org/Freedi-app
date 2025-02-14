@@ -1,9 +1,9 @@
 import { Change, logger } from 'firebase-functions/v1';
 import { db } from '.';
 import { FieldValue } from 'firebase-admin/firestore';
-import { Importance } from '../../src/types/agreement';
-import { Collections } from '../../src/types/enums';
-import { StatementSchema } from '../../src/types/statement/statementTypes';
+import { Importance } from '../../src/types/agreement/Agreement';
+import { Collections } from '../../src/types/TypeEnums';
+import { StatementSchema } from '../../src/types/statement/Statement';
 import { parse } from 'valibot';
 import { FirestoreEvent } from 'firebase-functions/firestore';
 import { DocumentSnapshot } from 'firebase-functions/v1/firestore';
@@ -21,7 +21,8 @@ export async function setImportanceToStatement(
 			| Importance
 			| undefined;
 		const statementId =
-			importanceBeforeData?.statementId || importanceAfterData?.statementId;
+			importanceBeforeData?.statementId ||
+			importanceAfterData?.statementId;
 		if (!statementId) throw new Error('No statement id found');
 
 		const diffNumberOfUsers = (() => {
@@ -36,7 +37,8 @@ export async function setImportanceToStatement(
 		let importanceAfter = 0;
 		if (importanceBeforeData)
 			importanceBefore = importanceBeforeData.importance;
-		if (importanceAfterData) importanceAfter = importanceAfterData.importance;
+		if (importanceAfterData)
+			importanceAfter = importanceAfterData.importance;
 
 		//get section id
 		const sectionId =
@@ -58,7 +60,9 @@ export async function setImportanceToStatement(
 		const diffImportance = importanceAfter - importanceBefore;
 
 		//update statement importance
-		const statementRef = db.collection(Collections.statements).doc(statementId);
+		const statementRef = db
+			.collection(Collections.statements)
+			.doc(statementId);
 
 		//get previous statement data
 		const statement = await statementRef.get();

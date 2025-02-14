@@ -1,5 +1,5 @@
 import { store } from '@/redux/store';
-import { User } from '@/types/user';
+import { User } from '@/types/user/User';
 
 export function getUserFromFirebase(): User | null {
 	try {

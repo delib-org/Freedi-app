@@ -5,7 +5,7 @@ import InvitePanel from './invitePanel/InvitePanel';
 import { logOut } from '@/controllers/db/auth';
 import { setFollowMeDB } from '@/controllers/db/statements/setStatements';
 import { useLanguage } from '@/controllers/hooks/useLanguages';
-import { Statement } from '@/types/statement/statementTypes';
+import { Statement } from '@/types/statement/Statement';
 
 interface Props {
 	statement: Statement | undefined;
@@ -16,7 +16,7 @@ interface Props {
 const StatementHeader: FC<Props> = ({
 	statement,
 	topParentStatement,
-	parentStatement
+	parentStatement,
 }) => {
 	// Hooks
 	const { pathname } = useLocation();

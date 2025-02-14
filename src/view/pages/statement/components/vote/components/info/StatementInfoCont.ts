@@ -1,5 +1,5 @@
 import { updateStatementText } from '@/controllers/db/statements/setStatements';
-import { Statement } from '@/types/statement/statementTypes';
+import { Statement } from '@/types/statement/Statement';
 import { FormEvent, Dispatch, SetStateAction } from 'react';
 
 export function handleSubmitInfo(

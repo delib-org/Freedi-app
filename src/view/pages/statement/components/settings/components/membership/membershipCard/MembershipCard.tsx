@@ -8,8 +8,8 @@ import MemberRemove from '@/assets/icons/memberRemove.svg?react';
 import { updateMemberRole } from '@/controllers/db/subscriptions/setSubscriptions';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { userSelector } from '@/redux/users/userSlice';
-import { StatementSubscription } from '@/types/statement/subscription';
-import { Role } from '@/types/user';
+import { StatementSubscription } from '@/types/statement/StatementSubscription';
+import { Role } from '@/types/user/UserSettings';
 
 interface Props {
 	member: StatementSubscription;
@@ -68,7 +68,11 @@ const MembershipCard: FC<Props> = ({ member }) => {
 			<div className={styles.card__membership}>
 				{isBanned ? (
 					<button onClick={handleRemoveMember}>
-						<img src={unBlockImg} alt='Unblock' className={styles.unBlockImg} />
+						<img
+							src={unBlockImg}
+							alt='Unblock'
+							className={styles.unBlockImg}
+						/>
 					</button>
 				) : (
 					<>

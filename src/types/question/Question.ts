@@ -1,5 +1,10 @@
 import { object, optional, enum_, InferOutput, array } from 'valibot';
-import { QuestionStage, QuestionStagesType, QuestionStep, QuestionType } from '../enums';
+import {
+	QuestionStage,
+	QuestionStagesType,
+	QuestionStep,
+	QuestionType,
+} from '../TypeEnums';
 
 export const QuestionSettingsSchema = object({
 	questionType: optional(enum_(QuestionType)), //deprecated

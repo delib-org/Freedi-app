@@ -2,8 +2,10 @@ import { createSlice } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
 import { defaultFontSize } from '../../model/fonts/fontsModel';
 import { RootState } from '../store';
-import { UserSettings, UserSchema, Agreement, User } from '@/types/user';
 import { parse } from 'valibot';
+import { User, UserSchema } from '@/types/user/User';
+import { UserSettings } from '@/types/user/UserSettings';
+import { Agreement } from '@/types/agreement/Agreement';
 
 export enum Status {
 	idle = 'idle',
@@ -53,7 +55,8 @@ export const userSlicer = createSlice({
 		increaseFontSize: (state, action: PayloadAction<number>) => {
 			try {
 				if (!state.user) return;
-				if (!state.user?.fontSize) state.user.fontSize = defaultFontSize;
+				if (!state.user?.fontSize)
+					state.user.fontSize = defaultFontSize;
 
 				state.user.fontSize += action.payload;
 				if (state.user.fontSize < 10) state.user.fontSize = 10;
@@ -98,7 +101,10 @@ export const userSlicer = createSlice({
 		setColorContrast: (state, action: PayloadAction<boolean>) => {
 			state.colorContrast = action.payload;
 		},
-		setUserSettings: (state, action: PayloadAction<UserSettings | null>) => {
+		setUserSettings: (
+			state,
+			action: PayloadAction<UserSettings | null>
+		) => {
 			state.userSettings = action.payload;
 		},
 	},

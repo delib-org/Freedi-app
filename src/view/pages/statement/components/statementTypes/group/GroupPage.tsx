@@ -7,11 +7,15 @@ import { StatementContext } from '../../../StatementCont';
 import './groupPage.scss';
 import AddButton from './AddButton';
 import SubGroupCard from '@/view/components/subGroupCard/SubGroupCard';
-import { QuestionType, StatementType } from '@/types/enums';
+import { QuestionType, StatementType } from '@/types/TypeEnums';
 
 export default function GroupPage() {
-	const { handleSetNewStatement, setNewStatementType, statement, setNewQuestionType } =
-		useContext(StatementContext);
+	const {
+		handleSetNewStatement,
+		setNewStatementType,
+		statement,
+		setNewQuestionType,
+	} = useContext(StatementContext);
 
 	const subStatements = useSelector(
 		statementSubsSelector(statement?.statementId)
@@ -23,12 +27,13 @@ export default function GroupPage() {
 		(sub) => sub.statementType === StatementType.question
 	);
 
-	function handleAddStatement(newStatementType: StatementType, questionType?: QuestionType) {
-
+	function handleAddStatement(
+		newStatementType: StatementType,
+		questionType?: QuestionType
+	) {
 		setNewStatementType(newStatementType);
 		if (questionType) {
 			setNewQuestionType(questionType);
-
 		}
 		handleSetNewStatement(true);
 	}
@@ -56,11 +61,21 @@ export default function GroupPage() {
 					></Button>
 					<Button
 						text='add mass consensus'
-						onClick={() => handleAddStatement(StatementType.question, QuestionType.massConsensus)}
+						onClick={() =>
+							handleAddStatement(
+								StatementType.question,
+								QuestionType.massConsensus
+							)
+						}
 					></Button>
 					<Button
 						text='add question'
-						onClick={() => handleAddStatement(StatementType.question, QuestionType.multiStage)}
+						onClick={() =>
+							handleAddStatement(
+								StatementType.question,
+								QuestionType.multiStage
+							)
+						}
 					></Button>
 				</div>
 				<AddButton />

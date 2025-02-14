@@ -1,7 +1,7 @@
 import { FC, useState, useRef } from 'react';
 import styles from './Dot.module.scss';
 import { useLanguage } from '@/controllers/hooks/useLanguages';
-import { Statement } from '@/types/statement/statementTypes';
+import { Statement } from '@/types/statement/Statement';
 
 interface Props {
 	subStatement: Statement;
@@ -83,7 +83,9 @@ function fromAgreementToColor(
 
 		const adjustAgreement = (agreement + 1) / 2;
 
-		const index = Math.floor(adjustAgreement * agreementColors.length * 0.99);
+		const index = Math.floor(
+			adjustAgreement * agreementColors.length * 0.99
+		);
 
 		return agreementColors[index];
 	} catch (error) {

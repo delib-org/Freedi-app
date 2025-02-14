@@ -8,14 +8,18 @@ import {
 } from 'firebase/firestore';
 import { FireStore } from '../config';
 import { getNumberDigits } from '@/controllers/general/helpers';
-import { Collections } from '@/types/enums';
+import { Collections } from '@/types/TypeEnums';
 
 export async function getMaxInvitationDigits(): Promise<number | undefined> {
 	try {
 		const invitationsRef = collection(FireStore, Collections.invitations);
 		const q = query(
 			invitationsRef,
-			where('lastUpdate', '>', new Date().getTime() - 24 * 60 * 60 * 1000),
+			where(
+				'lastUpdate',
+				'>',
+				new Date().getTime() - 24 * 60 * 60 * 1000
+			),
 			orderBy('number', 'desc'),
 			limit(1)
 		);
@@ -43,14 +47,19 @@ export async function getInvitationPathName(
 		const q = query(
 			invitationsRef,
 			where('number', '==', number),
-			where('lastUpdate', '>', new Date().getTime() - 24 * 60 * 60 * 1000),
+			where(
+				'lastUpdate',
+				'>',
+				new Date().getTime() - 24 * 60 * 60 * 1000
+			),
 			orderBy('number', 'desc'),
 			limit(1)
 		);
 		const numbersDB = await getDocs(q);
 		const numbers = numbersDB.docs.map((doc) => doc.data());
 
-		if (numbers.length === 0) throw new Error('No number found in FireStore');
+		if (numbers.length === 0)
+			throw new Error('No number found in FireStore');
 		const { pathname } = numbers[0];
 		if (!pathname) throw new Error('No path name found');
 

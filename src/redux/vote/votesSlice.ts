@@ -3,7 +3,7 @@ import type { PayloadAction } from '@reduxjs/toolkit';
 import { RootState } from '../store';
 
 import { updateArray } from '@/controllers/general/helpers';
-import { Statement, StatementSchema } from '@/types/statement/statementTypes';
+import { Statement, StatementSchema } from '@/types/statement/Statement';
 import { Vote, getVoteId } from '@/types/vote';
 import { parse } from 'valibot';
 
@@ -39,7 +39,8 @@ export const votesSlicer = createSlice({
 				if (!oldVote) {
 					state.votes = updateArray(state.votes, newVote, 'parentId');
 				} else {
-					const isSameOption = newVote.statementId === oldVote?.statementId;
+					const isSameOption =
+						newVote.statementId === oldVote?.statementId;
 					if (isSameOption) newVote.statementId = 'none';
 					state.votes = updateArray(state.votes, newVote, 'parentId');
 				}

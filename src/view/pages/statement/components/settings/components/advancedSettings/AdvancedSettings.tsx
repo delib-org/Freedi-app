@@ -5,12 +5,13 @@ import { useLanguage } from '@/controllers/hooks/useLanguages';
 import Checkbox from '@/view/components/checkbox/Checkbox';
 import './AdvancedSettings.scss';
 import { setStatementSettingToDB } from '@/controllers/db/statementSettings/setStatementSettings';
-import { StatementSettings } from '@/types/statement/statementTypes';
+import { StatementSettings } from '@/types/statement/StatementSettings';
 
 const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 	const { t } = useLanguage();
 
-	const statementSettings: StatementSettings = getStatementSettings(statement);
+	const statementSettings: StatementSettings =
+		getStatementSettings(statement);
 	const {
 		inVotingGetOnlyResults = false,
 		enhancedEvaluation = false,
@@ -41,7 +42,9 @@ const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 			<Checkbox
 				label={'Chat'}
 				isChecked={hasChat}
-				onChange={(checked) => handleAdvancedSettingChange('hasChat', checked)}
+				onChange={(checked) =>
+					handleAdvancedSettingChange('hasChat', checked)
+				}
 			/>
 			<Checkbox
 				label={'Enable Sub-Conversations'}
@@ -65,38 +68,55 @@ const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 				}
 			/>
 			<Checkbox
-				label={'Allow participants to contribute options to the voting page'}
+				label={
+					'Allow participants to contribute options to the voting page'
+				}
 				isChecked={enableAddVotingOption}
 				onChange={(checked) =>
-					handleAdvancedSettingChange('enableAddVotingOption', checked)
+					handleAdvancedSettingChange(
+						'enableAddVotingOption',
+						checked
+					)
 				}
 			/>
 			<Checkbox
 				label='Allow participants to contribute options to the evaluation page'
 				isChecked={enableAddEvaluationOption}
 				onChange={(checked) =>
-					handleAdvancedSettingChange('enableAddEvaluationOption', checked)
+					handleAdvancedSettingChange(
+						'enableAddEvaluationOption',
+						checked
+					)
 				}
 			/>
 			<Checkbox
 				label='In Voting page, show only the results of the top options'
 				isChecked={inVotingGetOnlyResults}
 				onChange={(checked) =>
-					handleAdvancedSettingChange('inVotingGetOnlyResults', checked)
+					handleAdvancedSettingChange(
+						'inVotingGetOnlyResults',
+						checked
+					)
 				}
 			/>
 			<Checkbox
 				label='Allow similarity search'
 				isChecked={enableSimilaritiesSearch}
 				onChange={(checked) =>
-					handleAdvancedSettingChange('enableSimilaritiesSearch', checked)
+					handleAdvancedSettingChange(
+						'enableSimilaritiesSearch',
+						checked
+					)
 				}
 			/>
 			<Checkbox
 				label='Navigational elements'
 				isChecked={enableNavigationalElements}
 				onChange={(checked) =>
-					handleAdvancedSettingChange('enableNavigationalElements', checked)
+					handleAdvancedSettingChange(
+						'enableNavigationalElements',
+						checked
+					)
 				}
 			/>
 		</div>

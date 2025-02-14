@@ -1,8 +1,8 @@
 import { logger } from 'firebase-functions/v1';
 import { db } from '.';
-import { Collections } from '../../src/types/enums';
-import { Statement } from '../../src/types/statement/statementTypes';
-import { StatementView } from '../../src/types/statement/subscription';
+import { Collections } from '../../src/types/TypeEnums';
+import { Statement } from '../../src/types/statement/Statement';
+import { StatementView } from '../../src/types/statement/StatementSubscription';
 
 //@ts-ignore
 export async function updateStatementWithViews(ev) {
@@ -10,7 +10,9 @@ export async function updateStatementWithViews(ev) {
 		const view = ev.data.data() as StatementView;
 		const statementId = view.statementId;
 		if (!statementId) throw new Error('StatementId not found');
-		const statementRef = db.collection(Collections.statements).doc(statementId);
+		const statementRef = db
+			.collection(Collections.statements)
+			.doc(statementId);
 
 		//increment the view count
 		await db.runTransaction(async (t) => {
@@ -20,7 +22,8 @@ export async function updateStatementWithViews(ev) {
 				const statement = statementDB.data() as Statement;
 				if (!statement) throw new Error('Statement not found');
 
-				if (!statement.viewed) statement.viewed = { individualViews: 0 };
+				if (!statement.viewed)
+					statement.viewed = { individualViews: 0 };
 
 				const views = statement.viewed.individualViews || 0;
 				t.update(statementRef, { 'viewed.individualViews': views + 1 });

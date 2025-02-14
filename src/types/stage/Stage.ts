@@ -1,5 +1,6 @@
-import { StatementType } from '../enums';
-import { createBasicStatement, Statement } from '../statement/statementTypes';
+import { StatementType } from '../TypeEnums';
+import { Statement } from '../statement/Statement';
+import { createBasicStatement } from '../statement/StatementUtils';
 
 export enum StageType {
 	explanation = 'explanation',

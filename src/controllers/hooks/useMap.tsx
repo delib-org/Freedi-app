@@ -1,4 +1,4 @@
-import { Statement } from '@/types/statement/statementTypes';
+import { Statement } from '@/types/statement/Statement';
 import {
 	Dispatch,
 	createContext,
@@ -23,7 +23,9 @@ const MapModelContext = createContext<MapProps | undefined>(undefined);
 export const useMapContext = (): MapProps => {
 	const context = useContext(MapModelContext);
 	if (!context) {
-		throw new Error('useMapContext must be used within a MyContextProvider');
+		throw new Error(
+			'useMapContext must be used within a MyContextProvider'
+		);
 	}
 
 	return context;

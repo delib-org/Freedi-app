@@ -9,8 +9,8 @@ import {
 import { FireStore } from '../config';
 import { getUserFromFirebase } from '../users/usersGeneral';
 import { store } from '@/redux/store';
-import { Collections } from '@/types/enums';
-import { Statement, StatementSchema } from '@/types/statement/statementTypes';
+import { Collections } from '@/types/TypeEnums';
+import { Statement, StatementSchema } from '@/types/statement/Statement';
 import { getVoteId, Vote, VoteSchema } from '@/types/vote';
 import { parse } from 'valibot';
 
@@ -58,7 +58,9 @@ export async function getVoters(parentId: string): Promise<Vote[]> {
 		const q = query(votesRef, where('parentId', '==', parentId));
 
 		const votersDB = await getDocs(q);
-		const voters = votersDB.docs.map((vote) => parse(VoteSchema, vote.data()));
+		const voters = votersDB.docs.map((vote) =>
+			parse(VoteSchema, vote.data())
+		);
 
 		return voters;
 	} catch (error) {

@@ -8,7 +8,7 @@ import RoomsIcon from '@/assets/icons/roomsIcon.svg?react';
 import ChatIcon from '@/assets/icons/roundedChatDotIcon.svg?react';
 import SettingsIcon from '@/assets/icons/settingsIcon.svg?react';
 import VotingIcon from '@/assets/icons/votingIcon.svg?react';
-import { Screen } from '@/types/enums';
+import { Screen } from '@/types/TypeEnums';
 
 interface TabIconProps {
 	screenLink: Screen;
