@@ -8,18 +8,23 @@ import HeaderMassConsensus from '../headerMassConsensus/HeaderMassConsensus';
 import { MassConsensusPageUrls } from '@/types/enums';
 import styles from './VotingSuggestion.module.scss';
 import { Link, useParams } from 'react-router';
+import { useSelector } from 'react-redux';
+import { statementSelector } from '@/redux/statements/statementsSlice';
 
 const VotingSuggestions = () => {
 	const { subStatements } = VotingSuggestionsMV();
 	const { statementId } = useParams();
+	const statement = useSelector(statementSelector(statementId));
 	const [isStatementInfoModalOpen, setIsStatementInfoModalOpen] =
 		useState(false);
 	const [statementInfo, setStatementInfo] = useState<Statement | undefined>(
 		undefined
 	);
 
-	if (!subStatements || subStatements.length === 0) {
-		return <p>Loading or no suggestions available.</p>;
+	if (!subStatements) {
+		if (subStatements.length === 0) return <p>no suggestions available.</p>;
+
+		return <p>Loading</p>;
 	}
 
 	return (
@@ -32,7 +37,7 @@ const VotingSuggestions = () => {
 			</h2>
 			<div className={styles.voteGraph}>
 				<VotingArea
-					totalVotes={6}
+					totalVotes={statement.totalEvaluators}
 					setShowInfo={setIsStatementInfoModalOpen}
 					subStatements={subStatements}
 					setStatementInfo={setStatementInfo}
