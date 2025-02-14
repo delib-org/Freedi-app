@@ -1,6 +1,6 @@
 import styles from './Chip.module.scss';
 import SmileIcon from '@/assets/icons/smileIcon.svg?react';
-import { User } from '@/types/user';
+import { User } from '@/types/user/User';
 
 interface Props {
 	user: User | undefined;

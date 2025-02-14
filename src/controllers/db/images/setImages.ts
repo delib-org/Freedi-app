@@ -1,7 +1,7 @@
 import { getDownloadURL, ref, uploadBytesResumable } from 'firebase/storage';
 import { storage } from '../config';
-import { Statement } from '@/types/statement/statementTypes';
-import { Collections } from '@/types/enums';
+import { Statement } from '@/types/statement/Statement';
+import { Collections } from '@/types/TypeEnums';
 
 export function uploadImageToStorage(
 	file: File,
@@ -10,7 +10,8 @@ export function uploadImageToStorage(
 	return new Promise((resolve, reject) => {
 		const imageRef = ref(
 			storage,
-			`${Collections.statements}/${statement.statementId
+			`${Collections.statements}/${
+				statement.statementId
 			}/imgId-${Math.random()}`
 		);
 
@@ -34,7 +35,9 @@ export function uploadImageToStorage(
 			},
 			async () => {
 				try {
-					const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+					const downloadURL = await getDownloadURL(
+						uploadTask.snapshot.ref
+					);
 					resolve(downloadURL);
 				} catch (error) {
 					console.error('Error retrieving download URL:', error);

@@ -11,11 +11,12 @@ import {
 	updateStatement,
 } from '@/controllers/db/statements/setStatements';
 import { getVoters } from '@/controllers/db/vote/getVotes';
-import { StatementType } from '@/types/enums';
-import { Evaluation } from '@/types/evaluation/evaluationTypes';
-import { Statement, StatementSettings } from '@/types/statement/statementTypes';
+import { StatementType } from '@/types/TypeEnums';
+import { Evaluation } from '@/types/evaluation/Evaluation';
+import { Statement } from '@/types/statement/Statement';
 import { Vote } from '@/types/vote';
 import { Dispatch, SetStateAction } from 'react';
+import { StatementSettings } from '@/types/statement/StatementSettings';
 
 // Get users that voted on options in this statement
 export async function handleGetVoters(
@@ -109,7 +110,8 @@ export async function setNewStatement({
 				membership,
 			});
 
-			if (!newStatement) throw new Error('newStatement had error in creating');
+			if (!newStatement)
+				throw new Error('newStatement had error in creating');
 
 			await setStatementToDB({
 				parentStatement: 'top',
@@ -137,7 +139,8 @@ export async function setNewStatement({
 				showEvaluation,
 				membership,
 			});
-			if (!newStatement) throw new Error('newStatement had not been updated');
+			if (!newStatement)
+				throw new Error('newStatement had not been updated');
 
 			await setStatementToDB({
 				parentStatement,
@@ -165,7 +168,9 @@ export const getStatementSettings = (statement: Statement) => {
 		enhancedEvaluation: Boolean(statementSettings.enhancedEvaluation),
 		showEvaluation: Boolean(statementSettings.showEvaluation),
 		subScreens: statementSettings.subScreens ?? [],
-		inVotingGetOnlyResults: Boolean(statementSettings.inVotingGetOnlyResults),
+		inVotingGetOnlyResults: Boolean(
+			statementSettings.inVotingGetOnlyResults
+		),
 		enableSimilaritiesSearch: Boolean(
 			statementSettings.enableSimilaritiesSearch
 		),
@@ -245,12 +250,14 @@ export async function createStatementFromModal({
 
 		await setStatementToDB({
 			statement: newStatement,
-			parentStatement: parentStatement === 'top' ? 'top' : parentStatement,
+			parentStatement:
+				parentStatement === 'top' ? 'top' : parentStatement,
 		});
 
 		await setStatementToDB({
 			statement: newStatement,
-			parentStatement: parentStatement === 'top' ? 'top' : parentStatement,
+			parentStatement:
+				parentStatement === 'top' ? 'top' : parentStatement,
 		});
 	} catch (error) {
 		console.error(error);

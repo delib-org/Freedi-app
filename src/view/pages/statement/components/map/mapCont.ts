@@ -1,7 +1,7 @@
 import { getResultsDB } from '@/controllers/db/results/getResults';
-import { DeliberativeElement } from '@/types/enums';
-import { ResultsBy, Results } from '@/types/results';
-import { Statement } from '@/types/statement/statementTypes';
+import { DeliberativeElement } from '@/types/TypeEnums';
+import { ResultsBy, Results } from '@/types/results/Results';
+import { Statement } from '@/types/statement/Statement';
 
 export async function getResults(
 	statement: Statement,
@@ -13,17 +13,22 @@ export async function getResults(
 		const result: Results = { top: statement, sub: [] };
 
 		if (resultsBy === ResultsBy.topOptions) {
-			result.sub = [...getResultsByOptions(subStatements, numberOfResults)];
+			result.sub = [
+				...getResultsByOptions(subStatements, numberOfResults),
+			];
 		} else {
 			result.sub = [];
 		}
 
-		const subResultsPromises = result.sub.map(async (subResult: Results) => {
-			const subStatement = subResult.top;
-			const subResults: Statement[] = await getResultsDB(subStatement);
+		const subResultsPromises = result.sub.map(
+			async (subResult: Results) => {
+				const subStatement = subResult.top;
+				const subResults: Statement[] =
+					await getResultsDB(subStatement);
 
-			return subResults;
-		});
+				return subResults;
+			}
+		);
 
 		const resultsStatements = await Promise.all(subResultsPromises);
 

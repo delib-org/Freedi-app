@@ -3,7 +3,7 @@ import { handleGetVoters } from '../statementSettingsCont';
 import MembersChipsList from './membership/membersChipsList/MembersChipList';
 import { useLanguage } from '@/controllers/hooks/useLanguages';
 import { Vote } from '@/types/vote';
-import { User } from '@/types/user';
+import { User } from '@/types/user/User';
 
 interface GetVotersProps {
 	statementId: string;
@@ -56,7 +56,9 @@ const GetVoters: FC<GetVotersProps> = ({ statementId, joinedMembers }) => {
 							<span>
 								{voters.length} {t('Voted')}
 							</span>
-							<MembersChipsList members={voters.map((v) => v.voter as User)} />
+							<MembersChipsList
+								members={voters.map((v) => v.voter as User)}
+							/>
 						</>
 					) : (
 						<div>{t('No voters found')}</div>

@@ -11,10 +11,10 @@ import {
 import { FireStore } from '../config';
 import { setEvaluationToStore } from '@/redux/evaluations/evaluationsSlice';
 import { AppDispatch } from '@/redux/store';
-import { Collections } from '@/types/enums';
-import { UserSchema } from '@/types/user';
+import { Collections } from '@/types/TypeEnums';
+import { UserSchema } from '@/types/user/User';
 import { parse } from 'valibot';
-import { Evaluation, EvaluationSchema } from '@/types/evaluation/evaluationTypes';
+import { Evaluation, EvaluationSchema } from '@/types/evaluation/Evaluation';
 
 export const listenToEvaluations = (
 	dispatch: AppDispatch,
@@ -36,7 +36,10 @@ export const listenToEvaluations = (
 			try {
 				evaluationsDB.forEach((evaluationDB) => {
 					try {
-						const evaluation = parse(EvaluationSchema, evaluationDB.data());
+						const evaluation = parse(
+							EvaluationSchema,
+							evaluationDB.data()
+						);
 
 						dispatch(setEvaluationToStore(evaluation));
 					} catch (error) {
@@ -50,7 +53,7 @@ export const listenToEvaluations = (
 	} catch (error) {
 		console.error(error);
 
-		return () => { };
+		return () => {};
 	}
 };
 

@@ -1,5 +1,5 @@
 import { object, string, number, optional, InferOutput } from 'valibot';
-import { UserSchema } from '../user';
+import { UserSchema } from '../user/User';
 
 export const VoteSchema = object({
 	voteId: string(),

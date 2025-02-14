@@ -1,10 +1,10 @@
-import { FC } from 'react'
-import styles from './SubGroupCard.module.scss'
+import { FC } from 'react';
+import styles from './SubGroupCard.module.scss';
 import { Link, NavLink } from 'react-router';
 import useSubGroupCard from './SubGroupCardVM';
 import { useLanguage } from '@/controllers/hooks/useLanguages';
-import { Statement } from '@/types/statement/statementTypes';
-import { StatementType } from '@/types/enums';
+import { Statement } from '@/types/statement/Statement';
+import { StatementType } from '@/types/TypeEnums';
 
 interface Props {
 	statement: Statement;
@@ -40,24 +40,29 @@ const SubGroupCard: FC<Props> = ({ statement }) => {
 					</div>
 				</Link>
 
-				{results && statement.statementType === StatementType.question && (
-					<div className={styles.results}>
-						{results.length !== 0 && (
-							<NavLink to={`/statement/${results[0].parentId}/main`}>
-								<p>{answerLabel}:</p>
-							</NavLink>
-						)}
-						<ul>
-							{results.map((result) => (
-								<li key={result.statementId}>
-									<NavLink to={`/statement/${result.statementId}/main`}>
-										{result.statement}
-									</NavLink>
-								</li>
-							))}
-						</ul>
-					</div>
-				)}
+				{results &&
+					statement.statementType === StatementType.question && (
+						<div className={styles.results}>
+							{results.length !== 0 && (
+								<NavLink
+									to={`/statement/${results[0].parentId}/main`}
+								>
+									<p>{answerLabel}:</p>
+								</NavLink>
+							)}
+							<ul>
+								{results.map((result) => (
+									<li key={result.statementId}>
+										<NavLink
+											to={`/statement/${result.statementId}/main`}
+										>
+											{result.statement}
+										</NavLink>
+									</li>
+								))}
+							</ul>
+						</div>
+					)}
 			</div>
 		);
 	} catch (err) {

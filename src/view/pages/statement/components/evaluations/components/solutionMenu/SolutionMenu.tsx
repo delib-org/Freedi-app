@@ -8,8 +8,8 @@ import { updateIsQuestion } from '@/controllers/db/statements/setStatements';
 import { useLanguage } from '@/controllers/hooks/useLanguages';
 import Menu from '@/view/components/menu/Menu';
 import MenuOption from '@/view/components/menu/MenuOption';
-import { Statement } from '@/types/statement/statementTypes';
-import { StatementType } from '@/types/enums';
+import { Statement } from '@/types/statement/Statement';
+import { StatementType } from '@/types/TypeEnums';
 
 interface Props {
 	statement: Statement;
@@ -68,7 +68,11 @@ const SolutionMenu: FC<Props> = ({
 				<MenuOption
 					isOptionSelected={isOption}
 					icon={<LightBulbIcon />}
-					label={isOption ? t('Unmark as a Solution') : t('Mark as a Solution')}
+					label={
+						isOption
+							? t('Unmark as a Solution')
+							: t('Mark as a Solution')
+					}
 					onOptionClick={() => {
 						handleSetOption();
 						setIsCardMenuOpen(false);
@@ -80,7 +84,9 @@ const SolutionMenu: FC<Props> = ({
 					isOptionSelected={isResearch}
 					icon={<QuestionMarkIcon />}
 					label={
-						isResearch ? t('Unmark as a Question') : t('Mark as a Question')
+						isResearch
+							? t('Unmark as a Question')
+							: t('Mark as a Question')
 					}
 					onOptionClick={() => {
 						updateIsQuestion(statement);

@@ -1,7 +1,7 @@
 import { doc, setDoc } from 'firebase/firestore';
 import { FireStore } from '../config';
-import { Collections } from '@/types/enums';
-import { ResultsBy } from '@/types/results';
+import { Collections } from '@/types/TypeEnums';
+import { ResultsBy } from '@/types/results/Results';
 
 export async function updateResultsSettings(
 	statementId: string,
@@ -9,7 +9,11 @@ export async function updateResultsSettings(
 	numberOfResults = 3
 ) {
 	try {
-		const statementRef = doc(FireStore, Collections.statements, statementId);
+		const statementRef = doc(
+			FireStore,
+			Collections.statements,
+			statementId
+		);
 
 		const results = {
 			numberOfResults,

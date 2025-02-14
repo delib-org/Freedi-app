@@ -1,4 +1,4 @@
-import { SortType } from '@/types/enums';
+import { SortType } from '@/types/TypeEnums';
 
 export interface NavItem {
 	link: SortType;

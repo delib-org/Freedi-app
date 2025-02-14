@@ -8,8 +8,8 @@ import {
 	where,
 } from 'firebase/firestore';
 import { FireStore } from '../config';
-import { Collections } from '@/types/enums';
-import { Invitation } from '@/types/invitation';
+import { Collections } from '@/types/TypeEnums';
+import { Invitation } from '@/types/invitation/Invitation';
 
 interface CreateInvitationProps {
 	pathname: string;
@@ -29,7 +29,11 @@ export async function setInvitationToDB({
 		const invitationsRef = collection(FireStore, Collections.invitations);
 		const q = query(
 			invitationsRef,
-			where('lastUpdate', '>', new Date().getTime() - 24 * 60 * 60 * 1000),
+			where(
+				'lastUpdate',
+				'>',
+				new Date().getTime() - 24 * 60 * 60 * 1000
+			),
 			orderBy('number', 'desc'),
 			limit(1)
 		);
@@ -58,7 +62,11 @@ export async function setInvitationToDB({
 		const q2 = query(
 			invitationsRef,
 			where('statementId', '==', statementId),
-			where('lastUpdate', '>', new Date().getTime() - 24 * 60 * 60 * 1000),
+			where(
+				'lastUpdate',
+				'>',
+				new Date().getTime() - 24 * 60 * 60 * 1000
+			),
 			orderBy('number', 'desc'),
 			limit(1)
 		);

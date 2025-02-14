@@ -1,4 +1,4 @@
-import { QuestionStep } from '@/types/enums';
+import { QuestionStep } from '@/types/TypeEnums';
 import { StepInfo, getStepsInfo } from './QuestionStageRadioBtn';
 
 export function getStepInfo(
@@ -20,7 +20,9 @@ export function getStepInfo(
 		let btnBackgroundColor = '#DCE7FF';
 
 		if (stageInfo) {
-			btnBackgroundColor = isSelected ? `var(${stageInfo.color})` : '#DCE7FF';
+			btnBackgroundColor = isSelected
+				? `var(${stageInfo.color})`
+				: '#DCE7FF';
 		}
 
 		return { backgroundColor, btnBackgroundColor, stageInfo };

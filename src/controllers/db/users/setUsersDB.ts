@@ -1,9 +1,10 @@
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { FireStore } from '../config';
 import { store } from '@/redux/store';
-import { Collections } from '@/types/enums';
-import { UserSchema, Agreement, AgreementSchema, User } from '@/types/user';
+import { Collections } from '@/types/TypeEnums';
+import { UserSchema, User } from '@/types/user/User';
 import { parse } from 'valibot';
+import { Agreement, AgreementSchema } from '@/types/agreement/Agreement';
 
 export async function setUserToDB(user: User) {
 	try {

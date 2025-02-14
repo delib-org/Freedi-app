@@ -10,15 +10,19 @@ import Button, { ButtonType } from '@/view/components/buttons/button/Button';
 import Input from '@/view/components/input/Input';
 import Textarea from '@/view/components/textarea/Textarea';
 import { StatementContext } from '@/view/pages/statement/StatementCont';
-import { Statement } from '@/types/statement/statementTypes';
-import { StatementType } from '@/types/enums';
+import { StatementType } from '@/types/TypeEnums';
+import { Statement } from '@/types/statement/Statement';
 
 export default function GetInitialStatementData() {
 	const { t } = useLanguage();
 	const { title, description, setTitle, setDescription } =
 		useContext(NewStatementContext);
-	const { newStatementType, newQuestionType, handleSetNewStatement, statement } =
-		useContext(StatementContext);
+	const {
+		newStatementType,
+		newQuestionType,
+		handleSetNewStatement,
+		statement,
+	} = useContext(StatementContext);
 
 	const handleSubmit = async (ev: FormEvent<HTMLFormElement>) => {
 		ev.preventDefault();
@@ -60,7 +64,9 @@ export default function GetInitialStatementData() {
 	return (
 		<>
 			<h4>{t('Compose your suggestion')}</h4>
-			<p>{newStatementType}:{newQuestionType}</p>
+			<p>
+				{newStatementType}:{newQuestionType}
+			</p>
 			<form className={styles.form} onSubmit={handleSubmit}>
 				<Input
 					label={titleLabel}

@@ -1,4 +1,4 @@
-import { functionConfig } from '@/types/firebase/configFunctions';
+import { functionConfig } from '@/types/ConfigFunctions';
 
 export const findSimilarStatements = async (
 	statementId: string,

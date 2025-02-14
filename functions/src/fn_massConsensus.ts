@@ -1,6 +1,6 @@
 import { db } from '.';
 import { logger, Request, Response } from 'firebase-functions/v1';
-import { Collections } from '../../src/types/enums';
+import { Collections } from '../../src/types/TypeEnums';
 
 export const getInitialMCData = async (req: Request, res: Response) => {
 	try {

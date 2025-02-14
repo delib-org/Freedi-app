@@ -1,17 +1,27 @@
-import { array, object, string, enum_, optional, null_, InferOutput } from "valibot";
-import { MassConsensusPageUrls } from "../enums";
+import {
+	array,
+	object,
+	string,
+	enum_,
+	optional,
+	null_,
+	InferOutput,
+} from 'valibot';
+import { MassConsensusPageUrls } from '../TypeEnums';
 
 export const MassConsensusPageUrlsSchema = enum_(MassConsensusPageUrls);
 
 export const MassConsensusSchema = object({
-	texts: optional(object({
-		introduction: string(),
-		suggestionQuestion: string(),
-		similarSuggestions: string(),
-		randomSuggestions: string(),
-		topSuggestions: string(),
-		voting: string(),
-	})),
+	texts: optional(
+		object({
+			introduction: string(),
+			suggestionQuestion: string(),
+			similarSuggestions: string(),
+			randomSuggestions: string(),
+			topSuggestions: string(),
+			voting: string(),
+		})
+	),
 	steps: array(MassConsensusPageUrlsSchema),
 	currentStep: optional(MassConsensusPageUrlsSchema),
 });

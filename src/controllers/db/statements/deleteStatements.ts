@@ -8,8 +8,8 @@ import {
 	where,
 } from 'firebase/firestore';
 import { FireStore } from '../config';
-import { Statement } from '@/types/statement/statementTypes';
-import { Collections } from '@/types/enums';
+import { Statement } from '@/types/statement/Statement';
+import { Collections } from '@/types/TypeEnums';
 
 export async function deleteStatementFromDB(
 	statement: Statement,
@@ -18,7 +18,8 @@ export async function deleteStatementFromDB(
 	try {
 		if (!statement) throw new Error('No statement');
 
-		if (!isAuthorized) alert('You are not authorized to delete this statement');
+		if (!isAuthorized)
+			alert('You are not authorized to delete this statement');
 
 		if (!statement) throw new Error('No statement');
 		const confirmed = confirm(

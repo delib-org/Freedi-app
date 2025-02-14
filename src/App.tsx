@@ -22,7 +22,7 @@ import { updateAgreementToStore, userSelector } from './redux/users/userSlice';
 // Custom components
 import Accessibility from './view/components/accessibility/Accessibility';
 import TermsOfUse from './view/components/termsOfUse/TermsOfUse';
-import { Agreement } from './types/user';
+import { Agreement } from './types/agreement/Agreement';
 
 // Helpers
 
