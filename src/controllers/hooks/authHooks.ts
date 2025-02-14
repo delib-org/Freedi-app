@@ -8,10 +8,10 @@ import {
 	statementSubscriptionSelector,
 } from '@/redux/statements/statementsSlice';
 import { store } from '@/redux/store';
-import { Access } from '@/types/enums';
-import { Statement } from '@/types/statement/statementTypes';
-import { StatementSubscription } from '@/types/statement/subscription';
-import { Role } from '@/types/user';
+import { Access } from '@/types/TypeEnums';
+import { Statement } from '@/types/statement/Statement';
+import { StatementSubscription } from '@/types/statement/StatementSubscription';
+import { Role } from '@/types/user/UserSettings';
 
 const useAuth = () => {
 	const [isLogged, setIsLogged] = useState(false);
@@ -54,26 +54,30 @@ export function useIsAuthorized(statementId: string | undefined): {
 
 		// if statment close, and !member or admin -> show password
 
-		isAuthorizedFn(statement, statementSubscription).then((_isAuthorized) => {
-			if (_isAuthorized) {
-				setIsAuthorized(true);
-				setLoading(false);
-			} else {
-				setIsAuthorized(false);
-				setLoading(false);
-				setError(true);
+		isAuthorizedFn(statement, statementSubscription).then(
+			(_isAuthorized) => {
+				if (_isAuthorized) {
+					setIsAuthorized(true);
+					setLoading(false);
+				} else {
+					setIsAuthorized(false);
+					setLoading(false);
+					setError(true);
+				}
 			}
-		});
+		);
 	}, [statement, statementSubscription]);
 
 	useEffect(() => {
 		if (!statement) return;
 		if (!topParentStatement)
-			getStatementFromDB(statement.topParentId).then((_topParentStatement) => {
-				if (_topParentStatement) {
-					setTopParentStatement(_topParentStatement);
+			getStatementFromDB(statement.topParentId).then(
+				(_topParentStatement) => {
+					if (_topParentStatement) {
+						setTopParentStatement(_topParentStatement);
+					}
 				}
-			});
+			);
 	}, [statement, topParentStatement]);
 
 	return {

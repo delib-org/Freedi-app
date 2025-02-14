@@ -7,8 +7,9 @@ import {
 	enum_,
 	InferOutput,
 } from 'valibot';
-import { Role, User, UserSchema } from '../../user';
-import { StatementSchema } from '../statementTypes';
+import { User, UserSchema } from '../user/User';
+import { StatementSchema } from './Statement';
+import { Role } from '../user/UserSettings';
 
 export const StatementSubscriptionSchema = object({
 	role: enum_(Role),

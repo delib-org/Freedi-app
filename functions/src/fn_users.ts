@@ -1,9 +1,10 @@
 import { QueryDocumentSnapshot } from 'firebase-admin/firestore';
 import { FirestoreEvent } from 'firebase-functions/firestore';
 import { db } from '.';
-import { Collections } from '../../src/types/enums';
-import { UserSchema, UserSettings } from '../../src/types/user';
+import { Collections } from '../../src/types/TypeEnums';
+import { UserSchema } from '../../src/types/user/User';
 import { parse } from 'valibot';
+import { UserSettings } from '../../src/types/user/UserSettings';
 
 export async function setUserSettings(
 	e: FirestoreEvent<

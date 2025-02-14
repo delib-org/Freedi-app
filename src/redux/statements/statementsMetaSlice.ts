@@ -2,7 +2,10 @@ import { createSlice } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
 import { RootState } from '../store';
 import { updateArray } from '@/controllers/general/helpers';
-import { StatementMetaData, StatementMetaDataSchema } from '@/types/statement/statementTypes';
+import {
+	StatementMetaData,
+	StatementMetaDataSchema,
+} from '@/types/statement/Statement';
 import { parse } from 'valibot';
 
 // Define a type for the slice state
@@ -19,7 +22,10 @@ export const statementMetaData = createSlice({
 	name: 'statements-meta-data',
 	initialState,
 	reducers: {
-		setStatementMetaData: (state, action: PayloadAction<StatementMetaData>) => {
+		setStatementMetaData: (
+			state,
+			action: PayloadAction<StatementMetaData>
+		) => {
 			try {
 				const statementMetaData = parse(
 					StatementMetaDataSchema,

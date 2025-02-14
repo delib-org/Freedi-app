@@ -1,4 +1,11 @@
-import { ChangeEvent, FC, MouseEvent, TouchEvent, useEffect, useState } from 'react';
+import {
+	ChangeEvent,
+	FC,
+	MouseEvent,
+	TouchEvent,
+	useEffect,
+	useState,
+} from 'react';
 import { useLanguage } from '@/controllers/hooks/useLanguages';
 import RadioButtonWithLabel from '@/view/components/radioButtonWithLabel/RadioButtonWithLabel';
 import styles from './ChoseBySettings.module.scss';
@@ -7,7 +14,11 @@ import { StatementSettingsProps } from '../../settingsTypeHelpers';
 import { useDispatch, useSelector } from 'react-redux';
 import { choseBySelector, setChoseBy } from '@/redux/choseBy/choseBySlice';
 import { setChoseByToDB } from '@/controllers/db/choseBy/setChoseBy';
-import { ChoseBy, ChoseByEvaluationType, CutoffType } from '@/types/choseBy';
+import {
+	ChoseBy,
+	ChoseByEvaluationType,
+	CutoffType,
+} from '@/types/choseBy/ChoseBy';
 
 interface RangeProps {
 	maxValue: number;
@@ -38,7 +49,9 @@ const ChoseBySettings: FC<StatementSettingsProps> = ({ statement }) => {
 				step: 1,
 				value: choseBy?.number ?? 0,
 			});
-			dispatch(setChoseBy({ ...choseBy, number: Math.ceil(choseBy.number) }));
+			dispatch(
+				setChoseBy({ ...choseBy, number: Math.ceil(choseBy.number) })
+			);
 		} else if (choseBy?.cutoffType === CutoffType.cutoffValue) {
 			setRangeProps({
 				maxValue: 10,
@@ -109,12 +122,15 @@ const ChoseBySettings: FC<StatementSettingsProps> = ({ statement }) => {
 		<div className={styles.choseBy}>
 			<h2>{t('Options Selection Criteria')}</h2>
 			<section>
-				<h3 className='title'>{t('How to evaluate and select top options')}</h3>
+				<h3 className='title'>
+					{t('How to evaluate and select top options')}
+				</h3>
 				<RadioButtonWithLabel
 					id={ChoseByEvaluationType.consensus}
 					labelText={t('By Consensus')}
 					checked={
-						choseBy?.choseByEvaluationType === ChoseByEvaluationType.consensus
+						choseBy?.choseByEvaluationType ===
+						ChoseByEvaluationType.consensus
 					}
 					onChange={handleEvaluationChange}
 				/>
@@ -122,7 +138,8 @@ const ChoseBySettings: FC<StatementSettingsProps> = ({ statement }) => {
 					id={ChoseByEvaluationType.likes}
 					labelText={t('By most liked')}
 					checked={
-						choseBy?.choseByEvaluationType === ChoseByEvaluationType.likes
+						choseBy?.choseByEvaluationType ===
+						ChoseByEvaluationType.likes
 					}
 					onChange={handleEvaluationChange}
 				/>
@@ -137,7 +154,9 @@ const ChoseBySettings: FC<StatementSettingsProps> = ({ statement }) => {
 				/>
 			</section>
 			<section>
-				<h3 className='title'>{t('Method of selecting leading options')}</h3>
+				<h3 className='title'>
+					{t('Method of selecting leading options')}
+				</h3>
 				<RadioButtonWithLabel
 					id={CutoffType.topOptions}
 					labelText={`${t('Top results')}: ${choseBy?.cutoffType === CutoffType.topOptions ? rangeProps.value : ''}`}

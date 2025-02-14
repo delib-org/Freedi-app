@@ -4,13 +4,13 @@ import {
 	getStatementSubscriptionId,
 	StatementSubscription,
 	StatementSubscriptionSchema,
-} from '../../src/types/statement/subscription';
-import { Role } from '../../src/types/user';
-import { Collections } from '../../src/types/enums';
+} from '../../src/types/statement/StatementSubscription';
+import { Collections } from '../../src/types/TypeEnums';
 import { parse } from 'valibot';
 import { QueryDocumentSnapshot } from 'firebase-admin/firestore';
 import { FirestoreEvent } from 'firebase-functions/firestore';
-import { StatementSchema } from '../../src/types/statement/statementTypes';
+import { StatementSchema } from '../../src/types/statement/Statement';
+import { Role } from '../../src/types/user/UserSettings';
 
 export async function setAdminsToNewStatement(
 	ev: FirestoreEvent<
@@ -78,7 +78,8 @@ export async function setAdminsToNewStatement(
 					statement.statementId,
 					adminSub.user
 				);
-				if (!statementsSubscribeId) throw new Error('No statementsSubscribeId');
+				if (!statementsSubscribeId)
+					throw new Error('No statementsSubscribeId');
 
 				const newSubscription: StatementSubscription = {
 					statementId: statement.statementId,

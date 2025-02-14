@@ -1,4 +1,19 @@
-import { object, string, number, InferOutput, optional } from 'valibot';
+import {
+	object,
+	string,
+	number,
+	InferOutput,
+	optional,
+	InferInput,
+} from 'valibot';
+
+export const AgreementSchema = object({
+	text: string(),
+	date: number(),
+	version: string(),
+});
+
+export type Agreement = InferInput<typeof AgreementSchema>;
 
 export enum AgreeDisagreeEnum {
 	Agree = 'agree',
@@ -35,3 +50,19 @@ export const ImportanceSchema = object({
 });
 
 export type Importance = InferOutput<typeof ImportanceSchema>;
+
+export const DocumentApprovalSchema = object({
+	approved: number(),
+	totalVoters: number(),
+	averageApproval: number(),
+});
+
+export type DocumentApproval = InferInput<typeof DocumentApprovalSchema>;
+
+export const DocumentImportanceSchema = object({
+	numberOfUsers: number(),
+	averageImportance: number(),
+	sumImportance: number(),
+});
+
+export type DocumentImportance = InferInput<typeof DocumentImportanceSchema>;

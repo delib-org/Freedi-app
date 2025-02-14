@@ -1,7 +1,7 @@
-import { ChoseBy } from '@/types/choseBy';
+import { ChoseBy } from '@/types/choseBy/ChoseBy';
 import { DB } from '../config';
 import { doc, setDoc } from 'firebase/firestore';
-import { Collections } from '@/types/enums';
+import { Collections } from '@/types/TypeEnums';
 
 export async function setChoseByToDB(choseBy: ChoseBy) {
 	try {

@@ -1,7 +1,7 @@
-import { FC } from "react";
-import EnhancedEvaluation from "./enhancedEvaluation/EnhancedEvaluation";
-import SimpleEvaluation from "./simpleEvaluation/SimpleEvaluation";
-import { Statement } from "@/types/statement/statementTypes";
+import { FC } from 'react';
+import EnhancedEvaluation from './enhancedEvaluation/EnhancedEvaluation';
+import SimpleEvaluation from './simpleEvaluation/SimpleEvaluation';
+import { Statement } from '@/types/statement/Statement';
 
 interface EvaluationProps {
 	parentStatement: Statement | undefined;
@@ -9,7 +9,6 @@ interface EvaluationProps {
 }
 
 const Evaluation: FC<EvaluationProps> = ({ parentStatement, statement }) => {
-
 	try {
 		if (!parentStatement) throw new Error('parentStatement is not defined');
 

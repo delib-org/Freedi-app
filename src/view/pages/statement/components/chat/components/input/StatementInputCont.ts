@@ -1,11 +1,11 @@
-import { StatementType } from '@/types/enums';
-import { Statement } from '@/types/statement/statementTypes';
+import { StatementType } from '@/types/TypeEnums';
+import { Statement } from '@/types/statement/Statement';
 import { defaultStatementSettings } from './../../../settings/emptyStatementModel';
 import {
 	createStatement,
 	setStatementToDB,
 } from '@/controllers/db/statements/setStatements';
-import { User } from '@/types/user';
+import { User } from '@/types/user/User';
 
 export function handleAddStatement(
 	message: string,

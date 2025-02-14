@@ -1,6 +1,6 @@
-import { DeliberativeElement } from '@/types/enums';
-import { Results } from '@/types/results';
-import { Statement } from '@/types/statement/statementTypes';
+import { DeliberativeElement } from '@/types/TypeEnums';
+import { Results } from '@/types/results/Results';
+import { Statement } from '@/types/statement/Statement';
 
 interface ResultLevel {
 	result: Results;
@@ -34,7 +34,10 @@ export function sortStatementsByHierarchy(statements: Statement[]): Results[] {
 			const statement = _statements[0];
 
 			//find top parent statement
-			const parentStatement = findMostTopStatement(statement, _statements);
+			const parentStatement = findMostTopStatement(
+				statement,
+				_statements
+			);
 
 			const { result, ids: _ids } = createResultLevel(
 				parentStatement,

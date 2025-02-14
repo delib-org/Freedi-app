@@ -2,10 +2,11 @@ import { logOut } from '../db/auth';
 import { HistoryTracker } from '@/redux/history/HistorySlice';
 import { store } from '@/redux/store';
 import { setUser } from '@/redux/users/userSlice';
-import { Screen } from '@/types/enums';
-import { Statement } from '@/types/statement/statementTypes';
-import { StatementSubscription } from '@/types/statement/subscription';
-import { Role, User } from '@/types/user';
+import { Screen } from '@/types/TypeEnums';
+import { Statement } from '@/types/statement/Statement';
+import { StatementSubscription } from '@/types/statement/StatementSubscription';
+import { User } from '@/types/user/User';
+import { Role } from '@/types/user/UserSettings';
 
 export function updateArray<T>(
 	currentArray: Array<T>,
@@ -255,7 +256,9 @@ export function isProduction(): boolean {
 export const handleCloseInviteModal = (
 	setShowModal: (show: boolean) => void
 ) => {
-	const inviteModal = document.querySelector('.inviteModal') as HTMLDivElement;
+	const inviteModal = document.querySelector(
+		'.inviteModal'
+	) as HTMLDivElement;
 	inviteModal.classList.add('closing');
 
 	setTimeout(() => {

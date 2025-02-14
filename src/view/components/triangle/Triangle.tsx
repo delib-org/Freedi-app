@@ -4,7 +4,7 @@ import Dot from './dot/Dot';
 import styles from './Triangle.module.scss';
 import { useLanguage } from '@/controllers/hooks/useLanguages';
 import { statementOptionsSelector } from '@/redux/statements/statementsSlice';
-import { Statement } from '@/types/statement/statementTypes';
+import { Statement } from '@/types/statement/Statement';
 
 interface Props {
 	statement: Statement;
@@ -28,7 +28,9 @@ const Triangle: FC<Props> = ({ statement }) => {
 	return (
 		<>
 			<div className={styles.triangle}></div>
-			<div className={`${styles.triangle} ${styles['triangle--invisible']}`}>
+			<div
+				className={`${styles.triangle} ${styles['triangle--invisible']}`}
+			>
 				{subStatements.map((subStatement: Statement) => {
 					return (
 						<Dot

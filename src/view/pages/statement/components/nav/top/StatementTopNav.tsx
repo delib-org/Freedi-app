@@ -16,8 +16,8 @@ import useStatementColor from '@/controllers/hooks/useStatementColor.ts';
 import Menu from '@/view/components/menu/Menu';
 import MenuOption from '@/view/components/menu/MenuOption';
 import { StatementContext } from '../../../StatementCont';
-import { Statement } from '@/types/statement/statementTypes';
-import { Role } from '@/types/user';
+import { Statement } from '@/types/statement/Statement';
+import { Role } from '@/types/user/UserSettings';
 
 interface Props {
 	statement?: Statement;
@@ -55,7 +55,9 @@ const StatementTopNav: FC<Props> = ({
 	if (!statement) return null;
 	const _statement = parentStatement || statement;
 
-	const enableNavigationalElements = Boolean(_statement?.statementSettings?.enableNavigationalElements)
+	const enableNavigationalElements = Boolean(
+		_statement?.statementSettings?.enableNavigationalElements
+	);
 
 	const isAdmin = role === Role.admin;
 	const allowNavigation = enableNavigationalElements || isAdmin;
@@ -111,8 +113,12 @@ interface NavigationButtonsProps {
 	headerStyle: { color: string; backgroundColor: string };
 }
 
-function NavigationButtons({ screen, handleNavigation, headerStyle, statement }: Readonly<NavigationButtonsProps>) {
-
+function NavigationButtons({
+	screen,
+	handleNavigation,
+	headerStyle,
+	statement,
+}: Readonly<NavigationButtonsProps>) {
 	const { hasChat } = statement?.statementSettings || { hasChat: false };
 	if (!hasChat) return null;
 
@@ -149,11 +155,24 @@ interface NavButtonsProps {
 	statement?: Statement;
 }
 
-function NavButtons({ screen, handleNavigation, headerStyle, allowNavigation, statement, parentStatement }: Readonly<NavButtonsProps>) {
-
+function NavButtons({
+	screen,
+	handleNavigation,
+	headerStyle,
+	allowNavigation,
+	statement,
+	parentStatement,
+}: Readonly<NavButtonsProps>) {
 	return (
 		<>
-			{allowNavigation && <NavigationButtons statement={parentStatement || statement} screen={screen} handleNavigation={handleNavigation} headerStyle={headerStyle} />}
+			{allowNavigation && (
+				<NavigationButtons
+					statement={parentStatement || statement}
+					screen={screen}
+					handleNavigation={handleNavigation}
+					headerStyle={headerStyle}
+				/>
+			)}
 			<button>
 				<View color={headerStyle.color} />
 			</button>

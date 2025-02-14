@@ -2,8 +2,8 @@ import React, { FC } from 'react';
 import { handleGetEvaluators } from '../statementSettingsCont';
 import MembersChipsList from './membership/membersChipsList/MembersChipList';
 import { useLanguage } from '@/controllers/hooks/useLanguages';
-import { Evaluation } from '@/types/evaluation/evaluationTypes';
-import { User } from '@/types/user';
+import { Evaluation } from '@/types/evaluation/Evaluation';
+import { User } from '@/types/user/User';
 
 interface GetEvaluatorsProps {
 	statementId: string;
@@ -47,7 +47,9 @@ const GetEvaluators: FC<GetEvaluatorsProps> = ({ statementId }) => {
 							<MembersChipsList members={members} />
 						</>
 					)}
-					{members.length === 0 && <div>{t('No evaluators found')}</div>}
+					{members.length === 0 && (
+						<div>{t('No evaluators found')}</div>
+					)}
 				</>
 			)}
 		</>

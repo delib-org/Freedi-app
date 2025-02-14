@@ -2,22 +2,22 @@ import { Change, logger } from 'firebase-functions/v1';
 import { db } from './index';
 import { DocumentSnapshot, FieldValue } from 'firebase-admin/firestore';
 import { FirestoreEvent } from 'firebase-functions/firestore';
-import { Evaluation } from '../../src/types/evaluation/evaluationTypes';
-import { User } from '../../src/types/user';
+import { Evaluation } from '../../src/types/evaluation/Evaluation';
+import { User } from '../../src/types/user/User';
 import { number, parse } from 'valibot';
 import {
 	Statement,
 	StatementSchema,
-	statementToSimpleStatement,
-} from '../../src/types/statement/statementTypes';
-import { Collections, StatementType } from '../../src/types/enums';
+} from '../../src/types/statement/Statement';
+import { Collections, StatementType } from '../../src/types/TypeEnums';
 import {
 	ChoseBy,
 	ChoseByEvaluationType,
 	CutoffType,
 	defaultChoseBySettings,
-} from '../../src/types/choseBy';
-import { StageType } from '../../src/types/stage';
+} from '../../src/types/choseBy/ChoseBy';
+import { StageType } from '../../src/types/stage/Stage';
+import { statementToSimpleStatement } from '../../src/types/statement/SimpleStatement';
 
 enum ActionTypes {
 	new = 'new',
@@ -87,7 +87,8 @@ export async function deleteEvaluation(event) {
 //@ts-ignore
 export async function updateEvaluation(event) {
 	try {
-		const statementEvaluationBefore = event.data.before.data() as Evaluation;
+		const statementEvaluationBefore =
+			event.data.before.data() as Evaluation;
 		const { evaluation: evaluationBefore } = statementEvaluationBefore;
 		const statementEvaluationAfter = event.data.after.data() as Evaluation;
 		const { evaluation: evaluationAfter, statementId } =
@@ -118,50 +119,53 @@ export async function updateEvaluation(event) {
 
 //inner functions
 
-function calcAgreement(newSumEvaluations: number, numberOfEvaluators: number): number {
+function calcAgreement(
+	newSumEvaluations: number,
+	numberOfEvaluators: number
+): number {
 	/**
-* Consensus Calculation Formula
-* ============================
-* Formula: Agreement = (sumOption/nOption) * sqrt(nTotal)
-* 
-* Purpose:
-* This formula is designed to find the most agreed-upon option in a system where:
-* - There are infinite possible options
-* - Each option can be evaluated on a scale from -1 to +1
-* - We need to balance between average rating and participation level
-* 
-* Components:
-* -----------
-* 1. Average Rating: (sumOption/nOption)
-*    - sumOption: Sum of all evaluations for this specific option
-*    - nOption: Number of evaluators for this specific option
-*    - Provides a score between -1 (complete disagreement) to +1 (complete agreement)
-* 
-* 2. Participation Weight: sqrt(nTotal)
-*    - nTotal: Total number of evaluators across ALL options
-*    - Using square root provides balanced weighting:
-*      - Gives more weight to options with broader participation
-*      - Prevents overshadowing new options with few evaluations
-* 
-* Why This Works:
-* --------------
-* - Balances quality (average rating) with quantity (participation)
-* - Prevents small groups from dominating with extreme ratings
-* - Gives new options a fair chance while still rewarding broad consensus
-* - Allows fair comparison between:
-*   - Popular options with many evaluations
-*   - Niche options with few but positive evaluations
-*   - New options that haven't been heavily evaluated yet
-* 
-* Example Scenarios:
-* -----------------
-* Option A: 100 people rated +0.5 average
-* Option B: 2 people rated +1 average
-* Option C: 50 people rated +0.7 average
-* 
-* The formula will balance these factors to find true consensus rather than
-* just highest average or most votes.
-*/
+	 * Consensus Calculation Formula
+	 * ============================
+	 * Formula: Agreement = (sumOption/nOption) * sqrt(nTotal)
+	 *
+	 * Purpose:
+	 * This formula is designed to find the most agreed-upon option in a system where:
+	 * - There are infinite possible options
+	 * - Each option can be evaluated on a scale from -1 to +1
+	 * - We need to balance between average rating and participation level
+	 *
+	 * Components:
+	 * -----------
+	 * 1. Average Rating: (sumOption/nOption)
+	 *    - sumOption: Sum of all evaluations for this specific option
+	 *    - nOption: Number of evaluators for this specific option
+	 *    - Provides a score between -1 (complete disagreement) to +1 (complete agreement)
+	 *
+	 * 2. Participation Weight: sqrt(nTotal)
+	 *    - nTotal: Total number of evaluators across ALL options
+	 *    - Using square root provides balanced weighting:
+	 *      - Gives more weight to options with broader participation
+	 *      - Prevents overshadowing new options with few evaluations
+	 *
+	 * Why This Works:
+	 * --------------
+	 * - Balances quality (average rating) with quantity (participation)
+	 * - Prevents small groups from dominating with extreme ratings
+	 * - Gives new options a fair chance while still rewarding broad consensus
+	 * - Allows fair comparison between:
+	 *   - Popular options with many evaluations
+	 *   - Niche options with few but positive evaluations
+	 *   - New options that haven't been heavily evaluated yet
+	 *
+	 * Example Scenarios:
+	 * -----------------
+	 * Option A: 100 people rated +0.5 average
+	 * Option B: 2 people rated +1 average
+	 * Option C: 50 people rated +0.7 average
+	 *
+	 * The formula will balance these factors to find true consensus rather than
+	 * just highest average or most votes.
+	 */
 	try {
 		parse(number(), newSumEvaluations);
 		parse(number(), numberOfEvaluators);
@@ -224,8 +228,10 @@ async function updateStatementEvaluation({
 			if (statement.evaluation) {
 				evaluation.sumEvaluations += evaluationDiff;
 				evaluation.numberOfEvaluators += addEvaluator;
-				evaluation.sumPro = (evaluation.sumPro || 0) + proConDiff.proDiff;
-				evaluation.sumCon = (evaluation.sumCon || 0) + proConDiff.conDiff;
+				evaluation.sumPro =
+					(evaluation.sumPro || 0) + proConDiff.proDiff;
+				evaluation.sumCon =
+					(evaluation.sumCon || 0) + proConDiff.conDiff;
 			}
 
 			const agreement = calcAgreement(
@@ -316,16 +322,21 @@ async function updateParentStatementWithChosenOptions(
 
 		// get parent choseBy settings statement and parent statement
 
-		const [parentStatementChoseByDB, parentStatementDB] = await Promise.all([
-			db.collection(Collections.choseBy).doc(parentId).get(),
-			db.collection(Collections.statements).doc(parentId).get(),
-		]);
+		const [parentStatementChoseByDB, parentStatementDB] = await Promise.all(
+			[
+				db.collection(Collections.choseBy).doc(parentId).get(),
+				db.collection(Collections.statements).doc(parentId).get(),
+			]
+		);
 
 		const parentStatementChoseBy: ChoseBy = !parentStatementChoseByDB.exists
 			? defaultChoseBySettings(parentId)
 			: (parentStatementChoseByDB.data() as ChoseBy);
 		parentStatementChoseBy.number = Number(parentStatementChoseBy.number);
-		const parentStatement = parse(StatementSchema, parentStatementDB.data());
+		const parentStatement = parse(
+			StatementSchema,
+			parentStatementDB.data()
+		);
 
 		//chose top options by the choseBy settings & get the top options
 		const chosenOptions = await choseTopOptions(parentStatementChoseBy);
@@ -350,8 +361,8 @@ async function updateParentStatementWithChosenOptions(
 		parentStatement: Statement;
 		topOptionsStatements: Statement[];
 	}) {
-		const childStatementsSimple = topOptionsStatements.map((st: Statement) =>
-			statementToSimpleStatement(st)
+		const childStatementsSimple = topOptionsStatements.map(
+			(st: Statement) => statementToSimpleStatement(st)
 		);
 
 		if (!parentId) throw new Error('parentId is not defined');
@@ -462,7 +473,9 @@ async function optionsChosenByMethod(
 			.limit(Math.ceil(number))
 			.get();
 
-		const statements = statementsDB.docs.map((doc) => doc.data() as Statement);
+		const statements = statementsDB.docs.map(
+			(doc) => doc.data() as Statement
+		);
 
 		return statements;
 	} else if (cutoffType === CutoffType.cutoffValue) {
@@ -470,7 +483,9 @@ async function optionsChosenByMethod(
 			.where(evaluationQuery, '>', number)
 			.get();
 
-		const statements = statementsDB.docs.map((doc) => doc.data() as Statement);
+		const statements = statementsDB.docs.map(
+			(doc) => doc.data() as Statement
+		);
 
 		return statements;
 	}

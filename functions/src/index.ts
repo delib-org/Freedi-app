@@ -37,9 +37,9 @@ import { updateAgrees } from './fn_agree';
 import { setUserSettings } from './fn_users';
 import { updateStatementWithViews } from './fn_views';
 import { getInitialMCData } from './fn_massConsensus';
-import { Collections } from '../../src/types/enums';
+import { Collections } from '../../src/types/TypeEnums';
 import { Request, Response } from 'firebase-functions/v1';
-import { functionConfig } from '../../src/types/firebase/configFunctions';
+import { functionConfig } from '../../src/types/ConfigFunctions';
 
 // Initialize Firebase
 initializeApp();

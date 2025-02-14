@@ -1,8 +1,8 @@
 import { FC, useContext, useState } from 'react';
 
 // Third party libraries
-import { useSelector } from "react-redux";
-import { Link, useParams } from "react-router";
+import { useSelector } from 'react-redux';
+import { Link, useParams } from 'react-router';
 
 // Icons
 import AgreementIcon from '@/assets/icons/agreementIcon.svg?react';
@@ -20,7 +20,7 @@ import StartHere from '@/view/components/startHere/StartHere';
 import { StatementContext } from '../../../StatementCont';
 import { sortItems } from './StatementBottomNavModal';
 import { useLanguage } from '@/controllers/hooks/useLanguages';
-import { SortType, StatementType } from '@/types/enums';
+import { SortType, StatementType } from '@/types/TypeEnums';
 
 interface Props {
 	showNav?: boolean;
@@ -99,7 +99,9 @@ const StatementBottomNav: FC<Props> = () => {
 										color={statementColor.backgroundColor}
 									/>
 								</Link>
-								<span className='button-name'>{navItem.name}</span>
+								<span className='button-name'>
+									{navItem.name}
+								</span>
 							</div>
 						))}
 						<button

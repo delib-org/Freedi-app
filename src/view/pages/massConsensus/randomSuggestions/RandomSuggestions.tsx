@@ -8,17 +8,16 @@ import { Link, useParams } from 'react-router'
 const RandomSuggestions = () => {
 	const { statementId } = useParams()
 
-	useRandomSuggestions()
-
 	return (
 		<>
-			<HeaderMassConsensus backTo={MassConsensusPageUrls.initialQuestion} />
+			<HeaderMassConsensus
+				backTo={MassConsensusPageUrls.initialQuestion}
+			/>
 			<div>RandomSuggestions</div>
 			<SuggestionCards selectionFunction={SelectionFunction.random} />
 			<Link className={"btn"} to={`/mass-consensus/${statementId}/${MassConsensusPageUrls.voting}`}>Next</Link>
 		</>
+	);
+};
 
-	)
-}
-
-export default RandomSuggestions
+export default RandomSuggestions;

@@ -1,4 +1,4 @@
-import { Role } from '../user';
+import { Role } from './user/UserSettings';
 
 export function isMember(role: Role | undefined): boolean {
 	if (role === Role.admin || role === Role.member || role === Role.creator)

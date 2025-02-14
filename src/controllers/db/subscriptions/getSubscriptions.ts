@@ -24,13 +24,13 @@ import {
 } from '@/redux/statements/statementsSlice';
 import { AppDispatch, store } from '@/redux/store';
 import { listenedStatements } from '@/view/pages/home/Home';
-import { Collections } from '@/types/enums';
-import { Statement, StatementSchema } from '@/types/statement/statementTypes';
+import { Collections } from '@/types/TypeEnums';
+import { Statement, StatementSchema } from '@/types/statement/Statement';
 import {
 	StatementSubscription,
 	StatementSubscriptionSchema,
-} from '@/types/statement/subscription';
-import { Role } from '@/types/user';
+} from '@/types/statement/StatementSubscription';
+import { Role } from '@/types/user/UserSettings';
 import { User } from 'firebase/auth';
 import { parse } from 'valibot';
 
@@ -68,7 +68,9 @@ export const listenToStatementSubSubscriptions = (
 					if (firstCall) {
 						statementSubscriptions.push(statementSubscription);
 					} else {
-						dispatch(setStatementSubscription(statementSubscription));
+						dispatch(
+							setStatementSubscription(statementSubscription)
+						);
 					}
 				}
 
@@ -82,7 +84,7 @@ export const listenToStatementSubSubscriptions = (
 	} catch (error) {
 		console.error(error);
 
-		return () => { };
+		return () => {};
 	}
 };
 
@@ -112,7 +114,9 @@ export function listenToStatementSubscriptions(
 				try {
 					const statementSubscription =
 						change.doc.data() as StatementSubscription;
-					if (!Array.isArray(statementSubscription.statement.results)) {
+					if (
+						!Array.isArray(statementSubscription.statement.results)
+					) {
 						const subscriptionRef = doc(
 							FireStore,
 							Collections.statementsSubscribe,
@@ -125,7 +129,10 @@ export function listenToStatementSubscriptions(
 					parse(StatementSubscriptionSchema, statementSubscription);
 
 					//prevent listening to a document statement
-					if (statementSubscription.statement.statementType === 'document')
+					if (
+						statementSubscription.statement.statementType ===
+						'document'
+					)
 						return;
 
 					if (change.type === 'added') {
@@ -134,7 +141,9 @@ export function listenToStatementSubscriptions(
 						);
 
 						const index = listenedStatements.findIndex(
-							(ls) => ls.statementId === statementSubscription.statementId
+							(ls) =>
+								ls.statementId ===
+								statementSubscription.statementId
 						);
 						if (index === -1) {
 							listenedStatements.push({
@@ -143,16 +152,22 @@ export function listenToStatementSubscriptions(
 							});
 						}
 
-						dispatch(setStatementSubscription(statementSubscription));
+						dispatch(
+							setStatementSubscription(statementSubscription)
+						);
 					}
 
 					if (change.type === 'modified') {
-						dispatch(setStatementSubscription(statementSubscription));
+						dispatch(
+							setStatementSubscription(statementSubscription)
+						);
 					}
 
 					if (change.type === 'removed') {
 						const index = listenedStatements.findIndex(
-							(ls) => ls.statementId === statementSubscription.statementId
+							(ls) =>
+								ls.statementId ===
+								statementSubscription.statementId
 						);
 						if (index !== -1) {
 							listenedStatements[index].unsubFunction();
@@ -160,24 +175,29 @@ export function listenToStatementSubscriptions(
 						}
 
 						dispatch(
-							deleteSubscribedStatement(statementSubscription.statementId)
+							deleteSubscribedStatement(
+								statementSubscription.statementId
+							)
 						);
 					}
 				} catch (error) {
-					console.error('Listen to statement subscriptions each error', error);
+					console.error(
+						'Listen to statement subscriptions each error',
+						error
+					);
 				}
 			});
 		});
 	} catch (error) {
 		console.error('Listen to statement subscriptions error', error);
 
-		return () => { };
+		return () => {};
 	}
 }
 
 export async function getStatmentsSubsciptions(): Promise<
 	StatementSubscription[]
-	> {
+> {
 	try {
 		const user = store.getState().user.user;
 		if (!user) throw new Error('User not logged in');
@@ -382,7 +402,8 @@ export async function getTopParentSubscription(
 		if (!topParentStatement) {
 			topParentStatement = await getStatementFromDB(topParentId);
 		}
-		if (!topParentStatement) throw new Error('Top parent statement not found');
+		if (!topParentStatement)
+			throw new Error('Top parent statement not found');
 
 		return topParentStatement;
 	}
@@ -465,7 +486,9 @@ export function getNewStatementsFromSubscriptions(): Unsubscribe {
 				}
 				if (change.type === 'removed') {
 					dispatch(
-						deleteSubscribedStatement(statementSubscription.statementId)
+						deleteSubscribedStatement(
+							statementSubscription.statementId
+						)
 					);
 				}
 			});
@@ -473,6 +496,6 @@ export function getNewStatementsFromSubscriptions(): Unsubscribe {
 	} catch (error) {
 		console.error(error);
 
-		return () => { };
+		return () => {};
 	}
 }

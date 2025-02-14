@@ -5,7 +5,7 @@ import NavRoomsIcon from '@/assets/icons/navRoomsIcon.svg?react';
 import NavSettings from '@/assets/icons/navSettingsIcon.svg?react';
 import NavSolutionIcon from '@/assets/icons/navSolutionIcon.svg?react';
 import NavVoteIcon from '@/assets/icons/navVoteIcon.svg?react';
-import { Screen } from '@/types/enums';
+import { Screen } from '@/types/TypeEnums';
 
 export const allScreensWithoutSettings = [
 	{
@@ -15,7 +15,13 @@ export const allScreensWithoutSettings = [
 		default: false,
 		icon: NavMainPageIcon,
 	},
-	{ link: Screen.CHAT, name: 'Chat', id: 'chat', default: true, icon: NavChat },
+	{
+		link: Screen.CHAT,
+		name: 'Chat',
+		id: 'chat',
+		default: true,
+		icon: NavChat,
+	},
 	{
 		link: Screen.OPTIONS,
 		name: 'Suggestions',

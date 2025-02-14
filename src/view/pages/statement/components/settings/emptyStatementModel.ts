@@ -1,6 +1,6 @@
-import { Screen, StatementType } from '@/types/enums';
-import { ResultsBy } from '@/types/results';
-import { Statement } from '@/types/statement/statementTypes';
+import { Screen, StatementType } from '@/types/TypeEnums';
+import { ResultsBy } from '@/types/results/Results';
+import { Statement } from '@/types/statement/Statement';
 
 export const defaultStatementSettings = {
 	enhancedEvaluation: true,

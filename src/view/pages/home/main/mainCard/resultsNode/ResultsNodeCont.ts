@@ -1,19 +1,19 @@
-import { StatementType } from "@/types/enums";
-import { Statement } from "@/types/statement/statementTypes";
+import { StatementType } from '@/types/TypeEnums';
+import { Statement } from '@/types/statement/Statement';
 
 export function styleSwitch(statement: Statement) {
 	const { statementType } = statement;
 
 	switch (statementType) {
 		case StatementType.question:
-			return "question";
+			return 'question';
 		case StatementType.option:
-			return "option";
+			return 'option';
 		case StatementType.group:
-			return "group";
+			return 'group';
 		case StatementType.statement:
-			return "statement";
+			return 'statement';
 		default:
-			return "statement";
+			return 'statement';
 	}
 }

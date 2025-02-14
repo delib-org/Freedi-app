@@ -9,8 +9,12 @@ import {
 	where,
 } from 'firebase/firestore';
 import { FireStore } from '../config';
-import { Collections, StatementType, DeliberativeElement } from '@/types/enums';
-import { Statement, StatementSchema } from '@/types/statement/statementTypes';
+import {
+	Collections,
+	StatementType,
+	DeliberativeElement,
+} from '@/types/TypeEnums';
+import { Statement, StatementSchema } from '@/types/statement/Statement';
 import { parse } from 'valibot';
 
 export async function getStatementFromDB(

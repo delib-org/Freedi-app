@@ -35,8 +35,9 @@ import { MapProvider } from '@/controllers/hooks/useMap';
 import { RootState } from '@/redux/store';
 import { userSelector } from '@/redux/users/userSlice';
 import Modal from '@/view/components/modal/Modal';
-import { StatementType, Access, QuestionType } from '@/types/enums';
-import { Role, User } from '@/types/user';
+import { StatementType, Access, QuestionType } from '@/types/TypeEnums';
+import { User } from '@/types/user/User';
+import { Role } from '@/types/user/UserSettings';
 
 // Create selectors
 export const subStatementsSelector = createSelector(
@@ -53,8 +54,14 @@ const StatementMain: FC = () => {
 	const { statementId } = useParams();
 
 	//TODO:create a check with the parent statement if subscribes. if not subscribed... go according to the rules of authorization
-	const { error, isAuthorized, loading, statement, topParentStatement, role } =
-		useIsAuthorized(statementId);
+	const {
+		error,
+		isAuthorized,
+		loading,
+		statement,
+		topParentStatement,
+		role,
+	} = useIsAuthorized(statementId);
 
 	// Redux store
 	const dispatch = useAppDispatch();
@@ -64,8 +71,12 @@ const StatementMain: FC = () => {
 	const [talker, setTalker] = useState<User | null>(null);
 	const [isStatementNotFound, setIsStatementNotFound] = useState(false);
 	const [showNewStatement, setShowNewStatement] = useState<boolean>(false);
-	const [newStatementType, setNewStatementType] = useState<StatementType>(StatementType.group);
-	const [newQuestionType, setNewQuestionType] = useState<QuestionType>(QuestionType.multiStage);
+	const [newStatementType, setNewStatementType] = useState<StatementType>(
+		StatementType.group
+	);
+	const [newQuestionType, setNewQuestionType] = useState<QuestionType>(
+		QuestionType.multiStage
+	);
 
 	// const [_, setPasswordCheck] = useState<boolean>(false)
 
@@ -93,7 +104,10 @@ const StatementMain: FC = () => {
 	useEffect(() => {
 		if (statement && screen) {
 			//set navigator tab title
-			const { shortVersion } = statementTitleToDisplay(statement.statement, 15);
+			const { shortVersion } = statementTitleToDisplay(
+				statement.statement,
+				15
+			);
 			document.title = `FreeDi - ${shortVersion}`;
 		}
 	}, [statement, screen]);
@@ -129,7 +143,11 @@ const StatementMain: FC = () => {
 
 			unSubUserSettings = listenToUserSettings();
 			unSubAllDescendants = listenToAllDescendants(statementId); //used for map
-			unSubEvaluations = listenToEvaluations(dispatch, statementId, user?.uid);
+			unSubEvaluations = listenToEvaluations(
+				dispatch,
+				statementId,
+				user?.uid
+			);
 			unSubSubStatements = listenToSubStatements(statementId); //TODO: check if this is needed. It can be integrated under listenToAllDescendants
 
 			unSubStatementSubscription = listenToStatementSubscription(
@@ -172,7 +190,10 @@ const StatementMain: FC = () => {
 				const isSubscribed = await getIsSubscribed(statementId);
 
 				// if isSubscribed is false, then subscribe
-				if (!isSubscribed && statement.membership?.access === Access.close) {
+				if (
+					!isSubscribed &&
+					statement.membership?.access === Access.close
+				) {
 					// subscribe
 					setStatementSubscriptionToDB(statement, Role.member);
 				} else {
@@ -183,31 +204,42 @@ const StatementMain: FC = () => {
 		}
 	}, [statement]);
 
-	const contextValue = useMemo(() => ({
-		statement,
-		talker,
-		handleShowTalker,
-		role,
-		handleSetNewStatement,
-		setNewStatementType,
-		newStatementType,
-		setNewQuestionType,
-		newQuestionType,
-	}), [statement, talker, role, handleShowTalker, handleSetNewStatement, setNewStatementType, newStatementType]);
+	const contextValue = useMemo(
+		() => ({
+			statement,
+			talker,
+			handleShowTalker,
+			role,
+			handleSetNewStatement,
+			setNewStatementType,
+			newStatementType,
+			setNewQuestionType,
+			newQuestionType,
+		}),
+		[
+			statement,
+			talker,
+			role,
+			handleShowTalker,
+			handleSetNewStatement,
+			setNewStatementType,
+			newStatementType,
+		]
+	);
 
 	if (isStatementNotFound) return <Page404 />;
 	if (error) return <UnAuthorizedPage />;
 	if (loading) return <LoadingPage />;
 
 	if (isAuthorized) {
-
 		return (
 			<StatementContext.Provider value={contextValue}>
 				<div className='page'>
 					{showNewStatement && (
 						<Modal
 							closeModal={(e) => {
-								if (e.target === e.currentTarget) setShowNewStatement(false);
+								if (e.target === e.currentTarget)
+									setShowNewStatement(false);
 							}}
 						>
 							<NewStatement />
