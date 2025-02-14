@@ -7,37 +7,13 @@ import {
 } from 'firebase-admin/firestore';
 import { db } from './index';
 import { Collections, StatementType } from '../../src/types/enums';
-import { Statement, StatementSchema } from '../../src/types/statement/statementTypes';
+import {
+	Statement,
+	StatementSchema,
+} from '../../src/types/statement/statementTypes';
 import { FirestoreEvent } from 'firebase-functions/firestore';
 import { parse } from 'valibot';
-import { Request } from 'firebase-functions/https';
-import { Response } from 'firebase-functions/v1';
-
-// TODO: Where is this used?
-// export async function updateSubscribedListenersCB(event: any) {
-// 	//get statement
-// 	const { statementId } = event.params;
-// 	//get all subscribers to this statement
-// 	const subscribersRef = db.collection(Collections.statementsSubscribe);
-// 	const q = subscribersRef.where('statementId', '==', statementId);
-// 	const subscribersDB = await q.get();
-// 	//update all subscribers
-// 	subscribersDB.docs.forEach((doc: any) => {
-// 		try {
-// 			const subscriberId = doc.data().statementsSubscribeId;
-// 			if (!subscriberId) throw new Error('subscriberId not found');
-
-// 			db.doc(`statementsSubscribe/${subscriberId}`).set(
-// 				{
-// 					lastUpdate: Timestamp.now().toMillis(),
-// 				},
-// 				{ merge: true }
-// 			);
-// 		} catch (error) {
-// 			logger.error('error updating subscribers', error);
-// 		}
-// 	});
-// }
+import { Response, Request } from 'firebase-functions/v1';
 
 export async function updateParentWithNewMessageCB(
 	e: FirestoreEvent<

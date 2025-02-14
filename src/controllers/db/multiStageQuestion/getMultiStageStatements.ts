@@ -4,6 +4,7 @@ import { setCurrentMultiStepOptions } from '@/redux/statements/statementsSlice';
 import { store } from '@/redux/store';
 import { Statement, StatementSchema } from '@/types/statement/statementTypes';
 import { functionConfig } from '@/types/firebase/configFunctions';
+import firebaseConfig from '../configKey';
 
 // TODO: Change urls bellow to match new environment
 export async function getFirstEvaluationOptions(
@@ -42,11 +43,11 @@ export async function getSecondEvaluationOptions(
 		const dispatch = store.dispatch;
 		const urlBase = isProduction()
 			? 'qeesi7aziq-uc.a.run.app'
-			: 'http://localhost:5001/synthesistalyaron/us-central1';
+			: `http://localhost:5001/${firebaseConfig.projectId}/${functionConfig.region}`;
 
 		const url = isProduction()
 			? `https://getTopStatements-${urlBase}`
-			: 'http://localhost:5001/synthesistalyaron/us-central1/getTopStatements';
+			: `http://localhost:5001/${firebaseConfig.projectId}/${functionConfig.region}/getTopStatements`;
 		const response = await fetch(
 			`${url}?parentId=${statement.statementId}&limit=10`
 		);

@@ -52,7 +52,13 @@ const wrapHttpFunction = (
 	return onRequest(
 		{
 			...functionConfig,
-			cors: ['https://freedi-test.web.app'],
+			cors: [
+				'https://freedi-test.web.app',
+				'https://delib-5.web.app',
+				'https://freedi.tech',
+				'https://delib.web.app',
+				'http://localhost:5173/',
+			],
 		},
 		async (req, res) => {
 			try {
@@ -71,6 +77,7 @@ exports.getTopStatements = wrapHttpFunction(getTopStatements);
 exports.getUserOptions = wrapHttpFunction(getUserOptions);
 exports.checkForSimilarStatements = wrapHttpFunction(findSimilarStatements);
 exports.massConsensusGetInitialData = wrapHttpFunction(getInitialMCData);
+exports.getQuestionOptions = wrapHttpFunction(getQuestionOptions);
 
 // Firestore Triggers
 exports.setUserSettings = onDocumentCreated(
@@ -285,17 +292,3 @@ exports.updateStatementWithViews = onDocumentCreated(
 
 const isProduction = process.env.NODE_ENV === 'production';
 console.info('isProduction', isProduction);
-const cors = {
-	cors: [
-		'https://delib-5.web.app',
-		'https://freedi.tech',
-		'https://delib.web.app',
-	],
-};
-
-exports.massConsensusGetInitialData = onRequest(cors, getInitialMCData);
-exports.checkForSimilarStatements = onRequest(cors, findSimilarStatements);
-exports.getUserOptions = onRequest(cors, getUserOptions); //suggestions
-exports.getTopStatements = onRequest(cors, getTopStatements); //second evaluation
-exports.getRandomStatements = onRequest(cors, getRandomStatements); //first evaluation
-exports.getQuestionOptions = onRequest(cors, getQuestionOptions); //first evaluation
