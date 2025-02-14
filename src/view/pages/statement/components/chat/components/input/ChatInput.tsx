@@ -12,7 +12,7 @@ import { useLanguage } from '@/controllers/hooks/useLanguages';
 import useStatementColor from '@/controllers/hooks/useStatementColor';
 import { userSelector } from '@/redux/users/userSlice';
 import SendIcon from '@/view/components/icons/SendIcon';
-import { Statement } from '@/types/statement/statementTypes';
+import { Statement } from '@/types/statement/Statement';
 
 interface Props {
 	statement: Statement;

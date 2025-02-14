@@ -1,12 +1,12 @@
 import { Change, logger } from 'firebase-functions/v1';
 import { db } from '.';
-import { ApprovalSchema } from '../../src/types/approval';
-import { Collections } from '../../src/types/enums';
-import { DocumentApproval } from '../../src/types/user';
-import { Statement } from '../../src/types/statement/statementTypes';
+import { ApprovalSchema } from '../../src/types/approval/Approval';
+import { Collections } from '../../src/types/TypeEnums';
+import { Statement } from '../../src/types/statement/Statement';
 import { number, parse } from 'valibot';
 import { DocumentSnapshot } from 'firebase-admin/firestore';
 import { FirestoreEvent } from 'firebase-functions/firestore';
+import { DocumentApproval } from '../../src/types/agreement/Agreement';
 
 export async function updateApprovalResults(
 	event: FirestoreEvent<
@@ -24,7 +24,10 @@ export async function updateApprovalResults(
 		if (!action) throw new Error('No action found');
 
 		const approveAfterData = parse(ApprovalSchema, event.data.after.data());
-		const approveBeforeData = parse(ApprovalSchema, event.data.before.data());
+		const approveBeforeData = parse(
+			ApprovalSchema,
+			event.data.before.data()
+		);
 
 		const eventData = approveAfterData || approveBeforeData;
 
@@ -67,7 +70,9 @@ export async function updateApprovalResults(
 
 				if (!documentApproval) {
 					const averageApproval = getAverageApproval(
-						approvingUserDiff !== 0 ? approvedDiff / approvingUserDiff : 0
+						approvingUserDiff !== 0
+							? approvedDiff / approvingUserDiff
+							: 0
 					);
 					const newApprovalResults = {
 						approved: approvedDiff,
@@ -85,7 +90,8 @@ export async function updateApprovalResults(
 				}
 
 				const newApproved = documentApproval.approved + approvedDiff;
-				const totalVoters = documentApproval.totalVoters + approvingUserDiff;
+				const totalVoters =
+					documentApproval.totalVoters + approvingUserDiff;
 
 				const averageApproval = getAverageApproval(
 					totalVoters !== 0 ? newApproved / totalVoters : 0
@@ -148,8 +154,10 @@ export async function updateApprovalResults(
 				};
 
 				if (documentApproval) {
-					const newApproved = documentApproval.approved + approvedDiff;
-					const newTotalVoters = documentApproval.totalVoters + addUser;
+					const newApproved =
+						documentApproval.approved + approvedDiff;
+					const newTotalVoters =
+						documentApproval.totalVoters + addUser;
 
 					const averageApproval = getAverageApproval(
 						newTotalVoters !== 0 ? newApproved / newTotalVoters : 0

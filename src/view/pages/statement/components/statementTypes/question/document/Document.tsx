@@ -8,8 +8,8 @@ import { useSelector } from 'react-redux';
 import { statementSubsSelector } from '@/redux/statements/statementsSlice';
 import StageCard from './stages/StageCard';
 import { updateStatementsOrderToDB } from '@/controllers/db/statements/setStatements';
-import { Statement } from '@/types/statement/statementTypes';
-import { StatementType } from '@/types/enums';
+import { Statement } from '@/types/statement/Statement';
+import { StatementType } from '@/types/TypeEnums';
 
 const Document: FC = () => {
 	const { statement } = useContext(StatementContext);

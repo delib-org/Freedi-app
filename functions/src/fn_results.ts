@@ -1,11 +1,14 @@
 import { Change, logger } from 'firebase-functions/v1';
 import { db } from './index';
-import { Statement, StatementSchema } from '../../src/types/statement/statementTypes';
-import { Collections } from '../../src/types/enums';
+import {
+	Statement,
+	StatementSchema,
+} from '../../src/types/statement/Statement';
+import { Collections } from '../../src/types/TypeEnums';
 import { DocumentSnapshot } from 'firebase-admin/firestore';
 import { FirestoreEvent } from 'firebase-functions/firestore';
 import { parse } from 'valibot';
-import { ResultsSettingsSchema } from '../../src/types/results';
+import { ResultsSettingsSchema } from '../../src/types/results/Results';
 
 export async function updateResultsSettings(
 	ev: FirestoreEvent<
@@ -18,7 +21,10 @@ export async function updateResultsSettings(
 	if (!ev.data) return;
 	try {
 		//get results
-		const { resultsBy } = parse(ResultsSettingsSchema, ev.data.after.data());
+		const { resultsBy } = parse(
+			ResultsSettingsSchema,
+			ev.data.after.data()
+		);
 		const { statementId } = ev.params;
 
 		if (!statementId) throw new Error('statementId is required');

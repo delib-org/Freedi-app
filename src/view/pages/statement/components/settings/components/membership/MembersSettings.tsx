@@ -3,7 +3,7 @@ import { createSelector } from '@reduxjs/toolkit';
 import { collection, getDocs } from 'firebase/firestore';
 
 // Third party imports
-import { useParams } from "react-router";
+import { useParams } from 'react-router';
 
 // Redux Store
 import { FireStore } from '../../../../../../../controllers/db/config';
@@ -18,10 +18,10 @@ import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { useLanguage } from '@/controllers/hooks/useLanguages';
 import { RootState } from '@/redux/store';
 import './MembersSettings.scss';
-import { Collections } from '@/types/enums';
-import { Statement } from '@/types/statement/statementTypes';
-import { StatementSubscription } from '@/types/statement/subscription';
-import { Role } from '@/types/user';
+import { Collections } from '@/types/TypeEnums';
+import { Statement } from '@/types/statement/Statement';
+import { StatementSubscription } from '@/types/statement/StatementSubscription';
+import { Role } from '@/types/user/UserSettings';
 
 interface MembersSettingsProps {
 	statement: Statement;
@@ -55,7 +55,10 @@ const MembersSettings: FC<MembersSettingsProps> = ({ statement }) => {
 	}
 
 	const fetchAwaitingUsers = async (): Promise<void> => {
-		const usersCollection = collection(FireStore, Collections.awaitingUsers);
+		const usersCollection = collection(
+			FireStore,
+			Collections.awaitingUsers
+		);
 		const usersSnapshot = await getDocs(usersCollection);
 		const count = usersSnapshot.docs.length;
 
@@ -72,12 +75,17 @@ const MembersSettings: FC<MembersSettingsProps> = ({ statement }) => {
 
 	if (!members) return null;
 
-	const joinedMembers = members.filter((member) => member.role !== Role.banned);
+	const joinedMembers = members.filter(
+		(member) => member.role !== Role.banned
+	);
 	const bannedUser = members.filter((member) => member.role === Role.banned);
 
 	return (
 		<div className='members-settings'>
-			<button className='link-anonymous' onClick={() => handleShare(statement)}>
+			<button
+				className='link-anonymous'
+				onClick={() => handleShare(statement)}
+			>
 				{t('Send a link to anonymous users')}
 				<ShareIcon />
 			</button>

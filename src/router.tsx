@@ -1,8 +1,8 @@
 import { lazy, Suspense } from 'react';
 import { createBrowserRouter } from 'react-router';
-import LoadingPage from './view/pages/loadingPage/LoadingPage';
+import LoadingPage from './view/pages/loadingPage/LoadingPage'; // Adjust the import path as needed
 import InitialQuestion from './view/pages/massConsensus/initialQuestion/InitialQuestion';
-import { MassConsensusPageUrls } from './types/enums';
+import { MassConsensusPageUrls } from './types/TypeEnums';
 import RandomSuggestions from './view/pages/massConsensus/randomSuggestions/RandomSuggestions';
 import TopSuggestions from './view/pages/massConsensus/topSuggestions/TopSuggestions';
 import SimilarSuggestions from './view/pages/massConsensus/similarSuggestions/SimilarSuggestions';

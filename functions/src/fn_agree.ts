@@ -1,7 +1,11 @@
 import { Change, logger } from 'firebase-functions/v1';
 import { db } from '.';
-import { Agree, AgreeDisagree, AgreeSchema } from '../../src/types/agreement';
-import { Collections } from '../../src/types/enums';
+import {
+	Agree,
+	AgreeDisagree,
+	AgreeSchema,
+} from '../../src/types/agreement/Agreement';
+import { Collections } from '../../src/types/TypeEnums';
 import { DocumentSnapshot } from 'firebase-admin/firestore';
 import { FirestoreEvent } from 'firebase-functions/firestore';
 import { parse } from 'valibot';
@@ -50,7 +54,10 @@ export async function updateAgrees(
 			const updateAgrees: Agree = {
 				agree: newAgree,
 				disagree: newDisagree,
-				avgAgree: totalAgree !== 0 ? (newAgree - newDisagree) / totalAgree : 0,
+				avgAgree:
+					totalAgree !== 0
+						? (newAgree - newDisagree) / totalAgree
+						: 0,
 			};
 
 			t.update(statementRef, { documentAgree: updateAgrees });

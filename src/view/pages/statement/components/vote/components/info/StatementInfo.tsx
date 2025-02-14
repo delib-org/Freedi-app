@@ -14,7 +14,7 @@ import {
 	statementSubscriptionSelector,
 } from '@/redux/statements/statementsSlice';
 import Text from '@/view/components/text/Text';
-import { Statement } from '@/types/statement/statementTypes';
+import { Statement } from '@/types/statement/Statement';
 
 interface Props {
 	statement: Statement | null;
@@ -22,7 +22,6 @@ interface Props {
 }
 
 const StatementInfo: FC<Props> = ({ statement, setShowInfo }) => {
-
 	// Hooks
 	const { t } = useLanguage();
 
@@ -30,13 +29,15 @@ const StatementInfo: FC<Props> = ({ statement, setShowInfo }) => {
 	const statementSubscription = useAppSelector(
 		statementSubscriptionSelector(statement?.statementId)
 	);
-	const parentStatement = useAppSelector(statementSelector(statement?.parentId));
+	const parentStatement = useAppSelector(
+		statementSelector(statement?.parentId)
+	);
 
 	// Use State
 	const [isInEditMode, setIsInEditMode] = useState(false);
 	const [formData, setFormData] = useState({
-		title: statement?.statement || "",
-		description: statement?.description || "",
+		title: statement?.statement || '',
+		description: statement?.description || '',
 	});
 
 	if (!statement) return null;
@@ -121,7 +122,10 @@ const StatementInfo: FC<Props> = ({ statement, setShowInfo }) => {
 						</div>
 					</div>
 					<div className='form-buttons'>
-						<button className='close-button' onClick={() => setShowInfo(false)}>
+						<button
+							className='close-button'
+							onClick={() => setShowInfo(false)}
+						>
 							{t('Close')}
 						</button>
 					</div>

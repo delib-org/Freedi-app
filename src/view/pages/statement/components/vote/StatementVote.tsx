@@ -19,8 +19,8 @@ import './StatementVote.scss';
 import Toast from '@/view/components/toast/Toast';
 import { useLanguage } from '@/controllers/hooks/useLanguages';
 import { StatementContext } from '../../StatementCont';
-import { Statement } from '@/types/statement/statementTypes';
-import { QuestionStep } from '@/types/enums';
+import { Statement } from '@/types/statement/Statement';
+import { QuestionStep } from '@/types/TypeEnums';
 
 let getVoteFromDB = false;
 

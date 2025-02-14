@@ -7,10 +7,10 @@ import {
 	orderBy,
 } from 'firebase/firestore';
 import { FireStore } from '../config';
-import { Collections } from '@/types/enums';
-import { Statement, StatementSchema } from '@/types/statement/statementTypes';
+import { Collections } from '@/types/TypeEnums';
+import { Statement, StatementSchema } from '@/types/statement/Statement';
 import { parse } from 'valibot';
-import { ResultsBy } from '@/types/results';
+import { ResultsBy } from '@/types/results/Results';
 
 export async function getResultsDB(statement: Statement): Promise<Statement[]> {
 	try {

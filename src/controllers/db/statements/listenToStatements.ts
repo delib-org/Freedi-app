@@ -22,12 +22,17 @@ import {
 	setStatements,
 } from '@/redux/statements/statementsSlice';
 import { AppDispatch, store } from '@/redux/store';
-import { Collections, StatementType, DeliberativeElement } from '@/types/enums';
-import { Statement, StatementSchema } from '@/types/statement/statementTypes';
-import { StatementSubscription } from '@/types/statement/subscription';
-import { Role, User } from '@/types/user';
+import {
+	Collections,
+	StatementType,
+	DeliberativeElement,
+} from '@/types/TypeEnums';
+import { Statement, StatementSchema } from '@/types/statement/Statement';
+import { StatementSubscription } from '@/types/statement/StatementSubscription';
+import { User } from '@/types/user/User';
 import { parse } from 'valibot';
 import React from 'react';
+import { Role } from '@/types/user/UserSettings';
 
 // Helpers
 
@@ -60,7 +65,9 @@ export const listenToStatementSubscription = (
 					statementSubscription.role = Role.admin;
 				} else if (role === undefined) {
 					statementSubscription.role = Role.unsubscribed;
-					console.info('Role is undefined. Setting role to unsubscribed');
+					console.info(
+						'Role is undefined. Setting role to unsubscribed'
+					);
 				}
 
 				dispatch(setStatementSubscription(statementSubscription));
@@ -71,7 +78,7 @@ export const listenToStatementSubscription = (
 	} catch (error) {
 		console.error(error);
 
-		return () => { };
+		return () => {};
 	}
 };
 
@@ -81,15 +88,20 @@ export const listenToStatement = (
 ): Unsubscribe => {
 	try {
 		const dispatch = store.dispatch;
-		if (!statementId) throw new Error("Statement id is undefined");
-		const statementRef = doc(FireStore, Collections.statements, statementId);
+		if (!statementId) throw new Error('Statement id is undefined');
+		const statementRef = doc(
+			FireStore,
+			Collections.statements,
+			statementId
+		);
 
 		return onSnapshot(
 			statementRef,
 			(statementDB) => {
 				try {
 					if (!statementDB.exists()) {
-						if (setIsStatementNotFound) setIsStatementNotFound(true);
+						if (setIsStatementNotFound)
+							setIsStatementNotFound(true);
 						throw new Error('Statement does not exist');
 					}
 					const statement = statementDB.data() as Statement;
@@ -106,7 +118,7 @@ export const listenToStatement = (
 		console.error(error);
 		if (setIsStatementNotFound) setIsStatementNotFound(true);
 
-		return () => { };
+		return () => {};
 	}
 };
 
@@ -157,14 +169,17 @@ export const listenToSubStatements = (
 	} catch (error) {
 		console.error(error);
 
-		return () => { };
+		return () => {};
 	}
 };
 
 export const listenToMembers =
 	(dispatch: AppDispatch) => (statementId: string) => {
 		try {
-			const membersRef = collection(FireStore, Collections.statementsSubscribe);
+			const membersRef = collection(
+				FireStore,
+				Collections.statementsSubscribe
+			);
 			const q = query(
 				membersRef,
 				where('statementId', '==', statementId),
@@ -184,7 +199,9 @@ export const listenToMembers =
 					}
 
 					if (change.type === 'removed') {
-						dispatch(removeMembership(member.statementsSubscribeId));
+						dispatch(
+							removeMembership(member.statementsSubscribeId)
+						);
 					}
 				});
 			});
@@ -233,8 +250,16 @@ export async function listenToChildStatements(
 			statementsRef,
 			and(
 				or(
-					where('deliberativeElement', '==', DeliberativeElement.option),
-					where('deliberativeElement', '==', DeliberativeElement.research)
+					where(
+						'deliberativeElement',
+						'==',
+						DeliberativeElement.option
+					),
+					where(
+						'deliberativeElement',
+						'==',
+						DeliberativeElement.research
+					)
 				),
 				where('parents', 'array-contains', statementId)
 			)
@@ -308,8 +333,16 @@ export function listenToAllDescendants(statementId: string): Unsubscribe {
 			statementsRef,
 			and(
 				or(
-					where('deliberativeElement', '==', DeliberativeElement.option),
-					where('deliberativeElement', '==', DeliberativeElement.research)
+					where(
+						'deliberativeElement',
+						'==',
+						DeliberativeElement.option
+					),
+					where(
+						'deliberativeElement',
+						'==',
+						DeliberativeElement.research
+					)
 				),
 				where('parents', 'array-contains', statementId)
 			),

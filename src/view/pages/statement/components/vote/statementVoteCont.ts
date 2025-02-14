@@ -1,5 +1,5 @@
-import { DeliberativeElement, Screen } from '@/types/enums';
-import { Statement } from '@/types/statement/statementTypes';
+import { Statement } from '@/types/statement/Statement';
+import { DeliberativeElement, Screen } from '@/types/TypeEnums';
 
 // Updates the displayed options with how many votes each option has from the parent statement
 export function setSelectionsToOptions(
@@ -11,7 +11,8 @@ export function setSelectionsToOptions(
 		if (statement.selections) {
 			parsedOptions.forEach((option: Statement) => {
 				if (statement.selections?.[option.statementId] !== undefined) {
-					const optionSelections = statement.selections[option.statementId];
+					const optionSelections =
+						statement.selections[option.statementId];
 					option.voted = optionSelections;
 				}
 			});

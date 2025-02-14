@@ -1,10 +1,10 @@
-import { FC, useEffect, useState } from "react";
-import { useAppSelector } from "@/controllers/hooks/reduxHooks";
-import useDirection from "@/controllers/hooks/useDirection";
-import { evaluationSelector } from "@/redux/evaluations/evaluationsSlice";
-import Thumb from "@/view/components/thumb/Thumb";
-import "./SimpleEvaluation.scss";
-import { Statement } from "@/types/statement/statementTypes";
+import { FC, useEffect, useState } from 'react';
+import { useAppSelector } from '@/controllers/hooks/reduxHooks';
+import useDirection from '@/controllers/hooks/useDirection';
+import { evaluationSelector } from '@/redux/evaluations/evaluationsSlice';
+import Thumb from '@/view/components/thumb/Thumb';
+import './SimpleEvaluation.scss';
+import { Statement } from '@/types/statement/Statement';
 
 interface Props {
 	statement: Statement;
@@ -27,7 +27,7 @@ const SimpleEvaluation: FC<Props> = ({
 	const [proVotesCount, setProVotesCount] = useState(initialProVotesCount);
 
 	const evaluation = useAppSelector(
-		evaluationSelector(statement.statementId),
+		evaluationSelector(statement.statementId)
 	);
 
 	const { consensus } = statement;
@@ -41,25 +41,25 @@ const SimpleEvaluation: FC<Props> = ({
 	}, [statement.con, statement.pro]);
 
 	return (
-		<div className="simple-evaluation">
+		<div className='simple-evaluation'>
 			<div
-				className="evaluation-box"
+				className='evaluation-box'
 				style={{ flexDirection: direction }}
 			>
 				{shouldDisplayScore && <span>{conVotesCount}</span>}
-				<div className="thumb-icon">
+				<div className='thumb-icon'>
 					<Thumb
 						evaluation={evaluation || 0}
-						upDown="down"
+						upDown='down'
 						statement={statement}
 						setConVote={setConVotesCount}
 						setProVote={setProVotesCount}
 					/>
 				</div>
-				<div className="thumb-icon">
+				<div className='thumb-icon'>
 					<Thumb
 						evaluation={evaluation || 0}
-						upDown="up"
+						upDown='up'
 						statement={statement}
 						setProVote={setProVotesCount}
 						setConVote={setConVotesCount}
@@ -68,7 +68,7 @@ const SimpleEvaluation: FC<Props> = ({
 				{shouldDisplayScore && <span>{proVotesCount}</span>}
 			</div>
 			{shouldDisplayScore && (
-				<div className="total-evaluations">{consensusToDisplay}</div>
+				<div className='total-evaluations'>{consensusToDisplay}</div>
 			)}
 		</div>
 	);

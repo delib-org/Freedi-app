@@ -6,11 +6,11 @@ import {
 	QueryDocumentSnapshot,
 } from 'firebase-admin/firestore';
 import { db } from './index';
-import { Collections, StatementType } from '../../src/types/enums';
+import { Collections, StatementType } from '../../src/types/TypeEnums';
 import {
 	Statement,
 	StatementSchema,
-} from '../../src/types/statement/statementTypes';
+} from '../../src/types/statement/Statement';
 import { FirestoreEvent } from 'firebase-functions/firestore';
 import { parse } from 'valibot';
 import { Response, Request } from 'firebase-functions/v1';

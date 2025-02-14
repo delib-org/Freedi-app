@@ -16,7 +16,7 @@ import {
 } from '@/controllers/general/helpers';
 import { useMapContext } from '@/controllers/hooks/useMap';
 import useStatementColor from '@/controllers/hooks/useStatementColor';
-import { Statement } from '@/types/statement/statementTypes';
+import { Statement } from '@/types/statement/Statement';
 
 const nodeStyle = (
 	parentStatement: Statement | 'top',
@@ -25,7 +25,9 @@ const nodeStyle = (
 ) => {
 	const style = {
 		backgroundColor:
-			parentStatement === 'top' ? 'darkblue' : statementColor.backgroundColor,
+			parentStatement === 'top'
+				? 'darkblue'
+				: statementColor.backgroundColor,
 		color: statementColor.color,
 		height: 40,
 		width: 70,
@@ -109,8 +111,10 @@ export default function CustomNode({ data }: NodeProps) {
 						style={{
 							position: 'absolute',
 							cursor: 'pointer',
-							right: mapContext.direction === 'TB' ? 0 : '-1.8rem',
-							bottom: mapContext.direction === 'TB' ? '-1.8rem' : 0,
+							right:
+								mapContext.direction === 'TB' ? 0 : '-1.8rem',
+							bottom:
+								mapContext.direction === 'TB' ? '-1.8rem' : 0,
 						}}
 					>
 						<PlusIcon />

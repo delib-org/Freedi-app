@@ -1,13 +1,13 @@
+import firebaseConfig from '@/controllers/db/configKey';
 import { setStatements } from '@/redux/statements/statementsSlice';
 import { userSelector } from '@/redux/users/userSlice';
-import { MassConsensusPageUrls } from '@/types/enums';
-import { Statement } from '@/types/statement';
+import { functionConfig } from '@/types/ConfigFunctions';
+import { MassConsensusPageUrls } from '@/types/TypeEnums';
+import { SelectionFunction } from '@/types/evaluation/Evaluation';
+import { Statement } from '@/types/statement/Statement';
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useParams } from 'react-router';
-import { SelectionFunction } from '@/types/evaluation';
-import { functionConfig } from '@/types/firebase/configFunctions';
-import firebaseConfig from '@/controllers/db/configKey';
 
 const useTopSuggestions = () => {
 	const navigate = useNavigate();

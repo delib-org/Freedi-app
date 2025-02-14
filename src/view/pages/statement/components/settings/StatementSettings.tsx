@@ -21,7 +21,7 @@ import {
 // Custom components
 import Loader from '@/view/components/loaders/Loader';
 import { listenToChoseBy } from '@/controllers/db/choseBy/getChoseBy';
-import { Statement } from '@/types/statement/statementTypes';
+import { Statement } from '@/types/statement/Statement';
 
 const StatementSettings: FC = () => {
 	// * Hooks * //
@@ -67,7 +67,8 @@ const StatementSettings: FC = () => {
 				getStatementFromDB(statement.parentId)
 					.then((parentStatement) => {
 						try {
-							if (!parentStatement) throw new Error('no parent statement');
+							if (!parentStatement)
+								throw new Error('no parent statement');
 
 							setParentStatement(parentStatement);
 						} catch (error) {
@@ -96,7 +97,8 @@ const StatementSettings: FC = () => {
 					setStatementToEdit(statement);
 				} else {
 					(async () => {
-						const statementDB = await getStatementFromDB(statementId);
+						const statementDB =
+							await getStatementFromDB(statementId);
 						if (statementDB) {
 							dispatch(setStatement(statementDB));
 							setStatementToEdit(statementDB);

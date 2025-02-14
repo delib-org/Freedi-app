@@ -1,13 +1,13 @@
-import { FC, useEffect } from "react";
-import { Link } from "react-router";
-import { getStatementFromDB } from "@/controllers/db/statements/getStatement";
-import { getTime, truncateString } from "@/controllers/general/helpers";
-import { useAppDispatch, useAppSelector } from "@/controllers/hooks/reduxHooks";
+import { FC, useEffect } from 'react';
+import { Link } from 'react-router';
+import { getStatementFromDB } from '@/controllers/db/statements/getStatement';
+import { getTime, truncateString } from '@/controllers/general/helpers';
+import { useAppDispatch, useAppSelector } from '@/controllers/hooks/reduxHooks';
 import {
 	setStatement,
 	statementSelectorById,
 } from '@/redux/statements/statementsSlice';
-import { Statement } from '@/types/statement/statementTypes';
+import { Statement } from '@/types/statement/Statement';
 
 interface Props {
 	statement: Statement;
@@ -15,8 +15,8 @@ interface Props {
 
 const UpdateMainCard: FC<Props> = ({ statement }) => {
 	try {
-		if (!statement) throw new Error("No statement");
-		if (!statement.parentId) throw new Error("No parent id");
+		if (!statement) throw new Error('No statement');
+		if (!statement.parentId) throw new Error('No parent id');
 		const dispatch = useAppDispatch();
 		const parentStatement = useAppSelector(
 			statementSelectorById(statement.parentId)
@@ -30,15 +30,21 @@ const UpdateMainCard: FC<Props> = ({ statement }) => {
 			}
 		}, [parentStatement]);
 
-		const group = parentStatement ? getTitle(parentStatement.statement) : '';
+		const group = parentStatement
+			? getTitle(parentStatement.statement)
+			: '';
 		const text = statement.statement;
 
 		return (
 			<Link to={`/statement/${statement.parentId}/chat`}>
 				<p>
-					{parentStatement ? <span>{truncateString(group)}: </span> : null}
+					{parentStatement ? (
+						<span>{truncateString(group)}: </span>
+					) : null}
 					<span>{truncateString(text, 32)} </span>
-					<span className='time'>{getTime(statement.lastUpdate)}</span>
+					<span className='time'>
+						{getTime(statement.lastUpdate)}
+					</span>
 				</p>
 			</Link>
 		);

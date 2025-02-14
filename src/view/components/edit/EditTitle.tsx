@@ -12,7 +12,7 @@ import styles from './EditTitle.module.scss';
 import Save from '@/assets/icons/saveIcon.svg?react';
 import { updateStatementText } from '@/controllers/db/statements/setStatements';
 import { useLanguage } from '@/controllers/hooks/useLanguages';
-import { Statement } from '@/types/statement/statementTypes';
+import { Statement } from '@/types/statement/Statement';
 
 interface Props {
 	statement: Statement | undefined;
@@ -31,7 +31,9 @@ const EditTitle: FC<Props> = ({
 	setEdit,
 	isTextArea,
 }) => {
-	const [description, setDescription] = useState(statement?.description || '');
+	const [description, setDescription] = useState(
+		statement?.description || ''
+	);
 	const [title, setTitle] = useState(statement?.statement || '');
 
 	// Single ref for both textarea and input
@@ -81,7 +83,9 @@ const EditTitle: FC<Props> = ({
 			<div style={{ direction: direction, textAlign: align }}>
 				<Text
 					statement={useTitle ? statement.statement : undefined}
-					description={useDescription ? statement.description : undefined}
+					description={
+						useDescription ? statement.description : undefined
+					}
 				/>
 			</div>
 		);
@@ -122,7 +126,9 @@ const EditTitle: FC<Props> = ({
 					<button
 						className={styles.save}
 						onClick={handleSave}
-						style={{ left: direction === 'rtl' ? '-1.4rem' : 'none' }}
+						style={{
+							left: direction === 'rtl' ? '-1.4rem' : 'none',
+						}}
 						aria-label='Save'
 					>
 						<Save />

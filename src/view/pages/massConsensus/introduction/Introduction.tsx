@@ -3,7 +3,7 @@ import styles from './Introduction.module.scss';
 import { Link } from 'react-router';
 import HeaderMassConsensus from '../headerMassConsensus/HeaderMassConsensus';
 import { useParamsLanguage } from '../useParamsLang/UseParamsLanguge';
-import { MassConsensusPageUrls } from '@/types/enums';
+import { MassConsensusPageUrls } from '@/types/TypeEnums';
 
 const Introduction = () => {
 	const { statement, loading, error } = useIntroductionMV();

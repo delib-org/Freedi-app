@@ -5,8 +5,8 @@ import {
 	statementSelector,
 } from '@/redux/statements/statementsSlice';
 import { userSelector } from '@/redux/users/userSlice';
-import { functionConfig } from '@/types/firebase/configFunctions';
-import { Statement } from '@/types/statement/statementTypes';
+import { functionConfig } from '@/types/ConfigFunctions';
+import { Statement } from '@/types/statement/Statement';
 
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';

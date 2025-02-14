@@ -3,11 +3,12 @@ import { FireStore } from '../config';
 import { getUserFromFirebase } from '../users/usersGeneral';
 import { getStatementSubscriptionId } from '@/controllers/general/helpers';
 import { store } from '@/redux/store';
-import { Collections } from '@/types/enums';
-import { Statement, StatementSchema } from '@/types/statement/statementTypes';
-import { StatementSubscriptionSchema } from '@/types/statement/subscription';
-import { Role, User } from '@/types/user';
+import { Collections } from '@/types/TypeEnums';
+import { Statement, StatementSchema } from '@/types/statement/Statement';
+import { StatementSubscriptionSchema } from '@/types/statement/StatementSubscription';
+import { User } from '@/types/user/User';
 import { parse } from 'valibot';
+import { Role } from '@/types/user/UserSettings';
 
 export async function setStatementSubscriptionToDB(
 	statement: Statement,
@@ -20,7 +21,10 @@ export async function setStatementSubscriptionToDB(
 
 		const { statementId } = parse(StatementSchema, statement);
 
-		const statementsSubscribeId = getStatementSubscriptionId(statementId, user);
+		const statementsSubscribeId = getStatementSubscriptionId(
+			statementId,
+			user
+		);
 		if (!statementsSubscribeId)
 			throw new Error('Error in getting statementsSubscribeId');
 
@@ -46,7 +50,8 @@ export async function setStatementSubscriptionToDB(
 			createdAt: Timestamp.now().toMillis(),
 		};
 
-		if (user.uid === statement.creatorId) subscriptionData.role = Role.admin;
+		if (user.uid === statement.creatorId)
+			subscriptionData.role = Role.admin;
 
 		const parsedStatementSubscription = parse(
 			StatementSubscriptionSchema,
@@ -110,8 +115,12 @@ export async function setRoleToDB(
 			currentUserStatementSubscriptionRef
 		);
 		const currentUserRole = currentUserStatementSubscription.data()?.role;
-		if (!currentUserRole) throw new Error('Error in getting currentUserRole');
-		if (currentUserRole !== Role.admin || statement.creator.uid === user.uid)
+		if (!currentUserRole)
+			throw new Error('Error in getting currentUserRole');
+		if (
+			currentUserRole !== Role.admin ||
+			statement.creator.uid === user.uid
+		)
 			return;
 
 		//setting user role in statement
@@ -139,10 +148,13 @@ export async function updateMemberRole(
 	newRole: Role
 ): Promise<void> {
 	try {
-		const statementSubscriptionId = getStatementSubscriptionId(statementId, {
-			uid: userId,
-			displayName: '',
-		});
+		const statementSubscriptionId = getStatementSubscriptionId(
+			statementId,
+			{
+				uid: userId,
+				displayName: '',
+			}
+		);
 		if (!statementSubscriptionId)
 			throw new Error('Error in getting statementSubscriptionId');
 

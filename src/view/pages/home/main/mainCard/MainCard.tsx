@@ -1,16 +1,16 @@
-import { FC, useEffect } from "react";
-import { Link } from "react-router";
-import styles from "./MainCard.module.scss";
+import { FC, useEffect } from 'react';
+import { Link } from 'react-router';
+import styles from './MainCard.module.scss';
 //img
-import UpdateMainCard from "./updateMainCard/UpdateMainCard";
-import ImgThumb from "@/assets/images/ImgThumb.png";
-import { listenToAllSubStatements } from "@/controllers/db/statements/listenToStatements";
-import { getLastElements } from "@/controllers/general/helpers";
-import { useAppSelector } from "@/controllers/hooks/reduxHooks";
-import { subStatementsByTopParentIdMemo } from "@/redux/statements/statementsSlice";
-import Text from "@/view/components/text/Text";
-import StatementChatMore from "@/view/pages/statement/components/chat/components/StatementChatMore";
-import { Statement } from "@/types/statement/statementTypes";
+import UpdateMainCard from './updateMainCard/UpdateMainCard';
+import ImgThumb from '@/assets/images/ImgThumb.png';
+import { listenToAllSubStatements } from '@/controllers/db/statements/listenToStatements';
+import { getLastElements } from '@/controllers/general/helpers';
+import { useAppSelector } from '@/controllers/hooks/reduxHooks';
+import { subStatementsByTopParentIdMemo } from '@/redux/statements/statementsSlice';
+import Text from '@/view/components/text/Text';
+import StatementChatMore from '@/view/pages/statement/components/chat/components/StatementChatMore';
+import { Statement } from '@/types/statement/Statement';
 
 interface Props {
 	statement: Statement;

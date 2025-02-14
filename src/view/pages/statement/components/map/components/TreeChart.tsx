@@ -33,7 +33,7 @@ import MapHorizontalLayoutIcon from '@/assets/icons/MapHorizontalLayoutIcon.svg'
 import MapRestoreIcon from '@/assets/icons/MapRestoreIcon.svg';
 import MapSaveIcon from '@/assets/icons/MapSaveIcon.svg';
 import MapVerticalLayoutIcon from '@/assets/icons/MapVerticalLayoutIcon.svg';
-import { Results } from '@/types/results';
+import { Results } from '@/types/results/Results';
 
 // Helper functions
 
@@ -80,13 +80,14 @@ export default function TreeChart({ descendants, isAdmin }: Readonly<Props>) {
 		const { nodes: createdNodes, edges: createdEdges } =
 			createInitialNodesAndEdges(descendants[0]);
 
-		const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutElements(
-			createdNodes,
-			createdEdges,
-			mapContext.nodeHeight,
-			mapContext.nodeWidth,
-			mapContext.direction
-		);
+		const { nodes: layoutedNodes, edges: layoutedEdges } =
+			getLayoutElements(
+				createdNodes,
+				createdEdges,
+				mapContext.nodeHeight,
+				mapContext.nodeWidth,
+				mapContext.direction
+			);
 
 		setNodes(layoutedNodes);
 		setEdges(layoutedEdges);
@@ -104,8 +105,10 @@ export default function TreeChart({ descendants, isAdmin }: Readonly<Props>) {
 
 			setMapContext((prev) => ({
 				...prev,
-				targetPosition: direction === 'TB' ? Position.Top : Position.Left,
-				sourcePosition: direction === 'TB' ? Position.Bottom : Position.Right,
+				targetPosition:
+					direction === 'TB' ? Position.Top : Position.Left,
+				sourcePosition:
+					direction === 'TB' ? Position.Bottom : Position.Right,
 				nodeWidth: width,
 				nodeHeight: height,
 				direction,
@@ -120,10 +123,7 @@ export default function TreeChart({ descendants, isAdmin }: Readonly<Props>) {
 		[nodes, edges, setEdges, setMapContext, setNodes]
 	);
 
-	const onNodeDragStop = async (
-		_: MouseEvent,
-		node: Node
-	) => {
+	const onNodeDragStop = async (_: MouseEvent, node: Node) => {
 		const intersections = getIntersectingNodes(node).map((n) => n.id);
 
 		if (intersections.length === 0) return setEdges(tempEdges);
@@ -178,12 +178,16 @@ export default function TreeChart({ descendants, isAdmin }: Readonly<Props>) {
 
 	const handleMoveStatement = async (move: boolean) => {
 		if (move) {
-			const [draggedStatement, newDraggedStatementParent] = await Promise.all([
-				getStatementFromDB(draggedNodeId),
-				getStatementFromDB(intersectedNodeId),
-			]);
+			const [draggedStatement, newDraggedStatementParent] =
+				await Promise.all([
+					getStatementFromDB(draggedNodeId),
+					getStatementFromDB(intersectedNodeId),
+				]);
 			if (!draggedStatement || !newDraggedStatementParent) return;
-			await updateStatementParents(draggedStatement, newDraggedStatementParent);
+			await updateStatementParents(
+				draggedStatement,
+				newDraggedStatementParent
+			);
 		} else {
 			onRestore();
 		}
@@ -222,15 +226,23 @@ export default function TreeChart({ descendants, isAdmin }: Readonly<Props>) {
 						</div>
 					)}
 					{isButtonVisible && (
-						<div className={`arc-buttons ${isButtonVisible ? 'open' : ''}`}>
+						<div
+							className={`arc-buttons ${isButtonVisible ? 'open' : ''}`}
+						>
 							<button onClick={handleCancelClick}>
 								<img src={MapCancelIcon} alt='Cancel' />
 							</button>
 							<button onClick={() => onLayout('TB')}>
-								<img src={MapVerticalLayoutIcon} alt='vertical layout' />
+								<img
+									src={MapVerticalLayoutIcon}
+									alt='vertical layout'
+								/>
 							</button>
 							<button onClick={() => onLayout('LR')}>
-								<img src={MapHorizontalLayoutIcon} alt='horizontal layout' />
+								<img
+									src={MapHorizontalLayoutIcon}
+									alt='horizontal layout'
+								/>
 							</button>
 							<button onClick={onRestore}>
 								<img src={MapRestoreIcon} alt='Restore' />

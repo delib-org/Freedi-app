@@ -24,8 +24,8 @@ import {
 import EditTitle from '@/view/components/edit/EditTitle';
 import IconButton from '@/view/components/iconButton/IconButton';
 import './SuggestionCard.scss';
-import { Screen, StatementType } from '@/types/enums';
-import { Statement } from '@/types/statement/statementTypes';
+import { Screen, StatementType } from '@/types/TypeEnums';
+import { Statement } from '@/types/statement/Statement';
 
 interface Props {
 	statement: Statement | undefined;
@@ -140,7 +140,8 @@ const SuggestionCard: FC<Props> = ({
 			<div
 				className='selected-option'
 				style={{
-					backgroundColor: statement.selected === true ? 'var(--approve)' : '',
+					backgroundColor:
+						statement.selected === true ? 'var(--approve)' : '',
 				}}
 			>
 				<div
@@ -190,7 +191,9 @@ const SuggestionCard: FC<Props> = ({
 					{hasChildren && (
 						<IconButton
 							className='add-sub-question-button more-question'
-							onClick={() => setShouldShowAddSubQuestionModal(true)}
+							onClick={() =>
+								setShouldShowAddSubQuestionModal(true)
+							}
 						>
 							<AddQuestionIcon />
 						</IconButton>
