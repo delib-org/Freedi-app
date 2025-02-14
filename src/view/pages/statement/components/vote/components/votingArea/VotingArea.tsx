@@ -4,14 +4,15 @@ import OptionBar from '../optionBar/OptionBar';
 import './VotingArea.scss';
 import { getSortedVotingOptions, isVerticalOptionBar } from './VotingAreaCont';
 import useWindowDimensions from '@/controllers/hooks/useWindowDimentions';
-import { Statement } from '@/types/statement/statementTypes';
-import { DeliberativeElement } from '@/types/enums';
+
 import { useSelector } from 'react-redux';
 import {
 	statementSelectorById,
 	statementSubsSelector,
 } from '@/redux/statements/statementsSlice';
-import { SelectionFunction } from '@/types/evaluation/evaluationTypes';
+import { Statement } from '@/types/statement/Statement';
+import { SelectionFunction } from '@/types/evaluation/Evaluation';
+import { DeliberativeElement } from '@/types/TypeEnums';
 
 interface VotingAreaProps {
 	setStatementInfo: React.Dispatch<
