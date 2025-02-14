@@ -1,6 +1,6 @@
 import firebaseConfig from '@/controllers/db/configKey';
 import { setSimilarStatements } from '@/redux/massConsensus/massConsensusSlice';
-import { functionConfig } from '@/types/firebase/configFunctions';
+import { functionConfig } from '@/types/ConfigFunctions';
 import React, { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { useParams } from 'react-router';
