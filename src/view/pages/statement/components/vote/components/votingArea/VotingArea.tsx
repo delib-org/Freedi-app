@@ -5,11 +5,13 @@ import './VotingArea.scss';
 import { getSortedVotingOptions, isVerticalOptionBar } from './VotingAreaCont';
 import useWindowDimensions from '@/controllers/hooks/useWindowDimentions';
 import { StatementContext } from '@/view/pages/statement/StatementCont';
-import { Statement } from '@/types/statement/statementTypes';
-import { DeliberativeElement } from '@/types/enums';
+import { Statement } from '@/types/statement/Statement';
+import { DeliberativeElement } from '@/types/TypeEnums';
 
 interface VotingAreaProps {
-	setStatementInfo: React.Dispatch<React.SetStateAction<Statement | undefined>>;
+	setStatementInfo: React.Dispatch<
+		React.SetStateAction<Statement | undefined>
+	>;
 	subStatements: Statement[];
 	setShowInfo: React.Dispatch<React.SetStateAction<boolean>>;
 	totalVotes: number;
@@ -30,8 +32,8 @@ const VotingArea: FC<VotingAreaProps> = ({
 	const _options = statement?.statementSettings?.inVotingGetOnlyResults
 		? subStatements.filter((st) => st.isResult)
 		: subStatements.filter(
-			(st) => st.deliberativeElement === DeliberativeElement.option
-		);
+				(st) => st.deliberativeElement === DeliberativeElement.option
+			);
 
 	const options = getSortedVotingOptions({
 		statement,

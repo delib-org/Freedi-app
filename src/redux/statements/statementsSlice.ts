@@ -3,10 +3,10 @@ import { createSlice, PayloadAction, createSelector } from '@reduxjs/toolkit';
 // Helpers
 import { updateArray } from '../../controllers/general/helpers';
 import { RootState, store } from '../store';
-import { StatementType, DeliberativeElement } from '@/types/enums';
-import { Statement } from '@/types/statement/statementTypes';
-import { StatementSubscription } from '@/types/statement/subscription';
-import { SelectionFunction } from '@/types/evaluation/evaluationTypes';
+import { StatementType, DeliberativeElement } from '@/types/TypeEnums';
+import { Statement } from '@/types/statement/Statement';
+import { StatementSubscription } from '@/types/statement/StatementSubscription';
+import { SelectionFunction } from '@/types/evaluation/Evaluation';
 
 enum StatementScreen {
 	chat = 'chat',
@@ -45,15 +45,18 @@ export const statementsSlicer = createSlice({
 				const newStatement = { ...action.payload };
 
 				//for legacy statements - can be deleted after all statements are updated or at least after 1 feb 24.
-				if (!Array.isArray(newStatement.results)) newStatement.results = [];
+				if (!Array.isArray(newStatement.results))
+					newStatement.results = [];
 
 				newStatement.order = 0;
 				const oldStatement = state.statements.find(
-					(statement) => statement.statementId === newStatement.statementId
+					(statement) =>
+						statement.statementId === newStatement.statementId
 				);
 
 				const isEqualStatements =
-					JSON.stringify(oldStatement) === JSON.stringify(newStatement);
+					JSON.stringify(oldStatement) ===
+					JSON.stringify(newStatement);
 				if (!isEqualStatements)
 					state.statements = updateArray(
 						state.statements,
@@ -62,37 +65,61 @@ export const statementsSlicer = createSlice({
 					);
 
 				//update last update if bigger than current
-				if (newStatement.lastUpdate > state.statementSubscriptionLastUpdate) {
-					state.statementSubscriptionLastUpdate = newStatement.lastUpdate;
+				if (
+					newStatement.lastUpdate >
+					state.statementSubscriptionLastUpdate
+				) {
+					state.statementSubscriptionLastUpdate =
+						newStatement.lastUpdate;
 				}
 			} catch (error) {
 				console.error(error);
 			}
 		},
-		setMassConsensusStatements: (state, action: PayloadAction<{ statements: Statement[], selectionFunction: SelectionFunction }>) => {
-			const statements = action.payload.statements.map((st: Statement) => ({
-				...st,
-				evaluation: {
-					...st.evaluation,
-					selectionFunction: action.payload.selectionFunction,
-				}
-			}));
+		setMassConsensusStatements: (
+			state,
+			action: PayloadAction<{
+				statements: Statement[];
+				selectionFunction: SelectionFunction;
+			}>
+		) => {
+			const statements = action.payload.statements.map(
+				(st: Statement) => ({
+					...st,
+					evaluation: {
+						...st.evaluation,
+						selectionFunction: action.payload.selectionFunction,
+					},
+				})
+			);
 
-			const previousSelectedStatements: Statement[] = state.statements.filter(
-				(st) => st.evaluation.selectionFunction === action.payload.selectionFunction
-			).map((st) => ({
-				...st,
-				evaluation: {
-					...st.evaluation,
-					selectionFunction: undefined,
-				}
-			}));
+			const previousSelectedStatements: Statement[] = state.statements
+				.filter(
+					(st) =>
+						st.evaluation.selectionFunction ===
+						action.payload.selectionFunction
+				)
+				.map((st) => ({
+					...st,
+					evaluation: {
+						...st.evaluation,
+						selectionFunction: undefined,
+					},
+				}));
 
 			previousSelectedStatements.forEach((st) => {
-				state.statements = updateArray(state.statements, st, 'statementId');
+				state.statements = updateArray(
+					state.statements,
+					st,
+					'statementId'
+				);
 			});
 			statements.forEach((st) => {
-				state.statements = updateArray(state.statements, st, 'statementId');
+				state.statements = updateArray(
+					state.statements,
+					st,
+					'statementId'
+				);
 			});
 		},
 		setStatements: (state, action: PayloadAction<Statement[]>) => {
@@ -129,7 +156,8 @@ export const statementsSlicer = createSlice({
 				const newStatementSubscription = action.payload;
 				const oldStatementSubscription = state.statements.find(
 					(statement) =>
-						statement.statementId === newStatementSubscription.statementId
+						statement.statementId ===
+						newStatementSubscription.statementId
 				);
 				const isEqualStatements =
 					JSON.stringify(oldStatementSubscription) ===
@@ -180,9 +208,10 @@ export const statementsSlicer = createSlice({
 			try {
 				const statementId = action.payload;
 
-				state.statementSubscription = state.statementSubscription.filter(
-					(statement) => statement.statementId !== statementId
-				);
+				state.statementSubscription =
+					state.statementSubscription.filter(
+						(statement) => statement.statementId !== statementId
+					);
 			} catch (error) {
 				console.error(error);
 			}
@@ -224,7 +253,8 @@ export const statementsSlicer = createSlice({
 				updates.forEach((update) => {
 					try {
 						const statement = state.statements.find(
-							(statement) => statement.statementId === update.statementId
+							(statement) =>
+								statement.statementId === update.statementId
 						);
 						if (statement) statement.top = update.top;
 						else throw new Error('statement not found');
@@ -244,7 +274,10 @@ export const statementsSlicer = createSlice({
 			}
 		},
 
-		setMembership: (state, action: PayloadAction<StatementSubscription>) => {
+		setMembership: (
+			state,
+			action: PayloadAction<StatementSubscription>
+		) => {
 			try {
 				const newMembership = action.payload;
 
@@ -262,7 +295,8 @@ export const statementsSlicer = createSlice({
 				const statementsSubscribeId = action.payload;
 				state.statementMembership = state.statementMembership.filter(
 					(statement) =>
-						statement.statementsSubscribeId !== statementsSubscribeId
+						statement.statementsSubscribeId !==
+						statementsSubscribeId
 				);
 			} catch (error) {
 				console.error(error);
@@ -275,7 +309,10 @@ export const statementsSlicer = createSlice({
 			state.statementMembership = [];
 			state.screen = StatementScreen.chat;
 		},
-		setCurrentMultiStepOptions: (state, action: PayloadAction<Statement[]>) => {
+		setCurrentMultiStepOptions: (
+			state,
+			action: PayloadAction<Statement[]>
+		) => {
 			try {
 				const previousInMultiStageOptions = state.statements.filter(
 					(statement) => statement.isInMultiStage
@@ -315,7 +352,7 @@ export const {
 	removeMembership,
 	resetStatements,
 	setCurrentMultiStepOptions,
-	setMassConsensusStatements
+	setMassConsensusStatements,
 } = statementsSlicer.actions;
 
 // statements
@@ -354,7 +391,9 @@ export const subStatementsByTopParentIdMemo = (
 export const statementDescendantsSelector = createSelector(
 	[statementsSelector, (_state, statementId: string) => statementId],
 	(statements, statementId) =>
-		statements.filter((statement) => statement.parents?.includes(statementId))
+		statements.filter((statement) =>
+			statement.parents?.includes(statementId)
+		)
 );
 
 export const statementsRoomSolutions =
@@ -398,7 +437,8 @@ export const statementOptionsSelector = (statementId: string | undefined) =>
 			.filter(
 				(statementSub) =>
 					statementSub.parentId === statementId &&
-					statementSub.deliberativeElement === DeliberativeElement.option
+					statementSub.deliberativeElement ===
+						DeliberativeElement.option
 			)
 			.sort((a, b) => a.createdAt - b.createdAt)
 			.map((statement) => ({ ...statement }));
@@ -485,7 +525,8 @@ export const myStatementsByStatementIdSelector = (
 		(state: RootState) => state.statements.statements,
 		(statements) =>
 			statements.filter(
-				(st) => st.parentId === statementId && st.creatorId === user?.uid
+				(st) =>
+					st.parentId === statementId && st.creatorId === user?.uid
 			)
 	);
 };

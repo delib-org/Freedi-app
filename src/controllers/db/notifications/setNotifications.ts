@@ -12,9 +12,12 @@ import {
 } from 'firebase/firestore';
 import { FireStore } from '../config';
 import { store } from '@/redux/store';
-import { Collections } from '@/types/enums';
-import { NotificationType } from '@/types/notification/notificationsType';
-import { deleteInAppNotification, setInAppNotification } from '@/redux/notificationsSlice/notificationsSlice';
+import { Collections } from '@/types/TypeEnums';
+import { NotificationType } from '@/types/notification/Notification';
+import {
+	deleteInAppNotification,
+	setInAppNotification,
+} from '@/redux/notificationsSlice/notificationsSlice';
 
 // export async function getUserPermissionToNotifications(
 // 	t: (text: string) => string
@@ -172,7 +175,10 @@ export function listenToInAppNotifications(): Unsubscribe {
 
 		const dispatch = store.dispatch;
 
-		const messagesRef = collection(FireStore, Collections.inAppNotifications);
+		const messagesRef = collection(
+			FireStore,
+			Collections.inAppNotifications
+		);
 		const q = query(
 			messagesRef,
 			where('userId', '==', user.uid),

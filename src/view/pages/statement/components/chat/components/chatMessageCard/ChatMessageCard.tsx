@@ -28,8 +28,8 @@ import { deleteStatementFromDB } from '@/controllers/db/statements/deleteStateme
 import Evaluation from '../../../evaluations/components/evaluation/Evaluation';
 import useAutoFocus from '@/controllers/hooks/useAutoFocus ';
 import UploadImage from '@/view/components/uploadImage/UploadImage';
-import { StatementType } from '@/types/enums';
-import { Statement } from '@/types/statement/statementTypes';
+import { StatementType } from '@/types/TypeEnums';
+import { Statement } from '@/types/statement/Statement';
 
 export interface NewQuestion {
 	statement: Statement;
@@ -64,7 +64,8 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
 
 	// Use States
 	const [isEdit, setIsEdit] = useState(false);
-	const [isNewStatementModalOpen, setIsNewStatementModalOpen] = useState(false);
+	const [isNewStatementModalOpen, setIsNewStatementModalOpen] =
+		useState(false);
 	const [isCardMenuOpen, setIsCardMenuOpen] = useState(false);
 	const [text, setText] = useState(
 		`${statement?.statement}\n${statement.description}`
@@ -163,7 +164,9 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
 
 			<div
 				className={
-					isStatement ? 'message-box message-box--statement' : 'message-box'
+					isStatement
+						? 'message-box message-box--statement'
+						: 'message-box'
 				}
 				style={{
 					borderColor: isGeneral
@@ -179,7 +182,9 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
 							<div
 								className='input-wrapper'
 								style={{
-									flexDirection: isAlignedLeft ? 'row' : 'row-reverse',
+									flexDirection: isAlignedLeft
+										? 'row'
+										: 'row-reverse',
 								}}
 							>
 								<textarea
@@ -227,7 +232,9 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
 							<MenuOption
 								label={t('Upload Image')}
 								icon={<UploadImageIcon />}
-								onOptionClick={() => fileInputRef.current?.click()}
+								onOptionClick={() =>
+									fileInputRef.current?.click()
+								}
 							/>
 						)}
 						{_isAuthorized && (
@@ -235,7 +242,9 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
 								isOptionSelected={isOption}
 								icon={<LightBulbIcon />}
 								label={
-									isOption ? t('Unmark as a Solution') : t('Mark as a Solution')
+									isOption
+										? t('Unmark as a Solution')
+										: t('Mark as a Solution')
 								}
 								onOptionClick={() => {
 									handleSetOption();
@@ -264,7 +273,10 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
 								label={t('Delete')}
 								icon={<DeleteIcon />}
 								onOptionClick={() => {
-									deleteStatementFromDB(statement, _isAuthorized);
+									deleteStatementFromDB(
+										statement,
+										_isAuthorized
+									);
 									setIsCardMenuOpen(false);
 								}}
 							/>
@@ -285,7 +297,10 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
 					<div className='chat-more-element'>
 						<StatementChatMore statement={statement} />
 					</div>
-					<Evaluation parentStatement={parentStatement} statement={statement} />
+					<Evaluation
+						parentStatement={parentStatement}
+						statement={statement}
+					/>
 					{shouldLinkToChildren && (
 						<button
 							className='add-question-btn more-question'

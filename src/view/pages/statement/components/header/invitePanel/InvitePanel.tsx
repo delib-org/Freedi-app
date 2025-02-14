@@ -5,7 +5,7 @@ import XIcon from '../../../../../components/icons/XIcon';
 import InviteModal from '../../../../../components/modal/InviteModal';
 import styles from './InvitePanel.module.scss';
 import InvitePanelBox from './InvitePanelBox';
-import { Invitation } from '@/types/invitation';
+import { Invitation } from '@/types/invitation/Invitation';
 
 interface Props {
 	setShowModal: (show: boolean) => void;
@@ -14,14 +14,17 @@ interface Props {
 }
 
 const InvitePanel: FC<Props> = ({ setShowModal, statementId, pathname }) => {
-	const [invitationNumberArr, setInvitationNumberArr] = useState<number[]>([]);
+	const [invitationNumberArr, setInvitationNumberArr] = useState<number[]>(
+		[]
+	);
 
 	useEffect(() => {
 		if (!statementId) throw new Error('StatementId is missing');
 		setInvitationToDB({ statementId, pathname }).then(
 			(invitation: Invitation | undefined) => {
 				try {
-					if (!invitation) throw new Error('No invitation found in DB');
+					if (!invitation)
+						throw new Error('No invitation found in DB');
 
 					invitationNumberToArray(invitation?.number);
 				} catch (error) {

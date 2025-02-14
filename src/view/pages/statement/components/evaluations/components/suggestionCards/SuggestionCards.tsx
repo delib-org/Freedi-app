@@ -1,19 +1,23 @@
-import { FC, useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { useParams } from "react-router";
-import { sortSubStatements } from "../../statementsEvaluationCont";
-import SuggestionCard from "./suggestionCard/SuggestionCard";
-import styles from "./SuggestionCards.module.scss";
-import EmptyScreen from "../emptyScreen/EmptyScreen";
-import { Statement } from "@/types/statement";
-import { SortType, StatementType } from "@/types/enums";
-import { getStatementFromDB } from "@/controllers/db/statements/getStatement";
-import { setStatement, statementSelector, statementSubsSelector } from "@/redux/statements/statementsSlice";
-import { SelectionFunction } from "@/types/evaluation";
+import { FC, useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { useParams } from 'react-router';
+import { sortSubStatements } from '../../statementsEvaluationCont';
+import SuggestionCard from './suggestionCard/SuggestionCard';
+import styles from './SuggestionCards.module.scss';
+import EmptyScreen from '../emptyScreen/EmptyScreen';
+import { Statement } from '@/types/statement/Statement';
+import { SortType, StatementType } from '@/types/TypeEnums';
+import { getStatementFromDB } from '@/controllers/db/statements/getStatement';
+import {
+	setStatement,
+	statementSelector,
+	statementSubsSelector,
+} from '@/redux/statements/statementsSlice';
+import { SelectionFunction } from '@/types/evaluation/Evaluation';
 
 interface Props {
-	propSort?: SortType
-	selectionFunction?: SelectionFunction
+	propSort?: SortType;
+	selectionFunction?: SelectionFunction;
 }
 
 const SuggestionCards: FC<Props> = ({ propSort, selectionFunction }) => {
@@ -21,18 +25,27 @@ const SuggestionCards: FC<Props> = ({ propSort, selectionFunction }) => {
 	const sort = propSort || _sort || SortType.accepted;
 
 	const dispatch = useDispatch();
-	const statement = useSelector(statementSelector(statementId))
+	const statement = useSelector(statementSelector(statementId));
 
 	const [totalHeight, setTotalHeight] = useState(0);
 
-	const _subStatements = useSelector(statementSubsSelector(statement?.statementId))
-		.filter((sub: Statement) => sub.statementType === StatementType.option);
+	const _subStatements = useSelector(
+		statementSubsSelector(statement?.statementId)
+	).filter((sub: Statement) => sub.statementType === StatementType.option);
 
-	const subStatements = selectionFunction ? _subStatements.filter((sub: Statement) => sub.evaluation.selectionFunction === selectionFunction) : _subStatements
+	const subStatements = selectionFunction
+		? _subStatements.filter(
+				(sub: Statement) =>
+					sub.evaluation.selectionFunction === selectionFunction
+			)
+		: _subStatements;
 
 	useEffect(() => {
-		if (!statement) getStatementFromDB(statementId).then((statement: Statement) => dispatch(setStatement(statement)))
-	}, ([statement]))
+		if (!statement)
+			getStatementFromDB(statementId).then((statement: Statement) =>
+				dispatch(setStatement(statement))
+			);
+	}, [statement]);
 
 	useEffect(() => {
 		const { totalHeight: _totalHeight } = sortSubStatements(
@@ -44,9 +57,12 @@ const SuggestionCards: FC<Props> = ({ propSort, selectionFunction }) => {
 	}, [sort]);
 
 	useEffect(() => {
-		const _totalHeight = subStatements.reduce((acc: number, sub: Statement) => {
-			return acc + (sub.elementHight ?? 200) + 30;
-		}, 0);
+		const _totalHeight = subStatements.reduce(
+			(acc: number, sub: Statement) => {
+				return acc + (sub.elementHight ?? 200) + 30;
+			},
+			0
+		);
 		setTotalHeight(_totalHeight);
 		sortSubStatements(subStatements, sort, 30);
 	}, [subStatements.length]);
@@ -61,7 +77,7 @@ const SuggestionCards: FC<Props> = ({ propSort, selectionFunction }) => {
 		);
 	}
 
-	if (!statement) return null
+	if (!statement) return null;
 
 	return (
 		<div

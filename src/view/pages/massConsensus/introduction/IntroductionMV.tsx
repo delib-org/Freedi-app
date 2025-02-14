@@ -1,11 +1,14 @@
-import { listenToAuth, signAnonymously } from "@/controllers/db/auth";
-import { setStatement, statementSelector } from "@/redux/statements/statementsSlice";
-import { userSelector } from "@/redux/users/userSlice";
-import { Statement } from "@/types/statement/statementTypes";
+import { listenToAuth, signAnonymously } from '@/controllers/db/auth';
+import {
+	setStatement,
+	statementSelector,
+} from '@/redux/statements/statementsSlice';
+import { userSelector } from '@/redux/users/userSlice';
+import { Statement } from '@/types/statement/Statement';
 
-import { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { useNavigate, useParams } from "react-router";
+import { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate, useParams } from 'react-router';
 
 export function useIntroductionMV() {
 	const dispatch = useDispatch();
@@ -17,7 +20,11 @@ export function useIntroductionMV() {
 	const user = useSelector(userSelector);
 
 	useEffect(() => {
-		listenToAuth(navigate, true, `/mass-consensus/${statementId}/introduction`);
+		listenToAuth(
+			navigate,
+			true,
+			`/mass-consensus/${statementId}/introduction`
+		);
 	}, []);
 
 	useEffect(() => {
@@ -34,17 +41,18 @@ export function useIntroductionMV() {
 
 			setLoading(false);
 		});
-
 	}, [statementId]);
 
 	return { statement, loading, error };
 }
 
-async function getInitialMCData(statementId: string): Promise<{ statement: Statement | null, error: string }> {
-	const prodEndPoint =
-		`https://massConsensusGetInitialData-qeesi7aziq-uc.a.run.app`;
+async function getInitialMCData(
+	statementId: string
+): Promise<{ statement: Statement | null; error: string }> {
+	const prodEndPoint = `https://massConsensusGetInitialData-qeesi7aziq-uc.a.run.app`;
 	const localEndPoint = `http://localhost:5001/delib-v3-dev/us-central1/massConsensusGetInitialData`;
-	const requestUrl = (location.hostname !== 'localhost') ? prodEndPoint : localEndPoint;
+	const requestUrl =
+		location.hostname !== 'localhost' ? prodEndPoint : localEndPoint;
 
 	const response = await fetch(`${requestUrl}?statementId=${statementId}`);
 	try {

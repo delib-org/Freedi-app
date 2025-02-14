@@ -4,8 +4,8 @@ import styles from './AddStage.module.scss';
 import Button, { ButtonType } from '@/view/components/buttons/button/Button';
 import { saveStatementToDB } from '@/controllers/db/statements/setStatements';
 import { StatementContext } from '@/view/pages/statement/StatementCont';
-import { StatementType } from '@/types/enums';
-import { StageType } from '@/types/stage';
+import { StatementType } from '@/types/TypeEnums';
+import { StageType } from '@/types/stage/Stage';
 
 interface AddStageProps {
 	setShowAddStage: (showAddStage: boolean) => void;
@@ -66,11 +66,21 @@ const AddStage: FC<AddStageProps> = ({ setShowAddStage }) => {
 						{t('Select Stage Type')}
 					</option>
 					<option value={StageType.needs}>{t('Needs')}</option>
-					<option value={StageType.explanation}>{t('Explanation')}</option>
-					<option value={StageType.questions}>{t('Research Questions')}</option>
-					<option value={StageType.hypothesis}>{t('Hypothesis')}</option>
-					<option value={StageType.suggestions}>{t('Suggestions')}</option>
-					<option value={StageType.conclusion}>{t('Conclusion')}</option>
+					<option value={StageType.explanation}>
+						{t('Explanation')}
+					</option>
+					<option value={StageType.questions}>
+						{t('Research Questions')}
+					</option>
+					<option value={StageType.hypothesis}>
+						{t('Hypothesis')}
+					</option>
+					<option value={StageType.suggestions}>
+						{t('Suggestions')}
+					</option>
+					<option value={StageType.conclusion}>
+						{t('Conclusion')}
+					</option>
 					<option value={StageType.summary}>{t('Summery')}</option>
 					<option value={StageType.other}>{t('Other')}</option>
 				</select>
@@ -84,7 +94,9 @@ const AddStage: FC<AddStageProps> = ({ setShowAddStage }) => {
 					onKeyUp={handleManualStageName}
 					required
 				/>
-				<label htmlFor='stageDescription'>{t('Stage Description')}</label>
+				<label htmlFor='stageDescription'>
+					{t('Stage Description')}
+				</label>
 				<textarea
 					id='stageDescription'
 					name='stageDescription'

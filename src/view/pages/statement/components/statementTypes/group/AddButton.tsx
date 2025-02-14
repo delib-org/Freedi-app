@@ -1,19 +1,22 @@
 import React, { useContext } from 'react';
 import IconButton from '@/view/components/iconButton/IconButton';
-import PlusIcon from "@/assets/icons/plusIcon.svg?react";
-import AddDocumentIcon from "@/assets/icons/document.svg?react";
-import AddClusterIcon from "@/assets/icons/net-clusters.svg?react";
-import AddSubQuestionIcon from "@/assets/icons/questionIcon.svg?react";
-import AddSubGroupIcon from "@/assets/icons/team-group.svg?react";
+import PlusIcon from '@/assets/icons/plusIcon.svg?react';
+import AddDocumentIcon from '@/assets/icons/document.svg?react';
+import AddClusterIcon from '@/assets/icons/net-clusters.svg?react';
+import AddSubQuestionIcon from '@/assets/icons/questionIcon.svg?react';
+import AddSubGroupIcon from '@/assets/icons/team-group.svg?react';
 import { StatementContext } from '../../../StatementCont';
-import { QuestionType, StatementType } from '@/types/enums';
+import { QuestionType, StatementType } from '@/types/TypeEnums';
 
 export default function AddButton() {
 	const [actionsOpen, setActionsOpen] = React.useState(false);
 	const { handleSetNewStatement, setNewStatementType, setNewQuestionType } =
 		useContext(StatementContext);
 
-	function handleAddStatement(newStatementType: StatementType, questionType?: QuestionType) {
+	function handleAddStatement(
+		newStatementType: StatementType,
+		questionType?: QuestionType
+	) {
 		setNewStatementType(newStatementType);
 		if (questionType) {
 			setNewQuestionType(questionType);
@@ -21,19 +24,30 @@ export default function AddButton() {
 		handleSetNewStatement(true);
 	}
 
-	const handleAction = (action: 'document' | 'cluster' | 'subgroup' | 'subquestion') => {
+	const handleAction = (
+		action: 'document' | 'cluster' | 'subgroup' | 'subquestion'
+	) => {
 		switch (action) {
 			case 'document':
-				handleAddStatement(StatementType.question, QuestionType.multiStage);
+				handleAddStatement(
+					StatementType.question,
+					QuestionType.multiStage
+				);
 				break;
 			case 'cluster':
-				handleAddStatement(StatementType.question, QuestionType.massConsensus);
+				handleAddStatement(
+					StatementType.question,
+					QuestionType.massConsensus
+				);
 				break;
 			case 'subgroup':
 				handleAddStatement(StatementType.group);
 				break;
 			case 'subquestion':
-				handleAddStatement(StatementType.question, QuestionType.singleStep);
+				handleAddStatement(
+					StatementType.question,
+					QuestionType.singleStep
+				);
 				break;
 			default:
 				break;
@@ -46,23 +60,23 @@ export default function AddButton() {
 		{
 			key: 'document',
 			action: 'document' as const,
-			icon: <AddDocumentIcon />
+			icon: <AddDocumentIcon />,
 		},
 		{
 			key: 'cluster',
 			action: 'cluster' as const,
-			icon: <AddClusterIcon />
+			icon: <AddClusterIcon />,
 		},
 		{
 			key: 'subgroup',
 			action: 'subgroup' as const,
-			icon: <AddSubGroupIcon />
+			icon: <AddSubGroupIcon />,
 		},
 		{
 			key: 'subquestion',
 			action: 'subquestion' as const,
-			icon: <AddSubQuestionIcon />
-		}
+			icon: <AddSubQuestionIcon />,
+		},
 	];
 
 	return (
@@ -72,7 +86,6 @@ export default function AddButton() {
 					{actions.map(({ key, action, icon }) => (
 						<IconButton
 							key={key}
-
 							onClick={() => handleAction(action)}
 						>
 							{icon}
@@ -84,7 +97,7 @@ export default function AddButton() {
 					></button>
 				</>
 			)}
-			<IconButton onClick={toggleActions} className="plus-button">
+			<IconButton onClick={toggleActions} className='plus-button'>
 				<PlusIcon />
 			</IconButton>
 		</div>

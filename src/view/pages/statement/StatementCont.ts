@@ -1,6 +1,7 @@
-import { QuestionType, StatementType } from '@/types/enums';
-import { Statement } from '@/types/statement/statementTypes';
-import { Role, User } from '@/types/user';
+import { Statement } from '@/types/statement/Statement';
+import { QuestionType, StatementType } from '@/types/TypeEnums';
+import { User } from '@/types/user/User';
+import { Role } from '@/types/user/UserSettings';
 import { createContext } from 'react';
 
 interface StatementContextProps {
@@ -12,7 +13,7 @@ interface StatementContextProps {
 	setNewStatementType: (newStatementType: StatementType) => void;
 	setNewQuestionType: (newQuestionType: QuestionType) => void;
 	newStatementType: StatementType; //used to determine the type of the new statement when created
-	newQuestionType: QuestionType; //used to determine the type of the new question when created	
+	newQuestionType: QuestionType; //used to determine the type of the new question when created
 }
 
 export const StatementContext = createContext<StatementContextProps>({
@@ -32,5 +33,5 @@ export const StatementContext = createContext<StatementContextProps>({
 		return;
 	},
 	newStatementType: StatementType.group,
-	newQuestionType: QuestionType.multiStage
+	newQuestionType: QuestionType.multiStage,
 });

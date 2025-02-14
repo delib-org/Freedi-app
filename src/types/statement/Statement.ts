@@ -9,76 +9,21 @@ import {
 	any,
 	enum_,
 	InferOutput,
-	parse,
 } from 'valibot';
+import { DeliberativeElement, DocumentType, StatementType } from '../TypeEnums';
+import { MembershipSchema, StepSchema, UserSchema } from '../user/User';
+import { ResultsSettingsSchema } from '../results/Results';
+import { QuestionSettingsSchema } from '../question/Question';
 import {
-	DeliberationType,
-	DeliberativeElement,
-	DocumentType,
-	StatementType,
-} from '../enums';
-import {
+	AgreeSchema,
 	DocumentApprovalSchema,
 	DocumentImportanceSchema,
-	MembershipSchema,
-	StepSchema,
-	User,
-	UserDataSchema,
-	UserSchema,
-} from '../user';
-import { StatementEvaluationSchema } from '../evaluation';
-import { ResultsSettingsSchema } from '../results';
-import { QuestionSettingsSchema } from '../question';
-import { AgreeSchema } from '../agreement';
-import { StageType } from '../stage';
-import { getRandomUID } from '../helpers';
-
-const SimpleStatementSchema = object({
-	statementId: string(),
-	statement: string(),
-	description: optional(string()),
-	creatorId: string(),
-	creator: UserSchema,
-	parentId: string(),
-	consensus: number(),
-	voted: optional(number()),
-});
-
-export type SimpleStatement = InferOutput<typeof SimpleStatementSchema>;
-
-export function statementToSimpleStatement(
-	statement: Statement
-): SimpleStatement {
-	const simple: SimpleStatement = {
-		statementId: statement.statementId,
-		statement: statement.statement,
-		description: statement.description,
-		creatorId: statement.creatorId,
-		creator: statement.creator,
-		parentId: statement.parentId,
-		consensus: statement.consensus,
-		voted: statement.voted || 0,
-	};
-
-	return simple;
-}
-
-export const StatementSettingsSchema = object({
-	subScreens: optional(array(string())),
-	enableAddEvaluationOption: optional(boolean()),
-	enableAddVotingOption: optional(boolean()),
-	enhancedEvaluation: optional(boolean()),
-	showEvaluation: optional(boolean()),
-	inVotingGetOnlyResults: optional(boolean()),
-	enableSimilaritiesSearch: optional(boolean()),
-	enableNavigationalElements: optional(boolean()),
-	show: optional(boolean()),
-	deliberationType: optional(enum_(DeliberationType)),
-	hasChat: optional(boolean()),
-	hasChildren: optional(boolean()),
-});
-
-export type StatementSettings = InferOutput<typeof StatementSettingsSchema>;
+} from '../agreement/Agreement';
+import { StageType } from '../stage/Stage';
+import { SimpleStatementSchema } from './SimpleStatement';
+import { StatementSettingsSchema } from './StatementSettings';
+import { UserDataSchema } from '../user/UserSettings';
+import { StatementEvaluationSchema } from '../evaluation/Evaluation';
 
 export const StatementSchema = object({
 	allowAnonymousLogin: optional(boolean()),
@@ -185,45 +130,3 @@ export const StatementMetaDataSchema = object({
 });
 
 export type StatementMetaData = InferOutput<typeof StatementMetaDataSchema>;
-
-interface CreateBasicStatementProps {
-	parentStatement: Statement;
-	user: User;
-	stageType?: StageType;
-	statementType?: StatementType;
-	statement: string;
-	description?: string;
-}
-export function createBasicStatement({
-	parentStatement,
-	user,
-	stageType,
-	statementType,
-	statement,
-	description,
-}: CreateBasicStatementProps): Statement | undefined {
-	try {
-		const newStatement: Statement = {
-			statement: statement,
-			description: description ?? '',
-			statementType: statementType ?? StatementType.statement,
-			parentId: parentStatement.statementId,
-			stageType: stageType ?? StageType.explanation,
-			creatorId: user.uid,
-			creator: user,
-			consensus: 0,
-			voted: 0,
-			statementId: getRandomUID(),
-			topParentId: parentStatement.topParentId || parentStatement.statementId,
-			parents: parentStatement.parents ? [...parentStatement.parents] : [],
-			lastUpdate: new Date().getTime(),
-			createdAt: new Date().getTime(),
-		};
-
-		return parse(StatementSchema, newStatement);
-	} catch (error) {
-		console.error(error);
-
-		return undefined;
-	}
-}

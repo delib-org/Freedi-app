@@ -9,9 +9,9 @@ import styles from './Switch.module.scss';
 import QuestionPage from '../statementTypes/question/QuestionPage';
 import StagePage from '../statementTypes/stage/StagePage';
 import { useSwitchMV } from './SwitchMV';
-import { StatementType } from '@/types/enums';
-import { Role } from '@/types/user';
-import { Statement } from '@/types/statement/statementTypes';
+import { StatementType } from '@/types/TypeEnums';
+import { Statement } from '@/types/statement/Statement';
+import { Role } from '@/types/user/UserSettings';
 
 const Switch = () => {
 	const { statement, role } = useContext(StatementContext);
@@ -43,7 +43,10 @@ interface SwitchScreenProps {
 	role: Role | undefined;
 }
 
-function SwitchScreen({ statement, role }: Readonly<SwitchScreenProps>): ReactNode {
+function SwitchScreen({
+	statement,
+	role,
+}: Readonly<SwitchScreenProps>): ReactNode {
 	let { screen } = useParams();
 	const { hasChat } = statement?.statementSettings || { hasChat: false };
 

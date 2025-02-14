@@ -1,7 +1,7 @@
 import { doc, runTransaction } from 'firebase/firestore';
 import { FireStore } from '../config';
 import { store } from '@/redux/store';
-import { Collections } from '@/types/enums';
+import { Collections } from '@/types/TypeEnums';
 
 export async function decreesUserSettingsLearningRemain({
 	evaluation,
@@ -36,7 +36,11 @@ export async function decreesUserSettingsLearningRemain({
 		if (!user) throw new Error('user is not logged in');
 		if (!user.uid) throw new Error('uid is required');
 
-		const userSettingsRef = doc(FireStore, Collections.usersSettings, user.uid);
+		const userSettingsRef = doc(
+			FireStore,
+			Collections.usersSettings,
+			user.uid
+		);
 
 		//transaction to update the evaluation number
 		await runTransaction(FireStore, async (transaction) => {
@@ -45,8 +49,12 @@ export async function decreesUserSettingsLearningRemain({
 				if (!userSettings.exists()) return;
 				const userSettingsData = userSettings.data();
 
-				const _evaluation = Number(userSettingsData.learning.evaluation);
-				const _addOptions = Number(userSettingsData.learning.addOptions);
+				const _evaluation = Number(
+					userSettingsData.learning.evaluation
+				);
+				const _addOptions = Number(
+					userSettingsData.learning.addOptions
+				);
 				if (!_evaluation && !_addOptions) return;
 				if (evaluation && _evaluation <= 0) return;
 				if (addOption && _addOptions <= 0) return;

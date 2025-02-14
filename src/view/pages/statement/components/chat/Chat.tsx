@@ -3,12 +3,12 @@ import { FC, useEffect, useState, useRef, useContext } from 'react';
 // Third Party Imports
 
 // Custom Components
-import { useLocation, useParams } from "react-router";
-import useSlideAndSubStatement from "../../../../../controllers/hooks/useSlideAndSubStatement";
-import { StatementContext } from "../../StatementCont";
-import styles from "./Chat.module.scss";
-import ChatMessageCard from "./components/chatMessageCard/ChatMessageCard";
-import ChatInput from "./components/input/ChatInput";
+import { useLocation, useParams } from 'react-router';
+import useSlideAndSubStatement from '../../../../../controllers/hooks/useSlideAndSubStatement';
+import { StatementContext } from '../../StatementCont';
+import styles from './Chat.module.scss';
+import ChatMessageCard from './components/chatMessageCard/ChatMessageCard';
+import ChatInput from './components/input/ChatInput';
 
 import NewMessages from './components/newMessages/NewMessages';
 import { listenToSubStatements } from '@/controllers/db/statements/listenToStatements';
@@ -16,8 +16,8 @@ import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { statementSubsSelector } from '@/redux/statements/statementsSlice';
 import { userSelector } from '@/redux/users/userSlice';
 import Description from '../evaluations/components/description/Description';
-import { StatementType } from '@/types/enums';
-import { Statement } from '@/types/statement/statementTypes';
+import { StatementType } from '@/types/TypeEnums';
+import { Statement } from '@/types/statement/Statement';
 
 let firstTime = true;
 let numberOfSubStatements = 0;
@@ -106,7 +106,8 @@ const Chat: FC = () => {
 		//if new sub-statement was not created by the user, then set numberOfNewMessages to the number of new subStatements
 		const lastMessage = subStatements[subStatements.length - 1];
 		if (lastMessage?.creatorId !== user?.uid) {
-			const isNewMessages = subStatements.length - numberOfSubStatements > 0;
+			const isNewMessages =
+				subStatements.length - numberOfSubStatements > 0;
 			numberOfSubStatements = subStatements.length;
 			if (isNewMessages) {
 				setNumberOfNewMessages((n) => n + 1);

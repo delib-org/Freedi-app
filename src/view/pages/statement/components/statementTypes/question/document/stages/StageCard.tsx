@@ -3,8 +3,9 @@ import styles from './StageCard.module.scss';
 import Button, { ButtonType } from '@/view/components/buttons/button/Button';
 import { NavLink, useNavigate } from 'react-router';
 import { useLanguage } from '@/controllers/hooks/useLanguages';
-import { StageClass } from '@/types/stage';
-import { SimpleStatement, Statement } from '@/types/statement/statementTypes';
+import { StageClass } from '@/types/stage/Stage';
+import { Statement } from '@/types/statement/Statement';
+import { SimpleStatement } from '@/types/statement/SimpleStatement';
 
 interface Props {
 	statement: Statement;
@@ -18,8 +19,8 @@ const StageCard: FC<Props> = ({ statement }) => {
 	const chosen = statement.results || [];
 
 	function suggestNewSuggestion(ev: MouseEvent<HTMLButtonElement>) {
-		ev.stopPropagation()
-		navigate(`/stage/${statement.statementId}`)
+		ev.stopPropagation();
+		navigate(`/stage/${statement.statementId}`);
 	}
 
 	return (
@@ -39,14 +40,29 @@ const StageCard: FC<Props> = ({ statement }) => {
 					<h4>{t('Selected Options')}</h4>
 					<ul>
 						{chosen.map((opt: SimpleStatement) => (
-							<NavLink key={opt.statementId} to={`/stage/${opt.statementId}`}><li >{opt.statement}{opt.description ? ":" : ""} {opt.description}</li></NavLink>
+							<NavLink
+								key={opt.statementId}
+								to={`/stage/${opt.statementId}`}
+							>
+								<li>
+									{opt.statement}
+									{opt.description ? ':' : ''}{' '}
+									{opt.description}
+								</li>
+							</NavLink>
 						))}
 					</ul>
 				</>
 			)}
-			<NavLink to={`/stage/${statement.statementId}`} ><p className={styles.seeMore}>See more...</p></NavLink>
-			<div className="btns">
-				<Button text="Add Suggestion" buttonType={ButtonType.SECONDARY} onClick={suggestNewSuggestion} />
+			<NavLink to={`/stage/${statement.statementId}`}>
+				<p className={styles.seeMore}>See more...</p>
+			</NavLink>
+			<div className='btns'>
+				<Button
+					text='Add Suggestion'
+					buttonType={ButtonType.SECONDARY}
+					onClick={suggestNewSuggestion}
+				/>
 			</div>
 		</div>
 	);

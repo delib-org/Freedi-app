@@ -7,7 +7,7 @@ import { useContext, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useParams } from 'react-router';
 import { StatementContext } from '../../StatementCont';
-import { StatementType } from '@/types/enums';
+import { StatementType } from '@/types/TypeEnums';
 
 export function useSwitchMV() {
 	const dispatch = useDispatch();

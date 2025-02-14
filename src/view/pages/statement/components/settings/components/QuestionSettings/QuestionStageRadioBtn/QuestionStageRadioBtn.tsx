@@ -9,9 +9,9 @@ import { setQuestionStage } from '@/controllers/db/statements/statementMetaData/
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { useLanguage } from '@/controllers/hooks/useLanguages';
 import { statementMetaDataSelector } from '@/redux/statements/statementsMetaSlice';
-import { Statement } from '@/types/statement/statementTypes';
+import { Statement } from '@/types/statement/Statement';
 import { getStepInfo } from './helpers';
-import { QuestionStep } from '@/types/enums';
+import { QuestionStep } from '@/types/TypeEnums';
 
 interface Props {
 	step: QuestionStep;
@@ -50,7 +50,10 @@ const QuestionStageRadioBtn: FC<Props> = ({ step, statement }) => {
 			<button
 				className='question-stage-radio-btn__radio'
 				onClick={() => {
-					setQuestionStage({ statementId: statement.statementId, step });
+					setQuestionStage({
+						statementId: statement.statementId,
+						step,
+					});
 				}}
 			>
 				<div
@@ -133,7 +136,8 @@ export function getStepsInfo(
 					name: 'Finished',
 					icon: <FlagIcon className='img' />,
 					color: '--settings-finished',
-					message: 'The voting process for this question has concluded',
+					message:
+						'The voting process for this question has concluded',
 				};
 
 			default:

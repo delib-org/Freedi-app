@@ -4,7 +4,7 @@ import {
 	Collections,
 	DeliberativeElement,
 	StatementType,
-} from '../../src/types/enums';
+} from '../../src/types/TypeEnums';
 import { Request, Response } from 'firebase-functions/v1';
 
 export const getUserOptions = async (req: Request, res: Response) => {

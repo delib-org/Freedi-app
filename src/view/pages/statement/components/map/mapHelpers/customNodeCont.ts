@@ -1,5 +1,5 @@
-import { Results } from '@/types/results';
-import { Statement } from '@/types/statement/statementTypes';
+import { Results } from '@/types/results/Results';
+import { Statement } from '@/types/statement/Statement';
 import dagre from '@dagrejs/dagre';
 import { Edge, Node, Position } from 'reactflow';
 
@@ -36,7 +36,9 @@ export const getLayoutElements = (
 			const nodeWithPosition = dagreGraph.node(node.id);
 
 			node.targetPosition = isHorizontal ? Position.Left : Position.Top;
-			node.sourcePosition = isHorizontal ? Position.Right : Position.Bottom;
+			node.sourcePosition = isHorizontal
+				? Position.Right
+				: Position.Bottom;
 
 			node.position = {
 				x: nodeWithPosition.x - nodeWidth / 2,

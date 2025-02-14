@@ -1,19 +1,19 @@
-import { FC, useEffect, useState } from "react";
-import { useNavigate } from "react-router";
-import CreateStatementModalSwitch from "../createStatementModalSwitch/CreateStatementModalSwitch";
-import StatementBottomNav from "../nav/bottom/StatementBottomNav";
-import StatementInfo from "../vote/components/info/StatementInfo";
-import Description from "./components/description/Description";
-import SuggestionCards from "./components/suggestionCards/SuggestionCards";
-import styles from "./statementEvaluationsPage.module.scss";
-import LightBulbIcon from "@/assets/icons/lightBulbIcon.svg?react";
-import X from "@/assets/icons/x.svg?react";
-import { useLanguage } from "@/controllers/hooks/useLanguages";
-import Button from "@/view/components/buttons/button/Button";
-import Modal from "@/view/components/modal/Modal";
-import Toast from "@/view/components/toast/Toast";
-import { Statement } from "@/types/statement/statementTypes";
-import { QuestionStep, StatementType } from "@/types/enums";
+import { FC, useEffect, useState } from 'react';
+import { useNavigate } from 'react-router';
+import CreateStatementModalSwitch from '../createStatementModalSwitch/CreateStatementModalSwitch';
+import StatementBottomNav from '../nav/bottom/StatementBottomNav';
+import StatementInfo from '../vote/components/info/StatementInfo';
+import Description from './components/description/Description';
+import SuggestionCards from './components/suggestionCards/SuggestionCards';
+import styles from './statementEvaluationsPage.module.scss';
+import LightBulbIcon from '@/assets/icons/lightBulbIcon.svg?react';
+import X from '@/assets/icons/x.svg?react';
+import { useLanguage } from '@/controllers/hooks/useLanguages';
+import Button from '@/view/components/buttons/button/Button';
+import Modal from '@/view/components/modal/Modal';
+import Toast from '@/view/components/toast/Toast';
+import { Statement } from '@/types/statement/Statement';
+import { QuestionStep, StatementType } from '@/types/TypeEnums';
 
 interface StatementEvaluationPageProps {
 	statement: Statement;
@@ -26,7 +26,6 @@ const StatementEvaluationPage: FC<StatementEvaluationPageProps> = ({
 	statement,
 	questions = false,
 }) => {
-
 	// Hooks
 
 	const navigate = useNavigate();
@@ -118,7 +117,7 @@ const StatementEvaluationPage: FC<StatementEvaluationPageProps> = ({
 						return (
 							<>
 								<Button
-									text={t("Close")}
+									text={t('Close')}
 									iconOnRight={false}
 									onClick={() => {
 										setShowToast(false);
@@ -126,7 +125,7 @@ const StatementEvaluationPage: FC<StatementEvaluationPageProps> = ({
 									icon={<X />}
 								/>
 								<Button
-									text={t("Add a solution")}
+									text={t('Add a solution')}
 									iconOnRight={true}
 									onClick={() => {
 										setShowToast(false);
@@ -142,7 +141,7 @@ const StatementEvaluationPage: FC<StatementEvaluationPageProps> = ({
 					default:
 						return (
 							<Button
-								text={t("Close")}
+								text={t('Close')}
 								iconOnRight={false}
 								onClick={() => {
 									setShowToast(false);
