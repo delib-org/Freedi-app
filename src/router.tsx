@@ -4,7 +4,6 @@ import LoadingPage from './view/pages/loadingPage/LoadingPage'; // Adjust the im
 import InitialQuestion from './view/pages/massConsensus/initialQuestion/InitialQuestion';
 import { MassConsensusPageUrls } from './types/TypeEnums';
 import RandomSuggestions from './view/pages/massConsensus/randomSuggestions/RandomSuggestions';
-import TopSuggestions from './view/pages/massConsensus/topSuggestions/TopSuggestions';
 import SimilarSuggestions from './view/pages/massConsensus/similarSuggestions/SimilarSuggestions';
 import VotingSuggestions from './view/pages/massConsensus/votingSuggestions/VotingSuggestions';
 

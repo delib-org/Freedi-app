@@ -3,8 +3,8 @@ import {
 	statementSubsSelector,
 } from '@/redux/statements/statementsSlice';
 import { userSelector } from '@/redux/users/userSlice';
-import { MassConsensusPageUrls } from '@/types/enums';
-import { SelectionFunction } from '@/types/evaluation';
+import { SelectionFunction } from '@/types/evaluation/Evaluation';
+import { MassConsensusPageUrls } from '@/types/TypeEnums';
 
 import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';

@@ -1,9 +1,8 @@
 import HeaderMassConsensus from '../headerMassConsensus/HeaderMassConsensus'
-import { MassConsensusPageUrls } from '@/types/enums'
 import SuggestionCards from '../../statement/components/evaluations/components/suggestionCards/SuggestionCards'
-import { SelectionFunction } from '@/types/evaluation/evaluationTypes'
-import { useRandomSuggestions } from './RandomSuggestionsVM'
 import { Link, useParams } from 'react-router'
+import { SelectionFunction } from '@/types/evaluation/Evaluation';
+import { MassConsensusPageUrls } from '@/types/TypeEnums';
 
 const RandomSuggestions = () => {
 	const { statementId } = useParams()
