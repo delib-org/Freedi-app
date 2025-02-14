@@ -32,3 +32,10 @@ jobs:
 
             - name: Run TypeScript type checking
               run: npm run typecheck
+
+            - name: Build the project
+              run: npm run build
+
+            - name: Build Functions
+              working-directory: ./functions
+              run: npm run build

@@ -1,6 +1,6 @@
-import { UserSchema } from '@/types/user/User';
 import { InferOutput, number, object, optional, string } from 'valibot';
 import { Statement } from './Statement';
+import { UserSchema } from '../user/User';
 
 export const SimpleStatementSchema = object({
 	statementId: string(),

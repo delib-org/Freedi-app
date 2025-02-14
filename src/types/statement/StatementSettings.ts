@@ -1,4 +1,3 @@
-import { DeliberationType } from '@/types/TypeEnums';
 import {
 	object,
 	optional,
@@ -8,6 +7,7 @@ import {
 	enum_,
 	InferOutput,
 } from 'valibot';
+import { DeliberationType } from '../TypeEnums';
 
 export const StatementSettingsSchema = object({
 	subScreens: optional(array(string())),
