@@ -12,7 +12,6 @@ const useTopSuggestions = () => {
 	const dispatch = useDispatch();
 	const user = useSelector(userSelector);
 	const { statementId } = useParams<{ statementId: string }>();
-	const [suggestions, setSuggestions] = useState<Statement[]>([]);
 
 	useEffect(() => {
 		fetch(
@@ -27,7 +26,6 @@ const useTopSuggestions = () => {
 						selectionFunction: SelectionFunction.top,
 					},
 				}));
-				setSuggestions(options);
 				dispatch(setStatements(options));
 			})
 			.catch((error) => console.error('Error:', error));
