@@ -4,25 +4,22 @@ import { setCurrentMultiStepOptions } from '@/redux/statements/statementsSlice';
 import { store } from '@/redux/store';
 import { Statement, StatementSchema } from '@/types/statement/Statement';
 import { functionConfig } from '@/types/ConfigFunctions';
+import firebaseConfig from '../configKey';
 
-// TODO: Change urls bellow to match new environment
 export async function getFirstEvaluationOptions(
 	statement: Statement | undefined
 ): Promise<void> {
 	try {
-		const projectId = import.meta.env.VITE_FIREBASE_PROJECT_ID;
 		if (!statement) return;
 		const dispatch = store.dispatch;
-		const urlBase = isProduction()
-			? 'qeesi7aziq-uc.a.run.app'
-			: `http://localhost:5001/${projectId}/${functionConfig.region}`;
 
-		const url = isProduction()
-			? `https://getRandomStatements-${urlBase}`
-			: `http://localhost:5001/${projectId}/${functionConfig.region}/getRandomStatements`;
+		const endPoint =
+			location.hostname === 'localhost'
+				? `http://localhost:5001/${firebaseConfig.projectId}/${functionConfig.region}/getRandomStatements`
+				: import.meta.env.VITE_APP_RANDOM_STATEMENTS_ENDPOINT;
 
 		const response = await fetch(
-			`${url}?parentId=${statement.statementId}&limit=6`
+			`${endPoint}?parentId=${statement.statementId}&limit=6`
 		);
 		const { randomStatements, error } = await response.json();
 		if (error) throw new Error(error);
@@ -40,15 +37,13 @@ export async function getSecondEvaluationOptions(
 	try {
 		if (!statement) return;
 		const dispatch = store.dispatch;
-		const urlBase = isProduction()
-			? 'qeesi7aziq-uc.a.run.app'
-			: 'http://localhost:5001/synthesistalyaron/us-central1';
 
-		const url = isProduction()
-			? `https://getTopStatements-${urlBase}`
-			: 'http://localhost:5001/synthesistalyaron/us-central1/getTopStatements';
+		const endPoint = isProduction()
+			? `http://localhost:5001/${firebaseConfig.projectId}/${functionConfig.region}/getTopStatements`
+			: import.meta.env.VITE_APP_TOP_STATEMENTS_ENDPOINT;
+
 		const response = await fetch(
-			`${url}?parentId=${statement.statementId}&limit=10`
+			`${endPoint}?parentId=${statement.statementId}&limit=10`
 		);
 		const { topSolutions, error } = await response.json();
 		if (error) throw new Error(error);
