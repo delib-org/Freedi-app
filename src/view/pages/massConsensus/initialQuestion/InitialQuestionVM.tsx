@@ -52,7 +52,7 @@ export function useInitialQuestion(): InitialQuestionVM {
 async function getSimilarStatements(statementId: string, userInput: string) {
 	try {
 		const endPoint =
-			location.hostname !== 'localhost'
+			location.hostname === 'localhost'
 				? `http://localhost:5001/${firebaseConfig.projectId}/${functionConfig.region}/checkForSimilarStatements`
 				: import.meta.env.VITE_APP_CHECK_SIMILARITIES_ENDPOINT;
 
