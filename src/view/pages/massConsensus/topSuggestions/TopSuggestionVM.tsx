@@ -40,7 +40,7 @@ const useTopSuggestions = () => {
 			);
 	}, [user]);
 
-	return { suggestions, statementId };
+	return {};
 };
 
 export default useTopSuggestions;
