@@ -1,5 +1,7 @@
+import firebaseConfig from '@/controllers/db/configKey';
 import { setStatements } from '@/redux/statements/statementsSlice';
 import { userSelector } from '@/redux/users/userSlice';
+import { functionConfig } from '@/types/ConfigFunctions';
 import { MassConsensusPageUrls } from '@/types/TypeEnums';
 import { SelectionFunction } from '@/types/evaluation/Evaluation';
 import { Statement } from '@/types/statement/Statement';
@@ -15,9 +17,12 @@ const useTopSuggestions = () => {
 	const [suggestions, setSuggestions] = useState<Statement[]>([]);
 
 	useEffect(() => {
-		fetch(
-			`http://localhost:5001/delib-v3-dev/us-central1/getTopStatements?parentId=${statementId}&limit=2`
-		)
+		const endPoint =
+			location.hostname === 'localhost'
+				? `http://localhost:5001/${firebaseConfig.projectId}/${functionConfig.region}/getTopStatements?parentId=${statementId}&limit=2`
+				: import.meta.env.VITE_APP_TOP_STATEMENTS_ENDPOINT;
+
+		fetch(endPoint)
 			.then((response) => response.json())
 			.then((data) => {
 				const options = data.statements.map((st: Statement) => ({
