@@ -18,7 +18,7 @@ const useTopSuggestions = () => {
 
 	useEffect(() => {
 		const endPoint =
-			location.hostname !== 'localhost'
+			location.hostname === 'localhost'
 				? `http://localhost:5001/${firebaseConfig.projectId}/${functionConfig.region}/getTopStatements?parentId=${statementId}&limit=2`
 				: import.meta.env.VITE_APP_TOP_STATEMENTS_ENDPOINT;
 

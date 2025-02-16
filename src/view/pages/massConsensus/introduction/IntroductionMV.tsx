@@ -56,7 +56,7 @@ async function getInitialMCData(
 	const localEndPoint = `http://localhost:5001/${firebaseConfig.projectId}/${functionConfig.region}/massConsensusGetInitialData`;
 
 	const requestUrl =
-		location.hostname !== 'localhost' ? deployedEndPoint : localEndPoint;
+		location.hostname === 'localhost' ? localEndPoint : deployedEndPoint;
 
 	const response = await fetch(`${requestUrl}?statementId=${statementId}`);
 

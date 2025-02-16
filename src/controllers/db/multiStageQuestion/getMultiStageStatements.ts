@@ -14,7 +14,7 @@ export async function getFirstEvaluationOptions(
 		const dispatch = store.dispatch;
 
 		const endPoint =
-			location.hostname !== 'localhost'
+			location.hostname === 'localhost'
 				? `http://localhost:5001/${firebaseConfig.projectId}/${functionConfig.region}/getRandomStatements`
 				: import.meta.env.VITE_APP_RANDOM_STATEMENTS_ENDPOINT;
 
