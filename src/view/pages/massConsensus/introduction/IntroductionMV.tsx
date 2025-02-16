@@ -51,10 +51,12 @@ export function useIntroductionMV() {
 async function getInitialMCData(
 	statementId: string
 ): Promise<{ statement: Statement | null; error: string }> {
-	const prodEndPoint = `https://massConsensusGetInitialData-qeesi7aziq-uc.a.run.app`;
+	const deployedEndPoint = import.meta.env.VITE_APP_MASS_CONSENSUS_ENDPOINT;
+
 	const localEndPoint = `http://localhost:5001/${firebaseConfig.projectId}/${functionConfig.region}/massConsensusGetInitialData`;
+
 	const requestUrl =
-		location.hostname !== 'localhost' ? prodEndPoint : localEndPoint;
+		location.hostname !== 'localhost' ? deployedEndPoint : localEndPoint;
 
 	const response = await fetch(`${requestUrl}?statementId=${statementId}`);
 

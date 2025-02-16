@@ -51,20 +51,22 @@ export function useInitialQuestion(): InitialQuestionVM {
 
 async function getSimilarStatements(statementId: string, userInput: string) {
 	try {
-		const response = await fetch(
-			`http://localhost:5001/${firebaseConfig.projectId}/${functionConfig.region}/checkForSimilarStatements`,
-			{
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-				},
-				body: JSON.stringify({
-					statementId,
-					userInput,
-					generateIfNeeded: true,
-				}),
-			}
-		);
+		const endPoint =
+			location.hostname !== 'localhost'
+				? `http://localhost:5001/${firebaseConfig.projectId}/${functionConfig.region}/checkForSimilarStatements`
+				: import.meta.env.VITE_APP_CHECK_SIMILARITIES_ENDPOINT;
+
+		const response = await fetch(endPoint, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify({
+				statementId,
+				userInput,
+				generateIfNeeded: true,
+			}),
+		});
 		const data = await response.json();
 		const { optionsInDB, optionsGenerated, userOption } = data;
 		const _userOption = { statement: userOption, statementId: null };

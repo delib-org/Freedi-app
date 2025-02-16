@@ -24,10 +24,13 @@ export function useRandomSuggestions() {
 	}, [user]);
 
 	useEffect(() => {
+		const endPoint =
+			location.hostname !== 'localhost'
+				? `http://localhost:5001/${firebaseConfig.projectId}/${functionConfig.region}/getRandomStatements`
+				: import.meta.env.VITE_APP_RANDOM_STATEMENTS_ENDPOINT;
+
 		if (statementId) {
-			fetch(
-				`http://localhost:5001/${firebaseConfig.projectId}/${functionConfig.region}/getRandomStatements?parentId=${statementId}&limit=2`
-			)
+			fetch(endPoint)
 				.then((response) => {
 					if (!response.ok) {
 						throw new Error(
