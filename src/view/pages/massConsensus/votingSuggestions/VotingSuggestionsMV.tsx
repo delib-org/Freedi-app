@@ -9,6 +9,9 @@ import { MassConsensusPageUrls } from '@/types/TypeEnums';
 import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useParams } from 'react-router';
+import firebaseConfig from '@/controllers/db/configKey';
+import { functionConfig } from '@/types/ConfigFunctions';
+import { listenToSubStatements } from '@/controllers/db/statements/listenToStatements';
 
 export function VotingSuggestionsMV() {
 	const { statementId } = useParams<{ statementId: string }>();
@@ -26,7 +29,7 @@ export function VotingSuggestionsMV() {
 
 	async function fetchTopStatements() {
 		fetch(
-			`http://localhost:5001/delib-v3-dev/us-central1/getTopStatements?parentId=${statementId}&limit=6`
+			`http://localhost:5001/${firebaseConfig.projectId}/${functionConfig.region}/getTopStatements?parentId=${statementId}&limit=6`
 		)
 			.then((res) => res.json())
 			.then((data) => {
@@ -44,6 +47,8 @@ export function VotingSuggestionsMV() {
 	
 	useEffect(() => {
 		fetchTopStatements();
+		const unsubscribe = listenToSubStatements(statementId);
+		return () => unsubscribe()
 	}, [statementId]);
 
 	useEffect(() => {

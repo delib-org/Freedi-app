@@ -4,11 +4,11 @@ import { DocumentSnapshot, FieldValue } from 'firebase-admin/firestore';
 import { Collections } from '../../src/types/TypeEnums';
 import {
 	Statement,
-	StatementSchema,
 } from '../../src/types/statement/Statement';
 import { maxKeyInObject } from '../../src/types/TypeUtils';
 import { FirestoreEvent } from 'firebase-functions/firestore';
 import { parse } from 'valibot';
+import { VoteSchema } from '../../src/types/vote';
 
 export async function updateVote(
 	event: FirestoreEvent<Change<DocumentSnapshot> | undefined>
@@ -16,11 +16,12 @@ export async function updateVote(
 	if (!event?.data) return;
 
 	try {
-		const newVote = parse(StatementSchema, event.data.after.data());
+		console.log(event.data.after.data())
+		const newVote = parse(VoteSchema, event.data.after.data());
 		const { statementId: newVoteOptionId } = newVote;
 		if (event.data.before.data() !== undefined) {
 			const previousVote = parse(
-				StatementSchema,
+				VoteSchema,
 				event.data.before.data()
 			);
 

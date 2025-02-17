@@ -39,7 +39,7 @@ const useTopSuggestions = () => {
 
 	useEffect(() => {
 		fetchStatements();
-		const unsubscribe = listenToEvaluations(dispatch, statementId, user.uid);
+		const unsubscribe = listenToEvaluations(dispatch, statementId, user.uid, SelectionFunction.top);
 		return () => unsubscribe();
 	}, [statementId, user.uid]);
 
