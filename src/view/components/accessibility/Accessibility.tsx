@@ -16,6 +16,7 @@ import { colorMappings } from './colorContrast';
 import { useAutoClose } from '@/controllers/hooks/useAutoClose';
 import { useFontSize } from '@/controllers/hooks/useFontSize';
 import useClickOutside from '@/controllers/hooks/useClickOutside';
+import { useLanguage } from '@/controllers/hooks/useLanguages';
 
 export default function Accessibility() {
 	// * Redux * //
@@ -26,6 +27,7 @@ export default function Accessibility() {
 
 	// * Hooks * //
 	const { isOpen, handleOpen } = useAutoClose(10000);
+	const { t } = useLanguage();
 
 	const handleClickOutside = useCallback(() => {
 		if (isOpen) handleOpen();
@@ -77,10 +79,10 @@ export default function Accessibility() {
 				</div>
 				<div className='accessibility-panel__contrast'>
 					<button onClick={() => dispatch(setColorContrast(true))} className='high-contrast'>
-						<HighContrastIcon /> High contrast
+						<HighContrastIcon /> {t("High contrast")}
 					</button>
 					<button onClick={() => dispatch(setColorContrast(false))} className='light-contrast'>
-						<LightContrastIcon /> Light contrast
+						<LightContrastIcon /> {t("Light contrast")}
 					</button>
 				</div>
 			</div>
