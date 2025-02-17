@@ -24,7 +24,7 @@ export function VotingSuggestionsMV() {
 			statement.evaluation.selectionFunction === SelectionFunction.vote
 	);
 
-	useEffect(() => {
+	async function fetchTopStatements() {
 		fetch(
 			`http://localhost:5001/delib-v3-dev/us-central1/getTopStatements?parentId=${statementId}&limit=6`
 		)
@@ -40,11 +40,16 @@ export function VotingSuggestionsMV() {
 				);
 			})
 			.catch((err) => console.error(err));
+	}
+	
+	useEffect(() => {
+		fetchTopStatements();
 	}, [statementId]);
+
 	useEffect(() => {
 		if (!user)
 			navigate(
-				`/mass-consensus/${statementId}/${MassConsensusPageUrls.voting}`
+				`/mass-consensus/${statementId}/${MassConsensusPageUrls.introduction}`
 			);
 	}, [user]);
 
