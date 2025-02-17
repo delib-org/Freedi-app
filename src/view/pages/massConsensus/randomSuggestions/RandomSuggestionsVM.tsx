@@ -1,5 +1,7 @@
+import firebaseConfig from '@/controllers/db/configKey';
 import { setMassConsensusStatements } from '@/redux/statements/statementsSlice';
 import { userSelector } from '@/redux/users/userSlice';
+import { functionConfig } from '@/types/ConfigFunctions';
 import { MassConsensusPageUrls } from '@/types/TypeEnums';
 import { SelectionFunction } from '@/types/evaluation/Evaluation';
 
@@ -22,10 +24,13 @@ export function useRandomSuggestions() {
 	}, [user]);
 
 	useEffect(() => {
+		const endPoint =
+			location.hostname === 'localhost'
+				? `http://localhost:5001/${firebaseConfig.projectId}/${functionConfig.region}/getRandomStatements`
+				: import.meta.env.VITE_APP_RANDOM_STATEMENTS_ENDPOINT;
+
 		if (statementId) {
-			fetch(
-				`http://localhost:5001/delib-v3-dev/us-central1/getRandomStatements?parentId=${statementId}&limit=2`
-			)
+			fetch(endPoint)
 				.then((response) => {
 					if (!response.ok) {
 						throw new Error(
