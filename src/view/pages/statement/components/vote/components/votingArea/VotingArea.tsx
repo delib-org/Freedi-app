@@ -1,11 +1,17 @@
-import React, { FC, useContext } from 'react';
+import React, { FC } from 'react';
 import { useParams } from 'react-router';
 import OptionBar from '../optionBar/OptionBar';
 import './VotingArea.scss';
 import { getSortedVotingOptions, isVerticalOptionBar } from './VotingAreaCont';
 import useWindowDimensions from '@/controllers/hooks/useWindowDimentions';
-import { StatementContext } from '@/view/pages/statement/StatementCont';
+
+import { useSelector } from 'react-redux';
+import {
+	statementSelectorById,
+	statementSubsSelector,
+} from '@/redux/statements/statementsSlice';
 import { Statement } from '@/types/statement/Statement';
+import { SelectionFunction } from '@/types/evaluation/Evaluation';
 import { DeliberativeElement } from '@/types/TypeEnums';
 
 interface VotingAreaProps {
@@ -15,6 +21,7 @@ interface VotingAreaProps {
 	subStatements: Statement[];
 	setShowInfo: React.Dispatch<React.SetStateAction<boolean>>;
 	totalVotes: number;
+	isMassConsensus?: boolean;
 }
 
 const VotingArea: FC<VotingAreaProps> = ({
@@ -22,18 +29,27 @@ const VotingArea: FC<VotingAreaProps> = ({
 	subStatements,
 	setShowInfo,
 	totalVotes,
+	isMassConsensus = false,
 }) => {
-	const { sort } = useParams();
-	const { statement } = useContext(StatementContext);
+	const { statementId, sort } = useParams();
+	const statement = useSelector(statementSelectorById(statementId));
 	const { width } = useWindowDimensions();
+	const massConsensusOptions = useSelector(
+		statementSubsSelector(statementId)
+	).filter(
+		(s: Statement) =>
+			s.evaluation?.selectionFunction === SelectionFunction.vote
+	);
 
 	if (!statement) return null;
 
-	const _options = statement?.statementSettings?.inVotingGetOnlyResults
+	const defaultOptions = statement?.statementSettings?.inVotingGetOnlyResults
 		? subStatements.filter((st) => st.isResult)
 		: subStatements.filter(
 				(st) => st.deliberativeElement === DeliberativeElement.option
 			);
+
+	const _options = isMassConsensus ? massConsensusOptions : defaultOptions;
 
 	const options = getSortedVotingOptions({
 		statement,
