@@ -26,7 +26,7 @@ export function useRandomSuggestions() {
 	useEffect(() => {
 		const endPoint =
 			location.hostname === 'localhost'
-				? `http://localhost:5001/${firebaseConfig.projectId}/${functionConfig.region}/getRandomStatements`
+				? `http://localhost:5001/${firebaseConfig.projectId}/${functionConfig.region}/getRandomStatements?parentId=${statementId}&limit=2`
 				: import.meta.env.VITE_APP_RANDOM_STATEMENTS_ENDPOINT;
 
 		if (statementId) {

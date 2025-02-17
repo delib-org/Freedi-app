@@ -4,6 +4,7 @@ import SuggestionCards from '../../statement/components/evaluations/components/s
 import { SelectionFunction } from '@/types/evaluation/Evaluation';
 import { useRandomSuggestions } from './RandomSuggestionsVM';
 import FooterMassConsensus from '../footerMassConsesus/footerMassConsesus';
+import TitleMassConsensus from '../TitleMassConsensus/TitleMassConsensus';
 
 const RandomSuggestions = () => {
 	useRandomSuggestions();
@@ -12,10 +13,11 @@ const RandomSuggestions = () => {
 		<>
 			<HeaderMassConsensus
 				backTo={MassConsensusPageUrls.initialQuestion}
+				title='random suggestions'
 			/>
-			<div>RandomSuggestions</div>
+			<TitleMassConsensus title="please rate the random suggestions" />
 			<SuggestionCards selectionFunction={SelectionFunction.random} />
-			<FooterMassConsensus goTo={MassConsensusPageUrls.topSuggestions}/>
+			<FooterMassConsensus goTo={MassConsensusPageUrls.topSuggestions} />
 		</>
 	);
 };
