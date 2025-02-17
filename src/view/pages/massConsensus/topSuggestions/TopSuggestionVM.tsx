@@ -5,7 +5,7 @@ import { functionConfig } from '@/types/ConfigFunctions';
 import { MassConsensusPageUrls } from '@/types/TypeEnums';
 import { SelectionFunction } from '@/types/evaluation/Evaluation';
 import { Statement } from '@/types/statement/Statement';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useParams } from 'react-router';
 
@@ -14,7 +14,6 @@ const useTopSuggestions = () => {
 	const dispatch = useDispatch();
 	const user = useSelector(userSelector);
 	const { statementId } = useParams<{ statementId: string }>();
-	const [suggestions, setSuggestions] = useState<Statement[]>([]);
 
 	useEffect(() => {
 		const endPoint =
@@ -32,7 +31,6 @@ const useTopSuggestions = () => {
 						selectionFunction: SelectionFunction.top,
 					},
 				}));
-				setSuggestions(options);
 				dispatch(setStatements(options));
 			})
 			.catch((error) => console.error('Error:', error));
@@ -45,7 +43,7 @@ const useTopSuggestions = () => {
 			);
 	}, [user]);
 
-	return { suggestions, statementId };
+	return {};
 };
 
 export default useTopSuggestions;
