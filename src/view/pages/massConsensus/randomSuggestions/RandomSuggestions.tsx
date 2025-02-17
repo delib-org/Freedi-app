@@ -1,12 +1,11 @@
-import HeaderMassConsensus from '../headerMassConsensus/HeaderMassConsensus';
-import { MassConsensusPageUrls } from '@/types/TypeEnums';
-import SuggestionCards from '../../statement/components/evaluations/components/suggestionCards/SuggestionCards';
+import HeaderMassConsensus from '../headerMassConsensus/HeaderMassConsensus'
+import SuggestionCards from '../../statement/components/evaluations/components/suggestionCards/SuggestionCards'
+import { Link, useParams } from 'react-router'
 import { SelectionFunction } from '@/types/evaluation/Evaluation';
-import { useRandomSuggestions } from './RandomSuggestionsVM';
-import FooterMassConsensus from '../footerMassConsesus/footerMassConsesus';
+import { MassConsensusPageUrls } from '@/types/TypeEnums';
 
 const RandomSuggestions = () => {
-	useRandomSuggestions();
+	const { statementId } = useParams()
 
 	return (
 		<>
@@ -15,7 +14,7 @@ const RandomSuggestions = () => {
 			/>
 			<div>RandomSuggestions</div>
 			<SuggestionCards selectionFunction={SelectionFunction.random} />
-			<FooterMassConsensus goTo={MassConsensusPageUrls.topSuggestions}/>
+			<Link className={"btn"} to={`/mass-consensus/${statementId}/${MassConsensusPageUrls.voting}`}>Next</Link>
 		</>
 	);
 };

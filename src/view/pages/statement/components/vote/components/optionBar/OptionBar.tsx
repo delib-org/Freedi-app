@@ -41,20 +41,17 @@ export const OptionBar: FC<OptionBarProps> = ({
 		screenWidth,
 	});
 	const padding = 40;
-
 	const { shortVersion } = statementTitleToDisplay(option.statement, 30);
 	const barHeight =
 		selections > 0 && totalVotes > 0
 			? Math.round((selections / totalVotes) * 100)
 			: 0;
 
-	// * Functions * //
 	const handleVotePress = () => {
 		dispatch(setVoteToStore(option));
 		setVoteToDB(option);
 		getStatementFromDB(option.statementId);
 	};
-
 	const isOptionSelected = vote?.statementId === option.statementId;
 
 	const containerInset = `${(_optionOrder - order) * barWidth}px`;
@@ -82,7 +79,9 @@ export const OptionBar: FC<OptionBarProps> = ({
 			style={containerStyle}
 		>
 			<div className='column' style={{ width: `${barWidth}px` }}>
-				{shouldShowStat && <div className='percentage-text'>{barHeight}%</div>}
+				{shouldShowStat && (
+					<div className='percentage-text'>{barHeight}%</div>
+				)}
 				<div className='bar drop-shadow' style={barStyle}>
 					<div className='number-of-selections'>{selections}</div>
 				</div>
@@ -109,7 +108,9 @@ export const OptionBar: FC<OptionBarProps> = ({
 					setShowInfo(true);
 				}}
 			>
-				<InfoIcon style={{ color: barHeight > 10 ? 'white' : '#6E8AA6' }} />
+				<InfoIcon
+					style={{ color: barHeight > 10 ? 'white' : '#6E8AA6' }}
+				/>
 			</button>
 			<div className={`title ${barWidth < 90 ? 'is-bar-small' : ''}`}>
 				{shortVersion}
