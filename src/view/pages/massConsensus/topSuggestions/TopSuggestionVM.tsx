@@ -1,12 +1,12 @@
 import firebaseConfig from '@/controllers/db/configKey';
-import { listenToEvaluations } from '@/controllers/db/evaluation/getEvaluation';
+import { listenToEvaluation, listenToEvaluations } from '@/controllers/db/evaluation/getEvaluation';
 import { setStatements } from '@/redux/statements/statementsSlice';
 import { userSelector } from '@/redux/users/userSlice';
 import { functionConfig } from '@/types/ConfigFunctions';
 import { MassConsensusPageUrls } from '@/types/TypeEnums';
 import { SelectionFunction } from '@/types/evaluation/Evaluation';
 import { Statement } from '@/types/statement/Statement';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useParams } from 'react-router';
 
@@ -16,11 +16,13 @@ const useTopSuggestions = () => {
 	const user = useSelector(userSelector);
 	const { statementId } = useParams<{ statementId: string }>();
 
+	const [topStatements, setTopStatements] = useState<Statement[]>([]);
+
 	const fetchStatements = () => {
 		const endPoint =
-		location.hostname === 'localhost'
-			? `http://localhost:5001/${firebaseConfig.projectId}/${functionConfig.region}/getTopStatements?parentId=${statementId}&limit=2`
-			: import.meta.env.VITE_APP_TOP_STATEMENTS_ENDPOINT;
+			location.hostname === 'localhost'
+				? `http://localhost:5001/${firebaseConfig.projectId}/${functionConfig.region}/getTopStatements?parentId=${statementId}&limit=6`
+				: import.meta.env.VITE_APP_TOP_STATEMENTS_ENDPOINT;
 
 		fetch(endPoint)
 			.then((response) => response.json())
@@ -33,15 +35,24 @@ const useTopSuggestions = () => {
 					},
 				}));
 				dispatch(setStatements(options));
-		})
-		.catch((error) => console.error('Error:', error));
+				setTopStatements(options);
+			})
+			.catch((error) => console.error('Error:', error));
 	}
 
 	useEffect(() => {
 		fetchStatements();
-		const unsubscribe = listenToEvaluations(dispatch, statementId, user.uid, SelectionFunction.top);
-		return () => unsubscribe();
 	}, [statementId, user.uid]);
+
+	useEffect(() => {
+		const unSubscribes: Function[] = topStatements.map((statement) => {
+			return listenToEvaluation(statement.statementId);
+		});
+
+		return () => {
+			unSubscribes.forEach((unSubscribe) => unSubscribe());
+		};
+	}, [topStatements.length]);
 
 	useEffect(() => {
 		if (!user)
