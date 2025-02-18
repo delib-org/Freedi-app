@@ -1,5 +1,5 @@
 import firebaseConfig from '@/controllers/db/configKey';
-import { listenToEvaluation, listenToEvaluations } from '@/controllers/db/evaluation/getEvaluation';
+import { listenToEvaluation } from '@/controllers/db/evaluation/getEvaluation';
 import { setStatement, setStatements, statementSelectorById } from '@/redux/statements/statementsSlice';
 import { userSelector } from '@/redux/users/userSlice';
 import { functionConfig } from '@/types/ConfigFunctions';
@@ -51,13 +51,11 @@ const useTopSuggestions = () => {
 	useEffect(() => {
 		if (statement) {
 			if (statement.statementSettings.showEvaluation === undefined || statement.statementSettings.showEvaluation === null || statement.statementSettings.showEvaluation === true) {
-				console.log("statement", statement);
 				const statementDontShowEvaluation = {
 					...statement, statementSettings: {
 						...statement.statementSettings, showEvaluation: false
 					}
 				};
-				console.log("statement 2", statement.statementSettings);
 
 				dispatch(setStatement(statementDontShowEvaluation));
 			}
@@ -69,7 +67,7 @@ const useTopSuggestions = () => {
 	}, [statementId, user?.uid]);
 
 	useEffect(() => {
-		const unSubscribes: Function[] = topStatements.map((statement) => {
+		const unSubscribes = topStatements.map((statement) => {
 			return listenToEvaluation(statement.statementId);
 		});
 
@@ -77,8 +75,6 @@ const useTopSuggestions = () => {
 			unSubscribes.forEach((unSubscribe) => unSubscribe());
 		};
 	}, [topStatements.length]);
-
-
 
 	return {};
 };

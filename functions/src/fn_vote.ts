@@ -16,7 +16,6 @@ export async function updateVote(
 	if (!event?.data) return;
 
 	try {
-		console.log(event.data.after.data())
 		const newVote = parse(VoteSchema, event.data.after.data());
 		const { statementId: newVoteOptionId } = newVote;
 		if (event.data.before.data() !== undefined) {
