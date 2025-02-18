@@ -55,7 +55,7 @@ const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({
 				className={`${styles['evaluation-score']} ${statement.consensus < 0 ? 'negative' : ''}`}
 			>
 				{shouldDisplayScore && <span>{sumPro}</span>}
-				{numberOfEvaluators && numberOfEvaluators > 0 ? (
+				{shouldDisplayScore && numberOfEvaluators && numberOfEvaluators > 0 ? (
 					<span className={styles['total-evaluators']}>
 						{' '}
 						({numberOfEvaluators})

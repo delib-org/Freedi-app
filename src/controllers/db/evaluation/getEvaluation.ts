@@ -68,15 +68,17 @@ export const listenToEvaluations = (
 
 export function listenToEvaluation(statementId: string): Function {
 	try {
-		console.log("Listen to evaluation", statementId);
+
 		const user: User | null = store.getState().user.user;
 		if (!user) throw new Error('User is undefined');
 
 		const evaluationId = getStatementSubscriptionId(statementId, user);
+		console.log("Listen to evaluation", evaluationId);
 		const evaluationsRef = doc(FireStore, Collections.evaluations, evaluationId);
 
 		return onSnapshot(evaluationsRef, (evaluationDB) => {
 			try {
+				if (!evaluationDB.exists()) return;
 				const evaluation = parse(EvaluationSchema, evaluationDB.data());
 
 				store.dispatch(setEvaluationToStore(evaluation));

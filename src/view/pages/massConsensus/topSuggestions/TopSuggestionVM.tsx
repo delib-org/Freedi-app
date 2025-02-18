@@ -42,22 +42,31 @@ const useTopSuggestions = () => {
 	}
 
 	useEffect(() => {
-		if (statement && statement.statementSettings.showEvaluation === undefined || statement.statementSettings.showEvaluation === null || statement.statementSettings.showEvaluation === true) {
-			console.log("statement", statement);
-			const statementDontShowEvaluation = {
-				...statement, statementSettings: {
-					...statement.statementSettings, showEvaluation: false
-				}
-			};
-			console.log("statement 2", statement.statementSettings);
+		if (!user)
+			navigate(
+				`/mass-consensus/${statementId}/${MassConsensusPageUrls.introduction}`
+			);
+	}, []);
 
-			dispatch(setStatement(statementDontShowEvaluation));
+	useEffect(() => {
+		if (statement) {
+			if (statement.statementSettings.showEvaluation === undefined || statement.statementSettings.showEvaluation === null || statement.statementSettings.showEvaluation === true) {
+				console.log("statement", statement);
+				const statementDontShowEvaluation = {
+					...statement, statementSettings: {
+						...statement.statementSettings, showEvaluation: false
+					}
+				};
+				console.log("statement 2", statement.statementSettings);
+
+				dispatch(setStatement(statementDontShowEvaluation));
+			}
 		}
 	}, [statement]);
 
 	useEffect(() => {
 		fetchStatements();
-	}, [statementId, user.uid]);
+	}, [statementId, user?.uid]);
 
 	useEffect(() => {
 		const unSubscribes: Function[] = topStatements.map((statement) => {
@@ -69,12 +78,7 @@ const useTopSuggestions = () => {
 		};
 	}, [topStatements.length]);
 
-	useEffect(() => {
-		if (!user)
-			navigate(
-				`/mass-consensus/${statementId}/${MassConsensusPageUrls.introduction}`
-			);
-	}, [user]);
+
 
 	return {};
 };
