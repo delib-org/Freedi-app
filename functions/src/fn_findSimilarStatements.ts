@@ -33,7 +33,7 @@ export async function findSimilarStatements(
 		//if no options on the DB generate similar options by AI
 		if (statementSimple.length === 0) {
 			const textsByAI = await generateSimilar(userInput, numberOfOptionsToGenerate);
-			response.status(200).send({ similarTexts: textsByAI, ok: true });
+			response.status(200).send({ similarTexts: textsByAI, ok: true, userText: userInput });
 
 			return;
 		}
