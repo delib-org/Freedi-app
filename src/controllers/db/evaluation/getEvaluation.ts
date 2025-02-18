@@ -66,14 +66,14 @@ export const listenToEvaluations = (
 	}
 };
 
-export function listenToEvaluation(statementId: string): Function {
+export function listenToEvaluation(statementId: string): () => void {
 	try {
 
 		const user: User | null = store.getState().user.user;
 		if (!user) throw new Error('User is undefined');
 
 		const evaluationId = getStatementSubscriptionId(statementId, user);
-		console.log("Listen to evaluation", evaluationId);
+
 		const evaluationsRef = doc(FireStore, Collections.evaluations, evaluationId);
 
 		return onSnapshot(evaluationsRef, (evaluationDB) => {
@@ -89,7 +89,8 @@ export function listenToEvaluation(statementId: string): Function {
 
 	} catch (error) {
 		console.error(error);
-		return () => { return; };
+		
+return () => { return; };
 	}
 }
 

@@ -71,7 +71,7 @@ async function getSimilarStatements(statementId: string, userInput: string) {
 		const data = await response.json();
 		if (!data) throw new Error('No data returned from server');
 		const { similarStatements, similarTexts = [], userText } = data;
-		console.log(data);
+		
 		const _userText = { statement: userText, statementId: null };
 		const _similarTexts = similarTexts.map((text: string) => ({
 			statement: text,

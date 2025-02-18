@@ -93,7 +93,8 @@ export async function findSimilarStatements(
 			)
 			)
 			.filter((s) => s !== undefined);
-		return statements;
+		
+return statements;
 	}
 }
 

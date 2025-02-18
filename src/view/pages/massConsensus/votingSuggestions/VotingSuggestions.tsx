@@ -30,6 +30,7 @@ const VotingSuggestions = () => {
 				title='please vote for the best suggestion'
 				backTo={MassConsensusPageUrls.topSuggestions}
 			/>
+
 			<div className={styles.voteGraph}>
 				<VotingArea
 					totalVotes={totalVotes}
@@ -38,6 +39,7 @@ const VotingSuggestions = () => {
 					setStatementInfo={setStatementInfo}
 				></VotingArea>
 			</div>
+
 			{isStatementInfoModalOpen && (
 				<Modal>
 					<StatementInfo
@@ -46,6 +48,7 @@ const VotingSuggestions = () => {
 					/>
 				</Modal>
 			)}
+			
 			<FooterMassConsensus
 				goTo={MassConsensusPageUrls.leaveFeedback}
 			></FooterMassConsensus>

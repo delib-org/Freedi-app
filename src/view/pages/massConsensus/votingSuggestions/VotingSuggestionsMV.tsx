@@ -4,11 +4,9 @@ import { functionConfig } from '@/types/ConfigFunctions';
 import { MassConsensusPageUrls } from '@/types/TypeEnums';
 
 import { useEffect, useState } from 'react';
-import {  useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { useNavigate, useParams } from 'react-router';
-import {
-	listenToStatement,
-} from '@/controllers/db/statements/listenToStatements';
+import { listenToStatement } from '@/controllers/db/statements/listenToStatements';
 import { Statement } from '@/types/statement/Statement';
 
 export function VotingSuggestionsMV() {
@@ -33,12 +31,19 @@ export function VotingSuggestionsMV() {
 	}
 
 	useEffect(() => {
+
+		const unsubscribe = listenToStatement(statementId);
+
+		return () => unsubscribe();
+	}, []);
+
+	useEffect(() => {
 		fetchTopStatements();
 		const unsubscribe = subStatements.map((subStatement) =>
 			listenToStatement(subStatement.statementId)
 		);
-
-		return () => unsubscribe.forEach(u=>u())
+		
+		return () => unsubscribe.forEach((u) => u());
 	}, [subStatements.length]);
 
 	useEffect(() => {
