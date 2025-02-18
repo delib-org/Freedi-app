@@ -1,6 +1,6 @@
 import firebaseConfig from '@/controllers/db/configKey';
 import { listenToEvaluation, listenToEvaluations } from '@/controllers/db/evaluation/getEvaluation';
-import { setStatements } from '@/redux/statements/statementsSlice';
+import { setStatement, setStatements, statementSelectorById } from '@/redux/statements/statementsSlice';
 import { userSelector } from '@/redux/users/userSlice';
 import { functionConfig } from '@/types/ConfigFunctions';
 import { MassConsensusPageUrls } from '@/types/TypeEnums';
@@ -15,6 +15,7 @@ const useTopSuggestions = () => {
 	const dispatch = useDispatch();
 	const user = useSelector(userSelector);
 	const { statementId } = useParams<{ statementId: string }>();
+	const statement = useSelector(statementSelectorById(statementId));
 
 	const [topStatements, setTopStatements] = useState<Statement[]>([]);
 
@@ -39,6 +40,20 @@ const useTopSuggestions = () => {
 			})
 			.catch((error) => console.error('Error:', error));
 	}
+
+	useEffect(() => {
+		if (statement && statement.statementSettings.showEvaluation === undefined || statement.statementSettings.showEvaluation === null || statement.statementSettings.showEvaluation === true) {
+			console.log("statement", statement);
+			const statementDontShowEvaluation = {
+				...statement, statementSettings: {
+					...statement.statementSettings, showEvaluation: false
+				}
+			};
+			console.log("statement 2", statement.statementSettings);
+
+			dispatch(setStatement(statementDontShowEvaluation));
+		}
+	}, [statement]);
 
 	useEffect(() => {
 		fetchStatements();
