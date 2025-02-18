@@ -10,6 +10,7 @@ export async function findSimilarStatements(
 	response: Response
 ) {
 	try {
+		const numberOfOptionsToGenerate = 5;
 		const parsedBody = request.body;
 
 		const { statementId, userInput, generateIfNeeded = 6 } = parsedBody;
@@ -24,66 +25,75 @@ export async function findSimilarStatements(
 			doc.data()
 		) as Statement[];
 
-		const statementsText = subStatements.map((subStatement) => ({
+		const statementSimple: { statement: string, id: string }[] = subStatements.map((subStatement) => ({
 			statement: subStatement.statement,
 			id: subStatement.statementId,
 		}));
 
-		if (statementsText.length === 0) {
-			const similarStatements = await generateSimilar(userInput);
-			response.status(200).send(similarStatements);
+		//if no options on the DB generate similar options by AI
+		if (statementSimple.length === 0) {
+			const textsByAI = await generateSimilar(userInput, numberOfOptionsToGenerate);
+			response.status(200).send({ statementTexts: textsByAI, ok: true });
 
 			return;
 		}
 
-		const genAiResponse = await runGenAI(
-			statementsText.map((s) => s.statement),
+		//if there are options in the DB
+		const _similarStatementsAI: string[] = await findSimilarStatementsAI(
+			statementSimple.map((s) => s.statement),
 			userInput,
 			generateIfNeeded,
-			5
+			numberOfOptionsToGenerate
 		);
 
-		const similarStatementsIds = statementsText
-			.filter((subStatement) =>
-				genAiResponse.includes(subStatement.statement)
-			)
-			.map((s) => s.id);
+		const similarStatements = getStatementsFromTextsOfStatements(statementSimple, _similarStatementsAI, subStatements);
 
-		const similarStatements = similarStatementsIds
-			.map((id) =>
-				subStatements.find(
-					(subStatement) => subStatement.statementId === id
-				)
-			)
-			.filter((s) => s !== undefined);
+		const statementsLeftToGenerate = numberOfOptionsToGenerate - similarStatements.length;
 
-		const remainingSimilarStatements = 5 - similarStatements.length;
-
-		if (remainingSimilarStatements > 0) {
-			const generated = await generateSimilar(
+		//if there are not enough similar statements in the DB and we need to generate more
+		if (statementsLeftToGenerate > 0) {
+			const generated: string[] = await generateSimilar(
 				userInput,
-				remainingSimilarStatements
+				statementsLeftToGenerate
 			);
+
 			response.status(200).send({
-				optionsInDB: similarStatements,
-				optionsGenerated: generated,
-				userOption: userInput,
+				similarStatements,
+				statementTexts: generated,
+				userText: userInput,
 				ok: true,
 			});
 
 			return;
 		}
 
+		// If there are enough similar statements in the DB send them
+
 		response.status(200).send({
-			optionsInDB: similarStatements,
+			similarStatements,
 			ok: true,
-			userOption: userInput,
+			userText: userInput,
 		});
 	} catch (error) {
 		response.status(500).send({ error: error, ok: false });
 		console.error('error', { error });
 
 		return;
+	}
+
+	function getStatementsFromTextsOfStatements(statementSimple: { statement: string; id: string; }[], _similarStatementsAI: string[], subStatements: Statement[]): Statement[] {
+		const similarStatementsIds = statementSimple
+			.filter((subStatement) => _similarStatementsAI.includes(subStatement.statement)
+			)
+			.map((s) => s.id);
+
+		const statements = similarStatementsIds
+			.map((id) => subStatements.find(
+				(subStatement) => subStatement.statementId === id
+			)
+			)
+			.filter((s) => s !== undefined);
+		return statements;
 	}
 }
 
@@ -101,7 +111,7 @@ onInit(() => {
 	}
 });
 
-export async function runGenAI(
+export async function findSimilarStatementsAI(
 	allStatements: string[],
 	userInput: string,
 	generateIfNeeded?: boolean,
@@ -132,13 +142,13 @@ export async function runGenAI(
 
 export async function generateSimilar(
 	userInput: string,
-	remainingSimilarStatements: number = 5
-) {
+	optionsToBeGeneratedByAI: number = 5
+): Promise<string[]> {
 	try {
 		const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
 		const prompt = `
-		create ${remainingSimilarStatements} similar sentences to the user input '${userInput}'.
+		create ${optionsToBeGeneratedByAI} similar sentences to the user input '${userInput}'.
 		Give answer back in this json format: { strings: ['string1', 'string2', ...] }
 		`;
 

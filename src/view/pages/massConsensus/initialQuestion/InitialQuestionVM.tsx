@@ -68,6 +68,7 @@ async function getSimilarStatements(statementId: string, userInput: string) {
 			}),
 		});
 		const data = await response.json();
+		if (!data) throw new Error('No data returned from server');
 		const { optionsInDB, optionsGenerated, userOption } = data;
 		const _userOption = { statement: userOption, statementId: null };
 		const _optionsGenerated = optionsGenerated.map((option: string) => ({
