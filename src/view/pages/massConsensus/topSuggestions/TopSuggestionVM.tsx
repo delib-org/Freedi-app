@@ -1,4 +1,5 @@
 import firebaseConfig from '@/controllers/db/configKey';
+import { listenToEvaluations } from '@/controllers/db/evaluation/getEvaluation';
 import { setStatements } from '@/redux/statements/statementsSlice';
 import { userSelector } from '@/redux/users/userSlice';
 import { functionConfig } from '@/types/ConfigFunctions';
@@ -15,11 +16,11 @@ const useTopSuggestions = () => {
 	const user = useSelector(userSelector);
 	const { statementId } = useParams<{ statementId: string }>();
 
-	useEffect(() => {
+	const fetchStatements = () => {
 		const endPoint =
-			location.hostname === 'localhost'
-				? `http://localhost:5001/${firebaseConfig.projectId}/${functionConfig.region}/getTopStatements?parentId=${statementId}&limit=2`
-				: import.meta.env.VITE_APP_TOP_STATEMENTS_ENDPOINT;
+		location.hostname === 'localhost'
+			? `http://localhost:5001/${firebaseConfig.projectId}/${functionConfig.region}/getTopStatements?parentId=${statementId}&limit=2`
+			: import.meta.env.VITE_APP_TOP_STATEMENTS_ENDPOINT;
 
 		fetch(endPoint)
 			.then((response) => response.json())
@@ -32,9 +33,15 @@ const useTopSuggestions = () => {
 					},
 				}));
 				dispatch(setStatements(options));
-			})
-			.catch((error) => console.error('Error:', error));
-	}, [statementId]);
+		})
+		.catch((error) => console.error('Error:', error));
+	}
+
+	useEffect(() => {
+		fetchStatements();
+		const unsubscribe = listenToEvaluations(dispatch, statementId, user.uid, SelectionFunction.top);
+		return () => unsubscribe();
+	}, [statementId, user.uid]);
 
 	useEffect(() => {
 		if (!user)

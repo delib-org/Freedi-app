@@ -6,6 +6,7 @@ import { MassConsensusPageUrls } from './types/TypeEnums';
 import RandomSuggestions from './view/pages/massConsensus/randomSuggestions/RandomSuggestions';
 import SimilarSuggestions from './view/pages/massConsensus/similarSuggestions/SimilarSuggestions';
 import VotingSuggestions from './view/pages/massConsensus/votingSuggestions/VotingSuggestions';
+import TopSuggestions from './view/pages/massConsensus/topSuggestions/TopSuggestions';
 
 // Custom components
 const App = lazy(() => import('./App'));
@@ -216,6 +217,14 @@ export const router = createBrowserRouter([
 				element: (
 					<Suspense fallback={<LoadingPage />}>
 						<RandomSuggestions />
+					</Suspense>
+				),
+			},
+			{
+				path: MassConsensusPageUrls.topSuggestions,
+				element: (
+					<Suspense fallback={<LoadingPage />}>
+						<TopSuggestions />
 					</Suspense>
 				),
 			},

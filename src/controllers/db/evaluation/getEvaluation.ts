@@ -14,22 +14,30 @@ import { AppDispatch } from '@/redux/store';
 import { Collections } from '@/types/TypeEnums';
 import { UserSchema } from '@/types/user/User';
 import { parse } from 'valibot';
-import { Evaluation, EvaluationSchema } from '@/types/evaluation/Evaluation';
+import { Evaluation, EvaluationSchema, SelectionFunction } from '@/types/evaluation/Evaluation';
 
 export const listenToEvaluations = (
 	dispatch: AppDispatch,
 	parentId: string,
-	evaluatorId: string | undefined
+	evaluatorId: string | undefined,
+	selectionFunction?: SelectionFunction
 ): Unsubscribe => {
 	try {
 		const evaluationsRef = collection(FireStore, Collections.evaluations);
 
 		if (!evaluatorId) throw new Error('User is undefined');
 
-		const q = query(
+		const q = selectionFunction? 
+		query(
 			evaluationsRef,
 			where('parentId', '==', parentId),
-			where('evaluatorId', '==', evaluatorId)
+			where('evaluatorId', '==', evaluatorId),
+			where('evaluation.selectionFunction', '==', selectionFunction)
+		): 
+		query(
+			evaluationsRef,
+			where('parentId', '==', parentId),
+			where('evaluatorId', '==', evaluatorId)	
 		);
 
 		return onSnapshot(q, (evaluationsDB) => {

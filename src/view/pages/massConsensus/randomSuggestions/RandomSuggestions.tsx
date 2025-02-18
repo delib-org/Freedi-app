@@ -3,6 +3,7 @@ import SuggestionCards from '../../statement/components/evaluations/components/s
 import { Link, useParams } from 'react-router'
 import { SelectionFunction } from '@/types/evaluation/Evaluation';
 import { MassConsensusPageUrls } from '@/types/TypeEnums';
+import FooterMassConsensus from '../footerMassConsesus/footerMassConsesus';
 
 const RandomSuggestions = () => {
 	const { statementId } = useParams()
@@ -14,7 +15,7 @@ const RandomSuggestions = () => {
 			/>
 			<div>RandomSuggestions</div>
 			<SuggestionCards selectionFunction={SelectionFunction.random} />
-			<Link className={"btn"} to={`/mass-consensus/${statementId}/${MassConsensusPageUrls.voting}`}>Next</Link>
+			<FooterMassConsensus goTo={MassConsensusPageUrls.topSuggestions}/>
 		</>
 	);
 };
