@@ -40,7 +40,6 @@ const SuggestionCards: FC<Props> = ({ propSort, selectionFunction, subStatements
 		)
 		: _subStatements;
 
-
 	useEffect(() => {
 		if (!statement)
 			getStatementFromDB(statementId).then((statement: Statement) =>

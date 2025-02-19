@@ -8,7 +8,6 @@ import { useRandomSuggestions } from './RandomSuggestionsVM';
 
 const RandomSuggestions = () => {
 
-
 	useRandomSuggestions();
 
 	return (

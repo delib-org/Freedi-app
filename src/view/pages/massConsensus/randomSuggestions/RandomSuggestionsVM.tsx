@@ -1,6 +1,6 @@
 import firebaseConfig from '@/controllers/db/configKey';
 import { listenToEvaluation } from '@/controllers/db/evaluation/getEvaluation';
-import { setMassConsensusStatements, setStatements } from '@/redux/statements/statementsSlice';
+import { setMassConsensusStatements } from '@/redux/statements/statementsSlice';
 import { userSelector } from '@/redux/users/userSlice';
 import { functionConfig } from '@/types/ConfigFunctions';
 import { SelectionFunction } from '@/types/evaluation/Evaluation';
@@ -28,13 +28,11 @@ export function useRandomSuggestions() {
 
 	useEffect(() => {
 		const unsubscribes = subStatements.map((subStatement) => { return listenToEvaluation(subStatement.statementId) });
+
 		return () => {
 			unsubscribes.forEach((unsubscribe) => unsubscribe());
 		}
 	}, [subStatements]);
-
-
-
 
 	const fetchRandomStatements = async () => {
 		const endPoint =
@@ -51,7 +49,7 @@ export function useRandomSuggestions() {
 
 				const { statements } = await response.json();
 				if (!statements) throw new Error('No statements found');
-				console.log('statements', statements);
+
 				setSubStatements(statements);
 				dispatch(setMassConsensusStatements({ statements, selectionFunction: SelectionFunction.random }));
 			} catch (error) {
@@ -61,16 +59,4 @@ export function useRandomSuggestions() {
 	};
 
 	return { subStatements };
-}
-
-function changeToRandomSuggestions(statements: Statement[]) {
-	return statements.map((statement) => {
-		return {
-			...statement,
-			evaluation: {
-				...statement.evaluation,
-				selectionFunction: SelectionFunction.random
-			}
-		};
-	});
 }
