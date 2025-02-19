@@ -3,17 +3,22 @@ import SuggestionCards from '../../statement/components/evaluations/components/s
 import { SelectionFunction } from '@/types/evaluation/Evaluation';
 import { MassConsensusPageUrls } from '@/types/TypeEnums';
 import FooterMassConsensus from '../footerMassConsesus/footerMassConsesus';
+import TitleMassConsensus from '../TitleMassConsensus/TitleMassConsensus';
+import { useRandomSuggestions } from './RandomSuggestionsVM';
 
 const RandomSuggestions = () => {
+
+	useRandomSuggestions();
 
 	return (
 		<>
 			<HeaderMassConsensus
 				backTo={MassConsensusPageUrls.initialQuestion}
+				title='random suggestions'
 			/>
-			<div>RandomSuggestions</div>
+			<TitleMassConsensus title="please rate the random suggestions" />
 			<SuggestionCards selectionFunction={SelectionFunction.random} />
-			<FooterMassConsensus goTo={MassConsensusPageUrls.topSuggestions}/>
+			<FooterMassConsensus goTo={MassConsensusPageUrls.topSuggestions} />
 		</>
 	);
 };
