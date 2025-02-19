@@ -1,5 +1,6 @@
 import firebaseConfig from '@/controllers/db/configKey';
-import { setStatements } from '@/redux/statements/statementsSlice';
+import { listenToEvaluation } from '@/controllers/db/evaluation/getEvaluation';
+import { setMassConsensusStatements, setStatements } from '@/redux/statements/statementsSlice';
 import { userSelector } from '@/redux/users/userSlice';
 import { functionConfig } from '@/types/ConfigFunctions';
 import { SelectionFunction } from '@/types/evaluation/Evaluation';
@@ -18,16 +19,20 @@ export function useRandomSuggestions() {
 	const { statementId } = useParams<{ statementId: string }>();
 
 	useEffect(() => {
-		if (!user) {
-			navigate(
-				`/mass-consensus/${statementId}/${MassConsensusPageUrls.introduction}`
-			);
-		}
+		if (!user) navigate(`/mass-consensus/${statementId}/${MassConsensusPageUrls.introduction}`);
 	}, [user]);
 
 	useEffect(() => {
 		fetchRandomStatements();
 	}, [statementId]);
+
+	useEffect(() => {
+		const unsubscribes = subStatements.map((subStatement) => { return listenToEvaluation(subStatement.statementId) });
+		return () => {
+			unsubscribes.forEach((unsubscribe) => unsubscribe());
+		}
+	}, [subStatements]);
+
 
 
 
@@ -46,9 +51,9 @@ export function useRandomSuggestions() {
 
 				const { statements } = await response.json();
 				if (!statements) throw new Error('No statements found');
-
+				console.log('statements', statements);
 				setSubStatements(statements);
-				dispatch(setStatements(changeToRandomSuggestions(statements)));
+				dispatch(setMassConsensusStatements({ statements, selectionFunction: SelectionFunction.random }));
 			} catch (error) {
 				console.error('Error:', error);
 			}

@@ -4,8 +4,12 @@ import { SelectionFunction } from '@/types/evaluation/Evaluation';
 import { MassConsensusPageUrls } from '@/types/TypeEnums';
 import FooterMassConsensus from '../footerMassConsesus/footerMassConsesus';
 import TitleMassConsensus from '../TitleMassConsensus/TitleMassConsensus';
+import { useRandomSuggestions } from './RandomSuggestionsVM';
 
 const RandomSuggestions = () => {
+
+
+	useRandomSuggestions();
 
 	return (
 		<>
