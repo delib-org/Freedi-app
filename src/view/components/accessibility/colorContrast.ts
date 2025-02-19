@@ -48,6 +48,12 @@ export const colorMappings: ColorMappings = {
 	"--btn-tertiary-blue": "--btn-tertiary-blue-contrast",
 	"--btn-tertiary-red": "--btn-tertiary-red-contrast",
 
+	// accessibility buttons
+	"--btn-accessibility-icons": "--btn-accessibility-icons-contrast",
+	"--btn-accessibility-light-contrast": "--btn-accessibility-light-contrast-contrast",
+	"--btn-accessibility-light-contrast-text": "--btn-accessibility-light-contrast-text-contrast",
+	"--btn-accessibility-light-contrast-icons": "--btn-accessibility-light-contrast-icons-contrast",
+
 	// Card menu
 	"--card-menu": "--card-menu-contrast",
 	"--card-menu-stroke": "--card-menu-stroke-contrast",

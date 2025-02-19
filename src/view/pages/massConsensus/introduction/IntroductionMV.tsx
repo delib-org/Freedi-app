@@ -1,9 +1,11 @@
 import { listenToAuth, signAnonymously } from '@/controllers/db/auth';
+import firebaseConfig from '@/controllers/db/configKey';
 import {
 	setStatement,
 	statementSelector,
 } from '@/redux/statements/statementsSlice';
 import { userSelector } from '@/redux/users/userSlice';
+import { functionConfig } from '@/types/ConfigFunctions';
 import { Statement } from '@/types/statement/Statement';
 
 import { useEffect, useState } from 'react';
@@ -49,12 +51,15 @@ export function useIntroductionMV() {
 async function getInitialMCData(
 	statementId: string
 ): Promise<{ statement: Statement | null; error: string }> {
-	const prodEndPoint = `https://massConsensusGetInitialData-qeesi7aziq-uc.a.run.app`;
-	const localEndPoint = `http://localhost:5001/delib-v3-dev/us-central1/massConsensusGetInitialData`;
+	const deployedEndPoint = import.meta.env.VITE_APP_MASS_CONSENSUS_ENDPOINT;
+
+	const localEndPoint = `http://localhost:5001/${firebaseConfig.projectId}/${functionConfig.region}/massConsensusGetInitialData`;
+
 	const requestUrl =
-		location.hostname !== 'localhost' ? prodEndPoint : localEndPoint;
+		location.hostname === 'localhost' ? localEndPoint : deployedEndPoint;
 
 	const response = await fetch(`${requestUrl}?statementId=${statementId}`);
+
 	try {
 		const data = await response.json();
 		if (data.statement) {

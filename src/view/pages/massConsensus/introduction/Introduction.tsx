@@ -1,6 +1,5 @@
 import { useIntroductionMV } from './IntroductionMV';
 import styles from './Introduction.module.scss';
-import { Link } from 'react-router';
 import HeaderMassConsensus from '../headerMassConsensus/HeaderMassConsensus';
 import { useParamsLanguage } from '../useParamsLang/UseParamsLanguge';
 import { MassConsensusPageUrls } from '@/types/TypeEnums';
@@ -8,7 +7,7 @@ import FooterMassConsensus from '../footerMassConsesus/footerMassConsesus';
 
 const Introduction = () => {
 	const { statement, loading, error } = useIntroductionMV();
-	const { dir, lang } = useParamsLanguage();
+	const { dir } = useParamsLanguage();
 
 	if (error) return <div>{error}</div>;
 	if (loading) return <div>Loading...</div>;

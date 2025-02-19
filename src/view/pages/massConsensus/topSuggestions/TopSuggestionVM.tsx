@@ -1,5 +1,8 @@
-import { setStatements } from '@/redux/statements/statementsSlice';
+import firebaseConfig from '@/controllers/db/configKey';
+import { listenToEvaluation } from '@/controllers/db/evaluation/getEvaluation';
+import { setStatement, setStatements, statementSelectorById } from '@/redux/statements/statementsSlice';
 import { userSelector } from '@/redux/users/userSlice';
+import { functionConfig } from '@/types/ConfigFunctions';
 import { MassConsensusPageUrls } from '@/types/TypeEnums';
 import { SelectionFunction } from '@/types/evaluation/Evaluation';
 import { Statement } from '@/types/statement/Statement';
@@ -12,12 +15,17 @@ const useTopSuggestions = () => {
 	const dispatch = useDispatch();
 	const user = useSelector(userSelector);
 	const { statementId } = useParams<{ statementId: string }>();
-	const [suggestions, setSuggestions] = useState<Statement[]>([]);
+	const statement = useSelector(statementSelectorById(statementId));
 
-	useEffect(() => {
-		fetch(
-			`http://localhost:5001/delib-v3-dev/us-central1/getTopStatements?parentId=${statementId}&limit=2`
-		)
+	const [topStatements, setTopStatements] = useState<Statement[]>([]);
+
+	const fetchStatements = () => {
+		const endPoint =
+			location.hostname === 'localhost'
+				? `http://localhost:5001/${firebaseConfig.projectId}/${functionConfig.region}/getTopStatements?parentId=${statementId}&limit=6`
+				: import.meta.env.VITE_APP_TOP_STATEMENTS_ENDPOINT;
+
+		fetch(endPoint)
 			.then((response) => response.json())
 			.then((data) => {
 				const options = data.statements.map((st: Statement) => ({
@@ -27,18 +35,46 @@ const useTopSuggestions = () => {
 						selectionFunction: SelectionFunction.top,
 					},
 				}));
-				setSuggestions(options);
 				dispatch(setStatements(options));
+				setTopStatements(options);
 			})
 			.catch((error) => console.error('Error:', error));
-	}, [statementId]);
+	}
 
 	useEffect(() => {
 		if (!user)
 			navigate(
 				`/mass-consensus/${statementId}/${MassConsensusPageUrls.introduction}`
 			);
-	}, [user]);
+	}, []);
+
+	useEffect(() => {
+		if (statement) {
+			if (statement.statementSettings.showEvaluation === undefined || statement.statementSettings.showEvaluation === null || statement.statementSettings.showEvaluation === true) {
+				const statementDontShowEvaluation = {
+					...statement, statementSettings: {
+						...statement.statementSettings, showEvaluation: false
+					}
+				};
+
+				dispatch(setStatement(statementDontShowEvaluation));
+			}
+		}
+	}, [statement]);
+
+	useEffect(() => {
+		fetchStatements();
+	}, [statementId, user?.uid]);
+
+	useEffect(() => {
+		const unSubscribes = topStatements.map((statement) => {
+			return listenToEvaluation(statement.statementId);
+		});
+
+		return () => {
+			unSubscribes.forEach((unSubscribe) => unSubscribe());
+		};
+	}, [topStatements.length]);
 
 	return {};
 };
