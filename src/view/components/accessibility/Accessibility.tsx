@@ -1,6 +1,8 @@
 import { useCallback, useEffect } from 'react';
 import IconButton from '../iconButton/IconButton';
 import AccessibilityIcon from '@/assets/icons/accessibilityIcon.svg?react';
+import HighContrastIcon from '@/assets/icons/highContrast.svg?react';
+import LightContrastIcon from '@/assets/icons/lightContrast.svg?react';
 import { useAppDispatch, useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { defaultFontSize } from '@/model/fonts/fontsModel';
 import {
@@ -14,6 +16,7 @@ import { colorMappings } from './colorContrast';
 import { useAutoClose } from '@/controllers/hooks/useAutoClose';
 import { useFontSize } from '@/controllers/hooks/useFontSize';
 import useClickOutside from '@/controllers/hooks/useClickOutside';
+import { useLanguage } from '@/controllers/hooks/useLanguages';
 
 export default function Accessibility() {
 	// * Redux * //
@@ -23,7 +26,8 @@ export default function Accessibility() {
 	const colorContrast = useAppSelector(colorContrastSelector);
 
 	// * Hooks * //
-	const { isOpen, handleOpen } = useAutoClose(5000);
+	const { isOpen, handleOpen } = useAutoClose(10000);
+	const { t } = useLanguage();
 
 	const handleClickOutside = useCallback(() => {
 		if (isOpen) handleOpen();
@@ -49,6 +53,7 @@ export default function Accessibility() {
 		<div
 			ref={accessibilityRef}
 			className={`accessibility ${isOpen ? 'is-open' : ''}`}
+			style={{ fontSize: currentFontSize }}
 		>
 			<button className='accessibility-button' onClick={handleOpen}>
 				<AccessibilityIcon />
@@ -63,7 +68,7 @@ export default function Accessibility() {
 						+
 					</IconButton>
 					<output className='accessibility__fonts__size'>
-						{currentFontSize}px
+						Aa
 					</output>
 					<IconButton
 						className='change-font-size-button'
@@ -71,14 +76,13 @@ export default function Accessibility() {
 					>
 						-
 					</IconButton>
-					<span dir='ltr'>Fonts:</span>
 				</div>
 				<div className='accessibility-panel__contrast'>
-					<button onClick={() => dispatch(setColorContrast(true))}>
-						High contrast
+					<button onClick={() => dispatch(setColorContrast(true))} className='high-contrast'>
+						<HighContrastIcon /> {t("High contrast")}
 					</button>
-					<button onClick={() => dispatch(setColorContrast(false))}>
-						Light Contrast
+					<button onClick={() => dispatch(setColorContrast(false))} className='light-contrast'>
+						<LightContrastIcon /> {t("Light contrast")}
 					</button>
 				</div>
 			</div>
