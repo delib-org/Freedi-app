@@ -18,12 +18,13 @@ import { SelectionFunction } from '@/types/evaluation/Evaluation';
 interface Props {
 	propSort?: SortType;
 	selectionFunction?: SelectionFunction;
+	subStatements?: Statement[];
 }
 
-const SuggestionCards: FC<Props> = ({ propSort, selectionFunction }) => {
+const SuggestionCards: FC<Props> = ({ propSort, selectionFunction, subStatements: propSubStatements }) => {
 	const { sort: _sort, statementId } = useParams();
 	const sort = propSort || _sort || SortType.accepted;
-
+	console.log(propSubStatements)
 	const dispatch = useDispatch();
 	const statement = useSelector(statementSelector(statementId));
 
@@ -33,12 +34,14 @@ const SuggestionCards: FC<Props> = ({ propSort, selectionFunction }) => {
 		statementSubsSelector(statement?.statementId)
 	).filter((sub: Statement) => sub.statementType === StatementType.option);
 
-	const subStatements = selectionFunction
+	const subStatements = propSubStatements ? propSubStatements : selectionFunction
 		? _subStatements.filter(
-				(sub: Statement) =>
-					sub.evaluation.selectionFunction === selectionFunction
-			)
+			(sub: Statement) =>
+				sub.evaluation.selectionFunction === selectionFunction
+		)
 		: _subStatements;
+
+	console.log(subStatements);
 
 	useEffect(() => {
 		if (!statement)

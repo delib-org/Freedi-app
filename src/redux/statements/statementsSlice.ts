@@ -257,7 +257,7 @@ export const statementsSlicer = createSlice({
 								statement.statementId === update.statementId
 						);
 						if (statement) statement.top = update.top;
-						else throw new Error('statement not found');
+						else throw new Error(`statement ${update.statementId} not found`);
 					} catch (error) {
 						console.error('On updateStatementTop loop: ', error);
 					}
@@ -438,7 +438,7 @@ export const statementOptionsSelector = (statementId: string | undefined) =>
 				(statementSub) =>
 					statementSub.parentId === statementId &&
 					statementSub.deliberativeElement ===
-						DeliberativeElement.option
+					DeliberativeElement.option
 			)
 			.sort((a, b) => a.createdAt - b.createdAt)
 			.map((statement) => ({ ...statement }));
