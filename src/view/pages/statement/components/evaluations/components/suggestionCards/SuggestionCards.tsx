@@ -24,7 +24,6 @@ interface Props {
 const SuggestionCards: FC<Props> = ({ propSort, selectionFunction, subStatements: propSubStatements }) => {
 	const { sort: _sort, statementId } = useParams();
 	const sort = propSort || _sort || SortType.accepted;
-	console.log(propSubStatements)
 	const dispatch = useDispatch();
 	const statement = useSelector(statementSelector(statementId));
 
@@ -41,7 +40,6 @@ const SuggestionCards: FC<Props> = ({ propSort, selectionFunction, subStatements
 		)
 		: _subStatements;
 
-	console.log(subStatements);
 
 	useEffect(() => {
 		if (!statement)
