@@ -29,13 +29,14 @@ export function useInitialQuestion(): InitialQuestionVM {
 		if (!userInput) return;
 		setLoading(true);
 
-		const { optionsInDB, optionsGenerated, userOption } =
+		const { similarStatements = [], similarTexts = [], userText } =
 			await getSimilarStatements(statementId, userInput);
+
 		dispatch(
 			setSimilarStatements([
-				...[userOption],
-				...optionsInDB,
-				...optionsGenerated,
+				...[userText],
+				...similarTexts,
+				...similarStatements,
 			])
 		);
 		setReady(true);
@@ -68,17 +69,19 @@ async function getSimilarStatements(statementId: string, userInput: string) {
 			}),
 		});
 		const data = await response.json();
-		const { optionsInDB, optionsGenerated, userOption } = data;
-		const _userOption = { statement: userOption, statementId: null };
-		const _optionsGenerated = optionsGenerated.map((option: string) => ({
-			statement: option,
+		if (!data) throw new Error('No data returned from server');
+		const { similarStatements, similarTexts = [], userText } = data;
+		
+		const _userText = { statement: userText, statementId: null };
+		const _similarTexts = similarTexts.map((text: string) => ({
+			statement: text,
 			statementId: null,
 		}));
 
 		return {
-			optionsInDB,
-			optionsGenerated: _optionsGenerated,
-			userOption: _userOption,
+			similarStatements,
+			similarTexts: _similarTexts,
+			userText: _userText,
 		};
 	} catch (error) {
 		console.error('Error:', error);

@@ -16,7 +16,8 @@ export async function updateStatementNumberOfMembers(
 ) {
 	if (!event.data) return;
 	try {
-		const statementsSubscribeBefore = parse(
+
+		const statementsSubscribeBefore = !event.data.before.exists ? undefined : parse(
 			StatementSubscriptionSchema,
 			event.data.before.data()
 		);
