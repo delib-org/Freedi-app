@@ -27,12 +27,13 @@ export function useRandomSuggestions() {
 	}, [statementId]);
 
 	useEffect(() => {
+		if (!user) return;
 		const unsubscribes = subStatements.map((subStatement) => { return listenToEvaluation(subStatement.statementId) });
 
 		return () => {
 			unsubscribes.forEach((unsubscribe) => unsubscribe());
 		}
-	}, [subStatements]);
+	}, [subStatements, user]);
 
 	const fetchRandomStatements = async () => {
 		const endPoint =
