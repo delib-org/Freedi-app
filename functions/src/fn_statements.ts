@@ -1,41 +1,32 @@
-import { Collections, NotificationType, Statement } from 'delib-npm';
 import { logger } from 'firebase-functions';
-import { Timestamp, FieldValue } from 'firebase-admin/firestore';
+
+import {
+	Timestamp,
+	FieldValue,
+	QueryDocumentSnapshot,
+} from 'firebase-admin/firestore';
 import { db } from './index';
+import { Collections, StatementType } from '../../src/types/TypeEnums';
+import {
+	Statement,
+	StatementSchema,
+} from '../../src/types/statement/Statement';
+import { FirestoreEvent } from 'firebase-functions/firestore';
+import { parse } from 'valibot';
+import { Response, Request } from 'firebase-functions/v1';
 
-export async function updateSubscribedListenersCB(event: any) {
-	//get statement
-	const { statementId } = event.params;
-
-	//get all subscribers to this statement
-	const subscribersRef = db.collection(Collections.statementsSubscribe);
-	const q = subscribersRef.where('statementId', '==', statementId);
-	const subscribersDB = await q.get();
-
-	//update all subscribers
-	subscribersDB.docs.forEach((doc: any) => {
-		try {
-			const subscriberId = doc.data().statementsSubscribeId;
-			if (!subscriberId) throw new Error('subscriberId not found');
-
-			db.doc(`statementsSubscribe/${subscriberId}`).set(
-				{
-					lastUpdate: Timestamp.now().toMillis(),
-				},
-				{ merge: true }
-			);
-		} catch (error) {
-			logger.error('error updating subscribers', error);
+export async function updateParentWithNewMessageCB(
+	e: FirestoreEvent<
+		QueryDocumentSnapshot | undefined,
+		{
+			statementId: string;
 		}
-	});
-
-	return;
-}
-
-export async function updateParentWithNewMessageCB(e: any) {
+	>
+) {
+	if (!e.data) return;
 	try {
 		//get parentId
-		const _statement = e.data.data() as Statement;
+		const _statement = parse(StatementSchema, e.data.data());
 		const { parentId, topParentId, statementId, statement } = _statement;
 
 		if (parentId === 'top') return;
@@ -44,11 +35,6 @@ export async function updateParentWithNewMessageCB(e: any) {
 
 		//get parent
 		const parentRef = db.doc(`${Collections.statements}/${parentId}`);
-		// const parentDB = await parentRef.get();
-		// const parent = parentDB.data();
-		// if (!parent) throw new Error('parent not found');
-
-		await setInAppNotifications(parentId, _statement);
 
 		//update parent
 		const lastMessage = statement;
@@ -83,41 +69,21 @@ export async function updateParentWithNewMessageCB(e: any) {
 	}
 }
 
-
-async function setInAppNotifications(parentId: string, statement: Statement) {
+export async function getQuestionOptions(req: Request, res: Response) {
 	try {
-		const { creatorId } = statement;
+		const { statementId } = req.query;
+		if (!statementId) throw new Error('statementId is required');
 
-		const parentRef = db.doc(`${Collections.statements}/${parentId}`);
-		const parentDB = await parentRef.get();
-		if(!parentDB.exists) throw new Error('parent not found');
-		const parent = parentDB.data() as Statement;
+		const ref = db.collection(Collections.statements);
+		const query = ref
+			.where('parentId', '==', statementId)
+			.where('statementType', '==', StatementType.option);
+		const optionsDB = await query.get();
+		const options = optionsDB.docs.map((doc) => doc.data()) as Statement[];
 
-		//get subscribers of parent
-		const subscribersRef = db.collection(Collections.statementsSubscribe);
-		const q = subscribersRef.where('statementId', '==', parentId).where('role', 'in', ['admin', 'member']).where('user.isAnonymous', '==', false).where('userId', '!=', creatorId);
-		const subscribersDB = await q.get();
-		//get array of subscribers ids
-		const subscribersIds = subscribersDB.docs.map((sub) => sub.data().userId);
-
-		const batch = db.batch();
-		subscribersIds.forEach((userId) => {
-			const notificationRef = db.collection(Collections.inAppNotifications).doc();
-			const notification: NotificationType = {
-				userId,
-				parentId,
-				parentStatement: parent.statement,
-				text: statement.statement,
-				creatorName: statement.creator.displayName,
-				creatorImage: statement.creator.photoURL,
-				createdAt: new Date().getTime(),
-				read: false,
-				notificationId: notificationRef.id,
-			}
-			batch.set(notificationRef, notification);
-		});
-		await batch.commit();
+		res.status(200).send({ options, ok: true });
 	} catch (error) {
 		console.error(error);
+		res.status(500).send({ error: error, ok: false });
 	}
 }

@@ -1,8 +1,5 @@
-import { Statement, Vote, Evaluation, Screen } from 'delib-npm';
-
 // Helpers
-import { StatementSettings, StatementType } from 'delib-npm/dist/models/statementsModels';
-import { NavigateFunction } from 'react-router-dom';
+import { NavigateFunction } from 'react-router';
 import {
 	defaultResultsSettings,
 	defaultStatementSettings,
@@ -14,12 +11,18 @@ import {
 	updateStatement,
 } from '@/controllers/db/statements/setStatements';
 import { getVoters } from '@/controllers/db/vote/getVotes';
+import { StatementType } from '@/types/TypeEnums';
+import { Evaluation } from '@/types/evaluation/Evaluation';
+import { Statement } from '@/types/statement/Statement';
+import { Vote } from '@/types/vote';
+import { Dispatch, SetStateAction } from 'react';
+import { StatementSettings } from '@/types/statement/StatementSettings';
 
 // Get users that voted on options in this statement
 export async function handleGetVoters(
 	parentId: string | undefined,
-	setVoters: React.Dispatch<React.SetStateAction<Vote[]>>,
-	setClicked: React.Dispatch<React.SetStateAction<boolean>>
+	setVoters: Dispatch<SetStateAction<Vote[]>>,
+	setClicked: Dispatch<SetStateAction<boolean>>
 ) {
 	if (!parentId) return;
 	const voters = await getVoters(parentId);
@@ -30,8 +33,8 @@ export async function handleGetVoters(
 //Get users that did not vote on options in this statement
 export async function handleGetNonVoters(
 	parentId: string | undefined,
-	setNonVoters: React.Dispatch<React.SetStateAction<Vote[]>>,
-	setClicked: React.Dispatch<React.SetStateAction<boolean>>
+	setNonVoters: Dispatch<SetStateAction<Vote[]>>,
+	setClicked: Dispatch<SetStateAction<boolean>>
 ) {
 	if (!parentId) return;
 
@@ -52,8 +55,8 @@ export async function handleGetNonVoters(
 // Get users that evaluated on options in this statement
 export async function handleGetEvaluators(
 	parentId: string | undefined,
-	setEvaluators: React.Dispatch<React.SetStateAction<Evaluation[]>>,
-	setClicked: React.Dispatch<React.SetStateAction<boolean>>
+	setEvaluators: Dispatch<SetStateAction<Evaluation[]>>,
+	setClicked: Dispatch<SetStateAction<boolean>>
 ) {
 	if (!parentId) return;
 	const evaluators = await getEvaluations(parentId);
@@ -107,12 +110,12 @@ export async function setNewStatement({
 				membership,
 			});
 
-			if (!newStatement) throw new Error('newStatement had error in creating');
+			if (!newStatement)
+				throw new Error('newStatement had error in creating');
 
 			await setStatementToDB({
 				parentStatement: 'top',
 				statement: newStatement,
-				addSubscription: true,
 			});
 
 			return newStatement;
@@ -136,12 +139,12 @@ export async function setNewStatement({
 				showEvaluation,
 				membership,
 			});
-			if (!newStatement) throw new Error('newStatement had not been updated');
+			if (!newStatement)
+				throw new Error('newStatement had not been updated');
 
 			await setStatementToDB({
 				parentStatement,
 				statement: newStatement,
-				addSubscription: true,
 			});
 
 			return newStatement;
@@ -165,7 +168,9 @@ export const getStatementSettings = (statement: Statement) => {
 		enhancedEvaluation: Boolean(statementSettings.enhancedEvaluation),
 		showEvaluation: Boolean(statementSettings.showEvaluation),
 		subScreens: statementSettings.subScreens ?? [],
-		inVotingGetOnlyResults: Boolean(statementSettings.inVotingGetOnlyResults),
+		inVotingGetOnlyResults: Boolean(
+			statementSettings.inVotingGetOnlyResults
+		),
 		enableSimilaritiesSearch: Boolean(
 			statementSettings.enableSimilaritiesSearch
 		),
@@ -207,12 +212,10 @@ interface ToggleSubScreenParams {
 }
 
 export const toggleSubScreen = ({
-
 	statement,
 }: ToggleSubScreenParams): Statement => {
-
 	return {
-		...statement
+		...statement,
 	};
 };
 
@@ -229,7 +232,7 @@ export async function createStatementFromModal({
 	title,
 	description,
 	parentStatement,
-	statementType
+	statementType,
 }: CreateStatementFromModalParams) {
 	try {
 		if (!title) throw new Error('title is undefined');
@@ -247,14 +250,14 @@ export async function createStatementFromModal({
 
 		await setStatementToDB({
 			statement: newStatement,
-			parentStatement: parentStatement === 'top' ? 'top' : parentStatement,
-			addSubscription: true,
+			parentStatement:
+				parentStatement === 'top' ? 'top' : parentStatement,
 		});
 
 		await setStatementToDB({
 			statement: newStatement,
-			parentStatement: parentStatement === 'top' ? 'top' : parentStatement,
-			addSubscription: true,
+			parentStatement:
+				parentStatement === 'top' ? 'top' : parentStatement,
 		});
 	} catch (error) {
 		console.error(error);

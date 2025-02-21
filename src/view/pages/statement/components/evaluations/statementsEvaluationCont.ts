@@ -1,11 +1,11 @@
-import { Statement, SortType } from 'delib-npm';
-
 import {
 	EnhancedEvaluationThumb,
 	enhancedEvaluationsThumbs,
 } from './components/evaluation/enhancedEvaluation/EnhancedEvaluationModel';
-import { updateStatementTop } from '@/model/statements/statementsSlice';
-import { store } from '@/model/store';
+import { updateStatementTop } from '@/redux/statements/statementsSlice';
+import { store } from '@/redux/store';
+import { SortType } from '@/types/TypeEnums';
+import { Statement } from '@/types/statement/Statement';
 
 export function sortSubStatements(
 	subStatements: Statement[],

@@ -1,14 +1,19 @@
-import { DeliberativeElement, Statement } from 'delib-npm';
-import React, { FC, useContext } from 'react';
-import { useParams } from 'react-router-dom';
+import React, { FC } from 'react';
+import { useParams } from 'react-router';
 import OptionBar from '../optionBar/OptionBar';
 import './VotingArea.scss';
 import { getSortedVotingOptions, isVerticalOptionBar } from './VotingAreaCont';
 import useWindowDimensions from '@/controllers/hooks/useWindowDimentions';
-import { StatementContext } from '@/view/pages/statement/StatementCont';
+
+import { useSelector } from 'react-redux';
+import { statementSelectorById } from '@/redux/statements/statementsSlice';
+import { Statement } from '@/types/statement/Statement';
+import { DeliberativeElement } from '@/types/TypeEnums';
 
 interface VotingAreaProps {
-	setStatementInfo: React.Dispatch<React.SetStateAction<Statement | null>>;
+	setStatementInfo: React.Dispatch<
+		React.SetStateAction<Statement | undefined>
+	>;
 	subStatements: Statement[];
 	setShowInfo: React.Dispatch<React.SetStateAction<boolean>>;
 	totalVotes: number;
@@ -20,15 +25,19 @@ const VotingArea: FC<VotingAreaProps> = ({
 	setShowInfo,
 	totalVotes,
 }) => {
-	const { sort } = useParams();
-	const { statement } = useContext(StatementContext);
+	const { statementId, sort } = useParams();
+	const statement = useSelector(statementSelectorById(statementId));
+	const { width } = useWindowDimensions();
 
 	if (!statement) return null;
-	//if statementSettings.inVotingGetOnlyResults is true, only show results or selections
-	const _options = statement?.statementSettings?.inVotingGetOnlyResults
-		? subStatements.filter((st) => st.isResult)
-		: subStatements.filter(st => st.deliberativeElement === DeliberativeElement.option);
 
+	const defaultOptions = statement?.statementSettings?.inVotingGetOnlyResults
+		? subStatements.filter((st) => st.isResult)
+		: subStatements.filter(
+				(st) => st.deliberativeElement === DeliberativeElement.option
+			);
+
+	const _options = subStatements || defaultOptions;
 	const options = getSortedVotingOptions({
 		statement,
 		subStatements: _options,
@@ -36,7 +45,6 @@ const VotingArea: FC<VotingAreaProps> = ({
 	});
 	const optionsCount = options.length;
 
-	const { width } = useWindowDimensions();
 	const shouldShowVerticalBar = isVerticalOptionBar(width, optionsCount);
 
 	return (

@@ -1,9 +1,4 @@
-import { Statement, StatementType } from 'delib-npm';
 import { ChangeEvent, FC, useEffect, useRef, useState } from 'react';
-
-// Third Party Imports
-
-// Redux Store
 import StatementChatMore from '../StatementChatMore';
 import UserAvatar from '../userAvatar/UserAvatar';
 import AddQuestionIcon from '@/assets/icons/addQuestion.svg?react';
@@ -22,24 +17,19 @@ import { isAuthorized } from '@/controllers/general/helpers';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { useLanguage } from '@/controllers/hooks/useLanguages';
 import useStatementColor from '@/controllers/hooks/useStatementColor';
-import { statementSubscriptionSelector } from '@/model/statements/statementsSlice';
-import { store } from '@/model/store';
-
-// Helper functions
-
-// Hooks
-
-// Custom Components
+import { statementSubscriptionSelector } from '@/redux/statements/statementsSlice';
+import { store } from '@/redux/store';
 import EditTitle from '@/view/components/edit/EditTitle';
 import Menu from '@/view/components/menu/Menu';
 import MenuOption from '@/view/components/menu/MenuOption';
 import CreateStatementModal from '@/view/pages/statement/components/createStatementModal/CreateStatementModal';
-
 import './ChatMessageCard.scss';
 import { deleteStatementFromDB } from '@/controllers/db/statements/deleteStatements';
 import Evaluation from '../../../evaluations/components/evaluation/Evaluation';
 import useAutoFocus from '@/controllers/hooks/useAutoFocus ';
 import UploadImage from '@/view/components/uploadImage/UploadImage';
+import { StatementType } from '@/types/TypeEnums';
+import { Statement } from '@/types/statement/Statement';
 
 export interface NewQuestion {
 	statement: Statement;
@@ -59,7 +49,6 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
 	statement,
 	previousStatement,
 }) => {
-
 	const imageUrl = statement.imagesURL?.main ?? '';
 	const [image, setImage] = useState<string>(imageUrl);
 	// Hooks
@@ -75,7 +64,8 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
 
 	// Use States
 	const [isEdit, setIsEdit] = useState(false);
-	const [isNewStatementModalOpen, setIsNewStatementModalOpen] = useState(false);
+	const [isNewStatementModalOpen, setIsNewStatementModalOpen] =
+		useState(false);
 	const [isCardMenuOpen, setIsCardMenuOpen] = useState(false);
 	const [text, setText] = useState(
 		`${statement?.statement}\n${statement.description}`
@@ -174,7 +164,9 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
 
 			<div
 				className={
-					isStatement ? 'message-box message-box--statement' : 'message-box'
+					isStatement
+						? 'message-box message-box--statement'
+						: 'message-box'
 				}
 				style={{
 					borderColor: isGeneral
@@ -190,7 +182,9 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
 							<div
 								className='input-wrapper'
 								style={{
-									flexDirection: isAlignedLeft ? 'row' : 'row-reverse',
+									flexDirection: isAlignedLeft
+										? 'row'
+										: 'row-reverse',
 								}}
 							>
 								<textarea
@@ -238,7 +232,9 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
 							<MenuOption
 								label={t('Upload Image')}
 								icon={<UploadImageIcon />}
-								onOptionClick={() => fileInputRef.current?.click()}
+								onOptionClick={() =>
+									fileInputRef.current?.click()
+								}
 							/>
 						)}
 						{_isAuthorized && (
@@ -246,7 +242,9 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
 								isOptionSelected={isOption}
 								icon={<LightBulbIcon />}
 								label={
-									isOption ? t('Unmark as a Solution') : t('Mark as a Solution')
+									isOption
+										? t('Unmark as a Solution')
+										: t('Mark as a Solution')
 								}
 								onOptionClick={() => {
 									handleSetOption();
@@ -275,7 +273,10 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
 								label={t('Delete')}
 								icon={<DeleteIcon />}
 								onOptionClick={() => {
-									deleteStatementFromDB(statement, _isAuthorized);
+									deleteStatementFromDB(
+										statement,
+										_isAuthorized
+									);
 									setIsCardMenuOpen(false);
 								}}
 							/>
@@ -296,7 +297,10 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
 					<div className='chat-more-element'>
 						<StatementChatMore statement={statement} />
 					</div>
-					<Evaluation parentStatement={parentStatement} statement={statement} />
+					<Evaluation
+						parentStatement={parentStatement}
+						statement={statement}
+					/>
 					{shouldLinkToChildren && (
 						<button
 							className='add-question-btn more-question'

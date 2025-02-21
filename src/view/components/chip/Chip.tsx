@@ -1,14 +1,12 @@
-import { User } from "delib-npm";
-import { FC } from "react";
-import styles from "./Chip.module.scss";
-import SmileIcon from "@/assets/icons/smileIcon.svg?react";
-
-// import anonymous from "@/assets/anonymous1.png";
+import styles from './Chip.module.scss';
+import SmileIcon from '@/assets/icons/smileIcon.svg?react';
+import { User } from '@/types/user/User';
 
 interface Props {
-    user: User | undefined;
+	user: User | undefined;
 }
-const Chip: FC<Props> = ({ user }) => {
+
+export default function Chip({ user }: Props) {
 	if (!user) return null;
 	const displayName = user.displayName.slice(0, 15);
 
@@ -22,6 +20,4 @@ const Chip: FC<Props> = ({ user }) => {
 			<span>{displayName}</span>
 		</div>
 	);
-};
-
-export default Chip;
+}

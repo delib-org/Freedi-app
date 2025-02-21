@@ -1,25 +1,19 @@
-import { QuestionStage, QuestionType, Statement, StatementType } from "delib-npm";
-import { FC, useEffect, useState } from "react";
-
-// Third party imports
-
-// Custom Components
-
-import { useNavigate } from "react-router-dom";
-import CreateStatementModalSwitch from "../createStatementModalSwitch/CreateStatementModalSwitch";
-import StatementBottomNav from "../nav/bottom/StatementBottomNav";
-import { getStagesInfo } from "../settings/components/QuestionSettings/QuestionStageRadioBtn/QuestionStageRadioBtn";
-import StatementInfo from "../vote/components/info/StatementInfo";
-import Description from "./components/description/Description";
-import SuggestionCards from "./components/suggestionCards/SuggestionCards";
-import styles from "./statementEvaluationsPage.module.scss";
-import LightBulbIcon from "@/assets/icons/lightBulbIcon.svg?react";
-import X from "@/assets/icons/x.svg?react";
-import { getTitle } from "@/controllers/general/helpers";
-import { useLanguage } from "@/controllers/hooks/useLanguages";
-import Button from "@/view/components/buttons/button/Button";
-import Modal from "@/view/components/modal/Modal";
-import Toast from "@/view/components/toast/Toast";
+import { FC, useEffect, useState } from 'react';
+import { useNavigate } from 'react-router';
+import CreateStatementModalSwitch from '../createStatementModalSwitch/CreateStatementModalSwitch';
+import StatementBottomNav from '../nav/bottom/StatementBottomNav';
+import StatementInfo from '../vote/components/info/StatementInfo';
+import Description from './components/description/Description';
+import SuggestionCards from './components/suggestionCards/SuggestionCards';
+import styles from './statementEvaluationsPage.module.scss';
+import LightBulbIcon from '@/assets/icons/lightBulbIcon.svg?react';
+import X from '@/assets/icons/x.svg?react';
+import { useLanguage } from '@/controllers/hooks/useLanguages';
+import Button from '@/view/components/buttons/button/Button';
+import Modal from '@/view/components/modal/Modal';
+import Toast from '@/view/components/toast/Toast';
+import { Statement } from '@/types/statement/Statement';
+import { QuestionStep, StatementType } from '@/types/TypeEnums';
 
 interface StatementEvaluationPageProps {
 	statement: Statement;
@@ -32,70 +26,67 @@ const StatementEvaluationPage: FC<StatementEvaluationPageProps> = ({
 	statement,
 	questions = false,
 }) => {
+	// Hooks
+
+	const navigate = useNavigate();
+	const { t } = useLanguage();
+	const isMultiStage = false;
+
+	const currentStep = statement.questionSettings?.currentStep;
+	const useSearchForSimilarStatements =
+		statement.statementSettings?.enableSimilaritiesSearch || false;
+
+	// Use States
+	const [showModal, setShowModal] = useState(false);
+	const [showToast, setShowToast] = useState(false);
+	const [showExplanation, setShowExplanation] = useState<boolean>(
+		currentStep === QuestionStep.explanation && isMultiStage && !questions
+	);
+
+	useEffect(() => {
+		if (questions) {
+			setShowToast(false);
+		}
+	}, [questions]);
+
+	useEffect(() => {
+		if (!showToast && !questions) {
+			setShowToast(true);
+		}
+		if (
+			currentStep === QuestionStep.explanation &&
+			isMultiStage &&
+			!questions
+		) {
+			setShowExplanation(true);
+		}
+		if (currentStep === QuestionStep.voting && !questions) {
+			//redirect us react router dom to voting page
+			navigate(`/statement/${statement.statementId}/vote`);
+		}
+	}, [statement.questionSettings?.currentStep, questions]);
 	try {
-		// Hooks
-
-		const navigate = useNavigate();
-		const { t } = useLanguage();
-		const isMultiStage =
-			statement.questionSettings?.questionType === QuestionType.multipleSteps;
-
-		const currentStage = statement.questionSettings?.currentStage;
-		const stageInfo = getStagesInfo(currentStage);
-		const useSearchForSimilarStatements =
-			statement.statementSettings?.enableSimilaritiesSearch || false;
-
-		// Use States
-		const [showModal, setShowModal] = useState(false);
-		const [showToast, setShowToast] = useState(false);
-		const [showExplanation, setShowExplanation] = useState(
-			currentStage === QuestionStage.explanation && isMultiStage && !questions
-		);
-
-		useEffect(() => {
-			if (questions) {
-				setShowToast(false);
-			}
-		}, [questions]);
-
-		useEffect(() => {
-			if (!showToast && !questions) {
-				setShowToast(true);
-			}
-			if (
-				currentStage === QuestionStage.explanation &&
-				isMultiStage &&
-				!questions
-			) {
-				setShowExplanation(true);
-			}
-			if (currentStage === QuestionStage.voting && !questions) {
-				//redirect us react router dom to voting page
-				navigate(`/statement/${statement.statementId}/vote`);
-			}
-		}, [statement.questionSettings?.currentStage, questions]);
-
-		const message = stageInfo ? stageInfo.message : false;
+		const message = currentStep || false;
 
 		return (
 			<>
-				<div className="page__main">
+				<div className='page__main'>
 					<div className={`wrapper ${styles.wrapper}`}>
 						{isMultiStage && message && (
 							<Toast
-								text={`${t(message)}${currentStage === QuestionStage.suggestion ? `: "${getTitle(statement)}` : ""}`}
-								type="message"
+								text={`${t(message)}${currentStep === QuestionStep.suggestion ? statement.statement : ''}`}
+								type='message'
 								show={showToast}
 								setShow={setShowToast}
 							>
-								{getToastButtons(currentStage)}
+								{getToastButtons(currentStep)}
 							</Toast>
 						)}
 						<Description />
 						<SuggestionCards />
 					</div>
 				</div>
-				<div className="page__footer">
+				<div className='page__footer'>
 					<StatementBottomNav />
 				</div>
 				{showExplanation && (
@@ -119,63 +110,43 @@ const StatementEvaluationPage: FC<StatementEvaluationPageProps> = ({
 			</>
 		);
 
-		function getToastButtons(questionStage: QuestionStage | undefined) {
+		function getToastButtons(questionStage: QuestionStep | undefined) {
 			try {
 				switch (questionStage) {
-					case QuestionStage.voting:
-					case QuestionStage.firstEvaluation:
-					case QuestionStage.secondEvaluation:
-					case QuestionStage.finished:
-					case QuestionStage.explanation:
-						return (
-							<Button
-								text={t("Close")}
-								iconOnRight={false}
-								onClick={() => {
-									setShowToast(false);
-								}}
-								icon={<X />}
-								color="white"
-								bckColor="var(--crimson)"
-							/>
-						);
-					case QuestionStage.suggestion:
+					case QuestionStep.suggestion:
 						return (
 							<>
 								<Button
-									text={t("Close")}
+									text={t('Close')}
 									iconOnRight={false}
 									onClick={() => {
 										setShowToast(false);
 									}}
 									icon={<X />}
-									color="white"
-									bckColor="var(--crimson)"
 								/>
 								<Button
-									text={t("Add a solution")}
+									text={t('Add a solution')}
 									iconOnRight={true}
 									onClick={() => {
 										setShowToast(false);
 										setShowModal(true);
 									}}
 									icon={<LightBulbIcon />}
-									color="white"
-									bckColor="var(--green)"
 								/>
 							</>
 						);
+					case QuestionStep.voting:
+					case QuestionStep.finished:
+					case QuestionStep.explanation:
 					default:
 						return (
 							<Button
-								text={t("Close")}
+								text={t('Close')}
 								iconOnRight={false}
 								onClick={() => {
 									setShowToast(false);
 								}}
 								icon={<X />}
-								color="white"
-								bckColor="var(--crimson)"
 							/>
 						);
 				}

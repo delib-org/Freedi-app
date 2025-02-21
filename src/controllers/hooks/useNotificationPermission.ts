@@ -1,40 +1,31 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams } from "react-router";
 import { useAppSelector } from "./reduxHooks";
 import {
-	hasTokenSelector,
-	statementNotificationSelector,
-} from "@/model/statements/statementsSlice";
+	hasTokenSelector
+} from "@/redux/statements/statementsSlice";
 
 const useNotificationPermission = (token: string) => {
-	try {
-		const { statementId } = useParams();
 
-		if (!statementId) throw new Error("statementId not found");
+	const { statementId } = useParams();
 
-		const [permission, setPermission] = useState(
-			Notification.permission === "granted",
+	if (!statementId) throw new Error("statementId not found");
+
+	const [permission, setPermission] = useState(
+		Notification.permission === "granted",
+	);
+
+	const hasToken = useAppSelector(hasTokenSelector(token, statementId));
+
+	useEffect(() => {
+		setPermission(
+			Notification.permission === "granted" &&
+			hasToken,
 		);
-		const hasNotifications = useAppSelector(
-			statementNotificationSelector(statementId),
-		);
+	}, [hasToken, Notification.permission]);
 
-		const hasToken = useAppSelector(hasTokenSelector(token, statementId));
+	return permission;
 
-		useEffect(() => {
-			setPermission(
-				Notification.permission === "granted" &&
-                    hasNotifications &&
-                    hasToken,
-			);
-		}, [hasToken, hasNotifications, Notification.permission]);
-
-		return permission;
-	} catch (error) {
-		console.error(error);
-
-		return false;
-	}
 };
 
 export default useNotificationPermission;

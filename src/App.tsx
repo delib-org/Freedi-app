@@ -1,32 +1,28 @@
-import { Agreement } from 'delib-npm';
 import { Unsubscribe } from 'firebase/auth';
-import { useEffect, useState, Suspense } from 'react';
+import React, { useEffect, useState, Suspense } from 'react';
 
 // Third party imports
 import { useDispatch } from 'react-redux';
-import { Outlet, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { Outlet, useLocation, useNavigate, useParams } from 'react-router';
 
 // Firebase functions
 import { listenToAuth, logOut } from './controllers/db/auth';
 
 // Redux Store
-import {
-	listenToInAppNotifications,
-	onLocalMessage,
-} from './controllers/db/notifications/notifications';
 import { getSignature } from './controllers/db/users/getUserDB';
 import { updateUserAgreement } from './controllers/db/users/setUsersDB';
 import { useAppSelector } from './controllers/hooks/reduxHooks';
 import { LanguagesEnum, useLanguage } from './controllers/hooks/useLanguages';
-import { setHistory } from './model/history/HistorySlice';
-import { selectInitLocation } from './model/location/locationSlice';
-import { updateAgreementToStore, userSelector } from './model/users/userSlice';
+import { setHistory } from './redux/history/HistorySlice';
+import { selectInitLocation } from './redux/location/locationSlice';
+import { updateAgreementToStore, userSelector } from './redux/users/userSlice';
 
 // Type
 
 // Custom components
 import Accessibility from './view/components/accessibility/Accessibility';
 import TermsOfUse from './view/components/termsOfUse/TermsOfUse';
+import { Agreement } from './types/agreement/Agreement';
 
 // Helpers
 
@@ -35,7 +31,7 @@ export default function App() {
 	const location = useLocation();
 	const navigate = useNavigate();
 	const dispatch = useDispatch();
-	const { statementId, anonymous } = useParams();
+	const { statementId } = useParams();
 	const { changeLanguage, t } = useLanguage();
 
 	// Redux Store
@@ -59,9 +55,9 @@ export default function App() {
 	}, []);
 
 	useEffect(() => {
-		const authUnsubscribe: Unsubscribe = listenToAuth(dispatch)(
-			anonymous === 'true',
+		const authUnsubscribe: Unsubscribe = listenToAuth(
 			navigate,
+			false,
 			initLocation
 		);
 
@@ -78,8 +74,6 @@ export default function App() {
 				return;
 			}
 
-			const unsubscribeToLocalMessages = await onLocalMessage();
-
 			if (user.agreement?.date) {
 				setShowSignAgreement(false);
 			} else {
@@ -90,8 +84,6 @@ export default function App() {
 				setAgreement(agreement.text);
 				setShowSignAgreement(true);
 			}
-
-			return unsubscribeToLocalMessages;
 		};
 
 		return () => {
@@ -104,8 +96,6 @@ export default function App() {
 			return;
 		}
 
-		const unsubscribeToInAppNotifications = listenToInAppNotifications();
-
 		if (user.agreement?.date) {
 			setShowSignAgreement(false);
 		} else {
@@ -116,10 +106,6 @@ export default function App() {
 			setAgreement(agreement.text);
 			setShowSignAgreement(true);
 		}
-
-		return () => {
-			return unsubscribeToInAppNotifications();
-		};
 	}, [user]);
 
 	async function handleAgreement(agree: boolean, text: string) {
@@ -127,7 +113,10 @@ export default function App() {
 			if (!text) throw new Error('text is empty');
 			if (agree) {
 				setShowSignAgreement(false);
-				const agreement: Agreement | undefined = getSignature('basic', t);
+				const agreement: Agreement | undefined = getSignature(
+					'basic',
+					t
+				);
 				if (!agreement) throw new Error('agreement not found');
 				agreement.text = text;
 
@@ -151,7 +140,10 @@ export default function App() {
 
 			<Outlet />
 			{showSignAgreement && (
-				<TermsOfUse handleAgreement={handleAgreement} agreement={agreement} />
+				<TermsOfUse
+					handleAgreement={handleAgreement}
+					agreement={agreement}
+				/>
 			)}
 		</Suspense>
 	);

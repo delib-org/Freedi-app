@@ -1,11 +1,11 @@
 import { FC, useContext } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation } from "react-router";
 import FollowMeIcon from "../../../../components/icons/FollowMeIcon";
 import { setFollowMeDB } from "@/controllers/db/statements/setStatements";
 import { isAdmin } from "@/controllers/general/helpers";
 import { useAppSelector } from "@/controllers/hooks/reduxHooks";
 import { useLanguage } from "@/controllers/hooks/useLanguages";
-import { statementSelector } from "@/model/statements/statementsSlice";
+import { statementSelector } from "@/redux/statements/statementsSlice";
 import "./FollowMeToast.scss";
 import { StatementContext } from "../../StatementCont";
 
@@ -32,7 +32,7 @@ const FollowMeToast: FC = () => {
 	//if the follow me is empty, turn off the follow me toast
 	if (
 		topParentStatement?.followMe === "" ||
-        topParentStatement?.followMe === undefined
+		topParentStatement?.followMe === undefined
 	)
 		return null;
 

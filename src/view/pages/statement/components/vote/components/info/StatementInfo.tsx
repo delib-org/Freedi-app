@@ -1,45 +1,46 @@
-import { Statement } from "delib-npm";
-import { FC, useState } from "react";
-import { handleSubmitInfo } from "./StatementInfoCont";
+import { Dispatch, FC, SetStateAction, useState } from 'react';
+import { handleSubmitInfo } from './StatementInfoCont';
 
 //image
-import EditIcon from "@/assets/icons/editIcon.svg?react";
-import infoGraphic from "@/assets/images/infoGraphic.png";
-import { isAuthorized } from "@/controllers/general/helpers";
+import EditIcon from '@/assets/icons/editIcon.svg?react';
+import infoGraphic from '@/assets/images/infoGraphic.png';
+import { isAuthorized } from '@/controllers/general/helpers';
 
-import { useAppSelector } from "@/controllers/hooks/reduxHooks";
-import "./StatementInfo.scss";
-import { useLanguage } from "@/controllers/hooks/useLanguages";
+import { useAppSelector } from '@/controllers/hooks/reduxHooks';
+import './StatementInfo.scss';
+import { useLanguage } from '@/controllers/hooks/useLanguages';
 import {
 	statementSelector,
 	statementSubscriptionSelector,
-} from "@/model/statements/statementsSlice";
-import Text from "@/view/components/text/Text";
+} from '@/redux/statements/statementsSlice';
+import Text from '@/view/components/text/Text';
+import { Statement } from '@/types/statement/Statement';
 
 interface Props {
-  statement: Statement | null;
-  setShowInfo: React.Dispatch<React.SetStateAction<boolean>>;
+	statement: Statement | null;
+	setShowInfo: Dispatch<SetStateAction<boolean>>;
 }
 
 const StatementInfo: FC<Props> = ({ statement, setShowInfo }) => {
-	if (!statement) return null;
-
 	// Hooks
 	const { t } = useLanguage();
 
 	// Redux
 	const statementSubscription = useAppSelector(
-		statementSubscriptionSelector(statement.statementId)
+		statementSubscriptionSelector(statement?.statementId)
 	);
-	const parentStatement = useAppSelector(statementSelector(statement.parentId));
+	const parentStatement = useAppSelector(
+		statementSelector(statement?.parentId)
+	);
 
 	// Use State
 	const [isInEditMode, setIsInEditMode] = useState(false);
 	const [formData, setFormData] = useState({
-		title: statement.statement || "",
-		description: statement.description || "",
+		title: statement?.statement || '',
+		description: statement?.description || '',
 	});
 
+	if (!statement) return null;
 	const _isAuthorized = isAuthorized(
 		statement,
 		statementSubscription,
@@ -47,14 +48,14 @@ const StatementInfo: FC<Props> = ({ statement, setShowInfo }) => {
 	);
 
 	return (
-		<div className="statement-info">
-			<div className="info-graphic">
-				<img src={infoGraphic} alt="info" />
+		<div className='statement-info'>
+			<div className='info-graphic'>
+				<img src={infoGraphic} alt='info' />
 			</div>
 
 			{isInEditMode ? (
 				<form
-					className="form"
+					className='form'
 					onSubmit={(e) =>
 						handleSubmitInfo(
 							e,
@@ -65,9 +66,9 @@ const StatementInfo: FC<Props> = ({ statement, setShowInfo }) => {
 						)
 					}
 				>
-					<div className="inputs">
+					<div className='inputs'>
 						<input
-							type="text"
+							type='text'
 							value={formData.title}
 							onChange={(e) =>
 								setFormData({
@@ -85,41 +86,47 @@ const StatementInfo: FC<Props> = ({ statement, setShowInfo }) => {
 									description: e.target.value,
 								})
 							}
-							placeholder={t("description")}
+							placeholder={t('description')}
 						/>
 					</div>
-					<div className="form-buttons">
+					<div className='form-buttons'>
 						<button
-							type="button"
-							className="cancel-button"
+							type='button'
+							className='cancel-button'
 							onClick={() => setIsInEditMode(false)}
 						>
-							{t("Cancel")}
+							{t('Cancel')}
 						</button>
-						<button type="submit" className="save-button">
-							{t("Save")}
+						<button type='submit' className='save-button'>
+							{t('Save')}
 						</button>
 					</div>
 				</form>
 			) : (
 				<>
-					<div className="texts">
+					<div className='texts'>
 						<h3>
 							{formData.title}
 							{_isAuthorized && (
-								<button className="edit-icon" onClick={() => setIsInEditMode(true)} aria-label="Edit">
-									<EditIcon
-									/>
+								<button
+									className='edit-icon'
+									onClick={() => setIsInEditMode(true)}
+									aria-label='Edit'
+								>
+									<EditIcon />
 								</button>
 							)}
 						</h3>
-						<div className="text">
-							<Text description={formData.description || ""} />
+						<div className='text'>
+							<Text description={formData.description || ''} />
 						</div>
 					</div>
-					<div className="form-buttons">
-						<button className="close-button" onClick={() => setShowInfo(false)}>
-							{t("Close")}
+					<div className='form-buttons'>
+						<button
+							className='close-button'
+							onClick={() => setShowInfo(false)}
+						>
+							{t('Close')}
 						</button>
 					</div>
 				</>

@@ -1,4 +1,5 @@
-import { DeliberativeElement, Screen, Statement } from 'delib-npm';
+import { Statement } from '@/types/statement/Statement';
+import { DeliberativeElement, Screen } from '@/types/TypeEnums';
 
 // Updates the displayed options with how many votes each option has from the parent statement
 export function setSelectionsToOptions(
@@ -9,8 +10,9 @@ export function setSelectionsToOptions(
 		const parsedOptions = JSON.parse(JSON.stringify(options));
 		if (statement.selections) {
 			parsedOptions.forEach((option: Statement) => {
-				if (statement.selections.hasOwnProperty(`${option.statementId}`)) {
-					const optionSelections = statement.selections[option.statementId];
+				if (statement.selections?.[option.statementId] !== undefined) {
+					const optionSelections =
+						statement.selections[option.statementId];
 					option.voted = optionSelections;
 				}
 			});
@@ -101,10 +103,7 @@ export function getTotalVoters(statement: Statement | undefined) {
 // TODO: Not used. Delete later
 export function getSelections(statement: Statement, option: Statement) {
 	try {
-		if (
-			statement.selections &&
-			statement.selections.hasOwnProperty(option.statementId)
-		) {
+		if (statement.selections?.[option.statementId] !== undefined) {
 			const optionSelections = statement.selections[option.statementId];
 			if (!optionSelections) return 0;
 

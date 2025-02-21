@@ -1,15 +1,16 @@
-import { ChoseBy, Collections, defaultChoseBySettings } from "delib-npm";
-import { doc } from "firebase/firestore";
-import { FireStore } from "../config";
-import { onSnapshot, Unsubscribe } from "firebase/firestore";
-import { setChoseBy } from "@/model/choseBy/choseBySlice";
-import { store } from "@/model/store";
+import { FireStore } from '../config';
+import { onSnapshot, Unsubscribe, doc } from 'firebase/firestore';
+import { setChoseBy } from '@/redux/choseBy/choseBySlice';
+import { store } from '@/redux/store';
+import { Collections } from '@/types/TypeEnums';
+import { ChoseBy, defaultChoseBySettings } from '@/types/choseBy/ChoseBy';
 
 export function listenToChoseBy(statementId: string | undefined): Unsubscribe {
 	try {
-
 		if (!statementId) {
-			return () => { return; };
+			return () => {
+				return;
+			};
 		}
 
 		const dispatch = store.dispatch;
@@ -23,13 +24,12 @@ export function listenToChoseBy(statementId: string | undefined): Unsubscribe {
 			}
 
 			dispatch(setChoseBy(choseBySnap.data() as ChoseBy));
-
-			return
 		});
-
 	} catch (error) {
 		console.error(error);
 
-		return () => { return; };
+		return () => {
+			return;
+		};
 	}
 }

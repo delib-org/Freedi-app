@@ -1,11 +1,4 @@
 import {
-	Collections,
-	DeliberativeElement,
-	Statement,
-	StatementSchema,
-	StatementType,
-} from 'delib-npm';
-import {
 	and,
 	collection,
 	doc,
@@ -15,18 +8,24 @@ import {
 	query,
 	where,
 } from 'firebase/firestore';
-
-// Third party imports
-
-// Helpers
-// import { listenedStatements } from "../../../view/pages/home/Home";
 import { FireStore } from '../config';
+import {
+	Collections,
+	StatementType,
+	DeliberativeElement,
+} from '@/types/TypeEnums';
+import { Statement, StatementSchema } from '@/types/statement/Statement';
+import { parse } from 'valibot';
 
 export async function getStatementFromDB(
 	statementId: string
 ): Promise<Statement | undefined> {
 	try {
-		const statementRef = doc(FireStore, Collections.statements, statementId);
+		const statementRef = doc(
+			FireStore,
+			Collections.statements,
+			statementId
+		);
 		const statementDB = await getDoc(statementRef);
 
 		return statementDB.data() as Statement | undefined;
@@ -45,8 +44,8 @@ export async function getStatementDepth(
 	try {
 		const statements: Statement[][] = [[statement]];
 
-		//level 1 is already in store
-		//find second level
+		// level 1 is already in store
+		// find second level
 		const levelOneStatements: Statement[] = subStatements.filter(
 			(s) =>
 				s.parentId === statement.statementId &&
@@ -54,26 +53,21 @@ export async function getStatementDepth(
 		);
 		statements.push(levelOneStatements);
 
-		//get the next levels
-
+		// get the next levels
 		for (let i = 1; i < depth; i++) {
-			const statementsCB = statements[i].map(
-				(st: Statement) => getLevelResults(st) as Promise<Statement[]>
+			const statementPromises = statements[i].map((st: Statement) =>
+				getLevelResults(st)
 			);
 
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			let statementsTemp: any = await Promise.all(statementsCB);
+			const nextLevelStatements = await Promise.all(statementPromises);
+			const flattenedStatements = nextLevelStatements.flat();
 
-			statementsTemp = statementsTemp.flat(1);
+			if (flattenedStatements.length === 0) break;
 
-			if (statementsTemp.length === 0) break;
-
-			statements[i + 1] = [];
-			statements[i + 1].push(...statementsTemp);
+			statements[i + 1] = flattenedStatements;
 		}
 
-		// @ts-ignore
-		const finalStatements: Statement[] = statements.flat(Infinity);
+		const finalStatements = statements.flat(2);
 
 		return finalStatements;
 	} catch (error) {
@@ -90,18 +84,25 @@ export async function getStatementDepth(
 				statementsRef,
 				and(
 					or(
-						where('deliberativeElement', '==', DeliberativeElement.option),
-						where('deliberativeElement', '==', DeliberativeElement.research)
+						where(
+							'deliberativeElement',
+							'==',
+							DeliberativeElement.option
+						),
+						where(
+							'deliberativeElement',
+							'==',
+							DeliberativeElement.research
+						)
 					),
-					where("statementType", "!=", "document"),
+					where('statementType', '!=', 'document'),
 					where('parentId', '==', statement.statementId)
 				)
 			);
 			const statementsDB = await getDocs(q);
 
 			statementsDB.forEach((doc) => {
-				const statement = doc.data() as Statement;
-				StatementSchema.parse(statement);
+				const statement = parse(StatementSchema, doc.data());
 
 				subStatements.push(statement);
 			});
@@ -124,19 +125,25 @@ export async function getChildStatements(
 			statementsRef,
 			and(
 				or(
-					where('deliberativeElement', '==', DeliberativeElement.option),
-					where('deliberativeElement', '==', DeliberativeElement.research)
+					where(
+						'deliberativeElement',
+						'==',
+						DeliberativeElement.option
+					),
+					where(
+						'deliberativeElement',
+						'==',
+						DeliberativeElement.research
+					)
 				),
 				where('parents', 'array-contains', statementId)
 			)
 		);
 		const statementsDB = await getDocs(q);
 
-		const subStatements = statementsDB.docs.map((doc) => {
-			StatementSchema.parse(doc.data());
-
-			return doc.data() as Statement;
-		});
+		const subStatements = statementsDB.docs.map((doc) =>
+			parse(StatementSchema, doc.data())
+		);
 
 		return subStatements;
 	} catch (error) {

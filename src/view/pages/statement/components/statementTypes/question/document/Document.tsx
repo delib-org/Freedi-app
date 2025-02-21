@@ -1,19 +1,23 @@
-import { FC, useContext, useEffect, useState } from 'react'
-import { StatementContext } from '../../../../StatementCont'
-import styles from './Document.module.scss'
-import Button, { ButtonType } from '@/view/components/buttons/button/Button'
-import Modal from '@/view/components/modal/Modal'
-import AddStage from './addStage/AddStage'
-import { useSelector } from 'react-redux'
-import { statementSubsSelector } from '@/model/statements/statementsSlice'
-import StageCard from './stages/StageCard'
-import { Statement, StatementType } from 'delib-npm'
-import { updateStatementsOrderToDB } from '@/controllers/db/statements/setStatements'
+import { DragEvent, FC, useContext, useEffect, useState } from 'react';
+import { StatementContext } from '../../../../StatementCont';
+import styles from './Document.module.scss';
+import Button, { ButtonType } from '@/view/components/buttons/button/Button';
+import Modal from '@/view/components/modal/Modal';
+import AddStage from './addStage/AddStage';
+import { useSelector } from 'react-redux';
+import { statementSubsSelector } from '@/redux/statements/statementsSlice';
+import StageCard from './stages/StageCard';
+import { updateStatementsOrderToDB } from '@/controllers/db/statements/setStatements';
+import { Statement } from '@/types/statement/Statement';
+import { StatementType } from '@/types/TypeEnums';
 
 const Document: FC = () => {
 	const { statement } = useContext(StatementContext);
-	const initialStages = useSelector(statementSubsSelector(statement?.statementId))
-		.filter((sub: Statement) => sub.statementType === StatementType.stage).sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+	const initialStages = useSelector(
+		statementSubsSelector(statement?.statementId)
+	)
+		.filter((sub: Statement) => sub.statementType === StatementType.stage)
+		.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
 	const [stages, setStages] = useState<Statement[]>(initialStages);
 	const [showAddStage, setShowAddStage] = useState<boolean>(false);
@@ -21,9 +25,12 @@ const Document: FC = () => {
 
 	useEffect(() => {
 		setStages(initialStages);
-	}, [initialStages.length]);
+	}, [initialStages.length, initialStages]);
 
-	const handleDragStart = (e: React.DragEvent<HTMLDivElement>, index: number): void => {
+	const handleDragStart = (
+		e: DragEvent<HTMLDivElement>,
+		index: number
+	): void => {
 		setDraggedIndex(index);
 		e.dataTransfer.effectAllowed = 'move';
 
@@ -31,12 +38,15 @@ const Document: FC = () => {
 		e.dataTransfer.setData('text/plain', '');
 	};
 
-	const handleDragOver = (e: React.DragEvent<HTMLDivElement>): void => {
+	const handleDragOver = (e: DragEvent<HTMLDivElement>): void => {
 		e.preventDefault();
 		e.dataTransfer.dropEffect = 'move';
 	};
 
-	const handleDrop = (e: React.DragEvent<HTMLDivElement>, dropIndex: number): void => {
+	const handleDrop = (
+		e: DragEvent<HTMLDivElement>,
+		dropIndex: number
+	): void => {
 		e.preventDefault();
 		if (draggedIndex === null || draggedIndex === dropIndex) return;
 
@@ -63,8 +73,8 @@ const Document: FC = () => {
 			<h2>Question</h2>
 			<p>{statement?.description}</p>
 			<Button
-				text="Add Stage"
-				type="button"
+				text='Add Stage'
+				type='button'
 				buttonType={ButtonType.PRIMARY}
 				onClick={() => setShowAddStage(true)}
 			/>

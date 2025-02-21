@@ -1,15 +1,16 @@
-import { Statement } from "delib-npm";
-import { updateStatementText } from "@/controllers/db/statements/setStatements";
+import { updateStatementText } from '@/controllers/db/statements/setStatements';
+import { Statement } from '@/types/statement/Statement';
+import { FormEvent, Dispatch, SetStateAction } from 'react';
 
 export function handleSubmitInfo(
-	e: React.FormEvent<HTMLFormElement>,
+	e: FormEvent<HTMLFormElement>,
 	formData: {
-        title: string;
-        description: string;
-    },
-	statement: Statement,
-	setEdit: React.Dispatch<React.SetStateAction<boolean>>,
-	setShowInfo: React.Dispatch<React.SetStateAction<boolean>>,
+		title: string;
+		description: string;
+	},
+	statement: Statement | undefined,
+	setEdit: Dispatch<SetStateAction<boolean>>,
+	setShowInfo: Dispatch<SetStateAction<boolean>>
 ) {
 	e.preventDefault();
 	try {
@@ -20,7 +21,7 @@ export function handleSubmitInfo(
 		//add title and description
 
 		//update statement to DB
-		if (!statement) throw new Error("No statement");
+		if (!statement) throw new Error('No statement');
 		updateStatementText(statement, title, description);
 		setEdit(false);
 		setShowInfo(false);

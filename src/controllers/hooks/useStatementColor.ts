@@ -1,16 +1,20 @@
-import { StatementType, Statement } from "delib-npm";
-
-import { useEffect, useState } from "react";
+import { StatementType } from '@/types/TypeEnums';
+import { Statement } from '@/types/statement/Statement';
+import { useEffect, useState } from 'react';
 
 export interface StyleProps {
 	backgroundColor: string;
 	color: string;
 }
 
-export default function useStatementColor({ statement }: { statement: Statement | undefined }): StyleProps {
+export default function useStatementColor({
+	statement,
+}: {
+	statement: Statement | undefined;
+}): StyleProps {
 	const initStyle = {
-		backgroundColor: "var(--header-home)",
-		color: "white",
+		backgroundColor: 'var(--header-home)',
+		color: 'white',
 	};
 
 	if (!statement) return initStyle;
@@ -19,27 +23,26 @@ export default function useStatementColor({ statement }: { statement: Statement 
 	const [style, setStyle] = useState(initStyle);
 
 	try {
-
 		useEffect(() => {
 			if (statementType === StatementType.group) {
 				setStyle({
-					backgroundColor: "var(--group)",
-					color: "var(--group-text)",
+					backgroundColor: 'var(--group)',
+					color: 'var(--group-text)',
 				});
 			} else if (statementType === StatementType.option && isResult) {
 				setStyle({
-					backgroundColor: "var(--agree)",
-					color: "var(--header)",
+					backgroundColor: 'var(--agree)',
+					color: 'var(--header)',
 				});
 			} else if (statementType === StatementType.option) {
 				setStyle({
-					backgroundColor: "var(--option)",
-					color: "var(--white)",
+					backgroundColor: 'var(--option)',
+					color: 'var(--white)',
 				});
 			} else if (statementType === StatementType.question) {
 				setStyle({
-					backgroundColor: "var(--question)",
-					color: "var(--question-text)",
+					backgroundColor: 'var(--question)',
+					color: 'var(--question-text)',
 				});
 			} else {
 				setStyle(initStyle);

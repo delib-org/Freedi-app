@@ -1,20 +1,20 @@
-/* eslint-disable indent */
 import { useSelector } from 'react-redux';
-import { totalMessageBoxesSelector } from '@/model/statements/statementsSlice';
-import { RootState } from '@/model/store';
-import "./message-box-counter.scss"
+import { totalMessageBoxesSelector } from '@/redux/statements/statementsSlice';
+import { RootState } from '@/redux/store';
+import './message-box-counter.scss';
 
 const MessageBoxCounter = () => {
-    const totalMessageBoxes = useSelector((state: RootState) => totalMessageBoxesSelector(state));
+	const totalMessageBoxes = useSelector((state: RootState) =>
+		totalMessageBoxesSelector(state)
+	);
 
-    // Disable eslint rule for the next line
-    // eslint-disable-next-line no-console
+	// Disable eslint rule for the next line
 
-    return (
-        <div>
-            <span className='boxes-counter'>{totalMessageBoxes}</span>
-        </div>
-    );
+	return (
+		<div>
+			<span className='boxes-counter'>{totalMessageBoxes}</span>
+		</div>
+	);
 };
 
 export default MessageBoxCounter;

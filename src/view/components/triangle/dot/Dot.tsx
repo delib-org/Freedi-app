@@ -1,15 +1,15 @@
-import { Statement } from "delib-npm";
-import { FC, useState, useRef } from "react";
-import styles from "./Dot.module.scss";
-import { useLanguage } from "@/controllers/hooks/useLanguages";
+import { FC, useState, useRef } from 'react';
+import styles from './Dot.module.scss';
+import { useLanguage } from '@/controllers/hooks/useLanguages';
+import { Statement } from '@/types/statement/Statement';
 
 interface Props {
-  subStatement: Statement;
-  maxEvaluators: number;
+	subStatement: Statement;
+	maxEvaluators: number;
 }
 
 const Dot: FC<Props> = ({ subStatement, maxEvaluators }) => {
-	const {t} = useLanguage();
+	const { t } = useLanguage();
 	const randomX = useRef<number>((Math.random() - 0.5) * 0.07);
 	const randomY = useRef<number>((Math.random() - 0.5) * 0.07);
 	const [show, setShow] = useState(false);
@@ -25,7 +25,7 @@ const Dot: FC<Props> = ({ subStatement, maxEvaluators }) => {
 	}
 
 	return (
-		<div
+		<button
 			key={subStatement.statementId}
 			className={styles.dot}
 			style={{
@@ -37,31 +37,39 @@ const Dot: FC<Props> = ({ subStatement, maxEvaluators }) => {
 			onMouseLeave={() => handleShowTooltip(false)}
 		>
 			{show && (
-				<div className={`${styles.tooltip} ${left>0.5&&styles["tooltip--left"]}`}>
-					<div className={styles["tooltip__title"]}>
+				<div
+					className={`${styles.tooltip} ${left > 0.5 && styles['tooltip--left']}`}
+				>
+					<div className={styles['tooltip__title']}>
 						{subStatement.statement}
 					</div>
-					<div>{t("Support")}: {sumPro}</div>
-					<div>{t("Against")}: {sumCon}</div>
-					<div>{t("Voters")}: {numberOfEvaluators}</div>
+					<div>
+						{t('Support')}: {sumPro}
+					</div>
+					<div>
+						{t('Against')}: {sumCon}
+					</div>
+					<div>
+						{t('Voters')}: {numberOfEvaluators}
+					</div>
 				</div>
 			)}
-		</div>
+		</button>
 	);
 };
 
 export default Dot;
 
 const agreementColors = [
-	"--range-objections-100",
-	"--range-objections-60",
-	"--range-objections-30",
-	"--range-conflict-100",
-	"--range-conflict-60",
-	"--range-conflict-30",
-	"--range-positive-30",
-	"--range-positive-60",
-	"--range-positive-100",
+	'--range-objections-100',
+	'--range-objections-60',
+	'--range-objections-30',
+	'--range-conflict-100',
+	'--range-conflict-60',
+	'--range-conflict-30',
+	'--range-positive-30',
+	'--range-positive-60',
+	'--range-positive-100',
 ];
 
 function fromAgreementToColor(
@@ -70,13 +78,15 @@ function fromAgreementToColor(
 ): string | undefined {
 	try {
 		if (agreement < -1 || agreement > 1) {
-			throw new Error("Agreement must be between -1 and 1");
+			throw new Error('Agreement must be between -1 and 1');
 		}
 
 		const adjustAgreement = (agreement + 1) / 2;
 
-		const index = Math.floor(adjustAgreement * agreementColors.length * 0.99);
-    
+		const index = Math.floor(
+			adjustAgreement * agreementColors.length * 0.99
+		);
+
 		return agreementColors[index];
 	} catch (error) {
 		console.error(error);

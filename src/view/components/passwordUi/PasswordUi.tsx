@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Dispatch, SetStateAction, useState } from 'react';
+import { useNavigate } from 'react-router';
 
 //styles
 
@@ -17,7 +17,7 @@ import { useLanguage } from '@/controllers/hooks/useLanguages';
 export default function PasswordUi({
 	setPasswordCheck,
 }: Readonly<{
-	setPasswordCheck: React.Dispatch<React.SetStateAction<boolean>>;
+	setPasswordCheck: Dispatch<SetStateAction<boolean>>;
 }>) {
 	const navigate = useNavigate();
 	const { t } = useLanguage();

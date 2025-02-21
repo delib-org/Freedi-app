@@ -1,4 +1,4 @@
-import { SortType } from "delib-npm";
+import { SortType } from '@/types/TypeEnums';
 
 export interface NavItem {
 	link: SortType;
@@ -8,23 +8,22 @@ export interface NavItem {
 export const sortItems: NavItem[] = [
 	{
 		link: SortType.newest,
-		name: "New",
+		name: 'New',
 		id: SortType.newest,
 	},
 	{
 		link: SortType.mostUpdated,
-		name: "Update",
+		name: 'Update',
 		id: SortType.mostUpdated,
 	},
 	{
 		link: SortType.random,
-		name: "Random",
+		name: 'Random',
 		id: SortType.random,
 	},
 	{
 		link: SortType.accepted,
-		name: "Agreement",
+		name: 'Agreement',
 		id: SortType.accepted,
 	},
-
 ];

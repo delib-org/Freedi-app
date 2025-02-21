@@ -1,20 +1,21 @@
-import dagre from "@dagrejs/dagre";
-import { Results, Statement } from "delib-npm";
-import { Edge, Node, Position } from "reactflow";
+import { Results } from '@/types/results/Results';
+import { Statement } from '@/types/statement/Statement';
+import dagre from '@dagrejs/dagre';
+import { Edge, Node, Position } from 'reactflow';
 
 const position = { x: 0, y: 0 };
 
-export const getLayoutedElements = (
+export const getLayoutElements = (
 	nodes: Node[],
 	edges: Edge[],
 	nodeHeight: number,
 	nodeWidth: number,
-	direction = "TB",
+	direction = 'TB'
 ) => {
 	try {
 		const dagreGraph = new dagre.graphlib.Graph();
 		dagreGraph.setDefaultEdgeLabel(() => ({}));
-		const isHorizontal = direction === "LR";
+		const isHorizontal = direction === 'LR';
 
 		dagreGraph.setGraph({ rankdir: direction });
 
@@ -49,21 +50,21 @@ export const getLayoutedElements = (
 
 		return { nodes, edges };
 	} catch (error) {
-		console.error("getLayoutedElements() failed: ", error);
+		console.error('getLayoutedElements() failed: ', error);
 
 		return { nodes: [], edges: [] };
 	}
 };
 
 export const edgeStyle = {
-	stroke: "#000",
+	stroke: '#000',
 	strokeWidth: 1,
 	strokeOpacity: 0.5,
 };
 
 export const nodeOptions = (
 	result: Results,
-	parentStatement: "top" | Statement,
+	parentStatement: 'top' | Statement
 ) => {
 	return {
 		id: result.top.statementId,
@@ -72,7 +73,7 @@ export const nodeOptions = (
 			parentStatement,
 		},
 		position,
-		type: "custom",
+		type: 'custom',
 	};
 };
 
@@ -85,25 +86,25 @@ export const edgeOptions = (result: Results, parentId: string): Edge => {
 			style: edgeStyle,
 		};
 	} catch (error) {
-		console.error("edgeOptions() failed: ", error);
+		console.error('edgeOptions() failed: ', error);
 
 		return {
-			id: "",
-			source: "",
-			target: "",
+			id: '',
+			source: '',
+			target: '',
 			style: edgeStyle,
 		};
 	}
 };
 
 export const createInitialNodesAndEdges = (
-	result: Results | undefined,
+	result: Results | undefined
 ): { nodes: Node[]; edges: Edge[] } => {
 	try {
 		if (!result) return { nodes: [], edges: [] };
 		const edges: Edge[] = [];
 
-		const nodes: Node[] = [nodeOptions(result, "top")];
+		const nodes: Node[] = [nodeOptions(result, 'top')];
 
 		if (!result.sub || result?.sub?.length === 0) return { nodes, edges };
 
@@ -123,7 +124,7 @@ export const createInitialNodesAndEdges = (
 
 		return { nodes, edges };
 	} catch (error) {
-		console.error("createInitialElements() failed: ", error);
+		console.error('createInitialElements() failed: ', error);
 
 		return { nodes: [], edges: [] };
 	}

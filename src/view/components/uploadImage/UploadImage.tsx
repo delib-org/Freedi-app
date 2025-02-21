@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import './UploadImage.scss';
-import { Statement } from 'delib-npm';
 import { setImageLocally } from './uploadImageCont';
+import { Statement } from '@/types/statement/Statement';
 
 interface Props {
-	readonly statement: Statement;
+	readonly statement: Statement | undefined;
 	readonly fileInputRef?: React.RefObject<HTMLInputElement> | null;
 	readonly image: string;
 	readonly setImage: React.Dispatch<React.SetStateAction<string>>;
@@ -27,12 +27,7 @@ export default function UploadImage({
 
 			const file = event.target.files?.[0];
 			if (file) {
-				await setImageLocally(
-					file,
-					statement,
-					setImage,
-					setProgress
-				);
+				await setImageLocally(file, statement, setImage, setProgress);
 			}
 		} catch (error) {
 			console.error(error);
@@ -51,12 +46,7 @@ export default function UploadImage({
 
 			const file = event.dataTransfer.files[0];
 
-			await setImageLocally(
-				file,
-				statement,
-				setImage,
-				setProgress
-			);
+			await setImageLocally(file, statement, setImage, setProgress);
 		} catch (error) {
 			console.error(error);
 		}

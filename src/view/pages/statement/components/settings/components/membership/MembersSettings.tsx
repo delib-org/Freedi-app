@@ -1,42 +1,33 @@
-import { createSelector } from "@reduxjs/toolkit";
-import {
-	Role,
-	StatementSubscription,
-	Statement,
-	Collections,
-	// Access,
-	// membersAllowed,
-} from "delib-npm";
-import { collection, getDocs } from "firebase/firestore";
-import { Dispatch, FC, useEffect, useState } from "react";
+import { FC, useEffect, useState } from 'react';
+import { createSelector } from '@reduxjs/toolkit';
+import { collection, getDocs } from 'firebase/firestore';
 
 // Third party imports
-import { useParams } from "react-router-dom";
+import { useParams } from 'react-router';
 
 // Redux Store
-import { FireStore } from "../../../../../../../controllers/db/config";
-import SetWaitingList from "../../../../../../../controllers/db/waitingList/SetWaitingList";
-import MembershipLine from "./membershipCard/MembershipCard";
-import ShareIcon from "@/assets/icons/shareIcon.svg?react";
-import { useAppSelector } from "@/controllers/hooks/reduxHooks";
+import { FireStore } from '../../../../../../../controllers/db/config';
+import SetWaitingList from '../../../../../../../controllers/db/waitingList/SetWaitingList';
+import MembershipLine from './membershipCard/MembershipCard';
+import ShareIcon from '@/assets/icons/shareIcon.svg?react';
+import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 
 // Custom components
 
 // Hooks & Helpers
-import { useLanguage } from "@/controllers/hooks/useLanguages";
-import { RootState } from "@/model/store";
-import "./MembersSettings.scss";
-// import Checkbox from "@/view/components/checkbox/Checkbox";
+import { useLanguage } from '@/controllers/hooks/useLanguages';
+import { RootState } from '@/redux/store';
+import './MembersSettings.scss';
+import { Collections } from '@/types/TypeEnums';
+import { Statement } from '@/types/statement/Statement';
+import { StatementSubscription } from '@/types/statement/StatementSubscription';
+import { Role } from '@/types/user/UserSettings';
 
 interface MembersSettingsProps {
 	statement: Statement;
-	setStatementToEdit: Dispatch<Statement>;
 }
 
-const MembersSettings: FC<MembersSettingsProps> = ({
-	statement,
-	// setStatementToEdit,
-}) => {
+const MembersSettings: FC<MembersSettingsProps> = ({ statement }) => {
 	// * Hooks * //
 	const { statementId } = useParams();
 	const { t } = useLanguage();
@@ -44,7 +35,7 @@ const MembersSettings: FC<MembersSettingsProps> = ({
 
 	const statementMembershipSelector = (statementId: string | undefined) =>
 		createSelector(
-			(state: RootState) => state.statements.statementMembership, // Replace with your actual state selector
+			(state: RootState) => state.statements.statementMembership,
 			(memberships) =>
 				memberships.filter(
 					(membership: StatementSubscription) =>
@@ -52,55 +43,22 @@ const MembersSettings: FC<MembersSettingsProps> = ({
 				)
 		);
 
-	const members: StatementSubscription[] = useAppSelector(
-		statementMembershipSelector(statementId)
-	);
-
-	if (!members) return null;
-
-	const joinedMembers = members.filter((member) => member.role !== Role.banned);
-	const bannedUser = members.filter((member) => member.role === Role.banned);
-
 	function handleShare(statement: Statement | undefined) {
 		const baseUrl = window.location.origin;
 
 		const shareData = {
-			title: t("FreeDi: Empowering Agreements"),
-			text: t("Invited:") + statement?.statement,
+			title: t('FreeDi: Empowering Agreements'),
+			text: t('Invited:') + statement?.statement,
 			url: `${baseUrl}/statement-an/true/${statement?.statementId}/options`,
 		};
 		navigator.share(shareData);
 	}
 
-	// function handleOpenGroup() {
-	// 	setStatementToEdit({
-	// 		...statement,
-	// 		membership: {
-	// 			...statement.membership,
-	// 			access:
-	// 				statement.membership?.access === Access.open
-	// 					? Access.close
-	// 					: Access.open,
-	// 		},
-	// 	});
-	// }
-
-	// function handleAllowAnonymous() {
-	// 	setStatementToEdit({
-	// 		...statement,
-	// 		membership: {
-	// 			...statement.membership,
-	// 			typeOfMembersAllowed:
-	// 				statement.membership?.typeOfMembersAllowed ===
-	// 					membersAllowed.nonAnonymous
-	// 					? membersAllowed.all
-	// 					: membersAllowed.nonAnonymous,
-	// 		},
-	// 	});
-	// }
-
 	const fetchAwaitingUsers = async (): Promise<void> => {
-		const usersCollection = collection(FireStore, Collections.awaitingUsers);
+		const usersCollection = collection(
+			FireStore,
+			Collections.awaitingUsers
+		);
 		const usersSnapshot = await getDocs(usersCollection);
 		const count = usersSnapshot.docs.length;
 
@@ -111,42 +69,42 @@ const MembersSettings: FC<MembersSettingsProps> = ({
 		fetchAwaitingUsers();
 	}, []);
 
+	const members: StatementSubscription[] = useAppSelector(
+		statementMembershipSelector(statementId)
+	);
+
+	if (!members) return null;
+
+	const joinedMembers = members.filter(
+		(member) => member.role !== Role.banned
+	);
+	const bannedUser = members.filter((member) => member.role === Role.banned);
+
 	return (
-		<div className="members-settings">
-			{/* <Checkbox
-				name="openGroup"
-				label="Open Group"
-				isChecked={statement.membership?.access === Access.open}
-				toggleSelection={handleOpenGroup}
-			/>
-			<Checkbox
-				name="allowAnonymous"
-				label="Allow Anonymous users"
-				isChecked={
-					statement.membership?.typeOfMembersAllowed === membersAllowed.all
-				}
-				toggleSelection={handleAllowAnonymous}
-			/> */}
-			<button className="link-anonymous" onClick={() => handleShare(statement)}>
-				{t("Send a link to anonymous users")}
+		<div className='members-settings'>
+			<button
+				className='link-anonymous'
+				onClick={() => handleShare(statement)}
+			>
+				{t('Send a link to anonymous users')}
 				<ShareIcon />
 			</button>
-			<div className="upload-waiting-list">
-				<SetWaitingList statement={statement} />
+			<div className='upload-waiting-list'>
+				<SetWaitingList />
 			</div>
-			<div className="title">
-				{t("Joined members")} ({`${userCount}`})
+			<div className='title'>
+				{t('Joined members')} ({`${userCount}`})
 			</div>
-			<div className="members-box">
+			<div className='members-box'>
 				{joinedMembers.map((member) => (
 					<MembershipLine key={member.userId} member={member} />
 				))}
 			</div>
 
-			<div className="title">
-				{t("Banned users")} ({bannedUser.length})
+			<div className='title'>
+				{t('Banned users')} ({bannedUser.length})
 			</div>
-			<div className="members-box">
+			<div className='members-box'>
 				{bannedUser.map((member) => (
 					<MembershipLine key={member.userId} member={member} />
 				))}

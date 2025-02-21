@@ -1,82 +1,90 @@
-import { logger } from "firebase-functions/v1";
-import { db } from "./index";
-import { FieldValue } from "firebase-admin/firestore";
+import { Change, logger } from 'firebase-functions/v1';
+import { db } from './index';
+import { DocumentSnapshot, FieldValue } from 'firebase-admin/firestore';
+import { Collections } from '../../src/types/TypeEnums';
 import {
-    Collections,
-    Statement,
-    maxKeyInObject,
-} from "delib-npm";
+	Statement,
+} from '../../src/types/statement/Statement';
+import { maxKeyInObject } from '../../src/types/TypeUtils';
+import { FirestoreEvent } from 'firebase-functions/firestore';
+import { parse } from 'valibot';
+import { VoteSchema } from '../../src/types/vote';
 
-export async function updateVote(event: any) {
-    try {
-        const newVote = event.data.after.data();
-        const { statementId: newVoteOptionId } = newVote;
-        console.log(newVoteOptionId)
-        //first vote
-        if (event.data.before.data() !== undefined) {
-            const previousVote = event.data.before.data();
+export async function updateVote(
+	event: FirestoreEvent<Change<DocumentSnapshot> | undefined>
+) {
+	if (!event?.data) return;
 
-            const previousVoteOptionId = previousVote.statementId;
+	try {
+		const newVote = parse(VoteSchema, event.data.after.data());
+		const { statementId: newVoteOptionId } = newVote;
+		if (event.data.before.data() !== undefined) {
+			const previousVote = parse(
+				VoteSchema,
+				event.data.before.data()
+			);
 
-            if (newVoteOptionId === previousVoteOptionId) {
-                throw new Error("new and previous are the same");
-            } else {
-                logger.info("new and previous are not the same");
-                await db.doc(`statements/${newVote.parentId}`).update({
-                    [`selections.${newVoteOptionId}`]: FieldValue.increment(1),
-                    [`selections.${previousVoteOptionId}`]:
-                        FieldValue.increment(-1),
-                });
-            }
-        } else {
-            //second or more votes
-            await db.doc(`statements/${newVote.parentId}`).update({
-                [`selections.${newVoteOptionId}`]: FieldValue.increment(1),
-            });
-        }
+			const previousVoteOptionId = previousVote.statementId;
 
-        //update top voted
+			if (newVoteOptionId === previousVoteOptionId) {
+				throw new Error('new and previous are the same');
+			} else {
+				logger.info('new and previous are not the same');
+				await db.doc(`statements/${newVote.parentId}`).update({
+					[`selections.${newVoteOptionId}`]: FieldValue.increment(1),
+					[`selections.${previousVoteOptionId}`]:
+						FieldValue.increment(-1),
+				});
+			}
+		} else {
+			//second or more votes
+			await db.doc(`statements/${newVote.parentId}`).update({
+				[`selections.${newVoteOptionId}`]: FieldValue.increment(1),
+			});
+		}
 
-        const parentStatementDB = await db
-            .doc(`${Collections.statements}/${newVote.parentId}`)
-            .get();
-        if (!parentStatementDB.exists)
-            throw new Error(
-                `parentStatement ${newVote.parentId} do not exists`,
-            );
+		//update top voted
 
-        const parentStatement = parentStatementDB.data() as Statement;
-        const { selections } = parentStatement;
-        const topVotedId = maxKeyInObject(selections);
+		const parentStatementDB = await db
+			.doc(`${Collections.statements}/${newVote.parentId}`)
+			.get();
+		if (!parentStatementDB.exists)
+			throw new Error(
+				`parentStatement ${newVote.parentId} do not exists`
+			);
 
-        // remove previous results
-        const batch = db.batch();
+		const parentStatement = parentStatementDB.data() as Statement;
+		const { selections } = parentStatement;
+		const topVotedId = maxKeyInObject(selections);
 
-        const previousResultsDB = await db
-            .collection(Collections.statements)
-            .where("parentId", "==", newVote.parentId)
-            .where("selected", "==", true)
-            .get();
+		// remove previous results
+		const batch = db.batch();
 
-        previousResultsDB.forEach((resultDB: any) => {
-            const result = resultDB.data() as Statement;
-            const docRef = db.doc(
-                `${Collections.statements}/${result.statementId}`,
-            );
-            batch.update(docRef, { selected: false });
-        });
+		const previousResultsDB = await db
+			.collection(Collections.statements)
+			.where('parentId', '==', newVote.parentId)
+			.where('selected', '==', true)
+			.get();
 
-        // Commit the batch
-        await batch.commit();
+		previousResultsDB.forEach((resultDB) => {
+			const result = resultDB.data() as Statement;
+			const docRef = db.doc(
+				`${Collections.statements}/${result.statementId}`
+			);
+			batch.update(docRef, { selected: false });
+		});
 
-        await db
-            .doc(`${Collections.statements}/${topVotedId}`)
-            .update({ selected: true }); 
+		// Commit the batch
+		await batch.commit();
 
-        return true;
-    } catch (error) {
-        logger.error(error);
+		await db
+			.doc(`${Collections.statements}/${topVotedId}`)
+			.update({ selected: true });
 
-        return false;
-    }
+		return true;
+	} catch (error) {
+		logger.error(error);
+
+		return false;
+	}
 }

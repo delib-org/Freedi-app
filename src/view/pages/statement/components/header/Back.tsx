@@ -1,10 +1,10 @@
-import { Statement } from 'delib-npm';
 import { FC } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import BackArrowIcon from '@/assets/icons/chevronLeftIcon.svg?react';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { StyleProps } from '@/controllers/hooks/useStatementColor';
-import { historySelect, HistoryTracker } from '@/model/history/HistorySlice';
+import { historySelect, HistoryTracker } from '@/redux/history/HistorySlice';
+import { Statement } from '@/types/statement/Statement';
 
 interface Props {
 	statement: Statement | undefined;

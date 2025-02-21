@@ -1,10 +1,7 @@
-import { useCallback, useEffect, useState } from "react";
+import React, { MouseEvent, useCallback, useEffect, useState } from 'react';
 
 // Styles
-import "@/view/pages/statement/components/createStatementModal/CreateStatementModal.scss";
-
-// Third party imports
-import { Results } from "delib-npm";
+import '@/view/pages/statement/components/createStatementModal/CreateStatementModal.scss';
 
 // React Flow imports
 import ReactFlow, {
@@ -16,26 +13,27 @@ import ReactFlow, {
 	Node,
 	useReactFlow,
 	ReactFlowInstance,
-} from "reactflow";
-import "../mapHelpers/reactFlow.scss";
-import "reactflow/dist/style.css";
+} from 'reactflow';
+import '../mapHelpers/reactFlow.scss';
+import 'reactflow/dist/style.css';
 
 // icons
-import { getStatementFromDB } from "../../../../../../controllers/db/statements/getStatement";
-import { updateStatementParents } from "../../../../../../controllers/db/statements/setStatements";
-import { useMapContext } from "../../../../../../controllers/hooks/useMap";
-import Modal from "../../../../../components/modal/Modal";
+import { getStatementFromDB } from '../../../../../../controllers/db/statements/getStatement';
+import { updateStatementParents } from '../../../../../../controllers/db/statements/setStatements';
+import { useMapContext } from '../../../../../../controllers/hooks/useMap';
+import Modal from '../../../../../components/modal/Modal';
 import {
 	createInitialNodesAndEdges,
-	getLayoutedElements,
-} from "../mapHelpers/customNodeCont";
-import CustomNode from "./CustomNode";
-import MapCancelIcon from "@/assets/icons/MapCancelIcon.svg";
-import MapHamburgerIcon from "@/assets/icons/MapHamburgerIcon.svg";
-import MapHorizontalLayoutIcon from "@/assets/icons/MapHorizontalLayoutIcon.svg";
-import MapRestoreIcon from "@/assets/icons/MapRestoreIcon.svg";
-import MapSaveIcon from "@/assets/icons/MapSaveIcon.svg";
-import MapVerticalLayoutIcon from "@/assets/icons/MapVerticalLayoutIcon.svg";
+	getLayoutElements,
+} from '../mapHelpers/customNodeCont';
+import CustomNode from './CustomNode';
+import MapCancelIcon from '@/assets/icons/MapCancelIcon.svg';
+import MapHamburgerIcon from '@/assets/icons/MapHamburgerIcon.svg';
+import MapHorizontalLayoutIcon from '@/assets/icons/MapHorizontalLayoutIcon.svg';
+import MapRestoreIcon from '@/assets/icons/MapRestoreIcon.svg';
+import MapSaveIcon from '@/assets/icons/MapSaveIcon.svg';
+import MapVerticalLayoutIcon from '@/assets/icons/MapVerticalLayoutIcon.svg';
+import { Results } from '@/types/results/Results';
 
 // Helper functions
 
@@ -49,25 +47,22 @@ const nodeTypes = {
 
 interface Props {
 	descendants: Results[];
-  isAdmin: boolean;
+
+	isAdmin: boolean;
 }
 
-export default function TreeChart({
-	descendants,
-	isAdmin
-}: Readonly<Props>) {
-	
+export default function TreeChart({ descendants, isAdmin }: Readonly<Props>) {
 	const { getIntersectingNodes } = useReactFlow();
 	const [nodes, setNodes, onNodesChange] = useNodesState([]);
 	const [edges, setEdges, onEdgesChange] = useEdgesState([]);
 	const [tempEdges, setTempEdges] = useState(edges);
 	const [rfInstance, setRfInstance] = useState<null | ReactFlowInstance<
-    unknown,
-    unknown
-  >>(null);
+		unknown,
+		unknown
+	>>(null);
 
-	const [intersectedNodeId, setIntersectedNodeId] = useState("");
-	const [draggedNodeId, setDraggedNodeId] = useState("");
+	const [intersectedNodeId, setIntersectedNodeId] = useState('');
+	const [draggedNodeId, setDraggedNodeId] = useState('');
 
 	const { mapContext, setMapContext } = useMapContext();
 
@@ -83,15 +78,16 @@ export default function TreeChart({
 
 	useEffect(() => {
 		const { nodes: createdNodes, edges: createdEdges } =
-      createInitialNodesAndEdges(descendants[0]);
+			createInitialNodesAndEdges(descendants[0]);
 
-		const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(
-			createdNodes,
-			createdEdges,
-			mapContext.nodeHeight,
-			mapContext.nodeWidth,
-			mapContext.direction
-		);
+		const { nodes: layoutedNodes, edges: layoutedEdges } =
+			getLayoutElements(
+				createdNodes,
+				createdEdges,
+				mapContext.nodeHeight,
+				mapContext.nodeWidth,
+				mapContext.direction
+			);
 
 		setNodes(layoutedNodes);
 		setEdges(layoutedEdges);
@@ -103,32 +99,31 @@ export default function TreeChart({
 	}, [descendants[0]]);
 
 	const onLayout = useCallback(
-		(direction: "TB" | "LR") => {
-			const width = direction === "TB" ? 50 : 90;
-			const height = direction === "TB" ? 50 : 30;
+		(direction: 'TB' | 'LR') => {
+			const width = direction === 'TB' ? 50 : 90;
+			const height = direction === 'TB' ? 50 : 30;
 
 			setMapContext((prev) => ({
 				...prev,
-				targetPosition: direction === "TB" ? Position.Top : Position.Left,
-				sourcePosition: direction === "TB" ? Position.Bottom : Position.Right,
+				targetPosition:
+					direction === 'TB' ? Position.Top : Position.Left,
+				sourcePosition:
+					direction === 'TB' ? Position.Bottom : Position.Right,
 				nodeWidth: width,
 				nodeHeight: height,
 				direction,
 			}));
 
 			const { nodes: layoutedNodes, edges: layoutedEdges } =
-        getLayoutedElements(nodes, edges, height, width, direction);
+				getLayoutElements(nodes, edges, height, width, direction);
 
 			setNodes([...layoutedNodes]);
 			setEdges([...layoutedEdges]);
 		},
-		[nodes, edges]
+		[nodes, edges, setEdges, setMapContext, setNodes]
 	);
 
-	const onNodeDragStop = async (
-		_: React.MouseEvent<Element, MouseEvent>,
-		node: Node
-	) => {
+	const onNodeDragStop = async (_: MouseEvent, node: Node) => {
 		const intersections = getIntersectingNodes(node).map((n) => n.id);
 
 		if (intersections.length === 0) return setEdges(tempEdges);
@@ -143,7 +138,7 @@ export default function TreeChart({
 	};
 
 	const onNodeDrag = useCallback(
-		(_: React.MouseEvent<Element, MouseEvent>, node: Node) => {
+		(_: MouseEvent, node: Node) => {
 			setEdges([]);
 
 			const intersections = getIntersectingNodes(node).find((n) => n.id);
@@ -151,23 +146,23 @@ export default function TreeChart({
 			setNodes((ns) =>
 				ns.map((n) => ({
 					...n,
-					className: intersections?.id === n.id ? "highlight" : "",
+					className: intersections?.id === n.id ? 'highlight' : '',
 				}))
 			);
 		},
-		[]
+		[getIntersectingNodes, setEdges, setNodes]
 	);
 
 	const onSave = useCallback(() => {
 		if (rfInstance) {
 			const flow = rfInstance.toObject();
-			localStorage.setItem("flowKey", JSON.stringify(flow));
+			localStorage.setItem('flowKey', JSON.stringify(flow));
 		}
 	}, [rfInstance]);
 
 	const onRestore = useCallback(() => {
 		const restoreFlow = async () => {
-			const getFlow = localStorage.getItem("flowKey");
+			const getFlow = localStorage.getItem('flowKey');
 			if (!getFlow) return;
 
 			const flow = JSON.parse(getFlow);
@@ -179,16 +174,20 @@ export default function TreeChart({
 		};
 
 		restoreFlow();
-	}, [setNodes]);
+	}, [setNodes, setEdges]);
 
 	const handleMoveStatement = async (move: boolean) => {
 		if (move) {
-			const [draggedStatement, newDraggedStatementParent] = await Promise.all([
-				getStatementFromDB(draggedNodeId),
-				getStatementFromDB(intersectedNodeId),
-			]);
+			const [draggedStatement, newDraggedStatementParent] =
+				await Promise.all([
+					getStatementFromDB(draggedNodeId),
+					getStatementFromDB(intersectedNodeId),
+				]);
 			if (!draggedStatement || !newDraggedStatementParent) return;
-			await updateStatementParents(draggedStatement, newDraggedStatementParent);
+			await updateStatementParents(
+				draggedStatement,
+				newDraggedStatementParent
+			);
 		} else {
 			onRestore();
 		}
@@ -214,34 +213,42 @@ export default function TreeChart({
 				onInit={(reactFlowInstance) => {
 					setRfInstance(reactFlowInstance);
 					const flow = reactFlowInstance.toObject();
-					localStorage.setItem("flowKey", JSON.stringify(flow));
+					localStorage.setItem('flowKey', JSON.stringify(flow));
 				}}
 			>
 				<Controls />
-				<Panel position="bottom-right" className="btnsPanel">
+				<Panel position='bottom-right' className='btnsPanel'>
 					{!isButtonVisible && (
-						<div className="mainButton">
+						<div className='mainButton'>
 							<button onClick={handleHamburgerClick}>
-								<img src={MapHamburgerIcon} alt="Hamburger" />
+								<img src={MapHamburgerIcon} alt='Hamburger' />
 							</button>
 						</div>
 					)}
 					{isButtonVisible && (
-						<div className={`arc-buttons ${isButtonVisible ? "open" : ""}`}>
+						<div
+							className={`arc-buttons ${isButtonVisible ? 'open' : ''}`}
+						>
 							<button onClick={handleCancelClick}>
-								<img src={MapCancelIcon} alt="Cancel" />
+								<img src={MapCancelIcon} alt='Cancel' />
 							</button>
-							<button onClick={() => onLayout("TB")}>
-								<img src={MapVerticalLayoutIcon} alt="vertical layout" />
+							<button onClick={() => onLayout('TB')}>
+								<img
+									src={MapVerticalLayoutIcon}
+									alt='vertical layout'
+								/>
 							</button>
-							<button onClick={() => onLayout("LR")}>
-								<img src={MapHorizontalLayoutIcon} alt="horizontal layout" />
+							<button onClick={() => onLayout('LR')}>
+								<img
+									src={MapHorizontalLayoutIcon}
+									alt='horizontal layout'
+								/>
 							</button>
 							<button onClick={onRestore}>
-								<img src={MapRestoreIcon} alt="Restore" />
+								<img src={MapRestoreIcon} alt='Restore' />
 							</button>
 							<button onClick={onSave}>
-								<img src={MapSaveIcon} alt="Save" />
+								<img src={MapSaveIcon} alt='Save' />
 							</button>
 						</div>
 					)}
@@ -249,21 +256,21 @@ export default function TreeChart({
 			</ReactFlow>
 			{mapContext.moveStatementModal && (
 				<Modal>
-					<div style={{ padding: "1rem" }}>
+					<div style={{ padding: '1rem' }}>
 						<h1>Are you sure you want to move statement here?</h1>
 						<br />
-						<div className="btnBox">
+						<div className='btnBox'>
 							<button
 								onClick={() => handleMoveStatement(true)}
-								className="btn btn--large btn--add"
+								className='btn btn--large btn--add'
 							>
-                Yes
+								Yes
 							</button>
 							<button
 								onClick={() => handleMoveStatement(false)}
-								className="btn btn--large btn--disagree"
+								className='btn btn--large btn--disagree'
 							>
-                No
+								No
 							</button>
 						</div>
 					</div>

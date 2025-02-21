@@ -1,13 +1,11 @@
 import { createSelector } from '@reduxjs/toolkit';
-import { FC, useEffect, useState } from 'react';
+import { FC, useEffect, useMemo, useState } from 'react';
 
 // Third party imports
 import { useSelector } from 'react-redux';
-import { useParams } from 'react-router-dom';
+import { useParams } from 'react-router';
 
 // firestore
-import EnableNotifications from '../../components/enableNotifications/EnableNotifications';
-import ProfileImage from '../../components/profileImage/ProfileImage';
 import LoadingPage from '../loadingPage/LoadingPage';
 import Page404 from '../page404/Page404';
 import UnAuthorizedPage from '../unAuthorizedPage/UnAuthorizedPage';
@@ -34,13 +32,12 @@ import { statementTitleToDisplay } from '@/controllers/general/helpers';
 import { useIsAuthorized } from '@/controllers/hooks/authHooks';
 import { useAppDispatch } from '@/controllers/hooks/reduxHooks';
 import { MapProvider } from '@/controllers/hooks/useMap';
-import { RootState } from '@/model/store';
-import { userSelector } from '@/model/users/userSlice';
-
-// Custom components
-import AskPermission from '@/view/components/askPermission/AskPermission';
+import { RootState } from '@/redux/store';
+import { userSelector } from '@/redux/users/userSlice';
 import Modal from '@/view/components/modal/Modal';
-import { Access, Role, StatementType, User } from 'delib-npm';
+import { StatementType, Access, QuestionType } from '@/types/TypeEnums';
+import { User } from '@/types/user/User';
+import { Role } from '@/types/user/UserSettings';
 
 // Create selectors
 export const subStatementsSelector = createSelector(
@@ -57,8 +54,14 @@ const StatementMain: FC = () => {
 	const { statementId } = useParams();
 
 	//TODO:create a check with the parent statement if subscribes. if not subscribed... go according to the rules of authorization
-	const { error, isAuthorized, loading, statement, topParentStatement, role } =
-		useIsAuthorized(statementId);
+	const {
+		error,
+		isAuthorized,
+		loading,
+		statement,
+		topParentStatement,
+		role,
+	} = useIsAuthorized(statementId);
 
 	// Redux store
 	const dispatch = useAppDispatch();
@@ -66,12 +69,13 @@ const StatementMain: FC = () => {
 
 	// Use states
 	const [talker, setTalker] = useState<User | null>(null);
-	const [showAskPermission, setShowAskPermission] = useState<boolean>(false);
-	const [askNotifications, setAskNotifications] = useState(false);
 	const [isStatementNotFound, setIsStatementNotFound] = useState(false);
 	const [showNewStatement, setShowNewStatement] = useState<boolean>(false);
 	const [newStatementType, setNewStatementType] = useState<StatementType>(
 		StatementType.group
+	);
+	const [newQuestionType, setNewQuestionType] = useState<QuestionType>(
+		QuestionType.multiStage
 	);
 
 	// const [_, setPasswordCheck] = useState<boolean>(false)
@@ -100,8 +104,11 @@ const StatementMain: FC = () => {
 	useEffect(() => {
 		if (statement && screen) {
 			//set navigator tab title
-			const { shortVersion } = statementTitleToDisplay(statement.statement, 15);
-			document.title = `FreeDi - ${shortVersion}-${screen}`;
+			const { shortVersion } = statementTitleToDisplay(
+				statement.statement,
+				15
+			);
+			document.title = `FreeDi - ${shortVersion}`;
 		}
 	}, [statement, screen]);
 
@@ -136,7 +143,11 @@ const StatementMain: FC = () => {
 
 			unSubUserSettings = listenToUserSettings();
 			unSubAllDescendants = listenToAllDescendants(statementId); //used for map
-			unSubEvaluations = listenToEvaluations(dispatch, statementId, user?.uid);
+			unSubEvaluations = listenToEvaluations(
+				dispatch,
+				statementId,
+				user?.uid
+			);
 			unSubSubStatements = listenToSubStatements(statementId); //TODO: check if this is needed. It can be integrated under listenToAllDescendants
 
 			unSubStatementSubscription = listenToStatementSubscription(
@@ -179,7 +190,10 @@ const StatementMain: FC = () => {
 				const isSubscribed = await getIsSubscribed(statementId);
 
 				// if isSubscribed is false, then subscribe
-				if (!isSubscribed && statement.membership?.access === Access.close) {
+				if (
+					!isSubscribed &&
+					statement.membership?.access === Access.close
+				) {
 					// subscribe
 					setStatementSubscriptionToDB(statement, Role.member);
 				} else {
@@ -190,45 +204,42 @@ const StatementMain: FC = () => {
 		}
 	}, [statement]);
 
+	const contextValue = useMemo(
+		() => ({
+			statement,
+			talker,
+			handleShowTalker,
+			role,
+			handleSetNewStatement,
+			setNewStatementType,
+			newStatementType,
+			setNewQuestionType,
+			newQuestionType,
+		}),
+		[
+			statement,
+			talker,
+			role,
+			handleShowTalker,
+			handleSetNewStatement,
+			setNewStatementType,
+			newStatementType,
+		]
+	);
+
 	if (isStatementNotFound) return <Page404 />;
 	if (error) return <UnAuthorizedPage />;
 	if (loading) return <LoadingPage />;
 
-	if (isAuthorized)
+	if (isAuthorized) {
 		return (
-			<StatementContext.Provider
-				value={{
-					statement,
-					talker,
-					handleShowTalker,
-					role,
-					handleSetNewStatement,
-					setNewStatementType,
-					newStatementType,
-				}}
-			>
+			<StatementContext.Provider value={contextValue}>
 				<div className='page'>
-					{showAskPermission && <AskPermission showFn={setShowAskPermission} />}
-					{talker && (
-						<button
-							onClick={() => {
-								handleShowTalker(null);
-							}}
-						>
-							<ProfileImage />
-						</button>
-					)}
-					{askNotifications && (
-						<EnableNotifications
-							statement={statement}
-							setAskNotifications={setAskNotifications}
-							setShowAskPermission={setShowAskPermission}
-						/>
-					)}
 					{showNewStatement && (
 						<Modal
 							closeModal={(e) => {
-								if (e.target === e.currentTarget) setShowNewStatement(false);
+								if (e.target === e.currentTarget)
+									setShowNewStatement(false);
 							}}
 						>
 							<NewStatement />
@@ -236,8 +247,8 @@ const StatementMain: FC = () => {
 					)}
 					<StatementHeader
 						statement={statement}
+						parentStatement={undefined}
 						topParentStatement={topParentStatement}
-						setShowAskPermission={setShowAskPermission}
 					/>
 					<MapProvider>
 						<Switch />
@@ -245,6 +256,7 @@ const StatementMain: FC = () => {
 				</div>
 			</StatementContext.Provider>
 		);
+	}
 
 	return <UnAuthorizedPage />;
 };

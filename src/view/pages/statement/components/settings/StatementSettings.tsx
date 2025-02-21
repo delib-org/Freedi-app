@@ -1,8 +1,7 @@
-import { Statement } from 'delib-npm';
 import { FC, useEffect, useState } from 'react';
 
 // Third party imports
-import { useParams } from 'react-router-dom';
+import { useParams } from 'react-router';
 
 // Redux Store
 import StatementSettingsForm from './components/statementSettingsForm/StatementSettingsForm';
@@ -15,13 +14,14 @@ import { useLanguage } from '@/controllers/hooks/useLanguages';
 import {
 	setStatement,
 	statementSelector,
-} from '@/model/statements/statementsSlice';
+} from '@/redux/statements/statementsSlice';
 
 // Hooks & Helpers
 
 // Custom components
 import Loader from '@/view/components/loaders/Loader';
 import { listenToChoseBy } from '@/controllers/db/choseBy/getChoseBy';
+import { Statement } from '@/types/statement/Statement';
 
 const StatementSettings: FC = () => {
 	// * Hooks * //
@@ -67,7 +67,8 @@ const StatementSettings: FC = () => {
 				getStatementFromDB(statement.parentId)
 					.then((parentStatement) => {
 						try {
-							if (!parentStatement) throw new Error('no parent statement');
+							if (!parentStatement)
+								throw new Error('no parent statement');
 
 							setParentStatement(parentStatement);
 						} catch (error) {
@@ -96,7 +97,8 @@ const StatementSettings: FC = () => {
 					setStatementToEdit(statement);
 				} else {
 					(async () => {
-						const statementDB = await getStatementFromDB(statementId);
+						const statementDB =
+							await getStatementFromDB(statementId);
 						if (statementDB) {
 							dispatch(setStatement(statementDB));
 							setStatementToEdit(statementDB);

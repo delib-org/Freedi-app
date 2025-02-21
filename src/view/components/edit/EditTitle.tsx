@@ -1,5 +1,4 @@
-import { Statement } from 'delib-npm';
-import {
+import React, {
 	ChangeEvent,
 	Dispatch,
 	FC,
@@ -8,19 +7,12 @@ import {
 	useRef,
 	useState,
 } from 'react';
-
-// Third party
-
-// Statements Helpers
 import Text from '../text/Text';
 import styles from './EditTitle.module.scss';
 import Save from '@/assets/icons/saveIcon.svg?react';
 import { updateStatementText } from '@/controllers/db/statements/setStatements';
-
-// Styles
-
-// Custom components
 import { useLanguage } from '@/controllers/hooks/useLanguages';
+import { Statement } from '@/types/statement/Statement';
 
 interface Props {
 	statement: Statement | undefined;
@@ -31,8 +23,17 @@ interface Props {
 	useDescription?: boolean;
 }
 
-const EditTitle: FC<Props> = ({ useTitle = true, useDescription = true, statement, isEdit, setEdit, isTextArea }) => {
-	const [description, setDescription] = useState(statement?.description || '');
+const EditTitle: FC<Props> = ({
+	useTitle = true,
+	useDescription = true,
+	statement,
+	isEdit,
+	setEdit,
+	isTextArea,
+}) => {
+	const [description, setDescription] = useState(
+		statement?.description || ''
+	);
 	const [title, setTitle] = useState(statement?.statement || '');
 
 	// Single ref for both textarea and input
@@ -44,8 +45,6 @@ const EditTitle: FC<Props> = ({ useTitle = true, useDescription = true, statemen
 			inputRef.current.focus();
 		}
 	}, [isEdit]);
-
-	if (!statement) return null;
 
 	const { dir: direction } = useLanguage();
 	const align = direction === 'ltr' ? 'left' : 'right';
@@ -78,11 +77,15 @@ const EditTitle: FC<Props> = ({ useTitle = true, useDescription = true, statemen
 	}
 
 	if (!isEdit) {
+		if (!statement) return null;
+
 		return (
 			<div style={{ direction: direction, textAlign: align }}>
 				<Text
 					statement={useTitle ? statement.statement : undefined}
-					description={useDescription ? statement.description : undefined}
+					description={
+						useDescription ? statement.description : undefined
+					}
 				/>
 			</div>
 		);
@@ -123,7 +126,9 @@ const EditTitle: FC<Props> = ({ useTitle = true, useDescription = true, statemen
 					<button
 						className={styles.save}
 						onClick={handleSave}
-						style={{ left: direction === 'rtl' ? '-1.4rem' : 'none' }}
+						style={{
+							left: direction === 'rtl' ? '-1.4rem' : 'none',
+						}}
 						aria-label='Save'
 					>
 						<Save />

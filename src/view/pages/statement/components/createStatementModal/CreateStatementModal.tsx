@@ -1,9 +1,4 @@
-import { Statement, StatementType } from 'delib-npm';
 import { FC, useState, useEffect, useRef } from 'react';
-
-// Third party imports
-
-// Images
 import { createStatementFromModal } from '../settings/statementSettingsCont';
 import newOptionGraphic from '@/assets/images/newOptionGraphic.png';
 import newQuestionGraphic from '@/assets/images/newQuestionGraphic.png';
@@ -11,15 +6,15 @@ import { useLanguage } from '@/controllers/hooks/useLanguages';
 import Modal from '@/view/components/modal/Modal';
 import './CreateStatementModal.scss';
 import Button, { ButtonType } from '@/view/components/buttons/button/Button';
+import { StatementType } from '@/types/TypeEnums';
+import { Statement } from '@/types/statement/Statement';
 
 interface CreateStatementModalProps {
 	parentStatement: Statement | 'top';
 	isOption: boolean;
-	singleSelection?: boolean;
 	setShowModal: (bool: boolean) => void;
 	getSubStatements?: () => Promise<void>;
-	toggleAskNotifications?: () => void;
-	isSendToStoreTemp?: boolean; // This is used for setting the input from the user to the store and from there to the UI as a new statement
+	isSendToStoreTemp?: boolean;
 	allowedTypes?: StatementType[];
 }
 
@@ -63,7 +58,11 @@ const CreateStatementModal: FC<CreateStatementModalProps> = ({
 			<form className='overlay' onSubmit={onFormSubmit}>
 				<div className='modal-image'>
 					<img
-						src={isOptionSelected ? newOptionGraphic : newQuestionGraphic}
+						src={
+							isOptionSelected
+								? newOptionGraphic
+								: newQuestionGraphic
+						}
 						alt='New Statement'
 					/>
 				</div>

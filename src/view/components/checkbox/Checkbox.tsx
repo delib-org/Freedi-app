@@ -1,4 +1,4 @@
-import { FC, useState } from "react";
+import React, { FC, useState } from "react";
 import CheckboxCheckedIcon from "@/assets/icons/checkboxCheckedIcon.svg?react";
 import CheckboxEmptyIcon from "@/assets/icons/checkboxEmptyIcon.svg?react";
 import { useLanguage } from "@/controllers/hooks/useLanguages";

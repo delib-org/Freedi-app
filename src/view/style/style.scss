@@ -163,11 +163,13 @@
 
 
   //buttons
+  --btn-primary: #5f88e5;
   --btn-primary-default: #5f88e5;
   --btn-primary-hover: #80a0ea;
   --btn-primary-selected: #285edc;
   --btn-primary-disabled: #e2e6ee;
 
+  --btn-secondary: #5f88e5;
   --btn-secondary-default: #5f88e5;
   --btn-secondary-hover: #80a0ea;
   --btn-secondary-selected-border: #285edc;
@@ -184,11 +186,13 @@
   --btn-orange-selected: #ea4715;
 
   //buttons-contrast
+  --btn-primary-contrast: #165bfa;
   --btn-primary-default-contrast: #165bfa;
   --btn-primary-hover-contrast: #467cfb;
   --btn-primary-selected-contrast: #0544d7;
   --btn-primary-disabled-contrast: #dce0ea;
 
+  --btn-secondary-contrast: #165bfa;
   --btn-secondary-default-contrast: #165bfa;
   --btn-secondary-hover-contrast: #467cfb;
   --btn-secondary-selected-border-contrast: #0544d7;
@@ -204,6 +208,16 @@
   --btn-orange-hover-contrast: #fc8064;
   --btn-orange-selected-contrast: #f53105;
 
+  // accessibility buttons
+  --btn-accessibility-icons: #5f88e5;
+  --btn-accessibility-light-contrast: #f5f8ff;
+  --btn-accessibility-light-contrast-text: #191e29;
+  --btn-accessibility-light-contrast-icons: #5f88e5;
+
+  --btn-accessibility-icons-contrast: #17349c;
+  --btn-accessibility-light-contrast-contrast: #165bfa;
+  --btn-accessibility-light-contrast-text-contrast: #ffffff;
+  --btn-accessibility-light-contrast-icons-contrast: #ffffff;
 
   //card
   --card-default: #ffffff;
@@ -428,7 +442,7 @@
   --Surface-tabSys-background-level-1-contrast: #ffffff00;
   --Surface-tabSys-background-level-2-contrast: #ffffff;
 
-  //text  
+  //text
   --text-title: #191e29;
   --text-subtitle: #2a3346;
   --text-body: #3d4d71;
@@ -441,7 +455,7 @@
   --text-error: #f74a4d;
   --text-warning: #ef7550;
 
-  //text-contrast  
+  //text-contrast
   --text-title-contrast: #08090d;
   --text-subtitle-contrast: #11151d;
   --text-body-contrast: #212736;
@@ -454,17 +468,17 @@
   --text-error-contrast: #ff0207;
   --text-warning-contrast: #fb6340;
 
-  //toggle  
+  //toggle
   --toggle-background: #e0e8fa;
   --toggle-disabled: #f74a4d;
   --toggle-enabled: #76c0b3;
 
-  //toggle-contrast  
+  //toggle-contrast
   --toggle-background-contrast: #d2dffe;
   --toggle-disabled-contrast: #ff3336;
   --toggle-enabled-contrast: #00eec4;
 
-  //triangle-dots 
+  //triangle-dots
   --triangle-dots-agreement-100: #4fab9a;
   --triangle-dots-agreement-100-disinterest: #abd8d0;
   --triangle-dots-agreement-50: #ffe16a;
@@ -477,7 +491,7 @@
   --triangle-dots-objections-100-disinterest: #8f7200;
   --triangle-dots-avoidance: #c6cddc;
 
-  //triangle-dots-contrast 
+  //triangle-dots-contrast
   --triangle-dots-agreement-100-contrast: #4fab9a;
   --triangle-dots-agreement-100-disinterest-contrast: #abd8d0;
   --triangle-dots-agreement-50-contrast: #ffe16a;
@@ -621,7 +635,8 @@
   // --btn-tertiary: #a2c0f0;
   // --btn-follow-me: #ec8aba;
   // --btn-fab: #739ee4;
-  // --btn-disabled: #c6d2de;
+  --btn-disabled: #c6d2de;
+  --btn-disabled-text: #88919b;
   // //buttons-contrast
   // --btn-primary-contrast: #ffffff;
   // --btn-secondary-contrast: #ffffff;

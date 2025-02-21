@@ -1,10 +1,9 @@
-import { Screen, Statement, StatementType } from 'delib-npm';
 import { FC, useEffect, useRef, useState } from 'react';
 
 // Third Party
 
 // Redux Store
-import { useParams } from 'react-router-dom';
+import { useParams } from 'react-router';
 import StatementChatMore from '../../../../chat/components/StatementChatMore';
 import CreateStatementModal from '../../../../createStatementModal/CreateStatementModal';
 import { sortSubStatements } from '../../../statementsEvaluationCont';
@@ -21,18 +20,12 @@ import useStatementColor, {
 import {
 	setStatementElementHight,
 	statementSubscriptionSelector,
-} from '@/model/statements/statementsSlice';
-
-// Helpers
-
-// Hooks
-
-// Custom Components
-
+} from '@/redux/statements/statementsSlice';
 import EditTitle from '@/view/components/edit/EditTitle';
-
 import IconButton from '@/view/components/iconButton/IconButton';
 import './SuggestionCard.scss';
+import { Screen, StatementType } from '@/types/TypeEnums';
+import { Statement } from '@/types/statement/Statement';
 
 interface Props {
 	statement: Statement | undefined;
@@ -69,7 +62,11 @@ const SuggestionCard: FC<Props> = ({
 	const [isCardMenuOpen, setIsCardMenuOpen] = useState(false);
 
 	useEffect(() => {
-		if (sort !== Screen.OPTIONS_RANDOM && sort !== Screen.QUESTIONS_RANDOM && sort !== "random") {
+		if (
+			sort !== Screen.OPTIONS_RANDOM &&
+			sort !== Screen.QUESTIONS_RANDOM &&
+			sort !== 'random'
+		) {
 			sortSubStatements(siblingStatements, sort, 30);
 		}
 	}, [statement?.consensus]);
@@ -78,8 +75,6 @@ const SuggestionCard: FC<Props> = ({
 		sortSubStatements(siblingStatements, sort, 30);
 	}, [statement?.elementHight]);
 
-	if (!statement) return null;
-
 	const _isAuthorized = isAuthorized(
 		statement,
 		statementSubscription,
@@ -87,7 +82,7 @@ const SuggestionCard: FC<Props> = ({
 	);
 
 	const statementColor: StyleProps = useStatementColor({
-		statement
+		statement,
 	});
 
 	useEffect(() => {
@@ -124,6 +119,8 @@ const SuggestionCard: FC<Props> = ({
 	const statementAge = new Date().getTime() - statement.createdAt;
 	const hasChildren = parentStatement?.statementSettings?.hasChildren;
 
+	if (!statement) return null;
+
 	return (
 		<div
 			className={
@@ -133,7 +130,7 @@ const SuggestionCard: FC<Props> = ({
 			}
 			style={{
 				top: `${statement.top || 0}px`,
-				borderLeft: `8px solid ${statement.isChosen ? "var(--approve)" : statementColor.backgroundColor || 'white'}`,
+				borderLeft: `8px solid ${statement.isChosen ? 'var(--approve)' : statementColor.backgroundColor || 'white'}`,
 				color: statementColor.color,
 				flexDirection: dir === 'ltr' ? 'row' : 'row-reverse',
 			}}
@@ -143,9 +140,8 @@ const SuggestionCard: FC<Props> = ({
 			<div
 				className='selected-option'
 				style={{
-					backgroundColor: statement.selected === true
-						? "var(--approve)"
-						: '',
+					backgroundColor:
+						statement.selected === true ? 'var(--approve)' : '',
 				}}
 			>
 				<div
@@ -195,7 +191,9 @@ const SuggestionCard: FC<Props> = ({
 					{hasChildren && (
 						<IconButton
 							className='add-sub-question-button more-question'
-							onClick={() => setShouldShowAddSubQuestionModal(true)}
+							onClick={() =>
+								setShouldShowAddSubQuestionModal(true)
+							}
 						>
 							<AddQuestionIcon />
 						</IconButton>

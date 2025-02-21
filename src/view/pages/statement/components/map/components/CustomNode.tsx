@@ -1,8 +1,7 @@
-import { Statement } from 'delib-npm';
 import { useEffect, useState } from 'react';
 
 // Third party
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { Handle, NodeProps } from 'reactflow';
 
 // Hooks
@@ -17,6 +16,7 @@ import {
 } from '@/controllers/general/helpers';
 import { useMapContext } from '@/controllers/hooks/useMap';
 import useStatementColor from '@/controllers/hooks/useStatementColor';
+import { Statement } from '@/types/statement/Statement';
 
 const nodeStyle = (
 	parentStatement: Statement | 'top',
@@ -25,7 +25,9 @@ const nodeStyle = (
 ) => {
 	const style = {
 		backgroundColor:
-			parentStatement === 'top' ? 'darkblue' : statementColor.backgroundColor,
+			parentStatement === 'top'
+				? 'darkblue'
+				: statementColor.backgroundColor,
 		color: statementColor.color,
 		height: 40,
 		width: 70,
@@ -46,8 +48,7 @@ export default function CustomNode({ data }: NodeProps) {
 
 	const { result, parentStatement } = data;
 
-	const { statementId, statement } =
-		result.top as Statement;
+	const { statementId, statement } = result.top as Statement;
 
 	const { shortVersion: nodeTitle } = statementTitleToDisplay(statement, 80);
 
@@ -110,8 +111,10 @@ export default function CustomNode({ data }: NodeProps) {
 						style={{
 							position: 'absolute',
 							cursor: 'pointer',
-							right: mapContext.direction === 'TB' ? 0 : '-1.8rem',
-							bottom: mapContext.direction === 'TB' ? '-1.8rem' : 0,
+							right:
+								mapContext.direction === 'TB' ? 0 : '-1.8rem',
+							bottom:
+								mapContext.direction === 'TB' ? '-1.8rem' : 0,
 						}}
 					>
 						<PlusIcon />

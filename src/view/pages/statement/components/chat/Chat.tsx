@@ -1,22 +1,23 @@
-import { Statement, StatementType } from "delib-npm";
-import { FC, useEffect, useState, useRef, useContext } from "react";
+import { FC, useEffect, useState, useRef, useContext } from 'react';
 
 // Third Party Imports
 
 // Custom Components
-import { useLocation, useParams } from "react-router-dom";
-import useSlideAndSubStatement from "../../../../../controllers/hooks/useSlideAndSubStatement";
-import { StatementContext } from "../../StatementCont";
-import styles from "./Chat.module.scss";
-import ChatMessageCard from "./components/chatMessageCard/ChatMessageCard";
-import ChatInput from "./components/input/ChatInput";
+import { useLocation, useParams } from 'react-router';
+import useSlideAndSubStatement from '../../../../../controllers/hooks/useSlideAndSubStatement';
+import { StatementContext } from '../../StatementCont';
+import styles from './Chat.module.scss';
+import ChatMessageCard from './components/chatMessageCard/ChatMessageCard';
+import ChatInput from './components/input/ChatInput';
 
-import NewMessages from "./components/newMessages/NewMessages";
-import { listenToSubStatements } from "@/controllers/db/statements/listenToStatements";
-import { useAppSelector } from "@/controllers/hooks/reduxHooks";
-import { statementSubsSelector } from "@/model/statements/statementsSlice";
-import { userSelector } from "@/model/users/userSlice";
-import Description from "../evaluations/components/description/Description";
+import NewMessages from './components/newMessages/NewMessages';
+import { listenToSubStatements } from '@/controllers/db/statements/listenToStatements';
+import { useAppSelector } from '@/controllers/hooks/reduxHooks';
+import { statementSubsSelector } from '@/redux/statements/statementsSlice';
+import { userSelector } from '@/redux/users/userSlice';
+import Description from '../evaluations/components/description/Description';
+import { StatementType } from '@/types/TypeEnums';
+import { Statement } from '@/types/statement/Statement';
 
 let firstTime = true;
 let numberOfSubStatements = 0;
@@ -25,14 +26,18 @@ const Chat: FC = () => {
 	const chatRef = useRef<HTMLDivElement>(null);
 	const { statementId } = useParams();
 	const { statement } = useContext(StatementContext);
-	const subStatements = useAppSelector(statementSubsSelector(statementId)).filter(s => s.statementType !== StatementType.stage);
+	const subStatements = useAppSelector(
+		statementSubsSelector(statementId)
+	).filter((s) => s.statementType !== StatementType.stage);
 	const user = useAppSelector(userSelector);
-	const messagesEndRef = useRef(null);
+	const messagesEndRef = useRef<HTMLDivElement>(null);
 	const location = useLocation();
 
 	const [numberOfNewMessages, setNumberOfNewMessages] = useState<number>(0);
 
-	const { toSlide, slideInOrOut } = useSlideAndSubStatement(statement?.parentId);
+	const { toSlide, slideInOrOut } = useSlideAndSubStatement(
+		statement?.parentId
+	);
 
 	function scrollToHash() {
 		if (location.hash) {
@@ -47,20 +52,18 @@ const Chat: FC = () => {
 		}
 	}
 
-	//update the chat height based on the window height
-
 	useEffect(() => {
 		const updateChatHeight = () => {
 			if (chatRef.current) {
-				chatRef.current.style.height = `${window.innerHeight - chatRef.current.getBoundingClientRect().top}px`; // Adjust 100px as needed
+				chatRef.current.style.height = `${window.innerHeight - chatRef.current.getBoundingClientRect().top}px`;
 			}
 		};
 
 		updateChatHeight();
-		window.addEventListener("resize", updateChatHeight);
+		window.addEventListener('resize', updateChatHeight);
 
 		return () => {
-			window.removeEventListener("resize", updateChatHeight);
+			window.removeEventListener('resize', updateChatHeight);
 		};
 	}, []);
 
@@ -70,12 +73,10 @@ const Chat: FC = () => {
 		if (!messagesEndRef.current) return;
 		if (location.hash) return;
 		if (firstTime) {
-			//@ts-ignore
-			messagesEndRef.current.scrollIntoView({ behavior: "auto" });
+			messagesEndRef.current.scrollIntoView({ behavior: 'auto' });
 			firstTime = false;
 		} else {
-			//@ts-ignore
-			messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+			messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
 		}
 	};
 
@@ -91,7 +92,6 @@ const Chat: FC = () => {
 
 	//effects
 	useEffect(() => {
-
 		if (!firstTime) return;
 
 		if (location.hash) {
@@ -113,9 +113,7 @@ const Chat: FC = () => {
 				setNumberOfNewMessages((n) => n + 1);
 			}
 		} else {
-
 			scrollToBottom();
-
 		}
 	}, [subStatements.length]);
 
@@ -125,7 +123,7 @@ const Chat: FC = () => {
 				className={`${styles.wrapper} ${toSlide && slideInOrOut}`}
 				id={`msg-${statement?.statementId}`}
 			>
-				<div className="wrapper">
+				<div className='wrapper'>
 					<Description />
 				</div>
 				{subStatements?.map((statementSub: Statement, index) => (
@@ -140,16 +138,17 @@ const Chat: FC = () => {
 
 				<div ref={messagesEndRef} />
 			</div>
-			{statement && <div className={styles.input}>
-				<ChatInput statement={statement} />
-			</div>}
+			{statement && (
+				<div className={styles.input}>
+					<ChatInput statement={statement} />
+				</div>
+			)}
 			<div>
 				<NewMessages
 					newMessages={numberOfNewMessages}
 					setNewMessages={setNumberOfNewMessages}
 					scrollToBottom={scrollToBottom}
 				/>
-
 			</div>
 		</div>
 	);

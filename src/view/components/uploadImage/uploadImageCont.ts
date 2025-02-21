@@ -1,7 +1,8 @@
-import { Statement } from 'delib-npm';
 import { compressImage } from './compressImage';
 import { uploadImageToStorage } from '@/controllers/db/images/setImages';
 import { updateStatementMainImage } from '@/controllers/db/statements/setStatements';
+import { Statement } from '@/types/statement/Statement';
+import React from 'react';
 
 export async function setImageLocally(
 	file: File,
@@ -9,7 +10,7 @@ export async function setImageLocally(
 	setImage: React.Dispatch<React.SetStateAction<string>>,
 	setProgress: React.Dispatch<React.SetStateAction<number>>
 ) {
-	setImage("");
+	setImage('');
 
 	if (file) {
 		const img = new Image();
@@ -20,7 +21,11 @@ export async function setImageLocally(
 				img.src = reader.result as string;
 
 				img.onload = async () => {
-					const compressedFile = await compressImage(file, 200, setProgress);
+					const compressedFile = await compressImage(
+						file,
+						200,
+						setProgress
+					);
 
 					setImage(URL.createObjectURL(compressedFile));
 

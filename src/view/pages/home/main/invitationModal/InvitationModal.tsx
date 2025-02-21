@@ -1,5 +1,5 @@
-import { FC, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { FC, useEffect, useState } from "react";
+import { useNavigate } from "react-router";
 import styles from "./InvitationModal.module.scss";
 import InvitationModalInputBoxWrapper from "./InvitationModalInputBoxWrapper";
 import {
@@ -12,7 +12,7 @@ import XIcon from "@/view/components/icons/XIcon";
 import InviteModal from "@/view/components/modal/InviteModal";
 
 interface Props {
-  setShowModal: (show: boolean) => void;
+	setShowModal: (show: boolean) => void;
 }
 const InvitationModal: FC<Props> = ({ setShowModal }) => {
 	const navigate = useNavigate();
@@ -66,15 +66,15 @@ const InvitationModal: FC<Props> = ({ setShowModal }) => {
 
 			if (
 				Number.isInteger(Number(pinValue)) &&
-        Number(pinValue) >= 0 &&
-        Number(pinValue) <= 9
+				Number(pinValue) >= 0 &&
+				Number(pinValue) <= 9
 			) {
 				pins.push(Number(pinValue));
 			} else {
 				pins.push(0);
 			}
 		}
-		
+
 		return pins;
 	}
 
@@ -83,7 +83,7 @@ const InvitationModal: FC<Props> = ({ setShowModal }) => {
 		for (let i = 0; i < pins.length; i++) {
 			fullPin += pins[i] * Math.pow(10, i);
 		}
-		
+
 		return fullPin;
 	}
 

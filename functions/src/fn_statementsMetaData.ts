@@ -1,43 +1,57 @@
-import { Collections } from "delib-npm";
-import { FieldValue, Timestamp } from "firebase-admin/firestore";
-import { db } from ".";
-import { logger } from "firebase-functions/v1";
+import { FieldValue, Timestamp } from 'firebase-admin/firestore';
+import { db } from '.';
+import { logger } from 'firebase-functions/v1';
+import { Collections } from '../../src/types/TypeEnums';
 
-export async function addOrRemoveMemberFromStatementDB(statementId: string, eventType: "new" | "update" | "delete", isMemberAfter: boolean, isMemberBefore: boolean): Promise<void> {
-    try {
+type MembershipChange = {
+	eventType: 'new' | 'update' | 'delete';
+	isMemberAfter: boolean;
+	isMemberBefore: boolean;
+};
 
-        if (!statementId) throw new Error("statementId is required")
+function calculateMembershipIncrement({
+	eventType,
+	isMemberAfter,
+	isMemberBefore,
+}: MembershipChange): number {
+	if (eventType === 'new') return isMemberAfter ? 1 : 0;
+	if (eventType === 'delete') return isMemberBefore ? -1 : 0;
+	if (eventType === 'update' && isMemberAfter !== isMemberBefore) {
+		return isMemberAfter ? 1 : -1;
+	}
 
+	return 0;
+}
 
+export async function addOrRemoveMemberFromStatementDB(
+	statementId: string,
+	eventType: 'new' | 'update' | 'delete',
+	isMemberAfter: boolean,
+	isMemberBefore: boolean
+): Promise<void> {
+	if (!statementId) {
+		logger.error('statementId is required');
 
-        let increment = 0;
-        if (eventType === "new" && isMemberAfter) {
-            increment = 1;
+		return;
+	}
 
-        } else if (eventType === "delete" && isMemberBefore) {
-            increment = -1;
+	const increment = calculateMembershipIncrement({
+		eventType,
+		isMemberAfter,
+		isMemberBefore,
+	});
+	if (increment === 0) return;
 
-        } else if (eventType === "update" && isMemberAfter && !isMemberBefore) {
-            increment = 1;
-
-        } else if (eventType === "update" && !isMemberAfter && isMemberBefore) {
-            increment = -1;
-        }
-
-        const statementRef = db.doc(`${Collections.statementsMetaData}/${statementId}`);
-        const statementMetaData = await statementRef.get();
-        if (!statementMetaData.exists) {
-
-        }
-        statementRef.set({
-            numberOfMembers: FieldValue.increment(increment),
-            lastUpdate: Timestamp.now().toMillis(),
-            statementId
-        }, { merge: true });
-        return;
-
-    } catch (error) {
-        logger.error("error updating statement with number of members", error);
-        return;
-    }
+	try {
+		await db.doc(`${Collections.statementsMetaData}/${statementId}`).set(
+			{
+				numberOfMembers: FieldValue.increment(increment),
+				lastUpdate: Timestamp.now().toMillis(),
+				statementId,
+			},
+			{ merge: true }
+		);
+	} catch (error) {
+		logger.error('error updating statement with number of members', error);
+	}
 }

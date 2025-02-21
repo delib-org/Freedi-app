@@ -1,11 +1,11 @@
-import { ComponentProps, FC } from "react";
+import { ComponentProps, FC, ReactNode } from "react";
 import "./MenuOption.scss";
 
 interface MenuOptionProps extends ComponentProps<"button"> {
-    onOptionClick: () => void;
-    label: string;
-    isOptionSelected?: boolean;
-    icon: JSX.Element;
+	onOptionClick: () => void;
+	label: string;
+	isOptionSelected?: boolean;
+	icon: ReactNode;
 }
 
 const MenuOption: FC<MenuOptionProps> = ({

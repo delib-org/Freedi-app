@@ -1,46 +1,78 @@
-import { StatementSubscription } from "delib-npm";
-import { logger } from "firebase-functions";
-import { isMember } from "delib-npm/dist/controllers/helpers";
-import { addOrRemoveMemberFromStatementDB } from "./fn_statementsMetaData";
+import { Change, logger } from 'firebase-functions';
+import { addOrRemoveMemberFromStatementDB } from './fn_statementsMetaData';
+import { StatementSubscriptionSchema } from '../../src/types/statement/StatementSubscription';
+import { isMember } from '../../src/types/TypeUtils';
+import { DocumentSnapshot } from 'firebase-admin/firestore';
+import { FirestoreEvent } from 'firebase-functions/firestore';
+import { parse } from 'valibot';
 
+export async function updateStatementNumberOfMembers(
+	event: FirestoreEvent<
+		Change<DocumentSnapshot> | undefined,
+		{
+			subscriptionId: string;
+		}
+	>
+) {
+	if (!event.data) return;
+	try {
 
-export async function updateStatementNumberOfMembers(event: any) {
-    try {
+		const statementsSubscribeBefore = !event.data.before.exists ? undefined : parse(
+			StatementSubscriptionSchema,
+			event.data.before.data()
+		);
 
+		const statementsSubscribeAfter = parse(
+			StatementSubscriptionSchema,
+			event.data.after.data()
+		);
 
-        const statementsSubscribeBefore = event.data.before.data() as StatementSubscription;
-        const statementsSubscribeAfter = event.data.after.data() as StatementSubscription;
+		const roleBefore = statementsSubscribeBefore
+			? statementsSubscribeBefore.role
+			: undefined;
+		const roleAfter = statementsSubscribeAfter
+			? statementsSubscribeAfter.role
+			: undefined;
 
-        const roleBefore = statementsSubscribeBefore ? statementsSubscribeBefore.role : undefined;
-        const roleAfter = statementsSubscribeAfter ? statementsSubscribeAfter.role : undefined;
+		const eventType = getEventType(event);
+		if (eventType === 'update' && roleBefore === roleAfter) return;
 
-        const eventType = getEventType(event);
-        if(eventType === "update" && roleBefore === roleAfter) return;
+		const _isMemberAfter = isMember(roleAfter);
+		const _isMemberBefore = isMember(roleBefore);
+		const statementId: string =
+			statementsSubscribeBefore?.statementId ||
+			statementsSubscribeAfter?.statementId;
 
+		await addOrRemoveMemberFromStatementDB(
+			statementId,
+			eventType,
+			_isMemberAfter,
+			_isMemberBefore
+		);
 
-        const _isMemberAfter = isMember(roleAfter);
-        const _isMemberBefore = isMember(roleBefore);
-        const statementId: string = statementsSubscribeBefore?.statementId || statementsSubscribeAfter?.statementId;
+		//inner functions
+		function getEventType(
+			event: FirestoreEvent<
+				Change<DocumentSnapshot> | undefined,
+				{
+					subscriptionId: string;
+				}
+			>
+		): 'new' | 'update' | 'delete' {
+			if (!event.data) return 'delete';
 
-        await addOrRemoveMemberFromStatementDB(statementId, eventType, _isMemberAfter, _isMemberBefore);
+			const beforeSnapshot = event.data.before;
+			const afterSnapshot = event.data.after;
 
-
-        //inner functions
-        function getEventType(event: any): "new" | "update" | "delete" {
-            const beforeSnapshot = event.data.before;
-            const afterSnapshot = event.data.after;
-
-            if (!beforeSnapshot.exists) {
-                return "new";
-            } else if (!afterSnapshot.exists) {
-                return "delete";
-            } else {
-                return "update";
-            }
-        }
-
-        
-    } catch (error) {
-        logger.error("error updating statement with number of members", error);
-    }
+			if (!beforeSnapshot.exists) {
+				return 'new';
+			} else if (!afterSnapshot.exists) {
+				return 'delete';
+			} else {
+				return 'update';
+			}
+		}
+	} catch (error) {
+		logger.error('error updating statement with number of members', error);
+	}
 }

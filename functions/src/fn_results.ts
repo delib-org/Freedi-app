@@ -1,109 +1,68 @@
-import { Collections, ResultsBy, Statement } from "delib-npm";
-import { logger } from "firebase-functions/v1";
-import { db } from "./index";
+import { Change, logger } from 'firebase-functions/v1';
+import { db } from './index';
+import {
+	Statement,
+	StatementSchema,
+} from '../../src/types/statement/Statement';
+import { Collections } from '../../src/types/TypeEnums';
+import { DocumentSnapshot } from 'firebase-admin/firestore';
+import { FirestoreEvent } from 'firebase-functions/firestore';
+import { parse } from 'valibot';
+import { ResultsSettingsSchema } from '../../src/types/results/Results';
 
-//results are dealing with the overall results of the deliberation
+export async function updateResultsSettings(
+	ev: FirestoreEvent<
+		Change<DocumentSnapshot> | undefined,
+		{
+			statementId: string;
+		}
+	>
+): Promise<Statement[] | undefined> {
+	if (!ev.data) return;
+	try {
+		//get results
+		const { resultsBy } = parse(
+			ResultsSettingsSchema,
+			ev.data.after.data()
+		);
+		const { statementId } = ev.params;
 
-export async function updateResultsSettings(ev: any): Promise<Statement[]> {
-    try {
-        //get results
-        const { resultsBy } = ev.data.after.data();
-        const { statementId } = ev.params;
+		if (!statementId) throw new Error('statementId is required');
+		if (!resultsBy) throw new Error('resultsBy is required');
 
-        if (!statementId) throw new Error("statementId is required");
-        if (!resultsBy) throw new Error("resultsBy is required");
+		const topStatements = await resultsByTopOptions(statementId);
 
-        const topStatements = await transpileResults(statementId, resultsBy);
+		//save results to DB
+		await db
+			.collection(Collections.results)
+			.doc(statementId)
+			.set({ [resultsBy]: topStatements }, { merge: true });
 
-        //save results to DB
-        await db
-            .collection(Collections.results)
-            .doc(statementId)
-            .set({ [resultsBy]: topStatements }, { merge: true });
+		return topStatements;
+	} catch (error) {
+		logger.error(error);
 
-        return topStatements;
-    } catch (error) {
-        logger.error(error);
-
-        return [];
-    }
-}
-async function transpileResults(
-    statementId: string,
-    resultsBy: ResultsBy,
-): Promise<Statement[]> {
-    //this function is responsible for converting the results to the desired format
-    try {
-        //get top results by ResultBy
-        switch (resultsBy) {
-            case ResultsBy.topOptions:
-                logger.info("topOption");
-
-                return await resultsByTopOptions(statementId);
-            default:
-                return await resultsByTopOptions(statementId);
-        }
-    } catch (error) {
-        logger.error(error);
-
-        return [];
-    }
+		return [];
+	}
 }
 
 async function resultsByTopOptions(statementId: string): Promise<Statement[]> {
-    try {
-        //get top options
-        // statementRef
-        // const statementRef = db.collection(Collections.statements).doc(statementId);
-        // const statementDB = await statementRef.get();
-        // const statement = statementDB.data() as Statement;
+	try {
+		//get top options
+		const topOptionsDB = await db
+			.collection(Collections.statements)
+			.where('parentId', '==', statementId)
+			.orderBy('consensus', 'desc')
+			.limit(5)
+			.get();
+		const topOptions = topOptionsDB.docs.map((doc) =>
+			parse(StatementSchema, doc.data())
+		);
 
-        //get top options
-        const topOptionsDB = await db
-            .collection(Collections.statements)
-            .where("parentId", "==", statementId)
-            .orderBy("consensus", "desc")
-            .limit(5)
-            .get();
-        const topOptions = topOptionsDB.docs.map(
-            (doc: any) => doc.data() as Statement,
-        );
+		return topOptions;
+	} catch (error) {
+		logger.error(error);
 
-        return topOptions;
-    } catch (error) {
-        logger.error(error);
-
-        return [];
-    }
+		return [];
+	}
 }
-
-// async function resultsByTopVotes(statementId: string): Promise<Statement[]> {
-//     try {
-//         //get top options
-//         // statementRef
-//         const statementRef = db
-//             .collection(Collections.statements)
-//             .doc(statementId);
-//         const statementDB = await statementRef.get();
-//         const statement = statementDB.data() as Statement;
-
-//         //get top selection
-//         const { selections } = statement;
-//         if (!selections) throw new Error("selections is required");
-
-//         const topStatementId = Object.keys(selections).reduce((a, b) =>
-//             selections[a] > selections[b] ? a : b,
-//         );
-//         const topStatementRef = db
-//             .collection(Collections.statements)
-//             .doc(topStatementId);
-//         const topStatementDB = await topStatementRef.get();
-//         const topStatement = topStatementDB.data() as Statement;
-
-//         return [topStatement];
-//     } catch (error) {
-//         logger.error(error);
-
-//         return [];
-//     }
-// }
