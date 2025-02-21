@@ -8,7 +8,7 @@ import {
 import { setEvaluationToDB } from '@/controllers/db/evaluation/setEvaluation';
 import { decreesUserSettingsLearningRemain } from '@/controllers/db/learning/setLearning';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
-import { useLanguage } from '@/controllers/hooks/useLanguages';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import { evaluationSelector } from '@/redux/evaluations/evaluationsSlice';
 import { userSettingsSelector } from '@/redux/users/userSlice';
 import { Statement } from '@/types/statement/Statement';
@@ -28,7 +28,7 @@ const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({
 
 	const learningEvaluation =
 		useAppSelector(userSettingsSelector)?.learning?.evaluation || 0;
-	const { t } = useLanguage();
+	const { t } = useUserConfig();
 
 	const { sumPro, sumCon, numberOfEvaluators } = statement.evaluation || {
 		sumPro: 0,
@@ -55,7 +55,9 @@ const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({
 				className={`${styles['evaluation-score']} ${statement.consensus < 0 ? 'negative' : ''}`}
 			>
 				{shouldDisplayScore && <span>{sumPro}</span>}
-				{shouldDisplayScore && numberOfEvaluators && numberOfEvaluators > 0 ? (
+				{shouldDisplayScore &&
+				numberOfEvaluators &&
+				numberOfEvaluators > 0 ? (
 					<span className={styles['total-evaluators']}>
 						{' '}
 						({numberOfEvaluators})

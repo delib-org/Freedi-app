@@ -13,7 +13,7 @@ import AddQuestionIcon from '@/assets/icons/addQuestion.svg?react';
 import { setStatementIsOption } from '@/controllers/db/statements/setStatements';
 import { isAuthorized } from '@/controllers/general/helpers';
 import { useAppDispatch, useAppSelector } from '@/controllers/hooks/reduxHooks';
-import { useLanguage } from '@/controllers/hooks/useLanguages';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import useStatementColor, {
 	StyleProps,
 } from '@/controllers/hooks/useStatementColor';
@@ -41,7 +41,7 @@ const SuggestionCard: FC<Props> = ({
 	// Hooks
 	if (!parentStatement) console.error('parentStatement is not defined');
 
-	const { t, dir } = useLanguage();
+	const { t, dir } = useUserConfig();
 	const { sort } = useParams();
 
 	// Redux Store

@@ -2,7 +2,7 @@ import { FC, memo } from 'react';
 import { useSelector } from 'react-redux';
 import Dot from './dot/Dot';
 import styles from './Triangle.module.scss';
-import { useLanguage } from '@/controllers/hooks/useLanguages';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import { statementOptionsSelector } from '@/redux/statements/statementsSlice';
 import { Statement } from '@/types/statement/Statement';
 
@@ -11,7 +11,7 @@ interface Props {
 }
 
 const Triangle: FC<Props> = ({ statement }) => {
-	const { t } = useLanguage();
+	const { t } = useUserConfig();
 	const subStatements: Statement[] = useSelector(
 		statementOptionsSelector(statement.statementId)
 	).filter((s: Statement) => s.evaluation?.sumCon !== undefined);

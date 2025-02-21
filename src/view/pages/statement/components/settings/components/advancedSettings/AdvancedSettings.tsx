@@ -1,14 +1,14 @@
 import { FC } from 'react';
 import { StatementSettingsProps } from '../../settingsTypeHelpers';
 import { getStatementSettings } from '../../statementSettingsCont';
-import { useLanguage } from '@/controllers/hooks/useLanguages';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import Checkbox from '@/view/components/checkbox/Checkbox';
 import './AdvancedSettings.scss';
 import { setStatementSettingToDB } from '@/controllers/db/statementSettings/setStatementSettings';
 import { StatementSettings } from '@/types/statement/StatementSettings';
 
 const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
-	const { t } = useLanguage();
+	const { t } = useUserConfig();
 
 	const statementSettings: StatementSettings =
 		getStatementSettings(statement);

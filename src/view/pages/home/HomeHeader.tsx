@@ -1,9 +1,5 @@
 // Helpers
 import { useEffect, useState } from 'react';
-
-// icons
-
-// Components
 import IconButton from '../../components/iconButton/IconButton';
 import Menu from '../../components/menu/Menu';
 import MenuOption from '../../components/menu/MenuOption';
@@ -12,7 +8,7 @@ import DisconnectIcon from '@/assets/icons/disconnectIcon.svg?react';
 import InstallIcon from '@/assets/icons/installIcon.svg?react';
 import InvitationIcon from '@/assets/icons/invitation.svg?react';
 import { handleLogout } from '@/controllers/general/helpers';
-import { useLanguage } from '@/controllers/hooks/useLanguages';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 
 export default function HomeHeader() {
 	const [isHomeMenuOpen, setIsHomeMenuOpen] = useState(false);
@@ -28,7 +24,7 @@ export default function HomeHeader() {
 	const [deferredPrompt, setDeferredPrompt] =
 		useState<BeforeInstallPromptEvent | null>(null);
 
-	const { t, dir } = useLanguage();
+	const { t, dir } = useUserConfig();
 
 	useEffect(() => {
 		window.addEventListener('beforeinstallprompt', (e: Event) => {
@@ -46,15 +42,17 @@ export default function HomeHeader() {
 		try {
 			if (deferredPrompt) {
 				deferredPrompt.prompt();
-				deferredPrompt.userChoice.then((choiceResult: { outcome: string }) => {
-					if (choiceResult.outcome === 'accepted') {
-						console.info('User accepted the install prompt');
-					} else {
-						console.info('User dismissed the install prompt');
+				deferredPrompt.userChoice.then(
+					(choiceResult: { outcome: string }) => {
+						if (choiceResult.outcome === 'accepted') {
+							console.info('User accepted the install prompt');
+						} else {
+							console.info('User dismissed the install prompt');
+						}
+						setDeferredPrompt(null);
+						setIsInstallable(false);
 					}
-					setDeferredPrompt(null);
-					setIsInstallable(false);
-				});
+				);
 			}
 		} catch (error) {
 			console.error(error);
@@ -85,12 +83,16 @@ export default function HomeHeader() {
 						iconColor='white'
 					>
 						<MenuOption
-							icon={<DisconnectIcon style={{ color: '#4E88C7' }} />}
+							icon={
+								<DisconnectIcon style={{ color: '#4E88C7' }} />
+							}
 							label={t('Disconnect')}
 							onOptionClick={() => handleLogout()}
 						/>
 						<MenuOption
-							icon={<InvitationIcon style={{ color: '#4E88C7' }} />}
+							icon={
+								<InvitationIcon style={{ color: '#4E88C7' }} />
+							}
 							label={t('Join with PIN number')}
 							onOptionClick={handleInvitationPanel}
 						/>

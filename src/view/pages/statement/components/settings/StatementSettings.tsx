@@ -10,7 +10,7 @@ import { getStatementFromDB } from '@/controllers/db/statements/getStatement';
 import { listenToMembers } from '@/controllers/db/statements/listenToStatements';
 import { listenToStatementMetaData } from '@/controllers/db/statements/statementMetaData/listenToStatementMeta';
 import { useAppDispatch, useAppSelector } from '@/controllers/hooks/reduxHooks';
-import { useLanguage } from '@/controllers/hooks/useLanguages';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import {
 	setStatement,
 	statementSelector,
@@ -26,7 +26,7 @@ import { Statement } from '@/types/statement/Statement';
 const StatementSettings: FC = () => {
 	// * Hooks * //
 	const { statementId } = useParams();
-	const { t } = useLanguage();
+	const { t } = useUserConfig();
 
 	// * State * //
 	const [parentStatement, setParentStatement] = useState<Statement | 'top'>(

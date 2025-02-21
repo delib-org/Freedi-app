@@ -15,7 +15,7 @@ import MembersSettings from './../../components/membership/MembersSettings';
 import SectionTitle from './../../components/sectionTitle/SectionTitle';
 import TitleAndDescription from './../../components/titleAndDescription/TitleAndDescription';
 import { setNewStatement } from './../../statementSettingsCont';
-import { useLanguage } from '@/controllers/hooks/useLanguages';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import UploadImage from '@/view/components/uploadImage/UploadImage';
 
 // Hooks & Helpers
@@ -47,7 +47,7 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 	// * Hooks * //
 	const navigate = useNavigate();
 	const { statementId } = useParams();
-	const { t } = useLanguage();
+	const { t } = useUserConfig();
 
 	const [image, setImage] = useState<string>(imageUrl);
 	const [loading, setLoading] = useState<boolean>(false);

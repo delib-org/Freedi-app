@@ -1,5 +1,5 @@
 import React, { FC, useContext, useState } from 'react';
-import { useLanguage } from '@/controllers/hooks/useLanguages';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import styles from './AddStage.module.scss';
 import Button, { ButtonType } from '@/view/components/buttons/button/Button';
 import { saveStatementToDB } from '@/controllers/db/statements/setStatements';
@@ -12,7 +12,7 @@ interface AddStageProps {
 }
 
 const AddStage: FC<AddStageProps> = ({ setShowAddStage }) => {
-	const { t } = useLanguage();
+	const { t } = useUserConfig();
 	const { statement } = useContext(StatementContext);
 
 	const [defaultStageName, setDefaultStageName] = useState<string>('');

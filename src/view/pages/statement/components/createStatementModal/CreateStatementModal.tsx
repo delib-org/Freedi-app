@@ -2,7 +2,7 @@ import { FC, useState, useEffect, useRef } from 'react';
 import { createStatementFromModal } from '../settings/statementSettingsCont';
 import newOptionGraphic from '@/assets/images/newOptionGraphic.png';
 import newQuestionGraphic from '@/assets/images/newQuestionGraphic.png';
-import { useLanguage } from '@/controllers/hooks/useLanguages';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import Modal from '@/view/components/modal/Modal';
 import './CreateStatementModal.scss';
 import Button, { ButtonType } from '@/view/components/buttons/button/Button';
@@ -29,7 +29,7 @@ const CreateStatementModal: FC<CreateStatementModalProps> = ({
 	const [isOptionSelected, setIsOptionSelected] = useState(isOption);
 	const [title, setTitle] = useState('');
 	const [description, setDescription] = useState('');
-	const { t } = useLanguage();
+	const { t } = useUserConfig();
 
 	const titleInputRef = useRef<HTMLInputElement>(null);
 
@@ -118,7 +118,7 @@ const Tabs: FC<TabsProps> = ({
 	isOptionChosen,
 	setIsOptionChosen,
 }) => {
-	const { t } = useLanguage();
+	const { t } = useUserConfig();
 
 	return (
 		<div className='tabs'>
@@ -154,7 +154,7 @@ const CreateStatementButtons: FC<CreateStatementButtonsProps> = ({
 	isOption,
 	onCancel,
 }) => {
-	const { t } = useLanguage();
+	const { t } = useUserConfig();
 
 	return (
 		<div className='create-statement-buttons'>

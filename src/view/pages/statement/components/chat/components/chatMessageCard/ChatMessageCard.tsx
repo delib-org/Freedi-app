@@ -15,7 +15,7 @@ import {
 } from '@/controllers/db/statements/setStatements';
 import { isAuthorized } from '@/controllers/general/helpers';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
-import { useLanguage } from '@/controllers/hooks/useLanguages';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import useStatementColor from '@/controllers/hooks/useStatementColor';
 import { statementSubscriptionSelector } from '@/redux/statements/statementsSlice';
 import { store } from '@/redux/store';
@@ -54,7 +54,7 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
 	// Hooks
 	const { statementType } = statement;
 	const statementColor = useStatementColor({ statement });
-	const { t, dir } = useLanguage();
+	const { t, dir } = useUserConfig();
 
 	// Redux store
 	const userId = store.getState().user.user?.uid;

@@ -10,7 +10,7 @@ import {
 	sortStatementsByHierarchy,
 } from '@/controllers/general/sorting';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
-import { useLanguage } from '@/controllers/hooks/useLanguages';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import { useMapContext } from '@/controllers/hooks/useMap';
 import {
 	statementDescendantsSelector,
@@ -37,7 +37,7 @@ const StatementMap: FC<Props> = ({ statement }) => {
 	const role = userSubscription ? userSubscription.role : Role.member;
 	const _isAdmin = isAdmin(role);
 
-	const { t } = useLanguage();
+	const { t } = useUserConfig();
 	const { mapContext, setMapContext } = useMapContext();
 
 	const [sortedDescendants, setSortedDescendants] = useState<Results[]>([]);

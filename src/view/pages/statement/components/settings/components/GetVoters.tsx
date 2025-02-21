@@ -1,7 +1,7 @@
 import React, { FC, useEffect } from 'react';
 import { handleGetVoters } from '../statementSettingsCont';
 import MembersChipsList from './membership/membersChipsList/MembersChipList';
-import { useLanguage } from '@/controllers/hooks/useLanguages';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import { Vote } from '@/types/vote';
 import { User } from '@/types/user/User';
 
@@ -11,7 +11,7 @@ interface GetVotersProps {
 }
 
 const GetVoters: FC<GetVotersProps> = ({ statementId, joinedMembers }) => {
-	const { t } = useLanguage();
+	const { t } = useUserConfig();
 
 	const [voters, setVoters] = React.useState<Vote[]>([]);
 	const [nonVoters, setNonVoters] = React.useState<User[]>([]);

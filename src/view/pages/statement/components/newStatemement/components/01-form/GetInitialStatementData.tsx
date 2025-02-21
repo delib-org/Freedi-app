@@ -5,7 +5,7 @@ import {
 	createStatement,
 	setStatementToDB,
 } from '@/controllers/db/statements/setStatements';
-import { useLanguage } from '@/controllers/hooks/useLanguages';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import Button, { ButtonType } from '@/view/components/buttons/button/Button';
 import Input from '@/view/components/input/Input';
 import Textarea from '@/view/components/textarea/Textarea';
@@ -14,7 +14,7 @@ import { StatementType } from '@/types/TypeEnums';
 import { Statement } from '@/types/statement/Statement';
 
 export default function GetInitialStatementData() {
-	const { t } = useLanguage();
+	const { t } = useUserConfig();
 	const { title, description, setTitle, setDescription } =
 		useContext(NewStatementContext);
 	const {

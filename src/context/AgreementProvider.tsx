@@ -1,6 +1,6 @@
 import { FC, ReactNode, useState, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
-import { useLanguage } from '@/controllers/hooks/useLanguages';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import { getSignature } from '@/controllers/db/users/getUserDB';
 import { updateUserAgreement } from '@/controllers/db/users/setUsersDB';
 import { updateAgreementToStore } from '@/redux/users/userSlice';
@@ -19,7 +19,7 @@ export const AgreementProvider: FC<AgreementProviderProps> = ({
 	user,
 }) => {
 	const dispatch = useDispatch();
-	const { t } = useLanguage();
+	const { t } = useUserConfig();
 	const [showSignAgreement, setShowSignAgreement] = useState(false);
 	const [agreement, setAgreement] = useState<string>('');
 

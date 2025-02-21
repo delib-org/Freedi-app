@@ -4,7 +4,7 @@ import StatementTopNav from '../nav/top/StatementTopNav';
 import InvitePanel from './invitePanel/InvitePanel';
 import { logOut } from '@/controllers/db/authenticationUtils';
 import { setFollowMeDB } from '@/controllers/db/statements/setStatements';
-import { useLanguage } from '@/controllers/hooks/useLanguages';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import { Statement } from '@/types/statement/Statement';
 
 interface Props {
@@ -23,7 +23,7 @@ const StatementHeader: FC<Props> = ({
 	const [isHeaderMenuOpen, setIsHeaderMenuOpen] = useState(false);
 	const [showInvitationPanel, setShowInvitationPanel] = useState(false);
 
-	const { t, dir } = useLanguage();
+	const { t, dir } = useUserConfig();
 
 	function handleShare() {
 		const baseUrl = window.location.origin;

@@ -11,7 +11,7 @@ import Text from '../text/Text';
 import styles from './EditTitle.module.scss';
 import Save from '@/assets/icons/saveIcon.svg?react';
 import { updateStatementText } from '@/controllers/db/statements/setStatements';
-import { useLanguage } from '@/controllers/hooks/useLanguages';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import { Statement } from '@/types/statement/Statement';
 
 interface Props {
@@ -46,7 +46,7 @@ const EditTitle: FC<Props> = ({
 		}
 	}, [isEdit]);
 
-	const { dir: direction } = useLanguage();
+	const { dir: direction } = useUserConfig();
 	const align = direction === 'ltr' ? 'left' : 'right';
 
 	function handleChange(

@@ -11,7 +11,7 @@ import InvitationIcon from '@/assets/icons/invitation.svg?react';
 import SettingsIcon from '@/assets/icons/settings.svg?react';
 import ShareIcon from '@/assets/icons/shareIcon.svg?react';
 import View from '@/assets/icons/view.svg?react';
-import { useLanguage } from '@/controllers/hooks/useLanguages';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import useStatementColor from '@/controllers/hooks/useStatementColor.ts';
 import Menu from '@/view/components/menu/Menu';
 import MenuOption from '@/view/components/menu/MenuOption';
@@ -41,7 +41,7 @@ const StatementTopNav: FC<Props> = ({
 	handleShare,
 }) => {
 	//hooks
-	const { t } = useLanguage();
+	const { t } = useUserConfig();
 	const navigate = useNavigate();
 	const { screen } = useParams();
 	const { role } = useContext(StatementContext);

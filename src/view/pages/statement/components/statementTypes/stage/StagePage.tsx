@@ -1,19 +1,20 @@
 import { useContext, useEffect, useRef } from 'react';
 import { StatementContext } from '../../../StatementCont';
 import SuggestionCards from '../../evaluations/components/suggestionCards/SuggestionCards';
-import styles from './StagePage.module.scss'
+import styles from './StagePage.module.scss';
 import StatementBottomNav from '../../nav/bottom/StatementBottomNav';
-import { useLanguage } from '@/controllers/hooks/useLanguages';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 
 const StagePage = () => {
-	const { t } = useLanguage();
+	const { t } = useUserConfig();
 	const { statement } = useContext(StatementContext);
 	const stageRef = useRef<HTMLDivElement>(null);
 
 	useEffect(() => {
 		const updateHeight = () => {
 			if (stageRef.current) {
-				const topPosition = stageRef.current.getBoundingClientRect().top;
+				const topPosition =
+					stageRef.current.getBoundingClientRect().top;
 				const viewportHeight = window.innerHeight;
 				const newHeight = viewportHeight - topPosition;
 				stageRef.current.style.height = `${newHeight}px`;
@@ -31,16 +32,16 @@ const StagePage = () => {
 		};
 	}, []);
 
-	const stageName = statement?.statement ? `: ${t(statement.statement)}` : "";
+	const stageName = statement?.statement ? `: ${t(statement.statement)}` : '';
 
 	return (
-		<div
-			ref={stageRef}
-			className={styles.stage}
-		>
+		<div ref={stageRef} className={styles.stage}>
 			<div className={styles.wrapper}>
-				<h2>{t("Stage")}{statement?.statement && stageName}</h2>
-				<p className="mb-4">Stage description</p>
+				<h2>
+					{t('Stage')}
+					{statement?.statement && stageName}
+				</h2>
+				<p className='mb-4'>Stage description</p>
 				<SuggestionCards />
 				<div className={styles.bottomNav}>
 					<StatementBottomNav />

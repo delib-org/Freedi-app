@@ -17,7 +17,7 @@ import './StatementVote.scss';
 
 // Helpers
 import Toast from '@/view/components/toast/Toast';
-import { useLanguage } from '@/controllers/hooks/useLanguages';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import { StatementContext } from '../../StatementCont';
 import { Statement } from '@/types/statement/Statement';
 import { QuestionStep } from '@/types/TypeEnums';
@@ -27,7 +27,7 @@ let getVoteFromDB = false;
 const StatementVote: FC = () => {
 	// * Hooks * //
 	const dispatch = useAppDispatch();
-	const { t } = useLanguage();
+	const { t } = useUserConfig();
 	const { statement } = useContext(StatementContext);
 	const subStatements: Statement[] = [];
 

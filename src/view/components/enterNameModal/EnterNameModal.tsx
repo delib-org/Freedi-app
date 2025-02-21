@@ -9,7 +9,7 @@ import styles from './enterNameModal.module.scss';
 
 // Functions
 import { signAnonymously } from '@/controllers/db/authenticationUtils';
-import { useLanguage } from '@/controllers/hooks/useLanguages';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 
 interface Props {
 	closeModal: VoidFunction;
@@ -20,7 +20,7 @@ const EnterNameModal: FC<Props> = ({ closeModal }) => {
 	const [showStartBtn, setShowStartBtn] = useState<boolean>(false);
 	const inputRef = useRef<HTMLInputElement>(null); // Create a ref for the input
 
-	const { t } = useLanguage();
+	const { t } = useUserConfig();
 
 	useEffect(() => {
 		inputRef.current?.focus(); // Set focus on the input when the component mounts

@@ -19,7 +19,7 @@ import { userSettingsSelector } from '@/redux/users/userSlice';
 import StartHere from '@/view/components/startHere/StartHere';
 import { StatementContext } from '../../../StatementCont';
 import { sortItems } from './StatementBottomNavModal';
-import { useLanguage } from '@/controllers/hooks/useLanguages';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import { SortType, StatementType } from '@/types/TypeEnums';
 
 interface Props {
@@ -30,7 +30,7 @@ const StatementBottomNav: FC<Props> = () => {
 	const { statementId } = useParams();
 	const { statement, setNewStatementType, handleSetNewStatement } =
 		useContext(StatementContext);
-	const { dir } = useLanguage();
+	const { dir } = useUserConfig();
 
 	const timesRemainToLearnAddOption =
 		useSelector(userSettingsSelector)?.learning?.addOptions || 0;

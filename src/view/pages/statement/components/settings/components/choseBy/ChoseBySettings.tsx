@@ -6,7 +6,7 @@ import {
 	useEffect,
 	useState,
 } from 'react';
-import { useLanguage } from '@/controllers/hooks/useLanguages';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import RadioButtonWithLabel from '@/view/components/radioButtonWithLabel/RadioButtonWithLabel';
 import styles from './ChoseBySettings.module.scss';
 import { StatementSettingsProps } from '../../settingsTypeHelpers';
@@ -28,7 +28,7 @@ interface RangeProps {
 }
 
 const ChoseBySettings: FC<StatementSettingsProps> = ({ statement }) => {
-	const { t } = useLanguage();
+	const { t } = useUserConfig();
 	const dispatch = useDispatch();
 	const choseBy: ChoseBy | undefined = useSelector(
 		choseBySelector(statement.statementId)

@@ -2,7 +2,7 @@ import { FC, MouseEvent } from 'react';
 import styles from './StageCard.module.scss';
 import Button, { ButtonType } from '@/view/components/buttons/button/Button';
 import { NavLink, useNavigate } from 'react-router';
-import { useLanguage } from '@/controllers/hooks/useLanguages';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import { StageClass } from '@/types/stage/Stage';
 import { Statement } from '@/types/statement/Statement';
 import { SimpleStatement } from '@/types/statement/SimpleStatement';
@@ -13,7 +13,7 @@ interface Props {
 
 const StageCard: FC<Props> = ({ statement }) => {
 	const stageClass = new StageClass();
-	const { t } = useLanguage();
+	const { t } = useUserConfig();
 	const navigate = useNavigate();
 
 	const chosen = statement.results || [];
