@@ -4,7 +4,7 @@ import { useLanguage } from '@/controllers/hooks/useLanguages';
 import { getSignature } from '@/controllers/db/users/getUserDB';
 import { updateUserAgreement } from '@/controllers/db/users/setUsersDB';
 import { updateAgreementToStore } from '@/redux/users/userSlice';
-import { logOut } from '@/controllers/db/auth';
+import { logOut } from '@/controllers/db/authenticationUtils';
 import type { Agreement } from '@/types/agreement/Agreement';
 import type { User } from '@/types/user/User';
 import TermsOfUse from '@/view/components/termsOfUse/TermsOfUse';

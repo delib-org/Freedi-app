@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router';
 import MoreLeft from '../../../assets/icons/moreLeft.svg?react';
 import MoreRight from '../../../assets/icons/moreRight.svg?react';
 import Logo from '../../../assets/logo/106 x 89 SVG.svg?react';
@@ -8,19 +7,11 @@ import EnterNameModal from '../../components/enterNameModal/EnterNameModal';
 import styles from './Start.module.scss';
 import StartPageImage from '@/assets/images/StartPageImage.png';
 import { LANGUAGES } from '@/constants/Languages';
-import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import useDirection from '@/controllers/hooks/useDirection';
 import { LanguagesEnum, useLanguage } from '@/controllers/hooks/useLanguages';
-import {
-	selectInitLocation,
-} from '@/redux/location/locationSlice';
-import { userSelector } from '@/redux/users/userSlice';
 import packageJson from '../../../../package.json';
 
 const Start = () => {
-	const navigate = useNavigate();
-	const user = useAppSelector(userSelector);
-	const initLocation = useAppSelector(selectInitLocation);
 	const [shouldShowNameModal, setShouldShowNameModal] = useState(false);
 	const savedLang = localStorage.getItem('lang');
 	const direction = useDirection();
@@ -34,14 +25,6 @@ const Start = () => {
 			localStorage.setItem('lang', defaultLang);
 		}
 	}, []);
-
-	useEffect(() => {
-		if (user) {
-			navigate(initLocation || '/home', {
-				state: { from: window.location.pathname },
-			});
-		}
-	}, [user]);
 
 	return (
 		<div className={styles.splashPage}>
@@ -91,13 +74,21 @@ const Start = () => {
 
 			<GoogleLoginButton />
 
-			<img src={StartPageImage} alt='' className={styles.StratPageImage} />
+			<img
+				src={StartPageImage}
+				alt=''
+				className={styles.StratPageImage}
+			/>
 			<a href='http://delib.org' target='_blank' className={styles.ddi}>
-				<footer>{t('From the Institute for Deliberative Democracy')}</footer>
+				<footer>
+					{t('From the Institute for Deliberative Democracy')}
+				</footer>
 			</a>
 
 			{shouldShowNameModal && (
-				<EnterNameModal closeModal={() => setShouldShowNameModal(false)} />
+				<EnterNameModal
+					closeModal={() => setShouldShowNameModal(false)}
+				/>
 			)}
 		</div>
 	);

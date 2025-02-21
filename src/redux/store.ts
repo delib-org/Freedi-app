@@ -1,7 +1,6 @@
 import { configureStore } from '@reduxjs/toolkit';
 import { evaluationsSlicer } from './evaluations/evaluationsSlice';
 import { historySlice } from './history/HistorySlice';
-import { initLocationSlice } from './location/locationSlice';
 import { resultsSlice } from './results/resultsSlice';
 import { statementMetaData } from './statements/statementsMetaSlice';
 import { statementsSlicer } from './statements/statementsSlice';
@@ -19,7 +18,6 @@ export const store = configureStore({
 		user: userSlicer.reducer,
 		votes: votesSlicer.reducer,
 		results: resultsSlice.reducer,
-		initLocation: initLocationSlice.reducer,
 		history: historySlice.reducer,
 		choseBys: choseBySlice.reducer,
 		massConsensus: massConsensusSlice.reducer,

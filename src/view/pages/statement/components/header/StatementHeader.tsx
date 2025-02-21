@@ -2,7 +2,7 @@ import React, { FC, useState } from 'react';
 import { useLocation } from 'react-router';
 import StatementTopNav from '../nav/top/StatementTopNav';
 import InvitePanel from './invitePanel/InvitePanel';
-import { logOut } from '@/controllers/db/auth';
+import { logOut } from '@/controllers/db/authenticationUtils';
 import { setFollowMeDB } from '@/controllers/db/statements/setStatements';
 import { useLanguage } from '@/controllers/hooks/useLanguages';
 import { Statement } from '@/types/statement/Statement';

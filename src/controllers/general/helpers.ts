@@ -1,4 +1,4 @@
-import { logOut } from '../db/auth';
+import { logOut } from '../db/authenticationUtils';
 import { HistoryTracker } from '@/redux/history/HistorySlice';
 import { store } from '@/redux/store';
 import { setUser } from '@/redux/users/userSlice';

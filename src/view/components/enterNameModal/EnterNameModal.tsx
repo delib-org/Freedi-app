@@ -8,7 +8,7 @@ import styles from './enterNameModal.module.scss';
 // Custom components
 
 // Functions
-import { signAnonymously } from '@/controllers/db/auth';
+import { signAnonymously } from '@/controllers/db/authenticationUtils';
 import { useLanguage } from '@/controllers/hooks/useLanguages';
 
 interface Props {

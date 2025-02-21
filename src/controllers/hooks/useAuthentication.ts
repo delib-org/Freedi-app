@@ -2,9 +2,9 @@ import { useEffect, useState } from 'react';
 import { User } from 'firebase/auth';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '@/controllers/db/config';
-import { useNavigate } from 'react-router';
+import { useNavigate, useLocation, useParams } from 'react-router';
 import { useDispatch } from 'react-redux';
-// Add any user actions you need to dispatch
+import { setHistory } from '@/redux/history/HistorySlice';
 
 interface AuthState {
 	isAuthenticated: boolean;
@@ -18,8 +18,18 @@ export const useAuthentication = () => {
 		isLoading: true,
 		user: null,
 	});
+
 	const navigate = useNavigate();
+	const location = useLocation();
 	const dispatch = useDispatch();
+	const { statementId } = useParams();
+
+	// Track route history for all navigation
+	useEffect(() => {
+		if (location.pathname !== '/start') {
+			dispatch(setHistory({ statementId, pathname: location.pathname }));
+		}
+	}, [dispatch, location, statementId]);
 
 	useEffect(() => {
 		const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -29,20 +39,39 @@ export const useAuthentication = () => {
 					isLoading: false,
 					user,
 				});
-				// You might want to dispatch user data to your Redux store here
-				// dispatch(setUser(user));
+
+				// After authentication, history state will contain the initial route
+				const historyState = JSON.parse(
+					localStorage.getItem('routeHistory') || '{}'
+				);
+				const savedPath = historyState?.pathname;
+
+				if (
+					savedPath &&
+					savedPath !== '/start' &&
+					location.pathname === '/start'
+				) {
+					navigate(savedPath, { replace: true });
+				}
 			} else {
 				setAuthState({
 					isAuthenticated: false,
 					isLoading: false,
 					user: null,
 				});
-				navigate('/start');
+
+				// Save current location before redirecting to start
+				if (location.pathname !== '/start') {
+					dispatch(
+						setHistory({ statementId, pathname: location.pathname })
+					);
+					navigate('/start', { replace: true });
+				}
 			}
 		});
 
 		return () => unsubscribe();
-	}, [navigate, dispatch]);
+	}, [navigate, dispatch, location.pathname, statementId]);
 
 	return authState;
 };

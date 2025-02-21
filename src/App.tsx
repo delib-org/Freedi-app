@@ -1,22 +1,14 @@
 import { Suspense, useEffect } from 'react';
-import { Outlet, useLocation, useParams } from 'react-router';
-import { useDispatch } from 'react-redux';
-import { LanguagesEnum, useLanguage } from '@/controllers/hooks/useLanguages';
-import { useAppSelector } from '@/controllers/hooks/reduxHooks';
-import { setHistory } from '@/redux/history/HistorySlice';
-import { selectInitLocation } from '@/redux/location/locationSlice';
-import { useAuthentication } from './controllers/hooks/useAuthentication';
-import { Accessibility } from 'lucide-react';
-import LoadingPage from './view/pages/loadingPage/LoadingPage';
+import { Outlet } from 'react-router';
 import { AgreementProvider } from './context/AgreementProvider';
+import { useAuthentication } from './controllers/hooks/useAuthentication';
+import { useLanguage, LanguagesEnum } from './controllers/hooks/useLanguages';
+import LoadingPage from './view/pages/loadingPage/LoadingPage';
+import Accessibility from './view/components/accessibility/Accessibility';
 
 export default function App() {
-	const location = useLocation();
-	const dispatch = useDispatch();
-	const { statementId } = useParams();
 	const { changeLanguage } = useLanguage();
 	const { isAuthenticated, isLoading, user } = useAuthentication();
-	const initLocation = useAppSelector(selectInitLocation);
 
 	// Handle language setup
 	useEffect(() => {
@@ -30,17 +22,12 @@ export default function App() {
 		}
 	}, [changeLanguage]);
 
-	// Track route history
-	useEffect(() => {
-		dispatch(setHistory({ statementId, pathname: location.pathname }));
-	}, [dispatch, location, statementId]);
-
 	if (isLoading) {
 		return <LoadingPage />;
 	}
 
 	if (!isAuthenticated) {
-		return null; // Let the router handle redirection
+		return null;
 	}
 
 	return (
