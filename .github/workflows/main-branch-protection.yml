@@ -1,0 +1,49 @@
+name: Branch Protection
+
+on:
+  pull_request:
+    branches:
+      - main
+    types: [opened, synchronize, reopened]
+
+jobs:
+  check_source_branch:
+    name: Check Source Branch
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify PR Source
+        run: |
+          if [ "${{ github.head_ref }}" != "dev" ]; then
+            echo "Error: Pull requests to main branch must come from dev branch"
+            echo "Current source branch: ${{ github.head_ref }}"
+            exit 1
+          else
+            echo "Source branch verification passed: PR is from dev branch"
+          fi
+
+  check_merge_status:
+    name: Check Merge Status
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify Branch Status
+        run: |
+          if [ "${{ github.base_ref }}" != "main" ]; then
+            echo "Error: Target branch must be main"
+            echo "Current target branch: ${{ github.base_ref }}"
+            exit 1
+          fi
+          
+          echo "Target branch verification passed: PR is targeting main branch"
+
+  block_direct_commits:
+    name: Block Direct Commits
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check for Direct Commits
+        run: |
+          if [ "${{ github.event_name }}" == "push" ] && [ "${{ github.ref }}" == "refs/heads/main" ]; then
+            echo "Error: Direct pushes to main branch are not allowed"
+            exit 1
+          fi
+          
+          echo "Direct commit check passed: Not a direct push to main"
