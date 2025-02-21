@@ -28,9 +28,18 @@ export const useAuthentication = () => {
 		creator: null,
 		initialRoute: '',
 	});
+
 	const navigate = useNavigate();
 	const location = useLocation();
 	const dispatch = useDispatch();
+	const { statementId } = useParams();
+
+	// Track route history for all navigation
+	useEffect(() => {
+		if (location.pathname !== '/start') {
+			dispatch(setHistory({ statementId, pathname: location.pathname }));
+		}
+	}, [dispatch, location, statementId]);
 
 	// Get initial route from local storage
 	const initialRoute = useRef(

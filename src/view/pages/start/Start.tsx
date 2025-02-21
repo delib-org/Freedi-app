@@ -81,7 +81,6 @@ const Start = () => {
 				alt=''
 				className={styles.StratPageImage}
 			/>
-
 			<a href='http://delib.org' target='_blank' className={styles.ddi}>
 				<footer>
 					{t('From the Institute for Deliberative Democracy')}
