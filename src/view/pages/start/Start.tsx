@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import MoreLeft from '../../../assets/icons/moreLeft.svg?react';
 import MoreRight from '../../../assets/icons/moreRight.svg?react';
 import Logo from '../../../assets/logo/106 x 89 SVG.svg?react';
@@ -81,6 +81,7 @@ const Start = () => {
 				alt=''
 				className={styles.StratPageImage}
 			/>
+
 			<a href='http://delib.org' target='_blank' className={styles.ddi}>
 				<footer>
 					{t('From the Institute for Deliberative Democracy')}
