@@ -29,7 +29,7 @@ import {
 // Redux Store
 import { listenToUserSettings } from '@/controllers/db/users/getUserDB';
 import { statementTitleToDisplay } from '@/controllers/general/helpers';
-import { useIsAuthorized } from '@/controllers/hooks/authHooks';
+import { useIsAuthorized } from '@/controllers/hooks/useAuthorization';
 import { useAppDispatch } from '@/controllers/hooks/reduxHooks';
 import { MapProvider } from '@/controllers/hooks/useMap';
 import { RootState } from '@/redux/store';

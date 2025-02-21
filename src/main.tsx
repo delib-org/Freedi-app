@@ -4,7 +4,7 @@ import "./view/style/style.scss";
 import { RouterProvider } from "react-router";
 import { store } from "./redux/store";
 import { Provider } from "react-redux";
-import { router } from "./router";
+import { router } from "./routes/router";
 import {
 	LanguageProvider,
 	LanguagesEnum,
