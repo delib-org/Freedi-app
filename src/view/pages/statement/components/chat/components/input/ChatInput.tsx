@@ -7,12 +7,11 @@ import { handleAddStatement } from './StatementInputCont';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 
 // Redux Store
-import useDirection from '@/controllers/hooks/useDirection';
-import { useLanguage } from '@/controllers/hooks/useLanguages';
 import useStatementColor from '@/controllers/hooks/useStatementColor';
 import { userSelector } from '@/redux/users/userSlice';
 import SendIcon from '@/view/components/icons/SendIcon';
 import { Statement } from '@/types/statement/Statement';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 
 interface Props {
 	statement: Statement;
@@ -22,12 +21,10 @@ const ChatInput: FC<Props> = ({ statement }) => {
 	if (!statement) throw new Error('No statement');
 
 	// Redux hooks
-	const { t } = useLanguage();
+	const { t, rowDirection } = useUserConfig();
 	const user = useAppSelector(userSelector);
 
 	const statementColor = useStatementColor({ statement });
-
-	const direction = useDirection();
 	const [message, setMessage] = useState('');
 
 	const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -81,7 +78,7 @@ const ChatInput: FC<Props> = ({ statement }) => {
 			<form
 				onSubmit={(e) => handleSubmitInput(e)}
 				name='theForm'
-				style={{ flexDirection: direction }}
+				style={{ flexDirection: rowDirection }}
 			>
 				<textarea
 					style={{

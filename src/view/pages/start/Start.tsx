@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import MoreLeft from '../../../assets/icons/moreLeft.svg?react';
 import MoreRight from '../../../assets/icons/moreRight.svg?react';
 import Logo from '../../../assets/logo/106 x 89 SVG.svg?react';
@@ -7,24 +7,16 @@ import EnterNameModal from '../../components/enterNameModal/EnterNameModal';
 import styles from './Start.module.scss';
 import StartPageImage from '@/assets/images/StartPageImage.png';
 import { LANGUAGES } from '@/constants/Languages';
-import useDirection from '@/controllers/hooks/useDirection';
-import { LanguagesEnum, useLanguage } from '@/controllers/hooks/useLanguages';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import packageJson from '../../../../package.json';
+import { LanguagesEnum } from '@/context/UserConfigContext';
 
 const Start = () => {
 	const [shouldShowNameModal, setShouldShowNameModal] = useState(false);
-	const savedLang = localStorage.getItem('lang');
-	const direction = useDirection();
+	const { t, changeLanguage, currentLanguage, rowDirection } =
+		useUserConfig();
 
-	const { t, changeLanguage } = useLanguage();
-	const defaultLang = 'he';
 	const version = packageJson.version;
-
-	useEffect(() => {
-		if (!savedLang) {
-			localStorage.setItem('lang', defaultLang);
-		}
-	}, []);
 
 	return (
 		<div className={styles.splashPage}>
@@ -41,18 +33,13 @@ const Start = () => {
 				</span>
 			</div>
 			<div className={styles.version}>v: {version}</div>
+
 			<select
 				className={styles.language}
-				defaultValue={savedLang || defaultLang}
+				value={currentLanguage}
 				onChange={(e) => {
 					const lang = e.target.value as LanguagesEnum;
 					changeLanguage(lang);
-					if (lang === 'he' || lang === 'ar') {
-						document.body.style.direction = 'rtl';
-					} else {
-						document.body.style.direction = 'ltr';
-					}
-					localStorage.setItem('lang', lang);
 				}}
 			>
 				{LANGUAGES.map(({ code, label }) => (
@@ -61,15 +48,16 @@ const Start = () => {
 					</option>
 				))}
 			</select>
+
 			<button
-				style={{ flexDirection: direction }}
+				style={{ flexDirection: rowDirection }}
 				data-cy='anonymous-login'
-				className={`${styles.anonymous} ${direction === 'row' ? styles.ltr : styles.rtl}`}
+				className={`${styles.anonymous} ${rowDirection === 'row' ? styles.ltr : styles.rtl}`}
 				onClick={() => setShouldShowNameModal((prev) => !prev)}
 			>
-				{direction === 'row-reverse' ? <MoreLeft /> : null}
+				{rowDirection === 'row-reverse' ? <MoreLeft /> : null}
 				{t('Login with a temporary name')}{' '}
-				{direction === 'row' ? <MoreRight /> : null}
+				{rowDirection === 'row' ? <MoreRight /> : null}
 			</button>
 
 			<GoogleLoginButton />
@@ -79,6 +67,7 @@ const Start = () => {
 				alt=''
 				className={styles.StratPageImage}
 			/>
+
 			<a href='http://delib.org' target='_blank' className={styles.ddi}>
 				<footer>
 					{t('From the Institute for Deliberative Democracy')}

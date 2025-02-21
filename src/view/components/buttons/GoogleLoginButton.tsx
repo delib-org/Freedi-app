@@ -3,20 +3,18 @@ import googleLogo from '@/assets/icons/googleSimpleLogo.svg';
 import moreLeft from '@/assets/icons/moreLeft.svg';
 import moreRight from '@/assets/icons/moreRight.svg';
 import { googleLogin } from '@/controllers/db/authenticationUtils';
-import useDirection from '@/controllers/hooks/useDirection';
-import { useLanguage } from '@/controllers/hooks/useLanguages';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 
 export default function GoogleLoginButton() {
-	const direction = useDirection();
-	const { t } = useLanguage();
+	const { t, rowDirection } = useUserConfig();
 
 	return (
 		<button
-			className={`${styles.googleLogin} ${direction === 'row' ? styles.ltr : styles.rtl}`}
+			className={`${styles.googleLogin} ${rowDirection === 'row' ? styles.ltr : styles.rtl}`}
 			onClick={googleLogin}
 		>
 			<img
-				src={direction === 'row-reverse' ? moreRight : moreLeft}
+				src={rowDirection === 'row-reverse' ? moreRight : moreLeft}
 				alt='login-with-google'
 			/>
 			{t('Sign up with')}
