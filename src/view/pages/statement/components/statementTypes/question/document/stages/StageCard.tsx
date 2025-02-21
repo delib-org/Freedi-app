@@ -28,7 +28,7 @@ const StageCard: FC<Props> = ({ statement, isDescription, isSuggestions }) => {
 		: `/statement/${statement.statementId}`;
 	const topVotedId =
 		statement.stageSelectionType === StageSelectionType.voting &&
-			statement.selections
+		statement.selections
 			? maxKeyInObject(statement.selections)
 			: '';
 
@@ -58,12 +58,15 @@ const StageCard: FC<Props> = ({ statement, isDescription, isSuggestions }) => {
 	const description =
 		statement?.evaluationSettings?.evaluationUI === 'voting'
 			? 'Solution selected by vote'
-			: 'Solutions selected for discussed issue'
+			: 'Solutions selected for discussed issue';
 
 	const title = getTitle();
 
 	return (
-		<div className={styles.card} style={{ paddingRight: isSuggestions ? '36px' : '0px' }}>
+		<div
+			className={styles.card}
+			style={{ paddingRight: isSuggestions ? '36px' : '0px' }}
+		>
 			<h3>{t(title)}</h3>
 			<span className={styles.card__description}>{t(description)}</span>
 			{chosen.length === 0 ? (
@@ -79,8 +82,15 @@ const StageCard: FC<Props> = ({ statement, isDescription, isSuggestions }) => {
 								<ol className={styles.suggestions}>
 									<li>
 										<div>{opt.statement}</div>
-										{opt.description &&
-											<div className={styles.statement__description}>{opt.description}</div>}
+										{opt.description && (
+											<div
+												className={
+													styles.statement__description
+												}
+											>
+												{opt.description}
+											</div>
+										)}
 									</li>
 								</ol>
 							</NavLink>

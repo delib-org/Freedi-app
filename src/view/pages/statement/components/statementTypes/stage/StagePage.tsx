@@ -1,19 +1,16 @@
-import { useEffect, useRef } from 'react';
+import { useContext, useEffect, useRef } from 'react';
 import SuggestionCards from '../../evaluations/components/suggestionCards/SuggestionCards';
 import styles from './StagePage.module.scss';
 import StatementBottomNav from '../../nav/bottom/StatementBottomNav';
 import StatementVote from '../../vote/StatementVote';
-import { useParams } from 'react-router';
-import { statementSelectorById } from '@/redux/statements/statementsSlice';
-import { useSelector } from 'react-redux';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import { Statement } from '@/types/statement/StatementTypes';
 import { EvaluationUI } from '@/types/evaluation/Evaluation';
+import { StatementContext } from '../../../StatementCont';
 
 const StagePage = () => {
-	const { statementId } = useParams();
 	const { t } = useUserConfig();
-	const statement = useSelector(statementSelectorById(statementId));
+	const { statement } = useContext(StatementContext);
 	const stageRef = useRef<HTMLDivElement>(null);
 
 	useEffect(() => {
@@ -50,6 +47,19 @@ const StagePage = () => {
 			<StagePageSwitch statement={statement} />
 			<div className={styles.bottomNav}>
 				<StatementBottomNav />
+			</div>
+			<div ref={stageRef} className={styles.stage}>
+				<div className={styles.wrapper}>
+					<h2>
+						{t('Stage')}
+						{statement?.statement && stageName}
+					</h2>
+					<p className='mb-4'>Stage description</p>
+					<SuggestionCards />
+					<div className={styles.bottomNav}>
+						<StatementBottomNav />
+					</div>
+				</div>
 			</div>
 		</>
 	);

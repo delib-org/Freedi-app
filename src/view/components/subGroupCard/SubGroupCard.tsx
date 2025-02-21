@@ -2,8 +2,8 @@ import { FC } from 'react';
 import styles from './SubGroupCard.module.scss';
 import { Link, NavLink } from 'react-router';
 import useSubGroupCard from './SubGroupCardVM';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import { Statement } from '@/types/statement/StatementTypes';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import { StatementType } from '@/types/TypeEnums';
 
 interface Props {
