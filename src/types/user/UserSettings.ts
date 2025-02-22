@@ -7,7 +7,7 @@ import {
 	nullable,
 	InferOutput,
 } from 'valibot';
-import { AgreementSchema } from '../agreement/Agreement';
+import { TermsOfUseAcceptanceSchema } from '../agreement/Agreement';
 
 export enum Role {
 	admin = 'admin',
@@ -28,7 +28,7 @@ export const userSettingsSchema = object({
 	fontSize: optional(number()),
 	color: optional(string()),
 	defaultLanguage: optional(enum_(Languages)),
-	ent: optional(nullable(AgreementSchema)),
+	ent: optional(nullable(TermsOfUseAcceptanceSchema)),
 	role: optional(enum_(Role)),
 	learning: optional(
 		object({

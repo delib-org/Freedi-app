@@ -1,5 +1,5 @@
 import { createSelector } from '@reduxjs/toolkit';
-import { FC, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 // Third party imports
 import { useSelector } from 'react-redux';
@@ -29,7 +29,6 @@ import {
 // Redux Store
 import { listenToUserSettings } from '@/controllers/db/users/getUserDB';
 import { statementTitleToDisplay } from '@/controllers/general/helpers';
-import { useIsAuthorized } from '@/controllers/hooks/useAuthorization';
 import { useAppDispatch } from '@/controllers/hooks/reduxHooks';
 import { MapProvider } from '@/controllers/hooks/useMap';
 import { RootState } from '@/redux/store';
@@ -38,6 +37,7 @@ import Modal from '@/view/components/modal/Modal';
 import { StatementType, Access, QuestionType } from '@/types/TypeEnums';
 import { User } from '@/types/user/User';
 import { Role } from '@/types/user/UserSettings';
+import { useAuthorization } from '@/controllers/hooks/useAuthorization';
 
 // Create selectors
 export const subStatementsSelector = createSelector(
@@ -49,7 +49,7 @@ export const subStatementsSelector = createSelector(
 			.sort((a, b) => a.createdAt - b.createdAt)
 );
 
-const StatementMain: FC = () => {
+export default function StatementMain() {
 	// Hooks
 	const { statementId } = useParams();
 
@@ -61,7 +61,7 @@ const StatementMain: FC = () => {
 		statement,
 		topParentStatement,
 		role,
-	} = useIsAuthorized(statementId);
+	} = useAuthorization(statementId);
 
 	// Redux store
 	const dispatch = useAppDispatch();
@@ -259,6 +259,4 @@ const StatementMain: FC = () => {
 	}
 
 	return <UnAuthorizedPage />;
-};
-
-export default StatementMain;
+}

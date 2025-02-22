@@ -1,7 +1,7 @@
 import { RouteObject } from 'react-router';
 import { MassConsensusPageUrls } from '@/types/TypeEnums';
 import { lazy } from 'react';
-import { withSuspense } from './router';
+import withSuspense from './withSuspense';
 
 const Introduction = lazy(
 	() => import('@/view/pages/massConsensus/introduction/Introduction')

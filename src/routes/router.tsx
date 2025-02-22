@@ -1,6 +1,5 @@
-import React, { lazy, Suspense } from 'react';
+import { lazy } from 'react';
 import { createBrowserRouter } from 'react-router';
-import LoadingPage from '@/view/pages/loadingPage/LoadingPage';
 
 // Layout components
 const App = lazy(() => import('@/App'));
@@ -11,18 +10,13 @@ import { protectedRoutes } from './protectedRoutes';
 import { publicRoutes } from './publicRoutes';
 import { massConsensusRoutes } from './massConsensusRoutes';
 import { errorRoutes } from './errorRoutes';
-
-export const withSuspense = (
-	Component: React.LazyExoticComponent<() => React.ReactNode>
-) => {
-	return (
-		<Suspense fallback={<LoadingPage />}>
-			<Component />
-		</Suspense>
-	);
-};
+import withSuspense from './withSuspense';
 
 export const router = createBrowserRouter([
+	{
+		path: '/start',
+		element: withSuspense(lazy(() => import('@/view/pages/start/Start'))),
+	},
 	{
 		path: '/',
 		element: withSuspense(App),
@@ -38,9 +32,9 @@ export const router = createBrowserRouter([
 				children: protectedRoutes,
 			},
 			// Error routes
-			...errorRoutes,
 		],
 	},
+	...errorRoutes,
 	// Mass consensus routes at root level
 	...massConsensusRoutes,
 ]);

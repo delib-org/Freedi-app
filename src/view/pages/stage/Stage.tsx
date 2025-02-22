@@ -1,10 +1,10 @@
-import { useIsAuthorized } from '@/controllers/hooks/useAuthorization';
+import { useAuthorization } from '@/controllers/hooks/useAuthorization';
 import StatementHeader from '../statement/components/header/StatementHeader';
 import { useStageVM } from './StageVM';
 
 const Stage = () => {
 	const { stage, parentStatement } = useStageVM();
-	const { loading, topParentStatement } = useIsAuthorized(
+	const { loading, topParentStatement } = useAuthorization(
 		stage?.statementId ?? ''
 	);
 

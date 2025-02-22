@@ -4,7 +4,10 @@ import { store } from '@/redux/store';
 import { Collections } from '@/types/TypeEnums';
 import { UserSchema, User } from '@/types/user/User';
 import { parse } from 'valibot';
-import { Agreement, AgreementSchema } from '@/types/agreement/Agreement';
+import {
+	TermsOfUseAcceptance,
+	TermsOfUseAcceptanceSchema,
+} from '@/types/agreement/Agreement';
 
 export async function setUserToDB(user: User) {
 	try {
@@ -38,7 +41,7 @@ export async function updateUserFontSize(size: number) {
 }
 
 export async function updateUserAgreement(
-	agreement: Agreement
+	agreement: TermsOfUseAcceptance
 ): Promise<boolean> {
 	try {
 		const user = store.getState().user.user;
@@ -46,7 +49,7 @@ export async function updateUserAgreement(
 		if (!user.uid) throw new Error('uid is required');
 		if (!agreement) throw new Error('agreement is required');
 
-		const parsedAgreement = parse(AgreementSchema, agreement);
+		const parsedAgreement = parse(TermsOfUseAcceptanceSchema, agreement);
 
 		const userRef = doc(FireStore, Collections.users, user.uid);
 		await setDoc(userRef, { agreement: parsedAgreement }, { merge: true });

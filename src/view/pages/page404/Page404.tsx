@@ -1,5 +1,4 @@
 import './page404.scss';
-import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router';
 import img404 from '@/assets/images/404.png';
 
@@ -10,15 +9,12 @@ import Cloud1 from '@/assets/images/Cloud1.png';
 import Cloud2 from '@/assets/images/Cloud2.png';
 import Cloud3 from '@/assets/images/Cloud3.png';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
-import { setInitLocation } from '@/redux/location/locationSlice';
 
 const Page404 = () => {
 	const navigate = useNavigate();
-	const dispatch = useDispatch();
 	const { t } = useUserConfig();
 
 	function handleGoHome() {
-		dispatch(setInitLocation('/home'));
 		navigate('/', { state: { from: window.location.pathname } });
 	}
 

@@ -5,7 +5,7 @@ import { RootState } from '../store';
 import { parse } from 'valibot';
 import { User, UserSchema } from '@/types/user/User';
 import { UserSettings } from '@/types/user/UserSettings';
-import { Agreement } from '@/types/agreement/Agreement';
+import { TermsOfUseAcceptance } from '@/types/agreement/Agreement';
 
 export enum Status {
 	idle = 'idle',
@@ -78,7 +78,7 @@ export const userSlicer = createSlice({
 		},
 		updateAgreementToStore: (
 			state: UserState,
-			action: PayloadAction<Agreement | undefined>
+			action: PayloadAction<TermsOfUseAcceptance | undefined>
 		) => {
 			try {
 				if (!state.user) return;

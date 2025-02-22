@@ -10,13 +10,18 @@ import { LANGUAGES } from '@/constants/Languages';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import packageJson from '../../../../package.json';
 import { LanguagesEnum } from '@/context/UserConfigContext';
+import { useAuthentication } from '@/controllers/hooks/useAuthentication';
+import { Navigate } from 'react-router';
 
 const Start = () => {
 	const [shouldShowNameModal, setShouldShowNameModal] = useState(false);
 	const { t, changeLanguage, currentLanguage, rowDirection } =
 		useUserConfig();
+	const { isAuthenticated } = useAuthentication();
 
 	const version = packageJson.version;
+
+	if (isAuthenticated) return <Navigate to='/home' replace />;
 
 	return (
 		<div className={styles.splashPage}>

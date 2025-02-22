@@ -9,7 +9,7 @@ import {
 	InferOutput,
 } from 'valibot';
 import { Access, membersAllowed, StepType } from '../TypeEnums';
-import { AgreementSchema } from '../agreement/Agreement';
+import { TermsOfUseAcceptanceSchema } from '../agreement/Agreement';
 
 export const UserSchema = object({
 	displayName: string(),
@@ -20,7 +20,7 @@ export const UserSchema = object({
 	isAnonymous: optional(boolean()),
 	fontSize: optional(nullable(number())),
 	color: optional(string()),
-	agreement: optional(nullable(AgreementSchema)),
+	agreement: optional(nullable(TermsOfUseAcceptanceSchema)),
 	role: optional(string()),
 });
 

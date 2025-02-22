@@ -5,6 +5,11 @@ import { auth } from '@/controllers/db/config';
 import { useNavigate, useLocation, useParams } from 'react-router';
 import { useDispatch } from 'react-redux';
 import { setHistory } from '@/redux/history/HistorySlice';
+import { resetEvaluations } from '@/redux/evaluations/evaluationsSlice';
+import { resetResults } from '@/redux/results/resultsSlice';
+import { resetStatements } from '@/redux/statements/statementsSlice';
+import { setUser } from '@/redux/users/userSlice';
+import { resetVotes } from '@/redux/vote/votesSlice';
 
 interface AuthState {
 	isAuthenticated: boolean;
@@ -67,6 +72,12 @@ export const useAuthentication = () => {
 					);
 					navigate('/start', { replace: true });
 				}
+
+				dispatch(resetStatements());
+				dispatch(resetEvaluations());
+				dispatch(resetVotes());
+				dispatch(resetResults());
+				dispatch(setUser(null));
 			}
 		});
 

@@ -1,23 +1,9 @@
 import {
-	signInWithPopup,
 	GoogleAuthProvider,
-	onAuthStateChanged,
+	signInWithPopup,
 	signInAnonymously,
-	Unsubscribe,
-	User as FirebaseUser,
 } from 'firebase/auth';
-import { NavigateFunction } from 'react-router';
 import { auth } from './config';
-import { setUserToDB } from './users/setUsersDB';
-import { resetEvaluations } from '@/redux/evaluations/evaluationsSlice';
-import { defaultFontSize } from '@/model/fonts/fontsModel';
-import { resetResults } from '@/redux/results/resultsSlice';
-import { resetStatements } from '@/redux/statements/statementsSlice';
-import { AppDispatch, store } from '@/redux/store';
-import { setFontSize, setUser } from '@/redux/users/userSlice';
-import { resetVotes } from '@/redux/vote/votesSlice';
-import { User, UserSchema } from '@/types/user/User';
-import { parse } from 'valibot';
 
 export function googleLogin() {
 	const provider = new GoogleAuthProvider();
@@ -47,33 +33,3 @@ export function signAnonymously() {
 			console.error(error);
 		});
 }
-
-const updateUserFontSize = (dispatch: AppDispatch, fontSize: number): void => {
-	dispatch(setFontSize(fontSize));
-	document.body.style.fontSize = `${fontSize}px`;
-};
-
-const handleUserSignOut = (): void => {
-	const dispatch = store.dispatch;
-	dispatch(resetStatements());
-	dispatch(resetEvaluations());
-	dispatch(resetVotes());
-	dispatch(resetResults());
-	dispatch(setUser(null));
-};
-
-const handleUserSignIn = async (
-	userFB: unknown,
-	navigate: NavigateFunction,
-	initialUrl: string
-): Promise<void> => {
-	const dispatch = store.dispatch;
-
-	const fontSize = userDB.fontSize ?? defaultFontSize;
-
-	updateUserFontSize(dispatch, fontSize);
-
-	if (initialUrl) {
-		navigate(initialUrl);
-	}
-};
