@@ -10,11 +10,12 @@ import {
 } from 'firebase/firestore';
 import { FireStore } from '../config';
 import { setEvaluationToStore } from '@/redux/evaluations/evaluationsSlice';
-import { AppDispatch } from '@/redux/store';
+import { AppDispatch, store } from '@/redux/store';
 import { Collections } from '@/types/TypeEnums';
-import { UserSchema } from '@/types/user/User';
+import { User, UserSchema } from '@/types/user/User';
 import { parse } from 'valibot';
 import { Evaluation, EvaluationSchema, SelectionFunction } from '@/types/evaluation/Evaluation';
+import { getStatementSubscriptionId } from '@/controllers/general/helpers';
 
 export const listenToEvaluations = (
 	dispatch: AppDispatch,
@@ -27,18 +28,18 @@ export const listenToEvaluations = (
 
 		if (!evaluatorId) throw new Error('User is undefined');
 
-		const q = selectionFunction? 
-		query(
-			evaluationsRef,
-			where('parentId', '==', parentId),
-			where('evaluatorId', '==', evaluatorId),
-			where('evaluation.selectionFunction', '==', selectionFunction)
-		): 
-		query(
-			evaluationsRef,
-			where('parentId', '==', parentId),
-			where('evaluatorId', '==', evaluatorId)	
-		);
+		const q = selectionFunction ?
+			query(
+				evaluationsRef,
+				where('parentId', '==', parentId),
+				where('evaluatorId', '==', evaluatorId),
+				where('evaluation.selectionFunction', '==', selectionFunction)
+			) :
+			query(
+				evaluationsRef,
+				where('parentId', '==', parentId),
+				where('evaluatorId', '==', evaluatorId)
+			);
 
 		return onSnapshot(q, (evaluationsDB) => {
 			try {
@@ -61,9 +62,37 @@ export const listenToEvaluations = (
 	} catch (error) {
 		console.error(error);
 
-		return () => {};
+		return () => { };
 	}
 };
+
+export function listenToEvaluation(statementId: string): () => void {
+	try {
+
+		const user: User | null = store.getState().user.user;
+		if (!user) throw new Error('User is undefined');
+
+		const evaluationId = getStatementSubscriptionId(statementId, user);
+
+		const evaluationsRef = doc(FireStore, Collections.evaluations, evaluationId);
+
+		return onSnapshot(evaluationsRef, (evaluationDB) => {
+			try {
+				if (!evaluationDB.exists()) return;
+				const evaluation = parse(EvaluationSchema, evaluationDB.data());
+
+				store.dispatch(setEvaluationToStore(evaluation));
+			} catch (error) {
+				console.error(error);
+			}
+		});
+
+	} catch (error) {
+		console.error(error);
+		
+return () => { return; };
+	}
+}
 
 export async function getEvaluations(parentId: string): Promise<Evaluation[]> {
 	try {
