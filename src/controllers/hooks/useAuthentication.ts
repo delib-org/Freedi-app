@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { User } from 'firebase/auth';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '@/controllers/db/config';
-import { useNavigate, useLocation } from 'react-router';
+import { useNavigate, useLocation, useParams } from 'react-router';
 import { useDispatch } from 'react-redux';
 import { resetEvaluations } from '@/redux/evaluations/evaluationsSlice';
 import { resetResults } from '@/redux/results/resultsSlice';

@@ -32,9 +32,9 @@ import Modal from '@/view/components/modal/Modal';
 import { StatementType, Access, QuestionType } from '@/types/TypeEnums';
 import { Creator } from '@/types/user/User';
 import { Role } from '@/types/user/UserSettings';
+import { useAuthorization } from '@/controllers/hooks/useAuthorization';
 import { statementSelector } from '@/redux/statements/statementsSlice';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
-import { useAuthorization } from '@/controllers/hooks/useAuthorization';
 import { useSelector } from 'react-redux';
 
 // Create selectors
