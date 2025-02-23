@@ -4,6 +4,7 @@ import HeaderMassConsensus from "../headerMassConsensus/HeaderMassConsensus";
 import useTopSuggestions from "./TopSuggestionVM";
 import TitleMassConsensus from "../TitleMassConsensus/TitleMassConsensus";
 import FooterMassConsensus from "../footerMassConsesus/footerMassConsesus";
+import { SelectionFunction } from "@/types/evaluation/Evaluation";
 
 const TopSuggestions = () => {
 	useTopSuggestions();
@@ -12,7 +13,7 @@ const TopSuggestions = () => {
         <div>
             <HeaderMassConsensus title="leading suggestion evaluation" backTo={MassConsensusPageUrls.randomSuggestions} />
             <TitleMassConsensus title="please rate the top suggestions" />
-            <SuggestionCards propSort={SortType.random}  />
+            <SuggestionCards selectionFunction={SelectionFunction.top} propSort={SortType.random}  />
             <FooterMassConsensus goTo={MassConsensusPageUrls.voting}/>
         </div>
     )

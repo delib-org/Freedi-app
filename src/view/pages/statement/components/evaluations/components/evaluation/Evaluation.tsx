@@ -12,10 +12,8 @@ const Evaluation: FC<EvaluationProps> = ({ parentStatement, statement }) => {
 	try {
 		if (!parentStatement) throw new Error('parentStatement is not defined');
 
-		const shouldDisplayScore: boolean = parentStatement.statementSettings
-			?.showEvaluation
-			? parentStatement.statementSettings?.showEvaluation
-			: false;
+		let shouldDisplayScore: boolean = !!parentStatement.statementSettings?.showEvaluation;
+		if (statement.evaluation?.selectionFunction) shouldDisplayScore = false;
 
 		if (parentStatement.statementSettings?.enhancedEvaluation) {
 			return (

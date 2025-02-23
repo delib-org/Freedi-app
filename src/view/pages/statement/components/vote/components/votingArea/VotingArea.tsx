@@ -6,12 +6,8 @@ import { getSortedVotingOptions, isVerticalOptionBar } from './VotingAreaCont';
 import useWindowDimensions from '@/controllers/hooks/useWindowDimentions';
 
 import { useSelector } from 'react-redux';
-import {
-	statementSelectorById,
-	statementSubsSelector,
-} from '@/redux/statements/statementsSlice';
+import { statementSelectorById } from '@/redux/statements/statementsSlice';
 import { Statement } from '@/types/statement/Statement';
-import { SelectionFunction } from '@/types/evaluation/Evaluation';
 import { DeliberativeElement } from '@/types/TypeEnums';
 
 interface VotingAreaProps {
@@ -21,7 +17,6 @@ interface VotingAreaProps {
 	subStatements: Statement[];
 	setShowInfo: React.Dispatch<React.SetStateAction<boolean>>;
 	totalVotes: number;
-	isMassConsensus?: boolean;
 }
 
 const VotingArea: FC<VotingAreaProps> = ({
@@ -29,17 +24,10 @@ const VotingArea: FC<VotingAreaProps> = ({
 	subStatements,
 	setShowInfo,
 	totalVotes,
-	isMassConsensus = false,
 }) => {
 	const { statementId, sort } = useParams();
 	const statement = useSelector(statementSelectorById(statementId));
 	const { width } = useWindowDimensions();
-	const massConsensusOptions = useSelector(
-		statementSubsSelector(statementId)
-	).filter(
-		(s: Statement) =>
-			s.evaluation?.selectionFunction === SelectionFunction.vote
-	);
 
 	if (!statement) return null;
 
@@ -49,8 +37,7 @@ const VotingArea: FC<VotingAreaProps> = ({
 				(st) => st.deliberativeElement === DeliberativeElement.option
 			);
 
-	const _options = isMassConsensus ? massConsensusOptions : defaultOptions;
-
+	const _options = subStatements || defaultOptions;
 	const options = getSortedVotingOptions({
 		statement,
 		subStatements: _options,

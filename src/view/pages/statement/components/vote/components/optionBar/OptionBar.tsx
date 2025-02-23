@@ -46,7 +46,6 @@ export const OptionBar: FC<OptionBarProps> = ({
 		selections > 0 && totalVotes > 0
 			? Math.round((selections / totalVotes) * 100)
 			: 0;
-
 	const handleVotePress = () => {
 		dispatch(setVoteToStore(option));
 		setVoteToDB(option);
