@@ -13,9 +13,7 @@ function LeaveFeedback() {
 	const { t } = useLanguage();
 	const [email, setEmail] = useState('');
 
-	const handleSendButton = () => {
-		console.log('send', email);
-	}
+	const handleSendButton = () => { };
 
 	const handleEmailChange = (value: string) => {
 		setEmail(value);
