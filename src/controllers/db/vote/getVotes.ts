@@ -7,8 +7,6 @@ import {
 	where,
 } from 'firebase/firestore';
 import { FireStore } from '../config';
-import { getUserFromFirebase } from '../users/usersGeneral';
-import { store } from '@/redux/store';
 import { Collections } from '@/types/TypeEnums';
 import { Statement, StatementSchema } from '@/types/statement/Statement';
 import { getVoteId, Vote, VoteSchema } from '@/types/vote';
@@ -17,15 +15,14 @@ import { parse } from 'valibot';
 // Why get user from firebase when we can pass it as a parameter?
 export async function getToVoteOnParent(
 	parentId: string | undefined,
+	userId: string,
 	updateStoreWithVoteCB: (statement: Statement) => void
 ): Promise<void> {
 	try {
 		if (!parentId) throw new Error('ParentId not provided');
-
-		const user = getUserFromFirebase();
-		if (!user) throw new Error('User not logged in');
 		if (!parentId) throw new Error('ParentId not provided');
-		const voteId = getVoteId(user.uid, parentId);
+
+		const voteId = getVoteId(userId, parentId);
 		if (!voteId) throw new Error('VoteId not found');
 
 		const parentVoteRef = doc(FireStore, Collections.votes, voteId);
@@ -52,8 +49,6 @@ export async function getToVoteOnParent(
 
 export async function getVoters(parentId: string): Promise<Vote[]> {
 	try {
-		const user = store.getState().user.user;
-		if (!user) throw new Error('User not logged in');
 		const votesRef = collection(FireStore, Collections.votes);
 		const q = query(votesRef, where('parentId', '==', parentId));
 

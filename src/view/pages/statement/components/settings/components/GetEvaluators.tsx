@@ -3,7 +3,7 @@ import { handleGetEvaluators } from '../statementSettingsCont';
 import MembersChipsList from './membership/membersChipsList/MembersChipList';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import { Evaluation } from '@/types/evaluation/Evaluation';
-import { User } from '@/types/user/User';
+import { Creator } from '@/types/user/User';
 
 interface GetEvaluatorsProps {
 	statementId: string;
@@ -24,7 +24,7 @@ const GetEvaluators: FC<GetEvaluatorsProps> = ({ statementId }) => {
 	};
 
 	const members = evaluators.flatMap(
-		(evaluator) => evaluator.evaluator as User
+		(evaluator) => evaluator.evaluator as Creator
 	);
 
 	return (

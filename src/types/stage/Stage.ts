@@ -46,7 +46,7 @@ export class StageClass {
 		try {
 			const newStage = createBasicStatement({
 				parentStatement: statement,
-				user: statement.creator,
+				creator: statement.creator,
 				stageType: stageType,
 				statementType: StatementType.stage,
 				statement: this.convertToStageTitle(stageType),

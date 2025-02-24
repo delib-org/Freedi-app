@@ -6,10 +6,9 @@ import unBlockImg from '@/assets/icons/Icon-base-46px.png';
 import MemberAdmin from '@/assets/icons/memberAdmin.svg?react';
 import MemberRemove from '@/assets/icons/memberRemove.svg?react';
 import { updateMemberRole } from '@/controllers/db/subscriptions/setSubscriptions';
-import { useAppSelector } from '@/controllers/hooks/reduxHooks';
-import { userSelector } from '@/redux/users/userSlice';
 import { StatementSubscription } from '@/types/statement/StatementSubscription';
 import { Role } from '@/types/user/UserSettings';
+import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 
 interface Props {
 	member: StatementSubscription;
@@ -19,13 +18,13 @@ const MembershipCard: FC<Props> = ({ member }) => {
 	const firstLetter = member.user.displayName.charAt(0).toUpperCase();
 	const displayImg = member.user.photoURL;
 	const [role, setRole] = useState(member.role);
-	const user = useAppSelector(userSelector);
+	const { user } = useAuthentication();
 
 	useEffect(() => {
 		setRole(member.role);
 	}, [member.role]);
 
-	if (member.userId === user?.uid) return null;
+	if (member.userId === user.uid) return null;
 
 	async function handleRemoveMember() {
 		const newRole = role === Role.banned ? Role.member : Role.banned;

@@ -11,7 +11,7 @@ import {
 	InferOutput,
 } from 'valibot';
 import { DeliberativeElement, DocumentType, StatementType } from '../TypeEnums';
-import { MembershipSchema, StepSchema, UserSchema } from '../user/User';
+import { MembershipSchema, StepSchema, CreatorSchema } from '../user/User';
 import { ResultsSettingsSchema } from '../results/Results';
 import { QuestionSettingsSchema } from '../question/Question';
 import {
@@ -22,98 +22,94 @@ import {
 import { StageType } from '../stage/Stage';
 import { SimpleStatementSchema } from './SimpleStatement';
 import { StatementSettingsSchema } from './StatementSettings';
-import { UserDataSchema } from '../user/UserSettings';
 import { StatementEvaluationSchema } from '../evaluation/Evaluation';
 
 export const StatementSchema = object({
 	allowAnonymousLogin: optional(boolean()),
-	statement: string(),
-	description: optional(string()),
-	statementId: string(),
-	creatorId: string(),
-	creator: UserSchema,
-	statementType: enum_(StatementType),
-	deliberativeElement: optional(enum_(DeliberativeElement)),
+	chosenSolutions: optional(array(string())),
 	color: optional(string()),
-	defaultLanguage: optional(string()),
-	followMe: optional(string()),
-	parentId: string(),
-	parents: optional(array(string())),
-	topParentId: string(),
-	hasChildren: optional(boolean()),
-	lastMessage: optional(string()),
-	lastUpdate: number(),
-	lastChildUpdate: optional(number()),
-	createdAt: number(),
-	pro: optional(number()),
 	con: optional(number()),
+	consensus: number(),
+	createdAt: number(),
+	creator: CreatorSchema,
+	deliberativeElement: optional(enum_(DeliberativeElement)),
+	description: optional(string()),
 	doc: optional(
 		object({
 			isDoc: boolean(),
 			order: number(),
 		})
 	),
-	consensus: number(),
-	order: optional(number()),
+	documentAgree: optional(AgreeSchema),
+	documentApproval: optional(DocumentApprovalSchema),
+	documentImportance: optional(DocumentImportanceSchema),
+	documentSettings: optional(
+		object({
+			isTop: boolean(),
+			order: number(),
+			parentDocumentId: string(),
+			type: enum_(DocumentType),
+		})
+	),
 	elementHight: optional(number()),
-	top: optional(number()),
-	votes: optional(number()),
-	selections: optional(any()),
-	isSelected: optional(boolean()),
-	voted: optional(number()),
-	totalSubStatements: optional(number()),
-	membership: optional(MembershipSchema),
-	maxConsensus: optional(number()),
-	selected: optional(boolean()),
-	results: optional(array(SimpleStatementSchema)),
-	isResult: optional(boolean()),
+	evaluation: optional(StatementEvaluationSchema),
+	followMe: optional(string()),
+	hasChildren: optional(boolean()),
 	imagesURL: optional(
 		object({
 			main: optional(string()),
 			more: optional(array(string())),
 		})
 	),
-	totalEvaluators: optional(number()),
+	importanceData: optional(
+		object({
+			numberOfUsers: number(),
+			numberOfViews: number(),
+			sumImportance: number(),
+		})
+	),
+	isChosen: optional(boolean()),
 	isInMultiStage: optional(boolean()),
-	documentApproval: optional(DocumentApprovalSchema),
-	documentImportance: optional(DocumentImportanceSchema),
-	documentAgree: optional(AgreeSchema),
+	isResult: optional(boolean()),
+	isSelected: optional(boolean()),
+	lastChildUpdate: optional(number()),
+	lastMessage: optional(string()),
+	lastUpdate: number(),
+	maxConsensus: optional(number()),
+	membership: optional(MembershipSchema),
+	order: optional(number()),
+	parentId: string(),
+	parents: optional(array(string())),
+	pro: optional(number()),
+	questionSettings: optional(QuestionSettingsSchema),
+	results: optional(array(SimpleStatementSchema)),
+	resultsSettings: optional(ResultsSettingsSchema),
+	selected: optional(boolean()),
+	selections: optional(any()),
 	stageId: optional(nullable(string())),
+	stageType: optional(enum_(StageType)),
+	statement: string(),
+	statementId: string(),
+	statementSettings: optional(StatementSettingsSchema),
+	statementType: enum_(StatementType),
+	steps: optional(
+		object({
+			allSteps: optional(array(StepSchema)),
+			currentStep: StepSchema,
+		})
+	),
+	summary: optional(string()),
+	top: optional(number()),
+	topParentId: string(),
+	totalEvaluators: optional(number()),
+	totalSubStatements: optional(number()),
 	viewed: optional(
 		object({
 			individualViews: optional(number()),
 		})
 	),
-	stageType: optional(enum_(StageType)),
-	creatorData: optional(UserDataSchema),
-	isChosen: optional(boolean()),
-	chosenSolutions: optional(array(string())),
-	summary: optional(string()),
-	evaluation: optional(StatementEvaluationSchema),
-	importanceData: optional(
-		object({
-			sumImportance: number(),
-			numberOfUsers: number(),
-			numberOfViews: number(),
-		})
-	),
-	documentSettings: optional(
-		object({
-			parentDocumentId: string(),
-			order: number(),
-			type: enum_(DocumentType),
-			isTop: boolean(),
-		})
-	),
-	resultsSettings: optional(ResultsSettingsSchema),
-	steps: optional(
-		object({
-			currentStep: StepSchema,
-			allSteps: optional(array(StepSchema)),
-		})
-	),
-	questionSettings: optional(QuestionSettingsSchema),
-	statementSettings: optional(StatementSettingsSchema),
+	votes: optional(number()),
+	voted: optional(number()),
 });
 
 export type Statement = InferOutput<typeof StatementSchema>;

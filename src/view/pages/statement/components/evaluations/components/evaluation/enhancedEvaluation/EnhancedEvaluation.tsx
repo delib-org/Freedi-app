@@ -8,10 +8,10 @@ import {
 import { setEvaluationToDB } from '@/controllers/db/evaluation/setEvaluation';
 import { decreesUserSettingsLearningRemain } from '@/controllers/db/learning/setLearning';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+// import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import { evaluationSelector } from '@/redux/evaluations/evaluationsSlice';
-import { userSettingsSelector } from '@/redux/users/userSlice';
 import { Statement } from '@/types/statement/Statement';
+import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 
 interface EnhancedEvaluationProps {
 	statement: Statement;
@@ -22,13 +22,13 @@ const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({
 	statement,
 	shouldDisplayScore,
 }) => {
+	// const { t } = useUserConfig();
 	const evaluationScore = useAppSelector(
 		evaluationSelector(statement.statementId)
 	);
 
-	const learningEvaluation =
-		useAppSelector(userSettingsSelector)?.learning?.evaluation || 0;
-	const { t } = useUserConfig();
+	// const learningEvaluation =
+	// 	useAppSelector(userSettingsSelector)?.learning?.evaluation || 0;
 
 	const { sumPro, sumCon, numberOfEvaluators } = statement.evaluation || {
 		sumPro: 0,
@@ -66,12 +66,12 @@ const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({
 			</div>
 			<div />
 			<div className={styles.explain}>
-				{learningEvaluation > 0 && (
+				{/* {learningEvaluation > 0 && (
 					<div className={`${styles['evaluation-explain']}`}>
 						<span>{t('Disagree')}</span>
 						<span>{t('Agree')}</span>
 					</div>
-				)}
+				)} */}
 			</div>
 			<div />
 		</div>
@@ -91,9 +91,13 @@ const EvaluationThumb: FC<EvaluationThumbProps> = ({
 	evaluationScore,
 	statement,
 }) => {
+	const { creator } = useAuthentication();
 	const handleSetEvaluation = (): void => {
-		setEvaluationToDB(statement, evaluationThumb.evaluation);
-		decreesUserSettingsLearningRemain({ evaluation: true });
+		setEvaluationToDB(statement, creator, evaluationThumb.evaluation);
+		decreesUserSettingsLearningRemain({
+			userId: creator.uid,
+			evaluation: true,
+		});
 	};
 
 	const isThumbActive =

@@ -1,45 +1,43 @@
 import { doc, runTransaction } from 'firebase/firestore';
 import { FireStore } from '../config';
-import { store } from '@/redux/store';
+// import { store } from '@/redux/store';
 import { Collections } from '@/types/TypeEnums';
 
 export async function decreesUserSettingsLearningRemain({
+	userId,
 	evaluation,
 	addOption,
 }: {
+	userId: string;
 	evaluation?: boolean;
 	addOption?: boolean;
 }): Promise<boolean> {
 	try {
 		if (!evaluation && !addOption)
 			throw new Error('evaluation or addOption is required');
-		const user = store.getState().user.user;
-		const userSettings = store.getState().user.userSettings;
-		if (!userSettings) return true;
+		// const userSettings = store.getState().user.userSettings;
+		// if (!userSettings) return true;
 
-		const finishedLearningEvaluation =
-			!userSettings.learning ||
-			userSettings.learning.evaluation === undefined ||
-			userSettings.learning.evaluation <= 0;
-		const finishedLearningAddOPtion =
-			!userSettings.learning ||
-			userSettings.learning.addOptions === undefined ||
-			userSettings.learning.addOptions <= 0;
-		if (
-			evaluation &&
-			finishedLearningEvaluation &&
-			addOption &&
-			finishedLearningAddOPtion
-		)
-			return true;
-
-		if (!user) throw new Error('user is not logged in');
-		if (!user.uid) throw new Error('uid is required');
+		// const finishedLearningEvaluation =
+		// 	!userSettings.learning ||
+		// 	userSettings.learning.evaluation === undefined ||
+		// 	userSettings.learning.evaluation <= 0;
+		// const finishedLearningAddOPtion =
+		// 	!userSettings.learning ||
+		// 	userSettings.learning.addOptions === undefined ||
+		// 	userSettings.learning.addOptions <= 0;
+		// if (
+		// 	evaluation &&
+		// 	finishedLearningEvaluation &&
+		// 	addOption &&
+		// 	finishedLearningAddOPtion
+		// )
+		// 	return true;
 
 		const userSettingsRef = doc(
 			FireStore,
 			Collections.usersSettings,
-			user.uid
+			userId
 		);
 
 		//transaction to update the evaluation number

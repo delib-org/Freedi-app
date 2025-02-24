@@ -2,7 +2,7 @@ import { createSlice, PayloadAction, createSelector } from '@reduxjs/toolkit';
 
 // Helpers
 import { updateArray } from '../../controllers/general/helpers';
-import { RootState, store } from '../store';
+import { RootState } from '../store';
 import { StatementType, DeliberativeElement } from '@/types/TypeEnums';
 import { Statement } from '@/types/statement/Statement';
 import { StatementSubscription } from '@/types/statement/StatementSubscription';
@@ -257,7 +257,10 @@ export const statementsSlicer = createSlice({
 								statement.statementId === update.statementId
 						);
 						if (statement) statement.top = update.top;
-						else throw new Error(`statement ${update.statementId} not found`);
+						else
+							throw new Error(
+								`statement ${update.statementId} not found`
+							);
 					} catch (error) {
 						console.error('On updateStatementTop loop: ', error);
 					}
@@ -414,13 +417,6 @@ export const statementSelector =
 			(statement) => statement.statementId === statementId
 		);
 
-// export const statementSubsSelector =
-// 	(statementId: string | undefined) => (state: RootState) =>
-// 		state.statements.statements
-// 			.filter((statementSub) => statementSub.parentId === statementId)
-// 			.sort((a, b) => a.createdAt - b.createdAt)
-// 			.map((statement) => ({ ...statement }));
-
 const selectStatements = (state: RootState) => state.statements.statements;
 
 export const statementSubsSelector = (statementId: string | undefined) =>
@@ -438,7 +434,7 @@ export const statementOptionsSelector = (statementId: string | undefined) =>
 				(statementSub) =>
 					statementSub.parentId === statementId &&
 					statementSub.deliberativeElement ===
-					DeliberativeElement.option
+						DeliberativeElement.option
 			)
 			.sort((a, b) => a.createdAt - b.createdAt)
 			.map((statement) => ({ ...statement }));
@@ -515,21 +511,6 @@ export const subscriptionParentStatementSelector = (parentId: string) =>
 				(sub) => sub.statement.topParentId === parentId
 			)
 	);
-
-export const myStatementsByStatementIdSelector = (
-	statementId: string | undefined
-) => {
-	const user = store.getState().user.user;
-
-	return createSelector(
-		(state: RootState) => state.statements.statements,
-		(statements) =>
-			statements.filter(
-				(st) =>
-					st.parentId === statementId && st.creatorId === user?.uid
-			)
-	);
-};
 
 export const statementsOfMultiStepSelectorByStatementId = (
 	statementId: string | undefined

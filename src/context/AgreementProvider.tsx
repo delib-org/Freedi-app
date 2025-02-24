@@ -1,10 +1,8 @@
 import { FC, ReactNode, useState, useEffect } from 'react';
-import { useDispatch } from 'react-redux';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
-import { updateAgreementToStore } from '@/redux/users/userSlice';
 import { logOut } from '@/controllers/db/authenticationUtils';
 import type { TermsOfUseAcceptance } from '@/types/agreement/Agreement';
-import type { User } from '@/types/user/User';
+import type { Creator } from '@/types/user/User';
 import TermsOfUse from '@/view/components/termsOfUse/TermsOfUse';
 import {
 	getLatestTermsAcceptance,
@@ -14,14 +12,13 @@ import LoadingPage from '@/view/pages/loadingPage/LoadingPage';
 
 interface AgreementProviderProps {
 	children: ReactNode;
-	user: User | null;
+	user: Creator | null;
 }
 
 export const AgreementProvider: FC<AgreementProviderProps> = ({
 	children,
 	user,
 }) => {
-	const dispatch = useDispatch();
 	const { t } = useUserConfig();
 	const [showSignAgreement, setShowSignAgreement] = useState(false);
 	const [agreement, setAgreement] = useState<string>('');
@@ -73,7 +70,6 @@ export const AgreementProvider: FC<AgreementProviderProps> = ({
 
 				const isSuccess = await saveTermsAcceptance(agreement);
 				if (isSuccess) {
-					dispatch(updateAgreementToStore(agreement));
 					setShowSignAgreement(false);
 				}
 			} else {

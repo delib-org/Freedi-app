@@ -1,18 +1,15 @@
 import { Timestamp, doc, getDoc, setDoc } from 'firebase/firestore';
 import { FireStore } from '../config';
-import { store } from '@/redux/store';
 import { Collections } from '@/types/TypeEnums';
 import { Statement } from '@/types/statement/Statement';
 import { getVoteId, Vote, VoteSchema } from '@/types/vote';
-import { User } from '@/types/user/User';
+import { Creator } from '@/types/user/User';
 import { parse } from 'valibot';
 
-export async function setVoteToDB(option: Statement) {
+export async function setVoteToDB(option: Statement, creator: Creator) {
 	try {
 		//vote reference
-		const user: User | null = store.getState().user.user;
-		if (!user) throw new Error('User not logged in');
-		const voteId = getVoteId(user.uid, option.parentId);
+		const voteId = getVoteId(creator.uid, option.parentId);
 
 		const voteRef = doc(FireStore, Collections.votes, voteId);
 
@@ -21,10 +18,10 @@ export async function setVoteToDB(option: Statement) {
 			voteId,
 			statementId: option.statementId,
 			parentId: option.parentId,
-			userId: user.uid,
+			userId: creator.uid,
 			lastUpdate: Timestamp.now().toMillis(),
 			createdAt: Timestamp.now().toMillis(),
-			voter: user,
+			voter: creator,
 		};
 
 		const voteDoc = await getDoc(voteRef);

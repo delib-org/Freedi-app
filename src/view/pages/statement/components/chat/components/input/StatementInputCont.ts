@@ -5,7 +5,8 @@ import {
 	createStatement,
 	setStatementToDB,
 } from '@/controllers/db/statements/setStatements';
-import { User } from '@/types/user/User';
+import { User } from 'firebase/auth';
+import { convertFirebaseUserToCreator } from '@/types/user/userUtils';
 
 export function handleAddStatement(
 	message: string,
@@ -14,6 +15,7 @@ export function handleAddStatement(
 ) {
 	try {
 		if (!user) throw new Error('No user');
+		const creator = convertFirebaseUserToCreator(user);
 
 		//remove white spaces and \n
 		const title = message.split('\n')[0];
@@ -23,6 +25,7 @@ export function handleAddStatement(
 
 		const newStatement: Statement | undefined = createStatement({
 			...defaultStatementSettings,
+			creator,
 			hasChildren: true,
 			text: title,
 			description,
@@ -33,6 +36,7 @@ export function handleAddStatement(
 
 		setStatementToDB({
 			statement: newStatement,
+			creator,
 			parentStatement: statement,
 		});
 	} catch (error) {

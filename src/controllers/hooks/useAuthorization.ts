@@ -4,7 +4,6 @@ import {
 	statementSelector,
 	statementSubscriptionSelector,
 } from '@/redux/statements/statementsSlice';
-import { store } from '@/redux/store';
 import { Access } from '@/types/TypeEnums';
 import type { Statement } from '@/types/statement/Statement';
 import { getStatementFromDB } from '@/controllers/db/statements/getStatement';
@@ -12,6 +11,8 @@ import { getTopParentSubscriptionFromDByStatement } from '@/controllers/db/subsc
 import { setStatementSubscriptionToDB } from '@/controllers/db/subscriptions/setSubscriptions';
 import { Role } from '@/types/user/UserSettings';
 import { StatementSubscription } from '@/types/statement/StatementSubscription';
+import { useAuthentication } from './useAuthentication';
+import { Creator } from '@/types/user/User';
 
 export interface AuthorizationState {
 	isAuthorized: boolean;
@@ -35,6 +36,7 @@ export const useAuthorization = (statementId?: string) => {
 		statementSubscriptionSelector(statementId)
 	);
 	const role = statementSubscription?.role || Role.unsubscribed;
+	const { creator } = useAuthentication();
 
 	const checkAuthorization = async () => {
 		if (!statement) {
@@ -47,6 +49,7 @@ export const useAuthorization = (statementId?: string) => {
 			// Check statement authorization
 			const isAuthorized = await isUserAuthorized(
 				statement,
+				creator,
 				statementSubscription
 			);
 
@@ -83,6 +86,7 @@ export const useAuthorization = (statementId?: string) => {
 // Helper functions
 async function isUserAuthorized(
 	statement: Statement,
+	creator: Creator,
 	subscription?: StatementSubscription
 ): Promise<boolean> {
 	// Open access check
@@ -91,7 +95,7 @@ async function isUserAuthorized(
 		subscription?.role !== Role.banned
 	) {
 		if (!subscription) {
-			await setStatementSubscriptionToDB(statement, Role.member);
+			await setStatementSubscriptionToDB(statement, creator, Role.member);
 		}
 
 		return true;
@@ -100,26 +104,35 @@ async function isUserAuthorized(
 	// Closed access check
 	if (statement.membership?.access === Access.close) {
 		// Direct access check
-		if (hasRequiredRole(statement, subscription?.role)) {
+		if (hasRequiredRole(statement, creator.uid, subscription?.role)) {
 			return true;
 		}
 
 		// Parent subscription check
 		const parentSubscription =
-			await getTopParentSubscriptionFromDByStatement(statement);
+			await getTopParentSubscriptionFromDByStatement(
+				statement,
+				creator.uid
+			);
 
-		return hasRequiredRole(statement, parentSubscription?.role);
+		return hasRequiredRole(
+			statement,
+			creator.uid,
+			parentSubscription?.role
+		);
 	}
 
 	return false;
 }
 
-function hasRequiredRole(statement: Statement, role?: Role): boolean {
-	const userId = store.getState().user.user?.uid;
-
+function hasRequiredRole(
+	statement: Statement,
+	userId: string,
+	role?: Role
+): boolean {
 	return (
 		role === Role.admin ||
 		role === Role.member ||
-		statement.creatorId === userId
+		statement.creator.uid === userId
 	);
 }

@@ -4,14 +4,13 @@ import styles from './ChatInput.module.scss';
 
 // Icons
 import { handleAddStatement } from './StatementInputCont';
-import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 
 // Redux Store
 import useStatementColor from '@/controllers/hooks/useStatementColor';
-import { userSelector } from '@/redux/users/userSlice';
 import SendIcon from '@/view/components/icons/SendIcon';
 import { Statement } from '@/types/statement/Statement';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 
 interface Props {
 	statement: Statement;
@@ -22,7 +21,7 @@ const ChatInput: FC<Props> = ({ statement }) => {
 
 	// Redux hooks
 	const { t, rowDirection } = useUserConfig();
-	const user = useAppSelector(userSelector);
+	const { user } = useAuthentication();
 
 	const statementColor = useStatementColor({ statement });
 	const [message, setMessage] = useState('');

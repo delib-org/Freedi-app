@@ -6,6 +6,7 @@ import { saveStatementToDB } from '@/controllers/db/statements/setStatements';
 import { StatementContext } from '@/view/pages/statement/StatementCont';
 import { StatementType } from '@/types/TypeEnums';
 import { StageType } from '@/types/stage/Stage';
+import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 
 interface AddStageProps {
 	setShowAddStage: (showAddStage: boolean) => void;
@@ -14,6 +15,7 @@ interface AddStageProps {
 const AddStage: FC<AddStageProps> = ({ setShowAddStage }) => {
 	const { t } = useUserConfig();
 	const { statement } = useContext(StatementContext);
+	const { creator } = useAuthentication();
 
 	const [defaultStageName, setDefaultStageName] = useState<string>('');
 	const [userEnteredStageName, setUserEnteredStageName] =
@@ -43,6 +45,7 @@ const AddStage: FC<AddStageProps> = ({ setShowAddStage }) => {
 
 		if (!statement || !stageType) return;
 		await saveStatementToDB({
+			creator,
 			text: name,
 			description,
 			stageType,

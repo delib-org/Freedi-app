@@ -21,6 +21,7 @@ import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import { StatementContext } from '../../StatementCont';
 import { Statement } from '@/types/statement/Statement';
 import { QuestionStep } from '@/types/TypeEnums';
+import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 
 let getVoteFromDB = false;
 
@@ -28,6 +29,7 @@ const StatementVote: FC = () => {
 	// * Hooks * //
 	const dispatch = useAppDispatch();
 	const { t } = useUserConfig();
+	const { user } = useAuthentication();
 	const { statement } = useContext(StatementContext);
 	const subStatements: Statement[] = [];
 
@@ -50,8 +52,10 @@ const StatementVote: FC = () => {
 
 	useEffect(() => {
 		if (!getVoteFromDB) {
-			getToVoteOnParent(statement?.statementId, (option: Statement) =>
-				dispatch(setVoteToStore(option))
+			getToVoteOnParent(
+				statement?.statementId,
+				user.uid,
+				(option: Statement) => dispatch(setVoteToStore(option))
 			);
 			getVoteFromDB = true;
 		}

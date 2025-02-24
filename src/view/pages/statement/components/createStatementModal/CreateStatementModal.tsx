@@ -8,6 +8,7 @@ import './CreateStatementModal.scss';
 import Button, { ButtonType } from '@/view/components/buttons/button/Button';
 import { StatementType } from '@/types/TypeEnums';
 import { Statement } from '@/types/statement/Statement';
+import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 
 interface CreateStatementModalProps {
 	parentStatement: Statement | 'top';
@@ -30,6 +31,7 @@ const CreateStatementModal: FC<CreateStatementModalProps> = ({
 	const [title, setTitle] = useState('');
 	const [description, setDescription] = useState('');
 	const { t } = useUserConfig();
+	const { creator } = useAuthentication();
 
 	const titleInputRef = useRef<HTMLInputElement>(null);
 
@@ -43,6 +45,7 @@ const CreateStatementModal: FC<CreateStatementModalProps> = ({
 		setShowModal(false);
 
 		await createStatementFromModal({
+			creator,
 			title,
 			description,
 			isOptionSelected,

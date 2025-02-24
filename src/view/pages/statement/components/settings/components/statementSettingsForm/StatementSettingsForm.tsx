@@ -30,6 +30,7 @@ import Loader from '@/view/components/loaders/Loader';
 import { Statement } from '@/types/statement/Statement';
 import { StatementSubscription } from '@/types/statement/StatementSubscription';
 import { Role } from '@/types/user/UserSettings';
+import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 
 interface StatementSettingsFormProps {
 	statement: Statement;
@@ -48,6 +49,7 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 	const navigate = useNavigate();
 	const { statementId } = useParams();
 	const { t } = useUserConfig();
+	const { user } = useAuthentication();
 
 	const [image, setImage] = useState<string>(imageUrl);
 	const [loading, setLoading] = useState<boolean>(false);
@@ -77,6 +79,7 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 			e.preventDefault();
 			setLoading(true);
 			const newStatement = await setNewStatement({
+				user,
 				navigate,
 				statementId,
 				statement,

@@ -4,7 +4,6 @@ import { historySlice } from './history/HistorySlice';
 import { resultsSlice } from './results/resultsSlice';
 import { statementMetaData } from './statements/statementsMetaSlice';
 import { statementsSlicer } from './statements/statementsSlice';
-import { userSlicer } from './users/userSlice';
 import { votesSlicer } from './vote/votesSlice';
 import { choseBySlice } from './choseBy/choseBySlice';
 import { massConsensusSlice } from './massConsensus/massConsensusSlice';
@@ -15,7 +14,6 @@ export const store = configureStore({
 		statements: statementsSlicer.reducer,
 		statementMetaData: statementMetaData.reducer,
 		evaluations: evaluationsSlicer.reducer,
-		user: userSlicer.reducer,
 		votes: votesSlicer.reducer,
 		results: resultsSlice.reducer,
 		history: historySlice.reducer,

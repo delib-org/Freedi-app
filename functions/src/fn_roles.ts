@@ -45,12 +45,11 @@ export async function setAdminsToNewStatement(
 			throw new Error('No newStatementSubscriptionId');
 		const newSubscription: StatementSubscription = {
 			statementId: statement.statementId,
-			userId: statement.creatorId,
 			role: Role.admin,
 			lastUpdate: Date.now(),
 			statement,
 			statementsSubscribeId: newStatementSubscriptionId,
-			user: statement.creator,
+			creator: statement.creator,
 		};
 		parse(StatementSubscriptionSchema, newSubscription);
 
@@ -76,19 +75,18 @@ export async function setAdminsToNewStatement(
 			try {
 				const statementsSubscribeId = getStatementSubscriptionId(
 					statement.statementId,
-					adminSub.user
+					adminSub.creator
 				);
 				if (!statementsSubscribeId)
 					throw new Error('No statementsSubscribeId');
 
 				const newSubscription: StatementSubscription = {
 					statementId: statement.statementId,
-					userId: adminSub.userId,
 					role: Role.admin,
 					lastUpdate: Date.now(),
 					statement,
 					statementsSubscribeId,
-					user: adminSub.user,
+					creator: adminSub.creator,
 				};
 
 				parse(StatementSubscriptionSchema, newSubscription);

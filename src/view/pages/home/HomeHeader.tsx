@@ -7,8 +7,8 @@ import InvitationModal from './main/invitationModal/InvitationModal';
 import DisconnectIcon from '@/assets/icons/disconnectIcon.svg?react';
 import InstallIcon from '@/assets/icons/installIcon.svg?react';
 import InvitationIcon from '@/assets/icons/invitation.svg?react';
-import { handleLogout } from '@/controllers/general/helpers';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { logOut } from '@/controllers/db/authenticationUtils';
 
 export default function HomeHeader() {
 	const [isHomeMenuOpen, setIsHomeMenuOpen] = useState(false);
@@ -87,7 +87,7 @@ export default function HomeHeader() {
 								<DisconnectIcon style={{ color: '#4E88C7' }} />
 							}
 							label={t('Disconnect')}
-							onOptionClick={() => handleLogout()}
+							onOptionClick={logOut}
 						/>
 						<MenuOption
 							icon={

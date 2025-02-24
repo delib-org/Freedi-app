@@ -78,7 +78,7 @@ const SuggestionCard: FC<Props> = ({
 	const _isAuthorized = isAuthorized(
 		statement,
 		statementSubscription,
-		parentStatement?.creatorId
+		parentStatement?.creator.uid
 	);
 
 	const statementColor: StyleProps = useStatementColor({

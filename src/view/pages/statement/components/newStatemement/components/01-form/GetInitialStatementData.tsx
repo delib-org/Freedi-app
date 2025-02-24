@@ -12,6 +12,7 @@ import Textarea from '@/view/components/textarea/Textarea';
 import { StatementContext } from '@/view/pages/statement/StatementCont';
 import { StatementType } from '@/types/TypeEnums';
 import { Statement } from '@/types/statement/Statement';
+import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 
 export default function GetInitialStatementData() {
 	const { t } = useUserConfig();
@@ -23,6 +24,7 @@ export default function GetInitialStatementData() {
 		handleSetNewStatement,
 		statement,
 	} = useContext(StatementContext);
+	const { creator } = useAuthentication();
 
 	const handleSubmit = async (ev: FormEvent<HTMLFormElement>) => {
 		ev.preventDefault();
@@ -36,6 +38,7 @@ export default function GetInitialStatementData() {
 			if (!statement) throw new Error('Statement is not defined');
 
 			const newStatement: Statement | undefined = createStatement({
+				creator,
 				parentStatement: statement,
 				text: title,
 				description,
@@ -45,6 +48,7 @@ export default function GetInitialStatementData() {
 			if (!newStatement) throw new Error('newStatement is not defined');
 
 			setStatementToDB({
+				creator,
 				parentStatement: statement,
 				statement: newStatement,
 			});

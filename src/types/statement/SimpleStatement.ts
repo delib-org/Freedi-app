@@ -1,13 +1,13 @@
 import { InferOutput, number, object, optional, string } from 'valibot';
 import { Statement } from './Statement';
-import { UserSchema } from '../user/User';
+import { CreatorSchema } from '../user/User';
 
 export const SimpleStatementSchema = object({
 	statementId: string(),
 	statement: string(),
 	description: optional(string()),
 	creatorId: string(),
-	creator: UserSchema,
+	creator: CreatorSchema,
 	parentId: string(),
 	consensus: number(),
 	voted: optional(number()),
@@ -22,7 +22,7 @@ export function statementToSimpleStatement(
 		statementId: statement.statementId,
 		statement: statement.statement,
 		description: statement.description,
-		creatorId: statement.creatorId,
+		creatorId: statement.creator.uid,
 		creator: statement.creator,
 		parentId: statement.parentId,
 		consensus: statement.consensus,

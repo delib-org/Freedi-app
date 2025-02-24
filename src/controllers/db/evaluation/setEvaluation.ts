@@ -1,13 +1,14 @@
 import { Timestamp, doc, setDoc } from 'firebase/firestore';
 import { FireStore } from '../config';
-import { store } from '@/redux/store';
 import { Statement } from '@/types/statement/Statement';
 import { number, parse } from 'valibot';
 import { Collections } from '@/types/TypeEnums';
 import { EvaluationSchema } from '@/types/evaluation/Evaluation';
+import { Creator } from '@/types/user/User';
 
 export async function setEvaluationToDB(
 	statement: Statement,
+	creator: Creator,
 	evaluation: number
 ): Promise<void> {
 	try {
@@ -21,11 +22,8 @@ export async function setEvaluationToDB(
 		if (!parentId) throw new Error('ParentId is undefined');
 
 		const statementId = statement.statementId;
-		const user = store.getState().user.user;
 
-		const userId = user?.uid;
-		if (!userId) throw new Error('User is undefined');
-		const evaluationId = `${userId}--${statementId}`;
+		const evaluationId = `${creator.uid}--${statementId}`;
 
 		//set evaluation to db
 
@@ -38,10 +36,10 @@ export async function setEvaluationToDB(
 			parentId,
 			evaluationId,
 			statementId,
-			evaluatorId: userId,
+			evaluatorId: creator.uid,
 			updatedAt: Timestamp.now().toMillis(),
 			evaluation,
-			evaluator: user,
+			evaluator: creator,
 		};
 
 		parse(EvaluationSchema, evaluationData);

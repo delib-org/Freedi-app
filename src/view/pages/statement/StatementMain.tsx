@@ -1,8 +1,5 @@
 import { createSelector } from '@reduxjs/toolkit';
 import { useEffect, useMemo, useState } from 'react';
-
-// Third party imports
-import { useSelector } from 'react-redux';
 import { useParams } from 'react-router';
 
 // firestore
@@ -27,17 +24,16 @@ import {
 } from '@/controllers/db/subscriptions/setSubscriptions';
 
 // Redux Store
-import { listenToUserSettings } from '@/controllers/db/users/getUserDB';
 import { statementTitleToDisplay } from '@/controllers/general/helpers';
 import { useAppDispatch } from '@/controllers/hooks/reduxHooks';
 import { MapProvider } from '@/controllers/hooks/useMap';
 import { RootState } from '@/redux/store';
-import { userSelector } from '@/redux/users/userSlice';
 import Modal from '@/view/components/modal/Modal';
 import { StatementType, Access, QuestionType } from '@/types/TypeEnums';
-import { User } from '@/types/user/User';
+import { Creator } from '@/types/user/User';
 import { Role } from '@/types/user/UserSettings';
 import { useAuthorization } from '@/controllers/hooks/useAuthorization';
+import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 
 // Create selectors
 export const subStatementsSelector = createSelector(
@@ -65,10 +61,10 @@ export default function StatementMain() {
 
 	// Redux store
 	const dispatch = useAppDispatch();
-	const user = useSelector(userSelector);
+	const { creator } = useAuthentication();
 
 	// Use states
-	const [talker, setTalker] = useState<User | null>(null);
+	const [talker, setTalker] = useState<Creator | null>(null);
 	const [isStatementNotFound, setIsStatementNotFound] = useState(false);
 	const [showNewStatement, setShowNewStatement] = useState<boolean>(false);
 	const [newStatementType, setNewStatementType] = useState<StatementType>(
@@ -82,7 +78,7 @@ export default function StatementMain() {
 
 	// Constants
 
-	const handleShowTalker = (_talker: User | null) => {
+	const handleShowTalker = (_talker: Creator | null) => {
 		if (!talker) {
 			setTalker(_talker);
 		} else {
@@ -135,24 +131,23 @@ export default function StatementMain() {
 			return;
 		};
 
-		if (user && statementId) {
+		if (creator && statementId) {
 			unSubListenToStatement = listenToStatement(
 				statementId,
 				setIsStatementNotFound
 			);
-
-			unSubUserSettings = listenToUserSettings();
 			unSubAllDescendants = listenToAllDescendants(statementId); //used for map
 			unSubEvaluations = listenToEvaluations(
 				dispatch,
 				statementId,
-				user?.uid
+				creator.uid
 			);
-			unSubSubStatements = listenToSubStatements(statementId); //TODO: check if this is needed. It can be integrated under listenToAllDescendants
+			//TODO: check if this is needed. It can be integrated under listenToAllDescendants
+			unSubSubStatements = listenToSubStatements(statementId);
 
 			unSubStatementSubscription = listenToStatementSubscription(
 				statementId,
-				user,
+				creator,
 				dispatch
 			);
 		}
@@ -165,7 +160,7 @@ export default function StatementMain() {
 			unSubEvaluations();
 			unSubAllDescendants();
 		};
-	}, [user, statementId]);
+	}, [creator, statementId]);
 
 	useEffect(() => {
 		//listen to top parent statement
@@ -187,7 +182,10 @@ export default function StatementMain() {
 	useEffect(() => {
 		if (statement) {
 			(async () => {
-				const isSubscribed = await getIsSubscribed(statementId);
+				const isSubscribed = await getIsSubscribed(
+					statementId,
+					creator.uid
+				);
 
 				// if isSubscribed is false, then subscribe
 				if (
@@ -195,10 +193,17 @@ export default function StatementMain() {
 					statement.membership?.access === Access.close
 				) {
 					// subscribe
-					setStatementSubscriptionToDB(statement, Role.member);
+					setStatementSubscriptionToDB(
+						statement,
+						creator,
+						Role.member
+					);
 				} else {
 					//update subscribed field
-					updateSubscriberForStatementSubStatements(statement);
+					updateSubscriberForStatementSubStatements(
+						statement,
+						creator.uid
+					);
 				}
 			})();
 		}

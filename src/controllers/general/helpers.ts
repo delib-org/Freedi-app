@@ -1,12 +1,9 @@
-import { logOut } from '../db/authenticationUtils';
 import { HistoryTracker } from '@/redux/history/HistorySlice';
-import { store } from '@/redux/store';
-import { setUser } from '@/redux/users/userSlice';
 import { Screen } from '@/types/TypeEnums';
 import { Statement } from '@/types/statement/Statement';
 import { StatementSubscription } from '@/types/statement/StatementSubscription';
-import { User } from '@/types/user/User';
 import { Role } from '@/types/user/UserSettings';
+import { useAuthentication } from '../hooks/useAuthentication';
 
 export function updateArray<T>(
 	currentArray: Array<T>,
@@ -51,10 +48,10 @@ export function isAuthorized(
 	try {
 		if (!statement) throw new Error('No statement');
 
-		const user = store.getState().user.user;
+		const { user } = useAuthentication();
 		if (!user?.uid) throw new Error('No user');
 
-		if (statement.creatorId === user.uid) return true;
+		if (statement.creator.uid === user.uid) return true;
 
 		if (parentStatementCreatorId === user.uid) return true;
 
@@ -147,11 +144,6 @@ export function calculateFontSize(text: string, maxSize = 6, minSize = 14) {
 	return `${fontSize}px`;
 }
 
-export function handleLogout() {
-	logOut();
-	store.dispatch(setUser(null));
-}
-
 export function getTitle(statement: Statement | undefined) {
 	try {
 		if (!statement) return '';
@@ -194,13 +186,12 @@ export function getRoomTimerId(
 
 export function getStatementSubscriptionId(
 	statementId: string,
-	user: User
+	userId: string
 ): string | undefined {
 	try {
-		if (!user?.uid) throw new Error('No user');
 		if (!statementId) throw new Error('No statementId');
 
-		return `${user.uid}--${statementId}`;
+		return `${userId}--${statementId}`;
 	} catch (error) {
 		console.error(error);
 

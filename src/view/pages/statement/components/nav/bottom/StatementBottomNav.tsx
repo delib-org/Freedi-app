@@ -1,7 +1,7 @@
 import { FC, useContext, useState } from 'react';
 
 // Third party libraries
-import { useSelector } from 'react-redux';
+// import { useSelector } from 'react-redux';
 import { Link, useParams } from 'react-router';
 
 // Icons
@@ -15,12 +15,12 @@ import UpdateIcon from '@/assets/icons/updateIcon.svg?react';
 import { decreesUserSettingsLearningRemain } from '@/controllers/db/learning/setLearning';
 import useStatementColor from '@/controllers/hooks/useStatementColor';
 import './StatementBottomNav.scss';
-import { userSettingsSelector } from '@/redux/users/userSlice';
-import StartHere from '@/view/components/startHere/StartHere';
+// import StartHere from '@/view/components/startHere/StartHere';
 import { StatementContext } from '../../../StatementCont';
 import { sortItems } from './StatementBottomNavModal';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import { SortType, StatementType } from '@/types/TypeEnums';
+import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 
 interface Props {
 	showNav?: boolean;
@@ -31,14 +31,15 @@ const StatementBottomNav: FC<Props> = () => {
 	const { statement, setNewStatementType, handleSetNewStatement } =
 		useContext(StatementContext);
 	const { dir } = useUserConfig();
+	const { user } = useAuthentication();
 
-	const timesRemainToLearnAddOption =
-		useSelector(userSettingsSelector)?.learning?.addOptions || 0;
+	// const timesRemainToLearnAddOption =
+	// 	useSelector(userSettingsSelector)?.learning?.addOptions || 0;
 
 	const [showSorting, setShowSorting] = useState(false);
-	const [showStartHere, setShowStartHere] = useState(
-		timesRemainToLearnAddOption > 0
-	);
+	// const [showStartHere, setShowStartHere] = useState(
+	// 	timesRemainToLearnAddOption > 0
+	// );
 
 	const statementColor = useStatementColor({ statement });
 
@@ -51,8 +52,11 @@ const StatementBottomNav: FC<Props> = () => {
 
 	const handleAddOption = () => {
 		handleCreateNewOption();
-		setShowStartHere(false);
-		decreesUserSettingsLearningRemain({ addOption: true });
+		// setShowStartHere(false);
+		decreesUserSettingsLearningRemain({
+			userId: user.uid,
+			addOption: true,
+		});
 	};
 
 	function handleSortingClick() {
@@ -61,7 +65,7 @@ const StatementBottomNav: FC<Props> = () => {
 
 	return (
 		<>
-			{showStartHere && <StartHere setShow={setShowStartHere} />}
+			{/* {showStartHere && <StartHere setShow={setShowStartHere} />} */}
 			<div
 				className={
 					showSorting

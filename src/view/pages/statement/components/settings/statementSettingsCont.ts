@@ -17,6 +17,9 @@ import { Statement } from '@/types/statement/Statement';
 import { Vote } from '@/types/vote';
 import { Dispatch, SetStateAction } from 'react';
 import { StatementSettings } from '@/types/statement/StatementSettings';
+import { User } from 'firebase/auth';
+import { convertFirebaseUserToCreator } from '@/types/user/userUtils';
+import { Creator } from '@/types/user/User';
 
 // Get users that voted on options in this statement
 export async function handleGetVoters(
@@ -68,6 +71,7 @@ interface SetNewStatementParams {
 	navigate: NavigateFunction;
 	statementId: string | undefined;
 	statement: Statement;
+	user: User;
 	parentStatement?: Statement | 'top';
 	statementType?: StatementType;
 }
@@ -75,12 +79,15 @@ interface SetNewStatementParams {
 export async function setNewStatement({
 	statementId,
 	statement,
+	user,
 	parentStatement = 'top',
 	statementType = StatementType.group,
 }: SetNewStatementParams): Promise<Statement | undefined> {
 	try {
 		// If statement title is empty, don't save
 		if (!statement.statement) return;
+
+		const creator = convertFirebaseUserToCreator(user);
 
 		const {
 			hasChildren,
@@ -96,6 +103,7 @@ export async function setNewStatement({
 		// If no statementId, user is on AddStatement page
 		if (!statementId) {
 			const newStatement = createStatement({
+				creator,
 				text: statement.statement,
 				description: statement.description,
 				statementType,
@@ -114,6 +122,7 @@ export async function setNewStatement({
 				throw new Error('newStatement had error in creating');
 
 			await setStatementToDB({
+				creator,
 				parentStatement: 'top',
 				statement: newStatement,
 			});
@@ -143,6 +152,7 @@ export async function setNewStatement({
 				throw new Error('newStatement had not been updated');
 
 			await setStatementToDB({
+				creator,
 				parentStatement,
 				statement: newStatement,
 			});
@@ -221,6 +231,7 @@ export const toggleSubScreen = ({
 
 interface CreateStatementFromModalParams {
 	title: string;
+	creator: Creator;
 	description: string;
 	isOptionSelected: boolean;
 	parentStatement: Statement | 'top';
@@ -233,12 +244,15 @@ export async function createStatementFromModal({
 	description,
 	parentStatement,
 	statementType,
+	creator,
 }: CreateStatementFromModalParams) {
 	try {
 		if (!title) throw new Error('title is undefined');
 		if (!parentStatement) throw new Error('Parent statement is missing');
+
 		const newStatement = createStatement({
 			...defaultStatementSettings,
+			creator,
 			hasChildren: true,
 			text: title,
 			description,
@@ -249,12 +263,14 @@ export async function createStatementFromModal({
 		if (!newStatement) throw new Error('newStatement was not created');
 
 		await setStatementToDB({
+			creator,
 			statement: newStatement,
 			parentStatement:
 				parentStatement === 'top' ? 'top' : parentStatement,
 		});
 
 		await setStatementToDB({
+			creator,
 			statement: newStatement,
 			parentStatement:
 				parentStatement === 'top' ? 'top' : parentStatement,

@@ -34,7 +34,6 @@ import { findSimilarStatements } from './fn_findSimilarStatements';
 import { updateApprovalResults } from './fn_approval';
 import { setImportanceToStatement } from './fn_importance';
 import { updateAgrees } from './fn_agree';
-import { setUserSettings } from './fn_users';
 import { updateStatementWithViews } from './fn_views';
 import { getInitialMCData } from './fn_massConsensus';
 import { Collections } from '../../src/types/TypeEnums';
@@ -78,22 +77,6 @@ exports.getUserOptions = wrapHttpFunction(getUserOptions);
 exports.checkForSimilarStatements = wrapHttpFunction(findSimilarStatements);
 exports.massConsensusGetInitialData = wrapHttpFunction(getInitialMCData);
 exports.getQuestionOptions = wrapHttpFunction(getQuestionOptions);
-
-// Firestore Triggers
-exports.setUserSettings = onDocumentCreated(
-	{
-		document: `/${Collections.users}/{userId}`,
-		...functionConfig,
-	},
-	async (event) => {
-		try {
-			await setUserSettings(event);
-		} catch (error) {
-			console.error('Error in setUserSettings:', error);
-			throw error;
-		}
-	}
-);
 
 exports.updateParentWithNewMessage = onDocumentCreated(
 	{

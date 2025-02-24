@@ -29,7 +29,7 @@ import {
 } from '@/types/TypeEnums';
 import { Statement, StatementSchema } from '@/types/statement/Statement';
 import { StatementSubscription } from '@/types/statement/StatementSubscription';
-import { User } from '@/types/user/User';
+import { Creator } from '@/types/user/User';
 import { parse } from 'valibot';
 import React from 'react';
 import { Role } from '@/types/user/UserSettings';
@@ -38,7 +38,7 @@ import { Role } from '@/types/user/UserSettings';
 
 export const listenToStatementSubscription = (
 	statementId: string,
-	user: User,
+	user: Creator,
 	dispatch: AppDispatch
 ): Unsubscribe => {
 	try {
@@ -209,81 +209,6 @@ export const listenToMembers =
 			console.error(error);
 		}
 	};
-
-export async function listenToUserAnswer(
-	questionId: string,
-	cb: (statement: Statement) => void
-) {
-	try {
-		const user = store.getState().user.user;
-		if (!user) throw new Error('User not logged in');
-		const statementsRef = collection(FireStore, Collections.statements);
-		const q = query(
-			statementsRef,
-			where('statementType', '==', StatementType.option),
-			where('parentId', '==', questionId),
-			where('creatorId', '==', user.uid),
-			orderBy('createdAt', 'desc'),
-			limit(1)
-		);
-
-		return onSnapshot(q, (statementsDB) => {
-			statementsDB.docChanges().forEach((change) => {
-				const statement = parse(StatementSchema, change.doc.data());
-
-				cb(statement);
-			});
-		});
-	} catch (error) {
-		console.error(error);
-	}
-}
-
-export async function listenToChildStatements(
-	dispatch: AppDispatch,
-	statementId: string,
-	callback: (childStatements: Statement[]) => void
-): Promise<Unsubscribe | null> {
-	try {
-		const statementsRef = collection(FireStore, Collections.statements);
-		const q = query(
-			statementsRef,
-			and(
-				or(
-					where(
-						'deliberativeElement',
-						'==',
-						DeliberativeElement.option
-					),
-					where(
-						'deliberativeElement',
-						'==',
-						DeliberativeElement.research
-					)
-				),
-				where('parents', 'array-contains', statementId)
-			)
-		);
-
-		const unsubscribe = onSnapshot(q, (statementsDB) => {
-			const childStatements: Statement[] = [];
-
-			statementsDB.forEach((doc) => {
-				const childStatement = doc.data() as Statement;
-				childStatements.push(childStatement);
-				dispatch(setStatement(childStatement));
-			});
-
-			callback(childStatements);
-		});
-
-		return unsubscribe;
-	} catch (error) {
-		console.error(error);
-
-		return null;
-	}
-}
 
 export function listenToAllSubStatements(
 	statementId: string,
