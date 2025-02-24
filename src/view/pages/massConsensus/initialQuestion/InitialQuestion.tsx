@@ -1,21 +1,25 @@
 import { useNavigate, useParams } from 'react-router';
 import HeaderMassConsensus from '../headerMassConsensus/HeaderMassConsensus';
+import FooterMassConsensus from '../FooterMassConsesus/FooterMassConsesus';
+import TitleMassConsensus from '../TitleMassConsensus/TitleMassConsensus';
 import { useParamsLanguage } from '../useParamsLang/UseParamsLanguge';
 import { useSelector } from 'react-redux';
 import { statementSelector } from '@/redux/statements/statementsSlice';
-import { KeyboardEvent, useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useInitialQuestion } from './InitialQuestionVM';
 import { MassConsensusPageUrls } from '@/types/TypeEnums';
 import Loader from '@/view/components/loaders/Loader';
+import { useLanguage } from '@/controllers/hooks/useLanguages';
+import styles from './InitialQuestion.module.scss'
 
 const InitialQuestion = () => {
 	const navigate = useNavigate();
-	const { dir } = useParamsLanguage();
+	const { dir, lang } = useParamsLanguage();
 	const { statementId } = useParams<{ statementId: string }>();
 	const statement = useSelector(statementSelector(statementId));
-	const [enableButton, setEnableButton] = useState(false);
-	const { handleSetInitialSuggestion, ready, loading } = useInitialQuestion();
-
+	const { handleSetInitialSuggestion, changeInput, ifButtonEnabled, ready, loading } = useInitialQuestion();
+	const { t } = useLanguage();
+	
 	useEffect(() => {
 		if (!statement) navigate(`/mass-consensus/${statementId}/introduction`);
 	}, [statementId, navigate]);
@@ -23,41 +27,20 @@ const InitialQuestion = () => {
 	useEffect(() => {
 		if (ready)
 			navigate(
-				`/mass-consensus/${statementId}/${MassConsensusPageUrls.similarSuggestions}`
+				`/mass-consensus/${statementId}/${MassConsensusPageUrls.similarSuggestions}?lang=${lang}`
 			);
 	}, [ready]);
 
-	function handleEnableButton(ev: KeyboardEvent<HTMLInputElement>) {
-		if (ev.currentTarget.value.length > 0) {
-			setEnableButton(true);
-		} else {
-			setEnableButton(false);
-		}
-	}
 
 	return (
 		<div style={{ direction: dir }}>
-			<HeaderMassConsensus backTo={MassConsensusPageUrls.introduction} />
-			<h3>
-				Please suggest an option for the question:{' '}
-				{statement?.statement}{' '}
-			</h3>
-			<form onSubmit={handleSetInitialSuggestion}>
-				<div>
-					<label htmlFor='option'>Option</label>
-					<input
-						type='text'
-						name='userInput'
-						onKeyUp={handleEnableButton}
-					/>
-				</div>
-				<button
-					className={`btn btn--primary btn--large ${!enableButton ? 'btn--disabled' : ''}`}
-					type='submit'
-				>
-					Submit
-				</button>
-			</form>
+			<HeaderMassConsensus  title={t('offer a suggestion')} backTo={MassConsensusPageUrls.introduction} />
+			<TitleMassConsensus title={t("please suggest a sentance that will unite Israel")} />
+			<div className={styles.suggestionContainer} style={{ direction: dir }}>
+				<h3>{t('Your description')}</h3>
+				<input type="text" onChange={changeInput}/>
+			</div>
+			<FooterMassConsensus goTo={MassConsensusPageUrls.randomSuggestions} onNext={handleSetInitialSuggestion} isNextActive={ifButtonEnabled}/>
 			{loading && <Loader />}
 		</div>
 	);

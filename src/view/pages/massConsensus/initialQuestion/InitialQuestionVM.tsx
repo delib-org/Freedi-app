@@ -6,9 +6,9 @@ import { useDispatch } from 'react-redux';
 import { useParams } from 'react-router';
 
 interface InitialQuestionVM {
-	handleSetInitialSuggestion: (
-		ev: React.FormEvent<HTMLFormElement>
-	) => Promise<void>;
+	handleSetInitialSuggestion: () => Promise<void>;
+	changeInput: (event: React.ChangeEvent<HTMLInputElement>) => void;
+	ifButtonEnabled: boolean;
 	ready: boolean;
 	loading: boolean;
 }
@@ -17,20 +17,23 @@ export function useInitialQuestion(): InitialQuestionVM {
 	const dispatch = useDispatch();
 	const { statementId } = useParams<{ statementId: string }>();
 
-	const [ready, setReady] = useState(false);
-	const [loading, setLoading] = useState(false);
+	const [ input, setInput ] = useState("");
+	const [ ifButtonEnabled, EnableButton] = useState(false);
+	const [ ready, setReady ] = useState(false);
+	const [ loading, setLoading ] = useState(false);
 
-	async function handleSetInitialSuggestion(
-		ev: React.FormEvent<HTMLFormElement>
-	) {
-		ev.preventDefault();
+	const changeInput = (event: React.ChangeEvent<HTMLInputElement>) => 
+	{
+		setInput(event.target.value);
+		EnableButton(event.target.value.length > 0);
+	}
 
-		const userInput = ev.currentTarget.userInput.value;
-		if (!userInput) return;
+	async function handleSetInitialSuggestion() {
+		if (!input) return;
 		setLoading(true);
 
 		const { similarStatements = [], similarTexts = [], userText } =
-			await getSimilarStatements(statementId, userInput);
+			await getSimilarStatements(statementId, input);
 
 		dispatch(
 			setSimilarStatements([
@@ -45,6 +48,8 @@ export function useInitialQuestion(): InitialQuestionVM {
 
 	return {
 		handleSetInitialSuggestion,
+		changeInput,
+		ifButtonEnabled,
 		ready,
 		loading,
 	};

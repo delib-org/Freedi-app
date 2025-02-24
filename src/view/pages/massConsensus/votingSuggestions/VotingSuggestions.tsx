@@ -10,8 +10,10 @@ import { useSelector } from 'react-redux';
 import { statementSelector } from '@/redux/statements/statementsSlice';
 import { MassConsensusPageUrls } from '@/types/TypeEnums';
 import { Statement } from '@/types/statement/Statement';
-import FooterMassConsensus from '../footerMassConsesus/footerMassConsesus';
+import FooterMassConsensus from '../footerMassConsesus/FooterMassConsesus';
 import { getTotalVoters } from '../../statement/components/vote/statementVoteCont';
+import { useLanguage } from '@/controllers/hooks/useLanguages';
+import TitleMassConsensus from '../TitleMassConsensus/TitleMassConsensus';
 
 const VotingSuggestions = () => {
 	const { subStatements } = VotingSuggestionsMV();
@@ -23,13 +25,15 @@ const VotingSuggestions = () => {
 		undefined
 	);
 	const totalVotes = getTotalVoters(statement);
+	const { t } = useLanguage();
 
 	return (
 		<>
 			<HeaderMassConsensus
-				title='please vote for the best suggestion'
+				title={t('Voting')}
 				backTo={MassConsensusPageUrls.topSuggestions}
 			/>
+			 <TitleMassConsensus title={t("please vote for the best suggestion")} />
 
 			<div className={styles.voteGraph}>
 				<VotingArea
