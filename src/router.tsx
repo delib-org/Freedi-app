@@ -8,6 +8,7 @@ import RandomSuggestions from './view/pages/massConsensus/randomSuggestions/Rand
 import SimilarSuggestions from './view/pages/massConsensus/similarSuggestions/SimilarSuggestions';
 import VotingSuggestions from './view/pages/massConsensus/votingSuggestions/VotingSuggestions';
 import TopSuggestions from './view/pages/massConsensus/topSuggestions/TopSuggestions';
+import LeaveFeedback from './view/pages/massConsensus/leaveFeedback/LeaveFeedback';
 
 // Types
 import { MassConsensusPageUrls } from './types/TypeEnums';
@@ -141,7 +142,15 @@ export const router = createBrowserRouter([
 			},
 			{
 				path: MassConsensusPageUrls.voting,
-				element: <SuspenseWrapper><VotingSuggestions /></SuspenseWrapper>,
+				element: <Suspense fallback={<LoadingPage />}><VotingSuggestions /></Suspense>,
+			},
+			{
+				path: MassConsensusPageUrls.leaveFeedback,
+				element: (
+					<Suspense fallback={<LoadingPage />}>
+						<LeaveFeedback />
+					</Suspense>
+				),
 			}
 		]
 	},

@@ -1,0 +1,32 @@
+name: Auto Assign
+on:
+  pull_request:
+    types: [opened, ready_for_review, reopened]
+    branches:
+      - dev
+jobs:
+  auto-assign:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Get potential assignees
+        id: get-assignees
+        run: |
+          PR_CREATOR="${{ github.event.pull_request.user.login }}"
+          ASSIGNEES="vladbyk89,talyaron"
+          FILTERED_ASSIGNEES=$(echo $ASSIGNEES | tr ',' '\n' | grep -v "^$PR_CREATOR$" | paste -sd,)
+          
+          if echo $ASSIGNEES | grep -q "$PR_CREATOR"; then
+            echo "num=1" >> $GITHUB_OUTPUT
+          else
+            echo "num=2" >> $GITHUB_OUTPUT
+          fi
+          echo "filtered=$FILTERED_ASSIGNEES" >> $GITHUB_OUTPUT
+
+      - name: Auto-assign PR
+        uses: pozil/auto-assign-issue@v1
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          assignees: ${{ steps.get-assignees.outputs.filtered }}
+          numOfAssignee: ${{ steps.get-assignees.outputs.num }}
