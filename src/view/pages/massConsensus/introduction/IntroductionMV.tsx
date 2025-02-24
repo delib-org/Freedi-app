@@ -25,7 +25,7 @@ export function useIntroductionMV() {
 		listenToAuth(
 			navigate,
 			true,
-			`/mass-consensus/${statementId}/introduction`
+			`/mass-consensus/${statementId}/introduction?lang=he`
 		);
 	}, []);
 

@@ -6,11 +6,11 @@
 	width: 100%;
 	padding: 1rem;
 
-	.back {
+	.icon {
 		display: flex;
 		align-items: center;
 		padding: 1rem;
-		color: white;
+		color: var(--question-text);
 		text-decoration: none;
 
 		&--ltr {
@@ -20,23 +20,22 @@
 		&:hover {
 			opacity: 0.8;
 		}
+		svg { // this is crucial for rendering of home, due to the svg being relativly big.
+			width: 24px;  
+			height: 24px;
+		}
 	}
 
-	.title {
-		font-size: 1.5rem;
-		font-weight: 600;
-		margin: 0;
-	}
-
-	.home {
+	.title-container {
+		flex: 1;
 		display: flex;
-		align-items: center;
-		color: white;
-		text-decoration: none;
-		padding: 0.5rem;
+		justify-content: flex-start;
 
-		&:hover {
-			opacity: 0.8;
+		.title {
+			font-size: 1.5rem;
+			font-weight: 600;
+			margin: 0;
+			color: var(--question-text);
 		}
 	}
 
