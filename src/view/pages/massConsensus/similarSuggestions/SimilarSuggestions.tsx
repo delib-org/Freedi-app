@@ -10,11 +10,9 @@ import { Statement } from '@/types/statement/Statement';
 import { GeneratedStatement } from '@/types/massConsensus/massConsensusModel';
 import styles from './SimilarSuggestions.module.scss';
 import { useSimilarSuggestions } from './SimilarSuggestionVM';
-import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 
 const SimilarSuggestions = () => {
 	const navigate = useNavigate();
-	const { user } = useAuthentication();
 	const { dir } = useParamsLanguage();
 	const { statementId } = useParams<{ statementId: string }>();
 	const { handleSetSuggestionToDB } = useSimilarSuggestions();
@@ -25,13 +23,6 @@ const SimilarSuggestions = () => {
 	function handleSelect(index: number) {
 		setSelected(index);
 	}
-
-	useEffect(() => {
-		if (!user)
-			navigate(
-				`/mass-consensus/${statementId}/${MassConsensusPageUrls.introduction}`
-			);
-	}, [user]);
 
 	useEffect(() => {
 		if (similarSuggestions.length === 0)

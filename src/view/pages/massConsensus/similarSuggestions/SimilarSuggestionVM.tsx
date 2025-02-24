@@ -4,18 +4,19 @@ import {
 	createStatement,
 	setStatementToDB,
 } from '@/controllers/db/statements/setStatements';
-import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { MassConsensusPageUrls, StatementType } from '@/types/TypeEnums';
 import { GeneratedStatement } from '@/types/massConsensus/massConsensusModel';
 import { Statement } from '@/types/statement/Statement';
-import { convertFirebaseUserToCreator } from '@/types/user/userUtils';
 import { useNavigate, useParams } from 'react-router';
 
 export function useSimilarSuggestions() {
 	const navigate = useNavigate();
 	const { statementId: parentId } = useParams<{ statementId: string }>();
-	const { user } = useAuthentication();
-	const creator = convertFirebaseUserToCreator(user);
+	const creator = {
+		displayName: 'Anonymous',
+		photoURL: '',
+		uid: '',
+	};
 
 	async function handleSetSuggestionToDB(
 		statement: Statement | GeneratedStatement
