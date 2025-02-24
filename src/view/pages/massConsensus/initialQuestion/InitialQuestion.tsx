@@ -31,7 +31,6 @@ const InitialQuestion = () => {
 			);
 	}, [ready]);
 
-
 	return (
 		<div style={{ direction: dir }}>
 			<HeaderMassConsensus  title={t('offer a suggestion')} backTo={MassConsensusPageUrls.introduction} />

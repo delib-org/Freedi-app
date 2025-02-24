@@ -5,7 +5,6 @@ import styles from './HeaderMassConsensus.module.scss';
 import { useParamsLanguage } from '../useParamsLang/UseParamsLanguge';
 import { MassConsensusPageUrls } from '@/types/TypeEnums';
 
-
 const HeaderMassConsensus = ({ backTo, backToApp, title, isIntro }: { backTo: MassConsensusPageUrls, backToApp?: boolean, title?: string, isIntro?: boolean }) => {
 	const { statementId } = useParams<{ statementId: string }>();
 	const { dir, lang } = useParamsLanguage();

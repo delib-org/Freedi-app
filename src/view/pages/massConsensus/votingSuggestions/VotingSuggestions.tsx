@@ -10,7 +10,7 @@ import { useSelector } from 'react-redux';
 import { statementSelector } from '@/redux/statements/statementsSlice';
 import { MassConsensusPageUrls } from '@/types/TypeEnums';
 import { Statement } from '@/types/statement/Statement';
-import FooterMassConsensus from '../footerMassConsesus/FooterMassConsesus';
+import FooterMassConsensus from '../FooterMassConsesus/FooterMassConsesus';
 import { getTotalVoters } from '../../statement/components/vote/statementVoteCont';
 import { useLanguage } from '@/controllers/hooks/useLanguages';
 import TitleMassConsensus from '../TitleMassConsensus/TitleMassConsensus';
