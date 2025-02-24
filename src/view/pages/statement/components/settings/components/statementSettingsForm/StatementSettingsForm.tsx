@@ -72,7 +72,7 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 	try {
 		const joinedMembers = members
 			.filter((member) => member.role !== Role.banned)
-			.map((m) => m.user);
+			.map((m) => m.creator);
 
 		// * Functions * //
 		const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {

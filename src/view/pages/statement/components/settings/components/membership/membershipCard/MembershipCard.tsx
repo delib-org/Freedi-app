@@ -15,8 +15,8 @@ interface Props {
 }
 
 const MembershipCard: FC<Props> = ({ member }) => {
-	const firstLetter = member.user.displayName.charAt(0).toUpperCase();
-	const displayImg = member.user.photoURL;
+	const firstLetter = member.creator.displayName.charAt(0).toUpperCase();
+	const displayImg = member.creator.photoURL;
 	const [role, setRole] = useState(member.role);
 	const { user } = useAuthentication();
 
@@ -24,12 +24,16 @@ const MembershipCard: FC<Props> = ({ member }) => {
 		setRole(member.role);
 	}, [member.role]);
 
-	if (member.userId === user.uid) return null;
+	if (member.creator.uid === user.uid) return null;
 
 	async function handleRemoveMember() {
 		const newRole = role === Role.banned ? Role.member : Role.banned;
 		try {
-			await updateMemberRole(member.statementId, member.userId, newRole);
+			await updateMemberRole(
+				member.statementId,
+				member.creator.uid,
+				newRole
+			);
 			setRole(newRole);
 		} catch (error) {
 			console.error('Error removing member:', error);
@@ -39,7 +43,11 @@ const MembershipCard: FC<Props> = ({ member }) => {
 	async function handleSetRole() {
 		try {
 			const newRole = role === Role.admin ? Role.member : Role.admin;
-			await updateMemberRole(member.statementId, member.userId, newRole);
+			await updateMemberRole(
+				member.statementId,
+				member.creator.uid,
+				newRole
+			);
 			setRole(newRole);
 		} catch (error) {
 			console.error('Error setting role:', error);
@@ -61,7 +69,7 @@ const MembershipCard: FC<Props> = ({ member }) => {
 				<div
 					className={`${styles.card__info__name} ${isBanned ? styles.bannedText : ''}`}
 				>
-					{member.user.displayName}
+					{member.creator.displayName}
 				</div>
 			</div>
 			<div className={styles.card__membership}>
