@@ -4,6 +4,7 @@ import {
 	createStatement,
 	setStatementToDB,
 } from '@/controllers/db/statements/setStatements';
+import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { MassConsensusPageUrls, StatementType } from '@/types/TypeEnums';
 import { GeneratedStatement } from '@/types/massConsensus/massConsensusModel';
 import { Statement } from '@/types/statement/StatementTypes';
@@ -12,11 +13,7 @@ import { useNavigate, useParams } from 'react-router';
 export function useSimilarSuggestions() {
 	const navigate = useNavigate();
 	const { statementId: parentId } = useParams<{ statementId: string }>();
-	const creator = {
-		displayName: 'Anonymous',
-		photoURL: '',
-		uid: '',
-	};
+	const { creator } = useAuthentication();
 
 	async function handleSetSuggestionToDB(
 		statement: Statement | GeneratedStatement

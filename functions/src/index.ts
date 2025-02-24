@@ -131,19 +131,16 @@ exports.checkForSimilarStatements = wrapHttpFunction(findSimilarStatements);
 exports.massConsensusGetInitialData = wrapHttpFunction(getInitialMCData);
 exports.getQuestionOptions = wrapHttpFunction(getQuestionOptions);
 
-exports.updateParentWithNewMessage = onDocumentCreated(
-	{
-		document: `/${Collections.statements}/{statementId}`,
-		...functionConfig,
-	},
-	async (event) => {
-		try {
-			await updateParentWithNewMessageCB(event);
-		} catch (error) {
-			console.error('Error in updateParentWithNewMessage:', error);
-			throw error;
-		}
-	}
+// --------------------------
+// FIRESTORE TRIGGER FUNCTIONS
+// --------------------------
+
+// Statement functions
+exports.updateParentWithNewMessage = createFirestoreFunction(
+	`/${Collections.statements}/{statementId}`,
+	onDocumentCreated,
+	updateParentWithNewMessageCB,
+	'updateParentWithNewMessage'
 );
 
 exports.setAdminsToNewStatement = createFirestoreFunction(

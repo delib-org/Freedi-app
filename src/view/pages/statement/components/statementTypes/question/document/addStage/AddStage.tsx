@@ -17,6 +17,7 @@ const AddStage: FC<AddStageProps> = ({ setShowAddStage }) => {
 	const { statement } = useContext(StatementContext);
 	const { creator } = useAuthentication();
 	const [isShaking, setIsShaking] = useState(false);
+	const { creator } = useAuthentication();
 
 	function handleCloseModal() {
 		setShowAddStage(false);
