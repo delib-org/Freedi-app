@@ -19,6 +19,16 @@ export const protectedRoutes: RouteObject[] = [
 		],
 	},
 	{
+		path: 'statement/:statementId/:page',
+		element: withSuspense(StatementMain),
+		children: [
+			{
+				path: ':sort',
+				element: withSuspense(StatementMain),
+			},
+		],
+	},
+	{
 		path: 'stage/:stageId',
 		element: withSuspense(Stage),
 	},
