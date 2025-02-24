@@ -18,23 +18,24 @@ export const router = createBrowserRouter([
 		element: withSuspense(lazy(() => import('@/view/pages/start/Start'))),
 	},
 	{
+		// App layout with User Authentication.
 		path: '/',
 		element: withSuspense(App),
 		errorElement: withSuspense(
 			lazy(() => import('@/view/pages/error/ErrorPage'))
 		),
 		children: [
-			// Public routes directly under App
+			// Public routes directly under App with no Authorization.
 			...publicRoutes,
-			// Protected routes wrapped in ProtectedLayout
+			// Protected routes wrapped in ProtectedLayout that contains user Authorization for Statement.
 			{
 				element: withSuspense(ProtectedLayout),
 				children: protectedRoutes,
 			},
-			// Error routes
 		],
 	},
+	// Error routes at root level.
 	...errorRoutes,
-	// Mass consensus routes at root level
+	// Mass consensus routes at root level.
 	...massConsensusRoutes,
 ]);
