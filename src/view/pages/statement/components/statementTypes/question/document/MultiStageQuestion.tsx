@@ -1,4 +1,4 @@
-import { DragEvent, FC, useContext, useEffect, useState, useMemo, KeyboardEvent } from 'react';
+import { DragEvent, FC, useContext, useState, useMemo, KeyboardEvent } from 'react';
 import { StatementContext } from '../../../../StatementCont';
 import styles from './MultiStageQuestion.module.scss';
 import Button, { ButtonType } from '@/view/components/buttons/button/Button';
@@ -62,7 +62,7 @@ const MultiStageQuestion: FC = () => {
 		setDraggedIndex(null);
 	};
 
-	const handleDragEnd = (e: DragEvent<HTMLButtonElement>): void => {
+	const handleDragEnd = (): void => {
 		setDraggedIndex(null);
 	};
 
@@ -116,7 +116,7 @@ const MultiStageQuestion: FC = () => {
 						onDragStart={(e) => handleDragStart(e, index)}
 						onDragOver={(e) => handleDragOver(e)}
 						onDrop={(e) => handleDrop(e, index)}
-						onDragEnd={(e) => handleDragEnd(e)}
+						onDragEnd={handleDragEnd}
 						aria-label={`Draggable stage ${index + 1}`}
 						onKeyDown={(e) => handleKeyDown(e, index)}
 					>
