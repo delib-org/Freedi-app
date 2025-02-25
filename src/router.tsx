@@ -31,7 +31,7 @@ const Start = lazy(() => import('./view/pages/start/Start'));
 const StatementMain = lazy(
 	() => import('./view/pages/statement/StatementMain')
 );
-const Stage = lazy(() => import('./view/pages/stage/Stage'));
+
 const Introduction = lazy(
 	() => import('./view/pages/massConsensus/introduction/Introduction')
 );
@@ -96,11 +96,7 @@ export const router = createBrowserRouter([
 								element: <SuspenseWrapper><StatementMain /></SuspenseWrapper>,
 							},
 						],
-					},
-					{
-						path: 'stage/:stageId',
-						element: <SuspenseWrapper><Stage /></SuspenseWrapper>,
-					},
+					}
 				],
 			},
 			{

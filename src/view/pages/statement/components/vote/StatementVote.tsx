@@ -20,6 +20,8 @@ import { useLanguage } from '@/controllers/hooks/useLanguages';
 import { StatementContext } from '../../StatementCont';
 import { Statement } from '@/types/statement/StatementTypes';
 import { QuestionStep } from '@/types/TypeEnums';
+import { statementSubsSelector } from '@/redux/statements/statementsSlice';
+import { useSelector } from 'react-redux';
 
 let getVoteFromDB = false;
 
@@ -28,7 +30,7 @@ const StatementVote: FC = () => {
 	const dispatch = useAppDispatch();
 	const { t } = useLanguage();
 	const { statement } = useContext(StatementContext);
-	const subStatements: Statement[] = [];
+	const subStatements = useSelector(statementSubsSelector(statement?.statementId));
 
 	const currentStep = statement?.questionSettings?.currentStep;
 	const isCurrentStepVoting = currentStep === QuestionStep.voting;

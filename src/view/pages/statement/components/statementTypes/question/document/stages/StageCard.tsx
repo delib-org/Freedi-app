@@ -16,12 +16,13 @@ const StageCard: FC<Props> = ({ statement, isDescription, isSuggestions }) => {
 
 	const { t } = useLanguage();
 	const navigate = useNavigate();
+	const stageUrl = `/statement/${statement.statementId}`
 
 	const chosen = statement.results || [];
 
 	function suggestNewSuggestion(ev: MouseEvent<HTMLButtonElement>) {
 		ev.stopPropagation();
-		navigate(`/statement/${statement.statementId}/stage/${statement.statementId}`);
+		navigate(stageUrl);
 	}
 
 	const getTitle = () => {
@@ -60,7 +61,7 @@ const StageCard: FC<Props> = ({ statement, isDescription, isSuggestions }) => {
 					</ul>
 				</>
 			)}
-			<NavLink to={`/statement/${statement.statementId}/stage/${statement.statementId}`}>
+			<NavLink to={stageUrl}>
 				<p className={styles.seeMore}>See more...</p>
 			</NavLink>
 			<div className='btns'>
