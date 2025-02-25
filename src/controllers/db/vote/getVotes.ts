@@ -10,7 +10,7 @@ import { FireStore } from '../config';
 import { getUserFromFirebase } from '../users/usersGeneral';
 import { store } from '@/redux/store';
 import { Collections } from '@/types/TypeEnums';
-import { Statement, StatementSchema } from '@/types/statement/Statement';
+import { Statement, StatementSchema } from '@/types/statement/StatementTypes';
 import { getVoteId, Vote, VoteSchema } from '@/types/vote';
 import { parse } from 'valibot';
 

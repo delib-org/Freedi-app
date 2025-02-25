@@ -2,7 +2,7 @@ import { FC } from 'react';
 import Text from '@/view/components/text/Text';
 import Triangle from '@/view/components/triangle/Triangle';
 import { membersAllowed } from '@/types/TypeEnums';
-import { Statement } from '@/types/statement/Statement';
+import { Statement } from '@/types/statement/StatementTypes';
 
 interface Props {
 	statement: Statement;

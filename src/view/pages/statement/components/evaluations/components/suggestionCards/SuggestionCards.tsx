@@ -5,13 +5,13 @@ import { sortSubStatements } from '../../statementsEvaluationCont';
 import SuggestionCard from './suggestionCard/SuggestionCard';
 import styles from './SuggestionCards.module.scss';
 import EmptyScreen from '../emptyScreen/EmptyScreen';
-import { Statement } from '@/types/statement/Statement';
-import { SortType, StatementType } from '@/types/TypeEnums';
+import { Statement } from '@/types/statement/StatementTypes';
+import { SortType } from '@/types/TypeEnums';
 import { getStatementFromDB } from '@/controllers/db/statements/getStatement';
 import {
 	setStatement,
-	statementSelector,
-	statementSubsSelector,
+	statementOptionsSelector,
+	statementSelector
 } from '@/redux/statements/statementsSlice';
 import { SelectionFunction } from '@/types/evaluation/Evaluation';
 
@@ -29,16 +29,14 @@ const SuggestionCards: FC<Props> = ({ propSort, selectionFunction, subStatements
 
 	const [totalHeight, setTotalHeight] = useState(0);
 
-	const _subStatements = useSelector(
-		statementSubsSelector(statement?.statementId)
-	).filter((sub: Statement) => sub.statementType === StatementType.option);
+	const _subStatements = useSelector(statementOptionsSelector(statement?.statementId));
 
-	const subStatements = propSubStatements ? propSubStatements : selectionFunction
+	const subStatements = propSubStatements || (selectionFunction
 		? _subStatements.filter(
 			(sub: Statement) =>
 				sub.evaluation.selectionFunction === selectionFunction
 		)
-		: _subStatements;
+		: _subStatements);
 
 	useEffect(() => {
 		if (!statement)

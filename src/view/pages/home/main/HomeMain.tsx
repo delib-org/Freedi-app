@@ -13,7 +13,7 @@ import { statementsSelector } from '@/redux/statements/statementsSlice';
 // Custom components
 import Footer from '@/view/components/footer/Footer';
 import PeopleLoader from '@/view/components/loaders/PeopleLoader';
-import { Statement } from '@/types/statement/Statement';
+import { Statement } from '@/types/statement/StatementTypes';
 
 const HomeMain = () => {
 	// Hooks

@@ -14,7 +14,7 @@ import {
 	StatementType,
 	DeliberativeElement,
 } from '@/types/TypeEnums';
-import { Statement, StatementSchema } from '@/types/statement/Statement';
+import { Statement, StatementSchema } from '@/types/statement/StatementTypes';
 import { parse } from 'valibot';
 
 export async function getStatementFromDB(

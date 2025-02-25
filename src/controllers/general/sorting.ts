@@ -1,6 +1,6 @@
 import { DeliberativeElement } from '@/types/TypeEnums';
 import { Results } from '@/types/results/Results';
-import { Statement } from '@/types/statement/Statement';
+import { Statement } from '@/types/statement/StatementTypes';
 
 interface ResultLevel {
 	result: Results;

@@ -1,9 +1,9 @@
 import { useContext } from 'react';
 import { StatementContext } from '../../../StatementCont';
 
-import SimpleQuestion from './simpleQuestion/SimpleQuestion';
 import { QuestionType } from '@/types/TypeEnums';
 import MassConsensus from './massConsesus/MassConsensus';
+import MultiStageQuestion from './document/MultiStageQuestion';
 
 const QuestionPage = () => {
 	const { statement } = useContext(StatementContext);
@@ -13,7 +13,7 @@ const QuestionPage = () => {
 
 	if (massConsensus) return <MassConsensus />;
 
-	return <SimpleQuestion />;
+	return <MultiStageQuestion />;
 };
 
 export default QuestionPage;

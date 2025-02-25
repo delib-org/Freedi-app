@@ -1,4 +1,4 @@
-import { Statement } from '@/types/statement/Statement';
+import { Statement } from '@/types/statement/StatementTypes';
 import { QuestionType, StatementType } from '@/types/TypeEnums';
 import { User } from '@/types/user/User';
 import { Role } from '@/types/user/UserSettings';

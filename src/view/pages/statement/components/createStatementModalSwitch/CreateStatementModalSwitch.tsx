@@ -2,7 +2,7 @@ import React from 'react';
 import CreateStatementModal from '../createStatementModal/CreateStatementModal';
 import SimilarStatementsSuggestion from '../newStatemement/newStatement';
 import { StatementType } from '@/types/TypeEnums';
-import { Statement } from '@/types/statement/Statement';
+import { Statement } from '@/types/statement/StatementTypes';
 
 interface CreateStatementModalSwitchProps {
 	useSimilarStatements: boolean;

@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate, useParams } from 'react-router';
 import { listenToStatement } from '@/controllers/db/statements/listenToStatements';
-import { Statement } from '@/types/statement/Statement';
+import { Statement } from '@/types/statement/StatementTypes';
 
 export function VotingSuggestionsMV() {
 	const { statementId } = useParams<{ statementId: string }>();
@@ -42,7 +42,7 @@ export function VotingSuggestionsMV() {
 		const unsubscribe = subStatements.map((subStatement) =>
 			listenToStatement(subStatement.statementId)
 		);
-		
+
 		return () => unsubscribe.forEach((u) => u());
 	}, [subStatements.length]);
 

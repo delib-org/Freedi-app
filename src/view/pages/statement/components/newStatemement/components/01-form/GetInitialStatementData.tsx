@@ -11,7 +11,7 @@ import Input from '@/view/components/input/Input';
 import Textarea from '@/view/components/textarea/Textarea';
 import { StatementContext } from '@/view/pages/statement/StatementCont';
 import { StatementType } from '@/types/TypeEnums';
-import { Statement } from '@/types/statement/Statement';
+import { Statement } from '@/types/statement/StatementTypes';
 
 export default function GetInitialStatementData() {
 	const { t } = useLanguage();

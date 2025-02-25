@@ -1,13 +1,17 @@
-import { lazy, Suspense } from 'react';
+import { lazy, ReactNode, Suspense } from 'react';
 import { createBrowserRouter } from 'react-router';
-import LoadingPage from './view/pages/loadingPage/LoadingPage'; // Adjust the import path as needed
+
+// Page imports
+import LoadingPage from './view/pages/loadingPage/LoadingPage';
 import InitialQuestion from './view/pages/massConsensus/initialQuestion/InitialQuestion';
-import { MassConsensusPageUrls } from './types/TypeEnums';
 import RandomSuggestions from './view/pages/massConsensus/randomSuggestions/RandomSuggestions';
 import SimilarSuggestions from './view/pages/massConsensus/similarSuggestions/SimilarSuggestions';
 import VotingSuggestions from './view/pages/massConsensus/votingSuggestions/VotingSuggestions';
 import TopSuggestions from './view/pages/massConsensus/topSuggestions/TopSuggestions';
 import LeaveFeedback from './view/pages/massConsensus/leaveFeedback/LeaveFeedback';
+
+// Types
+import { MassConsensusPageUrls } from './types/TypeEnums';
 
 // Custom components
 const App = lazy(() => import('./App'));
@@ -32,149 +36,86 @@ const Introduction = lazy(
 	() => import('./view/pages/massConsensus/introduction/Introduction')
 );
 
+// Wrapper component for Suspense
+const SuspenseWrapper = ({ children }: { children: ReactNode }) => (
+	<Suspense fallback={<LoadingPage />}>{children}</Suspense>
+);
+
 export const router = createBrowserRouter([
 	{
 		path: '/',
-		element: (
-			<Suspense fallback={<LoadingPage />}>
-				<App />
-			</Suspense>
-		),
-		errorElement: (
-			<Suspense fallback={<LoadingPage />}>
-				<ErrorPage />
-			</Suspense>
-		),
+		element: <SuspenseWrapper><App /></SuspenseWrapper>,
+		errorElement: <SuspenseWrapper><ErrorPage /></SuspenseWrapper>,
 		children: [
 			{
 				index: true,
-				element: (
-					<Suspense fallback={<LoadingPage />}>
-						<Start />
-					</Suspense>
-				),
-				errorElement: (
-					<Suspense fallback={<LoadingPage />}>
-						<ErrorPage />
-					</Suspense>
-				),
+				element: <SuspenseWrapper><Start /></SuspenseWrapper>,
 			},
 			{
 				path: 'home',
-				element: (
-					<Suspense fallback={<LoadingPage />}>
-						<Home />
-					</Suspense>
-				),
-				errorElement: (
-					<Suspense fallback={<LoadingPage />}>
-						<ErrorPage />
-					</Suspense>
-				),
+				element: <SuspenseWrapper><Home /></SuspenseWrapper>,
 				children: [
 					{
 						index: true,
-						element: (
-							<Suspense fallback={<LoadingPage />}>
-								<HomeMain />
-							</Suspense>
-						),
+						element: <SuspenseWrapper><HomeMain /></SuspenseWrapper>,
 					},
 					{
 						path: 'addStatement',
-						element: (
-							<Suspense fallback={<LoadingPage />}>
-								<AddStatement />
-							</Suspense>
-						),
+						element: <SuspenseWrapper><AddStatement /></SuspenseWrapper>,
 					},
 				],
 			},
 			{
 				path: 'member-rejection',
-				element: (
-					<Suspense fallback={<LoadingPage />}>
-						<MemberRejection />
-					</Suspense>
-				),
+				element: <SuspenseWrapper><MemberRejection /></SuspenseWrapper>,
 			},
 			{
 				path: 'login-first',
-				element: (
-					<Suspense fallback={<LoadingPage />}>
-						<LoginPage />
-					</Suspense>
-				),
+				element: <SuspenseWrapper><LoginPage /></SuspenseWrapper>,
 			},
 			{
 				path: 'statement/:statementId',
-				element: (
-					<Suspense fallback={<LoadingPage />}>
-						<StatementMain />
-					</Suspense>
-				),
+				element: <SuspenseWrapper><StatementMain /></SuspenseWrapper>,
 				children: [
 					{
 						path: ':screen',
-						element: (
-							<Suspense fallback={<LoadingPage />}>
-								<StatementMain />
-							</Suspense>
-						),
+						element: <SuspenseWrapper><StatementMain /></SuspenseWrapper>,
 					},
 				],
 			},
 			{
-				path: 'statement/:statementId/:page',
-				element: (
-					<Suspense fallback={<LoadingPage />}>
-						<StatementMain />
-					</Suspense>
-				),
+				path: 'statement/:statementId',
+				element: <SuspenseWrapper><StatementMain /></SuspenseWrapper>,
 				children: [
 					{
-						path: ':sort',
-						element: (
-							<Suspense fallback={<LoadingPage />}>
-								<StatementMain />
-							</Suspense>
-						),
+						path: ':page',
+						element: <SuspenseWrapper><StatementMain /></SuspenseWrapper>,
+						children: [
+							{
+								path: ':sort',
+								element: <SuspenseWrapper><StatementMain /></SuspenseWrapper>,
+							},
+						],
+					},
+					{
+						path: 'stage/:stageId',
+						element: <SuspenseWrapper><Stage /></SuspenseWrapper>,
 					},
 				],
-			},
-			{
-				path: 'stage/:stageId',
-				element: (
-					<Suspense fallback={<LoadingPage />}>
-						<Stage />
-					</Suspense>
-				),
 			},
 			{
 				path: 'statement-an/:anonymous/:statementId/:page',
-				element: (
-					<Suspense fallback={<LoadingPage />}>
-						<StatementMain />
-					</Suspense>
-				),
+				element: <SuspenseWrapper><StatementMain /></SuspenseWrapper>,
 				children: [
 					{
 						path: ':sort',
-						element: (
-							<Suspense fallback={<LoadingPage />}>
-								<StatementMain />
-							</Suspense>
-						),
+						element: <SuspenseWrapper><StatementMain /></SuspenseWrapper>,
 					},
 				],
 			},
 			{
 				path: '401',
-				element: (
-					<Suspense fallback={<LoadingPage />}>
-						<Page401 />
-					</Suspense>
-				),
+				element: <SuspenseWrapper><Page401 /></SuspenseWrapper>,
 			},
 		],
 	},
@@ -183,51 +124,27 @@ export const router = createBrowserRouter([
 		children: [
 			{
 				index: true, // This will be the default route
-				element: (
-					<Suspense fallback={<LoadingPage />}>
-						<Introduction />
-					</Suspense>
-				),
+				element: <SuspenseWrapper><Introduction /></SuspenseWrapper>,
 			},
 			{
 				path: MassConsensusPageUrls.introduction,
-				element: (
-					<Suspense fallback={<LoadingPage />}>
-						<Introduction />
-					</Suspense>
-				),
+				element: <SuspenseWrapper><Introduction /></SuspenseWrapper>,
 			},
 			{
 				path: MassConsensusPageUrls.initialQuestion,
-				element: (
-					<Suspense fallback={<LoadingPage />}>
-						<InitialQuestion />
-					</Suspense>
-				),
+				element: <SuspenseWrapper><InitialQuestion /></SuspenseWrapper>,
 			},
 			{
 				path: MassConsensusPageUrls.similarSuggestions,
-				element: (
-					<Suspense fallback={<LoadingPage />}>
-						<SimilarSuggestions />
-					</Suspense>
-				),
+				element: <SuspenseWrapper><SimilarSuggestions /></SuspenseWrapper>,
 			},
 			{
 				path: MassConsensusPageUrls.randomSuggestions,
-				element: (
-					<Suspense fallback={<LoadingPage />}>
-						<RandomSuggestions />
-					</Suspense>
-				),
+				element: <SuspenseWrapper><RandomSuggestions /></SuspenseWrapper>,
 			},
 			{
 				path: MassConsensusPageUrls.topSuggestions,
-				element: (
-					<Suspense fallback={<LoadingPage />}>
-						<TopSuggestions />
-					</Suspense>
-				),
+				element: <SuspenseWrapper><TopSuggestions /></SuspenseWrapper>,
 			},
 			{
 				path: MassConsensusPageUrls.voting,
@@ -245,18 +162,10 @@ export const router = createBrowserRouter([
 	},
 	{
 		path: '404',
-		element: (
-			<Suspense fallback={<LoadingPage />}>
-				<Page404 />
-			</Suspense>
-		),
+		element: <SuspenseWrapper><Page404 /></SuspenseWrapper>,
 	},
 	{
 		path: '*',
-		element: (
-			<Suspense fallback={<LoadingPage />}>
-				<Page404 />
-			</Suspense>
-		),
+		element: <SuspenseWrapper><Page404 /></SuspenseWrapper>,
 	},
 ]);

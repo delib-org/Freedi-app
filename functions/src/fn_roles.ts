@@ -9,7 +9,7 @@ import { Collections } from '../../src/types/TypeEnums';
 import { parse } from 'valibot';
 import { QueryDocumentSnapshot } from 'firebase-admin/firestore';
 import { FirestoreEvent } from 'firebase-functions/firestore';
-import { StatementSchema } from '../../src/types/statement/Statement';
+import { StatementSchema } from '../../src/types/statement/StatementTypes';
 import { Role } from '../../src/types/user/UserSettings';
 
 export async function setAdminsToNewStatement(

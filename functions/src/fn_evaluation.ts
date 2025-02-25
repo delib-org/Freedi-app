@@ -8,7 +8,7 @@ import { number, parse } from 'valibot';
 import {
 	Statement,
 	StatementSchema,
-} from '../../src/types/statement/Statement';
+} from '../../src/types/statement/StatementTypes';
 import { Collections, StatementType } from '../../src/types/TypeEnums';
 import {
 	ChoseBy,
@@ -16,7 +16,7 @@ import {
 	CutoffType,
 	defaultChoseBySettings,
 } from '../../src/types/choseBy/ChoseBy';
-import { StageType } from '../../src/types/stage/Stage';
+import { StageSelectionType } from '../../src/types/stage/stageTypes';
 import { statementToSimpleStatement } from '../../src/types/statement/SimpleStatement';
 
 enum ActionTypes {
@@ -377,7 +377,7 @@ async function updateParentStatementWithChosenOptions(
 		// then update also the question (which is the parent of the stage)
 		if (
 			parentStatement.statementType === StatementType.stage &&
-			parentStatement.stageType === StageType.suggestions
+			parentStatement.stageSelectionType === StageSelectionType.suggestions
 		) {
 			await db
 				.collection(Collections.statements)

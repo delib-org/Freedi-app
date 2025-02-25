@@ -1,34 +1,32 @@
-import { DragEvent, FC, useContext, useEffect, useState } from 'react';
+import { DragEvent, FC, useContext, useState, useMemo, KeyboardEvent } from 'react';
 import { StatementContext } from '../../../../StatementCont';
-import styles from './Document.module.scss';
+import styles from './MultiStageQuestion.module.scss';
 import Button, { ButtonType } from '@/view/components/buttons/button/Button';
 import Modal from '@/view/components/modal/Modal';
 import AddStage from './addStage/AddStage';
-import { useSelector } from 'react-redux';
-import { statementSubsSelector } from '@/redux/statements/statementsSlice';
+import { useDispatch, useSelector } from 'react-redux';
+import { setStatements, statementSubsSelector } from '@/redux/statements/statementsSlice';
 import StageCard from './stages/StageCard';
 import { updateStatementsOrderToDB } from '@/controllers/db/statements/setStatements';
-import { Statement } from '@/types/statement/Statement';
+import { Statement } from '@/types/statement/StatementTypes';
 import { StatementType } from '@/types/TypeEnums';
 
-const Document: FC = () => {
+const MultiStageQuestion: FC = () => {
 	const { statement } = useContext(StatementContext);
-	const initialStages = useSelector(
-		statementSubsSelector(statement?.statementId)
-	)
-		.filter((sub: Statement) => sub.statementType === StatementType.stage)
-		.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+	const dispatch = useDispatch();
+	const statementsFromStore = useSelector(statementSubsSelector(statement?.statementId));
 
-	const [stages, setStages] = useState<Statement[]>(initialStages);
+	const initialStages = useMemo(() =>
+		statementsFromStore
+			.filter((sub: Statement) => sub.statementType === StatementType.stage)
+			.sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+		, [statementsFromStore]);
+
 	const [showAddStage, setShowAddStage] = useState<boolean>(false);
 	const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
 
-	useEffect(() => {
-		setStages(initialStages);
-	}, [initialStages.length, initialStages]);
-
 	const handleDragStart = (
-		e: DragEvent<HTMLDivElement>,
+		e: DragEvent<HTMLButtonElement>,
 		index: number
 	): void => {
 		setDraggedIndex(index);
@@ -38,19 +36,19 @@ const Document: FC = () => {
 		e.dataTransfer.setData('text/plain', '');
 	};
 
-	const handleDragOver = (e: DragEvent<HTMLDivElement>): void => {
+	const handleDragOver = (e: DragEvent<HTMLButtonElement>): void => {
 		e.preventDefault();
 		e.dataTransfer.dropEffect = 'move';
 	};
 
 	const handleDrop = (
-		e: DragEvent<HTMLDivElement>,
+		e: DragEvent<HTMLButtonElement>,
 		dropIndex: number
 	): void => {
 		e.preventDefault();
 		if (draggedIndex === null || draggedIndex === dropIndex) return;
 
-		const newStages = [...stages];
+		const newStages = [...initialStages];
 		const draggedStage = newStages[draggedIndex];
 		newStages.splice(draggedIndex, 1);
 		newStages.splice(dropIndex, 0, draggedStage);
@@ -60,12 +58,35 @@ const Document: FC = () => {
 		});
 		updateStatementsOrderToDB(newStages);
 
-		setStages(newStages);
+		dispatch(setStatements(newStages));
 		setDraggedIndex(null);
 	};
 
 	const handleDragEnd = (): void => {
 		setDraggedIndex(null);
+	};
+
+	const handleKeyDown = (
+		e: KeyboardEvent<HTMLButtonElement>,
+		index: number
+	): void => {
+		if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+			e.preventDefault();
+			const newIndex = e.key === 'ArrowUp'
+				? Math.max(0, index - 1)
+				: Math.min(initialStages.length - 1, index + 1);
+
+			const newStages = [...initialStages];
+			const movedStage = newStages[index];
+			newStages.splice(index, 1);
+			newStages.splice(newIndex, 0, movedStage);
+
+			newStages.forEach((stage, i) => {
+				stage.order = i;
+			});
+			updateStatementsOrderToDB(newStages);
+			dispatch(setStatements(newStages));
+		}
 	};
 
 	return (
@@ -86,23 +107,30 @@ const Document: FC = () => {
 			)}
 
 			<div className={styles.stagesWrapper}>
-				{stages.map((stage, index) => (
-					<div
+				<StageCard statement={statement} isDescription={true} />
+				{initialStages.map((stage, index) => (
+					<button
 						key={stage.statementId}
 						className={`${styles.stageContainer} ${draggedIndex === index ? styles.dragging : ''}`}
 						draggable
 						onDragStart={(e) => handleDragStart(e, index)}
-						onDragOver={handleDragOver}
+						onDragOver={(e) => handleDragOver(e)}
 						onDrop={(e) => handleDrop(e, index)}
 						onDragEnd={handleDragEnd}
+						aria-label={`Draggable stage ${index + 1}`}
+						onKeyDown={(e) => handleKeyDown(e, index)}
 					>
-						<div className={styles.dragHandle}></div>
+						<div
+							className={styles.dragHandle}
+							aria-hidden="true"
+						></div>
 						<StageCard statement={stage} />
-					</div>
+					</button>
 				))}
+				<StageCard statement={statement} isSuggestions={true} />
 			</div>
 		</div>
 	);
 };
 
-export default Document;
+export default MultiStageQuestion;

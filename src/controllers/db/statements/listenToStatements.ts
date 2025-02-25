@@ -27,7 +27,7 @@ import {
 	StatementType,
 	DeliberativeElement,
 } from '@/types/TypeEnums';
-import { Statement, StatementSchema } from '@/types/statement/Statement';
+import { Statement, StatementSchema } from '@/types/statement/StatementTypes';
 import { StatementSubscription } from '@/types/statement/StatementSubscription';
 import { User } from '@/types/user/User';
 import { parse } from 'valibot';
@@ -78,7 +78,7 @@ export const listenToStatementSubscription = (
 	} catch (error) {
 		console.error(error);
 
-		return () => {};
+		return () => { };
 	}
 };
 
@@ -118,7 +118,7 @@ export const listenToStatement = (
 		console.error(error);
 		if (setIsStatementNotFound) setIsStatementNotFound(true);
 
-		return () => {};
+		return () => { };
 	}
 };
 
@@ -169,7 +169,7 @@ export const listenToSubStatements = (
 	} catch (error) {
 		console.error(error);
 
-		return () => {};
+		return () => { };
 	}
 };
 
