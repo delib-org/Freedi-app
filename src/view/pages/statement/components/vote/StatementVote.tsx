@@ -8,7 +8,6 @@ import HandIcon from '@/assets/icons/handIcon.svg?react';
 import X from '@/assets/icons/x.svg?react';
 import { getToVoteOnParent } from '@/controllers/db/vote/getVotes';
 import { useAppDispatch } from '@/controllers/hooks/reduxHooks';
-import { setVoteToStore } from '@/redux/vote/votesSlice';
 
 // Custom components
 import Button from '@/view/components/buttons/button/Button';
@@ -50,9 +49,7 @@ const StatementVote: FC = () => {
 
 	useEffect(() => {
 		if (!getVoteFromDB) {
-			getToVoteOnParent(statement?.statementId, (option: Statement) =>
-				dispatch(setVoteToStore(option))
-			);
+			getToVoteOnParent(statement?.statementId);
 			getVoteFromDB = true;
 		}
 	}, [statement?.statementId, dispatch]);

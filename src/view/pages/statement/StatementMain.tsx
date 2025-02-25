@@ -38,6 +38,7 @@ import Modal from '@/view/components/modal/Modal';
 import { StatementType, Access, QuestionType } from '@/types/TypeEnums';
 import { User } from '@/types/user/User';
 import { Role } from '@/types/user/UserSettings';
+import { statementSelector } from '@/redux/statements/statementsSlice';
 
 // Create selectors
 export const subStatementsSelector = createSelector(
@@ -51,7 +52,7 @@ export const subStatementsSelector = createSelector(
 
 const StatementMain: FC = () => {
 	// Hooks
-	const { statementId } = useParams();
+	const { statementId, stageId } = useParams();
 
 	//TODO:create a check with the parent statement if subscribes. if not subscribed... go according to the rules of authorization
 	const {
@@ -66,6 +67,8 @@ const StatementMain: FC = () => {
 	// Redux store
 	const dispatch = useAppDispatch();
 	const user = useSelector(userSelector);
+
+	const stage = useSelector(statementSelector(stageId));
 
 	// Use states
 	const [talker, setTalker] = useState<User | null>(null);
@@ -114,56 +117,29 @@ const StatementMain: FC = () => {
 
 	// Listen to statement changes.
 	useEffect(() => {
-		let unSubListenToStatement: () => void = () => {
-			return;
-		};
-
-		let unSubSubStatements: () => void = () => {
-			return;
-		};
-		let unSubStatementSubscription: () => void = () => {
-			return;
-		};
-		let unSubEvaluations: () => void = () => {
-			return;
-		};
-
-		let unSubUserSettings: () => void = () => {
-			return;
-		};
-		let unSubAllDescendants: () => void = () => {
-			return;
-		};
+		const unsubscribeFunctions: (() => void)[] = [];
 
 		if (user && statementId) {
-			unSubListenToStatement = listenToStatement(
-				statementId,
-				setIsStatementNotFound
+			// Initialize all listeners and store cleanup functions
+			unsubscribeFunctions.push(
+				listenToStatement(statementId, setIsStatementNotFound),
+				listenToUserSettings(),
+				listenToAllDescendants(statementId), // used for map
+				listenToEvaluations(dispatch, statementId, user?.uid),
+				listenToSubStatements(statementId), // TODO: check if this is needed. It can be integrated under listenToAllDescendants
+				listenToStatementSubscription(statementId, user, dispatch)
 			);
 
-			unSubUserSettings = listenToUserSettings();
-			unSubAllDescendants = listenToAllDescendants(statementId); //used for map
-			unSubEvaluations = listenToEvaluations(
-				dispatch,
-				statementId,
-				user?.uid
-			);
-			unSubSubStatements = listenToSubStatements(statementId); //TODO: check if this is needed. It can be integrated under listenToAllDescendants
-
-			unSubStatementSubscription = listenToStatementSubscription(
-				statementId,
-				user,
-				dispatch
-			);
+			if (stageId) {
+				unsubscribeFunctions.push(
+					listenToStatement(stageId, setIsStatementNotFound),
+				);
+			}
 		}
 
+		// Cleanup function that calls all unsubscribe functions
 		return () => {
-			unSubListenToStatement();
-			unSubUserSettings();
-			unSubSubStatements();
-			unSubStatementSubscription();
-			unSubEvaluations();
-			unSubAllDescendants();
+			unsubscribeFunctions.forEach(unsubscribe => unsubscribe());
 		};
 	}, [user, statementId]);
 
@@ -207,6 +183,7 @@ const StatementMain: FC = () => {
 	const contextValue = useMemo(
 		() => ({
 			statement,
+			stage,
 			talker,
 			handleShowTalker,
 			role,
@@ -218,6 +195,7 @@ const StatementMain: FC = () => {
 		}),
 		[
 			statement,
+			stage,
 			talker,
 			role,
 			handleShowTalker,
