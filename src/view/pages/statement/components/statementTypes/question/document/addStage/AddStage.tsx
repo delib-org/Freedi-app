@@ -15,29 +15,15 @@ const AddStage: FC<AddStageProps> = ({ setShowAddStage }) => {
 	const { t } = useLanguage();
 	const { statement } = useContext(StatementContext);
 
-	const [defaultStageName, setDefaultStageName] = useState<string>('');
-	const [userEnteredStageName, setUserEnteredStageName] =
-		useState<boolean>(false);
-
 	function handleCloseModal() {
 		setShowAddStage(false);
 	}
 
-	function handleChangeStageName(ev: React.ChangeEvent<HTMLSelectElement>) {
-		if (userEnteredStageName) return;
-		const stageSelectionType = ev.target.value as StageSelectionType;
-		const stageName = getDefaultStageName(stageSelectionType);
-		setDefaultStageName(stageName);
-	}
-
-	function handleManualStageName() {
-		setUserEnteredStageName(true);
-	}
-
-	async function handleSubmit(ev: React.FormEvent<HTMLFormElement>) {
+	async function handleAddStage(ev: React.FormEvent<HTMLFormElement>) {
 		ev.preventDefault();
 		const data = new FormData(ev.target as HTMLFormElement);
 		const stageSelectionType = data.get('stageSelectionType') as StageSelectionType;
+		if (!stageSelectionType) return;
 		const name = data.get('stageName') as string;
 		const description = (data.get('stageDescription') as string) || '';
 
@@ -55,34 +41,22 @@ const AddStage: FC<AddStageProps> = ({ setShowAddStage }) => {
 
 	return (
 		<div className={styles.box}>
-			<form onSubmit={handleSubmit}>
+			<form onSubmit={handleAddStage}>
 				<select
 					name='stageSelectionType'
 					id='stageSelectionType'
 					defaultValue=''
-					onChange={handleChangeStageName}
 				>
 					<option value='' disabled>
-						{t('Select Stage Type')}
+						{t('Define how to select top options')}
 					</option>
-					<option value={StageSelectionType.needs}>{t('Needs')}</option>
-					<option value={StageSelectionType.explanation}>
-						{t('Explanation')}
+					<option value={StageSelectionType.consensus}>
+						{t('Consensus')}
 					</option>
-					<option value={StageSelectionType.questions}>
-						{t('Research Questions')}
+					<option value={StageSelectionType.voting}>{t('Voting')}</option>
+					<option value={StageSelectionType.checkbox}>
+						{t('Checkbox')}
 					</option>
-					<option value={StageSelectionType.hypothesis}>
-						{t('Hypothesis')}
-					</option>
-					<option value={StageSelectionType.suggestions}>
-						{t('Suggestions')}
-					</option>
-					<option value={StageSelectionType.conclusion}>
-						{t('Conclusion')}
-					</option>
-					<option value={StageSelectionType.summary}>{t('Summery')}</option>
-					<option value={StageSelectionType.other}>{t('Other')}</option>
 				</select>
 				<label htmlFor='stageName'>{t('Stage Name')}</label>
 				<input
@@ -90,8 +64,6 @@ const AddStage: FC<AddStageProps> = ({ setShowAddStage }) => {
 					id='stageName'
 					name='stageName'
 					placeholder={t('Stage Name')}
-					defaultValue={defaultStageName}
-					onKeyUp={handleManualStageName}
 					required
 				/>
 				<label htmlFor='stageDescription'>
@@ -121,26 +93,3 @@ const AddStage: FC<AddStageProps> = ({ setShowAddStage }) => {
 };
 
 export default AddStage;
-
-function getDefaultStageName(stageSelectionType: StageSelectionType): string {
-	switch (stageSelectionType) {
-		case StageSelectionType.needs:
-			return 'Needs';
-		case StageSelectionType.explanation:
-			return 'Explanation';
-		case StageSelectionType.questions:
-			return 'Research Questions';
-		case StageSelectionType.hypothesis:
-			return 'Hypothesis';
-		case StageSelectionType.suggestions:
-			return 'Suggestions';
-		case StageSelectionType.conclusion:
-			return 'Conclusion';
-		case StageSelectionType.summary:
-			return 'Summery';
-		case StageSelectionType.other:
-			return 'Other';
-		default:
-			return '';
-	}
-}
