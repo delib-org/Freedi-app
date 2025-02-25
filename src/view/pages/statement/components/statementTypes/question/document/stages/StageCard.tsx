@@ -4,7 +4,11 @@ import Button, { ButtonType } from '@/view/components/buttons/button/Button';
 import { NavLink, useNavigate } from 'react-router';
 import { useLanguage } from '@/controllers/hooks/useLanguages';
 import { Statement } from '@/types/statement/StatementTypes';
-import { SimpleStatement } from '@/types/statement/SimpleStatement';
+import { SimpleStatement, statementToSimpleStatement } from '@/types/statement/SimpleStatement';
+import { maxKeyInObject } from '@/types/TypeUtils';
+import { StageSelectionType } from '@/types/stage/stageTypes';
+import { useSelector } from 'react-redux';
+import { statementSelectorById } from '@/redux/statements/statementsSlice';
 
 interface Props {
 	statement: Statement;
@@ -13,16 +17,26 @@ interface Props {
 }
 
 const StageCard: FC<Props> = ({ statement, isDescription, isSuggestions }) => {
-
 	const { t } = useLanguage();
 	const navigate = useNavigate();
+	const stageUrl = isSuggestions ? `/stage/${statement.statementId}` : `/statement/${statement.statementId}`;
 
-	const chosen = statement.results || [];
-	console.log(chosen);
+	const topVotedId = statement.stageSelectionType === StageSelectionType.voting
+		&& statement.selections
+		? maxKeyInObject(statement.selections)
+		: '';
+
+	const topVoted = useSelector(statementSelectorById(topVotedId));
+	const simpleTopVoted = topVoted ? statementToSimpleStatement(topVoted) : undefined;
+
+	const votingResults = simpleTopVoted ? [simpleTopVoted] : [];
+	const chosen: SimpleStatement[] = statement.stageSelectionType === StageSelectionType.voting
+		? votingResults
+		: statement.results;
 
 	function suggestNewSuggestion(ev: MouseEvent<HTMLButtonElement>) {
 		ev.stopPropagation();
-		navigate(`/stage/${statement.statementId}`);
+		navigate(stageUrl);
 	}
 
 	const getTitle = () => {
@@ -61,7 +75,7 @@ const StageCard: FC<Props> = ({ statement, isDescription, isSuggestions }) => {
 					</ul>
 				</>
 			)}
-			<NavLink to={`/statement/${statement.statementId}/stage/${statement.statementId}`}>
+			<NavLink to={stageUrl}>
 				<p className={styles.seeMore}>See more...</p>
 			</NavLink>
 			<div className='btns'>

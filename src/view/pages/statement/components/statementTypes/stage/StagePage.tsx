@@ -4,10 +4,16 @@ import SuggestionCards from '../../evaluations/components/suggestionCards/Sugges
 import styles from './StagePage.module.scss'
 import StatementBottomNav from '../../nav/bottom/StatementBottomNav';
 import { useLanguage } from '@/controllers/hooks/useLanguages';
+import { StageSelectionType } from '@/types/stage/stageTypes';
+import StatementVote from '../../vote/StatementVote';
+import { useParams } from 'react-router';
+import { statementSelectorById } from '@/redux/statements/statementsSlice';
+import { useSelector } from 'react-redux';
 
 const StagePage = () => {
+	const { statementId } = useParams();
 	const { t } = useLanguage();
-	const { statement } = useContext(StatementContext);
+	const statement = useSelector(statementSelectorById(statementId));
 	const stageRef = useRef<HTMLDivElement>(null);
 
 	useEffect(() => {
@@ -32,6 +38,7 @@ const StagePage = () => {
 	}, []);
 
 	const stageName = statement?.statement ? `: ${t(statement.statement)}` : "";
+	const { stageSelectionType } = statement;
 
 	return (
 		<div
@@ -41,9 +48,9 @@ const StagePage = () => {
 			<div className={styles.wrapper}>
 				<h2>{t("Stage")}{statement?.statement && stageName}</h2>
 				<p className="mb-4">Stage description</p>
-				<SuggestionCards />
+				{stageSelectionType === StageSelectionType.consensus ? <SuggestionCards /> : <StatementVote />}
 				<div className={styles.bottomNav}>
-					<StatementBottomNav />
+					{/* <StatementBottomNav /> */}
 				</div>
 			</div>
 		</div>

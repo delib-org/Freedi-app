@@ -8,17 +8,25 @@ export function isMember(role: Role | undefined): boolean {
 }
 
 export function maxKeyInObject(obj: { [key: string]: number }): string {
-	let maxKey = Object.keys(obj)[0];
-	let maxValue = obj[maxKey];
+	try {
+		if (obj === undefined) throw new Error('obj is undefined');
 
-	for (const key in obj) {
-		if (obj[key] > maxValue) {
-			maxValue = obj[key];
-			maxKey = key;
+		let maxKey = Object.keys(obj)[0];
+		let maxValue = obj[maxKey];
+
+		for (const key in obj) {
+			if (obj[key] > maxValue) {
+				maxValue = obj[key];
+				maxKey = key;
+			}
 		}
-	}
 
-	return maxKey;
+		return maxKey;
+	} catch (error) {
+		console.error(error);
+
+		return '';
+	}
 }
 
 export function getRandomUID(numberOfChars = 12): string {

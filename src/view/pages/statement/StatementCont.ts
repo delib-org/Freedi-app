@@ -6,6 +6,7 @@ import { createContext } from 'react';
 
 interface StatementContextProps {
 	statement: Statement | undefined;
+	stage: Statement | undefined;
 	talker: User | null;
 	handleShowTalker: (talker: User | null) => void;
 	handleSetNewStatement: (showPopup?: boolean) => void;
@@ -18,6 +19,7 @@ interface StatementContextProps {
 
 export const StatementContext = createContext<StatementContextProps>({
 	statement: undefined,
+	stage: undefined,
 	talker: null,
 	role: undefined,
 	handleSetNewStatement: () => {
