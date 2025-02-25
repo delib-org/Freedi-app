@@ -58,42 +58,42 @@ const StatementVote: FC = () => {
 
 	return (
 		<>
-			<div className='page__main'>
-				<div className='statement-vote'>
-					{showMultiStageMessage && (
-						<Toast
-							text={t(`${toastMessage}`)}
-							type='message'
-							show={showMultiStageMessage}
-							setShow={setShowMultiStageMessage}
-						>
-							<Button
-								text={t('Got it')}
-								iconOnRight={true}
-								icon={<X />}
-								onClick={() => setShowMultiStageMessage(false)}
-							/>
-						</Toast>
-					)}
-					<div className='number-of-votes-mark'>
-						<HandIcon /> {totalVotes}
-					</div>
-					<VotingArea
-						totalVotes={totalVotes}
-						setShowInfo={setIsStatementInfoModalOpen}
-						subStatements={subStatements}
-						setStatementInfo={setStatementInfo}
-					/>
-				</div>
-				{isStatementInfoModalOpen && (
-					<Modal>
-						<StatementInfo
-							statement={statementInfo}
-							setShowInfo={setIsStatementInfoModalOpen}
+
+			<div className='statement-vote'>
+				{showMultiStageMessage && (
+					<Toast
+						text={t(`${toastMessage}`)}
+						type='message'
+						show={showMultiStageMessage}
+						setShow={setShowMultiStageMessage}
+					>
+						<Button
+							text={t('Got it')}
+							iconOnRight={true}
+							icon={<X />}
+							onClick={() => setShowMultiStageMessage(false)}
 						/>
-					</Modal>
+					</Toast>
 				)}
+				<div className='number-of-votes-mark'>
+					<HandIcon /> {totalVotes}
+				</div>
+				<VotingArea
+					totalVotes={totalVotes}
+					setShowInfo={setIsStatementInfoModalOpen}
+					subStatements={subStatements}
+					setStatementInfo={setStatementInfo}
+				/>
 			</div>
+			{isStatementInfoModalOpen && (
+				<Modal>
+					<StatementInfo
+						statement={statementInfo}
+						setShowInfo={setIsStatementInfoModalOpen}
+					/>
+				</Modal>
+			)}
+
 			<div className='page__footer'>
 				<StatementBottomNav />
 			</div>
