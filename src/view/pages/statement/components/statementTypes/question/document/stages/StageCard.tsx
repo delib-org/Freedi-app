@@ -19,7 +19,7 @@ interface Props {
 const StageCard: FC<Props> = ({ statement, isDescription, isSuggestions }) => {
 	const { t } = useLanguage();
 	const navigate = useNavigate();
-	const stageUrl = `/statement/${statement.statementId}`;
+	const stageUrl = isSuggestions ? `/stage/${statement.statementId}` : `/statement/${statement.statementId}`;
 
 	const topVotedId = statement.stageSelectionType === StageSelectionType.voting
 		&& statement.selections

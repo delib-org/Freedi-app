@@ -6,10 +6,14 @@ import StatementBottomNav from '../../nav/bottom/StatementBottomNav';
 import { useLanguage } from '@/controllers/hooks/useLanguages';
 import { StageSelectionType } from '@/types/stage/stageTypes';
 import StatementVote from '../../vote/StatementVote';
+import { useParams } from 'react-router';
+import { statementSelectorById } from '@/redux/statements/statementsSlice';
+import { useSelector } from 'react-redux';
 
 const StagePage = () => {
+	const { statementId } = useParams();
 	const { t } = useLanguage();
-	const { statement } = useContext(StatementContext);
+	const statement = useSelector(statementSelectorById(statementId));
 	const stageRef = useRef<HTMLDivElement>(null);
 
 	useEffect(() => {

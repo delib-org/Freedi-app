@@ -1,5 +1,5 @@
 import { FC } from 'react';
-import { useNavigate } from 'react-router';
+import { useNavigate, useLocation } from 'react-router';
 import BackArrowIcon from '@/assets/icons/chevronLeftIcon.svg?react';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { StyleProps } from '@/controllers/hooks/useStatementColor';
@@ -13,12 +13,18 @@ interface Props {
 
 const Back: FC<Props> = ({ statement, headerColor }) => {
 	const navigate = useNavigate();
+	const location = useLocation();
 	const topParentHistory: HistoryTracker | undefined = useAppSelector(
 		historySelect(statement?.parentId ?? '')
 	);
 
 	function handleBack() {
 		try {
+			if (location.pathname.includes('stage')) {
+				return navigate(`/statement/${statement?.statementId}`, {
+					state: { from: window.location.pathname },
+				});
+			}
 			if (statement?.parentId === 'top' || !statement?.parentId) {
 				return navigate('/home', {
 					state: { from: window.location.pathname },

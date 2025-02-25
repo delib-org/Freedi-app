@@ -100,6 +100,10 @@ export const router = createBrowserRouter([
 				],
 			},
 			{
+				path: 'stage/:statementId',
+				element: <SuspenseWrapper><StatementMain /></SuspenseWrapper>,
+			},
+			{
 				path: 'statement-an/:anonymous/:statementId/:page',
 				element: <SuspenseWrapper><StatementMain /></SuspenseWrapper>,
 				children: [
