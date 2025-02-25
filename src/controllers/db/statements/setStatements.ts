@@ -24,7 +24,7 @@ import {
 import { UserSchema, Membership } from '@/types/user/User';
 import { number, parse, string } from 'valibot';
 import { ResultsBy } from '@/types/results/Results';
-import { StageType } from '@/types/stage/stageTypes';
+import { StageSelectionType } from '@/types/stage/stageTypes';
 import { getRandomUID } from '@/types/TypeUtils';
 
 export const updateStatementParents = async (
@@ -105,7 +105,7 @@ export async function saveStatementToDB({
 	numberOfResults,
 	hasChildren,
 	membership,
-	stageType,
+	stageSelectionType,
 }: CreateStatementProps): Promise<Statement | undefined> {
 	try {
 		const statement = createStatement({
@@ -121,7 +121,7 @@ export async function saveStatementToDB({
 			numberOfResults,
 			hasChildren,
 			membership,
-			stageType,
+			stageSelectionType,
 		});
 
 		if (!statement) throw new Error('Statement is undefined');
@@ -256,7 +256,7 @@ export interface CreateStatementProps {
 	numberOfResults?: number;
 	hasChildren?: boolean;
 	membership?: Membership;
-	stageType?: StageType;
+	stageSelectionType?: StageSelectionType;
 }
 
 export function createStatement({
@@ -274,7 +274,7 @@ export function createStatement({
 	numberOfResults = 1,
 	hasChildren = true,
 	membership,
-	stageType,
+	stageSelectionType,
 }: CreateStatementProps): Statement | undefined {
 	try {
 		const storeState = store.getState();
@@ -342,8 +342,8 @@ export function createStatement({
 			results: [],
 		};
 
-		if (stageType) {
-			newStatement.stageType = stageType;
+		if (stageSelectionType) {
+			newStatement.stageSelectionType = stageSelectionType;
 			newStatement.statementType = StatementType.stage;
 		}
 

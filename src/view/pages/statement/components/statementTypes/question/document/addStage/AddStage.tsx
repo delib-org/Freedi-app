@@ -5,7 +5,7 @@ import Button, { ButtonType } from '@/view/components/buttons/button/Button';
 import { saveStatementToDB } from '@/controllers/db/statements/setStatements';
 import { StatementContext } from '@/view/pages/statement/StatementCont';
 import { StatementType } from '@/types/TypeEnums';
-import { StageType } from '@/types/stage/stageTypes';
+import { StageSelectionType } from '@/types/stage/stageTypes';
 
 interface AddStageProps {
 	setShowAddStage: (showAddStage: boolean) => void;
@@ -25,8 +25,8 @@ const AddStage: FC<AddStageProps> = ({ setShowAddStage }) => {
 
 	function handleChangeStageName(ev: React.ChangeEvent<HTMLSelectElement>) {
 		if (userEnteredStageName) return;
-		const stageType = ev.target.value as StageType;
-		const stageName = getDefaultStageName(stageType);
+		const stageSelectionType = ev.target.value as StageSelectionType;
+		const stageName = getDefaultStageName(stageSelectionType);
 		setDefaultStageName(stageName);
 	}
 
@@ -37,15 +37,15 @@ const AddStage: FC<AddStageProps> = ({ setShowAddStage }) => {
 	async function handleSubmit(ev: React.FormEvent<HTMLFormElement>) {
 		ev.preventDefault();
 		const data = new FormData(ev.target as HTMLFormElement);
-		const stageType = data.get('stageType') as StageType;
+		const stageSelectionType = data.get('stageSelectionType') as StageSelectionType;
 		const name = data.get('stageName') as string;
 		const description = (data.get('stageDescription') as string) || '';
 
-		if (!statement || !stageType) return;
+		if (!statement || !stageSelectionType) return;
 		await saveStatementToDB({
 			text: name,
 			description,
-			stageType,
+			stageSelectionType,
 			parentStatement: statement,
 			statementType: StatementType.stage,
 		});
@@ -57,32 +57,32 @@ const AddStage: FC<AddStageProps> = ({ setShowAddStage }) => {
 		<div className={styles.box}>
 			<form onSubmit={handleSubmit}>
 				<select
-					name='stageType'
-					id='stageType'
+					name='stageSelectionType'
+					id='stageSelectionType'
 					defaultValue=''
 					onChange={handleChangeStageName}
 				>
 					<option value='' disabled>
 						{t('Select Stage Type')}
 					</option>
-					<option value={StageType.needs}>{t('Needs')}</option>
-					<option value={StageType.explanation}>
+					<option value={StageSelectionType.needs}>{t('Needs')}</option>
+					<option value={StageSelectionType.explanation}>
 						{t('Explanation')}
 					</option>
-					<option value={StageType.questions}>
+					<option value={StageSelectionType.questions}>
 						{t('Research Questions')}
 					</option>
-					<option value={StageType.hypothesis}>
+					<option value={StageSelectionType.hypothesis}>
 						{t('Hypothesis')}
 					</option>
-					<option value={StageType.suggestions}>
+					<option value={StageSelectionType.suggestions}>
 						{t('Suggestions')}
 					</option>
-					<option value={StageType.conclusion}>
+					<option value={StageSelectionType.conclusion}>
 						{t('Conclusion')}
 					</option>
-					<option value={StageType.summary}>{t('Summery')}</option>
-					<option value={StageType.other}>{t('Other')}</option>
+					<option value={StageSelectionType.summary}>{t('Summery')}</option>
+					<option value={StageSelectionType.other}>{t('Other')}</option>
 				</select>
 				<label htmlFor='stageName'>{t('Stage Name')}</label>
 				<input
@@ -122,23 +122,23 @@ const AddStage: FC<AddStageProps> = ({ setShowAddStage }) => {
 
 export default AddStage;
 
-function getDefaultStageName(stageType: StageType): string {
-	switch (stageType) {
-		case StageType.needs:
+function getDefaultStageName(stageSelectionType: StageSelectionType): string {
+	switch (stageSelectionType) {
+		case StageSelectionType.needs:
 			return 'Needs';
-		case StageType.explanation:
+		case StageSelectionType.explanation:
 			return 'Explanation';
-		case StageType.questions:
+		case StageSelectionType.questions:
 			return 'Research Questions';
-		case StageType.hypothesis:
+		case StageSelectionType.hypothesis:
 			return 'Hypothesis';
-		case StageType.suggestions:
+		case StageSelectionType.suggestions:
 			return 'Suggestions';
-		case StageType.conclusion:
+		case StageSelectionType.conclusion:
 			return 'Conclusion';
-		case StageType.summary:
+		case StageSelectionType.summary:
 			return 'Summery';
-		case StageType.other:
+		case StageSelectionType.other:
 			return 'Other';
 		default:
 			return '';

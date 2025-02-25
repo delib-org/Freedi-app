@@ -19,7 +19,7 @@ import {
 	DocumentApprovalSchema,
 	DocumentImportanceSchema,
 } from '../agreement/Agreement';
-import { StageType } from '../stage/stageTypes';
+import { StageSelectionType } from '../stage/stageTypes';
 import { SimpleStatementSchema } from './SimpleStatement';
 import { StatementSettingsSchema } from './StatementSettings';
 import { UserDataSchema } from '../user/UserSettings';
@@ -84,7 +84,7 @@ export const StatementSchema = object({
 			individualViews: optional(number()),
 		})
 	),
-	stageType: optional(enum_(StageType)),
+	stageSelectionType: optional(enum_(StageSelectionType)),
 	creatorData: optional(UserDataSchema),
 	isChosen: optional(boolean()),
 	chosenSolutions: optional(array(string())),
