@@ -18,6 +18,7 @@ const StageCard: FC<Props> = ({ statement, isDescription, isSuggestions }) => {
 	const navigate = useNavigate();
 
 	const chosen = statement.results || [];
+	console.log(chosen);
 
 	function suggestNewSuggestion(ev: MouseEvent<HTMLButtonElement>) {
 		ev.stopPropagation();
@@ -48,7 +49,7 @@ const StageCard: FC<Props> = ({ statement, isDescription, isSuggestions }) => {
 						{chosen.map((opt: SimpleStatement) => (
 							<NavLink
 								key={opt.statementId}
-								to={`/stage/${opt.statementId}`}
+								to={`/statement/${opt.statementId}`}
 							>
 								<li>
 									{opt.statement}

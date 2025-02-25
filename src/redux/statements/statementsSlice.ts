@@ -371,12 +371,6 @@ export const statementSelectorById =
 export const statementsSelector = (state: RootState) =>
 	state.statements.statements;
 
-export const statementsChildSelector =
-	(statementId: string) => (state: RootState) =>
-		state.statements.statements.filter((statement) =>
-			statement.parents?.includes(statementId)
-		);
-
 export const subStatementsByTopParentIdMemo = (
 	statementId: string | undefined
 ) =>
