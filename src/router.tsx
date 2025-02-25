@@ -1,4 +1,4 @@
-import { lazy, Suspense } from 'react';
+import { lazy, ReactNode, Suspense } from 'react';
 import { createBrowserRouter } from 'react-router';
 
 // Page imports
@@ -37,7 +37,7 @@ const Introduction = lazy(
 );
 
 // Wrapper component for Suspense
-const SuspenseWrapper = ({ children }: { children: React.ReactNode }) => (
+const SuspenseWrapper = ({ children }: { children: ReactNode }) => (
 	<Suspense fallback={<LoadingPage />}>{children}</Suspense>
 );
 
@@ -84,18 +84,24 @@ export const router = createBrowserRouter([
 				],
 			},
 			{
-				path: 'statement/:statementId/:page',
+				path: 'statement/:statementId',
 				element: <SuspenseWrapper><StatementMain /></SuspenseWrapper>,
 				children: [
 					{
-						path: ':sort',
+						path: ':page',
 						element: <SuspenseWrapper><StatementMain /></SuspenseWrapper>,
+						children: [
+							{
+								path: ':sort',
+								element: <SuspenseWrapper><StatementMain /></SuspenseWrapper>,
+							},
+						],
+					},
+					{
+						path: 'stage/:stageId',
+						element: <SuspenseWrapper><Stage /></SuspenseWrapper>,
 					},
 				],
-			},
-			{
-				path: 'stage/:stageId',
-				element: <SuspenseWrapper><Stage /></SuspenseWrapper>,
 			},
 			{
 				path: 'statement-an/:anonymous/:statementId/:page',

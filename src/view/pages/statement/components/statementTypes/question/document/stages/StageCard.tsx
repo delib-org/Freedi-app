@@ -60,7 +60,7 @@ const StageCard: FC<Props> = ({ statement, isDescription, isSuggestions }) => {
 					</ul>
 				</>
 			)}
-			<NavLink to={`/stage/${statement.statementId}`}>
+			<NavLink to={`/statement/${statement.statementId}/stage/${statement.statementId}`}>
 				<p className={styles.seeMore}>See more...</p>
 			</NavLink>
 			<div className='btns'>
