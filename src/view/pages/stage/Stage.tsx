@@ -31,6 +31,7 @@ interface StageSwitchProps {
 }
 
 function StageSwitch({ statement }: StageSwitchProps) {
+	console.log(statement.statementId);
 	if (statement.stageSelectionType === StageSelectionType.checkbox) {
 		return <p>Checkboxes</p>
 	} else if (statement.stageSelectionType === StageSelectionType.consensus) {

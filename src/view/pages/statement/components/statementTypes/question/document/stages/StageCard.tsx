@@ -18,11 +18,10 @@ const StageCard: FC<Props> = ({ statement, isDescription, isSuggestions }) => {
 	const navigate = useNavigate();
 
 	const chosen = statement.results || [];
-	console.log(chosen);
 
 	function suggestNewSuggestion(ev: MouseEvent<HTMLButtonElement>) {
 		ev.stopPropagation();
-		navigate(`/stage/${statement.statementId}`);
+		navigate(`/statement/${statement.statementId}/stage/${statement.statementId}`);
 	}
 
 	const getTitle = () => {

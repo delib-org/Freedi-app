@@ -59,7 +59,7 @@ export const StatementSchema = object({
 			isDoc: boolean(),
 			order: number(),
 		})
-	),
+	), // I think it is relevant to Freedi-sign
 	consensus: number(), // the consensus of the statement
 	order: optional(number()), // the order of the statement relative to its siblings
 	elementHight: optional(number()), // the height of the statement. It is used for animation purposes
