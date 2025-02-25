@@ -4,6 +4,7 @@ import { useStageVM } from './StageVM';
 
 const Stage = () => {
 	const { stage, parentStatement } = useStageVM();
+	console.log(parentStatement?.statement);
 	const { loading, topParentStatement } =
 		useIsAuthorized(stage?.statementId ?? '');
 
