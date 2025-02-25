@@ -4,7 +4,11 @@ import Button, { ButtonType } from '@/view/components/buttons/button/Button';
 import { NavLink, useNavigate } from 'react-router';
 import { useLanguage } from '@/controllers/hooks/useLanguages';
 import { Statement } from '@/types/statement/StatementTypes';
-import { SimpleStatement } from '@/types/statement/SimpleStatement';
+import { SimpleStatement, statementToSimpleStatement } from '@/types/statement/SimpleStatement';
+import { maxKeyInObject } from '@/types/TypeUtils';
+import { StageSelectionType } from '@/types/stage/stageTypes';
+import { useSelector } from 'react-redux';
+import { statementSelectorById } from '@/redux/statements/statementsSlice';
 
 interface Props {
 	statement: Statement;
@@ -13,12 +17,22 @@ interface Props {
 }
 
 const StageCard: FC<Props> = ({ statement, isDescription, isSuggestions }) => {
-
 	const { t } = useLanguage();
 	const navigate = useNavigate();
-	const stageUrl = `/statement/${statement.statementId}`
+	const stageUrl = `/statement/${statement.statementId}`;
 
-	const chosen = statement.results || [];
+	const topVotedId = statement.stageSelectionType === StageSelectionType.voting
+		&& statement.selections
+		? maxKeyInObject(statement.selections)
+		: '';
+
+	const topVoted = useSelector(statementSelectorById(topVotedId));
+	const simpleTopVoted = topVoted ? statementToSimpleStatement(topVoted) : undefined;
+
+	const votingResults = simpleTopVoted ? [simpleTopVoted] : [];
+	const chosen: SimpleStatement[] = statement.stageSelectionType === StageSelectionType.voting
+		? votingResults
+		: statement.results;
 
 	function suggestNewSuggestion(ev: MouseEvent<HTMLButtonElement>) {
 		ev.stopPropagation();
