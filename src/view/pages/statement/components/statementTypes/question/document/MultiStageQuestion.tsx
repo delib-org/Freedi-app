@@ -1,4 +1,4 @@
-import { DragEvent, FC, useContext, useEffect, useState, useMemo } from 'react';
+import { DragEvent, FC, useContext, useEffect, useState, useMemo, KeyboardEvent } from 'react';
 import { StatementContext } from '../../../../StatementCont';
 import styles from './MultiStageQuestion.module.scss';
 import Button, { ButtonType } from '@/view/components/buttons/button/Button';
@@ -26,7 +26,7 @@ const MultiStageQuestion: FC = () => {
 	const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
 
 	const handleDragStart = (
-		e: DragEvent<HTMLDivElement>,
+		e: DragEvent<HTMLButtonElement>,
 		index: number
 	): void => {
 		setDraggedIndex(index);
@@ -36,13 +36,13 @@ const MultiStageQuestion: FC = () => {
 		e.dataTransfer.setData('text/plain', '');
 	};
 
-	const handleDragOver = (e: DragEvent<HTMLDivElement>): void => {
+	const handleDragOver = (e: DragEvent<HTMLButtonElement>): void => {
 		e.preventDefault();
 		e.dataTransfer.dropEffect = 'move';
 	};
 
 	const handleDrop = (
-		e: DragEvent<HTMLDivElement>,
+		e: DragEvent<HTMLButtonElement>,
 		dropIndex: number
 	): void => {
 		e.preventDefault();
@@ -62,8 +62,31 @@ const MultiStageQuestion: FC = () => {
 		setDraggedIndex(null);
 	};
 
-	const handleDragEnd = (): void => {
+	const handleDragEnd = (e: DragEvent<HTMLButtonElement>): void => {
 		setDraggedIndex(null);
+	};
+
+	const handleKeyDown = (
+		e: KeyboardEvent<HTMLButtonElement>,
+		index: number
+	): void => {
+		if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+			e.preventDefault();
+			const newIndex = e.key === 'ArrowUp'
+				? Math.max(0, index - 1)
+				: Math.min(initialStages.length - 1, index + 1);
+
+			const newStages = [...initialStages];
+			const movedStage = newStages[index];
+			newStages.splice(index, 1);
+			newStages.splice(newIndex, 0, movedStage);
+
+			newStages.forEach((stage, i) => {
+				stage.order = i;
+			});
+			updateStatementsOrderToDB(newStages);
+			dispatch(setStatements(newStages));
+		}
 	};
 
 	return (
@@ -86,18 +109,23 @@ const MultiStageQuestion: FC = () => {
 			<div className={styles.stagesWrapper}>
 				<StageCard statement={statement} isDescription={true} />
 				{initialStages.map((stage, index) => (
-					<div
+					<button
 						key={stage.statementId}
 						className={`${styles.stageContainer} ${draggedIndex === index ? styles.dragging : ''}`}
 						draggable
 						onDragStart={(e) => handleDragStart(e, index)}
-						onDragOver={handleDragOver}
+						onDragOver={(e) => handleDragOver(e)}
 						onDrop={(e) => handleDrop(e, index)}
-						onDragEnd={handleDragEnd}
+						onDragEnd={(e) => handleDragEnd(e)}
+						aria-label={`Draggable stage ${index + 1}`}
+						onKeyDown={(e) => handleKeyDown(e, index)}
 					>
-						<div className={styles.dragHandle}></div>
+						<div
+							className={styles.dragHandle}
+							aria-hidden="true"
+						></div>
 						<StageCard statement={stage} />
-					</div>
+					</button>
 				))}
 				<StageCard statement={statement} isSuggestions={true} />
 			</div>
