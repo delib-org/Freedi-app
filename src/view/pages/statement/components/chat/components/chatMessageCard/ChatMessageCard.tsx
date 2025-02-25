@@ -29,7 +29,7 @@ import Evaluation from '../../../evaluations/components/evaluation/Evaluation';
 import useAutoFocus from '@/controllers/hooks/useAutoFocus ';
 import UploadImage from '@/view/components/uploadImage/UploadImage';
 import { StatementType } from '@/types/TypeEnums';
-import { Statement } from '@/types/statement/Statement';
+import { Statement } from '@/types/statement/StatementTypes';
 
 export interface NewQuestion {
 	statement: Statement;

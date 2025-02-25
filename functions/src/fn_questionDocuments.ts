@@ -1,7 +1,7 @@
 import { db } from '.';
 import { Collections, StatementType } from '../../src/types/TypeEnums';
-import { StageClass } from '../../src/types/stage/Stage';
-import { Statement } from '../../src/types/statement/Statement';
+import { StageClass } from '../../src/types/stage/stageTypes';
+import { Statement } from '../../src/types/statement/StatementTypes';
 
 export async function createStagesForQuestionDocument(
 	statementId: string

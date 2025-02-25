@@ -1,5 +1,5 @@
 import { StatementType } from '../TypeEnums';
-import { Statement } from '../statement/Statement';
+import { Statement } from '../statement/StatementTypes';
 import { createBasicStatement } from '../statement/StatementUtils';
 
 export enum StageType {

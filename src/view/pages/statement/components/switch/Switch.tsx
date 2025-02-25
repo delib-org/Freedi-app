@@ -10,7 +10,7 @@ import QuestionPage from '../statementTypes/question/QuestionPage';
 import StagePage from '../statementTypes/stage/StagePage';
 import { useSwitchMV } from './SwitchMV';
 import { StatementType } from '@/types/TypeEnums';
-import { Statement } from '@/types/statement/Statement';
+import { Statement } from '@/types/statement/StatementTypes';
 import { Role } from '@/types/user/UserSettings';
 
 const Switch = () => {

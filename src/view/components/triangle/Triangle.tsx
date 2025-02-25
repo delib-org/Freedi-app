@@ -4,7 +4,7 @@ import Dot from './dot/Dot';
 import styles from './Triangle.module.scss';
 import { useLanguage } from '@/controllers/hooks/useLanguages';
 import { statementOptionsSelector } from '@/redux/statements/statementsSlice';
-import { Statement } from '@/types/statement/Statement';
+import { Statement } from '@/types/statement/StatementTypes';
 
 interface Props {
 	statement: Statement;

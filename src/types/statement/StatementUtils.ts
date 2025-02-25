@@ -1,7 +1,7 @@
-import { Statement, StatementSchema } from './Statement';
+import { Statement, StatementSchema } from './StatementTypes';
 import { StatementType } from '../TypeEnums';
 import { getRandomUID } from '../TypeUtils';
-import { StageType } from '../stage/Stage';
+import { StageType } from '../stage/stageTypes';
 import { parse } from 'valibot';
 import { User } from '../user/User';
 

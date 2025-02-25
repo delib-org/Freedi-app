@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { useParams } from 'react-router';
 import { Unsubscribe } from 'firebase/firestore';
-import { Statement } from '@/types/statement/Statement';
+import { Statement } from '@/types/statement/StatementTypes';
 
 export function useStageVM(): {
 	stage: Statement | undefined;

@@ -19,7 +19,7 @@ import {
 	DocumentApprovalSchema,
 	DocumentImportanceSchema,
 } from '../agreement/Agreement';
-import { StageType } from '../stage/Stage';
+import { StageType } from '../stage/stageTypes';
 import { SimpleStatementSchema } from './SimpleStatement';
 import { StatementSettingsSchema } from './StatementSettings';
 import { UserDataSchema } from '../user/UserSettings';

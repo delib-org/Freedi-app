@@ -3,8 +3,8 @@ import styles from './StageCard.module.scss';
 import Button, { ButtonType } from '@/view/components/buttons/button/Button';
 import { NavLink, useNavigate } from 'react-router';
 import { useLanguage } from '@/controllers/hooks/useLanguages';
-import { StageClass } from '@/types/stage/Stage';
-import { Statement } from '@/types/statement/Statement';
+import { StageClass } from '@/types/stage/stageTypes';
+import { Statement } from '@/types/statement/StatementTypes';
 import { SimpleStatement } from '@/types/statement/SimpleStatement';
 
 interface Props {

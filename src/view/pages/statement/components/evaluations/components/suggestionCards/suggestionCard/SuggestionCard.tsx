@@ -25,7 +25,7 @@ import EditTitle from '@/view/components/edit/EditTitle';
 import IconButton from '@/view/components/iconButton/IconButton';
 import './SuggestionCard.scss';
 import { Screen, StatementType } from '@/types/TypeEnums';
-import { Statement } from '@/types/statement/Statement';
+import { Statement } from '@/types/statement/StatementTypes';
 
 interface Props {
 	statement: Statement | undefined;

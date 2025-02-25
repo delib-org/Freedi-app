@@ -8,7 +8,7 @@ import { number, parse } from 'valibot';
 import {
 	Statement,
 	StatementSchema,
-} from '../../src/types/statement/Statement';
+} from '../../src/types/statement/StatementTypes';
 import { Collections, StatementType } from '../../src/types/TypeEnums';
 import {
 	ChoseBy,
@@ -16,7 +16,7 @@ import {
 	CutoffType,
 	defaultChoseBySettings,
 } from '../../src/types/choseBy/ChoseBy';
-import { StageType } from '../../src/types/stage/Stage';
+import { StageType } from '../../src/types/stage/stageTypes';
 import { statementToSimpleStatement } from '../../src/types/statement/SimpleStatement';
 
 enum ActionTypes {

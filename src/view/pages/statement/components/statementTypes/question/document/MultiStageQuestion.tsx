@@ -8,7 +8,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { setStatements, statementSubsSelector } from '@/redux/statements/statementsSlice';
 import StageCard from './stages/StageCard';
 import { updateStatementsOrderToDB } from '@/controllers/db/statements/setStatements';
-import { Statement } from '@/types/statement/Statement';
+import { Statement } from '@/types/statement/StatementTypes';
 import { StatementType } from '@/types/TypeEnums';
 
 const MultiStageQuestion: FC = () => {

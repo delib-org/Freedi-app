@@ -1,4 +1,4 @@
-import { Statement } from '@/types/statement/Statement';
+import { Statement } from '@/types/statement/StatementTypes';
 
 export interface StatementSettingsProps {
 	statement: Statement;

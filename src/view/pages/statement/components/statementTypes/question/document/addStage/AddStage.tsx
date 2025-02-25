@@ -5,7 +5,7 @@ import Button, { ButtonType } from '@/view/components/buttons/button/Button';
 import { saveStatementToDB } from '@/controllers/db/statements/setStatements';
 import { StatementContext } from '@/view/pages/statement/StatementCont';
 import { StatementType } from '@/types/TypeEnums';
-import { StageType } from '@/types/stage/Stage';
+import { StageType } from '@/types/stage/stageTypes';
 
 interface AddStageProps {
 	setShowAddStage: (showAddStage: boolean) => void;

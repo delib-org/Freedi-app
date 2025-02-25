@@ -4,7 +4,7 @@ import { createSlice, PayloadAction, createSelector } from '@reduxjs/toolkit';
 import { updateArray } from '../../controllers/general/helpers';
 import { RootState, store } from '../store';
 import { StatementType, DeliberativeElement } from '@/types/TypeEnums';
-import { Statement } from '@/types/statement/Statement';
+import { Statement } from '@/types/statement/StatementTypes';
 import { StatementSubscription } from '@/types/statement/StatementSubscription';
 import { SelectionFunction } from '@/types/evaluation/Evaluation';
 
