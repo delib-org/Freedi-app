@@ -3,7 +3,7 @@ import { StatementContext } from '../../../StatementCont';
 
 import { QuestionType } from '@/types/TypeEnums';
 import MassConsensus from './massConsesus/MassConsensus';
-import Document from './document/Document';
+import MultiStageQuestion from './document/MultiStageQuestion';
 
 const QuestionPage = () => {
 	const { statement } = useContext(StatementContext);
@@ -13,7 +13,7 @@ const QuestionPage = () => {
 
 	if (massConsensus) return <MassConsensus />;
 
-	return <Document />;
+	return <MultiStageQuestion />;
 };
 
 export default QuestionPage;

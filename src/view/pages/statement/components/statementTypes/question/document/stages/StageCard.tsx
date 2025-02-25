@@ -9,9 +9,11 @@ import { SimpleStatement } from '@/types/statement/SimpleStatement';
 
 interface Props {
 	statement: Statement;
+	isDescription?: boolean;
+	isSuggestions?: boolean;
 }
 
-const StageCard: FC<Props> = ({ statement }) => {
+const StageCard: FC<Props> = ({ statement, isDescription, isSuggestions }) => {
 	const stageClass = new StageClass();
 	const { t } = useLanguage();
 	const navigate = useNavigate();
@@ -23,14 +25,19 @@ const StageCard: FC<Props> = ({ statement }) => {
 		navigate(`/stage/${statement.statementId}`);
 	}
 
+	const getTitle = () => {
+		if (isDescription) return 'Description';
+		if (isSuggestions) return 'Suggestions';
+
+		return stageClass.convertToStageTitle(statement.stageType);
+	};
+
+	const title = getTitle();
+
 	return (
 		<div className={styles.card}>
 			<h3>
-				{t(
-					statement.statement
-						? statement.statement
-						: stageClass.convertToStageTitle(statement.stageType)
-				)}
+				{t(title)}
 			</h3>
 
 			{chosen.length === 0 ? (
