@@ -1,5 +1,4 @@
-import { useContext, useEffect, useRef } from 'react';
-import { StatementContext } from '../../../StatementCont';
+import { useEffect, useRef } from 'react';
 import SuggestionCards from '../../evaluations/components/suggestionCards/SuggestionCards';
 import styles from './StagePage.module.scss'
 import StatementBottomNav from '../../nav/bottom/StatementBottomNav';
@@ -9,6 +8,7 @@ import StatementVote from '../../vote/StatementVote';
 import { useParams } from 'react-router';
 import { statementSelectorById } from '@/redux/statements/statementsSlice';
 import { useSelector } from 'react-redux';
+import { Statement } from '@/types/statement/StatementTypes';
 
 const StagePage = () => {
 	const { statementId } = useParams();
@@ -22,7 +22,7 @@ const StagePage = () => {
 				const topPosition = stageRef.current.getBoundingClientRect().top;
 				const viewportHeight = window.innerHeight;
 				const newHeight = viewportHeight - topPosition;
-				stageRef.current.style.height = `${newHeight}px`;
+				stageRef.current.style.height = `${newHeight + 300}px`;
 			}
 		};
 
@@ -47,8 +47,10 @@ const StagePage = () => {
 			<div className={styles.wrapper}>
 				<h2>{t("Stage")}{statement?.statement && stageName}</h2>
 				<p className="mb-4">Stage description</p>
-				<StagePageSwitch />
-				<StatementBottomNav />
+				<StagePageSwitch statement={statement} />
+				<div className={styles.bottomNav}>
+					<StatementBottomNav />
+				</div>
 			</div>
 		</div>
 	);
@@ -57,11 +59,11 @@ const StagePage = () => {
 export default StagePage;
 
 interface StagePageSwitchProps {
-	statement: Statement;
+	readonly statement: Statement;
 }
 
 function StagePageSwitch({ statement }: StagePageSwitchProps) {
-	const { statement } = useContext(StatementContext);
+
 	const { stageSelectionType } = statement;
 
 	if (stageSelectionType === StageSelectionType.consensus) {
