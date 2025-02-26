@@ -28,7 +28,7 @@ export function createBasicStatement({
 			description: description ?? '',
 			statementType: statementType ?? StatementType.statement,
 			parentId: parentStatement.statementId,
-			stageSelectionType: stageSelectionType ?? StageSelectionType.explanation,
+			stageSelectionType: stageSelectionType ?? StageSelectionType.consensus,
 			creatorId: user.uid,
 			creator: user,
 			consensus: 0,
