@@ -8,7 +8,6 @@
 
 @import url("https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,300;1,400;1,500;1,600;1,700;1,800&family=Patrick+Hand&display=swap&family=Roboto");
 
-
 :root {
   writing-mode: horizontal-tb;
   direction: ltr;
@@ -37,9 +36,8 @@
   --question-text: white;
 
   //group
-  --group: #B893E7;
+  --group: #b893e7;
   --group-text: white;
-
 
   //evaluation
   --agree: #57c6b2;
@@ -93,7 +91,6 @@
   // --body-dark: #57688f;
   // --button-blue: #739EE4;
 
-
   // //settings colors
   // --settings-suggestions: #68b4d4;
   // --settings-first-evaluation: #d4abf7;
@@ -118,7 +115,6 @@
   // --text: #6e8aa6;
   // --textOnDark: white;
 
-
   // --incorrectText: #ff3a46;
   // --correctText: #3bb0b0;
   // --background-color-info-text: #F5FCFF;
@@ -126,12 +122,6 @@
 
   //wights
   --wight-medium: 400;
-
-
-
-
-
-
 
   //FIGMA LIBRARY COLORS
   //agreement-rang
@@ -159,8 +149,6 @@
   --range-objections-100-contrast: #b50881;
   --range-objections-60-contrast: #f746c2;
   --range-objections-30-contrast: #fcb6e7;
-
-
 
   //buttons
   --btn-primary: #5f88e5;
@@ -562,7 +550,6 @@
   --voting-palette-pair-19-light: #dd90b6;
   --voting-palette-pair-19-dark: #d578a6;
 
-
   //voting palette-contrast
   --voting-palette-pair-1-light-contrast: #ff6b7f;
   --voting-palette-pair-1-dark-contrast: #ff4760;
@@ -621,13 +608,11 @@
   --voting-palette-pair-19-light-contrast: #ff6eb6;
   --voting-palette-pair-19-dark-contrast: #ff3d9d;
 
-
   // //base
   --bg-screen: #f2f6ff;
   // --bg-overlay: rgba(44, 46, 80, 0.8);
   // //base-contrast
   // --bg-screen-contrast: #021832;
-
 
   // //buttons
   // --btn-primary: #739ee4;
@@ -647,7 +632,6 @@
   // --btn-follow-me-contrast: #d4428a;
   // --btn-tertiary-red-contrast: #ff5b9c;
 
-
   // //card-menu
   // --card-menu: #ffffff;
   // --card-menu-stroke: #c7d7fb;
@@ -663,7 +647,6 @@
   // --menu-chosen-contrast: #ffffff;
   // --added-option-contrast: #ffeaa0;
 
-
   // //emojis
   // --emoji-happy: #67b8d1;
   // --emoji-smiley: #7cd4b5;
@@ -677,7 +660,6 @@
   // --emoji-thinking-contrast: #f97b4b;
   // --emoji-sad-contrast: #ff455e;
 
-
   // //headers
   // --header-home: #6394ee;
   // --header-bg-color: #5899e0;
@@ -689,7 +671,6 @@
   // --header-bg-color-contrast: #476FCA;
   // --header-question-contrast: #476fca;
   // --header-home-contrast: #ffffff;
-
 
   // //icons
   // --icon-white: #ffffff;
@@ -708,7 +689,6 @@
   // --icon-green-contrast: #00a89a;
   // --icon-red-contrast: #d1004b;
 
-
   // //info
   // --info-snackbar: #739ee4;
   // --info-massage-counter: #e478f8;
@@ -718,7 +698,6 @@
   // --info-snackbar-contrast: #476fca;
   // --info-massage-Home-counter-blue-contrast: #4894ff;
   // --info-massage-Home-counter-green-contrast: #34e15c;
-
 
   // //maps
   // --map-question: #739ee4;
@@ -730,7 +709,6 @@
   // --map-star-contrast: #06cebd;
   // --map-question-contrast: #476fca;
   // --map-option-contrast: #20a08a;
-
 
   // //multisteps
   // --step-vote-inactive: #f8bbda;
@@ -752,7 +730,6 @@
   // --step-option-active-contrast: #00dac7;
   // --step-top-rank-active-contrast: #3894f9;
 
-
   // //settings
   // --member-chip: #68b4d4;
   // --member-voter: #ebeaff;
@@ -765,7 +742,6 @@
   // --member-chip-contrast: #00a7ee;
   // --member-evaluators-contrast: #73e1d8;
   // --member-voter-contrast: #a6a2ff;
-
 
   // //toggles
   // --toggle-blue-active: #739ee4;
@@ -780,7 +756,6 @@
   // --toggle-green-active-contrast: #00dac7;
   // --toggle-crimson-active-contrast: #f63c86;
 
-
   // // triangle dots
   // --dot-agreement-100: #46b4a0;
   // --dot-agreement-50: #e7de2e;
@@ -788,7 +763,6 @@
   // --dot-taboo-50: #ff4185;
   // --dot-taboo-100: #99250e;
   // --dot-disinterest: #dae0e8;
-
 
   // //text
   // --text-headline: #232f4a;
