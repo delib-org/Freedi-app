@@ -38,7 +38,6 @@ const StagePage = () => {
 	}, []);
 
 	const stageName = statement?.statement ? `: ${t(statement.statement)}` : "";
-	const { stageSelectionType } = statement;
 
 	return (
 		<div
@@ -48,13 +47,28 @@ const StagePage = () => {
 			<div className={styles.wrapper}>
 				<h2>{t("Stage")}{statement?.statement && stageName}</h2>
 				<p className="mb-4">Stage description</p>
-				{stageSelectionType === StageSelectionType.consensus ? <SuggestionCards /> : <StatementVote />}
-				<div className={styles.bottomNav}>
-					{/* <StatementBottomNav /> */}
-				</div>
+				<StagePageSwitch />
+				<StatementBottomNav />
 			</div>
 		</div>
 	);
 };
 
 export default StagePage;
+
+interface StagePageSwitchProps {
+	statement: Statement;
+}
+
+function StagePageSwitch({ statement }: StagePageSwitchProps) {
+	const { statement } = useContext(StatementContext);
+	const { stageSelectionType } = statement;
+
+	if (stageSelectionType === StageSelectionType.consensus) {
+		return <SuggestionCards />;
+	} else if (stageSelectionType === StageSelectionType.voting) {
+		return <StatementVote />;
+	} else {
+		return <SuggestionCards />;
+	}
+}
