@@ -16,11 +16,11 @@ const FooterMassConsensus = ({ goTo, isIntro, isNextActive, onNext }: { goTo: Ma
 				className={`btn btn--large btn--secondary ${!isNextActive ? 'btn--disabled' : ''}`}
 				onClick={onNext}
 			  >
-				{t('next')}
+				{t('Next')}
 			  </button>
 			}
 			<Link to={`/mass-consensus/${statementId}/${goTo}?lang=${lang}`}>
-				<button className="btn btn--large btn--primary">{isIntro? t('start'): t('skip')}</button>
+				<button className="btn btn--large btn--primary">{isIntro? t('Start'): t('Skip')}</button>
 			</Link>
 		</div>
 	)
