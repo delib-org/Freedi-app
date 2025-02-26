@@ -1,6 +1,6 @@
 import { useNavigate, useParams } from 'react-router';
 import HeaderMassConsensus from '../headerMassConsensus/HeaderMassConsensus';
-import FooterMassConsensus from '../FooterMassConsesus/FooterMassConsesus';
+import FooterMassConsensus from '../footerMassConsesus/FooterMassConsesus';
 import TitleMassConsensus from '../TitleMassConsensus/TitleMassConsensus';
 import { useParamsLanguage } from '../useParamsLang/UseParamsLanguge';
 import { useSelector } from 'react-redux';

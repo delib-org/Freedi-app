@@ -3,7 +3,7 @@ import styles from './Introduction.module.scss';
 import HeaderMassConsensus from '../headerMassConsensus/HeaderMassConsensus';
 import { useParamsLanguage } from '../useParamsLang/UseParamsLanguge';
 import { MassConsensusPageUrls } from '@/types/TypeEnums';
-import FooterMassConsensus from '../FooterMassConsesus/FooterMassConsesus';
+import FooterMassConsensus from '../footerMassConsesus/FooterMassConsesus';
 import { useLanguage } from '@/controllers/hooks/useLanguages';
 
 const Introduction = () => {
