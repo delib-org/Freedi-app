@@ -80,7 +80,7 @@ const SuggestionCards: FC<Props> = ({ propSort, selectionFunction, subStatements
 	return (
 		<div
 			className={styles['suggestions-wrapper']}
-		// style={{ height: `${totalHeight + 500}px` }}
+			style={{ height: `${totalHeight + 60}px` }}
 		>
 			{subStatements?.map((statementSub: Statement) => {
 				return (

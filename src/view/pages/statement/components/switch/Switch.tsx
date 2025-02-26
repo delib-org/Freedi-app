@@ -19,20 +19,20 @@ const Switch = () => {
 
 	return (
 		<main className='page__main'>
+
 			<FollowMeToast />
-			<div className={styles.inner}>
-				<div className={styles.header}>
-					<h1>
-						{statement?.statementType === StatementType.stage
-							? parentStatement?.statement
-							: statement?.statement}
-					</h1>
-				</div>
-				<div className={styles.main}>
-					<div className={styles.statement}>
-						<SwitchScreen statement={statement} role={role} />
-					</div>
-				</div>
+
+			<div className={styles.header}>
+				<h1>
+					{statement?.statementType === StatementType.stage
+						? parentStatement?.statement
+						: statement?.statement}
+				</h1>
+			</div>
+			<div className="wrapper">
+
+				<SwitchScreen statement={statement} role={role} />
+
 			</div>
 		</main>
 	);
