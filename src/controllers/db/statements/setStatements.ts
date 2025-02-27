@@ -26,6 +26,8 @@ import { ResultsBy } from '@/types/results/Results';
 import { StageSelectionType } from '@/types/stage/stageTypes';
 import { getRandomUID } from '@/types/TypeUtils';
 import { EvaluationUI } from '@/types/evaluation/Evaluation';
+import { setChoseByToDB } from '../choseBy/setChoseBy';
+import { ChoseByEvaluationType, CutoffType } from '@/types/choseBy/ChoseByTypes';
 
 export const updateStatementParents = async (
 	statement: Statement,
@@ -131,6 +133,15 @@ export async function saveStatementToDB({
 			parentStatement,
 		});
 
+		if (statement.statementType !== StatementType.group) {
+			setChoseByToDB({
+				statementId: statement.statementId,
+				cutoffType: CutoffType.topOptions,
+				choseByEvaluationType: ChoseByEvaluationType.consensus,
+				number: 1,
+			});
+		}
+
 		return statement;
 	} catch (error) {
 		console.error(error);
@@ -232,6 +243,15 @@ export const setStatementToDB = async ({
 
 		//add subscription
 		await Promise.all(statementPromises);
+
+		if (statement.statementType !== StatementType.group) {
+			setChoseByToDB({
+				statementId: statement.statementId,
+				cutoffType: CutoffType.topOptions,
+				choseByEvaluationType: ChoseByEvaluationType.consensus,
+				number: 1,
+			});
+		}
 
 		return { statementId: statement.statementId, statement };
 	} catch (error) {
@@ -340,26 +360,28 @@ export function createStatement({
 			results: [],
 		};
 
-		if (stageSelectionType) {
-			if (stageSelectionType === StageSelectionType.consensus) {
-				newStatement.evaluationSettings = {
-					evaluationUI: EvaluationUI.suggestions,
-				}
-			} else if (stageSelectionType === StageSelectionType.voting) {
-				newStatement.evaluationSettings = {
-					evaluationUI: EvaluationUI.voting,
-				}
-			} else if (stageSelectionType === StageSelectionType.checkbox) {
-				newStatement.evaluationSettings = {
-					evaluationUI: EvaluationUI.checkbox,
-				}
-			}
-		}
-
 		if (newStatement.statementType === StatementType.question) {
 			newStatement.questionSettings = {
 				questionType: questionType ?? QuestionType.multiStage,
 			};
+
+			newStatement.evaluationSettings = {
+				evaluationUI: getEvaluationUI(stageSelectionType),
+			};
+
+		}
+
+		function getEvaluationUI(stageSelectionType?: StageSelectionType): EvaluationUI {
+			switch (stageSelectionType) {
+				case StageSelectionType.consensus:
+					return EvaluationUI.suggestions;
+				case StageSelectionType.voting:
+					return EvaluationUI.voting;
+				case StageSelectionType.checkbox:
+					return EvaluationUI.checkbox;
+				default:
+					return EvaluationUI.suggestions;
+			}
 		}
 
 		parse(StatementSchema, newStatement);

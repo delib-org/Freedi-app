@@ -7,7 +7,7 @@ import {
 } from '../TypeEnums';
 
 export const QuestionSettingsSchema = object({
-	questionType: optional(enum_(QuestionType)), //deprecated
+	questionType: optional(enum_(QuestionType)), // multi-stage, mass-consensus
 	steps: optional(enum_(QuestionStagesType)),
 	stepsAllowed: optional(array(enum_(QuestionStep))),
 	currentStep: optional(enum_(QuestionStep)),

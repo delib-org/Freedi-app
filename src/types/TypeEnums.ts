@@ -36,8 +36,6 @@ export enum membersAllowed {
 }
 
 export enum QuestionType {
-	singleStep = 'single-step', //deprecated
-	multipleSteps = 'multiple-steps', //deprecated
 	massConsensus = 'mass-consensus',
 	multiStage = 'multi-stage',
 }
