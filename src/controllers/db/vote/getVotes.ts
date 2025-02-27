@@ -7,7 +7,6 @@ import {
 	where,
 } from 'firebase/firestore';
 import { FireStore } from '../config';
-import { getUserFromFirebase } from '../users/usersGeneral';
 import { store } from '@/redux/store';
 import { Collections } from '@/types/TypeEnums';
 import { Statement, StatementSchema } from '@/types/statement/StatementTypes';

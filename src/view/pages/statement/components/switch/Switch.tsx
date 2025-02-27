@@ -12,7 +12,6 @@ import { useSwitchMV } from './SwitchMV';
 import { StatementType } from '@/types/TypeEnums';
 import { Statement } from '@/types/statement/StatementTypes';
 import { Role } from '@/types/user/UserSettings';
-import Triangle from '@/view/components/triangle/Triangle';
 
 const Switch = () => {
 	const { statement, role } = useContext(StatementContext);
