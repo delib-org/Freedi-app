@@ -12,7 +12,7 @@
 	flex-direction: column;
 	border-radius: var(--radius);
 	margin: 2rem 0;
-	
+
 	> div {
 		&:first-child {
 			border-radius: var(--radius) var(--radius) 0 0;
@@ -29,7 +29,6 @@
 	align-items: center;
 	background: white;
 	cursor: grab;
-	margin-bottom: 20px;
 	&.dragging {
 		opacity: 0.5;
 	}

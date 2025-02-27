@@ -21,11 +21,12 @@ interface Props {
 
 const StageCard: FC<Props> = ({ statement, isDescription, isSuggestions }) => {
 	const { t } = useLanguage();
+	const { dir } = useLanguage();
+
 	const navigate = useNavigate();
 	const stageUrl = isSuggestions
 		? `/stage/${statement.statementId}`
 		: `/statement/${statement.statementId}`;
-
 	const topVotedId =
 		statement.stageSelectionType === StageSelectionType.voting &&
 		statement.selections
@@ -55,14 +56,19 @@ const StageCard: FC<Props> = ({ statement, isDescription, isSuggestions }) => {
 		return statement.statement;
 	};
 
+	const description =
+		statement?.evaluationSettings.evaluationUI === 'voting'
+			? 'Choosing a suggestion in a vote'
+			: 'Possible solutions for discussed issue';
+
 	const title = getTitle();
 
 	return (
 		<div className={styles.card}>
 			<h3>{t(title)}</h3>
-
+			<span>{t(description)}</span>
 			{chosen.length === 0 ? (
-				<p>{t('No suggestion so far')}</p>
+				<h4>{t('No suggestion so far')}</h4>
 			) : (
 				<>
 					<h4>{t('Selected Options')}</h4>
@@ -72,25 +78,26 @@ const StageCard: FC<Props> = ({ statement, isDescription, isSuggestions }) => {
 								key={opt.statementId}
 								to={`/statement/${opt.statementId}`}
 							>
-								<ol>
+								<ol className={styles.suggestions}>
 									<li>
-										<strong>{opt.statement}</strong>
+										{opt.statement}
 										{opt.description &&
 											`: ${opt.description}`}
-										{' - '}
-										<span>
-											{opt.consensus}{' '}
-										</span>
 									</li>
 								</ol>
 							</NavLink>
 						))}
 					</ul>
+					<NavLink to={stageUrl}>
+						<p
+							className={`${styles.seeMore} ${dir === 'ltr' ? styles.rtl : styles.ltr}`}
+						>
+							{t('See more...')}
+						</p>{' '}
+					</NavLink>
 				</>
 			)}
-			<NavLink to={stageUrl}>
-				<p className={styles.seeMore}>See more...</p>
-			</NavLink>
+
 			<div className='btns'>
 				<Button
 					text='Add Suggestion'

@@ -1,11 +1,21 @@
-import { DragEvent, FC, useContext, useState, useMemo, KeyboardEvent } from 'react';
+import {
+	DragEvent,
+	FC,
+	useContext,
+	useState,
+	useMemo,
+	KeyboardEvent,
+} from 'react';
 import { StatementContext } from '../../../../StatementCont';
 import styles from './MultiStageQuestion.module.scss';
 import Button, { ButtonType } from '@/view/components/buttons/button/Button';
 import Modal from '@/view/components/modal/Modal';
 import AddStage from './addStage/AddStage';
 import { useDispatch, useSelector } from 'react-redux';
-import { setStatements, statementSubsSelector } from '@/redux/statements/statementsSlice';
+import {
+	setStatements,
+	statementSubsSelector,
+} from '@/redux/statements/statementsSlice';
 import StageCard from './stages/StageCard';
 import { updateStatementsOrderToDB } from '@/controllers/db/statements/setStatements';
 import { Statement } from '@/types/statement/StatementTypes';
@@ -14,13 +24,20 @@ import { StatementType } from '@/types/TypeEnums';
 const MultiStageQuestion: FC = () => {
 	const { statement } = useContext(StatementContext);
 	const dispatch = useDispatch();
-	const statementsFromStore = useSelector(statementSubsSelector(statement?.statementId));
+	const statementsFromStore = useSelector(
+		statementSubsSelector(statement?.statementId)
+	);
 
-	const initialStages = useMemo(() =>
-		statementsFromStore
-			.filter((sub: Statement) => sub.statementType === StatementType.question)
-			.sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
-		, [statementsFromStore]);
+	const initialStages = useMemo(
+		() =>
+			statementsFromStore
+				.filter(
+					(sub: Statement) =>
+						sub.statementType === StatementType.question
+				)
+				.sort((a, b) => (a.order ?? 0) - (b.order ?? 0)),
+		[statementsFromStore]
+	);
 
 	const [showAddStage, setShowAddStage] = useState<boolean>(false);
 	const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
@@ -72,9 +89,10 @@ const MultiStageQuestion: FC = () => {
 	): void => {
 		if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
 			e.preventDefault();
-			const newIndex = e.key === 'ArrowUp'
-				? Math.max(0, index - 1)
-				: Math.min(initialStages.length - 1, index + 1);
+			const newIndex =
+				e.key === 'ArrowUp'
+					? Math.max(0, index - 1)
+					: Math.min(initialStages.length - 1, index + 1);
 
 			const newStages = [...initialStages];
 			const movedStage = newStages[index];
@@ -107,7 +125,6 @@ const MultiStageQuestion: FC = () => {
 			)}
 
 			<div className={styles.stagesWrapper}>
-
 				{initialStages.map((stage, index) => (
 					<button
 						key={stage.statementId}
@@ -122,7 +139,7 @@ const MultiStageQuestion: FC = () => {
 					>
 						<div
 							className={styles.dragHandle}
-							aria-hidden="true"
+							aria-hidden='true'
 						></div>
 						<StageCard statement={stage} />
 					</button>
