@@ -336,3 +336,15 @@ export function processHistory(
 		return state;
 	}
 }
+
+export function getLatestUpdateStatements(statements: Statement[]): number {
+	if (!statements || statements.length === 0) {
+		return 0;
+	}
+
+	return statements.reduce(
+		(latestUpdate, statement) =>
+			statement.lastUpdate > latestUpdate ? statement.lastUpdate : latestUpdate,
+		0
+	);
+}
