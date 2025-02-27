@@ -51,7 +51,7 @@ interface Props {
 	isAdmin: boolean;
 }
 
-export default function TreeChart({ descendants, isAdmin }: Readonly<Props>) {
+export default function MindMapChart({ descendants, isAdmin }: Readonly<Props>) {
 	const { getIntersectingNodes } = useReactFlow();
 	const [nodes, setNodes, onNodesChange] = useNodesState([]);
 	const [edges, setEdges, onEdgesChange] = useEdgesState([]);
@@ -78,7 +78,7 @@ export default function TreeChart({ descendants, isAdmin }: Readonly<Props>) {
 
 	useEffect(() => {
 		const { nodes: createdNodes, edges: createdEdges } =
-			createInitialNodesAndEdges(descendants[0]);
+			createInitialNodesAndEdges(descendants);
 
 		const { nodes: layoutedNodes, edges: layoutedEdges } =
 			getLayoutElements(
@@ -96,7 +96,7 @@ export default function TreeChart({ descendants, isAdmin }: Readonly<Props>) {
 		setTimeout(() => {
 			onSave();
 		}, 500);
-	}, [descendants[0]]);
+	}, [descendants]);
 
 	const onLayout = useCallback(
 		(direction: 'TB' | 'LR') => {

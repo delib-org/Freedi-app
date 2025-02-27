@@ -3,7 +3,6 @@ import SuggestionCards from '../../evaluations/components/suggestionCards/Sugges
 import styles from './StagePage.module.scss'
 import StatementBottomNav from '../../nav/bottom/StatementBottomNav';
 import { useLanguage } from '@/controllers/hooks/useLanguages';
-import { StageSelectionType } from '@/types/stage/stageTypes';
 import StatementVote from '../../vote/StatementVote';
 import { useParams } from 'react-router';
 import { statementSelectorById } from '@/redux/statements/statementsSlice';
