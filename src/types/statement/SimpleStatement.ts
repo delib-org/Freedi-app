@@ -1,5 +1,5 @@
 import { InferOutput, number, object, optional, string } from 'valibot';
-import { Statement } from './Statement';
+import { Statement } from './StatementTypes';
 import { UserSchema } from '../user/User';
 
 export const SimpleStatementSchema = object({

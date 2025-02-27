@@ -1,11 +1,11 @@
-import React, { FC, useContext, useState } from 'react';
+import React, { FC, useContext } from 'react';
 import { useLanguage } from '@/controllers/hooks/useLanguages';
 import styles from './AddStage.module.scss';
 import Button, { ButtonType } from '@/view/components/buttons/button/Button';
 import { saveStatementToDB } from '@/controllers/db/statements/setStatements';
 import { StatementContext } from '@/view/pages/statement/StatementCont';
 import { StatementType } from '@/types/TypeEnums';
-import { StageType } from '@/types/stage/Stage';
+import { StageSelectionType } from '@/types/stage/stageTypes';
 
 interface AddStageProps {
 	setShowAddStage: (showAddStage: boolean) => void;
@@ -15,37 +15,23 @@ const AddStage: FC<AddStageProps> = ({ setShowAddStage }) => {
 	const { t } = useLanguage();
 	const { statement } = useContext(StatementContext);
 
-	const [defaultStageName, setDefaultStageName] = useState<string>('');
-	const [userEnteredStageName, setUserEnteredStageName] =
-		useState<boolean>(false);
-
 	function handleCloseModal() {
 		setShowAddStage(false);
 	}
 
-	function handleChangeStageName(ev: React.ChangeEvent<HTMLSelectElement>) {
-		if (userEnteredStageName) return;
-		const stageType = ev.target.value as StageType;
-		const stageName = getDefaultStageName(stageType);
-		setDefaultStageName(stageName);
-	}
-
-	function handleManualStageName() {
-		setUserEnteredStageName(true);
-	}
-
-	async function handleSubmit(ev: React.FormEvent<HTMLFormElement>) {
+	async function handleAddStage(ev: React.FormEvent<HTMLFormElement>) {
 		ev.preventDefault();
 		const data = new FormData(ev.target as HTMLFormElement);
-		const stageType = data.get('stageType') as StageType;
+		const stageSelectionType = data.get('stageSelectionType') as StageSelectionType;
+		if (!stageSelectionType) return;
 		const name = data.get('stageName') as string;
 		const description = (data.get('stageDescription') as string) || '';
 
-		if (!statement || !stageType) return;
+		if (!statement || !stageSelectionType) return;
 		await saveStatementToDB({
 			text: name,
 			description,
-			stageType,
+			stageSelectionType,
 			parentStatement: statement,
 			statementType: StatementType.stage,
 		});
@@ -55,34 +41,22 @@ const AddStage: FC<AddStageProps> = ({ setShowAddStage }) => {
 
 	return (
 		<div className={styles.box}>
-			<form onSubmit={handleSubmit}>
+			<form onSubmit={handleAddStage}>
 				<select
-					name='stageType'
-					id='stageType'
+					name='stageSelectionType'
+					id='stageSelectionType'
 					defaultValue=''
-					onChange={handleChangeStageName}
 				>
 					<option value='' disabled>
-						{t('Select Stage Type')}
+						{t('Define how to select top options')}
 					</option>
-					<option value={StageType.needs}>{t('Needs')}</option>
-					<option value={StageType.explanation}>
-						{t('Explanation')}
+					<option value={StageSelectionType.consensus}>
+						{t('Consensus')}
 					</option>
-					<option value={StageType.questions}>
-						{t('Research Questions')}
+					<option value={StageSelectionType.voting}>{t('Voting')}</option>
+					<option value={StageSelectionType.checkbox}>
+						{t('Checkbox')}
 					</option>
-					<option value={StageType.hypothesis}>
-						{t('Hypothesis')}
-					</option>
-					<option value={StageType.suggestions}>
-						{t('Suggestions')}
-					</option>
-					<option value={StageType.conclusion}>
-						{t('Conclusion')}
-					</option>
-					<option value={StageType.summary}>{t('Summery')}</option>
-					<option value={StageType.other}>{t('Other')}</option>
 				</select>
 				<label htmlFor='stageName'>{t('Stage Name')}</label>
 				<input
@@ -90,8 +64,6 @@ const AddStage: FC<AddStageProps> = ({ setShowAddStage }) => {
 					id='stageName'
 					name='stageName'
 					placeholder={t('Stage Name')}
-					defaultValue={defaultStageName}
-					onKeyUp={handleManualStageName}
 					required
 				/>
 				<label htmlFor='stageDescription'>
@@ -121,26 +93,3 @@ const AddStage: FC<AddStageProps> = ({ setShowAddStage }) => {
 };
 
 export default AddStage;
-
-function getDefaultStageName(stageType: StageType): string {
-	switch (stageType) {
-		case StageType.needs:
-			return 'Needs';
-		case StageType.explanation:
-			return 'Explanation';
-		case StageType.questions:
-			return 'Research Questions';
-		case StageType.hypothesis:
-			return 'Hypothesis';
-		case StageType.suggestions:
-			return 'Suggestions';
-		case StageType.conclusion:
-			return 'Conclusion';
-		case StageType.summary:
-			return 'Summery';
-		case StageType.other:
-			return 'Other';
-		default:
-			return '';
-	}
-}

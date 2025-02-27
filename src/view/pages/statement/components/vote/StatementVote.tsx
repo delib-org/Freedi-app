@@ -8,7 +8,6 @@ import HandIcon from '@/assets/icons/handIcon.svg?react';
 import X from '@/assets/icons/x.svg?react';
 import { getToVoteOnParent } from '@/controllers/db/vote/getVotes';
 import { useAppDispatch } from '@/controllers/hooks/reduxHooks';
-import { setVoteToStore } from '@/redux/vote/votesSlice';
 
 // Custom components
 import Button from '@/view/components/buttons/button/Button';
@@ -19,8 +18,10 @@ import './StatementVote.scss';
 import Toast from '@/view/components/toast/Toast';
 import { useLanguage } from '@/controllers/hooks/useLanguages';
 import { StatementContext } from '../../StatementCont';
-import { Statement } from '@/types/statement/Statement';
+import { Statement } from '@/types/statement/StatementTypes';
 import { QuestionStep } from '@/types/TypeEnums';
+import { statementSubsSelector } from '@/redux/statements/statementsSlice';
+import { useSelector } from 'react-redux';
 
 let getVoteFromDB = false;
 
@@ -29,7 +30,7 @@ const StatementVote: FC = () => {
 	const dispatch = useAppDispatch();
 	const { t } = useLanguage();
 	const { statement } = useContext(StatementContext);
-	const subStatements: Statement[] = [];
+	const subStatements = useSelector(statementSubsSelector(statement?.statementId));
 
 	const currentStep = statement?.questionSettings?.currentStep;
 	const isCurrentStepVoting = currentStep === QuestionStep.voting;
@@ -50,51 +51,49 @@ const StatementVote: FC = () => {
 
 	useEffect(() => {
 		if (!getVoteFromDB) {
-			getToVoteOnParent(statement?.statementId, (option: Statement) =>
-				dispatch(setVoteToStore(option))
-			);
+			getToVoteOnParent(statement?.statementId);
 			getVoteFromDB = true;
 		}
 	}, [statement?.statementId, dispatch]);
 
 	return (
 		<>
-			<div className='page__main'>
-				<div className='statement-vote'>
-					{showMultiStageMessage && (
-						<Toast
-							text={t(`${toastMessage}`)}
-							type='message'
-							show={showMultiStageMessage}
-							setShow={setShowMultiStageMessage}
-						>
-							<Button
-								text={t('Got it')}
-								iconOnRight={true}
-								icon={<X />}
-								onClick={() => setShowMultiStageMessage(false)}
-							/>
-						</Toast>
-					)}
-					<div className='number-of-votes-mark'>
-						<HandIcon /> {totalVotes}
-					</div>
-					<VotingArea
-						totalVotes={totalVotes}
-						setShowInfo={setIsStatementInfoModalOpen}
-						subStatements={subStatements}
-						setStatementInfo={setStatementInfo}
-					/>
-				</div>
-				{isStatementInfoModalOpen && (
-					<Modal>
-						<StatementInfo
-							statement={statementInfo}
-							setShowInfo={setIsStatementInfoModalOpen}
+
+			<div className='statement-vote'>
+				{showMultiStageMessage && (
+					<Toast
+						text={t(`${toastMessage}`)}
+						type='message'
+						show={showMultiStageMessage}
+						setShow={setShowMultiStageMessage}
+					>
+						<Button
+							text={t('Got it')}
+							iconOnRight={true}
+							icon={<X />}
+							onClick={() => setShowMultiStageMessage(false)}
 						/>
-					</Modal>
+					</Toast>
 				)}
+				<div className='number-of-votes-mark'>
+					<HandIcon /> {totalVotes}
+				</div>
+				<VotingArea
+					totalVotes={totalVotes}
+					setShowInfo={setIsStatementInfoModalOpen}
+					subStatements={subStatements}
+					setStatementInfo={setStatementInfo}
+				/>
 			</div>
+			{isStatementInfoModalOpen && (
+				<Modal>
+					<StatementInfo
+						statement={statementInfo}
+						setShowInfo={setIsStatementInfoModalOpen}
+					/>
+				</Modal>
+			)}
+
 			<div className='page__footer'>
 				<StatementBottomNav />
 			</div>

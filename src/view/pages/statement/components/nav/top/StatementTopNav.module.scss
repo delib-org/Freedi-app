@@ -42,5 +42,16 @@ $headerHight: 4.2rem;
 		}
 	}
 
+	.views {
+		position: relative;
+
+		&__dropdown {
+			position: absolute;
+			background-color: white;
+			box-shadow: 0px 3px 9px #00000026;
+			transform: translate(5rem, .5rem);
+		}
+	}
+
 
 }

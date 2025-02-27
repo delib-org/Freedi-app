@@ -223,5 +223,9 @@
 	"Document Question": "שאלה מורכבת",
 	"Simple Question": "שאלה פשוטה",
 	"Multistage question": "שאלה מרובה שלבים",
-	"Mass Consensus": "הסכמה מונית"
+	"Mass Consensus": "הסכמה מונית",
+	"Define how to select top options": "קביעת שיטת בחירת האופציות המובילות",
+	"Consensus": "הסכמה",
+	"Checkbox": "בחירה מרובה",
+	"Agreement Map": "מפת הסכמות"
 }

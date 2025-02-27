@@ -3,8 +3,8 @@ import { createSlice, PayloadAction, createSelector } from '@reduxjs/toolkit';
 // Helpers
 import { updateArray } from '../../controllers/general/helpers';
 import { RootState, store } from '../store';
-import { StatementType, DeliberativeElement } from '@/types/TypeEnums';
-import { Statement } from '@/types/statement/Statement';
+import { StatementType } from '@/types/TypeEnums';
+import { Statement } from '@/types/statement/StatementTypes';
 import { StatementSubscription } from '@/types/statement/StatementSubscription';
 import { SelectionFunction } from '@/types/evaluation/Evaluation';
 
@@ -371,12 +371,6 @@ export const statementSelectorById =
 export const statementsSelector = (state: RootState) =>
 	state.statements.statements;
 
-export const statementsChildSelector =
-	(statementId: string) => (state: RootState) =>
-		state.statements.statements.filter((statement) =>
-			statement.parents?.includes(statementId)
-		);
-
 export const subStatementsByTopParentIdMemo = (
 	statementId: string | undefined
 ) =>
@@ -414,13 +408,6 @@ export const statementSelector =
 			(statement) => statement.statementId === statementId
 		);
 
-// export const statementSubsSelector =
-// 	(statementId: string | undefined) => (state: RootState) =>
-// 		state.statements.statements
-// 			.filter((statementSub) => statementSub.parentId === statementId)
-// 			.sort((a, b) => a.createdAt - b.createdAt)
-// 			.map((statement) => ({ ...statement }));
-
 const selectStatements = (state: RootState) => state.statements.statements;
 
 export const statementSubsSelector = (statementId: string | undefined) =>
@@ -437,8 +424,7 @@ export const statementOptionsSelector = (statementId: string | undefined) =>
 			.filter(
 				(statementSub) =>
 					statementSub.parentId === statementId &&
-					statementSub.deliberativeElement ===
-					DeliberativeElement.option
+					statementSub.statementType === StatementType.option
 			)
 			.sort((a, b) => a.createdAt - b.createdAt)
 			.map((statement) => ({ ...statement }));
@@ -456,22 +442,6 @@ export const questionsSelector =
 			)
 			.sort((a, b) => a.createdAt - b.createdAt);
 
-const selectedStatementId = (statementId: string | undefined) => statementId;
-
-const slctSts = (state: RootState) => state.statements.statements;
-
-export const statementSubsSelectorMemo = createSelector(
-	[selectedStatementId, slctSts],
-	(statementId, statements) => {
-		if (!statementId) return [];
-		const sts = statements
-			.filter((statementSub) => statementSub.parentId === statementId)
-			.sort((a, b) => a.createdAt - b.createdAt)
-			.map((statement) => ({ ...statement }));
-
-		return sts;
-	}
-);
 export const statementSubscriptionSelector =
 	(statementId: string | undefined) => (state: RootState) =>
 		state.statements.statementSubscription.find(

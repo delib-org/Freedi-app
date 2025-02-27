@@ -4,7 +4,7 @@ import useDirection from '@/controllers/hooks/useDirection';
 import { evaluationSelector } from '@/redux/evaluations/evaluationsSlice';
 import Thumb from '@/view/components/thumb/Thumb';
 import './SimpleEvaluation.scss';
-import { Statement } from '@/types/statement/Statement';
+import { Statement } from '@/types/statement/StatementTypes';
 
 interface Props {
 	statement: Statement;

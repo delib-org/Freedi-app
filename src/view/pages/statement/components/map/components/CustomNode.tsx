@@ -16,7 +16,7 @@ import {
 } from '@/controllers/general/helpers';
 import { useMapContext } from '@/controllers/hooks/useMap';
 import useStatementColor from '@/controllers/hooks/useStatementColor';
-import { Statement } from '@/types/statement/Statement';
+import { Statement } from '@/types/statement/StatementTypes';
 
 const nodeStyle = (
 	parentStatement: Statement | 'top',

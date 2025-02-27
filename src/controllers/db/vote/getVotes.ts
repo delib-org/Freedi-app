@@ -7,46 +7,43 @@ import {
 	where,
 } from 'firebase/firestore';
 import { FireStore } from '../config';
-import { getUserFromFirebase } from '../users/usersGeneral';
 import { store } from '@/redux/store';
 import { Collections } from '@/types/TypeEnums';
-import { Statement, StatementSchema } from '@/types/statement/Statement';
+import { Statement, StatementSchema } from '@/types/statement/StatementTypes';
 import { getVoteId, Vote, VoteSchema } from '@/types/vote';
 import { parse } from 'valibot';
+import { setVoteToStore } from '@/redux/vote/votesSlice';
 
 // Why get user from firebase when we can pass it as a parameter?
 export async function getToVoteOnParent(
 	parentId: string | undefined,
-	updateStoreWithVoteCB: (statement: Statement) => void
-): Promise<void> {
-	try {
-		if (!parentId) throw new Error('ParentId not provided');
 
-		const user = getUserFromFirebase();
+): Promise<Statement | null> {
+	try {
+		const user = store.getState().user.user;
 		if (!user) throw new Error('User not logged in');
 		if (!parentId) throw new Error('ParentId not provided');
+
 		const voteId = getVoteId(user.uid, parentId);
 		if (!voteId) throw new Error('VoteId not found');
 
 		const parentVoteRef = doc(FireStore, Collections.votes, voteId);
-
 		const voteDB = await getDoc(parentVoteRef);
 
+		if (!voteDB.exists()) return null;
 		const vote = parse(VoteSchema, voteDB.data());
 
-		//get statement to update to store
-		const statementRef = doc(
-			FireStore,
-			Collections.statements,
-			vote.statementId
-		);
+		const statementRef = doc(FireStore, Collections.statements, vote.statementId);
 		const statementDB = await getDoc(statementRef);
-
 		const statement = parse(StatementSchema, statementDB.data());
 
-		updateStoreWithVoteCB(statement);
+		store.dispatch(setVoteToStore(statement));
+
+		return statement;
 	} catch (error) {
 		console.error(error);
+
+		return null;
 	}
 }
 

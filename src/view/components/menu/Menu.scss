@@ -1,43 +1,44 @@
 .menu {
-  position: relative;
+	position: relative;
 
-  .menu-content {
-    position: absolute;
-    display: flex;
-    flex-direction: column;
-    background-color: white;
-    box-shadow: 0px 3px 9px #00000026;
-    z-index: 5;
+	.menu-content {
+		position: absolute;
+		display: flex;
+		flex-direction: column;
+		background-color: white;
+		box-shadow: 0px 3px 9px #00000026;
+		z-index: 5;
 
-    &.ltr {
-      left: 0px;
+		&.ltr {
+			left: 0px;
 
-      &--card-menu {
-        right: 10px;
-      }
-    }
+			&--card-menu {
+				right: 10px;
+			}
+		}
 
-    &.rtl {
-      left: 0;
+		&.rtl {
+			transform: translateX(10px);
 
-      &--card-menu {
-        left: 10px;
-      }
-    }
-  }
-  @media (max-width: 1080px) {
-    .menu-content {
-      transform: translateX(-90%);
-    }
-  }
+			&--card-menu {
+				left: 10px;
+			}
+		}
+	}
+
+	@media (max-width: 1080px) {
+		.menu-content {
+			transform: translateX(10px);
+		}
+	}
 }
 
 .invisibleBackground {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100svh;
-  z-index: 4;
-  background-color: transparent;
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100vw;
+	height: 100svh;
+	z-index: 4;
+	background-color: transparent;
 }
