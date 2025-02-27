@@ -4,7 +4,10 @@ import Button, { ButtonType } from '@/view/components/buttons/button/Button';
 import { NavLink, useNavigate } from 'react-router';
 import { useLanguage } from '@/controllers/hooks/useLanguages';
 import { Statement } from '@/types/statement/StatementTypes';
-import { SimpleStatement, statementToSimpleStatement } from '@/types/statement/SimpleStatement';
+import {
+	SimpleStatement,
+	statementToSimpleStatement,
+} from '@/types/statement/SimpleStatement';
 import { maxKeyInObject } from '@/types/TypeUtils';
 import { StageSelectionType } from '@/types/stage/stageTypes';
 import { useSelector } from 'react-redux';
@@ -19,20 +22,26 @@ interface Props {
 const StageCard: FC<Props> = ({ statement, isDescription, isSuggestions }) => {
 	const { t } = useLanguage();
 	const navigate = useNavigate();
-	const stageUrl = isSuggestions ? `/stage/${statement.statementId}` : `/statement/${statement.statementId}`;
+	const stageUrl = isSuggestions
+		? `/stage/${statement.statementId}`
+		: `/statement/${statement.statementId}`;
 
-	const topVotedId = statement.stageSelectionType === StageSelectionType.voting
-		&& statement.selections
-		? maxKeyInObject(statement.selections)
-		: '';
+	const topVotedId =
+		statement.stageSelectionType === StageSelectionType.voting &&
+		statement.selections
+			? maxKeyInObject(statement.selections)
+			: '';
 
 	const topVoted = useSelector(statementSelectorById(topVotedId));
-	const simpleTopVoted = topVoted ? statementToSimpleStatement(topVoted) : undefined;
+	const simpleTopVoted = topVoted
+		? statementToSimpleStatement(topVoted)
+		: undefined;
 
 	const votingResults = simpleTopVoted ? [simpleTopVoted] : [];
-	const chosen: SimpleStatement[] = statement.stageSelectionType === StageSelectionType.voting
-		? votingResults
-		: statement.results;
+	const chosen: SimpleStatement[] =
+		statement.stageSelectionType === StageSelectionType.voting
+			? votingResults
+			: statement.results;
 
 	function suggestNewSuggestion(ev: MouseEvent<HTMLButtonElement>) {
 		ev.stopPropagation();
@@ -50,9 +59,7 @@ const StageCard: FC<Props> = ({ statement, isDescription, isSuggestions }) => {
 
 	return (
 		<div className={styles.card}>
-			<h3>
-				{t(title)}
-			</h3>
+			<h3>{t(title)}</h3>
 
 			{chosen.length === 0 ? (
 				<p>{t('No suggestion so far')}</p>
@@ -65,11 +72,17 @@ const StageCard: FC<Props> = ({ statement, isDescription, isSuggestions }) => {
 								key={opt.statementId}
 								to={`/statement/${opt.statementId}`}
 							>
-								<li>
-									{opt.statement}
-									{opt.description ? ':' : ''}{' '}
-									{opt.description}
-								</li>
+								<ol>
+									<li>
+										<strong>{opt.statement}</strong>
+										{opt.description &&
+											`: ${opt.description}`}
+										{' - '}
+										<span>
+											{opt.consensus}{' '}
+										</span>
+									</li>
+								</ol>
 							</NavLink>
 						))}
 					</ul>
