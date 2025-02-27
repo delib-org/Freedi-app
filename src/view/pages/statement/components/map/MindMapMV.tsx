@@ -5,11 +5,13 @@ import { useSelector } from "react-redux";
 import { useParams } from "react-router";
 import { resultsByParentId } from "./mapCont";
 import { Results } from "@/types/results/Results";
+import { Statement } from "@/types/statement/StatementTypes";
+import { getLatestUpdateStatements } from "@/controllers/general/helpers";
 
 export function useMindMap() {
 	const { statementId } = useParams();
 	const statement = useSelector(statementSelector(statementId));
-	const descendants = useSelector(statementDescendantsSelector(statementId));
+	const descendants: Statement[] = useSelector(statementDescendantsSelector(statementId));
 
 	// Use a ref to track if we've already processed these descendants
 	const processedDescendants = useRef<string | null>(null);
@@ -38,7 +40,7 @@ export function useMindMap() {
 			statementId: statement.statementId,
 			descendantsLength: descendants.length,
 			// Only include specific properties to limit unnecessary recalculations
-			descendantsIds: descendants.map(d => d.statementId)
+			descendants: descendants
 		});
 
 		// Skip processing if we've already processed this exact data

@@ -1,4 +1,4 @@
-import { useState, FC } from 'react';
+import { useState, FC, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { ReactFlowProvider } from 'reactflow';
 import CreateStatementModal from '../createStatementModal/CreateStatementModal';
@@ -33,7 +33,6 @@ const MindMap: FC = () => {
 
 	// Use the fixed hook
 	const { results } = useMindMap();
-	console.log(results);
 
 	const role = userSubscription ? userSubscription.role : Role.member;
 	const _isAdmin = isAdmin(role);
@@ -44,6 +43,10 @@ const MindMap: FC = () => {
 	const [filterBy, setFilterBy] = useState<FilterType>(
 		FilterType.questionsResultsOptions
 	);
+
+	useEffect(() => {
+		console.log("results has changed")
+	}, [results])
 
 	const toggleModal = (show: boolean) => {
 		setMapContext((prev) => ({
