@@ -1,4 +1,4 @@
-import { FC, useContext, useState } from 'react';
+import { FC, useContext, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import Back from '../../header/Back';
 import HomeButton from '../../header/HomeButton';
@@ -23,6 +23,7 @@ import TriangleIcon from '@/assets/icons/triangle.svg?react';
 import QuestionIcon from '@/assets/icons/navQuestionsIcon.svg?react';
 import GroupIcon from '@/assets/icons/group.svg?react';
 import { ViewIcon } from 'lucide-react';
+import { set } from 'valibot';
 
 interface Props {
 	statement?: Statement;
@@ -172,6 +173,10 @@ function NavButtons({
 	const { t } = useLanguage();
 	const [openViews, setOpenViews] = useState(true);
 
+	useEffect(() => {
+		setOpenViews(false);
+	}, [screen])
+
 	function handleAgreementMap() {
 		handleNavigation('agreement-map');
 		setOpenViews(false);
@@ -179,9 +184,8 @@ function NavButtons({
 
 	function handleView() {
 
-		if (screen !== 'view') {
+		if (screen !== 'view' || screen === undefined) {
 			handleNavigation('view');
-			setOpenViews(false);
 		} else {
 			setOpenViews(!openViews)
 		}
@@ -199,7 +203,7 @@ function NavButtons({
 				/>
 			)}
 			<button className={styles.views} onClick={handleView}>
-				{getNavIcon()}
+				<NavIcon statement={statement} screen={screen} headerStyle={headerStyle} />
 				{openViews &&
 					<div className={styles.views__dropdown}>
 						<MenuOption
@@ -221,19 +225,20 @@ function NavButtons({
 		</>
 	);
 
-	function getNavIcon() {
+}
 
-		if (screen === 'view') {
-			return <View color={headerStyle.color} />;
-		} else if (statement.statementType === StatementType.question) {
-			return <QuestionIcon color={headerStyle.color} />;
-		} else if (statement.statementType === StatementType.group) {
-			return <GroupIcon color={headerStyle.color} />;
-		} else {
-			return <ViewIcon color={headerStyle.color} />;
-		}
+function NavIcon({ statement, screen, headerStyle }: { readonly statement: Statement; readonly screen: string | undefined; readonly headerStyle: { readonly color: string; readonly backgroundColor: string } }) {
 
+	if (screen === 'view' || screen === undefined) {
+		return <View color={headerStyle.color} />;
+	} else if (statement.statementType === StatementType.question || statement.statementType === StatementType.stage) {
+		return <QuestionIcon color={headerStyle.color} />;
+	} else if (statement.statementType === StatementType.group) {
+		return <GroupIcon color={headerStyle.color} />;
+	} else {
+		return <View color={headerStyle.color} />;
 	}
+
 }
 
 function HeaderMenu({
