@@ -9,6 +9,7 @@ import TriangleIcon from '@/assets/icons/triangle.svg?react';
 import QuestionIcon from '@/assets/icons/navQuestionsIcon.svg?react';
 import GroupIcon from '@/assets/icons/group.svg?react';
 import View from '@/assets/icons/view.svg?react';
+import MapIcon from '@/assets/icons/navMainPageIcon.svg?react';
 
 import styles from '../StatementTopNav.module.scss';
 import { StatementType } from "@/types/TypeEnums";
@@ -40,7 +41,11 @@ function NavButtons({
 
 	function handleAgreementMap() {
 		handleNavigation('agreement-map');
-		setOpenViews(false);
+
+	}
+
+	function handleMindMap() {
+		handleNavigation('mind-map');
 	}
 
 	function handleView() {
@@ -71,6 +76,11 @@ function NavButtons({
 							label={t("Agreement Map")}
 							icon={<TriangleIcon style={{ color: '#4E88C7' }} />}
 							onOptionClick={handleAgreementMap}
+						/>
+						<MenuOption
+							label={t("Mind Map")}
+							icon={<MapIcon style={{ color: '#4E88C7' }} />}
+							onOptionClick={handleMindMap}
 						/>
 					</div>}
 

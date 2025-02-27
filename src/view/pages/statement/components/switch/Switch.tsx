@@ -13,6 +13,7 @@ import { StatementType } from '@/types/TypeEnums';
 import { Statement } from '@/types/statement/StatementTypes';
 import { Role } from '@/types/user/UserSettings';
 import Triangle from '../../../../components/triangle/Triangle';
+import MindMap from '../map/MindMap';
 
 const Switch = () => {
 	const { statement, role } = useContext(StatementContext);
@@ -63,6 +64,8 @@ function SwitchScreen({
 	switch (screen) {
 		case 'agreement-map':
 			return <Triangle />;
+		case 'mind-map':
+			return <MindMap />;
 		case 'chat':
 			return <Chat />;
 		case 'settings':

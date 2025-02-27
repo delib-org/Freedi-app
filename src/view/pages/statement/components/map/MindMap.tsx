@@ -14,6 +14,7 @@ import { useLanguage } from '@/controllers/hooks/useLanguages';
 import { useMapContext } from '@/controllers/hooks/useMap';
 import {
 	statementDescendantsSelector,
+	statementSelector,
 	statementSubscriptionSelector,
 } from '@/redux/statements/statementsSlice';
 import Modal from '@/view/components/modal/Modal';
@@ -21,12 +22,11 @@ import { StatementType } from '@/types/TypeEnums';
 import { Results } from '@/types/results/Results';
 import { Statement } from '@/types/statement/StatementTypes';
 import { Role } from '@/types/user/UserSettings';
+import { useParams } from 'react-router';
 
-interface Props {
-	statement: Statement;
-}
-
-const StatementMap: FC<Props> = ({ statement }) => {
+const MindMap: FC = () => {
+	const { statementId } = useParams();
+	const statement = useSelector(statementSelector(statementId));
 	const userSubscription = useAppSelector(
 		statementSubscriptionSelector(statement.statementId)
 	);
@@ -137,4 +137,4 @@ const StatementMap: FC<Props> = ({ statement }) => {
 	);
 };
 
-export default StatementMap;
+export default MindMap;
