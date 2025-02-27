@@ -8,7 +8,7 @@ import { number, parse } from 'valibot';
 import {
 	Statement,
 	StatementSchema,
-} from '../../src/types/statement/Statement';
+} from '../../src/types/statement/StatementTypes';
 import { Collections, StatementType } from '../../src/types/TypeEnums';
 import {
 	ChoseBy,
@@ -16,7 +16,7 @@ import {
 	CutoffType,
 	defaultChoseBySettings,
 } from '../../src/types/choseBy/ChoseBy';
-import { StageType } from '../../src/types/stage/Stage';
+
 import { statementToSimpleStatement } from '../../src/types/statement/SimpleStatement';
 
 enum ActionTypes {
@@ -322,7 +322,7 @@ async function updateParentStatementWithChosenOptions(
 
 		// get parent choseBy settings statement and parent statement
 
-		const [parentStatementChoseByDB, parentStatementDB] = await Promise.all(
+		const [parentStatementChoseByDB] = await Promise.all(
 			[
 				db.collection(Collections.choseBy).doc(parentId).get(),
 				db.collection(Collections.statements).doc(parentId).get(),
@@ -333,19 +333,14 @@ async function updateParentStatementWithChosenOptions(
 			? defaultChoseBySettings(parentId)
 			: (parentStatementChoseByDB.data() as ChoseBy);
 		parentStatementChoseBy.number = Number(parentStatementChoseBy.number);
-		const parentStatement = parse(
-			StatementSchema,
-			parentStatementDB.data()
-		);
 
 		//chose top options by the choseBy settings & get the top options
 		const chosenOptions = await choseTopOptions(parentStatementChoseBy);
 
 		if (!chosenOptions) throw new Error('chosenOptions is not found');
 
-		await updateParentChildren({
-			topOptionsStatements: chosenOptions,
-			parentStatement,
+		await updateParentOfChildren({
+			topOptionsStatements: chosenOptions
 		});
 
 		//update child statement selected to be of type result
@@ -354,13 +349,13 @@ async function updateParentStatementWithChosenOptions(
 	}
 
 	//inner functions
-	async function updateParentChildren({
-		topOptionsStatements,
-		parentStatement,
-	}: {
-		parentStatement: Statement;
+
+	interface UpdateParentChildrenProps {
 		topOptionsStatements: Statement[];
-	}) {
+	}
+	async function updateParentOfChildren({
+		topOptionsStatements
+	}: UpdateParentChildrenProps) {
 		const childStatementsSimple = topOptionsStatements.map(
 			(st: Statement) => statementToSimpleStatement(st)
 		);
@@ -373,20 +368,6 @@ async function updateParentStatementWithChosenOptions(
 			results: childStatementsSimple,
 		});
 
-		// If this is a statement under question and the stage is suggestions,
-		// then update also the question (which is the parent of the stage)
-		if (
-			parentStatement.statementType === StatementType.stage &&
-			parentStatement.stageType === StageType.suggestions
-		) {
-			await db
-				.collection(Collections.statements)
-				.doc(parentStatement.parentId)
-				.update({
-					totalResults: childStatementsSimple.length,
-					results: childStatementsSimple,
-				});
-		}
 	}
 }
 

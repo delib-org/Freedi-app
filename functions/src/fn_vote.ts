@@ -4,7 +4,7 @@ import { DocumentSnapshot, FieldValue } from 'firebase-admin/firestore';
 import { Collections } from '../../src/types/TypeEnums';
 import {
 	Statement,
-} from '../../src/types/statement/Statement';
+} from '../../src/types/statement/StatementTypes';
 import { maxKeyInObject } from '../../src/types/TypeUtils';
 import { FirestoreEvent } from 'firebase-functions/firestore';
 import { parse } from 'valibot';

@@ -10,7 +10,7 @@ import { Collections, StatementType } from '../../src/types/TypeEnums';
 import {
 	Statement,
 	StatementSchema,
-} from '../../src/types/statement/Statement';
+} from '../../src/types/statement/StatementTypes';
 import { FirestoreEvent } from 'firebase-functions/firestore';
 import { parse } from 'valibot';
 import { Response, Request } from 'firebase-functions/v1';

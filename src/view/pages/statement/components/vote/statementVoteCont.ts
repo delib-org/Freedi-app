@@ -1,4 +1,4 @@
-import { Statement } from '@/types/statement/Statement';
+import { Statement } from '@/types/statement/StatementTypes';
 import { DeliberativeElement, Screen } from '@/types/TypeEnums';
 
 // Updates the displayed options with how many votes each option has from the parent statement

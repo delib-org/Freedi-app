@@ -7,7 +7,7 @@ import useWindowDimensions from '@/controllers/hooks/useWindowDimentions';
 
 import { useSelector } from 'react-redux';
 import { statementSelectorById } from '@/redux/statements/statementsSlice';
-import { Statement } from '@/types/statement/Statement';
+import { Statement } from '@/types/statement/StatementTypes';
 import { DeliberativeElement } from '@/types/TypeEnums';
 
 interface VotingAreaProps {
@@ -34,8 +34,8 @@ const VotingArea: FC<VotingAreaProps> = ({
 	const defaultOptions = statement?.statementSettings?.inVotingGetOnlyResults
 		? subStatements.filter((st) => st.isResult)
 		: subStatements.filter(
-				(st) => st.deliberativeElement === DeliberativeElement.option
-			);
+			(st) => st.deliberativeElement === DeliberativeElement.option
+		);
 
 	const _options = subStatements || defaultOptions;
 	const options = getSortedVotingOptions({

@@ -3,7 +3,7 @@ import { db } from './index';
 import {
 	Statement,
 	StatementSchema,
-} from '../../src/types/statement/Statement';
+} from '../../src/types/statement/StatementTypes';
 import { Collections } from '../../src/types/TypeEnums';
 import { DocumentSnapshot } from 'firebase-admin/firestore';
 import { FirestoreEvent } from 'firebase-functions/firestore';
