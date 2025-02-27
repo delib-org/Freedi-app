@@ -20,6 +20,9 @@ import { Statement } from '@/types/statement/StatementTypes';
 import { Role } from '@/types/user/UserSettings';
 import { StatementType } from '@/types/TypeEnums';
 import TriangleIcon from '@/assets/icons/triangle.svg?react';
+import QuestionIcon from '@/assets/icons/navQuestionsIcon.svg?react';
+import GroupIcon from '@/assets/icons/group.svg?react';
+import { ViewIcon } from 'lucide-react';
 
 interface Props {
 	statement?: Statement;
@@ -174,6 +177,17 @@ function NavButtons({
 		setOpenViews(false);
 	}
 
+	function handleView() {
+
+		if (screen !== 'view') {
+			handleNavigation('view');
+			setOpenViews(false);
+		} else {
+			setOpenViews(!openViews)
+		}
+
+	}
+
 	return (
 		<>
 			{allowNavigation && (
@@ -184,8 +198,8 @@ function NavButtons({
 					headerStyle={headerStyle}
 				/>
 			)}
-			<button className={styles.views} onClick={() => setOpenViews(!openViews)}>
-				<View color={headerStyle.color} />
+			<button className={styles.views} onClick={handleView}>
+				{getNavIcon()}
 				{openViews &&
 					<div className={styles.views__dropdown}>
 						<MenuOption
@@ -206,6 +220,20 @@ function NavButtons({
 			)}
 		</>
 	);
+
+	function getNavIcon() {
+
+		if (screen === 'view') {
+			return <View color={headerStyle.color} />;
+		} else if (statement.statementType === StatementType.question) {
+			return <QuestionIcon color={headerStyle.color} />;
+		} else if (statement.statementType === StatementType.group) {
+			return <GroupIcon color={headerStyle.color} />;
+		} else {
+			return <ViewIcon color={headerStyle.color} />;
+		}
+
+	}
 }
 
 function HeaderMenu({
