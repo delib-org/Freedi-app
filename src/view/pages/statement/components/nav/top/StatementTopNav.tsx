@@ -1,16 +1,14 @@
-import { FC, useContext, useEffect, useState } from 'react';
+import { FC, useContext } from 'react';
 import { useNavigate, useParams } from 'react-router';
-import Back from '../../header/Back';
-import HomeButton from '../../header/HomeButton';
 import styles from './StatementTopNav.module.scss';
-import Chat from '@/assets/icons/chatTop.svg?react';
+
 import DisconnectIcon from '@/assets/icons/disconnectIcon.svg?react';
-import MainIcon from '@/assets/icons/evaluations2Icon.svg?react';
+
 import FollowMe from '@/assets/icons/follow.svg?react';
 import InvitationIcon from '@/assets/icons/invitation.svg?react';
 import SettingsIcon from '@/assets/icons/settings.svg?react';
 import ShareIcon from '@/assets/icons/shareIcon.svg?react';
-import View from '@/assets/icons/view.svg?react';
+
 import { useLanguage } from '@/controllers/hooks/useLanguages';
 import useStatementColor from '@/controllers/hooks/useStatementColor.ts';
 import Menu from '@/view/components/menu/Menu';
@@ -19,11 +17,8 @@ import { StatementContext } from '../../../StatementCont';
 import { Statement } from '@/types/statement/StatementTypes';
 import { Role } from '@/types/user/UserSettings';
 import { StatementType } from '@/types/TypeEnums';
-import TriangleIcon from '@/assets/icons/triangle.svg?react';
-import QuestionIcon from '@/assets/icons/navQuestionsIcon.svg?react';
-import GroupIcon from '@/assets/icons/group.svg?react';
-import { ViewIcon } from 'lucide-react';
-import { set } from 'valibot';
+
+import NavButtons from './navButtons/NavButtons';
 
 interface Props {
 	statement?: Statement;
@@ -110,136 +105,6 @@ const StatementTopNav: FC<Props> = ({
 };
 
 export default StatementTopNav;
-
-interface NavigationButtonsProps {
-	statement?: Statement;
-	parentStatement?: Statement;
-	screen: string | undefined;
-	handleNavigation: (path: string) => void;
-	headerStyle: { color: string; backgroundColor: string };
-}
-
-function NavigationButtons({
-	screen,
-	handleNavigation,
-	headerStyle,
-	statement,
-}: Readonly<NavigationButtonsProps>) {
-	const { hasChat } = statement?.statementSettings || { hasChat: false };
-	if (!hasChat) return null;
-
-	return (
-		<>
-			{(() => {
-				switch (screen) {
-					case 'main':
-						return (
-							<button onClick={() => handleNavigation('chat')}>
-								<Chat color={headerStyle.color} />
-							</button>
-						);
-					case 'chat':
-					case 'settings':
-					default:
-						return (
-							<button onClick={() => handleNavigation('main')}>
-								<MainIcon color={headerStyle.color} />
-							</button>
-						);
-				}
-			})()}
-		</>
-	);
-}
-
-interface NavButtonsProps {
-	parentStatement?: Statement;
-	screen: string | undefined;
-	handleNavigation: (path: string) => void;
-	headerStyle: { color: string; backgroundColor: string };
-	allowNavigation: boolean;
-	statement?: Statement;
-}
-
-function NavButtons({
-	screen,
-	handleNavigation,
-	headerStyle,
-	allowNavigation,
-	statement,
-	parentStatement,
-}: Readonly<NavButtonsProps>) {
-
-	const { t } = useLanguage();
-	const [openViews, setOpenViews] = useState(true);
-
-	useEffect(() => {
-		setOpenViews(false);
-	}, [screen])
-
-	function handleAgreementMap() {
-		handleNavigation('agreement-map');
-		setOpenViews(false);
-	}
-
-	function handleView() {
-
-		if (screen !== 'view' || screen === undefined) {
-			handleNavigation('view');
-		} else {
-			setOpenViews(!openViews)
-		}
-
-	}
-
-	return (
-		<>
-			{allowNavigation && (
-				<NavigationButtons
-					statement={parentStatement || statement}
-					screen={screen}
-					handleNavigation={handleNavigation}
-					headerStyle={headerStyle}
-				/>
-			)}
-			<button className={styles.views} onClick={handleView}>
-				<NavIcon statement={statement} screen={screen} headerStyle={headerStyle} />
-				{openViews &&
-					<div className={styles.views__dropdown}>
-						<MenuOption
-							label={t("Agreement Map")}
-							icon={<TriangleIcon style={{ color: '#4E88C7' }} />}
-							onOptionClick={handleAgreementMap}
-						/>
-					</div>}
-
-			</button>
-			{allowNavigation && (
-				<button className={styles.home}>
-					<HomeButton headerColor={headerStyle} />
-				</button>
-			)}
-			{allowNavigation && (
-				<Back statement={statement} headerColor={headerStyle} />
-			)}
-		</>
-	);
-
-}
-
-function NavIcon({ statement, screen, headerStyle }: { readonly statement: Statement; readonly screen: string | undefined; readonly headerStyle: { readonly color: string; readonly backgroundColor: string } }) {
-
-	if (screen === 'view' || screen === undefined) {
-		return <View color={headerStyle.color} />;
-	} else if (statement.statementType === StatementType.question || statement.statementType === StatementType.stage) {
-		return <QuestionIcon color={headerStyle.color} />;
-	} else if (statement.statementType === StatementType.group) {
-		return <GroupIcon color={headerStyle.color} />;
-	} else {
-		return <View color={headerStyle.color} />;
-	}
-
-}
 
 function HeaderMenu({
 	setIsHeaderMenuOpen,
