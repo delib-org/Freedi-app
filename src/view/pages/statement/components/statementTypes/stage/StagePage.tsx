@@ -9,6 +9,7 @@ import { useParams } from 'react-router';
 import { statementSelectorById } from '@/redux/statements/statementsSlice';
 import { useSelector } from 'react-redux';
 import { Statement } from '@/types/statement/StatementTypes';
+import { EvaluationUI } from '@/types/evaluation/Evaluation';
 
 const StagePage = () => {
 	const { statementId } = useParams();
@@ -60,11 +61,11 @@ interface StagePageSwitchProps {
 
 function StagePageSwitch({ statement }: StagePageSwitchProps) {
 
-	const { stageSelectionType } = statement;
+	const evaluationUI = statement?.evaluationSettings?.evaluationUI;
 
-	if (stageSelectionType === StageSelectionType.consensus) {
+	if (evaluationUI === EvaluationUI.suggestions) {
 		return <SuggestionCards />;
-	} else if (stageSelectionType === StageSelectionType.voting) {
+	} else if (evaluationUI === EvaluationUI.voting) {
 		return <StatementVote />;
 	} else {
 		return <SuggestionCards />;
