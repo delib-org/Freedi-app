@@ -1,4 +1,4 @@
-import { FC, useContext } from 'react';
+import { FC, useContext, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import Back from '../../header/Back';
 import HomeButton from '../../header/HomeButton';
@@ -19,6 +19,7 @@ import { StatementContext } from '../../../StatementCont';
 import { Statement } from '@/types/statement/StatementTypes';
 import { Role } from '@/types/user/UserSettings';
 import { StatementType } from '@/types/TypeEnums';
+import TriangleIcon from '@/assets/icons/triangle.svg?react';
 
 interface Props {
 	statement?: Statement;
@@ -164,6 +165,15 @@ function NavButtons({
 	statement,
 	parentStatement,
 }: Readonly<NavButtonsProps>) {
+
+	const { t } = useLanguage();
+	const [openViews, setOpenViews] = useState(true);
+
+	function handleAgreementMap() {
+		handleNavigation('agreement-map');
+		setOpenViews(false);
+	}
+
 	return (
 		<>
 			{allowNavigation && (
@@ -174,8 +184,17 @@ function NavButtons({
 					headerStyle={headerStyle}
 				/>
 			)}
-			<button>
+			<button className={styles.views} onClick={() => setOpenViews(!openViews)}>
 				<View color={headerStyle.color} />
+				{openViews &&
+					<div className={styles.views__dropdown}>
+						<MenuOption
+							label={t("Agreement Map")}
+							icon={<TriangleIcon style={{ color: '#4E88C7' }} />}
+							onOptionClick={handleAgreementMap}
+						/>
+					</div>}
+
 			</button>
 			{allowNavigation && (
 				<button className={styles.home}>
