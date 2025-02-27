@@ -57,7 +57,7 @@ const StatementTopNav: FC<Props> = ({
 	const _statement = parentStatement || statement;
 
 	const enableNavigationalElements = Boolean(
-		_statement?.statementSettings?.enableNavigationalElements || statement?.statementType === StatementType.stage
+		_statement?.statementSettings?.enableNavigationalElements
 	);
 
 	const isAdmin = role === Role.admin;

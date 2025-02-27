@@ -18,7 +18,6 @@ import {
 	Collections,
 	StatementType,
 	Access,
-	QuestionStage,
 	QuestionType,
 } from '@/types/TypeEnums';
 import { UserSchema, Membership } from '@/types/user/User';
@@ -26,6 +25,7 @@ import { number, parse, string } from 'valibot';
 import { ResultsBy } from '@/types/results/Results';
 import { StageSelectionType } from '@/types/stage/stageTypes';
 import { getRandomUID } from '@/types/TypeUtils';
+import { EvaluationUI } from '@/types/evaluation/Evaluation';
 
 export const updateStatementParents = async (
 	statement: Statement,
@@ -247,7 +247,6 @@ export interface CreateStatementProps {
 	parentStatement: Statement | 'top';
 	statementType: StatementType;
 	questionType?: QuestionType;
-	questionStages?: QuestionStage[];
 	enableAddEvaluationOption?: boolean;
 	enableAddVotingOption?: boolean;
 	enhancedEvaluation?: boolean;
@@ -265,7 +264,6 @@ export function createStatement({
 	parentStatement,
 	statementType,
 	questionType,
-	questionStages = [],
 	enableAddEvaluationOption = true,
 	enableAddVotingOption = true,
 	enhancedEvaluation = true,
@@ -343,16 +341,27 @@ export function createStatement({
 		};
 
 		if (stageSelectionType) {
-			newStatement.stageSelectionType = stageSelectionType;
-			newStatement.statementType = StatementType.stage;
+			if (stageSelectionType === StageSelectionType.consensus) {
+				newStatement.evaluationSettings = {
+					evaluationUI: EvaluationUI.suggestions,
+				}
+			} else if (stageSelectionType === StageSelectionType.voting) {
+				newStatement.evaluationSettings = {
+					evaluationUI: EvaluationUI.voting,
+				}
+			} else if (stageSelectionType === StageSelectionType.checkbox) {
+				newStatement.evaluationSettings = {
+					evaluationUI: EvaluationUI.checkbox,
+				}
+			}
 		}
 
 		if (newStatement.statementType === StatementType.question) {
 			newStatement.questionSettings = {
 				questionType: questionType ?? QuestionType.multiStage,
-				stages: [...questionStages],
 			};
 		}
+
 		parse(StatementSchema, newStatement);
 
 		return newStatement;

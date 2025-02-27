@@ -10,7 +10,6 @@ export const QuestionSettingsSchema = object({
 	questionType: optional(enum_(QuestionType)), //deprecated
 	steps: optional(enum_(QuestionStagesType)),
 	stepsAllowed: optional(array(enum_(QuestionStep))),
-	stages: optional(array(enum_(QuestionStage))),
 	currentStep: optional(enum_(QuestionStep)),
 	currentStage: optional(enum_(QuestionStage)), //deprecated
 });

@@ -104,7 +104,7 @@ function NavIcon({ statement, screen, headerStyle }: { readonly statement: State
 
 	if (screen === 'view' || screen === undefined) {
 		return <View color={headerStyle.color} />;
-	} else if (statement.statementType === StatementType.question || statement.statementType === StatementType.stage) {
+	} else if (statement.statementType === StatementType.question) {
 		return <QuestionIcon color={headerStyle.color} />;
 	} else if (statement.statementType === StatementType.group) {
 		return <GroupIcon color={headerStyle.color} />;

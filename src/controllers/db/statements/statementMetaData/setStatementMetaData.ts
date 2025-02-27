@@ -6,7 +6,7 @@ import {
 	QuestionType,
 	QuestionStep,
 } from '@/types/TypeEnums';
-import { QuestionSettings } from '@/types/question/Question';
+import { QuestionSettings } from '@/types/question/QuestionType';
 
 interface SetStatementStageParams {
 	statementId: string;

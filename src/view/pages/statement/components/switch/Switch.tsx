@@ -26,7 +26,7 @@ const Switch = () => {
 
 			<div className={styles.header}>
 				<h1>
-					{statement?.statementType === StatementType.stage
+					{parentStatement?.statementType === StatementType.question && statement?.statementType === StatementType.question
 						? parentStatement?.statement
 						: statement?.statement}
 				</h1>
@@ -89,8 +89,7 @@ function SwitchStatementType({
 			return <GroupPage />;
 		case StatementType.question:
 			return <QuestionPage />;
-		case StatementType.stage:
-			return <StagePage />;
+
 		default:
 			return null;
 	}

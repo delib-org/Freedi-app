@@ -18,7 +18,7 @@ const MultiStageQuestion: FC = () => {
 
 	const initialStages = useMemo(() =>
 		statementsFromStore
-			.filter((sub: Statement) => sub.statementType === StatementType.stage)
+			.filter((sub: Statement) => sub.statementType === StatementType.question)
 			.sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
 		, [statementsFromStore]);
 
