@@ -1,5 +1,4 @@
 import { getResultsDB } from '@/controllers/db/results/getResults';
-import { DeliberativeElement } from '@/types/TypeEnums';
 import { ResultsBy, Results } from '@/types/results/Results';
 import { Statement } from '@/types/statement/StatementTypes';
 
@@ -91,6 +90,7 @@ export function resultsByParentId(parentStatement: Statement, subStatements: Sta
 		return result;
 	} catch (error) {
 		console.error(error);
+
 		// Return a minimal valid result instead of undefined
 		return { top: parentStatement, sub: [] };
 	}
