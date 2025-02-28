@@ -1,9 +1,11 @@
+// UserConfigContext.tsx
 import React, {
 	createContext,
 	useState,
 	useCallback,
 	useEffect,
 	ReactNode,
+	useMemo,
 } from 'react';
 
 // Types and Enums
@@ -16,10 +18,17 @@ export enum LanguagesEnum {
 	nl = 'nl',
 }
 
+// Learning settings interface
+export interface LearningSettings {
+	evaluation: number;
+	addOptions: number;
+}
+
 export interface UserConfig {
 	chosenLanguage: LanguagesEnum;
 	fontSize: number;
 	colorContrast: boolean;
+	learning: LearningSettings; // Added learning settings
 }
 
 export type Direction = 'ltr' | 'rtl';
@@ -35,6 +44,8 @@ export type UserConfigContextType = {
 	changeFontSize: (newSize: number) => void;
 	colorContrast: boolean;
 	setColorContrast: (value: boolean) => void;
+	learning: LearningSettings;
+	decrementLearning: (type: 'evaluation' | 'addOptions') => void;
 };
 
 type UserConfigProviderProps = {
@@ -56,11 +67,16 @@ const languages: Record<string, string>[] = [en, ar, he, de, es, nl];
 export const DEFAULT_FONT_SIZE = 16;
 export const DEFAULT_LANGUAGE = LanguagesEnum.he;
 export const DEFAULT_COLOR_CONTRAST = false;
+export const DEFAULT_LEARNING_SETTINGS: LearningSettings = {
+	evaluation: 7, // Adjust as needed
+	addOptions: 3, // Adjust as needed
+};
 
 export const DEFAULT_CONFIG: UserConfig = {
 	chosenLanguage: DEFAULT_LANGUAGE,
 	fontSize: DEFAULT_FONT_SIZE,
 	colorContrast: DEFAULT_COLOR_CONTRAST,
+	learning: DEFAULT_LEARNING_SETTINGS,
 };
 
 // Create context
@@ -77,31 +93,6 @@ const getDirections = (
 	return {
 		dir: isRTL ? 'rtl' : 'ltr',
 		rowDirection: isRTL ? 'row-reverse' : 'row',
-	};
-};
-
-// Create context value helper
-const createContextValue = (
-	currentLanguage: string,
-	changeLanguage: (newLanguage: LanguagesEnum) => void,
-	t: (text: string) => string,
-	fontSize: number,
-	changeFontSize: (newSize: number) => void,
-	colorContrast: boolean,
-	setColorContrast: (value: boolean) => void
-): UserConfigContextType => {
-	const { dir, rowDirection } = getDirections(currentLanguage);
-
-	return {
-		currentLanguage,
-		changeLanguage,
-		t,
-		dir,
-		rowDirection,
-		fontSize,
-		changeFontSize,
-		colorContrast,
-		setColorContrast,
 	};
 };
 
@@ -124,6 +115,14 @@ export const UserConfigProvider: React.FC<UserConfigProviderProps> = ({
 					fontSize: parsedConfig.fontSize || DEFAULT_FONT_SIZE,
 					colorContrast:
 						parsedConfig.colorContrast ?? DEFAULT_COLOR_CONTRAST,
+					learning: {
+						evaluation:
+							parsedConfig.learning?.evaluation ??
+							DEFAULT_LEARNING_SETTINGS.evaluation,
+						addOptions:
+							parsedConfig.learning?.addOptions ??
+							DEFAULT_LEARNING_SETTINGS.addOptions,
+					},
 				};
 			}
 		} catch (error) {
@@ -179,6 +178,22 @@ export const UserConfigProvider: React.FC<UserConfigProviderProps> = ({
 		}));
 	}, []);
 
+	// Learning decrement handler
+	const decrementLearning = useCallback(
+		(type: 'evaluation' | 'addOptions') => {
+			setConfig((prev) => {
+				const learning = { ...prev.learning };
+
+				if (learning[type] > 0) {
+					learning[type] = learning[type] - 1;
+				}
+
+				return { ...prev, learning };
+			});
+		},
+		[]
+	);
+
 	// Translation function
 	const t = useCallback(
 		(text: string) => {
@@ -217,25 +232,30 @@ export const UserConfigProvider: React.FC<UserConfigProviderProps> = ({
 		});
 	}, [config.colorContrast]);
 
-	// Memoize context value
-	const contextValue = React.useMemo(
-		() =>
-			createContextValue(
-				config.chosenLanguage,
-				changeLanguage,
-				t,
-				config.fontSize,
-				changeFontSize,
-				config.colorContrast,
-				setColorContrast
-			),
+	// Create context value
+	const contextValue = useMemo(
+		() => ({
+			currentLanguage: config.chosenLanguage,
+			changeLanguage,
+			t,
+			dir: getDirections(config.chosenLanguage).dir,
+			rowDirection: getDirections(config.chosenLanguage).rowDirection,
+			fontSize: config.fontSize,
+			changeFontSize,
+			colorContrast: config.colorContrast,
+			setColorContrast,
+			learning: config.learning,
+			decrementLearning,
+		}),
 		[
 			config.chosenLanguage,
 			config.fontSize,
 			config.colorContrast,
+			config.learning,
 			changeLanguage,
 			changeFontSize,
 			setColorContrast,
+			decrementLearning,
 			t,
 		]
 	);

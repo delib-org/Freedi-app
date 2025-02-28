@@ -1,21 +1,20 @@
 import React, { FC } from 'react';
 import styles from './StartHere.module.scss';
 import PointDown from '@/assets/images/handPointingDown.png';
-import { decreesUserSettingsLearningRemain } from '@/controllers/db/learning/setLearning';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
-import { useAuthentication } from '@/controllers/hooks/useAuthentication';
+import { useDecreaseLearningRemain } from '@/controllers/hooks/useDecreaseLearningRemain';
 
 interface Props {
 	setShow: React.Dispatch<React.SetStateAction<boolean>>;
 }
+
 const StartHere: FC<Props> = ({ setShow }) => {
 	const { t, dir } = useUserConfig();
-	const { user } = useAuthentication();
+	const decreaseLearning = useDecreaseLearningRemain();
 
 	function handleCloseModal() {
 		setShow(false);
-		decreesUserSettingsLearningRemain({
-			userId: user.uid,
+		decreaseLearning({
 			addOption: true,
 		});
 	}
