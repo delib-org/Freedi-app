@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { User } from 'firebase/auth';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '@/controllers/db/config';
-import { useNavigate, useLocation, useParams } from 'react-router';
+import { useNavigate, useLocation } from 'react-router';
 import { useDispatch } from 'react-redux';
 import { resetEvaluations } from '@/redux/evaluations/evaluationsSlice';
 import { resetResults } from '@/redux/results/resultsSlice';
@@ -28,18 +28,9 @@ export const useAuthentication = () => {
 		creator: null,
 		initialRoute: '',
 	});
-
 	const navigate = useNavigate();
 	const location = useLocation();
 	const dispatch = useDispatch();
-	const { statementId } = useParams();
-
-	// Track route history for all navigation
-	useEffect(() => {
-		if (location.pathname !== '/start') {
-			dispatch(setHistory({ statementId, pathname: location.pathname }));
-		}
-	}, [dispatch, location, statementId]);
 
 	// Get initial route from local storage
 	const initialRoute = useRef(
