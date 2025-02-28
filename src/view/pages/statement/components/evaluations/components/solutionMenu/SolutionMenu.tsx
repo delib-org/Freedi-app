@@ -8,7 +8,7 @@ import { updateIsQuestion } from '@/controllers/db/statements/setStatements';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import Menu from '@/view/components/menu/Menu';
 import MenuOption from '@/view/components/menu/MenuOption';
-import { Statement } from '@/types/statement/Statement';
+import { Statement } from '@/types/statement/StatementTypes';
 import { StatementType } from '@/types/TypeEnums';
 
 interface Props {

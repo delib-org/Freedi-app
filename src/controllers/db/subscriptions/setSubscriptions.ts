@@ -2,14 +2,14 @@ import { doc, updateDoc, setDoc, Timestamp, getDoc } from 'firebase/firestore';
 import { FireStore } from '../config';
 import { getStatementSubscriptionId } from '@/controllers/general/helpers';
 import { Collections } from '@/types/TypeEnums';
-import { Statement, StatementSchema } from '@/types/statement/Statement';
+import { Statement, StatementSchema } from '@/types/statement/StatementTypes';
 import {
 	StatementSubscription,
 	StatementSubscriptionSchema,
 } from '@/types/statement/StatementSubscription';
-import { Creator } from '@/types/user/User';
 import { parse } from 'valibot';
 import { Role } from '@/types/user/UserSettings';
+import { Creator } from '@/types/user/User';
 
 export async function setStatementSubscriptionToDB(
 	statement: Statement,

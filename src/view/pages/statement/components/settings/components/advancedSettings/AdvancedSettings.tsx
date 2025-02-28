@@ -10,8 +10,8 @@ import { StatementSettings } from '@/types/statement/StatementSettings';
 const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 	const { t } = useUserConfig();
 
-	const statementSettings: StatementSettings =
-		getStatementSettings(statement);
+	const statementSettings: StatementSettings = getStatementSettings(statement);
+
 	const {
 		inVotingGetOnlyResults = false,
 		enhancedEvaluation = false,
@@ -28,6 +28,7 @@ const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 		property: keyof StatementSettings,
 		newValue: boolean
 	) {
+
 		setStatementSettingToDB({
 			statement,
 			property,

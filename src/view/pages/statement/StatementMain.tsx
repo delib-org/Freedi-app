@@ -32,8 +32,10 @@ import Modal from '@/view/components/modal/Modal';
 import { StatementType, Access, QuestionType } from '@/types/TypeEnums';
 import { Creator } from '@/types/user/User';
 import { Role } from '@/types/user/UserSettings';
-import { useAuthorization } from '@/controllers/hooks/useAuthorization';
+import { statementSelector } from '@/redux/statements/statementsSlice';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
+import { useAuthorization } from '@/controllers/hooks/useAuthorization';
+import { useSelector } from 'react-redux';
 
 // Create selectors
 export const subStatementsSelector = createSelector(
@@ -47,7 +49,7 @@ export const subStatementsSelector = createSelector(
 
 export default function StatementMain() {
 	// Hooks
-	const { statementId } = useParams();
+	const { statementId, stageId } = useParams();
 
 	//TODO:create a check with the parent statement if subscribes. if not subscribed... go according to the rules of authorization
 	const { isAuthorized, loading, statement, topParentStatement, role } =
@@ -56,6 +58,8 @@ export default function StatementMain() {
 	// Redux store
 	const dispatch = useAppDispatch();
 	const { creator } = useAuthentication();
+
+	const stage = useSelector(statementSelector(stageId));
 
 	// Use states
 	const [talker, setTalker] = useState<Creator | null>(null);
@@ -99,55 +103,28 @@ export default function StatementMain() {
 
 	// Listen to statement changes.
 	useEffect(() => {
-		let unSubListenToStatement: () => void = () => {
-			return;
-		};
-
-		let unSubSubStatements: () => void = () => {
-			return;
-		};
-		let unSubStatementSubscription: () => void = () => {
-			return;
-		};
-		let unSubEvaluations: () => void = () => {
-			return;
-		};
-
-		let unSubUserSettings: () => void = () => {
-			return;
-		};
-		let unSubAllDescendants: () => void = () => {
-			return;
-		};
+		const unsubscribeFunctions: (() => void)[] = [];
 
 		if (creator && statementId) {
-			unSubListenToStatement = listenToStatement(
-				statementId,
-				setIsStatementNotFound
+			// Initialize all listeners and store cleanup functions
+			unsubscribeFunctions.push(
+				listenToStatement(statementId, setIsStatementNotFound),
+				listenToAllDescendants(statementId), // used for map
+				listenToEvaluations(dispatch, statementId, creator.uid),
+				listenToSubStatements(statementId), // TODO: check if this is needed. It can be integrated under listenToAllDescendants
+				listenToStatementSubscription(statementId, creator, dispatch)
 			);
-			unSubAllDescendants = listenToAllDescendants(statementId); //used for map
-			unSubEvaluations = listenToEvaluations(
-				dispatch,
-				statementId,
-				creator.uid
-			);
-			//TODO: check if this is needed. It can be integrated under listenToAllDescendants
-			unSubSubStatements = listenToSubStatements(statementId);
 
-			unSubStatementSubscription = listenToStatementSubscription(
-				statementId,
-				creator,
-				dispatch
-			);
+			if (stageId) {
+				unsubscribeFunctions.push(
+					listenToStatement(stageId, setIsStatementNotFound)
+				);
+			}
 		}
 
+		// Cleanup function that calls all unsubscribe functions
 		return () => {
-			unSubListenToStatement();
-			unSubUserSettings();
-			unSubSubStatements();
-			unSubStatementSubscription();
-			unSubEvaluations();
-			unSubAllDescendants();
+			unsubscribeFunctions.forEach((unsubscribe) => unsubscribe());
 		};
 	}, [creator, statementId]);
 
@@ -201,6 +178,7 @@ export default function StatementMain() {
 	const contextValue = useMemo(
 		() => ({
 			statement,
+			stage,
 			talker,
 			handleShowTalker,
 			role,
@@ -212,6 +190,7 @@ export default function StatementMain() {
 		}),
 		[
 			statement,
+			stage,
 			talker,
 			role,
 			handleShowTalker,

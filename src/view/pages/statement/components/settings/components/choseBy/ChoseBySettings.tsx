@@ -18,7 +18,7 @@ import {
 	ChoseBy,
 	ChoseByEvaluationType,
 	CutoffType,
-} from '@/types/choseBy/ChoseBy';
+} from '@/types/choseBy/ChoseByTypes';
 
 interface RangeProps {
 	maxValue: number;

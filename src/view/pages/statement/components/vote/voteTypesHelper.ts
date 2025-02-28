@@ -1,4 +1,4 @@
-import { Statement } from '@/types/statement/Statement';
+import { Statement } from '@/types/statement/StatementTypes';
 import React from 'react';
 
 export interface OptionsBarsProps {

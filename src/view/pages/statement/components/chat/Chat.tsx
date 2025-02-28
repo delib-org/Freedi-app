@@ -10,8 +10,7 @@ import { listenToSubStatements } from '@/controllers/db/statements/listenToState
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { statementSubsSelector } from '@/redux/statements/statementsSlice';
 import Description from '../evaluations/components/description/Description';
-import { StatementType } from '@/types/TypeEnums';
-import { Statement } from '@/types/statement/Statement';
+import { Statement } from '@/types/statement/StatementTypes';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 
 let firstTime = true;
@@ -21,9 +20,7 @@ const Chat: FC = () => {
 	const chatRef = useRef<HTMLDivElement>(null);
 	const { statementId } = useParams();
 	const { statement } = useContext(StatementContext);
-	const subStatements = useAppSelector(
-		statementSubsSelector(statementId)
-	).filter((s) => s.statementType !== StatementType.stage);
+	const subStatements = useAppSelector(statementSubsSelector(statementId));
 	const { user } = useAuthentication();
 	const messagesEndRef = useRef<HTMLDivElement>(null);
 	const location = useLocation();
@@ -48,18 +45,16 @@ const Chat: FC = () => {
 	}
 
 	useEffect(() => {
-		const updateChatHeight = () => {
-			if (chatRef.current) {
-				chatRef.current.style.height = `${window.innerHeight - chatRef.current.getBoundingClientRect().top}px`;
-			}
-		};
-
-		updateChatHeight();
-		window.addEventListener('resize', updateChatHeight);
-
-		return () => {
-			window.removeEventListener('resize', updateChatHeight);
-		};
+		// const updateChatHeight = () => {
+		// 	if (chatRef.current) {
+		// 		chatRef.current.style.height = `${window.innerHeight - chatRef.current.getBoundingClientRect().top}px`;
+		// 	}
+		// };
+		// updateChatHeight();
+		// window.addEventListener('resize', updateChatHeight);
+		// return () => {
+		// 	window.removeEventListener('resize', updateChatHeight);
+		// };
 	}, []);
 
 	//scroll to bottom
@@ -118,9 +113,11 @@ const Chat: FC = () => {
 				className={`${styles.wrapper} ${toSlide && slideInOrOut}`}
 				id={`msg-${statement?.statementId}`}
 			>
-				<div className='wrapper'>
-					<Description />
-				</div>
+				{statement.description && (
+					<div className='wrapper'>
+						<Description />
+					</div>
+				)}
 				{subStatements?.map((statementSub: Statement, index) => (
 					<div key={statementSub.statementId}>
 						<ChatMessageCard

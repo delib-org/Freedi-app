@@ -14,7 +14,7 @@ import {
 	statementSubscriptionSelector,
 } from '@/redux/statements/statementsSlice';
 import Text from '@/view/components/text/Text';
-import { Statement } from '@/types/statement/Statement';
+import { Statement } from '@/types/statement/StatementTypes';
 
 interface Props {
 	statement: Statement | null;

@@ -3,8 +3,7 @@ export enum StatementType {
 	option = 'option',
 	question = 'question',
 	document = 'document',
-	group = 'group',
-	stage = 'stage',
+	group = 'group'
 }
 
 export enum DeliberativeElement {
@@ -37,8 +36,6 @@ export enum membersAllowed {
 }
 
 export enum QuestionType {
-	singleStep = 'single-step', //deprecated
-	multipleSteps = 'multiple-steps', //deprecated
 	massConsensus = 'mass-consensus',
 	multiStage = 'multi-stage',
 }

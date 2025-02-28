@@ -1,5 +1,5 @@
 import { StatementType } from '@/types/TypeEnums';
-import { Statement } from '@/types/statement/Statement';
+import { Statement } from '@/types/statement/StatementTypes';
 import { defaultStatementSettings } from './../../../settings/emptyStatementModel';
 import {
 	createStatement,

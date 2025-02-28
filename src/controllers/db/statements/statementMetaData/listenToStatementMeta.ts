@@ -4,7 +4,7 @@ import { FireStore } from '@/controllers/db/config';
 import { setStatementMetaData } from '@/redux/statements/statementsMetaSlice';
 import { store } from '@/redux/store';
 import { Collections } from '@/types/TypeEnums';
-import { StatementMetaDataSchema } from '@/types/statement/Statement';
+import { StatementMetaDataSchema } from '@/types/statement/StatementTypes';
 import { parse } from 'valibot';
 
 export function listenToStatementMetaData(statementId: string): Unsubscribe {

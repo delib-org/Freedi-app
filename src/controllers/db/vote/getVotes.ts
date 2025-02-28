@@ -8,7 +8,7 @@ import {
 } from 'firebase/firestore';
 import { FireStore } from '../config';
 import { Collections } from '@/types/TypeEnums';
-import { Statement, StatementSchema } from '@/types/statement/Statement';
+import { Statement, StatementSchema } from '@/types/statement/StatementTypes';
 import { getVoteId, Vote, VoteSchema } from '@/types/vote';
 import { parse } from 'valibot';
 
@@ -26,24 +26,24 @@ export async function getToVoteOnParent(
 		if (!voteId) throw new Error('VoteId not found');
 
 		const parentVoteRef = doc(FireStore, Collections.votes, voteId);
-
 		const voteDB = await getDoc(parentVoteRef);
 
+		if (!voteDB.exists()) return null;
 		const vote = parse(VoteSchema, voteDB.data());
 
-		//get statement to update to store
 		const statementRef = doc(
 			FireStore,
 			Collections.statements,
 			vote.statementId
 		);
 		const statementDB = await getDoc(statementRef);
-
 		const statement = parse(StatementSchema, statementDB.data());
 
 		updateStoreWithVoteCB(statement);
 	} catch (error) {
 		console.error(error);
+
+		return null;
 	}
 }
 

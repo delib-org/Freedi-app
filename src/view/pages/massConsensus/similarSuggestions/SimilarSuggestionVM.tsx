@@ -6,7 +6,7 @@ import {
 } from '@/controllers/db/statements/setStatements';
 import { MassConsensusPageUrls, StatementType } from '@/types/TypeEnums';
 import { GeneratedStatement } from '@/types/massConsensus/massConsensusModel';
-import { Statement } from '@/types/statement/Statement';
+import { Statement } from '@/types/statement/StatementTypes';
 import { useNavigate, useParams } from 'react-router';
 
 export function useSimilarSuggestions() {

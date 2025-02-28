@@ -8,7 +8,7 @@ import {
 	InferOutput,
 } from 'valibot';
 import { Creator, CreatorSchema } from '../user/User';
-import { StatementSchema } from './Statement';
+import { StatementSchema } from './StatementTypes';
 import { Role } from '../user/UserSettings';
 
 export const StatementSubscriptionSchema = object({

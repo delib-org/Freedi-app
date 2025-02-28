@@ -5,7 +5,7 @@ import { MassConsensusPageUrls } from '@/types/TypeEnums';
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { listenToStatement } from '@/controllers/db/statements/listenToStatements';
-import { Statement } from '@/types/statement/Statement';
+import { Statement } from '@/types/statement/StatementTypes';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 
 export function VotingSuggestionsMV() {

@@ -23,7 +23,7 @@ import {
 import { AppDispatch, store } from '@/redux/store';
 import { listenedStatements } from '@/view/pages/home/Home';
 import { Collections } from '@/types/TypeEnums';
-import { Statement } from '@/types/statement/Statement';
+import { Statement } from '@/types/statement/StatementTypes';
 import {
 	StatementSubscription,
 	StatementSubscriptionSchema,

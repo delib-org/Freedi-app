@@ -4,7 +4,7 @@ import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { setMassConsensusStatements } from '@/redux/statements/statementsSlice';
 import { functionConfig } from '@/types/ConfigFunctions';
 import { SelectionFunction } from '@/types/evaluation/Evaluation';
-import { Statement } from '@/types/statement/Statement';
+import { Statement } from '@/types/statement/StatementTypes';
 import { MassConsensusPageUrls } from '@/types/TypeEnums';
 
 import { useEffect, useState } from 'react';

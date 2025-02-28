@@ -1,4 +1,4 @@
-import { object, optional, enum_, InferOutput, array } from 'valibot';
+import { object, optional, enum_, InferOutput, array, boolean } from 'valibot';
 import {
 	QuestionStage,
 	QuestionStagesType,
@@ -7,10 +7,10 @@ import {
 } from '../TypeEnums';
 
 export const QuestionSettingsSchema = object({
-	questionType: optional(enum_(QuestionType)), //deprecated
+	isTopQuestion: optional(boolean()), //used to find the top question and all here descendants.
+	questionType: optional(enum_(QuestionType)), // multi-stage, mass-consensus
 	steps: optional(enum_(QuestionStagesType)),
 	stepsAllowed: optional(array(enum_(QuestionStep))),
-	stages: optional(array(enum_(QuestionStage))),
 	currentStep: optional(enum_(QuestionStep)),
 	currentStage: optional(enum_(QuestionStage)), //deprecated
 });

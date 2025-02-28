@@ -11,8 +11,8 @@ import Text from '../text/Text';
 import styles from './EditTitle.module.scss';
 import Save from '@/assets/icons/saveIcon.svg?react';
 import { updateStatementText } from '@/controllers/db/statements/setStatements';
+import { Statement } from '@/types/statement/StatementTypes';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
-import { Statement } from '@/types/statement/Statement';
 
 interface Props {
 	statement: Statement | undefined;
@@ -80,7 +80,7 @@ const EditTitle: FC<Props> = ({
 		if (!statement) return null;
 
 		return (
-			<div style={{ direction: direction, textAlign: align }}>
+			<div style={{ direction, textAlign: align }}>
 				<Text
 					statement={useTitle ? statement.statement : undefined}
 					description={

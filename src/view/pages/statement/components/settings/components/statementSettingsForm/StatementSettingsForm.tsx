@@ -27,7 +27,7 @@ import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { createSelector } from '@reduxjs/toolkit';
 import { RootState } from '@/redux/store';
 import Loader from '@/view/components/loaders/Loader';
-import { Statement } from '@/types/statement/Statement';
+import { Statement } from '@/types/statement/StatementTypes';
 import { StatementSubscription } from '@/types/statement/StatementSubscription';
 import { Role } from '@/types/user/UserSettings';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';

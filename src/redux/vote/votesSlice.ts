@@ -3,7 +3,7 @@ import type { PayloadAction } from '@reduxjs/toolkit';
 import { RootState } from '../store';
 
 import { updateArray } from '@/controllers/general/helpers';
-import { Statement, StatementSchema } from '@/types/statement/Statement';
+import { Statement, StatementSchema } from '@/types/statement/StatementTypes';
 import { Vote, getVoteId } from '@/types/vote';
 import { parse } from 'valibot';
 

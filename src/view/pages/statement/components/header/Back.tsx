@@ -2,8 +2,8 @@ import { FC } from 'react';
 import { useNavigate } from 'react-router';
 import BackArrowIcon from '@/assets/icons/chevronLeftIcon.svg?react';
 import { StyleProps } from '@/controllers/hooks/useStatementColor';
-import { Statement } from '@/types/statement/Statement';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
+import { Statement } from '@/types/statement/StatementTypes';
 
 interface Props {
 	statement: Statement | undefined;
@@ -16,6 +16,11 @@ const Back: FC<Props> = ({ statement, headerColor }) => {
 
 	function handleBack() {
 		try {
+			if (location.pathname.includes('stage')) {
+				return navigate(`/statement/${statement?.statementId}`, {
+					state: { from: window.location.pathname },
+				});
+			}
 			if (statement?.parentId === 'top' || !statement?.parentId) {
 				return navigate('/home', {
 					state: { from: window.location.pathname },

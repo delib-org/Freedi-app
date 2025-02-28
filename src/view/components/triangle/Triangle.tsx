@@ -2,16 +2,18 @@ import { FC, memo } from 'react';
 import { useSelector } from 'react-redux';
 import Dot from './dot/Dot';
 import styles from './Triangle.module.scss';
+import {
+	statementOptionsSelector,
+	statementSelector,
+} from '@/redux/statements/statementsSlice';
+import { Statement } from '@/types/statement/StatementTypes';
+import { useParams } from 'react-router';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
-import { statementOptionsSelector } from '@/redux/statements/statementsSlice';
-import { Statement } from '@/types/statement/Statement';
 
-interface Props {
-	statement: Statement;
-}
-
-const Triangle: FC<Props> = ({ statement }) => {
+const Triangle: FC = () => {
 	const { t } = useUserConfig();
+	const { statementId } = useParams();
+	const statement = useSelector(statementSelector(statementId));
 	const subStatements: Statement[] = useSelector(
 		statementOptionsSelector(statement.statementId)
 	).filter((s: Statement) => s.evaluation?.sumCon !== undefined);

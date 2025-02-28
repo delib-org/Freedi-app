@@ -13,7 +13,7 @@ import {
 import { getVoters } from '@/controllers/db/vote/getVotes';
 import { StatementType } from '@/types/TypeEnums';
 import { Evaluation } from '@/types/evaluation/Evaluation';
-import { Statement } from '@/types/statement/Statement';
+import { Statement } from '@/types/statement/StatementTypes';
 import { Vote } from '@/types/vote';
 import { Dispatch, SetStateAction } from 'react';
 import { StatementSettings } from '@/types/statement/StatementSettings';

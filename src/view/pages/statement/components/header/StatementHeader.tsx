@@ -1,11 +1,11 @@
-import React, { FC, useState } from 'react';
+import { FC, useState } from 'react';
 import { useLocation } from 'react-router';
 import StatementTopNav from '../nav/top/StatementTopNav';
 import InvitePanel from './invitePanel/InvitePanel';
 import { logOut } from '@/controllers/db/authenticationUtils';
 import { setFollowMeDB } from '@/controllers/db/statements/setStatements';
+import { Statement } from '@/types/statement/StatementTypes';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
-import { Statement } from '@/types/statement/Statement';
 
 interface Props {
 	statement: Statement | undefined;

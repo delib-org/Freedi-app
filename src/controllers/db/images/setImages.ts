@@ -1,6 +1,6 @@
 import { getDownloadURL, ref, uploadBytesResumable } from 'firebase/storage';
 import { storage } from '../config';
-import { Statement } from '@/types/statement/Statement';
+import { Statement } from '@/types/statement/StatementTypes';
 import { Collections } from '@/types/TypeEnums';
 
 export function uploadImageToStorage(
@@ -10,8 +10,7 @@ export function uploadImageToStorage(
 	return new Promise((resolve, reject) => {
 		const imageRef = ref(
 			storage,
-			`${Collections.statements}/${
-				statement.statementId
+			`${Collections.statements}/${statement.statementId
 			}/imgId-${Math.random()}`
 		);
 

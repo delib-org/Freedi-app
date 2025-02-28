@@ -4,7 +4,8 @@ import {
 	statementSelector,
 } from '@/redux/statements/statementsSlice';
 import { functionConfig } from '@/types/ConfigFunctions';
-import { Statement } from '@/types/statement/Statement';
+import { Statement } from '@/types/statement/StatementTypes';
+
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useParams } from 'react-router';

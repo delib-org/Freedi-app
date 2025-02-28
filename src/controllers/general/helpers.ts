@@ -1,6 +1,6 @@
 import { HistoryTracker } from '@/redux/history/HistorySlice';
 import { Screen } from '@/types/TypeEnums';
-import { Statement } from '@/types/statement/Statement';
+import { Statement } from '@/types/statement/StatementTypes';
 import { StatementSubscription } from '@/types/statement/StatementSubscription';
 import { Role } from '@/types/user/UserSettings';
 import { useAuthentication } from '../hooks/useAuthentication';
@@ -326,4 +326,16 @@ export function processHistory(
 
 		return state;
 	}
+}
+
+export function getLatestUpdateStatements(statements: Statement[]): number {
+	if (!statements || statements.length === 0) {
+		return 0;
+	}
+
+	return statements.reduce(
+		(latestUpdate, statement) =>
+			statement.lastUpdate > latestUpdate ? statement.lastUpdate : latestUpdate,
+		0
+	);
 }

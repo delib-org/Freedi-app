@@ -9,7 +9,7 @@ import { setQuestionStage } from '@/controllers/db/statements/statementMetaData/
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import { statementMetaDataSelector } from '@/redux/statements/statementsMetaSlice';
-import { Statement } from '@/types/statement/Statement';
+import { Statement } from '@/types/statement/StatementTypes';
 import { getStepInfo } from './helpers';
 import { QuestionStep } from '@/types/TypeEnums';
 

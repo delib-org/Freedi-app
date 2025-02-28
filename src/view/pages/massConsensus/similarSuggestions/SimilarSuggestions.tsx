@@ -6,7 +6,7 @@ import { MassConsensusPageUrls } from '@/types/TypeEnums';
 import { useSelector } from 'react-redux';
 import { selectSimilarStatements } from '@/redux/massConsensus/massConsensusSlice';
 import SimilarCard from './similarCard/SimilarCard';
-import { Statement } from '@/types/statement/Statement';
+import { Statement } from '@/types/statement/StatementTypes';
 import { GeneratedStatement } from '@/types/massConsensus/massConsensusModel';
 import styles from './SimilarSuggestions.module.scss';
 import { useSimilarSuggestions } from './SimilarSuggestionVM';

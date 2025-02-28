@@ -19,7 +19,7 @@ import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import { RootState } from '@/redux/store';
 import './MembersSettings.scss';
 import { Collections } from '@/types/TypeEnums';
-import { Statement } from '@/types/statement/Statement';
+import { Statement } from '@/types/statement/StatementTypes';
 import { StatementSubscription } from '@/types/statement/StatementSubscription';
 import { Role } from '@/types/user/UserSettings';
 

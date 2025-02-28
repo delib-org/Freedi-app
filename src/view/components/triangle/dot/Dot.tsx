@@ -1,7 +1,7 @@
 import { FC, useState, useRef } from 'react';
 import styles from './Dot.module.scss';
+import { Statement } from '@/types/statement/StatementTypes';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
-import { Statement } from '@/types/statement/Statement';
 
 interface Props {
 	subStatement: Statement;

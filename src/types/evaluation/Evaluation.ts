@@ -51,3 +51,15 @@ export const StatementEvaluationSchema = object({
 });
 
 export type StatementEvaluation = InferOutput<typeof StatementEvaluationSchema>;
+
+export enum EvaluationUI {
+	suggestions = 'suggestions',
+	voting = 'voting',
+	checkbox = 'checkbox',
+}
+
+export const StatementEvaluationSettingsSchema = object({
+	evaluationUI: enum_(EvaluationUI),
+});
+
+export type StatementEvaluationSettings = InferOutput<typeof StatementEvaluationSettingsSchema>;
