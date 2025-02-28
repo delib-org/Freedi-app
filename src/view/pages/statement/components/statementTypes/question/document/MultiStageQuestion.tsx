@@ -109,13 +109,8 @@ const MultiStageQuestion: FC = () => {
 
 	return (
 		<>
-
-			<Button
-				text='Add Stage'
-				type='button'
-				buttonType={ButtonType.PRIMARY}
-				onClick={() => setShowAddStage(true)}
-			/>
+			<h2 className={styles.title}>{statement.statement}</h2>
+			<p>{statement?.description}</p>
 
 			{showAddStage && (
 				<Modal>
@@ -147,6 +142,12 @@ const MultiStageQuestion: FC = () => {
 				))}
 				<StageCard statement={statement} isSuggestions={true} />
 			</div>
+			<Button
+				text='Add Stage'
+				type='button'
+				buttonType={ButtonType.PRIMARY}
+				onClick={() => setShowAddStage(true)}
+			/>
 		</>
 	);
 };
