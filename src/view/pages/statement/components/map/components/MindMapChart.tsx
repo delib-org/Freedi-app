@@ -46,7 +46,7 @@ const nodeTypes = {
 };
 
 interface Props {
-	descendants: Results[];
+	descendants: Results;
 
 	isAdmin: boolean;
 }
