@@ -25,7 +25,7 @@ import {
 import { AppDispatch, store } from '@/redux/store';
 import { listenedStatements } from '@/view/pages/home/Home';
 import { Collections } from '@/types/TypeEnums';
-import { Statement, StatementSchema } from '@/types/statement/Statement';
+import { Statement, StatementSchema } from '@/types/statement/StatementTypes';
 import {
 	StatementSubscription,
 	StatementSubscriptionSchema,
@@ -84,7 +84,7 @@ export const listenToStatementSubSubscriptions = (
 	} catch (error) {
 		console.error(error);
 
-		return () => {};
+		return () => { };
 	}
 };
 
@@ -191,7 +191,7 @@ export function listenToStatementSubscriptions(
 	} catch (error) {
 		console.error('Listen to statement subscriptions error', error);
 
-		return () => {};
+		return () => { };
 	}
 }
 
@@ -496,6 +496,6 @@ export function getNewStatementsFromSubscriptions(): Unsubscribe {
 	} catch (error) {
 		console.error(error);
 
-		return () => {};
+		return () => { };
 	}
 }

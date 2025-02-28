@@ -12,7 +12,7 @@ import styles from './EditTitle.module.scss';
 import Save from '@/assets/icons/saveIcon.svg?react';
 import { updateStatementText } from '@/controllers/db/statements/setStatements';
 import { useLanguage } from '@/controllers/hooks/useLanguages';
-import { Statement } from '@/types/statement/Statement';
+import { Statement } from '@/types/statement/StatementTypes';
 
 interface Props {
 	statement: Statement | undefined;

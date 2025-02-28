@@ -11,7 +11,7 @@ import Input from '@/view/components/input/Input';
 import Textarea from '@/view/components/textarea/Textarea';
 import { StatementContext } from '@/view/pages/statement/StatementCont';
 import { StatementType } from '@/types/TypeEnums';
-import { Statement } from '@/types/statement/Statement';
+import { Statement } from '@/types/statement/StatementTypes';
 
 export default function GetInitialStatementData() {
 	const { t } = useLanguage();
@@ -22,6 +22,7 @@ export default function GetInitialStatementData() {
 		newQuestionType,
 		handleSetNewStatement,
 		statement,
+		stage,
 	} = useContext(StatementContext);
 
 	const handleSubmit = async (ev: FormEvent<HTMLFormElement>) => {
@@ -36,7 +37,7 @@ export default function GetInitialStatementData() {
 			if (!statement) throw new Error('Statement is not defined');
 
 			const newStatement: Statement | undefined = createStatement({
-				parentStatement: statement,
+				parentStatement: stage ?? statement,
 				text: title,
 				description,
 				statementType: newStatementType,
@@ -45,7 +46,7 @@ export default function GetInitialStatementData() {
 			if (!newStatement) throw new Error('newStatement is not defined');
 
 			setStatementToDB({
-				parentStatement: statement,
+				parentStatement: stage ?? statement,
 				statement: newStatement,
 			});
 

@@ -7,7 +7,7 @@ import Modal from '@/view/components/modal/Modal';
 import './CreateStatementModal.scss';
 import Button, { ButtonType } from '@/view/components/buttons/button/Button';
 import { StatementType } from '@/types/TypeEnums';
-import { Statement } from '@/types/statement/Statement';
+import { Statement } from '@/types/statement/StatementTypes';
 
 interface CreateStatementModalProps {
 	parentStatement: Statement | 'top';

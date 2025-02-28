@@ -7,7 +7,7 @@ import {
 	setStatement,
 	statementSelectorById,
 } from '@/redux/statements/statementsSlice';
-import { Statement } from '@/types/statement/Statement';
+import { Statement } from '@/types/statement/StatementTypes';
 
 interface Props {
 	statement: Statement;

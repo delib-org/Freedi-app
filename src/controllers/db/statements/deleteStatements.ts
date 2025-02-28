@@ -8,7 +8,7 @@ import {
 	where,
 } from 'firebase/firestore';
 import { FireStore } from '../config';
-import { Statement } from '@/types/statement/Statement';
+import { Statement } from '@/types/statement/StatementTypes';
 import { Collections } from '@/types/TypeEnums';
 
 export async function deleteStatementFromDB(
