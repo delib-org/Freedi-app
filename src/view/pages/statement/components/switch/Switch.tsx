@@ -24,11 +24,9 @@ const Switch = () => {
 						: statement?.statement}
 				</h1>
 			</div>
-			<div className="wrapper">
 
-				<SwitchScreen statement={statement} role={role} />
+			<SwitchScreen statement={statement} role={role} />
 
-			</div>
 		</main>
 	);
 };
