@@ -21,7 +21,7 @@ export function setStatementSettingToDB({
 	try {
 		const statementSettingsRef = doc(
 			FireStore,
-			Collections.statementsSettings,
+			Collections.statements,
 			statement.statementId
 		);
 		setDoc(

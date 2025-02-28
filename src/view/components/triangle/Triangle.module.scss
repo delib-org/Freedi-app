@@ -1,14 +1,11 @@
 .triangle {
 	position: absolute;
-	top: 10%;
+	top: 20%;
 	left: 20%;
 	width: 70%;
 	height: 70%;
 	border: 2px solid #92cff8;
-	// background-color: #e4eef5;
 	clip-path: polygon(0 0, 0 100%, 100% 100%);
-
-	// transform: rotate(45deg);
 
 	&--invisible {
 		position: absolute;

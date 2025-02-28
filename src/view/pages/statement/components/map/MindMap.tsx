@@ -1,4 +1,4 @@
-import { useState, FC, useEffect } from 'react';
+import { useState, FC } from 'react';
 import { useSelector } from 'react-redux';
 import { ReactFlowProvider } from 'reactflow';
 import CreateStatementModal from '../createStatementModal/CreateStatementModal';
@@ -43,10 +43,6 @@ const MindMap: FC = () => {
 	const [filterBy, setFilterBy] = useState<FilterType>(
 		FilterType.questionsResultsOptions
 	);
-
-	useEffect(() => {
-		console.log("results has changed")
-	}, [results])
 
 	const toggleModal = (show: boolean) => {
 		setMapContext((prev) => ({

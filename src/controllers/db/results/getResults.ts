@@ -22,10 +22,8 @@ export async function getResultsDB(statement: Statement): Promise<Statement[]> {
 		const resultsBy = resultsSettings?.resultsBy || ResultsBy.topOptions;
 
 		if (resultsBy === ResultsBy.topOptions) {
-			const temp = await getTopOptionsDB(statement);
-			console.log(temp);
 
-			return temp;
+			return await getTopOptionsDB(statement);
 		} else {
 			return [];
 		}

@@ -63,7 +63,6 @@ function NavButtons({
 			{allowNavigation && (
 				<NavigationButtons
 					statement={parentStatement || statement}
-					screen={screen}
 					handleNavigation={handleNavigation}
 					headerStyle={headerStyle}
 				/>

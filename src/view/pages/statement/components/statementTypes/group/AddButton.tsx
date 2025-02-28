@@ -3,7 +3,6 @@ import IconButton from '@/view/components/iconButton/IconButton';
 import PlusIcon from '@/assets/icons/plusIcon.svg?react';
 import AddDocumentIcon from '@/assets/icons/document.svg?react';
 import AddClusterIcon from '@/assets/icons/net-clusters.svg?react';
-import AddSubQuestionIcon from '@/assets/icons/questionIcon.svg?react';
 import AddSubGroupIcon from '@/assets/icons/team-group.svg?react';
 import { StatementContext } from '../../../StatementCont';
 import { QuestionType, StatementType } from '@/types/TypeEnums';
@@ -25,16 +24,16 @@ export default function AddButton() {
 	}
 
 	const handleAction = (
-		action: 'document' | 'cluster' | 'subgroup' | 'subquestion'
+		action: 'question' | 'mass-consensus' | 'subgroup'
 	) => {
 		switch (action) {
-			case 'document':
+			case 'question':
 				handleAddStatement(
 					StatementType.question,
 					QuestionType.multiStage
 				);
 				break;
-			case 'cluster':
+			case 'mass-consensus':
 				handleAddStatement(
 					StatementType.question,
 					QuestionType.massConsensus
@@ -42,12 +41,6 @@ export default function AddButton() {
 				break;
 			case 'subgroup':
 				handleAddStatement(StatementType.group);
-				break;
-			case 'subquestion':
-				handleAddStatement(
-					StatementType.question,
-					QuestionType.singleStep
-				);
 				break;
 			default:
 				break;
@@ -58,25 +51,20 @@ export default function AddButton() {
 
 	const actions = [
 		{
-			key: 'document',
-			action: 'document' as const,
+			key: 'question',
+			action: 'question' as const,
 			icon: <AddDocumentIcon />,
 		},
 		{
-			key: 'cluster',
-			action: 'cluster' as const,
+			key: 'mass-consensus',
+			action: 'mass-consensus' as const,
 			icon: <AddClusterIcon />,
 		},
 		{
 			key: 'subgroup',
 			action: 'subgroup' as const,
 			icon: <AddSubGroupIcon />,
-		},
-		{
-			key: 'subquestion',
-			action: 'subquestion' as const,
-			icon: <AddSubQuestionIcon />,
-		},
+		}
 	];
 
 	return (

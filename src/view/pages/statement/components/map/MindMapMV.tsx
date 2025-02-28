@@ -6,7 +6,6 @@ import { useParams } from "react-router";
 import { resultsByParentId } from "./mapCont";
 import { Results } from "@/types/results/Results";
 import { Statement } from "@/types/statement/StatementTypes";
-import { getLatestUpdateStatements } from "@/controllers/general/helpers";
 
 export function useMindMap() {
 	const { statementId } = useParams();
