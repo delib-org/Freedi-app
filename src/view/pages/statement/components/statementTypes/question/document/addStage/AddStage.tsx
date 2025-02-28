@@ -1,4 +1,4 @@
-import React, { FC, useContext } from 'react';
+import React, { FC, useContext, useState } from 'react';
 import { useLanguage } from '@/controllers/hooks/useLanguages';
 import styles from './AddStage.module.scss';
 import Button, { ButtonType } from '@/view/components/buttons/button/Button';
@@ -14,6 +14,7 @@ interface AddStageProps {
 const AddStage: FC<AddStageProps> = ({ setShowAddStage }) => {
 	const { t } = useLanguage();
 	const { statement } = useContext(StatementContext);
+	const [isShaking, setIsShaking] = useState(false);
 
 	function handleCloseModal() {
 		setShowAddStage(false);
@@ -22,8 +23,16 @@ const AddStage: FC<AddStageProps> = ({ setShowAddStage }) => {
 	async function handleAddStage(ev: React.FormEvent<HTMLFormElement>) {
 		ev.preventDefault();
 		const data = new FormData(ev.target as HTMLFormElement);
-		const stageSelectionType = data.get('stageSelectionType') as StageSelectionType;
-		if (!stageSelectionType) return;
+		const stageSelectionType = data.get(
+			'stageSelectionType'
+		) as StageSelectionType;
+		if (!stageSelectionType) {
+			setIsShaking(true);
+
+			return;
+		}
+		setIsShaking(false);
+
 		const name = data.get('stageName') as string;
 		const description = (data.get('stageDescription') as string) || '';
 
@@ -46,6 +55,7 @@ const AddStage: FC<AddStageProps> = ({ setShowAddStage }) => {
 					name='stageSelectionType'
 					id='stageSelectionType'
 					defaultValue=''
+					className={isShaking ? styles.shake : ''}
 				>
 					<option value='' disabled>
 						{t('Define how to select top options')}
@@ -53,7 +63,9 @@ const AddStage: FC<AddStageProps> = ({ setShowAddStage }) => {
 					<option value={StageSelectionType.consensus}>
 						{t('Consensus')}
 					</option>
-					<option value={StageSelectionType.voting}>{t('Voting')}</option>
+					<option value={StageSelectionType.voting}>
+						{t('Voting')}
+					</option>
 					<option value={StageSelectionType.checkbox}>
 						{t('Checkbox')}
 					</option>
