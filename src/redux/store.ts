@@ -1,6 +1,5 @@
 import { configureStore } from '@reduxjs/toolkit';
 import { evaluationsSlicer } from './evaluations/evaluationsSlice';
-import { historySlice } from './history/HistorySlice';
 import { resultsSlice } from './results/resultsSlice';
 import { statementMetaData } from './statements/statementsMetaSlice';
 import { statementsSlicer } from './statements/statementsSlice';
@@ -16,7 +15,6 @@ export const store = configureStore({
 		evaluations: evaluationsSlicer.reducer,
 		votes: votesSlicer.reducer,
 		results: resultsSlice.reducer,
-		history: historySlice.reducer,
 		choseBys: choseBySlice.reducer,
 		massConsensus: massConsensusSlice.reducer,
 		notifications: notificationsSlicer.reducer,
