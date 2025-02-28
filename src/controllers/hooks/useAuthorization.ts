@@ -5,7 +5,7 @@ import {
 	statementSubscriptionSelector,
 } from '@/redux/statements/statementsSlice';
 import { Access } from '@/types/TypeEnums';
-import type { Statement } from '@/types/statement/Statement';
+import type { Statement } from '@/types/statement/StatementTypes';
 import { getStatementFromDB } from '@/controllers/db/statements/getStatement';
 import { getTopParentSubscriptionFromDByStatement } from '@/controllers/db/subscriptions/getSubscriptions';
 import { setStatementSubscriptionToDB } from '@/controllers/db/subscriptions/setSubscriptions';

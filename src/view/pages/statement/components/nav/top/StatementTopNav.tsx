@@ -15,6 +15,7 @@ import { StatementContext } from '../../../StatementCont';
 import { Statement } from '@/types/statement/StatementTypes';
 import { Role } from '@/types/user/UserSettings';
 import NavButtons from './navButtons/NavButtons';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 
 interface Props {
 	statement?: Statement;

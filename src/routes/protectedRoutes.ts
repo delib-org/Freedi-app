@@ -5,7 +5,12 @@ import withSuspense from './withSuspense';
 const StatementMain = lazy(
 	() => import('@/view/pages/statement/StatementMain')
 );
-const Stage = lazy(() => import('@/view/pages/stage/Stage'));
+const Stage = lazy(
+	() =>
+		import(
+			'@/view/pages/statement/components/statementTypes/stage/StagePage'
+		)
+);
 
 export const protectedRoutes: RouteObject[] = [
 	{
