@@ -7,7 +7,7 @@ import {
 } from './EnhancedEvaluationModel';
 import { setEvaluationToDB } from '@/controllers/db/evaluation/setEvaluation';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
-// import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import { evaluationSelector } from '@/redux/evaluations/evaluationsSlice';
 import { Statement } from '@/types/statement/StatementTypes';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
