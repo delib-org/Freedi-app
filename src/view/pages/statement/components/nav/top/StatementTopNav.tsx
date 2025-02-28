@@ -16,8 +16,6 @@ import MenuOption from '@/view/components/menu/MenuOption';
 import { StatementContext } from '../../../StatementCont';
 import { Statement } from '@/types/statement/StatementTypes';
 import { Role } from '@/types/user/UserSettings';
-import { StatementType } from '@/types/TypeEnums';
-
 import NavButtons from './navButtons/NavButtons';
 
 interface Props {
