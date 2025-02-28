@@ -29,7 +29,7 @@ const StageCard: FC<Props> = ({ statement, isDescription, isSuggestions }) => {
 		: `/statement/${statement.statementId}`;
 	const topVotedId =
 		statement.stageSelectionType === StageSelectionType.voting &&
-		statement.selections
+			statement.selections
 			? maxKeyInObject(statement.selections)
 			: '';
 
@@ -57,7 +57,7 @@ const StageCard: FC<Props> = ({ statement, isDescription, isSuggestions }) => {
 	};
 
 	const description =
-		statement?.evaluationSettings.evaluationUI === 'voting'
+		statement?.evaluationSettings?.evaluationUI === 'voting'
 			? 'Choosing a suggestion in a vote'
 			: 'Possible solutions for discussed issue';
 
