@@ -1,4 +1,4 @@
-import { ChoseBy } from '@/types/choseBy/ChoseBy';
+import { ChoseBy } from '@/types/choseBy/ChoseByTypes';
 import { DB } from '../config';
 import { doc, setDoc } from 'firebase/firestore';
 import { Collections } from '@/types/TypeEnums';

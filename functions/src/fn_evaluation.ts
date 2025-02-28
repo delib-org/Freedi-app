@@ -15,7 +15,7 @@ import {
 	ChoseByEvaluationType,
 	CutoffType,
 	defaultChoseBySettings,
-} from '../../src/types/choseBy/ChoseBy';
+} from '../../src/types/choseBy/ChoseByTypes';
 
 import { statementToSimpleStatement } from '../../src/types/statement/SimpleStatement';
 

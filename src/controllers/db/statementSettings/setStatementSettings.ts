@@ -1,6 +1,6 @@
 import { doc, setDoc } from 'firebase/firestore';
 import { FireStore } from '../config';
-import { QuestionSettings } from '@/types/question/Question';
+import { QuestionSettings } from '@/types/question/QuestionType';
 import { Statement } from '@/types/statement/StatementTypes';
 import { Collections, QuestionType } from '@/types/TypeEnums';
 import { StatementSettings } from '@/types/statement/StatementSettings';
@@ -21,7 +21,7 @@ export function setStatementSettingToDB({
 	try {
 		const statementSettingsRef = doc(
 			FireStore,
-			Collections.statementsSettings,
+			Collections.statements,
 			statement.statementId
 		);
 		setDoc(

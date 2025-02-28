@@ -3,15 +3,14 @@ import { useSelector } from 'react-redux';
 import Dot from './dot/Dot';
 import styles from './Triangle.module.scss';
 import { useLanguage } from '@/controllers/hooks/useLanguages';
-import { statementOptionsSelector } from '@/redux/statements/statementsSlice';
+import { statementOptionsSelector, statementSelector } from '@/redux/statements/statementsSlice';
 import { Statement } from '@/types/statement/StatementTypes';
+import { useParams } from 'react-router';
 
-interface Props {
-	statement: Statement;
-}
-
-const Triangle: FC<Props> = ({ statement }) => {
+const Triangle: FC = () => {
 	const { t } = useLanguage();
+	const { statementId } = useParams();
+	const statement = useSelector(statementSelector(statementId));
 	const subStatements: Statement[] = useSelector(
 		statementOptionsSelector(statement.statementId)
 	).filter((s: Statement) => s.evaluation?.sumCon !== undefined);
