@@ -17,6 +17,8 @@ export function VotingSuggestionsMV() {
 
 	const user = useSelector(userSelector);
 
+	const navigateToFeedback = () => navigate(`/mass-consensus/${statementId}/${MassConsensusPageUrls.leaveFeedback}`);
+
 	async function fetchTopStatements() {
 		fetch(
 			`http://localhost:5001/${firebaseConfig.projectId}/${functionConfig.region}/getTopStatements?parentId=${statementId}&limit=6`
@@ -53,5 +55,5 @@ export function VotingSuggestionsMV() {
 			);
 	}, [user]);
 
-	return { subStatements, statementId };
+	return { subStatements, statementId, navigateToFeedback };
 }

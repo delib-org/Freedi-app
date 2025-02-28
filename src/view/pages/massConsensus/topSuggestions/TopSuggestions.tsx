@@ -9,7 +9,7 @@ import { useLanguage } from "@/controllers/hooks/useLanguages";
 
 const TopSuggestions = () => {
     const { t } = useLanguage();
-	useTopSuggestions();
+	const { navigateToVoting } = useTopSuggestions();
 
     return (
         <div>
@@ -18,7 +18,7 @@ const TopSuggestions = () => {
             <div className="wrapper">
                 <SuggestionCards selectionFunction={SelectionFunction.top} propSort={SortType.random}  />
             </div>
-            <FooterMassConsensus goTo={MassConsensusPageUrls.voting}/>
+            <FooterMassConsensus isNextActive={true} onNext={navigateToVoting} goTo={MassConsensusPageUrls.voting}/>
         </div>
     )
 }
