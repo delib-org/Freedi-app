@@ -1,6 +1,7 @@
 .wrapper {
 	max-width: var(--wrapper);
 	margin: 1rem auto;
+
 }
 
 .title {
@@ -8,6 +9,8 @@
 }
 
 .stagesWrapper {
+	padding-top: 2rem;
+	background-color: white;
 	display: flex;
 	flex-direction: column;
 	border-radius: var(--radius);
@@ -22,6 +25,7 @@
 
 		&:last-child {
 			border-radius: 0 0 var(--radius) var(--radius);
+			padding-bottom: 2rem;
 		}
 	}
 }

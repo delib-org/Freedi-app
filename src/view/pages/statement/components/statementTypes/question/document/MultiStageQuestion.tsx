@@ -109,8 +109,7 @@ const MultiStageQuestion: FC = () => {
 
 	return (
 		<>
-			<h2 className={styles.title}>{statement.statement}</h2>
-			<p>{statement?.description}</p>
+
 			<Button
 				text='Add Stage'
 				type='button'
@@ -125,6 +124,8 @@ const MultiStageQuestion: FC = () => {
 			)}
 
 			<div className={styles.stagesWrapper}>
+				<h2 className={styles.title}>{statement.statement}</h2>
+				<p>{statement?.description}</p>
 				{initialStages.map((stage, index) => (
 					<button
 						key={stage.statementId}
