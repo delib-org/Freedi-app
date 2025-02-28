@@ -33,7 +33,7 @@ const AddStage: FC<AddStageProps> = ({ setShowAddStage }) => {
 			description,
 			stageSelectionType,
 			parentStatement: statement,
-			statementType: StatementType.stage,
+			statementType: StatementType.question,
 		});
 
 		setShowAddStage(false);

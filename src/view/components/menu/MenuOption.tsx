@@ -15,13 +15,20 @@ const MenuOption: FC<MenuOptionProps> = ({
 	icon,
 }) => {
 	return (
-		<button
+		<div
 			className={`menu-option ${isOptionSelected ? "selected" : ""}`}
 			onClick={onOptionClick}
+			role="button"
+			tabIndex={0}
+			onKeyPress={(e) => {
+				if (e.key === "Enter" || e.key === " ") {
+					onOptionClick();
+				}
+			}}
 		>
 			{icon}
 			<div className="label">{label}</div>
-		</button>
+		</div>
 	);
 };
 

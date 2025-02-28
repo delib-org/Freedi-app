@@ -22,7 +22,7 @@ export function useSwitchMV() {
 		if (
 			!parentStatement &&
 			statementId &&
-			statement?.statementType === StatementType.stage
+			statement?.statementType === StatementType.question
 		) {
 			getStatementFromDB(statement?.parentId).then((statement) => {
 				if (statement) {
