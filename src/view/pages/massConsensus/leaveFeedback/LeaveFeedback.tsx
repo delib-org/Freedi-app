@@ -37,8 +37,6 @@ function LeaveFeedback() {
 			<FooterMassConsensus 
 				isNextActive={true} 
 				onNext={handleSendButton} 
-				goTo={MassConsensusPageUrls.initialQuestion} 
-				isIntro={true}
 				isFeedback={true}
 			/>
 			<div style={{ textAlign: "center", marginTop: "1rem" }}>

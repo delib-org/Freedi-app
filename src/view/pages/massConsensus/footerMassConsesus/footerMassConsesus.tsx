@@ -4,7 +4,7 @@ import { MassConsensusPageUrls } from '@/types/TypeEnums';
 import styles from './FooterMassConsensus.module.scss';
 import { useLanguage } from '@/controllers/hooks/useLanguages';
 
-const FooterMassConsensus = ({ goTo, isIntro, isNextActive, isFeedback, onNext }: { goTo: MassConsensusPageUrls, isIntro?: boolean, isNextActive?: boolean, isFeedback?: boolean, onNext?:()=> void }) => {
+const FooterMassConsensus = ({ goTo, isIntro, isNextActive, isFeedback, onNext }: { goTo?: MassConsensusPageUrls, isIntro?: boolean, isNextActive?: boolean, isFeedback?: boolean, onNext?:()=> void }) => {
 	const { statementId } = useParams<{ statementId: string }>();
 	const { lang } = useParamsLanguage();
 	const { t } = useLanguage();
@@ -14,7 +14,15 @@ const FooterMassConsensus = ({ goTo, isIntro, isNextActive, isFeedback, onNext }
 			{isIntro? 
 			<Link to={`/mass-consensus/${statementId}/${goTo}?lang=${lang}`}>
 				<button className="btn btn--large btn--primary">{isFeedback? t('Send'): t('Start')}</button>
-			</Link>:
+			</Link>
+			:isFeedback? 
+			<button
+				className={`btn btn--large btn--primary ${!isNextActive ? 'btn--disabled' : ''}`}
+				onClick={onNext}
+			>
+				{t('Send')}
+			</button>
+			:
 			<>
 				<button
 					className={`btn btn--large btn--primary ${!isNextActive ? 'btn--disabled' : ''}`}
