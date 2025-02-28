@@ -15,7 +15,7 @@ const Page404 = () => {
 	const { t } = useUserConfig();
 
 	function handleGoHome() {
-		navigate('/', { state: { from: window.location.pathname } });
+		navigate('/home', { replace: true });
 	}
 
 	return (

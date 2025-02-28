@@ -1,22 +1,23 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { User } from 'firebase/auth';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '@/controllers/db/config';
-import { useNavigate, useLocation, useParams } from 'react-router';
+import { useNavigate, useLocation } from 'react-router';
 import { useDispatch } from 'react-redux';
-import { setHistory } from '@/redux/history/HistorySlice';
 import { resetEvaluations } from '@/redux/evaluations/evaluationsSlice';
 import { resetResults } from '@/redux/results/resultsSlice';
 import { resetStatements } from '@/redux/statements/statementsSlice';
 import { resetVotes } from '@/redux/vote/votesSlice';
 import { Creator } from '@/types/user/User';
 import { convertFirebaseUserToCreator } from '@/types/user/userUtils';
+import { LocalStorageObjects } from '@/types/localStorage/LocalStorageObjects';
 
 interface AuthState {
 	isAuthenticated: boolean;
 	isLoading: boolean;
 	user: User | null;
 	creator: Creator | null;
+	initialRoute?: string;
 }
 
 export const useAuthentication = () => {
@@ -25,59 +26,55 @@ export const useAuthentication = () => {
 		isLoading: true,
 		user: null,
 		creator: null,
+		initialRoute: '',
 	});
-
 	const navigate = useNavigate();
 	const location = useLocation();
 	const dispatch = useDispatch();
-	const { statementId } = useParams();
 
-	// Track route history for all navigation
-	useEffect(() => {
-		if (location.pathname !== '/start') {
-			dispatch(setHistory({ statementId, pathname: location.pathname }));
-		}
-	}, [dispatch, location, statementId]);
+	// Get initial route from local storage
+	const initialRoute = useRef(
+		JSON.parse(localStorage.getItem(LocalStorageObjects.InitialRoute))
+	);
 
+	// Main auth effect
 	useEffect(() => {
 		const unsubscribe = onAuthStateChanged(auth, (user) => {
 			if (user) {
+				// User is authenticated
 				setAuthState({
 					isAuthenticated: true,
 					isLoading: false,
 					user,
 					creator: convertFirebaseUserToCreator(user),
+					initialRoute: initialRoute.current?.pathname,
 				});
-
-				// After authentication, history state will contain the initial route
-				const historyState = JSON.parse(
-					localStorage.getItem('routeHistory') || '{}'
-				);
-				const savedPath = historyState?.pathname;
-
-				if (
-					savedPath &&
-					savedPath !== '/start' &&
-					location.pathname === '/start'
-				) {
-					navigate(savedPath, { replace: true });
-				}
 			} else {
+				// User is not authenticated
 				setAuthState({
 					isAuthenticated: false,
 					isLoading: false,
 					user: null,
 					creator: null,
+					initialRoute: initialRoute.current?.pathname,
 				});
 
 				// Save current location before redirecting to start
-				if (location.pathname !== '/start') {
-					dispatch(
-						setHistory({ statementId, pathname: location.pathname })
+				if (
+					location.pathname !== '/start' &&
+					location.pathname !== '/'
+				) {
+					const historyData = {
+						pathname: location.pathname,
+					};
+					localStorage.setItem(
+						LocalStorageObjects.InitialRoute,
+						JSON.stringify(historyData)
 					);
 					navigate('/start', { replace: true });
 				}
 
+				// Reset application state
 				dispatch(resetStatements());
 				dispatch(resetEvaluations());
 				dispatch(resetVotes());
@@ -86,7 +83,7 @@ export const useAuthentication = () => {
 		});
 
 		return () => unsubscribe();
-	}, [navigate, dispatch, location.pathname, statementId]);
+	}, []);
 
 	return authState;
 };

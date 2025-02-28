@@ -48,6 +48,7 @@ import en from '../assets/Languages/en.json';
 import es from '../assets/Languages/es.json';
 import he from '../assets/Languages/he.json';
 import nl from '../assets/Languages/nl.json';
+import { LocalStorageObjects } from '@/types/localStorage/LocalStorageObjects';
 
 const languages: Record<string, string>[] = [en, ar, he, de, es, nl];
 
@@ -111,7 +112,9 @@ export const UserConfigProvider: React.FC<UserConfigProviderProps> = ({
 	// Initialize state from localStorage or defaults
 	const [config, setConfig] = useState<UserConfig>(() => {
 		try {
-			const savedConfig = localStorage.getItem('userConfig');
+			const savedConfig = localStorage.getItem(
+				LocalStorageObjects.UserConfig
+			);
 			if (savedConfig) {
 				const parsedConfig = JSON.parse(savedConfig);
 
@@ -137,7 +140,10 @@ export const UserConfigProvider: React.FC<UserConfigProviderProps> = ({
 	// Save to localStorage whenever config changes
 	useEffect(() => {
 		try {
-			localStorage.setItem('userConfig', JSON.stringify(config));
+			localStorage.setItem(
+				LocalStorageObjects.UserConfig,
+				JSON.stringify(config)
+			);
 		} catch (error) {
 			console.error('Error saving to localStorage:', error);
 		}

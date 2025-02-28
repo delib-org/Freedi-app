@@ -13,6 +13,7 @@ import { Role } from '@/types/user/UserSettings';
 import { StatementSubscription } from '@/types/statement/StatementSubscription';
 import { useAuthentication } from './useAuthentication';
 import { Creator } from '@/types/user/User';
+import { useNavigate } from 'react-router';
 
 export interface AuthorizationState {
 	isAuthorized: boolean;
@@ -30,6 +31,8 @@ export const useAuthorization = (statementId?: string) => {
 		loading: true,
 		error: false,
 	});
+
+	const navigation = useNavigate();
 
 	const statement = useAppSelector(statementSelector(statementId));
 	const statementSubscription = useAppSelector(
@@ -52,6 +55,10 @@ export const useAuthorization = (statementId?: string) => {
 				creator,
 				statementSubscription
 			);
+
+			if (!isAuthorized) {
+				navigation('/401');
+			}
 
 			// Get top parent statement if needed
 			let topParentStatement: Statement | undefined;

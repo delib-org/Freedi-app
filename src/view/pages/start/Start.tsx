@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import MoreLeft from '../../../assets/icons/moreLeft.svg?react';
 import MoreRight from '../../../assets/icons/moreRight.svg?react';
 import Logo from '../../../assets/logo/106 x 89 SVG.svg?react';
@@ -12,16 +12,25 @@ import packageJson from '../../../../package.json';
 import { LanguagesEnum } from '@/context/UserConfigContext';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { Navigate } from 'react-router';
+import { LocalStorageObjects } from '@/types/localStorage/LocalStorageObjects';
 
 const Start = () => {
 	const [shouldShowNameModal, setShouldShowNameModal] = useState(false);
 	const { t, changeLanguage, currentLanguage, rowDirection } =
 		useUserConfig();
-	const { isAuthenticated } = useAuthentication();
+	const { isAuthenticated, initialRoute } = useAuthentication();
+
+	const navigateTo = initialRoute ?? '/home';
 
 	const version = packageJson.version;
 
-	if (isAuthenticated) return <Navigate to='/home' replace />;
+	useEffect(() => {
+		if (isAuthenticated && initialRoute) {
+			localStorage.removeItem(LocalStorageObjects.InitialRoute);
+		}
+	}, [isAuthenticated, initialRoute]);
+
+	if (isAuthenticated) return <Navigate to={navigateTo} replace />;
 
 	return (
 		<div className={styles.splashPage}>

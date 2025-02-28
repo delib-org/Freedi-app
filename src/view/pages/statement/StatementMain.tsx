@@ -50,14 +50,8 @@ export default function StatementMain() {
 	const { statementId } = useParams();
 
 	//TODO:create a check with the parent statement if subscribes. if not subscribed... go according to the rules of authorization
-	const {
-		error,
-		isAuthorized,
-		loading,
-		statement,
-		topParentStatement,
-		role,
-	} = useAuthorization(statementId);
+	const { isAuthorized, loading, statement, topParentStatement, role } =
+		useAuthorization(statementId);
 
 	// Redux store
 	const dispatch = useAppDispatch();
@@ -73,10 +67,6 @@ export default function StatementMain() {
 	const [newQuestionType, setNewQuestionType] = useState<QuestionType>(
 		QuestionType.multiStage
 	);
-
-	// const [_, setPasswordCheck] = useState<boolean>(false)
-
-	// Constants
 
 	const handleShowTalker = (_talker: Creator | null) => {
 		if (!talker) {
@@ -96,7 +86,6 @@ export default function StatementMain() {
 	}
 
 	//in case the url is of undefined screen, navigate to the first available screen
-
 	useEffect(() => {
 		if (statement && screen) {
 			//set navigator tab title
@@ -233,7 +222,6 @@ export default function StatementMain() {
 	);
 
 	if (isStatementNotFound) return <Page404 />;
-	if (error) return <UnAuthorizedPage />;
 	if (loading) return <LoadingPage />;
 
 	if (isAuthorized) {
