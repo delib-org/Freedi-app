@@ -58,40 +58,42 @@ const Start = () => {
 				</span>
 			</div>
 			<div className={styles.version}>v: {version}</div>
-			<select
-				className={styles.language}
-				defaultValue={savedLang || defaultLang}
-				onChange={(e) => {
-					const lang = e.target.value as LanguagesEnum;
-					changeLanguage(lang);
-					if (lang === 'he' || lang === 'ar') {
-						document.body.style.direction = 'rtl';
-					} else {
-						document.body.style.direction = 'ltr';
-					}
-					localStorage.setItem('lang', lang);
-				}}
-			>
-				{LANGUAGES.map(({ code, label }) => (
-					<option key={code} value={code}>
-						{label}
-					</option>
-				))}
-			</select>
-			<button
-				style={{ flexDirection: direction }}
-				data-cy='anonymous-login'
-				className={`${styles.anonymous} ${direction === 'row' ? styles.ltr : styles.rtl}`}
-				onClick={() => setShouldShowNameModal((prev) => !prev)}
-			>
-				{direction === 'row-reverse' ? <MoreLeft /> : null}
-				{t('Login with a temporary name')}{' '}
-				{direction === 'row' ? <MoreRight /> : null}
-			</button>
+			<div className={styles.interactionComponents}>
+				<select
+					className={styles.language}
+					defaultValue={savedLang || defaultLang}
+					onChange={(e) => {
+						const lang = e.target.value as LanguagesEnum;
+						changeLanguage(lang);
+						if (lang === 'he' || lang === 'ar') {
+							document.body.style.direction = 'rtl';
+						} else {
+							document.body.style.direction = 'ltr';
+						}
+						localStorage.setItem('lang', lang);
+					}}
+				>
+					{LANGUAGES.map(({ code, label }) => (
+						<option key={code} value={code}>
+							{label}
+						</option>
+					))}
+				</select>
+				<button
+					style={{ flexDirection: direction }}
+					data-cy='anonymous-login'
+					className={`${styles.anonymous} ${direction === 'row' ? styles.ltr : styles.rtl}`}
+					onClick={() => setShouldShowNameModal((prev) => !prev)}
+				>
+					{direction === 'row-reverse' ? <MoreLeft /> : null}
+					{t('Login with a temporary name')}{' '}
+					{direction === 'row' ? <MoreRight /> : null}
+				</button>
 
-			<GoogleLoginButton />
+				<GoogleLoginButton />
+			</div>
 
-			<img src={StartPageImage} alt='' className={styles.StratPageImage} />
+			<img src={StartPageImage} alt='' className={styles.StartPageImage} />
 			<a href='http://delib.org' target='_blank' className={styles.ddi}>
 				<footer>{t('From the Institute for Deliberative Democracy')}</footer>
 			</a>
