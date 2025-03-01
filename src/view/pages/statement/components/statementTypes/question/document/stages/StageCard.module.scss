@@ -1,28 +1,52 @@
 .card {
-
 	padding: var(--padding) var(--padding) 3rem var(--padding);
 	background-color: white;
 	text-align: start;
-
-
+	width: 100%;
 	p {
 		color: var(--text);
+		font-size: 16px;
+		margin: 15px;
+	}
+	span {
+		color: var(--text);
+		font-size: 12px;
+		margin-bottom: 15px;
+	}
+	h4 {
+		margin: 26px;
+		margin-left: 0;
+		font-weight: medium;
 	}
 
+	h3 {
+		font-weight: medium;
+	}
 	ul {
 		list-style-type: none;
 		padding: 0;
 
 		li {
 			color: var(--text);
-			margin: .2rem .7rem .2rem .5rem;
+			margin: 16px;
 		}
 	}
-
-	.seeMore {
-		padding: 1rem .5rem .7rem 0;
+	.rtl {
+		text-align: right;
 	}
-
+	.ltr {
+		text-align: left;
+	}
+	.seeMore {
+		display: block;
+		font-size: 16px;
+		color: var(--btn-primary-default);
+		padding: 1rem 0.5rem 0.7rem 0;
+	}
+	.suggestions {
+		font-size: 16px;
+		color: var(--text-body);
+	}
 	a {
 		color: navy;
 
