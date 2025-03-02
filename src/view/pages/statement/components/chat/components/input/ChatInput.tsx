@@ -11,7 +11,6 @@ import SendIcon from '@/view/components/icons/SendIcon';
 import { Statement } from '@/types/statement/StatementTypes';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
-import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 
 interface Props {
 	statement: Statement;

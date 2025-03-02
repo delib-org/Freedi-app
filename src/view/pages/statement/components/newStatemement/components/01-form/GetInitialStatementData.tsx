@@ -44,7 +44,6 @@ export default function GetInitialStatementData() {
 				description,
 				statementType: newStatementType,
 				questionType: newQuestionType,
-				creator,
 			});
 			if (!newStatement) throw new Error('newStatement is not defined');
 
@@ -52,7 +51,6 @@ export default function GetInitialStatementData() {
 				creator,
 				parentStatement: statement,
 				statement: newStatement,
-				creator,
 			});
 
 			handleSetNewStatement(false);
