@@ -2,7 +2,7 @@ import HeaderMassConsensus from '../headerMassConsensus/HeaderMassConsensus'
 import SuggestionCards from '../../statement/components/evaluations/components/suggestionCards/SuggestionCards'
 import { SelectionFunction } from '@/types/evaluation/Evaluation';
 import { MassConsensusPageUrls } from '@/types/TypeEnums';
-import FooterMassConsensus from '../footerMassConsesus/FooterMassConsesus';
+import FooterMassConsensus from '../footerMassConsensus/FooterMassConsensus';
 import TitleMassConsensus from '../TitleMassConsensus/TitleMassConsensus';
 import { useRandomSuggestions } from './RandomSuggestionsVM';
 import { useLanguage } from '@/controllers/hooks/useLanguages';
