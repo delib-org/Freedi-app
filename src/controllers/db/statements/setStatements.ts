@@ -13,19 +13,21 @@ import {
 	getSiblingOptionsByParentId,
 } from '@/view/pages/statement/components/vote/statementVoteCont';
 import { getRandomColor } from '@/view/pages/statement/components/vote/votingColors';
-import { Statement, StatementSchema } from '@/types/statement/Statement';
+import { Statement, StatementSchema } from '@/types/statement/StatementTypes';
 import {
 	Collections,
 	StatementType,
 	Access,
-	QuestionStage,
 	QuestionType,
 } from '@/types/TypeEnums';
 import { UserSchema, Membership } from '@/types/user/User';
 import { number, parse, string } from 'valibot';
 import { ResultsBy } from '@/types/results/Results';
-import { StageType } from '@/types/stage/Stage';
+import { StageSelectionType } from '@/types/stage/stageTypes';
 import { getRandomUID } from '@/types/TypeUtils';
+import { EvaluationUI } from '@/types/evaluation/Evaluation';
+import { setChoseByToDB } from '../choseBy/setChoseBy';
+import { ChoseByEvaluationType, CutoffType } from '@/types/choseBy/ChoseByTypes';
 
 export const updateStatementParents = async (
 	statement: Statement,
@@ -105,7 +107,7 @@ export async function saveStatementToDB({
 	numberOfResults,
 	hasChildren,
 	membership,
-	stageType,
+	stageSelectionType,
 }: CreateStatementProps): Promise<Statement | undefined> {
 	try {
 		const statement = createStatement({
@@ -121,7 +123,7 @@ export async function saveStatementToDB({
 			numberOfResults,
 			hasChildren,
 			membership,
-			stageType,
+			stageSelectionType,
 		});
 
 		if (!statement) throw new Error('Statement is undefined');
@@ -130,6 +132,15 @@ export async function saveStatementToDB({
 			statement,
 			parentStatement,
 		});
+
+		if (statement.statementType !== StatementType.group) {
+			setChoseByToDB({
+				statementId: statement.statementId,
+				cutoffType: CutoffType.topOptions,
+				choseByEvaluationType: ChoseByEvaluationType.consensus,
+				number: 1,
+			});
+		}
 
 		return statement;
 	} catch (error) {
@@ -149,9 +160,9 @@ export const setStatementToDB = async ({
 	parentStatement,
 }: SetStatementToDBParams): Promise<
 	| {
-			statementId: string;
-			statement: Statement;
-	  }
+		statementId: string;
+		statement: Statement;
+	}
 	| undefined
 > => {
 	try {
@@ -181,8 +192,8 @@ export const setStatementToDB = async ({
 			parentStatement === 'top'
 				? statement.statementId
 				: statement?.topParentId ||
-					parentStatement?.topParentId ||
-					'top';
+				parentStatement?.topParentId ||
+				'top';
 
 		const siblingOptions = getSiblingOptionsByParentId(
 			parentId,
@@ -233,6 +244,15 @@ export const setStatementToDB = async ({
 		//add subscription
 		await Promise.all(statementPromises);
 
+		if (statement.statementType !== StatementType.group) {
+			setChoseByToDB({
+				statementId: statement.statementId,
+				cutoffType: CutoffType.topOptions,
+				choseByEvaluationType: ChoseByEvaluationType.consensus,
+				number: 1,
+			});
+		}
+
 		return { statementId: statement.statementId, statement };
 	} catch (error) {
 		console.error(error);
@@ -247,7 +267,6 @@ export interface CreateStatementProps {
 	parentStatement: Statement | 'top';
 	statementType: StatementType;
 	questionType?: QuestionType;
-	questionStages?: QuestionStage[];
 	enableAddEvaluationOption?: boolean;
 	enableAddVotingOption?: boolean;
 	enhancedEvaluation?: boolean;
@@ -256,7 +275,7 @@ export interface CreateStatementProps {
 	numberOfResults?: number;
 	hasChildren?: boolean;
 	membership?: Membership;
-	stageType?: StageType;
+	stageSelectionType?: StageSelectionType;
 }
 
 export function createStatement({
@@ -265,7 +284,6 @@ export function createStatement({
 	parentStatement,
 	statementType,
 	questionType,
-	questionStages = [],
 	enableAddEvaluationOption = true,
 	enableAddVotingOption = true,
 	enhancedEvaluation = true,
@@ -274,7 +292,7 @@ export function createStatement({
 	numberOfResults = 1,
 	hasChildren = true,
 	membership,
-	stageType,
+	stageSelectionType,
 }: CreateStatementProps): Statement | undefined {
 	try {
 		const storeState = store.getState();
@@ -342,17 +360,30 @@ export function createStatement({
 			results: [],
 		};
 
-		if (stageType) {
-			newStatement.stageType = stageType;
-			newStatement.statementType = StatementType.stage;
-		}
-
 		if (newStatement.statementType === StatementType.question) {
 			newStatement.questionSettings = {
 				questionType: questionType ?? QuestionType.multiStage,
-				stages: [...questionStages],
 			};
+
+			newStatement.evaluationSettings = {
+				evaluationUI: getEvaluationUI(stageSelectionType),
+			};
+
 		}
+
+		function getEvaluationUI(stageSelectionType?: StageSelectionType): EvaluationUI {
+			switch (stageSelectionType) {
+				case StageSelectionType.consensus:
+					return EvaluationUI.suggestions;
+				case StageSelectionType.voting:
+					return EvaluationUI.voting;
+				case StageSelectionType.checkbox:
+					return EvaluationUI.checkbox;
+				default:
+					return EvaluationUI.suggestions;
+			}
+		}
+
 		parse(StatementSchema, newStatement);
 
 		return newStatement;

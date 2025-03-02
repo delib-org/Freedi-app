@@ -1,5 +1,5 @@
 import { object, optional, number, enum_, InferOutput } from 'valibot';
-import { Statement } from '../statement/Statement';
+import { Statement } from '../statement/StatementTypes';
 
 export enum ResultsBy {
 	/** all options above a specific consensus level will be approved */

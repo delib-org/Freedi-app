@@ -11,7 +11,7 @@ import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { useLanguage } from '@/controllers/hooks/useLanguages';
 import { evaluationSelector } from '@/redux/evaluations/evaluationsSlice';
 import { userSettingsSelector } from '@/redux/users/userSlice';
-import { Statement } from '@/types/statement/Statement';
+import { Statement } from '@/types/statement/StatementTypes';
 
 interface EnhancedEvaluationProps {
 	statement: Statement;

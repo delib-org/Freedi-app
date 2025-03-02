@@ -16,8 +16,7 @@ import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { statementSubsSelector } from '@/redux/statements/statementsSlice';
 import { userSelector } from '@/redux/users/userSlice';
 import Description from '../evaluations/components/description/Description';
-import { StatementType } from '@/types/TypeEnums';
-import { Statement } from '@/types/statement/Statement';
+import { Statement } from '@/types/statement/StatementTypes';
 
 let firstTime = true;
 let numberOfSubStatements = 0;
@@ -28,7 +27,7 @@ const Chat: FC = () => {
 	const { statement } = useContext(StatementContext);
 	const subStatements = useAppSelector(
 		statementSubsSelector(statementId)
-	).filter((s) => s.statementType !== StatementType.stage);
+	)
 	const user = useAppSelector(userSelector);
 	const messagesEndRef = useRef<HTMLDivElement>(null);
 	const location = useLocation();
@@ -53,18 +52,18 @@ const Chat: FC = () => {
 	}
 
 	useEffect(() => {
-		const updateChatHeight = () => {
-			if (chatRef.current) {
-				chatRef.current.style.height = `${window.innerHeight - chatRef.current.getBoundingClientRect().top}px`;
-			}
-		};
+		// const updateChatHeight = () => {
+		// 	if (chatRef.current) {
+		// 		chatRef.current.style.height = `${window.innerHeight - chatRef.current.getBoundingClientRect().top}px`;
+		// 	}
+		// };
 
-		updateChatHeight();
-		window.addEventListener('resize', updateChatHeight);
+		// updateChatHeight();
+		// window.addEventListener('resize', updateChatHeight);
 
-		return () => {
-			window.removeEventListener('resize', updateChatHeight);
-		};
+		// return () => {
+		// 	window.removeEventListener('resize', updateChatHeight);
+		// };
 	}, []);
 
 	//scroll to bottom
@@ -123,9 +122,9 @@ const Chat: FC = () => {
 				className={`${styles.wrapper} ${toSlide && slideInOrOut}`}
 				id={`msg-${statement?.statementId}`}
 			>
-				<div className='wrapper'>
+				{statement.description && <div className='wrapper'>
 					<Description />
-				</div>
+				</div>}
 				{subStatements?.map((statementSub: Statement, index) => (
 					<div key={statementSub.statementId}>
 						<ChatMessageCard

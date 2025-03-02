@@ -5,7 +5,7 @@ import { userSelector } from '@/redux/users/userSlice';
 import { functionConfig } from '@/types/ConfigFunctions';
 import { MassConsensusPageUrls } from '@/types/TypeEnums';
 import { SelectionFunction } from '@/types/evaluation/Evaluation';
-import { Statement } from '@/types/statement/Statement';
+import { Statement } from '@/types/statement/StatementTypes';
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useParams } from 'react-router';
