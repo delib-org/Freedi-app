@@ -229,8 +229,8 @@
 	"Your description": "התיאור שלך",
 	"similar suggestions": "הצעות דומות",
 	"Thank you for the suggestion!": "תודה על ההצעה!",
-	"Here are similar suggestions. which one fits best?": "?אלו הצעות דומות שעלו. מי מהן עדיפה בעינך?",
-	"General suggestion evaluation": "הערכת הצעות מובילות",
+	"Here are similar suggestions. which one fits best?": "אלו הצעות דומות שעלו. מי מהן עדיפה בעינך?",
+	"General suggestion evaluation": "הערכת כלל הצעות",
 	"leading suggestion evaluation": "הערכת הצעות המובילות",
 	"please rate the following suggestions": "אנא דרג/י את ההצעות הבאות",
 	"please vote for the best suggestion": "אנא הצבע/י על האופציה המועדפת עליך",
@@ -240,5 +240,8 @@
 	"Agreement Map": "מפת הסכמות",
 	"Mind Map": "מפת חשיבה",
 	"Choosing a suggestion in a vote": "בחירת הצעה בהצבעה",
-	"Possible solutions for discussed issue": "פתרונות אפשריים לבעיה שנדונה"
+	"Possible solutions for discussed issue": "פתרונות אפשריים לבעיה שנדונה",
+	"Skip": "דלג",
+	"Next": "הבא",
+	"Sign up": "הרשמה"
 }
