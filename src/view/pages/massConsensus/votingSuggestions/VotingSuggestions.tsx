@@ -10,10 +10,10 @@ import { useSelector } from 'react-redux';
 import { statementSelector } from '@/redux/statements/statementsSlice';
 import { MassConsensusPageUrls } from '@/types/TypeEnums';
 import { Statement } from '@/types/statement/StatementTypes';
-import FooterMassConsensus from '../footerMassConsesus/footerMassConsesus';
 import { getTotalVoters } from '../../statement/components/vote/statementVoteCont';
 import { useLanguage } from '@/controllers/hooks/useLanguages';
 import TitleMassConsensus from '../TitleMassConsensus/TitleMassConsensus';
+import FooterMassConsensus from '../footerMassConsesus/FooterMassConsesus';
 
 const VotingSuggestions = () => {
 	const { subStatements } = VotingSuggestionsMV();
