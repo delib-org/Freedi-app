@@ -1,7 +1,7 @@
 import { Link, useParams } from 'react-router';
 import { useLanguageParams } from '../useParamsLang/useLanguageParams';
 import { MassConsensusPageUrls } from '@/types/TypeEnums';
-import styles from './FooterMassConsensus.module.scss';
+import styles from './MassConsensusFooter.module.scss';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 
 const MassConsensusFooter = ({
