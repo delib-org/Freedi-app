@@ -21,6 +21,7 @@ export async function getStatementFromDB(
 	statementId: string
 ): Promise<Statement | undefined> {
 	try {
+		if (!statementId) throw new Error('Statement ID is required to get statement from DB');
 		const statementRef = doc(
 			FireStore,
 			Collections.statements,
