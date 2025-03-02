@@ -1,6 +1,7 @@
 .wrapper {
 	max-width: var(--wrapper);
 	margin: 1rem auto;
+
 }
 
 .title {
@@ -8,18 +9,23 @@
 }
 
 .stagesWrapper {
+	padding-top: 2rem;
+	background-color: white;
 	display: flex;
 	flex-direction: column;
 	border-radius: var(--radius);
 	margin: 2rem 0;
+	max-width: var(--wrapper);
+	width: 100%;
 
-	> div {
+	>div {
 		&:first-child {
 			border-radius: var(--radius) var(--radius) 0 0;
 		}
 
 		&:last-child {
 			border-radius: 0 0 var(--radius) var(--radius);
+			padding-bottom: 2rem;
 		}
 	}
 }
@@ -29,9 +35,11 @@
 	align-items: center;
 	background: white;
 	cursor: grab;
+
 	&.dragging {
 		opacity: 0.5;
 	}
+
 	font: inherit;
 }
 

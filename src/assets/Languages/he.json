@@ -239,6 +239,8 @@
 	"Checkbox": "בחירה מרובה",
 	"Agreement Map": "מפת הסכמות",
 	"Mind Map": "מפת חשיבה",
-	"Choosing a suggestion in a vote": "בחירת הצעה בהצבעה",
-	"Possible solutions for discussed issue": "פתרונות אפשריים לבעיה שנדונה"
+	"Solution selected by vote": "פתרון שנבחר בהצבעה",
+	"Solutions selected for discussed issue": "פתרונות נבחרים",
+	"See more...": "עוד פתרונות...",
+	"Add Suggestions": "הוספת הצעה חדשה"
 }
