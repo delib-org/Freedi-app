@@ -1,6 +1,5 @@
 import { useNavigate, useParams } from 'react-router';
 import HeaderMassConsensus from '../headerMassConsensus/HeaderMassConsensus';
-import FooterMassConsensus from '../footerMassConsesus/FooterMassConsesus';
 import TitleMassConsensus from '../TitleMassConsensus/TitleMassConsensus';
 import { useParamsLanguage } from '../useParamsLang/UseParamsLanguge';
 import { useSelector } from 'react-redux';
@@ -11,6 +10,7 @@ import { MassConsensusPageUrls } from '@/types/TypeEnums';
 import Loader from '@/view/components/loaders/Loader';
 import { useLanguage } from '@/controllers/hooks/useLanguages';
 import styles from './InitialQuestion.module.scss'
+import FooterMassConsensus from '../footerMassConsesus/footerMassConsesus';
 
 const InitialQuestion = () => {
 	const navigate = useNavigate();

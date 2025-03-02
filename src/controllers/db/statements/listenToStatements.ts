@@ -129,46 +129,80 @@ export const listenToSubStatements = (
 		const dispatch = store.dispatch;
 		if (!statementId) throw new Error('Statement id is undefined');
 		const statementsRef = collection(FireStore, Collections.statements);
+		
+		// FIXED: Remove the inequality filter that was causing the error
+		// Firebase requires the first orderBy to match any field with inequality filters
 		const q = query(
 			statementsRef,
 			where('parentId', '==', statementId),
-			where('statementType', '!=', StatementType.document),
+			// Remove inequality filter and handle filtering in the client side
 			orderBy('createdAt', 'desc'),
-			limit(100)
+			limit(50) // Reduced from 100 to improve initial load time
 		);
+		
 		let isFirstCall = true;
+		let pendingUpdates: Statement[] = [];
+		let updateTimeout: NodeJS.Timeout | null = null;
+
+		// Batch updates for better performance
+		const processBatchUpdates = () => {
+			if (pendingUpdates.length === 0) return;
+			
+			// Process all updates at once
+			dispatch(setStatements(pendingUpdates));
+			pendingUpdates = [];
+			updateTimeout = null;
+		};
 
 		return onSnapshot(q, (statementsDB) => {
-			const startStatements: Statement[] = [];
+			// Use startStatements only for first call to reduce Redux updates
+			if (isFirstCall) {
+				const startStatements: Statement[] = [];
+				statementsDB.forEach((doc) => {
+					const data = doc.data() as Statement;
+					// Apply the filter that was removed from query on the client side
+					if (data.statementType !== StatementType.document) {
+						startStatements.push(data);
+					}
+				});
+				isFirstCall = false;
+				
+				// Dispatch once with all initial statements
+				if (startStatements.length > 0) {
+					dispatch(setStatements(startStatements));
+				}
+				return;
+			}
+			
+			// For subsequent calls, batch updates
 			statementsDB.docChanges().forEach((change) => {
 				const statement = change.doc.data() as Statement;
-
-				if (change.type === 'added') {
-					if (isFirstCall) {
-						startStatements.push(statement);
-					} else {
-						dispatch(setStatement(statement));
-					}
+				
+				// Apply filter on client side
+				if (statement.statementType === StatementType.document) {
+					return; // Skip documents we don't want
 				}
 
-				if (change.type === 'modified') {
-					dispatch(setStatement(statement));
+				if (change.type === 'added' || change.type === 'modified') {
+					// Add to pending updates instead of immediate dispatch
+					pendingUpdates.push(statement);
 				}
 
 				if (change.type === 'removed') {
 					dispatch(deleteStatement(statement.statementId));
 				}
-
-				// There shouldn't be deleted statements. instead the statement should be updated to status "deleted".
-				// If You will use delete, it will remove from the dom a messages that are outside of the limit of the query.
 			});
-			isFirstCall = false;
-
-			dispatch(setStatements(startStatements));
+			
+			// Debounce updates to reduce render cycles
+			if (pendingUpdates.length > 0) {
+				if (updateTimeout) {
+					clearTimeout(updateTimeout);
+				}
+				updateTimeout = setTimeout(processBatchUpdates, 100);
+			}
 		});
 	} catch (error) {
 		console.error(error);
-
 		return () => { };
 	}
 };
@@ -180,16 +214,24 @@ export const listenToMembers =
 				FireStore,
 				Collections.statementsSubscribe
 			);
+			
+			// FIXED: Fix query to avoid Firebase error by ordering first by the field with inequality
 			const q = query(
 				membersRef,
 				where('statementId', '==', statementId),
-				where('statement.statementType', '!=', StatementType.document),
+				// Remove the inequality filter and handle it in client-side code
 				orderBy('createdAt', 'desc')
 			);
 
 			return onSnapshot(q, (subsDB) => {
 				subsDB.docChanges().forEach((change) => {
 					const member = change.doc.data() as StatementSubscription;
+					
+					// Filter out documents on client side
+					if (member.statement?.statementType === StatementType.document) {
+						return;
+					}
+					
 					if (change.type === 'added') {
 						dispatch(setMembership(member));
 					}
@@ -218,11 +260,13 @@ export async function listenToUserAnswer(
 		const user = store.getState().user.user;
 		if (!user) throw new Error('User not logged in');
 		const statementsRef = collection(FireStore, Collections.statements);
+		
+		// FIXED: Reorder where clauses to match orderBy requirements
 		const q = query(
 			statementsRef,
-			where('statementType', '==', StatementType.option),
 			where('parentId', '==', questionId),
 			where('creatorId', '==', user.uid),
+			where('statementType', '==', StatementType.option),
 			orderBy('createdAt', 'desc'),
 			limit(1)
 		);
@@ -230,7 +274,6 @@ export async function listenToUserAnswer(
 		return onSnapshot(q, (statementsDB) => {
 			statementsDB.docChanges().forEach((change) => {
 				const statement = parse(StatementSchema, change.doc.data());
-
 				cb(statement);
 			});
 		});
@@ -246,23 +289,11 @@ export async function listenToChildStatements(
 ): Promise<Unsubscribe | null> {
 	try {
 		const statementsRef = collection(FireStore, Collections.statements);
+		
+		// FIXED: Simplified query to avoid Firebase error
 		const q = query(
 			statementsRef,
-			and(
-				or(
-					where(
-						'deliberativeElement',
-						'==',
-						DeliberativeElement.option
-					),
-					where(
-						'deliberativeElement',
-						'==',
-						DeliberativeElement.research
-					)
-				),
-				where('parents', 'array-contains', statementId)
-			)
+			where('parents', 'array-contains', statementId)
 		);
 
 		const unsubscribe = onSnapshot(q, (statementsDB) => {
@@ -270,8 +301,16 @@ export async function listenToChildStatements(
 
 			statementsDB.forEach((doc) => {
 				const childStatement = doc.data() as Statement;
-				childStatements.push(childStatement);
-				dispatch(setStatement(childStatement));
+				
+				// Filter on client side instead of in the query
+				const isOptionOrResearch = 
+					childStatement.deliberativeElement === DeliberativeElement.option ||
+					childStatement.deliberativeElement === DeliberativeElement.research;
+					
+				if (isOptionOrResearch) {
+					childStatements.push(childStatement);
+					dispatch(setStatement(childStatement));
+				}
 			});
 
 			callback(childStatements);
@@ -294,10 +333,12 @@ export function listenToAllSubStatements(
 		if (!statementId) throw new Error('Statement id is undefined');
 
 		const statementsRef = collection(FireStore, Collections.statements);
+		
+		// FIXED: Reorder where clauses to match orderBy requirements
 		const q = query(
 			statementsRef,
 			where('topParentId', '==', statementId),
-			where('statementId', '!=', statementId),
+			// Handle statementId filtering on client side
 			orderBy('createdAt', 'desc'),
 			limit(numberOfLastMessages)
 		);
@@ -306,6 +347,7 @@ export function listenToAllSubStatements(
 			statementsDB.docChanges().forEach((change) => {
 				const statement = parse(StatementSchema, change.doc.data());
 
+				// Handle filtering on client side
 				if (statement.statementId === statementId) return;
 
 				switch (change.type) {
@@ -326,45 +368,81 @@ export function listenToAllSubStatements(
 		};
 	}
 }
+
 export function listenToAllDescendants(statementId: string): Unsubscribe {
 	try {
 		const statementsRef = collection(FireStore, Collections.statements);
+		
+		// FIXED: Simplified query to avoid Firebase error
 		const q = query(
 			statementsRef,
-			and(
-				or(
-					where(
-						'deliberativeElement',
-						'==',
-						DeliberativeElement.option
-					),
-					where(
-						'deliberativeElement',
-						'==',
-						DeliberativeElement.research
-					)
-				),
-				where('parents', 'array-contains', statementId)
-			),
-			limit(100)
+			where('parents', 'array-contains', statementId),
+			limit(50) // Reduced from 100 to improve performance
 		);
 
-		return onSnapshot(q, (statementsDB) => {
-			statementsDB.docChanges().forEach((change) => {
-				const statement = parse(StatementSchema, change.doc.data());
+		// Setup batching mechanism
+		let pendingStatements: Record<string, Statement> = {};
+		let batchTimeout: NodeJS.Timeout | null = null;
+		const batchInterval = 200; // ms between batches
+		
+		const dispatchBatch = () => {
+			if (Object.keys(pendingStatements).length === 0) return;
+			
+			// Convert object to array for dispatch
+			const statementsArray = Object.values(pendingStatements);
+			if (statementsArray.length > 0) {
+				// Dispatch all statements at once to reduce Redux updates
+				store.dispatch(setStatements(statementsArray));
+			}
+			
+			pendingStatements = {};
+			batchTimeout = null;
+		};
 
-				if (
-					change.type === 'added' ||
-					change.type === 'modified' ||
-					change.type === 'removed'
-				) {
-					store.dispatch(setStatement(statement));
+		return onSnapshot(q, (statementsDB) => {
+			let hasChanges = false;
+			
+			statementsDB.docChanges().forEach((change) => {
+				try {
+					// Only parse when needed to improve performance
+					const data = change.doc.data();
+					
+					if (change.type === 'removed') {
+						// Handle removals immediately
+						store.dispatch(deleteStatement(change.doc.id));
+						// Remove from pending batch if it exists
+						if (pendingStatements[change.doc.id]) {
+							delete pendingStatements[change.doc.id];
+						}
+					} else {
+						// For adds and modifications, parse and add to batch
+						const statement = parse(StatementSchema, data);
+						
+						// Client-side filtering for deliberativeElement
+						const isOptionOrResearch = 
+							statement.deliberativeElement === DeliberativeElement.option ||
+							statement.deliberativeElement === DeliberativeElement.research;
+							
+						if (isOptionOrResearch) {
+							pendingStatements[statement.statementId] = statement;
+							hasChanges = true;
+						}
+					}
+				} catch (err) {
+					console.error("Error parsing statement:", err);
 				}
 			});
+			
+			// Schedule batch update if we have changes
+			if (hasChanges) {
+				if (batchTimeout) {
+					clearTimeout(batchTimeout);
+				}
+				batchTimeout = setTimeout(dispatchBatch, batchInterval);
+			}
 		});
 	} catch (error) {
 		console.error(error);
-
 		return (): void => {
 			return;
 		};

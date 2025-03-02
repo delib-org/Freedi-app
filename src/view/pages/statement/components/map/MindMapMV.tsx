@@ -7,62 +7,47 @@ import { resultsByParentId } from "./mapCont";
 import { Results } from "@/types/results/Results";
 import { Statement } from "@/types/statement/StatementTypes";
 
+import { useMemo } from "react";
+
 export function useMindMap() {
 	const { statementId } = useParams();
 	const statement = useSelector(statementSelector(statementId));
 	const descendants: Statement[] = useSelector(statementDescendantsSelector(statementId));
-
-	// Use a ref to track if we've already processed these descendants
-	const processedDescendants = useRef<string | null>(null);
-
-	// Initialize results state properly
-	const [results, setResults] = useState<Results | null>(null);
 
 	// Get descendants
 	useEffect(() => {
 		if (!statementId) return;
 
 		const unsubscribe = listenToDescendants(statementId);
-
-		return () => {
-			unsubscribe();
-		};
+		return () => unsubscribe();
 	}, [statementId]);
 
-	// Calculate results only when descendants or statement change
-	useEffect(() => {
-		// Skip if no data yet
-		if (!descendants.length || !statement) return;
-
-		// Create a cache key from the current data
-		const cacheKey = JSON.stringify({
-			statementId: statement.statementId,
-			descendantsLength: descendants.length,
-			// Only include specific properties to limit unnecessary recalculations
-			descendants: descendants
-		});
-
-		// Skip processing if we've already processed this exact data
-		if (processedDescendants.current === cacheKey) return;
-
-		// Update our processed tracking
-		processedDescendants.current = cacheKey;
-
+	// Use memoization for better performance
+	// Only recalculate when statement or descendants change significantly
+	const results = useMemo(() => {
+		if (!descendants.length || !statement) return null;
+		
 		try {
-			// Calculate new results
-			const newResults = resultsByParentId(statement, descendants);
-
-			// Update state only if results actually changed
-			setResults(prevResults => {
-				const prevResultsStr = JSON.stringify(prevResults);
-				const newResultsStr = JSON.stringify(newResults);
-
-				return prevResultsStr === newResultsStr ? prevResults : newResults;
-			});
+			// Create a minimal representation of descendants to avoid unnecessary recalculations
+			// We only need to track the IDs and parent-child relationships for the mind map
+			const descendantIds = descendants.map(d => ({
+				id: d.statementId,
+				parentId: d.parentId,
+				deliberativeElement: d.deliberativeElement
+			}));
+            
+			// Calculate results only if we have the necessary data
+			return resultsByParentId(statement, descendants);
 		} catch (error) {
 			console.error("Error calculating results:", error);
+			return null;
 		}
-	}, [descendants, statement]);
+	}, [
+		statement?.statementId, 
+		// Use a stable dependency array by converting descendants to a string of IDs
+		// This prevents unnecessary recalculations
+		descendants.map(d => d.statementId).join(',')
+	]);
 
 	return { descendants, results };
 }

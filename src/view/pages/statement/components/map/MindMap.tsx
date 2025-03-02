@@ -1,4 +1,4 @@
-import { useState, FC } from 'react';
+import { useState, FC, memo, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import { ReactFlowProvider } from 'reactflow';
 import CreateStatementModal from '../createStatementModal/CreateStatementModal';
@@ -21,8 +21,7 @@ import { useParams } from 'react-router';
 import { useMindMap } from './MindMapMV';
 
 const MindMap: FC = () => {
-	// Add a render counter for debugging - remove in production
-
+	// Get core data
 	const { statementId } = useParams();
 	const statement = useSelector(statementSelector(statementId));
 
@@ -31,7 +30,7 @@ const MindMap: FC = () => {
 		statementSubscriptionSelector(statement?.statementId)
 	);
 
-	// Use the fixed hook
+	// Use the optimized mind map hook
 	const { results } = useMindMap();
 
 	const role = userSubscription ? userSubscription.role : Role.member;
@@ -44,12 +43,17 @@ const MindMap: FC = () => {
 		FilterType.questionsResultsOptions
 	);
 
-	const toggleModal = (show: boolean) => {
+	// Memoize callback functions to prevent unnecessary re-renders
+	const toggleModal = useCallback((show: boolean) => {
 		setMapContext((prev) => ({
 			...prev,
 			showModal: show,
 		}));
-	};
+	}, [setMapContext]);
+
+	const handleFilterChange = useCallback((ev: React.ChangeEvent<HTMLSelectElement>) => {
+		setFilterBy(ev.target.value as FilterType);
+	}, []);
 
 	// Only render if we have the necessary data
 	if (!statement) {
@@ -61,9 +65,7 @@ const MindMap: FC = () => {
 			<ReactFlowProvider>
 				<select
 					aria-label='Select filter type for'
-					onChange={(ev) =>
-						setFilterBy(ev.target.value as FilterType)
-					}
+					onChange={handleFilterChange}
 					value={filterBy}
 					style={{
 						width: '100vw',
@@ -91,9 +93,10 @@ const MindMap: FC = () => {
 				>
 					{/* Only render chart when results are available */}
 					{results ? (
-						<MindMapChart
+						<MemoizedMindMapChart
 							descendants={results}
 							isAdmin={_isAdmin}
+							filterBy={filterBy}
 						/>
 					) : (
 						<div>Loading mind map data...</div>
@@ -118,4 +121,15 @@ const MindMap: FC = () => {
 	);
 };
 
-export default MindMap;
+// Memoize the MindMapChart component to prevent unnecessary re-renders
+const MemoizedMindMapChart = memo(MindMapChart, (prevProps, nextProps) => {
+	// Only re-render if these specific props change
+	return (
+		prevProps.isAdmin === nextProps.isAdmin &&
+		prevProps.descendants === nextProps.descendants &&
+		prevProps.filterBy === nextProps.filterBy
+	);
+});
+
+// Wrap the entire MindMap component in memo for additional performance
+export default memo(MindMap);

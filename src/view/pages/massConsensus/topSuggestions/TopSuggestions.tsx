@@ -3,9 +3,9 @@ import SuggestionCards from "../../statement/components/evaluations/components/s
 import HeaderMassConsensus from "../headerMassConsensus/HeaderMassConsensus";
 import useTopSuggestions from "./TopSuggestionVM";
 import TitleMassConsensus from "../TitleMassConsensus/TitleMassConsensus";
-import FooterMassConsensus from "../footerMassConsesus/FooterMassConsesus";
 import { SelectionFunction } from "@/types/evaluation/Evaluation";
 import { useLanguage } from "@/controllers/hooks/useLanguages";
+import FooterMassConsensus from "../footerMassConsesus/footerMassConsesus";
 
 const TopSuggestions = () => {
     const { t } = useLanguage();

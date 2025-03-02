@@ -13,7 +13,8 @@ import { Statement } from '@/types/statement/StatementTypes';
 import { getTotalVoters } from '../../statement/components/vote/statementVoteCont';
 import { useLanguage } from '@/controllers/hooks/useLanguages';
 import TitleMassConsensus from '../TitleMassConsensus/TitleMassConsensus';
-import FooterMassConsensus from '../footerMassConsesus/FooterMassConsesus';
+import FooterMassConsensus from '../footerMassConsesus/footerMassConsesus';
+
 
 const VotingSuggestions = () => {
 	const { subStatements } = VotingSuggestionsMV();

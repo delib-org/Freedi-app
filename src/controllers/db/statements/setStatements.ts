@@ -296,8 +296,31 @@ export function createStatement({
 }: CreateStatementProps): Statement | undefined {
 	try {
 		const storeState = store.getState();
-		const user = storeState.user.user;
-		if (!user) throw new Error('User is undefined');
+		let user = storeState.user.user;
+		
+		// If user is undefined, try to handle the error gracefully
+		if (!user) {
+			console.error('User is undefined in createStatement');
+			// Try to get user from localStorage as fallback
+			const userFromLocalStorage = localStorage.getItem('freedi_user');
+			if (userFromLocalStorage) {
+				try {
+					const parsedUser = JSON.parse(userFromLocalStorage);
+					if (parsedUser?.uid) {
+						console.log('Using user from localStorage as fallback');
+						user = parsedUser;
+					}
+				} catch (e) {
+					console.error('Failed to parse user from localStorage:', e);
+				}
+			}
+			
+			// If still no user, then throw error
+			if (!user) {
+				throw new Error('User is undefined and could not be retrieved from localStorage');
+			}
+		}
+		
 		if (!statementType) throw new Error('Statement type is undefined');
 
 		const statementId = getRandomUID();

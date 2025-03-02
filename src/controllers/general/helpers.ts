@@ -14,30 +14,53 @@ export function updateArray<T>(
 	updateByProperty: keyof T & string
 ): Array<T> {
 	try {
-		const arrayTemp = [...currentArray];
-
+		// Check if property exists
 		if (!newItem[updateByProperty]) {
 			throw new Error(`Item doesn't have property ${updateByProperty}`);
 		}
 
-		const index = arrayTemp.findIndex(
+		// Find the index without creating a copy first (more efficient)
+		const index = currentArray.findIndex(
 			(item) => item[updateByProperty] === newItem[updateByProperty]
 		);
-		if (index === -1) arrayTemp.push(newItem);
-		else {
-			const oldItem = JSON.stringify(arrayTemp[index]);
-			const newItemString = JSON.stringify({
-				...arrayTemp[index],
-				...newItem,
-			});
-			if (oldItem !== newItemString)
-				arrayTemp[index] = { ...arrayTemp[index], ...newItem };
+		
+		// If item doesn't exist, add it to the end
+		if (index === -1) {
+			// Only create a new array when we actually need to modify it
+			return [...currentArray, newItem];
 		}
-
-		return arrayTemp;
+		
+		// For updates, do a shallow comparison of important properties instead of expensive JSON.stringify
+		// This is much faster and prevents unnecessary re-renders
+		const oldItem = currentArray[index];
+		
+		// Compare only relevant properties that might have changed
+		// Test if they're different objects first
+		if (oldItem === newItem) {
+			return currentArray; // No change needed
+		}
+		
+		// Check for meaningful changes by comparing most likely changed properties
+		// This avoids creating a new array reference when not needed
+		const hasChanges = Object.keys(newItem).some(key => {
+			// Skip comparing functions and undefined values
+			if (typeof newItem[key as keyof T] === 'function') return false;
+			if (newItem[key as keyof T] === undefined) return false;
+			
+			// Compare property values
+			return oldItem[key as keyof T] !== newItem[key as keyof T];
+		});
+		
+		if (!hasChanges) {
+			return currentArray; // No meaningful changes, return original array
+		}
+		
+		// Create a new array with the updated item
+		const result = [...currentArray];
+		result[index] = { ...oldItem, ...newItem };
+		return result;
 	} catch (error) {
 		console.error(error);
-
 		return currentArray;
 	}
 }
