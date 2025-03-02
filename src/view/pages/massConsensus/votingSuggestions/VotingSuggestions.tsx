@@ -12,6 +12,8 @@ import { MassConsensusPageUrls } from '@/types/TypeEnums';
 import { Statement } from '@/types/statement/StatementTypes';
 import FooterMassConsensus from '../footerMassConsesus/footerMassConsesus';
 import { getTotalVoters } from '../../statement/components/vote/statementVoteCont';
+import { useLanguage } from '@/controllers/hooks/useLanguages';
+import TitleMassConsensus from '../TitleMassConsensus/TitleMassConsensus';
 
 const VotingSuggestions = () => {
 	const { subStatements } = VotingSuggestionsMV();
@@ -23,13 +25,15 @@ const VotingSuggestions = () => {
 		undefined
 	);
 	const totalVotes = getTotalVoters(statement);
+	const { t } = useLanguage();
 
 	return (
 		<>
 			<HeaderMassConsensus
-				title='please vote for the best suggestion'
+				title={t('Voting')}
 				backTo={MassConsensusPageUrls.topSuggestions}
 			/>
+			<TitleMassConsensus title={t("please vote for the best suggestion")} />
 
 			<div className={styles.voteGraph}>
 				<VotingArea

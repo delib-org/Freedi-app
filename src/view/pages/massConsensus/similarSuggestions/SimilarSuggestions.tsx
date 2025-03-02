@@ -10,6 +10,8 @@ import { Statement } from '@/types/statement/StatementTypes';
 import { GeneratedStatement } from '@/types/massConsensus/massConsensusModel';
 import styles from './SimilarSuggestions.module.scss';
 import { useSimilarSuggestions } from './SimilarSuggestionVM';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import TitleMassConsensus from '../TitleMassConsensus/TitleMassConsensus';
 
 const SimilarSuggestions = () => {
 	const navigate = useNavigate();
@@ -17,6 +19,7 @@ const SimilarSuggestions = () => {
 	const { statementId } = useParams<{ statementId: string }>();
 	const { handleSetSuggestionToDB } = useSimilarSuggestions();
 	const similarSuggestions = useSelector(selectSimilarStatements);
+	const { t } = useUserConfig();
 
 	const [selected, setSelected] = React.useState<number | null>(null);
 
@@ -32,9 +35,11 @@ const SimilarSuggestions = () => {
 	return (
 		<div style={{ direction: dir }}>
 			<HeaderMassConsensus
-				backTo={MassConsensusPageUrls.initialQuestion}
+				title={t('similar suggestions')}
+				backTo={MassConsensusPageUrls.randomSuggestions}
 			/>
-			<h3>Similar Suggestions</h3>
+			<TitleMassConsensus title={t('Thank you for the suggestion!')} />
+			<h3>{t('Here are similar suggestions. which one fits best?')}</h3>
 			<div className={styles['similar-suggestions__wrapper']}>
 				{similarSuggestions.map(
 					(

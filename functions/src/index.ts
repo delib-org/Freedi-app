@@ -1,3 +1,23 @@
+/* eslint-disable @typescript-eslint/no-unsafe-function-type */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import {
+	onDocumentUpdated,
+	onDocumentCreated,
+	onDocumentWritten,
+	onDocumentDeleted,
+} from 'firebase-functions/v2/firestore';
+import { onRequest } from 'firebase-functions/v2/https';
+import { Request, Response } from 'firebase-functions/v1';
+
+// The Firebase Admin SDK
+import { initializeApp } from 'firebase-admin/app';
+import { getFirestore } from 'firebase-admin/firestore';
+
+// Import collection constants
+import { Collections } from '../../src/types/TypeEnums';
+import { functionConfig } from '../../src/types/ConfigFunctions';
+
+// Import function modules
 import {
 	deleteEvaluation,
 	newEvaluation,
@@ -10,19 +30,6 @@ import {
 	updateParentWithNewMessageCB,
 } from './fn_statements';
 import { updateVote } from './fn_vote';
-
-import {
-	onDocumentUpdated,
-	onDocumentCreated,
-	onDocumentWritten,
-	onDocumentDeleted,
-} from 'firebase-functions/v2/firestore';
-
-import { onRequest } from 'firebase-functions/v2/https';
-
-// The Firebase Admin SDK to access Firestore.
-import { initializeApp } from 'firebase-admin/app';
-import { getFirestore } from 'firebase-admin/firestore';
 import { setAdminsToNewStatement } from './fn_roles';
 import { updateStatementNumberOfMembers } from './fn_subscriptions';
 import {
@@ -36,28 +43,40 @@ import { setImportanceToStatement } from './fn_importance';
 import { updateAgrees } from './fn_agree';
 import { updateStatementWithViews } from './fn_views';
 import { getInitialMCData } from './fn_massConsensus';
-import { Collections } from '../../src/types/TypeEnums';
-import { Request, Response } from 'firebase-functions/v1';
-import { functionConfig } from '../../src/types/ConfigFunctions';
 
 // Initialize Firebase
 initializeApp();
 export const db = getFirestore();
 
-// HTTP function wrapper with error handling
+// Environment configuration
+const isProduction = process.env.NODE_ENV === 'production';
+console.info('Environment:', isProduction ? 'Production' : 'Development');
+
+/**
+ * CORS configuration based on environment
+ */
+const corsConfig = isProduction
+	? ['https://freedi.tech', 'https://delib.web.app']
+	: [
+			'https://freedi-test.web.app',
+			'https://delib-5.web.app',
+			'https://freedi.tech',
+			'https://delib.web.app',
+			'http://localhost:5173',
+		];
+
+/**
+ * Creates a wrapper for HTTP functions with standardized error handling
+ * @param {Function} handler - The function handler to wrap
+ * @returns {Function} - Wrapped function with error handling
+ */
 const wrapHttpFunction = (
 	handler: (req: Request, res: Response) => Promise<void>
 ) => {
 	return onRequest(
 		{
 			...functionConfig,
-			cors: [
-				'https://freedi-test.web.app',
-				'https://delib-5.web.app',
-				'https://freedi.tech',
-				'https://delib.web.app',
-				'http://localhost:5173/',
-			],
+			cors: corsConfig,
 		},
 		async (req, res) => {
 			try {
@@ -70,7 +89,41 @@ const wrapHttpFunction = (
 	);
 };
 
-// HTTP Functions
+/**
+ * Creates a wrapper for Firestore triggers with standardized error handling
+ * @param {string} path - Document path
+ * @param {Function} triggerType - Firebase trigger type (onDocumentCreated, etc.)
+ * @param {Function} callback - Function to execute
+ * @param {string} functionName - Function name for logging
+ * @returns {Function} - Firebase function with error handling
+ */
+
+//@ts-ignore
+const createFirestoreFunction = (
+	path: string,
+	triggerType: any,
+	callback: Function,
+	functionName: string
+) => {
+	return triggerType(
+		{
+			document: path,
+			...functionConfig,
+		},
+		async (event: any) => {
+			try {
+				await callback(event);
+			} catch (error) {
+				console.error(`Error in ${functionName}:`, error);
+				throw error;
+			}
+		}
+	);
+};
+
+// --------------------------
+// HTTP FUNCTIONS
+// --------------------------
 exports.getRandomStatements = wrapHttpFunction(getRandomStatements);
 exports.getTopStatements = wrapHttpFunction(getTopStatements);
 exports.getUserOptions = wrapHttpFunction(getUserOptions);
@@ -93,185 +146,90 @@ exports.updateParentWithNewMessage = onDocumentCreated(
 	}
 );
 
-exports.updateMembers = onDocumentWritten(
-	{
-		document: `/${Collections.statementsSubscribe}/{subscriptionId}`,
-		...functionConfig,
-	},
-	async (event) => {
-		try {
-			await updateStatementNumberOfMembers(event);
-		} catch (error) {
-			console.error('Error in updateMembers:', error);
-			throw error;
-		}
-	}
+exports.setAdminsToNewStatement = createFirestoreFunction(
+	`/${Collections.statements}/{statementId}`,
+	onDocumentCreated,
+	setAdminsToNewStatement,
+	'setAdminsToNewStatement'
 );
 
-exports.onSetChoseBySettings = onDocumentWritten(
-	{
-		document: `/${Collections.choseBy}/{statementId}`,
-		...functionConfig,
-	},
-	async (event) => {
-		try {
-			await updateChosenOptions(event);
-		} catch (error) {
-			console.error('Error in onSetChoseBySettings:', error);
-			throw error;
-		}
-	}
+exports.updateStatementWithViews = createFirestoreFunction(
+	`/${Collections.statementViews}/{viewId}`,
+	onDocumentCreated,
+	updateStatementWithViews,
+	'updateStatementWithViews'
 );
 
-exports.newEvaluation = onDocumentCreated(
-	{
-		document: `/${Collections.evaluations}/{evaluationId}`,
-		...functionConfig,
-	},
-	async (event) => {
-		try {
-			await newEvaluation(event);
-		} catch (error) {
-			console.error('Error in newEvaluation:', error);
-			throw error;
-		}
-	}
+// Subscription functions
+exports.updateMembers = createFirestoreFunction(
+	`/${Collections.statementsSubscribe}/{subscriptionId}`,
+	onDocumentWritten,
+	updateStatementNumberOfMembers,
+	'updateMembers'
 );
 
-exports.deleteEvaluation = onDocumentDeleted(
-	{
-		document: `/${Collections.evaluations}/{evaluationId}`,
-		...functionConfig,
-	},
-	async (event) => {
-		try {
-			await deleteEvaluation(event);
-		} catch (error) {
-			console.error('Error in deleteEvaluation:', error);
-			throw error;
-		}
-	}
+// Evaluation functions
+exports.onSetChoseBySettings = createFirestoreFunction(
+	`/${Collections.choseBy}/{statementId}`,
+	onDocumentWritten,
+	updateChosenOptions,
+	'onSetChoseBySettings'
 );
 
-exports.updateEvaluation = onDocumentUpdated(
-	{
-		document: `/${Collections.evaluations}/{evaluationId}`,
-		...functionConfig,
-	},
-	async (event) => {
-		try {
-			await updateEvaluation(event);
-		} catch (error) {
-			console.error('Error in updateEvaluation:', error);
-			throw error;
-		}
-	}
+exports.newEvaluation = createFirestoreFunction(
+	`/${Collections.evaluations}/{evaluationId}`,
+	onDocumentCreated,
+	newEvaluation,
+	'newEvaluation'
 );
 
-exports.updateResultsSettings = onDocumentWritten(
-	{
-		document: `${Collections.resultsTriggers}/{statementId}`,
-		...functionConfig,
-	},
-	async (event) => {
-		try {
-			await updateResultsSettings(event);
-		} catch (error) {
-			console.error('Error in updateResultsSettings:', error);
-			throw error;
-		}
-	}
+exports.deleteEvaluation = createFirestoreFunction(
+	`/${Collections.evaluations}/{evaluationId}`,
+	onDocumentDeleted,
+	deleteEvaluation,
+	'deleteEvaluation'
 );
 
-exports.addVote = onDocumentWritten(
-	{
-		document: '/votes/{voteId}',
-		...functionConfig,
-	},
-	async (event) => {
-		try {
-			await updateVote(event);
-		} catch (error) {
-			console.error('Error in addVote:', error);
-			throw error;
-		}
-	}
+exports.updateEvaluation = createFirestoreFunction(
+	`/${Collections.evaluations}/{evaluationId}`,
+	onDocumentUpdated,
+	updateEvaluation,
+	'updateEvaluation'
 );
 
-exports.setAdminsToNewStatement = onDocumentCreated(
-	{
-		document: `/${Collections.statements}/{statementId}`,
-		...functionConfig,
-	},
-	async (event) => {
-		try {
-			await setAdminsToNewStatement(event);
-		} catch (error) {
-			console.error('Error in setAdminsToNewStatement:', error);
-			throw error;
-		}
-	}
+// Results functions
+exports.updateResultsSettings = createFirestoreFunction(
+	`/${Collections.resultsTriggers}/{statementId}`,
+	onDocumentWritten,
+	updateResultsSettings,
+	'updateResultsSettings'
 );
 
-exports.updateDocumentApproval = onDocumentWritten(
-	{
-		document: `/${Collections.approval}/{approvalId}`,
-		...functionConfig,
-	},
-	async (event) => {
-		try {
-			await updateApprovalResults(event);
-		} catch (error) {
-			console.error('Error in updateDocumentApproval:', error);
-			throw error;
-		}
-	}
+// Voting and approval functions
+exports.addVote = createFirestoreFunction(
+	'/votes/{voteId}',
+	onDocumentWritten,
+	updateVote,
+	'addVote'
 );
 
-exports.setImportanceToStatement = onDocumentWritten(
-	{
-		document: `/${Collections.importance}/{importanceId}`,
-		...functionConfig,
-	},
-	async (event) => {
-		try {
-			await setImportanceToStatement(event);
-		} catch (error) {
-			console.error('Error in setImportanceToStatement:', error);
-			throw error;
-		}
-	}
+exports.updateDocumentApproval = createFirestoreFunction(
+	`/${Collections.approval}/{approvalId}`,
+	onDocumentWritten,
+	updateApprovalResults,
+	'updateDocumentApproval'
 );
 
-exports.updateAgrees = onDocumentWritten(
-	{
-		document: `/${Collections.agrees}/{agreeId}`,
-		...functionConfig,
-	},
-	async (event) => {
-		try {
-			await updateAgrees(event);
-		} catch (error) {
-			console.error('Error in updateAgrees:', error);
-			throw error;
-		}
-	}
+exports.setImportanceToStatement = createFirestoreFunction(
+	`/${Collections.importance}/{importanceId}`,
+	onDocumentWritten,
+	setImportanceToStatement,
+	'setImportanceToStatement'
 );
 
-exports.updateStatementWithViews = onDocumentCreated(
-	{
-		document: `/${Collections.statementViews}/{viewId}`,
-		...functionConfig,
-	},
-	async (event) => {
-		try {
-			await updateStatementWithViews(event);
-		} catch (error) {
-			console.error('Error in updateStatementWithViews:', error);
-			throw error;
-		}
-	}
+exports.updateAgrees = createFirestoreFunction(
+	`/${Collections.agrees}/{agreeId}`,
+	onDocumentWritten,
+	updateAgrees,
+	'updateAgrees'
 );
-
-const isProduction = process.env.NODE_ENV === 'production';
-console.info('isProduction', isProduction);

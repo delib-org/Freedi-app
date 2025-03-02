@@ -28,7 +28,7 @@ const StageCard: FC<Props> = ({ statement, isDescription, isSuggestions }) => {
 		: `/statement/${statement.statementId}`;
 	const topVotedId =
 		statement.stageSelectionType === StageSelectionType.voting &&
-		statement.selections
+			statement.selections
 			? maxKeyInObject(statement.selections)
 			: '';
 
@@ -56,21 +56,20 @@ const StageCard: FC<Props> = ({ statement, isDescription, isSuggestions }) => {
 	};
 
 	const description =
-		statement?.evaluationSettings.evaluationUI === 'voting'
-			? 'Choosing a suggestion in a vote'
-			: 'Possible solutions for discussed issue';
+		statement?.evaluationSettings?.evaluationUI === 'voting'
+			? 'Solution selected by vote'
+			: 'Solutions selected for discussed issue'
 
 	const title = getTitle();
 
 	return (
-		<div className={styles.card}>
+		<div className={styles.card} style={{ paddingRight: isSuggestions ? '36px' : '0px' }}>
 			<h3>{t(title)}</h3>
-			<span>{t(description)}</span>
+			<span className={styles.card__description}>{t(description)}</span>
 			{chosen.length === 0 ? (
 				<h4>{t('No suggestion so far')}</h4>
 			) : (
 				<>
-					<h4>{t('Selected Options')}</h4>
 					<ul>
 						{chosen.map((opt: SimpleStatement) => (
 							<NavLink
@@ -79,9 +78,9 @@ const StageCard: FC<Props> = ({ statement, isDescription, isSuggestions }) => {
 							>
 								<ol className={styles.suggestions}>
 									<li>
-										{opt.statement}
+										<div>{opt.statement}</div>
 										{opt.description &&
-											`: ${opt.description}`}
+											<div className={styles.statement__description}>{opt.description}</div>}
 									</li>
 								</ol>
 							</NavLink>
@@ -99,7 +98,7 @@ const StageCard: FC<Props> = ({ statement, isDescription, isSuggestions }) => {
 
 			<div className='btns'>
 				<Button
-					text='Add Suggestion'
+					text={t('Add Suggestion')}
 					buttonType={ButtonType.SECONDARY}
 					onClick={suggestNewSuggestion}
 				/>
