@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { useParamsLanguage } from '../useParamsLang/UseParamsLanguge';
+import { useLanguageParams } from '../useParamsLang/useLanguageParams';
 import { useNavigate, useParams } from 'react-router';
 import HeaderMassConsensus from '../headerMassConsensus/HeaderMassConsensus';
 import { MassConsensusPageUrls } from '@/types/TypeEnums';
@@ -15,7 +15,7 @@ import TitleMassConsensus from '../TitleMassConsensus/TitleMassConsensus';
 
 const SimilarSuggestions = () => {
 	const navigate = useNavigate();
-	const { dir } = useParamsLanguage();
+	const { dir } = useLanguageParams();
 	const { statementId } = useParams<{ statementId: string }>();
 	const { handleSetSuggestionToDB } = useSimilarSuggestions();
 	const similarSuggestions = useSelector(selectSimilarStatements);

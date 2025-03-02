@@ -17,14 +17,6 @@ export function useIntroductionMV() {
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 
-	// useEffect(() => {
-	// 	listenToAuth(
-	// 		navigate,
-	// 		true,
-	// 		`/mass-consensus/${statementId}/introduction?lang=he`
-	// 	);
-	// }, []);
-
 	useEffect(() => {
 		if (!statementId) return;
 
