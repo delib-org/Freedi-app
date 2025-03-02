@@ -25,7 +25,7 @@ import './StatementSettingsForm.scss';
 import SaveIcon from '@/assets/icons/save.svg?react';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { createSelector } from '@reduxjs/toolkit';
-import { RootState } from '@/redux/store';
+import { RootState, store } from '@/redux/store';
 import Loader from '@/view/components/loaders/Loader';
 import { Statement } from '@/types/statement/StatementTypes';
 import { StatementSubscription } from '@/types/statement/StatementSubscription';
@@ -51,6 +51,7 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 
 	const [image, setImage] = useState<string>(imageUrl);
 	const [loading, setLoading] = useState<boolean>(false);
+	const [error, setError] = useState<string | null>(null);
 
 	// Selector to get the statement memberships
 	const statementMembershipSelector = (statementId: string | undefined) =>
@@ -76,15 +77,40 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 		const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
 			e.preventDefault();
 			setLoading(true);
-			const newStatement = await setNewStatement({
-				navigate,
-				statementId,
-				statement,
-				parentStatement,
-			});
-			setLoading(false);
-			if (!newStatement) throw new Error('No new statement');
-			navigate(`/statement/${newStatement.statementId}`);
+			setError(null);
+			
+			try {
+				// Check if user is logged in
+				const currentUser = store.getState().user.user;
+				if (!currentUser?.uid) {
+					console.error('User not logged in when trying to create/update statement');
+					setError('Please log in before creating a statement.');
+					setLoading(false);
+					return;
+				}
+				
+				const newStatement = await setNewStatement({
+					navigate,
+					statementId,
+					statement,
+					parentStatement,
+				});
+				
+				setLoading(false);
+				
+				if (!newStatement) {
+					console.error('Failed to create/update statement - no statement returned');
+					setError('Failed to save statement. Please try again.');
+					return;
+				}
+				
+				// Success - navigate to the new/updated statement
+				navigate(`/statement/${newStatement.statementId}`);
+			} catch (error) {
+				console.error('Error in handleSubmit:', error);
+				setError('An error occurred while saving. Please try again.');
+				setLoading(false);
+			}
 		};
 
 		const isNewStatement = !statementId;
@@ -109,6 +135,12 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 				className='statement-settings-form'
 				data-cy='statement-settings-form'
 			>
+				{error && (
+					<div className="error-message" style={{ color: 'red', padding: '10px', textAlign: 'center' }}>
+						{error}
+					</div>
+				)}
+				
 				<TitleAndDescription
 					statement={statement}
 					setStatementToEdit={setStatementToEdit}
@@ -152,9 +184,11 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 			</form>
 		);
 	} catch (error) {
-		console.error(error);
+		console.error('Error in StatementSettingsForm:', error);
 
-		return null;
+		return <div className="error-container">
+			<p>An error occurred while loading the form. Please try again later.</p>
+		</div>;
 	}
 };
 

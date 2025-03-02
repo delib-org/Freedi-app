@@ -371,80 +371,129 @@ export function listenToAllSubStatements(
 
 export function listenToAllDescendants(statementId: string): Unsubscribe {
 	try {
+		// If no statementId provided, return a no-op
+		if (!statementId) {
+			console.warn('No statementId provided to listenToAllDescendants');
+			return () => {};
+		}
+		
+		// Get a reference to Firestore collection
 		const statementsRef = collection(FireStore, Collections.statements);
 		
-		// FIXED: Simplified query to avoid Firebase error
+		// Create a very simple query with minimal constraints to avoid internal errors
+		// We'll do more detailed filtering on the client side
 		const q = query(
 			statementsRef,
 			where('parents', 'array-contains', statementId),
-			limit(50) // Reduced from 100 to improve performance
+			limit(15) // Significantly reduced limit to avoid internal errors
 		);
 
-		// Setup batching mechanism
+		// Variables for batching updates
 		let pendingStatements: Record<string, Statement> = {};
 		let batchTimeout: NodeJS.Timeout | null = null;
-		const batchInterval = 200; // ms between batches
+		const batchInterval = 300; // Increased to reduce update frequency
 		
-		const dispatchBatch = () => {
+		// Function to dispatch batched updates
+		const processBatch = () => {
 			if (Object.keys(pendingStatements).length === 0) return;
 			
-			// Convert object to array for dispatch
-			const statementsArray = Object.values(pendingStatements);
-			if (statementsArray.length > 0) {
-				// Dispatch all statements at once to reduce Redux updates
-				store.dispatch(setStatements(statementsArray));
+			try {
+				// Convert object to array for dispatch
+				const statementsArray = Object.values(pendingStatements);
+				if (statementsArray.length > 0) {
+					// Dispatch all statements at once to reduce Redux updates
+					store.dispatch(setStatements(statementsArray));
+				}
+				
+				// Clear the batch after processing
+				pendingStatements = {};
+				batchTimeout = null;
+			} catch (err) {
+				console.error('Error dispatching batch update:', err);
+				pendingStatements = {};
+				batchTimeout = null;
 			}
-			
-			pendingStatements = {};
-			batchTimeout = null;
 		};
 
-		return onSnapshot(q, (statementsDB) => {
-			let hasChanges = false;
-			
-			statementsDB.docChanges().forEach((change) => {
-				try {
-					// Only parse when needed to improve performance
-					const data = change.doc.data();
-					
-					if (change.type === 'removed') {
-						// Handle removals immediately
-						store.dispatch(deleteStatement(change.doc.id));
-						// Remove from pending batch if it exists
-						if (pendingStatements[change.doc.id]) {
-							delete pendingStatements[change.doc.id];
-						}
-					} else {
-						// For adds and modifications, parse and add to batch
-						const statement = parse(StatementSchema, data);
-						
-						// Client-side filtering for deliberativeElement
-						const isOptionOrResearch = 
-							statement.deliberativeElement === DeliberativeElement.option ||
-							statement.deliberativeElement === DeliberativeElement.research;
-							
-						if (isOptionOrResearch) {
-							pendingStatements[statement.statementId] = statement;
-							hasChanges = true;
-						}
-					}
-				} catch (err) {
-					console.error("Error parsing statement:", err);
-				}
-			});
-			
-			// Schedule batch update if we have changes
-			if (hasChanges) {
-				if (batchTimeout) {
-					clearTimeout(batchTimeout);
-				}
-				batchTimeout = setTimeout(dispatchBatch, batchInterval);
+		// Error handling wrapper for snapshot listener
+		// This adds an extra layer of protection against Firebase internal errors
+		const safeSnapshotListener = (
+			snapshot: any, 
+			onData: (snapshot: any) => void, 
+			onError: (error: any) => void
+		) => {
+			try {
+				onData(snapshot);
+			} catch (err) {
+				console.error('Error in snapshot listener:', err);
+				onError(err);
 			}
-		});
-	} catch (error) {
-		console.error(error);
-		return (): void => {
-			return;
 		};
+		
+		// Listen for changes
+		return onSnapshot(
+			q, 
+			(snapshot) => safeSnapshotListener(snapshot, (statementsDB) => {
+				let hasChanges = false;
+				
+				// Process each document change
+				try {
+					statementsDB.docChanges().forEach((change) => {
+						try {
+							// Get the raw data
+							const data = change.doc.data();
+							const docId = change.doc.id;
+							
+							// Handle document removal
+							if (change.type === 'removed') {
+								store.dispatch(deleteStatement(docId));
+								if (pendingStatements[docId]) {
+									delete pendingStatements[docId];
+								}
+								return;
+							} 
+							
+							// For adds and modifications, parse the data
+							try {
+								const statement = parse(StatementSchema, data);
+								
+								// Client-side filtering for deliberativeElement
+								if (
+									statement.deliberativeElement === DeliberativeElement.option ||
+									statement.deliberativeElement === DeliberativeElement.research
+								) {
+									pendingStatements[statement.statementId] = statement;
+									hasChanges = true;
+								}
+							} catch (parseErr) {
+								console.error('Error parsing statement:', parseErr);
+							}
+						} catch (docErr) {
+							console.error('Error processing document change:', docErr);
+						}
+					});
+					
+					// Schedule a batch update if there are changes
+					if (hasChanges) {
+						if (batchTimeout) {
+							clearTimeout(batchTimeout);
+						}
+						batchTimeout = setTimeout(processBatch, batchInterval);
+					}
+				} catch (changesErr) {
+					console.error('Error processing document changes:', changesErr);
+				}
+			}, 
+			(error) => {
+				console.error('Listen error for descendant statements:', error);
+			}),
+			// Error handler for the onSnapshot function itself
+			(error) => {
+				console.error('Error in listenToAllDescendants snapshot:', error);
+			}
+		);
+	} catch (error) {
+		console.error('Error setting up listenToAllDescendants:', error);
+		return () => {};
 	}
 }
