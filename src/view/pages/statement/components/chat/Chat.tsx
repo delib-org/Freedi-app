@@ -118,25 +118,22 @@ const Chat: FC = () => {
 
 	return (
 		<div className={styles.chat} ref={chatRef}>
-			<div
-				className={`${styles.wrapper} ${toSlide && slideInOrOut}`}
-				id={`msg-${statement?.statementId}`}
-			>
-				{statement.description && <div className='wrapper'>
-					<Description />
-				</div>}
-				{subStatements?.map((statementSub: Statement, index) => (
-					<div key={statementSub.statementId}>
-						<ChatMessageCard
-							parentStatement={statement}
-							statement={statementSub}
-							previousStatement={subStatements[index - 1]}
-						/>
-					</div>
-				))}
 
-				<div ref={messagesEndRef} />
-			</div>
+			{statement.description && <div className='wrapper'>
+				<Description />
+			</div>}
+			{subStatements?.map((statementSub: Statement, index) => (
+				<div key={statementSub.statementId}>
+					<ChatMessageCard
+						parentStatement={statement}
+						statement={statementSub}
+						previousStatement={subStatements[index - 1]}
+					/>
+				</div>
+			))}
+
+			<div ref={messagesEndRef} />
+
 			{statement && (
 				<div className={styles.input}>
 					<ChatInput statement={statement} />

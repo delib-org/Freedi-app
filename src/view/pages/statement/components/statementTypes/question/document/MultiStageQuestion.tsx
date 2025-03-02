@@ -144,7 +144,7 @@ const MultiStageQuestion: FC = () => {
 			</div>
 			<div className={`btns ${styles["add-stage"]}`}>
 				<Button
-					text='Add Stage'
+					text={t('Add sub-question')}
 					type='button'
 					buttonType={ButtonType.PRIMARY}
 					onClick={() => setShowAddStage(true)}

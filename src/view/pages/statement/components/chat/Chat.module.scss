@@ -1,9 +1,8 @@
 .chat {
-
 	position: relative;
-
 	display: flex;
 	flex-direction: column;
+	width: 100%;
 
 
 }
@@ -16,7 +15,7 @@
 
 .input {
 	width: 100%;
-	position: sticky;
+	position: fixed;
 	bottom: 0;
 	flex-shrink: 0;
 }
