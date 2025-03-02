@@ -41,7 +41,6 @@ import { findSimilarStatements } from './fn_findSimilarStatements';
 import { updateApprovalResults } from './fn_approval';
 import { setImportanceToStatement } from './fn_importance';
 import { updateAgrees } from './fn_agree';
-import { setUserSettings } from './fn_users';
 import { updateStatementWithViews } from './fn_views';
 import { getInitialMCData } from './fn_massConsensus';
 
@@ -59,12 +58,12 @@ console.info('Environment:', isProduction ? 'Production' : 'Development');
 const corsConfig = isProduction
 	? ['https://freedi.tech', 'https://delib.web.app']
 	: [
-		'https://freedi-test.web.app',
-		'https://delib-5.web.app',
-		'https://freedi.tech',
-		'https://delib.web.app',
-		'http://localhost:5173',
-	];
+			'https://freedi-test.web.app',
+			'https://delib-5.web.app',
+			'https://freedi.tech',
+			'https://delib.web.app',
+			'http://localhost:5173',
+		];
 
 /**
  * Creates a wrapper for HTTP functions with standardized error handling
@@ -100,7 +99,12 @@ const wrapHttpFunction = (
  */
 
 //@ts-ignore
-const createFirestoreFunction = (path: string, triggerType: any, callback: Function, functionName: string) => {
+const createFirestoreFunction = (
+	path: string,
+	triggerType: any,
+	callback: Function,
+	functionName: string
+) => {
 	return triggerType(
 		{
 			document: path,
@@ -127,24 +131,19 @@ exports.checkForSimilarStatements = wrapHttpFunction(findSimilarStatements);
 exports.massConsensusGetInitialData = wrapHttpFunction(getInitialMCData);
 exports.getQuestionOptions = wrapHttpFunction(getQuestionOptions);
 
-// --------------------------
-// FIRESTORE TRIGGER FUNCTIONS
-// --------------------------
-
-// User functions
-exports.setUserSettings = createFirestoreFunction(
-	`/${Collections.users}/{userId}`,
-	onDocumentCreated,
-	setUserSettings,
-	'setUserSettings'
-);
-
-// Statement functions
-exports.updateParentWithNewMessage = createFirestoreFunction(
-	`/${Collections.statements}/{statementId}`,
-	onDocumentCreated,
-	updateParentWithNewMessageCB,
-	'updateParentWithNewMessage'
+exports.updateParentWithNewMessage = onDocumentCreated(
+	{
+		document: `/${Collections.statements}/{statementId}`,
+		...functionConfig,
+	},
+	async (event) => {
+		try {
+			await updateParentWithNewMessageCB(event);
+		} catch (error) {
+			console.error('Error in updateParentWithNewMessage:', error);
+			throw error;
+		}
+	}
 );
 
 exports.setAdminsToNewStatement = createFirestoreFunction(

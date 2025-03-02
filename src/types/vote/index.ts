@@ -1,5 +1,5 @@
 import { object, string, number, optional, InferOutput } from 'valibot';
-import { UserSchema } from '../user/User';
+import { CreatorSchema } from '../user/User';
 
 export const VoteSchema = object({
 	voteId: string(),
@@ -8,7 +8,7 @@ export const VoteSchema = object({
 	parentId: string(),
 	lastUpdate: number(),
 	createdAt: number(),
-	voter: optional(UserSchema),
+	voter: optional(CreatorSchema),
 });
 
 export type Vote = InferOutput<typeof VoteSchema>;

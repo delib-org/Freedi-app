@@ -12,7 +12,7 @@ import passwordUiImgRed from '../../../assets/images/passwordUiImgRed.png';
 import Button from '../buttons/button/Button';
 import PasswordInput from './PasswordInput.tsx';
 import styles from './passwordUi.module.scss';
-import { useLanguage } from '@/controllers/hooks/useLanguages';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 
 export default function PasswordUi({
 	setPasswordCheck,
@@ -20,7 +20,7 @@ export default function PasswordUi({
 	setPasswordCheck: Dispatch<SetStateAction<boolean>>;
 }>) {
 	const navigate = useNavigate();
-	const { t } = useLanguage();
+	const { t } = useUserConfig();
 
 	const PASSWORD_CODE = 7538;
 	const PASSWORD_LENGTH = 4;
@@ -42,7 +42,8 @@ export default function PasswordUi({
 				setPasswordState({
 					img: passwordUiImgGreen,
 					text: t(`Bravo! Your password is correct. Welcome aboard!`),
-					textStyle: styles.passwordUi__statusSection__passwordTextCorrect,
+					textStyle:
+						styles.passwordUi__statusSection__passwordTextCorrect,
 				});
 
 				setTimeout(() => {
@@ -52,7 +53,8 @@ export default function PasswordUi({
 				setPasswordState({
 					img: passwordUiImgRed,
 					text: t(`Something went wrong. Please try again!`),
-					textStyle: styles.passwordUi__statusSection__passwordTextIncorrect,
+					textStyle:
+						styles.passwordUi__statusSection__passwordTextIncorrect,
 				});
 
 				setTriesCounter((prev) => {

@@ -2,7 +2,6 @@ import { FC, MouseEvent } from 'react';
 import styles from './StageCard.module.scss';
 import Button, { ButtonType } from '@/view/components/buttons/button/Button';
 import { NavLink, useNavigate } from 'react-router';
-import { useLanguage } from '@/controllers/hooks/useLanguages';
 import { Statement } from '@/types/statement/StatementTypes';
 import {
 	SimpleStatement,
@@ -12,6 +11,7 @@ import { maxKeyInObject } from '@/types/TypeUtils';
 import { StageSelectionType } from '@/types/stage/stageTypes';
 import { useSelector } from 'react-redux';
 import { statementSelectorById } from '@/redux/statements/statementsSlice';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 
 interface Props {
 	statement: Statement;
@@ -20,8 +20,7 @@ interface Props {
 }
 
 const StageCard: FC<Props> = ({ statement, isDescription, isSuggestions }) => {
-	const { t } = useLanguage();
-	const { dir } = useLanguage();
+	const { t, dir } = useUserConfig();
 
 	const navigate = useNavigate();
 	const stageUrl = isSuggestions

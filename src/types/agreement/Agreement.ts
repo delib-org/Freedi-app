@@ -5,15 +5,20 @@ import {
 	InferOutput,
 	optional,
 	InferInput,
+	boolean,
 } from 'valibot';
 
-export const AgreementSchema = object({
+export const TermsOfUseAcceptanceSchema = object({
 	text: string(),
 	date: number(),
 	version: string(),
+	userId: string(),
+	accepted: boolean(),
 });
 
-export type Agreement = InferInput<typeof AgreementSchema>;
+export type TermsOfUseAcceptance = InferInput<
+	typeof TermsOfUseAcceptanceSchema
+>;
 
 export enum AgreeDisagreeEnum {
 	Agree = 'agree',

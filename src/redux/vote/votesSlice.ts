@@ -27,9 +27,12 @@ export const votesSlicer = createSlice({
 
 				const newVote: Vote = {
 					statementId: statement.statementId,
-					userId: statement.creatorId,
+					userId: statement.creator.uid,
 					parentId: statement.parentId,
-					voteId: getVoteId(statement.creatorId, statement.parentId),
+					voteId: getVoteId(
+						statement.creator.uid,
+						statement.parentId
+					),
 					createdAt: new Date().getTime(),
 					lastUpdate: new Date().getTime(),
 				};

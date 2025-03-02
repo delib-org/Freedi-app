@@ -86,9 +86,7 @@ export enum Collections {
 	resultsTriggers = 'resultsTriggers',
 	results = 'results',
 	maps = 'maps',
-	agreements = 'agreements',
-	timers = 'timers-settings',
-	timersRooms = 'timers-rooms',
+	termsOfUseAcceptance = 'termsOfUseAcceptance',
 	invitations = 'invitations',
 	evaluators = 'evaluators',
 	documents = 'documents',
@@ -147,13 +145,13 @@ export enum SortType {
 }
 
 export enum MassConsensusPageUrls {
-	introduction = "introduction",
-	initialQuestion = "initial-question",
-	similarSuggestions = "similar-suggestions",
-	randomSuggestions = "random-suggestions",
-	topSuggestions = "top-suggestions",
-	voting = "voting",
-	leaveFeedback = "leave-feedback",
+	introduction = 'introduction',
+	initialQuestion = 'initial-question',
+	similarSuggestions = 'similar-suggestions',
+	randomSuggestions = 'random-suggestions',
+	topSuggestions = 'top-suggestions',
+	voting = 'voting',
+	leaveFeedback = 'leave-feedback',
 }
 
 export enum QuestionStep {

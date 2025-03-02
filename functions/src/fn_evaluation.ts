@@ -3,7 +3,7 @@ import { db } from './index';
 import { DocumentSnapshot, FieldValue } from 'firebase-admin/firestore';
 import { FirestoreEvent } from 'firebase-functions/firestore';
 import { Evaluation } from '../../src/types/evaluation/Evaluation';
-import { User } from '../../src/types/user/User';
+import { Creator } from '../../src/types/user/User';
 import { number, parse } from 'valibot';
 import {
 	Statement,
@@ -47,7 +47,7 @@ export async function newEvaluation(event) {
 		updateParentStatementWithChosenOptions(statement.parentId);
 
 		//update evaluators that the statement was evaluated
-		const evaluator: User | undefined = statementEvaluation.evaluator;
+		const evaluator: Creator | undefined = statementEvaluation.evaluator;
 
 		if (!evaluator) throw new Error('evaluator is not defined');
 

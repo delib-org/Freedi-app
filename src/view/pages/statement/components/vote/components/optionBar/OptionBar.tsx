@@ -15,6 +15,7 @@ import { getStatementFromDB } from '@/controllers/db/statements/getStatement';
 import { setVoteToDB } from '@/controllers/db/vote/setVote';
 import { statementTitleToDisplay } from '@/controllers/general/helpers';
 import { parentVoteSelector, setVoteToStore } from '@/redux/vote/votesSlice';
+import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 
 export const OptionBar: FC<OptionBarProps> = ({
 	option,
@@ -27,6 +28,7 @@ export const OptionBar: FC<OptionBarProps> = ({
 	optionsCount,
 	screenWidth,
 }) => {
+	const { creator } = useAuthentication();
 	// * Redux * //
 	const dispatch = useAppDispatch();
 	const vote = useAppSelector(parentVoteSelector(option.parentId));
@@ -48,7 +50,7 @@ export const OptionBar: FC<OptionBarProps> = ({
 			: 0;
 	const handleVotePress = () => {
 		dispatch(setVoteToStore(option));
-		setVoteToDB(option);
+		setVoteToDB(option, creator);
 		getStatementFromDB(option.statementId);
 	};
 	const isOptionSelected = vote?.statementId === option.statementId;

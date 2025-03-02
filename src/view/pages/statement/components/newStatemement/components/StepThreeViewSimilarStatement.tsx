@@ -1,6 +1,6 @@
 import React from 'react';
 import SendIcon from '@/assets/icons/send-icon-pointing-up-and-right.svg?react';
-import { useLanguage } from '@/controllers/hooks/useLanguages';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import Button from '@/view/components/buttons/button/Button';
 
 interface StepThreeViewSimilarStatementProps {
@@ -14,8 +14,7 @@ export default function StepThreeViewSimilarStatement({
 	setCurrentStep,
 	setShowModal,
 }: Readonly<StepThreeViewSimilarStatementProps>) {
-
-	const { t } = useLanguage();
+	const { t } = useUserConfig();
 	const handleSimilarStatementChosen = () => {
 		setShowModal(false);
 	};
@@ -23,15 +22,21 @@ export default function StepThreeViewSimilarStatement({
 	return (
 		<>
 			<h4 className='alertText'>
-				{t("Would you like to choose this suggestion")}?...
+				{t('Would you like to choose this suggestion')}?...
 			</h4>
-			<p className='similarities__statementsBox__statementTitle'>{viewSimilarStatement.title}</p>
-			<p className='similarities__statementsBox__statementDescription'>{viewSimilarStatement.description}</p>
+			<p className='similarities__statementsBox__statementTitle'>
+				{viewSimilarStatement.title}
+			</p>
+			<p className='similarities__statementsBox__statementDescription'>
+				{viewSimilarStatement.description}
+			</p>
 			<div className='twoButtonBox'>
 				<button
 					className='twoButtonBox__backButton'
 					onClick={() => setCurrentStep((prev) => prev - 1)}
-				>{t("Back")}</button>
+				>
+					{t('Back')}
+				</button>
 				<Button
 					icon={<SendIcon />}
 					text={t('Continue with this suggestion')}

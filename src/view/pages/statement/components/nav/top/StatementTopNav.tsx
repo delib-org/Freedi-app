@@ -8,8 +8,6 @@ import FollowMe from '@/assets/icons/follow.svg?react';
 import InvitationIcon from '@/assets/icons/invitation.svg?react';
 import SettingsIcon from '@/assets/icons/settings.svg?react';
 import ShareIcon from '@/assets/icons/shareIcon.svg?react';
-
-import { useLanguage } from '@/controllers/hooks/useLanguages';
 import useStatementColor from '@/controllers/hooks/useStatementColor.ts';
 import Menu from '@/view/components/menu/Menu';
 import MenuOption from '@/view/components/menu/MenuOption';
@@ -17,6 +15,7 @@ import { StatementContext } from '../../../StatementCont';
 import { Statement } from '@/types/statement/StatementTypes';
 import { Role } from '@/types/user/UserSettings';
 import NavButtons from './navButtons/NavButtons';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 
 interface Props {
 	statement?: Statement;
@@ -40,7 +39,7 @@ const StatementTopNav: FC<Props> = ({
 	handleShare,
 }) => {
 	//hooks
-	const { t } = useLanguage();
+	const { t } = useUserConfig();
 	const navigate = useNavigate();
 	const { screen } = useParams();
 	const { role } = useContext(StatementContext);

@@ -15,7 +15,7 @@ import MembersSettings from './../../components/membership/MembersSettings';
 import SectionTitle from './../../components/sectionTitle/SectionTitle';
 import TitleAndDescription from './../../components/titleAndDescription/TitleAndDescription';
 import { setNewStatement } from './../../statementSettingsCont';
-import { useLanguage } from '@/controllers/hooks/useLanguages';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import UploadImage from '@/view/components/uploadImage/UploadImage';
 
 // Hooks & Helpers
@@ -30,6 +30,7 @@ import Loader from '@/view/components/loaders/Loader';
 import { Statement } from '@/types/statement/StatementTypes';
 import { StatementSubscription } from '@/types/statement/StatementSubscription';
 import { Role } from '@/types/user/UserSettings';
+import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 
 interface StatementSettingsFormProps {
 	statement: Statement;
@@ -47,7 +48,8 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 	// * Hooks * //
 	const navigate = useNavigate();
 	const { statementId } = useParams();
-	const { t } = useLanguage();
+	const { t } = useUserConfig();
+	const { user } = useAuthentication();
 
 	const [image, setImage] = useState<string>(imageUrl);
 	const [loading, setLoading] = useState<boolean>(false);
@@ -70,13 +72,14 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 	try {
 		const joinedMembers = members
 			.filter((member) => member.role !== Role.banned)
-			.map((m) => m.user);
+			.map((m) => m.creator);
 
 		// * Functions * //
 		const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
 			e.preventDefault();
 			setLoading(true);
 			const newStatement = await setNewStatement({
+				user,
 				navigate,
 				statementId,
 				statement,

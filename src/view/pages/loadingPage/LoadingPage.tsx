@@ -1,17 +1,17 @@
-import LoaderGlass from "../../components/loaders/LoaderGlass";
-import styles from "./loadingPage.module.scss";
+import LoaderGlass from '../../components/loaders/LoaderGlass';
+import styles from './loadingPage.module.scss';
 
-import { useLanguage } from "@/controllers/hooks/useLanguages";
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 
 const LoadingPage = () => {
-	const { t } = useLanguage();
+	const { t } = useUserConfig();
 
 	return (
 		<div className={styles.loader}>
 			<div className={styles.box}>
-				<h1>{t("FreeDi: Empowering Agreements")}</h1>
+				<h1>{t('FreeDi: Empowering Agreements')}</h1>
 				<LoaderGlass />
-				<h2>{t("Please wait while the page loads")}</h2>
+				<h2>{t('Please wait while the page loads')}</h2>
 			</div>
 		</div>
 	);

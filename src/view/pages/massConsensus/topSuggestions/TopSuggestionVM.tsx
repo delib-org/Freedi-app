@@ -1,7 +1,11 @@
 import firebaseConfig from '@/controllers/db/configKey';
 import { listenToEvaluation } from '@/controllers/db/evaluation/getEvaluation';
-import { setStatement, setStatements, statementSelectorById } from '@/redux/statements/statementsSlice';
-import { userSelector } from '@/redux/users/userSlice';
+import { useAuthentication } from '@/controllers/hooks/useAuthentication';
+import {
+	setStatement,
+	setStatements,
+	statementSelectorById,
+} from '@/redux/statements/statementsSlice';
 import { functionConfig } from '@/types/ConfigFunctions';
 import { MassConsensusPageUrls } from '@/types/TypeEnums';
 import { SelectionFunction } from '@/types/evaluation/Evaluation';
@@ -13,9 +17,9 @@ import { useNavigate, useParams } from 'react-router';
 const useTopSuggestions = () => {
 	const navigate = useNavigate();
 	const dispatch = useDispatch();
-	const user = useSelector(userSelector);
 	const { statementId } = useParams<{ statementId: string }>();
 	const statement = useSelector(statementSelectorById(statementId));
+	const { user } = useAuthentication();
 
 	const [topStatements, setTopStatements] = useState<Statement[]>([]);
 
@@ -39,7 +43,7 @@ const useTopSuggestions = () => {
 				setTopStatements(options);
 			})
 			.catch((error) => console.error('Error:', error));
-	}
+	};
 
 	useEffect(() => {
 		if (!user)
@@ -50,11 +54,17 @@ const useTopSuggestions = () => {
 
 	useEffect(() => {
 		if (statement) {
-			if (statement.statementSettings.showEvaluation === undefined || statement.statementSettings.showEvaluation === null || statement.statementSettings.showEvaluation === true) {
+			if (
+				statement.statementSettings.showEvaluation === undefined ||
+				statement.statementSettings.showEvaluation === null ||
+				statement.statementSettings.showEvaluation === true
+			) {
 				const statementDontShowEvaluation = {
-					...statement, statementSettings: {
-						...statement.statementSettings, showEvaluation: false
-					}
+					...statement,
+					statementSettings: {
+						...statement.statementSettings,
+						showEvaluation: false,
+					},
 				};
 
 				dispatch(setStatement(statementDontShowEvaluation));
@@ -64,11 +74,11 @@ const useTopSuggestions = () => {
 
 	useEffect(() => {
 		fetchStatements();
-	}, [statementId, user?.uid]);
+	}, [statementId, user.uid]);
 
 	useEffect(() => {
 		const unSubscribes = topStatements.map((statement) => {
-			return listenToEvaluation(statement.statementId);
+			return listenToEvaluation(statement.statementId, user.uid);
 		});
 
 		return () => {

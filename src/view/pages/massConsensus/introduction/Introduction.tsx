@@ -1,16 +1,15 @@
 import { useIntroductionMV } from './IntroductionMV';
 import styles from './Introduction.module.scss';
 import HeaderMassConsensus from '../headerMassConsensus/HeaderMassConsensus';
-import { useParamsLanguage } from '../useParamsLang/UseParamsLanguge';
+import { useLanguageParams } from '../useParamsLang/useLanguageParams';
 import { MassConsensusPageUrls } from '@/types/TypeEnums';
-import FooterMassConsensus from '../footerMassConsesus/FooterMassConsesus';
-import { useLanguage } from '@/controllers/hooks/useLanguages';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import MassConsensusFooter from '../MassConsensusFooter/MassConsensusFooter';
 
 const Introduction = () => {
 	const { statement, loading, error } = useIntroductionMV();
-	const { dir } = useParamsLanguage();
-	const { t } = useLanguage();
-
+	const { dir } = useLanguageParams();
+	const { t } = useUserConfig();
 	if (error) return <div>{error}</div>;
 	if (loading) return <div>Loading...</div>;
 
@@ -25,7 +24,10 @@ const Introduction = () => {
 			<div className={styles.wrapper}>
 				<h1>{statement?.statement}</h1>
 				<p>{statement?.description}</p>
-				<FooterMassConsensus isIntro={true} goTo={MassConsensusPageUrls.initialQuestion}/>
+				<MassConsensusFooter
+					isIntro={true}
+					goTo={MassConsensusPageUrls.initialQuestion}
+				/>
 			</div>
 		</div>
 	);

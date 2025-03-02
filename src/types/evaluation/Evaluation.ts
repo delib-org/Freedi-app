@@ -7,7 +7,7 @@ import {
 	InferOutput,
 	enum_,
 } from 'valibot';
-import { UserSchema } from '../user/User';
+import { CreatorSchema } from '../user/User';
 
 export const EvaluationSchema = object({
 	parentId: string(),
@@ -16,7 +16,7 @@ export const EvaluationSchema = object({
 	evaluatorId: string(),
 	updatedAt: number(),
 	evaluation: number(),
-	evaluator: optional(UserSchema),
+	evaluator: optional(CreatorSchema),
 });
 
 export type Evaluation = InferOutput<typeof EvaluationSchema>;

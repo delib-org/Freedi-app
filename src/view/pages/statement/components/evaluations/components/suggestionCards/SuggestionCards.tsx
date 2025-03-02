@@ -23,6 +23,7 @@ interface Props {
 
 const SuggestionCards: FC<Props> = ({ propSort, selectionFunction, subStatements: propSubStatements }) => {
 	const { sort: _sort, statementId } = useParams();
+
 	const sort = propSort || _sort || SortType.accepted;
 	const dispatch = useDispatch();
 	const statement = useSelector(statementSelector(statementId));
@@ -39,11 +40,11 @@ const SuggestionCards: FC<Props> = ({ propSort, selectionFunction, subStatements
 		: _subStatements);
 
 	useEffect(() => {
-		if (!statement)
+		if (!statement && statementId)
 			getStatementFromDB(statementId).then((statement: Statement) =>
 				dispatch(setStatement(statement))
 			);
-	}, [statement]);
+	}, [statement, statementId]);
 
 	useEffect(() => {
 		const { totalHeight: _totalHeight } = sortSubStatements(

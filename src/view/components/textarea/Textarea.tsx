@@ -1,6 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import styles from './Textarea.module.scss';
-import { useLanguage } from '@/controllers/hooks/useLanguages';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 
 interface TextAreaProps {
 	label?: string;
@@ -16,7 +16,7 @@ const Textarea: React.FC<TextAreaProps> = ({
 	value = '',
 	name,
 }) => {
-	const { dir } = useLanguage();
+	const { dir } = useUserConfig();
 	const textareaRef = useRef<HTMLTextAreaElement>(null);
 
 	const adjustHeight = () => {
@@ -42,7 +42,9 @@ const Textarea: React.FC<TextAreaProps> = ({
 	return (
 		<div className={styles.container}>
 			<div className={styles.labelContainer}>
-				<div className={`${styles.labelWrapper} ${dir === "ltr" ? styles["labelWrapper--ltr"] : styles["labelWrapper--rtl"]}`}>
+				<div
+					className={`${styles.labelWrapper} ${dir === 'ltr' ? styles['labelWrapper--ltr'] : styles['labelWrapper--rtl']}`}
+				>
 					<span className={styles.label}>{label}</span>
 				</div>
 			</div>

@@ -1,12 +1,14 @@
-import { useParamsLanguage } from '../useParamsLang/UseParamsLanguge';
+import { useLanguageParams } from '../useParamsLang/useLanguageParams';
 import styles from './TitleMassConsensus.module.scss';
 
-const TitleMassConsensus = ({ title }: { title: string} ) => {
-	const { dir } = useParamsLanguage();
+const TitleMassConsensus = ({ title }: { title: string }) => {
+	const { dir } = useLanguageParams();
 
 	return (
-			<h1 className={styles.title} style={{ direction: dir }}>{title}</h1>
-	)
-}
+		<h1 className={styles.title} style={{ direction: dir }}>
+			{title}
+		</h1>
+	);
+};
 
-export default TitleMassConsensus
+export default TitleMassConsensus;
