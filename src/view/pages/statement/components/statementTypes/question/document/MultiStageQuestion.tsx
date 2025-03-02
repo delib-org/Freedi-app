@@ -109,14 +109,8 @@ const MultiStageQuestion: FC = () => {
 
 	return (
 		<>
-			<h2 className={styles.title}>Question</h2>
+			<h2 className={styles.title}>{statement.statement}</h2>
 			<p>{statement?.description}</p>
-			<Button
-				text='Add Stage'
-				type='button'
-				buttonType={ButtonType.PRIMARY}
-				onClick={() => setShowAddStage(true)}
-			/>
 
 			{showAddStage && (
 				<Modal>
@@ -125,6 +119,8 @@ const MultiStageQuestion: FC = () => {
 			)}
 
 			<div className={styles.stagesWrapper}>
+				<h2 className={styles.title}>{statement.statement}</h2>
+				<p>{statement?.description}</p>
 				{initialStages.map((stage, index) => (
 					<button
 						key={stage.statementId}
@@ -146,6 +142,12 @@ const MultiStageQuestion: FC = () => {
 				))}
 				<StageCard statement={statement} isSuggestions={true} />
 			</div>
+			<Button
+				text='Add Stage'
+				type='button'
+				buttonType={ButtonType.PRIMARY}
+				onClick={() => setShowAddStage(true)}
+			/>
 		</>
 	);
 };
