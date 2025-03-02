@@ -18,6 +18,8 @@ export function useRandomSuggestions() {
 	const [subStatements, setSubStatements] = useState<Statement[]>([]);
 	const { statementId } = useParams<{ statementId: string }>();
 
+	const navigateToTop = () => navigate(`/mass-consensus/${statementId}/${MassConsensusPageUrls.topSuggestions}`);
+
 	useEffect(() => {
 		if (!user) navigate(`/mass-consensus/${statementId}/${MassConsensusPageUrls.introduction}`);
 	}, [user]);
@@ -59,5 +61,5 @@ export function useRandomSuggestions() {
 		}
 	};
 
-	return { subStatements };
+	return { subStatements, navigateToTop };
 }
