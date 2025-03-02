@@ -18,6 +18,13 @@
 	max-width: var(--wrapper);
 	width: 100%;
 
+	.description {
+		font-size: 1.1rem;
+		font-weight: 400;
+		margin: 1.8rem 36px 1rem 36px;
+		color: var(--text-body);
+	}
+
 	>div {
 		&:first-child {
 			border-radius: var(--radius) var(--radius) 0 0;

@@ -24,9 +24,7 @@ const StageCard: FC<Props> = ({ statement, isDescription, isSuggestions }) => {
 	const { dir } = useLanguage();
 
 	const navigate = useNavigate();
-	const stageUrl = isSuggestions
-		? `/stage/${statement.statementId}`
-		: `/statement/${statement.statementId}`;
+	const stageUrl = `/stage/${statement.statementId}`
 	const topVotedId =
 		statement.stageSelectionType === StageSelectionType.voting &&
 			statement.selections
@@ -75,7 +73,7 @@ const StageCard: FC<Props> = ({ statement, isDescription, isSuggestions }) => {
 						{chosen.map((opt: SimpleStatement) => (
 							<NavLink
 								key={opt.statementId}
-								to={`/statement/${opt.statementId}`}
+								to={`/stage/${opt.statementId}`}
 							>
 								<ol className={styles.suggestions}>
 									<li>
@@ -87,17 +85,17 @@ const StageCard: FC<Props> = ({ statement, isDescription, isSuggestions }) => {
 							</NavLink>
 						))}
 					</ul>
-					<NavLink to={stageUrl}>
+					{!isSuggestions && <NavLink to={`/statement/${statement.statementId}`}>
 						<p
 							className={`${styles.seeMore} ${dir === 'ltr' ? styles.rtl : styles.ltr}`}
 						>
-							{t('See more...')}
+							{t('Read more...')}
 						</p>{' '}
-					</NavLink>
+					</NavLink>}
 				</>
 			)}
 
-			<div className='btns'>
+			<div className={`btns ${styles.btn}`}>
 				<Button
 					text={t('Add Suggestion')}
 					buttonType={ButtonType.SECONDARY}

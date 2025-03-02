@@ -117,10 +117,10 @@ const MultiStageQuestion: FC = () => {
 			)}
 
 			<div className={styles.stagesWrapper}>
-				<h2 className={styles.title}>{statement.statement}</h2>
-				<p>{statement?.description}</p>
+				<h2 className={styles.title}>מסמך: {statement.statement}</h2>
+				<div className={styles.description}>{statement?.description}</div>
 				{initialStages.map((stage, index) => (
-					<button
+					<div
 						key={stage.statementId}
 						className={`${styles.stageContainer} ${draggedIndex === index ? styles.dragging : ''}`}
 						draggable
@@ -136,7 +136,7 @@ const MultiStageQuestion: FC = () => {
 							aria-hidden='true'
 						></div>
 						<StageCard statement={stage} />
-					</button>
+					</div>
 				))}
 				<StageCard statement={statement} isSuggestions={true} />
 			</div>
