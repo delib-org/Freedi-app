@@ -41,9 +41,11 @@ const StagePage = () => {
 
 	return (
 		<>
-			<h2>{t("Stage")}{statement?.statement && stageName}</h2>
-			<p className="mb-4">Stage description</p>
-			<StagePageSwitch statement={statement} />
+			<div className={`${styles["stage-page"]} wrapper`}>
+				<h2>{t("Stage")}{statement?.statement && stageName}</h2>
+				<p className="mb-4">Stage description</p>
+				<StagePageSwitch statement={statement} />
+			</div>
 			<div className={styles.bottomNav}>
 				<StatementBottomNav />
 			</div>
