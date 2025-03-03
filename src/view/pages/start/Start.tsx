@@ -15,7 +15,7 @@ import {
 } from '@/redux/location/locationSlice';
 import { userSelector } from '@/redux/users/userSlice';
 import packageJson from '../../../../package.json';
-import LogoStart from '../../../assets/icons/logoStart.svg?react';
+import LogoStart from '../../../assets/icons/LogoStart.svg?react';
 
 const Start = () => {
 	const navigate = useNavigate();
