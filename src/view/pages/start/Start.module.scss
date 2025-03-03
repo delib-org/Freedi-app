@@ -19,101 +19,57 @@ body {
 	justify-content: space-between;
 	gap: var(--font-size);
 
-	button {
-		cursor: pointer;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		height: var(--height-of-interaction-component);
-		border-radius: 3rem;
-		gap: 1rem;
-		font-size: 1rem;
-		user-select: none;
-		min-width: 30ch;
-		max-width: 90%;
-		width: 22rem;
-		z-index: 1;
-		color: white;
-	}
-
 	.version {
 		margin-top: 3vh;
-		color: #5d8fe1;
+		margin-bottom: 3vh;
+		color: var(--text-blue);
 		font-size: var(--font-size);
 		font-weight: 200;
 	}
-
-	&__freediIcon {
-		margin-top: var(--font-size);
-	}
-
-	// &__subTitle {
-	// 	font-size: 3rem;
-	// 	opacity: 0.7;
-	// }
-
-	// &__loginButton {
-	// 	background: white !important;
-	// 	color: red !important;
-	// 	border-radius: 5px;
-	// }
 }
 
-// .number {
-// 	color: #fadf57;
-// 	position: relative;
-// 	top: 0.8rem;
-// }
+.mainLogo {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	width: fit-content;
+	max-width: 70vw;
+	margin-top: var(--font-size);
 
-// .h1 {
-// 	font-size: 4.55rem;
-// 	color: #fff;
-// }
+	svg {
+		display: block;
+		width: 100%;
+		height: auto;
+		overflow: hidden;
+	}
 
-// .h2 {
-// 	color: #fff;
-// 	font-size: 1rem;
-// 	opacity: 0.7;
-// }
+	&__title {
+		font-size: 6vh;
+		font-weight: 400;
+		font-style: normal;
+		display: inline-block;
+		text-align: center;
+		white-space: nowrap;
+	}
 
-// .mainLogo {
-// 	align-items: center;
-// 	display: flex;
-// 	flex-direction: column;
-// 	justify-content: center;
-// 	width: fit-content;
-// 	gap: var(--font-size);
+	&__slogan {
+		font-family: 'Overused Grotesk', sans-serif;
+		display: inline-block;
+		text-align: center;
+		white-space: nowrap;
+		overflow: hidden;
+		font-size: var(--font-size);
+	}
+}
 
-// 	&__title {
-// 		font-size: 5vh;
-// 		font-weight: 400;
-// 		font-style: normal;
-// 		width: 100%;
-// 		height: fit-content;
-// 	}
+.freeDiIcon {
+	width: 60%;
 
-// 	&__Free {
-// 		color: #5d8fe1;
-// 		font-family: 'Bruno Ace', sans-serif;
-// 	}
-
-// 	&__Di {
-// 		color: #5bbba9;
-// 		font-family: 'Bruno Ace', sans-serif;
-// 	}
-
-// 	&__slogan {
-// 		// display: flex;
-// 		// align-items: center;
-// 		// justify-content: center;
-// 		font-family: 'Overused Grotesk', sans-serif;
-// 		font-size: clamp(14px, 2.5vw, 54px);
-// 		width: 100%;
-// 		text-align: center;
-// 		font-stretch: expanded;
-// 		white-space: nowrap;
-// 	}
-// }
+	svg {
+		width: 100%;
+	}
+}
 
 .interactionComponents {
 	width: 80vw;
@@ -125,7 +81,7 @@ body {
 
 .language {
 	border-radius: 3rem;
-	color: #668fd1;
+	color: var(--text-blue);
 	height: var(--height-of-interaction-component);
 	text-align: center;
 	font-size: 1rem;
@@ -139,7 +95,7 @@ body {
 }
 
 .anonymous {
-	background-color: #739ee4;
+	background-color: var(--btn-primary);
 }
 
 .anonymous.ltr {
@@ -162,9 +118,26 @@ body {
 	font-size: var(--font-size);
 }
 
+.startBtn {
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: var(--height-of-interaction-component);
+	border-radius: 3rem;
+	gap: 1rem;
+	font-size: 1rem;
+	user-select: none;
+	min-width: 30ch;
+	max-width: 90%;
+	width: 22rem;
+	z-index: 1;
+	color: white;
+}
+
 @media only screen and (max-width: 600px) {
 	:root {
-		--font-size: 16px;
+		--font-size: 17px;
 	}
 	.interactionComponents {
 		width: 100vw;
@@ -222,21 +195,3 @@ body {
 	// 		margin-left: 2rem;
 	// 	}
 }
-
-// @media only screen and (max-height: 600px) {
-// 	.anonymous.ltr,
-// 	.anonymous.rtl {
-// 		position: absolute;
-// 		top: 19rem;
-// 	}
-
-// 	.language {
-// 		margin-top: 15rem;
-// 	}
-
-// 	.StratPageImage {
-// 		width: 13rem;
-// 		height: 9rem;
-// 		margin-left: 2rem;
-// 	}
-// }

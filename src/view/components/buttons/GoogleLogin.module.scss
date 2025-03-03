@@ -1,25 +1,19 @@
 .googleLogin {
 	background-color: #85d2c1;
-	// display: flex;
-	// align-items: center;
-	// justify-content: center;
-	// padding: 1rem 2rem;
-	// border-radius: 3rem;
-	// width: fit-content;
-	// width: 22rem;
-	// height: 2.5rem;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: 2.5rem;
+	border-radius: 3rem;
+	gap: 1rem;
+	font-size: 1rem;
+	user-select: none;
+	min-width: 30ch;
+	max-width: 90%;
+	width: 22rem;
+	z-index: 1;
 	color: white;
-	// gap: 1rem;
-	// font-size: 1rem;
-	// cursor: pointer;
-	// user-select: none;
-	// position: absolute;
-	// margin-top: 26rem;
-	// margin-left: 13rem;
-
-	// &.rowReverse {
-	// 	margin-right: 30rem;
-	// }
 
 	img {
 		width: 1.4rem;

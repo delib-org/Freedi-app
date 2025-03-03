@@ -15,7 +15,7 @@ import {
 } from '@/redux/location/locationSlice';
 import { userSelector } from '@/redux/users/userSlice';
 import packageJson from '../../../../package.json';
-import StartLogo from '@/view/components/startLogo/StartLogo';
+import LogoStart from '../../../assets/icons/logoStart.svg?react';
 
 const Start = () => {
 	const navigate = useNavigate();
@@ -45,7 +45,12 @@ const Start = () => {
 
 	return (
 		<div className={styles.splashPage}>
-			<StartLogo />
+			<div className={styles.mainLogo}>
+				<LogoStart />
+				<span className={styles.mainLogo__slogan}>
+					{t('Fostering Collaborations')}
+				</span>
+			</div>
 			<div className={styles.version}>v: {version}</div>
 			<div className={styles.interactionComponents}>
 				<select
@@ -71,7 +76,7 @@ const Start = () => {
 				<button
 					style={{ flexDirection: direction }}
 					data-cy='anonymous-login'
-					className={`${styles.anonymous} ${direction === 'row' ? styles.ltr : styles.rtl}`}
+					className={`${styles.startBtn} ${styles.anonymous} ${direction === 'row' ? styles.ltr : styles.rtl}`}
 					onClick={() => setShouldShowNameModal((prev) => !prev)}
 				>
 					{direction === 'row-reverse' ? <MoreLeft /> : null}
