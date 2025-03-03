@@ -1,21 +1,15 @@
 import { statementSubsSelector } from '@/redux/statements/statementsSlice';
 import styles from './GroupPage.module.scss';
-import Button from '@/view/components/buttons/button/Button';
 import { useContext } from 'react';
 import { useSelector } from 'react-redux';
 import { StatementContext } from '../../../StatementCont';
 import './groupPage.scss';
 import AddButton from './AddButton';
 import SubGroupCard from '@/view/components/subGroupCard/SubGroupCard';
-import { QuestionType, StatementType } from '@/types/TypeEnums';
+import { StatementType } from '@/types/TypeEnums';
 
 export default function GroupPage() {
-	const {
-		handleSetNewStatement,
-		setNewStatementType,
-		statement,
-		setNewQuestionType,
-	} = useContext(StatementContext);
+	const { statement } = useContext(StatementContext);
 
 	const subStatements = useSelector(
 		statementSubsSelector(statement?.statementId)
@@ -26,17 +20,6 @@ export default function GroupPage() {
 	const subQuestions = subStatements.filter(
 		(sub) => sub.statementType === StatementType.question
 	);
-
-	function handleAddStatement(
-		newStatementType: StatementType,
-		questionType?: QuestionType
-	) {
-		setNewStatementType(newStatementType);
-		if (questionType) {
-			setNewQuestionType(questionType);
-		}
-		handleSetNewStatement(true);
-	}
 
 	return (
 		<div className='groupPage'>
