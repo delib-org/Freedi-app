@@ -41,7 +41,7 @@ const MainCard: FC<Props> = ({ statement }) => {
 	return (
 		<div className={styles.mainCard}>
 			<Link
-				to={`/statement/${statement.statementId}/chat`}
+				to={`/statement/${statement.statementId}/`}
 				className={styles.link}
 			>
 				<div className={styles.content}>

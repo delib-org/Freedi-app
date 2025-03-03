@@ -1,15 +1,14 @@
 import { MassConsensusPageUrls } from '@/types/TypeEnums'
 import HeaderMassConsensus from '../headerMassConsensus/HeaderMassConsensus'
-import Button, { ButtonType } from '@/view/components/buttons/button/Button'
 import Input from '@/view/components/input/Input'
 import { MailIcon } from 'lucide-react'
-import './LeaveFeedback.scss'
 import { useState } from 'react'
-import { useNavigate } from 'react-router'
 import { useLanguage } from '@/controllers/hooks/useLanguages'
+import TitleMassConsensus from '../TitleMassConsensus/TitleMassConsensus'
+import FooterMassConsensus from '../footerMassConsensus/FooterMassConsensus'
+import styles from './LeaveFeedback.module.scss'
 
 function LeaveFeedback() {
-	const navigate = useNavigate();
 	const { t } = useLanguage();
 	const [email, setEmail] = useState('');
 
@@ -20,16 +19,12 @@ function LeaveFeedback() {
 	};
 
 	return (
-		<div className='leave-feedback'>
-			<HeaderMassConsensus title="הרשמה" backTo={MassConsensusPageUrls.voting} />
-			<div className="wrapper main-wrap">
-				<p>
-					{t('Thank you for your participation.')}
-				</p>
-				<p>
-					{t('Please leave your email to receive updates.')}
-				</p>
-				<div className='input-line'>
+		<div>
+			<HeaderMassConsensus title={t("Sign up")} backTo={MassConsensusPageUrls.voting} />
+			<TitleMassConsensus title={t("Thank you for your participation.")} />
+			<div className={`${styles.feedback} wrapper main-wrap`}>
+				<p>{t('Please leave your email to receive updates.')}</p>
+				<div className={styles.input}>
 					<Input
 						placeholder={t('Mail')}
 						name='email'
@@ -38,16 +33,19 @@ function LeaveFeedback() {
 					/>
 					<MailIcon />
 				</div>
-				<div style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", gap: "1rem" }}>
-					<Button text={t('Send')} onClick={handleSendButton} />
-
-					<a href="https://freedi.co" target="_blank" style={{ color: "var(--text-blue)", margin: "0 0 3rem 0" }}>
-						{t('Yours FreeDi')}
-					</a>
-					<Button text={t('Back')} onClick={() => { navigate(-1) }} buttonType={ButtonType.SECONDARY} />
-				</div>
+			</div>
+			<FooterMassConsensus
+				isNextActive={true}
+				onNext={handleSendButton}
+				isFeedback={true}
+			/>
+			<div style={{ textAlign: "center", marginTop: "1rem" }}>
+				<a href="https://freedi.co" target="_blank" style={{ color: "var(--text-blue)" }}>
+					{t('Yours FreeDi')}
+				</a>
 			</div>
 		</div>
+
 	)
 }
 
