@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 import MoreLeft from '../../../assets/icons/moreLeft.svg?react';
 import MoreRight from '../../../assets/icons/moreRight.svg?react';
-import Logo from '../../../assets/logo/106 x 89 SVG.svg?react';
 import GoogleLoginButton from '../../components/buttons/GoogleLoginButton';
 import EnterNameModal from '../../components/enterNameModal/EnterNameModal';
 import styles from './Start.module.scss';
@@ -16,6 +15,7 @@ import {
 } from '@/redux/location/locationSlice';
 import { userSelector } from '@/redux/users/userSlice';
 import packageJson from '../../../../package.json';
+import StartLogo from '@/view/components/startLogo/StartLogo';
 
 const Start = () => {
 	const navigate = useNavigate();
@@ -45,18 +45,7 @@ const Start = () => {
 
 	return (
 		<div className={styles.splashPage}>
-			<div className={styles.mainLogo}>
-				<div className={styles.freeDiIcon}>
-					<Logo />
-				</div>
-				<div className={styles.mainLogo__title}>
-					<span className={styles.mainLogo__Free}>Free</span>
-					<span className={styles.mainLogo__Di}>Di</span>
-				</div>
-				<span className={styles.mainLogo__slogan}>
-					{t('Fostering Collaborations')}
-				</span>
-			</div>
+			<StartLogo />
 			<div className={styles.version}>v: {version}</div>
 			<div className={styles.interactionComponents}>
 				<select

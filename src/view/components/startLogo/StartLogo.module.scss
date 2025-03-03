@@ -1,0 +1,49 @@
+@import url('https://fonts.googleapis.com/css2?family=Bruno+Ace&display=swap');
+@import url('https://fonts.cdnfonts.com/css/overused-grotesk');
+
+.mainLogo {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	width: 280px;
+	max-width: 70vw;
+	background-color: red;
+
+	&__title {
+		font-size: 6vh;
+		font-weight: 400;
+		font-style: normal;
+		display: inline-block;
+		text-align: center;
+		white-space: nowrap;
+		width: 100%;
+	}
+
+	&__Free {
+		color: #5d8fe1;
+		font-family: 'Bruno Ace', sans-serif;
+	}
+
+	&__Di {
+		color: #5bbba9;
+		font-family: 'Bruno Ace', sans-serif;
+	}
+
+	&__slogan {
+		font-family: 'Overused Grotesk', sans-serif;
+		display: inline-block;
+		text-align: center;
+		white-space: nowrap;
+		overflow: hidden;
+		width: 100%;
+	}
+}
+
+.freeDiIcon {
+	width: 60%;
+
+	svg {
+		width: 100%;
+	}
+}

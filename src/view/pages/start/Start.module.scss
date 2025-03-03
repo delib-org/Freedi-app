@@ -17,6 +17,7 @@ body {
 	align-items: center;
 	transition: all 0.3s;
 	justify-content: space-between;
+	gap: var(--font-size);
 
 	button {
 		cursor: pointer;
@@ -43,7 +44,7 @@ body {
 	}
 
 	&__freediIcon {
-		margin-top: 4rem;
+		margin-top: var(--font-size);
 	}
 
 	// &__subTitle {
@@ -75,51 +76,51 @@ body {
 // 	opacity: 0.7;
 // }
 
-.mainLogo {
-	align-items: center;
-	display: flex;
-	flex-direction: column;
-	justify-content: center;
-	width: fit-content;
-	gap: var(--font-size);
+// .mainLogo {
+// 	align-items: center;
+// 	display: flex;
+// 	flex-direction: column;
+// 	justify-content: center;
+// 	width: fit-content;
+// 	gap: var(--font-size);
 
-	&__title {
-		font-size: 5vh;
-		font-weight: 400;
-		font-style: normal;
-		width: 100%;
-		height: fit-content;
-	}
+// 	&__title {
+// 		font-size: 5vh;
+// 		font-weight: 400;
+// 		font-style: normal;
+// 		width: 100%;
+// 		height: fit-content;
+// 	}
 
-	&__Free {
-		color: #5d8fe1;
-		font-family: 'Bruno Ace', sans-serif;
-	}
+// 	&__Free {
+// 		color: #5d8fe1;
+// 		font-family: 'Bruno Ace', sans-serif;
+// 	}
 
-	&__Di {
-		color: #5bbba9;
-		font-family: 'Bruno Ace', sans-serif;
-	}
+// 	&__Di {
+// 		color: #5bbba9;
+// 		font-family: 'Bruno Ace', sans-serif;
+// 	}
 
-	&__slogan {
-		// display: flex;
-		// align-items: center;
-		// justify-content: center;
-		font-family: 'Overused Grotesk', sans-serif;
-		font-size: clamp(14px, 2.5vw, 54px);
-		width: 100%;
-		text-align: center;
-		font-stretch: expanded;
-		white-space: nowrap;
-	}
-}
+// 	&__slogan {
+// 		// display: flex;
+// 		// align-items: center;
+// 		// justify-content: center;
+// 		font-family: 'Overused Grotesk', sans-serif;
+// 		font-size: clamp(14px, 2.5vw, 54px);
+// 		width: 100%;
+// 		text-align: center;
+// 		font-stretch: expanded;
+// 		white-space: nowrap;
+// 	}
+// }
 
 .interactionComponents {
 	width: 80vw;
 	max-width: 800px;
 	display: flex;
 	flex-direction: column;
-	gap: 1rem;
+	gap: var(--font-size);
 }
 
 .language {
