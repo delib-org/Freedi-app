@@ -54,30 +54,6 @@ export default function GroupPage() {
 						<SubGroupCard key={sub.statementId} statement={sub} />
 					))}
 				</div>
-				<div className='btns'>
-					<Button
-						text='add group'
-						onClick={() => handleAddStatement(StatementType.group)}
-					></Button>
-					<Button
-						text='add mass consensus'
-						onClick={() =>
-							handleAddStatement(
-								StatementType.question,
-								QuestionType.massConsensus
-							)
-						}
-					></Button>
-					<Button
-						text='add question'
-						onClick={() =>
-							handleAddStatement(
-								StatementType.question,
-								QuestionType.multiStage
-							)
-						}
-					></Button>
-				</div>
 				<AddButton />
 			</div>
 		</div>
