@@ -4,7 +4,6 @@ import { FC, useEffect, useState, useRef, useContext } from 'react';
 
 // Custom Components
 import { useLocation, useParams } from 'react-router';
-import useSlideAndSubStatement from '../../../../../controllers/hooks/useSlideAndSubStatement';
 import { StatementContext } from '../../StatementCont';
 import styles from './Chat.module.scss';
 import ChatMessageCard from './components/chatMessageCard/ChatMessageCard';
@@ -33,10 +32,6 @@ const Chat: FC = () => {
 	const location = useLocation();
 
 	const [numberOfNewMessages, setNumberOfNewMessages] = useState<number>(0);
-
-	const { toSlide, slideInOrOut } = useSlideAndSubStatement(
-		statement?.parentId
-	);
 
 	function scrollToHash() {
 		if (location.hash) {
@@ -118,25 +113,22 @@ const Chat: FC = () => {
 
 	return (
 		<div className={styles.chat} ref={chatRef}>
-			<div
-				className={`${styles.wrapper} ${toSlide && slideInOrOut}`}
-				id={`msg-${statement?.statementId}`}
-			>
-				{statement.description && <div className='wrapper'>
-					<Description />
-				</div>}
-				{subStatements?.map((statementSub: Statement, index) => (
-					<div key={statementSub.statementId}>
-						<ChatMessageCard
-							parentStatement={statement}
-							statement={statementSub}
-							previousStatement={subStatements[index - 1]}
-						/>
-					</div>
-				))}
 
-				<div ref={messagesEndRef} />
-			</div>
+			{statement.description && <div className='wrapper'>
+				<Description />
+			</div>}
+			{subStatements?.map((statementSub: Statement, index) => (
+				<div key={statementSub.statementId}>
+					<ChatMessageCard
+						parentStatement={statement}
+						statement={statementSub}
+						previousStatement={subStatements[index - 1]}
+					/>
+				</div>
+			))}
+
+			<div ref={messagesEndRef} />
+
 			{statement && (
 				<div className={styles.input}>
 					<ChatInput statement={statement} />

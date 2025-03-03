@@ -19,6 +19,8 @@ const useTopSuggestions = () => {
 
 	const [topStatements, setTopStatements] = useState<Statement[]>([]);
 
+	const navigateToVoting = () => navigate(`/mass-consensus/${statementId}/${MassConsensusPageUrls.voting}`);
+
 	const fetchStatements = () => {
 		const endPoint =
 			location.hostname === 'localhost'
@@ -76,7 +78,7 @@ const useTopSuggestions = () => {
 		};
 	}, [topStatements.length]);
 
-	return {};
+	return { navigateToVoting };
 };
 
 export default useTopSuggestions;
