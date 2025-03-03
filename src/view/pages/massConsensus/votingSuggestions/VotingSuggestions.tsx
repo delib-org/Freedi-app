@@ -16,7 +16,7 @@ import TitleMassConsensus from '../TitleMassConsensus/TitleMassConsensus';
 import FooterMassConsensus from '../footerMassConsensus/FooterMassConsensus';
 
 const VotingSuggestions = () => {
-	const { subStatements } = VotingSuggestionsMV();
+	const { subStatements, navigateToFeedback } = VotingSuggestionsMV();
 	const { statementId } = useParams();
 	const statement = useSelector(statementSelector(statementId));
 	const [isStatementInfoModalOpen, setIsStatementInfoModalOpen] =
@@ -53,9 +53,7 @@ const VotingSuggestions = () => {
 				</Modal>
 			)}
 
-			<FooterMassConsensus
-				goTo={MassConsensusPageUrls.leaveFeedback}
-			></FooterMassConsensus>
+			<FooterMassConsensus isNextActive={true} onNext={navigateToFeedback} goTo={MassConsensusPageUrls.leaveFeedback}/>
 		</>
 	);
 };

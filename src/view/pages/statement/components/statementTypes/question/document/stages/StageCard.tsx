@@ -9,9 +9,9 @@ import {
 	statementToSimpleStatement,
 } from '@/types/statement/SimpleStatement';
 import { maxKeyInObject } from '@/types/TypeUtils';
-import { StageSelectionType } from '@/types/stage/stageTypes';
 import { useSelector } from 'react-redux';
 import { statementSelectorById } from '@/redux/statements/statementsSlice';
+import { EvaluationUI } from '@/types/evaluation/Evaluation';
 
 interface Props {
 	statement: Statement;
@@ -25,20 +25,22 @@ const StageCard: FC<Props> = ({ statement, isDescription, isSuggestions }) => {
 
 	const navigate = useNavigate();
 	const stageUrl = `/stage/${statement.statementId}`
+	const isVoting = statement.evaluationSettings?.evaluationUI === EvaluationUI.voting;
 	const topVotedId =
-		statement.stageSelectionType === StageSelectionType.voting &&
+		isVoting &&
 			statement.selections
 			? maxKeyInObject(statement.selections)
 			: '';
 
 	const topVoted = useSelector(statementSelectorById(topVotedId));
+
 	const simpleTopVoted = topVoted
 		? statementToSimpleStatement(topVoted)
 		: undefined;
 
 	const votingResults = simpleTopVoted ? [simpleTopVoted] : [];
 	const chosen: SimpleStatement[] =
-		statement.stageSelectionType === StageSelectionType.voting
+		isVoting
 			? votingResults
 			: statement.results;
 

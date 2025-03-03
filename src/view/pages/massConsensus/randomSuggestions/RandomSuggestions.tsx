@@ -8,7 +8,7 @@ import { useRandomSuggestions } from './RandomSuggestionsVM';
 import { useLanguage } from '@/controllers/hooks/useLanguages';
 
 const RandomSuggestions = () => {
-	useRandomSuggestions();
+	const {navigateToTop} = useRandomSuggestions();
 	const { t } = useLanguage();
 
 	return (
@@ -18,8 +18,10 @@ const RandomSuggestions = () => {
 				title={t("General suggestion evaluation")}
 			/>
 			<TitleMassConsensus title={t("please rate the following suggestions")} />
-			<SuggestionCards selectionFunction={SelectionFunction.random} />
-			<FooterMassConsensus goTo={MassConsensusPageUrls.topSuggestions} />
+			<div className="wrapper">
+				<SuggestionCards selectionFunction={SelectionFunction.random} />
+            </div>
+			<FooterMassConsensus isNextActive={true} onNext={navigateToTop} goTo={MassConsensusPageUrls.topSuggestions} />
 		</>
 	);
 };
