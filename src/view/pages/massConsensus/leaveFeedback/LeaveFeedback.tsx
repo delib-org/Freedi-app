@@ -5,7 +5,7 @@ import { MailIcon } from 'lucide-react'
 import { useState } from 'react'
 import { useLanguage } from '@/controllers/hooks/useLanguages'
 import TitleMassConsensus from '../TitleMassConsensus/TitleMassConsensus'
-import FooterMassConsensus from '../footerMassConsesus/FooterMassConsesus'
+import FooterMassConsensus from '../footerMassConsensus/FooterMassConsensus'
 import styles from './LeaveFeedback.module.scss'
 
 function LeaveFeedback() {
@@ -34,9 +34,9 @@ function LeaveFeedback() {
 					<MailIcon />
 				</div>
 			</div>
-			<FooterMassConsensus 
-				isNextActive={true} 
-				onNext={handleSendButton} 
+			<FooterMassConsensus
+				isNextActive={true}
+				onNext={handleSendButton}
 				isFeedback={true}
 			/>
 			<div style={{ textAlign: "center", marginTop: "1rem" }}>

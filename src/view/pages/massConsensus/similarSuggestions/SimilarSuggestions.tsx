@@ -13,7 +13,7 @@ import { useSimilarSuggestions } from './SimilarSuggestionVM';
 import { userSelector } from '@/redux/users/userSlice';
 import TitleMassConsensus from '../TitleMassConsensus/TitleMassConsensus';
 import { useLanguage } from '@/controllers/hooks/useLanguages';
-import FooterMassConsensus from '../footerMassConsesus/FooterMassConsesus';
+import FooterMassConsensus from '../footerMassConsensus/FooterMassConsensus';
 
 const SimilarSuggestions = () => {
 	const navigate = useNavigate();
@@ -41,7 +41,7 @@ const SimilarSuggestions = () => {
 
 	return (
 		<div className={styles['similar-suggestions']} style={{ direction: dir }}>
-			<HeaderMassConsensus  title={t('similar suggestions')} backTo={MassConsensusPageUrls.randomSuggestions} />
+			<HeaderMassConsensus title={t('similar suggestions')} backTo={MassConsensusPageUrls.randomSuggestions} />
 			<TitleMassConsensus title={t("Thank you for the suggestion!")} />
 			<h3>{t("Here are similar suggestions. which one fits best?")}</h3>
 			<div className={styles['similar-suggestions__wrapper']}>
@@ -61,9 +61,9 @@ const SimilarSuggestions = () => {
 					)
 				)}
 			</div>
-			<FooterMassConsensus 
-				goTo={MassConsensusPageUrls.randomSuggestions} 
-				isNextActive={selected !== null} 
+			<FooterMassConsensus
+				goTo={MassConsensusPageUrls.randomSuggestions}
+				isNextActive={selected !== null}
 				onNext={() => handleSetSuggestionToDB(similarSuggestions[selected])}
 			/>
 		</div>
