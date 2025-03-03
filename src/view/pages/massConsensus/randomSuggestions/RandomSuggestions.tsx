@@ -6,10 +6,15 @@ import FooterMassConsensus from '../footerMassConsensus/FooterMassConsensus';
 import TitleMassConsensus from '../TitleMassConsensus/TitleMassConsensus';
 import { useRandomSuggestions } from './RandomSuggestionsVM';
 import { useLanguage } from '@/controllers/hooks/useLanguages';
+import { selectMassConsensusTexts } from '@/redux/massConsensus/massConsensusSlice';
+import { useSelector } from 'react-redux';
+import { useParams } from 'react-router';
 
 const RandomSuggestions = () => {
-	const {navigateToTop} = useRandomSuggestions();
+	const { statementId } = useParams<{ statementId: string }>();
+	const { navigateToTop } = useRandomSuggestions();
 	const { t } = useLanguage();
+	const massConsensusTexts = useSelector(selectMassConsensusTexts(statementId));
 
 	return (
 		<>
@@ -17,10 +22,10 @@ const RandomSuggestions = () => {
 				backTo={MassConsensusPageUrls.initialQuestion}
 				title={t("General suggestion evaluation")}
 			/>
-			<TitleMassConsensus title={t("please rate the following suggestions")} />
+			<TitleMassConsensus title={massConsensusTexts ? massConsensusTexts.texts?.randomSuggestions : t("please rate the following suggestions")} />
 			<div className="wrapper">
 				<SuggestionCards selectionFunction={SelectionFunction.random} />
-            </div>
+			</div>
 			<FooterMassConsensus isNextActive={true} onNext={navigateToTop} goTo={MassConsensusPageUrls.topSuggestions} />
 		</>
 	);

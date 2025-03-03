@@ -11,12 +11,14 @@ import Loader from '@/view/components/loaders/Loader';
 import { useLanguage } from '@/controllers/hooks/useLanguages';
 import styles from './InitialQuestion.module.scss'
 import FooterMassConsensus from '../footerMassConsensus/FooterMassConsensus';
+import { selectMassConsensusTexts } from '@/redux/massConsensus/massConsensusSlice';
 
 const InitialQuestion = () => {
 	const navigate = useNavigate();
 	const { dir, lang } = useParamsLanguage();
 	const { statementId } = useParams<{ statementId: string }>();
 	const statement = useSelector(statementSelector(statementId));
+	const massConsensusTexts = useSelector(selectMassConsensusTexts(statementId));
 	const { handleSetInitialSuggestion, changeInput, ifButtonEnabled, ready, loading } = useInitialQuestion();
 	const { t } = useLanguage();
 
@@ -34,7 +36,7 @@ const InitialQuestion = () => {
 	return (
 		<div style={{ direction: dir }}>
 			<HeaderMassConsensus title={t('offer a suggestion')} backTo={MassConsensusPageUrls.introduction} />
-			<TitleMassConsensus title={t("please suggest a sentance that will unite Israel")} />
+			<TitleMassConsensus title={massConsensusTexts ? massConsensusTexts.texts?.suggestionQuestion : t("please suggest a sentence that will answer the question")} />
 			<div className={styles.suggestionContainer} style={{ direction: dir }}>
 				<h3>{t('Your description')}</h3>
 				<input type="text" onChange={changeInput} />

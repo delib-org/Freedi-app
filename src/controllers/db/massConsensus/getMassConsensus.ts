@@ -1,5 +1,5 @@
 // Adjust the path as necessary
-import { collection, onSnapshot, doc } from 'firebase/firestore';
+import { collection, onSnapshot, doc, getDoc } from 'firebase/firestore';
 import { FireStore } from '../config';
 import { parse } from 'valibot';
 import { MassConsensus, MassConsensusSchema } from '@/types/massConsensus/massConsensusTypes';
@@ -19,4 +19,19 @@ export const listenToMassConsensusQuestion = (statementId: string) => {
 		}
 	});
 
+};
+
+export const getMassConsensusQuestion = async (statementId: string): Promise<MassConsensus | null> => {
+	const massConsensusCollection = collection(FireStore, 'massConsensus');
+	const questionRef = doc(massConsensusCollection, statementId);
+	const docSnap = await getDoc(questionRef);
+
+	if (docSnap.exists()) {
+		const question = docSnap.data() as MassConsensus;
+		parse(MassConsensusSchema, question);
+
+		return question;
+	} else {
+		return null;
+	}
 };

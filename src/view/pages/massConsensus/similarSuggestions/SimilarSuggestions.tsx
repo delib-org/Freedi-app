@@ -4,7 +4,7 @@ import { useNavigate, useParams } from 'react-router';
 import HeaderMassConsensus from '../headerMassConsensus/HeaderMassConsensus';
 import { MassConsensusPageUrls } from '@/types/TypeEnums';
 import { useSelector } from 'react-redux';
-import { selectSimilarStatements } from '@/redux/massConsensus/massConsensusSlice';
+import { selectMassConsensusTexts, selectSimilarStatements } from '@/redux/massConsensus/massConsensusSlice';
 import SimilarCard from './similarCard/SimilarCard';
 import { Statement } from '@/types/statement/StatementTypes';
 import { GeneratedStatement } from '@/types/massConsensus/massConsensusTypes';
@@ -22,6 +22,7 @@ const SimilarSuggestions = () => {
 	const { statementId } = useParams<{ statementId: string }>();
 	const { handleSetSuggestionToDB } = useSimilarSuggestions();
 	const similarSuggestions = useSelector(selectSimilarStatements);
+	const massConsensusTexts = useSelector(selectMassConsensusTexts(statementId));
 	const { t } = useLanguage();
 
 	const [selected, setSelected] = React.useState<number | null>(null);
@@ -43,7 +44,7 @@ const SimilarSuggestions = () => {
 		<div className={styles['similar-suggestions']} style={{ direction: dir }}>
 			<HeaderMassConsensus title={t('similar suggestions')} backTo={MassConsensusPageUrls.randomSuggestions} />
 			<TitleMassConsensus title={t("Thank you for the suggestion!")} />
-			<h3>{t("Here are similar suggestions. which one fits best?")}</h3>
+			<h3>{massConsensusTexts ? massConsensusTexts.texts?.similarSuggestions : t("Here are similar suggestions. which one fits best?")}</h3>
 			<div className={styles['similar-suggestions__wrapper']}>
 				{similarSuggestions.map(
 					(
