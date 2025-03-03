@@ -20,9 +20,11 @@ import StageCard from './stages/StageCard';
 import { updateStatementsOrderToDB } from '@/controllers/db/statements/setStatements';
 import { Statement } from '@/types/statement/StatementTypes';
 import { StatementType } from '@/types/TypeEnums';
+import { useLanguage } from '@/controllers/hooks/useLanguages';
 
 const MultiStageQuestion: FC = () => {
 	const { statement } = useContext(StatementContext);
+	const { t } = useLanguage();
 	const dispatch = useDispatch();
 	const statementsFromStore = useSelector(
 		statementSubsSelector(statement?.statementId)
@@ -43,7 +45,7 @@ const MultiStageQuestion: FC = () => {
 	const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
 
 	const handleDragStart = (
-		e: DragEvent<HTMLButtonElement>,
+		e: DragEvent<HTMLDivElement>,
 		index: number
 	): void => {
 		setDraggedIndex(index);
@@ -53,13 +55,13 @@ const MultiStageQuestion: FC = () => {
 		e.dataTransfer.setData('text/plain', '');
 	};
 
-	const handleDragOver = (e: DragEvent<HTMLButtonElement>): void => {
+	const handleDragOver = (e: DragEvent<HTMLDivElement>): void => {
 		e.preventDefault();
 		e.dataTransfer.dropEffect = 'move';
 	};
 
 	const handleDrop = (
-		e: DragEvent<HTMLButtonElement>,
+		e: DragEvent<HTMLDivElement>,
 		dropIndex: number
 	): void => {
 		e.preventDefault();
@@ -84,7 +86,7 @@ const MultiStageQuestion: FC = () => {
 	};
 
 	const handleKeyDown = (
-		e: KeyboardEvent<HTMLButtonElement>,
+		e: KeyboardEvent<HTMLDivElement>,
 		index: number
 	): void => {
 		if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
@@ -109,14 +111,6 @@ const MultiStageQuestion: FC = () => {
 
 	return (
 		<>
-			<h2 className={styles.title}>Question</h2>
-			<p>{statement?.description}</p>
-			<Button
-				text='Add Stage'
-				type='button'
-				buttonType={ButtonType.PRIMARY}
-				onClick={() => setShowAddStage(true)}
-			/>
 
 			{showAddStage && (
 				<Modal>
@@ -125,8 +119,10 @@ const MultiStageQuestion: FC = () => {
 			)}
 
 			<div className={styles.stagesWrapper}>
+				<h2 className={styles.title}>{t("Document")}: {statement.statement}</h2>
+				<div className={styles.description}>{statement?.description}</div>
 				{initialStages.map((stage, index) => (
-					<button
+					<div
 						key={stage.statementId}
 						className={`${styles.stageContainer} ${draggedIndex === index ? styles.dragging : ''}`}
 						draggable
@@ -142,9 +138,17 @@ const MultiStageQuestion: FC = () => {
 							aria-hidden='true'
 						></div>
 						<StageCard statement={stage} />
-					</button>
+					</div>
 				))}
 				<StageCard statement={statement} isSuggestions={true} />
+			</div>
+			<div className={`btns ${styles["add-stage"]}`}>
+				<Button
+					text={t('Add sub-question')}
+					type='button'
+					buttonType={ButtonType.PRIMARY}
+					onClick={() => setShowAddStage(true)}
+				/>
 			</div>
 		</>
 	);

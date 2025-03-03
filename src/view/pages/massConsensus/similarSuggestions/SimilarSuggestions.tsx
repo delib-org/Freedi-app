@@ -11,6 +11,9 @@ import { GeneratedStatement } from '@/types/massConsensus/massConsensusModel';
 import styles from './SimilarSuggestions.module.scss';
 import { useSimilarSuggestions } from './SimilarSuggestionVM';
 import { userSelector } from '@/redux/users/userSlice';
+import TitleMassConsensus from '../TitleMassConsensus/TitleMassConsensus';
+import { useLanguage } from '@/controllers/hooks/useLanguages';
+import FooterMassConsensus from '../footerMassConsensus/FooterMassConsensus';
 
 const SimilarSuggestions = () => {
 	const navigate = useNavigate();
@@ -19,6 +22,7 @@ const SimilarSuggestions = () => {
 	const { statementId } = useParams<{ statementId: string }>();
 	const { handleSetSuggestionToDB } = useSimilarSuggestions();
 	const similarSuggestions = useSelector(selectSimilarStatements);
+	const { t } = useLanguage();
 
 	const [selected, setSelected] = React.useState<number | null>(null);
 
@@ -36,11 +40,10 @@ const SimilarSuggestions = () => {
 	}, [similarSuggestions, navigate, statementId]);
 
 	return (
-		<div style={{ direction: dir }}>
-			<HeaderMassConsensus
-				backTo={MassConsensusPageUrls.initialQuestion}
-			/>
-			<h3>Similar Suggestions</h3>
+		<div className={styles['similar-suggestions']} style={{ direction: dir }}>
+			<HeaderMassConsensus title={t('similar suggestions')} backTo={MassConsensusPageUrls.randomSuggestions} />
+			<TitleMassConsensus title={t("Thank you for the suggestion!")} />
+			<h3>{t("Here are similar suggestions. which one fits best?")}</h3>
 			<div className={styles['similar-suggestions__wrapper']}>
 				{similarSuggestions.map(
 					(
@@ -58,30 +61,11 @@ const SimilarSuggestions = () => {
 					)
 				)}
 			</div>
-			<div className='btns'>
-				<button
-					className='btn btn--secondary btn--large'
-					onClick={() =>
-						navigate(
-							`/mass-consensus/${statementId}/${MassConsensusPageUrls.initialQuestion}`
-						)
-					}
-				>
-					Back
-				</button>
-				{selected !== null && (
-					<button
-						className='btn btn--primary btn--large'
-						onClick={() =>
-							handleSetSuggestionToDB(
-								similarSuggestions[selected]
-							)
-						}
-					>
-						Next
-					</button>
-				)}
-			</div>
+			<FooterMassConsensus
+				goTo={MassConsensusPageUrls.randomSuggestions}
+				isNextActive={selected !== null}
+				onNext={() => handleSetSuggestionToDB(similarSuggestions[selected])}
+			/>
 		</div>
 	);
 };

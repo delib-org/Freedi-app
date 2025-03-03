@@ -1,57 +1,106 @@
+$bottomCard:1.5rem;
+
 .card {
-	padding: var(--padding) var(--padding) 3rem var(--padding);
+
 	background-color: white;
 	text-align: start;
 	width: 100%;
+
+	&--rtl {
+		padding: 0 0 $bottomCard var(--padding);
+	}
+
+	&--ltr {
+		padding: 0 var(--padding) $bottomCard 0;
+	}
+
+	&--suggestions {
+		padding-left: 36px;
+	}
+
+	&--suggestions-rtl {
+		padding-right: 36px;
+	}
+
 	p {
 		color: var(--text);
-		font-size: 16px;
-		margin: 15px;
+		font-size: 0.941rem;
+		/* 16px */
+		margin: 0.882rem;
+		/* 15px */
 	}
-	span {
-		color: var(--text);
-		font-size: 12px;
-		margin-bottom: 15px;
+
+	&__description {
+		color: var(--text-caption);
+		font-size: 0.706rem;
+		/* 12px */
+		margin-bottom: 0.882rem;
+		/* 15px */
 	}
+
 	h4 {
-		margin: 26px;
+		margin: 1.529rem;
+		/* 26px */
 		margin-left: 0;
-		font-weight: medium;
+		font-weight: 400;
+
 	}
 
 	h3 {
-		font-weight: medium;
+		font-weight: 500;
+		opacity: .85;
 	}
+
 	ul {
 		list-style-type: none;
 		padding: 0;
 
 		li {
 			color: var(--text);
-			margin: 16px;
+			margin: 0.941rem;
+			/* 16px */
 		}
 	}
+
 	.rtl {
 		text-align: right;
 	}
+
 	.ltr {
 		text-align: left;
 	}
+
 	.seeMore {
 		display: block;
-		font-size: 16px;
+		font-size: 0.941rem;
+		/* 16px */
 		color: var(--btn-primary-default);
 		padding: 1rem 0.5rem 0.7rem 0;
+		opacity: 0.5;
 	}
+
 	.suggestions {
-		font-size: 16px;
+		font-size: 0.941rem;
+		/* 16px */
 		color: var(--text-body);
 	}
+
 	a {
 		color: navy;
 
 		.active {
 			color: blue;
 		}
+	}
+
+	.statement {
+		&__description {
+			color: var(--text-caption)
+		}
+	}
+
+	.btn {
+		justify-content: end;
+		opacity: 0.5;
 	}
 }

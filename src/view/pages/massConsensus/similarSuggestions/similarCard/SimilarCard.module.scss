@@ -1,21 +1,39 @@
 .similar-card {
-	background-color: wheat;
-	padding: 1rem;
+	background-color: #f8f8f8;
+	border-radius: 8px;
+	padding: 1.2rem;
 	cursor: pointer;
 	user-select: none;
-	transition: all 0.1s;
+	transition: all 0.2s ease;
 	font-size: 1.2rem;
-
+	border: 1px solid #e0e0e0;
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+	margin-bottom: 0.8rem;
+	line-height: 1.5;
+	color: #333;
+	
 	&:hover {
-		transform: scale(1.01);
+	  transform: translateY(-2px);
+	  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+	}
+	
+	&:active {
+	  transform: translateY(1px);
+	  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 	}
 
+  
 	&--userStatement {
-		font-size: 1.5rem;
-		background-color: rgb(240, 163, 163);
-	}
-
+		font-size: 1.4rem;
+		background-color: #f5e9ff;
+		border-left: 4px solid #BDCEF4;
+		font-weight: 500;
+  }
+  
 	&--selected {
-		background-color: rgb(163, 240, 163);
-	}
+		background-color: #ebf7eb;
+		border: 1px solid #a3dba3;
+		border-left: 4px solid #4caf50;
+		box-shadow: 0 2px 8px rgba(76, 175, 80, 0.2);
+  }
 }
