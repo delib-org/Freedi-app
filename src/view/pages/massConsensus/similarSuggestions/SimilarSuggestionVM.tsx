@@ -5,7 +5,7 @@ import {
 	setStatementToDB,
 } from '@/controllers/db/statements/setStatements';
 import { MassConsensusPageUrls, StatementType } from '@/types/TypeEnums';
-import { GeneratedStatement } from '@/types/massConsensus/massConsensusModel';
+import { GeneratedStatement } from '@/types/massConsensus/massConsensusTypes';
 import { Statement } from '@/types/statement/StatementTypes';
 import { useNavigate, useParams } from 'react-router';
 

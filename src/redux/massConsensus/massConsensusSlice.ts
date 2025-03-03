@@ -2,7 +2,8 @@ import { createSlice } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
 import { RootState } from '../store';
 import { Statement } from '@/types/statement/StatementTypes';
-import { GeneratedStatement } from '@/types/massConsensus/massConsensusModel';
+import { GeneratedStatement, MassConsensus } from '@/types/massConsensus/massConsensusTypes';
+import { updateArray } from '@/controllers/general/helpers';
 
 export enum Status {
 	idle = 'idle',
@@ -13,11 +14,13 @@ export enum Status {
 // Define a type for the slice state
 interface MassConsensusState {
 	similarStatements: Statement[] | GeneratedStatement[];
+	massConsensusStatusTexts: MassConsensus[];
 }
 
 // Define the initial state using that type
 const initialState: MassConsensusState = {
 	similarStatements: [],
+	massConsensusStatusTexts: [],
 };
 
 export const massConsensusSlice = createSlice({
@@ -30,10 +33,26 @@ export const massConsensusSlice = createSlice({
 		) => {
 			state.similarStatements = action.payload;
 		},
+		setMassConsensusTexts: (
+			state,
+			action: PayloadAction<MassConsensus>
+		) => {
+			state.massConsensusStatusTexts = updateArray(
+				state.massConsensusStatusTexts, action.payload, 'statementId'
+			);
+		},
+		deleteMassConsensusTexts: (
+			state,
+			action: PayloadAction<string>
+		) => {
+			state.massConsensusStatusTexts = state.massConsensusStatusTexts.filter(
+				(massConsensus) => massConsensus.statementId !== action.payload
+			);
+		},
 	},
 });
 
-export const { setSimilarStatements } = massConsensusSlice.actions;
+export const { setSimilarStatements, setMassConsensusTexts, deleteMassConsensusTexts } = massConsensusSlice.actions;
 
 export const selectSimilarStatements = (state: RootState) =>
 	state.massConsensus.similarStatements;
@@ -43,5 +62,7 @@ export const selectSimilarStatementsByStatementId =
 			(statement: Statement | GeneratedStatement) =>
 				statement.statementId === statementId
 		);
+
+export const selectMassConsensusTexts = (statementId: string | undefined) => (state: RootState) => state.massConsensus.massConsensusStatusTexts.find(mc => mc.statementId === statementId);
 
 export default massConsensusSlice.reducer;

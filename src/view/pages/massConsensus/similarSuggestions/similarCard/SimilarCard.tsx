@@ -1,4 +1,4 @@
-import { GeneratedStatement } from '@/types/massConsensus/massConsensusModel';
+import { GeneratedStatement } from '@/types/massConsensus/massConsensusTypes';
 import { Statement } from '@/types/statement/StatementTypes';
 import { FC } from 'react';
 import styles from './SimilarCard.module.scss';

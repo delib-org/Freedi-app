@@ -7,7 +7,7 @@ import { useSelector } from 'react-redux';
 import { selectSimilarStatements } from '@/redux/massConsensus/massConsensusSlice';
 import SimilarCard from './similarCard/SimilarCard';
 import { Statement } from '@/types/statement/StatementTypes';
-import { GeneratedStatement } from '@/types/massConsensus/massConsensusModel';
+import { GeneratedStatement } from '@/types/massConsensus/massConsensusTypes';
 import styles from './SimilarSuggestions.module.scss';
 import { useSimilarSuggestions } from './SimilarSuggestionVM';
 import { userSelector } from '@/redux/users/userSlice';
