@@ -9,9 +9,9 @@ import {
 	statementToSimpleStatement,
 } from '@/types/statement/SimpleStatement';
 import { maxKeyInObject } from '@/types/TypeUtils';
-import { StageSelectionType } from '@/types/stage/stageTypes';
 import { useSelector } from 'react-redux';
 import { statementSelectorById } from '@/redux/statements/statementsSlice';
+import { EvaluationUI } from '@/types/evaluation/Evaluation';
 
 interface Props {
 	statement: Statement;
@@ -20,27 +20,27 @@ interface Props {
 }
 
 const StageCard: FC<Props> = ({ statement, isDescription, isSuggestions }) => {
-	const { t } = useLanguage();
-	const { dir } = useLanguage();
+
+	const { dir, t } = useLanguage();
 
 	const navigate = useNavigate();
-	const stageUrl = isSuggestions
-		? `/stage/${statement.statementId}`
-		: `/statement/${statement.statementId}`;
+	const stageUrl = `/stage/${statement.statementId}`
+	const isVoting = statement.evaluationSettings?.evaluationUI === EvaluationUI.voting;
 	const topVotedId =
-		statement.stageSelectionType === StageSelectionType.voting &&
+		isVoting &&
 			statement.selections
 			? maxKeyInObject(statement.selections)
 			: '';
 
 	const topVoted = useSelector(statementSelectorById(topVotedId));
+
 	const simpleTopVoted = topVoted
 		? statementToSimpleStatement(topVoted)
 		: undefined;
 
 	const votingResults = simpleTopVoted ? [simpleTopVoted] : [];
 	const chosen: SimpleStatement[] =
-		statement.stageSelectionType === StageSelectionType.voting
+		isVoting
 			? votingResults
 			: statement.results;
 
@@ -56,19 +56,19 @@ const StageCard: FC<Props> = ({ statement, isDescription, isSuggestions }) => {
 		return statement.statement;
 	};
 
-	const description =
-		statement?.evaluationSettings?.evaluationUI === 'voting'
-			? 'Solution selected by vote'
-			: 'Solutions selected for discussed issue'
-
 	const title = getTitle();
 
+	const direction = dir === "rtl" ? "card--rtl" : "card--ltr";
+	let suggestionsClass = '';
+	if (isSuggestions) {
+		suggestionsClass = dir === "ltr" ? "card--suggestions" : "card--suggestions-rtl";
+	}
+
 	return (
-		<div className={styles.card} style={{ paddingRight: isSuggestions ? '36px' : '0px' }}>
+		<div className={`${styles.card} ${styles[direction]} ${styles[suggestionsClass]}`}>
 			<h3>{t(title)}</h3>
-			<span className={styles.card__description}>{t(description)}</span>
 			{chosen.length === 0 ? (
-				<h4>{t('No suggestion so far')}</h4>
+				<p>{t('No suggestion so far')}</p>
 			) : (
 				<>
 					<ul>
@@ -87,17 +87,17 @@ const StageCard: FC<Props> = ({ statement, isDescription, isSuggestions }) => {
 							</NavLink>
 						))}
 					</ul>
-					<NavLink to={stageUrl}>
+					{!isSuggestions && <NavLink to={`/statement/${statement.statementId}`}>
 						<p
 							className={`${styles.seeMore} ${dir === 'ltr' ? styles.rtl : styles.ltr}`}
 						>
-							{t('See more...')}
+							{t('Read more...')}
 						</p>{' '}
-					</NavLink>
+					</NavLink>}
 				</>
 			)}
 
-			<div className='btns'>
+			<div className={`btns ${styles.btn}`}>
 				<Button
 					text={t('Add Suggestion')}
 					buttonType={ButtonType.SECONDARY}
