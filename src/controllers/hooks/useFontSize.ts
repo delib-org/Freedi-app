@@ -13,11 +13,24 @@ export const useFontSize = (initialSize: number, isUser: boolean) => {
 	}, [localFontSize, initialSize, isUser]);
 
 	const handleLocalFontSizeChange = (increment: number) => {
-		setLocalFontSize((prev) => prev + increment);
+		const screenWidth = window.innerWidth;
+		let newSize = localFontSize + increment;
+
+		if (screenWidth <= 600 && newSize > 21) {
+			newSize = 21;
+		}
+
+		setLocalFontSize(newSize);
 	};
 
 	const handleUserFontSizeChange = (increment: number) => {
-		const newSize = initialSize + increment;
+		const screenWidth = window.innerWidth;
+		let newSize = initialSize + increment;
+
+		if (screenWidth <= 600 && newSize > 21) {
+			newSize = 21;
+		}
+
 		updateUserFontSize(newSize);
 		dispatch(increaseFontSize(increment));
 	};
