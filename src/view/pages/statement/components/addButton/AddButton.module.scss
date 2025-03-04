@@ -1,0 +1,82 @@
+.actions {
+	--button-size: 2.5rem;
+	--main-button-size: 3.125rem;
+	--radius: 6rem;
+	--button-gap: 3rem;
+
+	position: absolute;
+	bottom: 2rem;
+	right: 2rem;
+
+	.plusButton {
+		position: relative;
+		z-index: 3;
+		background: var(--btn-primary);
+		width: var(--main-button-size);
+		height: var(--main-button-size);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		flex-direction: column;
+		border-radius: 50%;
+		box-shadow: 2px 2px 5px var(--shadow);
+		user-select: none;
+		cursor: pointer;
+		transition:
+			transform 0.3s ease-in-out,
+			background-color 0.3s ease-in-out;
+
+		svg {
+			color: white;
+			width: 1.5rem;
+			height: 1.5rem;
+		}
+	}
+
+	.active {
+		transform: translate(-50%, -50%) rotate(-45deg) scale(1.2);
+		background-color: var(--add-btn);
+	}
+
+	.actionBtn {
+		position: absolute;
+		background: var(--btn-primary);
+		width: var(--button-size);
+		height: var(--button-size);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		flex-direction: column;
+		border-radius: 50%;
+		user-select: none;
+		cursor: pointer;
+		transform: scale(0) translate(0, 0);
+		box-shadow: 2px 2px 5px var(--shadow);
+		transition:
+			transform 0.4s cubic-bezier(0.25, 1, 0.5, 1),
+			opacity 0.1s ease-in-out;
+		opacity: 0;
+		z-index: 2;
+		svg {
+			color: white;
+			width: 1.3rem;
+			height: 1.3rem;
+		}
+
+		&.visible {
+			opacity: 1;
+			transform: scale(1) translate(var(--x), var(--y));
+		}
+	}
+}
+
+.invisibleBackground {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100vw;
+	height: 100svh;
+	z-index: 1;
+	background-color: transparent;
+	cursor: default;
+}
