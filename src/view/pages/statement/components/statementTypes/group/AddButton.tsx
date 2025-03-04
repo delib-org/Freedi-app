@@ -1,8 +1,8 @@
 import React, { useContext } from 'react';
 import IconButton from '@/view/components/iconButton/IconButton';
 import PlusIcon from '@/assets/icons/plusIcon.svg?react';
-import AddDocumentIcon from '@/assets/icons/document.svg?react';
-import AddClusterIcon from '@/assets/icons/net-clusters.svg?react';
+import QuestionIcon from '@/assets/icons/questionIcon.svg?react';
+import MassConsensusIcon from '@/assets/icons/mass-consensus-question.svg?react';
 import AddSubGroupIcon from '@/assets/icons/team-group.svg?react';
 import { StatementContext } from '../../../StatementCont';
 import { QuestionType, StatementType } from '@/types/TypeEnums';
@@ -53,12 +53,12 @@ export default function AddButton() {
 		{
 			key: 'question',
 			action: 'question' as const,
-			icon: <AddDocumentIcon />,
+			icon: <QuestionIcon />,
 		},
 		{
 			key: 'mass-consensus',
 			action: 'mass-consensus' as const,
-			icon: <AddClusterIcon />,
+			icon: <MassConsensusIcon />,
 		},
 		{
 			key: 'subgroup',
