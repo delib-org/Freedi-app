@@ -5,7 +5,7 @@ import { getStatementSubscriptionId } from '@/controllers/general/helpers';
 import { store } from '@/redux/store';
 import { Collections } from '@/types/TypeEnums';
 import { Statement, StatementSchema } from '@/types/statement/StatementTypes';
-import { StatementSubscriptionSchema } from '@/types/statement/StatementSubscription';
+import { StatementSubscriptionSchema } from '@/types/statement/StatementSubscriptionTypes';
 import { User } from '@/types/user/User';
 import { parse } from 'valibot';
 import { Role } from '@/types/user/UserSettings';

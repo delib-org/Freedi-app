@@ -7,7 +7,7 @@ import { Statement } from '@/types/statement/StatementTypes';
 import {
 	SimpleStatement,
 	statementToSimpleStatement,
-} from '@/types/statement/SimpleStatement';
+} from '@/types/statement/SimpleStatementTypes';
 import { maxKeyInObject } from '@/types/TypeUtils';
 import { useSelector } from 'react-redux';
 import { statementSelectorById } from '@/redux/statements/statementsSlice';

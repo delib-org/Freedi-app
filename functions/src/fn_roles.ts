@@ -4,7 +4,7 @@ import {
 	getStatementSubscriptionId,
 	StatementSubscription,
 	StatementSubscriptionSchema,
-} from '../../src/types/statement/StatementSubscription';
+} from '../../src/types/statement/StatementSubscriptionTypes';
 import { Collections } from '../../src/types/TypeEnums';
 import { parse } from 'valibot';
 import { QueryDocumentSnapshot } from 'firebase-admin/firestore';

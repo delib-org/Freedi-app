@@ -9,10 +9,11 @@ import ChatIcon from '@/assets/icons/roundedChatDotIcon.svg?react';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { statementSubscriptionSelector } from '@/redux/statements/statementsSlice';
 import { Statement } from '@/types/statement/StatementTypes';
-import { StatementSubscription } from '@/types/statement/StatementSubscription';
+import { StatementSubscription } from '@/types/statement/StatementSubscriptionTypes';
+import { SimpleStatement } from '@/types/statement/SimpleStatementTypes';
 
 interface Props {
-	statement: Statement;
+	statement: Statement | SimpleStatement;
 }
 
 const StatementChatMore: FC<Props> = ({ statement }) => {

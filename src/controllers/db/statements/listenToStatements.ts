@@ -28,7 +28,7 @@ import {
 	DeliberativeElement,
 } from '@/types/TypeEnums';
 import { Statement, StatementSchema } from '@/types/statement/StatementTypes';
-import { StatementSubscription } from '@/types/statement/StatementSubscription';
+import { StatementSubscription } from '@/types/statement/StatementSubscriptionTypes';
 import { User } from '@/types/user/User';
 import { parse } from 'valibot';
 import React from 'react';

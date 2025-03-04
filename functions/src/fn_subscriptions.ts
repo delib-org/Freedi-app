@@ -1,10 +1,14 @@
 import { Change, logger } from 'firebase-functions';
 import { addOrRemoveMemberFromStatementDB } from './fn_statementsMetaData';
-import { StatementSubscriptionSchema } from '../../src/types/statement/StatementSubscription';
+import { StatementSubscription, StatementSubscriptionSchema } from '../../src/types/statement/StatementSubscriptionTypes';
 import { isMember } from '../../src/types/TypeUtils';
 import { DocumentSnapshot } from 'firebase-admin/firestore';
 import { FirestoreEvent } from 'firebase-functions/firestore';
 import { parse } from 'valibot';
+import { Statement, StatementSchema } from '../../src/types/statement/StatementTypes';
+import { db } from '.';
+import { Collections } from '../../src/types/TypeEnums';
+import { statementToSimpleStatement } from '../../src/types/statement/SimpleStatementTypes';
 
 export async function updateStatementNumberOfMembers(
 	event: FirestoreEvent<
@@ -75,4 +79,44 @@ export async function updateStatementNumberOfMembers(
 	} catch (error) {
 		logger.error('error updating statement with number of members', error);
 	}
+}
+
+export async function updateMembersWithSimpleStatement(event: FirestoreEvent<Change<DocumentSnapshot> | undefined, { subscriptionId: string; }>) {
+	if (!event.data) return;
+	try {
+
+		const _statement = event.data.after.data() as Statement;
+
+		const statement = parse(StatementSchema, _statement);
+
+		const statementId: string = statement.statementId;
+
+		//get all statement subscriptions
+		const statementSubscriptions = await getStatementSubscriptions(statementId);
+
+		//convert to simple statement
+		const simpleStatement = statementToSimpleStatement(statement);
+		if (!simpleStatement) throw new Error('error converting statement to simple statement');
+
+		//update all statement subscriptions
+		if (statementSubscriptions.length === 0) throw new Error('no subscriptions found');
+
+		const batch = db.batch();
+		statementSubscriptions.forEach((subscription) => {
+			const subscriptionRef = db.collection(Collections.statementsSubscribe).doc(subscription.statementsSubscribeId);
+			batch.update(subscriptionRef, { statement: simpleStatement });
+		});
+		await batch.commit();
+
+	} catch (error) {
+		logger.error('error updating updateMembersWithSimpleStatement', error);
+	}
+}
+
+export async function getStatementSubscriptions(statementId: string): Promise<StatementSubscription[]> {
+	const statementSubscriptions = await db.collection(Collections.statementsSubscribe)
+		.where('statementId', '==', statementId)
+		.get();
+
+	return statementSubscriptions.docs.map(doc => doc.data() as StatementSubscription);
 }

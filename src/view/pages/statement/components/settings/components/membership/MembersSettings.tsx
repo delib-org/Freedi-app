@@ -20,7 +20,7 @@ import { RootState } from '@/redux/store';
 import './MembersSettings.scss';
 import { Collections } from '@/types/TypeEnums';
 import { Statement } from '@/types/statement/StatementTypes';
-import { StatementSubscription } from '@/types/statement/StatementSubscription';
+import { StatementSubscription } from '@/types/statement/StatementSubscriptionTypes';
 import { Role } from '@/types/user/UserSettings';
 
 interface MembersSettingsProps {

@@ -20,7 +20,7 @@ import {
 	DocumentImportanceSchema,
 } from '../agreement/Agreement';
 import { StageSelectionType } from '../stage/stageTypes';
-import { SimpleStatementSchema } from './SimpleStatement';
+import { SimpleStatementSchema } from './SimpleStatementTypes';
 import { StatementSettingsSchema } from './StatementSettings';
 import { UserDataSchema } from '../user/UserSettings';
 import { StatementEvaluationSchema, StatementEvaluationSettingsSchema } from '../evaluation/Evaluation';

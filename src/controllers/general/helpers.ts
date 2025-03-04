@@ -4,7 +4,7 @@ import { store } from '@/redux/store';
 import { setUser } from '@/redux/users/userSlice';
 import { Screen } from '@/types/TypeEnums';
 import { Statement } from '@/types/statement/StatementTypes';
-import { StatementSubscription } from '@/types/statement/StatementSubscription';
+import { StatementSubscription } from '@/types/statement/StatementSubscriptionTypes';
 import { User } from '@/types/user/User';
 import { Role } from '@/types/user/UserSettings';
 

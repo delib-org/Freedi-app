@@ -8,7 +8,7 @@ import MemberRemove from '@/assets/icons/memberRemove.svg?react';
 import { updateMemberRole } from '@/controllers/db/subscriptions/setSubscriptions';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { userSelector } from '@/redux/users/userSlice';
-import { StatementSubscription } from '@/types/statement/StatementSubscription';
+import { StatementSubscription } from '@/types/statement/StatementSubscriptionTypes';
 import { Role } from '@/types/user/UserSettings';
 
 interface Props {

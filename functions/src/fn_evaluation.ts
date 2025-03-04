@@ -17,7 +17,7 @@ import {
 	defaultChoseBySettings,
 } from '../../src/types/choseBy/ChoseByTypes';
 
-import { statementToSimpleStatement } from '../../src/types/statement/SimpleStatement';
+import { statementToSimpleStatement } from '../../src/types/statement/SimpleStatementTypes';
 
 enum ActionTypes {
 	new = 'new',
@@ -358,7 +358,7 @@ async function updateParentStatementWithChosenOptions(
 	}: UpdateParentChildrenProps) {
 		const childStatementsSimple = topOptionsStatements.map(
 			(st: Statement) => statementToSimpleStatement(st)
-		);
+		).filter((st) => st !== undefined) as Statement[];
 
 		if (!parentId) throw new Error('parentId is not defined');
 

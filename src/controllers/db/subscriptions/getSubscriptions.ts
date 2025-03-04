@@ -11,11 +11,9 @@ import {
 	query,
 	where,
 	Unsubscribe,
-	updateDoc,
 } from 'firebase/firestore';
 import { FireStore } from '../config';
 import { getStatementFromDB } from '../statements/getStatement';
-import { listenToStatement } from '../statements/listenToStatements';
 import { getStatementSubscriptionId } from '@/controllers/general/helpers';
 import {
 	deleteSubscribedStatement,
@@ -23,16 +21,16 @@ import {
 	setStatementsSubscription,
 } from '@/redux/statements/statementsSlice';
 import { AppDispatch, store } from '@/redux/store';
-import { listenedStatements } from '@/view/pages/home/Home';
 import { Collections } from '@/types/TypeEnums';
 import { Statement, StatementSchema } from '@/types/statement/StatementTypes';
 import {
 	StatementSubscription,
 	StatementSubscriptionSchema,
-} from '@/types/statement/StatementSubscription';
+} from '@/types/statement/StatementSubscriptionTypes';
 import { Role } from '@/types/user/UserSettings';
 import { User } from 'firebase/auth';
 import { parse } from 'valibot';
+import { SimpleStatement } from '@/types/statement/SimpleStatementTypes';
 
 export const listenToStatementSubSubscriptions = (
 	statementId: string,
@@ -88,7 +86,7 @@ export const listenToStatementSubSubscriptions = (
 	}
 };
 
-export function listenToStatementSubscriptions(
+export function listenToTopStatementSubscriptions(
 	numberOfStatements = 30
 ): () => void {
 	try {
@@ -112,67 +110,13 @@ export function listenToStatementSubscriptions(
 		return onSnapshot(q, (subscriptionsDB) => {
 			subscriptionsDB.docChanges().forEach((change) => {
 				try {
-					const statementSubscription =
-						change.doc.data() as StatementSubscription;
-					if (
-						!Array.isArray(statementSubscription.statement.results)
-					) {
-						const subscriptionRef = doc(
-							FireStore,
-							Collections.statementsSubscribe,
-							statementSubscription.statementsSubscribeId
-						);
-						updateDoc(subscriptionRef, { 'statement.results': [] });
-						statementSubscription.statement.results = [];
-					}
+					const statementSubscription = change.doc.data() as StatementSubscription;
 
-					parse(StatementSubscriptionSchema, statementSubscription);
-
-					//prevent listening to a document statement
-					if (
-						statementSubscription.statement.statementType ===
-						'document'
-					)
-						return;
-
-					if (change.type === 'added') {
-						const unsubFunction = listenToStatement(
-							statementSubscription.statementId
-						);
-
-						const index = listenedStatements.findIndex(
-							(ls) =>
-								ls.statementId ===
-								statementSubscription.statementId
-						);
-						if (index === -1) {
-							listenedStatements.push({
-								unsubFunction,
-								statementId: statementSubscription.statementId,
-							});
-						}
-
+					if (change.type === 'added' || change.type === 'modified') {
 						dispatch(
 							setStatementSubscription(statementSubscription)
 						);
-					}
-
-					if (change.type === 'modified') {
-						dispatch(
-							setStatementSubscription(statementSubscription)
-						);
-					}
-
-					if (change.type === 'removed') {
-						const index = listenedStatements.findIndex(
-							(ls) =>
-								ls.statementId ===
-								statementSubscription.statementId
-						);
-						if (index !== -1) {
-							listenedStatements[index].unsubFunction();
-							listenedStatements.splice(index, 1);
-						}
+					} else if (change.type === 'removed') {
 
 						dispatch(
 							deleteSubscribedStatement(
@@ -195,7 +139,7 @@ export function listenToStatementSubscriptions(
 	}
 }
 
-export async function getStatmentsSubsciptions(): Promise<
+export async function getStatementsSubscriptions(): Promise<
 	StatementSubscription[]
 > {
 	try {
@@ -342,7 +286,7 @@ export async function getTopParentSubscriptionFromDByStatement(
 }
 
 interface GetTopParentSubscriptionProps {
-	topParentStatement: Statement | undefined;
+	topParentStatement: SimpleStatement | undefined;
 	topParentSubscription: StatementSubscription | undefined;
 	error?: boolean;
 }
@@ -413,7 +357,7 @@ export async function getTopParentSubscription(
 	) {
 		let topParentSubscription: StatementSubscription | undefined = store
 			.getState()
-			.statements.statementSubscription.find(
+			.statements.statementSubscriptions.find(
 				(sub: StatementSubscription) =>
 					sub.statementsSubscribeId === topParentSubscriptionId
 			);

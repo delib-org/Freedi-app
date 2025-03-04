@@ -31,7 +31,7 @@ import {
 } from './fn_statements';
 import { updateVote } from './fn_vote';
 import { setAdminsToNewStatement } from './fn_roles';
-import { updateStatementNumberOfMembers } from './fn_subscriptions';
+import { updateMembersWithSimpleStatement, updateStatementNumberOfMembers } from './fn_subscriptions';
 import {
 	getRandomStatements,
 	getTopStatements,
@@ -152,6 +152,13 @@ exports.setAdminsToNewStatement = createFirestoreFunction(
 	onDocumentCreated,
 	setAdminsToNewStatement,
 	'setAdminsToNewStatement'
+);
+
+exports.updateMembersWithSimpleStatement = createFirestoreFunction(
+	`/${Collections.statements}/{subscriptionId}`,
+	onDocumentWritten,
+	updateMembersWithSimpleStatement,
+	'updateMembersWithSimpleStatement'
 );
 
 exports.updateStatementWithViews = createFirestoreFunction(

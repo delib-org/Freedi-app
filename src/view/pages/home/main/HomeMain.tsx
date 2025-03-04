@@ -8,20 +8,19 @@ import { useNavigate } from 'react-router';
 import MainCard from './mainCard/MainCard';
 import bike from '@/assets/images/bike.png';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
-import { statementsSelector } from '@/redux/statements/statementsSlice';
+import { topSubscriptionsSelector } from '@/redux/statements/statementsSlice';
 
 // Custom components
 import Footer from '@/view/components/footer/Footer';
 import PeopleLoader from '@/view/components/loaders/PeopleLoader';
-import { Statement } from '@/types/statement/StatementTypes';
+import { StatementSubscription } from '@/types/statement/StatementSubscriptionTypes';
 
 const HomeMain = () => {
 	// Hooks
 	const navigate = useNavigate();
 	const [loading, setLoading] = useState(true);
 
-	const statements: Statement[] = useAppSelector(statementsSelector)
-		.filter((s) => s.parentId === 'top')
+	const statementSubscriptions: StatementSubscription[] = useAppSelector(topSubscriptionsSelector)
 		.sort((a, b) => b.lastUpdate - a.lastUpdate);
 
 	function handleAddStatement() {
@@ -35,10 +34,10 @@ const HomeMain = () => {
 			setLoading(false);
 		}, 3000);
 
-		if (statements.length > 0) {
+		if (statementSubscriptions.length > 0) {
 			setLoading(false);
 		}
-	}, [statements]);
+	}, [statementSubscriptions]);
 
 	return (
 		<main className='home-page__main slide-in'>
@@ -52,14 +51,14 @@ const HomeMain = () => {
 			<div
 				className='wrapper main-wrap'
 				style={{
-					justifyContent: statements.length > 0 ? 'start' : 'center',
+					justifyContent: statementSubscriptions.length > 0 ? 'start' : 'center',
 				}}
 			>
 				{!loading ? (
-					statements.map((statement) => (
+					statementSubscriptions.map((sb) => (
 						<MainCard
-							key={statement.statementId}
-							statement={statement}
+							key={sb.statement.statementId}
+							simpleStatement={sb.statement}
 						/>
 					))
 				) : (
