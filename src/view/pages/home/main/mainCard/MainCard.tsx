@@ -31,10 +31,10 @@ const MainCard: FC<Props> = ({ simpleStatement }) => {
 		: simpleStatement.description;
 
 	useEffect(() => {
-		const unsub = listenToAllSubStatements(simpleStatement.statementId);
+		const unsubscribe = listenToAllSubStatements(simpleStatement.statementId);
 
 		return () => {
-			unsub();
+			unsubscribe();
 		};
 	}, []);
 

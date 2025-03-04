@@ -85,9 +85,16 @@ export async function updateMembersWithSimpleStatement(event: FirestoreEvent<Cha
 	if (!event.data) return;
 	try {
 
-		const _statement = event.data.after.data() as Statement;
+		const _statementBefore = event.data.before.data() as Statement | undefined;
+		const _statementAfter = event.data.after.data() as Statement | undefined;
+		if (!_statementBefore || !_statementAfter) return;
 
-		const statement = parse(StatementSchema, _statement);
+		const simpleStatementBefore = statementToSimpleStatement(_statementBefore);
+		const simpleStatementAfter = statementToSimpleStatement(_statementAfter);
+
+		if (JSON.stringify(simpleStatementBefore) === JSON.stringify(simpleStatementAfter)) return;
+
+		const statement = parse(StatementSchema, _statementAfter);
 
 		const statementId: string = statement.statementId;
 
