@@ -4,7 +4,7 @@ import { useContext } from 'react';
 import { useSelector } from 'react-redux';
 import { StatementContext } from '../../../StatementCont';
 import './groupPage.scss';
-import AddButton from './AddButton';
+import AddButton from '../../addButton/AddButton';
 import SubGroupCard from '@/view/components/subGroupCard/SubGroupCard';
 import { StatementType } from '@/types/TypeEnums';
 
