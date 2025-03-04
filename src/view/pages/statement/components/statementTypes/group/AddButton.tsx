@@ -71,21 +71,40 @@ export default function AddButton() {
 		<div className='actions'>
 			{actionsOpen && (
 				<>
-					{actions.map(({ key, action, icon }) => (
-						<IconButton
-							key={key}
-							onClick={() => handleAction(action)}
-						>
-							{icon}
-						</IconButton>
-					))}
+					{actions.map(({ key, action, icon }, index) => {
+						const angle = -90 + (index * -90) / (actions.length - 1);
+
+						const x = Math.cos((angle * Math.PI) / 180) * 80;
+						const y = Math.sin((angle * Math.PI) / 180) * 80;
+
+						return (
+							<IconButton
+								key={key}
+								onClick={() => handleAction(action)}
+								className={`action-btn ${actionsOpen ? "visible" : ""}`}
+								title={`add ${action}`}
+								style={{
+									position: "absolute",
+									top: "-50%",
+									left: "-50%",
+									transform: actionsOpen
+										? `translate(${x}px, ${y}px)`
+										: `translate(-50%, -50%)`,
+									transition: "transform 0.3s ease-in-out, opacity 0.3s ease-in-out",
+									opacity: actionsOpen ? 1 : 0,
+								}}
+							>
+								{icon}
+							</IconButton>
+						);
+					})}
 					<button
 						className='invisibleBackground'
 						onClick={() => setActionsOpen(false)}
 					></button>
 				</>
 			)}
-			<IconButton onClick={toggleActions} className='plus-button'>
+			<IconButton onClick={toggleActions} className={`plus-button ${actionsOpen ? "active" : ""}`}>
 				<PlusIcon />
 			</IconButton>
 		</div>
