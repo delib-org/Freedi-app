@@ -1,7 +1,6 @@
 import { Change, logger } from 'firebase-functions';
 import { addOrRemoveMemberFromStatementDB } from './fn_statementsMetaData';
-import { StatementSubscriptionSchema } from '../../src/types/statement/StatementSubscription';
-import { isMember } from '../../src/types/TypeUtils';
+import { StatementSubscriptionSchema, isMember } from 'delib-npm';
 import { DocumentSnapshot } from 'firebase-admin/firestore';
 import { FirestoreEvent } from 'firebase-functions/firestore';
 import { parse } from 'valibot';

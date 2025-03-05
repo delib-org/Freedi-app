@@ -35,10 +35,9 @@ import { MapProvider } from '@/controllers/hooks/useMap';
 import { RootState } from '@/redux/store';
 import { userSelector } from '@/redux/users/userSlice';
 import Modal from '@/view/components/modal/Modal';
-import { StatementType, Access, QuestionType } from '@/types/TypeEnums';
-import { User } from '@/types/user/User';
-import { Role } from '@/types/user/UserSettings';
+
 import { statementSelector } from '@/redux/statements/statementsSlice';
+import { Role, StatementType, Access, QuestionType, User } from 'delib-npm';
 
 // Create selectors
 export const subStatementsSelector = createSelector(

@@ -1,14 +1,14 @@
 import { Change, logger } from 'firebase-functions/v1';
 import { db } from './index';
-import {
-	Statement,
-	StatementSchema,
-} from '../../src/types/statement/StatementTypes';
-import { Collections } from '../../src/types/TypeEnums';
 import { DocumentSnapshot } from 'firebase-admin/firestore';
 import { FirestoreEvent } from 'firebase-functions/firestore';
 import { parse } from 'valibot';
-import { ResultsSettingsSchema } from '../../src/types/results/Results';
+import {
+	Statement,
+	StatementSchema,
+	ResultsSettingsSchema,
+	Collections
+} from 'delib-npm';
 
 export async function updateResultsSettings(
 	ev: FirestoreEvent<

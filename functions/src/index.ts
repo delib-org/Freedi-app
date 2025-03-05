@@ -14,8 +14,7 @@ import { initializeApp } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 
 // Import collection constants
-import { Collections } from '../../src/types/TypeEnums';
-import { functionConfig } from '../../src/types/ConfigFunctions';
+import { Collections, functionConfig } from 'delib-npm';
 
 // Import function modules
 import {
