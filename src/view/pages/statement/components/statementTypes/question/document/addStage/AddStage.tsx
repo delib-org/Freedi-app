@@ -51,6 +51,13 @@ const AddStage: FC<AddStageProps> = ({ setShowAddStage }) => {
 	return (
 		<div className={styles.box}>
 			<form onSubmit={handleAddStage}>
+				<Button
+					text={'X'}
+					type='reset'
+					buttonType={ButtonType.SECONDARY}
+					onClick={handleCloseModal}
+					className={styles.xBtn}
+				/>
 				<select
 					name='stageSelectionType'
 					id='stageSelectionType'
@@ -97,6 +104,7 @@ const AddStage: FC<AddStageProps> = ({ setShowAddStage }) => {
 						type='reset'
 						buttonType={ButtonType.SECONDARY}
 						onClick={handleCloseModal}
+						className={styles.cancelBtn}
 					/>
 				</div>
 			</form>
