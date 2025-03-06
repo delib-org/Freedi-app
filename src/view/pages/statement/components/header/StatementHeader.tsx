@@ -5,7 +5,7 @@ import InvitePanel from './invitePanel/InvitePanel';
 import { logOut } from '@/controllers/db/auth';
 import { setFollowMeDB } from '@/controllers/db/statements/setStatements';
 import { useLanguage } from '@/controllers/hooks/useLanguages';
-import { Statement } from '@/types/statement/StatementTypes';
+import { Statement } from 'delib-npm';
 
 interface Props {
 	statement: Statement | undefined;

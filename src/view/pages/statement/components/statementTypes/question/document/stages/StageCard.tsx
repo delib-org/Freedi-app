@@ -3,15 +3,14 @@ import styles from './StageCard.module.scss';
 import Button, { ButtonType } from '@/view/components/buttons/button/Button';
 import { NavLink, useNavigate } from 'react-router';
 import { useLanguage } from '@/controllers/hooks/useLanguages';
-import { Statement } from '@/types/statement/StatementTypes';
 import {
-	SimpleStatement,
+	Statement, SimpleStatement,
 	statementToSimpleStatement,
-} from '@/types/statement/SimpleStatement';
-import { maxKeyInObject } from '@/types/TypeUtils';
+	maxKeyInObject,
+	EvaluationUI
+} from 'delib-npm';
 import { useSelector } from 'react-redux';
 import { statementSelectorById } from '@/redux/statements/statementsSlice';
-import { EvaluationUI } from '@/types/evaluation/Evaluation';
 
 interface Props {
 	statement: Statement;

@@ -20,7 +20,7 @@ import StartHere from '@/view/components/startHere/StartHere';
 import { StatementContext } from '../../../StatementCont';
 import { sortItems } from './StatementBottomNavModal';
 import { useLanguage } from '@/controllers/hooks/useLanguages';
-import { SortType, StatementType } from '@/types/TypeEnums';
+import { SortType, StatementType } from 'delib-npm';
 
 interface Props {
 	showNav?: boolean;

@@ -1,4 +1,4 @@
-import { MassConsensusPageUrls } from '@/types/TypeEnums'
+import { MassConsensusPageUrls } from 'delib-npm'
 import HeaderMassConsensus from '../headerMassConsensus/HeaderMassConsensus'
 import Input from '@/view/components/input/Input'
 import { MailIcon } from 'lucide-react'

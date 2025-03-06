@@ -4,8 +4,7 @@ import styles from './AddStage.module.scss';
 import Button, { ButtonType } from '@/view/components/buttons/button/Button';
 import { saveStatementToDB } from '@/controllers/db/statements/setStatements';
 import { StatementContext } from '@/view/pages/statement/StatementCont';
-import { StatementType } from '@/types/TypeEnums';
-import { StageSelectionType } from '@/types/stage/stageTypes';
+import { StageSelectionType, StatementType } from 'delib-npm';
 
 interface AddStageProps {
 	setShowAddStage: (showAddStage: boolean) => void;

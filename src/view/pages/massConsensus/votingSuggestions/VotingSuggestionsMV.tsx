@@ -1,13 +1,11 @@
 import firebaseConfig from '@/controllers/db/configKey';
 import { userSelector } from '@/redux/users/userSlice';
-import { functionConfig } from '@/types/ConfigFunctions';
-import { MassConsensusPageUrls } from '@/types/TypeEnums';
 
 import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate, useParams } from 'react-router';
 import { listenToStatement } from '@/controllers/db/statements/listenToStatements';
-import { Statement } from '@/types/statement/StatementTypes';
+import { Statement, functionConfig, MassConsensusPageUrls } from 'delib-npm';
 
 export function VotingSuggestionsMV() {
 	const { statementId } = useParams<{ statementId: string }>();

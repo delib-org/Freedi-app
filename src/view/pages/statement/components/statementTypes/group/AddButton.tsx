@@ -5,7 +5,7 @@ import AddDocumentIcon from '@/assets/icons/document.svg?react';
 import AddClusterIcon from '@/assets/icons/net-clusters.svg?react';
 import AddSubGroupIcon from '@/assets/icons/team-group.svg?react';
 import { StatementContext } from '../../../StatementCont';
-import { QuestionType, StatementType } from '@/types/TypeEnums';
+import { QuestionType, StatementType } from 'delib-npm';
 
 export default function AddButton() {
 	const [actionsOpen, setActionsOpen] = React.useState(false);

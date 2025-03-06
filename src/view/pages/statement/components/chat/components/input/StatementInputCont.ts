@@ -1,11 +1,10 @@
-import { StatementType } from '@/types/TypeEnums';
-import { Statement } from '@/types/statement/StatementTypes';
+import { StatementType, Statement } from 'delib-npm';
 import { defaultStatementSettings } from './../../../settings/emptyStatementModel';
 import {
 	createStatement,
 	setStatementToDB,
 } from '@/controllers/db/statements/setStatements';
-import { User } from '@/types/user/User';
+import { User } from 'delib-npm';
 
 export function handleAddStatement(
 	message: string,

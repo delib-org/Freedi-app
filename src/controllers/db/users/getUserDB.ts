@@ -2,11 +2,8 @@ import { doc, getDoc, onSnapshot, Unsubscribe } from 'firebase/firestore';
 import { FireStore } from '../config';
 import { store } from '@/redux/store';
 import { setUserSettings } from '@/redux/users/userSlice';
-import { Collections } from '@/types/TypeEnums';
-import { User, UserSchema } from '@/types/user/User';
 import { parse } from 'valibot';
-import { Agreement } from '@/types/agreement/Agreement';
-import { userSettingsSchema } from '@/types/user/UserSettings';
+import { userSettingsSchema, Collections, Agreement, User, UserSchema } from 'delib-npm';
 
 // get user font size and update document and html with the size in the FireStore
 export async function getUserFromDB(): Promise<User | undefined> {

@@ -2,10 +2,7 @@ import firebaseConfig from '@/controllers/db/configKey';
 import { listenToEvaluation } from '@/controllers/db/evaluation/getEvaluation';
 import { setMassConsensusStatements } from '@/redux/statements/statementsSlice';
 import { userSelector } from '@/redux/users/userSlice';
-import { functionConfig } from '@/types/ConfigFunctions';
-import { SelectionFunction } from '@/types/evaluation/Evaluation';
-import { Statement } from '@/types/statement/StatementTypes';
-import { MassConsensusPageUrls } from '@/types/TypeEnums';
+import { Statement, MassConsensusPageUrls, functionConfig, SelectionFunction } from 'delib-npm';
 
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';

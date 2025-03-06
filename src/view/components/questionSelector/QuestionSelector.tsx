@@ -4,7 +4,7 @@ import { StatementContext } from '@/view/pages/statement/StatementCont';
 import { useLanguage } from '@/controllers/hooks/useLanguages';
 import { updateQuestionType } from '@/controllers/db/statementSettings/setStatementSettings';
 import { Link } from 'react-router';
-import { MassConsensusPageUrls, QuestionType } from '@/types/TypeEnums';
+import { MassConsensusPageUrls, QuestionType } from 'delib-npm';
 
 const QuestionSelector: FC = () => {
 	const { statement } = useContext(StatementContext);
@@ -38,12 +38,12 @@ const QuestionSelector: FC = () => {
 			</select>
 			{statement?.questionSettings?.questionType ===
 				QuestionType.massConsensus && (
-				<Link
-					to={`/mass-consensus/${statement.statementId}/${MassConsensusPageUrls.introduction}?lang=${currentLanguage}`}
-				>
-					{t('Mass Consensus')}
-				</Link>
-			)}
+					<Link
+						to={`/mass-consensus/${statement.statementId}/${MassConsensusPageUrls.introduction}?lang=${currentLanguage}`}
+					>
+						{t('Mass Consensus')}
+					</Link>
+				)}
 		</>
 	);
 };

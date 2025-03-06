@@ -5,15 +5,14 @@ import { sortSubStatements } from '../../statementsEvaluationCont';
 import SuggestionCard from './suggestionCard/SuggestionCard';
 import styles from './SuggestionCards.module.scss';
 import EmptyScreen from '../emptyScreen/EmptyScreen';
-import { Statement } from '@/types/statement/StatementTypes';
-import { SortType } from '@/types/TypeEnums';
+import { Statement, SortType } from 'delib-npm';
 import { getStatementFromDB } from '@/controllers/db/statements/getStatement';
 import {
 	setStatement,
 	statementOptionsSelector,
 	statementSelector
 } from '@/redux/statements/statementsSlice';
-import { SelectionFunction } from '@/types/evaluation/Evaluation';
+import { SelectionFunction } from 'delib-npm';
 
 interface Props {
 	propSort?: SortType;

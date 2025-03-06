@@ -18,8 +18,7 @@ import {
 } from '@/redux/statements/statementsSlice';
 import StageCard from './stages/StageCard';
 import { updateStatementsOrderToDB } from '@/controllers/db/statements/setStatements';
-import { Statement } from '@/types/statement/StatementTypes';
-import { StatementType } from '@/types/TypeEnums';
+import { Statement, StatementType } from 'delib-npm';
 import { useLanguage } from '@/controllers/hooks/useLanguages';
 
 const MultiStageQuestion: FC = () => {

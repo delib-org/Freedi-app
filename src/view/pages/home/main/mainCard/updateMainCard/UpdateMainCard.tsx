@@ -2,33 +2,35 @@ import { FC, useEffect } from 'react';
 import { Link } from 'react-router';
 import { getStatementFromDB } from '@/controllers/db/statements/getStatement';
 import { getTime, truncateString } from '@/controllers/general/helpers';
-import { useAppDispatch, useAppSelector } from '@/controllers/hooks/reduxHooks';
+
 import {
 	setStatement,
 	statementSelectorById,
 } from '@/redux/statements/statementsSlice';
-import { Statement } from '@/types/statement/StatementTypes';
+import { Statement } from 'delib-npm';
+import { useDispatch, useSelector } from 'react-redux';
 
 interface Props {
 	statement: Statement;
 }
 
 const UpdateMainCard: FC<Props> = ({ statement }) => {
-	try {
-		if (!statement) throw new Error('No statement');
-		if (!statement.parentId) throw new Error('No parent id');
-		const dispatch = useAppDispatch();
-		const parentStatement = useAppSelector(
-			statementSelectorById(statement.parentId)
-		);
 
-		useEffect(() => {
-			if (!parentStatement) {
-				getStatementFromDB(statement.parentId).then((st) => {
-					if (st) dispatch(setStatement(st));
-				});
-			}
-		}, [parentStatement]);
+	if (!statement) throw new Error('No statement');
+	if (!statement.parentId) throw new Error('No parent id');
+	const dispatch = useDispatch();
+	const parentStatement = useSelector(
+		statementSelectorById(statement.parentId)
+	);
+
+	useEffect(() => {
+		if (!parentStatement) {
+			getStatementFromDB(statement.parentId).then((st) => {
+				if (st) dispatch(setStatement(st));
+			});
+		}
+	}, [parentStatement]);
+	try {
 
 		const group = parentStatement
 			? getTitle(parentStatement.statement)

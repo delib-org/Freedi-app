@@ -3,9 +3,7 @@ import type { PayloadAction } from '@reduxjs/toolkit';
 import { defaultFontSize } from '../../model/fonts/fontsModel';
 import { RootState } from '../store';
 import { parse } from 'valibot';
-import { User, UserSchema } from '@/types/user/User';
-import { UserSettings } from '@/types/user/UserSettings';
-import { Agreement } from '@/types/agreement/Agreement';
+import { Agreement, User, UserSchema, UserSettings } from 'delib-npm';
 
 export enum Status {
 	idle = 'idle',

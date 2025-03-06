@@ -6,7 +6,7 @@ import { StatementContext } from '../../../StatementCont';
 import './groupPage.scss';
 import AddButton from './AddButton';
 import SubGroupCard from '@/view/components/subGroupCard/SubGroupCard';
-import { StatementType } from '@/types/TypeEnums';
+import { StatementType } from "delib-npm"
 
 export default function GroupPage() {
 	const { statement } = useContext(StatementContext);

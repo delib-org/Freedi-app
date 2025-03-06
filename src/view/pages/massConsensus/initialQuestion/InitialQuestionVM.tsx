@@ -1,6 +1,6 @@
 import firebaseConfig from '@/controllers/db/configKey';
 import { setSimilarStatements } from '@/redux/massConsensus/massConsensusSlice';
-import { functionConfig } from '@/types/ConfigFunctions';
+import { functionConfig } from 'delib-npm';
 import React, { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { useParams } from 'react-router';
@@ -17,13 +17,12 @@ export function useInitialQuestion(): InitialQuestionVM {
 	const dispatch = useDispatch();
 	const { statementId } = useParams<{ statementId: string }>();
 
-	const [ input, setInput ] = useState("");
-	const [ ifButtonEnabled, EnableButton] = useState(false);
-	const [ ready, setReady ] = useState(false);
-	const [ loading, setLoading ] = useState(false);
+	const [input, setInput] = useState("");
+	const [ifButtonEnabled, EnableButton] = useState(false);
+	const [ready, setReady] = useState(false);
+	const [loading, setLoading] = useState(false);
 
-	const changeInput = (event: React.ChangeEvent<HTMLInputElement>) => 
-	{
+	const changeInput = (event: React.ChangeEvent<HTMLInputElement>) => {
 		setInput(event.target.value);
 		EnableButton(event.target.value.length > 0);
 	}
@@ -76,7 +75,7 @@ async function getSimilarStatements(statementId: string, userInput: string) {
 		const data = await response.json();
 		if (!data) throw new Error('No data returned from server');
 		const { similarStatements, similarTexts = [], userText } = data;
-		
+
 		const _userText = { statement: userText, statementId: null };
 		const _similarTexts = similarTexts.map((text: string) => ({
 			statement: text,

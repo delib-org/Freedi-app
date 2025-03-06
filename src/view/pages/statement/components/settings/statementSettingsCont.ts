@@ -11,12 +11,8 @@ import {
 	updateStatement,
 } from '@/controllers/db/statements/setStatements';
 import { getVoters } from '@/controllers/db/vote/getVotes';
-import { StatementType } from '@/types/TypeEnums';
-import { Evaluation } from '@/types/evaluation/Evaluation';
-import { Statement } from '@/types/statement/StatementTypes';
-import { Vote } from '@/types/vote';
+import { StatementSettings, StatementType, Evaluation, Statement, Vote } from 'delib-npm';
 import { Dispatch, SetStateAction } from 'react';
-import { StatementSettings } from '@/types/statement/StatementSettings';
 
 // Get users that voted on options in this statement
 export async function handleGetVoters(
