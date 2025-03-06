@@ -1,5 +1,4 @@
 import { FC, useContext, useEffect, useState } from 'react';
-import StatementBottomNav from '../nav/bottom/StatementBottomNav';
 import { getStepsInfo } from '../settings/components/QuestionSettings/QuestionStageRadioBtn/QuestionStageRadioBtn';
 import StatementInfo from './components/info/StatementInfo';
 import VotingArea from './components/votingArea/VotingArea';
@@ -93,10 +92,6 @@ const StatementVote: FC = () => {
 					/>
 				</Modal>
 			)}
-
-			<div className='page__footer'>
-				<StatementBottomNav />
-			</div>
 		</>
 	);
 };

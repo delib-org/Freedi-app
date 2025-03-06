@@ -39,13 +39,17 @@ const StagePage = () => {
 	const stageName = statement?.statement ? `: ${t(statement.statement)}` : "";
 
 	return (
+		<>
+			<div className={`${styles["stage-page"]} wrapper`}>
+				<h2>{t("Stage")}{statement?.statement && stageName}</h2>
+				<p className="mb-4">Stage description</p>
+				<StagePageSwitch statement={statement} />
+			</div>
+			<div className={styles.bottomNav}>
+				<StatementBottomNav />
+			</div>
 
-		<div className={`${styles["stage-page"]} wrapper`}>
-			<h2>{t("Stage")}{statement?.statement && stageName}</h2>
-			<p className="mb-4">Stage description</p>
-			<StagePageSwitch statement={statement} />
-		</div>
-
+		</>
 	);
 };
 
