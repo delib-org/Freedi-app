@@ -1,10 +1,62 @@
 .box {
-	padding: 20px;
-
+	padding: 40px;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	z-index: 4;
 	form {
 		display: flex;
 		flex-direction: column;
-		gap: 1rem;
+		gap: 1.5rem;
+		width: 100%;
+
+		select,
+		input,
+		textarea {
+			width: 100%;
+			padding: 10px;
+			font-size: 1rem;
+		}
+
+		textarea {
+			resize: none;
+			min-height: 100px;
+		}
+
+		.btns {
+			display: flex;
+			gap: 1rem;
+			justify-content: space-between;
+		}
+	}
+	.xBtn {
+		display: none;
+	}
+	@media (max-width: 768px) {
+		width: 100vw;
+		height: 100vh;
+		animation: openTransition 0.3s forwards;
+		form {
+			max-width: 90%;
+			select,
+			input,
+			textarea {
+				font-size: 0.9rem;
+				padding: 8px;
+			}
+			option {
+				font-size: 0.8rem;
+			}
+			.cancelBtn {
+				display: none;
+			}
+			.xBtn {
+				display: block;
+				background-color: transparent;
+				border: none;
+				font-size: 2em;
+			}
+		}
 	}
 }
 .img {
@@ -14,6 +66,20 @@
 .shake {
 	animation: shake 0.5s ease-in-out;
 	border: 1px solid red;
+}
+@keyframes openTransition {
+	0% {
+		transform: scale(0.1);
+		margin-top: 100vh;
+	}
+	50% {
+		transform: scale(0.5);
+
+		margin-top: 0;
+	}
+	100% {
+		transform: scale(1);
+	}
 }
 @keyframes shake {
 	0%,
