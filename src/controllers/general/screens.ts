@@ -1,5 +1,4 @@
-import { Screen } from '@/types/TypeEnums';
-import { Statement } from '@/types/statement/StatementTypes';
+import { Screen, Statement } from 'delib-npm';
 
 export function allowedScreens(
 	statement: Statement | undefined,

@@ -18,8 +18,8 @@ import './StatementVote.scss';
 import Toast from '@/view/components/toast/Toast';
 import { useLanguage } from '@/controllers/hooks/useLanguages';
 import { StatementContext } from '../../StatementCont';
-import { Statement } from '@/types/statement/StatementTypes';
-import { QuestionStep } from '@/types/TypeEnums';
+import { Statement, QuestionStep } from 'delib-npm';
+
 import { statementSubsSelector } from '@/redux/statements/statementsSlice';
 import { useSelector } from 'react-redux';
 

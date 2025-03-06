@@ -48,7 +48,7 @@ export async function setAdminsToNewStatement(
 			userId: statement.creatorId,
 			role: Role.admin,
 			lastUpdate: Date.now(),
-			statement,
+			statement: statement,
 			statementsSubscribeId: newStatementSubscriptionId,
 			user: statement.creator,
 		};
@@ -86,7 +86,7 @@ export async function setAdminsToNewStatement(
 					userId: adminSub.userId,
 					role: Role.admin,
 					lastUpdate: Date.now(),
-					statement,
+					statement: statement,
 					statementsSubscribeId,
 					user: adminSub.user,
 				};

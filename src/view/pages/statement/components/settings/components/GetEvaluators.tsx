@@ -2,8 +2,7 @@ import React, { FC } from 'react';
 import { handleGetEvaluators } from '../statementSettingsCont';
 import MembersChipsList from './membership/membersChipsList/MembersChipList';
 import { useLanguage } from '@/controllers/hooks/useLanguages';
-import { Evaluation } from '@/types/evaluation/Evaluation';
-import { User } from '@/types/user/User';
+import { Evaluation, User } from 'delib-npm';
 
 interface GetEvaluatorsProps {
 	statementId: string;

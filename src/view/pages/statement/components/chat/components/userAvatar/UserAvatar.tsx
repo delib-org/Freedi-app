@@ -5,7 +5,7 @@ import {
 } from '@/controllers/general/helpers';
 import './UserAvatar.scss';
 import { StatementContext } from '@/view/pages/statement/StatementCont';
-import { User } from '@/types/user/User';
+import { User } from 'delib-npm';
 
 interface UserAvatarProps {
 	user: User;

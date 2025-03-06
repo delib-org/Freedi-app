@@ -5,20 +5,13 @@ import { Outlet, useLocation, useParams } from "react-router";
 
 // Redux Store
 import HomeHeader from "./HomeHeader";
-import { getNewStatementsFromSubscriptions, listenToStatementSubscriptions } from "@/controllers/db/subscriptions/getSubscriptions";
+import { getNewStatementsFromSubscriptions, listenToTopStatementSubscriptions } from "@/controllers/db/subscriptions/getSubscriptions";
 import { useAppSelector } from "@/controllers/hooks/reduxHooks";
 import { userSelector } from "@/redux/users/userSlice";
 
 // Helpers
 
 // Custom Components
-
-interface ListenedStatements {
-	unsubFunction: () => void;
-	statementId: string;
-}
-
-export const listenedStatements: Array<ListenedStatements> = [];
 
 export default function Home() {
 	// Hooks
@@ -40,29 +33,14 @@ export default function Home() {
 	}, [location]);
 
 	useEffect(() => {
+		if (!user) return;
 
-		let unsubscribe: () => void = () => { };
-
-		let updatesUnsubscribe: () => void = () => { };
-		try {
-			if (user) {
-				unsubscribe = listenToStatementSubscriptions(30);
-				updatesUnsubscribe = getNewStatementsFromSubscriptions();
-			}
-		} catch (error) {
-			console.error(error);
-		}
+		const unsubscribe = listenToTopStatementSubscriptions(30);
+		const updatesUnsubscribe = getNewStatementsFromSubscriptions();
 
 		return () => {
-			if (unsubscribe) {
-				unsubscribe();
-				listenedStatements.forEach((ls) => {
-					ls.unsubFunction();
-				});
-			}
-			if (updatesUnsubscribe) {
-				updatesUnsubscribe();
-			}
+			unsubscribe();
+			updatesUnsubscribe();
 		};
 	}, [user]);
 

@@ -1,6 +1,4 @@
-import { DeliberativeElement } from '@/types/TypeEnums';
-import { Results } from '@/types/results/Results';
-import { Statement } from '@/types/statement/StatementTypes';
+import { DeliberativeElement, Results, Statement } from 'delib-npm';
 
 interface ResultLevel {
 	result: Results;

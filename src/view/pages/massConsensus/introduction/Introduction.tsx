@@ -2,7 +2,7 @@ import { useIntroductionMV } from './IntroductionMV';
 import styles from './Introduction.module.scss';
 import HeaderMassConsensus from '../headerMassConsensus/HeaderMassConsensus';
 import { useParamsLanguage } from '../useParamsLang/UseParamsLanguge';
-import { MassConsensusPageUrls } from '@/types/TypeEnums';
+import { MassConsensusPageUrls } from 'delib-npm';
 import FooterMassConsensus from '../footerMassConsensus/FooterMassConsensus';
 import { useLanguage } from '@/controllers/hooks/useLanguages';
 

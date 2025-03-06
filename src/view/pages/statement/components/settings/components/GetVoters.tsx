@@ -2,8 +2,7 @@ import React, { FC, useEffect } from 'react';
 import { handleGetVoters } from '../statementSettingsCont';
 import MembersChipsList from './membership/membersChipsList/MembersChipList';
 import { useLanguage } from '@/controllers/hooks/useLanguages';
-import { Vote } from '@/types/vote';
-import { User } from '@/types/user/User';
+import { Vote, User } from 'delib-npm';
 
 interface GetVotersProps {
 	statementId: string;

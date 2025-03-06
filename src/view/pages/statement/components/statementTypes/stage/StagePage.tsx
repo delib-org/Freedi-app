@@ -7,8 +7,7 @@ import StatementVote from '../../vote/StatementVote';
 import { useParams } from 'react-router';
 import { statementSelectorById } from '@/redux/statements/statementsSlice';
 import { useSelector } from 'react-redux';
-import { Statement } from '@/types/statement/StatementTypes';
-import { EvaluationUI } from '@/types/evaluation/Evaluation';
+import { Statement, EvaluationUI } from 'delib-npm';
 
 const StagePage = () => {
 	const { statementId } = useParams();

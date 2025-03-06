@@ -21,7 +21,7 @@ import {
 // Custom components
 import Loader from '@/view/components/loaders/Loader';
 import { listenToChoseBy } from '@/controllers/db/choseBy/getChoseBy';
-import { Statement } from '@/types/statement/StatementTypes';
+import { Statement } from 'delib-npm';
 
 const StatementSettings: FC = () => {
 	// * Hooks * //

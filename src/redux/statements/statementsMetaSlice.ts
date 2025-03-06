@@ -5,7 +5,7 @@ import { updateArray } from '@/controllers/general/helpers';
 import {
 	StatementMetaData,
 	StatementMetaDataSchema,
-} from '@/types/statement/StatementTypes';
+} from 'delib-npm';
 import { parse } from 'valibot';
 
 // Define a type for the slice state

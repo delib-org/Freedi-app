@@ -1,5 +1,5 @@
 import { store } from '@/redux/store';
-import { User } from '@/types/user/User';
+import { User } from 'delib-npm';
 
 export function getUserFromFirebase(): User | null {
 	try {

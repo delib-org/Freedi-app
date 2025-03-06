@@ -4,9 +4,9 @@ import {
 	QuestionStage,
 	Collections,
 	QuestionType,
+	QuestionSettings,
 	QuestionStep,
-} from '@/types/TypeEnums';
-import { QuestionSettings } from '@/types/question/QuestionType';
+} from 'delib-npm';
 
 interface SetStatementStageParams {
 	statementId: string;
