@@ -15,7 +15,7 @@ import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { statementSubsSelector } from '@/redux/statements/statementsSlice';
 import { userSelector } from '@/redux/users/userSlice';
 import Description from '../evaluations/components/description/Description';
-import { Statement } from '@/types/statement/StatementTypes';
+import { Statement } from 'delib-npm';
 
 let firstTime = true;
 let numberOfSubStatements = 0;
