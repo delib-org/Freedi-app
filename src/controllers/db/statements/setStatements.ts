@@ -270,6 +270,7 @@ export interface CreateStatementProps {
 	questionType?: QuestionType;
 	enableAddEvaluationOption?: boolean;
 	enableAddVotingOption?: boolean;
+	enableNavigationalElements?: boolean;
 	enhancedEvaluation?: boolean;
 	showEvaluation?: boolean;
 	resultsBy?: ResultsBy;
@@ -286,6 +287,7 @@ export function createStatement({
 	statementType,
 	questionType,
 	enableAddEvaluationOption = true,
+	enableNavigationalElements = true,
 	enableAddVotingOption = true,
 	enhancedEvaluation = true,
 	showEvaluation = true,
@@ -340,6 +342,7 @@ export function createStatement({
 				enableAddEvaluationOption,
 				enableAddVotingOption,
 				hasChildren,
+				enableNavigationalElements,
 			},
 			defaultLanguage: user.defaultLanguage || 'en',
 			createdAt: Timestamp.now().toMillis(),

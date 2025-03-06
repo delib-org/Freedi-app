@@ -21,7 +21,7 @@ const Back: FC<Props> = ({ statement, headerColor }) => {
 	function handleBack() {
 		try {
 			if (location.pathname.includes('stage')) {
-				return navigate(`/statement/${statement?.statementId}`, {
+				return navigate(`/statement/${statement?.parentId}`, {
 					state: { from: window.location.pathname },
 				});
 			}
