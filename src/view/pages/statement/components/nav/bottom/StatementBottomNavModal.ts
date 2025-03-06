@@ -1,4 +1,4 @@
-import { SortType } from '@/types/TypeEnums';
+import { SortType } from 'delib-npm';
 
 export interface NavItem {
 	link: SortType;

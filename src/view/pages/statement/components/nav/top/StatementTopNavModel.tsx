@@ -5,7 +5,7 @@ import NavRoomsIcon from '@/assets/icons/navRoomsIcon.svg?react';
 import NavSettings from '@/assets/icons/navSettingsIcon.svg?react';
 import NavSolutionIcon from '@/assets/icons/navSolutionIcon.svg?react';
 import NavVoteIcon from '@/assets/icons/navVoteIcon.svg?react';
-import { Screen } from '@/types/TypeEnums';
+import { Screen } from 'delib-npm';
 
 export const allScreensWithoutSettings = [
 	{

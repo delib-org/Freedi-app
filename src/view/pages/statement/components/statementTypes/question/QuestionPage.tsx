@@ -1,7 +1,7 @@
 import { useContext } from 'react';
 import { StatementContext } from '../../../StatementCont';
 
-import { QuestionType } from '@/types/TypeEnums';
+import { QuestionType } from 'delib-npm';
 import MassConsensus from './massConsesus/MassConsensus';
 import MultiStageQuestion from './document/MultiStageQuestion';
 import { useLocation } from 'react-router';

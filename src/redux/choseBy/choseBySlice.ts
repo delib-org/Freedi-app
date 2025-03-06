@@ -1,5 +1,5 @@
 import { updateArray } from '@/controllers/general/helpers';
-import { ChoseBy } from '@/types/choseBy/ChoseByTypes';
+import { ChoseBy } from 'delib-npm';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 interface ChoseByState {

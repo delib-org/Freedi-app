@@ -6,7 +6,7 @@ import { useSelector } from 'react-redux';
 import { statementSelector } from '@/redux/statements/statementsSlice';
 import { useEffect } from 'react';
 import { useInitialQuestion } from './InitialQuestionVM';
-import { MassConsensusPageUrls } from '@/types/TypeEnums';
+import { MassConsensusPageUrls } from 'delib-npm';
 import Loader from '@/view/components/loaders/Loader';
 import { useLanguage } from '@/controllers/hooks/useLanguages';
 import styles from './InitialQuestion.module.scss'

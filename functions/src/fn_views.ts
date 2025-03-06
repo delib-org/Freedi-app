@@ -1,8 +1,6 @@
 import { logger } from 'firebase-functions/v1';
 import { db } from '.';
-import { Collections } from '../../src/types/TypeEnums';
-import { Statement } from '../../src/types/statement/StatementTypes';
-import { StatementView } from '../../src/types/statement/StatementSubscription';
+import { Collections, Statement, StatementView } from 'delib-npm';
 
 //@ts-ignore
 export async function updateStatementWithViews(ev) {

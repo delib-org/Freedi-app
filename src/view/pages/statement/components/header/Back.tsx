@@ -4,7 +4,7 @@ import BackArrowIcon from '@/assets/icons/chevronLeftIcon.svg?react';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { StyleProps } from '@/controllers/hooks/useStatementColor';
 import { historySelect, HistoryTracker } from '@/redux/history/HistorySlice';
-import { Statement } from '@/types/statement/StatementTypes';
+import { Statement } from 'delib-npm';
 
 interface Props {
 	statement: Statement | undefined;
@@ -21,7 +21,7 @@ const Back: FC<Props> = ({ statement, headerColor }) => {
 	function handleBack() {
 		try {
 			if (location.pathname.includes('stage')) {
-				return navigate(`/statement/${statement?.statementId}`, {
+				return navigate(`/statement/${statement?.parentId}`, {
 					state: { from: window.location.pathname },
 				});
 			}

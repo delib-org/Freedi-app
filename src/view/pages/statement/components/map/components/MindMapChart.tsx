@@ -33,7 +33,7 @@ import MapHorizontalLayoutIcon from '@/assets/icons/MapHorizontalLayoutIcon.svg'
 import MapRestoreIcon from '@/assets/icons/MapRestoreIcon.svg';
 import MapSaveIcon from '@/assets/icons/MapSaveIcon.svg';
 import MapVerticalLayoutIcon from '@/assets/icons/MapVerticalLayoutIcon.svg';
-import { Results } from '@/types/results/Results';
+import { Results } from 'delib-npm';
 
 // Helper functions
 

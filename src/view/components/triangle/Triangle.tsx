@@ -4,7 +4,7 @@ import Dot from './dot/Dot';
 import styles from './Triangle.module.scss';
 import { useLanguage } from '@/controllers/hooks/useLanguages';
 import { statementOptionsSelector, statementSelector } from '@/redux/statements/statementsSlice';
-import { Statement } from '@/types/statement/StatementTypes';
+import { Statement } from 'delib-npm';
 import { useParams } from 'react-router';
 
 const Triangle: FC = () => {

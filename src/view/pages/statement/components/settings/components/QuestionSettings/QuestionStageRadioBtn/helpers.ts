@@ -1,4 +1,4 @@
-import { QuestionStep } from '@/types/TypeEnums';
+import { QuestionStep } from 'delib-npm';
 import { StepInfo, getStepsInfo } from './QuestionStageRadioBtn';
 
 export function getStepInfo(

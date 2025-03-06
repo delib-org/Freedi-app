@@ -8,8 +8,7 @@ import styles from './VotingSuggestion.module.scss';
 import { useParams } from 'react-router';
 import { useSelector } from 'react-redux';
 import { statementSelector } from '@/redux/statements/statementsSlice';
-import { MassConsensusPageUrls } from '@/types/TypeEnums';
-import { Statement } from '@/types/statement/StatementTypes';
+import { MassConsensusPageUrls, Statement } from 'delib-npm';
 import { getTotalVoters } from '../../statement/components/vote/statementVoteCont';
 import { useLanguage } from '@/controllers/hooks/useLanguages';
 import TitleMassConsensus from '../TitleMassConsensus/TitleMassConsensus';
@@ -53,7 +52,7 @@ const VotingSuggestions = () => {
 				</Modal>
 			)}
 
-			<FooterMassConsensus isNextActive={true} onNext={navigateToFeedback} goTo={MassConsensusPageUrls.leaveFeedback}/>
+			<FooterMassConsensus isNextActive={true} onNext={navigateToFeedback} goTo={MassConsensusPageUrls.leaveFeedback} />
 		</>
 	);
 };

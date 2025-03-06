@@ -1,7 +1,6 @@
 import { getDownloadURL, ref, uploadBytesResumable } from 'firebase/storage';
 import { storage } from '../config';
-import { Statement } from '@/types/statement/StatementTypes';
-import { Collections } from '@/types/TypeEnums';
+import { Statement, Collections } from 'delib-npm';
 
 export function uploadImageToStorage(
 	file: File,

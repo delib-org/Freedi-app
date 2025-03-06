@@ -1,6 +1,5 @@
 import { getResultsDB } from '@/controllers/db/results/getResults';
-import { ResultsBy, Results } from '@/types/results/Results';
-import { Statement } from '@/types/statement/StatementTypes';
+import { ResultsBy, Results, Statement } from 'delib-npm';
 
 export async function getResults(
 	statement: Statement,

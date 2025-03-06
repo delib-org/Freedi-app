@@ -1,7 +1,7 @@
 import { ReactElement } from 'react';
 import useStatementColor from '@/controllers/hooks/useStatementColor';
-import { Statement } from '@/types/statement/StatementTypes';
-import { QuestionType, StatementType } from '@/types/TypeEnums';
+
+import { QuestionType, StatementType, Statement } from 'delib-npm';
 
 import DocumentIcon from '@/assets/icons/document.svg?react';
 import QuestionIcon from '@/assets/icons/navQuestionsIcon.svg?react';

@@ -13,21 +13,22 @@ import {
 	getSiblingOptionsByParentId,
 } from '@/view/pages/statement/components/vote/statementVoteCont';
 import { getRandomColor } from '@/view/pages/statement/components/vote/votingColors';
-import { Statement, StatementSchema } from '@/types/statement/StatementTypes';
 import {
-	Collections,
+	Statement, StatementSchema, Collections,
 	StatementType,
 	Access,
 	QuestionType,
-} from '@/types/TypeEnums';
-import { UserSchema, Membership } from '@/types/user/User';
+	UserSchema, Membership,
+	ResultsBy,
+	StageSelectionType,
+	getRandomUID,
+	EvaluationUI,
+	ChoseByEvaluationType, CutoffType
+
+} from 'delib-npm';
+
 import { number, parse, string } from 'valibot';
-import { ResultsBy } from '@/types/results/Results';
-import { StageSelectionType } from '@/types/stage/stageTypes';
-import { getRandomUID } from '@/types/TypeUtils';
-import { EvaluationUI } from '@/types/evaluation/Evaluation';
 import { setChoseByToDB } from '../choseBy/setChoseBy';
-import { ChoseByEvaluationType, CutoffType } from '@/types/choseBy/ChoseByTypes';
 
 export const updateStatementParents = async (
 	statement: Statement,
@@ -269,6 +270,7 @@ export interface CreateStatementProps {
 	questionType?: QuestionType;
 	enableAddEvaluationOption?: boolean;
 	enableAddVotingOption?: boolean;
+	enableNavigationalElements?: boolean;
 	enhancedEvaluation?: boolean;
 	showEvaluation?: boolean;
 	resultsBy?: ResultsBy;
@@ -285,6 +287,7 @@ export function createStatement({
 	statementType,
 	questionType,
 	enableAddEvaluationOption = true,
+	enableNavigationalElements = true,
 	enableAddVotingOption = true,
 	enhancedEvaluation = true,
 	showEvaluation = true,
@@ -339,6 +342,7 @@ export function createStatement({
 				enableAddEvaluationOption,
 				enableAddVotingOption,
 				hasChildren,
+				enableNavigationalElements,
 			},
 			defaultLanguage: user.defaultLanguage || 'en',
 			createdAt: Timestamp.now().toMillis(),

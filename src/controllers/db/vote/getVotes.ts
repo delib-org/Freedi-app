@@ -8,9 +8,7 @@ import {
 } from 'firebase/firestore';
 import { FireStore } from '../config';
 import { store } from '@/redux/store';
-import { Collections } from '@/types/TypeEnums';
-import { Statement, StatementSchema } from '@/types/statement/StatementTypes';
-import { getVoteId, Vote, VoteSchema } from '@/types/vote';
+import { Collections, Statement, StatementSchema, getVoteId, Vote, VoteSchema } from 'delib-npm';
 import { parse } from 'valibot';
 import { setVoteToStore } from '@/redux/vote/votesSlice';
 

@@ -14,8 +14,7 @@ import { initializeApp } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 
 // Import collection constants
-import { Collections } from '../../src/types/TypeEnums';
-import { functionConfig } from '../../src/types/ConfigFunctions';
+import { Collections, functionConfig } from 'delib-npm';
 
 // Import function modules
 import {
@@ -31,7 +30,7 @@ import {
 } from './fn_statements';
 import { updateVote } from './fn_vote';
 import { setAdminsToNewStatement } from './fn_roles';
-import { updateStatementNumberOfMembers } from './fn_subscriptions';
+import { updateSubscriptionsSimpleStatement } from './fn_subscriptions';
 import {
 	getRandomStatements,
 	getTopStatements,
@@ -162,11 +161,18 @@ exports.updateStatementWithViews = createFirestoreFunction(
 );
 
 // Subscription functions
-exports.updateMembers = createFirestoreFunction(
-	`/${Collections.statementsSubscribe}/{subscriptionId}`,
-	onDocumentWritten,
-	updateStatementNumberOfMembers,
-	'updateMembers'
+// exports.updateNumberOfMembers = createFirestoreFunction(
+// 	`/${Collections.statementsSubscribe}/{subscriptionId}`,
+// 	onDocumentCreated,
+// 	updateStatementNumberOfMembers,
+// 	'updateNumberOfMembers'
+// );
+
+exports.updateSubscriptionsSimpleStatement = createFirestoreFunction(
+	`/${Collections.statements}/{statementId}`,
+	onDocumentUpdated,
+	updateSubscriptionsSimpleStatement,
+	'updateSubscriptionsSimpleStatement'
 );
 
 // Evaluation functions

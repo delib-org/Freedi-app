@@ -17,7 +17,7 @@ import { resetStatements } from '@/redux/statements/statementsSlice';
 import { AppDispatch, store } from '@/redux/store';
 import { setFontSize, setUser } from '@/redux/users/userSlice';
 import { resetVotes } from '@/redux/vote/votesSlice';
-import { User, UserSchema } from '@/types/user/User';
+import { User, UserSchema } from 'delib-npm';
 import { parse } from 'valibot';
 
 export function googleLogin() {

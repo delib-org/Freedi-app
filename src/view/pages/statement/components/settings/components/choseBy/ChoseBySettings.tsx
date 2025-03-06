@@ -18,7 +18,7 @@ import {
 	ChoseBy,
 	ChoseByEvaluationType,
 	CutoffType,
-} from '@/types/choseBy/ChoseByTypes';
+} from 'delib-npm';
 
 interface RangeProps {
 	maxValue: number;

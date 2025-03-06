@@ -12,8 +12,7 @@ import {
 } from 'firebase/firestore';
 import { FireStore } from '../config';
 import { store } from '@/redux/store';
-import { Collections } from '@/types/TypeEnums';
-import { NotificationType } from '@/types/notification/Notification';
+import { Collections, NotificationType } from 'delib-npm';
 import {
 	deleteInAppNotification,
 	setInAppNotification,

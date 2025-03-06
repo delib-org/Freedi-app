@@ -2,22 +2,15 @@ import { Change, logger } from 'firebase-functions/v1';
 import { db } from './index';
 import { DocumentSnapshot, FieldValue } from 'firebase-admin/firestore';
 import { FirestoreEvent } from 'firebase-functions/firestore';
-import { Evaluation } from '../../src/types/evaluation/Evaluation';
-import { User } from '../../src/types/user/User';
-import { number, parse } from 'valibot';
 import {
-	Statement,
-	StatementSchema,
-} from '../../src/types/statement/StatementTypes';
-import { Collections, StatementType } from '../../src/types/TypeEnums';
-import {
-	ChoseBy,
+	Evaluation, User, Statement,
+	StatementSchema, Collections, StatementType, ChoseBy,
 	ChoseByEvaluationType,
 	CutoffType,
-	defaultChoseBySettings,
-} from '../../src/types/choseBy/ChoseByTypes';
+	defaultChoseBySettings, statementToSimpleStatement
+} from 'delib-npm';
 
-import { statementToSimpleStatement } from '../../src/types/statement/SimpleStatement';
+import { number, parse } from 'valibot';
 
 enum ActionTypes {
 	new = 'new',

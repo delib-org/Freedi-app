@@ -4,8 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { useSelector } from "react-redux";
 import { useParams } from "react-router";
 import { resultsByParentId } from "./mapCont";
-import { Results } from "@/types/results/Results";
-import { Statement } from "@/types/statement/StatementTypes";
+import { Statement, Results } from "delib-npm";
 
 export function useMindMap() {
 	const { statementId } = useParams();

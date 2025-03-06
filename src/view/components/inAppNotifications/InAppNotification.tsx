@@ -2,7 +2,7 @@ import { FC } from 'react';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router';
 import styles from './InAppNotification.module.scss';
-import { NotificationType } from '@/types/notification/Notification';
+import { NotificationType } from 'delib-npm';
 import { updateNotificationRead } from '@/controllers/db/notifications/setNotifications';
 import { deleteInAppNotificationsByParentId } from '@/redux/notificationsSlice/notificationsSlice';
 

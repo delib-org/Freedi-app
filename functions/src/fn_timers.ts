@@ -1,6 +1,6 @@
 import { logger } from 'firebase-functions/v1';
 import { db } from './index';
-import { Collections } from '../../src/types/TypeEnums';
+import { Collections } from 'delib-npm';
 
 export async function cleanOldTimers() {
 	try {

@@ -1,7 +1,4 @@
-import { Statement } from '@/types/statement/StatementTypes';
-import { QuestionType, StatementType } from '@/types/TypeEnums';
-import { User } from '@/types/user/User';
-import { Role } from '@/types/user/UserSettings';
+import { User, Role, Statement, StatementType, QuestionType } from 'delib-npm';
 import { createContext } from 'react';
 
 interface StatementContextProps {

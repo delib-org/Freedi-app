@@ -11,10 +11,8 @@ import {
 import { FireStore } from '../config';
 import { setEvaluationToStore } from '@/redux/evaluations/evaluationsSlice';
 import { AppDispatch, store } from '@/redux/store';
-import { Collections } from '@/types/TypeEnums';
-import { User, UserSchema } from '@/types/user/User';
 import { parse } from 'valibot';
-import { Evaluation, EvaluationSchema, SelectionFunction } from '@/types/evaluation/Evaluation';
+import { Evaluation, EvaluationSchema, SelectionFunction, Collections, User, UserSchema } from 'delib-npm';
 import { getStatementSubscriptionId } from '@/controllers/general/helpers';
 
 export const listenToEvaluations = (
@@ -89,8 +87,8 @@ export function listenToEvaluation(statementId: string): () => void {
 
 	} catch (error) {
 		console.error(error);
-		
-return () => { return; };
+
+		return () => { return; };
 	}
 }
 
