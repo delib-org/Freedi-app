@@ -3,10 +3,7 @@ import { createSlice, PayloadAction, createSelector } from '@reduxjs/toolkit';
 // Helpers
 import { updateArray } from '../../controllers/general/helpers';
 import { RootState, store } from '../store';
-import { StatementType } from '@/types/TypeEnums';
-import { Statement } from '@/types/statement/StatementTypes';
-import { StatementSubscription } from '@/types/statement/StatementSubscription';
-import { SelectionFunction } from '@/types/evaluation/Evaluation';
+import { StatementSubscription, SelectionFunction, StatementType, Statement } from 'delib-npm';
 
 enum StatementScreen {
 	chat = 'chat',
@@ -400,6 +397,7 @@ export const statementsRoomSolutions =
 					statement.statementType === StatementType.option
 			)
 			.sort((a, b) => a.createdAt - b.createdAt);
+
 export const statementsSubscriptionsSelector = (
 	state: RootState
 ): StatementSubscription[] => state.statements.statementSubscription;
@@ -408,6 +406,11 @@ export const statementSelector =
 		state.statements.statements.find(
 			(statement) => statement.statementId === statementId
 		);
+
+export const topSubscriptionsSelector = (state: RootState) =>
+	state.statements.statementSubscription.filter(
+		(sub: StatementSubscription) => sub.statement.parentId === 'top'
+	);
 
 const selectStatements = (state: RootState) => state.statements.statements;
 

@@ -23,16 +23,15 @@ import {
 } from '@/redux/statements/statementsSlice';
 import { AppDispatch, store } from '@/redux/store';
 import {
-	Collections,
+	StatementSubscription, User, Role, Collections,
 	StatementType,
 	DeliberativeElement,
-} from '@/types/TypeEnums';
-import { Statement, StatementSchema } from '@/types/statement/StatementTypes';
-import { StatementSubscription } from '@/types/statement/StatementSubscription';
-import { User } from '@/types/user/User';
+	Statement,
+	StatementSchema,
+} from 'delib-npm';
+
 import { parse } from 'valibot';
 import React from 'react';
-import { Role } from '@/types/user/UserSettings';
 
 // Helpers
 

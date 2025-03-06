@@ -88,6 +88,7 @@ export async function updateMembersWithSimpleStatement(event: FirestoreEvent<Cha
 		const simpleStatementBefore = statementToSimpleStatement(_statementBefore);
 		const simpleStatementAfter = statementToSimpleStatement(_statementAfter);
 
+		//check if changes in the areas of simpleStatement where changed
 		if (JSON.stringify(simpleStatementBefore) === JSON.stringify(simpleStatementAfter)) return;
 
 		const statement = parse(StatementSchema, _statementAfter);
@@ -98,8 +99,7 @@ export async function updateMembersWithSimpleStatement(event: FirestoreEvent<Cha
 		const statementSubscriptions = await getStatementSubscriptions(statementId);
 
 		//convert to simple statement
-		const simpleStatement = statementToSimpleStatement(statement);
-		if (!simpleStatement) throw new Error('error converting statement to simple statement');
+		const simpleStatement = simpleStatementAfter;
 
 		//update all statement subscriptions
 		if (statementSubscriptions.length === 0) throw new Error('no subscriptions found');
@@ -112,7 +112,7 @@ export async function updateMembersWithSimpleStatement(event: FirestoreEvent<Cha
 		await batch.commit();
 
 	} catch (error) {
-		logger.error('error updating updateMembersWithSimpleStatement', error);
+		logger.error('Error updating updateMembersWithSimpleStatement', error);
 	}
 }
 

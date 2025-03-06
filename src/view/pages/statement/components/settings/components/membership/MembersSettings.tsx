@@ -18,10 +18,7 @@ import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { useLanguage } from '@/controllers/hooks/useLanguages';
 import { RootState } from '@/redux/store';
 import './MembersSettings.scss';
-import { Collections } from '@/types/TypeEnums';
-import { Statement } from '@/types/statement/StatementTypes';
-import { StatementSubscription } from '@/types/statement/StatementSubscription';
-import { Role } from '@/types/user/UserSettings';
+import { StatementSubscription, Role, Statement, Collections } from 'delib-npm';
 
 interface MembersSettingsProps {
 	statement: Statement;

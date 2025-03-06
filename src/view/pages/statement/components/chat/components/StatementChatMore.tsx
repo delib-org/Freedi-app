@@ -8,9 +8,7 @@ import ChatIcon from '@/assets/icons/roundedChatDotIcon.svg?react';
 // Statements functions
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { statementSubscriptionSelector } from '@/redux/statements/statementsSlice';
-import { Statement } from '@/types/statement/StatementTypes';
-import { StatementSubscription } from '@/types/statement/StatementSubscription';
-import { SimpleStatement } from 'delib-npm';
+import { SimpleStatement, StatementSubscription, Statement } from 'delib-npm';
 
 interface Props {
 	statement: Statement | SimpleStatement;

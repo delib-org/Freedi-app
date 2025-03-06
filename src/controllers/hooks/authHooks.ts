@@ -8,10 +8,7 @@ import {
 	statementSubscriptionSelector,
 } from '@/redux/statements/statementsSlice';
 import { store } from '@/redux/store';
-import { Access } from '@/types/TypeEnums';
-import { Statement } from '@/types/statement/StatementTypes';
-import { StatementSubscription } from '@/types/statement/StatementSubscription';
-import { Role } from '@/types/user/UserSettings';
+import { StatementSubscription, Role, Statement, Access } from 'delib-npm';
 
 const useAuth = () => {
 	const [isLogged, setIsLogged] = useState(false);

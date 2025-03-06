@@ -24,14 +24,14 @@ import {
 } from '@/redux/statements/statementsSlice';
 import { AppDispatch, store } from '@/redux/store';
 import { listenedStatements } from '@/view/pages/home/Home';
-import { Collections } from '@/types/TypeEnums';
-import { Statement, StatementSchema } from '@/types/statement/StatementTypes';
 import {
+	Statement, StatementSchema,
 	StatementSubscription,
 	StatementSubscriptionSchema,
-} from '@/types/statement/StatementSubscription';
-import { Role } from '@/types/user/UserSettings';
-import { User } from 'firebase/auth';
+	Role,
+	User,
+	Collections
+} from 'delib-npm';
 import { parse } from 'valibot';
 
 export const listenToStatementSubSubscriptions = (
@@ -88,7 +88,7 @@ export const listenToStatementSubSubscriptions = (
 	}
 };
 
-export function listenToStatementSubscriptions(
+export function listenToTopStatementSubscriptions(
 	numberOfStatements = 30
 ): () => void {
 	try {

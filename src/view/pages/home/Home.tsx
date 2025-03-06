@@ -5,7 +5,7 @@ import { Outlet, useLocation, useParams } from "react-router";
 
 // Redux Store
 import HomeHeader from "./HomeHeader";
-import { getNewStatementsFromSubscriptions, listenToStatementSubscriptions } from "@/controllers/db/subscriptions/getSubscriptions";
+import { getNewStatementsFromSubscriptions, listenToTopStatementSubscriptions } from "@/controllers/db/subscriptions/getSubscriptions";
 import { useAppSelector } from "@/controllers/hooks/reduxHooks";
 import { userSelector } from "@/redux/users/userSlice";
 
@@ -46,7 +46,7 @@ export default function Home() {
 		let updatesUnsubscribe: () => void = () => { };
 		try {
 			if (user) {
-				unsubscribe = listenToStatementSubscriptions(30);
+				unsubscribe = listenToTopStatementSubscriptions(30);
 				updatesUnsubscribe = getNewStatementsFromSubscriptions();
 			}
 		} catch (error) {
