@@ -407,10 +407,14 @@ export const statementSelector =
 			(statement) => statement.statementId === statementId
 		);
 
-export const topSubscriptionsSelector = (state: RootState) =>
-	state.statements.statementSubscription.filter(
-		(sub: StatementSubscription) => sub.statement.parentId === 'top' && sub.userId === state.user.user?.uid
-	);
+export const topSubscriptionsSelector = createSelector(
+	(state: RootState) => state.statements.statementSubscription,
+	(state: RootState) => state.user.user?.uid,
+	(statementSubscription, userId) =>
+		statementSubscription.filter(
+			(sub: StatementSubscription) => sub.statement.parentId === 'top' && sub.userId === userId
+		)
+);
 
 const selectStatements = (state: RootState) => state.statements.statements;
 

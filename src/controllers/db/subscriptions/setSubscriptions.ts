@@ -3,7 +3,7 @@ import { FireStore } from '../config';
 import { getUserFromFirebase } from '../users/usersGeneral';
 import { getStatementSubscriptionId } from '@/controllers/general/helpers';
 import { store } from '@/redux/store';
-import { Collections, Statement, StatementSchema, StatementSubscriptionSchema, User, Role } from 'delib-npm';
+import { Collections, Statement, StatementSchema, StatementSubscriptionSchema, User, Role, statementToSimpleStatement } from 'delib-npm';
 import { parse } from 'valibot';
 
 export async function setStatementSubscriptionToDB(
@@ -16,6 +16,7 @@ export async function setStatementSubscriptionToDB(
 		if (!user.uid) throw new Error('User not logged in');
 
 		const { statementId } = parse(StatementSchema, statement);
+		const simpleStatement = statementToSimpleStatement(statement);
 
 		const statementsSubscribeId = getStatementSubscriptionId(
 			statementId,
@@ -38,7 +39,7 @@ export async function setStatementSubscriptionToDB(
 		const subscriptionData = {
 			user,
 			statementsSubscribeId,
-			statement,
+			statement: simpleStatement,
 			role,
 			userId: user.uid,
 			statementId,

@@ -77,7 +77,7 @@ export async function updateStatementNumberOfMembers(
 	}
 }
 
-export async function updateMembersWithSimpleStatement(event: FirestoreEvent<Change<DocumentSnapshot> | undefined, { subscriptionId: string; }>) {
+export async function updateSubscriptionsSimpleStatement(event: FirestoreEvent<Change<DocumentSnapshot> | undefined, { subscriptionId: string; }>) {
 	if (!event.data) return;
 	try {
 
@@ -98,16 +98,13 @@ export async function updateMembersWithSimpleStatement(event: FirestoreEvent<Cha
 		//get all statement subscriptions
 		const statementSubscriptions = await getStatementSubscriptions(statementId);
 
-		//convert to simple statement
-		const simpleStatement = simpleStatementAfter;
-
 		//update all statement subscriptions
 		if (statementSubscriptions.length === 0) throw new Error('no subscriptions found');
 
 		const batch = db.batch();
 		statementSubscriptions.forEach((subscription) => {
 			const subscriptionRef = db.collection(Collections.statementsSubscribe).doc(subscription.statementsSubscribeId);
-			batch.update(subscriptionRef, { statement: simpleStatement });
+			batch.update(subscriptionRef, { statement: statement });
 		});
 		await batch.commit();
 

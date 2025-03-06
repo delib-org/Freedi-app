@@ -30,7 +30,7 @@ import {
 } from './fn_statements';
 import { updateVote } from './fn_vote';
 import { setAdminsToNewStatement } from './fn_roles';
-import { updateStatementNumberOfMembers } from './fn_subscriptions';
+import { updateStatementNumberOfMembers, updateSubscriptionsSimpleStatement } from './fn_subscriptions';
 import {
 	getRandomStatements,
 	getTopStatements,
@@ -166,6 +166,13 @@ exports.updateMembers = createFirestoreFunction(
 	onDocumentWritten,
 	updateStatementNumberOfMembers,
 	'updateMembers'
+);
+
+exports.updateSubscriptionsSimpleStatement = createFirestoreFunction(
+	`/${Collections.statements}/{statementId}`,
+	onDocumentUpdated,
+	updateSubscriptionsSimpleStatement,
+	'updateSubscriptionsSimpleStatement'
 );
 
 // Evaluation functions
