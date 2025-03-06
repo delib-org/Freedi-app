@@ -15,7 +15,7 @@ const StartHere: FC<Props> = ({ setShow }) => {
 	}
 
 	return (
-		<button onClick={handleCloseModal} className={`${styles["start-here"]} ${dir === "ltr" ? styles["start-here--ltr"] : ""}`}>
+		<button onClick={handleCloseModal} className={`${styles["start-here"]} ${dir === "ltr" ? styles["start-here--ltr"] : styles["start-here--rtl"]}`}>
 			<div className={styles.text}>{t("Add new option here")}</div>
 			<img className={styles.img} src={PointDown} alt="start here pointer" />
 		</button>
