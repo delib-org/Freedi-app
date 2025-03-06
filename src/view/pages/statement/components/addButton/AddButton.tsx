@@ -5,8 +5,8 @@ import AddQuestionIcon from '@/assets/icons/questionIcon.svg?react';
 import AddMassConsensusIcon from '@/assets/icons/massConsensusIcon.svg?react';
 import AddSubGroupIcon from '@/assets/icons/team-group.svg?react';
 import styles from './AddButton.module.scss'
-import { StatementContext } from '../../../StatementCont';
 import { QuestionType, StatementType } from 'delib-npm';
+import { StatementContext } from '../../StatementCont';
 
 export default function AddButton() {
 	const [actionsOpen, setActionsOpen] = React.useState(false);
