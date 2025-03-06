@@ -1,7 +1,7 @@
 import { doc, runTransaction } from 'firebase/firestore';
 import { FireStore } from '../config';
 import { store } from '@/redux/store';
-import { Collections } from '@/types/TypeEnums';
+import { Collections } from 'delib-npm';
 
 export async function decreesUserSettingsLearningRemain({
 	evaluation,
@@ -18,12 +18,10 @@ export async function decreesUserSettingsLearningRemain({
 		if (!userSettings) return true;
 
 		const finishedLearningEvaluation =
-			!userSettings.learning ||
-			userSettings.learning.evaluation === undefined ||
+			!userSettings.learning?.evaluation ||
 			userSettings.learning.evaluation <= 0;
 		const finishedLearningAddOPtion =
-			!userSettings.learning ||
-			userSettings.learning.addOptions === undefined ||
+			!userSettings.learning?.addOptions ||
 			userSettings.learning.addOptions <= 0;
 		if (
 			evaluation &&
