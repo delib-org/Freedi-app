@@ -1,10 +1,10 @@
 import { FC, useEffect, useState } from 'react';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
-import useDirection from '@/controllers/hooks/useDirection';
 import { evaluationSelector } from '@/redux/evaluations/evaluationsSlice';
 import Thumb from '@/view/components/thumb/Thumb';
 import './SimpleEvaluation.scss';
 import { Statement } from 'delib-npm';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 
 interface Props {
 	statement: Statement;
@@ -15,7 +15,7 @@ const SimpleEvaluation: FC<Props> = ({
 	statement,
 	shouldDisplayScore = true,
 }) => {
-	const direction = useDirection();
+	const { rowDirection } = useUserConfig();
 
 	const initialContVotesCount = statement.con ?? 0;
 	const initialProVotesCount = statement.pro ?? 0;
@@ -44,7 +44,7 @@ const SimpleEvaluation: FC<Props> = ({
 		<div className='simple-evaluation'>
 			<div
 				className='evaluation-box'
-				style={{ flexDirection: direction }}
+				style={{ flexDirection: rowDirection }}
 			>
 				{shouldDisplayScore && <span>{conVotesCount}</span>}
 				<div className='thumb-icon'>

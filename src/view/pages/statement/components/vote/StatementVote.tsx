@@ -15,21 +15,25 @@ import './StatementVote.scss';
 
 // Helpers
 import Toast from '@/view/components/toast/Toast';
-import { useLanguage } from '@/controllers/hooks/useLanguages';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import { StatementContext } from '../../StatementCont';
 import { Statement, QuestionStep } from 'delib-npm';
-
 import { statementSubsSelector } from '@/redux/statements/statementsSlice';
 import { useSelector } from 'react-redux';
+import { setVoteToStore } from '@/redux/vote/votesSlice';
+import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 
 let getVoteFromDB = false;
 
 const StatementVote: FC = () => {
 	// * Hooks * //
 	const dispatch = useAppDispatch();
-	const { t } = useLanguage();
+	const { t } = useUserConfig();
+	const { user } = useAuthentication();
 	const { statement } = useContext(StatementContext);
-	const subStatements = useSelector(statementSubsSelector(statement?.statementId));
+	const subStatements = useSelector(
+		statementSubsSelector(statement?.statementId)
+	);
 
 	const currentStep = statement?.questionSettings?.currentStep;
 	const isCurrentStepVoting = currentStep === QuestionStep.voting;
@@ -50,14 +54,17 @@ const StatementVote: FC = () => {
 
 	useEffect(() => {
 		if (!getVoteFromDB) {
-			getToVoteOnParent(statement?.statementId);
+			getToVoteOnParent(
+				statement?.statementId,
+				user.uid,
+				(option: Statement) => dispatch(setVoteToStore(option))
+			);
 			getVoteFromDB = true;
 		}
 	}, [statement?.statementId, dispatch]);
 
 	return (
 		<>
-
 			<div className='statement-vote'>
 				{showMultiStageMessage && (
 					<Toast

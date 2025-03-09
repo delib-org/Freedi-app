@@ -1,25 +1,29 @@
 import { doc, updateDoc, setDoc, Timestamp, getDoc } from 'firebase/firestore';
 import { FireStore } from '../config';
-import { getUserFromFirebase } from '../users/usersGeneral';
 import { getStatementSubscriptionId } from '@/controllers/general/helpers';
-import { store } from '@/redux/store';
-import { Collections, Statement, StatementSchema, StatementSubscriptionSchema, User, Role } from 'delib-npm';
+import {
+	Collections,
+	Statement,
+	StatementSchema,
+	StatementSubscriptionSchema,
+	User,
+	Role,
+	StatementSubscription,
+} from 'delib-npm';
 import { parse } from 'valibot';
+import { Creator } from '@/types/user/User';
 
 export async function setStatementSubscriptionToDB(
 	statement: Statement,
+	creator: Creator,
 	role: Role = Role.member
 ) {
 	try {
-		const user = store.getState().user.user;
-		if (!user) throw new Error('User not logged in');
-		if (!user.uid) throw new Error('User not logged in');
-
 		const { statementId } = parse(StatementSchema, statement);
 
 		const statementsSubscribeId = getStatementSubscriptionId(
 			statementId,
-			user
+			creator.uid
 		);
 		if (!statementsSubscribeId)
 			throw new Error('Error in getting statementsSubscribeId');
@@ -35,18 +39,18 @@ export async function setStatementSubscriptionToDB(
 		if (statementSubscription.exists()) return;
 
 		//if not subscribed, subscribe
-		const subscriptionData = {
-			user,
+		const subscriptionData: StatementSubscription = {
+			user: creator,
+			userId: creator.uid,
 			statementsSubscribeId,
 			statement,
 			role,
-			userId: user.uid,
 			statementId,
 			lastUpdate: Timestamp.now().toMillis(),
 			createdAt: Timestamp.now().toMillis(),
 		};
 
-		if (user.uid === statement.creatorId)
+		if (creator.uid === statement.creator.uid)
 			subscriptionData.role = Role.admin;
 
 		const parsedStatementSubscription = parse(
@@ -63,14 +67,11 @@ export async function setStatementSubscriptionToDB(
 }
 
 export async function updateSubscriberForStatementSubStatements(
-	statement: Statement
+	statement: Statement,
+	userId: string
 ) {
 	try {
-		const user = getUserFromFirebase();
-		if (!user) throw new Error('User not logged in');
-		if (!user.uid) throw new Error('User not logged in');
-
-		const statementsSubscribeId = `${user.uid}--${statement.statementId}`;
+		const statementsSubscribeId = `${userId}--${statement.statementId}`;
 
 		const statementsSubscribeRef = doc(
 			FireStore,
@@ -94,11 +95,9 @@ export async function setRoleToDB(
 ): Promise<void> {
 	try {
 		//getting current user role in statement
-		const currentUser = store.getState().user.user;
-		if (!currentUser) throw new Error('User not logged in');
 		const currentUserStatementSubscriptionId = getStatementSubscriptionId(
 			statement.statementId,
-			currentUser
+			user.uid
 		);
 		if (!currentUserStatementSubscriptionId)
 			throw new Error('Error in getting statementSubscriptionId');
@@ -122,7 +121,7 @@ export async function setRoleToDB(
 		//setting user role in statement
 		const statementSubscriptionId = getStatementSubscriptionId(
 			statement.statementId,
-			user
+			user.uid
 		);
 		if (!statementSubscriptionId)
 			throw new Error('Error in getting statementSubscriptionId');
@@ -146,10 +145,7 @@ export async function updateMemberRole(
 	try {
 		const statementSubscriptionId = getStatementSubscriptionId(
 			statementId,
-			{
-				uid: userId,
-				displayName: '',
-			}
+			userId
 		);
 		if (!statementSubscriptionId)
 			throw new Error('Error in getting statementSubscriptionId');

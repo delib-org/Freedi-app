@@ -3,11 +3,17 @@ import { db } from './index';
 import { DocumentSnapshot, FieldValue } from 'firebase-admin/firestore';
 import { FirestoreEvent } from 'firebase-functions/firestore';
 import {
-	Evaluation, User, Statement,
-	StatementSchema, Collections, StatementType, ChoseBy,
+	Evaluation,
+	Statement,
+	StatementSchema,
+	Collections,
+	StatementType,
+	ChoseBy,
 	ChoseByEvaluationType,
 	CutoffType,
-	defaultChoseBySettings, statementToSimpleStatement
+	defaultChoseBySettings,
+	statementToSimpleStatement,
+	User,
 } from 'delib-npm';
 
 import { number, parse } from 'valibot';
@@ -315,12 +321,10 @@ async function updateParentStatementWithChosenOptions(
 
 		// get parent choseBy settings statement and parent statement
 
-		const [parentStatementChoseByDB] = await Promise.all(
-			[
-				db.collection(Collections.choseBy).doc(parentId).get(),
-				db.collection(Collections.statements).doc(parentId).get(),
-			]
-		);
+		const [parentStatementChoseByDB] = await Promise.all([
+			db.collection(Collections.choseBy).doc(parentId).get(),
+			db.collection(Collections.statements).doc(parentId).get(),
+		]);
 
 		const parentStatementChoseBy: ChoseBy = !parentStatementChoseByDB.exists
 			? defaultChoseBySettings(parentId)
@@ -333,7 +337,7 @@ async function updateParentStatementWithChosenOptions(
 		if (!chosenOptions) throw new Error('chosenOptions is not found');
 
 		await updateParentOfChildren({
-			topOptionsStatements: chosenOptions
+			topOptionsStatements: chosenOptions,
 		});
 
 		//update child statement selected to be of type result
@@ -347,7 +351,7 @@ async function updateParentStatementWithChosenOptions(
 		topOptionsStatements: Statement[];
 	}
 	async function updateParentOfChildren({
-		topOptionsStatements
+		topOptionsStatements,
 	}: UpdateParentChildrenProps) {
 		const childStatementsSimple = topOptionsStatements.map(
 			(st: Statement) => statementToSimpleStatement(st)
@@ -360,7 +364,6 @@ async function updateParentStatementWithChosenOptions(
 			totalResults: childStatementsSimple.length,
 			results: childStatementsSimple,
 		});
-
 	}
 }
 

@@ -4,15 +4,15 @@ import {
 	createStatement,
 	setStatementToDB,
 } from '@/controllers/db/statements/setStatements';
-import { User } from 'delib-npm';
+import { Creator } from '@/types/user/User';
 
 export function handleAddStatement(
 	message: string,
 	statement: Statement,
-	user: User | null
+	creator: Creator | null
 ) {
 	try {
-		if (!user) throw new Error('No user');
+		if (!creator) throw new Error('No user');
 
 		//remove white spaces and \n
 		const title = message.split('\n')[0];
@@ -22,6 +22,7 @@ export function handleAddStatement(
 
 		const newStatement: Statement | undefined = createStatement({
 			...defaultStatementSettings,
+			creator,
 			hasChildren: true,
 			text: title,
 			description,
@@ -32,6 +33,7 @@ export function handleAddStatement(
 
 		setStatementToDB({
 			statement: newStatement,
+			creator,
 			parentStatement: statement,
 		});
 	} catch (error) {

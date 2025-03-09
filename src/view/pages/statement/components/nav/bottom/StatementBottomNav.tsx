@@ -1,7 +1,4 @@
-import { FC, useContext, useState } from 'react';
-
-// Third party libraries
-import { useSelector } from 'react-redux';
+import { FC, useContext, useState, useEffect } from 'react';
 import { Link, useParams } from 'react-router';
 
 // Icons
@@ -11,16 +8,14 @@ import PlusIcon from '@/assets/icons/plusIcon.svg?react';
 import RandomIcon from '@/assets/icons/randomIcon.svg?react';
 import SortIcon from '@/assets/icons/sort.svg?react';
 import UpdateIcon from '@/assets/icons/updateIcon.svg?react';
-
-import { decreesUserSettingsLearningRemain } from '@/controllers/db/learning/setLearning';
 import useStatementColor from '@/controllers/hooks/useStatementColor';
 import './StatementBottomNav.scss';
-import { userSettingsSelector } from '@/redux/users/userSlice';
 import StartHere from '@/view/components/startHere/StartHere';
 import { StatementContext } from '../../../StatementCont';
 import { sortItems } from './StatementBottomNavModal';
-import { useLanguage } from '@/controllers/hooks/useLanguages';
 import { SortType, StatementType } from 'delib-npm';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useDecreaseLearningRemain } from '@/controllers/hooks/useDecreaseLearningRemain';
 
 interface Props {
 	showNav?: boolean;
@@ -30,19 +25,22 @@ const StatementBottomNav: FC<Props> = () => {
 	const { statementId } = useParams();
 	const { statement, setNewStatementType, handleSetNewStatement } =
 		useContext(StatementContext);
-	const { dir } = useLanguage();
+	const { dir, learning } = useUserConfig();
+	const decreaseLearning = useDecreaseLearningRemain();
 
-	const timesRemainToLearnAddOption =
-		useSelector(userSettingsSelector)?.learning?.addOptions || 0;
+	const timesRemainToLearnAddOption = learning.addOptions;
 
 	const [showSorting, setShowSorting] = useState(false);
 	const [showStartHere, setShowStartHere] = useState(
 		timesRemainToLearnAddOption > 0
 	);
 
-	const statementColor = useStatementColor({ statement });
+	// Update showStartHere when learning.addOptions changes
+	useEffect(() => {
+		setShowStartHere(timesRemainToLearnAddOption > 0);
+	}, [timesRemainToLearnAddOption]);
 
-	//used to check if the user can add a new option in voting and in evaluation screens
+	const statementColor = useStatementColor({ statement });
 
 	function handleCreateNewOption() {
 		setNewStatementType(StatementType.option);
@@ -52,7 +50,9 @@ const StatementBottomNav: FC<Props> = () => {
 	const handleAddOption = () => {
 		handleCreateNewOption();
 		setShowStartHere(false);
-		decreesUserSettingsLearningRemain({ addOption: true });
+		decreaseLearning({
+			addOption: true,
+		});
 	};
 
 	function handleSortingClick() {

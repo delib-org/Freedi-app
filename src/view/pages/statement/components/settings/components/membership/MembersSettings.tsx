@@ -15,7 +15,7 @@ import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 // Custom components
 
 // Hooks & Helpers
-import { useLanguage } from '@/controllers/hooks/useLanguages';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import { RootState } from '@/redux/store';
 import './MembersSettings.scss';
 import { StatementSubscription, Role, Statement, Collections } from 'delib-npm';
@@ -27,7 +27,7 @@ interface MembersSettingsProps {
 const MembersSettings: FC<MembersSettingsProps> = ({ statement }) => {
 	// * Hooks * //
 	const { statementId } = useParams();
-	const { t } = useLanguage();
+	const { t } = useUserConfig();
 	const [userCount, setUserCount] = useState<number>(0);
 
 	const statementMembershipSelector = (statementId: string | undefined) =>
@@ -94,7 +94,7 @@ const MembersSettings: FC<MembersSettingsProps> = ({ statement }) => {
 			</div>
 			<div className='members-box'>
 				{joinedMembers.map((member) => (
-					<MembershipLine key={member.userId} member={member} />
+					<MembershipLine key={member.user.uid} member={member} />
 				))}
 			</div>
 
@@ -103,7 +103,7 @@ const MembersSettings: FC<MembersSettingsProps> = ({ statement }) => {
 			</div>
 			<div className='members-box'>
 				{bannedUser.map((member) => (
-					<MembershipLine key={member.userId} member={member} />
+					<MembershipLine key={member.user.uid} member={member} />
 				))}
 			</div>
 		</div>
