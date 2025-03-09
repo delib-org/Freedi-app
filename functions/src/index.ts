@@ -55,14 +55,14 @@ console.info('Environment:', isProduction ? 'Production' : 'Development');
  * CORS configuration based on environment
  */
 const corsConfig = isProduction
-	? ['https://freedi.tech', 'https://delib.web.app']
+	? ['https://freedi.tech', 'https://delib.web.app', 'https://freedi-test.web.app', 'https://delib-5.web.app', 'https://delib.web.app',]
 	: [
-			'https://freedi-test.web.app',
-			'https://delib-5.web.app',
-			'https://freedi.tech',
-			'https://delib.web.app',
-			'http://localhost:5173',
-		];
+		'http://localhost:5173',
+		'http://localhost:5174',
+		'http://localhost:5175',
+		'http://localhost:5176',
+		'http://localhost:5177'
+	];
 
 /**
  * Creates a wrapper for HTTP functions with standardized error handling
