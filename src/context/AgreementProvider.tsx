@@ -1,18 +1,18 @@
 import { FC, ReactNode, useState, useEffect } from 'react';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import { logOut } from '@/controllers/db/authenticationUtils';
-import type { TermsOfUseAcceptance } from '@/types/agreement/Agreement';
-import type { Creator } from '@/types/user/User';
 import TermsOfUse from '@/view/components/termsOfUse/TermsOfUse';
 import {
 	getLatestTermsAcceptance,
 	saveTermsAcceptance,
 } from '@/controllers/db/termsOfUse/termsOfUseService';
 import LoadingPage from '@/view/pages/loadingPage/LoadingPage';
+import { TermsOfUseAcceptance } from '@/types/agreement/Agreement';
+import { User } from 'delib-npm';
 
 interface AgreementProviderProps {
 	children: ReactNode;
-	user: Creator | null;
+	user: User | null;
 }
 
 export const AgreementProvider: FC<AgreementProviderProps> = ({

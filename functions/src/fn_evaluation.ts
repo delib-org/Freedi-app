@@ -13,6 +13,7 @@ import {
 	CutoffType,
 	defaultChoseBySettings,
 	statementToSimpleStatement,
+	User,
 } from 'delib-npm';
 
 import { number, parse } from 'valibot';
@@ -45,7 +46,7 @@ export async function newEvaluation(event) {
 		updateParentStatementWithChosenOptions(statement.parentId);
 
 		//update evaluators that the statement was evaluated
-		const evaluator: Creator | undefined = statementEvaluation.evaluator;
+		const evaluator: User | undefined = statementEvaluation.evaluator;
 
 		if (!evaluator) throw new Error('evaluator is not defined');
 

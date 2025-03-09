@@ -4,16 +4,13 @@ import {
 	statementSelector,
 	statementSubscriptionSelector,
 } from '@/redux/statements/statementsSlice';
-import { Access } from '@/types/TypeEnums';
-import type { Statement } from '@/types/statement/StatementTypes';
 import { getStatementFromDB } from '@/controllers/db/statements/getStatement';
 import { getTopParentSubscriptionFromDByStatement } from '@/controllers/db/subscriptions/getSubscriptions';
 import { setStatementSubscriptionToDB } from '@/controllers/db/subscriptions/setSubscriptions';
-import { Role } from '@/types/user/UserSettings';
-import { StatementSubscription } from '@/types/statement/StatementSubscription';
 import { useAuthentication } from './useAuthentication';
-import { Creator } from '@/types/user/User';
 import { useNavigate } from 'react-router';
+import { Access, Role, Statement, StatementSubscription } from 'delib-npm';
+import { Creator } from '@/types/user/User';
 
 export interface AuthorizationState {
 	isAuthorized: boolean;
@@ -84,8 +81,9 @@ export const useAuthorization = (statementId?: string) => {
 	};
 
 	useEffect(() => {
+		if (!creator) return;
 		checkAuthorization();
-	}, [statement, statementSubscription]);
+	}, [statement, statementSubscription, creator]);
 
 	return state;
 };

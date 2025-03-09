@@ -30,6 +30,7 @@ import {
 	DeliberativeElement,
 	Statement,
 	StatementSchema,
+	User,
 } from 'delib-npm';
 
 import { parse } from 'valibot';
@@ -39,7 +40,7 @@ import React from 'react';
 
 export const listenToStatementSubscription = (
 	statementId: string,
-	user: Creator,
+	user: User,
 	dispatch: AppDispatch
 ): Unsubscribe => {
 	try {

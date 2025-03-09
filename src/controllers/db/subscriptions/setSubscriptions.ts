@@ -11,10 +11,11 @@ import {
 	StatementSubscription,
 } from 'delib-npm';
 import { parse } from 'valibot';
+import { Creator } from '@/types/user/User';
 
 export async function setStatementSubscriptionToDB(
 	statement: Statement,
-	creator: User,
+	creator: Creator,
 	role: Role = Role.member
 ) {
 	try {
@@ -39,7 +40,8 @@ export async function setStatementSubscriptionToDB(
 
 		//if not subscribed, subscribe
 		const subscriptionData: StatementSubscription = {
-			creator,
+			user: creator,
+			userId: creator.uid,
 			statementsSubscribeId,
 			statement,
 			role,
@@ -89,13 +91,13 @@ export async function updateSubscriberForStatementSubStatements(
 export async function setRoleToDB(
 	statement: Statement,
 	role: Role,
-	creator: User
+	user: User
 ): Promise<void> {
 	try {
 		//getting current user role in statement
 		const currentUserStatementSubscriptionId = getStatementSubscriptionId(
 			statement.statementId,
-			creator.uid
+			user.uid
 		);
 		if (!currentUserStatementSubscriptionId)
 			throw new Error('Error in getting statementSubscriptionId');
@@ -112,14 +114,14 @@ export async function setRoleToDB(
 			throw new Error('Error in getting currentUserRole');
 		if (
 			currentUserRole !== Role.admin ||
-			statement.creator.uid === creator.uid
+			statement.creator.uid === user.uid
 		)
 			return;
 
 		//setting user role in statement
 		const statementSubscriptionId = getStatementSubscriptionId(
 			statement.statementId,
-			creator.uid
+			user.uid
 		);
 		if (!statementSubscriptionId)
 			throw new Error('Error in getting statementSubscriptionId');

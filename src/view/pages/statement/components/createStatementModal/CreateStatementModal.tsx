@@ -7,6 +7,7 @@ import Modal from '@/view/components/modal/Modal';
 import './CreateStatementModal.scss';
 import Button, { ButtonType } from '@/view/components/buttons/button/Button';
 import { StatementType, Statement } from 'delib-npm';
+import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 
 interface CreateStatementModalProps {
 	parentStatement: Statement | 'top';

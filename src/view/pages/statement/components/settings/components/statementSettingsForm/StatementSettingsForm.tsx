@@ -28,6 +28,7 @@ import { createSelector } from '@reduxjs/toolkit';
 import { RootState } from '@/redux/store';
 import Loader from '@/view/components/loaders/Loader';
 import { StatementSubscription, Role, Statement } from 'delib-npm';
+import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 
 interface StatementSettingsFormProps {
 	statement: Statement;
@@ -46,7 +47,7 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 	const navigate = useNavigate();
 	const { statementId } = useParams();
 	const { t } = useUserConfig();
-	const { user } = useAuthentication();
+	const { creator } = useAuthentication();
 
 	const [image, setImage] = useState<string>(imageUrl);
 	const [loading, setLoading] = useState<boolean>(false);
@@ -69,14 +70,14 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 	try {
 		const joinedMembers = members
 			.filter((member) => member.role !== Role.banned)
-			.map((m) => m.creator);
+			.map((m) => m.user);
 
 		// * Functions * //
 		const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
 			e.preventDefault();
 			setLoading(true);
 			const newStatement = await setNewStatement({
-				user,
+				creator,
 				navigate,
 				statementId,
 				statement,

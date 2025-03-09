@@ -6,7 +6,7 @@ import {
 	StatementSubscriptionSchema,
 	StatementSchema,
 	Role,
-	Collections
+	Collections,
 } from 'delib-npm';
 import { parse } from 'valibot';
 import { QueryDocumentSnapshot } from 'firebase-admin/firestore';
@@ -49,7 +49,8 @@ export async function setAdminsToNewStatement(
 			lastUpdate: Date.now(),
 			statement: statement,
 			statementsSubscribeId: newStatementSubscriptionId,
-			creator: statement.creator,
+			user: statement.creator,
+			userId: statement.creatorId,
 		};
 		parse(StatementSubscriptionSchema, newSubscription);
 
@@ -75,7 +76,7 @@ export async function setAdminsToNewStatement(
 			try {
 				const statementsSubscribeId = getStatementSubscriptionId(
 					statement.statementId,
-					adminSub.creator
+					adminSub.user
 				);
 				if (!statementsSubscribeId)
 					throw new Error('No statementsSubscribeId');
@@ -86,7 +87,8 @@ export async function setAdminsToNewStatement(
 					lastUpdate: Date.now(),
 					statement: statement,
 					statementsSubscribeId,
-					creator: adminSub.creator,
+					user: adminSub.user,
+					userId: adminSub.userId,
 				};
 
 				parse(StatementSubscriptionSchema, newSubscription);

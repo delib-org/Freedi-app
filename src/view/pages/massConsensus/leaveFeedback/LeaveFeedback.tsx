@@ -3,13 +3,13 @@ import HeaderMassConsensus from '../headerMassConsensus/HeaderMassConsensus';
 import Input from '@/view/components/input/Input';
 import { MailIcon } from 'lucide-react';
 import { useState } from 'react';
-import { useLanguage } from '@/controllers/hooks/useLanguages';
 import TitleMassConsensus from '../TitleMassConsensus/TitleMassConsensus';
 import FooterMassConsensus from '../footerMassConsensus/FooterMassConsensus';
 import styles from './LeaveFeedback.module.scss';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 
 function LeaveFeedback() {
-	const { t } = useLanguage();
+	const { t } = useUserConfig();
 	const [email, setEmail] = useState('');
 
 	const handleSendButton = () => {

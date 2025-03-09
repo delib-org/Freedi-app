@@ -51,7 +51,7 @@ const HeaderMassConsensus = ({
 			) : (
 				<Link
 					className={styles.icon}
-					to={`/mass-consensus/${statementId}/${MassConsensusPageUrls.introduction}?lang=${lang}`}
+					to={`/mass-consensus/${statementId}/${MassConsensusPageUrls.introduction}?lang=${currentLanguage}`}
 				>
 					<HomeIcon />
 				</Link>

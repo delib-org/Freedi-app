@@ -7,7 +7,7 @@ import {
 	enum_,
 	InferOutput,
 } from 'valibot';
-import { UserSchema, StatementSchema, Role } from 'delib-npm';
+import { UserSchema, StatementSchema, Role, User } from 'delib-npm';
 
 export const StatementSubscriptionSchema = object({
 	role: enum_(Role),
@@ -27,7 +27,7 @@ export type StatementSubscription = InferOutput<
 
 export function getStatementSubscriptionId(
 	statementId: string,
-	user: Creator
+	user: User
 ): string | undefined {
 	return `${user.uid}--${statementId}`;
 }

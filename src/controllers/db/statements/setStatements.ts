@@ -32,6 +32,7 @@ import {
 
 import { number, parse, string } from 'valibot';
 import { setChoseByToDB } from '../choseBy/setChoseBy';
+import { Creator } from '@/types/user/User';
 
 export const updateStatementParents = async (
 	statement: Statement,
@@ -143,7 +144,6 @@ export const setStatementToDB = async ({
 		if (!parentStatement) throw new Error('Parent statement is undefined');
 
 		const storeState = store.getState();
-		if (!creator) throw new Error('creator is undefined');
 
 		if (statement.statement.length < 2) {
 			throw new Error('Statement is too short');
@@ -195,7 +195,7 @@ export const setStatementToDB = async ({
 			};
 
 		parse(StatementSchema, statement);
-		parse(CreatorSchema, statement.creator);
+		parse(UserSchema, statement.creator);
 
 		//set statement
 		const statementRef = doc(
@@ -304,6 +304,7 @@ export function createStatement({
 			parents,
 			topParentId,
 			creator,
+			creatorId: creator.uid,
 			membership: membership || { access: Access.open },
 			statementSettings: {
 				enhancedEvaluation,

@@ -1,19 +1,18 @@
-import { StatementType, Statement, User } from 'delib-npm';
+import { StatementType, Statement } from 'delib-npm';
 import { defaultStatementSettings } from './../../../settings/emptyStatementModel';
 import {
 	createStatement,
 	setStatementToDB,
 } from '@/controllers/db/statements/setStatements';
-import { convertFirebaseUserToCreator } from '@/types/user/userUtils';
+import { Creator } from '@/types/user/User';
 
 export function handleAddStatement(
 	message: string,
 	statement: Statement,
-	user: User | null
+	creator: Creator | null
 ) {
 	try {
-		if (!user) throw new Error('No user');
-		const creator = convertFirebaseUserToCreator(user);
+		if (!creator) throw new Error('No user');
 
 		//remove white spaces and \n
 		const title = message.split('\n')[0];

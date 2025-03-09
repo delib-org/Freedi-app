@@ -19,7 +19,7 @@ import {
 	Vote,
 } from 'delib-npm';
 import { Dispatch, SetStateAction } from 'react';
-import { convertFirebaseUserToCreator } from '@/types/user/userUtils';
+import { Creator } from '@/types/user/User';
 
 // Get users that voted on options in this statement
 export async function handleGetVoters(
@@ -71,7 +71,7 @@ interface SetNewStatementParams {
 	navigate: NavigateFunction;
 	statementId: string | undefined;
 	statement: Statement;
-	user: User;
+	creator: Creator;
 	parentStatement?: Statement | 'top';
 	statementType?: StatementType;
 }
@@ -79,15 +79,13 @@ interface SetNewStatementParams {
 export async function setNewStatement({
 	statementId,
 	statement,
-	user,
+	creator,
 	parentStatement = 'top',
 	statementType = StatementType.group,
 }: SetNewStatementParams): Promise<Statement | undefined> {
 	try {
 		// If statement title is empty, don't save
 		if (!statement.statement) return;
-
-		const creator = convertFirebaseUserToCreator(user);
 
 		const {
 			hasChildren,

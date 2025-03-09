@@ -1,11 +1,11 @@
 import { Timestamp, doc, setDoc } from 'firebase/firestore';
 import { FireStore } from '../config';
 import { number, parse } from 'valibot';
-import { EvaluationSchema, Collections, Statement } from 'delib-npm';
+import { EvaluationSchema, Collections, Statement, User } from 'delib-npm';
 
 export async function setEvaluationToDB(
 	statement: Statement,
-	creator: Creator,
+	creator: User,
 	evaluation: number
 ): Promise<void> {
 	try {

@@ -94,7 +94,7 @@ const MembersSettings: FC<MembersSettingsProps> = ({ statement }) => {
 			</div>
 			<div className='members-box'>
 				{joinedMembers.map((member) => (
-					<MembershipLine key={member.creator.uid} member={member} />
+					<MembershipLine key={member.user.uid} member={member} />
 				))}
 			</div>
 
@@ -103,7 +103,7 @@ const MembersSettings: FC<MembersSettingsProps> = ({ statement }) => {
 			</div>
 			<div className='members-box'>
 				{bannedUser.map((member) => (
-					<MembershipLine key={member.creator.uid} member={member} />
+					<MembershipLine key={member.user.uid} member={member} />
 				))}
 			</div>
 		</div>

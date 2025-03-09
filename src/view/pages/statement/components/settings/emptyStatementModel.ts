@@ -32,6 +32,7 @@ export const defaultEmptyStatement: Statement = {
 		uid: '',
 		photoURL: undefined,
 	},
+	creatorId: '',
 	statementType: StatementType.statement,
 	lastUpdate: 0,
 	createdAt: 0,

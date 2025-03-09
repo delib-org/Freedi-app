@@ -14,8 +14,8 @@ interface Props {
 }
 
 const MembershipCard: FC<Props> = ({ member }) => {
-	const firstLetter = member.creator.displayName.charAt(0).toUpperCase();
-	const displayImg = member.creator.photoURL;
+	const firstLetter = member.user.displayName.charAt(0).toUpperCase();
+	const displayImg = member.user.photoURL;
 	const [role, setRole] = useState(member.role);
 	const { user } = useAuthentication();
 
@@ -23,14 +23,14 @@ const MembershipCard: FC<Props> = ({ member }) => {
 		setRole(member.role);
 	}, [member.role]);
 
-	if (member.creator.uid === user.uid) return null;
+	if (member.user.uid === user.uid) return null;
 
 	async function handleRemoveMember() {
 		const newRole = role === Role.banned ? Role.member : Role.banned;
 		try {
 			await updateMemberRole(
 				member.statementId,
-				member.creator.uid,
+				member.user.uid,
 				newRole
 			);
 			setRole(newRole);
@@ -44,7 +44,7 @@ const MembershipCard: FC<Props> = ({ member }) => {
 			const newRole = role === Role.admin ? Role.member : Role.admin;
 			await updateMemberRole(
 				member.statementId,
-				member.creator.uid,
+				member.user.uid,
 				newRole
 			);
 			setRole(newRole);
@@ -68,7 +68,7 @@ const MembershipCard: FC<Props> = ({ member }) => {
 				<div
 					className={`${styles.card__info__name} ${isBanned ? styles.bannedText : ''}`}
 				>
-					{member.creator.displayName}
+					{member.user.displayName}
 				</div>
 			</div>
 			<div className={styles.card__membership}>
