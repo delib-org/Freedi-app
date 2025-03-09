@@ -1,7 +1,7 @@
 import { FieldValue, Timestamp } from 'firebase-admin/firestore';
 import { db } from '.';
 import { logger } from 'firebase-functions/v1';
-import { Collections } from '../../src/types/TypeEnums';
+import { Collections } from 'delib-npm';
 
 type MembershipChange = {
 	eventType: 'new' | 'update' | 'delete';

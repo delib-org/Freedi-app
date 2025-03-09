@@ -9,18 +9,19 @@ import {
 	where,
 } from 'firebase/firestore';
 import { FireStore } from '../config';
+
 import {
-	Collections,
+	Statement, StatementSchema, Collections,
 	StatementType,
 	DeliberativeElement,
-} from '@/types/TypeEnums';
-import { Statement, StatementSchema } from '@/types/statement/StatementTypes';
+} from 'delib-npm';
 import { parse } from 'valibot';
 
 export async function getStatementFromDB(
 	statementId: string
 ): Promise<Statement | undefined> {
 	try {
+		if (!statementId) throw new Error('Statement ID is required to get statement from DB');
 		const statementRef = doc(
 			FireStore,
 			Collections.statements,

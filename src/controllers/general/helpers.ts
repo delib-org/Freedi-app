@@ -1,45 +1,50 @@
-import { logOut } from '../db/auth';
-import { HistoryTracker } from '@/redux/history/HistorySlice';
-import { store } from '@/redux/store';
-import { setUser } from '@/redux/users/userSlice';
-import { Screen } from '@/types/TypeEnums';
-import { Statement } from '@/types/statement/StatementTypes';
-import { StatementSubscription } from '@/types/statement/StatementSubscription';
-import { User } from '@/types/user/User';
-import { Role } from '@/types/user/UserSettings';
+import { StatementSubscription, Statement, Role, Screen } from 'delib-npm';
+import { useAuthentication } from '../hooks/useAuthentication';
 
 export function updateArray<T>(
 	currentArray: Array<T>,
 	newItem: T,
 	updateByProperty: keyof T & string
 ): Array<T> {
-	try {
-		const arrayTemp = [...currentArray];
-
-		if (!newItem[updateByProperty]) {
-			throw new Error(`Item doesn't have property ${updateByProperty}`);
-		}
-
-		const index = arrayTemp.findIndex(
-			(item) => item[updateByProperty] === newItem[updateByProperty]
-		);
-		if (index === -1) arrayTemp.push(newItem);
-		else {
-			const oldItem = JSON.stringify(arrayTemp[index]);
-			const newItemString = JSON.stringify({
-				...arrayTemp[index],
-				...newItem,
-			});
-			if (oldItem !== newItemString)
-				arrayTemp[index] = { ...arrayTemp[index], ...newItem };
-		}
-
-		return arrayTemp;
-	} catch (error) {
-		console.error(error);
+	// Check if property exists early to avoid unnecessary operations
+	if (newItem[updateByProperty] === undefined) {
+		console.error(`Item doesn't have property ${updateByProperty}`);
 
 		return currentArray;
 	}
+
+	const index = currentArray.findIndex(
+		(item) => item[updateByProperty] === newItem[updateByProperty]
+	);
+
+	// If item not found, just return a new array with the item added
+	if (index === -1) {
+		return [...currentArray, newItem];
+	}
+
+	// Check if the item actually needs to be updated
+	// Avoid unnecessary spread operations and comparisons
+	const existingItem = currentArray[index];
+	let needsUpdate = false;
+
+	// Compare only the keys in newItem for changes
+	for (const key in newItem) {
+		if (existingItem[key] !== newItem[key]) {
+			needsUpdate = true;
+			break;
+		}
+	}
+
+	// Only create a new array if an update is needed
+	if (!needsUpdate) {
+		return currentArray;
+	}
+
+	// Create a new array with the updated item
+	const result = [...currentArray];
+	result[index] = { ...existingItem, ...newItem };
+
+	return result;
 }
 
 export function isAuthorized(
@@ -51,10 +56,10 @@ export function isAuthorized(
 	try {
 		if (!statement) throw new Error('No statement');
 
-		const user = store.getState().user.user;
+		const { user } = useAuthentication();
 		if (!user?.uid) throw new Error('No user');
 
-		if (statement.creatorId === user.uid) return true;
+		if (statement.creator.uid === user.uid) return true;
 
 		if (parentStatementCreatorId === user.uid) return true;
 
@@ -147,11 +152,6 @@ export function calculateFontSize(text: string, maxSize = 6, minSize = 14) {
 	return `${fontSize}px`;
 }
 
-export function handleLogout() {
-	logOut();
-	store.dispatch(setUser(null));
-}
-
 export function getTitle(statement: Statement | undefined) {
 	try {
 		if (!statement) return '';
@@ -194,13 +194,12 @@ export function getRoomTimerId(
 
 export function getStatementSubscriptionId(
 	statementId: string,
-	user: User
+	userId: string
 ): string | undefined {
 	try {
-		if (!user?.uid) throw new Error('No user');
 		if (!statementId) throw new Error('No statementId');
 
-		return `${user.uid}--${statementId}`;
+		return `${userId}--${statementId}`;
 	} catch (error) {
 		console.error(error);
 
@@ -310,33 +309,6 @@ export function truncateString(text: string, maxLength = 20): string {
 	return text.length > maxLength ? text.slice(0, maxLength) + '...' : text;
 }
 
-export function processHistory(
-	{ statementId, pathname }: HistoryTracker,
-	state: HistoryTracker[]
-): HistoryTracker[] {
-	try {
-		const newHistory = [...state];
-
-		//add statement id to history only if it is not already there
-		if (newHistory.length === 0) return [{ statementId, pathname }];
-		if (pathname === state[state.length - 1]?.pathname) return newHistory;
-
-		//in case the the user only navigate between the screens of the statement, just update the pathname
-		if (!statementId) return [...state, { pathname }];
-		if (newHistory[newHistory.length - 1].statementId === statementId) {
-			newHistory[newHistory.length - 1].pathname = pathname;
-
-			return newHistory;
-		} else {
-			return [...state, { statementId, pathname }];
-		}
-	} catch (error) {
-		console.error(error);
-
-		return state;
-	}
-}
-
 export function getLatestUpdateStatements(statements: Statement[]): number {
 	if (!statements || statements.length === 0) {
 		return 0;
@@ -344,7 +316,9 @@ export function getLatestUpdateStatements(statements: Statement[]): number {
 
 	return statements.reduce(
 		(latestUpdate, statement) =>
-			statement.lastUpdate > latestUpdate ? statement.lastUpdate : latestUpdate,
+			statement.lastUpdate > latestUpdate
+				? statement.lastUpdate
+				: latestUpdate,
 		0
 	);
 }

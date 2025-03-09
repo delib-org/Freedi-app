@@ -15,10 +15,9 @@ import {
 } from '@/controllers/db/statements/setStatements';
 import { isAuthorized } from '@/controllers/general/helpers';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
-import { useLanguage } from '@/controllers/hooks/useLanguages';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import useStatementColor from '@/controllers/hooks/useStatementColor';
 import { statementSubscriptionSelector } from '@/redux/statements/statementsSlice';
-import { store } from '@/redux/store';
 import EditTitle from '@/view/components/edit/EditTitle';
 import Menu from '@/view/components/menu/Menu';
 import MenuOption from '@/view/components/menu/MenuOption';
@@ -28,8 +27,8 @@ import { deleteStatementFromDB } from '@/controllers/db/statements/deleteStateme
 import Evaluation from '../../../evaluations/components/evaluation/Evaluation';
 import useAutoFocus from '@/controllers/hooks/useAutoFocus ';
 import UploadImage from '@/view/components/uploadImage/UploadImage';
-import { StatementType } from '@/types/TypeEnums';
-import { Statement } from '@/types/statement/StatementTypes';
+import { StatementType, Statement } from 'delib-npm';
+import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 
 export interface NewQuestion {
 	statement: Statement;
@@ -54,10 +53,10 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
 	// Hooks
 	const { statementType } = statement;
 	const statementColor = useStatementColor({ statement });
-	const { t, dir } = useLanguage();
+	const { t, dir } = useUserConfig();
+	const { user } = useAuthentication();
 
 	// Redux store
-	const userId = store.getState().user.user?.uid;
 	const statementSubscription = useAppSelector(
 		statementSubscriptionSelector(statement.parentId)
 	);
@@ -74,19 +73,19 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
 	const fileInputRef = useRef<HTMLInputElement | null>(null);
 
 	// Variables
-	const creatorId = statement.creatorId;
 	const _isAuthorized = isAuthorized(
 		statement,
 		statementSubscription,
-		parentStatement?.creatorId
+		parentStatement?.creator.uid
 	);
-	const isMe = userId === creatorId;
+	const isMe = user.uid === statement.creator.uid;
 	const isQuestion = statementType === StatementType.question;
 	const isOption = statementType === StatementType.option;
 	const isStatement = statementType === StatementType.statement;
 	const textareaRef = useAutoFocus(isEdit);
 
-	const isPreviousFromSameAuthor = previousStatement?.creatorId === creatorId;
+	const isPreviousFromSameAuthor =
+		previousStatement?.creator.uid === statement.creator.uid;
 
 	const isAlignedLeft = (isMe && dir === 'ltr') || (!isMe && dir === 'rtl');
 

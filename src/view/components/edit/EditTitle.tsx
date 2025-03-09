@@ -11,8 +11,8 @@ import Text from '../text/Text';
 import styles from './EditTitle.module.scss';
 import Save from '@/assets/icons/saveIcon.svg?react';
 import { updateStatementText } from '@/controllers/db/statements/setStatements';
-import { useLanguage } from '@/controllers/hooks/useLanguages';
-import { Statement } from '@/types/statement/StatementTypes';
+import { Statement } from 'delib-npm';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 
 interface Props {
 	statement: Statement | undefined;
@@ -46,7 +46,7 @@ const EditTitle: FC<Props> = ({
 		}
 	}, [isEdit]);
 
-	const { dir: direction } = useLanguage();
+	const { dir: direction } = useUserConfig();
 	const align = direction === 'ltr' ? 'left' : 'right';
 
 	function handleChange(
@@ -80,7 +80,7 @@ const EditTitle: FC<Props> = ({
 		if (!statement) return null;
 
 		return (
-			<div style={{ direction: direction, textAlign: align }}>
+			<div style={{ direction, textAlign: align }}>
 				<Text
 					statement={useTitle ? statement.statement : undefined}
 					description={

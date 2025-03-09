@@ -155,7 +155,7 @@
 	"Unmark as a Question": "ביטול סימון כשאלה",
 	"Welcome to room": "ברוך/ה הבא/ה לחדר",
 	"Current stage": "שלב נוכחי",
-	"Suggestions": "הצעות",
+	"Suggestions": "הצעות לפתרון השאלה",
 	"First Evaluation": "הערכה ראשונה",
 	"Second Evaluation": "הערכה שנייה",
 	"Finished": "סיום",
@@ -247,5 +247,8 @@
 	"Solution selected by vote": "פתרון שנבחר בהצבעה",
 	"Solutions selected for discussed issue": "פתרונות נבחרים",
 	"See more...": "עוד פתרונות...",
-	"Add Suggestions": "הוספת הצעה חדשה"
+	"Read more...": "קרא/י עוד...",
+	"Add Suggestion": "הוספת הצעה חדשה",
+	"Document": "מסמך",
+	"Add sub-question": "הוספת שאלה משנית"
 }

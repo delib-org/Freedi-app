@@ -2,8 +2,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import { Response, onInit, Request } from 'firebase-functions/v1';
 import { db } from '.';
 import 'dotenv/config';
-import { Collections } from '../../src/types/TypeEnums';
-import { Statement } from '../../src/types/statement/StatementTypes';
+import { Collections, Statement } from 'delib-npm';
 
 export async function findSimilarStatements(
 	request: Request,

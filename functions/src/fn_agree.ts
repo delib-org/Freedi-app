@@ -3,9 +3,8 @@ import { db } from '.';
 import {
 	Agree,
 	AgreeDisagree,
-	AgreeSchema,
-} from '../../src/types/agreement/Agreement';
-import { Collections } from '../../src/types/TypeEnums';
+	AgreeSchema, Collections
+} from 'delib-npm';
 import { DocumentSnapshot } from 'firebase-admin/firestore';
 import { FirestoreEvent } from 'firebase-functions/firestore';
 import { parse } from 'valibot';

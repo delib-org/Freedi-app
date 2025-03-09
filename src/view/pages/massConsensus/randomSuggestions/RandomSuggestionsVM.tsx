@@ -1,27 +1,35 @@
 import firebaseConfig from '@/controllers/db/configKey';
 import { listenToEvaluation } from '@/controllers/db/evaluation/getEvaluation';
+import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { setMassConsensusStatements } from '@/redux/statements/statementsSlice';
-import { userSelector } from '@/redux/users/userSlice';
-import { functionConfig } from '@/types/ConfigFunctions';
-import { SelectionFunction } from '@/types/evaluation/Evaluation';
-import { Statement } from '@/types/statement/StatementTypes';
-import { MassConsensusPageUrls } from '@/types/TypeEnums';
+import {
+	Statement,
+	MassConsensusPageUrls,
+	functionConfig,
+	SelectionFunction,
+} from 'delib-npm';
 
 import { useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import { useNavigate, useParams } from 'react-router';
 
 export function useRandomSuggestions() {
 	const navigate = useNavigate();
-	const user = useSelector(userSelector);
+	const { user } = useAuthentication();
 	const dispatch = useDispatch();
 	const [subStatements, setSubStatements] = useState<Statement[]>([]);
 	const { statementId } = useParams<{ statementId: string }>();
 
-	const navigateToTop = () => navigate(`/mass-consensus/${statementId}/${MassConsensusPageUrls.topSuggestions}`);
+	const navigateToTop = () =>
+		navigate(
+			`/mass-consensus/${statementId}/${MassConsensusPageUrls.topSuggestions}`
+		);
 
 	useEffect(() => {
-		if (!user) navigate(`/mass-consensus/${statementId}/${MassConsensusPageUrls.introduction}`);
+		if (!user)
+			navigate(
+				`/mass-consensus/${statementId}/${MassConsensusPageUrls.introduction}`
+			);
 	}, [user]);
 
 	useEffect(() => {
@@ -30,11 +38,13 @@ export function useRandomSuggestions() {
 
 	useEffect(() => {
 		if (!user) return;
-		const unsubscribes = subStatements.map((subStatement) => { return listenToEvaluation(subStatement.statementId) });
+		const unsubscribes = subStatements.map((subStatement) => {
+			return listenToEvaluation(subStatement.statementId, user.uid);
+		});
 
 		return () => {
 			unsubscribes.forEach((unsubscribe) => unsubscribe());
-		}
+		};
 	}, [subStatements, user]);
 
 	const fetchRandomStatements = async () => {
@@ -54,7 +64,12 @@ export function useRandomSuggestions() {
 				if (!statements) throw new Error('No statements found');
 
 				setSubStatements(statements);
-				dispatch(setMassConsensusStatements({ statements, selectionFunction: SelectionFunction.random }));
+				dispatch(
+					setMassConsensusStatements({
+						statements,
+						selectionFunction: SelectionFunction.random,
+					})
+				);
 			} catch (error) {
 				console.error('Error:', error);
 			}

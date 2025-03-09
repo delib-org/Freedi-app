@@ -8,10 +8,9 @@ import {
 	onSnapshot,
 } from 'firebase/firestore';
 import { FireStore } from '../config';
-import { Collections, StatementType } from '@/types/TypeEnums';
-import { Statement, StatementSchema } from '@/types/statement/StatementTypes';
+import { Collections, StatementType, Statement, StatementSchema, ResultsBy } from 'delib-npm';
 import { parse } from 'valibot';
-import { ResultsBy } from '@/types/results/Results';
+
 import { store } from '@/redux/store';
 import { deleteStatement, setStatement } from '@/redux/statements/statementsSlice';
 

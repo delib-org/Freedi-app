@@ -7,13 +7,10 @@ import {
 	enum_,
 	InferOutput,
 } from 'valibot';
-import { User, UserSchema } from '../user/User';
-import { StatementSchema } from './StatementTypes';
-import { Role } from '../user/UserSettings';
+import { UserSchema, StatementSchema, Role, User } from 'delib-npm';
 
 export const StatementSubscriptionSchema = object({
 	role: enum_(Role),
-	userId: string(),
 	statementId: string(),
 	lastUpdate: number(),
 	createdAt: optional(number()),
@@ -21,7 +18,7 @@ export const StatementSubscriptionSchema = object({
 	statement: StatementSchema,
 	token: optional(array(string())),
 	totalSubStatementsRead: optional(number()),
-	user: UserSchema,
+	creator: UserSchema,
 });
 
 export type StatementSubscription = InferOutput<

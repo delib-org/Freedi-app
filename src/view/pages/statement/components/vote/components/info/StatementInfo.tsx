@@ -8,13 +8,13 @@ import { isAuthorized } from '@/controllers/general/helpers';
 
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import './StatementInfo.scss';
-import { useLanguage } from '@/controllers/hooks/useLanguages';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import {
 	statementSelector,
 	statementSubscriptionSelector,
 } from '@/redux/statements/statementsSlice';
 import Text from '@/view/components/text/Text';
-import { Statement } from '@/types/statement/StatementTypes';
+import { Statement } from 'delib-npm';
 
 interface Props {
 	statement: Statement | null;
@@ -23,7 +23,7 @@ interface Props {
 
 const StatementInfo: FC<Props> = ({ statement, setShowInfo }) => {
 	// Hooks
-	const { t } = useLanguage();
+	const { t } = useUserConfig();
 
 	// Redux
 	const statementSubscription = useAppSelector(
@@ -44,7 +44,7 @@ const StatementInfo: FC<Props> = ({ statement, setShowInfo }) => {
 	const _isAuthorized = isAuthorized(
 		statement,
 		statementSubscription,
-		parentStatement?.creatorId
+		parentStatement?.creator.uid
 	);
 
 	return (

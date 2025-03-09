@@ -1,5 +1,4 @@
-import { Results } from '@/types/results/Results';
-import { Statement } from '@/types/statement/StatementTypes';
+import { Results, Statement } from 'delib-npm';
 import dagre from '@dagrejs/dagre';
 import { Edge, Node, Position } from 'reactflow';
 

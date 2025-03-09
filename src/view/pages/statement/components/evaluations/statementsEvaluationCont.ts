@@ -4,8 +4,7 @@ import {
 } from './components/evaluation/enhancedEvaluation/EnhancedEvaluationModel';
 import { updateStatementTop } from '@/redux/statements/statementsSlice';
 import { store } from '@/redux/store';
-import { SortType } from '@/types/TypeEnums';
-import { Statement } from '@/types/statement/StatementTypes';
+import { Statement, SortType } from 'delib-npm';
 
 export function sortSubStatements(
 	subStatements: Statement[],

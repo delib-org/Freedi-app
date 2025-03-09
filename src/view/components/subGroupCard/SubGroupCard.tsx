@@ -2,16 +2,15 @@ import { FC } from 'react';
 import styles from './SubGroupCard.module.scss';
 import { Link, NavLink } from 'react-router';
 import useSubGroupCard from './SubGroupCardVM';
-import { useLanguage } from '@/controllers/hooks/useLanguages';
-import { Statement } from '@/types/statement/StatementTypes';
-import { StatementType } from '@/types/TypeEnums';
+import { Statement, StatementType } from 'delib-npm';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 
 interface Props {
 	statement: Statement;
 }
 
 const SubGroupCard: FC<Props> = ({ statement }) => {
-	const { t } = useLanguage();
+	const { t } = useUserConfig();
 	const { Icon, backgroundColor, text } = useSubGroupCard(statement);
 
 	try {

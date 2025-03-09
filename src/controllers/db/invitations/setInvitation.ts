@@ -8,8 +8,7 @@ import {
 	where,
 } from 'firebase/firestore';
 import { FireStore } from '../config';
-import { Collections } from '@/types/TypeEnums';
-import { Invitation } from '@/types/invitation/Invitation';
+import { Collections, Invitation } from 'delib-npm';
 
 interface CreateInvitationProps {
 	pathname: string;

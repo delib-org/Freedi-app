@@ -2,7 +2,7 @@ import { FC, useEffect, useRef } from 'react';
 
 // Hooks & Helpers
 import { StatementSettingsProps } from '../../settingsTypeHelpers';
-import { useLanguage } from '@/controllers/hooks/useLanguages';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import './TitleAndDescription.scss';
 import VisuallyHidden from '@/view/components/accessibility/toScreenReaders/VisuallyHidden';
 import Button, { ButtonType } from '@/view/components/buttons/button/Button';
@@ -12,7 +12,7 @@ const TitleAndDescription: FC<StatementSettingsProps> = ({
 	statement,
 	setStatementToEdit,
 }) => {
-	const { t } = useLanguage();
+	const { t } = useUserConfig();
 	const navigate = useNavigate();
 
 	// * Variables * //
@@ -52,7 +52,9 @@ const TitleAndDescription: FC<StatementSettingsProps> = ({
 				/>
 			</label>
 			<label htmlFor='statement-description'>
-				<VisuallyHidden labelName={t('Group Description')}></VisuallyHidden>
+				<VisuallyHidden
+					labelName={t('Group Description')}
+				></VisuallyHidden>
 				<textarea
 					id='statement-description'
 					name='description'
@@ -81,7 +83,9 @@ const TitleAndDescription: FC<StatementSettingsProps> = ({
 					buttonType={ButtonType.SECONDARY}
 					aria-label='Cancel button'
 					data-cy='settings-statement-cancel-btn'
-					onClick={() => { navigate('/home'); }}
+					onClick={() => {
+						navigate('/home');
+					}}
 				/>
 			</div>
 		</div>

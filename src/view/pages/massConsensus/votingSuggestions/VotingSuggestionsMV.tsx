@@ -1,23 +1,22 @@
 import firebaseConfig from '@/controllers/db/configKey';
-import { userSelector } from '@/redux/users/userSlice';
-import { functionConfig } from '@/types/ConfigFunctions';
-import { MassConsensusPageUrls } from '@/types/TypeEnums';
 
 import { useEffect, useState } from 'react';
-import { useSelector } from 'react-redux';
 import { useNavigate, useParams } from 'react-router';
 import { listenToStatement } from '@/controllers/db/statements/listenToStatements';
-import { Statement } from '@/types/statement/StatementTypes';
+import { Statement, functionConfig, MassConsensusPageUrls } from 'delib-npm';
+import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 
 export function VotingSuggestionsMV() {
 	const { statementId } = useParams<{ statementId: string }>();
 	const [subStatements, setSubStatements] = useState<Statement[]>([]);
 
 	const navigate = useNavigate();
+	const { user } = useAuthentication();
 
-	const user = useSelector(userSelector);
-
-	const navigateToFeedback = () => navigate(`/mass-consensus/${statementId}/${MassConsensusPageUrls.leaveFeedback}`);
+	const navigateToFeedback = () =>
+		navigate(
+			`/mass-consensus/${statementId}/${MassConsensusPageUrls.leaveFeedback}`
+		);
 
 	async function fetchTopStatements() {
 		fetch(
@@ -33,7 +32,6 @@ export function VotingSuggestionsMV() {
 	}
 
 	useEffect(() => {
-
 		const unsubscribe = listenToStatement(statementId);
 
 		return () => unsubscribe();

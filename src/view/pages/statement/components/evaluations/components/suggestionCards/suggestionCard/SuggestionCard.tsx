@@ -11,21 +11,17 @@ import Evaluation from '../../evaluation/Evaluation';
 import SolutionMenu from '../../solutionMenu/SolutionMenu';
 import AddQuestionIcon from '@/assets/icons/addQuestion.svg?react';
 import { setStatementIsOption } from '@/controllers/db/statements/setStatements';
-import { isAuthorized } from '@/controllers/general/helpers';
-import { useAppDispatch, useAppSelector } from '@/controllers/hooks/reduxHooks';
-import { useLanguage } from '@/controllers/hooks/useLanguages';
+import { useAppDispatch } from '@/controllers/hooks/reduxHooks';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import useStatementColor, {
 	StyleProps,
 } from '@/controllers/hooks/useStatementColor';
-import {
-	setStatementElementHight,
-	statementSubscriptionSelector,
-} from '@/redux/statements/statementsSlice';
+import { setStatementElementHight } from '@/redux/statements/statementsSlice';
 import EditTitle from '@/view/components/edit/EditTitle';
 import IconButton from '@/view/components/iconButton/IconButton';
 import './SuggestionCard.scss';
-import { Screen, StatementType } from '@/types/TypeEnums';
-import { Statement } from '@/types/statement/StatementTypes';
+import { Screen, StatementType, Statement } from 'delib-npm';
+import { useAuthorization } from '@/controllers/hooks/useAuthorization';
 
 interface Props {
 	statement: Statement | undefined;
@@ -41,15 +37,12 @@ const SuggestionCard: FC<Props> = ({
 	// Hooks
 	if (!parentStatement) console.error('parentStatement is not defined');
 
-	const { t, dir } = useLanguage();
+	const { t, dir } = useUserConfig();
+	const { isAuthorized } = useAuthorization(statement.statementId);
 	const { sort } = useParams();
 
 	// Redux Store
 	const dispatch = useAppDispatch();
-
-	const statementSubscription = useAppSelector(
-		statementSubscriptionSelector(statement?.statementId)
-	);
 
 	// Use Refs
 	const elementRef = useRef<HTMLDivElement>(null);
@@ -74,12 +67,6 @@ const SuggestionCard: FC<Props> = ({
 	useEffect(() => {
 		sortSubStatements(siblingStatements, sort, 30);
 	}, [statement?.elementHight]);
-
-	const _isAuthorized = isAuthorized(
-		statement,
-		statementSubscription,
-		parentStatement?.creatorId
-	);
 
 	const statementColor: StyleProps = useStatementColor({
 		statement,
@@ -166,7 +153,7 @@ const SuggestionCard: FC<Props> = ({
 					<div className='more'>
 						<SolutionMenu
 							statement={statement}
-							isAuthorized={_isAuthorized}
+							isAuthorized={isAuthorized}
 							isCardMenuOpen={isCardMenuOpen}
 							setIsCardMenuOpen={setIsCardMenuOpen}
 							isEdit={isEdit}

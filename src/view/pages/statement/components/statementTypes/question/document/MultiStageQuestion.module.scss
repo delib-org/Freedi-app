@@ -8,6 +8,10 @@
 	margin-top: 10px;
 }
 
+.add-stage {
+	margin-bottom: 4rem;
+}
+
 .stagesWrapper {
 	padding-top: 2rem;
 	background-color: white;
@@ -17,6 +21,18 @@
 	margin: 2rem 0;
 	max-width: var(--wrapper);
 	width: 100%;
+
+	.description {
+		font-size: 1.1rem;
+		font-weight: 400;
+		margin: 1.8rem 36px 1rem 36px;
+		color: var(--text-body);
+
+		@media screen and (max-width: 600px) {
+			margin: 1.2rem 36px 3rem 36px;
+
+		}
+	}
 
 	>div {
 		&:first-child {

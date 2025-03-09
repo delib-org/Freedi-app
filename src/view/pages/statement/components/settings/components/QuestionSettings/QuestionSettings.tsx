@@ -4,16 +4,16 @@ import { StatementSettingsProps } from '../../settingsTypeHelpers';
 import SectionTitle from '../sectionTitle/SectionTitle';
 import './QuestionSettings.scss';
 import { setQuestionTypeToDB } from '@/controllers/db/statementSettings/setStatementSettings';
-import { QuestionType, StatementType } from '@/types/TypeEnums';
-import { useLanguage } from '@/controllers/hooks/useLanguages';
+import { QuestionType, StatementType } from 'delib-npm';
 import DocumentIcon from '@/assets/icons/paper.svg?react';
 import SimpleIcon from '@/assets/icons/navQuestionsIcon.svg?react';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 
 const QuestionSettings: FC<StatementSettingsProps> = ({
 	statement,
 	// setStatementToEdit,
 }) => {
-	const { t } = useLanguage();
+	const { t } = useUserConfig();
 	try {
 		const { questionSettings } = statement;
 		if (statement.statementType !== StatementType.question) return null;

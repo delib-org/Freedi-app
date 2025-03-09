@@ -2,8 +2,7 @@ import { FireStore } from '../config';
 import { onSnapshot, Unsubscribe, doc } from 'firebase/firestore';
 import { setChoseBy } from '@/redux/choseBy/choseBySlice';
 import { store } from '@/redux/store';
-import { Collections } from '@/types/TypeEnums';
-import { ChoseBy, defaultChoseBySettings } from '@/types/choseBy/ChoseByTypes';
+import { ChoseBy, defaultChoseBySettings, Collections } from 'delib-npm';
 
 export function listenToChoseBy(statementId: string | undefined): Unsubscribe {
 	try {

@@ -1,7 +1,6 @@
 import { doc, setDoc } from 'firebase/firestore';
 import { FireStore } from '../config';
-import { Collections } from '@/types/TypeEnums';
-import { ResultsBy } from '@/types/results/Results';
+import { ResultsBy, Collections } from 'delib-npm';
 
 export async function updateResultsSettings(
 	statementId: string,

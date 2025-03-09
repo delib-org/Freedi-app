@@ -9,7 +9,8 @@ import SmileIcon from '@/assets/icons/smileIcon.svg?react';
 
 // Statement helpers
 import { setEvaluationToDB } from '@/controllers/db/evaluation/setEvaluation';
-import { Statement } from '@/types/statement/StatementTypes';
+import { Statement } from 'delib-npm';
+import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 
 interface ThumbProps {
 	evaluation: number;
@@ -26,11 +27,13 @@ const Thumb: FC<ThumbProps> = ({
 	setConVote,
 	setProVote,
 }) => {
+	const { creator } = useAuthentication();
+
 	const handleVote = (isUp: boolean) => {
 		if (isUp) {
 			if (evaluation > 0) {
 				// Set evaluation in DB
-				setEvaluationToDB(statement, 0);
+				setEvaluationToDB(statement, creator, 0);
 
 				// if evaluation is 0 user didn't vote yet so don't do anything
 				if (evaluation === 0) return;
@@ -38,19 +41,19 @@ const Thumb: FC<ThumbProps> = ({
 				// Set local state
 				setProVote((prev) => prev - 1);
 			} else {
-				setEvaluationToDB(statement, 1);
+				setEvaluationToDB(statement, creator, 1);
 				setProVote((prev) => prev + 1);
 				if (evaluation === 0) return;
 				setConVote((prev) => prev - 1);
 			}
 		} else {
 			if (evaluation < 0) {
-				setEvaluationToDB(statement, 0);
+				setEvaluationToDB(statement, creator, 0);
 
 				if (evaluation === 0) return;
 				setConVote((prev) => prev - 1);
 			} else {
-				setEvaluationToDB(statement, -1);
+				setEvaluationToDB(statement, creator, -1);
 				setConVote((prev) => prev + 1);
 				if (evaluation === 0) return;
 				setProVote((prev) => prev - 1);

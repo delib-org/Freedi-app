@@ -8,12 +8,11 @@ import SuggestionCards from './components/suggestionCards/SuggestionCards';
 import styles from './statementEvaluationsPage.module.scss';
 import LightBulbIcon from '@/assets/icons/lightBulbIcon.svg?react';
 import X from '@/assets/icons/x.svg?react';
-import { useLanguage } from '@/controllers/hooks/useLanguages';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import Button from '@/view/components/buttons/button/Button';
 import Modal from '@/view/components/modal/Modal';
 import Toast from '@/view/components/toast/Toast';
-import { Statement } from '@/types/statement/StatementTypes';
-import { QuestionStep, StatementType } from '@/types/TypeEnums';
+import { QuestionStep, StatementType, Statement } from 'delib-npm';
 
 interface StatementEvaluationPageProps {
 	statement: Statement;
@@ -29,7 +28,7 @@ const StatementEvaluationPage: FC<StatementEvaluationPageProps> = ({
 	// Hooks
 
 	const navigate = useNavigate();
-	const { t } = useLanguage();
+	const { t } = useUserConfig();
 	const isMultiStage = false;
 
 	const currentStep = statement.questionSettings?.currentStep;

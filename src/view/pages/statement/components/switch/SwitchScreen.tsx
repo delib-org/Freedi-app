@@ -1,9 +1,7 @@
-import { Statement } from "@/types/statement/StatementTypes";
+import { Statement, Role, StatementType } from "delib-npm";
 import { ReactNode } from "react";
 import GroupPage from "../statementTypes/group/GroupPage";
 import QuestionPage from "../statementTypes/question/QuestionPage";
-import { StatementType } from "@/types/TypeEnums";
-import { Role } from '@/types/user/UserSettings';
 import { useParams } from "react-router";
 import Triangle from "@/view/components/triangle/Triangle";
 import MindMap from "../map/MindMap";

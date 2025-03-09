@@ -1,5 +1,4 @@
 import { FC, useContext, useEffect, useState } from 'react';
-import StatementBottomNav from '../nav/bottom/StatementBottomNav';
 import { getStepsInfo } from '../settings/components/QuestionSettings/QuestionStageRadioBtn/QuestionStageRadioBtn';
 import StatementInfo from './components/info/StatementInfo';
 import VotingArea from './components/votingArea/VotingArea';
@@ -16,21 +15,25 @@ import './StatementVote.scss';
 
 // Helpers
 import Toast from '@/view/components/toast/Toast';
-import { useLanguage } from '@/controllers/hooks/useLanguages';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import { StatementContext } from '../../StatementCont';
-import { Statement } from '@/types/statement/StatementTypes';
-import { QuestionStep } from '@/types/TypeEnums';
+import { Statement, QuestionStep } from 'delib-npm';
 import { statementSubsSelector } from '@/redux/statements/statementsSlice';
 import { useSelector } from 'react-redux';
+import { setVoteToStore } from '@/redux/vote/votesSlice';
+import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 
 let getVoteFromDB = false;
 
 const StatementVote: FC = () => {
 	// * Hooks * //
 	const dispatch = useAppDispatch();
-	const { t } = useLanguage();
+	const { t } = useUserConfig();
+	const { user } = useAuthentication();
 	const { statement } = useContext(StatementContext);
-	const subStatements = useSelector(statementSubsSelector(statement?.statementId));
+	const subStatements = useSelector(
+		statementSubsSelector(statement?.statementId)
+	);
 
 	const currentStep = statement?.questionSettings?.currentStep;
 	const isCurrentStepVoting = currentStep === QuestionStep.voting;
@@ -50,15 +53,18 @@ const StatementVote: FC = () => {
 	const totalVotes = getTotalVoters(statement);
 
 	useEffect(() => {
-		if (!getVoteFromDB) {
-			getToVoteOnParent(statement?.statementId);
+		if (!getVoteFromDB && user?.uid) {
+			getToVoteOnParent(
+				statement?.statementId,
+				user.uid,
+				(option: Statement) => dispatch(setVoteToStore(option))
+			);
 			getVoteFromDB = true;
 		}
-	}, [statement?.statementId, dispatch]);
+	}, [statement?.statementId, dispatch, user?.uid]);
 
 	return (
 		<>
-
 			<div className='statement-vote'>
 				{showMultiStageMessage && (
 					<Toast
@@ -93,10 +99,6 @@ const StatementVote: FC = () => {
 					/>
 				</Modal>
 			)}
-
-			<div className='page__footer'>
-				<StatementBottomNav />
-			</div>
 		</>
 	);
 };

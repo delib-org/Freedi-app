@@ -1,8 +1,5 @@
 import { createSelector } from '@reduxjs/toolkit';
-import { FC, useEffect, useMemo, useState } from 'react';
-
-// Third party imports
-import { useSelector } from 'react-redux';
+import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router';
 
 // firestore
@@ -27,18 +24,17 @@ import {
 } from '@/controllers/db/subscriptions/setSubscriptions';
 
 // Redux Store
-import { listenToUserSettings } from '@/controllers/db/users/getUserDB';
 import { statementTitleToDisplay } from '@/controllers/general/helpers';
-import { useIsAuthorized } from '@/controllers/hooks/authHooks';
 import { useAppDispatch } from '@/controllers/hooks/reduxHooks';
 import { MapProvider } from '@/controllers/hooks/useMap';
 import { RootState } from '@/redux/store';
-import { userSelector } from '@/redux/users/userSlice';
 import Modal from '@/view/components/modal/Modal';
-import { StatementType, Access, QuestionType } from '@/types/TypeEnums';
-import { User } from '@/types/user/User';
-import { Role } from '@/types/user/UserSettings';
+
 import { statementSelector } from '@/redux/statements/statementsSlice';
+import { Role, StatementType, Access, QuestionType, User } from 'delib-npm';
+import { useAuthorization } from '@/controllers/hooks/useAuthorization';
+import { useSelector } from 'react-redux';
+import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 
 // Create selectors
 export const subStatementsSelector = createSelector(
@@ -50,23 +46,17 @@ export const subStatementsSelector = createSelector(
 			.sort((a, b) => a.createdAt - b.createdAt)
 );
 
-const StatementMain: FC = () => {
+export default function StatementMain() {
 	// Hooks
 	const { statementId, stageId } = useParams();
 
 	//TODO:create a check with the parent statement if subscribes. if not subscribed... go according to the rules of authorization
-	const {
-		error,
-		isAuthorized,
-		loading,
-		statement,
-		topParentStatement,
-		role,
-	} = useIsAuthorized(statementId);
+	const { isAuthorized, loading, statement, topParentStatement, role } =
+		useAuthorization(statementId);
 
 	// Redux store
 	const dispatch = useAppDispatch();
-	const user = useSelector(userSelector);
+	const { creator } = useAuthentication();
 
 	const stage = useSelector(statementSelector(stageId));
 
@@ -80,10 +70,6 @@ const StatementMain: FC = () => {
 	const [newQuestionType, setNewQuestionType] = useState<QuestionType>(
 		QuestionType.multiStage
 	);
-
-	// const [_, setPasswordCheck] = useState<boolean>(false)
-
-	// Constants
 
 	const handleShowTalker = (_talker: User | null) => {
 		if (!talker) {
@@ -103,7 +89,6 @@ const StatementMain: FC = () => {
 	}
 
 	//in case the url is of undefined screen, navigate to the first available screen
-
 	useEffect(() => {
 		if (statement && screen) {
 			//set navigator tab title
@@ -119,29 +104,28 @@ const StatementMain: FC = () => {
 	useEffect(() => {
 		const unsubscribeFunctions: (() => void)[] = [];
 
-		if (user && statementId) {
+		if (creator && statementId) {
 			// Initialize all listeners and store cleanup functions
 			unsubscribeFunctions.push(
 				listenToStatement(statementId, setIsStatementNotFound),
-				listenToUserSettings(),
 				listenToAllDescendants(statementId), // used for map
-				listenToEvaluations(dispatch, statementId, user?.uid),
+				listenToEvaluations(dispatch, statementId, creator.uid),
 				listenToSubStatements(statementId), // TODO: check if this is needed. It can be integrated under listenToAllDescendants
-				listenToStatementSubscription(statementId, user, dispatch)
+				listenToStatementSubscription(statementId, creator, dispatch)
 			);
 
 			if (stageId) {
 				unsubscribeFunctions.push(
-					listenToStatement(stageId, setIsStatementNotFound),
+					listenToStatement(stageId, setIsStatementNotFound)
 				);
 			}
 		}
 
 		// Cleanup function that calls all unsubscribe functions
 		return () => {
-			unsubscribeFunctions.forEach(unsubscribe => unsubscribe());
+			unsubscribeFunctions.forEach((unsubscribe) => unsubscribe());
 		};
-	}, [user, statementId]);
+	}, [creator, statementId]);
 
 	useEffect(() => {
 		//listen to top parent statement
@@ -163,7 +147,10 @@ const StatementMain: FC = () => {
 	useEffect(() => {
 		if (statement) {
 			(async () => {
-				const isSubscribed = await getIsSubscribed(statementId);
+				const isSubscribed = await getIsSubscribed(
+					statementId,
+					creator.uid
+				);
 
 				// if isSubscribed is false, then subscribe
 				if (
@@ -171,10 +158,17 @@ const StatementMain: FC = () => {
 					statement.membership?.access === Access.close
 				) {
 					// subscribe
-					setStatementSubscriptionToDB(statement, Role.member);
+					setStatementSubscriptionToDB(
+						statement,
+						creator,
+						Role.member
+					);
 				} else {
 					//update subscribed field
-					updateSubscriberForStatementSubStatements(statement);
+					updateSubscriberForStatementSubStatements(
+						statement,
+						creator.uid
+					);
 				}
 			})();
 		}
@@ -206,7 +200,6 @@ const StatementMain: FC = () => {
 	);
 
 	if (isStatementNotFound) return <Page404 />;
-	if (error) return <UnAuthorizedPage />;
 	if (loading) return <LoadingPage />;
 
 	if (isAuthorized) {
@@ -237,6 +230,4 @@ const StatementMain: FC = () => {
 	}
 
 	return <UnAuthorizedPage />;
-};
-
-export default StatementMain;
+}

@@ -4,15 +4,13 @@ import styles from './ChatInput.module.scss';
 
 // Icons
 import { handleAddStatement } from './StatementInputCont';
-import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 
 // Redux Store
-import useDirection from '@/controllers/hooks/useDirection';
-import { useLanguage } from '@/controllers/hooks/useLanguages';
 import useStatementColor from '@/controllers/hooks/useStatementColor';
-import { userSelector } from '@/redux/users/userSlice';
 import SendIcon from '@/view/components/icons/SendIcon';
-import { Statement } from '@/types/statement/StatementTypes';
+import { Statement } from 'delib-npm';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 
 interface Props {
 	statement: Statement;
@@ -22,12 +20,10 @@ const ChatInput: FC<Props> = ({ statement }) => {
 	if (!statement) throw new Error('No statement');
 
 	// Redux hooks
-	const { t } = useLanguage();
-	const user = useAppSelector(userSelector);
+	const { t, rowDirection } = useUserConfig();
+	const { user } = useAuthentication();
 
 	const statementColor = useStatementColor({ statement });
-
-	const direction = useDirection();
 	const [message, setMessage] = useState('');
 
 	const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -81,7 +77,7 @@ const ChatInput: FC<Props> = ({ statement }) => {
 			<form
 				onSubmit={(e) => handleSubmitInput(e)}
 				name='theForm'
-				style={{ flexDirection: direction }}
+				style={{ flexDirection: rowDirection }}
 			>
 				<textarea
 					style={{

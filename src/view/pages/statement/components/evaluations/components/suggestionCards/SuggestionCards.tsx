@@ -5,15 +5,14 @@ import { sortSubStatements } from '../../statementsEvaluationCont';
 import SuggestionCard from './suggestionCard/SuggestionCard';
 import styles from './SuggestionCards.module.scss';
 import EmptyScreen from '../emptyScreen/EmptyScreen';
-import { Statement } from '@/types/statement/StatementTypes';
-import { SortType } from '@/types/TypeEnums';
+import { Statement, SortType } from 'delib-npm';
 import { getStatementFromDB } from '@/controllers/db/statements/getStatement';
 import {
 	setStatement,
 	statementOptionsSelector,
 	statementSelector
 } from '@/redux/statements/statementsSlice';
-import { SelectionFunction } from '@/types/evaluation/Evaluation';
+import { SelectionFunction } from 'delib-npm';
 
 interface Props {
 	propSort?: SortType;
@@ -23,6 +22,7 @@ interface Props {
 
 const SuggestionCards: FC<Props> = ({ propSort, selectionFunction, subStatements: propSubStatements }) => {
 	const { sort: _sort, statementId } = useParams();
+
 	const sort = propSort || _sort || SortType.accepted;
 	const dispatch = useDispatch();
 	const statement = useSelector(statementSelector(statementId));
@@ -39,11 +39,11 @@ const SuggestionCards: FC<Props> = ({ propSort, selectionFunction, subStatements
 		: _subStatements);
 
 	useEffect(() => {
-		if (!statement)
+		if (!statement && statementId)
 			getStatementFromDB(statementId).then((statement: Statement) =>
 				dispatch(setStatement(statement))
 			);
-	}, [statement]);
+	}, [statement, statementId]);
 
 	useEffect(() => {
 		const { totalHeight: _totalHeight } = sortSubStatements(

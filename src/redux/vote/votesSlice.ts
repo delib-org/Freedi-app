@@ -3,8 +3,7 @@ import type { PayloadAction } from '@reduxjs/toolkit';
 import { RootState } from '../store';
 
 import { updateArray } from '@/controllers/general/helpers';
-import { Statement, StatementSchema } from '@/types/statement/StatementTypes';
-import { Vote, getVoteId } from '@/types/vote';
+import { Statement, StatementSchema, Vote, getVoteId } from 'delib-npm';
 import { parse } from 'valibot';
 
 // Define a type for the slice state
@@ -27,9 +26,12 @@ export const votesSlicer = createSlice({
 
 				const newVote: Vote = {
 					statementId: statement.statementId,
-					userId: statement.creatorId,
+					userId: statement.creator.uid,
 					parentId: statement.parentId,
-					voteId: getVoteId(statement.creatorId, statement.parentId),
+					voteId: getVoteId(
+						statement.creator.uid,
+						statement.parentId
+					),
 					createdAt: new Date().getTime(),
 					lastUpdate: new Date().getTime(),
 				};

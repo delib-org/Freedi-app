@@ -14,8 +14,7 @@ import { initializeApp } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 
 // Import collection constants
-import { Collections } from '../../src/types/TypeEnums';
-import { functionConfig } from '../../src/types/ConfigFunctions';
+import { Collections, functionConfig } from 'delib-npm';
 
 // Import function modules
 import {
@@ -31,7 +30,7 @@ import {
 } from './fn_statements';
 import { updateVote } from './fn_vote';
 import { setAdminsToNewStatement } from './fn_roles';
-import { updateStatementNumberOfMembers } from './fn_subscriptions';
+import { updateSubscriptionsSimpleStatement } from './fn_subscriptions';
 import {
 	getRandomStatements,
 	getTopStatements,
@@ -41,7 +40,6 @@ import { findSimilarStatements } from './fn_findSimilarStatements';
 import { updateApprovalResults } from './fn_approval';
 import { setImportanceToStatement } from './fn_importance';
 import { updateAgrees } from './fn_agree';
-import { setUserSettings } from './fn_users';
 import { updateStatementWithViews } from './fn_views';
 import { getInitialMCData } from './fn_massConsensus';
 
@@ -59,12 +57,12 @@ console.info('Environment:', isProduction ? 'Production' : 'Development');
 const corsConfig = isProduction
 	? ['https://freedi.tech', 'https://delib.web.app']
 	: [
-		'https://freedi-test.web.app',
-		'https://delib-5.web.app',
-		'https://freedi.tech',
-		'https://delib.web.app',
-		'http://localhost:5173',
-	];
+			'https://freedi-test.web.app',
+			'https://delib-5.web.app',
+			'https://freedi.tech',
+			'https://delib.web.app',
+			'http://localhost:5173',
+		];
 
 /**
  * Creates a wrapper for HTTP functions with standardized error handling
@@ -100,7 +98,12 @@ const wrapHttpFunction = (
  */
 
 //@ts-ignore
-const createFirestoreFunction = (path: string, triggerType: any, callback: Function, functionName: string) => {
+const createFirestoreFunction = (
+	path: string,
+	triggerType: any,
+	callback: Function,
+	functionName: string
+) => {
 	return triggerType(
 		{
 			document: path,
@@ -131,14 +134,6 @@ exports.getQuestionOptions = wrapHttpFunction(getQuestionOptions);
 // FIRESTORE TRIGGER FUNCTIONS
 // --------------------------
 
-// User functions
-exports.setUserSettings = createFirestoreFunction(
-	`/${Collections.users}/{userId}`,
-	onDocumentCreated,
-	setUserSettings,
-	'setUserSettings'
-);
-
 // Statement functions
 exports.updateParentWithNewMessage = createFirestoreFunction(
 	`/${Collections.statements}/{statementId}`,
@@ -162,11 +157,18 @@ exports.updateStatementWithViews = createFirestoreFunction(
 );
 
 // Subscription functions
-exports.updateMembers = createFirestoreFunction(
-	`/${Collections.statementsSubscribe}/{subscriptionId}`,
-	onDocumentWritten,
-	updateStatementNumberOfMembers,
-	'updateMembers'
+// exports.updateNumberOfMembers = createFirestoreFunction(
+// 	`/${Collections.statementsSubscribe}/{subscriptionId}`,
+// 	onDocumentCreated,
+// 	updateStatementNumberOfMembers,
+// 	'updateNumberOfMembers'
+// );
+
+exports.updateSubscriptionsSimpleStatement = createFirestoreFunction(
+	`/${Collections.statements}/{statementId}`,
+	onDocumentUpdated,
+	updateSubscriptionsSimpleStatement,
+	'updateSubscriptionsSimpleStatement'
 );
 
 // Evaluation functions

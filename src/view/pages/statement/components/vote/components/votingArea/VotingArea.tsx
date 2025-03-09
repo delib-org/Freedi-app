@@ -7,8 +7,7 @@ import useWindowDimensions from '@/controllers/hooks/useWindowDimentions';
 
 import { useSelector } from 'react-redux';
 import { statementSelectorById } from '@/redux/statements/statementsSlice';
-import { Statement } from '@/types/statement/StatementTypes';
-import { DeliberativeElement } from '@/types/TypeEnums';
+import { DeliberativeElement, Statement } from 'delib-npm';
 
 interface VotingAreaProps {
 	setStatementInfo: React.Dispatch<
