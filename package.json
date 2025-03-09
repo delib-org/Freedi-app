@@ -1,7 +1,7 @@
 {
 	"name": "freedi-app",
 	"private": true,
-	"version": "5.4",
+	"version": "5.4.0",
 	"type": "module",
 	"scripts": {
 		"preview": "vite preview",
@@ -14,18 +14,22 @@
 		"build:dev": "tsc && vite build --mode development",
 		"build:test": "tsc && vite build --mode testing",
 		"dev:all": "npm-run-all -p dev deve devf",
-		"lint": "eslint --fix",
+		"lint": "eslint \"**/*.{ts,tsx}\"",
+		"lint:fix": "eslint --fix \"**/*.{ts,tsx}\"",
 		"typecheck": "tsc",
 		"check-all": "npm-run-all lint typecheck build",
+		"deploy:rules": "firebase use prod && firebase deploy --only firestore:rules,storage",
+		"deploy:rules:dev": "firebase use dev && firebase deploy --only firestore:rules,storage",
+		"deploy:rules:test": "firebase use test && firebase deploy --only firestore:rules,storage",
 		"deploy:h": "npm run build && firebase use prod && firebase deploy --only hosting:prod",
 		"deploy:h:dev": "npm run build:dev && firebase use dev && firebase deploy --only hosting:dev",
 		"deploy:h:test": "npm run build:test && firebase use test && firebase deploy --only hosting:test",
 		"deploy:f": "cd functions && npm run build && firebase use prod && firebase deploy --only functions",
 		"deploy:f:dev": "cd functions && firebase use dev && firebase deploy --only functions",
 		"deploy:f:test": "cd functions && firebase use test && firebase deploy --only functions",
-		"deploy": "npm run deploy:h && npm run deploy:f",
-		"deploy:dev": "npm run deploy:h:dev && npm run deploy:f:dev",
-		"deploy:test": "npm run deploy:h:test && npm run deploy:f:test"
+		"deploy": "npm run deploy:h && npm run deploy:f && npm run deploy:rules",
+		"deploy:dev": "npm-run-all deploy:h:dev deploy:f:dev deploy:rules:dev",
+		"deploy:test": "npm run deploy:h:test && npm run deploy:f:test && npm run deploy:rules:test"
 	},
 	"dependencies": {
 		"@reduxjs/toolkit": "^1.9.5",
@@ -37,7 +41,7 @@
 		"react-redux": "^8.1.1",
 		"react-router": "^7.1.5",
 		"reactflow": "^11.11.1",
-		"valibot": "^1.0.0-beta.14"
+		"valibot": "^1.0.0-rc.1"
 	},
 	"devDependencies": {
 		"@dagrejs/dagre": "^1.0.4",

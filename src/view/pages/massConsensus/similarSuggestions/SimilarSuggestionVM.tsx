@@ -4,14 +4,21 @@ import {
 	createStatement,
 	setStatementToDB,
 } from '@/controllers/db/statements/setStatements';
+import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 
-import { GeneratedStatement, Statement, MassConsensusPageUrls, StatementType } from 'delib-npm';
+import {
+	GeneratedStatement,
+	Statement,
+	MassConsensusPageUrls,
+	StatementType,
+} from 'delib-npm';
 
 import { useNavigate, useParams } from 'react-router';
 
 export function useSimilarSuggestions() {
 	const navigate = useNavigate();
 	const { statementId: parentId } = useParams<{ statementId: string }>();
+	const { creator } = useAuthentication();
 
 	async function handleSetSuggestionToDB(
 		statement: Statement | GeneratedStatement
@@ -24,21 +31,23 @@ export function useSimilarSuggestions() {
 			//if statementId === null save new to DB
 			if (!statement.statementId) {
 				const newStatement: Statement = createStatement({
+					creator,
 					text: statement.statement,
 					parentStatement,
 					statementType: StatementType.option,
 				});
 				const { statementId: newStatementId } = await setStatementToDB({
+					creator,
 					statement: newStatement,
 					parentStatement,
 				});
 				if (!newStatementId)
 					throw new Error('Error saving statement to DB');
-				await setEvaluationToDB(newStatement, 1);
+				await setEvaluationToDB(newStatement, creator, 1);
 			} else {
 				const newStatement = statement as Statement;
 				//if statementId !== null evaluate +1 the statement
-				await setEvaluationToDB(newStatement, 1);
+				await setEvaluationToDB(newStatement, creator, 1);
 			}
 
 			navigate(

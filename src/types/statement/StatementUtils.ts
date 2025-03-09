@@ -3,11 +3,11 @@ import { StatementType } from '../TypeEnums';
 import { getRandomUID } from '../TypeUtils';
 import { StageSelectionType } from '../stage/stageTypes';
 import { parse } from 'valibot';
-import { User } from '../user/User';
+import { Creator } from '../user/User';
 
 interface CreateBasicStatementProps {
 	parentStatement: Statement;
-	user: User;
+	creator: Creator;
 	stageSelectionType?: StageSelectionType;
 	statementType?: StatementType;
 	statement: string;
@@ -16,7 +16,7 @@ interface CreateBasicStatementProps {
 
 export function createBasicStatement({
 	parentStatement,
-	user,
+	creator,
 	stageSelectionType,
 	statementType,
 	statement,
@@ -28,9 +28,9 @@ export function createBasicStatement({
 			description: description ?? '',
 			statementType: statementType ?? StatementType.statement,
 			parentId: parentStatement.statementId,
-			stageSelectionType: stageSelectionType ?? StageSelectionType.consensus,
-			creatorId: user.uid,
-			creator: user,
+			stageSelectionType:
+				stageSelectionType ?? StageSelectionType.consensus,
+			creator,
 			consensus: 0,
 			voted: 0,
 			statementId: getRandomUID(),

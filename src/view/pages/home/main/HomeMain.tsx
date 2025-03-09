@@ -13,14 +13,17 @@ import { topSubscriptionsSelector } from '@/redux/statements/statementsSlice';
 // Custom components
 import Footer from '@/view/components/footer/Footer';
 import PeopleLoader from '@/view/components/loaders/PeopleLoader';
+import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 
 const HomeMain = () => {
 	// Hooks
 	const navigate = useNavigate();
 	const [loading, setLoading] = useState(true);
+	const { user } = useAuthentication();
 
 	const topSubscriptions = useAppSelector(topSubscriptionsSelector)
-		.sort((a, b) => b.lastUpdate - a.lastUpdate);
+		.sort((a, b) => b.lastUpdate - a.lastUpdate)
+		.filter((sub) => sub.user.uid === user?.uid);
 
 	function handleAddStatement() {
 		navigate('/home/addStatement', {
@@ -50,7 +53,8 @@ const HomeMain = () => {
 			<div
 				className='wrapper main-wrap'
 				style={{
-					justifyContent: topSubscriptions.length > 0 ? 'start' : 'center',
+					justifyContent:
+						topSubscriptions.length > 0 ? 'start' : 'center',
 				}}
 			>
 				{!loading ? (

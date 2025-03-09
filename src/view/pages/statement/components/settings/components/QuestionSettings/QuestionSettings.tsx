@@ -5,15 +5,15 @@ import SectionTitle from '../sectionTitle/SectionTitle';
 import './QuestionSettings.scss';
 import { setQuestionTypeToDB } from '@/controllers/db/statementSettings/setStatementSettings';
 import { QuestionType, StatementType } from 'delib-npm';
-import { useLanguage } from '@/controllers/hooks/useLanguages';
 import DocumentIcon from '@/assets/icons/paper.svg?react';
 import SimpleIcon from '@/assets/icons/navQuestionsIcon.svg?react';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 
 const QuestionSettings: FC<StatementSettingsProps> = ({
 	statement,
 	// setStatementToEdit,
 }) => {
-	const { t } = useLanguage();
+	const { t } = useUserConfig();
 	try {
 		const { questionSettings } = statement;
 		if (statement.statementType !== StatementType.question) return null;
@@ -35,7 +35,7 @@ const QuestionSettings: FC<StatementSettingsProps> = ({
 					label='Document Question'
 					checked={
 						questionSettings?.questionType ===
-						QuestionType.multiStage || false
+							QuestionType.multiStage || false
 					}
 					setChecked={handleQuestionType}
 					textChecked={t('Document Question')}

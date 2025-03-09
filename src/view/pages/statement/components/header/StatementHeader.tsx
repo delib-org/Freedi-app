@@ -1,11 +1,11 @@
-import React, { FC, useState } from 'react';
+import { FC, useState } from 'react';
 import { useLocation } from 'react-router';
 import StatementTopNav from '../nav/top/StatementTopNav';
 import InvitePanel from './invitePanel/InvitePanel';
-import { logOut } from '@/controllers/db/auth';
+import { logOut } from '@/controllers/db/authenticationUtils';
 import { setFollowMeDB } from '@/controllers/db/statements/setStatements';
-import { useLanguage } from '@/controllers/hooks/useLanguages';
 import { Statement } from 'delib-npm';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 
 interface Props {
 	statement: Statement | undefined;
@@ -23,7 +23,7 @@ const StatementHeader: FC<Props> = ({
 	const [isHeaderMenuOpen, setIsHeaderMenuOpen] = useState(false);
 	const [showInvitationPanel, setShowInvitationPanel] = useState(false);
 
-	const { t, dir } = useLanguage();
+	const { t, dir } = useUserConfig();
 
 	function handleShare() {
 		const baseUrl = window.location.origin;

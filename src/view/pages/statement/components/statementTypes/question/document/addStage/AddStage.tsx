@@ -1,18 +1,20 @@
 import React, { FC, useContext, useState } from 'react';
-import { useLanguage } from '@/controllers/hooks/useLanguages';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import styles from './AddStage.module.scss';
 import Button, { ButtonType } from '@/view/components/buttons/button/Button';
 import { saveStatementToDB } from '@/controllers/db/statements/setStatements';
 import { StatementContext } from '@/view/pages/statement/StatementCont';
 import { StageSelectionType, StatementType } from 'delib-npm';
+import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 
 interface AddStageProps {
 	setShowAddStage: (showAddStage: boolean) => void;
 }
 
 const AddStage: FC<AddStageProps> = ({ setShowAddStage }) => {
-	const { t } = useLanguage();
+	const { t } = useUserConfig();
 	const { statement } = useContext(StatementContext);
+	const { creator } = useAuthentication();
 	const [isShaking, setIsShaking] = useState(false);
 
 	function handleCloseModal() {
@@ -37,6 +39,7 @@ const AddStage: FC<AddStageProps> = ({ setShowAddStage }) => {
 
 		if (!statement || !stageSelectionType) return;
 		await saveStatementToDB({
+			creator,
 			text: name,
 			description,
 			stageSelectionType,

@@ -5,7 +5,7 @@ import LightBulbIcon from '@/assets/icons/lightBulbIcon.svg?react';
 import QuestionMarkIcon from '@/assets/icons/questionIcon.svg?react';
 import { deleteStatementFromDB } from '@/controllers/db/statements/deleteStatements';
 import { updateIsQuestion } from '@/controllers/db/statements/setStatements';
-import { useLanguage } from '@/controllers/hooks/useLanguages';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import Menu from '@/view/components/menu/Menu';
 import MenuOption from '@/view/components/menu/MenuOption';
 import { Statement, StatementType } from 'delib-npm';
@@ -29,7 +29,7 @@ const SolutionMenu: FC<Props> = ({
 	setIsEdit,
 	handleSetOption,
 }) => {
-	const { t } = useLanguage();
+	const { t } = useUserConfig();
 
 	const isOption = statement.statementType === StatementType.option;
 	const isResearch = statement.statementType === StatementType.question;

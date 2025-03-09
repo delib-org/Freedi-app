@@ -2,13 +2,16 @@ import { FC, memo } from 'react';
 import { useSelector } from 'react-redux';
 import Dot from './dot/Dot';
 import styles from './Triangle.module.scss';
-import { useLanguage } from '@/controllers/hooks/useLanguages';
-import { statementOptionsSelector, statementSelector } from '@/redux/statements/statementsSlice';
+import {
+	statementOptionsSelector,
+	statementSelector,
+} from '@/redux/statements/statementsSlice';
 import { Statement } from 'delib-npm';
 import { useParams } from 'react-router';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 
 const Triangle: FC = () => {
-	const { t } = useLanguage();
+	const { t } = useUserConfig();
 	const { statementId } = useParams();
 	const statement = useSelector(statementSelector(statementId));
 	const subStatements: Statement[] = useSelector(
