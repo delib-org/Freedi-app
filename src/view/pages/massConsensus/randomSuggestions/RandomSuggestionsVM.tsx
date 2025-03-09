@@ -2,10 +2,12 @@ import firebaseConfig from '@/controllers/db/configKey';
 import { listenToEvaluation } from '@/controllers/db/evaluation/getEvaluation';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { setMassConsensusStatements } from '@/redux/statements/statementsSlice';
-import { functionConfig } from '@/types/ConfigFunctions';
-import { SelectionFunction } from '@/types/evaluation/Evaluation';
-import { Statement } from '@/types/statement/StatementTypes';
-import { MassConsensusPageUrls } from '@/types/TypeEnums';
+import {
+	Statement,
+	MassConsensusPageUrls,
+	functionConfig,
+	SelectionFunction,
+} from 'delib-npm';
 
 import { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
@@ -17,6 +19,11 @@ export function useRandomSuggestions() {
 	const dispatch = useDispatch();
 	const [subStatements, setSubStatements] = useState<Statement[]>([]);
 	const { statementId } = useParams<{ statementId: string }>();
+
+	const navigateToTop = () =>
+		navigate(
+			`/mass-consensus/${statementId}/${MassConsensusPageUrls.topSuggestions}`
+		);
 
 	useEffect(() => {
 		if (!user)
@@ -69,5 +76,5 @@ export function useRandomSuggestions() {
 		}
 	};
 
-	return { subStatements };
+	return { subStatements, navigateToTop };
 }

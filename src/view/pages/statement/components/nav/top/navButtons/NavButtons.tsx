@@ -1,4 +1,3 @@
-import { Statement } from '@/types/statement/StatementTypes';
 import NavigationButtons from '../navigationButtons/NavigationButtons';
 import HomeButton from '../../../header/HomeButton';
 import { useEffect, useState } from 'react';
@@ -11,7 +10,7 @@ import View from '@/assets/icons/view.svg?react';
 import MapIcon from '@/assets/icons/navMainPageIcon.svg?react';
 
 import styles from '../StatementTopNav.module.scss';
-import { StatementType } from '@/types/TypeEnums';
+import { StatementType, Statement } from 'delib-npm';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 
 interface NavButtonsProps {

@@ -6,11 +6,11 @@ import { useSelector } from 'react-redux';
 import { statementSelector } from '@/redux/statements/statementsSlice';
 import { useEffect } from 'react';
 import { useInitialQuestion } from './InitialQuestionVM';
-import { MassConsensusPageUrls } from '@/types/TypeEnums';
+import { MassConsensusPageUrls } from 'delib-npm';
 import Loader from '@/view/components/loaders/Loader';
 import styles from './InitialQuestion.module.scss';
+import FooterMassConsensus from '../footerMassConsensus/FooterMassConsensus';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
-import MassConsensusFooter from '../MassConsensusFooter/MassConsensusFooter';
 
 const InitialQuestion = () => {
 	const navigate = useNavigate();
@@ -53,7 +53,7 @@ const InitialQuestion = () => {
 				<h3>{t('Your description')}</h3>
 				<input type='text' onChange={changeInput} />
 			</div>
-			<MassConsensusFooter
+			<FooterMassConsensus
 				goTo={MassConsensusPageUrls.randomSuggestions}
 				onNext={handleSetInitialSuggestion}
 				isNextActive={ifButtonEnabled}

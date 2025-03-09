@@ -2,8 +2,8 @@ import { Link, useParams } from 'react-router';
 import BackIcon from '@/assets/icons/chevronLeftIcon.svg?react';
 import HomeIcon from '@/assets/icons/homeIcon.svg?react';
 import styles from './HeaderMassConsensus.module.scss';
-import { useLanguageParams } from '../useParamsLang/useLanguageParams';
-import { MassConsensusPageUrls } from '@/types/TypeEnums';
+import { MassConsensusPageUrls } from 'delib-npm';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 
 const HeaderMassConsensus = ({
 	backTo,
@@ -17,7 +17,7 @@ const HeaderMassConsensus = ({
 	isIntro?: boolean;
 }) => {
 	const { statementId } = useParams<{ statementId: string }>();
-	const { dir, lang } = useLanguageParams();
+	const { dir, currentLanguage } = useUserConfig();
 
 	return (
 		<div className={styles.headerMC} style={{ direction: dir }}>
@@ -33,7 +33,7 @@ const HeaderMassConsensus = ({
 					to={
 						backToApp
 							? `/statement/${statementId}`
-							: `/mass-consensus/${statementId}/${backTo}?lang=${lang}`
+							: `/mass-consensus/${statementId}/${backTo}?lang=${currentLanguage}`
 					}
 				>
 					<BackIcon />

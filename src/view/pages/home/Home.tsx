@@ -1,5 +1,9 @@
 import { useEffect, useState } from 'react';
+
+// Third party imports
 import { Outlet, useLocation, useParams } from 'react-router';
+
+// Redux Store
 import HomeHeader from './HomeHeader';
 import {
 	getNewStatementsFromSubscriptions,
@@ -10,13 +14,6 @@ import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 // Helpers
 
 // Custom Components
-
-interface ListenedStatements {
-	unsubFunction: () => void;
-	statementId: string;
-}
-
-export const listenedStatements: Array<ListenedStatements> = [];
 
 export default function Home() {
 	// Hooks
@@ -51,15 +48,8 @@ export default function Home() {
 		}
 
 		return () => {
-			if (unsubscribe) {
-				unsubscribe();
-				listenedStatements.forEach((ls) => {
-					ls.unsubFunction();
-				});
-			}
-			if (updatesUnsubscribe) {
-				updatesUnsubscribe();
-			}
+			unsubscribe();
+			updatesUnsubscribe();
 		};
 	}, [user]);
 

@@ -4,9 +4,8 @@ import styles from './StagePage.module.scss';
 import StatementBottomNav from '../../nav/bottom/StatementBottomNav';
 import StatementVote from '../../vote/StatementVote';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
-import { Statement } from '@/types/statement/StatementTypes';
-import { EvaluationUI } from '@/types/evaluation/Evaluation';
 import { StatementContext } from '../../../StatementCont';
+import { Statement, EvaluationUI } from 'delib-npm';
 
 const StagePage = () => {
 	const { t } = useUserConfig();
@@ -39,12 +38,14 @@ const StagePage = () => {
 
 	return (
 		<>
-			<h2>
-				{t('Stage')}
-				{statement?.statement && stageName}
-			</h2>
-			<p className='mb-4'>Stage description</p>
-			<StagePageSwitch statement={statement} />
+			<div className={`${styles['stage-page']} wrapper`}>
+				<h2>
+					{t('Stage')}
+					{statement?.statement && stageName}
+				</h2>
+				<p className='mb-4'>Stage description</p>
+				<StagePageSwitch statement={statement} />
+			</div>
 			<div className={styles.bottomNav}>
 				<StatementBottomNav />
 			</div>

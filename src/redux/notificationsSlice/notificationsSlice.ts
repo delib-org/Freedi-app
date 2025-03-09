@@ -1,16 +1,16 @@
 import { createSlice } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
 import { RootState } from '../store';
-import { NotificationType } from '@/types/notification/Notification';
+import { NotificationType } from 'delib-npm';
 import { updateArray } from '@/controllers/general/helpers';
 
 // Define a type for the slice state
-interface notificationsState {
+interface NotificationsState {
 	inAppNotifications: NotificationType[];
 }
 
 // Define the initial state using that type
-const initialState: notificationsState = {
+const initialState: NotificationsState = {
 	inAppNotifications: [],
 };
 

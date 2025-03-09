@@ -8,9 +8,9 @@ import { handleAddStatement } from './StatementInputCont';
 // Redux Store
 import useStatementColor from '@/controllers/hooks/useStatementColor';
 import SendIcon from '@/view/components/icons/SendIcon';
-import { Statement } from '@/types/statement/StatementTypes';
-import { useAuthentication } from '@/controllers/hooks/useAuthentication';
+import { Statement } from 'delib-npm';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 
 interface Props {
 	statement: Statement;

@@ -1,25 +1,26 @@
 import React, { useEffect } from 'react';
-import { useLanguageParams } from '../useParamsLang/useLanguageParams';
 import { useNavigate, useParams } from 'react-router';
 import HeaderMassConsensus from '../headerMassConsensus/HeaderMassConsensus';
-import { MassConsensusPageUrls } from '@/types/TypeEnums';
 import { useSelector } from 'react-redux';
 import { selectSimilarStatements } from '@/redux/massConsensus/massConsensusSlice';
 import SimilarCard from './similarCard/SimilarCard';
-import { Statement } from '@/types/statement/StatementTypes';
-import { GeneratedStatement } from '@/types/massConsensus/massConsensusModel';
+import {
+	Statement,
+	MassConsensusPageUrls,
+	GeneratedStatement,
+} from 'delib-npm';
 import styles from './SimilarSuggestions.module.scss';
 import { useSimilarSuggestions } from './SimilarSuggestionVM';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import TitleMassConsensus from '../TitleMassConsensus/TitleMassConsensus';
+import FooterMassConsensus from '../footerMassConsensus/FooterMassConsensus';
 
 const SimilarSuggestions = () => {
 	const navigate = useNavigate();
-	const { dir } = useLanguageParams();
 	const { statementId } = useParams<{ statementId: string }>();
 	const { handleSetSuggestionToDB } = useSimilarSuggestions();
 	const similarSuggestions = useSelector(selectSimilarStatements);
-	const { t } = useUserConfig();
+	const { t, dir } = useUserConfig();
 
 	const [selected, setSelected] = React.useState<number | null>(null);
 
@@ -33,7 +34,10 @@ const SimilarSuggestions = () => {
 	}, [similarSuggestions, navigate, statementId]);
 
 	return (
-		<div style={{ direction: dir }}>
+		<div
+			className={styles['similar-suggestions']}
+			style={{ direction: dir }}
+		>
 			<HeaderMassConsensus
 				title={t('similar suggestions')}
 				backTo={MassConsensusPageUrls.randomSuggestions}
@@ -57,30 +61,13 @@ const SimilarSuggestions = () => {
 					)
 				)}
 			</div>
-			<div className='btns'>
-				<button
-					className='btn btn--secondary btn--large'
-					onClick={() =>
-						navigate(
-							`/mass-consensus/${statementId}/${MassConsensusPageUrls.initialQuestion}`
-						)
-					}
-				>
-					Back
-				</button>
-				{selected !== null && (
-					<button
-						className='btn btn--primary btn--large'
-						onClick={() =>
-							handleSetSuggestionToDB(
-								similarSuggestions[selected]
-							)
-						}
-					>
-						Next
-					</button>
-				)}
-			</div>
+			<FooterMassConsensus
+				goTo={MassConsensusPageUrls.randomSuggestions}
+				isNextActive={selected !== null}
+				onNext={() =>
+					handleSetSuggestionToDB(similarSuggestions[selected])
+				}
+			/>
 		</div>
 	);
 };

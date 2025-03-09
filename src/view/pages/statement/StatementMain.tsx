@@ -29,13 +29,12 @@ import { useAppDispatch } from '@/controllers/hooks/reduxHooks';
 import { MapProvider } from '@/controllers/hooks/useMap';
 import { RootState } from '@/redux/store';
 import Modal from '@/view/components/modal/Modal';
-import { StatementType, Access, QuestionType } from '@/types/TypeEnums';
-import { Creator } from '@/types/user/User';
-import { Role } from '@/types/user/UserSettings';
-import { useAuthorization } from '@/controllers/hooks/useAuthorization';
+
 import { statementSelector } from '@/redux/statements/statementsSlice';
-import { useAuthentication } from '@/controllers/hooks/useAuthentication';
+import { Role, StatementType, Access, QuestionType, User } from 'delib-npm';
+import { useAuthorization } from '@/controllers/hooks/useAuthorization';
 import { useSelector } from 'react-redux';
+import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 
 // Create selectors
 export const subStatementsSelector = createSelector(
@@ -62,7 +61,7 @@ export default function StatementMain() {
 	const stage = useSelector(statementSelector(stageId));
 
 	// Use states
-	const [talker, setTalker] = useState<Creator | null>(null);
+	const [talker, setTalker] = useState<User | null>(null);
 	const [isStatementNotFound, setIsStatementNotFound] = useState(false);
 	const [showNewStatement, setShowNewStatement] = useState<boolean>(false);
 	const [newStatementType, setNewStatementType] = useState<StatementType>(
@@ -72,7 +71,7 @@ export default function StatementMain() {
 		QuestionType.multiStage
 	);
 
-	const handleShowTalker = (_talker: Creator | null) => {
+	const handleShowTalker = (_talker: User | null) => {
 		if (!talker) {
 			setTalker(_talker);
 		} else {

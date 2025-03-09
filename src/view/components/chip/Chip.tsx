@@ -1,9 +1,9 @@
 import styles from './Chip.module.scss';
 import SmileIcon from '@/assets/icons/smileIcon.svg?react';
-import { Creator } from '@/types/user/User';
+import { User } from 'delib-npm';
 
 interface Props {
-	user: Creator | undefined;
+	user: User | undefined;
 }
 
 export default function Chip({ user }: Props) {

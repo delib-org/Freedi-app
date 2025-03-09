@@ -10,10 +10,9 @@ import {
 	query,
 	where,
 	Unsubscribe,
-	updateDoc,
 } from 'firebase/firestore';
 import { FireStore } from '../config';
-import { listenToStatement } from '../statements/listenToStatements';
+import { getStatementFromDB } from '../statements/getStatement';
 import { getStatementSubscriptionId } from '@/controllers/general/helpers';
 import {
 	deleteSubscribedStatement,
@@ -21,15 +20,15 @@ import {
 	setStatementsSubscription,
 } from '@/redux/statements/statementsSlice';
 import { AppDispatch, store } from '@/redux/store';
-import { listenedStatements } from '@/view/pages/home/Home';
-import { Collections } from '@/types/TypeEnums';
-import { Statement } from '@/types/statement/StatementTypes';
 import {
+	Statement,
+	StatementSchema,
 	StatementSubscription,
 	StatementSubscriptionSchema,
-} from '@/types/statement/StatementSubscription';
-import { Role } from '@/types/user/UserSettings';
-import { User } from 'firebase/auth';
+	Role,
+	User,
+	Collections,
+} from 'delib-npm';
 import { parse } from 'valibot';
 
 export const listenToStatementSubSubscriptions = (
@@ -110,72 +109,18 @@ export function listenToStatementSubscriptions(
 				try {
 					const statementSubscription =
 						change.doc.data() as StatementSubscription;
-					if (
-						!Array.isArray(statementSubscription.statement.results)
-					) {
-						const subscriptionRef = doc(
-							FireStore,
-							Collections.statementsSubscribe,
-							statementSubscription.statementsSubscribeId
-						);
-						updateDoc(subscriptionRef, { 'statement.results': [] });
-						statementSubscription.statement.results = [];
-					}
 
-					parse(StatementSubscriptionSchema, statementSubscription);
-
-					//prevent listening to a document statement
-					if (
-						statementSubscription.statement.statementType ===
-						'document'
-					)
-						return;
-
-					if (change.type === 'added') {
-						const unsubFunction = listenToStatement(
-							statementSubscription.statementId
-						);
-
-						const index = listenedStatements.findIndex(
-							(ls) =>
-								ls.statementId ===
-								statementSubscription.statementId
-						);
-						if (index === -1) {
-							listenedStatements.push({
-								unsubFunction,
-								statementId: statementSubscription.statementId,
-							});
-						}
-
+					if (change.type === 'added' || change.type === 'modified')
 						dispatch(
 							setStatementSubscription(statementSubscription)
 						);
-					}
 
-					if (change.type === 'modified') {
-						dispatch(
-							setStatementSubscription(statementSubscription)
-						);
-					}
-
-					if (change.type === 'removed') {
-						const index = listenedStatements.findIndex(
-							(ls) =>
-								ls.statementId ===
-								statementSubscription.statementId
-						);
-						if (index !== -1) {
-							listenedStatements[index].unsubFunction();
-							listenedStatements.splice(index, 1);
-						}
-
+					if (change.type === 'removed')
 						dispatch(
 							deleteSubscribedStatement(
 								statementSubscription.statementId
 							)
 						);
-					}
 				} catch (error) {
 					console.error(
 						'Listen to statement subscriptions each error',
@@ -260,6 +205,121 @@ export async function getTopParentSubscriptionFromDByStatement(
 		return subscription;
 	} catch (error) {
 		console.error(error);
+	}
+}
+
+interface GetTopParentSubscriptionProps {
+	topParentStatement: Statement | undefined;
+	topParentSubscription: StatementSubscription | undefined;
+	error?: boolean;
+}
+
+export async function getTopParentSubscription(
+	statementId: string,
+	userId: string
+): Promise<GetTopParentSubscriptionProps> {
+	try {
+		const statement: Statement | undefined = await getStatement();
+
+		const topParentId = statement.topParentId;
+		if (!topParentId) throw new Error('Top parent id is undefined');
+
+		const topParentSubscriptionId = getStatementSubscriptionId(
+			topParentId,
+			userId
+		);
+
+		//get top subscription
+
+		const topParentSubscription = await getParentSubscription(
+			topParentSubscriptionId
+		);
+
+		if (topParentSubscription) {
+			return {
+				topParentSubscription,
+				topParentStatement: topParentSubscription.statement,
+				error: false,
+			};
+		}
+
+		//get top statement
+
+		const topParentStatement: Statement | undefined =
+			await getTopParentStatement(topParentId);
+
+		return { topParentStatement, topParentSubscription, error: false };
+	} catch (error) {
+		console.error(error);
+
+		return {
+			topParentStatement: undefined,
+			topParentSubscription: undefined,
+			error: true,
+		};
+	}
+
+	async function getTopParentStatement(
+		topParentId: string
+	): Promise<Statement | undefined> {
+		try {
+			const topParentStatement: Statement | undefined = store
+				.getState()
+				.statements.statements.find(
+					(st) => st.statementId === topParentId
+				);
+			if (topParentStatement) return topParentStatement;
+
+			const topParentStatementFromDB =
+				await getStatementFromDB(topParentId);
+
+			if (!topParentStatementFromDB)
+				throw new Error('Top parent statement not found');
+
+			return topParentStatementFromDB;
+		} catch (error) {
+			console.error(error);
+
+			return undefined;
+		}
+	}
+
+	async function getParentSubscription(
+		topParentSubscriptionId: string | undefined
+	) {
+		let topParentSubscription: StatementSubscription | undefined = store
+			.getState()
+			.statements.statementSubscription.find(
+				(sub: StatementSubscription) =>
+					sub.statementsSubscribeId === topParentSubscriptionId
+			);
+
+		if (!topParentSubscription) {
+			if (!topParentSubscriptionId)
+				throw new Error('Top parent subscription id is undefined');
+			topParentSubscription = await getStatementSubscriptionFromDB(
+				topParentSubscriptionId
+			);
+		}
+		if (!topParentSubscription)
+			throw new Error('Top parent subscription not found');
+
+		return parse(StatementSubscriptionSchema, topParentSubscription);
+	}
+
+	async function getStatement() {
+		let statement: Statement | undefined = store
+			.getState()
+			.statements.statements.find(
+				(st: Statement) => st.statementId === statementId
+			);
+
+		if (!statement) {
+			statement = await getStatementFromDB(statementId);
+		}
+		if (!statement) throw new Error('Statement not found');
+
+		return parse(StatementSchema, statement);
 	}
 }
 

@@ -1,15 +1,14 @@
-import { MassConsensusPageUrls, SortType } from '@/types/TypeEnums';
+import { MassConsensusPageUrls, SortType, SelectionFunction } from 'delib-npm';
 import SuggestionCards from '../../statement/components/evaluations/components/suggestionCards/SuggestionCards';
 import HeaderMassConsensus from '../headerMassConsensus/HeaderMassConsensus';
 import useTopSuggestions from './TopSuggestionVM';
 import TitleMassConsensus from '../TitleMassConsensus/TitleMassConsensus';
-import { SelectionFunction } from '@/types/evaluation/Evaluation';
-import MassConsensusFooter from '../MassConsensusFooter/MassConsensusFooter';
+import FooterMassConsensus from '../footerMassConsensus/FooterMassConsensus';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 
 const TopSuggestions = () => {
 	const { t } = useUserConfig();
-	useTopSuggestions();
+	const { navigateToVoting } = useTopSuggestions();
 
 	return (
 		<div>
@@ -26,7 +25,11 @@ const TopSuggestions = () => {
 					propSort={SortType.random}
 				/>
 			</div>
-			<MassConsensusFooter goTo={MassConsensusPageUrls.voting} />
+			<FooterMassConsensus
+				isNextActive={true}
+				onNext={navigateToVoting}
+				goTo={MassConsensusPageUrls.voting}
+			/>
 		</div>
 	);
 };

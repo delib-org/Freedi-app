@@ -4,7 +4,7 @@ import StatementTopNav from '../nav/top/StatementTopNav';
 import InvitePanel from './invitePanel/InvitePanel';
 import { logOut } from '@/controllers/db/authenticationUtils';
 import { setFollowMeDB } from '@/controllers/db/statements/setStatements';
-import { Statement } from '@/types/statement/StatementTypes';
+import { Statement } from 'delib-npm';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 
 interface Props {

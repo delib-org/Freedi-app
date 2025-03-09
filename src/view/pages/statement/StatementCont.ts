@@ -1,14 +1,11 @@
-import { Statement } from '@/types/statement/StatementTypes';
-import { QuestionType, StatementType } from '@/types/TypeEnums';
-import { Creator } from '@/types/user/User';
-import { Role } from '@/types/user/UserSettings';
+import { User, Role, Statement, StatementType, QuestionType } from 'delib-npm';
 import { createContext } from 'react';
 
 interface StatementContextProps {
 	statement: Statement | undefined;
 	stage: Statement | undefined;
-	talker: Creator | null;
-	handleShowTalker: (talker: Creator | null) => void;
+	talker: User | null;
+	handleShowTalker: (talker: User | null) => void;
 	handleSetNewStatement: (showPopup?: boolean) => void;
 	role: Role | undefined;
 	setNewStatementType: (newStatementType: StatementType) => void;

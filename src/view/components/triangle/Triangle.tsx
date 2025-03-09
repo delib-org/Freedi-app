@@ -6,7 +6,7 @@ import {
 	statementOptionsSelector,
 	statementSelector,
 } from '@/redux/statements/statementsSlice';
-import { Statement } from '@/types/statement/StatementTypes';
+import { Statement } from 'delib-npm';
 import { useParams } from 'react-router';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 

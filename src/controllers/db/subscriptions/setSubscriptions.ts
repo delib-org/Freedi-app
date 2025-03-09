@@ -1,19 +1,20 @@
 import { doc, updateDoc, setDoc, Timestamp, getDoc } from 'firebase/firestore';
 import { FireStore } from '../config';
 import { getStatementSubscriptionId } from '@/controllers/general/helpers';
-import { Collections } from '@/types/TypeEnums';
-import { Statement, StatementSchema } from '@/types/statement/StatementTypes';
 import {
-	StatementSubscription,
+	Collections,
+	Statement,
+	StatementSchema,
 	StatementSubscriptionSchema,
-} from '@/types/statement/StatementSubscription';
+	User,
+	Role,
+	StatementSubscription,
+} from 'delib-npm';
 import { parse } from 'valibot';
-import { Role } from '@/types/user/UserSettings';
-import { Creator } from '@/types/user/User';
 
 export async function setStatementSubscriptionToDB(
 	statement: Statement,
-	creator: Creator,
+	creator: User,
 	role: Role = Role.member
 ) {
 	try {
@@ -88,7 +89,7 @@ export async function updateSubscriberForStatementSubStatements(
 export async function setRoleToDB(
 	statement: Statement,
 	role: Role,
-	creator: Creator
+	creator: User
 ): Promise<void> {
 	try {
 		//getting current user role in statement

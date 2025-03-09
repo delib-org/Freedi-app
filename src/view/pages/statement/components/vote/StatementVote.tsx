@@ -1,5 +1,4 @@
 import { FC, useContext, useEffect, useState } from 'react';
-import StatementBottomNav from '../nav/bottom/StatementBottomNav';
 import { getStepsInfo } from '../settings/components/QuestionSettings/QuestionStageRadioBtn/QuestionStageRadioBtn';
 import StatementInfo from './components/info/StatementInfo';
 import VotingArea from './components/votingArea/VotingArea';
@@ -18,12 +17,11 @@ import './StatementVote.scss';
 import Toast from '@/view/components/toast/Toast';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import { StatementContext } from '../../StatementCont';
-import { Statement } from '@/types/statement/StatementTypes';
-import { QuestionStep } from '@/types/TypeEnums';
-import { useAuthentication } from '@/controllers/hooks/useAuthentication';
-import { useSelector } from 'react-redux';
+import { Statement, QuestionStep } from 'delib-npm';
 import { statementSubsSelector } from '@/redux/statements/statementsSlice';
+import { useSelector } from 'react-redux';
 import { setVoteToStore } from '@/redux/vote/votesSlice';
+import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 
 let getVoteFromDB = false;
 
@@ -101,10 +99,6 @@ const StatementVote: FC = () => {
 					/>
 				</Modal>
 			)}
-
-			<div className='page__footer'>
-				<StatementBottomNav />
-			</div>
 		</>
 	);
 };

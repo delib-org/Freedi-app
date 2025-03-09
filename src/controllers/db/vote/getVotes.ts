@@ -7,9 +7,14 @@ import {
 	where,
 } from 'firebase/firestore';
 import { FireStore } from '../config';
-import { Collections } from '@/types/TypeEnums';
-import { Statement, StatementSchema } from '@/types/statement/StatementTypes';
-import { getVoteId, Vote, VoteSchema } from '@/types/vote';
+import {
+	Collections,
+	Statement,
+	StatementSchema,
+	getVoteId,
+	Vote,
+	VoteSchema,
+} from 'delib-npm';
 import { parse } from 'valibot';
 
 // Why get user from firebase when we can pass it as a parameter?

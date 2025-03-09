@@ -11,7 +11,7 @@ import Text from '../text/Text';
 import styles from './EditTitle.module.scss';
 import Save from '@/assets/icons/saveIcon.svg?react';
 import { updateStatementText } from '@/controllers/db/statements/setStatements';
-import { Statement } from '@/types/statement/StatementTypes';
+import { Statement } from 'delib-npm';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 
 interface Props {

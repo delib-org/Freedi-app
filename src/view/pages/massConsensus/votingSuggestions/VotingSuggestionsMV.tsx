@@ -1,11 +1,9 @@
 import firebaseConfig from '@/controllers/db/configKey';
-import { functionConfig } from '@/types/ConfigFunctions';
-import { MassConsensusPageUrls } from '@/types/TypeEnums';
 
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { listenToStatement } from '@/controllers/db/statements/listenToStatements';
-import { Statement } from '@/types/statement/StatementTypes';
+import { Statement, functionConfig, MassConsensusPageUrls } from 'delib-npm';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 
 export function VotingSuggestionsMV() {
@@ -14,6 +12,11 @@ export function VotingSuggestionsMV() {
 
 	const navigate = useNavigate();
 	const { user } = useAuthentication();
+
+	const navigateToFeedback = () =>
+		navigate(
+			`/mass-consensus/${statementId}/${MassConsensusPageUrls.leaveFeedback}`
+		);
 
 	async function fetchTopStatements() {
 		fetch(
@@ -50,5 +53,5 @@ export function VotingSuggestionsMV() {
 			);
 	}, [user]);
 
-	return { subStatements, statementId };
+	return { subStatements, statementId, navigateToFeedback };
 }

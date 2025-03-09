@@ -5,10 +5,10 @@ import {
 } from '@/controllers/general/helpers';
 import './UserAvatar.scss';
 import { StatementContext } from '@/view/pages/statement/StatementCont';
-import { Creator } from '@/types/user/User';
+import { User } from 'delib-npm';
 
 interface UserAvatarProps {
-	user: Creator;
+	user: User;
 }
 
 const UserAvatar: FC<UserAvatarProps> = ({ user }) => {

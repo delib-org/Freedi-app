@@ -11,14 +11,14 @@ import {
 import { FireStore } from '../config';
 import { setEvaluationToStore } from '@/redux/evaluations/evaluationsSlice';
 import { AppDispatch, store } from '@/redux/store';
-import { Collections } from '@/types/TypeEnums';
-import { CreatorSchema } from '@/types/user/User';
 import { parse } from 'valibot';
 import {
 	Evaluation,
 	EvaluationSchema,
 	SelectionFunction,
-} from '@/types/evaluation/Evaluation';
+	Collections,
+	UserSchema,
+} from 'delib-npm';
 import { getStatementSubscriptionId } from '@/controllers/general/helpers';
 
 export const listenToEvaluations = (
@@ -144,7 +144,7 @@ export async function getEvaluations(parentId: string): Promise<Evaluation[]> {
 
 		const evaluatorsDB = await Promise.all(evaluatorsPromise);
 		const evaluators = evaluatorsDB.map((evaluatorDB) => {
-			const evaluator = parse(CreatorSchema, evaluatorDB?.data());
+			const evaluator = parse(UserSchema, evaluatorDB?.data());
 
 			return evaluator;
 		});

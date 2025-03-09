@@ -1,7 +1,6 @@
-import { ChoseBy } from '@/types/choseBy/ChoseByTypes';
+import { ChoseBy, Collections } from 'delib-npm';
 import { DB } from '../config';
 import { doc, setDoc } from 'firebase/firestore';
-import { Collections } from '@/types/TypeEnums';
 
 export async function setChoseByToDB(choseBy: ChoseBy) {
 	try {

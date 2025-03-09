@@ -13,24 +13,25 @@ import {
 	getSiblingOptionsByParentId,
 } from '@/view/pages/statement/components/vote/statementVoteCont';
 import { getRandomColor } from '@/view/pages/statement/components/vote/votingColors';
-import { Statement, StatementSchema } from '@/types/statement/StatementTypes';
 import {
+	Statement,
+	StatementSchema,
 	Collections,
 	StatementType,
 	Access,
 	QuestionType,
-} from '@/types/TypeEnums';
-import { Creator, CreatorSchema, Membership } from '@/types/user/User';
-import { number, parse, string } from 'valibot';
-import { ResultsBy } from '@/types/results/Results';
-import { StageSelectionType } from '@/types/stage/stageTypes';
-import { getRandomUID } from '@/types/TypeUtils';
-import { EvaluationUI } from '@/types/evaluation/Evaluation';
-import { setChoseByToDB } from '../choseBy/setChoseBy';
-import {
+	UserSchema,
+	Membership,
+	ResultsBy,
+	StageSelectionType,
+	getRandomUID,
+	EvaluationUI,
 	ChoseByEvaluationType,
 	CutoffType,
-} from '@/types/choseBy/ChoseByTypes';
+} from 'delib-npm';
+
+import { number, parse, string } from 'valibot';
+import { setChoseByToDB } from '../choseBy/setChoseBy';
 
 export const updateStatementParents = async (
 	statement: Statement,
@@ -240,6 +241,7 @@ export interface CreateStatementProps {
 	questionType?: QuestionType;
 	enableAddEvaluationOption?: boolean;
 	enableAddVotingOption?: boolean;
+	enableNavigationalElements?: boolean;
 	enhancedEvaluation?: boolean;
 	showEvaluation?: boolean;
 	resultsBy?: ResultsBy;
@@ -257,6 +259,7 @@ export function createStatement({
 	statementType,
 	questionType,
 	enableAddEvaluationOption = true,
+	enableNavigationalElements = true,
 	enableAddVotingOption = true,
 	enhancedEvaluation = true,
 	showEvaluation = true,
@@ -308,6 +311,7 @@ export function createStatement({
 				enableAddEvaluationOption,
 				enableAddVotingOption,
 				hasChildren,
+				enableNavigationalElements,
 			},
 			createdAt: Timestamp.now().toMillis(),
 			lastUpdate: Timestamp.now().toMillis(),

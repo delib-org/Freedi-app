@@ -403,6 +403,7 @@ export const statementsRoomSolutions =
 					statement.statementType === StatementType.option
 			)
 			.sort((a, b) => a.createdAt - b.createdAt);
+
 export const statementsSubscriptionsSelector = (
 	state: RootState
 ): StatementSubscription[] => state.statements.statementSubscription;
@@ -411,6 +412,14 @@ export const statementSelector =
 		state.statements.statements.find(
 			(statement) => statement.statementId === statementId
 		);
+
+export const topSubscriptionsSelector = createSelector(
+	(state: RootState) => state.statements.statementSubscription,
+	(statementSubscription) =>
+		statementSubscription.filter(
+			(sub: StatementSubscription) => sub.statement.parentId === 'top'
+		)
+);
 
 const selectStatements = (state: RootState) => state.statements.statements;
 

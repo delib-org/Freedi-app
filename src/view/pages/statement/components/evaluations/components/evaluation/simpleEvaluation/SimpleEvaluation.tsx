@@ -3,7 +3,7 @@ import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { evaluationSelector } from '@/redux/evaluations/evaluationsSlice';
 import Thumb from '@/view/components/thumb/Thumb';
 import './SimpleEvaluation.scss';
-import { Statement } from '@/types/statement/StatementTypes';
+import { Statement } from 'delib-npm';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 
 interface Props {

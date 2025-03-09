@@ -1,14 +1,14 @@
 import HeaderMassConsensus from '../headerMassConsensus/HeaderMassConsensus';
 import SuggestionCards from '../../statement/components/evaluations/components/suggestionCards/SuggestionCards';
-import { SelectionFunction } from '@/types/evaluation/Evaluation';
-import { MassConsensusPageUrls } from '@/types/TypeEnums';
+
+import { MassConsensusPageUrls, SelectionFunction } from 'delib-npm';
+import FooterMassConsensus from '../footerMassConsensus/FooterMassConsensus';
 import TitleMassConsensus from '../TitleMassConsensus/TitleMassConsensus';
 import { useRandomSuggestions } from './RandomSuggestionsVM';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
-import MassConsensusFooter from '../MassConsensusFooter/MassConsensusFooter';
 
 const RandomSuggestions = () => {
-	useRandomSuggestions();
+	const { navigateToTop } = useRandomSuggestions();
 	const { t } = useUserConfig();
 
 	return (
@@ -20,8 +20,17 @@ const RandomSuggestions = () => {
 			<TitleMassConsensus
 				title={t('please rate the following suggestions')}
 			/>
-			<SuggestionCards selectionFunction={SelectionFunction.random} />
-			<MassConsensusFooter goTo={MassConsensusPageUrls.topSuggestions} />
+			<TitleMassConsensus
+				title={t('please rate the following suggestions')}
+			/>
+			<div className='wrapper'>
+				<SuggestionCards selectionFunction={SelectionFunction.random} />
+			</div>
+			<FooterMassConsensus
+				isNextActive={true}
+				onNext={navigateToTop}
+				goTo={MassConsensusPageUrls.topSuggestions}
+			/>
 		</>
 	);
 };

@@ -23,16 +23,17 @@ import {
 } from '@/redux/statements/statementsSlice';
 import { AppDispatch, store } from '@/redux/store';
 import {
+	StatementSubscription,
+	Role,
 	Collections,
 	StatementType,
 	DeliberativeElement,
-} from '@/types/TypeEnums';
-import { Statement, StatementSchema } from '@/types/statement/StatementTypes';
-import { StatementSubscription } from '@/types/statement/StatementSubscription';
-import { Creator } from '@/types/user/User';
+	Statement,
+	StatementSchema,
+} from 'delib-npm';
+
 import { parse } from 'valibot';
 import React from 'react';
-import { Role } from '@/types/user/UserSettings';
 
 // Helpers
 
@@ -78,7 +79,7 @@ export const listenToStatementSubscription = (
 	} catch (error) {
 		console.error(error);
 
-		return () => { };
+		return () => {};
 	}
 };
 
@@ -118,7 +119,7 @@ export const listenToStatement = (
 		console.error(error);
 		if (setIsStatementNotFound) setIsStatementNotFound(true);
 
-		return () => { };
+		return () => {};
 	}
 };
 
@@ -169,7 +170,7 @@ export const listenToSubStatements = (
 	} catch (error) {
 		console.error(error);
 
-		return () => { };
+		return () => {};
 	}
 };
 

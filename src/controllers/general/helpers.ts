@@ -1,7 +1,4 @@
-import { Screen } from '@/types/TypeEnums';
-import { Statement } from '@/types/statement/StatementTypes';
-import { StatementSubscription } from '@/types/statement/StatementSubscription';
-import { Role } from '@/types/user/UserSettings';
+import { StatementSubscription, Statement, Role, Screen } from 'delib-npm';
 import { useAuthentication } from '../hooks/useAuthentication';
 
 export function updateArray<T>(
@@ -9,33 +6,45 @@ export function updateArray<T>(
 	newItem: T,
 	updateByProperty: keyof T & string
 ): Array<T> {
-	try {
-		const arrayTemp = [...currentArray];
-
-		if (!newItem[updateByProperty]) {
-			throw new Error(`Item doesn't have property ${updateByProperty}`);
-		}
-
-		const index = arrayTemp.findIndex(
-			(item) => item[updateByProperty] === newItem[updateByProperty]
-		);
-		if (index === -1) arrayTemp.push(newItem);
-		else {
-			const oldItem = JSON.stringify(arrayTemp[index]);
-			const newItemString = JSON.stringify({
-				...arrayTemp[index],
-				...newItem,
-			});
-			if (oldItem !== newItemString)
-				arrayTemp[index] = { ...arrayTemp[index], ...newItem };
-		}
-
-		return arrayTemp;
-	} catch (error) {
-		console.error(error);
+	// Check if property exists early to avoid unnecessary operations
+	if (newItem[updateByProperty] === undefined) {
+		console.error(`Item doesn't have property ${updateByProperty}`);
 
 		return currentArray;
 	}
+
+	const index = currentArray.findIndex(
+		(item) => item[updateByProperty] === newItem[updateByProperty]
+	);
+
+	// If item not found, just return a new array with the item added
+	if (index === -1) {
+		return [...currentArray, newItem];
+	}
+
+	// Check if the item actually needs to be updated
+	// Avoid unnecessary spread operations and comparisons
+	const existingItem = currentArray[index];
+	let needsUpdate = false;
+
+	// Compare only the keys in newItem for changes
+	for (const key in newItem) {
+		if (existingItem[key] !== newItem[key]) {
+			needsUpdate = true;
+			break;
+		}
+	}
+
+	// Only create a new array if an update is needed
+	if (!needsUpdate) {
+		return currentArray;
+	}
+
+	// Create a new array with the updated item
+	const result = [...currentArray];
+	result[index] = { ...existingItem, ...newItem };
+
+	return result;
 }
 
 export function isAuthorized(

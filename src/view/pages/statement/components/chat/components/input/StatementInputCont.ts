@@ -1,11 +1,9 @@
-import { StatementType } from '@/types/TypeEnums';
-import { Statement } from '@/types/statement/StatementTypes';
+import { StatementType, Statement, User } from 'delib-npm';
 import { defaultStatementSettings } from './../../../settings/emptyStatementModel';
 import {
 	createStatement,
 	setStatementToDB,
 } from '@/controllers/db/statements/setStatements';
-import { User } from 'firebase/auth';
 import { convertFirebaseUserToCreator } from '@/types/user/userUtils';
 
 export function handleAddStatement(

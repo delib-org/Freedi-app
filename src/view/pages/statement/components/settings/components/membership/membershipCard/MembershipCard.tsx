@@ -6,8 +6,7 @@ import unBlockImg from '@/assets/icons/Icon-base-46px.png';
 import MemberAdmin from '@/assets/icons/memberAdmin.svg?react';
 import MemberRemove from '@/assets/icons/memberRemove.svg?react';
 import { updateMemberRole } from '@/controllers/db/subscriptions/setSubscriptions';
-import { StatementSubscription } from '@/types/statement/StatementSubscription';
-import { Role } from '@/types/user/UserSettings';
+import { StatementSubscription, Role } from 'delib-npm';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 
 interface Props {

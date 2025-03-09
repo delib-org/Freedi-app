@@ -27,8 +27,7 @@ import { deleteStatementFromDB } from '@/controllers/db/statements/deleteStateme
 import Evaluation from '../../../evaluations/components/evaluation/Evaluation';
 import useAutoFocus from '@/controllers/hooks/useAutoFocus ';
 import UploadImage from '@/view/components/uploadImage/UploadImage';
-import { StatementType } from '@/types/TypeEnums';
-import { Statement } from '@/types/statement/StatementTypes';
+import { StatementType, Statement } from 'delib-npm';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 
 export interface NewQuestion {

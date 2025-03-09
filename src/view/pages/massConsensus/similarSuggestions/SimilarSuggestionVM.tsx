@@ -5,9 +5,14 @@ import {
 	setStatementToDB,
 } from '@/controllers/db/statements/setStatements';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
-import { MassConsensusPageUrls, StatementType } from '@/types/TypeEnums';
-import { GeneratedStatement } from '@/types/massConsensus/massConsensusModel';
-import { Statement } from '@/types/statement/StatementTypes';
+
+import {
+	GeneratedStatement,
+	Statement,
+	MassConsensusPageUrls,
+	StatementType,
+} from 'delib-npm';
+
 import { useNavigate, useParams } from 'react-router';
 
 export function useSimilarSuggestions() {

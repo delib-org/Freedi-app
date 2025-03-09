@@ -6,10 +6,12 @@ import {
 	setStatements,
 	statementSelectorById,
 } from '@/redux/statements/statementsSlice';
-import { functionConfig } from '@/types/ConfigFunctions';
-import { MassConsensusPageUrls } from '@/types/TypeEnums';
-import { SelectionFunction } from '@/types/evaluation/Evaluation';
-import { Statement } from '@/types/statement/StatementTypes';
+import {
+	functionConfig,
+	Statement,
+	MassConsensusPageUrls,
+	SelectionFunction,
+} from 'delib-npm';
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useParams } from 'react-router';
@@ -22,6 +24,11 @@ const useTopSuggestions = () => {
 	const { user } = useAuthentication();
 
 	const [topStatements, setTopStatements] = useState<Statement[]>([]);
+
+	const navigateToVoting = () =>
+		navigate(
+			`/mass-consensus/${statementId}/${MassConsensusPageUrls.voting}`
+		);
 
 	const fetchStatements = () => {
 		const endPoint =
@@ -86,7 +93,7 @@ const useTopSuggestions = () => {
 		};
 	}, [topStatements.length]);
 
-	return {};
+	return { navigateToVoting };
 };
 
 export default useTopSuggestions;

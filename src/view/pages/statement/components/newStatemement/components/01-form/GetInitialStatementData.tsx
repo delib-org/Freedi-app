@@ -10,8 +10,7 @@ import Button, { ButtonType } from '@/view/components/buttons/button/Button';
 import Input from '@/view/components/input/Input';
 import Textarea from '@/view/components/textarea/Textarea';
 import { StatementContext } from '@/view/pages/statement/StatementCont';
-import { StatementType } from '@/types/TypeEnums';
-import { Statement } from '@/types/statement/StatementTypes';
+import { StatementType, Statement } from 'delib-npm';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 
 export default function GetInitialStatementData() {

@@ -1,16 +1,18 @@
 import React, { useContext } from 'react';
 import IconButton from '@/view/components/iconButton/IconButton';
 import PlusIcon from '@/assets/icons/plusIcon.svg?react';
-import AddDocumentIcon from '@/assets/icons/document.svg?react';
-import AddClusterIcon from '@/assets/icons/net-clusters.svg?react';
+import AddQuestionIcon from '@/assets/icons/questionIcon.svg?react';
+import AddMassConsensusIcon from '@/assets/icons/massConsensusIcon.svg?react';
 import AddSubGroupIcon from '@/assets/icons/team-group.svg?react';
-import { StatementContext } from '../../../StatementCont';
-import { QuestionType, StatementType } from '@/types/TypeEnums';
+import styles from './AddButton.module.scss'
+import { QuestionType, StatementType } from 'delib-npm';
+import { StatementContext } from '../../StatementCont';
 
 export default function AddButton() {
 	const [actionsOpen, setActionsOpen] = React.useState(false);
 	const { handleSetNewStatement, setNewStatementType, setNewQuestionType } =
 		useContext(StatementContext);
+	const radius = 5;
 
 	function handleAddStatement(
 		newStatementType: StatementType,
@@ -53,12 +55,12 @@ export default function AddButton() {
 		{
 			key: 'question',
 			action: 'question' as const,
-			icon: <AddDocumentIcon />,
+			icon: <AddQuestionIcon />,
 		},
 		{
 			key: 'mass-consensus',
 			action: 'mass-consensus' as const,
-			icon: <AddClusterIcon />,
+			icon: <AddMassConsensusIcon />,
 		},
 		{
 			key: 'subgroup',
@@ -68,26 +70,43 @@ export default function AddButton() {
 	];
 
 	return (
-		<div className='actions'>
+		<div className={`${styles.actions}`}>
+			{actions.map(({ key, action, icon }, index) => {
+				const angle = -90 + (index * -90) / (actions.length - 1);
+
+				const x = Math.cos((angle * Math.PI) / 180) * radius;
+				const y = Math.sin((angle * Math.PI) / 180) * radius;
+
+				return (
+					<IconButton
+						key={key}
+						onClick={() => handleAction(action)}
+						className={`${styles.actionBtn} ${actionsOpen ? styles.visible : ""}`}
+						title={`add ${action}`}
+						style={{
+							position: "absolute",
+							top: "-50%",
+							left: "-50%",
+							"--x": `${x}rem`,
+							"--y": `${y}rem`,
+							transitionDelay: `${index * 0.1}s`,
+							backgroundColor: `${action === 'subgroup' ? '#a879e0' : ''}`
+						} as React.CSSProperties}
+					>
+						{icon}
+					</IconButton>
+				);
+			})}
 			{actionsOpen && (
-				<>
-					{actions.map(({ key, action, icon }) => (
-						<IconButton
-							key={key}
-							onClick={() => handleAction(action)}
-						>
-							{icon}
-						</IconButton>
-					))}
-					<button
-						className='invisibleBackground'
-						onClick={() => setActionsOpen(false)}
-					></button>
-				</>
-			)}
-			<IconButton onClick={toggleActions} className='plus-button'>
+				<button
+					className={`${styles.invisibleBackground}`}
+					onClick={() => setActionsOpen(false)}
+				></button>
+			)
+			}
+			<IconButton onClick={toggleActions} className={`${styles.plusButton} ${actionsOpen ? styles.active : ""}`}>
 				<PlusIcon />
 			</IconButton>
-		</div>
+		</div >
 	);
 }

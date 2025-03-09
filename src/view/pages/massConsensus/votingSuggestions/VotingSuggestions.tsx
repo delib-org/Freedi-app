@@ -8,15 +8,14 @@ import styles from './VotingSuggestion.module.scss';
 import { useParams } from 'react-router';
 import { useSelector } from 'react-redux';
 import { statementSelector } from '@/redux/statements/statementsSlice';
-import { MassConsensusPageUrls } from '@/types/TypeEnums';
-import { Statement } from '@/types/statement/StatementTypes';
-import MassConsensusFooter from '../MassConsensusFooter/MassConsensusFooter';
+import { MassConsensusPageUrls, Statement } from 'delib-npm';
 import { getTotalVoters } from '../../statement/components/vote/statementVoteCont';
 import TitleMassConsensus from '../TitleMassConsensus/TitleMassConsensus';
+import FooterMassConsensus from '../footerMassConsensus/FooterMassConsensus';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 
 const VotingSuggestions = () => {
-	const { subStatements } = VotingSuggestionsMV();
+	const { subStatements, navigateToFeedback } = VotingSuggestionsMV();
 	const { statementId } = useParams();
 	const statement = useSelector(statementSelector(statementId));
 	const [isStatementInfoModalOpen, setIsStatementInfoModalOpen] =
@@ -55,9 +54,11 @@ const VotingSuggestions = () => {
 				</Modal>
 			)}
 
-			<MassConsensusFooter
+			<FooterMassConsensus
+				isNextActive={true}
+				onNext={navigateToFeedback}
 				goTo={MassConsensusPageUrls.leaveFeedback}
-			></MassConsensusFooter>
+			/>
 		</>
 	);
 };

@@ -2,22 +2,20 @@ import { Change, logger } from 'firebase-functions/v1';
 import { db } from './index';
 import { DocumentSnapshot, FieldValue } from 'firebase-admin/firestore';
 import { FirestoreEvent } from 'firebase-functions/firestore';
-import { Evaluation } from '../../src/types/evaluation/Evaluation';
-import { Creator } from '../../src/types/user/User';
-import { number, parse } from 'valibot';
 import {
+	Evaluation,
 	Statement,
 	StatementSchema,
-} from '../../src/types/statement/StatementTypes';
-import { Collections, StatementType } from '../../src/types/TypeEnums';
-import {
+	Collections,
+	StatementType,
 	ChoseBy,
 	ChoseByEvaluationType,
 	CutoffType,
 	defaultChoseBySettings,
-} from '../../src/types/choseBy/ChoseByTypes';
+	statementToSimpleStatement,
+} from 'delib-npm';
 
-import { statementToSimpleStatement } from '../../src/types/statement/SimpleStatement';
+import { number, parse } from 'valibot';
 
 enum ActionTypes {
 	new = 'new',
@@ -322,12 +320,10 @@ async function updateParentStatementWithChosenOptions(
 
 		// get parent choseBy settings statement and parent statement
 
-		const [parentStatementChoseByDB] = await Promise.all(
-			[
-				db.collection(Collections.choseBy).doc(parentId).get(),
-				db.collection(Collections.statements).doc(parentId).get(),
-			]
-		);
+		const [parentStatementChoseByDB] = await Promise.all([
+			db.collection(Collections.choseBy).doc(parentId).get(),
+			db.collection(Collections.statements).doc(parentId).get(),
+		]);
 
 		const parentStatementChoseBy: ChoseBy = !parentStatementChoseByDB.exists
 			? defaultChoseBySettings(parentId)
@@ -340,7 +336,7 @@ async function updateParentStatementWithChosenOptions(
 		if (!chosenOptions) throw new Error('chosenOptions is not found');
 
 		await updateParentOfChildren({
-			topOptionsStatements: chosenOptions
+			topOptionsStatements: chosenOptions,
 		});
 
 		//update child statement selected to be of type result
@@ -354,7 +350,7 @@ async function updateParentStatementWithChosenOptions(
 		topOptionsStatements: Statement[];
 	}
 	async function updateParentOfChildren({
-		topOptionsStatements
+		topOptionsStatements,
 	}: UpdateParentChildrenProps) {
 		const childStatementsSimple = topOptionsStatements.map(
 			(st: Statement) => statementToSimpleStatement(st)
@@ -367,7 +363,6 @@ async function updateParentStatementWithChosenOptions(
 			totalResults: childStatementsSimple.length,
 			results: childStatementsSimple,
 		});
-
 	}
 }
 

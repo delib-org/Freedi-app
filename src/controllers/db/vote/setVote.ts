@@ -1,12 +1,16 @@
 import { Timestamp, doc, getDoc, setDoc } from 'firebase/firestore';
 import { FireStore } from '../config';
-import { Collections } from '@/types/TypeEnums';
-import { Statement } from '@/types/statement/StatementTypes';
-import { getVoteId, Vote, VoteSchema } from '@/types/vote';
-import { Creator } from '@/types/user/User';
+import {
+	Collections,
+	Statement,
+	getVoteId,
+	Vote,
+	VoteSchema,
+	User,
+} from 'delib-npm';
 import { parse } from 'valibot';
 
-export async function setVoteToDB(option: Statement, creator: Creator) {
+export async function setVoteToDB(option: Statement, creator: User) {
 	try {
 		//vote reference
 		const voteId = getVoteId(creator.uid, option.parentId);

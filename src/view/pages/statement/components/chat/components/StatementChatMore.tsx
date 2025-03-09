@@ -8,11 +8,10 @@ import ChatIcon from '@/assets/icons/roundedChatDotIcon.svg?react';
 // Statements functions
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { statementSubscriptionSelector } from '@/redux/statements/statementsSlice';
-import { Statement } from '@/types/statement/StatementTypes';
-import { StatementSubscription } from '@/types/statement/StatementSubscription';
+import { SimpleStatement, StatementSubscription, Statement } from 'delib-npm';
 
 interface Props {
-	statement: Statement;
+	statement: Statement | SimpleStatement;
 }
 
 const StatementChatMore: FC<Props> = ({ statement }) => {
@@ -25,7 +24,7 @@ const StatementChatMore: FC<Props> = ({ statement }) => {
 
 	// Variables
 	const messagesRead = statementSubscription?.totalSubStatementsRead || 0;
-	const messages = statement.totalSubStatements || 0;
+	const messages = 'totalSubStatements' in statement ? statement.totalSubStatements : 0;
 
 	return (
 		<button

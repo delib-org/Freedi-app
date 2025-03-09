@@ -1,9 +1,8 @@
 import React, { FC } from 'react';
 import { handleGetEvaluators } from '../statementSettingsCont';
 import MembersChipsList from './membership/membersChipsList/MembersChipList';
+import { Evaluation, User } from 'delib-npm';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
-import { Evaluation } from '@/types/evaluation/Evaluation';
-import { Creator } from '@/types/user/User';
 
 interface GetEvaluatorsProps {
 	statementId: string;
@@ -24,7 +23,7 @@ const GetEvaluators: FC<GetEvaluatorsProps> = ({ statementId }) => {
 	};
 
 	const members = evaluators.flatMap(
-		(evaluator) => evaluator.evaluator as Creator
+		(evaluator) => evaluator.evaluator as User
 	);
 
 	return (

@@ -5,7 +5,7 @@ import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import Checkbox from '@/view/components/checkbox/Checkbox';
 import './AdvancedSettings.scss';
 import { setStatementSettingToDB } from '@/controllers/db/statementSettings/setStatementSettings';
-import { StatementSettings } from '@/types/statement/StatementSettings';
+import { StatementSettings } from 'delib-npm';
 
 const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 	const { t } = useUserConfig();

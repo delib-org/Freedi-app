@@ -13,8 +13,8 @@ import './StatementBottomNav.scss';
 import StartHere from '@/view/components/startHere/StartHere';
 import { StatementContext } from '../../../StatementCont';
 import { sortItems } from './StatementBottomNavModal';
+import { SortType, StatementType } from 'delib-npm';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
-import { SortType, StatementType } from '@/types/TypeEnums';
 import { useDecreaseLearningRemain } from '@/controllers/hooks/useDecreaseLearningRemain';
 
 interface Props {

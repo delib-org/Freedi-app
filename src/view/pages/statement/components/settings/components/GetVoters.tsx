@@ -1,20 +1,19 @@
 import React, { FC, useEffect } from 'react';
 import { handleGetVoters } from '../statementSettingsCont';
 import MembersChipsList from './membership/membersChipsList/MembersChipList';
+import { Vote, User } from 'delib-npm';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
-import { Vote } from '@/types/vote';
-import { Creator } from '@/types/user/User';
 
 interface GetVotersProps {
 	statementId: string;
-	joinedMembers: Creator[];
+	joinedMembers: User[];
 }
 
 const GetVoters: FC<GetVotersProps> = ({ statementId, joinedMembers }) => {
 	const { t } = useUserConfig();
 
 	const [voters, setVoters] = React.useState<Vote[]>([]);
-	const [nonVoters, setNonVoters] = React.useState<Creator[]>([]);
+	const [nonVoters, setNonVoters] = React.useState<User[]>([]);
 	const [clickedVoters, setClickedVoters] = React.useState(false);
 	const [clickedNonVoters, setClickedNonVoters] = React.useState(false);
 
@@ -57,7 +56,7 @@ const GetVoters: FC<GetVotersProps> = ({ statementId, joinedMembers }) => {
 								{voters.length} {t('Voted')}
 							</span>
 							<MembersChipsList
-								members={voters.map((v) => v.voter as Creator)}
+								members={voters.map((v) => v.voter as User)}
 							/>
 						</>
 					) : (
