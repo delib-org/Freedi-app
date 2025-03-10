@@ -1,4 +1,4 @@
-import { FC, MouseEvent } from 'react';
+import { FC, MouseEvent, useEffect } from 'react';
 import styles from './StageCard.module.scss';
 import Button, { ButtonType } from '@/view/components/buttons/button/Button';
 import { NavLink, useNavigate } from 'react-router';
@@ -9,9 +9,10 @@ import {
 	maxKeyInObject,
 	EvaluationUI,
 } from 'delib-npm';
-import { useSelector } from 'react-redux';
-import { statementSelectorById } from '@/redux/statements/statementsSlice';
+import { useDispatch, useSelector } from 'react-redux';
+import { setStatement, statementSelectorById } from '@/redux/statements/statementsSlice';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { getStatementFromDB } from '@/controllers/db/statements/getStatement';
 
 interface Props {
 	statement: Statement;
@@ -21,11 +22,13 @@ interface Props {
 
 const StageCard: FC<Props> = ({ statement, isDescription, isSuggestions }) => {
 	const { dir, t } = useUserConfig();
+	const dispatch = useDispatch();
 
 	const navigate = useNavigate();
 	const stageUrl = `/stage/${statement.statementId}`;
 	const isVoting =
 		statement.evaluationSettings?.evaluationUI === EvaluationUI.voting;
+
 	const topVotedId =
 		isVoting && statement.selections
 			? maxKeyInObject(statement.selections)
@@ -62,6 +65,16 @@ const StageCard: FC<Props> = ({ statement, isDescription, isSuggestions }) => {
 		suggestionsClass =
 			dir === 'ltr' ? 'card--suggestions' : 'card--suggestions-rtl';
 	}
+
+	useEffect(() => {
+		if (isVoting && topVotedId && !topVoted) {
+			getStatementFromDB(topVotedId).then(topVotedDB => {
+				if (topVotedDB) {
+					dispatch(setStatement(topVotedDB));
+				}
+			});
+		}
+	}, [topVotedId, isVoting, topVoted, dispatch]);
 
 	return (
 		<div
