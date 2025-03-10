@@ -1,17 +1,18 @@
-import { FC, MouseEvent } from 'react';
+import { FC, MouseEvent, useEffect } from 'react';
 import styles from './StageCard.module.scss';
 import Button, { ButtonType } from '@/view/components/buttons/button/Button';
 import { NavLink, useNavigate } from 'react-router';
-import { useLanguage } from '@/controllers/hooks/useLanguages';
-import { Statement } from '@/types/statement/StatementTypes';
 import {
+	Statement,
 	SimpleStatement,
 	statementToSimpleStatement,
-} from '@/types/statement/SimpleStatement';
-import { maxKeyInObject } from '@/types/TypeUtils';
-import { useSelector } from 'react-redux';
-import { statementSelectorById } from '@/redux/statements/statementsSlice';
-import { EvaluationUI } from '@/types/evaluation/Evaluation';
+	maxKeyInObject,
+	EvaluationUI,
+} from 'delib-npm';
+import { useDispatch, useSelector } from 'react-redux';
+import { setStatement, statementSelectorById } from '@/redux/statements/statementsSlice';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { getStatementFromDB } from '@/controllers/db/statements/getStatement';
 
 interface Props {
 	statement: Statement;
@@ -20,15 +21,16 @@ interface Props {
 }
 
 const StageCard: FC<Props> = ({ statement, isDescription, isSuggestions }) => {
-
-	const { dir, t } = useLanguage();
+	const { dir, t } = useUserConfig();
+	const dispatch = useDispatch();
 
 	const navigate = useNavigate();
-	const stageUrl = `/stage/${statement.statementId}`
-	const isVoting = statement.evaluationSettings?.evaluationUI === EvaluationUI.voting;
+	const stageUrl = `/stage/${statement.statementId}`;
+	const isVoting =
+		statement.evaluationSettings?.evaluationUI === EvaluationUI.voting;
+
 	const topVotedId =
-		isVoting &&
-			statement.selections
+		isVoting && statement.selections
 			? maxKeyInObject(statement.selections)
 			: '';
 
@@ -39,10 +41,9 @@ const StageCard: FC<Props> = ({ statement, isDescription, isSuggestions }) => {
 		: undefined;
 
 	const votingResults = simpleTopVoted ? [simpleTopVoted] : [];
-	const chosen: SimpleStatement[] =
-		isVoting
-			? votingResults
-			: statement.results;
+	const chosen: SimpleStatement[] = isVoting
+		? votingResults
+		: statement.results;
 
 	function suggestNewSuggestion(ev: MouseEvent<HTMLButtonElement>) {
 		ev.stopPropagation();
@@ -58,14 +59,27 @@ const StageCard: FC<Props> = ({ statement, isDescription, isSuggestions }) => {
 
 	const title = getTitle();
 
-	const direction = dir === "rtl" ? "card--rtl" : "card--ltr";
+	const direction = dir === 'rtl' ? 'card--rtl' : 'card--ltr';
 	let suggestionsClass = '';
 	if (isSuggestions) {
-		suggestionsClass = dir === "ltr" ? "card--suggestions" : "card--suggestions-rtl";
+		suggestionsClass =
+			dir === 'ltr' ? 'card--suggestions' : 'card--suggestions-rtl';
 	}
 
+	useEffect(() => {
+		if (isVoting && topVotedId && !topVoted) {
+			getStatementFromDB(topVotedId).then(topVotedDB => {
+				if (topVotedDB) {
+					dispatch(setStatement(topVotedDB));
+				}
+			});
+		}
+	}, [topVotedId, isVoting, topVoted, dispatch]);
+
 	return (
-		<div className={`${styles.card} ${styles[direction]} ${styles[suggestionsClass]}`}>
+		<div
+			className={`${styles.card} ${styles[direction]} ${styles[suggestionsClass]}`}
+		>
 			<h3>{t(title)}</h3>
 			{chosen.length === 0 ? (
 				<p>{t('No suggestion so far')}</p>
@@ -80,20 +94,29 @@ const StageCard: FC<Props> = ({ statement, isDescription, isSuggestions }) => {
 								<ol className={styles.suggestions}>
 									<li>
 										<div>{opt.statement}</div>
-										{opt.description &&
-											<div className={styles.statement__description}>{opt.description}</div>}
+										{opt.description && (
+											<div
+												className={
+													styles.statement__description
+												}
+											>
+												{opt.description}
+											</div>
+										)}
 									</li>
 								</ol>
 							</NavLink>
 						))}
 					</ul>
-					{!isSuggestions && <NavLink to={`/statement/${statement.statementId}`}>
-						<p
-							className={`${styles.seeMore} ${dir === 'ltr' ? styles.rtl : styles.ltr}`}
-						>
-							{t('Read more...')}
-						</p>{' '}
-					</NavLink>}
+					{!isSuggestions && (
+						<NavLink to={`/statement/${statement.statementId}`}>
+							<p
+								className={`${styles.seeMore} ${dir === 'ltr' ? styles.rtl : styles.ltr}`}
+							>
+								{t('Read more...')}
+							</p>{' '}
+						</NavLink>
+					)}
 				</>
 			)}
 

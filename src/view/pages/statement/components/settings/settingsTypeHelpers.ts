@@ -1,4 +1,4 @@
-import { Statement } from '@/types/statement/StatementTypes';
+import { Statement } from 'delib-npm';
 
 export interface StatementSettingsProps {
 	statement: Statement;

@@ -1,12 +1,9 @@
 import { Change, logger } from 'firebase-functions/v1';
 import { db } from '.';
-import { ApprovalSchema } from '../../src/types/approval/Approval';
-import { Collections } from '../../src/types/TypeEnums';
-import { Statement } from '../../src/types/statement/StatementTypes';
+import { Collections, Statement, DocumentApproval, ApprovalSchema } from 'delib-npm';
 import { number, parse } from 'valibot';
 import { DocumentSnapshot } from 'firebase-admin/firestore';
 import { FirestoreEvent } from 'firebase-functions/firestore';
-import { DocumentApproval } from '../../src/types/agreement/Agreement';
 
 export async function updateApprovalResults(
 	event: FirestoreEvent<

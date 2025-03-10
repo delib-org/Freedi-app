@@ -9,22 +9,14 @@ import {
 	InferOutput,
 } from 'valibot';
 import { Access, membersAllowed, StepType } from '../TypeEnums';
-import { AgreementSchema } from '../agreement/Agreement';
 
-export const UserSchema = object({
+export const CreatorSchema = object({
 	displayName: string(),
-	defaultLanguage: optional(string()),
-	email: optional(nullable(string())),
 	photoURL: optional(nullable(string())),
 	uid: string(),
-	isAnonymous: optional(boolean()),
-	fontSize: optional(nullable(number())),
-	color: optional(string()),
-	agreement: optional(nullable(AgreementSchema)),
-	role: optional(string()),
 });
 
-export type User = InferOutput<typeof UserSchema>;
+export type Creator = InferOutput<typeof CreatorSchema>;
 
 export const MembershipSchema = object({
 	adminApproveMembers: optional(boolean()),

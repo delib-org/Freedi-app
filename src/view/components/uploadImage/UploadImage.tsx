@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import './UploadImage.scss';
 import { setImageLocally } from './uploadImageCont';
-import { Statement } from '@/types/statement/StatementTypes';
+import { Statement } from 'delib-npm';
 
 interface Props {
 	readonly statement: Statement | undefined;

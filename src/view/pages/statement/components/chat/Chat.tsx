@@ -1,21 +1,16 @@
 import { FC, useEffect, useState, useRef, useContext } from 'react';
-
-// Third Party Imports
-
-// Custom Components
 import { useLocation, useParams } from 'react-router';
 import { StatementContext } from '../../StatementCont';
 import styles from './Chat.module.scss';
 import ChatMessageCard from './components/chatMessageCard/ChatMessageCard';
 import ChatInput from './components/input/ChatInput';
-
 import NewMessages from './components/newMessages/NewMessages';
 import { listenToSubStatements } from '@/controllers/db/statements/listenToStatements';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { statementSubsSelector } from '@/redux/statements/statementsSlice';
-import { userSelector } from '@/redux/users/userSlice';
 import Description from '../evaluations/components/description/Description';
-import { Statement } from '@/types/statement/StatementTypes';
+import { Statement } from 'delib-npm';
+import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 
 let firstTime = true;
 let numberOfSubStatements = 0;
@@ -24,10 +19,8 @@ const Chat: FC = () => {
 	const chatRef = useRef<HTMLDivElement>(null);
 	const { statementId } = useParams();
 	const { statement } = useContext(StatementContext);
-	const subStatements = useAppSelector(
-		statementSubsSelector(statementId)
-	)
-	const user = useAppSelector(userSelector);
+	const subStatements = useAppSelector(statementSubsSelector(statementId));
+	const { user } = useAuthentication();
 	const messagesEndRef = useRef<HTMLDivElement>(null);
 	const location = useLocation();
 
@@ -52,10 +45,8 @@ const Chat: FC = () => {
 		// 		chatRef.current.style.height = `${window.innerHeight - chatRef.current.getBoundingClientRect().top}px`;
 		// 	}
 		// };
-
 		// updateChatHeight();
 		// window.addEventListener('resize', updateChatHeight);
-
 		// return () => {
 		// 	window.removeEventListener('resize', updateChatHeight);
 		// };
@@ -99,7 +90,7 @@ const Chat: FC = () => {
 	useEffect(() => {
 		//if new sub-statement was not created by the user, then set numberOfNewMessages to the number of new subStatements
 		const lastMessage = subStatements[subStatements.length - 1];
-		if (lastMessage?.creatorId !== user?.uid) {
+		if (lastMessage?.creator.uid !== user.uid) {
 			const isNewMessages =
 				subStatements.length - numberOfSubStatements > 0;
 			numberOfSubStatements = subStatements.length;
@@ -113,10 +104,11 @@ const Chat: FC = () => {
 
 	return (
 		<div className={styles.chat} ref={chatRef}>
-
-			{statement.description && <div className='wrapper'>
-				<Description />
-			</div>}
+			{statement.description && (
+				<div className='wrapper'>
+					<Description />
+				</div>
+			)}
 			{subStatements?.map((statementSub: Statement, index) => (
 				<div key={statementSub.statementId}>
 					<ChatMessageCard

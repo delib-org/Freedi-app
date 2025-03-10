@@ -4,13 +4,13 @@ import {
 	getStatementSubscriptionId,
 	StatementSubscription,
 	StatementSubscriptionSchema,
-} from '../../src/types/statement/StatementSubscription';
-import { Collections } from '../../src/types/TypeEnums';
+	StatementSchema,
+	Role,
+	Collections,
+} from 'delib-npm';
 import { parse } from 'valibot';
 import { QueryDocumentSnapshot } from 'firebase-admin/firestore';
 import { FirestoreEvent } from 'firebase-functions/firestore';
-import { StatementSchema } from '../../src/types/statement/StatementTypes';
-import { Role } from '../../src/types/user/UserSettings';
 
 export async function setAdminsToNewStatement(
 	ev: FirestoreEvent<
@@ -45,12 +45,12 @@ export async function setAdminsToNewStatement(
 			throw new Error('No newStatementSubscriptionId');
 		const newSubscription: StatementSubscription = {
 			statementId: statement.statementId,
-			userId: statement.creatorId,
 			role: Role.admin,
 			lastUpdate: Date.now(),
-			statement,
+			statement: statement,
 			statementsSubscribeId: newStatementSubscriptionId,
 			user: statement.creator,
+			userId: statement.creatorId,
 		};
 		parse(StatementSubscriptionSchema, newSubscription);
 
@@ -83,12 +83,12 @@ export async function setAdminsToNewStatement(
 
 				const newSubscription: StatementSubscription = {
 					statementId: statement.statementId,
-					userId: adminSub.userId,
 					role: Role.admin,
 					lastUpdate: Date.now(),
-					statement,
+					statement: statement,
 					statementsSubscribeId,
 					user: adminSub.user,
+					userId: adminSub.userId,
 				};
 
 				parse(StatementSubscriptionSchema, newSubscription);

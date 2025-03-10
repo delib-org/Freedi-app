@@ -1,10 +1,8 @@
-import { Statement } from "@/types/statement/StatementTypes";
-import NavigationButtons from "../navigationButtons/NavigationButtons";
+import NavigationButtons from '../navigationButtons/NavigationButtons';
 import HomeButton from '../../../header/HomeButton';
-import { useEffect, useState } from "react";
-import { useLanguage } from "@/controllers/hooks/useLanguages";
-import MenuOption from "@/view/components/menu/MenuOption";
-import Back from "../../../header/Back";
+import { useEffect, useState } from 'react';
+import MenuOption from '@/view/components/menu/MenuOption';
+import Back from '../../../header/Back';
 import TriangleIcon from '@/assets/icons/triangle.svg?react';
 import QuestionIcon from '@/assets/icons/navQuestionsIcon.svg?react';
 import GroupIcon from '@/assets/icons/group.svg?react';
@@ -12,7 +10,8 @@ import View from '@/assets/icons/view.svg?react';
 import MapIcon from '@/assets/icons/navMainPageIcon.svg?react';
 
 import styles from '../StatementTopNav.module.scss';
-import { StatementType } from "@/types/TypeEnums";
+import { StatementType, Statement } from 'delib-npm';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 
 interface NavButtonsProps {
 	parentStatement?: Statement;
@@ -31,17 +30,15 @@ function NavButtons({
 	statement,
 	parentStatement,
 }: Readonly<NavButtonsProps>) {
-
-	const { t } = useLanguage();
+	const { t } = useUserConfig();
 	const [openViews, setOpenViews] = useState(true);
 
 	useEffect(() => {
 		setOpenViews(false);
-	}, [screen])
+	}, [screen]);
 
 	function handleAgreementMap() {
 		handleNavigation('agreement-map');
-
 	}
 
 	function handleMindMap() {
@@ -49,13 +46,11 @@ function NavButtons({
 	}
 
 	function handleView() {
-
 		if (screen !== 'view' || screen === undefined) {
 			handleNavigation('view');
 		} else {
-			setOpenViews(!openViews)
+			setOpenViews(!openViews);
 		}
-
 	}
 
 	return (
@@ -68,21 +63,25 @@ function NavButtons({
 				/>
 			)}
 			<button className={styles.views} onClick={handleView}>
-				<NavIcon statement={statement} screen={screen} headerStyle={headerStyle} />
-				{openViews &&
+				<NavIcon
+					statement={statement}
+					screen={screen}
+					headerStyle={headerStyle}
+				/>
+				{openViews && (
 					<div className={styles.views__dropdown}>
 						<MenuOption
-							label={t("Agreement Map")}
+							label={t('Agreement Map')}
 							icon={<TriangleIcon style={{ color: '#4E88C7' }} />}
 							onOptionClick={handleAgreementMap}
 						/>
 						<MenuOption
-							label={t("Mind Map")}
+							label={t('Mind Map')}
 							icon={<MapIcon style={{ color: '#4E88C7' }} />}
 							onOptionClick={handleMindMap}
 						/>
-					</div>}
-
+					</div>
+				)}
 			</button>
 			{allowNavigation && (
 				<button className={styles.home}>
@@ -94,13 +93,22 @@ function NavButtons({
 			)}
 		</>
 	);
-
 }
 
 export default NavButtons;
 
-function NavIcon({ statement, screen, headerStyle }: { readonly statement: Statement; readonly screen: string | undefined; readonly headerStyle: { readonly color: string; readonly backgroundColor: string } }) {
-
+function NavIcon({
+	statement,
+	screen,
+	headerStyle,
+}: {
+	readonly statement: Statement;
+	readonly screen: string | undefined;
+	readonly headerStyle: {
+		readonly color: string;
+		readonly backgroundColor: string;
+	};
+}) {
 	if (screen === 'view' || screen === undefined) {
 		return <View color={headerStyle.color} />;
 	} else if (statement.statementType === StatementType.question) {
@@ -110,5 +118,4 @@ function NavIcon({ statement, screen, headerStyle }: { readonly statement: State
 	} else {
 		return <View color={headerStyle.color} />;
 	}
-
 }

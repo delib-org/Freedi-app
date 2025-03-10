@@ -18,13 +18,12 @@ import {
 } from '@/redux/statements/statementsSlice';
 import StageCard from './stages/StageCard';
 import { updateStatementsOrderToDB } from '@/controllers/db/statements/setStatements';
-import { Statement } from '@/types/statement/StatementTypes';
-import { StatementType } from '@/types/TypeEnums';
-import { useLanguage } from '@/controllers/hooks/useLanguages';
+import { Statement, StatementType } from 'delib-npm';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 
 const MultiStageQuestion: FC = () => {
 	const { statement } = useContext(StatementContext);
-	const { t } = useLanguage();
+	const { t } = useUserConfig();
 	const dispatch = useDispatch();
 	const statementsFromStore = useSelector(
 		statementSubsSelector(statement?.statementId)
@@ -111,7 +110,6 @@ const MultiStageQuestion: FC = () => {
 
 	return (
 		<>
-
 			{showAddStage && (
 				<Modal>
 					<AddStage setShowAddStage={setShowAddStage} />
@@ -119,8 +117,12 @@ const MultiStageQuestion: FC = () => {
 			)}
 
 			<div className={styles.stagesWrapper}>
-				<h2 className={styles.title}>{t("Document")}: {statement.statement}</h2>
-				<div className={styles.description}>{statement?.description}</div>
+				<h2 className={styles.title}>
+					{t('Document')}: {statement.statement}
+				</h2>
+				<div className={styles.description}>
+					{statement?.description}
+				</div>
 				{initialStages.map((stage, index) => (
 					<div
 						key={stage.statementId}
@@ -142,7 +144,7 @@ const MultiStageQuestion: FC = () => {
 				))}
 				<StageCard statement={statement} isSuggestions={true} />
 			</div>
-			<div className={`btns ${styles["add-stage"]}`}>
+			<div className={`btns ${styles['add-stage']}`}>
 				<Button
 					text={t('Add sub-question')}
 					type='button'

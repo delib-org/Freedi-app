@@ -1,14 +1,10 @@
 import { Change, logger } from 'firebase-functions/v1';
 import { db } from './index';
 import { DocumentSnapshot, FieldValue } from 'firebase-admin/firestore';
-import { Collections } from '../../src/types/TypeEnums';
-import {
-	Statement,
-} from '../../src/types/statement/StatementTypes';
-import { maxKeyInObject } from '../../src/types/TypeUtils';
+import { Collections, maxKeyInObject, Statement, VoteSchema } from 'delib-npm';
+
 import { FirestoreEvent } from 'firebase-functions/firestore';
 import { parse } from 'valibot';
-import { VoteSchema } from '../../src/types/vote';
 
 export async function updateVote(
 	event: FirestoreEvent<Change<DocumentSnapshot> | undefined>

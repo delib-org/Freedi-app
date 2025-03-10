@@ -4,7 +4,7 @@ import { StatementContext } from '../../StatementCont';
 import FollowMeToast from '../followMeToast/FollowMeToast';
 import styles from './Switch.module.scss';
 import { useSwitchMV } from './SwitchMV';
-import { StatementType } from '@/types/TypeEnums';
+import { StatementType } from 'delib-npm';
 
 import SwitchScreen from './SwitchScreen';
 

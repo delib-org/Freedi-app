@@ -6,12 +6,12 @@ import {
 	EnhancedEvaluationThumb,
 } from './EnhancedEvaluationModel';
 import { setEvaluationToDB } from '@/controllers/db/evaluation/setEvaluation';
-import { decreesUserSettingsLearningRemain } from '@/controllers/db/learning/setLearning';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
-import { useLanguage } from '@/controllers/hooks/useLanguages';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import { evaluationSelector } from '@/redux/evaluations/evaluationsSlice';
-import { userSettingsSelector } from '@/redux/users/userSlice';
-import { Statement } from '@/types/statement/StatementTypes';
+import { Statement } from 'delib-npm';
+import { useAuthentication } from '@/controllers/hooks/useAuthentication';
+import { useDecreaseLearningRemain } from '@/controllers/hooks/useDecreaseLearningRemain';
 
 interface EnhancedEvaluationProps {
 	statement: Statement;
@@ -22,13 +22,10 @@ const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({
 	statement,
 	shouldDisplayScore,
 }) => {
+	const { t, learning } = useUserConfig();
 	const evaluationScore = useAppSelector(
 		evaluationSelector(statement.statementId)
 	);
-
-	const learningEvaluation =
-		useAppSelector(userSettingsSelector)?.learning?.evaluation || 0;
-	const { t } = useLanguage();
 
 	const { sumPro, sumCon, numberOfEvaluators } = statement.evaluation || {
 		sumPro: 0,
@@ -55,7 +52,9 @@ const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({
 				className={`${styles['evaluation-score']} ${statement.consensus < 0 ? 'negative' : ''}`}
 			>
 				{shouldDisplayScore && <span>{sumPro}</span>}
-				{shouldDisplayScore && numberOfEvaluators && numberOfEvaluators > 0 ? (
+				{shouldDisplayScore &&
+				numberOfEvaluators &&
+				numberOfEvaluators > 0 ? (
 					<span className={styles['total-evaluators']}>
 						{' '}
 						({numberOfEvaluators})
@@ -64,7 +63,7 @@ const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({
 			</div>
 			<div />
 			<div className={styles.explain}>
-				{learningEvaluation > 0 && (
+				{learning.evaluation > 0 && (
 					<div className={`${styles['evaluation-explain']}`}>
 						<span>{t('Disagree')}</span>
 						<span>{t('Agree')}</span>
@@ -89,9 +88,14 @@ const EvaluationThumb: FC<EvaluationThumbProps> = ({
 	evaluationScore,
 	statement,
 }) => {
+	const { creator } = useAuthentication();
+	const decreaseLearning = useDecreaseLearningRemain();
+
 	const handleSetEvaluation = (): void => {
-		setEvaluationToDB(statement, evaluationThumb.evaluation);
-		decreesUserSettingsLearningRemain({ evaluation: true });
+		setEvaluationToDB(statement, creator, evaluationThumb.evaluation);
+		decreaseLearning({
+			evaluation: true,
+		});
 	};
 
 	const isThumbActive =

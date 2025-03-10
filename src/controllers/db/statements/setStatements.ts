@@ -13,21 +13,26 @@ import {
 	getSiblingOptionsByParentId,
 } from '@/view/pages/statement/components/vote/statementVoteCont';
 import { getRandomColor } from '@/view/pages/statement/components/vote/votingColors';
-import { Statement, StatementSchema } from '@/types/statement/StatementTypes';
 import {
+	Statement,
+	StatementSchema,
 	Collections,
 	StatementType,
 	Access,
 	QuestionType,
-} from '@/types/TypeEnums';
-import { UserSchema, Membership } from '@/types/user/User';
+	UserSchema,
+	Membership,
+	ResultsBy,
+	StageSelectionType,
+	getRandomUID,
+	EvaluationUI,
+	ChoseByEvaluationType,
+	CutoffType,
+} from 'delib-npm';
+
 import { number, parse, string } from 'valibot';
-import { ResultsBy } from '@/types/results/Results';
-import { StageSelectionType } from '@/types/stage/stageTypes';
-import { getRandomUID } from '@/types/TypeUtils';
-import { EvaluationUI } from '@/types/evaluation/Evaluation';
 import { setChoseByToDB } from '../choseBy/setChoseBy';
-import { ChoseByEvaluationType, CutoffType } from '@/types/choseBy/ChoseByTypes';
+import { Creator } from '@/types/user/User';
 
 export const updateStatementParents = async (
 	statement: Statement,
@@ -58,42 +63,6 @@ export const updateStatementParents = async (
 	}
 };
 
-export function setSubStatementToDB(
-	statement: Statement,
-	title: string,
-	description?: string,
-	statementType?: StatementType
-) {
-	try {
-		const newSubStatement = createStatement({
-			text: title,
-			description: description,
-			parentStatement: statement,
-			statementType: statementType || StatementType.statement,
-			enableAddEvaluationOption: true,
-			enableAddVotingOption: true,
-			enhancedEvaluation: true,
-			showEvaluation: true,
-			resultsBy: ResultsBy.topOptions,
-			numberOfResults: 1,
-			hasChildren: true,
-			membership: statement.membership,
-		});
-
-		if (!newSubStatement)
-			throw new Error('New newSubStatement is undefined');
-
-		const newSubStatementRef = doc(
-			FireStore,
-			Collections.statements,
-			newSubStatement.statementId
-		);
-		setDoc(newSubStatementRef, newSubStatement);
-	} catch (error) {
-		console.error(error);
-	}
-}
-
 export async function saveStatementToDB({
 	text,
 	description,
@@ -108,10 +77,12 @@ export async function saveStatementToDB({
 	hasChildren,
 	membership,
 	stageSelectionType,
+	creator,
 }: CreateStatementProps): Promise<Statement | undefined> {
 	try {
 		const statement = createStatement({
 			text,
+			creator,
 			description,
 			parentStatement,
 			statementType,
@@ -129,6 +100,7 @@ export async function saveStatementToDB({
 		if (!statement) throw new Error('Statement is undefined');
 
 		setStatementToDB({
+			creator,
 			statement,
 			parentStatement,
 		});
@@ -153,16 +125,18 @@ export async function saveStatementToDB({
 interface SetStatementToDBParams {
 	statement: Statement;
 	parentStatement: Statement | 'top';
+	creator: Creator;
 }
 
 export const setStatementToDB = async ({
 	statement,
 	parentStatement,
+	creator,
 }: SetStatementToDBParams): Promise<
 	| {
-		statementId: string;
-		statement: Statement;
-	}
+			statementId: string;
+			statement: Statement;
+	  }
 	| undefined
 > => {
 	try {
@@ -170,8 +144,6 @@ export const setStatementToDB = async ({
 		if (!parentStatement) throw new Error('Parent statement is undefined');
 
 		const storeState = store.getState();
-		const user = storeState.user.user;
-		if (!user) throw new Error('User is undefined');
 
 		if (statement.statement.length < 2) {
 			throw new Error('Statement is too short');
@@ -184,16 +156,15 @@ export const setStatementToDB = async ({
 				? StatementType.question
 				: statement.statementType;
 
-		statement.creatorId = statement?.creator?.uid || user.uid;
-		statement.creator = statement?.creator || user;
+		statement.creator = statement?.creator || creator;
 		statement.statementId = statement?.statementId || getRandomUID();
 		statement.parentId = parentId;
 		statement.topParentId =
 			parentStatement === 'top'
 				? statement.statementId
 				: statement?.topParentId ||
-				parentStatement?.topParentId ||
-				'top';
+					parentStatement?.topParentId ||
+					'top';
 
 		const siblingOptions = getSiblingOptionsByParentId(
 			parentId,
@@ -262,6 +233,7 @@ export const setStatementToDB = async ({
 };
 
 export interface CreateStatementProps {
+	creator: Creator;
 	text: string;
 	description?: string;
 	parentStatement: Statement | 'top';
@@ -269,6 +241,7 @@ export interface CreateStatementProps {
 	questionType?: QuestionType;
 	enableAddEvaluationOption?: boolean;
 	enableAddVotingOption?: boolean;
+	enableNavigationalElements?: boolean;
 	enhancedEvaluation?: boolean;
 	showEvaluation?: boolean;
 	resultsBy?: ResultsBy;
@@ -279,12 +252,14 @@ export interface CreateStatementProps {
 }
 
 export function createStatement({
+	creator,
 	text,
 	description,
 	parentStatement,
 	statementType,
 	questionType,
 	enableAddEvaluationOption = true,
+	enableNavigationalElements = true,
 	enableAddVotingOption = true,
 	enhancedEvaluation = true,
 	showEvaluation = true,
@@ -296,8 +271,6 @@ export function createStatement({
 }: CreateStatementProps): Statement | undefined {
 	try {
 		const storeState = store.getState();
-		const user = storeState.user.user;
-		if (!user) throw new Error('User is undefined');
 		if (!statementType) throw new Error('Statement type is undefined');
 
 		const statementId = getRandomUID();
@@ -330,8 +303,8 @@ export function createStatement({
 			parentId,
 			parents,
 			topParentId,
-			creator: user,
-			creatorId: user.uid,
+			creator,
+			creatorId: creator.uid,
 			membership: membership || { access: Access.open },
 			statementSettings: {
 				enhancedEvaluation,
@@ -339,8 +312,8 @@ export function createStatement({
 				enableAddEvaluationOption,
 				enableAddVotingOption,
 				hasChildren,
+				enableNavigationalElements,
 			},
-			defaultLanguage: user.defaultLanguage || 'en',
 			createdAt: Timestamp.now().toMillis(),
 			lastUpdate: Timestamp.now().toMillis(),
 			color: getRandomColor(existingColors),
@@ -368,10 +341,11 @@ export function createStatement({
 			newStatement.evaluationSettings = {
 				evaluationUI: getEvaluationUI(stageSelectionType),
 			};
-
 		}
 
-		function getEvaluationUI(stageSelectionType?: StageSelectionType): EvaluationUI {
+		function getEvaluationUI(
+			stageSelectionType?: StageSelectionType
+		): EvaluationUI {
 			switch (stageSelectionType) {
 				case StageSelectionType.consensus:
 					return EvaluationUI.suggestions;

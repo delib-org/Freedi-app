@@ -10,38 +10,37 @@ import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { subStatementsByTopParentIdMemo } from '@/redux/statements/statementsSlice';
 import Text from '@/view/components/text/Text';
 import StatementChatMore from '@/view/pages/statement/components/chat/components/StatementChatMore';
-import { Statement } from '@/types/statement/StatementTypes';
+import { SimpleStatement, Statement } from 'delib-npm';
 
 interface Props {
-	statement: Statement;
+	simpleStatement: SimpleStatement;
 }
 
-const MainCard: FC<Props> = ({ statement }) => {
+const MainCard: FC<Props> = ({ simpleStatement }) => {
 	const _subStatements: Statement[] = useAppSelector(
-		subStatementsByTopParentIdMemo(statement.statementId)
+		subStatementsByTopParentIdMemo(simpleStatement.statementId)
 	)
-		.filter((s) => s.statementId !== statement.statementId)
+		.filter((s) => s.statementId !== simpleStatement.statementId)
 		.sort((a, b) => a.lastUpdate - b.lastUpdate);
 
 	const subStatements = getLastElements(_subStatements, 7) as Statement[];
-	const statementImgUrl = statement.imagesURL?.main;
-	const description =
-		statement.description && statement.description.length > 30
-			? `${statement.description.slice(0, 144)} ...`
-			: statement.description;
+	const statementImgUrl = simpleStatement.imageURL || undefined;
+	const description = simpleStatement.description?.length > 30
+		? `${simpleStatement.description.slice(0, 144)} ...`
+		: simpleStatement.description;
 
 	useEffect(() => {
-		const unsub = listenToAllSubStatements(statement.statementId);
+		const unsubscribe = listenToAllSubStatements(simpleStatement.statementId);
 
 		return () => {
-			unsub();
+			unsubscribe();
 		};
 	}, []);
 
 	return (
 		<div className={styles.mainCard}>
 			<Link
-				to={`/statement/${statement.statementId}/`}
+				to={`/statement/${simpleStatement.statementId}/`}
 				className={styles.link}
 			>
 				<div className={styles.content}>
@@ -51,10 +50,10 @@ const MainCard: FC<Props> = ({ statement }) => {
 						}}
 						className={styles.img}
 					></div>
-					<StatementChatMore statement={statement} />
+					<StatementChatMore statement={simpleStatement} />
 				</div>
 
-				<h2>{statement.statement}</h2>
+				<h2>{simpleStatement.statement}</h2>
 				<div className={styles.contentText}>
 					<Text description={description} />
 				</div>

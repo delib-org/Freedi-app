@@ -1,25 +1,22 @@
-import { useEffect, useRef } from 'react';
+import { useContext, useEffect, useRef } from 'react';
 import SuggestionCards from '../../evaluations/components/suggestionCards/SuggestionCards';
-import styles from './StagePage.module.scss'
+import styles from './StagePage.module.scss';
 import StatementBottomNav from '../../nav/bottom/StatementBottomNav';
-import { useLanguage } from '@/controllers/hooks/useLanguages';
 import StatementVote from '../../vote/StatementVote';
-import { useParams } from 'react-router';
-import { statementSelectorById } from '@/redux/statements/statementsSlice';
-import { useSelector } from 'react-redux';
-import { Statement } from '@/types/statement/StatementTypes';
-import { EvaluationUI } from '@/types/evaluation/Evaluation';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { StatementContext } from '../../../StatementCont';
+import { Statement, EvaluationUI } from 'delib-npm';
 
 const StagePage = () => {
-	const { statementId } = useParams();
-	const { t } = useLanguage();
-	const statement = useSelector(statementSelectorById(statementId));
+	const { t } = useUserConfig();
+	const { statement } = useContext(StatementContext);
 	const stageRef = useRef<HTMLDivElement>(null);
 
 	useEffect(() => {
 		const updateHeight = () => {
 			if (stageRef.current) {
-				const topPosition = stageRef.current.getBoundingClientRect().top;
+				const topPosition =
+					stageRef.current.getBoundingClientRect().top;
 				const viewportHeight = window.innerHeight;
 				const newHeight = viewportHeight - topPosition;
 				stageRef.current.style.height = `${newHeight + 300}px`;
@@ -37,19 +34,21 @@ const StagePage = () => {
 		};
 	}, []);
 
-	const stageName = statement?.statement ? `: ${t(statement.statement)}` : "";
+	const stageName = statement?.statement ? `: ${t(statement.statement)}` : '';
 
 	return (
 		<>
-			<div className={`${styles["stage-page"]} wrapper`}>
-				<h2>{t("Stage")}{statement?.statement && stageName}</h2>
-				<p className="mb-4">Stage description</p>
+			<div className={`${styles['stage-page']} wrapper`}>
+				<h2>
+					{t('Stage')}
+					{statement?.statement && stageName}
+				</h2>
+				<p className='mb-4'>Stage description</p>
 				<StagePageSwitch statement={statement} />
 			</div>
 			<div className={styles.bottomNav}>
 				<StatementBottomNav />
 			</div>
-
 		</>
 	);
 };
@@ -61,7 +60,6 @@ interface StagePageSwitchProps {
 }
 
 function StagePageSwitch({ statement }: StagePageSwitchProps) {
-
 	const evaluationUI = statement?.evaluationSettings?.evaluationUI;
 
 	if (evaluationUI === EvaluationUI.suggestions) {

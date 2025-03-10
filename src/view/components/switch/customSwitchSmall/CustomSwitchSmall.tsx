@@ -1,8 +1,8 @@
-import React, { FC, useState } from "react";
-import "./CustomSwitchSmall.scss";
-import VisuallyHidden from "../../accessibility/toScreenReaders/VisuallyHidden";
-import BackgroundImage from "./customSwitchSmallBackground.svg";
-import { useLanguage } from "@/controllers/hooks/useLanguages";
+import React, { FC, useState } from 'react';
+import './CustomSwitchSmall.scss';
+import VisuallyHidden from '../../accessibility/toScreenReaders/VisuallyHidden';
+import BackgroundImage from './customSwitchSmallBackground.svg';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 
 interface Props {
 	label: string;
@@ -23,7 +23,7 @@ const CustomSwitchSmall: FC<Props> = ({
 	imageUnchecked,
 	setChecked,
 }) => {
-	const { dir } = useLanguage();
+	const { dir } = useUserConfig();
 	const [isChecked, setIsChecked] = useState(checked);
 
 	const handleChange = () => {
@@ -40,55 +40,61 @@ const CustomSwitchSmall: FC<Props> = ({
 
 	return (
 		<div
-			className="custom-switch-small"
+			className='custom-switch-small'
 			onClick={handleChange}
 			onKeyDown={handleKeyDown}
-			role="switch"
+			role='switch'
 			aria-checked={isChecked}
 			tabIndex={0}
 		>
 			<div
-				className={dir === "rtl" ? "background" : "background background--ltr"}
+				className={
+					dir === 'rtl' ? 'background' : 'background background--ltr'
+				}
 				style={{ backgroundImage: `url(${BackgroundImage})` }}
 			>
 				<div
-					className="ball ball-background"
-					style={{ left: "4.15rem" }}
-					aria-hidden="true"
+					className='ball ball-background'
+					style={{ left: '4.15rem' }}
+					aria-hidden='true'
 				>
 					{imageUnchecked}
 				</div>
 				<div
-					className="ball ball-background ball-background-off"
-					aria-hidden="true"
+					className='ball ball-background ball-background-off'
+					aria-hidden='true'
 				>
 					{imageChecked}
 				</div>
 				<div
-					className={`ball ball-switch ball-switch--${isChecked ? "checked" : "unchecked"}`}
+					className={`ball ball-switch ball-switch--${isChecked ? 'checked' : 'unchecked'}`}
 					style={{ left: `${isChecked ? 0 : 4.15}rem` }}
-					aria-hidden="true"
+					aria-hidden='true'
 				>
 					{isChecked ? imageChecked : imageUnchecked}
 				</div>
 			</div>
-			<div className="text" aria-hidden="true">
+			<div className='text' aria-hidden='true'>
 				{isChecked ? textChecked : textUnchecked}
 			</div>
 			<label htmlFor={`toggleSwitchSimple-${label}`}>
 				<VisuallyHidden labelName={label} />
 			</label>
 			<input
-				type="checkbox"
+				type='checkbox'
 				name={label}
 				id={`toggleSwitchSimple-${label}`}
-				className="switch-input"
+				className='switch-input'
 				onChange={handleChange}
-				value={isChecked ? "on" : "off"}
+				value={isChecked ? 'on' : 'off'}
 				checked={isChecked}
 				data-cy={`toggleSwitch-input-${label}`}
 				tabIndex={-1}
-				style={{ position: 'absolute', opacity: 0, pointerEvents: 'none' }}
+				style={{
+					position: 'absolute',
+					opacity: 0,
+					pointerEvents: 'none',
+				}}
 			/>
 		</div>
 	);

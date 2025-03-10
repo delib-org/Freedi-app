@@ -15,7 +15,7 @@ import MembersSettings from './../../components/membership/MembersSettings';
 import SectionTitle from './../../components/sectionTitle/SectionTitle';
 import TitleAndDescription from './../../components/titleAndDescription/TitleAndDescription';
 import { setNewStatement } from './../../statementSettingsCont';
-import { useLanguage } from '@/controllers/hooks/useLanguages';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import UploadImage from '@/view/components/uploadImage/UploadImage';
 
 // Hooks & Helpers
@@ -27,9 +27,8 @@ import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { createSelector } from '@reduxjs/toolkit';
 import { RootState } from '@/redux/store';
 import Loader from '@/view/components/loaders/Loader';
-import { Statement } from '@/types/statement/StatementTypes';
-import { StatementSubscription } from '@/types/statement/StatementSubscription';
-import { Role } from '@/types/user/UserSettings';
+import { StatementSubscription, Role, Statement } from 'delib-npm';
+import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 
 interface StatementSettingsFormProps {
 	statement: Statement;
@@ -47,7 +46,8 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 	// * Hooks * //
 	const navigate = useNavigate();
 	const { statementId } = useParams();
-	const { t } = useLanguage();
+	const { t } = useUserConfig();
+	const { creator } = useAuthentication();
 
 	const [image, setImage] = useState<string>(imageUrl);
 	const [loading, setLoading] = useState<boolean>(false);
@@ -77,6 +77,7 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 			e.preventDefault();
 			setLoading(true);
 			const newStatement = await setNewStatement({
+				creator,
 				navigate,
 				statementId,
 				statement,

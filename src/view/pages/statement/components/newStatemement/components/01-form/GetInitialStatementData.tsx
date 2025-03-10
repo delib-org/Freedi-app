@@ -5,16 +5,16 @@ import {
 	createStatement,
 	setStatementToDB,
 } from '@/controllers/db/statements/setStatements';
-import { useLanguage } from '@/controllers/hooks/useLanguages';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import Button, { ButtonType } from '@/view/components/buttons/button/Button';
 import Input from '@/view/components/input/Input';
 import Textarea from '@/view/components/textarea/Textarea';
 import { StatementContext } from '@/view/pages/statement/StatementCont';
-import { StatementType } from '@/types/TypeEnums';
-import { Statement } from '@/types/statement/StatementTypes';
+import { StatementType, Statement } from 'delib-npm';
+import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 
 export default function GetInitialStatementData() {
-	const { t } = useLanguage();
+	const { t } = useUserConfig();
 	const { title, description, setTitle, setDescription } =
 		useContext(NewStatementContext);
 	const {
@@ -22,8 +22,8 @@ export default function GetInitialStatementData() {
 		newQuestionType,
 		handleSetNewStatement,
 		statement,
-		stage,
 	} = useContext(StatementContext);
+	const { creator } = useAuthentication();
 
 	const handleSubmit = async (ev: FormEvent<HTMLFormElement>) => {
 		ev.preventDefault();
@@ -37,7 +37,8 @@ export default function GetInitialStatementData() {
 			if (!statement) throw new Error('Statement is not defined');
 
 			const newStatement: Statement | undefined = createStatement({
-				parentStatement: stage ?? statement,
+				creator,
+				parentStatement: statement,
 				text: title,
 				description,
 				statementType: newStatementType,
@@ -46,7 +47,8 @@ export default function GetInitialStatementData() {
 			if (!newStatement) throw new Error('newStatement is not defined');
 
 			setStatementToDB({
-				parentStatement: stage ?? statement,
+				creator,
+				parentStatement: statement,
 				statement: newStatement,
 			});
 

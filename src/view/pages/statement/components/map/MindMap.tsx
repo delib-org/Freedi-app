@@ -8,15 +8,14 @@ import {
 	FilterType
 } from '@/controllers/general/sorting';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
-import { useLanguage } from '@/controllers/hooks/useLanguages';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import { useMapContext } from '@/controllers/hooks/useMap';
 import {
 	statementSelector,
 	statementSubscriptionSelector,
 } from '@/redux/statements/statementsSlice';
 import Modal from '@/view/components/modal/Modal';
-import { StatementType } from '@/types/TypeEnums';
-import { Role } from '@/types/user/UserSettings';
+import { StatementType, Role } from 'delib-npm';
 import { useParams } from 'react-router';
 import { useMindMap } from './MindMapMV';
 
@@ -37,7 +36,7 @@ const MindMap: FC = () => {
 	const role = userSubscription ? userSubscription.role : Role.member;
 	const _isAdmin = isAdmin(role);
 
-	const { t } = useLanguage();
+	const { t } = useUserConfig();
 	const { mapContext, setMapContext } = useMapContext();
 
 	const [filterBy, setFilterBy] = useState<FilterType>(

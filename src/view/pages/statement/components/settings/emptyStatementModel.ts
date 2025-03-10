@@ -1,6 +1,4 @@
-import { Screen, StatementType } from '@/types/TypeEnums';
-import { ResultsBy } from '@/types/results/Results';
-import { Statement } from '@/types/statement/StatementTypes';
+import { Statement, ResultsBy, Screen, StatementType } from 'delib-npm';
 
 export const defaultStatementSettings = {
 	enhancedEvaluation: true,
@@ -29,19 +27,12 @@ export const defaultEmptyStatement: Statement = {
 	statement: '',
 	statementId: '',
 	parentId: '',
-	creatorId: '',
 	creator: {
 		displayName: '',
 		uid: '',
-		defaultLanguage: undefined,
-		email: undefined,
 		photoURL: undefined,
-		isAnonymous: undefined,
-		fontSize: undefined,
-		color: undefined,
-		agreement: undefined,
-		role: undefined,
 	},
+	creatorId: '',
 	statementType: StatementType.statement,
 	lastUpdate: 0,
 	createdAt: 0,

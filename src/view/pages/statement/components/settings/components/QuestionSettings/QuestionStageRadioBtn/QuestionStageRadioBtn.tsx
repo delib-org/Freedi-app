@@ -7,11 +7,10 @@ import HandIcon from '@/assets/icons/handIcon.svg?react';
 import LightBulbIcon from '@/assets/icons/lightBulbIcon.svg?react';
 import { setQuestionStage } from '@/controllers/db/statements/statementMetaData/setStatementMetaData';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
-import { useLanguage } from '@/controllers/hooks/useLanguages';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import { statementMetaDataSelector } from '@/redux/statements/statementsMetaSlice';
-import { Statement } from '@/types/statement/StatementTypes';
+import { QuestionStep, Statement, } from 'delib-npm';
 import { getStepInfo } from './helpers';
-import { QuestionStep } from '@/types/TypeEnums';
 
 interface Props {
 	step: QuestionStep;
@@ -19,7 +18,7 @@ interface Props {
 }
 
 const QuestionStageRadioBtn: FC<Props> = ({ step, statement }) => {
-	const { t } = useLanguage();
+	const { t } = useUserConfig();
 	const isSelected = statement.questionSettings?.currentStep === step;
 	const { backgroundColor, btnBackgroundColor } = getStepInfo(
 		step,
