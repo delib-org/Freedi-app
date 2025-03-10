@@ -6,11 +6,14 @@ import StatementVote from '../../vote/StatementVote';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import { StatementContext } from '../../../StatementCont';
 import { Statement, EvaluationUI } from 'delib-npm';
+import { useParams } from 'react-router';
 
 const StagePage = () => {
 	const { t } = useUserConfig();
+	const { sort } = useParams();
 	const { statement } = useContext(StatementContext);
 	const stageRef = useRef<HTMLDivElement>(null);
+	console.log(sort)
 
 	useEffect(() => {
 		const updateHeight = () => {

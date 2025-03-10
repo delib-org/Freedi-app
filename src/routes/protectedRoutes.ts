@@ -37,5 +37,9 @@ export const protectedRoutes: RouteObject[] = [
 		path: 'stage/:statementId',
 		element: withSuspense(StatementMain),
 	},
+	{
+		path: 'stage/:statementId/:sort',
+		element: withSuspense(StatementMain),
+	},
 	// ... other protected routes
 ];
