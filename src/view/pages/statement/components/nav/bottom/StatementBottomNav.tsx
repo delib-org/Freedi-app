@@ -22,7 +22,7 @@ interface Props {
 }
 
 const StatementBottomNav: FC<Props> = () => {
-	const { statementId } = useParams();
+	const { sort } = useParams();
 	const { statement, setNewStatementType, handleSetNewStatement } =
 		useContext(StatementContext);
 	const { dir, learning } = useUserConfig();
@@ -89,7 +89,7 @@ const StatementBottomNav: FC<Props> = () => {
 							>
 								<Link
 									className={`open-nav-icon ${showSorting ? 'active' : ''}`}
-									to={`/statement/${statementId}/main/${navItem.link}`}
+									to={sort ? `./../${navItem.link}` : `./${navItem.link}`}
 									aria-label='Sorting options'
 									key={navItem.id}
 									onClick={() => setShowSorting(false)}
