@@ -15,7 +15,7 @@ import { useNavigate, useParams } from 'react-router';
 
 export function useRandomSuggestions() {
 	const navigate = useNavigate();
-	const { user } = useAuthentication();
+	const { user, isLoading } = useAuthentication();
 	const dispatch = useDispatch();
 	const [subStatements, setSubStatements] = useState<Statement[]>([]);
 	const { statementId } = useParams<{ statementId: string }>();
@@ -26,11 +26,11 @@ export function useRandomSuggestions() {
 		);
 
 	useEffect(() => {
-		if (!user)
+		if (!isLoading && !user)
 			navigate(
 				`/mass-consensus/${statementId}/${MassConsensusPageUrls.introduction}`
 			);
-	}, [user]);
+	}, [user, isLoading]);
 
 	useEffect(() => {
 		fetchRandomStatements();

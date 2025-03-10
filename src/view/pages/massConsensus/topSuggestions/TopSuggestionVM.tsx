@@ -21,7 +21,7 @@ const useTopSuggestions = () => {
 	const dispatch = useDispatch();
 	const { statementId } = useParams<{ statementId: string }>();
 	const statement = useSelector(statementSelectorById(statementId));
-	const { user } = useAuthentication();
+	const { user, isLoading } = useAuthentication();
 
 	const [topStatements, setTopStatements] = useState<Statement[]>([]);
 
@@ -53,11 +53,11 @@ const useTopSuggestions = () => {
 	};
 
 	useEffect(() => {
-		if (!user)
+		if (!isLoading && !user)
 			navigate(
 				`/mass-consensus/${statementId}/${MassConsensusPageUrls.introduction}`
 			);
-	}, []);
+	}, [user, isLoading]);
 
 	useEffect(() => {
 		if (statement) {
@@ -81,7 +81,7 @@ const useTopSuggestions = () => {
 
 	useEffect(() => {
 		fetchStatements();
-	}, [statementId, user.uid]);
+	}, [statementId, user && user.uid]);
 
 	useEffect(() => {
 		const unSubscribes = topStatements.map((statement) => {
