@@ -6,7 +6,6 @@ import StatementVote from '../../vote/StatementVote';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import { StatementContext } from '../../../StatementCont';
 import { Statement, EvaluationUI } from 'delib-npm';
-import { useParams } from 'react-router';
 
 const StagePage = () => {
 	const { t } = useUserConfig();

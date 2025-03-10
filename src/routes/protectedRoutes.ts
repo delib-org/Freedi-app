@@ -6,7 +6,6 @@ const StatementMain = lazy(
 	() => import('@/view/pages/statement/StatementMain')
 );
 
-
 export const protectedRoutes: RouteObject[] = [
 	{
 		path: 'statement/:statementId',
