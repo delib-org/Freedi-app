@@ -1,7 +1,6 @@
 import { useNavigate, useParams } from 'react-router';
 import HeaderMassConsensus from '../headerMassConsensus/HeaderMassConsensus';
 import TitleMassConsensus from '../TitleMassConsensus/TitleMassConsensus';
-import { useLanguageParams } from '../useParamsLang/useLanguageParams';
 import { useSelector } from 'react-redux';
 import { statementSelector } from '@/redux/statements/statementsSlice';
 import { useEffect } from 'react';
@@ -14,7 +13,6 @@ import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 
 const InitialQuestion = () => {
 	const navigate = useNavigate();
-	const { dir, lang } = useLanguageParams();
 	const { statementId } = useParams<{ statementId: string }>();
 	const statement = useSelector(statementSelector(statementId));
 	const {
@@ -24,7 +22,7 @@ const InitialQuestion = () => {
 		ready,
 		loading,
 	} = useInitialQuestion();
-	const { t } = useUserConfig();
+	const { t, dir } = useUserConfig();
 
 	useEffect(() => {
 		if (!statement) navigate(`/mass-consensus/${statementId}/introduction`);
@@ -33,12 +31,12 @@ const InitialQuestion = () => {
 	useEffect(() => {
 		if (ready)
 			navigate(
-				`/mass-consensus/${statementId}/${MassConsensusPageUrls.similarSuggestions}?lang=${lang}`
+				`/mass-consensus/${statementId}/${MassConsensusPageUrls.similarSuggestions}`
 			);
 	}, [ready]);
 
 	return (
-		<div style={{ direction: dir }}>
+		<>
 			<HeaderMassConsensus
 				title={t('offer a suggestion')}
 				backTo={MassConsensusPageUrls.introduction}
@@ -59,7 +57,7 @@ const InitialQuestion = () => {
 				isNextActive={ifButtonEnabled}
 			/>
 			{loading && <Loader />}
-		</div>
+		</>
 	);
 };
 
