@@ -34,7 +34,6 @@ const StageCard: FC<Props> = ({ statement, isDescription, isSuggestions }) => {
 			? maxKeyInObject(statement.selections)
 			: '';
 
-
 	const topVoted = useSelector(statementSelectorById(topVotedId));
 
 	const simpleTopVoted = topVoted

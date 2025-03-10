@@ -10,7 +10,6 @@ import { useParams } from 'react-router';
 
 const StagePage = () => {
 	const { t } = useUserConfig();
-	const { sort } = useParams();
 	const { statement } = useContext(StatementContext);
 	const stageRef = useRef<HTMLDivElement>(null);
 
