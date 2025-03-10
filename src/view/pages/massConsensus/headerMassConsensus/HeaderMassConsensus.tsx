@@ -17,7 +17,7 @@ const HeaderMassConsensus = ({
 	isIntro?: boolean;
 }) => {
 	const { statementId } = useParams<{ statementId: string }>();
-	const { dir, currentLanguage } = useUserConfig();
+	const { dir } = useUserConfig();
 
 	return (
 		<div className={styles.headerMC} style={{ direction: dir }}>
@@ -33,7 +33,7 @@ const HeaderMassConsensus = ({
 					to={
 						backToApp
 							? `/statement/${statementId}`
-							: `/mass-consensus/${statementId}/${backTo}?lang=${currentLanguage}`
+							: `/mass-consensus/${statementId}/${backTo}`
 					}
 				>
 					<BackIcon />
@@ -51,7 +51,7 @@ const HeaderMassConsensus = ({
 			) : (
 				<Link
 					className={styles.icon}
-					to={`/mass-consensus/${statementId}/${MassConsensusPageUrls.introduction}?lang=${currentLanguage}`}
+					to={`/mass-consensus/${statementId}/${MassConsensusPageUrls.introduction}`}
 				>
 					<HomeIcon />
 				</Link>

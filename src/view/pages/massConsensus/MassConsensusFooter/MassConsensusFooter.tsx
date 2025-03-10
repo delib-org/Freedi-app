@@ -1,5 +1,4 @@
 import { Link, useParams } from 'react-router';
-import { useLanguageParams } from '../useParamsLang/useLanguageParams';
 import { MassConsensusPageUrls } from '@/types/TypeEnums';
 import styles from './MassConsensusFooter.module.scss';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
@@ -16,7 +15,6 @@ const MassConsensusFooter = ({
 	onNext?: () => void;
 }) => {
 	const { statementId } = useParams<{ statementId: string }>();
-	const { lang } = useLanguageParams();
 	const { t } = useUserConfig();
 
 	return (
@@ -29,7 +27,7 @@ const MassConsensusFooter = ({
 					{t('next')}
 				</button>
 			)}
-			<Link to={`/mass-consensus/${statementId}/${goTo}?lang=${lang}`}>
+			<Link to={`/mass-consensus/${statementId}/${goTo}`}>
 				<button className='btn btn--large btn--primary'>
 					{isIntro ? t('start') : t('skip')}
 				</button>

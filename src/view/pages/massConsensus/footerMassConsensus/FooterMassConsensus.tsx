@@ -17,13 +17,13 @@ const FooterMassConsensus = ({
 	onNext?: () => void;
 }) => {
 	const { statementId } = useParams<{ statementId: string }>();
-	const { t, currentLanguage } = useUserConfig();
+	const { t } = useUserConfig();
 
 	return (
 		<div className={styles.footerMC}>
 			{isIntro ? (
 				<Link
-					to={`/mass-consensus/${statementId}/${goTo}?lang=${currentLanguage}`}
+					to={`/mass-consensus/${statementId}/${goTo}`}
 				>
 					<button className='btn btn--large btn--primary'>
 						{isFeedback ? t('Send') : t('Start')}
@@ -45,7 +45,7 @@ const FooterMassConsensus = ({
 						{t('Next')}
 					</button>
 					<Link
-						to={`/mass-consensus/${statementId}/${goTo}?lang=${currentLanguage}`}
+						to={`/mass-consensus/${statementId}/${goTo}`}
 					>
 						<button className='btn btn--large btn--secondary'>
 							{t('Skip')}
