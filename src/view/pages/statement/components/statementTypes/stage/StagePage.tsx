@@ -49,19 +49,6 @@ const StagePage = () => {
 			<div className={styles.bottomNav}>
 				<StatementBottomNav />
 			</div>
-			<div ref={stageRef} className={styles.stage}>
-				<div className={styles.wrapper}>
-					<h2>
-						{t('Stage')}
-						{statement?.statement && stageName}
-					</h2>
-					<p className='mb-4'>Stage description</p>
-					<SuggestionCards />
-					<div className={styles.bottomNav}>
-						<StatementBottomNav />
-					</div>
-				</div>
-			</div>
 		</>
 	);
 };

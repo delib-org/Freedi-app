@@ -53,7 +53,7 @@ const StatementVote: FC = () => {
 	const totalVotes = getTotalVoters(statement);
 
 	useEffect(() => {
-		if (!getVoteFromDB) {
+		if (!getVoteFromDB && user?.uid) {
 			getToVoteOnParent(
 				statement?.statementId,
 				user.uid,
@@ -61,7 +61,7 @@ const StatementVote: FC = () => {
 			);
 			getVoteFromDB = true;
 		}
-	}, [statement?.statementId, dispatch]);
+	}, [statement?.statementId, dispatch, user?.uid]);
 
 	return (
 		<>

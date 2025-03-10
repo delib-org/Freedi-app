@@ -11,7 +11,7 @@ export function VotingSuggestionsMV() {
 	const [subStatements, setSubStatements] = useState<Statement[]>([]);
 
 	const navigate = useNavigate();
-	const { user } = useAuthentication();
+	const { user, isLoading } = useAuthentication();
 
 	const navigateToFeedback = () =>
 		navigate(
@@ -47,11 +47,11 @@ export function VotingSuggestionsMV() {
 	}, [subStatements.length]);
 
 	useEffect(() => {
-		if (!user)
+		if (!isLoading && !user)
 			navigate(
 				`/mass-consensus/${statementId}/${MassConsensusPageUrls.introduction}`
 			);
-	}, [user]);
+	}, [user, isLoading]);
 
 	return { subStatements, statementId, navigateToFeedback };
 }

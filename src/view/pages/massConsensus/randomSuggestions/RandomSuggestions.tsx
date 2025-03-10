@@ -20,9 +20,6 @@ const RandomSuggestions = () => {
 			<TitleMassConsensus
 				title={t('please rate the following suggestions')}
 			/>
-			<TitleMassConsensus
-				title={t('please rate the following suggestions')}
-			/>
 			<div className='wrapper'>
 				<SuggestionCards selectionFunction={SelectionFunction.random} />
 			</div>
