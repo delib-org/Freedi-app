@@ -13,7 +13,6 @@ const StagePage = () => {
 	const { sort } = useParams();
 	const { statement } = useContext(StatementContext);
 	const stageRef = useRef<HTMLDivElement>(null);
-	console.log(sort)
 
 	useEffect(() => {
 		const updateHeight = () => {

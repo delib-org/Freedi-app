@@ -13,7 +13,6 @@ import { useDispatch, useSelector } from 'react-redux';
 import { setStatement, statementSelectorById } from '@/redux/statements/statementsSlice';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import { getStatementFromDB } from '@/controllers/db/statements/getStatement';
-import AddStatement from '@/view/pages/home/main/addStatement/AddStatement';
 
 interface Props {
 	statement: Statement;
