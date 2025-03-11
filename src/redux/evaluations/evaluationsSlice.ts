@@ -48,9 +48,11 @@ export const evaluationsParentSelector =
 			(evaluation) => evaluation.parentId === parentId
 		);
 export const evaluationSelector =
-	(statementId: string | undefined) => (state: RootState) =>
-		state.evaluations.userEvaluations.find(
-			(evaluation) => evaluation.statementId === statementId
+	(statementId: string | undefined, creatorId?: string) => (state: RootState): number | undefined => {
+		const _creatorId = creatorId ?? state.creator.creator?.uid;
+		return state.evaluations.userEvaluations.find(
+			(evaluation) => evaluation.statementId === statementId && evaluation.evaluatorId === _creatorId
 		)?.evaluation;
+	}
 
 export default evaluationsSlicer.reducer;

@@ -2,15 +2,16 @@ import { FC } from 'react';
 import EnhancedEvaluation from './enhancedEvaluation/EnhancedEvaluation';
 import SimpleEvaluation from './simpleEvaluation/SimpleEvaluation';
 import { Statement } from 'delib-npm';
+import { useEvaluation } from './EvalautionMV';
 
 interface EvaluationProps {
-	parentStatement: Statement | undefined;
 	statement: Statement;
 }
 
-const Evaluation: FC<EvaluationProps> = ({ parentStatement, statement }) => {
+const Evaluation: FC<EvaluationProps> = ({ statement }) => {
 	try {
-		if (!parentStatement) throw new Error('parentStatement is not defined');
+		const { parentStatement } = useEvaluation(statement);
+		if (!parentStatement) return null;
 
 		let shouldDisplayScore: boolean = !!parentStatement.statementSettings?.showEvaluation;
 		if (statement.evaluation?.selectionFunction) shouldDisplayScore = false;

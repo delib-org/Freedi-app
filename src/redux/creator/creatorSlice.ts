@@ -24,6 +24,6 @@ const creatorSlice = createSlice({
 
 export const { setCreator, removeCreator } = creatorSlice.actions;
 
-export const selectCreator = (state: { creator: CreatorState }) => state.creator.creator;
+export const creatorSelector = (state: { creator: CreatorState }) => state.creator.creator;
 
 export default creatorSlice.reducer;

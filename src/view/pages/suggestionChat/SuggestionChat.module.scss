@@ -1,0 +1,24 @@
+.suggestionChat {
+	width: 100%;
+	max-width: var(--wrapper);
+	position: relative;
+	height: 100%;
+
+	.evaluationPanel {
+		margin: 1rem auto;
+		width: fit-content;
+	}
+
+	.comments {
+		display: flex;
+		flex-direction: column;
+		justify-content: flex-start;
+		gap: .5rem;
+	}
+
+	.chatInput {
+		position: absolute;
+		bottom: 0;
+		width: 100%;
+	}
+}
