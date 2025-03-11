@@ -39,7 +39,6 @@ const AddStage: FC<AddStageProps> = ({ setShowAddStage }) => {
 
 		if (!statement || !stageSelectionType) return;
 		await saveStatementToDB({
-			creator,
 			text: name,
 			description,
 			stageSelectionType,

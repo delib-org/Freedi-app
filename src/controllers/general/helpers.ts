@@ -257,9 +257,7 @@ export function isProduction(): boolean {
 export const handleCloseInviteModal = (
 	setShowModal: (show: boolean) => void
 ) => {
-	const inviteModal = document.querySelector(
-		'.inviteModal'
-	) as HTMLDivElement;
+	const inviteModal = document.querySelector('.inviteModal');
 	inviteModal.classList.add('closing');
 
 	setTimeout(() => {

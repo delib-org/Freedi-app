@@ -5,7 +5,10 @@ import path from 'path';
 import pkg from './package.json';
 
 // https://vitejs.dev/config/
-export default defineConfig(() => {
+export default defineConfig(({ mode }) => {
+
+	const isTestMode = mode === 'testing';
+
 	return {
 		plugins: [
 			react(),
@@ -23,6 +26,8 @@ export default defineConfig(() => {
 			'process.env.VITE_APP_VERSION': JSON.stringify(pkg.version),
 		},
 		build: {
+			minify: !isTestMode, // Only minify when NOT on freedi-test.web.app
+			sourcemap: isTestMode, // Only include sourcemaps on freedi-test.web.app
 			rollupOptions: {
 				output: {
 					manualChunks: {

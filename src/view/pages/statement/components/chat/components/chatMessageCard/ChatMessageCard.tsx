@@ -274,7 +274,7 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
 								onOptionClick={() => {
 									deleteStatementFromDB(
 										statement,
-										_isAuthorized
+										!!_isAuthorized
 									);
 									setIsCardMenuOpen(false);
 								}}

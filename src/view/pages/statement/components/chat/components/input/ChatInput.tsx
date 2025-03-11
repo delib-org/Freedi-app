@@ -64,7 +64,7 @@ const ChatInput: FC<Props> = ({ statement }) => {
 		e.preventDefault();
 
 		// Create statement
-		handleAddStatement(message, statement, user);
+		handleAddStatement(message, statement);
 
 		setMessage('');
 		if (textareaRef.current) {
