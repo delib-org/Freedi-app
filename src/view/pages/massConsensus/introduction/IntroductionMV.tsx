@@ -2,6 +2,7 @@ import firebaseConfig from '@/controllers/db/configKey';
 import {
 	setStatement,
 	statementSelector,
+	statementSubscriptionSelector,
 } from '@/redux/statements/statementsSlice';
 import { functionConfig, Statement } from 'delib-npm';
 
@@ -13,6 +14,7 @@ export function useIntroductionMV() {
 	const dispatch = useDispatch();
 	const { statementId } = useParams();
 	const statement = useSelector(statementSelector(statementId));
+	const subscription = useSelector(statementSubscriptionSelector(statementId));
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 
@@ -28,7 +30,7 @@ export function useIntroductionMV() {
 		});
 	}, [statementId]);
 
-	return { statement, loading, error };
+	return { statement, loading, error, subscription };
 }
 
 async function getInitialMCData(

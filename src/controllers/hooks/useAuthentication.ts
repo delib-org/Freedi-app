@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { User } from 'firebase/auth';
-import { onAuthStateChanged } from 'firebase/auth';
+import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from '@/controllers/db/config';
 import { useNavigate, useLocation } from 'react-router';
 import { useDispatch } from 'react-redux';

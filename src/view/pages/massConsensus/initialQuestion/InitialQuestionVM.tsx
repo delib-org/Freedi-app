@@ -1,8 +1,9 @@
 import firebaseConfig from '@/controllers/db/configKey';
 import { setSimilarStatements } from '@/redux/massConsensus/massConsensusSlice';
-import { functionConfig } from 'delib-npm';
+import { statementSubscriptionSelector } from '@/redux/statements/statementsSlice';
+import { functionConfig, StatementSubscription } from 'delib-npm';
 import React, { useState } from 'react';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { useParams } from 'react-router';
 
 interface InitialQuestionVM {
@@ -11,6 +12,7 @@ interface InitialQuestionVM {
 	ifButtonEnabled: boolean;
 	ready: boolean;
 	loading: boolean;
+	subscription: StatementSubscription | undefined;
 }
 
 export function useInitialQuestion(): InitialQuestionVM {
@@ -18,13 +20,14 @@ export function useInitialQuestion(): InitialQuestionVM {
 	const { statementId } = useParams<{ statementId: string }>();
 
 	const [input, setInput] = useState("");
-	const [ifButtonEnabled, EnableButton] = useState(false);
+	const [ifButtonEnabled, setIfButtonEnabled] = useState(false);
 	const [ready, setReady] = useState(false);
 	const [loading, setLoading] = useState(false);
+	const subscription = useSelector(statementSubscriptionSelector(statementId));
 
 	const changeInput = (event: React.ChangeEvent<HTMLInputElement>) => {
 		setInput(event.target.value);
-		EnableButton(event.target.value.length > 0);
+		setIfButtonEnabled(event.target.value.length > 0);
 	}
 
 	async function handleSetInitialSuggestion() {
@@ -51,6 +54,7 @@ export function useInitialQuestion(): InitialQuestionVM {
 		ifButtonEnabled,
 		ready,
 		loading,
+		subscription
 	};
 }
 
