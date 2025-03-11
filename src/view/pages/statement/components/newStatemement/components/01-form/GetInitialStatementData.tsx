@@ -37,7 +37,6 @@ export default function GetInitialStatementData() {
 			if (!statement) throw new Error('Statement is not defined');
 
 			const newStatement: Statement | undefined = createStatement({
-				creator,
 				parentStatement: statement,
 				text: title,
 				description,
@@ -47,7 +46,6 @@ export default function GetInitialStatementData() {
 			if (!newStatement) throw new Error('newStatement is not defined');
 
 			setStatementToDB({
-				creator,
 				parentStatement: statement,
 				statement: newStatement,
 			});

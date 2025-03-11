@@ -77,7 +77,6 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 			e.preventDefault();
 			setLoading(true);
 			const newStatement = await setNewStatement({
-				creator,
 				navigate,
 				statementId,
 				statement,

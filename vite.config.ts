@@ -9,9 +9,6 @@ export default defineConfig(({ mode }) => {
 
 	const isTestMode = mode === 'testing';
 
-	console.log('Build mode:', mode);
-	console.log('Minification enabled:', !isTestMode);
-
 	return {
 		plugins: [
 			react(),
