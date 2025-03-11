@@ -12,7 +12,7 @@ interface Props {
 export function useSuggestionComment({ parentStatement, statement }: Props) {
 	//get user evaluation
 	const creator = statement.creator;
-	const creatorEvaluation: number | undefined = useSelector(evaluationSelector(parentStatement.statementId, creator?.uid));
+	const evaluationNumber: number | undefined = useSelector(evaluationSelector(parentStatement.statementId, creator?.uid));
 
 	useEffect(() => {
 
@@ -22,5 +22,5 @@ export function useSuggestionComment({ parentStatement, statement }: Props) {
 	}, [creator?.uid]);
 
 
-	return { creatorEvaluation };
+	return { evaluationNumber };
 }
