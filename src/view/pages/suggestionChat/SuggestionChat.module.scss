@@ -7,6 +7,7 @@
 	.evaluationPanel {
 		margin: 1rem auto;
 		width: fit-content;
+
 	}
 
 	.comments {
@@ -14,6 +15,7 @@
 		flex-direction: column;
 		justify-content: flex-start;
 		gap: .5rem;
+		overflow-y: auto;
 	}
 
 	.chatInput {

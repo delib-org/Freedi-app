@@ -11,7 +11,8 @@ interface Props {
 }
 
 const CreatorEvaluationIcon: FC<Props> = ({ evaluationNumber, statement }) => {
-	const normalizedNumber = (enhancedEvaluationsThumbs.length - (((evaluationNumber + 1) * (enhancedEvaluationsThumbs.length - 1)) / 2)) - 1
+	const len = enhancedEvaluationsThumbs.length;
+	const normalizedNumber = len - (evaluationNumber + 1) * (len - 1) / 2 - 1
 
 	const thumb = enhancedEvaluationsThumbs[Math.round(normalizedNumber)];
 	if (!thumb) return null
