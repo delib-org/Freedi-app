@@ -57,7 +57,8 @@ export function isAuthorized(
 		if (!statement) throw new Error('No statement');
 
 		const { user } = useAuthentication();
-		if (!user?.uid) throw new Error('No user');
+		if (!user) return Role.unsubscribed;
+		if (!user?.uid) return Role.unsubscribed;
 
 		if (statement.creator.uid === user.uid) return true;
 
@@ -255,9 +256,7 @@ export function isProduction(): boolean {
 export const handleCloseInviteModal = (
 	setShowModal: (show: boolean) => void
 ) => {
-	const inviteModal = document.querySelector(
-		'.inviteModal'
-	) as HTMLDivElement;
+	const inviteModal = document.querySelector('.inviteModal');
 	inviteModal.classList.add('closing');
 
 	setTimeout(() => {

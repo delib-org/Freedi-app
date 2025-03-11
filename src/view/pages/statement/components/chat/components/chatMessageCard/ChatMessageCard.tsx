@@ -78,7 +78,7 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
 		statementSubscription,
 		parentStatement?.creator.uid
 	);
-	const isMe = user.uid === statement.creator.uid;
+	const isMe = user?.uid === statement.creator.uid;
 	const isQuestion = statementType === StatementType.question;
 	const isOption = statementType === StatementType.option;
 	const isStatement = statementType === StatementType.statement;
@@ -274,7 +274,7 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
 								onOptionClick={() => {
 									deleteStatementFromDB(
 										statement,
-										_isAuthorized
+										!!_isAuthorized
 									);
 									setIsCardMenuOpen(false);
 								}}

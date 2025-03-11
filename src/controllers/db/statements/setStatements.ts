@@ -77,12 +77,10 @@ export async function saveStatementToDB({
 	hasChildren,
 	membership,
 	stageSelectionType,
-	creator,
 }: CreateStatementProps): Promise<Statement | undefined> {
 	try {
 		const statement = createStatement({
 			text,
-			creator,
 			description,
 			parentStatement,
 			statementType,
@@ -100,7 +98,6 @@ export async function saveStatementToDB({
 		if (!statement) throw new Error('Statement is undefined');
 
 		setStatementToDB({
-			creator,
 			statement,
 			parentStatement,
 		});
@@ -125,13 +122,11 @@ export async function saveStatementToDB({
 interface SetStatementToDBParams {
 	statement: Statement;
 	parentStatement: Statement | 'top';
-	creator: Creator;
 }
 
 export const setStatementToDB = async ({
 	statement,
 	parentStatement,
-	creator,
 }: SetStatementToDBParams): Promise<
 	| {
 		statementId: string;
@@ -144,6 +139,8 @@ export const setStatementToDB = async ({
 		if (!parentStatement) throw new Error('Parent statement is undefined');
 
 		const storeState = store.getState();
+		const creator: Creator = storeState.creator?.creator;
+		if (!creator) throw new Error('Creator is undefined');
 
 		if (statement.statement.length < 2) {
 			throw new Error('Statement is too short');
@@ -233,7 +230,6 @@ export const setStatementToDB = async ({
 };
 
 export interface CreateStatementProps {
-	creator: Creator;
 	text: string;
 	description?: string;
 	parentStatement: Statement | 'top';
@@ -252,7 +248,6 @@ export interface CreateStatementProps {
 }
 
 export function createStatement({
-	creator,
 	text,
 	description,
 	parentStatement,
@@ -271,6 +266,8 @@ export function createStatement({
 }: CreateStatementProps): Statement | undefined {
 	try {
 		const storeState = store.getState();
+		const creator = storeState.creator?.creator;
+		if (!creator) throw new Error('Creator is undefined');
 		if (!statementType) throw new Error('Statement type is undefined');
 
 		const statementId = getRandomUID();
@@ -611,16 +608,6 @@ export async function updateIsQuestion(statement: Statement) {
 			Collections.statements,
 			statement.statementId
 		);
-
-		const parentStatementRef = doc(
-			FireStore,
-			Collections.statements,
-			statement.parentId
-		);
-
-		// TODO: Why is this not being used?
-		const parentStatementDB = await getDoc(parentStatementRef);
-		parse(StatementSchema, parentStatementDB.data());
 
 		let { statementType } = statement;
 		if (statementType === StatementType.question)
