@@ -81,7 +81,7 @@ export const listenToStatementSubSubscriptions = (
 	} catch (error) {
 		console.error(error);
 
-		return () => {};
+		return () => { };
 	}
 };
 
@@ -132,7 +132,7 @@ export function listenToStatementSubscriptions(
 	} catch (error) {
 		console.error('Listen to statement subscriptions error', error);
 
-		return () => {};
+		return () => { };
 	}
 }
 
@@ -368,6 +368,6 @@ export function getNewStatementsFromSubscriptions(userId: string): Unsubscribe {
 	} catch (error) {
 		console.error(error);
 
-		return () => {};
+		return () => { };
 	}
 }
