@@ -3,6 +3,8 @@ import { MassConsensusPageUrls } from '@/types/TypeEnums';
 import { lazy } from 'react';
 import withSuspense from './withSuspense';
 
+const MassConsensus = lazy(() => import('@/view/pages/massConsensus/MassConsensus'));
+
 const Introduction = lazy(
 	() => import('@/view/pages/massConsensus/introduction/Introduction')
 );
@@ -34,6 +36,7 @@ const LeaveFeedback = lazy(
 export const massConsensusRoutes: RouteObject[] = [
 	{
 		path: 'mass-consensus/:statementId',
+		element: withSuspense(MassConsensus),
 		children: [
 			{
 				index: true,

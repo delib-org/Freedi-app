@@ -90,7 +90,7 @@ const Chat: FC = () => {
 	useEffect(() => {
 		//if new sub-statement was not created by the user, then set numberOfNewMessages to the number of new subStatements
 		const lastMessage = subStatements[subStatements.length - 1];
-		if (lastMessage?.creator.uid !== user.uid) {
+		if (lastMessage?.creator?.uid !== user?.uid) {
 			const isNewMessages =
 				subStatements.length - numberOfSubStatements > 0;
 			numberOfSubStatements = subStatements.length;

@@ -20,10 +20,11 @@ const MembershipCard: FC<Props> = ({ member }) => {
 	const { user } = useAuthentication();
 
 	useEffect(() => {
-		setRole(member.role);
+		if (member.role)
+			setRole(member.role);
 	}, [member.role]);
 
-	if (member.user.uid === user.uid) return null;
+	if (member.user?.uid === user?.uid) return null;
 
 	async function handleRemoveMember() {
 		const newRole = role === Role.banned ? Role.member : Role.banned;
@@ -42,9 +43,10 @@ const MembershipCard: FC<Props> = ({ member }) => {
 	async function handleSetRole() {
 		try {
 			const newRole = role === Role.admin ? Role.member : Role.admin;
+			if (!member.user?.uid) throw new Error('No user id');
 			await updateMemberRole(
 				member.statementId,
-				member.user.uid,
+				member.user?.uid,
 				newRole
 			);
 			setRole(newRole);
