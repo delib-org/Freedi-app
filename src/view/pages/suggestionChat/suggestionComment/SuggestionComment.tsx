@@ -2,7 +2,7 @@ import { Statement } from 'delib-npm';
 import styles from './SuggestionComment.module.scss';
 import { FC } from 'react';
 import { useSuggestionComment } from './SuggestionCommentMV';
-import CreatorEvaluationIcon from './CreatorEvalautionIcon';
+import CreatorEvaluationIcon from './creatorEvalautionIcon/CreatorEvalautionIcon';
 
 
 interface Props {
@@ -16,7 +16,7 @@ const SuggestionComment: FC<Props> = ({ statement, parentStatement }) => {
 	return (
 		<div className={styles.suggestionComment}>
 			<p>{creator.displayName}</p>
-			<p>{statement.statement} <CreatorEvaluationIcon evaluationNumber={evaluationNumber} statement={statement} /></p>
+			<div>{statement.statement} <CreatorEvaluationIcon evaluationNumber={evaluationNumber} statement={statement} /></div>
 		</div>
 	)
 }
