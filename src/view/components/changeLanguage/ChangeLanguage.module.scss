@@ -1,0 +1,31 @@
+.language {
+	border-radius: 3rem;
+	color: var(--text-blue);
+	height: var(--height-of-interaction-component);
+	text-align: center;
+	font-size: 1rem;
+	width: fit-content;
+	margin-left: auto;
+	margin-right: auto;
+}
+
+.language option:nth-child(even) {
+	background-color: white;
+}
+.background {
+	background-color: var(--bg--overlay);
+	padding: 40px;
+	border-radius: 20px;
+	display: flex;
+	flex-direction: column;
+}
+.title {
+	color: var(--text-title);
+	margin: 0;
+	font-size: 1.5em;
+	padding-bottom: 20px;
+	cursor: pointer;
+}
+.wrapper {
+	display: flex;
+}
