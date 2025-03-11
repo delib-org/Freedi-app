@@ -134,9 +134,9 @@ export const setStatementToDB = async ({
 	creator,
 }: SetStatementToDBParams): Promise<
 	| {
-			statementId: string;
-			statement: Statement;
-	  }
+		statementId: string;
+		statement: Statement;
+	}
 	| undefined
 > => {
 	try {
@@ -163,8 +163,8 @@ export const setStatementToDB = async ({
 			parentStatement === 'top'
 				? statement.statementId
 				: statement?.topParentId ||
-					parentStatement?.topParentId ||
-					'top';
+				parentStatement?.topParentId ||
+				'top';
 
 		const siblingOptions = getSiblingOptionsByParentId(
 			parentId,
@@ -491,32 +491,31 @@ function updateStatementSettings({
 
 export async function updateStatementText(
 	statement: Statement | undefined,
-	title: string,
-	description: string
+	title?: string,
+	description?: string
 ) {
 	try {
-		if (!title) throw new Error('New title is undefined');
 		if (!statement) throw new Error('Statement is undefined');
 
-		if (
-			statement.statement === title &&
-			statement.description === description
-		)
-			return;
+		const updates: Partial<Statement> = {};
+		if (title && statement.statement !== title) {
+			updates.statement = title;
+		}
+		if (description && statement.description !== description) {
+			updates.description = description;
+		}
+		if (Object.keys(updates).length === 0) return;
 
-		parse(StatementSchema, statement);
+		updates.lastUpdate = Timestamp.now().toMillis();
+
+		parse(StatementSchema, { ...statement, ...updates });
 		const statementRef = doc(
 			FireStore,
 			Collections.statements,
 			statement.statementId
 		);
 
-		const newStatement = {
-			statement: title,
-			description,
-			lastUpdate: Timestamp.now().toMillis(),
-		};
-		await updateDoc(statementRef, newStatement);
+		await updateDoc(statementRef, updates);
 	} catch (error) {
 		console.error(error);
 	}
