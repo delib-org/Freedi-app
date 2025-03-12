@@ -63,6 +63,19 @@
 		margin: 1rem;
 		box-sizing: border-box;
 		resize: none;
+		display: flex;
+		flex-direction: column;
+		gap: 1rem;
+
+		>div {
+			position: relative;
+			top: -80px;
+		}
+
+		textarea {
+			width: 100%;
+			z-index: 200;
+		}
 
 		@media screen and (max-width: 768px) {
 			width: 100vw;

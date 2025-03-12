@@ -100,13 +100,15 @@ const SuggestionComment: FC<Props> = ({ statement, parentStatement }) => {
 						))}
 					</div>
 					{!hasTalkedLast && <>
-						{showInput && <textarea
-							className={styles.commentInput}
-							name="commentInput"
-							onKeyUp={handleCommentSubmit}
-							placeholder={t("Write your comment...")}
-							autoFocus
-						></textarea>}
+						{showInput && <div className={styles.commentInput}>
+							<EnhancedEvaluation statement={parentStatement} shouldDisplayScore={false} />
+							<textarea
+
+								name="commentInput"
+								onKeyUp={handleCommentSubmit}
+								placeholder={t("Write your comment...")}
+								autoFocus
+							></textarea></div>}
 						{!showInput && <button className={styles.replyButton} onClick={() => setShowInput(true)}>השב/י</button>}
 					</>
 					}
