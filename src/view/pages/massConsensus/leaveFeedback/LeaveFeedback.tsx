@@ -2,23 +2,15 @@ import { MassConsensusPageUrls } from 'delib-npm';
 import HeaderMassConsensus from '../headerMassConsensus/HeaderMassConsensus';
 import Input from '@/view/components/input/Input';
 import { MailIcon } from 'lucide-react';
-import { useState } from 'react';
 import TitleMassConsensus from '../TitleMassConsensus/TitleMassConsensus';
 import FooterMassConsensus from '../footerMassConsensus/FooterMassConsensus';
 import styles from './LeaveFeedback.module.scss';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useLeaveFeedback } from './LeaveFeedbackVM';
 
 function LeaveFeedback() {
 	const { t } = useUserConfig();
-	const [email, setEmail] = useState('');
-
-	const handleSendButton = () => {
-		return email;
-	};
-
-	const handleEmailChange = (value: string) => {
-		setEmail(value);
-	};
+	const { handleSendButton, handleEmailChange, MailStatus } = useLeaveFeedback();
 
 	return (
 		<div>
@@ -38,6 +30,7 @@ function LeaveFeedback() {
 						label=''
 						onChange={handleEmailChange}
 					/>
+					<span> {MailStatus === "invalid"? t('Invalid email'): null} </span>
 					<MailIcon />
 				</div>
 			</div>
