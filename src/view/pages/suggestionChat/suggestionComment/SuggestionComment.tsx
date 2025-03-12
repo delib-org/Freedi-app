@@ -11,6 +11,7 @@ import SubComment from './subComment/SubComment';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import ProfileImage from '@/view/components/profileImage/ProfileImage';
 import { creatorSelector } from '@/redux/creator/creatorSlice';
+// import EnhancedEvaluation from '../../statement/components/evaluations/components/evaluation/enhancedEvaluation/EnhancedEvaluation';
 import { evaluationSelector } from '@/redux/evaluations/evaluationsSlice';
 
 interface Props {
@@ -25,6 +26,7 @@ const SuggestionComment: FC<Props> = ({ statement, parentStatement }) => {
 	const comments = useSelector(statementSubsSelector(statement.statementId));
 	const previousEvaluation = useSelector(evaluationSelector(parentStatement.statementId, user?.uid));
 	const [isOpen, setIsOpen] = useState(false);
+	const [showInput, setShowInput] = useState(false);
 
 	const [evaluationChanged, setEvaluationChanged] = useState(false);
 
@@ -47,6 +49,27 @@ const SuggestionComment: FC<Props> = ({ statement, parentStatement }) => {
 
 	const hasTalkedLast = comments.length > 0 && comments[comments.length - 1].creator.uid === user?.uid;
 	const isCreator = parentStatement.creator.uid === user?.uid;
+
+	function handleCommentSubmit(ev: KeyboardEvent<HTMLTextAreaElement>): void {
+		if (ev.key === 'Enter' && !ev.shiftKey) {
+			ev.preventDefault();
+			const target = ev.target as HTMLTextAreaElement;
+			const text = target.value.trim();
+
+			if (text) {
+				const _text = !isCreator && evaluationChanged ? `, ${text} ${t('change to:')} :${previousEvaluation}` : text;
+				// Add comment
+				saveStatementToDB({
+					text: _text,
+					parentStatement: statement,
+					statementType: StatementType.statement
+				})
+			}
+			target.value = '';
+			setEvaluationChanged(false);
+			setShowInput(false);
+		}
+	}
 
 	return (
 		<div className={styles.suggestionComment}>
@@ -77,8 +100,14 @@ const SuggestionComment: FC<Props> = ({ statement, parentStatement }) => {
 						))}
 					</div>
 					{!hasTalkedLast && <>
-
-						<button className={styles.reply}>השב/י</button>
+						{showInput && <textarea
+							className={styles.commentInput}
+							name="commentInput"
+							onKeyUp={handleCommentSubmit}
+							placeholder={t("Write your comment...")}
+							autoFocus
+						></textarea>}
+						{!showInput && <button className={styles.replyButton} onClick={() => setShowInput(true)}>השב/י</button>}
 					</>
 					}
 				</>

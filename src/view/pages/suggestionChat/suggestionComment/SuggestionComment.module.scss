@@ -47,7 +47,7 @@
 		animation: fadeIn 0.3s ease;
 	}
 
-	.reply {
+	.replyButton {
 		background-color: rgb(149, 103, 223);
 		color: white;
 		padding: .2rem .5rem;
@@ -56,12 +56,24 @@
 		margin-bottom: 2rem;
 	}
 
-	textarea {
+	.commentInput {
 		width: -moz-available;
 		width: -webkit-fill-available;
 		height: 100px;
 		margin: 1rem;
 		box-sizing: border-box;
+		resize: none;
+
+		@media screen and (max-width: 768px) {
+			width: 100vw;
+			position: fixed;
+			bottom: 0;
+			left: 0;
+			margin: 0;
+			border: 1px solid #ccc;
+			z-index: 100;
+
+		}
 	}
 }
 
