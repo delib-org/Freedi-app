@@ -16,11 +16,14 @@
 		justify-content: flex-start;
 		gap: .5rem;
 		overflow-y: auto;
+		padding-bottom: 150px;
 	}
 
 	.chatInput {
-		position: absolute;
+		position: fixed;
 		bottom: 0;
+		left: 50%;
+		transform: translateX(-50%);
 		width: 100%;
 	}
 }
