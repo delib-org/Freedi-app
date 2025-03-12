@@ -1,26 +1,38 @@
-import { FC, useContext } from "react";
-import "./ProfileImage.scss";
-import { StatementContext } from "@/view/pages/statement/StatementCont";
+import { FC, TouchEvent, useState } from "react";
+import { Statement } from "delib-npm";
+import styles from './ProfileImage.module.scss';
 
-const ProfileImage: FC = () => {
-	const {talker} = useContext(StatementContext);
+interface Props {
+	statement: Statement;
+}
+
+const ProfileImage: FC<Props> = ({ statement }) => {
+	const [showPopup, setShowPopup] = useState(false);
+	const talker = statement.creator;
 
 	if (!talker) return null;
 
-	// const photoURL = user.photoURL ? user.photoURL : anonymous;
+	if (!talker.photoURL) {
+		return <div className={styles.profileName}>{talker.displayName}</div>;
+	}
+
+	const handleTouch = (e: TouchEvent) => {
+		// Prevent the subsequent mouse events from firing
+		e.preventDefault();
+		setShowPopup(!showPopup);
+		setTimeout(() => setShowPopup(false), 3000);
+	};
 
 	return (
-		<>
-			<div className="profile-image">
-				<div className="profile-image-box">
-					{talker.photoURL && <div
-						className="image"
-						style={{ backgroundImage: `url(${talker.photoURL})` }}
-					></div>}
-					<h3>{talker.displayName}</h3>
-				</div>
-			</div>
-		</>
+		<div
+			className={styles.profileImage}
+			style={{ backgroundImage: `url(${talker.photoURL})` }}
+			onMouseOver={() => setShowPopup(true)}
+			onMouseOut={() => setShowPopup(false)}
+			onTouchStart={handleTouch}
+		>
+			{showPopup && <div className={styles.popup}>{talker.displayName}</div>}
+		</div>
 	);
 };
 

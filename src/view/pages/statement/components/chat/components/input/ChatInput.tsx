@@ -10,18 +10,18 @@ import useStatementColor from '@/controllers/hooks/useStatementColor';
 import SendIcon from '@/view/components/icons/SendIcon';
 import { Statement } from 'delib-npm';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
-import { useAuthentication } from '@/controllers/hooks/useAuthentication';
+import EnhancedEvaluation from '../../../evaluations/components/evaluation/enhancedEvaluation/EnhancedEvaluation';
 
 interface Props {
 	statement: Statement;
+	hasEvaluation?: boolean;
 }
 
-const ChatInput: FC<Props> = ({ statement }) => {
+const ChatInput: FC<Props> = ({ statement, hasEvaluation }) => {
 	if (!statement) throw new Error('No statement');
 
 	// Redux hooks
 	const { t, rowDirection } = useUserConfig();
-	const { user } = useAuthentication();
 
 	const statementColor = useStatementColor({ statement });
 	const [message, setMessage] = useState('');
@@ -74,6 +74,7 @@ const ChatInput: FC<Props> = ({ statement }) => {
 
 	return (
 		<div className={styles.chatInput}>
+			{hasEvaluation && <div className={styles.eval}><EnhancedEvaluation statement={statement} shouldDisplayScore={false} /></div>}
 			<form
 				onSubmit={(e) => handleSubmitInput(e)}
 				name='theForm'
@@ -100,7 +101,9 @@ const ChatInput: FC<Props> = ({ statement }) => {
 					}}
 					required
 					placeholder={t('Type your message here...')}
-				></textarea>
+				>
+
+				</textarea>
 				<button
 					type='submit'
 					aria-label='Submit Button'
@@ -109,6 +112,7 @@ const ChatInput: FC<Props> = ({ statement }) => {
 				>
 					<SendIcon color={statementColor.color} />
 				</button>
+
 			</form>
 		</div>
 	);

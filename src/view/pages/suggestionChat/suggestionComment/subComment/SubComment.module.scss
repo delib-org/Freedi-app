@@ -1,0 +1,14 @@
+.subComment {
+	background-color: rgb(213, 223, 226);
+	width: fit-content;
+	padding: .1rem 1rem;
+	border-radius: 1rem;
+	display: flex;
+	gap: .5rem;
+
+	.text {
+
+		font-weight: 300;
+		font-size: .8rem;
+	}
+}
