@@ -9,10 +9,14 @@ import InstallIcon from '@/assets/icons/installIcon.svg?react';
 import InvitationIcon from '@/assets/icons/invitation.svg?react';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import { logOut } from '@/controllers/db/authenticationUtils';
+import { Globe2Icon } from 'lucide-react';
+import Modal from '@/view/components/modal/Modal';
+import ChangeLanguage from '@/view/components/changeLanguage/ChangeLanguage';
 
 export default function HomeHeader() {
 	const [isHomeMenuOpen, setIsHomeMenuOpen] = useState(false);
 	const [showInvitationModal, setShowInvitationModal] = useState(false);
+	const [showLanguageModal, setShowLanguageModal] = useState(false);
 
 	const [isInstallable, setIsInstallable] = useState(false);
 
@@ -58,13 +62,18 @@ export default function HomeHeader() {
 			console.error(error);
 		}
 	}
-	function handleInvitationPanel() {
+
+	function handlePanel(modal: string) {
 		try {
-			setShowInvitationModal(true);
+			if (modal === 'invitation') setShowInvitationModal(true);
+			else setShowLanguageModal(true);
 			setIsHomeMenuOpen(false);
 		} catch (error) {
 			console.error(error);
 		}
+	}
+	function closeModal() {
+		setShowLanguageModal(false);
 	}
 
 	return (
@@ -90,17 +99,30 @@ export default function HomeHeader() {
 							onOptionClick={logOut}
 						/>
 						<MenuOption
+							icon={<Globe2Icon style={{ color: '#4E88C7' }} />}
+							label={t('Change language')}
+							onOptionClick={() => handlePanel('changeLanguage')}
+						/>
+						<MenuOption
 							icon={
 								<InvitationIcon style={{ color: '#4E88C7' }} />
 							}
 							label={t('Join with PIN number')}
-							onOptionClick={handleInvitationPanel}
+							onOptionClick={() => handlePanel('invitation')}
 						/>
 					</Menu>
 				</div>
 			</div>
 			{showInvitationModal && (
 				<InvitationModal setShowModal={setShowInvitationModal} />
+			)}
+			{showLanguageModal && (
+				<Modal closeModal={closeModal}>
+					<ChangeLanguage
+						background
+						setShowModal={setShowLanguageModal}
+					/>
+				</Modal>
 			)}
 		</div>
 	);
