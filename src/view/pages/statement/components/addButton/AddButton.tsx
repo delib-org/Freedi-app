@@ -18,6 +18,8 @@ export default function AddButton() {
 		newStatementType: StatementType,
 		questionType?: QuestionType
 	) {
+		setActionsOpen(false);
+
 		setNewStatementType(newStatementType);
 		if (questionType) {
 			setNewQuestionType(questionType);
