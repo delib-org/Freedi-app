@@ -16,7 +16,7 @@ const AddStage: FC<AddStageProps> = ({ setShowAddStage }) => {
 	const { statement } = useContext(StatementContext);
 	const { creator } = useAuthentication();
 	const [isShaking, setIsShaking] = useState(false);
-
+	
 	function handleCloseModal() {
 		setShowAddStage(false);
 	}
@@ -60,6 +60,7 @@ const AddStage: FC<AddStageProps> = ({ setShowAddStage }) => {
 					onClick={handleCloseModal}
 					className={styles.xBtn}
 				/>
+				<h1>{statement.statement}</h1>
 				<select
 					name='stageSelectionType'
 					id='stageSelectionType'

@@ -1,4 +1,4 @@
-import { StatementSubscription, Statement, Role, Screen } from 'delib-npm';
+import { StatementSubscription, Statement, Role, Screen, Access } from 'delib-npm';
 import { useAuthentication } from '../hooks/useAuthentication';
 
 export function updateArray<T>(
@@ -57,21 +57,23 @@ export function isAuthorized(
 		if (!statement) throw new Error('No statement');
 
 		const { user } = useAuthentication();
-		if (!user?.uid) throw new Error('No user');
+		if (statement.membership.access === Access.close && !user?.uid) return true
+		else if (user?.uid) {
 
-		if (statement.creator.uid === user.uid) return true;
+			if (statement.creator?.uid === user.uid) return true;
 
-		if (parentStatementCreatorId === user.uid) return true;
+			if (parentStatementCreatorId === user.uid) return true;
 
-		if (!statementSubscription) return false;
+			if (!statementSubscription) return false;
 
-		const role = statementSubscription?.role;
+			const role = statementSubscription?.role;
 
-		if (role === Role.admin) {
-			return true;
+			if (role === Role.admin) {
+				return true;
+			}
+
+			if (authorizedRoles?.includes(role)) return true;
 		}
-
-		if (authorizedRoles?.includes(role)) return true;
 
 		return false;
 	} catch (error) {
