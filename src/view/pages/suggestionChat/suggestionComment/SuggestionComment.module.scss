@@ -3,6 +3,12 @@
 	border: 1px solid #ccc;
 	border-radius: 0px 0px 5px 5px;
 
+
+	@media screen and (max-width: 768px) {
+		margin: 8px;
+
+	}
+
 	.commentHeader {
 		display: flex;
 		align-items: center;
@@ -39,6 +45,15 @@
 		gap: .5rem;
 		padding: 1rem;
 		animation: fadeIn 0.3s ease;
+	}
+
+	.reply {
+		background-color: rgb(149, 103, 223);
+		color: white;
+		padding: .2rem .5rem;
+		border-radius: 2rem;
+		transform: translateX(-100%);
+		margin-bottom: 2rem;
 	}
 
 	textarea {

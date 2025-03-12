@@ -5,12 +5,16 @@ import { Statement } from 'delib-npm';
 import { useEvaluation } from './EvalautionMV';
 
 interface EvaluationProps {
-	statement: Statement;
+	statement?: Statement;
 }
 
 const Evaluation: FC<EvaluationProps> = ({ statement }) => {
+
+	const { parentStatement } = useEvaluation(statement);
+
+	if (!statement) return null;
 	try {
-		const { parentStatement } = useEvaluation(statement);
+
 		if (!parentStatement) return null;
 
 		let shouldDisplayScore: boolean = !!parentStatement.statementSettings?.showEvaluation;

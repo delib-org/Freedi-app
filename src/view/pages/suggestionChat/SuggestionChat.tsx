@@ -1,4 +1,3 @@
-import React, { useEffect } from 'react'
 import styles from './SuggestionChat.module.scss';
 import Evaluation from '../statement/components/evaluations/components/evaluation/Evaluation';
 import { useParams } from 'react-router';
@@ -18,11 +17,11 @@ const SuggestionChat = () => {
 
 	return (
 		<div className={styles.suggestionChat}>
-			<h1>Suggestion</h1>
+			<p className={styles["suggestionChat__explain"]}>כמה את/ה מרוצה מההצעה?</p>
 			<div className={styles.evaluationPanel}>
 				<Evaluation statement={statement} />
 			</div>
-			<p>Chat</p>
+			<p className={styles["suggestionChat__comments"]}>כתוב ההערה כדי לסייע למציע ההצעה לשפר את  ההצעה</p>
 			<div className={styles.comments}>
 				{comments.map((comment) => (<SuggestionComment key={comment.statementId} statement={comment} parentStatement={statement} />))}
 			</div>

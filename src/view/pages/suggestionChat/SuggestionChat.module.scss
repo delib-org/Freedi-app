@@ -4,6 +4,19 @@
 	position: relative;
 	height: 100%;
 
+	&__explain {
+		opacity: .8;
+		font-weight: 300;
+		text-align: center;
+	}
+
+	&__comments {
+		margin-top: 1rem;
+		opacity: .8;
+		font-weight: 300;
+		text-align: center;
+	}
+
 	.evaluationPanel {
 		margin: 1rem auto;
 		width: fit-content;
@@ -17,6 +30,11 @@
 		gap: .5rem;
 		overflow-y: auto;
 		padding-bottom: 150px;
+
+		@media screen and (min-width: 768px) {
+			padding: 10px;
+
+		}
 	}
 
 	.chatInput {

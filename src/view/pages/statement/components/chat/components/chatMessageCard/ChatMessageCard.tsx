@@ -297,7 +297,6 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
 						<StatementChatMore statement={statement} />
 					</div>
 					<Evaluation
-						parentStatement={parentStatement}
 						statement={statement}
 					/>
 					{shouldLinkToChildren && (

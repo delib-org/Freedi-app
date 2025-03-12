@@ -29,6 +29,8 @@ const ProfileImage: FC<Props> = ({ statement }) => {
 			style={{ backgroundImage: `url(${talker.photoURL})` }}
 			onMouseOver={() => setShowPopup(true)}
 			onMouseOut={() => setShowPopup(false)}
+			onFocus={() => setShowPopup(true)}
+			onBlur={() => setShowPopup(false)}
 			onTouchStart={handleTouch}
 		>
 			{showPopup && <div className={styles.popup}>{talker.displayName}</div>}

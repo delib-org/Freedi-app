@@ -6,6 +6,8 @@
 	display: flex;
 	gap: .5rem;
 
+	animation: entrance .15s ease-out;
+
 	&--isMe {
 		background-color: rgb(165, 253, 195);
 	}
@@ -16,4 +18,17 @@
 		font-weight: 300;
 		font-size: .8rem;
 	}
+}
+
+@keyframes entrance {
+	from {
+		opacity: 0;
+		transform: translateX(1rem);
+	}
+
+	to {
+		opacity: 1;
+		transform: translateX(0);
+	}
+
 }
