@@ -10,6 +10,10 @@ import { listenToSubStatements } from '@/controllers/db/statements/listenToState
 import SubComment from './subComment/SubComment';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import ProfileImage from '@/view/components/profileImage/ProfileImage';
+import { creatorSelector } from '@/redux/creator/creatorSlice';
+import EnhancedEvaluation from '../../statement/components/evaluations/components/evaluation/enhancedEvaluation/EnhancedEvaluation';
+import { stat } from 'fs';
+import { evaluationSelector } from '@/redux/evaluations/evaluationsSlice';
 
 interface Props {
 	parentStatement: Statement
@@ -18,9 +22,13 @@ interface Props {
 
 const SuggestionComment: FC<Props> = ({ statement, parentStatement }) => {
 	const { t } = useUserConfig();
+	const user = useSelector(creatorSelector);
 	const { evaluationNumber } = useSuggestionComment({ parentStatement, statement });
 	const comments = useSelector(statementSubsSelector(statement.statementId));
+	const previousEvaluation = useSelector(evaluationSelector(parentStatement.statementId, user?.uid));
 	const [isOpen, setIsOpen] = useState(false);
+
+	const [evaluationChanged, setEvaluationChanged] = useState(false);
 
 	useEffect(() => {
 		const unsubscribe = listenToSubStatements(statement.statementId);
@@ -28,26 +36,43 @@ const SuggestionComment: FC<Props> = ({ statement, parentStatement }) => {
 		return () => unsubscribe();
 	}, [])
 
+	useEffect(() => {
+		if (previousEvaluation) {
+			console.log("previousEvaluation", previousEvaluation)
+			setEvaluationChanged(true)
+		}
+	}, [previousEvaluation])
+
+	useEffect(() => {
+		console.log(evaluationChanged, "to: ", previousEvaluation)
+	}, [evaluationChanged])
+
+	const toggleAccordion = () => {
+		setIsOpen(!isOpen);
+	};
+
+	const hasTalkedLast = comments.length === 0 || comments.length > 0 && comments[comments.length - 1].creator.uid === user?.uid;
+	const isCreator = parentStatement.creator.uid === user?.uid;
+
 	function handleCommentSubmit(ev: KeyboardEvent<HTMLTextAreaElement>): void {
 		if (ev.key === 'Enter' && !ev.shiftKey) {
 			ev.preventDefault();
 			const target = ev.target as HTMLTextAreaElement;
 			const text = target.value.trim();
+			console.log("Evaluation changed: ", evaluationChanged)
 			if (text) {
+				const _text = !isCreator && evaluationChanged ? `, ${text} ${t('change to:')} ${previousEvaluation}` : text;
 				// Add comment
 				saveStatementToDB({
-					text,
+					text: _text,
 					parentStatement: statement,
 					statementType: StatementType.statement
 				})
 			}
 			target.value = '';
+			setEvaluationChanged(false);
 		}
 	}
-
-	const toggleAccordion = () => {
-		setIsOpen(!isOpen);
-	};
 
 	return (
 		<div className={styles.suggestionComment}>
@@ -62,6 +87,7 @@ const SuggestionComment: FC<Props> = ({ statement, parentStatement }) => {
 				<div>
 					<ProfileImage statement={statement} />
 					<CreatorEvaluationIcon evaluationNumber={evaluationNumber} />
+					{statement.statement}, {previousEvaluation}
 				</div>
 				<span className={`${styles.accordionIcon} ${isOpen ? styles.open : ''}`}>
 					▼
@@ -76,11 +102,15 @@ const SuggestionComment: FC<Props> = ({ statement, parentStatement }) => {
 							<SubComment key={comment.statementId} statement={comment} />
 						))}
 					</div>
-					<textarea
-						name="commentInput"
-						onKeyUp={handleCommentSubmit}
-						placeholder={t("Write your comment...")}
-					></textarea>
+					{!hasTalkedLast && <>
+						<textarea
+							name="commentInput"
+							onKeyUp={handleCommentSubmit}
+							placeholder={t("Write your comment...")}
+						></textarea>
+						{!isCreator && <EnhancedEvaluation statement={parentStatement} shouldDisplayScore={true} />}
+					</>
+					}
 				</>
 			)}
 

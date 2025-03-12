@@ -6,6 +6,11 @@
 	display: flex;
 	gap: .5rem;
 
+	&--isMe {
+		background-color: rgb(165, 253, 195);
+	}
+
+
 	.text {
 
 		font-weight: 300;

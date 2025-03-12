@@ -50,6 +50,7 @@ export const evaluationsParentSelector =
 export const evaluationSelector =
 	(statementId: string | undefined, creatorId?: string) => (state: RootState): number | undefined => {
 		const _creatorId = creatorId ?? state.creator.creator?.uid;
+
 		return state.evaluations.userEvaluations.find(
 			(evaluation) => evaluation.statementId === statementId && evaluation.evaluatorId === _creatorId
 		)?.evaluation;
