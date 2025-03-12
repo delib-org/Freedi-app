@@ -11,7 +11,7 @@ import SubComment from './subComment/SubComment';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import ProfileImage from '@/view/components/profileImage/ProfileImage';
 import { creatorSelector } from '@/redux/creator/creatorSlice';
-// import EnhancedEvaluation from '../../statement/components/evaluations/components/evaluation/enhancedEvaluation/EnhancedEvaluation';
+import EnhancedEvaluation from '../../statement/components/evaluations/components/evaluation/enhancedEvaluation/EnhancedEvaluation';
 import { evaluationSelector } from '@/redux/evaluations/evaluationsSlice';
 
 interface Props {
