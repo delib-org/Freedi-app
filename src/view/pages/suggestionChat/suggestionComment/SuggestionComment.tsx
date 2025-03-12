@@ -61,7 +61,7 @@ const SuggestionComment: FC<Props> = ({ statement, parentStatement }) => {
 			const text = target.value.trim();
 			console.log("Evaluation changed: ", evaluationChanged)
 			if (text) {
-				const _text = !isCreator && evaluationChanged ? `, ${text} ${t('change to:')} ${previousEvaluation}` : text;
+				const _text = !isCreator && evaluationChanged ? `, ${text} ${t('change to:')} :${previousEvaluation}` : text;
 				// Add comment
 				saveStatementToDB({
 					text: _text,

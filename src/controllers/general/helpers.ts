@@ -322,3 +322,37 @@ export function getLatestUpdateStatements(statements: Statement[]): number {
 		0
 	);
 }
+
+export const emojiTransformer = (text: string): string => {
+	// Define the sentiment emoji mapping
+	const sentimentEmojis = {
+		':-1': '😠', // Really disagree
+		':-0.75': '🙁', // Strongly disagree
+		':-0.5': '😕', // Half disagree
+		':-0.25': '😐', // Slightly disagree
+		':0': '😐', // Neutral
+		':0.25': '🙂', // Slightly agree
+		':0.5': '😊', // Half agree
+		':0.75': '😄', // Strongly agree
+		':1': '😁', // Really agree
+	};
+
+	// Transform the text with emoji replacements
+	if (!text) return '';
+
+	let result = text;
+
+	// Replace all sentiment codes with corresponding emojis
+	// Use a more precise regex pattern that looks for the exact codes
+	Object.entries(sentimentEmojis).forEach(([code, emoji]) => {
+		// Escape special characters in the code
+		const escapedCode = code.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+		// Use lookahead and lookbehind to ensure we're matching standalone codes
+		// Or use a regex that matches the code at the start, end, or surrounded by spaces
+		const regex = new RegExp(`(^|\\s)${escapedCode}(\\s|$)`, 'g');
+		result = result.replace(regex, `$1${emoji}$2`);
+	});
+
+	return result;
+};
