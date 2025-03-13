@@ -116,11 +116,11 @@ export class NotificationService {
    */
   private async sendTokenToServer(userId: string, token: string): Promise<void> {
     try {
-      // Store token in Firestore
-      await setDoc(doc(db, 'fcmTokens', userId), {
+      // Store token in pushNotifications collection
+      await setDoc(doc(db, 'pushNotifications', token), {
         token,
         userId,
-        createdAt: new Date(),
+        lastUpdate: new Date(),
         platform: 'web',
         deviceInfo: {
           userAgent: navigator.userAgent,
@@ -128,10 +128,55 @@ export class NotificationService {
         }
       }, { merge: true });
       
-      console.info('FCM token sent to server');
+      console.info('FCM token sent to server in pushNotifications collection');
+      this.isTokenSentToServer = true;
     } catch (error) {
       console.error('Error sending token to server:', error);
       this.isTokenSentToServer = false;
+    }
+  }
+  
+  /**
+   * Register user's interest in receiving notifications for a specific statement
+   * @param userId User's ID
+   * @param token FCM token
+   * @param statementId Statement ID to subscribe to
+   */
+  public async registerForStatementNotifications(
+    userId: string, 
+    token: string | null, 
+    statementId: string
+  ): Promise<boolean> {
+    try {
+      if (!token) {
+        // If no token is provided, try to get one
+        token = this.token;
+        
+        // If still no token, try to refresh
+        if (!token) {
+          token = await this.getOrRefreshToken(userId);
+        }
+        
+        // If still no token, fail
+        if (!token) {
+          console.error('No FCM token available to register for notifications');
+          return false;
+        }
+      }
+      
+      // Store in askedToBeNotify collection
+      await setDoc(doc(db, 'askedToBeNotify', `${token}_${statementId}`), {
+        token,
+        userId,
+        statementId,
+        lastUpdate: new Date()
+      }, { merge: true });
+      
+      console.info(`Registered for notifications for statement ${statementId}`);
+      return true;
+    } catch (error) {
+      console.error('Error registering for statement notifications:', error);
+      return false;
     }
   }
 

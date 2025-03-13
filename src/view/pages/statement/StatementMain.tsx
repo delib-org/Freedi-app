@@ -35,6 +35,8 @@ import { Role, StatementType, Access, QuestionType, User } from 'delib-npm';
 import { useAuthorization } from '@/controllers/hooks/useAuthorization';
 import { useSelector } from 'react-redux';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
+import { notificationService } from '@/services/notificationService';
+import FCMTokenDisplay from '@/view/components/notifications/FCMTokenDisplay';
 
 // Create selectors
 export const subStatementsSelector = createSelector(
@@ -144,8 +146,9 @@ export default function StatementMain() {
 		};
 	}, [statement?.topParentId]);
 
+	// Effect to handle subscription and notification permission
 	useEffect(() => {
-		if (statement) {
+		if (statement && creator) {
 			(async () => {
 				const isSubscribed = await getIsSubscribed(
 					statementId,
@@ -170,9 +173,53 @@ export default function StatementMain() {
 						creator.uid
 					);
 				}
+				
+				// Request notification permission and register for this statement
+				if ('Notification' in window) {
+					// Only prompt if not already decided
+					if (Notification.permission === 'default') {
+						// Ask for permission
+						const permission = await Notification.requestPermission();
+						
+						if (permission === 'granted') {
+							// Initialize notification service with user ID
+							await notificationService.initialize(creator.uid);
+							
+							// Register for notifications for this statement
+							const token = notificationService.getToken();
+							if (token) {
+								await notificationService.registerForStatementNotifications(
+									creator.uid,
+									token,
+									statementId
+								);
+							}
+						}
+					} else if (Notification.permission === 'granted') {
+						// Permission already granted, make sure we have a token and are registered
+						try {
+							// Initialize notification service if needed
+							if (!notificationService.getToken()) {
+								await notificationService.initialize(creator.uid);
+							}
+							
+							// Register for notifications for this statement
+							const token = notificationService.getToken();
+							if (token) {
+								await notificationService.registerForStatementNotifications(
+									creator.uid,
+									token,
+									statementId
+								);
+							}
+						} catch (error) {
+							console.error('Error setting up notifications for statement:', error);
+						}
+					}
+				}
 			})();
 		}
-	}, [statement]);
+	}, [statement, creator, statementId]);
 
 	const contextValue = useMemo(
 		() => ({
