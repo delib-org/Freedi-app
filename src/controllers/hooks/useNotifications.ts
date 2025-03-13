@@ -178,10 +178,6 @@ export const useNotifications = (statementId?: string) => {
 					{
 						action: 'open',
 						title: 'Open'
-					},
-					{
-						action: 'dismiss',
-						title: 'Dismiss'
 					}
 				],
 				requireInteraction: true

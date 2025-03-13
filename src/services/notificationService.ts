@@ -304,10 +304,6 @@ export class NotificationService {
 				{
 					action: 'open',
 					title: 'Open'
-				},
-				{
-					action: 'dismiss',
-					title: 'Dismiss'
 				}
 			]
 		};

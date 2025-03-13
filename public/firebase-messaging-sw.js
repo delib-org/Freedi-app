@@ -82,15 +82,11 @@ messaging.onBackgroundMessage(async function (payload) {
                 notificationId,
                 url
             },
-            // Add action buttons
+            // Only show a single action button to prevent duplicate notifications with different buttons
             actions: [
                 {
                     action: 'open',
                     title: data.openActionTitle || 'Open'
-                },
-                {
-                    action: 'dismiss',
-                    title: data.dismissActionTitle || 'Dismiss'
                 }
             ],
             // Make notification require interaction (won't auto-dismiss)
@@ -157,13 +153,10 @@ self.addEventListener('notificationclick', function(event) {
         navigator.clearAppBadge().catch(err => console.error('Error clearing badge:', err));
     }
     
-    // Handle action buttons
+    // Handle action buttons - simplified to just 'open' since we removed 'dismiss'
     let actionUrl = url;
     if (event.action === 'open' && data.openUrl) {
         actionUrl = data.openUrl;
-    } else if (event.action === 'dismiss') {
-        // Just close the notification without opening a window
-        return;
     }
     
     // Main notification click logic

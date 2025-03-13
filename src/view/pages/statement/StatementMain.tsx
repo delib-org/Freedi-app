@@ -146,7 +146,7 @@ export default function StatementMain() {
 		};
 	}, [statement?.topParentId]);
 
-	// Effect to handle subscription and notification permission
+	// Effect to handle membership subscription (but NOT notification subscription)
 	useEffect(() => {
 		if (statement && creator) {
 			(async () => {
@@ -174,47 +174,16 @@ export default function StatementMain() {
 					);
 				}
 				
-				// Request notification permission and register for this statement
-				if ('Notification' in window) {
-					// Only prompt if not already decided
-					if (Notification.permission === 'default') {
-						// Ask for permission
-						const permission = await Notification.requestPermission();
-						
-						if (permission === 'granted') {
-							// Initialize notification service with user ID
+				// We no longer automatically register for notifications here
+				// This is now handled by the notification subscription button
+				// Just initialize the service if needed for the token
+				if ('Notification' in window && Notification.permission === 'granted' && creator) {
+					try {
+						if (!notificationService.getToken()) {
 							await notificationService.initialize(creator.uid);
-							
-							// Register for notifications for this statement
-							const token = notificationService.getToken();
-							if (token) {
-								await notificationService.registerForStatementNotifications(
-									creator.uid,
-									token,
-									statementId
-								);
-							}
 						}
-					} else if (Notification.permission === 'granted') {
-						// Permission already granted, make sure we have a token and are registered
-						try {
-							// Initialize notification service if needed
-							if (!notificationService.getToken()) {
-								await notificationService.initialize(creator.uid);
-							}
-							
-							// Register for notifications for this statement
-							const token = notificationService.getToken();
-							if (token) {
-								await notificationService.registerForStatementNotifications(
-									creator.uid,
-									token,
-									statementId
-								);
-							}
-						} catch (error) {
-							console.error('Error setting up notifications for statement:', error);
-						}
+					} catch (error) {
+						console.error('Error initializing notification service:', error);
 					}
 				}
 			})();
