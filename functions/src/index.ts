@@ -26,6 +26,7 @@ import {
 import { updateResultsSettings } from './fn_results';
 import {
 	getQuestionOptions,
+	updateNumberOfNewSubStatements,
 	updateParentWithNewMessageCB,
 } from './fn_statements';
 import { updateVote } from './fn_vote';
@@ -137,11 +138,11 @@ exports.massConsensusAddMember = wrapHttpFunction(addMassConsensusMember);
 // --------------------------
 
 // Statement functions
-exports.updateParentWithNewMessage = createFirestoreFunction(
+exports.updateNumberOfNewSubStatements = createFirestoreFunction(
 	`/${Collections.statements}/{statementId}`,
 	onDocumentCreated,
-	updateParentWithNewMessageCB,
-	'updateParentWithNewMessage'
+	updateNumberOfNewSubStatements,
+	'updateNumberOfNewSubStatements'
 );
 
 exports.updateInAppNotifications = createFirestoreFunction(

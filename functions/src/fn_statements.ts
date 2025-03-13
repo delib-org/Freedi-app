@@ -15,7 +15,7 @@ import { FirestoreEvent } from 'firebase-functions/firestore';
 import { parse } from 'valibot';
 import { Response, Request } from 'firebase-functions/v1';
 
-export async function updateParentWithNewMessageCB(
+export async function updateNumberOfNewSubStatements(
 	e: FirestoreEvent<
 		QueryDocumentSnapshot | undefined,
 		{

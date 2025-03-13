@@ -51,6 +51,9 @@ export async function setAdminsToNewStatement(
 			statementsSubscribeId: newStatementSubscriptionId,
 			user: statement.creator,
 			userId: statement.creatorId,
+			getInAppNotification: true,
+			getEmailNotification: true,
+			getPushNotification: true,
 		};
 		parse(StatementSubscriptionSchema, newSubscription);
 
