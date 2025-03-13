@@ -1,12 +1,12 @@
 import { MassConsensusPageUrls } from 'delib-npm';
 import { MailIcon } from 'lucide-react';
-import React, { useEffect, useState } from 'react';
 import TitleMassConsensus from '../TitleMassConsensus/TitleMassConsensus';
 import FooterMassConsensus from '../footerMassConsensus/FooterMassConsensus';
 import styles from './LeaveFeedback.module.scss';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import { useLeaveFeedback } from './LeaveFeedbackVM';
 import { useHeader } from '../headerMassConsensus/HeaderContext';
+import { useEffect } from 'react';
 
 function LeaveFeedback() {
 	const { t } = useUserConfig();
@@ -24,32 +24,16 @@ function LeaveFeedback() {
 		});
 	}, []);
 
-	const handleSendButton = () => {
-		return email;
-	};
-
-	const handleEmailChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-		const value = event.target.value;
-		setEmail(value);
-	};
-
 	return (
 		<div>
 			<TitleMassConsensus
 				title={t('Thank you for your participation')}
 			/>
 			<div className={styles.feedback}>
-				<h3>{t('Please leave your email to receive updates')}</h3>
+				<p>{t('Please leave your email to receive updates')}</p>
 				<div className={styles.input}>
-					{/* <Input
-						placeholder={t('Mail')}
-						name='email'
-						label=''
-						onChange={handleEmailChange}
-					/> */}
 					<input placeholder={t('Mail')} type='email' name='email' onChange={handleEmailChange} />
-
-					<span> {MailStatus === "invalid"? t('Invalid email'): null} </span>
+					<span> {MailStatus === "invalid" ? t('Invalid email') : null} </span>
 					<MailIcon />
 				</div>
 			</div>
