@@ -21,6 +21,5 @@ export function useSuggestionComment({ parentStatement, statement }: Props) {
 		return () => unsubscribe();
 	}, [creator?.uid]);
 
-
 	return { evaluationNumber };
 }

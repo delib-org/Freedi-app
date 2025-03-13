@@ -1,5 +1,6 @@
 import { StatementSubscription, Statement, Role, Screen, Access } from 'delib-npm';
 import { useAuthentication } from '../hooks/useAuthentication';
+import { EnhancedEvaluationThumb } from '@/view/pages/statement/components/evaluations/components/evaluation/enhancedEvaluation/EnhancedEvaluationModel';
 
 export function updateArray<T>(
 	currentArray: Array<T>,
@@ -356,3 +357,28 @@ export const emojiTransformer = (text: string): string => {
 
 	return result;
 };
+
+/**
+ * Find the closest evaluation value in the array to a given target value
+ * @param {Array} array - Array of objects with evaluation property
+ * @param {number} targetValue - The value to find the closest match for (-1 to 1)
+ * @returns {Object} - The object with the closest evaluation value
+ */
+export function findClosestEvaluation(array: EnhancedEvaluationThumb[], targetValue = 0) {
+	// Validate input
+	if (!Array.isArray(array) || array.length === 0) {
+		throw new Error('Input must be a non-empty array');
+	}
+
+	if (targetValue < -1 || targetValue > 1) {
+		throw new Error('Target value must be between -1 and 1');
+	}
+
+	// Sort the array by the absolute difference between evaluation and target value
+	return array.reduce((closest, current) => {
+		const currentDiff = Math.abs(current.evaluation - targetValue);
+		const closestDiff = Math.abs(closest.evaluation - targetValue);
+
+		return currentDiff < closestDiff ? current : closest;
+	}, array[0]);
+}

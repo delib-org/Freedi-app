@@ -13,7 +13,12 @@ const SuggestionChat = () => {
 	const statement = useSelector(statementSelector(statementId));
 	const comments = useSelector(statementSubsSelector(statementId));
 
+	const statementCreator = statement.creator.uid === creator.uid;
+
 	const creatorCommented = comments.find((comment) => comment.creator.uid === creator.uid);
+
+	console.log("is statement creator", statementCreator?.uid === creator.uid);
+	console.log("test:", statement !== undefined, !creatorCommented, !statementCreator)
 
 	return (
 		<div className={styles.suggestionChat}>
@@ -21,11 +26,12 @@ const SuggestionChat = () => {
 			<div className={styles.evaluationPanel}>
 				<Evaluation statement={statement} />
 			</div>
-			<p className={styles["suggestionChat__comments"]}>כתוב ההערה כדי לסייע למציע ההצעה לשפר את  ההצעה</p>
+			<p className={styles["suggestionChat__comments"]}>{!statementCreator ? "כתוב/כתבי ההערה כדי לסייע למציע ההצעה לשפר את  ההצעה" : "כאן יכתבו הערות להצעתך"}</p>
 			<div className={styles.comments}>
 				{comments.map((comment) => (<SuggestionComment key={comment.statementId} statement={comment} parentStatement={statement} />))}
 			</div>
-			{statement && !creatorCommented && <div className={styles.chatInput}>
+
+			{statement && !creatorCommented && !statementCreator && <div className={styles.chatInput}>
 				<ChatInput statement={statement} hasEvaluation={true} />
 			</div>}
 		</div>

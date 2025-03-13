@@ -53,8 +53,8 @@ const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({
 			>
 				{shouldDisplayScore && <span>{sumPro}</span>}
 				{shouldDisplayScore &&
-				numberOfEvaluators &&
-				numberOfEvaluators > 0 ? (
+					numberOfEvaluators &&
+					numberOfEvaluators > 0 ? (
 					<span className={styles['total-evaluators']}>
 						{' '}
 						({numberOfEvaluators})
@@ -77,13 +77,13 @@ const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({
 
 export default EnhancedEvaluation;
 
-interface EvaluationThumbProps {
+export interface EvaluationThumbProps {
 	statement: Statement;
 	evaluationScore: number | undefined;
 	evaluationThumb: EnhancedEvaluationThumb;
 }
 
-const EvaluationThumb: FC<EvaluationThumbProps> = ({
+export const EvaluationThumb: FC<EvaluationThumbProps> = ({
 	evaluationThumb,
 	evaluationScore,
 	statement,

@@ -11,6 +11,7 @@ export function useEvaluation(statement: Statement | undefined) {
 		const unsubscribe = parentStatement ? () => { return; }
 			:
 			listenToStatement(statement.parentId);
+
 		return () => unsubscribe();
 	}, [parentStatement?.statementId]);
 

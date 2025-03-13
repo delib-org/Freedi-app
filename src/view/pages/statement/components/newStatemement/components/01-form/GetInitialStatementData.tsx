@@ -11,7 +11,6 @@ import Input from '@/view/components/input/Input';
 import Textarea from '@/view/components/textarea/Textarea';
 import { StatementContext } from '@/view/pages/statement/StatementCont';
 import { StatementType, Statement } from 'delib-npm';
-import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 
 export default function GetInitialStatementData() {
 	const { t } = useUserConfig();
@@ -23,7 +22,6 @@ export default function GetInitialStatementData() {
 		handleSetNewStatement,
 		statement,
 	} = useContext(StatementContext);
-	const { creator } = useAuthentication();
 
 	const handleSubmit = async (ev: FormEvent<HTMLFormElement>) => {
 		ev.preventDefault();
