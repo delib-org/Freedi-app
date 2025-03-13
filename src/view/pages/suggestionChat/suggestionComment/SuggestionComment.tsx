@@ -10,9 +10,9 @@ import { listenToSubStatements } from '@/controllers/db/statements/listenToState
 import SubComment from './subComment/SubComment';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import ProfileImage from '@/view/components/profileImage/ProfileImage';
-import { creatorSelector } from '@/redux/creator/creatorSlice';
 import { evaluationSelector } from '@/redux/evaluations/evaluationsSlice';
 import EvaluationPopup from './evaluationPopup/EvaluationPopup';
+import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 
 interface Props {
 	parentStatement: Statement
@@ -21,7 +21,9 @@ interface Props {
 
 const SuggestionComment: FC<Props> = ({ statement, parentStatement }) => {
 	const { t } = useUserConfig();
-	const user = useSelector(creatorSelector);
+	const initialStatement = useRef(parentStatement.statement);
+	const initialDescription = useRef(parentStatement.description);
+	const { user } = useAuthentication();
 	const { evaluationNumber } = useSuggestionComment({ parentStatement, statement });
 	const comments = useSelector(statementSubsSelector(statement.statementId));
 	const previousEvaluation = useSelector(evaluationSelector(parentStatement.statementId, user?.uid));
@@ -49,11 +51,32 @@ const SuggestionComment: FC<Props> = ({ statement, parentStatement }) => {
 		}
 	}, [showInput]);
 
+	useEffect(() => {
+		if (user?.uid !== parentStatement.creator.uid) return;
+
+		if (initialStatement.current !== parentStatement.statement) {
+			saveStatementToDB({
+				text: `${t("Title changed by the creator to")}: ${parentStatement.statement}`,
+				parentStatement: statement,
+				statementType: StatementType.statement
+			});
+			initialStatement.current = parentStatement.statement;
+		}
+		if (initialDescription.current !== parentStatement.description) {
+			saveStatementToDB({
+				text: `${t("Description changed by the creator to")}: ${parentStatement.statement}`,
+				parentStatement: statement,
+				statementType: StatementType.statement
+			});
+			initialDescription.current = parentStatement.description;
+		}
+
+	}, [parentStatement.statement, parentStatement.description]);
+
 	const toggleAccordion = () => {
 		setIsOpen(!isOpen);
 	};
 
-	const hasTalkedLast = comments.length > 0 && comments[comments.length - 1].creator.uid === user?.uid;
 	const isCreator = parentStatement.creator.uid === user?.uid;
 
 	function handleCommentSubmit(ev: KeyboardEvent<HTMLTextAreaElement>): void {
@@ -94,7 +117,6 @@ const SuggestionComment: FC<Props> = ({ statement, parentStatement }) => {
 				onClick={toggleAccordion}
 				onKeyDown={(e) => { if (e.key === 'Enter') toggleAccordion(); }}
 				tabIndex={0}
-				role="button"
 			>
 				<div className={styles.commentCreator}>
 					<ProfileImage statement={statement} />
@@ -115,22 +137,21 @@ const SuggestionComment: FC<Props> = ({ statement, parentStatement }) => {
 							<SubComment key={comment.statementId} statement={comment} />
 						))}
 					</div>
-					{!hasTalkedLast && <>
-						{showInput && <div className={styles.commentInput}>
-							<textarea
-								ref={textareaRef}
-								name="commentInput"
-								onKeyUp={handleCommentSubmit}
-								onChange={handleTextareaChange}
-								placeholder={t("Write your comment...")}
-								rows={1}
-								autoFocus
-							/>
-							{!isCreator && <EvaluationPopup parentStatement={parentStatement} />}
-						</div>}
-						{!showInput && <button className={styles.replyButton} onClick={() => setShowInput(true)}>השב/י</button>}
-					</>
-					}
+
+					{showInput && <div className={styles.commentInput}>
+						<textarea
+							ref={textareaRef}
+							name="commentInput"
+							onKeyUp={handleCommentSubmit}
+							onChange={handleTextareaChange}
+							placeholder={t("Write your comment...")}
+							rows={1}
+							autoFocus
+						/>
+						{!isCreator && <EvaluationPopup parentStatement={parentStatement} />}
+					</div>}
+					{!showInput && <button className={styles.replyButton} onClick={() => setShowInput(true)}>השב/י</button>}
+
 				</>
 			)}
 		</div>
