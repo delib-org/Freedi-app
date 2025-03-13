@@ -25,25 +25,10 @@ const SuggestionChat = () => {
 	const creator = useSelector(creatorSelector);
 	const statement = useSelector(statementSelector(statementId));
 	const comments = useSelector(statementSubsSelector(statementId));
-	const [editDescription, setEditDescription] = useState(false);
 
 	// Derived state
 	const isStatementCreator = statement.creator.uid === creator.uid;
 	const hasCreatorCommented = comments.some(comment => comment.creator.uid === creator.uid);
-
-	// Event handlers
-	const handleEditDescription = () => {
-		console.log("handleEditDescription")
-		setEditDescription(true);
-	};
-
-	const handleUpdateDescription = (e) => {
-		if (e.key !== 'Enter') return;
-
-		const description = e.target.value;
-		updateStatementText(statement, undefined, description);
-		setEditDescription(false);
-	};
 
 	// Component render
 	return (
