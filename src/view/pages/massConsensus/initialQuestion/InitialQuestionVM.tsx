@@ -2,40 +2,34 @@ import firebaseConfig from '@/controllers/db/configKey';
 import { setSimilarStatements } from '@/redux/massConsensus/massConsensusSlice';
 import { statementSubscriptionSelector } from '@/redux/statements/statementsSlice';
 import { functionConfig, StatementSubscription } from 'delib-npm';
-import React, { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useParams } from 'react-router';
 
 interface InitialQuestionVM {
 	handleSetInitialSuggestion: () => Promise<void>;
-	changeInput: (event: React.ChangeEvent<HTMLInputElement>) => void;
 	ifButtonEnabled: boolean;
 	ready: boolean;
 	loading: boolean;
 	subscription: StatementSubscription | undefined;
 }
 
-export function useInitialQuestion(): InitialQuestionVM {
+export function useInitialQuestion(description: string): InitialQuestionVM {
 	const dispatch = useDispatch();
 	const { statementId } = useParams<{ statementId: string }>();
 
-	const [input, setInput] = useState("");
-	const [ifButtonEnabled, setIfButtonEnabled] = useState(false);
 	const [ready, setReady] = useState(false);
 	const [loading, setLoading] = useState(false);
 	const subscription = useSelector(statementSubscriptionSelector(statementId));
 
-	const changeInput = (event: React.ChangeEvent<HTMLInputElement>) => {
-		setInput(event.target.value);
-		setIfButtonEnabled(event.target.value.length > 0);
-	}
+	const ifButtonEnabled = useMemo(() => description.trim().length > 0, [description]);
 
 	async function handleSetInitialSuggestion() {
-		if (!input) return;
+		if (!ifButtonEnabled) return;
 		setLoading(true);
 
 		const { similarStatements = [], similarTexts = [], userText } =
-			await getSimilarStatements(statementId, input);
+			await getSimilarStatements(statementId, description);
 
 		dispatch(
 			setSimilarStatements([
@@ -50,7 +44,6 @@ export function useInitialQuestion(): InitialQuestionVM {
 
 	return {
 		handleSetInitialSuggestion,
-		changeInput,
 		ifButtonEnabled,
 		ready,
 		loading,

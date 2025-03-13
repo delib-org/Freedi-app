@@ -7,16 +7,21 @@ interface TextAreaProps {
 	placeholder?: string;
 	value?: string;
 	onChange?: (value: string) => void;
+	backgroundColor?: string;
 	name: string;
+	maxLength?: number
 }
 
 const Textarea: React.FC<TextAreaProps> = ({
 	label = 'Your description',
 	placeholder = 'Please write the description of your suggestion here...',
 	value = '',
+	onChange,
+	backgroundColor = '#fff',
 	name,
+	maxLength
 }) => {
-	const { dir } = useUserConfig();
+	const { t, dir } = useUserConfig();
 	const textareaRef = useRef<HTMLTextAreaElement>(null);
 
 	const adjustHeight = () => {
@@ -34,9 +39,9 @@ const Textarea: React.FC<TextAreaProps> = ({
 		adjustHeight();
 	}, [value]);
 
-	const handleChange = () => {
+	const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
 		adjustHeight();
-		// onChange?.(e.target.value);
+		onChange?.(e.target.value);
 	};
 
 	return (
@@ -44,6 +49,7 @@ const Textarea: React.FC<TextAreaProps> = ({
 			<div className={styles.labelContainer}>
 				<div
 					className={`${styles.labelWrapper} ${dir === 'ltr' ? styles['labelWrapper--ltr'] : styles['labelWrapper--rtl']}`}
+					style={{ backgroundColor: backgroundColor }}
 				>
 					<span className={styles.label}>{label}</span>
 				</div>
@@ -54,11 +60,20 @@ const Textarea: React.FC<TextAreaProps> = ({
 					ref={textareaRef}
 					className={styles.textArea}
 					placeholder={placeholder}
-					defaultValue={value}
+					value={value}
 					onChange={handleChange}
 					rows={3} // Start with one row
+					maxLength={maxLength}
 				/>
 			</div>
+			{typeof maxLength === 'number' && (
+				<div
+					className={styles.charCounter}
+					style={{ direction: dir === 'rtl' ? 'rtl' : 'ltr' }}
+				>
+					{value.length} / {maxLength} {t('characters')}
+				</div>
+			)}
 		</div>
 	);
 };

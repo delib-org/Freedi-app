@@ -1,43 +1,53 @@
 import { MassConsensusPageUrls } from 'delib-npm';
-import HeaderMassConsensus from '../headerMassConsensus/HeaderMassConsensus';
-import Input from '@/view/components/input/Input';
 import { MailIcon } from 'lucide-react';
-import { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import TitleMassConsensus from '../TitleMassConsensus/TitleMassConsensus';
 import FooterMassConsensus from '../footerMassConsensus/FooterMassConsensus';
 import styles from './LeaveFeedback.module.scss';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useHeader } from '../headerMassConsensus/HeaderContext';
 
 function LeaveFeedback() {
 	const { t } = useUserConfig();
 	const [email, setEmail] = useState('');
 
+	const { setHeader } = useHeader();
+
+	useEffect(() => {
+		setHeader({
+			title: t('Sign up'),
+			backTo: MassConsensusPageUrls.voting,
+			backToApp: false,
+			isIntro: false,
+			setHeader,
+		});
+	}, []);
+
 	const handleSendButton = () => {
 		return email;
 	};
 
-	const handleEmailChange = (value: string) => {
+	const handleEmailChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+		const value = event.target.value;
 		setEmail(value);
 	};
 
 	return (
 		<div>
-			<HeaderMassConsensus
-				title={t('Sign up')}
-				backTo={MassConsensusPageUrls.voting}
-			/>
 			<TitleMassConsensus
-				title={t('Thank you for your participation.')}
+				title={t('Thank you for your participation')}
 			/>
-			<div className={`${styles.feedback} wrapper main-wrap`}>
-				<p>{t('Please leave your email to receive updates.')}</p>
+			<div className={styles.feedback}>
+				<h3>{t('Please leave your email to receive updates')}</h3>
 				<div className={styles.input}>
-					<Input
+					{/* <Input
 						placeholder={t('Mail')}
 						name='email'
 						label=''
 						onChange={handleEmailChange}
-					/>
+					/> */}
+					<input placeholder={t('Mail')} type='email' name='email' onChange={handleEmailChange} />
+
 					<MailIcon />
 				</div>
 			</div>

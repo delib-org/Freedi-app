@@ -1,30 +1,37 @@
 import { MassConsensusPageUrls, SortType, SelectionFunction } from 'delib-npm';
 import SuggestionCards from '../../statement/components/evaluations/components/suggestionCards/SuggestionCards';
-import HeaderMassConsensus from '../headerMassConsensus/HeaderMassConsensus';
 import useTopSuggestions from './TopSuggestionVM';
 import TitleMassConsensus from '../TitleMassConsensus/TitleMassConsensus';
 import FooterMassConsensus from '../footerMassConsensus/FooterMassConsensus';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useHeader } from '../headerMassConsensus/HeaderContext';
+import { useEffect } from 'react';
 
 const TopSuggestions = () => {
 	const { t } = useUserConfig();
 	const { navigateToVoting } = useTopSuggestions();
 
+	const { setHeader } = useHeader();
+
+	useEffect(() => {
+		setHeader({
+			title: t('Leading suggestion evaluation'),
+			backTo: MassConsensusPageUrls.randomSuggestions,
+			backToApp: false,
+			isIntro: false,
+			setHeader,
+		});
+	}, []);
+
 	return (
 		<div>
-			<HeaderMassConsensus
-				title={t('leading suggestion evaluation')}
-				backTo={MassConsensusPageUrls.randomSuggestions}
-			/>
 			<TitleMassConsensus
-				title={t('please rate the following suggestions')}
+				title={t('Please rate the following suggestions')}
 			/>
-			<div className='wrapper'>
-				<SuggestionCards
-					selectionFunction={SelectionFunction.top}
-					propSort={SortType.random}
-				/>
-			</div>
+			<SuggestionCards
+				selectionFunction={SelectionFunction.top}
+				propSort={SortType.random}
+			/>
 			<FooterMassConsensus
 				isNextActive={true}
 				onNext={navigateToVoting}
