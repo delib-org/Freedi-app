@@ -1,5 +1,6 @@
 import { StatementSubscription, Statement, Role, Screen, Access } from 'delib-npm';
 import { useAuthentication } from '../hooks/useAuthentication';
+import { EnhancedEvaluationThumb } from '@/view/pages/statement/components/evaluations/components/evaluation/enhancedEvaluation/EnhancedEvaluationModel';
 
 export function updateArray<T>(
 	currentArray: Array<T>,
@@ -257,9 +258,7 @@ export function isProduction(): boolean {
 export const handleCloseInviteModal = (
 	setShowModal: (show: boolean) => void
 ) => {
-	const inviteModal = document.querySelector(
-		'.inviteModal'
-	) as HTMLDivElement;
+	const inviteModal = document.querySelector('.inviteModal');
 	inviteModal.classList.add('closing');
 
 	setTimeout(() => {
@@ -323,4 +322,63 @@ export function getLatestUpdateStatements(statements: Statement[]): number {
 				: latestUpdate,
 		0
 	);
+}
+
+export const emojiTransformer = (text: string): string => {
+	// Define the sentiment emoji mapping
+	const sentimentEmojis = {
+		':-1': '😠', // Really disagree
+		':-0.75': '🙁', // Strongly disagree
+		':-0.5': '😕', // Half disagree
+		':-0.25': '😐', // Slightly disagree
+		':0': '😐', // Neutral
+		':0.25': '🙂', // Slightly agree
+		':0.5': '😊', // Half agree
+		':0.75': '😄', // Strongly agree
+		':1': '😁', // Really agree
+	};
+
+	// Transform the text with emoji replacements
+	if (!text) return '';
+
+	let result = text;
+
+	// Replace all sentiment codes with corresponding emojis
+	// Use a more precise regex pattern that looks for the exact codes
+	Object.entries(sentimentEmojis).forEach(([code, emoji]) => {
+		// Escape special characters in the code
+		const escapedCode = code.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+		// Use lookahead and lookbehind to ensure we're matching standalone codes
+		// Or use a regex that matches the code at the start, end, or surrounded by spaces
+		const regex = new RegExp(`(^|\\s)${escapedCode}(\\s|$)`, 'g');
+		result = result.replace(regex, `$1${emoji}$2`);
+	});
+
+	return result;
+};
+
+/**
+ * Find the closest evaluation value in the array to a given target value
+ * @param {Array} array - Array of objects with evaluation property
+ * @param {number} targetValue - The value to find the closest match for (-1 to 1)
+ * @returns {Object} - The object with the closest evaluation value
+ */
+export function findClosestEvaluation(array: EnhancedEvaluationThumb[], targetValue = 0) {
+	// Validate input
+	if (!Array.isArray(array) || array.length === 0) {
+		throw new Error('Input must be a non-empty array');
+	}
+
+	if (targetValue < -1 || targetValue > 1) {
+		throw new Error('Target value must be between -1 and 1');
+	}
+
+	// Sort the array by the absolute difference between evaluation and target value
+	return array.reduce((closest, current) => {
+		const currentDiff = Math.abs(current.evaluation - targetValue);
+		const closestDiff = Math.abs(closest.evaluation - targetValue);
+
+		return currentDiff < closestDiff ? current : closest;
+	}, array[0]);
 }

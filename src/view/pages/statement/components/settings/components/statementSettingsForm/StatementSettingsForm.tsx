@@ -28,7 +28,6 @@ import { createSelector } from '@reduxjs/toolkit';
 import { RootState } from '@/redux/store';
 import Loader from '@/view/components/loaders/Loader';
 import { StatementSubscription, Role, Statement } from 'delib-npm';
-import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 
 interface StatementSettingsFormProps {
 	statement: Statement;
@@ -47,7 +46,6 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 	const navigate = useNavigate();
 	const { statementId } = useParams();
 	const { t } = useUserConfig();
-	const { creator } = useAuthentication();
 
 	const [image, setImage] = useState<string>(imageUrl);
 	const [loading, setLoading] = useState<boolean>(false);
@@ -77,7 +75,6 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 			e.preventDefault();
 			setLoading(true);
 			const newStatement = await setNewStatement({
-				creator,
 				navigate,
 				statementId,
 				statement,

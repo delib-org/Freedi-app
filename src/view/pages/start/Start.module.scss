@@ -79,21 +79,6 @@ body {
 	gap: var(--font-size);
 }
 
-.language {
-	border-radius: 3rem;
-	color: var(--text-blue);
-	height: var(--height-of-interaction-component);
-	text-align: center;
-	font-size: 1rem;
-	width: fit-content;
-	margin-left: auto;
-	margin-right: auto;
-}
-
-.language option:nth-child(even) {
-	background-color: white;
-}
-
 .anonymous {
 	background-color: var(--btn-primary);
 }
