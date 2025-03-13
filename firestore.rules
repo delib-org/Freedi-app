@@ -57,12 +57,12 @@ service cloud.firestore {
     }
 
 
-match /pushNotifications/{pushNotificationId=**}{
-		allow read: if request.auth.uid != null;
-		allow write: if request.auth.uid != null;
-}
+	match /pushNotifications/{pushNotificationId=**}{
+			allow read: if request.auth.uid != null;
+			allow write: if request.auth.uid != null;
+	}
 
-	match /askedToBeNotify/{askedToBeNotifyId=**} {
+	match /askedToBeNotified/{askedToBeNotifiedId=**} {
 		allow read: if request.auth.uid != null;
 		allow write: if request.auth.uid != null;
 	}
