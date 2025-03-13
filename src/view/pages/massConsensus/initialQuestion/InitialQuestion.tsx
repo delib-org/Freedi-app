@@ -76,7 +76,7 @@ const InitialQuestion = () => {
 					</div>
 				</form>
 			}
-			{/* {isAdmin && !edit &&
+			{isAdmin && !edit &&
 				<div className='btns'>
 					<button
 						className="btn btn--secondary"
@@ -91,7 +91,7 @@ const InitialQuestion = () => {
 						Edit
 					</button>
 				</div>
-			} */}
+			}
 			<Textarea
 				name='your-description'
 				label={t('Your description')}
