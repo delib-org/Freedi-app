@@ -7,7 +7,7 @@ import { resetEvaluations } from '@/redux/evaluations/evaluationsSlice';
 import { resetResults } from '@/redux/results/resultsSlice';
 import { resetStatements } from '@/redux/statements/statementsSlice';
 import { resetVotes } from '@/redux/vote/votesSlice';
-import { Creator } from '@/types/user/User';
+import { Creator } from 'delib-npm';
 import { convertFirebaseUserToCreator } from '@/types/user/userUtils';
 import { LocalStorageObjects } from '@/types/localStorage/LocalStorageObjects';
 import { setCreator } from '@/redux/creator/creatorSlice';

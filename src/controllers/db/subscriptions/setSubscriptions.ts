@@ -9,9 +9,9 @@ import {
 	User,
 	Role,
 	StatementSubscription,
+	Creator
 } from 'delib-npm';
 import { parse } from 'valibot';
-import { Creator } from '@/types/user/User';
 
 export async function setStatementSubscriptionToDB(
 	statement: Statement,
