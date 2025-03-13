@@ -1,0 +1,27 @@
+.profileImage {
+	width: 2rem;
+	height: 2rem;
+	border-radius: 50%;
+	background-position: center;
+	background-size: cover;
+	background-repeat: no-repeat;
+	position: relative;
+
+	.popup {
+		position: absolute;
+		width: fit-content;
+		word-break: keep-all;
+		display: block ruby;
+		border-radius: .5rem;
+		bottom: 1rem;
+		right: 1rem;
+		background-color: rgb(135, 163, 163);
+		padding: .2rem .5rem;
+	}
+
+}
+
+.profileName {
+	font-size: .9rem;
+	font-weight: 300;
+}
