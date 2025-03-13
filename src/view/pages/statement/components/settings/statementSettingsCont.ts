@@ -17,9 +17,9 @@ import {
 	Evaluation,
 	Statement,
 	Vote,
+	Creator
 } from 'delib-npm';
 import { Dispatch, SetStateAction } from 'react';
-import { Creator } from '@/types/user/User';
 
 // Get users that voted on options in this statement
 export async function handleGetVoters(

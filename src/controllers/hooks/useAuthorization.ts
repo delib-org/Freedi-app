@@ -9,8 +9,7 @@ import { getTopParentSubscriptionFromDByStatement } from '@/controllers/db/subsc
 import { setStatementSubscriptionToDB } from '@/controllers/db/subscriptions/setSubscriptions';
 import { useAuthentication } from './useAuthentication';
 import { useNavigate } from 'react-router';
-import { Access, Role, Statement, StatementSubscription } from 'delib-npm';
-import { Creator } from '@/types/user/User';
+import { Access, Role, Statement, StatementSubscription, Creator } from 'delib-npm';
 
 export interface AuthorizationState {
 	isAuthorized: boolean;
@@ -100,7 +99,7 @@ async function isUserAuthorized(
 		subscription?.role !== Role.banned
 	) {
 		if (!subscription) {
-			await setStatementSubscriptionToDB(statement, creator, Role.member);
+			await setStatementSubscriptionToDB({ statement, creator, role: Role.member });
 		}
 
 		return true;

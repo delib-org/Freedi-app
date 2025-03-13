@@ -161,11 +161,11 @@ export default function StatementMain() {
 					statement.membership?.access === Access.close
 				) {
 					// subscribe
-					setStatementSubscriptionToDB(
+					setStatementSubscriptionToDB({
 						statement,
 						creator,
-						Role.member
-					);
+						role: Role.member
+					});
 				} else {
 					//update subscribed field
 					updateSubscriberForStatementSubStatements(

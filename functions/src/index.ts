@@ -26,7 +26,7 @@ import {
 import { updateResultsSettings } from './fn_results';
 import {
 	getQuestionOptions,
-	updateParentWithNewMessageCB,
+	updateNumberOfNewSubStatements,
 } from './fn_statements';
 import { updateVote } from './fn_vote';
 import { setAdminsToNewStatement } from './fn_roles';
@@ -42,6 +42,7 @@ import { setImportanceToStatement } from './fn_importance';
 import { updateAgrees } from './fn_agree';
 import { updateStatementWithViews } from './fn_views';
 import { getInitialMCData, addMassConsensusMember } from './fn_massConsensus';
+import { updateInAppNotifications } from './fn_notifications';
 
 // Initialize Firebase
 initializeApp();
@@ -136,11 +137,18 @@ exports.massConsensusAddMember = wrapHttpFunction(addMassConsensusMember);
 // --------------------------
 
 // Statement functions
-exports.updateParentWithNewMessage = createFirestoreFunction(
+exports.updateNumberOfNewSubStatements = createFirestoreFunction(
 	`/${Collections.statements}/{statementId}`,
 	onDocumentCreated,
-	updateParentWithNewMessageCB,
-	'updateParentWithNewMessage'
+	updateNumberOfNewSubStatements,
+	'updateNumberOfNewSubStatements'
+);
+
+exports.updateInAppNotifications = createFirestoreFunction(
+	`/${Collections.statements}/{statementId}`,
+	onDocumentCreated,
+	updateInAppNotifications,
+	'updateInAppNotifications'
 );
 
 exports.setAdminsToNewStatement = createFirestoreFunction(
