@@ -1,4 +1,4 @@
-import { Collections, getStatementSubscriptionId, NotificationType, Statement, StatementSchema, StatementSubscription } from "delib-npm";
+import { Collections, NotificationType, Statement, StatementSchema, StatementSubscription } from "delib-npm";
 import { logger } from "firebase-functions/v1";
 import { parse } from "valibot";
 import { db } from ".";
@@ -28,12 +28,10 @@ export async function updateInAppNotifications(e: FirestoreEvent<
 		const subscribersInApp = subscribersDB.docs.map((doc: QueryDocumentSnapshot) => doc.data() as StatementSubscription);
 		const parentStatement = parse(StatementSchema, parentStatementDB.data());
 		//update the inAppNotifications of the subscribers
-		console.log("found subscribers for", parentStatement.statement, subscribersInApp.length);
 		const batch = db.batch();
 		subscribersInApp.forEach((subscriber: StatementSubscription) => {
-			const notificationId = getStatementSubscriptionId(newStatement.parentId, subscriber.user);
-			if (!notificationId) return;
-			const subscriberRef = db.doc(`${Collections.inAppNotifications}/${notificationId}`);
+
+			const notificationRef = db.collection(Collections.inAppNotifications).doc();
 			const newNotification: NotificationType = {
 				userId: subscriber.userId,
 				parentId: newStatement.parentId,
@@ -43,9 +41,10 @@ export async function updateInAppNotifications(e: FirestoreEvent<
 				creatorImage: newStatement.creator.photoURL,
 				createdAt: newStatement.createdAt,
 				read: false,
-				notificationId
+				notificationId: notificationRef.id,
+				statementId: newStatement.statementId,
 			};
-			batch.set(subscriberRef, newNotification);
+			batch.create(notificationRef, newNotification);
 		});
 
 		batch.commit();

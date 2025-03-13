@@ -27,7 +27,6 @@ import { updateResultsSettings } from './fn_results';
 import {
 	getQuestionOptions,
 	updateNumberOfNewSubStatements,
-	updateParentWithNewMessageCB,
 } from './fn_statements';
 import { updateVote } from './fn_vote';
 import { setAdminsToNewStatement } from './fn_roles';
