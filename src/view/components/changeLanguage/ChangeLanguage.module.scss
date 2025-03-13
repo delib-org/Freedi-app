@@ -8,6 +8,7 @@
 	border-radius: 20px;
 	display: flex;
 	flex-direction: column;
+	min-height: 700px;
 	@media (max-width: 768px) {
 		width: 100vw;
 		height: 100vh;
@@ -24,9 +25,8 @@
 	text-align: center;
 	font-size: 1rem;
 	width: fit-content;
-	display: flex;
-	flex-direction: column;
-	flex-wrap: wrap;
+	margin-left: auto;
+	margin-right: auto;
 }
 
 .language option:nth-child(even) {
