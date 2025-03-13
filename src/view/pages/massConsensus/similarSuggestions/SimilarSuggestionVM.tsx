@@ -31,13 +31,11 @@ export function useSimilarSuggestions() {
 			//if statementId === null save new to DB
 			if (!statement.statementId) {
 				const newStatement: Statement = createStatement({
-					creator,
 					text: statement.statement,
 					parentStatement,
 					statementType: StatementType.option,
 				});
 				const { statementId: newStatementId } = await setStatementToDB({
-					creator,
 					statement: newStatement,
 					parentStatement,
 				});

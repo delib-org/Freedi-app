@@ -1,0 +1,68 @@
+.suggestionChat {
+	width: 100%;
+	max-width: var(--wrapper);
+	position: relative;
+	height: 100%;
+
+	&__explain {
+		opacity: .8;
+		font-weight: 300;
+		text-align: center;
+	}
+
+	&__description {
+		margin: 1rem 0;
+		opacity: .8;
+		font-weight: 300;
+		text-align: start;
+		width: 100%;
+
+		p {
+			text-align: start;
+			font-size: 1.2rem;
+			font-weight: 300;
+			line-height: 1.8rem;
+			word-break: break-all;
+		}
+
+		@media screen and (maX-width: 768px) {
+			padding: 0rem 1rem;
+		}
+
+	}
+
+	&__comments {
+		margin-top: 1rem;
+		opacity: .8;
+		font-weight: 300;
+		text-align: center;
+	}
+
+	.evaluationPanel {
+		margin: 1rem auto;
+		width: fit-content;
+
+	}
+
+	.comments {
+		display: flex;
+		flex-direction: column;
+		justify-content: flex-start;
+		gap: .5rem;
+		overflow-y: auto;
+		padding-bottom: 150px;
+
+		@media screen and (min-width: 768px) {
+			padding: 10px;
+
+		}
+	}
+
+	.chatInput {
+		position: fixed;
+		bottom: 0;
+		left: 50%;
+		transform: translateX(-50%);
+		width: 100%;
+	}
+}

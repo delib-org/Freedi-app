@@ -10,6 +10,7 @@ import { resetVotes } from '@/redux/vote/votesSlice';
 import { Creator } from '@/types/user/User';
 import { convertFirebaseUserToCreator } from '@/types/user/userUtils';
 import { LocalStorageObjects } from '@/types/localStorage/LocalStorageObjects';
+import { setCreator } from '@/redux/creator/creatorSlice';
 
 interface AuthState {
 	isAuthenticated: boolean;
@@ -48,6 +49,7 @@ export const useAuthentication = () => {
 					creator: convertFirebaseUserToCreator(user),
 					initialRoute: initialRoute.current?.pathname,
 				});
+				dispatch(setCreator(convertFirebaseUserToCreator(user)));
 			} else {
 				// User is not authenticated
 				setAuthState({
