@@ -7,7 +7,8 @@ importScripts(
     "https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging-compat.js"
 );
 
-// Initialize the Firebase app in the service worker
+// Initialize the Firebase app in the service worker with the production configuration
+// Make sure these values match the ones in your Firebase Console for freedi-test project
 firebase.initializeApp({
     apiKey: "AIzaSyBEumZUTCL3Jc9pt7_CjiSVTxmz9aMqSvo",
     authDomain: "synthesistalyaron.firebaseapp.com",
@@ -24,6 +25,79 @@ const messaging = firebase.messaging();
 
 // Cache for storing notification data
 const notificationCache = new Map();
+
+// Badge counter in IndexedDB to persist across refreshes
+let badgeCount = 0;
+
+// Initialize badge counter from IndexedDB
+const initBadgeCount = async () => {
+    try {
+        const openRequest = indexedDB.open('FreeDiNotifications', 1);
+        
+        openRequest.onupgradeneeded = (event) => {
+            const db = event.target.result;
+            if (!db.objectStoreNames.contains('badgeCounter')) {
+                db.createObjectStore('badgeCounter', { keyPath: 'id' });
+            }
+        };
+        
+        openRequest.onsuccess = (event) => {
+            const db = event.target.result;
+            const transaction = db.transaction('badgeCounter', 'readonly');
+            const store = transaction.objectStore('badgeCounter');
+            const countRequest = store.get('badge');
+            
+            countRequest.onsuccess = () => {
+                if (countRequest.result) {
+                    badgeCount = countRequest.result.count || 0;
+                    
+                    // Apply current badge count on initialization
+                    if ('setAppBadge' in navigator) {
+                        navigator.setAppBadge(badgeCount).catch(err => 
+                            console.error('Error setting badge on init:', err)
+                        );
+                    } else if ('setExperimentalAppBadge' in navigator) {
+                        // @ts-ignore - Experimental API
+                        navigator.setExperimentalAppBadge(badgeCount).catch(err => 
+                            console.error('Error setting experimental badge:', err)
+                        );
+                    } else if ('ExperimentalBadge' in window) {
+                        // @ts-ignore - Another experimental API seen in some browsers
+                        window.ExperimentalBadge.set(badgeCount).catch(err => 
+                            console.error('Error setting ExperimentalBadge:', err)
+                        );
+                    }
+                }
+            };
+        };
+        
+        openRequest.onerror = (event) => {
+            console.error('IndexedDB error when initializing badge:', event.target.error);
+        };
+    } catch (error) {
+        console.error('Error initializing badge count:', error);
+    }
+};
+
+// Update badge count in IndexedDB
+const saveBadgeCount = async (count) => {
+    try {
+        const openRequest = indexedDB.open('FreeDiNotifications', 1);
+        
+        openRequest.onsuccess = (event) => {
+            const db = event.target.result;
+            const transaction = db.transaction('badgeCounter', 'readwrite');
+            const store = transaction.objectStore('badgeCounter');
+            
+            store.put({ id: 'badge', count: count });
+        };
+    } catch (error) {
+        console.error('Error saving badge count:', error);
+    }
+};
+
+// Initialize the badge counter
+initBadgeCount();
 
 // Function to play notification sound
 const playNotificationSound = async () => {
@@ -103,25 +177,58 @@ messaging.onBackgroundMessage(async function (payload) {
             }
         };
 
-        // Add badge to app icon if supported
-        if ('setAppBadge' in navigator) {
-            try {
-                // Get all clients to check if any are visible
-                const clients = await self.clients.matchAll({
-                    type: 'window',
-                    includeUncontrolled: true
-                });
+        // Handle badge counter for notification
+        try {
+            // Get all clients to check if any are visible
+            const clients = await self.clients.matchAll({
+                type: 'window',
+                includeUncontrolled: true
+            });
+            
+            // Only increment badge if all windows are hidden or not focused
+            const allHidden = clients.every(client => 
+                !client.visibilityState || 
+                client.visibilityState === 'hidden' || 
+                !client.focused
+            );
+            
+            if (allHidden) {
+                // Increment badge count
+                badgeCount++;
                 
-                // Only set badge if all windows are hidden
-                const allHidden = clients.every(client => !client.visibilityState || client.visibilityState === 'hidden');
+                // Save the updated count to IndexedDB
+                await saveBadgeCount(badgeCount);
                 
-                if (allHidden) {
-                    // Get current badge count and increment
-                    navigator.setAppBadge(1).catch(err => console.error('Error setting badge:', err));
+                // Set badge using standard or experimental APIs based on browser support
+                if ('setAppBadge' in navigator) {
+                    // Standard Badging API (Chrome, Edge, Safari)
+                    await navigator.setAppBadge(badgeCount)
+                        .catch(err => console.error('Error setting badge:', err));
+                } else if ('setExperimentalAppBadge' in navigator) {
+                    // Experimental API for some browsers
+                    // @ts-ignore - Experimental API
+                    await navigator.setExperimentalAppBadge(badgeCount)
+                        .catch(err => console.error('Error setting experimental badge:', err));
+                } else if ('ExperimentalBadge' in window) {
+                    // Another experimental API seen in some browsers
+                    // @ts-ignore - Experimental API
+                    await window.ExperimentalBadge.set(badgeCount)
+                        .catch(err => console.error('Error setting ExperimentalBadge:', err));
                 }
-            } catch (error) {
-                console.error('Error setting app badge:', error);
+            } else {
+                // If app is visible, notify it about the new message anyway
+                clients.forEach(client => {
+                    client.postMessage({
+                        type: 'NEW_NOTIFICATION_RECEIVED',
+                        payload: {
+                            ...payload,
+                            notificationId
+                        }
+                    });
+                });
             }
+        } catch (error) {
+            console.error('Error handling badge counter:', error);
         }
 
         // Show the notification
@@ -149,8 +256,26 @@ self.addEventListener('notificationclick', function(event) {
     const notificationId = data.notificationId;
     
     // Clear badge when notification is clicked
-    if ('clearAppBadge' in navigator) {
-        navigator.clearAppBadge().catch(err => console.error('Error clearing badge:', err));
+    try {
+        // Reset badge count
+        badgeCount = 0;
+        saveBadgeCount(0);
+        
+        // Clear badge using standard or experimental APIs based on browser support
+        if ('clearAppBadge' in navigator) {
+            // Standard Badging API (Chrome, Edge, Safari)
+            navigator.clearAppBadge().catch(err => console.error('Error clearing badge:', err));
+        } else if ('clearExperimentalAppBadge' in navigator) {
+            // Experimental API for some browsers
+            // @ts-ignore - Experimental API
+            navigator.clearExperimentalAppBadge().catch(err => console.error('Error clearing experimental badge:', err));
+        } else if ('ExperimentalBadge' in window) {
+            // Another experimental API seen in some browsers
+            // @ts-ignore - Experimental API
+            window.ExperimentalBadge.clear().catch(err => console.error('Error clearing ExperimentalBadge:', err));
+        }
+    } catch (error) {
+        console.error('Error clearing badge:', error);
     }
     
     // Handle action buttons - simplified to just 'open' since we removed 'dismiss'
@@ -222,8 +347,26 @@ self.addEventListener('message', (event) => {
         });
         
         // Clear app badge
-        if ('clearAppBadge' in navigator) {
-            navigator.clearAppBadge().catch(err => console.error('Error clearing badge:', err));
+        try {
+            // Reset badge count
+            badgeCount = 0;
+            saveBadgeCount(0);
+            
+            // Clear badge using standard or experimental APIs based on browser support
+            if ('clearAppBadge' in navigator) {
+                // Standard Badging API (Chrome, Edge, Safari)
+                navigator.clearAppBadge().catch(err => console.error('Error clearing badge:', err));
+            } else if ('clearExperimentalAppBadge' in navigator) {
+                // Experimental API for some browsers
+                // @ts-ignore - Experimental API
+                navigator.clearExperimentalAppBadge().catch(err => console.error('Error clearing experimental badge:', err));
+            } else if ('ExperimentalBadge' in window) {
+                // Another experimental API seen in some browsers
+                // @ts-ignore - Experimental API
+                window.ExperimentalBadge.clear().catch(err => console.error('Error clearing ExperimentalBadge:', err));
+            }
+        } catch (error) {
+            console.error('Error clearing badge:', error);
         }
     }
 });
