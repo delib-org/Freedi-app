@@ -15,6 +15,7 @@ import { StatementContext } from '../../../StatementCont';
 import { Statement, Role } from 'delib-npm';
 import NavButtons from './navButtons/NavButtons';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import NotificationSubscriptionButton from '@/view/components/notifications/NotificationSubscriptionButton';
 
 interface Props {
 	statement?: Statement;

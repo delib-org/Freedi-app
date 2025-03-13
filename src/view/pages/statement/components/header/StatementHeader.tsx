@@ -6,6 +6,7 @@ import { logOut } from '@/controllers/db/authenticationUtils';
 import { setFollowMeDB } from '@/controllers/db/statements/setStatements';
 import { Statement } from 'delib-npm';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import NotificationSubscriptionButton from '@/view/components/notifications/NotificationSubscriptionButton';
 
 interface Props {
 	statement: Statement | undefined;
@@ -84,6 +85,13 @@ const StatementHeader: FC<Props> = ({
 					statementId={statement?.statementId}
 					pathname={pathname}
 				/>
+			)}
+			
+			{/* Add Notification Subscription Button */}
+			{statement && (
+				<div className="notification-subscription-container" style={{ position: 'absolute', right: '20px', top: '12px' }}>
+					<NotificationSubscriptionButton statementId={statement.statementId} />
+				</div>
 			)}
 		</div>
 	);
