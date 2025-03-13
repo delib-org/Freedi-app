@@ -5,6 +5,11 @@ import { hasTokenSelector } from '@/redux/statements/statementsSlice';
 import { notificationService } from '@/services/notificationService';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 
+// Helper to check if service workers are supported
+const isServiceWorkerSupported = () => 'serviceWorker' in navigator;
+// Helper to check if notifications are supported
+const isNotificationSupported = () => 'Notification' in window;
+
 /**
  * Hook to handle notifications for the application
  * @param statementId - The ID of the statement to handle notifications for (optional)
@@ -12,13 +17,15 @@ import { getAuth, onAuthStateChanged } from 'firebase/auth';
  */
 export const useNotifications = (statementId?: string) => {
 	const [permissionState, setPermissionState] = useState<{
-		permission: NotificationPermission;
+		permission: NotificationPermission | 'unsupported';
 		loading: boolean;
 		token: string | null;
+		serviceWorkerSupported: boolean;
 	}>({
-		permission: Notification.permission,
+		permission: isNotificationSupported() ? Notification.permission : 'unsupported',
 		loading: false,
-		token: null
+		token: null,
+		serviceWorkerSupported: isServiceWorkerSupported()
 	});
 
 	const params = useParams();
@@ -29,6 +36,13 @@ export const useNotifications = (statementId?: string) => {
 
 	// Initialize notifications based on authentication state
 	useEffect(() => {
+		// Early return if service workers or notifications aren't supported
+		if (!isServiceWorkerSupported() || !isNotificationSupported()) {
+			console.log('Service Workers or Notifications not supported in this browser mode');
+
+			return () => { }; // Empty cleanup function
+		}
+
 		const auth = getAuth();
 
 		const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -42,7 +56,8 @@ export const useNotifications = (statementId?: string) => {
 					setPermissionState({
 						permission: Notification.permission,
 						loading: false,
-						token
+						token,
+						serviceWorkerSupported: true
 					});
 				} catch (error) {
 					console.error('Error initializing notifications:', error);
@@ -53,7 +68,8 @@ export const useNotifications = (statementId?: string) => {
 				setPermissionState({
 					permission: Notification.permission,
 					loading: false,
-					token: null
+					token: null,
+					serviceWorkerSupported: true
 				});
 			}
 		});
@@ -69,17 +85,27 @@ export const useNotifications = (statementId?: string) => {
 			}
 		};
 
-		navigator.serviceWorker.addEventListener('message', handleServiceWorkerMessage);
+		// Only add event listener if service worker is available
+		if (navigator.serviceWorker) {
+			navigator.serviceWorker.addEventListener('message', handleServiceWorkerMessage);
+		}
 
 		// Clean up listeners on unmount
 		return () => {
 			unsubscribe();
-			navigator.serviceWorker.removeEventListener('message', handleServiceWorkerMessage);
+			if (navigator.serviceWorker) {
+				navigator.serviceWorker.removeEventListener('message', handleServiceWorkerMessage);
+			}
 		};
 	}, []);
 
 	// Request notification permission
-	const requestPermission = async (): Promise<NotificationPermission> => {
+	const requestPermission = async (): Promise<NotificationPermission | 'unsupported'> => {
+		// Check if notifications are supported
+		if (!isNotificationSupported() || !isServiceWorkerSupported()) {
+			return 'unsupported';
+		}
+
 		setPermissionState(prev => ({ ...prev, loading: true }));
 
 		try {
@@ -91,10 +117,20 @@ export const useNotifications = (statementId?: string) => {
 				if (auth.currentUser) {
 					await notificationService.initialize(auth.currentUser.uid);
 					const token = notificationService.getToken();
-					setPermissionState({ permission: result, loading: false, token });
+					setPermissionState({
+						permission: result,
+						loading: false,
+						token,
+						serviceWorkerSupported: true
+					});
 				}
 			} else {
-				setPermissionState({ permission: result, loading: false, token: null });
+				setPermissionState({
+					permission: result,
+					loading: false,
+					token: null,
+					serviceWorkerSupported: true
+				});
 			}
 
 			return result;
@@ -119,6 +155,12 @@ export const useNotifications = (statementId?: string) => {
 
 	// Send a test notification
 	const sendTestNotification = () => {
+		if (!isNotificationSupported() || !isServiceWorkerSupported()) {
+			console.log('Notifications not supported in this browser mode');
+
+			return;
+		}
+
 		if (Notification.permission !== 'granted') {
 			console.error('Notification permission not granted');
 
@@ -151,18 +193,24 @@ export const useNotifications = (statementId?: string) => {
 
 	// Clear all notifications
 	const clearNotifications = () => {
-		if ('Notification' in window && 'serviceWorker' in navigator) {
-			navigator.serviceWorker.ready.then(registration => {
-				registration.getNotifications().then(notifications => {
-					notifications.forEach(notification => notification.close());
-				});
+		if (!isNotificationSupported() || !isServiceWorkerSupported()) {
+			console.log('Notifications not supported in this browser mode');
 
-				// Send message to service worker to clear any background notifications
-				navigator.serviceWorker.controller?.postMessage({
+			return;
+		}
+
+		navigator.serviceWorker.ready.then(registration => {
+			registration.getNotifications().then(notifications => {
+				notifications.forEach(notification => notification.close());
+			});
+
+			// Send message to service worker to clear any background notifications
+			if (navigator.serviceWorker.controller) {
+				navigator.serviceWorker.controller.postMessage({
 					type: 'CLEAR_NOTIFICATIONS'
 				});
-			});
-		}
+			}
+		});
 	};
 
 	return {

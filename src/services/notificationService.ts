@@ -1,10 +1,15 @@
 import { getMessaging, getToken, onMessage } from "firebase/messaging";
-import { app } from "@/controllers/db/config";
+import { app, DB } from "@/controllers/db/config";
 import { vapidKey } from "@/controllers/db/configKey";
 import { setDoc, doc, getFirestore } from "firebase/firestore";
+import { Collections } from "delib-npm";
 
-// Initialize Firebase Messaging
-const messaging = getMessaging(app);
+// Helper function to check if service workers are supported
+const isServiceWorkerSupported = () => 'serviceWorker' in navigator;
+// Helper function to check if notifications are supported
+const isNotificationSupported = () => 'Notification' in window;
+
+// Initialize Firebase components that don't require service workers
 const db = getFirestore(app);
 
 /**
@@ -15,6 +20,7 @@ export class NotificationService {
 	private token: string | null = null;
 	private isTokenSentToServer = false;
 	private notificationHandler: ((payload: any) => void) | null = null;
+	private messaging: any = null; // Initialized lazily when needed
 
 	private constructor() {
 		// Singleton pattern
@@ -32,10 +38,46 @@ export class NotificationService {
 	}
 
 	/**
+	 * Check if the browser supports notifications and service workers
+	 */
+	public isSupported(): boolean {
+		return isServiceWorkerSupported() && isNotificationSupported();
+	}
+
+	/**
+	 * Initialize Firebase Messaging safely
+	 */
+	private initializeMessaging(): boolean {
+		if (!this.isSupported()) {
+			console.info('This browser does not support the required features for notifications');
+
+			return false;
+		}
+
+		try {
+			if (!this.messaging) {
+				this.messaging = getMessaging(app);
+			}
+
+			return true;
+		} catch (error) {
+			console.error('Failed to initialize Firebase Messaging:', error);
+
+			return false;
+		}
+	}
+
+	/**
 	 * Request permission to show notifications
 	 * @returns A promise that resolves with a boolean indicating if permission was granted
 	 */
 	public async requestPermission(): Promise<boolean> {
+		if (!this.isSupported()) {
+			console.info('This browser does not support the required features for notifications');
+
+			return false;
+		}
+
 		try {
 			const permission = await Notification.requestPermission();
 
@@ -53,7 +95,18 @@ export class NotificationService {
 	 * @returns A promise that resolves when initialization is complete
 	 */
 	public async initialize(userId: string): Promise<void> {
+		if (!this.isSupported()) {
+			console.info('This browser does not support the required features for notifications');
+
+			return;
+		}
+
 		try {
+			// Initialize messaging first
+			if (!this.initializeMessaging()) {
+				return;
+			}
+
 			const permission = await this.requestPermission();
 
 			if (!permission) {
@@ -78,7 +131,16 @@ export class NotificationService {
 	 * @returns The FCM token
 	 */
 	public async getOrRefreshToken(userId: string): Promise<string | null> {
+		if (!this.isSupported()) {
+			return null;
+		}
+
 		try {
+			// Initialize messaging if not already done
+			if (!this.initializeMessaging()) {
+				return null;
+			}
+
 			// Request permission first if not granted
 			if (Notification.permission !== 'granted') {
 				const permissionGranted = await this.requestPermission();
@@ -86,7 +148,7 @@ export class NotificationService {
 			}
 
 			// Get token
-			const currentToken = await getToken(messaging, {
+			const currentToken = await getToken(this.messaging, {
 				vapidKey,
 				serviceWorkerRegistration: await navigator.serviceWorker.getRegistration()
 			});
@@ -153,6 +215,12 @@ export class NotificationService {
 		token: string | null,
 		statementId: string
 	): Promise<boolean> {
+		if (!this.isSupported()) {
+			console.info('This browser does not support the required features for notifications');
+
+			return false;
+		}
+
 		try {
 			if (!token) {
 				// If no token is provided, try to get one
@@ -172,7 +240,9 @@ export class NotificationService {
 			}
 
 			// Store in askedToBeNotify collection
-			await setDoc(doc(db, 'askedToBeNotify', `${token}_${statementId}`), {
+			console.log(Collections.askedToBeNotified, `${token}_${statementId}`)
+			const notificationRef = doc(DB, Collections.askedToBeNotified, `${token}_${statementId}`);
+			await setDoc(notificationRef, {
 				token,
 				userId,
 				statementId,
@@ -193,7 +263,11 @@ export class NotificationService {
 	 * Set up a listener for foreground messages
 	 */
 	private setupForegroundListener(): void {
-		onMessage(messaging, (payload) => {
+		if (!this.isSupported() || !this.messaging) {
+			return;
+		}
+
+		onMessage(this.messaging, (payload) => {
 			console.info('Message received in foreground:', payload);
 
 			// If we have a notification payload, show it
@@ -213,6 +287,10 @@ export class NotificationService {
 	 * @param payload The FCM message payload
 	 */
 	private showForegroundNotification(payload: any): void {
+		if (!this.isSupported()) {
+			return;
+		}
+
 		const notificationTitle = payload.notification?.title || 'FreeDi App';
 		const notificationOptions = {
 			body: payload.notification?.body || '',
@@ -270,7 +348,7 @@ export class NotificationService {
 	 * @returns True if notification permission is granted
 	 */
 	public hasPermission(): boolean {
-		return Notification.permission === 'granted';
+		return isNotificationSupported() && Notification.permission === 'granted';
 	}
 
 	/**

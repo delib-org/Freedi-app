@@ -10,7 +10,7 @@ import fs from 'fs';
 export default defineConfig(({ mode }) => {
 
 	const isTestMode = mode === 'testing';
-	
+
 	// Read custom service worker content
 	const customSWContent = fs.readFileSync(
 		path.resolve(__dirname, 'public/custom-sw.js'),
@@ -31,10 +31,6 @@ export default defineConfig(({ mode }) => {
 				srcDir: 'src',
 				filename: 'sw.js',
 				injectRegister: false, // We'll register the service worker manually
-				injectManifest: {
-					injectionPoint: null,
-					rollupFormat: 'iife'
-				},
 				workbox: {
 					// Don't cache firebase messaging service worker
 					globIgnores: ['firebase-messaging-sw.js'],
