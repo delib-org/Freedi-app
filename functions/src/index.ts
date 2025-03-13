@@ -41,7 +41,7 @@ import { updateApprovalResults } from './fn_approval';
 import { setImportanceToStatement } from './fn_importance';
 import { updateAgrees } from './fn_agree';
 import { updateStatementWithViews } from './fn_views';
-import { getInitialMCData } from './fn_massConsensus';
+import { getInitialMCData, addMassConsensusMember } from './fn_massConsensus';
 
 // Initialize Firebase
 initializeApp();
@@ -129,6 +129,7 @@ exports.getUserOptions = wrapHttpFunction(getUserOptions);
 exports.checkForSimilarStatements = wrapHttpFunction(findSimilarStatements);
 exports.massConsensusGetInitialData = wrapHttpFunction(getInitialMCData);
 exports.getQuestionOptions = wrapHttpFunction(getQuestionOptions);
+exports.massConsensusAddMember = wrapHttpFunction(addMassConsensusMember);
 
 // --------------------------
 // FIRESTORE TRIGGER FUNCTIONS
