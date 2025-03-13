@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { registerSW } from 'virtual:pwa-register';
 import InstallPWA from './InstallPWA';
 import PWAUpdateToast from './PWAUpdateToast';
+import NotificationPrompt from '../notifications/NotificationPrompt';
 
 interface PWAWrapperProps {
   children: React.ReactNode;
@@ -9,6 +10,7 @@ interface PWAWrapperProps {
 
 const PWAWrapper: React.FC<PWAWrapperProps> = ({ children }) => {
   const [updateSW, setUpdateSW] = useState<((reload?: boolean) => Promise<void>) | null>(null);
+  const [showNotificationPrompt, setShowNotificationPrompt] = useState(false);
 
   useEffect(() => {
     // Only set up the service worker in production
@@ -33,6 +35,14 @@ const PWAWrapper: React.FC<PWAWrapperProps> = ({ children }) => {
             });
           }, 60 * 1000); // Check every minute
           
+          // Check if we should show notification prompt
+          if ('Notification' in window && Notification.permission === 'default') {
+            // Wait a bit before showing the notification prompt
+            setTimeout(() => {
+              setShowNotificationPrompt(true);
+            }, 5000);
+          }
+          
           // Clean up interval when component unmounts
           return () => clearInterval(updateInterval);
         },
@@ -48,6 +58,22 @@ const PWAWrapper: React.FC<PWAWrapperProps> = ({ children }) => {
         console.info('App is online. Checking for updates...');
         updateFunc(false).catch(console.error);
       });
+      
+      // Listen for notification permission changes
+      const handlePermissionChange = () => {
+        if (Notification.permission !== 'default') {
+          setShowNotificationPrompt(false);
+        }
+      };
+      
+      // Try to listen for permission changes (not supported in all browsers)
+      if ('permissions' in navigator) {
+        navigator.permissions.query({ name: 'notifications' as PermissionName })
+          .then(permissionStatus => {
+            permissionStatus.onchange = handlePermissionChange;
+          })
+          .catch(console.error);
+      }
     }
   }, []);
 
@@ -56,6 +82,9 @@ const PWAWrapper: React.FC<PWAWrapperProps> = ({ children }) => {
       {children}
       <InstallPWA />
       {updateSW && <PWAUpdateToast registerUpdate={updateSW} />}
+      {showNotificationPrompt && (
+        <NotificationPrompt onClose={() => setShowNotificationPrompt(false)} />
+      )}
     </>
   );
 };

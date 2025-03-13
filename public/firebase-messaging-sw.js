@@ -1,16 +1,13 @@
 
+// Import latest Firebase scripts
 importScripts(
-    "https://www.gstatic.com/firebasejs/9.2.0/firebase-app-compat.js"
+    "https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"
 );
 importScripts(
-    "https://www.gstatic.com/firebasejs/9.2.0/firebase-messaging-compat.js"
+    "https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging-compat.js"
 );
 
-//https://cdnjs.cloudflare.com/ajax/libs/firebase/10.1.0/firebase-messaging-sw.min.js
-
-// Initialize the Firebase app in the service worker by passing in
-// your app's Firebase config object.
-// https://firebase.google.com/docs/web/setup#config-object
+// Initialize the Firebase app in the service worker
 firebase.initializeApp({
     apiKey: "AIzaSyBEumZUTCL3Jc9pt7_CjiSVTxmz9aMqSvo",
     authDomain: "synthesistalyaron.firebaseapp.com",
@@ -22,49 +19,219 @@ firebase.initializeApp({
     measurementId: "G-XSGFFBXM9X",
 });
 
-// Retrieve an instance of Firebase Messaging so that it can handle background
-// messages.
+// Retrieve an instance of Firebase Messaging
 const messaging = firebase.messaging();
 
-messaging.onBackgroundMessage(function (payload) {
+// Cache for storing notification data
+const notificationCache = new Map();
+
+// Function to play notification sound
+const playNotificationSound = async () => {
+    // This won't work in the service worker context, but we'll leave it for reference
     try {
-        // Customize notification here
-        if (!payload.notification) throw new Error("no data");
-        console.log(payload)
-        const { title, body } = payload.notification;
-      
-        const notificationTitle = title || "Background Message";
-        const notificationOptions = {
-            body,
-            icon: "https://firebasestorage.googleapis.com/v0/b/synthesistalyaron.appspot.com/o/logo%2Flogo-48px.png?alt=media&token=e2d11208-2c1c-4c29-a422-42a4e430f9a0",
-            badge: "https://firebasestorage.googleapis.com/v0/b/synthesistalyaron.appspot.com/o/logo%2Flogo-48px.png?alt=media&token=e2d11208-2c1c-4c29-a422-42a4e430f9a0",
-            dir: "rtl",
-            tag: "confirm-notification",
-        };
-
-        self.registration.showNotification(
-            notificationTitle,
-            notificationOptions
-        );
-        
-        // navigator.setAppBadge(1);
-        //play sound
-
-        // const notificationSound = new Audio('https://delib-5.web.app/assets/sound/sweet_notification.mp3');
-        // notificationSound.play();
-
-        self.addEventListener("notificationclick", function (event) {
-            event.notification.close();
-            if (event.action === "explore") {
-                clients.openWindow(event.notification.data.url);
-            } else if (event.action === "close") {
-            } else {
-                clients.openWindow(event.notification.data.url);
+        await self.clients.matchAll().then(clients => {
+            if (clients.length > 0) {
+                // Send a message to the client to play the sound
+                clients[0].postMessage({
+                    type: 'PLAY_NOTIFICATION_SOUND'
+                });
             }
         });
     } catch (error) {
-        console.error(error);
+        console.error('Error playing notification sound:', error);
+    }
+};
+
+// Handle background messages (when app is closed or in background)
+messaging.onBackgroundMessage(async function (payload) {
+    try {
+        console.info('[firebase-messaging-sw.js] Received background message:', payload);
+        
+        // If there's no notification object, we can't show a notification
+        if (!payload.notification) {
+            console.error('No notification data in payload');
+            return;
+        }
+        
+        const { title, body, image } = payload.notification;
+        const data = payload.data || {};
+        
+        // Generate a unique ID for this notification if not provided
+        const notificationId = data.id || new Date().getTime().toString();
+        
+        // Store notification data in cache for access when user clicks
+        notificationCache.set(notificationId, {
+            ...payload,
+            timestamp: new Date().getTime()
+        });
+        
+        // Default URL to open when notification is clicked
+        const url = data.url || '/';
+        
+        // Enhanced notification options
+        const notificationOptions = {
+            body: body || '',
+            icon: '/icons/logo-192px.png', // Local app icon
+            badge: '/icons/logo-48px.png', // Badge icon
+            image: image || '', // Large image if provided
+            vibrate: [100, 50, 100, 50, 100], // Vibration pattern
+            sound: '/assets/sounds/bell.mp3', // Sound file
+            tag: data.tag || notificationId, // Group similar notifications
+            data: {
+                ...data,
+                notificationId,
+                url
+            },
+            // Add action buttons
+            actions: [
+                {
+                    action: 'open',
+                    title: data.openActionTitle || 'Open'
+                },
+                {
+                    action: 'dismiss',
+                    title: data.dismissActionTitle || 'Dismiss'
+                }
+            ],
+            // Make notification require interaction (won't auto-dismiss)
+            requireInteraction: data.requireInteraction !== 'false',
+            // Timestamp when notification was received
+            timestamp: new Date().getTime(),
+            // Direction for text (useful for RTL languages)
+            dir: data.dir || 'auto',
+            // Controls notification appearance in Android
+            android: {
+                style: 'bigtext',
+                priority: 'high',
+                channelId: data.channelId || 'default'
+            }
+        };
+
+        // Add badge to app icon if supported
+        if ('setAppBadge' in navigator) {
+            try {
+                // Get all clients to check if any are visible
+                const clients = await self.clients.matchAll({
+                    type: 'window',
+                    includeUncontrolled: true
+                });
+                
+                // Only set badge if all windows are hidden
+                const allHidden = clients.every(client => !client.visibilityState || client.visibilityState === 'hidden');
+                
+                if (allHidden) {
+                    // Get current badge count and increment
+                    navigator.setAppBadge(1).catch(err => console.error('Error setting badge:', err));
+                }
+            } catch (error) {
+                console.error('Error setting app badge:', error);
+            }
+        }
+
+        // Show the notification
+        await self.registration.showNotification(title || 'FreeDi App', notificationOptions);
+        
+        // Try to play sound (though this typically won't work in service worker)
+        await playNotificationSound();
+        
+        console.info('Notification displayed successfully');
+    } catch (error) {
+        console.error('Error showing notification:', error);
     }
 });
 
+// Handle notification click
+self.addEventListener('notificationclick', function(event) {
+    console.info('Notification clicked:', event);
+    
+    // Close the notification
+    event.notification.close();
+    
+    // Get notification data
+    const data = event.notification.data || {};
+    const url = data.url || '/';
+    const notificationId = data.notificationId;
+    
+    // Clear badge when notification is clicked
+    if ('clearAppBadge' in navigator) {
+        navigator.clearAppBadge().catch(err => console.error('Error clearing badge:', err));
+    }
+    
+    // Handle action buttons
+    let actionUrl = url;
+    if (event.action === 'open' && data.openUrl) {
+        actionUrl = data.openUrl;
+    } else if (event.action === 'dismiss') {
+        // Just close the notification without opening a window
+        return;
+    }
+    
+    // Main notification click logic
+    event.waitUntil(
+        (async () => {
+            try {
+                // Clean up old notifications from cache (older than 1 day)
+                const now = new Date().getTime();
+                for (const [key, value] of notificationCache.entries()) {
+                    if (now - value.timestamp > 24 * 60 * 60 * 1000) {
+                        notificationCache.delete(key);
+                    }
+                }
+                
+                // Try to find an existing window and focus it
+                const allClients = await clients.matchAll({
+                    type: 'window',
+                    includeUncontrolled: true
+                });
+                
+                // Check if we already have a window open
+                for (const client of allClients) {
+                    // If we find a client with the same URL, focus it
+                    if (client.url.includes(actionUrl)) {
+                        await client.focus();
+                        // Post a message to the client with notification data
+                        if (notificationId && notificationCache.has(notificationId)) {
+                            client.postMessage({
+                                type: 'NOTIFICATION_CLICKED',
+                                payload: notificationCache.get(notificationId)
+                            });
+                        }
+                        return;
+                    }
+                }
+                
+                // If no matching window found, open a new one
+                const client = await clients.openWindow(actionUrl);
+                if (client && notificationId && notificationCache.has(notificationId)) {
+                    // Wait a moment for client to initialize
+                    setTimeout(() => {
+                        client.postMessage({
+                            type: 'NOTIFICATION_CLICKED',
+                            payload: notificationCache.get(notificationId)
+                        });
+                    }, 1000);
+                }
+            } catch (error) {
+                console.error('Error handling notification click:', error);
+            }
+        })()
+    );
+});
+
+// Listen for messages from the main app
+self.addEventListener('message', (event) => {
+    console.info('Message received in SW:', event.data);
+    
+    if (event.data && event.data.type === 'CLEAR_NOTIFICATIONS') {
+        // Clear all displayed notifications
+        self.registration.getNotifications().then(notifications => {
+            notifications.forEach(notification => notification.close());
+        });
+        
+        // Clear app badge
+        if ('clearAppBadge' in navigator) {
+            navigator.clearAppBadge().catch(err => console.error('Error clearing badge:', err));
+        }
+    }
+});
 
