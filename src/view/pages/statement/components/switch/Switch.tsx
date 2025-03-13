@@ -41,7 +41,7 @@ const Switch = () => {
 					{parentStatement?.statementType === StatementType.question && statement?.statementType === StatementType.question
 						? parentStatement?.statement
 						: statement?.statement}
-				</h1> : <h1><input type="text" defaultValue={statement?.statement} onKeyUp={handleUpdateStatement} /></h1>}
+				</h1> : <h1><input type="text" defaultValue={statement?.statement} onBlur={() => setEdit(false)} onKeyUp={handleUpdateStatement} /></h1>}
 			</button>
 
 			<SwitchScreen statement={statement} role={role} />
