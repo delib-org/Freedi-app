@@ -5,11 +5,12 @@ import TitleMassConsensus from '../TitleMassConsensus/TitleMassConsensus';
 import FooterMassConsensus from '../footerMassConsensus/FooterMassConsensus';
 import styles from './LeaveFeedback.module.scss';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useLeaveFeedback } from './LeaveFeedbackVM';
 import { useHeader } from '../headerMassConsensus/HeaderContext';
 
 function LeaveFeedback() {
 	const { t } = useUserConfig();
-	const [email, setEmail] = useState('');
+	const { handleSendButton, handleEmailChange, MailStatus } = useLeaveFeedback();
 
 	const { setHeader } = useHeader();
 
@@ -48,6 +49,7 @@ function LeaveFeedback() {
 					/> */}
 					<input placeholder={t('Mail')} type='email' name='email' onChange={handleEmailChange} />
 
+					<span> {MailStatus === "invalid"? t('Invalid email'): null} </span>
 					<MailIcon />
 				</div>
 			</div>

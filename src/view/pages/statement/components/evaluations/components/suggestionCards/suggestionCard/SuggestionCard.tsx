@@ -171,7 +171,6 @@ const SuggestionCard: FC<Props> = ({
 					)}
 					<div className='evolution-element'>
 						<Evaluation
-							parentStatement={parentStatement}
 							statement={statement}
 						/>
 					</div>

@@ -80,7 +80,7 @@ export const listenToStatementSubscription = (
 	} catch (error) {
 		console.error(error);
 
-		return () => {};
+		return () => { };
 	}
 };
 
@@ -120,7 +120,7 @@ export const listenToStatement = (
 		console.error(error);
 		if (setIsStatementNotFound) setIsStatementNotFound(true);
 
-		return () => {};
+		return () => { };
 	}
 };
 
@@ -171,7 +171,7 @@ export const listenToSubStatements = (
 	} catch (error) {
 		console.error(error);
 
-		return () => {};
+		return () => { };
 	}
 };
 
@@ -237,6 +237,7 @@ export function listenToAllSubStatements(
 
 				switch (change.type) {
 					case 'added':
+					case 'modified':
 						store.dispatch(setStatement(statement));
 						break;
 					case 'removed':

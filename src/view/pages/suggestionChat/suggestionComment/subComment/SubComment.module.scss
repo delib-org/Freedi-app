@@ -1,0 +1,33 @@
+.subComment {
+	background-color: rgb(233, 243, 246);
+	width: fit-content;
+	padding: .1rem 1rem;
+	border-radius: 1rem;
+	display: flex;
+	gap: .5rem;
+
+	animation: entrance .15s ease-out;
+
+	&--isMe {
+		background-color: rgb(165, 253, 195);
+	}
+
+
+	.text {
+		font-weight: 300;
+		font-size: .8rem;
+	}
+}
+
+@keyframes entrance {
+	from {
+		opacity: 0;
+		transform: translateX(1rem);
+	}
+
+	to {
+		opacity: 1;
+		transform: translateX(0);
+	}
+
+}

@@ -7,6 +7,7 @@ import { votesSlicer } from './vote/votesSlice';
 import { choseBySlice } from './choseBy/choseBySlice';
 import { massConsensusSlice } from './massConsensus/massConsensusSlice';
 import { notificationsSlicer } from './notificationsSlice/notificationsSlice';
+import creatorReducer from './creator/creatorSlice';
 
 export const store = configureStore({
 	reducer: {
@@ -18,6 +19,7 @@ export const store = configureStore({
 		choseBys: choseBySlice.reducer,
 		massConsensus: massConsensusSlice.reducer,
 		notifications: notificationsSlicer.reducer,
+		creator: creatorReducer,
 	},
 });
 
