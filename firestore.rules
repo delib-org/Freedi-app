@@ -56,6 +56,17 @@ service cloud.firestore {
       allow update: if request.auth.uid == resource.data.userId;
     }
 
+
+match /pushNotifications/{pushNotificationId=**}{
+		allow read: if request.auth.uid != null;
+		allow write: if request.auth.uid != null;
+}
+
+	match /askedToBeNotify/{askedToBeNotifyId=**} {
+		allow read: if request.auth.uid != null;
+		allow write: if request.auth.uid != null;
+	}
+
      match /statementsMeta/{statementId=**}{
         allow read: if request.auth.uid != null;
       allow write: if request.auth.uid != null;
