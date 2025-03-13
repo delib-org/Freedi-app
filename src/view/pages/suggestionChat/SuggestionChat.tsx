@@ -17,9 +17,6 @@ const SuggestionChat = () => {
 
 	const creatorCommented = comments.find((comment) => comment.creator.uid === creator.uid);
 
-	console.log("is statement creator", statementCreator?.uid === creator.uid);
-	console.log("test:", statement !== undefined, !creatorCommented, !statementCreator)
-
 	return (
 		<div className={styles.suggestionChat}>
 			<p className={styles["suggestionChat__explain"]}>כמה את/ה מרוצה מההצעה?</p>

@@ -370,13 +370,13 @@ interface UpdateStatementProps {
 	description?: string;
 	statement: Statement;
 	statementType?: StatementType;
-	enableAddEvaluationOption: boolean;
-	enableAddVotingOption: boolean;
-	enhancedEvaluation: boolean;
-	showEvaluation: boolean;
+	enableAddEvaluationOption?: boolean;
+	enableAddVotingOption?: boolean;
+	enhancedEvaluation?: boolean;
+	showEvaluation?: boolean;
 	resultsBy?: ResultsBy;
 	numberOfResults?: number;
-	hasChildren: boolean;
+	hasChildren?: boolean;
 	membership?: Membership;
 }
 export function updateStatement({
