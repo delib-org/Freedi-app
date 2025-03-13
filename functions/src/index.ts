@@ -42,6 +42,7 @@ import { setImportanceToStatement } from './fn_importance';
 import { updateAgrees } from './fn_agree';
 import { updateStatementWithViews } from './fn_views';
 import { getInitialMCData, addMassConsensusMember } from './fn_massConsensus';
+import { updateInAppNotifications } from './fn_notifications';
 
 // Initialize Firebase
 initializeApp();
@@ -141,6 +142,13 @@ exports.updateParentWithNewMessage = createFirestoreFunction(
 	onDocumentCreated,
 	updateParentWithNewMessageCB,
 	'updateParentWithNewMessage'
+);
+
+exports.updateInAppNotifications = createFirestoreFunction(
+	`/${Collections.statements}/{statementId}`,
+	onDocumentCreated,
+	updateInAppNotifications,
+	'updateInAppNotifications'
 );
 
 exports.setAdminsToNewStatement = createFirestoreFunction(

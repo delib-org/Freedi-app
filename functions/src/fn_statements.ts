@@ -52,7 +52,7 @@ export async function updateParentWithNewMessageCB(
 				'topParentId is top, and it is an error in the client logic'
 			);
 
-		const topParentRef = db.doc(`statements/${topParentId}`);
+		const topParentRef = db.doc(`${Collections.statements}/${topParentId}`);
 		topParentRef.update({ lastChildUpdate: lastUpdate, lastUpdate });
 
 		//create statement metadata

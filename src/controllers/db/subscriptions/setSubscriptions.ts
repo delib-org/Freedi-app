@@ -13,11 +13,23 @@ import {
 } from 'delib-npm';
 import { parse } from 'valibot';
 
-export async function setStatementSubscriptionToDB(
+interface SetSubscriptionProps {
 	statement: Statement,
 	creator: Creator,
-	role: Role = Role.member
-) {
+	role?: Role
+	getInAppNotification?: boolean,
+	getEmailNotification?: boolean,
+	getPushNotification?: boolean
+}
+
+export async function setStatementSubscriptionToDB({
+	statement,
+	creator,
+	role = Role.member,
+	getInAppNotification = true,
+	getEmailNotification = false,
+	getPushNotification = false
+}: SetSubscriptionProps): Promise<void> {
 	try {
 		const { statementId } = parse(StatementSchema, statement);
 
@@ -48,6 +60,9 @@ export async function setStatementSubscriptionToDB(
 			statementId,
 			lastUpdate: Timestamp.now().toMillis(),
 			createdAt: Timestamp.now().toMillis(),
+			getInAppNotification,
+			getEmailNotification,
+			getPushNotification,
 		};
 
 		if (creator.uid === statement.creator.uid)

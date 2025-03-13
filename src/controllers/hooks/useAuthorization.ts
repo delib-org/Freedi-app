@@ -99,7 +99,7 @@ async function isUserAuthorized(
 		subscription?.role !== Role.banned
 	) {
 		if (!subscription) {
-			await setStatementSubscriptionToDB(statement, creator, Role.member);
+			await setStatementSubscriptionToDB({ statement, creator, role: Role.member });
 		}
 
 		return true;
