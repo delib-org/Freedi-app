@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import firebaseConfig from '@/controllers/db/configKey';
 import { functionConfig, Creator } from "delib-npm";
 import { useParams } from "react-router";
@@ -31,7 +31,8 @@ export function useLeaveFeedback() {
 		addMassConsensusMember(massConsensusMember);
 	};
 
-	const handleEmailChange = (value: string) => {
+	const handleEmailChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+		const value = event.target.value;
 		setEmail(value);
 	};
 
