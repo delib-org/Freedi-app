@@ -105,9 +105,16 @@ export default defineConfig(({ mode }) => {
 					manualChunks: (id) => {
 						// Core vendor libraries in a separate chunk
 						if (id.includes('node_modules')) {
-							if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
+							// Group all React and related dependencies together
+							if (id.includes('react') || 
+								id.includes('/scheduler/') ||
+								id.includes('/use-sync-external-store/') ||
+								id.includes('/@remix-run/') ||
+								id.includes('/redux/')) {
 								return 'vendor-react';
 							}
+							
+							// Other vendor libraries
 							return 'vendor-other';
 						}
 						
