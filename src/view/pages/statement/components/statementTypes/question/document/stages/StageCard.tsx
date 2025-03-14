@@ -97,7 +97,7 @@ const StageCard: FC<Props> = ({ statement, isDescription, isSuggestions }) => {
 							{chosen.map((opt: SimpleStatement) => (
 								<NavLink
 									key={opt.statementId}
-									to={`/ statement / ${opt.statementId}`}
+									to={`/statement/${opt.statementId}`}
 								>
 									<ol className={styles.suggestions}>
 										<li>
