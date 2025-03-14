@@ -9,6 +9,7 @@ interface SearchInputProps {
 	value?: string;
 	image?: string;
 	onChange?: (value: string) => void;
+	backgroundColor?: string;
 	name: string;
 }
 
@@ -18,6 +19,7 @@ const Input: React.FC<SearchInputProps> = ({
 	value = '',
 	image,
 	onChange,
+	backgroundColor = '#fff',
 	name,
 }) => {
 	const { dir } = useUserConfig();
@@ -36,9 +38,9 @@ const Input: React.FC<SearchInputProps> = ({
 	return (
 		<div className={styles.container}>
 			<div
-				className={`${styles.label} ${
-					dir === 'ltr' ? styles['label--ltr'] : styles['label--rtl']
-				}`}
+				className={`${styles.label} ${dir === 'ltr' ? styles['label--ltr'] : styles['label--rtl']
+					}`}
+				style={{ backgroundColor: backgroundColor }}
 			>
 				{label}
 			</div>
