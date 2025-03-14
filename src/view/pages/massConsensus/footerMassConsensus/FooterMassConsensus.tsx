@@ -17,21 +17,21 @@ const FooterMassConsensus = ({
 	onNext?: () => void;
 }) => {
 	const { statementId } = useParams<{ statementId: string }>();
-	const { t } = useUserConfig();
+	const { t, dir } = useUserConfig();
 
 	return (
-		<div className={styles.footerMC}>
+		<div className={styles.footerMC} style={{ direction: dir === 'ltr' ? 'rtl' : 'ltr' }}>
 			{isIntro ? (
 				<Link
 					to={`/mass-consensus/${statementId}/${goTo}`}
 				>
-					<button className='btn btn--large btn--primary'>
+					<button className='btn btn--massConsensus btn--primary'>
 						{isFeedback ? t('Send') : t('Start')}
 					</button>
 				</Link>
 			) : isFeedback ? (
 				<button
-					className={`btn btn--large btn--primary ${!isNextActive ? 'btn--disabled' : ''}`}
+					className={`btn btn--massConsensus btn--primary ${!isNextActive ? 'btn--disabled' : ''}`}
 					onClick={onNext}
 				>
 					{t('Send')}
@@ -39,7 +39,7 @@ const FooterMassConsensus = ({
 			) : (
 				<>
 					<button
-						className={`btn btn--large btn--primary ${!isNextActive ? 'btn--disabled' : ''}`}
+						className={`btn btn--massConsensus btn--primary ${!isNextActive ? 'btn--disabled' : ''}`}
 						onClick={onNext}
 					>
 						{t('Next')}
@@ -47,7 +47,7 @@ const FooterMassConsensus = ({
 					<Link
 						to={`/mass-consensus/${statementId}/${goTo}`}
 					>
-						<button className='btn btn--large btn--secondary'>
+						<button className='btn btn--massConsensus btn--secondary'>
 							{t('Skip')}
 						</button>
 					</Link>

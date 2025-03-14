@@ -2,20 +2,33 @@
 	display: flex;
 	flex-direction: column;
 	align-items: inherit;
-	padding: 1rem;
 	text-align: inherit;
 	direction: inherit;
+	gap: 1rem;
 
-  	.input {
+	.input {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
 		gap: 1rem;
 		margin: 0 0 1rem 0;
-		padding: 0.5rem;
+		width: 100%;
+
+		input {
+			background-color: transparent;
+			font-size: 1.3rem;
+			flex: 1;
+			font-family: 'Roboto', sans-serif;
+			border-bottom: solid 1px #aebee2;
+		}
 
 		svg {
 			color: var(--icons-blue);
 		}
 	}
+}
+
+.placeholder {
+	font-style: italic;
+	color: #7484a9;
 }

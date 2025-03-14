@@ -7,13 +7,24 @@
 	justify-content: center;
 	align-items: center;
 	gap: 1rem;
-	padding: 1rem;
-	background-color: var(--background-color);
+	padding-bottom: 2rem;
+	background: linear-gradient(
+		to bottom,
+		rgba(0, 0, 0, 0) 0%,
+		var(--bg-screen) 20%
+	);
+
 	z-index: 100;
 
 	@media (max-width: 768px) {
-	  padding: 0.75rem;
-	  gap: 0.5rem;
-
+		padding: 0.75rem;
 	}
-  }
+
+	@media (max-width: 630px) {
+		justify-content: space-between;
+	}
+}
+
+.btn {
+	padding: 0 3rem;
+}
