@@ -102,10 +102,37 @@ export default defineConfig(({ mode }) => {
 			cssCodeSplit: false, // Extract all CSS into a single file
 			rollupOptions: {
 				output: {
-					manualChunks: {
-						'vendor-react': ['react', 'react-dom', 'react-router'],
-						statement: ['./src/view/pages/statement/StatementMain'],
-						styles: ['./src/view/style/style.scss'],
+					manualChunks: (id) => {
+						// Core vendor libraries in a separate chunk
+						if (id.includes('node_modules')) {
+							if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
+								return 'vendor-react';
+							}
+							return 'vendor-other';
+						}
+						
+						// Mass consensus in its own chunk
+						if (id.includes('/view/pages/massConsensus/')) {
+							return 'mass-consensus';
+						}
+						
+						// Start page in its own chunk for fast loading
+						if (id.includes('/view/pages/start/Start')) {
+							return 'start-page';
+						}
+						
+						// Main app code (everything else) in one chunk
+						if (id.includes('/src/view/')) {
+							return 'main-app';
+						}
+						
+						// Styles
+						if (id.includes('/view/style/style.scss')) {
+							return 'styles';
+						}
+						
+						// Default - let Rollup decide
+						return null;
 					},
 					assetFileNames: (assetInfo) => {
 						if (assetInfo.name?.endsWith('.css')) {
