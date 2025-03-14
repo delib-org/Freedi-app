@@ -18,15 +18,46 @@ const clearBadgeCount = async () => {
       await window.ExperimentalBadge.clear();
     }
     
-    // Reset badge count in IndexedDB
-    const openRequest = indexedDB.open('FreeDiNotifications', 1);
-    openRequest.onsuccess = (event) => {
-      // @ts-ignore - Type issues with event.target
-      const db = event.target.result;
-      const transaction = db.transaction('badgeCounter', 'readwrite');
-      const store = transaction.objectStore('badgeCounter');
-      store.put({ id: 'badge', count: 0 });
-    };
+    // Try to reset badge count in IndexedDB (safely)
+    try {
+      const openRequest = indexedDB.open('FreeDiNotifications', 1);
+      
+      // Handle database upgrade - this runs when the database is created or version is changed
+      openRequest.onupgradeneeded = (event) => {
+        // @ts-ignore - Type issues with event.target
+        const db = event.target.result;
+        // Create the object store if it doesn't exist
+        if (!db.objectStoreNames.contains('badgeCounter')) {
+          db.createObjectStore('badgeCounter', { keyPath: 'id' });
+        }
+      };
+      
+      openRequest.onsuccess = (event) => {
+        try {
+          // @ts-ignore - Type issues with event.target
+          const db = event.target.result;
+          
+          // Check if the badgeCounter store exists
+          if (!db.objectStoreNames.contains('badgeCounter')) {
+            console.info('badgeCounter object store does not exist');
+            return;
+          }
+          
+          const transaction = db.transaction('badgeCounter', 'readwrite');
+          const store = transaction.objectStore('badgeCounter');
+          store.put({ id: 'badge', count: 0 });
+        } catch (innerError) {
+          console.info('Error accessing badgeCounter store:', innerError);
+        }
+      };
+      
+      openRequest.onerror = (event) => {
+        console.info('IndexedDB open error:', event);
+      };
+    } catch (dbError) {
+      console.info('IndexedDB operation failed:', dbError);
+      // Not a critical error, just log and continue
+    }
   } catch (error) {
     console.error('Error clearing badge count:', error);
   }
