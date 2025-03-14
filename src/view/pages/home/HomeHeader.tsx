@@ -127,6 +127,7 @@ export default function HomeHeader() {
 				<Modal closeModal={closeModal}>
 					<ChangeLanguage
 						background
+						setShowMenu={setIsHomeMenuOpen}
 						setShowModal={setShowLanguageModal}
 					/>
 				</Modal>

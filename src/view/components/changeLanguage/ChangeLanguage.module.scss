@@ -11,6 +11,8 @@
 	@media (max-width: 768px) {
 		width: 100vw;
 		height: 100vh;
+		padding: 1.2rem;
+
 		.XBtn {
 			display: none;
 		}
@@ -57,7 +59,20 @@
 	color: var(--text-disabled);
 	order: -1;
 }
+.backArrow {
+	color: blue;
+	cursor: pointer;
+	margin-bottom: 20px;
 
+	padding: 0;
+	@media (min-width: 768px) {
+		display: none;
+	}
+}
+span {
+	display: flex;
+	align-items: center;
+}
 .flag {
 	font-size: 1.2em;
 	margin-right: 0.5em;
@@ -86,6 +101,9 @@
 	cursor: pointer;
 	margin: 0 20% 0.5em 20%;
 	padding-bottom: 1em;
+	@media (max-width: 768px) {
+		margin: 0;
+	}
 }
 
 .wrapper {

@@ -4,15 +4,18 @@ import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import { LANGUAGES } from '@/constants/Languages';
 import { FC } from 'react';
 import Button, { ButtonType } from '../buttons/button/Button';
+import BackToMenuArrow from '@/assets/icons/backToMenuArrow.svg?react';
 
 interface ChangeLanguageProps {
 	background?: boolean;
 	setShowModal?: (show: boolean) => void;
+	setShowMenu?: (show: boolean) => void;
 }
 
 const ChangeLanguage: FC<ChangeLanguageProps> = ({
 	background = false,
 	setShowModal,
+	setShowMenu,
 }) => {
 	const { t, changeLanguage, currentLanguage } = useUserConfig();
 
@@ -28,9 +31,14 @@ const ChangeLanguage: FC<ChangeLanguageProps> = ({
 		}
 		localStorage.setItem('lang', lang);
 
-		if (setShowModal) {
+		if (setShowModal || setShowMenu) {
 			setShowModal(false);
 		}
+	}
+
+	function goBackToMenu() {
+		setShowMenu(true);
+		setShowModal(false);
 	}
 
 	return (
@@ -45,8 +53,15 @@ const ChangeLanguage: FC<ChangeLanguageProps> = ({
 					X
 				</button>
 			)}
+
 			{background && (
-				<h1 className={styles.title}>{t('Language selection')}</h1>
+				<span>
+					<BackToMenuArrow
+						className={styles.backArrow}
+						onClick={goBackToMenu}
+					/>
+					<h1 className={styles.title}>{t('Language selection')}</h1>
+				</span>
 			)}
 			{background ? (
 				<div className={styles.optionsWrapper}>
