@@ -5,12 +5,9 @@ import path from 'path';
 import pkg from './package.json';
 import { VitePWA } from 'vite-plugin-pwa';
 import fs from 'fs';
-
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
-
 	const isTestMode = mode === 'testing';
-
 	// Read custom service worker content
 	const customSWContent = fs.readFileSync(
 		path.resolve(__dirname, 'public/custom-sw.js'),
@@ -111,6 +108,7 @@ export default defineConfig(({ mode }) => {
 						if (assetInfo.name?.endsWith('.css')) {
 							return 'assets/style.[hash].css';
 						}
+
 						return 'assets/[name]-[hash][extname]';
 					},
 				},
