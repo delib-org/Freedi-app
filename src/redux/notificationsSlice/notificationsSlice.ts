@@ -92,4 +92,6 @@ export const {
 export const inAppNotificationsSelector = (state: RootState) =>
 	state.notifications.inAppNotifications;
 
+export const inAppNotificationsCountSelectorForStatement = (statementId: string) => (state: RootState) => state.notifications.inAppNotifications.filter(notification => notification.parentId === statementId).length;
+
 export default notificationsSlicer.reducer;

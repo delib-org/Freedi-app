@@ -108,7 +108,6 @@ export default function StatementMain() {
 		const unsubscribeFunctions: (() => void)[] = [];
 
 		if (creator && statementId) {
-			console.log("clearing in app notifications for:", statementId);
 			markInAppNotificationOfParentAsRead(statementId);
 			// Initialize all listeners and store cleanup functions
 			unsubscribeFunctions.push(

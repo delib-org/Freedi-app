@@ -9,6 +9,8 @@ import ChatIcon from '@/assets/icons/roundedChatDotIcon.svg?react';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { statementSubscriptionSelector } from '@/redux/statements/statementsSlice';
 import { SimpleStatement, StatementSubscription, Statement } from 'delib-npm';
+import { useSelector } from 'react-redux';
+import { inAppNotificationsCountSelectorForStatement } from '@/redux/notificationsSlice/notificationsSlice';
 
 interface Props {
 	statement: Statement | SimpleStatement;
@@ -19,12 +21,7 @@ const StatementChatMore: FC<Props> = ({ statement }) => {
 	const navigate = useNavigate();
 
 	// Redux store
-	const statementSubscription: StatementSubscription | undefined =
-		useAppSelector(statementSubscriptionSelector(statement.statementId));
-
-	// Variables
-	const messagesRead = statementSubscription?.totalSubStatementsRead || 0;
-	const messages = 'totalSubStatements' in statement ? statement.totalSubStatements : 0;
+	const countMessages = useSelector(inAppNotificationsCountSelectorForStatement(statement.statementId));
 
 	return (
 		<button
@@ -37,11 +34,10 @@ const StatementChatMore: FC<Props> = ({ statement }) => {
 			}
 		>
 			<div className='icon'>
-				{messages}
-				{messages - messagesRead > 0 && (
+				{countMessages > 0 && (
 					<div className='redCircle'>
-						{messages - messagesRead < 10
-							? messages - messagesRead
+						{countMessages < 10
+							? countMessages
 							: `9+`}
 					</div>
 				)}
