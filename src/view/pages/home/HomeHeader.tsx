@@ -9,9 +9,10 @@ import InstallIcon from '@/assets/icons/installIcon.svg?react';
 import InvitationIcon from '@/assets/icons/invitation.svg?react';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import { logOut } from '@/controllers/db/authenticationUtils';
-import { Globe2Icon } from 'lucide-react';
+import LanguagesIcon from '@/assets/icons/languagesIcon.svg?react';
 import Modal from '@/view/components/modal/Modal';
 import ChangeLanguage from '@/view/components/changeLanguage/ChangeLanguage';
+import { LANGUAGES } from '@/constants/Languages';
 
 export default function HomeHeader() {
 	const [isHomeMenuOpen, setIsHomeMenuOpen] = useState(false);
@@ -28,7 +29,11 @@ export default function HomeHeader() {
 	const [deferredPrompt, setDeferredPrompt] =
 		useState<BeforeInstallPromptEvent | null>(null);
 
-	const { t, dir } = useUserConfig();
+	const { t, dir, currentLanguage } = useUserConfig();
+
+	const currentLabel = LANGUAGES.find(
+		(lang) => lang.code === currentLanguage
+	).label;
 
 	useEffect(() => {
 		window.addEventListener('beforeinstallprompt', (e: Event) => {
@@ -99,8 +104,10 @@ export default function HomeHeader() {
 							onOptionClick={logOut}
 						/>
 						<MenuOption
-							icon={<Globe2Icon style={{ color: '#4E88C7' }} />}
-							label={t('Change language')}
+							icon={
+								<LanguagesIcon style={{ color: '#4E88C7' }} />
+							}
+							label={currentLabel}
 							onOptionClick={() => handlePanel('changeLanguage')}
 						/>
 						<MenuOption
@@ -120,6 +127,7 @@ export default function HomeHeader() {
 				<Modal closeModal={closeModal}>
 					<ChangeLanguage
 						background
+						setShowMenu={setIsHomeMenuOpen}
 						setShowModal={setShowLanguageModal}
 					/>
 				</Modal>
