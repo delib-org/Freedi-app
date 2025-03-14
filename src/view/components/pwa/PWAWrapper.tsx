@@ -4,6 +4,34 @@ import InstallPWA from './InstallPWA';
 import PWAUpdateToast from './PWAUpdateToast';
 import NotificationPrompt from '../notifications/NotificationPrompt';
 
+// Function to clear badge count
+const clearBadgeCount = async () => {
+  try {
+    // Clear badge using standard or experimental APIs based on browser support
+    if ('clearAppBadge' in navigator) {
+      await navigator.clearAppBadge();
+    } else if ('clearExperimentalAppBadge' in navigator) {
+      // @ts-ignore - Experimental API
+      await navigator.clearExperimentalAppBadge();
+    } else if ('ExperimentalBadge' in window) {
+      // @ts-ignore - Experimental API
+      await window.ExperimentalBadge.clear();
+    }
+    
+    // Reset badge count in IndexedDB
+    const openRequest = indexedDB.open('FreeDiNotifications', 1);
+    openRequest.onsuccess = (event) => {
+      // @ts-ignore - Type issues with event.target
+      const db = event.target.result;
+      const transaction = db.transaction('badgeCounter', 'readwrite');
+      const store = transaction.objectStore('badgeCounter');
+      store.put({ id: 'badge', count: 0 });
+    };
+  } catch (error) {
+    console.error('Error clearing badge count:', error);
+  }
+};
+
 interface PWAWrapperProps {
   children: React.ReactNode;
 }
@@ -15,6 +43,36 @@ const PWAWrapper: React.FC<PWAWrapperProps> = ({ children }) => {
   useEffect(() => {
     // Only set up the service worker in production
     if (import.meta.env.PROD) {
+      // Clear badge when app is opened or focused
+      clearBadgeCount();
+      
+      // Set up visibility change listener to clear badge when app comes into focus
+      const handleVisibilityChange = () => {
+        if (document.visibilityState === 'visible') {
+          clearBadgeCount();
+          
+          // Also tell the service worker to clear notifications
+          if (navigator.serviceWorker.controller) {
+            navigator.serviceWorker.controller.postMessage({
+              type: 'CLEAR_NOTIFICATIONS'
+            });
+          }
+        }
+      };
+      
+      document.addEventListener('visibilitychange', handleVisibilityChange);
+      
+      // Explicitly register the Firebase Messaging Service Worker
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/firebase-messaging-sw.js')
+          .then(registration => {
+            console.info('Firebase Messaging SW registered with scope:', registration.scope);
+          })
+          .catch(error => {
+            console.error('Firebase Messaging SW registration failed:', error);
+          });
+      }
+      
       const updateFunc = registerSW({
         onNeedRefresh() {
           // Dispatch custom event to notify components an update is available
@@ -43,8 +101,11 @@ const PWAWrapper: React.FC<PWAWrapperProps> = ({ children }) => {
             }, 5000);
           }
           
-          // Clean up interval when component unmounts
-          return () => clearInterval(updateInterval);
+          // Clean up interval and event listener when component unmounts
+          return () => {
+            clearInterval(updateInterval);
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+          };
         },
         onRegisterError(error) {
           console.error('Service worker registration error:', error);
