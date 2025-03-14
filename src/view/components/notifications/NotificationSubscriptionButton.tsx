@@ -4,6 +4,8 @@ import { notificationService } from '@/services/notificationService';
 import { getAuth } from 'firebase/auth';
 import { doc, getDoc, getFirestore, deleteDoc } from 'firebase/firestore';
 import { Collections } from 'delib-npm';
+import BellIcon from '@/assets/icons/bellIcon.svg?react';
+import BellSlashIcon from '@/assets/icons/bellSlashIcon.svg?react';
 
 interface NotificationSubscriptionButtonProps {
 	statementId: string;
@@ -137,12 +139,7 @@ const NotificationSubscriptionButton: React.FC<NotificationSubscriptionButtonPro
 				<span className="loading-indicator"></span>
 			) : (
 				<>
-					<span className="icon">
-						{isSubscribed ? '🔔' : '🔕'}
-					</span>
-					<span className="text">
-						{isSubscribed ? 'Unsubscribe' : 'Subscribe'}
-					</span>
+					{isSubscribed ? <BellIcon /> : <BellSlashIcon />}
 				</>
 			)}
 		</button>
