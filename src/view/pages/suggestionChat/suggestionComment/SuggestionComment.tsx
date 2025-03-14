@@ -15,6 +15,7 @@ import EvaluationPopup from './evaluationPopup/EvaluationPopup';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import StatementChatMore from '../../statement/components/chat/components/StatementChatMore';
 import { setStatementSubscriptionToDB } from '@/controllers/db/subscriptions/setSubscriptions';
+import { clearInAppNotifications } from '@/controllers/db/inAppNotifications/db_inAppNotifications';
 
 interface Props {
 	parentStatement: Statement
@@ -38,7 +39,10 @@ const SuggestionComment: FC<Props> = ({ statement, parentStatement }) => {
 	useEffect(() => {
 		const unsubscribe = listenToSubStatements(statement.statementId);
 
-		return () => unsubscribe();
+		return () => {
+			unsubscribe();
+			clearInAppNotifications(statement.statementId);
+		}
 	}, []);
 
 	useEffect(() => {

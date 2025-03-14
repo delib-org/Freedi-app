@@ -36,7 +36,7 @@ import { useAuthorization } from '@/controllers/hooks/useAuthorization';
 import { useSelector } from 'react-redux';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { notificationService } from '@/services/notificationService';
-import { listenToInAppNotifications, markInAppNotificationOfParentAsRead } from '@/controllers/db/inAppNotifications/db_inAppNotifications';
+import { listenToInAppNotifications, clearInAppNotifications } from '@/controllers/db/inAppNotifications/db_inAppNotifications';
 
 // Create selectors
 export const subStatementsSelector = createSelector(
@@ -108,7 +108,7 @@ export default function StatementMain() {
 		const unsubscribeFunctions: (() => void)[] = [];
 
 		if (creator && statementId) {
-			markInAppNotificationOfParentAsRead(statementId);
+			clearInAppNotifications(statementId);
 			// Initialize all listeners and store cleanup functions
 			unsubscribeFunctions.push(
 				listenToStatement(statementId, setIsStatementNotFound),

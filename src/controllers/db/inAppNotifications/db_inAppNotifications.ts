@@ -28,7 +28,7 @@ export function listenToInAppNotifications() {
 	}
 }
 
-export async function markInAppNotificationOfParentAsRead(statementId: string) {
+export async function clearInAppNotifications(statementId: string) {
 	try {
 		const user = store.getState().creator.creator;
 		if (!user) throw new Error('User not found');
