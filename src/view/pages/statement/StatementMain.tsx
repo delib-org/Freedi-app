@@ -36,7 +36,7 @@ import { useAuthorization } from '@/controllers/hooks/useAuthorization';
 import { useSelector } from 'react-redux';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { notificationService } from '@/services/notificationService';
-import FCMTokenDisplay from '@/view/components/notifications/FCMTokenDisplay';
+import { listenToInAppNotifications, markInAppNotificationOfParentAsRead } from '@/controllers/db/inAppNotifications/db_inAppNotifications';
 
 // Create selectors
 export const subStatementsSelector = createSelector(
@@ -104,16 +104,20 @@ export default function StatementMain() {
 
 	// Listen to statement changes.
 	useEffect(() => {
+
 		const unsubscribeFunctions: (() => void)[] = [];
 
 		if (creator && statementId) {
+			console.log("clearing in app notifications for:", statementId);
+			markInAppNotificationOfParentAsRead(statementId);
 			// Initialize all listeners and store cleanup functions
 			unsubscribeFunctions.push(
 				listenToStatement(statementId, setIsStatementNotFound),
 				listenToAllDescendants(statementId), // used for map
 				listenToEvaluations(dispatch, statementId, creator.uid),
 				listenToSubStatements(statementId), // TODO: check if this is needed. It can be integrated under listenToAllDescendants
-				listenToStatementSubscription(statementId, creator, dispatch)
+				listenToStatementSubscription(statementId, creator, dispatch),
+				listenToInAppNotifications()
 			);
 
 			if (stageId) {
@@ -173,7 +177,7 @@ export default function StatementMain() {
 						creator.uid
 					);
 				}
-				
+
 				// We no longer automatically register for notifications here
 				// This is now handled by the notification subscription button
 				// Just initialize the service if needed for the token

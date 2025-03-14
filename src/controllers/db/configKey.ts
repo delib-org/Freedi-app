@@ -10,6 +10,8 @@ const firebaseConfig = {
 };
 
 const vapidKeys = import.meta.env.VITE_FIREBASE_VAPID_KEY;
+console.log("import.meta.env", import.meta.env);
+console.log("vapidKeys", vapidKeys);
 
 export const vapidKey = vapidKeys;
 
