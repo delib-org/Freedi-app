@@ -15,9 +15,10 @@ import { inAppNotificationsCountSelectorForStatement } from '@/redux/notificatio
 interface Props {
 	statement: Statement | SimpleStatement;
 	onlyCircle?: boolean;
+	useLink?: boolean;
 }
 
-const StatementChatMore: FC<Props> = ({ statement, onlyCircle }) => {
+const StatementChatMore: FC<Props> = ({ statement, onlyCircle, useLink = true }) => {
 	// Hooks
 	const navigate = useNavigate();
 
@@ -28,11 +29,12 @@ const StatementChatMore: FC<Props> = ({ statement, onlyCircle }) => {
 		<button
 			className='statementChatMore'
 			aria-label='Chat more button'
-			onClick={() =>
-				navigate(`/statement/${statement.statementId}/chat`, {
-					state: { from: window.location.pathname },
-				})
-			}
+			onClick={() => {
+				if (useLink)
+					navigate(`/statement/${statement.statementId}/chat`, {
+						state: { from: window.location.pathname },
+					})
+			}}
 		>
 			<div className='icon'>
 				{countMessages > 0 && (

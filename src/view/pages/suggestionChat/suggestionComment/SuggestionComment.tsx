@@ -5,7 +5,7 @@ import { useSuggestionComment } from './SuggestionCommentMV';
 import CreatorEvaluationIcon from './CreatorEvaluationIcon/CreatorEvaluationIcon';
 import { saveStatementToDB } from '@/controllers/db/statements/setStatements';
 import { useSelector } from 'react-redux';
-import { statementSubsSelector } from '@/redux/statements/statementsSlice';
+import { setStatementSubscription, statementSubscriptionSelector, statementSubsSelector } from '@/redux/statements/statementsSlice';
 import { listenToSubStatements } from '@/controllers/db/statements/listenToStatements';
 import SubComment from './subComment/SubComment';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
@@ -13,6 +13,8 @@ import ProfileImage from '@/view/components/profileImage/ProfileImage';
 import { evaluationSelector } from '@/redux/evaluations/evaluationsSlice';
 import EvaluationPopup from './evaluationPopup/EvaluationPopup';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
+import StatementChatMore from '../../statement/components/chat/components/StatementChatMore';
+import { setStatementSubscriptionToDB } from '@/controllers/db/subscriptions/setSubscriptions';
 
 interface Props {
 	parentStatement: Statement
@@ -21,6 +23,7 @@ interface Props {
 
 const SuggestionComment: FC<Props> = ({ statement, parentStatement }) => {
 	const { t } = useUserConfig();
+	const subscription = useSelector(statementSubscriptionSelector(statement.statementId));
 	const initialStatement = useRef(parentStatement.statement);
 	const initialDescription = useRef(parentStatement.description);
 	const { user } = useAuthentication();
@@ -79,6 +82,8 @@ const SuggestionComment: FC<Props> = ({ statement, parentStatement }) => {
 
 	const isCreator = parentStatement.creator.uid === user?.uid;
 
+	console.log("parentStatement", statement.statement)
+
 	function handleCommentSubmit(ev: KeyboardEvent<HTMLTextAreaElement>): void {
 		if (ev.key === 'Enter' && !ev.shiftKey) {
 			ev.preventDefault();
@@ -92,6 +97,16 @@ const SuggestionComment: FC<Props> = ({ statement, parentStatement }) => {
 					parentStatement: statement,
 					statementType: StatementType.statement
 				});
+
+				if (!isCreator && !subscription) {
+					console.log("Subscribe to:", statement.statement)
+					//subscribe to the parent statement
+					setStatementSubscriptionToDB({
+						statement,
+						creator: user,
+						getInAppNotification: true
+					});
+				}
 			}
 			target.value = '';
 			setEvaluationChanged(false);
@@ -118,13 +133,19 @@ const SuggestionComment: FC<Props> = ({ statement, parentStatement }) => {
 				onKeyDown={(e) => { if (e.key === 'Enter') toggleAccordion(); }}
 				tabIndex={0}
 			>
-				<div className={styles.commentCreator}>
-					<ProfileImage statement={statement} />
-					<CreatorEvaluationIcon evaluationNumber={evaluationNumber} />
+				<div className={styles.creatorText}>
+					<div className={styles.commentCreator}>
+						<ProfileImage statement={statement} />
+						<CreatorEvaluationIcon evaluationNumber={evaluationNumber} />
+					</div>
+					<div className={styles.commentText} style={{ userSelect: 'text' }} >
+						{statement.statement}, {statement.statementId}
+					</div>
+					<div className={styles.notifications}>
+						<StatementChatMore statement={statement} onlyCircle={true} useLink={false} />
+					</div>
 				</div>
-				<div className={styles.commentText}>
-					{statement.statement}, {previousEvaluation}
-				</div>
+
 				<span className={`${styles.accordionIcon} ${isOpen ? styles.open : ''}`}>
 					▼
 				</span>

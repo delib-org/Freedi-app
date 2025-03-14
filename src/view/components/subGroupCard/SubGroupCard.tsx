@@ -32,12 +32,12 @@ const SubGroupCard: FC<Props> = ({ statement }) => {
 					className={styles.type}
 				>
 					<div className={styles.text}>{text}</div>
-					<StatementChatMore statement={statement} onlyCircle={true} />
 					<div
 						className={styles.iconWrapper}
 						style={{ color: backgroundColor }}
 					>
 						{Icon}
+						<div><StatementChatMore statement={statement} onlyCircle={true} /></div>
 					</div>
 				</Link>
 
