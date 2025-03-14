@@ -12,10 +12,42 @@
 		/>
 		<meta name="description" content="FreeDi - collaborative decision-making platform">
 		<title>FreeDi App</title>
+		<!-- Preload the main style.scss file to make it load faster -->
+		<link rel="preload" href="/src/view/style/style.scss" as="style">
 	</head>
 	<style>
-		body {
+		:root {
+			--mainBackground: #1f5895;
+			--statementBackground: #f2f6ff;
+			--inputBackground: #f5fcff;
+			--btn-primary: #5f88e5;
+			--btn-disabled: #c6d2de;
+			--bg-screen: #f2f6ff;
+			--surface-background: #f2f6ff;
+			--wrapper-max-width: 75ch;
+		}
+
+		* {
+			margin: 0;
+			padding: 0;
+			box-sizing: border-box;
+			font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+		}
+
+		html, body {
+			width: 100%;
+			height: 100%;
+			margin: 0;
+			padding: 0;
+			background-color: var(--bg-screen);
 			overflow: hidden;
+		}
+
+		body {
+			width: 100svw;
+			height: 100svh;
+			font-size: 1.0625rem;
+			line-height: 150%;
 		}
 
 		.loaderBox {
@@ -25,6 +57,14 @@
 			flex-direction: column;
 			justify-content: center;
 			align-items: center;
+			background-color: var(--mainBackground);
+			color: white;
+		}
+
+		h1, h4 {
+			color: white;
+			text-align: center;
+			margin-bottom: 1rem;
 		}
 
 		.loader {
@@ -32,7 +72,8 @@
 			border-radius: 50%;
 			width: 48px;
 			height: 48px;
-			color: navy;
+			color: white;
+			margin-top: 2rem;
 		}
 
 		.loader:before,

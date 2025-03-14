@@ -99,11 +99,19 @@ export default defineConfig(({ mode }) => {
 		build: {
 			minify: !isTestMode, // Only minify when NOT on freedi-test.web.app
 			sourcemap: isTestMode, // Only include sourcemaps on freedi-test.web.app
+			cssCodeSplit: false, // Extract all CSS into a single file
 			rollupOptions: {
 				output: {
 					manualChunks: {
 						'vendor-react': ['react', 'react-dom', 'react-router'],
 						statement: ['./src/view/pages/statement/StatementMain'],
+						styles: ['./src/view/style/style.scss'],
+					},
+					assetFileNames: (assetInfo) => {
+						if (assetInfo.name?.endsWith('.css')) {
+							return 'assets/style.[hash].css';
+						}
+						return 'assets/[name]-[hash][extname]';
 					},
 				},
 			},
