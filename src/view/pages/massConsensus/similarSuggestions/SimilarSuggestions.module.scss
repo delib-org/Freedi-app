@@ -1,42 +1,9 @@
 .similar-suggestions {
-	display: flex;
-	flex-direction: column;
-	min-height: 100vh;
-	background-color: #f9f9f9;
-	
-	h3 {
-	  text-align: center;
-	  color: #444;
-	  font-size: 1.3rem;
-	  font-weight: 500;
-	  margin: 0.5rem auto 1rem;
-	  max-width: 800px;
-	  padding: 0 1.5rem;
-	  line-height: 1.5;
-	}
-	
-	&__wrapper {
-	  display: grid;
-	  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-	  max-width: 1000px;
-	  margin: 0 auto 1.5rem;
-	  gap: 1rem;
-	  padding: 0 1.5rem;
-	  
-	  @media (max-width: 768px) {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+	gap: 0 1rem;
+
+	@media (max-width: 768px) {
 		grid-template-columns: 1fr;
-		padding: 0 1rem;
-		margin-bottom: 1rem;
-	  }
 	}
-  
-	// Space between the title component and the h3
-	:global(.title-mass-consensus) + h3 {
-	  margin-top: 0.5rem;
-	}
-	
-	// Ensure proper spacing before footer
-	&__wrapper + :global(.footer-mass-consensus) {
-	  margin-top: 1rem;
-	}
-  }
+}

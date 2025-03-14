@@ -50,7 +50,7 @@ export function useRandomSuggestions() {
 	const fetchRandomStatements = async () => {
 		const endPoint =
 			location.hostname === 'localhost'
-				? `http://localhost:5001/${firebaseConfig.projectId}/${functionConfig.region}/getRandomStatements?parentId=${statementId}&limit=2`
+				? `http://localhost:5001/${firebaseConfig.projectId}/${functionConfig.region}/getRandomStatements?parentId=${statementId}&limit=6`
 				: import.meta.env.VITE_APP_RANDOM_STATEMENTS_ENDPOINT;
 
 		if (statementId) {
