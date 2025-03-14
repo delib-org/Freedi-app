@@ -1,9 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { VotingSuggestionsMV } from './VotingSuggestionsMV';
 import VotingArea from '../../statement/components/vote/components/votingArea/VotingArea';
 import Modal from '@/view/components/modal/Modal';
 import StatementInfo from '../../statement/components/vote/components/info/StatementInfo';
-import HeaderMassConsensus from '../headerMassConsensus/HeaderMassConsensus';
 import styles from './VotingSuggestion.module.scss';
 import { useParams } from 'react-router';
 import { useSelector } from 'react-redux';
@@ -13,6 +12,7 @@ import { getTotalVoters } from '../../statement/components/vote/statementVoteCon
 import TitleMassConsensus from '../TitleMassConsensus/TitleMassConsensus';
 import FooterMassConsensus from '../footerMassConsensus/FooterMassConsensus';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useHeader } from '../headerMassConsensus/HeaderContext';
 
 const VotingSuggestions = () => {
 	const { subStatements, navigateToFeedback } = VotingSuggestionsMV();
@@ -26,14 +26,22 @@ const VotingSuggestions = () => {
 	const totalVotes = getTotalVoters(statement);
 	const { t } = useUserConfig();
 
+	const { setHeader } = useHeader();
+
+	useEffect(() => {
+		setHeader({
+			title: t('Voting'),
+			backTo: MassConsensusPageUrls.topSuggestions,
+			backToApp: false,
+			isIntro: false,
+			setHeader,
+		});
+	}, []);
+
 	return (
 		<>
-			<HeaderMassConsensus
-				title={t('Voting')}
-				backTo={MassConsensusPageUrls.topSuggestions}
-			/>
 			<TitleMassConsensus
-				title={t('please vote for the best suggestion')}
+				title={t('Please vote for the best suggestion')}
 			/>
 
 			<div className={styles.voteGraph}>

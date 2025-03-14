@@ -1,6 +1,5 @@
 import React, { useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router';
-import HeaderMassConsensus from '../headerMassConsensus/HeaderMassConsensus';
 import { useSelector } from 'react-redux';
 import { selectSimilarStatements } from '@/redux/massConsensus/massConsensusSlice';
 import SimilarCard from './similarCard/SimilarCard';
@@ -14,15 +13,28 @@ import { useSimilarSuggestions } from './SimilarSuggestionVM';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import TitleMassConsensus from '../TitleMassConsensus/TitleMassConsensus';
 import FooterMassConsensus from '../footerMassConsensus/FooterMassConsensus';
+import { useHeader } from '../headerMassConsensus/HeaderContext';
 
 const SimilarSuggestions = () => {
 	const navigate = useNavigate();
 	const { statementId } = useParams<{ statementId: string }>();
 	const { handleSetSuggestionToDB } = useSimilarSuggestions();
 	const similarSuggestions = useSelector(selectSimilarStatements);
-	const { t, dir } = useUserConfig();
+	const { t } = useUserConfig();
 
 	const [selected, setSelected] = React.useState<number | null>(null);
+
+	const { setHeader } = useHeader();
+
+	useEffect(() => {
+		setHeader({
+			title: t('similar suggestions'),
+			backTo: MassConsensusPageUrls.initialQuestion,
+			backToApp: false,
+			isIntro: false,
+			setHeader,
+		});
+	}, []);
 
 	function handleSelect(index: number) {
 		setSelected(index);
@@ -34,17 +46,10 @@ const SimilarSuggestions = () => {
 	}, [similarSuggestions, navigate, statementId]);
 
 	return (
-		<div
-			className={styles['similar-suggestions']}
-			style={{ direction: dir }}
-		>
-			<HeaderMassConsensus
-				title={t('similar suggestions')}
-				backTo={MassConsensusPageUrls.randomSuggestions}
-			/>
+		<>
 			<TitleMassConsensus title={t('Thank you for the suggestion!')} />
 			<h3>{t('Here are similar suggestions. which one fits best?')}</h3>
-			<div className={styles['similar-suggestions__wrapper']}>
+			<div className={styles['similar-suggestions']}>
 				{similarSuggestions.map(
 					(
 						suggestion: Statement | GeneratedStatement,
@@ -62,13 +67,13 @@ const SimilarSuggestions = () => {
 				)}
 			</div>
 			<FooterMassConsensus
-				goTo={MassConsensusPageUrls.randomSuggestions}
+				goTo={MassConsensusPageUrls.topSuggestions}
 				isNextActive={selected !== null}
 				onNext={() =>
 					handleSetSuggestionToDB(similarSuggestions[selected])
 				}
 			/>
-		</div>
+		</>
 	);
 };
 
