@@ -9,7 +9,7 @@ import InstallIcon from '@/assets/icons/installIcon.svg?react';
 import InvitationIcon from '@/assets/icons/invitation.svg?react';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import { logOut } from '@/controllers/db/authenticationUtils';
-import { LanguagesIcon } from 'lucide-react';
+import LanguagesIcon from '@/assets/icons/languagesIcon.svg?react';
 import Modal from '@/view/components/modal/Modal';
 import ChangeLanguage from '@/view/components/changeLanguage/ChangeLanguage';
 import { LANGUAGES } from '@/constants/Languages';

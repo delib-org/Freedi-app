@@ -50,13 +50,13 @@ const ChangeLanguage: FC<ChangeLanguageProps> = ({
 			)}
 			{background ? (
 				<div className={styles.optionsWrapper}>
-					{LANGUAGES.map(({ code, label, icon }) => (
+					{LANGUAGES.map(({ code, label, icon: Icon }) => (
 						<button
 							key={code}
 							className={`${styles.languageOption} ${currentLanguage === code ? styles.selected : ''}`}
 							onClick={() => handleLanguageChange(code)}
 						>
-							<span className={styles.flag}>{icon}</span>
+							<Icon className={styles.flag} />
 							<span>{t(label)}</span>
 						</button>
 					))}

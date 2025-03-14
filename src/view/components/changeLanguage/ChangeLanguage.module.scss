@@ -34,7 +34,7 @@
 	cursor: pointer;
 	transition: 0.2s ease;
 	width: 100%;
-	font-size: 1.2em;
+	font-size: 1em;
 	gap: 1px;
 	order: 0;
 }
@@ -60,13 +60,15 @@
 
 .flag {
 	font-size: 1.2em;
-	margin-right: 6px;
+	margin-right: 0.5em;
+	margin-left: 0.5em;
 }
 
 .closeBtn {
 	border-bottom: 1px solid black;
 	margin: 0 auto;
-	top: 20px;
+	position: relative;
+	top: 70px;
 	padding: 1em;
 }
 
@@ -74,7 +76,7 @@
 	color: var(--text-blue);
 	font-size: 1.4em;
 	text-align: right;
-	margin: 1em;
+	margin: 0.5em;
 }
 
 .title {
@@ -82,7 +84,7 @@
 	font-size: 1.5em;
 	text-align: start;
 	cursor: pointer;
-	margin: 1em 20% 1em 20%;
+	margin: 0 20% 0.5em 20%;
 	padding-bottom: 1em;
 }
 
