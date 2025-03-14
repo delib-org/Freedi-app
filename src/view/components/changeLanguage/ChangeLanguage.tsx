@@ -2,7 +2,7 @@ import { LanguagesEnum } from '@/context/UserConfigContext';
 import styles from './ChangeLanguage.module.scss';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import { LANGUAGES } from '@/constants/Languages';
-import React, { FC } from 'react';
+import { FC } from 'react';
 import Button, { ButtonType } from '../buttons/button/Button';
 
 interface ChangeLanguageProps {
@@ -40,7 +40,7 @@ const ChangeLanguage: FC<ChangeLanguageProps> = ({
 			{background && (
 				<button
 					onClick={() => setShowModal(false)}
-					className={styles.closeBtn}
+					className={styles.XBtn}
 				>
 					X
 				</button>
@@ -48,39 +48,37 @@ const ChangeLanguage: FC<ChangeLanguageProps> = ({
 			{background && (
 				<h1 className={styles.title}>{t('Language selection')}</h1>
 			)}
-			<div className={styles.languageContainer}>
-				{background ? (
-					<div>
-						{LANGUAGES.map(({ code, label, icon }) => (
-							<button
-								key={code}
-								className={`${styles.languageOption} ${currentLanguage === code ? styles.selected : ''}`}
-								onClick={() => handleLanguageChange(code)}
-							>
-								<span className={styles.flag}>{icon}</span>
-								<span>{label}</span>
-							</button>
-						))}
-					</div>
-				) : (
-					<select
-						value={currentLanguage}
-						onChange={(e) => handleLanguageChange(e.target.value)}
-						className={styles.language}
-					>
-						{LANGUAGES.map(({ code, label }) => (
-							<option key={code} value={code}>
-								{label}
-							</option>
-						))}
-					</select>
-				)}
-			</div>
+			{background ? (
+				<div className={styles.optionsWrapper}>
+					{LANGUAGES.map(({ code, label, icon }) => (
+						<button
+							key={code}
+							className={`${styles.languageOption} ${currentLanguage === code ? styles.selected : ''}`}
+							onClick={() => handleLanguageChange(code)}
+						>
+							<span className={styles.flag}>{icon}</span>
+							<span>{t(label)}</span>
+						</button>
+					))}
+				</div>
+			) : (
+				<select
+					value={currentLanguage}
+					onChange={(e) => handleLanguageChange(e.target.value)}
+					className={styles.language}
+				>
+					{LANGUAGES.map(({ code, label }) => (
+						<option key={code} value={code}>
+							{label}
+						</option>
+					))}
+				</select>
+			)}
 
 			{background && (
 				<Button
 					text='close'
-					className={styles.langBtn}
+					className={styles.closeBtn}
 					buttonType={ButtonType.PRIMARY}
 					onClick={() => setShowModal(false)}
 				></Button>
