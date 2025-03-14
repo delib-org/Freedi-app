@@ -240,7 +240,7 @@ export class NotificationService {
 			}
 
 			// Store in askedToBeNotify collection
-			console.log(Collections.askedToBeNotified, `${token}_${statementId}`)
+
 			const notificationRef = doc(DB, Collections.askedToBeNotified, `${token}_${statementId}`);
 			await setDoc(notificationRef, {
 				token,
