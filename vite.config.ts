@@ -103,43 +103,38 @@ export default defineConfig(({ mode }) => {
 			rollupOptions: {
 				output: {
 					manualChunks: (id) => {
-						// Core vendor libraries in a separate chunk
+						// React and core dependencies - should be bundled together
+						if (id.includes('node_modules/react/') || 
+							id.includes('node_modules/react-dom/') ||
+							id.includes('node_modules/scheduler/') ||
+							id.includes('node_modules/react-router') ||
+							id.includes('node_modules/react-redux') ||
+							id.includes('node_modules/@reduxjs/toolkit')) {
+							return 'vendor-react';
+						}
+						
+						// Handle other node_modules
 						if (id.includes('node_modules')) {
-							// Group all React and related dependencies together
-							if (id.includes('react') || 
-								id.includes('/scheduler/') ||
-								id.includes('/use-sync-external-store/') ||
-								id.includes('/@remix-run/') ||
-								id.includes('/redux/')) {
-								return 'vendor-react';
-							}
-							
-							// Other vendor libraries
 							return 'vendor-other';
 						}
 						
-						// Mass consensus in its own chunk
+						// Mass consensus section
 						if (id.includes('/view/pages/massConsensus/')) {
 							return 'mass-consensus';
 						}
 						
-						// Start page in its own chunk for fast loading
+						// Start page section
 						if (id.includes('/view/pages/start/Start')) {
 							return 'start-page';
 						}
 						
-						// Main app code (everything else) in one chunk
-						if (id.includes('/src/view/')) {
-							return 'main-app';
-						}
-						
-						// Styles
-						if (id.includes('/view/style/style.scss')) {
+						// CSS styles
+						if (id.includes('.scss') || id.includes('.css')) {
 							return 'styles';
 						}
 						
-						// Default - let Rollup decide
-						return null;
+						// All other app code in a single chunk
+						return 'main-app';
 					},
 					assetFileNames: (assetInfo) => {
 						if (assetInfo.name?.endsWith('.css')) {
