@@ -37,7 +37,7 @@ const ChangeLanguage: FC<ChangeLanguageProps> = ({
 	}
 
 	function goBackToMenu() {
-		setShowMenu(true);
+		if (setShowMenu) setShowMenu(true);
 		setShowModal(false);
 	}
 
