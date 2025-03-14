@@ -4,6 +4,7 @@ import { Link, NavLink } from 'react-router';
 import useSubGroupCard from './SubGroupCardVM';
 import { Statement, StatementType } from 'delib-npm';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import StatementChatMore from '@/view/pages/statement/components/chat/components/StatementChatMore';
 
 interface Props {
 	statement: Statement;
@@ -31,6 +32,7 @@ const SubGroupCard: FC<Props> = ({ statement }) => {
 					className={styles.type}
 				>
 					<div className={styles.text}>{text}</div>
+					<StatementChatMore statement={statement} onlyCircle={true} />
 					<div
 						className={styles.iconWrapper}
 						style={{ color: backgroundColor }}

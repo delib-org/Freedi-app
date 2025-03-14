@@ -14,9 +14,10 @@ import { inAppNotificationsCountSelectorForStatement } from '@/redux/notificatio
 
 interface Props {
 	statement: Statement | SimpleStatement;
+	onlyCircle?: boolean;
 }
 
-const StatementChatMore: FC<Props> = ({ statement }) => {
+const StatementChatMore: FC<Props> = ({ statement, onlyCircle }) => {
 	// Hooks
 	const navigate = useNavigate();
 
@@ -41,7 +42,7 @@ const StatementChatMore: FC<Props> = ({ statement }) => {
 							: `9+`}
 					</div>
 				)}
-				<ChatIcon />
+				{!onlyCircle && < ChatIcon />}
 			</div>
 		</button>
 	);

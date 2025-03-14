@@ -26,11 +26,10 @@ import {
 import { updateResultsSettings } from './fn_results';
 import {
 	getQuestionOptions,
-	updateNumberOfNewSubStatements,
+	// updateNumberOfNewSubStatements,
 } from './fn_statements';
 import { updateVote } from './fn_vote';
-import { setAdminsToNewStatement } from './fn_roles';
-import { updateSubscriptionsSimpleStatement } from './fn_subscriptions';
+import { setAdminsToNewStatement, updateSubscriptionsSimpleStatement } from './fn_subscriptions';
 import {
 	getRandomStatements,
 	getTopStatements,
@@ -137,12 +136,12 @@ exports.massConsensusAddMember = wrapHttpFunction(addMassConsensusMember);
 // --------------------------
 
 // Statement functions
-exports.updateNumberOfNewSubStatements = createFirestoreFunction(
-	`/${Collections.statements}/{statementId}`,
-	onDocumentCreated,
-	updateNumberOfNewSubStatements,
-	'updateNumberOfNewSubStatements'
-);
+// exports.updateNumberOfNewSubStatements = createFirestoreFunction(
+// 	`/${Collections.statements}/{statementId}`,
+// 	onDocumentCreated,
+// 	updateNumberOfNewSubStatements,
+// 	'updateNumberOfNewSubStatements'
+// );
 
 exports.updateInAppNotifications = createFirestoreFunction(
 	`/${Collections.statements}/{statementId}`,
