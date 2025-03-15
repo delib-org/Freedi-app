@@ -1,43 +1,39 @@
 import { MassConsensusPageUrls } from 'delib-npm';
-import HeaderMassConsensus from '../headerMassConsensus/HeaderMassConsensus';
-import Input from '@/view/components/input/Input';
 import { MailIcon } from 'lucide-react';
-import { useState } from 'react';
 import TitleMassConsensus from '../TitleMassConsensus/TitleMassConsensus';
 import FooterMassConsensus from '../footerMassConsensus/FooterMassConsensus';
 import styles from './LeaveFeedback.module.scss';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useLeaveFeedback } from './LeaveFeedbackVM';
+import { useHeader } from '../headerMassConsensus/HeaderContext';
+import { useEffect } from 'react';
 
 function LeaveFeedback() {
 	const { t } = useUserConfig();
-	const [email, setEmail] = useState('');
+	const { handleSendButton, handleEmailChange, MailStatus } = useLeaveFeedback();
 
-	const handleSendButton = () => {
-		return email;
-	};
+	const { setHeader } = useHeader();
 
-	const handleEmailChange = (value: string) => {
-		setEmail(value);
-	};
+	useEffect(() => {
+		setHeader({
+			title: t('Sign up'),
+			backTo: MassConsensusPageUrls.voting,
+			backToApp: false,
+			isIntro: false,
+			setHeader,
+		});
+	}, []);
 
 	return (
 		<div>
-			<HeaderMassConsensus
-				title={t('Sign up')}
-				backTo={MassConsensusPageUrls.voting}
-			/>
 			<TitleMassConsensus
-				title={t('Thank you for your participation.')}
+				title={t('Thank you for your participation')}
 			/>
-			<div className={`${styles.feedback} wrapper main-wrap`}>
-				<p>{t('Please leave your email to receive updates.')}</p>
+			<div className={styles.feedback}>
+				<p>{t('Please leave your email to receive updates')}</p>
 				<div className={styles.input}>
-					<Input
-						placeholder={t('Mail')}
-						name='email'
-						label=''
-						onChange={handleEmailChange}
-					/>
+					<input placeholder={t('Mail')} type='email' name='email' onChange={handleEmailChange} />
+					<span> {MailStatus === "invalid" ? t('Invalid email') : null} </span>
 					<MailIcon />
 				</div>
 			</div>

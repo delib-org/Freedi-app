@@ -20,7 +20,7 @@ export function VotingSuggestionsMV() {
 
 	async function fetchTopStatements() {
 		fetch(
-			`http://localhost:5001/${firebaseConfig.projectId}/${functionConfig.region}/getTopStatements?parentId=${statementId}&limit=6`
+			`http://localhost:5001/${firebaseConfig.projectId}/${functionConfig.region}/getTopStatements?parentId=${statementId}&limit=4`
 		)
 			.then((res) => res.json())
 			.then((data) => {

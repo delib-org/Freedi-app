@@ -1,0 +1,33 @@
+.evaluation-popup {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	position: absolute;
+	bottom: 0rem;
+	left: 0;
+	z-index: 300;
+	width: fit-content;
+
+
+
+
+	&__thumb {
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		width: 2rem;
+		height: 2rem;
+		border-radius: 50%;
+		transform: translate(1.5rem, -.2rem);
+		position: absolute;
+		bottom: 5px;
+	}
+
+	&__thumbs {
+		background-color: white;
+		transform: translate(1rem, -.5rem);
+		box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+		border-radius: 2rem;
+	}
+}

@@ -2,11 +2,16 @@ import { getStatementSubscriptionFromDB } from '@/controllers/db/subscriptions/g
 import { getStatementSubscriptionId } from '@/controllers/general/helpers'
 import { useAuthentication } from '@/controllers/hooks/useAuthentication'
 import { setStatementSubscription, statementSubscriptionSelector } from '@/redux/statements/statementsSlice'
-import React, { useEffect } from 'react'
+import { useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { Outlet, useParams } from 'react-router'
+import { HeaderProvider } from './headerMassConsensus/HeaderContext'
+import HeaderMassConsensus from './headerMassConsensus/HeaderMassConsensus'
+import styles from './MassConsensus.module.scss'
+import { useUserConfig } from '@/controllers/hooks/useUserConfig'
 
 const MassConsensus = () => {
+	const { dir } = useUserConfig();
 	const dispatch = useDispatch();
 	const { statementId } = useParams()
 	const { user } = useAuthentication()
@@ -24,7 +29,14 @@ const MassConsensus = () => {
 	}, [subscription, user])
 
 	return (
-		<Outlet />
+		<HeaderProvider>
+			<HeaderMassConsensus />
+			<div className={styles.massConsensus} style={{ direction: dir }}>
+				<div className={styles.massConsensus__wrapper}>
+					<Outlet />
+				</div>
+			</div>
+		</HeaderProvider>
 	)
 }
 

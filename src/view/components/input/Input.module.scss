@@ -3,8 +3,7 @@
 	position: relative;
 	display: flex;
 	flex-direction: column;
-	font-family: 'Roboto',
-		sans-serif;
+	font-family: 'Roboto', sans-serif;
 	width: 100%;
 }
 
@@ -14,13 +13,11 @@
 	top: 0.875rem;
 	left: -0.5rem;
 	z-index: 1;
-	background-color: #ffffff;
 	width: fit-content;
 	color: #7484a9;
 	padding: 0 0.5rem;
 	border-radius: 0.5rem;
 	font-size: 1rem;
-
 
 	&--ltr {
 		text-align: left;
@@ -40,7 +37,6 @@
 	display: flex;
 	align-items: center;
 	flex-direction: row-reverse;
-
 }
 
 .searchIcon {
@@ -55,8 +51,7 @@
 	border: none;
 	resize: none;
 	background: transparent;
-	font-family: 'Roboto',
-		sans-serif;
+	font-family: 'Roboto', sans-serif;
 	font-size: 1rem;
 	line-height: 150%;
 	font-weight: 300;
@@ -83,15 +78,14 @@
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	padding: .5rem;
+	padding: 0.5rem;
 
 	@media screen and (max-width: 768px) {
-		padding: .25rem;
-
+		padding: 0.25rem;
 	}
 
 	svg {
-		transform: scale(.8);
+		transform: scale(0.8);
 	}
 
 	&:hover {
@@ -106,7 +100,4 @@
 
 .clearIcon {
 	display: block;
-
-
-
 }
