@@ -103,7 +103,6 @@ const SuggestionComment: FC<Props> = ({ statement, parentStatement }) => {
 				});
 
 				if (!isCreator && !subscription) {
-					console.log("Subscribe to:", statement.statement)
 					//subscribe to the parent statement
 					setStatementSubscriptionToDB({
 						statement,
@@ -143,7 +142,7 @@ const SuggestionComment: FC<Props> = ({ statement, parentStatement }) => {
 						<CreatorEvaluationIcon evaluationNumber={evaluationNumber} />
 					</div>
 					<div className={styles.commentText} style={{ userSelect: 'text' }} >
-						{statement.statement}, {statement.statementId}
+						{statement.statement}
 					</div>
 					<div className={styles.notifications}>
 						<StatementChatMore statement={statement} onlyCircle={true} useLink={false} />

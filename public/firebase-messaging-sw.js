@@ -1,4 +1,3 @@
-
 // Import latest Firebase scripts
 importScripts(
 	"https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"
@@ -8,9 +7,11 @@ importScripts(
 );
 
 // Initialize the Firebase app in the service worker with the production configuration
-// Make sure these values match the ones in your Firebase Console for freedi-test project
-//For production
+// First, determine the current domain
+const currentDomain = self.location.hostname;
+console.info('Current domain detected:', currentDomain);
 
+// Select Firebase config based on the domain
 let firebaseConfig;
 if (currentDomain === 'freedi.tech' || currentDomain === 'delib.web.app') {
 	// Development config
@@ -36,11 +37,20 @@ if (currentDomain === 'freedi.tech' || currentDomain === 'delib.web.app') {
 	};
 } else {
 	// Fallback or staging config
+	console.warn('Using fallback config for unknown domain:', currentDomain);
 	firebaseConfig = {
-		// ...fallback config
+		// Use your fallback configuration here
+		apiKey: 'AIzaSyBCgq3y9WjS8ZkB-q_lnkFM2BuUdLp2M-g',
+		authDomain: 'freedi-test.firebaseapp.com',
+		projectId: 'freedi-test',
+		storageBucket: 'freedi-test.firebasestorage.app',
+		messagingSenderId: '47037334917',
+		appId: '1:47037334917:web:f9bce2dd772b5efd29f0ec'
 	};
 }
+
 // Initialize Firebase
+console.info('Initializing Firebase with config:', firebaseConfig);
 firebase.initializeApp(firebaseConfig);
 
 // Retrieve an instance of Firebase Messaging
@@ -393,4 +403,3 @@ self.addEventListener('message', (event) => {
 		}
 	}
 });
-
