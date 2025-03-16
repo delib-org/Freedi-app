@@ -10,7 +10,7 @@
 		z-index: 5;
 
 		&.ltr {
-			left: 0px;
+			transform: translateX(-92%);
 
 			&--card-menu {
 				right: 10px;
@@ -18,8 +18,7 @@
 		}
 
 		&.rtl {
-			transform: translateX(10px);
-
+			left: 0px;
 			&--card-menu {
 				left: 10px;
 			}
