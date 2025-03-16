@@ -1,4 +1,4 @@
-import { FC, useContext } from 'react';
+import { FC, useContext, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import styles from './StatementTopNav.module.scss';
 
@@ -15,6 +15,10 @@ import { StatementContext } from '../../../StatementCont';
 import { Statement, Role } from 'delib-npm';
 import NavButtons from './navButtons/NavButtons';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { LANGUAGES } from '@/constants/Languages';
+import { LanguagesIcon } from 'lucide-react';
+import ChangeLanguage from '@/view/components/changeLanguage/ChangeLanguage';
+import Modal from '@/view/components/modal/Modal';
 
 interface Props {
 	statement?: Statement;
@@ -38,10 +42,12 @@ const StatementTopNav: FC<Props> = ({
 	handleShare,
 }) => {
 	//hooks
-	const { t } = useUserConfig();
+	const { t, currentLanguage } = useUserConfig();
 	const navigate = useNavigate();
 	const { screen } = useParams();
 	const { role } = useContext(StatementContext);
+	const [showLanguageModal, setShowLanguageModal] = useState(false);
+
 	// const
 	const headerStyle = useStatementColor({ statement });
 	const menuIconStyle = {
@@ -65,6 +71,13 @@ const StatementTopNav: FC<Props> = ({
 			navigate(`/statement/${statement.statementId}/${path}`);
 	}
 
+	function closeOpenModal() {
+		setShowLanguageModal(!showLanguageModal);
+	}
+	const currentLabel = LANGUAGES.find(
+		(lang) => lang.code === currentLanguage
+	).label;
+
 	return (
 		<nav
 			className={styles.nav}
@@ -82,9 +95,12 @@ const StatementTopNav: FC<Props> = ({
 						handleFollowMe={handleFollowMe}
 						handleInvitePanel={handleInvitePanel}
 						handleNavigation={handleNavigation}
+						setShowLanguageModal={closeOpenModal}
+						showLanguageModal={showLanguageModal}
 						isAdmin={isAdmin}
 						menuIconStyle={menuIconStyle}
 						t={t}
+						currentLabel={currentLabel}
 					/>
 				)}
 				<NavButtons
@@ -111,21 +127,27 @@ function HeaderMenu({
 	handleFollowMe,
 	handleInvitePanel,
 	handleNavigation,
+	setShowLanguageModal,
+	showLanguageModal,
 	isAdmin,
 	menuIconStyle,
 	t,
+	currentLabel,
 }: Readonly<{
 	setIsHeaderMenuOpen: (value: boolean) => void;
 	isHeaderMenuOpen: boolean;
 	headerStyle: { color: string; backgroundColor: string };
+	setShowLanguageModal: () => void;
 	handleShare: () => void;
 	handleLogout: () => void;
 	handleFollowMe: () => void;
 	handleInvitePanel: () => void;
 	handleNavigation: (path: string) => void;
+	showLanguageModal: boolean;
 	isAdmin: boolean;
 	menuIconStyle: { color: string; width: string };
 	t: (key: string) => string;
+	currentLabel: string;
 }>) {
 	return (
 		<div className={styles.button}>
@@ -158,6 +180,11 @@ function HeaderMenu({
 							onOptionClick={handleInvitePanel}
 						/>
 						<MenuOption
+							label={currentLabel}
+							icon={<LanguagesIcon style={menuIconStyle} />}
+							onOptionClick={setShowLanguageModal}
+						/>
+						<MenuOption
 							label={t('Settings')}
 							icon={<SettingsIcon style={menuIconStyle} />}
 							onOptionClick={() => handleNavigation('settings')}
@@ -165,6 +192,14 @@ function HeaderMenu({
 					</>
 				)}
 			</Menu>
+			{showLanguageModal && (
+				<Modal>
+					<ChangeLanguage
+						background
+						setShowModal={setShowLanguageModal}
+					/>
+				</Modal>
+			)}
 		</div>
 	);
 }
