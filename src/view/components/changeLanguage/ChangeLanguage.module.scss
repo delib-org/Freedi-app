@@ -56,8 +56,8 @@
 .language option:nth-child(even) {
 	background-color: white;
 }
-.language option:nth-child(odd) {
-	background-color: white;
+.reverse {
+	transform: scaleX(-1);
 }
 .optionsWrapper {
 	display: flex;

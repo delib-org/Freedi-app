@@ -55,7 +55,7 @@ const ChangeLanguage: FC<ChangeLanguageProps> = ({
 				{background && (
 					<span>
 						<BackToMenuArrow
-							className={styles.backArrow}
+							className={`${styles.backArrow} ${(currentLanguage === 'he' || currentLanguage === 'ar') ? styles.reverse : ""}`}
 							onClick={goBackToMenu}
 						/>
 						<h1 className={styles.title}>
