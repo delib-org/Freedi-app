@@ -11,9 +11,11 @@ interface ChangeLanguageProps {
 	background?: boolean;
 	setShowModal?: (show: boolean) => void;
 	setShowMenu?: (show: boolean) => void;
+	sameDirMenu?: boolean;
 }
 
 const ChangeLanguage: FC<ChangeLanguageProps> = ({
+	sameDirMenu = false,
 	background = false,
 	setShowModal,
 	setShowMenu,
@@ -55,7 +57,7 @@ const ChangeLanguage: FC<ChangeLanguageProps> = ({
 				{background && (
 					<span>
 						<BackToMenuArrow
-							className={`${styles.backArrow} ${(currentLanguage === 'he' || currentLanguage === 'ar') ? styles.reverse : ""}`}
+							className={`${styles.backArrow} ${(!sameDirMenu && currentLanguage === 'he') || currentLanguage === 'ar' ? styles.reverse : ''}`}
 							onClick={goBackToMenu}
 						/>
 						<h1 className={styles.title}>

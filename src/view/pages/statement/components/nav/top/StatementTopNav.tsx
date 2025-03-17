@@ -16,7 +16,7 @@ import { Statement, Role } from 'delib-npm';
 import NavButtons from './navButtons/NavButtons';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import { LANGUAGES } from '@/constants/Languages';
-import { LanguagesIcon } from 'lucide-react';
+import LanguagesIcon from '@/assets/icons/languagesIcon.svg?react';
 import ChangeLanguage from '@/view/components/changeLanguage/ChangeLanguage';
 import Modal from '@/view/components/modal/Modal';
 
@@ -197,6 +197,7 @@ function HeaderMenu({
 			{showLanguageModal && (
 				<Modal>
 					<ChangeLanguage
+						sameDirMenu={true}
 						background
 						setShowModal={setShowLanguageModal}
 					/>
