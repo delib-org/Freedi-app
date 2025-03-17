@@ -4,7 +4,6 @@ import {
 	useContext,
 	useState,
 	useMemo,
-	KeyboardEvent,
 } from 'react';
 import { StatementContext } from '../../../../StatementCont';
 import styles from './MultiStageQuestion.module.scss';
@@ -42,21 +41,26 @@ const MultiStageQuestion: FC = () => {
 
 	const [showAddStage, setShowAddStage] = useState<boolean>(false);
 	const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+	const [draggedItem, setDraggedItem] = useState<null | { index: number;indexOffset: number; y: number }>(null);
 
 	const handleDragStart = (
 		e: DragEvent<HTMLDivElement>,
 		index: number
 	): void => {
 		setDraggedIndex(index);
-		e.dataTransfer.effectAllowed = 'move';
-
-		// Required for Firefox
-		e.dataTransfer.setData('text/plain', '');
+		const topOfTarget = e.currentTarget.getBoundingClientRect().top
+		setDraggedItem({ 
+			index, 
+			indexOffset: e.clientY - topOfTarget,
+			y: topOfTarget
+		});
 	};
 
 	const handleDragOver = (e: DragEvent<HTMLDivElement>): void => {
 		e.preventDefault();
-		e.dataTransfer.dropEffect = 'move';
+		if (draggedItem) {
+			setDraggedItem((prev) => prev ? { ...prev, y: e.clientY - draggedItem.indexOffset } : null);
+		}
 	};
 
 	const handleDrop = (
@@ -65,7 +69,6 @@ const MultiStageQuestion: FC = () => {
 	): void => {
 		e.preventDefault();
 		if (draggedIndex === null || draggedIndex === dropIndex) return;
-
 		const newStages = [...initialStages];
 		const draggedStage = newStages[draggedIndex];
 		newStages.splice(draggedIndex, 1);
@@ -77,35 +80,11 @@ const MultiStageQuestion: FC = () => {
 		updateStatementsOrderToDB(newStages);
 
 		dispatch(setStatements(newStages));
-		setDraggedIndex(null);
 	};
 
 	const handleDragEnd = (): void => {
+		setDraggedItem(null);
 		setDraggedIndex(null);
-	};
-
-	const handleKeyDown = (
-		e: KeyboardEvent<HTMLDivElement>,
-		index: number
-	): void => {
-		if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-			e.preventDefault();
-			const newIndex =
-				e.key === 'ArrowUp'
-					? Math.max(0, index - 1)
-					: Math.min(initialStages.length - 1, index + 1);
-
-			const newStages = [...initialStages];
-			const movedStage = newStages[index];
-			newStages.splice(index, 1);
-			newStages.splice(newIndex, 0, movedStage);
-
-			newStages.forEach((stage, i) => {
-				stage.order = i;
-			});
-			updateStatementsOrderToDB(newStages);
-			dispatch(setStatements(newStages));
-		}
 	};
 
 	return (
@@ -133,7 +112,6 @@ const MultiStageQuestion: FC = () => {
 						onDrop={(e) => handleDrop(e, index)}
 						onDragEnd={handleDragEnd}
 						aria-label={`Draggable stage ${index + 1}`}
-						onKeyDown={(e) => handleKeyDown(e, index)}
 					>
 						<div
 							className={styles.dragHandle}
@@ -142,6 +120,20 @@ const MultiStageQuestion: FC = () => {
 						<StageCard statement={stage} />
 					</div>
 				))}
+				{draggedItem && (
+					<div
+						className={styles.ghostItem}
+						style={{
+						top: `${draggedItem.y}px`,
+						position: "absolute",
+						transform: "translateX(-20%)",
+						opacity: 0.5,
+						pointerEvents: "none",
+						}}
+					>
+						<StageCard statement={initialStages[draggedItem.index]} />
+					</div>
+				)}
 				<StageCard statement={statement} isSuggestions={true} />
 			</div>
 			<div className={`btns ${styles['add-stage']}`}>
