@@ -157,6 +157,7 @@ function HeaderMenu({
 				isMenuOpen={isHeaderMenuOpen}
 				iconColor={headerStyle.color}
 				isHamburger={true}
+				isLeft={true}
 			>
 				<MenuOption
 					label={t('Share')}
