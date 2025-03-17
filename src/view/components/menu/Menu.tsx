@@ -37,18 +37,14 @@ const Menu: FC<MenuProps> = ({
 				)}
 			</IconButton>
 
-			{isMenuOpen && (
-				<div
-					className={`menu-content  ${dir}${isCardMenu ? '--card-menu' : ''}`}
-				>
-					{children}
-					<button
-						className='invisibleBackground'
-						onClick={() => setIsOpen(false)}
-						aria-label='Close menu'
-					/>
-				</div>
-			)}
+			<div className={`menu-content ${dir}${isCardMenu ? '--card-menu' : ''} ${isMenuOpen ? 'open' : ''}`}>
+				{children}
+				<button
+					className="invisibleBackground"
+					onClick={() => setIsOpen(false)}
+					aria-label="Close menu"
+				/>
+			</div>
 		</div>
 	);
 };

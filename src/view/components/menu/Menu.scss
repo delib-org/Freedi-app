@@ -1,44 +1,68 @@
 .menu {
-	position: relative;
+  position: relative;
+  margin: auto;
 
-	.menu-content {
-		position: absolute;
-		display: flex;
-		flex-direction: column;
-		background-color: white;
-		box-shadow: 0px 3px 9px #00000026;
-		z-index: 5;
+  .menu-content {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    background-color: white;
+    box-shadow: 0px 3px 9px #00000026;
+    z-index: 5;
+    overflow: hidden;
+    max-height: 0;
+    transform: translateY(0);
+    transform-origin: top;
 
-		&.ltr {
-			left: 0px;
+    transition:
+      max-height 0.3s ease-out,
+      opacity 0.3s ease-out,
+      transform 0.3s ease-out;
 
-			&--card-menu {
-				right: 10px;
-			}
-		}
+    &.open {
+      max-height: 500px;
+      transform: translateY(1);
+      transition:
+        max-height 0.9s ease-out,
+        opacity 0.9s ease-out;
+    }
 
-		&.rtl {
-			transform: translateX(10px);
+    &.ltr {
+      left: 0px;
 
-			&--card-menu {
-				left: 10px;
-			}
-		}
-	}
+      &--card-menu {
+        right: 10px;
+      }
+      @media (max-width: 900px) {
+        transform: translateX(-60%);
+      }
+    }
 
-	@media (max-width: 1080px) {
-		.menu-content {
-			transform: translateX(10px);
-		}
-	}
+    &.rtl {
+      transform: translateX(10px);
+
+      &--card-menu {
+        left: 10px;
+      }
+      @media (max-width: 900px) {
+        transform: translateX(55%);
+      }
+    }
+  }
+
+  @media (max-width: 1080px) {
+    .menu-content {
+      transform: translateX(10px);
+    }
+  }
 }
 
 .invisibleBackground {
-	position: fixed;
-	top: 0;
-	left: 0;
-	width: 100vw;
-	height: 100svh;
-	z-index: 4;
-	background-color: transparent;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100svh;
+  z-index: 4;
+  background-color: transparent;
 }
