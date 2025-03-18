@@ -96,13 +96,7 @@ export default function HomeHeader() {
 						setIsOpen={setIsHomeMenuOpen}
 						iconColor='white'
 					>
-						<MenuOption
-							icon={
-								<DisconnectIcon style={{ color: '#4E88C7' }} />
-							}
-							label={t('Disconnect')}
-							onOptionClick={logOut}
-						/>
+
 						<MenuOption
 							icon={
 								<LanguagesIcon style={{ color: '#4E88C7' }} />
@@ -116,6 +110,13 @@ export default function HomeHeader() {
 							}
 							label={t('Join with PIN number')}
 							onOptionClick={() => handlePanel('invitation')}
+						/>
+						<MenuOption
+							icon={
+								<DisconnectIcon style={{ color: '#4E88C7' }} />
+							}
+							label={t('Disconnect')}
+							onOptionClick={logOut}
 						/>
 					</Menu>
 				</div>

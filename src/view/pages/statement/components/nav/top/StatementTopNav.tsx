@@ -162,11 +162,7 @@ function HeaderMenu({
 					icon={<ShareIcon style={menuIconStyle} />}
 					onOptionClick={handleShare}
 				/>
-				<MenuOption
-					label={t('Disconnect')}
-					icon={<DisconnectIcon style={menuIconStyle} />}
-					onOptionClick={handleLogout}
-				/>
+
 				{isAdmin && (
 					<>
 						<MenuOption
@@ -188,6 +184,11 @@ function HeaderMenu({
 							label={t('Settings')}
 							icon={<SettingsIcon style={menuIconStyle} />}
 							onOptionClick={() => handleNavigation('settings')}
+						/>
+						<MenuOption
+							label={t('Disconnect')}
+							icon={<DisconnectIcon style={menuIconStyle} />}
+							onOptionClick={handleLogout}
 						/>
 					</>
 				)}
