@@ -1,4 +1,4 @@
-import { ComponentProps, FC } from 'react';
+import { ComponentProps, FC, ReactNode } from 'react';
 import IconButton from '../iconButton/IconButton';
 import BurgerIcon from '@/assets/icons/burgerIcon.svg?react';
 import EllipsisIcon from '@/assets/icons/ellipsisIcon.svg?react';
@@ -11,6 +11,7 @@ interface MenuProps extends ComponentProps<'div'> {
 	setIsOpen: (isOpen: boolean) => void;
 	isHamburger?: boolean;
 	isCardMenu?: boolean;
+	footer?: ReactNode;
 }
 
 const Menu: FC<MenuProps> = ({
@@ -20,6 +21,7 @@ const Menu: FC<MenuProps> = ({
 	children,
 	isHamburger = false,
 	isCardMenu = false,
+	footer,
 }) => {
 	const { dir } = useUserConfig();
 
@@ -39,6 +41,11 @@ const Menu: FC<MenuProps> = ({
 
 			<div className={`menu-content ${dir}${isCardMenu ? '--card-menu' : ''} ${isMenuOpen ? 'open' : ''}`}>
 				{children}
+				{footer && (
+					<div className="menu-footer" onClick={(e) => e.stopPropagation()}>
+						{footer}
+					</div>
+				)}
 				<button
 					className="invisibleBackground"
 					onClick={() => setIsOpen(false)}

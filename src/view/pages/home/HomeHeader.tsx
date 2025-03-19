@@ -47,6 +47,7 @@ export default function HomeHeader() {
 			setIsInstallable(true);
 		});
 	}, []);
+
 	function handleInstallApp() {
 		try {
 			if (deferredPrompt) {
@@ -77,6 +78,7 @@ export default function HomeHeader() {
 			console.error(error);
 		}
 	}
+
 	function closeModal() {
 		setShowLanguageModal(false);
 	}
@@ -95,32 +97,28 @@ export default function HomeHeader() {
 						isMenuOpen={isHomeMenuOpen}
 						setIsOpen={setIsHomeMenuOpen}
 						iconColor='white'
+						footer={ // ✅ Move Disconnect option inside the Menu
+							<MenuOption
+								icon={<DisconnectIcon style={{ color: '#4E88C7' }} />}
+								label={t('Disconnect')}
+								onOptionClick={logOut}
+							/>
+						}
 					>
-
 						<MenuOption
-							icon={
-								<LanguagesIcon style={{ color: '#4E88C7' }} />
-							}
+							icon={<LanguagesIcon style={{ color: '#4E88C7' }} />}
 							label={currentLabel}
 							onOptionClick={() => handlePanel('changeLanguage')}
 						/>
 						<MenuOption
-							icon={
-								<InvitationIcon style={{ color: '#4E88C7' }} />
-							}
+							icon={<InvitationIcon style={{ color: '#4E88C7' }} />}
 							label={t('Join with PIN number')}
 							onOptionClick={() => handlePanel('invitation')}
-						/>
-						<MenuOption
-							icon={
-								<DisconnectIcon style={{ color: '#4E88C7' }} />
-							}
-							label={t('Disconnect')}
-							onOptionClick={logOut}
 						/>
 					</Menu>
 				</div>
 			</div>
+
 			{showInvitationModal && (
 				<InvitationModal setShowModal={setShowInvitationModal} />
 			)}

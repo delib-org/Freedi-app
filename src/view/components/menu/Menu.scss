@@ -49,6 +49,15 @@
         transform: translateX(55%);
       }
     }
+
+    .menu-footer {
+      //   padding: 8px 8px;
+      //   border-top: 1px solid #ccc;
+      //   background-color: white;
+      cursor: pointer;
+      pointer-events: auto;
+      z-index: 1000;
+    }
   }
 
   @media (max-width: 1080px) {
