@@ -2,9 +2,44 @@
   position: relative;
   margin: auto;
 
+  .menu-header {
+    display: flex;
+    flex-flow: column;
+    height: 123px;
+    width: 352px;
+    padding: 1rem;
+    background: var(--btn-primary-default);
+    color: white;
+    font-family: "Roboto", sans-serif;
+
+    .menu-title {
+      display: flex;
+      padding: 1rem 0;
+      font-weight: 500;
+      font-size: 1.5rem;
+    }
+
+    .menu-user {
+      display: flex;
+      justify-content: start;
+      gap: 1.5rem;
+      letter-spacing: 0.2px;
+
+      .menu-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid white;
+        background-color: #ccc; /* Fallback color */
+      }
+    }
+  }
+
   .menu-content {
     position: absolute;
     display: flex;
+    min-width: 200px;
     flex-direction: column;
     background-color: white;
     border-radius: 10px;
@@ -58,6 +93,8 @@
   }
 
   .menu-footer {
+    display: flex;
+    height: 83px;
     background-color: var(--btn-primary-default);
     cursor: pointer;
     pointer-events: auto;
