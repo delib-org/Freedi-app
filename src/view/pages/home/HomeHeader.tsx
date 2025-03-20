@@ -99,8 +99,8 @@ export default function HomeHeader() {
 						iconColor='white'
 						footer={ // ✅ Move Disconnect option inside the Menu
 							<MenuOption
-								icon={<DisconnectIcon style={{ color: '#4E88C7' }} />}
-								label={t('Disconnect')}
+								icon={<DisconnectIcon style={{ color: 'white' }} />}
+								label={<span style={{ color: 'white' }}>{t('Disconnect')}</span>}
 								onOptionClick={logOut}
 							/>
 						}
