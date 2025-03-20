@@ -62,6 +62,10 @@
     cursor: pointer;
     pointer-events: auto;
     z-index: 1000;
+
+    .menu-option {
+      border-bottom: none;
+    }
   }
 }
 

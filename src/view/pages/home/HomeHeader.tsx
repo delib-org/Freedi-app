@@ -96,15 +96,17 @@ export default function HomeHeader() {
 					<Menu
 						isMenuOpen={isHomeMenuOpen}
 						setIsOpen={setIsHomeMenuOpen}
-						iconColor='white'
-						footer={ // ✅ Move Disconnect option inside the Menu
+						iconColor="white"
+						footer={
 							<MenuOption
+								className="footer"
 								icon={<DisconnectIcon style={{ color: 'white' }} />}
 								label={<span style={{ color: 'white' }}>{t('Disconnect')}</span>}
 								onOptionClick={logOut}
 							/>
 						}
 					>
+
 						<MenuOption
 							icon={<LanguagesIcon style={{ color: '#4E88C7' }} />}
 							label={currentLabel}
