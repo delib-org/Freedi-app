@@ -19,9 +19,12 @@ export function VotingSuggestionsMV() {
 		);
 
 	async function fetchTopStatements() {
-		fetch(
-			`http://localhost:5001/${firebaseConfig.projectId}/${functionConfig.region}/getTopStatements?parentId=${statementId}&limit=4`
-		)
+		
+		const endPoint = location.hostname === 'localhost'
+			? `http://localhost:5001/${firebaseConfig.projectId}/${functionConfig.region}/getTopStatements?parentId=${statementId}&limit=4`
+			: `${import.meta.env.VITE_APP_TOP_STATEMENTS_ENDPOINT}?parentId=${statementId}&limit=4`;
+
+		fetch(endPoint)
 			.then((res) => res.json())
 			.then((data) => {
 				const statements = data.statements;
