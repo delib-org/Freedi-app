@@ -19,7 +19,6 @@ import { LANGUAGES } from '@/constants/Languages';
 import LanguagesIcon from '@/assets/icons/languagesIcon.svg?react';
 import ChangeLanguage from '@/view/components/changeLanguage/ChangeLanguage';
 import Modal from '@/view/components/modal/Modal';
-import NotificationSubscriptionButton from '@/view/components/notifications/NotificationSubscriptionButton';
 
 interface Props {
 	statement?: Statement;
@@ -158,7 +157,6 @@ function HeaderMenu({
 				isMenuOpen={isHeaderMenuOpen}
 				iconColor={headerStyle.color}
 				isHamburger={true}
-				isLeft={true}
 			>
 				<MenuOption
 					label={t('Share')}

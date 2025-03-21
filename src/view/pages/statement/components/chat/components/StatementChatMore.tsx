@@ -6,9 +6,8 @@ import { useNavigate } from 'react-router';
 import ChatIcon from '@/assets/icons/roundedChatDotIcon.svg?react';
 
 // Statements functions
-import { useAppSelector } from '@/controllers/hooks/reduxHooks';
-import { statementSubscriptionSelector } from '@/redux/statements/statementsSlice';
-import { SimpleStatement, StatementSubscription, Statement } from 'delib-npm';
+
+import { SimpleStatement, Statement } from 'delib-npm';
 import { useSelector } from 'react-redux';
 import { inAppNotificationsCountSelectorForStatement } from '@/redux/notificationsSlice/notificationsSlice';
 

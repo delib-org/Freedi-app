@@ -38,7 +38,7 @@ export const useNotifications = (statementId?: string) => {
 	useEffect(() => {
 		// Early return if service workers or notifications aren't supported
 		if (!isServiceWorkerSupported() || !isNotificationSupported()) {
-			console.log('Service Workers or Notifications not supported in this browser mode');
+			console.info('Service Workers or Notifications not supported in this browser mode');
 
 			return () => { }; // Empty cleanup function
 		}
@@ -156,7 +156,7 @@ export const useNotifications = (statementId?: string) => {
 	// Send a test notification
 	const sendTestNotification = () => {
 		if (!isNotificationSupported() || !isServiceWorkerSupported()) {
-			console.log('Notifications not supported in this browser mode');
+			console.info('Notifications not supported in this browser mode');
 
 			return;
 		}
@@ -190,7 +190,7 @@ export const useNotifications = (statementId?: string) => {
 	// Clear all notifications
 	const clearNotifications = () => {
 		if (!isNotificationSupported() || !isServiceWorkerSupported()) {
-			console.log('Notifications not supported in this browser mode');
+			console.info('Notifications not supported in this browser mode');
 
 			return;
 		}

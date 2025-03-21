@@ -5,7 +5,7 @@ import { useSuggestionComment } from './SuggestionCommentMV';
 import CreatorEvaluationIcon from './CreatorEvaluationIcon/CreatorEvaluationIcon';
 import { saveStatementToDB } from '@/controllers/db/statements/setStatements';
 import { useSelector } from 'react-redux';
-import { setStatementSubscription, statementSubscriptionSelector, statementSubsSelector } from '@/redux/statements/statementsSlice';
+import { statementSubscriptionSelector, statementSubsSelector } from '@/redux/statements/statementsSlice';
 import { listenToSubStatements } from '@/controllers/db/statements/listenToStatements';
 import SubComment from './subComment/SubComment';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
@@ -85,8 +85,6 @@ const SuggestionComment: FC<Props> = ({ statement, parentStatement }) => {
 	};
 
 	const isCreator = parentStatement.creator.uid === user?.uid;
-
-	console.log("parentStatement", statement.statement)
 
 	function handleCommentSubmit(ev: KeyboardEvent<HTMLTextAreaElement>): void {
 		if (ev.key === 'Enter' && !ev.shiftKey) {

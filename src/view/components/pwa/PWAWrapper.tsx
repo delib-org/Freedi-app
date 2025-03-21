@@ -40,6 +40,7 @@ const clearBadgeCount = async () => {
           // Check if the badgeCounter store exists
           if (!db.objectStoreNames.contains('badgeCounter')) {
             console.info('badgeCounter object store does not exist');
+            
             return;
           }
           

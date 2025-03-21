@@ -34,7 +34,7 @@ const useTopSuggestions = () => {
 		const endPoint =
 			location.hostname === 'localhost'
 				? `http://localhost:5001/${firebaseConfig.projectId}/${functionConfig.region}/getTopStatements?parentId=${statementId}&limit=6`
-				: import.meta.env.VITE_APP_TOP_STATEMENTS_ENDPOINT;
+				: `${import.meta.env.VITE_APP_TOP_STATEMENTS_ENDPOINT}?parentId=${statementId}&limit=6`;
 
 		fetch(endPoint)
 			.then((response) => response.json())
