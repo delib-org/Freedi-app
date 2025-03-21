@@ -16,7 +16,7 @@ import { Statement, Role } from 'delib-npm';
 import NavButtons from './navButtons/NavButtons';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import { LANGUAGES } from '@/constants/Languages';
-import { LanguagesIcon } from 'lucide-react';
+import LanguagesIcon from '@/assets/icons/languagesIcon.svg?react';
 import ChangeLanguage from '@/view/components/changeLanguage/ChangeLanguage';
 import Modal from '@/view/components/modal/Modal';
 
@@ -152,6 +152,7 @@ function HeaderMenu({
 	return (
 		<div className={styles.button}>
 			<Menu
+				sameDirMenu={true}
 				setIsOpen={setIsHeaderMenuOpen}
 				isMenuOpen={isHeaderMenuOpen}
 				iconColor={headerStyle.color}
@@ -161,6 +162,11 @@ function HeaderMenu({
 					label={t('Share')}
 					icon={<ShareIcon style={menuIconStyle} />}
 					onOptionClick={handleShare}
+				/>
+				<MenuOption
+					label={currentLabel}
+					icon={<LanguagesIcon style={menuIconStyle} />}
+					onOptionClick={setShowLanguageModal}
 				/>
 				<MenuOption
 					label={t('Disconnect')}
@@ -179,11 +185,7 @@ function HeaderMenu({
 							icon={<InvitationIcon style={menuIconStyle} />}
 							onOptionClick={handleInvitePanel}
 						/>
-						<MenuOption
-							label={currentLabel}
-							icon={<LanguagesIcon style={menuIconStyle} />}
-							onOptionClick={setShowLanguageModal}
-						/>
+
 						<MenuOption
 							label={t('Settings')}
 							icon={<SettingsIcon style={menuIconStyle} />}
@@ -195,6 +197,7 @@ function HeaderMenu({
 			{showLanguageModal && (
 				<Modal>
 					<ChangeLanguage
+						sameDirMenu={true}
 						background
 						setShowModal={setShowLanguageModal}
 					/>

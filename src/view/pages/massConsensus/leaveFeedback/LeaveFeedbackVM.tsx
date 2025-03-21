@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import firebaseConfig from '@/controllers/db/configKey';
-import { functionConfig } from "delib-npm";
-import { Creator } from "@/types/user/User";
+import { functionConfig, Creator } from "delib-npm";
 import { useParams } from "react-router";
 import { useAuthentication } from "@/controllers/hooks/useAuthentication";
 

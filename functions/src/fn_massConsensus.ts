@@ -1,7 +1,6 @@
 import { db } from '.';
 import { logger, Request, Response } from 'firebase-functions/v1';
-import { Collections } from 'delib-npm';
-import { Creator } from '../../src/types/user/User';
+import { Collections, MassConsensusMember } from 'delib-npm';
 
 export const getInitialMCData = async (req: Request, res: Response) => {
 	try {
@@ -41,36 +40,29 @@ export const getInitialMCData = async (req: Request, res: Response) => {
 	}
 };
 
-interface MassConsensusMember {
-	statementId: string;
-	lastUpdate: number;
-	email: string;
-	creator: Creator;
-  } //TODO: add to types
-
-  export const addMassConsensusMember = async (req: Request, res: Response) => {
+export const addMassConsensusMember = async (req: Request, res: Response) => {
 	try {
-	  const { statementId, lastUpdate, email, creator }: MassConsensusMember = req.body;
-		
-	  if (!statementId?.trim() || !email?.trim() || !lastUpdate || !creator) {
-		res.status(400).send({ error: 'Missing required fields', ok: false });
-		
-		return;
-	  }
-  
-	  const newMember: MassConsensusMember = {
-		statementId,
-		lastUpdate,
-		email,
-		creator,
-	  };
-	  await db.collection("massConsensusMembers" /* TODO: add to collections */).doc(creator.uid).set(newMember);
-  
-	  res.send({ message: 'Member added successfully', ok: true });
+		const { statementId, lastUpdate, email, creator }: MassConsensusMember = req.body;
+
+		if (!statementId?.trim() || !email?.trim() || !lastUpdate || !creator) {
+			res.status(400).send({ error: 'Missing required fields', ok: false });
+
+			return;
+		}
+
+		const newMember: MassConsensusMember = {
+			statementId,
+			lastUpdate,
+			email,
+			creator,
+		};
+		await db.collection(Collections.massConsensusMembers).doc(creator.uid).set(newMember);
+
+		res.send({ message: 'Member added successfully', ok: true });
 	} catch (error) {
-	  const errorMessage =
-		error instanceof Error ? error.message : 'Unknown error occurred';
+		const errorMessage =
+			error instanceof Error ? error.message : 'Unknown error occurred';
 		console.error(error);
-	  res.status(500).send({ error: errorMessage, ok: false });
+		res.status(500).send({ error: errorMessage, ok: false });
 	}
-  };
+};

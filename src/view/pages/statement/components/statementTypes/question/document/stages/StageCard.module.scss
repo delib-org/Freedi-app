@@ -2,6 +2,18 @@ $bottomCard:1.5rem;
 
 .card {
 
+	.title {
+		position: relative;
+		width: fit-content;
+
+		.notification {
+			position: absolute;
+			top: -10px;
+			left: -10px;
+
+		}
+	}
+
 	background-color: white;
 	text-align: start;
 	width: 100%;
