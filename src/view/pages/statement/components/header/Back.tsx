@@ -28,7 +28,7 @@ const Back: FC<Props> = ({ statement, headerColor }) => {
 			}
 
 			if (initialRoute === undefined) {
-				return navigate(`/statement/${statement?.parentId}/chat`, {
+				return navigate(`/statement/${statement?.parentId}`, {
 					state: { from: window.location.pathname },
 				});
 			}
