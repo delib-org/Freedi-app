@@ -11,7 +11,7 @@ interface MenuProps extends ComponentProps<'div'> {
 	setIsOpen: (isOpen: boolean) => void;
 	isHamburger?: boolean;
 	isCardMenu?: boolean;
-	isLeft?: boolean;
+	sameDirMenu?: boolean;
 }
 
 const Menu: FC<MenuProps> = ({
@@ -21,7 +21,7 @@ const Menu: FC<MenuProps> = ({
 	children,
 	isHamburger = false,
 	isCardMenu = false,
-	isLeft = false,
+	sameDirMenu = false,
 }) => {
 	const { dir } = useUserConfig();
 
@@ -41,7 +41,7 @@ const Menu: FC<MenuProps> = ({
 
 			{isMenuOpen && (
 				<div
-					className={`menu-content  ${isLeft ? "rtl" : dir}${isCardMenu ? '--card-menu' : ''}`}
+					className={`menu-content ${sameDirMenu ? '' : dir} ${isCardMenu ? '--card-menu' : ''}`}
 				>
 					{children}
 					<button
