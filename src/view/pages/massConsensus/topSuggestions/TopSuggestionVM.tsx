@@ -81,9 +81,10 @@ const useTopSuggestions = () => {
 
 	useEffect(() => {
 		fetchStatements();
-	}, [statementId, user && user.uid]);
+	}, [statementId, user?.uid]);
 
 	useEffect(() => {
+		if (!user) return;
 		const unSubscribes = topStatements.map((statement) => {
 			return listenToEvaluation(statement.statementId, user.uid);
 		});
@@ -91,7 +92,7 @@ const useTopSuggestions = () => {
 		return () => {
 			unSubscribes.forEach((unSubscribe) => unSubscribe());
 		};
-	}, [topStatements.length]);
+	}, [topStatements.length, user]);
 
 	return { navigateToVoting };
 };
