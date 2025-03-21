@@ -6,46 +6,44 @@ import { useNavigate } from 'react-router';
 import ChatIcon from '@/assets/icons/roundedChatDotIcon.svg?react';
 
 // Statements functions
-import { useAppSelector } from '@/controllers/hooks/reduxHooks';
-import { statementSubscriptionSelector } from '@/redux/statements/statementsSlice';
-import { SimpleStatement, StatementSubscription, Statement } from 'delib-npm';
+
+import { SimpleStatement, Statement } from 'delib-npm';
+import { useSelector } from 'react-redux';
+import { inAppNotificationsCountSelectorForStatement } from '@/redux/notificationsSlice/notificationsSlice';
 
 interface Props {
 	statement: Statement | SimpleStatement;
+	onlyCircle?: boolean;
+	useLink?: boolean;
 }
 
-const StatementChatMore: FC<Props> = ({ statement }) => {
+const StatementChatMore: FC<Props> = ({ statement, onlyCircle, useLink = true }) => {
 	// Hooks
 	const navigate = useNavigate();
 
 	// Redux store
-	const statementSubscription: StatementSubscription | undefined =
-		useAppSelector(statementSubscriptionSelector(statement.statementId));
-
-	// Variables
-	const messagesRead = statementSubscription?.totalSubStatementsRead || 0;
-	const messages = 'totalSubStatements' in statement ? statement.totalSubStatements : 0;
+	const countMessages = useSelector(inAppNotificationsCountSelectorForStatement(statement.statementId));
 
 	return (
 		<button
 			className='statementChatMore'
 			aria-label='Chat more button'
-			onClick={() =>
-				navigate(`/statement/${statement.statementId}/chat`, {
-					state: { from: window.location.pathname },
-				})
-			}
+			onClick={() => {
+				if (useLink)
+					navigate(`/statement/${statement.statementId}/chat`, {
+						state: { from: window.location.pathname },
+					})
+			}}
 		>
 			<div className='icon'>
-				{messages}
-				{messages - messagesRead > 0 && (
+				{countMessages > 0 && (
 					<div className='redCircle'>
-						{messages - messagesRead < 10
-							? messages - messagesRead
+						{countMessages < 10
+							? countMessages
 							: `9+`}
 					</div>
 				)}
-				<ChatIcon />
+				{!onlyCircle && < ChatIcon />}
 			</div>
 		</button>
 	);

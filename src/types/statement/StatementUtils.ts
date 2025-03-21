@@ -1,9 +1,5 @@
-import { Statement, StatementSchema } from './StatementTypes';
-import { StatementType } from '../TypeEnums';
-import { getRandomUID } from '../TypeUtils';
-import { StageSelectionType } from '../stage/stageTypes';
+import { Statement, StatementSchema, StatementType, getRandomUID, StageSelectionType, Creator } from 'delib-npm';
 import { parse } from 'valibot';
-import { Creator } from '../user/User';
 
 interface CreateBasicStatementProps {
 	parentStatement: Statement;
@@ -31,6 +27,7 @@ export function createBasicStatement({
 			stageSelectionType:
 				stageSelectionType ?? StageSelectionType.consensus,
 			creator,
+			creatorId: creator.uid,
 			consensus: 0,
 			voted: 0,
 			statementId: getRandomUID(),

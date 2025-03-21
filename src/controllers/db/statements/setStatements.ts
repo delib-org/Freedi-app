@@ -28,11 +28,11 @@ import {
 	EvaluationUI,
 	ChoseByEvaluationType,
 	CutoffType,
+	Creator
 } from 'delib-npm';
 
 import { number, parse, string } from 'valibot';
 import { setChoseByToDB } from '../choseBy/setChoseBy';
-import { Creator } from '@/types/user/User';
 
 export const updateStatementParents = async (
 	statement: Statement,

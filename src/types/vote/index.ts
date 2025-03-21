@@ -1,5 +1,5 @@
 import { object, string, number, optional, InferOutput } from 'valibot';
-import { CreatorSchema } from '../user/User';
+import { CreatorSchema } from 'delib-npm';
 
 export const VoteSchema = object({
 	voteId: string(),
