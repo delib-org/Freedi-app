@@ -18,7 +18,6 @@ export default function HomeHeader() {
 	const [isHomeMenuOpen, setIsHomeMenuOpen] = useState(false);
 	const [showInvitationModal, setShowInvitationModal] = useState(false);
 	const [showLanguageModal, setShowLanguageModal] = useState(false);
-
 	const [isInstallable, setIsInstallable] = useState(false);
 
 	interface BeforeInstallPromptEvent extends Event {
@@ -34,6 +33,8 @@ export default function HomeHeader() {
 	const currentLabel = LANGUAGES.find(
 		(lang) => lang.code === currentLanguage
 	).label;
+
+	const currentStatement = undefined;
 
 	useEffect(() => {
 		window.addEventListener('beforeinstallprompt', (e: Event) => {
@@ -101,7 +102,7 @@ export default function HomeHeader() {
 							<MenuOption
 								className="footer"
 								icon={<DisconnectIcon style={{ color: 'white' }} />}
-								label={<span style={{ color: 'white' }}>{t('Disconnect')}</span>}
+								label={t('Disconnect')}
 								onOptionClick={logOut}
 							/>
 						}

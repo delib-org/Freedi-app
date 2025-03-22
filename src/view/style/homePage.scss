@@ -11,7 +11,7 @@
     align-items: center;
     justify-content: center;
     color: var(--text-negative);
-    background-color: var(--header-home);
+    background-color: var(--current-page-background);
     margin-bottom: -1px;
     z-index: 1;
 
@@ -35,7 +35,7 @@
       width: 100%;
       margin: auto;
 
-      @media (max-width: 900px) {
+      @media (max-width: 1360px) {
         justify-content: space-between;
         padding: 1.2rem;
       }

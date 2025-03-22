@@ -3,27 +3,25 @@
   margin: auto;
 
   .menu-header {
-    display: flex;
+    width: 100%;
     flex-flow: column;
-    height: 123px;
-    width: 352px;
-    padding: 1rem;
-    background: var(--btn-primary-default);
+    position: relative;
     color: white;
     font-family: "Roboto", sans-serif;
+    z-index: 20;
 
     .menu-title {
       display: flex;
-      padding: 1rem 0;
-      font-weight: 500;
-      font-size: 1.5rem;
+      justify-content: left;
+      padding: 1.2rem;
+      font-size: headline/medium;
     }
 
     .menu-user {
       display: flex;
-      justify-content: start;
+      padding: 0.5rem 1.2rem;
       gap: 1.5rem;
-      letter-spacing: 0.2px;
+      letter-spacing: 0.5px;
 
       .menu-avatar {
         width: 32px;
@@ -31,7 +29,7 @@
         border-radius: 50%;
         object-fit: cover;
         border: 2px solid white;
-        background-color: #ccc; /* Fallback color */
+        background-color: #ccc;
       }
     }
   }
@@ -39,10 +37,11 @@
   .menu-content {
     position: absolute;
     display: flex;
+    border-radius: 15px;
+    width: 350px;
     min-width: 200px;
     flex-direction: column;
     background-color: white;
-    border-radius: 10px;
     box-shadow: 0px 3px 9px #00000026;
     z-index: 5;
     overflow: hidden;
@@ -56,7 +55,7 @@
       transform 0.3s ease-out;
 
     &.open {
-      max-height: 500px;
+      max-height: 800px;
       transform: translateY(1);
       transition:
         max-height 0.9s ease-out,
@@ -64,13 +63,13 @@
     }
 
     &.ltr {
-      left: 0px;
+      left: -10px;
 
       &--card-menu {
         right: 10px;
       }
-      @media (max-width: 900px) {
-        transform: translateX(-60%);
+      @media (max-width: 1360px) {
+        transform: translateX(-85%);
       }
     }
 
@@ -80,28 +79,30 @@
       &--card-menu {
         left: 10px;
       }
-      @media (max-width: 900px) {
-        transform: translateX(55%);
+      @media (max-width: 1360px) {
+        transform: translateX(90%);
       }
     }
   }
 
   @media (max-width: 1080px) {
     .menu-content {
-      transform: translateX(10px);
+      transform: translateX(20px);
     }
   }
 
   .menu-footer {
     display: flex;
     height: 83px;
-    background-color: var(--btn-primary-default);
+    background-color: var(--Off-Canvas-Header, #5f88e5);
     cursor: pointer;
     pointer-events: auto;
     z-index: 1000;
 
     .menu-option {
       border-bottom: none;
+      background-color: none;
+      color: white;
     }
   }
 }

@@ -149,8 +149,14 @@ function HeaderMenu({
 	t: (key: string) => string;
 	currentLabel: string;
 }>) {
+	// Apply dynamic style to the menu-header
+	const menuHeaderStyle = {
+		backgroundColor: headerStyle.backgroundColor,
+		color: headerStyle.color
+	};
+
 	return (
-		<div className={styles.button}>
+		<div className={styles.button} style={menuHeaderStyle}>
 			<Menu
 				setIsOpen={setIsHeaderMenuOpen}
 				isMenuOpen={isHeaderMenuOpen}
