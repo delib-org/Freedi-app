@@ -15,43 +15,38 @@ export default function useStatementColor({
 		backgroundColor: 'var(--header-home)',
 		color: 'white',
 	};
+	const [style, setStyle] = useState(initStyle);
+
+	const { statementType, isResult } = statement;
+
+	useEffect(() => {
+		if (statementType === StatementType.group) {
+			setStyle({
+				backgroundColor: 'var(--group)',
+				color: 'var(--group-text)',
+			});
+		} else if (statementType === StatementType.option && isResult) {
+			setStyle({
+				backgroundColor: 'var(--agree)',
+				color: 'var(--header)',
+			});
+		} else if (statementType === StatementType.option) {
+			setStyle({
+				backgroundColor: 'var(--option)',
+				color: 'var(--white)',
+			});
+		} else if (statementType === StatementType.question) {
+			setStyle({
+				backgroundColor: 'var(--question)',
+				color: 'var(--question-text)',
+			});
+		} else {
+			setStyle(initStyle);
+		}
+	}, [statementType, isResult]);
 
 	if (!statement) return initStyle;
 
-	const { statementType, isResult } = statement;
-	const [style, setStyle] = useState(initStyle);
+	return style;
 
-	try {
-		useEffect(() => {
-			if (statementType === StatementType.group) {
-				setStyle({
-					backgroundColor: 'var(--group)',
-					color: 'var(--group-text)',
-				});
-			} else if (statementType === StatementType.option && isResult) {
-				setStyle({
-					backgroundColor: 'var(--agree)',
-					color: 'var(--header)',
-				});
-			} else if (statementType === StatementType.option) {
-				setStyle({
-					backgroundColor: 'var(--option)',
-					color: 'var(--white)',
-				});
-			} else if (statementType === StatementType.question) {
-				setStyle({
-					backgroundColor: 'var(--question)',
-					color: 'var(--question-text)',
-				});
-			} else {
-				setStyle(initStyle);
-			}
-		}, [statementType, isResult]);
-
-		return style;
-	} catch (error) {
-		console.error(error);
-
-		return style;
-	}
 }

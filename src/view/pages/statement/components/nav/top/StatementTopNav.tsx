@@ -46,10 +46,11 @@ const StatementTopNav: FC<Props> = ({
 	const navigate = useNavigate();
 	const { screen } = useParams();
 	const { role } = useContext(StatementContext);
+	const headerStyle = useStatementColor({ statement });
 	const [showLanguageModal, setShowLanguageModal] = useState(false);
 
 	// const
-	const headerStyle = useStatementColor({ statement });
+	
 	const menuIconStyle = {
 		color: headerStyle.backgroundColor,
 		width: '24px',
