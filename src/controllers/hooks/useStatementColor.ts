@@ -15,13 +15,13 @@ export default function useStatementColor({
 		backgroundColor: 'var(--header-home)',
 		color: 'white',
 	};
-
-	if (!statement) return initStyle;
-
-	const { statementType, isResult } = statement;
 	const [style, setStyle] = useState(initStyle);
 
-	try {
+	
+
+	const { statementType, isResult } = statement;	
+
+	
 		useEffect(() => {
 			if (statementType === StatementType.group) {
 				setStyle({
@@ -48,10 +48,8 @@ export default function useStatementColor({
 			}
 		}, [statementType, isResult]);
 
-		return style;
-	} catch (error) {
-		console.error(error);
+		if (!statement) return initStyle;
 
 		return style;
-	}
+	
 }

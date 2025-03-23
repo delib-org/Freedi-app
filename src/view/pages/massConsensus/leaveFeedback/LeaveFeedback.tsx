@@ -7,10 +7,13 @@ import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import { useLeaveFeedback } from './LeaveFeedbackVM';
 import { useHeader } from '../headerMassConsensus/HeaderContext';
 import { useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router';
 
 function LeaveFeedback() {
+	const {statementId} = useParams();
+	const navigate = useNavigate();
 	const { t } = useUserConfig();
-	const { handleSendButton, handleEmailChange, MailStatus } = useLeaveFeedback();
+	const { handleSendButton, handleEmailChange, mailStatus } = useLeaveFeedback();
 
 	const { setHeader } = useHeader();
 
@@ -24,6 +27,10 @@ function LeaveFeedback() {
 		});
 	}, []);
 
+	useEffect(() => {
+		if (mailStatus === "valid") navigate(`/mass-consensus/${statementId}/${MassConsensusPageUrls.thankYou}`);
+	}, [mailStatus]);
+
 	return (
 		<div>
 			<TitleMassConsensus
@@ -33,7 +40,7 @@ function LeaveFeedback() {
 				<p>{t('Please leave your email to receive updates')}</p>
 				<div className={styles.input}>
 					<input placeholder={t('Mail')} type='email' name='email' onChange={handleEmailChange} />
-					<span> {MailStatus === "invalid" ? t('Invalid email') : null} </span>
+					<span> {mailStatus === "invalid" ? t('Invalid email') : null} </span>
 					<MailIcon />
 				</div>
 			</div>
