@@ -30,24 +30,25 @@ import {
 	DeliberativeElement,
 	Statement,
 	StatementSchema,
-	User,
+	Creator,
 } from 'delib-npm';
 
 import { parse } from 'valibot';
 import React from 'react';
 
+
 // Helpers
 
 export const listenToStatementSubscription = (
 	statementId: string,
-	user: User,
-	dispatch: AppDispatch
+	creator:Creator,
 ): Unsubscribe => {
 	try {
+		const dispatch = store.dispatch;
 		const statementsSubscribeRef = doc(
 			FireStore,
 			Collections.statementsSubscribe,
-			`${user.uid}--${statementId}`
+			`${creator.uid}--${statementId}`
 		);
 
 		return onSnapshot(statementsSubscribeRef, (statementSubscriptionDB) => {
