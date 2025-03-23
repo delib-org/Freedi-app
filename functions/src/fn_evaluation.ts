@@ -326,7 +326,8 @@ export async function updateChosenOptions(
 		if (!snapshot?.exists) return;
 
 		const statement = snapshot.data();
-		if (!statement || statement.statementType !== 'option') return;
+		if (!statement || statement.statementType !== StatementType.option)
+			return;
 
 		const parentId = statement.parentStatementId;
 		if (!parentId) return;
