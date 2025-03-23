@@ -3,6 +3,7 @@ import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import {statementSelector,	statementSubscriptionSelector} from '@/redux/statements/statementsSlice';
 import { useAuthentication } from './useAuthentication';
 import { Access, Role, Statement, Creator } from 'delib-npm';
+
 export interface AuthorizationState {
 	isAuthorized: boolean;
 	loading: boolean;
@@ -28,8 +29,6 @@ export const useAuthorization = (statementId?: string): AuthorizationState => {
 	//check if there is statement and statement subscription on redux, else get from DB
 
 	//Listen to statement subscription
-
-
 	useEffect(() => {
 
 		setState((prevState) => ({
@@ -67,19 +66,11 @@ export const useAuthorization = (statementId?: string): AuthorizationState => {
 				}));
 
 			}
-
 		}
-
-
 	}, [statementSubscription?.role, statement?.membership?.access]);
-
-
-
 
 	return state;
 };
-
-
 
 function isMemberRole(
 	statement: Statement,

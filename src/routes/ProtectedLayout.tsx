@@ -23,6 +23,7 @@ export default function ProtectedLayout() {
 		if (!statement && statementId) {
 			unsubscribe = listenToStatement(statementId);
 		}
+		
 		return () => {
 			unsubscribe();
 		}
@@ -34,6 +35,7 @@ export default function ProtectedLayout() {
 		if (!statementSubscription && statementId && creator) {
 			unsubscribe = listenToStatementSubscription(statementId, creator);
 		}
+
 		return () => {
 			unsubscribe();
 		}
@@ -45,12 +47,13 @@ export default function ProtectedLayout() {
 		}
 	}, [isAuthorized, loading]);
 
-
 	if (loading) {
+
 		return <LoadingPage />;
 	}
 
 	if (error) {
+
 		return <Page401 />; //TODO: create a page for this error	
 	}
 

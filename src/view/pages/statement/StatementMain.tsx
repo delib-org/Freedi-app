@@ -53,7 +53,6 @@ export default function StatementMain() {
 	const statement = useSelector(statementSelector(statementId));
 	const topParentStatement = useSelector(statementSelector(statement?.topParentId));
 
-
 	//TODO:create a check with the parent statement if subscribes. if not subscribed... go according to the rules of authorization
 	const { isAuthorized, loading, role } =
 		useAuthorization(statementId);

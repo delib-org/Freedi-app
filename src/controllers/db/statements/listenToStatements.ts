@@ -36,9 +36,7 @@ import {
 import { parse } from 'valibot';
 import React from 'react';
 
-
 // Helpers
-
 export const listenToStatementSubscription = (
 	statementId: string,
 	creator:Creator,
