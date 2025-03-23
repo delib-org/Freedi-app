@@ -154,6 +154,11 @@ export const UserConfigProvider: React.FC<UserConfigProviderProps> = ({
 		document.body.style.direction = dir;
 	}, [config.chosenLanguage]);
 
+	//update font size
+	useEffect(() => {
+		document.documentElement.style.fontSize = `${config.fontSize}px`;
+	}, [config.fontSize]);
+
 	// Language change handler
 	const changeLanguage = useCallback((newLanguage: LanguagesEnum) => {
 		setConfig((prev) => ({
