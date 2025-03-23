@@ -4,6 +4,7 @@ import Dove from '@/assets/images/SubscriptionThanks.png';
 
 const ThankYou = () => {
     const { t } = useUserConfig();
+    
     return (
         <div className={styles.thanks}>
             <img src={Dove} alt="a dove that says thanks" />
