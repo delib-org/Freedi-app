@@ -17,10 +17,13 @@ export default function useStatementColor({
 	};
 	const [style, setStyle] = useState(initStyle);
 
-	const { statementType, isResult } = statement;
+	const statementType = statement?.statementType;
+	const isResult = statement?.isResult;
 
 	useEffect(() => {
-		if (statementType === StatementType.group) {
+		if (!statementType) {
+			setStyle(initStyle);
+		} else if (statementType === StatementType.group) {
 			setStyle({
 				backgroundColor: 'var(--group)',
 				color: 'var(--group-text)',
