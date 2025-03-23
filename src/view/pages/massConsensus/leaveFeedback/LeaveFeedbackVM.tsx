@@ -13,14 +13,14 @@ interface MassConsensusMember {
 
 export function useLeaveFeedback() {
 	const [email, setEmail] = useState('');
-	const [MailStatus, setMailStatus] = useState<string>("pending");
+	const [mailStatus, setMailStatus] = useState<string>("pending");
 	const { statementId } = useParams();
 	const { creator } = useAuthentication();
 	const emailRegex = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
 
 	const handleSendButton = () => {
 		setMailStatus(emailRegex.test(email) ? "valid" : "invalid");
-		if (MailStatus !== "valid") return;
+		if (mailStatus !== "valid") return;
 
 		const massConsensusMember: MassConsensusMember = {
 			statementId: statementId,
@@ -36,7 +36,7 @@ export function useLeaveFeedback() {
 		setEmail(value);
 	};
 
-	return { handleSendButton, handleEmailChange, MailStatus };
+	return { handleSendButton, handleEmailChange, mailStatus };
 }
 
 async function addMassConsensusMember(

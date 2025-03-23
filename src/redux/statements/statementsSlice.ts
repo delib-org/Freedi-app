@@ -82,7 +82,13 @@ export const statementsSlicer = createSlice({
 				(st: Statement) => ({
 					...st,
 					evaluation: {
-						...st.evaluation,
+						sumEvaluations: st.evaluation?.sumEvaluations || 0,
+						agreement: st.evaluation?.agreement || 0,
+						numberOfEvaluators: st.evaluation?.numberOfEvaluators || 0,
+						sumPro: st.evaluation?.sumPro || 0,
+						sumCon: st.evaluation?.sumCon || 0,
+						viewed: st.evaluation?.viewed || 0,
+						evaluationRandomNumber: st.evaluation?.evaluationRandomNumber,
 						selectionFunction: action.payload.selectionFunction,
 					},
 				})

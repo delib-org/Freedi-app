@@ -27,9 +27,11 @@ import LoginPage from '@/view/pages/login/LoginFirst';
 import MemberRejection from '@/view/pages/memberRejection/MemberRejection';
 
 // Mass Consensus URLs
-import { MassConsensusPageUrls } from '@/types/TypeEnums';
+
 import Page401 from '@/view/pages/page401/Page401';
 import Page404 from '@/view/pages/page404/Page404';
+import ThankYou from '@/view/pages/massConsensus/thankYou/ThankYou';
+import { MassConsensusPageUrls } from 'delib-npm';
 
 // Define errorRoutes
 const errorRoutes = [
@@ -85,6 +87,10 @@ const massConsensusRoutes = [
 				path: MassConsensusPageUrls.leaveFeedback,
 				element: <LeaveFeedback />,
 			},
+			{
+				path:MassConsensusPageUrls.thankYou,
+				element: <ThankYou />,
+			}
 		],
 	},
 ];
