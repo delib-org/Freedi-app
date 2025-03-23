@@ -13,6 +13,7 @@ $headerHight: 4.2rem;
     width: 100%;
     margin: auto;
     display: flex;
+    flex-direction: row-reverse;
     justify-content: space-between;
     max-width: var(--wrapper);
   }
@@ -27,7 +28,6 @@ $headerHight: 4.2rem;
       width: 1.7rem;
     }
   }
-
   .back {
     transform: rotate(180deg);
   }
@@ -43,22 +43,26 @@ $headerHight: 4.2rem;
       top: 3rem;
     }
   }
+}
+.menuFooter {
+  display: flex;
+  height: 83px;
+  background-color: var(--group);
+  cursor: pointer;
+  pointer-events: auto;
+  z-index: 1000;
 
-  .menuFooter {
-    display: flex;
-    height: 83px;
-    background-color: var(--group);
+  .menu-option {
+    color: #232f4a; // Default color
+  }
+
+  .disconnectOption,
+  .menu-option {
+    color: white !important; // Force this color to be white
+  }
+
+  svg,
+  .menu-option {
     color: white;
-    cursor: pointer;
-    pointer-events: auto;
-    z-index: 1000;
-
-    .menu-option {
-      color: white;
-    }
-
-    svg {
-      color: white;
-    }
   }
 }

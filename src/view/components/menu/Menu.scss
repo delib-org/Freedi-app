@@ -90,19 +90,23 @@
       transform: translateX(20px);
     }
   }
+}
 
-  .menu-footer {
-    display: flex;
-    height: 83px;
-    cursor: pointer;
-    pointer-events: auto;
-    z-index: 1000;
+.menu-footer {
+  display: flex;
+  height: 83px;
+  cursor: pointer;
+  pointer-events: auto;
+  z-index: 1000;
 
-    .menu-option {
-      border-bottom: none;
-      background-color: none;
-      color: white;
-    }
+  label {
+    color: white;
+  }
+
+  .menu-option {
+    border-bottom: none;
+    background-color: none;
+    color: white;
   }
 }
 

@@ -8,17 +8,17 @@ import FollowMe from '@/assets/icons/follow.svg?react';
 import InvitationIcon from '@/assets/icons/invitation.svg?react';
 import SettingsIcon from '@/assets/icons/settings.svg?react';
 import ShareIcon from '@/assets/icons/shareIcon.svg?react';
+import { LANGUAGES } from '@/constants/Languages';
 import useStatementColor from '@/controllers/hooks/useStatementColor.ts';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import ChangeLanguage from '@/view/components/changeLanguage/ChangeLanguage';
 import Menu from '@/view/components/menu/Menu';
 import MenuOption from '@/view/components/menu/MenuOption';
-import { StatementContext } from '../../../StatementCont';
-import { Statement, Role } from 'delib-npm';
-import NavButtons from './navButtons/NavButtons';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
-import { LANGUAGES } from '@/constants/Languages';
-import { LanguagesIcon } from 'lucide-react';
-import ChangeLanguage from '@/view/components/changeLanguage/ChangeLanguage';
 import Modal from '@/view/components/modal/Modal';
+import { Role, Statement } from 'delib-npm';
+import { LanguagesIcon } from 'lucide-react';
+import { StatementContext } from '../../../StatementCont';
+import NavButtons from './navButtons/NavButtons';
 
 interface Props {
 	statement?: Statement;
@@ -150,7 +150,7 @@ function HeaderMenu({
 	isAdmin: boolean;
 	menuIconStyle: { color: string; width: string };
 	t: (key: string) => string;
-	currentLabel: string;
+	currentLabel: string | undefined;
 }>) {
 	// Apply dynamic style to the menu-header
 	const menuHeaderStyle = {
@@ -186,7 +186,7 @@ function HeaderMenu({
 							onOptionClick={handleInvitePanel}
 						/>
 						<MenuOption
-							label={currentLabel}
+							label={currentLabel as string}
 							icon={<LanguagesIcon style={menuIconStyle} />}
 							onOptionClick={setShowLanguageModal}
 						/>
@@ -200,12 +200,12 @@ function HeaderMenu({
 				)}
 
 				{/* Footer Section */}
-				<div className={styles.menuFooter}>
+				<div className={`${styles.menuFooter}`}>
 					<MenuOption
-						label={t('Disconnect')}
+						label={<span style={{ color: 'white' }}>{t('Disconnect')}</span>}
 						icon={<DisconnectIcon />}
 						onOptionClick={handleLogout}
-
+						className={`${styles.menuOption} ${styles.disconnectOption}`}
 					/>
 				</div>
 			</Menu>

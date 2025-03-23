@@ -7,7 +7,6 @@ import { RootState } from '@/redux/store';
 import { Statement } from 'delib-npm';
 import { ComponentProps, FC, ReactNode } from 'react';
 import { useSelector } from 'react-redux';
-import { useLocation } from 'react-router';
 import IconButton from '../iconButton/IconButton';
 import './Menu.scss';
 
@@ -36,12 +35,7 @@ const Menu: FC<MenuProps> = ({
 	const { dir } = useUserConfig();
 	const user = useSelector((state: RootState) => state.creator.creator);
 	const avatarSrc = user?.photoURL || DefaultAvatar;
-	const location = useLocation();
 	const { backgroundColor } = useStatementColor({ statement });
-
-	const determineMenuColor = () => {
-		return location.pathname.startsWith('/statement/') ? '#b893e7' : '#5f88e5';
-	};
 
 	return (
 		<div className="menu"  >
@@ -56,7 +50,7 @@ const Menu: FC<MenuProps> = ({
 			<div className={`menu-content ${dir}${isCardMenu ? '--card-menu' : ''} ${isMenuOpen ? 'open' : ''}`}>
 				<div
 					className={`menu-header ${dir}`}
-					style={{ backgroundColor: backgroundColor || determineMenuColor() }}
+					style={{ backgroundColor }}
 				>
 					<h2 className="menu-title">FreeDi</h2>
 					<div className="menu-user">
@@ -69,7 +63,7 @@ const Menu: FC<MenuProps> = ({
 					<div
 						className="menu-footer"
 						onClick={(e) => e.stopPropagation()}
-						style={{ backgroundColor: backgroundColor || determineMenuColor() }}
+						style={{ backgroundColor }}
 					>
 						{footer}
 					</div>
