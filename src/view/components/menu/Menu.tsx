@@ -1,15 +1,15 @@
-import { FC, ComponentProps, ReactNode } from 'react';
-import IconButton from '../iconButton/IconButton';
 import BurgerIcon from '@/assets/icons/burgerIcon.svg?react';
 import EllipsisIcon from '@/assets/icons/ellipsisIcon.svg?react';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
-import { useSelector } from 'react-redux';
-import { RootState } from '@/redux/store';
-import './Menu.scss';
 import DefaultAvatar from '@/assets/images/avatar.jpg';
 import useStatementColor from '@/controllers/hooks/useStatementColor';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { RootState } from '@/redux/store';
 import { Statement } from 'delib-npm';
+import { ComponentProps, FC, ReactNode } from 'react';
+import { useSelector } from 'react-redux';
 import { useLocation } from 'react-router';
+import IconButton from '../iconButton/IconButton';
+import './Menu.scss';
 
 interface MenuProps extends ComponentProps<'div'> {
 	iconColor: string;
@@ -20,18 +20,7 @@ interface MenuProps extends ComponentProps<'div'> {
 	footer?: ReactNode;
 	statement?: Statement;
 	currentPage?: string;
-}
-
-// eslint-disable-next-line no-redeclare
-interface MenuProps {
-	iconColor: string;
-	isMenuOpen: boolean;
-	setIsOpen: (isOpen: boolean) => void;
 	children: ReactNode;
-	isHamburger?: boolean;
-	isCardMenu?: boolean;
-	footer?: ReactNode;
-	statement?: Statement;
 }
 
 const Menu: FC<MenuProps> = ({
@@ -49,16 +38,13 @@ const Menu: FC<MenuProps> = ({
 	const avatarSrc = user?.photoURL || DefaultAvatar;
 	const location = useLocation();
 	const { backgroundColor } = useStatementColor({ statement });
-	const determineHeaderColor = () => {
-		if (location.pathname === '/statement/') {
-			return backgroundColor || '#b893e7';
-		}
 
-		return backgroundColor || '#5f88e5';
+	const determineMenuColor = () => {
+		return location.pathname.startsWith('/statement/') ? '#b893e7' : '#5f88e5';
 	};
 
 	return (
-		<div className="menu">
+		<div className="menu" style={{ backgroundColor }} >
 			<IconButton onClick={() => setIsOpen(!isMenuOpen)}>
 				{isHamburger ? (
 					<BurgerIcon style={{ color: iconColor }} />
@@ -70,7 +56,7 @@ const Menu: FC<MenuProps> = ({
 			<div className={`menu-content ${dir}${isCardMenu ? '--card-menu' : ''} ${isMenuOpen ? 'open' : ''}`}>
 				<div
 					className={`menu-header ${dir}`}
-					style={{ backgroundColor: determineHeaderColor() }}  // Set dynamic color here
+					style={{ backgroundColor: backgroundColor || determineMenuColor() }}
 				>
 					<h2 className="menu-title">FreeDi</h2>
 					<div className="menu-user">
@@ -80,7 +66,11 @@ const Menu: FC<MenuProps> = ({
 				</div>
 				{children}
 				{footer && (
-					<div className="menu-footer" onClick={(e) => e.stopPropagation()}>
+					<div
+						className="menu-footer"
+						onClick={(e) => e.stopPropagation()}
+						style={{ backgroundColor: backgroundColor || determineMenuColor() }}
+					>
 						{footer}
 					</div>
 				)}

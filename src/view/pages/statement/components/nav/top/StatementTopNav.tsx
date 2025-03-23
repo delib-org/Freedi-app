@@ -55,7 +55,9 @@ const StatementTopNav: FC<Props> = ({
 		width: '24px',
 	};
 
-	if (!statement) return null;
+	// Prevent rendering when statement is undefined
+	if (!statement) return null; // or display a fallback UI here
+
 	const _statement = parentStatement || statement;
 
 	const enableNavigationalElements = Boolean(
@@ -76,7 +78,7 @@ const StatementTopNav: FC<Props> = ({
 	}
 	const currentLabel = LANGUAGES.find(
 		(lang) => lang.code === currentLanguage
-	).label;
+	)?.label;
 
 	return (
 		<nav
@@ -85,7 +87,7 @@ const StatementTopNav: FC<Props> = ({
 			style={{ backgroundColor: headerStyle.backgroundColor }}
 		>
 			<div className={styles.wrapper}>
-				{allowNavigation && (
+				{allowNavigation && statement && ( // Check if statement is defined before rendering
 					<HeaderMenu
 						setIsHeaderMenuOpen={setIsHeaderMenuOpen}
 						isHeaderMenuOpen={isHeaderMenuOpen}
@@ -101,6 +103,7 @@ const StatementTopNav: FC<Props> = ({
 						menuIconStyle={menuIconStyle}
 						t={t}
 						currentLabel={currentLabel}
+						statement={statement} // Ensure statement is passed here
 					/>
 				)}
 				<NavButtons
@@ -133,7 +136,9 @@ function HeaderMenu({
 	menuIconStyle,
 	t,
 	currentLabel,
+	statement,
 }: Readonly<{
+	statement: Statement;
 	setIsHeaderMenuOpen: (value: boolean) => void;
 	isHeaderMenuOpen: boolean;
 	headerStyle: { color: string; backgroundColor: string };
@@ -158,6 +163,7 @@ function HeaderMenu({
 	return (
 		<div className={styles.button} style={menuHeaderStyle}>
 			<Menu
+				statement={statement}
 				setIsOpen={setIsHeaderMenuOpen}
 				isMenuOpen={isHeaderMenuOpen}
 				iconColor={headerStyle.color}
@@ -191,13 +197,19 @@ function HeaderMenu({
 							icon={<SettingsIcon style={menuIconStyle} />}
 							onOptionClick={() => handleNavigation('settings')}
 						/>
-						<MenuOption
-							label={t('Disconnect')}
-							icon={<DisconnectIcon style={menuIconStyle} />}
-							onOptionClick={handleLogout}
-						/>
+
 					</>
 				)}
+
+				{/* Footer Section */}
+				<div className={styles.menuFooter}>
+					<MenuOption
+						label={t('Disconnect')}
+						icon={<DisconnectIcon />}
+						onOptionClick={handleLogout}
+
+					/>
+				</div>
 			</Menu>
 			{showLanguageModal && (
 				<Modal>
