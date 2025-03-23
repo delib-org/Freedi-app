@@ -8,7 +8,6 @@ import {
 } from 'firebase-functions/v2/firestore';
 import { onRequest } from 'firebase-functions/v2/https';
 import { Request, Response } from 'firebase-functions/v1';
-
 // The Firebase Admin SDK
 import { initializeApp } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
@@ -26,11 +25,13 @@ import {
 import { updateResultsSettings } from './fn_results';
 import {
 	getQuestionOptions,
-	updateParentWithNewMessageCB,
+	// updateNumberOfNewSubStatements,
 } from './fn_statements';
 import { updateVote } from './fn_vote';
-import { setAdminsToNewStatement } from './fn_roles';
-import { updateSubscriptionsSimpleStatement } from './fn_subscriptions';
+import {
+	setAdminsToNewStatement,
+	updateSubscriptionsSimpleStatement,
+} from './fn_subscriptions';
 import {
 	getRandomStatements,
 	getTopStatements,
@@ -42,6 +43,7 @@ import { setImportanceToStatement } from './fn_importance';
 import { updateAgrees } from './fn_agree';
 import { updateStatementWithViews } from './fn_views';
 import { getInitialMCData, addMassConsensusMember } from './fn_massConsensus';
+import { updateInAppNotifications } from './fn_notifications';
 
 // Initialize Firebase
 initializeApp();
@@ -55,14 +57,20 @@ console.info('Environment:', isProduction ? 'Production' : 'Development');
  * CORS configuration based on environment
  */
 const corsConfig = isProduction
-	? ['https://freedi.tech', 'https://delib.web.app', 'https://freedi-test.web.app', 'https://delib-5.web.app', 'https://delib.web.app',]
+	? [
+			'https://freedi.tech',
+			'https://delib.web.app',
+			'https://freedi-test.web.app',
+			'https://delib-5.web.app',
+			'https://delib.web.app',
+		]
 	: [
-		'http://localhost:5173',
-		'http://localhost:5174',
-		'http://localhost:5175',
-		'http://localhost:5176',
-		'http://localhost:5177'
-	];
+			'http://localhost:5173',
+			'http://localhost:5174',
+			'http://localhost:5175',
+			'http://localhost:5176',
+			'http://localhost:5177',
+		];
 
 /**
  * Creates a wrapper for HTTP functions with standardized error handling
@@ -136,11 +144,18 @@ exports.massConsensusAddMember = wrapHttpFunction(addMassConsensusMember);
 // --------------------------
 
 // Statement functions
-exports.updateParentWithNewMessage = createFirestoreFunction(
+// exports.updateNumberOfNewSubStatements = createFirestoreFunction(
+// 	`/${Collections.statements}/{statementId}`,
+// 	onDocumentCreated,
+// 	updateNumberOfNewSubStatements,
+// 	'updateNumberOfNewSubStatements'
+// );
+
+exports.updateInAppNotifications = createFirestoreFunction(
 	`/${Collections.statements}/{statementId}`,
 	onDocumentCreated,
-	updateParentWithNewMessageCB,
-	'updateParentWithNewMessage'
+	updateInAppNotifications,
+	'updateInAppNotifications'
 );
 
 exports.setAdminsToNewStatement = createFirestoreFunction(
@@ -149,7 +164,12 @@ exports.setAdminsToNewStatement = createFirestoreFunction(
 	setAdminsToNewStatement,
 	'setAdminsToNewStatement'
 );
-
+exports.updateChosenOptionsOnOptionCreate = createFirestoreFunction(
+	`/${Collections.statements}/{statementId}`,
+	onDocumentCreated,
+	updateChosenOptions,
+	'updateChosenOptionsOnOptionCreate'
+);
 exports.updateStatementWithViews = createFirestoreFunction(
 	`/${Collections.statementViews}/{viewId}`,
 	onDocumentCreated,

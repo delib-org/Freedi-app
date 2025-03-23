@@ -1,7 +1,7 @@
 import { Change, logger } from 'firebase-functions';
 import { addOrRemoveMemberFromStatementDB } from './fn_statementsMetaData';
-import { Collections, Statement, StatementSchema, StatementSubscription, StatementSubscriptionSchema, isMember, statementToSimpleStatement } from 'delib-npm';
-import { DocumentSnapshot } from 'firebase-admin/firestore';
+import { Collections, Role, Statement, StatementSchema, StatementSubscription, StatementSubscriptionSchema, createSubscription, getStatementSubscriptionId, isMember, statementToSimpleStatement } from 'delib-npm';
+import { DocumentSnapshot, QueryDocumentSnapshot } from 'firebase-admin/firestore';
 import { FirestoreEvent } from 'firebase-functions/firestore';
 import { parse } from 'valibot';
 import { db } from '.';
@@ -119,4 +119,96 @@ export async function getStatementSubscriptions(statementId: string): Promise<St
 		.get();
 
 	return statementSubscriptions.docs.map(doc => doc.data() as StatementSubscription);
+}
+
+export async function setAdminsToNewStatement(
+	ev: FirestoreEvent<
+		QueryDocumentSnapshot | undefined,
+		{
+			statementId: string;
+		}
+	>
+) {
+	//Caution: This function grants administrative privileges to statement creators throughout the entire statement hierarchy. This approach has potential drawbacks:
+
+	//Administrative Overhead: Exponentially increasing admin counts can strain database resources.
+	//Security Concerns: Grants broad access privileges to potentially non-top-level admins.
+
+	//Recommendations:
+	//Re-evaluate Authorization Model: Consider a more fine-grained permission system that prevents excessive admin proliferation.
+	//Future Enhancement: Implement a more scalable and secure solution for managing administrative rights.
+	// Tal Yaron, Deliberation Team, 3rd May 2024
+
+	if (!ev.data) return;
+
+	try {
+		//get parent statement ID
+		const statement = parse(StatementSchema, ev.data.data());
+
+		//subscribe the creator to the new statement
+		const subscription = createSubscription({
+			statement,
+			role: Role.admin,
+			user: statement.creator,
+			getEmailNotification: true,
+			getInAppNotification: true,
+			getPushNotification: true,
+		})
+
+		if (!subscription) throw new Error('No subscription');
+		if (!subscription.statementsSubscribeId) throw new Error('No subscriptionId');
+
+		await db
+			.collection(Collections.statementsSubscribe)
+			.doc(subscription.statementsSubscribeId)
+			.set(subscription);
+
+		const { parentId } = statement;
+
+		//get all admins of the parent statement
+		const adminsDB = await db
+			.collection(Collections.statementsSubscribe)
+			.where('statementId', '==', parentId)
+			.where('role', '==', Role.admin)
+			.get();
+		const adminsSubscriptions = adminsDB.docs.map((doc) =>
+			parse(StatementSubscriptionSchema, doc.data())
+		);
+
+		//subscribe the admins to the new statement
+		adminsSubscriptions.forEach(async (adminSub: StatementSubscription) => {
+			try {
+				const statementsSubscribeId = getStatementSubscriptionId(
+					statement.statementId,
+					adminSub.user
+				);
+				if (!statementsSubscribeId)
+					throw new Error('No statementsSubscribeId');
+
+				const newSubscription: StatementSubscription | undefined = createSubscription({
+					statement,
+					role: Role.admin,
+					user: adminSub.user,
+					getEmailNotification: true,
+					getInAppNotification: true,
+					getPushNotification: true,
+				});
+				if (!newSubscription) throw new Error(`No newSubscription for admin ${adminSub.user.uid}`);
+
+				parse(StatementSubscriptionSchema, newSubscription);
+
+				await db
+					.collection(Collections.statementsSubscribe)
+					.doc(statementsSubscribeId)
+					.set(newSubscription);
+			} catch (error) {
+				logger.error(
+					'In setAdminsToNewStatement, on subscribe the admins to the new statement'
+				);
+				logger.error(error);
+			}
+		});
+	} catch (error) {
+		logger.error(error);
+	}
 }

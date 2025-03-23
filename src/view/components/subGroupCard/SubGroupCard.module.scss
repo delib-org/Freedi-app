@@ -28,6 +28,13 @@
 			justify-content: center;
 			width: 3rem;
 			height: 3rem;
+			position: relative;
+
+			>div {
+				position: absolute;
+				top: 0px;
+				left: 5px;
+			}
 		}
 	}
 

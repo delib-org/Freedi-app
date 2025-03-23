@@ -15,7 +15,7 @@ import { FirestoreEvent } from 'firebase-functions/firestore';
 import { parse } from 'valibot';
 import { Response, Request } from 'firebase-functions/v1';
 
-export async function updateParentWithNewMessageCB(
+export async function updateNumberOfNewSubStatements(
 	e: FirestoreEvent<
 		QueryDocumentSnapshot | undefined,
 		{
@@ -52,7 +52,7 @@ export async function updateParentWithNewMessageCB(
 				'topParentId is top, and it is an error in the client logic'
 			);
 
-		const topParentRef = db.doc(`statements/${topParentId}`);
+		const topParentRef = db.doc(`${Collections.statements}/${topParentId}`);
 		topParentRef.update({ lastChildUpdate: lastUpdate, lastUpdate });
 
 		//create statement metadata

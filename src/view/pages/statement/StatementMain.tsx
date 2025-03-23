@@ -13,7 +13,6 @@ import { StatementContext } from './StatementCont';
 import { listenToEvaluations } from '@/controllers/db/evaluation/getEvaluation';
 import {
 	listenToStatement,
-	listenToStatementSubscription,
 	listenToAllDescendants,
 	listenToSubStatements,
 } from '@/controllers/db/statements/listenToStatements';
@@ -35,6 +34,8 @@ import { Role, StatementType, Access, QuestionType, User } from 'delib-npm';
 import { useAuthorization } from '@/controllers/hooks/useAuthorization';
 import { useSelector } from 'react-redux';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
+import { notificationService } from '@/services/notificationService';
+import { listenToInAppNotifications, clearInAppNotifications } from '@/controllers/db/inAppNotifications/db_inAppNotifications';
 
 // Create selectors
 export const subStatementsSelector = createSelector(
@@ -49,9 +50,11 @@ export const subStatementsSelector = createSelector(
 export default function StatementMain() {
 	// Hooks
 	const { statementId, stageId } = useParams();
+	const statement = useSelector(statementSelector(statementId));
+	const topParentStatement = useSelector(statementSelector(statement?.topParentId));
 
 	//TODO:create a check with the parent statement if subscribes. if not subscribed... go according to the rules of authorization
-	const { isAuthorized, loading, statement, topParentStatement, role } =
+	const { isAuthorized, loading, role } =
 		useAuthorization(statementId);
 
 	// Redux store
@@ -102,16 +105,17 @@ export default function StatementMain() {
 
 	// Listen to statement changes.
 	useEffect(() => {
+
 		const unsubscribeFunctions: (() => void)[] = [];
 
 		if (creator && statementId) {
+			clearInAppNotifications(statementId);
 			// Initialize all listeners and store cleanup functions
 			unsubscribeFunctions.push(
-				listenToStatement(statementId, setIsStatementNotFound),
 				listenToAllDescendants(statementId), // used for map
-				listenToEvaluations(dispatch, statementId, creator.uid),
+				listenToEvaluations(dispatch, statementId, creator?.uid),
 				listenToSubStatements(statementId), // TODO: check if this is needed. It can be integrated under listenToAllDescendants
-				listenToStatementSubscription(statementId, creator, dispatch)
+				listenToInAppNotifications()
 			);
 
 			if (stageId) {
@@ -144,12 +148,13 @@ export default function StatementMain() {
 		};
 	}, [statement?.topParentId]);
 
+	// Effect to handle membership subscription (but NOT notification subscription)
 	useEffect(() => {
-		if (statement) {
+		if (statement && creator) {
 			(async () => {
 				const isSubscribed = await getIsSubscribed(
 					statementId,
-					creator.uid
+					creator?.uid
 				);
 
 				// if isSubscribed is false, then subscribe
@@ -158,11 +163,11 @@ export default function StatementMain() {
 					statement.membership?.access === Access.close
 				) {
 					// subscribe
-					setStatementSubscriptionToDB(
+					setStatementSubscriptionToDB({
 						statement,
 						creator,
-						Role.member
-					);
+						role: Role.member
+					});
 				} else {
 					//update subscribed field
 					updateSubscriberForStatementSubStatements(
@@ -170,9 +175,22 @@ export default function StatementMain() {
 						creator.uid
 					);
 				}
+
+				// We no longer automatically register for notifications here
+				// This is now handled by the notification subscription button
+				// Just initialize the service if needed for the token
+				if ('Notification' in window && Notification.permission === 'granted' && creator) {
+					try {
+						if (!notificationService.getToken()) {
+							await notificationService.initialize(creator?.uid);
+						}
+					} catch (error) {
+						console.error('Error initializing notification service:', error);
+					}
+				}
 			})();
 		}
-	}, [statement]);
+	}, [statement, creator, statementId]);
 
 	const contextValue = useMemo(
 		() => ({

@@ -51,12 +51,14 @@ export function useRandomSuggestions() {
 		const endPoint =
 			location.hostname === 'localhost'
 				? `http://localhost:5001/${firebaseConfig.projectId}/${functionConfig.region}/getRandomStatements?parentId=${statementId}&limit=6`
-				: import.meta.env.VITE_APP_RANDOM_STATEMENTS_ENDPOINT;
+				: `${import.meta.env.VITE_APP_RANDOM_STATEMENTS_ENDPOINT}?parentId=${statementId}&limit=6`;
 
 		if (statementId) {
 			try {
 				const response = await fetch(endPoint);
 				if (!response.ok) {
+					const {error} = await response.json();
+					console.error('Error:', error);
 					throw new Error(`HTTP error! status: ${response.status}`);
 				}
 

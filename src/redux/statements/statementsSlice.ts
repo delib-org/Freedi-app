@@ -1,9 +1,7 @@
 import { createSlice, PayloadAction, createSelector } from '@reduxjs/toolkit';
 import { updateArray } from '../../controllers/general/helpers';
 import { RootState } from '../store';
-import { StatementType } from '@/types/TypeEnums';
-import { SelectionFunction } from '@/types/evaluation/Evaluation';
-import { Statement, StatementSubscription } from 'delib-npm';
+import { Statement, StatementSubscription, SelectionFunction, StatementType } from 'delib-npm';
 
 enum StatementScreen {
 	chat = 'chat',
@@ -84,7 +82,13 @@ export const statementsSlicer = createSlice({
 				(st: Statement) => ({
 					...st,
 					evaluation: {
-						...st.evaluation,
+						sumEvaluations: st.evaluation?.sumEvaluations || 0,
+						agreement: st.evaluation?.agreement || 0,
+						numberOfEvaluators: st.evaluation?.numberOfEvaluators || 0,
+						sumPro: st.evaluation?.sumPro || 0,
+						sumCon: st.evaluation?.sumCon || 0,
+						viewed: st.evaluation?.viewed || 0,
+						evaluationRandomNumber: st.evaluation?.evaluationRandomNumber,
 						selectionFunction: action.payload.selectionFunction,
 					},
 				})
