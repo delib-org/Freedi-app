@@ -15,7 +15,6 @@ export default function useStatementColor({
     backgroundColor: "var(--header-home)",
     color: "white",
   };
-  console.log(statement?.statementType);
 
   const [style, setStyle] = useState(initStyle);
 

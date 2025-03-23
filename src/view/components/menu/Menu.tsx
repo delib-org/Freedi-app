@@ -44,7 +44,7 @@ const Menu: FC<MenuProps> = ({
 	};
 
 	return (
-		<div className="menu" style={{ backgroundColor }} >
+		<div className="menu"  >
 			<IconButton onClick={() => setIsOpen(!isMenuOpen)}>
 				{isHamburger ? (
 					<BurgerIcon style={{ color: iconColor }} />

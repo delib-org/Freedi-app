@@ -41,22 +41,20 @@ const StatementTopNav: FC<Props> = ({
 	isHeaderMenuOpen,
 	handleShare,
 }) => {
-	//hooks
+
 	const { t, currentLanguage } = useUserConfig();
 	const navigate = useNavigate();
 	const { screen } = useParams();
 	const { role } = useContext(StatementContext);
 	const [showLanguageModal, setShowLanguageModal] = useState(false);
 
-	// const
 	const headerStyle = useStatementColor({ statement });
 	const menuIconStyle = {
 		color: headerStyle.backgroundColor,
 		width: '24px',
 	};
 
-	// Prevent rendering when statement is undefined
-	if (!statement) return null; // or display a fallback UI here
+	if (!statement) return null;
 
 	const _statement = parentStatement || statement;
 
@@ -87,7 +85,7 @@ const StatementTopNav: FC<Props> = ({
 			style={{ backgroundColor: headerStyle.backgroundColor }}
 		>
 			<div className={styles.wrapper}>
-				{allowNavigation && statement && ( // Check if statement is defined before rendering
+				{allowNavigation && statement && (
 					<HeaderMenu
 						setIsHeaderMenuOpen={setIsHeaderMenuOpen}
 						isHeaderMenuOpen={isHeaderMenuOpen}
@@ -103,7 +101,7 @@ const StatementTopNav: FC<Props> = ({
 						menuIconStyle={menuIconStyle}
 						t={t}
 						currentLabel={currentLabel}
-						statement={statement} // Ensure statement is passed here
+						statement={statement}
 					/>
 				)}
 				<NavButtons
