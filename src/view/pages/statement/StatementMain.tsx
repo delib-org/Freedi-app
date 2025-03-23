@@ -13,7 +13,6 @@ import { StatementContext } from './StatementCont';
 import { listenToEvaluations } from '@/controllers/db/evaluation/getEvaluation';
 import {
 	listenToStatement,
-	listenToStatementSubscription,
 	listenToAllDescendants,
 	listenToSubStatements,
 } from '@/controllers/db/statements/listenToStatements';
@@ -51,9 +50,11 @@ export const subStatementsSelector = createSelector(
 export default function StatementMain() {
 	// Hooks
 	const { statementId, stageId } = useParams();
+	const statement = useSelector(statementSelector(statementId));
+	const topParentStatement = useSelector(statementSelector(statement?.topParentId));
 
 	//TODO:create a check with the parent statement if subscribes. if not subscribed... go according to the rules of authorization
-	const { isAuthorized, loading, statement, topParentStatement, role } =
+	const { isAuthorized, loading, role } =
 		useAuthorization(statementId);
 
 	// Redux store
@@ -111,11 +112,9 @@ export default function StatementMain() {
 			clearInAppNotifications(statementId);
 			// Initialize all listeners and store cleanup functions
 			unsubscribeFunctions.push(
-				listenToStatement(statementId, setIsStatementNotFound),
 				listenToAllDescendants(statementId), // used for map
-				listenToEvaluations(dispatch, statementId, creator.uid),
+				listenToEvaluations(dispatch, statementId, creator?.uid),
 				listenToSubStatements(statementId), // TODO: check if this is needed. It can be integrated under listenToAllDescendants
-				listenToStatementSubscription(statementId, creator, dispatch),
 				listenToInAppNotifications()
 			);
 
@@ -155,7 +154,7 @@ export default function StatementMain() {
 			(async () => {
 				const isSubscribed = await getIsSubscribed(
 					statementId,
-					creator.uid
+					creator?.uid
 				);
 
 				// if isSubscribed is false, then subscribe
@@ -183,7 +182,7 @@ export default function StatementMain() {
 				if ('Notification' in window && Notification.permission === 'granted' && creator) {
 					try {
 						if (!notificationService.getToken()) {
-							await notificationService.initialize(creator.uid);
+							await notificationService.initialize(creator?.uid);
 						}
 					} catch (error) {
 						console.error('Error initializing notification service:', error);

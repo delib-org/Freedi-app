@@ -1,135 +1,78 @@
 import { useState, useEffect } from 'react';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
-import {
-	statementSelector,
-	statementSubscriptionSelector,
-} from '@/redux/statements/statementsSlice';
-import { getStatementFromDB } from '@/controllers/db/statements/getStatement';
-import { getTopParentSubscriptionFromDByStatement } from '@/controllers/db/subscriptions/getSubscriptions';
-import { setStatementSubscriptionToDB } from '@/controllers/db/subscriptions/setSubscriptions';
+import {statementSelector,	statementSubscriptionSelector} from '@/redux/statements/statementsSlice';
 import { useAuthentication } from './useAuthentication';
-import { useNavigate } from 'react-router';
-import { Access, Role, Statement, StatementSubscription, Creator } from 'delib-npm';
+import { Access, Role, Statement, Creator } from 'delib-npm';
 
 export interface AuthorizationState {
 	isAuthorized: boolean;
 	loading: boolean;
 	error: boolean;
-	statement?: Statement;
-	statementSubscription?: StatementSubscription;
-	topParentStatement?: Statement;
 	role?: Role;
+	creator?: Creator;
 }
 
-export const useAuthorization = (statementId?: string) => {
+export const useAuthorization = (statementId?: string): AuthorizationState => {
+
 	const [state, setState] = useState<AuthorizationState>({
 		isAuthorized: false,
 		loading: true,
 		error: false,
 	});
 
-	const navigation = useNavigate();
-
 	const statement = useAppSelector(statementSelector(statementId));
 	const statementSubscription = useAppSelector(
 		statementSubscriptionSelector(statementId)
 	);
-	const role = statementSubscription?.role || Role.unsubscribed;
 	const { creator } = useAuthentication();
 
-	const checkAuthorization = async () => {
-		if (!statement) {
-			setState((prev) => ({ ...prev, loading: false, error: true }));
+	//check if there is statement and statement subscription on redux, else get from DB
 
-			return;
-		}
+	//Listen to statement subscription
+	useEffect(() => {
 
-		try {
-			// Check statement authorization
-			const isAuthorized = await isUserAuthorized(
-				statement,
-				creator,
-				statementSubscription
-			);
+		setState((prevState) => ({
+			...prevState,
+			creator,
+		}));
 
-			if (!isAuthorized) {
-				navigation('/401');
-			}
-
-			// Get top parent statement if needed
-			let topParentStatement: Statement | undefined;
-			if (statement.topParentId) {
-				topParentStatement = await getStatementFromDB(
-					statement.topParentId
-				);
-			}
-
-			setState({
-				isAuthorized,
-				loading: false,
-				error: !isAuthorized,
-				statement,
-				statementSubscription,
-				topParentStatement,
-				role,
-			});
-		} catch (error) {
-			console.error('Authorization check failed:', error);
-			setState((prev) => ({ ...prev, loading: false, error: true }));
-		}
-	};
+	}, [creator]);
 
 	useEffect(() => {
-		if (!creator) return;
-		checkAuthorization();
-	}, [statement, statementSubscription, creator]);
+		if (statementSubscription) {
+			const { role } = statementSubscription;
+
+			// if the user is the creator or an admin or a member
+			if (isMemberRole(statement, creator?.uid, role)) {
+
+				setState((prevState) => ({
+					...prevState,
+					isAuthorized: true,
+					loading: false,
+				}));
+				// if the statement is open and the user is not banned
+			} else if (role !== Role.banned && statement?.membership?.access === Access.open) {
+
+				setState((prevState) => ({
+					...prevState,
+					isAuthorized: true,
+					loading: false,
+				}));
+			} else {
+				setState((prevState) => ({
+					...prevState,
+					isAuthorized: false,
+					loading: false,
+				}));
+
+			}
+		}
+	}, [statementSubscription?.role, statement?.membership?.access]);
 
 	return state;
 };
 
-// Helper functions
-async function isUserAuthorized(
-	statement: Statement,
-	creator: Creator,
-	subscription?: StatementSubscription
-): Promise<boolean> {
-	// Open access check
-	if (
-		statement.membership?.access === Access.open &&
-		subscription?.role !== Role.banned
-	) {
-		if (!subscription) {
-			await setStatementSubscriptionToDB({ statement, creator, role: Role.member });
-		}
-
-		return true;
-	}
-
-	// Closed access check
-	if (statement.membership?.access === Access.close) {
-		// Direct access check
-		if (hasRequiredRole(statement, creator.uid, subscription?.role)) {
-			return true;
-		}
-
-		// Parent subscription check
-		const parentSubscription =
-			await getTopParentSubscriptionFromDByStatement(
-				statement,
-				creator.uid
-			);
-
-		return hasRequiredRole(
-			statement,
-			creator.uid,
-			parentSubscription?.role
-		);
-	}
-
-	return false;
-}
-
-function hasRequiredRole(
+function isMemberRole(
 	statement: Statement,
 	userId: string,
 	role?: Role
