@@ -3,6 +3,8 @@ import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import {statementSelector,	statementSubscriptionSelector} from '@/redux/statements/statementsSlice';
 import { useAuthentication } from './useAuthentication';
 import { Access, Role, Statement, Creator } from 'delib-npm';
+import { setStatementSubscriptionToDB } from '../db/subscriptions/setSubscriptions';
+
 
 export interface AuthorizationState {
 	isAuthorized: boolean;
@@ -53,6 +55,8 @@ export const useAuthorization = (statementId?: string): AuthorizationState => {
 				// if the statement is open and the user is not banned
 			} else if (role !== Role.banned && statement?.membership?.access === Access.open) {
 
+				//subscribe to the statement
+
 				setState((prevState) => ({
 					...prevState,
 					isAuthorized: true,
@@ -66,6 +70,12 @@ export const useAuthorization = (statementId?: string): AuthorizationState => {
 				}));
 
 			}
+		} else if (!statementSubscription && statement?.membership?.access === Access.open ){ 
+			setStatementSubscriptionToDB({
+				statement,
+				creator,
+				role: Role.member,
+			});
 		}
 	}, [statementSubscription?.role, statement?.membership?.access]);
 
