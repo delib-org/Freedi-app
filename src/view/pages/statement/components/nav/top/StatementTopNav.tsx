@@ -1,4 +1,4 @@
-import { FC, useContext, useState } from 'react';
+import { FC, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import styles from './StatementTopNav.module.scss';
 
@@ -11,7 +11,6 @@ import ShareIcon from '@/assets/icons/shareIcon.svg?react';
 import useStatementColor from '@/controllers/hooks/useStatementColor.ts';
 import Menu from '@/view/components/menu/Menu';
 import MenuOption from '@/view/components/menu/MenuOption';
-import { StatementContext } from '../../../StatementCont';
 import { Statement, Role } from 'delib-npm';
 import NavButtons from './navButtons/NavButtons';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
@@ -19,6 +18,8 @@ import { LANGUAGES } from '@/constants/Languages';
 import LanguagesIcon from '@/assets/icons/languagesIcon.svg?react';
 import ChangeLanguage from '@/view/components/changeLanguage/ChangeLanguage';
 import Modal from '@/view/components/modal/Modal';
+import { useSelector } from 'react-redux';
+import { statementSubscriptionSelector } from '@/redux/statements/statementsSlice';
 
 interface Props {
 	statement?: Statement;
@@ -45,11 +46,9 @@ const StatementTopNav: FC<Props> = ({
 	const { t, currentLanguage } = useUserConfig();
 	const navigate = useNavigate();
 	const { screen } = useParams();
-	const { role } = useContext(StatementContext);
+const role = useSelector(statementSubscriptionSelector(statement?.statementId))?.role;
 	const headerStyle = useStatementColor({ statement });
 	const [showLanguageModal, setShowLanguageModal] = useState(false);
-
-	// const
 	
 	const menuIconStyle = {
 		color: headerStyle.backgroundColor,
