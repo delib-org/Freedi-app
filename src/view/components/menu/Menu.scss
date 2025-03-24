@@ -108,14 +108,13 @@
     background-color: none;
     color: white;
   }
-
-  .invisibleBackground {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100svh;
-    z-index: 4;
-    background-color: transparent;
-  }
+}
+.invisibleBackground {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100svh;
+  z-index: 4;
+  background-color: transparent;
 }
