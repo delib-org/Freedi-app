@@ -16,11 +16,6 @@ import {
 	listenToAllDescendants,
 	listenToSubStatements,
 } from '@/controllers/db/statements/listenToStatements';
-import { getIsSubscribed } from '@/controllers/db/subscriptions/getSubscriptions';
-import {
-	updateSubscriberForStatementSubStatements,
-	setStatementSubscriptionToDB,
-} from '@/controllers/db/subscriptions/setSubscriptions';
 
 // Redux Store
 import { statementTitleToDisplay } from '@/controllers/general/helpers';
@@ -29,8 +24,8 @@ import { MapProvider } from '@/controllers/hooks/useMap';
 import { RootState } from '@/redux/store';
 import Modal from '@/view/components/modal/Modal';
 
-import { statementSelector } from '@/redux/statements/statementsSlice';
-import { Role, StatementType, Access, QuestionType, User } from 'delib-npm';
+import { statementSelector, statementSubscriptionSelector } from '@/redux/statements/statementsSlice';
+import { StatementType, QuestionType, User } from 'delib-npm';
 import { useAuthorization } from '@/controllers/hooks/useAuthorization';
 import { useSelector } from 'react-redux';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
@@ -52,10 +47,8 @@ export default function StatementMain() {
 	const { statementId, stageId } = useParams();
 	const statement = useSelector(statementSelector(statementId));
 	const topParentStatement = useSelector(statementSelector(statement?.topParentId));
-
-	//TODO:create a check with the parent statement if subscribes. if not subscribed... go according to the rules of authorization
-	const { isAuthorized, loading, role } =
-		useAuthorization(statementId);
+	const role = useSelector(statementSubscriptionSelector(statementId))?.role;
+	const { isAuthorized, loading } = useAuthorization(statementId);
 
 	// Redux store
 	const dispatch = useAppDispatch();
@@ -148,48 +141,36 @@ export default function StatementMain() {
 		};
 	}, [statement?.topParentId]);
 
-	// Effect to handle membership subscription (but NOT notification subscription)
+	/**
+	 * Effect to handle membership subscription
+	 * This does NOT handle notification subscription, which is managed separately 
+	 * by the notification subscription button
+	 */
 	useEffect(() => {
-		if (statement && creator) {
-			(async () => {
-				const isSubscribed = await getIsSubscribed(
-					statementId,
-					creator?.uid
-				);
+		// Only proceed if both statement and creator exist
+		if (!statement || !creator) return;
 
-				// if isSubscribed is false, then subscribe
-				if (
-					!isSubscribed &&
-					statement.membership?.access === Access.close
-				) {
-					// subscribe
-					setStatementSubscriptionToDB({
-						statement,
-						creator,
-						role: Role.member
-					});
-				} else {
-					//update subscribed field
-					updateSubscriberForStatementSubStatements(
-						statement,
-						creator.uid
-					);
-				}
+		const handleMembershipSubscription = async () => {
+			try {
+				// Check if user is already subscribed
 
-				// We no longer automatically register for notifications here
-				// This is now handled by the notification subscription button
-				// Just initialize the service if needed for the token
-				if ('Notification' in window && Notification.permission === 'granted' && creator) {
-					try {
-						if (!notificationService.getToken()) {
-							await notificationService.initialize(creator?.uid);
-						}
-					} catch (error) {
-						console.error('Error initializing notification service:', error);
-					}
+				// Initialize notification service if needed (for token only)
+				const notificationsEnabled =
+					'Notification' in window &&
+					Notification.permission === 'granted' &&
+					creator;
+
+				if (notificationsEnabled && !notificationService.getToken()) {
+					await notificationService.initialize(creator.uid);
 				}
-			})();
-		}
+			} catch (error) {
+				console.error('Error in membership subscription handler:', error);
+			}
+		};
+
+		// Execute the async function immediately
+		handleMembershipSubscription();
+
 	}, [statement, creator, statementId]);
 
 	const contextValue = useMemo(
