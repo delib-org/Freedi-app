@@ -17,8 +17,10 @@ const MassConsensusAdmin = () => {
 	const { statementId } = useParams<{ statementId: string }>();
 	const statement = useSelector(statementSelector(statementId));
 	const options = useSelector(statementSubsSelector(statementId)).filter((st) => st.statementType === StatementType.option);
-	const topOptions = options?.sort((a, b) => b.consensus - a.consensus).slice(0, 5);
-	const bottomOptions = options?.sort((a, b) => a.consensus - b.consensus).slice(0, 5);
+	const sortedOptions = options ? [...options].sort((a, b) => b.consensus - a.consensus) : [];
+	const topOptions = sortedOptions?.slice(0, 5);
+	const sortedBottomOptions = options ? [...options].sort((a, b) => a.consensus - b.consensus) : [];
+	const bottomOptions = sortedBottomOptions.slice(0, 5);
 
 	const { t } = useUserConfig();
 
