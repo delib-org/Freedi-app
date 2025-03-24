@@ -9,7 +9,8 @@ interface TextAreaProps {
 	onChange?: (value: string) => void;
 	backgroundColor?: string;
 	name: string;
-	maxLength?: number
+	maxLength?: number;
+	onKeyUp?: (e: React.KeyboardEvent<HTMLTextAreaElement>) => void;
 }
 
 const Textarea: React.FC<TextAreaProps> = ({
@@ -19,7 +20,8 @@ const Textarea: React.FC<TextAreaProps> = ({
 	onChange,
 	backgroundColor = '#fff',
 	name,
-	maxLength
+	maxLength,
+	onKeyUp,
 }) => {
 	const { t, dir } = useUserConfig();
 	const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -64,6 +66,7 @@ const Textarea: React.FC<TextAreaProps> = ({
 					onChange={handleChange}
 					rows={3} // Start with one row
 					maxLength={maxLength}
+					onKeyUp={onKeyUp}
 				/>
 			</div>
 			{typeof maxLength === 'number' && (
