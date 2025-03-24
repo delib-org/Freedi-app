@@ -27,9 +27,6 @@ export const useAuthorization = (statementId?: string): AuthorizationState => {
 
 	const { creator } = useAuthentication();
 
-
-
-
 	// Handle authorization and role updates in a single effect
 	useEffect(() => {
 		// If the subscription exists in Redux store

@@ -16,8 +16,6 @@ import {
 	listenToAllDescendants,
 	listenToSubStatements,
 } from '@/controllers/db/statements/listenToStatements';
-import { getIsSubscribed } from '@/controllers/db/subscriptions/getSubscriptions';
-import { updateSubscriberForStatementSubStatements } from '@/controllers/db/subscriptions/setSubscriptions';
 
 // Redux Store
 import { statementTitleToDisplay } from '@/controllers/general/helpers';
@@ -27,7 +25,7 @@ import { RootState } from '@/redux/store';
 import Modal from '@/view/components/modal/Modal';
 
 import { statementSelector, statementSubscriptionSelector } from '@/redux/statements/statementsSlice';
-import { StatementType, Access, QuestionType, User } from 'delib-npm';
+import { StatementType, QuestionType, User } from 'delib-npm';
 import { useAuthorization } from '@/controllers/hooks/useAuthorization';
 import { useSelector } from 'react-redux';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
@@ -155,7 +153,6 @@ export default function StatementMain() {
 		const handleMembershipSubscription = async () => {
 			try {
 				// Check if user is already subscribed
-
 
 				// Initialize notification service if needed (for token only)
 				const notificationsEnabled =
