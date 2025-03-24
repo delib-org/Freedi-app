@@ -1,9 +1,7 @@
 import { FC, useContext, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import styles from './StatementTopNav.module.scss';
-
 import DisconnectIcon from '@/assets/icons/disconnectIcon.svg?react';
-
 import FollowMe from '@/assets/icons/follow.svg?react';
 import InvitationIcon from '@/assets/icons/invitation.svg?react';
 import SettingsIcon from '@/assets/icons/settings.svg?react';

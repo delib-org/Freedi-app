@@ -52,17 +52,7 @@ $headerHight: 4.2rem;
   pointer-events: auto;
   z-index: 1000;
 
-  .menu-option {
-    color: #232f4a; // Default color
-  }
-
-  .disconnectOption,
-  .menu-option {
-    color: white !important; // Force this color to be white
-  }
-
-  svg,
-  .menu-option {
+  svg {
     color: white;
   }
 }
