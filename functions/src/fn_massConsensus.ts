@@ -2,6 +2,7 @@ import { db } from '.';
 import { logger, Request, Response } from 'firebase-functions/v1';
 import { Collections, MassConsensusMember, Statement, StatementType } from 'delib-npm';
 import { FieldValue } from 'firebase-admin/firestore';
+import { current } from '@reduxjs/toolkit';
 
 export const getInitialMCData = async (req: Request, res: Response) => {
 	try {
@@ -72,7 +73,7 @@ export const addMassConsensusMember = async (req: Request, res: Response) => {
 export async function addOptionToMassConsensus(ev:any){
 	try {
 
-		const newStatement = ev.data.data() as Statement || undefined;
+		const newStatement = ev.data?.data() as Statement || undefined;
 		if(!newStatement) return;
 		if(newStatement.statementType !== StatementType.option) return;
 		
@@ -104,7 +105,7 @@ export async function addOptionToMassConsensus(ev:any){
 
 export async function removeOptionFromMassConsensus(ev: any) {
 	try {
-		const deletedStatement = ev.data.data() as Statement || undefined;
+		const deletedStatement = ev.data?.data() as Statement || undefined;
 		if (!deletedStatement) return;
 		if (deletedStatement.statementType !== StatementType.option) return;
 
@@ -129,10 +130,10 @@ export async function removeOptionFromMassConsensus(ev: any) {
 	}
 }
 
-export async function updateOptionInMassConsensus(ev: any) {
+export async function updateOptionInMassConsensus(change: any) {
 	try {
-		const beforeData = ev.data.before.data() as Statement || undefined;
-		const afterData = ev.data.after.data() as Statement || undefined;
+		const beforeData = change.before?.data() as Statement || undefined;
+		const afterData = change.after?.data() as Statement || undefined;
 
 		if (!beforeData || !afterData) return;
 
@@ -174,5 +175,41 @@ export async function updateOptionInMassConsensus(ev: any) {
 	} catch (error) {
 		console.error(error);
 		return;
+	}
+}
+
+export async function addMemberToMassConsensus(ev:any){
+	try {
+		if(!ev.data.data()) return;
+		const newMember = ev.data.data() as MassConsensusMember;
+		if (!newMember) return;
+		const statementRef = db.collection(Collections.statements).doc(newMember.statementId);
+		console.log(newMember.statementId, newMember.creator.uid);
+
+		await db.runTransaction(async (transaction) => {
+			const statementDoc = await transaction.get(statementRef);
+			if (!statementDoc.exists) {
+				throw new Error('Statement does not exist');
+			}
+
+			const statementData = statementDoc.data() as Statement;
+			if (statementData && statementData.massMembers !== undefined) {
+				console.log("current members", statementData.massMembers);
+				transaction.update(statementRef, {
+					massMembers: FieldValue.increment(1)
+				});
+			} else {
+				console.log("setting members:1");
+				transaction.update(statementRef, {
+					massMembers: 1
+				});
+			}
+		});
+
+	} catch (error) {
+		console.error(error);
+
+		return;
+		
 	}
 }

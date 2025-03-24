@@ -13,8 +13,6 @@ const MassConsensusAdmin = () => {
 	const statement = useSelector(statementSelector(statementId));
 	const {t} = useUserConfig();
 
-	console.log(statement)
-
 	return (
 		<div className={styles.simpleQuestion}>
 			<div className={styles.wrapper}>
@@ -26,7 +24,7 @@ const MassConsensusAdmin = () => {
 				<div className={styles.summary}>
 					<div>
 						<img src={HandsImage} alt="Total participants" />
-						<div>{t("Total participants")}: 56</div>
+						<div>{t("Total participants")}: {statement.massMembers || 0}</div>
 					</div>
 					<div>
 						<img src={BulbImage} alt="Total Suggestions" />

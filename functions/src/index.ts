@@ -42,7 +42,7 @@ import { updateApprovalResults } from './fn_approval';
 import { setImportanceToStatement } from './fn_importance';
 import { updateAgrees } from './fn_agree';
 import { updateStatementWithViews } from './fn_views';
-import { getInitialMCData, addMassConsensusMember, addOptionToMassConsensus, removeOptionFromMassConsensus, updateOptionInMassConsensus } from './fn_massConsensus';
+import { getInitialMCData, addMassConsensusMember, addOptionToMassConsensus, removeOptionFromMassConsensus, updateOptionInMassConsensus, addMemberToMassConsensus } from './fn_massConsensus';
 import { updateInAppNotifications } from './fn_notifications';
 
 // Initialize Firebase
@@ -58,19 +58,19 @@ console.info('Environment:', isProduction ? 'Production' : 'Development');
  */
 const corsConfig = isProduction
 	? [
-			'https://freedi.tech',
-			'https://delib.web.app',
-			'https://freedi-test.web.app',
-			'https://delib-5.web.app',
-			'https://delib.web.app',
-		]
+		'https://freedi.tech',
+		'https://delib.web.app',
+		'https://freedi-test.web.app',
+		'https://delib-5.web.app',
+		'https://delib.web.app',
+	]
 	: [
-			'http://localhost:5173',
-			'http://localhost:5174',
-			'http://localhost:5175',
-			'http://localhost:5176',
-			'http://localhost:5177',
-		];
+		'http://localhost:5173',
+		'http://localhost:5174',
+		'http://localhost:5175',
+		'http://localhost:5176',
+		'http://localhost:5177',
+	];
 
 /**
  * Creates a wrapper for HTTP functions with standardized error handling
@@ -212,6 +212,13 @@ exports.updateOptionInMassConsensus = createFirestoreFunction(
 	onDocumentCreated,
 	updateOptionInMassConsensus,
 	'updateOptionInMassConsensus'
+);
+
+exports.addMemberToMassConsensus = createFirestoreFunction(
+	`/${Collections.massConsensusMembers}/{memberId}`,
+	onDocumentCreated,
+	addMemberToMassConsensus,
+	'addMemberToMassConsensus'
 );
 
 // Evaluation functions
