@@ -15,6 +15,7 @@ import {
 	listenToStatement,
 	listenToAllDescendants,
 	listenToSubStatements,
+	listenToStatementSubscription,
 } from '@/controllers/db/statements/listenToStatements';
 
 // Redux Store
@@ -105,6 +106,8 @@ export default function StatementMain() {
 			clearInAppNotifications(statementId);
 			// Initialize all listeners and store cleanup functions
 			unsubscribeFunctions.push(
+				listenToStatement(statementId, setIsStatementNotFound),
+				listenToStatementSubscription(statementId, creator),
 				listenToAllDescendants(statementId), // used for map
 				listenToEvaluations(dispatch, statementId, creator?.uid),
 				listenToSubStatements(statementId), // TODO: check if this is needed. It can be integrated under listenToAllDescendants
