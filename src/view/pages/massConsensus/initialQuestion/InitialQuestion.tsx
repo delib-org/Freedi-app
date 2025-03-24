@@ -76,9 +76,6 @@ const InitialQuestion = () => {
 
 	return (
 		<>
-			<TitleMassConsensus
-				title={t('Please suggest a sentence to answer this question')}
-			/>
 			{!edit ? (
 				<TitleMassConsensus
 					title={statement ? statement.statement : ''}
@@ -120,8 +117,8 @@ const InitialQuestion = () => {
 			)}
 			<Textarea
 				name='your-description'
-				label={t('Your description')}
-				placeholder={t('Propose a sentence that will unify')}
+				label={t('Your suggestion')}
+				placeholder=''
 				backgroundColor='var(--bg-screen)'
 				maxLength={120}
 				onChange={setDescription}
