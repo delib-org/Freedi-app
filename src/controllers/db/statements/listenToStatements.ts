@@ -88,6 +88,7 @@ export const listenToStatement = (
 	setIsStatementNotFound?: React.Dispatch<React.SetStateAction<boolean>>
 ): Unsubscribe => {
 	try {
+		console.log("listenToStatement", statementId);
 		const dispatch = store.dispatch;
 		if (!statementId) throw new Error('Statement id is undefined');
 		const statementRef = doc(

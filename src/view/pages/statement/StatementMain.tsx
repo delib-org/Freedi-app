@@ -1,5 +1,5 @@
 import { createSelector } from '@reduxjs/toolkit';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useId, useMemo, useState } from 'react';
 import { useParams } from 'react-router';
 
 // firestore
@@ -15,7 +15,6 @@ import {
 	listenToStatement,
 	listenToAllDescendants,
 	listenToSubStatements,
-	listenToStatementSubscription,
 } from '@/controllers/db/statements/listenToStatements';
 
 // Redux Store
@@ -103,12 +102,8 @@ export default function StatementMain() {
 
 		if (creator && statementId) {
 			clearInAppNotifications(statementId);
+			console.log("listen")
 			
-			// Essential listeners - these are always needed
-			unsubscribeFunctions.push(
-				listenToStatement(statementId, setIsStatementNotFound),
-				listenToStatementSubscription(statementId, creator)
-			);
 			
 			// Combine and optimize additional listeners
 			const { pathname } = window.location;
