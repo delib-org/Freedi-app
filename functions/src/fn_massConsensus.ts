@@ -2,7 +2,6 @@ import { db } from '.';
 import { logger, Request, Response } from 'firebase-functions/v1';
 import { Collections, MassConsensusMember, Statement, StatementType } from 'delib-npm';
 import { FieldValue } from 'firebase-admin/firestore';
-import { current } from '@reduxjs/toolkit';
 
 export const getInitialMCData = async (req: Request, res: Response) => {
 	try {

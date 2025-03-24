@@ -203,13 +203,13 @@ exports.addOptionToMassConsensus = createFirestoreFunction(
 );
 exports.removeOptionFromMassConsensus = createFirestoreFunction(
 	`/${Collections.statements}/{statementId}`,
-	onDocumentCreated,
+	onDocumentDeleted,
 	removeOptionFromMassConsensus,
 	'removeOptionFromMassConsensus'
 );
 exports.updateOptionInMassConsensus = createFirestoreFunction(
 	`/${Collections.statements}/{statementId}`,
-	onDocumentCreated,
+	onDocumentUpdated,
 	updateOptionInMassConsensus,
 	'updateOptionInMassConsensus'
 );
