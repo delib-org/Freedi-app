@@ -10,7 +10,8 @@ import ShareButton from '@/view/components/buttons/shareButton/ShareButton';
 import { useEffect } from 'react';
 import { listenToSubStatements } from '@/controllers/db/statements/listenToStatements';
 import { StatementType } from 'delib-npm';
-import OptionDeleteCard from './components/deleteCard/OptionDeletecard';
+import OptionMCCard from './components/deleteCard/OptionMCCard';
+import DeletionLadyImage from "@/assets/images/rejectLady.png";
 
 const MassConsensusAdmin = () => {
 	const { statementId } = useParams<{ statementId: string }>();
@@ -45,21 +46,18 @@ const MassConsensusAdmin = () => {
 					<div>{t("Total suggestions")}: {statement.suggestions || 0}</div>
 				</div>
 			</div>
-			<h3>Top Options</h3>
-			<ul>
+				<h3>{t("Top options")}</h3>
+			
 				{topOptions?.map((option) => (
-					<li key={option.statementId}>
-						{option.statement}
-						<div>{option.consensus}%</div>
-					</li>
+					<OptionMCCard key={option.statementId} statement={option} isDelete={false} />
 				))}
-			</ul>
-			<h3>Bottom Options</h3>
-			<ul>
+			
+				<h3>{t("Options for deletion")}</h3>
+				<img className={styles.deletionImage} src={DeletionLadyImage} alt="Options for deletion" />
 				{bottomOptions?.map((option) => (
-					<OptionDeleteCard key={option.statementId} statement={option} />
+					<OptionMCCard key={option.statementId} statement={option} isDelete={true} />
 				))}
-			</ul>
+			
 			</div>
 		</div>
 	);
