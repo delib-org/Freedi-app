@@ -1,0 +1,32 @@
+.deleteCard {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 1.3rem;
+
+
+    b{
+        font-weight: 300;
+    }
+    .description{
+        font-weight: 200;
+        font-size: .9rem;
+    }
+
+    &Btns{
+        display: flex;
+        gap:1rem;
+
+        svg{
+            cursor:pointer;
+            color:var(--icon-red);
+        }
+       
+        span{
+            direction: ltr;
+            font-weight: 100;
+            color:gray;
+        }
+    }
+
+}

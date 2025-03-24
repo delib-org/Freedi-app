@@ -39,7 +39,7 @@ import React from 'react';
 // Helpers
 export const listenToStatementSubscription = (
 	statementId: string,
-	creator:Creator,
+	creator: Creator,
 ): Unsubscribe => {
 	try {
 		const dispatch = store.dispatch;
@@ -125,40 +125,44 @@ export const listenToStatement = (
 };
 
 export const listenToSubStatements = (
-	statementId: string | undefined
+	statementId: string | undefined,
+	topBottom?: 'top' | 'bottom',
+	numberOfOptions?: number
 ): Unsubscribe => {
 	try {
 		const dispatch = store.dispatch;
 		if (!statementId) throw new Error('Statement id is undefined');
 		const statementsRef = collection(FireStore, Collections.statements);
-		
+
 		// Reduce the initial load to 25 items for faster initial loading
 		// This should be enough for most use cases while dramatically improving load time
+		const descAsc = topBottom === 'top' ? 'desc' : 'asc';
+
 		const q = query(
 			statementsRef,
 			where('parentId', '==', statementId),
 			where('statementType', '!=', StatementType.document),
-			orderBy('createdAt', 'desc'),
-			limit(25)
+			orderBy('createdAt', descAsc),
+			limit(numberOfOptions)
 		);
-		
+
 		let isFirstCall = true;
 
 		return onSnapshot(q, (statementsDB) => {
 			// For the first call, batch process all statements at once
 			if (isFirstCall) {
 				const startStatements: Statement[] = [];
-				
+
 				statementsDB.forEach((doc) => {
 					const statement = doc.data() as Statement;
 					startStatements.push(statement);
 				});
-				
+
 				// Dispatch all statements at once instead of individually
 				if (startStatements.length > 0) {
 					dispatch(setStatements(startStatements));
 				}
-				
+
 				isFirstCall = false;
 			} else {
 				// After initial load, handle individual changes
@@ -295,12 +299,12 @@ export function listenToAllDescendants(statementId: string): Unsubscribe {
 					const statement = parse(StatementSchema, doc.data());
 					statements.push(statement);
 				});
-				
+
 				// Dispatch all statements at once instead of one by one
 				if (statements.length > 0) {
 					store.dispatch(setStatements(statements));
 				}
-				
+
 				isFirstBatch = false;
 			} else {
 				// After initial load, process changes individually
