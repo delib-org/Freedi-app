@@ -1,0 +1,31 @@
+.link{
+    color:var(--text-blue);
+    cursor:pointer;
+    display: flex ;
+    align-items: center;
+    justify-content: center;
+    gap:2rem;
+}
+
+.share{
+    margin-top: 2rem;
+    margin-bottom: 2rem;
+}
+
+.summary{
+    display: flex;
+  justify-content: center;
+   align-items:baseline;
+    justify-content: center;
+    gap: 4rem;
+    margin-top: 2rem;
+    >div{
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
+        flex-direction: column;
+        font-size: .85rem;
+        font-weight: 300;
+    }
+}

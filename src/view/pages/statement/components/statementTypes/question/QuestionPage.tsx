@@ -2,7 +2,7 @@ import { useContext } from 'react';
 import { StatementContext } from '../../../StatementCont';
 
 import { QuestionType } from 'delib-npm';
-import MassConsensus from './massConsesusQuestion/MassConsensusQuestion';
+import MassConsensus from './massConsesusQuestion/MassConsensusAdmin';
 import MultiStageQuestion from './document/MultiStageQuestion';
 import { useLocation } from 'react-router';
 import StagePage from '../stage/StagePage';
