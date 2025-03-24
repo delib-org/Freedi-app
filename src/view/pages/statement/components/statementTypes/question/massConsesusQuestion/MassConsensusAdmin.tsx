@@ -1,14 +1,12 @@
 import styles from './MassConsensusAdmin.module.scss';
 import Description from '../../../evaluations/components/description/Description';
 import { useParams } from 'react-router';
-import ShareButton from '@/view/components/buttons/shareButton/ShareButton';
 import HandsImage from '@/assets/images/hands.png';
 import BulbImage from '@/assets/images/bulb.png';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import { useSelector } from 'react-redux';
 import { statementSelector } from '@/redux/statements/statementsSlice';
-
-
+import ShareButton from '@/view/components/buttons/shareButton/ShareButton';
 
 const MassConsensusAdmin = () => {
 	const { statementId } = useParams<{ statementId: string }>();
