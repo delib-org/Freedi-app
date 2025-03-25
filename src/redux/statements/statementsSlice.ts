@@ -82,12 +82,12 @@ export const statementsSlicer = createSlice({
 				(st: Statement) => ({
 					...st,
 					evaluation: {
-						sumEvaluations: st.evaluation?.sumEvaluations || 0,
-						agreement: st.evaluation?.agreement || 0,
-						numberOfEvaluators: st.evaluation?.numberOfEvaluators || 0,
-						sumPro: st.evaluation?.sumPro || 0,
-						sumCon: st.evaluation?.sumCon || 0,
-						viewed: st.evaluation?.viewed || 0,
+						sumEvaluations: st.evaluation?.sumEvaluations ?? 0,
+						agreement: st.evaluation?.agreement ?? 0,
+						numberOfEvaluators: st.evaluation?.numberOfEvaluators ?? 0,
+						sumPro: st.evaluation?.sumPro ?? 0,
+						sumCon: st.evaluation?.sumCon ?? 0,
+						viewed: st.evaluation?.viewed ?? 0,
 						evaluationRandomNumber: st.evaluation?.evaluationRandomNumber,
 						selectionFunction: action.payload.selectionFunction,
 					},
@@ -97,7 +97,7 @@ export const statementsSlicer = createSlice({
 			const previousSelectedStatements: Statement[] = state.statements
 				.filter(
 					(st) =>
-						st.evaluation.selectionFunction ===
+						st.evaluation?.selectionFunction ===
 						action.payload.selectionFunction
 				)
 				.map((st) => ({

@@ -10,10 +10,11 @@ import { useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router';
 
 function LeaveFeedback() {
-	const {statementId} = useParams();
+	const { statementId } = useParams();
 	const navigate = useNavigate();
 	const { t } = useUserConfig();
-	const { handleSendButton, handleEmailChange, mailStatus } = useLeaveFeedback();
+	const { handleSendButton, handleEmailChange, mailStatus } =
+		useLeaveFeedback();
 
 	const { setHeader } = useHeader();
 
@@ -28,19 +29,36 @@ function LeaveFeedback() {
 	}, []);
 
 	useEffect(() => {
-		if (mailStatus === "valid") navigate(`/mass-consensus/${statementId}/${MassConsensusPageUrls.thankYou}`);
+		if (mailStatus === 'valid')
+			navigate(
+				`/mass-consensus/${statementId}/${MassConsensusPageUrls.thankYou}`
+			);
 	}, [mailStatus]);
 
 	return (
 		<div>
-			<TitleMassConsensus
-				title={t('Thank you for your participation')}
-			/>
+			<TitleMassConsensus title={t('Thank you for your participation')} />
 			<div className={styles.feedback}>
 				<p>{t('Please leave your email to receive updates')}</p>
 				<div className={styles.input}>
-					<input placeholder={t('Mail')} type='email' name='email' onChange={handleEmailChange} />
-					<span> {mailStatus === "invalid" ? t('Invalid email') : null} </span>
+					<input
+						placeholder={t('Mail')}
+						type='email'
+						name='email'
+						onChange={handleEmailChange}
+						onKeyUp={(e) => {
+							if (e.key === 'Enter') {
+								e.preventDefault();
+								handleSendButton();
+							}
+						}}
+					/>
+					<span>
+						{' '}
+						{mailStatus === 'invalid'
+							? t('Invalid email')
+							: null}{' '}
+					</span>
 					<MailIcon />
 				</div>
 			</div>
