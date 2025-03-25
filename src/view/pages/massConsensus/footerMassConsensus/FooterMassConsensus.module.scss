@@ -1,12 +1,13 @@
 .footerMC {
-	position: fixed;
-	bottom: 0;
+	position: sticky;
+	bottom: 70px;
 	left: 0;
 	width: 100%;
 	display: flex;
 	justify-content: center;
 	align-items: center;
 	gap: 1rem;
+	margin-top: 1rem;
 	padding-bottom: 2rem;
 	background: linear-gradient(
 		to bottom,
@@ -18,6 +19,8 @@
 
 	@media (max-width: 768px) {
 		padding: 0.75rem;
+		position: fixed;
+		bottom: 20px;
 	}
 
 	@media (max-width: 630px) {
