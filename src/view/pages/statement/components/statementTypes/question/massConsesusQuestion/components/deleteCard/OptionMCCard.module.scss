@@ -1,0 +1,44 @@
+.optionMCCard {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 1.3rem;
+
+
+    b{
+        font-weight: 300;
+    }
+    .description{
+        font-weight: 200;
+        font-size: .9rem;
+    }
+
+    &Btns{
+        display: flex;
+        gap:1rem;
+
+        svg{
+            cursor:pointer;
+            color:var(--icon-red);
+        }
+       
+        span{
+            direction: ltr;
+            font-weight: 100;
+            color:gray;
+        }
+    }
+
+    .smile{
+        background-color: rgba(66, 79, 108, 0.65);
+        width: 2.0rem;
+        height: 2.0rem;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor:unset;
+    }
+
+  
+}
