@@ -46,10 +46,10 @@ const StatementTopNav: FC<Props> = ({
 	const { t, currentLanguage } = useUserConfig();
 	const navigate = useNavigate();
 	const { screen } = useParams();
-const role = useSelector(statementSubscriptionSelector(statement?.statementId))?.role;
+	const role = useSelector(statementSubscriptionSelector(statement?.statementId))?.role;
 	const headerStyle = useStatementColor({ statement });
 	const [showLanguageModal, setShowLanguageModal] = useState(false);
-	
+
 	const menuIconStyle = {
 		color: headerStyle.backgroundColor,
 		width: '24px',
@@ -149,6 +149,7 @@ function HeaderMenu({
 	t: (key: string) => string;
 	currentLabel: string;
 }>) {
+
 	return (
 		<div className={styles.button}>
 			<Menu
