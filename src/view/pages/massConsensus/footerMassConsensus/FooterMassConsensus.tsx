@@ -32,12 +32,19 @@ const FooterMassConsensus = ({
 
 		if (isFeedback) {
 			return (
-				<button
-					className={`btn btn--massConsensus btn--primary ${!isNextActive ? 'btn--disabled' : ''}`}
-					onClick={onNext}
-				>
-					{t('Send')}
-				</button>
+				<>
+					<Link to={`/mass-consensus/${statementId}/${goTo}`}>
+						<button className='btn btn--massConsensus btn--secondary'>
+							{t('Skip')}
+						</button>
+					</Link>
+					<button
+						className={`btn btn--massConsensus btn--primary ${!isNextActive ? 'btn--disabled' : ''}`}
+						onClick={onNext}
+					>
+						{t('Send')}
+					</button>
+				</>
 			);
 		}
 
