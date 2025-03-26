@@ -2,7 +2,7 @@ import { useContext } from 'react';
 import { StatementContext } from '../../../StatementCont';
 
 import { QuestionType } from 'delib-npm';
-import MassConsensus from './massConsesusQuestion/MassConsensusQuestion';
+import MassConsensusAdmin from './massConsesusQuestion/MassConsensusAdmin';
 import MultiStageQuestion from './document/MultiStageQuestion';
 import { useLocation } from 'react-router';
 import StagePage from '../stage/StagePage';
@@ -18,7 +18,7 @@ const QuestionPage = () => {
 	if (location.pathname.includes('stage')) {
 		return <StagePage />;
 	} else if (massConsensus) {
-		return <MassConsensus />;
+		return <MassConsensusAdmin />;
 	} else {
 		return <MultiStageQuestion />;
 	}

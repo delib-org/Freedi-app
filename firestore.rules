@@ -144,6 +144,10 @@ service cloud.firestore {
       allow write: if request.auth.uid != null;
     }
 
+     match /massConsensusMembers/{userId=**}{
+      allow write: if request.auth.uid != null;
+    }
+
     match /choseBy/{statementId=**}{
       allow read: if request.auth.uid != null;
       allow write: if request.auth.uid != null;
