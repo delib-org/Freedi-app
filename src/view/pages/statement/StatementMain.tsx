@@ -102,7 +102,6 @@ export default function StatementMain() {
 
 		if (creator && statementId) {
 			clearInAppNotifications(statementId);
-			console.log("listen")
 
 			// Combine and optimize additional listeners
 			const { pathname } = window.location;

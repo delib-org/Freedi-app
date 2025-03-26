@@ -83,12 +83,6 @@ export const listenToStatementSubscription = (
 	}
 };
 
-function getStack() {
-	const stack = new Error().stack;
-
-	return stack;
-}
-
 export const listenToStatement = (
 	statementId: string | undefined,
 	setIsStatementNotFound?: React.Dispatch<React.SetStateAction<boolean>>
