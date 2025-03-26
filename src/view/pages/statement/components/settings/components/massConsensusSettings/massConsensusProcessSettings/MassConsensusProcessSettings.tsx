@@ -2,7 +2,7 @@ import { useUserConfig } from '@/controllers/hooks/useUserConfig'
 import styles from './MassConsensusProcessSettings.module.scss'
 import ProcessSetting from './ProcessSetting/ProcessSetting'
 import { useEffect } from 'react'
-import { MassConsensusProcess } from 'delib-npm'
+import { LoginType, MassConsensusProcess } from 'delib-npm'
 import { defaultMassConsensusProcess } from '@/model/massConsensus/massConsensusModel'
 import { useSelector } from 'react-redux'
 import { massConsensusProcessSelector } from '@/redux/massConsensus/massConsensusSlice'
@@ -25,8 +25,8 @@ const MassConsensusProcessSettings = () => {
 
 	const processList = useSelector(massConsensusProcessSelector(statementId)) || defaultMassConsensusProcesses;
 	const { steps: stepsDefault, processName: processNameDefault } = processList.loginTypes.default
-	const { steps: stepsGoogle, processName: processNameGoogle } = processList.loginTypes.google
-	const { steps: stepsAnonymous, processName: processNameAnonymous } = processList.loginTypes.anonymous
+	const { steps: stepsGoogle, processName: processNameGoogle } = processList.loginTypes.google || {};
+	const { steps: stepsAnonymous, processName: processNameAnonymous } = processList.loginTypes.anonymous || {};
 
 	useEffect(() => {
 		const unsubscribe = listenToMassConsensusProcess(statementId)
@@ -39,9 +39,9 @@ const MassConsensusProcessSettings = () => {
 	return (
 		<div className={styles.mcProcess}>
 			<h3>{t("Mass Consensus Process Settings")}</h3>
-			<ProcessSetting steps={stepsDefault} processName={processNameDefault} />
-			{processList.loginTypes.google && <ProcessSetting steps={stepsGoogle} processName={processNameGoogle} />}
-			{processList.loginTypes.anonymous && <ProcessSetting steps={stepsAnonymous} processName={processNameAnonymous} />}
+			<ProcessSetting steps={stepsDefault} processName={processNameDefault} loginType={LoginType.default} />
+			{processList.loginTypes.google && <ProcessSetting steps={stepsGoogle} processName={processNameGoogle} loginType={LoginType.google} />}
+			{processList.loginTypes.anonymous && <ProcessSetting steps={stepsAnonymous} processName={processNameAnonymous} loginType={LoginType.anonymous} />}
 
 		</div>
 	)

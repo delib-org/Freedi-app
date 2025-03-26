@@ -1,16 +1,17 @@
 import React, { useState, useRef } from 'react';
 import styles from './ProcessSettings.module.scss'
 import { defaultMassConsensusProcess } from '@/model/massConsensus/massConsensusModel';
-import { MassConsensusPageUrls } from 'delib-npm';
+import { LoginType, MassConsensusPageUrls } from 'delib-npm';
 import { reorderMassConsensusProcessToDB } from '@/controllers/db/massConsensus/setMassConsensus';
 import { useParams } from 'react-router';
 
 interface Props {
 	processName: string;
 	steps: MassConsensusPageUrls[];
+	loginType: LoginType;
 }
 
-const ProcessSetting = ({ processName, steps: _steps }: Props) => {
+const ProcessSetting = ({ processName, steps: _steps, loginType }: Props) => {
 	const { statementId } = useParams();
 	const [steps, setSteps] = useState<MassConsensusPageUrls[]>(_steps || defaultMassConsensusProcess);
 
@@ -38,7 +39,7 @@ const ProcessSetting = ({ processName, steps: _steps }: Props) => {
 			setSteps(newStepsOrder);
 
 			if (statementId)
-				reorderMassConsensusProcessToDB({ steps: newStepsOrder, statementId: statementId });
+				reorderMassConsensusProcessToDB({ steps: newStepsOrder, statementId, loginType });
 		}
 	};
 
