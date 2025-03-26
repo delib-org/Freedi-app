@@ -25,13 +25,13 @@ export async function setMassConsensusMemberToDB(creator: Creator | User, statem
 }
 
 interface MassConsensusProcessProps {
-	processList: MassConsensusPageUrls[];
+	steps: MassConsensusPageUrls[];
 	loginType?: LoginType;
 	statementId: string;
 	processName?: string;
 }
 
-export async function reorderMassConsensusProcessToDB({ processList, loginType, statementId, processName }: MassConsensusProcessProps) {
+export async function reorderMassConsensusProcessToDB({ steps, loginType, statementId, processName }: MassConsensusProcessProps) {
 	try {
 		const processRef = doc(DB, Collections.massConsensusProcesses, statementId);
 
@@ -44,11 +44,11 @@ export async function reorderMassConsensusProcessToDB({ processList, loginType, 
 		const type = loginType ?? "default";
 
 		updateData.loginTypes[type] = {
-			steps: processList
+			steps
 		};
 
 		if (processName) {
-			updateData[type].processList = processName;
+			updateData[type].steps = processName;
 		}
 
 		const PartialMassConsensusProcessSchema = partial(MassConsensusProcessSchema);

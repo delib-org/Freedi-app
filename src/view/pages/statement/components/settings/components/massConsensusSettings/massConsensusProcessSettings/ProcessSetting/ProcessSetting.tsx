@@ -1,13 +1,18 @@
 import React, { useState, useRef } from 'react';
 import styles from './ProcessSettings.module.scss'
 import { defaultMassConsensusProcess } from '@/model/massConsensus/massConsensusModel';
-import { LoginType, MassConsensusPageUrls } from 'delib-npm';
+import { MassConsensusPageUrls } from 'delib-npm';
 import { reorderMassConsensusProcessToDB } from '@/controllers/db/massConsensus/setMassConsensus';
 import { useParams } from 'react-router';
 
-const ProcessSetting = () => {
+interface Props {
+	processName: string;
+	steps: MassConsensusPageUrls[];
+}
+
+const ProcessSetting = ({ processName, steps: _steps }: Props) => {
 	const { statementId } = useParams();
-	const [processList, setProcessList] = useState<MassConsensusPageUrls[]>(defaultMassConsensusProcess);
+	const [steps, setSteps] = useState<MassConsensusPageUrls[]>(_steps || defaultMassConsensusProcess);
 
 	const dragItem = useRef<number | null>(null);
 	const dragOverItem = useRef<number | null>(null);
@@ -24,22 +29,23 @@ const ProcessSetting = () => {
 
 	const handleDragEnd = () => {
 		if (dragItem.current !== null && dragOverItem.current !== null) {
-			const newList = [...processList];
-			const draggedItemContent = newList[dragItem.current];
-			newList.splice(dragItem.current, 1);
-			newList.splice(dragOverItem.current, 0, draggedItemContent);
+			const newStepsOrder = [...steps];
+			const draggedItemContent = newStepsOrder[dragItem.current];
+			newStepsOrder.splice(dragItem.current, 1);
+			newStepsOrder.splice(dragOverItem.current, 0, draggedItemContent);
 			dragItem.current = null;
 			dragOverItem.current = null;
-			setProcessList(newList);
+			setSteps(newStepsOrder);
 
 			if (statementId)
-				reorderMassConsensusProcessToDB({ processList: newList, statementId: statementId });
+				reorderMassConsensusProcessToDB({ steps: newStepsOrder, statementId: statementId });
 		}
 	};
 
 	return (
 		<div className={styles['process-setting']}>
-			{processList.map((process, index) => (
+			<h4>{processName}</h4>
+			{steps.map((process, index) => (
 				<div
 					key={index}
 					draggable
