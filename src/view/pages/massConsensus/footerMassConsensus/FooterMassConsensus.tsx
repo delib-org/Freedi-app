@@ -19,40 +19,51 @@ const FooterMassConsensus = ({
 	const { statementId } = useParams<{ statementId: string }>();
 	const { t, dir } = useUserConfig();
 
-	return (
-		<div
-			className={styles.footerMC}
-			style={{ direction: dir === 'ltr' ? 'rtl' : 'ltr' }}
-		
-		>
-			{isIntro ? (
+	const renderButton = () => {
+		if (isIntro) {
+			return (
 				<Link to={`/mass-consensus/${statementId}/${goTo}`}>
 					<button className='btn btn--massConsensus btn--primary'>
 						{isFeedback ? t('Send') : t('Start')}
 					</button>
 				</Link>
-			) : isFeedback ? (
+			);
+		}
+
+		if (isFeedback) {
+			return (
 				<button
 					className={`btn btn--massConsensus btn--primary ${!isNextActive ? 'btn--disabled' : ''}`}
 					onClick={onNext}
 				>
 					{t('Send')}
 				</button>
-			) : (
-				<>
-					<button
-						className={`btn btn--massConsensus btn--primary ${!isNextActive ? 'btn--disabled' : ''}`}
-						onClick={onNext}
-					>
-						{t('Next')}
+			);
+		}
+
+		return (
+			<>
+				<Link to={`/mass-consensus/${statementId}/${goTo}`}>
+					<button className='btn btn--massConsensus btn--secondary'>
+						{t('Skip')}
 					</button>
-					<Link to={`/mass-consensus/${statementId}/${goTo}`}>
-						<button className='btn btn--massConsensus btn--secondary'>
-							{t('Skip')}
-						</button>
-					</Link>
-				</>
-			)}
+				</Link>
+				<button
+					className={`btn btn--massConsensus btn--primary ${!isNextActive ? 'btn--disabled' : ''}`}
+					onClick={onNext}
+				>
+					{t('Next')}
+				</button>
+			</>
+		);
+	};
+
+	return (
+		<div
+			className={styles.footerMC}
+			style={{ direction: dir === 'ltr' ? 'rtl' : 'ltr' }}
+		>
+			{renderButton()}
 		</div>
 	);
 };
