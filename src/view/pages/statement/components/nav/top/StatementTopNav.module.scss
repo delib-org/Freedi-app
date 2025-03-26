@@ -16,6 +16,10 @@ $headerHight: 4.2rem;
     flex-direction: row-reverse;
     justify-content: space-between;
     max-width: var(--wrapper);
+
+    &.rtl {
+      direction: rtl;
+    }
   }
 
   button {
