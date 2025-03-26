@@ -9,7 +9,7 @@ import { HeaderProvider } from './headerMassConsensus/HeaderContext'
 import HeaderMassConsensus from './headerMassConsensus/HeaderMassConsensus'
 import styles from './MassConsensus.module.scss'
 import { useUserConfig } from '@/controllers/hooks/useUserConfig'
-import { setMassConsensusMemberToDB } from '@/controllers/db/massConsensus/setmassConsensus'
+import { setMassConsensusMemberToDB } from '@/controllers/db/massConsensus/setMassConsensus'
 
 const MassConsensus = () => {
 	const { dir } = useUserConfig();
@@ -30,9 +30,9 @@ const MassConsensus = () => {
 	}, [subscription, user])
 
 	useEffect(() => {
-		console.log("user", user)
-		if(user)
-		setMassConsensusMemberToDB(user, statementId)
+
+		if (user)
+			setMassConsensusMemberToDB(user, statementId)
 	}, [user])
 
 	return (

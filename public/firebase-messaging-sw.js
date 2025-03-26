@@ -50,7 +50,7 @@ if (currentDomain === 'freedi.tech' || currentDomain === 'delib.web.app') {
 }
 
 // Initialize Firebase
-console.info('Initializing Firebase with config:', firebaseConfig);
+
 firebase.initializeApp(firebaseConfig);
 
 // Retrieve an instance of Firebase Messaging
