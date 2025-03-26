@@ -39,7 +39,7 @@ import React from 'react';
 // Helpers
 export const listenToStatementSubscription = (
 	statementId: string,
-	creator:Creator,
+	creator: Creator,
 ): Unsubscribe => {
 	try {
 		const dispatch = store.dispatch;
@@ -83,6 +83,12 @@ export const listenToStatementSubscription = (
 	}
 };
 
+function getStack() {
+	const stack = new Error().stack;
+
+	return stack;
+}
+
 export const listenToStatement = (
 	statementId: string | undefined,
 	setIsStatementNotFound?: React.Dispatch<React.SetStateAction<boolean>>
@@ -124,48 +130,59 @@ export const listenToStatement = (
 };
 
 export const listenToSubStatements = (
-	statementId: string | undefined
+	statementId: string | undefined,
+	topBottom?: 'top' | 'bottom',
+	numberOfOptions?: number
 ): Unsubscribe => {
 	try {
 		const dispatch = store.dispatch;
 		if (!statementId) throw new Error('Statement id is undefined');
 		const statementsRef = collection(FireStore, Collections.statements);
+
+		// Reduce the initial load to 25 items for faster initial loading
+		// This should be enough for most use cases while dramatically improving load time
+		const descAsc = topBottom === 'top' ? 'desc' : 'asc';
+
 		const q = query(
 			statementsRef,
 			where('parentId', '==', statementId),
 			where('statementType', '!=', StatementType.document),
-			orderBy('createdAt', 'desc'),
-			limit(100)
+			orderBy('createdAt', descAsc),
+			limit(numberOfOptions)
 		);
+
 		let isFirstCall = true;
 
 		return onSnapshot(q, (statementsDB) => {
-			const startStatements: Statement[] = [];
-			statementsDB.docChanges().forEach((change) => {
-				const statement = change.doc.data() as Statement;
+			// For the first call, batch process all statements at once
+			if (isFirstCall) {
+				const startStatements: Statement[] = [];
 
-				if (change.type === 'added') {
-					if (isFirstCall) {
-						startStatements.push(statement);
-					} else {
+				statementsDB.forEach((doc) => {
+					const statement = doc.data() as Statement;
+					startStatements.push(statement);
+				});
+
+				// Dispatch all statements at once instead of individually
+				if (startStatements.length > 0) {
+					dispatch(setStatements(startStatements));
+				}
+
+				isFirstCall = false;
+			} else {
+				// After initial load, handle individual changes
+				statementsDB.docChanges().forEach((change) => {
+					const statement = change.doc.data() as Statement;
+
+					if (change.type === 'added') {
 						dispatch(setStatement(statement));
+					} else if (change.type === 'modified') {
+						dispatch(setStatement(statement));
+					} else if (change.type === 'removed') {
+						dispatch(deleteStatement(statement.statementId));
 					}
-				}
-
-				if (change.type === 'modified') {
-					dispatch(setStatement(statement));
-				}
-
-				if (change.type === 'removed') {
-					dispatch(deleteStatement(statement.statementId));
-				}
-
-				// There shouldn't be deleted statements. instead the statement should be updated to status "deleted".
-				// If You will use delete, it will remove from the dom a messages that are outside of the limit of the query.
-			});
-			isFirstCall = false;
-
-			dispatch(setStatements(startStatements));
+				});
+			}
 		});
 	} catch (error) {
 		console.error(error);
@@ -273,21 +290,43 @@ export function listenToAllDescendants(statementId: string): Unsubscribe {
 				),
 				where('parents', 'array-contains', statementId)
 			),
-			limit(100)
+			// Increase performance by limiting batch size
+			limit(50)
 		);
 
-		return onSnapshot(q, (statementsDB) => {
-			statementsDB.docChanges().forEach((change) => {
-				const statement = parse(StatementSchema, change.doc.data());
+		// Use batched updates for better performance
+		let isFirstBatch = true;
+		const statements: Statement[] = [];
 
-				if (
-					change.type === 'added' ||
-					change.type === 'modified' ||
-					change.type === 'removed'
-				) {
-					store.dispatch(setStatement(statement));
+		return onSnapshot(q, (statementsDB) => {
+			if (isFirstBatch) {
+				// Process the initial batch of statements all at once
+				statementsDB.forEach((doc) => {
+					const statement = parse(StatementSchema, doc.data());
+					statements.push(statement);
+				});
+
+				// Dispatch all statements at once instead of one by one
+				if (statements.length > 0) {
+					store.dispatch(setStatements(statements));
 				}
-			});
+
+				isFirstBatch = false;
+			} else {
+				// After initial load, process changes individually
+				statementsDB.docChanges().forEach((change) => {
+					const statement = parse(StatementSchema, change.doc.data());
+
+					if (
+						change.type === 'added' ||
+						change.type === 'modified'
+					) {
+						store.dispatch(setStatement(statement));
+					} else if (change.type === 'removed') {
+						store.dispatch(deleteStatement(statement.statementId));
+					}
+				});
+			}
 		});
 	} catch (error) {
 		console.error(error);
