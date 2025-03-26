@@ -24,6 +24,7 @@ const MassConsensusProcessSettings = () => {
 	}
 
 	const processList = useSelector(massConsensusProcessSelector(statementId)) || defaultMassConsensusProcesses;
+
 	const { steps: stepsDefault, processName: processNameDefault } = processList.loginTypes.default
 	const { steps: stepsGoogle, processName: processNameGoogle } = processList.loginTypes.google || {};
 	const { steps: stepsAnonymous, processName: processNameAnonymous } = processList.loginTypes.anonymous || {};

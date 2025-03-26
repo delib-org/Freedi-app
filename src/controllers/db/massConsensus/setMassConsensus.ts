@@ -1,6 +1,6 @@
 import { Collections, Creator, getStatementSubscriptionId, LoginType, MassConsensusMember, MassConsensusPageUrls, MassConsensusProcessSchema, User } from "delib-npm";
 import { DB } from "../config";
-import { doc, setDoc } from "firebase/firestore";
+import { arrayRemove, doc, setDoc, updateDoc } from "firebase/firestore";
 import { convertFirebaseUserToCreator } from "@/types/user/userUtils";
 import { parse, partial } from "valibot";
 
@@ -61,4 +61,17 @@ export async function reorderMassConsensusProcessToDB({ steps, loginType, statem
 		console.error(error);
 
 	}
+}
+
+export async function removeMassConsensusStep(statementId: string, loginType: LoginType, step: MassConsensusPageUrls): Promise<void> {
+	try {
+		const processRef = doc(DB, Collections.massConsensusProcesses, statementId);
+		await updateDoc(processRef, {
+			[`loginTypes.${loginType}.steps`]: arrayRemove(step)
+		});
+	} catch (error) {
+		console.error(error);
+
+	}
+
 }

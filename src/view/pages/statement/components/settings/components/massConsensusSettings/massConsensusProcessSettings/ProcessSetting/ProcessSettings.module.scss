@@ -9,6 +9,12 @@
 		margin-bottom: 5px;
 		background-color: #f9f9f9;
 		cursor: grab;
+		display: flex;
+		justify-content: space-between;
+
+		svg {
+			color: var(--reject)
+		}
 
 		&:hover {
 			background-color: #e9e9e9;

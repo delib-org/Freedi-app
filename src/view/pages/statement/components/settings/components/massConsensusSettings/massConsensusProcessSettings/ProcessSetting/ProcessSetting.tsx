@@ -1,9 +1,10 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import styles from './ProcessSettings.module.scss'
 import { defaultMassConsensusProcess } from '@/model/massConsensus/massConsensusModel';
 import { LoginType, MassConsensusPageUrls } from 'delib-npm';
-import { reorderMassConsensusProcessToDB } from '@/controllers/db/massConsensus/setMassConsensus';
+import { removeMassConsensusStep, reorderMassConsensusProcessToDB } from '@/controllers/db/massConsensus/setMassConsensus';
 import { useParams } from 'react-router';
+import DeleteIcon from '@/assets/icons/delete.svg?react';
 
 interface Props {
 	processName: string;
@@ -13,7 +14,12 @@ interface Props {
 
 const ProcessSetting = ({ processName, steps: _steps, loginType }: Props) => {
 	const { statementId } = useParams();
+
 	const [steps, setSteps] = useState<MassConsensusPageUrls[]>(_steps || defaultMassConsensusProcess);
+
+	useEffect(() => {
+		setSteps(_steps);
+	}, [_steps])
 
 	const dragItem = useRef<number | null>(null);
 	const dragOverItem = useRef<number | null>(null);
@@ -43,12 +49,16 @@ const ProcessSetting = ({ processName, steps: _steps, loginType }: Props) => {
 		}
 	};
 
+	function handleDelete(step: MassConsensusPageUrls) {
+		removeMassConsensusStep(statementId, loginType, step);
+	}
+
 	return (
 		<div className={styles['process-setting']}>
 			<h4>{processName}</h4>
 			{steps.map((process, index) => (
 				<div
-					key={index}
+					key={`${loginType}-${index}`}
 					draggable
 					onDragStart={(e) => handleDragStart(e, index)}
 					onDragEnter={(e) => handleDragEnter(e, index)}
@@ -56,6 +66,7 @@ const ProcessSetting = ({ processName, steps: _steps, loginType }: Props) => {
 					className={styles['process-item']}
 				>
 					{index + 1}: {process}
+					<button onClick={() => handleDelete(process)}><DeleteIcon /></button>
 				</div>
 			))}
 		</div>
