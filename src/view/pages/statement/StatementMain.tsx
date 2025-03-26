@@ -1,5 +1,5 @@
 import { createSelector } from '@reduxjs/toolkit';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useId, useMemo, useState } from 'react';
 import { useParams } from 'react-router';
 
 // firestore
@@ -15,7 +15,6 @@ import {
 	listenToStatement,
 	listenToAllDescendants,
 	listenToSubStatements,
-	listenToStatementSubscription,
 } from '@/controllers/db/statements/listenToStatements';
 
 // Redux Store
@@ -99,21 +98,38 @@ export default function StatementMain() {
 
 	// Listen to statement changes.
 	useEffect(() => {
-
 		const unsubscribeFunctions: (() => void)[] = [];
 
 		if (creator && statementId) {
 			clearInAppNotifications(statementId);
-			// Initialize all listeners and store cleanup functions
-			unsubscribeFunctions.push(
-				listenToStatement(statementId, setIsStatementNotFound),
-				listenToStatementSubscription(statementId, creator),
-				listenToAllDescendants(statementId), // used for map
-				listenToEvaluations(dispatch, statementId, creator?.uid),
-				listenToSubStatements(statementId), // TODO: check if this is needed. It can be integrated under listenToAllDescendants
-				listenToInAppNotifications()
-			);
 
+			// Combine and optimize additional listeners
+			const { pathname } = window.location;
+			const currentScreen = pathname.split('/').pop() || 'main';
+
+			// Only load descendant data if viewing the mind-map
+			if (currentScreen === 'mind-map') {
+				unsubscribeFunctions.push(
+					listenToAllDescendants(statementId)
+				);
+			} else {
+				// For other screens, use the more efficient listener that fetches only direct children
+				unsubscribeFunctions.push(
+					listenToSubStatements(statementId)
+				);
+			}
+
+			// Only load evaluations for the statement view
+			if (currentScreen === 'main') {
+				unsubscribeFunctions.push(
+					listenToEvaluations(dispatch, statementId, creator?.uid)
+				);
+			}
+
+			// Notifications are always needed
+			unsubscribeFunctions.push(listenToInAppNotifications());
+
+			// Only load stage data if a stageId is provided
 			if (stageId) {
 				unsubscribeFunctions.push(
 					listenToStatement(stageId, setIsStatementNotFound)
@@ -123,11 +139,29 @@ export default function StatementMain() {
 
 		// Cleanup function that calls all unsubscribe functions
 		return () => {
-			unsubscribeFunctions.forEach((unsubscribe) => unsubscribe());
+			unsubscribeFunctions.forEach((unsubscribe) => {
+				try {
+					// Check if unsubscribe is actually a function
+					if (typeof unsubscribe === 'function') {
+						unsubscribe();
+					} else {
+						// eslint-disable-next-line no-console
+						console.warn('Invalid unsubscribe function detected:', unsubscribe);
+					}
+				} catch (error) {
+					console.error('Error while unsubscribing:', error);
+					// Continue with other unsubscribes despite this error
+				}
+			});
 		};
-	}, [creator, statementId]);
+	}, [creator, statementId, stageId]);
 
 	useEffect(() => {
+
+		const topParentId = statement?.topParentId;
+		if (!topParentId) return;
+		if (topParentId === statementId) return;
+
 		//listen to top parent statement
 		let unSubscribe = () => {
 			return;
@@ -153,27 +187,31 @@ export default function StatementMain() {
 		// Only proceed if both statement and creator exist
 		if (!statement || !creator) return;
 
-		const handleMembershipSubscription = async () => {
-			try {
-				// Check if user is already subscribed
+		// Use a small delay to prioritize loading the UI first
+		const timeoutId = setTimeout(() => {
+			const handleMembershipSubscription = async () => {
+				try {
+					// Initialize notification service if needed (for token only)
+					const notificationsEnabled =
+						'Notification' in window &&
+						Notification.permission === 'granted' &&
+						creator;
 
-				// Initialize notification service if needed (for token only)
-				const notificationsEnabled =
-					'Notification' in window &&
-					Notification.permission === 'granted' &&
-					creator;
-
-				if (notificationsEnabled && !notificationService.getToken()) {
-					await notificationService.initialize(creator.uid);
+					if (notificationsEnabled && !notificationService.getToken()) {
+						await notificationService.initialize(creator.uid);
+					}
+				} catch (error) {
+					console.error('Error in membership subscription handler:', error);
 				}
-			} catch (error) {
-				console.error('Error in membership subscription handler:', error);
-			}
+			};
+
+			// Execute the async function after UI has loaded
+			handleMembershipSubscription();
+		}, 1000); // Delay for 1 second to prioritize UI rendering
+
+		return () => {
+			clearTimeout(timeoutId);
 		};
-
-		// Execute the async function immediately
-		handleMembershipSubscription();
-
 	}, [statement, creator, statementId]);
 
 	const contextValue = useMemo(
