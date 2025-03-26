@@ -1,9 +1,12 @@
 import React, { useState, useRef } from 'react';
 import styles from './ProcessSettings.module.scss'
 import { defaultMassConsensusProcess } from '@/model/massConsensus/massConsensusModel';
-import { MassConsensusPageUrls } from 'delib-npm';
+import { LoginType, MassConsensusPageUrls } from 'delib-npm';
+import { reorderMassConsensusProcessToDB } from '@/controllers/db/massConsensus/setMassConsensus';
+import { useParams } from 'react-router';
 
 const ProcessSetting = () => {
+	const { statementId } = useParams();
 	const [processList, setProcessList] = useState<MassConsensusPageUrls[]>(defaultMassConsensusProcess);
 
 	const dragItem = useRef<number | null>(null);
@@ -28,6 +31,9 @@ const ProcessSetting = () => {
 			dragItem.current = null;
 			dragOverItem.current = null;
 			setProcessList(newList);
+
+			if (statementId)
+				reorderMassConsensusProcessToDB({ processList: newList, statementId: statementId });
 		}
 	};
 
