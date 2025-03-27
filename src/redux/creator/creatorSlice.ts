@@ -1,4 +1,4 @@
-import { Creator } from '@/types/user/User';
+import { Creator } from 'delib-npm';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 interface CreatorState {

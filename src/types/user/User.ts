@@ -4,19 +4,10 @@ import {
 	number,
 	boolean,
 	optional,
-	nullable,
 	enum_,
 	InferOutput,
 } from 'valibot';
 import { Access, membersAllowed, StepType } from '../TypeEnums';
-
-export const CreatorSchema = object({
-	displayName: string(),
-	photoURL: optional(nullable(string())),
-	uid: string(),
-});
-
-export type Creator = InferOutput<typeof CreatorSchema>;
 
 export const MembershipSchema = object({
 	adminApproveMembers: optional(boolean()),

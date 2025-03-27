@@ -44,14 +44,9 @@ export const getUserOptions = async (req: Request, res: Response) => {
 export const getRandomStatements = async (req: Request, res: Response) => {
 	try {
 		const parentId = req.query.parentId;
+		
 		let limit = Number(req.query.limit) || (6 as number);
 		if (limit > 50) limit = 50;
-
-		if (!parentId) {
-			res.status(400).send({ error: 'parentId is required', ok: false });
-
-			return;
-		}
 
 		if (!parentId) {
 			res.status(400).send({ error: 'parentId is required', ok: false });

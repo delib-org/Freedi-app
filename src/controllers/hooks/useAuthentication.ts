@@ -7,7 +7,7 @@ import { resetEvaluations } from '@/redux/evaluations/evaluationsSlice';
 import { resetResults } from '@/redux/results/resultsSlice';
 import { resetStatements } from '@/redux/statements/statementsSlice';
 import { resetVotes } from '@/redux/vote/votesSlice';
-import { Creator } from '@/types/user/User';
+import { Creator } from 'delib-npm';
 import { convertFirebaseUserToCreator } from '@/types/user/userUtils';
 import { LocalStorageObjects } from '@/types/localStorage/LocalStorageObjects';
 import { setCreator } from '@/redux/creator/creatorSlice';
@@ -20,7 +20,7 @@ interface AuthState {
 	initialRoute?: string;
 }
 
-export const useAuthentication = () => {
+export const useAuthentication = ():AuthState => {
 	const [authState, setAuthState] = useState<AuthState>({
 		isAuthenticated: false,
 		isLoading: true,
@@ -28,6 +28,7 @@ export const useAuthentication = () => {
 		creator: null,
 		initialRoute: '',
 	});
+
 	const navigate = useNavigate();
 	const location = useLocation();
 	const dispatch = useDispatch();
@@ -40,6 +41,7 @@ export const useAuthentication = () => {
 	// Main auth effect
 	useEffect(() => {
 		const unsubscribe = onAuthStateChanged(auth, (user) => {
+		
 			if (user) {
 				// User is authenticated
 				setAuthState({

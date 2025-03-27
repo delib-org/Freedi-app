@@ -1,7 +1,7 @@
 import { db } from '.';
 import { logger, Request, Response } from 'firebase-functions/v1';
-import { Collections } from 'delib-npm';
-import { Creator } from '../../src/types/user/User';
+import { Collections, MassConsensusMember, Statement, StatementType } from 'delib-npm';
+import { FieldValue } from 'firebase-admin/firestore';
 
 export const getInitialMCData = async (req: Request, res: Response) => {
 	try {
@@ -41,36 +41,174 @@ export const getInitialMCData = async (req: Request, res: Response) => {
 	}
 };
 
-interface MassConsensusMember {
-	statementId: string;
-	lastUpdate: number;
-	email: string;
-	creator: Creator;
-  } //TODO: add to types
-
-  export const addMassConsensusMember = async (req: Request, res: Response) => {
+export const addMassConsensusMember = async (req: Request, res: Response) => {
 	try {
-	  const { statementId, lastUpdate, email, creator }: MassConsensusMember = req.body;
-		
-	  if (!statementId?.trim() || !email?.trim() || !lastUpdate || !creator) {
-		res.status(400).send({ error: 'Missing required fields', ok: false });
-		
-		return;
-	  }
-  
-	  const newMember: MassConsensusMember = {
-		statementId,
-		lastUpdate,
-		email,
-		creator,
-	  };
-	  await db.collection("massConsensusMembers" /* TODO: add to collections */).doc(creator.uid).set(newMember);
-  
-	  res.send({ message: 'Member added successfully', ok: true });
+		const { statementId, lastUpdate, email, creator }: MassConsensusMember = req.body;
+
+		if (!statementId?.trim() || !email?.trim() || !lastUpdate || !creator) {
+			res.status(400).send({ error: 'Missing required fields', ok: false });
+
+			return;
+		}
+
+		const newMember: MassConsensusMember = {
+			statementId,
+			lastUpdate,
+			email,
+			creator,
+		};
+		await db.collection(Collections.massConsensusMembers).doc(creator.uid).set(newMember);
+
+		res.send({ message: 'Member added successfully', ok: true });
 	} catch (error) {
-	  const errorMessage =
-		error instanceof Error ? error.message : 'Unknown error occurred';
+		const errorMessage =
+			error instanceof Error ? error.message : 'Unknown error occurred';
 		console.error(error);
-	  res.status(500).send({ error: errorMessage, ok: false });
+		res.status(500).send({ error: errorMessage, ok: false });
 	}
-  };
+};
+
+
+export async function addOptionToMassConsensus(ev:any){
+	try {
+
+		const newStatement = ev.data?.data() as Statement || undefined;
+		if(!newStatement) return;
+		if(newStatement.statementType !== StatementType.option) return;
+		
+		const parentRef = db.collection(Collections.statements).doc(newStatement.parentId);
+
+		await db.runTransaction(async (transaction) => {
+			const parentDoc = await transaction.get(parentRef);
+			if (!parentDoc.exists) {
+				throw new Error('Parent statement does not exist');
+			}
+
+			const parentData = parentDoc.data();
+			if (parentData && parentData.suggestions !== undefined) {
+				transaction.update(parentRef, {
+					suggestions: FieldValue.increment(1)
+				});
+			} else {
+				transaction.update(parentRef, {
+					suggestions: 1
+				});
+			}
+		});
+	} catch (error) {
+		console.error(error);
+		return;
+		
+	}
+}
+
+export async function removeOptionFromMassConsensus(ev: any) {
+	try {
+		const deletedStatement = ev.data?.data() as Statement || undefined;
+		if (!deletedStatement) return;
+		if (deletedStatement.statementType !== StatementType.option) return;
+
+		const parentRef = db.collection(Collections.statements).doc(deletedStatement.parentId);
+
+		await db.runTransaction(async (transaction) => {
+			const parentDoc = await transaction.get(parentRef);
+			if (!parentDoc.exists) {
+				throw new Error('Parent statement does not exist');
+			}
+
+			const parentData = parentDoc.data();
+			if (parentData && parentData.suggestions !== undefined && parentData.suggestions > 0) {
+				transaction.update(parentRef, {
+					suggestions: FieldValue.increment(-1)
+				});
+			}
+		});
+	} catch (error) {
+		console.error(error);
+		return;
+	}
+}
+
+export async function updateOptionInMassConsensus(change: any) {
+	try {
+		const beforeData = change.before?.data() as Statement || undefined;
+		const afterData = change.after?.data() as Statement || undefined;
+
+		if (!beforeData || !afterData) return;
+
+		// Check if the statement type changed
+		if (beforeData.statementType === afterData.statementType) return;
+		if (beforeData.statementType !== StatementType.option && afterData.statementType !== StatementType.option
+		) return;
+
+		const parentRef = db.collection(Collections.statements).doc(afterData.parentId);
+
+		await db.runTransaction(async (transaction) => {
+			const parentDoc = await transaction.get(parentRef);
+			if (!parentDoc.exists) {
+				throw new Error('Parent statement does not exist');
+			}
+
+			const parentData = parentDoc.data();
+
+			if (beforeData.statementType !== StatementType.option && afterData.statementType === StatementType.option) {
+				// Increment suggestions count
+				if (parentData && parentData.suggestions !== undefined) {
+					transaction.update(parentRef, {
+						suggestions: FieldValue.increment(1)
+					});
+				} else {
+					transaction.update(parentRef, {
+						suggestions: 1
+					});
+				}
+			} else if (beforeData.statementType === StatementType.option && afterData.statementType !== StatementType.option) {
+				// Decrement suggestions count
+				if (parentData && parentData.suggestions !== undefined && parentData.suggestions > 0) {
+					transaction.update(parentRef, {
+						suggestions: FieldValue.increment(-1)
+					});
+				}
+			}
+		});
+	} catch (error) {
+		console.error(error);
+		return;
+	}
+}
+
+export async function addMemberToMassConsensus(ev:any){
+	try {
+		if(!ev.data.data()) return;
+		const newMember = ev.data.data() as MassConsensusMember;
+		if (!newMember) return;
+		const statementRef = db.collection(Collections.statements).doc(newMember.statementId);
+		console.log(newMember.statementId, newMember.creator.uid);
+
+		await db.runTransaction(async (transaction) => {
+			const statementDoc = await transaction.get(statementRef);
+			if (!statementDoc.exists) {
+				throw new Error('Statement does not exist');
+			}
+
+			const statementData = statementDoc.data() as Statement;
+			if (statementData && statementData.massMembers !== undefined) {
+				console.log("current members", statementData.massMembers);
+				transaction.update(statementRef, {
+					massMembers: FieldValue.increment(1)
+				});
+			} else {
+				console.log("setting members:1");
+				transaction.update(statementRef, {
+					massMembers: 1
+				});
+			}
+		});
+
+	} catch (error) {
+		console.error(error);
+
+		return;
+		
+	}
+}

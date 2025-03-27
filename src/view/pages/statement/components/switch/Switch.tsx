@@ -21,6 +21,7 @@ const Switch = () => {
 	function handleUpdateStatement(e) {
 		if (e.key === 'Enter') {
 			const title = e.target.value;
+			
 			updateStatementText(statement, title);
 			setEdit(false);
 		}

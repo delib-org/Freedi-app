@@ -1,6 +1,10 @@
 import { Change, logger } from 'firebase-functions/v1';
 import { db } from './index';
-import { DocumentSnapshot, FieldValue } from 'firebase-admin/firestore';
+import {
+	DocumentSnapshot,
+	FieldValue,
+	getFirestore,
+} from 'firebase-admin/firestore';
 import { FirestoreEvent } from 'firebase-functions/firestore';
 import {
 	Evaluation,
@@ -299,17 +303,44 @@ function calcDiffEvaluation({
 		return { proDiff: 0, conDiff: 0 };
 	}
 }
-
 export async function updateChosenOptions(
-	event: FirestoreEvent<Change<DocumentSnapshot> | undefined>
+	event: FirestoreEvent<
+		Change<DocumentSnapshot> | DocumentSnapshot | undefined
+	>
 ) {
 	try {
-		//get parent statementId
-		const statementId = event.params.statementId;
+		let snapshot: DocumentSnapshot | undefined;
 
-		await updateParentStatementWithChosenOptions(statementId);
+		// Check if the event is a Change or a DocumentSnapshot
+		if (event.data) {
+			if ('after' in event.data) {
+				// It's a Change<DocumentSnapshot>
+				snapshot = event.data.after;
+			} else {
+				// It's a DocumentSnapshot (no change)
+				snapshot = event.data;
+			}
+		}
+
+		// If snapshot is undefined or does not exist, return early
+		if (!snapshot?.exists) return;
+
+		const statement = snapshot.data();
+		if (!statement || statement.statementType !== StatementType.option)
+			return;
+
+		const parentId = statement.parentStatementId;
+		if (!parentId) return;
+
+		const db = getFirestore();
+		const parentRef = db.collection(Collections.statements).doc(parentId);
+
+		// Update the parent statement with the chosen option
+		await parentRef.update({
+			chosenOptions: FieldValue.arrayUnion(snapshot.id),
+		});
 	} catch (error) {
-		logger.error(error);
+		logger.error('Error updating chosen options:', error);
 	}
 }
 

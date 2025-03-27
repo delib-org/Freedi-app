@@ -1,4 +1,4 @@
-import { FC, useContext, useState } from 'react';
+import { FC, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import styles from './StatementTopNav.module.scss';
 
@@ -11,14 +11,15 @@ import ShareIcon from '@/assets/icons/shareIcon.svg?react';
 import useStatementColor from '@/controllers/hooks/useStatementColor.ts';
 import Menu from '@/view/components/menu/Menu';
 import MenuOption from '@/view/components/menu/MenuOption';
-import { StatementContext } from '../../../StatementCont';
 import { Statement, Role } from 'delib-npm';
 import NavButtons from './navButtons/NavButtons';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import { LANGUAGES } from '@/constants/Languages';
-import { LanguagesIcon } from 'lucide-react';
+import LanguagesIcon from '@/assets/icons/languagesIcon.svg?react';
 import ChangeLanguage from '@/view/components/changeLanguage/ChangeLanguage';
 import Modal from '@/view/components/modal/Modal';
+import { useSelector } from 'react-redux';
+import { statementSubscriptionSelector } from '@/redux/statements/statementsSlice';
 
 interface Props {
 	statement?: Statement;
@@ -45,11 +46,10 @@ const StatementTopNav: FC<Props> = ({
 	const { t, currentLanguage } = useUserConfig();
 	const navigate = useNavigate();
 	const { screen } = useParams();
-	const { role } = useContext(StatementContext);
-	const [showLanguageModal, setShowLanguageModal] = useState(false);
-
-	// const
+const role = useSelector(statementSubscriptionSelector(statement?.statementId))?.role;
 	const headerStyle = useStatementColor({ statement });
+	const [showLanguageModal, setShowLanguageModal] = useState(false);
+	
 	const menuIconStyle = {
 		color: headerStyle.backgroundColor,
 		width: '24px',
@@ -152,6 +152,7 @@ function HeaderMenu({
 	return (
 		<div className={styles.button}>
 			<Menu
+				sameDirMenu={true}
 				setIsOpen={setIsHeaderMenuOpen}
 				isMenuOpen={isHeaderMenuOpen}
 				iconColor={headerStyle.color}
@@ -161,6 +162,11 @@ function HeaderMenu({
 					label={t('Share')}
 					icon={<ShareIcon style={menuIconStyle} />}
 					onOptionClick={handleShare}
+				/>
+				<MenuOption
+					label={currentLabel}
+					icon={<LanguagesIcon style={menuIconStyle} />}
+					onOptionClick={setShowLanguageModal}
 				/>
 				<MenuOption
 					label={t('Disconnect')}
@@ -179,11 +185,7 @@ function HeaderMenu({
 							icon={<InvitationIcon style={menuIconStyle} />}
 							onOptionClick={handleInvitePanel}
 						/>
-						<MenuOption
-							label={currentLabel}
-							icon={<LanguagesIcon style={menuIconStyle} />}
-							onOptionClick={setShowLanguageModal}
-						/>
+
 						<MenuOption
 							label={t('Settings')}
 							icon={<SettingsIcon style={menuIconStyle} />}
@@ -195,6 +197,7 @@ function HeaderMenu({
 			{showLanguageModal && (
 				<Modal>
 					<ChangeLanguage
+						sameDirMenu={true}
 						background
 						setShowModal={setShowLanguageModal}
 					/>

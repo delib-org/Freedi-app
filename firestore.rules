@@ -54,7 +54,19 @@ service cloud.firestore {
     match /inAppNotifications/{inAppNotificationId=**}{
       allow read: if request.auth.uid == resource.data.userId;
       allow update: if request.auth.uid == resource.data.userId;
+	  allow delete: if request.auth.uid == resource.data.userId;
     }
+
+
+	match /pushNotifications/{pushNotificationId=**}{
+			allow read: if request.auth.uid != null;
+			allow write: if request.auth.uid != null;
+	}
+
+	match /askedToBeNotified/{askedToBeNotifiedId=**} {
+		allow read: if request.auth.uid != null;
+		allow write: if request.auth.uid != null;
+	}
 
      match /statementsMeta/{statementId=**}{
         allow read: if request.auth.uid != null;
@@ -129,6 +141,10 @@ service cloud.firestore {
     
     match /statementsSignatures/{signatureId=**}{
       allow read: if request.auth.uid != null;
+      allow write: if request.auth.uid != null;
+    }
+
+     match /massConsensusMembers/{userId=**}{
       allow write: if request.auth.uid != null;
     }
 
