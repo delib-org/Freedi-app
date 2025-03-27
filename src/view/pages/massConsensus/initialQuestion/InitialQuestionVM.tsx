@@ -20,16 +20,24 @@ export function useInitialQuestion(description: string): InitialQuestionVM {
 
 	const [ready, setReady] = useState(false);
 	const [loading, setLoading] = useState(false);
-	const subscription = useSelector(statementSubscriptionSelector(statementId));
+	const subscription = useSelector(
+		statementSubscriptionSelector(statementId)
+	);
 
-	const ifButtonEnabled = useMemo(() => description.trim().length > 0, [description]);
+	const ifButtonEnabled = useMemo(
+		() => description.trim().length > 0,
+		[description]
+	);
 
 	async function handleSetInitialSuggestion() {
 		if (!ifButtonEnabled) return;
 		setLoading(true);
 
-		const { similarStatements = [], similarTexts = [], userText } =
-			await getSimilarStatements(statementId, description);
+		const {
+			similarStatements = [],
+			similarTexts = [],
+			userText,
+		} = await getSimilarStatements(statementId, description);
 
 		dispatch(
 			setSimilarStatements([
@@ -47,7 +55,7 @@ export function useInitialQuestion(description: string): InitialQuestionVM {
 		ifButtonEnabled,
 		ready,
 		loading,
-		subscription
+		subscription,
 	};
 }
 
@@ -73,7 +81,9 @@ async function getSimilarStatements(statementId: string, userInput: string) {
 		if (!data) throw new Error('No data returned from server');
 		const { similarStatements, similarTexts = [], userText } = data;
 
-		const _userText = { statement: userText, statementId: null };
+		const _userText = userText.statementId
+			? userText
+			: { statement: userText, statementId: null };
 		const _similarTexts = similarTexts.map((text: string) => ({
 			statement: text,
 			statementId: null,
