@@ -151,7 +151,6 @@ function HeaderMenu({
 	t: (key: string) => string;
 	currentLabel: string | undefined;
 }>) {
-
 	// Apply dynamic style to the menu-header
 	const menuHeaderStyle = {
 		backgroundColor: headerStyle.backgroundColor,
