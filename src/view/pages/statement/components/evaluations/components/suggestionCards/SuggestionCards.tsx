@@ -55,11 +55,11 @@ const SuggestionCards: FC<Props> = ({
 	}, [statement, statementId]);
 
 	useEffect(() => {
-		if (!statementId) return;
+
 		const unsubscribe = listenToEvaluations(statementId);
 
 		return () => unsubscribe();
-	}, [statementId])
+	}, [])
 
 	useEffect(() => {
 		const { totalHeight: _totalHeight } = sortSubStatements(
