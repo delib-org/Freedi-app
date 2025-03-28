@@ -35,7 +35,7 @@ interface Props {
 	handleLogout: () => void;
 	setIsHeaderMenuOpen: (value: boolean) => void;
 	isHeaderMenuOpen: boolean;
-}
+};
 
 const StatementTopNav: FC<Props> = ({
 	statement,
