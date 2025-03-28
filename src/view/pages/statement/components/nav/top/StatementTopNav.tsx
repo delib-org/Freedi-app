@@ -14,17 +14,10 @@ import Menu from '@/view/components/menu/Menu';
 import MenuOption from '@/view/components/menu/MenuOption';
 import Modal from '@/view/components/modal/Modal';
 import { Role, Statement } from 'delib-npm';
-import { LanguagesIcon } from 'lucide-react';
-import { StatementContext } from '../../../StatementCont';
 import NavButtons from './navButtons/NavButtons';
-import { Statement, Role } from 'delib-npm';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
-import { LANGUAGES } from '@/constants/Languages';
-import LanguagesIcon from '@/assets/icons/languagesIcon.svg?react';
-import ChangeLanguage from '@/view/components/changeLanguage/ChangeLanguage';
-import Modal from '@/view/components/modal/Modal';
 import { useSelector } from 'react-redux';
 import { statementSubscriptionSelector } from '@/redux/statements/statementsSlice';
+import LanguagesIcon from '@/assets/icons/languagesIcon.svg?react';
 
 interface Props {
 	statement?: Statement;
@@ -54,8 +47,6 @@ const StatementTopNav: FC<Props> = ({
 	const role = useSelector(statementSubscriptionSelector(statement?.statementId))?.role;
 	const headerStyle = useStatementColor({ statement });
 	const [showLanguageModal, setShowLanguageModal] = useState(false);
-
-	const headerStyle = useStatementColor({ statement });
 
 	const menuIconStyle = {
 		color: headerStyle.backgroundColor,
@@ -167,12 +158,10 @@ function HeaderMenu({
 		color: headerStyle.color
 	};
 
-
 	return (
 		<div className={styles.button} style={menuHeaderStyle}>
 			<Menu
 				statement={statement}
-				sameDirMenu={true}
 				setIsOpen={setIsHeaderMenuOpen}
 				isMenuOpen={isHeaderMenuOpen}
 				iconColor={headerStyle.color}
