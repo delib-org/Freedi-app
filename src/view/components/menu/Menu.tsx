@@ -1,9 +1,14 @@
-import { ComponentProps, FC } from 'react';
-import IconButton from '../iconButton/IconButton';
 import BurgerIcon from '@/assets/icons/burgerIcon.svg?react';
 import EllipsisIcon from '@/assets/icons/ellipsisIcon.svg?react';
-import './Menu.scss';
+import DefaultAvatar from '@/assets/images/avatar.jpg';
+import useStatementColor from '@/controllers/hooks/useStatementColor';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { RootState } from '@/redux/store';
+import { Statement } from 'delib-npm';
+import { ComponentProps, FC, ReactNode } from 'react';
+import { useSelector } from 'react-redux';
+import IconButton from '../iconButton/IconButton';
+import './Menu.scss';
 
 interface MenuProps extends ComponentProps<'div'> {
 	iconColor: string;
@@ -11,7 +16,10 @@ interface MenuProps extends ComponentProps<'div'> {
 	setIsOpen: (isOpen: boolean) => void;
 	isHamburger?: boolean;
 	isCardMenu?: boolean;
-	sameDirMenu?: boolean;
+	footer?: ReactNode;
+	statement?: Statement;
+	currentPage?: string;
+	children: ReactNode;
 }
 
 const Menu: FC<MenuProps> = ({
@@ -21,16 +29,16 @@ const Menu: FC<MenuProps> = ({
 	children,
 	isHamburger = false,
 	isCardMenu = false,
-	sameDirMenu = false,
+	footer,
+	statement,
 }) => {
 	const { dir } = useUserConfig();
-
-	if (!children) {
-		return null;
-	}
+	const user = useSelector((state: RootState) => state.creator.creator);
+	const avatarSrc = user?.photoURL || DefaultAvatar;
+	const { backgroundColor } = useStatementColor({ statement });
 
 	return (
-		<div className='menu'>
+		<div className="menu"  >
 			<IconButton onClick={() => setIsOpen(!isMenuOpen)}>
 				{isHamburger ? (
 					<BurgerIcon style={{ color: iconColor }} />
@@ -39,18 +47,33 @@ const Menu: FC<MenuProps> = ({
 				)}
 			</IconButton>
 
-			{isMenuOpen && (
+			<div className={`menu-content ${dir}${isCardMenu ? '--card-menu' : ''} ${isMenuOpen ? 'open' : ''}`}>
 				<div
-					className={`menu-content ${sameDirMenu ? '' : dir} ${isCardMenu ? '--card-menu' : ''}`}
+					className={`menu-header ${dir}`}
+					style={{ backgroundColor }}
 				>
-					{children}
-					<button
-						className='invisibleBackground'
-						onClick={() => setIsOpen(false)}
-						aria-label='Close menu'
-					/>
+					<h2 className="menu-title">FreeDi</h2>
+					<div className="menu-user">
+						<img className="menu-avatar" src={avatarSrc} alt="User avatar" />
+						<span className="menu-username">{user?.displayName}</span>
+					</div>
 				</div>
-			)}
+				{children}
+				{footer && (
+					<div
+						className="menu-footer"
+						onClick={(e) => e.stopPropagation()}
+						style={{ backgroundColor }}
+					>
+						{footer}
+					</div>
+				)}
+				<button
+					className="invisibleBackground"
+					onClick={() => setIsOpen(false)}
+					aria-label="Close menu"
+				/>
+			</div>
 		</div>
 	);
 };
