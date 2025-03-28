@@ -15,6 +15,7 @@ export default function ProtectedLayout() {
 	const navigate = useNavigate();
 	const { loading, error, isAuthorized } = useAuthorization(statementId);
 	const statement = useSelector(statementSelector(statementId));
+	const _statementId = statement?.statementId;
 
 	useEffect(() => {
 		if (!statement) {
@@ -24,7 +25,7 @@ export default function ProtectedLayout() {
 				}
 			});
 		}
-	}, [statement?.statementId]);
+	}, [_statementId]);
 
 	useEffect(() => {
 		if (!isAuthorized && !loading && !error) {
