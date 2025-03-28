@@ -1,4 +1,4 @@
-import { FC } from 'react';
+import { FC, useMemo } from 'react';
 import './StatementChatMore.scss';
 
 // Icons
@@ -22,9 +22,10 @@ const StatementChatMore: FC<Props> = ({ statement, onlyCircle, useLink = true })
 	// Hooks
 	const navigate = useNavigate();
 	const { user } = useAuthentication();
-	
+
 	// Redux store
-	const notifications = useSelector(inAppNotificationsCountSelectorForStatement(statement.statementId));
+	const notifications = useSelector(inAppNotificationsCountSelectorForStatement(statement.statementId))
+
 	const countMessages = notifications.filter(notification => notification.creatorName !== user.displayName).length;
 
 	return (
