@@ -103,6 +103,10 @@ export default function StatementMain() {
 		if (creator && statementId) {
 			clearInAppNotifications(statementId);
 
+			unsubscribeFunctions.push(
+				listenToStatement(statementId, setIsStatementNotFound)
+			);
+
 			// Combine and optimize additional listeners
 			const { pathname } = window.location;
 			const currentScreen = pathname.split('/').pop() || 'main';
