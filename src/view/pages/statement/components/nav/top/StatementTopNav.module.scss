@@ -1,50 +1,62 @@
 $headerHight: 4.2rem;
 
 .nav {
-	width: 100%;
-	display: flex;
-	justify-content: space-evenly;
-	direction: ltr;
-	border-radius: 0 0 calc($headerHight / 2) 0;
-	box-shadow: 0px 3px 9px #00000026;
-	height: 4.2rem;
+  width: 100%;
+  display: flex;
+  justify-content: space-evenly;
+  direction: ltr;
+  border-radius: 0 0 calc($headerHight / 2) 0;
+  box-shadow: 0px 3px 9px #00000026;
+  height: 4.2rem;
 
-	.wrapper {
+  .wrapper {
+    width: 100%;
+    margin: auto;
+    display: flex;
+    flex-direction: row-reverse;
+    justify-content: space-between;
+    max-width: var(--wrapper);
 
-		width: 100%;
-		margin: auto;
-		display: flex;
-		justify-content: space-between;
-		max-width: var(--wrapper);
+    &.rtl {
+      direction: rtl;
+    }
+  }
 
-	}
+  button {
+    flex: 1;
+    padding: 0.6rem 1rem;
+    background-color: transparent;
 
-	button {
-		flex: 1;
-		padding: 0.6rem 1rem;
-		background-color: transparent;
+    svg {
+      height: 1.7rem;
+      width: 1.7rem;
+    }
+  }
+  .back {
+    transform: rotate(180deg);
+  }
 
-		svg {
-			height: 1.7rem;
-			width: 1.7rem;
-		}
-	}
+  .views {
+    position: relative;
 
-	.back {
-		transform: rotate(180deg);
-	}
+    &__dropdown {
+      position: absolute;
+      background-color: white;
+      box-shadow: 0px 3px 9px #00000026;
+      left: 50%;
+      top: 3rem;
+    }
+  }
+}
+.menuFooter {
+  display: flex;
+  height: 83px;
+  background-color: var(--group);
+  cursor: pointer;
+  pointer-events: auto;
+  z-index: 1000;
 
-	.views {
-		position: relative;
-
-		&__dropdown {
-			position: absolute;
-			background-color: white;
-			box-shadow: 0px 3px 9px #00000026;
-			left: 50%;
-			top: 3rem;
-		}
-	}
-
-
+  svg {
+    color: white;
+  }
 }

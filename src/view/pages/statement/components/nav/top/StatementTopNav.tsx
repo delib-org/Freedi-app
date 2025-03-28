@@ -1,18 +1,23 @@
 import { FC, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import styles from './StatementTopNav.module.scss';
-
 import DisconnectIcon from '@/assets/icons/disconnectIcon.svg?react';
-
 import FollowMe from '@/assets/icons/follow.svg?react';
 import InvitationIcon from '@/assets/icons/invitation.svg?react';
 import SettingsIcon from '@/assets/icons/settings.svg?react';
 import ShareIcon from '@/assets/icons/shareIcon.svg?react';
+import { LANGUAGES } from '@/constants/Languages';
 import useStatementColor from '@/controllers/hooks/useStatementColor.ts';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import ChangeLanguage from '@/view/components/changeLanguage/ChangeLanguage';
 import Menu from '@/view/components/menu/Menu';
 import MenuOption from '@/view/components/menu/MenuOption';
-import { Statement, Role } from 'delib-npm';
+import Modal from '@/view/components/modal/Modal';
+import { Role, Statement } from 'delib-npm';
+import { LanguagesIcon } from 'lucide-react';
+import { StatementContext } from '../../../StatementCont';
 import NavButtons from './navButtons/NavButtons';
+import { Statement, Role } from 'delib-npm';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import { LANGUAGES } from '@/constants/Languages';
 import LanguagesIcon from '@/assets/icons/languagesIcon.svg?react';
@@ -42,7 +47,7 @@ const StatementTopNav: FC<Props> = ({
 	isHeaderMenuOpen,
 	handleShare,
 }) => {
-	//hooks
+
 	const { t, currentLanguage } = useUserConfig();
 	const navigate = useNavigate();
 	const { screen } = useParams();
@@ -50,12 +55,15 @@ const StatementTopNav: FC<Props> = ({
 	const headerStyle = useStatementColor({ statement });
 	const [showLanguageModal, setShowLanguageModal] = useState(false);
 
+	const headerStyle = useStatementColor({ statement });
+
 	const menuIconStyle = {
 		color: headerStyle.backgroundColor,
 		width: '24px',
 	};
 
 	if (!statement) return null;
+
 	const _statement = parentStatement || statement;
 
 	const enableNavigationalElements = Boolean(
@@ -76,16 +84,16 @@ const StatementTopNav: FC<Props> = ({
 	}
 	const currentLabel = LANGUAGES.find(
 		(lang) => lang.code === currentLanguage
-	).label;
+	)?.label;
 
 	return (
 		<nav
-			className={styles.nav}
+			className={`${styles.nav} ${currentLanguage === 'he' ? styles.rtl : styles.ltr}`}
 			data-cy='statement-nav'
 			style={{ backgroundColor: headerStyle.backgroundColor }}
 		>
-			<div className={styles.wrapper}>
-				{allowNavigation && (
+			<div className={styles.wrapper} >
+				{allowNavigation && statement && (
 					<HeaderMenu
 						setIsHeaderMenuOpen={setIsHeaderMenuOpen}
 						isHeaderMenuOpen={isHeaderMenuOpen}
@@ -101,6 +109,7 @@ const StatementTopNav: FC<Props> = ({
 						menuIconStyle={menuIconStyle}
 						t={t}
 						currentLabel={currentLabel}
+						statement={statement}
 					/>
 				)}
 				<NavButtons
@@ -133,7 +142,9 @@ function HeaderMenu({
 	menuIconStyle,
 	t,
 	currentLabel,
+	statement,
 }: Readonly<{
+	statement: Statement;
 	setIsHeaderMenuOpen: (value: boolean) => void;
 	isHeaderMenuOpen: boolean;
 	headerStyle: { color: string; backgroundColor: string };
@@ -147,12 +158,20 @@ function HeaderMenu({
 	isAdmin: boolean;
 	menuIconStyle: { color: string; width: string };
 	t: (key: string) => string;
-	currentLabel: string;
+	currentLabel: string | undefined;
 }>) {
 
+	// Apply dynamic style to the menu-header
+	const menuHeaderStyle = {
+		backgroundColor: headerStyle.backgroundColor,
+		color: headerStyle.color
+	};
+
+
 	return (
-		<div className={styles.button}>
+		<div className={styles.button} style={menuHeaderStyle}>
 			<Menu
+				statement={statement}
 				sameDirMenu={true}
 				setIsOpen={setIsHeaderMenuOpen}
 				isMenuOpen={isHeaderMenuOpen}
@@ -186,14 +205,29 @@ function HeaderMenu({
 							icon={<InvitationIcon style={menuIconStyle} />}
 							onOptionClick={handleInvitePanel}
 						/>
-
+						<MenuOption
+							label={currentLabel as string}
+							icon={<LanguagesIcon style={menuIconStyle} />}
+							onOptionClick={setShowLanguageModal}
+						/>
 						<MenuOption
 							label={t('Settings')}
 							icon={<SettingsIcon style={menuIconStyle} />}
 							onOptionClick={() => handleNavigation('settings')}
 						/>
+
 					</>
 				)}
+
+				{/* Footer Section */}
+				<div className={`${styles.menuFooter}`}>
+					<MenuOption
+						label={<span style={{ color: 'white' }}>{t('Disconnect')}</span>}
+						icon={<DisconnectIcon />}
+						onOptionClick={handleLogout}
+						className={`${styles.menuOption} ${styles.disconnectOption}`}
+					/>
+				</div>
 			</Menu>
 			{showLanguageModal && (
 				<Modal>
