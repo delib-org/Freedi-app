@@ -1,4 +1,4 @@
-import { FC, useMemo } from 'react';
+import { FC } from 'react';
 import './StatementChatMore.scss';
 
 // Icons
@@ -19,7 +19,7 @@ interface Props {
 }
 
 const StatementChatMore: FC<Props> = ({ statement, onlyCircle, useLink = true }) => {
-	// Hooks
+
 	const navigate = useNavigate();
 	const { user } = useAuthentication();
 
