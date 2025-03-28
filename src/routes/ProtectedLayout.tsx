@@ -4,7 +4,6 @@ import { useAuthorization } from '@/controllers/hooks/useAuthorization';
 import { setStatement, statementSelector } from '@/redux/statements/statementsSlice';
 import LoadingPage from '@/view/pages/loadingPage/LoadingPage';
 import Page401 from '@/view/pages/page401/Page401';
-import { stat } from 'fs';
 import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Outlet, useNavigate, useParams } from 'react-router';
