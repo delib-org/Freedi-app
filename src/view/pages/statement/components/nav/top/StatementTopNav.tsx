@@ -1,4 +1,4 @@
-import { FC, useContext, useState } from 'react';
+import { FC, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import styles from './StatementTopNav.module.scss';
 import DisconnectIcon from '@/assets/icons/disconnectIcon.svg?react';
@@ -17,6 +17,14 @@ import { Role, Statement } from 'delib-npm';
 import { LanguagesIcon } from 'lucide-react';
 import { StatementContext } from '../../../StatementCont';
 import NavButtons from './navButtons/NavButtons';
+import { Statement, Role } from 'delib-npm';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { LANGUAGES } from '@/constants/Languages';
+import LanguagesIcon from '@/assets/icons/languagesIcon.svg?react';
+import ChangeLanguage from '@/view/components/changeLanguage/ChangeLanguage';
+import Modal from '@/view/components/modal/Modal';
+import { useSelector } from 'react-redux';
+import { statementSubscriptionSelector } from '@/redux/statements/statementsSlice';
 
 interface Props {
 	statement?: Statement;
@@ -43,10 +51,12 @@ const StatementTopNav: FC<Props> = ({
 	const { t, currentLanguage } = useUserConfig();
 	const navigate = useNavigate();
 	const { screen } = useParams();
-	const { role } = useContext(StatementContext);
+	const role = useSelector(statementSubscriptionSelector(statement?.statementId))?.role;
+	const headerStyle = useStatementColor({ statement });
 	const [showLanguageModal, setShowLanguageModal] = useState(false);
 
 	const headerStyle = useStatementColor({ statement });
+
 	const menuIconStyle = {
 		color: headerStyle.backgroundColor,
 		width: '24px',
@@ -150,16 +160,19 @@ function HeaderMenu({
 	t: (key: string) => string;
 	currentLabel: string | undefined;
 }>) {
+
 	// Apply dynamic style to the menu-header
 	const menuHeaderStyle = {
 		backgroundColor: headerStyle.backgroundColor,
 		color: headerStyle.color
 	};
 
+
 	return (
 		<div className={styles.button} style={menuHeaderStyle}>
 			<Menu
 				statement={statement}
+				sameDirMenu={true}
 				setIsOpen={setIsHeaderMenuOpen}
 				isMenuOpen={isHeaderMenuOpen}
 				iconColor={headerStyle.color}
@@ -170,7 +183,16 @@ function HeaderMenu({
 					icon={<ShareIcon style={menuIconStyle} />}
 					onOptionClick={handleShare}
 				/>
-
+				<MenuOption
+					label={currentLabel}
+					icon={<LanguagesIcon style={menuIconStyle} />}
+					onOptionClick={setShowLanguageModal}
+				/>
+				<MenuOption
+					label={t('Disconnect')}
+					icon={<DisconnectIcon style={menuIconStyle} />}
+					onOptionClick={handleLogout}
+				/>
 				{isAdmin && (
 					<>
 						<MenuOption
@@ -210,6 +232,7 @@ function HeaderMenu({
 			{showLanguageModal && (
 				<Modal>
 					<ChangeLanguage
+						sameDirMenu={true}
 						background
 						setShowModal={setShowLanguageModal}
 					/>

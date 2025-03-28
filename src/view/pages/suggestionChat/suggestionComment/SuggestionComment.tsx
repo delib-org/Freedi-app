@@ -4,8 +4,8 @@ import { FC, KeyboardEvent, useEffect, useState, useRef, ChangeEvent } from 'rea
 import { useSuggestionComment } from './SuggestionCommentMV';
 import CreatorEvaluationIcon from './CreatorEvaluationIcon/CreatorEvaluationIcon';
 import { saveStatementToDB } from '@/controllers/db/statements/setStatements';
-import { useSelector } from 'react-redux';
-import { statementSubsSelector } from '@/redux/statements/statementsSlice';
+import { useDispatch, useSelector } from 'react-redux';
+import { statementSubscriptionSelector, statementSubsSelector } from '@/redux/statements/statementsSlice';
 import { listenToSubStatements } from '@/controllers/db/statements/listenToStatements';
 import SubComment from './subComment/SubComment';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
@@ -13,6 +13,10 @@ import ProfileImage from '@/view/components/profileImage/ProfileImage';
 import { evaluationSelector } from '@/redux/evaluations/evaluationsSlice';
 import EvaluationPopup from './evaluationPopup/EvaluationPopup';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
+import StatementChatMore from '../../statement/components/chat/components/statementChatMore/StatementChatMore';
+import { setStatementSubscriptionToDB } from '@/controllers/db/subscriptions/setSubscriptions';
+import { clearInAppNotifications } from '@/controllers/db/inAppNotifications/db_inAppNotifications';
+import { deleteInAppNotificationsByParentId } from '@/redux/notificationsSlice/notificationsSlice';
 
 interface Props {
 	parentStatement: Statement
@@ -21,6 +25,8 @@ interface Props {
 
 const SuggestionComment: FC<Props> = ({ statement, parentStatement }) => {
 	const { t } = useUserConfig();
+	const dispatch = useDispatch();
+	const subscription = useSelector(statementSubscriptionSelector(statement.statementId));
 	const initialStatement = useRef(parentStatement.statement);
 	const initialDescription = useRef(parentStatement.description);
 	const { user } = useAuthentication();
@@ -31,11 +37,15 @@ const SuggestionComment: FC<Props> = ({ statement, parentStatement }) => {
 	const [showInput, setShowInput] = useState(false);
 	const [evaluationChanged, setEvaluationChanged] = useState(false);
 	const textareaRef = useRef<HTMLTextAreaElement>(null);
+	const commentsRef = useRef<HTMLDivElement>(null);
 
 	useEffect(() => {
 		const unsubscribe = listenToSubStatements(statement.statementId);
 
-		return () => unsubscribe();
+		return () => {
+			unsubscribe();
+			clearInAppNotifications(statement.statementId);
+		}
 	}, []);
 
 	useEffect(() => {
@@ -50,6 +60,19 @@ const SuggestionComment: FC<Props> = ({ statement, parentStatement }) => {
 			adjustTextareaHeight(textareaRef.current);
 		}
 	}, [showInput]);
+
+	useEffect(() => {
+		// observe the comments to mark as read
+		let readTimeout: NodeJS.Timeout;
+		if ( commentsRef.current ) {
+			readTimeout = setTimeout(() => {
+				dispatch(deleteInAppNotificationsByParentId(statement.statementId))
+			}, 2000)
+		}
+		else {
+			clearTimeout(readTimeout);
+		}
+	},[isOpen])
 
 	useEffect(() => {
 		if (user?.uid !== parentStatement.creator.uid) return;
@@ -92,6 +115,15 @@ const SuggestionComment: FC<Props> = ({ statement, parentStatement }) => {
 					parentStatement: statement,
 					statementType: StatementType.statement
 				});
+
+				if (!isCreator && !subscription) {
+					//subscribe to the parent statement
+					setStatementSubscriptionToDB({
+						statement,
+						creator: user,
+						getInAppNotification: true
+					});
+				}
 			}
 			target.value = '';
 			setEvaluationChanged(false);
@@ -118,20 +150,26 @@ const SuggestionComment: FC<Props> = ({ statement, parentStatement }) => {
 				onKeyDown={(e) => { if (e.key === 'Enter') toggleAccordion(); }}
 				tabIndex={0}
 			>
-				<div className={styles.commentCreator}>
-					<ProfileImage statement={statement} />
-					<CreatorEvaluationIcon evaluationNumber={evaluationNumber} />
+				<div className={styles.creatorText}>
+					<div className={styles.commentCreator}>
+						<ProfileImage statement={statement} />
+						<CreatorEvaluationIcon evaluationNumber={evaluationNumber} />
+					</div>
+					<div className={styles.commentText} style={{ userSelect: 'text' }} >
+						{statement.statement}
+					</div>
+					<div className={styles.notifications}>
+						<StatementChatMore statement={statement} onlyCircle={true} useLink={false} />
+					</div>
 				</div>
-				<div className={styles.commentText}>
-					{statement.statement}, {previousEvaluation}
-				</div>
+
 				<span className={`${styles.accordionIcon} ${isOpen ? styles.open : ''}`}>
 					▼
 				</span>
 			</button>
 			{isOpen && (
 				<>
-					<div className={styles.subComments}>
+					<div ref={commentsRef} className={styles.subComments}>
 						<SubComment statement={statement} />
 						{comments.map((comment) => (
 							<SubComment key={comment.statementId} statement={comment} />

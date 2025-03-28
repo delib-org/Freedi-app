@@ -18,6 +18,13 @@ export const notificationsSlicer = createSlice({
 	name: 'notifications',
 	initialState,
 	reducers: {
+		setInAppNotificationsAll: (state, action: PayloadAction<NotificationType[]>) => {
+			try {
+				state.inAppNotifications = action.payload;
+			} catch (error) {
+				console.error(error);
+			}
+		},
 		setInAppNotifications: (
 			state,
 			action: PayloadAction<NotificationType[]>
@@ -74,6 +81,7 @@ export const notificationsSlicer = createSlice({
 });
 
 export const {
+	setInAppNotificationsAll,
 	setInAppNotification,
 	setInAppNotifications,
 	deleteInAppNotification,
@@ -83,5 +91,7 @@ export const {
 // Other code such as selectors can use the imported `RootState` type
 export const inAppNotificationsSelector = (state: RootState) =>
 	state.notifications.inAppNotifications;
+
+export const inAppNotificationsCountSelectorForStatement = (statementId: string) => (state: RootState) => state.notifications.inAppNotifications.filter(notification => notification.parentId === statementId);
 
 export default notificationsSlicer.reducer;

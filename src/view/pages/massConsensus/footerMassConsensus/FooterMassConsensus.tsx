@@ -20,11 +20,13 @@ const FooterMassConsensus = ({
 	const { t, dir } = useUserConfig();
 
 	return (
-		<div className={styles.footerMC} style={{ direction: dir === 'ltr' ? 'rtl' : 'ltr' }}>
+		<div
+			className={styles.footerMC}
+			style={{ direction: dir === 'ltr' ? 'rtl' : 'ltr' }}
+		
+		>
 			{isIntro ? (
-				<Link
-					to={`/mass-consensus/${statementId}/${goTo}`}
-				>
+				<Link to={`/mass-consensus/${statementId}/${goTo}`}>
 					<button className='btn btn--massConsensus btn--primary'>
 						{isFeedback ? t('Send') : t('Start')}
 					</button>
@@ -44,9 +46,7 @@ const FooterMassConsensus = ({
 					>
 						{t('Next')}
 					</button>
-					<Link
-						to={`/mass-consensus/${statementId}/${goTo}`}
-					>
+					<Link to={`/mass-consensus/${statementId}/${goTo}`}>
 						<button className='btn btn--massConsensus btn--secondary'>
 							{t('Skip')}
 						</button>

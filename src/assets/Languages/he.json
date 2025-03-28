@@ -229,7 +229,7 @@
 	"Mass Consensus": "הסכמה מונית",
 	"offer a suggestion": "העלאת הצעה",
 	"please suggest a sentance that will unite Israel": "אנא הציעו משפט שיאחד את עם ישראל",
-	"Your description": "התיאור שלך",
+	"Your suggestion": "ההצעה שלך",
 	"similar suggestions": "הצעות דומות",
 	"Thank you for the suggestion!": "תודה על ההצעה!",
 	"Here are similar suggestions. which one fits best?": "אלו הצעות דומות שעלו. מי מהן עדיפה בעינך?",
@@ -263,5 +263,14 @@
 	"Nederlands": "הולנדית ",
 	"العربية": "ערבית",
 	"Español": "ספרדית",
-	"Deutsch": "גרמנית"
+	"Deutsch": "גרמנית",
+	"Thank you for the registration": "תודה על ההרשמה!",
+	"You have successfully registered to receive updates. We will send you a message when there is news.": "נרשמת בהצלחה לקבלת עדכונים. נשלח לך הודעה כאשר יהיו חדשות.",
+	"Back to home": "חזרה לדף הבית",
+	"Groups": "קבוצות",
+	"Results Summary": "סיכום תוצאות",
+	"Total participants": "סך כל המשתתפים",
+	"Total suggestions": "סך כל ההצעות",
+	"Options for deletion": "אפשרויות למחיקה",
+	"Top options": "אפשרויות מובילות"
 }

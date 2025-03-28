@@ -51,4 +51,5 @@ export default function useStatementColor({
   }, [statement]);
 
   return style;
+
 }

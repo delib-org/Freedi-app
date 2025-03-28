@@ -12,6 +12,7 @@ import MapIcon from '@/assets/icons/navMainPageIcon.svg?react';
 import styles from '../StatementTopNav.module.scss';
 import { StatementType, Statement } from 'delib-npm';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import NotificationSubscriptionButton from '@/view/components/notifications/NotificationSubscriptionButton';
 
 interface NavButtonsProps {
 	parentStatement?: Statement;
@@ -61,6 +62,9 @@ function NavButtons({
 					handleNavigation={handleNavigation}
 					headerStyle={headerStyle}
 				/>
+			)}
+			{statement && (
+				<NotificationSubscriptionButton statementId={statement.statementId} />
 			)}
 			<button className={styles.views} onClick={handleView}>
 				<NavIcon

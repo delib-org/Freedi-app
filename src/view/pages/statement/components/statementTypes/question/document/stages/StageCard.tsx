@@ -13,6 +13,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { setStatement, statementSelectorById } from '@/redux/statements/statementsSlice';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import { getStatementFromDB } from '@/controllers/db/statements/getStatement';
+import StatementChatMore from '../../../../chat/components/statementChatMore/StatementChatMore';
 
 interface Props {
 	statement: Statement;
@@ -80,45 +81,53 @@ const StageCard: FC<Props> = ({ statement, isDescription, isSuggestions }) => {
 		<div
 			className={`${styles.card} ${styles[direction]} ${styles[suggestionsClass]}`}
 		>
-			<h3>{t(title)}</h3>
-			{chosen.length === 0 ? (
-				<p>{t('No suggestion so far')}</p>
-			) : (
-				<>
-					<ul>
-						{chosen.map((opt: SimpleStatement) => (
-							<NavLink
-								key={opt.statementId}
-								to={`/statement/${opt.statementId}`}
-							>
-								<ol className={styles.suggestions}>
-									<li>
-										<div>{opt.statement}</div>
-										{opt.description && (
-											<div
-												className={
-													styles.statement__description
-												}
-											>
-												{opt.description}
-											</div>
-										)}
-									</li>
-								</ol>
+			<div className={`${styles.title}`}>
+				<div className={`${styles.notification}`}>
+					<StatementChatMore statement={statement} onlyCircle={true} />
+				</div>
+				<h3>{t(title)}</h3>
+			</div>
+
+			{
+				chosen.length === 0 ? (
+					<p>{t('No suggestion so far')}</p>
+				) : (
+					<>
+						<ul>
+							{chosen.map((opt: SimpleStatement) => (
+								<NavLink
+									key={opt.statementId}
+									to={`/statement/${opt.statementId}`}
+								>
+									<ol className={styles.suggestions}>
+										<li>
+											<div>{opt.statement}</div>
+											{opt.description && (
+												<div
+													className={
+														styles.statement__description
+													}
+												>
+													{opt.description}
+												</div>
+											)}
+										</li>
+									</ol>
+								</NavLink>
+							))}
+						</ul>
+						{!isSuggestions && (
+							<NavLink to={`/statement/${statement.statementId}`}>
+								<p
+									className={`${styles.seeMore} ${dir === 'ltr' ? styles.rtl : styles.ltr}`}
+								>
+									{t('Read more...')}
+								</p>{' '}
 							</NavLink>
-						))}
-					</ul>
-					{!isSuggestions && (
-						<NavLink to={`/statement/${statement.statementId}`}>
-							<p
-								className={`${styles.seeMore} ${dir === 'ltr' ? styles.rtl : styles.ltr}`}
-							>
-								{t('Read more...')}
-							</p>{' '}
-						</NavLink>
-					)}
-				</>
-			)}
+						)}
+					</>
+				)
+			}
 
 			<div className={`btns ${styles.btn}`}>
 				<Button
@@ -127,7 +136,7 @@ const StageCard: FC<Props> = ({ statement, isDescription, isSuggestions }) => {
 					onClick={suggestNewSuggestion}
 				/>
 			</div>
-		</div>
+		</div >
 	);
 };
 

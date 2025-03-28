@@ -10,31 +10,25 @@ import StatementHeader from './components/header/StatementHeader';
 import NewStatement from './components/newStatemement/newStatement';
 import Switch from './components/switch/Switch';
 import { StatementContext } from './StatementCont';
-import { listenToEvaluations } from '@/controllers/db/evaluation/getEvaluation';
 import {
 	listenToStatement,
-	listenToStatementSubscription,
 	listenToAllDescendants,
 	listenToSubStatements,
 } from '@/controllers/db/statements/listenToStatements';
-import { getIsSubscribed } from '@/controllers/db/subscriptions/getSubscriptions';
-import {
-	updateSubscriberForStatementSubStatements,
-	setStatementSubscriptionToDB,
-} from '@/controllers/db/subscriptions/setSubscriptions';
 
 // Redux Store
 import { statementTitleToDisplay } from '@/controllers/general/helpers';
-import { useAppDispatch } from '@/controllers/hooks/reduxHooks';
 import { MapProvider } from '@/controllers/hooks/useMap';
 import { RootState } from '@/redux/store';
 import Modal from '@/view/components/modal/Modal';
 
-import { statementSelector } from '@/redux/statements/statementsSlice';
-import { Role, StatementType, Access, QuestionType, User } from 'delib-npm';
+import { statementSelector, statementSubscriptionSelector } from '@/redux/statements/statementsSlice';
+import { StatementType, QuestionType, User } from 'delib-npm';
 import { useAuthorization } from '@/controllers/hooks/useAuthorization';
 import { useSelector } from 'react-redux';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
+import { notificationService } from '@/services/notificationService';
+import { listenToInAppNotifications, clearInAppNotifications } from '@/controllers/db/inAppNotifications/db_inAppNotifications';
 
 // Create selectors
 export const subStatementsSelector = createSelector(
@@ -49,13 +43,12 @@ export const subStatementsSelector = createSelector(
 export default function StatementMain() {
 	// Hooks
 	const { statementId, stageId } = useParams();
-
-	//TODO:create a check with the parent statement if subscribes. if not subscribed... go according to the rules of authorization
-	const { isAuthorized, loading, statement, topParentStatement, role } =
-		useAuthorization(statementId);
+	const statement = useSelector(statementSelector(statementId));
+	const topParentStatement = useSelector(statementSelector(statement?.topParentId));
+	const role = useSelector(statementSubscriptionSelector(statementId))?.role;
+	const { isAuthorized, loading } = useAuthorization(statementId);
 
 	// Redux store
-	const dispatch = useAppDispatch();
 	const { creator } = useAuthentication();
 
 	const stage = useSelector(statementSelector(stageId));
@@ -105,15 +98,32 @@ export default function StatementMain() {
 		const unsubscribeFunctions: (() => void)[] = [];
 
 		if (creator && statementId) {
-			// Initialize all listeners and store cleanup functions
+			clearInAppNotifications(statementId);
+
 			unsubscribeFunctions.push(
-				listenToStatement(statementId, setIsStatementNotFound),
-				listenToAllDescendants(statementId), // used for map
-				listenToEvaluations(dispatch, statementId, creator.uid),
-				listenToSubStatements(statementId), // TODO: check if this is needed. It can be integrated under listenToAllDescendants
-				listenToStatementSubscription(statementId, creator, dispatch)
+				listenToStatement(statementId, setIsStatementNotFound)
 			);
 
+			// Combine and optimize additional listeners
+			const { pathname } = window.location;
+			const currentScreen = pathname.split('/').pop() || 'main';
+
+			// Only load descendant data if viewing the mind-map
+			if (currentScreen === 'mind-map') {
+				unsubscribeFunctions.push(
+					listenToAllDescendants(statementId)
+				);
+			} else {
+				// For other screens, use the more efficient listener that fetches only direct children
+				unsubscribeFunctions.push(
+					listenToSubStatements(statementId)
+				);
+			}
+
+			// Notifications are always needed
+			unsubscribeFunctions.push(listenToInAppNotifications());
+
+			// Only load stage data if a stageId is provided
 			if (stageId) {
 				unsubscribeFunctions.push(
 					listenToStatement(stageId, setIsStatementNotFound)
@@ -123,11 +133,29 @@ export default function StatementMain() {
 
 		// Cleanup function that calls all unsubscribe functions
 		return () => {
-			unsubscribeFunctions.forEach((unsubscribe) => unsubscribe());
+			unsubscribeFunctions.forEach((unsubscribe) => {
+				try {
+					// Check if unsubscribe is actually a function
+					if (typeof unsubscribe === 'function') {
+						unsubscribe();
+					} else {
+						// eslint-disable-next-line no-console
+						console.warn('Invalid unsubscribe function detected:', unsubscribe);
+					}
+				} catch (error) {
+					console.error('Error while unsubscribing:', error);
+					// Continue with other unsubscribes despite this error
+				}
+			});
 		};
-	}, [creator, statementId]);
+	}, [creator, statementId, stageId]);
 
 	useEffect(() => {
+
+		const topParentId = statement?.topParentId;
+		if (!topParentId) return;
+		if (topParentId === statementId) return;
+
 		//listen to top parent statement
 		let unSubscribe = () => {
 			return;
@@ -144,35 +172,41 @@ export default function StatementMain() {
 		};
 	}, [statement?.topParentId]);
 
+	/**
+	 * Effect to handle membership subscription
+	 * This does NOT handle notification subscription, which is managed separately 
+	 * by the notification subscription button
+	 */
 	useEffect(() => {
-		if (statement) {
-			(async () => {
-				const isSubscribed = await getIsSubscribed(
-					statementId,
-					creator.uid
-				);
+		// Only proceed if both statement and creator exist
+		if (!statement || !creator) return;
 
-				// if isSubscribed is false, then subscribe
-				if (
-					!isSubscribed &&
-					statement.membership?.access === Access.close
-				) {
-					// subscribe
-					setStatementSubscriptionToDB(
-						statement,
-						creator,
-						Role.member
-					);
-				} else {
-					//update subscribed field
-					updateSubscriberForStatementSubStatements(
-						statement,
-						creator.uid
-					);
+		// Use a small delay to prioritize loading the UI first
+		const timeoutId = setTimeout(() => {
+			const handleMembershipSubscription = async () => {
+				try {
+					// Initialize notification service if needed (for token only)
+					const notificationsEnabled =
+						'Notification' in window &&
+						Notification.permission === 'granted' &&
+						creator;
+
+					if (notificationsEnabled && !notificationService.getToken()) {
+						await notificationService.initialize(creator.uid);
+					}
+				} catch (error) {
+					console.error('Error in membership subscription handler:', error);
 				}
-			})();
-		}
-	}, [statement]);
+			};
+
+			// Execute the async function after UI has loaded
+			handleMembershipSubscription();
+		}, 1000); // Delay for 1 second to prioritize UI rendering
+
+		return () => {
+			clearTimeout(timeoutId);
+		};
+	}, [statement, creator, statementId]);
 
 	const contextValue = useMemo(
 		() => ({

@@ -10,6 +10,7 @@ import {
 	listenToStatementSubscriptions,
 } from '@/controllers/db/subscriptions/getSubscriptions';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
+import { listenToInAppNotifications } from '@/controllers/db/inAppNotifications/db_inAppNotifications';
 
 // Helpers
 
@@ -33,15 +34,16 @@ export default function Home() {
 	}, [location]);
 
 	useEffect(() => {
-		let unsubscribe: () => void = () => {};
-
-		let updatesUnsubscribe: () => void = () => {};
+		let unsubscribe: () => void = () => { };
+		let updatesUnsubscribe: () => void = () => { };
+		let unsubscribeInAppNotifications: () => void = () => { };
 		try {
 			if (user) {
 				unsubscribe = listenToStatementSubscriptions(user.uid, 30);
 				updatesUnsubscribe = getNewStatementsFromSubscriptions(
 					user.uid
 				);
+				unsubscribeInAppNotifications = listenToInAppNotifications();
 			}
 		} catch (error) {
 			console.error(error);
@@ -50,6 +52,7 @@ export default function Home() {
 		return () => {
 			unsubscribe();
 			updatesUnsubscribe();
+			unsubscribeInAppNotifications();
 		};
 	}, [user]);
 

@@ -5,14 +5,15 @@ import { sortSubStatements } from '../../statementsEvaluationCont';
 import SuggestionCard from './suggestionCard/SuggestionCard';
 import styles from './SuggestionCards.module.scss';
 import EmptyScreen from '../emptyScreen/EmptyScreen';
-import { Statement, SortType } from 'delib-npm';
+import { Statement, SortType, SelectionFunction } from 'delib-npm';
 import { getStatementFromDB } from '@/controllers/db/statements/getStatement';
 import {
 	setStatement,
 	statementOptionsSelector,
-	statementSelector
+	statementSelector,
 } from '@/redux/statements/statementsSlice';
-import { SelectionFunction } from 'delib-npm';
+
+import { listenToEvaluations } from '@/controllers/db/evaluation/getEvaluation';
 
 interface Props {
 	propSort?: SortType;
@@ -20,7 +21,11 @@ interface Props {
 	subStatements?: Statement[];
 }
 
-const SuggestionCards: FC<Props> = ({ propSort, selectionFunction, subStatements: propSubStatements }) => {
+const SuggestionCards: FC<Props> = ({
+	propSort,
+	selectionFunction,
+	subStatements: propSubStatements,
+}) => {
 	const { sort: _sort, statementId } = useParams();
 
 	const sort = propSort || _sort || SortType.accepted;
@@ -29,14 +34,18 @@ const SuggestionCards: FC<Props> = ({ propSort, selectionFunction, subStatements
 
 	const [totalHeight, setTotalHeight] = useState(0);
 
-	const _subStatements = useSelector(statementOptionsSelector(statement?.statementId));
+	const _subStatements = useSelector(
+		statementOptionsSelector(statement?.statementId)
+	);
 
-	const subStatements = propSubStatements || (selectionFunction
-		? _subStatements.filter(
-			(sub: Statement) =>
-				sub.evaluation.selectionFunction === selectionFunction
-		)
-		: _subStatements);
+	const subStatements =
+		propSubStatements ||
+		(selectionFunction
+			? _subStatements.filter(
+				(sub: Statement) =>
+					sub.evaluation.selectionFunction === selectionFunction
+			)
+			: _subStatements);
 
 	useEffect(() => {
 		if (!statement && statementId)
@@ -44,6 +53,13 @@ const SuggestionCards: FC<Props> = ({ propSort, selectionFunction, subStatements
 				dispatch(setStatement(statement))
 			);
 	}, [statement, statementId]);
+
+	useEffect(() => {
+
+		const unsubscribe = listenToEvaluations(statementId);
+
+		return () => unsubscribe();
+	}, [])
 
 	useEffect(() => {
 		const { totalHeight: _totalHeight } = sortSubStatements(
