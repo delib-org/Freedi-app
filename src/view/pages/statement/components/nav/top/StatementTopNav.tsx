@@ -169,40 +169,33 @@ function HeaderMenu({
 				<MenuOption
 					label={t('Share')}
 					icon={<ShareIcon style={menuIconStyle} />}
-					onOptionClick={handleShare}
-				/>
+					onOptionClick={handleShare} />
 				<MenuOption
 					label={currentLabel}
 					icon={<LanguagesIcon style={menuIconStyle} />}
-					onOptionClick={setShowLanguageModal}
-				/>
+					onOptionClick={setShowLanguageModal} />
 				<MenuOption
 					label={t('Disconnect')}
 					icon={<DisconnectIcon style={menuIconStyle} />}
-					onOptionClick={handleLogout}
-				/>
+					onOptionClick={handleLogout} />
 				{isAdmin && (
 					<>
 						<MenuOption
 							label={t('Follow Me')}
 							icon={<FollowMe style={menuIconStyle} />}
-							onOptionClick={handleFollowMe}
-						/>
+							onOptionClick={handleFollowMe} />
 						<MenuOption
 							label={t('Invite with PIN number')}
 							icon={<InvitationIcon style={menuIconStyle} />}
-							onOptionClick={handleInvitePanel}
-						/>
+							onOptionClick={handleInvitePanel} />
 						<MenuOption
 							label={currentLabel as string}
 							icon={<LanguagesIcon style={menuIconStyle} />}
-							onOptionClick={setShowLanguageModal}
-						/>
+							onOptionClick={setShowLanguageModal} />
 						<MenuOption
 							label={t('Settings')}
 							icon={<SettingsIcon style={menuIconStyle} />}
-							onOptionClick={() => handleNavigation('settings')}
-						/>
+							onOptionClick={() => handleNavigation('settings')} />
 
 					</>
 				)}
@@ -210,10 +203,10 @@ function HeaderMenu({
 				{/* Footer Section */}
 				<div className={`${styles.menuFooter}`}>
 					<MenuOption
-						label={<span style={{ color: 'white' }}>{t('Disconnect')}</span>}
+						label={t('Disconnect')}
 						icon={<DisconnectIcon />}
 						onOptionClick={handleLogout}
-						className={`${styles.menuOption} ${styles.disconnectOption}`}
+						style={{ color: 'white' }}
 					/>
 				</div>
 			</Menu>

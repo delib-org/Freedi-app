@@ -38,8 +38,6 @@ export default function HomeHeader() {
 		(lang) => lang.code === currentLanguage
 	).label;
 
-	const currentStatement = undefined;
-
 	useEffect(() => {
 		window.addEventListener('beforeinstallprompt', (e: Event) => {
 			const beforeInstallPromptEvent = e as BeforeInstallPromptEvent;
@@ -111,26 +109,26 @@ export default function HomeHeader() {
 								className="footer"
 								icon={<DisconnectIcon style={{ color: 'white' }} />}
 								label={t('Disconnect')}
-								onOptionClick={logOut}
-							/>
+								onOptionClick={logOut} children={''} />
 						}
 					>
 
 						<MenuOption
 							icon={<LanguagesIcon style={{ color: '#4E88C7' }} />}
 							label={currentLabel}
-							onOptionClick={() => handlePanel('changeLanguage')}
-						/>
+							onOptionClick={() => handlePanel('changeLanguage')} children={''} />
 						<MenuOption
 							icon={<InvitationIcon style={{ color: '#4E88C7' }} />}
 							label={t('Join with PIN number')}
-							onOptionClick={() => handlePanel('invitation')}
-						/>
+							onOptionClick={() => handlePanel('invitation')} children={''} />
 
-						<button onClick={handleShowInAppNotifications} className='menu-option inAppNotifications'>
-							<MailIcon style={{ color: '#4E88C7' }} />
+						<MenuOption
+							icon={<MailIcon style={{ color: '#4E88C7' }} />}
+							label={t('Notifications')}
+							onOptionClick={handleShowInAppNotifications}
+						>
 							{showInAppNotifications && <InAppNotifications />}
-						</button>
+						</MenuOption>
 					</Menu>
 				</div>
 			</div>
