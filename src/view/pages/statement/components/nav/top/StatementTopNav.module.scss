@@ -17,8 +17,20 @@ $headerHight: 4.2rem;
     justify-content: space-between;
     max-width: var(--wrapper);
 
+    &.ltr {
+      direction: ltr;
+      flex-direction: row-reverse;
+      @media (max-width: 1360px) {
+        transform: translateX(2%);
+      }
+    }
+
     &.rtl {
       direction: rtl;
+      flex-direction: row-reverse;
+      @media (max-width: 1360px) {
+        transform: translateX(-2%);
+      }
     }
   }
 
@@ -57,6 +69,11 @@ $headerHight: 4.2rem;
   z-index: 1000;
 
   svg {
+    color: white;
+  }
+}
+.menuOption {
+  .label {
     color: white;
   }
 }

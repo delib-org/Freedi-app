@@ -80,7 +80,7 @@
         left: 10px;
       }
       @media (max-width: 1360px) {
-        transform: translateX(90%);
+        transform: translateX(87%);
       }
     }
   }
@@ -90,7 +90,6 @@
       transform: translateX(20px);
     }
   }
-
 }
 
 .menu-footer {
@@ -99,10 +98,6 @@
   cursor: pointer;
   pointer-events: auto;
   z-index: 1000;
-
-  label {
-    color: white;
-  }
 
   .menu-option {
     border-bottom: none;
@@ -118,5 +113,4 @@
   height: 100svh;
   z-index: 4;
   background-color: transparent;
-
 }

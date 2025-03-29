@@ -6,6 +6,7 @@ interface MenuOptionProps extends ComponentProps<"button"> {
 	label: string;
 	isOptionSelected?: boolean;
 	icon: ReactNode;
+	children?: ReactNode;
 }
 
 const MenuOption: FC<MenuOptionProps> = ({
@@ -13,6 +14,8 @@ const MenuOption: FC<MenuOptionProps> = ({
 	label,
 	isOptionSelected = false,
 	icon,
+	style,
+	children,
 }) => {
 	return (
 		<button
@@ -25,7 +28,8 @@ const MenuOption: FC<MenuOptionProps> = ({
 			}}
 		>
 			{icon}
-			<div className="label">{label}</div>
+			<div className="label" style={style}>{label}</div>
+			{children}
 		</button>
 	);
 };

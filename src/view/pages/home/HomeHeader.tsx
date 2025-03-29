@@ -38,8 +38,6 @@ export default function HomeHeader() {
 		(lang) => lang.code === currentLanguage
 	).label;
 
-	const currentStatement = undefined;
-
 	useEffect(() => {
 		window.addEventListener('beforeinstallprompt', (e: Event) => {
 			const beforeInstallPromptEvent = e as BeforeInstallPromptEvent;
@@ -95,10 +93,7 @@ export default function HomeHeader() {
 		<div className={`homePage__header ${dir}`}>
 			<div className='homePage__header__wrapper'>
 				<h1 className='homePage__header__wrapper__title'>FreeDi</h1>
-				<button onClick={handleShowInAppNotifications} className='inAppNotifications'>
-					<MailIcon />
-					{showInAppNotifications && <InAppNotifications />}
-				</button>
+
 				<div className='homePage__header__wrapper__icons'>
 					{isInstallable && (
 						<IconButton onClick={handleInstallApp}>
@@ -114,21 +109,26 @@ export default function HomeHeader() {
 								className="footer"
 								icon={<DisconnectIcon style={{ color: 'white' }} />}
 								label={t('Disconnect')}
-								onOptionClick={logOut}
-							/>
+								onOptionClick={logOut} children={''} />
 						}
 					>
 
 						<MenuOption
 							icon={<LanguagesIcon style={{ color: '#4E88C7' }} />}
 							label={currentLabel}
-							onOptionClick={() => handlePanel('changeLanguage')}
-						/>
+							onOptionClick={() => handlePanel('changeLanguage')} children={''} />
 						<MenuOption
 							icon={<InvitationIcon style={{ color: '#4E88C7' }} />}
 							label={t('Join with PIN number')}
-							onOptionClick={() => handlePanel('invitation')}
-						/>
+							onOptionClick={() => handlePanel('invitation')} children={''} />
+
+						<MenuOption
+							icon={<MailIcon style={{ color: '#4E88C7' }} />}
+							label={t('Notifications')}
+							onOptionClick={handleShowInAppNotifications}
+						>
+							{showInAppNotifications && <InAppNotifications />}
+						</MenuOption>
 					</Menu>
 				</div>
 			</div>
