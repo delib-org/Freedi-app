@@ -63,16 +63,12 @@ const SuggestionComment: FC<Props> = ({ statement, parentStatement }) => {
 
 	useEffect(() => {
 		// observe the comments to mark as read
-		let readTimeout: NodeJS.Timeout;
-		if ( commentsRef.current ) {
-			readTimeout = setTimeout(() => {
-				dispatch(deleteInAppNotificationsByParentId(statement.statementId))
-			}, 2000)
+		if (commentsRef.current) {
+			setTimeout(() => {
+				dispatch(deleteInAppNotificationsByParentId(statement.statementId));
+			}, 2000);
 		}
-		else {
-			clearTimeout(readTimeout);
-		}
-	},[isOpen])
+	}, [isOpen])
 
 	useEffect(() => {
 		if (user?.uid !== parentStatement.creator.uid) return;
