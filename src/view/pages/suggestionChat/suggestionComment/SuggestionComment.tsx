@@ -65,6 +65,7 @@ const SuggestionComment: FC<Props> = ({ statement, parentStatement }) => {
 		// observe the comments to mark as read
 		if (commentsRef.current) {
 			setTimeout(() => {
+
 				dispatch(deleteInAppNotificationsByParentId(statement.statementId));
 			}, 2000);
 		}
