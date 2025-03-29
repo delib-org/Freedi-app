@@ -83,7 +83,7 @@ const StatementTopNav: FC<Props> = ({
 			data-cy='statement-nav'
 			style={{ backgroundColor: headerStyle.backgroundColor }}
 		>
-			<div className={styles.wrapper} >
+			<div className={`${styles.wrapper} ${currentLanguage === 'he' ? styles.rtl : styles.ltr}`}>
 				{allowNavigation && statement && (
 					<HeaderMenu
 						setIsHeaderMenuOpen={setIsHeaderMenuOpen}
