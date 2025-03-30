@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
-import { statementSelector, statementSubscriptionSelector } from '@/redux/statements/statementsSlice';
+import { setStatementSubscription, statementSelector, statementSubscriptionSelector } from '@/redux/statements/statementsSlice';
 import { useAuthentication } from './useAuthentication';
 import { Access, Role, Statement, Creator, getStatementSubscriptionId } from 'delib-npm';
 import { setStatementSubscriptionToDB } from '../db/subscriptions/setSubscriptions';
 import { getStatementSubscriptionFromDB } from '../db/subscriptions/getSubscriptions';
+import { useDispatch } from 'react-redux';
 
 export interface AuthorizationState {
 	isAuthorized: boolean;
@@ -19,6 +20,7 @@ export const useAuthorization = (statementId?: string): AuthorizationState => {
 		loading: true,
 		error: false,
 	});
+	const dispatch = useDispatch();
 	const statement = useAppSelector(statementSelector(statementId));
 	const statementSubscription = useAppSelector(
 		statementSubscriptionSelector(statementId)
@@ -50,7 +52,7 @@ export const useAuthorization = (statementId?: string): AuthorizationState => {
 					loading: false
 				}));
 			}
-		
+
 			// If the subscription does not exist in Redux store
 		} else if (!statementSubscription && statement?.membership?.access === Access.open && creator) {
 			// Set loading state while creating subscription
@@ -61,8 +63,11 @@ export const useAuthorization = (statementId?: string): AuthorizationState => {
 
 			//check if the user is the subscribed to the statement
 			const statementSubscriptionId = getStatementSubscriptionId(statement.statementId, creator);
+
 			getStatementSubscriptionFromDB(statementSubscriptionId).then((subscription) => {
 				if (subscription) {
+					dispatch(setStatementSubscription(subscription));
+
 					if (isAuthorized(statement, creator?.uid, subscription.role)) {
 						setState((prevState) => ({
 							...prevState,

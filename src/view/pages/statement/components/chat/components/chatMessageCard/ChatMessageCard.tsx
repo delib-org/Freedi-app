@@ -1,5 +1,5 @@
 import { ChangeEvent, FC, useEffect, useRef, useState } from 'react';
-import StatementChatMore from '../StatementChatMore';
+import StatementChatMore from '../statementChatMore/StatementChatMore';
 import UserAvatar from '../userAvatar/UserAvatar';
 import AddQuestionIcon from '@/assets/icons/addQuestion.svg?react';
 import DeleteIcon from '@/assets/icons/delete.svg?react';

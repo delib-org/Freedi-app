@@ -22,32 +22,33 @@ import {
 import { getStatementSubscriptionId } from '@/controllers/general/helpers';
 
 export const listenToEvaluations = (
-	dispatch: AppDispatch,
 	parentId: string,
-	evaluatorId: string | undefined,
 	selectionFunction?: SelectionFunction
 ): Unsubscribe => {
 	try {
+		const dispatch = store.dispatch as AppDispatch;
 		const evaluationsRef = collection(FireStore, Collections.evaluations);
+		const user = store.getState().creator.creator;
 
-		if (!evaluatorId) throw new Error('User is undefined');
+		if (!user) throw new Error('User is undefined');
+		const evaluatorId = user.uid;
 
 		const q = selectionFunction
 			? query(
-					evaluationsRef,
-					where('parentId', '==', parentId),
-					where('evaluatorId', '==', evaluatorId),
-					where(
-						'evaluation.selectionFunction',
-						'==',
-						selectionFunction
-					)
+				evaluationsRef,
+				where('parentId', '==', parentId),
+				where('evaluatorId', '==', evaluatorId),
+				where(
+					'evaluation.selectionFunction',
+					'==',
+					selectionFunction
 				)
+			)
 			: query(
-					evaluationsRef,
-					where('parentId', '==', parentId),
-					where('evaluatorId', '==', evaluatorId)
-				);
+				evaluationsRef,
+				where('parentId', '==', parentId),
+				where('evaluatorId', '==', evaluatorId)
+			);
 
 		return onSnapshot(q, (evaluationsDB) => {
 			try {
@@ -70,7 +71,7 @@ export const listenToEvaluations = (
 	} catch (error) {
 		console.error(error);
 
-		return () => {};
+		return () => { };
 	}
 };
 
