@@ -2,3 +2,21 @@
 	background-color: teal;
 	padding: 5rem;
 }
+
+.checkboxContainer {
+	display: flex;
+	justify-content: start;
+	align-items: center;
+	gap: 1rem;
+	cursor: pointer;
+	transition: all 0.3s ease-in-out;
+
+	&:hover {
+		background-color: rgba(0, 0, 0, 0.1);
+	}
+
+	svg {
+		width: 1.2rem;
+		height: 1.2rem;
+	}
+}
