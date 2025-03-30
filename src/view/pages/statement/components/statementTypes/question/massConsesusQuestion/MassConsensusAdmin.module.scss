@@ -1,43 +1,45 @@
-.link{
-    color:var(--text-blue);
-    cursor:pointer;
-    display: flex ;
-    align-items: center;
-    justify-content: center;
-    gap:2rem;
+.link {
+	color: var(--text-blue);
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 2rem;
 }
 
-.share{
-    margin-top: 1rem;
-    margin-bottom: 1rem;
+.share {
+	margin-top: 1rem;
+	margin-bottom: 1rem;
 }
 
-.summary{
-    display: flex;
-  justify-content: center;
-   align-items:baseline;
-    justify-content: center;
-    gap: 4rem;
-    margin-top: 2rem;
-    >div{
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 1rem;
-        flex-direction: column;
-        font-size: .85rem;
-        font-weight: 300;
-    }
+.summary {
+	display: flex;
+	justify-content: center;
+	align-items: baseline;
+	justify-content: center;
+	gap: 4rem;
+	margin-top: 2rem;
+	> div {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 1rem;
+		flex-direction: column;
+		font-size: 0.85rem;
+		font-weight: 300;
+	}
 }
-
+.centered {
+	margin: 0 auto;
+}
 .massConsensusAdmin {
-    display: flex;
-    flex-direction: column;
-    gap: 2rem;
-    margin-top: 2rem;
-    width: 100%;
+	display: flex;
+	flex-direction: column;
+	gap: 2rem;
+	margin-top: 2rem;
+	width: 100%;
 }
 
-  .deletionImage {
-      width: 130px;
-  }
+.deletionImage {
+	width: 130px;
+}
