@@ -4,11 +4,10 @@ import FooterMassConsensus from '../footerMassConsensus/FooterMassConsensus';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import { useEffect, useState } from 'react';
 import { updateStatementText } from '@/controllers/db/statements/setStatements';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import { setStatement } from '@/redux/statements/statementsSlice';
 import Text from '@/view/components/text/Text';
 import { useHeader } from '../headerMassConsensus/HeaderContext';
-import { creatorSelector } from '@/redux/creator/creatorSlice';
 
 const Introduction = () => {
 	const { t } = useUserConfig();
@@ -16,9 +15,6 @@ const Introduction = () => {
 	const { statement, loading, error, subscription } = useIntroductionMV();
 	const [edit, setEdit] = useState(false);
 	const role = subscription?.role;
-	const user = useSelector(creatorSelector);
-
-	console.log("uid", user?.uid)
 
 	const { setHeader } = useHeader();
 

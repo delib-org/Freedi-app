@@ -6,6 +6,7 @@ interface MenuOptionProps extends ComponentProps<"button"> {
 	label: string;
 	isOptionSelected?: boolean;
 	icon: ReactNode;
+	children?: ReactNode;
 }
 
 const MenuOption: FC<MenuOptionProps> = ({
@@ -13,22 +14,23 @@ const MenuOption: FC<MenuOptionProps> = ({
 	label,
 	isOptionSelected = false,
 	icon,
+	style,
+	children,
 }) => {
 	return (
-		<div
+		<button
 			className={`menu-option ${isOptionSelected ? "selected" : ""}`}
 			onClick={onOptionClick}
-			role="button"
-			tabIndex={0}
-			onKeyPress={(e) => {
+			onKeyDown={(e) => {
 				if (e.key === "Enter" || e.key === " ") {
 					onOptionClick();
 				}
 			}}
 		>
 			{icon}
-			<div className="label">{label}</div>
-		</div>
+			<div className="label" style={style}>{label}</div>
+			{children}
+		</button>
 	);
 };
 
