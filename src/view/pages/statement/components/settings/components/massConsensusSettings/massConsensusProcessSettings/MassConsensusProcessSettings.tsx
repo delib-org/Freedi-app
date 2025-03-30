@@ -10,6 +10,7 @@ import { useParams } from 'react-router'
 import { listenToMassConsensusProcess } from '@/controllers/db/massConsensus/getMassConsensus'
 import CheckBoxCheckIcon from '@/assets/icons/checkboxCheckedIcon.svg?react';
 import CheckBoxIcon from '@/assets/icons/checkboxEmptyIcon.svg?react';
+import { updateMassConsensusLoginTypeProcess } from '@/controllers/db/massConsensus/setMassConsensus'
 
 const MassConsensusProcessSettings = () => {
 	const dispatch = useDispatch()
@@ -27,12 +28,12 @@ const MassConsensusProcessSettings = () => {
 	}
 
 	const processList = useSelector(massConsensusProcessSelector(statementId)) || defaultMassConsensusProcesses;
-	const showGoogle = processList.loginTypes.google && processList.loginTypes.google.steps.length > 0;
-	const showAnonymous = processList.loginTypes.anonymous && processList.loginTypes.anonymous.steps.length > 0;
+	const showGoogle = processList.loginTypes?.google && processList.loginTypes.google.steps?.length > 0;
+	const showAnonymous = processList.loginTypes?.anonymous && processList.loginTypes?.anonymous.steps?.length > 0;
 
 	const { steps: stepsDefault, processName: processNameDefault } = processList.loginTypes.default
-	const { steps: stepsGoogle, processName: processNameGoogle } = processList.loginTypes.google || {};
-	const { steps: stepsAnonymous, processName: processNameAnonymous } = processList.loginTypes.anonymous || {};
+	const { steps: stepsGoogle, processName: processNameGoogle } = processList.loginTypes?.google || {};
+	const { steps: stepsAnonymous, processName: processNameAnonymous } = processList.loginTypes?.anonymous || {};
 
 	useEffect(() => {
 		const unsubscribe = listenToMassConsensusProcess(statementId)
@@ -43,20 +44,9 @@ const MassConsensusProcessSettings = () => {
 	}, [])
 
 	function handleSetCheckbox(loginType: LoginType) {
-		if (loginType === LoginType.google) {
-			if (showGoogle) {
-				processList.loginTypes.google.steps = [];
-			} else {
-				processList.loginTypes.google.steps = defaultMassConsensusProcess;
-			}
-		} else if (loginType === LoginType.anonymous) {
-			if (showAnonymous) {
-				processList.loginTypes.anonymous.steps = [];
 
-			} else {
-				processList.loginTypes.anonymous.steps = defaultMassConsensusProcess;
-			}
-		}
+		updateMassConsensusLoginTypeProcess(statementId, loginType)
+
 	}
 
 	return (

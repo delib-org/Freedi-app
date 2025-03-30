@@ -56,7 +56,7 @@ const ProcessSetting = ({ processName, steps: _steps, loginType }: Props) => {
 	return (
 		<div className={styles['process-setting']}>
 			<h4>{processName}</h4>
-			{steps.map((process, index) => (
+			{steps && steps.map((process, index) => (
 				<div
 					key={`${loginType}-${index}`}
 					draggable
