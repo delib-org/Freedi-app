@@ -13,7 +13,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { setStatement, statementSelectorById } from '@/redux/statements/statementsSlice';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import { getStatementFromDB } from '@/controllers/db/statements/getStatement';
-import StatementChatMore from '../../../../chat/components/StatementChatMore';
+import StatementChatMore from '../../../../chat/components/statementChatMore/StatementChatMore';
 
 interface Props {
 	statement: Statement;

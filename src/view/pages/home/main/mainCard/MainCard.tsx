@@ -9,7 +9,7 @@ import { getLastElements } from '@/controllers/general/helpers';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { subStatementsByTopParentIdMemo } from '@/redux/statements/statementsSlice';
 import Text from '@/view/components/text/Text';
-import StatementChatMore from '@/view/pages/statement/components/chat/components/StatementChatMore';
+import StatementChatMore from '@/view/pages/statement/components/chat/components/statementChatMore/StatementChatMore';
 import { SimpleStatement, Statement } from 'delib-npm';
 
 interface Props {

@@ -4,7 +4,7 @@ import { FC, KeyboardEvent, useEffect, useState, useRef, ChangeEvent } from 'rea
 import { useSuggestionComment } from './SuggestionCommentMV';
 import CreatorEvaluationIcon from './CreatorEvaluationIcon/CreatorEvaluationIcon';
 import { saveStatementToDB } from '@/controllers/db/statements/setStatements';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { statementSubscriptionSelector, statementSubsSelector } from '@/redux/statements/statementsSlice';
 import { listenToSubStatements } from '@/controllers/db/statements/listenToStatements';
 import SubComment from './subComment/SubComment';
@@ -13,9 +13,10 @@ import ProfileImage from '@/view/components/profileImage/ProfileImage';
 import { evaluationSelector } from '@/redux/evaluations/evaluationsSlice';
 import EvaluationPopup from './evaluationPopup/EvaluationPopup';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
-import StatementChatMore from '../../statement/components/chat/components/StatementChatMore';
+import StatementChatMore from '../../statement/components/chat/components/statementChatMore/StatementChatMore';
 import { setStatementSubscriptionToDB } from '@/controllers/db/subscriptions/setSubscriptions';
 import { clearInAppNotifications } from '@/controllers/db/inAppNotifications/db_inAppNotifications';
+import { deleteInAppNotificationsByParentId } from '@/redux/notificationsSlice/notificationsSlice';
 
 interface Props {
 	parentStatement: Statement
@@ -24,6 +25,7 @@ interface Props {
 
 const SuggestionComment: FC<Props> = ({ statement, parentStatement }) => {
 	const { t } = useUserConfig();
+	const dispatch = useDispatch();
 	const subscription = useSelector(statementSubscriptionSelector(statement.statementId));
 	const initialStatement = useRef(parentStatement.statement);
 	const initialDescription = useRef(parentStatement.description);
@@ -35,6 +37,7 @@ const SuggestionComment: FC<Props> = ({ statement, parentStatement }) => {
 	const [showInput, setShowInput] = useState(false);
 	const [evaluationChanged, setEvaluationChanged] = useState(false);
 	const textareaRef = useRef<HTMLTextAreaElement>(null);
+	const commentsRef = useRef<HTMLDivElement>(null);
 
 	useEffect(() => {
 		const unsubscribe = listenToSubStatements(statement.statementId);
@@ -57,6 +60,16 @@ const SuggestionComment: FC<Props> = ({ statement, parentStatement }) => {
 			adjustTextareaHeight(textareaRef.current);
 		}
 	}, [showInput]);
+
+	useEffect(() => {
+		// observe the comments to mark as read
+		if (commentsRef.current) {
+			setTimeout(() => {
+
+				dispatch(deleteInAppNotificationsByParentId(statement.statementId));
+			}, 2000);
+		}
+	}, [isOpen])
 
 	useEffect(() => {
 		if (user?.uid !== parentStatement.creator.uid) return;
@@ -153,7 +166,7 @@ const SuggestionComment: FC<Props> = ({ statement, parentStatement }) => {
 			</button>
 			{isOpen && (
 				<>
-					<div className={styles.subComments}>
+					<div ref={commentsRef} className={styles.subComments}>
 						<SubComment statement={statement} />
 						{comments.map((comment) => (
 							<SubComment key={comment.statementId} statement={comment} />

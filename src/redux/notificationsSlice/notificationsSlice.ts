@@ -2,6 +2,7 @@ import { createSlice } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
 import { RootState } from '../store';
 import { NotificationType, updateArray } from 'delib-npm';
+import { createSelector } from '@reduxjs/toolkit';
 
 // Define a type for the slice state
 interface NotificationsState {
@@ -91,6 +92,13 @@ export const {
 export const inAppNotificationsSelector = (state: RootState) =>
 	state.notifications.inAppNotifications;
 
-export const inAppNotificationsCountSelectorForStatement = (statementId: string) => (state: RootState) => state.notifications.inAppNotifications.filter(notification => notification.parentId === statementId).length;
+export const inAppNotificationsCountSelectorForStatement = (statementId: string) =>
+	createSelector(
+		(state: RootState) => state.notifications.inAppNotifications,
+		(inAppNotifications) =>
+			inAppNotifications.filter(
+				(notification) => notification.parentId === statementId
+			)
+	);
 
 export default notificationsSlicer.reducer;
