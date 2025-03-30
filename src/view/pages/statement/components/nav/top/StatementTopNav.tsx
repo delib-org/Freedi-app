@@ -16,7 +16,6 @@ import NavButtons from './navButtons/NavButtons';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import { LANGUAGES } from '@/constants/Languages';
 import LanguagesIcon from '@/assets/icons/languagesIcon.svg?react';
-import ChangeLanguage from '@/view/components/changeLanguage/ChangeLanguage';
 import Modal from '@/view/components/modal/Modal';
 import { useSelector } from 'react-redux';
 import { statementSubscriptionSelector } from '@/redux/statements/statementsSlice';
