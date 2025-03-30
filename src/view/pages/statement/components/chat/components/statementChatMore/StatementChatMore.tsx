@@ -10,6 +10,7 @@ import ChatIcon from '@/assets/icons/roundedChatDotIcon.svg?react';
 import { SimpleStatement, Statement } from 'delib-npm';
 import { useSelector } from 'react-redux';
 import { inAppNotificationsCountSelectorForStatement } from '@/redux/notificationsSlice/notificationsSlice';
+import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 
 interface Props {
 	statement: Statement | SimpleStatement;
@@ -18,11 +19,14 @@ interface Props {
 }
 
 const StatementChatMore: FC<Props> = ({ statement, onlyCircle, useLink = true }) => {
-	// Hooks
+
 	const navigate = useNavigate();
+	const { user } = useAuthentication();
 
 	// Redux store
-	const countMessages = useSelector(inAppNotificationsCountSelectorForStatement(statement.statementId));
+	const notifications = useSelector(inAppNotificationsCountSelectorForStatement(statement.statementId))
+
+	const countMessages = notifications.filter(notification => notification.creatorName !== user.displayName).length;
 
 	return (
 		<button

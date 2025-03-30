@@ -68,14 +68,14 @@ export const addMassConsensusMember = async (req: Request, res: Response) => {
 	}
 };
 
-
-export async function addOptionToMassConsensus(ev:any){
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function addOptionToMassConsensus(ev: any) {
 	try {
 
 		const newStatement = ev.data?.data() as Statement || undefined;
-		if(!newStatement) return;
-		if(newStatement.statementType !== StatementType.option) return;
-		
+		if (!newStatement) return;
+		if (newStatement.statementType !== StatementType.option) return;
+
 		const parentRef = db.collection(Collections.statements).doc(newStatement.parentId);
 
 		await db.runTransaction(async (transaction) => {
@@ -97,11 +97,13 @@ export async function addOptionToMassConsensus(ev:any){
 		});
 	} catch (error) {
 		console.error(error);
+
 		return;
-		
+
 	}
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function removeOptionFromMassConsensus(ev: any) {
 	try {
 		const deletedStatement = ev.data?.data() as Statement || undefined;
@@ -125,10 +127,12 @@ export async function removeOptionFromMassConsensus(ev: any) {
 		});
 	} catch (error) {
 		console.error(error);
+
 		return;
 	}
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function updateOptionInMassConsensus(change: any) {
 	try {
 		const beforeData = change.before?.data() as Statement || undefined;
@@ -173,17 +177,18 @@ export async function updateOptionInMassConsensus(change: any) {
 		});
 	} catch (error) {
 		console.error(error);
+
 		return;
 	}
 }
 
-export async function addMemberToMassConsensus(ev:any){
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function addMemberToMassConsensus(ev: any) {
 	try {
-		if(!ev.data.data()) return;
+		if (!ev.data.data()) return;
 		const newMember = ev.data.data() as MassConsensusMember;
 		if (!newMember) return;
 		const statementRef = db.collection(Collections.statements).doc(newMember.statementId);
-		console.log(newMember.statementId, newMember.creator.uid);
 
 		await db.runTransaction(async (transaction) => {
 			const statementDoc = await transaction.get(statementRef);
@@ -192,13 +197,12 @@ export async function addMemberToMassConsensus(ev:any){
 			}
 
 			const statementData = statementDoc.data() as Statement;
-			if (statementData && statementData.massMembers !== undefined) {
-				console.log("current members", statementData.massMembers);
+			if (statementData?.massMembers !== undefined) {
+
 				transaction.update(statementRef, {
 					massMembers: FieldValue.increment(1)
 				});
 			} else {
-				console.log("setting members:1");
 				transaction.update(statementRef, {
 					massMembers: 1
 				});
@@ -209,6 +213,6 @@ export async function addMemberToMassConsensus(ev:any){
 		console.error(error);
 
 		return;
-		
+
 	}
 }

@@ -4,7 +4,7 @@ import { Link, NavLink } from 'react-router';
 import useSubGroupCard from './SubGroupCardVM';
 import { Statement, StatementType } from 'delib-npm';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
-import StatementChatMore from '@/view/pages/statement/components/chat/components/StatementChatMore';
+import StatementChatMore from '@/view/pages/statement/components/chat/components/statementChatMore/StatementChatMore';
 
 interface Props {
 	statement: Statement;
