@@ -39,7 +39,6 @@ const SimilarSuggestions = () => {
 	function handleSelect(index: number) {
 		setSelected(index);
 	}
-	console.log(similarSuggestions);
 	useEffect(() => {
 		if (similarSuggestions.length === 0)
 			navigate(`/mass-consensus/${statementId}/introduction`);
