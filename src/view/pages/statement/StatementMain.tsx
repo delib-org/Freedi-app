@@ -1,5 +1,5 @@
 import { createSelector } from '@reduxjs/toolkit';
-import { useEffect, useId, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router';
 
 // firestore
@@ -10,7 +10,6 @@ import StatementHeader from './components/header/StatementHeader';
 import NewStatement from './components/newStatemement/newStatement';
 import Switch from './components/switch/Switch';
 import { StatementContext } from './StatementCont';
-import { listenToEvaluations } from '@/controllers/db/evaluation/getEvaluation';
 import {
 	listenToStatement,
 	listenToAllDescendants,
@@ -19,7 +18,6 @@ import {
 
 // Redux Store
 import { statementTitleToDisplay } from '@/controllers/general/helpers';
-import { useAppDispatch } from '@/controllers/hooks/reduxHooks';
 import { MapProvider } from '@/controllers/hooks/useMap';
 import { RootState } from '@/redux/store';
 import Modal from '@/view/components/modal/Modal';
@@ -51,7 +49,6 @@ export default function StatementMain() {
 	const { isAuthorized, loading } = useAuthorization(statementId);
 
 	// Redux store
-	const dispatch = useAppDispatch();
 	const { creator } = useAuthentication();
 
 	const stage = useSelector(statementSelector(stageId));
@@ -103,6 +100,10 @@ export default function StatementMain() {
 		if (creator && statementId) {
 			clearInAppNotifications(statementId);
 
+			unsubscribeFunctions.push(
+				listenToStatement(statementId, setIsStatementNotFound)
+			);
+
 			// Combine and optimize additional listeners
 			const { pathname } = window.location;
 			const currentScreen = pathname.split('/').pop() || 'main';
@@ -116,13 +117,6 @@ export default function StatementMain() {
 				// For other screens, use the more efficient listener that fetches only direct children
 				unsubscribeFunctions.push(
 					listenToSubStatements(statementId)
-				);
-			}
-
-			// Only load evaluations for the statement view
-			if (currentScreen === 'main') {
-				unsubscribeFunctions.push(
-					listenToEvaluations(dispatch, statementId, creator?.uid)
 				);
 			}
 

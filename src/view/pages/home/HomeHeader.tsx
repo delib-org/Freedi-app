@@ -20,8 +20,8 @@ export default function HomeHeader() {
 	const [isHomeMenuOpen, setIsHomeMenuOpen] = useState(false);
 	const [showInvitationModal, setShowInvitationModal] = useState(false);
 	const [showLanguageModal, setShowLanguageModal] = useState(false);
-	const [showInAppNotifications, setShowInAppNotifications] = useState(false);
 
+	const [showInAppNotifications, setShowInAppNotifications] = useState(false);
 	const [isInstallable, setIsInstallable] = useState(false);
 
 	interface BeforeInstallPromptEvent extends Event {
@@ -50,6 +50,7 @@ export default function HomeHeader() {
 			setIsInstallable(true);
 		});
 	}, []);
+
 	function handleInstallApp() {
 		try {
 			if (deferredPrompt) {
@@ -80,6 +81,7 @@ export default function HomeHeader() {
 			console.error(error);
 		}
 	}
+
 	function closeModal() {
 		setShowLanguageModal(false);
 	}
@@ -91,45 +93,50 @@ export default function HomeHeader() {
 		<div className={`homePage__header ${dir}`}>
 			<div className='homePage__header__wrapper'>
 				<h1 className='homePage__header__wrapper__title'>FreeDi</h1>
-				<button onClick={handleShowInAppNotifications} className='inAppNotifications'>
-					<MailIcon />
-					{showInAppNotifications && <InAppNotifications />}
-				</button>
+
 				<div className='homePage__header__wrapper__icons'>
 					{isInstallable && (
 						<IconButton onClick={handleInstallApp}>
 							<InstallIcon />
 						</IconButton>
 					)}
+					<button onClick={handleShowInAppNotifications} className='inAppNotifications'>
+						<MailIcon />
+						{showInAppNotifications && <InAppNotifications />}
+					</button>
 					<Menu
 						isMenuOpen={isHomeMenuOpen}
 						setIsOpen={setIsHomeMenuOpen}
-						iconColor='white'
+						iconColor="white"
+						footer={
+							<MenuOption
+								className="footer"
+								icon={<DisconnectIcon style={{ color: 'white' }} />}
+								label={t('Disconnect')}
+								onOptionClick={logOut} children={''} />
+						}
 					>
+
 						<MenuOption
-							icon={
-								<DisconnectIcon style={{ color: '#4E88C7' }} />
-							}
-							label={t('Disconnect')}
-							onOptionClick={logOut}
-						/>
-						<MenuOption
-							icon={
-								<LanguagesIcon style={{ color: '#4E88C7' }} />
-							}
+							icon={<LanguagesIcon style={{ color: '#4E88C7' }} />}
 							label={currentLabel}
-							onOptionClick={() => handlePanel('changeLanguage')}
-						/>
+							onOptionClick={() => handlePanel('changeLanguage')} children={''} />
 						<MenuOption
-							icon={
-								<InvitationIcon style={{ color: '#4E88C7' }} />
-							}
+							icon={<InvitationIcon style={{ color: '#4E88C7' }} />}
 							label={t('Join with PIN number')}
-							onOptionClick={() => handlePanel('invitation')}
-						/>
+							onOptionClick={() => handlePanel('invitation')} children={''} />
+
+						<MenuOption
+							icon={<MailIcon style={{ color: '#4E88C7' }} />}
+							label={t('Notifications')}
+							onOptionClick={handleShowInAppNotifications}
+						>
+							{showInAppNotifications && <InAppNotifications />}
+						</MenuOption>
 					</Menu>
 				</div>
 			</div>
+
 			{showInvitationModal && (
 				<InvitationModal setShowModal={setShowInvitationModal} />
 			)}

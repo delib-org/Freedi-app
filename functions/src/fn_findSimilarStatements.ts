@@ -24,15 +24,23 @@ export async function findSimilarStatements(
 			doc.data()
 		) as Statement[];
 
-		const statementSimple: { statement: string, id: string }[] = subStatements.map((subStatement) => ({
-			statement: subStatement.statement,
-			id: subStatement.statementId,
-		}));
+		const statementSimple: { statement: string; id: string }[] =
+			subStatements.map((subStatement) => ({
+				statement: subStatement.statement,
+				id: subStatement.statementId,
+			}));
 
 		//if no options on the DB generate similar options by AI
 		if (statementSimple.length === 0) {
-			const textsByAI = await generateSimilar(userInput, numberOfOptionsToGenerate);
-			response.status(200).send({ similarTexts: textsByAI, ok: true, userText: userInput });
+			const textsByAI = await generateSimilar(
+				userInput,
+				numberOfOptionsToGenerate
+			);
+			response.status(200).send({
+				similarTexts: textsByAI,
+				ok: true,
+				userText: userInput,
+			});
 
 			return;
 		}
@@ -45,9 +53,23 @@ export async function findSimilarStatements(
 			numberOfOptionsToGenerate
 		);
 
-		const similarStatements = getStatementsFromTextsOfStatements(statementSimple, _similarStatementsAI, subStatements);
+		const similarStatements = getStatementsFromTextsOfStatements(
+			statementSimple,
+			_similarStatementsAI,
+			subStatements
+		);
+		const duplicateStatement = similarStatements.find(
+			(stat) => stat.statement === userInput
+		);
 
-		const statementsLeftToGenerate = numberOfOptionsToGenerate - similarStatements.length;
+		if (duplicateStatement) {
+			const index = similarStatements.indexOf(duplicateStatement);
+			if (index !== -1) {
+				similarStatements.splice(index, 1);
+			}
+		}
+		const statementsLeftToGenerate =
+			numberOfOptionsToGenerate - similarStatements.length;
 
 		//if there are not enough similar statements in the DB and we need to generate more
 		if (statementsLeftToGenerate > 0) {
@@ -59,7 +81,7 @@ export async function findSimilarStatements(
 			response.status(200).send({
 				similarStatements,
 				similarTexts: generated,
-				userText: userInput,
+				userText: duplicateStatement || userInput,
 				ok: true,
 			});
 
@@ -71,7 +93,7 @@ export async function findSimilarStatements(
 		response.status(200).send({
 			similarStatements,
 			ok: true,
-			userText: userInput,
+			userText: duplicateStatement || userInput,
 		});
 	} catch (error) {
 		response.status(500).send({ error: error, ok: false });
@@ -80,16 +102,22 @@ export async function findSimilarStatements(
 		return;
 	}
 
-	function getStatementsFromTextsOfStatements(statementSimple: { statement: string; id: string; }[], _similarStatementsAI: string[], subStatements: Statement[]): Statement[] {
+	function getStatementsFromTextsOfStatements(
+		statementSimple: { statement: string; id: string }[],
+		_similarStatementsAI: string[],
+		subStatements: Statement[]
+	): Statement[] {
 		const similarStatementsIds = statementSimple
-			.filter((subStatement) => _similarStatementsAI.includes(subStatement.statement)
+			.filter((subStatement) =>
+				_similarStatementsAI.includes(subStatement.statement)
 			)
 			.map((s) => s.id);
 
 		const statements = similarStatementsIds
-			.map((id) => subStatements.find(
-				(subStatement) => subStatement.statementId === id
-			)
+			.map((id) =>
+				subStatements.find(
+					(subStatement) => subStatement.statementId === id
+				)
 			)
 			.filter((s) => s !== undefined);
 
@@ -148,7 +176,7 @@ export async function generateSimilar(
 		const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
 		const prompt = `
-		create ${optionsToBeGeneratedByAI} similar sentences to the user input '${userInput}'.
+		create ${optionsToBeGeneratedByAI} similar sentences to the user input '${userInput}' but never the same.
 		Give answer back in this json format: { strings: ['string1', 'string2', ...] }
 		`;
 
