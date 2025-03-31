@@ -12,6 +12,7 @@ import {
 	MassConsensusPageUrls,
 	StatementType,
 } from 'delib-npm';
+import { useState } from 'react';
 
 import { useNavigate, useParams } from 'react-router';
 
@@ -19,11 +20,13 @@ export function useSimilarSuggestions() {
 	const navigate = useNavigate();
 	const { statementId: parentId } = useParams<{ statementId: string }>();
 	const { creator } = useAuthentication();
+	const [loading, setLoading] = useState(false);
 
 	async function handleSetSuggestionToDB(
 		statement: Statement | GeneratedStatement
 	) {
 		try {
+			setLoading(true);
 			const parentStatement = await getStatementFromDB(parentId);
 			if (!parentStatement)
 				throw new Error('Error getting parent statement from DB');
@@ -51,7 +54,8 @@ export function useSimilarSuggestions() {
 			navigate(
 				`/mass-consensus/${parentId}/${MassConsensusPageUrls.randomSuggestions}`
 			);
-
+			setLoading(false);
+			
 			return;
 		} catch (error) {
 			console.error(error);
@@ -60,5 +64,6 @@ export function useSimilarSuggestions() {
 
 	return {
 		handleSetSuggestionToDB,
+		loading,
 	};
 }

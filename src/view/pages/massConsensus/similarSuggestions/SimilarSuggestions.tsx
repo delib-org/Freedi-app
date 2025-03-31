@@ -14,11 +14,12 @@ import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import TitleMassConsensus from '../TitleMassConsensus/TitleMassConsensus';
 import FooterMassConsensus from '../footerMassConsensus/FooterMassConsensus';
 import { useHeader } from '../headerMassConsensus/HeaderContext';
+import Loader from '@/view/components/loaders/Loader';
 
 const SimilarSuggestions = () => {
 	const navigate = useNavigate();
 	const { statementId } = useParams<{ statementId: string }>();
-	const { handleSetSuggestionToDB } = useSimilarSuggestions();
+	const { handleSetSuggestionToDB, loading } = useSimilarSuggestions();
 	const similarSuggestions = useSelector(selectSimilarStatements);
 	const { t } = useUserConfig();
 
@@ -67,11 +68,12 @@ const SimilarSuggestions = () => {
 			</div>
 			<FooterMassConsensus
 				goTo={MassConsensusPageUrls.topSuggestions}
-				isNextActive={selected !== null}
+				isNextActive={selected !== null && !loading}
 				onNext={() =>
 					handleSetSuggestionToDB(similarSuggestions[selected])
 				}
 			/>
+			{loading && <Loader /> /* TODO: insert designed mass-consensus loader */}
 		</>
 	);
 };
