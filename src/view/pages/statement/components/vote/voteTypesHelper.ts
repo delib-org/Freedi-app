@@ -22,4 +22,5 @@ export interface OptionBarProps {
 	optionsCount: number;
 	isVertical: boolean;
 	screenWidth: number;
+	changeVotedOption?: void;
 }

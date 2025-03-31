@@ -1,4 +1,4 @@
-import React, { FC } from 'react';
+import React, { FC, useState } from 'react';
 import { useParams } from 'react-router';
 import OptionBar from '../optionBar/OptionBar';
 import './VotingArea.scss';
@@ -27,6 +27,7 @@ const VotingArea: FC<VotingAreaProps> = ({
 	const { statementId, sort } = useParams();
 	const statement = useSelector(statementSelectorById(statementId));
 	const { width } = useWindowDimensions();
+	const [ votedOption, setVotedOptioin ] = useState<number>(-1); //for temporary dispaly while loading
 
 	if (!statement) return null;
 
@@ -46,6 +47,14 @@ const VotingArea: FC<VotingAreaProps> = ({
 
 	const shouldShowVerticalBar = isVerticalOptionBar(width, optionsCount);
 
+	//helper functions
+
+	const changeVotedOption = (indexPressed) => {
+		if (indexPressed === votedOption) setVotedOptioin(-1);
+		else setVotedOptioin(indexPressed);
+		console.log(votedOption)
+	}
+
 	return (
 		<div
 			className={`voting-area ${shouldShowVerticalBar ? 'vertical' : 'horizontal'}`}
@@ -63,6 +72,7 @@ const VotingArea: FC<VotingAreaProps> = ({
 						setStatementInfo={setStatementInfo}
 						optionsCount={optionsCount}
 						screenWidth={width}
+						changeVotedOption={changeVotedOption(i)}
 					/>
 				);
 			})}
