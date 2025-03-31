@@ -26,7 +26,7 @@ const StatementChatMore: FC<Props> = ({ statement, onlyCircle, useLink = true })
 	// Redux store
 	const notifications = useSelector(inAppNotificationsCountSelectorForStatement(statement.statementId))
 
-	const countMessages = notifications.filter(notification => notification.creatorName !== user.displayName).length;
+	const countMessages = notifications.filter(notification => notification.creatorName !== user?.displayName).length;
 
 	return (
 		<button
