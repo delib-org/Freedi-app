@@ -1,16 +1,18 @@
 import { Link, useParams } from 'react-router';
-import { MassConsensusPageUrls } from 'delib-npm';
+import { LoginType, MassConsensusPageUrls } from 'delib-npm';
 import styles from './FooterMassConsensus.module.scss';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { nextStep } from '../MassConsensusVM';
+import { useSelector } from 'react-redux';
+import { useAuthentication } from '@/controllers/hooks/useAuthentication';
+import { massConsensusStepsSelector } from '@/redux/massConsensus/massConsensusSlice';
 
 const FooterMassConsensus = ({
-	goTo,
 	isIntro,
 	isNextActive,
 	isFeedback,
 	onNext,
 }: {
-	goTo?: MassConsensusPageUrls;
 	isIntro?: boolean;
 	isNextActive?: boolean;
 	isFeedback?: boolean;
@@ -18,6 +20,11 @@ const FooterMassConsensus = ({
 }) => {
 	const { statementId } = useParams<{ statementId: string }>();
 	const { t, dir } = useUserConfig();
+	const { user } = useAuthentication()
+	const loginType = user?.isAnonymous ? LoginType.anonymous : LoginType.google;
+	const steps = useSelector(massConsensusStepsSelector(statementId, loginType));
+	console.log(steps);
+	const goTo = nextStep(statementId, steps);
 
 	const renderButton = () => {
 		if (isIntro) {

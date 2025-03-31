@@ -13,6 +13,8 @@ import { setMassConsensusMemberToDB } from '@/controllers/db/massConsensus/setMa
 import { massConsensusStepsSelector, setMassConsensusProcess } from '@/redux/massConsensus/massConsensusSlice'
 import { getMassConsensusProcess } from '@/controllers/db/massConsensus/getMassConsensus'
 import { LoginType } from 'delib-npm'
+import { get } from 'http'
+import { getStep } from './MassConsensusVM'
 
 const MassConsensus = () => {
 	const { dir } = useUserConfig();
@@ -22,8 +24,7 @@ const MassConsensus = () => {
 	const subscription = useSelector(statementSubscriptionSelector(statementId))
 	const loginType = user?.isAnonymous ? LoginType.anonymous : LoginType.google;
 	const steps = useSelector(massConsensusStepsSelector(statementId, loginType))
-
-	console.log(steps)
+	getStep(statementId);
 
 	useEffect(() => {
 		if (!subscription && user) {
