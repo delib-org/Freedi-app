@@ -8,7 +8,7 @@ import { useParams } from 'react-router';
 
 interface InitialQuestionVM {
 	handleSetInitialSuggestion: () => Promise<void>;
-	ifButtonEnabled: boolean;
+	ifTextFilled: boolean;
 	ready: boolean;
 	loading: boolean;
 	subscription: StatementSubscription | undefined;
@@ -24,13 +24,13 @@ export function useInitialQuestion(description: string): InitialQuestionVM {
 		statementSubscriptionSelector(statementId)
 	);
 
-	const ifButtonEnabled = useMemo(
+	const ifTextFilled = useMemo(
 		() => description.trim().length > 0,
 		[description]
 	);
 
 	async function handleSetInitialSuggestion() {
-		if (!ifButtonEnabled) return;
+		if (!ifTextFilled || loading) return;
 		setLoading(true);
 
 		const {
@@ -52,7 +52,7 @@ export function useInitialQuestion(description: string): InitialQuestionVM {
 
 	return {
 		handleSetInitialSuggestion,
-		ifButtonEnabled,
+		ifTextFilled,
 		ready,
 		loading,
 		subscription,

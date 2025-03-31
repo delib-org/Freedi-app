@@ -24,7 +24,7 @@ const InitialQuestion = () => {
 	const dispatch = useDispatch(); // Dispatch to update the redux state
 	const {
 		handleSetInitialSuggestion,
-		ifButtonEnabled,
+		ifTextFilled,
 		ready,
 		loading,
 		subscription,
@@ -133,9 +133,9 @@ const InitialQuestion = () => {
 			<FooterMassConsensus
 				goTo={MassConsensusPageUrls.randomSuggestions}
 				onNext={handleSetInitialSuggestion}
-				isNextActive={ifButtonEnabled}
+				isNextActive={ifTextFilled && !loading}
 			/>
-			{loading && <Loader />}
+			{loading && <Loader /> /* TODO: insert designed mass-consensus loader */}
 		</>
 	);
 };
