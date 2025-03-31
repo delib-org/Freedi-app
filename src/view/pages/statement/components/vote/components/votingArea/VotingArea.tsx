@@ -52,7 +52,6 @@ const VotingArea: FC<VotingAreaProps> = ({
 	const changeVotedOption = (indexPressed) => {
 		if (indexPressed === votedOption) setVotedOptioin(-1);
 		else setVotedOptioin(indexPressed);
-		console.log(votedOption)
 	}
 
 	return (
@@ -72,7 +71,8 @@ const VotingArea: FC<VotingAreaProps> = ({
 						setStatementInfo={setStatementInfo}
 						optionsCount={optionsCount}
 						screenWidth={width}
-						changeVotedOption={changeVotedOption(i)}
+						changeVotedOption={() => changeVotedOption(i)}
+						isVoted={votedOption == i}
 					/>
 				);
 			})}

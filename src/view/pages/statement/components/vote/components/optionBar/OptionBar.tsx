@@ -27,7 +27,8 @@ export const OptionBar: FC<OptionBarProps> = ({
 	isVertical,
 	optionsCount,
 	screenWidth,
-	changeVotedOption
+	changeVotedOption,
+	isVoted
 }) => {
 	const { creator } = useAuthentication();
 	// * Redux * //
@@ -48,9 +49,9 @@ export const OptionBar: FC<OptionBarProps> = ({
 	const barHeight =
 		selections > 0 && totalVotes > 0
 			? Math.round((selections / totalVotes) * 100)
-			: 0;
+			: isVoted? 100: 0;
 	const handleVotePress = () => {
-		changeVotedOption;
+		changeVotedOption();
 		dispatch(setVoteToStore(option));
 		setVoteToDB(option, creator);
 		getStatementFromDB(option.statementId);
