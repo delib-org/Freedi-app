@@ -10,6 +10,9 @@ import HeaderMassConsensus from './headerMassConsensus/HeaderMassConsensus'
 import styles from './MassConsensus.module.scss'
 import { useUserConfig } from '@/controllers/hooks/useUserConfig'
 import { setMassConsensusMemberToDB } from '@/controllers/db/massConsensus/setMassConsensus'
+import { massConsensusStepsSelector, setMassConsensusProcess } from '@/redux/massConsensus/massConsensusSlice'
+import { getMassConsensusProcess } from '@/controllers/db/massConsensus/getMassConsensus'
+import { LoginType } from 'delib-npm'
 
 const MassConsensus = () => {
 	const { dir } = useUserConfig();
@@ -17,6 +20,10 @@ const MassConsensus = () => {
 	const { statementId } = useParams()
 	const { user } = useAuthentication()
 	const subscription = useSelector(statementSubscriptionSelector(statementId))
+	const loginType = user?.isAnonymous ? LoginType.anonymous : LoginType.google;
+	const steps = useSelector(massConsensusStepsSelector(statementId, loginType))
+
+	console.log(steps)
 
 	useEffect(() => {
 		if (!subscription && user) {
@@ -31,8 +38,15 @@ const MassConsensus = () => {
 
 	useEffect(() => {
 
-		if (user)
-			setMassConsensusMemberToDB(user, statementId)
+		if (user) {
+			setMassConsensusMemberToDB(user, statementId);
+
+			getMassConsensusProcess(statementId).then((process) => {
+				if (process) {
+					dispatch(setMassConsensusProcess(process))
+				}
+			})
+		}
 	}, [user])
 
 	return (

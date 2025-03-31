@@ -4,7 +4,7 @@ import ProcessSetting from './ProcessSetting/ProcessSetting'
 import { useEffect } from 'react'
 import { LoginType, MassConsensusProcess } from 'delib-npm'
 import { defaultMassConsensusProcess } from '@/model/massConsensus/massConsensusModel'
-import { useDispatch, useSelector } from 'react-redux'
+import { useSelector } from 'react-redux'
 import { massConsensusProcessSelector } from '@/redux/massConsensus/massConsensusSlice'
 import { useParams } from 'react-router'
 import { listenToMassConsensusProcess } from '@/controllers/db/massConsensus/getMassConsensus'
@@ -13,7 +13,7 @@ import CheckBoxIcon from '@/assets/icons/checkboxEmptyIcon.svg?react';
 import { updateMassConsensusLoginTypeProcess } from '@/controllers/db/massConsensus/setMassConsensus'
 
 const MassConsensusProcessSettings = () => {
-	const dispatch = useDispatch()
+
 	const { t } = useUserConfig()
 	const { statementId } = useParams()
 

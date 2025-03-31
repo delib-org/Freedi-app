@@ -1,7 +1,8 @@
 import { createSlice } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
 import { RootState } from '../store';
-import { Statement, GeneratedStatement, MassConsensusProcess, updateArray } from 'delib-npm';
+import { Statement, GeneratedStatement, MassConsensusProcess, updateArray, LoginType } from 'delib-npm';
+import { defaultMassConsensusProcess } from '@/model/massConsensus/massConsensusModel';
 
 export enum Status {
 	idle = 'idle',
@@ -61,5 +62,11 @@ export const selectSimilarStatementsByStatementId =
 		);
 
 export const massConsensusProcessSelector = (statementId: string) => (state: RootState) => state.massConsensus.massConsensusProcess.find((process) => process.statementId === statementId);
+export const massConsensusStepsSelector = (statementId: string, loginType: LoginType) => (state: RootState) => {
+	const process = state.massConsensus.massConsensusProcess.find((process) => process.statementId === statementId);
+	if (!process) return defaultMassConsensusProcess;
+	if (process.loginTypes[loginType]?.steps) return process.loginTypes[loginType].steps;
+	else return process.loginTypes.default?.steps || defaultMassConsensusProcess;
+}
 
 export default massConsensusSlice.reducer;
