@@ -16,9 +16,6 @@ const HeaderMassConsensus = () => {
 	const role = useSelector(statementSubscriptionSelector(statementId))?.role;
 	const { steps, currentStep } = useMassConsensusSteps();
 	const { previousStep } = getStepNavigation(steps, currentStep);
-	console.log("currentStep", currentStep)
-	console.log("steps", steps)
-	console.log("previousStep", previousStep)
 
 	const computedTitle = typeof title === 'function' ? title() : title;
 
