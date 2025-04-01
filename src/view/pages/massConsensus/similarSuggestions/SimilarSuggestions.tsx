@@ -15,6 +15,7 @@ import TitleMassConsensus from '../TitleMassConsensus/TitleMassConsensus';
 import FooterMassConsensus from '../footerMassConsensus/FooterMassConsensus';
 import { useHeader } from '../headerMassConsensus/HeaderContext';
 import Loader from '@/view/components/loaders/Loader';
+import { getStepNavigation, useMassConsensusSteps } from '../MassConsensusVM';
 
 const SimilarSuggestions = () => {
 	const navigate = useNavigate();
@@ -23,6 +24,8 @@ const SimilarSuggestions = () => {
 	const similarSuggestions = useSelector(selectSimilarStatements);
 	const { t } = useUserConfig();
 	const [loadingStatements, setLoadingStatements] = useState(true);
+	const { steps, currentStep } = useMassConsensusSteps();
+	const { nextStep } = getStepNavigation(steps, currentStep);
 
 	const [selected, setSelected] = React.useState<number | null>(null);
 
@@ -43,7 +46,7 @@ const SimilarSuggestions = () => {
 	}
 	useEffect(() => {
 		if (similarSuggestions.length === 0) {
-			navigate(`/mass-consensus/${statementId}/introduction`);
+			navigate(`/mass-consensus/${statementId}/${nextStep}`);
 		} else {
 			setLoadingStatements(false);
 		}
@@ -77,7 +80,6 @@ const SimilarSuggestions = () => {
 				)}
 			</div>
 			<FooterMassConsensus
-				goTo={MassConsensusPageUrls.topSuggestions}
 				isNextActive={selected !== null}
 				onNext={() =>
 					handleSetSuggestionToDB(similarSuggestions[selected])

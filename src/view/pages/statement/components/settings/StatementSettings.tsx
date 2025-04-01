@@ -8,7 +8,6 @@ import StatementSettingsForm from './components/statementSettingsForm/StatementS
 import { defaultEmptyStatement } from './emptyStatementModel';
 import { getStatementFromDB } from '@/controllers/db/statements/getStatement';
 import { listenToMembers } from '@/controllers/db/statements/listenToStatements';
-import { listenToStatementMetaData } from '@/controllers/db/statements/statementMetaData/listenToStatementMeta';
 import { useAppDispatch, useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import {
@@ -21,7 +20,8 @@ import {
 // Custom components
 import Loader from '@/view/components/loaders/Loader';
 import { listenToChoseBy } from '@/controllers/db/choseBy/getChoseBy';
-import { Statement } from 'delib-npm';
+import { QuestionType, Statement } from 'delib-npm';
+import MassConsensusSettings from './components/massConsensusSettings/MassConsensusSettings';
 
 const StatementSettings: FC = () => {
 	// * Hooks * //
@@ -87,11 +87,9 @@ const StatementSettings: FC = () => {
 	useEffect(() => {
 		try {
 			let unsubscribe: undefined | (() => void);
-			let unSubMeta: undefined | (() => void);
 
 			if (statementId) {
 				unsubscribe = listenToMembers(dispatch)(statementId);
-				unSubMeta = listenToStatementMetaData(statementId);
 
 				if (statement) {
 					setStatementToEdit(statement);
@@ -111,12 +109,14 @@ const StatementSettings: FC = () => {
 
 			return () => {
 				if (unsubscribe) unsubscribe();
-				if (unSubMeta) unSubMeta();
+
 			};
 		} catch (error) {
 			console.error(error);
 		}
 	}, [statementId]);
+
+	const isMassConsensus = statement?.questionSettings?.questionType === QuestionType.massConsensus;
 
 	return (
 		<div className='test'>
@@ -126,11 +126,14 @@ const StatementSettings: FC = () => {
 					<Loader />
 				</div>
 			) : (
-				<StatementSettingsForm
-					statement={statementToEdit}
-					parentStatement={parentStatement}
-					setStatementToEdit={setStatementToEdit}
-				/>
+				<>
+					<StatementSettingsForm
+						statement={statementToEdit}
+						parentStatement={parentStatement}
+						setStatementToEdit={setStatementToEdit}
+					/>
+					{isMassConsensus && <MassConsensusSettings />}
+				</>
 			)}
 		</div>
 	);

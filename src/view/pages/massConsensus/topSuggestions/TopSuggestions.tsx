@@ -41,7 +41,6 @@ const TopSuggestions = () => {
 			<FooterMassConsensus
 				isNextActive={true}
 				onNext={navigateToVoting}
-				goTo={MassConsensusPageUrls.voting}
 			/>
 		</div>
 	);

@@ -47,10 +47,6 @@ const InitialQuestion = () => {
 	const isAdmin = subscription?.role === Role.admin;
 
 	useEffect(() => {
-		if (!statement) navigate(`/mass-consensus/${statementId}/introduction`);
-	}, [statementId, navigate]);
-
-	useEffect(() => {
 		if (ready)
 			navigate(
 				`/mass-consensus/${statementId}/${MassConsensusPageUrls.similarSuggestions}`
@@ -125,13 +121,12 @@ const InitialQuestion = () => {
 				value={description}
 				onKeyUp={(e) => {
 					if (e.key === 'Enter') {
-					  e.preventDefault();
-					  handleSetInitialSuggestion();
+						e.preventDefault();
+						handleSetInitialSuggestion();
 					}
-				  }}
+				}}
 			/>
 			<FooterMassConsensus
-				goTo={MassConsensusPageUrls.randomSuggestions}
 				onNext={handleSetInitialSuggestion}
 				isNextActive={ifButtonEnabled}
 			/>

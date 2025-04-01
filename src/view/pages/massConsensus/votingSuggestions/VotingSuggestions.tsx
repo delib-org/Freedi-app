@@ -65,7 +65,6 @@ const VotingSuggestions = () => {
 			<FooterMassConsensus
 				isNextActive={true}
 				onNext={navigateToFeedback}
-				goTo={MassConsensusPageUrls.leaveFeedback}
 			/>
 		</>
 	);

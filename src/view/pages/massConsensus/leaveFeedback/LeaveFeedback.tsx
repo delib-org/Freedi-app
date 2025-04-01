@@ -66,7 +66,6 @@ function LeaveFeedback() {
 				isNextActive={true}
 				onNext={handleSendButton}
 				isFeedback={true}
-				goTo={MassConsensusPageUrls.thankYou}
 			/>
 			<div style={{ textAlign: 'center', marginTop: '1rem' }}>
 				<a
