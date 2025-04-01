@@ -100,6 +100,10 @@ export default function HomeHeader() {
 							<InstallIcon />
 						</IconButton>
 					)}
+					<button onClick={handleShowInAppNotifications} className='inAppNotifications'>
+						<MailIcon />
+						{showInAppNotifications && <InAppNotifications />}
+					</button>
 					<Menu
 						isMenuOpen={isHomeMenuOpen}
 						setIsOpen={setIsHomeMenuOpen}

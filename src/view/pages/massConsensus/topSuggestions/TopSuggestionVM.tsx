@@ -22,6 +22,7 @@ const useTopSuggestions = () => {
 	const { statementId } = useParams<{ statementId: string }>();
 	const statement = useSelector(statementSelectorById(statementId));
 	const { user, isLoading } = useAuthentication();
+	const [loadingStatements, setLoadingStatements] = useState(true);
 
 	const [topStatements, setTopStatements] = useState<Statement[]>([]);
 
@@ -48,6 +49,7 @@ const useTopSuggestions = () => {
 				}));
 				dispatch(setStatements(options));
 				setTopStatements(options);
+				setLoadingStatements(false);
 			})
 			.catch((error) => console.error('Error:', error));
 	};
@@ -94,7 +96,7 @@ const useTopSuggestions = () => {
 		};
 	}, [topStatements.length, user]);
 
-	return { navigateToVoting };
+	return { navigateToVoting, loadingStatements };
 };
 
 export default useTopSuggestions;

@@ -6,6 +6,7 @@ import { nextStep } from '../MassConsensusVM';
 import { useSelector } from 'react-redux';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { massConsensusStepsSelector } from '@/redux/massConsensus/massConsensusSlice';
+import { useState } from 'react';
 
 const FooterMassConsensus = ({
 	isIntro,
@@ -26,11 +27,22 @@ const FooterMassConsensus = ({
 	console.log(steps);
 	const goTo = nextStep(statementId, steps);
 
+	const [isButtonClicked, setIsButtonClicked] = useState(false);
+
+	const handleClick = (callback?: () => void) => {
+		setIsButtonClicked(true);
+		if (callback) callback();
+	};
+
 	const renderButton = () => {
 		if (isIntro) {
 			return (
 				<Link to={`/mass-consensus/${statementId}/${goTo}`}>
-					<button className='btn btn--massConsensus btn--primary'>
+					<button
+						className='btn btn--massConsensus btn--primary'
+						onClick={() => handleClick()}
+						disabled={isButtonClicked}
+					>
 						{isFeedback ? t('Send') : t('Start')}
 					</button>
 				</Link>
@@ -41,13 +53,17 @@ const FooterMassConsensus = ({
 			return (
 				<>
 					<Link to={`/mass-consensus/${statementId}/${goTo}`}>
-						<button className='btn btn--massConsensus btn--secondary'>
+						<button
+							className='btn btn--massConsensus btn--secondary'
+							disabled={isButtonClicked}
+						>
 							{t('Skip')}
 						</button>
 					</Link>
 					<button
 						className={`btn btn--massConsensus btn--primary ${!isNextActive ? 'btn--disabled' : ''}`}
-						onClick={onNext}
+						onClick={() => handleClick(onNext)}
+						disabled={isButtonClicked || !isNextActive}
 					>
 						{t('Send')}
 					</button>
@@ -58,13 +74,17 @@ const FooterMassConsensus = ({
 		return (
 			<>
 				<Link to={`/mass-consensus/${statementId}/${goTo}`}>
-					<button className='btn btn--massConsensus btn--secondary'>
+					<button
+						className='btn btn--massConsensus btn--secondary'
+						disabled={isButtonClicked}
+					>
 						{t('Skip')}
 					</button>
 				</Link>
 				<button
 					className={`btn btn--massConsensus btn--primary ${!isNextActive ? 'btn--disabled' : ''}`}
-					onClick={onNext}
+					onClick={() => handleClick(onNext)}
+					disabled={isButtonClicked || !isNextActive}
 				>
 					{t('Next')}
 				</button>
