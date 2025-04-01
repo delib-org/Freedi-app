@@ -4,27 +4,26 @@ import { useAuthentication } from '@/controllers/hooks/useAuthentication'
 import { setStatementSubscription, statementSubscriptionSelector } from '@/redux/statements/statementsSlice'
 import { useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { Outlet, useParams } from 'react-router'
+import { Outlet, useNavigate, useParams } from 'react-router'
 import { HeaderProvider } from './headerMassConsensus/HeaderContext'
 import HeaderMassConsensus from './headerMassConsensus/HeaderMassConsensus'
 import styles from './MassConsensus.module.scss'
 import { useUserConfig } from '@/controllers/hooks/useUserConfig'
 import { setMassConsensusMemberToDB } from '@/controllers/db/massConsensus/setMassConsensus'
-import { massConsensusStepsSelector, setMassConsensusProcess } from '@/redux/massConsensus/massConsensusSlice'
+import { setMassConsensusProcess } from '@/redux/massConsensus/massConsensusSlice'
 import { getMassConsensusProcess } from '@/controllers/db/massConsensus/getMassConsensus'
-import { LoginType } from 'delib-npm'
-import { get } from 'http'
-import { getStep } from './MassConsensusVM'
 
 const MassConsensus = () => {
+	const navigate = useNavigate()
 	const { dir } = useUserConfig();
 	const dispatch = useDispatch();
 	const { statementId } = useParams()
 	const { user } = useAuthentication()
-	const subscription = useSelector(statementSubscriptionSelector(statementId))
-	const loginType = user?.isAnonymous ? LoginType.anonymous : LoginType.google;
-	const steps = useSelector(massConsensusStepsSelector(statementId, loginType))
-	getStep(statementId);
+	const subscription = useSelector(statementSubscriptionSelector(statementId));
+
+	useEffect(() => {
+		navigate(`/mass-consensus/${statementId}/introduction`)
+	}, [])
 
 	useEffect(() => {
 		if (!subscription && user) {
