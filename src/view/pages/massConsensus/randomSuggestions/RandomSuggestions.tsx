@@ -37,7 +37,6 @@ const RandomSuggestions = () => {
 			<FooterMassConsensus
 				isNextActive={true}
 				onNext={navigateToTop}
-				goTo={MassConsensusPageUrls.topSuggestions}
 			/>
 		</>
 	);
