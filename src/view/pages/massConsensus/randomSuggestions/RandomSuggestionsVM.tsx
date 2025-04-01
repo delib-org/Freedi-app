@@ -19,6 +19,7 @@ export function useRandomSuggestions() {
 	const dispatch = useDispatch();
 	const [subStatements, setSubStatements] = useState<Statement[]>([]);
 	const { statementId } = useParams<{ statementId: string }>();
+	const [loadingStatements, setLoadingStatements] = useState(true);
 
 	const navigateToTop = () =>
 		navigate(
@@ -57,7 +58,7 @@ export function useRandomSuggestions() {
 			try {
 				const response = await fetch(endPoint);
 				if (!response.ok) {
-					const {error} = await response.json();
+					const { error } = await response.json();
 					console.error('Error:', error);
 					throw new Error(`HTTP error! status: ${response.status}`);
 				}
@@ -72,11 +73,12 @@ export function useRandomSuggestions() {
 						selectionFunction: SelectionFunction.random,
 					})
 				);
+				setLoadingStatements(false);
 			} catch (error) {
 				console.error('Error:', error);
 			}
 		}
 	};
 
-	return { subStatements, navigateToTop };
+	return { subStatements, navigateToTop, loadingStatements };
 }

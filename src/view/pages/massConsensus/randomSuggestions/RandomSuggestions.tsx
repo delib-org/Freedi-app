@@ -6,9 +6,10 @@ import { useRandomSuggestions } from './RandomSuggestionsVM';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import { useHeader } from '../headerMassConsensus/HeaderContext';
 import { useEffect } from 'react';
+import Loader from '@/view/components/loaders/Loader';
 
 const RandomSuggestions = () => {
-	const { navigateToTop } = useRandomSuggestions();
+	const { navigateToTop, loadingStatements } = useRandomSuggestions();
 	const { t } = useUserConfig();
 
 	const { setHeader } = useHeader();
@@ -28,7 +29,11 @@ const RandomSuggestions = () => {
 			<TitleMassConsensus
 				title={t('Please rate the following suggestions')}
 			/>
-			<SuggestionCards selectionFunction={SelectionFunction.random} />
+			{loadingStatements ? (
+				<Loader />
+			) : (
+				<SuggestionCards selectionFunction={SelectionFunction.random} />
+			)}
 			<FooterMassConsensus
 				isNextActive={true}
 				onNext={navigateToTop}
