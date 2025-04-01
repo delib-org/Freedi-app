@@ -14,26 +14,21 @@ const InAppNotifications = () => {
 			<span className={styles.notificationTitle}>{t('Notifications')}</span>
 
 			{inAppNotifications.map((notification) => {
-				// const userId = notification.userId;
-				const user = store.getState().creator.creator;
-				const avatarSrc = user?.photoURL || '/images/avatar.png';
 
 				return (
-					<div key={notification.notificationId} className={styles.notificationCard}>
-						{/* <img
-							className={styles.avatar}
-							src={avatarSrc}
-							alt={user?.displayName ? user.displayName : 'User avatar'}
-						/> */}
-						<div className={styles.text}>
-							{/* <span className={styles.username}>{user?.displayName}</span> */}
-							<Link to={`/statement/${notification.parentId}`}>
+					<Link to={`/statement/${notification.parentId}`} key={notification.notificationId} className={styles.notificationLink}>
+						<div className={styles.notificationCard}>
+							<img
+								className={styles.avatar}
+								src={notification.creatorImage || '/src/assets/images/avatar.jpg'}
+								alt='User avatar'
+							/>
+							<div className={styles.text}>
+								<span className={styles.username}>{notification.creatorName}</span>
 								{notification.text}
-							</Link>
+							</div>
 						</div>
-
-					</div>
-
+					</Link>
 				);
 			})}
 		</div>

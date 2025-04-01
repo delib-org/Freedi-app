@@ -3,11 +3,12 @@
 	background-color: white;
 	box-shadow: 3px 3px 10px #a9adf49a;
 	border-radius: 15px;
-	padding: 20px;
+	padding: 10px;
 	display: flex;
 	flex-direction: column;
 	max-width: 30rem;
 	min-width: 12rem;
+	color: var(--text-title);
 
 	a {
 		text-align: start;
@@ -18,26 +19,43 @@
 	}
 }
 
-.ltr {
-	color: red;
-	transform: translateX(-50%);
-	text-align: left !important;
-}
-
-.rtl {
-	color: green;
-	transform: translateX(50%);
-	text-align: left !important;
+.notificationLink {
+	:hover {
+		background-color: #dbdbdb;
+	}
 }
 
 .notificationCard {
 	display: flex;
 	gap: 0.5rem;
-	margin: 0.5rem;
 	cursor: pointer;
+	padding: 10px;
+	border-radius: 0.36rem;
 }
 
 .notificationTitle {
 	font-weight: bold;
 	font-size: 1.5rem;
+	margin: 1rem;
+}
+
+.username {
+	color: var(--text-caption);
+}
+
+.avatar {
+	width: 32px;
+	height: 32px;
+	border-radius: 50%;
+	object-fit: cover;
+	border: 2px solid white;
+	background-color: #ccc;
+}
+
+.ltr {
+	transform: translateX(-50%);
+}
+
+.rtl {
+	transform: translateX(50%);
 }
