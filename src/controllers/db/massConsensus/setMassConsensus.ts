@@ -1,4 +1,4 @@
-import { Collections, Creator, getStatementSubscriptionId, LoginType, MassConsensusMember, MassConsensusPageUrls, MassConsensusProcessSchema, User } from "delib-npm";
+import { Collections, Creator, getStatementSubscriptionId, LoginType, MassConsensusMember, MassConsensusPageUrls, MassConsensusProcess, MassConsensusProcessSchema, User } from "delib-npm";
 import { DB } from "../config";
 import { arrayRemove, deleteField, doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
 import { convertFirebaseUserToCreator } from "@/types/user/userUtils";
@@ -49,7 +49,7 @@ export async function reorderMassConsensusProcessToDB({ steps, loginType, statem
 		};
 
 		if (processName) {
-			updateData[type].steps = processName;
+			updateData.loginTypes[type].processName = processName;
 		}
 
 		const PartialMassConsensusProcessSchema = partial(MassConsensusProcessSchema);
@@ -82,28 +82,61 @@ export async function updateMassConsensusLoginTypeProcess(statementId: string, l
 		const processRef = doc(DB, Collections.massConsensusProcesses, statementId);
 
 		const processDB = await getDoc(processRef);
-		if (!processDB.exists()) throw new Error("No process was found");
+		if (processDB.exists()) {
 
-		const processData = processDB.data();
-		if (!processData) throw new Error("No process data was found");
+			const processData = processDB.data();
+			if (!processData) throw new Error("No process data was found");
 
-		if (!processData.loginTypes) throw new Error("No process data was found");
-		const processList = processData.loginTypes[loginType];
-		if (!processList) {
-			await updateDoc(processRef, {
-				[`loginTypes.${loginType}`]: {
-					steps: defaultMassConsensusProcess,
-					processName: processName || "Default Process for all users"
-				}
-			});
+			if (!processData.loginTypes) throw new Error("No process data was found");
+			const processList = processData.loginTypes[loginType];
+			if (!processList) {
+				await updateDoc(processRef, {
+					[`loginTypes.${loginType}`]: {
+						steps: defaultMassConsensusProcess,
+						processName: processName || "Default Process for all users"
+					}
+				});
+			} else {
+				await updateDoc(processRef, {
+					[`loginTypes.${loginType}`]: deleteField()
+				});
+			}
 		} else {
-			await updateDoc(processRef, {
-				[`loginTypes.${loginType}`]: deleteField()
-			});
+
+			await setNewProcessToDB(statementId, loginType);
 		}
 
 	} catch (error) {
 		console.error(error);
 
+	}
+}
+
+export async function setNewProcessToDB(statementId: string, loginType?: LoginType): Promise<MassConsensusProcess | undefined> {
+	try {
+		const processRef = doc(DB, Collections.massConsensusProcesses, statementId);
+
+		const process = {
+			statementId,
+			loginTypes: {
+				default: {
+					steps: defaultMassConsensusProcess,
+					processName: "Default Process for all users"
+				}
+			}
+		}
+
+		if (loginType) {
+			process.loginTypes[loginType] = {
+				steps: defaultMassConsensusProcess,
+				processName: "Default Process for all users"
+			}
+		}
+
+		setDoc(processRef, process, { merge: true });
+	} catch (error) {
+		console.error(error);
+
+		return undefined;
 	}
 }

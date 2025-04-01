@@ -31,6 +31,13 @@ const MassConsensusProcessSettings = () => {
 	const showGoogle = processList.loginTypes?.google && processList.loginTypes.google.steps?.length > 0;
 	const showAnonymous = processList.loginTypes?.anonymous && processList.loginTypes?.anonymous.steps?.length > 0;
 
+	if (!processList.loginTypes?.default) {
+		processList.loginTypes.default = {
+			steps: defaultMassConsensusProcess,
+			processName: t("Default Process for all users")
+		}
+	}
+
 	const { steps: stepsDefault, processName: processNameDefault } = processList.loginTypes.default
 	const { steps: stepsGoogle, processName: processNameGoogle } = processList.loginTypes?.google || {};
 	const { steps: stepsAnonymous, processName: processNameAnonymous } = processList.loginTypes?.anonymous || {};
