@@ -1,58 +1,64 @@
-import { Link, useParams } from 'react-router';
-import { MassConsensusPageUrls } from 'delib-npm';
+import { useNavigate, useParams } from 'react-router';
 import styles from './FooterMassConsensus.module.scss';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { getStepNavigation, useMassConsensusSteps } from '../MassConsensusVM';
+
 import { useState } from 'react';
 
 const FooterMassConsensus = ({
-	goTo,
 	isIntro,
 	isNextActive,
 	isFeedback,
 	onNext,
 }: {
-	goTo?: MassConsensusPageUrls;
 	isIntro?: boolean;
 	isNextActive?: boolean;
 	isFeedback?: boolean;
 	onNext?: () => void;
 }) => {
 	const { statementId } = useParams<{ statementId: string }>();
+	const navigate = useNavigate();
 	const { t, dir } = useUserConfig();
-
+	const { steps, currentStep } = useMassConsensusSteps();
+	const { nextStep: goTo } = getStepNavigation(steps, currentStep);
 	const [isButtonClicked, setIsButtonClicked] = useState(false);
 
 	const handleClick = (callback?: () => void) => {
+		if (!goTo) return;
 		setIsButtonClicked(true);
 		if (callback) callback();
+		navigate(`/mass-consensus/${statementId}/${goTo}`)
 	};
+
+	if (goTo === undefined) {
+		return null;
+	}
 
 	const renderButton = () => {
 		if (isIntro) {
 			return (
-				<Link to={`/mass-consensus/${statementId}/${goTo}`}>
-					<button
-						className='btn btn--massConsensus btn--primary'
-						onClick={() => handleClick()}
-						disabled={isButtonClicked}
-					>
-						{isFeedback ? t('Send') : t('Start')}
-					</button>
-				</Link>
+				<button
+					className='btn btn--massConsensus btn--primary'
+					onClick={() => handleClick()}
+					disabled={isButtonClicked}
+				>
+					{isFeedback ? t('Send') : t('Start')}
+				</button>
 			);
 		}
 
 		if (isFeedback) {
 			return (
 				<>
-					<Link to={`/mass-consensus/${statementId}/${goTo}`}>
-						<button
-							className='btn btn--massConsensus btn--secondary'
-							disabled={isButtonClicked}
-						>
-							{t('Skip')}
-						</button>
-					</Link>
+
+					<button
+						className='btn btn--massConsensus btn--secondary'
+						disabled={isButtonClicked}
+						onClick={() => handleClick()}
+					>
+						{t('Skip')}
+					</button>
+
 					<button
 						className={`btn btn--massConsensus btn--primary ${!isNextActive ? 'btn--disabled' : ''}`}
 						onClick={() => handleClick(onNext)}
@@ -66,14 +72,14 @@ const FooterMassConsensus = ({
 
 		return (
 			<>
-				<Link to={`/mass-consensus/${statementId}/${goTo}`}>
-					<button
-						className='btn btn--massConsensus btn--secondary'
-						disabled={isButtonClicked}
-					>
-						{t('Skip')}
-					</button>
-				</Link>
+				<button
+					className='btn btn--massConsensus btn--secondary'
+					disabled={isButtonClicked}
+					onClick={() => handleClick()}
+				>
+					{t('Skip')}
+				</button>
+
 				<button
 					className={`btn btn--massConsensus btn--primary ${!isNextActive ? 'btn--disabled' : ''}`}
 					onClick={() => handleClick(onNext)}

@@ -62,7 +62,6 @@ const Introduction = () => {
 
 			<FooterMassConsensus
 				isIntro={true}
-				goTo={MassConsensusPageUrls.initialQuestion}
 			/>
 		</>
 	);

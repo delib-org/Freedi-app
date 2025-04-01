@@ -63,7 +63,7 @@ export default function Accessibility() {
 
 		setPosition((prev) => ({
 			top: Math.min(Math.max(prev.top + deltaY, 0), window.innerHeight - 100),
-			right: Math.min(Math.max(prev.left - deltaX, 0), window.innerWidth - 100),
+			right: Math.min(Math.max(prev.right - deltaX, 0), window.innerWidth - 100),
 		}));
 	};
 
@@ -86,7 +86,7 @@ export default function Accessibility() {
 			}
 			}
 			className={`accessibility ${isOpen ? 'is-open' : ''}`}
-			style={{ fontSize, top: `${position.top}px`, right: `${position.left}px` }}
+			style={{ fontSize, top: `${position.top}px`, right: `${position.right}px` }}
 		>
 			<button
 				className='accessibility-button'
