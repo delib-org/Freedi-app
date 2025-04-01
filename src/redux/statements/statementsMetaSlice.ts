@@ -1,8 +1,8 @@
 import { createSlice } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
 import { RootState } from '../store';
-import { updateArray } from '@/controllers/general/helpers';
 import {
+	updateArray,
 	StatementMetaData,
 	StatementMetaDataSchema,
 } from 'delib-npm';
