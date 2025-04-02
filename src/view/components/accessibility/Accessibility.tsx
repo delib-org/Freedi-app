@@ -31,7 +31,7 @@ export default function Accessibility() {
 	}, [colorContrast]);
 
 	// * Drag & Drop * //
-	const [position, setPosition] = useState({ top: 250, right: 100 });
+	const [position, setPosition] = useState({ top: 250 });
 	const dragRef = useRef<HTMLDivElement | null>(null);
 	const startPos = useRef({ x: 0, y: 0 });
 	const isDragging = useRef(false);
@@ -63,7 +63,6 @@ export default function Accessibility() {
 
 		setPosition((prev) => ({
 			top: Math.min(Math.max(prev.top + deltaY, 0), window.innerHeight - 100),
-			right: Math.min(Math.max(prev.left - deltaX, 0), window.innerWidth - 100),
 		}));
 	};
 
@@ -86,7 +85,7 @@ export default function Accessibility() {
 			}
 			}
 			className={`accessibility ${isOpen ? 'is-open' : ''}`}
-			style={{ fontSize, top: `${position.top}px`, right: `${position.left}px` }}
+			style={{ fontSize, top: `${position.top}px` }}
 		>
 			<button
 				className='accessibility-button'

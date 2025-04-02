@@ -1,9 +1,7 @@
 import { createSlice } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
 import { RootState } from '../store';
-
-import { updateArray } from '@/controllers/general/helpers';
-import { Statement, StatementSchema, Vote, getVoteId } from 'delib-npm';
+import { Statement, StatementSchema, Vote, getVoteId, updateArray } from 'delib-npm';
 import { parse } from 'valibot';
 
 // Define a type for the slice state
