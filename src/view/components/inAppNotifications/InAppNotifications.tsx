@@ -3,9 +3,13 @@ import { useSelector } from 'react-redux';
 import { Link } from 'react-router';
 import styles from './InAppNotifications.module.scss';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { NotificationType } from 'delib-npm';
+import { creatorSelector } from '@/redux/creator/creatorSlice';
 
 const InAppNotifications = () => {
-	const inAppNotifications = useSelector(inAppNotificationsSelector)
+	const creator = useSelector(creatorSelector);
+	const inAppNotifications: NotificationType[] = useSelector(inAppNotificationsSelector).filter(n => n.userId !== creator?.uid);
+
 	const { t } = useUserConfig();
 
 	return (
