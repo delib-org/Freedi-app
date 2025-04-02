@@ -6,9 +6,12 @@
 	padding: 10px;
 	display: flex;
 	flex-direction: column;
+	width: fit-content;
 	max-width: 30rem;
-	min-width: 12rem;
 	color: var(--text-title);
+	text-wrap: nowrap;
+	transform: translateX(-50%);
+	left: 50%;
 
 	a {
 		text-align: start;
@@ -52,10 +55,12 @@
 	background-color: #ccc;
 }
 
-.ltr {
-	transform: translateX(-50%);
+.text {
+	overflow: hidden;
+	text-overflow: ellipsis;
 }
 
-.rtl {
-	transform: translateX(50%);
+.noNotifications {
+	text-align: center;
+	color: gray;
 }
