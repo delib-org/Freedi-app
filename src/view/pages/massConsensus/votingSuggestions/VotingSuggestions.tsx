@@ -7,7 +7,7 @@ import styles from './VotingSuggestion.module.scss';
 import { useParams } from 'react-router';
 import { useSelector } from 'react-redux';
 import { statementSelector } from '@/redux/statements/statementsSlice';
-import { MassConsensusPageUrls, Statement } from 'delib-npm';
+import { Statement } from 'delib-npm';
 import { getTotalVoters } from '../../statement/components/vote/statementVoteCont';
 import TitleMassConsensus from '../TitleMassConsensus/TitleMassConsensus';
 import FooterMassConsensus from '../footerMassConsensus/FooterMassConsensus';
@@ -31,7 +31,6 @@ const VotingSuggestions = () => {
 	useEffect(() => {
 		setHeader({
 			title: t('Voting'),
-			backTo: MassConsensusPageUrls.topSuggestions,
 			backToApp: false,
 			isIntro: false,
 			setHeader,

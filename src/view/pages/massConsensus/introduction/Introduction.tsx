@@ -1,5 +1,4 @@
 import { useIntroductionMV } from './IntroductionMV';
-import { MassConsensusPageUrls } from 'delib-npm';
 import FooterMassConsensus from '../footerMassConsensus/FooterMassConsensus';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import { useEffect, useState } from 'react';
@@ -21,7 +20,6 @@ const Introduction = () => {
 	useEffect(() => {
 		setHeader({
 			title: t('description'),
-			backTo: MassConsensusPageUrls.introduction,
 			backToApp: false,
 			isIntro: true,
 			setHeader,

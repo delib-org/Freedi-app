@@ -146,8 +146,7 @@ export enum SortType {
 
 export enum MassConsensusPageUrls {
 	introduction = 'introduction',
-	initialQuestion = 'initial-question',
-	similarSuggestions = 'similar-suggestions',
+	question = 'question',
 	randomSuggestions = 'random-suggestions',
 	topSuggestions = 'top-suggestions',
 	voting = 'voting',
