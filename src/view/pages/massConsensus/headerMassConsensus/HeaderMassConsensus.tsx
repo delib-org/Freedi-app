@@ -7,21 +7,22 @@ import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import { useHeader } from './HeaderContext';
 import { useSelector } from 'react-redux';
 import { statementSubscriptionSelector } from '@/redux/statements/statementsSlice';
+import { getStepNavigation, useMassConsensusSteps } from '../MassConsensusVM';
 
 const HeaderMassConsensus = () => {
 	const { statementId } = useParams<{ statementId: string }>();
 	const { dir } = useUserConfig();
-	const { title, backTo, backToApp, isIntro } = useHeader();
+	const { title, backToApp, isIntro } = useHeader();
 	const role = useSelector(statementSubscriptionSelector(statementId))?.role;
+	const { steps, currentStep } = useMassConsensusSteps();
+	const { previousStep } = getStepNavigation(steps, currentStep);
 
 	const computedTitle = typeof title === 'function' ? title() : title;
 
 	return (
 		<div className={styles.headerMC} style={{ direction: dir }}>
 			<div className={styles.headerMC__wrapper}>
-				{isIntro ? (
-					''
-				) : (
+				{previousStep && (
 					<Link
 						className={
 							dir === 'ltr'
@@ -31,7 +32,7 @@ const HeaderMassConsensus = () => {
 						to={
 							backToApp
 								? `/statement/${statementId}`
-								: `/mass-consensus/${statementId}/${backTo}`
+								: `/mass-consensus/${statementId}/${previousStep}`
 						}
 					>
 						<BackIcon />
@@ -49,7 +50,7 @@ const HeaderMassConsensus = () => {
 				) : (
 					<Link
 						className={styles.icon}
-							to={role === Role.admin ? `/statement/${statementId}`:`/mass-consensus/${statementId}/${MassConsensusPageUrls.introduction}`}
+						to={role === Role.admin ? `/statement/${statementId}` : `/mass-consensus/${statementId}/${MassConsensusPageUrls.introduction}`}
 					>
 						<HomeIcon />
 					</Link>

@@ -1,7 +1,6 @@
 import { createSlice, PayloadAction, createSelector } from '@reduxjs/toolkit';
-import { updateArray } from '../../controllers/general/helpers';
 import { RootState } from '../store';
-import { Statement, StatementSubscription, SelectionFunction, StatementType } from 'delib-npm';
+import { Statement, StatementSubscription, SelectionFunction, StatementType, updateArray } from 'delib-npm';
 
 enum StatementScreen {
 	chat = 'chat',

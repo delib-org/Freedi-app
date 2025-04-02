@@ -6,10 +6,11 @@ import FooterMassConsensus from '../footerMassConsensus/FooterMassConsensus';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import { useHeader } from '../headerMassConsensus/HeaderContext';
 import { useEffect } from 'react';
+import Loader from '@/view/components/loaders/Loader';
 
 const TopSuggestions = () => {
 	const { t } = useUserConfig();
-	const { navigateToVoting } = useTopSuggestions();
+	const { navigateToVoting, loadingStatements } = useTopSuggestions();
 
 	const { setHeader } = useHeader();
 
@@ -28,14 +29,18 @@ const TopSuggestions = () => {
 			<TitleMassConsensus
 				title={t('Please rate the following suggestions')}
 			/>
-			<SuggestionCards
-				selectionFunction={SelectionFunction.top}
-				propSort={SortType.random}
-			/>
+			{loadingStatements ? (
+				<Loader />
+			) : (
+				<SuggestionCards
+					selectionFunction={SelectionFunction.top}
+					propSort={SortType.random}
+				/>
+			)}
+
 			<FooterMassConsensus
 				isNextActive={true}
 				onNext={navigateToVoting}
-				goTo={MassConsensusPageUrls.voting}
 			/>
 		</div>
 	);
