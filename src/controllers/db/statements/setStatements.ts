@@ -267,6 +267,7 @@ export function createStatement({
 	try {
 		const storeState = store.getState();
 		const creator = storeState.creator?.creator;
+		console.log("creator", creator.uid);
 		if (!creator) throw new Error('Creator is undefined');
 		if (!statementType) throw new Error('Statement type is undefined');
 
