@@ -15,6 +15,7 @@ export async function updateInAppNotifications(
 	e: FirestoreEvent<QueryDocumentSnapshot>,
 ): Promise<void> {
 	try {
+		//go to the new statement and parse it
 		const newStatement = e.data?.data() as Statement;
 		if (newStatement.parentId === 'top') return;
 		const statement = parse(StatementSchema, newStatement);
@@ -65,16 +66,21 @@ async function fetchNotificationData(parentId: string) {
  * Creates in-app notifications using batch write operation.
  */
 async function processInAppNotifications(subscribersInApp: StatementSubscription[], newStatement: Statement, parentStatement: Statement) {
+	//here we should have all the subscribers for the parent notification
+
 	const batch = db.batch();
 
 	// Create notification for each subscriber
 	subscribersInApp.forEach((subscriber: StatementSubscription) => {
+
 		const notificationRef = db.collection(Collections.inAppNotifications).doc();
+
 		const newNotification: NotificationType = {
-			userId: subscriber.userId,
+			userId: subscriber.user.uid,
 			parentId: newStatement.parentId,
 			parentStatement: parentStatement.statement,
 			text: newStatement.statement,
+			creatorId: newStatement.creator.uid,
 			creatorName: newStatement.creator.displayName,
 			creatorImage: newStatement.creator.photoURL,
 			createdAt: newStatement.createdAt,

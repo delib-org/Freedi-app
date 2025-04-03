@@ -30,9 +30,9 @@ const FooterMassConsensus = ({
 		navigate(`/mass-consensus/${statementId}/${goTo}`)
 	};
 
-	if (goTo === undefined) {
-		return null;
-	}
+	// if (goTo === undefined) {
+	// 	return null;
+	// }
 
 	const renderButton = () => {
 		if (isIntro) {
