@@ -5,12 +5,12 @@ import { parse } from "valibot";
 
 export async function updateResultSettingsToDB(
 	statementId: string,
-	resultSettings: ResultsSettings
+	resultsSettings: ResultsSettings
 ) {
 	try {
 		const resultSettingsRef = doc(DB, Collections.statements, statementId);
-		parse(ResultsSettingsSchema, resultSettings)
-		await updateDoc(resultSettingsRef, resultSettings);
+		parse(ResultsSettingsSchema, resultsSettings)
+		await updateDoc(resultSettingsRef, { resultsSettings });
 	} catch (error) {
 		console.error(error);
 	}

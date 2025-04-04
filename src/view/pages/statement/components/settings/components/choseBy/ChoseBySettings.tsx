@@ -10,16 +10,15 @@ import RadioButtonWithLabel from '@/view/components/radioButtonWithLabel/RadioBu
 import styles from './ChoseBySettings.module.scss';
 import { StatementSettingsProps } from '../../settingsTypeHelpers';
 
-import { useDispatch } from 'react-redux';
+import { useSelector } from 'react-redux';
 
 import {
-	ChoseByEvaluationType,
 	CutoffBy,
-	CutoffType,
 	ResultsBy,
+	Statement,
 } from 'delib-npm';
 import { updateResultSettingsToDB } from '@/controllers/db/statements/setResultSettings';
-import { updateStoreResultsSettings } from '@/redux/statements/statementsSlice';
+import { statementSelector } from '@/redux/statements/statementsSlice';
 
 interface RangeProps {
 	maxValue: number;
@@ -28,38 +27,18 @@ interface RangeProps {
 	value: number;
 }
 
-const ChoseBySettings: FC<StatementSettingsProps> = ({ statement }) => {
+const ChoseBySettings: FC<StatementSettingsProps> = ({ statement: _statement }) => {
 	const { t } = useUserConfig();
-	const dispatch = useDispatch();
+	const statement = useSelector(statementSelector(_statement.statementId)) as Statement;
+
 	const { resultsSettings } = statement;
 
 	const [rangeProps, setRangeProps] = useState<RangeProps>({
 		maxValue: 20,
 		minValue: 1,
 		step: 1,
-		value: resultsSettings.cutoffNumber ?? 0,
+		value: resultsSettings.cutoffNumber ?? 1,
 	});
-
-	// useEffect(() => {
-	// 	if (choseBy?.cutoffType === CutoffType.topOptions) {
-	// 		setRangeProps({
-	// 			maxValue: 20,
-	// 			minValue: 1,
-	// 			step: 1,
-	// 			value: choseBy?.number ?? 0,
-	// 		});
-	// 		dispatch(
-	// 			setChoseBy({ ...choseBy, number: Math.ceil(choseBy.number) })
-	// 		);
-	// 	} else if (choseBy?.cutoffType === CutoffType.cutoffValue) {
-	// 		setRangeProps({
-	// 			maxValue: 10,
-	// 			minValue: -10,
-	// 			step: 0.1,
-	// 			value: choseBy?.number ?? 0,
-	// 		});
-	// 	}
-	// }, [choseBy, dispatch]);
 
 	function handleEvaluationChange(e: ChangeEvent<HTMLInputElement>) {
 		if (!e.target.id) return;
@@ -68,8 +47,8 @@ const ChoseBySettings: FC<StatementSettingsProps> = ({ statement }) => {
 			...resultsSettings,
 			resultsBy: e.target.id as ResultsBy,
 		};
-		dispatch(updateStoreResultsSettings({ statementId: statement.statementId, resultsSettings: newResultsSettings }));
-
+		// dispatch(updateStoreResultsSettings({ statementId: statement.statementId, resultsSettings: newResultsSettings }));
+		updateResultSettingsToDB(statement.statementId, newResultsSettings)
 	}
 
 	function handleCutoffChange(e: ChangeEvent<HTMLInputElement>) {
@@ -77,10 +56,11 @@ const ChoseBySettings: FC<StatementSettingsProps> = ({ statement }) => {
 
 		const newResultsSettings = {
 			...resultsSettings,
-			cutOffBy: e.target.id as CutoffBy,
+			cutoffBy: e.target.id as CutoffBy,
 		};
-		dispatch(updateStoreResultsSettings({ statementId: statement.statementId, resultsSettings: newResultsSettings }));
 
+		// dispatch(updateStoreResultsSettings({ statementId: statement.statementId, resultsSettings: newResultsSettings }));
+		updateResultSettingsToDB(statement.statementId, newResultsSettings)
 	}
 
 	function handleRangeChange(
@@ -97,15 +77,24 @@ const ChoseBySettings: FC<StatementSettingsProps> = ({ statement }) => {
 			value: getValue(valueAsNumber),
 		});
 
-		const newResultsSettings = {
-			...resultsSettings,
-			numberOfResults: getValue(valueAsNumber),
-		};
+		let newResultsSettings;
 
-		if (e.type === 'mouseup' || e.type === 'touchend') {
-			updateResultSettingsToDB(statement.statementId, newResultsSettings)
+		if (resultsSettings.cutoffBy === CutoffBy.topOptions) {
+			newResultsSettings = {
+				...resultsSettings,
+				numberOfResults: getValue(valueAsNumber),
+			};
+		} else if (resultsSettings.cutoffBy === CutoffBy.aboveThreshold) {
+			newResultsSettings = {
+				...resultsSettings,
+				cutoffNumber: getValue(valueAsNumber),
+			};
+		}
 
-			dispatch(updateStoreResultsSettings({ statementId: statement.statementId, resultsSettings: newResultsSettings }));
+		if (newResultsSettings && (e.type === 'mouseup' || e.type === 'touchend')) {
+
+			updateResultSettingsToDB(statement.statementId, newResultsSettings);
+
 		}
 	}
 
@@ -123,19 +112,19 @@ const ChoseBySettings: FC<StatementSettingsProps> = ({ statement }) => {
 					{t('How to evaluate and select top options')}
 				</h3>
 				<RadioButtonWithLabel
-					id={ChoseByEvaluationType.consensus}
+					id={ResultsBy.consensus}
 					labelText={t('By Consensus')}
 					checked={resultsSettings?.resultsBy === ResultsBy.consensus}
 					onChange={handleEvaluationChange}
 				/>
 				<RadioButtonWithLabel
-					id={ChoseByEvaluationType.likes}
+					id={ResultsBy.mostLiked}
 					labelText={t('By most liked')}
 					checked={resultsSettings?.resultsBy === ResultsBy.mostLiked}
 					onChange={handleEvaluationChange}
 				/>
 				<RadioButtonWithLabel
-					id={ChoseByEvaluationType.likesDislikes}
+					id={ResultsBy.averageLikesDislikes}
 					labelText={t('By sum liked - disliked')}
 					checked={resultsSettings?.resultsBy === ResultsBy.averageLikesDislikes}
 					onChange={handleEvaluationChange}
@@ -146,41 +135,100 @@ const ChoseBySettings: FC<StatementSettingsProps> = ({ statement }) => {
 					{t('Method of selecting leading options')}
 				</h3>
 				<RadioButtonWithLabel
-					id={CutoffType.topOptions}
+					id={CutoffBy.topOptions}
 					labelText={`${t('Top results')}`}
 					checked={resultsSettings.cutoffBy === CutoffBy.topOptions}
 					onChange={handleCutoffChange}
 				/>
 				<RadioButtonWithLabel
-					id={CutoffType.cutoffValue}
+					id={CutoffBy.aboveThreshold}
 					labelText={`${t('Above specific value')}`}
 					checked={resultsSettings.cutoffBy === CutoffBy.aboveThreshold}
 					onChange={handleCutoffChange}
 				/>
 			</section>
 			<section>
-				<div className='title'>{t('Value')}</div>
-				<div className={styles.range}>
-					<span>{rangeProps.minValue}</span>
-					<input
-						className='range'
-						type='range'
-						aria-label='Number Of Results'
-						name='numberOfResults'
-						value={rangeProps?.value}
-						min={rangeProps.minValue}
-						max={rangeProps.maxValue}
-						step={rangeProps.step}
-						onChange={handleRangeChange}
-						onMouseUp={handleRangeChange}
-						onTouchEnd={handleRangeChange}
-					/>
-					<span>{rangeProps.maxValue}</span>
-				</div>
-				<div className={styles.cutoffValue}>{rangeProps.value}</div>
+				{resultsSettings.cutoffBy === CutoffBy.topOptions ? (
+					<TopOptionsRange statement={statement} handleRangeChange={handleRangeChange} />
+				) : (
+					<AboveThresholdRange statement={statement} handleRangeChange={handleRangeChange} />
+				)}
 			</section>
 		</div>
 	);
 };
 
 export default ChoseBySettings;
+
+interface ComponentRangeProps {
+	statement: Statement;
+	handleRangeChange: (e: ChangeEvent<HTMLInputElement> | MouseEvent<HTMLInputElement> | TouchEvent<HTMLInputElement>) => void;
+}
+
+function TopOptionsRange({ statement: statement, handleRangeChange }: ComponentRangeProps) {
+	const { t } = useUserConfig();
+
+	const rangeProps = {
+		maxValue: 20,
+		minValue: 1,
+		step: 1,
+		value: statement.resultsSettings.numberOfResults ?? 1,
+	};
+
+	return (
+		<>
+			<div className='title'>{t('Value')}</div>
+			<div className={styles.range}>
+				<span>{rangeProps.minValue}</span>
+				<input
+					className='range'
+					type='range'
+					aria-label='Number Of Results'
+					name='numberOfResults'
+					defaultValue={rangeProps.value}
+					min={rangeProps.minValue}
+					max={rangeProps.maxValue}
+					step={rangeProps.step}
+					onChange={handleRangeChange}
+					onMouseUp={handleRangeChange}
+					onTouchEnd={handleRangeChange}
+				/>
+				<span>{rangeProps.maxValue}</span>
+			</div>
+			<div className={styles.cutoffValue}>{rangeProps.value}</div>
+		</>
+	)
+}
+function AboveThresholdRange({ statement: statement, handleRangeChange }: ComponentRangeProps) {
+	const { t } = useUserConfig();
+	const rangeProps = {
+		maxValue: 10,
+		minValue: 1,
+		step: 1,
+		value: statement.resultsSettings.cutoffNumber ?? 1,
+	};
+
+	return (
+		<>
+			<div className='title'>{t('Value')}</div>
+			<div className={styles.range}>
+				<span>{rangeProps.minValue}</span>
+				<input
+					className='range'
+					type='range'
+					aria-label='Number Of Results'
+					name='numberOfResults'
+					defaultValue={rangeProps.value}
+					min={rangeProps.minValue}
+					max={rangeProps.maxValue}
+					step={rangeProps.step}
+					onChange={handleRangeChange}
+					onMouseUp={handleRangeChange}
+					onTouchEnd={handleRangeChange}
+				/>
+				<span>{rangeProps.maxValue}</span>
+			</div>
+			<div className={styles.cutoffValue}>{rangeProps.value}</div>
+		</>
+	)
+}
