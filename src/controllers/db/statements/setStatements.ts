@@ -104,13 +104,13 @@ export async function saveStatementToDB({
 		});
 
 		if (statement.statementType !== StatementType.group) {
-			console.log("first setChoseByToDB", numberOfResults)
-			setChoseByToDB({
-				statementId: statement.statementId,
-				cutoffType: CutoffType.topOptions,
-				choseByEvaluationType: ChoseByEvaluationType.consensus,
-				number: numberOfResults,
-			});
+			if (resultsBy) {
+				statement.resultsSettings.resultsBy = resultsBy;
+
+			}
+			if (numberOfResults) {
+				statement.resultsSettings.numberOfResults = numberOfResults;
+			}
 		}
 
 		return statement;
