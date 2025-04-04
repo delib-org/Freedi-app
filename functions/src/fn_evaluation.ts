@@ -308,7 +308,7 @@ export async function updateChosenOptions(
 	>
 ) {
 	try {
-		console.log("updateChosenOptions triggered");
+
 		let snapshot: DocumentSnapshot | undefined;
 
 		// Check if the event is a Change or a DocumentSnapshot
@@ -348,7 +348,7 @@ async function updateParentStatementWithChosenOptions(
 	parentId: string | undefined
 ) {
 	try {
-		console.log("updateParentStatementWithChosenOptions triggered for ", parentId);
+
 		if (!parentId) throw new Error('parentId is not defined');
 
 		// get parent choseBy settings statement and parent statement
@@ -360,7 +360,6 @@ async function updateParentStatementWithChosenOptions(
 		if (!resultsSettings) throw new Error('resultsSettings is not found');
 
 		const chosenOptions = await choseTopOptions(parentId, resultsSettings);
-		console.log(choseTopOptions.length, "chosenOptions length");
 
 		if (!chosenOptions) throw new Error('chosenOptions is not found');
 
@@ -402,7 +401,7 @@ async function choseTopOptions(
 	resultsSettings: ResultsSettings
 ): Promise<Statement[] | undefined> {
 	try {
-		console.log("...................choseTopOptions..................");
+
 		const statementsRef = db.collection(Collections.statements);
 
 		//first get previous top options and remove isChosen
@@ -417,7 +416,7 @@ async function choseTopOptions(
 		});
 
 		await batch.commit();
-		console.log("ended saving the pervious top options....");
+
 		//then get the new top options by the new settings
 		const chosenOptions = await optionsChosenByMethod(parentId, resultsSettings);
 
@@ -427,7 +426,6 @@ async function choseTopOptions(
 
 		const batch2 = db.batch();
 		sortedOptions.forEach((doc) => {
-			console.log("isChosen", doc.statement);
 			const statementRef = statementsRef.doc(doc.statementId);
 			batch2.update(statementRef, { isChosen: true });
 		});
@@ -475,7 +473,6 @@ async function optionsChosenByMethod(
 		cutoffNumber
 	} = resultsSettings;
 
-	console.log("resultsSettings", resultsSettings);
 	const number = Number(numberOfResults);
 	const evaluationQuery = getEvaluationQuery(resultsBy);
 
