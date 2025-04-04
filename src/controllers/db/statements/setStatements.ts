@@ -27,10 +27,17 @@ import {
 	getRandomUID,
 	EvaluationUI,
 	Creator,
-	CutoffBy
+	CutoffBy,
+	ResultsSettings
 } from 'delib-npm';
 
 import { number, parse, string } from 'valibot';
+
+export const resultsSettingsDefault: ResultsSettings = {
+	resultsBy: ResultsBy.consensus,
+	numberOfResults: 1,
+	cutoffBy: CutoffBy.topOptions,
+};
 
 export const updateStatementParents = async (
 	statement: Statement,
@@ -105,6 +112,7 @@ export async function saveStatementToDB({
 				...statement.resultsSettings,
 				resultsBy: resultsBy || statement.resultsSettings.resultsBy,
 				numberOfResults: numberOfResults || statement.resultsSettings.numberOfResults,
+				cutoffBy: statement.resultsSettings.cutoffBy || CutoffBy.topOptions,
 			};
 		}
 
@@ -174,11 +182,7 @@ export const setStatementToDB = async ({
 		const { results, resultsSettings } = statement;
 		if (!results) statement.results = [];
 		if (!resultsSettings)
-			statement.resultsSettings = {
-				resultsBy: ResultsBy.consensus,
-				numberOfResults: 1,
-				cutoffBy: CutoffBy.aboveThreshold,
-			};
+			statement.resultsSettings = resultsSettingsDefault;
 
 		statement.lastUpdate = new Date().getTime();
 		statement.createdAt = statement?.createdAt || new Date().getTime();
@@ -309,8 +313,9 @@ export function createStatement({
 			color: getRandomColor(existingColors),
 			resultsSettings: {
 				resultsBy: resultsBy || ResultsBy.consensus,
-				numberOfResults: Number(numberOfResults),
-				cutoffBy: CutoffBy.aboveThreshold,
+				numberOfResults: Number(numberOfResults) || 1,
+				cutoffNumber: 1,
+				cutoffBy: CutoffBy.topOptions,
 			},
 			hasChildren,
 			consensus: 0,
@@ -398,21 +403,13 @@ export function updateStatement({
 		if (resultsBy && newStatement.resultsSettings)
 			newStatement.resultsSettings.resultsBy = resultsBy;
 		else if (resultsBy && !newStatement.resultsSettings) {
-			newStatement.resultsSettings = {
-				resultsBy: resultsBy,
-				numberOfResults: 1,
-				cutoffBy: CutoffBy.topOptions,
-			};
+			newStatement.resultsSettings = resultsSettingsDefault;
 		}
 		if (numberOfResults && newStatement.resultsSettings)
 			newStatement.resultsSettings.numberOfResults =
 				Number(numberOfResults);
 		else if (numberOfResults && !newStatement.resultsSettings) {
-			newStatement.resultsSettings = {
-				resultsBy: ResultsBy.consensus,
-				numberOfResults: numberOfResults,
-				cutoffBy: CutoffBy.topOptions,
-			};
+			newStatement.resultsSettings = resultsSettingsDefault;
 		}
 
 		newStatement.statementSettings = updateStatementSettings({
