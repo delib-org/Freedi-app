@@ -308,6 +308,7 @@ export async function updateChosenOptions(
 	>
 ) {
 	try {
+		console.log("updateChosenOptions triggered");
 		let snapshot: DocumentSnapshot | undefined;
 
 		// Check if the event is a Change or a DocumentSnapshot
@@ -347,6 +348,7 @@ async function updateParentStatementWithChosenOptions(
 	parentId: string | undefined
 ) {
 	try {
+		console.log("updateParentStatementWithChosenOptions triggered for ", parentId);
 		if (!parentId) throw new Error('parentId is not defined');
 
 		// get parent choseBy settings statement and parent statement
@@ -358,6 +360,7 @@ async function updateParentStatementWithChosenOptions(
 		if (!resultsSettings) throw new Error('resultsSettings is not found');
 
 		const chosenOptions = await choseTopOptions(parentId, resultsSettings);
+		console.log(choseTopOptions.length, "chosenOptions length");
 
 		if (!chosenOptions) throw new Error('chosenOptions is not found');
 
@@ -366,6 +369,7 @@ async function updateParentStatementWithChosenOptions(
 		});
 
 		//update child statement selected to be of type result
+		await choseTopOptions(parentId, resultsSettings);
 	} catch (error) {
 		logger.error(error);
 	}
@@ -398,6 +402,7 @@ async function choseTopOptions(
 	resultsSettings: ResultsSettings
 ): Promise<Statement[] | undefined> {
 	try {
+		console.log("...................choseTopOptions..................");
 		const statementsRef = db.collection(Collections.statements);
 
 		//first get previous top options and remove isChosen
@@ -412,16 +417,17 @@ async function choseTopOptions(
 		});
 
 		await batch.commit();
-
+		console.log("ended saving the pervious top options....");
 		//then get the new top options by the new settings
 		const chosenOptions = await optionsChosenByMethod(parentId, resultsSettings);
 
-		if (!chosenOptions) throw new Error('statementsDB is not defined');
+		if (!chosenOptions || chosenOptions.length === 0) throw new Error("Couldn't find top options");
 
 		const sortedOptions = getSortedOptions(chosenOptions, resultsSettings);
 
 		const batch2 = db.batch();
 		sortedOptions.forEach((doc) => {
+			console.log("isChosen", doc.statement);
 			const statementRef = statementsRef.doc(doc.statementId);
 			batch2.update(statementRef, { isChosen: true });
 		});
@@ -465,8 +471,11 @@ async function optionsChosenByMethod(
 	const {
 		numberOfResults,
 		resultsBy,
-		cutoffBy
+		cutoffBy,
+		cutoffNumber
 	} = resultsSettings;
+
+	console.log("resultsSettings", resultsSettings);
 	const number = Number(numberOfResults);
 	const evaluationQuery = getEvaluationQuery(resultsBy);
 
@@ -488,7 +497,7 @@ async function optionsChosenByMethod(
 		return statements;
 	} else if (cutoffBy === CutoffBy.aboveThreshold) {
 		const statementsDB = await statementsRef
-			.where(evaluationQuery, '>', number)
+			.where(evaluationQuery, '>', cutoffNumber)
 			.get();
 
 		const statements = statementsDB.docs.map(
