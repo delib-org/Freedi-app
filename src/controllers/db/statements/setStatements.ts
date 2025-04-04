@@ -33,6 +33,7 @@ import {
 
 import { number, parse, string } from 'valibot';
 import { setChoseByToDB } from '../choseBy/setChoseBy';
+import { stat } from 'fs';
 
 export const updateStatementParents = async (
 	statement: Statement,
@@ -103,12 +104,13 @@ export async function saveStatementToDB({
 		});
 
 		if (statement.statementType !== StatementType.group) {
-			setChoseByToDB({
-				statementId: statement.statementId,
-				cutoffType: CutoffType.topOptions,
-				choseByEvaluationType: ChoseByEvaluationType.consensus,
-				number: 1,
-			});
+			if (resultsBy) {
+				statement.resultsSettings.resultsBy = resultsBy;
+
+			}
+			if (numberOfResults) {
+				statement.resultsSettings.numberOfResults = numberOfResults;
+			}
 		}
 
 		return statement;
@@ -213,11 +215,12 @@ export const setStatementToDB = async ({
 		await Promise.all(statementPromises);
 
 		if (statement.statementType !== StatementType.group) {
+			console.log("setChoseByToDB", statement.resultsSettings.numberOfResults)
 			setChoseByToDB({
 				statementId: statement.statementId,
 				cutoffType: CutoffType.topOptions,
 				choseByEvaluationType: ChoseByEvaluationType.consensus,
-				number: 1,
+				number: statement.resultsSettings.numberOfResults,
 			});
 		}
 

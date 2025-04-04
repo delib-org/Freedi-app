@@ -5,7 +5,7 @@ import {
 	type TermsOfUseAcceptance,
 } from '@/types/agreement/Agreement';
 import { DB } from '../config';
-import { Collections } from '@/types/TypeEnums';
+import { Collections } from 'delib-npm';
 import { parse } from 'valibot';
 
 export async function getLatestTermsAcceptance(

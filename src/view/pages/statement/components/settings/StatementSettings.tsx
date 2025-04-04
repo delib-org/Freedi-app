@@ -19,7 +19,6 @@ import {
 
 // Custom components
 import Loader from '@/view/components/loaders/Loader';
-import { listenToChoseBy } from '@/controllers/db/choseBy/getChoseBy';
 import { QuestionType, Statement } from 'delib-npm';
 import MassConsensusSettings from './components/massConsensusSettings/MassConsensusSettings';
 
@@ -42,15 +41,6 @@ const StatementSettings: FC = () => {
 	const statement: Statement | undefined = useAppSelector(
 		statementSelector(statementId)
 	);
-
-	// * Use Effect * //
-	useEffect(() => {
-		const unsubscribe = listenToChoseBy(statementId);
-
-		return () => {
-			unsubscribe();
-		};
-	}, []);
 
 	useEffect(() => {
 		try {
