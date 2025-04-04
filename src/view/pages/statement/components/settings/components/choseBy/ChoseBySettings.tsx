@@ -3,7 +3,6 @@ import {
 	FC,
 	MouseEvent,
 	TouchEvent,
-	useEffect,
 	useState,
 } from 'react';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
@@ -11,15 +10,16 @@ import RadioButtonWithLabel from '@/view/components/radioButtonWithLabel/RadioBu
 import styles from './ChoseBySettings.module.scss';
 import { StatementSettingsProps } from '../../settingsTypeHelpers';
 
-import { useDispatch, useSelector } from 'react-redux';
-import { choseBySelector, setChoseBy } from '@/redux/choseBy/choseBySlice';
-import { setChoseByToDB } from '@/controllers/db/choseBy/setChoseBy';
+import { useDispatch } from 'react-redux';
+
 import {
-	ChoseBy,
 	ChoseByEvaluationType,
+	CutoffBy,
 	CutoffType,
 	ResultsBy,
 } from 'delib-npm';
+import { updateResultSettingsToDB } from '@/controllers/db/statements/setResultSettings';
+import { updateStoreResultsSettings } from '@/redux/statements/statementsSlice';
 
 interface RangeProps {
 	maxValue: number;
@@ -63,23 +63,23 @@ const ChoseBySettings: FC<StatementSettingsProps> = ({ statement }) => {
 
 	function handleEvaluationChange(e: ChangeEvent<HTMLInputElement>) {
 		if (!e.target.id) return;
-		if (!choseBy) return;
-		const newChoseBy = {
-			...choseBy,
-			choseByEvaluationType: e.target.id as ChoseByEvaluationType,
+
+		const newResultsSettings = {
+			...resultsSettings,
+			resultsBy: e.target.id as ResultsBy,
 		};
-		dispatch(setChoseBy(newChoseBy));
+		dispatch(updateStoreResultsSettings({ statementId: statement.statementId, resultsSettings: newResultsSettings }));
 
 	}
 
 	function handleCutoffChange(e: ChangeEvent<HTMLInputElement>) {
 		if (!e.target.id) return;
-		if (!choseBy) return;
 
-		const newChoseBy = {
-			...choseBy,
-			cutoffType: e.target.id as CutoffType,
+		const newResultsSettings = {
+			...resultsSettings,
+			cutOffBy: e.target.id as CutoffBy,
 		};
+		dispatch(updateStoreResultsSettings({ statementId: statement.statementId, resultsSettings: newResultsSettings }));
 
 	}
 
@@ -89,7 +89,6 @@ const ChoseBySettings: FC<StatementSettingsProps> = ({ statement }) => {
 			| MouseEvent<HTMLInputElement>
 			| TouchEvent<HTMLInputElement>
 	) {
-		if (!choseBy) return;
 
 		const valueAsNumber = (e.target as HTMLInputElement).valueAsNumber;
 
@@ -98,19 +97,20 @@ const ChoseBySettings: FC<StatementSettingsProps> = ({ statement }) => {
 			value: getValue(valueAsNumber),
 		});
 
-		const newChoseBy = {
-			...choseBy,
-			number: getValue(valueAsNumber),
+		const newResultsSettings = {
+			...resultsSettings,
+			numberOfResults: getValue(valueAsNumber),
 		};
 
 		if (e.type === 'mouseup' || e.type === 'touchend') {
-			setChoseByToDB(newChoseBy);
-			dispatch(setChoseBy(newChoseBy));
+			updateResultSettingsToDB(statement.statementId, newResultsSettings)
+
+			dispatch(updateStoreResultsSettings({ statementId: statement.statementId, resultsSettings: newResultsSettings }));
 		}
 	}
 
 	function getValue(value: number) {
-		return choseBy?.cutoffType === CutoffType.cutoffValue
+		return resultsSettings.cutoffBy === CutoffBy.aboveThreshold
 			? (value ?? 0)
 			: Math.ceil(value ?? 0);
 	}
@@ -125,25 +125,19 @@ const ChoseBySettings: FC<StatementSettingsProps> = ({ statement }) => {
 				<RadioButtonWithLabel
 					id={ChoseByEvaluationType.consensus}
 					labelText={t('By Consensus')}
-					checked={resultsSettings?.resultsBy === ResultsBy.consensusLevel}
+					checked={resultsSettings?.resultsBy === ResultsBy.consensus}
 					onChange={handleEvaluationChange}
 				/>
 				<RadioButtonWithLabel
 					id={ChoseByEvaluationType.likes}
 					labelText={t('By most liked')}
-					checked={
-						choseBy?.choseByEvaluationType ===
-						ChoseByEvaluationType.likes
-					}
+					checked={resultsSettings?.resultsBy === ResultsBy.mostLiked}
 					onChange={handleEvaluationChange}
 				/>
 				<RadioButtonWithLabel
 					id={ChoseByEvaluationType.likesDislikes}
 					labelText={t('By sum liked - disliked')}
-					checked={
-						choseBy?.choseByEvaluationType ===
-						ChoseByEvaluationType.likesDislikes
-					}
+					checked={resultsSettings?.resultsBy === ResultsBy.averageLikesDislikes}
 					onChange={handleEvaluationChange}
 				/>
 			</section>
@@ -153,14 +147,14 @@ const ChoseBySettings: FC<StatementSettingsProps> = ({ statement }) => {
 				</h3>
 				<RadioButtonWithLabel
 					id={CutoffType.topOptions}
-					labelText={`${t('Top results')}: ${choseBy?.cutoffType === CutoffType.topOptions ? rangeProps.value : ''}`}
-					checked={choseBy?.cutoffType === CutoffType.topOptions}
+					labelText={`${t('Top results')}`}
+					checked={resultsSettings.cutoffBy === CutoffBy.topOptions}
 					onChange={handleCutoffChange}
 				/>
 				<RadioButtonWithLabel
 					id={CutoffType.cutoffValue}
-					labelText={`${t('Above specific value')}: ${choseBy?.cutoffType === CutoffType.cutoffValue ? rangeProps.value : ''}`}
-					checked={choseBy?.cutoffType === CutoffType.cutoffValue}
+					labelText={`${t('Above specific value')}`}
+					checked={resultsSettings.cutoffBy === CutoffBy.aboveThreshold}
 					onChange={handleCutoffChange}
 				/>
 			</section>

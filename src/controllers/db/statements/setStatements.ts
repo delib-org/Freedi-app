@@ -26,14 +26,11 @@ import {
 	StageSelectionType,
 	getRandomUID,
 	EvaluationUI,
-	ChoseByEvaluationType,
-	CutoffType,
-	Creator
+	Creator,
+	CutoffBy
 } from 'delib-npm';
 
 import { number, parse, string } from 'valibot';
-import { setChoseByToDB } from '../choseBy/setChoseBy';
-import { stat } from 'fs';
 
 export const updateStatementParents = async (
 	statement: Statement,
@@ -177,7 +174,11 @@ export const setStatementToDB = async ({
 		const { results, resultsSettings } = statement;
 		if (!results) statement.results = [];
 		if (!resultsSettings)
-			statement.resultsSettings = { resultsBy: ResultsBy.topOptions };
+			statement.resultsSettings = {
+				resultsBy: ResultsBy.consensus,
+				numberOfResults: 1,
+				cutoffBy: CutoffBy.aboveThreshold,
+			};
 
 		statement.lastUpdate = new Date().getTime();
 		statement.createdAt = statement?.createdAt || new Date().getTime();
@@ -211,16 +212,6 @@ export const setStatementToDB = async ({
 
 		//add subscription
 		await Promise.all(statementPromises);
-
-		if (statement.statementType !== StatementType.group) {
-			console.log("setChoseByToDB", statement.resultsSettings.numberOfResults)
-			setChoseByToDB({
-				statementId: statement.statementId,
-				cutoffType: CutoffType.topOptions,
-				choseByEvaluationType: ChoseByEvaluationType.consensus,
-				number: statement.resultsSettings.numberOfResults,
-			});
-		}
 
 		return { statementId: statement.statementId, statement };
 	} catch (error) {
@@ -259,7 +250,7 @@ export function createStatement({
 	enableAddVotingOption = true,
 	enhancedEvaluation = true,
 	showEvaluation = true,
-	resultsBy = ResultsBy.topOptions,
+	resultsBy = ResultsBy.consensus,
 	numberOfResults = 1,
 	hasChildren = true,
 	membership,
@@ -268,7 +259,7 @@ export function createStatement({
 	try {
 		const storeState = store.getState();
 		const creator = storeState.creator?.creator;
-		console.log("creator", creator.uid);
+
 		if (!creator) throw new Error('Creator is undefined');
 		if (!statementType) throw new Error('Statement type is undefined');
 
@@ -317,8 +308,9 @@ export function createStatement({
 			lastUpdate: Timestamp.now().toMillis(),
 			color: getRandomColor(existingColors),
 			resultsSettings: {
-				resultsBy: resultsBy || ResultsBy.topOptions,
+				resultsBy: resultsBy || ResultsBy.consensus,
 				numberOfResults: Number(numberOfResults),
+				cutoffBy: CutoffBy.aboveThreshold,
 			},
 			hasChildren,
 			consensus: 0,
@@ -409,6 +401,7 @@ export function updateStatement({
 			newStatement.resultsSettings = {
 				resultsBy: resultsBy,
 				numberOfResults: 1,
+				cutoffBy: CutoffBy.topOptions,
 			};
 		}
 		if (numberOfResults && newStatement.resultsSettings)
@@ -416,8 +409,9 @@ export function updateStatement({
 				Number(numberOfResults);
 		else if (numberOfResults && !newStatement.resultsSettings) {
 			newStatement.resultsSettings = {
-				resultsBy: ResultsBy.topOptions,
+				resultsBy: ResultsBy.consensus,
 				numberOfResults: numberOfResults,
+				cutoffBy: CutoffBy.topOptions,
 			};
 		}
 
