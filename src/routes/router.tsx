@@ -9,8 +9,7 @@ import ProtectedLayout from './ProtectedLayout';
 // Mass Consensus pages
 import MassConsensus from '@/view/pages/massConsensus/MassConsensus';
 import Introduction from '@/view/pages/massConsensus/introduction/Introduction';
-import InitialQuestion from '@/view/pages/massConsensus/initialQuestion/InitialQuestion';
-import SimilarSuggestions from '@/view/pages/massConsensus/similarSuggestions/SimilarSuggestions';
+import MassConsensusQuestion from '@/view/pages/massConsensus/massConsesusQuestion/MassConsesusQuestion';
 import RandomSuggestions from '@/view/pages/massConsensus/randomSuggestions/RandomSuggestions';
 import TopSuggestions from '@/view/pages/massConsensus/topSuggestions/TopSuggestions';
 import VotingSuggestions from '@/view/pages/massConsensus/votingSuggestions/VotingSuggestions';
@@ -64,12 +63,8 @@ const massConsensusRoutes = [
 				element: <Introduction />,
 			},
 			{
-				path: MassConsensusPageUrls.initialQuestion,
-				element: <InitialQuestion />,
-			},
-			{
-				path: MassConsensusPageUrls.similarSuggestions,
-				element: <SimilarSuggestions />,
+				path: MassConsensusPageUrls.question,
+				element: <MassConsensusQuestion />,
 			},
 			{
 				path: MassConsensusPageUrls.randomSuggestions,

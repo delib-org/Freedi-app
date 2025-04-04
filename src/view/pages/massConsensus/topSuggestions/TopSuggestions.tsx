@@ -1,4 +1,4 @@
-import { MassConsensusPageUrls, SortType, SelectionFunction } from 'delib-npm';
+import { SortType, SelectionFunction } from 'delib-npm';
 import SuggestionCards from '../../statement/components/evaluations/components/suggestionCards/SuggestionCards';
 import useTopSuggestions from './TopSuggestionVM';
 import TitleMassConsensus from '../TitleMassConsensus/TitleMassConsensus';
@@ -17,7 +17,6 @@ const TopSuggestions = () => {
 	useEffect(() => {
 		setHeader({
 			title: t('Leading suggestion evaluation'),
-			backTo: MassConsensusPageUrls.randomSuggestions,
 			backToApp: false,
 			isIntro: false,
 			setHeader,

@@ -8,14 +8,8 @@ const MassConsensus = lazy(() => import('@/view/pages/massConsensus/MassConsensu
 const Introduction = lazy(
 	() => import('@/view/pages/massConsensus/introduction/Introduction')
 );
-const InitialQuestion = lazy(
-	() => import('@/view/pages/massConsensus/initialQuestion/InitialQuestion')
-);
-const SimilarSuggestions = lazy(
-	() =>
-		import(
-			'@/view/pages/massConsensus/similarSuggestions/SimilarSuggestions'
-		)
+const MassConsensusQuestion = lazy(
+	() => import('@/view/pages/massConsensus/massConsesusQuestion/MassConsesusQuestion')
 );
 const RandomSuggestions = lazy(
 	() =>
@@ -47,12 +41,8 @@ export const massConsensusRoutes: RouteObject[] = [
 				element: withSuspense(Introduction),
 			},
 			{
-				path: MassConsensusPageUrls.initialQuestion,
-				element: withSuspense(InitialQuestion),
-			},
-			{
-				path: MassConsensusPageUrls.similarSuggestions,
-				element: withSuspense(SimilarSuggestions),
+				path: MassConsensusPageUrls.question,
+				element: withSuspense(MassConsensusQuestion),
 			},
 			{
 				path: MassConsensusPageUrls.randomSuggestions,

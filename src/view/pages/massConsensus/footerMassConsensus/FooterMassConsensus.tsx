@@ -10,11 +10,13 @@ const FooterMassConsensus = ({
 	isNextActive,
 	isFeedback,
 	onNext,
+	blockNavigation
 }: {
 	isIntro?: boolean;
 	isNextActive?: boolean;
 	isFeedback?: boolean;
 	onNext?: () => void;
+	blockNavigation?: boolean;
 }) => {
 	const { statementId } = useParams<{ statementId: string }>();
 	const navigate = useNavigate();
@@ -25,9 +27,11 @@ const FooterMassConsensus = ({
 
 	const handleClick = (callback?: () => void) => {
 		if (!goTo) return;
-		setIsButtonClicked(true);
 		if (callback) callback();
-		navigate(`/mass-consensus/${statementId}/${goTo}`)
+		if (!blockNavigation) {
+			setIsButtonClicked(true);
+			navigate(`/mass-consensus/${statementId}/${goTo}`)
+		}
 	};
 
 	// if (goTo === undefined) {
