@@ -167,17 +167,16 @@ interface ComponentRangeProps {
 
 function TopOptionsRange({ statement: statement, handleRangeChange }: ComponentRangeProps) {
 	const { t } = useUserConfig();
-
+	const [value, setValue] = useState<number>(statement.resultsSettings.numberOfResults ?? 1);
 	const rangeProps = {
 		maxValue: 20,
 		minValue: 1,
-		step: 1,
-		value: statement.resultsSettings.numberOfResults ?? 1,
+		step: 1
 	};
 
 	return (
 		<>
-			<div className='title'>{t('Value')}</div>
+			<div className='title'>{t('Top options to be selected')}: {value}</div>
 			<div className={styles.range}>
 				<span>{rangeProps.minValue}</span>
 				<input
@@ -185,32 +184,31 @@ function TopOptionsRange({ statement: statement, handleRangeChange }: ComponentR
 					type='range'
 					aria-label='Number Of Results'
 					name='numberOfResults'
-					defaultValue={rangeProps.value}
+					defaultValue={value}
 					min={rangeProps.minValue}
 					max={rangeProps.maxValue}
 					step={rangeProps.step}
-					onChange={handleRangeChange}
+					onChange={(e) => setValue((e.target as HTMLInputElement).valueAsNumber)}
 					onMouseUp={handleRangeChange}
 					onTouchEnd={handleRangeChange}
 				/>
 				<span>{rangeProps.maxValue}</span>
 			</div>
-			<div className={styles.cutoffValue}>{rangeProps.value}</div>
 		</>
 	)
 }
 function AboveThresholdRange({ statement: statement, handleRangeChange }: ComponentRangeProps) {
 	const { t } = useUserConfig();
+	const [value, setValue] = useState<number>(statement.resultsSettings.cutoffNumber ?? 1);
 	const rangeProps = {
 		maxValue: 10,
 		minValue: 1,
 		step: 1,
-		value: statement.resultsSettings.cutoffNumber ?? 1,
 	};
 
 	return (
 		<>
-			<div className='title'>{t('Value')}</div>
+			<div className='title'>{t('The score to be considered as a top option')}: {value}</div>
 			<div className={styles.range}>
 				<span>{rangeProps.minValue}</span>
 				<input
@@ -218,17 +216,16 @@ function AboveThresholdRange({ statement: statement, handleRangeChange }: Compon
 					type='range'
 					aria-label='Number Of Results'
 					name='numberOfResults'
-					defaultValue={rangeProps.value}
+					defaultValue={value}
 					min={rangeProps.minValue}
 					max={rangeProps.maxValue}
 					step={rangeProps.step}
-					onChange={handleRangeChange}
+					onChange={(e) => setValue((e.target as HTMLInputElement).valueAsNumber)}
 					onMouseUp={handleRangeChange}
 					onTouchEnd={handleRangeChange}
 				/>
 				<span>{rangeProps.maxValue}</span>
 			</div>
-			<div className={styles.cutoffValue}>{rangeProps.value}</div>
 		</>
 	)
 }
