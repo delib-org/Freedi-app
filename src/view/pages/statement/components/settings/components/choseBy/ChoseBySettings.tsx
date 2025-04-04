@@ -18,6 +18,7 @@ import {
 	ChoseBy,
 	ChoseByEvaluationType,
 	CutoffType,
+	ResultsBy,
 } from 'delib-npm';
 
 interface RangeProps {
@@ -30,37 +31,35 @@ interface RangeProps {
 const ChoseBySettings: FC<StatementSettingsProps> = ({ statement }) => {
 	const { t } = useUserConfig();
 	const dispatch = useDispatch();
-	const choseBy: ChoseBy | undefined = useSelector(
-		choseBySelector(statement.statementId)
-	);
+	const { resultsSettings } = statement;
 
 	const [rangeProps, setRangeProps] = useState<RangeProps>({
 		maxValue: 20,
 		minValue: 1,
 		step: 1,
-		value: choseBy?.number ?? 0,
+		value: resultsSettings.cutoffNumber ?? 0,
 	});
 
-	useEffect(() => {
-		if (choseBy?.cutoffType === CutoffType.topOptions) {
-			setRangeProps({
-				maxValue: 20,
-				minValue: 1,
-				step: 1,
-				value: choseBy?.number ?? 0,
-			});
-			dispatch(
-				setChoseBy({ ...choseBy, number: Math.ceil(choseBy.number) })
-			);
-		} else if (choseBy?.cutoffType === CutoffType.cutoffValue) {
-			setRangeProps({
-				maxValue: 10,
-				minValue: -10,
-				step: 0.1,
-				value: choseBy?.number ?? 0,
-			});
-		}
-	}, [choseBy, dispatch]);
+	// useEffect(() => {
+	// 	if (choseBy?.cutoffType === CutoffType.topOptions) {
+	// 		setRangeProps({
+	// 			maxValue: 20,
+	// 			minValue: 1,
+	// 			step: 1,
+	// 			value: choseBy?.number ?? 0,
+	// 		});
+	// 		dispatch(
+	// 			setChoseBy({ ...choseBy, number: Math.ceil(choseBy.number) })
+	// 		);
+	// 	} else if (choseBy?.cutoffType === CutoffType.cutoffValue) {
+	// 		setRangeProps({
+	// 			maxValue: 10,
+	// 			minValue: -10,
+	// 			step: 0.1,
+	// 			value: choseBy?.number ?? 0,
+	// 		});
+	// 	}
+	// }, [choseBy, dispatch]);
 
 	function handleEvaluationChange(e: ChangeEvent<HTMLInputElement>) {
 		if (!e.target.id) return;
@@ -70,7 +69,7 @@ const ChoseBySettings: FC<StatementSettingsProps> = ({ statement }) => {
 			choseByEvaluationType: e.target.id as ChoseByEvaluationType,
 		};
 		dispatch(setChoseBy(newChoseBy));
-		setChoseByToDB(newChoseBy);
+
 	}
 
 	function handleCutoffChange(e: ChangeEvent<HTMLInputElement>) {
@@ -82,8 +81,6 @@ const ChoseBySettings: FC<StatementSettingsProps> = ({ statement }) => {
 			cutoffType: e.target.id as CutoffType,
 		};
 
-		dispatch(setChoseBy(newChoseBy));
-		setChoseByToDB(newChoseBy);
 	}
 
 	function handleRangeChange(
@@ -128,10 +125,7 @@ const ChoseBySettings: FC<StatementSettingsProps> = ({ statement }) => {
 				<RadioButtonWithLabel
 					id={ChoseByEvaluationType.consensus}
 					labelText={t('By Consensus')}
-					checked={
-						choseBy?.choseByEvaluationType ===
-						ChoseByEvaluationType.consensus
-					}
+					checked={resultsSettings?.resultsBy === ResultsBy.consensusLevel}
 					onChange={handleEvaluationChange}
 				/>
 				<RadioButtonWithLabel

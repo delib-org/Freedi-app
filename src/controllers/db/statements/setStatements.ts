@@ -104,13 +104,11 @@ export async function saveStatementToDB({
 		});
 
 		if (statement.statementType !== StatementType.group) {
-			if (resultsBy) {
-				statement.resultsSettings.resultsBy = resultsBy;
-
-			}
-			if (numberOfResults) {
-				statement.resultsSettings.numberOfResults = numberOfResults;
-			}
+			statement.resultsSettings = {
+				...statement.resultsSettings,
+				resultsBy: resultsBy || statement.resultsSettings.resultsBy,
+				numberOfResults: numberOfResults || statement.resultsSettings.numberOfResults,
+			};
 		}
 
 		return statement;
