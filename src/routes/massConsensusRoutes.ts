@@ -1,5 +1,5 @@
 import { RouteObject } from 'react-router';
-import { MassConsensusPageUrls } from '@/types/TypeEnums';
+import { MassConsensusPageUrls } from 'delib-npm';
 import { lazy } from 'react';
 import withSuspense from './withSuspense';
 
