@@ -30,7 +30,7 @@ interface RangeProps {
 const ChoseBySettings: FC<StatementSettingsProps> = ({ statement: _statement }) => {
 	const { t } = useUserConfig();
 	const statement = useSelector(statementSelector(_statement.statementId)) as Statement;
-
+	if (!statement) return null;
 	const { resultsSettings } = statement;
 
 	const [rangeProps, setRangeProps] = useState<RangeProps>({
