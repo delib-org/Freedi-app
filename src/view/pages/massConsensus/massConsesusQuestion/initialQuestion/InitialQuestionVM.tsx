@@ -1,4 +1,5 @@
 import firebaseConfig from '@/controllers/db/configKey';
+import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { setSimilarStatements } from '@/redux/massConsensus/massConsensusSlice';
 import { statementSubscriptionSelector } from '@/redux/statements/statementsSlice';
 import { functionConfig, StatementSubscription } from 'delib-npm';
@@ -11,13 +12,16 @@ interface InitialQuestionVM {
 	ifButtonEnabled: boolean;
 	ready: boolean;
 	subscription: StatementSubscription | undefined;
+	error?: string;
 }
 
 export function useInitialQuestion(description: string): InitialQuestionVM {
 	const dispatch = useDispatch();
 	const { statementId } = useParams<{ statementId: string }>();
+	const { creator } = useAuthentication();
 
 	const [ready, setReady] = useState(false);
+	const [error, setError] = useState('');
 	const subscription = useSelector(
 		statementSubscriptionSelector(statementId)
 	);
@@ -28,34 +32,49 @@ export function useInitialQuestion(description: string): InitialQuestionVM {
 	);
 
 	async function handleSetInitialSuggestion() {
-		if (!ifButtonEnabled) return;
+		try {
+			if (!ifButtonEnabled) return;
+			const creatorId = creator.uid;
+			const {
+				similarStatements = [],
+				similarTexts = [],
+				userText,
+			} = await getSimilarStatements(
+				statementId,
+				description,
+				creatorId,
+				setError
+			);
+			if (error) return;
+			dispatch(
+				setSimilarStatements([
+					...[userText],
+					...similarTexts,
+					...similarStatements,
+				])
+			);
 
-		const {
-			similarStatements = [],
-			similarTexts = [],
-			userText,
-		} = await getSimilarStatements(statementId, description);
-
-		dispatch(
-			setSimilarStatements([
-				...[userText],
-				...similarTexts,
-				...similarStatements,
-			])
-		);
-
-		setReady(true);
+			setReady(true);
+		} catch (error) {
+			console.error(error);
+		}
 	}
 
 	return {
 		handleSetInitialSuggestion,
 		ifButtonEnabled,
 		ready,
+		error,
 		subscription,
 	};
 }
 
-async function getSimilarStatements(statementId: string, userInput: string) {
+async function getSimilarStatements(
+	statementId: string,
+	userInput: string,
+	creatorId: string,
+	setError
+) {
 	try {
 		const endPoint =
 			location.hostname === 'localhost'
@@ -70,11 +89,20 @@ async function getSimilarStatements(statementId: string, userInput: string) {
 			body: JSON.stringify({
 				statementId,
 				userInput,
+				creatorId,
 				generateIfNeeded: true,
 			}),
 		});
+		if (!response.ok) {
+			const errorData = await response.json();
+			if (response.status === 403) setError(errorData.error);
+
+			throw new Error(errorData.error || 'Server error');
+		}
+
 		const data = await response.json();
 		if (!data) throw new Error('No data returned from server');
+
 		const { similarStatements, similarTexts = [], userText } = data;
 
 		const _userText = userText.statementId

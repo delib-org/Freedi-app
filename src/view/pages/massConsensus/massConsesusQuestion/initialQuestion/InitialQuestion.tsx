@@ -13,33 +13,39 @@ import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import Textarea from '@/view/components/textarea/Textarea';
 import { updateStatementText } from '@/controllers/db/statements/setStatements';
 
-const InitialQuestion = ({stage, updateStage, setIfButtonEnabled}) => {
+const InitialQuestion = ({
+	stage,
+	updateStage,
+	setIfButtonEnabled,
+	setReachedLimit,
+}) => {
 	const { statementId } = useParams<{ statementId: string }>();
 	const statement = useSelector(statementSelector(statementId));
 	const [description, setDescription] = useState('');
 	const dispatch = useDispatch(); // Dispatch to update the redux state
-	const {
-		handleSetInitialSuggestion,
-		ready,
-		subscription,
-	} = useInitialQuestion(description);
+	const { handleSetInitialSuggestion, ready, error, subscription } =
+		useInitialQuestion(description);
 	const { t } = useUserConfig();
 	const [edit, setEdit] = useState(false);
 	const [title, setTitle] = useState(statement ? statement.statement : '');
-	
+
 	const isAdmin = subscription?.role === Role.admin;
-	
-	useEffect(() => {
-		if ( stage === "loading" ) handleSetInitialSuggestion();
-	}, [stage])
 
 	useEffect(() => {
-		if (ready) updateStage("suggestions");
-	}, [ready]);
+		if (stage === 'loading') handleSetInitialSuggestion();
+	}, [stage]);
 
 	useEffect(() => {
-		setIfButtonEnabled(description !== null)
-	}, [description])
+		if (error) setReachedLimit(true);
+	}, [error]);
+
+	useEffect(() => {
+		if (ready && !error) updateStage('suggestions');
+	}, [ready, error]);
+
+	useEffect(() => {
+		setIfButtonEnabled(description !== '');
+	}, [description]);
 
 	async function handleSubmitInitialQuestionText(e) {
 		e.preventDefault();
@@ -51,6 +57,7 @@ const InitialQuestion = ({stage, updateStage, setIfButtonEnabled}) => {
 
 			return;
 		}
+		if (error) return;
 		await updateStatementText(statement, title);
 
 		dispatch(setStatement({ ...statement, statement: title }));
@@ -99,7 +106,9 @@ const InitialQuestion = ({stage, updateStage, setIfButtonEnabled}) => {
 					</button>
 				</div>
 			)}
+			{error && <h3 className={styles.error}>{t(error)}</h3>}
 			<Textarea
+				isDisabled={stage === 'submitting' || error !== ''}
 				name='your-description'
 				label={t('Your suggestion')}
 				placeholder=''

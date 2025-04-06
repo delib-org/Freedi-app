@@ -11,6 +11,7 @@ interface TextAreaProps {
 	name: string;
 	maxLength?: number;
 	onKeyUp?: (e: React.KeyboardEvent<HTMLTextAreaElement>) => void;
+	isDisabled?;
 }
 
 const Textarea: React.FC<TextAreaProps> = ({
@@ -22,6 +23,7 @@ const Textarea: React.FC<TextAreaProps> = ({
 	name,
 	maxLength,
 	onKeyUp,
+	isDisabled = false,
 }) => {
 	const { t, dir } = useUserConfig();
 	const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -59,6 +61,7 @@ const Textarea: React.FC<TextAreaProps> = ({
 			<div className={styles.inputContainer}>
 				<textarea
 					name={name}
+					disabled={isDisabled}
 					ref={textareaRef}
 					className={styles.textArea}
 					placeholder={placeholder}
