@@ -29,6 +29,7 @@ const SuggestionCards: FC<Props> = ({
 	const { sort: _sort, statementId } = useParams();
 
 	const sort = propSort || _sort || SortType.accepted;
+
 	const dispatch = useDispatch();
 	const statement = useSelector(statementSelector(statementId));
 
