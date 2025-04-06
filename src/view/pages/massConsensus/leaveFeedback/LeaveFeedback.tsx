@@ -21,7 +21,6 @@ function LeaveFeedback() {
 	useEffect(() => {
 		setHeader({
 			title: t('Sign up'),
-			backTo: MassConsensusPageUrls.voting,
 			backToApp: false,
 			isIntro: false,
 			setHeader,

@@ -26,13 +26,18 @@ import {
 	StageSelectionType,
 	getRandomUID,
 	EvaluationUI,
-	ChoseByEvaluationType,
-	CutoffType,
-	Creator
+	Creator,
+	CutoffBy,
+	ResultsSettings
 } from 'delib-npm';
 
 import { number, parse, string } from 'valibot';
-import { setChoseByToDB } from '../choseBy/setChoseBy';
+
+export const resultsSettingsDefault: ResultsSettings = {
+	resultsBy: ResultsBy.consensus,
+	numberOfResults: 1,
+	cutoffBy: CutoffBy.topOptions,
+};
 
 export const updateStatementParents = async (
 	statement: Statement,
@@ -103,12 +108,12 @@ export async function saveStatementToDB({
 		});
 
 		if (statement.statementType !== StatementType.group) {
-			setChoseByToDB({
-				statementId: statement.statementId,
-				cutoffType: CutoffType.topOptions,
-				choseByEvaluationType: ChoseByEvaluationType.consensus,
-				number: 1,
-			});
+			statement.resultsSettings = {
+				...statement.resultsSettings,
+				resultsBy: resultsBy || statement.resultsSettings.resultsBy,
+				numberOfResults: numberOfResults || statement.resultsSettings.numberOfResults,
+				cutoffBy: statement.resultsSettings.cutoffBy || CutoffBy.topOptions,
+			};
 		}
 
 		return statement;
@@ -177,7 +182,7 @@ export const setStatementToDB = async ({
 		const { results, resultsSettings } = statement;
 		if (!results) statement.results = [];
 		if (!resultsSettings)
-			statement.resultsSettings = { resultsBy: ResultsBy.topOptions };
+			statement.resultsSettings = resultsSettingsDefault;
 
 		statement.lastUpdate = new Date().getTime();
 		statement.createdAt = statement?.createdAt || new Date().getTime();
@@ -211,15 +216,6 @@ export const setStatementToDB = async ({
 
 		//add subscription
 		await Promise.all(statementPromises);
-
-		if (statement.statementType !== StatementType.group) {
-			setChoseByToDB({
-				statementId: statement.statementId,
-				cutoffType: CutoffType.topOptions,
-				choseByEvaluationType: ChoseByEvaluationType.consensus,
-				number: 1,
-			});
-		}
 
 		return { statementId: statement.statementId, statement };
 	} catch (error) {
@@ -258,7 +254,7 @@ export function createStatement({
 	enableAddVotingOption = true,
 	enhancedEvaluation = true,
 	showEvaluation = true,
-	resultsBy = ResultsBy.topOptions,
+	resultsBy = ResultsBy.consensus,
 	numberOfResults = 1,
 	hasChildren = true,
 	membership,
@@ -267,7 +263,7 @@ export function createStatement({
 	try {
 		const storeState = store.getState();
 		const creator = storeState.creator?.creator;
-		console.log("creator", creator.uid);
+
 		if (!creator) throw new Error('Creator is undefined');
 		if (!statementType) throw new Error('Statement type is undefined');
 
@@ -316,8 +312,10 @@ export function createStatement({
 			lastUpdate: Timestamp.now().toMillis(),
 			color: getRandomColor(existingColors),
 			resultsSettings: {
-				resultsBy: resultsBy || ResultsBy.topOptions,
-				numberOfResults: Number(numberOfResults),
+				resultsBy: resultsBy || ResultsBy.consensus,
+				numberOfResults: Number(numberOfResults) || 1,
+				cutoffNumber: 1,
+				cutoffBy: CutoffBy.topOptions,
 			},
 			hasChildren,
 			consensus: 0,
@@ -405,19 +403,13 @@ export function updateStatement({
 		if (resultsBy && newStatement.resultsSettings)
 			newStatement.resultsSettings.resultsBy = resultsBy;
 		else if (resultsBy && !newStatement.resultsSettings) {
-			newStatement.resultsSettings = {
-				resultsBy: resultsBy,
-				numberOfResults: 1,
-			};
+			newStatement.resultsSettings = resultsSettingsDefault;
 		}
 		if (numberOfResults && newStatement.resultsSettings)
 			newStatement.resultsSettings.numberOfResults =
 				Number(numberOfResults);
 		else if (numberOfResults && !newStatement.resultsSettings) {
-			newStatement.resultsSettings = {
-				resultsBy: ResultsBy.topOptions,
-				numberOfResults: numberOfResults,
-			};
+			newStatement.resultsSettings = resultsSettingsDefault;
 		}
 
 		newStatement.statementSettings = updateStatementSettings({

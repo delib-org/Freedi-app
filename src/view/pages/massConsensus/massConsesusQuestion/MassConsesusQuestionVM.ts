@@ -3,30 +3,34 @@ import { useHeader } from "../headerMassConsensus/HeaderContext";
 import { useUserConfig } from "@/controllers/hooks/useUserConfig";
 
 const useMassConsensusQuestion = () => {
-    const { setHeader } = useHeader();
-    const { t } = useUserConfig();
+	const { setHeader } = useHeader();
+	const { t } = useUserConfig();
 
-    const [ stage, updateStage ] = useState<"question" | "loading" | "suggestions" | "submitting">("question");
-    const [ ifButtonEnabled, setIfButtonEnabled ] = useState<boolean>(true);
-    
-    useEffect(() => {
-        setHeader({
-            title: t('offer a suggestion'),
-            backToApp: false,
-            isIntro: false,
-            setHeader,
-        });
-    }, []);
+	const [stage, updateStage] = useState<"question" | "loading" | "suggestions" | "submitting">("question");
+	const [ifButtonEnabled, setIfButtonEnabled] = useState<boolean>(true);
 
-    const handleNext = () => {
-        (stage === "question")? updateStage("loading"): updateStage("submitting");
-    }
+	useEffect(() => {
+		setHeader({
+			title: t('offer a suggestion'),
+			backToApp: false,
+			isIntro: false,
+			setHeader,
+		});
+	}, []);
 
-    useEffect(() => {
-        setIfButtonEnabled(!(stage === "loading" || stage === "submitting"));
-    }, [stage])
+	const handleNext = () => {
+		if (stage === "question") {
+			updateStage("loading");
+		} else {
+			updateStage("submitting");
+		}
+	}
 
-    return { stage, updateStage, handleNext, ifButtonEnabled, setIfButtonEnabled }
+	useEffect(() => {
+		setIfButtonEnabled(!(stage === "loading" || stage === "submitting"));
+	}, [stage])
+
+	return { stage, updateStage, handleNext, ifButtonEnabled, setIfButtonEnabled }
 }
 
 export default useMassConsensusQuestion

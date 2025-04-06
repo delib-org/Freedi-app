@@ -5,215 +5,216 @@ $addOptionSize: 60px;
 @media screen and (max-width: 600px) {}
 
 .statement-bottom-nav {
-    width: 100%;
-    position: relative;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    bottom: 0px;
-    z-index: 10;
-    padding: 5px 5px 30px 5px;
-    background: rgb(252, 252, 252);
-    background: linear-gradient(180deg, rgba(252, 252, 252, 0) 0%, rgba(255, 255, 255, 0.8687850140056023) 37%, rgba(255, 255, 255, 1) 100%);
+	width: 100%;
+	position: relative;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	bottom: 0px;
+	z-index: 10;
+	padding: 5px 5px 30px 5px;
+	background: rgb(252, 252, 252);
+	background: linear-gradient(180deg, rgba(252, 252, 252, 0) 0%, rgba(255, 255, 255, 0.8687850140056023) 37%, rgba(255, 255, 255, 1) 100%);
 
-    &--show {
+	&--show {
 
-        animation: showSortMenu 750ms linear 0s 1 forwards normal;
-    }
+		animation: showSortMenu 750ms linear 0s 1 forwards normal;
+	}
 
-    &--ltr {
-        flex-direction: row-reverse;
-    }
+	&--ltr {
+		flex-direction: row-reverse;
+	}
 
-    @keyframes showSortMenu {
-        0% {
-            opacity: 0;
-        }
+	@keyframes showSortMenu {
+		0% {
+			opacity: 0;
+		}
 
-        100% {
-            opacity: 1;
-        }
+		100% {
+			opacity: 1;
+		}
 
-    }
+	}
 
-    .add-option-button-wrapper {
-        position: relative;
-        top: 0px;
-        display: flex;
-        justify-content: space-between;
-        width: 100%;
+	.add-option-button-wrapper {
+		position: relative;
+		top: 0px;
+		display: flex;
+		justify-content: space-between;
+		width: 100%;
 
-        &--ltr {
-            flex-direction: row-reverse;
-        }
-
-
-        .add-option-button {
-            width: $addOptionSize;
-            height: $addOptionSize;
-            border-radius: $addOptionSize;
-            z-index: 10000;
-
-        }
-    }
+		&--ltr {
+			flex-direction: row-reverse;
+		}
 
 
-    .sort-menu {
+		.add-option-button {
+			width: $addOptionSize;
+			height: $addOptionSize;
+			border-radius: $addOptionSize;
+			z-index: 10000;
 
-        position: relative;
-        flex: auto;
-
-
-        &__item {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            position: absolute;
-            left: 0;
-            transition: all 1s ease;
+		}
+	}
 
 
-            .button-name {
-                display: none;
-                font-size: .8rem;
-                opacity: 0;
-                transition: all 1s ease;
-                color: var(--text-headline)
-            }
+	.sort-menu {
 
-            .open-nav-icon {
-                width: 3rem;
-                height: 3rem;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                background-color: var(--white);
-                box-shadow: 2px 2px 5px var(--shadow);
-                border-radius: 50%;
-                cursor: pointer;
-                transition: all 1s ease;
-                // position: absolute;
-                // left: 0;
+		position: relative;
+		flex: auto;
 
 
-                svg {
-                    width: 26px;
-                }
+		&__item {
+			display: flex;
+			flex-direction: column;
+			justify-content: center;
+			align-items: center;
+			position: absolute;
+			left: 0;
+			transition: all 1s ease;
+
+
+			.button-name {
+				display: none;
+				font-size: .8rem;
+				opacity: 0;
+				transition: all 1s ease;
+				color: var(--text-headline)
+			}
+
+			.open-nav-icon {
+				width: 2.5rem;
+				height: 2.5rem;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				background-color: var(--white);
+				box-shadow: 2px 2px 5px var(--shadow);
+				border-radius: 50%;
+				cursor: pointer;
+				transition: all 1s ease;
+
+
+				svg {
+					width: 26px;
+				}
 
 
 
 
-            }
+			}
 
-            &.active {
+			&.active {
+
+				.open-nav-icon {
+					width: 3rem;
+					height: 3rem;
+				}
+
+				&:nth-child(1) {
+					z-index: 20;
+
+					left: $sortBtnPosition;
+
+					@media screen and (max-width: 600px) {
+						left: calc($sortBtnPositionMobile);
+
+					}
+
+					.open-nav-icon {
+						transform: rotate(360deg);
+					}
+
+					.button-name {
+						opacity: 1;
+						display: block;
+					}
+				}
+
+				&:nth-child(2) {
+					z-index: 20;
+
+					left: calc($sortBtnPosition * 2);
+
+					@media screen and (max-width: 600px) {
+						left: calc($sortBtnPositionMobile *2);
+
+					}
+
+					.open-nav-icon {
+						transform: rotate(360deg);
+					}
+
+					.button-name {
+						opacity: 1;
+						display: block;
+					}
+				}
+
+				&:nth-child(3) {
+					z-index: 20;
+
+					left: calc($sortBtnPosition * 3);
+
+					@media screen and (max-width: 600px) {
+						left: calc($sortBtnPositionMobile * 3);
+
+					}
+
+					.open-nav-icon {
+						transform: rotate(360deg);
+					}
+
+					.button-name {
+						opacity: 1;
+						display: block;
+					}
+				}
+
+				&:nth-child(4) {
+					z-index: 20;
+
+					left: calc($sortBtnPosition * 4);
+
+					@media screen and (max-width: 600px) {
+						left: calc($sortBtnPositionMobile * 4);
+
+					}
+
+					.open-nav-icon {
+						transform: rotate(360deg);
+					}
+
+					.button-name {
+						opacity: 1;
+						display: block;
+					}
+				}
+			}
 
 
+		}
 
-                &:nth-child(1) {
-                    z-index: 20;
+		.sort-button {
+			width: 51px;
+			height: 51px;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			background-color: var(--question);
+			color: white;
+			box-shadow: 2px 2px 5px var(--shadow);
+			border-radius: 50%;
+			cursor: pointer;
+			transition: all 1s ease;
+			position: absolute;
+			left: 0;
+			z-index: 10000;
 
-                    left: $sortBtnPosition;
+			svg {
+				width: 26px;
+			}
+		}
 
-                    @media screen and (max-width: 600px) {
-                        left: calc($sortBtnPositionMobile);
-
-                    }
-
-                    .open-nav-icon {
-                        transform: rotate(360deg);
-                    }
-
-                    .button-name {
-                        opacity: 1;
-                        display: block;
-                    }
-                }
-
-                &:nth-child(2) {
-                    z-index: 20;
-
-                    left: calc($sortBtnPosition * 2);
-
-                    @media screen and (max-width: 600px) {
-                        left: calc($sortBtnPositionMobile *2);
-
-                    }
-
-                    .open-nav-icon {
-                        transform: rotate(360deg);
-                    }
-
-                    .button-name {
-                        opacity: 1;
-                        display: block;
-                    }
-                }
-
-                &:nth-child(3) {
-                    z-index: 20;
-
-                    left: calc($sortBtnPosition * 3);
-
-                    @media screen and (max-width: 600px) {
-                        left: calc($sortBtnPositionMobile * 3);
-
-                    }
-
-                    .open-nav-icon {
-                        transform: rotate(360deg);
-                    }
-
-                    .button-name {
-                        opacity: 1;
-                        display: block;
-                    }
-                }
-
-                &:nth-child(4) {
-                    z-index: 20;
-
-                    left: calc($sortBtnPosition * 4);
-
-                    @media screen and (max-width: 600px) {
-                        left: calc($sortBtnPositionMobile * 4);
-
-                    }
-
-                    .open-nav-icon {
-                        transform: rotate(360deg);
-                    }
-
-                    .button-name {
-                        opacity: 1;
-                        display: block;
-                    }
-                }
-            }
-
-
-        }
-
-        .sort-button {
-            width: 51px;
-            height: 51px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background-color: var(--question);
-            color: white;
-            box-shadow: 2px 2px 5px var(--shadow);
-            border-radius: 50%;
-            cursor: pointer;
-            transition: all 1s ease;
-            position: absolute;
-            left: 0;
-            z-index: 10000;
-
-            svg {
-                width: 26px;
-            }
-        }
-
-    }
+	}
 }

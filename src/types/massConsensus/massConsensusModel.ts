@@ -7,7 +7,7 @@ import {
 	null_,
 	InferOutput,
 } from 'valibot';
-import { MassConsensusPageUrls } from '../TypeEnums';
+import { MassConsensusPageUrls } from 'delib-npm';
 
 export const MassConsensusPageUrlsSchema = enum_(MassConsensusPageUrls);
 
