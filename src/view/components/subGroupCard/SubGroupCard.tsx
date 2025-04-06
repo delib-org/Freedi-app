@@ -2,7 +2,7 @@ import { FC } from 'react';
 import styles from './SubGroupCard.module.scss';
 import { Link, NavLink } from 'react-router';
 import useSubGroupCard from './SubGroupCardVM';
-import { Statement, StatementType } from 'delib-npm';
+import { EvaluationUI, ResultsBy, Statement, StatementType } from 'delib-npm';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import StatementChatMore from '@/view/pages/statement/components/chat/components/statementChatMore/StatementChatMore';
 
@@ -15,13 +15,16 @@ const SubGroupCard: FC<Props> = ({ statement }) => {
 	const { Icon, backgroundColor, text } = useSubGroupCard(statement);
 
 	try {
-		const { results } = statement;
+		const { results, topVotedOption, evaluationSettings } = statement;
+		const evaluationUI = evaluationSettings?.evaluationUI;
+		const isDecidedByVoting = evaluationUI === EvaluationUI.voting;
+		const shouldSeeVoting = isDecidedByVoting && topVotedOption;
 		const answerLabel =
-			results && results.length > 1 ? t('Answers') : t('Answer');
+			results && (results.length > 1 || !isDecidedByVoting) ? t('Answers') : t('Answer');
 
 		return (
 			<div
-				className={styles.card}
+				className={styles.subGroupCard}
 				style={{
 					border: `1px solid ${backgroundColor}`,
 					borderLeft: `5px solid ${backgroundColor}`,
@@ -40,30 +43,34 @@ const SubGroupCard: FC<Props> = ({ statement }) => {
 						<div><StatementChatMore statement={statement} onlyCircle={true} /></div>
 					</div>
 				</Link>
-
-				{results &&
-					statement.statementType === StatementType.question && (
-						<div className={styles.results}>
-							{results.length !== 0 && (
-								<NavLink
-									to={`/statement/${results[0].parentId}/main`}
-								>
-									<p>{answerLabel}:</p>
-								</NavLink>
-							)}
-							<ul>
-								{results.map((result) => (
-									<li key={result.statementId}>
-										<NavLink
-											to={`/statement/${result.statementId}/main`}
-										>
-											{result.statement}
-										</NavLink>
-									</li>
-								))}
-							</ul>
-						</div>
-					)}
+				{shouldSeeVoting ? (
+					<NavLink
+						to={`/statement/${topVotedOption.statementId}/main`}
+					>
+						{topVotedOption.statement}
+					</NavLink>
+				) : (statement.statementType === StatementType.question && (
+					<div className={styles.results}>
+						{results.length !== 0 && (
+							<NavLink
+								to={`/statement/${results[0].parentId}/main`}
+							>
+								<p>{answerLabel}:</p>
+							</NavLink>
+						)}
+						<ul>
+							{results.map((result) => (
+								<li key={result.statementId}>
+									<NavLink
+										to={`/statement/${result.statementId}/main`}
+									>
+										{result.statement}
+									</NavLink>
+								</li>
+							))}
+						</ul>
+					</div>
+				))}
 			</div>
 		);
 	} catch (err) {

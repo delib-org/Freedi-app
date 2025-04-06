@@ -23,27 +23,15 @@ interface Props {
 
 const StageCard: FC<Props> = ({ statement, isDescription, isSuggestions }) => {
 	const { dir, t } = useUserConfig();
-	const dispatch = useDispatch();
 
 	const navigate = useNavigate();
 	const stageUrl = `/stage/${statement.statementId}`;
 	const isVoting =
 		statement.evaluationSettings?.evaluationUI === EvaluationUI.voting;
 
-	const topVotedId =
-		isVoting && statement.selections
-			? maxKeyInObject(statement.selections)
-			: '';
-
-	const topVoted = useSelector(statementSelectorById(topVotedId));
-
-	const simpleTopVoted = topVoted
-		? statementToSimpleStatement(topVoted)
-		: undefined;
-
-	const votingResults = simpleTopVoted ? [simpleTopVoted] : [];
-	const chosen: SimpleStatement[] = isVoting
-		? votingResults
+	const votingResults: SimpleStatement | undefined = statement.topVotedOption;
+	const chosen: SimpleStatement[] = isVoting && votingResults
+		? [votingResults]
 		: statement.results;
 
 	function suggestNewSuggestion(ev: MouseEvent<HTMLButtonElement>) {
@@ -66,16 +54,6 @@ const StageCard: FC<Props> = ({ statement, isDescription, isSuggestions }) => {
 		suggestionsClass =
 			dir === 'ltr' ? 'card--suggestions' : 'card--suggestions-rtl';
 	}
-
-	useEffect(() => {
-		if (isVoting && topVotedId && !topVoted) {
-			getStatementFromDB(topVotedId).then(topVotedDB => {
-				if (topVotedDB) {
-					dispatch(setStatement(topVotedDB));
-				}
-			});
-		}
-	}, [topVotedId, isVoting, topVoted, dispatch]);
 
 	return (
 		<div
