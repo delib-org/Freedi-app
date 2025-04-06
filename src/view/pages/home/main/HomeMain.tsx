@@ -8,22 +8,29 @@ import { useNavigate } from 'react-router';
 import MainCard from './mainCard/MainCard';
 import bike from '@/assets/images/bike.png';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
-import { topSubscriptionsSelector } from '@/redux/statements/statementsSlice';
+import { statementsSubscriptionsSelector, topSubscriptionsSelector } from '@/redux/statements/statementsSlice';
 
 // Custom components
 import Footer from '@/view/components/footer/Footer';
 import PeopleLoader from '@/view/components/loaders/PeopleLoader';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
+import { StatementType } from 'delib-npm';
+import MainQuestionCard from './mainQuestionCard/MainQuestionCard';
 
 const HomeMain = () => {
 	// Hooks
 	const navigate = useNavigate();
 	const [loading, setLoading] = useState(true);
+	const [subPage, setSubPage] = useState<"decisions" | "groups">("groups");
 	const { user } = useAuthentication();
 
 	const topSubscriptions = useAppSelector(topSubscriptionsSelector)
 		.sort((a, b) => b.lastUpdate - a.lastUpdate)
 		.filter((sub) => sub.user?.uid === user?.uid);
+
+	const latestDecisions = useAppSelector(statementsSubscriptionsSelector)
+		.filter((sub) => sub.statement.statementType === StatementType.question)
+		.sort((a, b) => b.lastUpdate - a.lastUpdate)
 
 	function handleAddStatement() {
 		navigate('/home/addStatement', {
@@ -57,20 +64,31 @@ const HomeMain = () => {
 						topSubscriptions.length > 0 ? 'start' : 'center',
 				}}
 			>
-				{!loading ? (
-					topSubscriptions.map((sub) => (
-						<MainCard
-							key={sub.statementId}
-							simpleStatement={sub.statement}
-						/>
-					))
-				) : (
-					<div className='peopleLoadingScreen'>
-						<PeopleLoader />
-					</div>
-				)}
+				{(() => {
+					if (loading) {
+						return (
+							<div className='peopleLoadingScreen'>
+								<PeopleLoader />
+							</div>
+						);
+					}
+
+					const itemsToRender = subPage === "groups" ? topSubscriptions : latestDecisions;
+
+					return itemsToRender.map((sub) => (
+						subPage === "groups" ?
+							<MainCard
+								key={sub.statementId}
+								simpleStatement={sub.statement}
+							/> :
+							<MainQuestionCard
+								key={sub.statementId}
+								simpleStatement={sub.statement}
+							/>
+					));
+				})()}
 			</div>
-			<Footer onclick={handleAddStatement} />
+			<Footer addGroup={handleAddStatement} setSubPage={setSubPage} subPage={subPage} />
 		</main>
 	);
 };

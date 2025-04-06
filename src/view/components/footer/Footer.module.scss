@@ -11,11 +11,49 @@
 	gap: .5rem;
 
 	button {
-		background-color: rgb(84, 230, 230);
+
 		flex: 1;
 		height: 100%;
 		border-radius: 10px;
+
 	}
+
+	.button {
+		flex: 1;
+		height: 100%;
+		border-radius: 10px;
+		transition: all 0.2s ease-in-out;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: 0.2rem;
+
+		.activeText {
+			font-weight: 600;
+		}
+
+		.buttonImage {
+			width: 6.5rem;
+			height: 1.5rem;
+			padding: .2rem;
+
+			&Active {
+				background-color: #8cff6f6b;
+				color: black;
+				border-radius: 2rem;
+
+			}
+
+
+		}
+
+
+
+
+	}
+
+
 }
 
 .addStatementButton {
