@@ -1,12 +1,10 @@
 // Helpers
 import { NavigateFunction } from 'react-router';
-import {
-	defaultResultsSettings,
-	defaultStatementSettings,
-} from './emptyStatementModel';
+import { defaultStatementSettings } from './emptyStatementModel';
 import { getEvaluations } from '@/controllers/db/evaluation/getEvaluation';
 import {
 	createStatement,
+	resultsSettingsDefault,
 	setStatementToDB,
 	updateStatement,
 } from '@/controllers/db/statements/setStatements';
@@ -187,7 +185,7 @@ export const getStatementSettings = (statement: Statement) => {
 
 const getSetStatementData = (statement: Statement) => {
 	const { resultsBy, numberOfResults } =
-		statement.resultsSettings ?? defaultResultsSettings;
+		statement.resultsSettings ?? resultsSettingsDefault;
 	const {
 		enableAddEvaluationOption,
 		enableAddVotingOption,

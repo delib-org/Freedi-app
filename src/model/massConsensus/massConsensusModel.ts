@@ -2,8 +2,7 @@ import { MassConsensusPageUrls } from "delib-npm";
 
 export const defaultMassConsensusProcess = [
 	MassConsensusPageUrls.introduction,
-	MassConsensusPageUrls.initialQuestion,
-	MassConsensusPageUrls.similarSuggestions,
+	MassConsensusPageUrls.question,
 	MassConsensusPageUrls.randomSuggestions,
 	MassConsensusPageUrls.topSuggestions,
 	MassConsensusPageUrls.voting,

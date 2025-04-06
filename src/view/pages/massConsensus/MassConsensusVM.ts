@@ -21,7 +21,6 @@ export function useMassConsensusSteps(): Props {
 		return Object.values(MassConsensusPageUrls).includes(segment as MassConsensusPageUrls);
 	});
 	const currentStep = currentPage as MassConsensusPageUrls || MassConsensusPageUrls.introduction;
-
 	try {
 		return { steps, loginType, currentStep };
 	} catch (error) {
@@ -36,16 +35,6 @@ export function getStepNavigation(steps: MassConsensusPageUrls[], currentStep: M
 
 	const nextStepIndex = currentStepIndex + 1 >= steps.length ? undefined : currentStepIndex + 1;
 	let previousStepIndex = currentStepIndex === 0 ? undefined : currentStepIndex - 1;
-
-	const isPrevSimilarSuggestions = steps[previousStepIndex] === MassConsensusPageUrls.similarSuggestions;
-
-	if (isPrevSimilarSuggestions) {
-		previousStepIndex = previousStepIndex - 1;
-
-		if (previousStepIndex < 0) {
-			previousStepIndex = undefined;
-		}
-	}
 
 	const nextStep = nextStepIndex !== undefined ? steps[nextStepIndex] || MassConsensusPageUrls.introduction : undefined;
 	const previousStep = previousStepIndex !== undefined ? steps[previousStepIndex] || MassConsensusPageUrls.introduction : undefined;

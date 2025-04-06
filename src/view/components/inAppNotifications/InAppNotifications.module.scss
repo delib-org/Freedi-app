@@ -1,14 +1,17 @@
 .inAppNotifications {
 	position: absolute;
 	background-color: white;
-	color: gray;
 	box-shadow: 3px 3px 10px #a9adf49a;
-	border-radius: 0.36rem;
-	padding: 5px;
-	transform: translateX(50%);
+	border-radius: 15px;
+	padding: 10px;
 	display: flex;
 	flex-direction: column;
-	width: 12rem;
+	width: fit-content;
+	max-width: 30rem;
+	color: var(--text-title);
+	text-wrap: nowrap;
+	transform: translateX(-50%);
+	left: 50%;
 
 	a {
 		text-align: start;
@@ -17,4 +20,14 @@
 			color: black;
 		}
 	}
+
+	@media screen and (max-width: 768px) {
+		max-width: 80vw;
+	}
+}
+
+.notificationTitle {
+	font-weight: bold;
+	font-size: 1.5rem;
+	margin: 1rem;
 }

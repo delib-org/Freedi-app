@@ -10,7 +10,7 @@ export async function getResults(
 	try {
 		const result: Results = { top: statement, sub: [] };
 
-		if (resultsBy === ResultsBy.topOptions) {
+		if (resultsBy === ResultsBy.consensus) {
 			result.sub = [
 				...getResultsByOptions(subStatements, numberOfResults),
 			];

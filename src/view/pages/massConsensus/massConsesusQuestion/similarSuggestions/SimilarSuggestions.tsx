@@ -5,41 +5,26 @@ import { selectSimilarStatements } from '@/redux/massConsensus/massConsensusSlic
 import SimilarCard from './similarCard/SimilarCard';
 import {
 	Statement,
-	MassConsensusPageUrls,
 	GeneratedStatement,
 } from 'delib-npm';
 import styles from './SimilarSuggestions.module.scss';
 import { useSimilarSuggestions } from './SimilarSuggestionVM';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
-import TitleMassConsensus from '../TitleMassConsensus/TitleMassConsensus';
-import FooterMassConsensus from '../footerMassConsensus/FooterMassConsensus';
-import { useHeader } from '../headerMassConsensus/HeaderContext';
 import Loader from '@/view/components/loaders/Loader';
-import { getStepNavigation, useMassConsensusSteps } from '../MassConsensusVM';
+import { getStepNavigation, useMassConsensusSteps } from '../../MassConsensusVM';
+import TitleMassConsensus from '../../TitleMassConsensus/TitleMassConsensus';
 
-const SimilarSuggestions = () => {
+const SimilarSuggestions = ({stage, setIfButtonEnabled}) => {
 	const navigate = useNavigate();
 	const { statementId } = useParams<{ statementId: string }>();
-	const { handleSetSuggestionToDB } = useSimilarSuggestions();
 	const similarSuggestions = useSelector(selectSimilarStatements);
 	const { t } = useUserConfig();
 	const [loadingStatements, setLoadingStatements] = useState(true);
 	const { steps, currentStep } = useMassConsensusSteps();
 	const { nextStep } = getStepNavigation(steps, currentStep);
+	const { handleSetSuggestionToDB } = useSimilarSuggestions(statementId, nextStep);
 
 	const [selected, setSelected] = React.useState<number | null>(null);
-
-	const { setHeader } = useHeader();
-
-	useEffect(() => {
-		setHeader({
-			title: t('similar suggestions'),
-			backTo: MassConsensusPageUrls.initialQuestion,
-			backToApp: false,
-			isIntro: false,
-			setHeader,
-		});
-	}, []);
 
 	function handleSelect(index: number) {
 		setSelected(index);
@@ -51,6 +36,14 @@ const SimilarSuggestions = () => {
 			setLoadingStatements(false);
 		}
 	}, [similarSuggestions, navigate, statementId]);
+
+	useEffect(() => {
+		if ( stage === "submitting" ) handleSetSuggestionToDB(similarSuggestions[selected]);
+	}, [stage])
+
+	useEffect(() => {
+		setIfButtonEnabled(selected !== null)
+	}, [selected])
 
 	return (
 		<>
@@ -79,12 +72,6 @@ const SimilarSuggestions = () => {
 					)
 				)}
 			</div>
-			<FooterMassConsensus
-				isNextActive={selected !== null}
-				onNext={() =>
-					handleSetSuggestionToDB(similarSuggestions[selected])
-				}
-			/>
 		</>
 	);
 };

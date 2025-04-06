@@ -10,7 +10,6 @@ interface InitialQuestionVM {
 	handleSetInitialSuggestion: () => Promise<void>;
 	ifButtonEnabled: boolean;
 	ready: boolean;
-	loading: boolean;
 	subscription: StatementSubscription | undefined;
 }
 
@@ -19,7 +18,6 @@ export function useInitialQuestion(description: string): InitialQuestionVM {
 	const { statementId } = useParams<{ statementId: string }>();
 
 	const [ready, setReady] = useState(false);
-	const [loading, setLoading] = useState(false);
 	const subscription = useSelector(
 		statementSubscriptionSelector(statementId)
 	);
@@ -31,7 +29,6 @@ export function useInitialQuestion(description: string): InitialQuestionVM {
 
 	async function handleSetInitialSuggestion() {
 		if (!ifButtonEnabled) return;
-		setLoading(true);
 
 		const {
 			similarStatements = [],
@@ -46,15 +43,14 @@ export function useInitialQuestion(description: string): InitialQuestionVM {
 				...similarStatements,
 			])
 		);
+
 		setReady(true);
-		setLoading(false);
 	}
 
 	return {
 		handleSetInitialSuggestion,
 		ifButtonEnabled,
 		ready,
-		loading,
 		subscription,
 	};
 }

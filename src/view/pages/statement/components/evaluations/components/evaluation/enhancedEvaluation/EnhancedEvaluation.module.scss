@@ -1,100 +1,123 @@
 .enhanced-evaluation {
+	display: grid;
+	grid-template-columns: auto 1fr auto;
+	grid-template-rows: auto auto;
+	gap: 0.5rem;
 
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  grid-template-rows: auto auto;
-  gap: 0.5rem;
+	@media screen and (max-width: 500px) {
+		display: flex;
+		flex-direction: column;
+		width: fit-content;
+		margin: auto;
+		margin-top: 1rem;
+	}
 
+	.evaluation-thumbs {
+		display: flex;
+		flex-direction: row-reverse;
+		width: fit-content;
+		// direction: ltr; // Default direction
+		gap: 0.5rem;
 
-  @media screen and (max-width: 500px) {
-    width: fit-content;
-    margin: auto;
-    margin-top: 1rem;
-  }
+		.evaluation-thumb {
+			transition: all 0.3s;
+			display: flex;
+			border-radius: 3rem;
+			justify-content: center;
+			align-items: center;
+			height: 2rem;
+			min-width: 2rem;
+			cursor: pointer;
+			user-select: none;
+			opacity: 0.8;
 
+			&.active {
+				transform: scale(1.2);
+				z-index: 0;
+				opacity: 1;
+			}
+		}
+	}
 
-  .evaluation-thumbs {
+	.evaluation-score {
+		display: flex;
+		gap: 0.2rem;
+		align-items: center;
+		justify-content: center;
+		color: var(--text-body);
+		color: #a9b9de;
 
-    display: flex;
-    flex-direction: row-reverse;
-    width: fit-content;
-    // direction: ltr; // Default direction
-    gap: 0.5rem;
+		// Adding new styles for tooltips
+		.scoreValue {
+			font-weight: 500;
+			padding: 0.15rem 0.25rem;
+			border-radius: 3px;
+			transition: background-color 0.2s ease;
+			direction: ltr;
 
+			&:hover {
+				background-color: rgba(0, 0, 0, 0.05); // subtle highlight on hover
+			}
+		}
 
+		&.negative .scoreValue {
+			color: #da6d6d;
+		}
 
-    .evaluation-thumb {
-      transition: all 0.3s;
-      display: flex;
-      border-radius: 3rem;
-      justify-content: center;
-      align-items: center;
-      height: 2rem;
-      min-width: 2rem;
-      cursor: pointer;
-      user-select: none;
-      opacity: 0.8;
+		.total-evaluators {
+			direction: ltr;
+			opacity: 0.8;
+			transition: opacity 0.2s ease;
 
-      &.active {
-        transform: scale(1.2);
-        z-index: 0;
-        opacity: 1;
-      }
+			&:hover {
+				opacity: 1;
+			}
+		}
+	}
 
-    }
-  }
+	.explain {
+		justify-content: space-between;
+		color: var(--text-label);
 
-  .evaluation-score {
+		&--ltr {
+			flex-direction: row-reverse;
+		}
+	}
 
-    display: flex;
-    gap: 0.2rem;
-    align-items: center;
-    justify-content: center;
-    color: var(--text-body);
-    // direction: ltr;
+	.evaluation-bar {
+		display: flex;
+		align-items: center;
+		flex-direction: column;
+		gap: 0.6rem;
+		color: rgba(0, 0, 0, 0.711);
+		font-size: 0.8rem;
+	}
 
-  }
-
-  .explain {
-    justify-content: space-between;
-    color: var(--text-label);
-
-    &--ltr {
-      flex-direction: row-reverse;
-    }
-  }
-
-  .evaluation-bar {
-    display: flex;
-
-    align-items: center;
-    flex-direction: column;
-    gap: 0.6rem;
-    color: rgba(0, 0, 0, 0.711);
-    font-size: 0.8rem;
-
-
-
-  }
-
-  .total-evaluators {
-    direction: ltr;
-  }
-
-
-
-
-  .evaluation-explain {
-    display: flex;
-    justify-content: space-between;
-    font-weight: 300;
-    font-size: 0.8rem;
-    color: rgba(0, 0, 0, 0.711);
-    text-align: center;
-    width: 100%;
-  }
+	.evaluation-explain {
+		display: flex;
+		justify-content: space-between;
+		font-weight: 300;
+		font-size: 0.8rem;
+		color: rgba(0, 0, 0, 0.711);
+		text-align: center;
+		width: 100%;
+	}
 }
 
 .active {
-  transform: scale(1.1);
+	transform: scale(1.1);
+}
+
+// Mobile optimizations for tooltips
+@media screen and (max-width: 500px) {
+	.enhanced-evaluation {
+		.evaluation-score {
+
+			.scoreValue,
+			.total-evaluators {
+				// Make tap targets larger on mobile
+				padding: 0.25rem 0.3rem;
+			}
+		}
+	}
 }

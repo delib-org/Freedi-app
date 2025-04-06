@@ -38,7 +38,7 @@
 	"Discussion Topic": "נושא הדיון",
 	"Divide into rooms": "חלק/י לחדרים",
 	"Division into rooms": "חלוקה לחדרים",
-	"Dont agree": "אני לא מסכים/ה",
+	"Don't agree": "אני לא מסכים/ה",
 	"Edit Text": "עריכת טקסט",
 	"Upload Image": "העלאת תמונה",
 	"Enable Sub-Conversations": "לאפשר תת-שיחות",
@@ -91,6 +91,7 @@
 	"No Topic Chosen by You": "לא נבחר נושא על ידך",
 	"No evaluators found": "לא נמצאו הערכות של משתתפים",
 	"No voters found": "לא נמצאו מצביעים",
+	"Notifications": "התראות",
 	"Number of Results to Display": "כמה תוצאות להציג",
 	"Number of Solutions in Each Level": "כמות פתרונות בכל רמה",
 	"Please suggest a solution to the question": "אנא הצע/י פתרון לשאלה",
@@ -149,6 +150,7 @@
 	"Welcome to Room Number": "מוזמן/ת לחדר מספר",
 	"Yes": "כן",
 	"Yours FreeDi": "שלכם, פרידי הסכמות",
+	"You have no new notifications": "אין לך התראות חדשות",
 	"Would you like to receive notifications in this group?": "האם תרצה לקבל הודעות בקבוצה הזאת?",
 	"Save": "שמירה",
 	"description": "תיאור",
@@ -273,5 +275,11 @@
 	"Total suggestions": "סך כל ההצעות",
 	"Options for deletion": "אפשרויות למחיקה",
 	"Top options": "אפשרויות מובילות",
-	"Mass Consensus Process Settings": "הגדרות תהליך הסכמה המונית"
+	"Mass Consensus Process Settings": "הגדרות תהליך הסכמה המונית",
+	"Top options to be selected": "אופציות מובילות שיבחרו",
+	"The score to be considered as a top option": "הציון שיתקבל כאופציה מובילה",
+	"Consent": "אישור",
+	"Average score": "ציון ממוצע",
+	"Number of evaluators": "מספר המעריכים",
+	"Consensus score": "ציון הסכמה"
 }

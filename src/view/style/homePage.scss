@@ -15,11 +15,6 @@
 		margin-bottom: -1px;
 		z-index: 1;
 
-		.inAppNotifications {
-			color: var(--text-negative);
-			position: relative;
-		}
-
 		@media (max-width: 570px) {
 			background-color: #6499f0;
 		}
@@ -36,8 +31,8 @@
 			display: flex;
 			flex-flow: row;
 			align-items: center;
-			justify-content: space-around;
-			width: 100%;
+			justify-content: space-between;
+			width: var(--wrapper);
 			margin: auto;
 
 			@media (max-width: 900px) {
@@ -113,6 +108,10 @@
 					color: var(--menu-chosen);
 				}
 			}
+
+			&__title {
+				margin-bottom: 0;
+			}
 		}
 	}
 }
@@ -139,29 +138,29 @@
 	margin-bottom: 2rem;
 	margin-top: -5rem;
 	width: 100vw;
-	background-image: url("../../assets/images/Hero-rectangle.png");
+	background-image: url('../../assets/images/Hero-rectangle.png');
 	height: 32vh;
 
 	@media (max-width: 1200px) {
-		background-image: url("../../assets/images/hero-x4.png");
+		background-image: url('../../assets/images/hero-x4.png');
 		height: 25vh;
 		margin-top: 0;
 	}
 
 	@media (max-width: 860px) {
-		background-image: url("../../assets/images/hero-x3.png");
+		background-image: url('../../assets/images/hero-x3.png');
 		height: 26vh;
 		margin-top: 0;
 	}
 
 	@media (max-width: 570px) {
-		background-image: url("../../assets/images/hero-x1.png");
+		background-image: url('../../assets/images/hero-x1.png');
 
 		height: 22vh;
 	}
 
 	@media (max-width: 440px) {
-		background-image: url("../../assets/images/hero-x1.png");
+		background-image: url('../../assets/images/hero-x1.png');
 		height: 20vh;
 	}
 }

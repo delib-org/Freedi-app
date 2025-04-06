@@ -12,12 +12,11 @@ import {
 	StatementSchema,
 	Collections,
 	StatementType,
-	ChoseBy,
-	ChoseByEvaluationType,
-	CutoffType,
-	defaultChoseBySettings,
 	statementToSimpleStatement,
 	User,
+	ResultsSettings,
+	ResultsBy,
+	CutoffBy,
 } from 'delib-npm';
 
 import { number, parse } from 'valibot';
@@ -309,6 +308,7 @@ export async function updateChosenOptions(
 	>
 ) {
 	try {
+
 		let snapshot: DocumentSnapshot | undefined;
 
 		// Check if the event is a Change or a DocumentSnapshot
@@ -348,22 +348,18 @@ async function updateParentStatementWithChosenOptions(
 	parentId: string | undefined
 ) {
 	try {
+
 		if (!parentId) throw new Error('parentId is not defined');
 
 		// get parent choseBy settings statement and parent statement
 
-		const [parentStatementChoseByDB] = await Promise.all([
-			db.collection(Collections.choseBy).doc(parentId).get(),
-			db.collection(Collections.statements).doc(parentId).get(),
-		]);
+		const parentStatementDB = await db.collection(Collections.statements).doc(parentId).get();
+		const parentStatement = parentStatementDB.data() as Statement;
+		if (!parentStatement) throw new Error('parentStatement is not found');
+		const { resultsSettings } = parentStatement;
+		if (!resultsSettings) throw new Error('resultsSettings is not found');
 
-		const parentStatementChoseBy: ChoseBy = !parentStatementChoseByDB.exists
-			? defaultChoseBySettings(parentId)
-			: (parentStatementChoseByDB.data() as ChoseBy);
-		parentStatementChoseBy.number = Number(parentStatementChoseBy.number);
-
-		//chose top options by the choseBy settings & get the top options
-		const chosenOptions = await choseTopOptions(parentStatementChoseBy);
+		const chosenOptions = await choseTopOptions(parentId, resultsSettings);
 
 		if (!chosenOptions) throw new Error('chosenOptions is not found');
 
@@ -372,6 +368,7 @@ async function updateParentStatementWithChosenOptions(
 		});
 
 		//update child statement selected to be of type result
+		await choseTopOptions(parentId, resultsSettings);
 	} catch (error) {
 		logger.error(error);
 	}
@@ -400,9 +397,11 @@ async function updateParentStatementWithChosenOptions(
 
 //chose top options by the choseBy settings
 async function choseTopOptions(
-	choseBy: ChoseBy
+	parentId: string,
+	resultsSettings: ResultsSettings
 ): Promise<Statement[] | undefined> {
 	try {
+
 		const statementsRef = db.collection(Collections.statements);
 
 		//first get previous top options and remove isChosen
@@ -419,11 +418,11 @@ async function choseTopOptions(
 		await batch.commit();
 
 		//then get the new top options by the new settings
-		const chosenOptions = await optionsChosenByMethod(choseBy);
+		const chosenOptions = await optionsChosenByMethod(parentId, resultsSettings);
 
-		if (!chosenOptions) throw new Error('statementsDB is not defined');
+		if (!chosenOptions || chosenOptions.length === 0) throw new Error("Couldn't find top options");
 
-		const sortedOptions = getSortedOptions(chosenOptions, choseBy);
+		const sortedOptions = getSortedOptions(chosenOptions, resultsSettings);
 
 		const batch2 = db.batch();
 		sortedOptions.forEach((doc) => {
@@ -443,16 +442,16 @@ async function choseTopOptions(
 
 function getSortedOptions(
 	statements: Statement[],
-	choseBy: ChoseBy
+	resultsSettings: ResultsSettings
 ): Statement[] {
-	const { choseByEvaluationType } = choseBy;
-	if (choseByEvaluationType === ChoseByEvaluationType.consensus) {
+	const { resultsBy } = resultsSettings;
+	if (resultsBy === ResultsBy.consensus) {
 		return statements.sort((b, a) => a.consensus - b.consensus);
-	} else if (choseByEvaluationType === ChoseByEvaluationType.likes) {
+	} else if (resultsBy === ResultsBy.mostLiked) {
 		return statements.sort(
 			(b, a) => (a.evaluation?.sumPro ?? 0) - (b.evaluation?.sumPro ?? 0)
 		);
-	} else if (choseByEvaluationType === ChoseByEvaluationType.likesDislikes) {
+	} else if (resultsBy === ResultsBy.averageLikesDislikes) {
 		return statements.sort(
 			(b, a) =>
 				(a.evaluation?.sumEvaluations ?? 0) -
@@ -464,18 +463,25 @@ function getSortedOptions(
 }
 
 async function optionsChosenByMethod(
-	choseBy: ChoseBy
+	parentId: string,
+	resultsSettings: ResultsSettings
 ): Promise<Statement[] | undefined> {
-	const { number: numberString, choseByEvaluationType, cutoffType } = choseBy;
-	const number = Number(numberString);
-	const evaluationQuery = getEvaluationQuery(choseByEvaluationType);
+	const {
+		numberOfResults,
+		resultsBy,
+		cutoffBy,
+		cutoffNumber
+	} = resultsSettings;
+
+	const number = Number(numberOfResults);
+	const evaluationQuery = getEvaluationQuery(resultsBy);
 
 	const statementsRef = db
 		.collection(Collections.statements)
-		.where('parentId', '==', choseBy.statementId)
+		.where('parentId', '==', parentId)
 		.where('statementType', '==', StatementType.option);
 
-	if (cutoffType === CutoffType.topOptions) {
+	if (cutoffBy === CutoffBy.topOptions) {
 		const statementsDB = await statementsRef
 			.orderBy(evaluationQuery, 'desc')
 			.limit(Math.ceil(number))
@@ -486,9 +492,9 @@ async function optionsChosenByMethod(
 		);
 
 		return statements;
-	} else if (cutoffType === CutoffType.cutoffValue) {
+	} else if (cutoffBy === CutoffBy.aboveThreshold) {
 		const statementsDB = await statementsRef
-			.where(evaluationQuery, '>', number)
+			.where(evaluationQuery, '>', cutoffNumber)
 			.get();
 
 		const statements = statementsDB.docs.map(
@@ -501,12 +507,12 @@ async function optionsChosenByMethod(
 	return undefined;
 }
 
-function getEvaluationQuery(choseByEvaluationType: ChoseByEvaluationType) {
-	if (choseByEvaluationType === ChoseByEvaluationType.consensus) {
+function getEvaluationQuery(choseByEvaluationType: ResultsBy) {
+	if (choseByEvaluationType === ResultsBy.consensus) {
 		return 'consensus';
-	} else if (choseByEvaluationType === ChoseByEvaluationType.likes) {
+	} else if (choseByEvaluationType === ResultsBy.mostLiked) {
 		return 'evaluation.sumPro';
-	} else if (choseByEvaluationType === ChoseByEvaluationType.likesDislikes) {
+	} else if (choseByEvaluationType === ResultsBy.averageLikesDislikes) {
 		return 'evaluation.sumEvaluations';
 	}
 

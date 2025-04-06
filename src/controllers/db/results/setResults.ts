@@ -4,7 +4,7 @@ import { ResultsBy, Collections } from 'delib-npm';
 
 export async function updateResultsSettings(
 	statementId: string,
-	resultsBy: ResultsBy = ResultsBy.topOptions,
+	resultsBy: ResultsBy = ResultsBy.consensus,
 	numberOfResults = 3
 ) {
 	try {
