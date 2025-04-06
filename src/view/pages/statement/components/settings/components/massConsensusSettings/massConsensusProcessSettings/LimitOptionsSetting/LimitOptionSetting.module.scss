@@ -1,3 +1,19 @@
 .title {
 	margin-top: 2rem;
 }
+.range {
+	display: flex;
+	gap: 1rem;
+	align-items: center;
+
+	span {
+		direction: ltr;
+	}
+}
+
+section {
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+	margin-top: 2rem;
+}

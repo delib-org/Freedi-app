@@ -35,17 +35,19 @@ export function useInitialQuestion(description: string): InitialQuestionVM {
 		try {
 			if (!ifButtonEnabled) return;
 			const creatorId = creator.uid;
-			const {
-				similarStatements = [],
-				similarTexts = [],
-				userText,
-			} = await getSimilarStatements(
+			const result = await getSimilarStatements(
 				statementId,
 				description,
 				creatorId,
 				setError
 			);
-			if (error) return;
+			if (error || !result) return;
+
+			const {
+				similarStatements = [],
+				similarTexts = [],
+				userText,
+			} = result;
 			dispatch(
 				setSimilarStatements([
 					...[userText],
