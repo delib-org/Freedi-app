@@ -2,7 +2,7 @@ import { FC } from 'react';
 import styles from './SubGroupCard.module.scss';
 import { Link, NavLink } from 'react-router';
 import useSubGroupCard from './SubGroupCardVM';
-import { EvaluationUI, ResultsBy, Statement, StatementType } from 'delib-npm';
+import { EvaluationUI, Statement, StatementType } from 'delib-npm';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import StatementChatMore from '@/view/pages/statement/components/chat/components/statementChatMore/StatementChatMore';
 
