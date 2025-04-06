@@ -1,4 +1,4 @@
-.card {
+.subGroupCard {
 	display: flex;
 	flex-direction: column;
 	padding: 0.5rem 1rem;
@@ -43,8 +43,12 @@
 			padding: 0 1rem;
 
 			a {
-				color: blue;
+				color: var(--text-blue);
 			}
+		}
+
+		a {
+			color: var(--text-blue);
 		}
 	}
 }
