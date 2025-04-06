@@ -73,15 +73,14 @@ const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({
 					</CustomTooltip>
 				) : null}
 			</div>
-			<div />
-			<div className={styles.explain}>
-				{learning.evaluation > 0 && (
+			{learning.evaluation > 0 && (
+				<div className={styles.explain}>
 					<div className={`${styles['evaluation-explain']}`}>
 						<span>{t('Disagree')}</span>
 						<span>{t('Agree')}</span>
 					</div>
-				)}
-			</div>
+				</div>
+			)}
 			<div />
 		</div>
 	);
