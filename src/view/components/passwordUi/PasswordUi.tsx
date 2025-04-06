@@ -96,7 +96,7 @@ export default function PasswordUi({
 				<Button
 					text={t('Submit')}
 					onClick={() => handleSubmit()}
-					className='btn btn--affirmation'
+					className='btn btn--primary'
 				/>
 			</div>
 		</div>

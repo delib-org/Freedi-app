@@ -1,4 +1,5 @@
-import { Statement, ResultsBy, Screen, StatementType } from 'delib-npm';
+import { resultsSettingsDefault } from '@/controllers/db/statements/setStatements';
+import { Statement, Screen, StatementType } from 'delib-npm';
 
 export const defaultStatementSettings = {
 	enhancedEvaluation: true,
@@ -9,11 +10,6 @@ export const defaultStatementSettings = {
 	inVotingGetOnlyResults: false,
 	enableSimilaritiesSearch: false,
 	enableNavigationalElements: false,
-} as const;
-
-export const defaultResultsSettings = {
-	resultsBy: ResultsBy.topOptions,
-	numberOfResults: 1,
 } as const;
 
 export const defaultStatementSubScreens: Screen[] = [
@@ -38,7 +34,7 @@ export const defaultEmptyStatement: Statement = {
 	createdAt: 0,
 	consensus: 0,
 	// default values
-	resultsSettings: defaultResultsSettings,
+	resultsSettings: resultsSettingsDefault,
 	statementSettings: defaultStatementSettings,
 	hasChildren: true,
 } as const;

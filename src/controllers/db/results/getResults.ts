@@ -18,9 +18,9 @@ export async function getResultsDB(statement: Statement): Promise<Statement[]> {
 	try {
 
 		const { resultsSettings } = statement;
-		const resultsBy = resultsSettings?.resultsBy || ResultsBy.topOptions;
+		const resultsBy = resultsSettings?.resultsBy || ResultsBy.consensus;
 
-		if (resultsBy === ResultsBy.topOptions) {
+		if (resultsBy === ResultsBy.consensus) {
 
 			return await getTopOptionsDB(statement);
 		} else {

@@ -1,6 +1,7 @@
+// CustomSwitch.tsx
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import React, { FC, ReactNode } from 'react';
-import './CustomSwitch.scss';
+import styles from './CustomSwitch.module.scss';
 import VisuallyHidden from '../../accessibility/toScreenReaders/VisuallyHidden';
 
 interface Props {
@@ -33,7 +34,7 @@ const CustomSwitch: FC<Props> = ({
 
 	return (
 		<div
-			className={`custom-switch ${checked ? 'checked' : ''}`}
+			className={`${styles.customSwitch} ${checked ? styles.checked : ''}`}
 			role='switch'
 			aria-checked={checked}
 			tabIndex={0}
@@ -41,10 +42,10 @@ const CustomSwitch: FC<Props> = ({
 			onKeyDown={handleKeyDown}
 			data-cy={`toggleSwitch-${name}`}
 		>
-			<div className='tag' aria-hidden='true'>
+			<div className={styles.tag} aria-hidden='true'>
 				{children}
 			</div>
-			<div className='label'>{t(label)}</div>
+			<div className={styles.label}>{t(label)}</div>
 			<label htmlFor={`toggleSwitch-${name}`}>
 				<VisuallyHidden labelName={label} />
 			</label>
@@ -52,7 +53,7 @@ const CustomSwitch: FC<Props> = ({
 				type='checkbox'
 				name={name}
 				id={`toggleSwitch-${name}`}
-				className='switch-input'
+				className={styles.switchInput}
 				onChange={handleChange}
 				value={checked ? 'on' : 'off'}
 				checked={checked}

@@ -7,7 +7,7 @@ import {
 	enum_,
 	InferOutput,
 } from 'valibot';
-import { Access, membersAllowed, StepType } from '../TypeEnums';
+import { Access, membersAllowed, StepType } from 'delib-npm';
 
 export const MembershipSchema = object({
 	adminApproveMembers: optional(boolean()),

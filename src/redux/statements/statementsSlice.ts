@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction, createSelector } from '@reduxjs/toolkit';
 import { RootState } from '../store';
-import { Statement, StatementSubscription, SelectionFunction, StatementType, updateArray } from 'delib-npm';
+import { Statement, StatementSubscription, SelectionFunction, StatementType, updateArray, ResultsSettings } from 'delib-npm';
 
 enum StatementScreen {
 	chat = 'chat',
@@ -17,8 +17,13 @@ interface StatementsState {
 }
 
 interface StatementOrder {
-	statementId: string;
+	statementId: 'string';
 	order: number;
+}
+
+interface UpdateResultsSettings {
+	statementId: string;
+	resultsSettings: ResultsSettings;
 }
 
 // Define the initial state using that type
@@ -337,6 +342,15 @@ export const statementsSlicer = createSlice({
 				console.error(error);
 			}
 		},
+		updateStoreResultsSettings: (state, action: PayloadAction<UpdateResultsSettings>) => {
+			const { statementId, resultsSettings } = action.payload;
+			const statement = state.statements.find(
+				(statement) => statement.statementId === statementId
+			);
+			if (statement) {
+				statement.resultsSettings = resultsSettings;
+			}
+		}
 	},
 });
 
@@ -356,6 +370,7 @@ export const {
 	resetStatements,
 	setCurrentMultiStepOptions,
 	setMassConsensusStatements,
+	updateStoreResultsSettings
 } = statementsSlicer.actions;
 
 // statements
