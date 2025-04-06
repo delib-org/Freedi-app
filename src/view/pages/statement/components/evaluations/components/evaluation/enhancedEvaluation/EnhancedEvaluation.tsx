@@ -12,6 +12,7 @@ import { evaluationSelector } from '@/redux/evaluations/evaluationsSlice';
 import { Statement } from 'delib-npm';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { useDecreaseLearningRemain } from '@/controllers/hooks/useDecreaseLearningRemain';
+import { CustomTooltip } from '@/view/components/tooltip/CustomTooltip';
 
 interface EnhancedEvaluationProps {
 	statement: Statement;
@@ -26,18 +27,17 @@ const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({
 	const evaluationScore = useAppSelector(
 		evaluationSelector(statement.statementId)
 	);
-
+	const { consensus: _consensus } = statement;
 	const { sumPro, sumCon, numberOfEvaluators } = statement.evaluation || {
 		sumPro: 0,
 		sumCon: 0,
 		numberOfEvaluators: 0,
 	};
+	const avg = Math.round(((sumPro - sumCon) / numberOfEvaluators) * 100) / 100;
+	const consensus = Math.round(_consensus * 100) / 100;
 
 	return (
 		<div className={styles['enhanced-evaluation']}>
-			<div className={`${styles['evaluation-score']} con-element`}>
-				{shouldDisplayScore === true ? sumCon : null}
-			</div>
 			<div className={styles['evaluation-thumbs']}>
 				{enhancedEvaluationsThumbs.map((evaluationThumb) => (
 					<EvaluationThumb
@@ -49,16 +49,28 @@ const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({
 				))}
 			</div>
 			<div
-				className={`${styles['evaluation-score']} ${statement.consensus < 0 ? 'negative' : ''}`}
+				className={`${styles['evaluation-score']} ${statement.consensus < 0 ? styles.negative : ''}`}
 			>
-				{shouldDisplayScore && <span>{sumPro}</span>}
+				{shouldDisplayScore && (
+					<CustomTooltip content={t("Average score")} position="top">
+						<span className={styles.scoreValue}>{avg}</span>
+					</CustomTooltip>
+				)}
+
+				{shouldDisplayScore && (
+					<CustomTooltip content={t("Consensus score")} position="top">
+						<span className={styles.scoreValue}>{consensus}</span>
+					</CustomTooltip>
+				)}
+
 				{shouldDisplayScore &&
 					numberOfEvaluators &&
 					numberOfEvaluators > 0 ? (
-					<span className={styles['total-evaluators']}>
-						{' '}
-						({numberOfEvaluators})
-					</span>
+					<CustomTooltip content={t("Number of evaluators")} position="bottom">
+						<span className={styles['total-evaluators']}>
+							{' '}({numberOfEvaluators})
+						</span>
+					</CustomTooltip>
 				) : null}
 			</div>
 			<div />
