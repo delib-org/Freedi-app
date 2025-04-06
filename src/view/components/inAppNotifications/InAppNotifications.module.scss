@@ -20,47 +20,14 @@
 			color: black;
 		}
 	}
-}
 
-.notificationLink {
-	:hover {
-		background-color: #dbdbdb;
+	@media screen and (max-width: 768px) {
+		max-width: 80vw;
 	}
-}
-
-.notificationCard {
-	display: flex;
-	gap: 0.5rem;
-	cursor: pointer;
-	padding: 10px;
-	border-radius: 0.36rem;
 }
 
 .notificationTitle {
 	font-weight: bold;
 	font-size: 1.5rem;
 	margin: 1rem;
-}
-
-.username {
-	color: var(--text-caption);
-}
-
-.avatar {
-	width: 32px;
-	height: 32px;
-	border-radius: 50%;
-	object-fit: cover;
-	border: 2px solid white;
-	background-color: #ccc;
-}
-
-.text {
-	overflow: hidden;
-	text-overflow: ellipsis;
-}
-
-.noNotifications {
-	text-align: center;
-	color: gray;
 }

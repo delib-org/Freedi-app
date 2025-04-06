@@ -1,14 +1,14 @@
 import { inAppNotificationsSelector } from '@/redux/notificationsSlice/notificationsSlice';
 import { useSelector } from 'react-redux';
-import { Link } from 'react-router';
 import styles from './InAppNotifications.module.scss';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import { NotificationType } from 'delib-npm';
 import { creatorSelector } from '@/redux/creator/creatorSlice';
+import NotificationCard from '../notificationCard/NotificationCard';
 
 const InAppNotifications = () => {
 	const creator = useSelector(creatorSelector);
-	const inAppNotifications: NotificationType[] = useSelector(inAppNotificationsSelector).filter(n => n.userId !== creator?.uid);
+	const inAppNotifications: NotificationType[] = useSelector(inAppNotificationsSelector).filter(n => n.creatorId !== creator?.uid);
 
 	const { t } = useUserConfig();
 
@@ -20,23 +20,7 @@ const InAppNotifications = () => {
 					{inAppNotifications.map((notification) => {
 
 						return (
-							<Link
-								to={`/statement/${notification.parentId}`}
-								key={notification.notificationId}
-								className={styles.notificationLink}
-							>
-								<div className={styles.notificationCard}>
-									<img
-										className={styles.avatar}
-										src={notification.creatorImage || '/src/assets/images/avatar.jpg'}
-										alt="User avatar"
-									/>
-									<div className={styles.text}>
-										<span className={styles.username}>{notification.creatorName}</span>
-										{notification.text}
-									</div>
-								</div>
-							</Link>
+							<NotificationCard key={notification.notificationId} {...notification} />
 						);
 					})}
 				</>
