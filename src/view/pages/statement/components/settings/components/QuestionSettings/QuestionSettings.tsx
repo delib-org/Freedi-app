@@ -11,7 +11,6 @@ import ConsentIcon from '@/assets/icons/checkboxCheckedIcon.svg?react';
 import SuggestionsIcon from '@/assets/icons/evaluations2Icon.svg?react';
 import VotingIcon from '@/assets/icons/voting.svg?react';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
-import { Section } from 'lucide-react';
 import MultiSwitch from '@/view/components/switch/multiSwitch/MultiSwitch';
 import { setEvaluationUIType } from '@/controllers/db/evaluation/setEvaluation';
 
