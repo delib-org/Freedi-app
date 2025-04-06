@@ -278,5 +278,8 @@
 	"Mass Consensus Process Settings": "הגדרות תהליך הסכמה המונית",
 	"Top options to be selected": "אופציות מובילות שיבחרו",
 	"The score to be considered as a top option": "הציון שיתקבל כאופציה מובילה",
-	"Consent": "אישור"
+	"Consent": "אישור",
+	"Average score": "ציון ממוצע",
+	"Number of evaluators": "מספר המעריכים",
+	"Consensus score": "ציון הסכמה"
 }
