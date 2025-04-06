@@ -38,7 +38,7 @@
 	"Discussion Topic": "נושא הדיון",
 	"Divide into rooms": "חלק/י לחדרים",
 	"Division into rooms": "חלוקה לחדרים",
-	"Dont agree": "אני לא מסכים/ה",
+	"Don't agree": "אני לא מסכים/ה",
 	"Edit Text": "עריכת טקסט",
 	"Upload Image": "העלאת תמונה",
 	"Enable Sub-Conversations": "לאפשר תת-שיחות",
@@ -277,5 +277,6 @@
 	"Top options": "אפשרויות מובילות",
 	"Mass Consensus Process Settings": "הגדרות תהליך הסכמה המונית",
 	"Top options to be selected": "אופציות מובילות שיבחרו",
-	"The score to be considered as a top option": "הציון שיתקבל כאופציה מובילה"
+	"The score to be considered as a top option": "הציון שיתקבל כאופציה מובילה",
+	"Consent": "אישור"
 }

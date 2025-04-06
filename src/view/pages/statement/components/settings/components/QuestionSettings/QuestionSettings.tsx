@@ -4,10 +4,15 @@ import { StatementSettingsProps } from '../../settingsTypeHelpers';
 import SectionTitle from '../sectionTitle/SectionTitle';
 import './QuestionSettings.scss';
 import { setQuestionTypeToDB } from '@/controllers/db/statementSettings/setStatementSettings';
-import { QuestionType, StatementType } from 'delib-npm';
+import { EvaluationUI, QuestionType, StatementType } from 'delib-npm';
 import DocumentIcon from '@/assets/icons/paper.svg?react';
 import SimpleIcon from '@/assets/icons/navQuestionsIcon.svg?react';
+import ConsentIcon from '@/assets/icons/checkboxCheckedIcon.svg?react';
+import SuggestionsIcon from '@/assets/icons/evaluations2Icon.svg?react';
+import VotingIcon from '@/assets/icons/voting.svg?react';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import MultiSwitch from '@/view/components/switch/multiSwitch/MultiSwitch';
+import { setEvaluationUIType } from '@/controllers/db/evaluation/setEvaluation';
 
 const QuestionSettings: FC<StatementSettingsProps> = ({
 	statement,
@@ -29,13 +34,24 @@ const QuestionSettings: FC<StatementSettingsProps> = ({
 
 		return (
 			<div className='question-settings'>
+				<SectionTitle title={t('Evaluation Type')} />
+				<MultiSwitch
+					options={[
+						{ label: t('Consensus'), value: EvaluationUI.suggestions, icon: <SuggestionsIcon /> },
+						{ label: t('Voting'), value: EvaluationUI.voting, icon: <VotingIcon /> },
+						{ label: t('Consent'), value: EvaluationUI.checkbox, icon: <ConsentIcon /> },
+					]}
+					onClick={(value) => { setEvaluationUIType(statement.statementId, value as EvaluationUI); }}
+					currentValue={statement.evaluationSettings?.evaluationUI}
+				/>
+
 				<SectionTitle title='Question Settings' />
 
 				<CustomSwitchSmall
 					label='Document Question'
 					checked={
 						questionSettings?.questionType ===
-							QuestionType.multiStage || false
+						QuestionType.multiStage || false
 					}
 					setChecked={handleQuestionType}
 					textChecked={t('Document Question')}

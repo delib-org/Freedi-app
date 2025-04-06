@@ -11,6 +11,7 @@ interface SearchInputProps {
 	onChange?: (value: string) => void;
 	backgroundColor?: string;
 	name: string;
+	autoFocus?: boolean;
 }
 
 const Input: React.FC<SearchInputProps> = ({
@@ -21,6 +22,7 @@ const Input: React.FC<SearchInputProps> = ({
 	onChange,
 	backgroundColor = '#fff',
 	name,
+	autoFocus = false,
 }) => {
 	const { dir } = useUserConfig();
 	const [inputValue, setInputValue] = useState<string>(value);
@@ -61,6 +63,7 @@ const Input: React.FC<SearchInputProps> = ({
 					onChange={handleChange}
 					placeholder={placeholder}
 					className={styles.input}
+					autoFocus={autoFocus}
 				/>
 				{inputValue && (
 					<button

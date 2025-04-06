@@ -15,11 +15,6 @@
 		margin-bottom: -1px;
 		z-index: 1;
 
-		.inAppNotifications {
-			color: var(--text-negative);
-			position: relative;
-		}
-
 		@media (max-width: 570px) {
 			background-color: #6499f0;
 		}
@@ -112,6 +107,10 @@
 				.homeMenu:hover {
 					color: var(--menu-chosen);
 				}
+			}
+
+			&__title {
+				margin-bottom: 0;
 			}
 		}
 	}

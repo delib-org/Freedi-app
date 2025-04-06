@@ -1,0 +1,50 @@
+.switch {
+	display: flex;
+	flex-direction: row;
+	justify-content: start;
+	padding: 10px;
+	border: 1px solid #ccc;
+	border-radius: 5px;
+	gap: 1rem;
+	margin: 2rem 0;
+
+	.option {
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		background-color: #9ac2ed;
+		gap: 1rem;
+		color: white;
+		border: none;
+		padding: 10px 20px;
+
+		border-radius: 4rem;
+		/* Added for rounded corners on buttons */
+		cursor: pointer;
+		/* Added to change cursor on hover */
+		font-size: 16px;
+		/* Added for font size of buttons */
+
+		&:hover {
+			background-color: #0056b3;
+			/* Added for button hover effect */
+		}
+
+		svg {
+
+			height: 1.3rem;
+			/* Added for icon size */
+		}
+
+
+
+		/* Added for active button text color */
+	}
+
+	.active {
+		background-color: #004494;
+		/* Added for active button color */
+		color: white;
+		/* Added for active button text color */
+	}
+}

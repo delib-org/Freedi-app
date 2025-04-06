@@ -1,7 +1,7 @@
-import { Timestamp, doc, setDoc } from 'firebase/firestore';
+import { Timestamp, doc, setDoc, updateDoc } from 'firebase/firestore';
 import { FireStore } from '../config';
 import { number, parse } from 'valibot';
-import { EvaluationSchema, Collections, Statement, User } from 'delib-npm';
+import { EvaluationSchema, Collections, Statement, User, EvaluationUI } from 'delib-npm';
 
 export async function setEvaluationToDB(
 	statement: Statement,
@@ -46,3 +46,13 @@ export async function setEvaluationToDB(
 		console.error(error);
 	}
 }
+
+export function setEvaluationUIType(statementId: string, evaluationUI: EvaluationUI) {
+
+	const evaluationUIRef = doc(FireStore, Collections.statements, statementId);
+	updateDoc(evaluationUIRef, { evaluationSettings: { evaluationUI: evaluationUI } }).catch(error => {
+		console.error('Error updating evaluation UI:', error);
+	});
+
+	return evaluationUIRef;
+};

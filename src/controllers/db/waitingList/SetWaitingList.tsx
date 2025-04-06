@@ -40,7 +40,7 @@ const SetWaitingList: FC = () => {
 				icon={<UploadFileIcon />}
 				text={'Upload members list'}
 				onClick={handleButtonClick}
-				className={'btn btn--affirmation'}
+				className={'btn btn--primary'}
 			/>
 		</div>
 	);

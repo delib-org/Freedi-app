@@ -72,6 +72,7 @@ export default function GetInitialStatementData() {
 					placeholder={titleLabel}
 					value={title}
 					name='title'
+					autoFocus={true}
 				/>
 				<Textarea
 					label={descriptionLabel}

@@ -19,6 +19,7 @@ import {
 } from 'delib-npm';
 import { updateResultSettingsToDB } from '@/controllers/db/statements/setResultSettings';
 import { statementSelector } from '@/redux/statements/statementsSlice';
+import SectionTitle from '../sectionTitle/SectionTitle';
 
 interface RangeProps {
 	maxValue: number;
@@ -30,7 +31,7 @@ interface RangeProps {
 const ChoseBySettings: FC<StatementSettingsProps> = ({ statement: _statement }) => {
 	const { t } = useUserConfig();
 	const statement = useSelector(statementSelector(_statement.statementId)) as Statement;
-
+	if (!statement) return null;
 	const { resultsSettings } = statement;
 
 	const [rangeProps, setRangeProps] = useState<RangeProps>({
@@ -106,7 +107,7 @@ const ChoseBySettings: FC<StatementSettingsProps> = ({ statement: _statement }) 
 
 	return (
 		<div className={styles.choseBy}>
-			<h2>{t('Options Selection Criteria')}</h2>
+			<SectionTitle title={t('Options Selection Criteria')} />
 			<section>
 				<h3 className='title'>
 					{t('How to evaluate and select top options')}
