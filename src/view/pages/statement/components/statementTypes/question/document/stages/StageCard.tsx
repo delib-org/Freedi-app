@@ -58,7 +58,7 @@ const StageCard: FC<Props> = ({ statement, isDescription, isSuggestions }) => {
 				<div className={`${styles.notification}`}>
 					<StatementChatMore statement={statement} onlyCircle={true} />
 				</div>
-				<h3>{t(title)}</h3>
+				<h3>{t(title)} {isSuggestions && `: ${statement.statement}`}</h3>
 			</div>
 
 			{
@@ -68,25 +68,24 @@ const StageCard: FC<Props> = ({ statement, isDescription, isSuggestions }) => {
 					<>
 						<ul>
 							{chosen.map((opt: SimpleStatement) => (
-								<NavLink
-									key={opt.statementId}
-									to={`/statement/${opt.statementId}`}
-								>
-									<ol className={styles.suggestions}>
-										<li>
-											<div>{opt.statement}</div>
-											{opt.description && (
-												<div
-													className={
-														styles.statement__description
-													}
-												>
-													{opt.description}
-												</div>
-											)}
-										</li>
-									</ol>
-								</NavLink>
+								<li className={styles.suggestions} key={opt.statementId}>
+									<NavLink
+
+										to={`/statement/${opt.statementId}`}
+									>
+										<div>{opt.statement}</div>
+										{opt.description && (
+											<div
+												className={
+													styles.statement__description
+												}
+											>
+												{opt.description}
+											</div>
+										)}
+									</NavLink>
+								</li>
+
 							))}
 						</ul>
 						{!isSuggestions && (
