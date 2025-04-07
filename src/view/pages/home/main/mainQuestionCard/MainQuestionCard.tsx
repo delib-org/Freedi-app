@@ -34,12 +34,6 @@ const MainQuestionCard: FC<Props> = ({ simpleStatement }) => {
 			className={styles.mainCard}
 			to={`/statement/${simpleStatement.statementId}/`}
 		>
-			<div
-				style={{
-					backgroundImage: `url(${statementImgUrl ?? ImgThumb})`,
-				}}
-				className={styles.img}
-			></div>
 			<div className={styles.info}>
 				<div className={styles.title}>
 					<div>{simpleStatement.statement}</div>
