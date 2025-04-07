@@ -60,7 +60,8 @@ const InstallPWA: React.FC = () => {
         <img 
           src="/src/assets/icons/installIcon.svg" 
           alt="Install" 
-          className="install-icon" 
+          className="install-icon"
+          style={{ backgroundColor: 'transparent' }}
         />
         Install App
       </button>
