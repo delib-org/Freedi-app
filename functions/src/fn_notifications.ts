@@ -24,6 +24,8 @@ export async function updateInAppNotifications(
 		const [subscribersDB, parentStatementDB, askedToBeNotifiedDB] = await fetchNotificationData(statement.parentId);
 		const subscribersInApp = subscribersDB.docs.map((doc: QueryDocumentSnapshot) => doc.data() as StatementSubscription);
 		const parentStatement = parse(StatementSchema, parentStatementDB.data());
+
+		//get fcm subscribers
 		const fcmSubscribers: FcmSubscriber[] = askedToBeNotifiedDB.docs.map((ntfDB: QueryDocumentSnapshot) => {
 			const data = ntfDB.data();
 
@@ -31,6 +33,15 @@ export async function updateInAppNotifications(
 				userId: data.userId,
 				token: data.token
 			};
+		});
+
+		//update last message in the parent statement
+		await db.doc(`${Collections.statements}/${statement.parentId}`).update({
+			lastMessage: {
+				message: newStatement.statement,
+				creator: newStatement.creator.displayName || "Anonymous",
+				createdAt: newStatement.createdAt,
+			},
 		});
 
 		// Process notifications

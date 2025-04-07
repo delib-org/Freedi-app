@@ -1,7 +1,8 @@
 .footer {
 	position: fixed;
 	bottom: 0;
-	width: var(--wrapper);
+	max-width: var(--wrapper);
+	width: 100%;
 	height: 3rem;
 	display: flex;
 	flex-direction: row;
@@ -58,7 +59,7 @@
 
 .addStatementButton {
 	background: #5899e0;
-	width: 3.125rem;
+	flex: 1;
 	height: 3.125rem;
 	display: flex;
 	align-items: center;
