@@ -20,8 +20,14 @@ const NotificationSubscriptionButton: React.FC<NotificationSubscriptionButtonPro
 	const [permissionState, setPermissionState] = useState<NotificationPermission>('default');
 
 	useEffect(() => {
-		// Set initial permission state
-		setPermissionState(Notification.permission);
+		// Check if notifications are supported first
+		if (!notificationService.isSupported()) {
+			setIsLoading(false);
+			return;
+		}
+		
+		// Set initial permission state safely
+		setPermissionState(notificationService.safeGetPermission() as NotificationPermission);
 
 		// Check if user is already subscribed
 		const checkSubscription = async () => {
@@ -37,7 +43,8 @@ const NotificationSubscriptionButton: React.FC<NotificationSubscriptionButtonPro
 				}
 
 				// Initialize notification service to get token
-				if (Notification.permission === 'granted') {
+				const permissionState = notificationService.safeGetPermission();
+				if (permissionState === 'granted') {
 					await notificationService.initialize(auth.currentUser.uid);
 					const token = notificationService.getToken();
 
@@ -73,13 +80,19 @@ const NotificationSubscriptionButton: React.FC<NotificationSubscriptionButtonPro
 			}
 
 			// If not granted, request permission
-			if (Notification.permission !== 'granted') {
-				const permission = await Notification.requestPermission();
-				setPermissionState(permission);
+			const currentPermission = notificationService.safeGetPermission();
+			if (currentPermission !== 'granted') {
+				// Only try to request permission if the API is supported
+				if (notificationService.isSupported()) {
+					const permission = await Notification.requestPermission();
+					setPermissionState(permission);
 
-				if (permission !== 'granted') {
+					if (permission !== 'granted') {
+						setIsLoading(false);
+						return;
+					}
+				} else {
 					setIsLoading(false);
-
 					return;
 				}
 			}
@@ -118,7 +131,7 @@ const NotificationSubscriptionButton: React.FC<NotificationSubscriptionButtonPro
 	};
 
 	// If notifications aren't supported, don't show the button
-	if (!('Notification' in window)) {
+	if (!notificationService.isSupported()) {
 		return null;
 	}
 
