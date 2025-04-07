@@ -2,410 +2,354 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Base functions
-    function isAuthenticated() {
-      return request.auth != null;
+
+	match /termsOfUseAcceptance/{document} {
+		allow read: if request.auth != null && 
+					  request.auth.uid == resource.data.userId;
+		allow create: if request.auth != null && 
+					   request.auth.uid == request.resource.data.userId &&
+					   request.resource.data.accepted == true;
+	}
+
+    match /awaitingUsers/{document=**} {
+      allow read, write: if request.auth != null;
+    }
+
+     match /councils/{councilId=**}{
+      allow read;
+      allow write: if request.auth.uid != null;
+    }
+
+    match /version/{version=**}{
+      allow read;
+    
+    }
+
+      match /statements/{statementId=**}{
+
+        function hasProtectedFieldChanges(beforeData, afterData) {
+          return (beforeData != null && (
+          // Check if questionSettings is being modified
+          (afterData.questionSettings != beforeData.questionSettings) ||
+          // Check if statementSettings is being modified
+          (afterData.statementSettings != beforeData.statementSettings)
+        ));
+      }
+
+      function isCreator() {
+        return request.auth.uid != null &&  resource.data.creatorId == request.auth.uid;
+      }
+
+
+      allow read;
+      allow update: if request.auth.uid != null && !hasProtectedFieldChanges(resource.data, request.resource.data) ||  (isAdmin(statementId) || isCreator());
+      allow create: if request.auth.uid != null;
+      allow delete: if request.auth.uid != null &&  (isAdmin(statementId) || isCreator());
+    }
+     
+     match /statementsSettings/{statementId=**}{
+      allow write: if request.auth.uid != null && isAdmin(statementId);
+    }
+
+    match /inAppNotifications/{inAppNotificationId=**}{
+      allow read: if request.auth.uid == resource.data.userId;
+      allow update: if request.auth.uid == resource.data.userId;
+	  allow delete: if request.auth.uid == resource.data.userId;
+    }
+
+
+	match /pushNotifications/{pushNotificationId=**}{
+			allow read: if request.auth.uid != null;
+			allow write: if request.auth.uid != null;
+	}
+
+	match /askedToBeNotified/{askedToBeNotifiedId=**} {
+		allow read: if request.auth.uid != null;
+		allow write: if request.auth.uid != null;
+	}
+
+     match /statementsMeta/{statementId=**}{
+        allow read: if request.auth.uid != null;
+      allow write: if request.auth.uid != null;
+    }
+
+    match /importance/{importanceId=**}{
+      allow read: if request.auth.uid != null;
+      allow write: if request.auth.uid != null;
+    }
+
+    match /statementViews/{statementId=**}{
+      allow write: if request.auth.uid != null;
+      allow read: if request.auth.uid != null;
+    }
+
+    match /statementSegments/{segementId=**}{
+      allow write: if request.auth.uid != null;
+      allow read: if request.auth.uid != null;
+    }
+
+
+      match /approval/{approvalId=**}{
+      allow read;
+      allow write: if request.auth.uid != null;
     }
     
-    function isOwner(userId) {
-      return isAuthenticated() && request.auth.uid == userId;
+    match /documentsSigns/{documentsSignId=**}{
+      allow read: if request.auth.uid != null;
+    }
+
+    
+    match /signatures/{signaturesId=**}{
+     allow read: if request.auth.uid != null;
+      allow write: if request.auth.uid != null;
     }
     
-    function isCreator() {
-      return isAuthenticated() && resource.data.creatorId == request.auth.uid;
+     match /agrees/{agreeId=**}{
+      allow read: if request.auth.uid != null;
+      allow write: if request.auth.uid != null;
     }
     
+    match /invitations/{invitationId=**}{
+       allow read: if request.auth.uid != null;
+      allow write: if request.auth.uid != null;
+    }
+      match /admins/{adminStatementId=**}{
+     
+      allow write: if request.auth.uid == request.resource.data.user.uid;
+    }
+    match /statementsSubscribe/{statementSubId=**} {
+      function isSubscriber() {
+          return request.auth.uid != null && 
+                resource.data.userId == request.auth.uid;
+      }
+
+      function isStatementAdmin(statementId) {
+          let subId = string(request.auth.uid) + '--' + cleanPath(string(statementId));
+          let subscription = get(/databases/$(database)/documents/statementsSubscribe/$(subId)).data;
+          return subscription != null && subscription.role == 'admin';
+      }
+
+      allow read: if request.auth.uid != null;
+      allow create: if request.auth.uid != null;
+      allow update: if request.auth.uid != null && 
+                      (isSubscriber() || 
+                      isStatementAdmin(resource.data.statementId));
+      allow delete: if request.auth.uid != null && 
+                      (isSubscriber() || 
+                      isStatementAdmin(resource.data.statementId));
+  }
+
+  
+
+  match /massConsensusProcesses/{statementId=**}{
+      allow read: if request.auth.uid != null;
+      allow write: if request.auth.uid != null;
+    }
+    
+    match /statementsSignatures/{signatureId=**}{
+      allow read: if request.auth.uid != null;
+      allow write: if request.auth.uid != null;
+    }
+
+     match /massConsensusMembers/{userId=**}{
+      allow write: if request.auth.uid != null;
+    }
+
+    match /choseBy/{statementId=**}{
+      allow read: if request.auth.uid != null;
+      allow write: if request.auth.uid != null;
+    }
+
+    match /statementRoomsAsked/{requestId=**}{
+    	allow read: if request.auth.uid != null;
+      allow write: if request.auth.uid != null;
+    }
+
+      match /resultsTriggers/{statementId=**}{
+    
+      allow write: if request.auth.uid != null;
+    }
+
+    match /statementLobbyRooms/{statementId=**}{
+    	allow read: if request.auth.uid != null;
+
+    }
+
+     match /timers-settings/{timerIdx=**}{
+      allow read: if request.auth.uid != null;
+      allow write: if request.auth.uid != null;
+    }
+     match /rooms/{roomId=**}{
+      allow read: if request.auth.uid != null;
+      allow write: if request.auth.uid != null;
+    }
+     match /participants/{participantId=**}{
+      allow read: if request.auth.uid != null;
+      allow write: if request.auth.uid != null;
+    }
+     match /roomsSettings/{roomSettingsId=**}{
+      allow read: if request.auth.uid != null;
+      allow write: if request.auth.uid != null;
+    }
+
+    match /timers-rooms/{timerIdx=**}{
+      allow read: if request.auth.uid != null;
+      allow write: if request.auth.uid != null;
+    }
+
+     match /evaluations/{evluationId=**}{
+      allow read: if request.auth.uid != null;
+      allow write: if request.auth.uid != null;
+    }
+
+    match /approval/{approvalId=**}{
+      allow read: if request.auth.uid != null;
+      allow write: if request.auth.uid != null;
+    }
+
+     match /statementEvaluators/{statementEvaluatorsId=**}{
+      allow read: if request.auth.uid != null;
+      allow write: if request.auth.uid != null;
+    }
+
+    match /votes/{voteId=**}{
+      allow read: if request.auth.uid != null;
+      allow write: if request.auth.uid != null;
+    }
+    
+    match /posts/{postId=**}{
+      allow read;
+      allow write: if request.auth.uid != null;
+    }
+    match /chatMessages/{chatMessageId}{
+     	allow read;
+      allow write: if request.auth.uid != null;
+    }
+    match /posts/{group=**}{
+      allow read;
+      allow write: if request.auth.uid != null;
+    }
+    match /groups/{group=**}{
+      allow read;
+      allow write: if request.auth.uid != null;
+    }
+    match /chats/{chatId}{
+    	allow read:if request.auth.uid != null;
+    	allow write: if request.auth.uid == resource.data.creator.uid
+    }
+
+      match /usersSettings/{userId=**}{
+        allow read: if request.auth.uid != null;
+        allow write: if request.auth.uid != null;
+      }
+
+       match /usersData/{userId=**}{
+        allow read: if request.auth.uid != null;
+        allow write: if request.auth.uid != null;
+      }
+
+      match /usersV2/{userId=**}{
+        allow read: if request.auth.uid != null;
+        allow write: if request.auth.uid == request.resource.data.uid;
+      }
+
+    match /users/{user}{
+      allow read;
+      allow write: if request.auth.uid != null;
+      
+      match /chat/{chat=**}{
+       allow read;
+      	allow write: if request.auth.uid != null;
+      }
+       match /chatLastEnterence/{ chatLastEnterence=**}{
+       	allow read;
+      	allow write: if request.auth.uid != null;
+      }
+      
+      match /feed/{ feed=**}{
+       	allow read;
+      	allow write: if request.auth.uid != null;
+      }
+      
+      match /feedLastEntrence/{ feedLastEntrence=**}{
+       	allow read;
+      	allow write: if request.auth.uid != null;
+      }
+      
+       match /feeds/{feeds=**}{
+       	allow read;
+      	allow write: if request.auth.uid != null;
+      }
+      
+        match /groups/{groups=**}{
+       	allow read;
+      	allow write: if request.auth.uid != null;
+      }
+      
+        match /groupsOwned/{groupsOwned=**}{
+       	allow read;
+      	allow write: if request.auth.uid != null;
+      }
+        match /messages/{messages=**}{
+       	allow read;
+      	allow write: if request.auth.uid != null;
+      }
+        match /messagesCounter/{messagesCounter=**}{
+       	allow read;
+      	allow write: if request.auth.uid != null;
+      }
+       match /optionsRead/{optionsRead=**}{
+       	allow read;
+      	allow write: if request.auth.uid != null;
+      }
+       match /registerGroups/{registerGroups=**}{
+       	allow read;
+      	allow write: if request.auth.uid != null;
+      }
+     
+      
+      match /memberships/{membership}{
+      	allow read: if request.auth.uid != null;
+        allow write:if request.auth.uid != null;
+      }
+    }
+    match /messages/{message=**}{
+      allow read;
+      allow write: if request.auth.uid != null;
+    }
+      match /tokens/{token=**}{
+      allow read;
+      allow write: if request.auth.uid != null;
+    }
+      
+    match /consultations/{consultationId}{
+    	allow read: if resource.data.groupType == 'public'|| get(/databases/$(database)/documents/users/$(request.auth.uid)/memberships/$(consultationId)).data.role != null
+  		allow write: if request.auth.uid == request.resource.data.creator.uid;
+      
+      match /meta/{metaId}{
+      		allow read:if request.auth.uid != null;
+          allow write: if get(/databases/$(database)/documents/consultations/$(consultationId)).data.creator.uid == request.auth.uid;
+      }
+      
+    }
+    
+    match /news/{new}{
+      allow read: if request.auth.uid != null;
+      allow write: if request.auth.uid == request.resource.data.creator.uid
+    }
+
+    //functions
     function isAdmin(statementId) {
       let subId = string(request.auth.uid) + '--' + cleanPath(string(statementId));
       let subscription = get(/databases/$(database)/documents/statementsSubscribe/$(subId)).data;
       return subscription != null && subscription.role == 'admin';
     }
-    
-    function isSubscriber(subscriptionId) {
-      return isAuthenticated() && 
-            resource.data.userId == request.auth.uid;
-    }
-    
-    function validateString(field) {
-      return request.resource.data[field] is string && 
-            request.resource.data[field].size() <= 1000;
-    }
-    
-    function validateTimestamp(field) {
-      return request.resource.data[field] is timestamp;
-    }
-    
+
     function cleanPath(path) {
       return path.replace('/', '');
     }
-    
-    function hasProtectedFieldChanges(beforeData, afterData) {
-      return (beforeData != null && (
-        (afterData.questionSettings != beforeData.questionSettings) ||
-        (afterData.statementSettings != beforeData.statementSettings)
-      ));
-    }
 
-    // User data protection
-    match /termsOfUseAcceptance/{document} {
-      allow read: if isOwner(resource.data.userId);
-      allow create: if isOwner(request.resource.data.userId) &&
-                      request.resource.data.accepted == true;
-    }
     
-    match /users/{userId} {
-      allow read; // Public profiles are common, but consider restricting if sensitive
-      allow write: if isOwner(userId);
-      
-      // Nested user collection rules
-      match /chat/{chat=**} {
-        allow read;
-        allow write: if isAuthenticated();
-      }
-      
-      match /chatLastEnterence/{chatLastEnterence=**} {
-        allow read;
-        allow write: if isAuthenticated();
-      }
-      
-      match /feed/{feed=**} {
-        allow read;
-        allow write: if isAuthenticated();
-      }
-      
-      match /feedLastEntrence/{feedLastEntrence=**} {
-        allow read;
-        allow write: if isAuthenticated();
-      }
-      
-      match /feeds/{feeds=**} {
-        allow read;
-        allow write: if isAuthenticated();
-      }
-      
-      match /groups/{groups=**} {
-        allow read;
-        allow write: if isAuthenticated();
-      }
-      
-      match /groupsOwned/{groupsOwned=**} {
-        allow read;
-        allow write: if isAuthenticated();
-      }
-      
-      match /messages/{messages=**} {
-        allow read;
-        allow write: if isAuthenticated();
-      }
-      
-      match /messagesCounter/{messagesCounter=**} {
-        allow read;
-        allow write: if isAuthenticated();
-      }
-      
-      match /optionsRead/{optionsRead=**} {
-        allow read;
-        allow write: if isAuthenticated();
-      }
-      
-      match /registerGroups/{registerGroups=**} {
-        allow read;
-        allow write: if isAuthenticated();
-      }
-      
-      match /memberships/{membership} {
-        allow read: if isAuthenticated();
-        allow write: if isAuthenticated();
-      }
-    }
-    
-    match /usersSettings/{userId} {
-      allow read: if isAuthenticated();
-      allow write: if isOwner(userId);
-    }
-    
-    match /usersData/{userId} {
-      allow read: if isAuthenticated();
-      allow write: if isOwner(userId);
-    }
-    
-    match /usersV2/{userId} {
-      allow read: if isAuthenticated();
-      allow write: if isOwner(request.resource.data.uid);
-    }
-    
-    // Statement related rules with better validation
-    match /statements/{statementId} {
-      function validateStatementData() {
-        return request.resource.data.text is string &&
-              request.resource.data.creatorId is string;
-      }
-      
-      allow read;
-      allow create: if isAuthenticated() && validateStatementData();
-      allow update: if isAuthenticated() && (
-                      !hasProtectedFieldChanges(resource.data, request.resource.data) || 
-                      isAdmin(statementId) || 
-                      isCreator()
-                    );
-      allow delete: if isAuthenticated() && (isAdmin(statementId) || isCreator());
-    }
-    
-    match /statementsSettings/{statementId} {
-      allow read: if isAuthenticated();
-      allow write: if isAuthenticated() && isAdmin(statementId);
-    }
-    
-    match /statementsMeta/{statementId} {
-      allow read: if isAuthenticated();
-      allow write: if isAuthenticated();
-    }
-    
-    match /statementViews/{statementId} {
-      allow read: if isAuthenticated();
-      allow write: if isAuthenticated();
-    }
-    
-    match /statementSegments/{segmentId} {
-      allow read: if isAuthenticated();
-      allow write: if isAuthenticated();
-    }
-    
-    // Notifications with better security
-    match /inAppNotifications/{notificationId} {
-      allow read: if isOwner(resource.data.userId);
-      allow update, delete: if isOwner(resource.data.userId);
-    }
-    
-    match /pushNotifications/{pushNotificationId} {
-      allow read: if isAuthenticated();
-      allow write: if isAuthenticated();
-    }
-    
-    match /askedToBeNotified/{askedToBeNotifiedId} {
-      allow read: if isAuthenticated();
-      allow write: if isAuthenticated();
-    }
-    
-    // Voting and evaluations with field validation
-    match /votes/{voteId} {
-      function validateVote() {
-        return request.resource.data.userId == request.auth.uid &&
-              request.resource.data.statementId is string &&
-              request.resource.data.vote is number;
-      }
-      
-      allow read: if isAuthenticated();
-      allow write: if isAuthenticated() && validateVote();
-    }
-    
-    match /evaluations/{evaluationId} {
-      function validateEvaluation() {
-        return request.resource.data.userId == request.auth.uid &&
-              request.resource.data.statementId is string &&
-              request.resource.data.evaluation is number;
-      }
-      
-      allow read: if isAuthenticated();
-      allow write: if isAuthenticated() && validateEvaluation();
-    }
-    
-    // Importance ratings
-    match /importance/{importanceId} {
-      allow read: if isAuthenticated();
-      allow write: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
-    }
-    
-    // Approval management
-    match /approval/{approvalId} {
-      allow read: if isAuthenticated();
-      allow write: if isAuthenticated();
-    }
-    
-    // Agreement management
-    match /agrees/{agreeId} {
-      allow read: if isAuthenticated();
-      allow write: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
-    }
-    
-    // Invitations management
-    match /invitations/{invitationId} {
-      allow read: if isAuthenticated();
-      allow write: if isAuthenticated();
-    }
-    
-    match /admins/{adminStatementId} {
-      allow write: if isAuthenticated() && request.auth.uid == request.resource.data.user.uid;
-    }
-    
-    // Subscriptions with improved rules
-    match /statementsSubscribe/{subscriptionId} {
-      function isStatementAdmin(statementId) {
-        let subId = string(request.auth.uid) + '--' + cleanPath(string(statementId));
-        let subscription = get(/databases/$(database)/documents/statementsSubscribe/$(subId)).data;
-        return subscription != null && subscription.role == 'admin';
-      }
-      
-      allow read: if isAuthenticated();
-      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
-      allow update: if isAuthenticated() && (
-                      isSubscriber() || 
-                      isStatementAdmin(resource.data.statementId)
-                    );
-      allow delete: if isAuthenticated() && (
-                      isSubscriber() || 
-                      isStatementAdmin(resource.data.statementId)
-                    );
-    }
-    
-    // Mass consensus with improved validation
-    match /massConsensusProcesses/{processId} {
-      allow read: if isAuthenticated();
-      allow write: if isAuthenticated();
-    }
-    
-    match /massConsensusMembers/{userId} {
-      allow read: if isAuthenticated();
-      allow write: if isAuthenticated();
-    }
-    
-    // Choose by feature
-    match /choseBy/{statementId} {
-      allow read: if isAuthenticated();
-      allow write: if isAuthenticated();
-    }
-    
-    // Results management
-    match /resultsTriggers/{statementId} {
-      allow read: if isAuthenticated();
-      allow write: if isAuthenticated();
-    }
-    
-    // Rooms and participants
-    match /rooms/{roomId} {
-      allow read: if isAuthenticated();
-      allow write: if isAuthenticated();
-    }
-    
-    match /participants/{participantId} {
-      allow read: if isAuthenticated();
-      allow write: if isAuthenticated();
-    }
-    
-    match /roomsSettings/{roomSettingsId} {
-      allow read: if isAuthenticated();
-      allow write: if isAuthenticated();
-    }
-    
-    // Timer settings
-    match /timers-settings/{timerIdx} {
-      allow read: if isAuthenticated();
-      allow write: if isAuthenticated();
-    }
-    
-    match /timers-rooms/{timerIdx} {
-      allow read: if isAuthenticated();
-      allow write: if isAuthenticated();
-    }
-    
-    // Evaluator management
-    match /statementEvaluators/{statementEvaluatorsId} {
-      allow read: if isAuthenticated();
-      allow write: if isAuthenticated();
-    }
-    
-    // Posts and chat messages
-    match /posts/{postId} {
-      allow read;
-      allow write: if isAuthenticated();
-    }
-    
-    match /chatMessages/{chatMessageId} {
-      allow read;
-      allow write: if isAuthenticated();
-    }
-    
-    // Groups management
-    match /groups/{group} {
-      allow read;
-      allow write: if isAuthenticated();
-    }
-    
-    // Chats
-    match /chats/{chatId} {
-      allow read: if isAuthenticated();
-      allow write: if isAuthenticated() && request.auth.uid == resource.data.creator.uid;
-    }
-    
-    // Councils
-    match /councils/{councilId} {
-      allow read;
-      allow write: if isAuthenticated();
-    }
-    
-    // Version information
-    match /version/{version} {
-      allow read;
-    }
-    
-    // Awaiting users
-    match /awaitingUsers/{document} {
-      allow read, write: if isAuthenticated();
-    }
-    
-    // Consultations
-    match /consultations/{consultationId} {
-      allow read: if resource.data.groupType == 'public' || 
-                    get(/databases/$(database)/documents/users/$(request.auth.uid)/memberships/$(consultationId)).data.role != null;
-      allow write: if isAuthenticated() && request.auth.uid == request.resource.data.creator.uid;
-      
-      match /meta/{metaId} {
-        allow read: if isAuthenticated();
-        allow write: if get(/databases/$(database)/documents/consultations/$(consultationId)).data.creator.uid == request.auth.uid;
-      }
-    }
-    
-    // News
-    match /news/{new} {
-      allow read: if isAuthenticated();
-      allow write: if isAuthenticated() && request.auth.uid == request.resource.data.creator.uid;
-    }
-    
-    // Statement-related documents and signatures
-    match /documentsSigns/{documentsSignId} {
-      allow read: if isAuthenticated();
-    }
-    
-    match /signatures/{signaturesId} {
-      allow read: if isAuthenticated();
-      allow write: if isAuthenticated();
-    }
-    
-    match /statementsSignatures/{signatureId} {
-      allow read: if isAuthenticated();
-      allow write: if isAuthenticated();
-    }
-    
-    // Statement lobby rooms
-    match /statementLobbyRooms/{statementId} {
-      allow read: if isAuthenticated();
-    }
-    
-    // Statement rooms requests
-    match /statementRoomsAsked/{requestId} {
-      allow read: if isAuthenticated();
-      allow write: if isAuthenticated();
-    }
-    
-    // Messages and tokens
-    match /messages/{message} {
-      allow read;
-      allow write: if isAuthenticated();
-    }
-    
-    match /tokens/{token} {
-      allow read;
-      allow write: if isAuthenticated();
-    }
+
   }
 }

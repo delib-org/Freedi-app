@@ -282,5 +282,10 @@
 	"Average score": "ציון ממוצע",
 	"Number of evaluators": "מספר המעריכים",
 	"Consensus score": "ציון הסכמה",
-	"Decisions": "החלטות"
+	"Decisions": "החלטות",
+	"Create a group": "יצירת קבוצה",
+	"Create a question": "יצירת שאלה",
+	"Create a statement": "יצירת אמירה",
+	"Question Title": "כותרת השאלה",
+	"Question Description": "תיאור השאלה"
 }
