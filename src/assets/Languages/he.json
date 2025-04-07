@@ -281,5 +281,11 @@
 	"Consent": "אישור",
 	"Average score": "ציון ממוצע",
 	"Number of evaluators": "מספר המעריכים",
-	"Consensus score": "ציון הסכמה"
+	"Consensus score": "ציון הסכמה",
+	"Decisions": "החלטות",
+	"Create a group": "יצירת קבוצה",
+	"Create a question": "יצירת שאלה",
+	"Create a statement": "יצירת אמירה",
+	"Question Title": "כותרת השאלה",
+	"Question Description": "תיאור השאלה"
 }

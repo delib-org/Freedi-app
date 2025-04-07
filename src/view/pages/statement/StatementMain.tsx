@@ -186,13 +186,14 @@ export default function StatementMain() {
 			const handleMembershipSubscription = async () => {
 				try {
 					// Initialize notification service if needed (for token only)
-					const notificationsEnabled =
-						'Notification' in window &&
-						Notification.permission === 'granted' &&
-						creator;
+					// First check if notifications are properly supported by the browser
+					if (notificationService.isSupported()) {
+						const permission = notificationService.safeGetPermission();
+						const notificationsEnabled = permission === 'granted' && creator;
 
-					if (notificationsEnabled && !notificationService.getToken()) {
-						await notificationService.initialize(creator.uid);
+						if (notificationsEnabled && !notificationService.getToken()) {
+							await notificationService.initialize(creator.uid);
+						}
 					}
 				} catch (error) {
 					console.error('Error in membership subscription handler:', error);
