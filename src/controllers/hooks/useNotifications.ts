@@ -22,7 +22,9 @@ export const useNotifications = (statementId?: string) => {
 		token: string | null;
 		serviceWorkerSupported: boolean;
 	}>({
-		permission: isNotificationSupported() ? Notification.permission : 'unsupported',
+		permission: isNotificationSupported() && isServiceWorkerSupported() 
+			? notificationService.safeGetPermission() 
+			: 'unsupported',
 		loading: false,
 		token: null,
 		serviceWorkerSupported: isServiceWorkerSupported()
@@ -37,7 +39,7 @@ export const useNotifications = (statementId?: string) => {
 	// Initialize notifications based on authentication state
 	useEffect(() => {
 		// Early return if service workers or notifications aren't supported
-		if (!isServiceWorkerSupported() || !isNotificationSupported()) {
+		if (!notificationService.isSupported()) {
 			console.info('Service Workers or Notifications not supported in this browser mode');
 
 			return () => { }; // Empty cleanup function
@@ -54,7 +56,7 @@ export const useNotifications = (statementId?: string) => {
 					const token = notificationService.getToken();
 
 					setPermissionState({
-						permission: Notification.permission,
+						permission: notificationService.safeGetPermission(),
 						loading: false,
 						token,
 						serviceWorkerSupported: true
@@ -66,7 +68,7 @@ export const useNotifications = (statementId?: string) => {
 			} else {
 				// User is signed out
 				setPermissionState({
-					permission: Notification.permission,
+					permission: notificationService.safeGetPermission(),
 					loading: false,
 					token: null,
 					serviceWorkerSupported: true
@@ -102,7 +104,7 @@ export const useNotifications = (statementId?: string) => {
 	// Request notification permission
 	const requestPermission = async (): Promise<NotificationPermission | 'unsupported'> => {
 		// Check if notifications are supported
-		if (!isNotificationSupported() || !isServiceWorkerSupported()) {
+		if (!notificationService.isSupported()) {
 			return 'unsupported';
 		}
 
@@ -155,13 +157,13 @@ export const useNotifications = (statementId?: string) => {
 
 	// Send a test notification
 	const sendTestNotification = () => {
-		if (!isNotificationSupported() || !isServiceWorkerSupported()) {
+		if (!notificationService.isSupported()) {
 			console.info('Notifications not supported in this browser mode');
 
 			return;
 		}
 
-		if (Notification.permission !== 'granted') {
+		if (notificationService.safeGetPermission() !== 'granted') {
 			console.error('Notification permission not granted');
 
 			return;
@@ -189,7 +191,7 @@ export const useNotifications = (statementId?: string) => {
 
 	// Clear all notifications
 	const clearNotifications = () => {
-		if (!isNotificationSupported() || !isServiceWorkerSupported()) {
+		if (!notificationService.isSupported()) {
 			console.info('Notifications not supported in this browser mode');
 
 			return;

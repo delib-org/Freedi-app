@@ -1,0 +1,32 @@
+.mainCard {
+	display: flex;
+	gap: 1rem;
+
+}
+
+.img {
+	height: 4rem;
+	width: 4rem;
+	background-position: center;
+	background-repeat: no-repeat;
+	background-size: cover;
+	border-radius: 4rem;
+}
+
+.info {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+
+
+	.title {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+	}
+
+	.updates {
+		font-size: .9rem;
+		font-weight: 300;
+	}
+}
