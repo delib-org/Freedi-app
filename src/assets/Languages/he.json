@@ -283,4 +283,11 @@
 	"Number of evaluators": "מספר המעריכים",
 	"Consensus score": "ציון הסכמה",
 	"Maximum options submitted by user": "מספר ההצעות המירבי על ידי משתמש"
+	"Consensus score": "ציון הסכמה",
+	"Decisions": "החלטות",
+	"Create a group": "יצירת קבוצה",
+	"Create a question": "יצירת שאלה",
+	"Create a statement": "יצירת אמירה",
+	"Question Title": "כותרת השאלה",
+	"Question Description": "תיאור השאלה"
 }

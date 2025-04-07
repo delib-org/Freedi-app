@@ -22,9 +22,11 @@ export class NotificationService {
 	private isTokenSentToServer = false;
 	private notificationHandler: ((payload: any) => void) | null = null;
 	private messaging: any = null; // Initialized lazily when needed
+	private browserSupportsNotifications: boolean;
 
 	private constructor() {
 		// Singleton pattern
+		this.browserSupportsNotifications = this.isSupported();
 	}
 
 	/**
@@ -43,6 +45,23 @@ export class NotificationService {
 	 */
 	public isSupported(): boolean {
 		return isServiceWorkerSupported() && isNotificationSupported();
+	}
+	
+	/**
+	 * Safe way to check notification permission that works on all browsers
+	 * including iOS where Notification API might exist but not be fully supported
+	 */
+	public safeGetPermission(): NotificationPermission | 'unsupported' {
+		if (!this.isSupported()) {
+			return 'unsupported';
+		}
+		
+		try {
+			return Notification.permission;
+		} catch (error) {
+			console.error('Error accessing Notification.permission:', error);
+			return 'unsupported';
+		}
 	}
 
 	/**

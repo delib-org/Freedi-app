@@ -33,7 +33,7 @@ const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({
 		sumCon: 0,
 		numberOfEvaluators: 0,
 	};
-	const avg = Math.round(((sumPro - sumCon) / numberOfEvaluators) * 100) / 100;
+	const avg = numberOfEvaluators !== 0 ? Math.round(((sumPro - sumCon) / numberOfEvaluators) * 100) / 100 : 0;
 	const consensus = Math.round(_consensus * 100) / 100;
 
 	return (
