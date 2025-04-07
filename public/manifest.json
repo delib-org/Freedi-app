@@ -4,7 +4,7 @@
 	"description": "Freedi - collaborative decision-making platform",
 	"start_url": "/",
 	"display": "standalone",
-	"background_color": "#1093fd",
+	"background_color": "transparent",
 	"theme_color": "#1093fd",
 	"icons": [{
 			"src": "icons/logo-48px.png",
@@ -35,7 +35,7 @@
 			"src": "icons/logo-512px.png",
 			"sizes": "512x512",
 			"type": "image/png",
-			"purpose": "any maskable"
+			"purpose": "any"
 		}
 	]
 }
