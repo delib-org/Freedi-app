@@ -1,9 +1,6 @@
 import { FC, useEffect } from 'react';
 import { Link } from 'react-router';
 import styles from './MainQuestionCard.module.scss';
-//img
-
-import ImgThumb from '@/assets/images/ImgThumb.png';
 import { listenToStatement } from '@/controllers/db/statements/listenToStatements';
 import { statementSelector } from '@/redux/statements/statementsSlice';
 import StatementChatMore from '@/view/pages/statement/components/chat/components/statementChatMore/StatementChatMore';
@@ -18,7 +15,6 @@ interface Props {
 const MainQuestionCard: FC<Props> = ({ simpleStatement }) => {
 
 	const statement: Statement | undefined = useSelector(statementSelector(simpleStatement.statementId))
-	const statementImgUrl = simpleStatement.imageURL || undefined;
 	const lastMessage = statement?.lastMessage;
 
 	useEffect(() => {
