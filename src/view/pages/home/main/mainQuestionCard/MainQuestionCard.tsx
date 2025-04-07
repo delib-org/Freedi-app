@@ -9,6 +9,7 @@ import { statementSelector } from '@/redux/statements/statementsSlice';
 import StatementChatMore from '@/view/pages/statement/components/chat/components/statementChatMore/StatementChatMore';
 import { SimpleStatement, Statement } from 'delib-npm';
 import { useSelector } from 'react-redux';
+import { getTime } from '@/controllers/general/helpers';
 
 interface Props {
 	simpleStatement: SimpleStatement;
@@ -45,9 +46,9 @@ const MainQuestionCard: FC<Props> = ({ simpleStatement }) => {
 					<StatementChatMore statement={simpleStatement} />
 				</div>
 
-				<div className={styles.updates}>
-					{lastMessage?.creator}: {lastMessage?.message}
-				</div>
+				{lastMessage && <div className={styles.updates}>
+					{lastMessage?.creator}: {lastMessage?.message}, {getTime(lastMessage?.createdAt)}
+				</div>}
 			</div>
 
 		</Link>

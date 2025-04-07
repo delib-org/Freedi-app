@@ -15,14 +15,13 @@
 
 		flex: 1;
 		height: 100%;
-		border-radius: 10px;
 
 	}
 
 	.button {
 		flex: 1;
 		height: 100%;
-		border-radius: 10px;
+		border-radius: 4rem;
 		transition: all 0.2s ease-in-out;
 		display: flex;
 		flex-direction: column;
@@ -39,18 +38,24 @@
 			height: 1.5rem;
 			padding: .2rem;
 
-			&Active {
-				background-color: #8cff6f6b;
-				color: black;
-				border-radius: 2rem;
 
-			}
 
 
 		}
 
+		&Active {
+			background-color: #8cff6f6b;
+			color: black;
+			border-radius: 2rem;
+
+		}
 
 
+		&:hover {
+			background-color: #8cff6f6b;
+			color: black;
+			transition: all 0.2s ease-in-out;
+		}
 
 	}
 
@@ -60,13 +65,14 @@
 .addStatementButton {
 	background: #5899e0;
 	flex: 1;
+	margin: .1rem 0;
 	height: 3.125rem;
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	flex-direction: column;
 	position: relative;
-	border-radius: 50%;
+	border-radius: 4rem;
 	box-shadow: 0px 10px 30px 0px rgba(52, 103, 157, 0.108);
 	user-select: none;
 	cursor: pointer;

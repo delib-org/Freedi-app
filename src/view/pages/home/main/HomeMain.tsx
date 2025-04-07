@@ -21,7 +21,7 @@ const HomeMain = () => {
 	// Hooks
 	const navigate = useNavigate();
 	const [loading, setLoading] = useState(true);
-	const [subPage, setSubPage] = useState<"decisions" | "groups">("groups");
+	const [subPage, setSubPage] = useState<"decisions" | "groups">("decisions");
 	const { user } = useAuthentication();
 
 	const topSubscriptions = useAppSelector(topSubscriptionsSelector)
