@@ -19,10 +19,10 @@ const MainQuestionCard: FC<Props> = ({ simpleStatement }) => {
 
 	const statement: Statement | undefined = useSelector(statementSelector(simpleStatement.statementId))
 	const statementImgUrl = simpleStatement.imageURL || undefined;
-	const lastMessage = statement.lastMessage;
+	const lastMessage = statement?.lastMessage;
 
 	useEffect(() => {
-		const unsubscribe = listenToStatement(simpleStatement.statementId)
+		const unsubscribe = listenToStatement(simpleStatement.statementId);
 
 		return () => {
 			unsubscribe();

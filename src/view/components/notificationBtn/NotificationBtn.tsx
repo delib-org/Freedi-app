@@ -9,7 +9,7 @@ import styles from './NotificationBtn.module.scss';
 
 const NotificationBtn = () => {
 	const creator = useSelector(creatorSelector);
-	const InAppNotificationsList: NotificationType[] = useSelector(inAppNotificationsSelector).filter(n => n.creatorId !== creator?.uid);
+	const inAppNotificationsList: NotificationType[] = useSelector(inAppNotificationsSelector).filter(n => n.creatorId !== creator?.uid);
 	const [showInAppNotifications, setShowInAppNotifications] = useState(false);
 
 	function handleShowInAppNotifications() {
@@ -19,10 +19,10 @@ const NotificationBtn = () => {
 	return (
 		<button onClick={handleShowInAppNotifications} className={styles.notificationBtn}>
 			<div className={styles.icon}>
-				{InAppNotificationsList.length > 0 && (
+				{inAppNotificationsList.length > 0 && (
 					<div className={styles.redCircle}>
-						{InAppNotificationsList.length < 10
-							? InAppNotificationsList.length
+						{inAppNotificationsList.length < 10
+							? inAppNotificationsList.length
 							: `9+`}
 					</div>
 				)}
