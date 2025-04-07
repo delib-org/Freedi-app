@@ -1,8 +1,9 @@
 import { FC } from 'react';
-import { defaultResultsSettings } from '../../emptyStatementModel';
+
 import { StatementSettingsProps } from '../../settingsTypeHelpers';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import './ResultsRange.scss';
+import { defaultResultsSettings } from 'delib-npm';
 
 const ResultsRange: FC<StatementSettingsProps> = ({
 	statement,

@@ -93,17 +93,16 @@ export default function HomeHeader() {
 		<div className={`homePage__header ${dir}`}>
 			<div className='homePage__header__wrapper'>
 				<h1 className='homePage__header__wrapper__title'>FreeDi</h1>
-
+				<button onClick={handleShowInAppNotifications} className='inAppNotifications'>
+					<MailIcon />
+					{showInAppNotifications && <InAppNotifications />}
+				</button>
 				<div className='homePage__header__wrapper__icons'>
 					{isInstallable && (
 						<IconButton onClick={handleInstallApp}>
 							<InstallIcon />
 						</IconButton>
 					)}
-					<button onClick={handleShowInAppNotifications} className='inAppNotifications'>
-						<MailIcon />
-						{showInAppNotifications && <InAppNotifications />}
-					</button>
 					<Menu
 						isMenuOpen={isHomeMenuOpen}
 						setIsOpen={setIsHomeMenuOpen}
@@ -125,14 +124,6 @@ export default function HomeHeader() {
 							icon={<InvitationIcon style={{ color: '#4E88C7' }} />}
 							label={t('Join with PIN number')}
 							onOptionClick={() => handlePanel('invitation')} children={''} />
-
-						<MenuOption
-							icon={<MailIcon style={{ color: '#4E88C7' }} />}
-							label={t('Notifications')}
-							onOptionClick={handleShowInAppNotifications}
-						>
-							{showInAppNotifications && <InAppNotifications />}
-						</MenuOption>
 					</Menu>
 				</div>
 			</div>

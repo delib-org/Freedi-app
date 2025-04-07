@@ -9,13 +9,12 @@ import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import {
 	GeneratedStatement,
 	Statement,
-	MassConsensusPageUrls,
 	StatementType,
 } from 'delib-npm';
 
 import { useNavigate, useParams } from 'react-router';
 
-export function useSimilarSuggestions() {
+export function useSimilarSuggestions(statementId, nextStep) {
 	const navigate = useNavigate();
 	const { statementId: parentId } = useParams<{ statementId: string }>();
 	const { creator } = useAuthentication();
@@ -48,11 +47,8 @@ export function useSimilarSuggestions() {
 				await setEvaluationToDB(newStatement, creator, 1);
 			}
 
-			navigate(
-				`/mass-consensus/${parentId}/${MassConsensusPageUrls.randomSuggestions}`
-			);
+			navigate(`/mass-consensus/${statementId}/${nextStep}`);
 
-			return;
 		} catch (error) {
 			console.error(error);
 		}

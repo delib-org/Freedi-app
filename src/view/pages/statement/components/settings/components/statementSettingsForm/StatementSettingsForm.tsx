@@ -102,20 +102,30 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 			);
 
 		return (
-			<form
-				onSubmit={handleSubmit}
-				className='statement-settings-form'
-				data-cy='statement-settings-form'
-			>
-				<TitleAndDescription
-					statement={statement}
-					setStatementToEdit={setStatementToEdit}
-				/>
-				<SectionTitle title={t('General Settings')} />
-				<section className='switches-area'>
-					<AdvancedSettings {...statementSettingsProps} />
-				</section>
-				<ChoseBySettings {...statementSettingsProps} />
+			<>
+				<form
+					onSubmit={handleSubmit}
+					className='statement-settings-form'
+					data-cy='statement-settings-form'
+				>
+					<TitleAndDescription
+						statement={statement}
+						setStatementToEdit={setStatementToEdit}
+					/>
+					<SectionTitle title={t('General Settings')} />
+					<section className='switches-area'>
+						<AdvancedSettings {...statementSettingsProps} />
+					</section>
+					<ChoseBySettings {...statementSettingsProps} />
+					<button
+						type='submit'
+						className='submit-button'
+						aria-label='Submit button'
+						data-cy='settings-statement-submit-btn'
+					>
+						<SaveIcon />
+					</button>
+				</form>
 
 				{!isNewStatement && (
 					<>
@@ -139,15 +149,7 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 					</>
 				)}
 
-				<button
-					type='submit'
-					className='submit-button'
-					aria-label='Submit button'
-					data-cy='settings-statement-submit-btn'
-				>
-					<SaveIcon />
-				</button>
-			</form>
+			</>
 		);
 	} catch (error) {
 		console.error(error);

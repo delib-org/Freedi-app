@@ -1,5 +1,5 @@
-import { useNavigate, useParams } from 'react-router';
-import TitleMassConsensus from '../TitleMassConsensus/TitleMassConsensus';
+import { useParams } from 'react-router';
+import TitleMassConsensus from '../../TitleMassConsensus/TitleMassConsensus';
 import { useDispatch, useSelector } from 'react-redux';
 import {
 	setStatement,
@@ -7,51 +7,39 @@ import {
 } from '@/redux/statements/statementsSlice';
 import { useEffect, useState } from 'react';
 import { useInitialQuestion } from './InitialQuestionVM';
-import { MassConsensusPageUrls, Role } from 'delib-npm';
-import Loader from '@/view/components/loaders/Loader';
+import { Role } from 'delib-npm';
 import styles from './InitialQuestion.module.scss';
-import FooterMassConsensus from '../footerMassConsensus/FooterMassConsensus';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
-import { useHeader } from '../headerMassConsensus/HeaderContext';
 import Textarea from '@/view/components/textarea/Textarea';
 import { updateStatementText } from '@/controllers/db/statements/setStatements';
 
-const InitialQuestion = () => {
-	const navigate = useNavigate();
+const InitialQuestion = ({stage, updateStage, setIfButtonEnabled}) => {
 	const { statementId } = useParams<{ statementId: string }>();
 	const statement = useSelector(statementSelector(statementId));
 	const [description, setDescription] = useState('');
 	const dispatch = useDispatch(); // Dispatch to update the redux state
 	const {
 		handleSetInitialSuggestion,
-		ifButtonEnabled,
 		ready,
-		loading,
 		subscription,
 	} = useInitialQuestion(description);
 	const { t } = useUserConfig();
 	const [edit, setEdit] = useState(false);
 	const [title, setTitle] = useState(statement ? statement.statement : '');
-	const { setHeader } = useHeader();
-
-	useEffect(() => {
-		setHeader({
-			title: t('offer a suggestion'),
-			backTo: MassConsensusPageUrls.introduction,
-			backToApp: false,
-			isIntro: false,
-			setHeader,
-		});
-	}, []);
-
+	
 	const isAdmin = subscription?.role === Role.admin;
+	
+	useEffect(() => {
+		if ( stage === "loading" ) handleSetInitialSuggestion();
+	}, [stage])
 
 	useEffect(() => {
-		if (ready)
-			navigate(
-				`/mass-consensus/${statementId}/${MassConsensusPageUrls.similarSuggestions}`
-			);
+		if (ready) updateStage("suggestions");
 	}, [ready]);
+
+	useEffect(() => {
+		setIfButtonEnabled(description !== null)
+	}, [description])
 
 	async function handleSubmitInitialQuestionText(e) {
 		e.preventDefault();
@@ -126,11 +114,6 @@ const InitialQuestion = () => {
 					}
 				}}
 			/>
-			<FooterMassConsensus
-				onNext={handleSetInitialSuggestion}
-				isNextActive={ifButtonEnabled}
-			/>
-			{loading && <Loader />}
 		</>
 	);
 };
