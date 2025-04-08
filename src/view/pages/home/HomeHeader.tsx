@@ -13,15 +13,13 @@ import LanguagesIcon from '@/assets/icons/languagesIcon.svg?react';
 import Modal from '@/view/components/modal/Modal';
 import ChangeLanguage from '@/view/components/changeLanguage/ChangeLanguage';
 import { LANGUAGES } from '@/constants/Languages';
-import MailIcon from '@/assets/icons/mailIcon.svg?react';
-import InAppNotifications from '@/view/components/inAppNotifications/InAppNotifications';
+import NotificationBtn from '@/view/components/notificationBtn/NotificationBtn';
 
 export default function HomeHeader() {
 	const [isHomeMenuOpen, setIsHomeMenuOpen] = useState(false);
 	const [showInvitationModal, setShowInvitationModal] = useState(false);
 	const [showLanguageModal, setShowLanguageModal] = useState(false);
 
-	const [showInAppNotifications, setShowInAppNotifications] = useState(false);
 	const [isInstallable, setIsInstallable] = useState(false);
 
 	interface BeforeInstallPromptEvent extends Event {
@@ -85,18 +83,12 @@ export default function HomeHeader() {
 	function closeModal() {
 		setShowLanguageModal(false);
 	}
-	function handleShowInAppNotifications() {
-		setShowInAppNotifications(!showInAppNotifications);
-	}
 
 	return (
 		<div className={`homePage__header ${dir}`}>
 			<div className='homePage__header__wrapper'>
 				<h1 className='homePage__header__wrapper__title'>FreeDi</h1>
-				<button onClick={handleShowInAppNotifications} className='inAppNotifications'>
-					<MailIcon />
-					{showInAppNotifications && <InAppNotifications />}
-				</button>
+				<NotificationBtn />
 				<div className='homePage__header__wrapper__icons'>
 					{isInstallable && (
 						<IconButton onClick={handleInstallApp}>

@@ -1,0 +1,36 @@
+.notificationLink {
+	:hover {
+		background-color: #dbdbdb;
+	}
+}
+
+.notificationCard {
+	display: flex;
+	gap: 0.5rem;
+	cursor: pointer;
+	padding: 10px;
+	border-radius: 0.36rem;
+}
+
+.username {
+	color: var(--text-caption);
+}
+
+.avatar {
+	width: 32px;
+	height: 32px;
+	border-radius: 50%;
+	object-fit: cover;
+	border: 2px solid white;
+	background-color: #ccc;
+}
+
+.text {
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.noNotifications {
+	text-align: center;
+	color: gray;
+}

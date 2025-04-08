@@ -23,11 +23,11 @@ export default function TermsOfUse({
 					<Button
 						text={t('Agree')}
 						onClick={() => handleAgreement(true, agreement)}
-						className='btn btn--affirmation'
+						className='btn btn--primary'
 					/>
 					<Button
 						data-cy='agree-btn'
-						text={t('Dont agree')}
+						text={t("Don't agree")}
 						onClick={() => handleAgreement(false, agreement)}
 						buttonType={ButtonType.SECONDARY}
 					/>

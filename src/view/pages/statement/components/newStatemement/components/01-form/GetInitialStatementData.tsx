@@ -23,6 +23,18 @@ export default function GetInitialStatementData() {
 		statement,
 	} = useContext(StatementContext);
 
+	const _title = ((newStatementType: StatementType) => {
+
+		switch (newStatementType) {
+			case StatementType.group:
+				return t("Create a group");
+			case StatementType.question:
+				return t("Create a question");
+			default:
+				return t("Create a statement");
+		}
+	})(newStatementType);
+
 	const handleSubmit = async (ev: FormEvent<HTMLFormElement>) => {
 		ev.preventDefault();
 		try {
@@ -57,26 +69,20 @@ export default function GetInitialStatementData() {
 	const {
 		title: titleLabel,
 		description: descriptionLabel,
-		placeholder,
 	} = getTexts(newStatementType);
 
 	return (
 		<>
-			<h4>{t('Compose your suggestion')}</h4>
-			<p>
-				{newStatementType}:{newQuestionType}
-			</p>
+			<h4>{_title}</h4>
 			<form className={styles.form} onSubmit={handleSubmit}>
 				<Input
-					label={titleLabel}
-					placeholder={titleLabel}
+					label={t(titleLabel)}
 					value={title}
 					name='title'
 					autoFocus={true}
 				/>
 				<Textarea
-					label={descriptionLabel}
-					placeholder={placeholder}
+					label={t(descriptionLabel)}
 					value={description}
 					name='description'
 				/>
