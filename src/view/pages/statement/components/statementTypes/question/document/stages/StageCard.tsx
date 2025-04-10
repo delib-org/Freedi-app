@@ -58,7 +58,7 @@ const StageCard: FC<Props> = ({ statement, isDescription, isSuggestions }) => {
 				<div className={`${styles.notification}`}>
 					<StatementChatMore statement={statement} onlyCircle={true} />
 				</div>
-				<h3>{t(title)} {isSuggestions && `: ${statement.statement}`}</h3>
+				<NavLink to={stageUrl}><h3>{t(title)} {isSuggestions && `: ${statement.statement}`}</h3></NavLink>
 			</div>
 
 			{
@@ -100,14 +100,6 @@ const StageCard: FC<Props> = ({ statement, isDescription, isSuggestions }) => {
 					</>
 				)
 			}
-
-			<div className={`btns ${styles.btn}`}>
-				<Button
-					text={t('Add Suggestion')}
-					buttonType={ButtonType.SECONDARY}
-					onClick={suggestNewSuggestion}
-				/>
-			</div>
 		</div >
 	);
 };
