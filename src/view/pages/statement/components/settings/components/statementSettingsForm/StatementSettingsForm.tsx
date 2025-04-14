@@ -112,20 +112,20 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 						statement={statement}
 						setStatementToEdit={setStatementToEdit}
 					/>
-					<SectionTitle title={t('General Settings')} />
-					<section className='switches-area'>
-						<AdvancedSettings {...statementSettingsProps} />
-					</section>
-					<ChoseBySettings {...statementSettingsProps} />
-					<button
-						type='submit'
-						className='submit-button'
-						aria-label='Submit button'
-						data-cy='settings-statement-submit-btn'
-					>
-						<SaveIcon />
-					</button>
 				</form>
+				<SectionTitle title={t('General Settings')} />
+				<section className='switches-area'>
+					<AdvancedSettings {...statementSettingsProps} />
+				</section>
+				<ChoseBySettings {...statementSettingsProps} />
+				<button
+					type='submit'
+					className='submit-button'
+					aria-label='Submit button'
+					data-cy='settings-statement-submit-btn'
+				>
+					<SaveIcon />
+				</button>
 
 				{!isNewStatement && (
 					<>
