@@ -22,7 +22,6 @@ import UploadImage from '@/view/components/uploadImage/UploadImage';
 import './StatementSettingsForm.scss';
 
 // icons
-import SaveIcon from '@/assets/icons/save.svg?react';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { createSelector } from '@reduxjs/toolkit';
 import { RootState } from '@/redux/store';
@@ -119,11 +118,11 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 					<ChoseBySettings {...statementSettingsProps} />
 					<button
 						type='submit'
-						className='submit-button'
+						className='submit-button btn'
 						aria-label='Submit button'
 						data-cy='settings-statement-submit-btn'
 					>
-						<SaveIcon />
+						{t('Save')}
 					</button>
 				</form>
 
