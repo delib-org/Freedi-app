@@ -12,18 +12,45 @@ export async function findSimilarStatements(
 		const numberOfOptionsToGenerate = 5;
 		const parsedBody = request.body;
 
-		const { statementId, userInput, generateIfNeeded = 6 } = parsedBody;
+		const {
+			statementId,
+			userInput,
+			creatorId,
+			generateIfNeeded = 6,
+		} = parsedBody;
 		//generateIfNeeded is a boolean that indicates if we should generate similar statements if no similar statements are found
 
 		const ref = db.collection(Collections.statements);
-		const query = ref.where('parentId', '==', statementId);
+		const parentDoc = await ref.doc(statementId).get();
+		if (!parentDoc.exists) {
+			response
+				.status(404)
+				.send({ ok: false, error: 'Parent statement not found' });
 
+			return;
+		}
+		const parentStatement = parentDoc.data() as Statement;
+
+		const query = ref.where('parentId', '==', statementId);
 		const subStatementsDB = await query.get();
 
 		const subStatements = subStatementsDB.docs.map((doc) =>
 			doc.data()
 		) as Statement[];
+		const userStatements = subStatements.filter(
+			(s) => s.creatorId === creatorId
+		);
+		const maxAllowed =
+			parentStatement.statementSettings?.numberOfOptionsPerUser ?? 1;
 
+		if (userStatements.length >= maxAllowed) {
+			response.status(403).send({
+				ok: false,
+				error: 'You have reached the maximum number of suggestions allowed.',
+			});
+
+			return;
+		}
 		const statementSimple: { statement: string; id: string }[] =
 			subStatements.map((subStatement) => ({
 				statement: subStatement.statement,
@@ -36,6 +63,7 @@ export async function findSimilarStatements(
 				userInput,
 				numberOfOptionsToGenerate
 			);
+
 			response.status(200).send({
 				similarTexts: textsByAI,
 				ok: true,
@@ -95,6 +123,8 @@ export async function findSimilarStatements(
 			ok: true,
 			userText: duplicateStatement || userInput,
 		});
+
+		return;
 	} catch (error) {
 		response.status(500).send({ error: error, ok: false });
 		console.error('error', { error });

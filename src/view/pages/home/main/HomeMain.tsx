@@ -16,13 +16,16 @@ import PeopleLoader from '@/view/components/loaders/PeopleLoader';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { StatementType } from 'delib-npm';
 import MainQuestionCard from './mainQuestionCard/MainQuestionCard';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 
 const HomeMain = () => {
 	// Hooks
 	const navigate = useNavigate();
 	const [loading, setLoading] = useState(true);
 	const [subPage, setSubPage] = useState<"decisions" | "groups">("decisions");
+	const [subPageTitle, setSubPageTitle] = useState<"Decisions" | "Groups">("Decisions");
 	const { user } = useAuthentication();
+	const { t } = useUserConfig();
 
 	const topSubscriptions = useAppSelector(topSubscriptionsSelector)
 		.sort((a, b) => b.lastUpdate - a.lastUpdate)
@@ -48,6 +51,10 @@ const HomeMain = () => {
 		}
 	}, [topSubscriptions]);
 
+	useEffect(() => {
+		setSubPageTitle(subPage === "decisions" ? "Decisions" : "Groups");
+	}, [subPage])
+
 	return (
 		<main className='home-page__main slide-in'>
 			<div className='heroImg'></div>
@@ -64,6 +71,7 @@ const HomeMain = () => {
 						topSubscriptions.length > 0 ? 'start' : 'center',
 				}}
 			>
+				<h2>{t(subPageTitle)}</h2>
 				{(() => {
 					if (loading) {
 						return (

@@ -23,9 +23,10 @@ const NotificationSubscriptionButton: React.FC<NotificationSubscriptionButtonPro
 		// Check if notifications are supported first
 		if (!notificationService.isSupported()) {
 			setIsLoading(false);
+
 			return;
 		}
-		
+
 		// Set initial permission state safely
 		setPermissionState(notificationService.safeGetPermission() as NotificationPermission);
 
@@ -89,10 +90,12 @@ const NotificationSubscriptionButton: React.FC<NotificationSubscriptionButtonPro
 
 					if (permission !== 'granted') {
 						setIsLoading(false);
+
 						return;
 					}
 				} else {
 					setIsLoading(false);
+
 					return;
 				}
 			}
