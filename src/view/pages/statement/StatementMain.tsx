@@ -23,7 +23,7 @@ import { RootState } from '@/redux/store';
 import Modal from '@/view/components/modal/Modal';
 
 import { statementSelector, statementSubscriptionSelector } from '@/redux/statements/statementsSlice';
-import { StatementType, QuestionType, User } from 'delib-npm';
+import { StatementType, QuestionType, User, Role } from 'delib-npm';
 import { useAuthorization } from '@/controllers/hooks/useAuthorization';
 import { useSelector } from 'react-redux';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
@@ -46,7 +46,7 @@ export default function StatementMain() {
 	const statement = useSelector(statementSelector(statementId));
 	const topParentStatement = useSelector(statementSelector(statement?.topParentId));
 	const role = useSelector(statementSubscriptionSelector(statementId))?.role;
-	const { isAuthorized, loading } = useAuthorization(statementId);
+	const { isAuthorized, loading, isWaitingForApproval } = useAuthorization(statementId);
 
 	// Redux store
 	const { creator } = useAuthentication();
@@ -234,7 +234,10 @@ export default function StatementMain() {
 		]
 	);
 
+	console.log("isWaitingForApproval", isWaitingForApproval, "isAuthorized", isAuthorized, "loading", loading, "isStatementNotFound", isStatementNotFound, "role", role, "statementId", statementId, "topParentStatement", topParentStatement?.statementId);
+
 	if (isStatementNotFound) return <Page404 />;
+	if (isWaitingForApproval || role === Role.waiting) return <h1>Waiting for approval</h1>
 	if (loading) return <LoadingPage />;
 
 	if (isAuthorized) {
