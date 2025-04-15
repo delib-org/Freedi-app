@@ -66,7 +66,7 @@ function NavButtons({
 			{statement && (
 				<NotificationSubscriptionButton statementId={statement.statementId} />
 			)}
-			<button className={styles.views} onClick={handleView}>
+			<div className={`${styles.views} ${styles.button}`} onClick={handleView} role='button'>
 				<NavIcon
 					statement={statement}
 					screen={screen}
@@ -86,7 +86,7 @@ function NavButtons({
 						/>
 					</div>
 				)}
-			</button>
+			</div>
 			{allowNavigation && (
 				<button className={styles.home}>
 					<HomeButton headerColor={headerStyle} />
