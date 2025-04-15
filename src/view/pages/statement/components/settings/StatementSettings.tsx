@@ -21,7 +21,7 @@ import {
 import Loader from '@/view/components/loaders/Loader';
 import { QuestionType, Statement } from 'delib-npm';
 import MassConsensusSettings from './components/massConsensusSettings/MassConsensusSettings';
-import GroupSettings from './components/group/GroupSettings';
+import GroupSettings from './components/membershipSettings/MembershipSettings';
 
 const StatementSettings: FC = () => {
 	// * Hooks * //

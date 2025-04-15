@@ -128,5 +128,5 @@ function isAuthorized(
 	userId: string,
 	role?: Role
 ): boolean {
-	return isMemberRole(statement, userId, role) || role !== Role.banned && statement?.membership?.access === Access.open;
+	return isMemberRole(statement, userId, role) || role !== Role.banned && statement?.membership?.access === Access.openToAll;
 }

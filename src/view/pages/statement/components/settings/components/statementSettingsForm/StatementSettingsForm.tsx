@@ -27,6 +27,8 @@ import { createSelector } from '@reduxjs/toolkit';
 import { RootState } from '@/redux/store';
 import Loader from '@/view/components/loaders/Loader';
 import { StatementSubscription, Role, Statement } from 'delib-npm';
+import { SaveIcon } from 'lucide-react';
+import GroupSettings from '../membershipSettings/MembershipSettings';
 
 interface StatementSettingsFormProps {
 	statement: Statement;
@@ -125,6 +127,7 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 						{t('Save')}
 					</button>
 				</form>
+				<GroupSettings statement={statement} />
 				<SectionTitle title={t('General Settings')} />
 				<section className='switches-area'>
 					<AdvancedSettings {...statementSettingsProps} />

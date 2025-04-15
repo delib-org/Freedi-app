@@ -9,8 +9,12 @@ export interface MultiSwitchProps {
 
 const MultiSwitch: React.FC<MultiSwitchProps> = ({ options, onClick, currentValue }) => {
 	function handleSwitch(value: string) {
+		console.log("handleSwitch", value)
 		onClick(value)
 	}
+
+	console.log(currentValue, 'currentValue')
+	console.log(options, 'options')
 
 	return (
 		<div className={styles.switch}>
@@ -24,6 +28,7 @@ const MultiSwitch: React.FC<MultiSwitchProps> = ({ options, onClick, currentValu
 				>
 					{option.icon ? option.icon : null}
 					{option.label}
+					{option.value}
 				</button>
 			))}
 		</div>
