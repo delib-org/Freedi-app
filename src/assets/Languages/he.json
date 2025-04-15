@@ -289,5 +289,13 @@
 	"Create a statement": "יצירת אמירה",
 	"Question Title": "כותרת השאלה",
 	"Question Description": "תיאור השאלה",
-	"Group Settings": "הגדרות קבוצה"
+	"Group Settings": "הגדרות קבוצה",
+	"Public": "ציבורי",
+	"Moderated": "דורש אישור מנהל/ת",
+	"Registered": "משתמשים  מחוברים",
+	"Open to all": "פתוח לכולם",
+	"Open for registered members": "פתוח למשתמשים מחוברים",
+	"Secret": "סודי",
+	"Open for approved members": "פתוח למשתמשים מאושרים",
+	"Membership Settings": "הגדרות חברות"
 }

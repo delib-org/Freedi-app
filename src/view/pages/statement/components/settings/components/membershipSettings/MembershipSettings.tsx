@@ -3,6 +3,8 @@ import SectionTitle from '../sectionTitle/SectionTitle'
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import { Access, Statement } from 'delib-npm';
 import MultiSwitch from '@/view/components/switch/multiSwitch/MultiSwitch';
+import { updateStatement } from '@/controllers/db/statements/setStatements';
+import { setStatementMembership } from '@/controllers/db/statements/setStatementMembership';
 
 interface Props {
 	statement: Statement;
@@ -15,34 +17,36 @@ const MembershipSettings: FC<Props> = ({ statement }) => {
 
 	if (!statement) return null;
 
-	console.log("access", Access)
-
 	return (
 		<div>
-			<SectionTitle title={t('Group Settings')} />
+			<SectionTitle title={t('Membership Settings')} />
 			<MultiSwitch
 				options={[
 					{
-						label: t('Allow everyone to join the group'),
+						label: t('Open to all'),
+						toolTip: t('Anyone can join the group'),
 						value: Access.openToAll,
 					},
 					{
-						label: t('Allow registered members to join the group'),
+						label: t('Open for registered members'),
+						toolTip: t('Only registered members can join the group'),
 						value: Access.openForRegistered,
 					},
 					{
-						label: t('Allow only approved members to join the group'),
+						label: t('Moderated'),
+						toolTip: t('Only approved members can join the group'),
 						value: Access.moderated,
 					},
 					{
-						label: t('Only the creator can add members'),
+						label: t('Secret'),
+						toolTip: t('Only the creator can add members'),
 						value: Access.secret,
 					}
 				]}
 				currentValue={membershipAccess}
 				onClick={(newValues) => {
-					console.log("newValues", newValues)
 					setMembershipAccess(newValues as Access)
+					setStatementMembership({ statement, membershipAccess: newValues as Access })
 				}}
 			/>
 		</div>
