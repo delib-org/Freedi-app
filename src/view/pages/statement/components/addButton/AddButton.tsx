@@ -7,11 +7,13 @@ import AddSubGroupIcon from '@/assets/icons/team-group.svg?react';
 import styles from './AddButton.module.scss'
 import { QuestionType, StatementType } from 'delib-npm';
 import { StatementContext } from '../../StatementCont';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 
 export default function AddButton() {
 	const [actionsOpen, setActionsOpen] = React.useState(false);
 	const { handleSetNewStatement, setNewStatementType, setNewQuestionType } =
 		useContext(StatementContext);
+	const { dir } = useUserConfig();
 	const radius = 5;
 
 	function handleAddStatement(
@@ -74,7 +76,12 @@ export default function AddButton() {
 	return (
 		<div className={`${styles.actions}`}>
 			{actions.map(({ key, action, icon }, index) => {
-				const angle = -90 + (index * -90) / (actions.length - 1);
+				let angle: number;
+				if (dir === 'ltr') {
+					angle = -90 + (index * 90) / (actions.length - 1);
+				} else {
+					angle = -90 + (index * -90) / (actions.length - 1);
+				}
 
 				const x = Math.cos((angle * Math.PI) / 180) * radius;
 				const y = Math.sin((angle * Math.PI) / 180) * radius;
