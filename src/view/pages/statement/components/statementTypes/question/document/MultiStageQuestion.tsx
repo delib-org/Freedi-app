@@ -19,6 +19,7 @@ import StageCard from './stages/StageCard';
 import { updateStatementsOrderToDB } from '@/controllers/db/statements/setStatements';
 import { Statement, StatementType } from 'delib-npm';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import MultiStageQuestionsBar from '../../../multiStageQuestionsBar/MultiStageQuestionsBar';
 
 const MultiStageQuestion: FC = () => {
 	const { statement } = useContext(StatementContext);
@@ -41,7 +42,7 @@ const MultiStageQuestion: FC = () => {
 
 	const [showAddStage, setShowAddStage] = useState<boolean>(false);
 	const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
-	const [draggedItem, setDraggedItem] = useState<null | { index: number;indexOffset: number; y: number }>(null);
+	const [draggedItem, setDraggedItem] = useState<null | { index: number; indexOffset: number; y: number }>(null);
 
 	const handleDragStart = (
 		e: DragEvent<HTMLDivElement>,
@@ -49,8 +50,8 @@ const MultiStageQuestion: FC = () => {
 	): void => {
 		setDraggedIndex(index);
 		const topOfTarget = e.currentTarget.getBoundingClientRect().top
-		setDraggedItem({ 
-			index, 
+		setDraggedItem({
+			index,
 			indexOffset: e.clientY - topOfTarget,
 			y: topOfTarget
 		});
@@ -96,39 +97,44 @@ const MultiStageQuestion: FC = () => {
 			)}
 
 			<div className={styles.stagesWrapper}>
+				<MultiStageQuestionsBar />
 				<h2 className={styles.title}>
 					{t('Document')}: {statement.statement}
 				</h2>
 				<div className={styles.description}>
 					{statement?.description}
 				</div>
-				{initialStages.map((stage, index) => (
-					<div
-						key={stage.statementId}
-						className={`${styles.stageContainer} ${draggedIndex === index ? styles.dragging : ''}`}
-						draggable
-						onDragStart={(e) => handleDragStart(e, index)}
-						onDragOver={(e) => handleDragOver(e)}
-						onDrop={(e) => handleDrop(e, index)}
-						onDragEnd={handleDragEnd}
-						aria-label={`Draggable stage ${index + 1}`}
-					>
+				{initialStages.map((stage, index) => {
+					console.log(stage.evaluationSettings?.evaluationUI);
+
+					return (
 						<div
-							className={styles.dragHandle}
-							aria-hidden='true'
-						></div>
-						<StageCard statement={stage} />
-					</div>
-				))}
+							key={stage.statementId}
+							className={`${styles.stageContainer} ${draggedIndex === index ? styles.dragging : ''}`}
+							draggable
+							onDragStart={(e) => handleDragStart(e, index)}
+							onDragOver={(e) => handleDragOver(e)}
+							onDrop={(e) => handleDrop(e, index)}
+							onDragEnd={handleDragEnd}
+							aria-label={`Draggable stage ${index + 1}`}
+						>
+							<div
+								className={styles.dragHandle}
+								aria-hidden='true'
+							></div>
+							<StageCard statement={stage} />
+						</div>
+					)
+				})}
 				{draggedItem && (
 					<div
 						className={styles.ghostItem}
 						style={{
-						top: `${draggedItem.y}px`,
-						position: "absolute",
-						transform: "translateX(-20%)",
-						opacity: 0.5,
-						pointerEvents: "none",
+							top: `${draggedItem.y}px`,
+							position: "absolute",
+							transform: "translateX(-20%)",
+							opacity: 0.5,
+							pointerEvents: "none",
 						}}
 					>
 						<StageCard statement={initialStages[draggedItem.index]} />
