@@ -1,27 +1,52 @@
 import Loader from '@/view/components/loaders/Loader';
-import InitialQuestion from "./initialQuestion/InitialQuestion";
-import useMassConsensusQuestion from "./MassConsesusQuestionVM"
-import SimilarSuggestions from "./similarSuggestions/SimilarSuggestions";
+import InitialQuestion from './initialQuestion/InitialQuestion';
+import useMassConsensusQuestion from './MassConsensusQuestionVM';
+import SimilarSuggestions from './similarSuggestions/SimilarSuggestions';
 import FooterMassConsensus from '../footerMassConsensus/FooterMassConsensus';
 
 const MassConsensusQuestion = () => {
-    const { stage, updateStage, handleNext, ifButtonEnabled, setIfButtonEnabled } = useMassConsensusQuestion();
-    
-    return (
-        <>
-            { (stage === "question" || (stage === "loading"))?
-             <InitialQuestion stage={stage} updateStage={updateStage} setIfButtonEnabled={setIfButtonEnabled} /> 
-             : <SimilarSuggestions stage={stage} setIfButtonEnabled={setIfButtonEnabled}/> }
+	const {
+		stage,
+		updateStage,
+		handleNext,
+		ifButtonEnabled,
+		setIfButtonEnabled,
+		reachedLimit,
+		setReachedLimit,
+	} = useMassConsensusQuestion();
 
-            { (stage === "loading" || stage === "submitting")? <Loader/> : null }
-             
-            <FooterMassConsensus
-				onNext={handleNext}
-				isNextActive={ifButtonEnabled}
-                blockNavigation={true}
-			/>
-        </>
-    )
-}
+	return (
+		<>
+			{stage === 'question' || stage === 'loading' ? (
+				<InitialQuestion
+					setReachedLimit={setReachedLimit}
+					stage={stage}
+					updateStage={updateStage}
+					setIfButtonEnabled={setIfButtonEnabled}
+				/>
+			) : (
+				<SimilarSuggestions
+					stage={stage}
+					setIfButtonEnabled={setIfButtonEnabled}
+				/>
+			)}
 
-export default MassConsensusQuestion
+			{stage === 'loading' || (stage === 'submitting' && <Loader />)}
+			{reachedLimit ? (
+				<FooterMassConsensus
+					onNext={() => {}}
+					isNextActive={false}
+					blockNavigation={false}
+				/>
+			) : (
+				<FooterMassConsensus
+					onNext={handleNext}
+					isNextActive={ifButtonEnabled}
+					blockNavigation={true}
+				/>
+			)}
+		</>
+	);
+};
+
+export default MassConsensusQuestion;

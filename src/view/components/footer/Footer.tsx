@@ -3,7 +3,7 @@ import { FC } from "react";
 import AddIcon from "@/assets/icons/plusIcon.svg?react";
 import GroupIcon from "@/assets/icons/group.svg?react";
 // import GravelIcon from "@/assets/icons/gravel.svg?react";
-import QuestionMarkIcon from "@/assets/icons/questionIcon.svg?react";
+import TargetIcon from "@/assets/icons/target.svg?react";
 import styles from "./Footer.module.scss";
 import { useUserConfig } from "@/controllers/hooks/useUserConfig";
 import { NotificationType } from "delib-npm";
@@ -37,7 +37,7 @@ const Footer: FC<Props> = ({ addGroup, setSubPage, subPage }) => {
 							? inAppNotificationsList.length
 							: `9+`}
 					</div>}
-					<QuestionMarkIcon />
+					<TargetIcon />
 				</div>
 				<span className={`${subPage === "decisions" ? styles.activeText : ""}`}>{t("Decisions")}</span>
 			</button>
