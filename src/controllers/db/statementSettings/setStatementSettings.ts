@@ -1,11 +1,17 @@
 import { doc, setDoc } from 'firebase/firestore';
 import { FireStore } from '../config';
-import { StatementSettings, QuestionSettings, Statement, Collections, QuestionType } from 'delib-npm';
+import {
+	StatementSettings,
+	QuestionSettings,
+	Statement,
+	Collections,
+	QuestionType,
+} from 'delib-npm';
 
 interface SetStatementSettingsProps {
 	statement: Statement;
 	property: keyof StatementSettings | keyof QuestionSettings;
-	newValue: boolean;
+	newValue: boolean | number;
 	settingsSection: keyof Statement;
 }
 

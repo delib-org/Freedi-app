@@ -28,7 +28,7 @@ import {
 	EvaluationUI,
 	Creator,
 	CutoffBy,
-	ResultsSettings
+	ResultsSettings,
 } from 'delib-npm';
 
 import { number, parse, string } from 'valibot';
@@ -111,8 +111,11 @@ export async function saveStatementToDB({
 			statement.resultsSettings = {
 				...statement.resultsSettings,
 				resultsBy: resultsBy || statement.resultsSettings.resultsBy,
-				numberOfResults: numberOfResults || statement.resultsSettings.numberOfResults,
-				cutoffBy: statement.resultsSettings.cutoffBy || CutoffBy.topOptions,
+				numberOfResults:
+					numberOfResults ||
+					statement.resultsSettings.numberOfResults,
+				cutoffBy:
+					statement.resultsSettings.cutoffBy || CutoffBy.topOptions,
 			};
 		}
 
@@ -134,9 +137,9 @@ export const setStatementToDB = async ({
 	parentStatement,
 }: SetStatementToDBParams): Promise<
 	| {
-		statementId: string;
-		statement: Statement;
-	}
+			statementId: string;
+			statement: Statement;
+	  }
 	| undefined
 > => {
 	try {
@@ -165,8 +168,8 @@ export const setStatementToDB = async ({
 			parentStatement === 'top'
 				? statement.statementId
 				: statement?.topParentId ||
-				parentStatement?.topParentId ||
-				'top';
+					parentStatement?.topParentId ||
+					'top';
 
 		const siblingOptions = getSiblingOptionsByParentId(
 			parentId,
@@ -261,6 +264,9 @@ export function createStatement({
 	stageSelectionType,
 }: CreateStatementProps): Statement | undefined {
 	try {
+		if (questionType === QuestionType.massConsensus) {
+			hasChildren = false;
+		}
 		const storeState = store.getState();
 		const creator = storeState.creator?.creator;
 

@@ -1,7 +1,6 @@
-import { FC, MouseEvent } from 'react';
+import { FC } from 'react';
 import styles from './StageCard.module.scss';
-import Button, { ButtonType } from '@/view/components/buttons/button/Button';
-import { NavLink, useNavigate } from 'react-router';
+import { NavLink } from 'react-router';
 import {
 	Statement,
 	SimpleStatement,
@@ -19,7 +18,6 @@ interface Props {
 const StageCard: FC<Props> = ({ statement, isDescription, isSuggestions }) => {
 	const { dir, t } = useUserConfig();
 
-	const navigate = useNavigate();
 	const stageUrl = `/stage/${statement.statementId}`;
 	const isVoting =
 		statement.evaluationSettings?.evaluationUI === EvaluationUI.voting;
@@ -28,11 +26,6 @@ const StageCard: FC<Props> = ({ statement, isDescription, isSuggestions }) => {
 	const chosen: SimpleStatement[] = isVoting && votingResults
 		? [votingResults]
 		: statement.results;
-
-	function suggestNewSuggestion(ev: MouseEvent<HTMLButtonElement>) {
-		ev.stopPropagation();
-		navigate(stageUrl);
-	}
 
 	const getTitle = () => {
 		if (isDescription) return 'Description';
@@ -51,65 +44,53 @@ const StageCard: FC<Props> = ({ statement, isDescription, isSuggestions }) => {
 	}
 
 	return (
-		<div
-			className={`${styles.card} ${styles[direction]} ${styles[suggestionsClass]}`}
-		>
-			<div className={`${styles.title}`}>
-				<div className={`${styles.notification}`}>
-					<StatementChatMore statement={statement} onlyCircle={true} />
+		<NavLink to={stageUrl}>
+			<div
+				className={`${styles.card} ${styles[direction]} ${styles[suggestionsClass]}`}
+			>
+				<div className={`${styles.title}`}>
+					<div className={`${styles.notification}`}>
+						<StatementChatMore statement={statement} onlyCircle={true} />
+					</div>
+					<h3>{t(title)} {isSuggestions && `: ${statement.statement}`}</h3>
 				</div>
-				<h3>{t(title)}</h3>
-			</div>
 
-			{
-				chosen.length === 0 ? (
-					<p>{t('No suggestion so far')}</p>
-				) : (
-					<>
-						<ul>
-							{chosen.map((opt: SimpleStatement) => (
-								<NavLink
-									key={opt.statementId}
-									to={`/statement/${opt.statementId}`}
-								>
-									<ol className={styles.suggestions}>
-										<li>
-											<div>{opt.statement}</div>
-											{opt.description && (
-												<div
-													className={
-														styles.statement__description
-													}
-												>
-													{opt.description}
-												</div>
-											)}
-										</li>
-									</ol>
+				{
+					chosen.length === 0 ? (
+						<p>{t('No suggestion so far')}</p>
+					) : (
+						<>
+							<ul>
+								{chosen.map((opt: SimpleStatement) => (
+									<li className={styles.suggestions} key={opt.statementId}>
+										<div>{opt.statement}</div>
+										{opt.description && (
+											<div
+												className={
+													styles.statement__description
+												}
+											>
+												{opt.description}
+											</div>
+										)}
+									</li>
+
+								))}
+							</ul>
+							{!isSuggestions && (
+								<NavLink to={`/statement/${statement.statementId}`}>
+									<p
+										className={`${styles.seeMore} ${dir === 'ltr' ? styles.rtl : styles.ltr}`}
+									>
+										{t('Read more...')}
+									</p>{' '}
 								</NavLink>
-							))}
-						</ul>
-						{!isSuggestions && (
-							<NavLink to={`/statement/${statement.statementId}`}>
-								<p
-									className={`${styles.seeMore} ${dir === 'ltr' ? styles.rtl : styles.ltr}`}
-								>
-									{t('Read more...')}
-								</p>{' '}
-							</NavLink>
-						)}
-					</>
-				)
-			}
-
-			<div className={`btns ${styles.btn}`}>
-				<Button
-					text={t('Add Suggestion')}
-					buttonType={ButtonType.SECONDARY}
-					onClick={suggestNewSuggestion}
-				/>
-			</div>
-		</div >
+							)}
+						</>
+					)
+				}
+			</div >
+		</NavLink>
 	);
 };
 
