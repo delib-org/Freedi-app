@@ -1,11 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
-import { setStatementSubscription, statementSelector, statementSubscriptionSelector } from '@/redux/statements/statementsSlice';
-import { useAuthentication } from './useAuthentication';
-import { Access, Role, Statement, Creator, getStatementSubscriptionId } from 'delib-npm';
+import { statementSelector, statementSubscriptionSelector } from '@/redux/statements/statementsSlice';
+import { Access, Role, Statement, Creator } from 'delib-npm';
 import { setStatementSubscriptionToDB } from '../db/subscriptions/setSubscriptions';
-import { getStatementSubscriptionFromDB } from '../db/subscriptions/getSubscriptions';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { creatorSelector } from '@/redux/creator/creatorSlice';
 import { listenToStatementSubscription } from '../db/statements/listenToStatements';
 
@@ -19,96 +17,119 @@ export interface AuthorizationState {
 }
 
 export const useAuthorization = (statementId?: string): AuthorizationState => {
-	const [isAuthorized, setIsAuthorized] = useState(false);
-	const [loading, setLoading] = useState(true);
-	const [error, setError] = useState(false);
-	const [errorMessage, setErrorMessage] = useState('');
-	const [isWaitingForApproval, setIsWaitingForApproval] = useState(false);
+	const [authState, setAuthState] = useState<AuthorizationState>({
+		isAuthorized: false,
+		loading: true,
+		error: false,
+		errorMessage: '',
+		isWaitingForApproval: false
+	});
 
-	const dispatch = useDispatch();
 	const statement = useAppSelector(statementSelector(statementId));
-	const statementSubscription = useAppSelector(
-		statementSubscriptionSelector(statementId)
-	);
+	const statementSubscription = useAppSelector(statementSubscriptionSelector(statementId));
 	const creator = useSelector(creatorSelector);
-	const creatorId = creator?.uid;
 	const role = statementSubscription?.role;
 
+	// Set up subscription listener
 	useEffect(() => {
-
-		if (!statementId) return;
-		if (!creatorId) return;
+		if (!statementId || !creator?.uid) return;
 
 		const unsubscribe = listenToStatementSubscription(statementId, creator);
+		return () => unsubscribe();
+	}, [statementId, creator?.uid]);
 
-		return () => {
-			unsubscribe();
-		};
-
-	}, [creatorId, statementId]);
-
-	// Handle authorization and role updates in a single effect
+	// Handle authorization logic
 	useEffect(() => {
-		if (statementSubscription && isMemberRole(statement, creatorId, role)) {
+		if (!statement || !creator) return;
 
-			setIsAuthorized(true);
-			setLoading(false);
-			setError(false);
-			setErrorMessage('');
-
+		// If we're waiting for subscription data and still loading
+		if (!statementSubscription && authState.loading) {
 			return;
-
-		} else if (role === Role.waiting) {
-			setIsWaitingForApproval(true);
-			setLoading(false);
-			setError(false);
-			setErrorMessage('');
-
-			return;
-		} else {
-			if (isOpenToAll(statement, role) || isOpenToRegistered(statement, creator, role)) {
-				setIsAuthorized(true);
-				setStatementSubscriptionToDB({ statement, creator, role: Role.member });
-				setError(false);
-				setErrorMessage('');
-
-				return;
-			} else {
-				if (isModeratedGroup(statement, role)) {
-					setIsWaitingForApproval(true);
-					setLoading(false);
-					setStatementSubscriptionToDB({
-						statement,
-						creator,
-						role: Role.waiting,
-						getInAppNotification: false,
-						getEmailNotification: false,
-						getPushNotification: false,
-					})
-					setError(false);
-					setErrorMessage('');
-					setIsAuthorized(false);
-					return;
-				} else {
-					setLoading(false);
-					setError(true);
-					setErrorMessage('You are not authorized to view this statement.');
-					setIsAuthorized(false);
-				}
-			}
 		}
-	}, [statementSubscription]);
 
-	return {
-		isAuthorized,
-		loading,
-		error,
-		errorMessage,
-		creator,
-		isWaitingForApproval
-	};
+		// Case 1: User is already a member or admin
+		if (isMemberRole(statement, creator.uid, role)) {
+			setAuthState({
+				isAuthorized: true,
+				loading: false,
+				error: false,
+				errorMessage: '',
+				creator,
+				isWaitingForApproval: false
+			});
+			return;
+		}
+
+		// Case 2: User is waiting for approval
+		if (role === Role.waiting) {
+			setAuthState({
+				isAuthorized: false,
+				loading: false,
+				error: false,
+				errorMessage: '',
+				creator,
+				isWaitingForApproval: true
+			});
+			return;
+		}
+
+		// Case 3: Open group - auto-subscribe as member
+		if (isOpenAccess(statement, creator, role)) {
+			setStatementSubscriptionToDB({
+				statement,
+				creator,
+				role: Role.member
+			});
+
+			setAuthState({
+				isAuthorized: true,
+				loading: false,
+				error: false,
+				errorMessage: '',
+				creator,
+				isWaitingForApproval: false
+			});
+			return;
+		}
+
+		// Case 4: Moderated group - subscribe as waiting
+		if (isModeratedGroup(statement, role)) {
+			setStatementSubscriptionToDB({
+				statement,
+				creator,
+				role: Role.waiting,
+				getInAppNotification: false,
+				getEmailNotification: false,
+				getPushNotification: false,
+			});
+
+			setAuthState({
+				isAuthorized: false,
+				loading: false,
+				error: false,
+				errorMessage: '',
+				creator,
+				isWaitingForApproval: true
+			});
+			return;
+		}
+
+		// Case 5: Not authorized
+		setAuthState({
+			isAuthorized: false,
+			loading: false,
+			error: true,
+			errorMessage: 'You are not authorized to view this statement.',
+			creator,
+			isWaitingForApproval: false
+		});
+
+	}, [statement, creator, statementSubscription, role]);
+
+	return authState;
 };
 
+// Helper functions
 function isMemberRole(
 	statement: Statement,
 	userId: string,
@@ -121,23 +142,22 @@ function isMemberRole(
 	);
 }
 
-function isAuthorized(
+function isOpenAccess(
 	statement: Statement,
-	creator?: Creator,
+	creator: Creator,
 	role?: Role
 ): boolean {
-	if (!statement || !creator) return false;
-	return isMemberRole(statement, creator.uid, role) || isOpenToAll(statement, role) || isOpenToRegistered(statement, creator, role);
+	if (role === Role.banned) return false;
+
+	return (
+		statement?.membership?.access === Access.openToAll ||
+		(statement?.membership?.access === Access.openForRegistered && creator.isAnonymous === false)
+	);
 }
 
-function isOpenToAll(statement: Statement, role?: Role) {
-	return role !== Role.banned && statement?.membership?.access === Access.openToAll;
-}
-
-function isOpenToRegistered(statement: Statement, creator: Creator, role: Role) {
-	return role !== Role.banned && statement?.membership?.access === Access.openForRegistered && creator.isAnonymous === false;
-}
-
-function isModeratedGroup(statement: Statement, role?: Role) {
+function isModeratedGroup(
+	statement: Statement,
+	role?: Role
+): boolean {
 	return role !== Role.banned && statement?.membership?.access === Access.moderated;
 }
