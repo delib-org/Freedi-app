@@ -5,6 +5,7 @@ import { Link } from 'react-router';
 
 const WaitingPage = () => {
 	const { t } = useUserConfig()
+
 	return (
 		<div className={`page ${styles.wait}`}>
 			<div className={styles.wrapper}>

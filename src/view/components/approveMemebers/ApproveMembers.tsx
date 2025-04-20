@@ -1,7 +1,12 @@
+import { useApproveMembership } from "./ApproveMembersVM";
 
 const ApproveMembers = () => {
+	useApproveMembership();
+
 	return (
-		<div>ApproveMembers</div>
+		<div>
+			Approve memberships
+		</div>
 	)
 }
 
