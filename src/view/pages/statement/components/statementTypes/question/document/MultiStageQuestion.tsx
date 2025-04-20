@@ -40,6 +40,7 @@ const MultiStageQuestion: FC = () => {
 				.sort((a, b) => (a.order ?? 0) - (b.order ?? 0)),
 		[statementsFromStore]
 	);
+	console.log(initialStages);
 
 	const [showAddStage, setShowAddStage] = useState<boolean>(false);
 	const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
@@ -98,6 +99,7 @@ const MultiStageQuestion: FC = () => {
 			)}
 
 			<div className={styles.stagesWrapper}>
+				<MultiStageQuestionsBar />
 				<h2 className={styles.title}>
 					{t('Document')}: {statement.statement}
 				</h2>
@@ -126,11 +128,11 @@ const MultiStageQuestion: FC = () => {
 					<div
 						className={styles.ghostItem}
 						style={{
-						top: `${draggedItem.y}px`,
-						position: "absolute",
-						transform: "translateX(-20%)",
-						opacity: 0.5,
-						pointerEvents: "none",
+							top: `${draggedItem.y}px`,
+							position: "absolute",
+							transform: "translateX(-20%)",
+							opacity: 0.5,
+							pointerEvents: "none",
 						}}
 					>
 						<StageCard statement={initialStages[draggedItem.index]} />
