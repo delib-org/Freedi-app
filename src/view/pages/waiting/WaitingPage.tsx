@@ -1,6 +1,6 @@
 import { useUserConfig } from '@/controllers/hooks/useUserConfig'
-import BalloonsImage from '@/assets/images/ballons.png'
-import styles from './WatingPage.module.scss';
+import BalloonsImage from '@/assets/images/balloons.png'
+import styles from './WaitingPage.module.scss';
 import { Link } from 'react-router';
 
 const WaitingPage = () => {
