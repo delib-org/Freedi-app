@@ -19,8 +19,8 @@ import StageCard from './stages/StageCard';
 import { updateStatementsOrderToDB } from '@/controllers/db/statements/setStatements';
 import { Statement, StatementType } from 'delib-npm';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
-import MultiStageQuestionsBar from '../../../multiStageQuestionsBar/MultiStageQuestionsBar';
 import StagePage from '../../stage/StagePage';
+import MultiStageQuestionsBar from '../../../multiStageQuestionsBar/MultiStageQuestionsBar';
 
 const MultiStageQuestion: FC = () => {
 	const { statement } = useContext(StatementContext);
@@ -30,6 +30,7 @@ const MultiStageQuestion: FC = () => {
 		statementSubsSelector(statement?.statementId)
 	);
 
+	// By categorizing statement types, we can selectively provide data to the bar component via props, optimizing its rendering to show only the required information.
 	const initialStages = useMemo(
 		() =>
 			statementsFromStore
@@ -40,7 +41,6 @@ const MultiStageQuestion: FC = () => {
 				.sort((a, b) => (a.order ?? 0) - (b.order ?? 0)),
 		[statementsFromStore]
 	);
-	console.log(initialStages);
 
 	const [showAddStage, setShowAddStage] = useState<boolean>(false);
 	const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
@@ -97,103 +97,62 @@ const MultiStageQuestion: FC = () => {
 					<AddStage setShowAddStage={setShowAddStage} />
 				</Modal>
 			)}
-
 			<div className={styles.stagesWrapper}>
-				<MultiStageQuestionsBar />
-				<h2 className={styles.title}>
-					{t('Document')}: {statement.statement}
-				</h2>
-				<div className={styles.description}>
-					{statement?.description}
+				<MultiStageQuestionsBar questions voting />
+				<div className={`btns ${styles['add-stage']}`}>
+					<Button
+						text={t('Add sub-question')}
+						type='button'
+						buttonType={ButtonType.PRIMARY}
+						onClick={() => setShowAddStage(true)}
+					/>
 				</div>
-				{initialStages.map((stage, index) => (
-					<div
-						key={stage.statementId}
-						className={`${styles.stageContainer} ${draggedIndex === index ? styles.dragging : ''}`}
-						draggable
-						onDragStart={(e) => handleDragStart(e, index)}
-						onDragOver={(e) => handleDragOver(e)}
-						onDrop={(e) => handleDrop(e, index)}
-						onDragEnd={handleDragEnd}
-						aria-label={`Draggable stage ${index + 1}`}
-					>
-						<div
-							className={styles.dragHandle}
-							aria-hidden='true'
-						></div>
-						<StageCard statement={stage} />
-					</div>
-				))}
-				{draggedItem && (
-					<div
-						className={styles.ghostItem}
-						style={{
-							top: `${draggedItem.y}px`,
-							position: "absolute",
-							transform: "translateX(-20%)",
-							opacity: 0.5,
-							pointerEvents: "none",
-						}}
-					>
-						<StageCard statement={initialStages[draggedItem.index]} />
-					</div>
-				)}
-				<StageCard statement={statement} isSuggestions={true} />
-			</div>
-			<div className={`btns ${styles['add-stage']}`}>
-				<Button
-					text={t('Add sub-question')}
-					type='button'
-					buttonType={ButtonType.PRIMARY}
-					onClick={() => setShowAddStage(true)}
-				/>
-			</div>
-			{initialStages.length === 0 ? (
-				<StagePage />) :
-				(
-					<div className={styles.stagesWrapper}>
-						<h2 className={styles.title}>
-							{t('Document')}: {statement.statement}
-						</h2>
-						<div className={styles.description}>
-							{statement?.description}
-						</div>
-						{initialStages.map((stage, index) => (
-							<div
-								key={stage.statementId}
-								className={`${styles.stageContainer} ${draggedIndex === index ? styles.dragging : ''}`}
-								draggable
-								onDragStart={(e) => handleDragStart(e, index)}
-								onDragOver={(e) => handleDragOver(e)}
-								onDrop={(e) => handleDrop(e, index)}
-								onDragEnd={handleDragEnd}
-								aria-label={`Draggable stage ${index + 1}`}
-							>
+				{initialStages.length === 0 ? (
+					<StagePage />) :
+					(
+						<div className={styles.stagesWrapper}>
+							<h2 className={styles.title}>
+								{t('Document')}: {statement.statement}
+							</h2>
+							<div className={styles.description}>
+								{statement?.description}
+							</div>
+							{initialStages.map((stage, index) => (
 								<div
-									className={styles.dragHandle}
-									aria-hidden='true'
-								></div>
-								<StageCard statement={stage} />
-							</div>
-						))}
-						{draggedItem && (
-							<div
-								className={styles.ghostItem}
-								style={{
-									top: `${draggedItem.y}px`,
-									position: "absolute",
-									transform: "translateX(-20%)",
-									opacity: 0.5,
-									pointerEvents: "none",
-								}}
-							>
-								<StageCard statement={initialStages[draggedItem.index]} />
-							</div>
-						)}
-						<StageCard statement={statement} isSuggestions={true} />
-					</div>
-				)}
-
+									key={stage.statementId}
+									className={`${styles.stageContainer} ${draggedIndex === index ? styles.dragging : ''}`}
+									draggable
+									onDragStart={(e) => handleDragStart(e, index)}
+									onDragOver={(e) => handleDragOver(e)}
+									onDrop={(e) => handleDrop(e, index)}
+									onDragEnd={handleDragEnd}
+									aria-label={`Draggable stage ${index + 1}`}
+								>
+									<div
+										className={styles.dragHandle}
+										aria-hidden='true'
+									></div>
+									<StageCard statement={stage} />
+								</div>
+							))}
+							{draggedItem && (
+								<div
+									className={styles.ghostItem}
+									style={{
+										top: `${draggedItem.y}px`,
+										position: "absolute",
+										transform: "translateX(-20%)",
+										opacity: 0.5,
+										pointerEvents: "none",
+									}}
+								>
+									<StageCard statement={initialStages[draggedItem.index]} />
+								</div>
+							)}
+							<StageCard statement={statement} isSuggestions={true} />
+						</div>
+					)}
+			</div>
 		</>
 	);
 };
