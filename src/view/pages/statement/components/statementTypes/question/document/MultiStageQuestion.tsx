@@ -1,34 +1,45 @@
 import {
-	DragEvent,
 	FC,
 	useContext,
 	useState,
 	useMemo,
+	useRef,
 } from 'react';
 import { StatementContext } from '../../../../StatementCont';
 import styles from './MultiStageQuestion.module.scss';
 import Button, { ButtonType } from '@/view/components/buttons/button/Button';
 import Modal from '@/view/components/modal/Modal';
 import AddStage from './addStage/AddStage';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import {
-	setStatements,
 	statementSubsSelector,
 } from '@/redux/statements/statementsSlice';
-import StageCard from './stages/StageCard';
-import { updateStatementsOrderToDB } from '@/controllers/db/statements/setStatements';
 import { Statement, StatementType } from 'delib-npm';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import StagePage from '../../stage/StagePage';
 import MultiStageQuestionsBar from '../../../multiStageQuestionsBar/MultiStageQuestionsBar';
+import StageList from './stages/StageList';
 
 const MultiStageQuestion: FC = () => {
 	const { statement } = useContext(StatementContext);
 	const { t } = useUserConfig();
-	const dispatch = useDispatch();
 	const statementsFromStore = useSelector(
 		statementSubsSelector(statement?.statementId)
 	);
+
+	const infoRef = useRef<HTMLDivElement | null>(null);
+	const questionsRef = useRef<HTMLDivElement | null>(null);
+	const suggestionsRef = useRef<HTMLDivElement | null>(null);
+	const votingRef = useRef<HTMLDivElement | null>(null);
+	const summaryRef = useRef<HTMLDivElement | null>(null);
+
+	// const sectionRefs = {
+	// 	info: infoRef,
+	// 	questions: questionsRef,
+	// 	suggestions: suggestionsRef,
+	// 	voting: votingRef,
+	// 	summary: summaryRef,
+	// };
 
 	// By categorizing statement types, we can selectively provide data to the bar component via props, optimizing its rendering to show only the required information.
 	const initialStages = useMemo(
@@ -43,52 +54,6 @@ const MultiStageQuestion: FC = () => {
 	);
 
 	const [showAddStage, setShowAddStage] = useState<boolean>(false);
-	const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
-	const [draggedItem, setDraggedItem] = useState<null | { index: number; indexOffset: number; y: number }>(null);
-
-	const handleDragStart = (
-		e: DragEvent<HTMLDivElement>,
-		index: number
-	): void => {
-		setDraggedIndex(index);
-		const topOfTarget = e.currentTarget.getBoundingClientRect().top
-		setDraggedItem({
-			index,
-			indexOffset: e.clientY - topOfTarget,
-			y: topOfTarget
-		});
-	};
-
-	const handleDragOver = (e: DragEvent<HTMLDivElement>): void => {
-		e.preventDefault();
-		if (draggedItem) {
-			setDraggedItem((prev) => prev ? { ...prev, y: e.clientY - draggedItem.indexOffset } : null);
-		}
-	};
-
-	const handleDrop = (
-		e: DragEvent<HTMLDivElement>,
-		dropIndex: number
-	): void => {
-		e.preventDefault();
-		if (draggedIndex === null || draggedIndex === dropIndex) return;
-		const newStages = [...initialStages];
-		const draggedStage = newStages[draggedIndex];
-		newStages.splice(draggedIndex, 1);
-		newStages.splice(dropIndex, 0, draggedStage);
-
-		newStages.forEach((stage, index) => {
-			stage.order = index;
-		});
-		updateStatementsOrderToDB(newStages);
-
-		dispatch(setStatements(newStages));
-	};
-
-	const handleDragEnd = (): void => {
-		setDraggedItem(null);
-		setDraggedIndex(null);
-	};
 
 	return (
 		<>
@@ -98,7 +63,7 @@ const MultiStageQuestion: FC = () => {
 				</Modal>
 			)}
 			<div className={styles.stagesWrapper}>
-				<MultiStageQuestionsBar questions voting />
+				<MultiStageQuestionsBar questions voting suggestions summary />
 				<div className={`btns ${styles['add-stage']}`}>
 					<Button
 						text={t('Add sub-question')}
@@ -117,39 +82,11 @@ const MultiStageQuestion: FC = () => {
 							<div className={styles.description}>
 								{statement?.description}
 							</div>
-							{initialStages.map((stage, index) => (
-								<div
-									key={stage.statementId}
-									className={`${styles.stageContainer} ${draggedIndex === index ? styles.dragging : ''}`}
-									draggable
-									onDragStart={(e) => handleDragStart(e, index)}
-									onDragOver={(e) => handleDragOver(e)}
-									onDrop={(e) => handleDrop(e, index)}
-									onDragEnd={handleDragEnd}
-									aria-label={`Draggable stage ${index + 1}`}
-								>
-									<div
-										className={styles.dragHandle}
-										aria-hidden='true'
-									></div>
-									<StageCard statement={stage} />
-								</div>
-							))}
-							{draggedItem && (
-								<div
-									className={styles.ghostItem}
-									style={{
-										top: `${draggedItem.y}px`,
-										position: "absolute",
-										transform: "translateX(-20%)",
-										opacity: 0.5,
-										pointerEvents: "none",
-									}}
-								>
-									<StageCard statement={initialStages[draggedItem.index]} />
-								</div>
-							)}
-							<StageCard statement={statement} isSuggestions={true} />
+							<div ref={infoRef} id="info"><StageList imageType='info' statements={[statement]} isSuggestions /></div>
+							<div ref={questionsRef} id="questions"><StageList imageType='questions' statements={initialStages} /></div>
+							<div ref={suggestionsRef} id="suggestions"><StageList imageType='suggestions' statements={initialStages} /></div>
+							<div ref={votingRef} id="voting"><StageList imageType='voting' statements={initialStages} /></div>
+							<div ref={summaryRef} id="summary"><StageList imageType='summary' statements={initialStages} /></div>
 						</div>
 					)}
 			</div>
