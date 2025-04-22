@@ -101,8 +101,11 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 				</div>
 			);
 
+		console.log(statement)
+
 		return (
-			<>
+
+			<div className="wrapper">
 				<form
 					onSubmit={handleSubmit}
 					className='statement-settings-form'
@@ -127,13 +130,13 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 						{t('Save')}
 					</button>
 				</form>
-				<MembershipSettings statement={statement} />
+
+				<MembershipSettings statement={statement} setStatementToEdit={setStatementToEdit} />
 				<SectionTitle title={t('General Settings')} />
 				<section className='switches-area'>
 					<AdvancedSettings {...statementSettingsProps} />
 				</section>
 				<ChoseBySettings {...statementSettingsProps} />
-
 
 				{!isNewStatement && (
 					<>
@@ -156,8 +159,8 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 						</section>
 					</>
 				)}
+			</div>
 
-			</>
 		);
 	} catch (error) {
 		console.error(error);

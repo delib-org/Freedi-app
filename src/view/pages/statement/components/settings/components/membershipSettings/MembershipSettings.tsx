@@ -8,9 +8,10 @@ import { setStatementMembership } from '@/controllers/db/statements/setStatement
 
 interface Props {
 	statement: Statement;
+	setStatementToEdit: (statement: Statement) => void;
 }
 
-const MembershipSettings: FC<Props> = ({ statement }) => {
+const MembershipSettings: FC<Props> = ({ statement, setStatementToEdit }) => {
 	const { t } = useUserConfig();
 
 	const [membershipAccess, setMembershipAccess] = useState<Access>(statement?.membership?.access ?? Access.openToAll);
@@ -46,7 +47,18 @@ const MembershipSettings: FC<Props> = ({ statement }) => {
 				currentValue={membershipAccess}
 				onClick={(newValues) => {
 					setMembershipAccess(newValues as Access)
-					setStatementMembership({ statement, membershipAccess: newValues as Access })
+					//in case of a new statement, we need to set the membership access in the statement object
+					if (statement.statementId === "") {
+						setStatementToEdit({
+							...statement,
+							membership: {
+								...statement.membership,
+								access: newValues as Access
+							}
+						})
+					} else {
+						setStatementMembership({ statement, membershipAccess: newValues as Access })
+					}
 				}}
 			/>
 		</div>
