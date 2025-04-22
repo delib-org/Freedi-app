@@ -1,5 +1,10 @@
 .approveMembers {
 	position: relative;
+	color: white;
+
+	.toggleButton {
+		color: white;
+	}
 
 	.membersList {
 		position: absolute;
@@ -15,12 +20,13 @@
 		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 		/* Add shadow for depth */
 		color: black;
+
 	}
 
 	.rtl {
 
-		right: 0px;
-		left: auto;
+		left: 0px;
+		right: auto;
 
 
 	}

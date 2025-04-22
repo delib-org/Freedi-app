@@ -15,8 +15,9 @@ export const statementsSlicer = createSlice({
 	initialState,
 	reducers: {
 		setWaitingMember: (state, action: PayloadAction<WaitingMember>) => {
+			console.log("first waiting list", action.payload.user.displayName)
 			const newWaitingMember = action.payload as WaitingMember;
-			const existingWaitingMember = state.waitingList.find((waiting) => waiting.statementId === newWaitingMember.statementId);
+			const existingWaitingMember = state.waitingList.find((waiting) => waiting.statementsSubscribeId === newWaitingMember.statementsSubscribeId);
 			if (existingWaitingMember) {
 				// Update the existing waiting list item with the new data
 				Object.assign(existingWaitingMember, newWaitingMember);

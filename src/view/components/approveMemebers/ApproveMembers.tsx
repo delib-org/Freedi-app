@@ -3,11 +3,14 @@ import { useApproveMembership } from "./ApproveMembersVM";
 import MembersIcon from "@/assets/icons/group.svg?react";
 import styles from "./ApproveMembers.module.scss";
 import { useUserConfig } from "@/controllers/hooks/useUserConfig";
+import ApproveMember from "./approveMember/ApproveMember";
 
 const ApproveMembers = () => {
 	const { waitingList } = useApproveMembership();
-	const { dir } = useUserConfig();
+	const { dir, t } = useUserConfig();
 	const [show, setShow] = useState(false);
+
+	console.log(waitingList)
 
 	return (
 		<div className={styles.approveMembers}>
@@ -16,9 +19,9 @@ const ApproveMembers = () => {
 			</button>
 			{show && waitingList.length > 0 && (
 				<div className={`${styles.membersList} ${dir === "rtl" ? styles.rtl : ""}`}>
-					<h3>Waiting List</h3>
+					<h3>{t("Waiting List")}</h3>
 					{waitingList.map(member => (
-						<div key={member.userId}>{member.user.displayName}</div>
+						<ApproveMember key={member.userId} wait={member} />
 					))}
 				</div>
 			)}

@@ -90,13 +90,14 @@ export default function HomeHeader() {
 			<div className='homePage__header__wrapper'>
 				<h1 className='homePage__header__wrapper__title'>FreeDi</h1>
 				<NotificationBtn />
+				<ApproveMembers />
 				<div className='homePage__header__wrapper__icons'>
 					{isInstallable && (
 						<IconButton onClick={handleInstallApp}>
 							<InstallIcon />
 						</IconButton>
 					)}
-					<ApproveMembers />
+
 					<Menu
 						isMenuOpen={isHomeMenuOpen}
 						setIsOpen={setIsHomeMenuOpen}
