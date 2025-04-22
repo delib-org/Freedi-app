@@ -1,34 +1,35 @@
 import { listenToWaitingForMembership } from "@/controllers/db/membership/getMembership";
+import { creatorSelector } from "@/redux/creator/creatorSlice";
+import { selectWaitingMember } from "@/redux/subscriptions/subscriptionsSlice";
 import { Unsubscribe } from "firebase/firestore";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
+import { useSelector } from "react-redux";
 
 export function useApproveMembership() {
+	const user = useSelector(creatorSelector);
+	const waitingListFromStore = useSelector(selectWaitingMember)
+	const waitingList = useMemo(() => waitingListFromStore, [waitingListFromStore]);
+	const userId = user?.uid;
 	try {
 
 		useEffect(() => {
-			console.log("first useApproveMembership");
-			let isMounted = true;
-			let unsubscribeFunctions: Unsubscribe[] = [];
 
-			listenToWaitingForMembership()
-				.then(unsubscribes => {
-					if (isMounted) {
-						unsubscribeFunctions = unsubscribes;
-					} else {
-						// Component already unmounted, clean up immediately
-						unsubscribes.forEach(unsubscribe => unsubscribe());
-					}
-				})
-				.catch(error => {
-					console.error("Error in useEffect:", error);
-				});
+			let unsubscribe: Unsubscribe | undefined = undefined;
+
+			if (!userId) return;
+
+			unsubscribe = listenToWaitingForMembership();
 
 			// This is the actual cleanup function for useEffect
 			return () => {
-				isMounted = false;
-				unsubscribeFunctions.forEach(unsubscribe => unsubscribe());
+
+				if (unsubscribe) {
+					unsubscribe();
+				}
 			};
-		}, []);
+		}, [userId]);
+
+		return { waitingList }
 
 	} catch (error) {
 		// Handle error appropriately, e.g., log it or rethrow it

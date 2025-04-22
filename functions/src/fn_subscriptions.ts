@@ -1,19 +1,16 @@
 import { Change, logger } from 'firebase-functions';
 import { Collections, Role, Statement, StatementSchema, StatementSubscription, StatementSubscriptionSchema, createSubscription, getRandomUID, getStatementSubscriptionId, statementToSimpleStatement } from 'delib-npm';
-import { DocumentSnapshot } from 'firebase-admin/firestore';
-import { FirestoreEvent } from 'firebase-functions/firestore';
 import { parse } from 'valibot';
 import { db } from '.';
-import { QueryDocumentSnapshot } from 'firebase-functions/v1/firestore';
+import { DocumentSnapshot, QueryDocumentSnapshot } from 'firebase-functions/v1/firestore';
+import { FirestoreEvent } from 'firebase-functions/firestore';
 
-export async function onNewSubscription(event: any) {
+export async function onNewSubscription(event: FirestoreEvent<DocumentSnapshot | undefined>) {
 	try {
 		const snapshot = event.data as DocumentSnapshot | undefined;
 		if (!snapshot) throw new Error('No snapshot found in onNewSubscription');
 
 		const subscription = parse(StatementSubscriptionSchema, snapshot.data()) as StatementSubscription;
-
-		console.log("subscription:", subscription)
 
 		//if new subscription role is waiting, then update the collection waitingForApproval
 		const role = subscription.role;

@@ -30,12 +30,10 @@ export const useAuthorization = (statementId?: string): AuthorizationState => {
 	const creator = useSelector(creatorSelector);
 	const role = statementSubscription?.role;
 
-	console.log(role, statement?.membership?.access)
-
 	// Set up subscription listener
 	useEffect(() => {
 		if (!statementId || !creator?.uid) return;
-		console.log("listenToStatementSubscription")
+
 		const unsubscribe = listenToStatementSubscription(statementId, creator);
 
 		return () => unsubscribe();
@@ -47,7 +45,6 @@ export const useAuthorization = (statementId?: string): AuthorizationState => {
 
 		// If we're waiting for subscription data and still loading
 		// if (!statementSubscription && authState.loading) {
-		// 	console.log("If we're waiting for subscription data and still loading")
 
 		// 	return;
 		// }
@@ -68,7 +65,7 @@ export const useAuthorization = (statementId?: string): AuthorizationState => {
 
 		// Case 2: User is waiting for approval
 		if (role === Role.waiting) {
-			console.log("waiting for approval")
+
 			setAuthState({
 				isAuthorized: false,
 				loading: false,
@@ -83,7 +80,7 @@ export const useAuthorization = (statementId?: string): AuthorizationState => {
 
 		// Case 3: Open group - auto-subscribe as member
 		if (isOpenAccess(statement, creator, role)) {
-			console.log("open group - auto-subscribe as member")
+
 			setStatementSubscriptionToDB({
 				statement,
 				creator,
@@ -104,7 +101,7 @@ export const useAuthorization = (statementId?: string): AuthorizationState => {
 
 		// Case 4: Moderated group - subscribe as waiting
 		if (isModeratedGroup(statement, role)) {
-			console.log("moderated group - subscribe as waiting")
+
 			setStatementSubscriptionToDB({
 				statement,
 				creator,

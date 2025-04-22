@@ -1,0 +1,27 @@
+.approveMembers {
+	position: relative;
+
+	.membersList {
+		position: absolute;
+		right: 0px;
+		text-align: start;
+		background-color: white;
+		border: 1px solid #ccc;
+		z-index: 10;
+		padding: 10px;
+		/* Add padding for better spacing */
+		border-radius: 5px;
+		/* Add border radius for rounded corners */
+		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+		/* Add shadow for depth */
+		color: black;
+	}
+
+	.rtl {
+
+		right: 0px;
+		left: auto;
+
+
+	}
+}
