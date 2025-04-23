@@ -42,9 +42,8 @@
 		white-space: nowrap; // Prevent text wrapping
 		overflow: hidden; // Hide overflow
 		text-overflow: ellipsis; // Add ellipsis for very long names
-		min-width: 0; // Allow flexbox to shrink this element if needed
-		flex: 1; // Allow it to take available space
 
+		min-width: 15ch;
 	}
 
 	.buttons {

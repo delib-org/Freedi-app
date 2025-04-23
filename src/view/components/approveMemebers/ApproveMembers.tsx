@@ -10,13 +10,15 @@ const ApproveMembers = () => {
 	const { dir, t } = useUserConfig();
 	const [show, setShow] = useState(false);
 
-	console.log(waitingList)
+	const numberMembers = waitingList.length;
+	if (numberMembers === 0) return null; // Don't render if there are no members
 
 	return (
 		<div className={styles.approveMembers}>
 			<button onClick={() => setShow(!show)} className={styles.toggleButton}> {/* Add toggle functionality */}
 				<MembersIcon />
-			</button>
+				<div className={`notificationsCircle ${styles.notification}`}>{numberMembers}</div>
+			</button >
 			{show && waitingList.length > 0 && (
 				<div className={`${styles.membersList} ${dir === "rtl" ? styles.rtl : ""}`}>
 					<h3>{t("Waiting List")}</h3>
@@ -25,7 +27,7 @@ const ApproveMembers = () => {
 					))}
 				</div>
 			)}
-		</div>
+		</div >
 	)
 }
 

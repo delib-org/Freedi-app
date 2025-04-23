@@ -175,6 +175,25 @@ service cloud.firestore {
 
     }
 
+	match /awaitingUsers/{documentId} {
+		function isAdminForStatement() {
+			let waitingMember = resource.data;
+			let statementId = waitingMember.statementId;
+			let subId = string(request.auth.uid) + '--' + cleanPath(string(statementId));
+			let subscription = get(/databases/$(database)/documents/statementsSubscribe/$(subId)).data;
+			return subscription != null && subscription.role == 'admin';
+		}
+
+		// Only allow reading if user is an admin for the statement
+		allow read: if request.auth != null && isAdminForStatement();
+		
+		// Only allow deletion if user is an admin for the statement
+		allow delete: if request.auth != null && isAdminForStatement();
+		
+		// Deny all other operations
+		allow create, update: if false;
+	}
+
      match /timers-settings/{timerIdx=**}{
       allow read: if request.auth.uid != null;
       allow write: if request.auth.uid != null;
@@ -242,6 +261,8 @@ service cloud.firestore {
         allow read: if request.auth.uid != null;
         allow write: if request.auth.uid != null;
       }
+
+
 
        match /usersData/{userId=**}{
         allow read: if request.auth.uid != null;

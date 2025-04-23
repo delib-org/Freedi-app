@@ -4,6 +4,12 @@
 
 	.toggleButton {
 		color: white;
+
+		.notification {
+			position: absolute;
+			top: -15px;
+			left: -15px;
+		}
 	}
 
 	.membersList {
