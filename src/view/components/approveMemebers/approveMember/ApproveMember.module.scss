@@ -5,7 +5,7 @@
 	width: fit-content;
 	display: flex;
 	align-items: center; // Add this to vertically align items
-	max-width: 100%; // Ensure it doesn't overflow its parent
+	width: 100%; // Ensure it doesn't overflow its parent
 	border-radius: 5px; // Optional for consistent styling with buttons
 
 	@media screen and (max-width: 768px) {

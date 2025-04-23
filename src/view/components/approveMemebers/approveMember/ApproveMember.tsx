@@ -13,7 +13,7 @@ const ApproveMember: FC<Props> = ({ wait }) => {
 	return (
 		<div className={styles.memberDisplay}>
 			<div className={styles.memberName}>{wait.user.displayName}</div>
-			<span className={styles.inGroup}>{t("in group")}</span>
+			<span className={styles.inGroup}>{t("in")}</span>
 			<div className={styles.statement}>{wait.statement.statement}</div>
 			<div className={styles.buttons}>
 				<button className={styles.approveButton}>
