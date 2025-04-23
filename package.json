@@ -34,7 +34,8 @@
 	},
 	"dependencies": {
 		"@reduxjs/toolkit": "^1.9.5",
-		"delib-npm": "^5.5.36",
+		"delib-npm": "^5.5.44",
+		"esbuild": "0.25.2",
 		"firebase": "^11.0.2",
 		"lucide-react": "^0.474.0",
 		"react": "^18.2.0",

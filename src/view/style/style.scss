@@ -765,3 +765,15 @@ p {
 		color: inherit;
 	}
 }
+
+.notificationsCircle {
+	width: 1.4rem;
+	height: 1.4rem;
+	border-radius: 2rem;
+	background-color: var(--icons-blue-dark);
+	color: white;
+	z-index: 1000;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}

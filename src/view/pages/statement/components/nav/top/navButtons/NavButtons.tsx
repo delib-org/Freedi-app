@@ -13,6 +13,9 @@ import styles from '../StatementTopNav.module.scss';
 import { StatementType, Statement } from 'delib-npm';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import NotificationSubscriptionButton from '@/view/components/notifications/NotificationSubscriptionButton';
+import ApproveMembers from '@/view/components/approveMemebers/ApproveMembers';
+import { useSelector } from 'react-redux';
+import { statementSubscriptionSelector } from '@/redux/statements/statementsSlice';
 
 interface NavButtonsProps {
 	parentStatement?: Statement;
@@ -33,6 +36,9 @@ function NavButtons({
 }: Readonly<NavButtonsProps>) {
 	const { t } = useUserConfig();
 	const [openViews, setOpenViews] = useState(true);
+	const subscription = useSelector(statementSubscriptionSelector(statement?.statementId));
+	const role = subscription?.role;
+	const isAdmin = role === 'admin';
 
 	useEffect(() => {
 		setOpenViews(false);
@@ -66,7 +72,8 @@ function NavButtons({
 			{statement && (
 				<NotificationSubscriptionButton statementId={statement.statementId} />
 			)}
-			<button className={styles.views} onClick={handleView}>
+			{isAdmin && <ApproveMembers />}
+			<div className={`${styles.views} ${styles.button}`} onClick={handleView} role='button'>
 				<NavIcon
 					statement={statement}
 					screen={screen}
@@ -86,7 +93,7 @@ function NavButtons({
 						/>
 					</div>
 				)}
-			</button>
+			</div>
 			{allowNavigation && (
 				<button className={styles.home}>
 					<HomeButton headerColor={headerStyle} />
