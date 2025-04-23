@@ -9,10 +9,8 @@ interface Props {
 
 export async function setStatementMembership({ statement, membershipAccess }: Props): Promise<void> {
 	try {
-		if (!statement) {
-			console.warn('No statement provided for membership update.');
-			return;
-		};
+		if (!statement) return;
+
 		const statementRef = doc(DB, Collections.statements, statement.statementId);
 		updateDoc(statementRef, {
 			membership: {

@@ -3,7 +3,6 @@ import SectionTitle from '../sectionTitle/SectionTitle'
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import { Access, Statement } from 'delib-npm';
 import MultiSwitch from '@/view/components/switch/multiSwitch/MultiSwitch';
-import { updateStatement } from '@/controllers/db/statements/setStatements';
 import { setStatementMembership } from '@/controllers/db/statements/setStatementMembership';
 
 interface Props {
@@ -37,11 +36,6 @@ const MembershipSettings: FC<Props> = ({ statement, setStatementToEdit }) => {
 						label: t('Moderated'),
 						toolTip: t('Only approved members can join the group'),
 						value: Access.moderated,
-					},
-					{
-						label: t('Secret'),
-						toolTip: t('Only the creator can add members'),
-						value: Access.secret,
 					}
 				]}
 				currentValue={membershipAccess}

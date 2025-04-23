@@ -1,4 +1,4 @@
-import { StatementSubscription, Statement, Role, Screen, Access } from 'delib-npm';
+import { StatementSubscription, Statement, Role, Screen } from 'delib-npm';
 import { useAuthentication } from '../hooks/useAuthentication';
 import { EnhancedEvaluationThumb } from '@/view/pages/statement/components/evaluations/components/evaluation/enhancedEvaluation/EnhancedEvaluationModel';
 
@@ -12,22 +12,14 @@ export function isAuthorized(
 		if (!statement) throw new Error('No statement');
 
 		const { user } = useAuthentication();
-		if (statement.membership.access === Access.close && !user?.uid) return true
-		else if (user?.uid) {
+		if (!user) return false;
 
-			if (statement.creator?.uid === user.uid) return true;
+		if (isUserCreator(user.uid, statement, parentStatementCreatorId, statementSubscription)) {
+			return true;
+		}
 
-			if (parentStatementCreatorId === user.uid) return true;
-
-			if (!statementSubscription) return false;
-
-			const role = statementSubscription?.role;
-
-			if (role === Role.admin) {
-				return true;
-			}
-
-			if (authorizedRoles?.includes(role)) return true;
+		if (statementSubscription && isUserAuthorizedByRole(statementSubscription.role, authorizedRoles)) {
+			return true;
 		}
 
 		return false;
@@ -36,6 +28,23 @@ export function isAuthorized(
 
 		return false;
 	}
+}
+
+function isUserCreator(
+	userId: string,
+	statement: Statement,
+	parentStatementCreatorId?: string,
+	statementSubscription?: StatementSubscription
+): boolean {
+	return (
+		statement.creator?.uid === userId ||
+		statement.creator?.uid === parentStatementCreatorId ||
+		statement.creator?.uid === statementSubscription?.userId
+	);
+}
+
+function isUserAuthorizedByRole(role: Role, authorizedRoles?: Array<Role>): boolean {
+	return role === Role.admin || (authorizedRoles?.includes(role) ?? false);
 }
 
 export function isAdmin(role: Role | undefined): boolean {

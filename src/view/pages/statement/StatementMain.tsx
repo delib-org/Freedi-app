@@ -234,8 +234,6 @@ export default function StatementMain() {
 		]
 	);
 
-	console.log("isWaitingForApproval", isWaitingForApproval, "isAuthorized", isAuthorized, "loading", loading, "isStatementNotFound", isStatementNotFound, "role", role, "statementId", statementId, "topParentStatement", topParentStatement?.statementId);
-
 	if (isStatementNotFound) return <Page404 />;
 	if (isWaitingForApproval || role === Role.waiting) return <h1>Waiting for approval</h1>
 	if (loading) return <LoadingPage />;

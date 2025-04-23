@@ -101,8 +101,6 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 				</div>
 			);
 
-		console.log(statement)
-
 		return (
 
 			<div className="wrapper">
