@@ -1,79 +1,61 @@
 import { Change, logger } from 'firebase-functions';
-import { addOrRemoveMemberFromStatementDB } from './fn_statementsMetaData';
-import { Collections, Role, Statement, StatementSchema, StatementSubscription, StatementSubscriptionSchema, createSubscription, getStatementSubscriptionId, isMember, statementToSimpleStatement } from 'delib-npm';
-import { DocumentSnapshot, QueryDocumentSnapshot } from 'firebase-admin/firestore';
-import { FirestoreEvent } from 'firebase-functions/firestore';
+import { Collections, Role, Statement, StatementSchema, StatementSubscription, StatementSubscriptionSchema, createSubscription, getRandomUID, getStatementSubscriptionId, statementToSimpleStatement } from 'delib-npm';
 import { parse } from 'valibot';
 import { db } from '.';
+import { DocumentSnapshot, QueryDocumentSnapshot } from 'firebase-functions/v1/firestore';
+import { FirestoreEvent } from 'firebase-functions/firestore';
 
-export async function updateStatementNumberOfMembers(
-	event: FirestoreEvent<
-		Change<DocumentSnapshot> | undefined,
-		{
-			subscriptionId: string;
-		}
-	>
-) {
-	if (!event.data) return;
+export async function onNewSubscription(event: FirestoreEvent<DocumentSnapshot | undefined>) {
 	try {
+		const snapshot = event.data as DocumentSnapshot | undefined;
+		if (!snapshot) throw new Error('No snapshot found in onNewSubscription');
 
-		const statementsSubscribeBefore = !event.data.before.exists ? undefined : parse(
-			StatementSubscriptionSchema,
-			event.data.before.data()
-		);
+		const subscription = parse(StatementSubscriptionSchema, snapshot.data()) as StatementSubscription;
 
-		const statementsSubscribeAfter = parse(
-			StatementSubscriptionSchema,
-			event.data.after.data()
-		);
+		//if new subscription role is waiting, then update the collection waitingForApproval
+		const role = subscription.role;
+		const subscriptionId = subscription.statementsSubscribeId;
+		if (!subscriptionId) throw new Error('No subscriptionId found');
+		if (role === Role.waiting) {
 
-		const roleBefore = statementsSubscribeBefore
-			? statementsSubscribeBefore.role
-			: undefined;
-		const roleAfter = statementsSubscribeAfter
-			? statementsSubscribeAfter.role
-			: undefined;
+			//get all admins of the top parent statement
+			const statement = parse(StatementSchema, subscription.statement);
+			const topParentId = statement.parentId === 'top' ? statement.statementId : statement.topParentId;
 
-		const eventType = getEventType(event);
-		if (eventType === 'update' && roleBefore === roleAfter) return;
+			const adminsDB = await db
+				.collection(Collections.statementsSubscribe)
+				.where('statementId', '==', topParentId)
+				.where('role', '==', Role.admin)
+				.get();
+			if (adminsDB.empty) throw new Error('No admins found');
+			if (adminsDB.docs.length === 0) throw new Error('No admins found');
 
-		const _isMemberAfter = isMember(roleAfter);
-		const _isMemberBefore = isMember(roleBefore);
-		const statementId: string =
-			statementsSubscribeBefore?.statementId ||
-			statementsSubscribeAfter?.statementId;
+			const adminsSubscriptions = adminsDB.docs.map((doc) =>
+				parse(StatementSubscriptionSchema, doc.data())
+			) as StatementSubscription[];
 
-		await addOrRemoveMemberFromStatementDB(
-			statementId,
-			eventType,
-			_isMemberAfter,
-			_isMemberBefore
-		);
+			// Update the collection awaitingUsers for each admin
+			const batch = db.batch();
 
-		//inner functions
-		function getEventType(
-			event: FirestoreEvent<
-				Change<DocumentSnapshot> | undefined,
-				{
-					subscriptionId: string;
+			const collectionRef = db.collection(Collections.awaitingUsers);
+
+			adminsSubscriptions.forEach((adminSub: StatementSubscription) => {
+
+				const adminRef = collectionRef.doc(getRandomUID());
+				const adminCall = {
+					...subscription,
+					adminId: adminSub.userId
 				}
-			>
-		): 'new' | 'update' | 'delete' {
-			if (!event.data) return 'delete';
+				batch.set(adminRef, adminCall);
+			});
+			await batch.commit();
 
-			const beforeSnapshot = event.data.before;
-			const afterSnapshot = event.data.after;
-
-			if (!beforeSnapshot.exists) {
-				return 'new';
-			} else if (!afterSnapshot.exists) {
-				return 'delete';
-			} else {
-				return 'update';
-			}
 		}
+
 	} catch (error) {
-		logger.error('error updating statement with number of members', error);
+		logger.error('Error onNewSubscription', error);
+
+		return;
 	}
 }
 

@@ -288,5 +288,17 @@
 	"Create a question": "יצירת שאלה",
 	"Create a statement": "יצירת אמירה",
 	"Question Title": "כותרת השאלה",
-	"Question Description": "תיאור השאלה"
+	"Question Description": "תיאור השאלה",
+	"Group Settings": "הגדרות קבוצה",
+	"Public": "ציבורי",
+	"Moderated": "דורש אישור מנהל/ת",
+	"Registered": "משתמשים  מחוברים",
+	"Open to all": "פתוח לכולם",
+	"Open for registered members": "פתוח למשתמשים מחוברים",
+	"Secret": "סודי",
+	"Open for approved members": "פתוח למשתמשים מאושרים",
+	"Membership Settings": "הגדרות חברות",
+	"Waiting List": "רשימת ממתינים",
+	"in": "ב",
+	"Are you sure you want to reject this member?": "האם אתה בטוח/ה שתרצה לדחות את הבקשה של חבר זה?"
 }
