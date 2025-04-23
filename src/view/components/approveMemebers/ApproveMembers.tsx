@@ -10,7 +10,7 @@ const ApproveMembers = () => {
 	const { dir, t } = useUserConfig();
 	const [show, setShow] = useState(false);
 
-	const numberMembers = waitingList.length;
+	const numberMembers = waitingList.length < 99 ? waitingList.length : "99+"; // Limit the number to 99+ if it exceeds 99
 	if (numberMembers === 0) return null; // Don't render if there are no members
 
 	return (

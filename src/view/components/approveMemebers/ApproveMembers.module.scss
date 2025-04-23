@@ -2,13 +2,15 @@
 	position: relative;
 	color: white;
 
+
 	.toggleButton {
 		color: white;
+		position: relative;
 
 		.notification {
 			position: absolute;
-			top: -15px;
-			left: -15px;
+			top: -10px;
+			left: -10px;
 		}
 	}
 
