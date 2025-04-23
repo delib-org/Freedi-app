@@ -25,8 +25,8 @@ const nodeStyle = (
 ) => {
 	const style = {
 		backgroundColor:
-			parentStatement === 'top'
-				? 'darkblue'
+			parentStatement === 'top' && !parentStatement
+				? ' #b893e7'
 				: statementColor.backgroundColor,
 		color: statementColor.color,
 		height: 40,
