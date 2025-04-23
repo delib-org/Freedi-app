@@ -52,6 +52,7 @@ const SolutionMenu: FC<Props> = ({
 			isMenuOpen={isCardMenuOpen}
 			iconColor='#5899E0'
 			isCardMenu={true}
+			isNavMenu={false}
 		>
 			{isAuthorized && (
 				<MenuOption
