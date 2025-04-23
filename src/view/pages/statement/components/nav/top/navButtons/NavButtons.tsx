@@ -36,7 +36,9 @@ function NavButtons({
 }: Readonly<NavButtonsProps>) {
 	const { t } = useUserConfig();
 	const [openViews, setOpenViews] = useState(true);
-	const subscription = useSelector(statementSubscriptionSelector(statement?.statementId));
+	const subscription = useSelector(
+		statementSubscriptionSelector(statement?.statementId)
+	);
 	const role = subscription?.role;
 	const isAdmin = role === 'admin';
 
@@ -44,6 +46,11 @@ function NavButtons({
 		setOpenViews(false);
 	}, [screen]);
 
+	useEffect(() => {
+		if (screen === 'view') {
+			setOpenViews(true);
+		}
+	}, [screen]);
 	function handleAgreementMap() {
 		handleNavigation('agreement-map');
 	}
@@ -70,10 +77,16 @@ function NavButtons({
 				/>
 			)}
 			{statement && (
-				<NotificationSubscriptionButton statementId={statement.statementId} />
+				<NotificationSubscriptionButton
+					statementId={statement.statementId}
+				/>
 			)}
 			{isAdmin && <ApproveMembers />}
-			<div className={`${styles.views} ${styles.button}`} onClick={handleView} role='button'>
+			<div
+				className={`${styles.views} ${styles.button}`}
+				onClick={handleView}
+				role='button'
+			>
 				<NavIcon
 					statement={statement}
 					screen={screen}
