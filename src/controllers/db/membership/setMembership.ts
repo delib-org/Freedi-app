@@ -1,13 +1,13 @@
 import { WaitingMember, WaitingMemberSchema, Collections, Role } from "delib-npm";
 import { parse } from "valibot";
 import { DB } from "../config";
-import { collection, deleteDoc, doc, getDocs, query, updateDoc, where, writeBatch } from "firebase/firestore";
+import { collection, doc, getDocs, query, updateDoc, where, writeBatch } from "firebase/firestore";
 
-export async function approveMembership(waitingMember: WaitingMember) {
+export async function approveMembership(waitingMember: WaitingMember, accept: boolean) {
 	try {
 		parse(WaitingMemberSchema, waitingMember);
 		const waitingMembersRef = doc(DB, Collections.statementsSubscribe, waitingMember.statementsSubscribeId);
-		await updateDoc(waitingMembersRef, { role: Role.member }); // Update the role to 'member' or whatever is appropriate
+		await updateDoc(waitingMembersRef, { role: accept ? Role.member : Role.banned }); // Update the role to 'member' or whatever is appropriate
 
 		//remove the waiting member from the waiting list
 		const waitingListRef = collection(DB, Collections.awaitingUsers);

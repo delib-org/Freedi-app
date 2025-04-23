@@ -1,5 +1,5 @@
 import { WaitingMember } from 'delib-npm'
-import { FC } from 'react'
+import { FC, useState } from 'react'
 import styles from './ApproveMember.module.scss'
 import { UserCheck, UserX } from 'lucide-react'
 import { useUserConfig } from '@/controllers/hooks/useUserConfig'
@@ -10,12 +10,22 @@ interface Props {
 }
 const ApproveMember: FC<Props> = ({ wait }) => {
 	const { t } = useUserConfig();
+	const [show, setShow] = useState(true);
 
 	function handleApprove() {
-		approveMembership(wait)
+		approveMembership(wait, true)
+		setShow(false)
 	}
 	function handleReject() {
-		console.log("reject")
+		const confirmReject = window.confirm(t("Are you sure you want to reject this member?"));
+		if (confirmReject) {
+			approveMembership(wait, false); // Call approveMembership with false to reject the member
+			setShow(false)
+		}
+	}
+
+	if (show === false) {
+		return null; // Don't render anything if show is false
 	}
 
 	return (
