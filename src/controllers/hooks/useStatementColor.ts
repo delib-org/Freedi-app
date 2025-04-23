@@ -21,18 +21,16 @@ export default function useStatementColor({
 	// Only run the effect when the `statement` is available
 	useEffect(() => {
 		if (!statement) return;
-
-		const { statementType, isChosen } = statement;
-
+		const { statementType, isChosen, isResult } = statement;
 		if (statementType === StatementType.group) {
 			setStyle({
 				backgroundColor: 'var(--group, #b893e7)', // Purple shade for group type
 				color: 'var(--group-text, #ffffff)', // Text color for group (white)
 			});
-		} else if (isChosen) {
+		} else if (isResult || isChosen) {
 			setStyle({
 				backgroundColor: 'var(--agree, #008000)', // Green for agreement
-				color: 'var(--header, #000000)', // Text color for chosen
+				color: 'var(--header, #000000)', // Text color for result
 			});
 		} else if (statementType === StatementType.option) {
 			setStyle({
