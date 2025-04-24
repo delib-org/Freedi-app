@@ -19,6 +19,8 @@ interface Props {
 const sectionIds = ['info', 'questions', 'suggestions', 'voting', 'summary'] as const;
 type SectionId = (typeof sectionIds)[number];
 
+const HEADER_OFFSET_FACTOR = 0.15;
+
 const MultiStageQuestionsBar: FC<Props> = ({
 	infoData,
 	questionsData = [],
@@ -30,6 +32,7 @@ const MultiStageQuestionsBar: FC<Props> = ({
 	const [activeSection, setActiveSection] = useState<SectionId>('info');
 	const manualScrollRef = useRef(false);
 	const timeoutRef = useRef<number | undefined>(undefined);
+	const targetSectionRef = useRef<SectionId | null>(null);
 
 	const hasInfo = !!infoData;
 	const hasQuestions = questionsData.length > 0;
@@ -60,6 +63,7 @@ const MultiStageQuestionsBar: FC<Props> = ({
 
 	const scrollToSection = (id: SectionId) => {
 		setActiveSection(id);
+		targetSectionRef.current = id;
 
 		manualScrollRef.current = true;
 
@@ -69,18 +73,42 @@ const MultiStageQuestionsBar: FC<Props> = ({
 
 		const section = document.getElementById(id);
 		if (section) {
-			section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+			section.scrollIntoView({ behavior: 'smooth' });
+
+			setTimeout(() => {
+				window.scrollBy({
+					top: -window.innerHeight * HEADER_OFFSET_FACTOR,
+					behavior: 'smooth'
+				});
+			}, 100);
 
 			timeoutRef.current = window.setTimeout(() => {
 				manualScrollRef.current = false;
-			}, 1000);
+				targetSectionRef.current = null;
+			}, 1200);
 		}
 	};
 
 	useEffect(() => {
 		const observer = new IntersectionObserver(
 			(entries) => {
-				if (manualScrollRef.current) return;
+				if (manualScrollRef.current) {
+					if (targetSectionRef.current) {
+						const targetEntry = entries.find(entry =>
+							entry.target.id === targetSectionRef.current && entry.isIntersecting);
+
+						if (targetEntry) {
+							manualScrollRef.current = false;
+							targetSectionRef.current = null;
+							if (timeoutRef.current !== undefined) {
+								window.clearTimeout(timeoutRef.current);
+								timeoutRef.current = undefined;
+							}
+						}
+					}
+
+					return;
+				}
 
 				const visibleEntries = entries.filter(entry => entry.isIntersecting);
 

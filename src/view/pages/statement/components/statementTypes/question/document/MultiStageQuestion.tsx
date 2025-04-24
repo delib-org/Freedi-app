@@ -45,11 +45,11 @@ const MultiStageQuestion: FC = () => {
 		[statementsFromStore]
 	);
 
-	const suggestionStatements = questionStatements
+	const suggestionStatements = [];
 
-	const votingStatements = questionStatements
+	const votingStatements = [];
 
-	const summaryStatements = questionStatements
+	const summaryStatements = [];
 
 	const [showAddStage, setShowAddStage] = useState<boolean>(false);
 

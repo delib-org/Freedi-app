@@ -7,6 +7,7 @@ import InfoIcon from '@/assets/icons/info.svg?react';
 import HandIcon from '@/assets/icons/navVoteIcon.svg?react';
 import FlagIcon from '@/assets/icons/flagIcon.svg?react';
 import QuestionIcon from '@/assets/icons/questionIcon.svg?react';
+import SmileSuggestionIcon from '@/assets/icons/smileSuggestionIcon.svg?react';
 import React from 'react';
 import styles from './StageList.module.scss';
 import { Statement } from 'delib-npm';
@@ -24,6 +25,14 @@ const imagesMap: Record<HeaderProps['imageType'], string> = {
 	summary: SummaryImage,
 };
 
+const iconsMap: Record<HeaderProps['imageType'], React.ElementType> = {
+	info: InfoIcon,
+	questions: QuestionIcon,
+	suggestions: SmileSuggestionIcon,
+	voting: HandIcon,
+	summary: FlagIcon,
+};
+
 type StageInfo = {
 	title: string;
 	description: string;
@@ -31,6 +40,7 @@ type StageInfo = {
 
 const HeaderStage: React.FC<HeaderProps> = ({ imageType, statement }) => {
 	const imageSrc = imagesMap[imageType];
+	const SelectedIcon = iconsMap[imageType];
 
 	const stageInfoMap: Record<HeaderProps['imageType'], StageInfo> = {
 		info: {
@@ -56,13 +66,16 @@ const HeaderStage: React.FC<HeaderProps> = ({ imageType, statement }) => {
 	};
 
 	return (
-		<div className={styles.description}>
+		<div className={styles.headerWrapper}>
 			<img src={imageSrc} alt={imageType} />
 			<header className={styles.stageHeader}>
 
 				<div className={styles.headerContent}>
-					<div className={styles.headerTitle}><InfoIcon />{stageInfoMap[imageType].title}</div>
-					<div style={{ display: 'flex', alignItems: 'center' }}>{stageInfoMap[imageType].description}</div>
+					<div className={styles.headerTitle}>
+						{SelectedIcon && <SelectedIcon className={styles.titleIcon} />}
+						{stageInfoMap[imageType].title}
+					</div>
+					<div className={styles.headerDescription}>{stageInfoMap[imageType].description}</div>
 				</div>
 			</header>
 		</div>

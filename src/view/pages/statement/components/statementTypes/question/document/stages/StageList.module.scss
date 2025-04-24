@@ -51,12 +51,12 @@ header {
 	}
 }
 
-.description {
+.headerWrapper {
 	font-size: 1.1rem;
 	font-weight: 400;
 	color: var(--text-body);
 	text-align: center;
-	padding-inline: 2rem;
+	margin: 2rem 0;
 
 	img {
 		height: 20vh;
@@ -75,4 +75,10 @@ header {
 		height: 1.5rem;
 		color: var(--text-body);
 	}
+}
+
+.headerDescription {
+	display: flex;
+	align-items: center;
+	font-size: 1rem;
 }
