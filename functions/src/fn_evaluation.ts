@@ -367,8 +367,6 @@ async function updateParentStatementWithChosenOptions(
 			topOptionsStatements: chosenOptions,
 		});
 
-		//update child statement selected to be of type result
-		await choseTopOptions(parentId, resultsSettings);
 	} catch (error) {
 		logger.error(error);
 	}
