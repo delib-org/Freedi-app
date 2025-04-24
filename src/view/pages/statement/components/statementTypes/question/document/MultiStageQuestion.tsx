@@ -17,8 +17,9 @@ import {
 import { Statement, StatementType } from 'delib-npm';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import StagePage from '../../stage/StagePage';
-import MultiStageQuestionsBar from '../../../multiStageQuestionsBar/MultiStageQuestionsBar';
 import StageList from './stages/StageList';
+import MultiStageQuestionsBar from '../../../multiStageQuestionsBar/MultiStageQuestionsBar';
+import HeaderStage from './stages/HeaderStage';
 
 const MultiStageQuestion: FC = () => {
 	const { statement } = useContext(StatementContext);
@@ -33,16 +34,7 @@ const MultiStageQuestion: FC = () => {
 	const votingRef = useRef<HTMLDivElement | null>(null);
 	const summaryRef = useRef<HTMLDivElement | null>(null);
 
-	// const sectionRefs = {
-	// 	info: infoRef,
-	// 	questions: questionsRef,
-	// 	suggestions: suggestionsRef,
-	// 	voting: votingRef,
-	// 	summary: summaryRef,
-	// };
-
-	// By categorizing statement types, we can selectively provide data to the bar component via props, optimizing its rendering to show only the required information.
-	const initialStages = useMemo(
+	const questionStatements = useMemo(
 		() =>
 			statementsFromStore
 				.filter(
@@ -52,6 +44,12 @@ const MultiStageQuestion: FC = () => {
 				.sort((a, b) => (a.order ?? 0) - (b.order ?? 0)),
 		[statementsFromStore]
 	);
+
+	const suggestionStatements = questionStatements
+
+	const votingStatements = questionStatements
+
+	const summaryStatements = questionStatements
 
 	const [showAddStage, setShowAddStage] = useState<boolean>(false);
 
@@ -63,7 +61,13 @@ const MultiStageQuestion: FC = () => {
 				</Modal>
 			)}
 			<div className={styles.stagesWrapper}>
-				<MultiStageQuestionsBar questions voting suggestions summary />
+				<MultiStageQuestionsBar
+					infoData={statement}
+					questionsData={questionStatements}
+					suggestionsData={suggestionStatements}
+					votingData={votingStatements}
+					summaryData={summaryStatements}
+				/>
 				<div className={`btns ${styles['add-stage']}`}>
 					<Button
 						text={t('Add sub-question')}
@@ -72,23 +76,24 @@ const MultiStageQuestion: FC = () => {
 						onClick={() => setShowAddStage(true)}
 					/>
 				</div>
-				{initialStages.length === 0 ? (
-					<StagePage />) :
-					(
-						<div className={styles.stagesWrapper}>
-							<h2 className={styles.title}>
-								{t('Document')}: {statement.statement}
-							</h2>
-							<div className={styles.description}>
-								{statement?.description}
+				<div>
+					{questionStatements.length === 0 ? (
+						<StagePage />) :
+						(
+							<div className={styles.stagesWrapper}>
+								<h2 ref={infoRef} id="info" className={styles.title}>
+									{t('Document')}: {statement.statement}
+								</h2>
+								<HeaderStage imageType='info' statement={statement} />
+								<div ref={questionsRef} id="questions">
+									<StageList imageType='questions' statements={questionStatements} isSuggestions />
+								</div>
 							</div>
-							<div ref={infoRef} id="info"><StageList imageType='info' statements={[statement]} isSuggestions /></div>
-							<div ref={questionsRef} id="questions"><StageList imageType='questions' statements={initialStages} /></div>
-							<div ref={suggestionsRef} id="suggestions"><StageList imageType='suggestions' statements={initialStages} /></div>
-							<div ref={votingRef} id="voting"><StageList imageType='voting' statements={initialStages} /></div>
-							<div ref={summaryRef} id="summary"><StageList imageType='summary' statements={initialStages} /></div>
-						</div>
-					)}
+						)}
+					{suggestionStatements.length > 0 && <div ref={suggestionsRef} id="suggestions"><StageList imageType='suggestions' statements={suggestionStatements} /></div>}
+					{votingStatements.length > 0 && <div ref={votingRef} id="voting"><StageList imageType='voting' statements={votingStatements} /></div>}
+					{summaryStatements.length > 0 && <div ref={summaryRef} id="summary"><StageList imageType='summary' statements={summaryStatements} /></div>}
+				</div>
 			</div>
 		</>
 	);

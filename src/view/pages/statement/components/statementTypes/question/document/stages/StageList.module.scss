@@ -1,9 +1,5 @@
 header {
-	text-align: center;
-
-	img {
-		height: 20vh;
-	}
+	width: 100%;
 }
 .stageListContainer {
 	display: flex;
@@ -52,5 +48,31 @@ header {
 	&::after {
 		top: 6px;
 		transform: translateX(2px);
+	}
+}
+
+.description {
+	font-size: 1.1rem;
+	font-weight: 400;
+	color: var(--text-body);
+	text-align: center;
+	padding-inline: 2rem;
+
+	img {
+		height: 20vh;
+	}
+}
+
+.headerTitle {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	font-size: 1.3rem;
+	font-weight: 600;
+	color: #2a3346;
+
+	svg {
+		height: 1.5rem;
+		color: var(--text-body);
 	}
 }

@@ -1,8 +1,3 @@
-import InfoImage from '@/assets/images/multiStageQuestion/info.png';
-import QuestionImage from '@/assets/images/multiStageQuestion/questions.png';
-import SuggestionImage from '@/assets/images/multiStageQuestion/suggestions.png';
-import VotingImage from '@/assets/images/multiStageQuestion/voting.png';
-import SummaryImage from '@/assets/images/multiStageQuestion/summary.png';
 import React, { DragEvent, useState } from 'react';
 import { Statement } from 'delib-npm';
 import StageCard from './StageCard';
@@ -10,23 +5,15 @@ import { updateStatementsOrderToDB } from '@/controllers/db/statements/setStatem
 import { setStatements } from '@/redux/statements/statementsSlice';
 import { useDispatch } from 'react-redux';
 import styles from './StageList.module.scss';
+import HeaderStage from './HeaderStage';
 
 type HeaderProps = {
 	imageType: 'info' | 'questions' | 'suggestions' | 'voting' | 'summary';
 	statements: Statement[];
-	isSuggestions?: boolean
-};
-
-const imagesMap: Record<HeaderProps['imageType'], string> = {
-	info: InfoImage,
-	questions: QuestionImage,
-	suggestions: SuggestionImage,
-	voting: VotingImage,
-	summary: SummaryImage,
+	isSuggestions?: boolean;
 };
 
 const StageList: React.FC<HeaderProps> = ({ imageType, statements, isSuggestions }) => {
-	const imageSrc = imagesMap[imageType];
 	const dispatch = useDispatch();
 
 	const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
@@ -78,14 +65,16 @@ const StageList: React.FC<HeaderProps> = ({ imageType, statements, isSuggestions
 
 	return (
 		<div className={styles.stageListContainer}>
-			<header>
+			{/* <header className={styles.stageHeader}>
 				<img src={imageSrc} alt={imageType} />
-			</header>
+				<div className={styles.headerContent}>
+					<h2>{stageInfoMap[imageType].title}</h2>
+					<p>{stageInfoMap[imageType].description}</p>
+				</div>
+			</header> */}
+			<HeaderStage imageType={imageType} statement={statements.length > 0 ? statements[0] : undefined} />
 
 			{(() => {
-				if (isSuggestions) {
-					return <StageCard statement={statements[0]} isSuggestions={true} />;
-				}
 				if (statements.length === 1) {
 					return <StageCard statement={statements[0]} />;
 				}
@@ -124,9 +113,9 @@ const StageList: React.FC<HeaderProps> = ({ imageType, statements, isSuggestions
 					<StageCard statement={statements[draggedItem.index]} />
 				</div>
 			)}
+			{isSuggestions && <StageCard statement={statements[0]} isSuggestions={true} />}
 		</div>
 	);
-
 };
 
-export default StageList
+export default StageList;
