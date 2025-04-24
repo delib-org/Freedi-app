@@ -1,5 +1,5 @@
 import { resultsSettingsDefault } from '@/controllers/db/statements/setStatements';
-import { Statement, Screen, StatementType } from 'delib-npm';
+import { Statement, Screen, StatementType, Access } from 'delib-npm';
 
 export const defaultStatementSettings = {
 	enhancedEvaluation: true,
@@ -37,4 +37,7 @@ export const defaultEmptyStatement: Statement = {
 	resultsSettings: resultsSettingsDefault,
 	statementSettings: defaultStatementSettings,
 	hasChildren: true,
+	membership: {
+		access: Access.openToAll
+	}
 } as const;

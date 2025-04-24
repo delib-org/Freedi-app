@@ -22,12 +22,12 @@ import UploadImage from '@/view/components/uploadImage/UploadImage';
 import './StatementSettingsForm.scss';
 
 // icons
-import SaveIcon from '@/assets/icons/save.svg?react';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { createSelector } from '@reduxjs/toolkit';
 import { RootState } from '@/redux/store';
 import Loader from '@/view/components/loaders/Loader';
 import { StatementSubscription, Role, Statement } from 'delib-npm';
+import MembershipSettings from '../membershipSettings/MembershipSettings';
 
 interface StatementSettingsFormProps {
 	statement: Statement;
@@ -102,7 +102,8 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 			);
 
 		return (
-			<>
+
+			<div className="wrapper">
 				<form
 					onSubmit={handleSubmit}
 					className='statement-settings-form'
@@ -112,6 +113,7 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 						statement={statement}
 						setStatementToEdit={setStatementToEdit}
 					/>
+
 					<SectionTitle title={t('General Settings')} />
 					<section className='switches-area'>
 						<AdvancedSettings {...statementSettingsProps} />
@@ -119,13 +121,20 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 					<ChoseBySettings {...statementSettingsProps} />
 					<button
 						type='submit'
-						className='submit-button'
+						className='submit-button btn'
 						aria-label='Submit button'
 						data-cy='settings-statement-submit-btn'
 					>
-						<SaveIcon />
+						{t('Save')}
 					</button>
 				</form>
+
+				<MembershipSettings statement={statement} setStatementToEdit={setStatementToEdit} />
+				<SectionTitle title={t('General Settings')} />
+				<section className='switches-area'>
+					<AdvancedSettings {...statementSettingsProps} />
+				</section>
+				<ChoseBySettings {...statementSettingsProps} />
 
 				{!isNewStatement && (
 					<>
@@ -148,8 +157,8 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 						</section>
 					</>
 				)}
+			</div>
 
-			</>
 		);
 	} catch (error) {
 		console.error(error);
