@@ -4,7 +4,7 @@ import { DocumentSnapshot, FieldValue } from 'firebase-admin/firestore';
 import { Collections, maxKeyInObject, Statement, statementToSimpleStatement, VoteSchema } from 'delib-npm';
 
 import { FirestoreEvent } from 'firebase-functions/firestore';
-import { is, parse } from 'valibot';
+import { parse } from 'valibot';
 
 export async function updateVote(
 	event: FirestoreEvent<Change<DocumentSnapshot> | undefined>
