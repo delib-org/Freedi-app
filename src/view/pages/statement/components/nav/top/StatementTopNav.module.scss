@@ -1,79 +1,98 @@
 $headerHight: 4.2rem;
+$svgHeight: 1.7rem;
+$svgWidth: 1.7rem;
 
 .nav {
-  width: 100%;
-  display: flex;
-  justify-content: space-evenly;
-  direction: ltr;
-  border-radius: 0 0 calc($headerHight / 2) 0;
-  box-shadow: 0px 3px 9px #00000026;
-  height: 4.2rem;
+	width: 100%;
+	display: flex;
+	justify-content: space-evenly;
+	direction: ltr;
+	border-radius: 0 0 calc($headerHight / 2) 0;
+	box-shadow: 0px 3px 9px #00000026;
+	height: 4.2rem;
 
-  .wrapper {
-    width: 100%;
-    margin: auto;
-    display: flex;
-    flex-direction: row-reverse;
-    justify-content: space-between;
-    max-width: var(--wrapper);
+	.wrapper {
+		width: 100%;
+		margin: auto;
+		display: flex;
+		flex-direction: row-reverse;
+		justify-content: space-between;
+		max-width: var(--wrapper);
 
-    &.ltr {
-      direction: ltr;
-      flex-direction: row-reverse;
-      @media (max-width: 1360px) {
-        transform: translateX(2%);
-      }
-    }
+		.button {
+			flex: 1;
+			display: flex;
+			justify-content: center;
+			align-items: center;
 
-    &.rtl {
-      direction: rtl;
-      flex-direction: row-reverse;
-      @media (max-width: 1360px) {
-        transform: translateX(-2%);
-      }
-    }
-  }
+			svg {
+				height: $svgHeight;
+				width: $svgWidth;
+			}
+		}
 
-  button {
-    flex: 1;
-    padding: 0.6rem 1rem;
-    background-color: transparent;
+		&.ltr {
+			direction: ltr;
+			flex-direction: row-reverse;
 
-    svg {
-      height: 1.7rem;
-      width: 1.7rem;
-    }
-  }
-  .back {
-    transform: rotate(180deg);
-  }
+			@media (max-width: 1360px) {
+				transform: translateX(2%);
+			}
+		}
 
-  .views {
-    position: relative;
+		&.rtl {
+			direction: rtl;
+			flex-direction: row-reverse;
 
-    &__dropdown {
-      position: absolute;
-      background-color: white;
-      box-shadow: 0px 3px 9px #00000026;
-      left: 50%;
-      top: 3rem;
-    }
-  }
+			@media (max-width: 1360px) {
+				transform: translateX(-2%);
+			}
+		}
+	}
+
+	button {
+		flex: 1;
+		padding: 0.6rem 1rem;
+		background-color: transparent;
+
+		svg {
+			height: $svgHeight;
+			width: $svgWidth;
+		}
+	}
+
+	.back {
+		transform: rotate(180deg);
+	}
+
+	.views {
+		position: relative;
+
+		&__dropdown {
+			position: absolute;
+			background-color: white;
+			box-shadow: 0px 3px 9px #00000026;
+			left: 50%;
+			top: 3rem;
+		}
+	}
 }
+
 .menuFooter {
-  display: flex;
-  height: 83px;
-  background-color: var(--group);
-  cursor: pointer;
-  pointer-events: auto;
-  z-index: 1000;
+	display: flex;
+	height: 83px;
+	background-color: var(--group);
+	cursor: pointer;
+	pointer-events: auto;
+	z-index: 1000;
 
-  svg {
-    color: white;
-  }
+	svg {
+		color: white;
+	}
 }
+
 .menuOption {
-  .label {
-    color: white;
-  }
+	.label {
+		color: white;
+	}
 }

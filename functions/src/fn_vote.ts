@@ -4,7 +4,7 @@ import { DocumentSnapshot, FieldValue } from 'firebase-admin/firestore';
 import { Collections, maxKeyInObject, Statement, statementToSimpleStatement, VoteSchema } from 'delib-npm';
 
 import { FirestoreEvent } from 'firebase-functions/firestore';
-import { parse } from 'valibot';
+import { is, parse } from 'valibot';
 
 export async function updateVote(
 	event: FirestoreEvent<Change<DocumentSnapshot> | undefined>
@@ -14,30 +14,8 @@ export async function updateVote(
 	try {
 		const newVote = parse(VoteSchema, event.data.after.data());
 		const { statementId: newVoteOptionId } = newVote;
-		if (event.data.before.data() !== undefined) {
-			const previousVote = parse(
-				VoteSchema,
-				event.data.before.data()
-			);
 
-			const previousVoteOptionId = previousVote.statementId;
-
-			if (newVoteOptionId === previousVoteOptionId) {
-				throw new Error('new and previous are the same');
-			} else {
-				logger.info('new and previous are not the same');
-				await db.doc(`statements/${newVote.parentId}`).update({
-					[`selections.${newVoteOptionId}`]: FieldValue.increment(1),
-					[`selections.${previousVoteOptionId}`]:
-						FieldValue.increment(-1),
-				});
-			}
-		} else {
-			//second or more votes
-			await db.doc(`statements/${newVote.parentId}`).update({
-				[`selections.${newVoteOptionId}`]: FieldValue.increment(1),
-			});
-		}
+		await updateParentStatementVotes();
 
 		//update top voted
 
@@ -59,7 +37,7 @@ export async function updateVote(
 		const previousResultsDB = await db
 			.collection(Collections.statements)
 			.where('parentId', '==', newVote.parentId)
-			.where('selected', '==', true)
+			.where('isVoted', '==', true)
 			.get();
 
 		previousResultsDB.forEach((resultDB) => {
@@ -67,7 +45,7 @@ export async function updateVote(
 			const docRef = db.doc(
 				`${Collections.statements}/${result.statementId}`
 			);
-			batch.update(docRef, { selected: false });
+			batch.update(docRef, { isVoted: false });
 		});
 
 		// Commit the batch
@@ -76,7 +54,7 @@ export async function updateVote(
 		//mark the new top voted option as selected
 		await db
 			.doc(`${Collections.statements}/${topVotedId}`)
-			.update({ selected: true });
+			.update({ isVoted: true });
 
 		//check if the topVoted option is the same as the previous one
 		//if not, update the topVoted option in the parent statement
@@ -103,6 +81,33 @@ export async function updateVote(
 		}
 
 		return true;
+
+		async function updateParentStatementVotes() {
+			if (event.data?.before?.data() !== undefined) {
+				const previousVote = parse(
+					VoteSchema,
+					event.data.before.data()
+				);
+
+				const previousVoteOptionId = previousVote.statementId;
+
+				if (newVoteOptionId === previousVoteOptionId) {
+					throw new Error('new and previous are the same');
+				} else {
+					logger.info('new and previous are not the same');
+					await db.doc(`statements/${newVote.parentId}`).update({
+						[`selections.${newVoteOptionId}`]: FieldValue.increment(1),
+						[`selections.${previousVoteOptionId}`]:
+							FieldValue.increment(-1),
+					});
+				}
+			} else {
+				//second or more votes
+				await db.doc(`statements/${newVote.parentId}`).update({
+					[`selections.${newVoteOptionId}`]: FieldValue.increment(1),
+				});
+			}
+		}
 	} catch (error) {
 		logger.error(error);
 

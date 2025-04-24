@@ -27,6 +27,7 @@ import { createSelector } from '@reduxjs/toolkit';
 import { RootState } from '@/redux/store';
 import Loader from '@/view/components/loaders/Loader';
 import { StatementSubscription, Role, Statement } from 'delib-npm';
+import MembershipSettings from '../membershipSettings/MembershipSettings';
 
 interface StatementSettingsFormProps {
 	statement: Statement;
@@ -101,7 +102,8 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 			);
 
 		return (
-			<>
+
+			<div className="wrapper">
 				<form
 					onSubmit={handleSubmit}
 					className='statement-settings-form'
@@ -111,6 +113,7 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 						statement={statement}
 						setStatementToEdit={setStatementToEdit}
 					/>
+
 					<SectionTitle title={t('General Settings')} />
 					<section className='switches-area'>
 						<AdvancedSettings {...statementSettingsProps} />
@@ -125,6 +128,13 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 						{t('Save')}
 					</button>
 				</form>
+
+				<MembershipSettings statement={statement} setStatementToEdit={setStatementToEdit} />
+				<SectionTitle title={t('General Settings')} />
+				<section className='switches-area'>
+					<AdvancedSettings {...statementSettingsProps} />
+				</section>
+				<ChoseBySettings {...statementSettingsProps} />
 
 				{!isNewStatement && (
 					<>
@@ -147,8 +157,8 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 						</section>
 					</>
 				)}
+			</div>
 
-			</>
 		);
 	} catch (error) {
 		console.error(error);
