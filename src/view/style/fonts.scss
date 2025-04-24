@@ -1,0 +1,44 @@
+// _fonts.scss
+
+// Open Sans
+@font-face {
+	font-family: 'Open Sans';
+	font-style: normal;
+	font-weight: 300;
+	src: url('../../assets/fonts/Open_Sans/') format('woff2'),
+		url('../assets/fonts/open-sans/OpenSans-Light.woff') format('woff');
+	font-display: swap;
+}
+
+@font-face {
+	font-family: 'Open Sans';
+	font-style: normal;
+	font-weight: 400;
+	src: url('../assets/fonts/open-sans/OpenSans-Regular.woff2') format('woff2'),
+		url('../assets/fonts/open-sans/OpenSans-Regular.woff') format('woff');
+	font-display: swap;
+}
+
+// Add more Open Sans variations...
+
+// Patrick Hand
+@font-face {
+	font-family: 'Patrick Hand';
+	font-style: normal;
+	font-weight: 400;
+	src: url('../assets/fonts/patrick-hand/PatrickHand-Regular.woff2') format('woff2'),
+		url('../assets/fonts/patrick-hand/PatrickHand-Regular.woff') format('woff');
+	font-display: swap;
+}
+
+// Roboto
+@font-face {
+	font-family: 'Roboto';
+	font-style: normal;
+	font-weight: 400;
+	src: url('../assets/fonts/roboto/Roboto-Regular.woff2') format('woff2'),
+		url('../assets/fonts/roboto/Roboto-Regular.woff') format('woff');
+	font-display: swap;
+}
+
+// Add more Roboto variations as needed...
