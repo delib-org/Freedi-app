@@ -150,6 +150,8 @@ export default function StatementMain() {
 		};
 	}, [creator, statementId, stageId]);
 
+	const topParentId = statement?.topParentId;
+
 	useEffect(() => {
 
 		const topParentId = statement?.topParentId;
@@ -170,7 +172,7 @@ export default function StatementMain() {
 		return () => {
 			unSubscribe();
 		};
-	}, [statement?.topParentId]);
+	}, [topParentId, statementId]);
 
 	/**
 	 * Effect to handle membership subscription

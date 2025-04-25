@@ -134,13 +134,13 @@ const SuggestionCard: FC<Props> = ({
 				className='selected-option'
 				style={{
 					backgroundColor:
-						statement.selected === true ? 'var(--approve)' : '',
+						statement.isVoted === true ? 'var(--approve)' : '',
 				}}
 			>
 				<div
 					style={{
 						color: statementColor.color,
-						display: statement.selected ? 'block' : 'none',
+						display: statement.isVoted ? 'block' : 'none',
 					}}
 				>
 					{t('Selected')}
