@@ -137,9 +137,9 @@ export const setStatementToDB = async ({
 	parentStatement,
 }: SetStatementToDBParams): Promise<
 	| {
-			statementId: string;
-			statement: Statement;
-	  }
+		statementId: string;
+		statement: Statement;
+	}
 	| undefined
 > => {
 	try {
@@ -168,8 +168,8 @@ export const setStatementToDB = async ({
 			parentStatement === 'top'
 				? statement.statementId
 				: statement?.topParentId ||
-					parentStatement?.topParentId ||
-					'top';
+				parentStatement?.topParentId ||
+				'top';
 
 		const siblingOptions = getSiblingOptionsByParentId(
 			parentId,
@@ -643,23 +643,25 @@ export async function updateStatementMainImage(
 }
 
 export async function setFollowMeDB(
-	statement: Statement,
+	topParentStatement: Statement,
 	path: string | undefined
 ): Promise<void> {
 	try {
 		parse(string(), path);
-		parse(StatementSchema, statement);
+		parse(StatementSchema, topParentStatement);
 
-		const statementRef = doc(
+		const topParentStatementRef = doc(
 			FireStore,
 			Collections.statements,
-			statement.statementId
+			topParentStatement.statementId
 		);
 
 		if (path) {
-			await updateDoc(statementRef, { followMe: path });
+
+			await updateDoc(topParentStatementRef, { followMe: path });
 		} else {
-			await updateDoc(statementRef, { followMe: '' });
+
+			await updateDoc(topParentStatementRef, { followMe: '' });
 		}
 	} catch (error) {
 		console.error(error);
