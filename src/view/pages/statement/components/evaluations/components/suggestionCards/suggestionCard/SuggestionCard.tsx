@@ -38,7 +38,7 @@ const SuggestionCard: FC<Props> = ({
 	if (!parentStatement) console.error('parentStatement is not defined');
 
 	const { t, dir } = useUserConfig();
-	const { isAuthorized } = useAuthorization(statement.statementId);
+	const { isAuthorized, isAdmin } = useAuthorization(statement.statementId);
 	const { sort } = useParams();
 
 	// Redux Store
@@ -107,7 +107,7 @@ const SuggestionCard: FC<Props> = ({
 	const hasChildren = parentStatement?.statementSettings?.hasChildren;
 
 	if (!statement) return null;
-	
+
 	function handleRightClick(e: React.MouseEvent) {
 		e.preventDefault();
 		setIsCardMenuOpen(!isCardMenuOpen);
@@ -160,6 +160,7 @@ const SuggestionCard: FC<Props> = ({
 						<SolutionMenu
 							statement={statement}
 							isAuthorized={isAuthorized}
+							isAdmin={isAdmin}
 							isCardMenuOpen={isCardMenuOpen}
 							setIsCardMenuOpen={setIsCardMenuOpen}
 							isEdit={isEdit}

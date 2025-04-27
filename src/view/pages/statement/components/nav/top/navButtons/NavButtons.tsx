@@ -13,7 +13,7 @@ import styles from '../StatementTopNav.module.scss';
 import { StatementType, Statement } from 'delib-npm';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import NotificationSubscriptionButton from '@/view/components/notifications/NotificationSubscriptionButton';
-import ApproveMembers from '@/view/components/approveMemebers/ApproveMembers';
+import ApproveMembers from '@/view/components/approveMemebers/WaitingList';
 import { useSelector } from 'react-redux';
 import { statementSubscriptionSelector } from '@/redux/statements/statementsSlice';
 
