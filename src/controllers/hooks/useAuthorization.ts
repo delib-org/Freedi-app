@@ -9,6 +9,8 @@ import { listenToStatement, listenToStatementSubscription } from '../db/statemen
 
 export interface AuthorizationState {
 	isAuthorized: boolean;
+	role: Role;
+	isAdmin: boolean;
 	loading: boolean;
 	error: boolean;
 	errorMessage: string;
@@ -19,6 +21,8 @@ export interface AuthorizationState {
 export const useAuthorization = (statementId?: string): AuthorizationState => {
 	const [authState, setAuthState] = useState<AuthorizationState>({
 		isAuthorized: false,
+		role: Role.unsubscribed,
+		isAdmin: false,
 		loading: true,
 		error: false,
 		errorMessage: '',
@@ -36,6 +40,7 @@ export const useAuthorization = (statementId?: string): AuthorizationState => {
 
 	//set up top parent statement listener
 	useEffect(() => {
+
 		if (!statementId || !topParentId) return;
 		if (topParentStatement) return;
 
@@ -74,12 +79,6 @@ export const useAuthorization = (statementId?: string): AuthorizationState => {
 	useEffect(() => {
 		if (!statement || !creator) return;
 
-		// If we're waiting for subscription data and still loading
-		// if (!topParentSubscription && authState.loading) {
-
-		// 	return;
-		// }
-
 		// Case 1: User is already a member or admin
 		if (isMemberRole(statement, creator.uid, role)) {
 			setAuthState({
@@ -88,7 +87,9 @@ export const useAuthorization = (statementId?: string): AuthorizationState => {
 				error: false,
 				errorMessage: '',
 				creator,
-				isWaitingForApproval: false
+				isWaitingForApproval: false,
+				role,
+				isAdmin: isAdminRole(role),
 			});
 
 			return;
@@ -100,6 +101,8 @@ export const useAuthorization = (statementId?: string): AuthorizationState => {
 			setAuthState({
 				isAuthorized: false,
 				loading: false,
+				role,
+				isAdmin: isAdminRole(role),
 				error: false,
 				errorMessage: '',
 				creator,
@@ -121,6 +124,8 @@ export const useAuthorization = (statementId?: string): AuthorizationState => {
 			setAuthState({
 				isAuthorized: true,
 				loading: false,
+				role,
+				isAdmin: isAdminRole(role),
 				error: false,
 				errorMessage: '',
 				creator,
@@ -144,6 +149,9 @@ export const useAuthorization = (statementId?: string): AuthorizationState => {
 
 			setAuthState({
 				isAuthorized: false,
+
+				role: Role.banned,
+				isAdmin: role,
 				loading: false,
 				error: false,
 				errorMessage: '',
@@ -157,6 +165,8 @@ export const useAuthorization = (statementId?: string): AuthorizationState => {
 		// Case 5: Not authorized
 		setAuthState({
 			isAuthorized: false,
+			role: Role.banned,
+			isAdmin: role,
 			loading: false,
 			error: true,
 			errorMessage: 'You are not authorized to view this statement.',
@@ -170,6 +180,10 @@ export const useAuthorization = (statementId?: string): AuthorizationState => {
 };
 
 // Helper functions
+function isAdminRole(role: Role): boolean {
+	return role === Role.admin || role === Role.creator;
+}
+
 function isMemberRole(
 	statement: Statement,
 	userId: string,

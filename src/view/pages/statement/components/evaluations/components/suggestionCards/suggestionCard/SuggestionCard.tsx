@@ -20,8 +20,9 @@ import { setStatementElementHight } from '@/redux/statements/statementsSlice';
 import EditTitle from '@/view/components/edit/EditTitle';
 import IconButton from '@/view/components/iconButton/IconButton';
 import './SuggestionCard.scss';
-import { Screen, StatementType, Statement } from 'delib-npm';
+import { Screen, StatementType, Statement, Role } from 'delib-npm';
 import { useAuthorization } from '@/controllers/hooks/useAuthorization';
+import { is } from 'valibot';
 
 interface Props {
 	statement: Statement | undefined;
@@ -38,7 +39,7 @@ const SuggestionCard: FC<Props> = ({
 	if (!parentStatement) console.error('parentStatement is not defined');
 
 	const { t, dir } = useUserConfig();
-	const { isAuthorized } = useAuthorization(statement.statementId);
+	const { isAuthorized, isAdmin } = useAuthorization(statement.statementId);
 	const { sort } = useParams();
 
 	// Redux Store
@@ -107,7 +108,7 @@ const SuggestionCard: FC<Props> = ({
 	const hasChildren = parentStatement?.statementSettings?.hasChildren;
 
 	if (!statement) return null;
-	
+
 	function handleRightClick(e: React.MouseEvent) {
 		e.preventDefault();
 		setIsCardMenuOpen(!isCardMenuOpen);
@@ -160,6 +161,7 @@ const SuggestionCard: FC<Props> = ({
 						<SolutionMenu
 							statement={statement}
 							isAuthorized={isAuthorized}
+							isAdmin={isAdmin}
 							isCardMenuOpen={isCardMenuOpen}
 							setIsCardMenuOpen={setIsCardMenuOpen}
 							isEdit={isEdit}

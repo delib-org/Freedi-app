@@ -44,7 +44,7 @@ const StatementTopNav: FC<Props> = ({
 	const { t, currentLanguage } = useUserConfig();
 	const navigate = useNavigate();
 	const { screen } = useParams();
-	const role = useSelector(statementSubscriptionSelector(statement?.statementId))?.role;
+	const role = useSelector(statementSubscriptionSelector(statement?.topParentId))?.role;
 	const headerStyle = useStatementColor({ statement });
 	const [showLanguageModal, setShowLanguageModal] = useState(false);
 
@@ -170,11 +170,11 @@ function HeaderMenu({
 					label={t('Share')}
 					icon={<ShareIcon style={menuIconStyle} />}
 					onOptionClick={handleShare} />
-				{!isAdmin&&<MenuOption
+				{!isAdmin && <MenuOption
 					label={currentLabel}
 					icon={<LanguagesIcon style={menuIconStyle} />}
 					onOptionClick={setShowLanguageModal} />}
-				
+
 				{isAdmin && (
 					<>
 						<MenuOption
