@@ -20,9 +20,8 @@ import { setStatementElementHight } from '@/redux/statements/statementsSlice';
 import EditTitle from '@/view/components/edit/EditTitle';
 import IconButton from '@/view/components/iconButton/IconButton';
 import './SuggestionCard.scss';
-import { Screen, StatementType, Statement, Role } from 'delib-npm';
+import { Screen, StatementType, Statement } from 'delib-npm';
 import { useAuthorization } from '@/controllers/hooks/useAuthorization';
-import { is } from 'valibot';
 
 interface Props {
 	statement: Statement | undefined;

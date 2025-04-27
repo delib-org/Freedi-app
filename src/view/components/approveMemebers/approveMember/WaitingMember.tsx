@@ -1,6 +1,6 @@
 import { WaitingMember } from 'delib-npm'
 import { FC, useState } from 'react'
-import styles from './ApproveMember.module.scss'
+import styles from './WaitingMember.module.scss'
 import { UserCheck, UserX } from 'lucide-react'
 import { useUserConfig } from '@/controllers/hooks/useUserConfig'
 import { approveMembership } from '@/controllers/db/membership/setMembership'

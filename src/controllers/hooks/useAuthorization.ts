@@ -149,9 +149,8 @@ export const useAuthorization = (statementId?: string): AuthorizationState => {
 
 			setAuthState({
 				isAuthorized: false,
-
 				role: Role.banned,
-				isAdmin: role,
+				isAdmin: isAdminRole(role),
 				loading: false,
 				error: false,
 				errorMessage: '',
@@ -166,7 +165,7 @@ export const useAuthorization = (statementId?: string): AuthorizationState => {
 		setAuthState({
 			isAuthorized: false,
 			role: Role.banned,
-			isAdmin: role,
+			isAdmin: isAdminRole(role),
 			loading: false,
 			error: true,
 			errorMessage: 'You are not authorized to view this statement.',
