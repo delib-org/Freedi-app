@@ -130,10 +130,6 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 				</form>
 
 				<MembershipSettings statement={statement} setStatementToEdit={setStatementToEdit} />
-				<SectionTitle title={t('General Settings')} />
-				<section className='switches-area'>
-					<AdvancedSettings {...statementSettingsProps} />
-				</section>
 				<ChoseBySettings {...statementSettingsProps} />
 
 				{!isNewStatement && (
