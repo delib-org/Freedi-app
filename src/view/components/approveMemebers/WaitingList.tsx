@@ -1,11 +1,11 @@
 import { useState } from "react";
-import { useApproveMembership } from "./ApproveMembersVM";
+import { useApproveMembership } from "./WaitingListVM";
 import MembersIcon from "@/assets/icons/group.svg?react";
-import styles from "./ApproveMembers.module.scss";
+import styles from "./WaitingList.module.scss";
 import { useUserConfig } from "@/controllers/hooks/useUserConfig";
-import ApproveMember from "./approveMember/ApproveMember";
+import WaitingMember from "./approveMember/WaitingMember";
 
-const ApproveMembers = () => {
+const WaitingList = () => {
 	const { waitingList } = useApproveMembership();
 	const { dir, t } = useUserConfig();
 	const [show, setShow] = useState(false);
@@ -23,7 +23,7 @@ const ApproveMembers = () => {
 				<div className={`${styles.membersList} ${dir === "rtl" ? styles.rtl : ""}`}>
 					<h3>{t("Waiting List")}</h3>
 					{waitingList.map(member => (
-						<ApproveMember key={member.userId} wait={member} />
+						<WaitingMember key={member.statementsSubscribeId} wait={member} />
 					))}
 				</div>
 			)}
@@ -31,4 +31,4 @@ const ApproveMembers = () => {
 	)
 }
 
-export default ApproveMembers
+export default WaitingList

@@ -40,6 +40,7 @@ import React from 'react';
 export const listenToStatementSubscription = (
 	statementId: string,
 	creator: Creator,
+	setHasSubscription?: React.Dispatch<React.SetStateAction<boolean>>
 ): Unsubscribe => {
 	try {
 		const dispatch = store.dispatch;
@@ -53,6 +54,8 @@ export const listenToStatementSubscription = (
 			try {
 				if (!statementSubscriptionDB.exists()) {
 					console.info('No subscription found');
+
+					if (setHasSubscription) setHasSubscription(false);
 
 					return;
 				}

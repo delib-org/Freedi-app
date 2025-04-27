@@ -305,7 +305,7 @@ export function createStatement({
 			topParentId,
 			creator,
 			creatorId: creator.uid,
-			membership: membership || { access: Access.open },
+			membership: membership || { access: Access.openToAll },
 			statementSettings: {
 				enhancedEvaluation,
 				showEvaluation,

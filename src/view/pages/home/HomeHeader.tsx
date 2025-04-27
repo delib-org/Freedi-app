@@ -14,7 +14,7 @@ import Modal from '@/view/components/modal/Modal';
 import ChangeLanguage from '@/view/components/changeLanguage/ChangeLanguage';
 import { LANGUAGES } from '@/constants/Languages';
 import NotificationBtn from '@/view/components/notificationBtn/NotificationBtn';
-import ApproveMembers from '@/view/components/approveMemebers/ApproveMembers';
+import ApproveMembers from '@/view/components/approveMemebers/WaitingList';
 
 export default function HomeHeader() {
 	const [isHomeMenuOpen, setIsHomeMenuOpen] = useState(false);

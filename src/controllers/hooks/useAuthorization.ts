@@ -5,10 +5,12 @@ import { Access, Role, Statement, Creator } from 'delib-npm';
 import { setStatementSubscriptionToDB } from '../db/subscriptions/setSubscriptions';
 import { useSelector } from 'react-redux';
 import { creatorSelector } from '@/redux/creator/creatorSlice';
-import { listenToStatementSubscription } from '../db/statements/listenToStatements';
+import { listenToStatement, listenToStatementSubscription } from '../db/statements/listenToStatements';
 
 export interface AuthorizationState {
 	isAuthorized: boolean;
+	role: Role;
+	isAdmin: boolean;
 	loading: boolean;
 	error: boolean;
 	errorMessage: string;
@@ -19,35 +21,63 @@ export interface AuthorizationState {
 export const useAuthorization = (statementId?: string): AuthorizationState => {
 	const [authState, setAuthState] = useState<AuthorizationState>({
 		isAuthorized: false,
+		role: Role.unsubscribed,
+		isAdmin: false,
 		loading: true,
 		error: false,
 		errorMessage: '',
 		isWaitingForApproval: false
 	});
 
+	const [hasSubscription, setHasSubscription] = useState(false);
+
 	const statement = useAppSelector(statementSelector(statementId));
-	const statementSubscription = useAppSelector(statementSubscriptionSelector(statementId));
+	const topParentStatement = useAppSelector(statementSelector(statement?.topParentId));
+	const topParentSubscription = useAppSelector(statementSubscriptionSelector(statement?.topParentId));
 	const creator = useSelector(creatorSelector);
-	const role = statementSubscription?.role;
+	const role = topParentSubscription?.role;
+	const topParentId = statement?.topParentId;
+
+	//set up top parent statement listener
+	useEffect(() => {
+
+		if (!statementId || !topParentId) return;
+		if (topParentStatement) return;
+
+		// Fetch the top parent statement if it doesn't exist in the store
+		const unsubscribe = listenToStatement(topParentId);
+
+		return () => {
+			unsubscribe();
+		}
+	}, [statementId, topParentId]);
 
 	// Set up subscription listener
 	useEffect(() => {
 		if (!statementId || !creator?.uid) return;
 
-		const unsubscribe = listenToStatementSubscription(statementId, creator);
+		const unsubscribe = listenToStatementSubscription(topParentId, creator, setHasSubscription);
 
 		return () => unsubscribe();
-	}, [statementId, creator?.uid]);
+	}, [topParentId, creator?.uid]);
+
+	//check if has subscription
+	useEffect(() => {
+		if (!hasSubscription && topParentStatement && creator) {
+			setStatementSubscriptionToDB({
+				statement: topParentStatement,
+				creator,
+				role: Role.waiting,
+				getInAppNotification: false,
+				getEmailNotification: false,
+				getPushNotification: false,
+			})
+		}
+	}, [hasSubscription, topParentStatement, creator]);
 
 	// Handle authorization logic
 	useEffect(() => {
 		if (!statement || !creator) return;
-
-		// If we're waiting for subscription data and still loading
-		// if (!statementSubscription && authState.loading) {
-
-		// 	return;
-		// }
 
 		// Case 1: User is already a member or admin
 		if (isMemberRole(statement, creator.uid, role)) {
@@ -57,7 +87,9 @@ export const useAuthorization = (statementId?: string): AuthorizationState => {
 				error: false,
 				errorMessage: '',
 				creator,
-				isWaitingForApproval: false
+				isWaitingForApproval: false,
+				role,
+				isAdmin: isAdminRole(role),
 			});
 
 			return;
@@ -69,6 +101,8 @@ export const useAuthorization = (statementId?: string): AuthorizationState => {
 			setAuthState({
 				isAuthorized: false,
 				loading: false,
+				role,
+				isAdmin: isAdminRole(role),
 				error: false,
 				errorMessage: '',
 				creator,
@@ -79,7 +113,7 @@ export const useAuthorization = (statementId?: string): AuthorizationState => {
 		}
 
 		// Case 3: Open group - auto-subscribe as member
-		if (isOpenAccess(statement, creator, role)) {
+		if (isOpenAccess(topParentStatement, creator, role)) {
 
 			setStatementSubscriptionToDB({
 				statement,
@@ -90,6 +124,8 @@ export const useAuthorization = (statementId?: string): AuthorizationState => {
 			setAuthState({
 				isAuthorized: true,
 				loading: false,
+				role,
+				isAdmin: isAdminRole(role),
 				error: false,
 				errorMessage: '',
 				creator,
@@ -100,7 +136,7 @@ export const useAuthorization = (statementId?: string): AuthorizationState => {
 		}
 
 		// Case 4: Moderated group - subscribe as waiting
-		if (isModeratedGroup(statement, role)) {
+		if (isModeratedGroup(topParentStatement, role)) {
 
 			setStatementSubscriptionToDB({
 				statement,
@@ -113,6 +149,8 @@ export const useAuthorization = (statementId?: string): AuthorizationState => {
 
 			setAuthState({
 				isAuthorized: false,
+				role: Role.banned,
+				isAdmin: isAdminRole(role),
 				loading: false,
 				error: false,
 				errorMessage: '',
@@ -126,6 +164,8 @@ export const useAuthorization = (statementId?: string): AuthorizationState => {
 		// Case 5: Not authorized
 		setAuthState({
 			isAuthorized: false,
+			role: Role.banned,
+			isAdmin: isAdminRole(role),
 			loading: false,
 			error: true,
 			errorMessage: 'You are not authorized to view this statement.',
@@ -133,12 +173,16 @@ export const useAuthorization = (statementId?: string): AuthorizationState => {
 			isWaitingForApproval: false
 		});
 
-	}, [statement, creator, statementSubscription, role]);
+	}, [statement, creator, topParentSubscription, role, topParentStatement]);
 
 	return authState;
 };
 
 // Helper functions
+function isAdminRole(role: Role): boolean {
+	return role === Role.admin || role === Role.creator;
+}
+
 function isMemberRole(
 	statement: Statement,
 	userId: string,
