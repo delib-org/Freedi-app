@@ -38,6 +38,8 @@ export const useAuthorization = (statementId?: string): AuthorizationState => {
 	const role = topParentSubscription?.role;
 	const topParentId = statement?.topParentId;
 
+	console.log("useAuthorization", statementId, topParentId, role);
+
 	//set up top parent statement listener
 	useEffect(() => {
 
