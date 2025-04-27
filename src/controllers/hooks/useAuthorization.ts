@@ -29,12 +29,11 @@ export const useAuthorization = (statementId?: string): AuthorizationState => {
 
 	const statement = useAppSelector(statementSelector(statementId));
 	const topParentStatement = useAppSelector(statementSelector(statement?.topParentId));
-	const statementSubscription = useAppSelector(statementSubscriptionSelector(statement?.topParentId));
+	const topParentSubscription = useAppSelector(statementSubscriptionSelector(statement?.topParentId));
 	const creator = useSelector(creatorSelector);
-	const role = statementSubscription?.role;
+	const role = topParentSubscription?.role;
 	const topParentId = statement?.topParentId;
 
-	console.log(statement?.topParentId, statementSubscription?.statement?.statement)
 	//set up top parent statement listener
 	useEffect(() => {
 		if (!statementId || !topParentId) return;
@@ -76,7 +75,7 @@ export const useAuthorization = (statementId?: string): AuthorizationState => {
 		if (!statement || !creator) return;
 
 		// If we're waiting for subscription data and still loading
-		// if (!statementSubscription && authState.loading) {
+		// if (!topParentSubscription && authState.loading) {
 
 		// 	return;
 		// }
@@ -165,7 +164,7 @@ export const useAuthorization = (statementId?: string): AuthorizationState => {
 			isWaitingForApproval: false
 		});
 
-	}, [statement, creator, statementSubscription, role, topParentStatement]);
+	}, [statement, creator, topParentSubscription, role, topParentStatement]);
 
 	return authState;
 };
