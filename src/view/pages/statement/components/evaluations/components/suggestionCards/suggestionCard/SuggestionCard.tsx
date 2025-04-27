@@ -1,4 +1,4 @@
-import { FC, useEffect, useRef, useState } from 'react';
+import React, { FC, useEffect, useRef, useState } from 'react';
 
 // Third Party
 
@@ -107,9 +107,15 @@ const SuggestionCard: FC<Props> = ({
 	const hasChildren = parentStatement?.statementSettings?.hasChildren;
 
 	if (!statement) return null;
+	
+	function handleRightClick(e: React.MouseEvent) {
+		e.preventDefault();
+		setIsCardMenuOpen(!isCardMenuOpen);
+	}
 
 	return (
 		<div
+			onContextMenu={(e) => handleRightClick(e)}
 			className={
 				statementAge < 10000
 					? 'statement-evaluation-card statement-evaluation-card--new'
@@ -170,9 +176,7 @@ const SuggestionCard: FC<Props> = ({
 						</div>
 					)}
 					<div className='evolution-element'>
-						<Evaluation
-							statement={statement}
-						/>
+						<Evaluation statement={statement} />
 					</div>
 					{hasChildren && (
 						<IconButton
