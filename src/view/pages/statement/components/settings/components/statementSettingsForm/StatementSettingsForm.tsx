@@ -11,7 +11,6 @@ import AdvancedSettings from './../../components/advancedSettings/AdvancedSettin
 import ChoseBySettings from '../choseBy/ChoseBySettings';
 import GetEvaluators from './../../components/GetEvaluators';
 import GetVoters from './../../components/GetVoters';
-import MembersSettings from './../../components/membership/MembersSettings';
 import SectionTitle from './../../components/sectionTitle/SectionTitle';
 import TitleAndDescription from './../../components/titleAndDescription/TitleAndDescription';
 import { setNewStatement } from './../../statementSettingsCont';
@@ -26,7 +25,7 @@ import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { createSelector } from '@reduxjs/toolkit';
 import { RootState } from '@/redux/store';
 import Loader from '@/view/components/loaders/Loader';
-import { StatementSubscription, Role, Statement } from 'delib-npm';
+import { StatementSubscription, Role, Statement, StatementType } from 'delib-npm';
 import MembershipSettings from '../membershipSettings/MembershipSettings';
 
 interface StatementSettingsFormProps {
@@ -118,7 +117,7 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 					<section className='switches-area'>
 						<AdvancedSettings {...statementSettingsProps} />
 					</section>
-					<ChoseBySettings {...statementSettingsProps} />
+
 					<button
 						type='submit'
 						className='submit-button btn'
@@ -128,9 +127,8 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 						{t('Save')}
 					</button>
 				</form>
-
 				<MembershipSettings statement={statement} setStatementToEdit={setStatementToEdit} />
-				<ChoseBySettings {...statementSettingsProps} />
+				{statement.statementType === StatementType.question && <ChoseBySettings {...statementSettingsProps} />}
 
 				{!isNewStatement && (
 					<>
@@ -141,7 +139,6 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 						/>
 						<QuestionSettings {...statementSettingsProps} />
 						<SectionTitle title={t('Members')} />
-						<MembersSettings statement={statement} />
 						<section className='get-members-area'>
 							<GetVoters
 								statementId={statementId}
