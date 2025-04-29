@@ -20,7 +20,7 @@ function SwitchScreen({
 }: Readonly<SwitchScreenProps>): ReactNode {
 	let { screen } = useParams();
 	const { hasChat } = statement?.statementSettings || { hasChat: false };
-	console.log("role", role);
+
 	//allowed screens
 	const hasPermission = role === Role.admin;
 	if (!hasPermission && screen === 'settings') {

@@ -89,7 +89,7 @@ const StatementBottomNav: FC<Props> = () => {
 							>
 								<Link
 									className={`open-nav-icon ${showSorting ? 'active' : ''}`}
-									to={sort ? `./../${navItem.link}` : `./${navItem.link}`}
+									to={sort ? `./${navItem.link}` : `./${navItem.link}`}
 									aria-label='Sorting options'
 									key={navItem.id}
 									onClick={() => setShowSorting(false)}
