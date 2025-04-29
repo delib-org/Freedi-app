@@ -1,5 +1,5 @@
 // Helpers
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import IconButton from '../../components/iconButton/IconButton';
 import Menu from '../../components/menu/Menu';
 import MenuOption from '../../components/menu/MenuOption';
@@ -15,7 +15,6 @@ import ChangeLanguage from '@/view/components/changeLanguage/ChangeLanguage';
 import { LANGUAGES } from '@/constants/Languages';
 import NotificationBtn from '@/view/components/notificationBtn/NotificationBtn';
 import WaitingList from '@/view/components/approveMemebers/WaitingList';
-import useClickOutside from '@/controllers/hooks/useClickOutside';
 
 export default function HomeHeader() {
 	const [isHomeMenuOpen, setIsHomeMenuOpen] = useState(false);
@@ -50,12 +49,6 @@ export default function HomeHeader() {
 			setIsInstallable(true);
 		});
 	}, []);
-
-	const handleClickOutside = useCallback(() => {
-		if (isHomeMenuOpen) setIsHomeMenuOpen(false);
-	}, [isHomeMenuOpen, setIsHomeMenuOpen]);
-
-	const menuRef = useClickOutside(handleClickOutside);
 
 	function handleInstallApp() {
 		try {
@@ -105,30 +98,28 @@ export default function HomeHeader() {
 						</IconButton>
 					)}
 
-					<div ref={(node) => {if (menuRef) menuRef.current = node;}}>
-						<Menu
-							isMenuOpen={isHomeMenuOpen}
-							setIsOpen={setIsHomeMenuOpen}
-							iconColor="white"
-							footer={
-								<MenuOption
-									className="footer"
-									icon={<DisconnectIcon style={{ color: 'white' }} />}
-									label={t('Disconnect')}
-									onOptionClick={logOut} children={''} />
-							}
-						>
+					<Menu
+						isMenuOpen={isHomeMenuOpen}
+						setIsOpen={setIsHomeMenuOpen}
+						iconColor="white"
+						footer={
+							<MenuOption
+								className="footer"
+								icon={<DisconnectIcon style={{ color: 'white' }} />}
+								label={t('Disconnect')}
+								onOptionClick={logOut} children={''} />
+						}
+					>
 
-							<MenuOption
-								icon={<LanguagesIcon style={{ color: '#4E88C7' }} />}
-								label={currentLabel}
-								onOptionClick={() => handlePanel('changeLanguage')} children={''} />
-							<MenuOption
-								icon={<InvitationIcon style={{ color: '#4E88C7' }} />}
-								label={t('Join with PIN number')}
-								onOptionClick={() => handlePanel('invitation')} children={''} />
-						</Menu>
-					</div>
+						<MenuOption
+							icon={<LanguagesIcon style={{ color: '#4E88C7' }} />}
+							label={currentLabel}
+							onOptionClick={() => handlePanel('changeLanguage')} children={''} />
+						<MenuOption
+							icon={<InvitationIcon style={{ color: '#4E88C7' }} />}
+							label={t('Join with PIN number')}
+							onOptionClick={() => handlePanel('invitation')} children={''} />
+					</Menu>
 				</div>
 			</div>
 
