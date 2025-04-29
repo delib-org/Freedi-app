@@ -9,9 +9,11 @@ import { StatementType } from 'delib-npm';
 import SwitchScreen from './SwitchScreen';
 import { updateStatementText } from '@/controllers/db/statements/setStatements';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
+import { useAuthorization } from '@/controllers/hooks/useAuthorization';
 
 const Switch = () => {
-	const { statement, role } = useContext(StatementContext);
+	const { statement } = useContext(StatementContext);
+	const { role } = useAuthorization(statement?.statementId);
 	const { parentStatement } = useSwitchMV();
 	const { user } = useAuthentication();
 	const isCreator = statement?.creator.uid === user?.uid;
@@ -21,7 +23,7 @@ const Switch = () => {
 	function handleUpdateStatement(e) {
 		if (e.key === 'Enter') {
 			const title = e.target.value;
-			
+
 			updateStatementText(statement, title);
 			setEdit(false);
 		}

@@ -14,13 +14,11 @@ import { StatementType, Statement } from 'delib-npm';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import NotificationSubscriptionButton from '@/view/components/notifications/NotificationSubscriptionButton';
 import ApproveMembers from '@/view/components/approveMemebers/WaitingList';
-import { useSelector } from 'react-redux';
-import { statementSubscriptionSelector } from '@/redux/statements/statementsSlice';
 
 interface NavButtonsProps {
 	parentStatement?: Statement;
 	screen: string | undefined;
-	handleNavigation: (path: string) => void;
+	handleNavigation: (path: string, screen?: "screen") => void;
 	headerStyle: { color: string; backgroundColor: string };
 	allowNavigation: boolean;
 	statement?: Statement;
@@ -36,11 +34,6 @@ function NavButtons({
 }: Readonly<NavButtonsProps>) {
 	const { t } = useUserConfig();
 	const [openViews, setOpenViews] = useState(true);
-	const subscription = useSelector(
-		statementSubscriptionSelector(statement?.statementId)
-	);
-	const role = subscription?.role;
-	const isAdmin = role === 'admin';
 
 	useEffect(() => {
 		setOpenViews(false);
@@ -52,15 +45,15 @@ function NavButtons({
 		}
 	}, [screen]);
 	function handleAgreementMap() {
-		handleNavigation('agreement-map');
+		handleNavigation('agreement-map', "screen");
 	}
 
 	function handleMindMap() {
-		handleNavigation('mind-map');
+		handleNavigation('mind-map', "screen");
 	}
 
 	function handleView() {
-		if (screen !== 'view' || screen === undefined) {
+		if (screen === 'settings') {
 			handleNavigation('view');
 		} else {
 			setOpenViews(!openViews);
@@ -81,7 +74,7 @@ function NavButtons({
 					statementId={statement.statementId}
 				/>
 			)}
-			{isAdmin && <ApproveMembers />}
+			<ApproveMembers />
 			<div
 				className={`${styles.views} ${styles.button}`}
 				onClick={handleView}
