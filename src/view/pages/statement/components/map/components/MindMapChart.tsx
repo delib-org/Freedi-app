@@ -271,8 +271,18 @@ export default function MindMapChart({
 							<button onClick={onRestore}>
 								<img src={MapRestoreIcon} alt='Restore' />
 							</button>
-							<button onClick={onSave}>
-								<img src={MapSaveIcon} alt='Save' />
+							{/*it does seem to be a save button remove style to see it*/}
+							<button
+								onClick={onSave}
+								style={{
+									pointerEvents: 'none',
+								}}
+							>
+								<img
+									src={MapSaveIcon}
+									alt='Save'
+									style={{ opacity: 0 }}
+								/>
 							</button>
 						</div>
 					)}
