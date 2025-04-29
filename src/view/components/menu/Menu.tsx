@@ -20,6 +20,7 @@ interface MenuProps extends ComponentProps<'div'> {
 	statement?: Statement;
 	currentPage?: string;
 	children: ReactNode;
+	isNavMenu?: boolean;
 }
 
 const Menu: FC<MenuProps> = ({
@@ -31,6 +32,7 @@ const Menu: FC<MenuProps> = ({
 	isCardMenu = false,
 	footer,
 	statement,
+	isNavMenu=true
 }) => {
 	const { dir } = useUserConfig();
 	const user = useSelector((state: RootState) => state.creator.creator);
@@ -38,7 +40,7 @@ const Menu: FC<MenuProps> = ({
 	const { backgroundColor } = useStatementColor({ statement });
 
 	return (
-		<div className="menu"  >
+		<div className='menu'>
 			<IconButton onClick={() => setIsOpen(!isMenuOpen)}>
 				{isHamburger ? (
 					<BurgerIcon style={{ color: iconColor }} />
@@ -47,21 +49,29 @@ const Menu: FC<MenuProps> = ({
 				)}
 			</IconButton>
 
-			<div className={`menu-content ${dir}${isCardMenu ? '--card-menu' : ''} ${isMenuOpen ? 'open' : ''}`}>
-				<div
+			<div
+				className={`menu-content ${dir}${isCardMenu ? '--card-menu' : ''} ${isMenuOpen ? 'open' : ''}`}
+			>
+				{isNavMenu&&<div
 					className={`menu-header ${dir}`}
 					style={{ backgroundColor }}
 				>
-					<h2 className="menu-title">FreeDi</h2>
-					<div className="menu-user">
-						<img className="menu-avatar" src={avatarSrc} alt="User avatar" />
-						<span className="menu-username">{user?.displayName}</span>
+					<h2 className='menu-title'>FreeDi</h2>
+					<div className='menu-user'>
+						<img
+							className='menu-avatar'
+							src={avatarSrc}
+							alt='User avatar'
+						/>
+						<span className='menu-username'>
+							{user?.displayName}
+						</span>
 					</div>
-				</div>
+				</div>}
 				{children}
 				{footer && (
 					<div
-						className="menu-footer"
+						className='menu-footer'
 						onClick={(e) => e.stopPropagation()}
 						style={{ backgroundColor }}
 					>
@@ -69,9 +79,9 @@ const Menu: FC<MenuProps> = ({
 					</div>
 				)}
 				<button
-					className="invisibleBackground"
+					className='invisibleBackground'
 					onClick={() => setIsOpen(false)}
-					aria-label="Close menu"
+					aria-label='Close menu'
 				/>
 			</div>
 		</div>

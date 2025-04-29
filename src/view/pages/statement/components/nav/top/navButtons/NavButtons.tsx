@@ -13,14 +13,12 @@ import styles from '../StatementTopNav.module.scss';
 import { StatementType, Statement } from 'delib-npm';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import NotificationSubscriptionButton from '@/view/components/notifications/NotificationSubscriptionButton';
-import ApproveMembers from '@/view/components/approveMemebers/ApproveMembers';
-import { useSelector } from 'react-redux';
-import { statementSubscriptionSelector } from '@/redux/statements/statementsSlice';
+import ApproveMembers from '@/view/components/approveMemebers/WaitingList';
 
 interface NavButtonsProps {
 	parentStatement?: Statement;
 	screen: string | undefined;
-	handleNavigation: (path: string) => void;
+	handleNavigation: (path: string, screen?: "screen") => void;
 	headerStyle: { color: string; backgroundColor: string };
 	allowNavigation: boolean;
 	statement?: Statement;
@@ -36,24 +34,26 @@ function NavButtons({
 }: Readonly<NavButtonsProps>) {
 	const { t } = useUserConfig();
 	const [openViews, setOpenViews] = useState(true);
-	const subscription = useSelector(statementSubscriptionSelector(statement?.statementId));
-	const role = subscription?.role;
-	const isAdmin = role === 'admin';
 
 	useEffect(() => {
 		setOpenViews(false);
 	}, [screen]);
 
+	useEffect(() => {
+		if (screen === 'view') {
+			setOpenViews(true);
+		}
+	}, [screen]);
 	function handleAgreementMap() {
-		handleNavigation('agreement-map');
+		handleNavigation('agreement-map', "screen");
 	}
 
 	function handleMindMap() {
-		handleNavigation('mind-map');
+		handleNavigation('mind-map', "screen");
 	}
 
 	function handleView() {
-		if (screen !== 'view' || screen === undefined) {
+		if (screen === 'settings') {
 			handleNavigation('view');
 		} else {
 			setOpenViews(!openViews);
@@ -70,10 +70,16 @@ function NavButtons({
 				/>
 			)}
 			{statement && (
-				<NotificationSubscriptionButton statementId={statement.statementId} />
+				<NotificationSubscriptionButton
+					statementId={statement.statementId}
+				/>
 			)}
-			{isAdmin && <ApproveMembers />}
-			<div className={`${styles.views} ${styles.button}`} onClick={handleView} role='button'>
+			<ApproveMembers />
+			<div
+				className={`${styles.views} ${styles.button}`}
+				onClick={handleView}
+				role='button'
+			>
 				<NavIcon
 					statement={statement}
 					screen={screen}

@@ -9,10 +9,13 @@ import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import Menu from '@/view/components/menu/Menu';
 import MenuOption from '@/view/components/menu/MenuOption';
 import { Statement, StatementType } from 'delib-npm';
+import { useSelector } from 'react-redux';
+import { creatorSelector } from '@/redux/creator/creatorSlice';
 
 interface Props {
 	statement: Statement;
 	isAuthorized: boolean;
+	isAdmin: boolean;
 	isCardMenuOpen: boolean;
 	setIsCardMenuOpen: (isOpen: boolean) => void;
 	isEdit: boolean;
@@ -22,6 +25,7 @@ interface Props {
 
 const SolutionMenu: FC<Props> = ({
 	statement,
+	isAdmin,
 	isAuthorized,
 	isCardMenuOpen,
 	setIsCardMenuOpen,
@@ -30,7 +34,9 @@ const SolutionMenu: FC<Props> = ({
 	handleSetOption,
 }) => {
 	const { t } = useUserConfig();
-
+	const user = useSelector(creatorSelector);
+	const isCreator = statement.creatorId === user?.uid;
+	const isCreatorOrAdmin = isCreator || isAdmin;
 	const isOption = statement.statementType === StatementType.option;
 	const isResearch = statement.statementType === StatementType.question;
 
@@ -52,8 +58,9 @@ const SolutionMenu: FC<Props> = ({
 			isMenuOpen={isCardMenuOpen}
 			iconColor='#5899E0'
 			isCardMenu={true}
+			isNavMenu={false}
 		>
-			{isAuthorized && (
+			{isAuthorized && isCreatorOrAdmin && (
 				<MenuOption
 					label={t('Edit Text')}
 					icon={<EditIcon />}
@@ -93,7 +100,7 @@ const SolutionMenu: FC<Props> = ({
 					}}
 				/>
 			)}
-			{isAuthorized && (
+			{isAuthorized && isCreatorOrAdmin && (
 				<MenuOption
 					label={t('Delete')}
 					icon={<DeleteIcon />}
