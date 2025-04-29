@@ -18,10 +18,10 @@ const NotificationBtn = () => {
 	}
 
 	const handleClickOutside = useCallback(() => {
-			if (showInAppNotifications) setShowInAppNotifications(false);
-		}, [showInAppNotifications, setShowInAppNotifications]);
+		if (showInAppNotifications) setShowInAppNotifications(false);
+	}, [showInAppNotifications, setShowInAppNotifications]);
 	
-		const notifRef = useClickOutside(handleClickOutside);
+	const notifRef = useClickOutside(handleClickOutside);
 
 	return (
 		<button onClick={handleShowInAppNotifications} className={styles.notificationBtn}>
