@@ -25,7 +25,7 @@ const nodeStyle = (
 		maxWidth: '30ch',
 		margin: '0.5rem',
 		borderRadius: '5px',
-		padding: '1rem ',
+		padding: '.9rem ',
 		display: 'flex',
 		justifyContent: 'center',
 		alignItems: 'center',
@@ -49,7 +49,7 @@ export default function CustomNode({ data }: NodeProps) {
 	const dynamicNodeStyle = {
 		...nodeStyle(parentStatement, statementColor),
 		width: dimensions ? `${dimensions.width}px` : 'auto',
-		minHeight: dimensions ? `${dimensions.height}px` : 'auto',
+		minHeight: 'auto',
 	};
 
 	const handleNodeClick = () => {
