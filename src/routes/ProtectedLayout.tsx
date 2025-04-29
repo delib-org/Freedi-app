@@ -23,6 +23,7 @@ export default function ProtectedLayout() {
 				if (statement) {
 					dispatch(setStatement(statement));
 				}
+				else navigate("/404")
 			});
 		}
 	}, [_statementId]);
