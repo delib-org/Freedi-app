@@ -37,6 +37,7 @@ export default function Accessibility() {
 	const isDragging = useRef(false);
 
 	const handleStart = (event: React.MouseEvent | React.TouchEvent) => {
+		
 		const clientX = 'touches' in event ? event.touches[0].clientX : event.clientX;
 		const clientY = 'touches' in event ? event.touches[0].clientY : event.clientY;
 		startPos.current = { x: clientX, y: clientY };
@@ -91,6 +92,8 @@ export default function Accessibility() {
 				className='accessibility-button'
 				onMouseDown={handleStart}
 				onTouchStart={handleStart}
+				onClick={handleOpen}
+				aria-label={t('Accessibility options')}
 			>
 				<AccessibilityIcon />
 			</button>
