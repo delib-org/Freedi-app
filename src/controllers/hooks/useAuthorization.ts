@@ -61,9 +61,10 @@ export const useAuthorization = (statementId?: string): AuthorizationState => {
 		return () => unsubscribe();
 	}, [topParentId, creator?.uid]);
 
-	//check if has subscription
 	useEffect(() => {
-		if (!hasSubscription && topParentStatement && creator) {
+
+		// if it is moderated group and user is not subscribed or not banned, set the subscription to waiting
+		if (!hasSubscription && isModeratedGroup(topParentStatement, role) && creator && role !== Role.banned) {
 			setStatementSubscriptionToDB({
 				statement: topParentStatement,
 				creator,
@@ -73,7 +74,7 @@ export const useAuthorization = (statementId?: string): AuthorizationState => {
 				getPushNotification: false,
 			})
 		}
-	}, [hasSubscription, topParentStatement, creator]);
+	}, [hasSubscription, topParentStatement, creator, role]);
 
 	// Handle authorization logic
 	useEffect(() => {
@@ -116,7 +117,7 @@ export const useAuthorization = (statementId?: string): AuthorizationState => {
 		if (isOpenAccess(topParentStatement, creator, role)) {
 
 			setStatementSubscriptionToDB({
-				statement,
+				statement: topParentStatement,
 				creator,
 				role: Role.member
 			});
@@ -139,7 +140,7 @@ export const useAuthorization = (statementId?: string): AuthorizationState => {
 		if (isModeratedGroup(topParentStatement, role)) {
 
 			setStatementSubscriptionToDB({
-				statement,
+				statement: topParentStatement,
 				creator,
 				role: Role.waiting,
 				getInAppNotification: false,
