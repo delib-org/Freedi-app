@@ -83,7 +83,7 @@ const massConsensusRoutes = [
 				element: <LeaveFeedback />,
 			},
 			{
-				path:MassConsensusPageUrls.thankYou,
+				path: MassConsensusPageUrls.thankYou,
 				element: <ThankYou />,
 			}
 		],
@@ -92,18 +92,13 @@ const massConsensusRoutes = [
 
 // Define protectedRoutes
 const protectedRoutes = [
+
 	{
-		path: 'statement/:statementId',
+		path: 'stage/:statementId',
 		element: <StatementMain />,
-		children: [
-			{
-				path: ':screen',
-				element: <StatementMain />,
-			},
-		],
 	},
 	{
-		path: 'statement/:statementId/:page',
+		path: 'statement/:statementId',
 		element: <StatementMain />,
 		children: [
 			{
@@ -113,8 +108,14 @@ const protectedRoutes = [
 		],
 	},
 	{
-		path: 'stage/:statementId',
+		path: 'statement-screen/:statementId',
 		element: <StatementMain />,
+		children: [
+			{
+				path: ':screen',
+				element: <StatementMain />,
+			},
+		],
 	},
 	{
 		path: 'stage/:statementId/:sort',

@@ -64,10 +64,17 @@ const StatementTopNav: FC<Props> = ({
 	const isAdmin = role === Role.admin;
 	const allowNavigation = enableNavigationalElements || isAdmin;
 
-	function handleNavigation(path: string) {
-		if (path === 'settings') setIsHeaderMenuOpen(false);
-		if (statement?.statementId)
-			navigate(`/statement/${statement.statementId}/${path}`);
+	function handleNavigation(path: string, screen?: "screen") {
+		if (!statement?.statementId) return;
+		if (path === 'settings' || screen === "screen") {
+			setIsHeaderMenuOpen(false);
+			navigate(`/statement-screen/${statement.statementId}/${path}`);
+
+			return;
+		}
+
+		navigate(`/statement/${statement.statementId}/${path}`);
+		setIsHeaderMenuOpen(false);
 	}
 
 	function closeOpenModal() {
