@@ -1,24 +1,36 @@
 import { Results, Statement } from 'delib-npm';
 import dagre from '@dagrejs/dagre';
 import { Edge, Node, Position } from 'reactflow';
+import { statementTitleToDisplay } from '@/controllers/general/helpers';
 
 const position = { x: 0, y: 0 };
 
 export const getLayoutElements = (
 	nodes: Node[],
 	edges: Edge[],
-	nodeHeight: number,
-	nodeWidth: number,
-	direction = 'TB'
+	defaultNodeHeight: number,
+	defaultNodeWidth: number,
+	direction = 'TB',
+	nodePadding = 46
 ) => {
 	try {
 		const dagreGraph = new dagre.graphlib.Graph();
 		dagreGraph.setDefaultEdgeLabel(() => ({}));
 		const isHorizontal = direction === 'LR';
 
-		dagreGraph.setGraph({ rankdir: direction });
+		dagreGraph.setGraph({
+			rankdir: direction,
+			nodesep: isHorizontal ? nodePadding : 20,
+			ranksep: isHorizontal ? 150 : nodePadding * 2,
+			marginx: 20,
+			marginy: 20,
+		});
 
 		nodes.forEach((node) => {
+			const nodeWidth = node.data.dimensions?.width ?? defaultNodeWidth;
+			const nodeHeight =
+				node.data.dimensions?.height ?? defaultNodeHeight;
+
 			dagreGraph.setNode(node.id, {
 				width: nodeWidth,
 				height: nodeHeight,
@@ -33,6 +45,9 @@ export const getLayoutElements = (
 
 		nodes.forEach((node) => {
 			const nodeWithPosition = dagreGraph.node(node.id);
+			const nodeWidth = node.data.dimensions?.width ?? defaultNodeWidth;
+			const nodeHeight =
+				node.data.dimensions?.height ?? defaultNodeHeight;
 
 			node.targetPosition = isHorizontal ? Position.Left : Position.Top;
 			node.sourcePosition = isHorizontal
@@ -40,8 +55,8 @@ export const getLayoutElements = (
 				: Position.Bottom;
 
 			node.position = {
-				x: nodeWithPosition.x - nodeWidth / 2,
-				y: nodeWithPosition.y - nodeHeight / 2,
+				x: nodeWithPosition.x - nodeWidth / (!isHorizontal ? 2 : 10),
+				y: nodeWithPosition.y - nodeHeight / (isHorizontal ? 2 : 10),
 			};
 
 			return node;
@@ -65,11 +80,21 @@ export const nodeOptions = (
 	result: Results,
 	parentStatement: 'top' | Statement
 ) => {
+	const { statement } = result.top;
+	const { shortVersion: nodeTitle } = statementTitleToDisplay(statement, 80);
+
+	const estimatedWidth = Math.min(Math.max(nodeTitle.length * 8, 100), 300);
+	const estimatedHeight = Math.ceil(nodeTitle.length / 25) * 20 + 40;
+
 	return {
 		id: result.top.statementId,
 		data: {
 			result,
 			parentStatement,
+			dimensions: {
+				width: estimatedWidth,
+				height: estimatedHeight,
+			},
 		},
 		position,
 		type: 'custom',
@@ -102,19 +127,13 @@ export const createInitialNodesAndEdges = (
 	try {
 		if (!result) return { nodes: [], edges: [] };
 		const edges: Edge[] = [];
-
 		const nodes: Node[] = [nodeOptions(result, 'top')];
-
 		if (!result.sub || result?.sub?.length === 0) return { nodes, edges };
-
 		createNodes(result.sub, result.top);
-
 		function createNodes(results: Results[], parentStatement: Statement) {
 			results.forEach((sub) => {
 				nodes.push(nodeOptions(sub, parentStatement));
-
 				edges.push(edgeOptions(sub, parentStatement.statementId));
-
 				if (sub.sub && sub.sub.length > 0) {
 					createNodes(sub.sub, sub.top);
 				}
