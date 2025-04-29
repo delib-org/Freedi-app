@@ -1,11 +1,12 @@
 import MailIcon from '@/assets/icons/mailIcon.svg?react';
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import InAppNotifications from '../inAppNotifications/InAppNotifications';
 import { useSelector } from 'react-redux';
 import { creatorSelector } from '@/redux/creator/creatorSlice';
 import { NotificationType } from 'delib-npm';
 import { inAppNotificationsSelector } from '@/redux/notificationsSlice/notificationsSlice';
 import styles from './NotificationBtn.module.scss';
+import useClickOutside from '@/controllers/hooks/useClickOutside';
 
 const NotificationBtn = () => {
 	const creator = useSelector(creatorSelector);
@@ -15,6 +16,12 @@ const NotificationBtn = () => {
 	function handleShowInAppNotifications() {
 		setShowInAppNotifications(!showInAppNotifications);
 	}
+
+	const handleClickOutside = useCallback(() => {
+			if (showInAppNotifications) setShowInAppNotifications(false);
+		}, [showInAppNotifications, setShowInAppNotifications]);
+	
+		const notifRef = useClickOutside(handleClickOutside);
 
 	return (
 		<button onClick={handleShowInAppNotifications} className={styles.notificationBtn}>
@@ -28,7 +35,10 @@ const NotificationBtn = () => {
 				)}
 			</div>
 			<MailIcon />
-			{showInAppNotifications && <InAppNotifications />}
+			{showInAppNotifications && <div ref={(node) => {
+				if (notifRef) notifRef.current = node;}}>
+					<InAppNotifications />
+				</div>}
 		</button>
 	)
 }
