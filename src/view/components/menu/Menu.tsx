@@ -5,10 +5,11 @@ import useStatementColor from '@/controllers/hooks/useStatementColor';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import { RootState } from '@/redux/store';
 import { Statement } from 'delib-npm';
-import { ComponentProps, FC, ReactNode } from 'react';
+import { ComponentProps, FC, ReactNode, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import IconButton from '../iconButton/IconButton';
 import './Menu.scss';
+import useClickOutside from '@/controllers/hooks/useClickOutside';
 
 interface MenuProps extends ComponentProps<'div'> {
 	iconColor: string;
@@ -39,8 +40,14 @@ const Menu: FC<MenuProps> = ({
 	const avatarSrc = user?.photoURL || DefaultAvatar;
 	const { backgroundColor } = useStatementColor({ statement });
 
+	const handleClickOutside = useCallback(() => {
+		if (isMenuOpen) setIsOpen(false);
+	}, [isMenuOpen, setIsOpen]);
+
+	const menuRef = useClickOutside(handleClickOutside);
+
 	return (
-		<div className='menu'>
+		<div ref={(node) => {if (menuRef) menuRef.current = node;}} className='menu'>
 			<IconButton onClick={() => setIsOpen(!isMenuOpen)}>
 				{isHamburger ? (
 					<BurgerIcon style={{ color: iconColor }} />
