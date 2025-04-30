@@ -44,7 +44,7 @@ const StatementTopNav: FC<Props> = ({
 	const { t, currentLanguage } = useUserConfig();
 	const navigate = useNavigate();
 	const { screen } = useParams();
-	const role = useSelector(statementSubscriptionSelector(statement?.statementId))?.role;
+	const role = useSelector(statementSubscriptionSelector(statement?.topParentId))?.role;
 	const headerStyle = useStatementColor({ statement });
 	const [showLanguageModal, setShowLanguageModal] = useState(false);
 
@@ -64,10 +64,17 @@ const StatementTopNav: FC<Props> = ({
 	const isAdmin = role === Role.admin;
 	const allowNavigation = enableNavigationalElements || isAdmin;
 
-	function handleNavigation(path: string) {
-		if (path === 'settings') setIsHeaderMenuOpen(false);
-		if (statement?.statementId)
-			navigate(`/statement/${statement.statementId}/${path}`);
+	function handleNavigation(path: string, screen?: "screen") {
+		if (!statement?.statementId) return;
+		if (path === 'settings' || screen === "screen") {
+			setIsHeaderMenuOpen(false);
+			navigate(`/statement-screen/${statement.statementId}/${path}`);
+
+			return;
+		}
+
+		navigate(`/statement/${statement.statementId}/${path}`);
+		setIsHeaderMenuOpen(false);
 	}
 
 	function closeOpenModal() {
@@ -170,14 +177,11 @@ function HeaderMenu({
 					label={t('Share')}
 					icon={<ShareIcon style={menuIconStyle} />}
 					onOptionClick={handleShare} />
-				<MenuOption
+				{!isAdmin && <MenuOption
 					label={currentLabel}
 					icon={<LanguagesIcon style={menuIconStyle} />}
-					onOptionClick={setShowLanguageModal} />
-				<MenuOption
-					label={t('Disconnect')}
-					icon={<DisconnectIcon style={menuIconStyle} />}
-					onOptionClick={handleLogout} />
+					onOptionClick={setShowLanguageModal} />}
+
 				{isAdmin && (
 					<>
 						<MenuOption
@@ -189,7 +193,7 @@ function HeaderMenu({
 							icon={<InvitationIcon style={menuIconStyle} />}
 							onOptionClick={handleInvitePanel} />
 						<MenuOption
-							label={currentLabel as string}
+							label={currentLabel}
 							icon={<LanguagesIcon style={menuIconStyle} />}
 							onOptionClick={setShowLanguageModal} />
 						<MenuOption

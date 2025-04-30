@@ -16,6 +16,7 @@ const MembershipSettings: FC<Props> = ({ statement, setStatementToEdit }) => {
 	const [membershipAccess, setMembershipAccess] = useState<Access>(statement?.membership?.access ?? Access.openToAll);
 
 	if (!statement) return null;
+	if (statement.parentId !== 'top') return null; // Only top-level statements can have membership settings
 
 	return (
 		<div>

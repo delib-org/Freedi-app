@@ -20,8 +20,10 @@ const FollowMeToast: FC = () => {
 	);
 
 	function handleRemoveToast() {
+
 		if (!_isAdmin) return;
 		if (!topParentStatement) return;
+
 		setFollowMeDB(topParentStatement, '');
 	}
 
@@ -36,11 +38,10 @@ const FollowMeToast: FC = () => {
 	)
 		return null;
 
-	if (_isAdmin) {
-		return <ToastInner />;
-	}
-
-	return (
+	//if admin render toast, but do not use link
+	return _isAdmin ? (
+		<ToastInner />
+	) : (
 		<Link to={topParentStatement?.followMe || '/home'}>
 			<ToastInner />
 		</Link>

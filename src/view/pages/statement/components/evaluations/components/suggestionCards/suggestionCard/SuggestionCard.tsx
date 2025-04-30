@@ -1,4 +1,4 @@
-import { FC, useEffect, useRef, useState } from 'react';
+import React, { FC, useEffect, useRef, useState } from 'react';
 
 // Third Party
 
@@ -38,7 +38,7 @@ const SuggestionCard: FC<Props> = ({
 	if (!parentStatement) console.error('parentStatement is not defined');
 
 	const { t, dir } = useUserConfig();
-	const { isAuthorized } = useAuthorization(statement.statementId);
+	const { isAuthorized, isAdmin } = useAuthorization(statement.statementId);
 	const { sort } = useParams();
 
 	// Redux Store
@@ -108,8 +108,14 @@ const SuggestionCard: FC<Props> = ({
 
 	if (!statement) return null;
 
+	function handleRightClick(e: React.MouseEvent) {
+		e.preventDefault();
+		setIsCardMenuOpen(!isCardMenuOpen);
+	}
+
 	return (
 		<div
+			onContextMenu={(e) => handleRightClick(e)}
 			className={
 				statementAge < 10000
 					? 'statement-evaluation-card statement-evaluation-card--new'
@@ -154,6 +160,7 @@ const SuggestionCard: FC<Props> = ({
 						<SolutionMenu
 							statement={statement}
 							isAuthorized={isAuthorized}
+							isAdmin={isAdmin}
 							isCardMenuOpen={isCardMenuOpen}
 							setIsCardMenuOpen={setIsCardMenuOpen}
 							isEdit={isEdit}
@@ -170,9 +177,7 @@ const SuggestionCard: FC<Props> = ({
 						</div>
 					)}
 					<div className='evolution-element'>
-						<Evaluation
-							statement={statement}
-						/>
+						<Evaluation statement={statement} />
 					</div>
 					{hasChildren && (
 						<IconButton
