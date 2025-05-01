@@ -4,9 +4,7 @@ import { ReactFlowProvider } from 'reactflow';
 import CreateStatementModal from '../createStatementModal/CreateStatementModal';
 import MindMapChart from './components/MindMapChart';
 import { isAdmin } from '@/controllers/general/helpers';
-import {
-	FilterType
-} from '@/controllers/general/sorting';
+import { FilterType } from '@/controllers/general/sorting';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import { useMapContext } from '@/controllers/hooks/useMap';
@@ -93,6 +91,7 @@ const MindMap: FC = () => {
 						<MindMapChart
 							descendants={results}
 							isAdmin={_isAdmin}
+							filterBy={filterBy}
 						/>
 					) : (
 						<div>Loading mind map data...</div>

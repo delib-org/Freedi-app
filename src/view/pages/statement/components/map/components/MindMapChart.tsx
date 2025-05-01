@@ -33,7 +33,8 @@ import MapHorizontalLayoutIcon from '@/assets/icons/MapHorizontalLayoutIcon.svg'
 import MapRestoreIcon from '@/assets/icons/MapRestoreIcon.svg';
 import MapSaveIcon from '@/assets/icons/MapSaveIcon.svg';
 import MapVerticalLayoutIcon from '@/assets/icons/MapVerticalLayoutIcon.svg';
-import { Results } from 'delib-npm';
+import { Results, StatementType } from 'delib-npm';
+import { FilterType } from '@/controllers/general/sorting';
 
 // Helper functions
 
@@ -47,11 +48,15 @@ const nodeTypes = {
 
 interface Props {
 	descendants: Results;
-
+	filterBy: FilterType;
 	isAdmin: boolean;
 }
 
-export default function MindMapChart({ descendants, isAdmin }: Readonly<Props>) {
+export default function MindMapChart({
+	descendants,
+	isAdmin,
+	filterBy,
+}: Readonly<Props>) {
 	const { getIntersectingNodes } = useReactFlow();
 	const [nodes, setNodes, onNodesChange] = useNodesState([]);
 	const [edges, setEdges, onEdgesChange] = useEdgesState([]);
@@ -75,10 +80,29 @@ export default function MindMapChart({ descendants, isAdmin }: Readonly<Props>) 
 	const handleCancelClick = () => {
 		setIsButtonVisible(false);
 	};
+	function filterDescendants(results: Results): Results | null {
+		const { isVoted, isChosen } = results.top;
+		if (results.top.statementType === StatementType.option) {
+			if (!(isVoted || isChosen)) return null;
+		}
 
+		const filteredSub = results.sub
+			.map((subResult) => filterDescendants(subResult))
+			.filter((result): result is Results => result !== null);
+
+		return {
+			top: results.top,
+			sub: filteredSub,
+		};
+	}
+	const filtered = filterDescendants(descendants);
 	useEffect(() => {
 		const { nodes: createdNodes, edges: createdEdges } =
-			createInitialNodesAndEdges(descendants);
+			createInitialNodesAndEdges(
+				filterBy !== FilterType.questionsResults
+					? descendants
+					: filtered
+			);
 
 		const { nodes: layoutedNodes, edges: layoutedEdges } =
 			getLayoutElements(
@@ -96,7 +120,7 @@ export default function MindMapChart({ descendants, isAdmin }: Readonly<Props>) 
 		setTimeout(() => {
 			onSave();
 		}, 500);
-	}, [descendants]);
+	}, [descendants, filterBy]);
 
 	const onLayout = useCallback(
 		(direction: 'TB' | 'LR') => {
@@ -247,8 +271,18 @@ export default function MindMapChart({ descendants, isAdmin }: Readonly<Props>) 
 							<button onClick={onRestore}>
 								<img src={MapRestoreIcon} alt='Restore' />
 							</button>
-							<button onClick={onSave}>
-								<img src={MapSaveIcon} alt='Save' />
+							{/*it does seem to be a save button remove style to see it*/}
+							<button
+								onClick={onSave}
+								style={{
+									pointerEvents: 'none',
+								}}
+							>
+								<img
+									src={MapSaveIcon}
+									alt='Save'
+									style={{ opacity: 0 }}
+								/>
 							</button>
 						</div>
 					)}

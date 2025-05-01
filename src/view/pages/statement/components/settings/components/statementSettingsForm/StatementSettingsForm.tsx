@@ -129,7 +129,6 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 				</form>
 				<MembershipSettings statement={statement} setStatementToEdit={setStatementToEdit} />
 				{statement.statementType === StatementType.question && <ChoseBySettings {...statementSettingsProps} />}
-
 				{!isNewStatement && (
 					<>
 						<UploadImage
