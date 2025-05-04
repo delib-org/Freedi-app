@@ -1,4 +1,5 @@
-import { StatementSubscription, Statement, Role, Screen } from 'delib-npm';
+import firebaseConfig from '@/controllers/db/configKey';
+import { functionConfig, StatementSubscription, Statement, Role } from 'delib-npm';
 import { useAuthentication } from '../hooks/useAuthentication';
 import { EnhancedEvaluationThumb } from '@/view/pages/statement/components/evaluations/components/evaluation/enhancedEvaluation/EnhancedEvaluationModel';
 
@@ -173,25 +174,6 @@ export function getStatementSubscriptionId(
 	}
 }
 
-export function getFirstScreen(array: Array<Screen>): Screen {
-	try {
-		//get the first screen from the array by this order: home, questions, options, chat, vote
-		if (!array) throw new Error('No array');
-
-		if (array.includes(Screen.HOME)) return Screen.HOME;
-		if (array.includes(Screen.QUESTIONS)) return Screen.QUESTIONS;
-		if (array.includes(Screen.OPTIONS)) return Screen.OPTIONS;
-		if (array.includes(Screen.CHAT)) return Screen.CHAT;
-		if (array.includes(Screen.VOTE)) return Screen.VOTE;
-
-		return Screen.CHAT;
-	} catch (error) {
-		console.error(error);
-
-		return Screen.CHAT;
-	}
-}
-
 //get first name from full name or first name with firs family name letter
 
 export function getFirstName(fullName: string) {
@@ -344,4 +326,40 @@ export function findClosestEvaluation(array: EnhancedEvaluationThumb[], targetVa
 
 		return currentDiff < closestDiff ? current : closest;
 	}, array[0]);
+}
+
+/**
+ * Generates an API endpoint for Firebase Cloud Functions
+ * @param {string} functionName - The name of the Firebase function
+ * @param {Record<string, string|number>} queryParams - Query parameters to append to the URL
+ * @param {string} envVarName - Optional environment variable name to use for production endpoints
+ * @returns {string} - The complete API endpoint URL
+ */
+export function APIEndPoint(
+	functionName: string,
+	queryParams: Record<string, string | number>,
+	envVarName?: string
+): string {
+	// Convert query parameters to URL search params
+	const queryString = Object.entries(queryParams)
+		.map(([key, value]) => `${key}=${encodeURIComponent(value)}`)
+		.join('&');
+
+	// Check if running on localhost
+	if (window.location.hostname === 'localhost') {
+		return `http://localhost:5001/${firebaseConfig.projectId}/${functionConfig.region}/${functionName}${queryString ? '?' : ''}${queryString}`;
+	}
+
+	// For production, use the provided environment variable or construct a default one
+	const envVar = envVarName 
+		? import.meta.env[envVarName]
+		: import.meta.env[`VITE_APP_${functionName.toUpperCase()}_ENDPOINT`];
+
+	// If the environment variable exists, use it, otherwise use a standard pattern
+	if (envVar) {
+		return `${envVar}?${queryString}`;
+	}
+
+	// Fallback if no environment variable is found
+	return `https://${functionConfig.region}-${firebaseConfig.projectId}.cloudfunctions.net/${functionName}?${queryString}`;
 }

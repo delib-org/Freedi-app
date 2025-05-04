@@ -3,7 +3,7 @@ import { useSelector } from 'react-redux';
 import { ReactFlowProvider } from 'reactflow';
 import CreateStatementModal from '../createStatementModal/CreateStatementModal';
 import MindMapChart from './components/MindMapChart';
-import { isAdmin } from '@/controllers/general/helpers';
+import { APIEndPoint, isAdmin } from '@/controllers/general/helpers';
 import { FilterType } from '@/controllers/general/sorting';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
@@ -29,7 +29,7 @@ const MindMap: FC = () => {
 	);
 
 	// Use the fixed hook
-	const { results } = useMindMap();
+	const { results, descendants } = useMindMap();
 
 	const role = userSubscription ? userSubscription.role : Role.member;
 	const _isAdmin = isAdmin(role);
@@ -53,9 +53,32 @@ const MindMap: FC = () => {
 		return <div>Loading statement...</div>;
 	}
 
+	function handleCluster(){
+		console.log("descendants", descendants);
+		const endPoint = APIEndPoint('getCluster', {});
+		fetch(endPoint, {
+			method: 'POST',
+			body: JSON.stringify({ 
+				topic: statement,
+				descendants: descendants 
+			}),
+			headers: {
+				'Content-Type': 'application/json',
+			},
+		})
+			.then((response) => response.json())
+			.then((data) => {
+				console.log('Cluster data:', data);
+			})
+			.catch((error) => {
+				console.error('Error fetching cluster data:', error);
+			});
+	}
+
 	return (
 		<main className='page__main'>
 			<ReactFlowProvider>
+				<button onClick={handleCluster} className='btn'>Cluster</button>
 				<select
 					aria-label='Select filter type for'
 					onChange={(ev) =>
