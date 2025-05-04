@@ -1,43 +1,37 @@
 import { useEffect, useState } from 'react';
-
 // Third party
 import { useNavigate } from 'react-router';
 import { Handle, NodeProps } from 'reactflow';
-
 // Hooks
-
 // Icons
 import PlusIcon from '@/assets/icons/plusIcon.svg?react';
-
 // Statements functions
-import {
-	calculateFontSize,
-	statementTitleToDisplay,
-} from '@/controllers/general/helpers';
+import { statementTitleToDisplay } from '@/controllers/general/helpers';
 import { useMapContext } from '@/controllers/hooks/useMap';
 import useStatementColor from '@/controllers/hooks/useStatementColor';
 import { Statement } from 'delib-npm';
 
 const nodeStyle = (
 	parentStatement: Statement | 'top',
-	statementColor: { backgroundColor: string; color: string },
-	nodeTitle: string
+	statementColor: { backgroundColor: string; color: string }
 ) => {
 	const style = {
 		backgroundColor:
-			parentStatement === 'top'
-				? 'darkblue'
+			parentStatement === 'top' && !parentStatement
+				? '#b893e7'
 				: statementColor.backgroundColor,
 		color: statementColor.color,
-		height: 40,
-		width: 70,
+		minWidth: '5ch',
+		maxWidth: '30ch',
+		margin: '0.5rem',
 		borderRadius: '5px',
+		padding: '.9rem ',
 		display: 'flex',
 		justifyContent: 'center',
 		alignItems: 'center',
-		padding: '.5rem',
-		cursor: 'pointer',
-		fontSize: calculateFontSize(nodeTitle),
+		fontSize: '1rem',
+		textAlign: 'center',
+		whiteSpace: 'normal',
 	};
 
 	return style;
@@ -45,18 +39,18 @@ const nodeStyle = (
 
 export default function CustomNode({ data }: NodeProps) {
 	const navigate = useNavigate();
-
-	const { result, parentStatement } = data;
-
+	const { result, parentStatement, dimensions } = data;
 	const { statementId, statement } = result.top as Statement;
-
 	const { shortVersion: nodeTitle } = statementTitleToDisplay(statement, 80);
-
 	const statementColor = useStatementColor({ statement: result.top });
-
 	const { mapContext, setMapContext } = useMapContext();
-
 	const [showBtns, setShowBtns] = useState(false);
+
+	const dynamicNodeStyle = {
+		...nodeStyle(parentStatement, statementColor),
+		width: dimensions ? `${dimensions.width}px` : 'auto',
+		minHeight: 'auto',
+	};
 
 	const handleNodeClick = () => {
 		if (!showBtns) {
@@ -94,7 +88,7 @@ export default function CustomNode({ data }: NodeProps) {
 				onClick={handleNodeClick}
 				data-id={statementId}
 				style={{
-					...nodeStyle(parentStatement, statementColor, nodeTitle),
+					...dynamicNodeStyle,
 					textAlign: 'center',
 					wordBreak: 'break-word',
 				}}
@@ -119,7 +113,6 @@ export default function CustomNode({ data }: NodeProps) {
 					>
 						<PlusIcon />
 					</button>
-
 					<button
 						className='addIcon'
 						onClick={handleAddSiblingNode}
@@ -135,7 +128,6 @@ export default function CustomNode({ data }: NodeProps) {
 					</button>
 				</>
 			)}
-
 			<Handle type='target' position={mapContext.targetPosition} />
 			<Handle type='source' position={mapContext.sourcePosition} />
 		</>

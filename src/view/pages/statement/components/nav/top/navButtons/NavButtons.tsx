@@ -1,6 +1,6 @@
 import NavigationButtons from '../navigationButtons/NavigationButtons';
 import HomeButton from '../../../header/HomeButton';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import MenuOption from '@/view/components/menu/MenuOption';
 import Back from '../../../header/Back';
 import TriangleIcon from '@/assets/icons/triangle.svg?react';
@@ -14,6 +14,7 @@ import { StatementType, Statement } from 'delib-npm';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import NotificationSubscriptionButton from '@/view/components/notifications/NotificationSubscriptionButton';
 import ApproveMembers from '@/view/components/approveMemebers/WaitingList';
+import useClickOutside from '@/controllers/hooks/useClickOutside';
 
 interface NavButtonsProps {
 	parentStatement?: Statement;
@@ -44,6 +45,13 @@ function NavButtons({
 			setOpenViews(true);
 		}
 	}, [screen]);
+
+	const handleClickOutside = useCallback(() => {
+			if (openViews) setOpenViews(false);
+		}, [openViews, setOpenViews]);
+		
+	const btnRef = useClickOutside(handleClickOutside);
+
 	function handleAgreementMap() {
 		handleNavigation('agreement-map', "screen");
 	}
@@ -86,7 +94,8 @@ function NavButtons({
 					headerStyle={headerStyle}
 				/>
 				{openViews && (
-					<div className={styles.views__dropdown}>
+					<div ref={(node) => {
+						if (btnRef) btnRef.current = node;}} className={styles.views__dropdown}>
 						<MenuOption
 							label={t('Agreement Map')}
 							icon={<TriangleIcon style={{ color: '#4E88C7' }} />}
