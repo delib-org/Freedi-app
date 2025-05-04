@@ -10,7 +10,7 @@ import View from '@/assets/icons/view.svg?react';
 import MapIcon from '@/assets/icons/navMainPageIcon.svg?react';
 
 import styles from '../StatementTopNav.module.scss';
-import { StatementType, Statement } from 'delib-npm';
+import { StatementType, Statement, Screen } from 'delib-npm';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import NotificationSubscriptionButton from '@/view/components/notifications/NotificationSubscriptionButton';
 import ApproveMembers from '@/view/components/approveMemebers/WaitingList';
@@ -53,15 +53,15 @@ function NavButtons({
 	const btnRef = useClickOutside(handleClickOutside);
 
 	function handleAgreementMap() {
-		handleNavigation('agreement-map', "screen");
+		handleNavigation(Screen.agreementMap);
 	}
 
 	function handleMindMap() {
-		handleNavigation('mind-map', "screen");
+		handleNavigation(Screen.mindMap);
 	}
 
 	function handleView() {
-		if (screen === 'settings') {
+		if (screen === Screen.settings || screen === Screen.chat) {
 			handleNavigation('view');
 		} else {
 			setOpenViews(!openViews);

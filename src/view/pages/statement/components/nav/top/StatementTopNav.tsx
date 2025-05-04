@@ -13,7 +13,7 @@ import ChangeLanguage from '@/view/components/changeLanguage/ChangeLanguage';
 import Menu from '@/view/components/menu/Menu';
 import MenuOption from '@/view/components/menu/MenuOption';
 import Modal from '@/view/components/modal/Modal';
-import { Role, Statement } from 'delib-npm';
+import { Role, Screen, Statement } from 'delib-npm';
 import NavButtons from './navButtons/NavButtons';
 import { useSelector } from 'react-redux';
 import { statementSubscriptionSelector } from '@/redux/statements/statementsSlice';
@@ -64,9 +64,9 @@ const StatementTopNav: FC<Props> = ({
 	const isAdmin = role === Role.admin;
 	const allowNavigation = enableNavigationalElements || isAdmin;
 
-	function handleNavigation(path: string, screen?: "screen") {
+	function handleNavigation(path: string | Screen) {
 		if (!statement?.statementId) return;
-		if (path === 'settings' || screen === "screen") {
+		if (Object.values(Screen).includes(path as Screen)) {
 			setIsHeaderMenuOpen(false);
 			navigate(`/statement-screen/${statement.statementId}/${path}`);
 

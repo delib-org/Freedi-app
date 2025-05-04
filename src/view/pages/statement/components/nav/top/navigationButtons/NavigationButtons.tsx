@@ -4,7 +4,7 @@ import Chat from '@/assets/icons/chatTop.svg?react';
 interface NavigationButtonsProps {
 	statement?: Statement;
 	parentStatement?: Statement;
-	handleNavigation: (path: string) => void;
+	handleNavigation: (path: string, screen?: string) => void;
 	headerStyle: { color: string; backgroundColor: string };
 }
 
@@ -18,7 +18,7 @@ function NavigationButtons({
 	if (!hasChat) return null;
 
 	return (
-		<button onClick={() => handleNavigation('chat')}>
+		<button onClick={() => handleNavigation('chat', "screen")} >
 			<Chat color={headerStyle.color} />
 		</button>
 	);
