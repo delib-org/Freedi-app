@@ -117,11 +117,13 @@ const StatementSettings: FC = () => {
 				</div>
 			) : (
 				<>
+
 					<StatementSettingsForm
 						statement={statementToEdit}
 						parentStatement={parentStatement}
 						setStatementToEdit={setStatementToEdit}
 					/>
+
 					{isMassConsensus && <MassConsensusSettings />}
 				</>
 			)}

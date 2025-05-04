@@ -50,6 +50,9 @@ const CreateStatementModal: FC<CreateStatementModalProps> = ({
 			isOptionSelected,
 			parentStatement,
 			isSendToStoreTemp,
+			statementType: isOptionSelected
+				? StatementType.option
+				: StatementType.question,
 		});
 
 		await getSubStatements?.();

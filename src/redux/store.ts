@@ -8,6 +8,7 @@ import { choseBySlice } from './choseBy/choseBySlice';
 import { massConsensusSlice } from './massConsensus/massConsensusSlice';
 import { notificationsSlicer } from './notificationsSlice/notificationsSlice';
 import creatorReducer from './creator/creatorSlice';
+import SubscriptionsReducer from './subscriptions/subscriptionsSlice';
 
 export const store = configureStore({
 	reducer: {
@@ -20,6 +21,7 @@ export const store = configureStore({
 		massConsensus: massConsensusSlice.reducer,
 		notifications: notificationsSlicer.reducer,
 		creator: creatorReducer,
+		subscriptions: SubscriptionsReducer.reducer,
 	},
 });
 
