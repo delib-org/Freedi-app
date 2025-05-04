@@ -24,8 +24,10 @@ const MultiSwitch: React.FC<MultiSwitchProps> = ({ options, onClick, currentValu
 					tabIndex={0}
 				>
 					<CustomTooltip content={option.toolTip ? option.toolTip : ''} position="top" >
+						<div className={styles.optionContent}>
 						{option.icon ? option.icon : null}
 						{option.label}
+						</div>
 					</CustomTooltip>
 				</button>
 			))}

@@ -1,0 +1,15 @@
+<svg width="32" height="32" xmlns="http://www.w3.org/2000/svg">
+
+ <g>
+  <title>Layer 1</title>
+  <ellipse ry="2.89968" rx="2.89968" id="svg_1" cy="8.94671" cx="11.53292" stroke="currentColor" />
+  <ellipse ry="3.3699" rx="3.3699" id="svg_2" cy="20.85893" cx="7.30095" stroke="currentColor" />
+  <ellipse ry="3.44827" rx="3.44827" id="svg_3" cy="19.84012" cx="21.01567" stroke="currentColor" />
+  <ellipse ry="1.88088" rx="1.88088" id="svg_4" cy="7.92791" cx="21.95611" stroke="currentColor" />
+  <ellipse ry="1.33229" rx="1.33229" id="svg_5" cy="14.74608" cx="15.45141" stroke="currentColor" />
+  <line stroke-linecap="undefined" stroke-linejoin="undefined" id="svg_6" y2="15.60815" x2="14.74609" y1="19.52664" x1="10.20064" stroke="currentColor" fill="currentColor"/>
+  <line stroke-linecap="undefined" stroke-linejoin="undefined" id="svg_7" y2="13.60782" x2="14.58491" y1="11.45149" x1="12.90027" stroke="currentColor" fill="currentColor"/>
+  <line stroke-linecap="undefined" stroke-linejoin="undefined" id="svg_8" y2="13.60782" x2="16.4717" y1="9.49731" x1="20.71698" stroke="currentColor" fill="currentColor"/>
+  <line stroke-linecap="undefined" stroke-linejoin="undefined" id="svg_9" y2="15.89892" x2="16.20216" y1="17.8531" x1="18.29111" stroke="currentColor" fill="currentColor"/>
+ </g>
+</svg>
