@@ -31,7 +31,7 @@ export function useMindMap() {
 	// Calculate results only when descendants or statement change
 	useEffect(() => {
 		// Skip if no data yet
-		if (!descendants.length || !statement) return;
+		if ( !statement) return;
 
 		// Create a cache key from the current data
 		const cacheKey = JSON.stringify({

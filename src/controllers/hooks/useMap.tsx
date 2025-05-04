@@ -47,6 +47,7 @@ interface MapProviderState {
 	nodeWidth: number;
 	nodeHeight: number;
 	direction: 'TB' | 'LR';
+	hoveredId: string | null;
 }
 
 export const MapProvider: FC<MapProviderProps> = ({ children }) => {
@@ -61,6 +62,7 @@ export const MapProvider: FC<MapProviderProps> = ({ children }) => {
 		nodeWidth: 50,
 		nodeHeight: 50,
 		direction: 'TB',
+		hoveredId: null,
 	});
 
 	const contextValue = useMemo(
