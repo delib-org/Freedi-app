@@ -61,7 +61,7 @@ function NavButtons({
 	}
 
 	function handleView() {
-		if (screen === Screen.settings || screen === Screen.chat) {
+		if (screen === Screen.settings || screen === Screen.chat || screen === Screen.agreementMap || screen === Screen.mindMap) {
 			handleNavigation('view');
 		} else {
 			setOpenViews(!openViews);
