@@ -33,7 +33,7 @@ import MapHorizontalLayoutIcon from '@/assets/icons/MapHorizontalLayoutIcon.svg'
 import MapRestoreIcon from '@/assets/icons/MapRestoreIcon.svg';
 import MapSaveIcon from '@/assets/icons/MapSaveIcon.svg';
 import MapVerticalLayoutIcon from '@/assets/icons/MapVerticalLayoutIcon.svg';
-import { Results, StatementType } from 'delib-npm';
+import { Results, Statement, StatementType } from 'delib-npm';
 import { FilterType } from '@/controllers/general/sorting';
 
 // Helper functions
@@ -72,6 +72,7 @@ export default function MindMapChart({
 	const { mapContext, setMapContext } = useMapContext();
 
 	const [isButtonVisible, setIsButtonVisible] = useState(false);
+	const hoveredId = mapContext?.hoveredId ?? null;
 
 	const handleHamburgerClick = () => {
 		setIsButtonVisible(true);
@@ -192,8 +193,8 @@ export default function MindMapChart({
 			const flow = JSON.parse(getFlow);
 
 			if (flow) {
-				setNodes(flow.nodes || []);
-				setEdges(flow.edges || []);
+				setNodes(flow.nodes ?? []);
+				setEdges(flow.edges ?? []);
 			}
 		};
 
@@ -221,6 +222,26 @@ export default function MindMapChart({
 		}));
 	};
 
+	function findStatementById(results: Results, id: string): Statement | null {
+		if (results.top.statementId === id) return results.top;
+
+		for (const sub of results.sub) {
+			const found = findStatementById(sub, id);
+			if (found) return found;
+		}
+
+		return null;
+	}
+	const handleAddSiblingNode = () => {
+		const hoveredStatement =
+			findStatementById(descendants, hoveredId) ?? descendants.top;
+		setMapContext((prev) => ({
+			...prev,
+			showModal: true,
+			parentStatement: hoveredStatement,
+		}));
+	};
+
 	return (
 		<>
 			<ReactFlow
@@ -228,6 +249,7 @@ export default function MindMapChart({
 				edges={edges}
 				nodeTypes={nodeTypes}
 				fitView
+				zoomOnDoubleClick={false}
 				style={{ height: `100vh` }}
 				nodesDraggable={isAdmin}
 				onNodesChange={onNodesChange}
@@ -271,18 +293,8 @@ export default function MindMapChart({
 							<button onClick={onRestore}>
 								<img src={MapRestoreIcon} alt='Restore' />
 							</button>
-							{/*it does seem to be a save button remove style to see it*/}
-							<button
-								onClick={onSave}
-								style={{
-									pointerEvents: 'none',
-								}}
-							>
-								<img
-									src={MapSaveIcon}
-									alt='Save'
-									style={{ opacity: 0 }}
-								/>
+							<button onClick={() => handleAddSiblingNode()}>
+								<img src={MapSaveIcon} alt='Add' />
 							</button>
 						</div>
 					)}

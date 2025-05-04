@@ -11,10 +11,10 @@ import { useMapContext } from '@/controllers/hooks/useMap';
 import useStatementColor from '@/controllers/hooks/useStatementColor';
 import { Statement } from 'delib-npm';
 
-const nodeStyle = (
-	parentStatement: Statement | 'top',
-	statementColor: { backgroundColor: string; color: string }
-) => {
+const nodeStyle = (statementColor: {
+	backgroundColor: string;
+	color: string;
+}) => {
 	const style = {
 		backgroundColor: statementColor.backgroundColor,
 		color: statementColor.color,
@@ -45,7 +45,7 @@ function CustomNode({ data }: NodeProps) {
 	const showBtns = hoveredId === statementId;
 
 	const dynamicNodeStyle = {
-		...nodeStyle(parentStatement, statementColor),
+		...nodeStyle(statementColor),
 		width: dimensions ? `${dimensions.width}px` : 'auto',
 		minHeight: 'auto',
 	};
@@ -64,8 +64,24 @@ function CustomNode({ data }: NodeProps) {
 			state: { from: window.location.pathname },
 		});
 	};
-
+	const handleNodeClick = () => {
+		if (hoveredId === statementId) {
+			setMapContext((prev) => ({
+				...prev,
+				hoveredId: null,
+			}));
+		} else {
+			setMapContext((prev) => ({
+				...prev,
+				hoveredId: statementId,
+			}));
+		}
+	};
 	const handleAddChildNode = () => {
+		setMapContext((prev) => ({
+			...prev,
+			hoveredId: null,
+		}));
 		setMapContext((prev) => ({
 			...prev,
 			showModal: true,
@@ -85,7 +101,8 @@ function CustomNode({ data }: NodeProps) {
 		<>
 			<button
 				onDoubleClick={handleNodeDoubleClick}
-				onMouseEnter={handleNodeHover}
+				onClick={handleNodeClick}
+				onMouseEnter={() => handleNodeHover()}
 				data-id={statementId}
 				style={{
 					...dynamicNodeStyle,
