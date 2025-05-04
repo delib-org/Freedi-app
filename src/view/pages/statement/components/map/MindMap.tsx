@@ -53,14 +53,14 @@ const MindMap: FC = () => {
 		return <div>Loading statement...</div>;
 	}
 
-	function handleCluster(){
+	function handleCluster() {
 		console.log("descendants", descendants);
 		const endPoint = APIEndPoint('getCluster', {});
 		fetch(endPoint, {
 			method: 'POST',
-			body: JSON.stringify({ 
+			body: JSON.stringify({
 				topic: statement,
-				descendants: descendants 
+				descendants: descendants
 			}),
 			headers: {
 				'Content-Type': 'application/json',
@@ -75,10 +75,31 @@ const MindMap: FC = () => {
 			});
 	}
 
+	function handleRecoverSnapshot() {
+		const endPoint = APIEndPoint('recoverLastSnapshot', {});
+		fetch(endPoint, {
+			method: 'POST',
+			body: JSON.stringify({ snapshotId: statement.statementId }),
+			headers: {
+				'Content-Type': 'application/json',
+			},
+		})
+			.then((response) => response.json())
+			.then((data) => {
+				console.log('Recover snapshot data:', data);
+			})
+			.catch((error) => {
+				console.error('Error fetching recover snapshot data:', error);
+			});
+	}
+
 	return (
 		<main className='page__main'>
 			<ReactFlowProvider>
-				<button onClick={handleCluster} className='btn'>Cluster</button>
+				<div className="btns">
+					<button onClick={handleCluster} className='btn'>Cluster</button>
+					<button onClick={handleRecoverSnapshot} className='btn'>Recover Snapshot</button>
+				</div>
 				<select
 					aria-label='Select filter type for'
 					onChange={(ev) =>

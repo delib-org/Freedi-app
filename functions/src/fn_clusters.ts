@@ -1,7 +1,17 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { Statement, StatementSchema } from 'delib-npm';
-import { Response, Request, onInit } from 'firebase-functions/v1';
+import { Collections, getRandomUID, Statement, StatementSchema, StatementSnapShot, StatementType } from 'delib-npm';
+import { Response, Request, onInit, logger } from 'firebase-functions/v1';
 import { array, parse } from 'valibot';
+import { db } from '.';
+
+interface SimpleDescendants {
+    statement: string;
+    statementId: string;
+}
+interface Group {
+    groupName: string;
+    statements: SimpleDescendants[];
+}
 
 let genAI: GoogleGenerativeAI;
 
@@ -33,8 +43,10 @@ export async function getCluster(req: Request, res: Response) {
 
             throw new Error('Invalid input: descendants could not be parsed');
         }
-        
-        const simpleDescendants = descendants.map((descendant) => ({
+
+      
+
+        const simpleDescendants: SimpleDescendants[] = descendants.map((descendant) => ({
             statement: descendant.statement,
             statementId: descendant.statementId,
         }));
@@ -77,6 +89,48 @@ The statements to analyze are: ${JSON.stringify(simpleDescendants)}
             throw new Error('Error parsing response: expected an array of groups');
         }
 
+        //save snapshot to firestore
+        const snapshot: StatementSnapShot = {
+            topic: topic,
+            descendants: descendants,
+            createdAt: new Date().getTime(),
+        };
+
+        const snapshotsRef = db.collection(Collections.statementSnapShots);
+        const newSnapshot =  await snapshotsRef.add(snapshot);
+        logger.log('Snapshot saved successfully:', snapshot.topic.statementId, newSnapshot.id);
+
+//update data-base
+        const batch = db.batch();
+
+        //create new statements based on the groups:
+        groups.forEach((group: Group) => {
+            const id = getRandomUID();
+            const groupRef = db.collection(Collections.statements).doc(id);
+            batch.set(groupRef, {
+                statement: group.groupName,
+                statementId: id,
+                parentId: topic.statementId,
+                parents: [...(topic.parents || []), topic.statementId],
+                topParentId: topic.topParentId,
+                StatementType: StatementType.option,
+                createdAt: new Date().getTime(),
+                topicId: topic.statementId,
+                type: 'cluster',
+                snapshotId: newSnapshot.id,
+            });
+            group.statements.forEach((statement: SimpleDescendants) => {
+                const statementRef = db.collection(Collections.statements).doc(statement.statementId);
+                batch.update(statementRef, {
+                    parentId: id,
+                    parents: [...(topic.parents || []), topic.statementId, id],
+                });
+            });
+        });
+
+        await batch.commit();
+        logger.log('Batch write completed successfully');
+
         res.status(200).send({ text, descendants, ok: true, groups });
 
     } catch (error) {
@@ -85,10 +139,7 @@ The statements to analyze are: ${JSON.stringify(simpleDescendants)}
     }
 }
 
-interface Group {
-    groupName: string;
-    statements: string[];
-}
+
 
 function convertStringToJson(input: string): Group[] | null {
     try {
@@ -106,5 +157,44 @@ function convertStringToJson(input: string): Group[] | null {
         console.error('Error parsing JSON string:', error);
         throw new Error('Invalid JSON string provided');
         // Return an empty array in case of error
+    }
+}
+
+export const recoverLastSnapshot = async (req: Request, res: Response) => {
+    try {
+        const { snapshotId } = req.body;
+        if (!snapshotId || typeof snapshotId !== 'string') {
+            throw new Error('Invalid input: snapshotId is required');
+        }
+
+        const snapshotsRef = db.collection(Collections.statementSnapShots);
+        const snapshotDoc = await snapshotsRef.where("topic.statementId", "==", snapshotId).orderBy("createdAt","desc").limit(1).get();
+
+        if (snapshotDoc.empty) {
+            throw new Error('Snapshot not found');
+        }
+
+        const snapshotData = snapshotDoc.docs[0].data() as StatementSnapShot;
+
+
+        //recover the snapshot data
+        const batch = db.batch();
+        const statementsRef = db.collection(Collections.statements);
+        const statements = snapshotData.descendants;
+        statements.forEach((statement) => {
+            const statementRef = statementsRef.doc(statement.statementId);
+            batch.update(statementRef, {
+                parentId: snapshotData.topic.statementId,
+                parents: [...(snapshotData.topic.parents || []), snapshotData.topic.statementId],
+                topParentId: snapshotData.topic.topParentId,
+            });
+        });
+
+        await batch.commit();
+        logger.log('Batch write completed successfully for snapshot:', snapshotData.topic.statementId);
+
+        res.status(200).send({ snapshotData, ok: true });
+    } catch (error) {
+        res.status(500).send({ error: error instanceof Error ? error.message : 'Unknown server error', ok: false });
     }
 }
