@@ -41,22 +41,13 @@ function CustomNode({ data }: NodeProps) {
 	const { shortVersion: nodeTitle } = statementTitleToDisplay(statement, 80);
 	const statementColor = useStatementColor({ statement: result.top });
 	const { mapContext, setMapContext } = useMapContext();
-	const hoveredId = mapContext?.hoveredId ?? null;
-	const showBtns = hoveredId === statementId;
+	const selectedId = mapContext?.selectedId ?? null;
+	const showBtns = selectedId === statementId;
 
 	const dynamicNodeStyle = {
 		...nodeStyle(statementColor),
 		width: dimensions ? `${dimensions.width}px` : 'auto',
 		minHeight: 'auto',
-	};
-
-	const handleNodeHover = () => {
-		if (hoveredId !== statementId) {
-			setMapContext((prev) => ({
-				...prev,
-				hoveredId: statementId,
-			}));
-		}
 	};
 
 	const handleNodeDoubleClick = () => {
@@ -65,22 +56,22 @@ function CustomNode({ data }: NodeProps) {
 		});
 	};
 	const handleNodeClick = () => {
-		if (hoveredId === statementId) {
+		if (selectedId === statementId) {
 			setMapContext((prev) => ({
 				...prev,
-				hoveredId: null,
+				selectedId: null,
 			}));
 		} else {
 			setMapContext((prev) => ({
 				...prev,
-				hoveredId: statementId,
+				selectedId: statementId,
 			}));
 		}
 	};
 	const handleAddChildNode = () => {
 		setMapContext((prev) => ({
 			...prev,
-			hoveredId: null,
+			selectedId: null,
 		}));
 		setMapContext((prev) => ({
 			...prev,
@@ -102,7 +93,6 @@ function CustomNode({ data }: NodeProps) {
 			<button
 				onDoubleClick={handleNodeDoubleClick}
 				onClick={handleNodeClick}
-				onMouseEnter={() => handleNodeHover()}
 				data-id={statementId}
 				style={{
 					...dynamicNodeStyle,
@@ -151,7 +141,7 @@ function CustomNode({ data }: NodeProps) {
 	);
 }
 export default React.memo(CustomNode, (prevProps, nextProps) => {
-	// Check if mapContext exists before accessing hoveredId
+	// Check if mapContext exists before accessing selectedId
 	const prevMapContext = prevProps.data.mapContext ?? {};
 	const nextMapContext = nextProps.data.mapContext ?? {};
 
@@ -159,8 +149,8 @@ export default React.memo(CustomNode, (prevProps, nextProps) => {
 	const nextId = nextProps.data.result.top.statement.statementId;
 
 	// Only re-render if this specific node's hover state changed
-	const prevHovered = prevMapContext.hoveredId === prevId;
-	const nextHovered = nextMapContext.hoveredId === nextId;
+	const prevSelected = prevMapContext.selectedId === prevId;
+	const nextSelected = nextMapContext.selectedId === nextId;
 
-	return prevHovered === nextHovered;
+	return prevSelected === nextSelected;
 });

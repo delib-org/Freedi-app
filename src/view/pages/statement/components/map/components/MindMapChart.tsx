@@ -72,7 +72,7 @@ export default function MindMapChart({
 	const { mapContext, setMapContext } = useMapContext();
 
 	const [isButtonVisible, setIsButtonVisible] = useState(false);
-	const hoveredId = mapContext?.hoveredId ?? null;
+	const selectedId = mapContext?.selectedId ?? null;
 
 	const handleHamburgerClick = () => {
 		setIsButtonVisible(true);
@@ -234,7 +234,7 @@ export default function MindMapChart({
 	}
 	const handleAddSiblingNode = () => {
 		const hoveredStatement =
-			findStatementById(descendants, hoveredId) ?? descendants.top;
+			findStatementById(descendants, selectedId) ?? descendants.top;
 		setMapContext((prev) => ({
 			...prev,
 			showModal: true,
