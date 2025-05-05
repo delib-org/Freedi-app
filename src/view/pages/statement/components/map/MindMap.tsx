@@ -3,7 +3,7 @@ import { useSelector } from 'react-redux';
 import { ReactFlowProvider } from 'reactflow';
 import CreateStatementModal from '../createStatementModal/CreateStatementModal';
 import MindMapChart from './components/MindMapChart';
-import { APIEndPoint, isAdmin } from '@/controllers/general/helpers';
+import { isAdmin } from '@/controllers/general/helpers';
 import { FilterType } from '@/controllers/general/sorting';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
@@ -16,6 +16,7 @@ import Modal from '@/view/components/modal/Modal';
 import { StatementType, Role } from 'delib-npm';
 import { useParams } from 'react-router';
 import { useMindMap } from './MindMapMV';
+import Loader from '@/view/components/loaders/Loader';
 
 const MindMap: FC = () => {
 	// Add a render counter for debugging - remove in production
@@ -29,7 +30,7 @@ const MindMap: FC = () => {
 	);
 
 	// Use the fixed hook
-	const { results, descendants } = useMindMap();
+	const { flat, results, loading, handleCluster, handleRecoverSnapshot } = useMindMap();
 
 	const role = userSubscription ? userSubscription.role : Role.member;
 	const _isAdmin = isAdmin(role);
@@ -51,54 +52,15 @@ const MindMap: FC = () => {
 	// Only render if we have the necessary data
 	if (!statement) {
 		return <div>Loading statement...</div>;
-	}
-
-	function handleCluster() {
-		console.log("descendants", descendants);
-		const endPoint = APIEndPoint('getCluster', {});
-		fetch(endPoint, {
-			method: 'POST',
-			body: JSON.stringify({
-				topic: statement,
-				descendants: descendants
-			}),
-			headers: {
-				'Content-Type': 'application/json',
-			},
-		})
-			.then((response) => response.json())
-			.then((data) => {
-				console.log('Cluster data:', data);
-			})
-			.catch((error) => {
-				console.error('Error fetching cluster data:', error);
-			});
-	}
-
-	function handleRecoverSnapshot() {
-		const endPoint = APIEndPoint('recoverLastSnapshot', {});
-		fetch(endPoint, {
-			method: 'POST',
-			body: JSON.stringify({ snapshotId: statement.statementId }),
-			headers: {
-				'Content-Type': 'application/json',
-			},
-		})
-			.then((response) => response.json())
-			.then((data) => {
-				console.log('Recover snapshot data:', data);
-			})
-			.catch((error) => {
-				console.error('Error fetching recover snapshot data:', error);
-			});
-	}
+	}	
 
 	return (
 		<main className='page__main'>
 			<ReactFlowProvider>
 				<div className="btns">
-					<button onClick={handleCluster} className='btn'>Cluster</button>
-					<button onClick={handleRecoverSnapshot} className='btn'>Recover Snapshot</button>
+					{loading && <Loader />}
+					{flat && !loading  && <button onClick={handleCluster} className='btn'>Cluster</button>}
+					{!flat && !loading && <button onClick={handleRecoverSnapshot} className='btn'>Flat</button>}
 				</div>
 				<select
 					aria-label='Select filter type for'

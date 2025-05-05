@@ -4,12 +4,16 @@ import { useEffect, useState, useRef } from "react";
 import { useSelector } from "react-redux";
 import { useParams } from "react-router";
 import { resultsByParentId } from "./mapCont";
-import { Statement, Results } from "delib-npm";
+import { Statement, Results, StatementType } from "delib-npm";
+import { APIEndPoint } from "@/controllers/general/helpers";
 
 export function useMindMap() {
 	const { statementId } = useParams();
 	const statement = useSelector(statementSelector(statementId));
 	const descendants: Statement[] = useSelector(statementDescendantsSelector(statementId));
+
+	const [flat, setFlat] = useState(false);
+	const [loading, setLoading] = useState(false);
 
 	// Use a ref to track if we've already processed these descendants
 	const processedDescendants = useRef<string | null>(null);
@@ -27,6 +31,10 @@ export function useMindMap() {
 			unsubscribe();
 		};
 	}, [statementId]);
+
+	useEffect(() => {
+		setFlat(isFlat(descendants, statementId));
+	}, [descendants.length, statementId]);
 
 	// Calculate results only when descendants or statement change
 	useEffect(() => {
@@ -63,5 +71,47 @@ export function useMindMap() {
 		}
 	}, [descendants, statement]);
 
-	return { descendants, results };
+	function handleCluster() {
+		setLoading(true);
+		const endPoint = APIEndPoint('getCluster', {});
+		fetch(endPoint, {
+			method: 'POST',
+			body: JSON.stringify({
+				topic: statement,
+				descendants: descendants
+			}),
+			headers: {
+				'Content-Type': 'application/json',
+			},
+		})
+			.catch((error) => {
+				console.error('Error fetching cluster data:', error);
+			})
+			.finally(() => {
+				setLoading(false);
+			});
+	}
+
+	function handleRecoverSnapshot() {
+		setLoading(true);
+		const endPoint = APIEndPoint('recoverLastSnapshot', {});
+		fetch(endPoint, {
+			method: 'POST',
+			body: JSON.stringify({ snapshotId: statement.statementId }),
+			headers: {
+				'Content-Type': 'application/json',
+			},
+		}).catch((error) => {
+				console.error('Error fetching recover snapshot data:', error);
+			}).
+			finally(() => {
+				setLoading(false);
+			});
+	}
+
+	return { descendants, results, loading, handleRecoverSnapshot, handleCluster, flat };
+}
+
+function isFlat(descendants: Statement[], statementId: string) {
+	return !descendants.some((descendant) => descendant.isCluster && descendant.parentId === statementId);
 }

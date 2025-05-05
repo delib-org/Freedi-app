@@ -47,8 +47,7 @@ export async function getCluster(req: Request, res: Response) {
         const simpleDescendants: SimpleDescendants[] = descendants.map((descendant) => ({
             statement: descendant.statement,
             statementId: descendant.statementId,
-        }));
-       
+        }));       
 
         const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
@@ -91,12 +90,9 @@ The statements to analyze are: ${JSON.stringify(simpleDescendants)}
         const snapshot: StatementSnapShot = {
             topic: topic,
             descendants: descendants,
+            clusters:[],
             createdAt: new Date().getTime(),
-        };
-
-        const snapshotsRef = db.collection(Collections.statementSnapShots);
-        const newSnapshot =  await snapshotsRef.add(snapshot);
-        logger.log('Snapshot saved successfully:', snapshot.topic.statementId, newSnapshot.id);
+        };       
 
 //update data-base
         const batch = db.batch();
@@ -105,8 +101,11 @@ The statements to analyze are: ${JSON.stringify(simpleDescendants)}
         groups.forEach((group: Group) => {
             const id = getRandomUID();
             const groupRef = db.collection(Collections.statements).doc(id);
+            snapshot.clusters.push(id);
+
             const newStatement:Statement = {
                 statement: group.groupName,
+                isCluster: true,
                 statementId: id,
                 parentId: topic.statementId,
                 parents: [...(topic.parents || []), topic.statementId],
@@ -131,6 +130,10 @@ The statements to analyze are: ${JSON.stringify(simpleDescendants)}
         await batch.commit();
         logger.log('Batch write completed successfully');
 
+        const snapshotsRef = db.collection(Collections.statementSnapShots);
+        const newSnapshot = await snapshotsRef.add(snapshot);
+        logger.log('Snapshot saved successfully:', snapshot.topic.statementId, newSnapshot.id);
+
         res.status(200).send({ text, descendants, ok: true, groups });
 
     } catch (error) {
@@ -138,8 +141,6 @@ The statements to analyze are: ${JSON.stringify(simpleDescendants)}
 
     }
 }
-
-
 
 function convertStringToJson(input: string): Group[] | null {
     try {
@@ -176,22 +177,28 @@ export const recoverLastSnapshot = async (req: Request, res: Response) => {
 
         const snapshotData = snapshotDoc.docs[0].data() as StatementSnapShot;
 
-
         //recover the snapshot data
         const batch = db.batch();
-        const statementsRef = db.collection(Collections.statements);
-        const statements = snapshotData.descendants;
-        statements.forEach((statement) => {
-            const statementRef = statementsRef.doc(statement.statementId);
+        const clustersDB = await db.collection(Collections.statements).where("parentId", "==", snapshotData.topic.statementId).where("isCluster", "==", true).get();
+        const clustersIds = clustersDB.docs.map((doc) => doc.id as string);
+        const descendants = snapshotData.descendants;
+        
+        descendants.forEach((statement) => {
+            const statementRef = db.collection(Collections.statements).doc(statement.statementId);
             batch.update(statementRef, {
                 parentId: snapshotData.topic.statementId,
                 parents: [...(snapshotData.topic.parents || []), snapshotData.topic.statementId],
                 topParentId: snapshotData.topic.topParentId,
             });
         });
+        
+        clustersIds.forEach((clusterId) => {
+            const clusterRef = db.collection(Collections.statements).doc(clusterId);
+            batch.delete(clusterRef);
+        });
 
         await batch.commit();
-        logger.log('Batch write completed successfully for snapshot:', snapshotData.topic.statementId);
+        logger.log('Batch write restore successfully for snapshot:', snapshotData.topic.statementId);
 
         res.status(200).send({ snapshotData, ok: true });
     } catch (error) {
