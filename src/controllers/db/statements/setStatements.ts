@@ -137,9 +137,9 @@ export const setStatementToDB = async ({
 	parentStatement,
 }: SetStatementToDBParams): Promise<
 	| {
-		statementId: string;
-		statement: Statement;
-	}
+			statementId: string;
+			statement: Statement;
+	  }
 	| undefined
 > => {
 	try {
@@ -168,8 +168,8 @@ export const setStatementToDB = async ({
 			parentStatement === 'top'
 				? statement.statementId
 				: statement?.topParentId ||
-				parentStatement?.topParentId ||
-				'top';
+					parentStatement?.topParentId ||
+					'top';
 
 		const siblingOptions = getSiblingOptionsByParentId(
 			parentId,
@@ -269,7 +269,14 @@ export function createStatement({
 		}
 		const storeState = store.getState();
 		const creator = storeState.creator?.creator;
-
+		if (
+			parentStatement !== 'top' &&
+			typeof parentStatement !== 'string' &&
+			parentStatement.statementType === StatementType.group &&
+			statementType === StatementType.option
+		) {
+			return;
+		}
 		if (!creator) throw new Error('Creator is undefined');
 		if (!statementType) throw new Error('Statement type is undefined');
 
@@ -657,10 +664,8 @@ export async function setFollowMeDB(
 		);
 
 		if (path) {
-
 			await updateDoc(topParentStatementRef, { followMe: path });
 		} else {
-
 			await updateDoc(topParentStatementRef, { followMe: '' });
 		}
 	} catch (error) {
