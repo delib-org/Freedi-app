@@ -42,9 +42,7 @@ export async function getCluster(req: Request, res: Response) {
         if (!descendants) {
 
             throw new Error('Invalid input: descendants could not be parsed');
-        }
-
-      
+        }      
 
         const simpleDescendants: SimpleDescendants[] = descendants.map((descendant) => ({
             statement: descendant.statement,
@@ -107,23 +105,25 @@ The statements to analyze are: ${JSON.stringify(simpleDescendants)}
         groups.forEach((group: Group) => {
             const id = getRandomUID();
             const groupRef = db.collection(Collections.statements).doc(id);
-            batch.set(groupRef, {
+            const newStatement:Statement = {
                 statement: group.groupName,
                 statementId: id,
                 parentId: topic.statementId,
                 parents: [...(topic.parents || []), topic.statementId],
                 topParentId: topic.topParentId,
-                StatementType: StatementType.option,
-                createdAt: new Date().getTime(),
-                topicId: topic.statementId,
-                type: 'cluster',
-                snapshotId: newSnapshot.id,
-            });
+                statementType: StatementType.option,
+                createdAt: new Date().getTime(), 
+                creator: topic.creator,
+                creatorId: topic.creatorId,
+                consensus: 0,
+                lastUpdate: new Date().getTime(),
+            }
+            batch.set(groupRef, newStatement);
             group.statements.forEach((statement: SimpleDescendants) => {
                 const statementRef = db.collection(Collections.statements).doc(statement.statementId);
                 batch.update(statementRef, {
                     parentId: id,
-                    parents: [...(topic.parents || []), topic.statementId, id],
+                    parents: [...(topic.parents || []), topic.statementId],
                 });
             });
         });
