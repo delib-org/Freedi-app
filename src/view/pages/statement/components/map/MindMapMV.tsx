@@ -1,15 +1,25 @@
-import { listenToDescendants } from "@/controllers/db/results/getResults";
-import { statementDescendantsSelector, statementSelector } from "@/redux/statements/statementsSlice";
-import { useEffect, useState, useRef } from "react";
-import { useSelector } from "react-redux";
-import { useParams } from "react-router";
-import { resultsByParentId } from "./mapCont";
-import { Statement, Results } from "delib-npm";
+import { listenToDescendants } from '@/controllers/db/results/getResults';
+import {
+	statementDescendantsSelector,
+	statementSelector,
+} from '@/redux/statements/statementsSlice';
+import { useEffect, useState, useRef } from 'react';
+import { useSelector } from 'react-redux';
+import { useParams } from 'react-router';
+import { resultsByParentId } from './mapCont';
+import { Statement, Results, StatementType } from 'delib-npm';
 
 export function useMindMap() {
 	const { statementId } = useParams();
 	const statement = useSelector(statementSelector(statementId));
-	const descendants: Statement[] = useSelector(statementDescendantsSelector(statementId));
+	const allDescendants: Statement[] = useSelector(
+		statementDescendantsSelector(statementId)
+	);
+	const descendants = allDescendants.filter(
+		(statement) =>
+			statement.statementType === StatementType.question ||
+			statement.statementType === StatementType.option
+	);
 
 	// Use a ref to track if we've already processed these descendants
 	const processedDescendants = useRef<string | null>(null);
@@ -31,14 +41,14 @@ export function useMindMap() {
 	// Calculate results only when descendants or statement change
 	useEffect(() => {
 		// Skip if no data yet
-		if ( !statement) return;
+		if (!statement) return;
 
 		// Create a cache key from the current data
 		const cacheKey = JSON.stringify({
 			statementId: statement.statementId,
 			descendantsLength: descendants.length,
 			// Only include specific properties to limit unnecessary recalculations
-			descendants: descendants
+			descendants: descendants,
 		});
 
 		// Skip processing if we've already processed this exact data
@@ -52,14 +62,16 @@ export function useMindMap() {
 			const newResults = resultsByParentId(statement, descendants);
 
 			// Update state only if results actually changed
-			setResults(prevResults => {
+			setResults((prevResults) => {
 				const prevResultsStr = JSON.stringify(prevResults);
 				const newResultsStr = JSON.stringify(newResults);
 
-				return prevResultsStr === newResultsStr ? prevResults : newResults;
+				return prevResultsStr === newResultsStr
+					? prevResults
+					: newResults;
 			});
 		} catch (error) {
-			console.error("Error calculating results:", error);
+			console.error('Error calculating results:', error);
 		}
 	}, [descendants, statement]);
 
