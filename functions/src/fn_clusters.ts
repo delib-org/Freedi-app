@@ -1,7 +1,7 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { Collections, getRandomUID, Statement, StatementSchema, StatementSnapShot, StatementType } from 'delib-npm';
 import { Response, Request, onInit, logger } from 'firebase-functions/v1';
-import { array, parse } from 'valibot';
+import {  parse } from 'valibot';
 import { db } from '.';
 
 interface SimpleDescendants {
@@ -30,18 +30,24 @@ onInit(() => {
 export async function getCluster(req: Request, res: Response) {
     try {
 
-        const _descendants = req.body.descendants as Statement[];
+        const statementId = req.body.statementId as Statement[];
+        const descendantsDB = await db.collection(Collections.statements).where("parentId", "==", statementId).get();
+        const descendants = descendantsDB.docs.map((doc) => parse(StatementSchema, doc.data())).filter((statement) => statement.isCluster !== true) as Statement[];
         const topic = req.body.topic as Statement;
-        if (!topic || typeof topic !== 'object') {
-            throw new Error('Invalid input: topic should be a valid statement object');
+        
+        if (!topic || !topic.statementId) {
+            throw new Error('Invalid input: topic is required');
         }
-        if (!_descendants || !Array.isArray(_descendants)) {
-            throw new Error('Invalid input: descendants should be an array of statements');
+        if (!statementId || typeof statementId !== 'string') {
+            throw new Error('Invalid input: statementId is required');
         }
-        const descendants = parse(array(StatementSchema), _descendants);
-        if (!descendants) {
 
-            throw new Error('Invalid input: descendants could not be parsed');
+        if (!descendants || descendants.length === 0) {
+
+            logger.log('No descendants found for the given statementId:', statementId);
+            res.status(200).send({ message: 'No descendants found', descendants: [], ok: true });
+            
+            return;
         }      
 
         const simpleDescendants: SimpleDescendants[] = descendants.map((descendant) => ({
@@ -52,28 +58,29 @@ export async function getCluster(req: Request, res: Response) {
         const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
         const prompt = `
-The following statements are ideas suggested under this topic: ${topic.statement}.
+        Hi Gemini! I need your help to cluster some statements based on their relevance to a main topic.
+        The following statements are ideas suggested under this topic: ${topic.statement}.
 
-Your task:
-1. Cluster these statements primarily based on their relevance and relationship to the main topic "${topic.statement}".
-2. Statements that address similar aspects of the main topic should be grouped together.
-3. Within each relevance-based cluster, identify and consolidate similar statements:
-   - When statements express the same concept with minor variations (like "לטייל ברגל", "טיול רגלי", and "טיול רגלי"), merge them into the most appropriate version.
-   - Choose the clearest and most grammatically correct version (e.g., "טיול רגלי" over variations like "לטייל ברגל" or "טיל רגלי").
-   - When you integrate or merge multiple similar statements, use the statementId of the best statement (the one with the clearest expression or most grammatically correct version).
-4. Name each group based on how its statements relate to the main topic, using the primary language of the statements.
+        Your task:
+        1. Cluster these statements primarily based on their relevance and relationship to the main topic "${topic.statement}".
+        2. Statements that address similar aspects of the main topic should be grouped together.
+        3. Within each relevance-based cluster, identify and consolidate similar statements:
+        - When statements express the same concept with minor variations (like "לטייל ברגל", "טיול רגלי", and "טיול רגלי"), merge them into the most appropriate version.
+        - Choose the clearest and most grammatically correct version (e.g., "טיול רגלי" over variations like "לטייל ברגל" or "טיל רגלי").
+        - When you integrate or merge multiple similar statements, use the statementId of the best statement (the one with the clearest expression or most grammatically correct version).
+        4. Name each group based on how its statements relate to the main topic, using the primary language of the statements.
 
-Return your response as a JSON array of cluster objects with this structure:
-[{
-  groupName: "תיאור הקבוצה (באופן שמתייחס לנושא המרכזי)",
-  statements: [
-    {statement: "משפט נבחר 1", statementId: "id1"},
-    {statement: "משפט נבחר 2", statementId: "id2"}
-  ]
-}]
+        Return your response as a JSON array of cluster objects with this structure:
+        [{
+        groupName: "תיאור הקבוצה (באופן שמתייחס לנושא המרכזי)",
+        statements: [
+            {statement: "משפט נבחר 1", statementId: "id1"},
+            {statement: "משפט נבחר 2", statementId: "id2"}
+        ]
+        }]
 
-The statements to analyze are: ${JSON.stringify(simpleDescendants)}
-`;
+        The statements to analyze are: ${JSON.stringify(simpleDescendants)}
+        `;
         const response = await model.generateContent(prompt);
         if (!response) {
             throw new Error('Error generating response from model');

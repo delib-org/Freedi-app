@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { useSelector } from "react-redux";
 import { useParams } from "react-router";
 import { resultsByParentId } from "./mapCont";
-import { Statement, Results, StatementType } from "delib-npm";
+import { Statement, Results } from "delib-npm";
 import { APIEndPoint } from "@/controllers/general/helpers";
 
 export function useMindMap() {
@@ -77,8 +77,8 @@ export function useMindMap() {
 		fetch(endPoint, {
 			method: 'POST',
 			body: JSON.stringify({
-				topic: statement,
-				descendants: descendants
+				statementId: statement.statementId,
+				topic: statement
 			}),
 			headers: {
 				'Content-Type': 'application/json',
@@ -102,8 +102,8 @@ export function useMindMap() {
 				'Content-Type': 'application/json',
 			},
 		}).catch((error) => {
-				console.error('Error fetching recover snapshot data:', error);
-			}).
+			console.error('Error fetching recover snapshot data:', error);
+		}).
 			finally(() => {
 				setLoading(false);
 			});
