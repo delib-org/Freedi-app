@@ -45,6 +45,7 @@ import { updateAgrees } from './fn_agree';
 import { updateStatementWithViews } from './fn_views';
 import { getInitialMCData, addMassConsensusMember, addOptionToMassConsensus, removeOptionFromMassConsensus, updateOptionInMassConsensus, addMemberToMassConsensus } from './fn_massConsensus';
 import { updateInAppNotifications } from './fn_notifications';
+import { getCluster, recoverLastSnapshot } from './fn_clusters';
 
 // Initialize Firebase
 initializeApp();
@@ -139,6 +140,8 @@ exports.checkForSimilarStatements = wrapHttpFunction(findSimilarStatements);
 exports.massConsensusGetInitialData = wrapHttpFunction(getInitialMCData);
 exports.getQuestionOptions = wrapHttpFunction(getQuestionOptions);
 exports.massConsensusAddMember = wrapHttpFunction(addMassConsensusMember);
+exports.getCluster = wrapHttpFunction(getCluster);
+exports.recoverLastSnapshot = wrapHttpFunction(recoverLastSnapshot);
 
 // --------------------------
 // FIRESTORE TRIGGER FUNCTIONS
