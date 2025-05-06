@@ -15,7 +15,7 @@ import {
 	Evaluation,
 	Statement,
 	Vote,
-	Creator
+	Creator,
 } from 'delib-npm';
 import { Dispatch, SetStateAction } from 'react';
 

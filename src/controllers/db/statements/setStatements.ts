@@ -32,6 +32,7 @@ import {
 } from 'delib-npm';
 
 import { number, parse, string } from 'valibot';
+import { isStatementTypeAllowedAsChildren } from '@/controllers/general/helpers';
 
 export const resultsSettingsDefault: ResultsSettings = {
 	resultsBy: ResultsBy.consensus,
@@ -269,12 +270,7 @@ export function createStatement({
 		}
 		const storeState = store.getState();
 		const creator = storeState.creator?.creator;
-		if (
-			parentStatement !== 'top' &&
-			typeof parentStatement !== 'string' &&
-			parentStatement.statementType === StatementType.group &&
-			statementType === StatementType.option
-		) {
+		if (!isStatementTypeAllowedAsChildren(parentStatement, statementType)) {
 			return;
 		}
 		if (!creator) throw new Error('Creator is undefined');

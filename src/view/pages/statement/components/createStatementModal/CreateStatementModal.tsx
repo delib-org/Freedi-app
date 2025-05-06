@@ -42,14 +42,6 @@ const CreateStatementModal: FC<CreateStatementModalProps> = ({
 
 	const onFormSubmit = async () => {
 		setShowModal(false);
-		if (
-			parentStatement !== 'top' &&
-			typeof parentStatement !== 'string' &&
-			parentStatement.statementType === StatementType.group &&
-			isOptionSelected
-		) {
-			return;
-		}
 
 		await createStatementFromModal({
 			creator,
