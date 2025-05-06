@@ -1,5 +1,4 @@
 import { FC, useContext } from "react";
-import styles from "./Description.module.scss";
 import Text from "@/view/components/text/Text";
 import { StatementContext } from "@/view/pages/statement/StatementCont";
 
