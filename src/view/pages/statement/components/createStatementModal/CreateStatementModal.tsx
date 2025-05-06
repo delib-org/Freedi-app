@@ -75,7 +75,6 @@ const CreateStatementModal: FC<CreateStatementModalProps> = ({
 				<Tabs
 					isOptionChosen={isOptionSelected}
 					setIsOptionChosen={setIsOptionSelected}
-					parentStatement={parentStatement}
 					allowedTypes={allowedTypes}
 				/>
 
@@ -115,7 +114,6 @@ interface TabsProps {
 	allowedTypes?: StatementType[];
 	isOptionChosen: boolean;
 	setIsOptionChosen: (isOptionChosen: boolean) => void;
-	parentStatement: Statement | 'top';
 }
 
 const Tabs: FC<TabsProps> = ({

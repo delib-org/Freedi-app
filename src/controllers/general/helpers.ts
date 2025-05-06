@@ -1,5 +1,11 @@
 import firebaseConfig from '@/controllers/db/configKey';
-import { functionConfig, StatementSubscription, Statement, Role } from 'delib-npm';
+import {
+	functionConfig,
+	StatementSubscription,
+	Statement,
+	Role,
+	StatementType,
+} from 'delib-npm';
 import { useAuthentication } from '../hooks/useAuthentication';
 import { EnhancedEvaluationThumb } from '@/view/pages/statement/components/evaluations/components/evaluation/enhancedEvaluation/EnhancedEvaluationModel';
 
@@ -15,11 +21,21 @@ export function isAuthorized(
 		const { user } = useAuthentication();
 		if (!user) return false;
 
-		if (isUserCreator(user.uid, statement, parentStatementCreatorId, statementSubscription)) {
+		if (
+			isUserCreator(
+				user.uid,
+				statement,
+				parentStatementCreatorId,
+				statementSubscription
+			)
+		) {
 			return true;
 		}
 
-		if (statementSubscription && isUserAuthorizedByRole(statementSubscription.role, authorizedRoles)) {
+		if (
+			statementSubscription &&
+			isUserAuthorizedByRole(statementSubscription.role, authorizedRoles)
+		) {
 			return true;
 		}
 
@@ -44,7 +60,10 @@ function isUserCreator(
 	);
 }
 
-function isUserAuthorizedByRole(role: Role, authorizedRoles?: Array<Role>): boolean {
+function isUserAuthorizedByRole(
+	role: Role,
+	authorizedRoles?: Array<Role>
+): boolean {
 	return role === Role.admin || (authorizedRoles?.includes(role) ?? false);
 }
 
@@ -83,7 +102,25 @@ export function generateRandomLightColor(uuid: string) {
 
 	return hexColor;
 }
+export function isStatementTypeAllowedAsChildren(
+	parentStatement: string | { statementType: StatementType },
+	childType: StatementType
+): boolean {
+	// Handle 'top' case and string case
+	if (parentStatement === 'top' || typeof parentStatement === 'string') {
+		return true;
+	}
 
+	// Handle the group/option case
+	if (
+		parentStatement.statementType === StatementType.group &&
+		childType === StatementType.option
+	) {
+		return false;
+	}
+
+	return true;
+}
 export const statementTitleToDisplay = (
 	statement: string,
 	titleLength: number
@@ -309,7 +346,10 @@ export const emojiTransformer = (text: string): string => {
  * @param {number} targetValue - The value to find the closest match for (-1 to 1)
  * @returns {Object} - The object with the closest evaluation value
  */
-export function findClosestEvaluation(array: EnhancedEvaluationThumb[], targetValue = 0) {
+export function findClosestEvaluation(
+	array: EnhancedEvaluationThumb[],
+	targetValue = 0
+) {
 	// Validate input
 	if (!Array.isArray(array) || array.length === 0) {
 		throw new Error('Input must be a non-empty array');

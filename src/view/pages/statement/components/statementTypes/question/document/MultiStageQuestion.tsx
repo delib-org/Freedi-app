@@ -7,7 +7,6 @@ import {
 } from 'react';
 import { StatementContext } from '../../../../StatementCont';
 import styles from './MultiStageQuestion.module.scss';
-import Button, { ButtonType } from '@/view/components/buttons/button/Button';
 import Modal from '@/view/components/modal/Modal';
 import AddStage from './addStage/AddStage';
 import { useDispatch, useSelector } from 'react-redux';
@@ -96,15 +95,13 @@ const MultiStageQuestion: FC = () => {
 				</Modal>
 			)}
 			<div className={`btns ${styles['add-stage']}`}>
-				<Button
-					text={t('Add sub-question')}
-					type='button'
-					buttonType={ButtonType.PRIMARY}
+				<button
+					className='btn btn--secondary'
 					onClick={() => setShowAddStage(true)}
-				/>
+				>{t('Add sub-question')}</button>
 			</div>
 			{initialStages.length === 0 ? (
-				<StagePage />) :
+				<StagePage showStageTitle={false} />) :
 				(
 					<div className={styles.stagesWrapper}>
 						<h2 className={styles.title}>
