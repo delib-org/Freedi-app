@@ -1,0 +1,14 @@
+.thanks{
+    max-width: var(--wrapper);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin: 5rem auto;
+    gap:2rem;
+
+    img{
+        width: 100%;
+        max-width: 300px;
+    }
+}

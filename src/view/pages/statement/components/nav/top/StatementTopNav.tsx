@@ -1,62 +1,53 @@
-import { Role, Statement } from 'delib-npm';
-import { FC, useContext } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import Back from '../../header/Back';
-import HomeButton from '../../header/HomeButton';
+import { FC, useState } from 'react';
+import { useNavigate, useParams } from 'react-router';
 import styles from './StatementTopNav.module.scss';
-// Third party imports
-
-// Helpers
-import BellIcon from '@/assets/icons/bellIcon.svg?react';
-import BellSlashIcon from '@/assets/icons/bellSlashIcon.svg?react';
-import Chat from '@/assets/icons/chatTop.svg?react';
 import DisconnectIcon from '@/assets/icons/disconnectIcon.svg?react';
-import MainIcon from '@/assets/icons/evaluations2Icon.svg?react';
 import FollowMe from '@/assets/icons/follow.svg?react';
 import InvitationIcon from '@/assets/icons/invitation.svg?react';
 import SettingsIcon from '@/assets/icons/settings.svg?react';
 import ShareIcon from '@/assets/icons/shareIcon.svg?react';
-import View from '@/assets/icons/view.svg?react';
-import { useLanguage } from '@/controllers/hooks/useLanguages';
+import { LANGUAGES } from '@/constants/Languages';
 import useStatementColor from '@/controllers/hooks/useStatementColor.ts';
-
-//icons
-
-//components
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import ChangeLanguage from '@/view/components/changeLanguage/ChangeLanguage';
 import Menu from '@/view/components/menu/Menu';
 import MenuOption from '@/view/components/menu/MenuOption';
-import { StatementContext } from '../../../StatementCont';
+import Modal from '@/view/components/modal/Modal';
+import { Role, Screen, Statement } from 'delib-npm';
+import NavButtons from './navButtons/NavButtons';
+import { useSelector } from 'react-redux';
+import { statementSubscriptionSelector } from '@/redux/statements/statementsSlice';
+import LanguagesIcon from '@/assets/icons/languagesIcon.svg?react';
 
 interface Props {
 	statement?: Statement;
+	parentStatement?: Statement;
 	handleShare: () => void;
 	handleFollowMe: () => void;
-	handleToggleNotifications: () => void;
 	handleInvitePanel: () => void;
 	handleLogout: () => void;
 	setIsHeaderMenuOpen: (value: boolean) => void;
 	isHeaderMenuOpen: boolean;
-	permission: boolean;
-}
+};
 
 const StatementTopNav: FC<Props> = ({
 	statement,
+	parentStatement,
 	setIsHeaderMenuOpen,
-	handleToggleNotifications,
 	handleLogout,
 	handleFollowMe,
 	handleInvitePanel,
-	permission,
 	isHeaderMenuOpen,
 	handleShare,
 }) => {
-	//hooks
-	const { t } = useLanguage();
+
+	const { t, currentLanguage } = useUserConfig();
 	const navigate = useNavigate();
 	const { screen } = useParams();
-	const { role } = useContext(StatementContext);
-	// const
+	const role = useSelector(statementSubscriptionSelector(statement?.topParentId))?.role;
 	const headerStyle = useStatementColor({ statement });
+	const [showLanguageModal, setShowLanguageModal] = useState(false);
+
 	const menuIconStyle = {
 		color: headerStyle.backgroundColor,
 		width: '24px',
@@ -64,25 +55,43 @@ const StatementTopNav: FC<Props> = ({
 
 	if (!statement) return null;
 
-	const enableNavigationalElements = Boolean(statement?.statementSettings?.enableNavigationalElements)
+	const _statement = parentStatement || statement;
+
+	const enableNavigationalElements = Boolean(
+		_statement?.statementSettings?.enableNavigationalElements
+	);
 
 	const isAdmin = role === Role.admin;
 	const allowNavigation = enableNavigationalElements || isAdmin;
 
-	function handleNavigation(path: string) {
-		if (path === "settings") setIsHeaderMenuOpen(false);
-		if (statement && statement.statementId)
-			navigate(`/statement/${statement.statementId}/${path}`);
+	function handleNavigation(path: string | Screen) {
+		if (!statement?.statementId) return;
+		if (Object.values(Screen).includes(path as Screen)) {
+			setIsHeaderMenuOpen(false);
+			navigate(`/statement-screen/${statement.statementId}/${path}`);
+
+			return;
+		}
+
+		navigate(`/statement/${statement.statementId}/${path}`);
+		setIsHeaderMenuOpen(false);
 	}
+
+	function closeOpenModal() {
+		setShowLanguageModal(!showLanguageModal);
+	}
+	const currentLabel = LANGUAGES.find(
+		(lang) => lang.code === currentLanguage
+	)?.label;
 
 	return (
 		<nav
-			className={styles.nav}
-			data-cy="statement-nav"
+			className={`${styles.nav} ${currentLanguage === 'he' ? styles.rtl : styles.ltr}`}
+			data-cy='statement-nav'
 			style={{ backgroundColor: headerStyle.backgroundColor }}
 		>
-			<div className={styles.wrapper}>
-				{allowNavigation && (
+			<div className={`${styles.wrapper} ${currentLanguage === 'he' ? styles.rtl : styles.ltr}`}>
+				{allowNavigation && statement && (
 					<HeaderMenu
 						setIsHeaderMenuOpen={setIsHeaderMenuOpen}
 						isHeaderMenuOpen={isHeaderMenuOpen}
@@ -92,19 +101,22 @@ const StatementTopNav: FC<Props> = ({
 						handleFollowMe={handleFollowMe}
 						handleInvitePanel={handleInvitePanel}
 						handleNavigation={handleNavigation}
+						setShowLanguageModal={closeOpenModal}
+						showLanguageModal={showLanguageModal}
 						isAdmin={isAdmin}
 						menuIconStyle={menuIconStyle}
 						t={t}
+						currentLabel={currentLabel}
+						statement={statement}
 					/>
 				)}
 				<NavButtons
 					statement={statement}
+					parentStatement={parentStatement}
 					screen={screen}
 					handleNavigation={handleNavigation}
 					headerStyle={headerStyle}
 					allowNavigation={allowNavigation}
-					permission={permission}
-					handleToggleNotifications={handleToggleNotifications}
 				/>
 			</div>
 		</nav>
@@ -113,123 +125,49 @@ const StatementTopNav: FC<Props> = ({
 
 export default StatementTopNav;
 
-interface NavigationButtonsProps {
-	statement?: Statement;
-	screen: string | undefined;
-	handleNavigation: (path: string) => void;
+function HeaderMenu({
+	setIsHeaderMenuOpen,
+	isHeaderMenuOpen,
+	headerStyle,
+	handleShare,
+	handleLogout,
+	handleFollowMe,
+	handleInvitePanel,
+	handleNavigation,
+	setShowLanguageModal,
+	showLanguageModal,
+	isAdmin,
+	menuIconStyle,
+	t,
+	currentLabel,
+	statement,
+}: Readonly<{
+	statement: Statement;
+	setIsHeaderMenuOpen: (value: boolean) => void;
+	isHeaderMenuOpen: boolean;
 	headerStyle: { color: string; backgroundColor: string };
-}
-
-function NavigationButtons({ screen, handleNavigation, headerStyle, statement }: NavigationButtonsProps) {
-	const { hasChat } = statement?.statementSettings || { hasChat: false };
-	if (!hasChat) return null;
-
-	return (
-		<>
-			{(() => {
-				switch (screen) {
-					case 'chat':
-						return (
-							<button onClick={() => handleNavigation("main")}>
-								<MainIcon color={headerStyle.color} />
-							</button>
-						);
-					case "main":
-						return (
-							<button onClick={() => handleNavigation("chat")}>
-								<Chat color={headerStyle.color} />
-							</button>
-						);
-					case "settings":
-						return (
-							<button onClick={() => handleNavigation("main")}>
-								<MainIcon color={headerStyle.color} />
-							</button>
-						);
-					default:
-						return (
-							<button onClick={() => handleNavigation("chat")}>
-								<Chat color={headerStyle.color} />
-							</button>
-						);
-				}
-			})()}
-		</>
-	)
-}
-
-interface NavButtonsProps {
-	screen: string | undefined;
+	setShowLanguageModal: () => void;
+	handleShare: () => void;
+	handleLogout: () => void;
+	handleFollowMe: () => void;
+	handleInvitePanel: () => void;
 	handleNavigation: (path: string) => void;
-	headerStyle: { color: string; backgroundColor: string };
-	allowNavigation: boolean;
-	permission: boolean;
-	handleToggleNotifications: () => void;
-	statement?: Statement;
-}
-
-function NavButtons({ screen, handleNavigation, headerStyle, allowNavigation, permission, handleToggleNotifications, statement }: NavButtonsProps) {
+	showLanguageModal: boolean;
+	isAdmin: boolean;
+	menuIconStyle: { color: string; width: string };
+	t: (key: string) => string;
+	currentLabel: string | undefined;
+}>) {
+	// Apply dynamic style to the menu-header
+	const menuHeaderStyle = {
+		backgroundColor: headerStyle.backgroundColor,
+		color: headerStyle.color
+	};
 
 	return (
-		<>
-			{allowNavigation && <NavigationButtons statement={statement} screen={screen} handleNavigation={handleNavigation} headerStyle={headerStyle} />}
-			<button onClick={handleToggleNotifications}>
-				{permission ? (
-					<BellIcon color={headerStyle.color} />
-				) : (
-					<BellSlashIcon color={headerStyle.color} />
-				)}
-			</button>
-			<button>
-				<View color={headerStyle.color} />
-			</button>
-			{
-				allowNavigation && (
-					<button className={styles.home}>
-						<HomeButton headerColor={headerStyle} />
-					</button>
-				)
-			}
-			{
-				allowNavigation && (
-					<Back statement={statement} headerColor={headerStyle} />
-				)
-			}
-		</>
-
-	);
-}
-
-function HeaderMenu(
-	{
-		setIsHeaderMenuOpen,
-		isHeaderMenuOpen,
-		headerStyle,
-		handleShare,
-		handleLogout,
-		handleFollowMe,
-		handleInvitePanel,
-		handleNavigation,
-		isAdmin,
-		menuIconStyle,
-		t
-	}: {
-		setIsHeaderMenuOpen: (value: boolean) => void;
-		isHeaderMenuOpen: boolean;
-		headerStyle: { color: string; backgroundColor: string };
-		handleShare: () => void;
-		handleLogout: () => void;
-		handleFollowMe: () => void;
-		handleInvitePanel: () => void;
-		handleNavigation: (path: string) => void;
-		isAdmin: boolean;
-		menuIconStyle: { color: string; width: string };
-		t: (key: string) => string;
-	}
-) {
-	return (
-		<div className={styles.button}>
+		<div className={styles.button} style={menuHeaderStyle}>
 			<Menu
+				statement={statement}
 				setIsOpen={setIsHeaderMenuOpen}
 				isMenuOpen={isHeaderMenuOpen}
 				iconColor={headerStyle.color}
@@ -238,33 +176,53 @@ function HeaderMenu(
 				<MenuOption
 					label={t('Share')}
 					icon={<ShareIcon style={menuIconStyle} />}
-					onOptionClick={handleShare}
-				/>
-				<MenuOption
-					label={t('Disconnect')}
-					icon={<DisconnectIcon style={menuIconStyle} />}
-					onOptionClick={handleLogout}
-				/>
+					onOptionClick={handleShare} />
+				{!isAdmin && <MenuOption
+					label={currentLabel}
+					icon={<LanguagesIcon style={menuIconStyle} />}
+					onOptionClick={setShowLanguageModal} />}
+
 				{isAdmin && (
 					<>
 						<MenuOption
 							label={t('Follow Me')}
 							icon={<FollowMe style={menuIconStyle} />}
-							onOptionClick={handleFollowMe}
-						/>
+							onOptionClick={handleFollowMe} />
 						<MenuOption
 							label={t('Invite with PIN number')}
 							icon={<InvitationIcon style={menuIconStyle} />}
-							onOptionClick={handleInvitePanel}
-						/>
+							onOptionClick={handleInvitePanel} />
+						<MenuOption
+							label={currentLabel}
+							icon={<LanguagesIcon style={menuIconStyle} />}
+							onOptionClick={setShowLanguageModal} />
 						<MenuOption
 							label={t('Settings')}
 							icon={<SettingsIcon style={menuIconStyle} />}
-							onOptionClick={() => handleNavigation("settings")}
-						/>
+							onOptionClick={() => handleNavigation('settings')} />
+
 					</>
 				)}
+
+				{/* Footer Section */}
+				<div className={`${styles.menuFooter}`}>
+					<MenuOption
+						label={t('Disconnect')}
+						icon={<DisconnectIcon />}
+						onOptionClick={handleLogout}
+						style={{ color: 'white' }}
+					/>
+				</div>
 			</Menu>
+			{showLanguageModal && (
+				<Modal>
+					<ChangeLanguage
+						sameDirMenu={true}
+						background
+						setShowModal={setShowLanguageModal}
+					/>
+				</Modal>
+			)}
 		</div>
-	)
+	);
 }

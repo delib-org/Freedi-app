@@ -1,30 +1,31 @@
-import { FC } from "react";
-import { defaultResultsSettings } from "../../emptyStatementModel";
-import { StatementSettingsProps } from "../../settingsTypeHelpers";
-import { useLanguage } from "@/controllers/hooks/useLanguages";
-import "./ResultsRange.scss";
+import { FC } from 'react';
+
+import { StatementSettingsProps } from '../../settingsTypeHelpers';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import './ResultsRange.scss';
+import { defaultResultsSettings } from 'delib-npm';
 
 const ResultsRange: FC<StatementSettingsProps> = ({
 	statement,
 	setStatementToEdit,
 }) => {
-	const { t } = useLanguage();
+	const { t } = useUserConfig();
 	const resultsSettings = statement.resultsSettings ?? defaultResultsSettings;
 
-	const title = `${t("Number of Results to Display")}: `;
+	const title = `${t('Number of Results to Display')}: `;
 
 	return (
-		<section className="results-range">
-			<div className="title">{title}</div>
-			<div className="range-box">
+		<section className='results-range'>
+			<div className='title'>{title}</div>
+			<div className='range-box'>
 				<input
-					className="range"
-					type="range"
-					aria-label="Number Of Results"
-					name="numberOfResults"
+					className='range'
+					type='range'
+					aria-label='Number Of Results'
+					name='numberOfResults'
 					value={resultsSettings.numberOfResults}
-					min="1"
-					max="10"
+					min='1'
+					max='10'
 					onChange={(e) => {
 						setStatementToEdit({
 							...statement,
@@ -35,7 +36,7 @@ const ResultsRange: FC<StatementSettingsProps> = ({
 						});
 					}}
 				/>
-				<span className="number-of-results">
+				<span className='number-of-results'>
 					{resultsSettings.numberOfResults}
 				</span>
 			</div>

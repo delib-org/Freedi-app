@@ -1,9 +1,9 @@
-import { FC, useState } from "react";
-import CheckboxCheckedIcon from "@/assets/icons/checkboxCheckedIcon.svg?react";
-import CheckboxEmptyIcon from "@/assets/icons/checkboxEmptyIcon.svg?react";
-import { useLanguage } from "@/controllers/hooks/useLanguages";
-import "./Checkbox.scss";
-import VisuallyHidden from "../accessibility/toScreenReaders/VisuallyHidden";
+import React, { FC, useState } from 'react';
+import CheckboxCheckedIcon from '@/assets/icons/checkboxCheckedIcon.svg?react';
+import CheckboxEmptyIcon from '@/assets/icons/checkboxEmptyIcon.svg?react';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import './Checkbox.scss';
+import VisuallyHidden from '../accessibility/toScreenReaders/VisuallyHidden';
 
 interface CheckboxProps {
 	name?: string;
@@ -18,44 +18,50 @@ const Checkbox: FC<CheckboxProps> = ({
 	isChecked,
 	onChange,
 }: CheckboxProps) => {
-	const { t } = useLanguage();
-	const [_isChecked, setIsChecked] = useState(isChecked);
+	const { t } = useUserConfig();
+	const [checked, setChecked] = useState(isChecked);
 
 	const handleChange = () => {
-		setIsChecked(!_isChecked);
-		onChange(!_isChecked);
+		setChecked(!checked);
+		onChange(!checked);
+	};
+
+	const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+		if (e.key === 'Enter' || e.key === ' ') {
+			e.preventDefault();
+			handleChange();
+		}
 	};
 
 	return (
 		<div
-			className={`checkbox ${_isChecked ? "checked" : ""}`}
+			className={`checkbox ${checked ? 'checked' : ''}`}
 			onClick={handleChange}
+			onKeyDown={handleKeyDown}
+			role='checkbox'
+			aria-checked={checked}
+			tabIndex={0}
 		>
-			<label
-				htmlFor={`checkbox-${label}`}
-			>
+			<label htmlFor={`checkbox-${label}`}>
 				<VisuallyHidden labelName={t(label)} />
 			</label>
-			<button
-				type="button"
-				className="checkbox-icon"
-				onKeyDown={(e: React.KeyboardEvent<HTMLButtonElement>) => {
-					if (e.key === "Enter") {
-						e.preventDefault();
-					}
-				}}
-				aria-label={_isChecked ? "Uncheck" : "Check"}
-			>
-				{_isChecked ? <CheckboxCheckedIcon /> : <CheckboxEmptyIcon />}
-			</button>
+			<div className='checkbox-icon' aria-hidden='true'>
+				{checked ? <CheckboxCheckedIcon /> : <CheckboxEmptyIcon />}
+			</div>
 			<input
-				type="checkbox"
+				type='checkbox'
 				name={name}
 				id={`checkbox-${label}`}
-				checked={_isChecked}
+				checked={checked}
 				onChange={handleChange}
+				tabIndex={-1}
+				style={{
+					position: 'absolute',
+					opacity: 0,
+					pointerEvents: 'none',
+				}}
 			/>
-			<div className="checkbox-label">{t(label)}</div>
+			<div className='checkbox-label'>{t(label)}</div>
 		</div>
 	);
 };

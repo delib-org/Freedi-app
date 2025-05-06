@@ -1,60 +1,104 @@
-import { QuestionStage, QuestionType, Statement, StatementType } from "delib-npm";
-import { FC, useContext, useEffect, useState } from "react";
-import { useSelector } from "react-redux";
-import { useNavigate, useParams } from "react-router-dom";
-import { sortSubStatements } from "../../statementsEvaluationCont";
-import SuggestionCard from "./suggestionCard/SuggestionCard";
-import styles from "./SuggestionCards.module.scss";
-import { getFirstEvaluationOptions, getSecondEvaluationOptions } from "@/controllers/db/multiStageQuestion/getMultiStageStatements";
-import { statementSubsSelector } from "@/model/statements/statementsSlice";
-import { StatementContext } from "@/view/pages/statement/StatementCont";
-import EmptyScreen from "../emptyScreen/EmptyScreen";
+import { FC, useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { useParams } from 'react-router';
+import { sortSubStatements } from '../../statementsEvaluationCont';
+import SuggestionCard from './suggestionCard/SuggestionCard';
+import styles from './SuggestionCards.module.scss';
+import EmptyScreen from '../emptyScreen/EmptyScreen';
+import { Statement, SortType, SelectionFunction } from 'delib-npm';
+import { getStatementFromDB } from '@/controllers/db/statements/getStatement';
+import {
+	setStatement,
+	statementOptionsSelector,
+	statementSelector,
+} from '@/redux/statements/statementsSlice';
 
-const SuggestionCards: FC = () => {
-	const { sort } = useParams();
-	const navigate = useNavigate();
-	const { statement } = useContext(StatementContext);
+import { listenToEvaluations } from '@/controllers/db/evaluation/getEvaluation';
+
+interface Props {
+	propSort?: SortType;
+	selectionFunction?: SelectionFunction;
+	subStatements?: Statement[];
+}
+
+const SuggestionCards: FC<Props> = ({
+	propSort,
+	selectionFunction,
+	subStatements: propSubStatements,
+}) => {
+	const { sort: _sort, statementId } = useParams();
+
+	const sort = propSort || _sort || SortType.newest;
+
+	const dispatch = useDispatch();
+	const statement = useSelector(statementSelector(statementId));
 
 	const [totalHeight, setTotalHeight] = useState(0);
 
-	const { questionType, currentStage } = statement?.questionSettings || { questionType: QuestionType.singleStep, currentStage: QuestionStage.suggestion };
-	const subStatements = useSelector(statementSubsSelector(statement?.statementId)).filter((sub: Statement) => sub.statementType === StatementType.option);
+	const _subStatements = useSelector(
+		statementOptionsSelector(statement?.statementId)
+	);
+
+	const subStatements =
+		propSubStatements ||
+		(selectionFunction
+			? _subStatements.filter(
+				(sub: Statement) =>
+					sub.evaluation.selectionFunction === selectionFunction
+			)
+			: _subStatements);
+
+	useEffect(() => {
+		if (!statement && statementId)
+			getStatementFromDB(statementId).then((statement: Statement) =>
+				dispatch(setStatement(statement))
+			);
+	}, [statement, statementId]);
 
 	useEffect(() => {
 
-		const { totalHeight: _totalHeight } = sortSubStatements(subStatements, sort, 30);
+		const unsubscribe = listenToEvaluations(statementId);
+
+		return () => unsubscribe();
+	}, [])
+
+	useEffect(() => {
+		const { totalHeight: _totalHeight } = sortSubStatements(
+			subStatements,
+			sort,
+			30
+		);
 		setTotalHeight(_totalHeight);
 	}, [sort]);
-	useEffect(() => {
-		if (questionType == QuestionType.multipleSteps) {
-			if (currentStage === QuestionStage.firstEvaluation)
-				getFirstEvaluationOptions(statement);
-			else if (currentStage === QuestionStage.secondEvaluation)
-				getSecondEvaluationOptions(statement);
-			else if (currentStage === QuestionStage.voting) navigate(`statement/${statement?.statementId}/vote`);
-			else if (currentStage === QuestionStage.finished) getSecondEvaluationOptions(statement);
-
-		}
-	}, [currentStage, questionType]);
-
 
 	useEffect(() => {
-		const _totalHeight = subStatements.reduce((acc: number, sub: Statement) => {
-			return acc + (sub.elementHight || 200) + 30;
-		}
-			, 0);
+		const _totalHeight = subStatements.reduce(
+			(acc: number, sub: Statement) => {
+				return acc + (sub.elementHight ?? 200) + 30;
+			},
+			0
+		);
 		setTotalHeight(_totalHeight);
 		sortSubStatements(subStatements, sort, 30);
 	}, [subStatements.length]);
 
 	if (!subStatements) {
 		return (
-			<EmptyScreen setShowModal={() => { return }} />
+			<EmptyScreen
+				setShowModal={() => {
+					return;
+				}}
+			/>
 		);
 	}
 
+	if (!statement) return null;
+
 	return (
-		<div className={styles["suggestions-wrapper"]} style={{ height: `${totalHeight + 100}px` }}>
+		<div
+			className={styles['suggestions-wrapper']}
+			style={{ height: `${totalHeight + 60}px` }}
+		>
 			{subStatements?.map((statementSub: Statement) => {
 				return (
 					<SuggestionCard
@@ -65,7 +109,6 @@ const SuggestionCards: FC = () => {
 					/>
 				);
 			})}
-
 		</div>
 	);
 };

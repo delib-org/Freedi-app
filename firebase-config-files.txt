@@ -6,15 +6,7 @@
 	},
 	"functions": [
 		{
-			"runtime": "nodejs20",
 			"source": "functions",
-			"codebase": "default",
-			"ignore": [
-				"node_modules",
-				".git",
-				"firebase-debug.log",
-				"firebase-debug.*.log"
-			],
 			"predeploy": ["npm --prefix \"$RESOURCE_DIR\" run build"]
 		}
 	],
@@ -25,54 +17,11 @@
 			"ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
 			"rewrites": [
 				{
-					"source": "/getRandomStatements2",
-					"function": {
-						"functionId": "getRandomStatements2",
-						"region": "us-central1"
-					}
-				},
-				{
 					"source": "**",
 					"destination": "/index.html"
 				}
 			]
 		},
-		{
-			"target": "test",
-			"public": "dist",
-			"ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
-			"rewrites": [
-				{
-					"source": "/getRandomStatements2",
-					"function": {
-						"functionId": "getRandomStatements2",
-						"region": "us-central1"
-					}
-				},
-				{
-					"source": "**",
-					"destination": "/index.html"
-				}
-			]
-		},
-		{
-			"target": "prod",
-			"public": "dist",
-			"ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
-			"rewrites": [
-				{
-					"source": "/getRandomStatements2",
-					"function": {
-						"functionId": "getRandomStatements2",
-						"region": "us-central1"
-					}
-				},
-				{
-					"source": "**",
-					"destination": "/index.html"
-				}
-			]
-		}
 	],
 	"emulators": {
 		"auth": {
@@ -110,29 +59,21 @@
 
 {
 	"projects": {
-		"test": "delib-testing",
-		"dev": "delib-v3-dev",
-		"prod": "synthesistalyaron"
+		"test": "freedi-test",
+		"dev": "your_project_id"
 	},
 	"targets": {
-		"synthesistalyaron": {
-			"hosting": {
-				"prod": [
-					"synthesistalyaron"
-				]
-			}
-		},
-		"delib-v3-dev": {
+		"your_project_id": {
 			"hosting": {
 				"dev": [
-					"delib-v3-dev"
+					"your_project_id"
 				]
 			}
 		},
-		"delib-testing": {
+		"freedi-test": {
 			"hosting": {
 				"test": [
-					"delib-testing"
+					"freedi-test"
 				]
 			}
 		}

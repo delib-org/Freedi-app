@@ -1,10 +1,9 @@
-import { Statement } from 'delib-npm';
 import { FC } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import BackArrowIcon from '@/assets/icons/chevronLeftIcon.svg?react';
-import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { StyleProps } from '@/controllers/hooks/useStatementColor';
-import { historySelect, HistoryTracker } from '@/model/history/HistorySlice';
+import { Statement } from 'delib-npm';
+import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 
 interface Props {
 	statement: Statement | undefined;
@@ -13,30 +12,33 @@ interface Props {
 
 const Back: FC<Props> = ({ statement, headerColor }) => {
 	const navigate = useNavigate();
-	const topParentHistory: HistoryTracker | undefined = useAppSelector(
-		historySelect(statement?.parentId ?? '')
-	);
+	const { initialRoute } = useAuthentication();
 
 	function handleBack() {
 		try {
+			if (location.pathname.includes('stage')) {
+				return navigate(`/statement/${statement?.parentId}`, {
+					state: { from: window.location.pathname },
+				});
+			}
 			if (statement?.parentId === 'top' || !statement?.parentId) {
 				return navigate('/home', {
 					state: { from: window.location.pathname },
 				});
 			}
 
-			if (topParentHistory === undefined) {
-				return navigate(`/statement/${statement?.parentId}/chat`, {
+			if (initialRoute === undefined) {
+				return navigate(`/statement/${statement?.parentId}`, {
 					state: { from: window.location.pathname },
 				});
 			}
 
-			if (!topParentHistory || !statement)
+			if (!initialRoute || !statement)
 				return navigate('/home', {
 					state: { from: window.location.pathname },
 				});
 
-			return navigate(topParentHistory.pathname, {
+			return navigate(initialRoute, {
 				state: { from: window.location.pathname },
 			});
 		} catch (error) {

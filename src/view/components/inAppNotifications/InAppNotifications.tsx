@@ -1,56 +1,34 @@
-import { FC } from 'react';
-
+import { inAppNotificationsSelector } from '@/redux/notificationsSlice/notificationsSlice';
 import { useSelector } from 'react-redux';
-import InAppNotification from './inAppNotification/InAppNotification';
 import styles from './InAppNotifications.module.scss';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { NotificationType } from 'delib-npm';
+import { creatorSelector } from '@/redux/creator/creatorSlice';
+import NotificationCard from '../notificationCard/NotificationCard';
 
-import { useLanguage } from '@/controllers/hooks/useLanguages';
-import { inAppNotificationsSelector } from '@/model/notifications/notificationsSlice';
+const InAppNotifications = () => {
+	const creator = useSelector(creatorSelector);
+	const inAppNotifications: NotificationType[] = useSelector(inAppNotificationsSelector).filter(n => n.creatorId !== creator?.uid);
 
-interface Props {
-	handleShowNotifications: (show: boolean) => void;
+	const { t } = useUserConfig();
+
+	return (
+		<div className={styles.inAppNotifications}>
+			{inAppNotifications && inAppNotifications.length > 0 ? (
+				<>
+					<span className={styles.notificationTitle}>{t('Notifications')}</span>
+					{inAppNotifications.map((notification) => {
+
+						return (
+							<NotificationCard key={notification.notificationId} {...notification} />
+						);
+					})}
+				</>
+			) : (
+				<div className={styles.noNotifications}>{t('You have no new notifications')}</div>
+			)}
+		</div>
+	)
 }
 
-const InAppNotifications: FC<Props> = ({ handleShowNotifications }) => {
-	const { dir } = useLanguage();
-	try {
-		const _inAppNotifications = [...useSelector(inAppNotificationsSelector)];
-
-		const inAppNotifications =
-			_inAppNotifications.length > 0
-				? _inAppNotifications.sort((a, b) => b.createdAt - a.createdAt)
-				: [];
-
-		return (
-			<>
-				<button
-					aria-label='Close or open Notifications'
-					className={styles.background}
-					onClick={() => {
-						handleShowNotifications(false);
-					}}
-				></button>
-				<div
-					className={styles.notifications}
-					style={{
-						left: dir === 'ltr' ? '10px' : 'none',
-						right: dir === 'ltr' ? 'none' : '10px',
-					}}
-				>
-					{inAppNotifications.map((notification) => (
-						<InAppNotification
-							key={notification.notificationId}
-							notification={notification}
-						/>
-					))}
-				</div>
-			</>
-		);
-	} catch (error) {
-		console.error(error);
-
-		return <div></div>;
-	}
-};
-
-export default InAppNotifications;
+export default InAppNotifications

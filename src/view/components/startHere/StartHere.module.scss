@@ -1,34 +1,43 @@
-.wrapper {
-    position: absolute;
-    bottom: 100px;
-    transform: translateX(10%);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    background-color: rgba(255, 255, 255, 0.5);
-    padding: 1rem;
-    box-shadow: 0 0 20px rgba(240, 240, 240, 0.7);
-    border-radius: 2rem;
+.start-here {
+	position: absolute;
+	bottom: 100px;
+	transform: translateX(10%);
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	padding: 1rem;
+	box-shadow: 0 0 20px rgba(240, 240, 240, 0.7);
+	border-radius: 2rem;
+
+	&--rtl {
+		right: var(--padding);
+	}
+
+	&--ltr {
+		right: var(--padding);
+
+
+	}
 }
 
 .text {
-    font-size: .9rem;
-    text-align: center;
-    padding-bottom: 10px;
+	font-size: .9rem;
+	text-align: center;
+	padding-bottom: 10px;
 }
 
 .img {
-    width: 80px;
-    transform: rotate(340deg);
-    animation: emphasize 0.5s ease-in-out 0s infinite alternate;
+	width: 80px;
+	transform: rotate(340deg);
+	animation: emphasize 0.5s ease-in-out 0s infinite alternate;
 }
 
 @keyframes emphasize {
-    from {
-        transform: rotate(340deg) translateY(15px);
-    }
+	from {
+		transform: rotate(340deg) translateY(15px);
+	}
 
-    to {
-        transform: rotate(340deg) translateY(25px);
-    }
+	to {
+		transform: rotate(340deg) translateY(25px);
+	}
 }

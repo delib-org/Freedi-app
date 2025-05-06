@@ -1,22 +1,24 @@
-import { Statement } from "delib-npm";
-import { FC } from "react";
-import EnhancedEvaluation from "./enhancedEvaluation/EnhancedEvaluation";
-import SimpleEvaluation from "./simpleEvaluation/SimpleEvaluation";
+import { FC } from 'react';
+import EnhancedEvaluation from './enhancedEvaluation/EnhancedEvaluation';
+import SimpleEvaluation from './simpleEvaluation/SimpleEvaluation';
+import { Statement } from 'delib-npm';
+import { useEvaluation } from './EvalautionMV';
 
 interface EvaluationProps {
-	parentStatement: Statement | undefined;
-	statement: Statement;
+	statement?: Statement;
 }
 
-const Evaluation: FC<EvaluationProps> = ({ parentStatement, statement }) => {
+const Evaluation: FC<EvaluationProps> = ({ statement }) => {
 
+	const { parentStatement } = useEvaluation(statement);
+
+	if (!statement) return null;
 	try {
-		if (!parentStatement) throw new Error('parentStatement is not defined');
 
-		const shouldDisplayScore: boolean = parentStatement.statementSettings
-			?.showEvaluation
-			? parentStatement.statementSettings?.showEvaluation
-			: false;
+		if (!parentStatement) return null;
+
+		let shouldDisplayScore: boolean = !!parentStatement.statementSettings?.showEvaluation;
+		if (statement.evaluation?.selectionFunction) shouldDisplayScore = false;
 
 		if (parentStatement.statementSettings?.enhancedEvaluation) {
 			return (
@@ -35,8 +37,8 @@ const Evaluation: FC<EvaluationProps> = ({ parentStatement, statement }) => {
 		);
 	} catch (error) {
 		console.error(error);
-		
-return null;
+
+		return null;
 	}
 };
 

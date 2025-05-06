@@ -1,10 +1,5 @@
-import { Statement, StatementType } from 'delib-npm';
 import { ChangeEvent, FC, useEffect, useRef, useState } from 'react';
-
-// Third Party Imports
-
-// Redux Store
-import StatementChatMore from '../StatementChatMore';
+import StatementChatMore from '../statementChatMore/StatementChatMore';
 import UserAvatar from '../userAvatar/UserAvatar';
 import AddQuestionIcon from '@/assets/icons/addQuestion.svg?react';
 import DeleteIcon from '@/assets/icons/delete.svg?react';
@@ -20,26 +15,20 @@ import {
 } from '@/controllers/db/statements/setStatements';
 import { isAuthorized } from '@/controllers/general/helpers';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
-import { useLanguage } from '@/controllers/hooks/useLanguages';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import useStatementColor from '@/controllers/hooks/useStatementColor';
-import { statementSubscriptionSelector } from '@/model/statements/statementsSlice';
-import { store } from '@/model/store';
-
-// Helper functions
-
-// Hooks
-
-// Custom Components
+import { statementSubscriptionSelector } from '@/redux/statements/statementsSlice';
 import EditTitle from '@/view/components/edit/EditTitle';
 import Menu from '@/view/components/menu/Menu';
 import MenuOption from '@/view/components/menu/MenuOption';
 import CreateStatementModal from '@/view/pages/statement/components/createStatementModal/CreateStatementModal';
-
 import './ChatMessageCard.scss';
 import { deleteStatementFromDB } from '@/controllers/db/statements/deleteStatements';
 import Evaluation from '../../../evaluations/components/evaluation/Evaluation';
 import useAutoFocus from '@/controllers/hooks/useAutoFocus ';
 import UploadImage from '@/view/components/uploadImage/UploadImage';
+import { StatementType, Statement } from 'delib-npm';
+import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 
 export interface NewQuestion {
 	statement: Statement;
@@ -59,23 +48,23 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
 	statement,
 	previousStatement,
 }) => {
-
 	const imageUrl = statement.imagesURL?.main ?? '';
 	const [image, setImage] = useState<string>(imageUrl);
 	// Hooks
 	const { statementType } = statement;
 	const statementColor = useStatementColor({ statement });
-	const { t, dir } = useLanguage();
+	const { t, dir } = useUserConfig();
+	const { user } = useAuthentication();
 
 	// Redux store
-	const userId = store.getState().user.user?.uid;
 	const statementSubscription = useAppSelector(
 		statementSubscriptionSelector(statement.parentId)
 	);
 
 	// Use States
 	const [isEdit, setIsEdit] = useState(false);
-	const [isNewStatementModalOpen, setIsNewStatementModalOpen] = useState(false);
+	const [isNewStatementModalOpen, setIsNewStatementModalOpen] =
+		useState(false);
 	const [isCardMenuOpen, setIsCardMenuOpen] = useState(false);
 	const [text, setText] = useState(
 		`${statement?.statement}\n${statement.description}`
@@ -84,19 +73,19 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
 	const fileInputRef = useRef<HTMLInputElement | null>(null);
 
 	// Variables
-	const creatorId = statement.creatorId;
 	const _isAuthorized = isAuthorized(
 		statement,
 		statementSubscription,
-		parentStatement?.creatorId
+		parentStatement?.creator.uid
 	);
-	const isMe = userId === creatorId;
+	const isMe = user?.uid === statement.creator?.uid;
 	const isQuestion = statementType === StatementType.question;
 	const isOption = statementType === StatementType.option;
 	const isStatement = statementType === StatementType.statement;
 	const textareaRef = useAutoFocus(isEdit);
 
-	const isPreviousFromSameAuthor = previousStatement?.creatorId === creatorId;
+	const isPreviousFromSameAuthor =
+		previousStatement?.creator.uid === statement.creator.uid;
 
 	const isAlignedLeft = (isMe && dir === 'ltr') || (!isMe && dir === 'rtl');
 
@@ -174,7 +163,9 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
 
 			<div
 				className={
-					isStatement ? 'message-box message-box--statement' : 'message-box'
+					isStatement
+						? 'message-box message-box--statement'
+						: 'message-box'
 				}
 				style={{
 					borderColor: isGeneral
@@ -190,7 +181,9 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
 							<div
 								className='input-wrapper'
 								style={{
-									flexDirection: isAlignedLeft ? 'row' : 'row-reverse',
+									flexDirection: isAlignedLeft
+										? 'row'
+										: 'row-reverse',
 								}}
 							>
 								<textarea
@@ -222,6 +215,7 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
 						setIsOpen={setIsCardMenuOpen}
 						isMenuOpen={isCardMenuOpen}
 						iconColor='var(--icon-blue)'
+						isCardMenu={true}
 					>
 						{_isAuthorized && (
 							<MenuOption
@@ -237,7 +231,9 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
 							<MenuOption
 								label={t('Upload Image')}
 								icon={<UploadImageIcon />}
-								onOptionClick={() => fileInputRef.current?.click()}
+								onOptionClick={() =>
+									fileInputRef.current?.click()
+								}
 							/>
 						)}
 						{_isAuthorized && (
@@ -245,7 +241,9 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
 								isOptionSelected={isOption}
 								icon={<LightBulbIcon />}
 								label={
-									isOption ? t('Unmark as a Solution') : t('Mark as a Solution')
+									isOption
+										? t('Unmark as a Solution')
+										: t('Mark as a Solution')
 								}
 								onOptionClick={() => {
 									handleSetOption();
@@ -274,7 +272,10 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
 								label={t('Delete')}
 								icon={<DeleteIcon />}
 								onOptionClick={() => {
-									deleteStatementFromDB(statement, _isAuthorized);
+									deleteStatementFromDB(
+										statement,
+										!!_isAuthorized
+									);
 									setIsCardMenuOpen(false);
 								}}
 							/>
@@ -295,7 +296,9 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
 					<div className='chat-more-element'>
 						<StatementChatMore statement={statement} />
 					</div>
-					<Evaluation parentStatement={parentStatement} statement={statement} />
+					<Evaluation
+						statement={statement}
+					/>
 					{shouldLinkToChildren && (
 						<button
 							className='add-question-btn more-question'

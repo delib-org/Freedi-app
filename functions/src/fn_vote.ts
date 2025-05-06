@@ -1,82 +1,116 @@
-import { logger } from "firebase-functions/v1";
-import { db } from "./index";
-import { FieldValue } from "firebase-admin/firestore";
-import {
-    Collections,
-    Statement,
-    maxKeyInObject,
-} from "delib-npm";
+import { Change, logger } from 'firebase-functions/v1';
+import { db } from './index';
+import { DocumentSnapshot, FieldValue } from 'firebase-admin/firestore';
+import { Collections, maxKeyInObject, Statement, statementToSimpleStatement, VoteSchema } from 'delib-npm';
 
-export async function updateVote(event: any) {
-    try {
-        const newVote = event.data.after.data();
-        const { statementId: newVoteOptionId } = newVote;
-        console.log(newVoteOptionId)
-        //first vote
-        if (event.data.before.data() !== undefined) {
-            const previousVote = event.data.before.data();
+import { FirestoreEvent } from 'firebase-functions/firestore';
+import { parse } from 'valibot';
 
-            const previousVoteOptionId = previousVote.statementId;
+export async function updateVote(
+	event: FirestoreEvent<Change<DocumentSnapshot> | undefined>
+) {
+	if (!event?.data) return;
 
-            if (newVoteOptionId === previousVoteOptionId) {
-                throw new Error("new and previous are the same");
-            } else {
-                logger.info("new and previous are not the same");
-                await db.doc(`statements/${newVote.parentId}`).update({
-                    [`selections.${newVoteOptionId}`]: FieldValue.increment(1),
-                    [`selections.${previousVoteOptionId}`]:
-                        FieldValue.increment(-1),
-                });
-            }
-        } else {
-            //second or more votes
-            await db.doc(`statements/${newVote.parentId}`).update({
-                [`selections.${newVoteOptionId}`]: FieldValue.increment(1),
-            });
-        }
+	try {
+		const newVote = parse(VoteSchema, event.data.after.data());
+		const { statementId: newVoteOptionId } = newVote;
 
-        //update top voted
+		await updateParentStatementVotes();
 
-        const parentStatementDB = await db
-            .doc(`${Collections.statements}/${newVote.parentId}`)
-            .get();
-        if (!parentStatementDB.exists)
-            throw new Error(
-                `parentStatement ${newVote.parentId} do not exists`,
-            );
+		//update top voted
 
-        const parentStatement = parentStatementDB.data() as Statement;
-        const { selections } = parentStatement;
-        const topVotedId = maxKeyInObject(selections);
+		const parentStatementDB = await db
+			.doc(`${Collections.statements}/${newVote.parentId}`)
+			.get();
+		if (!parentStatementDB.exists)
+			throw new Error(
+				`parentStatement ${newVote.parentId} do not exists`
+			);
 
-        // remove previous results
-        const batch = db.batch();
+		const parentStatement = parentStatementDB.data() as Statement;
+		const { selections, topVotedOption: previousTopVotedOption } = parentStatement;
+		const topVotedId = maxKeyInObject(selections);
 
-        const previousResultsDB = await db
-            .collection(Collections.statements)
-            .where("parentId", "==", newVote.parentId)
-            .where("selected", "==", true)
-            .get();
+		// remove previous results
+		const batch = db.batch();
 
-        previousResultsDB.forEach((resultDB: any) => {
-            const result = resultDB.data() as Statement;
-            const docRef = db.doc(
-                `${Collections.statements}/${result.statementId}`,
-            );
-            batch.update(docRef, { selected: false });
-        });
+		const previousResultsDB = await db
+			.collection(Collections.statements)
+			.where('parentId', '==', newVote.parentId)
+			.where('isVoted', '==', true)
+			.get();
 
-        // Commit the batch
-        await batch.commit();
+		previousResultsDB.forEach((resultDB) => {
+			const result = resultDB.data() as Statement;
+			const docRef = db.doc(
+				`${Collections.statements}/${result.statementId}`
+			);
+			batch.update(docRef, { isVoted: false });
+		});
 
-        await db
-            .doc(`${Collections.statements}/${topVotedId}`)
-            .update({ selected: true }); 
+		// Commit the batch
+		await batch.commit();
 
-        return true;
-    } catch (error) {
-        logger.error(error);
+		//mark the new top voted option as selected
+		await db
+			.doc(`${Collections.statements}/${topVotedId}`)
+			.update({ isVoted: true });
 
-        return false;
-    }
+		//check if the topVoted option is the same as the previous one
+		//if not, update the topVoted option in the parent statement
+		if (previousTopVotedOption?.statementId !== topVotedId) {
+
+			//get topVoted option:
+			const topVotedOptionDB = await db
+				.doc(`${Collections.statements}/${topVotedId}`)
+				.get();
+
+			if (!topVotedOptionDB.exists)
+				throw new Error(
+					`topVotedOption ${topVotedId} do not exists`
+				);
+			const topVotedOption = topVotedOptionDB.data() as Statement;
+
+			const simpleStatement = statementToSimpleStatement(topVotedOption);
+
+			await db.doc(`${Collections.statements}/${newVote.parentId}`).update({
+				topVotedOption: simpleStatement
+			});
+
+			logger.info(`Vote updated successfully for parentId: ${newVote.parentId}`);
+		}
+
+		return true;
+
+		async function updateParentStatementVotes() {
+			if (event.data?.before?.data() !== undefined) {
+				const previousVote = parse(
+					VoteSchema,
+					event.data.before.data()
+				);
+
+				const previousVoteOptionId = previousVote.statementId;
+
+				if (newVoteOptionId === previousVoteOptionId) {
+					throw new Error('new and previous are the same');
+				} else {
+					logger.info('new and previous are not the same');
+					await db.doc(`statements/${newVote.parentId}`).update({
+						[`selections.${newVoteOptionId}`]: FieldValue.increment(1),
+						[`selections.${previousVoteOptionId}`]:
+							FieldValue.increment(-1),
+					});
+				}
+			} else {
+				//second or more votes
+				await db.doc(`statements/${newVote.parentId}`).update({
+					[`selections.${newVoteOptionId}`]: FieldValue.increment(1),
+				});
+			}
+		}
+	} catch (error) {
+		logger.error(error);
+
+		return false;
+	}
 }

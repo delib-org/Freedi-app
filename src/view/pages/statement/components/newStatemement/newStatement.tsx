@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 
 import './newStatement.scss';
 
@@ -12,28 +12,34 @@ export interface DisplayStatement {
 	statementId: string;
 }
 
-export default function NewStatement() {
+function CurrenScreen(currentStep: 0 | 1 | 2 | 3 | 4) {
+	switch (currentStep) {
+		case 0:
+			return <GetInitialStatementData />;
+		case 1:
+			return <>Step 1</>;
+		case 2:
+			return <>Step 2</>;
+		default:
+			return <>Error: Could't fins the step</>;
+	}
+}
 
+export default function NewStatement() {
 	const [title, setTitle] = useState<string>('');
 	const [description, setDescription] = useState<string>('');
 	const [currentStep, setCurrentStep] = useState<0 | 1 | 2 | 3 | 4>(0);
 
-	return (
-		<NewStatementContext.Provider value={{ title, setTitle, description, setDescription, setCurrentStep }}>
-			<div className='newStatement'>
-				{CurrenScreen(currentStep)}
-			</div>
-		</NewStatementContext.Provider>
-	)
+	const contextValue = useMemo(
+		() => ({ title, setTitle, description, setDescription, setCurrentStep }),
+		[title, description]
+	);
 
-	function CurrenScreen(currentStep: 0 | 1 | 2 | 3 | 4): JSX.Element {
-		switch (currentStep) {
-			case 0:
-				return (<GetInitialStatementData />);
-			default:
-				return <>Error: Could't fins the step</>;
-		}
-	}
+	return (
+		<NewStatementContext.Provider value={contextValue}>
+			<div className='newStatement'>{CurrenScreen(currentStep)}</div>
+		</NewStatementContext.Provider>
+	);
 
 	// const stepsComponents = [
 	// 	<GetInitialStatementData

@@ -1,33 +1,29 @@
-import { Statement } from 'delib-npm';
-import { FC, useState, useEffect, useRef } from 'react';
+import React, { FC, useState, useEffect, useRef } from 'react';
 import styles from './ChatInput.module.scss';
 // Third Party Imports
 
 // Icons
 import { handleAddStatement } from './StatementInputCont';
-import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 
 // Redux Store
-import useDirection from '@/controllers/hooks/useDirection';
-import { useLanguage } from '@/controllers/hooks/useLanguages';
 import useStatementColor from '@/controllers/hooks/useStatementColor';
-import { userSelector } from '@/model/users/userSlice';
 import SendIcon from '@/view/components/icons/SendIcon';
+import { Statement } from 'delib-npm';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import EnhancedEvaluation from '../../../evaluations/components/evaluation/enhancedEvaluation/EnhancedEvaluation';
 
 interface Props {
 	statement: Statement;
+	hasEvaluation?: boolean;
 }
 
-const ChatInput: FC<Props> = ({ statement }) => {
+const ChatInput: FC<Props> = ({ statement, hasEvaluation }) => {
 	if (!statement) throw new Error('No statement');
 
 	// Redux hooks
-	const { t } = useLanguage();
-	const user = useAppSelector(userSelector);
+	const { t, rowDirection } = useUserConfig();
 
 	const statementColor = useStatementColor({ statement });
-
-	const direction = useDirection();
 	const [message, setMessage] = useState('');
 
 	const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -68,7 +64,7 @@ const ChatInput: FC<Props> = ({ statement }) => {
 		e.preventDefault();
 
 		// Create statement
-		handleAddStatement(message, statement, user);
+		handleAddStatement(message, statement);
 
 		setMessage('');
 		if (textareaRef.current) {
@@ -78,18 +74,18 @@ const ChatInput: FC<Props> = ({ statement }) => {
 
 	return (
 		<div className={styles.chatInput}>
+			{hasEvaluation && <div className={styles.eval}><EnhancedEvaluation statement={statement} shouldDisplayScore={false} /></div>}
 			<form
 				onSubmit={(e) => handleSubmitInput(e)}
 				name='theForm'
-
-				style={{ flexDirection: direction }}
+				style={{ flexDirection: rowDirection }}
 			>
 				<textarea
 					style={{
 						borderTop: `2px solid ${statementColor.backgroundColor}`,
 						minHeight: '40px', // Add minimum height
-						resize: 'none',    // Prevent manual resizing since we're handling it
-						overflow: 'hidden' // Hide scrollbar since we're auto-expanding
+						resize: 'none', // Prevent manual resizing since we're handling it
+						overflow: 'hidden', // Hide scrollbar since we're auto-expanding
 					}}
 					data-cy='statement-chat-input'
 					className='page__footer__form__input'
@@ -100,13 +96,14 @@ const ChatInput: FC<Props> = ({ statement }) => {
 					value={message}
 					onInput={adjustTextareaHeight}
 					onChange={(e) => {
-						setMessage(e.target.value)
+						setMessage(e.target.value);
 						adjustTextareaHeight(); // Call height adjustment on change
-
 					}}
 					required
 					placeholder={t('Type your message here...')}
-				></textarea>
+				>
+
+				</textarea>
 				<button
 					type='submit'
 					aria-label='Submit Button'
@@ -115,6 +112,7 @@ const ChatInput: FC<Props> = ({ statement }) => {
 				>
 					<SendIcon color={statementColor.color} />
 				</button>
+
 			</form>
 		</div>
 	);

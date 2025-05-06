@@ -1,15 +1,15 @@
-// CustomSwitch.js
-import { useLanguage } from "@/controllers/hooks/useLanguages";
-import { FC } from "react";
-import "./CustomSwitch.scss";
-import VisuallyHidden from "../../accessibility/toScreenReaders/VisuallyHidden";
+// CustomSwitch.tsx
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import React, { FC, ReactNode } from 'react';
+import styles from './CustomSwitch.module.scss';
+import VisuallyHidden from '../../accessibility/toScreenReaders/VisuallyHidden';
 
 interface Props {
-    label: string;
-    name: string;
-    checked: boolean;
-    children: JSX.Element;
-    setChecked: (checked: boolean) => void;
+	label: string;
+	name: string;
+	checked: boolean;
+	children: ReactNode;
+	setChecked: (checked: boolean) => void;
 }
 
 const CustomSwitch: FC<Props> = ({
@@ -19,38 +19,51 @@ const CustomSwitch: FC<Props> = ({
 	setChecked,
 	children,
 }) => {
-	const { t } = useLanguage();
+	const { t } = useUserConfig();
 
 	const handleChange = () => {
 		setChecked(!checked);
 	};
 
+	const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+		if (e.key === 'Enter' || e.key === ' ') {
+			e.preventDefault();
+			handleChange();
+		}
+	};
+
 	return (
-		<div className={`custom-switch ${checked ? "checked" : ""}`} >
-			<button className="tag" onClick={handleChange} aria-label="custom switch" type="button">
+		<div
+			className={`${styles.customSwitch} ${checked ? styles.checked : ''}`}
+			role='switch'
+			aria-checked={checked}
+			tabIndex={0}
+			onClick={handleChange}
+			onKeyDown={handleKeyDown}
+			data-cy={`toggleSwitch-${name}`}
+		>
+			<div className={styles.tag} aria-hidden='true'>
 				{children}
-			</button>
-			<button
-				className="label"
-				onClick={handleChange}
-				data-cy={`toggleSwitch-${name}`}
-				type='button'
-				
-			>
-				{t(label)}
-			</button>
+			</div>
+			<div className={styles.label}>{t(label)}</div>
 			<label htmlFor={`toggleSwitch-${name}`}>
 				<VisuallyHidden labelName={label} />
 			</label>
 			<input
-				type="checkbox"
+				type='checkbox'
 				name={name}
 				id={`toggleSwitch-${name}`}
-				className="switch-input"
+				className={styles.switchInput}
 				onChange={handleChange}
-				value={checked ? "on" : "off"}
+				value={checked ? 'on' : 'off'}
 				checked={checked}
 				data-cy={`toggleSwitch-input-${name}`}
+				tabIndex={-1}
+				style={{
+					position: 'absolute',
+					opacity: 0,
+					pointerEvents: 'none',
+				}}
 			/>
 		</div>
 	);

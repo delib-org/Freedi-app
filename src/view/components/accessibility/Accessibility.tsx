@@ -1,118 +1,133 @@
-import { useEffect, useState, useRef } from "react";
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import IconButton from '../iconButton/IconButton';
+import AccessibilityIcon from '@/assets/icons/accessibilityIcon.svg?react';
+import HighContrastIcon from '@/assets/icons/highContrast.svg?react';
+import LightContrastIcon from '@/assets/icons/lightContrast.svg?react';
+import './Accessibility.scss';
+import { useAutoClose } from '@/controllers/hooks/useAutoClose';
+import useClickOutside from '@/controllers/hooks/useClickOutside';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { colorMappings } from './colorContrast';
 
-// Redux Store
-import IconButton from "../iconButton/IconButton";
-import AccessibilityIcon from "@/assets/icons/accessibilityIcon.svg?react";
-import { updateUserFontSize } from "@/controllers/db/users/setUsersDB";
-import { useAppDispatch, useAppSelector } from "@/controllers/hooks/reduxHooks";
-import { defaultFontSize } from "@/model/fonts/fontsModel";
-import {
-	colorContrastSelector,
-	fontSizeSelector,
-	increaseFontSize,
-	setColorContrast,
-	userSelector,
-} from "@/model/users/userSlice";
+export default function Accessibility() {
+	const { fontSize, changeFontSize, colorContrast, setColorContrast, t } =
+		useUserConfig();
 
-// Icons
-import "./Accessibility.scss";
-import { colorMappings } from "./colorContrast";
+	const { isOpen, handleOpen } = useAutoClose(10000);
 
-const Accessibility = () => {
-	const dispatch = useAppDispatch();
-	const fontSize = useAppSelector(fontSizeSelector);
-	const user = useAppSelector(userSelector);
-	const colorContrast = useAppSelector(colorContrastSelector);
+	const handleClickOutside = useCallback(() => {
+		if (isOpen) handleOpen();
+	}, [isOpen, handleOpen]);
 
-	const accessibilityPanel = useRef<HTMLDivElement>(null);
+	const accessibilityRef = useClickOutside(handleClickOutside);
 
 	useEffect(() => {
 		Object.entries(colorMappings).forEach(([key, contrastKey]) => {
 			document.documentElement.style.setProperty(
 				key,
-				colorContrast ? `var(${contrastKey})` : ""
+				colorContrast ? `var(${contrastKey})` : ''
 			);
 		});
 	}, [colorContrast]);
 
-	const handleToggleContrast = (isContrast:boolean) => {
-		dispatch(setColorContrast(isContrast));
+	// * Drag & Drop * //
+	const [position, setPosition] = useState({ top: 250 });
+	const dragRef = useRef<HTMLDivElement | null>(null);
+	const startPos = useRef({ x: 0, y: 0 });
+	const isDragging = useRef(false);
+
+	const handleStart = (event: React.MouseEvent | React.TouchEvent) => {
+		
+		const clientX = 'touches' in event ? event.touches[0].clientX : event.clientX;
+		const clientY = 'touches' in event ? event.touches[0].clientY : event.clientY;
+		startPos.current = { x: clientX, y: clientY };
+		isDragging.current = false;
+
+		document.addEventListener('mousemove', handleMove);
+		document.addEventListener('mouseup', handleEnd);
+		document.addEventListener('touchmove', handleMove, { passive: false });
+		document.addEventListener('touchend', handleEnd);
 	};
 
-	const [isOpen, setIsOpen] = useState(false);
-	const [_fontSize, setFontSize] = useState(fontSize || defaultFontSize);
+	const handleMove = (event: MouseEvent | TouchEvent) => {
+		const clientX = 'touches' in event ? event.touches[0].clientX : event.clientX;
+		const clientY = 'touches' in event ? event.touches[0].clientY : event.clientY;
 
-	useEffect(() => {
-		// document.documentElement.style.fontSize = fontSize + "px";
-		document.documentElement.style.fontSize = fontSize + "px";
-	}, [fontSize]);
+		const deltaX = clientX - startPos.current.x;
+		const deltaY = clientY - startPos.current.y;
 
-	function handleChangeFontSize(number: number) {
-		if (!user) {
-			//get current font size from body
-
-			//update body font size
-			// document.documentElement.style.fontSize = `${_fontSize + number}px`;
-			document.body.style.fontSize = `${_fontSize + number}px`;
-			setFontSize(_fontSize + number);
-		} else {
-			updateUserFontSize(fontSize + number);
-			dispatch(increaseFontSize(number));
+		if (Math.abs(deltaX) > 5 || Math.abs(deltaY) > 5) {
+			isDragging.current = true;
 		}
-	}
 
-	function handleOpen() {
-		if (isOpen) {
-			// If it's not open, open it and start the timer to close it after 2 seconds
-			setIsOpen(false);
-		} else {
-			// If it's already open, close it immediately
-			setIsOpen(true);
-			setTimeout(() => {
-				setIsOpen(false);
-			}, 14000);
+		startPos.current = { x: clientX, y: clientY };
+
+		setPosition((prev) => ({
+			top: Math.min(Math.max(prev.top + deltaY, 0), window.innerHeight - 100),
+		}));
+	};
+
+	const handleEnd = () => {
+		document.removeEventListener('mousemove', handleMove);
+		document.removeEventListener('mouseup', handleEnd);
+		document.removeEventListener('touchmove', handleMove);
+		document.removeEventListener('touchend', handleEnd);
+
+		if (!isDragging.current) {
+			handleOpen();
 		}
-	}
-
-	const accessibilityPanelWidth = accessibilityPanel.current?.offsetWidth || 0;
+	};
 
 	return (
 		<div
-			className="accessibility"
-			style={
-				!isOpen ? { left: `${-accessibilityPanelWidth}px` } : { left: "0rem" }
+			ref={(node) => {
+				dragRef.current = node;
+				if (accessibilityRef) accessibilityRef.current = node;
 			}
+			}
+			className={`accessibility ${isOpen ? 'is-open' : ''}`}
+			style={{ fontSize, top: `${position.top}px` }}
 		>
-			<button className="accessibility-button" onClick={handleOpen}>
+			<button
+				className='accessibility-button'
+				onMouseDown={handleStart}
+				onTouchStart={handleStart}
+				onClick={handleOpen}
+				aria-label={t('Accessibility options')}
+			>
 				<AccessibilityIcon />
 			</button>
-
-			<div className="accessibility-panel" ref={accessibilityPanel}>
-				<div className="accessibility-panel__fonts">
+			<div className='accessibility-panel'>
+				<div className='accessibility-panel__fonts'>
 					<IconButton
-						className="change-font-size-button"
-						onClick={() => handleChangeFontSize(1)}
+						className='change-font-size-button'
+						onClick={() => changeFontSize(fontSize + 1)}
 					>
-            +
+						+
 					</IconButton>
-					<div className="accessibility__fonts__size" role="status">
-						{user ? fontSize : _fontSize}px
-					</div>
+					<output className='accessibility__fonts__size'>Aa</output>
 					<IconButton
-						className="change-font-size-button"
-						onClick={() => handleChangeFontSize(-1)}
+						className='change-font-size-button'
+						onClick={() => changeFontSize(fontSize - 1)}
 					>
-            -
+						-
 					</IconButton>
-					<span dir="ltr">Fonts:</span>
 				</div>
-				<div className="accessibility-panel__contrast">
-					<button onClick={()=>handleToggleContrast(true)}>High contrast</button>
-					<button onClick={()=>handleToggleContrast(false)}>Light Contrast</button>
+				<div className='accessibility-panel__contrast'>
+					<button
+						onClick={() => setColorContrast(true)}
+						className='high-contrast'
+					>
+						<HighContrastIcon /> {t('High contrast')}
+					</button>
+					<button
+						onClick={() => setColorContrast(false)}
+						className='light-contrast'
+					>
+						<LightContrastIcon /> {t('Light contrast')}
+					</button>
 				</div>
 			</div>
 		</div>
 	);
-};
-
-export default Accessibility;
+}

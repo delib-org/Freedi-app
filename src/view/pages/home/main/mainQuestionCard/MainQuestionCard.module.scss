@@ -1,0 +1,39 @@
+.mainCard {
+	display: flex;
+	gap: 1rem;
+	background-color: white;
+	min-height: 4rem;
+	padding: .8rem;
+	border-radius: 5px;
+	border: 1px solid rgb(212, 212, 212);
+	border-left: 6px solid var(--question)
+}
+
+.img {
+	height: 4rem;
+	width: 4rem;
+	background-position: center;
+	background-repeat: no-repeat;
+	background-size: cover;
+	border-radius: 4rem;
+}
+
+.info {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+
+
+	.title {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		color: var(--text-title);
+	}
+
+	.updates {
+		font-size: .9rem;
+		font-weight: 300;
+		color: var(--text-body);
+	}
+}

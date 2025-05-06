@@ -1,18 +1,18 @@
-import { Statement } from "delib-npm";
-import { FC } from "react";
-
-import { getEvaluationThumbIdByScore } from "../../../statementsEvaluationCont";
-import styles from "./EnhancedEvaluation.module.scss";
+import { FC } from 'react';
+import { getEvaluationThumbIdByScore } from '../../../statementsEvaluationCont';
+import styles from './EnhancedEvaluation.module.scss';
 import {
 	enhancedEvaluationsThumbs,
 	EnhancedEvaluationThumb,
-} from "./EnhancedEvaluationModel";
-import { setEvaluationToDB } from "@/controllers/db/evaluation/setEvaluation";
-import { decreesUserSettingsLearningRemain } from "@/controllers/db/learning/setLearning";
-import { useAppSelector } from "@/controllers/hooks/reduxHooks";
-import { useLanguage } from "@/controllers/hooks/useLanguages";
-import { evaluationSelector } from "@/model/evaluations/evaluationsSlice";
-import { userSettingsSelector } from "@/model/users/userSlice";
+} from './EnhancedEvaluationModel';
+import { setEvaluationToDB } from '@/controllers/db/evaluation/setEvaluation';
+import { useAppSelector } from '@/controllers/hooks/reduxHooks';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { evaluationSelector } from '@/redux/evaluations/evaluationsSlice';
+import { Statement } from 'delib-npm';
+import { useAuthentication } from '@/controllers/hooks/useAuthentication';
+import { useDecreaseLearningRemain } from '@/controllers/hooks/useDecreaseLearningRemain';
+import { CustomTooltip } from '@/view/components/tooltip/CustomTooltip';
 
 interface EnhancedEvaluationProps {
 	statement: Statement;
@@ -23,32 +23,22 @@ const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({
 	statement,
 	shouldDisplayScore,
 }) => {
+	const { t, learning } = useUserConfig();
 	const evaluationScore = useAppSelector(
 		evaluationSelector(statement.statementId)
 	);
-
-	const learningEvaluation =
-		useAppSelector(userSettingsSelector)?.learning?.evaluation || 0;
-	const { t } = useLanguage();
-
+	const { consensus: _consensus } = statement;
 	const { sumPro, sumCon, numberOfEvaluators } = statement.evaluation || {
 		sumPro: 0,
 		sumCon: 0,
 		numberOfEvaluators: 0,
 	};
+	const avg = numberOfEvaluators !== 0 ? Math.round(((sumPro - sumCon) / numberOfEvaluators) * 100) / 100 : 0;
+	const consensus = Math.round(_consensus * 100) / 100;
 
 	return (
-		<div
-			className={`${styles[`enhanced-evaluation`]}`}
-		// className={styles[`enhanced-evaluation] ${dir === "ltr" ? "mirrorReverse" : ""}`]}
-		>
-
-			<div className={`${styles["evaluation-score"]} con-element`}>
-				{shouldDisplayScore === true ? sumCon : null}
-			</div>
-			<div
-				className={styles["evaluation-thumbs"]}
-			>
+		<div className={styles['enhanced-evaluation']}>
+			<div className={styles['evaluation-thumbs']}>
 				{enhancedEvaluationsThumbs.map((evaluationThumb) => (
 					<EvaluationThumb
 						key={evaluationThumb.id}
@@ -59,22 +49,38 @@ const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({
 				))}
 			</div>
 			<div
-				className={`${styles[`evaluation-score`]} ${statement.consensus < 0 ? "negative" : ""}`}
+				className={`${styles['evaluation-score']} ${statement.consensus < 0 ? styles.negative : ''}`}
 			>
-				{shouldDisplayScore && <span>{sumPro}</span>}
-				{(numberOfEvaluators && numberOfEvaluators > 0) ? (
-					<span className={styles["total-evaluators"]}> ({numberOfEvaluators})</span>
-				) : null}
+				{shouldDisplayScore && (
+					<CustomTooltip content={t("Average score")} position="top">
+						<span className={styles.scoreValue}>{avg}</span>
+					</CustomTooltip>
+				)}
 
+				{shouldDisplayScore && (
+					<CustomTooltip content={t("Consensus score")} position="top">
+						<span className={styles.scoreValue}>{consensus}</span>
+					</CustomTooltip>
+				)}
+
+				{shouldDisplayScore &&
+					numberOfEvaluators &&
+					numberOfEvaluators > 0 ? (
+					<CustomTooltip content={t("Number of evaluators")} position="bottom">
+						<span className={styles['total-evaluators']}>
+							{' '}({numberOfEvaluators})
+						</span>
+					</CustomTooltip>
+				) : null}
 			</div>
-			<div />
-			<div className={styles.explain}>
-				{learningEvaluation > 0 && (<div className={`${styles["evaluation-explain"]}`}>
-					<span>{t("Disagree")}</span>
-					<span>{t("Agree")}</span>
-				</div>)
-				}
-			</div>
+			{learning.evaluation > 0 && (
+				<div className={styles.explain}>
+					<div className={`${styles['evaluation-explain']}`}>
+						<span>{t('Disagree')}</span>
+						<span>{t('Agree')}</span>
+					</div>
+				</div>
+			)}
 			<div />
 		</div>
 	);
@@ -82,20 +88,25 @@ const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({
 
 export default EnhancedEvaluation;
 
-interface EvaluationThumbProps {
+export interface EvaluationThumbProps {
 	statement: Statement;
 	evaluationScore: number | undefined;
 	evaluationThumb: EnhancedEvaluationThumb;
 }
 
-const EvaluationThumb: FC<EvaluationThumbProps> = ({
+export const EvaluationThumb: FC<EvaluationThumbProps> = ({
 	evaluationThumb,
 	evaluationScore,
 	statement,
 }) => {
+	const { creator } = useAuthentication();
+	const decreaseLearning = useDecreaseLearningRemain();
+
 	const handleSetEvaluation = (): void => {
-		setEvaluationToDB(statement, evaluationThumb.evaluation);
-		decreesUserSettingsLearningRemain({ evaluation: true });
+		setEvaluationToDB(statement, creator, evaluationThumb.evaluation);
+		decreaseLearning({
+			evaluation: true,
+		});
 	};
 
 	const isThumbActive =
@@ -104,7 +115,7 @@ const EvaluationThumb: FC<EvaluationThumbProps> = ({
 
 	return (
 		<button
-			className={`${styles["evaluation-thumb"]} ${isThumbActive ? styles.active : ""}`}
+			className={`${styles['evaluation-thumb']} ${isThumbActive ? styles.active : ''}`}
 			style={{
 				backgroundColor: isThumbActive
 					? evaluationThumb.colorSelected

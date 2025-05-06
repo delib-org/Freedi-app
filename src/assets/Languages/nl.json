@@ -80,6 +80,7 @@
   "No": "Nee",
   "No Options Selected Yet": "Nog geen opties geselecteerd",
   "No Topic Chosen by You": "Geen onderwerp door jou gekozen",
+  "Notifications": "Meldingen",
   "Number of Results to Display": "Aantal resultaten weergeven",
   "Number of Solutions in Each Level": "Aantal oplossingen in elke niveau",
   "Please suggest a solution to the question": "Stel een oplossing voor aan de vraag",
@@ -169,6 +170,11 @@
   "Continue with your original suggestion": "Ga door met uw oorspronkelijke suggestie",
   "Continue with this suggestion": "Ga door met deze suggestie",
   "Back": "Terug",
-   "Disagree": "Niet akkoord gaan",
-   "Type your message here..." : "Typ hier je bericht..."
+  "Disagree": "Niet akkoord gaan",
+  "Type your message here...": "Typ hier je bericht...",
+  "العربية": "Arabisch",
+  "Español": "Spaans",
+  "Deutsch": "Duits",
+  "עברית": "Hebreeuws",
+  "English": "Engels"
 }

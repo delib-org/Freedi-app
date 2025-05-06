@@ -1,16 +1,17 @@
 import SendIcon from '@/assets/icons/send-icon-pointing-up-and-right.svg?react';
 import Button from '@/view/components/buttons/button/Button';
+import { Dispatch, SetStateAction } from 'react';
 
-interface StepFourContinueWithOwnInput {
+interface StepFourContinueWithOwnInputProps {
 	newStatementInput: { title: string; description: string };
 	onFormSubmit: () => void;
-	setCurrentStep: React.Dispatch<React.SetStateAction<number>>;
+	setCurrentStep: Dispatch<SetStateAction<number>>;
 }
 
 export default function StepFourContinueWithOwnInput({
 	newStatementInput,
 	onFormSubmit,
-}: Readonly<StepFourContinueWithOwnInput>) {
+}: Readonly<StepFourContinueWithOwnInputProps>) {
 	return (
 		<>
 			<h4 className='similarities__title'>Your statement details</h4>

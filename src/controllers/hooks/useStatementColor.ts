@@ -1,55 +1,52 @@
-import { StatementType, Statement } from "delib-npm";
-
-import { useEffect, useState } from "react";
+import { StatementType, Statement } from 'delib-npm';
+import { useEffect, useState } from 'react';
 
 export interface StyleProps {
 	backgroundColor: string;
 	color: string;
 }
 
-export default function useStatementColor({ statement }: { statement: Statement | undefined }): StyleProps {
+export default function useStatementColor({
+	statement,
+}: {
+	statement: Statement | undefined;
+}): StyleProps {
 	const initStyle = {
-		backgroundColor: "var(--header-home)",
-		color: "white",
+		backgroundColor: 'var(--header-home)',
+		color: 'white',
 	};
 
-	if (!statement) return initStyle;
-
-	const { statementType, isResult } = statement;
 	const [style, setStyle] = useState(initStyle);
 
-	try {
+	// Only run the effect when the `statement` is available
+	useEffect(() => {
+		if (!statement) return;
+		const { statementType, isChosen, isVoted } = statement;
+		if (statementType === StatementType.group) {
+			setStyle({
+				backgroundColor: 'var(--group, #b893e7)', // Purple shade for group type
+				color: 'var(--group-text, #ffffff)', // Text color for group (white)
+			});
+		} else if (isVoted || isChosen) {
+			setStyle({
+				backgroundColor: 'var(--agree, #008000)', // Green for agreement
+				color: 'var(--header, #000000)', // Text color for result
+			});
+		} else if (statementType === StatementType.option) {
+			setStyle({
+				backgroundColor: 'var(--option, #123abc)', // Custom option color
+				color: 'var(--white, #ffffff)', // Text color for options
+			});
+		} else if (statementType === StatementType.question) {
+			setStyle({
+				backgroundColor: 'var(--question, #123def)', // Custom question color
+				color: 'var(--question-text, #fff)', // Text color for questions
+			});
+		} else {
+			// Default colors
+			setStyle(initStyle);
+		}
+	}, [statement]);
 
-		useEffect(() => {
-			if (statementType === StatementType.group) {
-				setStyle({
-					backgroundColor: "var(--group)",
-					color: "var(--group-text)",
-				});
-			} else if (statementType === StatementType.option && isResult) {
-				setStyle({
-					backgroundColor: "var(--agree)",
-					color: "var(--header)",
-				});
-			} else if (statementType === StatementType.option) {
-				setStyle({
-					backgroundColor: "var(--option)",
-					color: "var(--white)",
-				});
-			} else if (statementType === StatementType.question) {
-				setStyle({
-					backgroundColor: "var(--question)",
-					color: "var(--question-text)",
-				});
-			} else {
-				setStyle(initStyle);
-			}
-		}, [statementType, isResult]);
-
-		return style;
-	} catch (error) {
-		console.error(error);
-
-		return style;
-	}
+	return style;
 }

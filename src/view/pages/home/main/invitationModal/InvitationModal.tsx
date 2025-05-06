@@ -1,24 +1,24 @@
-import { FC, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import styles from "./InvitationModal.module.scss";
-import InvitationModalInputBoxWrapper from "./InvitationModalInputBoxWrapper";
+import React, { FC, useEffect, useState } from 'react';
+import { useNavigate } from 'react-router';
+import styles from './InvitationModal.module.scss';
+import InvitationModalInputBoxWrapper from './InvitationModalInputBoxWrapper';
 import {
 	getInvitationPathName,
 	getMaxInvitationDigits,
-} from "@/controllers/db/invitations/getInvitations";
-import { handleCloseInviteModal } from "@/controllers/general/helpers";
-import { useLanguage } from "@/controllers/hooks/useLanguages";
-import XIcon from "@/view/components/icons/XIcon";
-import InviteModal from "@/view/components/modal/InviteModal";
+} from '@/controllers/db/invitations/getInvitations';
+import { handleCloseInviteModal } from '@/controllers/general/helpers';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import XIcon from '@/view/components/icons/XIcon';
+import InviteModal from '@/view/components/modal/InviteModal';
 
 interface Props {
-  setShowModal: (show: boolean) => void;
+	setShowModal: (show: boolean) => void;
 }
 const InvitationModal: FC<Props> = ({ setShowModal }) => {
 	const navigate = useNavigate();
-	const { t } = useLanguage();
+	const { t } = useUserConfig();
 
-	const [errorMessage, setErrorMessage] = useState<string>("");
+	const [errorMessage, setErrorMessage] = useState<string>('');
 	const [maxInvitation, setMaxInvitation] = useState<number | undefined>(
 		undefined
 	);
@@ -38,12 +38,14 @@ const InvitationModal: FC<Props> = ({ setShowModal }) => {
 
 			const fullPin = settingPins(pins);
 
-			if (!fullPin) throw new Error("No pin value");
+			if (!fullPin) throw new Error('No pin value');
 
 			const pathname = await getInvitationPathName(fullPin);
 			if (!pathname) {
 				setErrorMessage(
-					t("Couldn't find the invitation. Please check the PIN and try again.")
+					t(
+						"Couldn't find the invitation. Please check the PIN and try again."
+					)
 				);
 
 				return;
@@ -62,19 +64,19 @@ const InvitationModal: FC<Props> = ({ setShowModal }) => {
 		const pins: number[] = [];
 		const form = ev.target as HTMLFormElement;
 		for (let i = 0; i < maxInvitation!; i++) {
-			const pinValue = (form["pin" + i] as HTMLInputElement).value;
+			const pinValue = (form['pin' + i] as HTMLInputElement).value;
 
 			if (
 				Number.isInteger(Number(pinValue)) &&
-        Number(pinValue) >= 0 &&
-        Number(pinValue) <= 9
+				Number(pinValue) >= 0 &&
+				Number(pinValue) <= 9
 			) {
 				pins.push(Number(pinValue));
 			} else {
 				pins.push(0);
 			}
 		}
-		
+
 		return pins;
 	}
 
@@ -83,7 +85,7 @@ const InvitationModal: FC<Props> = ({ setShowModal }) => {
 		for (let i = 0; i < pins.length; i++) {
 			fullPin += pins[i] * Math.pow(10, i);
 		}
-		
+
 		return fullPin;
 	}
 
@@ -91,22 +93,30 @@ const InvitationModal: FC<Props> = ({ setShowModal }) => {
 		<InviteModal>
 			<div className={styles.invitation}>
 				<form className={styles.invitation__form} onSubmit={handleJoin}>
-					<InvitationModalInputBoxWrapper maxInvitation={maxInvitation} />
+					<InvitationModalInputBoxWrapper
+						maxInvitation={maxInvitation}
+					/>
 					{errorMessage && (
-						<div className={styles.invitation__error}>{errorMessage}</div>
+						<div className={styles.invitation__error}>
+							{errorMessage}
+						</div>
 					)}
 
 					{maxInvitation === undefined ? (
-						<p className={styles.invitation__form__noRooms}>{t("There are no rooms yet")}</p>
+						<p className={styles.invitation__form__noRooms}>
+							{t('There are no rooms yet')}
+						</p>
 					) : (
 						<input
-							type="submit"
+							type='submit'
 							className={styles.invitation__form__btn}
-							value={t("Join")}
+							value={t('Join')}
 						></input>
 					)}
 
-					<button onClick={() => handleCloseInviteModal(setShowModal)}>
+					<button
+						onClick={() => handleCloseInviteModal(setShowModal)}
+					>
 						<XIcon />
 					</button>
 				</form>

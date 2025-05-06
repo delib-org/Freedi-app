@@ -1,46 +1,58 @@
-import { Statement, Collections, EvaluationSchema } from "delib-npm";
-import { Timestamp, doc, setDoc } from "firebase/firestore";
-import { z } from "zod";
-import { FireStore } from "../config";
-import { store } from "@/model/store";
+import { Timestamp, doc, setDoc, updateDoc } from 'firebase/firestore';
+import { FireStore } from '../config';
+import { number, parse } from 'valibot';
+import { EvaluationSchema, Collections, Statement, User, EvaluationUI } from 'delib-npm';
 
 export async function setEvaluationToDB(
 	statement: Statement,
-	evaluation: number,
+	creator: User,
+	evaluation: number
 ): Promise<void> {
 	try {
-		z.number().parse(evaluation);
+		parse(number(), evaluation);
+
 		if (evaluation < -1 || evaluation > 1)
-			throw new Error("Evaluation is not in range");
+			throw new Error('Evaluation is not in range');
 
 		//ids
 		const parentId = statement.parentId;
-		if (!parentId) throw new Error("ParentId is undefined");
+		if (!parentId) throw new Error('ParentId is undefined');
 
 		const statementId = statement.statementId;
-		const user = store.getState().user.user;
 
-		const userId = user?.uid;
-		if (!userId) throw new Error("User is undefined");
-		const evaluationId = `${userId}--${statementId}`;
+		const evaluationId = `${creator.uid}--${statementId}`;
 
 		//set evaluation to db
 
-		const evaluationRef = doc(FireStore, Collections.evaluations, evaluationId);
+		const evaluationRef = doc(
+			FireStore,
+			Collections.evaluations,
+			evaluationId
+		);
 		const evaluationData = {
 			parentId,
 			evaluationId,
 			statementId,
-			evaluatorId: userId,
+			evaluatorId: creator.uid,
 			updatedAt: Timestamp.now().toMillis(),
 			evaluation,
-			evaluator: user,
+			evaluator: creator,
 		};
-		
-		EvaluationSchema.parse(evaluationData);
+
+		parse(EvaluationSchema, evaluationData);
 
 		await setDoc(evaluationRef, evaluationData);
 	} catch (error) {
 		console.error(error);
 	}
 }
+
+export function setEvaluationUIType(statementId: string, evaluationUI: EvaluationUI) {
+
+	const evaluationUIRef = doc(FireStore, Collections.statements, statementId);
+	updateDoc(evaluationUIRef, { evaluationSettings: { evaluationUI: evaluationUI } }).catch(error => {
+		console.error('Error updating evaluation UI:', error);
+	});
+
+	return evaluationUIRef;
+};

@@ -1,18 +1,21 @@
-import { Statement, StatementType } from "delib-npm";
-import { FC, useEffect } from "react";
-import DeleteIcon from "@/assets/icons/delete.svg?react";
-import EditIcon from "@/assets/icons/editIcon.svg?react";
-import LightBulbIcon from "@/assets/icons/lightBulbIcon.svg?react";
+import { FC, useEffect } from 'react';
+import DeleteIcon from '@/assets/icons/delete.svg?react';
+import EditIcon from '@/assets/icons/editIcon.svg?react';
+import LightBulbIcon from '@/assets/icons/lightBulbIcon.svg?react';
 import QuestionMarkIcon from '@/assets/icons/questionIcon.svg?react';
-import { deleteStatementFromDB } from "@/controllers/db/statements/deleteStatements";
-import { updateIsQuestion } from "@/controllers/db/statements/setStatements";
-import { useLanguage } from "@/controllers/hooks/useLanguages";
-import Menu from "@/view/components/menu/Menu";
-import MenuOption from "@/view/components/menu/MenuOption";
+import { deleteStatementFromDB } from '@/controllers/db/statements/deleteStatements';
+import { updateIsQuestion } from '@/controllers/db/statements/setStatements';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import Menu from '@/view/components/menu/Menu';
+import MenuOption from '@/view/components/menu/MenuOption';
+import { Statement, StatementType } from 'delib-npm';
+import { useSelector } from 'react-redux';
+import { creatorSelector } from '@/redux/creator/creatorSlice';
 
 interface Props {
 	statement: Statement;
 	isAuthorized: boolean;
+	isAdmin: boolean;
 	isCardMenuOpen: boolean;
 	setIsCardMenuOpen: (isOpen: boolean) => void;
 	isEdit: boolean;
@@ -22,6 +25,7 @@ interface Props {
 
 const SolutionMenu: FC<Props> = ({
 	statement,
+	isAdmin,
 	isAuthorized,
 	isCardMenuOpen,
 	setIsCardMenuOpen,
@@ -29,30 +33,36 @@ const SolutionMenu: FC<Props> = ({
 	setIsEdit,
 	handleSetOption,
 }) => {
-	const { t } = useLanguage();
-
+	const { t } = useUserConfig();
+	const user = useSelector(creatorSelector);
+	const isCreator = statement.creatorId === user?.uid;
+	const isCreatorOrAdmin = isCreator || isAdmin;
 	const isOption = statement.statementType === StatementType.option;
 	const isResearch = statement.statementType === StatementType.question;
 
-	if (!isAuthorized) return null;
-
 	useEffect(() => {
 		if (isCardMenuOpen) {
-			setTimeout(() => {
+			const timer = setTimeout(() => {
 				setIsCardMenuOpen(false);
-			}, 5000);
+			}, 35000);
+
+			return () => clearTimeout(timer);
 		}
 	}, [isCardMenuOpen]);
+
+	if (!isAuthorized) return null;
 
 	return (
 		<Menu
 			setIsOpen={setIsCardMenuOpen}
 			isMenuOpen={isCardMenuOpen}
-			iconColor="#5899E0"
+			iconColor='#5899E0'
+			isCardMenu={true}
+			isNavMenu={false}
 		>
-			{isAuthorized && (
+			{isAuthorized && isCreatorOrAdmin && (
 				<MenuOption
-					label={t("Edit Text")}
+					label={t('Edit Text')}
 					icon={<EditIcon />}
 					onOptionClick={() => {
 						setIsEdit(!isEdit);
@@ -66,8 +76,8 @@ const SolutionMenu: FC<Props> = ({
 					icon={<LightBulbIcon />}
 					label={
 						isOption
-							? t("Unmark as a Solution")
-							: t("Mark as a Solution")
+							? t('Unmark as a Solution')
+							: t('Mark as a Solution')
 					}
 					onOptionClick={() => {
 						handleSetOption();
@@ -90,9 +100,9 @@ const SolutionMenu: FC<Props> = ({
 					}}
 				/>
 			)}
-			{isAuthorized && (
+			{isAuthorized && isCreatorOrAdmin && (
 				<MenuOption
-					label={t("Delete")}
+					label={t('Delete')}
 					icon={<DeleteIcon />}
 					onOptionClick={() => {
 						deleteStatementFromDB(statement, isAuthorized);

@@ -1,16 +1,5 @@
-// import * as XLSX from "xlsx";
-// import { doc, setDoc } from "firebase/firestore";
-// import { FireStore } from "../config";
-// import { Statement } from "delib-npm";
-
-// interface User {
-//   Name: string;
-//   Email: string;
-//   Phone: string;
-// }
-
 export const SetWaitingListCont = async (
-	file: File, 
+	file: File
 
 	// statement: Statement
 ) => {
@@ -40,7 +29,7 @@ export const SetWaitingListCont = async (
 		// 		});
 		// 	}
 		// }
-		alert("This feature is not available yet");
+		alert('This feature is not available yet');
 	};
 	reader.readAsArrayBuffer(file);
 };

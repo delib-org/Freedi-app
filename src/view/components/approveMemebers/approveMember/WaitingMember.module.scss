@@ -1,0 +1,87 @@
+.memberDisplay {
+	font-size: 16px;
+	color: #333;
+	background-color: #f0f0f0;
+	width: fit-content;
+	display: flex;
+	align-items: center; // Add this to vertically align items
+	width: 100%; // Ensure it doesn't overflow its parent
+	border-radius: 5px; // Optional for consistent styling with buttons
+
+	@media screen and (max-width: 768px) {
+		flex-direction: column; // Stack items vertically on small screens
+		align-items: flex-start; // Align items to the start of the flex container
+		gap: 0rem; // Add gap between items
+
+	}
+
+	.inGroup {
+		@media screen and (max-width: 768px) {
+			display: none;
+
+		}
+	}
+
+	.statement {
+		font-size: 16px;
+		color: #333;
+		background-color: #f0f0f0;
+		padding: 5px 10px; // Add consistent padding
+		white-space: nowrap; // Prevent text wrapping
+		overflow: hidden; // Hide overflow
+		text-overflow: ellipsis; // Add ellipsis for very long names
+		min-width: 0; // Allow flexbox to shrink this element if needed
+		flex: 1; // Allow it to take available space
+	}
+
+	.memberName {
+		font-size: 16px;
+		color: #333;
+		background-color: #f0f0f0;
+		padding: 5px 10px; // Add consistent padding
+		white-space: nowrap; // Prevent text wrapping
+		overflow: hidden; // Hide overflow
+		text-overflow: ellipsis; // Add ellipsis for very long names
+
+		min-width: 15ch;
+	}
+
+	.buttons {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		padding: 5px 10px;
+		background-color: #f0f0f0;
+		border-radius: 5px;
+		transition: background-color 0.3s ease;
+		gap: .5rem;
+		flex-shrink: 0; // Prevent buttons from shrinking
+
+		button {
+			background-color: #e4e4e4;
+			color: white;
+			border: none;
+			padding: 5px 10px;
+			border-radius: 5px;
+			cursor: pointer;
+			font-size: 14px;
+			transition: background-color 0.3s ease;
+
+
+
+
+			&:hover {
+				background-color: #cecece;
+				cursor: pointer;
+			}
+
+			&:active {
+				background-color: #d0d0d0;
+			}
+
+			&:focus {
+				outline: 2px solid rgb(122, 122, 122);
+			}
+		}
+	}
+}

@@ -1,25 +1,20 @@
-import { Statement, StatementType } from 'delib-npm';
 import { FC, useState, useEffect, useRef } from 'react';
-
-// Third party imports
-
-// Images
 import { createStatementFromModal } from '../settings/statementSettingsCont';
 import newOptionGraphic from '@/assets/images/newOptionGraphic.png';
 import newQuestionGraphic from '@/assets/images/newQuestionGraphic.png';
-import { useLanguage } from '@/controllers/hooks/useLanguages';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import Modal from '@/view/components/modal/Modal';
 import './CreateStatementModal.scss';
 import Button, { ButtonType } from '@/view/components/buttons/button/Button';
+import { StatementType, Statement } from 'delib-npm';
+import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 
 interface CreateStatementModalProps {
 	parentStatement: Statement | 'top';
 	isOption: boolean;
-	singleSelection?: boolean;
 	setShowModal: (bool: boolean) => void;
 	getSubStatements?: () => Promise<void>;
-	toggleAskNotifications?: () => void;
-	isSendToStoreTemp?: boolean; // This is used for setting the input from the user to the store and from there to the UI as a new statement
+	isSendToStoreTemp?: boolean;
 	allowedTypes?: StatementType[];
 }
 
@@ -34,7 +29,8 @@ const CreateStatementModal: FC<CreateStatementModalProps> = ({
 	const [isOptionSelected, setIsOptionSelected] = useState(isOption);
 	const [title, setTitle] = useState('');
 	const [description, setDescription] = useState('');
-	const { t } = useLanguage();
+	const { t } = useUserConfig();
+	const { creator } = useAuthentication();
 
 	const titleInputRef = useRef<HTMLInputElement>(null);
 
@@ -48,11 +44,15 @@ const CreateStatementModal: FC<CreateStatementModalProps> = ({
 		setShowModal(false);
 
 		await createStatementFromModal({
+			creator,
 			title,
 			description,
 			isOptionSelected,
 			parentStatement,
 			isSendToStoreTemp,
+			statementType: isOptionSelected
+				? StatementType.option
+				: StatementType.question,
 		});
 
 		await getSubStatements?.();
@@ -63,7 +63,11 @@ const CreateStatementModal: FC<CreateStatementModalProps> = ({
 			<form className='overlay' onSubmit={onFormSubmit}>
 				<div className='modal-image'>
 					<img
-						src={isOptionSelected ? newOptionGraphic : newQuestionGraphic}
+						src={
+							isOptionSelected
+								? newOptionGraphic
+								: newQuestionGraphic
+						}
 						alt='New Statement'
 					/>
 				</div>
@@ -71,7 +75,6 @@ const CreateStatementModal: FC<CreateStatementModalProps> = ({
 				<Tabs
 					isOptionChosen={isOptionSelected}
 					setIsOptionChosen={setIsOptionSelected}
-					parentStatement={parentStatement}
 					allowedTypes={allowedTypes}
 				/>
 
@@ -111,7 +114,6 @@ interface TabsProps {
 	allowedTypes?: StatementType[];
 	isOptionChosen: boolean;
 	setIsOptionChosen: (isOptionChosen: boolean) => void;
-	parentStatement: Statement | 'top';
 }
 
 const Tabs: FC<TabsProps> = ({
@@ -119,7 +121,7 @@ const Tabs: FC<TabsProps> = ({
 	isOptionChosen,
 	setIsOptionChosen,
 }) => {
-	const { t } = useLanguage();
+	const { t } = useUserConfig();
 
 	return (
 		<div className='tabs'>
@@ -155,7 +157,7 @@ const CreateStatementButtons: FC<CreateStatementButtonsProps> = ({
 	isOption,
 	onCancel,
 }) => {
-	const { t } = useLanguage();
+	const { t } = useUserConfig();
 
 	return (
 		<div className='create-statement-buttons'>

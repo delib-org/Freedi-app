@@ -1,22 +1,30 @@
 import { useContext, useEffect, useRef } from 'react';
-import { StatementContext } from '../../../StatementCont';
 import SuggestionCards from '../../evaluations/components/suggestionCards/SuggestionCards';
-import styles from './StagePage.module.scss'
+import styles from './StagePage.module.scss';
 import StatementBottomNav from '../../nav/bottom/StatementBottomNav';
-import { useLanguage } from '@/controllers/hooks/useLanguages';
+import StatementVote from '../../vote/StatementVote';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { StatementContext } from '../../../StatementCont';
+import { Statement, EvaluationUI } from 'delib-npm';
+import Clustering from '../../clustering/Clustering';
 
-const StagePage = () => {
-	const { t } = useLanguage();
+interface Props {
+	showStageTitle?: boolean;
+}
+
+const StagePage = ({ showStageTitle = true }: Props) => {
+	const { t } = useUserConfig();
 	const { statement } = useContext(StatementContext);
 	const stageRef = useRef<HTMLDivElement>(null);
 
 	useEffect(() => {
 		const updateHeight = () => {
 			if (stageRef.current) {
-				const topPosition = stageRef.current.getBoundingClientRect().top;
+				const topPosition =
+					stageRef.current.getBoundingClientRect().top;
 				const viewportHeight = window.innerHeight;
 				const newHeight = viewportHeight - topPosition;
-				stageRef.current.style.height = `${newHeight}px`;
+				stageRef.current.style.height = `${newHeight + 300}px`;
 			}
 		};
 
@@ -31,23 +39,42 @@ const StagePage = () => {
 		};
 	}, []);
 
-	const stageName = statement?.statement ? `: ${t(statement.statement)}` : "";
+	const stageName = statement?.statement ? `: ${t(statement.statement)}` : '';
+	const isClustering = statement?.evaluationSettings?.evaluationUI === EvaluationUI.clustering;
 
 	return (
-		<div
-			ref={stageRef}
-			className={styles.stage}
-		>
-			<div className={styles.wrapper}>
-				<h2>{t("Stage")}{statement?.statement && stageName}</h2>
-				<p className="mb-4">Stage description</p>
-				<SuggestionCards />
-				<div className={styles.bottomNav}>
-					<StatementBottomNav />
-				</div>
+		<>
+			<div className={`${styles['stage-page']} wrapper`}>
+				{!isClustering && showStageTitle && <h2>
+					{t('Stage')}
+					{statement?.statement && stageName}
+				</h2>}
+				<StagePageSwitch statement={statement} />
 			</div>
-		</div>
+			<div className={styles.bottomNav}>
+				<StatementBottomNav />
+			</div>
+		</>
 	);
 };
 
 export default StagePage;
+
+interface StagePageSwitchProps {
+	readonly statement: Statement;
+}
+
+function StagePageSwitch({ statement }: StagePageSwitchProps) {
+	const evaluationUI = statement?.evaluationSettings?.evaluationUI;
+
+	switch (evaluationUI) {
+		case EvaluationUI.suggestions:
+			return <SuggestionCards />;
+		case EvaluationUI.voting:
+			return <StatementVote />;
+		case EvaluationUI.clustering:
+			return <Clustering />;
+		default:
+			return <SuggestionCards />;
+	}
+}

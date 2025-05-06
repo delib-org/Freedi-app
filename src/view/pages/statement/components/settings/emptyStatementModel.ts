@@ -1,4 +1,5 @@
-import { ResultsBy, Screen, Statement, StatementType } from 'delib-npm';
+import { resultsSettingsDefault } from '@/controllers/db/statements/setStatements';
+import { Statement, StatementType, Access } from 'delib-npm';
 
 export const defaultStatementSettings = {
 	enhancedEvaluation: true,
@@ -11,41 +12,26 @@ export const defaultStatementSettings = {
 	enableNavigationalElements: false,
 } as const;
 
-export const defaultResultsSettings = {
-	resultsBy: ResultsBy.topOptions,
-	numberOfResults: 1,
-} as const;
-
-export const defaultStatementSubScreens: Screen[] = [
-	Screen.CHAT,
-	Screen.OPTIONS,
-	Screen.VOTE,
-];
-
 export const defaultEmptyStatement: Statement = {
 	topParentId: '',
 	statement: '',
 	statementId: '',
 	parentId: '',
-	creatorId: '',
 	creator: {
 		displayName: '',
 		uid: '',
-		defaultLanguage: undefined,
-		email: undefined,
 		photoURL: undefined,
-		isAnonymous: undefined,
-		fontSize: undefined,
-		color: undefined,
-		agreement: undefined,
-		role: undefined,
 	},
+	creatorId: '',
 	statementType: StatementType.statement,
 	lastUpdate: 0,
 	createdAt: 0,
 	consensus: 0,
 	// default values
-	resultsSettings: defaultResultsSettings,
+	resultsSettings: resultsSettingsDefault,
 	statementSettings: defaultStatementSettings,
 	hasChildren: true,
+	membership: {
+		access: Access.openToAll
+	}
 } as const;

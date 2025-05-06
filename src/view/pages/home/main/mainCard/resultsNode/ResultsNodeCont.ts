@@ -1,18 +1,18 @@
-import { Statement, StatementType } from "delib-npm";
+import { StatementType, Statement } from 'delib-npm';
 
 export function styleSwitch(statement: Statement) {
 	const { statementType } = statement;
 
 	switch (statementType) {
 		case StatementType.question:
-			return "question";
+			return 'question';
 		case StatementType.option:
-			return "option";
+			return 'option';
 		case StatementType.group:
-			return "group";
+			return 'group';
 		case StatementType.statement:
-			return "statement";
+			return 'statement';
 		default:
-			return "statement";
+			return 'statement';
 	}
 }

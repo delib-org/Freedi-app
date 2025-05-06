@@ -1,4 +1,4 @@
-import { DeliberativeElement, Screen, Statement } from 'delib-npm';
+import { DeliberativeElement, SortType, Statement } from 'delib-npm';
 
 // Updates the displayed options with how many votes each option has from the parent statement
 export function setSelectionsToOptions(
@@ -9,8 +9,9 @@ export function setSelectionsToOptions(
 		const parsedOptions = JSON.parse(JSON.stringify(options));
 		if (statement.selections) {
 			parsedOptions.forEach((option: Statement) => {
-				if (statement.selections.hasOwnProperty(`${option.statementId}`)) {
-					const optionSelections = statement.selections[option.statementId];
+				if (statement.selections?.[option.statementId] !== undefined) {
+					const optionSelections =
+						statement.selections[option.statementId];
 					option.voted = optionSelections;
 				}
 			});
@@ -30,33 +31,22 @@ export function sortOptionsIndex(
 ): Statement[] {
 	let _options = JSON.parse(JSON.stringify(options));
 
-	// sort only the order of the options acording to the sort
+	// sort only the order of the options according to the sort
 	switch (sort) {
-		case Screen.VOTES_NEW:
+		case SortType.newest:
 			_options = _options.sort((a: Statement, b: Statement) => {
 				return b.createdAt - a.createdAt;
 			});
 			break;
-
-		case Screen.VOTES_CONSENSUS:
-			_options = _options.sort((a: Statement, b: Statement) => {
-				return b.consensus - a.consensus;
-			});
-			break;
-		case Screen.VOTES_RANDOM:
+		case SortType.random:
 			_options = _options.sort(() => Math.random() - 0.5);
 			break;
-		case Screen.VOTESֹֹֹ_VOTED:
+		case SortType.accepted:
 			_options = _options.sort((a: Statement, b: Statement) => {
-				const aVoted: number = a.voted === undefined ? 0 : a.voted;
-				const bVoted: number = b.voted === undefined ? 0 : b.voted;
+				const aVoted: number = a.voted ?? 0;
+				const bVoted: number = b.voted ?? 0;
 
 				return bVoted - aVoted;
-			});
-			break;
-		case Screen.VOTES_UPDATED:
-			_options = _options.sort((a: Statement, b: Statement) => {
-				return b.lastUpdate - a.lastUpdate;
 			});
 			break;
 		default:
@@ -101,10 +91,7 @@ export function getTotalVoters(statement: Statement | undefined) {
 // TODO: Not used. Delete later
 export function getSelections(statement: Statement, option: Statement) {
 	try {
-		if (
-			statement.selections &&
-			statement.selections.hasOwnProperty(option.statementId)
-		) {
+		if (statement.selections?.[option.statementId] !== undefined) {
 			const optionSelections = statement.selections[option.statementId];
 			if (!optionSelections) return 0;
 

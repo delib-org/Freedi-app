@@ -1,4 +1,4 @@
-import { FC, useEffect, useRef, useState } from 'react';
+import React, { FC, useEffect, useRef, useState } from 'react';
 
 // Styles
 import Button, { ButtonType } from '../buttons/button/Button';
@@ -8,8 +8,8 @@ import styles from './enterNameModal.module.scss';
 // Custom components
 
 // Functions
-import { signAnonymously } from '@/controllers/db/auth';
-import { useLanguage } from '@/controllers/hooks/useLanguages';
+import { signAnonymously } from '@/controllers/db/authenticationUtils';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 
 interface Props {
 	closeModal: VoidFunction;
@@ -20,7 +20,7 @@ const EnterNameModal: FC<Props> = ({ closeModal }) => {
 	const [showStartBtn, setShowStartBtn] = useState<boolean>(false);
 	const inputRef = useRef<HTMLInputElement>(null); // Create a ref for the input
 
-	const { t } = useLanguage();
+	const { t } = useUserConfig();
 
 	useEffect(() => {
 		inputRef.current?.focus(); // Set focus on the input when the component mounts
@@ -36,7 +36,7 @@ const EnterNameModal: FC<Props> = ({ closeModal }) => {
 			if (isReadyToStart(displayName)) {
 				signAnonymously();
 				const _displayName = displayName || 'Anonymous';
-				sessionStorage.setItem('displayName', _displayName);
+				localStorage.setItem('displayName', _displayName);
 				closeModal();
 			}
 		} catch (error) {

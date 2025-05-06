@@ -1,154 +1,152 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+import { Collections, NotificationType, Statement, StatementSchema, StatementSubscription } from "delib-npm";
+import { logger } from "firebase-functions/v1";
+import { parse } from "valibot";
+import { db } from ".";
+import { FirestoreEvent } from "firebase-functions/firestore";
+import { QueryDocumentSnapshot } from "firebase-admin/firestore";
 import * as admin from "firebase-admin";
-import { Collections, Statement, StatementSubscription } from "delib-npm";
-import { logger } from "firebase-functions";
-import { FieldValue } from "firebase-admin/firestore";
-import { db } from "./index";
-import { log } from "firebase-functions/logger";
-import { z } from "zod";
 
-export async function sendNotificationsCB(e: any) {
+/**
+ * Updates in-app notifications when a new statement is created as a reply.
+ * Creates notifications for users subscribed to the parent statement.
+ */
+
+export async function updateInAppNotifications(
+	e: FirestoreEvent<QueryDocumentSnapshot>,
+): Promise<void> {
 	try {
-		const statement = e.data.data();
-		if (!statement) throw new Error("statement not found");
+		//go to the new statement and parse it
+		const newStatement = e.data?.data() as Statement;
+		if (newStatement.parentId === 'top') return;
+		const statement = parse(StatementSchema, newStatement);
 
-		const parentId = statement.parentId;
+		// Fetch all required data in parallel
+		const [subscribersDB, parentStatementDB, askedToBeNotifiedDB] = await fetchNotificationData(statement.parentId);
+		const subscribersInApp = subscribersDB.docs.map((doc: QueryDocumentSnapshot) => doc.data() as StatementSubscription);
+		const parentStatement = parse(StatementSchema, parentStatementDB.data());
 
-		if (!parentId) throw new Error("parentId not found");
+		//get fcm subscribers
+		const fcmSubscribers: FcmSubscriber[] = askedToBeNotifiedDB.docs.map((ntfDB: QueryDocumentSnapshot) => {
+			const data = ntfDB.data();
 
-		const parentRef = db.doc(`statements/${parentId}`);
-		const parentDB = await parentRef.get();
+			return {
+				userId: data.userId,
+				token: data.token
+			};
+		});
 
-		const parent = parentDB.exists ? (parentDB.data() as Statement) : null;
-		const _title = parent ? parent.statement.replace(/\*/g, "") : "Delib-5";
+		//update last message in the parent statement
+		await db.doc(`${Collections.statements}/${statement.parentId}`).update({
+			lastMessage: {
+				message: newStatement.statement,
+				creator: newStatement.creator.displayName || "Anonymous",
+				createdAt: newStatement.createdAt,
+			},
+		});
 
-		//bring only the first paragraph
-		const _titleArr = _title.split("\n");
-		const _titleFirstParagraph = _titleArr[0];
+		// Process notifications
+		await processInAppNotifications(subscribersInApp, newStatement, parentStatement);
+		await processFcmNotifications(fcmSubscribers, newStatement);
+	} catch (error) {
+		logger.error(error);
+	}
+}
 
-		//limit to 20 chars
-		const parentStatementTitle = _titleFirstParagraph.substring(0, 20);
+/**
+ * Fetches all data needed for notification processing in parallel.
+ */
+async function fetchNotificationData(parentId: string) {
+	// Query for in-app and FCM notification subscribers
+	const parentStatementSubscribersCB = db.collection(Collections.statementsSubscribe)
+		.where('statementId', '==', parentId)
+		.where("getInAppNotification", "==", true)
+		.get();
+	const askedToBeNotifiedCB = db.collection(Collections.askedToBeNotified)
+		.where('statementId', '==', parentId)
+		.get();
+	const parentStatementCB = db.doc(`${Collections.statements}/${parentId}`).get();
 
-		// const title = "In conversation: " + __first20Chars;
-		const title = `${parentStatementTitle} / ${statement.creator.displayName}`;
+	return await Promise.all([
+		parentStatementSubscribersCB,
+		parentStatementCB,
+		askedToBeNotifiedCB
+	]);
+}
 
-		//get all subscribers to this statement
-		const subscribersRef = db.collection(Collections.statementsSubscribe);
+/**
+ * Creates in-app notifications using batch write operation.
+ */
+async function processInAppNotifications(subscribersInApp: StatementSubscription[], newStatement: Statement, parentStatement: Statement) {
+	//here we should have all the subscribers for the parent notification
 
-		const q = subscribersRef
-			.where("statementId", "==", parentId)
-			.where("notification", "==", true);
+	const batch = db.batch();
 
-		const subscribersDB = await q.get();
+	// Create notification for each subscriber
+	subscribersInApp.forEach((subscriber: StatementSubscription) => {
 
-		//send push notifications to all subscribers
-		subscribersDB.docs.forEach((subscriberDB) => {
-			const subscriber = subscriberDB.data() as StatementSubscription;
-			const tokenArr = subscriber.token;
-			const { success } = z.array(z.string()).safeParse(tokenArr);
-			if (!success) {
-				log(`tokenArr is not an array of strings`, tokenArr);
+		const notificationRef = db.collection(Collections.inAppNotifications).doc();
 
-				return;
+		const newNotification: NotificationType = {
+			userId: subscriber.user.uid,
+			parentId: newStatement.parentId,
+			parentStatement: parentStatement.statement,
+			text: newStatement.statement,
+			creatorId: newStatement.creator.uid,
+			creatorName: newStatement.creator.displayName,
+			creatorImage: newStatement.creator.photoURL,
+			createdAt: newStatement.createdAt,
+			read: false,
+			notificationId: notificationRef.id,
+			statementId: newStatement.statementId,
+		};
+		batch.create(notificationRef, newNotification);
+	});
+
+	await batch.commit();
+}
+
+/**
+ * Sends FCM push notifications in batches.
+ */
+interface FcmSubscriber {
+	userId: string;
+	token: string;
+}
+
+async function processFcmNotifications(fcmSubscribers: FcmSubscriber[], newStatement: Statement) {
+	if (fcmSubscribers.length > 0) {
+		// Format FCM messages
+		const fcmMessages = fcmSubscribers.map(subscriber => {
+			if (subscriber.userId && subscriber.token) {
+				return {
+					token: subscriber.token,
+					notification: {
+						title: `New reply from ${newStatement.creator.displayName}`,
+						body: newStatement.statement.substring(0, 100) + (newStatement.statement.length > 100 ? '...' : '')
+					},
+					data: {
+						statementId: newStatement.statementId,
+						parentId: newStatement.parentId,
+						createdAt: newStatement.createdAt.toString(),
+						notificationType: 'statement_reply'
+					}
+				};
+			} else {
+				return null;
 			}
+		}).filter(message => message !== null);
 
-			if (tokenArr && tokenArr.length > 0) {
-				// Send a message to each device the user has registered for notifications.
-
+		// Send notifications in batches to avoid FCM limitations
+		const fcmBatchSize = 500;
+		for (let i = 0; i < fcmMessages.length; i += fcmBatchSize) {
+			const batch = fcmMessages.slice(i, i + fcmBatchSize);
+			if (batch.length > 0) {
 				try {
-					tokenArr.forEach((token: string) => {
-						const message: any = {
-							notification: {
-								title,
-								body: statement.statement,
-							},
-							data: {
-								title,
-								body: statement.statement,
-								statementId: parentId,
-								chatId: `${parentId}/chat`,
-								url: `https://freedi.tech/statement/${parentId}/chat`,
-
-							},
-							webpush: {
-								fcm_options: {
-									link: `https://freedi.tech/statement/${parentId}/chat`,
-								},
-							},
-							token,
-						};
-						message.android = {
-							notification: {
-								icon: "https://firebasestorage.googleapis.com/v0/b/synthesistalyaron.appspot.com/o/logo%2Flogo-48px.png?alt=media&token=e2d11208-2c1c-4c29-a422-42a4e430f9a0", // Replace with your icon name
-							},
-						};
-						message.apns = {
-							payload: {
-								aps: {
-									"mutable-content": 1,
-								},
-							},
-							fcm_options: {
-								image: "https://firebasestorage.googleapis.com/v0/b/synthesistalyaron.appspot.com/o/logo%2Flogo-48px.png?alt=media&token=e2d11208-2c1c-4c29-a422-42a4e430f9a0", // Replace with your icon URL
-							},
-						};
-						admin
-							.messaging()
-							.send(message)
-							.then((response: any) => {
-								// Response is a message ID string.
-								logger.info(
-									"Successfully sent message:",
-									response,
-								);
-							})
-							.catch((error: any) => {
-								logger.error(
-									"Error failed to sent notification: ",
-									error,
-								);
-
-								// Delete token from DB if it is not valid.
-								if (
-									error.code ===
-                                    "messaging/invalid-registration-token" ||
-                                    error.code ===
-                                    "messaging/registration-token-not-registered" ||
-                                    error.message ===
-                                    "The registration token is not a valid FCM registration token"
-								) {
-									logger.info("Deleting token from DB");
-
-									db.collection(
-										Collections.statementsSubscribe,
-									)
-										.where(
-											"statementsSubscribeId",
-											"==",
-											subscriber.statementsSubscribeId,
-										)
-										.get()
-										.then((querySnapshot) => {
-											querySnapshot.forEach((doc) => {
-												doc.ref.update({
-													token: FieldValue.arrayRemove(
-														token,
-													),
-												});
-											});
-										});
-								}
-							});
-					});
-				} catch (error) {
-					logger.error(
-						`send push notifications to all subscriber `,
-						error,
-					);
+					await Promise.all(batch.map(message => admin.messaging().send(message)));
+				} catch (fcmError) {
+					logger.error("Error sending FCM notifications:", fcmError);
 				}
 			}
-		});
-	} catch (error) {
-		logger.error("error sending notifications", error);
+		}
 	}
 }

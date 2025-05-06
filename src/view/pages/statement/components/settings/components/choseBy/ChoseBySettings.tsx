@@ -1,17 +1,25 @@
-import { ChoseBy, ChoseByEvaluationType, CutoffType } from "delib-npm";
-import { FC, useEffect, useState } from "react";
-
-// Custom components
-
-// Third party imports
-import { useLanguage } from "@/controllers/hooks/useLanguages";
-import RadioButtonWithLabel from "@/view/components/radioButtonWithLabel/RadioButtonWithLabel";
+import {
+	ChangeEvent,
+	FC,
+	MouseEvent,
+	TouchEvent,
+	useState,
+} from 'react';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import RadioButtonWithLabel from '@/view/components/radioButtonWithLabel/RadioButtonWithLabel';
 import styles from './ChoseBySettings.module.scss';
-import { StatementSettingsProps } from "../../settingsTypeHelpers";
+import { StatementSettingsProps } from '../../settingsTypeHelpers';
 
-import { useDispatch, useSelector } from "react-redux";
-import { choseBySelector, setChoseBy } from "@/model/choseBy/choseBySlice";
-import { setChoseByToDB } from "@/controllers/db/choseBy/setChoseBy";
+import { useSelector } from 'react-redux';
+
+import {
+	CutoffBy,
+	ResultsBy,
+	Statement,
+} from 'delib-npm';
+import { updateResultSettingsToDB } from '@/controllers/db/statements/setResultSettings';
+import { statementSelector } from '@/redux/statements/statementsSlice';
+import SectionTitle from '../sectionTitle/SectionTitle';
 
 interface RangeProps {
 	maxValue: number;
@@ -20,72 +28,48 @@ interface RangeProps {
 	value: number;
 }
 
-const ChoseBySettings: FC<StatementSettingsProps> = ({
-	statement
-}) => {
-	const { t } = useLanguage();
-	const dispatch = useDispatch();
-	const choseBy: ChoseBy | undefined = useSelector(choseBySelector(statement.statementId));
+const ChoseBySettings: FC<StatementSettingsProps> = ({ statement: _statement }) => {
+	const { t } = useUserConfig();
+	const statement = useSelector(statementSelector(_statement.statementId)) as Statement;
+	if (!statement) return null;
+	const { resultsSettings } = statement;
 
 	const [rangeProps, setRangeProps] = useState<RangeProps>({
 		maxValue: 20,
 		minValue: 1,
 		step: 1,
-		value: choseBy?.number ?? 0,
+		value: resultsSettings.cutoffNumber ?? 1,
 	});
 
-	useEffect(() => {
-
-		if (choseBy?.cutoffType === CutoffType.topOptions) {
-
-			setRangeProps({
-				maxValue: 20,
-				minValue: 1,
-				step: 1,
-				value: choseBy?.number ?? 0,
-			});
-			dispatch(setChoseBy({ ...choseBy, number: Math.ceil(choseBy.number) }));
-		}
-		else if (choseBy?.cutoffType === CutoffType.cutoffValue) {
-
-			setRangeProps({
-				maxValue: 10,
-				minValue: -10,
-				step: 0.1,
-				value: choseBy?.number ?? 0,
-			});
-		}
-	}, [choseBy?.cutoffType]);
-
-	function handleEvaluationChange(e: React.ChangeEvent<HTMLInputElement>) {
-
+	function handleEvaluationChange(e: ChangeEvent<HTMLInputElement>) {
 		if (!e.target.id) return;
-		if (!choseBy) return;
-		const newChoseBy = {
-			...choseBy,
-			choseByEvaluationType: e.target.id as ChoseByEvaluationType,
-		};
-		dispatch(setChoseBy(newChoseBy));
-		setChoseByToDB(newChoseBy);
 
+		const newResultsSettings = {
+			...resultsSettings,
+			resultsBy: e.target.id as ResultsBy,
+		};
+		// dispatch(updateStoreResultsSettings({ statementId: statement.statementId, resultsSettings: newResultsSettings }));
+		updateResultSettingsToDB(statement.statementId, newResultsSettings)
 	}
 
-	function handleCutoffChange(e: React.ChangeEvent<HTMLInputElement>) {
+	function handleCutoffChange(e: ChangeEvent<HTMLInputElement>) {
 		if (!e.target.id) return;
-		if (!choseBy) return;
 
-		const newChoseBy = {
-			...choseBy,
-			cutoffType: e.target.id as CutoffType,
+		const newResultsSettings = {
+			...resultsSettings,
+			cutoffBy: e.target.id as CutoffBy,
 		};
 
-		dispatch(setChoseBy(newChoseBy));
-		setChoseByToDB(newChoseBy);
+		// dispatch(updateStoreResultsSettings({ statementId: statement.statementId, resultsSettings: newResultsSettings }));
+		updateResultSettingsToDB(statement.statementId, newResultsSettings)
 	}
 
-	function handleRangeChange(e: React.ChangeEvent<HTMLInputElement> | React.MouseEvent<HTMLInputElement> | React.TouchEvent<HTMLInputElement>) {
-
-		if (!choseBy) return;
+	function handleRangeChange(
+		e:
+			| ChangeEvent<HTMLInputElement>
+			| MouseEvent<HTMLInputElement>
+			| TouchEvent<HTMLInputElement>
+	) {
 
 		const valueAsNumber = (e.target as HTMLInputElement).valueAsNumber;
 
@@ -94,88 +78,155 @@ const ChoseBySettings: FC<StatementSettingsProps> = ({
 			value: getValue(valueAsNumber),
 		});
 
-		const newChoseBy = {
-			...choseBy,
-			number: getValue(valueAsNumber),
-		};
+		let newResultsSettings;
 
-		if (e.type === "mouseup" || e.type === "touchend") {
-			setChoseByToDB(newChoseBy);
-			dispatch(setChoseBy(newChoseBy));
+		if (resultsSettings.cutoffBy === CutoffBy.topOptions) {
+			newResultsSettings = {
+				...resultsSettings,
+				numberOfResults: getValue(valueAsNumber),
+			};
+		} else if (resultsSettings.cutoffBy === CutoffBy.aboveThreshold) {
+			newResultsSettings = {
+				...resultsSettings,
+				cutoffNumber: getValue(valueAsNumber),
+			};
 		}
 
+		if (newResultsSettings && (e.type === 'mouseup' || e.type === 'touchend')) {
+
+			updateResultSettingsToDB(statement.statementId, newResultsSettings);
+
+		}
 	}
 
 	function getValue(value: number) {
-		return choseBy?.cutoffType === CutoffType.cutoffValue ? value ?? 0 : Math.ceil(value ?? 0);
+		return resultsSettings.cutoffBy === CutoffBy.aboveThreshold
+			? (value ?? 0)
+			: Math.ceil(value ?? 0);
 	}
 
 	return (
 		<div className={styles.choseBy}>
-			<h2>{t("Options Selection Criteria")}</h2>
-			<section >
-				<h3 className="title">{t("How to evaluate and select top options")}</h3>
+			<SectionTitle title={t('Options Selection Criteria')} />
+			<section>
+				<h3 className='title'>
+					{t('How to evaluate and select top options')}
+				</h3>
 				<RadioButtonWithLabel
-					id={ChoseByEvaluationType.consensus}
-					labelText={t("By Consensus")}
-					checked={choseBy?.choseByEvaluationType === ChoseByEvaluationType.consensus}
+					id={ResultsBy.consensus}
+					labelText={t('By Consensus')}
+					checked={resultsSettings?.resultsBy === ResultsBy.consensus}
 					onChange={handleEvaluationChange}
 				/>
 				<RadioButtonWithLabel
-					id={ChoseByEvaluationType.likes}
-					labelText={t("By most liked")}
-					checked={choseBy?.choseByEvaluationType === ChoseByEvaluationType.likes}
+					id={ResultsBy.mostLiked}
+					labelText={t('By most liked')}
+					checked={resultsSettings?.resultsBy === ResultsBy.mostLiked}
 					onChange={handleEvaluationChange}
 				/>
 				<RadioButtonWithLabel
-					id={ChoseByEvaluationType.likesDislikes}
-					labelText={t("By sum liked - disliked")}
-					checked={choseBy?.choseByEvaluationType === ChoseByEvaluationType.likesDislikes}
+					id={ResultsBy.averageLikesDislikes}
+					labelText={t('By sum liked - disliked')}
+					checked={resultsSettings?.resultsBy === ResultsBy.averageLikesDislikes}
 					onChange={handleEvaluationChange}
 				/>
 			</section>
 			<section>
-				<h3 className="title">{t("Method of selecting leading options")}</h3>
+				<h3 className='title'>
+					{t('Method of selecting leading options')}
+				</h3>
 				<RadioButtonWithLabel
-					id={CutoffType.topOptions}
-					labelText={`${t("Top results")}: ${choseBy?.cutoffType === CutoffType.topOptions ? rangeProps.value : ""}`}
-					checked={choseBy?.cutoffType === CutoffType.topOptions}
+					id={CutoffBy.topOptions}
+					labelText={`${t('Top results')}`}
+					checked={resultsSettings.cutoffBy === CutoffBy.topOptions}
 					onChange={handleCutoffChange}
 				/>
 				<RadioButtonWithLabel
-					id={CutoffType.cutoffValue}
-					labelText={`${t("Above specific value")}: ${choseBy?.cutoffType === CutoffType.cutoffValue ? rangeProps.value : ""}`}
-					checked={choseBy?.cutoffType === CutoffType.cutoffValue}
+					id={CutoffBy.aboveThreshold}
+					labelText={`${t('Above specific value')}`}
+					checked={resultsSettings.cutoffBy === CutoffBy.aboveThreshold}
 					onChange={handleCutoffChange}
 				/>
 			</section>
 			<section>
-				<div className="title">{t("Value")}</div>
-				<div className={styles.range}>
-					<span>{rangeProps.minValue}</span>
-					<input
-						className="range"
-						type="range"
-						aria-label="Number Of Results"
-						name="numberOfResults"
-						value={rangeProps?.value}
-						min={rangeProps.minValue}
-						max={rangeProps.maxValue}
-						step={rangeProps.step}
-						onChange={handleRangeChange}
-						onMouseUp={handleRangeChange}
-						onTouchEnd={handleRangeChange}
-
-					/>
-					<span>{rangeProps.maxValue}</span>
-
-				</div>
-				<div className={styles.cutoffValue}>
-					{rangeProps.value}
-				</div>
+				{resultsSettings.cutoffBy === CutoffBy.topOptions ? (
+					<TopOptionsRange statement={statement} handleRangeChange={handleRangeChange} />
+				) : (
+					<AboveThresholdRange statement={statement} handleRangeChange={handleRangeChange} />
+				)}
 			</section>
 		</div>
 	);
 };
 
 export default ChoseBySettings;
+
+interface ComponentRangeProps {
+	statement: Statement;
+	handleRangeChange: (e: ChangeEvent<HTMLInputElement> | MouseEvent<HTMLInputElement> | TouchEvent<HTMLInputElement>) => void;
+}
+
+function TopOptionsRange({ statement: statement, handleRangeChange }: ComponentRangeProps) {
+	const { t } = useUserConfig();
+	const [value, setValue] = useState<number>(statement.resultsSettings.numberOfResults ?? 1);
+	const rangeProps = {
+		maxValue: 20,
+		minValue: 1,
+		step: 1
+	};
+
+	return (
+		<>
+			<div className='title'>{t('Top options to be selected')}: {value}</div>
+			<div className={styles.range}>
+				<span>{rangeProps.minValue}</span>
+				<input
+					className='range'
+					type='range'
+					aria-label='Number Of Results'
+					name='numberOfResults'
+					defaultValue={value}
+					min={rangeProps.minValue}
+					max={rangeProps.maxValue}
+					step={rangeProps.step}
+					onChange={(e) => setValue((e.target as HTMLInputElement).valueAsNumber)}
+					onMouseUp={handleRangeChange}
+					onTouchEnd={handleRangeChange}
+				/>
+				<span>{rangeProps.maxValue}</span>
+			</div>
+		</>
+	)
+}
+function AboveThresholdRange({ statement: statement, handleRangeChange }: ComponentRangeProps) {
+	const { t } = useUserConfig();
+	const [value, setValue] = useState<number>(statement.resultsSettings.cutoffNumber ?? 1);
+	const rangeProps = {
+		maxValue: 10,
+		minValue: 1,
+		step: 1,
+	};
+
+	return (
+		<>
+			<div className='title'>{t('The score to be considered as a top option')}: {value}</div>
+			<div className={styles.range}>
+				<span>{rangeProps.minValue}</span>
+				<input
+					className='range'
+					type='range'
+					aria-label='Number Of Results'
+					name='numberOfResults'
+					defaultValue={value}
+					min={rangeProps.minValue}
+					max={rangeProps.maxValue}
+					step={rangeProps.step}
+					onChange={(e) => setValue((e.target as HTMLInputElement).valueAsNumber)}
+					onMouseUp={handleRangeChange}
+					onTouchEnd={handleRangeChange}
+				/>
+				<span>{rangeProps.maxValue}</span>
+			</div>
+		</>
+	)
+}

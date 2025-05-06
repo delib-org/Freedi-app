@@ -14,14 +14,10 @@ import { getBarWidth } from './OptionBarCont';
 import { getStatementFromDB } from '@/controllers/db/statements/getStatement';
 import { setVoteToDB } from '@/controllers/db/vote/setVote';
 import { statementTitleToDisplay } from '@/controllers/general/helpers';
-import { parentVoteSelector, setVoteToStore } from '@/model/vote/votesSlice';
+import { parentVoteSelector, setVoteToStore } from '@/redux/vote/votesSlice';
+import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 
-interface OptionBarExtendedProps extends OptionBarProps {
-	isVertical: boolean;
-	screenWidth: number;
-}
-
-export const OptionBar: FC<OptionBarExtendedProps> = ({
+export const OptionBar: FC<OptionBarProps> = ({
 	option,
 	totalVotes,
 	statement,
@@ -32,6 +28,7 @@ export const OptionBar: FC<OptionBarExtendedProps> = ({
 	optionsCount,
 	screenWidth,
 }) => {
+	const { creator } = useAuthentication();
 	// * Redux * //
 	const dispatch = useAppDispatch();
 	const vote = useAppSelector(parentVoteSelector(option.parentId));
@@ -46,20 +43,16 @@ export const OptionBar: FC<OptionBarExtendedProps> = ({
 		screenWidth,
 	});
 	const padding = 40;
-
 	const { shortVersion } = statementTitleToDisplay(option.statement, 30);
 	const barHeight =
 		selections > 0 && totalVotes > 0
 			? Math.round((selections / totalVotes) * 100)
 			: 0;
-
-	// * Functions * //
 	const handleVotePress = () => {
 		dispatch(setVoteToStore(option));
-		setVoteToDB(option);
+		setVoteToDB(option, creator);
 		getStatementFromDB(option.statementId);
 	};
-
 	const isOptionSelected = vote?.statementId === option.statementId;
 
 	const containerInset = `${(_optionOrder - order) * barWidth}px`;
@@ -87,7 +80,9 @@ export const OptionBar: FC<OptionBarExtendedProps> = ({
 			style={containerStyle}
 		>
 			<div className='column' style={{ width: `${barWidth}px` }}>
-				{shouldShowStat && <div className='percentage-text'>{barHeight}%</div>}
+				{shouldShowStat && (
+					<div className='percentage-text'>{barHeight}%</div>
+				)}
 				<div className='bar drop-shadow' style={barStyle}>
 					<div className='number-of-selections'>{selections}</div>
 				</div>
@@ -114,7 +109,9 @@ export const OptionBar: FC<OptionBarExtendedProps> = ({
 					setShowInfo(true);
 				}}
 			>
-				<InfoIcon style={{ color: barHeight > 10 ? 'white' : '#6E8AA6' }} />
+				<InfoIcon
+					style={{ color: barHeight > 10 ? 'white' : '#6E8AA6' }}
+				/>
 			</button>
 			<div className={`title ${barWidth < 90 ? 'is-bar-small' : ''}`}>
 				{shortVersion}

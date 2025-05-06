@@ -1,0 +1,98 @@
+.wrapper {
+	max-width: var(--wrapper);
+	margin: 1rem auto;
+
+}
+
+.title {
+	margin-top: 10px;
+}
+
+.description {
+	max-width: var(--wrapper);
+
+
+
+	.add-stage {
+		margin-bottom: 2rem;
+		margin-top: 2rem;
+	}
+}
+
+.stagesWrapper {
+	padding-top: 2rem;
+	background-color: white;
+	display: flex;
+	flex-direction: column;
+	border-radius: var(--radius);
+	margin: 2rem 0;
+	max-width: var(--wrapper);
+	width: 100%;
+
+	.description {
+		font-size: 1.1rem;
+		font-weight: 400;
+		margin: 1.8rem 36px 1rem 36px;
+		color: var(--text-body);
+
+		@media screen and (max-width: 600px) {
+			margin: 1.2rem 36px 3rem 36px;
+
+		}
+	}
+
+	>div {
+		&:first-child {
+			border-radius: var(--radius) var(--radius) 0 0;
+		}
+
+		&:last-child {
+			border-radius: 0 0 var(--radius) var(--radius);
+			padding-bottom: 2rem;
+		}
+	}
+}
+
+.stageContainer {
+	display: flex;
+	align-items: center;
+	background: white;
+	cursor: grab;
+
+	&.dragging {
+		opacity: 0;
+	}
+
+	font: inherit;
+}
+
+.dragHandle {
+	width: 24px;
+	height: 24px;
+	margin-right: 12px;
+	position: relative;
+	cursor: grab;
+
+	&::before,
+	&::after {
+		content: '';
+		position: absolute;
+		left: 50%;
+		width: 2px;
+		height: 2px;
+		background: #666;
+		box-shadow:
+			0 4px 0 #666,
+			0 8px 0 #666;
+	}
+
+	&::before {
+		top: 6px;
+		transform: translateX(-4px);
+	}
+
+	&::after {
+		top: 6px;
+		transform: translateX(2px);
+	}
+}

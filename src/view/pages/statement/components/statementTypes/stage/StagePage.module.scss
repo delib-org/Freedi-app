@@ -1,3 +1,11 @@
+.stage-page {
+	margin-top: 1rem;
+
+	h2 {
+		margin-bottom: 0.5rem;
+	}
+}
+
 .stage {
 
 	display: flex;
@@ -11,9 +19,11 @@
 	flex-direction: column;
 	max-width: var(--wrapper);
 	width: 100vw;
+	height: 100%;
 	margin: auto;
-
 	flex: 1;
+
+
 }
 
 .bottomNav {

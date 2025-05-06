@@ -1,9 +1,8 @@
-import React, { FC, useState } from "react";
-import "./CustomSwitchSmall.scss";
-import VisuallyHidden from "../../accessibility/toScreenReaders/VisuallyHidden";
-import BackgroundImage from "./customSwitchSmallBackground.svg";
-
-import { useLanguage } from "@/controllers/hooks/useLanguages";
+import React, { FC, useState } from 'react';
+import './CustomSwitchSmall.scss';
+import VisuallyHidden from '../../accessibility/toScreenReaders/VisuallyHidden';
+import BackgroundImage from './customSwitchSmallBackground.svg';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 
 interface Props {
 	label: string;
@@ -24,56 +23,78 @@ const CustomSwitchSmall: FC<Props> = ({
 	imageUnchecked,
 	setChecked,
 }) => {
+	const { dir } = useUserConfig();
+	const [isChecked, setIsChecked] = useState(checked);
 
-	const { dir } = useLanguage();
-	const [_checked, _setChecked] = useState<boolean>(checked);
 	const handleChange = () => {
-		_setChecked(!_checked);
-		setChecked(!_checked);
+		setIsChecked(!isChecked);
+		setChecked(!isChecked);
 	};
 
-	//checked means multi-stage question
+	const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+		if (e.key === 'Enter' || e.key === ' ') {
+			e.preventDefault();
+			handleChange();
+		}
+	};
 
 	return (
-		<div className="custom-switch-small" onClick={handleChange}>
+		<div
+			className='custom-switch-small'
+			onClick={handleChange}
+			onKeyDown={handleKeyDown}
+			role='switch'
+			aria-checked={isChecked}
+			tabIndex={0}
+		>
 			<div
-				className={dir === "rtl" ? "background" : "background background--ltr"}
+				className={
+					dir === 'rtl' ? 'background' : 'background background--ltr'
+				}
 				style={{ backgroundImage: `url(${BackgroundImage})` }}
 			>
-				<div className="ball ball-background" style={{ left: "4.15rem" }}>
+				<div
+					className='ball ball-background'
+					style={{ left: '4.15rem' }}
+					aria-hidden='true'
+				>
 					{imageUnchecked}
 				</div>
-				<div className="ball ball-background ball-background-off">
+				<div
+					className='ball ball-background ball-background-off'
+					aria-hidden='true'
+				>
 					{imageChecked}
 				</div>
-				<button
-					className={`ball ball-switch ball-switch--${_checked ? "checked" : "unchecked"}`}
-					type="button"
-					style={{ left: `${_checked ? 0 : 4.15}rem` }}
-					aria-label={_checked ? "Turn off" : "Turn on"}
-					onKeyDown={(e) => {
-						if (e.key === 'Enter' || e.key === ' ') {
-							e.preventDefault();
-							handleChange();
-						}
-					}}
+				<div
+					className={`ball ball-switch ball-switch--${isChecked ? 'checked' : 'unchecked'}`}
+					style={{ left: `${isChecked ? 0 : 4.15}rem` }}
+					aria-hidden='true'
 				>
-					{_checked ? imageChecked : imageUnchecked}
-				</button>
+					{isChecked ? imageChecked : imageUnchecked}
+				</div>
 			</div>
-			<div className="text">{_checked ? textChecked : textUnchecked}</div>
+			<div className='text' aria-hidden='true'>
+				{isChecked ? textChecked : textUnchecked}
+			</div>
 			<label htmlFor={`toggleSwitchSimple-${label}`}>
 				<VisuallyHidden labelName={label} />
 			</label>
 			<input
-				type="checkbox"
+				type='checkbox'
 				name={label}
 				id={`toggleSwitchSimple-${label}`}
-				className="switch-input"
+				className='switch-input'
 				onChange={handleChange}
-				value={_checked ? "on" : "off"}
-				checked={_checked}
+				value={isChecked ? 'on' : 'off'}
+				checked={isChecked}
 				data-cy={`toggleSwitch-input-${label}`}
+				tabIndex={-1}
+				style={{
+					position: 'absolute',
+					opacity: 0,
+					pointerEvents: 'none',
+				}}
 			/>
 		</div>
 	);

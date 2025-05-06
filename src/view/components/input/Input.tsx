@@ -1,6 +1,6 @@
 import React, { useState, ChangeEvent } from 'react';
 import styles from './Input.module.scss';
-import { useLanguage } from '@/controllers/hooks/useLanguages';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import CloseIcon from '@/assets/icons/close.svg?react';
 
 interface SearchInputProps {
@@ -9,7 +9,9 @@ interface SearchInputProps {
 	value?: string;
 	image?: string;
 	onChange?: (value: string) => void;
+	backgroundColor?: string;
 	name: string;
+	autoFocus?: boolean;
 }
 
 const Input: React.FC<SearchInputProps> = ({
@@ -18,9 +20,11 @@ const Input: React.FC<SearchInputProps> = ({
 	value = '',
 	image,
 	onChange,
-	name
+	backgroundColor = '#fff',
+	name,
+	autoFocus = false,
 }) => {
-	const { dir } = useLanguage();
+	const { dir } = useUserConfig();
 	const [inputValue, setInputValue] = useState<string>(value);
 
 	const handleChange = (e: ChangeEvent<HTMLInputElement>): void => {
@@ -36,8 +40,9 @@ const Input: React.FC<SearchInputProps> = ({
 	return (
 		<div className={styles.container}>
 			<div
-				className={`${styles.label} ${dir === "ltr" ? styles["label--ltr"] : styles["label--rtl"]
+				className={`${styles.label} ${dir === 'ltr' ? styles['label--ltr'] : styles['label--rtl']
 					}`}
+				style={{ backgroundColor: backgroundColor }}
 			>
 				{label}
 			</div>
@@ -45,7 +50,7 @@ const Input: React.FC<SearchInputProps> = ({
 				{image && (
 					<img
 						src={image}
-						alt="search"
+						alt='search'
 						className={styles.searchIcon}
 						width={24}
 						height={24}
@@ -53,18 +58,19 @@ const Input: React.FC<SearchInputProps> = ({
 				)}
 				<input
 					name={name}
-					type="text"
+					type='text'
 					value={inputValue}
 					onChange={handleChange}
 					placeholder={placeholder}
 					className={styles.input}
+					autoFocus={autoFocus}
 				/>
 				{inputValue && (
 					<button
 						onClick={handleClear}
 						className={styles.clearButton}
-						type="button"
-						aria-label="Clear input"
+						type='button'
+						aria-label='Clear input'
 					>
 						<CloseIcon />
 					</button>

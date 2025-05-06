@@ -1,4 +1,4 @@
-import { useRef, Dispatch, SetStateAction } from 'react';
+import React, { useRef, Dispatch, SetStateAction } from 'react';
 import styles from './passwordUi.module.scss';
 
 interface PasswordProps {

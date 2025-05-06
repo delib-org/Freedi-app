@@ -1,32 +1,31 @@
-import { Statement } from 'delib-npm';
 import { FC, useEffect, useState } from 'react';
 
 // Third party imports
-import { useParams } from 'react-router-dom';
+import { useParams } from 'react-router';
 
 // Redux Store
 import StatementSettingsForm from './components/statementSettingsForm/StatementSettingsForm';
 import { defaultEmptyStatement } from './emptyStatementModel';
 import { getStatementFromDB } from '@/controllers/db/statements/getStatement';
 import { listenToMembers } from '@/controllers/db/statements/listenToStatements';
-import { listenToStatementMetaData } from '@/controllers/db/statements/statementMetaData/listenToStatementMeta';
 import { useAppDispatch, useAppSelector } from '@/controllers/hooks/reduxHooks';
-import { useLanguage } from '@/controllers/hooks/useLanguages';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import {
 	setStatement,
 	statementSelector,
-} from '@/model/statements/statementsSlice';
+} from '@/redux/statements/statementsSlice';
 
 // Hooks & Helpers
 
 // Custom components
 import Loader from '@/view/components/loaders/Loader';
-import { listenToChoseBy } from '@/controllers/db/choseBy/getChoseBy';
+import { QuestionType, Statement } from 'delib-npm';
+import MassConsensusSettings from './components/massConsensusSettings/MassConsensusSettings';
 
 const StatementSettings: FC = () => {
 	// * Hooks * //
 	const { statementId } = useParams();
-	const { t } = useLanguage();
+	const { t } = useUserConfig();
 
 	// * State * //
 	const [parentStatement, setParentStatement] = useState<Statement | 'top'>(
@@ -43,15 +42,6 @@ const StatementSettings: FC = () => {
 		statementSelector(statementId)
 	);
 
-	// * Use Effect * //
-	useEffect(() => {
-		const unsubscribe = listenToChoseBy(statementId);
-
-		return () => {
-			unsubscribe();
-		};
-	}, []);
-
 	useEffect(() => {
 		try {
 			if (statement) {
@@ -67,7 +57,8 @@ const StatementSettings: FC = () => {
 				getStatementFromDB(statement.parentId)
 					.then((parentStatement) => {
 						try {
-							if (!parentStatement) throw new Error('no parent statement');
+							if (!parentStatement)
+								throw new Error('no parent statement');
 
 							setParentStatement(parentStatement);
 						} catch (error) {
@@ -86,17 +77,16 @@ const StatementSettings: FC = () => {
 	useEffect(() => {
 		try {
 			let unsubscribe: undefined | (() => void);
-			let unSubMeta: undefined | (() => void);
 
 			if (statementId) {
 				unsubscribe = listenToMembers(dispatch)(statementId);
-				unSubMeta = listenToStatementMetaData(statementId);
 
 				if (statement) {
 					setStatementToEdit(statement);
 				} else {
 					(async () => {
-						const statementDB = await getStatementFromDB(statementId);
+						const statementDB =
+							await getStatementFromDB(statementId);
 						if (statementDB) {
 							dispatch(setStatement(statementDB));
 							setStatementToEdit(statementDB);
@@ -109,12 +99,14 @@ const StatementSettings: FC = () => {
 
 			return () => {
 				if (unsubscribe) unsubscribe();
-				if (unSubMeta) unSubMeta();
+
 			};
 		} catch (error) {
 			console.error(error);
 		}
 	}, [statementId]);
+
+	const isMassConsensus = statement?.questionSettings?.questionType === QuestionType.massConsensus;
 
 	return (
 		<div className='test'>
@@ -124,11 +116,16 @@ const StatementSettings: FC = () => {
 					<Loader />
 				</div>
 			) : (
-				<StatementSettingsForm
-					statement={statementToEdit}
-					parentStatement={parentStatement}
-					setStatementToEdit={setStatementToEdit}
-				/>
+				<>
+
+					<StatementSettingsForm
+						statement={statementToEdit}
+						parentStatement={parentStatement}
+						setStatementToEdit={setStatementToEdit}
+					/>
+
+					{isMassConsensus && <MassConsensusSettings />}
+				</>
 			)}
 		</div>
 	);

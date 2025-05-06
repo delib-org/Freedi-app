@@ -1,38 +1,27 @@
-import { Screen, Statement, StatementType } from 'delib-npm';
-import { FC, useEffect, useRef, useState } from 'react';
+import React, { FC, useEffect, useRef, useState } from 'react';
 
 // Third Party
 
 // Redux Store
-import { useParams } from 'react-router-dom';
-import StatementChatMore from '../../../../chat/components/StatementChatMore';
+import { useParams } from 'react-router';
+import StatementChatMore from '../../../../chat/components/statementChatMore/StatementChatMore';
 import CreateStatementModal from '../../../../createStatementModal/CreateStatementModal';
 import { sortSubStatements } from '../../../statementsEvaluationCont';
 import Evaluation from '../../evaluation/Evaluation';
 import SolutionMenu from '../../solutionMenu/SolutionMenu';
 import AddQuestionIcon from '@/assets/icons/addQuestion.svg?react';
 import { setStatementIsOption } from '@/controllers/db/statements/setStatements';
-import { isAuthorized } from '@/controllers/general/helpers';
-import { useAppDispatch, useAppSelector } from '@/controllers/hooks/reduxHooks';
-import { useLanguage } from '@/controllers/hooks/useLanguages';
+import { useAppDispatch } from '@/controllers/hooks/reduxHooks';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import useStatementColor, {
 	StyleProps,
 } from '@/controllers/hooks/useStatementColor';
-import {
-	setStatementElementHight,
-	statementSubscriptionSelector,
-} from '@/model/statements/statementsSlice';
-
-// Helpers
-
-// Hooks
-
-// Custom Components
-
+import { setStatementElementHight } from '@/redux/statements/statementsSlice';
 import EditTitle from '@/view/components/edit/EditTitle';
-
 import IconButton from '@/view/components/iconButton/IconButton';
 import './SuggestionCard.scss';
+import { StatementType, Statement } from 'delib-npm';
+import { useAuthorization } from '@/controllers/hooks/useAuthorization';
 
 interface Props {
 	statement: Statement | undefined;
@@ -48,15 +37,12 @@ const SuggestionCard: FC<Props> = ({
 	// Hooks
 	if (!parentStatement) console.error('parentStatement is not defined');
 
-	const { t, dir } = useLanguage();
+	const { t, dir } = useUserConfig();
+	const { isAuthorized, isAdmin } = useAuthorization(statement.statementId);
 	const { sort } = useParams();
 
 	// Redux Store
 	const dispatch = useAppDispatch();
-
-	const statementSubscription = useAppSelector(
-		statementSubscriptionSelector(statement?.statementId)
-	);
 
 	// Use Refs
 	const elementRef = useRef<HTMLDivElement>(null);
@@ -69,25 +55,11 @@ const SuggestionCard: FC<Props> = ({
 	const [isCardMenuOpen, setIsCardMenuOpen] = useState(false);
 
 	useEffect(() => {
-		if (sort !== Screen.OPTIONS_RANDOM && sort !== Screen.QUESTIONS_RANDOM && sort !== "random") {
-			sortSubStatements(siblingStatements, sort, 30);
-		}
-	}, [statement?.consensus]);
-
-	useEffect(() => {
 		sortSubStatements(siblingStatements, sort, 30);
 	}, [statement?.elementHight]);
 
-	if (!statement) return null;
-
-	const _isAuthorized = isAuthorized(
-		statement,
-		statementSubscription,
-		parentStatement?.creatorId
-	);
-
 	const statementColor: StyleProps = useStatementColor({
-		statement
+		statement,
 	});
 
 	useEffect(() => {
@@ -124,8 +96,16 @@ const SuggestionCard: FC<Props> = ({
 	const statementAge = new Date().getTime() - statement.createdAt;
 	const hasChildren = parentStatement?.statementSettings?.hasChildren;
 
+	if (!statement) return null;
+
+	function handleRightClick(e: React.MouseEvent) {
+		e.preventDefault();
+		setIsCardMenuOpen(!isCardMenuOpen);
+	}
+
 	return (
 		<div
+			onContextMenu={(e) => handleRightClick(e)}
 			className={
 				statementAge < 10000
 					? 'statement-evaluation-card statement-evaluation-card--new'
@@ -133,7 +113,7 @@ const SuggestionCard: FC<Props> = ({
 			}
 			style={{
 				top: `${statement.top || 0}px`,
-				borderLeft: `8px solid ${statement.isChosen ? "var(--approve)" : statementColor.backgroundColor || 'white'}`,
+				borderLeft: `8px solid ${statement.isChosen ? 'var(--approve)' : statementColor.backgroundColor || 'white'}`,
 				color: statementColor.color,
 				flexDirection: dir === 'ltr' ? 'row' : 'row-reverse',
 			}}
@@ -143,15 +123,14 @@ const SuggestionCard: FC<Props> = ({
 			<div
 				className='selected-option'
 				style={{
-					backgroundColor: statement.selected === true
-						? "var(--approve)"
-						: '',
+					backgroundColor:
+						statement.isVoted === true ? 'var(--approve)' : '',
 				}}
 			>
 				<div
 					style={{
 						color: statementColor.color,
-						display: statement.selected ? 'block' : 'none',
+						display: statement.isVoted ? 'block' : 'none',
 					}}
 				>
 					{t('Selected')}
@@ -170,7 +149,8 @@ const SuggestionCard: FC<Props> = ({
 					<div className='more'>
 						<SolutionMenu
 							statement={statement}
-							isAuthorized={_isAuthorized}
+							isAuthorized={isAuthorized}
+							isAdmin={isAdmin}
 							isCardMenuOpen={isCardMenuOpen}
 							setIsCardMenuOpen={setIsCardMenuOpen}
 							isEdit={isEdit}
@@ -187,15 +167,14 @@ const SuggestionCard: FC<Props> = ({
 						</div>
 					)}
 					<div className='evolution-element'>
-						<Evaluation
-							parentStatement={parentStatement}
-							statement={statement}
-						/>
+						<Evaluation statement={statement} />
 					</div>
 					{hasChildren && (
 						<IconButton
 							className='add-sub-question-button more-question'
-							onClick={() => setShouldShowAddSubQuestionModal(true)}
+							onClick={() =>
+								setShouldShowAddSubQuestionModal(true)
+							}
 						>
 							<AddQuestionIcon />
 						</IconButton>

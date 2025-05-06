@@ -1,73 +1,78 @@
-import { Statement } from 'delib-npm';
-import { useEffect, useState } from 'react';
-
+import React from 'react';
 // Third party
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { Handle, NodeProps } from 'reactflow';
-
 // Hooks
-
 // Icons
 import PlusIcon from '@/assets/icons/plusIcon.svg?react';
-
 // Statements functions
-import {
-	calculateFontSize,
-	statementTitleToDisplay,
-} from '@/controllers/general/helpers';
+import { statementTitleToDisplay } from '@/controllers/general/helpers';
 import { useMapContext } from '@/controllers/hooks/useMap';
 import useStatementColor from '@/controllers/hooks/useStatementColor';
+import { Statement } from 'delib-npm';
 
-const nodeStyle = (
-	parentStatement: Statement | 'top',
-	statementColor: { backgroundColor: string; color: string },
-	nodeTitle: string
-) => {
+const nodeStyle = (statementColor: {
+	backgroundColor: string;
+	color: string;
+}) => {
 	const style = {
-		backgroundColor:
-			parentStatement === 'top' ? 'darkblue' : statementColor.backgroundColor,
+		backgroundColor: statementColor.backgroundColor,
 		color: statementColor.color,
-		height: 40,
-		width: 70,
+		minWidth: '5ch',
+		maxWidth: '30ch',
+		margin: '0.5rem',
 		borderRadius: '5px',
+		padding: '.5rem ',
 		display: 'flex',
 		justifyContent: 'center',
 		alignItems: 'center',
-		padding: '.5rem',
-		cursor: 'pointer',
-		fontSize: calculateFontSize(nodeTitle),
+		fontSize: '1rem',
+		textAlign: 'center',
+		whiteSpace: 'normal',
 	};
 
 	return style;
 };
 
-export default function CustomNode({ data }: NodeProps) {
+function CustomNode({ data }: NodeProps) {
 	const navigate = useNavigate();
-
-	const { result, parentStatement } = data;
-
-	const { statementId, statement } =
-		result.top as Statement;
-
+	const { result, parentStatement, dimensions } = data;
+	const { statementId, statement } = result.top as Statement;
 	const { shortVersion: nodeTitle } = statementTitleToDisplay(statement, 80);
-
 	const statementColor = useStatementColor({ statement: result.top });
-
 	const { mapContext, setMapContext } = useMapContext();
+	const selectedId = mapContext?.selectedId ?? null;
+	const showBtns = selectedId === statementId;
 
-	const [showBtns, setShowBtns] = useState(false);
-
-	const handleNodeClick = () => {
-		if (!showBtns) {
-			setShowBtns((prev) => !prev);
-		} else {
-			navigate(`/statement/${statementId}/chat`, {
-				state: { from: window.location.pathname },
-			});
-		}
+	const dynamicNodeStyle = {
+		...nodeStyle(statementColor),
+		width: dimensions ? `${dimensions.width}px` : 'auto',
+		minHeight: 'auto',
 	};
 
+	const handleNodeDoubleClick = () => {
+		navigate(`/statement/${statementId}/chat`, {
+			state: { from: window.location.pathname },
+		});
+	};
+	const handleNodeClick = () => {
+		if (selectedId === statementId) {
+			setMapContext((prev) => ({
+				...prev,
+				selectedId: null,
+			}));
+		} else {
+			setMapContext((prev) => ({
+				...prev,
+				selectedId: statementId,
+			}));
+		}
+	};
 	const handleAddChildNode = () => {
+		setMapContext((prev) => ({
+			...prev,
+			selectedId: null,
+		}));
 		setMapContext((prev) => ({
 			...prev,
 			showModal: true,
@@ -83,17 +88,14 @@ export default function CustomNode({ data }: NodeProps) {
 		}));
 	};
 
-	useEffect(() => {
-		if (!mapContext.showModal) setShowBtns(false);
-	}, [mapContext.showModal]);
-
 	return (
 		<>
 			<button
+				onDoubleClick={handleNodeDoubleClick}
 				onClick={handleNodeClick}
 				data-id={statementId}
 				style={{
-					...nodeStyle(parentStatement, statementColor, nodeTitle),
+					...dynamicNodeStyle,
 					textAlign: 'center',
 					wordBreak: 'break-word',
 				}}
@@ -110,13 +112,14 @@ export default function CustomNode({ data }: NodeProps) {
 						style={{
 							position: 'absolute',
 							cursor: 'pointer',
-							right: mapContext.direction === 'TB' ? 0 : '-1.8rem',
-							bottom: mapContext.direction === 'TB' ? '-1.8rem' : 0,
+							right:
+								mapContext.direction === 'TB' ? 0 : '-1.8rem',
+							bottom:
+								mapContext.direction === 'TB' ? '-1.8rem' : 0,
 						}}
 					>
 						<PlusIcon />
 					</button>
-
 					<button
 						className='addIcon'
 						onClick={handleAddSiblingNode}
@@ -132,9 +135,22 @@ export default function CustomNode({ data }: NodeProps) {
 					</button>
 				</>
 			)}
-
 			<Handle type='target' position={mapContext.targetPosition} />
 			<Handle type='source' position={mapContext.sourcePosition} />
 		</>
 	);
 }
+export default React.memo(CustomNode, (prevProps, nextProps) => {
+	// Check if mapContext exists before accessing selectedId
+	const prevMapContext = prevProps.data.mapContext ?? {};
+	const nextMapContext = nextProps.data.mapContext ?? {};
+
+	const prevId = prevProps.data.result.top.statement.statementId;
+	const nextId = nextProps.data.result.top.statement.statementId;
+
+	// Only re-render if this specific node's hover state changed
+	const prevSelected = prevMapContext.selectedId === prevId;
+	const nextSelected = nextMapContext.selectedId === nextId;
+
+	return prevSelected === nextSelected;
+});

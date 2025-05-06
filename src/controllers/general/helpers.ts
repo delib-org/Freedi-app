@@ -1,75 +1,43 @@
+import firebaseConfig from '@/controllers/db/configKey';
 import {
-	Role,
-	Screen,
-	Statement,
+	functionConfig,
 	StatementSubscription,
-	User
-} from "delib-npm";
-import { ZodError, ZodIssue } from "zod";
-import { logOut } from "../db/auth";
-import { HistoryTracker } from "@/model/history/HistorySlice";
-import { store } from "@/model/store";
-import { setUser } from "@/model/users/userSlice";
-
-export function updateArray<T>(
-	currentArray: Array<T>,
-	newItem: T,
-	updateByProperty: keyof T & string,
-): Array<T> {
-	try {
-		const arrayTemp = [...currentArray];
-
-		if (!newItem[updateByProperty]) {
-			throw new Error(`Item doesn't have property ${updateByProperty}`);
-		}
-
-		const index = arrayTemp.findIndex(
-			(item) => item[updateByProperty] === newItem[updateByProperty],
-		);
-		if (index === -1) arrayTemp.push(newItem);
-		else {
-			const oldItem = JSON.stringify(arrayTemp[index]);
-			const newItemString = JSON.stringify({
-				...arrayTemp[index],
-				...newItem,
-			});
-			if (oldItem !== newItemString)
-				arrayTemp[index] = { ...arrayTemp[index], ...newItem };
-		}
-
-		return arrayTemp;
-	} catch (error) {
-		console.error(error);
-
-		return currentArray;
-	}
-}
+	Statement,
+	Role,
+	StatementType,
+} from 'delib-npm';
+import { useAuthentication } from '../hooks/useAuthentication';
+import { EnhancedEvaluationThumb } from '@/view/pages/statement/components/evaluations/components/evaluation/enhancedEvaluation/EnhancedEvaluationModel';
 
 export function isAuthorized(
-	statement: Statement,
+	statement: Statement | undefined,
 	statementSubscription: StatementSubscription | undefined,
 	parentStatementCreatorId?: string | undefined,
-	authorizedRoles?: Array<Role>,
+	authorizedRoles?: Array<Role>
 ) {
 	try {
-		if (!statement) throw new Error("No statement");
+		if (!statement) throw new Error('No statement');
 
-		const user = store.getState().user.user;
-		if (!user?.uid) throw new Error("No user");
+		const { user } = useAuthentication();
+		if (!user) return false;
 
-		if (statement.creatorId === user.uid) return true;
-
-		if (parentStatementCreatorId === user.uid) return true;
-
-		if (!statementSubscription) return false;
-
-		const role = statementSubscription?.role;
-
-		if (role === Role.admin) {
+		if (
+			isUserCreator(
+				user.uid,
+				statement,
+				parentStatementCreatorId,
+				statementSubscription
+			)
+		) {
 			return true;
 		}
 
-		if (authorizedRoles?.includes(role)) return true;
+		if (
+			statementSubscription &&
+			isUserAuthorizedByRole(statementSubscription.role, authorizedRoles)
+		) {
+			return true;
+		}
 
 		return false;
 	} catch (error) {
@@ -77,6 +45,26 @@ export function isAuthorized(
 
 		return false;
 	}
+}
+
+function isUserCreator(
+	userId: string,
+	statement: Statement,
+	parentStatementCreatorId?: string,
+	statementSubscription?: StatementSubscription
+): boolean {
+	return (
+		statement.creator?.uid === userId ||
+		statement.creator?.uid === parentStatementCreatorId ||
+		statement.creator?.uid === statementSubscription?.userId
+	);
+}
+
+function isUserAuthorizedByRole(
+	role: Role,
+	authorizedRoles?: Array<Role>
+): boolean {
+	return role === Role.admin || (authorizedRoles?.includes(role) ?? false);
 }
 
 export function isAdmin(role: Role | undefined): boolean {
@@ -87,10 +75,10 @@ export function isAdmin(role: Role | undefined): boolean {
 
 export function getInitials(fullName: string) {
 	// Split the full name into words
-	const words = fullName.split(" ");
+	const words = fullName.split(' ');
 
 	// Initialize an empty string to store the initials
-	let initials = "";
+	let initials = '';
 
 	// Iterate through each word and append the first letter to the initials string
 	for (const word of words) {
@@ -104,7 +92,7 @@ export function getInitials(fullName: string) {
 
 export function generateRandomLightColor(uuid: string) {
 	// Generate a random number based on the UUID
-	const seed = parseInt(uuid.replace(/[^\d]/g, ""), 10);
+	const seed = parseInt(uuid.replace(/[^\d]/g, ''), 10);
 	const randomValue = (seed * 9301 + 49297) % 233280;
 
 	// Convert the random number to a hexadecimal color code
@@ -114,17 +102,35 @@ export function generateRandomLightColor(uuid: string) {
 
 	return hexColor;
 }
+export function isStatementTypeAllowedAsChildren(
+	parentStatement: string | { statementType: StatementType },
+	childType: StatementType
+): boolean {
+	// Handle 'top' case and string case
+	if (parentStatement === 'top' || typeof parentStatement === 'string') {
+		return true;
+	}
 
+	// Handle the group/option case
+	if (
+		parentStatement.statementType === StatementType.group &&
+		childType === StatementType.option
+	) {
+		return false;
+	}
+
+	return true;
+}
 export const statementTitleToDisplay = (
 	statement: string,
-	titleLength: number,
+	titleLength: number
 ) => {
 	const _title =
-		statement.split("\n")[0].replace("*", "") || statement.replace("*", "");
+		statement.split('\n')[0].replace('*', '') || statement.replace('*', '');
 
 	const titleToSet =
 		_title.length > titleLength - 3
-			? _title.substring(0, titleLength) + "..."
+			? _title.substring(0, titleLength) + '...'
 			: _title;
 
 	return { shortVersion: titleToSet, fullVersion: _title };
@@ -144,42 +150,37 @@ export function calculateFontSize(text: string, maxSize = 6, minSize = 14) {
 	// Calculate the font size based on the length of the text
 	const fontSize = Math.max(
 		baseFontSize - fontSizeMultiplier * text.length,
-		maxSize,
+		maxSize
 	);
 
 	return `${fontSize}px`;
 }
 
-export function handleLogout() {
-	logOut();
-	store.dispatch(setUser(null));
-}
-
 export function getTitle(statement: Statement | undefined) {
 	try {
-		if (!statement) return "";
+		if (!statement) return '';
 
-		const title = statement.statement.split("\n")[0].replace("*", "");
+		const title = statement.statement.split('\n')[0].replace('*', '');
 
 		return title;
 	} catch (error) {
 		console.error(error);
 
-		return "";
+		return '';
 	}
 }
 
 export function getDescription(statement: Statement) {
 	try {
-		if (!statement) throw new Error("No statement");
+		if (!statement) throw new Error('No statement');
 
-		const description = statement.statement.split("\n").slice(1).join("\n");
+		const description = statement.statement.split('\n').slice(1).join('\n');
 
 		return description;
 	} catch (error) {
 		console.error(error);
 
-		return "";
+		return '';
 	}
 }
 
@@ -190,20 +191,19 @@ export function getSetTimerId(statementId: string, order: number) {
 export function getRoomTimerId(
 	statementId: string,
 	roomNumber: number,
-	order: number,
+	order: number
 ) {
 	return `${statementId}--${roomNumber}--${order}`;
 }
 
 export function getStatementSubscriptionId(
 	statementId: string,
-	user: User,
+	userId: string
 ): string | undefined {
 	try {
-		if (!user?.uid) throw new Error("No user");
-		if (!statementId) throw new Error("No statementId");
+		if (!statementId) throw new Error('No statementId');
 
-		return `${user.uid}--${statementId}`;
+		return `${userId}--${statementId}`;
 	} catch (error) {
 		console.error(error);
 
@@ -211,51 +211,19 @@ export function getStatementSubscriptionId(
 	}
 }
 
-export function getFirstScreen(array: Array<Screen>): Screen {
-	try {
-		//get the first screen from the array by this order: home, questions, options, chat, vote
-		if (!array) throw new Error("No array");
-
-		if (array.includes(Screen.HOME)) return Screen.HOME;
-		if (array.includes(Screen.QUESTIONS)) return Screen.QUESTIONS;
-		if (array.includes(Screen.OPTIONS)) return Screen.OPTIONS;
-		if (array.includes(Screen.CHAT)) return Screen.CHAT;
-		if (array.includes(Screen.VOTE)) return Screen.VOTE;
-
-		return Screen.CHAT;
-	} catch (error) {
-		console.error(error);
-
-		return Screen.CHAT;
-	}
-}
-
 //get first name from full name or first name with firs family name letter
 
 export function getFirstName(fullName: string) {
 	try {
-		if (!fullName) return "";
-		const names = fullName.split(" ");
-		if (names.length > 1) return names[0] + " " + names[1][0] + ".";
+		if (!fullName) return '';
+		const names = fullName.split(' ');
+		if (names.length > 1) return names[0] + ' ' + names[1][0] + '.';
 
 		return names[0];
 	} catch (error) {
 		console.error(error);
 
-		return "";
-	}
-}
-
-export function writeZodError(error: ZodError, object: unknown): void {
-	try {
-		error.issues.forEach((issue: ZodIssue) => {
-			console.error(`Error at ${issue.path.join('.')}: ${issue.message} (${issue.code})`);
-
-			console.info("Object sent:", object)
-		});
-
-	} catch (error) {
-		console.error(error);
+		return '';
 	}
 }
 
@@ -266,19 +234,24 @@ export function getNumberDigits(number: number): number {
 }
 
 export function isProduction(): boolean {
-	return window.location.hostname !== "localhost";
+	return window.location.hostname !== 'localhost';
 }
 
-export const handleCloseInviteModal = (setShowModal: (show: boolean) => void) => {
-	const inviteModal = document.querySelector(".inviteModal") as HTMLDivElement;
-	inviteModal.classList.add("closing");
+export const handleCloseInviteModal = (
+	setShowModal: (show: boolean) => void
+) => {
+	const inviteModal = document.querySelector('.inviteModal');
+	inviteModal.classList.add('closing');
 
 	setTimeout(() => {
 		setShowModal(false);
 	}, 400);
 };
 
-export function getLastElements(array: Array<unknown>, number: number): Array<unknown> {
+export function getLastElements(
+	array: Array<unknown>,
+	number: number
+): Array<unknown> {
 	return array.slice(Math.max(array.length - number, 1));
 }
 
@@ -297,54 +270,136 @@ export function getTime(time: number): string {
 	const currentYear = currentTime.getFullYear();
 
 	if (currentYear !== timeYear) {
-		return `${timeDay}/${timeMonth}/${timeYear} ${hours}:${minutes?.toString().length === 1 ? "0" + minutes : minutes}`;
-	} else if (currentDay !== timeDay && currentMonth === timeMonth && currentYear === timeYear) {
-		return `${timeDay}/${timeMonth} ${hours}:${minutes?.toString().length === 1 ? "0" + minutes : minutes}`;
-
-	} else if (currentDay === timeDay && currentMonth === timeMonth && currentYear === timeYear) {
-		return `${hours}:${minutes?.toString().length === 1 ? "0" + minutes : minutes}`;
+		return `${timeDay}/${timeMonth}/${timeYear} ${hours}:${minutes?.toString().length === 1 ? '0' + minutes : minutes}`;
+	} else if (
+		currentDay !== timeDay &&
+		currentMonth === timeMonth &&
+		currentYear === timeYear
+	) {
+		return `${timeDay}/${timeMonth} ${hours}:${minutes?.toString().length === 1 ? '0' + minutes : minutes}`;
+	} else if (
+		currentDay === timeDay &&
+		currentMonth === timeMonth &&
+		currentYear === timeYear
+	) {
+		return `${hours}:${minutes?.toString().length === 1 ? '0' + minutes : minutes}`;
 	}
 
-	return `${hours}:${minutes?.toString().length === 1 ? "0" + minutes : minutes}`;
+	return `${hours}:${minutes?.toString().length === 1 ? '0' + minutes : minutes}`;
 }
 
 export function truncateString(text: string, maxLength = 20): string {
-	return text.length > maxLength ? text.slice(0, maxLength) + "..." : text;
+	return text.length > maxLength ? text.slice(0, maxLength) + '...' : text;
 }
 
-export function processHistory({ statementId, pathname }: HistoryTracker, state: HistoryTracker[]): HistoryTracker[] {
-	try {
-
-		const newHistory = [...state];
-
-		//add statement id to history only if it is not already there
-		if (newHistory.length === 0) return [{ statementId, pathname }];
-		if (pathname === state[state.length - 1]?.pathname) return newHistory;
-
-		//in case the the user only navigate between the screens of the statement, just update the pathname
-		if (!statementId) return [...state, { pathname }]
-		if (newHistory[newHistory.length - 1].statementId === statementId) {
-			newHistory[newHistory.length - 1].pathname = pathname;
-
-			return newHistory;
-		} else {
-			return [...state, { statementId, pathname }];
-		}
-
-	} catch (error) {
-		console.error(error);
-
-		return state;
+export function getLatestUpdateStatements(statements: Statement[]): number {
+	if (!statements || statements.length === 0) {
+		return 0;
 	}
+
+	return statements.reduce(
+		(latestUpdate, statement) =>
+			statement.lastUpdate > latestUpdate
+				? statement.lastUpdate
+				: latestUpdate,
+		0
+	);
 }
 
-export function getRandomUID(numberOfChars = 12): string {
+export const emojiTransformer = (text: string): string => {
+	// Define the sentiment emoji mapping
+	const sentimentEmojis = {
+		':-1': '😠', // Really disagree
+		':-0.75': '🙁', // Strongly disagree
+		':-0.5': '😕', // Half disagree
+		':-0.25': '😐', // Slightly disagree
+		':0': '😐', // Neutral
+		':0.25': '🙂', // Slightly agree
+		':0.5': '😊', // Half agree
+		':0.75': '😄', // Strongly agree
+		':1': '😁', // Really agree
+	};
 
-	const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-0123456789";
-	let randomString = "";
-	for (let i = 0; i < numberOfChars; i++) {
-		randomString += chars.charAt(Math.floor(Math.random() * chars.length));
+	// Transform the text with emoji replacements
+	if (!text) return '';
+
+	let result = text;
+
+	// Replace all sentiment codes with corresponding emojis
+	// Use a more precise regex pattern that looks for the exact codes
+	Object.entries(sentimentEmojis).forEach(([code, emoji]) => {
+		// Escape special characters in the code
+		const escapedCode = code.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+		// Use lookahead and lookbehind to ensure we're matching standalone codes
+		// Or use a regex that matches the code at the start, end, or surrounded by spaces
+		const regex = new RegExp(`(^|\\s)${escapedCode}(\\s|$)`, 'g');
+		result = result.replace(regex, `$1${emoji}$2`);
+	});
+
+	return result;
+};
+
+/**
+ * Find the closest evaluation value in the array to a given target value
+ * @param {Array} array - Array of objects with evaluation property
+ * @param {number} targetValue - The value to find the closest match for (-1 to 1)
+ * @returns {Object} - The object with the closest evaluation value
+ */
+export function findClosestEvaluation(
+	array: EnhancedEvaluationThumb[],
+	targetValue = 0
+) {
+	// Validate input
+	if (!Array.isArray(array) || array.length === 0) {
+		throw new Error('Input must be a non-empty array');
 	}
 
-	return randomString;
+	if (targetValue < -1 || targetValue > 1) {
+		throw new Error('Target value must be between -1 and 1');
+	}
+
+	// Sort the array by the absolute difference between evaluation and target value
+	return array.reduce((closest, current) => {
+		const currentDiff = Math.abs(current.evaluation - targetValue);
+		const closestDiff = Math.abs(closest.evaluation - targetValue);
+
+		return currentDiff < closestDiff ? current : closest;
+	}, array[0]);
+}
+
+/**
+ * Generates an API endpoint for Firebase Cloud Functions
+ * @param {string} functionName - The name of the Firebase function
+ * @param {Record<string, string|number>} queryParams - Query parameters to append to the URL
+ * @param {string} envVarName - Optional environment variable name to use for production endpoints
+ * @returns {string} - The complete API endpoint URL
+ */
+export function APIEndPoint(
+	functionName: string,
+	queryParams: Record<string, string | number>,
+	envVarName?: string
+): string {
+	// Convert query parameters to URL search params
+	const queryString = Object.entries(queryParams)
+		.map(([key, value]) => `${key}=${encodeURIComponent(value)}`)
+		.join('&');
+
+	// Check if running on localhost
+	if (window.location.hostname === 'localhost') {
+		return `http://localhost:5001/${firebaseConfig.projectId}/${functionConfig.region}/${functionName}${queryString ? '?' : ''}${queryString}`;
+	}
+
+	// For production, use the provided environment variable or construct a default one
+	const envVar = envVarName
+		? import.meta.env[envVarName]
+		: import.meta.env[`VITE_APP_${functionName.toUpperCase()}_ENDPOINT`];
+
+	// If the environment variable exists, use it, otherwise use a standard pattern
+	if (envVar) {
+		return `${envVar}?${queryString}`;
+	}
+
+	// Fallback if no environment variable is found
+	return `https://${functionConfig.region}-${firebaseConfig.projectId}.cloudfunctions.net/${functionName}?${queryString}`;
 }

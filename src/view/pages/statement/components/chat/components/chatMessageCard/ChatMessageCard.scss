@@ -50,7 +50,7 @@
 
 			.info-text {
 				flex: 1;
-
+				user-select: text;
 				background-color: var(--background-color-info-text);
 			}
 		}
@@ -61,7 +61,7 @@
 			border-top: 2px solid var(--statementBackground);
 			padding-top: 0.5rem;
 
-			> div {
+			>div {
 				display: flex;
 			}
 
@@ -111,6 +111,13 @@
 			border-left: 0.65rem solid;
 			margin-right: 1.8rem;
 			margin-left: 1rem;
+
+			@media screen and (max-width: 500px) {
+				margin-right: 0rem;
+				margin-left: 0rem;
+
+			}
+
 
 			.triangle {
 				clip-path: polygon(0 0, 0% 100%, 70% 0);

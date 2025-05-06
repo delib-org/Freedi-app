@@ -1,23 +1,25 @@
 // Helpers
 import { useEffect, useState } from 'react';
-
-// icons
-
-// Components
 import IconButton from '../../components/iconButton/IconButton';
 import Menu from '../../components/menu/Menu';
 import MenuOption from '../../components/menu/MenuOption';
 import InvitationModal from './main/invitationModal/InvitationModal';
-import NotificationHeader from './NotificatiosHeader';
 import DisconnectIcon from '@/assets/icons/disconnectIcon.svg?react';
 import InstallIcon from '@/assets/icons/installIcon.svg?react';
 import InvitationIcon from '@/assets/icons/invitation.svg?react';
-import { handleLogout } from '@/controllers/general/helpers';
-import { useLanguage } from '@/controllers/hooks/useLanguages';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { logOut } from '@/controllers/db/authenticationUtils';
+import LanguagesIcon from '@/assets/icons/languagesIcon.svg?react';
+import Modal from '@/view/components/modal/Modal';
+import ChangeLanguage from '@/view/components/changeLanguage/ChangeLanguage';
+import { LANGUAGES } from '@/constants/Languages';
+import NotificationBtn from '@/view/components/notificationBtn/NotificationBtn';
+import WaitingList from '@/view/components/approveMemebers/WaitingList';
 
 export default function HomeHeader() {
 	const [isHomeMenuOpen, setIsHomeMenuOpen] = useState(false);
 	const [showInvitationModal, setShowInvitationModal] = useState(false);
+	const [showLanguageModal, setShowLanguageModal] = useState(false);
 
 	const [isInstallable, setIsInstallable] = useState(false);
 
@@ -29,7 +31,11 @@ export default function HomeHeader() {
 	const [deferredPrompt, setDeferredPrompt] =
 		useState<BeforeInstallPromptEvent | null>(null);
 
-	const { t, dir } = useLanguage();
+	const { t, dir, currentLanguage } = useUserConfig();
+
+	const currentLabel = LANGUAGES.find(
+		(lang) => lang.code === currentLanguage
+	).label;
 
 	useEffect(() => {
 		window.addEventListener('beforeinstallprompt', (e: Event) => {
@@ -43,64 +49,91 @@ export default function HomeHeader() {
 			setIsInstallable(true);
 		});
 	}, []);
+
 	function handleInstallApp() {
 		try {
 			if (deferredPrompt) {
 				deferredPrompt.prompt();
-				deferredPrompt.userChoice.then((choiceResult: { outcome: string }) => {
-					if (choiceResult.outcome === 'accepted') {
-						console.info('User accepted the install prompt');
-					} else {
-						console.info('User dismissed the install prompt');
+				deferredPrompt.userChoice.then(
+					(choiceResult: { outcome: string }) => {
+						if (choiceResult.outcome === 'accepted') {
+							console.info('User accepted the install prompt');
+						} else {
+							console.info('User dismissed the install prompt');
+						}
+						setDeferredPrompt(null);
+						setIsInstallable(false);
 					}
-					setDeferredPrompt(null);
-					setIsInstallable(false);
-				});
+				);
 			}
 		} catch (error) {
 			console.error(error);
 		}
 	}
-	function handleInvitationPanel() {
+
+	function handlePanel(modal: string) {
 		try {
-			setShowInvitationModal(true);
+			if (modal === 'invitation') setShowInvitationModal(true);
+			else setShowLanguageModal(true);
 			setIsHomeMenuOpen(false);
 		} catch (error) {
 			console.error(error);
 		}
 	}
 
+	function closeModal() {
+		setShowLanguageModal(false);
+	}
+
 	return (
 		<div className={`homePage__header ${dir}`}>
 			<div className='homePage__header__wrapper'>
-				<NotificationHeader />
 				<h1 className='homePage__header__wrapper__title'>FreeDi</h1>
+				<NotificationBtn />
+				<WaitingList />
 				<div className='homePage__header__wrapper__icons'>
 					{isInstallable && (
 						<IconButton onClick={handleInstallApp}>
 							<InstallIcon />
 						</IconButton>
 					)}
+
 					<Menu
 						isMenuOpen={isHomeMenuOpen}
 						setIsOpen={setIsHomeMenuOpen}
-						iconColor='white'
+						iconColor="white"
+						footer={
+							<MenuOption
+								className="footer"
+								icon={<DisconnectIcon style={{ color: 'white' }} />}
+								label={t('Disconnect')}
+								onOptionClick={logOut} children={''} />
+						}
 					>
+
 						<MenuOption
-							icon={<DisconnectIcon style={{ color: '#4E88C7' }} />}
-							label={t('Disconnect')}
-							onOptionClick={() => handleLogout()}
-						/>
+							icon={<LanguagesIcon style={{ color: '#4E88C7' }} />}
+							label={currentLabel}
+							onOptionClick={() => handlePanel('changeLanguage')} children={''} />
 						<MenuOption
 							icon={<InvitationIcon style={{ color: '#4E88C7' }} />}
 							label={t('Join with PIN number')}
-							onOptionClick={handleInvitationPanel}
-						/>
+							onOptionClick={() => handlePanel('invitation')} children={''} />
 					</Menu>
 				</div>
 			</div>
+
 			{showInvitationModal && (
 				<InvitationModal setShowModal={setShowInvitationModal} />
+			)}
+			{showLanguageModal && (
+				<Modal closeModal={closeModal}>
+					<ChangeLanguage
+						background
+						setShowMenu={setIsHomeMenuOpen}
+						setShowModal={setShowLanguageModal}
+					/>
+				</Modal>
 			)}
 		</div>
 	);
