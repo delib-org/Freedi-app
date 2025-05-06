@@ -11,12 +11,8 @@ const Description: FC = () => {
 	}
 
 	return (
-		<div className={styles.description}>
+		<div className="description">
 			<Text description={statement.description} />
-			<textarea
-				className={styles.textarea}
-				placeholder="Add a comment..."
-			/>
 		</div>
 	);
 };
