@@ -20,7 +20,7 @@ import { setStatementElementHight } from '@/redux/statements/statementsSlice';
 import EditTitle from '@/view/components/edit/EditTitle';
 import IconButton from '@/view/components/iconButton/IconButton';
 import './SuggestionCard.scss';
-import { Screen, StatementType, Statement } from 'delib-npm';
+import { StatementType, Statement } from 'delib-npm';
 import { useAuthorization } from '@/controllers/hooks/useAuthorization';
 
 interface Props {
@@ -53,16 +53,6 @@ const SuggestionCard: FC<Props> = ({
 	const [shouldShowAddSubQuestionModal, setShouldShowAddSubQuestionModal] =
 		useState(false);
 	const [isCardMenuOpen, setIsCardMenuOpen] = useState(false);
-
-	useEffect(() => {
-		if (
-			sort !== Screen.OPTIONS_RANDOM &&
-			sort !== Screen.QUESTIONS_RANDOM &&
-			sort !== 'random'
-		) {
-			sortSubStatements(siblingStatements, sort, 30);
-		}
-	}, [statement?.consensus]);
 
 	useEffect(() => {
 		sortSubStatements(siblingStatements, sort, 30);

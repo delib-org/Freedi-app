@@ -1,5 +1,5 @@
 import { resultsSettingsDefault } from '@/controllers/db/statements/setStatements';
-import { Statement, Screen, StatementType, Access } from 'delib-npm';
+import { Statement, StatementType, Access } from 'delib-npm';
 
 export const defaultStatementSettings = {
 	enhancedEvaluation: true,
@@ -11,12 +11,6 @@ export const defaultStatementSettings = {
 	enableSimilaritiesSearch: false,
 	enableNavigationalElements: false,
 } as const;
-
-export const defaultStatementSubScreens: Screen[] = [
-	Screen.CHAT,
-	Screen.OPTIONS,
-	Screen.VOTE,
-];
 
 export const defaultEmptyStatement: Statement = {
 	topParentId: '',

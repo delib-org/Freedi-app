@@ -223,7 +223,7 @@ export async function generateSimilar(
 	}
 }
 
-function extractAndParseJsonString(input: string): { strings: string[] } {
+export function extractAndParseJsonString(input: string): { strings: string[] } {
 	try {
 		// Find the first '{' and the last '}'
 		const startIndex = input.indexOf('{');
