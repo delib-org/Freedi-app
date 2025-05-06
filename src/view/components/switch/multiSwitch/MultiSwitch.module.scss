@@ -37,7 +37,12 @@
 			/* Added for icon size */
 		}
 
-
+.optionContent{
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	gap: .3rem;
+}
 
 		/* Added for active button text color */
 	}
