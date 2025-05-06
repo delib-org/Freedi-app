@@ -8,7 +8,11 @@ import { StatementContext } from '../../../StatementCont';
 import { Statement, EvaluationUI } from 'delib-npm';
 import Clustering from '../../clustering/Clustering';
 
-const StagePage = () => {
+interface Props {
+	showStageTitle?: boolean;
+}
+
+const StagePage = ({ showStageTitle = true }: Props) => {
 	const { t } = useUserConfig();
 	const { statement } = useContext(StatementContext);
 	const stageRef = useRef<HTMLDivElement>(null);
@@ -41,7 +45,7 @@ const StagePage = () => {
 	return (
 		<>
 			<div className={`${styles['stage-page']} wrapper`}>
-				{!isClustering && <h2>
+				{!isClustering && showStageTitle && <h2>
 					{t('Stage')}
 					{statement?.statement && stageName}
 				</h2>}
