@@ -104,7 +104,7 @@ const MultiStageQuestion: FC = () => {
 				/>
 			</div>
 			{initialStages.length === 0 ? (
-				<StagePage />) :
+				<StagePage showStageTitle={false} />) :
 				(
 					<div className={styles.stagesWrapper}>
 						<h2 className={styles.title}>
