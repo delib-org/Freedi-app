@@ -1,5 +1,4 @@
 import { FC, useContext } from "react";
-import styles from "./Description.module.scss";
 import Text from "@/view/components/text/Text";
 import { StatementContext } from "@/view/pages/statement/StatementCont";
 
@@ -11,12 +10,8 @@ const Description: FC = () => {
 	}
 
 	return (
-		<div className={styles.description}>
+		<div className="description">
 			<Text description={statement.description} />
-			<textarea
-				className={styles.textarea}
-				placeholder="Add a comment..."
-			/>
 		</div>
 	);
 };
