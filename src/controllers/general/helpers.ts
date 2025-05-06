@@ -351,7 +351,7 @@ export function APIEndPoint(
 	}
 
 	// For production, use the provided environment variable or construct a default one
-	const envVar = envVarName 
+	const envVar = envVarName
 		? import.meta.env[envVarName]
 		: import.meta.env[`VITE_APP_${functionName.toUpperCase()}_ENDPOINT`];
 
