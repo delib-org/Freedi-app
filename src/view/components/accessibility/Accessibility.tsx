@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 import IconButton from '../iconButton/IconButton';
 import AccessibilityIcon from '@/assets/icons/accessibilityIcon.svg?react';
 import HighContrastIcon from '@/assets/icons/highContrast.svg?react';
@@ -13,6 +13,7 @@ export default function Accessibility() {
 	const { fontSize, changeFontSize, colorContrast, setColorContrast, t } =
 		useUserConfig();
 
+	// Using the useAutoClose hook correctly
 	const { isOpen, handleOpen } = useAutoClose(10000);
 
 	const handleClickOutside = useCallback(() => {
@@ -31,17 +32,23 @@ export default function Accessibility() {
 	}, [colorContrast]);
 
 	// * Drag & Drop * //
-	const [position, setPosition] = useState({ top: 250 });
-	const dragRef = useRef<HTMLDivElement | null>(null);
+	const [position, setPosition] = React.useState({ top: 250 });
+	const dragRef = useRef(null);
 	const startPos = useRef({ x: 0, y: 0 });
 	const isDragging = useRef(false);
+	// Track if a touch event has been moved
+	const touchMoved = useRef(false);
 
-	const handleStart = (event: React.MouseEvent | React.TouchEvent) => {
-		
+	const handleStart = (event) => {
 		const clientX = 'touches' in event ? event.touches[0].clientX : event.clientX;
 		const clientY = 'touches' in event ? event.touches[0].clientY : event.clientY;
 		startPos.current = { x: clientX, y: clientY };
 		isDragging.current = false;
+
+		// Reset touch moved flag at start of touch
+		if ('touches' in event) {
+			touchMoved.current = false;
+		}
 
 		document.addEventListener('mousemove', handleMove);
 		document.addEventListener('mouseup', handleEnd);
@@ -49,15 +56,21 @@ export default function Accessibility() {
 		document.addEventListener('touchend', handleEnd);
 	};
 
-	const handleMove = (event: MouseEvent | TouchEvent) => {
+	const handleMove = (event) => {
 		const clientX = 'touches' in event ? event.touches[0].clientX : event.clientX;
 		const clientY = 'touches' in event ? event.touches[0].clientY : event.clientY;
 
 		const deltaX = clientX - startPos.current.x;
 		const deltaY = clientY - startPos.current.y;
 
+		// Mark as dragging if moved significantly
 		if (Math.abs(deltaX) > 5 || Math.abs(deltaY) > 5) {
 			isDragging.current = true;
+
+			// For touch events, explicitly mark as moved
+			if ('touches' in event) {
+				touchMoved.current = true;
+			}
 		}
 
 		startPos.current = { x: clientX, y: clientY };
@@ -67,15 +80,29 @@ export default function Accessibility() {
 		}));
 	};
 
-	const handleEnd = () => {
+	const handleEnd = (event) => {
 		document.removeEventListener('mousemove', handleMove);
 		document.removeEventListener('mouseup', handleEnd);
 		document.removeEventListener('touchmove', handleMove);
 		document.removeEventListener('touchend', handleEnd);
 
-		if (!isDragging.current) {
+		// For mouse: toggle if not dragging
+		// For touch: toggle only if tap (not moved)
+		const isTouchEvent = event && event.type === 'touchend';
+
+		if ((!isTouchEvent && !isDragging.current) ||
+			(isTouchEvent && !touchMoved.current)) {
 			handleOpen();
 		}
+	};
+
+	// Explicit click handler for mobile - as a backup
+	const handleClick = (e) => {
+		e.preventDefault();
+		e.stopPropagation();
+		handleOpen();
+
+		return false;
 	};
 
 	return (
@@ -83,8 +110,7 @@ export default function Accessibility() {
 			ref={(node) => {
 				dragRef.current = node;
 				if (accessibilityRef) accessibilityRef.current = node;
-			}
-			}
+			}}
 			className={`accessibility ${isOpen ? 'is-open' : ''}`}
 			style={{ fontSize, top: `${position.top}px` }}
 		>
@@ -92,7 +118,7 @@ export default function Accessibility() {
 				className='accessibility-button'
 				onMouseDown={handleStart}
 				onTouchStart={handleStart}
-				onClick={handleOpen}
+				onClick={handleClick}
 				aria-label={t('Accessibility options')}
 			>
 				<AccessibilityIcon />
@@ -105,7 +131,7 @@ export default function Accessibility() {
 					>
 						+
 					</IconButton>
-					<output className='accessibility__fonts__size'>Aa</output>
+					<span className='accessibility__fonts__size'>Aa</span>
 					<IconButton
 						className='change-font-size-button'
 						onClick={() => changeFontSize(fontSize - 1)}
