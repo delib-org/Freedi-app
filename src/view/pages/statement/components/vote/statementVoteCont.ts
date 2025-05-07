@@ -1,4 +1,4 @@
-import { DeliberativeElement, Screen, SortType, Statement } from 'delib-npm';
+import { DeliberativeElement, SortType, Statement } from 'delib-npm';
 
 // Updates the displayed options with how many votes each option has from the parent statement
 export function setSelectionsToOptions(
@@ -47,11 +47,6 @@ export function sortOptionsIndex(
 				const bVoted: number = b.voted ?? 0;
 
 				return bVoted - aVoted;
-			});
-			break;
-		case Screen.VOTES_UPDATED:
-			_options = _options.sort((a: Statement, b: Statement) => {
-				return b.lastUpdate - a.lastUpdate;
 			});
 			break;
 		default:

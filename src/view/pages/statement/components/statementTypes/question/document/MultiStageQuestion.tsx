@@ -7,7 +7,6 @@ import {
 } from 'react';
 import { StatementContext } from '../../../../StatementCont';
 import styles from './MultiStageQuestion.module.scss';
-import Button, { ButtonType } from '@/view/components/buttons/button/Button';
 import Modal from '@/view/components/modal/Modal';
 import AddStage from './addStage/AddStage';
 import { useDispatch, useSelector } from 'react-redux';
@@ -20,6 +19,7 @@ import { updateStatementsOrderToDB } from '@/controllers/db/statements/setStatem
 import { Statement, StatementType } from 'delib-npm';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import StagePage from '../../stage/StagePage';
+import Text from '@/view/components/text/Text';
 
 const MultiStageQuestion: FC = () => {
 	const { statement } = useContext(StatementContext);
@@ -88,6 +88,8 @@ const MultiStageQuestion: FC = () => {
 		setDraggedIndex(null);
 	};
 
+	const hasStages = initialStages.length > 0;
+
 	return (
 		<>
 			{showAddStage && (
@@ -95,16 +97,17 @@ const MultiStageQuestion: FC = () => {
 					<AddStage setShowAddStage={setShowAddStage} />
 				</Modal>
 			)}
+			{!hasStages && <div className={`${styles.description} description`}>
+				<Text description={statement?.description} fontSize='1.2rem' />
+			</div>}
 			<div className={`btns ${styles['add-stage']}`}>
-				<Button
-					text={t('Add sub-question')}
-					type='button'
-					buttonType={ButtonType.PRIMARY}
+				<button
+					className='btn btn--secondary'
 					onClick={() => setShowAddStage(true)}
-				/>
+				>{t('Add sub-question')}</button>
 			</div>
-			{initialStages.length === 0 ? (
-				<StagePage />) :
+			{!hasStages ? (
+				<StagePage showStageTitle={false} />) :
 				(
 					<div className={styles.stagesWrapper}>
 						<h2 className={styles.title}>

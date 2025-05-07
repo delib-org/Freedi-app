@@ -95,7 +95,7 @@ button {
 	&--secondary {
 		background-color: var(--white);
 		color: var(--btn-secondary);
-		border: 2px solid var(--btn-secondary);
+		border: 1px solid var(--btn-secondary);
 	}
 
 	&--disabled {
@@ -109,6 +109,7 @@ button {
 		padding: 0.5rem 3rem;
 	}
 }
+
 .buttonOutlineWhite {
 	background: none;
 	border: 1px solid white;
@@ -181,7 +182,7 @@ button {
 		right: 5vw;
 	}
 
-	& > div {
+	&>div {
 		z-index: 100;
 		background: var(--accent);
 		width: 3.2rem;
