@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 // Third party
 import { useNavigate } from 'react-router';
-import { Handle, NodeProps } from 'reactflow';
+import { Handle, NodeProps, useStore } from 'reactflow';
 // Hooks
 // Icons
 import PlusIcon from '@/assets/icons/plusIcon.svg?react';
@@ -48,11 +48,50 @@ function CustomNode({ data }: NodeProps) {
 
 	const [showMenu, setShowMenu] = useState(false);
 
+	// Get zoom level from React Flow store
+	const zoom = useStore((state) => state.transform[2]);
+
+	// Create refs for buttons that need fixed sizing
+	const addChildRef = useRef(null);
+	const addSiblingRef = useRef(null);
+	const menuButtonRef = useRef(null);
+	const menuContainerRef = useRef(null);
+
 	const dynamicNodeStyle = {
 		...nodeStyle(statementColor),
 		width: dimensions ? `${dimensions.width}px` : 'auto',
 		minHeight: 'auto',
 	};
+
+	// Apply inverse scale to buttons when zoom changes
+	useEffect(() => {
+		if (zoom && showBtns) {
+			const scale = 1 / zoom; // Inverse scaling factor
+
+			// Apply scaling to all button refs
+			if (addChildRef.current) {
+				addChildRef.current.style.transform = `scale(${scale})`;
+				addChildRef.current.style.transformOrigin = 'center center';
+			}
+
+			if (addSiblingRef.current) {
+				addSiblingRef.current.style.transform = `scale(${scale})`;
+				addSiblingRef.current.style.transformOrigin = 'center center';
+			}
+
+			if (menuButtonRef.current) {
+				menuButtonRef.current.style.transform = `scale(${scale})`;
+				menuButtonRef.current.style.transformOrigin = 'center center';
+			}
+
+			if (menuContainerRef.current) {
+				// Scale the menu container
+				menuContainerRef.current.style.transform = `scale(${scale})`;
+				// Set transform origin to bottom right to maintain position
+				menuContainerRef.current.style.transformOrigin = 'bottom right';
+			}
+		}
+	}, [zoom, showBtns, showMenu]);
 
 	//effects
 	//close menu every time a node is selected
@@ -61,12 +100,12 @@ function CustomNode({ data }: NodeProps) {
 	}, [selectedId]);
 
 	//handlers
-
 	const handleNodeDoubleClick = () => {
 		navigate(`/statement/${statementId}/chat`, {
 			state: { from: window.location.pathname },
 		});
 	};
+
 	const handleNodeClick = () => {
 		if (selectedId === statementId) {
 			setMapContext((prev) => ({
@@ -80,6 +119,7 @@ function CustomNode({ data }: NodeProps) {
 			}));
 		}
 	};
+
 	const handleAddChildNode = () => {
 		setMapContext((prev) => ({
 			...prev,
@@ -125,6 +165,7 @@ function CustomNode({ data }: NodeProps) {
 						className='addIcon'
 						onClick={handleAddChildNode}
 						aria-label='Add child node'
+						ref={addChildRef}
 						style={{
 							position: 'absolute',
 							cursor: 'pointer',
@@ -140,6 +181,7 @@ function CustomNode({ data }: NodeProps) {
 						className='addIcon'
 						onClick={handleAddSiblingNode}
 						aria-label='Add sibling node'
+						ref={addSiblingRef}
 						style={{
 							position: 'absolute',
 							cursor: 'pointer',
@@ -153,6 +195,7 @@ function CustomNode({ data }: NodeProps) {
 						aria-label='open settings menu'
 						className='addIcon'
 						onClick={handleMenuClick}
+						ref={menuButtonRef}
 						style={{
 							position: 'absolute',
 							cursor: 'pointer',
@@ -164,21 +207,18 @@ function CustomNode({ data }: NodeProps) {
 									: "-.5rem",
 						}}
 					>
-						<EllipsisIcon
-
-						/>
+						<EllipsisIcon />
 					</button>
 					{showMenu && <div
+						ref={menuContainerRef}
 						style={{
 							position: 'absolute',
 							cursor: 'pointer',
-							right:
-								mapContext.direction === 'TB' ? "-.5rem" : '-.5rem',
-							top:
-								mapContext.direction === 'TB'
-									? '-1rem'
-									: "-1rem",
-							transform: 'translate(50%, -100%)',
+							right: '0',
+							bottom: '100%',
+							marginBottom: '10px', // Fixed distance regardless of zoom
+							transformOrigin: 'bottom right',
+							zIndex: 999, // Ensure menu appears above other elements
 						}}
 					>
 						<NodeMenu />
