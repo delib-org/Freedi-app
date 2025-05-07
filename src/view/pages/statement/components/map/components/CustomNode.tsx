@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 // Third party
 import { useNavigate } from 'react-router';
 import { Handle, NodeProps } from 'reactflow';
@@ -11,6 +11,7 @@ import { statementTitleToDisplay } from '@/controllers/general/helpers';
 import { useMapContext } from '@/controllers/hooks/useMap';
 import useStatementColor from '@/controllers/hooks/useStatementColor';
 import { Statement } from 'delib-npm';
+import NodeMenu from './nodeMenu/NodeMenu';
 
 const nodeStyle = (statementColor: {
 	backgroundColor: string;
@@ -45,11 +46,21 @@ function CustomNode({ data }: NodeProps) {
 	const selectedId = mapContext?.selectedId ?? null;
 	const showBtns = selectedId === statementId;
 
+	const [showMenu, setShowMenu] = useState(false);
+
 	const dynamicNodeStyle = {
 		...nodeStyle(statementColor),
 		width: dimensions ? `${dimensions.width}px` : 'auto',
 		minHeight: 'auto',
 	};
+
+	//effects
+	//close menu every time a node is selected
+	useEffect(() => {
+		setShowMenu(false);
+	}, [selectedId]);
+
+	//handlers
 
 	const handleNodeDoubleClick = () => {
 		navigate(`/statement/${statementId}/chat`, {
@@ -88,6 +99,10 @@ function CustomNode({ data }: NodeProps) {
 			parentStatement: parentStatement,
 		}));
 	};
+
+	function handleMenuClick() {
+		setShowMenu((prev) => !prev);
+	}
 
 	return (
 		<>
@@ -137,6 +152,7 @@ function CustomNode({ data }: NodeProps) {
 					<button
 						aria-label='open settings menu'
 						className='addIcon'
+						onClick={handleMenuClick}
 						style={{
 							position: 'absolute',
 							cursor: 'pointer',
@@ -152,6 +168,21 @@ function CustomNode({ data }: NodeProps) {
 
 						/>
 					</button>
+					{showMenu && <div
+						style={{
+							position: 'absolute',
+							cursor: 'pointer',
+							right:
+								mapContext.direction === 'TB' ? "-.5rem" : '-.5rem',
+							top:
+								mapContext.direction === 'TB'
+									? '-1rem'
+									: "-1rem",
+							transform: 'translate(50%, -100%)',
+						}}
+					>
+						<NodeMenu />
+					</div>}
 				</>
 			)}
 			<Handle type='target' position={mapContext.targetPosition} />
