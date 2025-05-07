@@ -1,9 +1,28 @@
 .nodeMenu {
 	display: flex;
-	padding: 0.8rem 1rem;
+	padding: 0.2rem 0.5rem;
 	justify-content: space-between;
-	gap: 1rem;
+	gap: .2rem;
 	background-color: white;
 	border-radius: 0.5rem;
 	box-shadow: 0 0 0.5rem rgba(0, 0, 0, 0.1);
+
+	button {
+
+		border: none;
+		padding: 0.5rem 1rem;
+		cursor: pointer;
+		color: var(--icons-blue-dark);
+
+
+		&:hover {
+			background-color: lightgoldenrodyellow;
+		}
+
+		border-radius: 0.25rem;
+	}
+
+	.deleteButton {
+		color: var(--reject);
+	}
 }
