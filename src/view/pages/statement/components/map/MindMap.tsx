@@ -30,7 +30,7 @@ const MindMap: FC = () => {
 	);
 
 	// Use the fixed hook
-	const { flat, results, loading, handleCluster, handleRecoverSnapshot } = useMindMap();
+	const { flat, results, loading, handleRecoverSnapshot } = useMindMap();
 
 	const role = userSubscription ? userSubscription.role : Role.member;
 	const _isAdmin = isAdmin(role);
@@ -52,16 +52,11 @@ const MindMap: FC = () => {
 	// Only render if we have the necessary data
 	if (!statement) {
 		return <div>Loading statement...</div>;
-	}	
+	}
 
 	return (
 		<main className='page__main'>
 			<ReactFlowProvider>
-				<div className="btns">
-					{loading && <Loader />}
-					{flat && !loading  && <button onClick={handleCluster} className='btn'>Cluster</button>}
-					{!flat && !loading && <button onClick={handleRecoverSnapshot} className='btn'>Flat</button>}
-				</div>
 				<select
 					aria-label='Select filter type for'
 					onChange={(ev) =>

@@ -80,14 +80,13 @@ export function useMindMap() {
 		}
 	}, [descendants, statement]);
 
-	function handleCluster() {
+	function handleCluster(statementId: string) {
 		setLoading(true);
 		const endPoint = APIEndPoint('getCluster', {});
 		fetch(endPoint, {
 			method: 'POST',
 			body: JSON.stringify({
-				statementId: statement.statementId,
-				topic: statement
+				statementId
 			}),
 			headers: {
 				'Content-Type': 'application/json',

@@ -221,7 +221,7 @@ function CustomNode({ data }: NodeProps) {
 							zIndex: 999, // Ensure menu appears above other elements
 						}}
 					>
-						<NodeMenu />
+						<NodeMenu selectedId={selectedId} />
 					</div>}
 				</>
 			)}
