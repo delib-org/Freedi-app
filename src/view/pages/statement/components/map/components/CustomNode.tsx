@@ -5,6 +5,7 @@ import { Handle, NodeProps } from 'reactflow';
 // Hooks
 // Icons
 import PlusIcon from '@/assets/icons/plusIcon.svg?react';
+import EllipsisIcon from '@/assets/icons/ellipsisIcon.svg?react';
 // Statements functions
 import { statementTitleToDisplay } from '@/controllers/general/helpers';
 import { useMapContext } from '@/controllers/hooks/useMap';
@@ -132,6 +133,24 @@ function CustomNode({ data }: NodeProps) {
 						}}
 					>
 						<PlusIcon />
+					</button>
+					<button
+						aria-label='open settings menu'
+						className='addIcon'
+						style={{
+							position: 'absolute',
+							cursor: 'pointer',
+							right:
+								mapContext.direction === 'TB' ? 0 : '-1.8rem',
+							top:
+								mapContext.direction === 'TB'
+									? '-1.8rem'
+									: 0,
+						}}
+					>
+						<EllipsisIcon
+
+						/>
 					</button>
 				</>
 			)}
