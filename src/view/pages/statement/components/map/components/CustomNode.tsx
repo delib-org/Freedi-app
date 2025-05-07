@@ -1,6 +1,6 @@
 import React from 'react';
 // Third party
-import { useNavigate } from 'react-router';
+import { useNavigate, useParams } from 'react-router';
 import { Handle, NodeProps } from 'reactflow';
 // Hooks
 // Icons
@@ -43,6 +43,9 @@ function CustomNode({ data }: NodeProps) {
 	const { mapContext, setMapContext } = useMapContext();
 	const selectedId = mapContext?.selectedId ?? null;
 	const showBtns = selectedId === statementId;
+
+	const { statementId: rootStatementId } = useParams();
+	const isRootNode = statementId === rootStatementId;
 
 	const dynamicNodeStyle = {
 		...nodeStyle(statementColor),
@@ -120,19 +123,27 @@ function CustomNode({ data }: NodeProps) {
 					>
 						<PlusIcon />
 					</button>
-					<button
-						className='addIcon'
-						onClick={handleAddSiblingNode}
-						aria-label='Add sibling node'
-						style={{
-							position: 'absolute',
-							cursor: 'pointer',
-							left: mapContext.direction === 'TB' ? '-1.8rem' : 0,
-							top: mapContext.direction === 'TB' ? 0 : '-1.8rem',
-						}}
-					>
-						<PlusIcon />
-					</button>
+					{!isRootNode && (
+						<button
+							className='addIcon'
+							onClick={handleAddSiblingNode}
+							aria-label='Add sibling node'
+							style={{
+								position: 'absolute',
+								cursor: 'pointer',
+								left:
+									mapContext.direction === 'TB'
+										? '-1.8rem'
+										: 0,
+								top:
+									mapContext.direction === 'TB'
+										? 0
+										: '-1.8rem',
+							}}
+						>
+							<PlusIcon />
+						</button>
+					)}
 				</>
 			)}
 			<Handle type='target' position={mapContext.targetPosition} />

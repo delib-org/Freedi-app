@@ -252,6 +252,7 @@ export default function MindMapChart({
 				zoomOnDoubleClick={false}
 				style={{ height: `100vh` }}
 				nodesDraggable={isAdmin}
+				panOnDrag={!isAdmin}
 				onNodesChange={onNodesChange}
 				onEdgesChange={onEdgesChange}
 				onNodeDrag={onNodeDrag}
@@ -262,7 +263,7 @@ export default function MindMapChart({
 					localStorage.setItem('flowKey', JSON.stringify(flow));
 				}}
 			>
-				<Controls />
+				<Controls showInteractive={isAdmin} />
 				<Panel position='bottom-right' className='btnsPanel'>
 					{!isButtonVisible && (
 						<div className='mainButton'>
