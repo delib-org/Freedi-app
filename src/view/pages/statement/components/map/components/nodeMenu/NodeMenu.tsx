@@ -2,9 +2,9 @@ import { FC, useEffect, useRef } from 'react';
 import { useStore } from 'reactflow';
 import styles from './NodeMenu.module.scss';
 // icons
-import ClusterIcon from '@/assets/icons/networkIcon.svg?react';
+
 import DeleteIcon from '@/assets/icons/delete.svg?react';
-import { useMindMap } from '../../MindMapMV';
+import ClusterButton from './clusterButton/ClusterButton';
 
 interface Props {
 	selectedId?: string
@@ -13,7 +13,6 @@ interface Props {
 const NodeMenu: FC<Props> = ({ selectedId }) => {
 	const nodeMenuRef = useRef(null);
 	const iconsRef = useRef([]);
-	const { handleCluster } = useMindMap();
 
 	// Get the current zoom level from the react-flow store
 	const zoom = useStore((state) => state.transform[2]);
@@ -53,9 +52,7 @@ const NodeMenu: FC<Props> = ({ selectedId }) => {
 
 	return (
 		<div className={styles.nodeMenu} ref={nodeMenuRef}>
-			<button ref={addToIconsRef} onClick={() => handleCluster(selectedId)}>
-				<ClusterIcon />
-			</button>
+			<ClusterButton selectedId={selectedId} addToIconsRef={addToIconsRef} />
 			<button className={styles.deleteButton} ref={addToIconsRef}>
 				<DeleteIcon />
 			</button>
