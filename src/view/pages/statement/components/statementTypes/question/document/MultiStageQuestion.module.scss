@@ -7,9 +7,15 @@
 	margin-top: 10px;
 }
 
-.add-stage {
-	margin-bottom: 2rem;
-	margin-top: 2rem;
+.description {
+	max-width: var(--wrapper);
+
+
+
+	.add-stage {
+		margin-bottom: 2rem;
+		margin-top: 2rem;
+	}
 }
 
 .stagesWrapper {

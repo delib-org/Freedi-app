@@ -50,7 +50,7 @@
 
 			.info-text {
 				flex: 1;
-
+				user-select: text;
 				background-color: var(--background-color-info-text);
 			}
 		}
