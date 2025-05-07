@@ -100,12 +100,12 @@ export function useMindMap() {
 			});
 	}
 
-	function handleRecoverSnapshot() {
+	function handleRecoverSnapshot(statementId: string) {
 		setLoading(true);
 		const endPoint = APIEndPoint('recoverLastSnapshot', {});
 		fetch(endPoint, {
 			method: 'POST',
-			body: JSON.stringify({ snapshotId: statement.statementId }),
+			body: JSON.stringify({ snapshotId: statementId }),
 			headers: {
 				'Content-Type': 'application/json',
 			},

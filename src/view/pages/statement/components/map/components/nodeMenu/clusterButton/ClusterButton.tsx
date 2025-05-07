@@ -4,6 +4,7 @@ import ImportUnClusterIcon from '@/assets/icons/network-no.svg?react';
 import { useMindMap } from '../../../MindMapMV';
 import { useSelector } from 'react-redux';
 import { statementOptionsSelector } from '@/redux/statements/statementsSlice';
+import styles from './ClusterButton.module.scss';
 
 interface Props {
 	selectedId: string | null
@@ -16,11 +17,23 @@ const ClusterButton: FC<Props> = ({ selectedId, addToIconsRef }) => {
 
 	const hasClusterChildren = children.every((child) => child.isCluster);
 
-	const { handleCluster, handleRecoverSnapshot } = useMindMap();
+	const { handleCluster, handleRecoverSnapshot, loading } = useMindMap();
+
+	if (!children || children.length === 0) return null
+
+	if (loading) {
+		return (
+			<button ref={addToIconsRef} disabled >
+				<div className={styles.loader}>
+					<ClusterIcon />
+				</div>
+			</button>
+		)
+	}
 
 	if (hasClusterChildren) {
 		return (
-			<button ref={addToIconsRef} onClick={() => handleRecoverSnapshot()}>
+			<button ref={addToIconsRef} onClick={() => handleRecoverSnapshot(selectedId)}>
 				<ImportUnClusterIcon />
 			</button>
 		)
