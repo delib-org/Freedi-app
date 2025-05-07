@@ -114,9 +114,9 @@ function CustomNode({ data }: NodeProps) {
 							position: 'absolute',
 							cursor: 'pointer',
 							right:
-								mapContext.direction === 'TB' ? 0 : '-1.8rem',
+								mapContext.direction === 'TB' ? "calc(50% - 0.5rem)" : "-.8rem",
 							bottom:
-								mapContext.direction === 'TB' ? '-1.8rem' : 0,
+								mapContext.direction === 'TB' ? '-.8rem' : "calc(50% - 0.5rem)",
 						}}
 					>
 						<PlusIcon />
@@ -128,8 +128,8 @@ function CustomNode({ data }: NodeProps) {
 						style={{
 							position: 'absolute',
 							cursor: 'pointer',
-							left: mapContext.direction === 'TB' ? '-1.8rem' : 0,
-							top: mapContext.direction === 'TB' ? 0 : '-1.8rem',
+							left: mapContext.direction === 'TB' ? '-.5rem' : "calc(50% - 0.5rem)",
+							top: mapContext.direction === 'TB' ? "calc(50% - 0.5rem)" : '-.8rem',
 						}}
 					>
 						<PlusIcon />
@@ -141,11 +141,11 @@ function CustomNode({ data }: NodeProps) {
 							position: 'absolute',
 							cursor: 'pointer',
 							right:
-								mapContext.direction === 'TB' ? 0 : '-1.8rem',
+								mapContext.direction === 'TB' ? "-.5rem" : '-.5rem',
 							top:
 								mapContext.direction === 'TB'
-									? '-1.8rem'
-									: 0,
+									? '-.5rem'
+									: "-.5rem",
 						}}
 					>
 						<EllipsisIcon
