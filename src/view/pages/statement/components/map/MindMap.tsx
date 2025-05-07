@@ -16,7 +16,6 @@ import Modal from '@/view/components/modal/Modal';
 import { StatementType, Role } from 'delib-npm';
 import { useParams } from 'react-router';
 import { useMindMap } from './MindMapMV';
-import Loader from '@/view/components/loaders/Loader';
 
 const MindMap: FC = () => {
 	// Add a render counter for debugging - remove in production
@@ -30,7 +29,7 @@ const MindMap: FC = () => {
 	);
 
 	// Use the fixed hook
-	const { flat, results, loading, handleRecoverSnapshot } = useMindMap();
+	const { results } = useMindMap();
 
 	const role = userSubscription ? userSubscription.role : Role.member;
 	const _isAdmin = isAdmin(role);
