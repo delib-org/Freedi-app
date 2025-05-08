@@ -40,8 +40,10 @@ export default function Accessibility() {
 	const touchMoved = useRef(false);
 
 	const handleStart = (event) => {
-		const clientX = 'touches' in event ? event.touches[0].clientX : event.clientX;
-		const clientY = 'touches' in event ? event.touches[0].clientY : event.clientY;
+		const clientX =
+			'touches' in event ? event.touches[0].clientX : event.clientX;
+		const clientY =
+			'touches' in event ? event.touches[0].clientY : event.clientY;
 		startPos.current = { x: clientX, y: clientY };
 		isDragging.current = false;
 
@@ -57,8 +59,10 @@ export default function Accessibility() {
 	};
 
 	const handleMove = (event) => {
-		const clientX = 'touches' in event ? event.touches[0].clientX : event.clientX;
-		const clientY = 'touches' in event ? event.touches[0].clientY : event.clientY;
+		const clientX =
+			'touches' in event ? event.touches[0].clientX : event.clientX;
+		const clientY =
+			'touches' in event ? event.touches[0].clientY : event.clientY;
 
 		const deltaX = clientX - startPos.current.x;
 		const deltaY = clientY - startPos.current.y;
@@ -76,7 +80,10 @@ export default function Accessibility() {
 		startPos.current = { x: clientX, y: clientY };
 
 		setPosition((prev) => ({
-			top: Math.min(Math.max(prev.top + deltaY, 0), window.innerHeight - 100),
+			top: Math.min(
+				Math.max(prev.top + deltaY, 0),
+				window.innerHeight - 100
+			),
 		}));
 	};
 
@@ -90,19 +97,12 @@ export default function Accessibility() {
 		// For touch: toggle only if tap (not moved)
 		const isTouchEvent = event && event.type === 'touchend';
 
-		if ((!isTouchEvent && !isDragging.current) ||
-			(isTouchEvent && !touchMoved.current)) {
+		if (
+			(!isTouchEvent && !isDragging.current) ||
+			(isTouchEvent && !touchMoved.current)
+		) {
 			handleOpen();
 		}
-	};
-
-	// Explicit click handler for mobile - as a backup
-	const handleClick = (e) => {
-		e.preventDefault();
-		e.stopPropagation();
-		handleOpen();
-
-		return false;
 	};
 
 	return (
@@ -118,7 +118,6 @@ export default function Accessibility() {
 				className='accessibility-button'
 				onMouseDown={handleStart}
 				onTouchStart={handleStart}
-				onClick={handleClick}
 				aria-label={t('Accessibility options')}
 			>
 				<AccessibilityIcon />
