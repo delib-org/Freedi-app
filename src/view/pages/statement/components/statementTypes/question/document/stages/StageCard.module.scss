@@ -39,7 +39,8 @@ $bottomCard: 1.5rem;
 		/* 15px */
 	}
 
-	.showMore {
+	a {
+		width: fit-content;
 		margin: auto;
 	}
 
@@ -49,6 +50,11 @@ $bottomCard: 1.5rem;
 
 		&:nth-child(even) {
 			background-color: transparent;
+		}
+
+		.suggestionTitle {
+			font-weight: bold;
+			margin-inline-start: 0.2rem;
 		}
 	}
 

@@ -56,14 +56,17 @@ const StageCard: FC<Props> = ({ statement, isDescription, isSuggestions }) => {
 		<div
 			dir={dir}
 			className={styles.card}
-			onClick={handleCardClick}
 		>
-			<div className={`${styles.title} ${styles.item}`} style={expanded ? { backgroundColor: 'transparent' } : {}}>
+			<div
+				className={`${styles.title} ${styles.item}`}
+				style={expanded ? { backgroundColor: 'transparent' } : {}}
+				onClick={handleCardClick}
+			>
 				<div className={`${styles.notification}`}>
 					<StatementChatMore statement={statement} onlyCircle={true} />
 				</div>
 				<p>{t(title)} {isSuggestions && `: ${statement.statement}`}</p>
-				{chosen.length !== 0 && (expanded ? <MinusIcon /> : <PlusIcon />)}
+				{expanded ? <MinusIcon /> : <PlusIcon />}
 			</div>
 			<div
 				ref={contentRef}
@@ -72,16 +75,26 @@ const StageCard: FC<Props> = ({ statement, isDescription, isSuggestions }) => {
 					maxHeight: `${contentHeight}px`,
 					overflow: 'hidden',
 					transition: 'max-height 0.3s ease-in-out, opacity 0.3s ease-in-out',
-					opacity: expanded && chosen.length > 0 ? 1 : 0,
+					opacity: expanded ? 1 : 0,
 				}}
 			>
 				{chosen.map((opt: SimpleStatement) => (
 					<div key={opt.statementId} className={`${styles.item} ${styles.suggestions}`}>
-						<p>{opt.statement}</p>
+						<p className={styles.suggestionTitle}>{opt.statement}</p>
+						{opt.description && <p>{opt.description}</p>}
 					</div>
 				))}
-				{expanded && chosen.length > 0 && (
-					<NavLink to={`/statement/${statement.statementId}`}><Button buttonType={ButtonType.PRIMARY} text={t('View question suggestions')} className={styles.showMore} /></NavLink>
+				{expanded && (
+					<NavLink to={`/statement/${statement.statementId}`}>
+						<Button
+							buttonType={ButtonType.PRIMARY}
+							text={
+								chosen.length > 0
+									? t('View question suggestions')
+									: t('Add first suggestion')
+							}
+						/>
+					</NavLink>
 				)}
 			</div>
 		</div >
