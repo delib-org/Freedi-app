@@ -5,7 +5,6 @@ import { NotificationType, StatementType } from 'delib-npm';
 
 const NotificationCard: React.FC<NotificationType> = (notification) => {
 	const isChat = notification?.statementType === StatementType.statement;
-	console.log(isChat, notification);
 
 	return (
 		<Link
