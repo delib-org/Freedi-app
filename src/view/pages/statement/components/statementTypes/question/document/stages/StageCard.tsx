@@ -57,7 +57,7 @@ const StageCard: FC<Props> = ({ statement, isDescription, isSuggestions }) => {
 			dir={dir}
 			className={styles.card}
 		>
-			<div
+			<button
 				className={`${styles.title} ${styles.item}`}
 				style={expanded ? { backgroundColor: 'transparent' } : {}}
 				onClick={handleCardClick}
@@ -67,7 +67,7 @@ const StageCard: FC<Props> = ({ statement, isDescription, isSuggestions }) => {
 				</div>
 				<p>{t(title)} {isSuggestions && `: ${statement.statement}`}</p>
 				{expanded ? <MinusIcon /> : <PlusIcon />}
-			</div>
+			</button>
 			<div
 				ref={contentRef}
 				className={styles.previewContent}
@@ -85,13 +85,13 @@ const StageCard: FC<Props> = ({ statement, isDescription, isSuggestions }) => {
 					</div>
 				))}
 				{expanded && (
-					<NavLink to={`/statement/${statement.statementId}`}>
+					<NavLink to={`/stage/${statement.statementId}`}>
 						<Button
 							buttonType={ButtonType.PRIMARY}
 							text={
 								chosen.length > 0
 									? t('View question suggestions')
-									: t('Add first suggestion')
+									: t('Add your suggestion')
 							}
 						/>
 					</NavLink>
