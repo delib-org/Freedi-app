@@ -90,6 +90,7 @@ async function processInAppNotifications(subscribersInApp: StatementSubscription
 			userId: subscriber.user.uid,
 			parentId: newStatement.parentId,
 			parentStatement: parentStatement.statement,
+			statementType: parentStatement.statementType,
 			text: newStatement.statement,
 			creatorId: newStatement.creator.uid,
 			creatorName: newStatement.creator.displayName,
