@@ -16,7 +16,6 @@ import Modal from '@/view/components/modal/Modal';
 import { StatementType, Role } from 'delib-npm';
 import { useParams } from 'react-router';
 import { useMindMap } from './MindMapMV';
-import Loader from '@/view/components/loaders/Loader';
 
 const MindMap: FC = () => {
 	// Add a render counter for debugging - remove in production
@@ -33,8 +32,7 @@ const MindMap: FC = () => {
 	);
 
 	// Use the fixed hook
-	const { flat, results, loading, handleCluster, handleRecoverSnapshot } =
-		useMindMap();
+	const { results } = useMindMap();
 
 	const role = userSubscription ? userSubscription.role : Role.member;
 	const _isAdmin = isAdmin(role);
@@ -61,19 +59,6 @@ const MindMap: FC = () => {
 	return (
 		<main className='page__main'>
 			<ReactFlowProvider>
-				<div className='btns'>
-					{loading && <Loader />}
-					{flat && !loading && (
-						<button onClick={handleCluster} className='btn'>
-							Cluster
-						</button>
-					)}
-					{!flat && !loading && (
-						<button onClick={handleRecoverSnapshot} className='btn'>
-							Flat
-						</button>
-					)}
-				</div>
 				<select
 					aria-label='Select filter type for'
 					onChange={(ev) =>
