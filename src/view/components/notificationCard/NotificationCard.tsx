@@ -1,10 +1,11 @@
 import React from 'react';
 import { Link } from 'react-router';
 import styles from './NotificationCard.module.scss';
-import { NotificationType, StatementType } from 'delib-npm';
+import { NotificationType } from 'delib-npm';
+import { isChatMessage } from '@/controllers/general/helpers';
 
 const NotificationCard: React.FC<NotificationType> = (notification) => {
-	const isChat = notification?.statementType === StatementType.statement;
+	const isChat = isChatMessage(notification.statementType);
 
 	return (
 		<Link
