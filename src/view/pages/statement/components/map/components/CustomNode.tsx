@@ -238,14 +238,8 @@ function CustomNode({ data }: NodeProps) {
 						style={{
 							position: 'absolute',
 							cursor: 'pointer',
-							right:
-								mapContext.direction === 'TB'
-									? '-.5rem'
-									: '-.5rem',
-							top:
-								mapContext.direction === 'TB'
-									? '-.5rem'
-									: '-.5rem',
+							right: '-.5rem',
+							top: '-.5rem',
 						}}
 					>
 						<EllipsisIcon />
