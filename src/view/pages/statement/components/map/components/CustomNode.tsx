@@ -12,6 +12,7 @@ import { useMapContext } from '@/controllers/hooks/useMap';
 import useStatementColor from '@/controllers/hooks/useStatementColor';
 import { Statement } from 'delib-npm';
 import NodeMenu from './nodeMenu/NodeMenu';
+import { updateStatementText } from '@/controllers/db/statements/setStatements';
 
 const nodeStyle = (statementColor: {
 	backgroundColor: string;
@@ -41,12 +42,19 @@ function CustomNode({ data }: NodeProps) {
 	const { result, parentStatement, dimensions } = data;
 	const { statementId, statement } = result.top as Statement;
 	const { shortVersion: nodeTitle } = statementTitleToDisplay(statement, 80);
-	const statementColor = useStatementColor({ statement: result.top });
 	const { mapContext, setMapContext } = useMapContext();
 	const selectedId = mapContext?.selectedId ?? null;
 	const showBtns = selectedId === statementId;
+	const [isEdit, setIsEdit] = useState(false);
+	const [title, setTitle] = useState(nodeTitle);
+	const [localStatement, setLocalStatement] = useState(result.top);
 
+	const statementColor = useStatementColor({ statement: localStatement });
 	const [showMenu, setShowMenu] = useState(false);
+
+	useEffect(() => {
+		setLocalStatement(result.top);
+	}, [result.top.statement.statementType]);
 
 	// Get zoom level from React Flow store
 	const zoom = useStore((state) => state.transform[2]);
@@ -101,6 +109,9 @@ function CustomNode({ data }: NodeProps) {
 
 	//handlers
 	const handleNodeDoubleClick = () => {
+		if (isEdit) {
+			return;
+		}
 		navigate(`/statement/${statementId}/chat`, {
 			state: { from: window.location.pathname },
 		});
@@ -143,6 +154,15 @@ function CustomNode({ data }: NodeProps) {
 	function handleMenuClick() {
 		setShowMenu((prev) => !prev);
 	}
+	function handleUpdateStatement(e) {
+		if (e.key === 'Enter') {
+			const title = e.target.value;
+
+			updateStatementText(result.top, title);
+			setIsEdit(false);
+			setTitle(title);
+		}
+	}
 
 	return (
 		<>
@@ -157,7 +177,16 @@ function CustomNode({ data }: NodeProps) {
 				}}
 				className='node__content'
 			>
-				{nodeTitle}
+				{isEdit ? (
+					<input
+						type='text'
+						defaultValue={title}
+						onBlur={() => setIsEdit(false)}
+						onKeyUp={(e) => handleUpdateStatement(e)}
+					/>
+				) : (
+					title
+				)}
 			</button>
 			{showBtns && (
 				<>
@@ -170,9 +199,13 @@ function CustomNode({ data }: NodeProps) {
 							position: 'absolute',
 							cursor: 'pointer',
 							right:
-								mapContext.direction === 'TB' ? "calc(50% - 0.5rem)" : "-.8rem",
+								mapContext.direction === 'TB'
+									? 'calc(50% - 0.5rem)'
+									: '-.8rem',
 							bottom:
-								mapContext.direction === 'TB' ? '-.8rem' : "calc(50% - 0.5rem)",
+								mapContext.direction === 'TB'
+									? '-.8rem'
+									: 'calc(50% - 0.5rem)',
 						}}
 					>
 						<PlusIcon />
@@ -185,8 +218,14 @@ function CustomNode({ data }: NodeProps) {
 						style={{
 							position: 'absolute',
 							cursor: 'pointer',
-							left: mapContext.direction === 'TB' ? '-.5rem' : "calc(50% - 0.5rem)",
-							top: mapContext.direction === 'TB' ? "calc(50% - 0.5rem)" : '-.8rem',
+							left:
+								mapContext.direction === 'TB'
+									? '-.5rem'
+									: 'calc(50% - 0.5rem)',
+							top:
+								mapContext.direction === 'TB'
+									? 'calc(50% - 0.5rem)'
+									: '-.8rem',
 						}}
 					>
 						<PlusIcon />
@@ -200,29 +239,38 @@ function CustomNode({ data }: NodeProps) {
 							position: 'absolute',
 							cursor: 'pointer',
 							right:
-								mapContext.direction === 'TB' ? "-.5rem" : '-.5rem',
+								mapContext.direction === 'TB'
+									? '-.5rem'
+									: '-.5rem',
 							top:
 								mapContext.direction === 'TB'
 									? '-.5rem'
-									: "-.5rem",
+									: '-.5rem',
 						}}
 					>
 						<EllipsisIcon />
 					</button>
-					{showMenu && <div
-						ref={menuContainerRef}
-						style={{
-							position: 'absolute',
-							cursor: 'pointer',
-							right: '0',
-							bottom: '100%',
-							marginBottom: '10px', // Fixed distance regardless of zoom
-							transformOrigin: 'bottom right',
-							zIndex: 999, // Ensure menu appears above other elements
-						}}
-					>
-						<NodeMenu selectedId={selectedId} />
-					</div>}
+					{showMenu && (
+						<div
+							ref={menuContainerRef}
+							style={{
+								position: 'absolute',
+								cursor: 'pointer',
+								right: '0',
+								bottom: '100%',
+								marginBottom: '10px', // Fixed distance regardless of zoom
+								transformOrigin: 'bottom right',
+								zIndex: 999, // Ensure menu appears above other elements
+							}}
+						>
+							<NodeMenu
+								setStatement={setLocalStatement}
+								setIsEdit={setIsEdit}
+								statement={result.top}
+								selectedId={selectedId}
+							/>
+						</div>
+					)}
 				</>
 			)}
 			<Handle type='target' position={mapContext.targetPosition} />
