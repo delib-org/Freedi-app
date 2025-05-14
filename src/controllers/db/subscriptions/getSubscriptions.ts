@@ -39,7 +39,6 @@ export const listenToStatementSubSubscriptions = (
 	try {
 		if (!user) throw new Error('User not logged in');
 		if (!user.uid) throw new Error('User not logged in');
-
 		const statementsSubscribeRef = collection(
 			FireStore,
 			Collections.statementsSubscribe
@@ -54,13 +53,11 @@ export const listenToStatementSubSubscriptions = (
 		return onSnapshot(q, (subscriptionsDB) => {
 			let firstCall = true;
 			const statementSubscriptions: StatementSubscription[] = [];
-
 			subscriptionsDB.docChanges().forEach((change) => {
 				const statementSubscription = parse(
 					StatementSubscriptionSchema,
 					change.doc.data()
 				);
-
 				if (change.type === 'added') {
 					if (firstCall) {
 						statementSubscriptions.push(statementSubscription);
@@ -70,9 +67,15 @@ export const listenToStatementSubSubscriptions = (
 						);
 					}
 				}
-
 				if (change.type === 'modified') {
 					dispatch(setStatementSubscription(statementSubscription));
+				}
+				if (change.type === 'removed') {
+					dispatch(
+						deleteSubscribedStatement(
+							statementSubscription.statementId
+						)
+					);
 				}
 			});
 			firstCall = false;
@@ -81,10 +84,9 @@ export const listenToStatementSubSubscriptions = (
 	} catch (error) {
 		console.error(error);
 
-		return () => { };
+		return () => {};
 	}
 };
-
 export function listenToStatementSubscriptions(
 	userId: string,
 	numberOfStatements = 30
@@ -132,7 +134,7 @@ export function listenToStatementSubscriptions(
 	} catch (error) {
 		console.error('Listen to statement subscriptions error', error);
 
-		return () => { };
+		return () => {};
 	}
 }
 
@@ -368,6 +370,6 @@ export function getNewStatementsFromSubscriptions(userId: string): Unsubscribe {
 	} catch (error) {
 		console.error(error);
 
-		return () => { };
+		return () => {};
 	}
 }

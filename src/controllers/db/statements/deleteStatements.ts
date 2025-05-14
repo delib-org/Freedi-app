@@ -19,7 +19,10 @@ export async function deleteStatementFromDB(
 		if (!statement) throw new Error('No statement');
 
 		if (!isAuthorized)
-			alert('You are not authorized to delete this statement');
+			return alert('You are not authorized to delete this statement');
+
+		if (statement.statementType === StatementType.group)
+			return alert('cannot delete group');
 
 		if (!statement) throw new Error('No statement');
 		const confirmed = confirm(

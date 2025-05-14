@@ -1,26 +1,48 @@
 import { Change, logger } from 'firebase-functions';
-import { Collections, Role, Statement, StatementSchema, StatementSubscription, StatementSubscriptionSchema, createSubscription, getRandomUID, getStatementSubscriptionId, statementToSimpleStatement } from 'delib-npm';
+import {
+	Collections,
+	Role,
+	Statement,
+	StatementSchema,
+	StatementSubscription,
+	StatementSubscriptionSchema,
+	createSubscription,
+	getRandomUID,
+	getStatementSubscriptionId,
+	statementToSimpleStatement,
+} from 'delib-npm';
 import { parse } from 'valibot';
 import { db } from '.';
-import { DocumentSnapshot, QueryDocumentSnapshot } from 'firebase-functions/v1/firestore';
+import {
+	DocumentSnapshot,
+	QueryDocumentSnapshot,
+} from 'firebase-functions/v1/firestore';
 import { FirestoreEvent } from 'firebase-functions/firestore';
 
-export async function onNewSubscription(event: FirestoreEvent<DocumentSnapshot | undefined>) {
+export async function onNewSubscription(
+	event: FirestoreEvent<DocumentSnapshot | undefined>
+) {
 	try {
 		const snapshot = event.data as DocumentSnapshot | undefined;
-		if (!snapshot) throw new Error('No snapshot found in onNewSubscription');
+		if (!snapshot)
+			throw new Error('No snapshot found in onNewSubscription');
 
-		const subscription = parse(StatementSubscriptionSchema, snapshot.data()) as StatementSubscription;
+		const subscription = parse(
+			StatementSubscriptionSchema,
+			snapshot.data()
+		) as StatementSubscription;
 
 		//if new subscription role is waiting, then update the collection waitingForApproval
 		const role = subscription.role;
 		const subscriptionId = subscription.statementsSubscribeId;
 		if (!subscriptionId) throw new Error('No subscriptionId found');
 		if (role === Role.waiting) {
-
 			//get all admins of the top parent statement
 			const statement = parse(StatementSchema, subscription.statement);
-			const topParentId = statement.parentId === 'top' ? statement.statementId : statement.topParentId;
+			const topParentId =
+				statement.parentId === 'top'
+					? statement.statementId
+					: statement.topParentId;
 
 			const adminsDB = await db
 				.collection(Collections.statementsSubscribe)
@@ -40,67 +62,145 @@ export async function onNewSubscription(event: FirestoreEvent<DocumentSnapshot |
 			const collectionRef = db.collection(Collections.awaitingUsers);
 
 			adminsSubscriptions.forEach((adminSub: StatementSubscription) => {
-
 				const adminRef = collectionRef.doc(getRandomUID());
 				const adminCall = {
 					...subscription,
-					adminId: adminSub.userId
-				}
+					adminId: adminSub.userId,
+				};
 				batch.set(adminRef, adminCall);
 			});
 			await batch.commit();
-
 		}
-
 	} catch (error) {
 		logger.error('Error onNewSubscription', error);
 
 		return;
 	}
 }
+export async function onStatementDeletionDeleteSubscriptions(
+	event: FirestoreEvent<DocumentSnapshot | undefined, { statementId: string }>
+) {
+	try {
+		const snapshot = event.data as DocumentSnapshot | undefined;
+		if (!snapshot)
+			throw new Error('No snapshot found in onNewSubscription');
 
-export async function updateSubscriptionsSimpleStatement(event: FirestoreEvent<Change<DocumentSnapshot> | undefined, { subscriptionId: string; }>) {
+		const deletedStatement = snapshot.data() as Statement | undefined;
+		if (!deletedStatement) {
+			throw new Error('No statement data found');
+		}
+	
+		const statementId = event.params.statementId;
+		logger.info(`Processing deletion of statement: ${statementId}`);
+
+		// Proceed with the deletion process since the user is an admin
+		// Query all subscriptions related to this statement
+		const subscriptionsSnapshot = await db
+			.collection(Collections.statementsSubscribe)
+			.where('statementId', '==', statementId)
+			.get();
+
+		if (subscriptionsSnapshot.empty) {
+			logger.info(`No subscriptions found for statement ${statementId}`);
+
+			return;
+		}
+
+		// Create a batch to delete all subscriptions
+		const batch = db.batch();
+
+		subscriptionsSnapshot.docs.forEach((doc) => {
+			logger.info(`Adding subscription ${doc.id} to deletion batch`);
+			batch.delete(doc.ref);
+		});
+
+		// Also delete any waiting approval entries
+		const awaitingUsersSnapshot = await db
+			.collection(Collections.awaitingUsers)
+			.where('statementId', '==', statementId)
+			.get();
+
+		if (!awaitingUsersSnapshot.empty) {
+			awaitingUsersSnapshot.docs.forEach((doc) => {
+				logger.info(`Adding awaiting user ${doc.id} to deletion batch`);
+				batch.delete(doc.ref);
+			});
+		}
+
+		// Commit the batch deletion
+		await batch.commit();
+		logger.info(
+			`Successfully deleted ${subscriptionsSnapshot.size} subscriptions for statement ${statementId}`
+		);
+	} catch (error) {
+		logger.error('Error in onStatementDeletionDeleteSubscriptions:', error);
+	}
+}
+
+export async function updateSubscriptionsSimpleStatement(
+	event: FirestoreEvent<
+		Change<DocumentSnapshot> | undefined,
+		{ subscriptionId: string }
+	>
+) {
 	if (!event.data) return;
 	try {
-
-		const _statementBefore = event.data.before.data() as Statement | undefined;
-		const _statementAfter = event.data.after.data() as Statement | undefined;
+		const _statementBefore = event.data.before.data() as
+			| Statement
+			| undefined;
+		const _statementAfter = event.data.after.data() as
+			| Statement
+			| undefined;
 		if (!_statementBefore || !_statementAfter) return;
 
-		const simpleStatementBefore = statementToSimpleStatement(_statementBefore);
-		const simpleStatementAfter = statementToSimpleStatement(_statementAfter);
+		const simpleStatementBefore =
+			statementToSimpleStatement(_statementBefore);
+		const simpleStatementAfter =
+			statementToSimpleStatement(_statementAfter);
 
 		//check if changes in the areas of simpleStatement where changed
-		if (JSON.stringify(simpleStatementBefore) === JSON.stringify(simpleStatementAfter)) return;
+		if (
+			JSON.stringify(simpleStatementBefore) ===
+			JSON.stringify(simpleStatementAfter)
+		)
+			return;
 
 		const statement = parse(StatementSchema, _statementAfter);
 
 		const statementId: string = statement.statementId;
 
 		//get all statement subscriptions
-		const statementSubscriptions = await getStatementSubscriptions(statementId);
+		const statementSubscriptions =
+			await getStatementSubscriptions(statementId);
 
 		//update all statement subscriptions
-		if (statementSubscriptions.length === 0) throw new Error('no subscriptions found');
+		if (statementSubscriptions.length === 0)
+			throw new Error('no subscriptions found');
 
 		const batch = db.batch();
 		statementSubscriptions.forEach((subscription) => {
-			const subscriptionRef = db.collection(Collections.statementsSubscribe).doc(subscription.statementsSubscribeId);
+			const subscriptionRef = db
+				.collection(Collections.statementsSubscribe)
+				.doc(subscription.statementsSubscribeId);
 			batch.update(subscriptionRef, { statement: statement });
 		});
 		await batch.commit();
-
 	} catch (error) {
 		logger.error('Error updating updateMembersWithSimpleStatement', error);
 	}
 }
 
-export async function getStatementSubscriptions(statementId: string): Promise<StatementSubscription[]> {
-	const statementSubscriptions = await db.collection(Collections.statementsSubscribe)
+export async function getStatementSubscriptions(
+	statementId: string
+): Promise<StatementSubscription[]> {
+	const statementSubscriptions = await db
+		.collection(Collections.statementsSubscribe)
 		.where('statementId', '==', statementId)
 		.get();
 
-	return statementSubscriptions.docs.map(doc => doc.data() as StatementSubscription);
+	return statementSubscriptions.docs.map(
+		(doc) => doc.data() as StatementSubscription
+	);
 }
 
 export async function setAdminsToNewStatement(
@@ -135,10 +235,11 @@ export async function setAdminsToNewStatement(
 			getEmailNotification: true,
 			getInAppNotification: true,
 			getPushNotification: true,
-		})
+		});
 
 		if (!subscription) throw new Error('No subscription');
-		if (!subscription.statementsSubscribeId) throw new Error('No subscriptionId');
+		if (!subscription.statementsSubscribeId)
+			throw new Error('No subscriptionId');
 
 		await db
 			.collection(Collections.statementsSubscribe)
@@ -167,15 +268,19 @@ export async function setAdminsToNewStatement(
 				if (!statementsSubscribeId)
 					throw new Error('No statementsSubscribeId');
 
-				const newSubscription: StatementSubscription | undefined = createSubscription({
-					statement,
-					role: Role.admin,
-					user: adminSub.user,
-					getEmailNotification: true,
-					getInAppNotification: true,
-					getPushNotification: true,
-				});
-				if (!newSubscription) throw new Error(`No newSubscription for admin ${adminSub.user.uid}`);
+				const newSubscription: StatementSubscription | undefined =
+					createSubscription({
+						statement,
+						role: Role.admin,
+						user: adminSub.user,
+						getEmailNotification: true,
+						getInAppNotification: true,
+						getPushNotification: true,
+					});
+				if (!newSubscription)
+					throw new Error(
+						`No newSubscription for admin ${adminSub.user.uid}`
+					);
 
 				parse(StatementSubscriptionSchema, newSubscription);
 

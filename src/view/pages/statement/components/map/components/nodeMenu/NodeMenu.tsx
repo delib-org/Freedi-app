@@ -65,8 +65,8 @@ const NodeMenu: FC<Props> = ({
 			iconsRef.current.push(el);
 		}
 	};
-	const deleteNode = () => {
-		deleteStatementFromDB(statement, isAuthorized);
+	const deleteNode = async () => {
+		await deleteStatementFromDB(statement, isAuthorized);
 	};
 	const changeNodeStatementType = async () => {
 		const newType =
