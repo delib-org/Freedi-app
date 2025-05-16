@@ -73,18 +73,41 @@
     gap: 0.5rem;
     margin-top: 0.5rem;
 
+    .approveButton {
+      background: #4fab9a;
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 25px;
+      cursor: pointer;
+
+      &:hover {
+        background-color: #37756a;
+      }
+    }
+
+    .rejectButton {
+      background: transparent;
+      color: var(--Text-Error, #f74a4d);
+      border: 1px solid var(--Text-Error, #f74a4d);
+      padding: 8px 12px;
+      border-radius: 25px;
+      cursor: pointer;
+
+      &:hover {
+        color: var(--Text-Error, #be3b3d);
+        border: 1px solid var(--Text-Error, #be3b3d);
+        background-color: rgb(228, 228, 228);
+      }
+    }
+
     button {
-      background-color: #e4e4e4;
       color: black;
       border: none;
       padding: 5px 10px;
       border-radius: 5px;
       cursor: pointer;
       font-size: 14px;
-
-      &:hover {
-        background-color: #cecece;
-      }
     }
   }
 }

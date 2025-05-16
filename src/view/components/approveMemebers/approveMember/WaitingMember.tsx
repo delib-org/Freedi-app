@@ -4,6 +4,7 @@ import styles from './WaitingMember.module.scss'
 import { UserCheck, UserX } from 'lucide-react'
 import { useUserConfig } from '@/controllers/hooks/useUserConfig'
 import { approveMembership } from '@/controllers/db/membership/setMembership'
+import avatar from '@/assets/images/avatar.jpg'
 
 interface Props {
 	wait: WaitingMember
@@ -33,12 +34,16 @@ const ApproveMember: FC<Props> = ({ wait }) => {
 			<div className={styles.summaryRow}>
 				<input type="checkbox" className={styles.checkbox} />
 
-				<img src={wait.user.photoURL} className={styles.avatar} alt="User avatar" />
+				<img src={wait.user.photoURL || avatar} className={styles.avatar} alt="User avatar" />
 
 				<div className={styles.userInfo}>
 					<div className={styles.displayName}>{wait.user.displayName}</div>
 					<div className={styles.requestDate}>
-						{new Date(wait.createdAt).toLocaleDateString()}
+						{new Date(wait.createdAt).toLocaleDateString('en-US', {
+							month: 'short',
+							day: 'numeric',
+							year: 'numeric'
+						})}
 					</div>
 				</div>
 
@@ -57,12 +62,12 @@ const ApproveMember: FC<Props> = ({ wait }) => {
 						<strong>{t("Group Status")}:</strong> {wait.statement.membership.access}
 					</div>
 
-					<div className={styles.buttons}>
+					<div className={styles.actions}>
 						<button className={styles.approveButton} onClick={handleApprove}>
-							<UserCheck size={20} color="green" />
+							{t("Approve")}
 						</button>
 						<button className={styles.rejectButton} onClick={handleReject}>
-							<UserX size={20} color="red" />
+							{t("Deny")}
 						</button>
 					</div>
 				</div>
