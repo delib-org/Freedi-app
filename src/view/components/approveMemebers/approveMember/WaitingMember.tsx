@@ -10,39 +10,64 @@ interface Props {
 }
 const ApproveMember: FC<Props> = ({ wait }) => {
 	const { t } = useUserConfig();
-	const [show, setShow] = useState(true);
+	const [showDetails, setShowDetails] = useState(false);
+	const [isVisible, setIsVisible] = useState(true);
 
 	function handleApprove() {
 		approveMembership(wait, true)
-		setShow(false)
+		setIsVisible(false);
 	}
 	function handleReject() {
 		const confirmReject = window.confirm(t("Are you sure you want to reject this member?"));
 		if (confirmReject) {
 			approveMembership(wait, false); // Call approveMembership with false to reject the member
-			setShow(false)
+			setIsVisible(false);
 		}
 	}
 
-	if (show === false) {
-		return null; // Don't render anything if show is false
-	}
+	if (!isVisible) return null;
 
 	return (
-		<div className={styles.memberDisplay}>
-			<div className={styles.memberName}>{wait.user.displayName}</div>
-			<span className={styles.inGroup}>{t("in")}</span>
-			<div className={styles.statement}>{wait.statement.statement}</div>
-			<div className={styles.buttons}>
-				<button className={styles.approveButton} onClick={handleApprove}>
-					<UserCheck size={20} color="green" />
-				</button>
-				<button className={styles.rejectButton} onClick={handleReject}>
-					<UserX size={20} color="red" />
+		<div className={styles.wrapper}>
+			{/* Collapsed summary view */}
+			<div className={styles.summaryRow}>
+				<input type="checkbox" className={styles.checkbox} />
+
+				<img src={wait.user.photoURL} className={styles.avatar} alt="User avatar" />
+
+				<div className={styles.userInfo}>
+					<div className={styles.displayName}>{wait.user.displayName}</div>
+					<div className={styles.requestDate}>
+						{new Date(wait.createdAt).toLocaleDateString()}
+					</div>
+				</div>
+
+				<button onClick={() => setShowDetails(!showDetails)} className={styles.expandBtn}>
+					{showDetails ? '-' : '+'}
 				</button>
 			</div>
-		</div>
-	)
-}
 
+			{/* Expanded detail view */}
+			{showDetails && (
+				<div className={styles.detailsPanel}>
+					<div>
+						<strong>{t("Group")}:</strong> {wait.statement.statement}
+					</div>
+					<div>
+						<strong>{t("Group Status")}:</strong> {wait.statement.membership.access}
+					</div>
+
+					<div className={styles.buttons}>
+						<button className={styles.approveButton} onClick={handleApprove}>
+							<UserCheck size={20} color="green" />
+						</button>
+						<button className={styles.rejectButton} onClick={handleReject}>
+							<UserX size={20} color="red" />
+						</button>
+					</div>
+				</div>
+			)}
+		</div>
+	);
+};
 export default ApproveMember

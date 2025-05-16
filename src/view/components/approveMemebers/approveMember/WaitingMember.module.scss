@@ -1,87 +1,90 @@
-.memberDisplay {
-	font-size: 16px;
-	color: #333;
-	background-color: #f0f0f0;
-	width: fit-content;
-	display: flex;
-	align-items: center; // Add this to vertically align items
-	width: 100%; // Ensure it doesn't overflow its parent
-	border-radius: 5px; // Optional for consistent styling with buttons
+.wrapper {
+  background-color: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  margin-bottom: 1rem;
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
 
-	@media screen and (max-width: 768px) {
-		flex-direction: column; // Stack items vertically on small screens
-		align-items: flex-start; // Align items to the start of the flex container
-		gap: 0rem; // Add gap between items
+.summaryRow {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.5rem;
+  background-color: #f0f0f0;
+  border-radius: 5px;
+}
 
-	}
+.checkbox {
+  margin-left: 0.5rem;
+}
 
-	.inGroup {
-		@media screen and (max-width: 768px) {
-			display: none;
+.avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+}
 
-		}
-	}
+.userInfo {
+  display: flex;
+  flex-direction: column;
+}
 
-	.statement {
-		font-size: 16px;
-		color: #333;
-		background-color: #f0f0f0;
-		padding: 5px 10px; // Add consistent padding
-		white-space: nowrap; // Prevent text wrapping
-		overflow: hidden; // Hide overflow
-		text-overflow: ellipsis; // Add ellipsis for very long names
-		min-width: 0; // Allow flexbox to shrink this element if needed
-		flex: 1; // Allow it to take available space
-	}
+.displayName {
+  font-weight: bold;
+  font-size: 16px;
+}
 
-	.memberName {
-		font-size: 16px;
-		color: #333;
-		background-color: #f0f0f0;
-		padding: 5px 10px; // Add consistent padding
-		white-space: nowrap; // Prevent text wrapping
-		overflow: hidden; // Hide overflow
-		text-overflow: ellipsis; // Add ellipsis for very long names
+.requestDate {
+  font-size: 12px;
+  color: #777;
+}
 
-		min-width: 15ch;
-	}
+.expandBtn {
+  margin-left: auto;
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
 
-	.buttons {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		padding: 5px 10px;
-		background-color: #f0f0f0;
-		border-radius: 5px;
-		transition: background-color 0.3s ease;
-		gap: .5rem;
-		flex-shrink: 0; // Prevent buttons from shrinking
+  &:hover {
+    color: #666;
+  }
+}
 
-		button {
-			background-color: #e4e4e4;
-			color: white;
-			border: none;
-			padding: 5px 10px;
-			border-radius: 5px;
-			cursor: pointer;
-			font-size: 14px;
-			transition: background-color 0.3s ease;
+.detailsPanel {
+  padding: 0.75rem 1rem;
+  background-color: #ffffff;
+  border-top: 1px solid #ddd;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 
+  div {
+    font-size: 14px;
+  }
 
+  .actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
 
+    button {
+      background-color: #e4e4e4;
+      color: black;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 14px;
 
-			&:hover {
-				background-color: #cecece;
-				cursor: pointer;
-			}
-
-			&:active {
-				background-color: #d0d0d0;
-			}
-
-			&:focus {
-				outline: 2px solid rgb(122, 122, 122);
-			}
-		}
-	}
+      &:hover {
+        background-color: #cecece;
+      }
+    }
+  }
 }
