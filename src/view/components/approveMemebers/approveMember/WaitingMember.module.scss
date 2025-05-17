@@ -2,29 +2,31 @@ $memberbg: #f2f6ff;
 
 .wrapper {
   background-color: $memberbg;
-  border-bottom: 1px solid #ddd;
-  border-radius: 5px;
-  margin-bottom: 1rem;
+  width: 350px;
+  border-bottom: 1px solid #bdcef4;
   padding: 0.5rem;
   display: flex;
   flex-direction: column;
-  width: 100%;
 
   .summaryRow {
     display: flex;
     align-items: center;
+    height: 74px;
+    font-size: 16px;
     gap: 1rem;
-    padding: 0.5rem;
     background-color: $memberbg;
     border-radius: 5px;
 
     .checkbox {
       margin-left: 0.5rem;
+      height: 24px;
+      width: 24px;
+      background-color: transparent;
     }
 
     .avatar {
-      width: 40px;
-      height: 40px;
+      width: 32px;
+      height: 32px;
       border-radius: 50%;
       object-fit: cover;
     }
@@ -35,31 +37,46 @@ $memberbg: #f2f6ff;
     }
 
     .displayName {
-      font-weight: bold;
+      width: 105px;
+      height: 28px;
+      margin-right: 5.2rem;
       font-size: 16px;
+      color: #2a3346;
     }
 
     .requestDate {
-      font-size: 12px;
-      color: #777;
+      height: 21px;
+      font-size: 14px;
+      color: #7484a9;
     }
   }
-  .expandBtn {
-    margin-left: auto;
-    background: none;
-    border: none;
-    font-size: 20px;
-    cursor: pointer;
 
-    &:hover {
-      color: #666;
-    }
+  label {
+    font-size: 14px;
+    color: #7484a9;
+    margin-right: 1.2rem;
+  }
+  .expandBtn {
+    // background: none;
+    // border: none;
+    // width: 24px;
+    // font-family: "Inter Tight", sans-serif;
+    // font-weight: thin;
+    // font-size: 35px;
+
+    // color: #1b45a7;
+
+    // cursor: pointer;
+
+    // &:hover {
+    //   color: #0f2968;
+    // }
   }
 
   .detailsPanel {
+    width: 100%;
     padding: 0.75rem 1rem;
     background-color: $memberbg;
-    border-top: 1px solid #ddd;
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
@@ -70,16 +87,27 @@ $memberbg: #f2f6ff;
 
     .actions {
       display: flex;
-      gap: 0.5rem;
+      flex-direction: row;
+      justify-content: space-around;
+      gap: 3rem;
       margin-top: 0.5rem;
 
       .approveButton {
+        flex: unset;
+        width: 165px;
+        height: 44px;
         background: #4fab9a;
         color: white;
         border: none;
         padding: 8px 12px;
         border-radius: 25px;
+        font-size: 15px;
         cursor: pointer;
+
+        box-shadow:
+          0px 2px 4px 0px #26385438,
+          0px 9px 6px 0px #2638541c,
+          0px 16px 7px 0px #26385408;
 
         &:hover {
           background-color: #37756a;
@@ -87,11 +115,16 @@ $memberbg: #f2f6ff;
       }
 
       .rejectButton {
+        flex: unset;
+        width: 98px;
+        height: 44px;
         background: transparent;
         color: var(--Text-Error, #f74a4d);
         border: 1px solid var(--Text-Error, #f74a4d);
+        font-size: 15px;
         padding: 8px 12px;
         border-radius: 25px;
+        font-weight: 800;
         cursor: pointer;
 
         &:hover {

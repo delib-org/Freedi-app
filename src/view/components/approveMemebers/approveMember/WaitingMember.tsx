@@ -1,10 +1,11 @@
+import avatar from '@/assets/images/avatar.jpg'
+import { approveMembership } from '@/controllers/db/membership/setMembership'
+import { useUserConfig } from '@/controllers/hooks/useUserConfig'
 import { WaitingMember } from 'delib-npm'
 import { FC, useState } from 'react'
 import styles from './WaitingMember.module.scss'
-import { UserCheck, UserX } from 'lucide-react'
-import { useUserConfig } from '@/controllers/hooks/useUserConfig'
-import { approveMembership } from '@/controllers/db/membership/setMembership'
-import avatar from '@/assets/images/avatar.jpg'
+import expandIcon from '@/assets/icons/Expand.png'
+import collapseIcon from '@/assets/icons/Collapse.png'
 
 interface Props {
 	wait: WaitingMember
@@ -48,7 +49,7 @@ const ApproveMember: FC<Props> = ({ wait }) => {
 				</div>
 
 				<button onClick={() => setShowDetails(!showDetails)} className={styles.expandBtn}>
-					{showDetails ? '-' : '+'}
+					<img src={showDetails ? collapseIcon : expandIcon} alt="Toggle details" className={styles.expandIcon} />
 				</button>
 			</div>
 
@@ -56,10 +57,12 @@ const ApproveMember: FC<Props> = ({ wait }) => {
 			{showDetails && (
 				<div className={styles.detailsPanel}>
 					<div>
-						<strong>{t("Group")}:</strong> {wait.statement.statement}
+						<label>{t("Group")}</label>
+						<span className={styles.groupName}>{wait.statement.statement}</span>
 					</div>
 					<div>
-						<strong>{t("Group Status")}:</strong> {wait.statement.membership.access}
+						<label>{t("Group Status")}</label>
+						<span className={styles.groupStatus}>{wait.statement.membership.access}</span>
 					</div>
 
 					<div className={styles.actions}>
