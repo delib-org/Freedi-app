@@ -2,7 +2,6 @@ $memberbg: #f2f6ff;
 
 .wrapper {
   background-color: $memberbg;
-  width: 350px;
   border-bottom: 1px solid #bdcef4;
   padding: 0.5rem;
   display: flex;
@@ -11,18 +10,11 @@ $memberbg: #f2f6ff;
   .summaryRow {
     display: flex;
     align-items: center;
-    height: 74px;
+    height: 65px;
     font-size: 16px;
     gap: 1rem;
     background-color: $memberbg;
     border-radius: 5px;
-
-    .checkbox {
-      margin-left: 0.5rem;
-      height: 24px;
-      width: 24px;
-      background-color: transparent;
-    }
 
     .avatar {
       width: 32px;
@@ -37,9 +29,9 @@ $memberbg: #f2f6ff;
     }
 
     .displayName {
-      width: 105px;
+      width: 120px;
       height: 28px;
-      margin-right: 5.2rem;
+      margin-right: 2rem;
       font-size: 16px;
       color: #2a3346;
     }
@@ -54,23 +46,6 @@ $memberbg: #f2f6ff;
   label {
     font-size: 14px;
     color: #7484a9;
-    margin-right: 1.2rem;
-  }
-  .expandBtn {
-    // background: none;
-    // border: none;
-    // width: 24px;
-    // font-family: "Inter Tight", sans-serif;
-    // font-weight: thin;
-    // font-size: 35px;
-
-    // color: #1b45a7;
-
-    // cursor: pointer;
-
-    // &:hover {
-    //   color: #0f2968;
-    // }
   }
 
   .detailsPanel {

@@ -6,6 +6,7 @@ import { FC, useState } from 'react'
 import styles from './WaitingMember.module.scss'
 import expandIcon from '@/assets/icons/Expand.png'
 import collapseIcon from '@/assets/icons/Collapse.png'
+import Checkbox from '../../checkbox/Checkbox'
 
 interface Props {
 	wait: WaitingMember
@@ -14,6 +15,7 @@ const ApproveMember: FC<Props> = ({ wait }) => {
 	const { t } = useUserConfig();
 	const [showDetails, setShowDetails] = useState(false);
 	const [isVisible, setIsVisible] = useState(true);
+	const [isChecked, setIsChecked] = useState(false);
 
 	function handleApprove() {
 		approveMembership(wait, true)
@@ -33,8 +35,11 @@ const ApproveMember: FC<Props> = ({ wait }) => {
 		<div className={styles.wrapper}>
 			{/* Collapsed summary view */}
 			<div className={styles.summaryRow}>
-				<input type="checkbox" className={styles.checkbox} />
-
+				<Checkbox
+					name={`select-${wait.userId}`}
+					isChecked={isChecked}
+					onChange={(checked) => setIsChecked(checked)}
+				/>
 				<img src={wait.user.photoURL || avatar} className={styles.avatar} alt="User avatar" />
 
 				<div className={styles.userInfo}>

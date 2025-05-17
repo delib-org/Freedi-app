@@ -1,46 +1,49 @@
 .approveMembers {
-	position: relative;
-	color: white;
+  position: relative;
+  color: white;
 
+  .toggleButton {
+    color: white;
+    position: relative;
 
-	.toggleButton {
-		color: white;
-		position: relative;
+    .notification {
+      position: absolute;
+      top: -10px;
+      left: -10px;
+    }
+  }
 
-		.notification {
-			position: absolute;
-			top: -10px;
-			left: -10px;
-		}
-	}
+  .membersList {
+    position: absolute;
+    width: 390px;
+    height: auto;
+    right: 0px;
+    text-align: start;
+    background-color: #f2f6ff;
+    // border: 1px solid #ccc;
+    z-index: 10;
+    padding: 10px;
+    /* Add padding for better spacing */
+    border-radius: 16px;
+    /* Add border radius for rounded corners */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    /* Add shadow for depth */
+    color: black;
+    display: flex;
+    flex-direction: column;
+    max-height: 80vh;
+    overflow-y: auto;
 
-	.membersList {
-		position: absolute;
-		right: 0px;
-		text-align: start;
-		background-color: white;
-		border: 1px solid #ccc;
-		z-index: 10;
-		padding: 10px;
-		/* Add padding for better spacing */
-		border-radius: 5px;
-		/* Add border radius for rounded corners */
-		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-		/* Add shadow for depth */
-		color: black;
-		display: flex;
-		flex-direction: column;
-		gap: 0.1rem;
+    box-shadow:
+      0px 15px 33px 0px #7685a021,
+      0px 60px 60px 0px #7685a01c,
+      0px 134px 81px 0px #7685a012,
+      0px 239px 95px 0px #6b799505,
+      0px 373px 104px 0px #6b799500;
+  }
 
-		max-height: 80vh;
-		overflow-y: auto;
-	}
-
-	.rtl {
-
-		left: 0px;
-		right: auto;
-
-
-	}
+  .rtl {
+    left: 0px;
+    right: auto;
+  }
 }
