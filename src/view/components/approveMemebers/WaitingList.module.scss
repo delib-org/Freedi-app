@@ -1,6 +1,7 @@
 .approveMembers {
   position: relative;
   color: white;
+  left: 7rem;
 
   .toggleButton {
     color: white;
@@ -20,9 +21,10 @@
     right: 0px;
     text-align: start;
     background-color: #f2f6ff;
+
     // border: 1px solid #ccc;
     z-index: 10;
-    padding: 10px;
+    padding: 15px;
     /* Add padding for better spacing */
     border-radius: 16px;
     /* Add border radius for rounded corners */
@@ -40,10 +42,14 @@
       0px 134px 81px 0px #7685a012,
       0px 239px 95px 0px #6b799505,
       0px 373px 104px 0px #6b799500;
+
+    @media screen and (max-width: 690px) {
+      width: 350px;
+    }
   }
 
   .rtl {
-    left: 0px;
+    left: -14rem;
     right: auto;
   }
 }

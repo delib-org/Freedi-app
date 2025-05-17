@@ -3,14 +3,14 @@ $memberbg: #f2f6ff;
 .wrapper {
   background-color: $memberbg;
   border-bottom: 1px solid #bdcef4;
-  padding: 0.5rem;
+  padding: 0.2rem;
   display: flex;
   flex-direction: column;
 
   .summaryRow {
     display: flex;
     align-items: center;
-    height: 65px;
+    height: 62px;
     font-size: 16px;
     gap: 1rem;
     background-color: $memberbg;
@@ -29,11 +29,17 @@ $memberbg: #f2f6ff;
     }
 
     .displayName {
+      display: flex;
+      flex-direction: row;
+      justify-content: start;
       width: 120px;
       height: 28px;
-      margin-right: 2rem;
       font-size: 16px;
       color: #2a3346;
+
+      @media screen and (max-width: 667px) {
+        margin-right: 0;
+      }
     }
 
     .requestDate {
@@ -50,7 +56,7 @@ $memberbg: #f2f6ff;
 
   .detailsPanel {
     width: 100%;
-    padding: 0.75rem 1rem;
+    padding: 0.5rem;
     background-color: $memberbg;
     display: flex;
     flex-direction: column;
@@ -63,7 +69,7 @@ $memberbg: #f2f6ff;
     .actions {
       display: flex;
       flex-direction: row;
-      justify-content: space-around;
+      justify-content: space-between;
       gap: 3rem;
       margin-top: 0.5rem;
 
