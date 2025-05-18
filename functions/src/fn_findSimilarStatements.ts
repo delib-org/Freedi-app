@@ -1,5 +1,5 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { Response, onInit, Request } from 'firebase-functions/v1';
+import { Response, Request } from 'firebase-functions/v1';
 import { db } from '.';
 import 'dotenv/config';
 import { Collections, Statement } from 'delib-npm';
@@ -155,19 +155,14 @@ export async function findSimilarStatements(
 	}
 }
 
-let genAI: GoogleGenerativeAI;
-
-onInit(() => {
-	try {
-		if (!process.env.GOOGLE_API_KEY) {
-			throw new Error('Missing GOOGLE_API_KEY environment variable');
-		}
-
-		genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
-	} catch (error) {
-		console.error('Error initializing GenAI', error);
+function getGenAI(): GoogleGenerativeAI {
+	const apiKey = process.env.GOOGLE_API_KEY;
+	if (!apiKey) {
+		throw new Error('Missing GOOGLE_API_KEY environment variable');
 	}
-});
+
+	return new GoogleGenerativeAI(apiKey);
+}
 
 export async function findSimilarStatementsAI(
 	allStatements: string[],
@@ -176,7 +171,9 @@ export async function findSimilarStatementsAI(
 	numberOfSimilarStatements: number = 6
 ) {
 	try {
-		const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+		const model = getGenAI().getGenerativeModel({
+			model: 'gemini-1.5-flash',
+		});
 
 		const prompt = `
 		Find up to ${numberOfSimilarStatements} sentences in the following strings:  ${allStatements},  that are similar to the user input '${userInput}'. 
@@ -203,7 +200,9 @@ export async function generateSimilar(
 	optionsToBeGeneratedByAI: number = 5
 ): Promise<string[]> {
 	try {
-		const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+		const model = getGenAI().getGenerativeModel({
+			model: 'gemini-1.5-flash',
+		});
 
 		const prompt = `
 		create ${optionsToBeGeneratedByAI} similar sentences to the user input '${userInput}' but never the same.
@@ -223,7 +222,9 @@ export async function generateSimilar(
 	}
 }
 
-export function extractAndParseJsonString(input: string): { strings: string[] } {
+export function extractAndParseJsonString(input: string): {
+	strings: string[];
+} {
 	try {
 		// Find the first '{' and the last '}'
 		const startIndex = input.indexOf('{');
