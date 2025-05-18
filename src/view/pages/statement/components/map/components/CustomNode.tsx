@@ -262,6 +262,9 @@ function CustomNode({ data }: NodeProps) {
 								setIsEdit={setIsEdit}
 								statement={result.top}
 								selectedId={selectedId}
+								handleAddChildNode={handleAddChildNode}
+																handleAddSiblingNode={handleAddSiblingNode}
+
 							/>
 						</div>
 					)}

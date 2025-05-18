@@ -54,9 +54,14 @@ export const listenToStatementSubSubscriptions = (
 			let firstCall = true;
 			const statementSubscriptions: StatementSubscription[] = [];
 			subscriptionsDB.docChanges().forEach((change) => {
+				const data = change.doc.data();
 				const statementSubscription = parse(
 					StatementSubscriptionSchema,
-					change.doc.data()
+
+					{
+						...data,
+						lastUpdated: data.lastUpdated?.toDate?.() ?? null,
+					}
 				);
 				if (change.type === 'added') {
 					if (firstCall) {
@@ -350,9 +355,13 @@ export function getNewStatementsFromSubscriptions(userId: string): Unsubscribe {
 
 		return onSnapshot(q, (subscriptionsDB) => {
 			subscriptionsDB.docChanges().forEach((change) => {
+				const data = change.doc.data();
 				const statementSubscription = parse(
 					StatementSubscriptionSchema,
-					change.doc.data()
+					{
+						...data,
+						lastUpdated: data.lastUpdated?.toDate?.() ?? null,
+					}
 				);
 
 				if (change.type === 'added' || change.type === 'modified') {
