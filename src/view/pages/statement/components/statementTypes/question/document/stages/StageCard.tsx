@@ -87,10 +87,10 @@ const StageCard: FC<Props> = ({ statement, isDescription, isSuggestions }) => {
 				{expanded && (
 					<NavLink to={`/stage/${statement.statementId}`}>
 						<Button
-							buttonType={ButtonType.PRIMARY}
+							buttonType={ButtonType.SECONDARY}
 							text={
 								chosen.length > 0
-									? t('View question suggestions')
+									? t('View other suggestions')
 									: t('Add your suggestion')
 							}
 						/>

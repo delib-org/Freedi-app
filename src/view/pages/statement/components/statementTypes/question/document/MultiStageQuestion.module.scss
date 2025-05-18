@@ -18,6 +18,10 @@
 	}
 }
 
+.h3 {
+	margin-bottom: 1rem;
+}
+
 .stagesWrapper {
 	padding-top: 2rem;
 	display: flex;
@@ -38,7 +42,7 @@
 		}
 	}
 
-	> div {
+	>div {
 		&:first-child {
 			border-radius: var(--radius) var(--radius) 0 0;
 		}

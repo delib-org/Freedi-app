@@ -116,6 +116,7 @@ const MultiStageQuestion: FC = () => {
 						<div className={styles.description}>
 							{statement?.description}
 						</div>
+						<h3 className={styles.h3}>{t('Preliminary questions')}</h3>
 						{initialStages.map((stage, index) => (
 							<div
 								key={stage.statementId}
@@ -148,6 +149,7 @@ const MultiStageQuestion: FC = () => {
 								<StageCard statement={initialStages[draggedItem.index]} />
 							</div>
 						)}
+						<h3 className={styles.h3}>{t("Proposed solution")}</h3>
 						<StageCard statement={statement} isSuggestions={true} />
 					</div>
 				)}
