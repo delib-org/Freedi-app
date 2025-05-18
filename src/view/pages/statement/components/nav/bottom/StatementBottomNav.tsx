@@ -55,6 +55,17 @@ const StatementBottomNav: FC<Props> = () => {
 		});
 	};
 
+	const getBasePath = () => {
+		const pathArray = location.pathname.split('/');
+		// Remove the last segment (current sort)
+		console.log('sort:', sort);
+		if (sort) {
+			pathArray.pop();
+		}
+
+		return pathArray.join('/');
+	};
+
 	function handleSortingClick() {
 		setShowSorting(!showSorting);
 	}
@@ -89,7 +100,7 @@ const StatementBottomNav: FC<Props> = () => {
 							>
 								<Link
 									className={`open-nav-icon ${showSorting ? 'active' : ''}`}
-									to={sort ? `./${navItem.link}` : `./${navItem.link}`}
+									to={`${getBasePath()}/${navItem.link}`}
 									aria-label='Sorting options'
 									key={navItem.id}
 									onClick={() => setShowSorting(false)}
