@@ -73,6 +73,8 @@ const SuggestionCards: FC<Props> = ({
 
 	useEffect(() => {
 
+		if (sort !== SortType.accepted) return;
+
 		const prevSubStatements = prevSubStatementsRef.current;
 		// Now you can compare prevSubStatements with current subStatements
 		// For example, check if the array has changed
