@@ -1,6 +1,7 @@
 import React, { JSX } from 'react'
 import styles from "./MultiSwitch.module.scss";
 import { CustomTooltip } from '../../tooltip/CustomTooltip';
+import CheckIcon from '@/assets/icons/checkIcon.svg?react';
 
 export interface MultiSwitchProps {
 	options: { label: string; value: string; icon?: JSX.Element; toolTip?: string }[];
@@ -25,8 +26,9 @@ const MultiSwitch: React.FC<MultiSwitchProps> = ({ options, onClick, currentValu
 				>
 					<CustomTooltip content={option.toolTip ? option.toolTip : ''} position="top" >
 						<div className={styles.optionContent}>
-						{option.icon ? option.icon : null}
-						{option.label}
+							{option.icon ? option.icon : null}
+							{option.label}
+							{currentValue === option.value && <CheckIcon />}
 						</div>
 					</CustomTooltip>
 				</button>

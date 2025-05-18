@@ -1,11 +1,14 @@
-import { listenToDescendants } from "@/controllers/db/results/getResults";
-import { statementDescendantsSelector, statementSelector } from "@/redux/statements/statementsSlice";
-import { useEffect, useState, useRef } from "react";
-import { useSelector } from "react-redux";
-import { useParams } from "react-router";
-import { resultsByParentId } from "./mapCont";
-import { Statement, Results, StatementType } from "delib-npm";
-import { APIEndPoint } from "@/controllers/general/helpers";
+import { listenToDescendants } from '@/controllers/db/results/getResults';
+import {
+	statementDescendantsSelector,
+	statementSelector,
+} from '@/redux/statements/statementsSlice';
+import { useEffect, useState, useRef } from 'react';
+import { useSelector } from 'react-redux';
+import { useParams } from 'react-router';
+import { resultsByParentId } from './mapCont';
+import { Statement, Results } from 'delib-npm';
+import { APIEndPoint, isChatMessage } from '@/controllers/general/helpers';
 
 export function useMindMap() {
 	const { statementId } = useParams();
@@ -14,9 +17,7 @@ export function useMindMap() {
 		statementDescendantsSelector(statementId)
 	);
 	const descendants = allDescendants.filter(
-		(statement) =>
-			statement.statementType === StatementType.question ||
-			statement.statementType === StatementType.option
+		(statement) => !isChatMessage(statement.statementType)
 	);
 
 	const [flat, setFlat] = useState(false);
@@ -86,7 +87,7 @@ export function useMindMap() {
 		fetch(endPoint, {
 			method: 'POST',
 			body: JSON.stringify({
-				statementId
+				statementId,
 			}),
 			headers: {
 				'Content-Type': 'application/json',
@@ -109,17 +110,28 @@ export function useMindMap() {
 			headers: {
 				'Content-Type': 'application/json',
 			},
-		}).catch((error) => {
-			console.error('Error fetching recover snapshot data:', error);
-		}).
-			finally(() => {
+		})
+			.catch((error) => {
+				console.error('Error fetching recover snapshot data:', error);
+			})
+			.finally(() => {
 				setLoading(false);
 			});
 	}
 
-	return { descendants, results, loading, handleRecoverSnapshot, handleCluster, flat };
+	return {
+		descendants,
+		results,
+		loading,
+		handleRecoverSnapshot,
+		handleCluster,
+		flat,
+	};
 }
 
 function isFlat(descendants: Statement[], statementId: string) {
-	return !descendants.some((descendant) => descendant.isCluster && descendant.parentId === statementId);
+	return !descendants.some(
+		(descendant) =>
+			descendant.isCluster && descendant.parentId === statementId
+	);
 }

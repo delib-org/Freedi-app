@@ -100,7 +100,7 @@ export function listenToStatementSubscriptions(
 		);
 		const q = query(
 			statementsSubscribeRef,
-			where('creator.uid', '==', userId),
+			where('userId', '==', userId),
 			where('statement.parentId', '==', 'top'),
 			orderBy('lastUpdate', 'desc'),
 			limit(numberOfStatements)
