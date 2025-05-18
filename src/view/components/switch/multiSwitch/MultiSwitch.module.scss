@@ -13,7 +13,7 @@
 		display: flex;
 		justify-content: center;
 		align-items: center;
-		background-color: #9ac2ed;
+		background-color: #c6cddc;
 		gap: 1rem;
 		color: white;
 		border: none;
@@ -26,29 +26,23 @@
 		font-size: 16px;
 		/* Added for font size of buttons */
 
-		&:hover {
-			background-color: #0056b3;
-			/* Added for button hover effect */
-		}
-
 		svg {
-
-			height: 1.3rem;
+			height: fit-content;
 			/* Added for icon size */
 		}
 
-.optionContent{
-	display: flex;
-	justify-content: center;
-	align-items: center;
-	gap: .3rem;
-}
+		.optionContent {
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			gap: 0.5rem;
+		}
 
 		/* Added for active button text color */
 	}
 
 	.active {
-		background-color: #004494;
+		background-color: var(--btn-primary-default);
 		/* Added for active button color */
 		color: white;
 		/* Added for active button text color */
