@@ -56,14 +56,13 @@ const StageCard: FC<Props> = ({ statement, isDescription, isSuggestions }) => {
 		<div
 			dir={dir}
 			className={styles.card}
+		>			<button
+			className={`${styles.title} ${styles.item}`}
+			style={expanded ? { backgroundColor: 'transparent' } : {}}
+			onClick={handleCardClick}
 		>
-			<button
-				className={`${styles.title} ${styles.item}`}
-				style={expanded ? { backgroundColor: 'transparent' } : {}}
-				onClick={handleCardClick}
-			>
 				<div className={`${styles.notification}`}>
-					<StatementChatMore statement={statement} onlyCircle={true} />
+					<StatementChatMore statement={statement} onlyCircle={true} asButton={false} />
 				</div>
 				<p>{t(title)} {isSuggestions && `: ${statement.statement}`}</p>
 				{expanded ? <MinusIcon /> : <PlusIcon />}
