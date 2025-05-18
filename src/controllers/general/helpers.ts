@@ -59,7 +59,11 @@ function isUserCreator(
 		statement.creator?.uid === statementSubscription?.userId
 	);
 }
+export function isChatMessage(statementType: StatementType): boolean {
+	if (statementType === StatementType.statement) return true;
 
+	return false;
+}
 function isUserAuthorizedByRole(
 	role: Role,
 	authorizedRoles?: Array<Role>

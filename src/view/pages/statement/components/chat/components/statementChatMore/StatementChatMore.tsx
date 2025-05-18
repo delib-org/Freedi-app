@@ -16,9 +16,10 @@ interface Props {
 	statement: Statement | SimpleStatement;
 	onlyCircle?: boolean;
 	useLink?: boolean;
+	asButton?: boolean;
 }
 
-const StatementChatMore: FC<Props> = ({ statement, onlyCircle, useLink = true }) => {
+const StatementChatMore: FC<Props> = ({ statement, onlyCircle, useLink = true, asButton = true }) => {
 
 	const navigate = useNavigate();
 	const { user } = useAuthentication();
@@ -28,28 +29,49 @@ const StatementChatMore: FC<Props> = ({ statement, onlyCircle, useLink = true })
 
 	const countMessages = notifications.filter(notification => notification.creatorName !== user?.displayName).length;
 
-	return (
+	const handleClick = () => {
+		if (useLink) {
+			navigate(`/statement/${statement.statementId}/chat`, {
+				state: { from: window.location.pathname },
+			});
+		}
+	};
+
+	const content = (
+		<div className='icon'>
+			{countMessages > 0 && (
+				<div className='redCircle'>
+					{countMessages < 10
+						? countMessages
+						: `9+`}
+				</div>
+			)}
+			{!onlyCircle && < ChatIcon />}
+		</div>);
+
+	return asButton ? (
 		<button
 			className='statementChatMore'
 			aria-label='Chat more button'
-			onClick={() => {
-				if (useLink)
-					navigate(`/statement/${statement.statementId}/chat`, {
-						state: { from: window.location.pathname },
-					})
-			}}
+			onClick={handleClick}
 		>
-			<div className='icon'>
-				{countMessages > 0 && (
-					<div className='redCircle'>
-						{countMessages < 10
-							? countMessages
-							: `9+`}
-					</div>
-				)}
-				{!onlyCircle && < ChatIcon />}
-			</div>
+			{content}
 		</button>
+	) : (
+		<div
+			className='statementChatMore'
+			onClick={handleClick}
+			role="button"
+			tabIndex={0}
+			onKeyDown={(e) => {
+				if (e.key === 'Enter' || e.key === ' ') {
+					handleClick();
+				}
+			}}
+			aria-label='Chat more button'
+		>
+			{content}
+		</div>
 	);
 };
 
