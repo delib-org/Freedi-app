@@ -1,7 +1,6 @@
 .wrapper {
 	max-width: var(--wrapper);
 	margin: 1rem auto;
-
 }
 
 .title {
@@ -21,7 +20,6 @@
 
 .stagesWrapper {
 	padding-top: 2rem;
-	background-color: white;
 	display: flex;
 	flex-direction: column;
 	border-radius: var(--radius);
@@ -37,11 +35,10 @@
 
 		@media screen and (max-width: 600px) {
 			margin: 1.2rem 36px 3rem 36px;
-
 		}
 	}
 
-	>div {
+	> div {
 		&:first-child {
 			border-radius: var(--radius) var(--radius) 0 0;
 		}
@@ -56,7 +53,6 @@
 .stageContainer {
 	display: flex;
 	align-items: center;
-	background: white;
 	cursor: grab;
 
 	&.dragging {

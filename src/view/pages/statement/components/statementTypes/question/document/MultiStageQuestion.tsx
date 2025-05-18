@@ -127,10 +127,10 @@ const MultiStageQuestion: FC = () => {
 								onDragEnd={handleDragEnd}
 								aria-label={`Draggable stage ${index + 1}`}
 							>
-								<div
+								{/* <div
 									className={styles.dragHandle}
 									aria-hidden='true'
-								></div>
+								></div> */}
 								<StageCard statement={stage} />
 							</div>
 						))}
