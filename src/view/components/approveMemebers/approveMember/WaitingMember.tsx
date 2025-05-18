@@ -38,8 +38,7 @@ const ApproveMember: FC<Props> = ({ wait }) => {
 				<Checkbox
 					name={`select-${wait.userId}`}
 					isChecked={isChecked}
-					onChange={(checked) => setIsChecked(checked)}
-				/>
+					onChange={(checked) => setIsChecked(checked)} label={''} />
 				<img src={wait.user.photoURL || avatar} className={styles.avatar} alt="User avatar" />
 
 				<div className={styles.userInfo}>
@@ -61,11 +60,11 @@ const ApproveMember: FC<Props> = ({ wait }) => {
 			{/* Expanded detail view */}
 			{showDetails && (
 				<div className={styles.detailsPanel}>
-					<div>
+					<div className={styles.detailRow}>
 						<label>{t("Group")}</label>
 						<span className={styles.groupName}>{wait.statement.statement}</span>
 					</div>
-					<div>
+					<div className={styles.detailRow}>
 						<label>{t("Group Status")}</label>
 						<span className={styles.groupStatus}>{wait.statement.membership.access}</span>
 					</div>
