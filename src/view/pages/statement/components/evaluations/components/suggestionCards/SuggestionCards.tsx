@@ -1,4 +1,4 @@
-import { FC, useEffect, useState } from 'react';
+import { FC, useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useParams } from 'react-router';
 import { sortSubStatements } from '../../statementsEvaluationCont';
@@ -29,7 +29,7 @@ const SuggestionCards: FC<Props> = ({
 	const { sort: _sort, statementId } = useParams();
 
 	const sort = propSort || _sort || SortType.newest;
-
+	const prevSubStatementsRef = useRef<Statement[]>([]);
 	const dispatch = useDispatch();
 	const statement = useSelector(statementSelector(statementId));
 
@@ -72,6 +72,26 @@ const SuggestionCards: FC<Props> = ({
 	}, [sort]);
 
 	useEffect(() => {
+
+		const prevSubStatements = prevSubStatementsRef.current;
+		// Now you can compare prevSubStatements with current subStatements
+		// For example, check if the array has changed
+		if (prevSubStatements && hasOrderChanged(prevSubStatements, subStatements)) {
+
+			// Do something with prevSubStatements if needed
+			const { totalHeight: _totalHeight } = sortSubStatements(
+				subStatements,
+				sort,
+				30
+			);
+			setTotalHeight(_totalHeight);
+		}
+
+		// Update the ref with current value for next render
+		prevSubStatementsRef.current = subStatements;
+	}, [subStatements]);
+
+	useEffect(() => {
 		const _totalHeight = subStatements.reduce(
 			(acc: number, sub: Statement) => {
 				return acc + (sub.elementHight ?? 200) + 30;
@@ -93,6 +113,15 @@ const SuggestionCards: FC<Props> = ({
 	}
 
 	if (!statement) return null;
+
+	function hasOrderChanged(originalArray: Statement[], newArray: Statement[]) {
+		if (originalArray.length !== newArray.length) return true;
+
+		const _originalArray = originalArray.sort((a, b) => a.consensus - b.consensus);
+		const _newArray = newArray.sort((a, b) => a.consensus - b.consensus);
+
+		return _originalArray.some((item, index) => item.statementId !== _newArray[index].statementId);
+	}
 
 	return (
 		<div

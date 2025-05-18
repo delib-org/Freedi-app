@@ -58,7 +58,6 @@ const StatementBottomNav: FC<Props> = () => {
 	const getBasePath = () => {
 		const pathArray = location.pathname.split('/');
 		// Remove the last segment (current sort)
-		console.log('sort:', sort);
 		if (sort) {
 			pathArray.pop();
 		}
