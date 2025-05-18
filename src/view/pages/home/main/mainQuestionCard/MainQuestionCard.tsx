@@ -29,11 +29,12 @@ const MainQuestionCard: FC<Props> = ({ simpleStatement }) => {
 		<Link
 			className={styles.mainCard}
 			to={`/statement/${simpleStatement.statementId}/`}
-		>
-			<div className={styles.info}>
+		>			<div className={styles.info}>
 				<div className={styles.title}>
 					<div>{simpleStatement.statement}</div>
-					<StatementChatMore statement={simpleStatement} />
+					<div onClick={(e) => e.stopPropagation()}>
+						<StatementChatMore statement={simpleStatement} />
+					</div>
 				</div>
 
 				{lastMessage && <div className={styles.updates}>

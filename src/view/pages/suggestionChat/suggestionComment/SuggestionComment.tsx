@@ -156,9 +156,8 @@ const SuggestionComment: FC<Props> = ({ statement, parentStatement }) => {
 					</div>
 					<div className={styles.commentText} style={{ userSelect: 'text' }} >
 						{statement.statement}
-					</div>
-					<div className={styles.notifications}>
-						<StatementChatMore statement={statement} onlyCircle={true} useLink={false} />
+					</div>					<div className={styles.notifications}>
+						<StatementChatMore statement={statement} onlyCircle={true} useLink={false} asButton={false} />
 					</div>
 				</div>
 
