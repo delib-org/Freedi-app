@@ -65,14 +65,5 @@
   .reverseCheckboxLayout {
     margin: 1rem 0.5rem;
     flex-direction: row-reverse;
-
-    // .checkbox-icon {
-    //   order: 2; // checkbox icon after label
-    //   margin-left: 0.5rem;
-    // }
-
-    .checkbox-label {
-      color: black; // label before icon
-    }
   }
 }
