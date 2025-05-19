@@ -34,13 +34,14 @@ const SubGroupCard: FC<Props> = ({ statement }) => {
 					to={`/statement/${statement.statementId}`}
 					className={styles.type}
 				>
-					<div className={styles.text}>{text}</div>
-					<div
+					<div className={styles.text}>{text}</div>					<div
 						className={styles.iconWrapper}
 						style={{ color: backgroundColor }}
 					>
 						{Icon}
-						<div><StatementChatMore statement={statement} onlyCircle={true} /></div>
+						<div onClick={(e) => e.stopPropagation()}>
+							<StatementChatMore statement={statement} onlyCircle={true} />
+						</div>
 					</div>
 				</Link>
 				{shouldSeeVoting ? (

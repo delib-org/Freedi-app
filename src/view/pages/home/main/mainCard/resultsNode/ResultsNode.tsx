@@ -16,11 +16,12 @@ export const ResultsNode: FC<Props> = ({ statement }) => {
 				state={{
 					from: window.location.pathname,
 				}}
-				to={`/statement/${statement.statementId}/chat`}
-			>
+				to={`/statement/${statement.statementId}/chat`}			>
 				<Text statement={statement.statement} />
 
-				<StatementChatMore statement={statement} />
+				<div onClick={(e) => e.stopPropagation()}>
+					<StatementChatMore statement={statement} />
+				</div>
 			</Link>
 		</div>
 	);
