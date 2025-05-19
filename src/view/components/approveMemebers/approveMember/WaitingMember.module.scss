@@ -3,7 +3,7 @@ $memberbg: #f2f6ff;
 .wrapper {
   background-color: $memberbg;
   border-bottom: 1px solid #bdcef4;
-  padding: 0.2rem;
+  padding-bottom: 1rem;
   display: flex;
   flex-direction: column;
   user-select: none;
@@ -13,7 +13,7 @@ $memberbg: #f2f6ff;
     align-items: center;
     height: 62px;
     font-size: 16px;
-    gap: 1rem;
+    gap: 0.6rem;
     background-color: $memberbg;
     border-radius: 5px;
 
@@ -52,6 +52,7 @@ $memberbg: #f2f6ff;
 
   label,
   .groupStatus {
+    margin-bottom: 0.7rem;
     font-size: 14px;
     color: #7484a9;
   }
@@ -65,10 +66,11 @@ $memberbg: #f2f6ff;
 
   .detailRow {
     display: flex;
-    gap: 1.2rem;
+    gap: 1.4rem;
 
     .groupName {
       flex: auto;
+      height: 28px;
       color: var(--Text-Title, #191e29);
       font-size: 16px;
       font-weight: 700;

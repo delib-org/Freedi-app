@@ -10,6 +10,7 @@ interface CheckboxProps {
 	label: string;
 	isChecked: boolean;
 	onChange: (checked: boolean) => void;
+	className?: string;
 }
 
 const Checkbox: FC<CheckboxProps> = ({
@@ -17,6 +18,7 @@ const Checkbox: FC<CheckboxProps> = ({
 	label,
 	isChecked,
 	onChange,
+	className,
 }: CheckboxProps) => {
 	const { t } = useUserConfig();
 
@@ -33,7 +35,7 @@ const Checkbox: FC<CheckboxProps> = ({
 
 	return (
 		<div
-			className={`checkbox ${isChecked ? 'checked' : ''}`}
+			className={`checkbox ${isChecked ? 'checked' : ''} ${className ?? ''}`}
 			onClick={handleChange}
 			onKeyDown={handleKeyDown}
 			role='checkbox'

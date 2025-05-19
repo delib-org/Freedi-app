@@ -57,13 +57,14 @@ const WaitingList = () => {
 
 			{show && waitingList.length > 0 && (
 				<div className={`${styles.membersList} ${dir === "rtl" ? styles.rtl : ""}`}>
-					<h3>{t("Waiting List")}</h3>
+					<h3 className="listTitle">{t("Waiting List")}</h3>
 
 					<div className={styles.selectAllWrapper}>
 						<Checkbox
-							label={allSelected ? "Unselect All" : "Select All"}
+							label={allSelected ? "Deselect All" : "Select All"}
 							isChecked={allSelected}
 							onChange={toggleSelectAll}
+							className={styles.reverseCheckboxLayout}
 						/>
 					</div>
 
