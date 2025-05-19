@@ -10,12 +10,13 @@ import Checkbox from '../../checkbox/Checkbox'
 
 interface Props {
 	wait: WaitingMember
+	isChecked: boolean;
+	onCheckChange: (checked: boolean) => void;
 }
-const ApproveMember: FC<Props> = ({ wait }) => {
+const ApproveMember: FC<Props> = ({ wait, isChecked, onCheckChange }) => {
 	const { t } = useUserConfig();
 	const [showDetails, setShowDetails] = useState(false);
 	const [isVisible, setIsVisible] = useState(true);
-	const [isChecked, setIsChecked] = useState(false);
 
 	function handleApprove() {
 		approveMembership(wait, true)
@@ -38,7 +39,9 @@ const ApproveMember: FC<Props> = ({ wait }) => {
 				<Checkbox
 					name={`select-${wait.userId}`}
 					isChecked={isChecked}
-					onChange={(checked) => setIsChecked(checked)} label={''} />
+					onChange={onCheckChange}
+					label=""
+				/>
 				<img src={wait.user.photoURL || avatar} className={styles.avatar} alt="User avatar" />
 
 				<div className={styles.userInfo}>
