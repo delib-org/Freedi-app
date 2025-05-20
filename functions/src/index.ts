@@ -290,3 +290,24 @@ exports.updateAgrees = createFirestoreFunction(
 	updateAgrees,
 	'updateAgrees'
 );
+
+// Export email-related functions
+import { testEmailTemplates } from './email-test';
+
+// Export for email template testing (for development purposes)
+export const testEmails = onRequest(async (req: Request, res: Response) => {
+	try {
+		const email = req.query.email;
+		if (!email || typeof email !== 'string') {
+			res.status(400).send('Email parameter is required');
+
+			return;
+		}
+
+		await testEmailTemplates(email);
+		res.send(`Test emails sent to ${email}`);
+	} catch (error) {
+		console.error('Error in test emails function:', error);
+		res.status(500).send('Error sending test emails');
+	}
+});

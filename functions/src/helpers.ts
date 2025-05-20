@@ -41,8 +41,6 @@ const transporter = nodemailer.createTransport({
 });
 export async function sendEmail({ to, subject, body }: { to: string, subject: string, body: string }) {
 	// Send email logic here
-	console.log(`Sending email to ${to} with subject "${subject}" and body "${body}"`);
-
 	try {
 
 		const mailOptions = {

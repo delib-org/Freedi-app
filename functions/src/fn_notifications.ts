@@ -12,6 +12,7 @@ import { FirestoreEvent } from 'firebase-functions/firestore';
 import { QueryDocumentSnapshot } from 'firebase-admin/firestore';
 import * as admin from 'firebase-admin';
 import { sendEmail } from './helpers';
+import { createReplyNotificationEmail } from './email-templates';
 
 /**
  * Updates in-app notifications when a new statement is created as a reply.
@@ -49,7 +50,6 @@ export async function updateInAppNotifications(
 				};
 			}
 		);
-
 		//get email subscribers
 		const emailSubscribers = subscribersInApp.filter(
 			(subscriber: StatementSubscription) => subscriber.getEmailNotification && subscriber.user.email
@@ -59,10 +59,17 @@ export async function updateInAppNotifications(
 		for (const subscriber of emailSubscribers) {
 			if (!subscriber.user.email) continue;
 
+			const emailHtml = createReplyNotificationEmail({
+				statementId: newStatement.statementId,
+				replyText: newStatement.statement,
+				replierName: newStatement.creator.displayName || 'Anonymous',
+				recipientName: subscriber.user.displayName
+			});
+
 			const emailResult = await sendEmail({
 				to: subscriber.user.email,
-				subject: `New reply to your statement`,
-				body: `You have a new reply to your statement: ${newStatement.statement}`
+				subject: `New proposal from ${newStatement.creator.displayName || 'Anonymous'}`,
+				body: emailHtml
 			});
 
 			if (!emailResult.success) {
