@@ -7,6 +7,7 @@ import { useUserConfig } from "@/controllers/hooks/useUserConfig";
 import ApproveMember from "./approveMember/WaitingMember";
 import Checkbox from "../checkbox/Checkbox";
 import { approveMultiple, rejectMultiple } from "@/services/membershipActions";
+import exitBtn from "@/assets/icons/close.svg";
 
 const WaitingList = () => {
 	const { waitingList } = useApproveMembership();
@@ -50,7 +51,11 @@ const WaitingList = () => {
 
 			{show && waitingList.length > 0 && (
 				<div className={`${styles.membersList} ${dir === "rtl" ? styles.rtl : ""}`}>
-					<h3 className="listTitle">{t("Waiting List")}</h3>
+					<div className={styles.listHeader}>
+						<h3 className="listTitle">{t("Waiting List")}</h3>
+						<button className={styles.exitButton} onClick={() => setShow(false)}>
+							<img src={exitBtn} alt="Close" /></button>
+					</div>
 
 					<div className={styles.selectAllWrapper}>
 						<Checkbox
@@ -86,6 +91,10 @@ const WaitingList = () => {
 							}}
 						/>
 					))}
+
+					<button className={styles.bottomCloseButton} onClick={() => setShow(false)}>
+						{t("Close")}
+					</button>
 				</div>
 			)}
 		</div>
