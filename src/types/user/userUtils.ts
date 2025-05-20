@@ -10,5 +10,6 @@ export function convertFirebaseUserToCreator(user: User | Creator): Creator {
 		photoURL: user.photoURL,
 		uid: user.uid,
 		isAnonymous: user.isAnonymous,
+		email: user.email,
 	};
 }

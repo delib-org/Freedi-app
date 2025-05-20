@@ -11,6 +11,7 @@ import { db } from '.';
 import { FirestoreEvent } from 'firebase-functions/firestore';
 import { QueryDocumentSnapshot } from 'firebase-admin/firestore';
 import * as admin from 'firebase-admin';
+import { sendEmail } from './helpers';
 
 /**
  * Updates in-app notifications when a new statement is created as a reply.
@@ -49,6 +50,26 @@ export async function updateInAppNotifications(
 			}
 		);
 
+		//get email subscribers
+		const emailSubscribers = subscribersInApp.filter(
+			(subscriber: StatementSubscription) => subscriber.getEmailNotification && subscriber.user.email
+		);
+
+		//send emails
+		for (const subscriber of emailSubscribers) {
+			if (!subscriber.user.email) continue;
+
+			const emailResult = await sendEmail({
+				to: subscriber.user.email,
+				subject: `New reply to your statement`,
+				body: `You have a new reply to your statement: ${newStatement.statement}`
+			});
+
+			if (!emailResult.success) {
+				logger.error('Error sending email:', emailResult.error);
+			}
+		}
+
 		//update last message in the parent statement
 		await db.doc(`${Collections.statements}/${statement.parentId}`).update({
 			lastMessage: {
@@ -78,7 +99,6 @@ async function fetchNotificationData(parentId: string) {
 	const parentStatementSubscribersCB = db
 		.collection(Collections.statementsSubscribe)
 		.where('statementId', '==', parentId)
-		.where('getInAppNotification', '==', true)
 		.get();
 	const askedToBeNotifiedCB = db
 		.collection(Collections.askedToBeNotified)

@@ -18,6 +18,7 @@
 		"eslint.enable": true,
 		"eslint.useFlatConfig": true,
 		"cSpell.words": [
+			"BREVO",
 			"Freedi",
 			"Millis",
 			"reactflow",
