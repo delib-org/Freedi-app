@@ -1,9 +1,61 @@
 $memberbg: #f2f6ff;
 
+.actions {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  gap: 3rem;
+  margin: 1rem 0;
+
+  .approveButton {
+    flex: unset;
+    width: 165px;
+    height: 44px;
+    background: #4fab9a;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 25px;
+    font-size: 15px;
+    cursor: pointer;
+
+    box-shadow:
+      0px 2px 4px 0px #26385438,
+      0px 9px 6px 0px #2638541c,
+      0px 16px 7px 0px #26385408;
+
+    &:hover {
+      background-color: #37756a;
+    }
+  }
+
+  .rejectButton {
+    flex: unset;
+    width: 98px;
+    height: 44px;
+    background: transparent;
+    color: var(--Text-Error, #f74a4d);
+    border: 1px solid var(--Text-Error, #f74a4d);
+    font-size: 15px;
+    font-family:
+      "Gill Sans", "Gill Sans MT", Calibri, "Trebuchet MS", sans-serif;
+    padding: 8px 12px;
+    border-radius: 25px;
+    font-weight: 800;
+    cursor: pointer;
+
+    &:hover {
+      color: var(--Text-Error, #be3b3d);
+      border: 1px solid var(--Text-Error, #be3b3d);
+      background-color: rgb(228, 228, 228);
+    }
+  }
+}
+
 .wrapper {
   background-color: $memberbg;
   border-bottom: 1px solid #bdcef4;
-  padding-bottom: 1rem;
+  padding-bottom: 0.5rem;
   display: flex;
   flex-direction: column;
   user-select: none;
@@ -13,6 +65,7 @@ $memberbg: #f2f6ff;
     align-items: center;
     height: 62px;
     font-size: 16px;
+    margin-top: 0.5rem;
     gap: 0.6rem;
     background-color: $memberbg;
     border-radius: 5px;
@@ -69,12 +122,19 @@ $memberbg: #f2f6ff;
     gap: 1.4rem;
 
     .groupName {
-      flex: auto;
+      display: flex;
+      flex-direction: row;
+      justify-content: end;
       height: 28px;
       color: var(--Text-Title, #191e29);
       font-size: 16px;
       font-weight: 700;
     }
+  }
+
+  .detailRow.statusRow {
+    justify-content: space-between;
+    align-items: center;
   }
 
   .detailsPanel {
@@ -87,56 +147,6 @@ $memberbg: #f2f6ff;
 
     div {
       font-size: 14px;
-    }
-
-    .actions {
-      display: flex;
-      flex-direction: row;
-      justify-content: space-between;
-      gap: 3rem;
-      margin-top: 0.5rem;
-
-      .approveButton {
-        flex: unset;
-        width: 165px;
-        height: 44px;
-        background: #4fab9a;
-        color: white;
-        border: none;
-        padding: 8px 12px;
-        border-radius: 25px;
-        font-size: 15px;
-        cursor: pointer;
-
-        box-shadow:
-          0px 2px 4px 0px #26385438,
-          0px 9px 6px 0px #2638541c,
-          0px 16px 7px 0px #26385408;
-
-        &:hover {
-          background-color: #37756a;
-        }
-      }
-
-      .rejectButton {
-        flex: unset;
-        width: 98px;
-        height: 44px;
-        background: transparent;
-        color: var(--Text-Error, #f74a4d);
-        border: 1px solid var(--Text-Error, #f74a4d);
-        font-size: 15px;
-        padding: 8px 12px;
-        border-radius: 25px;
-        font-weight: 800;
-        cursor: pointer;
-
-        &:hover {
-          color: var(--Text-Error, #be3b3d);
-          border: 1px solid var(--Text-Error, #be3b3d);
-          background-color: rgb(228, 228, 228);
-        }
-      }
     }
   }
 }

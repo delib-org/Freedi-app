@@ -1,12 +1,12 @@
+import collapseIcon from '@/assets/icons/Collapse.png'
+import expandIcon from '@/assets/icons/Expand.png'
 import avatar from '@/assets/images/avatar.jpg'
-import { approveMembership } from '@/controllers/db/membership/setMembership'
 import { useUserConfig } from '@/controllers/hooks/useUserConfig'
+import { approveSingle, rejectSingle } from '@/services/membershipActions'
 import { WaitingMember } from 'delib-npm'
 import { FC, useState } from 'react'
-import styles from './WaitingMember.module.scss'
-import expandIcon from '@/assets/icons/Expand.png'
-import collapseIcon from '@/assets/icons/Collapse.png'
 import Checkbox from '../../checkbox/Checkbox'
+import styles from './WaitingMember.module.scss'
 
 interface Props {
 	wait: WaitingMember
@@ -19,15 +19,11 @@ const ApproveMember: FC<Props> = ({ wait, isChecked, onCheckChange }) => {
 	const [isVisible, setIsVisible] = useState(true);
 
 	function handleApprove() {
-		approveMembership(wait, true)
-		setIsVisible(false);
+		approveSingle(wait, () => setIsVisible(false));
 	}
+
 	function handleReject() {
-		const confirmReject = window.confirm(t("Are you sure you want to reject this member?"));
-		if (confirmReject) {
-			approveMembership(wait, false); // Call approveMembership with false to reject the member
-			setIsVisible(false);
-		}
+		rejectSingle(wait, () => setIsVisible(false));
 	}
 
 	if (!isVisible) return null;
@@ -67,7 +63,7 @@ const ApproveMember: FC<Props> = ({ wait, isChecked, onCheckChange }) => {
 						<label>{t("Group")}</label>
 						<span className={styles.groupName}>{wait.statement.statement}</span>
 					</div>
-					<div className={styles.detailRow}>
+					<div className={`${styles.detailRow} ${styles.statusRow}`}>
 						<label>{t("Group Status")}</label>
 						<span className={styles.groupStatus}>{wait.statement.membership.access}</span>
 					</div>

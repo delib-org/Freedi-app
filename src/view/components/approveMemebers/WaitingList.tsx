@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { useApproveMembership } from "./WaitingListVM";
 import MembersIcon from "@/assets/icons/group.svg?react";
+import waitingStyles from "./approveMember/WaitingMember.module.scss";
 import styles from "./WaitingList.module.scss";
-import "./approveMember/WaitingMember.module.scss";
 import { useUserConfig } from "@/controllers/hooks/useUserConfig";
 import ApproveMember from "./approveMember/WaitingMember";
 import Checkbox from "../checkbox/Checkbox";
-import { approveMembership } from "@/controllers/db/membership/setMembership";
+import { approveMultiple, rejectMultiple } from "@/services/membershipActions";
 
 const WaitingList = () => {
 	const { waitingList } = useApproveMembership();
@@ -22,22 +22,15 @@ const WaitingList = () => {
 	};
 
 	const handleApproveAll = () => {
-		selectedIds.forEach((id) => {
-			const member = waitingList.find((m) => m.statementsSubscribeId === id);
-			if (member) approveMembership(member, true);
-		});
+		const membersToApprove = waitingList.filter(m => selectedIds.includes(m.statementsSubscribeId));
+		approveMultiple(membersToApprove);
 		setSelectedIds([]);
 	};
 
 	const handleDenyAll = () => {
-		const confirmReject = window.confirm(t("Are you sure you want to reject all selected members?"));
-		if (confirmReject) {
-			selectedIds.forEach((id) => {
-				const member = waitingList.find((m) => m.statementsSubscribeId === id);
-				if (member) approveMembership(member, false);
-			});
-			setSelectedIds([]);
-		}
+		const membersToReject = waitingList.filter(m => selectedIds.includes(m.statementsSubscribeId));
+		rejectMultiple(membersToReject);
+		setSelectedIds([]);
 	};
 
 	const numberMembers = waitingList.length < 99 ? waitingList.length : "99+";
@@ -69,12 +62,12 @@ const WaitingList = () => {
 					</div>
 
 					{selectedIds.length > 0 && (
-						<div className={styles.bulkActions}>
-							<button className="approveButton" onClick={handleApproveAll}>
-								{t("Approve Selected")}
+						<div className={waitingStyles.actions}>
+							<button className={waitingStyles.approveButton} onClick={handleApproveAll}>
+								{t("Approve All")}
 							</button>
-							<button className="rejectButton" onClick={handleDenyAll}>
-								{t("Deny Selected")}
+							<button className={waitingStyles.rejectButton} onClick={handleDenyAll}>
+								{t("Deny All")}
 							</button>
 						</div>
 					)}
