@@ -46,7 +46,7 @@ const StatementChatMore: FC<Props> = ({ statement, onlyCircle, useLink = true, a
 						: `9+`}
 				</div>
 			)}
-			{!onlyCircle && < ChatIcon />}
+			{!onlyCircle&&<ChatIcon />}
 		</div>);
 
 	return asButton ? (
