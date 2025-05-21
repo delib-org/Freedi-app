@@ -7,7 +7,7 @@ import { useUserConfig } from "@/controllers/hooks/useUserConfig";
 import ApproveMember from "./approveMember/WaitingMember";
 import Checkbox from "../checkbox/Checkbox";
 import { approveMultiple, rejectMultiple } from "@/services/membershipActions";
-import exitBtn from "@/assets/icons/close.svg";
+import closeList from "@/assets/icons/closeList.png";
 
 const WaitingList = () => {
 	const { waitingList } = useApproveMembership();
@@ -50,12 +50,15 @@ const WaitingList = () => {
 			</button>
 
 			{show && waitingList.length > 0 && (
-				<div className={`${styles.membersList} ${dir === "rtl" ? styles.rtl : ""}`}>
-					<div className={styles.listHeader}>
-						<h3 className="listTitle">{t("Waiting List")}</h3>
-						<button className={styles.exitButton} onClick={() => setShow(false)}>
-							<img src={exitBtn} alt="Close" /></button>
-					</div>
+				<div className={`${styles.membersList} ${dir === "rtl" ? styles.rtl : styles.ltr}`}>
+					<button
+						className={styles.exitButton}
+						onClick={() => setShow(false)}
+					>
+						<img src={closeList} alt="Close" />
+					</button>
+
+					<h3 className={styles.listTitle}>{t("Waiting List")}</h3>
 
 					<div className={styles.selectAllWrapper}>
 						<Checkbox
@@ -66,7 +69,7 @@ const WaitingList = () => {
 						/>
 					</div>
 
-					{selectedIds.length > 0 && (
+					{selectedIds.length === waitingList.length && (
 						<div className={waitingStyles.actions}>
 							<button className={waitingStyles.approveButton} onClick={handleApproveAll}>
 								{t("Approve All")}

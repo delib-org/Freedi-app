@@ -54,43 +54,60 @@
   }
 }
 
-.listHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin: 0 0.5rem;
+.membersList {
+  position: relative;
+  padding-top: 3rem;
+}
 
-  h3 {
-    margin: 1rem 0;
-    font-size: 1.2rem;
+.exitButton {
+  position: absolute;
+  margin: 1rem;
+
+  .ltr & {
+    right: 10px;
   }
 
-  .exitButton {
-    background: none;
-    border: none;
-    cursor: pointer;
-    transition: color 0.2s ease;
+  .rtl & {
+    left: 10px;
+  }
+}
 
-    &:hover {
-      color: #000;
-    }
+.listTitle {
+  position: relative;
+  top: 2rem;
+  margin-bottom: 1rem;
+  font-size: 1.2rem;
+  font-weight: bold;
+
+  .ltr & {
+    left: 0;
+  }
+
+  .rtl & {
+    right: 0;
   }
 }
 
 .bottomCloseButton {
   align-self: center;
   margin-top: 1rem;
-  background-color: #7484a9;
-  color: white;
-  border: none;
+  width: 89px;
+  height: 44px;
+  background-color: transparent;
+  color: #285edc;
+  border: 1px solid #285edc;
   border-radius: 20px;
   padding: 0.5rem 1rem;
   font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   cursor: pointer;
   transition: background-color 0.2s ease;
 
   &:hover {
-    background-color: #5f6f94;
+    background-color: rgba(40, 94, 220, 0.1);
   }
 }
 
@@ -99,6 +116,6 @@
 }
 
 .reverseCheckboxLayout {
-  margin: 1rem 0.5rem;
+  margin: 2rem 0.5rem;
   flex-direction: row-reverse;
 }
