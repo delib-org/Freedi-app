@@ -86,7 +86,7 @@ $memberbg: #f2f6ff;
       display: flex;
       flex-direction: row;
       justify-content: start;
-      width: 120px;
+      width: 105px;
       height: 28px;
       font-size: 16px;
       color: #2a3346;
@@ -96,6 +96,12 @@ $memberbg: #f2f6ff;
       }
     }
 
+    .expandBtn {
+      margin: 0.3rem;
+      display: flex;
+      flex-direction: row;
+      justify-content: end;
+    }
     .requestDate {
       height: 21px;
       font-size: 14px;
@@ -125,7 +131,7 @@ $memberbg: #f2f6ff;
       display: flex;
       flex-direction: row;
       justify-content: end;
-      height: 28px;
+      height: 26px;
       color: var(--Text-Title, #191e29);
       font-size: 16px;
       font-weight: 700;
@@ -139,7 +145,7 @@ $memberbg: #f2f6ff;
 
   .detailsPanel {
     width: 100%;
-    padding: 0.5rem;
+    padding: 1rem;
     background-color: $memberbg;
     display: flex;
     flex-direction: column;

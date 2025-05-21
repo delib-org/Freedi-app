@@ -74,8 +74,7 @@
 
 .listTitle {
   position: relative;
-  top: 2rem;
-  margin-bottom: 1rem;
+  top: 2.5rem;
   font-size: 1.2rem;
   font-weight: bold;
 
@@ -90,15 +89,13 @@
 
 .bottomCloseButton {
   align-self: center;
-  margin-top: 1rem;
+  margin: 2rem 0 1rem 0;
   width: 89px;
-  height: 44px;
-  background-color: transparent;
   color: #285edc;
   border: 1px solid #285edc;
   border-radius: 20px;
-  padding: 0.5rem 1rem;
-  font-size: 0.95rem;
+  font-size: 16px;
+  font-weight: 600;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -116,6 +113,6 @@
 }
 
 .reverseCheckboxLayout {
-  margin: 2rem 0.5rem;
+  margin: 2.5rem 0.3rem 0 0.7rem;
   flex-direction: row-reverse;
 }
