@@ -61,7 +61,7 @@
 
 .exitButton {
   position: absolute;
-  margin: 1rem;
+  margin: 1rem 0.5rem;
 
   .ltr & {
     right: 10px;
@@ -114,6 +114,6 @@
 }
 
 .reverseCheckboxLayout {
-  margin: 2.5rem 0.3rem 0 0.7rem;
+  margin: 2.5rem 0 0 0.5rem;
   flex-direction: row-reverse;
 }
