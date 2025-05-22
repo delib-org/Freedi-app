@@ -1,13 +1,14 @@
-import { useState } from "react";
-import { useApproveMembership } from "./WaitingListVM";
+import closeList from "@/assets/icons/closeList.png";
 import MembersIcon from "@/assets/icons/group.svg?react";
+import { useUserConfig } from "@/controllers/hooks/useUserConfig";
+import { approveMultiple, rejectMultiple } from "@/services/membershipActions";
+import { useState } from "react";
+import Checkbox from "../checkbox/Checkbox";
+import ApproveMember from "./approveMember/WaitingMember";
 import waitingStyles from "./approveMember/WaitingMember.module.scss";
 import styles from "./WaitingList.module.scss";
-import { useUserConfig } from "@/controllers/hooks/useUserConfig";
-import ApproveMember from "./approveMember/WaitingMember";
-import Checkbox from "../checkbox/Checkbox";
-import { approveMultiple, rejectMultiple } from "@/services/membershipActions";
-import closeList from "@/assets/icons/closeList.png";
+import "@/view/style/buttons.scss";
+import { useApproveMembership } from "./WaitingListVM";
 
 const WaitingList = () => {
 	const { waitingList } = useApproveMembership();
@@ -71,10 +72,10 @@ const WaitingList = () => {
 
 					{selectedIds.length === waitingList.length && (
 						<div className={waitingStyles.actions}>
-							<button className={waitingStyles.approveButton} onClick={handleApproveAll}>
+							<button className="approveButton" onClick={handleApproveAll}>
 								{t("Approve All")}
 							</button>
-							<button className={waitingStyles.rejectButton} onClick={handleDenyAll}>
+							<button className="rejectButton" onClick={handleDenyAll}>
 								{t("Deny All")}
 							</button>
 						</div>
@@ -95,7 +96,7 @@ const WaitingList = () => {
 						/>
 					))}
 
-					<button className={styles.bottomCloseButton} onClick={() => setShow(false)}>
+					<button className="bottomCloseButton" onClick={() => setShow(false)}>
 						{t("Close")}
 					</button>
 				</div>

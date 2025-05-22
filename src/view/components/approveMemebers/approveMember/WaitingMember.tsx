@@ -7,6 +7,7 @@ import { WaitingMember } from 'delib-npm'
 import { FC, useState } from 'react'
 import Checkbox from '../../checkbox/Checkbox'
 import styles from './WaitingMember.module.scss'
+import "@/view/style/buttons.scss";
 
 interface Props {
 	wait: WaitingMember
@@ -69,10 +70,10 @@ const ApproveMember: FC<Props> = ({ wait, isChecked, onCheckChange }) => {
 					</div>
 
 					<div className={styles.actions}>
-						<button className={styles.approveButton} onClick={handleApprove}>
+						<button className="approveButton" onClick={handleApprove}>
 							{t("Approve")}
 						</button>
-						<button className={styles.rejectButton} onClick={handleReject}>
+						<button className="rejectButton" onClick={handleReject}>
 							{t("Deny")}
 						</button>
 					</div>
