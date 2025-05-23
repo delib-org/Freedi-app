@@ -1,7 +1,7 @@
 .suggestionComment {
-	display: block;
-	border-radius: 5px;
-	box-shadow: 0px 0px 5px 0px #cccccc73;
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
 
 	@media screen and (max-width: 768px) {
 		margin: 8px;
@@ -13,41 +13,24 @@
 		align-items: center;
 		cursor: pointer;
 		position: relative;
-		padding: 0.5rem;
 		justify-content: space-between;
-		background-color: rgb(235, 235, 235);
 		width: 100%;
+		padding-inline-end: 1rem;
 
-		&:hover {
-			background-color: rgba(0, 0, 0, 0.05);
-		}
-
-		.commentCreator {
+		.commentCard {
+			width: 100%;
 			display: flex;
-			align-items: center;
-			gap: 1rem;
-
-			@media screen and (max-width: 768px) {
-				display: flex;
-				flex-direction: column;
-			}
-		}
-
-		.creatorText {
-			display: flex;
-			flex-direction: row;
-			gap: 0.5rem;
 		}
 
 		.notifications {
-			transform: translateY(-.2rem);
+			transform: translateY(-0.2rem);
 		}
 	}
 
 	.accordionIcon {
-		margin-left: 0.5rem;
-		font-size: 0.8rem;
+		width: 1.2rem;
 		transition: transform 0.2s ease;
+		color: #1b45a7;
 
 		&.open {
 			transform: rotate(180deg);
@@ -57,25 +40,19 @@
 	.subComments {
 		display: flex;
 		flex-direction: column;
-		gap: 0.5rem;
-		padding: 1rem;
+		gap: 1rem;
 		animation: fadeIn 0.3s ease;
+		margin-inline-start: 3rem;
 	}
 
 	.replyButton {
-		background-color: rgb(149, 103, 223);
-		color: white;
-		padding: 0.2rem 0.5rem;
-		border-radius: 2rem;
-		transform: translateX(-100%);
-		margin-bottom: 2rem;
+		margin: auto;
 	}
 
 	.commentInput {
 		width: -moz-available;
 		width: -webkit-fill-available;
 
-		margin: 1rem;
 		box-sizing: border-box;
 		resize: none;
 		display: flex;
@@ -83,6 +60,7 @@
 		gap: 1rem;
 		position: relative;
 		margin-top: 3rem;
+		margin-inline-start: 3rem;
 
 		textarea {
 			width: 100%;

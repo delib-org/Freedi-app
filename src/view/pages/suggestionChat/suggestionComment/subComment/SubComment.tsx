@@ -2,24 +2,32 @@ import { Statement } from 'delib-npm'
 import { FC } from 'react';
 import styles from './SubComment.module.scss';
 import ProfileImage from '@/view/components/profileImage/ProfileImage';
-import { useSelector } from 'react-redux';
-import { creatorSelector } from '@/redux/creator/creatorSlice';
-import { emojiTransformer } from '@/controllers/general/helpers';
-import Text from '@/view/components/text/Text';
+import CreatorEvaluationIcon from '../CreatorEvaluationIcon/CreatorEvaluationIcon';
+import { useSuggestionComment } from '../SuggestionCommentMV';
 
 interface Props {
 	statement: Statement;
+	parentStatement: Statement
 }
 
-const SubComment: FC<Props> = ({ statement }) => {
-	const user = useSelector(creatorSelector);
-	const isMe = statement.creator.uid === user?.uid;
+const SubComment: FC<Props> = ({ statement, parentStatement }) => {
+	const { evaluationNumber } = useSuggestionComment({ parentStatement, statement });
 
 	return (
 		<div
-			className={`${styles.subComment} ${isMe && styles["subComment--isMe"]}`}>
-			<ProfileImage statement={statement} />:	<div className={styles.text}>
-				<Text statement={emojiTransformer(statement.statement)} />
+			className={styles.subComment}>
+			{/* // <ProfileImage statement={statement} />:	<div className={styles.text}>
+			// 	<Text statement={emojiTransformer(statement.statement)} />
+			// </div> */}
+			<ProfileImage statement={statement} />
+			<div className={styles.commentCard}>
+				<div className={styles.creatorInfo}>
+					<span className={styles.creatorName}>{statement.creator.displayName}</span>
+					<CreatorEvaluationIcon evaluationNumber={evaluationNumber} />
+				</div>
+				<div className={styles.commentText} style={{ userSelect: 'text' }} >
+					{statement.statement}
+				</div>
 			</div>
 		</div>
 	)
