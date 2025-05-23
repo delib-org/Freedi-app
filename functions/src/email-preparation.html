@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Email Template Preview</title>
+	<style>
+		:root {
+			--primary-color: rgb(132, 187, 247);
+			--primary-color-hover: rgb(88, 153, 223);
+			--text-color: #333333;
+			--background-color: #f9f9f9;
+			--border-color: #eaeaea;
+			--footer-text-color: #777777;
+			--link-color: #1f5895;
+			--container-padding: 25px;
+			--button-padding: 12px 24px;
+			--font-family: Arial, sans-serif;
+		}
+
+		body {
+			font-family: var(--font-family);
+			line-height: 1.6;
+			color: var(--text-color);
+			margin: 0;
+			padding: 0;
+		}
+
+		/* Email styles */
+		.container {
+			background-color: var(--background-color);
+			border-radius: 8px;
+			padding: var(--container-padding);
+			max-width: 600px;
+			margin: 20px auto;
+		}
+
+		.header {
+			text-align: center;
+			margin-bottom: 20px;
+		}
+
+		.logo {
+			max-width: 150px;
+			margin-bottom: 15px;
+		}
+
+		.button-container {
+			text-align: center;
+			margin: 30px 0;
+		}
+
+		.button {
+			background-color: var(--primary-color);
+			color: white;
+			padding: var(--button-padding);
+			text-decoration: none;
+			border-radius: 4px;
+			font-weight: bold;
+			display: inline-block;
+		}
+
+		.button:hover {
+			background-color: var(--primary-color-hover);
+		}
+
+		.button a {
+			color: white;
+		}
+
+		.message {
+			margin: 20px 0;
+			line-height: 1.8;
+		}
+
+		.footer {
+			margin-top: 30px;
+			font-size: 12px;
+			text-align: center;
+			color: var(--footer-text-color);
+			border-top: 1px solid var(--border-color);
+			padding-top: 20px;
+		}
+	</style>
+</head>
+
+<body>
+	<div id="email-container"></div>
+
+	<script>
+		// Email template generator function
+		function generateEmailContent(options) {
+			const {
+				title,
+				greeting,
+				message,
+				buttonText,
+				buttonUrl,
+				showButtonLink
+			} = options;
+
+			// Create the HTML structure directly without nesting a complete HTML document
+			const emailHTML = `
+            <div class="container">
+                <div class="header">
+                    <h2>${title}</h2>
+                </div>
+               
+                <p>${greeting}</p>
+               
+                <div class="message">
+                    <p>${message}</p>
+                </div>
+               
+                <div class="button-container">
+                    <a href="${buttonUrl}" class="button">${buttonText}</a>
+                </div>
+               
+                ${showButtonLink ? `
+                <p>If you're having trouble with the button above, you can also copy and paste the following link into your browser:</p>
+                <p style="word-break: break-all;">${buttonUrl}</p>
+                ` : ''}
+               
+                <p>Thank you for using Freedi!</p>
+               
+                <div class="footer">
+                    <p>This is an automated message. Please do not reply to this email.</p>
+                    <p><a href="https://freedi.co" style="color: var(--link-color); text-decoration: none;">Freedi.co</a></p>
+                </div>
+            </div>`;
+
+			return emailHTML;
+		}
+
+		// Default data
+		const defaultEmailData = {
+			title: "Welcome to Freedi!",
+			greeting: "Hello John,",
+			message: "Thank you for signing up with Freedi. We're excited to have you on board! Your account has been successfully created and is now ready to use.",
+			buttonText: "Get Started",
+			buttonUrl: "https://freedi.co/dashboard",
+			showButtonLink: true
+		};
+
+		// Initialize the email template on page load with default data
+		document.addEventListener('DOMContentLoaded', function () {
+			const emailContainer = document.getElementById('email-container');
+			const emailContent = generateEmailContent(defaultEmailData);
+			emailContainer.innerHTML = emailContent;
+		});
+
+		// For compatibility with external usage, keep the original template function
+		function generateEmailTemplate(options) {
+			const {
+				title,
+				greeting,
+				message,
+				buttonText,
+				buttonUrl,
+				showButtonLink = true
+			} = options;
+
+			return `<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        :root {
+            --primary-color: rgb(132, 187, 247);
+            --primary-color-hover: rgb(88, 153, 223);
+            --text-color: #333333;
+            --background-color: #f9f9f9;
+            --border-color: #eaeaea;
+            --footer-text-color: #777777;
+            --link-color: #1f5895;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .container {
+            background-color: var(--background-color);
+            border-radius: 8px;
+            padding: 25px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .logo {
+            max-width: 150px;
+            margin-bottom: 15px;
+        }
+        .button-container {
+            text-align: center;
+            margin: 30px 0;
+        }
+        .button {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: bold;
+            display: inline-block;
+        }
+        .button:hover {
+            background-color: var(--primary-color-hover);
+        }
+        .button a {
+            color: white;
+        }
+   
+        .message {
+            margin: 20px 0;
+            line-height: 1.8;
+        }
+        .footer {
+            margin-top: 30px;
+            font-size: 12px;
+            text-align: center;
+            color: var(--footer-text-color);
+            border-top: 1px solid var(--border-color);
+            padding-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h2>${title}</h2>
+        </div>
+       
+        <p>${greeting}</p>
+       
+        <div class="message">
+            <p>${message}</p>
+        </div>
+       
+        <div class="button-container">
+            <a href="${buttonUrl}" class="button">${buttonText}</a>
+        </div>
+       
+        ${showButtonLink ? `
+        <p>If you're having trouble with the button above, you can also copy and paste the following link into your browser:</p>
+        <p style="word-break: break-all;">${buttonUrl}</p>
+        ` : ''}
+       
+        <p>Thank you for using Freedi!</p>
+       
+        <div class="footer">
+            <p>This is an automated message. Please do not reply to this email.</p>
+            <p><a href="https://freedi.co" style="color: var(--link-color); text-decoration: none;">Freedi.co</a></p>
+        </div>
+    </div>
+</body>
+</html>`;
+		}
+	</script>
+</body>
+
+</html>
