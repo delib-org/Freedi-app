@@ -9,8 +9,9 @@ import ChatIcon from '@/assets/icons/roundedChatDotIcon.svg?react';
 
 import { SimpleStatement, Statement } from 'delib-npm';
 import { useSelector } from 'react-redux';
-import { inAppNotificationsCountSelectorForStatement } from '@/redux/notificationsSlice/notificationsSlice';
-import { useAuthentication } from '@/controllers/hooks/useAuthentication';
+import { inAppNotificationsSelector } from '@/redux/notificationsSlice/notificationsSlice';
+import { NotificationType } from '@/types/notification/Notification';
+import { creatorSelector } from '@/redux/creator/creatorSlice';
 
 interface Props {
 	statement: Statement | SimpleStatement;
@@ -19,15 +20,21 @@ interface Props {
 	asButton?: boolean;
 }
 
-const StatementChatMore: FC<Props> = ({ statement, onlyCircle, useLink = true, asButton = true }) => {
-
+const StatementChatMore: FC<Props> = ({
+	statement,
+	onlyCircle,
+	useLink = true,
+	asButton = true,
+}) => {
 	const navigate = useNavigate();
-	const { user } = useAuthentication();
 
 	// Redux store
-	const notifications = useSelector(inAppNotificationsCountSelectorForStatement(statement.statementId))
 
-	const countMessages = notifications.filter(notification => notification.creatorName !== user?.displayName).length;
+	const creator = useSelector(creatorSelector);
+
+	const inAppNotificationsList: NotificationType[] = useSelector(
+		inAppNotificationsSelector
+	).filter((n) => n.creatorId !== creator?.uid);
 
 	const handleClick = () => {
 		if (useLink) {
@@ -39,15 +46,16 @@ const StatementChatMore: FC<Props> = ({ statement, onlyCircle, useLink = true, a
 
 	const content = (
 		<div className='icon'>
-			{countMessages > 0 && (
+			{inAppNotificationsList.length > 0 && (
 				<div className='redCircle'>
-					{countMessages < 10
-						? countMessages
+					{inAppNotificationsList.length < 10
+						? inAppNotificationsList.length
 						: `9+`}
 				</div>
 			)}
-			{!onlyCircle && < ChatIcon />}
-		</div>);
+			{!onlyCircle && <ChatIcon />}
+		</div>
+	);
 
 	return asButton ? (
 		<button
@@ -61,7 +69,7 @@ const StatementChatMore: FC<Props> = ({ statement, onlyCircle, useLink = true, a
 		<div
 			className='statementChatMore'
 			onClick={handleClick}
-			role="button"
+			role='button'
 			tabIndex={0}
 			onKeyDown={(e) => {
 				if (e.key === 'Enter' || e.key === ' ') {

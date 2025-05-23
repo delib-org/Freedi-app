@@ -23,12 +23,12 @@ export async function updateInAppNotifications(
 	try {
 		//go to the new statement and parse it
 		const newStatement = e.data?.data() as Statement;
-		if (newStatement.parentId === 'top') return;
 		const statement = parse(StatementSchema, newStatement);
 
 		// Fetch all required data in parallel
 		const [subscribersDB, parentStatementDB, askedToBeNotifiedDB] =
 			await fetchNotificationData(statement.parentId);
+
 		const subscribersInApp = subscribersDB.docs.map(
 			(doc: QueryDocumentSnapshot) => doc.data() as StatementSubscription
 		);
@@ -36,6 +36,41 @@ export async function updateInAppNotifications(
 			StatementSchema,
 			parentStatementDB.data()
 		);
+
+		// Also fetch subscribers for the top-level parent if this is a nested reply
+		let topLevelSubscribers: StatementSubscription[] = [];
+		if (statement.parentId !== 'top') {
+			// Find the top-level parent by traversing up
+			let currentParent = parentStatement;
+			while (currentParent && currentParent.parentId !== 'top') {
+				const parentDoc = await db
+					.doc(`${Collections.statements}/${currentParent.parentId}`)
+					.get();
+				if (parentDoc.exists) {
+					currentParent = parse(StatementSchema, parentDoc.data());
+				} else {
+					break;
+				}
+			}
+
+			if (
+				currentParent &&
+				currentParent.statementId !== statement.parentId
+			) {
+				const topSubscribersDB = await db
+					.collection(Collections.statementsSubscribe)
+					.where('statementId', '==', currentParent.statementId)
+					.where('getInAppNotification', '==', true)
+					.get();
+
+				topLevelSubscribers = topSubscribersDB.docs.map(
+					(doc) => doc.data() as StatementSubscription
+				);
+			}
+		}
+
+		// Combine subscribers
+		const allSubscribers = [...subscribersInApp, ...topLevelSubscribers];
 
 		//get fcm subscribers
 		const fcmSubscribers: FcmSubscriber[] = askedToBeNotifiedDB.docs.map(
@@ -60,7 +95,7 @@ export async function updateInAppNotifications(
 
 		// Process notifications
 		await processInAppNotifications(
-			subscribersInApp,
+			allSubscribers,
 			newStatement,
 			parentStatement
 		);
@@ -69,7 +104,6 @@ export async function updateInAppNotifications(
 		logger.error(error);
 	}
 }
-
 /**
  * Fetches all data needed for notification processing in parallel.
  */
