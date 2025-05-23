@@ -2,13 +2,14 @@ import {
 	collection,
 	deleteDoc,
 	doc,
+	getDoc,
 	getDocs,
-	limit,
 	query,
 	where,
+	writeBatch,
 } from 'firebase/firestore';
 import { FireStore } from '../config';
-import { Collections, Statement } from 'delib-npm';
+import { Collections, Statement, StatementType } from 'delib-npm';
 
 export async function deleteStatementFromDB(
 	statement: Statement,
@@ -18,29 +19,64 @@ export async function deleteStatementFromDB(
 		if (!statement) throw new Error('No statement');
 
 		if (!isAuthorized)
-			alert('You are not authorized to delete this statement');
+			return alert('You are not authorized to delete this statement');
+
+		if (statement.statementType === StatementType.group)
+			return alert('cannot delete group');
 
 		if (!statement) throw new Error('No statement');
 		const confirmed = confirm(
 			`Are you sure you want to delete ${statement.statement}?`
 		);
-		if (!confirmed) return;
+		if (!confirmed) {
+			return;
+		}
 
-		//check if the statement has children
+		//get all children and update their parentId to this statement's parentId
 		const childrenRef = collection(FireStore, Collections.statements);
 		const q = query(
 			childrenRef,
-			where('parentId', '==', statement.statementId),
-			limit(1)
+			where('parentId', '==', statement.statementId)
 		);
-		const hasChildren = await getDocs(q);
-		if (hasChildren.docs.length > 0) {
-			alert(
-				'You cannot delete a statement with children. Please delete the children first.'
+		const children = await getDocs(q);
+		// Check if parent is a group and any child is an option
+		if (statement.parentId) {
+			// Get the parent statement
+			const parentRef = doc(
+				FireStore,
+				Collections.statements,
+				statement.parentId
 			);
+			const parentDoc = await getDoc(parentRef);
 
-			return;
+			// Check if parent is a group
+			if (
+				parentDoc.exists() &&
+				parentDoc.data().statementType === StatementType.group
+			) {
+				// Check if any child is an option
+				const hasOptionChild = children.docs.some(
+					(child) =>
+						child.data().statementType === StatementType.option
+				);
+
+				if (hasOptionChild) {
+					alert(
+						'Cannot delete this statement. It contains option statements under a group parent.'
+					);
+
+					return;
+				}
+			}
 		}
+		// Update each child's parentId to the deleted statement's parentId
+		const batch = writeBatch(FireStore);
+		children.docs.forEach((child) => {
+			const childRef = doc(FireStore, Collections.statements, child.id);
+			batch.update(childRef, { parentId: statement.parentId });
+		});
+		await batch.commit();
+
 		const statementRef = doc(
 			FireStore,
 			Collections.statements,
