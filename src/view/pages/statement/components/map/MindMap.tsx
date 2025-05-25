@@ -1,4 +1,4 @@
-import { useState, FC } from 'react';
+import { useState, FC, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { ReactFlowProvider } from 'reactflow';
 import CreateStatementModal from '../createStatementModal/CreateStatementModal';
@@ -22,6 +22,7 @@ const MindMap: FC = () => {
 
 	const { statementId } = useParams();
 	const statement = useSelector(statementSelector(statementId));
+	const [statementParent, setStatementParent] = useState<typeof current>();
 
 	const rootStatementId = statement?.topParentId ?? statement?.statementId;
 
@@ -39,6 +40,7 @@ const MindMap: FC = () => {
 
 	const { t } = useUserConfig();
 	const { mapContext, setMapContext } = useMapContext();
+	const selectedId = mapContext?.selectedId ?? null;
 
 	const [filterBy, setFilterBy] = useState<FilterType>(
 		FilterType.questionsResultsOptions
@@ -50,6 +52,20 @@ const MindMap: FC = () => {
 			showModal: show,
 		}));
 	};
+	const current = useSelector(
+		selectedId ? statementSelector(selectedId) : () => undefined
+	);
+
+	useEffect(() => {
+		if (current) {
+			setStatementParent(current);
+		}
+	}, [current]);
+
+	const isDefaultOption: boolean =
+		statementParent?.statementType === StatementType.question;
+	const isOptionAllowed =
+		statementParent?.statementType !== StatementType.group;
 
 	// Only render if we have the necessary data
 	if (!statement) {
@@ -105,11 +121,11 @@ const MindMap: FC = () => {
 					<Modal>
 						<CreateStatementModal
 							allowedTypes={[
-								StatementType.option,
+								isOptionAllowed && StatementType.option,
 								StatementType.question,
 							]}
 							parentStatement={mapContext.parentStatement}
-							isOption={mapContext.isOption}
+							isOption={isDefaultOption}
 							setShowModal={toggleModal}
 						/>
 					</Modal>
