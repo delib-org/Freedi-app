@@ -72,10 +72,10 @@ const WaitingList = () => {
 
 					{selectedIds.length === waitingList.length && (
 						<div className={waitingStyles.actions}>
-							<button className="approveButton" onClick={handleApproveAll}>
+							<button className="btn--approve" onClick={handleApproveAll}>
 								{t("Approve All")}
 							</button>
-							<button className="rejectButton" onClick={handleDenyAll}>
+							<button className="btn--reject" onClick={handleDenyAll}>
 								{t("Deny All")}
 							</button>
 						</div>
@@ -96,7 +96,7 @@ const WaitingList = () => {
 						/>
 					))}
 
-					<button className="bottomCloseButton" onClick={() => setShow(false)}>
+					<button className="btn--Close" onClick={() => setShow(false)}>
 						{t("Close")}
 					</button>
 				</div>
