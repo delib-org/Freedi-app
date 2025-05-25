@@ -27,6 +27,7 @@ import { RootState } from '@/redux/store';
 import Loader from '@/view/components/loaders/Loader';
 import { StatementSubscription, Role, Statement, StatementType } from 'delib-npm';
 import MembershipSettings from '../membershipSettings/MembershipSettings';
+import UserDataSetting from '../UserDataSettings/UserDataSetting';
 
 interface StatementSettingsFormProps {
 	statement: Statement;
@@ -137,6 +138,7 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 							setImage={setImage}
 						/>
 						<QuestionSettings {...statementSettingsProps} />
+						<UserDataSetting />
 						<SectionTitle title={t('Members')} />
 						<section className='get-members-area'>
 							<GetVoters

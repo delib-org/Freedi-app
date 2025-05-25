@@ -1,0 +1,22 @@
+.modal {
+	background-color: white;
+	position: fixed;
+	top: 20px;
+	left: 50%;
+	transform: translateX(-50%);
+	z-index: 1000;
+	max-width: var(--wrapper);
+	width: 100vw;
+	padding: 20px;
+	border-radius: 8px;
+	height: calc(100vh - 40px);
+	box-shadow: 6px 6px 12px rgba(0, 0, 0, 0.1);
+
+	@media screen and (max-width: 768px) {
+
+		height: 100vh;
+		top: 0px;
+		border-radius: 0px;
+
+	}
+}
