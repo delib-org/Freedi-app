@@ -1,0 +1,205 @@
+.userQuestion {
+	margin-bottom: 1.5rem;
+	padding: 1rem;
+	border: 1px solid #e0e6ff;
+	border-radius: 8px;
+	background-color: #f8faff;
+
+	.questionHeader {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		margin-bottom: 1rem;
+
+		.deleteQuestionIcon {
+			cursor: pointer;
+			padding: 0.25rem;
+			color: #e74c3c;
+			border-radius: 50%;
+			transition: background-color 0.2s;
+
+			&:hover {
+				background-color: #ffe6e6;
+			}
+		}
+
+		.questionActions {
+			display: flex;
+			align-items: center;
+			gap: 0.5rem;
+
+			.typeSelector {
+				.typeSelect {
+					padding: 0.25rem 0.5rem;
+					border: 1px solid #d1d9e6;
+					border-radius: 4px;
+					font-size: 0.85rem;
+					background-color: white;
+					cursor: pointer;
+
+					&:focus {
+						outline: none;
+						border-color: #667eea;
+						box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
+					}
+				}
+			}
+		}
+
+		.editQuestionForm {
+			display: flex;
+			flex-direction: column;
+			gap: 0.75rem;
+			width: 100%;
+
+			.editActions {
+				display: flex;
+				gap: 0.5rem;
+				justify-content: flex-end;
+			}
+		}
+	}
+
+	.questionTitle {
+		font-size: 1.1rem;
+		font-weight: 500;
+		color: #2c3e50;
+		margin: 0;
+		cursor: pointer;
+		transition: color 0.2s;
+
+		&:hover {
+			color: #667eea;
+		}
+	}
+
+	.optionItem {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		margin-bottom: 0.5rem;
+		padding: 0.5rem;
+		background-color: white;
+		border-radius: 4px;
+		border: 1px solid #e8ecf5;
+
+		.deleteIcon {
+			cursor: pointer;
+			padding: 0.25rem;
+			color: #e74c3c;
+			border-radius: 50%;
+			transition: background-color 0.2s;
+
+			&:hover {
+				background-color: #ffe5e5;
+			}
+		}
+
+		label {
+			display: flex;
+			align-items: center;
+			gap: 0.5rem;
+			font-size: 0.95rem;
+			color: #34495e;
+			cursor: pointer;
+			flex: 1;
+
+			input {
+				margin: 0;
+			}
+		}
+	}
+
+	.addOptionSection {
+		margin-top: 1rem;
+		padding-top: 1rem;
+		border-top: 1px solid #e8ecf5;
+
+		.btns {
+			margin-top: 0.5rem;
+		}
+	}
+
+	.textInput,
+	.textareaInput {
+		width: 100%;
+		padding: 0.5rem;
+		border: 1px solid #d1d9e6;
+		border-radius: 4px;
+		font-size: 0.9rem;
+		background-color: #f8f9fa;
+
+		&:disabled {
+			cursor: not-allowed;
+			opacity: 0.7;
+		}
+	}
+
+	.textareaInput {
+		min-height: 80px;
+		resize: vertical;
+	}
+}
+
+/* New Question Form Styles */
+.newQuestionForm {
+	margin-bottom: 2rem;
+	padding: 1rem;
+	border: 2px dashed #bdcef4;
+	border-radius: 8px;
+	background-color: #f0f4ff;
+
+	h4 {
+		margin: 0 0 1rem 0;
+		color: #2c3e50;
+		font-size: 1.2rem;
+	}
+
+	.formField {
+		margin-bottom: 1rem;
+	}
+
+	.selectField {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+
+		label {
+			font-size: 1rem;
+			color: #7484a9;
+			font-weight: 500;
+		}
+
+		select {
+			padding: 0.75rem;
+			border: 1px solid #bdcef4;
+			border-radius: 0.5rem;
+			font-size: 1rem;
+			background-color: #fff;
+			transition: border-color 0.2s;
+
+			&:focus {
+				outline: none;
+				border-color: #007bff;
+			}
+		}
+	}
+}
+
+.existingQuestions {
+	h4 {
+		margin: 0 0 1rem 0;
+		color: #2c3e50;
+		font-size: 1.2rem;
+	}
+
+	.emptyState {
+		color: #7484a9;
+		font-style: italic;
+		text-align: center;
+		padding: 2rem;
+		background-color: #f8faff;
+		border-radius: 8px;
+		border: 1px dashed #e0e6ff;
+	}
+}

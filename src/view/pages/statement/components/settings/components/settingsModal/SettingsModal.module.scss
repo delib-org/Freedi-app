@@ -11,6 +11,10 @@
 	border-radius: 8px;
 	height: calc(100vh - 40px);
 	box-shadow: 6px 6px 12px rgba(0, 0, 0, 0.1);
+	overflow-y: auto;
+	border: 1px solid #e8ecf5;
+
+
 
 	@media screen and (max-width: 768px) {
 
