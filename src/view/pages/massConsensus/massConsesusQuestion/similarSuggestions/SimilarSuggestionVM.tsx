@@ -1,4 +1,5 @@
 import { setEvaluationToDB } from '@/controllers/db/evaluation/setEvaluation';
+import { listenToMassConsensusProcess } from '@/controllers/db/massConsensus/getMassConsensus';
 import { getStatementFromDB } from '@/controllers/db/statements/getStatement';
 import {
 	createStatement,
@@ -6,11 +7,8 @@ import {
 } from '@/controllers/db/statements/setStatements';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 
-import {
-	GeneratedStatement,
-	Statement,
-	StatementType,
-} from 'delib-npm';
+import { GeneratedStatement, Statement, StatementType } from 'delib-npm';
+import { useEffect } from 'react';
 
 import { useNavigate, useParams } from 'react-router';
 
@@ -19,6 +17,13 @@ export function useSimilarSuggestions(statementId, nextStep) {
 	const { statementId: parentId } = useParams<{ statementId: string }>();
 	const { creator } = useAuthentication();
 
+	useEffect(() => {
+		if (!parentId) return;
+
+		const unsubscribe = listenToMassConsensusProcess(parentId);
+
+		return () => unsubscribe();
+	}, [parentId]);
 	async function handleSetSuggestionToDB(
 		statement: Statement | GeneratedStatement
 	) {
@@ -48,7 +53,6 @@ export function useSimilarSuggestions(statementId, nextStep) {
 			}
 
 			navigate(`/mass-consensus/${statementId}/${nextStep}`);
-
 		} catch (error) {
 			console.error(error);
 		}
