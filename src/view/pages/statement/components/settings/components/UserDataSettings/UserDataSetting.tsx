@@ -22,7 +22,7 @@ const UserDataSetting: FC<Props> = ({ statement }) => {
 	const statementId = statement.statementId
 	const { t } = useUserConfig()
 	const dispatch = useDispatch()
-	const [showModal, setShowModal] = useState(true)
+	const [showModal, setShowModal] = useState(false)
 	// Get user questions from Redux store filtered by statement ID
 	const userQuestions = useSelector((state: RootState) =>
 		selectUserQuestionsByStatementId(state, statement.statementId)
