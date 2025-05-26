@@ -1,22 +1,28 @@
 import { Collections, Statement, UserQuestion, UserQuestionSchema } from "delib-npm";
-import { addDoc, collection } from "firebase/firestore";
+import { doc, setDoc } from "firebase/firestore";
 import { DB } from "../config";
 import { parse } from "valibot";
+import { store } from "@/redux/store";
+import { setUserQuestion } from "@/redux/userData/userDataSlice";
 
-export async function addUserDataQuestion(statement: Statement, question: UserQuestion) {
+export async function setUserDataQuestion(statement: Statement, question: UserQuestion) {
 	try {
 		if (!statement || !question) {
 			throw new Error("Statement and question must be provided");
 		}
 		parse(UserQuestionSchema, question);
-		const questionsRef = collection(DB, Collections.userDataQuestions);
-		console.log(questionsRef, question)
-		const newQuestion = await addDoc(questionsRef, question);
+		const dispatch = store.dispatch;
 
-		console.log("User data question added with ID:", newQuestion.id);
+		const questionsRef = doc(DB, Collections.userDataQuestions, question.userQuestionId);
+
+		await setDoc(questionsRef, question, {
+			merge: true
+		});
+
+		dispatch(setUserQuestion(question));
+
 	} catch (error) {
 		console.error("Error adding user data question:", error);
-		throw new Error("Failed to add user data question");
 
 	}
 }

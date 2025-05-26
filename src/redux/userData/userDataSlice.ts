@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction, createSelector } from '@reduxjs/toolkit';
-import { UserQuestion } from 'delib-npm';
+import { updateArray, UserQuestion } from 'delib-npm';
 import { RootState } from '../store';
 
 interface UserDataState {
@@ -14,15 +14,10 @@ const userDataSlice = createSlice({
 	name: 'userData',
 	initialState,
 	reducers: {
-		addUserQuestion: (state, action: PayloadAction<UserQuestion>) => {
-			state.userQuestions.push(action.payload);
+		setUserQuestion: (state, action: PayloadAction<UserQuestion>) => {
+			state.userQuestions = updateArray(state.userQuestions, action.payload, 'userQuestionId');
 		},
-		updateUserQuestion: (state, action: PayloadAction<{ index: number; userQuestion: Partial<UserQuestion> }>) => {
-			const { index, userQuestion } = action.payload;
-			if (state.userQuestions[index]) {
-				state.userQuestions[index] = { ...state.userQuestions[index], ...userQuestion };
-			}
-		},
+
 		deleteUserQuestion: (state, action: PayloadAction<number>) => {
 			state.userQuestions.splice(action.payload, 1);
 		},
@@ -33,8 +28,7 @@ const userDataSlice = createSlice({
 });
 
 export const {
-	addUserQuestion,
-	updateUserQuestion,
+	setUserQuestion,
 	deleteUserQuestion,
 	setUserQuestions
 } = userDataSlice.actions;

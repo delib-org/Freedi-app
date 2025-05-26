@@ -1,31 +1,17 @@
 import React, { FC, useState } from 'react'
+import { useSelector, useDispatch } from 'react-redux'
 import SectionTitle from '../sectionTitle/SectionTitle'
 import { useUserConfig } from '@/controllers/hooks/useUserConfig'
 import SettingsModal from '../settingsModal/SettingsModal'
 import UserQuestionComp from './userQuestion/UserQuestionComp'
-import Input from '@/view/components/input/Input'
 import PlusIcon from '@/assets/icons/plusIcon.svg?react'
 import styles from './UserDataSetting.module.scss'
-import { Statement, UserQuestion, UserQuestionType } from 'delib-npm'
-import { addUserDataQuestion } from '@/controllers/db/userData/setUserData'
+import { getRandomUID, Statement, UserQuestion, UserQuestionType } from 'delib-npm'
+import { setUserDataQuestion } from '@/controllers/db/userData/setUserData'
+import { RootState } from '@/redux/store'
+import { setUserQuestion, deleteUserQuestion, selectUserQuestionsByStatementId } from '@/redux/userData/userDataSlice'
 
 //mockData
-const initialUserQuestions: UserQuestion[] = [
-	// {
-	// 	question: 'What is your favorite color?',
-	// 	type: UserQuestionType.radio,
-	// 	options: ['Red', 'Blue', 'Green'],
-	// },
-	// {
-	// 	question: 'Tell us about yourself',
-	// 	type: UserQuestionType.textarea,
-	// },
-	// {
-	// 	question: 'What foods do you like?',
-	// 	type: UserQuestionType.checkbox,
-	// 	options: ['Pizza', 'Burger', 'Salad'],
-	// },
-]
 
 interface Props {
 	statement: Statement;
@@ -33,68 +19,87 @@ interface Props {
 
 const UserDataSetting: FC<Props> = ({ statement }) => {
 	const { t } = useUserConfig()
+	const dispatch = useDispatch()
 	const [showModal, setShowModal] = useState(true)
-	const [userQuestions, setUserQuestions] = useState<UserQuestion[]>(initialUserQuestions)
-	const [newQuestion, setNewQuestion] = useState('')
-	const [newQuestionType, setNewQuestionType] = useState<UserQuestionType>(UserQuestionType.text)
+	// Get user questions from Redux store filtered by statement ID
+	const userQuestions = useSelector((state: RootState) =>
+		selectUserQuestionsByStatementId(state, statement.statementId)
+	)
+
 	function closeModal() {
 		setShowModal(false)
 	}
+	const handleAddNewQuestion = (e: React.FormEvent) => {
+		e.preventDefault()
 
-	const handleAddNewQuestion = () => {
-		if (!newQuestion.trim()) return
+		const form = e.target as HTMLFormElement
+		const formData = new FormData(form)
+		const newQuestion = formData.get('newQuestion') as string
+		const newQuestionType = formData.get('questionType') as UserQuestionType
+
+		if (!newQuestion.trim()) return;
 
 		const newQuestionObj: UserQuestion = {
+			userQuestionId: getRandomUID(),
 			question: newQuestion.trim(),
 			type: newQuestionType,
 			statementId: statement.statementId,
 			options: newQuestionType === UserQuestionType.checkbox || newQuestionType === UserQuestionType.radio ? [] : []
-		}
+		};
 
-		setUserQuestions(prevQuestions => [...prevQuestions, newQuestionObj])
-		setNewQuestion('')
-		setNewQuestionType(UserQuestionType.text)
+		dispatch(setUserQuestion(newQuestionObj))
 
-		addUserDataQuestion(statement, newQuestionObj)
+		// Reset the form
+		form.reset();
+
+		setUserDataQuestion(statement, newQuestionObj)
 	}
+
 	const handleDeleteQuestion = (questionIndex: number) => {
-		setUserQuestions(prevQuestions => prevQuestions.filter((_, index) => index !== questionIndex))
+		const questionToDelete = userQuestions[questionIndex]
+		if (questionToDelete && questionToDelete.userQuestionId) {
+			// Find the actual index in the Redux store and dispatch delete action
+			const storeIndex = userQuestions.findIndex(q => q.userQuestionId === questionToDelete.userQuestionId)
+			if (storeIndex !== -1) {
+				dispatch(deleteUserQuestion(storeIndex))
+			}
+		}
+	}
+	const handleUpdateQuestion = (questionIndex: number, updatedQuestion: Partial<UserQuestion>) => {
+		const questionToUpdate = userQuestions[questionIndex]
+		if (questionToUpdate && questionToUpdate.userQuestionId) {
+			const updatedQuestionObj: UserQuestion = {
+				...questionToUpdate,
+				...updatedQuestion
+			}
+			dispatch(setUserQuestion(updatedQuestionObj))
+		}
 	}
 
-	const handleUpdateQuestion = (questionIndex: number, updatedQuestion: Partial<UserQuestion>) => {
-		setUserQuestions(prevQuestions =>
-			prevQuestions.map((question, index) =>
-				index === questionIndex ? { ...question, ...updatedQuestion } : question
-			)
-		)
-	}
 	const handleAddOption = (questionIndex: number, newOption: string) => {
 		if (!newOption.trim()) return
 
-		setUserQuestions(prevQuestions =>
-			prevQuestions.map((question, index) => {
-				if (index === questionIndex) {
-					const updatedOptions = question.options ? [...question.options, newOption.trim()] : [newOption.trim()]
-
-					return { ...question, options: updatedOptions }
-				}
-
-				return question
-			})
-		)
+		const questionToUpdate = userQuestions[questionIndex]
+		if (questionToUpdate && questionToUpdate.userQuestionId) {
+			const updatedOptions = questionToUpdate.options ? [...questionToUpdate.options, newOption.trim()] : [newOption.trim()]
+			const updatedQuestion: UserQuestion = {
+				...questionToUpdate,
+				options: updatedOptions
+			}
+			dispatch(setUserQuestion(updatedQuestion))
+		}
 	}
+
 	const handleDeleteOption = (questionIndex: number, optionIndex: number) => {
-		setUserQuestions(prevQuestions =>
-			prevQuestions.map((question, index) => {
-				if (index === questionIndex && question.options) {
-					const updatedOptions = question.options.filter((_, idx) => idx !== optionIndex)
-
-					return { ...question, options: updatedOptions }
-				}
-
-				return question
-			})
-		)
+		const questionToUpdate = userQuestions[questionIndex]
+		if (questionToUpdate && questionToUpdate.userQuestionId && questionToUpdate.options) {
+			const updatedOptions = questionToUpdate.options.filter((_, idx) => idx !== optionIndex)
+			const updatedQuestion: UserQuestion = {
+				...questionToUpdate,
+				options: updatedOptions
+			}
+			dispatch(setUserQuestion(updatedQuestion))
+		}
 	}
 
 	return (
@@ -104,18 +109,18 @@ const UserDataSetting: FC<Props> = ({ statement }) => {
 				<button className='btn btn--secondary' onClick={() => setShowModal(true)}>{t('Edit')}</button>
 			</div>			{showModal && <SettingsModal closeModal={closeModal}>
 				<div className={styles.userDataSettings}>
-					<h3>{t('User Data Questions')}</h3>
-
-					{/* New Question Form */}
-					<div className={styles.newQuestionForm}>
+					<h3>{t('User Data Questions')}</h3>					{/* New Question Form */}
+					<form className={styles.newQuestionForm} onSubmit={handleAddNewQuestion}>
 						<h4>{t('Add New Question')}</h4>
 						<div className={styles.formFields}>
-							<Input
+							<label htmlFor="questionType">
+								{t('Question')}
+							</label>
+							<input
 								name="newQuestion"
-								label={t('Question Text')}
 								placeholder={t('Enter your question')}
-								value={newQuestion}
-								onChange={(value) => setNewQuestion(value)}
+								required
+								type="text"
 							/>
 
 							<div className={styles.selectField}>
@@ -124,8 +129,8 @@ const UserDataSetting: FC<Props> = ({ statement }) => {
 								</label>
 								<select
 									id="questionType"
-									value={newQuestionType}
-									onChange={(e) => setNewQuestionType(e.target.value as UserQuestionType)}
+									name="questionType"
+									defaultValue={UserQuestionType.text}
 								>
 									<option value={UserQuestionType.text}>{t('Text Input')}</option>
 									<option value={UserQuestionType.textarea}>{t('Text Area')}</option>
@@ -134,15 +139,14 @@ const UserDataSetting: FC<Props> = ({ statement }) => {
 								</select>
 							</div>
 							<button
+								type="submit"
 								className="btn btn--add"
-								onClick={handleAddNewQuestion}
-								disabled={!newQuestion.trim()}
 							>
 								<PlusIcon />
 								{t('Add Question')}
 							</button>
 						</div>
-					</div>
+					</form>
 
 					{/* Existing Questions */}
 					<div className={styles.existingQuestions}>
