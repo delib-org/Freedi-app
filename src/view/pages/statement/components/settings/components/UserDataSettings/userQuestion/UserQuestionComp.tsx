@@ -1,10 +1,10 @@
 import React, { useState } from 'react'
-import { UserQuestion, UserQuestionType } from '../UserDataSetting'
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import DeleteIcon from '@/assets/icons/delete.svg?react';
 import PlusIcon from '@/assets/icons/plusIcon.svg?react';
 import Input from '@/view/components/input/Input';
 import styles from './UserQuestionComp.module.scss';
+import { UserQuestion, UserQuestionType } from 'delib-npm';
 
 interface Props {
 	userQuestions: UserQuestion;

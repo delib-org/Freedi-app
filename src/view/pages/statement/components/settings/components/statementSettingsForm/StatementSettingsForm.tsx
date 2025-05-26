@@ -138,7 +138,7 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 							setImage={setImage}
 						/>
 						<QuestionSettings {...statementSettingsProps} />
-						<UserDataSetting />
+						<UserDataSetting statement={statement} />
 						<SectionTitle title={t('Members')} />
 						<section className='get-members-area'>
 							<GetVoters

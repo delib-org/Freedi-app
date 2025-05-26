@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { FC, useState } from 'react'
 import SectionTitle from '../sectionTitle/SectionTitle'
 import { useUserConfig } from '@/controllers/hooks/useUserConfig'
 import SettingsModal from '../settingsModal/SettingsModal'
@@ -6,39 +6,32 @@ import UserQuestionComp from './userQuestion/UserQuestionComp'
 import Input from '@/view/components/input/Input'
 import PlusIcon from '@/assets/icons/plusIcon.svg?react'
 import styles from './UserDataSetting.module.scss'
-
-export enum UserQuestionType {
-	text = 'text',
-	textarea = 'textarea',
-	checkbox = 'checkbox',
-	radio = 'radio',
-}
-
-export interface UserQuestion {
-	question: string;
-	type: UserQuestionType;
-	options?: string[]; // For checkbox and radio types
-}
+import { Statement, UserQuestion, UserQuestionType } from 'delib-npm'
+import { addUserDataQuestion } from '@/controllers/db/userData/setUserData'
 
 //mockData
 const initialUserQuestions: UserQuestion[] = [
-	{
-		question: 'What is your favorite color?',
-		type: UserQuestionType.radio,
-		options: ['Red', 'Blue', 'Green'],
-	},
-	{
-		question: 'Tell us about yourself',
-		type: UserQuestionType.textarea,
-	},
-	{
-		question: 'What foods do you like?',
-		type: UserQuestionType.checkbox,
-		options: ['Pizza', 'Burger', 'Salad'],
-	},
+	// {
+	// 	question: 'What is your favorite color?',
+	// 	type: UserQuestionType.radio,
+	// 	options: ['Red', 'Blue', 'Green'],
+	// },
+	// {
+	// 	question: 'Tell us about yourself',
+	// 	type: UserQuestionType.textarea,
+	// },
+	// {
+	// 	question: 'What foods do you like?',
+	// 	type: UserQuestionType.checkbox,
+	// 	options: ['Pizza', 'Burger', 'Salad'],
+	// },
 ]
 
-const UserDataSetting = () => {
+interface Props {
+	statement: Statement;
+}
+
+const UserDataSetting: FC<Props> = ({ statement }) => {
 	const { t } = useUserConfig()
 	const [showModal, setShowModal] = useState(true)
 	const [userQuestions, setUserQuestions] = useState<UserQuestion[]>(initialUserQuestions)
@@ -54,12 +47,15 @@ const UserDataSetting = () => {
 		const newQuestionObj: UserQuestion = {
 			question: newQuestion.trim(),
 			type: newQuestionType,
-			options: newQuestionType === UserQuestionType.checkbox || newQuestionType === UserQuestionType.radio ? [] : undefined
+			statementId: statement.statementId,
+			options: newQuestionType === UserQuestionType.checkbox || newQuestionType === UserQuestionType.radio ? [] : []
 		}
 
 		setUserQuestions(prevQuestions => [...prevQuestions, newQuestionObj])
 		setNewQuestion('')
 		setNewQuestionType(UserQuestionType.text)
+
+		addUserDataQuestion(statement, newQuestionObj)
 	}
 	const handleDeleteQuestion = (questionIndex: number) => {
 		setUserQuestions(prevQuestions => prevQuestions.filter((_, index) => index !== questionIndex))
