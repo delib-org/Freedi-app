@@ -206,19 +206,48 @@ async function updateStatementEvaluation({
 		if (!statementId) throw new Error('statementId is not defined');
 		parse(number(), evaluationDiff);
 
+		//user's changed evaluation
 		const proConDiff = calcDiffEvaluation({
 			newEvaluation,
 			oldEvaluation,
 			action,
 		});
 
-		return await db.runTransaction(async (transaction) => {
-			const statementRef = db
-				.collection(Collections.statements)
-				.doc(statementId);
-			const statementDB = await transaction.get(statementRef);
-			const statement = parse(StatementSchema, statementDB.data());
+		//get user's segments
 
+		return await db.runTransaction(async (transaction) => {
+			try {
+				const statementRef = db
+					.collection(Collections.statements)
+					.doc(statementId);
+				const statementDB = await transaction.get(statementRef);
+				const statement = parse(StatementSchema, statementDB.data());
+
+				//overall evaluation
+				const { agreement, evaluation } = getEvaluation(statement, proConDiff);
+
+				transaction.update(statementRef, {
+					totalEvaluators: FieldValue.increment(addEvaluator),
+					consensus: agreement,
+					evaluation,
+					proSum: FieldValue.increment(proConDiff.proDiff),
+					conSum: FieldValue.increment(proConDiff.conDiff),
+				});
+
+				return (await statementRef.get()).data() as Statement;
+			} catch (error) {
+				logger.error('Error in transaction of updateStatementEvaluation:', error);
+				throw error;
+			}
+		});
+	} catch (error) {
+		logger.error(error);
+
+		return undefined;
+	}
+
+	function getEvaluation(statement: Statement, proConDiff: CalcDiff) {
+		try {
 			const evaluation = statement.evaluation || {
 				agreement: statement.consensus || 0,
 				sumEvaluations: evaluationDiff,
@@ -243,20 +272,12 @@ async function updateStatementEvaluation({
 
 			evaluation.agreement = agreement;
 
-			transaction.update(statementRef, {
-				totalEvaluators: FieldValue.increment(addEvaluator),
-				consensus: agreement,
-				evaluation,
-				proSum: FieldValue.increment(proConDiff.proDiff),
-				conSum: FieldValue.increment(proConDiff.conDiff),
-			});
+			return { agreement, evaluation };
+		} catch (error) {
+			logger.error('Error in getEvaluation of updateStatementEvaluation:', error);
 
-			return (await statementRef.get()).data() as Statement;
-		});
-	} catch (error) {
-		logger.error(error);
-
-		return undefined;
+			return { agreement: 0, evaluation: {} };
+		}
 	}
 }
 
