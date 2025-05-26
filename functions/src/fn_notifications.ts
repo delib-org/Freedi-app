@@ -1,6 +1,7 @@
 import {
 	Collections,
 	NotificationType,
+	QuestionType,
 	Statement,
 	StatementSchema,
 	StatementSubscription,
@@ -147,11 +148,16 @@ async function processInAppNotifications(
 			.collection(Collections.inAppNotifications)
 			.doc();
 
+		const questionType =
+			newStatement.questionSettings?.questionType ??
+			QuestionType.multiStage;
+
 		const newNotification: NotificationType = {
 			userId: subscriber.user.uid,
 			parentId: newStatement.parentId,
 			parentStatement: parentStatement.statement,
 			statementType: newStatement.statementType,
+			questionType: questionType,
 			text: newStatement.statement,
 			creatorId: newStatement.creator.uid,
 			creatorName: newStatement.creator.displayName,
