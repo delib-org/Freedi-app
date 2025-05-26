@@ -1,4 +1,4 @@
-import React, { FC, useState } from 'react'
+import React, { FC, useEffect, useState } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import SectionTitle from '../sectionTitle/SectionTitle'
 import { useUserConfig } from '@/controllers/hooks/useUserConfig'
@@ -7,9 +7,10 @@ import UserQuestionComp from './userQuestion/UserQuestionComp'
 import PlusIcon from '@/assets/icons/plusIcon.svg?react'
 import styles from './UserDataSetting.module.scss'
 import { getRandomUID, Statement, UserQuestion, UserQuestionType } from 'delib-npm'
-import { setUserDataQuestion } from '@/controllers/db/userData/setUserData'
+import { deleteUserDataQuestion, setUserDataQuestion } from '@/controllers/db/userData/setUserData'
 import { RootState } from '@/redux/store'
 import { setUserQuestion, deleteUserQuestion, selectUserQuestionsByStatementId } from '@/redux/userData/userDataSlice'
+import { getUserQuestions } from '@/controllers/db/userData/getUserData'
 
 //mockData
 
@@ -18,6 +19,7 @@ interface Props {
 }
 
 const UserDataSetting: FC<Props> = ({ statement }) => {
+	const statementId = statement.statementId
 	const { t } = useUserConfig()
 	const dispatch = useDispatch()
 	const [showModal, setShowModal] = useState(true)
@@ -25,6 +27,10 @@ const UserDataSetting: FC<Props> = ({ statement }) => {
 	const userQuestions = useSelector((state: RootState) =>
 		selectUserQuestionsByStatementId(state, statement.statementId)
 	)
+
+	useEffect(() => {
+		getUserQuestions(statementId)
+	}, [statementId])
 
 	function closeModal() {
 		setShowModal(false)
@@ -61,8 +67,10 @@ const UserDataSetting: FC<Props> = ({ statement }) => {
 			// Find the actual index in the Redux store and dispatch delete action
 			const storeIndex = userQuestions.findIndex(q => q.userQuestionId === questionToDelete.userQuestionId)
 			if (storeIndex !== -1) {
-				dispatch(deleteUserQuestion(storeIndex))
+				dispatch(deleteUserQuestion(questionToDelete.userQuestionId))
 			}
+
+			deleteUserDataQuestion(questionToDelete)
 		}
 	}
 	const handleUpdateQuestion = (questionIndex: number, updatedQuestion: Partial<UserQuestion>) => {
@@ -73,6 +81,7 @@ const UserDataSetting: FC<Props> = ({ statement }) => {
 				...updatedQuestion
 			}
 			dispatch(setUserQuestion(updatedQuestionObj))
+			setUserDataQuestion(statement, updatedQuestionObj)
 		}
 	}
 

@@ -1,9 +1,9 @@
 import { Collections, Statement, UserQuestion, UserQuestionSchema } from "delib-npm";
-import { doc, setDoc } from "firebase/firestore";
+import { deleteDoc, doc, setDoc } from "firebase/firestore";
 import { DB } from "../config";
 import { parse } from "valibot";
 import { store } from "@/redux/store";
-import { setUserQuestion } from "@/redux/userData/userDataSlice";
+import { deleteUserQuestion, setUserQuestion } from "@/redux/userData/userDataSlice";
 
 export async function setUserDataQuestion(statement: Statement, question: UserQuestion) {
 	try {
@@ -24,5 +24,22 @@ export async function setUserDataQuestion(statement: Statement, question: UserQu
 	} catch (error) {
 		console.error("Error adding user data question:", error);
 
+	}
+}
+
+export async function deleteUserDataQuestion(question: UserQuestion) {
+	try {
+		if (!question || !question.userQuestionId) {
+			throw new Error("Question and question ID must be provided");
+		}
+
+		const questionsRef = doc(DB, Collections.userDataQuestions, question.userQuestionId);
+
+		await deleteDoc(questionsRef);
+
+		store.dispatch(deleteUserQuestion(question.userQuestionId));
+
+	} catch (error) {
+		console.error("Error deleting user data question:", error);
 	}
 }

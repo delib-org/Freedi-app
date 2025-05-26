@@ -18,8 +18,8 @@ const userDataSlice = createSlice({
 			state.userQuestions = updateArray(state.userQuestions, action.payload, 'userQuestionId');
 		},
 
-		deleteUserQuestion: (state, action: PayloadAction<number>) => {
-			state.userQuestions.splice(action.payload, 1);
+		deleteUserQuestion: (state, action: PayloadAction<string>) => {
+			state.userQuestions = state.userQuestions.filter(q => q.userQuestionId !== action.payload);
 		},
 		setUserQuestions: (state, action: PayloadAction<UserQuestion[]>) => {
 			state.userQuestions = action.payload;
