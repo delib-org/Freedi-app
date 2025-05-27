@@ -19,12 +19,30 @@ const EnterNameModal: FC<Props> = ({ closeModal }) => {
 	const [displayName, setDisplayName] = useState<string | null>(null);
 	const [showStartBtn, setShowStartBtn] = useState<boolean>(false);
 	const inputRef = useRef<HTMLInputElement>(null); // Create a ref for the input
-
+		
 	const { t } = useUserConfig();
 
 	useEffect(() => {
 		inputRef.current?.focus(); // Set focus on the input when the component mounts
 	}, []);
+
+	// Handle Enter key press to start
+	useEffect(() => {
+	const handleKeyDown = (e: KeyboardEvent) => {
+		if (e.key === 'Enter' && isReadyToStart(displayName)) {
+			handleStart();
+		}
+	};
+
+	const inputElement = inputRef.current;
+    if (inputElement) {
+        inputElement.addEventListener('keydown', handleKeyDown);
+
+        return () => {
+            inputElement.removeEventListener('keydown', handleKeyDown);
+        };
+    }
+	}, [displayName]);
 
 	function handleSetName(ev: React.ChangeEvent<HTMLInputElement>) {
 		setDisplayName(ev.target.value);
