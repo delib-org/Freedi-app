@@ -82,7 +82,7 @@ export const listenToStatementSubscription = (
 	} catch (error) {
 		console.error(error);
 
-		return () => { };
+		return () => {};
 	}
 };
 
@@ -122,7 +122,7 @@ export const listenToStatement = (
 		console.error(error);
 		if (setIsStatementNotFound) setIsStatementNotFound(true);
 
-		return () => { };
+		return () => {};
 	}
 };
 
@@ -184,7 +184,7 @@ export const listenToSubStatements = (
 	} catch (error) {
 		console.error(error);
 
-		return () => { };
+		return () => {};
 	}
 };
 
@@ -314,10 +314,7 @@ export function listenToAllDescendants(statementId: string): Unsubscribe {
 				statementsDB.docChanges().forEach((change) => {
 					const statement = parse(StatementSchema, change.doc.data());
 
-					if (
-						change.type === 'added' ||
-						change.type === 'modified'
-					) {
+					if (change.type === 'added' || change.type === 'modified') {
 						store.dispatch(setStatement(statement));
 					} else if (change.type === 'removed') {
 						store.dispatch(deleteStatement(statement.statementId));

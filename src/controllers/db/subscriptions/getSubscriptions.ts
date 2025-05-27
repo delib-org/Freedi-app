@@ -39,7 +39,6 @@ export const listenToStatementSubSubscriptions = (
 	try {
 		if (!user) throw new Error('User not logged in');
 		if (!user.uid) throw new Error('User not logged in');
-
 		const statementsSubscribeRef = collection(
 			FireStore,
 			Collections.statementsSubscribe
@@ -54,13 +53,16 @@ export const listenToStatementSubSubscriptions = (
 		return onSnapshot(q, (subscriptionsDB) => {
 			let firstCall = true;
 			const statementSubscriptions: StatementSubscription[] = [];
-
 			subscriptionsDB.docChanges().forEach((change) => {
+				const data = change.doc.data();
 				const statementSubscription = parse(
 					StatementSubscriptionSchema,
-					change.doc.data()
-				);
 
+					{
+						...data,
+						lastUpdated: data.lastUpdated?.toDate?.() ?? null,
+					}
+				);
 				if (change.type === 'added') {
 					if (firstCall) {
 						statementSubscriptions.push(statementSubscription);
@@ -70,9 +72,15 @@ export const listenToStatementSubSubscriptions = (
 						);
 					}
 				}
-
 				if (change.type === 'modified') {
 					dispatch(setStatementSubscription(statementSubscription));
+				}
+				if (change.type === 'removed') {
+					dispatch(
+						deleteSubscribedStatement(
+							statementSubscription.statementId
+						)
+					);
 				}
 			});
 			firstCall = false;
@@ -81,10 +89,9 @@ export const listenToStatementSubSubscriptions = (
 	} catch (error) {
 		console.error(error);
 
-		return () => { };
+		return () => {};
 	}
 };
-
 export function listenToStatementSubscriptions(
 	userId: string,
 	numberOfStatements = 30
@@ -98,7 +105,7 @@ export function listenToStatementSubscriptions(
 		);
 		const q = query(
 			statementsSubscribeRef,
-			where('creator.uid', '==', userId),
+			where('userId', '==', userId),
 			where('statement.parentId', '==', 'top'),
 			orderBy('lastUpdate', 'desc'),
 			limit(numberOfStatements)
@@ -132,7 +139,7 @@ export function listenToStatementSubscriptions(
 	} catch (error) {
 		console.error('Listen to statement subscriptions error', error);
 
-		return () => { };
+		return () => {};
 	}
 }
 
@@ -348,9 +355,13 @@ export function getNewStatementsFromSubscriptions(userId: string): Unsubscribe {
 
 		return onSnapshot(q, (subscriptionsDB) => {
 			subscriptionsDB.docChanges().forEach((change) => {
+				const data = change.doc.data();
 				const statementSubscription = parse(
 					StatementSubscriptionSchema,
-					change.doc.data()
+					{
+						...data,
+						lastUpdated: data.lastUpdated?.toDate?.() ?? null,
+					}
 				);
 
 				if (change.type === 'added' || change.type === 'modified') {
@@ -368,6 +379,6 @@ export function getNewStatementsFromSubscriptions(userId: string): Unsubscribe {
 	} catch (error) {
 		console.error(error);
 
-		return () => { };
+		return () => {};
 	}
 }

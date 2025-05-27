@@ -1,10 +1,16 @@
-import { Collections, NotificationType, Statement, StatementSchema, StatementSubscription } from "delib-npm";
-import { logger } from "firebase-functions/v1";
-import { parse } from "valibot";
-import { db } from ".";
-import { FirestoreEvent } from "firebase-functions/firestore";
-import { QueryDocumentSnapshot } from "firebase-admin/firestore";
-import * as admin from "firebase-admin";
+import {
+	Collections,
+	NotificationType,
+	Statement,
+	StatementSchema,
+	StatementSubscription,
+} from 'delib-npm';
+import { logger } from 'firebase-functions/v1';
+import { parse } from 'valibot';
+import { db } from '.';
+import { FirestoreEvent } from 'firebase-functions/firestore';
+import { QueryDocumentSnapshot } from 'firebase-admin/firestore';
+import * as admin from 'firebase-admin';
 
 /**
  * Updates in-app notifications when a new statement is created as a reply.
@@ -12,85 +18,140 @@ import * as admin from "firebase-admin";
  */
 
 export async function updateInAppNotifications(
-	e: FirestoreEvent<QueryDocumentSnapshot>,
+	e: FirestoreEvent<QueryDocumentSnapshot>
 ): Promise<void> {
 	try {
 		//go to the new statement and parse it
 		const newStatement = e.data?.data() as Statement;
-		if (newStatement.parentId === 'top') return;
 		const statement = parse(StatementSchema, newStatement);
 
 		// Fetch all required data in parallel
-		const [subscribersDB, parentStatementDB, askedToBeNotifiedDB] = await fetchNotificationData(statement.parentId);
-		const subscribersInApp = subscribersDB.docs.map((doc: QueryDocumentSnapshot) => doc.data() as StatementSubscription);
-		const parentStatement = parse(StatementSchema, parentStatementDB.data());
+		const [subscribersDB, parentStatementDB, askedToBeNotifiedDB] =
+			await fetchNotificationData(statement.parentId);
+
+		const subscribersInApp = subscribersDB.docs.map(
+			(doc: QueryDocumentSnapshot) => doc.data() as StatementSubscription
+		);
+		const parentStatement = parse(
+			StatementSchema,
+			parentStatementDB.data()
+		);
+
+		// Also fetch subscribers for the top-level parent if this is a nested reply
+		let topLevelSubscribers: StatementSubscription[] = [];
+		if (statement.parentId !== 'top') {
+			// Find the top-level parent by traversing up
+			let currentParent = parentStatement;
+			while (currentParent && currentParent.parentId !== 'top') {
+				const parentDoc = await db
+					.doc(`${Collections.statements}/${currentParent.parentId}`)
+					.get();
+				if (parentDoc.exists) {
+					currentParent = parse(StatementSchema, parentDoc.data());
+				} else {
+					break;
+				}
+			}
+
+			if (
+				currentParent &&
+				currentParent.statementId !== statement.parentId
+			) {
+				const topSubscribersDB = await db
+					.collection(Collections.statementsSubscribe)
+					.where('statementId', '==', currentParent.statementId)
+					.where('getInAppNotification', '==', true)
+					.get();
+
+				topLevelSubscribers = topSubscribersDB.docs.map(
+					(doc) => doc.data() as StatementSubscription
+				);
+			}
+		}
+
+		// Combine subscribers
+		const allSubscribers = [...subscribersInApp, ...topLevelSubscribers];
 
 		//get fcm subscribers
-		const fcmSubscribers: FcmSubscriber[] = askedToBeNotifiedDB.docs.map((ntfDB: QueryDocumentSnapshot) => {
-			const data = ntfDB.data();
+		const fcmSubscribers: FcmSubscriber[] = askedToBeNotifiedDB.docs.map(
+			(ntfDB: QueryDocumentSnapshot) => {
+				const data = ntfDB.data();
 
-			return {
-				userId: data.userId,
-				token: data.token
-			};
-		});
+				return {
+					userId: data.userId,
+					token: data.token,
+				};
+			}
+		);
 
 		//update last message in the parent statement
 		await db.doc(`${Collections.statements}/${statement.parentId}`).update({
 			lastMessage: {
 				message: newStatement.statement,
-				creator: newStatement.creator.displayName || "Anonymous",
+				creator: newStatement.creator.displayName || 'Anonymous',
 				createdAt: newStatement.createdAt,
 			},
 		});
 
 		// Process notifications
-		await processInAppNotifications(subscribersInApp, newStatement, parentStatement);
+		await processInAppNotifications(
+			allSubscribers,
+			newStatement,
+			parentStatement
+		);
 		await processFcmNotifications(fcmSubscribers, newStatement);
 	} catch (error) {
 		logger.error(error);
 	}
 }
-
 /**
  * Fetches all data needed for notification processing in parallel.
  */
 async function fetchNotificationData(parentId: string) {
 	// Query for in-app and FCM notification subscribers
-	const parentStatementSubscribersCB = db.collection(Collections.statementsSubscribe)
+	const parentStatementSubscribersCB = db
+		.collection(Collections.statementsSubscribe)
 		.where('statementId', '==', parentId)
-		.where("getInAppNotification", "==", true)
+		.where('getInAppNotification', '==', true)
 		.get();
-	const askedToBeNotifiedCB = db.collection(Collections.askedToBeNotified)
+	const askedToBeNotifiedCB = db
+		.collection(Collections.askedToBeNotified)
 		.where('statementId', '==', parentId)
 		.get();
-	const parentStatementCB = db.doc(`${Collections.statements}/${parentId}`).get();
+	const parentStatementCB = db
+		.doc(`${Collections.statements}/${parentId}`)
+		.get();
 
 	return await Promise.all([
 		parentStatementSubscribersCB,
 		parentStatementCB,
-		askedToBeNotifiedCB
+		askedToBeNotifiedCB,
 	]);
 }
 
 /**
  * Creates in-app notifications using batch write operation.
  */
-async function processInAppNotifications(subscribersInApp: StatementSubscription[], newStatement: Statement, parentStatement: Statement) {
+async function processInAppNotifications(
+	subscribersInApp: StatementSubscription[],
+	newStatement: Statement,
+	parentStatement: Statement
+) {
 	//here we should have all the subscribers for the parent notification
 
 	const batch = db.batch();
 
 	// Create notification for each subscriber
 	subscribersInApp.forEach((subscriber: StatementSubscription) => {
-
-		const notificationRef = db.collection(Collections.inAppNotifications).doc();
+		const notificationRef = db
+			.collection(Collections.inAppNotifications)
+			.doc();
 
 		const newNotification: NotificationType = {
 			userId: subscriber.user.uid,
 			parentId: newStatement.parentId,
 			parentStatement: parentStatement.statement,
-			statementType: parentStatement.statementType,
+			statementType: newStatement.statementType,
 			text: newStatement.statement,
 			creatorId: newStatement.creator.uid,
 			creatorName: newStatement.creator.displayName,
@@ -114,28 +175,37 @@ interface FcmSubscriber {
 	token: string;
 }
 
-async function processFcmNotifications(fcmSubscribers: FcmSubscriber[], newStatement: Statement) {
+async function processFcmNotifications(
+	fcmSubscribers: FcmSubscriber[],
+	newStatement: Statement
+) {
 	if (fcmSubscribers.length > 0) {
 		// Format FCM messages
-		const fcmMessages = fcmSubscribers.map(subscriber => {
-			if (subscriber.userId && subscriber.token) {
-				return {
-					token: subscriber.token,
-					notification: {
-						title: `New reply from ${newStatement.creator.displayName}`,
-						body: newStatement.statement.substring(0, 100) + (newStatement.statement.length > 100 ? '...' : '')
-					},
-					data: {
-						statementId: newStatement.statementId,
-						parentId: newStatement.parentId,
-						createdAt: newStatement.createdAt.toString(),
-						notificationType: 'statement_reply'
-					}
-				};
-			} else {
-				return null;
-			}
-		}).filter(message => message !== null);
+		const fcmMessages = fcmSubscribers
+			.map((subscriber) => {
+				if (subscriber.userId && subscriber.token) {
+					return {
+						token: subscriber.token,
+						notification: {
+							title: `New reply from ${newStatement.creator.displayName}`,
+							body:
+								newStatement.statement.substring(0, 100) +
+								(newStatement.statement.length > 100
+									? '...'
+									: ''),
+						},
+						data: {
+							statementId: newStatement.statementId,
+							parentId: newStatement.parentId,
+							createdAt: newStatement.createdAt.toString(),
+							notificationType: 'statement_reply',
+						},
+					};
+				} else {
+					return null;
+				}
+			})
+			.filter((message) => message !== null);
 
 		// Send notifications in batches to avoid FCM limitations
 		const fcmBatchSize = 500;
@@ -143,9 +213,11 @@ async function processFcmNotifications(fcmSubscribers: FcmSubscriber[], newState
 			const batch = fcmMessages.slice(i, i + fcmBatchSize);
 			if (batch.length > 0) {
 				try {
-					await Promise.all(batch.map(message => admin.messaging().send(message)));
+					await Promise.all(
+						batch.map((message) => admin.messaging().send(message))
+					);
 				} catch (fcmError) {
-					logger.error("Error sending FCM notifications:", fcmError);
+					logger.error('Error sending FCM notifications:', fcmError);
 				}
 			}
 		}

@@ -1,19 +1,22 @@
 .nodeMenu {
 	display: flex;
-	padding: 0.2rem 0.5rem;
-	justify-content: space-between;
-	gap: .2rem;
+	flex-direction: column;
 	background-color: white;
 	border-radius: 0.5rem;
 	box-shadow: 0 0 0.5rem rgba(0, 0, 0, 0.1);
+	.iconContainer {
+		display: flex;
+		flex-direction: row;
+		padding: 0.2rem 0.5rem;
+		justify-content: space-between;
+		gap: 0.2rem;
+	}
 
 	button {
-
 		border: none;
-		padding: 0.5rem 1rem;
 		cursor: pointer;
 		color: var(--icons-blue-dark);
-
+		padding: 0.5rem 1rem;
 
 		&:hover {
 			background-color: lightgoldenrodyellow;
@@ -21,8 +24,24 @@
 
 		border-radius: 0.25rem;
 	}
-
+	.rateMenuContainer {
+		margin: 0 auto;
+		padding: 0;
+		button {
+			padding: 0;
+		}
+	}
 	.deleteButton {
 		color: var(--reject);
+	}
+	.editBtn {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+
+		svg {
+			height: 1.3rem;
+			width: 1.3rem;
+		}
 	}
 }

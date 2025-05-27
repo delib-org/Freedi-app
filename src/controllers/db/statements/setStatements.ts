@@ -33,6 +33,7 @@ import {
 
 import { number, parse, string } from 'valibot';
 import { isStatementTypeAllowedAsChildren } from '@/controllers/general/helpers';
+import { setNewProcessToDB } from '../massConsensus/setMassConsensus';
 
 export const resultsSettingsDefault: ResultsSettings = {
 	resultsBy: ResultsBy.consensus,
@@ -103,7 +104,7 @@ export async function saveStatementToDB({
 
 		if (!statement) throw new Error('Statement is undefined');
 
-		setStatementToDB({
+		await setStatementToDB({
 			statement,
 			parentStatement,
 		});
@@ -364,6 +365,9 @@ export function createStatement({
 		}
 
 		parse(StatementSchema, newStatement);
+		if (questionType === QuestionType.massConsensus) {
+			setNewProcessToDB(newStatement.statementId);
+		}
 
 		return newStatement;
 	} catch (error) {

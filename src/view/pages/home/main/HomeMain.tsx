@@ -22,7 +22,7 @@ const HomeMain = () => {
 	// Hooks
 	const navigate = useNavigate();
 	const [loading, setLoading] = useState(true);
-	const [subPage, setSubPage] = useState<"decisions" | "groups">("decisions");
+	const [subPage, setSubPage] = useState<"decisions" | "groups">("groups");
 	const [subPageTitle, setSubPageTitle] = useState<"Decisions" | "Groups">("Decisions");
 	const { user } = useAuthentication();
 	const { t } = useUserConfig();
