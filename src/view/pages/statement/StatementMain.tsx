@@ -29,6 +29,7 @@ import { useSelector } from 'react-redux';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { notificationService } from '@/services/notificationService';
 import { listenToInAppNotifications, clearInAppNotifications } from '@/controllers/db/inAppNotifications/db_inAppNotifications';
+import { listenToUserQuestions } from '@/controllers/db/userData/getUserData';
 
 // Create selectors
 export const subStatementsSelector = createSelector(
@@ -102,6 +103,9 @@ export default function StatementMain() {
 
 			unsubscribeFunctions.push(
 				listenToStatement(statementId, setIsStatementNotFound)
+			);
+			unsubscribeFunctions.push(
+				listenToUserQuestions(statementId)
 			);
 
 			// Combine and optimize additional listeners

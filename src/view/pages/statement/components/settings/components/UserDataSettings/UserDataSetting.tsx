@@ -1,4 +1,4 @@
-import React, { FC, useEffect, useState } from 'react'
+import React, { FC, useState } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import SectionTitle from '../sectionTitle/SectionTitle'
 import { useUserConfig } from '@/controllers/hooks/useUserConfig'
@@ -10,7 +10,6 @@ import { getRandomUID, Statement, UserQuestion, UserQuestionType } from 'delib-n
 import { deleteUserDataQuestion, setUserDataQuestion } from '@/controllers/db/userData/setUserData'
 import { RootState } from '@/redux/store'
 import { setUserQuestion, deleteUserQuestion, selectUserQuestionsByStatementId } from '@/redux/userData/userDataSlice'
-import { getUserQuestions } from '@/controllers/db/userData/getUserData'
 
 //mockData
 
@@ -19,7 +18,7 @@ interface Props {
 }
 
 const UserDataSetting: FC<Props> = ({ statement }) => {
-	const statementId = statement.statementId
+
 	const { t } = useUserConfig()
 	const dispatch = useDispatch()
 	const [showModal, setShowModal] = useState(false)
@@ -27,10 +26,6 @@ const UserDataSetting: FC<Props> = ({ statement }) => {
 	const userQuestions = useSelector((state: RootState) =>
 		selectUserQuestionsByStatementId(state, statement.statementId)
 	)
-
-	useEffect(() => {
-		getUserQuestions(statementId)
-	}, [statementId])
 
 	function closeModal() {
 		setShowModal(false)
@@ -116,7 +111,8 @@ const UserDataSetting: FC<Props> = ({ statement }) => {
 			<SectionTitle title={t('Member Information')} />
 			<div className="btns">
 				<button className='btn btn--secondary' onClick={() => setShowModal(true)}>{t('Edit')}</button>
-			</div>			{showModal && <SettingsModal closeModal={closeModal}>
+			</div>
+			{showModal && <SettingsModal closeModal={closeModal}>
 				<div className={styles.userDataSettings}>
 					<h3>{t('User Data Questions')}</h3>					{/* New Question Form */}
 					<form className={styles.newQuestionForm} onSubmit={handleAddNewQuestion}>

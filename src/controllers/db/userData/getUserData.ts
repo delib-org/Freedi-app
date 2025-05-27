@@ -1,9 +1,9 @@
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { collection, query, where, getDocs, onSnapshot } from 'firebase/firestore';
 import { FireStore } from '../config';
 import { Collections, UserQuestion, UserQuestionSchema } from 'delib-npm';
 import { parse } from 'valibot';
 import { store } from '@/redux/store';
-import { setUserQuestions } from '@/redux/userData/userDataSlice';
+import { deleteUserQuestion, setUserQuestion, setUserQuestions } from '@/redux/userData/userDataSlice';
 
 /**
  * Fetches user questions from the database for a specific statement ID
@@ -54,5 +54,41 @@ export async function getUserQuestions(statementId: string): Promise<void> {
 		console.error('Error fetching user questions:', error);
 		// Dispatch empty array in case of error to clear any stale data
 		store.dispatch(setUserQuestions([]));
+	}
+}
+
+export function listenToUserQuestions(statementId: string): () => void {
+	try {
+		if (!statementId) {
+			throw new Error('Statement ID is required to listen for user questions');
+		}
+
+		const userQuestionsRef = collection(FireStore, Collections.userDataQuestions);
+		const q = query(
+			userQuestionsRef,
+			where('statementId', '==', statementId)
+		);
+
+		return onSnapshot(q, (userQuestionsDB) => {
+			userQuestionsDB.docChanges().forEach((change) => {
+				try {
+					const data = change.doc.data();
+					const validatedQuestion = parse(UserQuestionSchema, data);
+
+					if (change.type === 'added' || change.type === 'modified') {
+						store.dispatch(setUserQuestion(validatedQuestion));
+					} else if (change.type === 'removed') {
+						store.dispatch(deleteUserQuestion(change.doc.id));
+					}
+				} catch (validationError) {
+					console.error(`Invalid user question data for document ${change.doc.id}:`, validationError);
+				}
+			});
+		});
+
+	} catch (error) {
+		console.error('Error setting up listener for user questions:', error);
+
+		return () => { return; } // Return a no-op function in case of error
 	}
 }
