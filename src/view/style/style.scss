@@ -128,6 +128,7 @@
 	--btn-orange-selected: #ea4715;
 
 	--add-btn: #275ddb;
+	--btn-disabled: #C6CDDC;
 
 	//buttons-contrast
 	--btn-primary-contrast: #165bfa;
@@ -153,6 +154,7 @@
 	--btn-orange-selected-contrast: #f53105;
 
 	--add-btn-contrast: #0443d6;
+	--btn-disabled-contrast: #DCE0EA;
 
 	// accessibility buttons
 	--btn-accessibility-icons: #5f88e5;
@@ -292,13 +294,15 @@
 	--icons-disabled-dark: #909ebc;
 
 	//icons-contrast
-	--icons-blue-contrast: #165bfa;
-	--icons-blue-dark-contrast: #0332a0;
-	--icons-white-contrast: #ffffff;
-	--icons-red-contrast: #ff0207;
-	--icons-green-contrast: #00bd9a;
-	--icons-disabled-contrast: #93a0bd;
-	--icons-disabled-dark-contrast: #6d7ea6;
+	--icon-blue-contrast: #165bfa;
+	--icon-blue-dark-contrast: #0332a0;
+	--icon-white-contrast: #ffffff;
+	--icon-red-contrast: #ff0207;
+	--icon-green-contrast: #00bd9a;
+	--icon-disabled-contrast: #93a0bd;
+	--icon-disabled-dark-contrast: #6d7ea6;
+	--icon-disabled-filled: #a9d2ff;
+	--icon-disabled-filled-contrast: #
 
 	//input
 	--input-active: #ffffff;
@@ -568,6 +572,9 @@
 
 	// //base
 	--bg-screen: #f2f6ff;
+	--bg-screen-contrast: #ffffff;
+	--bg-overlay: rgba(1, 17, 55, 0.4);
+	--bg-overlay-contrast: rgba(1, 17, 55, 0.8);
 
 	// btns
 	--btn-disabled: #c6d2de;

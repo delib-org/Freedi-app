@@ -48,6 +48,7 @@ export const colorMappings: ColorMappings = {
   "--btn-tertiary-blue": "--btn-tertiary-blue-contrast",
   "--btn-tertiary-red": "--btn-tertiary-red-contrast",
   "--add-btn": "--add-btn-contrast",
+  "--btn-disabled": "--btn-disabled-contrast",
 
   // accessibility buttons
   "--btn-accessibility-icons": "--btn-accessibility-icons-contrast",

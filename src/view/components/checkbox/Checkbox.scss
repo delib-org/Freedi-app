@@ -3,7 +3,7 @@
     --text-paragraph: #57688f;
 
     --icon-disabled-filled: #a9d2ff;
-    --icon-blue: #5f88e5;
+
 
     font-family: "Roboto", sans-serif;
     line-height: 150%;
@@ -37,7 +37,7 @@
         }
 
         .checkbox-icon svg {
-            color: var(--icon-blue);
+            color: var(--icons-blue);
         }
     }
 }
