@@ -1,0 +1,100 @@
+.container {
+	background-color: var(--card-default);
+	border: 1px solid #e5e7eb;
+	border-radius: 8px;
+	padding: 1rem;
+}
+
+.questionSection {
+	margin-bottom: 1rem;
+}
+
+.questionTitle {
+	font-size: 0.875rem;
+	font-weight: 500;
+	color: var(--text-title);
+	margin-bottom: 0.75rem;
+}
+
+.required {
+	color: var(--text-error);
+	margin-left: 0.25rem;
+}
+
+.inputContainer {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+}
+
+.textInput {
+	width: 100%;
+	padding: 0.5rem 0.75rem;
+	border: 1px solid #d1d5db;
+	border-radius: 0.375rem;
+	font-size: 0.875rem;
+	background-color: var(--input-active);
+
+	&:focus {
+		outline: none;
+		border-color: var(--btn-primary-default);
+		box-shadow: 0 0 0 2px rgba(95, 136, 229, 0.2);
+	}
+
+	&::placeholder {
+		color: var(--text-caption);
+	}
+
+	&:required {
+		border-color: #d1d5db;
+	}
+}
+
+.textareaInput {
+	@extend .textInput;
+	resize: vertical;
+	min-height: 4rem;
+}
+
+.optionsContainer {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+}
+
+.optionLabel {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	cursor: pointer;
+
+	&:hover {
+		opacity: 0.8;
+	}
+}
+
+.radioInput,
+.checkboxInput {
+	width: 1rem;
+	height: 1rem;
+	color: var(--btn-primary-default);
+	border-color: #d1d5db;
+
+	&:focus {
+		box-shadow: 0 0 0 2px rgba(95, 136, 229, 0.2);
+	}
+
+	&:checked {
+		background-color: var(--btn-primary-default);
+		border-color: var(--btn-primary-default);
+	}
+}
+
+.checkboxInput {
+	border-radius: 0.25rem;
+}
+
+.optionText {
+	font-size: 0.875rem;
+	color: var(--text-body);
+}

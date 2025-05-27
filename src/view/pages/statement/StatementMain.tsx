@@ -30,6 +30,8 @@ import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { notificationService } from '@/services/notificationService';
 import { listenToInAppNotifications, clearInAppNotifications } from '@/controllers/db/inAppNotifications/db_inAppNotifications';
 import { listenToUserQuestions } from '@/controllers/db/userData/getUserData';
+import { selectUserQuestionsByStatementId } from '@/redux/userData/userDataSlice';
+import UserDataQuestions from './components/userDataQuestions/UserDataQuestions';
 
 // Create selectors
 export const subStatementsSelector = createSelector(
@@ -45,6 +47,7 @@ export default function StatementMain() {
 	// Hooks
 	const { statementId, stageId } = useParams();
 	const statement = useSelector(statementSelector(statementId));
+	const userDataQuestions = useSelector(selectUserQuestionsByStatementId(statementId));
 	const topParentStatement = useSelector(statementSelector(statement?.topParentId));
 	const role = useSelector(statementSubscriptionSelector(statementId))?.role;
 	const { isAuthorized, loading, isWaitingForApproval } = useAuthorization(statementId);
@@ -54,6 +57,8 @@ export default function StatementMain() {
 
 	const stage = useSelector(statementSelector(stageId));
 
+	const showUserQuestion = userDataQuestions && userDataQuestions.length > 0;
+
 	// Use states
 	const [talker, setTalker] = useState<User | null>(null);
 	const [isStatementNotFound, setIsStatementNotFound] = useState(false);
@@ -61,9 +66,15 @@ export default function StatementMain() {
 	const [newStatementType, setNewStatementType] = useState<StatementType>(
 		StatementType.group
 	);
+	const [showUserQuestionsModal, setShowUserQuestionsModal] = useState<boolean>(showUserQuestion);
 	const [newQuestionType, setNewQuestionType] = useState<QuestionType>(
 		QuestionType.multiStage
 	);
+
+	function closeModal() {
+		console.log("first close modal");
+		setShowUserQuestionsModal(false);
+	}
 
 	const handleShowTalker = (_talker: User | null) => {
 		if (!talker) {
@@ -93,6 +104,14 @@ export default function StatementMain() {
 			document.title = `FreeDi - ${shortVersion}`;
 		}
 	}, [statement, screen]);
+
+	useEffect(() => {
+		if (userDataQuestions?.length > 0) {
+			setShowUserQuestionsModal(true);
+		} else {
+			setShowUserQuestionsModal(false);
+		}
+	}, [showUserQuestion])
 
 	// Listen to statement changes.
 	useEffect(() => {
@@ -266,6 +285,7 @@ export default function StatementMain() {
 					<MapProvider>
 						<Switch />
 					</MapProvider>
+					{showUserQuestionsModal && <Modal><UserDataQuestions closeModal={closeModal} statement={statement} questions={userDataQuestions} /></Modal>}
 				</div>
 			</StatementContext.Provider>
 		);
