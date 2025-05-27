@@ -1,4 +1,4 @@
-import { QuestionType, Statement, UserQuestion } from 'delib-npm'
+import { QuestionType, Statement, UserQuestion, UserQuestionType } from 'delib-npm'
 import { FC, useState } from 'react'
 import UserQuestionInput from '../settings/userDataQuestionInput/UserDataQuestionInput';
 
@@ -14,17 +14,32 @@ const UserDataQuestions: FC<Props> = ({ statement, questions, closeModal }) => {
 
 	const handleQuestionChange = (question: UserQuestion, value: string | string[]) => {
 		// Update the statement with the new user data
-		console.log('handleQuestionChange', question, value);
-		setUserData((prevData) => {
-			const currentQuestion = prevData.find(q => q.userQuestionId === question.userQuestionId);
-			if (currentQuestion) {
-				return prevData.map(q =>
-					q.userQuestionId === question.userQuestionId ? { ...q, answer: Array.isArray(value) ? value.join(',') : value } : q
-				);
-			}
+		if (question.type === UserQuestionType.text || question.type === UserQuestionType.textarea || question.type === UserQuestionType.radio) {
 
-			return [...prevData, { ...question, answer: Array.isArray(value) ? value.join(',') : value }];
-		});
+			setUserData((prevData) => {
+				const currentQuestion = prevData.find(q => q.userQuestionId === question.userQuestionId);
+				if (currentQuestion) {
+					return prevData.map(q =>
+						q.userQuestionId === question.userQuestionId ? { ...q, answer: Array.isArray(value) ? value.join(',') : value } : q
+					);
+				}
+
+				return [...prevData, { ...question, answer: Array.isArray(value) ? value.join(',') : value }];
+			});
+		} else if (question.type === UserQuestionType.checkbox) {
+			setUserData((prevData) => {
+				const currentQuestion = prevData.find(q => q.userQuestionId === question.userQuestionId);
+				if (currentQuestion) {
+					if (currentQuestion.answerOptions.includes(value as string)) {
+						return prevData.map(q =>
+							q.userQuestionId === question.userQuestionId ? { ...q, answerOptions: q.answerOptions.filter(opt => opt !== value) } : q
+						);
+					}
+				}
+
+				return [...prevData, { ...question, answerOptions: [value as string] }];
+			});
+		}
 
 		console.log(userData)
 	};

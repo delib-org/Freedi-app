@@ -67,7 +67,7 @@ const UserQuestionInput: FC<UserQuestionInputProps> = ({
 									type="radio"
 									name={`radio-${question.statementId}`}
 									value={option}
-									checked={value === option}
+									defaultChecked={value === option}
 									onChange={() => handleRadioChange(option)}
 									className={styles.radioInput}
 									required={question.required}
@@ -86,8 +86,7 @@ const UserQuestionInput: FC<UserQuestionInputProps> = ({
 								<label key={index} className={styles.optionLabel}>
 									<input
 										type="checkbox"
-										value={option}
-										checked={currentValues.includes(option)}
+										defaultChecked={currentValues.includes(option)}
 										onChange={() => handleCheckboxChange(option)}
 										className={styles.checkboxInput}
 									/>
