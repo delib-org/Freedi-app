@@ -122,23 +122,28 @@ const Tabs: FC<TabsProps> = ({
 	setIsOptionChosen,
 }) => {
 	const { t } = useUserConfig();
+	const availableTypes = allowedTypes ?? [
+		StatementType.option,
+		StatementType.question,
+	];
 
 	return (
 		<div className='tabs'>
-			{allowedTypes?.includes(StatementType.option) && (
+			{availableTypes.includes(StatementType.option) && (
 				<button
+					type='button'
 					onClick={() => setIsOptionChosen(true)}
-					className={`tab option ${isOptionChosen ? 'active' : ''}`}
+					className={`tab question ${isOptionChosen ? 'active' : ''}`}
 				>
 					{t('Option')}
-
 					{isOptionChosen && <div className='block' />}
 				</button>
 			)}
-			{allowedTypes?.includes(StatementType.question) && (
+			{availableTypes.includes(StatementType.question) && (
 				<button
+					type='button'
 					onClick={() => setIsOptionChosen(false)}
-					className={`tab question ${isOptionChosen ? '' : 'active'}`}
+					className={`tab question ${!isOptionChosen ? 'active' : ''}`}
 				>
 					{t('Question')}
 					{!isOptionChosen && <div className='block' />}
@@ -147,7 +152,6 @@ const Tabs: FC<TabsProps> = ({
 		</div>
 	);
 };
-
 interface CreateStatementButtonsProps {
 	isOption: boolean;
 	onCancel: VoidFunction;
