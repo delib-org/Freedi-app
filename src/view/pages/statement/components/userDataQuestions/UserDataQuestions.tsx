@@ -31,10 +31,14 @@ const UserDataQuestions: FC<Props> = ({ statement, questions, closeModal }) => {
 				const currentQuestion = prevData.find(q => q.userQuestionId === question.userQuestionId);
 				if (currentQuestion) {
 					if (currentQuestion.answerOptions.includes(value as string)) {
-						return prevData.map(q =>
-							q.userQuestionId === question.userQuestionId ? { ...q, answerOptions: q.answerOptions.filter(opt => opt !== value) } : q
-						);
+						currentQuestion.answerOptions = [...currentQuestion.answerOptions.filter(option => option !== value)];
+					} else {
+						currentQuestion.answerOptions = [...currentQuestion.answerOptions, value as string];
 					}
+
+					return prevData.map(q =>
+						q.userQuestionId === question.userQuestionId ? { ...q, answerOptions: currentQuestion.answerOptions } : q
+					);
 				}
 
 				return [...prevData, { ...question, answerOptions: [value as string] }];
