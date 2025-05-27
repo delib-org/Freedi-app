@@ -5,6 +5,7 @@ import styles from './UserDataQuestionInput.module.scss';
 interface UserQuestionInputProps {
 	question: UserQuestion;
 	value?: string | string[];
+	options
 	onChange: (value: string | string[]) => void;
 	className?: string;
 }
@@ -38,7 +39,7 @@ const UserQuestionInput: FC<UserQuestionInputProps> = ({
 					<div className={styles.inputContainer}>
 						<input
 							type="text"
-							value={value as string}
+							defaultValue={value as string}
 							onChange={handleTextChange}
 							placeholder="Write your location here..."
 							className={styles.textInput}
@@ -49,7 +50,7 @@ const UserQuestionInput: FC<UserQuestionInputProps> = ({
 				return (
 					<div className={styles.inputContainer}>
 						<textarea
-							value={value as string}
+							defaultValue={value as string}
 							onChange={handleTextChange}
 							placeholder="Express your viewpoint..."
 							rows={4}

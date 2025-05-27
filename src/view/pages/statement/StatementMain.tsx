@@ -45,9 +45,9 @@ export const subStatementsSelector = createSelector(
 
 export default function StatementMain() {
 	// Hooks
-	const { statementId, stageId } = useParams();
+	const { statementId, stageId, sort, screen } = useParams();
 	const statement = useSelector(statementSelector(statementId));
-	const userDataQuestions = useSelector(selectUserQuestionsByStatementId(statementId));
+	const userDataQuestions = useSelector((state: RootState) => selectUserQuestionsByStatementId(state, statementId || ''));
 	const topParentStatement = useSelector(statementSelector(statement?.topParentId));
 	const role = useSelector(statementSubscriptionSelector(statementId))?.role;
 	const { isAuthorized, loading, isWaitingForApproval } = useAuthorization(statementId);
@@ -72,7 +72,6 @@ export default function StatementMain() {
 	);
 
 	function closeModal() {
-		console.log("first close modal");
 		setShowUserQuestionsModal(false);
 	}
 
@@ -106,12 +105,12 @@ export default function StatementMain() {
 	}, [statement, screen]);
 
 	useEffect(() => {
-		if (userDataQuestions?.length > 0) {
+		if (userDataQuestions?.length > 0 && screen !== "settings") {
 			setShowUserQuestionsModal(true);
 		} else {
 			setShowUserQuestionsModal(false);
 		}
-	}, [showUserQuestion])
+	}, [showUserQuestion, screen])
 
 	// Listen to statement changes.
 	useEffect(() => {

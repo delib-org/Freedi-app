@@ -34,9 +34,9 @@ export const {
 } = userDataSlice.actions;
 
 // Selectors
-export const selectUserQuestionsByStatementId = (statementId: string) => createSelector(
-	[(state: RootState) => state.userData.userQuestions],
-	(userQuestions) => userQuestions.filter(question => question.statementId === statementId)
+export const selectUserQuestionsByStatementId = createSelector(
+	[(state: RootState) => state.userData.userQuestions, (state: RootState, statementId: string) => statementId],
+	(userQuestions, statementId) => userQuestions.filter(question => question.statementId === statementId)
 );
 
 export default userDataSlice.reducer;

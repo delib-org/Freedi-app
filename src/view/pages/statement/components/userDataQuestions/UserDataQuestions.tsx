@@ -1,5 +1,5 @@
-import { Statement, UserQuestion } from 'delib-npm'
-import { FC } from 'react'
+import { QuestionType, Statement, UserQuestion } from 'delib-npm'
+import { FC, useState } from 'react'
 import UserQuestionInput from '../settings/userDataQuestionInput/UserDataQuestionInput';
 
 interface Props {
@@ -10,15 +10,23 @@ interface Props {
 
 const UserDataQuestions: FC<Props> = ({ statement, questions, closeModal }) => {
 
-	const handleQuestionChange = (questionId: string, value: string | string[]) => {
-		// Update the statement with the new user data
-		const updatedUserData = {
-			...statement.userData,
-			[questionId]: value
-		};
+	const [userData, setUserData] = useState<UserQuestion[]>([]);
 
-		// Here you would typically dispatch an action to update the Redux store
-		console.log(`Updated question ${questionId} with value:`, updatedUserData);
+	const handleQuestionChange = (question: UserQuestion, value: string | string[]) => {
+		// Update the statement with the new user data
+		console.log('handleQuestionChange', question, value);
+		setUserData((prevData) => {
+			const currentQuestion = prevData.find(q => q.userQuestionId === question.userQuestionId);
+			if (currentQuestion) {
+				return prevData.map(q =>
+					q.userQuestionId === question.userQuestionId ? { ...q, answer: Array.isArray(value) ? value.join(',') : value } : q
+				);
+			}
+
+			return [...prevData, { ...question, answer: Array.isArray(value) ? value.join(',') : value }];
+		});
+
+		console.log(userData)
 	};
 
 	return (
@@ -28,7 +36,8 @@ const UserDataQuestions: FC<Props> = ({ statement, questions, closeModal }) => {
 					key={question.userQuestionId}
 					question={question}
 					value={''}
-					onChange={(value) => handleQuestionChange(question.userQuestionId, value)}
+					options={question.options || []}
+					onChange={(value) => handleQuestionChange(question, value)}
 				/>
 			))}
 			<div className="btns">
@@ -37,5 +46,4 @@ const UserDataQuestions: FC<Props> = ({ statement, questions, closeModal }) => {
 		</div >
 	)
 }
-
 export default UserDataQuestions

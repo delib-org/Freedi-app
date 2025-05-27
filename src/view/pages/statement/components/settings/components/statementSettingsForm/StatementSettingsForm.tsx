@@ -86,6 +86,7 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 		};
 
 		const isNewStatement = !statementId;
+		const isQuestion = statement.statementType === StatementType.question;
 
 		const statementSettingsProps = {
 			statement,
@@ -138,7 +139,7 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 							setImage={setImage}
 						/>
 						<QuestionSettings {...statementSettingsProps} />
-						<UserDataSetting statement={statement} />
+						{isQuestion && <UserDataSetting statement={statement} />}
 						<SectionTitle title={t('Members')} />
 						<section className='get-members-area'>
 							<GetVoters
