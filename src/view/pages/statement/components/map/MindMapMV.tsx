@@ -9,6 +9,7 @@ import { useParams } from 'react-router';
 import { resultsByParentId } from './mapCont';
 import { Statement, Results } from 'delib-npm';
 import { APIEndPoint, isChatMessage } from '@/controllers/general/helpers';
+import { listenToEvaluations } from '@/controllers/db/evaluation/getEvaluation';
 
 export function useMindMap() {
 	const { statementId } = useParams();
@@ -39,7 +40,21 @@ export function useMindMap() {
 			unsubscribe();
 		};
 	}, [statementId]);
+	useEffect(() => {
+		if (!statementId) return;
 
+		const unsubscribes = allDescendants.map(
+			(statement) => listenToEvaluations(statement.statementId) // assuming listenToEvaluation takes a statementId
+		);
+
+		return () => {
+			unsubscribes.forEach((unsubscribe) => {
+				if (typeof unsubscribe === 'function') {
+					unsubscribe();
+				}
+			});
+		};
+	}, [allDescendants]);
 	useEffect(() => {
 		setFlat(isFlat(descendants, statementId));
 	}, [descendants.length, statementId]);
