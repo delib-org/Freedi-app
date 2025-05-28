@@ -12,8 +12,6 @@ import { colorMappings } from './colorContrast';
 export default function Accessibility() {
 	const { fontSize, changeFontSize, colorContrast, setColorContrast, t } =
 		useUserConfig();
-
-	// Using the useAutoClose hook correctly
 	const { isOpen, handleOpen } = useAutoClose(10000);
 
 	const handleClickOutside = useCallback(() => {
@@ -31,37 +29,14 @@ export default function Accessibility() {
 		});
 	}, [colorContrast]);
 
-	// * Drag & Drop * //
+	// Drag & Drop
 	const [position, setPosition] = React.useState({ top: 250 });
-	const dragRef = useRef(null);
 	const startPos = useRef({ x: 0, y: 0 });
 	const isDragging = useRef(false);
-	// Track if a touch event has been moved
 	const touchMoved = useRef(false);
+	const buttonRef = useRef(null);
 
-	const handleStart = (event) => {
-		if ('touches' in event) {
-			event.preventDefault();
-		}
-		const clientX =
-			'touches' in event ? event.touches[0].clientX : event.clientX;
-		const clientY =
-			'touches' in event ? event.touches[0].clientY : event.clientY;
-		startPos.current = { x: clientX, y: clientY };
-		isDragging.current = false;
-
-		// Reset touch moved flag at start of touch
-		if ('touches' in event) {
-			touchMoved.current = false;
-		}
-
-		document.addEventListener('mousemove', handleMove);
-		document.addEventListener('mouseup', handleEnd);
-		document.addEventListener('touchmove', handleMove, { passive: false });
-		document.addEventListener('touchend', handleEnd);
-	};
-
-	const handleMove = (event) => {
+	const handleMove = useCallback((event) => {
 		const clientX =
 			'touches' in event ? event.touches[0].clientX : event.clientX;
 		const clientY =
@@ -70,37 +45,76 @@ export default function Accessibility() {
 		const deltaX = clientX - startPos.current.x;
 		const deltaY = clientY - startPos.current.y;
 
-		// Mark as dragging if moved significantly
 		if (Math.abs(deltaX) > 5 || Math.abs(deltaY) > 5) {
 			isDragging.current = true;
-
-			// For touch events, explicitly mark as moved
 			if ('touches' in event) {
 				touchMoved.current = true;
 			}
 		}
 
 		startPos.current = { x: clientX, y: clientY };
-
 		setPosition((prev) => ({
 			top: Math.min(
 				Math.max(prev.top + deltaY, 0),
 				window.innerHeight - 100
 			),
 		}));
-	};
-	const buttonRef = useRef(null);
+	}, []);
+
+	const handleEnd = useCallback(
+		(event) => {
+			document.removeEventListener('mousemove', handleMove);
+			document.removeEventListener('mouseup', handleEnd);
+			document.removeEventListener('touchmove', handleMove);
+			document.removeEventListener('touchend', handleEnd);
+
+			const isTouchEvent = event && event.type === 'touchend';
+
+			if (
+				(!isTouchEvent && !isDragging.current) ||
+				(isTouchEvent && !touchMoved.current)
+			) {
+				handleOpen();
+			}
+		},
+		[handleMove, handleOpen]
+	);
+
+	const handleStart = useCallback(
+		(event) => {
+			if ('touches' in event) {
+				event.preventDefault();
+			}
+			const clientX =
+				'touches' in event ? event.touches[0].clientX : event.clientX;
+			const clientY =
+				'touches' in event ? event.touches[0].clientY : event.clientY;
+			startPos.current = { x: clientX, y: clientY };
+			isDragging.current = false;
+
+			if ('touches' in event) {
+				touchMoved.current = false;
+			}
+
+			document.addEventListener('mousemove', handleMove);
+			document.addEventListener('mouseup', handleEnd);
+			document.addEventListener('touchmove', handleMove, {
+				passive: false,
+			});
+			document.addEventListener('touchend', handleEnd);
+		},
+		[handleMove, handleEnd]
+	);
 
 	useEffect(() => {
 		const button = buttonRef.current;
 		if (!button) return;
 
 		const handleTouchStart = (event) => {
-			event.preventDefault(); // This will work now
+			event.preventDefault();
 			handleStart(event);
 		};
 
-		// Add non-passive touch event listener
 		button.addEventListener('touchstart', handleTouchStart, {
 			passive: false,
 		});
@@ -110,32 +124,11 @@ export default function Accessibility() {
 			button.removeEventListener('touchstart', handleTouchStart);
 			button.removeEventListener('mousedown', handleStart);
 		};
-	}, []);
-
-	const handleEnd = (event) => {
-		document.removeEventListener('mousemove', handleMove);
-		document.removeEventListener('mouseup', handleEnd);
-		document.removeEventListener('touchmove', handleMove);
-		document.removeEventListener('touchend', handleEnd);
-
-		// For mouse: toggle if not dragging
-		// For touch: toggle only if tap (not moved)
-		const isTouchEvent = event && event.type === 'touchend';
-
-		if (
-			(!isTouchEvent && !isDragging.current) ||
-			(isTouchEvent && !touchMoved.current)
-		) {
-			handleOpen();
-		}
-	};
+	}, [handleStart]);
 
 	return (
 		<div
-			ref={(node) => {
-				dragRef.current = node;
-				if (accessibilityRef) accessibilityRef.current = node;
-			}}
+			ref={accessibilityRef}
 			className={`accessibility ${isOpen ? 'is-open' : ''}`}
 			style={{ fontSize, top: `${position.top}px` }}
 		>
