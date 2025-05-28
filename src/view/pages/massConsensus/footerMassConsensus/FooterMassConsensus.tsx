@@ -10,7 +10,7 @@ const FooterMassConsensus = ({
 	isNextActive,
 	isFeedback,
 	onNext,
-	blockNavigation
+	blockNavigation,
 }: {
 	isIntro?: boolean;
 	isNextActive?: boolean;
@@ -30,14 +30,15 @@ const FooterMassConsensus = ({
 		if (callback) callback();
 		if (!blockNavigation) {
 			setIsButtonClicked(true);
-			navigate(`/mass-consensus/${statementId}/${goTo}`)
+			navigate(`/mass-consensus/${statementId}/${goTo}`);
 		}
 	};
+	const handleSkip = () => {
+		if (!goTo) return;
+		setIsButtonClicked(true);
 
-	// if (goTo === undefined) {
-	// 	return null;
-	// }
-
+		navigate(`/mass-consensus/${statementId}/${goTo}`);
+	};
 	const renderButton = () => {
 		if (isIntro) {
 			return (
@@ -54,11 +55,10 @@ const FooterMassConsensus = ({
 		if (isFeedback) {
 			return (
 				<>
-
 					<button
 						className='btn btn--massConsensus btn--secondary'
 						disabled={isButtonClicked}
-						onClick={() => handleClick()}
+						onClick={() => handleSkip()}
 					>
 						{t('Skip')}
 					</button>
@@ -79,7 +79,7 @@ const FooterMassConsensus = ({
 				<button
 					className='btn btn--massConsensus btn--secondary'
 					disabled={isButtonClicked}
-					onClick={() => handleClick()}
+					onClick={() => handleSkip()}
 				>
 					{t('Skip')}
 				</button>

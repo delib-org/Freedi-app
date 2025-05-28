@@ -99,7 +99,7 @@ async function getSimilarStatements(
 			const errorData = await response.json();
 			if (response.status === 403) setError(errorData.error);
 
-			throw new Error(errorData.error || 'Server error');
+			throw new Error(errorData.error ?? 'Server error');
 		}
 
 		const data = await response.json();
