@@ -40,6 +40,9 @@ export default function Accessibility() {
 	const touchMoved = useRef(false);
 
 	const handleStart = (event) => {
+		if ('touches' in event) {
+			event.preventDefault();
+		}
 		const clientX =
 			'touches' in event ? event.touches[0].clientX : event.clientX;
 		const clientY =
@@ -86,6 +89,28 @@ export default function Accessibility() {
 			),
 		}));
 	};
+	const buttonRef = useRef(null);
+
+	useEffect(() => {
+		const button = buttonRef.current;
+		if (!button) return;
+
+		const handleTouchStart = (event) => {
+			event.preventDefault(); // This will work now
+			handleStart(event);
+		};
+
+		// Add non-passive touch event listener
+		button.addEventListener('touchstart', handleTouchStart, {
+			passive: false,
+		});
+		button.addEventListener('mousedown', handleStart);
+
+		return () => {
+			button.removeEventListener('touchstart', handleTouchStart);
+			button.removeEventListener('mousedown', handleStart);
+		};
+	}, []);
 
 	const handleEnd = (event) => {
 		document.removeEventListener('mousemove', handleMove);
@@ -116,8 +141,7 @@ export default function Accessibility() {
 		>
 			<button
 				className='accessibility-button'
-				onMouseDown={handleStart}
-				onTouchStart={handleStart}
+				ref={buttonRef}
 				aria-label={t('Accessibility options')}
 			>
 				<AccessibilityIcon />
