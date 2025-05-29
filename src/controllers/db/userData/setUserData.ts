@@ -1,9 +1,10 @@
 import { Collections, Statement, UserQuestion, UserQuestionSchema } from "delib-npm";
-import { deleteDoc, doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
+import { collection, deleteDoc, doc, getDoc, setDoc, updateDoc, writeBatch } from "firebase/firestore";
 import { DB } from "../config";
-import { parse } from "valibot";
+import { parse, safeParse } from "valibot";
 import { store } from "@/redux/store";
 import { deleteUserQuestion, setUserQuestion } from "@/redux/userData/userDataSlice";
+import type { BaseSchema } from "valibot";
 
 export async function setUserDataQuestion(statement: Statement, question: UserQuestion) {
 	try {
@@ -97,4 +98,57 @@ export async function deleteUserDataOption(question: UserQuestion, option: strin
 	} catch (error) {
 		console.error("Error deleting user data option:", error);
 	}
+}
+
+export async function setUserAnswers(answers: UserQuestion[]) {
+	try {
+		if (!answers || !Array.isArray(answers)) {
+			throw new Error("Answers must be an array");
+		}
+
+		const dispatch = store.dispatch;
+		const user = store.getState().creator?.creator;
+		if (!user || !user.uid) {
+			throw new Error("User must be logged in to set answers");
+		}
+		const { uid } = user;
+		const batch = writeBatch(DB);
+
+		for (const answer of answers) {
+			const { isValid } = validateDataAndLogIssues(UserQuestionSchema, answer);
+			if (!isValid) throw new Error("Invalid answer data");
+			console.log(`${answer.userQuestionId}--${uid}`)
+			const questionRef = doc(DB, Collections.usersData, `${answer.userQuestionId}--${uid}`);
+			batch.set(questionRef, answer, { merge: true });
+			dispatch(setUserQuestion(answer));
+		}
+
+		await batch.commit();
+
+	} catch (error) {
+		console.error("Error setting user answers:", error);
+	}
+}
+
+export function validateDataAndLogIssues<T>(schema: BaseSchema<any, T, any>, data: unknown): { isValid: boolean; validData?: T } {
+	const result = safeParse(schema, data);
+
+	if (!result.success) {
+		console.info('Validation failed!');
+		console.info('Issues:', result.issues);
+
+		// Print each issue in detail
+		result.issues.forEach((issue, index) => {
+			console.info(`Issue ${index + 1}:`);
+			console.info('  Path:', issue.path?.map(p => p.key).join('.') || 'root');
+			console.info('  Message:', issue.message);
+			console.info('  Expected:', issue.expected);
+			console.info('  Received:', issue.received);
+			console.info('  Input:', issue.input);
+		});
+
+		return { isValid: false };
+	}
+
+	return { isValid: true, validData: result.output };
 }

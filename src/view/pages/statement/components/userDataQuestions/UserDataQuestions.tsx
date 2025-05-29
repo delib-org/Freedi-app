@@ -1,6 +1,7 @@
 import { QuestionType, Statement, UserQuestion, UserQuestionType } from 'delib-npm'
 import { FC, useState } from 'react'
 import UserQuestionInput from '../settings/userDataQuestionInput/UserDataQuestionInput';
+import { setUserAnswers } from '@/controllers/db/userData/setUserData';
 
 interface Props {
 	statement: Statement;
@@ -29,24 +30,28 @@ const UserDataQuestions: FC<Props> = ({ statement, questions, closeModal }) => {
 		} else if (question.type === UserQuestionType.checkbox) {
 			setUserData((prevData) => {
 				const currentQuestion = prevData.find(q => q.userQuestionId === question.userQuestionId);
+				const _value = value[0];
 				if (currentQuestion) {
-					if (currentQuestion.answerOptions.includes(value as string)) {
-						currentQuestion.answerOptions = [...currentQuestion.answerOptions.filter(option => option !== value)];
-					} else {
-						currentQuestion.answerOptions = [...currentQuestion.answerOptions, value as string];
-					}
+					const newOptions = currentQuestion.answerOptions.includes(_value as string)
+						? currentQuestion.answerOptions.filter(option => option !== _value)
+						: [...currentQuestion.answerOptions, _value as string];
+
+					console.log("newOptions", newOptions);
 
 					return prevData.map(q =>
-						q.userQuestionId === question.userQuestionId ? { ...q, answerOptions: currentQuestion.answerOptions } : q
+						q.userQuestionId === question.userQuestionId ? { ...q, answerOptions: newOptions } : q
 					);
 				}
 
-				return [...prevData, { ...question, answerOptions: [value as string] }];
+				return [...prevData, { ...question, answerOptions: [_value as string] }];
 			});
 		}
-
-		console.log(userData)
 	};
+
+	function handleSaveUserAnswers() {
+		setUserAnswers(userData);
+		closeModal();
+	}
 
 	return (
 		<div>
@@ -60,7 +65,7 @@ const UserDataQuestions: FC<Props> = ({ statement, questions, closeModal }) => {
 				/>
 			))}
 			<div className="btns">
-				<button className="btn btn--secondary" onClick={() => { console.log("close modal"); closeModal(); }}>Submit</button>
+				<button className="btn btn--secondary" onClick={handleSaveUserAnswers}>Submit</button>
 			</div>
 		</div >
 	)
