@@ -115,6 +115,7 @@ export async function setUserAnswers(answers: UserQuestion[]) {
 		const batch = writeBatch(DB);
 
 		for (const answer of answers) {
+			answer.userId = uid; // Ensure userId is set
 			const { isValid } = validateDataAndLogIssues(UserQuestionSchema, answer);
 			if (!isValid) throw new Error("Invalid answer data");
 			console.log(`${answer.userQuestionId}--${uid}`)
