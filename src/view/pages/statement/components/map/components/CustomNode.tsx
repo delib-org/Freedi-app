@@ -41,6 +41,7 @@ function CustomNode({ data }: NodeProps) {
 	const navigate = useNavigate();
 	const { result, parentStatement, dimensions } = data;
 	const { statementId, statement } = result.top as Statement;
+
 	const { shortVersion: nodeTitle } = statementTitleToDisplay(statement, 80);
 	const { mapContext, setMapContext } = useMapContext();
 	const selectedId = mapContext?.selectedId ?? null;
@@ -52,9 +53,10 @@ function CustomNode({ data }: NodeProps) {
 	const statementColor = useStatementColor({ statement: localStatement });
 	const [showMenu, setShowMenu] = useState(false);
 
+	const { isVoted, isChosen, statementType } = result.top;
 	useEffect(() => {
 		setLocalStatement(result.top);
-	}, [result.top.statement.statementType]);
+	}, [isVoted, isChosen, statementType]);
 
 	// Get zoom level from React Flow store
 	const zoom = useStore((state) => state.transform[2]);
@@ -263,8 +265,7 @@ function CustomNode({ data }: NodeProps) {
 								statement={result.top}
 								selectedId={selectedId}
 								handleAddChildNode={handleAddChildNode}
-																handleAddSiblingNode={handleAddSiblingNode}
-
+								handleAddSiblingNode={handleAddSiblingNode}
 							/>
 						</div>
 					)}
@@ -275,17 +276,4 @@ function CustomNode({ data }: NodeProps) {
 		</>
 	);
 }
-export default React.memo(CustomNode, (prevProps, nextProps) => {
-	// Check if mapContext exists before accessing selectedId
-	const prevMapContext = prevProps.data.mapContext ?? {};
-	const nextMapContext = nextProps.data.mapContext ?? {};
-
-	const prevId = prevProps.data.result.top.statement.statementId;
-	const nextId = nextProps.data.result.top.statement.statementId;
-
-	// Only re-render if this specific node's hover state changed
-	const prevSelected = prevMapContext.selectedId === prevId;
-	const nextSelected = nextMapContext.selectedId === nextId;
-
-	return prevSelected === nextSelected;
-});
+export default CustomNode;
