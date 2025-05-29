@@ -92,3 +92,42 @@ export function listenToUserQuestions(statementId: string): () => void {
 		return () => { return; } // Return a no-op function in case of error
 	}
 }
+
+export function listenToUserAnswers(statementId:string){
+	try {
+		const user = store.getState().creator.creator;
+		if (!user || !user.uid) {
+			throw new Error('User must be logged in to listen for user answers');
+		}
+		const uid = user.uid;
+
+		const userAnswersRef = collection(FireStore, Collections.usersData);
+		const q = query(
+			userAnswersRef,
+			where('statementId', '==', statementId),
+			where('userId', '==', uid)
+		);
+
+		return onSnapshot(q, (userAnswersDB) => {
+			userAnswersDB.docChanges().forEach((change) => {
+				try {
+					const data = change.doc.data();
+					const validatedAnswer = parse(UserQuestionSchema, data);
+
+					if (change.type === 'added' || change.type === 'modified') {
+						store.dispatch(setUserQuestion(validatedAnswer));
+					} else if (change.type === 'removed') {
+						store.dispatch(deleteUserQuestion(change.doc.id));
+					}
+				} catch (validationError) {
+					console.error(`Invalid user answer data for document ${change.doc.id}:`, validationError);
+				}
+			});
+		});
+	} catch (error) {
+		console.error('Error setting up listener for user answers:', error);
+
+		return () => { return; } // Return a no-op function in case of error
+		
+	}
+}
