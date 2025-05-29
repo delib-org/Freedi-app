@@ -53,13 +53,10 @@ function CustomNode({ data }: NodeProps) {
 	const statementColor = useStatementColor({ statement: localStatement });
 	const [showMenu, setShowMenu] = useState(false);
 
+	const { isVoted, isChosen, statementType } = result.top;
 	useEffect(() => {
 		setLocalStatement(result.top);
-	}, [
-		result.top.isVoted,
-		result.top.isChosen,
-		result.top.statement.statementType,
-	]);
+	}, [isVoted, isChosen, statementType]);
 
 	// Get zoom level from React Flow store
 	const zoom = useStore((state) => state.transform[2]);

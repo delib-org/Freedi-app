@@ -42,7 +42,6 @@ export function useMindMap() {
 	}, [statementId]);
 	useEffect(() => {
 		if (!statementId) return;
-
 		const unsubscribes = allDescendants.map(
 			(statement) => listenToEvaluations(statement.statementId) // assuming listenToEvaluation takes a statementId
 		);
@@ -54,7 +53,7 @@ export function useMindMap() {
 				}
 			});
 		};
-	}, [allDescendants]);
+	}, [allDescendants.length]);
 	useEffect(() => {
 		setFlat(isFlat(descendants, statementId));
 	}, [descendants.length, statementId]);
