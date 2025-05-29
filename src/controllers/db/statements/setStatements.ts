@@ -327,6 +327,9 @@ export function createStatement({
 				cutoffNumber: 1,
 				cutoffBy: CutoffBy.topOptions,
 			},
+			questionSettings: {
+				...(questionType && { questionType }),
+			},
 			hasChildren,
 			consensus: 0,
 			evaluation: {
