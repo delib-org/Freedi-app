@@ -111,8 +111,8 @@ export const UserConfigProvider: React.FC<UserConfigProviderProps> = ({
 
 				return {
 					chosenLanguage:
-						parsedConfig.chosenLanguage || DEFAULT_LANGUAGE,
-					fontSize: parsedConfig.fontSize || DEFAULT_FONT_SIZE,
+						parsedConfig.chosenLanguage ?? DEFAULT_LANGUAGE,
+					fontSize: parsedConfig.fontSize ?? DEFAULT_FONT_SIZE,
 					colorContrast:
 						parsedConfig.colorContrast ?? DEFAULT_COLOR_CONTRAST,
 					learning: {
