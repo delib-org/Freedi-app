@@ -23,13 +23,14 @@ export function useIntroductionMV() {
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 
+	const { defaultLanguage } = statement;
 	useEffect(() => {
 		if (!statement) return;
 
 		if (statement.defaultLanguage) {
 			changeLanguage(statement.defaultLanguage as LanguagesEnum);
 		}
-	}, [statement]);
+	}, [defaultLanguage]);
 
 	useEffect(() => {
 		if (!statementId) return;
