@@ -1,11 +1,15 @@
-import { listenToDescendants } from "@/controllers/db/results/getResults";
-import { statementDescendantsSelector, statementSelector } from "@/redux/statements/statementsSlice";
-import { useEffect, useState, useRef } from "react";
-import { useSelector } from "react-redux";
-import { useParams } from "react-router";
-import { resultsByParentId } from "./mapCont";
-import { Statement, Results, StatementType } from "delib-npm";
-import { APIEndPoint } from "@/controllers/general/helpers";
+import { listenToDescendants } from '@/controllers/db/results/getResults';
+import {
+	statementDescendantsSelector,
+	statementSelector,
+} from '@/redux/statements/statementsSlice';
+import { useEffect, useState, useRef } from 'react';
+import { useSelector } from 'react-redux';
+import { useParams } from 'react-router';
+import { resultsByParentId } from './mapCont';
+import { Statement, Results } from 'delib-npm';
+import { APIEndPoint, isChatMessage } from '@/controllers/general/helpers';
+import { listenToEvaluations } from '@/controllers/db/evaluation/getEvaluation';
 
 export function useMindMap() {
 	const { statementId } = useParams();
@@ -14,9 +18,7 @@ export function useMindMap() {
 		statementDescendantsSelector(statementId)
 	);
 	const descendants = allDescendants.filter(
-		(statement) =>
-			statement.statementType === StatementType.question ||
-			statement.statementType === StatementType.option
+		(statement) => !isChatMessage(statement.statementType)
 	);
 
 	const [flat, setFlat] = useState(false);
@@ -38,7 +40,21 @@ export function useMindMap() {
 			unsubscribe();
 		};
 	}, [statementId]);
+	useEffect(() => {
+		if (!statementId) return;
 
+		const unsubscribes = descendants.map(
+			(statement) => listenToEvaluations(statement.parentId) // assuming listenToEvaluation takes a statementId
+		);
+
+		return () => {
+			unsubscribes.forEach((unsubscribe) => {
+				if (typeof unsubscribe === 'function') {
+					unsubscribe();
+				}
+			});
+		};
+	}, [descendants.length]);
 	useEffect(() => {
 		setFlat(isFlat(descendants, statementId));
 	}, [descendants.length, statementId]);
@@ -80,14 +96,13 @@ export function useMindMap() {
 		}
 	}, [descendants, statement]);
 
-	function handleCluster() {
+	function handleCluster(statementId: string) {
 		setLoading(true);
 		const endPoint = APIEndPoint('getCluster', {});
 		fetch(endPoint, {
 			method: 'POST',
 			body: JSON.stringify({
-				statementId: statement.statementId,
-				topic: statement
+				statementId,
 			}),
 			headers: {
 				'Content-Type': 'application/json',
@@ -101,26 +116,37 @@ export function useMindMap() {
 			});
 	}
 
-	function handleRecoverSnapshot() {
+	function handleRecoverSnapshot(statementId: string) {
 		setLoading(true);
 		const endPoint = APIEndPoint('recoverLastSnapshot', {});
 		fetch(endPoint, {
 			method: 'POST',
-			body: JSON.stringify({ snapshotId: statement.statementId }),
+			body: JSON.stringify({ snapshotId: statementId }),
 			headers: {
 				'Content-Type': 'application/json',
 			},
-		}).catch((error) => {
-			console.error('Error fetching recover snapshot data:', error);
-		}).
-			finally(() => {
+		})
+			.catch((error) => {
+				console.error('Error fetching recover snapshot data:', error);
+			})
+			.finally(() => {
 				setLoading(false);
 			});
 	}
 
-	return { descendants, results, loading, handleRecoverSnapshot, handleCluster, flat };
+	return {
+		descendants,
+		results,
+		loading,
+		handleRecoverSnapshot,
+		handleCluster,
+		flat,
+	};
 }
 
 function isFlat(descendants: Statement[], statementId: string) {
-	return !descendants.some((descendant) => descendant.isCluster && descendant.parentId === statementId);
+	return !descendants.some(
+		(descendant) =>
+			descendant.isCluster && descendant.parentId === statementId
+	);
 }

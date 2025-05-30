@@ -262,7 +262,7 @@ export default function MindMapChart({
 					localStorage.setItem('flowKey', JSON.stringify(flow));
 				}}
 			>
-				<Controls />
+				<Controls showInteractive={isAdmin} />
 				<Panel position='bottom-right' className='btnsPanel'>
 					{!isButtonVisible && (
 						<div className='mainButton'>

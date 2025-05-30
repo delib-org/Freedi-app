@@ -1,22 +1,42 @@
 .subComment {
-	background-color: rgb(233, 243, 246);
-	width: fit-content;
-	padding: .1rem 1rem;
-	border-radius: 1rem;
-	display: flex;
-	gap: .5rem;
+	position: relative;
+	background-color: #e6effd;
+	padding: 12px 16px;
+	margin-inline-start: 3rem;
+	border-radius: 12px;
+	border-start-start-radius: 0;
+	max-width: 400px;
+	font-family: sans-serif;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+	color: #1a1a1a;
+	border: 1px solid #d2dffe;
+	width: 100%;
 
-	animation: entrance .15s ease-out;
-
-	&--isMe {
-		background-color: rgb(165, 253, 195);
+	&::before {
+		content: '';
+		position: absolute;
+		top: -1px;
+		inset-inline-start: -21px;
+		width: 0;
+		height: 0;
+		border-bottom: 23px solid transparent;
+		border-inline-end: 21px solid #d2dffe;
+		z-index: 0;
 	}
 
-
-	.text {
-		font-weight: 300;
-		font-size: .8rem;
+	&::after {
+		content: '';
+		position: absolute;
+		top: 0;
+		inset-inline-start: -20px;
+		width: 0;
+		height: 0;
+		border-bottom: 20px solid transparent;
+		border-inline-end: 20px solid #e6effd;
+		z-index: 1;
 	}
+
+	animation: entrance 0.15s ease-out;
 }
 
 @keyframes entrance {
@@ -29,5 +49,4 @@
 		opacity: 1;
 		transform: translateX(0);
 	}
-
 }

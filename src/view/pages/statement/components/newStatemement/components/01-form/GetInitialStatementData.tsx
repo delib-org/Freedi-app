@@ -10,10 +10,11 @@ import Button, { ButtonType } from '@/view/components/buttons/button/Button';
 import Input from '@/view/components/input/Input';
 import Textarea from '@/view/components/textarea/Textarea';
 import { StatementContext } from '@/view/pages/statement/StatementCont';
-import { StatementType, Statement } from 'delib-npm';
+import { StatementType, Statement, QuestionType } from 'delib-npm';
+import { LanguagesEnum } from '@/context/UserConfigContext';
 
 export default function GetInitialStatementData() {
-	const { t } = useUserConfig();
+	const { t, currentLanguage } = useUserConfig();
 	const { title, description, setTitle, setDescription } =
 		useContext(NewStatementContext);
 	const {
@@ -24,14 +25,13 @@ export default function GetInitialStatementData() {
 	} = useContext(StatementContext);
 
 	const _title = ((newStatementType: StatementType) => {
-
 		switch (newStatementType) {
 			case StatementType.group:
-				return t("Create a group");
+				return t('Create a group');
 			case StatementType.question:
-				return t("Create a question");
+				return t('Create a question');
 			default:
-				return t("Create a statement");
+				return t('Create a statement');
 		}
 	})(newStatementType);
 
@@ -45,11 +45,16 @@ export default function GetInitialStatementData() {
 			setDescription(description);
 
 			if (!statement) throw new Error('Statement is not defined');
+			const lang =
+				newQuestionType === QuestionType.massConsensus
+					? (currentLanguage as LanguagesEnum)
+					: '';
 
 			const newStatement: Statement | undefined = createStatement({
 				parentStatement: statement,
 				text: title,
 				description,
+				defaultLanguage: lang,
 				statementType: newStatementType,
 				questionType: newQuestionType,
 			});
@@ -66,10 +71,8 @@ export default function GetInitialStatementData() {
 		}
 	};
 
-	const {
-		title: titleLabel,
-		description: descriptionLabel,
-	} = getTexts(newStatementType);
+	const { title: titleLabel, description: descriptionLabel } =
+		getTexts(newStatementType);
 
 	return (
 		<>
@@ -80,6 +83,7 @@ export default function GetInitialStatementData() {
 					value={title}
 					name='title'
 					autoFocus={true}
+					placeholder=''
 				/>
 				<Textarea
 					label={t(descriptionLabel)}

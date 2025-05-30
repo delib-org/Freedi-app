@@ -5,6 +5,7 @@ import {
 	Statement,
 	Role,
 	StatementType,
+	QuestionType,
 } from 'delib-npm';
 import { useAuthentication } from '../hooks/useAuthentication';
 import { EnhancedEvaluationThumb } from '@/view/pages/statement/components/evaluations/components/evaluation/enhancedEvaluation/EnhancedEvaluationModel';
@@ -59,7 +60,16 @@ function isUserCreator(
 		statement.creator?.uid === statementSubscription?.userId
 	);
 }
+export function isChatMessage(statementType: StatementType): boolean {
+	if (statementType === StatementType.statement) return true;
 
+	return false;
+}
+export function isMassConsensus(questionType: QuestionType): boolean {
+	if (questionType === QuestionType.massConsensus) return true;
+
+	return false;
+}
 function isUserAuthorizedByRole(
 	role: Role,
 	authorizedRoles?: Array<Role>

@@ -5,14 +5,14 @@
 	height: 100%;
 
 	&__explain {
-		opacity: .8;
+		opacity: 0.8;
 		font-weight: 300;
 		text-align: center;
 	}
 
 	&__description {
 		margin: 1rem 0;
-		opacity: .8;
+		opacity: 0.8;
 		font-weight: 300;
 		text-align: start;
 		width: 100%;
@@ -25,15 +25,14 @@
 			word-break: break-all;
 		}
 
-		@media screen and (maX-width: 768px) {
+		@media screen and (max-width: 768px) {
 			padding: 0rem 1rem;
 		}
-
 	}
 
 	&__comments {
 		margin-top: 1rem;
-		opacity: .8;
+		opacity: 0.8;
 		font-weight: 300;
 		text-align: center;
 	}
@@ -41,20 +40,18 @@
 	.evaluationPanel {
 		margin: 1rem auto;
 		width: fit-content;
-
 	}
 
 	.comments {
 		display: flex;
 		flex-direction: column;
 		justify-content: flex-start;
-		gap: .5rem;
+		gap: 1rem;
 		overflow-y: auto;
 		padding-bottom: 150px;
 
 		@media screen and (min-width: 768px) {
 			padding: 10px;
-
 		}
 	}
 

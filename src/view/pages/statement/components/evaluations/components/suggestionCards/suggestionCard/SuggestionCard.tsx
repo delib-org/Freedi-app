@@ -172,8 +172,10 @@ const SuggestionCard: FC<Props> = ({
 					{hasChildren && (
 						<IconButton
 							className='add-sub-question-button more-question'
-							onClick={() =>
-								setShouldShowAddSubQuestionModal(true)
+							style={{ opacity: '0', cursor: 'default' }}
+							onClick={
+								() => {} //delete the brackets and uncomment the line below for functionality
+								//	setShouldShowAddSubQuestionModal(true)
 							}
 						>
 							<AddQuestionIcon />

@@ -33,6 +33,8 @@ import {
 
 import { number, parse, string } from 'valibot';
 import { isStatementTypeAllowedAsChildren } from '@/controllers/general/helpers';
+import { setNewProcessToDB } from '../massConsensus/setMassConsensus';
+import { LanguagesEnum } from '@/context/UserConfigContext';
 
 export const resultsSettingsDefault: ResultsSettings = {
 	resultsBy: ResultsBy.consensus,
@@ -81,6 +83,7 @@ export async function saveStatementToDB({
 	resultsBy,
 	numberOfResults,
 	hasChildren,
+	defaultLanguage,
 	membership,
 	stageSelectionType,
 }: CreateStatementProps): Promise<Statement | undefined> {
@@ -97,13 +100,14 @@ export async function saveStatementToDB({
 			resultsBy,
 			numberOfResults,
 			hasChildren,
+			defaultLanguage,
 			membership,
 			stageSelectionType,
 		});
 
 		if (!statement) throw new Error('Statement is undefined');
 
-		setStatementToDB({
+		await setStatementToDB({
 			statement,
 			parentStatement,
 		});
@@ -243,6 +247,7 @@ export interface CreateStatementProps {
 	resultsBy?: ResultsBy;
 	numberOfResults?: number;
 	hasChildren?: boolean;
+	defaultLanguage?: string;
 	membership?: Membership;
 	stageSelectionType?: StageSelectionType;
 }
@@ -261,12 +266,14 @@ export function createStatement({
 	resultsBy = ResultsBy.consensus,
 	numberOfResults = 1,
 	hasChildren = true,
+	defaultLanguage,
 	membership,
 	stageSelectionType,
 }: CreateStatementProps): Statement | undefined {
 	try {
 		if (questionType === QuestionType.massConsensus) {
 			hasChildren = false;
+			defaultLanguage = defaultLanguage ?? LanguagesEnum.he;
 		}
 		const storeState = store.getState();
 		const creator = storeState.creator?.creator;
@@ -275,7 +282,6 @@ export function createStatement({
 		}
 		if (!creator) throw new Error('Creator is undefined');
 		if (!statementType) throw new Error('Statement type is undefined');
-
 		const statementId = getRandomUID();
 
 		const parentId =
@@ -307,6 +313,7 @@ export function createStatement({
 			parents,
 			topParentId,
 			creator,
+			...(defaultLanguage && { defaultLanguage: defaultLanguage }),
 			creatorId: creator.uid,
 			membership: membership || { access: Access.openToAll },
 			statementSettings: {
@@ -325,6 +332,9 @@ export function createStatement({
 				numberOfResults: Number(numberOfResults) || 1,
 				cutoffNumber: 1,
 				cutoffBy: CutoffBy.topOptions,
+			},
+			questionSettings: {
+				...(questionType && { questionType }),
 			},
 			hasChildren,
 			consensus: 0,
@@ -364,6 +374,9 @@ export function createStatement({
 		}
 
 		parse(StatementSchema, newStatement);
+		if (questionType === QuestionType.massConsensus) {
+			setNewProcessToDB(newStatement.statementId);
+		}
 
 		return newStatement;
 	} catch (error) {

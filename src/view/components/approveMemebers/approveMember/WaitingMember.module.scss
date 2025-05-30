@@ -1,87 +1,114 @@
-.memberDisplay {
-	font-size: 16px;
-	color: #333;
-	background-color: #f0f0f0;
-	width: fit-content;
-	display: flex;
-	align-items: center; // Add this to vertically align items
-	width: 100%; // Ensure it doesn't overflow its parent
-	border-radius: 5px; // Optional for consistent styling with buttons
+$memberbg: #f2f6ff;
 
-	@media screen and (max-width: 768px) {
-		flex-direction: column; // Stack items vertically on small screens
-		align-items: flex-start; // Align items to the start of the flex container
-		gap: 0rem; // Add gap between items
+.actions {
+  display: flex;
+  flex-direction: row;
+  gap: 3rem;
+  margin: 1rem 0;
+}
 
-	}
+.wrapper {
+  background-color: $memberbg;
+  border-bottom: 1px solid #bdcef4;
+  padding-bottom: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  user-select: none;
 
-	.inGroup {
-		@media screen and (max-width: 768px) {
-			display: none;
+  .summaryRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 62px;
+    font-size: 16px;
+    gap: 2.2rem;
+    margin-top: 0.5rem;
+    background-color: $memberbg;
+    border-radius: 5px;
 
-		}
-	}
+    .avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
 
-	.statement {
-		font-size: 16px;
-		color: #333;
-		background-color: #f0f0f0;
-		padding: 5px 10px; // Add consistent padding
-		white-space: nowrap; // Prevent text wrapping
-		overflow: hidden; // Hide overflow
-		text-overflow: ellipsis; // Add ellipsis for very long names
-		min-width: 0; // Allow flexbox to shrink this element if needed
-		flex: 1; // Allow it to take available space
-	}
+    .userInfo {
+      display: flex;
+      flex-direction: column;
+    }
 
-	.memberName {
-		font-size: 16px;
-		color: #333;
-		background-color: #f0f0f0;
-		padding: 5px 10px; // Add consistent padding
-		white-space: nowrap; // Prevent text wrapping
-		overflow: hidden; // Hide overflow
-		text-overflow: ellipsis; // Add ellipsis for very long names
+    .displayName {
+      display: flex;
+      flex-direction: row;
+      justify-content: start;
+      width: 105px;
+      height: 28px;
+      font-size: 16px;
+      color: #2a3346;
 
-		min-width: 15ch;
-	}
+      @media screen and (max-width: 667px) {
+        margin-right: 0;
+      }
+    }
 
-	.buttons {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		padding: 5px 10px;
-		background-color: #f0f0f0;
-		border-radius: 5px;
-		transition: background-color 0.3s ease;
-		gap: .5rem;
-		flex-shrink: 0; // Prevent buttons from shrinking
+    .expandBtn {
+      margin: 0.3rem;
+      display: flex;
+      flex-direction: row;
+      justify-content: end;
+    }
+    .requestDate {
+      height: 21px;
+      font-size: 14px;
+      color: #7484a9;
+    }
+  }
 
-		button {
-			background-color: #e4e4e4;
-			color: white;
-			border: none;
-			padding: 5px 10px;
-			border-radius: 5px;
-			cursor: pointer;
-			font-size: 14px;
-			transition: background-color 0.3s ease;
+  label,
+  .groupStatus {
+    margin-bottom: 0.7rem;
+    font-size: 14px;
+    color: #7484a9;
+  }
 
+  .groupStatus {
+    display: flex;
+    align-items: end;
+    font-weight: bolder;
+    font-size: 15px;
+  }
 
+  .detailRow {
+    display: flex;
+    gap: 1.4rem;
 
+    .groupName {
+      display: flex;
+      flex-direction: row;
+      justify-content: end;
+      height: 26px;
+      color: var(--Text-Title, #191e29);
+      font-size: 16px;
+      font-weight: 700;
+    }
+  }
 
-			&:hover {
-				background-color: #cecece;
-				cursor: pointer;
-			}
+  .detailRow.statusRow {
+    justify-content: space-between;
+    align-items: center;
+  }
 
-			&:active {
-				background-color: #d0d0d0;
-			}
+  .detailsPanel {
+    width: 100%;
+    padding: 1rem;
+    background-color: $memberbg;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
 
-			&:focus {
-				outline: 2px solid rgb(122, 122, 122);
-			}
-		}
-	}
+    div {
+      font-size: 14px;
+    }
+  }
 }

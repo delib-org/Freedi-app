@@ -172,6 +172,16 @@ function HeaderMenu({
 				isMenuOpen={isHeaderMenuOpen}
 				iconColor={headerStyle.color}
 				isHamburger={true}
+				footer={
+					<div className={`${styles.menuFooter}`}>
+						<MenuOption
+							label={t('Disconnect')}
+							icon={<DisconnectIcon />}
+							onOptionClick={handleLogout}
+							style={{ color: 'white' }}
+						/>
+					</div>
+				}
 			>
 				<MenuOption
 					label={t('Share')}
@@ -204,15 +214,6 @@ function HeaderMenu({
 					</>
 				)}
 
-				{/* Footer Section */}
-				<div className={`${styles.menuFooter}`}>
-					<MenuOption
-						label={t('Disconnect')}
-						icon={<DisconnectIcon />}
-						onOptionClick={handleLogout}
-						style={{ color: 'white' }}
-					/>
-				</div>
 			</Menu>
 			{showLanguageModal && (
 				<Modal>

@@ -1,48 +1,85 @@
+import collapseIcon from '@/assets/icons/Collapse.png'
+import expandIcon from '@/assets/icons/Expand.png'
+import avatar from '@/assets/images/avatar.jpg'
+import { useUserConfig } from '@/controllers/hooks/useUserConfig'
+import { approveSingle, rejectSingle } from '@/services/membershipActions'
 import { WaitingMember } from 'delib-npm'
 import { FC, useState } from 'react'
+import Checkbox from '../../checkbox/Checkbox'
 import styles from './WaitingMember.module.scss'
-import { UserCheck, UserX } from 'lucide-react'
-import { useUserConfig } from '@/controllers/hooks/useUserConfig'
-import { approveMembership } from '@/controllers/db/membership/setMembership'
+import "@/view/style/buttons.scss";
 
 interface Props {
 	wait: WaitingMember
+	isChecked: boolean;
+	onCheckChange: (checked: boolean) => void;
 }
-const ApproveMember: FC<Props> = ({ wait }) => {
+const ApproveMember: FC<Props> = ({ wait, isChecked, onCheckChange }) => {
 	const { t } = useUserConfig();
-	const [show, setShow] = useState(true);
+	const [showDetails, setShowDetails] = useState(false);
+	const [isVisible, setIsVisible] = useState(true);
 
 	function handleApprove() {
-		approveMembership(wait, true)
-		setShow(false)
-	}
-	function handleReject() {
-		const confirmReject = window.confirm(t("Are you sure you want to reject this member?"));
-		if (confirmReject) {
-			approveMembership(wait, false); // Call approveMembership with false to reject the member
-			setShow(false)
-		}
+		approveSingle(wait, () => setIsVisible(false));
 	}
 
-	if (show === false) {
-		return null; // Don't render anything if show is false
+	function handleReject() {
+		rejectSingle(wait, () => setIsVisible(false));
 	}
+
+	if (!isVisible) return null;
 
 	return (
-		<div className={styles.memberDisplay}>
-			<div className={styles.memberName}>{wait.user.displayName}</div>
-			<span className={styles.inGroup}>{t("in")}</span>
-			<div className={styles.statement}>{wait.statement.statement}</div>
-			<div className={styles.buttons}>
-				<button className={styles.approveButton} onClick={handleApprove}>
-					<UserCheck size={20} color="green" />
-				</button>
-				<button className={styles.rejectButton} onClick={handleReject}>
-					<UserX size={20} color="red" />
+		<div className={styles.wrapper}>
+			{/* Collapsed summary view */}
+			<div className={styles.summaryRow}>
+				<Checkbox
+					name={`select-${wait.userId}`}
+					isChecked={isChecked}
+					onChange={onCheckChange}
+					label=""
+				/>
+				<img src={wait.user.photoURL || avatar} className={styles.avatar} alt="User avatar" />
+
+				<div className={styles.userInfo}>
+					<div className={styles.displayName}>{wait.user.displayName}</div>
+					<div className={styles.requestDate}>
+						{new Date(wait.createdAt).toLocaleDateString('en-US', {
+							month: 'short',
+							day: 'numeric',
+							year: 'numeric'
+						})}
+					</div>
+				</div>
+
+				<button onClick={() => setShowDetails(!showDetails)} className={styles.expandBtn}>
+					<img src={showDetails ? collapseIcon : expandIcon} alt="Toggle details" className={styles.expandIcon} />
 				</button>
 			</div>
-		</div>
-	)
-}
 
+			{/* Expanded detail view */}
+			{showDetails && (
+				<div className={styles.detailsPanel}>
+					<div className={styles.detailRow}>
+						<label>{t("Group")}</label>
+						<span className={styles.groupName}>{wait.statement.statement}</span>
+					</div>
+					<div className={`${styles.detailRow} ${styles.statusRow}`}>
+						<label>{t("Group Status")}</label>
+						<span className={styles.groupStatus}>{wait.statement.membership.access}</span>
+					</div>
+
+					<div className={styles.actions}>
+						<button className="btn--approve" onClick={handleApprove}>
+							{t("Approve")}
+						</button>
+						<button className="btn--reject" onClick={handleReject}>
+							{t("Deny")}
+						</button>
+					</div>
+				</div>
+			)}
+		</div>
+	);
+};
 export default ApproveMember

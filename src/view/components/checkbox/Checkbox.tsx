@@ -1,4 +1,4 @@
-import React, { FC, useState } from 'react';
+import React, { FC } from 'react';
 import CheckboxCheckedIcon from '@/assets/icons/checkboxCheckedIcon.svg?react';
 import CheckboxEmptyIcon from '@/assets/icons/checkboxEmptyIcon.svg?react';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
@@ -10,6 +10,7 @@ interface CheckboxProps {
 	label: string;
 	isChecked: boolean;
 	onChange: (checked: boolean) => void;
+	className?: string;
 }
 
 const Checkbox: FC<CheckboxProps> = ({
@@ -17,13 +18,12 @@ const Checkbox: FC<CheckboxProps> = ({
 	label,
 	isChecked,
 	onChange,
+	className,
 }: CheckboxProps) => {
 	const { t } = useUserConfig();
-	const [checked, setChecked] = useState(isChecked);
 
 	const handleChange = () => {
-		setChecked(!checked);
-		onChange(!checked);
+		onChange(!isChecked);
 	};
 
 	const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
@@ -35,24 +35,24 @@ const Checkbox: FC<CheckboxProps> = ({
 
 	return (
 		<div
-			className={`checkbox ${checked ? 'checked' : ''}`}
+			className={`checkbox ${isChecked ? 'checked' : ''} ${className ?? ''}`}
 			onClick={handleChange}
 			onKeyDown={handleKeyDown}
 			role='checkbox'
-			aria-checked={checked}
+			aria-checked={isChecked}
 			tabIndex={0}
 		>
 			<label htmlFor={`checkbox-${label}`}>
 				<VisuallyHidden labelName={t(label)} />
 			</label>
 			<div className='checkbox-icon' aria-hidden='true'>
-				{checked ? <CheckboxCheckedIcon /> : <CheckboxEmptyIcon />}
+				{isChecked ? <CheckboxCheckedIcon /> : <CheckboxEmptyIcon />}
 			</div>
 			<input
 				type='checkbox'
 				name={name}
 				id={`checkbox-${label}`}
-				checked={checked}
+				checked={isChecked}
 				onChange={handleChange}
 				tabIndex={-1}
 				style={{

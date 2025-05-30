@@ -1,4 +1,6 @@
+import { LanguagesEnum } from '@/context/UserConfigContext';
 import firebaseConfig from '@/controllers/db/configKey';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import {
 	setStatement,
 	statementSelector,
@@ -14,9 +16,21 @@ export function useIntroductionMV() {
 	const dispatch = useDispatch();
 	const { statementId } = useParams();
 	const statement = useSelector(statementSelector(statementId));
-	const subscription = useSelector(statementSubscriptionSelector(statementId));
+	const subscription = useSelector(
+		statementSubscriptionSelector(statementId)
+	);
+	const { changeLanguage } = useUserConfig();
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
+
+	const { defaultLanguage } = statement;
+	useEffect(() => {
+		if (!statement) return;
+
+		if (statement.defaultLanguage) {
+			changeLanguage(statement.defaultLanguage as LanguagesEnum);
+		}
+	}, [defaultLanguage]);
 
 	useEffect(() => {
 		if (!statementId) return;

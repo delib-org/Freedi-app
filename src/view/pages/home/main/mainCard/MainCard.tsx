@@ -42,15 +42,16 @@ const MainCard: FC<Props> = ({ simpleStatement }) => {
 			<Link
 				to={`/statement/${simpleStatement.statementId}/`}
 				className={styles.link}
-			>
-				<div className={styles.content}>
+			>				<div className={styles.content}>
 					<div
 						style={{
 							backgroundImage: `url(${statementImgUrl ?? ImgThumb})`,
 						}}
 						className={styles.img}
 					></div>
-					<StatementChatMore statement={simpleStatement} />
+					<div onClick={(e) => e.stopPropagation()}>
+						<StatementChatMore statement={simpleStatement} />
+					</div>
 				</div>
 
 				<h2>{simpleStatement.statement}</h2>
