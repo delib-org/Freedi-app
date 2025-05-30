@@ -252,7 +252,6 @@ export default function MindMapChart({
 				zoomOnDoubleClick={false}
 				style={{ height: `100vh` }}
 				nodesDraggable={isAdmin}
-				panOnDrag={!isAdmin}
 				onNodesChange={onNodesChange}
 				onEdgesChange={onEdgesChange}
 				onNodeDrag={onNodeDrag}
