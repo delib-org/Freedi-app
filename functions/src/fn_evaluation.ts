@@ -39,7 +39,7 @@ export async function newEvaluation(event) {
 
 		const statementEvaluation = event.data.data() as Evaluation;
 		const userId: string | undefined = statementEvaluation.evaluator?.uid;
-		const { statementId } = statementEvaluation;
+		const { statementId, parentId } = statementEvaluation;
 		if (!statementId) throw new Error('statementId is not defined');
 
 		//add one evaluator to statement, and add evaluation to statement
@@ -51,6 +51,7 @@ export async function newEvaluation(event) {
 			newEvaluation: statementEvaluation.evaluation,
 			oldEvaluation: 0,
 			userId,
+			parentId
 		});
 		if (!statement) throw new Error('statement does not exist');
 		updateParentStatementWithChosenOptions(statement.parentId);
@@ -86,6 +87,7 @@ export async function deleteEvaluation(event) {
 			newEvaluation: 0,
 			oldEvaluation: evaluation,
 			userId,
+			parentId: statementEvaluation.parentId,
 		});
 		if (!statement) throw new Error('statement does not exist');
 		updateParentStatementWithChosenOptions(statement.parentId);
@@ -117,6 +119,7 @@ export async function updateEvaluation(event) {
 			newEvaluation: evaluationAfter,
 			oldEvaluation: evaluationBefore,
 			userId,
+			parentId: statementEvaluationAfter.parentId,
 		});
 		if (!statement) throw new Error('statement does not exist');
 
@@ -205,6 +208,7 @@ interface UpdateStatementEvaluationProps {
 	newEvaluation: number;
 	oldEvaluation: number;
 	userId?: string;
+	parentId: string;
 }
 
 // Helper function to calculate incremental MAD when adding a new value
@@ -247,6 +251,7 @@ async function updateStatementEvaluation({
 	newEvaluation,
 	oldEvaluation,
 	userId,
+	parentId,
 }: UpdateStatementEvaluationProps): Promise<Statement | undefined> {
 	try {
 		if (!statementId) throw new Error('statementId is not defined');
@@ -295,8 +300,8 @@ async function updateStatementEvaluation({
 				//get userData
 				const userDataRef = db.collection(Collections.usersData);
 				if (!userId) throw new Error('userId is not defined');
-
-				const userDataDB = await userDataRef.where('userId', '==', userId).where('statementId', '==', statementId).get();
+				console.log("userId", userId, "statementId", parentId);
+				const userDataDB = await userDataRef.where('userId', '==', userId).where('statementId', '==', parentId).get();
 
 				if (userDataDB.empty) {
 					throw new Error(`User ${userId} data does not exist on statement ${statementId}`);
