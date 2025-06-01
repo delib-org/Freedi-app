@@ -4,10 +4,12 @@ import { RootState } from '../store';
 
 interface UserDataState {
 	userQuestions: UserQuestion[];
+	userData: UserQuestion[];
 }
 
 const initialState: UserDataState = {
-	userQuestions: []
+	userQuestions: [],
+	userData: []
 };
 
 const userDataSlice = createSlice({
@@ -23,20 +25,33 @@ const userDataSlice = createSlice({
 		},
 		setUserQuestions: (state, action: PayloadAction<UserQuestion[]>) => {
 			state.userQuestions = action.payload;
-		}
+		},
+		setUserData: (state, action: PayloadAction<UserQuestion>) => {
+			state.userData = updateArray(state.userData, action.payload, 'userQuestionId');
+		},
+		deleteUserData: (state, action: PayloadAction<string>) => {
+			state.userData = state.userData.filter(q => q.userQuestionId !== action.payload);
+		},
 	}
 });
 
 export const {
 	setUserQuestion,
 	deleteUserQuestion,
-	setUserQuestions
+	setUserQuestions,
+	setUserData,
+	deleteUserData
 } = userDataSlice.actions;
 
 // Selectors
-export const selectUserQuestionsByStatementId = createSelector(
-	[(state: RootState) => state.userData.userQuestions, (state: RootState, statementId: string) => statementId],
-	(userQuestions, statementId) => userQuestions.filter(question => question.statementId === statementId)
+export const selectUserQuestionsByStatementId = (statementId: string) => createSelector(
+	[(state: RootState) => state.userData.userQuestions],
+	(userQuestions) => userQuestions.filter(question => question.statementId === statementId)
+);
+
+export const selectUserDataByStatementId = (statementId: string) => createSelector(
+	[(state: RootState) => state.userData.userData],
+	(userData) => userData.filter(data => data.statementId === statementId)
 );
 
 export default userDataSlice.reducer;
