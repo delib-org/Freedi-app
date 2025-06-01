@@ -1,22 +1,19 @@
-import { QuestionType, Statement, UserQuestion, UserQuestionType } from 'delib-npm'
-import { FC, useState } from 'react'
+import { UserQuestion, UserQuestionType } from 'delib-npm'
+import { FC, useState, FormEvent } from 'react'
 import UserQuestionInput from '../settings/userDataQuestionInput/UserDataQuestionInput';
 import { setUserAnswers } from '@/controllers/db/userData/setUserData';
 
 interface Props {
-	statement: Statement;
 	questions: UserQuestion[];
-	closeModal?: () => void;
 }
 
-const UserDataQuestions: FC<Props> = ({ statement, questions, closeModal }) => {
-
+const UserDataQuestions: FC<Props> = ({ questions }) => {
 	const [userData, setUserData] = useState<UserQuestion[]>([]);
+	const [isSubmitting, setIsSubmitting] = useState(false);
 
 	const handleQuestionChange = (question: UserQuestion, value: string | string[]) => {
 		// Update the statement with the new user data
 		if (question.type === UserQuestionType.text || question.type === UserQuestionType.textarea || question.type === UserQuestionType.radio) {
-
 			setUserData((prevData) => {
 				const currentQuestion = prevData.find(q => q.userQuestionId === question.userQuestionId);
 				if (currentQuestion) {
@@ -36,8 +33,6 @@ const UserDataQuestions: FC<Props> = ({ statement, questions, closeModal }) => {
 						? currentQuestion.answerOptions.filter(option => option !== _value)
 						: [...currentQuestion.answerOptions, _value as string];
 
-					console.log("newOptions", newOptions);
-
 					return prevData.map(q =>
 						q.userQuestionId === question.userQuestionId ? { ...q, answerOptions: newOptions } : q
 					);
@@ -48,13 +43,22 @@ const UserDataQuestions: FC<Props> = ({ statement, questions, closeModal }) => {
 		}
 	};
 
-	function handleSaveUserAnswers() {
-		setUserAnswers(userData);
-		closeModal();
-	}
+	const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+		e.preventDefault();
+		setIsSubmitting(true);
+
+		try {
+			await setUserAnswers(userData);
+		} catch (error) {
+			console.error('Error saving user answers:', error);
+			// You might want to show an error message to the user here
+		} finally {
+			setIsSubmitting(false);
+		}
+	};
 
 	return (
-		<div>
+		<form onSubmit={handleSubmit}>
 			{questions.map((question: UserQuestion) => (
 				<UserQuestionInput
 					key={question.userQuestionId}
@@ -65,9 +69,16 @@ const UserDataQuestions: FC<Props> = ({ statement, questions, closeModal }) => {
 				/>
 			))}
 			<div className="btns">
-				<button className="btn btn--secondary" onClick={handleSaveUserAnswers}>Submit</button>
+				<button
+					type="submit"
+					className="btn btn--secondary"
+					disabled={isSubmitting}
+				>
+					{isSubmitting ? 'Submitting...' : 'Submit'}
+				</button>
 			</div>
-		</div >
+		</form>
 	)
 }
+
 export default UserDataQuestions

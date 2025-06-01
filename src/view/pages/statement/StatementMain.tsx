@@ -57,7 +57,6 @@ export default function StatementMain() {
 	const { creator } = useAuthentication();
 
 	const stage = useSelector(statementSelector(stageId));
-	console.log("userData.length < userDataQuestions.length", userData.length < userDataQuestions.length);
 	const showUserQuestions = userDataQuestions && userDataQuestions.length > 0 && userData.length < userDataQuestions.length;
 
 	// Use states
@@ -67,14 +66,10 @@ export default function StatementMain() {
 	const [newStatementType, setNewStatementType] = useState<StatementType>(
 		StatementType.group
 	);
-	const [showUserQuestionsModal, setShowUserQuestionsModal] = useState<boolean>(showUserQuestions);
+
 	const [newQuestionType, setNewQuestionType] = useState<QuestionType>(
 		QuestionType.multiStage
 	);
-
-	function closeModal() {
-		setShowUserQuestionsModal(false);
-	}
 
 	const handleShowTalker = (_talker: User | null) => {
 		if (!talker) {
@@ -104,14 +99,6 @@ export default function StatementMain() {
 			document.title = `FreeDi - ${shortVersion}`;
 		}
 	}, [statement, screen]);
-
-	useEffect(() => {
-		if (userDataQuestions?.length > 0 && screen !== "settings") {
-			setShowUserQuestionsModal(true);
-		} else {
-			setShowUserQuestionsModal(false);
-		}
-	}, [showUserQuestions, screen])
 
 	// Listen to statement changes.
 	useEffect(() => {
@@ -289,7 +276,7 @@ export default function StatementMain() {
 					<MapProvider>
 						<Switch />
 					</MapProvider>
-					{(showUserQuestions && screen !== "settings") && <Modal><UserDataQuestions closeModal={closeModal} statement={statement} questions={userDataQuestions} /></Modal>}
+					{(showUserQuestions && screen !== "settings") && <Modal><UserDataQuestions questions={userDataQuestions} /></Modal>}
 				</div>
 			</StatementContext.Provider>
 		);
