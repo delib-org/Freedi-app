@@ -17,7 +17,6 @@ import {
 	ResultsSettings,
 	ResultsBy,
 	CutoffBy,
-	UserData,
 	PolarizationMetrics,
 	PolarizationAxis,
 	UserQuestion,
@@ -254,7 +253,7 @@ async function updateStatementEvaluation({
 			}
 		});
 
-		return await db.runTransaction(async (transaction) => {
+		await db.runTransaction(async (transaction) => {
 			try {
 				//get userData
 				const userDataRef = db.collection(Collections.usersData);
@@ -274,25 +273,27 @@ async function updateStatementEvaluation({
 				//if polarization index does not exist, create it
 				if (!polarizationIndexDB.exists) {
 
-					const axes: PolarizationAxis[] = userAnswers.map((userAnswer) => {
+					const axes: PolarizationAxis[] = userAnswers
+						.filter((userAnswer) => userAnswer.userQuestionId !== undefined)
+						.map((userAnswer) => {
 
-						const groups: PolarizationGroup[] = userAnswer.options.map((option) => ({
-							groupId: option,
-							groupName: option,
-							average: proConDiff.proDiff - proConDiff.conDiff,
-							color: getRandomColor(),
-							mad: 0,
-							numberOfMembers: addEvaluator
-						}));
+							const groups: PolarizationGroup[] = userAnswer.options.map((option) => ({
+								groupId: option,
+								groupName: option,
+								average: proConDiff.proDiff - proConDiff.conDiff,
+								color: getRandomColor(),
+								mad: 0,
+								numberOfMembers: addEvaluator
+							}));
 
-						return {
-							groupingQuestionId: userAnswer.userQuestionId,
-							groupingQuestionText: userAnswer.question,
-							axisAverageAgreement: proConDiff.proDiff - proConDiff.conDiff,
-							axisMAD: 0,
-							groups
-						}
-					});
+							return {
+								groupingQuestionId: userAnswer.userQuestionId!,
+								groupingQuestionText: userAnswer.question,
+								axisAverageAgreement: proConDiff.proDiff - proConDiff.conDiff,
+								axisMAD: 0,
+								groups
+							}
+						});
 
 					const polarizationIndex: PolarizationMetrics = {
 						statementId,
@@ -303,14 +304,39 @@ async function updateStatementEvaluation({
 
 						axes: axes,
 					};
+
 					transaction.set(polarizationIndexRef, polarizationIndex);
+
+				} else {
+					const polarizationIndex = polarizationIndexDB.data() as PolarizationMetrics;
+
+					//update axes
+					polarizationIndex.axes.forEach((axis) => {
+						axis.groups.forEach((group) => {
+							group.average += proConDiff.proDiff - proConDiff.conDiff;
+							group.numberOfMembers += addEvaluator;
+						});
+					});
+
+					polarizationIndex.overallMAD = 0; // reset MAD, it will be recalculated later
+					polarizationIndex.totalEvaluators += addEvaluator;
+					polarizationIndex.averageAgreement += proConDiff.proDiff - proConDiff.conDiff;
+					polarizationIndex.lastUpdated = new Date().getTime();
+
+					transaction.update(polarizationIndexRef, polarizationIndex);
 				}
 
 			} catch (error) {
 				logger.error('Error in transaction of updateStatementEvaluation:', error);
-
+				throw error;
 			}
 		});
+
+		// Get and return the updated statement
+		const statementRef = db.collection(Collections.statements).doc(statementId);
+		const updatedStatement = await statementRef.get();
+
+		return updatedStatement.data() as Statement;
 	} catch (error) {
 		logger.error(error);
 
