@@ -105,7 +105,7 @@ export async function updateEvaluation(event) {
 		const { evaluation: evaluationAfter, statementId } =
 			statementEvaluationAfter;
 		const evaluationDiff = evaluationAfter - evaluationBefore;
-		const userId: string | undefined = statementEvaluation.evaluator?.uid;
+		const userId: string | undefined = statementEvaluationAfter.evaluator?.uid;
 
 		if (!statementId) throw new Error('statementId is not defined');
 
@@ -206,6 +206,39 @@ interface UpdateStatementEvaluationProps {
 	oldEvaluation: number;
 	userId?: string;
 }
+
+// Helper function to calculate incremental MAD when adding a new value
+function calculateMADWithNewValue(
+	oldMAD: number,
+	oldMean: number,
+	oldCount: number,
+	newValue: number
+): { newMAD: number, newMean: number } {
+	if (oldCount === 0) {
+		return { newMAD: 0, newMean: newValue };
+	}
+
+	const newCount = oldCount + 1;
+	const newMean = (oldMean * oldCount + newValue) / newCount;
+
+	if (newCount === 1) {
+		return { newMAD: 0, newMean };
+	}
+
+	// Calculate new MAD
+	// We approximate by assuming the old values maintain their relative spread
+	const oldSumAbsDev = oldMAD * oldCount;
+	const newValueAbsDev = Math.abs(newValue - newMean);
+
+	// Estimate how much the mean change affects existing values
+	const meanShift = newMean - oldMean;
+	const adjustedOldSumAbsDev = oldSumAbsDev + Math.abs(meanShift) * oldCount * 0.5; // Conservative estimate
+
+	const newMAD = (adjustedOldSumAbsDev + newValueAbsDev) / newCount;
+
+	return { newMAD, newMean };
+}
+
 async function updateStatementEvaluation({
 	statementId,
 	evaluationDiff,
@@ -225,6 +258,9 @@ async function updateStatementEvaluation({
 			oldEvaluation,
 			action,
 		});
+
+		// The user's new evaluation value
+		const userEvaluationValue = proConDiff.proDiff - proConDiff.conDiff;
 
 		//update evaluation of the statement
 		await db.runTransaction(async (transaction) => {
@@ -253,6 +289,7 @@ async function updateStatementEvaluation({
 			}
 		});
 
+		//update polarization index with proper MAD calculation
 		await db.runTransaction(async (transaction) => {
 			try {
 				//get userData
@@ -272,36 +309,33 @@ async function updateStatementEvaluation({
 
 				//if polarization index does not exist, create it
 				if (!polarizationIndexDB.exists) {
-
 					const axes: PolarizationAxis[] = userAnswers
 						.filter((userAnswer) => userAnswer.userQuestionId !== undefined)
 						.map((userAnswer) => {
-
 							const groups: PolarizationGroup[] = userAnswer.options.map((option) => ({
 								groupId: option,
 								groupName: option,
-								average: proConDiff.proDiff - proConDiff.conDiff,
+								average: userEvaluationValue,
 								color: getRandomColor(),
-								mad: 0,
+								mad: 0, // First user, no deviation yet
 								numberOfMembers: addEvaluator
 							}));
 
 							return {
 								groupingQuestionId: userAnswer.userQuestionId!,
 								groupingQuestionText: userAnswer.question,
-								axisAverageAgreement: proConDiff.proDiff - proConDiff.conDiff,
-								axisMAD: 0,
+								axisAverageAgreement: userEvaluationValue,
+								axisMAD: 0, // First user, no deviation yet
 								groups
 							}
 						});
 
 					const polarizationIndex: PolarizationMetrics = {
 						statementId,
-						overallMAD: 0,
+						overallMAD: 0, // First user, no deviation yet
 						totalEvaluators: addEvaluator,
-						averageAgreement: proConDiff.proDiff - proConDiff.conDiff,
+						averageAgreement: userEvaluationValue,
 						lastUpdated: new Date().getTime(),
-
 						axes: axes,
 					};
 
@@ -310,18 +344,74 @@ async function updateStatementEvaluation({
 				} else {
 					const polarizationIndex = polarizationIndexDB.data() as PolarizationMetrics;
 
-					//update axes
-					polarizationIndex.axes.forEach((axis) => {
-						axis.groups.forEach((group) => {
-							group.average += proConDiff.proDiff - proConDiff.conDiff;
-							group.numberOfMembers += addEvaluator;
-						});
-					});
+					// Calculate new overall metrics with incremental MAD
+					const oldOverallCount = polarizationIndex.totalEvaluators;
+					const oldOverallMean = polarizationIndex.averageAgreement;
 
-					polarizationIndex.overallMAD = 0; // reset MAD, it will be recalculated later
-					polarizationIndex.totalEvaluators += addEvaluator;
-					polarizationIndex.averageAgreement += proConDiff.proDiff - proConDiff.conDiff;
+					const { newMAD: newOverallMAD, newMean: newOverallMean } = calculateMADWithNewValue(
+						polarizationIndex.overallMAD,
+						oldOverallMean,
+						oldOverallCount,
+						userEvaluationValue
+					);
+
+					// Update overall metrics
+					polarizationIndex.overallMAD = newOverallMAD;
+					polarizationIndex.totalEvaluators = oldOverallCount + addEvaluator;
+					polarizationIndex.averageAgreement = newOverallMean;
 					polarizationIndex.lastUpdated = new Date().getTime();
+
+					// Update each axis with proper MAD calculation
+					polarizationIndex.axes.forEach((axis) => {
+						// Find which groups this user belongs to for this axis
+						const userAnswer = userAnswers.find(ua => ua.userQuestionId === axis.groupingQuestionId);
+
+						if (userAnswer && userAnswer.options) {
+							// Calculate axis-level updates
+							const oldAxisCount = axis.groups.reduce((sum, group) => sum + group.numberOfMembers, 0);
+							const oldAxisMean = axis.axisAverageAgreement;
+
+							const { newMAD: newAxisMAD, newMean: newAxisMean } = calculateMADWithNewValue(
+								axis.axisMAD,
+								oldAxisMean,
+								oldAxisCount,
+								userEvaluationValue
+							);
+
+							axis.axisAverageAgreement = newAxisMean;
+							axis.axisMAD = newAxisMAD;
+
+							// Update specific groups the user belongs to
+							userAnswer.options.forEach((groupId) => {
+								const group = axis.groups.find(g => g.groupId === groupId);
+								if (group) {
+									const oldGroupCount = group.numberOfMembers;
+									const oldGroupMean = group.average;
+
+									const { newMAD: newGroupMAD, newMean: newGroupMean } = calculateMADWithNewValue(
+										group.mad,
+										oldGroupMean,
+										oldGroupCount,
+										userEvaluationValue
+									);
+
+									group.average = newGroupMean;
+									group.mad = newGroupMAD;
+									group.numberOfMembers = oldGroupCount + addEvaluator;
+								}
+							});
+
+							// Update groups the user doesn't belong to (their count stays the same, but axis mean changed)
+							axis.groups.forEach((group) => {
+								if (!userAnswer.options.includes(group.groupId) && group.numberOfMembers > 0) {
+									// Recalculate group's MAD based on the new axis mean
+									// This is an approximation since we don't have individual values
+									const meanDifference = Math.abs(group.average - newAxisMean);
+									group.mad = Math.min(group.mad + meanDifference * 0.1, 1.0); // Conservative adjustment
+								}
+							});
+						}
+					});
 
 					transaction.update(polarizationIndexRef, polarizationIndex);
 				}
