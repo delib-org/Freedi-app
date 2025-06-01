@@ -8,6 +8,7 @@ import MindMap from "../map/MindMap";
 import Chat from "../chat/Chat";
 import StatementSettings from "../settings/StatementSettings";
 import SuggestionChat from "@/view/pages/suggestionChat/SuggestionChat";
+import PolarizationIndex from "@/view/components/polarizationIndex/PolarizationIndex";
 
 interface SwitchScreenProps {
 	statement: Statement | undefined;
@@ -31,6 +32,8 @@ function SwitchScreen({
 	}
 
 	switch (screen) {
+		case 'polarization-map':
+			return <PolarizationIndex />
 		case 'agreement-map':
 			return <Triangle />;
 		case 'mind-map':

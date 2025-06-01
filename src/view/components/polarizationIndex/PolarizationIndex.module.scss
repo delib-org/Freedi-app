@@ -1,0 +1,325 @@
+// Base container
+.polarizationContainer {
+	font-family: Arial, sans-serif;
+	padding: 20px;
+	max-width: 1200px;
+	margin: 0 auto;
+}
+
+// Header styles
+.header {
+	margin-bottom: 30px;
+	text-align: center;
+}
+
+.title {
+	color: #333;
+	margin-bottom: 10px;
+	font-size: clamp(1.5rem, 4vw, 2.5rem);
+}
+
+.subtitle {
+	color: #666;
+	font-size: clamp(0.9rem, 2.5vw, 1.1rem);
+	margin-bottom: 20px;
+}
+
+// Axis selector
+.axisSelector {
+	display: flex;
+	gap: 10px;
+	justify-content: center;
+	flex-wrap: wrap;
+	margin-bottom: 20px;
+}
+
+.axisButton {
+	padding: 8px 16px;
+	background-color: #f7fafc;
+	color: #333;
+	border: 1px solid #e2e8f0;
+	border-radius: 6px;
+	cursor: pointer;
+	font-size: clamp(0.8rem, 2vw, 0.9rem);
+	transition: all 0.2s;
+
+	&:hover {
+		background-color: #edf2f7;
+	}
+}
+
+.axisButtonActive {
+	background-color: #3182ce;
+	color: white;
+
+	&:hover {
+		background-color: #2c5aa0;
+	}
+}
+
+// Chart container
+.chartContainer {
+	background-color: white;
+	border-radius: 10px;
+	box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+	padding: 20px;
+	margin-bottom: 30px;
+}
+
+.canvas {
+	cursor: pointer;
+	display: block;
+	max-width: 100%;
+}
+
+// Statistics grid
+.statsGrid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+	gap: 20px;
+	margin-bottom: 30px;
+}
+
+.statsCard {
+	background-color: #f8f9fa;
+	padding: 20px;
+	border-radius: 8px;
+	border: 1px solid #e9ecef;
+}
+
+.statsCardTitle {
+	margin: 0 0 15px 0;
+	color: #333;
+}
+
+.axisStatsCard {
+	background-color: #e3f2fd;
+	padding: 20px;
+	border-radius: 8px;
+	border: 1px solid #bbdefb;
+}
+
+.axisStatsTitle {
+	margin: 0 0 15px 0;
+	color: #1565c0;
+}
+
+.statsContent {
+	font-size: 14px;
+	line-height: 1.6;
+}
+
+// Selected group card
+.selectedGroupCard {
+	background-color: #fff3cd;
+	padding: 20px;
+	border-radius: 8px;
+	border: 1px solid #ffeaa7;
+	margin-bottom: 20px;
+}
+
+.selectedGroupTitle {
+	margin: 0 0 15px 0;
+	color: #856404;
+}
+
+.selectedGroupGrid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+	gap: 15px;
+	font-size: 14px;
+}
+
+.colorBadge {
+	color: white;
+	padding: 2px 8px;
+	border-radius: 4px;
+}
+
+// Groups list
+.groupsListContainer {
+	background-color: white;
+	border-radius: 10px;
+	box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+	padding: 20px;
+}
+
+.groupsListTitle {
+	margin: 0 0 20px 0;
+	color: #333;
+}
+
+.groupsGrid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+	gap: 15px;
+}
+
+.groupCard {
+	padding: 15px;
+	border-radius: 8px;
+	border: 2px solid #e2e8f0;
+	cursor: pointer;
+	transition: all 0.2s;
+	background-color: #f7fafc;
+
+	&:hover {
+		transform: translateY(-1px);
+		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+	}
+}
+
+.groupCardSelected {
+	transform: translateY(-1px);
+	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.groupCardHeader {
+	display: flex;
+	align-items: center;
+	margin-bottom: 8px;
+}
+
+.groupColorDot {
+	width: 16px;
+	height: 16px;
+	border-radius: 50%;
+	margin-right: 10px;
+}
+
+.groupCardContent {
+	font-size: 13px;
+	color: #666;
+}
+
+// Instructions
+.instructions {
+	margin-top: 30px;
+	padding: 15px;
+	background-color: #e3f2fd;
+	border-radius: 8px;
+	text-align: center;
+	font-size: 14px;
+	color: #1565c0;
+}
+
+// Responsive design
+@media (max-width: 768px) {
+	.polarizationContainer {
+		padding: 15px;
+	}
+
+	.header {
+		margin-bottom: 20px;
+	}
+
+	.axisSelector {
+		flex-direction: column;
+		align-items: center;
+	}
+
+	.axisButton {
+		min-width: 200px;
+	}
+
+	.statsGrid {
+		grid-template-columns: 1fr;
+	}
+
+	.selectedGroupGrid {
+		grid-template-columns: 1fr;
+	}
+
+	.groupsGrid {
+		grid-template-columns: 1fr;
+	}
+
+	.chartContainer {
+		padding: 15px;
+	}
+}
+
+@media (max-width: 480px) {
+	.polarizationContainer {
+		padding: 10px;
+	}
+
+	.title {
+		font-size: 1.5rem;
+	}
+
+	.subtitle {
+		font-size: 0.9rem;
+	}
+
+	.axisButton {
+		min-width: 100%;
+		padding: 12px 16px;
+	}
+
+	.chartContainer {
+		padding: 10px;
+	}
+
+	.statsCard,
+	.axisStatsCard,
+	.selectedGroupCard,
+	.groupsListContainer {
+		padding: 15px;
+	}
+}
+
+// Dark mode support (optional)
+@media (prefers-color-scheme: dark) {
+	.polarizationContainer {
+		color: #e2e8f0;
+	}
+
+	.chartContainer,
+	.groupsListContainer {
+		background-color: #2d3748;
+	}
+
+	.statsCard {
+		background-color: #4a5568;
+		border-color: #718096;
+	}
+
+	.statsCardTitle,
+	.groupsListTitle {
+		color: #e2e8f0;
+	}
+
+	.axisStatsCard {
+		background-color: #2b6cb0;
+		border-color: #3182ce;
+	}
+
+	.selectedGroupCard {
+		background-color: #744210;
+		border-color: #d69e2e;
+	}
+
+	.instructions {
+		background-color: #2b6cb0;
+	}
+
+	.groupCard {
+		background-color: #4a5568;
+		border-color: #718096;
+
+		&:hover {
+			background-color: #5a6578;
+		}
+	}
+
+	.axisButton {
+		background-color: #4a5568;
+		color: #e2e8f0;
+		border-color: #718096;
+
+		&:hover {
+			background-color: #5a6578;
+		}
+	}
+}
