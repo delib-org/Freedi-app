@@ -31,14 +31,21 @@ const mockPolarizationData = {
 					numberOfMembers: 320,
 					color: "#e53e3e",
 					mad: 0.21
-				},
-				{
+				}, {
 					groupId: "pol_123_moderate",
 					groupName: "Moderate",
 					average: 0.15,
 					numberOfMembers: 330,
 					color: "#38a169",
 					mad: 0.45
+				},
+				{
+					groupId: "pol_123_independent",
+					groupName: "Independent",
+					average: -0.22,
+					numberOfMembers: 280,
+					color: "#ed8936",
+					mad: 0.52
 				}
 			]
 		},
@@ -63,14 +70,84 @@ const mockPolarizationData = {
 					numberOfMembers: 350,
 					color: "#f56565",
 					mad: 0.58
-				},
-				{
+				}, {
 					groupId: "age_456_senior",
 					groupName: "55+",
 					average: -0.12,
 					numberOfMembers: 250,
 					color: "#4299e1",
 					mad: 0.42
+				}, {
+					groupId: "age_456_elderly",
+					groupName: "65+",
+					average: -0.35,
+					numberOfMembers: 180,
+					color: "#805ad5",
+					mad: 0.38
+				}
+			]
+		},
+		{
+			groupingQuestionId: "education_level_789",
+			groupingQuestionText: "What is your education level?",
+			axisAverageAgreement: 0.09,
+			axisMAD: 0.58,
+			groups: [
+				{
+					groupId: "edu_789_high_school",
+					groupName: "High School",
+					average: -0.32,
+					numberOfMembers: 220,
+					color: "#d69e2e",
+					mad: 0.44
+				},
+				{
+					groupId: "edu_789_bachelor",
+					groupName: "Bachelor's",
+					average: 0.18,
+					numberOfMembers: 380,
+					color: "#38b2ac",
+					mad: 0.39
+				},
+				{
+					groupId: "edu_789_graduate",
+					groupName: "Graduate",
+					average: 0.41,
+					numberOfMembers: 300,
+					color: "#667eea",
+					mad: 0.33
+				}
+			]
+		},
+		{
+			groupingQuestionId: "income_level_012",
+			groupingQuestionText: "What is your household income?",
+			axisAverageAgreement: 0.04,
+			axisMAD: 0.61,
+			groups: [
+				{
+					groupId: "inc_012_low",
+					groupName: "Under $50k",
+					average: 0.28,
+					numberOfMembers: 250,
+					color: "#f687b3",
+					mad: 0.47
+				},
+				{
+					groupId: "inc_012_middle",
+					groupName: "$50k-$100k",
+					average: 0.02,
+					numberOfMembers: 420,
+					color: "#4fd1c7",
+					mad: 0.55
+				},
+				{
+					groupId: "inc_012_high",
+					groupName: "Over $100k",
+					average: -0.19,
+					numberOfMembers: 330,
+					color: "#fc8181",
+					mad: 0.41
 				}
 			]
 		}
@@ -79,10 +156,73 @@ const mockPolarizationData = {
 
 const PolarizationIndex = ({ statementId = 'climate_policy_001' }) => {
 	const canvasRef = useRef(null);
-	const [selectedAxis, setSelectedAxis] = useState(0);
-	const [selectedGroup, setSelectedGroup] = useState(null);
+	const [selectedAxis, setSelectedAxis] = useState(0); const [selectedGroup, setSelectedGroup] = useState(null);
 	const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+	const [isMainPointPressed, setIsMainPointPressed] = useState(false); const [subGroupsAnimation, setSubGroupsAnimation] = useState(0); // 0-1 animation progress
 	const containerRef = useRef(null);
+	const isAnimatingRef = useRef(false);
+
+	// Animation effect for sub-groups
+	useEffect(() => {
+		let animationFrame;
+		if (isMainPointPressed && subGroupsAnimation < 1) {
+			// Animate in
+			if (!isAnimatingRef.current) {
+				isAnimatingRef.current = true;
+				const startTime = Date.now();
+				const duration = 300; // 300ms animation
+
+				const animate = () => {
+					const elapsed = Date.now() - startTime;
+					const progress = Math.min(elapsed / duration, 1);
+
+					// Easing function (ease-out)
+					const easedProgress = 1 - Math.pow(1 - progress, 3);
+
+					setSubGroupsAnimation(easedProgress); if (progress < 1) {
+						animationFrame = requestAnimationFrame(animate);
+					} else {
+						isAnimatingRef.current = false;
+					}
+				};
+
+				animationFrame = requestAnimationFrame(animate);
+			}
+		} else if (!isMainPointPressed && subGroupsAnimation > 0) {
+			// Animate out
+			if (!isAnimatingRef.current) {
+				isAnimatingRef.current = true;
+				const startTime = Date.now();
+				const currentProgress = subGroupsAnimation;
+				const duration = 200; // Faster animation out
+
+				const animate = () => {
+					const elapsed = Date.now() - startTime;
+					const progress = Math.min(elapsed / duration, 1);
+
+					// Easing function (ease-in)
+					const easedProgress = Math.pow(1 - progress, 2);
+
+					setSubGroupsAnimation(currentProgress * easedProgress);
+
+					if (progress < 1) {
+						animationFrame = requestAnimationFrame(animate);
+					} else {
+						setSubGroupsAnimation(0);
+						isAnimatingRef.current = false;
+					}
+				};
+
+				animationFrame = requestAnimationFrame(animate);
+			}
+		}
+
+		return () => {
+			if (animationFrame) {
+				cancelAnimationFrame(animationFrame);
+			}
+		};
+	}, [isMainPointPressed]); // Only depend on isMainPointPressed, not subGroupsAnimation
 
 	// Handle responsive canvas sizing
 	useEffect(() => {
@@ -102,6 +242,31 @@ const PolarizationIndex = ({ statementId = 'climate_policy_001' }) => {
 
 		return () => window.removeEventListener('resize', updateDimensions);
 	}, []);
+
+	// Global mouse/touch release handlers to catch releases outside canvas
+	useEffect(() => {
+		const handleGlobalMouseUp = () => {
+			if (isMainPointPressed) {
+				setIsMainPointPressed(false);
+				setSelectedGroup(null);
+			}
+		};
+
+		const handleGlobalTouchEnd = () => {
+			if (isMainPointPressed) {
+				setIsMainPointPressed(false);
+				setSelectedGroup(null);
+			}
+		};
+
+		document.addEventListener('mouseup', handleGlobalMouseUp);
+		document.addEventListener('touchend', handleGlobalTouchEnd);
+
+		return () => {
+			document.removeEventListener('mouseup', handleGlobalMouseUp);
+			document.removeEventListener('touchend', handleGlobalTouchEnd);
+		};
+	}, [isMainPointPressed]);
 
 	// Generate triangle boundary points
 	const generateTriangleBoundary = () => {
@@ -129,16 +294,16 @@ const PolarizationIndex = ({ statementId = 'climate_policy_001' }) => {
 	};
 
 	// Canvas to data coordinates (for click detection)
-	const canvasToData = (canvasX, canvasY) => {
-		const margin = 60;
-		const plotWidth = dimensions.width - 2 * margin;
-		const plotHeight = dimensions.height - 2 * margin;
-
-		const dataX = ((canvasX - margin) / plotWidth) * 2 - 1;
-		const dataY = (dimensions.height - margin - canvasY) / plotHeight;
-
-		return { x: dataX, y: dataY };
-	};
+	// const canvasToData = (canvasX, canvasY) => {
+	//   const margin = 60;
+	//   const plotWidth = dimensions.width - 2 * margin;
+	//   const plotHeight = dimensions.height - 2 * margin;
+	//   
+	//   const dataX = ((canvasX - margin) / plotWidth) * 2 - 1;
+	//   const dataY = (dimensions.height - margin - canvasY) / plotHeight;
+	//   
+	//   return { x: dataX, y: dataY };
+	// };
 
 	// Draw the chart
 	useEffect(() => {
@@ -246,30 +411,41 @@ const PolarizationIndex = ({ statementId = 'climate_policy_001' }) => {
 		ctx.beginPath();
 		ctx.arc(overallPoint.x, overallPoint.y, 12, 0, 2 * Math.PI);
 		ctx.fill();
-		ctx.stroke();
+		ctx.stroke();		// Draw groups for selected axis (only when main point is pressed)
+		if (subGroupsAnimation > 0) {
+			const currentAxis = mockPolarizationData.axes[selectedAxis];
 
-		// Draw groups for selected axis
-		const currentAxis = mockPolarizationData.axes[selectedAxis];
-		currentAxis.groups.forEach((group, index) => {
-			const groupPoint = dataToCanvas(group.average, currentAxis.axisMAD);
+			currentAxis.groups.forEach((group, index) => {
+				// Use the group's own MAD for consistent positioning
+				const groupPoint = dataToCanvas(group.average, group.mad);
 
-			ctx.fillStyle = group.color;
-			ctx.strokeStyle = selectedGroup === index ? '#000' : '#fff';
-			ctx.lineWidth = selectedGroup === index ? 3 : 2;
+				// Apply animation scaling and opacity
+				const animatedAlpha = subGroupsAnimation;
+				const baseRadius = Math.max(6, Math.min(15, Math.sqrt(group.numberOfMembers / 10)));
+				const animatedRadius = baseRadius * subGroupsAnimation;
 
-			const radius = Math.max(6, Math.min(15, Math.sqrt(group.numberOfMembers / 10)));
+				// Set opacity based on animation progress
+				ctx.globalAlpha = animatedAlpha;
 
-			ctx.beginPath();
-			ctx.arc(groupPoint.x, groupPoint.y, radius, 0, 2 * Math.PI);
-			ctx.fill();
-			ctx.stroke();
+				ctx.fillStyle = group.color;
+				ctx.strokeStyle = selectedGroup === index ? '#000' : '#fff';
+				ctx.lineWidth = selectedGroup === index ? 3 : 2;
 
-			// Group label
-			ctx.fillStyle = '#333';
-			ctx.font = '11px Arial';
-			ctx.textAlign = 'center';
-			ctx.fillText(group.groupName, groupPoint.x, groupPoint.y - radius - 8);
-		});
+				ctx.beginPath();
+				ctx.arc(groupPoint.x, groupPoint.y, animatedRadius, 0, 2 * Math.PI);
+				ctx.fill();
+				ctx.stroke();
+
+				// Group label with animation
+				ctx.fillStyle = '#333';
+				ctx.font = '11px Arial';
+				ctx.textAlign = 'center';
+				ctx.fillText(group.groupName, groupPoint.x, groupPoint.y - animatedRadius - 8);
+
+				// Reset global alpha
+				ctx.globalAlpha = 1.0;
+			});
+		}
 
 		// Draw vertices labels
 		ctx.fillStyle = '#333';
@@ -290,33 +466,81 @@ const PolarizationIndex = ({ statementId = 'climate_policy_001' }) => {
 		// Maximum Polarization vertex
 		const vertex3 = dataToCanvas(0, 1);
 		ctx.textAlign = 'center';
-		ctx.fillText('Maximum Polarization', vertex3.x, vertex3.y - 20);
-		ctx.fillText('(0, 1)', vertex3.x, vertex3.y - 8);
+		ctx.fillText('Maximum Polarization', vertex3.x, vertex3.y - 20); ctx.fillText('(0, 1)', vertex3.x, vertex3.y - 8);
 
-	}, [dimensions, selectedAxis, selectedGroup]);
-
-	// Handle canvas clicks
-	const handleCanvasClick = (event) => {
+	}, [dimensions, selectedAxis, selectedGroup, isMainPointPressed, subGroupsAnimation]);
+	// Handle canvas clicks and mouse/touch events
+	const handleCanvasMouseDown = (event) => {
 		const canvas = canvasRef.current;
 		const rect = canvas.getBoundingClientRect();
 		const canvasX = event.clientX - rect.left;
 		const canvasY = event.clientY - rect.top;
 
-		const currentAxis = mockPolarizationData.axes[selectedAxis];
+		const mainPointClicked = checkMainPointClick(canvasX, canvasY);
 
-		// Check if click is on any group
+		// If main point wasn't clicked and sub-groups are visible, check for group clicks
+		if (!mainPointClicked && isMainPointPressed && subGroupsAnimation > 0.5) {
+			checkGroupClick(canvasX, canvasY);
+		}
+	}; const handleCanvasTouchStart = (event) => {
+		event.preventDefault();
+		const canvas = canvasRef.current;
+		const rect = canvas.getBoundingClientRect();
+		const touch = event.touches[0];
+		const canvasX = touch.clientX - rect.left;
+		const canvasY = touch.clientY - rect.top;
+
+		const mainPointClicked = checkMainPointClick(canvasX, canvasY);
+
+		// If main point wasn't clicked and sub-groups are visible, check for group clicks
+		if (!mainPointClicked && isMainPointPressed && subGroupsAnimation > 0.5) {
+			checkGroupClick(canvasX, canvasY);
+		}
+	};
+
+	const checkGroupClick = (canvasX, canvasY) => {
+		const currentAxis = mockPolarizationData.axes[selectedAxis];
 		currentAxis.groups.forEach((group, index) => {
-			const groupPoint = dataToCanvas(group.average, currentAxis.axisMAD);
-			const distance = Math.sqrt(
+			// Use the group's own average and mad, not the axis MAD
+			const groupPoint = dataToCanvas(group.average, group.mad);
+			const groupDistance = Math.sqrt(
 				Math.pow(canvasX - groupPoint.x, 2) + Math.pow(canvasY - groupPoint.y, 2)
 			);
 
 			const radius = Math.max(6, Math.min(15, Math.sqrt(group.numberOfMembers / 10)));
 
-			if (distance <= radius + 5) {
+			if (groupDistance <= radius + 5) {
 				setSelectedGroup(selectedGroup === index ? null : index);
 			}
 		});
+	};
+	const handleCanvasMouseUp = () => {
+		setIsMainPointPressed(false);
+		setSelectedGroup(null); // Clear selected group when releasing main point
+	};
+	const handleCanvasTouchEnd = () => {
+		setIsMainPointPressed(false);
+		setSelectedGroup(null); // Clear selected group when releasing main point
+	}; const checkMainPointClick = (canvasX, canvasY) => {
+		const overallPoint = dataToCanvas(mockPolarizationData.averageAgreement, mockPolarizationData.overallMAD);
+		const distance = Math.sqrt(
+			Math.pow(canvasX - overallPoint.x, 2) + Math.pow(canvasY - overallPoint.y, 2)
+		);
+
+		const mainRadius = isMainPointPressed ? 16 : 12;
+		const clickThreshold = mainRadius + 8;
+
+		if (distance <= clickThreshold) {
+			setIsMainPointPressed(true);
+			setSelectedGroup(null); // Clear any selected group
+
+			return true; // Indicate main point was clicked
+		}
+
+		return false; // Main point was not clicked
+	};
+	const handleCanvasClick = () => {
+		// This function is kept for backward compatibility but main logic moved to mouse/touch handlers
 	};
 
 	const currentAxis = mockPolarizationData.axes[selectedAxis];
@@ -358,8 +582,19 @@ const PolarizationIndex = ({ statementId = 'climate_policy_001' }) => {
 				<canvas
 					ref={canvasRef}
 					onClick={handleCanvasClick}
+					onMouseDown={handleCanvasMouseDown}
+					onMouseUp={handleCanvasMouseUp}
+					onTouchStart={handleCanvasTouchStart}
+					onTouchEnd={handleCanvasTouchEnd}
 					className={styles.canvas}
 				/>
+
+				{/* Main Point Tooltip */}
+				{isMainPointPressed && (
+					<div className={styles.mainPointTooltip}>
+						Overall Position
+					</div>
+				)}
 			</div>
 
 			{/* Statistics Panel */}
@@ -436,11 +671,9 @@ const PolarizationIndex = ({ statementId = 'climate_policy_001' }) => {
 						</div>
 					))}
 				</div>
-			</div>
-
-			{/* Instructions */}
+			</div>			{/* Instructions */}
 			<div className={styles.instructions}>
-				💡 Click on group dots to see detailed information. Switch between different grouping questions using the buttons above.
+				💡 Press and hold the main red point to reveal sub-groups. Click on sub-group dots while holding to see detailed information. Switch between different grouping questions using the buttons above.
 			</div>
 		</div>
 	);

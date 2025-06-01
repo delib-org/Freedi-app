@@ -64,12 +64,48 @@
 	box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 	padding: 20px;
 	margin-bottom: 30px;
+	position: relative; // For tooltip positioning
 }
 
 .canvas {
 	cursor: pointer;
 	display: block;
 	max-width: 100%;
+	user-select: none; // Prevent text selection on touch
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+}
+
+// Main point tooltip
+.mainPointTooltip {
+	position: absolute;
+	top: 10px;
+	right: 10px;
+	background-color: rgba(255, 107, 107, 0.9);
+	color: white;
+	border-radius: 6px;
+	padding: 8px 12px;
+	font-size: 12px;
+	font-weight: bold;
+	z-index: 10;
+	animation: tooltipFadeIn 0.2s ease-out;
+	backdrop-filter: blur(3px);
+	-webkit-backdrop-filter: blur(3px);
+	box-shadow: 0 2px 8px rgba(255, 107, 107, 0.3);
+	pointer-events: none; // Allow interactions through the tooltip
+}
+
+@keyframes tooltipFadeIn {
+	from {
+		opacity: 0;
+		transform: translateY(-10px);
+	}
+
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
 }
 
 // Statistics grid
@@ -237,6 +273,13 @@
 	.chartContainer {
 		padding: 15px;
 	}
+
+	.mainPointTooltip {
+		top: 5px;
+		right: 5px;
+		font-size: 11px;
+		padding: 6px 10px;
+	}
 }
 
 @media (max-width: 480px) {
@@ -266,6 +309,21 @@
 	.selectedGroupCard,
 	.groupsListContainer {
 		padding: 15px;
+	}
+
+	.mainPointTooltip {
+		top: 5px;
+		right: 5px;
+		font-size: 10px;
+		padding: 5px 8px;
+	}
+
+	.tooltipTitle {
+		font-size: 14px;
+	}
+
+	.tooltipContent {
+		font-size: 13px;
 	}
 }
 
