@@ -3,7 +3,7 @@ import { FireStore } from '../config';
 import { Collections, UserQuestion, UserQuestionSchema } from 'delib-npm';
 import { parse } from 'valibot';
 import { store } from '@/redux/store';
-import { deleteUserQuestion, setUserQuestion, setUserQuestions } from '@/redux/userData/userDataSlice';
+import { deleteUserData, deleteUserQuestion, setUserData, setUserQuestion, setUserQuestions } from '@/redux/userData/userDataSlice';
 
 /**
  * Fetches user questions from the database for a specific statement ID
@@ -11,6 +11,7 @@ import { deleteUserQuestion, setUserQuestion, setUserQuestions } from '@/redux/u
  * @param statementId - The ID of the statement to fetch questions for
  */
 export async function getUserQuestions(statementId: string): Promise<void> {
+
 	try {
 		if (!statementId) {
 			throw new Error('Statement ID is required to get user questions');
@@ -30,7 +31,7 @@ export async function getUserQuestions(statementId: string): Promise<void> {
 		// Execute the query
 		const querySnapshot = await getDocs(q);
 
-		// Map the documents to UserQuestion objects with validatio
+		// Map the documents to UserQuestion objects with validation
 
 		const userQuestions: UserQuestion[] = querySnapshot.docs
 			.map((doc) => {
@@ -93,7 +94,8 @@ export function listenToUserQuestions(statementId: string): () => void {
 	}
 }
 
-export function listenToUserAnswers(statementId:string){
+export function listenToUserAnswers(statementId: string) {
+
 	try {
 		const user = store.getState().creator.creator;
 		if (!user || !user.uid) {
@@ -109,15 +111,16 @@ export function listenToUserAnswers(statementId:string){
 		);
 
 		return onSnapshot(q, (userAnswersDB) => {
+
 			userAnswersDB.docChanges().forEach((change) => {
 				try {
-					const data = change.doc.data();
+					const data = change.doc.data() as UserQuestion;
 					const validatedAnswer = parse(UserQuestionSchema, data);
 
 					if (change.type === 'added' || change.type === 'modified') {
-						store.dispatch(setUserQuestion(validatedAnswer));
+						store.dispatch(setUserData(validatedAnswer));
 					} else if (change.type === 'removed') {
-						store.dispatch(deleteUserQuestion(change.doc.id));
+						store.dispatch(deleteUserData(data.userQuestionId));
 					}
 				} catch (validationError) {
 					console.error(`Invalid user answer data for document ${change.doc.id}:`, validationError);
@@ -128,6 +131,6 @@ export function listenToUserAnswers(statementId:string){
 		console.error('Error setting up listener for user answers:', error);
 
 		return () => { return; } // Return a no-op function in case of error
-		
+
 	}
 }

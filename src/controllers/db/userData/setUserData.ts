@@ -1,5 +1,5 @@
 import { Collections, Statement, UserQuestion, UserQuestionSchema } from "delib-npm";
-import { collection, deleteDoc, doc, getDoc, setDoc, updateDoc, writeBatch } from "firebase/firestore";
+import { deleteDoc, doc, getDoc, setDoc, updateDoc, writeBatch } from "firebase/firestore";
 import { DB } from "../config";
 import { parse, safeParse } from "valibot";
 import { store } from "@/redux/store";
@@ -118,7 +118,7 @@ export async function setUserAnswers(answers: UserQuestion[]) {
 			answer.userId = uid; // Ensure userId is set
 			const { isValid } = validateDataAndLogIssues(UserQuestionSchema, answer);
 			if (!isValid) throw new Error("Invalid answer data");
-			console.log(`${answer.userQuestionId}--${uid}`)
+
 			const questionRef = doc(DB, Collections.usersData, `${answer.userQuestionId}--${uid}`);
 			batch.set(questionRef, answer, { merge: true });
 			dispatch(setUserQuestion(answer));
@@ -131,6 +131,7 @@ export async function setUserAnswers(answers: UserQuestion[]) {
 	}
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function validateDataAndLogIssues<T>(schema: BaseSchema<any, T, any>, data: unknown): { isValid: boolean; validData?: T } {
 	const result = safeParse(schema, data);
 
