@@ -13,7 +13,6 @@ import {
 	Collections,
 	StatementType,
 	statementToSimpleStatement,
-	User,
 	ResultsSettings,
 	ResultsBy,
 	CutoffBy,
@@ -26,178 +25,14 @@ import {
 import { number, parse } from 'valibot';
 import { getRandomColor } from './helpers';
 
+// ============================================================================
+// TYPES & ENUMS
+// ============================================================================
+
 enum ActionTypes {
 	new = 'new',
 	update = 'update',
 	delete = 'delete',
-}
-
-//@ts-ignore
-export async function newEvaluation(event) {
-	try {
-		//add evaluator to statement
-
-		const statementEvaluation = event.data.data() as Evaluation;
-		const userId: string | undefined = statementEvaluation.evaluator?.uid;
-		const { statementId, parentId } = statementEvaluation;
-		if (!statementId) throw new Error('statementId is not defined');
-
-		//add one evaluator to statement, and add evaluation to statement
-		const statement = await updateStatementEvaluation({
-			statementId,
-			evaluationDiff: statementEvaluation.evaluation,
-			addEvaluator: 1,
-			action: ActionTypes.new,
-			newEvaluation: statementEvaluation.evaluation,
-			oldEvaluation: 0,
-			userId,
-			parentId
-		});
-		if (!statement) throw new Error('statement does not exist');
-		updateParentStatementWithChosenOptions(statement.parentId);
-
-		//update evaluators that the statement was evaluated
-		const evaluator: User | undefined = statementEvaluation.evaluator;
-
-		if (!evaluator) throw new Error('evaluator is not defined');
-
-		return;
-	} catch (error) {
-		logger.error(error);
-
-		return;
-	}
-}
-
-//@ts-ignore
-export async function deleteEvaluation(event) {
-	try {
-		//add evaluator to statement
-		const statementEvaluation = event.data.data() as Evaluation;
-		const { statementId, evaluation } = statementEvaluation;
-		const userId: string | undefined = statementEvaluation.evaluator?.uid;
-		if (!statementId) throw new Error('statementId is not defined');
-
-		//add one evaluator to statement
-		const statement = await updateStatementEvaluation({
-			statementId,
-			evaluationDiff: -1 * evaluation,
-			addEvaluator: -1,
-			action: ActionTypes.delete,
-			newEvaluation: 0,
-			oldEvaluation: evaluation,
-			userId,
-			parentId: statementEvaluation.parentId,
-		});
-		if (!statement) throw new Error('statement does not exist');
-		updateParentStatementWithChosenOptions(statement.parentId);
-	} catch (error) {
-		logger.error(error);
-	}
-}
-
-//update evaluation of a statement
-//@ts-ignore
-export async function updateEvaluation(event) {
-	try {
-		const statementEvaluationBefore =
-			event.data.before.data() as Evaluation;
-		const { evaluation: evaluationBefore } = statementEvaluationBefore;
-		const statementEvaluationAfter = event.data.after.data() as Evaluation;
-		const { evaluation: evaluationAfter, statementId } =
-			statementEvaluationAfter;
-		const evaluationDiff = evaluationAfter - evaluationBefore;
-		const userId: string | undefined = statementEvaluationAfter.evaluator?.uid;
-
-		if (!statementId) throw new Error('statementId is not defined');
-
-		//get statement
-		const statement = await updateStatementEvaluation({
-			statementId,
-			evaluationDiff,
-			action: ActionTypes.update,
-			newEvaluation: evaluationAfter,
-			oldEvaluation: evaluationBefore,
-			userId,
-			parentId: statementEvaluationAfter.parentId,
-		});
-		if (!statement) throw new Error('statement does not exist');
-
-		//update parent statement?
-		updateParentStatementWithChosenOptions(statement.parentId);
-	} catch (error) {
-		console.info('error in updateEvaluation');
-		logger.error(error);
-
-		return;
-	}
-}
-
-//inner functions
-
-function calcAgreement(
-	newSumEvaluations: number,
-	numberOfEvaluators: number
-): number {
-	/**
-	 * Consensus Calculation Formula
-	 * ============================
-	 * Formula: Agreement = (sumOption/nOption) * sqrt(nTotal)
-	 *
-	 * Purpose:
-	 * This formula is designed to find the most agreed-upon option in a system where:
-	 * - There are infinite possible options
-	 * - Each option can be evaluated on a scale from -1 to +1
-	 * - We need to balance between average rating and participation level
-	 *
-	 * Components:
-	 * -----------
-	 * 1. Average Rating: (sumOption/nOption)
-	 *    - sumOption: Sum of all evaluations for this specific option
-	 *    - nOption: Number of evaluators for this specific option
-	 *    - Provides a score between -1 (complete disagreement) to +1 (complete agreement)
-	 *
-	 * 2. Participation Weight: sqrt(nTotal)
-	 *    - nTotal: Total number of evaluators across ALL options
-	 *    - Using square root provides balanced weighting:
-	 *      - Gives more weight to options with broader participation
-	 *      - Prevents overshadowing new options with few evaluations
-	 *
-	 * Why This Works:
-	 * --------------
-	 * - Balances quality (average rating) with quantity (participation)
-	 * - Prevents small groups from dominating with extreme ratings
-	 * - Gives new options a fair chance while still rewarding broad consensus
-	 * - Allows fair comparison between:
-	 *   - Popular options with many evaluations
-	 *   - Niche options with few but positive evaluations
-	 *   - New options that haven't been heavily evaluated yet
-	 *
-	 * Example Scenarios:
-	 * -----------------
-	 * Option A: 100 people rated +0.5 average
-	 * Option B: 2 people rated +1 average
-	 * Option C: 50 people rated +0.7 average
-	 *
-	 * The formula will balance these factors to find true consensus rather than
-	 * just highest average or most votes.
-	 */
-	try {
-		parse(number(), newSumEvaluations);
-		parse(number(), numberOfEvaluators);
-
-		if (numberOfEvaluators === 0) numberOfEvaluators = 1;
-
-		const averageEvaluation = newSumEvaluations / numberOfEvaluators;
-		const agreement = averageEvaluation * Math.sqrt(numberOfEvaluators);
-		// divide by the number of question members to get a scale of 100% agreement
-
-		return agreement;
-	} catch (error) {
-		logger.error(error);
-
-		return 0;
-	}
 }
 
 interface UpdateStatementEvaluationProps {
@@ -211,13 +46,379 @@ interface UpdateStatementEvaluationProps {
 	parentId: string;
 }
 
-// Helper function to calculate incremental MAD when adding a new value
-function calculateMADWithNewValue(
-	oldMAD: number,
-	oldMean: number,
-	oldCount: number,
-	newValue: number
-): { newMAD: number, newMean: number } {
+interface CalcDiff {
+	proDiff: number;
+	conDiff: number;
+}
+
+interface MADResult {
+	newMAD: number;
+	newMean: number;
+}
+
+// ============================================================================
+// MAIN EVENT HANDLERS
+// ============================================================================
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function newEvaluation(event: any): Promise<void> {
+	try {
+		const evaluation = event.data.data() as Evaluation;
+		const { statementId, parentId } = evaluation;
+		const userId = evaluation.evaluator?.uid;
+
+		if (!statementId) {
+			throw new Error('statementId is required');
+		}
+
+		const statement = await updateStatementEvaluation({
+			statementId,
+			evaluationDiff: evaluation.evaluation,
+			addEvaluator: 1,
+			action: ActionTypes.new,
+			newEvaluation: evaluation.evaluation,
+			oldEvaluation: 0,
+			userId,
+			parentId
+		});
+
+		if (!statement) {
+			throw new Error('Failed to update statement');
+		}
+
+		await updateParentStatementWithChosenOptions(statement.parentId);
+
+	} catch (error) {
+		logger.error('Error in newEvaluation:', error);
+	}
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function deleteEvaluation(event: any): Promise<void> {
+	try {
+		const evaluation = event.data.data() as Evaluation;
+		const { statementId, evaluation: evaluationValue } = evaluation;
+		const userId = evaluation.evaluator?.uid;
+
+		if (!statementId) {
+			throw new Error('statementId is required');
+		}
+
+		const statement = await updateStatementEvaluation({
+			statementId,
+			evaluationDiff: -1 * evaluationValue,
+			addEvaluator: -1,
+			action: ActionTypes.delete,
+			newEvaluation: 0,
+			oldEvaluation: evaluationValue,
+			userId,
+			parentId: evaluation.parentId,
+		});
+
+		if (!statement) {
+			throw new Error('Failed to update statement');
+		}
+
+		await updateParentStatementWithChosenOptions(statement.parentId);
+
+	} catch (error) {
+		logger.error('Error in deleteEvaluation:', error);
+	}
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function updateEvaluation(event: any): Promise<void> {
+	try {
+		const before = event.data.before.data() as Evaluation;
+		const after = event.data.after.data() as Evaluation;
+
+		const evaluationDiff = after.evaluation - before.evaluation;
+		const userId = after.evaluator?.uid;
+
+		if (!after.statementId) {
+			throw new Error('statementId is required');
+		}
+
+		const statement = await updateStatementEvaluation({
+			statementId: after.statementId,
+			evaluationDiff,
+			action: ActionTypes.update,
+			newEvaluation: after.evaluation,
+			oldEvaluation: before.evaluation,
+			userId,
+			parentId: after.parentId,
+		});
+
+		if (!statement) {
+			throw new Error('Failed to update statement');
+		}
+
+		await updateParentStatementWithChosenOptions(statement.parentId);
+
+	} catch (error) {
+		logger.error('Error in updateEvaluation:', error);
+	}
+}
+
+// ============================================================================
+// CORE BUSINESS LOGIC
+// ============================================================================
+
+async function updateStatementEvaluation(props: UpdateStatementEvaluationProps): Promise<Statement | undefined> {
+	const { statementId, evaluationDiff, addEvaluator = 0, action, newEvaluation, oldEvaluation, userId, parentId } = props;
+
+	try {
+		if (!statementId) {
+			throw new Error('statementId is required');
+		}
+
+		parse(number(), evaluationDiff);
+
+		// Calculate pro/con differences
+		const proConDiff = calcDiffEvaluation({ newEvaluation, oldEvaluation, action });
+		const userEvaluationValue = proConDiff.proDiff - proConDiff.conDiff;
+
+		// Update statement evaluation
+		await updateStatementInTransaction(statementId, evaluationDiff, addEvaluator, proConDiff);
+
+		// Update polarization index (if user data exists)
+		if (userId) {
+			await updatePolarizationIndex(statementId, parentId, userId, userEvaluationValue, addEvaluator);
+		}
+
+		// Return updated statement
+		const statementRef = db.collection(Collections.statements).doc(statementId);
+		const updatedStatement = await statementRef.get();
+
+		return updatedStatement.data() as Statement;
+
+	} catch (error) {
+		logger.error('Error in updateStatementEvaluation:', error);
+
+		return undefined;
+	}
+}
+
+// ============================================================================
+// STATEMENT UPDATE HELPERS
+// ============================================================================
+
+async function updateStatementInTransaction(
+	statementId: string,
+	evaluationDiff: number,
+	addEvaluator: number,
+	proConDiff: CalcDiff
+): Promise<void> {
+	await db.runTransaction(async (transaction) => {
+		const statementRef = db.collection(Collections.statements).doc(statementId);
+		const statementDoc = await transaction.get(statementRef);
+		const statement = parse(StatementSchema, statementDoc.data());
+
+		const { agreement, evaluation } = calculateEvaluation(statement, proConDiff, evaluationDiff, addEvaluator);
+
+		transaction.update(statementRef, {
+			totalEvaluators: FieldValue.increment(addEvaluator),
+			consensus: agreement,
+			evaluation,
+			proSum: FieldValue.increment(proConDiff.proDiff),
+			conSum: FieldValue.increment(proConDiff.conDiff),
+		});
+	});
+}
+
+function calculateEvaluation(statement: Statement, proConDiff: CalcDiff, evaluationDiff: number, addEvaluator: number) {
+	const evaluation = statement.evaluation || {
+		agreement: statement.consensus || 0,
+		sumEvaluations: evaluationDiff,
+		numberOfEvaluators: statement.totalEvaluators || 1,
+		sumPro: proConDiff.proDiff,
+		sumCon: proConDiff.conDiff,
+	};
+
+	if (statement.evaluation) {
+		evaluation.sumEvaluations += evaluationDiff;
+		evaluation.numberOfEvaluators += addEvaluator;
+		evaluation.sumPro = (evaluation.sumPro || 0) + proConDiff.proDiff;
+		evaluation.sumCon = (evaluation.sumCon || 0) + proConDiff.conDiff;
+	}
+
+	const agreement = calcAgreement(evaluation.sumEvaluations, evaluation.numberOfEvaluators);
+	evaluation.agreement = agreement;
+
+	return { agreement, evaluation };
+}
+
+// ============================================================================
+// POLARIZATION INDEX HELPERS
+// ============================================================================
+
+async function updatePolarizationIndex(
+	statementId: string,
+	parentId: string,
+	userId: string,
+	userEvaluationValue: number,
+	addEvaluator: number
+): Promise<void> {
+	try {
+		await db.runTransaction(async (transaction) => {
+			// Get user demographic data
+			const userAnswers = await getUserDemographicData(userId, parentId);
+
+			if (userAnswers.length === 0) {
+				logger.info(`No demographic data for user ${userId} on statement ${parentId} - skipping polarization index`);
+
+				return;
+			}
+
+			const polarizationRef = db.collection(Collections.polarizationIndex).doc(statementId);
+			const polarizationDoc = await transaction.get(polarizationRef);
+
+			if (!polarizationDoc.exists) {
+				// Create new polarization index
+				const newIndex = createInitialPolarizationIndex(statementId, userAnswers, userEvaluationValue, addEvaluator);
+				transaction.set(polarizationRef, newIndex);
+			} else {
+				// Update existing polarization index
+				const polarizationIndex = polarizationDoc.data() as PolarizationMetrics;
+				updateExistingPolarizationIndex(polarizationIndex, userAnswers, userEvaluationValue, addEvaluator);
+				transaction.update(polarizationRef, polarizationIndex);
+			}
+		});
+	} catch (error) {
+		logger.error('Error updating polarization index:', error);
+		// Don't throw - polarization is optional functionality
+	}
+}
+
+async function getUserDemographicData(userId: string, parentId: string): Promise<UserQuestion[]> {
+	const userDataRef = db.collection(Collections.usersData);
+	const userDataSnapshot = await userDataRef
+		.where('userId', '==', userId)
+		.where('statementId', '==', parentId)
+		.get();
+
+	if (userDataSnapshot.empty) {
+		return [];
+	}
+
+	return userDataSnapshot.docs
+		.map(doc => doc.data() as UserQuestion)
+		.filter(answer => answer.userQuestionId && answer.options && answer.options.length > 0);
+}
+
+function createInitialPolarizationIndex(
+	statementId: string,
+	userAnswers: UserQuestion[],
+	userEvaluationValue: number,
+	addEvaluator: number
+): PolarizationMetrics {
+	const axes: PolarizationAxis[] = userAnswers.map((userAnswer) => {
+		const groups: PolarizationGroup[] = userAnswer.options!.map((option) => ({
+			groupId: option,
+			groupName: option,
+			average: userEvaluationValue,
+			color: getRandomColor(),
+			mad: 0, // First user, no deviation
+			numberOfMembers: addEvaluator
+		}));
+
+		return {
+			groupingQuestionId: userAnswer.userQuestionId!,
+			groupingQuestionText: userAnswer.question,
+			axisAverageAgreement: userEvaluationValue,
+			axisMAD: 0, // First user, no deviation
+			groups
+		};
+	});
+
+	return {
+		statementId,
+		overallMAD: 0, // First user, no deviation
+		totalEvaluators: addEvaluator,
+		averageAgreement: userEvaluationValue,
+		lastUpdated: new Date().getTime(),
+		axes,
+	};
+}
+
+function updateExistingPolarizationIndex(
+	polarizationIndex: PolarizationMetrics,
+	userAnswers: UserQuestion[],
+	userEvaluationValue: number,
+	addEvaluator: number
+): void {
+	// Update overall metrics
+	const overallResult = calculateMADWithNewValue(
+		polarizationIndex.overallMAD,
+		polarizationIndex.averageAgreement,
+		polarizationIndex.totalEvaluators,
+		userEvaluationValue
+	);
+
+	polarizationIndex.overallMAD = overallResult.newMAD;
+	polarizationIndex.totalEvaluators += addEvaluator;
+	polarizationIndex.averageAgreement = overallResult.newMean;
+	polarizationIndex.lastUpdated = new Date().getTime();
+
+	// Update each axis
+	polarizationIndex.axes.forEach((axis) => {
+		const userAnswer = userAnswers.find(ua => ua.userQuestionId === axis.groupingQuestionId);
+
+		if (userAnswer?.options) {
+			updateAxisWithNewUser(axis, userAnswer, userEvaluationValue, addEvaluator);
+		}
+	});
+}
+
+function updateAxisWithNewUser(
+	axis: PolarizationAxis,
+	userAnswer: UserQuestion,
+	userEvaluationValue: number,
+	addEvaluator: number
+): void {
+	// Calculate axis-level updates
+	const oldAxisCount = axis.groups.reduce((sum, group) => sum + group.numberOfMembers, 0);
+	const axisResult = calculateMADWithNewValue(
+		axis.axisMAD,
+		axis.axisAverageAgreement,
+		oldAxisCount,
+		userEvaluationValue
+	);
+
+	axis.axisAverageAgreement = axisResult.newMean;
+	axis.axisMAD = axisResult.newMAD;
+
+	// Update groups the user belongs to
+	userAnswer.options!.forEach((groupId) => {
+		const group = axis.groups.find(g => g.groupId === groupId);
+		if (group) {
+			const groupResult = calculateMADWithNewValue(
+				group.mad,
+				group.average,
+				group.numberOfMembers,
+				userEvaluationValue
+			);
+
+			group.average = groupResult.newMean;
+			group.mad = groupResult.newMAD;
+			group.numberOfMembers += addEvaluator;
+		}
+	});
+
+	// Adjust other groups for axis mean change
+	axis.groups.forEach((group) => {
+		if (!userAnswer.options!.includes(group.groupId) && group.numberOfMembers > 0) {
+			const meanDifference = Math.abs(group.average - axisResult.newMean);
+			group.mad = Math.min(group.mad + meanDifference * 0.1, 1.0);
+		}
+	});
+}
+
+// ============================================================================
+// MATH UTILITIES
+// ============================================================================
+
+function calculateMADWithNewValue(oldMAD: number, oldMean: number, oldCount: number, newValue: number): MADResult {
 	if (oldCount === 0) {
 		return { newMAD: 0, newMean: newValue };
 	}
@@ -229,269 +430,41 @@ function calculateMADWithNewValue(
 		return { newMAD: 0, newMean };
 	}
 
-	// Calculate new MAD
-	// We approximate by assuming the old values maintain their relative spread
+	// Calculate new MAD incrementally
 	const oldSumAbsDev = oldMAD * oldCount;
 	const newValueAbsDev = Math.abs(newValue - newMean);
-
-	// Estimate how much the mean change affects existing values
 	const meanShift = newMean - oldMean;
-	const adjustedOldSumAbsDev = oldSumAbsDev + Math.abs(meanShift) * oldCount * 0.5; // Conservative estimate
-
+	const adjustedOldSumAbsDev = oldSumAbsDev + Math.abs(meanShift) * oldCount * 0.5;
 	const newMAD = (adjustedOldSumAbsDev + newValueAbsDev) / newCount;
 
 	return { newMAD, newMean };
 }
 
-async function updateStatementEvaluation({
-	statementId,
-	evaluationDiff,
-	addEvaluator = 0,
-	action,
-	newEvaluation,
-	oldEvaluation,
-	userId,
-	parentId,
-}: UpdateStatementEvaluationProps): Promise<Statement | undefined> {
+function calcAgreement(sumEvaluations: number, numberOfEvaluators: number): number {
 	try {
-		if (!statementId) throw new Error('statementId is not defined');
-		parse(number(), evaluationDiff);
+		parse(number(), sumEvaluations);
+		parse(number(), numberOfEvaluators);
 
-		//user's changed evaluation
-		const proConDiff = calcDiffEvaluation({
-			newEvaluation,
-			oldEvaluation,
-			action,
-		});
+		if (numberOfEvaluators === 0) numberOfEvaluators = 1;
 
-		// The user's new evaluation value
-		const userEvaluationValue = proConDiff.proDiff - proConDiff.conDiff;
+		const averageEvaluation = sumEvaluations / numberOfEvaluators;
 
-		//update evaluation of the statement
-		await db.runTransaction(async (transaction) => {
-			try {
-				const statementRef = db
-					.collection(Collections.statements)
-					.doc(statementId);
-				const statementDB = await transaction.get(statementRef);
-				const statement = parse(StatementSchema, statementDB.data());
-
-				//overall evaluation
-				const { agreement, evaluation } = getEvaluation(statement, proConDiff);
-
-				transaction.update(statementRef, {
-					totalEvaluators: FieldValue.increment(addEvaluator),
-					consensus: agreement,
-					evaluation,
-					proSum: FieldValue.increment(proConDiff.proDiff),
-					conSum: FieldValue.increment(proConDiff.conDiff),
-				});
-
-				return (await statementRef.get()).data() as Statement;
-			} catch (error) {
-				logger.error('Error in transaction of updateStatementEvaluation:', error);
-				throw error;
-			}
-		});
-
-		//update polarization index with proper MAD calculation
-		await db.runTransaction(async (transaction) => {
-			try {
-				//get userData
-				const userDataRef = db.collection(Collections.usersData);
-				if (!userId) throw new Error('userId is not defined');
-				console.log("userId", userId, "statementId", parentId);
-				const userDataDB = await userDataRef.where('userId', '==', userId).where('statementId', '==', parentId).get();
-
-				if (userDataDB.empty) {
-					throw new Error(`User ${userId} data does not exist on statement ${statementId}`);
-				}
-
-				const userAnswers = userDataDB.docs.map(doc => doc.data() as UserQuestion)
-
-				const polarizationIndexRef = db.collection(Collections.polarizationIndex).doc(statementId);
-				const polarizationIndexDB = await transaction.get(polarizationIndexRef);
-
-				//if polarization index does not exist, create it
-				if (!polarizationIndexDB.exists) {
-					const axes: PolarizationAxis[] = userAnswers
-						.filter((userAnswer) => userAnswer.userQuestionId !== undefined)
-						.map((userAnswer) => {
-							const groups: PolarizationGroup[] = userAnswer.options.map((option) => ({
-								groupId: option,
-								groupName: option,
-								average: userEvaluationValue,
-								color: getRandomColor(),
-								mad: 0, // First user, no deviation yet
-								numberOfMembers: addEvaluator
-							}));
-
-							return {
-								groupingQuestionId: userAnswer.userQuestionId!,
-								groupingQuestionText: userAnswer.question,
-								axisAverageAgreement: userEvaluationValue,
-								axisMAD: 0, // First user, no deviation yet
-								groups
-							}
-						});
-
-					const polarizationIndex: PolarizationMetrics = {
-						statementId,
-						overallMAD: 0, // First user, no deviation yet
-						totalEvaluators: addEvaluator,
-						averageAgreement: userEvaluationValue,
-						lastUpdated: new Date().getTime(),
-						axes: axes,
-					};
-
-					transaction.set(polarizationIndexRef, polarizationIndex);
-
-				} else {
-					const polarizationIndex = polarizationIndexDB.data() as PolarizationMetrics;
-
-					// Calculate new overall metrics with incremental MAD
-					const oldOverallCount = polarizationIndex.totalEvaluators;
-					const oldOverallMean = polarizationIndex.averageAgreement;
-
-					const { newMAD: newOverallMAD, newMean: newOverallMean } = calculateMADWithNewValue(
-						polarizationIndex.overallMAD,
-						oldOverallMean,
-						oldOverallCount,
-						userEvaluationValue
-					);
-
-					// Update overall metrics
-					polarizationIndex.overallMAD = newOverallMAD;
-					polarizationIndex.totalEvaluators = oldOverallCount + addEvaluator;
-					polarizationIndex.averageAgreement = newOverallMean;
-					polarizationIndex.lastUpdated = new Date().getTime();
-
-					// Update each axis with proper MAD calculation
-					polarizationIndex.axes.forEach((axis) => {
-						// Find which groups this user belongs to for this axis
-						const userAnswer = userAnswers.find(ua => ua.userQuestionId === axis.groupingQuestionId);
-
-						if (userAnswer && userAnswer.options) {
-							// Calculate axis-level updates
-							const oldAxisCount = axis.groups.reduce((sum, group) => sum + group.numberOfMembers, 0);
-							const oldAxisMean = axis.axisAverageAgreement;
-
-							const { newMAD: newAxisMAD, newMean: newAxisMean } = calculateMADWithNewValue(
-								axis.axisMAD,
-								oldAxisMean,
-								oldAxisCount,
-								userEvaluationValue
-							);
-
-							axis.axisAverageAgreement = newAxisMean;
-							axis.axisMAD = newAxisMAD;
-
-							// Update specific groups the user belongs to
-							userAnswer.options.forEach((groupId) => {
-								const group = axis.groups.find(g => g.groupId === groupId);
-								if (group) {
-									const oldGroupCount = group.numberOfMembers;
-									const oldGroupMean = group.average;
-
-									const { newMAD: newGroupMAD, newMean: newGroupMean } = calculateMADWithNewValue(
-										group.mad,
-										oldGroupMean,
-										oldGroupCount,
-										userEvaluationValue
-									);
-
-									group.average = newGroupMean;
-									group.mad = newGroupMAD;
-									group.numberOfMembers = oldGroupCount + addEvaluator;
-								}
-							});
-
-							// Update groups the user doesn't belong to (their count stays the same, but axis mean changed)
-							axis.groups.forEach((group) => {
-								if (!userAnswer.options.includes(group.groupId) && group.numberOfMembers > 0) {
-									// Recalculate group's MAD based on the new axis mean
-									// This is an approximation since we don't have individual values
-									const meanDifference = Math.abs(group.average - newAxisMean);
-									group.mad = Math.min(group.mad + meanDifference * 0.1, 1.0); // Conservative adjustment
-								}
-							});
-						}
-					});
-
-					transaction.update(polarizationIndexRef, polarizationIndex);
-				}
-
-			} catch (error) {
-				logger.error('Error in transaction of updateStatementEvaluation:', error);
-				throw error;
-			}
-		});
-
-		// Get and return the updated statement
-		const statementRef = db.collection(Collections.statements).doc(statementId);
-		const updatedStatement = await statementRef.get();
-
-		return updatedStatement.data() as Statement;
+		return averageEvaluation * Math.sqrt(numberOfEvaluators);
 	} catch (error) {
-		logger.error(error);
+		logger.error('Error calculating agreement:', error);
 
-		return undefined;
-	}
-
-	function getEvaluation(statement: Statement, proConDiff: CalcDiff) {
-		try {
-			const evaluation = statement.evaluation || {
-				agreement: statement.consensus || 0,
-				sumEvaluations: evaluationDiff,
-				numberOfEvaluators: statement.totalEvaluators || 1,
-				sumPro: proConDiff.proDiff,
-				sumCon: proConDiff.conDiff,
-			};
-
-			if (statement.evaluation) {
-				evaluation.sumEvaluations += evaluationDiff;
-				evaluation.numberOfEvaluators += addEvaluator;
-				evaluation.sumPro =
-					(evaluation.sumPro || 0) + proConDiff.proDiff;
-				evaluation.sumCon =
-					(evaluation.sumCon || 0) + proConDiff.conDiff;
-			}
-
-			const agreement = calcAgreement(
-				evaluation.sumEvaluations,
-				evaluation.numberOfEvaluators
-			);
-
-			evaluation.agreement = agreement;
-
-			return { agreement, evaluation };
-		} catch (error) {
-			logger.error('Error in getEvaluation of updateStatementEvaluation:', error);
-
-			return { agreement: 0, evaluation: {} };
-		}
+		return 0;
 	}
 }
 
-interface CalcDiff {
-	proDiff: number;
-	conDiff: number;
-}
-
-function calcDiffEvaluation({
-	action,
-	newEvaluation,
-	oldEvaluation,
-}: {
+function calcDiffEvaluation({ action, newEvaluation, oldEvaluation }: {
 	action: ActionTypes;
 	newEvaluation: number;
 	oldEvaluation: number;
 }): CalcDiff {
 	try {
-		const positiveDiff =
-			Math.max(newEvaluation, 0) - Math.max(oldEvaluation, 0);
-		const negativeDiff =
-			Math.min(newEvaluation, 0) - Math.min(oldEvaluation, 0);
+		const positiveDiff = Math.max(newEvaluation, 0) - Math.max(oldEvaluation, 0);
+		const negativeDiff = Math.min(newEvaluation, 0) - Math.min(oldEvaluation, 0);
 
 		switch (action) {
 			case ActionTypes.new:
@@ -505,50 +478,36 @@ function calcDiffEvaluation({
 					conDiff: Math.max(oldEvaluation, 0),
 				};
 			case ActionTypes.update:
-				return { proDiff: positiveDiff, conDiff: -negativeDiff };
+				return {
+					proDiff: positiveDiff,
+					conDiff: -negativeDiff
+				};
 			default:
-				throw new Error('Action is not defined correctly');
+				throw new Error('Invalid action type');
 		}
 	} catch (error) {
-		logger.error(error);
+		logger.error('Error calculating evaluation diff:', error);
 
 		return { proDiff: 0, conDiff: 0 };
 	}
 }
-export async function updateChosenOptions(
-	event: FirestoreEvent<
-		Change<DocumentSnapshot> | DocumentSnapshot | undefined
-	>
-) {
+
+// ============================================================================
+// PARENT STATEMENT UPDATE LOGIC
+// ============================================================================
+
+export async function updateChosenOptions(event: FirestoreEvent<Change<DocumentSnapshot> | DocumentSnapshot | undefined>): Promise<void> {
 	try {
-
-		let snapshot: DocumentSnapshot | undefined;
-
-		// Check if the event is a Change or a DocumentSnapshot
-		if (event.data) {
-			if ('after' in event.data) {
-				// It's a Change<DocumentSnapshot>
-				snapshot = event.data.after;
-			} else {
-				// It's a DocumentSnapshot (no change)
-				snapshot = event.data;
-			}
-		}
-
-		// If snapshot is undefined or does not exist, return early
+		const snapshot = getSnapshotFromEvent(event);
 		if (!snapshot?.exists) return;
 
 		const statement = snapshot.data();
-		if (!statement || statement.statementType !== StatementType.option)
-			return;
+		if (!statement || statement.statementType !== StatementType.option) return;
 
 		const parentId = statement.parentStatementId;
 		if (!parentId) return;
 
-		const db = getFirestore();
-		const parentRef = db.collection(Collections.statements).doc(parentId);
-
-		// Update the parent statement with the chosen option
+		const parentRef = getFirestore().collection(Collections.statements).doc(parentId);
 		await parentRef.update({
 			chosenOptions: FieldValue.arrayUnion(snapshot.id),
 		});
@@ -557,175 +516,156 @@ export async function updateChosenOptions(
 	}
 }
 
-async function updateParentStatementWithChosenOptions(
-	parentId: string | undefined
-) {
+function getSnapshotFromEvent(event: FirestoreEvent<Change<DocumentSnapshot> | DocumentSnapshot | undefined>): DocumentSnapshot | undefined {
+	if (!event.data) return undefined;
+
+	if ('after' in event.data) {
+		return event.data.after;
+	}
+
+	return event.data;
+}
+
+async function updateParentStatementWithChosenOptions(parentId: string | undefined): Promise<void> {
+	if (!parentId) return;
+
 	try {
+		const parentStatement = await getParentStatement(parentId);
 
-		if (!parentId) throw new Error('parentId is not defined');
+		if (!parentStatement.resultsSettings) {
+			logger.warn('No results settings found for parent statement');
 
-		// get parent choseBy settings statement and parent statement
+			return;
+		}
 
-		const parentStatementDB = await db.collection(Collections.statements).doc(parentId).get();
-		const parentStatement = parentStatementDB.data() as Statement;
-		if (!parentStatement) throw new Error('parentStatement is not found');
-		const { resultsSettings } = parentStatement;
-		if (!resultsSettings) throw new Error('resultsSettings is not found');
+		const chosenOptions = await choseTopOptions(parentId, parentStatement.resultsSettings);
 
-		const chosenOptions = await choseTopOptions(parentId, resultsSettings);
-
-		if (!chosenOptions) throw new Error('chosenOptions is not found');
-
-		await updateParentOfChildren({
-			topOptionsStatements: chosenOptions,
-		});
-
+		if (chosenOptions) {
+			await updateParentWithResults(parentId, chosenOptions);
+		}
 	} catch (error) {
-		logger.error(error);
-	}
-
-	//inner functions
-
-	interface UpdateParentChildrenProps {
-		topOptionsStatements: Statement[];
-	}
-	async function updateParentOfChildren({
-		topOptionsStatements,
-	}: UpdateParentChildrenProps) {
-		const childStatementsSimple = topOptionsStatements.map(
-			(st: Statement) => statementToSimpleStatement(st)
-		);
-
-		if (!parentId) throw new Error('parentId is not defined');
-
-		//update parent with results
-		await db.collection(Collections.statements).doc(parentId).update({
-			totalResults: childStatementsSimple.length,
-			results: childStatementsSimple,
-		});
+		logger.error('Error updating parent statement:', error);
 	}
 }
 
-//chose top options by the choseBy settings
-async function choseTopOptions(
-	parentId: string,
-	resultsSettings: ResultsSettings
-): Promise<Statement[] | undefined> {
+async function getParentStatement(parentId: string): Promise<Statement> {
+	const parentDoc = await db.collection(Collections.statements).doc(parentId).get();
+	const parentStatement = parentDoc.data() as Statement;
+
+	if (!parentStatement) {
+		throw new Error('Parent statement not found');
+	}
+
+	if (!parentStatement.resultsSettings) {
+		throw new Error('Results settings not found');
+	}
+
+	return parentStatement;
+}
+
+async function updateParentWithResults(parentId: string, chosenOptions: Statement[]): Promise<void> {
+	const childStatementsSimple = chosenOptions.map(statementToSimpleStatement);
+
+	await db.collection(Collections.statements).doc(parentId).update({
+		totalResults: childStatementsSimple.length,
+		results: childStatementsSimple,
+	});
+}
+
+// ============================================================================
+// OPTION SELECTION LOGIC
+// ============================================================================
+
+async function choseTopOptions(parentId: string, resultsSettings: ResultsSettings): Promise<Statement[] | undefined> {
 	try {
+		await clearPreviousChosenOptions();
 
-		const statementsRef = db.collection(Collections.statements);
-
-		//first get previous top options and remove isChosen
-		const previousTopOptionsDB = await statementsRef
-			.where('isChosen', '==', true)
-			.get();
-
-		const batch = db.batch();
-		previousTopOptionsDB.forEach((doc) => {
-			const statementRef = statementsRef.doc(doc.id);
-			batch.update(statementRef, { isChosen: false });
-		});
-
-		await batch.commit();
-
-		//then get the new top options by the new settings
-		const chosenOptions = await optionsChosenByMethod(parentId, resultsSettings);
-
-		if (!chosenOptions || chosenOptions.length === 0) throw new Error("Couldn't find top options");
+		const chosenOptions = await getOptionsUsingMethod(parentId, resultsSettings);
+		if (!chosenOptions?.length) {
+			throw new Error("No top options found");
+		}
 
 		const sortedOptions = getSortedOptions(chosenOptions, resultsSettings);
-
-		const batch2 = db.batch();
-		sortedOptions.forEach((doc) => {
-			const statementRef = statementsRef.doc(doc.statementId);
-			batch2.update(statementRef, { isChosen: true });
-		});
-
-		await batch2.commit();
+		await markOptionsAsChosen(sortedOptions);
 
 		return sortedOptions;
 	} catch (error) {
-		console.error(`At choseTopOptions ${error}`);
+		logger.error('Error choosing top options:', error);
 
 		return undefined;
 	}
 }
 
-function getSortedOptions(
-	statements: Statement[],
-	resultsSettings: ResultsSettings
-): Statement[] {
-	const { resultsBy } = resultsSettings;
-	if (resultsBy === ResultsBy.consensus) {
-		return statements.sort((b, a) => a.consensus - b.consensus);
-	} else if (resultsBy === ResultsBy.mostLiked) {
-		return statements.sort(
-			(b, a) => (a.evaluation?.sumPro ?? 0) - (b.evaluation?.sumPro ?? 0)
-		);
-	} else if (resultsBy === ResultsBy.averageLikesDislikes) {
-		return statements.sort(
-			(b, a) =>
-				(a.evaluation?.sumEvaluations ?? 0) -
-				(b.evaluation?.sumEvaluations ?? 0)
-		);
-	}
+async function clearPreviousChosenOptions(): Promise<void> {
+	const statementsRef = db.collection(Collections.statements);
+	const previousChosenDocs = await statementsRef.where('isChosen', '==', true).get();
 
-	return statements;
+	const batch = db.batch();
+	previousChosenDocs.forEach((doc) => {
+		batch.update(statementsRef.doc(doc.id), { isChosen: false });
+	});
+
+	await batch.commit();
 }
 
-async function optionsChosenByMethod(
-	parentId: string,
-	resultsSettings: ResultsSettings
-): Promise<Statement[] | undefined> {
-	const {
-		numberOfResults,
-		resultsBy,
-		cutoffBy,
-		cutoffNumber
-	} = resultsSettings;
+async function markOptionsAsChosen(statements: Statement[]): Promise<void> {
+	const statementsRef = db.collection(Collections.statements);
+	const batch = db.batch();
 
-	const number = Number(numberOfResults);
-	const evaluationQuery = getEvaluationQuery(resultsBy);
+	statements.forEach((statement) => {
+		batch.update(statementsRef.doc(statement.statementId), { isChosen: true });
+	});
 
-	const statementsRef = db
+	await batch.commit();
+}
+
+function getSortedOptions(statements: Statement[], resultsSettings: ResultsSettings): Statement[] {
+	const { resultsBy } = resultsSettings;
+
+	const sortComparisons = {
+		[ResultsBy.consensus]: (a: Statement, b: Statement) => b.consensus - a.consensus,
+		[ResultsBy.mostLiked]: (a: Statement, b: Statement) => (b.evaluation?.sumPro ?? 0) - (a.evaluation?.sumPro ?? 0),
+		[ResultsBy.averageLikesDislikes]: (a: Statement, b: Statement) => (b.evaluation?.sumEvaluations ?? 0) - (a.evaluation?.sumEvaluations ?? 0),
+	};
+
+	return statements.sort(sortComparisons[resultsBy] || sortComparisons[ResultsBy.consensus]);
+}
+
+async function getOptionsUsingMethod(parentId: string, resultsSettings: ResultsSettings): Promise<Statement[] | undefined> {
+	const { numberOfResults, resultsBy, cutoffBy, cutoffNumber } = resultsSettings;
+	const evaluationField = getEvaluationField(resultsBy);
+
+	const baseQuery = db
 		.collection(Collections.statements)
 		.where('parentId', '==', parentId)
 		.where('statementType', '==', StatementType.option);
 
 	if (cutoffBy === CutoffBy.topOptions) {
-		const statementsDB = await statementsRef
-			.orderBy(evaluationQuery, 'desc')
-			.limit(Math.ceil(number))
+		const snapshot = await baseQuery
+			.orderBy(evaluationField, 'desc')
+			.limit(Math.ceil(Number(numberOfResults)))
 			.get();
 
-		const statements = statementsDB.docs.map(
-			(doc) => doc.data() as Statement
-		);
+		return snapshot.docs.map(doc => doc.data() as Statement);
+	}
 
-		return statements;
-	} else if (cutoffBy === CutoffBy.aboveThreshold) {
-		const statementsDB = await statementsRef
-			.where(evaluationQuery, '>', cutoffNumber)
+	if (cutoffBy === CutoffBy.aboveThreshold) {
+		const snapshot = await baseQuery
+			.where(evaluationField, '>', cutoffNumber)
 			.get();
 
-		const statements = statementsDB.docs.map(
-			(doc) => doc.data() as Statement
-		);
-
-		return statements;
+		return snapshot.docs.map(doc => doc.data() as Statement);
 	}
 
 	return undefined;
 }
 
-function getEvaluationQuery(choseByEvaluationType: ResultsBy) {
-	if (choseByEvaluationType === ResultsBy.consensus) {
-		return 'consensus';
-	} else if (choseByEvaluationType === ResultsBy.mostLiked) {
-		return 'evaluation.sumPro';
-	} else if (choseByEvaluationType === ResultsBy.averageLikesDislikes) {
-		return 'evaluation.sumEvaluations';
-	}
+function getEvaluationField(resultsBy: ResultsBy): string {
+	const fieldMap = {
+		[ResultsBy.consensus]: 'consensus',
+		[ResultsBy.mostLiked]: 'evaluation.sumPro',
+		[ResultsBy.averageLikesDislikes]: 'evaluation.sumEvaluations',
+	};
 
-	return 'consensus';
+	return fieldMap[resultsBy] || 'consensus';
 }
