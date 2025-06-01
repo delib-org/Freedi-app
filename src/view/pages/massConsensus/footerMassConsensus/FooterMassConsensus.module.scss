@@ -9,11 +9,9 @@
 	gap: 1rem;
 	margin-top: 1rem;
 	padding-bottom: 2rem;
-	background: linear-gradient(
-		to bottom,
-		rgba(0, 0, 0, 0) 0%,
-		var(--bg-screen) 20%
-	);
+	background: linear-gradient(to bottom,
+			rgba(0, 0, 0, 0) 0%,
+			var(--statementBackground) 20%);
 
 	z-index: 100;
 
