@@ -5,9 +5,10 @@ import { setUserAnswers } from '@/controllers/db/userData/setUserData';
 
 interface Props {
 	questions: UserQuestion[];
+	closeModal?: () => void;
 }
 
-const UserDataQuestions: FC<Props> = ({ questions }) => {
+const UserDataQuestions: FC<Props> = ({ questions, closeModal }) => {
 	const [userData, setUserData] = useState<UserQuestion[]>([]);
 	const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -43,12 +44,44 @@ const UserDataQuestions: FC<Props> = ({ questions }) => {
 		}
 	};
 
+	const validateForm = (): boolean => {
+		// Check if all questions have been answered
+		for (const question of questions) {
+			const userAnswer = userData.find(q => q.userQuestionId === question.userQuestionId);
+
+			if (!userAnswer) {
+				return false;
+			}
+
+			// Check based on question type
+			if (question.type === UserQuestionType.text || question.type === UserQuestionType.textarea || question.type === UserQuestionType.radio) {
+				if (!userAnswer.answer || userAnswer.answer.trim() === '') {
+					return false;
+				}
+			} else if (question.type === UserQuestionType.checkbox) {
+				if (!userAnswer.answerOptions || userAnswer.answerOptions.length === 0) {
+					return false;
+				}
+			}
+		}
+
+		return true;
+	};
+
 	const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
+
+		if (!validateForm()) {
+			alert('Please answer all required fields before submitting.');
+
+			return;
+		}
+
 		setIsSubmitting(true);
 
 		try {
 			await setUserAnswers(userData);
+			closeModal?.();
 		} catch (error) {
 			console.error('Error saving user answers:', error);
 			// You might want to show an error message to the user here
@@ -66,13 +99,14 @@ const UserDataQuestions: FC<Props> = ({ questions }) => {
 					value={''}
 					options={question.options || []}
 					onChange={(value) => handleQuestionChange(question, value)}
+					required={true}
 				/>
 			))}
 			<div className="btns">
 				<button
 					type="submit"
 					className="btn btn--secondary"
-					disabled={isSubmitting}
+					disabled={isSubmitting || !validateForm()}
 				>
 					{isSubmitting ? 'Submitting...' : 'Submit'}
 				</button>
