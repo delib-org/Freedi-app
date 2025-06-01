@@ -17,9 +17,15 @@ import {
 	ResultsSettings,
 	ResultsBy,
 	CutoffBy,
+	UserData,
+	PolarizationMetrics,
+	PolarizationAxis,
+	UserQuestion,
+	PolarizationGroup,
 } from 'delib-npm';
 
 import { number, parse } from 'valibot';
+import { getRandomColor } from './helpers';
 
 enum ActionTypes {
 	new = 'new',
@@ -33,6 +39,7 @@ export async function newEvaluation(event) {
 		//add evaluator to statement
 
 		const statementEvaluation = event.data.data() as Evaluation;
+		const userId: string | undefined = statementEvaluation.evaluator?.uid;
 		const { statementId } = statementEvaluation;
 		if (!statementId) throw new Error('statementId is not defined');
 
@@ -44,6 +51,7 @@ export async function newEvaluation(event) {
 			action: ActionTypes.new,
 			newEvaluation: statementEvaluation.evaluation,
 			oldEvaluation: 0,
+			userId,
 		});
 		if (!statement) throw new Error('statement does not exist');
 		updateParentStatementWithChosenOptions(statement.parentId);
@@ -67,6 +75,7 @@ export async function deleteEvaluation(event) {
 		//add evaluator to statement
 		const statementEvaluation = event.data.data() as Evaluation;
 		const { statementId, evaluation } = statementEvaluation;
+		const userId: string | undefined = statementEvaluation.evaluator?.uid;
 		if (!statementId) throw new Error('statementId is not defined');
 
 		//add one evaluator to statement
@@ -77,6 +86,7 @@ export async function deleteEvaluation(event) {
 			action: ActionTypes.delete,
 			newEvaluation: 0,
 			oldEvaluation: evaluation,
+			userId,
 		});
 		if (!statement) throw new Error('statement does not exist');
 		updateParentStatementWithChosenOptions(statement.parentId);
@@ -96,6 +106,7 @@ export async function updateEvaluation(event) {
 		const { evaluation: evaluationAfter, statementId } =
 			statementEvaluationAfter;
 		const evaluationDiff = evaluationAfter - evaluationBefore;
+		const userId: string | undefined = statementEvaluation.evaluator?.uid;
 
 		if (!statementId) throw new Error('statementId is not defined');
 
@@ -106,6 +117,7 @@ export async function updateEvaluation(event) {
 			action: ActionTypes.update,
 			newEvaluation: evaluationAfter,
 			oldEvaluation: evaluationBefore,
+			userId,
 		});
 		if (!statement) throw new Error('statement does not exist');
 
@@ -193,6 +205,7 @@ interface UpdateStatementEvaluationProps {
 	action: ActionTypes;
 	newEvaluation: number;
 	oldEvaluation: number;
+	userId?: string;
 }
 async function updateStatementEvaluation({
 	statementId,
@@ -201,6 +214,7 @@ async function updateStatementEvaluation({
 	action,
 	newEvaluation,
 	oldEvaluation,
+	userId,
 }: UpdateStatementEvaluationProps): Promise<Statement | undefined> {
 	try {
 		if (!statementId) throw new Error('statementId is not defined');
@@ -213,9 +227,8 @@ async function updateStatementEvaluation({
 			action,
 		});
 
-		//get user's segments
-
-		return await db.runTransaction(async (transaction) => {
+		//update evaluation of the statement
+		await db.runTransaction(async (transaction) => {
 			try {
 				const statementRef = db
 					.collection(Collections.statements)
@@ -238,6 +251,64 @@ async function updateStatementEvaluation({
 			} catch (error) {
 				logger.error('Error in transaction of updateStatementEvaluation:', error);
 				throw error;
+			}
+		});
+
+		return await db.runTransaction(async (transaction) => {
+			try {
+				//get userData
+				const userDataRef = db.collection(Collections.usersData);
+				if (!userId) throw new Error('userId is not defined');
+
+				const userDataDB = await userDataRef.where('userId', '==', userId).where('statementId', '==', statementId).get();
+
+				if (userDataDB.empty) {
+					throw new Error(`User ${userId} data does not exist on statement ${statementId}`);
+				}
+
+				const userAnswers = userDataDB.docs.map(doc => doc.data() as UserQuestion)
+
+				const polarizationIndexRef = db.collection(Collections.polarizationIndex).doc(statementId);
+				const polarizationIndexDB = await transaction.get(polarizationIndexRef);
+
+				//if polarization index does not exist, create it
+				if (!polarizationIndexDB.exists) {
+
+					const axes: PolarizationAxis[] = userAnswers.map((userAnswer) => {
+
+						const groups: PolarizationGroup[] = userAnswer.options.map((option) => ({
+							groupId: option,
+							groupName: option,
+							average: proConDiff.proDiff - proConDiff.conDiff,
+							color: getRandomColor(),
+							mad: 0,
+							numberOfMembers: addEvaluator
+						}));
+
+						return {
+							groupingQuestionId: userAnswer.userQuestionId,
+							groupingQuestionText: userAnswer.question,
+							axisAverageAgreement: proConDiff.proDiff - proConDiff.conDiff,
+							axisMAD: 0,
+							groups
+						}
+					});
+
+					const polarizationIndex: PolarizationMetrics = {
+						statementId,
+						overallMAD: 0,
+						totalEvaluators: addEvaluator,
+						averageAgreement: proConDiff.proDiff - proConDiff.conDiff,
+						lastUpdated: new Date().getTime(),
+
+						axes: axes,
+					};
+					transaction.set(polarizationIndexRef, polarizationIndex);
+				}
+
+			} catch (error) {
+				logger.error('Error in transaction of updateStatementEvaluation:', error);
+
 			}
 		});
 	} catch (error) {
