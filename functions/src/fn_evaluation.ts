@@ -260,30 +260,38 @@ async function updatePolarizationIndex(
 	addEvaluator: number
 ): Promise<void> {
 	try {
-		await db.runTransaction(async (transaction) => {
-			// Get user demographic data
-			const userAnswers = await getUserDemographicData(userId, parentId);
+		const userAnswers = await getUserDemographicData(userId, parentId);
 
-			if (userAnswers.length === 0) {
-				logger.info(`No demographic data for user ${userId} on statement ${parentId} - skipping polarization index`);
+		if (userAnswers.length === 0) {
+			logger.info(`No demographic data for user ${userId} on statement ${parentId} - skipping polarization index`);
 
-				return;
+			return;
+		}
+
+		// Get user demographic data
+		const polarizationRef = db.collection(Collections.polarizationIndex).doc(statementId);
+		const polarizationDB = await polarizationRef.get();
+
+		if (!polarizationDB.exists) {
+			// Create new polarization index
+			const newIndex = await createInitialPolarizationIndex(statementId, userAnswers, userEvaluationValue, addEvaluator);
+			console.log("newIndex", newIndex);
+			polarizationRef.set(newIndex);
+			logger.info(`Created new polarization index for statement ${statementId}`);
+		} else {
+			// Update existing polarization index
+			const polarizationIndex = polarizationDB.data() as PolarizationMetrics;
+			console.log("polarizationIndex", polarizationIndex);
+			logger.info(`Updating existing polarization index for statement ${statementId}`);
+			const newPolarizationIndex = updateExistingPolarizationIndex(polarizationIndex, userAnswers, userEvaluationValue, addEvaluator);
+
+			if (newPolarizationIndex) {
+				console.log("newPolarizationIndex", newPolarizationIndex);
+
+				polarizationRef.update(newPolarizationIndex);
 			}
+		}
 
-			const polarizationRef = db.collection(Collections.polarizationIndex).doc(statementId);
-			const polarizationDoc = await transaction.get(polarizationRef);
-
-			if (!polarizationDoc.exists) {
-				// Create new polarization index
-				const newIndex = createInitialPolarizationIndex(statementId, userAnswers, userEvaluationValue, addEvaluator);
-				transaction.set(polarizationRef, newIndex);
-			} else {
-				// Update existing polarization index
-				const polarizationIndex = polarizationDoc.data() as PolarizationMetrics;
-				updateExistingPolarizationIndex(polarizationIndex, userAnswers, userEvaluationValue, addEvaluator);
-				transaction.update(polarizationRef, polarizationIndex);
-			}
-		});
 	} catch (error) {
 		logger.error('Error updating polarization index:', error);
 		// Don't throw - polarization is optional functionality
@@ -355,28 +363,39 @@ function updateExistingPolarizationIndex(
 	userAnswers: UserQuestion[],
 	userEvaluationValue: number,
 	addEvaluator: number
-): void {
-	// Update overall metrics
-	const overallResult = calculateMADWithNewValue(
-		polarizationIndex.overallMAD,
-		polarizationIndex.averageAgreement,
-		polarizationIndex.totalEvaluators,
-		userEvaluationValue
-	);
+): PolarizationMetrics | undefined {
+	try {
 
-	polarizationIndex.overallMAD = overallResult.newMAD;
-	polarizationIndex.totalEvaluators += addEvaluator;
-	polarizationIndex.averageAgreement = overallResult.newMean;
-	polarizationIndex.lastUpdated = new Date().getTime();
+		// Update overall metrics
+		const overallResult = calculateMADWithNewValue(
+			polarizationIndex.overallMAD,
+			polarizationIndex.averageAgreement,
+			polarizationIndex.totalEvaluators,
+			userEvaluationValue
+		);
 
-	// Update each axis
-	polarizationIndex.axes.forEach((axis) => {
-		const userAnswer = userAnswers.find(ua => ua.userQuestionId === axis.groupingQuestionId);
+		polarizationIndex.overallMAD = overallResult.newMAD;
+		polarizationIndex.totalEvaluators += addEvaluator;
+		polarizationIndex.averageAgreement = overallResult.newMean;
+		polarizationIndex.lastUpdated = new Date().getTime();
 
-		if (userAnswer?.options) {
-			updateAxisWithNewUser(axis, userAnswer, userEvaluationValue, addEvaluator);
-		}
-	});
+		// Update each axis
+		polarizationIndex.axes.forEach((axis) => {
+			const userAnswer = userAnswers.find(ua => ua.userQuestionId === axis.groupingQuestionId);
+
+			if (userAnswer?.options) {
+				updateAxisWithNewUser(axis, userAnswer, userEvaluationValue, addEvaluator);
+			}
+		});
+
+		return polarizationIndex;
+
+	} catch (error) {
+		logger.error('Error updating existing polarization index:', error);
+
+		return undefined; // Skip update if error occurs
+
+	}
 }
 
 function updateAxisWithNewUser(
