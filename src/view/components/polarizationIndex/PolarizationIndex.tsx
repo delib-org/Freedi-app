@@ -14,8 +14,6 @@ const PolarizationIndex = () => {
 	const containerRef = useRef(null);
 	const polarizationIndexes = useSelector(selectPolarizationIndexByParentId(statementId));
 
-	console.log('Polarization Index Data:', JSON.stringify(polarizationIndexes));
-
 	// Ensure selectedStatementIndex is within bounds and handle empty/undefined arrays
 	const safeSelectedIndex = polarizationIndexes && polarizationIndexes.length > 0
 		? Math.min(selectedStatementIndex, polarizationIndexes.length - 1)
@@ -211,11 +209,10 @@ const PolarizationIndex = () => {
 			ctx.font = isSelected ? 'bold 11px Arial' : '10px Arial';
 			ctx.textAlign = 'center';
 			const labelY = statementPoint.y - (isSelected ? 20 : 16);
-			ctx.fillText((statement.statementId || 'Unknown').replace('_', ' '), statementPoint.x, labelY);
+			ctx.fillText((statement.statement || 'Unknown').replace('_', ' '), statementPoint.x, labelY);
 		});
-
 		// Draw groups for SELECTED statement only
-		const currentAxis = currentStatementData.axes[safeSelectedAxis];
+		const currentAxis = currentStatementData?.axes?.[safeSelectedAxis];
 		if (currentAxis && currentAxis.groups) {
 			currentAxis.groups.forEach((group, index) => {
 				// Safety check for group data
@@ -302,9 +299,8 @@ const PolarizationIndex = () => {
 
 			return;
 		}
-
 		// Check for group clicks (only for current statement)
-		const currentAxis = currentStatementData.axes[safeSelectedAxis];
+		const currentAxis = currentStatementData?.axes?.[safeSelectedAxis];
 		if (!currentAxis || !currentAxis.groups) return;
 
 		let clickedGroup = null;
@@ -421,10 +417,7 @@ const PolarizationIndex = () => {
 								}}
 							>
 								<div style={{ fontWeight: 'bold', marginBottom: '4px' }}>
-									{statement.statementId || 'Unknown'}
-								</div>
-								<div style={{ fontSize: '12px', opacity: safeSelectedIndex === index ? 0.9 : 0.7 }}>
-									{statement.statement || 'No statement text available'}
+									{statement.statement || 'Unknown'}
 								</div>
 							</div>
 						))}
@@ -435,7 +428,7 @@ const PolarizationIndex = () => {
 				{currentStatementData.axes && currentStatementData.axes.length > 0 && (
 					<div style={{ marginBottom: '20px' }}>
 						<h3 style={{ marginBottom: '10px', color: '#333' }}>
-							Select Grouping for "{currentStatementData.statementId || 'Unknown'}":
+							Select Grouping for "{currentStatementData.statement || 'Unknown'}":
 						</h3>
 						<div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
 							{currentStatementData.axes.map((axis, index) => (
@@ -461,14 +454,13 @@ const PolarizationIndex = () => {
 						</div>
 					</div>
 				)}
-			</div>
-
-			{/* Chart Container */}
+			</div>			{/* Chart Container */}
 			<div
 				ref={containerRef}
 				style={{
 					width: '100%',
 					maxWidth: '800px',
+					minHeight: '400px',
 					margin: '0 auto',
 					backgroundColor: '#fff',
 					border: '1px solid #e2e8f0',
@@ -480,7 +472,7 @@ const PolarizationIndex = () => {
 				<canvas
 					ref={canvasRef}
 					onClick={handleCanvasClick}
-					style={{ cursor: 'pointer', display: 'block' }}
+					style={{ cursor: 'pointer', display: 'block', width: '100%', height: 'auto' }}
 				/>
 			</div>
 
@@ -490,7 +482,7 @@ const PolarizationIndex = () => {
 				<div style={{ backgroundColor: '#f7fafc', padding: '16px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
 					<h3 style={{ margin: '0 0 12px 0', color: '#333' }}>Selected Statement Metrics</h3>
 					<div style={{ fontSize: '14px', lineHeight: '1.6' }}>
-						<div><strong>Statement:</strong> {currentStatementData.statementId || 'Unknown'}</div>
+						<div><strong>Statement:</strong> {currentStatementData.statement || 'Unknown'}</div>
 						<div><strong>Total Evaluators:</strong> {currentStatementData.totalEvaluators || 0}</div>
 						<div><strong>Average Agreement:</strong> {(currentStatementData.averageAgreement || 0).toFixed(3)}</div>
 						<div><strong>Polarization (MAD):</strong> {(currentStatementData.overallMAD || 0).toFixed(3)}</div>
@@ -620,10 +612,7 @@ const PolarizationIndex = () => {
 										marginRight: '8px'
 									}}
 								/>
-								<strong style={{ fontSize: '16px' }}>{statement.statementId || 'Unknown'}</strong>
-							</div>
-							<div style={{ fontSize: '14px', marginBottom: '8px', color: '#666' }}>
-								{statement.statement || 'No statement text available'}
+								<strong style={{ fontSize: '16px' }}>{statement.statement || 'Unknown'}</strong>
 							</div>
 							<div style={{ fontSize: '12px', lineHeight: '1.4' }}>
 								<div><strong>Agreement:</strong> {(statement.averageAgreement || 0).toFixed(3)}</div>
