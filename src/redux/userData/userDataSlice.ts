@@ -64,4 +64,9 @@ export const selectUserDataByStatementId = (statementId: string) => createSelect
 	(userData) => userData.filter(data => data.statementId === statementId)
 );
 
+export const selectPolarizationIndexByParentId = (parentId: string) => createSelector(
+	[(state: RootState) => state.userData.polarizationIndexes],
+	(polarizationIndexes) => polarizationIndexes.filter(pi => pi.parentId === parentId)
+);
+
 export default userDataSlice.reducer;

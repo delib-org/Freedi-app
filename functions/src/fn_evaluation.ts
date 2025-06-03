@@ -340,6 +340,7 @@ async function createInitialPolarizationIndex(
 
 	return {
 		statementId,
+		parentId: statementData.parentId,
 		statement: statementData.statement,
 		overallMAD: 0, // First user, no deviation
 		totalEvaluators: addEvaluator,
