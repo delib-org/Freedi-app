@@ -275,18 +275,16 @@ async function updatePolarizationIndex(
 		if (!polarizationDB.exists) {
 			// Create new polarization index
 			const newIndex = await createInitialPolarizationIndex(statementId, userAnswers, userEvaluationValue, addEvaluator);
-			console.log("newIndex", newIndex);
+
 			polarizationRef.set(newIndex);
 			logger.info(`Created new polarization index for statement ${statementId}`);
 		} else {
 			// Update existing polarization index
 			const polarizationIndex = polarizationDB.data() as PolarizationMetrics;
-			console.log("polarizationIndex", polarizationIndex);
 			logger.info(`Updating existing polarization index for statement ${statementId}`);
 			const newPolarizationIndex = updateExistingPolarizationIndex(polarizationIndex, userAnswers, userEvaluationValue, addEvaluator);
 
 			if (newPolarizationIndex) {
-				console.log("newPolarizationIndex", newPolarizationIndex);
 
 				polarizationRef.update(newPolarizationIndex);
 			}
