@@ -567,7 +567,7 @@
 	--voting-palette-pair-19-dark-contrast: #ff3d9d;
 
 	// //base
-	--bg-screen: #f2f6ff;
+	--statementBackground: #f2f6ff;
 
 	// btns
 	--btn-disabled: #c6d2de;
@@ -602,7 +602,7 @@ body {
 	font-family: "Open Sans", sans-serif;
 	font-size: 1.0625rem;
 	line-height: 150%;
-	background: var(--bg-screen);
+	background: var(--statementBackground);
 	overflow: hidden;
 }
 

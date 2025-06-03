@@ -23,7 +23,7 @@ const nodeStyle = (statementColor: {
 		color: statementColor.color,
 		minWidth: '5ch',
 		maxWidth: '30ch',
-		margin: '0.5rem',
+		margin: '0.2rem',
 		borderRadius: '5px',
 		padding: '.5rem ',
 		display: 'flex',
