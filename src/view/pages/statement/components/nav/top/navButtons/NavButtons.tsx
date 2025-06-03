@@ -47,9 +47,9 @@ function NavButtons({
 	}, [screen]);
 
 	const handleClickOutside = useCallback(() => {
-			if (openViews) setOpenViews(false);
-		}, [openViews, setOpenViews]);
-		
+		if (openViews) setOpenViews(false);
+	}, [openViews, setOpenViews]);
+
 	const btnRef = useClickOutside(handleClickOutside);
 
 	function handleAgreementMap() {
@@ -66,6 +66,10 @@ function NavButtons({
 		} else {
 			setOpenViews(!openViews);
 		}
+	}
+
+	function handlePolarizationIndex() {
+		handleNavigation(Screen.polarizationIndex);
 	}
 
 	return (
@@ -95,11 +99,17 @@ function NavButtons({
 				/>
 				{openViews && (
 					<div ref={(node) => {
-						if (btnRef) btnRef.current = node;}} className={styles.views__dropdown}>
+						if (btnRef) btnRef.current = node;
+					}} className={styles.views__dropdown}>
 						<MenuOption
 							label={t('Agreement Map')}
 							icon={<TriangleIcon style={{ color: '#4E88C7' }} />}
 							onOptionClick={handleAgreementMap}
+						/>
+						<MenuOption
+							label={t('Polarization Index')}
+							icon={<TriangleIcon style={{ color: '#4E88C7' }} />}
+							onOptionClick={handlePolarizationIndex}
 						/>
 						<MenuOption
 							label={t('Mind Map')}

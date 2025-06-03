@@ -1,4 +1,4 @@
-import { Statement, Role, StatementType } from "delib-npm";
+import { Statement, Role, StatementType, Screen } from "delib-npm";
 import { ReactNode } from "react";
 import GroupPage from "../statementTypes/group/GroupPage";
 import QuestionPage from "../statementTypes/question/QuestionPage";
@@ -32,17 +32,17 @@ function SwitchScreen({
 	}
 
 	switch (screen) {
-		case 'polarization-map':
+		case Screen.polarizationIndex:
 			return <PolarizationIndex />
-		case 'agreement-map':
+		case Screen.agreementMap:
 			return <Triangle />;
-		case 'mind-map':
+		case Screen.mindMap:
 			return <MindMap />;
-		case 'chat':
+		case Screen.chat:
 			return <Chat />;
-		case 'settings':
+		case Screen.settings:
 			return <StatementSettings />;
-		case 'main':
+		case "main":
 			return <SwitchStatementType statement={statement} />;
 		default:
 			return <SwitchStatementType statement={statement} />;

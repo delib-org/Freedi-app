@@ -2,165 +2,492 @@ import React, { useState, useEffect, useRef } from 'react';
 
 import styles from './PolarizationIndex.module.scss';
 
-// Mock data based on your schema
-const mockPolarizationData = {
-	statementId: "climate_policy_001",
-	totalEvaluators: 1000,
-	overallMAD: 0.65,
-	averageAgreement: 0.12,
-	lastUpdated: Date.now(),
-	axes: [
-		{
-			groupingQuestionId: "political_affiliation_123",
-			groupingQuestionText: "What is your political affiliation?",
-			axisAverageAgreement: 0.12,
-			axisMAD: 0.65,
-			groups: [
-				{
-					groupId: "pol_123_liberal",
-					groupName: "Liberal",
-					average: 0.73,
-					numberOfMembers: 350,
-					color: "#3182ce",
-					mad: 0.18
-				},
-				{
-					groupId: "pol_123_conservative",
-					groupName: "Conservative",
-					average: -0.68,
-					numberOfMembers: 320,
-					color: "#e53e3e",
-					mad: 0.21
-				}, {
-					groupId: "pol_123_moderate",
-					groupName: "Moderate",
-					average: 0.15,
-					numberOfMembers: 330,
-					color: "#38a169",
-					mad: 0.45
-				},
-				{
-					groupId: "pol_123_independent",
-					groupName: "Independent",
-					average: -0.22,
-					numberOfMembers: 280,
-					color: "#ed8936",
-					mad: 0.52
-				}
-			]
-		},
-		{
-			groupingQuestionId: "age_group_456",
-			groupingQuestionText: "What is your age group?",
-			axisAverageAgreement: 0.18,
-			axisMAD: 0.52,
-			groups: [
-				{
-					groupId: "age_456_young",
-					groupName: "18-35",
-					average: 0.45,
-					numberOfMembers: 400,
-					color: "#9f7aea",
-					mad: 0.35
-				},
-				{
-					groupId: "age_456_middle",
-					groupName: "36-55",
-					average: 0.08,
-					numberOfMembers: 350,
-					color: "#f56565",
-					mad: 0.58
-				}, {
-					groupId: "age_456_senior",
-					groupName: "55+",
-					average: -0.12,
-					numberOfMembers: 250,
-					color: "#4299e1",
-					mad: 0.42
-				}, {
-					groupId: "age_456_elderly",
-					groupName: "65+",
-					average: -0.35,
-					numberOfMembers: 180,
-					color: "#805ad5",
-					mad: 0.38
-				}
-			]
-		},
-		{
-			groupingQuestionId: "education_level_789",
-			groupingQuestionText: "What is your education level?",
-			axisAverageAgreement: 0.09,
-			axisMAD: 0.58,
-			groups: [
-				{
-					groupId: "edu_789_high_school",
-					groupName: "High School",
-					average: -0.32,
-					numberOfMembers: 220,
-					color: "#d69e2e",
-					mad: 0.44
-				},
-				{
-					groupId: "edu_789_bachelor",
-					groupName: "Bachelor's",
-					average: 0.18,
-					numberOfMembers: 380,
-					color: "#38b2ac",
-					mad: 0.39
-				},
-				{
-					groupId: "edu_789_graduate",
-					groupName: "Graduate",
-					average: 0.41,
-					numberOfMembers: 300,
-					color: "#667eea",
-					mad: 0.33
-				}
-			]
-		},
-		{
-			groupingQuestionId: "income_level_012",
-			groupingQuestionText: "What is your household income?",
-			axisAverageAgreement: 0.04,
-			axisMAD: 0.61,
-			groups: [
-				{
-					groupId: "inc_012_low",
-					groupName: "Under $50k",
-					average: 0.28,
-					numberOfMembers: 250,
-					color: "#f687b3",
-					mad: 0.47
-				},
-				{
-					groupId: "inc_012_middle",
-					groupName: "$50k-$100k",
-					average: 0.02,
-					numberOfMembers: 420,
-					color: "#4fd1c7",
-					mad: 0.55
-				},
-				{
-					groupId: "inc_012_high",
-					groupName: "Over $100k",
-					average: -0.19,
-					numberOfMembers: 330,
-					color: "#fc8181",
-					mad: 0.41
-				}
-			]
-		}
-	]
-};
+// Mock data based on your schema - array of different statements
+const mockPolarizationData = [
+	{
+		statementId: "climate_policy_001",
+		statementText: "Government should implement carbon taxes to combat climate change",
+		totalEvaluators: 1000,
+		overallMAD: 0.65,
+		averageAgreement: 0.12,
+		lastUpdated: Date.now(),
+		axes: [
+			{
+				groupingQuestionId: "political_affiliation_123",
+				groupingQuestionText: "What is your political affiliation?",
+				axisAverageAgreement: 0.12,
+				axisMAD: 0.65,
+				groups: [
+					{
+						groupId: "pol_123_liberal",
+						groupName: "Liberal",
+						average: 0.73,
+						numberOfMembers: 350,
+						color: "#3182ce",
+						mad: 0.18
+					},
+					{
+						groupId: "pol_123_conservative",
+						groupName: "Conservative",
+						average: -0.68,
+						numberOfMembers: 320,
+						color: "#e53e3e",
+						mad: 0.21
+					},
+					{
+						groupId: "pol_123_moderate",
+						groupName: "Moderate",
+						average: 0.15,
+						numberOfMembers: 330,
+						color: "#38a169",
+						mad: 0.45
+					},
+					{
+						groupId: "pol_123_independent",
+						groupName: "Independent",
+						average: -0.22,
+						numberOfMembers: 280,
+						color: "#ed8936",
+						mad: 0.52
+					}
+				]
+			},
+			{
+				groupingQuestionId: "age_group_456",
+				groupingQuestionText: "What is your age group?",
+				axisAverageAgreement: 0.18,
+				axisMAD: 0.52,
+				groups: [
+					{
+						groupId: "age_456_young",
+						groupName: "18-35",
+						average: 0.45,
+						numberOfMembers: 400,
+						color: "#9f7aea",
+						mad: 0.35
+					},
+					{
+						groupId: "age_456_middle",
+						groupName: "36-55",
+						average: 0.08,
+						numberOfMembers: 350,
+						color: "#f56565",
+						mad: 0.58
+					},
+					{
+						groupId: "age_456_senior",
+						groupName: "55+",
+						average: -0.12,
+						numberOfMembers: 250,
+						color: "#4299e1",
+						mad: 0.42
+					},
+					{
+						groupId: "age_456_elderly",
+						groupName: "65+",
+						average: -0.35,
+						numberOfMembers: 180,
+						color: "#805ad5",
+						mad: 0.38
+					}
+				]
+			},
+			{
+				groupingQuestionId: "education_level_789",
+				groupingQuestionText: "What is your education level?",
+				axisAverageAgreement: 0.09,
+				axisMAD: 0.58,
+				groups: [
+					{
+						groupId: "edu_789_high_school",
+						groupName: "High School",
+						average: -0.32,
+						numberOfMembers: 220,
+						color: "#d69e2e",
+						mad: 0.44
+					},
+					{
+						groupId: "edu_789_bachelor",
+						groupName: "Bachelor's",
+						average: 0.18,
+						numberOfMembers: 380,
+						color: "#38b2ac",
+						mad: 0.39
+					},
+					{
+						groupId: "edu_789_graduate",
+						groupName: "Graduate",
+						average: 0.41,
+						numberOfMembers: 300,
+						color: "#667eea",
+						mad: 0.33
+					}
+				]
+			},
+			{
+				groupingQuestionId: "income_level_012",
+				groupingQuestionText: "What is your household income?",
+				axisAverageAgreement: 0.04,
+				axisMAD: 0.61,
+				groups: [
+					{
+						groupId: "inc_012_low",
+						groupName: "Under $50k",
+						average: 0.28,
+						numberOfMembers: 250,
+						color: "#f687b3",
+						mad: 0.47
+					},
+					{
+						groupId: "inc_012_middle",
+						groupName: "$50k-$100k",
+						average: 0.02,
+						numberOfMembers: 420,
+						color: "#4fd1c7",
+						mad: 0.55
+					},
+					{
+						groupId: "inc_012_high",
+						groupName: "Over $100k",
+						average: -0.19,
+						numberOfMembers: 330,
+						color: "#fc8181",
+						mad: 0.41
+					}
+				]
+			}
+		]
+	},
+	{
+		statementId: "healthcare_002",
+		statementText: "Universal healthcare should be implemented nationwide",
+		totalEvaluators: 1200,
+		overallMAD: 0.43,
+		averageAgreement: 0.31,
+		lastUpdated: Date.now() - 3600000, // 1 hour ago
+		axes: [
+			{
+				groupingQuestionId: "political_affiliation_123",
+				groupingQuestionText: "What is your political affiliation?",
+				axisAverageAgreement: 0.31,
+				axisMAD: 0.43,
+				groups: [
+					{
+						groupId: "pol_123_liberal",
+						groupName: "Liberal",
+						average: 0.82,
+						numberOfMembers: 420,
+						color: "#3182ce",
+						mad: 0.15
+					},
+					{
+						groupId: "pol_123_conservative",
+						groupName: "Conservative",
+						average: -0.45,
+						numberOfMembers: 380,
+						color: "#e53e3e",
+						mad: 0.28
+					},
+					{
+						groupId: "pol_123_moderate",
+						groupName: "Moderate",
+						average: 0.25,
+						numberOfMembers: 280,
+						color: "#38a169",
+						mad: 0.35
+					},
+					{
+						groupId: "pol_123_independent",
+						groupName: "Independent",
+						average: 0.15,
+						numberOfMembers: 320,
+						color: "#ed8936",
+						mad: 0.42
+					}
+				]
+			},
+			{
+				groupingQuestionId: "age_group_456",
+				groupingQuestionText: "What is your age group?",
+				axisAverageAgreement: 0.28,
+				axisMAD: 0.38,
+				groups: [
+					{
+						groupId: "age_456_young",
+						groupName: "18-35",
+						average: 0.52,
+						numberOfMembers: 480,
+						color: "#9f7aea",
+						mad: 0.32
+					},
+					{
+						groupId: "age_456_middle",
+						groupName: "36-55",
+						average: 0.18,
+						numberOfMembers: 420,
+						color: "#f56565",
+						mad: 0.41
+					},
+					{
+						groupId: "age_456_senior",
+						groupName: "55+",
+						average: 0.08,
+						numberOfMembers: 300,
+						color: "#4299e1",
+						mad: 0.38
+					},
+					{
+						groupId: "age_456_elderly",
+						groupName: "65+",
+						average: -0.12,
+						numberOfMembers: 200,
+						color: "#805ad5",
+						mad: 0.35
+					}
+				]
+			},
+			{
+				groupingQuestionId: "education_level_789",
+				groupingQuestionText: "What is your education level?",
+				axisAverageAgreement: 0.33,
+				axisMAD: 0.41,
+				groups: [
+					{
+						groupId: "edu_789_high_school",
+						groupName: "High School",
+						average: 0.15,
+						numberOfMembers: 280,
+						color: "#d69e2e",
+						mad: 0.48
+					},
+					{
+						groupId: "edu_789_bachelor",
+						groupName: "Bachelor's",
+						average: 0.35,
+						numberOfMembers: 450,
+						color: "#38b2ac",
+						mad: 0.36
+					},
+					{
+						groupId: "edu_789_graduate",
+						groupName: "Graduate",
+						average: 0.48,
+						numberOfMembers: 370,
+						color: "#667eea",
+						mad: 0.29
+					}
+				]
+			},
+			{
+				groupingQuestionId: "income_level_012",
+				groupingQuestionText: "What is your household income?",
+				axisAverageAgreement: 0.29,
+				axisMAD: 0.44,
+				groups: [
+					{
+						groupId: "inc_012_low",
+						groupName: "Under $50k",
+						average: 0.58,
+						numberOfMembers: 320,
+						color: "#f687b3",
+						mad: 0.33
+					},
+					{
+						groupId: "inc_012_middle",
+						groupName: "$50k-$100k",
+						average: 0.22,
+						numberOfMembers: 480,
+						color: "#4fd1c7",
+						mad: 0.42
+					},
+					{
+						groupId: "inc_012_high",
+						groupName: "Over $100k",
+						average: 0.08,
+						numberOfMembers: 400,
+						color: "#fc8181",
+						mad: 0.38
+					}
+				]
+			}
+		]
+	},
+	{
+		statementId: "education_funding_003",
+		statementText: "Public schools should receive significantly more funding",
+		totalEvaluators: 850,
+		overallMAD: 0.22,
+		averageAgreement: 0.58,
+		lastUpdated: Date.now() - 7200000, // 2 hours ago
+		axes: [
+			{
+				groupingQuestionId: "political_affiliation_123",
+				groupingQuestionText: "What is your political affiliation?",
+				axisAverageAgreement: 0.58,
+				axisMAD: 0.22,
+				groups: [
+					{
+						groupId: "pol_123_liberal",
+						groupName: "Liberal",
+						average: 0.75,
+						numberOfMembers: 290,
+						color: "#3182ce",
+						mad: 0.18
+					},
+					{
+						groupId: "pol_123_conservative",
+						groupName: "Conservative",
+						average: 0.35,
+						numberOfMembers: 270,
+						color: "#e53e3e",
+						mad: 0.25
+					},
+					{
+						groupId: "pol_123_moderate",
+						groupName: "Moderate",
+						average: 0.62,
+						numberOfMembers: 190,
+						color: "#38a169",
+						mad: 0.19
+					},
+					{
+						groupId: "pol_123_independent",
+						groupName: "Independent",
+						average: 0.58,
+						numberOfMembers: 200,
+						color: "#ed8936",
+						mad: 0.21
+					}
+				]
+			},
+			{
+				groupingQuestionId: "age_group_456",
+				groupingQuestionText: "What is your age group?",
+				axisAverageAgreement: 0.61,
+				axisMAD: 0.19,
+				groups: [
+					{
+						groupId: "age_456_young",
+						groupName: "18-35",
+						average: 0.68,
+						numberOfMembers: 340,
+						color: "#9f7aea",
+						mad: 0.22
+					},
+					{
+						groupId: "age_456_middle",
+						groupName: "36-55",
+						average: 0.72,
+						numberOfMembers: 280,
+						color: "#f56565",
+						mad: 0.18
+					},
+					{
+						groupId: "age_456_senior",
+						groupName: "55+",
+						average: 0.45,
+						numberOfMembers: 230,
+						color: "#4299e1",
+						mad: 0.28
+					},
+					{
+						groupId: "age_456_elderly",
+						groupName: "65+",
+						average: 0.38,
+						numberOfMembers: 150,
+						color: "#805ad5",
+						mad: 0.32
+					}
+				]
+			},
+			{
+				groupingQuestionId: "education_level_789",
+				groupingQuestionText: "What is your education level?",
+				axisAverageAgreement: 0.55,
+				axisMAD: 0.24,
+				groups: [
+					{
+						groupId: "edu_789_high_school",
+						groupName: "High School",
+						average: 0.48,
+						numberOfMembers: 180,
+						color: "#d69e2e",
+						mad: 0.28
+					},
+					{
+						groupId: "edu_789_bachelor",
+						groupName: "Bachelor's",
+						average: 0.58,
+						numberOfMembers: 350,
+						color: "#38b2ac",
+						mad: 0.22
+					},
+					{
+						groupId: "edu_789_graduate",
+						groupName: "Graduate",
+						average: 0.65,
+						numberOfMembers: 320,
+						color: "#667eea",
+						mad: 0.19
+					}
+				]
+			},
+			{
+				groupingQuestionId: "income_level_012",
+				groupingQuestionText: "What is your household income?",
+				axisAverageAgreement: 0.56,
+				axisMAD: 0.25,
+				groups: [
+					{
+						groupId: "inc_012_low",
+						groupName: "Under $50k",
+						average: 0.72,
+						numberOfMembers: 220,
+						color: "#f687b3",
+						mad: 0.21
+					},
+					{
+						groupId: "inc_012_middle",
+						groupName: "$50k-$100k",
+						average: 0.58,
+						numberOfMembers: 380,
+						color: "#4fd1c7",
+						mad: 0.23
+					},
+					{
+						groupId: "inc_012_high",
+						groupName: "Over $100k",
+						average: 0.38,
+						numberOfMembers: 250,
+						color: "#fc8181",
+						mad: 0.31
+					}
+				]
+			}
+		]
+	}
+];
 
-const PolarizationIndex = ({ statementId = 'climate_policy_001' }) => {
-	const canvasRef = useRef(null);
-	const [selectedAxis, setSelectedAxis] = useState(0); const [selectedGroup, setSelectedGroup] = useState(null);
+const PolarizationIndex = ({ initialStatementId }: { initialStatementId?: string } = {}) => {
+	const canvasRef = useRef(null); const [selectedStatementIndex, setSelectedStatementIndex] = useState(() => {
+		if (initialStatementId) {
+			const index = mockPolarizationData.findIndex(statement => statement.statementId === initialStatementId);
+
+			return index >= 0 ? index : 0;
+		}
+
+		return 0;
+	});
+	const [selectedAxis, setSelectedAxis] = useState(0);
+	const [selectedGroup, setSelectedGroup] = useState(null);
 	const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
-	const [isMainPointPressed, setIsMainPointPressed] = useState(false); const [subGroupsAnimation, setSubGroupsAnimation] = useState(0); // 0-1 animation progress
+	const [isMainPointPressed, setIsMainPointPressed] = useState(false);
+	const [subGroupsAnimation, setSubGroupsAnimation] = useState(0); // 0-1 animation progress
 	const containerRef = useRef(null);
 	const isAnimatingRef = useRef(false);
+
+	// Get current statement data
+	const currentStatementData = mockPolarizationData[selectedStatementIndex];
 
 	// Animation effect for sub-groups
 	useEffect(() => {
@@ -401,9 +728,8 @@ const PolarizationIndex = ({ statementId = 'climate_policy_001' }) => {
 			ctx.textAlign = 'right';
 			ctx.fillText(tick.toString(), margin - 10, canvasPoint.y + 3);
 		});
-
 		// Draw overall position
-		const overallPoint = dataToCanvas(mockPolarizationData.averageAgreement, mockPolarizationData.overallMAD);
+		const overallPoint = dataToCanvas(currentStatementData.averageAgreement, currentStatementData.overallMAD);
 		ctx.fillStyle = '#ff6b6b';
 		ctx.strokeStyle = '#fff';
 		ctx.lineWidth = 3;
@@ -413,7 +739,7 @@ const PolarizationIndex = ({ statementId = 'climate_policy_001' }) => {
 		ctx.fill();
 		ctx.stroke();		// Draw groups for selected axis (only when main point is pressed)
 		if (subGroupsAnimation > 0) {
-			const currentAxis = mockPolarizationData.axes[selectedAxis];
+			const currentAxis = currentStatementData.axes[selectedAxis];
 
 			currentAxis.groups.forEach((group, index) => {
 				// Use the group's own MAD for consistent positioning
@@ -497,9 +823,8 @@ const PolarizationIndex = ({ statementId = 'climate_policy_001' }) => {
 			checkGroupClick(canvasX, canvasY);
 		}
 	};
-
 	const checkGroupClick = (canvasX, canvasY) => {
-		const currentAxis = mockPolarizationData.axes[selectedAxis];
+		const currentAxis = currentStatementData.axes[selectedAxis];
 		currentAxis.groups.forEach((group, index) => {
 			// Use the group's own average and mad, not the axis MAD
 			const groupPoint = dataToCanvas(group.average, group.mad);
@@ -522,7 +847,7 @@ const PolarizationIndex = ({ statementId = 'climate_policy_001' }) => {
 		setIsMainPointPressed(false);
 		setSelectedGroup(null); // Clear selected group when releasing main point
 	}; const checkMainPointClick = (canvasX, canvasY) => {
-		const overallPoint = dataToCanvas(mockPolarizationData.averageAgreement, mockPolarizationData.overallMAD);
+		const overallPoint = dataToCanvas(currentStatementData.averageAgreement, currentStatementData.overallMAD);
 		const distance = Math.sqrt(
 			Math.pow(canvasX - overallPoint.x, 2) + Math.pow(canvasY - overallPoint.y, 2)
 		);
@@ -543,23 +868,41 @@ const PolarizationIndex = ({ statementId = 'climate_policy_001' }) => {
 		// This function is kept for backward compatibility but main logic moved to mouse/touch handlers
 	};
 
-	const currentAxis = mockPolarizationData.axes[selectedAxis];
+	const currentAxis = currentStatementData.axes[selectedAxis];
 	const selectedGroupData = selectedGroup !== null ? currentAxis.groups[selectedGroup] : null;
 
 	return (
-		<div className={styles.polarizationContainer}>
-			{/* Header */}
+		<div className={styles.polarizationContainer}>			{/* Header */}
 			<div className={styles.header}>
 				<h1 className={styles.title}>
 					Polarization Analysis
 				</h1>
 				<p className={styles.subtitle}>
-					Statement ID: {statementId}
+					Statement: {currentStatementData.statementText}
 				</p>
+
+				{/* Statement Selector */}
+				<div className={styles.statementSelector}>
+					{mockPolarizationData.map((statement, index) => (
+						<button
+							key={statement.statementId}
+							onClick={() => {
+								setSelectedStatementIndex(index);
+								setSelectedAxis(0);
+								setSelectedGroup(null);
+								setIsMainPointPressed(false);
+							}}
+							className={`${styles.statementButton} ${selectedStatementIndex === index ? styles.statementButtonActive : ''}`}
+						>
+							<div className={styles.statementButtonTitle}>{statement.statementId}</div>
+							<div className={styles.statementButtonText}>{statement.statementText}</div>
+						</button>
+					))}
+				</div>
 
 				{/* Axis Selector */}
 				<div className={styles.axisSelector}>
-					{mockPolarizationData.axes.map((axis, index) => (
+					{currentStatementData.axes.map((axis, index) => (
 						<button
 							key={axis.groupingQuestionId}
 							onClick={() => {
@@ -601,12 +944,11 @@ const PolarizationIndex = ({ statementId = 'climate_policy_001' }) => {
 			<div className={styles.statsGrid}>
 				{/* Overall Stats */}
 				<div className={styles.statsCard}>
-					<h3 className={styles.statsCardTitle}>Overall Metrics</h3>
-					<div className={styles.statsContent}>
-						<div><strong>Total Evaluators:</strong> {mockPolarizationData.totalEvaluators}</div>
-						<div><strong>Average Agreement:</strong> {mockPolarizationData.averageAgreement.toFixed(3)}</div>
-						<div><strong>Polarization (MAD):</strong> {mockPolarizationData.overallMAD.toFixed(3)}</div>
-						<div><strong>Last Updated:</strong> {new Date(mockPolarizationData.lastUpdated).toLocaleString()}</div>
+					<h3 className={styles.statsCardTitle}>Overall Metrics</h3>				<div className={styles.statsContent}>
+						<div><strong>Total Evaluators:</strong> {currentStatementData.totalEvaluators}</div>
+						<div><strong>Average Agreement:</strong> {currentStatementData.averageAgreement.toFixed(3)}</div>
+						<div><strong>Polarization (MAD):</strong> {currentStatementData.overallMAD.toFixed(3)}</div>
+						<div><strong>Last Updated:</strong> {new Date(currentStatementData.lastUpdated).toLocaleString()}</div>
 					</div>
 				</div>
 
