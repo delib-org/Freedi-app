@@ -1,16 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
 
-import styles from './PolarizationIndex.module.scss';
-
 // Mock data based on your schema - array of different statements
 const mockPolarizationData = [
 	{
 		statementId: "climate_policy_001",
-		statementText: "Government should implement carbon taxes to combat climate change",
+		statement: "Government should implement carbon taxes to combat climate change",
 		totalEvaluators: 1000,
 		overallMAD: 0.65,
 		averageAgreement: 0.12,
 		lastUpdated: Date.now(),
+		color: "#e53e3e", // Red
 		axes: [
 			{
 				groupingQuestionId: "political_affiliation_123",
@@ -160,11 +159,12 @@ const mockPolarizationData = [
 	},
 	{
 		statementId: "healthcare_002",
-		statementText: "Universal healthcare should be implemented nationwide",
+		statement: "Universal healthcare should be implemented nationwide",
 		totalEvaluators: 1200,
 		overallMAD: 0.43,
 		averageAgreement: 0.31,
 		lastUpdated: Date.now() - 3600000, // 1 hour ago
+		color: "#3182ce", // Blue
 		axes: [
 			{
 				groupingQuestionId: "political_affiliation_123",
@@ -314,11 +314,12 @@ const mockPolarizationData = [
 	},
 	{
 		statementId: "education_funding_003",
-		statementText: "Public schools should receive significantly more funding",
+		statement: "Public schools should receive significantly more funding",
 		totalEvaluators: 850,
 		overallMAD: 0.22,
 		averageAgreement: 0.58,
 		lastUpdated: Date.now() - 7200000, // 2 hours ago
+		color: "#38a169", // Green
 		axes: [
 			{
 				groupingQuestionId: "political_affiliation_123",
@@ -468,8 +469,9 @@ const mockPolarizationData = [
 	}
 ];
 
-const PolarizationIndex = ({ initialStatementId }: { initialStatementId?: string } = {}) => {
-	const canvasRef = useRef(null); const [selectedStatementIndex, setSelectedStatementIndex] = useState(() => {
+const PolarizationIndex = ({ initialStatementId } = {}) => {
+	const canvasRef = useRef(null);
+	const [selectedStatementIndex, setSelectedStatementIndex] = useState(() => {
 		if (initialStatementId) {
 			const index = mockPolarizationData.findIndex(statement => statement.statementId === initialStatementId);
 
@@ -481,75 +483,10 @@ const PolarizationIndex = ({ initialStatementId }: { initialStatementId?: string
 	const [selectedAxis, setSelectedAxis] = useState(0);
 	const [selectedGroup, setSelectedGroup] = useState(null);
 	const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
-	const [isMainPointPressed, setIsMainPointPressed] = useState(false);
-	const [subGroupsAnimation, setSubGroupsAnimation] = useState(0); // 0-1 animation progress
 	const containerRef = useRef(null);
-	const isAnimatingRef = useRef(false);
 
 	// Get current statement data
 	const currentStatementData = mockPolarizationData[selectedStatementIndex];
-
-	// Animation effect for sub-groups
-	useEffect(() => {
-		let animationFrame;
-		if (isMainPointPressed && subGroupsAnimation < 1) {
-			// Animate in
-			if (!isAnimatingRef.current) {
-				isAnimatingRef.current = true;
-				const startTime = Date.now();
-				const duration = 300; // 300ms animation
-
-				const animate = () => {
-					const elapsed = Date.now() - startTime;
-					const progress = Math.min(elapsed / duration, 1);
-
-					// Easing function (ease-out)
-					const easedProgress = 1 - Math.pow(1 - progress, 3);
-
-					setSubGroupsAnimation(easedProgress); if (progress < 1) {
-						animationFrame = requestAnimationFrame(animate);
-					} else {
-						isAnimatingRef.current = false;
-					}
-				};
-
-				animationFrame = requestAnimationFrame(animate);
-			}
-		} else if (!isMainPointPressed && subGroupsAnimation > 0) {
-			// Animate out
-			if (!isAnimatingRef.current) {
-				isAnimatingRef.current = true;
-				const startTime = Date.now();
-				const currentProgress = subGroupsAnimation;
-				const duration = 200; // Faster animation out
-
-				const animate = () => {
-					const elapsed = Date.now() - startTime;
-					const progress = Math.min(elapsed / duration, 1);
-
-					// Easing function (ease-in)
-					const easedProgress = Math.pow(1 - progress, 2);
-
-					setSubGroupsAnimation(currentProgress * easedProgress);
-
-					if (progress < 1) {
-						animationFrame = requestAnimationFrame(animate);
-					} else {
-						setSubGroupsAnimation(0);
-						isAnimatingRef.current = false;
-					}
-				};
-
-				animationFrame = requestAnimationFrame(animate);
-			}
-		}
-
-		return () => {
-			if (animationFrame) {
-				cancelAnimationFrame(animationFrame);
-			}
-		};
-	}, [isMainPointPressed]); // Only depend on isMainPointPressed, not subGroupsAnimation
 
 	// Handle responsive canvas sizing
 	useEffect(() => {
@@ -569,31 +506,6 @@ const PolarizationIndex = ({ initialStatementId }: { initialStatementId?: string
 
 		return () => window.removeEventListener('resize', updateDimensions);
 	}, []);
-
-	// Global mouse/touch release handlers to catch releases outside canvas
-	useEffect(() => {
-		const handleGlobalMouseUp = () => {
-			if (isMainPointPressed) {
-				setIsMainPointPressed(false);
-				setSelectedGroup(null);
-			}
-		};
-
-		const handleGlobalTouchEnd = () => {
-			if (isMainPointPressed) {
-				setIsMainPointPressed(false);
-				setSelectedGroup(null);
-			}
-		};
-
-		document.addEventListener('mouseup', handleGlobalMouseUp);
-		document.addEventListener('touchend', handleGlobalTouchEnd);
-
-		return () => {
-			document.removeEventListener('mouseup', handleGlobalMouseUp);
-			document.removeEventListener('touchend', handleGlobalTouchEnd);
-		};
-	}, [isMainPointPressed]);
 
 	// Generate triangle boundary points
 	const generateTriangleBoundary = () => {
@@ -619,18 +531,6 @@ const PolarizationIndex = ({ initialStatementId }: { initialStatementId?: string
 
 		return { x: canvasX, y: canvasY };
 	};
-
-	// Canvas to data coordinates (for click detection)
-	// const canvasToData = (canvasX, canvasY) => {
-	//   const margin = 60;
-	//   const plotWidth = dimensions.width - 2 * margin;
-	//   const plotHeight = dimensions.height - 2 * margin;
-	//   
-	//   const dataX = ((canvasX - margin) / plotWidth) * 2 - 1;
-	//   const dataY = (dimensions.height - margin - canvasY) / plotHeight;
-	//   
-	//   return { x: dataX, y: dataY };
-	// };
 
 	// Draw the chart
 	useEffect(() => {
@@ -728,50 +628,52 @@ const PolarizationIndex = ({ initialStatementId }: { initialStatementId?: string
 			ctx.textAlign = 'right';
 			ctx.fillText(tick.toString(), margin - 10, canvasPoint.y + 3);
 		});
-		// Draw overall position
-		const overallPoint = dataToCanvas(currentStatementData.averageAgreement, currentStatementData.overallMAD);
-		ctx.fillStyle = '#ff6b6b';
-		ctx.strokeStyle = '#fff';
-		ctx.lineWidth = 3;
 
-		ctx.beginPath();
-		ctx.arc(overallPoint.x, overallPoint.y, 12, 0, 2 * Math.PI);
-		ctx.fill();
-		ctx.stroke();		// Draw groups for selected axis (only when main point is pressed)
-		if (subGroupsAnimation > 0) {
-			const currentAxis = currentStatementData.axes[selectedAxis];
+		// Draw ALL main statement points
+		mockPolarizationData.forEach((statement, index) => {
+			const statementPoint = dataToCanvas(statement.averageAgreement, statement.overallMAD);
+			const isSelected = index === selectedStatementIndex;
 
-			currentAxis.groups.forEach((group, index) => {
-				// Use the group's own MAD for consistent positioning
-				const groupPoint = dataToCanvas(group.average, group.mad);
+			ctx.fillStyle = statement.color;
+			ctx.strokeStyle = '#fff';
+			ctx.lineWidth = isSelected ? 4 : 2;
 
-				// Apply animation scaling and opacity
-				const animatedAlpha = subGroupsAnimation;
-				const baseRadius = Math.max(6, Math.min(15, Math.sqrt(group.numberOfMembers / 10)));
-				const animatedRadius = baseRadius * subGroupsAnimation;
+			ctx.beginPath();
+			ctx.arc(statementPoint.x, statementPoint.y, isSelected ? 14 : 10, 0, 2 * Math.PI);
+			ctx.fill();
+			ctx.stroke();
 
-				// Set opacity based on animation progress
-				ctx.globalAlpha = animatedAlpha;
+			// Add statement label
+			ctx.fillStyle = '#333';
+			ctx.font = isSelected ? 'bold 11px Arial' : '10px Arial';
+			ctx.textAlign = 'center';
+			const labelY = statementPoint.y - (isSelected ? 20 : 16);
+			ctx.fillText(statement.statementId.replace('_', ' '), statementPoint.x, labelY);
+		});
 
-				ctx.fillStyle = group.color;
-				ctx.strokeStyle = selectedGroup === index ? '#000' : '#fff';
-				ctx.lineWidth = selectedGroup === index ? 3 : 2;
+		// Draw groups for SELECTED statement only
+		const currentAxis = currentStatementData.axes[selectedAxis];
 
-				ctx.beginPath();
-				ctx.arc(groupPoint.x, groupPoint.y, animatedRadius, 0, 2 * Math.PI);
-				ctx.fill();
-				ctx.stroke();
+		currentAxis.groups.forEach((group, index) => {
+			const groupPoint = dataToCanvas(group.average, group.mad);
 
-				// Group label with animation
-				ctx.fillStyle = '#333';
-				ctx.font = '11px Arial';
-				ctx.textAlign = 'center';
-				ctx.fillText(group.groupName, groupPoint.x, groupPoint.y - animatedRadius - 8);
+			const baseRadius = Math.max(6, Math.min(15, Math.sqrt(group.numberOfMembers / 10)));
 
-				// Reset global alpha
-				ctx.globalAlpha = 1.0;
-			});
-		}
+			ctx.fillStyle = group.color;
+			ctx.strokeStyle = selectedGroup === index ? '#000' : '#fff';
+			ctx.lineWidth = selectedGroup === index ? 3 : 2;
+
+			ctx.beginPath();
+			ctx.arc(groupPoint.x, groupPoint.y, baseRadius, 0, 2 * Math.PI);
+			ctx.fill();
+			ctx.stroke();
+
+			// Group label
+			ctx.fillStyle = '#333';
+			ctx.font = '11px Arial';
+			ctx.textAlign = 'center';
+			ctx.fillText(group.groupName, groupPoint.x, groupPoint.y - baseRadius - 8);
+		});
 
 		// Draw vertices labels
 		ctx.fillStyle = '#333';
@@ -792,41 +694,46 @@ const PolarizationIndex = ({ initialStatementId }: { initialStatementId?: string
 		// Maximum Polarization vertex
 		const vertex3 = dataToCanvas(0, 1);
 		ctx.textAlign = 'center';
-		ctx.fillText('Maximum Polarization', vertex3.x, vertex3.y - 20); ctx.fillText('(0, 1)', vertex3.x, vertex3.y - 8);
+		ctx.fillText('Maximum Polarization', vertex3.x, vertex3.y - 20);
+		ctx.fillText('(0, 1)', vertex3.x, vertex3.y - 8);
 
-	}, [dimensions, selectedAxis, selectedGroup, isMainPointPressed, subGroupsAnimation]);
-	// Handle canvas clicks and mouse/touch events
-	const handleCanvasMouseDown = (event) => {
+	}, [dimensions, selectedAxis, selectedGroup, selectedStatementIndex]);
+
+	// Handle canvas clicks
+	const handleCanvasClick = (event) => {
 		const canvas = canvasRef.current;
 		const rect = canvas.getBoundingClientRect();
 		const canvasX = event.clientX - rect.left;
 		const canvasY = event.clientY - rect.top;
 
-		const mainPointClicked = checkMainPointClick(canvasX, canvasY);
+		// Check for main statement point clicks FIRST
+		let clickedStatement = null;
+		mockPolarizationData.forEach((statement, index) => {
+			const statementPoint = dataToCanvas(statement.averageAgreement, statement.overallMAD);
+			const distance = Math.sqrt(
+				Math.pow(canvasX - statementPoint.x, 2) + Math.pow(canvasY - statementPoint.y, 2)
+			);
+			const radius = index === selectedStatementIndex ? 14 : 10;
 
-		// If main point wasn't clicked and sub-groups are visible, check for group clicks
-		if (!mainPointClicked && isMainPointPressed && subGroupsAnimation > 0.5) {
-			checkGroupClick(canvasX, canvasY);
+			if (distance <= radius + 5) {
+				clickedStatement = index;
+			}
+		});
+
+		if (clickedStatement !== null) {
+			// Statement point was clicked
+			setSelectedStatementIndex(clickedStatement);
+			setSelectedAxis(0); // Reset to first axis
+			setSelectedGroup(null); // Clear selected group
+
+			return;
 		}
-	}; const handleCanvasTouchStart = (event) => {
-		event.preventDefault();
-		const canvas = canvasRef.current;
-		const rect = canvas.getBoundingClientRect();
-		const touch = event.touches[0];
-		const canvasX = touch.clientX - rect.left;
-		const canvasY = touch.clientY - rect.top;
 
-		const mainPointClicked = checkMainPointClick(canvasX, canvasY);
-
-		// If main point wasn't clicked and sub-groups are visible, check for group clicks
-		if (!mainPointClicked && isMainPointPressed && subGroupsAnimation > 0.5) {
-			checkGroupClick(canvasX, canvasY);
-		}
-	};
-	const checkGroupClick = (canvasX, canvasY) => {
+		// Check for group clicks (only for current statement)
 		const currentAxis = currentStatementData.axes[selectedAxis];
+		let clickedGroup = null;
+
 		currentAxis.groups.forEach((group, index) => {
-			// Use the group's own average and mad, not the axis MAD
 			const groupPoint = dataToCanvas(group.average, group.mad);
 			const groupDistance = Math.sqrt(
 				Math.pow(canvasX - groupPoint.x, 2) + Math.pow(canvasY - groupPoint.y, 2)
@@ -835,116 +742,120 @@ const PolarizationIndex = ({ initialStatementId }: { initialStatementId?: string
 			const radius = Math.max(6, Math.min(15, Math.sqrt(group.numberOfMembers / 10)));
 
 			if (groupDistance <= radius + 5) {
-				setSelectedGroup(selectedGroup === index ? null : index);
+				clickedGroup = index;
 			}
 		});
-	};
-	const handleCanvasMouseUp = () => {
-		setIsMainPointPressed(false);
-		setSelectedGroup(null); // Clear selected group when releasing main point
-	};
-	const handleCanvasTouchEnd = () => {
-		setIsMainPointPressed(false);
-		setSelectedGroup(null); // Clear selected group when releasing main point
-	}; const checkMainPointClick = (canvasX, canvasY) => {
-		const overallPoint = dataToCanvas(currentStatementData.averageAgreement, currentStatementData.overallMAD);
-		const distance = Math.sqrt(
-			Math.pow(canvasX - overallPoint.x, 2) + Math.pow(canvasY - overallPoint.y, 2)
-		);
 
-		const mainRadius = isMainPointPressed ? 16 : 12;
-		const clickThreshold = mainRadius + 8;
-
-		if (distance <= clickThreshold) {
-			setIsMainPointPressed(true);
-			setSelectedGroup(null); // Clear any selected group
-
-			return true; // Indicate main point was clicked
+		if (clickedGroup !== null) {
+			setSelectedGroup(selectedGroup === clickedGroup ? null : clickedGroup);
+		} else {
+			setSelectedGroup(null);
 		}
-
-		return false; // Main point was not clicked
-	};
-	const handleCanvasClick = () => {
-		// This function is kept for backward compatibility but main logic moved to mouse/touch handlers
 	};
 
 	const currentAxis = currentStatementData.axes[selectedAxis];
 	const selectedGroupData = selectedGroup !== null ? currentAxis.groups[selectedGroup] : null;
 
 	return (
-		<div className={styles.polarizationContainer}>			{/* Header */}
-			<div className={styles.header}>
-				<h1 className={styles.title}>
-					Polarization Analysis
+		<div style={{ padding: '20px', fontFamily: 'Arial, sans-serif' }}>
+			{/* Header */}
+			<div style={{ marginBottom: '20px' }}>
+				<h1 style={{ fontSize: '24px', marginBottom: '10px', color: '#333' }}>
+					Polarization Analysis - All Statements
 				</h1>
-				<p className={styles.subtitle}>
-					Statement: {currentStatementData.statementText}
+				<p style={{ fontSize: '16px', color: '#666', marginBottom: '20px' }}>
+					Selected Statement: <strong>{currentStatementData.statement}</strong>
 				</p>
 
-				{/* Statement Selector */}
-				<div className={styles.statementSelector}>
-					{mockPolarizationData.map((statement, index) => (
-						<button
-							key={statement.statementId}
-							onClick={() => {
-								setSelectedStatementIndex(index);
-								setSelectedAxis(0);
-								setSelectedGroup(null);
-								setIsMainPointPressed(false);
-							}}
-							className={`${styles.statementButton} ${selectedStatementIndex === index ? styles.statementButtonActive : ''}`}
-						>
-							<div className={styles.statementButtonTitle}>{statement.statementId}</div>
-							<div className={styles.statementButtonText}>{statement.statementText}</div>
-						</button>
-					))}
+				{/* Statement Legend */}
+				<div style={{ marginBottom: '20px' }}>
+					<h3 style={{ marginBottom: '10px', color: '#333' }}>Statements (Click on chart to select):</h3>
+					<div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+						{mockPolarizationData.map((statement, index) => (
+							<div
+								key={statement.statementId}
+								onClick={() => {
+									setSelectedStatementIndex(index);
+									setSelectedAxis(0);
+									setSelectedGroup(null);
+								}}
+								style={{
+									padding: '8px 12px',
+									backgroundColor: selectedStatementIndex === index ? statement.color : '#f7fafc',
+									color: selectedStatementIndex === index ? 'white' : '#333',
+									border: `2px solid ${statement.color}`,
+									borderRadius: '6px',
+									cursor: 'pointer',
+									fontSize: '14px',
+									maxWidth: '300px',
+									textAlign: 'left'
+								}}
+							>
+								<div style={{ fontWeight: 'bold', marginBottom: '4px' }}>{statement.statementId}</div>
+								<div style={{ fontSize: '12px', opacity: selectedStatementIndex === index ? 0.9 : 0.7 }}>
+									{statement.statement}
+								</div>
+							</div>
+						))}
+					</div>
 				</div>
 
 				{/* Axis Selector */}
-				<div className={styles.axisSelector}>
-					{currentStatementData.axes.map((axis, index) => (
-						<button
-							key={axis.groupingQuestionId}
-							onClick={() => {
-								setSelectedAxis(index);
-								setSelectedGroup(null);
-							}}
-							className={`${styles.axisButton} ${selectedAxis === index ? styles.axisButtonActive : ''}`}
-						>
-							{axis.groupingQuestionText}
-						</button>
-					))}
+				<div style={{ marginBottom: '20px' }}>
+					<h3 style={{ marginBottom: '10px', color: '#333' }}>Select Grouping for "{currentStatementData.statementId}":</h3>
+					<div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+						{currentStatementData.axes.map((axis, index) => (
+							<button
+								key={axis.groupingQuestionId}
+								onClick={() => {
+									setSelectedAxis(index);
+									setSelectedGroup(null);
+								}}
+								style={{
+									padding: '8px 16px',
+									backgroundColor: selectedAxis === index ? '#38a169' : '#f7fafc',
+									color: selectedAxis === index ? 'white' : '#333',
+									border: '1px solid #e2e8f0',
+									borderRadius: '6px',
+									cursor: 'pointer',
+									fontSize: '14px'
+								}}
+							>
+								{axis.groupingQuestionText}
+							</button>
+						))}
+					</div>
 				</div>
 			</div>
 
 			{/* Chart Container */}
 			<div
 				ref={containerRef}
-				className={styles.chartContainer}
+				style={{
+					width: '100%',
+					maxWidth: '800px',
+					margin: '0 auto',
+					backgroundColor: '#fff',
+					border: '1px solid #e2e8f0',
+					borderRadius: '8px',
+					padding: '20px',
+					marginBottom: '20px'
+				}}
 			>
 				<canvas
 					ref={canvasRef}
 					onClick={handleCanvasClick}
-					onMouseDown={handleCanvasMouseDown}
-					onMouseUp={handleCanvasMouseUp}
-					onTouchStart={handleCanvasTouchStart}
-					onTouchEnd={handleCanvasTouchEnd}
-					className={styles.canvas}
+					style={{ cursor: 'pointer', display: 'block' }}
 				/>
-
-				{/* Main Point Tooltip */}
-				{isMainPointPressed && (
-					<div className={styles.mainPointTooltip}>
-						Overall Position
-					</div>
-				)}
 			</div>
 
 			{/* Statistics Panel */}
-			<div className={styles.statsGrid}>
+			<div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px', marginBottom: '20px' }}>
 				{/* Overall Stats */}
-				<div className={styles.statsCard}>
-					<h3 className={styles.statsCardTitle}>Overall Metrics</h3>				<div className={styles.statsContent}>
+				<div style={{ backgroundColor: '#f7fafc', padding: '16px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+					<h3 style={{ margin: '0 0 12px 0', color: '#333' }}>Selected Statement Metrics</h3>
+					<div style={{ fontSize: '14px', lineHeight: '1.6' }}>
+						<div><strong>Statement:</strong> {currentStatementData.statementId}</div>
 						<div><strong>Total Evaluators:</strong> {currentStatementData.totalEvaluators}</div>
 						<div><strong>Average Agreement:</strong> {currentStatementData.averageAgreement.toFixed(3)}</div>
 						<div><strong>Polarization (MAD):</strong> {currentStatementData.overallMAD.toFixed(3)}</div>
@@ -953,11 +864,11 @@ const PolarizationIndex = ({ initialStatementId }: { initialStatementId?: string
 				</div>
 
 				{/* Current Axis Stats */}
-				<div className={styles.axisStatsCard}>
-					<h3 className={styles.axisStatsTitle}>
+				<div style={{ backgroundColor: '#f7fafc', padding: '16px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+					<h3 style={{ margin: '0 0 12px 0', color: '#333' }}>
 						{currentAxis.groupingQuestionText}
 					</h3>
-					<div className={styles.statsContent}>
+					<div style={{ fontSize: '14px', lineHeight: '1.6' }}>
 						<div><strong>Axis Average:</strong> {currentAxis.axisAverageAgreement.toFixed(3)}</div>
 						<div><strong>Axis MAD:</strong> {currentAxis.axisMAD.toFixed(3)}</div>
 						<div><strong>Groups:</strong> {currentAxis.groups.length}</div>
@@ -968,44 +879,60 @@ const PolarizationIndex = ({ initialStatementId }: { initialStatementId?: string
 
 			{/* Group Details */}
 			{selectedGroupData && (
-				<div className={styles.selectedGroupCard}>
-					<h3 className={styles.selectedGroupTitle}>
+				<div style={{ backgroundColor: '#fffdf7', padding: '16px', borderRadius: '8px', border: '2px solid #fbbf24', marginBottom: '20px' }}>
+					<h3 style={{ margin: '0 0 12px 0', color: '#333' }}>
 						Selected Group: {selectedGroupData.groupName}
 					</h3>
-					<div className={styles.selectedGroupGrid}>
+					<div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px', fontSize: '14px' }}>
 						<div><strong>Average Opinion:</strong> {selectedGroupData.average.toFixed(3)}</div>
 						<div><strong>Members:</strong> {selectedGroupData.numberOfMembers}</div>
 						<div><strong>Internal MAD:</strong> {selectedGroupData.mad.toFixed(3)}</div>
 						<div><strong>Color:</strong> <span
-							className={styles.colorBadge}
-							style={{ backgroundColor: selectedGroupData.color }}
-						>{selectedGroupData.color}</span></div>
+							style={{
+								display: 'inline-block',
+								width: '20px',
+								height: '20px',
+								backgroundColor: selectedGroupData.color,
+								borderRadius: '3px',
+								verticalAlign: 'middle',
+								marginLeft: '8px',
+								border: '1px solid #ccc'
+							}}
+						></span> {selectedGroupData.color}</div>
 					</div>
 				</div>
 			)}
 
 			{/* Groups List */}
-			<div className={styles.groupsListContainer}>
-				<h3 className={styles.groupsListTitle}>Groups in Current Axis</h3>
-				<div className={styles.groupsGrid}>
+			<div style={{ marginBottom: '20px' }}>
+				<h3 style={{ marginBottom: '16px', color: '#333' }}>Groups in Current Axis</h3>
+				<div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '12px' }}>
 					{currentAxis.groups.map((group, index) => (
 						<div
 							key={group.groupId}
 							onClick={() => setSelectedGroup(selectedGroup === index ? null : index)}
-							className={`${styles.groupCard} ${selectedGroup === index ? styles.groupCardSelected : ''}`}
 							style={{
-								borderColor: selectedGroup === index ? group.color : '#e2e8f0',
-								backgroundColor: selectedGroup === index ? `${group.color}15` : '#f7fafc'
+								padding: '12px',
+								borderRadius: '8px',
+								border: `2px solid ${selectedGroup === index ? group.color : '#e2e8f0'}`,
+								backgroundColor: selectedGroup === index ? `${group.color}15` : '#f7fafc',
+								cursor: 'pointer',
+								transition: 'all 0.2s ease'
 							}}
 						>
-							<div className={styles.groupCardHeader}>
+							<div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
 								<div
-									className={styles.groupColorDot}
-									style={{ backgroundColor: group.color }}
+									style={{
+										width: '12px',
+										height: '12px',
+										backgroundColor: group.color,
+										borderRadius: '50%',
+										marginRight: '8px'
+									}}
 								/>
 								<strong>{group.groupName}</strong>
 							</div>
-							<div className={styles.groupCardContent}>
+							<div style={{ fontSize: '14px', lineHeight: '1.4' }}>
 								<div>Average: {group.average.toFixed(3)}</div>
 								<div>Members: {group.numberOfMembers}</div>
 								<div>MAD: {group.mad.toFixed(3)}</div>
@@ -1013,9 +940,64 @@ const PolarizationIndex = ({ initialStatementId }: { initialStatementId?: string
 						</div>
 					))}
 				</div>
-			</div>			{/* Instructions */}
-			<div className={styles.instructions}>
-				💡 Press and hold the main red point to reveal sub-groups. Click on sub-group dots while holding to see detailed information. Switch between different grouping questions using the buttons above.
+			</div>
+
+			{/* All Statements Summary */}
+			<div style={{ marginBottom: '20px' }}>
+				<h3 style={{ marginBottom: '16px', color: '#333' }}>All Statements Overview</h3>
+				<div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '12px' }}>
+					{mockPolarizationData.map((statement, index) => (
+						<div
+							key={statement.statementId}
+							onClick={() => {
+								setSelectedStatementIndex(index);
+								setSelectedAxis(0);
+								setSelectedGroup(null);
+							}}
+							style={{
+								padding: '16px',
+								borderRadius: '8px',
+								border: `2px solid ${statement.color}`,
+								backgroundColor: selectedStatementIndex === index ? `${statement.color}15` : '#f7fafc',
+								cursor: 'pointer',
+								transition: 'all 0.2s ease'
+							}}
+						>
+							<div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
+								<div
+									style={{
+										width: '16px',
+										height: '16px',
+										backgroundColor: statement.color,
+										borderRadius: '50%',
+										marginRight: '8px'
+									}}
+								/>
+								<strong style={{ fontSize: '16px' }}>{statement.statementId}</strong>
+							</div>
+							<div style={{ fontSize: '14px', marginBottom: '8px', color: '#666' }}>
+								{statement.statement}
+							</div>
+							<div style={{ fontSize: '12px', lineHeight: '1.4' }}>
+								<div><strong>Agreement:</strong> {statement.averageAgreement.toFixed(3)}</div>
+								<div><strong>Polarization:</strong> {statement.overallMAD.toFixed(3)}</div>
+								<div><strong>Evaluators:</strong> {statement.totalEvaluators}</div>
+							</div>
+						</div>
+					))}
+				</div>
+			</div>
+
+			{/* Instructions */}
+			<div style={{
+				backgroundColor: '#e6fffa',
+				padding: '16px',
+				borderRadius: '8px',
+				border: '1px solid #4fd1c7',
+				fontSize: '14px',
+				color: '#234e52'
+			}}>
+				💡 <strong>How to use:</strong> All three main statement points are always visible on the chart. Click on any main point (large colored dots) to select a statement and view its groups. Use the grouping buttons to switch between different demographic breakdowns for the selected statement. Click on group dots to see detailed information.
 			</div>
 		</div>
 	);
