@@ -8,7 +8,6 @@ import PlusIcon from '@/assets/icons/plusIcon.svg?react'
 import styles from './UserDataSetting.module.scss'
 import { getRandomUID, Statement, UserQuestion, UserQuestionType } from 'delib-npm'
 import { deleteUserDataOption, deleteUserDataQuestion, setUserDataOption, setUserDataQuestion } from '@/controllers/db/userData/setUserData'
-import { RootState } from '@/redux/store'
 import { setUserQuestion, deleteUserQuestion, selectUserQuestionsByStatementId } from '@/redux/userData/userDataSlice'
 
 //mockData

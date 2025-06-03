@@ -14,63 +14,21 @@ const PolarizationIndex = () => {
 	const containerRef = useRef(null);
 	const polarizationIndexes = useSelector(selectPolarizationIndexByParentId(statementId));
 
-	// Early return with loading state if no data
-	if (!polarizationIndexes || polarizationIndexes.length === 0) {
-		return (
-			<div style={{ padding: '20px', fontFamily: 'Arial, sans-serif', textAlign: 'center' }}>
-				<h1 style={{ fontSize: '24px', marginBottom: '10px', color: '#333' }}>
-					Polarization Analysis
-				</h1>
-				<div style={{
-					padding: '40px',
-					backgroundColor: '#f7fafc',
-					borderRadius: '8px',
-					border: '1px solid #e2e8f0',
-					margin: '20px 0'
-				}}>
-					<div style={{ fontSize: '18px', color: '#666', marginBottom: '10px' }}>
-						Loading polarization data...
-					</div>
-					<div style={{ fontSize: '14px', color: '#999' }}>
-						Please wait while we fetch the analysis results.
-					</div>
-				</div>
-			</div>
-		);
-	}
+	console.log('Polarization Index Data:', JSON.stringify(polarizationIndexes));
 
-	// Ensure selectedStatementIndex is within bounds
-	const safeSelectedIndex = Math.min(selectedStatementIndex, polarizationIndexes.length - 1);
-	const currentStatementData = polarizationIndexes[safeSelectedIndex];
+	// Ensure selectedStatementIndex is within bounds and handle empty/undefined arrays
+	const safeSelectedIndex = polarizationIndexes && polarizationIndexes.length > 0
+		? Math.min(selectedStatementIndex, polarizationIndexes.length - 1)
+		: 0;
 
-	// Additional safety check for current statement data
-	if (!currentStatementData || !currentStatementData.axes || currentStatementData.axes.length === 0) {
-		return (
-			<div style={{ padding: '20px', fontFamily: 'Arial, sans-serif', textAlign: 'center' }}>
-				<h1 style={{ fontSize: '24px', marginBottom: '10px', color: '#333' }}>
-					Polarization Analysis
-				</h1>
-				<div style={{
-					padding: '40px',
-					backgroundColor: '#fff3cd',
-					borderRadius: '8px',
-					border: '1px solid #ffeaa7',
-					margin: '20px 0'
-				}}>
-					<div style={{ fontSize: '18px', color: '#856404', marginBottom: '10px' }}>
-						No analysis data available
-					</div>
-					<div style={{ fontSize: '14px', color: '#856404' }}>
-						The polarization analysis for this statement is not yet complete.
-					</div>
-				</div>
-			</div>
-		);
-	}
+	const currentStatementData = polarizationIndexes && polarizationIndexes.length > 0
+		? polarizationIndexes[safeSelectedIndex]
+		: null;
 
 	// Ensure selectedAxis is within bounds
-	const safeSelectedAxis = Math.min(selectedAxis, currentStatementData.axes.length - 1);
-
+	const safeSelectedAxis = currentStatementData && currentStatementData.axes && currentStatementData.axes.length > 0
+		? Math.min(selectedAxis, currentStatementData.axes.length - 1)
+		: 0;
 	// Handle responsive canvas sizing
 	useEffect(() => {
 		const updateDimensions = () => {
@@ -105,7 +63,7 @@ const PolarizationIndex = () => {
 			setSelectedAxis(0);
 			setSelectedGroup(null);
 		}
-	}, [polarizationIndexes]);
+	}, [polarizationIndexes.length]);
 
 	// Generate triangle boundary points
 	const generateTriangleBoundary = () => {
@@ -121,7 +79,7 @@ const PolarizationIndex = () => {
 	};
 
 	// Transform data coordinates to canvas coordinates
-	const dataToCanvas = (dataX, dataY) => {
+	const dataToCanvas = (dataX: number, dataY: number) => {
 		const margin = 60;
 		const plotWidth = dimensions.width - 2 * margin;
 		const plotHeight = dimensions.height - 2 * margin;
@@ -374,8 +332,58 @@ const PolarizationIndex = () => {
 		}
 	};
 
-	const currentAxis = currentStatementData.axes[safeSelectedAxis];
+	const currentAxis = currentStatementData?.axes[safeSelectedAxis];
 	const selectedGroupData = selectedGroup !== null && currentAxis?.groups ? currentAxis.groups[selectedGroup] : null;
+
+	// Early return with loading state if no data
+	if (!polarizationIndexes || polarizationIndexes.length === 0) {
+		return (
+			<div style={{ padding: '20px', fontFamily: 'Arial, sans-serif', textAlign: 'center' }}>
+				<h1 style={{ fontSize: '24px', marginBottom: '10px', color: '#333' }}>
+					Polarization Analysis
+				</h1>
+				<div style={{
+					padding: '40px',
+					backgroundColor: '#f7fafc',
+					borderRadius: '8px',
+					border: '1px solid #e2e8f0',
+					margin: '20px 0'
+				}}>
+					<div style={{ fontSize: '18px', color: '#666', marginBottom: '10px' }}>
+						Loading polarization data...
+					</div>
+					<div style={{ fontSize: '14px', color: '#999' }}>
+						Please wait while we fetch the analysis results.
+					</div>
+				</div>
+			</div>
+		);
+	}
+
+	// Additional safety check for current statement data
+	if (!currentStatementData || !currentStatementData.axes || currentStatementData.axes.length === 0) {
+		return (
+			<div style={{ padding: '20px', fontFamily: 'Arial, sans-serif', textAlign: 'center' }}>
+				<h1 style={{ fontSize: '24px', marginBottom: '10px', color: '#333' }}>
+					Polarization Analysis
+				</h1>
+				<div style={{
+					padding: '40px',
+					backgroundColor: '#fff3cd',
+					borderRadius: '8px',
+					border: '1px solid #ffeaa7',
+					margin: '20px 0'
+				}}>
+					<div style={{ fontSize: '18px', color: '#856404', marginBottom: '10px' }}>
+						No analysis data available
+					</div>
+					<div style={{ fontSize: '14px', color: '#856404' }}>
+						The polarization analysis for this statement is not yet complete.
+					</div>
+				</div>
+			</div>
+		);
+	}
 
 	return (
 		<div style={{ padding: '20px', fontFamily: 'Arial, sans-serif' }}>
