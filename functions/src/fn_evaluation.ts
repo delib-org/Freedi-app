@@ -306,12 +306,12 @@ async function getUserDemographicData(userId: string, parentId: string): Promise
 		.filter(answer => answer.userQuestionId && answer.options && answer.options.length > 0);
 }
 
-function createInitialPolarizationIndex(
+async function createInitialPolarizationIndex(
 	statementId: string,
 	userAnswers: UserQuestion[],
 	userEvaluationValue: number,
 	addEvaluator: number
-): PolarizationMetrics {
+): Promise<PolarizationMetrics> {
 	const axes: PolarizationAxis[] = userAnswers.map((userAnswer) => {
 		const groups: PolarizationGroup[] = userAnswer.options!.map((option) => ({
 			groupId: option,
@@ -331,8 +331,16 @@ function createInitialPolarizationIndex(
 		};
 	});
 
+	const statementRef = db.collection(Collections.statements).doc(statementId);
+	const statementDoc = await statementRef.get();
+	if (!statementDoc.exists) {
+		throw new Error(`Statement with ID ${statementId} does not exist`);
+	}
+	const statementData = statementDoc.data() as Statement;
+
 	return {
 		statementId,
+		statement: statementData.statement,
 		overallMAD: 0, // First user, no deviation
 		totalEvaluators: addEvaluator,
 		averageAgreement: userEvaluationValue,
