@@ -256,7 +256,7 @@ async function updatePolarizationIndex(
 	statementId: string,
 	parentId: string,
 	userId: string,
-	userEvaluationValue: number,
+	userDiffEvaluation: number,
 	addEvaluator: number
 ): Promise<void> {
 	try {
@@ -268,21 +268,27 @@ async function updatePolarizationIndex(
 			return;
 		}
 
+		console.log(userAnswers);
+
 		// Get user demographic data
 		const polarizationRef = db.collection(Collections.polarizationIndex).doc(statementId);
 		const polarizationDB = await polarizationRef.get();
 
 		if (!polarizationDB.exists) {
 			// Create new polarization index
-			const newIndex = await createInitialPolarizationIndex(statementId, userAnswers, userEvaluationValue, addEvaluator);
+			const newIndex = await createInitialPolarizationIndex(statementId, userAnswers, userDiffEvaluation, addEvaluator);
 
 			polarizationRef.set(newIndex);
-			logger.info(`Created new polarization index for statement ${statementId}`);
+			logger.info(`Created new polarization index for statement ${statementId} with user ${userId}`);
 		} else {
 			// Update existing polarization index
 			const polarizationIndex = polarizationDB.data() as PolarizationMetrics;
-			logger.info(`Updating existing polarization index for statement ${statementId}`);
-			const newPolarizationIndex = updateExistingPolarizationIndex(polarizationIndex, userAnswers, userEvaluationValue, addEvaluator);
+			console.log("polarizationIndex", polarizationIndex);
+			console.log("userAnswers", userAnswers);
+			console.log("groups:", polarizationIndex.axes.forEach(axis => console.log(axis.groups)));
+			console.log("userDiffEvaluation", userDiffEvaluation);
+			console.log("addEvaluator", addEvaluator);
+			const newPolarizationIndex = updateExistingPolarizationIndex(polarizationIndex, userAnswers, userDiffEvaluation, addEvaluator);
 
 			if (newPolarizationIndex) {
 
@@ -359,7 +365,7 @@ async function createInitialPolarizationIndex(
 function updateExistingPolarizationIndex(
 	polarizationIndex: PolarizationMetrics,
 	userAnswers: UserQuestion[],
-	userEvaluationValue: number,
+	userDiffEvaluation: number,
 	addEvaluator: number
 ): PolarizationMetrics | undefined {
 	try {
@@ -369,7 +375,7 @@ function updateExistingPolarizationIndex(
 			polarizationIndex.overallMAD,
 			polarizationIndex.averageAgreement,
 			polarizationIndex.totalEvaluators,
-			userEvaluationValue
+			userDiffEvaluation
 		);
 
 		polarizationIndex.overallMAD = overallResult.newMAD;
@@ -444,13 +450,13 @@ function updateAxisWithNewUser(
 // MATH UTILITIES
 // ============================================================================
 
-function calculateMADWithNewValue(oldMAD: number, oldMean: number, oldCount: number, newValue: number): MADResult {
+function calculateMADWithNewValue(oldMAD: number, oldMean: number, oldCount: number, evaluationDiff: number): MADResult {
 	if (oldCount === 0) {
-		return { newMAD: 0, newMean: newValue };
+		return { newMAD: 0, newMean: evaluationDiff };
 	}
 
 	const newCount = oldCount + 1;
-	const newMean = (oldMean * oldCount + newValue) / newCount;
+	const newMean = (oldMean * oldCount + evaluationDiff) / newCount;
 
 	if (newCount === 1) {
 		return { newMAD: 0, newMean };
@@ -458,7 +464,7 @@ function calculateMADWithNewValue(oldMAD: number, oldMean: number, oldCount: num
 
 	// Calculate new MAD incrementally
 	const oldSumAbsDev = oldMAD * oldCount;
-	const newValueAbsDev = Math.abs(newValue - newMean);
+	const newValueAbsDev = Math.abs(evaluationDiff - newMean);
 	const meanShift = newMean - oldMean;
 	const adjustedOldSumAbsDev = oldSumAbsDev + Math.abs(meanShift) * oldCount * 0.5;
 	const newMAD = (adjustedOldSumAbsDev + newValueAbsDev) / newCount;
