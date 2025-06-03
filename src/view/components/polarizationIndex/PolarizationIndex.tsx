@@ -469,17 +469,9 @@ const mockPolarizationData = [
 	}
 ];
 
-const PolarizationIndex = ({ initialStatementId } = {}) => {
+const PolarizationIndex = () => {
 	const canvasRef = useRef(null);
-	const [selectedStatementIndex, setSelectedStatementIndex] = useState(() => {
-		if (initialStatementId) {
-			const index = mockPolarizationData.findIndex(statement => statement.statementId === initialStatementId);
-
-			return index >= 0 ? index : 0;
-		}
-
-		return 0;
-	});
+	const [selectedStatementIndex, setSelectedStatementIndex] = useState(0);
 	const [selectedAxis, setSelectedAxis] = useState(0);
 	const [selectedGroup, setSelectedGroup] = useState(null);
 	const [dimensions, setDimensions] = useState({ width: 0, height: 0 });

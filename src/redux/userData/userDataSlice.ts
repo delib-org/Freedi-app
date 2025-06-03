@@ -1,15 +1,17 @@
 import { createSlice, PayloadAction, createSelector } from '@reduxjs/toolkit';
-import { updateArray, UserQuestion } from 'delib-npm';
+import { PolarizationMetrics, updateArray, UserQuestion } from 'delib-npm';
 import { RootState } from '../store';
 
 interface UserDataState {
 	userQuestions: UserQuestion[];
 	userData: UserQuestion[];
+	polarizationIndexes: PolarizationMetrics[];
 }
 
 const initialState: UserDataState = {
 	userQuestions: [],
-	userData: []
+	userData: [],
+	polarizationIndexes: []
 };
 
 const userDataSlice = createSlice({
@@ -32,6 +34,12 @@ const userDataSlice = createSlice({
 		deleteUserData: (state, action: PayloadAction<string>) => {
 			state.userData = state.userData.filter(q => q.userQuestionId !== action.payload);
 		},
+		setPolarizationIndexes: (state, action: PayloadAction<PolarizationMetrics>) => {
+			state.polarizationIndexes = updateArray(state.polarizationIndexes, action.payload, 'statementId');
+		},
+		deletePolarizationIndex: (state, action: PayloadAction<string>) => {
+			state.polarizationIndexes = state.polarizationIndexes.filter(pi => pi.statementId !== action.payload);
+		}
 	}
 });
 
@@ -40,7 +48,9 @@ export const {
 	deleteUserQuestion,
 	setUserQuestions,
 	setUserData,
-	deleteUserData
+	deleteUserData,
+	setPolarizationIndexes,
+	deletePolarizationIndex
 } = userDataSlice.actions;
 
 // Selectors
