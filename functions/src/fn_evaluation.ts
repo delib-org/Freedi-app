@@ -50,6 +50,18 @@ interface CalcDiff {
 	conDiff: number;
 }
 
+interface UserDemographicEvaluation {
+	userId: string;
+	statementId: string;
+	parentId: string;
+	evaluation: number;
+	demographic: Array<{
+		question: string;
+		answer: string;
+		userQuestionId: string;
+	}>;
+}
+
 // ============================================================================
 // MAIN EVENT HANDLERS
 // ============================================================================
@@ -173,15 +185,12 @@ export async function updateEvaluation(event: any): Promise<void> {
 // ============================================================================
 
 async function updateStatementEvaluation(props: UpdateStatementEvaluationProps): Promise<Statement | undefined> {
-	const { statementId, evaluationDiff, addEvaluator = 0, action, newEvaluation, oldEvaluation, userId, parentId } = props;
+	const { statementId, evaluationDiff, addEvaluator = 0, action, newEvaluation, oldEvaluation } = props;
 
 	try {
 		if (!statementId) {
 			throw new Error('statementId is required');
 		}
-
-		console.log("userId", userId);
-		console.log("parentId", parentId);
 
 		parse(number(), evaluationDiff);
 
@@ -265,31 +274,35 @@ async function updateUserDemographicEvaluation(statement: Statement, userEvalDat
 		const parentId = statement.parentId;
 
 		if (!userId || !parentId) {
-			logger.warn('User ID or parent ID is missing - skipping demographic evaluation update');
+			console.info('User ID or parent ID is missing - skipping demographic evaluation update');
 
 			return;
 		}
 
 		//get user demographic data
 		const userDemographicDataDB = await db.collection(Collections.usersData).where('userId', '==', userId).where('statementId', '==', parentId).get();
+
 		if (userDemographicDataDB.empty) {
-			logger.info(`No demographic data found for user ${userId} on statement ${parentId} - skipping evaluation update`);
+			console.info(`No demographic data found for user ${userId} on statement ${parentId} - skipping evaluation update`);
 
 			return;
 		}
 
 		const userDemographicData = userDemographicDataDB.docs.map(doc => doc.data() as UserQuestion);
 
-		const userDemographicEvaluation: Record<string, unknown> = {
+		const userDemographicEvaluation: UserDemographicEvaluation = {
 			userId,
 			statementId: statement.statementId,
 			parentId: statement.parentId,
 			evaluation: evaluation || 0,
+			demographic: []
 		}
 
 		userDemographicData.forEach((demographic) => {
-			userDemographicEvaluation[demographic.question] = demographic.answer;
-			userDemographicEvaluation.userQuestionId = demographic.userQuestionId;
+			if (!demographic.userQuestionId || !demographic.answer) return;
+
+			userDemographicEvaluation.demographic.push({ question: demographic.question, answer: demographic.answer, userQuestionId: demographic.userQuestionId });
+
 		});
 
 		console.log('userDemographicEvaluation', userDemographicEvaluation);
