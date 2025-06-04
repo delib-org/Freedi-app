@@ -172,7 +172,7 @@ const SuggestionCard: FC<Props> = ({
 					{hasChildren && (
 						<IconButton
 							className='add-sub-question-button more-question'
-							style={{ opacity: '0', cursor: 'default' }}
+							style={{  display:'none', cursor: 'default' }} // changed to display none for it to not take dom space
 							onClick={
 								() => {} //delete the brackets and uncomment the line below for functionality
 								//	setShouldShowAddSubQuestionModal(true)

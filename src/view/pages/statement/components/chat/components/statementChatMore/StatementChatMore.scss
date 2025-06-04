@@ -20,6 +20,10 @@
 	.icon {
 		display: flex;
 		align-items: center;
+		transform: translate(0, -8px) scale(120%);
+		@media screen and (max-width: 500px){
+			transform: translate(3px, -5px) scale(130%);
+		}
 		color: var(--question-header);
 
 		.redCircle {
