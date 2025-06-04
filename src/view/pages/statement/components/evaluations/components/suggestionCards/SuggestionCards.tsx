@@ -38,15 +38,17 @@ const SuggestionCards: FC<Props> = ({
 	const _subStatements = useSelector(
 		statementOptionsSelector(statement?.statementId)
 	);
-	const [isMobile, setIsMobile] = useState(false);
+	const [isMobile, setIsMobile] = useState(
+		window.matchMedia('(max-width: 768px)').matches
+	);
+
 	useEffect(() => {
-		const handleResize = () => {
-			setIsMobile(window.innerWidth <= 768);
-		};
+		const mediaQuery = window.matchMedia('(max-width: 768px)');
+		const handleChange = () => setIsMobile(mediaQuery.matches);
 
-		window.addEventListener('resize', handleResize);
+		mediaQuery.addEventListener('change', handleChange);
 
-		return () => window.removeEventListener('resize', handleResize);
+		return () => mediaQuery.removeEventListener('change', handleChange);
 	}, []);
 
 	const subStatements =
