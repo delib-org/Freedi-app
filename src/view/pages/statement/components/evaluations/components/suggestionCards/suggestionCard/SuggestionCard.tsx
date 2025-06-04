@@ -27,12 +27,14 @@ interface Props {
 	statement: Statement | undefined;
 	siblingStatements: Statement[];
 	parentStatement: Statement | undefined;
+	isMobile?: boolean;
 }
 
 const SuggestionCard: FC<Props> = ({
 	parentStatement,
 	siblingStatements,
 	statement,
+	isMobile = false,
 }) => {
 	// Hooks
 	if (!parentStatement) console.error('parentStatement is not defined');
@@ -161,14 +163,34 @@ const SuggestionCard: FC<Props> = ({
 				</div>
 
 				<div className='actions'>
-					{hasChildren && (
+					{hasChildren && !isMobile && (
 						<div className='chat chat-more-element'>
 							<StatementChatMore statement={statement} />
 						</div>
 					)}
-					<div className='evolution-element'>
-						<Evaluation statement={statement} />
-					</div>
+					{isMobile ? (
+						<div className={'inline-evaluation'}>
+							<div className='evolution-element'>
+								<Evaluation
+									isMobile={isMobile}
+									statement={statement}
+								/>
+							</div>
+							{hasChildren && (
+								<div className='chat chat-more-element'>
+									<StatementChatMore statement={statement} />
+								</div>
+							)}
+						</div>
+					) : (
+						<div className='evolution-element'>
+							<Evaluation
+								isMobile={isMobile}
+								statement={statement}
+							/>
+						</div>
+					)}
+
 					{hasChildren && (
 						<IconButton
 							className='add-sub-question-button more-question'

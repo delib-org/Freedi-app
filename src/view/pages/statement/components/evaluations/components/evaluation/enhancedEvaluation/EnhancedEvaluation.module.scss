@@ -25,12 +25,16 @@
 			border-radius: 3rem;
 			justify-content: center;
 			align-items: center;
+
 			height: 2rem;
 			min-width: 2rem;
 			cursor: pointer;
 			user-select: none;
 			opacity: 0.8;
-
+			@media (max-width: 768px) {
+				height: 1.5rem;
+				min-width: 1.5rem;
+			}
 			&.active {
 				transform: scale(1.2);
 				z-index: 0;
@@ -56,7 +60,12 @@
 			direction: ltr;
 
 			&:hover {
-				background-color: rgba(0, 0, 0, 0.05); // subtle highlight on hover
+				background-color: rgba(
+					0,
+					0,
+					0,
+					0.05
+				); // subtle highlight on hover
 			}
 		}
 
@@ -112,7 +121,6 @@
 @media screen and (max-width: 500px) {
 	.enhanced-evaluation {
 		.evaluation-score {
-
 			.scoreValue,
 			.total-evaluators {
 				// Make tap targets larger on mobile
