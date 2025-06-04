@@ -16,14 +16,13 @@ import {
 	ResultsSettings,
 	ResultsBy,
 	CutoffBy,
-	PolarizationMetrics,
-	PolarizationAxis,
 	UserQuestion,
-	PolarizationGroup,
 } from 'delib-npm';
 
 import { number, parse } from 'valibot';
-import { getRandomColor } from './helpers';
+
+// import { getRandomColor } from './helpers';
+// import { user } from 'firebase-functions/v1/auth';
 
 // ============================================================================
 // TYPES & ENUMS
@@ -49,11 +48,6 @@ interface UpdateStatementEvaluationProps {
 interface CalcDiff {
 	proDiff: number;
 	conDiff: number;
-}
-
-interface MADResult {
-	newMAD: number;
-	newMean: number;
 }
 
 // ============================================================================
@@ -135,6 +129,10 @@ export async function updateEvaluation(event: any): Promise<void> {
 		const evaluationDiff = after.evaluation - before.evaluation;
 		const userId = after.evaluator?.uid;
 
+		if (!userId) {
+			throw new Error('User ID is required');
+		}
+
 		if (!after.statementId) {
 			throw new Error('statementId is required');
 		}
@@ -155,6 +153,16 @@ export async function updateEvaluation(event: any): Promise<void> {
 
 		await updateParentStatementWithChosenOptions(statement.parentId);
 
+		// Update user data evaluation based on demographics
+		const demographicSettings = await db.collection(Collections.userDataQuestions).where('statementId', '==', statement.parentId).limit(1).get();
+		if (!demographicSettings.empty) {
+			const userEvalData = {
+				userId,
+				evaluation: after.evaluation || 0,
+			}
+			updateUserDemographicEvaluation(statement, userEvalData)
+		}
+
 	} catch (error) {
 		logger.error('Error in updateEvaluation:', error);
 	}
@@ -172,19 +180,17 @@ async function updateStatementEvaluation(props: UpdateStatementEvaluationProps):
 			throw new Error('statementId is required');
 		}
 
+		console.log("userId", userId);
+		console.log("parentId", parentId);
+
 		parse(number(), evaluationDiff);
 
 		// Calculate pro/con differences
 		const proConDiff = calcDiffEvaluation({ newEvaluation, oldEvaluation, action });
-		const userEvaluationValue = proConDiff.proDiff - proConDiff.conDiff;
+		// const userEvaluationValue = proConDiff.proDiff - proConDiff.conDiff;
 
 		// Update statement evaluation
 		await updateStatementInTransaction(statementId, evaluationDiff, addEvaluator, proConDiff);
-
-		// Update polarization index (if user data exists)
-		if (userId) {
-			await updatePolarizationIndex(statementId, parentId, userId, userEvaluationValue, addEvaluator);
-		}
 
 		// Return updated statement
 		const statementRef = db.collection(Collections.statements).doc(statementId);
@@ -252,225 +258,136 @@ function calculateEvaluation(statement: Statement, proConDiff: CalcDiff, evaluat
 // POLARIZATION INDEX HELPERS
 // ============================================================================
 
-async function updatePolarizationIndex(
-	statementId: string,
-	parentId: string,
-	userId: string,
-	userDiffEvaluation: number,
-	addEvaluator: number
-): Promise<void> {
-	try {
-		const userAnswers = await getUserDemographicData(userId, parentId);
+async function updateUserDemographicEvaluation(statement: Statement, userEvalData: { userId: string, evaluation: number }): Promise<void> {
 
-		if (userAnswers.length === 0) {
-			logger.info(`No demographic data for user ${userId} on statement ${parentId} - skipping polarization index`);
+	try {
+		const { userId, evaluation } = userEvalData;
+		const parentId = statement.parentId;
+
+		if (!userId || !parentId) {
+			logger.warn('User ID or parent ID is missing - skipping demographic evaluation update');
 
 			return;
 		}
 
-		console.log(userAnswers);
+		//get user demographic data
+		const userDemographicDataDB = await db.collection(Collections.usersData).where('userId', '==', userId).where('statementId', '==', parentId).get();
+		if (userDemographicDataDB.empty) {
+			logger.info(`No demographic data found for user ${userId} on statement ${parentId} - skipping evaluation update`);
 
-		// Get user demographic data
-		const polarizationRef = db.collection(Collections.polarizationIndex).doc(statementId);
-		const polarizationDB = await polarizationRef.get();
-
-		if (!polarizationDB.exists) {
-			// Create new polarization index
-			const newIndex = await createInitialPolarizationIndex(statementId, userAnswers, userDiffEvaluation, addEvaluator);
-
-			polarizationRef.set(newIndex);
-			logger.info(`Created new polarization index for statement ${statementId} with user ${userId}`);
-		} else {
-			// Update existing polarization index
-			const polarizationIndex = polarizationDB.data() as PolarizationMetrics;
-			console.log("polarizationIndex", polarizationIndex);
-			console.log("userAnswers", userAnswers);
-			console.log("groups:", polarizationIndex.axes.forEach(axis => console.log(axis.groups)));
-			console.log("userDiffEvaluation", userDiffEvaluation);
-			console.log("addEvaluator", addEvaluator);
-			const newPolarizationIndex = updateExistingPolarizationIndex(polarizationIndex, userAnswers, userDiffEvaluation, addEvaluator);
-
-			if (newPolarizationIndex) {
-
-				polarizationRef.update(newPolarizationIndex);
-			}
+			return;
 		}
 
-	} catch (error) {
-		logger.error('Error updating polarization index:', error);
-		// Don't throw - polarization is optional functionality
-	}
-}
+		const userDemographicData = userDemographicDataDB.docs.map(doc => doc.data() as UserQuestion);
 
-async function getUserDemographicData(userId: string, parentId: string): Promise<UserQuestion[]> {
-	const userDataRef = db.collection(Collections.usersData);
-	const userDataSnapshot = await userDataRef
-		.where('userId', '==', userId)
-		.where('statementId', '==', parentId)
-		.get();
+		const userDemographicEvaluation: Record<string, unknown> = {
+			userId,
+			statementId: statement.statementId,
+			parentId: statement.parentId,
+			evaluation: evaluation || 0,
+		}
 
-	if (userDataSnapshot.empty) {
-		return [];
-	}
-
-	return userDataSnapshot.docs
-		.map(doc => doc.data() as UserQuestion)
-		.filter(answer => answer.userQuestionId && answer.options && answer.options.length > 0);
-}
-
-async function createInitialPolarizationIndex(
-	statementId: string,
-	userAnswers: UserQuestion[],
-	userEvaluationValue: number,
-	addEvaluator: number
-): Promise<PolarizationMetrics> {
-	const axes: PolarizationAxis[] = userAnswers.map((userAnswer) => {
-		const groups: PolarizationGroup[] = userAnswer.options!.map((option) => ({
-			groupId: option,
-			groupName: option,
-			average: userEvaluationValue,
-			color: getRandomColor(),
-			mad: 0, // First user, no deviation
-			numberOfMembers: addEvaluator
-		}));
-
-		return {
-			groupingQuestionId: userAnswer.userQuestionId!,
-			groupingQuestionText: userAnswer.question,
-			axisAverageAgreement: userEvaluationValue,
-			axisMAD: 0, // First user, no deviation
-			groups
-		};
-	});
-
-	const statementRef = db.collection(Collections.statements).doc(statementId);
-	const statementDoc = await statementRef.get();
-	if (!statementDoc.exists) {
-		throw new Error(`Statement with ID ${statementId} does not exist`);
-	}
-	const statementData = statementDoc.data() as Statement;
-
-	return {
-		statementId,
-		parentId: statementData.parentId,
-		statement: statementData.statement,
-		overallMAD: 0, // First user, no deviation
-		totalEvaluators: addEvaluator,
-		averageAgreement: userEvaluationValue,
-		lastUpdated: new Date().getTime(),
-		axes,
-	};
-}
-
-function updateExistingPolarizationIndex(
-	polarizationIndex: PolarizationMetrics,
-	userAnswers: UserQuestion[],
-	userDiffEvaluation: number,
-	addEvaluator: number
-): PolarizationMetrics | undefined {
-	try {
-
-		// Update overall metrics
-		const overallResult = calculateMADWithNewValue(
-			polarizationIndex.overallMAD,
-			polarizationIndex.averageAgreement,
-			polarizationIndex.totalEvaluators,
-			userDiffEvaluation
-		);
-
-		polarizationIndex.overallMAD = overallResult.newMAD;
-		polarizationIndex.totalEvaluators += addEvaluator;
-		polarizationIndex.averageAgreement = overallResult.newMean;
-		polarizationIndex.lastUpdated = new Date().getTime();
-
-		// Update each axis
-		polarizationIndex.axes.forEach((axis) => {
-			const userAnswer = userAnswers.find(ua => ua.userQuestionId === axis.groupingQuestionId);
-
-			if (userAnswer?.options) {
-				updateAxisWithNewUser(axis, userAnswer, userEvaluationValue, addEvaluator);
-			}
+		userDemographicData.forEach((demographic) => {
+			userDemographicEvaluation[demographic.question] = demographic.answer;
+			userDemographicEvaluation.userQuestionId = demographic.userQuestionId;
 		});
 
-		return polarizationIndex;
+		console.log('userDemographicEvaluation', userDemographicEvaluation);
+
+		//save to user demographicEvaluation collection
+		const userDemographicEvaluationRef = db.collection(Collections.userDemographicEvaluations).doc(`${statement.statementId}--${userId}`);
+		await userDemographicEvaluationRef.set(userDemographicEvaluation, { merge: true });
+
+		// Update polarization index
+		// await updatePolarizationIndex(statement.statementId, parentId, userId, evaluation, 1);
+
+		logger.info(`Updated user demographic evaluation for user ${userId} on statement ${statement.statementId}`);
 
 	} catch (error) {
-		logger.error('Error updating existing polarization index:', error);
-
-		return undefined; // Skip update if error occurs
+		logger.error('Error updating user demographic evaluation:', error);
 
 	}
 }
 
-function updateAxisWithNewUser(
-	axis: PolarizationAxis,
-	userAnswer: UserQuestion,
-	userEvaluationValue: number,
-	addEvaluator: number
-): void {
-	// Calculate axis-level updates
-	const oldAxisCount = axis.groups.reduce((sum, group) => sum + group.numberOfMembers, 0);
-	const axisResult = calculateMADWithNewValue(
-		axis.axisMAD,
-		axis.axisAverageAgreement,
-		oldAxisCount,
-		userEvaluationValue
-	);
+// async function updatePolarizationIndex(
+// 	statementId: string,
+// 	parentId: string,
+// 	userId: string,
+// 	userDiffEvaluation: number,
+// 	addEvaluator: number
+// ): Promise<void> {
+// 	try {
+// 		const userDemographic = await getUserDemographicData(userId, parentId);
 
-	axis.axisAverageAgreement = axisResult.newMean;
-	axis.axisMAD = axisResult.newMAD;
+// 		if (userDemographic.length === 0) {
+// 			logger.info(`No demographic data for user ${userId} on statement ${parentId} - skipping polarization index`);
 
-	// Update groups the user belongs to
-	userAnswer.options!.forEach((groupId) => {
-		const group = axis.groups.find(g => g.groupId === groupId);
-		if (group) {
-			const groupResult = calculateMADWithNewValue(
-				group.mad,
-				group.average,
-				group.numberOfMembers,
-				userEvaluationValue
-			);
+// 			return;
+// 		}
 
-			group.average = groupResult.newMean;
-			group.mad = groupResult.newMAD;
-			group.numberOfMembers += addEvaluator;
-		}
-	});
+// 		// Get user demographic data
+// 		const polarizationRef = db.collection(Collections.polarizationIndex).doc(statementId);
+// 		const polarizationDB = await polarizationRef.get();
 
-	// Adjust other groups for axis mean change
-	axis.groups.forEach((group) => {
-		if (!userAnswer.options!.includes(group.groupId) && group.numberOfMembers > 0) {
-			const meanDifference = Math.abs(group.average - axisResult.newMean);
-			group.mad = Math.min(group.mad + meanDifference * 0.1, 1.0);
-		}
-	});
-}
+// 		if (!polarizationDB.exists) {
+// 			// Create new polarization index
+// 			const newIndex = await createInitialPolarizationIndex(statementId, userDemographic, userDiffEvaluation, addEvaluator);
+// 			console.log("New polarization index created:", newIndex);
+
+// 			polarizationRef.set(newIndex);
+// 			logger.info(`Created new polarization index for statement ${statementId} with user ${userId}`);
+// 		} else {
+// 			// Update existing polarization index
+// 			const polarizationIndex = polarizationDB.data() as PolarizationMetrics;
+// 			console.log("polarizationIndex", polarizationIndex);
+// 			polarizationIndex.axes.forEach(axe => {
+// 				console.log("axis", axe);
+// 				axe.groups.forEach(group => {
+// 					console.log("group", group);
+// 				});
+// 			});
+// 			console.log("userDemographic", userDemographic);
+// 			console.log("userDiffEvaluation", userDiffEvaluation);
+// 			console.log("addEvaluator", addEvaluator);
+// 			const newPolarizationIndex = updateExistingPolarizationIndex(polarizationIndex, userDemographic, userDiffEvaluation, addEvaluator);
+
+// 			if (newPolarizationIndex) {
+
+// 				polarizationRef.update(newPolarizationIndex);
+// 			}
+// 		}
+
+// 	} catch (error) {
+// 		logger.error('Error updating polarization index:', error);
+// 		// Don't throw - polarization is optional functionality
+// 	}
+// }
 
 // ============================================================================
 // MATH UTILITIES
 // ============================================================================
 
-function calculateMADWithNewValue(oldMAD: number, oldMean: number, oldCount: number, evaluationDiff: number): MADResult {
-	if (oldCount === 0) {
-		return { newMAD: 0, newMean: evaluationDiff };
-	}
+// function calculateMADWithNewValue(oldMAD: number, oldMean: number, oldCount: number, evaluationDiff: number): MADResult {
+// 	if (oldCount === 0) {
+// 		return { newMAD: 0, newMean: evaluationDiff };
+// 	}
 
-	const newCount = oldCount + 1;
-	const newMean = (oldMean * oldCount + evaluationDiff) / newCount;
+// 	const newCount = oldCount + 1;
+// 	const newMean = (oldMean * oldCount + evaluationDiff) / newCount;
 
-	if (newCount === 1) {
-		return { newMAD: 0, newMean };
-	}
+// 	if (newCount === 1) {
+// 		return { newMAD: 0, newMean };
+// 	}
 
-	// Calculate new MAD incrementally
-	const oldSumAbsDev = oldMAD * oldCount;
-	const newValueAbsDev = Math.abs(evaluationDiff - newMean);
-	const meanShift = newMean - oldMean;
-	const adjustedOldSumAbsDev = oldSumAbsDev + Math.abs(meanShift) * oldCount * 0.5;
-	const newMAD = (adjustedOldSumAbsDev + newValueAbsDev) / newCount;
+// 	// Calculate new MAD incrementally
+// 	const oldSumAbsDev = oldMAD * oldCount;
+// 	const newValueAbsDev = Math.abs(evaluationDiff - newMean);
+// 	const meanShift = newMean - oldMean;
+// 	const adjustedOldSumAbsDev = oldSumAbsDev + Math.abs(meanShift) * oldCount * 0.5;
+// 	const newMAD = (adjustedOldSumAbsDev + newValueAbsDev) / newCount;
 
-	return { newMAD, newMean };
-}
+// 	return { newMAD, newMean };
+// }
 
 function calcAgreement(sumEvaluations: number, numberOfEvaluators: number): number {
 	try {
