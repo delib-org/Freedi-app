@@ -25,4 +25,27 @@
 
 		cursor: pointer;
 	}
+
+	.axisGroup {
+
+		width: 15px;
+		height: 15px;
+		border-radius: 50%;
+		transform: translate(-50%, -50%);
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		position: absolute;
+
+		.axisGroupPoint {
+			width: 10px;
+			height: 10px;
+			border-radius: 50%;
+			background-color: blue;
+			position: absolute;
+			top: 50%;
+			left: 50%;
+
+		}
+	}
 }

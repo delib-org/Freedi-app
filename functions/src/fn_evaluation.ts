@@ -23,6 +23,7 @@ import {
 
 import { number, parse } from 'valibot';
 import { getRandomColor } from './helpers';
+import { stat } from 'fs';
 
 // import { getRandomColor } from './helpers';
 // import { user } from 'firebase-functions/v1/auth';
@@ -295,15 +296,6 @@ async function updateUserDemographicEvaluation(statement: Statement, userEvalDat
 
 		const axes: AxesItem[] = createAxes(userDemographicEvaluations, userDemographicData);
 
-		const previousPolarizationDB = await db.collection(Collections.polarizationIndex).doc(statement.statementId).get()
-
-		let color = getRandomColor();
-		if (previousPolarizationDB.exists) {
-			color = previousPolarizationDB.data()?.color;
-		}
-		if (!color) {
-			color = getRandomColor();
-		}
 		const polarizationIndex: polarizationIndex = {
 			statementId: statement.statementId,
 			parentId: statement.parentId,
@@ -314,7 +306,7 @@ async function updateUserDemographicEvaluation(statement: Statement, userEvalDat
 			averageAgreement: overallMean,
 			lastUpdated: Date.now(),
 			axes,
-			color
+			color: statement.color || getRandomColor(),
 		}
 
 		await db.collection(Collections.polarizationIndex).doc(statement.statementId).set(polarizationIndex, { merge: true });
