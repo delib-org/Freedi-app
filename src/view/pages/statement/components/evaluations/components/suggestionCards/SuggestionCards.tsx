@@ -38,14 +38,26 @@ const SuggestionCards: FC<Props> = ({
 	const _subStatements = useSelector(
 		statementOptionsSelector(statement?.statementId)
 	);
+	const [isMobile, setIsMobile] = useState(
+		window.matchMedia('(max-width: 768px)').matches
+	);
+
+	useEffect(() => {
+		const mediaQuery = window.matchMedia('(max-width: 768px)');
+		const handleChange = () => setIsMobile(mediaQuery.matches);
+
+		mediaQuery.addEventListener('change', handleChange);
+
+		return () => mediaQuery.removeEventListener('change', handleChange);
+	}, []);
 
 	const subStatements =
 		propSubStatements ||
 		(selectionFunction
 			? _subStatements.filter(
-				(sub: Statement) =>
-					sub.evaluation.selectionFunction === selectionFunction
-			)
+					(sub: Statement) =>
+						sub.evaluation.selectionFunction === selectionFunction
+				)
 			: _subStatements);
 
 	useEffect(() => {
@@ -56,11 +68,10 @@ const SuggestionCards: FC<Props> = ({
 	}, [statement, statementId]);
 
 	useEffect(() => {
-
 		const unsubscribe = listenToEvaluations(statementId);
 
 		return () => unsubscribe();
-	}, [])
+	}, []);
 
 	useEffect(() => {
 		const { totalHeight: _totalHeight } = sortSubStatements(
@@ -106,6 +117,7 @@ const SuggestionCards: FC<Props> = ({
 						parentStatement={statement}
 						siblingStatements={subStatements}
 						statement={statementSub}
+						isMobile={isMobile}
 					/>
 				);
 			})}
