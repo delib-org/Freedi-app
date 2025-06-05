@@ -1,3 +1,4 @@
+import React, { useState, useEffect, useRef } from 'react';
 import { listenToPolarizationIndex } from '@/controllers/db/polarizationIndex/getPolarizationIndex';
 import { selectPolarizationIndexByParentId } from '@/redux/userData/userDataSlice';
 import { polarizationIndex } from 'delib-npm';
