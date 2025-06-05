@@ -305,12 +305,91 @@ async function updateUserDemographicEvaluation(statement: Statement, userEvalDat
 
 		});
 
-		console.log('userDemographicEvaluation', userDemographicEvaluation);
-
 		//save to user demographicEvaluation collection
 		const userDemographicEvaluationRef = db.collection(Collections.userDemographicEvaluations).doc(`${statement.statementId}--${userId}`);
 		await userDemographicEvaluationRef.set(userDemographicEvaluation, { merge: true });
 
+		//get all userDemographicEvaluations for the statement
+		const userDemographicEvaluationsDB = await db.collection(Collections.userDemographicEvaluations).where('parentId', '==', parentId).get();
+		const userDemographicEvaluations = userDemographicEvaluationsDB.docs.map(doc => doc.data() as UserDemographicEvaluation);
+
+		console.log("userDemographicEvaluations", userDemographicEvaluations);
+
+		const values = userDemographicEvaluations.map(evaluation => evaluation.evaluation);
+		const { mad: overallMAD, mean: overallMean } = calcMadAndMean(values);
+		console.log("overallMAD", overallMAD);
+
+		const axesSet = new Set<string>();
+		userDemographicEvaluations.forEach(evaluation => {
+			evaluation.demographic.forEach(demographic => {
+				axesSet.add(demographic.userQuestionId);
+			});
+		});
+
+		userDemographicEvaluations.forEach((ud: any) => {
+			ud.demographic.forEach((demographic: any) => {
+				console.log(ud.userId, ud.evaluation, "demographic", demographic);
+			})
+		})
+
+		const axes: any = Array.from(axesSet).map(axId => {
+			const axisDemographic = userDemographicData.find(demographic => demographic.userQuestionId === axId);
+			console.log("axisDemographic", axisDemographic);
+
+			return {
+				axId, groups: axisDemographic?.options.map(option => {
+
+					const values = userDemographicEvaluations
+						.filter(evaluation => evaluation.demographic.filter(evl => evl.userQuestionId === axId && evl.answer === option).length > 0)
+						.map(evaluation => evaluation.evaluation);
+
+					console.log("values for option", option, values);
+
+					return {
+						option,
+						mad: values.length > 0 ? calcMadAndMean(values).mad : 0,
+						mean: values.length > 0 ? calcMadAndMean(values).mean : 0,
+					};
+				})
+			};
+
+		});
+
+		axes.forEach((ax: any) => {
+			const values: number[] = [];
+			ax.groups?.forEach((group: { mean: number; }) => {
+				values.push(group.mean);
+			});
+			const { mad: groupMAD } = calcMadAndMean(values);
+			ax.groupsMAD = groupMAD;
+		});
+
+		console.log("axes", axes);
+		axes.forEach((ax: any) => console.log(ax))
+
+		const polarizationIndex = {
+			statementId: statement.statementId,
+			parentId: statement.parentId,
+			statement: statement.statement,
+			overallMAD,
+			averageAgreement: overallMean,
+			lastUpdated: Date.now(),
+			axes
+		}
+
+		console.log("polarizationIndex", polarizationIndex);
+
+		// const polarizationIndex: PolarizationMetrics = {
+		// 	statementId: statement.statementId,
+		// 	parentId: statement.parentId,
+		// 	statement: statement.statement,
+		// 	overallMAD,
+		// 	averageAgreement: values.length > 0 ? values.reduce((sum, val) => sum + val, 0) / values.length : 0,
+		// 	lastUpdated: Date.now(),
+		// 	axes: []
+		// }
+
+		// console.log("polarizationIndex", polarizationIndex);
 		// Update polarization index
 		// await updatePolarizationIndex(statement.statementId, parentId, userId, evaluation, 1);
 
@@ -320,6 +399,17 @@ async function updateUserDemographicEvaluation(statement: Statement, userEvalDat
 		logger.error('Error updating user demographic evaluation:', error);
 
 	}
+}
+
+function calcMadAndMean(values: number[]): { mad: number, mean: number } {
+	// Placeholder for MAD calculation logic
+	if (values.length === 0) return { mad: 0, mean: 0 };
+	if (values.length === 1) return { mad: 0, mean: values[0] };
+
+	const mean = values.reduce((sum, value) => sum + value, 0) / values.length;
+	const mad = values.reduce((sum, value) => sum + Math.abs(value - mean), 0) / values.length;
+
+	return { mad, mean };
 }
 
 // async function updatePolarizationIndex(
