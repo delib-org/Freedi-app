@@ -1,5 +1,5 @@
 import { FC, ReactNode, useState, useRef, useEffect } from 'react';
-import styles from './CustomTooltip.module.scss';
+import styles from './Tooltip.module.scss';
 
 interface TooltipProps {
 	content: string;
@@ -7,7 +7,7 @@ interface TooltipProps {
 	position?: 'top' | 'bottom' | 'left' | 'right';
 }
 
-export const CustomTooltip: FC<TooltipProps> = ({
+export const Tooltip: FC<TooltipProps> = ({
 	content,
 	children,
 	position = 'top'

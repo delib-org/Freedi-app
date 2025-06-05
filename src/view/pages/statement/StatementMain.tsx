@@ -29,6 +29,9 @@ import { useSelector } from 'react-redux';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { notificationService } from '@/services/notificationService';
 import { listenToInAppNotifications, clearInAppNotifications } from '@/controllers/db/inAppNotifications/db_inAppNotifications';
+import { listenToUserAnswers, listenToUserQuestions } from '@/controllers/db/userData/getUserData';
+import { selectUserDataByStatementId, selectUserQuestionsByStatementId } from '@/redux/userData/userDataSlice';
+import UserDataQuestions from './components/userDataQuestions/UserDataQuestions';
 
 // Create selectors
 export const subStatementsSelector = createSelector(
@@ -42,8 +45,10 @@ export const subStatementsSelector = createSelector(
 
 export default function StatementMain() {
 	// Hooks
-	const { statementId, stageId } = useParams();
+	const { statementId, stageId, screen } = useParams();
 	const statement = useSelector(statementSelector(statementId));
+	const userDataQuestions = useSelector(selectUserQuestionsByStatementId(statementId || ''));
+	const userData = useSelector(selectUserDataByStatementId(statementId || ''));
 	const topParentStatement = useSelector(statementSelector(statement?.topParentId));
 	const role = useSelector(statementSubscriptionSelector(statementId))?.role;
 	const { isAuthorized, loading, isWaitingForApproval } = useAuthorization(statementId);
@@ -52,6 +57,7 @@ export default function StatementMain() {
 	const { creator } = useAuthentication();
 
 	const stage = useSelector(statementSelector(stageId));
+	const showUserQuestions = userDataQuestions && userDataQuestions.length > 0 && userData.length < userDataQuestions.length;
 
 	// Use states
 	const [talker, setTalker] = useState<User | null>(null);
@@ -60,6 +66,7 @@ export default function StatementMain() {
 	const [newStatementType, setNewStatementType] = useState<StatementType>(
 		StatementType.group
 	);
+
 	const [newQuestionType, setNewQuestionType] = useState<QuestionType>(
 		QuestionType.multiStage
 	);
@@ -102,6 +109,13 @@ export default function StatementMain() {
 
 			unsubscribeFunctions.push(
 				listenToStatement(statementId, setIsStatementNotFound)
+			);
+			unsubscribeFunctions.push(
+				listenToUserQuestions(statementId)
+			);
+
+			unsubscribeFunctions.push(
+				listenToUserAnswers(statementId)
 			);
 
 			// Combine and optimize additional listeners
@@ -262,6 +276,7 @@ export default function StatementMain() {
 					<MapProvider>
 						<Switch />
 					</MapProvider>
+					{(showUserQuestions && screen !== "settings") && <Modal><UserDataQuestions questions={userDataQuestions} /></Modal>}
 				</div>
 			</StatementContext.Provider>
 		);
