@@ -40,7 +40,7 @@ const InstallPWA: React.FC = () => {
 
     // Wait for the user to respond to the prompt
     const { outcome } = await deferredPrompt.userChoice;
-    
+
     if (outcome === 'accepted') {
       console.info('App installed');
     } else {
@@ -57,9 +57,9 @@ const InstallPWA: React.FC = () => {
   return (
     <div className="install-pwa">
       <button onClick={handleInstallClick} className="install-button">
-        <img 
-          src="/src/assets/icons/installIcon.svg" 
-          alt="Install" 
+        <img
+          src="/src/assets/icons/installIconW.svg"
+          alt="Install"
           className="install-icon"
           style={{ backgroundColor: 'transparent' }}
         />
