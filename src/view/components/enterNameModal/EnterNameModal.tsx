@@ -1,4 +1,4 @@
-import React, { FC, useEffect, useRef, useState } from 'react';
+import React, { FC, useRef, useState } from 'react';
 
 // Styles
 import Button, { ButtonType } from '../buttons/button/Button';
@@ -22,31 +22,23 @@ const EnterNameModal: FC<Props> = ({ closeModal }) => {
 		
 	const { t } = useUserConfig();
 
-	useEffect(() => {
-		inputRef.current?.focus(); // Set focus on the input when the component mounts
-	}, []);
-
-	// Handle Enter key press to start
-	useEffect(() => {
-	const handleKeyDown = (e: KeyboardEvent) => {
-		if (e.key === 'Enter' && isReadyToStart(displayName)) {
-			handleStart();
-		}
-	};
-
-	const inputElement = inputRef.current;
-    if (inputElement) {
-        inputElement.addEventListener('keydown', handleKeyDown);
-
-        return () => {
-            inputElement.removeEventListener('keydown', handleKeyDown);
-        };
-    }
-	}, [displayName]);
-
 	function handleSetName(ev: React.ChangeEvent<HTMLInputElement>) {
 		setDisplayName(ev.target.value);
 		setShowStartBtn(isReadyToStart(ev.target.value));
+	}
+
+	function handleSubmit(e: React.FormEvent) {
+		e.preventDefault();
+		if (!isReadyToStart(displayName)) return;
+
+		try {
+			signAnonymously();
+			const _displayName = displayName || 'Anonymous';
+			localStorage.setItem('displayName', _displayName);
+			closeModal();
+		} catch (error) {
+			console.error(error);
+		}
 	}
 
 	function handleStart() {
@@ -64,7 +56,7 @@ const EnterNameModal: FC<Props> = ({ closeModal }) => {
 
 	return (
 		<Modal>
-			<div className={styles.box} data-cy='anonymous-input'>
+			<form className={styles.box} onSubmit={handleSubmit} data-cy='anonymous-input'>
 				<input
 					ref={inputRef} // Assign the ref to the input
 					className={styles.input}
@@ -89,7 +81,7 @@ const EnterNameModal: FC<Props> = ({ closeModal }) => {
 						onClick={closeModal}
 					/>
 				</div>
-			</div>
+			</form>
 		</Modal>
 	);
 };
