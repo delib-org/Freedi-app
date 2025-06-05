@@ -310,14 +310,11 @@ async function updateUserDemographicEvaluation(statement: Statement, userEvalDat
 		await userDemographicEvaluationRef.set(userDemographicEvaluation, { merge: true });
 
 		//get all userDemographicEvaluations for the statement
-		const userDemographicEvaluationsDB = await db.collection(Collections.userDemographicEvaluations).where('parentId', '==', parentId).get();
+		const userDemographicEvaluationsDB = await db.collection(Collections.userDemographicEvaluations).where('statementId', '==', statement.statementId).where("parentId", "==", parentId).get();
 		const userDemographicEvaluations = userDemographicEvaluationsDB.docs.map(doc => doc.data() as UserDemographicEvaluation);
-
-		console.log("userDemographicEvaluations", userDemographicEvaluations);
 
 		const values = userDemographicEvaluations.map(evaluation => evaluation.evaluation);
 		const { mad: overallMAD, mean: overallMean } = calcMadAndMean(values);
-		console.log("overallMAD", overallMAD);
 
 		const axesSet = new Set<string>();
 		userDemographicEvaluations.forEach(evaluation => {
@@ -326,24 +323,17 @@ async function updateUserDemographicEvaluation(statement: Statement, userEvalDat
 			});
 		});
 
-		userDemographicEvaluations.forEach((ud: any) => {
-			ud.demographic.forEach((demographic: any) => {
-				console.log(ud.userId, ud.evaluation, "demographic", demographic);
-			})
-		})
-
 		const axes: any = Array.from(axesSet).map(axId => {
 			const axisDemographic = userDemographicData.find(demographic => demographic.userQuestionId === axId);
-			console.log("axisDemographic", axisDemographic);
 
 			return {
-				axId, groups: axisDemographic?.options.map(option => {
+				axId,
+				question: axisDemographic?.question || '',
+				groups: axisDemographic?.options.map(option => {
 
 					const values = userDemographicEvaluations
-						.filter(evaluation => evaluation.demographic.filter(evl => evl.userQuestionId === axId && evl.answer === option).length > 0)
+						.filter(evaluation => evaluation.demographic.filter(evl => evaluation.statementId === statement.statementId && evl.userQuestionId === axId && evl.answer === option).length > 0)
 						.map(evaluation => evaluation.evaluation);
-
-					console.log("values for option", option, values);
 
 					return {
 						option,
@@ -364,9 +354,6 @@ async function updateUserDemographicEvaluation(statement: Statement, userEvalDat
 			ax.groupsMAD = groupMAD;
 		});
 
-		console.log("axes", axes);
-		axes.forEach((ax: any) => console.log(ax))
-
 		const polarizationIndex = {
 			statementId: statement.statementId,
 			parentId: statement.parentId,
@@ -378,6 +365,7 @@ async function updateUserDemographicEvaluation(statement: Statement, userEvalDat
 		}
 
 		console.log("polarizationIndex", polarizationIndex);
+		await db.collection(Collections.polarizationIndex).doc(statement.statementId).set(polarizationIndex, { merge: true });
 
 		// const polarizationIndex: PolarizationMetrics = {
 		// 	statementId: statement.statementId,
