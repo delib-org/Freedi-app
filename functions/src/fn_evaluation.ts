@@ -17,6 +17,7 @@ import {
 	ResultsBy,
 	CutoffBy,
 	UserQuestion,
+	AxesItem,
 } from 'delib-npm';
 
 import { number, parse } from 'valibot';
@@ -279,13 +280,92 @@ async function updateUserDemographicEvaluation(statement: Statement, userEvalDat
 			return;
 		}
 
-		//get user demographic data
+		const { userDemographicData, userDemographicEvaluations } = await getUserDemographicData(userId, parentId, evaluation);
+
+		if (!userDemographicEvaluations || userDemographicEvaluations.length === 0) {
+			console.info(`No demographic evaluation found for user ${userId} on statement ${parentId} - skipping evaluation update`);
+
+			return;
+		}
+
+		const values = userDemographicEvaluations.map(evaluation => evaluation.evaluation);
+		const { mad: overallMAD, mean: overallMean } = calcMadAndMean(values);
+
+		const axes: AxesItem[] = createAxes(userDemographicEvaluations, userDemographicData);
+
+		const polarizationIndex = {
+			statementId: statement.statementId,
+			parentId: statement.parentId,
+			statement: statement.statement,
+			overallMAD,
+			averageAgreement: overallMean,
+			lastUpdated: Date.now(),
+			axes
+		}
+
+		await db.collection(Collections.polarizationIndex).doc(statement.statementId).set(polarizationIndex, { merge: true });
+
+		logger.info(`Updated user demographic evaluation for user ${userId} on statement ${statement.statementId}`);
+
+	} catch (error) {
+		logger.error('Error updating user demographic evaluation:', error);
+
+	}
+
+	function createAxes(userDemographicEvaluations: UserDemographicEvaluation[], userDemographicData: UserQuestion[]): AxesItem[] {
+		const axesSet = new Set<string>();
+		userDemographicEvaluations.forEach(evaluation => {
+			evaluation.demographic.forEach(demographic => {
+				axesSet.add(demographic.userQuestionId);
+			});
+		});
+
+		const axes: AxesItem[] = Array.from(axesSet).map(axId => {
+			const axisDemographic = userDemographicData.find(demographic => demographic.userQuestionId === axId);
+
+			return {
+				axId,
+				question: axisDemographic?.question || '',
+				groupsMAD: 0,
+				groups: axisDemographic?.options?.map(option => {
+
+					const values = userDemographicEvaluations
+						.filter(evaluation => evaluation.demographic.filter(evl => evaluation.statementId === statement.statementId && evl.userQuestionId === axId && evl.answer === option).length > 0)
+						.map(evaluation => evaluation.evaluation);
+
+					const { mad, mean, n } = calcMadAndMean(values);
+
+					return {
+						option,
+						mad,
+						mean,
+						n,
+					};
+				}) || []
+			};
+
+		});
+
+		axes.forEach((ax: AxesItem) => {
+			const values: number[] = [];
+			ax.groups?.forEach((group: { mean: number; }) => {
+				values.push(group.mean);
+			});
+			const { mad: groupMAD } = calcMadAndMean(values);
+			ax.groupsMAD = groupMAD;
+		});
+
+		return axes;
+	}
+
+	//get user demographic data
+	async function getUserDemographicData(userId: string, parentId: string, evaluation: number): Promise<{ userDemographicData: UserQuestion[], userDemographicEvaluations: UserDemographicEvaluation[] | null }> {
 		const userDemographicDataDB = await db.collection(Collections.usersData).where('userId', '==', userId).where('statementId', '==', parentId).get();
 
 		if (userDemographicDataDB.empty) {
 			console.info(`No demographic data found for user ${userId} on statement ${parentId} - skipping evaluation update`);
 
-			return;
+			return { userDemographicData: [], userDemographicEvaluations: [] };
 		}
 
 		const userDemographicData = userDemographicDataDB.docs.map(doc => doc.data() as UserQuestion);
@@ -296,7 +376,7 @@ async function updateUserDemographicEvaluation(statement: Statement, userEvalDat
 			parentId: statement.parentId,
 			evaluation: evaluation || 0,
 			demographic: []
-		}
+		};
 
 		userDemographicData.forEach((demographic) => {
 			if (!demographic.userQuestionId || !demographic.answer) return;
@@ -313,91 +393,19 @@ async function updateUserDemographicEvaluation(statement: Statement, userEvalDat
 		const userDemographicEvaluationsDB = await db.collection(Collections.userDemographicEvaluations).where('statementId', '==', statement.statementId).where("parentId", "==", parentId).get();
 		const userDemographicEvaluations = userDemographicEvaluationsDB.docs.map(doc => doc.data() as UserDemographicEvaluation);
 
-		const values = userDemographicEvaluations.map(evaluation => evaluation.evaluation);
-		const { mad: overallMAD, mean: overallMean } = calcMadAndMean(values);
-
-		const axesSet = new Set<string>();
-		userDemographicEvaluations.forEach(evaluation => {
-			evaluation.demographic.forEach(demographic => {
-				axesSet.add(demographic.userQuestionId);
-			});
-		});
-
-		const axes: any = Array.from(axesSet).map(axId => {
-			const axisDemographic = userDemographicData.find(demographic => demographic.userQuestionId === axId);
-
-			return {
-				axId,
-				question: axisDemographic?.question || '',
-				groups: axisDemographic?.options.map(option => {
-
-					const values = userDemographicEvaluations
-						.filter(evaluation => evaluation.demographic.filter(evl => evaluation.statementId === statement.statementId && evl.userQuestionId === axId && evl.answer === option).length > 0)
-						.map(evaluation => evaluation.evaluation);
-
-					return {
-						option,
-						mad: values.length > 0 ? calcMadAndMean(values).mad : 0,
-						mean: values.length > 0 ? calcMadAndMean(values).mean : 0,
-					};
-				})
-			};
-
-		});
-
-		axes.forEach((ax: any) => {
-			const values: number[] = [];
-			ax.groups?.forEach((group: { mean: number; }) => {
-				values.push(group.mean);
-			});
-			const { mad: groupMAD } = calcMadAndMean(values);
-			ax.groupsMAD = groupMAD;
-		});
-
-		const polarizationIndex = {
-			statementId: statement.statementId,
-			parentId: statement.parentId,
-			statement: statement.statement,
-			overallMAD,
-			averageAgreement: overallMean,
-			lastUpdated: Date.now(),
-			axes
-		}
-
-		console.log("polarizationIndex", polarizationIndex);
-		await db.collection(Collections.polarizationIndex).doc(statement.statementId).set(polarizationIndex, { merge: true });
-
-		// const polarizationIndex: PolarizationMetrics = {
-		// 	statementId: statement.statementId,
-		// 	parentId: statement.parentId,
-		// 	statement: statement.statement,
-		// 	overallMAD,
-		// 	averageAgreement: values.length > 0 ? values.reduce((sum, val) => sum + val, 0) / values.length : 0,
-		// 	lastUpdated: Date.now(),
-		// 	axes: []
-		// }
-
-		// console.log("polarizationIndex", polarizationIndex);
-		// Update polarization index
-		// await updatePolarizationIndex(statement.statementId, parentId, userId, evaluation, 1);
-
-		logger.info(`Updated user demographic evaluation for user ${userId} on statement ${statement.statementId}`);
-
-	} catch (error) {
-		logger.error('Error updating user demographic evaluation:', error);
-
+		return { userDemographicData: userDemographicData, userDemographicEvaluations: userDemographicEvaluations };
 	}
 }
 
-function calcMadAndMean(values: number[]): { mad: number, mean: number } {
+function calcMadAndMean(values: number[]): { mad: number, mean: number, n: number } {
 	// Placeholder for MAD calculation logic
-	if (values.length === 0) return { mad: 0, mean: 0 };
-	if (values.length === 1) return { mad: 0, mean: values[0] };
+	if (values.length === 0) return { mad: 0, mean: 0, n: 0 };
+	if (values.length === 1) return { mad: 0, mean: values[0], n: 1 };
 
 	const mean = values.reduce((sum, value) => sum + value, 0) / values.length;
 	const mad = values.reduce((sum, value) => sum + Math.abs(value - mean), 0) / values.length;
 
-	return { mad, mean };
+	return { mad, mean, n: values.length };
 }
 
 // async function updatePolarizationIndex(
