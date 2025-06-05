@@ -18,6 +18,7 @@ import {
 	CutoffBy,
 	UserQuestion,
 	AxesItem,
+	polarizationIndex,
 } from 'delib-npm';
 
 import { number, parse } from 'valibot';
@@ -289,15 +290,17 @@ async function updateUserDemographicEvaluation(statement: Statement, userEvalDat
 		}
 
 		const values = userDemographicEvaluations.map(evaluation => evaluation.evaluation);
-		const { mad: overallMAD, mean: overallMean } = calcMadAndMean(values);
+		const { mad: overallMAD, mean: overallMean, n: overallN } = calcMadAndMean(values);
 
 		const axes: AxesItem[] = createAxes(userDemographicEvaluations, userDemographicData);
 
-		const polarizationIndex = {
+		const polarizationIndex: polarizationIndex = {
 			statementId: statement.statementId,
 			parentId: statement.parentId,
 			statement: statement.statement,
 			overallMAD,
+			overallMean,
+			overallN,
 			averageAgreement: overallMean,
 			lastUpdated: Date.now(),
 			axes
