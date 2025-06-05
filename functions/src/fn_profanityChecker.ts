@@ -4,7 +4,6 @@ export const checkProfanity = functions.https.onCall(
   async (request: functions.https.CallableRequest) => {
     const { text } = request.data as { text: string };
 
-    // 🔐 Replace with functions.config().google.api_key in production
     const apiKey = process.env.GOOGLE_API_KEY;
 
     if (!apiKey) {
