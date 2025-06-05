@@ -106,7 +106,14 @@ const PolarizationIndex = () => {
 						{point.axes.map((axis: Axis) => (
 							<>
 								{axis.groups.map((group) => (
-									<div key={group.option} className={styles.axisGroup} style={{ left: group.position.x + 'px', top: group.position.y + 'px', display: showGroups === point.statementId ? 'block' : 'none' }}>
+									<div
+										key={group.option}
+										className={styles.axisGroup}
+										style={{
+											left: showGroups === point.statementId ? group.position.x + 'px' : point.position.x + 10 + 'px',
+											top: showGroups === point.statementId ? group.position.y + 'px' : point.position.y + 10 + 'px',
+											opacity: showGroups === point.statementId ? 1 : 0
+										}}>
 										<Tooltip content={`${point.statement}, ${group.option} MAD: ${group.mad.toFixed(2)}, Mean: ${group.mean.toFixed(2)}, N: ${group.n}`} position="top">
 											<div className={styles.axisGroupPoint} style={{ backgroundColor: point.color }} />
 										</Tooltip>

@@ -36,6 +36,7 @@
 		justify-content: center;
 		align-items: center;
 		position: absolute;
+		transition: opacity 1ms ease-in-out, all 1200ms ease-in-out;
 
 		.axisGroupPoint {
 			width: 10px;
