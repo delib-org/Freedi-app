@@ -6,6 +6,8 @@
 
 .tooltip {
 	position: absolute;
+	width: max-content;
+	max-width: 300px;
 	z-index: 10;
 	padding: 0.5rem 0.8rem;
 	border-radius: 4px;
@@ -38,6 +40,30 @@
 	&.right {
 		left: calc(100% + 10px);
 		top: 50%;
+		transform: translateY(-50%);
+	}
+
+	&.top-left {
+		bottom: calc(100% + 10px);
+		right: calc(100% + 10px);
+		transform: translateY(-50%);
+	}
+
+	&.top-right {
+		bottom: calc(100% + 10px);
+		left: calc(100% + 10px);
+		transform: translateY(-50%);
+	}
+
+	&.bottom-left {
+		top: calc(100% + 10px);
+		right: calc(100% + 10px);
+		transform: translateY(-50%);
+	}
+
+	&.bottom-right {
+		top: calc(100% + 10px);
+		left: calc(100% + 10px);
 		transform: translateY(-50%);
 	}
 
