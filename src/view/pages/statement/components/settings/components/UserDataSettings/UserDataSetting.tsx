@@ -21,7 +21,7 @@ const UserDataSetting: FC<Props> = ({ statement }) => {
 	const { t } = useUserConfig()
 	const dispatch = useDispatch()
 	const [showModal, setShowModal] = useState(false)	// Get user questions from Redux store filtered by statement ID
-	const userQuestions = useSelector(selectUserQuestionsByStatementId(statement.statementId));
+	const userQuestions: UserQuestion[] = useSelector(selectUserQuestionsByStatementId(statement.statementId));
 
 	function closeModal() {
 		setShowModal(false)
@@ -81,7 +81,8 @@ const UserDataSetting: FC<Props> = ({ statement }) => {
 
 		const questionToUpdate = userQuestions[questionIndex]
 		if (questionToUpdate && questionToUpdate.userQuestionId) {
-			const updatedOptions = questionToUpdate.options ? [...questionToUpdate.options, newOption.trim()] : [newOption.trim()]
+			const newOptionObj = { option: newOption.trim(), color: '' } // You can set a default color or leave it empty
+			const updatedOptions = questionToUpdate.options ? [...questionToUpdate.options, newOptionObj] : [newOptionObj]
 			const updatedQuestion: UserQuestion = {
 				...questionToUpdate,
 				options: updatedOptions
@@ -102,7 +103,7 @@ const UserDataSetting: FC<Props> = ({ statement }) => {
 			}
 			dispatch(setUserQuestion(updatedQuestion))
 		}
-		deleteUserDataOption(questionToUpdate, questionToUpdate.options[optionIndex]);
+		deleteUserDataOption(questionToUpdate, questionToUpdate.options[optionIndex].option);
 	}
 
 	return (

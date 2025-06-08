@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { listenToPolarizationIndex } from '@/controllers/db/polarizationIndex/getPolarizationIndex';
 import { selectPolarizationIndexByParentId } from '@/redux/userData/userDataSlice';
-import { polarizationIndex } from 'delib-npm';
 import { useSelector } from 'react-redux';
 import { useParams } from 'react-router';
 import styles from './PolarizationIndex.module.scss';
-import { generateRandomLightColor } from '@/controllers/general/helpers';
 import { Tooltip } from '../tooltip/Tooltip';
+import { PolarizationIndex } from 'delib-npm';
 
 interface Group {
 	option: string;
@@ -30,6 +29,7 @@ interface Point {
 	statement: string;
 	overallMAD: number;
 	overallMean: number;
+	overallN: number;
 	axes: Axis[];
 	color: string;
 	position: {
@@ -38,7 +38,7 @@ interface Point {
 	}
 }
 
-const PolarizationIndex = () => {
+const PolarizationIndexComp = () => {
 	const { statementId } = useParams();
 	const polarizationIndexes = useSelector(selectPolarizationIndexByParentId(statementId));
 
@@ -123,7 +123,7 @@ const PolarizationIndex = () => {
 	);
 }
 
-export default PolarizationIndex;
+export default PolarizationIndexComp;
 
 function calculatePosition(mad: number, mean: number, boardDimensions: { width: number; height: number }): { x: number; y: number } {
 	try {
@@ -147,7 +147,7 @@ function calculatePosition(mad: number, mean: number, boardDimensions: { width: 
 	}
 }
 
-function calculatePositions(points: polarizationIndex[], boardDimensions: { width: number; height: number }): Point[] {
+function calculatePositions(points: PolarizationIndex[], boardDimensions: { width: number; height: number }): Point[] {
 	try {
 
 		return points.map(point => {
@@ -184,8 +184,7 @@ function calculatePositions(points: polarizationIndex[], boardDimensions: { widt
 							position: calculatePosition(group.mad, group.mean, boardDimensions)
 						})),
 					})),
-					position,
-					color: generateRandomLightColor(statementId),
+					position
 				};
 			} catch (error) {
 				console.error("Error calculating point:", error);

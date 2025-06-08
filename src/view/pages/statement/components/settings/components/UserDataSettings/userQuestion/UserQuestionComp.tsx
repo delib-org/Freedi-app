@@ -4,7 +4,7 @@ import DeleteIcon from '@/assets/icons/delete.svg?react';
 import PlusIcon from '@/assets/icons/plusIcon.svg?react';
 import Input from '@/view/components/input/Input';
 import styles from './UserQuestionComp.module.scss';
-import { UserQuestion, UserQuestionType } from 'delib-npm';
+import { DemographicOption, UserQuestion, UserQuestionType } from 'delib-npm';
 
 interface Props {
 	userQuestions: UserQuestion;
@@ -145,7 +145,7 @@ const UserQuestionComp = ({ userQuestions, questionIndex, onAddOption, onDeleteO
 			)}
 			{userQuestions.type === UserQuestionType.checkbox && (
 				<div>
-					{userQuestions.options?.map((option, index) => (
+					{userQuestions.options?.map((option: DemographicOption, index: number) => (
 						<div key={`check-${index}`} className={styles.optionItem}>
 							<DeleteIcon
 								className={styles.deleteIcon}
@@ -155,7 +155,7 @@ const UserQuestionComp = ({ userQuestions, questionIndex, onAddOption, onDeleteO
 							<input
 								type="color"
 								name={`user-question-${questionIndex}-${index}`}
-								value={option}
+								defaultValue={option.color}
 							/>
 						</div>
 					))}
@@ -163,7 +163,7 @@ const UserQuestionComp = ({ userQuestions, questionIndex, onAddOption, onDeleteO
 			)}
 			{userQuestions.type === UserQuestionType.radio && (
 				<div>
-					{userQuestions.options?.map((option, index) => (
+					{userQuestions.options?.map((option: DemographicOption, index: number) => (
 						<div key={index} className={styles.optionItem}>
 							<DeleteIcon
 								className={styles.deleteIcon}
@@ -173,7 +173,7 @@ const UserQuestionComp = ({ userQuestions, questionIndex, onAddOption, onDeleteO
 							<input
 								type="color"
 								name={`user-question-${questionIndex}-${index}`}
-								value={option}
+								defaultValue={option.color}
 							/>
 						</div>
 					))}
