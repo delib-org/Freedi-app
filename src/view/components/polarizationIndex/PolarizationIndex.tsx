@@ -7,7 +7,6 @@ import styles from './PolarizationIndex.module.scss';
 import { Tooltip } from '../tooltip/Tooltip';
 import { PolarizationIndex, UserQuestion } from 'delib-npm';
 import { listenToUserQuestions } from '@/controllers/db/userData/getUserData';
-import { current } from '@reduxjs/toolkit';
 
 interface Group {
 	option: {
