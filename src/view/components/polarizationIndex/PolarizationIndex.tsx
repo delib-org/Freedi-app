@@ -16,7 +16,7 @@ interface Group {
 	mean: number;
 	n: number;
 	mad: number;
-	position: {
+	position?: {
 		x: number;
 		y: number;
 	}
@@ -36,7 +36,7 @@ interface Point {
 	overallN: number;
 	axes: Axis[];
 	color: string;
-	position: {
+	position?: {
 		x: number;
 		y: number;
 	}
@@ -113,15 +113,15 @@ const PolarizationIndexComp = () => {
 							<>
 								{axis.groups.map((group: Group, i: number) => (
 									<div
-										key={group.option + i}
+										key={group.option.option + i}
 										className={styles.axisGroup}
 										style={{
 											left: showGroups === point.statementId ? group.position.x + 'px' : point.position.x + 10 + 'px',
 											top: showGroups === point.statementId ? group.position.y + 'px' : point.position.y + 10 + 'px',
 											opacity: showGroups === point.statementId ? 1 : 0
 										}}>
-										<Tooltip content={`${group.option} MAD: ${group.mad.toFixed(2)}, Mean: ${group.mean.toFixed(2)}, N: ${group.n}`} position="top">
-											<div className={styles.axisGroupPoint} style={{ backgroundColor: group.color }} />
+										<Tooltip content={`${group.option.option} MAD: ${group.mad.toFixed(2)}, Mean: ${group.mean.toFixed(2)}, N: ${group.n}`} position="top">
+											<div className={styles.axisGroupPoint} style={{ backgroundColor: group.option.color }} />
 										</Tooltip>
 									</div>
 								))}
@@ -190,17 +190,17 @@ function calculatePositions(points: PolarizationIndex[], boardDimensions: { widt
 						groupsMAD: axis.groupsMAD,
 						groups: axis.groups.map((group: Group) => {
 							const { options } = userQuestions.find(q => q.userQuestionId === axis.axId) || { options: [] };
-							console.log("options", options, "group.option", group.option.option, axis.axId);
 							const color = options.find(opt => opt.option === group.option.option)?.color || 'red'; // Default to red if no color is found
-							console.log("Group color:", color);
 
 							return {
-								option: group.option.option,
+								option: {
+									option: group.option.option,
+									color: color, // Use the color from user questions or default to red
+								},
 								mean: group.mean,
 								n: group.n,
 								mad: group.mad,
 								position: calculatePosition(group.mad, group.mean, boardDimensions),
-								color: color, // Use the color from user questions or default to red
 							};
 						}),
 					})),
