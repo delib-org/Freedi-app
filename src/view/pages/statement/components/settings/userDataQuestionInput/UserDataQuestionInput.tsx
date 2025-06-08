@@ -1,5 +1,5 @@
 import { UserQuestion, UserQuestionType } from "delib-npm";
-import { ChangeEvent, FC, useEffect, useState } from "react";
+import { FC, useEffect, useState } from "react";
 import styles from './UserDataQuestionInput.module.scss';
 
 interface UserQuestionInputProps {
@@ -51,25 +51,9 @@ const UserQuestionInput: FC<UserQuestionInputProps> = ({
 		return true;
 	};
 
-	const handleTextChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-		const newValue = e.target.value;
-		validateInput(newValue);
-		onChange(newValue);
-	};
-
 	const handleRadioChange = (selectedValue: string) => {
 		validateInput(selectedValue);
 		onChange(selectedValue);
-	};
-
-	const handleCheckboxChange = (optionValue: string) => {
-		const currentValues = Array.isArray(value) ? value : [];
-		const newValues = currentValues.includes(optionValue)
-			? currentValues.filter(v => v !== optionValue)
-			: [...currentValues, optionValue];
-
-		validateInput(newValues);
-		onChange(newValues);
 	};
 
 	// Validate on mount and when value/required changes
@@ -81,37 +65,6 @@ const UserQuestionInput: FC<UserQuestionInputProps> = ({
 
 	const renderInput = () => {
 		switch (question.type) {
-			case UserQuestionType.text:
-				return (
-					<div className={styles.inputContainer}>
-						<input
-							type="text"
-							defaultValue={value as string}
-							onChange={handleTextChange}
-							placeholder="Write your location here..."
-							className={`${styles.textInput} ${validationError ? styles.inputError : ''}`}
-							required={required}
-							aria-invalid={!!validationError}
-							aria-describedby={validationError ? `${question.userQuestionId}-error` : undefined}
-						/>
-					</div>
-				);
-
-			case UserQuestionType.textarea:
-				return (
-					<div className={styles.inputContainer}>
-						<textarea
-							defaultValue={value as string}
-							onChange={handleTextChange}
-							placeholder="Express your viewpoint..."
-							rows={4}
-							className={`${styles.textareaInput} ${validationError ? styles.inputError : ''}`}
-							required={required}
-							aria-invalid={!!validationError}
-							aria-describedby={validationError ? `${question.userQuestionId}-error` : undefined}
-						/>
-					</div>
-				);
 
 			case UserQuestionType.radio:
 				return (
@@ -121,37 +74,15 @@ const UserQuestionInput: FC<UserQuestionInputProps> = ({
 								<input
 									type="radio"
 									name={`radio-${question.userQuestionId}`}
-									value={option}
-									defaultChecked={value === option}
-									onChange={() => handleRadioChange(option)}
+									value={option.option}
+									defaultChecked={value === option.option}
+									onChange={() => handleRadioChange(option.option)}
 									className={styles.radioInput}
 									required={required}
 								/>
-								<span className={styles.optionText}>{option}</span>
+								<span className={styles.optionText}>{option.option}</span>
 							</label>
 						))}
-					</div>
-				);
-
-			case UserQuestionType.checkbox:
-				return (
-					<div className={styles.optionsContainer}>
-						{question.options?.map((option, index) => {
-							const currentValues = Array.isArray(value) ? value : [];
-
-							return (
-								<label key={index} className={styles.optionLabel}>
-									<input
-										type="checkbox"
-										defaultChecked={currentValues.includes(option)}
-										onChange={() => handleCheckboxChange(option)}
-										className={styles.checkboxInput}
-										aria-describedby={validationError ? `${question.userQuestionId}-error` : undefined}
-									/>
-									<span className={styles.optionText}>{option}</span>
-								</label>
-							);
-						})}
 					</div>
 				);
 

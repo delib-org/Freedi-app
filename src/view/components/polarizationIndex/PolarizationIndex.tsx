@@ -1,14 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { listenToPolarizationIndex } from '@/controllers/db/polarizationIndex/getPolarizationIndex';
-import { selectPolarizationIndexByParentId } from '@/redux/userData/userDataSlice';
+import { selectPolarizationIndexByParentId, selectUserQuestionsByStatementId } from '@/redux/userData/userDataSlice';
 import { useSelector } from 'react-redux';
 import { useParams } from 'react-router';
 import styles from './PolarizationIndex.module.scss';
 import { Tooltip } from '../tooltip/Tooltip';
-import { PolarizationIndex } from 'delib-npm';
+import { PolarizationIndex, UserQuestion } from 'delib-npm';
+import { listenToUserQuestions } from '@/controllers/db/userData/getUserData';
 
 interface Group {
-	option: string;
+	option: {
+		option: string;
+		color?: string; // Optional color property for group options
+	};
 	mean: number;
 	n: number;
 	mad: number;
@@ -41,23 +45,30 @@ interface Point {
 const PolarizationIndexComp = () => {
 	const { statementId } = useParams();
 	const polarizationIndexes = useSelector(selectPolarizationIndexByParentId(statementId));
+	const userQuestions: UserQuestion[] = useSelector(selectUserQuestionsByStatementId(statementId));
 
 	const [boardDimensions, setBoardDimensions] = useState({ width: 0, height: 0 });
 	const [showGroups, setShowGroups] = useState<string | null>(null);
-	const points = calculatePositions(polarizationIndexes, boardDimensions);
+	const points = calculatePositions(polarizationIndexes, boardDimensions, userQuestions);
+	console.log(points)
 
 	//calculate points on the screen
 	useEffect(() => {
 
 		let unsubscribe: () => void;
+		let userDataQuestionsUnsubscribe: () => void;
 
 		if (statementId) {
 			unsubscribe = listenToPolarizationIndex(statementId);
+			userDataQuestionsUnsubscribe = listenToUserQuestions(statementId);
 		}
 
 		return () => {
 			if (unsubscribe) {
 				unsubscribe();
+			}
+			if (userDataQuestionsUnsubscribe) {
+				userDataQuestionsUnsubscribe();
 			}
 		};
 	}, [statementId]);
@@ -100,9 +111,9 @@ const PolarizationIndexComp = () => {
 					<>
 						{point.axes.map((axis: Axis) => (
 							<>
-								{axis.groups.map((group) => (
+								{axis.groups.map((group: Group, i: number) => (
 									<div
-										key={group.option}
+										key={group.option + i}
 										className={styles.axisGroup}
 										style={{
 											left: showGroups === point.statementId ? group.position.x + 'px' : point.position.x + 10 + 'px',
@@ -110,7 +121,7 @@ const PolarizationIndexComp = () => {
 											opacity: showGroups === point.statementId ? 1 : 0
 										}}>
 										<Tooltip content={`${group.option} MAD: ${group.mad.toFixed(2)}, Mean: ${group.mean.toFixed(2)}, N: ${group.n}`} position="top">
-											<div className={styles.axisGroupPoint} style={{ backgroundColor: "red" }} />
+											<div className={styles.axisGroupPoint} style={{ backgroundColor: group.color }} />
 										</Tooltip>
 									</div>
 								))}
@@ -147,7 +158,7 @@ function calculatePosition(mad: number, mean: number, boardDimensions: { width: 
 	}
 }
 
-function calculatePositions(points: PolarizationIndex[], boardDimensions: { width: number; height: number }): Point[] {
+function calculatePositions(points: PolarizationIndex[], boardDimensions: { width: number; height: number }, userQuestions: UserQuestion[]): Point[] {
 	try {
 
 		return points.map(point => {
@@ -171,20 +182,29 @@ function calculatePositions(points: PolarizationIndex[], boardDimensions: { widt
 					overallMAD,
 					overallMean,
 					overallN,
+					position,
 					color: color,
 					axes: axes.map(axis => ({
 						questionId: axis.axId,
 						question: axis.question,
 						groupsMAD: axis.groupsMAD,
-						groups: axis.groups.map(group => ({
-							option: group.option,
-							mean: group.mean,
-							n: group.n,
-							mad: group.mad,
-							position: calculatePosition(group.mad, group.mean, boardDimensions)
-						})),
+						groups: axis.groups.map((group: Group) => {
+							const { options } = userQuestions.find(q => q.userQuestionId === axis.axId) || { options: [] };
+							console.log("options", options, "group.option", group.option.option, axis.axId);
+							const color = options.find(opt => opt.option === group.option.option)?.color || 'red'; // Default to red if no color is found
+							console.log("Group color:", color);
+
+							return {
+								option: group.option.option,
+								mean: group.mean,
+								n: group.n,
+								mad: group.mad,
+								position: calculatePosition(group.mad, group.mean, boardDimensions),
+								color: color, // Use the color from user questions or default to red
+							};
+						}),
 					})),
-					position
+
 				};
 			} catch (error) {
 				console.error("Error calculating point:", error);
