@@ -35,7 +35,7 @@ export async function updateUserDemographicEvaluation(statement: Statement, user
 		const demographicSettings = await db.collection(Collections.userDataQuestions).where('statementId', '==', statement.parentId).limit(1).get();
 		if (demographicSettings.empty) return;
 
-		const { usersDemographicData, usersDemographicEvaluations } = await getUserDemographicData(userId, parentId, evaluation);
+		const { usersDemographicData, usersDemographicEvaluations } = await getUserDemographicData(userId, parentId, evaluation, statement);
 
 		if (!usersDemographicEvaluations || usersDemographicEvaluations.length === 0) {
 			console.info(`No demographic evaluation found for user ${userId} on statement ${parentId} - skipping evaluation update`);
@@ -115,57 +115,112 @@ export async function updateUserDemographicEvaluation(statement: Statement, user
 	}
 
 	//get user demographic data
-	async function getUserDemographicData(userId: string, parentId: string, evaluation: number): Promise<{ usersDemographicData: UserQuestion[], usersDemographicEvaluations: UserDemographicEvaluation[] | null }> {
+	// Improved version with better separation of concerns and readability
+
+	interface DemographicResult {
+		usersDemographicData: UserQuestion[];
+		usersDemographicEvaluations: UserDemographicEvaluation[] | null;
+	}
+
+	async function getUserDemographicData(
+		userId: string,
+		parentId: string,
+		evaluation: number,
+		statement: Statement // Added this parameter since it was used but not defined
+	): Promise<DemographicResult> {
 		try {
+			// Fetch user's demographic data
+			const demographicData = await fetchUserDemographicData(userId, parentId);
+			if (demographicData.length === 0) {
+				console.info(`No demographic data found for user ${userId} on statement ${parentId}`);
 
-			const userDemographicEvaluationRef = db.collection(Collections.userDemographicEvaluations).doc(`${statement.statementId}--${userId}`);
-
-			const userDemographicDataDB = await db.collection(Collections.usersData).where('userId', '==', userId).where('statementId', '==', parentId).get();
-			if (userDemographicDataDB.empty) {
-				console.info(`No demographic data found for user ${userId} on statement ${parentId} - skipping evaluation update`);
-
-				return { usersDemographicData: [], usersDemographicEvaluations: [] };
+				return createEmptyResult();
 			}
 
-			const userDemographicsData = userDemographicDataDB.docs.map(doc => doc.data() as UserQuestion);
+			// Save user's evaluation with demographic info
+			await saveUserDemographicEvaluation(userId, statement, evaluation, demographicData);
 
-			const userDemographicEvaluation: UserDemographicEvaluation = {
-				userId,
-				statementId: statement.statementId,
-				parentId: statement.parentId,
-				evaluation: evaluation || 0,
-				demographic: userDemographicsData
-					.filter(demographic => demographic.answer && demographic.userQuestionId)
-					.map(demographic => ({
-						question: demographic.question,
-						answer: demographic.answer!,
-						userQuestionId: demographic.userQuestionId!
-					}))
+			// Get all evaluations for this statement
+			const allEvaluations = await fetchAllDemographicEvaluations(statement.statementId, parentId);
+			if (allEvaluations.length === 0) {
+				console.info(`No demographic evaluations found for statement ${statement.statementId}`);
+
+				return { usersDemographicData: demographicData, usersDemographicEvaluations: [] };
+			}
+
+			return {
+				usersDemographicData: demographicData,
+				usersDemographicEvaluations: allEvaluations
 			};
 
-			await userDemographicEvaluationRef.set(userDemographicEvaluation, { merge: true });
-
-			//get all user demographic evaluations for this statement
-
-			const usersDemographicEvaluationsDB = await db.collection(Collections.userDemographicEvaluations).where('statementId', '==', statement.statementId).where("parentId", "==", parentId).get()
-
-			if (usersDemographicEvaluationsDB.empty) {
-				console.info(`No demographic evaluations found for user ${userId} on statement ${parentId} - skipping evaluation update`);
-
-				return { usersDemographicData: [], usersDemographicEvaluations: [] };
-			}
-
-			const usersDemographicEvaluations = usersDemographicEvaluationsDB.docs.map(doc => doc.data() as UserDemographicEvaluation);
-
-			// Save to user demographicEvaluation collection
-
-			return { usersDemographicData: userDemographicsData, usersDemographicEvaluations: usersDemographicEvaluations };
-
 		} catch (error) {
-			logger.error('Error getting user demographic data:', error);
+			logger.error('Error in getUserDemographicData:', error);
 
-			return { usersDemographicData: [], usersDemographicEvaluations: [] };
+			return createEmptyResult();
 		}
+	}
+
+	// Helper functions for better separation of concerns
+
+	async function fetchUserDemographicData(userId: string, parentId: string): Promise<UserQuestion[]> {
+		const snapshot = await db
+			.collection(Collections.usersData)
+			.where('userId', '==', userId)
+			.where('statementId', '==', parentId)
+			.get();
+
+		return snapshot.empty ? [] : snapshot.docs.map(doc => doc.data() as UserQuestion);
+	}
+
+	async function saveUserDemographicEvaluation(
+		userId: string,
+		statement: Statement,
+		evaluation: number,
+		demographicData: UserQuestion[]
+	): Promise<void> {
+		const evaluationRef = db
+			.collection(Collections.userDemographicEvaluations)
+			.doc(`${statement.statementId}--${userId}`);
+
+		const evaluationData: UserDemographicEvaluation = {
+			userId,
+			statementId: statement.statementId,
+			parentId: statement.parentId,
+			evaluation: evaluation || 0,
+			demographic: buildDemographicSummary(demographicData)
+		};
+
+		await evaluationRef.set(evaluationData, { merge: true });
+	}
+
+	async function fetchAllDemographicEvaluations(
+		statementId: string,
+		parentId: string
+	): Promise<UserDemographicEvaluation[]> {
+		const snapshot = await db
+			.collection(Collections.userDemographicEvaluations)
+			.where('statementId', '==', statementId)
+			.where('parentId', '==', parentId)
+			.get();
+
+		return snapshot.empty ? [] : snapshot.docs.map(doc => doc.data() as UserDemographicEvaluation);
+	}
+
+	function buildDemographicSummary(demographicData: UserQuestion[]) {
+		return demographicData
+			.filter(item => item.answer && item.userQuestionId)
+			.map(item => ({
+				question: item.question,
+				answer: item.answer!,
+				userQuestionId: item.userQuestionId!
+			}));
+	}
+
+	function createEmptyResult(): DemographicResult {
+		return {
+			usersDemographicData: [],
+			usersDemographicEvaluations: []
+		};
 	}
 
 }
