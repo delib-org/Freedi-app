@@ -80,6 +80,7 @@ const UserDataSetting: FC<Props> = ({ statement }) => {
 		if (!newOption.trim()) return
 
 		const questionToUpdate = userQuestions[questionIndex]
+
 		if (questionToUpdate && questionToUpdate.userQuestionId) {
 			const newOptionObj = { option: newOption.trim(), color: '' } // You can set a default color or leave it empty
 			const updatedOptions = questionToUpdate.options ? [...questionToUpdate.options, newOptionObj] : [newOptionObj]
@@ -88,9 +89,9 @@ const UserDataSetting: FC<Props> = ({ statement }) => {
 				options: updatedOptions
 			}
 			dispatch(setUserQuestion(updatedQuestion))
+			setUserDataOption(questionToUpdate, newOptionObj);
 		}
 
-		setUserDataOption(questionToUpdate, newOption.trim());
 	}
 
 	const handleDeleteOption = (questionIndex: number, optionIndex: number) => {
@@ -137,9 +138,6 @@ const UserDataSetting: FC<Props> = ({ statement }) => {
 									name="questionType"
 									defaultValue={UserQuestionType.text}
 								>
-									<option value={UserQuestionType.text}>{t('Text Input')}</option>
-									<option value={UserQuestionType.textarea}>{t('Text Area')}</option>
-									<option value={UserQuestionType.checkbox}>{t('Multiple Choice (Checkbox)')}</option>
 									<option value={UserQuestionType.radio}>{t('Single Choice (Radio)')}</option>
 								</select>
 							</div>

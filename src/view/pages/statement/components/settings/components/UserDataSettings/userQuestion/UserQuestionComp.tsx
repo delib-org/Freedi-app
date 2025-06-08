@@ -5,6 +5,9 @@ import PlusIcon from '@/assets/icons/plusIcon.svg?react';
 import Input from '@/view/components/input/Input';
 import styles from './UserQuestionComp.module.scss';
 import { DemographicOption, UserQuestion, UserQuestionType } from 'delib-npm';
+import { setDemographicOptionColor } from '@/controllers/db/userData/setUserData';
+import { useDispatch } from 'react-redux';
+import { updateUserQuestionOptionColor } from '@/redux/userData/userDataSlice';
 
 interface Props {
 	userQuestions: UserQuestion;
@@ -17,6 +20,7 @@ interface Props {
 
 const UserQuestionComp = ({ userQuestions, questionIndex, onAddOption, onDeleteOption, onDeleteQuestion, onUpdateQuestion }: Props) => {
 	const { t } = useUserConfig();
+	const dispatch = useDispatch();
 	const [newOptionText, setNewOptionText] = useState('');
 	const [isEditingQuestion, setIsEditingQuestion] = useState(false);
 	const [editedQuestionText, setEditedQuestionText] = useState(userQuestions.question);
@@ -71,6 +75,17 @@ const UserQuestionComp = ({ userQuestions, questionIndex, onAddOption, onDeleteO
 		}
 	};
 
+	function handleChangeOptionColor(optionIndex: number, color: string) {
+
+		dispatch(updateUserQuestionOptionColor({ userQuestionId: userQuestions.userQuestionId, option: userQuestions.options[optionIndex].option, color: color }));
+
+		setDemographicOptionColor(userQuestions, {
+			option: userQuestions.options[optionIndex].option,
+			color: color
+		});
+
+	}
+
 	return (
 		<div className={styles.userQuestion}>
 			<div className={styles.questionHeader}>
@@ -111,9 +126,6 @@ const UserQuestionComp = ({ userQuestions, questionIndex, onAddOption, onDeleteO
 									onChange={(e) => handleTypeChange(e.target.value as UserQuestionType)}
 									className={styles.typeSelect}
 								>
-									<option value={UserQuestionType.text}>{t('Text')}</option>
-									<option value={UserQuestionType.textarea}>{t('Textarea')}</option>
-									<option value={UserQuestionType.checkbox}>{t('Checkbox')}</option>
 									<option value={UserQuestionType.radio}>{t('Radio')}</option>
 								</select>
 							</div>
@@ -128,52 +140,23 @@ const UserQuestionComp = ({ userQuestions, questionIndex, onAddOption, onDeleteO
 			</div>
 
 			{/* Question Preview */}
-			{userQuestions.type === UserQuestionType.text && (
-				<input
-					type="text"
-					placeholder="Your answer"
-					className={styles.textInput}
-					disabled
-				/>
-			)}
-			{userQuestions.type === UserQuestionType.textarea && (
-				<textarea
-					placeholder="Your answer"
-					className={styles.textareaInput}
-					disabled
-				/>
-			)}
-			{userQuestions.type === UserQuestionType.checkbox && (
-				<div>
-					{userQuestions.options?.map((option: DemographicOption, index: number) => (
-						<div key={`check-${index}`} className={styles.optionItem}>
-							<DeleteIcon
-								className={styles.deleteIcon}
-								onClick={() => handleDeleteOption(index)}
-								title={t('Delete Option')}
-							/>
-							<input
-								type="color"
-								name={`user-question-${questionIndex}-${index}`}
-								defaultValue={option.color}
-							/>
-						</div>
-					))}
-				</div>
-			)}
+
 			{userQuestions.type === UserQuestionType.radio && (
 				<div>
 					{userQuestions.options?.map((option: DemographicOption, index: number) => (
 						<div key={index} className={styles.optionItem}>
+							{option.option}
+							<input
+								type="color"
+								name={`user-question-${questionIndex}-${index}`}
+								value={option.color}
+								onChange={(e) => handleChangeOptionColor(index, e.target.value)}
+								onBlur={(e) => handleChangeOptionColor(index, e.target.value)}
+							/>
 							<DeleteIcon
 								className={styles.deleteIcon}
 								onClick={() => handleDeleteOption(index)}
 								title={t('Delete Option')}
-							/>
-							<input
-								type="color"
-								name={`user-question-${questionIndex}-${index}`}
-								defaultValue={option.color}
 							/>
 						</div>
 					))}

@@ -28,6 +28,16 @@ const userDataSlice = createSlice({
 		setUserQuestions: (state, action: PayloadAction<UserQuestion[]>) => {
 			state.userQuestions = action.payload;
 		},
+		updateUserQuestionOptionColor: (state, action: PayloadAction<{ userQuestionId: string; option: string; color: string }>) => {
+			const { userQuestionId, option, color } = action.payload;
+			const question = state.userQuestions.find(q => q.userQuestionId === userQuestionId);
+			if (question) {
+				const optionToUpdate = question.options.find(opt => opt.option === option);
+				if (optionToUpdate) {
+					optionToUpdate.color = color;
+				}
+			}
+		},
 		setUserData: (state, action: PayloadAction<UserQuestion>) => {
 			state.userData = updateArray(state.userData, action.payload, 'userQuestionId');
 		},
@@ -50,7 +60,8 @@ export const {
 	setUserData,
 	deleteUserData,
 	setPolarizationIndexes,
-	deletePolarizationIndex
+	deletePolarizationIndex,
+	updateUserQuestionOptionColor
 } = userDataSlice.actions;
 
 // Selectors
