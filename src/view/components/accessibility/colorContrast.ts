@@ -48,6 +48,11 @@ export const colorMappings: ColorMappings = {
   "--btn-tertiary-blue": "--btn-tertiary-blue-contrast",
   "--btn-tertiary-red": "--btn-tertiary-red-contrast",
   "--add-btn": "--add-btn-contrast",
+  "--btn-disabled": "--btn-disabled-contrast",
+  "--btn-purple-default": "--btn-purple-default-contrast",
+  "--btn-purple-hover": "--btn-purple-hover-contrast",
+  "--btn-purple-disable": "--btn-purple-disable-contrast",
+  "--btn-purple-selected": "--btn-purple-selected-contrast",
 
   // accessibility buttons
   "--btn-accessibility-icons": "--btn-accessibility-icons-contrast",
@@ -57,6 +62,8 @@ export const colorMappings: ColorMappings = {
     "--btn-accessibility-light-contrast-text-contrast",
   "--btn-accessibility-light-contrast-icons":
     "--btn-accessibility-light-contrast-icons-contrast",
+  "--btn-accessibility-light-contrast-text-contrast":
+    "--btn-accessibility-light-contrast-text",
 
   // Card menu
   "--card-menu": "--card-menu-contrast",
@@ -73,10 +80,14 @@ export const colorMappings: ColorMappings = {
   "--emoji-thinking": "--emoji-thinking-contrast",
   "--emoji-sad": "--emoji-sad-contrast",
 
+  // group
+  "--group": "--group-contrast",
+
   // Headers
   "--question-header": "--question-header-contrast",
   "--header-bg-color": "--header-bg-color-contrast",
   "--header-question": "--header-question-contrast",
+  "--header-group": "--header-group-contrast",
   "--header-option-chosen": "--header-option-chosen-contrast",
   "--header-option-non-chosen": "--header-option-non-chosen-contrast",
   "--header-home": "--header-home-contrast",
@@ -117,6 +128,9 @@ export const colorMappings: ColorMappings = {
   "--step-top-rank-active": "--step-top-rank-active-contrast",
   "--step-joined-members-active": "--step-joined-members-active-contrast",
   "--step-summary-active": "--step-summary-active-contrast",
+
+  // Question
+  "--question": "--question-contrast",
 
   // Settings
   "--member-chip": "--member-chip-contrast",

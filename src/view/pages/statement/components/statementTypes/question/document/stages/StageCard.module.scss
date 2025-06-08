@@ -47,7 +47,7 @@ $bottomCard: 1.5rem;
 
 	.suggestions {
 		background-color: #e8edf5;
-		border-inline-start: 4px solid #76c0b3;
+		border-inline-start: 4px solid (--header-chosen);
 
 		&:nth-child(even) {
 			background-color: transparent;

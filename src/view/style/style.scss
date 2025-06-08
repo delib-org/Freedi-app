@@ -32,12 +32,16 @@
 	--result-text: white;
 
 	//question
-	--question: #1093fd;
+	--question: #47B4EF;
 	--question-text: white;
+
+	--question-contrast: ##1093FD;
 
 	//group
 	--group: #b893e7;
 	--group-text: white;
+
+	--group-contrast: #A080E0;
 
 	//evaluation
 	--agree: #57c6b2;
@@ -142,6 +146,17 @@
 	--btn-secondary-selected-border-contrast: #0544d7;
 	--btn-secondary-selected-fill-contrast: #e5edff;
 	--btn-secondary-disabled-contrast: #424e6c;
+
+	--btn-purple-default: #A879E1;
+	--btn-purple-hover: ##B893E7;
+	--btn-purple-selected: #823FD4;
+	--btn-purple-disable: #DCC9F3;
+
+	--btn-purple-default-contrast: ##8A62D8;
+	--btn-purple-hover-contrast: ##A080E0;
+	--btn-purple-selected-contrast: #6432C8;
+	--btn-purple-disable-contrast: #D1C2F0;
+
 
 	--btn-white-default-contrast: #ffffff;
 	--btn-white-hover-contrast: #a9e0fe;
