@@ -152,10 +152,11 @@ const UserQuestionComp = ({ userQuestions, questionIndex, onAddOption, onDeleteO
 								onClick={() => handleDeleteOption(index)}
 								title={t('Delete Option')}
 							/>
-							<label>
-								<input type="checkbox" value={option} disabled />
-								{option}
-							</label>
+							<input
+								type="color"
+								name={`user-question-${questionIndex}-${index}`}
+								value={option}
+							/>
 						</div>
 					))}
 				</div>
@@ -169,10 +170,11 @@ const UserQuestionComp = ({ userQuestions, questionIndex, onAddOption, onDeleteO
 								onClick={() => handleDeleteOption(index)}
 								title={t('Delete Option')}
 							/>
-							<label>
-								<input type="radio" name={`user-question-${questionIndex}`} value={option} disabled />
-								{option}
-							</label>
+							<input
+								type="color"
+								name={`user-question-${questionIndex}-${index}`}
+								value={option}
+							/>
 						</div>
 					))}
 				</div>

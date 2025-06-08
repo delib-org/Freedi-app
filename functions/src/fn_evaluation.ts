@@ -23,7 +23,6 @@ import {
 
 import { number, parse } from 'valibot';
 import { getRandomColor } from './helpers';
-import { stat } from 'fs';
 
 // import { getRandomColor } from './helpers';
 // import { user } from 'firebase-functions/v1/auth';
@@ -276,6 +275,7 @@ async function updateUserDemographicEvaluation(statement: Statement, userEvalDat
 	try {
 		const { userId, evaluation } = userEvalData;
 		const parentId = statement.parentId;
+		console.log('updateUserDemographicEvaluation', userId, parentId, evaluation);
 
 		if (!userId || !parentId) {
 			console.info('User ID or parent ID is missing - skipping demographic evaluation update');

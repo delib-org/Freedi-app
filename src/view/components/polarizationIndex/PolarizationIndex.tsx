@@ -1,8 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { listenToPolarizationIndex } from '@/controllers/db/polarizationIndex/getPolarizationIndex';
 import { selectPolarizationIndexByParentId } from '@/redux/userData/userDataSlice';
 import { polarizationIndex } from 'delib-npm';
-import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useParams } from 'react-router';
 import styles from './PolarizationIndex.module.scss';
@@ -48,11 +47,6 @@ const PolarizationIndex = () => {
 	const points = calculatePositions(polarizationIndexes, boardDimensions);
 
 	//calculate points on the screen
-
-	points.forEach((point: Point) => {
-		console.log(point);
-	});
-
 	useEffect(() => {
 
 		let unsubscribe: () => void;
@@ -97,7 +91,7 @@ const PolarizationIndex = () => {
 				{points.map((point: Point) => (
 					<div className={styles.pointDiv} key={point.statementId} style={{ left: point.position.x + 'px', top: point.position.y + 'px' }}>
 						<Tooltip content={`${point.statement} MAD: ${point.overallMAD.toFixed(2)}, Mean: ${point.overallMean.toFixed(2)}, N: ${point.overallN}`} position="top">
-							<div onClick={() => handleShowGroups(point.statementId)} className={styles.point} style={{ backgroundColor: point.color }} />
+							<div onClick={() => handleShowGroups(point.statementId)} className={styles.point} style={{ backgroundColor: "blue" }} />
 						</Tooltip>
 
 					</div>
@@ -115,8 +109,8 @@ const PolarizationIndex = () => {
 											top: showGroups === point.statementId ? group.position.y + 'px' : point.position.y + 10 + 'px',
 											opacity: showGroups === point.statementId ? 1 : 0
 										}}>
-										<Tooltip content={`${point.statement}, ${group.option} MAD: ${group.mad.toFixed(2)}, Mean: ${group.mean.toFixed(2)}, N: ${group.n}`} position="top">
-											<div className={styles.axisGroupPoint} style={{ backgroundColor: point.color }} />
+										<Tooltip content={`${group.option} MAD: ${group.mad.toFixed(2)}, Mean: ${group.mean.toFixed(2)}, N: ${group.n}`} position="top">
+											<div className={styles.axisGroupPoint} style={{ backgroundColor: "red" }} />
 										</Tooltip>
 									</div>
 								))}
