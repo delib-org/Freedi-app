@@ -5,7 +5,7 @@
 	margin: 3rem auto;
 	clip-path: ellipse(50% 100% at 50% 100%);
 	background: #57c760;
-	background: linear-gradient(0deg, rgba(87, 199, 96, 1) 0%, rgba(87, 199, 133, 1) 11%, rgba(237, 83, 86, 1) 86%, rgba(255, 0, 4, 1) 99%);
+	background: linear-gradient(0deg, var(--approve), rgb(240, 240, 102), var(--reject) 99%);
 
 	.pointDiv {
 		position: absolute;
@@ -24,6 +24,7 @@
 		background-color: red;
 		border-radius: 50%;
 		cursor: pointer;
+		transition: all 0.3s ease-in-out;
 	}
 
 	.axisGroup {

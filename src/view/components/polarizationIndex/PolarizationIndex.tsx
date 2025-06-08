@@ -7,6 +7,7 @@ import styles from './PolarizationIndex.module.scss';
 import { Tooltip } from '../tooltip/Tooltip';
 import { PolarizationIndex, UserQuestion } from 'delib-npm';
 import { listenToUserQuestions } from '@/controllers/db/userData/getUserData';
+import { current } from '@reduxjs/toolkit';
 
 interface Group {
 	option: {
@@ -49,6 +50,7 @@ const PolarizationIndexComp = () => {
 
 	const [boardDimensions, setBoardDimensions] = useState({ width: 0, height: 0 });
 	const [showGroups, setShowGroups] = useState<string | null>(null);
+	const [currentStatementId, setCurrentStatementId] = useState<string | null>(null);
 	const points = calculatePositions(polarizationIndexes, boardDimensions, userQuestions);
 
 	//calculate points on the screen
@@ -93,6 +95,7 @@ const PolarizationIndexComp = () => {
 
 	function handleShowGroups(statementId: string) {
 		setShowGroups(statementId);
+		setCurrentStatementId(statementId);
 	}
 
 	function tooltipPosition(mad: number, mean: number): "top" | "bottom" | "left" | "right" | "top-left" | "top-right" | "bottom-left" | "bottom-right" {
@@ -104,7 +107,7 @@ const PolarizationIndexComp = () => {
 			}
 
 			return "top";
-		} else if (mad > 0.5) {
+		} else if (mad >= 0.5) {
 			if (mean <= 0) {
 				return "bottom-right";
 			} else if (mean > 0) {
@@ -122,7 +125,10 @@ const PolarizationIndexComp = () => {
 				{points.map((point: Point) => (
 					<div className={styles.pointDiv} key={point.statementId} style={{ left: point.position.x + 'px', top: point.position.y + 'px' }}>
 						<Tooltip content={`${point.statement} MAD: ${point.overallMAD.toFixed(2)}, Mean: ${point.overallMean.toFixed(2)}, N: ${point.overallN}`} position={tooltipPosition(point.overallMAD, point.overallMean)}>
-							<div onClick={() => handleShowGroups(point.statementId)} className={styles.point} style={{ backgroundColor: "blue" }} />
+							<div
+								onClick={() => handleShowGroups(point.statementId)}
+								className={styles.point}
+								style={{ backgroundColor: currentStatementId === point.statementId ? "blue" : "teal", transform: currentStatementId === point.statementId ? "scale(1.2)" : "scale(1)" }} />
 						</Tooltip>
 
 					</div>
