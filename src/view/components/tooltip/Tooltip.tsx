@@ -4,7 +4,7 @@ import styles from './Tooltip.module.scss';
 interface TooltipProps {
 	content: string;
 	children: ReactNode;
-	position?: 'top' | 'bottom' | 'left' | 'right';
+	position?: 'top' | 'bottom' | 'left' | 'right' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
 }
 
 export const Tooltip: FC<TooltipProps> = ({

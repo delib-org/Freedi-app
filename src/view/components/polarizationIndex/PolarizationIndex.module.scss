@@ -1,9 +1,20 @@
 .board {
 	width: 90vw;
 	height: 70vh;
-	border: 1px solid #eeaaaa;
 	position: relative;
 	margin: 3rem auto;
+
+	&-inner {
+		width: 100%;
+		height: 100%;
+		position: absolute;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		clip-path: ellipse(50% 100% at 50% 100%);
+		background: #57c760;
+		background: linear-gradient(0deg, var(--approve), rgb(240, 240, 102), var(--reject) 99%);
+	}
 
 	.pointDiv {
 		position: absolute;
@@ -17,17 +28,15 @@
 	}
 
 	.point {
-		width: 20px;
-		height: 20px;
+		width: 30px;
+		height: 30px;
 		background-color: red;
 		border-radius: 50%;
-
-
 		cursor: pointer;
+		transition: all 0.3s ease-in-out;
 	}
 
 	.axisGroup {
-
 		width: 15px;
 		height: 15px;
 		border-radius: 50%;
@@ -39,15 +48,15 @@
 		transition: opacity 1ms ease-in-out, all 1200ms ease-in-out;
 
 		.axisGroupPoint {
-			width: 10px;
-			height: 10px;
+			width: 20px;
+			height: 20px;
 			border-radius: 50%;
 			background-color: blue;
 			position: absolute;
 			transform: translate(-50%, -50%);
 			top: 50%;
 			left: 50%;
-
+			border: 1px solid black;
 		}
 	}
 }

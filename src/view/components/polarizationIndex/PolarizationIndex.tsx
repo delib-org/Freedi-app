@@ -49,8 +49,8 @@ const PolarizationIndexComp = () => {
 
 	const [boardDimensions, setBoardDimensions] = useState({ width: 0, height: 0 });
 	const [showGroups, setShowGroups] = useState<string | null>(null);
+	const [currentStatementId, setCurrentStatementId] = useState<string | null>(null);
 	const points = calculatePositions(polarizationIndexes, boardDimensions, userQuestions);
-	console.log(points)
 
 	//calculate points on the screen
 	useEffect(() => {
@@ -94,15 +94,41 @@ const PolarizationIndexComp = () => {
 
 	function handleShowGroups(statementId: string) {
 		setShowGroups(statementId);
+		setCurrentStatementId(statementId);
+	}
+
+	function tooltipPosition(mad: number, mean: number): "top" | "bottom" | "left" | "right" | "top-left" | "top-right" | "bottom-left" | "bottom-right" {
+		if (mad < 0.5) {
+			if (mean <= 0) {
+				return "top-right";
+			} else if (mean > 0) {
+				return "top-left";
+			}
+
+			return "top";
+		} else if (mad >= 0.5) {
+			if (mean <= 0) {
+				return "bottom-right";
+			} else if (mean > 0) {
+				return "bottom-left";
+			}
+
+			return "bottom";
+		}
+
 	}
 
 	return (
 		<div>
 			<div className={styles.board}>
+				<div className={styles["board-inner"]}>Polarization Index</div>
 				{points.map((point: Point) => (
 					<div className={styles.pointDiv} key={point.statementId} style={{ left: point.position.x + 'px', top: point.position.y + 'px' }}>
-						<Tooltip content={`${point.statement} MAD: ${point.overallMAD.toFixed(2)}, Mean: ${point.overallMean.toFixed(2)}, N: ${point.overallN}`} position="top">
-							<div onClick={() => handleShowGroups(point.statementId)} className={styles.point} style={{ backgroundColor: "blue" }} />
+						<Tooltip content={`${point.statement} MAD: ${point.overallMAD.toFixed(2)}, Mean: ${point.overallMean.toFixed(2)}, N: ${point.overallN}`} position={tooltipPosition(point.overallMAD, point.overallMean)}>
+							<div
+								onClick={() => handleShowGroups(point.statementId)}
+								className={styles.point}
+								style={{ backgroundColor: currentStatementId === point.statementId ? "blue" : "teal", transform: currentStatementId === point.statementId ? "scale(1.2)" : "scale(1)" }} />
 						</Tooltip>
 
 					</div>
@@ -120,7 +146,7 @@ const PolarizationIndexComp = () => {
 											top: showGroups === point.statementId ? group.position.y + 'px' : point.position.y + 10 + 'px',
 											opacity: showGroups === point.statementId ? 1 : 0
 										}}>
-										<Tooltip content={`${group.option.option} MAD: ${group.mad.toFixed(2)}, Mean: ${group.mean.toFixed(2)}, N: ${group.n}`} position="top">
+										<Tooltip content={`${group.option.option} MAD: ${group.mad.toFixed(2)}, Mean: ${group.mean.toFixed(2)}, N: ${group.n}`} position={tooltipPosition(group.mad, group.mean)}>
 											<div className={styles.axisGroupPoint} style={{ backgroundColor: group.option.color }} />
 										</Tooltip>
 									</div>
