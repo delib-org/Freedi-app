@@ -3,9 +3,18 @@
 	height: 70vh;
 	position: relative;
 	margin: 3rem auto;
-	clip-path: ellipse(50% 100% at 50% 100%);
-	background: #57c760;
-	background: linear-gradient(0deg, var(--approve), rgb(240, 240, 102), var(--reject) 99%);
+
+	&-inner {
+		width: 100%;
+		height: 100%;
+		position: absolute;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		clip-path: ellipse(50% 100% at 50% 100%);
+		background: #57c760;
+		background: linear-gradient(0deg, var(--approve), rgb(240, 240, 102), var(--reject) 99%);
+	}
 
 	.pointDiv {
 		position: absolute;

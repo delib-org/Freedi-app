@@ -121,6 +121,7 @@ const PolarizationIndexComp = () => {
 	return (
 		<div>
 			<div className={styles.board}>
+				<div className={styles["board-inner"]}>Polarization Index</div>
 				{points.map((point: Point) => (
 					<div className={styles.pointDiv} key={point.statementId} style={{ left: point.position.x + 'px', top: point.position.y + 'px' }}>
 						<Tooltip content={`${point.statement} MAD: ${point.overallMAD.toFixed(2)}, Mean: ${point.overallMean.toFixed(2)}, N: ${point.overallN}`} position={tooltipPosition(point.overallMAD, point.overallMean)}>
