@@ -1,4 +1,4 @@
-import { Collections, Statement, UserQuestion, UserQuestionSchema } from "delib-npm";
+import { Collections, DemographicOption, DemographicOptionSchema, Statement, UserQuestion, UserQuestionSchema } from "delib-npm";
 import { deleteDoc, doc, getDoc, setDoc, updateDoc, writeBatch } from "firebase/firestore";
 import { DB } from "../config";
 import { parse, safeParse } from "valibot";
@@ -45,10 +45,22 @@ export async function deleteUserDataQuestion(question: UserQuestion) {
 	}
 }
 
-export async function setUserDataOption(question: UserQuestion, option: string) {
+export async function setUserDataOption(question: UserQuestion, option: DemographicOption) {
 	try {
 		if (!question || !question.userQuestionId || !option) {
 			throw new Error("Question ID and option must be provided");
+		}
+
+		const results = safeParse(UserQuestionSchema, question);
+		if (!results.success) {
+			console.error("Invalid question data:", results.issues);
+			throw new Error("Invalid question data");
+		}
+
+		const resultsOption = safeParse(DemographicOptionSchema, option);
+		if (!resultsOption.success) {
+			console.error("Invalid option data:", resultsOption.issues);
+			throw new Error("Invalid option data");
 		}
 
 		const questionsRef = doc(DB, Collections.userDataQuestions, question.userQuestionId);
@@ -56,6 +68,7 @@ export async function setUserDataOption(question: UserQuestion, option: string) 
 		const questionDB = await getDoc(questionsRef);
 		if (!questionDB.exists()) throw new Error("Question does not exist in the database");
 		const questionData = questionDB.data() as UserQuestion;
+
 		if (!questionData.options) {
 			await updateDoc(questionsRef, {
 				options: [option]
@@ -63,7 +76,7 @@ export async function setUserDataOption(question: UserQuestion, option: string) 
 
 			return;
 		}
-		if (questionData.options.includes(option)) {
+		if (questionData.options.find(opt => opt.option === option.option)) {
 			return;
 		}
 		await updateDoc(questionsRef, {
@@ -87,11 +100,11 @@ export async function deleteUserDataOption(question: UserQuestion, option: strin
 		const questionDB = await getDoc(questionsRef);
 		if (!questionDB.exists()) throw new Error("Question does not exist in the database");
 		const questionData = questionDB.data() as UserQuestion;
-		if (!questionData.options || !questionData.options.includes(option)) {
+		if (!questionData.options || !questionData.options.find(opt => opt.option === option)) {
 			return;
 		}
 		await updateDoc(questionsRef, {
-			options: questionData.options.filter(opt => opt !== option)
+			options: questionData.options.filter(opt => opt.option !== option)
 		});
 
 		return;
@@ -153,4 +166,22 @@ export function validateDataAndLogIssues<T>(schema: BaseSchema<any, T, any>, dat
 	}
 
 	return { isValid: true, validData: result.output };
+}
+
+export function setDemographicOptionColor(userQuestion: UserQuestion, option: DemographicOption) {
+	if (!userQuestion || !userQuestion.userQuestionId || !option) {
+		throw new Error("User question ID and option must be provided");
+	}
+
+	const results = safeParse(UserQuestionSchema, userQuestion);
+	if (!results.success) {
+		console.error("Invalid user question data:", results.issues);
+		throw new Error("Invalid user question data");
+	}
+
+	const questionsRef = doc(DB, Collections.userDataQuestions, userQuestion.userQuestionId);
+
+	updateDoc(questionsRef, {
+		options: userQuestion.options?.map(opt => opt.option === option.option ? { ...opt, color: option.color } : opt)
+	});
 }

@@ -1,11 +1,11 @@
 import { createSlice, PayloadAction, createSelector } from '@reduxjs/toolkit';
-import { PolarizationMetrics, updateArray, UserQuestion } from 'delib-npm';
+import { PolarizationIndex, updateArray, UserQuestion } from 'delib-npm';
 import { RootState } from '../store';
 
 interface UserDataState {
 	userQuestions: UserQuestion[];
 	userData: UserQuestion[];
-	polarizationIndexes: PolarizationMetrics[];
+	polarizationIndexes: PolarizationIndex[];
 }
 
 const initialState: UserDataState = {
@@ -28,13 +28,23 @@ const userDataSlice = createSlice({
 		setUserQuestions: (state, action: PayloadAction<UserQuestion[]>) => {
 			state.userQuestions = action.payload;
 		},
+		updateUserQuestionOptionColor: (state, action: PayloadAction<{ userQuestionId: string; option: string; color: string }>) => {
+			const { userQuestionId, option, color } = action.payload;
+			const question = state.userQuestions.find(q => q.userQuestionId === userQuestionId);
+			if (question) {
+				const optionToUpdate = question.options.find(opt => opt.option === option);
+				if (optionToUpdate) {
+					optionToUpdate.color = color;
+				}
+			}
+		},
 		setUserData: (state, action: PayloadAction<UserQuestion>) => {
 			state.userData = updateArray(state.userData, action.payload, 'userQuestionId');
 		},
 		deleteUserData: (state, action: PayloadAction<string>) => {
 			state.userData = state.userData.filter(q => q.userQuestionId !== action.payload);
 		},
-		setPolarizationIndexes: (state, action: PayloadAction<PolarizationMetrics>) => {
+		setPolarizationIndexes: (state, action: PayloadAction<PolarizationIndex>) => {
 			state.polarizationIndexes = updateArray(state.polarizationIndexes, action.payload, 'statementId');
 		},
 		deletePolarizationIndex: (state, action: PayloadAction<string>) => {
@@ -50,7 +60,8 @@ export const {
 	setUserData,
 	deleteUserData,
 	setPolarizationIndexes,
-	deletePolarizationIndex
+	deletePolarizationIndex,
+	updateUserQuestionOptionColor
 } = userDataSlice.actions;
 
 // Selectors

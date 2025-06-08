@@ -1,13 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { listenToPolarizationIndex } from '@/controllers/db/polarizationIndex/getPolarizationIndex';
 import { selectPolarizationIndexByParentId } from '@/redux/userData/userDataSlice';
-import { polarizationIndex } from 'delib-npm';
-import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useParams } from 'react-router';
 import styles from './PolarizationIndex.module.scss';
-import { generateRandomLightColor } from '@/controllers/general/helpers';
 import { Tooltip } from '../tooltip/Tooltip';
+import { PolarizationIndex } from 'delib-npm';
 
 interface Group {
 	option: string;
@@ -31,6 +29,7 @@ interface Point {
 	statement: string;
 	overallMAD: number;
 	overallMean: number;
+	overallN: number;
 	axes: Axis[];
 	color: string;
 	position: {
@@ -39,7 +38,7 @@ interface Point {
 	}
 }
 
-const PolarizationIndex = () => {
+const PolarizationIndexComp = () => {
 	const { statementId } = useParams();
 	const polarizationIndexes = useSelector(selectPolarizationIndexByParentId(statementId));
 
@@ -48,11 +47,6 @@ const PolarizationIndex = () => {
 	const points = calculatePositions(polarizationIndexes, boardDimensions);
 
 	//calculate points on the screen
-
-	points.forEach((point: Point) => {
-		console.log(point);
-	});
-
 	useEffect(() => {
 
 		let unsubscribe: () => void;
@@ -97,7 +91,7 @@ const PolarizationIndex = () => {
 				{points.map((point: Point) => (
 					<div className={styles.pointDiv} key={point.statementId} style={{ left: point.position.x + 'px', top: point.position.y + 'px' }}>
 						<Tooltip content={`${point.statement} MAD: ${point.overallMAD.toFixed(2)}, Mean: ${point.overallMean.toFixed(2)}, N: ${point.overallN}`} position="top">
-							<div onClick={() => handleShowGroups(point.statementId)} className={styles.point} style={{ backgroundColor: point.color }} />
+							<div onClick={() => handleShowGroups(point.statementId)} className={styles.point} style={{ backgroundColor: "blue" }} />
 						</Tooltip>
 
 					</div>
@@ -115,8 +109,8 @@ const PolarizationIndex = () => {
 											top: showGroups === point.statementId ? group.position.y + 'px' : point.position.y + 10 + 'px',
 											opacity: showGroups === point.statementId ? 1 : 0
 										}}>
-										<Tooltip content={`${point.statement}, ${group.option} MAD: ${group.mad.toFixed(2)}, Mean: ${group.mean.toFixed(2)}, N: ${group.n}`} position="top">
-											<div className={styles.axisGroupPoint} style={{ backgroundColor: point.color }} />
+										<Tooltip content={`${group.option} MAD: ${group.mad.toFixed(2)}, Mean: ${group.mean.toFixed(2)}, N: ${group.n}`} position="top">
+											<div className={styles.axisGroupPoint} style={{ backgroundColor: "red" }} />
 										</Tooltip>
 									</div>
 								))}
@@ -129,7 +123,7 @@ const PolarizationIndex = () => {
 	);
 }
 
-export default PolarizationIndex;
+export default PolarizationIndexComp;
 
 function calculatePosition(mad: number, mean: number, boardDimensions: { width: number; height: number }): { x: number; y: number } {
 	try {
@@ -153,7 +147,7 @@ function calculatePosition(mad: number, mean: number, boardDimensions: { width: 
 	}
 }
 
-function calculatePositions(points: polarizationIndex[], boardDimensions: { width: number; height: number }): Point[] {
+function calculatePositions(points: PolarizationIndex[], boardDimensions: { width: number; height: number }): Point[] {
 	try {
 
 		return points.map(point => {
@@ -190,8 +184,7 @@ function calculatePositions(points: polarizationIndex[], boardDimensions: { widt
 							position: calculatePosition(group.mad, group.mean, boardDimensions)
 						})),
 					})),
-					position,
-					color: generateRandomLightColor(statementId),
+					position
 				};
 			} catch (error) {
 				console.error("Error calculating point:", error);

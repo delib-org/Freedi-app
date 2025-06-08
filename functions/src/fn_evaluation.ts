@@ -18,12 +18,11 @@ import {
 	CutoffBy,
 	UserQuestion,
 	AxesItem,
-	polarizationIndex,
+	PolarizationIndex,
 } from 'delib-npm';
 
 import { number, parse } from 'valibot';
 import { getRandomColor } from './helpers';
-import { stat } from 'fs';
 
 // import { getRandomColor } from './helpers';
 // import { user } from 'firebase-functions/v1/auth';
@@ -276,6 +275,7 @@ async function updateUserDemographicEvaluation(statement: Statement, userEvalDat
 	try {
 		const { userId, evaluation } = userEvalData;
 		const parentId = statement.parentId;
+		console.log('updateUserDemographicEvaluation', userId, parentId, evaluation);
 
 		if (!userId || !parentId) {
 			console.info('User ID or parent ID is missing - skipping demographic evaluation update');
@@ -296,7 +296,7 @@ async function updateUserDemographicEvaluation(statement: Statement, userEvalDat
 
 		const axes: AxesItem[] = createAxes(userDemographicEvaluations, userDemographicData);
 
-		const polarizationIndex: polarizationIndex = {
+		const PolarizationIndex: PolarizationIndex = {
 			statementId: statement.statementId,
 			parentId: statement.parentId,
 			statement: statement.statement,
@@ -309,7 +309,7 @@ async function updateUserDemographicEvaluation(statement: Statement, userEvalDat
 			color: statement.color || getRandomColor(),
 		}
 
-		await db.collection(Collections.polarizationIndex).doc(statement.statementId).set(polarizationIndex, { merge: true });
+		await db.collection(Collections.polarizationIndex).doc(statement.statementId).set(PolarizationIndex, { merge: true });
 
 		logger.info(`Updated user demographic evaluation for user ${userId} on statement ${statement.statementId}`);
 
@@ -336,7 +336,7 @@ async function updateUserDemographicEvaluation(statement: Statement, userEvalDat
 				groups: axisDemographic?.options?.map(option => {
 
 					const values = userDemographicEvaluations
-						.filter(evaluation => evaluation.demographic.filter(evl => evaluation.statementId === statement.statementId && evl.userQuestionId === axId && evl.answer === option).length > 0)
+						.filter(evaluation => evaluation.demographic.filter(evl => evaluation.statementId === statement.statementId && evl.userQuestionId === axId && evl.answer === option.option).length > 0)
 						.map(evaluation => evaluation.evaluation);
 
 					const { mad, mean, n } = calcMadAndMean(values);
@@ -443,9 +443,9 @@ function calcMadAndMean(values: number[]): { mad: number, mean: number, n: numbe
 // 			logger.info(`Created new polarization index for statement ${statementId} with user ${userId}`);
 // 		} else {
 // 			// Update existing polarization index
-// 			const polarizationIndex = polarizationDB.data() as PolarizationMetrics;
-// 			console.log("polarizationIndex", polarizationIndex);
-// 			polarizationIndex.axes.forEach(axe => {
+// 			const PolarizationIndex = polarizationDB.data() as PolarizationMetrics;
+// 			console.log("PolarizationIndex", PolarizationIndex);
+// 			PolarizationIndex.axes.forEach(axe => {
 // 				console.log("axis", axe);
 // 				axe.groups.forEach(group => {
 // 					console.log("group", group);
@@ -454,7 +454,7 @@ function calcMadAndMean(values: number[]): { mad: number, mean: number, n: numbe
 // 			console.log("userDemographic", userDemographic);
 // 			console.log("userDiffEvaluation", userDiffEvaluation);
 // 			console.log("addEvaluator", addEvaluator);
-// 			const newPolarizationIndex = updateExistingPolarizationIndex(polarizationIndex, userDemographic, userDiffEvaluation, addEvaluator);
+// 			const newPolarizationIndex = updateExistingPolarizationIndex(PolarizationIndex, userDemographic, userDiffEvaluation, addEvaluator);
 
 // 			if (newPolarizationIndex) {
 
