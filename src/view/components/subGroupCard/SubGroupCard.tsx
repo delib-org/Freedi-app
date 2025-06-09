@@ -1,10 +1,11 @@
-import { FC } from 'react';
+import React, { FC, useState } from 'react';
 import styles from './SubGroupCard.module.scss';
 import { Link, NavLink } from 'react-router';
 import useSubGroupCard from './SubGroupCardVM';
 import { EvaluationUI, Statement, StatementType } from 'delib-npm';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import StatementChatMore from '@/view/pages/statement/components/chat/components/statementChatMore/StatementChatMore';
+import ProfanityControlledTextarea from '@/view/components/ProfanityControl/ProfanityControlledTextarea';
 
 interface Props {
 	statement: Statement;
@@ -13,6 +14,23 @@ interface Props {
 const SubGroupCard: FC<Props> = ({ statement }) => {
 	const { t } = useUserConfig();
 	const { Icon, backgroundColor, text } = useSubGroupCard(statement);
+
+	// Local state for comment text
+	const [comment, setComment] = useState('');
+
+	// Handle textarea change
+	const onCommentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+		setComment(e.target.value);
+	};
+
+	// Handle submitting comment (replace with your real submit logic)
+	const submitComment = () => {
+		if (comment.trim().length > 0) {
+			console.info('Submitting comment:', comment.trim());
+			// TODO: Add your submission logic here (e.g., call API, update DB)
+			setComment('');
+		}
+	};
 
 	try {
 		const { results, topVotedOption, evaluationSettings } = statement;
@@ -34,7 +52,8 @@ const SubGroupCard: FC<Props> = ({ statement }) => {
 					to={`/statement/${statement.statementId}`}
 					className={styles.type}
 				>
-					<div className={styles.text}>{text}</div>					<div
+					<div className={styles.text}>{text}</div>
+					<div
 						className={styles.iconWrapper}
 						style={{ color: backgroundColor }}
 					>
@@ -44,6 +63,7 @@ const SubGroupCard: FC<Props> = ({ statement }) => {
 						</div>
 					</div>
 				</Link>
+
 				{shouldSeeVoting ? (
 					<NavLink
 						to={`/statement/${topVotedOption.statementId}/main`}
@@ -72,10 +92,30 @@ const SubGroupCard: FC<Props> = ({ statement }) => {
 						</ul>
 					</div>
 				))}
+
+				{/* === COMMENT INPUT BOX with profanity filter === */}
+				<div style={{ marginTop: 20 }}>
+
+					<ProfanityControlledTextarea
+						value={comment}
+						onChange={onCommentChange}
+						placeholder={t('Write your comment here...')}
+						rows={3}
+					/>
+					<button
+						onClick={submitComment}
+						disabled={comment.trim().length === 0}
+						style={{ marginTop: 8, padding: '6px 12px', cursor: 'pointer' }}
+					>
+						{t('Submit')}
+					</button>
+				</div>
 			</div>
 		);
 	} catch (err) {
 		console.error(err);
+
+		return null;
 	}
 };
 

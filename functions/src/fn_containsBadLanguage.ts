@@ -26,3 +26,34 @@ export async function containsBadLanguage(text: string): Promise<boolean> {
     return false; // fail-safe: allow text if error occurs
   }
 }
+export async function getToxicityScore(text: string): Promise<number | null> {
+  const apiKey = process.env.GOOGLE_API_KEY;
+  if (!apiKey) {
+    console.info("GOOGLE_API_KEY missing");
+
+    return null;
+  }
+
+  try {
+    const response = await fetch(
+      `https://commentanalyzer.googleapis.com/v1alpha1/comments:analyze?key=${apiKey}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          comment: { text },
+          languages: ["en"],
+          requestedAttributes: { TOXICITY: {} },
+        }),
+      }
+    );
+
+    const result = await response.json();
+
+    return result?.attributeScores?.TOXICITY?.summaryScore?.value ?? null;
+  } catch (err) {
+    console.error("Perspective API error:", err);
+
+    return null;
+  }
+}

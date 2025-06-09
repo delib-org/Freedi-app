@@ -1,15 +1,16 @@
 // Import the functions you need from the SDKs you need
-import { initializeApp } from 'firebase/app';
+import { initializeApp } from "firebase/app";
 import {
-	browserLocalPersistence,
-	connectAuthEmulator,
-	getAuth,
-	setPersistence,
-} from 'firebase/auth';
-import { connectFirestoreEmulator, getFirestore } from 'firebase/firestore';
-import { getStorage, connectStorageEmulator } from 'firebase/storage';
-import { isProduction } from '../general/helpers';
-import firebaseConfig from './configKey';
+  browserLocalPersistence,
+  connectAuthEmulator,
+  getAuth,
+  setPersistence,
+} from "firebase/auth";
+import { connectFirestoreEmulator, getFirestore } from "firebase/firestore";
+import { getStorage, connectStorageEmulator } from "firebase/storage";
+import { isProduction } from "../general/helpers";
+import firebaseConfig from "./configKey";
+import { getFunctions, connectFunctionsEmulator } from "firebase/functions";
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
@@ -17,22 +18,24 @@ const FireStore = getFirestore(app);
 const DB = FireStore;
 const storage = getStorage(app);
 const auth = getAuth();
+const functions = getFunctions(app);
 
 setPersistence(auth, browserLocalPersistence)
-	.then(() => {
-		console.info('Persistence set to local storage (cross-site safe).');
-	})
-	.catch((error) => {
-		console.error('Error setting persistence:', error);
-	});
+  .then(() => {
+    console.info("Persistence set to local storage (cross-site safe).");
+  })
+  .catch((error) => {
+    console.error("Error setting persistence:", error);
+  });
 
 //development
 if (!isProduction()) {
-	console.info('Running on development mode');
+  console.info("Running on development mode");
 
-	connectFirestoreEmulator(FireStore, '127.0.0.1', 8080);
-	connectAuthEmulator(auth, 'http://localhost:9099');
-	connectStorageEmulator(storage, '127.0.0.1', 9199);
+  connectFirestoreEmulator(FireStore, "127.0.0.1", 8080);
+  connectAuthEmulator(auth, "http://localhost:9099");
+  connectStorageEmulator(storage, "127.0.0.1", 9199);
+  connectFunctionsEmulator(functions, "127.0.0.1", 5001); // ✅ add this line
 }
 
-export { auth, FireStore, storage, app, DB };
+export { auth, FireStore, storage, app, DB, functions };

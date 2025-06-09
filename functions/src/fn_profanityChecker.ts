@@ -5,7 +5,6 @@ export const checkProfanity = functions.https.onCall(
     const { text } = request.data as { text: string };
 
     const apiKey = process.env.GOOGLE_API_KEY;
-
     if (!apiKey) {
       console.info("GOOGLE_API_KEY missing (waiting for secret setup)");
 
@@ -28,21 +27,20 @@ export const checkProfanity = functions.https.onCall(
 
       const result = await response.json();
 
-      if (
-        !result.attributeScores ||
-        !result.attributeScores.TOXICITY ||
-        !result.attributeScores.TOXICITY.summaryScore
-      ) {
-        throw new Error("Unexpected API response structure");
+      const score =
+        result?.attributeScores?.TOXICITY?.summaryScore?.value ?? null;
+
+      if (score === null) {
+        console.error("Unexpected API response:", result);
+
+        return { score: null, error: "Unexpected API response structure" };
       }
 
-      const score = result.attributeScores.TOXICITY.summaryScore.value ?? null;
-
       return { score };
-    } catch (err) {
-      console.error("Perspective API error:", err);
+    } catch (error) {
+      console.error("Perspective API error:", error);
 
-      return { error: "API call failed" };
+      return { score: null, error: "API call failed" };
     }
   }
 );
