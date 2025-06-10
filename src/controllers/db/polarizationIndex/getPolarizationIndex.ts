@@ -1,12 +1,12 @@
 import { collection, onSnapshot, query, where } from "firebase/firestore";
 import { FireStore } from "../config";
-import { Collections, PolarizationIndex } from "delib-npm";
+import { Collections, PolarizationMetrics } from "delib-npm";
 import { store } from "@/redux/store";
 import { deletePolarizationIndex, setPolarizationIndexes } from "@/redux/userData/userDataSlice";
 
 export function listenToPolarizationIndex(statementId: string) {
 	try {
-
+		console.log("listening to polarization index for statementId:", statementId);
 		if (!statementId) {
 			throw new Error("Statement ID is required to listen to polarization index.");
 		}
@@ -17,9 +17,9 @@ export function listenToPolarizationIndex(statementId: string) {
 		const q = query(polarizationIndexRef, where("parentId", "==", statementId));
 
 		return onSnapshot(q, (polarizationIndexes) => {
-
+			console.log("Received polarization index updates for statementId:", polarizationIndexes.docs.length, "documents");
 			polarizationIndexes.docChanges().forEach((change) => {
-				const data = change.doc.data() as PolarizationIndex;
+				const data = change.doc.data() as PolarizationMetrics;
 
 				if (change.type === 'added' || change.type === 'modified') {
 					dispatch(setPolarizationIndexes(data));
