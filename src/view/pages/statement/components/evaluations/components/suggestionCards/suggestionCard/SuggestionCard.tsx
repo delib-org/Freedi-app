@@ -40,6 +40,7 @@ const SuggestionCard: FC<Props> = ({
 	const { t, dir } = useUserConfig();
 	const { isAuthorized, isAdmin } = useAuthorization(statement.statementId);
 	const { sort } = useParams();
+	const enableJoining = parentStatement?.statementSettings?.joiningEnabled;
 
 	// Redux Store
 	const dispatch = useAppDispatch();
@@ -145,6 +146,7 @@ const SuggestionCard: FC<Props> = ({
 							setEdit={setIsEdit}
 							isTextArea={true}
 						/>
+						{enableJoining && <div className="btns btns--end"> <div className="btn btn--small">{t('Join')}</div></div>}
 					</div>
 					<div className='more'>
 						<SolutionMenu
@@ -172,9 +174,9 @@ const SuggestionCard: FC<Props> = ({
 					{hasChildren && (
 						<IconButton
 							className='add-sub-question-button more-question'
-							style={{  display:'none', cursor: 'default' }} // changed to display none for it to not take dom space
+							style={{ display: 'none', cursor: 'default' }} // changed to display none for it to not take dom space
 							onClick={
-								() => {} //delete the brackets and uncomment the line below for functionality
+								() => { } //delete the brackets and uncomment the line below for functionality
 								//	setShouldShowAddSubQuestionModal(true)
 							}
 						>
