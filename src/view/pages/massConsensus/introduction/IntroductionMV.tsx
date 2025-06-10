@@ -23,7 +23,7 @@ export function useIntroductionMV() {
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 
-	const { defaultLanguage } = statement;
+	const defaultLanguage = statement?.defaultLanguage;
 	useEffect(() => {
 		if (!statement) return;
 
