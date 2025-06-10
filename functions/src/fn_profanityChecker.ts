@@ -26,12 +26,14 @@ export const checkProfanity = functions.https.onCall(
       );
 
       const result = await response.json();
+      console.error("🧠 PERSPECTIVE RAW RESULT:", JSON.stringify(result));
+      const score = result?.attributeScores?.TOXICITY?.summaryScore?.value;
 
-      const score =
-        result?.attributeScores?.TOXICITY?.summaryScore?.value ?? null;
-
-      if (score === null) {
-        console.error("Unexpected API response:", result);
+      if (typeof score !== "number") {
+        console.error(
+          "⚠️ Invalid or missing TOXICITY score. Full response:",
+          JSON.stringify(result)
+        );
 
         return { score: null, error: "Unexpected API response structure" };
       }
