@@ -13,7 +13,7 @@ import MassConsensusQuestion from '@/view/pages/massConsensus/massConsesusQuesti
 import RandomSuggestions from '@/view/pages/massConsensus/randomSuggestions/RandomSuggestions';
 import TopSuggestions from '@/view/pages/massConsensus/topSuggestions/TopSuggestions';
 import VotingSuggestions from '@/view/pages/massConsensus/votingSuggestions/VotingSuggestions';
-import UserDemographicMC from '@/view/pages/massConsensus/massConsesusQuestion/userDemographicMC/userDemographicMC';
+import UserDemographicMC from '@/view/pages/massConsensus/massConsesusQuestion/userDemographicMC/UserDemographicMC';
 
 import LeaveFeedback from '@/view/pages/massConsensus/leaveFeedback/LeaveFeedback';
 

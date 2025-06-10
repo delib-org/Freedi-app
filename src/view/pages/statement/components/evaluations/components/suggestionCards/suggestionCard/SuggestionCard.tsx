@@ -23,6 +23,7 @@ import './SuggestionCard.scss';
 import { StatementType, Statement } from 'delib-npm';
 import { useAuthorization } from '@/controllers/hooks/useAuthorization';
 import { toggleJoining } from '@/controllers/db/joining/setJoining';
+import Joined from '@/view/components/joined/Joined';
 
 interface Props {
 	statement: Statement | undefined;
@@ -179,6 +180,7 @@ const SuggestionCard: FC<Props> = ({
 						/>
 						{enableJoining &&
 							<div className="btns btns--end">
+								<Joined statement={statement} />
 								<button
 									onClick={handleJoin}
 									disabled={isJoinLoading}
@@ -193,6 +195,7 @@ const SuggestionCard: FC<Props> = ({
 								>
 									{hasJoinedOptimistic ? t('Leave') : t('Join')}
 								</button>
+
 							</div>
 						}
 					</div>
