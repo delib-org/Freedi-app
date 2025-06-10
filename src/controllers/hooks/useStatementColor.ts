@@ -29,12 +29,12 @@ export default function useStatementColor({
       });
     } else if (isVoted || isChosen) {
       setStyle({
-        backgroundColor: "var(--header-agree, #008000)", // Green for agreement
+        backgroundColor: "var(--header-chosen, #008000)", // Green for agreement
         color: "var(--header, #000000)", // Text color for result
       });
     } else if (statementType === StatementType.option) {
       setStyle({
-        backgroundColor: "var(--header-option, #123abc)", // Custom option color
+        backgroundColor: "var(--header-not-chosen, #123abc)", // Custom option color
         color: "var(--white, #ffffff)", // Text color for options
       });
     } else if (statementType === StatementType.question) {
