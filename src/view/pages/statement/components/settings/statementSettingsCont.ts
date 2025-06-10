@@ -180,7 +180,6 @@ export const getStatementSettings = (statement: Statement) => {
 		),
 		hasChat: Boolean(statementSettings.hasChat),
 		hasChildren: Boolean(statementSettings.hasChildren),
-		joiningEnabled: Boolean(statementSettings.joiningEnabled),
 	};
 };
 

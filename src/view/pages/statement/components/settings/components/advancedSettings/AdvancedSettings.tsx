@@ -22,7 +22,6 @@ const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 		enableNavigationalElements = false,
 		hasChat = false,
 		hasChildren = false,
-		joiningEnabled = false,
 	} = statementSettings;
 
 	function handleAdvancedSettingChange(
@@ -46,13 +45,6 @@ const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 				isChecked={hasChat}
 				onChange={(checked) =>
 					handleAdvancedSettingChange('hasChat', checked)
-				}
-			/>
-			<Checkbox
-				label={'Enable Joining an option'}
-				isChecked={joiningEnabled}
-				onChange={(checked) =>
-					handleAdvancedSettingChange('joiningEnabled', checked)
 				}
 			/>
 			<Checkbox
