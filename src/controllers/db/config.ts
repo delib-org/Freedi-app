@@ -35,7 +35,7 @@ if (!isProduction()) {
   connectFirestoreEmulator(FireStore, "127.0.0.1", 8080);
   connectAuthEmulator(auth, "http://localhost:9099");
   connectStorageEmulator(storage, "127.0.0.1", 9199);
-  connectFunctionsEmulator(functions, "127.0.0.1", 5001); // ✅ add this line
+  connectFunctionsEmulator(functions, "127.0.0.1", 5001);
 }
 
 export { auth, FireStore, storage, app, DB, functions };

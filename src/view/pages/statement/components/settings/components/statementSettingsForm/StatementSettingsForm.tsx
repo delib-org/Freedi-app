@@ -4,6 +4,7 @@ import { Dispatch, FC, FormEvent, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 
 // Firestore functions
+import { setNewStatement } from './../../statementSettingsCont';
 
 // Custom components
 import QuestionSettings from '../QuestionSettings/QuestionSettings';
@@ -13,20 +14,22 @@ import GetEvaluators from './../../components/GetEvaluators';
 import GetVoters from './../../components/GetVoters';
 import SectionTitle from './../../components/sectionTitle/SectionTitle';
 import TitleAndDescription from './../../components/titleAndDescription/TitleAndDescription';
-import { setNewStatement } from './../../statementSettingsCont';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import UploadImage from '@/view/components/uploadImage/UploadImage';
+import MembershipSettings from '../membershipSettings/MembershipSettings';
 
 // Hooks & Helpers
-import './StatementSettingsForm.scss';
-
-// icons
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
+import { useProfanityCheck } from '@/controllers/hooks/useProfanityCheck';
 import { createSelector } from '@reduxjs/toolkit';
 import { RootState } from '@/redux/store';
-import Loader from '@/view/components/loaders/Loader';
+import './StatementSettingsForm.scss';
+
+// Types
 import { StatementSubscription, Role, Statement, StatementType } from 'delib-npm';
-import MembershipSettings from '../membershipSettings/MembershipSettings';
+
+// Components
+import Loader from '@/view/components/loaders/Loader';
 
 interface StatementSettingsFormProps {
 	statement: Statement;
@@ -45,6 +48,7 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 	const navigate = useNavigate();
 	const { statementId } = useParams();
 	const { t } = useUserConfig();
+	const { validateText, isChecking, error } = useProfanityCheck(); // ✅ Profanity hook
 
 	const [image, setImage] = useState<string>(imageUrl);
 	const [loading, setLoading] = useState<boolean>(false);
@@ -69,29 +73,41 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 			.filter((member) => member.role !== Role.banned)
 			.map((m) => m.user);
 
-		// * Functions * //
 		const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
 			e.preventDefault();
 			setLoading(true);
+
+			// ✅ Profanity check on title + description
+			const fullText = `${statement.statement ?? ''}\n${statement.description ?? ''}`;
+			const isClean = await validateText(fullText);
+			if (!isClean) {
+				setLoading(false);
+
+				return;
+			}
+
+			if (!statement?.statement?.trim()) {
+				setLoading(false);
+				throw new Error('No new statement');
+			}
+
 			const newStatement = await setNewStatement({
 				navigate,
 				statementId,
 				statement,
 				parentStatement,
 			});
+
 			setLoading(false);
+
 			if (!newStatement) throw new Error('No new statement');
 			navigate(`/statement/${newStatement.statementId}`);
 		};
 
 		const isNewStatement = !statementId;
+		const statementSettingsProps = { statement, setStatementToEdit } as const;
 
-		const statementSettingsProps = {
-			statement,
-			setStatementToEdit,
-		} as const;
-
-		if (loading)
+		if (loading || isChecking)
 			return (
 				<div className='statement-settings-form'>
 					<div className='loader-box'>
@@ -101,8 +117,7 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 			);
 
 		return (
-
-			<div className="wrapper">
+			<div className='wrapper'>
 				<form
 					onSubmit={handleSubmit}
 					className='statement-settings-form'
@@ -112,6 +127,13 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 						statement={statement}
 						setStatementToEdit={setStatementToEdit}
 					/>
+
+					{/* ✅ Show profanity error */}
+					{error && (
+						<p style={{ color: 'red', fontSize: '0.9rem', marginTop: '0.5rem' }}>
+							{error}
+						</p>
+					)}
 
 					<SectionTitle title={t('General Settings')} />
 					<section className='switches-area'>
@@ -127,22 +149,27 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 						{t('Save')}
 					</button>
 				</form>
-				<MembershipSettings statement={statement} setStatementToEdit={setStatementToEdit} />
-				{statement.statementType === StatementType.question && <ChoseBySettings {...statementSettingsProps} />}
+
+				<MembershipSettings
+					statement={statement}
+					setStatementToEdit={setStatementToEdit}
+				/>
+
+				{statement.statementType === StatementType.question && (
+					<ChoseBySettings {...statementSettingsProps} />
+				)}
+
 				{!isNewStatement && (
 					<>
 						<UploadImage
-							statement={statementSettingsProps.statement}
+							statement={statement}
 							image={image}
 							setImage={setImage}
 						/>
 						<QuestionSettings {...statementSettingsProps} />
 						<SectionTitle title={t('Members')} />
 						<section className='get-members-area'>
-							<GetVoters
-								statementId={statementId}
-								joinedMembers={joinedMembers}
-							/>
+							<GetVoters statementId={statementId} joinedMembers={joinedMembers} />
 						</section>
 						<section className='get-members-area'>
 							<GetEvaluators statementId={statementId} />
@@ -150,7 +177,6 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 					</>
 				)}
 			</div>
-
 		);
 	} catch (error) {
 		console.error(error);

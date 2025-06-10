@@ -1,12 +1,12 @@
+import { functions } from "@/controllers/db/config";
+import { httpsCallable } from "firebase/functions";
+
 export const checkProfanity = async (text: string): Promise<boolean> => {
   try {
-    const response = await fetch("/checkProfanity", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text }),
-    });
+    const fn = httpsCallable(functions, "checkProfanity");
+    const result = await fn({ text });
 
-    const { score } = await response.json();
+    const { score } = result.data as { score: number | null };
 
     return score !== null && score >= 0.7;
   } catch (error) {

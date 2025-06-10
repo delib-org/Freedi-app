@@ -13,7 +13,6 @@ import Save from '@/assets/icons/saveIcon.svg?react';
 import { updateStatementText } from '@/controllers/db/statements/setStatements';
 import { Statement } from 'delib-npm';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
-import SafeTextarea from '../textarea/SafeTextarea';
 
 interface Props {
 	statement: Statement | undefined;
@@ -96,17 +95,14 @@ const EditTitle: FC<Props> = ({
 		<div className={styles.container}>
 			{isTextArea ? (
 				<>
-					<SafeTextarea
-						value={`${title}\n${description}`}
-						onChange={(val) => {
-							const [firstLine, ...rest] = val.split('\n');
-							setTitle(firstLine);
-							setDescription(rest.join('\n'));
-						}}
-						onSubmit={handleSave}
-						placeholder='Add title and description...'
-					/>
-
+					<textarea
+						ref={inputRef as React.RefObject<HTMLTextAreaElement>}
+						style={{ direction: direction, textAlign: align }}
+						className={styles.textarea}
+						defaultValue={`${title}\n${description}`}
+						onChange={handleChange}
+						placeholder='Add text'
+					></textarea>
 					<button
 						className={styles.save}
 						onClick={handleSave}

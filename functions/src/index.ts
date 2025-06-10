@@ -54,6 +54,7 @@ import {
 } from "./fn_massConsensus";
 import { updateInAppNotifications } from "./fn_notifications";
 import { getCluster, recoverLastSnapshot } from "./fn_clusters";
+import { checkProfanity } from "./fn_profanityChecker";
 
 // Initialize Firebase
 initializeApp();
@@ -150,7 +151,7 @@ exports.getQuestionOptions = wrapHttpFunction(getQuestionOptions);
 exports.massConsensusAddMember = wrapHttpFunction(addMassConsensusMember);
 exports.getCluster = wrapHttpFunction(getCluster);
 exports.recoverLastSnapshot = wrapHttpFunction(recoverLastSnapshot);
-
+exports.checkProfanity = checkProfanity;
 // --------------------------
 // FIRESTORE TRIGGER FUNCTIONS
 // --------------------------
