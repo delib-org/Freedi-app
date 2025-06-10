@@ -17,3 +17,14 @@ export function getTopSelectionKeys(
 export const isEqualObjects = (objA: object | undefined, objB: object | undefined) => {
 	return JSON.stringify(objA) === JSON.stringify(objB);
 }
+
+export function getRandomColor() {
+	//let them be dark colors
+	const letters = '0123456789ABCDEF';
+	let color = '#';
+	for (let i = 0; i < 6; i++) {
+		color += letters[Math.floor(Math.random() * 16)];
+	}
+
+	return color;
+}

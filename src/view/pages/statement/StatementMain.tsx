@@ -22,13 +22,28 @@ import { MapProvider } from '@/controllers/hooks/useMap';
 import { RootState } from '@/redux/store';
 import Modal from '@/view/components/modal/Modal';
 
-import { statementSelector, statementSubscriptionSelector } from '@/redux/statements/statementsSlice';
+import {
+	statementSelector,
+	statementSubscriptionSelector,
+} from '@/redux/statements/statementsSlice';
 import { StatementType, QuestionType, User, Role } from 'delib-npm';
 import { useAuthorization } from '@/controllers/hooks/useAuthorization';
 import { useSelector } from 'react-redux';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { notificationService } from '@/services/notificationService';
-import { listenToInAppNotifications, clearInAppNotifications } from '@/controllers/db/inAppNotifications/db_inAppNotifications';
+import {
+	listenToInAppNotifications,
+	clearInAppNotifications,
+} from '@/controllers/db/inAppNotifications/db_inAppNotifications';
+import {
+	listenToUserAnswers,
+	listenToUserQuestions,
+} from '@/controllers/db/userData/getUserData';
+import {
+	selectUserDataByStatementId,
+	selectUserQuestionsByStatementId,
+} from '@/redux/userData/userDataSlice';
+import UserDataQuestions from './components/userDataQuestions/UserDataQuestions';
 
 // Create selectors
 export const subStatementsSelector = createSelector(
@@ -42,16 +57,29 @@ export const subStatementsSelector = createSelector(
 
 export default function StatementMain() {
 	// Hooks
-	const { statementId, stageId } = useParams();
+	const { statementId, stageId, screen } = useParams();
 	const statement = useSelector(statementSelector(statementId));
-	const topParentStatement = useSelector(statementSelector(statement?.topParentId));
+	const userDataQuestions = useSelector(
+		selectUserQuestionsByStatementId(statementId || '')
+	);
+	const userData = useSelector(
+		selectUserDataByStatementId(statementId || '')
+	);
+	const topParentStatement = useSelector(
+		statementSelector(statement?.topParentId)
+	);
 	const role = useSelector(statementSubscriptionSelector(statementId))?.role;
-	const { isAuthorized, loading, isWaitingForApproval } = useAuthorization(statementId);
+	const { isAuthorized, loading, isWaitingForApproval } =
+		useAuthorization(statementId);
 
 	// Redux store
 	const { creator } = useAuthentication();
 
 	const stage = useSelector(statementSelector(stageId));
+	const showUserQuestions =
+		userDataQuestions &&
+		userDataQuestions.length > 0 &&
+		userData.length < userDataQuestions.length;
 
 	// Use states
 	const [talker, setTalker] = useState<User | null>(null);
@@ -60,6 +88,10 @@ export default function StatementMain() {
 	const [newStatementType, setNewStatementType] = useState<StatementType>(
 		StatementType.group
 	);
+	const isMassConsensus =
+		statement?.questionSettings?.questionType ===
+		QuestionType.massConsensus;
+
 	const [newQuestionType, setNewQuestionType] = useState<QuestionType>(
 		QuestionType.multiStage
 	);
@@ -103,6 +135,9 @@ export default function StatementMain() {
 			unsubscribeFunctions.push(
 				listenToStatement(statementId, setIsStatementNotFound)
 			);
+			unsubscribeFunctions.push(listenToUserQuestions(statementId));
+
+			unsubscribeFunctions.push(listenToUserAnswers(statementId));
 
 			// Combine and optimize additional listeners
 			const { pathname } = window.location;
@@ -110,14 +145,10 @@ export default function StatementMain() {
 
 			// Only load descendant data if viewing the mind-map
 			if (currentScreen === 'mind-map') {
-				unsubscribeFunctions.push(
-					listenToAllDescendants(statementId)
-				);
+				unsubscribeFunctions.push(listenToAllDescendants(statementId));
 			} else {
 				// For other screens, use the more efficient listener that fetches only direct children
-				unsubscribeFunctions.push(
-					listenToSubStatements(statementId)
-				);
+				unsubscribeFunctions.push(listenToSubStatements(statementId));
 			}
 
 			// Notifications are always needed
@@ -140,7 +171,10 @@ export default function StatementMain() {
 						unsubscribe();
 					} else {
 						// eslint-disable-next-line no-console
-						console.warn('Invalid unsubscribe function detected:', unsubscribe);
+						console.warn(
+							'Invalid unsubscribe function detected:',
+							unsubscribe
+						);
 					}
 				} catch (error) {
 					console.error('Error while unsubscribing:', error);
@@ -153,7 +187,6 @@ export default function StatementMain() {
 	const topParentId = statement?.topParentId;
 
 	useEffect(() => {
-
 		const topParentId = statement?.topParentId;
 		if (!topParentId) return;
 		if (topParentId === statementId) return;
@@ -176,7 +209,7 @@ export default function StatementMain() {
 
 	/**
 	 * Effect to handle membership subscription
-	 * This does NOT handle notification subscription, which is managed separately 
+	 * This does NOT handle notification subscription, which is managed separately
 	 * by the notification subscription button
 	 */
 	useEffect(() => {
@@ -190,15 +223,23 @@ export default function StatementMain() {
 					// Initialize notification service if needed (for token only)
 					// First check if notifications are properly supported by the browser
 					if (notificationService.isSupported()) {
-						const permission = notificationService.safeGetPermission();
-						const notificationsEnabled = permission === 'granted' && creator;
+						const permission =
+							notificationService.safeGetPermission();
+						const notificationsEnabled =
+							permission === 'granted' && creator;
 
-						if (notificationsEnabled && !notificationService.getToken()) {
+						if (
+							notificationsEnabled &&
+							!notificationService.getToken()
+						) {
 							await notificationService.initialize(creator.uid);
 						}
 					}
 				} catch (error) {
-					console.error('Error in membership subscription handler:', error);
+					console.error(
+						'Error in membership subscription handler:',
+						error
+					);
 				}
 			};
 
@@ -237,7 +278,8 @@ export default function StatementMain() {
 	);
 
 	if (isStatementNotFound) return <Page404 />;
-	if (isWaitingForApproval || role === Role.waiting) return <h1>Waiting for approval</h1>
+	if (isWaitingForApproval || role === Role.waiting)
+		return <h1>Waiting for approval</h1>;
 	if (loading) return <LoadingPage />;
 
 	if (isAuthorized) {
@@ -262,6 +304,15 @@ export default function StatementMain() {
 					<MapProvider>
 						<Switch />
 					</MapProvider>
+					{showUserQuestions &&
+						screen !== 'settings' &&
+						!isMassConsensus && (
+							<Modal>
+								<UserDataQuestions
+									questions={userDataQuestions}
+								/>
+							</Modal>
+						)}
 				</div>
 			</StatementContext.Provider>
 		);

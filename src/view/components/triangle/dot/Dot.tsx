@@ -10,8 +10,8 @@ interface Props {
 
 const Dot: FC<Props> = ({ subStatement, maxEvaluators }) => {
 	const { t } = useUserConfig();
-	const randomX = useRef<number>((Math.random() - 0.5) * 0.07);
-	const randomY = useRef<number>((Math.random() - 0.5) * 0.07);
+	const randomX = useRef<number>((Math.random()) * 0.04);
+	const randomY = useRef<number>((Math.random()) * 0.04);
 	const [show, setShow] = useState(false);
 	const { sumCon, sumPro, numberOfEvaluators } = subStatement.evaluation!;
 	if (sumCon === undefined || sumPro === undefined) return null;

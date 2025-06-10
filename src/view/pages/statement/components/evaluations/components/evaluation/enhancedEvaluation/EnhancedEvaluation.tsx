@@ -12,7 +12,7 @@ import { evaluationSelector } from '@/redux/evaluations/evaluationsSlice';
 import { Statement } from 'delib-npm';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { useDecreaseLearningRemain } from '@/controllers/hooks/useDecreaseLearningRemain';
-import { CustomTooltip } from '@/view/components/tooltip/CustomTooltip';
+import { Tooltip } from '@/view/components/tooltip/Tooltip';
 
 interface EnhancedEvaluationProps {
 	statement: Statement;
@@ -52,25 +52,25 @@ const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({
 				className={`${styles['evaluation-score']} ${statement.consensus < 0 ? styles.negative : ''}`}
 			>
 				{shouldDisplayScore && (
-					<CustomTooltip content={t("Average score")} position="top">
+					<Tooltip content={t("Average score")} position="top">
 						<span className={styles.scoreValue}>{avg}</span>
-					</CustomTooltip>
+					</Tooltip>
 				)}
 
 				{shouldDisplayScore && (
-					<CustomTooltip content={t("Consensus score")} position="top">
+					<Tooltip content={t("Consensus score")} position="top">
 						<span className={styles.scoreValue}>{consensus}</span>
-					</CustomTooltip>
+					</Tooltip>
 				)}
 
 				{shouldDisplayScore &&
 					numberOfEvaluators &&
 					numberOfEvaluators > 0 ? (
-					<CustomTooltip content={t("Number of evaluators")} position="bottom">
+					<Tooltip content={t("Number of evaluators")} position="bottom">
 						<span className={styles['total-evaluators']}>
 							{' '}({numberOfEvaluators})
 						</span>
-					</CustomTooltip>
+					</Tooltip>
 				) : null}
 			</div>
 			{learning.evaluation > 0 && (

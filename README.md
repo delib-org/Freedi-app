@@ -53,6 +53,17 @@ VITE_FIREBASE_MEASUREMENT_ID=__YOUR_CONFIG__
 VITE_FIREBASE_VAPID_KEY=__YOUR_CONFIG__
 ```
 
+On functions create
+
+```env
+GOOGLE_API_KEY=your-key
+
+BREVO_USER=some user
+BREVO_PASSWORD=some password
+
+DOMAIN=localhost
+```
+
 ## Development
 
 ### VS Code Setup
