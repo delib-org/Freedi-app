@@ -1,4 +1,4 @@
-import { FC, useEffect, useRef } from 'react';
+import { FC, useEffect, useRef, useState } from 'react';
 
 // Hooks & Helpers
 import { StatementSettingsProps } from '../../settingsTypeHelpers';
@@ -7,6 +7,7 @@ import './TitleAndDescription.scss';
 import VisuallyHidden from '@/view/components/accessibility/toScreenReaders/VisuallyHidden';
 import Button, { ButtonType } from '@/view/components/buttons/button/Button';
 import { useNavigate } from 'react-router';
+import { useProfanityCheck } from '@/controllers/hooks/useProfanityCheck';
 
 const TitleAndDescription: FC<StatementSettingsProps> = ({
 	statement,
@@ -15,13 +16,16 @@ const TitleAndDescription: FC<StatementSettingsProps> = ({
 	const { t } = useUserConfig();
 	const navigate = useNavigate();
 
-	// * Variables * //
 	const arrayOfStatementParagraphs = statement?.statement.split('\n') || [];
-	const title = arrayOfStatementParagraphs[0];
-
-	const description = arrayOfStatementParagraphs.slice(1).join('\n');
+	const [title, setTitle] = useState(arrayOfStatementParagraphs[0]);
+	const [description, setDescription] = useState(
+		arrayOfStatementParagraphs.slice(1).join('\n')
+	);
 
 	const titleInputRef = useRef<HTMLInputElement>(null);
+
+	// ✅ Use the profanity-checking hook
+	const { validateText, isChecking, error } = useProfanityCheck();
 
 	useEffect(() => {
 		if (titleInputRef.current) {
@@ -29,10 +33,24 @@ const TitleAndDescription: FC<StatementSettingsProps> = ({
 		}
 	}, []);
 
+	const handleSubmit = async () => {
+		const fullText = `${title}\n${description}`;
+		const isClean = await validateText(fullText);
+
+		if (!isClean) return;
+
+		// ✅ Save only if the text is clean
+		setStatementToEdit({
+			...statement,
+			statement: fullText,
+			description,
+		});
+	};
+
 	return (
 		<div className='title-and-description'>
 			<label htmlFor='statement-title'>
-				<VisuallyHidden labelName={t('Group Title')}></VisuallyHidden>
+				<VisuallyHidden labelName={t('Group Title')} />
 				<input
 					id='statement-title'
 					data-cy='statement-title'
@@ -41,41 +59,37 @@ const TitleAndDescription: FC<StatementSettingsProps> = ({
 					name='statement'
 					placeholder={t('Group Title')}
 					value={title}
-					onChange={(e) => {
-						const newTitle = e.target.value;
-						setStatementToEdit({
-							...statement,
-							statement: `${newTitle}\n${description}`,
-						});
-					}}
-					required={true}
+					onChange={(e) => setTitle(e.target.value)}
+					required
 				/>
 			</label>
+
 			<label htmlFor='statement-description'>
-				<VisuallyHidden
-					labelName={t('Group Description')}
-				></VisuallyHidden>
+				<VisuallyHidden labelName={t('Group Description')} />
 				<textarea
 					id='statement-description'
 					name='description'
 					placeholder={t('Group Description')}
 					rows={3}
-					defaultValue={statement.description}
-					onChange={(e) => {
-						const newDescription = e.target.value;
-						setStatementToEdit({
-							...statement,
-							description: newDescription,
-						});
-					}}
+					value={description}
+					onChange={(e) => setDescription(e.target.value)}
 				/>
 			</label>
+
+			{/* ✅ Error message from the hook */}
+			{error && (
+				<p style={{ color: 'red', fontSize: '0.9rem', marginTop: '0.5rem' }}>
+					{error}
+				</p>
+			)}
+
 			<div className='btns'>
 				<Button
-					text={t('Save')}
+					text={isChecking ? t('Checking...') : t('Save')}
 					aria-label='Submit button'
 					data-cy='settings-statement-submit-btn'
-					type='submit'
+					type='button'
+					onClick={handleSubmit}
 				/>
 				<Button
 					text={t('Cancel')}
@@ -83,9 +97,7 @@ const TitleAndDescription: FC<StatementSettingsProps> = ({
 					buttonType={ButtonType.SECONDARY}
 					aria-label='Cancel button'
 					data-cy='settings-statement-cancel-btn'
-					onClick={() => {
-						navigate('/home');
-					}}
+					onClick={() => navigate('/home')}
 				/>
 			</div>
 		</div>
