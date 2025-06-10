@@ -22,6 +22,8 @@ import IconButton from '@/view/components/iconButton/IconButton';
 import './SuggestionCard.scss';
 import { StatementType, Statement } from 'delib-npm';
 import { useAuthorization } from '@/controllers/hooks/useAuthorization';
+import { toggleJoining } from '@/controllers/db/joining/setJoining';
+import Joined from '@/view/components/joined/Joined';
 
 interface Props {
 	statement: Statement | undefined;
@@ -38,8 +40,22 @@ const SuggestionCard: FC<Props> = ({
 	if (!parentStatement) console.error('parentStatement is not defined');
 
 	const { t, dir } = useUserConfig();
-	const { isAuthorized, isAdmin } = useAuthorization(statement.statementId);
+	const { isAuthorized, isAdmin, creator } = useAuthorization(statement.statementId);
 	const { sort } = useParams();
+	const enableJoining = parentStatement?.statementSettings?.joiningEnabled;
+
+	const hasJoinedServer = statement?.joined?.find(
+		(c) => c.uid === creator?.uid
+	) ? true : false;
+
+	// Optimistic state for instant UI updates
+	const [hasJoinedOptimistic, setHasJoinedOptimistic] = useState(hasJoinedServer);
+	const [isJoinLoading, setIsJoinLoading] = useState(false);
+
+	// Update optimistic state when server state changes
+	useEffect(() => {
+		setHasJoinedOptimistic(hasJoinedServer);
+	}, [hasJoinedServer]);
 
 	// Redux Store
 	const dispatch = useAppDispatch();
@@ -48,7 +64,6 @@ const SuggestionCard: FC<Props> = ({
 	const elementRef = useRef<HTMLDivElement>(null);
 
 	// Use States
-
 	const [isEdit, setIsEdit] = useState(false);
 	const [shouldShowAddSubQuestionModal, setShouldShowAddSubQuestionModal] =
 		useState(false);
@@ -90,6 +105,24 @@ const SuggestionCard: FC<Props> = ({
 			}
 		} catch (error) {
 			console.error(error);
+		}
+	}
+
+	async function handleJoin() {
+		// Optimistically update the UI immediately
+		setHasJoinedOptimistic(!hasJoinedOptimistic);
+		setIsJoinLoading(true);
+
+		try {
+			// Call the API function in the background
+			await toggleJoining(statement.statementId);
+		} catch (error) {
+			// If the API call fails, revert the optimistic update
+			console.error('Failed to toggle joining:', error);
+			setHasJoinedOptimistic(hasJoinedOptimistic); // revert to original state
+			// Optionally show an error message to the user here
+		} finally {
+			setIsJoinLoading(false);
 		}
 	}
 
@@ -145,6 +178,26 @@ const SuggestionCard: FC<Props> = ({
 							setEdit={setIsEdit}
 							isTextArea={true}
 						/>
+						{enableJoining &&
+							<div className="btns btns--end">
+								<Joined statement={statement} />
+								<button
+									onClick={handleJoin}
+									disabled={isJoinLoading}
+									className="btn btn--small"
+									style={{
+										backgroundColor: hasJoinedOptimistic ? 'var(--approve)' : 'inherit',
+										color: hasJoinedOptimistic ? 'white' : 'inherit',
+										borderColor: hasJoinedOptimistic ? 'var(--approve)' : 'inherit',
+										opacity: isJoinLoading ? 0.7 : 1,
+										cursor: isJoinLoading ? 'not-allowed' : 'pointer'
+									}}
+								>
+									{hasJoinedOptimistic ? t('Leave') : t('Join')}
+								</button>
+
+							</div>
+						}
 					</div>
 					<div className='more'>
 						<SolutionMenu
@@ -172,9 +225,9 @@ const SuggestionCard: FC<Props> = ({
 					{hasChildren && (
 						<IconButton
 							className='add-sub-question-button more-question'
-							style={{  display:'none', cursor: 'default' }} // changed to display none for it to not take dom space
+							style={{ display: 'none', cursor: 'default' }} // changed to display none for it to not take dom space
 							onClick={
-								() => {} //delete the brackets and uncomment the line below for functionality
+								() => { } //delete the brackets and uncomment the line below for functionality
 								//	setShouldShowAddSubQuestionModal(true)
 							}
 						>
