@@ -115,7 +115,7 @@ const ChatInput: FC<Props> = ({ statement, hasEvaluation }) => {
 					style={statementColor}
 					data-cy='statement-chat-send-btn'
 				>
-					<SendIcon color={statementColor.color} />
+					{isChecking ? t('Checking...') : <SendIcon color={statementColor.color} />}
 				</button>
 
 			</form>

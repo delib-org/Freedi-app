@@ -1,10 +1,11 @@
+import React, { FC, useEffect, useState } from 'react';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import StatementChatMore from '@/view/pages/statement/components/chat/components/statementChatMore/StatementChatMore';
 import { EvaluationUI, Statement, StatementType } from 'delib-npm';
-import React, { FC } from 'react';
 import { Link, NavLink } from 'react-router';
 import styles from './SubGroupCard.module.scss';
 import useSubGroupCard from './SubGroupCardVM';
+import { maskProfanityAI } from '@/services/maskProfanityAI';
 
 interface Props {
 	statement: Statement;
@@ -12,15 +13,32 @@ interface Props {
 
 const SubGroupCard: FC<Props> = ({ statement }) => {
 	const { t } = useUserConfig();
-	const { Icon, backgroundColor, text } = useSubGroupCard(statement);
+	const { Icon, backgroundColor } = useSubGroupCard(statement);
+
+	// ✅ States to store masked text
+	const [cleanMainText, setCleanMainText] = useState('');
+	const [cleanTopVoted, setCleanTopVoted] = useState('');
+	const [cleanResults, setCleanResults] = useState<string[]>([]);
+
+	useEffect(() => {
+		maskProfanityAI(statement.statement).then(setCleanMainText);
+
+		if (statement.topVotedOption?.statement) {
+			maskProfanityAI(statement.topVotedOption.statement).then(setCleanTopVoted);
+		}
+
+		Promise.all(
+			(statement.results || []).map((r) => maskProfanityAI(r.statement))
+		).then(setCleanResults);
+	}, [statement]);
 
 	try {
-		const { results, topVotedOption, evaluationSettings } = statement;
+		const { results = [], topVotedOption, evaluationSettings } = statement;
 		const evaluationUI = evaluationSettings?.evaluationUI;
 		const isDecidedByVoting = evaluationUI === EvaluationUI.voting;
 		const shouldSeeVoting = isDecidedByVoting && topVotedOption;
 		const answerLabel =
-			results && (results.length > 1 || !isDecidedByVoting) ? t('Answers') : t('Answer');
+			results.length > 1 || !isDecidedByVoting ? t('Answers') : t('Answer');
 
 		return (
 			<div
@@ -34,7 +52,7 @@ const SubGroupCard: FC<Props> = ({ statement }) => {
 					to={`/statement/${statement.statementId}`}
 					className={styles.type}
 				>
-					<div className={styles.text}>{text}</div>
+					<div className={styles.text}>{cleanMainText}</div>
 					<div
 						className={styles.iconWrapper}
 						style={{ color: backgroundColor }}
@@ -47,33 +65,27 @@ const SubGroupCard: FC<Props> = ({ statement }) => {
 				</Link>
 
 				{shouldSeeVoting ? (
-					<NavLink
-						to={`/statement/${topVotedOption.statementId}/main`}
-					>
-						{topVotedOption.statement}
+					<NavLink to={`/statement/${topVotedOption.statementId}/main`}>
+						{cleanTopVoted}
 					</NavLink>
-				) : (statement.statementType === StatementType.question && (
+				) : statement.statementType === StatementType.question && (
 					<div className={styles.results}>
 						{results.length !== 0 && (
-							<NavLink
-								to={`/statement/${results[0].parentId}/main`}
-							>
+							<NavLink to={`/statement/${results[0].parentId}/main`}>
 								<p>{answerLabel}:</p>
 							</NavLink>
 						)}
 						<ul>
-							{results.map((result) => (
+							{results.map((result, index) => (
 								<li key={result.statementId}>
-									<NavLink
-										to={`/statement/${result.statementId}/main`}
-									>
-										{result.statement}
+									<NavLink to={`/statement/${result.statementId}/main`}>
+										{cleanResults[index]}
 									</NavLink>
 								</li>
 							))}
 						</ul>
 					</div>
-				))}
+				)}
 			</div>
 		);
 	} catch (err) {
