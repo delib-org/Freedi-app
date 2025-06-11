@@ -49,7 +49,7 @@ const EditTitle: FC<Props> = ({
 
 	const { dir: direction } = useUserConfig();
 	const align = direction === 'ltr' ? 'left' : 'right';
-	const { validateText, isChecking, error } = useProfanityCheck();
+	const { validateText, isChecking } = useProfanityCheck();
 
 	function handleChange(
 		e: ChangeEvent<HTMLTextAreaElement | HTMLInputElement>

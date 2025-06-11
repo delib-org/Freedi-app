@@ -48,6 +48,8 @@ const MultiStageQuestion: FC = () => {
 	const [cleanedStages, setCleanedStages] = useState<Statement[]>([]);
 
 	useEffect(() => {
+		let isMounted = true;
+
 		async function cleanStageTexts() {
 			const cleaned = await Promise.all(
 				initialStages.map(async (stage) => {
@@ -61,11 +63,20 @@ const MultiStageQuestion: FC = () => {
 					};
 				})
 			);
-			setCleanedStages(cleaned);
+			if (isMounted) {
+				setCleanedStages(cleaned);
+			}
 		}
 
-		cleanStageTexts();
-	}, [initialStages]);
+		if (initialStages.length > 0) {
+			cleanStageTexts();
+		}
+
+		return () => {
+			isMounted = false; // prevents memory leak if component unmounts mid-request
+		};
+	}, [JSON.stringify(initialStages.map(s => s.statementId))]);
+
 	const handleDragStart = (
 		e: DragEvent<HTMLDivElement>,
 		index: number
