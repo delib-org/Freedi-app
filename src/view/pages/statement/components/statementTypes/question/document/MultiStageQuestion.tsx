@@ -4,6 +4,7 @@ import {
 	useContext,
 	useState,
 	useMemo,
+	useEffect,
 } from 'react';
 import { StatementContext } from '../../../../StatementCont';
 import styles from './MultiStageQuestion.module.scss';
@@ -20,6 +21,7 @@ import { Statement, StatementType } from 'delib-npm';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import StagePage from '../../stage/StagePage';
 import Text from '@/view/components/text/Text';
+import { maskProfanityAI } from '@/services/maskProfanityAI';
 
 const MultiStageQuestion: FC = () => {
 	const { statement } = useContext(StatementContext);
@@ -43,7 +45,27 @@ const MultiStageQuestion: FC = () => {
 	const [showAddStage, setShowAddStage] = useState<boolean>(false);
 	const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
 	const [draggedItem, setDraggedItem] = useState<null | { index: number; indexOffset: number; y: number }>(null);
+	const [cleanedStages, setCleanedStages] = useState<Statement[]>([]);
 
+	useEffect(() => {
+		async function cleanStageTexts() {
+			const cleaned = await Promise.all(
+				initialStages.map(async (stage) => {
+					const cleanedStatement = await maskProfanityAI(stage.statement);
+					const cleanedDescription = await maskProfanityAI(stage.description || '');
+
+					return {
+						...stage,
+						statement: cleanedStatement,
+						description: cleanedDescription,
+					};
+				})
+			);
+			setCleanedStages(cleaned);
+		}
+
+		cleanStageTexts();
+	}, [initialStages]);
 	const handleDragStart = (
 		e: DragEvent<HTMLDivElement>,
 		index: number
@@ -117,7 +139,7 @@ const MultiStageQuestion: FC = () => {
 							{statement?.description}
 						</div>
 						<h3 className={styles.h3}>{t('Preliminary questions')}</h3>
-						{initialStages.map((stage, index) => (
+						{cleanedStages.map((stage, index) => (
 							<div
 								key={stage.statementId}
 								className={`${styles.stageContainer} ${draggedIndex === index ? styles.dragging : ''}`}

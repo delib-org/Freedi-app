@@ -13,6 +13,7 @@ import Save from '@/assets/icons/saveIcon.svg?react';
 import { updateStatementText } from '@/controllers/db/statements/setStatements';
 import { Statement } from 'delib-npm';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useProfanityCheck } from '@/controllers/hooks/useProfanityCheck';
 
 interface Props {
 	statement: Statement | undefined;
@@ -48,6 +49,7 @@ const EditTitle: FC<Props> = ({
 
 	const { dir: direction } = useUserConfig();
 	const align = direction === 'ltr' ? 'left' : 'right';
+	const { validateText, isChecking, error } = useProfanityCheck();
 
 	function handleChange(
 		e: ChangeEvent<HTMLTextAreaElement | HTMLInputElement>
@@ -64,10 +66,19 @@ const EditTitle: FC<Props> = ({
 		}
 	}
 
-	function handleSave() {
+	async function handleSave() {
 		try {
-			if (!title) return; // Do not save if the text is empty
+			if (!title) return;
 			if (!statement) throw new Error('Statement is undefined');
+
+			const isTitleClean = await validateText(title);
+			const isDescriptionClean = description ? await validateText(description) : true;
+
+			if (!isTitleClean || !isDescriptionClean) {
+				alert('Inappropriate language is not allowed.');
+
+				return;
+			}
 
 			updateStatementText(statement, title, description);
 			setEdit(false);
@@ -126,12 +137,13 @@ const EditTitle: FC<Props> = ({
 					<button
 						className={styles.save}
 						onClick={handleSave}
+						disabled={isChecking}
 						style={{
 							left: direction === 'rtl' ? '-1.4rem' : 'none',
 						}}
 						aria-label='Save'
 					>
-						<Save />
+						<Save /> {isChecking ? 'Checking...' : ''}
 					</button>
 				</>
 			)}
