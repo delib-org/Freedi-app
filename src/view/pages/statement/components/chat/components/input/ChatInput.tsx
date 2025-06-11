@@ -12,6 +12,8 @@ import { Statement } from 'delib-npm';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import EnhancedEvaluation from '../../../evaluations/components/evaluation/enhancedEvaluation/EnhancedEvaluation';
 
+import { useProfanityCheck } from '@/controllers/hooks/useProfanityCheck';
+
 interface Props {
 	statement: Statement;
 	hasEvaluation?: boolean;
@@ -22,11 +24,11 @@ const ChatInput: FC<Props> = ({ statement, hasEvaluation }) => {
 
 	// Redux hooks
 	const { t, rowDirection } = useUserConfig();
-
 	const statementColor = useStatementColor({ statement });
 	const [message, setMessage] = useState('');
-
 	const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+	const { validateText, error, isChecking } = useProfanityCheck();
 
 	useEffect(() => {
 		if (textareaRef.current) {
@@ -56,12 +58,15 @@ const ChatInput: FC<Props> = ({ statement, hasEvaluation }) => {
 		}
 	}
 
-	const handleSubmitInput = (
+	const handleSubmitInput = async (
 		e:
 			| React.FormEvent<HTMLFormElement>
 			| React.KeyboardEvent<HTMLTextAreaElement>
 	) => {
 		e.preventDefault();
+
+		const isClean = await validateText(message);
+		if (!isClean) return;
 
 		// Create statement
 		handleAddStatement(message, statement);
@@ -114,6 +119,11 @@ const ChatInput: FC<Props> = ({ statement, hasEvaluation }) => {
 				</button>
 
 			</form>
+			{error && (
+				<p style={{ color: 'red', fontSize: '0.9rem', marginTop: '0.5rem' }}>
+					{error}
+				</p>
+			)}
 		</div>
 	);
 };

@@ -1,6 +1,4 @@
 import { FC, useEffect, useRef, useState } from 'react';
-
-// Hooks & Helpers
 import { StatementSettingsProps } from '../../settingsTypeHelpers';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import './TitleAndDescription.scss';
@@ -9,10 +7,11 @@ import Button, { ButtonType } from '@/view/components/buttons/button/Button';
 import { useNavigate } from 'react-router';
 import { useProfanityCheck } from '@/controllers/hooks/useProfanityCheck';
 
-const TitleAndDescription: FC<StatementSettingsProps> = ({
-	statement,
-	setStatementToEdit,
-}) => {
+interface Props extends StatementSettingsProps {
+	onSubmit: (fullText: string) => void;
+}
+
+const TitleAndDescription: FC<Props> = ({ statement, onSubmit }) => {
 	const { t } = useUserConfig();
 	const navigate = useNavigate();
 
@@ -23,8 +22,6 @@ const TitleAndDescription: FC<StatementSettingsProps> = ({
 	);
 
 	const titleInputRef = useRef<HTMLInputElement>(null);
-
-	// ✅ Use the profanity-checking hook
 	const { validateText, isChecking, error } = useProfanityCheck();
 
 	useEffect(() => {
@@ -38,13 +35,7 @@ const TitleAndDescription: FC<StatementSettingsProps> = ({
 		const isClean = await validateText(fullText);
 
 		if (!isClean) return;
-
-		// ✅ Save only if the text is clean
-		setStatementToEdit({
-			...statement,
-			statement: fullText,
-			description,
-		});
+		onSubmit(fullText);
 	};
 
 	return (
@@ -76,7 +67,6 @@ const TitleAndDescription: FC<StatementSettingsProps> = ({
 				/>
 			</label>
 
-			{/* ✅ Error message from the hook */}
 			{error && (
 				<p style={{ color: 'red', fontSize: '0.9rem', marginTop: '0.5rem' }}>
 					{error}

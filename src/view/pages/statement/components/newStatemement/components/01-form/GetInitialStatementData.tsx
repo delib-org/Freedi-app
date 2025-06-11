@@ -12,6 +12,7 @@ import Textarea from '@/view/components/textarea/Textarea';
 import { StatementContext } from '@/view/pages/statement/StatementCont';
 import { StatementType, Statement, QuestionType } from 'delib-npm';
 import { LanguagesEnum } from '@/context/UserConfigContext';
+import { useProfanityCheck } from '@/controllers/hooks/useProfanityCheck'; // ✅ ADDED
 
 export default function GetInitialStatementData() {
 	const { t, currentLanguage } = useUserConfig();
@@ -23,6 +24,8 @@ export default function GetInitialStatementData() {
 		handleSetNewStatement,
 		statement,
 	} = useContext(StatementContext);
+
+	const { validateText, error, isChecking } = useProfanityCheck(); // ✅ ADDED
 
 	const _title = ((newStatementType: StatementType) => {
 		switch (newStatementType) {
@@ -41,6 +44,11 @@ export default function GetInitialStatementData() {
 			const form = new FormData(ev.target as HTMLFormElement);
 			const title = form.get('title') as string;
 			const description = (form.get('description') as string) || '';
+			const fullText = `${title}\n${description}`; // ✅ Combine for profanity check
+
+			const isClean = await validateText(fullText); // ✅ ADDED
+			if (!isClean) return; // ✅ Block submit if not clean
+
 			setTitle(title.toString());
 			setDescription(description);
 
@@ -90,11 +98,20 @@ export default function GetInitialStatementData() {
 					value={description}
 					name='description'
 				/>
+
+				{/* ✅ Error message shown here */}
+				{error && (
+					<p style={{ color: 'red', fontSize: '0.9rem', marginTop: '0.5rem' }}>
+						{error}
+					</p>
+				)}
+
 				<div className='btns'>
 					<Button
 						type='submit'
-						text={t('Create')}
+						text={isChecking ? t('Checking...') : t('Create')} // ✅ UX feedback
 						buttonType={ButtonType.PRIMARY}
+						disabled={isChecking} // ✅ Prevent multiple clicks
 					/>
 					<Button
 						text={t('Cancel')}

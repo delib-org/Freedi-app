@@ -10,12 +10,12 @@ export const checkProfanity = async (text: string): Promise<boolean> => {
 
     const { score } = result.data as { score: number | null };
 
-    console.info("Perspective score:", score);
+    console.info("AI-based score:", score);
 
-    return score !== null && score >= 0.85;
+    return score === null || score < 0.85;
   } catch (error) {
     console.error("Profanity check error:", error);
 
-    return false;
+    return true;
   }
 };

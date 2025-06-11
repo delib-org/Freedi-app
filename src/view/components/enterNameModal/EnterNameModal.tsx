@@ -10,6 +10,7 @@ import styles from './enterNameModal.module.scss';
 // Functions
 import { signAnonymously } from '@/controllers/db/authenticationUtils';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useProfanityCheck } from '@/controllers/hooks/useProfanityCheck';
 
 interface Props {
 	closeModal: VoidFunction;
@@ -17,23 +18,33 @@ interface Props {
 
 const EnterNameModal: FC<Props> = ({ closeModal }) => {
 	const [displayName, setDisplayName] = useState<string | null>(null);
-	const [showStartBtn, setShowStartBtn] = useState<boolean>(false);
 	const inputRef = useRef<HTMLInputElement>(null); // Create a ref for the input
-
 	const { t } = useUserConfig();
+
+	// ✅ Profanity filtering state
+	const { validateText, isChecking, error } = useProfanityCheck();
+	const [isValid, setIsValid] = useState(false);
 
 	useEffect(() => {
 		inputRef.current?.focus(); // Set focus on the input when the component mounts
 	}, []);
 
-	function handleSetName(ev: React.ChangeEvent<HTMLInputElement>) {
-		setDisplayName(ev.target.value);
-		setShowStartBtn(isReadyToStart(ev.target.value));
+	// ✅ Check profanity on change
+	async function handleSetName(ev: React.ChangeEvent<HTMLInputElement>) {
+		const value = ev.target.value;
+		setDisplayName(value);
+
+		if (value.length > 1) {
+			const clean = await validateText(value);
+			setIsValid(clean);
+		} else {
+			setIsValid(false);
+		}
 	}
 
 	function handleStart() {
 		try {
-			if (isReadyToStart(displayName)) {
+			if (displayName && displayName.length > 1 && isValid) {
 				signAnonymously();
 				const _displayName = displayName || 'Anonymous';
 				localStorage.setItem('displayName', _displayName);
@@ -48,21 +59,30 @@ const EnterNameModal: FC<Props> = ({ closeModal }) => {
 		<Modal>
 			<div className={styles.box} data-cy='anonymous-input'>
 				<input
-					ref={inputRef} // Assign the ref to the input
+					ref={inputRef}
 					className={styles.input}
 					onChange={handleSetName}
 					type='text'
 					name='displayName'
 					placeholder={t('Nickname')}
 					autoComplete='off'
+					value={displayName || ''}
 				/>
+
+				{/* ✅ Show profanity error */}
+				{error && (
+					<p style={{ color: 'red', fontSize: '0.9rem', marginTop: '0.5rem' }}>
+						{error}
+					</p>
+				)}
+
 				<div className='btns'>
 					<Button
 						buttonType={ButtonType.PRIMARY}
 						data-cy='anonymous-start-btn'
-						text={t('Start')}
+						text={isChecking ? t('Checking...') : t('Start')}
 						onClick={handleStart}
-						disabled={!showStartBtn}
+						disabled={!isValid || isChecking}
 					/>
 					<Button
 						buttonType={ButtonType.SECONDARY}
@@ -77,7 +97,3 @@ const EnterNameModal: FC<Props> = ({ closeModal }) => {
 };
 
 export default EnterNameModal;
-
-function isReadyToStart(displayName: string | null) {
-	return displayName !== null && displayName.length > 1; // Simplified condition
-}

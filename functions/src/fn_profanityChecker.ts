@@ -1,48 +1,52 @@
 import * as functions from "firebase-functions";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
+function getGenAI(): GoogleGenerativeAI {
+  const apiKey = process.env.GOOGLE_API_KEY;
+  if (!apiKey) {
+    console.error("GOOGLE_API_KEY missing (waiting for secret setup)");
+    throw new Error("Missing GOOGLE_API_KEY");
+  }
+
+  return new GoogleGenerativeAI(apiKey);
+}
+
+// Gemini-based profanity detection
+async function containsBadLanguage(text: string): Promise<boolean> {
+  try {
+    const model = getGenAI().getGenerativeModel({ model: "gemini-1.5-flash" });
+
+    const prompt = `
+      Detect if the following text contains any offensive, hateful, or inappropriate language. 
+      Return only true or false. Text: "${text}"
+    `;
+
+    const result = await model.generateContent(prompt);
+    const output = (await result.response.text()).trim().toLowerCase();
+
+    console.error("🧠 Gemini response:", output); // helpful debug
+
+    return output.includes("true");
+  } catch (error) {
+    console.error("Gemini API error:", error);
+
+    return false; // fail-safe: allow text if Gemini fails
+  }
+}
+
+// Firebase Callable Function using Gemini
 export const checkProfanity = functions.https.onCall(
   async (request: functions.https.CallableRequest) => {
     const { text } = request.data as { text: string };
 
-    const apiKey = process.env.GOOGLE_API_KEY;
-    if (!apiKey) {
-      console.info("GOOGLE_API_KEY missing (waiting for secret setup)");
-
-      return { score: null, warning: "API key not set" };
-    }
-
     try {
-      const response = await fetch(
-        `https://commentanalyzer.googleapis.com/v1alpha1/comments:analyze?key=${apiKey}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            comment: { text },
-            languages: ["en"],
-            requestedAttributes: { TOXICITY: {} },
-          }),
-        }
-      );
+      const isBad = await containsBadLanguage(text);
 
-      const result = await response.json();
-      console.error("🧠 PERSPECTIVE RAW RESULT:", JSON.stringify(result));
-      const score = result?.attributeScores?.TOXICITY?.summaryScore?.value;
-
-      if (typeof score !== "number") {
-        console.error(
-          "⚠️ Invalid or missing TOXICITY score. Full response:",
-          JSON.stringify(result)
-        );
-
-        return { score: null, error: "Unexpected API response structure" };
-      }
-
-      return { score };
+      return { score: isBad ? 1 : 0 }; // mimic Perspective API style
     } catch (error) {
-      console.error("Perspective API error:", error);
+      console.error("Profanity check failed:", error);
 
-      return { score: null, error: "API call failed" };
+      return { score: null, error: "AI call failed" };
     }
   }
 );

@@ -1,4 +1,4 @@
-import { Dispatch, FC, FormEvent, useState } from 'react';
+import { Dispatch, FC, useState } from 'react';
 
 // Third party imports
 import { useNavigate, useParams } from 'react-router';
@@ -44,16 +44,14 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 }) => {
 	const imageUrl = statement.imagesURL?.main ?? '';
 
-	// * Hooks * //
 	const navigate = useNavigate();
 	const { statementId } = useParams();
 	const { t } = useUserConfig();
-	const { validateText, isChecking, error } = useProfanityCheck(); // ✅ Profanity hook
+	const { validateText, isChecking, error } = useProfanityCheck();
 
 	const [image, setImage] = useState<string>(imageUrl);
 	const [loading, setLoading] = useState<boolean>(false);
 
-	// Selector to get the statement memberships
 	const statementMembershipSelector = (statementId: string | undefined) =>
 		createSelector(
 			(state: RootState) => state.statements.statementMembership,
@@ -68,121 +66,109 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 		statementMembershipSelector(statementId)
 	);
 
-	try {
-		const joinedMembers = members
-			.filter((member) => member.role !== Role.banned)
-			.map((m) => m.user);
+	const joinedMembers = members
+		.filter((member) => member.role !== Role.banned)
+		.map((m) => m.user);
 
-		const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-			e.preventDefault();
-			setLoading(true);
+	const handleSubmit = async (fullText: string) => {
+		setLoading(true);
 
-			// ✅ Profanity check on title + description
-			const fullText = `${statement.statement ?? ''}\n${statement.description ?? ''}`;
-			const isClean = await validateText(fullText);
-			if (!isClean) {
-				setLoading(false);
-
-				return;
-			}
-
-			if (!statement?.statement?.trim()) {
-				setLoading(false);
-				throw new Error('No new statement');
-			}
-
-			const newStatement = await setNewStatement({
-				navigate,
-				statementId,
-				statement,
-				parentStatement,
-			});
-
+		const isClean = await validateText(fullText);
+		if (!isClean) {
 			setLoading(false);
 
-			if (!newStatement) throw new Error('No new statement');
-			navigate(`/statement/${newStatement.statementId}`);
+			return;
+		}
+
+		if (!fullText.trim()) {
+			setLoading(false);
+			throw new Error('No new statement');
+		}
+
+		const updatedStatement = {
+			...statement,
+			statement: fullText,
+			description: '', // optional: split description if needed
 		};
 
-		const isNewStatement = !statementId;
-		const statementSettingsProps = { statement, setStatementToEdit } as const;
+		const newStatement = await setNewStatement({
+			navigate,
+			statementId,
+			statement: updatedStatement,
+			parentStatement,
+		});
 
-		if (loading || isChecking)
-			return (
-				<div className='statement-settings-form'>
-					<div className='loader-box'>
-						<Loader />
-					</div>
-				</div>
-			);
+		setLoading(false);
 
+		if (!newStatement) throw new Error('No new statement');
+		navigate(`/statement/${newStatement.statementId}`);
+	};
+
+	const isNewStatement = !statementId;
+	const statementSettingsProps = { statement, setStatementToEdit } as const;
+
+	if (loading || isChecking)
 		return (
-			<div className='wrapper'>
-				<form
-					onSubmit={handleSubmit}
-					className='statement-settings-form'
-					data-cy='statement-settings-form'
-				>
-					<TitleAndDescription
-						statement={statement}
-						setStatementToEdit={setStatementToEdit}
-					/>
-
-					{/* ✅ Show profanity error */}
-					{error && (
-						<p style={{ color: 'red', fontSize: '0.9rem', marginTop: '0.5rem' }}>
-							{error}
-						</p>
-					)}
-
-					<SectionTitle title={t('General Settings')} />
-					<section className='switches-area'>
-						<AdvancedSettings {...statementSettingsProps} />
-					</section>
-
-					<button
-						type='submit'
-						className='submit-button btn'
-						aria-label='Submit button'
-						data-cy='settings-statement-submit-btn'
-					>
-						{t('Save')}
-					</button>
-				</form>
-
-				<MembershipSettings
-					statement={statement}
-					setStatementToEdit={setStatementToEdit}
-				/>
-
-				{statement.statementType === StatementType.question && (
-					<ChoseBySettings {...statementSettingsProps} />
-				)}
-
-				{!isNewStatement && (
-					<>
-						<UploadImage
-							statement={statement}
-							image={image}
-							setImage={setImage}
-						/>
-						<QuestionSettings {...statementSettingsProps} />
-						<SectionTitle title={t('Members')} />
-						<section className='get-members-area'>
-							<GetVoters statementId={statementId} joinedMembers={joinedMembers} />
-						</section>
-						<section className='get-members-area'>
-							<GetEvaluators statementId={statementId} />
-						</section>
-					</>
-				)}
+			<div className='statement-settings-form'>
+				<div className='loader-box'>
+					<Loader />
+				</div>
 			</div>
 		);
-	} catch (error) {
-		console.error(error);
 
-		return null;
-	}
+	return (
+		<div className='wrapper'>
+			<form
+				onSubmit={(e) => e.preventDefault()}
+				className='statement-settings-form'
+				data-cy='statement-settings-form'
+			>
+				<TitleAndDescription
+					statement={statement}
+					setStatementToEdit={setStatementToEdit}
+					onSubmit={handleSubmit}
+				/>
+
+				{error && (
+					<p style={{ color: 'red', fontSize: '0.9rem', marginTop: '0.5rem' }}>
+						{error}
+					</p>
+				)}
+
+				<SectionTitle title={t('General Settings')} />
+				<section className='switches-area'>
+					<AdvancedSettings {...statementSettingsProps} />
+				</section>
+			</form>
+
+			<MembershipSettings
+				statement={statement}
+				setStatementToEdit={setStatementToEdit}
+			/>
+
+			{statement.statementType === StatementType.question && (
+				<ChoseBySettings {...statementSettingsProps} />
+			)}
+
+			{!isNewStatement && (
+				<>
+					<UploadImage
+						statement={statement}
+						image={image}
+						setImage={setImage}
+					/>
+					<QuestionSettings {...statementSettingsProps} />
+					<SectionTitle title={t('Members')} />
+					<section className='get-members-area'>
+						<GetVoters statementId={statementId} joinedMembers={joinedMembers} />
+					</section>
+					<section className='get-members-area'>
+						<GetEvaluators statementId={statementId} />
+					</section>
+				</>
+			)}
+		</div>
+	);
 };
 
 export default StatementSettingsForm;

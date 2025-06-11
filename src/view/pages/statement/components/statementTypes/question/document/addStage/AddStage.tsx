@@ -5,6 +5,7 @@ import Button, { ButtonType } from '@/view/components/buttons/button/Button';
 import { saveStatementToDB } from '@/controllers/db/statements/setStatements';
 import { StatementContext } from '@/view/pages/statement/StatementCont';
 import { StageSelectionType, StatementType } from 'delib-npm';
+import { useProfanityCheck } from '@/controllers/hooks/useProfanityCheck';
 
 interface AddStageProps {
 	setShowAddStage: (showAddStage: boolean) => void;
@@ -14,6 +15,8 @@ const AddStage: FC<AddStageProps> = ({ setShowAddStage }) => {
 	const { t } = useUserConfig();
 	const { statement } = useContext(StatementContext);
 	const [isShaking, setIsShaking] = useState(false);
+
+	const { validateText, isChecking, error } = useProfanityCheck();
 
 	function handleCloseModal() {
 		setShowAddStage(false);
@@ -34,6 +37,10 @@ const AddStage: FC<AddStageProps> = ({ setShowAddStage }) => {
 
 		const name = data.get('stageName') as string;
 		const description = (data.get('stageDescription') as string) || '';
+
+		const fullText = `${name}\n${description}`;
+		const clean = await validateText(fullText);
+		if (!clean) return;
 
 		if (!statement || !stageSelectionType) return;
 		await saveStatementToDB({
@@ -93,11 +100,18 @@ const AddStage: FC<AddStageProps> = ({ setShowAddStage }) => {
 					name='stageDescription'
 					placeholder={t('Stage Description')}
 				/>
+				{/* ✅ Show profanity error */}
+				{error && (
+					<p style={{ color: 'red', fontSize: '0.9rem', marginTop: '0.5rem' }}>
+						{error}
+					</p>
+				)}
 				<div className='btns'>
 					<Button
-						text={t('Add Stage')}
+						text={isChecking ? t('Checking...') : t('Add Stage')}
 						type='submit'
 						buttonType={ButtonType.PRIMARY}
+						disabled={isChecking}
 					/>
 					<Button
 						text={t('Cancel')}
