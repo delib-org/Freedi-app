@@ -95,16 +95,17 @@
 }
 
 .light-contrast {
-	background-color: var(--btn-accessibility-light-contrast);
-	color: var(--btn-accessibility-light-contrast-text);
+	background-color: var(--btn-accessibility-light-contrast-icons);
+	color: var(--btn-accessibility-light-contrast-text-contrast);
 	svg {
-		color: var(--btn-accessibility-light-contrast-icons);
+		color: var(--btn-accessibility-light-contrast-text-contrast);
 	}
 }
 
 .high-contrast {
-
+	background-color: var(--btn-accessibility-light-contrast);
+	color: var(--btn-accessibility-light-contrast-icons);
 	svg {
-		color: var(--btn-accessibility-icons);
+		color: var(--btn-accessibility-light-contrast-icons);
 	}
 }

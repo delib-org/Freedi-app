@@ -9,14 +9,14 @@
   box-sizing: border-box;
 
   &--primary {
-    background-color: var(--btn-primary-default);
-    color: white;
+    background-color: var(--btn-primary);
+    color: var(--white);
   }
 
   &--secondary {
     background-color: white;
-    color: var(--btn-secondary-default);
-    border: 1px solid var(--btn-secondary-default);
+    color: var(--btn-secondary);
+    border: 1px solid var(--btn-secondary);
   }
 
   &--disabled {
