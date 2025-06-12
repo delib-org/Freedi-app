@@ -97,7 +97,7 @@ const HomeMain = () => {
 					));
 				})()}
 			</div>
-			<Footer addGroup={handleAddStatement} setSubPage={setSubPage} subPage={subPage} />
+			<Footer addGroup={handleAddStatement} isMain={true} setSubPage={setSubPage} subPage={subPage} />
 		</main>
 	);
 };

@@ -10,12 +10,14 @@ import { StatementContext } from '../../StatementCont';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import { useSelector } from 'react-redux';
 import { creatorSelector } from '@/redux/creator/creatorSlice';
+import { is } from 'valibot';
 
 interface Props {
 	addGroup: () => void;
+	isMain?: boolean;
 }
 
-export default function AddButton({ addGroup }: Props) {
+export default function AddButton({ addGroup, isMain }: Props) {
 	const user = useSelector(creatorSelector);
 	const isAdvancedUser = user?.advanceUser || false;
 	const [actionsOpen, setActionsOpen] = React.useState(false);
@@ -40,9 +42,7 @@ export default function AddButton({ addGroup }: Props) {
 	const handleAction = (
 		action: 'question' | 'mass-consensus' | 'subgroup'
 	) => {
-
-		if (isAdvancedUser) addGroup();
-
+		console.log("handleAction", action, isAdvancedUser, isMain, typeof addGroup);
 		switch (action) {
 			case 'question':
 				handleAddStatement(
@@ -65,8 +65,8 @@ export default function AddButton({ addGroup }: Props) {
 	};
 
 	const toggleActions = () => {
-		console.log("toggleActions", actionsOpen, isAdvancedUser);
-		if (!isAdvancedUser) {
+		console.log("toggleActions", !isAdvancedUser, isMain, typeof addGroup === "function");
+		if (!isAdvancedUser && isMain && typeof addGroup === "function") {
 			addGroup();
 
 			return;
