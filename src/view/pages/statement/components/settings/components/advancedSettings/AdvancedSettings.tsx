@@ -5,7 +5,7 @@ import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import Checkbox from '@/view/components/checkbox/Checkbox';
 import './AdvancedSettings.scss';
 import { setStatementSettingToDB } from '@/controllers/db/statementSettings/setStatementSettings';
-import { StatementSettings } from 'delib-npm';
+import { StatementSettings, StatementType } from 'delib-npm';
 
 const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 	const { t } = useUserConfig();
@@ -23,6 +23,7 @@ const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 		hasChat = false,
 		hasChildren = false,
 		joiningEnabled = false,
+		enableAddNewSubQuestionsButton = false,
 	} = statementSettings;
 
 	function handleAdvancedSettingChange(
@@ -48,13 +49,24 @@ const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 					handleAdvancedSettingChange('hasChat', checked)
 				}
 			/>
-			<Checkbox
-				label={'Enable Joining an option'}
-				isChecked={joiningEnabled}
-				onChange={(checked) =>
-					handleAdvancedSettingChange('joiningEnabled', checked)
-				}
-			/>
+			{statement.statementType === StatementType.question && (
+				<>
+					<Checkbox
+						label={'Enable Joining an option'}
+						isChecked={joiningEnabled}
+						onChange={(checked) =>
+							handleAdvancedSettingChange('joiningEnabled', checked)
+						}
+					/>
+					<Checkbox
+						label={'Enable add new sub-questions button'}
+						isChecked={enableAddNewSubQuestionsButton}
+						onChange={(checked) =>
+							handleAdvancedSettingChange('enableAddNewSubQuestionsButton', checked)
+						}
+					/>
+				</>
+			)}
 			<Checkbox
 				label={'Enable Sub-Conversations'}
 				isChecked={hasChildren}
