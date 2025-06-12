@@ -8,8 +8,16 @@ import styles from './AddButton.module.scss'
 import { QuestionType, StatementType } from 'delib-npm';
 import { StatementContext } from '../../StatementCont';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useSelector } from 'react-redux';
+import { creatorSelector } from '@/redux/creator/creatorSlice';
 
-export default function AddButton() {
+interface Props {
+	addGroup: () => void;
+}
+
+export default function AddButton({ addGroup }: Props) {
+	const user = useSelector(creatorSelector);
+	const isAdvancedUser = user?.advanceUser || false;
 	const [actionsOpen, setActionsOpen] = React.useState(false);
 	const { handleSetNewStatement, setNewStatementType, setNewQuestionType } =
 		useContext(StatementContext);
@@ -32,6 +40,9 @@ export default function AddButton() {
 	const handleAction = (
 		action: 'question' | 'mass-consensus' | 'subgroup'
 	) => {
+
+		if (isAdvancedUser) addGroup();
+
 		switch (action) {
 			case 'question':
 				handleAddStatement(
@@ -53,7 +64,15 @@ export default function AddButton() {
 		}
 	};
 
-	const toggleActions = () => setActionsOpen(!actionsOpen);
+	const toggleActions = () => {
+		console.log("toggleActions", actionsOpen, isAdvancedUser);
+		if (!isAdvancedUser) {
+			addGroup();
+
+			return;
+		}
+		setActionsOpen(!actionsOpen);
+	};
 
 	const actions = [
 		{
@@ -74,7 +93,7 @@ export default function AddButton() {
 	];
 
 	return (
-		<div className={`${styles.actions}`}>
+		<div className={`${styles.actions}`} >
 			{actions.map(({ key, action, icon }, index) => {
 				let angle: number;
 				if (dir === 'ltr') {

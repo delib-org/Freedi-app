@@ -22,7 +22,7 @@ const HomeMain = () => {
 	// Hooks
 	const navigate = useNavigate();
 	const [loading, setLoading] = useState(true);
-	const [subPage, setSubPage] = useState<"decisions" | "groups">("groups");
+	const [subPage, setSubPage] = useState<"decisions" | "groups">("decisions");
 	const [subPageTitle, setSubPageTitle] = useState<"Decisions" | "Groups">("Decisions");
 	const { user } = useAuthentication();
 	const { t } = useUserConfig();
@@ -36,6 +36,7 @@ const HomeMain = () => {
 		.sort((a, b) => b.lastUpdate - a.lastUpdate)
 
 	function handleAddStatement() {
+		console.log("add group")
 		navigate('/home/addStatement', {
 			state: { from: window.location.pathname },
 		});

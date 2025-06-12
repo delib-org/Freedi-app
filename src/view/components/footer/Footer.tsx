@@ -1,6 +1,5 @@
 import { FC } from "react";
 // icons
-import AddIcon from "@/assets/icons/plusIcon.svg?react";
 import GroupIcon from "@/assets/icons/group.svg?react";
 // import GravelIcon from "@/assets/icons/gravel.svg?react";
 import TargetIcon from "@/assets/icons/target.svg?react";
@@ -10,6 +9,7 @@ import { NotificationType } from "delib-npm";
 import { useSelector } from "react-redux";
 import { inAppNotificationsSelector } from "@/redux/notificationsSlice/notificationsSlice";
 import { creatorSelector } from "@/redux/creator/creatorSlice";
+import AddButton from "@/view/pages/statement/components/addButton/AddButton";
 
 interface Props {
 	addGroup: () => void;
@@ -27,9 +27,7 @@ const Footer: FC<Props> = ({ addGroup, setSubPage, subPage }) => {
 
 		<div className={styles.footer} data-cy="add-statement">
 
-			<button onClick={addGroup} className={styles.addStatementButton}>
-				<AddIcon />
-			</button>
+			<AddButton addGroup={addGroup} />
 			<button onClick={() => setSubPage("decisions")} className={`${styles.button} ${subPage === "decisions" ? styles.buttonActive : ""}`}>
 				<div className={`${styles.buttonImage} ${subPage === "decisions" ? styles.buttonImageActive : ""}`}>
 					{inAppNotificationsList.length > 0 && <div className={styles.redCircle}>
