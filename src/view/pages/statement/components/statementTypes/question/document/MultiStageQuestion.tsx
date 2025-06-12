@@ -100,12 +100,14 @@ const MultiStageQuestion: FC = () => {
 			{!hasStages && <div className={`${styles.description} description`}>
 				<Text description={statement?.description} fontSize='1.2rem' />
 			</div>}
-			<div className={`btns ${styles['add-stage']}`}>
-				<button
-					className='btn btn--secondary'
-					onClick={() => setShowAddStage(true)}
-				>{t('Add sub-question')}</button>
-			</div>
+			{statement.statementSettings?.enableAddNewSubQuestionsButton && (
+				<div className={`btns ${styles['add-stage']}`}>
+					<button
+						className='btn btn--secondary'
+						onClick={() => setShowAddStage(true)}
+					>{t('Add sub-question')}</button>
+				</div>
+			)}
 			{!hasStages ? (
 				<StagePage showStageTitle={false} />) :
 				(
