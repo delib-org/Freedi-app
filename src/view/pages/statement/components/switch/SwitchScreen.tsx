@@ -40,16 +40,18 @@ function SwitchScreen({
 		case 'settings':
 			return <StatementSettings />;
 		case 'main':
-			return <SwitchStatementType statement={statement} />;
+			return <SwitchStatementType statement={statement} role={role} />;
 		default:
-			return <SwitchStatementType statement={statement} />;
+			return <SwitchStatementType statement={statement} role={role} />;
 	}
 }
 
 function SwitchStatementType({
 	statement,
+	role,
 }: Readonly<{
 	statement: Statement | undefined;
+	role: Role | undefined;
 }>): ReactNode {
 	const statementType = statement?.statementType;
 
@@ -59,7 +61,12 @@ function SwitchStatementType({
 		case StatementType.question:
 			return <QuestionPage />;
 		case StatementType.option:
-			return <SuggestionChat />;
+			return statement ? (
+				<SuggestionChat
+					statement={statement}
+					isStatementCreator={role === Role.creator}
+				/>
+			) : null;;
 		default:
 			return null;
 	}
