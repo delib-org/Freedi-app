@@ -1,4 +1,4 @@
-import { FormEvent, useContext } from 'react';
+import { FormEvent, useContext, useEffect, useState } from 'react';
 import { NewStatementContext } from '../../newStatementCont';
 import styles from './GetInitialStatementData.module.scss';
 import {
@@ -17,23 +17,58 @@ export default function GetInitialStatementData() {
 	const { t, currentLanguage } = useUserConfig();
 	const { title, description, setTitle, setDescription } =
 		useContext(NewStatementContext);
+	const [_title, setTitleLabel] = useState<string>(t('Create a group'));
+
 	const {
 		newStatementType,
 		newQuestionType,
 		handleSetNewStatement,
+		setNewStatementType,
 		statement,
 	} = useContext(StatementContext);
 
-	const _title = ((newStatementType: StatementType) => {
-		switch (newStatementType) {
-			case StatementType.group:
-				return t('Create a group');
-			case StatementType.question:
-				return t('Create a question');
-			default:
-				return t('Create a statement');
+	useEffect(() => {
+		console.log("statement in GetInitialStatementData", statement);
+		if (!statement) {
+			setNewStatementType(StatementType.question);
+			setTitleLabel(t('Create a question'));
+		} else {
+			setTitleLabel(
+				((newStatementType: StatementType) => {
+					switch (newStatementType) {
+						case StatementType.group:
+							setNewStatementType(StatementType.group);
+							setTitleLabel(t('Create a group'));
+
+							return t('Create a group');
+						case StatementType.question:
+							setNewStatementType(StatementType.question);
+							setTitleLabel(t('Create a question'));
+
+							return t('Create a question');
+						default:
+							setNewStatementType(StatementType.statement);
+							setTitleLabel(t('Create a statement'));
+
+							return t('Create a statement');
+					}
+				})(newStatementType)
+			);
 		}
-	})(newStatementType);
+	}, [statement]);
+
+	console.log(statement, 'statement in GetInitialStatementData');
+	console.log(newStatementType, 'newStatementType in GetInitialStatementData');
+	// const _title = ((newStatementType: StatementType) => {
+	// 	switch (newStatementType) {
+	// 		case StatementType.group:
+	// 			return t('Create a group');
+	// 		case StatementType.question:
+	// 			return t('Create a question');
+	// 		default:
+	// 			return t('Create a statement');
+	// 	}
+	// })(newStatementType);
 
 	const handleSubmit = async (ev: FormEvent<HTMLFormElement>) => {
 		ev.preventDefault();

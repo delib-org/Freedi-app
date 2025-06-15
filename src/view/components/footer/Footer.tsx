@@ -27,8 +27,9 @@ const Footer: FC<Props> = ({ addGroup, setSubPage, subPage, isMain }) => {
 	return (
 
 		<div className={styles.footer} data-cy="add-statement">
-
-			<AddButton addGroup={addGroup} isMain={isMain} />
+			<div className={styles.addButtonContainer}>
+				<AddButton addGroup={addGroup} isMain={isMain} />
+			</div>
 			<button onClick={() => setSubPage("decisions")} className={`${styles.button} ${subPage === "decisions" ? styles.buttonActive : ""}`}>
 				<div className={`${styles.buttonImage} ${subPage === "decisions" ? styles.buttonImageActive : ""}`}>
 					{inAppNotificationsList.length > 0 && <div className={styles.redCircle}>

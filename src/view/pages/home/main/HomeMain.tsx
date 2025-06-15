@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import '@/view/style/homePage.scss';
-
+import styles from './HomeMain.module.scss';
 // Third party libraries
 import { useNavigate } from 'react-router';
 
@@ -17,6 +17,8 @@ import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { StatementType } from 'delib-npm';
 import MainQuestionCard from './mainQuestionCard/MainQuestionCard';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import NewStatement from '../../statement/components/newStatemement/newStatement';
+import { StatementContext } from '../../statement/StatementCont';
 
 const HomeMain = () => {
 	// Hooks
@@ -26,6 +28,9 @@ const HomeMain = () => {
 	const [subPageTitle, setSubPageTitle] = useState<"Decisions" | "Groups">("Decisions");
 	const { user } = useAuthentication();
 	const { t } = useUserConfig();
+	const { setNewStatementType } = useContext(StatementContext)
+
+	setNewStatementType(StatementType.question);
 
 	const topSubscriptions = useAppSelector(topSubscriptionsSelector)
 		.sort((a, b) => b.lastUpdate - a.lastUpdate)
@@ -36,7 +41,6 @@ const HomeMain = () => {
 		.sort((a, b) => b.lastUpdate - a.lastUpdate)
 
 	function handleAddStatement() {
-		console.log("add group")
 		navigate('/home/addStatement', {
 			state: { from: window.location.pathname },
 		});
@@ -58,6 +62,9 @@ const HomeMain = () => {
 
 	return (
 		<main className='home-page__main slide-in'>
+			<div className={styles.newStatementContainer}>
+				<NewStatement />
+			</div>
 			<div className='heroImg'></div>
 			<img
 				className='bikeImg'
