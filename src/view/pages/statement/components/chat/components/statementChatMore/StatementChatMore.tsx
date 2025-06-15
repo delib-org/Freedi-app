@@ -34,7 +34,10 @@ const StatementChatMore: FC<Props> = ({
 
 	const inAppNotificationsList: NotificationType[] = useSelector(
 		inAppNotificationsSelector
-	).filter((n) => n.creatorId !== creator?.uid);
+	).filter(
+		(n) =>
+			n.creatorId !== creator?.uid && n.parentId === statement.statementId
+	);
 
 	const handleClick = () => {
 		if (useLink) {
