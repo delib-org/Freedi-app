@@ -11,7 +11,7 @@ $bottomCard: 1.5rem;
 
 	.title {
 		position: relative;
-		border-inline-start: 4px solid #66afe9;
+		border-inline-start: 4px solid var(--header-question);
 		display: flex;
 		justify-content: space-between;
 		background-color: white;
@@ -25,7 +25,7 @@ $bottomCard: 1.5rem;
 		}
 
 		svg {
-			color: #1b45a7;
+			color: var(--icons-blue-dark);
 			cursor: pointer;
 			width: 1.8rem;
 			height: 1.8rem;
@@ -47,7 +47,7 @@ $bottomCard: 1.5rem;
 
 	.suggestions {
 		background-color: #e8edf5;
-		border-inline-start: 4px solid #76c0b3;
+		border-inline-start: 4px solid (--header-chosen);
 
 		&:nth-child(even) {
 			background-color: transparent;
@@ -60,7 +60,7 @@ $bottomCard: 1.5rem;
 	}
 
 	.previewContent {
-		color: #2a3346;
+		color: var(--text-subtitle);
 		font-size: 14px;
 		margin-inline-start: 1.5rem;
 		display: flex;
