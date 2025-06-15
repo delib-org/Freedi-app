@@ -45,7 +45,7 @@
 		align-items: center;
 		justify-content: center;
 		color: var(--text-body);
-		color: #a9b9de;
+		color: var(--emoji-happy);
 
 		// Adding new styles for tooltips
 		.scoreValue {
@@ -61,7 +61,7 @@
 		}
 
 		&.negative .scoreValue {
-			color: #da6d6d;
+			color: var(--emoji-thinking);
 		}
 
 		.total-evaluators {

@@ -13,9 +13,9 @@
 		display: flex;
 		justify-content: center;
 		align-items: center;
-		background-color: #c6cddc;
+		background-color: var(--btn-disabled);
 		gap: 1rem;
-		color: white;
+		color: var(--white);
 		border: none;
 		padding: 10px 20px;
 
@@ -42,7 +42,7 @@
 	}
 
 	.active {
-		background-color: var(--btn-primary-default);
+		background-color: var(--btn-primary);
 		/* Added for active button color */
 		color: white;
 		/* Added for active button text color */
