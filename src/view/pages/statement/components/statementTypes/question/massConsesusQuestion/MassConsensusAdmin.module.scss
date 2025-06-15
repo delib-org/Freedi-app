@@ -43,3 +43,17 @@
 .deletionImage {
 	width: 130px;
 }
+.allOptionsAccordion {
+	margin: 1rem 0;
+	font-size: 1.25rem;
+	summary {
+		cursor: pointer;
+		padding: 0.5rem;
+		border-radius: 4px;
+	}
+
+	.allOptionsContent {
+		border-top: none;
+		padding: 1rem;
+	}
+}
