@@ -5,7 +5,7 @@ import styles from './UserDataQuestionInput.module.scss';
 interface UserQuestionInputProps {
 	question: UserQuestion;
 	value?: string | string[];
-	options?: { option: string, color?: string }[];
+	options?: string[];
 	onChange: (value: string | string[]) => void;
 	className?: string;
 	required?: boolean;

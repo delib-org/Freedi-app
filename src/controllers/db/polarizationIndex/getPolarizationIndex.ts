@@ -1,6 +1,6 @@
 import { collection, onSnapshot, query, where } from "firebase/firestore";
 import { FireStore } from "../config";
-import { Collections, PolarizationIndex } from "delib-npm";
+import { Collections, PolarizationMetrics } from "delib-npm";
 import { store } from "@/redux/store";
 import { deletePolarizationIndex, setPolarizationIndexes } from "@/redux/userData/userDataSlice";
 
@@ -19,7 +19,7 @@ export function listenToPolarizationIndex(statementId: string) {
 		return onSnapshot(q, (polarizationIndexes) => {
 
 			polarizationIndexes.docChanges().forEach((change) => {
-				const data = change.doc.data() as PolarizationIndex;
+				const data = change.doc.data() as PolarizationMetrics;
 
 				if (change.type === 'added' || change.type === 'modified') {
 					dispatch(setPolarizationIndexes(data));
