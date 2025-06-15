@@ -47,7 +47,7 @@
 		}
 
 		&Active {
-			background-color: rgba(180, 224, 248, 1);
+			background-color: var(--member-awaiting);
 			color: black;
 			border-radius: 2rem;
 
@@ -55,7 +55,7 @@
 
 
 		&:hover {
-			background-color: rgba(180, 224, 248, 1);
+			background-color: var(--member-awaiting);
 			color: black;
 			transition: all 0.2s ease-in-out;
 		}
@@ -66,7 +66,7 @@
 }
 
 .addStatementButton {
-	background: #5899e0;
+	background: var(--btn-primary);
 	flex: 1;
 	margin: .1rem 0;
 	height: 3.125rem;
