@@ -71,8 +71,18 @@ export async function updateInAppNotifications(
 		}
 
 		// Combine subscribers
-		const allSubscribers = [...subscribersInApp, ...topLevelSubscribers];
+		const seenUserIds = new Set();
+		const allSubscribers = [
+			...subscribersInApp,
+			...topLevelSubscribers,
+		].filter((subscriber) => {
+			if (seenUserIds.has(subscriber.user.uid)) {
+				return false;
+			}
+			seenUserIds.add(subscriber.user.uid);
 
+			return true;
+		});
 		//get fcm subscribers
 		const fcmSubscribers: FcmSubscriber[] = askedToBeNotifiedDB.docs.map(
 			(ntfDB: QueryDocumentSnapshot) => {
