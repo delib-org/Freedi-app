@@ -1,5 +1,5 @@
-import { UserQuestion, UserQuestionType } from "delib-npm";
-import { FC, useEffect, useState } from "react";
+import { UserQuestion, UserQuestionType } from 'delib-npm';
+import { FC, useEffect, useState } from 'react';
 import styles from './UserDataQuestionInput.module.scss';
 
 interface UserQuestionInputProps {
@@ -16,10 +16,10 @@ const UserQuestionInput: FC<UserQuestionInputProps> = ({
 	value = '',
 	onChange,
 	className = '',
-	required = false
+	required = false,
 }) => {
 	const [validationError, setValidationError] = useState('');
-
+	const [isChosen, setIsChosen] = useState<number | null>(null);
 	const validateInput = (inputValue: string | string[]) => {
 		if (!required) {
 			setValidationError('');
@@ -31,7 +31,10 @@ const UserQuestionInput: FC<UserQuestionInputProps> = ({
 			case UserQuestionType.text:
 			case UserQuestionType.textarea:
 			case UserQuestionType.radio:
-				if (!inputValue || (typeof inputValue === 'string' && inputValue.trim() === '')) {
+				if (
+					!inputValue ||
+					(typeof inputValue === 'string' && inputValue.trim() === '')
+				) {
 					setValidationError('This field is required');
 
 					return false;
@@ -51,9 +54,10 @@ const UserQuestionInput: FC<UserQuestionInputProps> = ({
 		return true;
 	};
 
-	const handleRadioChange = (selectedValue: string) => {
+	const handleRadioChange = (selectedValue: string, index: number) => {
 		validateInput(selectedValue);
 		onChange(selectedValue);
+		setIsChosen(index);
 	};
 
 	// Validate on mount and when value/required changes
@@ -65,22 +69,31 @@ const UserQuestionInput: FC<UserQuestionInputProps> = ({
 
 	const renderInput = () => {
 		switch (question.type) {
-
 			case UserQuestionType.radio:
 				return (
-					<div className={styles.optionsContainer} role="radiogroup" aria-required={required}>
+					<div
+						className={styles.optionsContainer}
+						role='radiogroup'
+						aria-required={required}
+					>
 						{question.options?.map((option, index) => (
 							<label key={index} className={styles.optionLabel}>
 								<input
-									type="radio"
+									type='radio'
 									name={`radio-${question.userQuestionId}`}
 									value={option.option}
 									defaultChecked={value === option.option}
-									onChange={() => handleRadioChange(option.option)}
+									onChange={() =>
+										handleRadioChange(option.option, index)
+									}
 									className={styles.radioInput}
 									required={required}
 								/>
-								<span className={styles.optionText}>{option.option}</span>
+								<span
+									className={`${isChosen !== null && styles.optionText} ${isChosen === index && styles.selectedInput}`}
+								>
+									{option.option}
+								</span>
 							</label>
 						))}
 					</div>
@@ -103,8 +116,8 @@ const UserQuestionInput: FC<UserQuestionInputProps> = ({
 					<div
 						id={`${question.userQuestionId}-error`}
 						className={styles.errorMessage}
-						role="alert"
-						aria-live="polite"
+						role='alert'
+						aria-live='polite'
 					>
 						{validationError}
 					</div>
