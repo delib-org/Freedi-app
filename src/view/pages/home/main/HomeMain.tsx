@@ -19,6 +19,8 @@ import MainQuestionCard from './mainQuestionCard/MainQuestionCard';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import NewStatement from '../../statement/components/newStatemement/newStatement';
 import { StatementContext } from '../../statement/StatementCont';
+import { selectNewStatementShowModal } from '@/redux/statements/newStatementSlice';
+import { useSelector } from 'react-redux';
 
 const HomeMain = () => {
 	// Hooks
@@ -29,6 +31,7 @@ const HomeMain = () => {
 	const { user } = useAuthentication();
 	const { t } = useUserConfig();
 	const { setNewStatementType } = useContext(StatementContext)
+	const showNewStatementModal = useSelector(selectNewStatementShowModal);
 
 	setNewStatementType(StatementType.question);
 
@@ -62,9 +65,9 @@ const HomeMain = () => {
 
 	return (
 		<main className='home-page__main slide-in'>
-			<div className={styles.newStatementContainer}>
+			{showNewStatementModal && <div className={styles.newStatementContainer}>
 				<NewStatement />
-			</div>
+			</div>}
 			<div className='heroImg'></div>
 			<img
 				className='bikeImg'

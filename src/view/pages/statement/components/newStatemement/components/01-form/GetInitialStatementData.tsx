@@ -12,63 +12,25 @@ import Textarea from '@/view/components/textarea/Textarea';
 import { StatementContext } from '@/view/pages/statement/StatementCont';
 import { StatementType, Statement, QuestionType } from 'delib-npm';
 import { LanguagesEnum } from '@/context/UserConfigContext';
+import { useDispatch, useSelector } from 'react-redux';
+import { clearNewStatement, selectNewQuestionType, selectNewStatementType, selectParentStatementForNewStatement, setNewStatementType } from '@/redux/statements/newStatementSlice';
 
 export default function GetInitialStatementData() {
+	const dispatch = useDispatch();
 	const { t, currentLanguage } = useUserConfig();
-	const { title, description, setTitle, setDescription } =
-		useContext(NewStatementContext);
-	const [_title, setTitleLabel] = useState<string>(t('Create a group'));
 
-	const {
-		newStatementType,
-		newQuestionType,
-		handleSetNewStatement,
-		setNewStatementType,
-		statement,
-	} = useContext(StatementContext);
+	const newStatementType = useSelector(selectNewStatementType);
+	const newStatementQuestionType = useSelector(selectNewQuestionType);
+	const parentStatement = useSelector(selectParentStatementForNewStatement)
 
 	useEffect(() => {
-		console.log("statement in GetInitialStatementData", statement);
-		if (!statement) {
-			setNewStatementType(StatementType.question);
-			setTitleLabel(t('Create a question'));
-		} else {
-			setTitleLabel(
-				((newStatementType: StatementType) => {
-					switch (newStatementType) {
-						case StatementType.group:
-							setNewStatementType(StatementType.group);
-							setTitleLabel(t('Create a group'));
-
-							return t('Create a group');
-						case StatementType.question:
-							setNewStatementType(StatementType.question);
-							setTitleLabel(t('Create a question'));
-
-							return t('Create a question');
-						default:
-							setNewStatementType(StatementType.statement);
-							setTitleLabel(t('Create a statement'));
-
-							return t('Create a statement');
-					}
-				})(newStatementType)
-			);
+		console.log("statement in GetInitialStatementData", parentStatement);
+		if (!parentStatement) {
+			dispatch(setNewStatementType(StatementType.question));
 		}
-	}, [statement]);
+	}, [parentStatement]);
 
-	console.log(statement, 'statement in GetInitialStatementData');
 	console.log(newStatementType, 'newStatementType in GetInitialStatementData');
-	// const _title = ((newStatementType: StatementType) => {
-	// 	switch (newStatementType) {
-	// 		case StatementType.group:
-	// 			return t('Create a group');
-	// 		case StatementType.question:
-	// 			return t('Create a question');
-	// 		default:
-	// 			return t('Create a statement');
-	// 	}
-	// })(newStatementType);
 
 	const handleSubmit = async (ev: FormEvent<HTMLFormElement>) => {
 		ev.preventDefault();
@@ -76,53 +38,48 @@ export default function GetInitialStatementData() {
 			const form = new FormData(ev.target as HTMLFormElement);
 			const title = form.get('title') as string;
 			const description = (form.get('description') as string) || '';
-			setTitle(title.toString());
-			setDescription(description);
 
-			if (!statement) throw new Error('Statement is not defined');
 			const lang =
-				newQuestionType === QuestionType.massConsensus
+				newStatementQuestionType === QuestionType.massConsensus
 					? (currentLanguage as LanguagesEnum)
 					: '';
 
 			const newStatement: Statement | undefined = createStatement({
-				parentStatement: statement,
+				parentStatement,
 				text: title,
 				description,
 				defaultLanguage: lang,
 				statementType: newStatementType,
-				questionType: newQuestionType,
+				questionType: newStatementQuestionType,
 			});
 			if (!newStatement) throw new Error('newStatement is not defined');
 
 			setStatementToDB({
-				parentStatement: statement,
+				parentStatement: parentStatement || "top",
 				statement: newStatement,
 			});
 
-			handleSetNewStatement(false);
+			dispatch(clearNewStatement())
+
 		} catch (error) {
 			console.error(error);
 		}
 	};
 
-	const { title: titleLabel, description: descriptionLabel } =
+	const { headerTitle, title: titleLabel, description: descriptionLabel } =
 		getTexts(newStatementType);
 
 	return (
 		<>
-			<h4>{_title}</h4>
+			<h4>{headerTitle}</h4>
 			<form className={styles.form} onSubmit={handleSubmit}>
 				<Input
 					label={t(titleLabel)}
-					value={title}
 					name='title'
 					autoFocus={true}
-					placeholder=''
 				/>
 				<Textarea
 					label={t(descriptionLabel)}
-					value={description}
 					name='description'
 				/>
 				<div className='btns'>
@@ -143,6 +100,7 @@ export default function GetInitialStatementData() {
 }
 
 function getTexts(statementType: StatementType): {
+	headerTitle: string;
 	title: string;
 	description: string;
 	placeholder: string;
@@ -151,18 +109,21 @@ function getTexts(statementType: StatementType): {
 		switch (statementType) {
 			case StatementType.group:
 				return {
+					headerTitle: 'Create a group',
 					title: 'Group Title',
 					description: 'Group Description',
 					placeholder: 'Describe the group',
 				};
 			case StatementType.question:
 				return {
+					headerTitle: 'Create a question',
 					title: 'Question Title',
 					description: 'Question Description',
 					placeholder: 'Describe the question',
 				};
 			default:
 				return {
+					headerTitle: 'Create a statement',
 					title: 'Title',
 					description: 'Description',
 					placeholder: 'Description',
