@@ -30,13 +30,15 @@ const UserQuestionComp = ({ userQuestions, questionIndex, onAddOption, onDeleteO
 
 	const handleAddOption = () => {
 		if (newOptionText.trim()) {
+			console.info("text:", newOptionText)
 			onAddOption(questionIndex, newOptionText);
-			setNewOptionText('');
 		}
+		setNewOptionText('');
 	};
 
 	const handleKeyPress = (e: React.KeyboardEvent) => {
-		if (e.key === 'Enter' && newOptionText.trim()) {
+		if (e.key === 'Enter') {
+			e.preventDefault();
 			handleAddOption();
 		}
 	};

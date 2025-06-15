@@ -41,6 +41,8 @@ button {
 	}
 
 	&--add {
+		display: flex;
+    	align-items: center;
 		width: fit-content;
 		background-color: var(--add-btn);
 		color: var(--white);
@@ -74,9 +76,12 @@ button {
 	}
 
 	&--small {
+		display: flex;
+    	align-items: center; 
 		font-size: 0.8rem;
 		padding: .1rem .4rem;
 		width: fit-content;
+		margin-top: 1rem;
 	}
 
 	&--img {

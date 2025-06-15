@@ -1,4 +1,4 @@
-import React, { useState, ChangeEvent } from 'react';
+import React, { ChangeEvent } from 'react';
 import styles from './Input.module.scss';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import CloseIcon from '@/assets/icons/close.svg?react';
@@ -25,15 +25,12 @@ const Input: React.FC<SearchInputProps> = ({
 	autoFocus = false,
 }) => {
 	const { dir } = useUserConfig();
-	const [inputValue, setInputValue] = useState<string>(value);
 
 	const handleChange = (e: ChangeEvent<HTMLInputElement>): void => {
-		setInputValue(e.target.value);
 		onChange?.(e.target.value);
 	};
 
 	const handleClear = (): void => {
-		setInputValue('');
 		onChange?.('');
 	};
 
@@ -59,13 +56,13 @@ const Input: React.FC<SearchInputProps> = ({
 				<input
 					name={name}
 					type='text'
-					value={inputValue}
+					value={value}
 					onChange={handleChange}
 					placeholder={placeholder}
 					className={styles.input}
 					autoFocus={autoFocus}
 				/>
-				{inputValue && (
+				{value && (
 					<button
 						onClick={handleClear}
 						className={styles.clearButton}
