@@ -134,12 +134,12 @@ const PolarizationIndexComp = () => {
 					</div>
 				))}
 				{points.map((point: Point) => (
-					<>
+					<React.Fragment key={point.statementId}>
 						{point.axes.map((axis: Axis) => (
-							<>
+							<React.Fragment key={axis.questionId}>
 								{axis.groups.map((group: Group, i: number) => (
 									<div
-										key={group.option.option + i}
+										key={`${point.statementId}-${axis.questionId}-${group.option.option}-${i}`}
 										className={styles.axisGroup}
 										style={{
 											left: showGroups === point.statementId ? group.position.x + 'px' : point.position.x + 10 + 'px',
@@ -151,9 +151,9 @@ const PolarizationIndexComp = () => {
 										</Tooltip>
 									</div>
 								))}
-							</>
+							</React.Fragment>
 						))}
-					</>
+					</React.Fragment>
 				))}
 			</div>
 		</div >

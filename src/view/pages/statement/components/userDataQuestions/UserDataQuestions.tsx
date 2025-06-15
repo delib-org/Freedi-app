@@ -30,11 +30,11 @@ const UserDataQuestions: FC<Props> = ({ questions, closeModal }) => {
 					return prevData.map((q) =>
 						q.userQuestionId === question.userQuestionId
 							? {
-									...q,
-									answer: Array.isArray(value)
-										? value.join(',')
-										: value,
-								}
+								...q,
+								answer: Array.isArray(value)
+									? value.join(',')
+									: value,
+							}
 							: q
 					);
 				}
@@ -58,8 +58,8 @@ const UserDataQuestions: FC<Props> = ({ questions, closeModal }) => {
 						_value as string
 					)
 						? currentQuestion.answerOptions.filter(
-								(option) => option !== _value
-							)
+							(option) => option !== _value
+						)
 						: [...currentQuestion.answerOptions, _value as string];
 
 					return prevData.map((q) =>
