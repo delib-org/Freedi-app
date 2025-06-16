@@ -54,14 +54,11 @@ import {
 } from "./fn_massConsensus";
 import { updateInAppNotifications } from "./fn_notifications";
 import { getCluster, recoverLastSnapshot } from "./fn_clusters";
-import { checkProfanity } from "./fn_profanityChecker"
-
-
+import { checkProfanity } from "./fn_profanityChecker";
 
 // Initialize Firebase
 initializeApp();
 export const db = getFirestore();
-
 
 // Environment configuration
 const isProduction = process.env.NODE_ENV === "production";
