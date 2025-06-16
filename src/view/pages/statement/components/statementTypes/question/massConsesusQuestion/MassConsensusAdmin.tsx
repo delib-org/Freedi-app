@@ -10,12 +10,13 @@ import {
 	statementSubsSelector,
 } from '@/redux/statements/statementsSlice';
 import ShareButton from '@/view/components/buttons/shareButton/ShareButton';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { listenToSubStatements } from '@/controllers/db/statements/listenToStatements';
 import { StatementType } from 'delib-npm';
 import OptionMCCard from './components/deleteCard/OptionMCCard';
 import DeletionLadyImage from '@/assets/images/rejectLady.png';
 import Button, { ButtonType } from '@/view/components/buttons/button/Button';
+import SearchBar from './components/searchBar/SearchBar';
 
 const MassConsensusAdmin = () => {
 	const { statementId } = useParams<{ statementId: string }>();
@@ -31,12 +32,13 @@ const MassConsensusAdmin = () => {
 		? [...options].sort((a, b) => a.consensus - b.consensus)
 		: [];
 	const bottomOptions = sortedBottomOptions.slice(0, 5);
+	const [isSearching, setIsSearching] = useState(false);
 
 	const { t } = useUserConfig();
 	const navigate = useNavigate();
 	useEffect(() => {
 		if (!statement) return;
-		const unsubscribe = listenToSubStatements(statementId, 'bottom', 10);
+		const unsubscribe = listenToSubStatements(statementId, 'bottom');
 
 		return () => unsubscribe();
 	}, [statementId]);
@@ -72,6 +74,7 @@ const MassConsensusAdmin = () => {
 							{statement.massMembers || 0}
 						</div>
 					</div>
+
 					<div>
 						<img src={BulbImage} alt='Total Suggestions' />
 						<div>
@@ -80,6 +83,25 @@ const MassConsensusAdmin = () => {
 						</div>
 					</div>
 				</div>
+				<details className={styles.allOptionsAccordion}>
+					<summary>
+						{t('All Options')} ({options.length})
+					</summary>
+					<SearchBar
+						setIsSearching={setIsSearching}
+						options={topOptions}
+					/>
+					<div className={styles.allOptionsContent}>
+						{!isSearching &&
+							options.map((option) => (
+								<OptionMCCard
+									key={option.statementId}
+									statement={option}
+									isDelete={false}
+								/>
+							))}
+					</div>
+				</details>
 				<h3>{t('Top options')}</h3>
 
 				{topOptions?.map((option) => (

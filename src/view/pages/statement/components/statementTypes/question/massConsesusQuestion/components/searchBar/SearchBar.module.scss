@@ -1,0 +1,17 @@
+.magnifyingGlass {
+	font-size: 3rem;
+	color: var(--text-disabled);
+	width: fit-content;
+}
+.searchInput {
+	font-size: 1rem;
+	margin: 0.5rem;
+}
+.inlineInput {
+	display: flex;
+	flex-direction: row;
+}
+.XBtn {
+	align-self: center;
+	color: red;
+}
