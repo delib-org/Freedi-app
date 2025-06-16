@@ -19,7 +19,7 @@ import { StatementType } from 'delib-npm';
 import MainQuestionCard from './mainQuestionCard/MainQuestionCard';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import AddStatement from './addStatement/AddStatement';
-import NewStatement from '../../statement/components/newStatemement/newStatement';
+import NewStatement from '../../statement/components/newStatemement/NewStatement';
 
 const HomeMain = () => {
 	// Hooks

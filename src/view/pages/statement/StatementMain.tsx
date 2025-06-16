@@ -7,7 +7,7 @@ import LoadingPage from '../loadingPage/LoadingPage';
 import Page404 from '../page404/Page404';
 import UnAuthorizedPage from '../unAuthorizedPage/UnAuthorizedPage';
 import StatementHeader from './components/header/StatementHeader';
-import NewStatement from './components/newStatemement/newStatement';
+import NewStatement from './components/newStatemement/NewStatement';
 import Switch from './components/switch/Switch';
 import { StatementContext } from './StatementCont';
 import {
