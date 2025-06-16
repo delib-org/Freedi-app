@@ -34,7 +34,6 @@ const MassConsensusProcessSettings = () => {
 	const processList =
 		useSelector(massConsensusProcessSelector(statementId)) ||
 		defaultMassConsensusProcesses;
-
 	const showGoogle =
 		processList.loginTypes?.google &&
 		processList.loginTypes.google.steps?.length > 0;
@@ -59,9 +58,8 @@ const MassConsensusProcessSettings = () => {
 		userDataQuestions.length > 0
 			? rawStepsDefault
 			: rawStepsDefault.filter(
-				(step) => step !== MassConsensusPageUrls.userDemographics
-			);
-
+					(step) => step !== MassConsensusPageUrls.userDemographics
+				);
 	const { steps: stepsGoogle, processName: processNameGoogle } =
 		processList.loginTypes?.google || {};
 	const { steps: stepsAnonymous, processName: processNameAnonymous } =
