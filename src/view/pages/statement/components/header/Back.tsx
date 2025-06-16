@@ -16,6 +16,11 @@ const Back: FC<Props> = ({ statement, headerColor }) => {
 
 	function handleBack() {
 		try {
+			if (location.pathname.includes('my')) {
+				return navigate('/home', {
+					state: { from: window.location.pathname },
+				});
+			}
 			if (location.pathname.includes('stage')) {
 				return navigate(`/statement/${statement?.parentId}`, {
 					state: { from: window.location.pathname },
@@ -57,7 +62,7 @@ const Back: FC<Props> = ({ statement, headerColor }) => {
 			<BackArrowIcon
 				className='back-arrow-icon'
 				style={{
-					color: headerColor.color,
+					color: headerColor?.color || "white",
 				}}
 			/>
 		</button>
