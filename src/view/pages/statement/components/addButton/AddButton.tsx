@@ -8,10 +8,13 @@ import styles from './AddButton.module.scss'
 import { QuestionType, StatementType } from 'delib-npm';
 import { StatementContext } from '../../StatementCont';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useDispatch } from 'react-redux';
+import { setNewStatementModal } from '@/redux/statements/newStatementSlice';
 
 export default function AddButton() {
+	const dispatch = useDispatch();
 	const [actionsOpen, setActionsOpen] = React.useState(false);
-	const { handleSetNewStatement, setNewStatementType, setNewQuestionType } =
+	const { parentStatement } =
 		useContext(StatementContext);
 	const { dir } = useUserConfig();
 	const radius = 5;
@@ -34,19 +37,46 @@ export default function AddButton() {
 	) => {
 		switch (action) {
 			case 'question':
-				handleAddStatement(
-					StatementType.question,
-					QuestionType.multiStage
-				);
+				dispatch(setNewStatementModal({
+					parentStatement,
+					newStatement: {
+						statementType: StatementType.question,
+						questionSettings: {
+							questionType: QuestionType.multiStage,
+						},
+					},
+					isLoading: false,
+					error: null,
+					showModal: true,
+
+				}));
+
 				break;
 			case 'mass-consensus':
-				handleAddStatement(
-					StatementType.question,
-					QuestionType.massConsensus
-				);
+				dispatch(setNewStatementModal({
+					parentStatement,
+					newStatement: {
+						statementType: StatementType.question,
+						questionSettings: {
+							questionType: QuestionType.massConsensus,
+						},
+					},
+					isLoading: false,
+					error: null,
+					showModal: true,
+				}));
+
 				break;
 			case 'subgroup':
-				handleAddStatement(StatementType.group);
+				dispatch(setNewStatementModal({
+					parentStatement,
+					newStatement: {
+						statementType: StatementType.group,
+					},
+					isLoading: false,
+					error: null,
+					showModal: true,
+				}));
 				break;
 			default:
 				break;

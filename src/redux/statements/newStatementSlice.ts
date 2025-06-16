@@ -21,6 +21,9 @@ const newStatementSlice = createSlice({
 	name: 'newStatement',
 	initialState,
 	reducers: {
+		setNewStatementModal: (state, action: PayloadAction<NewStatementState>) => {
+			state = action.payload;
+		},
 		setParentStatement: (state, action: PayloadAction<Statement | null | "top">) => {
 			state.parentStatement = action.payload;
 		},
@@ -60,6 +63,7 @@ const newStatementSlice = createSlice({
 });
 
 export const {
+	setNewStatementModal,
 	setParentStatement,
 	setNewStatementType,
 	setNewQuestionType,
