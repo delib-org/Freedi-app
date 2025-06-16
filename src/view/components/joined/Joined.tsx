@@ -10,8 +10,8 @@ interface Props {
 const Joined: FC<Props> = ({ statement }) => {
 	return (
 		<div className={styles.joined}>
-			{statement.joined.map(c => (
-				<ProfileImage key={c.uid} creator={c} isSmall={true} />
+			{statement.joined?.map(c => (
+				<ProfileImage key={c.uid} creator={c} isSmall={true} statement={statement} />
 			))}
 		</div>
 	)

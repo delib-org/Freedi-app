@@ -44,6 +44,12 @@ const SuggestionCard: FC<Props> = ({
 	const { sort } = useParams();
 	const enableJoining = parentStatement?.statementSettings?.joiningEnabled;
 
+	// Redux Store
+	const dispatch = useAppDispatch();
+
+	// Use Refs
+	const elementRef = useRef<HTMLDivElement>(null);
+
 	const hasJoinedServer = statement?.joined?.find(
 		(c) => c.uid === creator?.uid
 	) ? true : false;
@@ -57,13 +63,8 @@ const SuggestionCard: FC<Props> = ({
 		setHasJoinedOptimistic(hasJoinedServer);
 	}, [hasJoinedServer]);
 
-	// Redux Store
-	const dispatch = useAppDispatch();
-
-	// Use Refs
-	const elementRef = useRef<HTMLDivElement>(null);
-
 	// Use States
+
 	const [isEdit, setIsEdit] = useState(false);
 	const [shouldShowAddSubQuestionModal, setShouldShowAddSubQuestionModal] =
 		useState(false);
@@ -195,7 +196,6 @@ const SuggestionCard: FC<Props> = ({
 								>
 									{hasJoinedOptimistic ? t('Leave') : t('Join')}
 								</button>
-
 							</div>
 						}
 					</div>

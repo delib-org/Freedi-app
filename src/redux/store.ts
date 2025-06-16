@@ -10,13 +10,11 @@ import { notificationsSlicer } from './notificationsSlice/notificationsSlice';
 import creatorReducer from './creator/creatorSlice';
 import SubscriptionsReducer from './subscriptions/subscriptionsSlice';
 import userDataReducer from './userData/userDataSlice';
-import newStatementReducer from './statements/newStatementSlice';
 
 export const store = configureStore({
 	reducer: {
 		statements: statementsSlicer.reducer,
 		statementMetaData: statementMetaData.reducer,
-		newStatement: newStatementReducer,
 		evaluations: evaluationsSlicer.reducer,
 		votes: votesSlicer.reducer,
 		results: resultsSlice.reducer,

@@ -1,5 +1,6 @@
 import { FC } from "react";
 // icons
+import AddIcon from "@/assets/icons/plusIcon.svg?react";
 import GroupIcon from "@/assets/icons/group.svg?react";
 // import GravelIcon from "@/assets/icons/gravel.svg?react";
 import TargetIcon from "@/assets/icons/target.svg?react";
@@ -9,16 +10,14 @@ import { NotificationType } from "delib-npm";
 import { useSelector } from "react-redux";
 import { inAppNotificationsSelector } from "@/redux/notificationsSlice/notificationsSlice";
 import { creatorSelector } from "@/redux/creator/creatorSlice";
-import AddButton from "@/view/pages/statement/components/addButton/AddButton";
 
 interface Props {
 	addGroup: () => void;
 	subPage: "decisions" | "groups";
 	setSubPage: (page: "decisions" | "groups") => void;
-	isMain: boolean;
 }
 
-const Footer: FC<Props> = ({ addGroup, setSubPage, subPage, isMain }) => {
+const Footer: FC<Props> = ({ addGroup, setSubPage, subPage }) => {
 
 	const { t } = useUserConfig();
 	const creator = useSelector(creatorSelector);
@@ -27,9 +26,10 @@ const Footer: FC<Props> = ({ addGroup, setSubPage, subPage, isMain }) => {
 	return (
 
 		<div className={styles.footer} data-cy="add-statement">
-			<div className={styles.addButtonContainer}>
-				<AddButton addGroup={addGroup} isMain={isMain} />
-			</div>
+
+			<button onClick={addGroup} className={styles.addStatementButton}>
+				<AddIcon />
+			</button>
 			<button onClick={() => setSubPage("decisions")} className={`${styles.button} ${subPage === "decisions" ? styles.buttonActive : ""}`}>
 				<div className={`${styles.buttonImage} ${subPage === "decisions" ? styles.buttonImageActive : ""}`}>
 					{inAppNotificationsList.length > 0 && <div className={styles.redCircle}>
