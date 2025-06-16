@@ -32,7 +32,7 @@ const HomeMain = () => {
 
 	const topSubscriptions = useAppSelector(topSubscriptionsSelector)
 		.sort((a, b) => b.lastUpdate - a.lastUpdate)
-		.filter((sub) => sub.user?.uid === user?.uid);
+		.filter((sub) => sub.user?.uid === user?.uid && sub.statement.statementType === StatementType.group);
 
 	const latestDecisions = useAppSelector(statementsSubscriptionsSelector)
 		.filter((sub) => sub.statement.statementType === StatementType.question)

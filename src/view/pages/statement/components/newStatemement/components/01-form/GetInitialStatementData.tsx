@@ -1,4 +1,5 @@
 import { FormEvent } from 'react';
+import { useLocation } from 'react-router';
 import styles from './GetInitialStatementData.module.scss';
 import {
 	createStatement,
@@ -17,6 +18,8 @@ import { creatorSelector } from '@/redux/creator/creatorSlice';
 
 export default function GetInitialStatementData() {
 	const { t, currentLanguage } = useUserConfig();
+	const location = useLocation();
+	const isHomePage = location.pathname === '/home';
 	const dispatch = useDispatch();
 	const newStatementParent = useSelector(selectParentStatementForNewStatement);
 	const newStatement = useSelector(selectNewStatement);
@@ -68,6 +71,9 @@ export default function GetInitialStatementData() {
 			}))
 			dispatch(setShowNewStatementModal(false));
 			dispatch(clearNewStatement());
+			if (isHomePage) {
+				window.location.href = `/statement/${statementId}`;
+			}
 		} catch (error) {
 			console.error(error);
 		}
