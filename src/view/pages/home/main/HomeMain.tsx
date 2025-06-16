@@ -17,6 +17,8 @@ import MainQuestionCard from './mainQuestionCard/MainQuestionCard';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import NewStatement from '../../statement/components/newStatemement/NewStatement';
 import { selectNewStatementShowModal } from '@/redux/statements/newStatementSlice';
+import { useSelector } from 'react-redux';
+import { creatorSelector } from '@/redux/creator/creatorSlice';
 
 const HomeMain = () => {
 	// Hooks
@@ -24,8 +26,9 @@ const HomeMain = () => {
 	const [loading, setLoading] = useState(true);
 	const [subPage, setSubPage] = useState<"decisions" | "groups">("groups");
 	const [subPageTitle, setSubPageTitle] = useState<"Decisions" | "Groups">("Decisions");
-	const { user } = useAuthentication();
+	const user = useSelector(creatorSelector);
 	const { t } = useUserConfig();
+	const userId = user?.uid || "";
 
 	const topSubscriptions = useAppSelector(topSubscriptionsSelector)
 		.sort((a, b) => b.lastUpdate - a.lastUpdate)
@@ -44,6 +47,15 @@ const HomeMain = () => {
 			setLoading(false);
 		}
 	}, [topSubscriptions]);
+
+	useEffect(() => {
+		if (userId && user.advanceUser) {
+			setSubPage("groups");
+		}
+		else {
+			setSubPage("decisions");
+		}
+	}, [userId])
 
 	useEffect(() => {
 		setSubPageTitle(subPage === "decisions" ? "Decisions" : "Groups");

@@ -8,10 +8,12 @@ import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import Button, { ButtonType } from '@/view/components/buttons/button/Button';
 import Input from '@/view/components/input/Input';
 import Textarea from '@/view/components/textarea/Textarea';
-import { StatementType, Statement, QuestionType } from 'delib-npm';
+import { StatementType, Statement, QuestionType, Role, getRandomUID, getStatementSubscriptionId } from 'delib-npm';
 import { LanguagesEnum } from '@/context/UserConfigContext';
 import { useDispatch, useSelector } from 'react-redux';
 import { clearNewStatement, selectNewStatement, selectParentStatementForNewStatement, setShowNewStatementModal } from '@/redux/statements/newStatementSlice';
+import { setStatement, setStatementSubscription } from '@/redux/statements/statementsSlice';
+import { creatorSelector } from '@/redux/creator/creatorSlice';
 
 export default function GetInitialStatementData() {
 	const { t, currentLanguage } = useUserConfig();
@@ -21,10 +23,12 @@ export default function GetInitialStatementData() {
 	const newStatementType = newStatement?.statementType || StatementType.group;
 	const newStatementQuestionType =
 		newStatement?.questionSettings?.questionType || QuestionType.multiStage;
+	const user = useSelector(creatorSelector);
 
 	const handleSubmit = async (ev: FormEvent<HTMLFormElement>) => {
 		ev.preventDefault();
 		try {
+			if (!user) throw new Error('User is not defined');
 			const form = new FormData(ev.target as HTMLFormElement);
 			const title = form.get('title') as string;
 			const description = (form.get('description') as string) || '';
@@ -45,11 +49,23 @@ export default function GetInitialStatementData() {
 			});
 			if (!_newStatement) throw new Error('newStatement is not defined');
 
-			setStatementToDB({
+			const { statementId } = await setStatementToDB({
 				parentStatement: newStatementParent,
 				statement: _newStatement,
 			});
 
+			dispatch(setStatement(_newStatement));
+			const now = new Date().getTime();
+			dispatch(setStatementSubscription({
+				role: Role.admin,
+				statement: _newStatement,
+				statementsSubscribeId: getStatementSubscriptionId(statementId, user),
+				statementId: statementId,
+				user: user,
+				lastUpdate: now,
+				createdAt: now,
+				userId: user?.uid || '',
+			}))
 			dispatch(setShowNewStatementModal(false));
 			dispatch(clearNewStatement());
 		} catch (error) {
