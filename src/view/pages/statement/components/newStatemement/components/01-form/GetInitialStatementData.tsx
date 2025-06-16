@@ -9,7 +9,7 @@ import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import Button, { ButtonType } from '@/view/components/buttons/button/Button';
 import Input from '@/view/components/input/Input';
 import Textarea from '@/view/components/textarea/Textarea';
-import { StatementType, Statement, QuestionType, Role, getRandomUID, getStatementSubscriptionId } from 'delib-npm';
+import { StatementType, Statement, QuestionType, Role, getStatementSubscriptionId } from 'delib-npm';
 import { LanguagesEnum } from '@/context/UserConfigContext';
 import { useDispatch, useSelector } from 'react-redux';
 import { clearNewStatement, selectNewStatement, selectParentStatementForNewStatement, setShowNewStatementModal } from '@/redux/statements/newStatementSlice';

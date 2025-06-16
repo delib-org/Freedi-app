@@ -11,7 +11,6 @@ import { statementsSubscriptionsSelector, topSubscriptionsSelector } from '@/red
 // Custom components
 import Footer from '@/view/components/footer/Footer';
 import PeopleLoader from '@/view/components/loaders/PeopleLoader';
-import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { StatementType } from 'delib-npm';
 import MainQuestionCard from './mainQuestionCard/MainQuestionCard';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
