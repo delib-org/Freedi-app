@@ -1,4 +1,4 @@
-import { FormEvent, useContext } from 'react';
+import { FormEvent, useContext, useState } from 'react';
 import { NewStatementContext } from '../../newStatementCont';
 import styles from './GetInitialStatementData.module.scss';
 import {
@@ -15,7 +15,7 @@ import { LanguagesEnum } from '@/context/UserConfigContext';
 
 export default function GetInitialStatementData() {
 	const { t, currentLanguage } = useUserConfig();
-	const { title, description, setTitle, setDescription } =
+	const { description, setTitle, setDescription } =
 		useContext(NewStatementContext);
 	const {
 		newStatementType,
@@ -23,6 +23,7 @@ export default function GetInitialStatementData() {
 		handleSetNewStatement,
 		statement,
 	} = useContext(StatementContext);
+	const [inputValue, setInputValue] = useState<string>("");
 
 	const _title = ((newStatementType: StatementType) => {
 		switch (newStatementType) {
@@ -41,7 +42,7 @@ export default function GetInitialStatementData() {
 			const form = new FormData(ev.target as HTMLFormElement);
 			const title = form.get('title') as string;
 			const description = (form.get('description') as string) || '';
-			setTitle(title.toString());
+			setTitle(inputValue.toString());
 			setDescription(description);
 
 			if (!statement) throw new Error('Statement is not defined');
@@ -66,6 +67,7 @@ export default function GetInitialStatementData() {
 			});
 
 			handleSetNewStatement(false);
+			setInputValue("");
 		} catch (error) {
 			console.error(error);
 		}
@@ -80,10 +82,11 @@ export default function GetInitialStatementData() {
 			<form className={styles.form} onSubmit={handleSubmit}>
 				<Input
 					label={t(titleLabel)}
-					value={title}
+					value={inputValue}
 					name='title'
 					autoFocus={true}
 					placeholder=''
+					onChange={(value) => setInputValue(value)}
 				/>
 				<Textarea
 					label={t(descriptionLabel)}
