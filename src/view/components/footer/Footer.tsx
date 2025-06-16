@@ -10,24 +10,38 @@ import { NotificationType } from "delib-npm";
 import { useSelector } from "react-redux";
 import { inAppNotificationsSelector } from "@/redux/notificationsSlice/notificationsSlice";
 import { creatorSelector } from "@/redux/creator/creatorSlice";
+import { useNavigate } from "react-router";
 
 interface Props {
-	addGroup: () => void;
+
 	subPage: "decisions" | "groups";
 	setSubPage: (page: "decisions" | "groups") => void;
 }
 
-const Footer: FC<Props> = ({ addGroup, setSubPage, subPage }) => {
+const Footer: FC<Props> = ({ setSubPage, subPage }) => {
 
+	const navigate = useNavigate();
 	const { t } = useUserConfig();
 	const creator = useSelector(creatorSelector);
 	const inAppNotificationsList: NotificationType[] = useSelector(inAppNotificationsSelector).filter(n => n.creatorId !== creator?.uid);
+	const user = useSelector(creatorSelector);
+	const isAdvanceUser = user?.advanceUser || false;
+
+	function addStatement() {
+		if (isAdvanceUser) {
+			navigate('/home/addStatement', {
+				state: { from: window.location.pathname },
+			});
+		} else {
+			// open new statement for question
+		}
+	}
 
 	return (
 
 		<div className={styles.footer} data-cy="add-statement">
 
-			<button onClick={addGroup} className={styles.addStatementButton}>
+			<button onClick={addStatement} className={styles.addStatementButton}>
 				<AddIcon />
 			</button>
 			<button onClick={() => setSubPage("decisions")} className={`${styles.button} ${subPage === "decisions" ? styles.buttonActive : ""}`}>
