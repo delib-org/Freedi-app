@@ -44,6 +44,7 @@ import {
 	selectUserQuestionsByStatementId,
 } from '@/redux/userData/userDataSlice';
 import UserDataQuestions from './components/userDataQuestions/UserDataQuestions';
+import { selectNewStatementShowModal } from '@/redux/statements/newStatementSlice';
 
 // Create selectors
 export const subStatementsSelector = createSelector(
@@ -59,6 +60,8 @@ export default function StatementMain() {
 	// Hooks
 	const { statementId, stageId, screen } = useParams();
 	const statement = useSelector(statementSelector(statementId));
+	const showNewStatement = useSelector(selectNewStatementShowModal);
+	console.log("showNewStatement", showNewStatement);
 	const userDataQuestions = useSelector(
 		selectUserQuestionsByStatementId(statementId || '')
 	);
@@ -84,7 +87,7 @@ export default function StatementMain() {
 	// Use states
 	const [talker, setTalker] = useState<User | null>(null);
 	const [isStatementNotFound, setIsStatementNotFound] = useState(false);
-	const [showNewStatement, setShowNewStatement] = useState<boolean>(false);
+
 	const [newStatementType, setNewStatementType] = useState<StatementType>(
 		StatementType.group
 	);
@@ -103,15 +106,6 @@ export default function StatementMain() {
 			setTalker(null);
 		}
 	};
-
-	function handleSetNewStatement(showPopup?: boolean) {
-		if (showPopup === undefined) {
-			setShowNewStatement(!showNewStatement);
-
-			return;
-		}
-		setShowNewStatement(showPopup);
-	}
 
 	//in case the url is of undefined screen, navigate to the first available screen
 	useEffect(() => {
@@ -259,7 +253,6 @@ export default function StatementMain() {
 			talker,
 			handleShowTalker,
 			role,
-			handleSetNewStatement,
 			setNewStatementType,
 			newStatementType,
 			setNewQuestionType,
@@ -271,7 +264,6 @@ export default function StatementMain() {
 			talker,
 			role,
 			handleShowTalker,
-			handleSetNewStatement,
 			setNewStatementType,
 			newStatementType,
 		]

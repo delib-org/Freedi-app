@@ -8,37 +8,27 @@ import styles from './AddButton.module.scss'
 import { QuestionType, StatementType } from 'delib-npm';
 import { StatementContext } from '../../StatementCont';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { setNewStatementModal } from '@/redux/statements/newStatementSlice';
+import { useParams } from 'react-router';
+import { statementSelectorById } from '@/redux/statements/statementsSlice';
 
 export default function AddButton() {
+	const { statementId } = useParams<{ statementId: string }>();
+	const statement = useSelector(statementSelectorById(statementId || ''));
 	const dispatch = useDispatch();
 	const [actionsOpen, setActionsOpen] = React.useState(false);
-	const { parentStatement } =
-		useContext(StatementContext);
 	const { dir } = useUserConfig();
 	const radius = 5;
-
-	function handleAddStatement(
-		newStatementType: StatementType,
-		questionType?: QuestionType
-	) {
-		setActionsOpen(false);
-
-		setNewStatementType(newStatementType);
-		if (questionType) {
-			setNewQuestionType(questionType);
-		}
-		handleSetNewStatement(true);
-	}
 
 	const handleAction = (
 		action: 'question' | 'mass-consensus' | 'subgroup'
 	) => {
+		console.log("handleAction", action);
 		switch (action) {
 			case 'question':
 				dispatch(setNewStatementModal({
-					parentStatement,
+					parentStatement: statement,
 					newStatement: {
 						statementType: StatementType.question,
 						questionSettings: {
@@ -48,13 +38,12 @@ export default function AddButton() {
 					isLoading: false,
 					error: null,
 					showModal: true,
-
 				}));
 
 				break;
 			case 'mass-consensus':
 				dispatch(setNewStatementModal({
-					parentStatement,
+					parentStatement: statement,
 					newStatement: {
 						statementType: StatementType.question,
 						questionSettings: {
@@ -69,7 +58,7 @@ export default function AddButton() {
 				break;
 			case 'subgroup':
 				dispatch(setNewStatementModal({
-					parentStatement,
+					parentStatement: statement,
 					newStatement: {
 						statementType: StatementType.group,
 					},

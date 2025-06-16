@@ -8,12 +8,10 @@ import AddButton from '../../addButton/AddButton';
 import SubGroupCard from '@/view/components/subGroupCard/SubGroupCard';
 import { StatementType } from "delib-npm"
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
-import { selectNewStatementShowModal } from '@/redux/statements/newStatementSlice';
 
 export default function GroupPage() {
 	const { t } = useUserConfig();
 	const { statement } = useContext(StatementContext);
-	const showNewStatementModal = useSelector(selectNewStatementShowModal);
 
 	const subStatements = useSelector(
 		statementSubsSelector(statement?.statementId)
