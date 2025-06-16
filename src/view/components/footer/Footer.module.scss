@@ -20,6 +20,13 @@
 
 	}
 
+	.addButtonContainer {
+		position: absolute;
+		bottom: 50px;
+
+		transform: translateX(-50%);
+	}
+
 	.button {
 		position: relative;
 		flex: 1;

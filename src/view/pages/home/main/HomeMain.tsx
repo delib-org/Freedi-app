@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import '@/view/style/homePage.scss';
-
+import styles from './HomeMain.module.scss';
 // Third party libraries
 import { useNavigate } from 'react-router';
 
@@ -17,15 +17,23 @@ import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { StatementType } from 'delib-npm';
 import MainQuestionCard from './mainQuestionCard/MainQuestionCard';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import NewStatement from '../../statement/components/newStatemement/newStatement';
+import { StatementContext } from '../../statement/StatementCont';
+import { selectNewStatementShowModal } from '@/redux/statements/newStatementSlice';
+import { useSelector } from 'react-redux';
 
 const HomeMain = () => {
 	// Hooks
 	const navigate = useNavigate();
 	const [loading, setLoading] = useState(true);
-	const [subPage, setSubPage] = useState<"decisions" | "groups">("groups");
+	const [subPage, setSubPage] = useState<"decisions" | "groups">("decisions");
 	const [subPageTitle, setSubPageTitle] = useState<"Decisions" | "Groups">("Decisions");
 	const { user } = useAuthentication();
 	const { t } = useUserConfig();
+	const { setNewStatementType } = useContext(StatementContext)
+	const showNewStatementModal = useSelector(selectNewStatementShowModal);
+
+	setNewStatementType(StatementType.question);
 
 	const topSubscriptions = useAppSelector(topSubscriptionsSelector)
 		.sort((a, b) => b.lastUpdate - a.lastUpdate)
@@ -57,6 +65,9 @@ const HomeMain = () => {
 
 	return (
 		<main className='home-page__main slide-in'>
+			{showNewStatementModal && <div className={styles.newStatementContainer}>
+				<NewStatement />
+			</div>}
 			<div className='heroImg'></div>
 			<img
 				className='bikeImg'
@@ -96,7 +107,7 @@ const HomeMain = () => {
 					));
 				})()}
 			</div>
-			<Footer addGroup={handleAddStatement} setSubPage={setSubPage} subPage={subPage} />
+			<Footer addGroup={handleAddStatement} isMain={true} setSubPage={setSubPage} subPage={subPage} />
 		</main>
 	);
 };

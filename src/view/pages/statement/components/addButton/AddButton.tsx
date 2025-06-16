@@ -8,11 +8,22 @@ import styles from './AddButton.module.scss'
 import { QuestionType, StatementType } from 'delib-npm';
 import { StatementContext } from '../../StatementCont';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useDispatch, useSelector } from 'react-redux';
+import { creatorSelector } from '@/redux/creator/creatorSlice';
+import { is } from 'valibot';
+import { setNewQuestionType, setNewStatementType, setShowNewStatementModal } from '@/redux/statements/newStatementSlice';
 
-export default function AddButton() {
+interface Props {
+	addGroup: () => void;
+	isMain?: boolean;
+}
+
+export default function AddButton({ addGroup, isMain }: Props) {
+	const dispatch = useDispatch();
+	const user = useSelector(creatorSelector);
+	const isAdvancedUser = user?.advanceUser || false;
 	const [actionsOpen, setActionsOpen] = React.useState(false);
-	const { handleSetNewStatement, setNewStatementType, setNewQuestionType } =
-		useContext(StatementContext);
+
 	const { dir } = useUserConfig();
 	const radius = 5;
 
@@ -22,16 +33,17 @@ export default function AddButton() {
 	) {
 		setActionsOpen(false);
 
-		setNewStatementType(newStatementType);
+		dispatch(setNewStatementType(newStatementType));
 		if (questionType) {
-			setNewQuestionType(questionType);
+			dispatch(setNewQuestionType(questionType));
 		}
-		handleSetNewStatement(true);
+
 	}
 
 	const handleAction = (
 		action: 'question' | 'mass-consensus' | 'subgroup'
 	) => {
+
 		switch (action) {
 			case 'question':
 				handleAddStatement(
@@ -53,7 +65,16 @@ export default function AddButton() {
 		}
 	};
 
-	const toggleActions = () => setActionsOpen(!actionsOpen);
+	const toggleActions = () => {
+		console.log("toggleActions", !isAdvancedUser, isMain, typeof addGroup === "function");
+		if (!isAdvancedUser && isMain) {
+			dispatch(setShowNewStatementModal(true));
+			dispatch(setNewStatementType(StatementType.question));
+
+			return;
+		}
+		setActionsOpen(!actionsOpen);
+	};
 
 	const actions = [
 		{
@@ -74,7 +95,7 @@ export default function AddButton() {
 	];
 
 	return (
-		<div className={`${styles.actions}`}>
+		<div className={`${styles.actions}`} >
 			{actions.map(({ key, action, icon }, index) => {
 				let angle: number;
 				if (dir === 'ltr') {
