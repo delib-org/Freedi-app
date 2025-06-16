@@ -14,7 +14,7 @@ import PeopleLoader from '@/view/components/loaders/PeopleLoader';
 import { StatementType } from 'delib-npm';
 import MainQuestionCard from './mainQuestionCard/MainQuestionCard';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
-import NewStatement from '../../statement/components/newStatemement/NewStatement';
+import NewStatement from '../../statement/components/newStatement/newStatement';
 import { selectNewStatementShowModal } from '@/redux/statements/newStatementSlice';
 import { useSelector } from 'react-redux';
 import { creatorSelector } from '@/redux/creator/creatorSlice';
