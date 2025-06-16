@@ -6,11 +6,12 @@ import GroupIcon from "@/assets/icons/group.svg?react";
 import TargetIcon from "@/assets/icons/target.svg?react";
 import styles from "./Footer.module.scss";
 import { useUserConfig } from "@/controllers/hooks/useUserConfig";
-import { NotificationType } from "delib-npm";
-import { useSelector } from "react-redux";
+import { NotificationType, StatementType } from "delib-npm";
+import { useDispatch, useSelector } from "react-redux";
 import { inAppNotificationsSelector } from "@/redux/notificationsSlice/notificationsSlice";
 import { creatorSelector } from "@/redux/creator/creatorSlice";
 import { useNavigate } from "react-router";
+import { setNewStatementType, setParentStatement, setShowNewStatementModal } from "@/redux/statements/newStatementSlice";
 
 interface Props {
 
@@ -20,6 +21,7 @@ interface Props {
 
 const Footer: FC<Props> = ({ setSubPage, subPage }) => {
 
+	const dispatch = useDispatch();
 	const navigate = useNavigate();
 	const { t } = useUserConfig();
 	const creator = useSelector(creatorSelector);
@@ -34,6 +36,9 @@ const Footer: FC<Props> = ({ setSubPage, subPage }) => {
 			});
 		} else {
 			// open new statement for question
+			dispatch(setShowNewStatementModal(true));
+			dispatch(setNewStatementType(StatementType.question));
+			dispatch(setParentStatement("top"));
 		}
 	}
 

@@ -1,5 +1,4 @@
-import { FormEvent, useContext } from 'react';
-import { NewStatementContext } from '../../newStatementCont';
+import { FormEvent } from 'react';
 import styles from './GetInitialStatementData.module.scss';
 import {
 	createStatement,
@@ -9,31 +8,19 @@ import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import Button, { ButtonType } from '@/view/components/buttons/button/Button';
 import Input from '@/view/components/input/Input';
 import Textarea from '@/view/components/textarea/Textarea';
-import { StatementContext } from '@/view/pages/statement/StatementCont';
 import { StatementType, Statement, QuestionType } from 'delib-npm';
 import { LanguagesEnum } from '@/context/UserConfigContext';
+import { useDispatch, useSelector } from 'react-redux';
+import { clearNewStatement, selectNewStatement, selectParentStatementForNewStatement, setShowNewStatementModal } from '@/redux/statements/newStatementSlice';
 
 export default function GetInitialStatementData() {
 	const { t, currentLanguage } = useUserConfig();
-	const { title, description, setTitle, setDescription } =
-		useContext(NewStatementContext);
-	const {
-		newStatementType,
-		newQuestionType,
-		handleSetNewStatement,
-		statement,
-	} = useContext(StatementContext);
-
-	const _title = ((newStatementType: StatementType) => {
-		switch (newStatementType) {
-			case StatementType.group:
-				return t('Create a group');
-			case StatementType.question:
-				return t('Create a question');
-			default:
-				return t('Create a statement');
-		}
-	})(newStatementType);
+	const dispatch = useDispatch();
+	const newStatementParent = useSelector(selectParentStatementForNewStatement);
+	const newStatement = useSelector(selectNewStatement);
+	const newStatementType = newStatement?.statementType || StatementType.group;
+	const newStatementQuestionType =
+		newStatement?.questionSettings?.questionType || QuestionType.multiStage;
 
 	const handleSubmit = async (ev: FormEvent<HTMLFormElement>) => {
 		ev.preventDefault();
@@ -41,53 +28,49 @@ export default function GetInitialStatementData() {
 			const form = new FormData(ev.target as HTMLFormElement);
 			const title = form.get('title') as string;
 			const description = (form.get('description') as string) || '';
-			setTitle(title.toString());
-			setDescription(description);
 
-			if (!statement) throw new Error('Statement is not defined');
+			if (!newStatementParent) throw new Error('Statement is not defined');
 			const lang =
-				newQuestionType === QuestionType.massConsensus
+				newStatementQuestionType === QuestionType.massConsensus
 					? (currentLanguage as LanguagesEnum)
 					: '';
 
-			const newStatement: Statement | undefined = createStatement({
-				parentStatement: statement,
+			const _newStatement: Statement | undefined = createStatement({
+				parentStatement: newStatementParent,
 				text: title,
 				description,
 				defaultLanguage: lang,
-				statementType: newStatementType,
-				questionType: newQuestionType,
+				statementType: newStatement?.statementType || StatementType.group,
+				questionType: newStatementQuestionType,
 			});
-			if (!newStatement) throw new Error('newStatement is not defined');
+			if (!_newStatement) throw new Error('newStatement is not defined');
 
 			setStatementToDB({
-				parentStatement: statement,
-				statement: newStatement,
+				parentStatement: newStatementParent,
+				statement: _newStatement,
 			});
 
-			handleSetNewStatement(false);
+			dispatch(setShowNewStatementModal(false));
+			dispatch(clearNewStatement());
 		} catch (error) {
 			console.error(error);
 		}
 	};
 
-	const { title: titleLabel, description: descriptionLabel } =
+	const { header, title: titleLabel, description: descriptionLabel } =
 		getTexts(newStatementType);
 
 	return (
 		<>
-			<h4>{_title}</h4>
+			<h4>{t(header)}</h4>
 			<form className={styles.form} onSubmit={handleSubmit}>
 				<Input
 					label={t(titleLabel)}
-					value={title}
 					name='title'
 					autoFocus={true}
-					placeholder=''
 				/>
 				<Textarea
 					label={t(descriptionLabel)}
-					value={description}
 					name='description'
 				/>
 				<div className='btns'>
@@ -99,7 +82,10 @@ export default function GetInitialStatementData() {
 					<Button
 						text={t('Cancel')}
 						buttonType={ButtonType.SECONDARY}
-						onClick={() => handleSetNewStatement(false)}
+						onClick={() => {
+							dispatch(setShowNewStatementModal(false));
+							dispatch(clearNewStatement());
+						}}
 					/>
 				</div>
 			</form>
@@ -108,6 +94,7 @@ export default function GetInitialStatementData() {
 }
 
 function getTexts(statementType: StatementType): {
+	header: string;
 	title: string;
 	description: string;
 	placeholder: string;
@@ -116,18 +103,21 @@ function getTexts(statementType: StatementType): {
 		switch (statementType) {
 			case StatementType.group:
 				return {
+					header: 'Create a group',
 					title: 'Group Title',
 					description: 'Group Description',
 					placeholder: 'Describe the group',
 				};
 			case StatementType.question:
 				return {
+					header: 'Create a question',
 					title: 'Question Title',
 					description: 'Question Description',
 					placeholder: 'Describe the question',
 				};
 			default:
 				return {
+					header: 'Create a statement',
 					title: 'Title',
 					description: 'Description',
 					placeholder: 'Description',
@@ -137,6 +127,7 @@ function getTexts(statementType: StatementType): {
 		console.error(error);
 
 		return {
+			header: 'Create a statement',
 			title: 'Title',
 			description: 'Description',
 			placeholder: 'Description',

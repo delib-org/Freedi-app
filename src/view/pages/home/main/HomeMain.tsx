@@ -2,9 +2,6 @@ import { useEffect, useState } from 'react';
 import '@/view/style/homePage.scss';
 import styles from './HomeMain.module.scss';
 
-// Third party libraries
-import { useNavigate } from 'react-router';
-
 // Redux store
 import MainCard from './mainCard/MainCard';
 import bike from '@/assets/images/bike.png';
@@ -18,12 +15,12 @@ import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { StatementType } from 'delib-npm';
 import MainQuestionCard from './mainQuestionCard/MainQuestionCard';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
-import AddStatement from './addStatement/AddStatement';
 import NewStatement from '../../statement/components/newStatemement/NewStatement';
+import { selectNewStatementShowModal } from '@/redux/statements/newStatementSlice';
 
 const HomeMain = () => {
 	// Hooks
-	const navigate = useNavigate();
+	const showNewStatementModal = useAppSelector(selectNewStatementShowModal);
 	const [loading, setLoading] = useState(true);
 	const [subPage, setSubPage] = useState<"decisions" | "groups">("groups");
 	const [subPageTitle, setSubPageTitle] = useState<"Decisions" | "Groups">("Decisions");
@@ -68,9 +65,9 @@ const HomeMain = () => {
 						topSubscriptions.length > 0 ? 'start' : 'center',
 				}}
 			>
-				<div className={styles.addStatementModal}>
+				{showNewStatementModal && <div className={styles.addStatementModal}>
 					<NewStatement />
-				</div>
+				</div>}
 				<h2>{t(subPageTitle)}</h2>
 				{(() => {
 					if (loading) {

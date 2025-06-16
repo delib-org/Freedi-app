@@ -2,7 +2,7 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { QuestionType, Statement, StatementType } from 'delib-npm';
 
 interface NewStatementState {
-	parentStatement: Statement | null;
+	parentStatement: Statement | null | "top";
 	newStatement: Partial<Statement> | null;
 	isLoading: boolean;
 	error: string | null;
@@ -21,7 +21,7 @@ const newStatementSlice = createSlice({
 	name: 'newStatement',
 	initialState,
 	reducers: {
-		setParentStatement: (state, action: PayloadAction<Statement | null>) => {
+		setParentStatement: (state, action: PayloadAction<Statement | null | "top">) => {
 			state.parentStatement = action.payload;
 		},
 		setNewStatementType: (state, action: PayloadAction<StatementType>) => {
