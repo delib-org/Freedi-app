@@ -37,6 +37,9 @@ export const colorMappings: ColorMappings = {
   "--bg-screen": "--bg-screen-contrast",
   "--bg-overlay": "--bg-overlay-contrast",
 
+  // Border
+  "--border-primary-subtle": "--border-primary-subtle-contrast",
+
   // Buttons
   "--btn-primary": "--btn-primary-contrast",
   "--btn-secondary": "--btn-secondary-contrast",
@@ -131,6 +134,10 @@ export const colorMappings: ColorMappings = {
   "--step-top-rank-active": "--step-top-rank-active-contrast",
   "--step-joined-members-active": "--step-joined-members-active-contrast",
   "--step-summary-active": "--step-summary-active-contrast",
+
+  // Surface
+  "--surface-primary-subtle": "--surface-primary-subtle-contrast",
+  "--surface-primary-lighter": "--surface-primary-lighter-contrast",
 
   // Question
   "--question": "--question-contrast",

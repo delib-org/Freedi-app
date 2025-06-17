@@ -6,22 +6,30 @@
 
 	h3 {
 		margin: 0 0 1.5rem 0;
-		color: #2c3e50;
+		color: (--text-primary);
 		font-size: 1.5rem;
-		text-align: center;
+		text-align: left;
+		font-weight: 500;
 	}
 
 	.newQuestionForm {
 		margin-bottom: 2rem;
 		padding: 1.5rem;
-		border: 2px dashed #bdcef4;
+		border-left: 6px solid var(--map-question);
 		border-radius: 8px;
-		background-color: #f0f4ff;
+		background-color: var(--card-default);
+		box-shadow: 0 2px 4px rgba(66, 79, 108, 0.1);
 
 		h4 {
 			margin: 0 0 1rem 0;
 			color: #2c3e50;
 			font-size: 1.2rem;
+		}
+
+		.questionInput {
+			border: 1px solid var(--border-primary-subtle);
+			border-radius: 0.5rem;
+			padding: 1rem;
 		}
 
 		.formFields {
@@ -43,12 +51,11 @@
 			}
 
 			select {
-				padding: 0.75rem;
-				border: 1px solid #bdcef4;
-				border-radius: 0.5rem;
+				padding: 1rem;
+				border-bottom: 0.1px solid var(--border-primary-subtle);
 				font-size: 1rem;
-				background-color: #fff;
 				transition: border-color 0.2s;
+				color: var(--text-subtitle);
 
 				&:focus {
 					outline: none;

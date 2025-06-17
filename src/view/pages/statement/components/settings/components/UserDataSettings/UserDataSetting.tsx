@@ -115,30 +115,27 @@ const UserDataSetting: FC<Props> = ({ statement }) => {
 			</div>
 			{showModal && <SettingsModal closeModal={closeModal}>
 				<div className={styles.userDataSettings}>
-					<h3>{t('User Data Questions')}</h3>					{/* New Question Form */}
+					<h3>{t('Survey Settings')}</h3>					{/* New Question Form */}
 					<form className={styles.newQuestionForm} onSubmit={handleAddNewQuestion}>
-						<h4>{t('Add New Question')}</h4>
 						<div className={styles.formFields}>
-							<label htmlFor="questionType">
-								{t('Question')}
-							</label>
 							<input
 								name="newQuestion"
-								placeholder={t('Enter your question')}
+								placeholder={t('White Question Here...')}
 								required
 								type="text"
+								className={styles.questionInput}
 							/>
 
 							<div className={styles.selectField}>
-								<label htmlFor="questionType">
-									{t('Question Type')}
-								</label>
 								<select
 									id="questionType"
 									name="questionType"
 									defaultValue={UserQuestionType.text}
 								>
-									<option value={UserQuestionType.radio}>{t('Single Choice (Radio)')}</option>
+									<option value={UserQuestionType.radio}>{t('Short Answer')}</option>
+									<option value={UserQuestionType.radio}>{t('Checkbox')}</option>
+									<option value={UserQuestionType.radio}>{t('Paragraph')}</option>
+									<option value={UserQuestionType.radio}>{t('Multiple Choice')}</option>
 								</select>
 							</div>
 							<button

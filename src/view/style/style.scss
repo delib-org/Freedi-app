@@ -108,6 +108,11 @@
 	--range-objections-60-contrast: #f746c2;
 	--range-objections-30-contrast: #fcb6e7;
 
+	//border
+	--border-primary-subtle: #BDCEF4;
+
+	--border-primary-subtle-contrast: #A0BCFD;
+
 	//buttons
 	--btn-primary: #5f88e5;
 	--btn-primary-default: #5f88e5;
@@ -390,6 +395,8 @@
 
 	//surface
 	--surface-background: #f2f6ff;
+	--surface-primary-subtle: #F1F5FD;
+	--surface-primary-lighter: #BDCEF4;
 	--surface-overlay: #01113766;
 	--surface-edit: #f2f6ff;
 	--surface-Surface-60: #ffffff99;
@@ -398,6 +405,8 @@
 
 	//surface-contrast
 	--surface-background-contrast: #ffffff;
+	--surface-primary-subtle-contrast: #F6F6F6;
+	--surface-primary-lighter-contrast: #A0BCFD;
 	--surface-overlay-contrast: #011137cc;
 	--surface-edit-contrast: #165bfa;
 	--surface-Surface-60-contrast: #f2f6ff;
@@ -406,7 +415,7 @@
 
 	//text
 	--text-title: #191e29;
-	--text-subtitle: #2a3346;
+	--text-subtitle: #2a3346; 
 	--text-body: #3d4d71;
 	--text-caption: #7484a9;
 	--text-label: #7484a9;
