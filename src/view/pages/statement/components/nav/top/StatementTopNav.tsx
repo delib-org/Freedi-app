@@ -18,6 +18,7 @@ import NavButtons from './navButtons/NavButtons';
 import { useSelector } from 'react-redux';
 import { statementSubscriptionSelector } from '@/redux/statements/statementsSlice';
 import LanguagesIcon from '@/assets/icons/languagesIcon.svg?react';
+import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 
 interface Props {
 	statement?: Statement;
@@ -28,7 +29,7 @@ interface Props {
 	handleLogout: () => void;
 	setIsHeaderMenuOpen: (value: boolean) => void;
 	isHeaderMenuOpen: boolean;
-};
+}
 
 const StatementTopNav: FC<Props> = ({
 	statement,
@@ -40,11 +41,13 @@ const StatementTopNav: FC<Props> = ({
 	isHeaderMenuOpen,
 	handleShare,
 }) => {
-
 	const { t, currentLanguage } = useUserConfig();
+	const { user } = useAuthentication();
 	const navigate = useNavigate();
 	const { screen } = useParams();
-	const role = useSelector(statementSubscriptionSelector(statement?.topParentId))?.role;
+	const role = useSelector(
+		statementSubscriptionSelector(statement?.topParentId)
+	)?.role;
 	const headerStyle = useStatementColor({ statement });
 	const [showLanguageModal, setShowLanguageModal] = useState(false);
 
@@ -61,7 +64,7 @@ const StatementTopNav: FC<Props> = ({
 		_statement?.statementSettings?.enableNavigationalElements
 	);
 
-	const isAdmin = role === Role.admin;
+	const isAdmin = role === Role.admin || user?.uid === statement?.creatorId;
 	const allowNavigation = enableNavigationalElements || isAdmin;
 
 	function handleNavigation(path: string | Screen) {
@@ -90,7 +93,9 @@ const StatementTopNav: FC<Props> = ({
 			data-cy='statement-nav'
 			style={{ backgroundColor: headerStyle.backgroundColor }}
 		>
-			<div className={`${styles.wrapper} ${currentLanguage === 'he' ? styles.rtl : styles.ltr}`}>
+			<div
+				className={`${styles.wrapper} ${currentLanguage === 'he' ? styles.rtl : styles.ltr}`}
+			>
 				{allowNavigation && statement && (
 					<HeaderMenu
 						setIsHeaderMenuOpen={setIsHeaderMenuOpen}
@@ -161,7 +166,7 @@ function HeaderMenu({
 	// Apply dynamic style to the menu-header
 	const menuHeaderStyle = {
 		backgroundColor: headerStyle.backgroundColor,
-		color: headerStyle.color
+		color: headerStyle.color,
 	};
 
 	return (
@@ -186,34 +191,40 @@ function HeaderMenu({
 				<MenuOption
 					label={t('Share')}
 					icon={<ShareIcon style={menuIconStyle} />}
-					onOptionClick={handleShare} />
-				{!isAdmin && <MenuOption
-					label={currentLabel}
-					icon={<LanguagesIcon style={menuIconStyle} />}
-					onOptionClick={setShowLanguageModal} />}
+					onOptionClick={handleShare}
+				/>
+				{!isAdmin && (
+					<MenuOption
+						label={currentLabel}
+						icon={<LanguagesIcon style={menuIconStyle} />}
+						onOptionClick={setShowLanguageModal}
+					/>
+				)}
 
 				{isAdmin && (
 					<>
 						<MenuOption
 							label={t('Follow Me')}
 							icon={<FollowMe style={menuIconStyle} />}
-							onOptionClick={handleFollowMe} />
+							onOptionClick={handleFollowMe}
+						/>
 						<MenuOption
 							label={t('Invite with PIN number')}
 							icon={<InvitationIcon style={menuIconStyle} />}
-							onOptionClick={handleInvitePanel} />
+							onOptionClick={handleInvitePanel}
+						/>
 						<MenuOption
 							label={currentLabel}
 							icon={<LanguagesIcon style={menuIconStyle} />}
-							onOptionClick={setShowLanguageModal} />
+							onOptionClick={setShowLanguageModal}
+						/>
 						<MenuOption
 							label={t('Settings')}
 							icon={<SettingsIcon style={menuIconStyle} />}
-							onOptionClick={() => handleNavigation('settings')} />
-
+							onOptionClick={() => handleNavigation('settings')}
+						/>
 					</>
 				)}
-
 			</Menu>
 			{showLanguageModal && (
 				<Modal>
