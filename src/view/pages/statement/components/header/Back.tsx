@@ -6,8 +6,8 @@ import { Statement } from 'delib-npm';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 
 interface Props {
-	statement: Statement | undefined;
-	headerColor: StyleProps;
+	statement?: Statement | undefined;
+	headerColor?: StyleProps;
 }
 
 const Back: FC<Props> = ({ statement, headerColor }) => {

@@ -16,13 +16,18 @@ const creatorSlice = createSlice({
 		setCreator: (state, action: PayloadAction<Creator>) => {
 			state.creator = action.payload;
 		},
+		setUserAdvanceUser: (state, action: PayloadAction<boolean>) => {
+			if (state.creator) {
+				state.creator.advanceUser = action.payload;
+			}
+		},
 		removeCreator: (state) => {
 			state.creator = null;
 		}
 	},
 });
 
-export const { setCreator, removeCreator } = creatorSlice.actions;
+export const { setCreator, removeCreator, setUserAdvanceUser } = creatorSlice.actions;
 
 export const creatorSelector = (state: { creator: CreatorState }) => state.creator.creator;
 
