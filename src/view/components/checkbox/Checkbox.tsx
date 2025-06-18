@@ -22,8 +22,11 @@ const Checkbox: FC<CheckboxProps> = ({
 }: CheckboxProps) => {
 	const { t } = useUserConfig();
 
+	// Ensure isChecked is always a boolean
+	const checkedValue = Boolean(isChecked);
+
 	const handleChange = () => {
-		onChange(!isChecked);
+		onChange(!checkedValue);
 	};
 
 	const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
@@ -35,24 +38,24 @@ const Checkbox: FC<CheckboxProps> = ({
 
 	return (
 		<div
-			className={`checkbox ${isChecked ? 'checked' : ''} ${className ?? ''}`}
+			className={`checkbox ${checkedValue ? 'checked' : ''} ${className ?? ''}`}
 			onClick={handleChange}
 			onKeyDown={handleKeyDown}
 			role='checkbox'
-			aria-checked={isChecked}
+			aria-checked={checkedValue}
 			tabIndex={0}
 		>
 			<label htmlFor={`checkbox-${label}`}>
 				<VisuallyHidden labelName={t(label)} />
 			</label>
 			<div className='checkbox-icon' aria-hidden='true'>
-				{isChecked ? <CheckboxCheckedIcon /> : <CheckboxEmptyIcon />}
+				{checkedValue ? <CheckboxCheckedIcon /> : <CheckboxEmptyIcon />}
 			</div>
 			<input
 				type='checkbox'
 				name={name}
 				id={`checkbox-${label}`}
-				checked={isChecked}
+				checked={checkedValue}
 				onChange={handleChange}
 				tabIndex={-1}
 				style={{

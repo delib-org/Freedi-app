@@ -16,14 +16,17 @@ import { sortItems } from './StatementBottomNavModal';
 import { SortType, StatementType } from 'delib-npm';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import { useDecreaseLearningRemain } from '@/controllers/hooks/useDecreaseLearningRemain';
+import { useDispatch } from 'react-redux';
+import { setNewStatementModal } from '@/redux/statements/newStatementSlice';
 
 interface Props {
 	showNav?: boolean;
 }
 
 const StatementBottomNav: FC<Props> = () => {
+	const dispatch = useDispatch();
 	const { sort } = useParams();
-	const { statement, setNewStatementType, handleSetNewStatement } =
+	const { statement } =
 		useContext(StatementContext);
 	const { dir, learning } = useUserConfig();
 	const decreaseLearning = useDecreaseLearningRemain();
@@ -43,8 +46,15 @@ const StatementBottomNav: FC<Props> = () => {
 	const statementColor = useStatementColor({ statement });
 
 	function handleCreateNewOption() {
-		setNewStatementType(StatementType.option);
-		handleSetNewStatement(true);
+		dispatch(setNewStatementModal({
+			parentStatement: statement,
+			newStatement: {
+				statementType: StatementType.option,
+			},
+			showModal: true,
+			isLoading: false,
+			error: null,
+		}))
 	}
 
 	const handleAddOption = () => {

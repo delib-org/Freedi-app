@@ -24,7 +24,6 @@ const Evaluation: FC<EvaluationProps> = ({ statement }) => {
 			return (
 				<EnhancedEvaluation
 					statement={statement}
-					shouldDisplayScore={shouldDisplayScore}
 				/>
 			);
 		}
