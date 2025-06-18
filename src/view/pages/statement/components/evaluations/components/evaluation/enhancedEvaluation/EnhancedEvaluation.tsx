@@ -60,8 +60,6 @@ const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({
 		return colors[index] || colors[0];
 	}
 
-	console.log("learning.evaluation", learning.evaluation);
-
 	return (
 		<div className={`${styles.evaluation}`}>
 			<div className={styles['enhanced-evaluation']}>
