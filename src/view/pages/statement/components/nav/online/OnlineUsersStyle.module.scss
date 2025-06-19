@@ -1,0 +1,40 @@
+.container {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+.userItem {
+	position: relative;
+}
+
+.avatar {
+	height: 2rem; 
+	width: 2rem; 
+	border-radius: 50%; 
+
+	&.activeRing {
+		border: 1px solid green;
+	}
+}
+
+.avatarImage {
+	object-fit: cover; 
+}
+
+.avatarDefault {
+	background: linear-gradient(
+		135deg,
+		#60a5fa,
+		#a855f7
+	); 
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.initial {
+	font-size: 0.75rem; // text-xs
+	font-weight: 500; // font-medium
+	color: white; // text-white
+}
