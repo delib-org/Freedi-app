@@ -1,5 +1,5 @@
 import { FC, useContext, useState, useEffect } from 'react';
-import { Link, useParams } from 'react-router';
+import { Link } from 'react-router';
 
 // Icons
 import AgreementIcon from '@/assets/icons/agreementIcon.svg?react';
@@ -22,7 +22,6 @@ interface Props {
 }
 
 const StatementBottomNav: FC<Props> = () => {
-	const { sort } = useParams();
 	const { statement, setNewStatementType, handleSetNewStatement } =
 		useContext(StatementContext);
 	const { dir, learning } = useUserConfig();
@@ -59,6 +58,12 @@ const StatementBottomNav: FC<Props> = () => {
 		setShowSorting(!showSorting);
 	}
 
+	function getBaseRoute() {
+		const path = window.location.pathname;
+
+		return path.includes('/stage/') ? 'stage' : 'statement';
+}
+
 	return (
 		<>
 			{showStartHere && <StartHere setShow={setShowStartHere} />}
@@ -89,7 +94,7 @@ const StatementBottomNav: FC<Props> = () => {
 							>
 								<Link
 									className={`open-nav-icon ${showSorting ? 'active' : ''}`}
-									to={sort ? `./${navItem.link}` : `./${navItem.link}`}
+									to={`/${getBaseRoute()}/${statement?.statementId}/${navItem.link}`}
 									aria-label='Sorting options'
 									key={navItem.id}
 									onClick={() => setShowSorting(false)}
