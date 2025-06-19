@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React from 'react';
 import IconButton from '@/view/components/iconButton/IconButton';
 import PlusIcon from '@/assets/icons/plusIcon.svg?react';
 import AddQuestionIcon from '@/assets/icons/questionIcon.svg?react';
@@ -6,54 +6,75 @@ import AddMassConsensusIcon from '@/assets/icons/massConsensusIcon.svg?react';
 import AddSubGroupIcon from '@/assets/icons/team-group.svg?react';
 import styles from './AddButton.module.scss'
 import { QuestionType, StatementType } from 'delib-npm';
-import { StatementContext } from '../../StatementCont';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useDispatch, useSelector } from 'react-redux';
+import { setNewStatementModal, setShowNewStatementModal } from '@/redux/statements/newStatementSlice';
+import { useParams } from 'react-router';
+import { statementSelectorById } from '@/redux/statements/statementsSlice';
 
 export default function AddButton() {
+	const { statementId } = useParams<{ statementId: string }>();
+	const statement = useSelector(statementSelectorById(statementId || ''));
+	const dispatch = useDispatch();
 	const [actionsOpen, setActionsOpen] = React.useState(false);
-	const { handleSetNewStatement, setNewStatementType, setNewQuestionType } =
-		useContext(StatementContext);
+
 	const { dir } = useUserConfig();
 	const radius = 5;
-
-	function handleAddStatement(
-		newStatementType: StatementType,
-		questionType?: QuestionType
-	) {
-		setActionsOpen(false);
-
-		setNewStatementType(newStatementType);
-		if (questionType) {
-			setNewQuestionType(questionType);
-		}
-		handleSetNewStatement(true);
-	}
 
 	const handleAction = (
 		action: 'question' | 'mass-consensus' | 'subgroup'
 	) => {
+		setActionsOpen(false);
 		switch (action) {
 			case 'question':
-				handleAddStatement(
-					StatementType.question,
-					QuestionType.multiStage
-				);
+				dispatch(setNewStatementModal({
+					parentStatement: statement,
+					newStatement: {
+						statementType: StatementType.question,
+						questionSettings: {
+							questionType: QuestionType.multiStage,
+						},
+					},
+					isLoading: false,
+					error: null,
+					showModal: true,
+				}));
+
 				break;
 			case 'mass-consensus':
-				handleAddStatement(
-					StatementType.question,
-					QuestionType.massConsensus
-				);
+				dispatch(setNewStatementModal({
+					parentStatement: statement,
+					newStatement: {
+						statementType: StatementType.question,
+						questionSettings: {
+							questionType: QuestionType.massConsensus,
+						},
+					},
+					isLoading: false,
+					error: null,
+					showModal: true,
+				}));
+
 				break;
 			case 'subgroup':
-				handleAddStatement(StatementType.group);
+				dispatch(setNewStatementModal({
+					parentStatement: statement,
+					newStatement: {
+						statementType: StatementType.group,
+					},
+					isLoading: false,
+					error: null,
+					showModal: true,
+				}));
 				break;
 			default:
 				break;
 		}
 	};
 
-	const toggleActions = () => setActionsOpen(!actionsOpen);
+	const toggleActions = () => {
+		setActionsOpen((prev) => !prev);
+	};
 
 	const actions = [
 		{
@@ -109,7 +130,7 @@ export default function AddButton() {
 			{actionsOpen && (
 				<button
 					className={`${styles.invisibleBackground}`}
-					onClick={() => setActionsOpen(false)}
+					onClick={() => dispatch(setShowNewStatementModal(false))} // Close the modal when clicking outside
 				></button>
 			)
 			}

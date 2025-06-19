@@ -2,6 +2,8 @@ import { UserQuestion, UserQuestionType } from 'delib-npm';
 import { FC, useState, FormEvent } from 'react';
 import UserQuestionInput from '../settings/userDataQuestionInput/UserDataQuestionInput';
 import { setUserAnswers } from '@/controllers/db/userData/setUserData';
+import Button, { ButtonType } from '@/view/components/buttons/button/Button';
+import styles from './UserDataQuestions.module.scss';
 
 interface Props {
 	questions: UserQuestion[];
@@ -30,11 +32,11 @@ const UserDataQuestions: FC<Props> = ({ questions, closeModal }) => {
 					return prevData.map((q) =>
 						q.userQuestionId === question.userQuestionId
 							? {
-									...q,
-									answer: Array.isArray(value)
-										? value.join(',')
-										: value,
-								}
+								...q,
+								answer: Array.isArray(value)
+									? value.join(',')
+									: value,
+							}
 							: q
 					);
 				}
@@ -58,8 +60,8 @@ const UserDataQuestions: FC<Props> = ({ questions, closeModal }) => {
 						_value as string
 					)
 						? currentQuestion.answerOptions.filter(
-								(option) => option !== _value
-							)
+							(option) => option !== _value
+						)
 						: [...currentQuestion.answerOptions, _value as string];
 
 					return prevData.map((q) =>
@@ -112,7 +114,6 @@ const UserDataQuestions: FC<Props> = ({ questions, closeModal }) => {
 
 	const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
-
 		if (!validateForm()) {
 			alert('Please answer all required fields before submitting.');
 
@@ -133,7 +134,7 @@ const UserDataQuestions: FC<Props> = ({ questions, closeModal }) => {
 	};
 
 	return (
-		<form onSubmit={handleSubmit}>
+		<form onSubmit={handleSubmit} className={styles.form}>
 			{questions.map((question: UserQuestion) => (
 				<UserQuestionInput
 					key={question.userQuestionId}
@@ -144,14 +145,12 @@ const UserDataQuestions: FC<Props> = ({ questions, closeModal }) => {
 					required={true}
 				/>
 			))}
-			<div className='btns'>
-				<button
-					type='submit'
-					className='btn btn--secondary'
+			<div className={styles.button}>
+				<Button
+					text={isSubmitting ? 'Submitting...' : 'Submit'}
+					buttonType={ButtonType.PRIMARY}
 					disabled={isSubmitting || !validateForm()}
-				>
-					{isSubmitting ? 'Submitting...' : 'Submit'}
-				</button>
+				></Button>
 			</div>
 		</form>
 	);
