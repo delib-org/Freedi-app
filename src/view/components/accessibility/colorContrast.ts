@@ -175,6 +175,7 @@ export const colorMappings: ColorMappings = {
   "--text-blue": "--text-blue-contrast",
   "--text-green": "--text-green-contrast",
   "--text-red": "--text-red-contrast",
+  "--text-action": "--text-action-contrast",
   "--text-caption": "--text-caption-contrast",
   "--text-crimson": "--text-crimson-contrast",
   "--text-emphasis": "--text-emphasis-contrast",

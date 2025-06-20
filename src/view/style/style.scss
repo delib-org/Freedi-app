@@ -305,7 +305,7 @@
 
 	//icons
 	--icons-blue: #5f88e5;
-	--icons-blue-dark: #1b45a7;
+	--icons-blue-dark: #3A60D6;
 	--icons-white: #ffffff;
 	--icons-red: #f74a4d;
 	--icons-green: #4fab9a;
@@ -314,7 +314,7 @@
 
 	//icons-contrast
 	--icons-blue-contrast: #165bfa;
-	--icons-blue-dark-contrast: #0332a0;
+	--icons-blue-dark-contrast: #0F36BE;
 	--icons-white-contrast: #ffffff;
 	--icons-red-contrast: #ff0207;
 	--icons-green-contrast: #00bd9a;
@@ -415,26 +415,28 @@
 
 	//text
 	--text-title: #191e29;
-	--text-subtitle: #2a3346; 
+	--text-subtitle: #383E54; 
 	--text-body: #3d4d71;
 	--text-caption: #7484a9;
 	--text-label: #7484a9;
 	--text-negative: #ffffff;
 	--text-disabled: #909ebc;
 	--text-blue: #285edc;
+	--text-action: #0F36BE;
 	--text-success: #4fab9a;
 	--text-error: #f74a4d;
 	--text-warning: #ef7550;
 
 	//text-contrast
 	--text-title-contrast: #08090d;
-	--text-subtitle-contrast: #11151d;
+	--text-subtitle-contrast: #353545;
 	--text-body-contrast: #212736;
 	--text-caption-contrast: #424e6c;
 	--text-Label-contrast: #424e6c;
 	--text-negative-contrast: #ffffff;
 	--text-disabled-contrast: #6d7ea6;
 	--text-blue-contrast: #0544d7;
+	--text-action-contrast: #0F36BE;
 	--text-success-contrast: #008f75;
 	--text-error-contrast: #ff0207;
 	--text-warning-contrast: #fb6340;

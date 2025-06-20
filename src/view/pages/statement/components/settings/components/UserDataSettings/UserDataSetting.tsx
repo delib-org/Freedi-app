@@ -1,10 +1,13 @@
-import React, { FC, useState } from 'react'
+import React, { FC, useState, JSX } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import SectionTitle from '../sectionTitle/SectionTitle'
 import { useUserConfig } from '@/controllers/hooks/useUserConfig'
 import SettingsModal from '../settingsModal/SettingsModal'
 import UserQuestionComp from './userQuestion/UserQuestionComp'
 import PlusIcon from '@/assets/icons/plusIcon.svg?react'
+import CheckboxIcon from '@/assets/icons/checkboxCheckedIcon.svg?react'
+import MenuDropdown from '@/assets/icons/arrow-down.svg?react'
+import RadioIcon from '@/assets/icons/radioButtonChecked.svg?react'
 import styles from './UserDataSetting.module.scss'
 import { getRandomUID, Statement, UserQuestion, UserQuestionType } from 'delib-npm'
 import { deleteUserDataOption, deleteUserDataQuestion, setUserDataOption, setUserDataQuestion } from '@/controllers/db/userData/setUserData'
@@ -16,11 +19,26 @@ interface Props {
 	statement: Statement;
 }
 
+interface Option {
+	type: string;
+	label: string;
+	icon: JSX.Element;
+}
+
 const UserDataSetting: FC<Props> = ({ statement }) => {
+	
+	const options = [
+  		{ type: 'text', label: 'Short Answer', icon: <CheckboxIcon className={styles.optionIcon}/> },
+  		{ type: 'checkbox', label: 'Checkbox', icon: <CheckboxIcon className={styles.optionIcon}/> },
+  		{ type: 'paragraph', label: 'Paragraph', icon: <CheckboxIcon className={styles.optionIcon}/> },
+  		{ type: 'radio', label: 'Multiple Choice', icon: <RadioIcon className={styles.optionIcon}/> },
+];
 
 	const { t } = useUserConfig()
 	const dispatch = useDispatch()
 	const [showModal, setShowModal] = useState(false)	// Get user questions from Redux store filtered by statement ID
+	const [selectedOption, setSelectedOption] = useState<Option>((options[0]));
+  	const [open, setOpen] = useState(false);
 	const userQuestions: UserQuestion[] = useSelector(selectUserQuestionsByStatementId(statement.statementId));
 
 	function closeModal() {
@@ -107,6 +125,12 @@ const UserDataSetting: FC<Props> = ({ statement }) => {
 		deleteUserDataOption(questionToUpdate, questionToUpdate.options[optionIndex].option);
 	}
 
+	const handleSelectOption = (option) => {
+		setSelectedOption((option));
+		console.info("h", selectedOption.label)
+		setOpen(false);
+  };
+
 	return (
 		<div>
 			<SectionTitle title={t('Member Information')} />
@@ -125,18 +149,38 @@ const UserDataSetting: FC<Props> = ({ statement }) => {
 								type="text"
 								className={styles.questionInput}
 							/>
-
-							<div className={styles.selectField}>
-								<select
-									id="questionType"
-									name="questionType"
-									defaultValue={UserQuestionType.text}
+							<div 
+ 								className={styles.selectField} 
+								onClick={() => setOpen(!open)} 
+								role="button"
+								tabIndex={0}
+								onKeyDown={(e) => e.key === 'Enter' && setOpen(!open)}>
+									<div className={styles.selectFieldWrapper}>
+										<div className={styles.option}>
+											<span>{selectedOption.icon}</span>
+											<span className={styles.textLabel}>{selectedOption.label}</span>
+										</div>
+										<MenuDropdown className={styles.optionIcon}/>
+									</div>
+							</div>
+							{open && (
+							<div className={styles.options}>
+								{options.map((option) => (
+								<button
+									key={option.type}
+									className={styles.option}
+									onClick={() => {
+									handleSelectOption(option);
+									}}
 								>
-									<option value={UserQuestionType.radio}>{t('Short Answer')}</option>
-									<option value={UserQuestionType.radio}>{t('Checkbox')}</option>
-									<option value={UserQuestionType.radio}>{t('Paragraph')}</option>
-									<option value={UserQuestionType.radio}>{t('Multiple Choice')}</option>
-								</select>
+									{option.icon}
+									<span className={styles.textLabel}>{option.label} </span>
+								</button>
+								))}
+							</div>
+							)}
+							<div>
+								<h3>required</h3>
 							</div>
 							<button
 								type="submit"

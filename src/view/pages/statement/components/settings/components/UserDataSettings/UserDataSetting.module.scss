@@ -63,7 +63,60 @@
 					border-color: #007bff;
 				}
 			}
+
+			.selectFieldWrapper {
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+			}
 		}
+
+		.options {
+			position: absolute;
+			top: 20rem;
+			left: 10rem;
+			right: 0;
+			background-color: var(--white);
+			border-radius: 0.5rem;
+			box-shadow: 0 4px 12px rgba(66, 79, 108, 0.15);
+			z-index: 100;
+			width: 50%;
+	}
+
+		.option {
+				display: flex;
+				align-items: center;
+				width: 100%;
+				padding: 1.25rem 1rem;
+				background: none;
+				border: none;
+				cursor: pointer;
+				transition: background-color 0.2s;
+				box-shadow: 0 2 4 0 rgba(66, 79, 108, 0.1);
+
+		&:hover {
+			background-color: #f4f7fa;
+		}
+
+		&:not(:first-child) {
+			border-top: 1px solid var(--border-primary-subtle);
+		}
+	}
+
+				.optionIcon{
+					width: 1.5rem;
+					height: 1.5rem;
+					color: var(--icons-blue-dark);
+					margin-right: 0.75rem;
+					display: flex;
+					align-items: center;
+					justify-content: center;
+				}
+
+				.textLabel {
+					color: var(--text-subtitle);
+					font-size: 1rem;
+				}
 	}
 
 	.existingQuestions {
