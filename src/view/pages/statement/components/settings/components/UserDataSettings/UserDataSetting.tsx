@@ -37,7 +37,7 @@ const UserDataSetting: FC<Props> = ({ statement }) => {
 	const { t } = useUserConfig()
 	const dispatch = useDispatch()
 	const [showModal, setShowModal] = useState(false)	// Get user questions from Redux store filtered by statement ID
-	const [selectedOption, setSelectedOption] = useState<Option>((options[3]));
+	const [selectedOption, setSelectedOption] = useState<Option>((options[0]));
   	const [open, setOpen] = useState(false);
 	const userQuestions: UserQuestion[] = useSelector(selectUserQuestionsByStatementId(statement.statementId));
 
@@ -127,6 +127,7 @@ const UserDataSetting: FC<Props> = ({ statement }) => {
 
 	const handleSelectOption = (option) => {
 		setSelectedOption((option));
+		console.info("h", selectedOption.label)
 		setOpen(false);
   };
 
@@ -169,7 +170,7 @@ const UserDataSetting: FC<Props> = ({ statement }) => {
 									key={option.type}
 									className={styles.option}
 									onClick={() => {
-										handleSelectOption(option);
+									handleSelectOption(option);
 									}}
 								>
 									{option.icon}
@@ -178,8 +179,22 @@ const UserDataSetting: FC<Props> = ({ statement }) => {
 								))}
 							</div>
 							)}
-							{selectedOption.type === 'radio' ?
+							<div>
+								<h3>required</h3>
+							</div>
+							<button
+								type="submit"
+								className="btn btn--add"
+							>
+								<PlusIcon />
+								{t('Add Question')}
+							</button>
+						</div>
+					</form>
+
+					{/* Existing Questions */}
 					<div className={styles.existingQuestions}>
+						<h4>{t('Existing Questions')}</h4>
 						{userQuestions.length === 0 ? (
 							<p className={styles.emptyState}>{t('No questions added yet')}</p>
 						) : (userQuestions.map((question, index) => (
@@ -195,21 +210,6 @@ const UserDataSetting: FC<Props> = ({ statement }) => {
 						))
 						)}
 					</div>
-					: null}
-							<div>
-								<h3>required</h3>
-							</div>
-							
-						</div>
-					</form>
-
-						<button
-							type="submit"
-							className="btn btn--add"
-							onClick={handleAddNewQuestion}
-						>
-						<PlusIcon />
-						</button>
 				</div>
 			</SettingsModal>}
 		</div>
