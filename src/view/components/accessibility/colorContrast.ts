@@ -95,16 +95,14 @@ export const colorMappings: ColorMappings = {
   "--header-search-chips": "--header-search-chips-contrast",
 
   // Icons
-  "--icons-white": "--icon-white-contrast",
-  "--icons-blue": "--icon-blue-contrast",
-  "--icons-blue-dark": "--icon-blue-dark-contrast",
-  "--icons-blue-light": "--icon-blue-light-contrast",
-  "--icons-red": "--icon-red-contrast",
-  "--icons-green": "--icon-green-contrast",
-  "--icons-disabled": "--icon-disabled-contrast",
-  "--icons-disabled-outline": "--icon-disabled-outline-contrast",
-  "--icons-disabled-filled": "--icon-disabled-filled-contrast",
-  "--icons-disabled-dark": "--icon-disabled-dark-contrast",
+  "--icons-white": "--icons-white-contrast",
+  "--icons-blue": "--icons-blue-contrast",
+  "--icons-blue-light": "--icons-blue-light-contrast",
+  "--icons-red": "--icons-red-contrast",
+  "--icons-green": "--icons-green-contrast",
+  "--icons-disabled-outline": "--icons-disabled-outline-contrast",
+  "--icons-disabled-filled": "--icons-disabled-filled-contrast",
+  "--icons-disabled-dark": "--icons-disabled-dark-contrast"
 
   // Info
   "--info-snackbar": "--info-snackbar-contrast",
