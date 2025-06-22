@@ -48,6 +48,11 @@ export const colorMappings: ColorMappings = {
   "--btn-tertiary-blue": "--btn-tertiary-blue-contrast",
   "--btn-tertiary-red": "--btn-tertiary-red-contrast",
   "--add-btn": "--add-btn-contrast",
+  "--btn-disabled": "--btn-disabled-contrast",
+  "--btn-purple-default": "--btn-purple-default-contrast",
+  "--btn-purple-hover": "--btn-purple-hover-contrast",
+  "--btn-purple-disable": "--btn-purple-disable-contrast",
+  "--btn-purple-selected": "--btn-purple-selected-contrast",
 
   // accessibility buttons
   "--btn-accessibility-icons": "--btn-accessibility-icons-contrast",
@@ -57,6 +62,8 @@ export const colorMappings: ColorMappings = {
     "--btn-accessibility-light-contrast-text-contrast",
   "--btn-accessibility-light-contrast-icons":
     "--btn-accessibility-light-contrast-icons-contrast",
+  "--btn-accessibility-light-contrast-text-contrast":
+    "--btn-accessibility-light-contrast-text",
 
   // Card menu
   "--card-menu": "--card-menu-contrast",
@@ -73,10 +80,15 @@ export const colorMappings: ColorMappings = {
   "--emoji-thinking": "--emoji-thinking-contrast",
   "--emoji-sad": "--emoji-sad-contrast",
 
+  // group
+  "--group": "--group-contrast",
+
   // Headers
   "--question-header": "--question-header-contrast",
   "--header-bg-color": "--header-bg-color-contrast",
   "--header-question": "--header-question-contrast",
+  "--header-group": "--header-group-contrast",
+  "--header-chosen": "--header-chosen-contrast",
   "--header-option-chosen": "--header-option-chosen-contrast",
   "--header-option-non-chosen": "--header-option-non-chosen-contrast",
   "--header-home": "--header-home-contrast",
@@ -90,7 +102,7 @@ export const colorMappings: ColorMappings = {
   "--icons-green": "--icons-green-contrast",
   "--icons-disabled-outline": "--icons-disabled-outline-contrast",
   "--icons-disabled-filled": "--icons-disabled-filled-contrast",
-  "--icons-disabled-dark": "--icons-disabled-dark-contrast",
+  "--icons-disabled-dark": "--icons-disabled-dark-contrast"
 
   // Info
   "--info-snackbar": "--info-snackbar-contrast",
@@ -118,6 +130,9 @@ export const colorMappings: ColorMappings = {
   "--step-joined-members-active": "--step-joined-members-active-contrast",
   "--step-summary-active": "--step-summary-active-contrast",
 
+  // Question
+  "--question": "--question-contrast",
+
   // Settings
   "--member-chip": "--member-chip-contrast",
   "--member-voter": "--member-voter-contrast",
@@ -142,6 +157,7 @@ export const colorMappings: ColorMappings = {
   "--dot-disinterest": "--dot-disinterest-contrast",
 
   // Text
+  "--text-body": "--text-body-contrast",
   "--text-headline": "--text-headline-contrast",
   "--text-paragraph": "--text-paragraph-contrast",
   "--text-paragraph-light": "--text-paragraph-light-contrast",
@@ -150,12 +166,53 @@ export const colorMappings: ColorMappings = {
   "--text-blue": "--text-blue-contrast",
   "--text-green": "--text-green-contrast",
   "--text-red": "--text-red-contrast",
+  "--text-caption": "--text-caption-contrast",
   "--text-crimson": "--text-crimson-contrast",
   "--text-emphasis": "--text-emphasis-contrast",
   "--text-dark-btn": "--text-dark-btn-contrast",
   "--text-light-btn": "--text-light-btn-contrast",
-  "--text-disabled-paragraph": "--text-disabled-paragraph-contrast",
+  "--text-disabled": "--text-disabled-contrast",
   "--text-disabled-light": "--text-disabled-light-contrast",
   "--text-disabled-digit": "--text-disabled-digit-contrast",
   "--text-triangle-taboo": "--text-triangle-taboo-contrast",
+
+  //voting palette
+  "--voting-palette-pair-1-light": "--voting-palette-pair-1-light-contrast",
+  "--voting-palette-pair-1-dark": "--voting-palette-pair-1-dark-contrast",
+  "--voting-palette-pair-2-light": "--voting-palette-pair-2-light-contrast",
+  "--voting-palette-pair-2-dark": "--voting-palette-pair-2-dark-contrast",
+  "--voting-palette-pair-3-light": "--voting-palette-pair-3-light-contrast",
+  "--voting-palette-pair-3-dark": "--voting-palette-pair-3-dark-contrast",
+  "--voting-palette-pair-4-light": "--voting-palette-pair-4-light-contrast",
+  "--voting-palette-pair-4-dark": "--voting-palette-pair-4-dark-contrast",
+  "--voting-palette-pair-5-light": "--voting-palette-pair-5-light-contrast",
+  "--voting-palette-pair-5-dark": "--voting-palette-pair-5-dark-contrast",
+  "--voting-palette-pair-6-light": "--voting-palette-pair-6-light-contrast",
+  "--voting-palette-pair-6-dark": "--voting-palette-pair-6-dark-contrast",
+  "--voting-palette-pair-7-light": "--voting-palette-pair-7-light-contrast",
+  "--voting-palette-pair-7-dark": "--voting-palette-pair-7-dark-contrast",
+  "--voting-palette-pair-8-light": "--voting-palette-pair-8-light-contrast",
+  "--voting-palette-pair-8-dark": "--voting-palette-pair-8-dark-contrast",
+  "--voting-palette-pair-9-light": "--voting-palette-pair-9-light-contrast",
+  "--voting-palette-pair-9-dark": "--voting-palette-pair-9-dark-contrast",
+  "--voting-palette-pair-10-light": "--voting-palette-pair-10-light-contrast",
+  "--voting-palette-pair-10-dark": "--voting-palette-pair-10-dark-contrast",
+  "--voting-palette-pair-11-light": "--voting-palette-pair-11-light-contrast",
+  "--voting-palette-pair-11-dark": "--voting-palette-pair-11-dark-contrast",
+  "--voting-palette-pair-12-light": "--voting-palette-pair-12-light-contrast",
+  "--voting-palette-pair-12-dark": "--voting-palette-pair-12-dark-contrast",
+  "--voting-palette-pair-13-light": "--voting-palette-pair-13-light-contrast",
+  "--voting-palette-pair-13-dark": "--voting-palette-pair-13-dark-contrast",
+  "--voting-palette-pair-14-light": "--voting-palette-pair-14-light-contrast",
+  "--voting-palette-pair-14-dark": "--voting-palette-pair-14-dark-contrast",
+  "--voting-palette-pair-15-light": "--voting-palette-pair-15-light-contrast",
+  "--voting-palette-pair-15-dark": "--voting-palette-pair-15-dark-contrast",
+  "--voting-palette-pair-16-light": "--voting-palette-pair-16-light-contrast",
+  "--voting-palette-pair-16-dark": "--voting-palette-pair-16-dark-contrast",
+  "--voting-palette-pair-17-light": "--voting-palette-pair-17-light-contrast",
+  "--voting-palette-pair-17-dark": "--voting-palette-pair-17-dark-contrast",
+  "--voting-palette-pair-18-light": "--voting-palette-pair-18-light-contrast",
+  "--voting-palette-pair-18-dark": "--voting-palette-pair-18-dark-contrast",
+  "--voting-palette-pair-19-light": "--voting-palette-pair-19-light-contrast",
+  "--voting-palette-pair-19-dark": "--voting-palette-pair-19-dark-contrast",
 };

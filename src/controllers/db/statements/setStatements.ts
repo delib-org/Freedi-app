@@ -142,9 +142,9 @@ export const setStatementToDB = async ({
 	parentStatement,
 }: SetStatementToDBParams): Promise<
 	| {
-			statementId: string;
-			statement: Statement;
-	  }
+		statementId: string;
+		statement: Statement;
+	}
 	| undefined
 > => {
 	try {
@@ -173,8 +173,8 @@ export const setStatementToDB = async ({
 			parentStatement === 'top'
 				? statement.statementId
 				: statement?.topParentId ||
-					parentStatement?.topParentId ||
-					'top';
+				parentStatement?.topParentId ||
+				'top';
 
 		const siblingOptions = getSiblingOptionsByParentId(
 			parentId,
@@ -259,13 +259,13 @@ export function createStatement({
 	statementType,
 	questionType,
 	enableAddEvaluationOption = true,
-	enableNavigationalElements = true,
+	enableNavigationalElements,
 	enableAddVotingOption = true,
 	enhancedEvaluation = true,
 	showEvaluation = true,
 	resultsBy = ResultsBy.consensus,
 	numberOfResults = 1,
-	hasChildren = true,
+	hasChildren,
 	defaultLanguage,
 	membership,
 	stageSelectionType,
@@ -283,6 +283,12 @@ export function createStatement({
 		if (!creator) throw new Error('Creator is undefined');
 		if (!statementType) throw new Error('Statement type is undefined');
 		const statementId = getRandomUID();
+
+		//get default values for simple or advanced users
+		enableNavigationalElements = defaultValue(
+			enableNavigationalElements, creator?.advanceUser
+		);
+		hasChildren = defaultValue(hasChildren, creator?.advanceUser);
 
 		const parentId =
 			parentStatement !== 'top' ? parentStatement?.statementId : 'top';
@@ -379,6 +385,12 @@ export function createStatement({
 		}
 
 		return newStatement;
+
+		function defaultValue(value: boolean | undefined, isAdvanceUser: boolean | undefined): boolean {
+			if (value !== undefined) return value;
+
+			return isAdvanceUser ? true : false;
+		}
 	} catch (error) {
 		console.error(error);
 

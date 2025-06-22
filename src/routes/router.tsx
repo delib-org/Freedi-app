@@ -13,7 +13,6 @@ import MassConsensusQuestion from '@/view/pages/massConsensus/massConsesusQuesti
 import RandomSuggestions from '@/view/pages/massConsensus/randomSuggestions/RandomSuggestions';
 import TopSuggestions from '@/view/pages/massConsensus/topSuggestions/TopSuggestions';
 import VotingSuggestions from '@/view/pages/massConsensus/votingSuggestions/VotingSuggestions';
-import UserDemographicMC from '@/view/pages/massConsensus/massConsesusQuestion/userDemographicMC/UserDemographicMC';
 
 import LeaveFeedback from '@/view/pages/massConsensus/leaveFeedback/LeaveFeedback';
 
@@ -33,6 +32,8 @@ import Page401 from '@/view/pages/page401/Page401';
 import Page404 from '@/view/pages/page404/Page404';
 import ThankYou from '@/view/pages/massConsensus/thankYou/ThankYou';
 import { MassConsensusPageUrls } from 'delib-npm';
+import UserDemographicMC from '@/view/pages/massConsensus/massConsesusQuestion/userDemographicMC/UserDemographicMC';
+import My from '@/view/pages/my/My';
 
 // Define errorRoutes
 const errorRoutes = [
@@ -178,6 +179,10 @@ export const router = createBrowserRouter([
 				element: <ProtectedLayout />,
 				children: protectedRoutes,
 			},
+			{
+				element: <My />,
+				path: 'my',
+			}
 		],
 	},
 	// Error routes at root level.

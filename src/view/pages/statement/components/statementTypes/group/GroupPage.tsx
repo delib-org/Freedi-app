@@ -10,7 +10,7 @@ import { StatementType } from "delib-npm"
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 
 export default function GroupPage() {
-	const {t} = useUserConfig();
+	const { t } = useUserConfig();
 	const { statement } = useContext(StatementContext);
 
 	const subStatements = useSelector(
@@ -27,13 +27,13 @@ export default function GroupPage() {
 		<div className='groupPage'>
 			<div className={styles.mainWrapper}>
 				<p>{statement?.description}</p>
-				{subGroups.length >0 && <h4>{t("Groups")}</h4>}
+				{subGroups.length > 0 && <h4>{t("Groups")}</h4>}
 				<div className={styles.subElementsWrapper}>
 					{subGroups.map((sub) => (
 						<SubGroupCard key={sub.statementId} statement={sub} />
 					))}
 				</div>
-				{subQuestions.length>0 &&  <h4>{t("Questions")}</h4>}
+				{subQuestions.length > 0 && <h4>{t("Questions")}</h4>}
 				<div className={styles.subElementsWrapper}>
 					{subQuestions.map((sub) => (
 						<SubGroupCard key={sub.statementId} statement={sub} />
