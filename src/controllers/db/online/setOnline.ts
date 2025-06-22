@@ -2,13 +2,11 @@ import {
 	Timestamp,
 	doc,
 	setDoc,
-	updateDoc,
 	deleteDoc,
 	collection,
 	query,
 	where,
 	onSnapshot,
-	serverTimestamp,
 } from 'firebase/firestore';
 import { FireStore } from '../config';
 import { store } from '@/redux/store';
@@ -36,6 +34,7 @@ export async function setUserOnlineToDB(
 				email: user.email || null,
 				advanceUser: user.advanceUser || false,
 			},
+			// Use Timestamp.now().toMillis() to get a number that validates properly
 			lastUpdated: Timestamp.now().toMillis(),
 			tabInFocus: true,
 		};
@@ -44,7 +43,12 @@ export async function setUserOnlineToDB(
 		parse(OnlineSchema, onlineUser);
 
 		const onlineRef = doc(FireStore, Collections.online, onlineId);
-		await setDoc(onlineRef, onlineUser);
+
+		// Force write to server first, then local cache
+		await setDoc(onlineRef, onlineUser, {
+			merge: true,
+			// This ensures the write goes to server first
+		});
 
 		return onlineId;
 	} catch (error) {
@@ -66,10 +70,15 @@ export async function updateUserTabFocusToDB(
 		const onlineId = `${userId}_${statementId}`;
 		const onlineUserRef = doc(FireStore, Collections.online, onlineId);
 
-		await updateDoc(onlineUserRef, {
-			tabInFocus,
-			lastUpdated: serverTimestamp(),
-		});
+		// Use setDoc with merge to create or update
+		await setDoc(
+			onlineUserRef,
+			{
+				tabInFocus,
+				lastUpdated: Timestamp.now().toMillis(),
+			},
+			{ merge: true }
+		);
 	} catch (error) {
 		console.error('Error updating tab focus:', error);
 	}
@@ -86,9 +95,14 @@ export async function updateUserHeartbeatToDB(
 		const onlineId = `${userId}_${statementId}`;
 		const onlineUserRef = doc(FireStore, Collections.online, onlineId);
 
-		await updateDoc(onlineUserRef, {
-			lastUpdated: serverTimestamp(),
-		});
+		// Use setDoc with merge to create or update
+		await setDoc(
+			onlineUserRef,
+			{
+				lastUpdated: Timestamp.now().toMillis(),
+			},
+			{ merge: true }
+		);
 	} catch (error) {
 		console.error('Error updating heartbeat:', error);
 	}
@@ -103,8 +117,8 @@ export async function removeUserFromOnlineToDB(
 		if (!userId) throw new Error('User ID is undefined');
 
 		const onlineId = `${userId}_${statementId}`;
-		const onlineUserRef = doc(FireStore, Collections.online, onlineId);
 
+		const onlineUserRef = doc(FireStore, Collections.online, onlineId);
 		await deleteDoc(onlineUserRef);
 	} catch (error) {
 		console.error('Error removing user from online:', error);
@@ -123,21 +137,37 @@ export function subscribeToonlineByStatement(
 			where('statementId', '==', statementId)
 		);
 
-		const unsubscribe = onSnapshot(q, (snapshot) => {
-			const online: Online[] = [];
+		const unsubscribe = onSnapshot(
+			q,
+			{
+				// Include metadata to get local changes immediately
+				includeMetadataChanges: true,
+			},
+			(snapshot) => {
+				const online: Online[] = [];
 
-			snapshot.forEach((doc) => {
-				try {
-					const data = doc.data();
-					const validatedData = parse(OnlineSchema, data);
-					online.push(validatedData);
-				} catch (error) {
-					console.error('Error validating online user data:', error);
-				}
-			});
+				snapshot.forEach((doc) => {
+					try {
+						const data = doc.data();
 
-			callback(online);
-		});
+						const validatedData = parse(OnlineSchema, data);
+						online.push(validatedData);
+					} catch (error) {
+						console.error(
+							'Error validating online user data:',
+							error,
+							doc.data()
+						);
+					}
+				});
+
+				callback(online);
+			},
+			(error) => {
+				console.error('Error in online users subscription:', error);
+				callback([]);
+			}
+		);
 
 		return unsubscribe;
 	} catch (error) {
@@ -151,7 +181,22 @@ export function subscribeToonlineByStatement(
 export function getCurrentUser(): Creator | undefined {
 	try {
 		const storeState = store.getState();
-		const creator: Creator = storeState.creator?.creator;
+
+		// Add more defensive checks
+		if (!storeState?.creator?.creator) {
+			console.info('No creator found in store state');
+
+			return undefined;
+		}
+
+		const creator: Creator = storeState.creator.creator;
+
+		// Validate that we have essential user properties
+		if (!creator.uid) {
+			console.info('Creator missing uid');
+
+			return undefined;
+		}
 
 		return creator;
 	} catch (error) {

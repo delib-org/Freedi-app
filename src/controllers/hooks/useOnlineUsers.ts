@@ -20,6 +20,29 @@ export const useOnlineUsers = (statementId) => {
 	const unsubscribeRef = useRef(null);
 	const heartbeatIntervalRef = useRef(null);
 	const isInitializedRef = useRef(false);
+	const lastHeartbeatRef = useRef(0);
+	const cleanupRef = useRef({ statementId: null, currentUser: null });
+
+	// Define cleanup function first
+	const cleanup = () => {
+		const {
+			statementId: cleanupStatementId,
+			currentUser: cleanupCurrentUser,
+		} = cleanupRef.current;
+		if (cleanupStatementId && cleanupCurrentUser) {
+			removeUserFromOnlineToDB(
+				cleanupStatementId,
+				cleanupCurrentUser.uid
+			).catch((err) =>
+				console.error('Error removing user from online:', err)
+			);
+		}
+	};
+
+	// Update cleanup ref when values change
+	useEffect(() => {
+		cleanupRef.current = { statementId, currentUser };
+	}, [statementId, currentUser]);
 
 	// Initialize user as online when hook mounts
 	useEffect(() => {
@@ -43,7 +66,7 @@ export const useOnlineUsers = (statementId) => {
 
 	// Subscribe to online users changes
 	useEffect(() => {
-		if (!statementId) return;
+		if (!statementId || !isInitializedRef.current) return;
 
 		const q = query(
 			collection(FireStore, Collections.online),
@@ -52,18 +75,10 @@ export const useOnlineUsers = (statementId) => {
 
 		const unsubscribe = onSnapshot(q, (snapshot) => {
 			const users = [];
-
 			snapshot.forEach((doc) => {
 				try {
 					const data = doc.data();
-					// Handle different timestamp formats
-					if (data.lastUpdated === null) {
-						data.lastUpdated = Date.now();
-					} else if (
-						data.lastUpdated &&
-						typeof data.lastUpdated.toMillis === 'function'
-					) {
-						// Convert Firestore Timestamp to milliseconds
+					if (data.lastUpdated?.toMillis) {
 						data.lastUpdated = data.lastUpdated.toMillis();
 					}
 					const validatedData = parse(OnlineSchema, data);
@@ -73,22 +88,30 @@ export const useOnlineUsers = (statementId) => {
 				}
 			});
 
-			setOnlineUsers(users);
+			const now = Date.now();
+			const validUsers = users.filter(
+				(u) =>
+					typeof u.lastUpdated === 'number' &&
+					now - u.lastUpdated < 60000
+			);
+			setOnlineUsers(validUsers);
 			setIsLoading(false);
 		});
 
 		unsubscribeRef.current = unsubscribe;
 
-		return () => {
-			if (unsubscribeRef.current) {
-				unsubscribeRef.current();
-			}
-		};
-	}, [statementId]);
+		return () => unsubscribe();
+	}, [statementId, isInitializedRef.current]);
 
 	// Handle tab focus/blur events
 	useEffect(() => {
-		if (!statementId || !currentUser || !isInitializedRef.current) return;
+		if (
+			typeof window === 'undefined' ||
+			!statementId ||
+			!currentUser ||
+			!isInitializedRef.current
+		)
+			return;
 
 		const handleFocus = async () => {
 			try {
@@ -114,12 +137,30 @@ export const useOnlineUsers = (statementId) => {
 			}
 		};
 
+		const handleVisibilityChange = async () => {
+			const isVisible = document.visibilityState === 'visible';
+			try {
+				await updateUserTabFocusToDB(
+					statementId,
+					currentUser.uid,
+					isVisible
+				);
+			} catch (err) {
+				console.error('Error updating visibility:', err);
+			}
+		};
+
 		window.addEventListener('focus', handleFocus);
 		window.addEventListener('blur', handleBlur);
+		document.addEventListener('visibilitychange', handleVisibilityChange);
 
 		return () => {
 			window.removeEventListener('focus', handleFocus);
 			window.removeEventListener('blur', handleBlur);
+			document.removeEventListener(
+				'visibilitychange',
+				handleVisibilityChange
+			);
 		};
 	}, [statementId, currentUser, isInitializedRef.current]);
 
@@ -128,6 +169,14 @@ export const useOnlineUsers = (statementId) => {
 		if (!statementId || !currentUser || !isInitializedRef.current) return;
 
 		const heartbeat = async () => {
+			const now = Date.now();
+			if (
+				now - lastHeartbeatRef.current < 25000 ||
+				document.visibilityState !== 'visible'
+			) {
+				return;
+			}
+			lastHeartbeatRef.current = now;
 			try {
 				await updateUserHeartbeatToDB(statementId, currentUser.uid);
 			} catch (err) {
@@ -138,8 +187,7 @@ export const useOnlineUsers = (statementId) => {
 		// Initial heartbeat after 30 seconds, then every 30 seconds
 		const timeoutId = setTimeout(() => {
 			heartbeat();
-
-			heartbeatIntervalRef.current = setInterval(heartbeat, 30000); // 30 seconds
+			heartbeatIntervalRef.current = setInterval(heartbeat, 30000);
 		}, 30000);
 
 		return () => {
@@ -150,36 +198,25 @@ export const useOnlineUsers = (statementId) => {
 		};
 	}, [statementId, currentUser, isInitializedRef.current]);
 
-	// Cleanup when component unmounts or user changes
-	useEffect(() => {
-		return () => {
-			if (statementId && currentUser) {
-				removeUserFromOnlineToDB(statementId, currentUser.uid).catch(
-					(err) =>
-						console.error('Error removing user from online:', err)
-				);
-			}
-		};
-	}, [statementId, currentUser]);
-
-	// Cleanup on page unload
+	// Cleanup on window close
 	useEffect(() => {
 		if (!statementId || !currentUser) return;
 
-		const handleBeforeUnload = () => {
-			// Use sendBeacon for better reliability on page unload
-			if (navigator.sendBeacon && window.fetch) {
-				// Note: This would require an API endpoint for immediate cleanup
-				// For now, rely on heartbeat timeout for cleanup
-			}
-		};
-
-		window.addEventListener('beforeunload', handleBeforeUnload);
+		window.addEventListener('beforeunload', cleanup);
+		window.addEventListener('unload', cleanup);
 
 		return () => {
-			window.removeEventListener('beforeunload', handleBeforeUnload);
+			window.removeEventListener('beforeunload', cleanup);
+			window.removeEventListener('unload', cleanup);
 		};
 	}, [statementId, currentUser]);
+
+	// Cleanup ONLY on component unmount (empty dependency array)
+	useEffect(() => {
+		return () => {
+			cleanup();
+		};
+	}, []);
 
 	// Helper functions for component use
 	const getActiveUsers = () => {
