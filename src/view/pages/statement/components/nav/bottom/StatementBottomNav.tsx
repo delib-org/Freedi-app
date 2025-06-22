@@ -24,7 +24,7 @@ interface Props {
 }
 
 const StatementBottomNav: FC<Props> = () => {
-	const { statement, setNewStatementType, handleSetNewStatement } =
+
 	const dispatch = useDispatch();
 	const { statement } =
 		useContext(StatementContext);
@@ -73,7 +73,7 @@ const StatementBottomNav: FC<Props> = () => {
 		const path = window.location.pathname;
 
 		return path.includes('/stage/') ? 'stage' : 'statement';
-}
+	}
 
 	return (
 		<>
