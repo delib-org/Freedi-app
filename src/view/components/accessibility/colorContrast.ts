@@ -83,14 +83,14 @@ export const colorMappings: ColorMappings = {
   "--header-search-chips": "--header-search-chips-contrast",
 
   // Icons
-  "--icon-white": "--icon-white-contrast",
-  "--icon-blue": "--icon-blue-contrast",
-  "--icon-blue-light": "--icon-blue-light-contrast",
-  "--icon-red": "--icon-red-contrast",
-  "--icon-green": "--icon-green-contrast",
-  "--icon-disabled-outline": "--icon-disabled-outline-contrast",
-  "--icon-disabled-filled": "--icon-disabled-filled-contrast",
-  "--icon-disabled-dark": "--icon-disabled-dark-contrast",
+  "--icons-white": "--icons-white-contrast",
+  "--icons-blue": "--icons-blue-contrast",
+  "--icons-blue-light": "--icons-blue-light-contrast",
+  "--icons-red": "--icons-red-contrast",
+  "--icons-green": "--icons-green-contrast",
+  "--icons-disabled-outline": "--icons-disabled-outline-contrast",
+  "--icons-disabled-filled": "--icons-disabled-filled-contrast",
+  "--icons-disabled-dark": "--icons-disabled-dark-contrast",
 
   // Info
   "--info-snackbar": "--info-snackbar-contrast",
