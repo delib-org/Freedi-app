@@ -42,6 +42,7 @@ const StatementTopNav: FC<Props> = ({
 	handleShare,
 }) => {
 	const { t, currentLanguage } = useUserConfig();
+	const { user } = useAuthentication();
 	const navigate = useNavigate();
 	const { screen } = useParams();
 	const role = useSelector(
@@ -63,7 +64,7 @@ const StatementTopNav: FC<Props> = ({
 		_statement?.statementSettings?.enableNavigationalElements
 	);
 
-	const isAdmin = role === Role.admin;
+	const isAdmin = role === Role.admin || user?.uid === statement?.creatorId;
 	const allowNavigation = enableNavigationalElements || isAdmin;
 
 	function handleNavigation(path: string | Screen) {
