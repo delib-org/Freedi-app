@@ -180,8 +180,7 @@ function CustomNode({ data }: NodeProps) {
 				className='node__content'
 			>
 				{isEdit ? (
-					<input
-						type='text'
+					<textarea
 						defaultValue={title}
 						onBlur={() => setIsEdit(false)}
 						onKeyUp={(e) => handleUpdateStatement(e)}
