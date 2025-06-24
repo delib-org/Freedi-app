@@ -5,7 +5,7 @@ import styles from "./OnlineUsersStyle.module.scss";
 const OnlineUsers = ({ statementId }) => {
   const { onlineUsers, isLoading } = useOnlineUsers(statementId);
   const amountOfShownUsers = 5;
-  const shownUsers = onlineUsers.filter((_, idx) => idx < amountOfShownUsers);
+const shownUsers = onlineUsers.slice(0, amountOfShownUsers);
   const hiddenCount = onlineUsers.length - shownUsers.length;
   if (isLoading || onlineUsers.length === 0) {
     return null;
