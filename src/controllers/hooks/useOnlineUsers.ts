@@ -1,247 +1,201 @@
-import { useState, useEffect, useRef } from 'react';
-import { collection, query, where, onSnapshot } from 'firebase/firestore';
-import { Collections, OnlineSchema } from 'delib-npm';
-import { parse } from 'valibot';
+import { useState, useEffect, useRef } from "react";
 import {
-	getCurrentUser,
-	removeUserFromOnlineToDB,
-	setUserOnlineToDB,
-	updateUserHeartbeatToDB,
-	updateUserTabFocusToDB,
-} from '../db/online/setOnline';
-import { FireStore } from '../db/config';
+  getCurrentUser,
+  removeUserFromOnlineToDB,
+  setUserOnlineToDB,
+  subscribeToValidOnlineUsers,
+  updateUserHeartbeatToDB,
+  updateUserTabFocusToDB,
+} from "../db/online/setOnline";
 
 export const useOnlineUsers = (statementId) => {
-	const [onlineUsers, setOnlineUsers] = useState([]);
-	const [isLoading, setIsLoading] = useState(true);
-	const [error, setError] = useState(null);
+  const [onlineUsers, setOnlineUsers] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-	const currentUser = getCurrentUser();
-	const unsubscribeRef = useRef(null);
-	const heartbeatIntervalRef = useRef(null);
-	const isInitializedRef = useRef(false);
-	const lastHeartbeatRef = useRef(0);
-	const cleanupRef = useRef({ statementId: null, currentUser: null });
+  const currentUser = getCurrentUser();
+  const unsubscribeRef = useRef(null);
+  const heartbeatIntervalRef = useRef(null);
+  const isInitializedRef = useRef(false);
+  const lastHeartbeatRef = useRef(0);
+  const cleanupRef = useRef({ statementId: null, currentUser: null });
 
-	// Define cleanup function first
-	const cleanup = () => {
-		const {
-			statementId: cleanupStatementId,
-			currentUser: cleanupCurrentUser,
-		} = cleanupRef.current;
-		if (cleanupStatementId && cleanupCurrentUser) {
-			removeUserFromOnlineToDB(
-				cleanupStatementId,
-				cleanupCurrentUser.uid
-			).catch((err) =>
-				console.error('Error removing user from online:', err)
-			);
-		}
-	};
+  // Define cleanup function first
+  const cleanup = () => {
+    const { statementId: cleanupStatementId, currentUser: cleanupCurrentUser } =
+      cleanupRef.current;
+    if (cleanupStatementId && cleanupCurrentUser) {
+      removeUserFromOnlineToDB(
+        cleanupStatementId,
+        cleanupCurrentUser.uid
+      ).catch((err) => console.error("Error removing user from online:", err));
+    }
+  };
 
-	// Update cleanup ref when values change
-	useEffect(() => {
-		cleanupRef.current = { statementId, currentUser };
-	}, [statementId, currentUser]);
+  // Update cleanup ref when values change
+  useEffect(() => {
+    cleanupRef.current = { statementId, currentUser };
+  }, [statementId, currentUser]);
 
-	// Initialize user as online when hook mounts
-	useEffect(() => {
-		if (!statementId || !currentUser || isInitializedRef.current) return;
+  // Initialize user as online when hook mounts
+  useEffect(() => {
+    if (!statementId || !currentUser || isInitializedRef.current) return;
 
-		const initializeOnlineUser = async () => {
-			try {
-				setIsLoading(true);
-				await setUserOnlineToDB(statementId, currentUser);
-				isInitializedRef.current = true;
-			} catch (err) {
-				console.error('Error setting user online:', err);
-				setError(err);
-			} finally {
-				setIsLoading(false);
-			}
-		};
+    const initializeOnlineUser = async () => {
+      try {
+        setIsLoading(true);
+        await setUserOnlineToDB(statementId, currentUser);
+        isInitializedRef.current = true;
+      } catch (err) {
+        console.error("Error setting user online:", err);
+        setError(err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-		initializeOnlineUser();
-	}, [statementId, currentUser]);
+    initializeOnlineUser();
+  }, [statementId, currentUser]);
 
-	// Subscribe to online users changes
-	useEffect(() => {
-		if (!statementId || !isInitializedRef.current) return;
+  // Subscribe to online users changes
+  useEffect(() => {
+    if (!statementId || !isInitializedRef.current) return;
 
-		const q = query(
-			collection(FireStore, Collections.online),
-			where('statementId', '==', statementId)
-		);
+    const unsubscribe = subscribeToValidOnlineUsers(
+      statementId,
+      setOnlineUsers,
+      setIsLoading
+    );
 
-		const unsubscribe = onSnapshot(q, (snapshot) => {
-			const users = [];
-			snapshot.forEach((doc) => {
-				try {
-					const data = doc.data();
-					if (data.lastUpdated?.toMillis) {
-						data.lastUpdated = data.lastUpdated.toMillis();
-					}
-					const validatedData = parse(OnlineSchema, data);
-					users.push(validatedData);
-				} catch (error) {
-					console.error('Error validating online user data:', error);
-				}
-			});
+    unsubscribeRef.current = unsubscribe;
 
-			const now = Date.now();
-			const validUsers = users.filter(
-				(u) =>
-					typeof u.lastUpdated === 'number' &&
-					now - u.lastUpdated < 60000
-			);
-			setOnlineUsers(validUsers);
-			setIsLoading(false);
-		});
+    return () => unsubscribe();
+  }, [statementId, isInitializedRef.current]);
 
-		unsubscribeRef.current = unsubscribe;
+  // Handle tab focus/blur events
+  useEffect(() => {
+    if (
+      typeof window === "undefined" ||
+      !statementId ||
+      !currentUser ||
+      !isInitializedRef.current
+    )
+      return;
 
-		return () => unsubscribe();
-	}, [statementId, isInitializedRef.current]);
+    const handleFocus = async () => {
+      try {
+        await updateUserTabFocusToDB(statementId, currentUser.uid, true);
+      } catch (err) {
+        console.error("Error updating tab focus:", err);
+      }
+    };
 
-	// Handle tab focus/blur events
-	useEffect(() => {
-		if (
-			typeof window === 'undefined' ||
-			!statementId ||
-			!currentUser ||
-			!isInitializedRef.current
-		)
-			return;
+    const handleBlur = async () => {
+      try {
+        await updateUserTabFocusToDB(statementId, currentUser.uid, false);
+      } catch (err) {
+        console.error("Error updating tab blur:", err);
+      }
+    };
 
-		const handleFocus = async () => {
-			try {
-				await updateUserTabFocusToDB(
-					statementId,
-					currentUser.uid,
-					true
-				);
-			} catch (err) {
-				console.error('Error updating tab focus:', err);
-			}
-		};
+    const handleVisibilityChange = async () => {
+      const isVisible = document.visibilityState === "visible";
+      try {
+        await updateUserTabFocusToDB(statementId, currentUser.uid, isVisible);
+      } catch (err) {
+        console.error("Error updating visibility:", err);
+      }
+    };
 
-		const handleBlur = async () => {
-			try {
-				await updateUserTabFocusToDB(
-					statementId,
-					currentUser.uid,
-					false
-				);
-			} catch (err) {
-				console.error('Error updating tab blur:', err);
-			}
-		};
+    window.addEventListener("focus", handleFocus);
+    window.addEventListener("blur", handleBlur);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
 
-		const handleVisibilityChange = async () => {
-			const isVisible = document.visibilityState === 'visible';
-			try {
-				await updateUserTabFocusToDB(
-					statementId,
-					currentUser.uid,
-					isVisible
-				);
-			} catch (err) {
-				console.error('Error updating visibility:', err);
-			}
-		};
+    return () => {
+      window.removeEventListener("focus", handleFocus);
+      window.removeEventListener("blur", handleBlur);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [statementId, currentUser, isInitializedRef.current]);
 
-		window.addEventListener('focus', handleFocus);
-		window.addEventListener('blur', handleBlur);
-		document.addEventListener('visibilitychange', handleVisibilityChange);
+  // Heartbeat to keep user alive
+  useEffect(() => {
+    if (!statementId || !currentUser || !isInitializedRef.current) return;
 
-		return () => {
-			window.removeEventListener('focus', handleFocus);
-			window.removeEventListener('blur', handleBlur);
-			document.removeEventListener(
-				'visibilitychange',
-				handleVisibilityChange
-			);
-		};
-	}, [statementId, currentUser, isInitializedRef.current]);
+    const heartbeat = async () => {
+      const now = Date.now();
+      if (
+        now - lastHeartbeatRef.current < 25000 ||
+        document.visibilityState !== "visible"
+      ) {
+        return;
+      }
+      lastHeartbeatRef.current = now;
+      try {
+        await updateUserHeartbeatToDB(statementId, currentUser.uid);
+      } catch (err) {
+        console.error("Error updating heartbeat:", err);
+      }
+    };
 
-	// Heartbeat to keep user alive
-	useEffect(() => {
-		if (!statementId || !currentUser || !isInitializedRef.current) return;
+    // Initial heartbeat after 30 seconds, then every 30 seconds
+    const timeoutId = setTimeout(() => {
+      heartbeat();
+      heartbeatIntervalRef.current = setInterval(heartbeat, 30000);
+    }, 30000);
 
-		const heartbeat = async () => {
-			const now = Date.now();
-			if (
-				now - lastHeartbeatRef.current < 25000 ||
-				document.visibilityState !== 'visible'
-			) {
-				return;
-			}
-			lastHeartbeatRef.current = now;
-			try {
-				await updateUserHeartbeatToDB(statementId, currentUser.uid);
-			} catch (err) {
-				console.error('Error updating heartbeat:', err);
-			}
-		};
+    return () => {
+      clearTimeout(timeoutId);
+      if (heartbeatIntervalRef.current) {
+        clearInterval(heartbeatIntervalRef.current);
+      }
+    };
+  }, [statementId, currentUser, isInitializedRef.current]);
 
-		// Initial heartbeat after 30 seconds, then every 30 seconds
-		const timeoutId = setTimeout(() => {
-			heartbeat();
-			heartbeatIntervalRef.current = setInterval(heartbeat, 30000);
-		}, 30000);
+  // Cleanup on window close
+  useEffect(() => {
+    if (!statementId || !currentUser) return;
 
-		return () => {
-			clearTimeout(timeoutId);
-			if (heartbeatIntervalRef.current) {
-				clearInterval(heartbeatIntervalRef.current);
-			}
-		};
-	}, [statementId, currentUser, isInitializedRef.current]);
+    window.addEventListener("beforeunload", cleanup);
+    window.addEventListener("unload", cleanup);
 
-	// Cleanup on window close
-	useEffect(() => {
-		if (!statementId || !currentUser) return;
+    return () => {
+      window.removeEventListener("beforeunload", cleanup);
+      window.removeEventListener("unload", cleanup);
+    };
+  }, [statementId, currentUser]);
 
-		window.addEventListener('beforeunload', cleanup);
-		window.addEventListener('unload', cleanup);
+  // Cleanup ONLY on component unmount (empty dependency array)
+  useEffect(() => {
+    return () => {
+      cleanup();
+    };
+  }, []);
 
-		return () => {
-			window.removeEventListener('beforeunload', cleanup);
-			window.removeEventListener('unload', cleanup);
-		};
-	}, [statementId, currentUser]);
+  // Helper functions for component use
+  const getActiveUsers = () => {
+    return onlineUsers.filter((user) => user.tabInFocus);
+  };
 
-	// Cleanup ONLY on component unmount (empty dependency array)
-	useEffect(() => {
-		return () => {
-			cleanup();
-		};
-	}, []);
+  const getTotalOnlineCount = () => {
+    return onlineUsers.length;
+  };
 
-	// Helper functions for component use
-	const getActiveUsers = () => {
-		return onlineUsers.filter((user) => user.tabInFocus);
-	};
+  const getActiveUserCount = () => {
+    return getActiveUsers().length;
+  };
 
-	const getTotalOnlineCount = () => {
-		return onlineUsers.length;
-	};
+  const isUserOnline = (userId) => {
+    return onlineUsers.some((user) => user.user.uid === userId);
+  };
 
-	const getActiveUserCount = () => {
-		return getActiveUsers().length;
-	};
-
-	const isUserOnline = (userId) => {
-		return onlineUsers.some((user) => user.user.uid === userId);
-	};
-
-	return {
-		onlineUsers,
-		activeUsers: getActiveUsers(),
-		totalOnlineCount: getTotalOnlineCount(),
-		activeUserCount: getActiveUserCount(),
-		isLoading,
-		error,
-		isUserOnline,
-	};
+  return {
+    onlineUsers,
+    activeUsers: getActiveUsers(),
+    totalOnlineCount: getTotalOnlineCount(),
+    activeUserCount: getActiveUserCount(),
+    isLoading,
+    error,
+    isUserOnline,
+  };
 };
