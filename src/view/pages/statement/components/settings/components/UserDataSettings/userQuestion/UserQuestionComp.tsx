@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import DeleteIcon from '@/assets/icons/delete.svg?react';
-import PlusIcon from '@/assets/icons/plusIcon.svg?react';
+import RadioIcon from '@/assets/icons/radioButtonEmpty.svg?react'
 import Input from '@/view/components/input/Input';
 import styles from './UserQuestionComp.module.scss';
 import { DemographicOption, UserQuestion, UserQuestionType } from 'delib-npm';
@@ -147,6 +147,7 @@ const UserQuestionComp = ({ userQuestions, questionIndex, onAddOption, onDeleteO
 				<div>
 					{userQuestions.options?.map((option: DemographicOption, index: number) => (
 						<div key={index} className={styles.optionItem}>
+							<RadioIcon className={styles.RadioIcon}/>
 							{option.option}
 							<input
 								type="color"
@@ -177,12 +178,11 @@ const UserQuestionComp = ({ userQuestions, questionIndex, onAddOption, onDeleteO
 					</div>
 					<div className="btns">
 						<button
-							className="btn btn--secondary btn--small"
+							className={styles.addOptionBtn}
 							onClick={handleAddOption}
 							disabled={!newOptionText.trim()}
 						>
-							<PlusIcon />
-							{t('Add')}
+							{t('Add New Option')}
 						</button>
 					</div>
 				</div>

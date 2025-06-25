@@ -5,7 +5,6 @@ import { useUserConfig } from '@/controllers/hooks/useUserConfig'
 import SettingsModal from '../settingsModal/SettingsModal'
 import UserQuestionComp from './userQuestion/UserQuestionComp'
 import PlusIcon from '@/assets/icons/plusIcon.svg?react'
-import CheckboxIcon from '@/assets/icons/checkboxCheckedIcon.svg?react'
 import MenuDropdown from '@/assets/icons/arrow-down.svg?react'
 import RadioIcon from '@/assets/icons/radioButtonChecked.svg?react'
 import styles from './UserDataSetting.module.scss'
@@ -20,7 +19,7 @@ interface Props {
 }
 
 interface Option {
-	type: string;
+	type: UserQuestionType;
 	label: string;
 	icon: JSX.Element;
 }
@@ -28,10 +27,7 @@ interface Option {
 const UserDataSetting: FC<Props> = ({ statement }) => {
 	
 	const options = [
-  		{ type: 'text', label: 'Short Answer', icon: <CheckboxIcon className={styles.optionIcon}/> },
-  		{ type: 'checkbox', label: 'Checkbox', icon: <CheckboxIcon className={styles.optionIcon}/> },
-  		{ type: 'paragraph', label: 'Paragraph', icon: <CheckboxIcon className={styles.optionIcon}/> },
-  		{ type: 'radio', label: 'Multiple Choice', icon: <RadioIcon className={styles.optionIcon}/> },
+  		{ type: UserQuestionType.radio, label: 'Multiple Choice', icon: <RadioIcon className={styles.optionIcon}/> },
 ];
 
 	const { t } = useUserConfig()
@@ -50,7 +46,7 @@ const UserDataSetting: FC<Props> = ({ statement }) => {
 		const form = e.target as HTMLFormElement
 		const formData = new FormData(form)
 		const newQuestion = formData.get('newQuestion') as string
-		const newQuestionType = formData.get('questionType') as UserQuestionType
+		const newQuestionType = selectedOption.type;
 
 		if (!newQuestion.trim()) return;
 
@@ -179,8 +175,28 @@ const UserDataSetting: FC<Props> = ({ statement }) => {
 								))}
 							</div>
 							)}
-							<div>
-								<h3>required</h3>
+								<div className={styles.existingQuestions}>
+						{userQuestions.map((question, index) => (
+							<UserQuestionComp
+								key={index}
+								userQuestions={question}
+								questionIndex={index}
+								onAddOption={handleAddOption}
+								onDeleteOption={handleDeleteOption}
+								onDeleteQuestion={handleDeleteQuestion}
+								onUpdateQuestion={handleUpdateQuestion}
+							/>
+						))}
+						
+					</div>
+							<div className={styles.bottom}>
+								<div>
+									<h3 className={styles.switcherText}>required</h3>		
+								</div>
+								<div>
+
+								</div>
+								
 							</div>
 							<button
 								type="submit"
@@ -193,23 +209,30 @@ const UserDataSetting: FC<Props> = ({ statement }) => {
 					</form>
 
 					{/* Existing Questions */}
-					<div className={styles.existingQuestions}>
-						<h4>{t('Existing Questions')}</h4>
-						{userQuestions.length === 0 ? (
-							<p className={styles.emptyState}>{t('No questions added yet')}</p>
-						) : (userQuestions.map((question, index) => (
-							<UserQuestionComp
-								key={index}
-								userQuestions={question}
-								questionIndex={index}
-								onAddOption={handleAddOption}
-								onDeleteOption={handleDeleteOption}
-								onDeleteQuestion={handleDeleteQuestion}
-								onUpdateQuestion={handleUpdateQuestion}
-							/>
-						))
-						)}
-					</div>
+					
+					{userQuestions.map((question, questionIndex) => (
+						<div key={question.userQuestionId ?? questionIndex} className={styles.existingQuestion}>
+						<h4>{question.question}</h4>
+							{question.options.map((option, optionIndex) => (
+							<div key={optionIndex} className={styles.optionItem}>
+								<RadioIcon className={styles.radioIcon} />
+								<h3>{option.option}</h3>
+								<input
+								type="color"
+								name={`user-question-${questionIndex}-${optionIndex}`}
+								value={option.color ?? '#000000'}
+								// onChange={(e) => handleChangeOptionColor(questionIndex, optionIndex, e.target.value)}
+								// onBlur={(e) => handleChangeOptionColor(questionIndex, optionIndex, e.target.value)}
+								/>
+								{/* <DeleteIcon
+								className={styles.deleteIcon}
+								onClick={() => handleDeleteOption(questionIndex, optionIndex)}
+								title={t('Delete Option')}
+								/> */}
+								</div>
+								))}
+							</div>
+							))}
 				</div>
 			</SettingsModal>}
 		</div>

@@ -119,6 +119,17 @@
 				}
 	}
 
+	.bottom {
+		border-top: 0.1px solid var(--border-primary-subtle);	
+		padding: 1rem;
+
+		.switcherText {
+			font-size: 1rem;
+			font-weight: 500;
+			color: var(--text-subtitle)
+		}
+	}
+
 	.existingQuestions {
 		h4 {
 			margin: 0 0 1rem 0;
@@ -135,5 +146,39 @@
 			border-radius: 8px;
 			border: 1px dashed #e0e6ff;
 		}
+	}
+}
+
+.existingQuestion {
+	margin-bottom: 1.5rem;
+	padding: 1rem;
+	border-radius: 8px;
+	background-color: var(--white);
+	box-shadow: 0 2 4 0 rgba(66,76,246, 0.1);
+
+	h4 {
+		margin: 0 0 1rem 0;
+		color: var(--text-subtitle);
+		font-size: 1.2rem;
+		text-align: left;
+	}
+
+	.optionItem {
+		display: flex;
+		padding: 1rem;
+	}
+
+	.radioIcon {
+		width: 1.5rem;
+		height: 1.5rem;
+		color: var(--icons-blue-dark);
+		margin-right: 0.75rem;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	h3 {
+		color: var(--text-subtitle);
 	}
 }
