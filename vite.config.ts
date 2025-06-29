@@ -4,15 +4,10 @@ import svgr from 'vite-plugin-svgr';
 import path from 'path';
 import pkg from './package.json';
 import { VitePWA } from 'vite-plugin-pwa';
-import fs from 'fs';
+
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
 	const isTestMode = mode === 'testing';
-	// Read custom service worker content
-	const customSWContent = fs.readFileSync(
-		path.resolve(__dirname, 'public/custom-sw.js'),
-		'utf-8'
-	);
 
 	return {
 		plugins: [
@@ -77,10 +72,7 @@ export default defineConfig(({ mode }) => {
 				injectManifest: {
 					injectionPoint: null,
 					additionalManifestEntries: [],
-					additionalPrecacheEntries: [],
 					maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // 5MB
-					transformManifest: (manifest) => manifest,
-					additionalServiceWorkerCode: customSWContent
 				}
 			}),
 		],
