@@ -36,6 +36,9 @@
 		"deploy:test": "npm run deploy:h:test && npm run deploy:f:test && npm run deploy:rules:test"
 	},
 	"dependencies": {
+		"@capacitor/android": "^7.4.0",
+		"@capacitor/core": "^7.4.0",
+		"@capacitor/ios": "^7.4.0",
 		"@reduxjs/toolkit": "^1.9.5",
 		"delib-npm": "^5.5.97",
 		"esbuild": "0.25.2",
@@ -49,6 +52,7 @@
 		"valibot": "^1.0.0-rc.1"
 	},
 	"devDependencies": {
+		"@capacitor/cli": "^7.4.0",
 		"@dagrejs/dagre": "^1.0.4",
 		"@eslint/js": "^9.18.0",
 		"@testing-library/jest-dom": "^6.6.3",
