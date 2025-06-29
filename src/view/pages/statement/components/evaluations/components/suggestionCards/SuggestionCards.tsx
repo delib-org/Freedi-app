@@ -39,6 +39,8 @@ const SuggestionCards: FC<Props> = ({
 		statementOptionsSelector(statement?.statementId)
 	);
 
+	const sortedSubStatementIds = _subStatements.sort((a, b) => a.consensus - b.consensus).map((sub: Statement) => sub.statementId).join("");
+
 	const subStatements =
 		propSubStatements ||
 		(selectionFunction
@@ -69,7 +71,7 @@ const SuggestionCards: FC<Props> = ({
 			30
 		);
 		setTotalHeight(_totalHeight);
-	}, [sort]);
+	}, [sort, sortedSubStatementIds]);
 
 	useEffect(() => {
 		const _totalHeight = subStatements.reduce(
