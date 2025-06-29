@@ -33,7 +33,16 @@
 		"deploy:f:test": "cd functions && firebase use test && firebase deploy --only functions",
 		"deploy:prod": "npm run deploy:h:prod && npm run deploy:f:prod && npm run deploy:rules:prod",
 		"deploy:dev": "npm-run-all deploy:h:dev deploy:f:dev deploy:rules:dev",
-		"deploy:test": "npm run deploy:h:test && npm run deploy:f:test && npm run deploy:rules:test"
+		"deploy:test": "npm run deploy:h:test && npm run deploy:f:test && npm run deploy:rules:test",
+		"android:setup": "powershell -ExecutionPolicy Bypass -File .\\scripts\\setup-dev.ps1",
+		"android:emulators": "powershell -ExecutionPolicy Bypass -File .\\scripts\\start-firebase.ps1",
+		"android:dev": "powershell -ExecutionPolicy Bypass -File .\\scripts\\dev-android.ps1",
+		"android:deploy": "powershell -ExecutionPolicy Bypass -File .\\scripts\\deploy-android.ps1",
+		"android:deploy-fast": "powershell -ExecutionPolicy Bypass -File .\\scripts\\deploy-android.ps1 -SkipBuild",
+		"android:deploy-logs": "powershell -ExecutionPolicy Bypass -File .\\scripts\\deploy-android.ps1 -WatchLogs",
+		"android:debug": "powershell -ExecutionPolicy Bypass -File .\\scripts\\debug-android.ps1 -All",
+		"android:logs": "powershell -ExecutionPolicy Bypass -File .\\scripts\\debug-android.ps1 -Logs",
+		"android:errors": "powershell -ExecutionPolicy Bypass -File .\\scripts\\debug-android.ps1 -Errors"
 	},
 	"dependencies": {
 		"@capacitor/android": "^7.4.0",
