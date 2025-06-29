@@ -90,8 +90,15 @@ export default defineConfig(({ mode }) => {
 			},
 		},
 		define: {
-			'process.env': process.env,
 			'process.env.VITE_APP_VERSION': JSON.stringify(pkg.version),
+			// Only expose environment variables that start with VITE_
+			...Object.keys(process.env)
+				.filter(key => key.startsWith('VITE_'))
+				.reduce((env, key) => {
+					env[`process.env.${key}`] = JSON.stringify(process.env[key]);
+
+					return env;
+				}, {} as Record<string, string>),
 		},
 		build: {
 			minify: !isTestMode, // Only minify when NOT on freedi-test.web.app
