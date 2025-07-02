@@ -5,12 +5,15 @@ import { useUserConfig } from '@/controllers/hooks/useUserConfig'
 import SettingsModal from '../settingsModal/SettingsModal'
 import UserQuestionComp from './userQuestion/UserQuestionComp'
 import PlusIcon from '@/assets/icons/plusIcon.svg?react'
+import DeleteIcon from '@/assets/icons/delete.svg?react';
 import MenuDropdown from '@/assets/icons/arrow-down.svg?react'
+import EllipsisIcon from '@/assets/icons/ellipsisIcon.svg?react'
 import RadioIcon from '@/assets/icons/radioButtonChecked.svg?react'
 import styles from './UserDataSetting.module.scss'
 import { getRandomUID, Statement, UserQuestion, UserQuestionType } from 'delib-npm'
 import { deleteUserDataOption, deleteUserDataQuestion, setUserDataOption, setUserDataQuestion } from '@/controllers/db/userData/setUserData'
 import { setUserQuestion, deleteUserQuestion, selectUserQuestionsByStatementId } from '@/redux/userData/userDataSlice'
+import CustomSwitchSmall from '@/view/components/switch/customSwitchSmall/CustomSwitchSmall'
 
 //mockData
 
@@ -35,35 +38,59 @@ const UserDataSetting: FC<Props> = ({ statement }) => {
 	const [showModal, setShowModal] = useState(false)	// Get user questions from Redux store filtered by statement ID
 	const [selectedOption, setSelectedOption] = useState<Option>((options[0]));
   	const [open, setOpen] = useState(false);
+	const [openDeleteQuestion, setOpenDeleteQuestion] = useState(false);
 	const userQuestions: UserQuestion[] = useSelector(selectUserQuestionsByStatementId(statement.statementId));
-
+	const [newQuestionText, setNewQuestionText] = useState('');
+	const [currentlyEditingQuestionId, setCurrentlyEditingQuestionId] = useState('');
+	const [newCardCreate, setNewCardCreate] = useState(true);
+	
 	function closeModal() {
 		setShowModal(false)
 	}
-	const handleAddNewQuestion = (e: React.FormEvent) => {
-		e.preventDefault()
 
-		const form = e.target as HTMLFormElement
-		const formData = new FormData(form)
-		const newQuestion = formData.get('newQuestion') as string
-		const newQuestionType = selectedOption.type;
+	const handleQuestionInputChange = (value: string) => {
+		setNewQuestionText(value);
 
-		if (!newQuestion.trim()) return;
+		const normalizedInput = value.trim().toLowerCase();
 
-		const newQuestionObj: UserQuestion = {
+		const existing = userQuestions.find(
+			(q) => q.question.trim().toLowerCase() === normalizedInput
+		);
+
+		setCurrentlyEditingQuestionId(existing ? existing.userQuestionId : null);
+	};
+
+	const handleAddNewQuestion = () => {
+		 const newQuestion = newQuestionText.trim();
+		if (!newQuestion) return;
+
+		if (currentlyEditingQuestionId) {
+			// Update existing
+			const existingIndex = userQuestions.findIndex(
+			(q) => q.userQuestionId === currentlyEditingQuestionId
+			);
+
+			const updatedQuestion = {
+			...userQuestions[existingIndex],
+			question: newQuestion,
+			};
+
+			dispatch(setUserQuestion(updatedQuestion));
+			setUserDataQuestion(statement, updatedQuestion);
+		} else {
+			// Create new
+			const newQuestionObj: UserQuestion = {
 			userQuestionId: getRandomUID(),
-			question: newQuestion.trim(),
-			type: newQuestionType,
+			question: newQuestion,
+			type: selectedOption.type,
 			statementId: statement.statementId,
-			options: newQuestionType === UserQuestionType.checkbox || newQuestionType === UserQuestionType.radio ? [] : []
-		};
-
-		dispatch(setUserQuestion(newQuestionObj))
-
-		// Reset the form
-		form.reset();
-
-		setUserDataQuestion(statement, newQuestionObj)
+			options: [],
+			};
+			setNewCardCreate(false);
+			setNewQuestionText('');
+			dispatch(setUserQuestion(newQuestionObj));
+			setUserDataQuestion(statement, newQuestionObj);
+  		}
 	}
 
 	const handleDeleteQuestion = (questionIndex: number) => {
@@ -78,6 +105,7 @@ const UserDataSetting: FC<Props> = ({ statement }) => {
 			deleteUserDataQuestion(questionToDelete)
 		}
 	}
+
 	const handleUpdateQuestion = (questionIndex: number, updatedQuestion: Partial<UserQuestion>) => {
 		const questionToUpdate = userQuestions[questionIndex]
 		if (questionToUpdate && questionToUpdate.userQuestionId) {
@@ -88,7 +116,7 @@ const UserDataSetting: FC<Props> = ({ statement }) => {
 			dispatch(setUserQuestion(updatedQuestionObj))
 			setUserDataQuestion(statement, updatedQuestionObj)
 		}
-	}
+	};
 
 	const handleAddOption = (questionIndex: number, newOption: string) => {
 		if (!newOption.trim()) return
@@ -105,7 +133,6 @@ const UserDataSetting: FC<Props> = ({ statement }) => {
 			dispatch(setUserQuestion(updatedQuestion))
 			setUserDataOption(questionToUpdate, newOptionObj);
 		}
-
 	}
 
 	const handleDeleteOption = (questionIndex: number, optionIndex: number) => {
@@ -123,9 +150,12 @@ const UserDataSetting: FC<Props> = ({ statement }) => {
 
 	const handleSelectOption = (option) => {
 		setSelectedOption((option));
-		console.info("h", selectedOption.label)
 		setOpen(false);
   };
+
+  const handleRequiredQuestion = () => {
+
+  }
 
 	return (
 		<div>
@@ -135,14 +165,16 @@ const UserDataSetting: FC<Props> = ({ statement }) => {
 			</div>
 			{showModal && <SettingsModal closeModal={closeModal}>
 				<div className={styles.userDataSettings}>
-					<h3>{t('Survey Settings')}</h3>					{/* New Question Form */}
-					<form className={styles.newQuestionForm} onSubmit={handleAddNewQuestion}>
+					<h3>{t('Survey Settings')}</h3>	
+					{newCardCreate && 	
+					<div className={styles.newQuestionForm} >			{/* New Question Form */}
 						<div className={styles.formFields}>
 							<input
 								name="newQuestion"
-								placeholder={t('White Question Here...')}
-								required
-								type="text"
+								value={newQuestionText}
+								onChange={(e) => handleQuestionInputChange(e.target.value)}
+								onBlur={() => handleAddNewQuestion()}
+								placeholder={t('Write question here...')}
 								className={styles.questionInput}
 							/>
 							<div 
@@ -159,24 +191,51 @@ const UserDataSetting: FC<Props> = ({ statement }) => {
 										<MenuDropdown className={styles.optionIcon}/>
 									</div>
 							</div>
-							{open && (
-							<div className={styles.options}>
-								{options.map((option) => (
-								<button
-									key={option.type}
-									className={styles.option}
-									onClick={() => {
-									handleSelectOption(option);
-									}}
-								>
-									{option.icon}
-									<span className={styles.textLabel}>{option.label} </span>
-								</button>
-								))}
+								{open && (
+								<div className={styles.options}>
+									{options.map((option) => (
+									<button
+										key={option.type}
+										className={styles.option}
+										onClick={() => {
+										handleSelectOption(option);
+										}}
+									>
+										{option.icon}
+										<span className={styles.textLabel}>{option.label} </span>
+									</button>
+									))}
+								</div>
+								)}
+							<div className={styles.bottomSection}>
+								<div className={styles.requiredSection}>
+									<h3 className={styles.switcherText}>required</h3>
+									<CustomSwitchSmall
+										label='Document Question'
+										checked={
+											false
+										}
+										setChecked={handleRequiredQuestion}
+										textChecked={t('')}
+										textUnchecked={t('')}
+										imageChecked={""}
+										imageUnchecked={""}
+									/>		
+								</div>
+								<EllipsisIcon 
+									className={styles.ellipsisIcon}
+									onClick={() => setOpenDeleteQuestion(!openDeleteQuestion)}/>
 							</div>
-							)}
-								<div className={styles.existingQuestions}>
-						{userQuestions.map((question, index) => (
+							{ openDeleteQuestion && <button className={styles.deleteQuestionBtn} onClick={() => setNewCardCreate(false)}>
+									<DeleteIcon 
+										className={styles.deleteIcon} />
+									<h3 className={styles.deleteQuestionText}>Delete</h3>
+								</button> } 
+						</div>
+					</div>}	
+
+					{/* Existing Questions */}
+						{userQuestions.reverse().map((question, index) => (
 							<UserQuestionComp
 								key={index}
 								userQuestions={question}
@@ -187,52 +246,21 @@ const UserDataSetting: FC<Props> = ({ statement }) => {
 								onUpdateQuestion={handleUpdateQuestion}
 							/>
 						))}
-						
-					</div>
-							<div className={styles.bottom}>
-								<div>
-									<h3 className={styles.switcherText}>required</h3>		
-								</div>
-								<div>
-
-								</div>
-								
-							</div>
+						<div className={styles.modalButtons}>
 							<button
-								type="submit"
-								className="btn btn--add"
-							>
-								<PlusIcon />
-								{t('Add Question')}
+									type="submit"
+									className={`btn ${styles.buttonSave}`}
+								>
+									{t("Save settings")}
+							</button>
+							<button
+									type="submit"
+									className={`btn btn--add ${styles.buttonAdd}`}
+									onClick={() => setNewCardCreate(true)}
+								>
+									<PlusIcon />
 							</button>
 						</div>
-					</form>
-
-					{/* Existing Questions */}
-					
-					{userQuestions.map((question, questionIndex) => (
-						<div key={question.userQuestionId ?? questionIndex} className={styles.existingQuestion}>
-						<h4>{question.question}</h4>
-							{question.options.map((option, optionIndex) => (
-							<div key={optionIndex} className={styles.optionItem}>
-								<RadioIcon className={styles.radioIcon} />
-								<h3>{option.option}</h3>
-								<input
-								type="color"
-								name={`user-question-${questionIndex}-${optionIndex}`}
-								value={option.color ?? '#000000'}
-								// onChange={(e) => handleChangeOptionColor(questionIndex, optionIndex, e.target.value)}
-								// onBlur={(e) => handleChangeOptionColor(questionIndex, optionIndex, e.target.value)}
-								/>
-								{/* <DeleteIcon
-								className={styles.deleteIcon}
-								onClick={() => handleDeleteOption(questionIndex, optionIndex)}
-								title={t('Delete Option')}
-								/> */}
-								</div>
-								))}
-							</div>
-							))}
 				</div>
 			</SettingsModal>}
 		</div>

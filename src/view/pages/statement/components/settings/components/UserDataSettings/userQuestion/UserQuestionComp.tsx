@@ -2,12 +2,13 @@ import React, { useState } from 'react'
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import DeleteIcon from '@/assets/icons/delete.svg?react';
 import RadioIcon from '@/assets/icons/radioButtonEmpty.svg?react'
-import Input from '@/view/components/input/Input';
+import EllipsisIcon from '@/assets/icons/ellipsisIcon.svg?react'
 import styles from './UserQuestionComp.module.scss';
 import { DemographicOption, UserQuestion, UserQuestionType } from 'delib-npm';
 import { setDemographicOptionColor } from '@/controllers/db/userData/setUserData';
 import { useDispatch } from 'react-redux';
 import { updateUserQuestionOptionColor } from '@/redux/userData/userDataSlice';
+import CustomSwitchSmall from '@/view/components/switch/customSwitchSmall/CustomSwitchSmall';
 
 interface Props {
 	userQuestions: UserQuestion;
@@ -25,6 +26,7 @@ const UserQuestionComp = ({ userQuestions, questionIndex, onAddOption, onDeleteO
 	const [isEditingQuestion, setIsEditingQuestion] = useState(false);
 	const [editedQuestionText, setEditedQuestionText] = useState(userQuestions.question);
 	const [selectedType, setSelectedType] = useState(userQuestions.type);
+	const [openDeleteQuestion, setOpenDeleteQuestion] = useState(false);
 
 	const isMultiOptions = userQuestions.type === UserQuestionType.checkbox || userQuestions.type === UserQuestionType.radio;
 
@@ -63,19 +65,23 @@ const UserQuestionComp = ({ userQuestions, questionIndex, onAddOption, onDeleteO
 		setIsEditingQuestion(false);
 	};
 
-	const handleTypeChange = (newType: UserQuestionType) => {
-		setSelectedType(newType);
-		if (onUpdateQuestion) {
-			// If changing to/from multi-option types, handle options appropriately
-			const needsOptions = newType === UserQuestionType.checkbox || newType === UserQuestionType.radio;
-			const currentHasOptions = userQuestions.options && userQuestions.options.length > 0;
+	// const handleTypeChange = (newType: UserQuestionType) => {
+	// 	setSelectedType(newType);
+	// 	if (onUpdateQuestion) {
+	// 		// If changing to/from multi-option types, handle options appropriately
+	// 		const needsOptions = newType === UserQuestionType.checkbox || newType === UserQuestionType.radio;
+	// 		const currentHasOptions = userQuestions.options && userQuestions.options.length > 0;
 
-			onUpdateQuestion(questionIndex, {
-				type: newType,
-				options: needsOptions ? (currentHasOptions ? userQuestions.options : []) : undefined
-			});
-		}
-	};
+	// 		onUpdateQuestion(questionIndex, {
+	// 			type: newType,
+	// 			options: needsOptions ? (currentHasOptions ? userQuestions.options : []) : undefined
+	// 		});
+	// 	}
+	// };
+
+  const handleRequiredQuestion = () => {
+
+  }
 
 	function handleChangeOptionColor(optionIndex: number, color: string) {
 
@@ -93,12 +99,12 @@ const UserQuestionComp = ({ userQuestions, questionIndex, onAddOption, onDeleteO
 			<div className={styles.questionHeader}>
 				{isEditingQuestion ? (
 					<div className={styles.editQuestionForm}>
-						<Input
+						<input
 							name="editQuestion"
-							label=""
-							placeholder={t('Enter question text')}
 							value={editedQuestionText}
-							onChange={(value) => setEditedQuestionText(value)}
+							placeholder={t('Enter question text')}
+							className={styles.editQuestionInput}
+							onChange={(e) => setEditedQuestionText(e.target.value)}
 						/>
 						<div className={styles.editActions}>
 							<button
@@ -123,19 +129,7 @@ const UserQuestionComp = ({ userQuestions, questionIndex, onAddOption, onDeleteO
 						</p>
 						<div className={styles.questionActions}>
 							<div className={styles.typeSelector}>
-								<select
-									value={selectedType}
-									onChange={(e) => handleTypeChange(e.target.value as UserQuestionType)}
-									className={styles.typeSelect}
-								>
-									<option value={UserQuestionType.radio}>{t('Radio')}</option>
-								</select>
 							</div>
-							<DeleteIcon
-								className={styles.deleteQuestionIcon}
-								onClick={() => onDeleteQuestion(questionIndex)}
-								title={t('Delete Question')}
-							/>
 						</div>
 					</>
 				)}
@@ -168,12 +162,12 @@ const UserQuestionComp = ({ userQuestions, questionIndex, onAddOption, onDeleteO
 			{isMultiOptions && (
 				<div className={styles.addOptionSection}>
 					<div onKeyDown={handleKeyPress}>
-						<Input
+						<input
 							name="newOption"
-							label={t('New Option')}
 							placeholder={t('Enter new option')}
+							className={styles.newOptionInput}
 							value={newOptionText}
-							onChange={(value) => setNewOptionText(value)}
+							onChange={(e) => setNewOptionText(e.target.value)}
 						/>
 					</div>
 					<div className="btns">
@@ -187,6 +181,28 @@ const UserQuestionComp = ({ userQuestions, questionIndex, onAddOption, onDeleteO
 					</div>
 				</div>
 			)}
+			<div className={styles.BottomSection}>
+				<div className={styles.requiredSection}>
+				<h3 className={styles.switcherText}>required</h3>
+					<CustomSwitchSmall
+						label='Document Question'
+						checked={false}
+						setChecked={handleRequiredQuestion}
+						textChecked={t('')}
+						textUnchecked={t('')}
+						imageChecked={""}
+						imageUnchecked={""}
+						/>		
+				</div>
+				<EllipsisIcon 
+					className={styles.ellipsisIcon}
+					onClick={() => setOpenDeleteQuestion(!openDeleteQuestion)}/>
+				</div>
+				{ openDeleteQuestion && <button className={styles.deleteQuestionBtn} onClick={() => onDeleteQuestion(questionIndex)}>
+					<DeleteIcon className={styles.deleteIcon}/>
+					<h3 className={styles.deleteQuestionText}>Delete</h3>
+				</button> }
+
 		</div>
 	)
 }

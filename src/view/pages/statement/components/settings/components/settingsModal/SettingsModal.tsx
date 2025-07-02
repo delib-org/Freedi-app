@@ -14,6 +14,7 @@ const SettingsModal: React.FC<Props> = ({ children, closeModal }) => {
 			<div className={styles.modalHeader}>
 				<ArrowLeftIcon
 					className={styles.icon}
+					onClick={closeModal}
 				/>
 				<CloseIcon
 					className={styles.icon}
