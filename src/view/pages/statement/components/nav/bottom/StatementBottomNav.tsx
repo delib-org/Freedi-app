@@ -1,5 +1,5 @@
 import { FC, useContext, useState, useEffect } from 'react';
-import { Link } from 'react-router';
+import { Link, useParams } from 'react-router';
 
 // Icons
 import AgreementIcon from '@/assets/icons/agreementIcon.svg?react';
@@ -13,11 +13,12 @@ import './StatementBottomNav.scss';
 import StartHere from '@/view/components/startHere/StartHere';
 import { StatementContext } from '../../../StatementCont';
 import { sortItems } from './StatementBottomNavModal';
-import { SortType, StatementType } from 'delib-npm';
+import { Role, SortType, StatementType } from 'delib-npm';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import { useDecreaseLearningRemain } from '@/controllers/hooks/useDecreaseLearningRemain';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { setNewStatementModal } from '@/redux/statements/newStatementSlice';
+import { statementSubscriptionSelector } from '@/redux/statements/statementsSlice';
 
 interface Props {
 	showNav?: boolean;
@@ -25,13 +26,20 @@ interface Props {
 
 const StatementBottomNav: FC<Props> = () => {
 
+	const { statementId } = useParams<{ statementId: string }>();
 	const dispatch = useDispatch();
+
 	const { statement } =
 		useContext(StatementContext);
+	const subscription = useSelector(statementSubscriptionSelector(statementId));
+
+	const role = subscription?.role;
+	const isAdmin = role === 'admin' || role === Role.creator;
 	const { dir, learning } = useUserConfig();
 	const decreaseLearning = useDecreaseLearningRemain();
 
 	const timesRemainToLearnAddOption = learning.addOptions;
+	const canAddOption = statement.statementSettings?.enableAddEvaluationOption ?? false;
 
 	const [showSorting, setShowSorting] = useState(false);
 	const [showStartHere, setShowStartHere] = useState(
@@ -88,7 +96,7 @@ const StatementBottomNav: FC<Props> = () => {
 				<div
 					className={`add-option-button-wrapper ${dir === 'ltr' ? 'add-option-button-wrapper--ltr' : ''}`}
 				>
-					<button
+					{(canAddOption || isAdmin) && <button
 						className='add-option-button'
 						aria-label='Add option'
 						style={statementColor}
@@ -97,6 +105,7 @@ const StatementBottomNav: FC<Props> = () => {
 					>
 						<PlusIcon style={{ color: statementColor.color }} />
 					</button>
+					}
 					<div className='sort-menu'>
 						{sortItems.map((navItem, i) => (
 							<div
@@ -129,7 +138,7 @@ const StatementBottomNav: FC<Props> = () => {
 						</button>
 					</div>
 				</div>
-			</div>
+			</div >
 		</>
 	);
 };
