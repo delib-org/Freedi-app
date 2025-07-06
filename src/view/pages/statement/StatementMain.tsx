@@ -14,6 +14,7 @@ import {
 	listenToStatement,
 	listenToAllDescendants,
 	listenToSubStatements,
+	listenToStatementSubscription,
 } from '@/controllers/db/statements/listenToStatements';
 
 // Redux Store
@@ -59,6 +60,7 @@ export const subStatementsSelector = createSelector(
 export default function StatementMain() {
 	// Hooks
 	const { statementId, stageId, screen } = useParams();
+
 	const statement = useSelector(statementSelector(statementId));
 	const showNewStatement = useSelector(selectNewStatementShowModal);
 	const dispatch = useDispatch();
@@ -73,6 +75,7 @@ export default function StatementMain() {
 		statementSelector(statement?.topParentId)
 	);
 	const role = useSelector(statementSubscriptionSelector(statementId))?.role;
+
 	const { isAuthorized, loading, isWaitingForApproval } =
 		useAuthorization(statementId);
 
@@ -130,6 +133,7 @@ export default function StatementMain() {
 			unsubscribeFunctions.push(
 				listenToStatement(statementId, setIsStatementNotFound)
 			);
+			unsubscribeFunctions.push(listenToStatementSubscription(statementId, creator));
 			unsubscribeFunctions.push(listenToUserQuestions(statementId));
 
 			unsubscribeFunctions.push(listenToUserAnswers(statementId));
