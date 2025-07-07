@@ -12,7 +12,6 @@ import {
 	statementOptionsSelector,
 	statementSelector,
 	statementSubscriptionSelector,
-	subStatementsByTopParentIdMemo,
 } from '@/redux/statements/statementsSlice';
 
 import { listenToEvaluations } from '@/controllers/db/evaluation/getEvaluation';
@@ -34,7 +33,7 @@ const SuggestionCards: FC<Props> = ({
 	const sort = propSort || _sort || SortType.newest;
 	const creator = useSelector(creatorSelector);
 	const parentSubscription = useSelector(statementSubscriptionSelector(statementId));
-	const isAdmin = creator?.uid === parentSubscription?.creatorId || parentSubscription?.role === Role.admin;
+	const isAdmin = creator?.uid === parentSubscription?.statement?.creatorId || parentSubscription?.role === Role.admin;
 
 	const dispatch = useDispatch();
 	const statement = useSelector(statementSelector(statementId));
