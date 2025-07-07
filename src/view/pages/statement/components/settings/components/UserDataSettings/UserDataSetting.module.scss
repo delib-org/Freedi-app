@@ -6,22 +6,30 @@
 
 	h3 {
 		margin: 0 0 1.5rem 0;
-		color: #2c3e50;
+		color: (--text-primary);
 		font-size: 1.5rem;
-		text-align: center;
+		text-align: left;
+		font-weight: 500;
 	}
 
 	.newQuestionForm {
 		margin-bottom: 2rem;
 		padding: 1.5rem;
-		border: 2px dashed #bdcef4;
+		border-left: 6px solid var(--map-question);
 		border-radius: 8px;
-		background-color: #f0f4ff;
+		background-color: var(--card-default);
+		box-shadow: 0 2px 4px rgba(66, 79, 108, 0.1);
 
 		h4 {
 			margin: 0 0 1rem 0;
 			color: #2c3e50;
 			font-size: 1.2rem;
+		}
+
+		.questionInput {
+			border: 1px solid var(--border-primary-subtle);
+			border-radius: 0.5rem;
+			padding: 1rem;
 		}
 
 		.formFields {
@@ -35,6 +43,7 @@
 			display: flex;
 			flex-direction: column;
 			gap: 0.5rem;
+			border-bottom: 0.1px solid var(--border-primary-subtle);
 
 			label {
 				font-size: 1rem;
@@ -43,18 +52,97 @@
 			}
 
 			select {
-				padding: 0.75rem;
-				border: 1px solid #bdcef4;
-				border-radius: 0.5rem;
+				padding: 1rem;
+				border-bottom: 0.1px solid var(--border-primary-subtle);
 				font-size: 1rem;
-				background-color: #fff;
 				transition: border-color 0.2s;
+				color: var(--text-subtitle);
 
 				&:focus {
 					outline: none;
 					border-color: #007bff;
 				}
 			}
+
+			.selectFieldWrapper {
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+			}
+		}
+
+		.options {
+			position: absolute;
+			top: 20rem;
+			left: 10rem;
+			right: 0;
+			background-color: var(--white);
+			border-radius: 0.5rem;
+			box-shadow: 0 4px 12px rgba(66, 79, 108, 0.15);
+			z-index: 100;
+			width: 50%;
+	}
+
+		.option {
+				display: flex;
+				align-items: center;
+				width: 100%;
+				padding: 1.25rem 1rem;
+				background: none;
+				border: none;
+				cursor: pointer;
+				transition: background-color 0.2s;
+				box-shadow: 0 2 4 0 rgba(66, 79, 108, 0.1);
+
+		&:hover {
+			background-color: #f4f7fa;
+		}
+
+		&:not(:first-child) {
+			border-top: 1px solid var(--border-primary-subtle);
+		}
+	}
+
+				.optionIcon{
+					width: 1.5rem;
+					height: 1.5rem;
+					color: var(--icons-blue-dark);
+					margin-right: 0.75rem;
+					display: flex;
+					align-items: center;
+					justify-content: center;
+				}
+
+				.textLabel {
+					color: var(--text-subtitle);
+					font-size: 1rem;
+				}
+	}
+
+	.bottomSection {
+		border-top: 0.1px solid var(--border-primary-subtle);
+		margin-top: 1rem;	
+		padding: 1rem;
+		display: flex;
+		justify-content: space-between;
+
+		.requiredSection {
+			display: flex;
+			gap: 0.8rem;
+
+		}
+
+		.ellipsisIcon {
+			width: 1.5rem;
+			height: 1.5rem;
+			color: var(--icons-blue-dark);
+			cursor: pointer;
+		}
+
+		.switcherText {
+			font-size: 1rem;
+			font-weight: 500;
+			color: var(--text-subtitle)
 		}
 	}
 
@@ -74,5 +162,140 @@
 			border-radius: 8px;
 			border: 1px dashed #e0e6ff;
 		}
+	}
+
+	.addOptionSection {
+		margin-top: 1rem;
+		padding-top: 1rem;
+		border-top: 1px solid #e8ecf5;
+
+		.addOptionBtn {
+			margin-top: 0.5rem;	
+			margin-bottom: 2rem;
+			color: var(--text-action)
+		}
+	}
+
+	.modalButtons {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+
+		.buttonAdd {
+			border-radius: 50rem;
+			height: 3rem;
+			width: 3rem;
+		}
+
+		.buttonSave {
+			padding: 0.5rem 2rem;
+			border-radius: 20px;
+		}
+	}
+	
+		.optionItem {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		margin-bottom: 0.5rem;
+		padding: 0.5rem;
+		color: var(--icons-disabled);
+
+		.deleteIcon {
+			cursor: pointer;
+			padding: 0.25rem;
+			color: var(--icons-red);
+			border-radius: 50%;
+			transition: background-color 0.2s;
+
+			&:hover {
+				background-color: #ffe5e5;
+			}
+		}
+
+		label {
+			display: flex;
+			align-items: center;
+			gap: 0.5rem;
+			font-size: 0.95rem;
+			color: #34495e;
+			cursor: pointer;
+			flex: 1;
+
+			input {
+				margin: 0;
+			}
+		}
+
+		.RadioIcon {
+			width: 1.5rem;
+			height: 1.5rem;
+			color: var(--icons-disabled);
+			margin-right: 0.75rem;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+	}
+	}
+}
+
+		.deleteQuestionBtn {
+			display: flex;
+			flex-direction: row;
+			position: absolute;
+			background-color: var(--white);
+			padding: 0.2rem 3rem; 
+			border-radius: 4px;
+			left: 70%;
+			box-shadow: 0 2px 4px 0 rgba(66, 79, 108, 0.10);
+			gap: 1rem;
+
+			.deleteIcon {
+				cursor: pointer;
+				color: var(--icons-red);
+			}
+
+			.deleteQuestionText {
+				font-size: 16px;
+				font-weight: 600;
+				color: vat(--text-subtitle);
+				font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+			}
+
+		}
+
+
+.existingQuestion {
+	margin-bottom: 1.5rem;
+	padding: 1rem;
+	border-radius: 8px;
+	background-color: var(--white);
+	box-shadow: 0 2 4 0 rgba(66,76,246, 0.1);
+
+	h4 {
+		margin: 0 0 1rem 0;
+		color: var(--text-subtitle);
+		font-size: 1.2rem;
+		text-align: left;
+	}
+
+	.optionItem {
+		display: flex;
+		padding: 1rem;
+	}
+
+	.radioIcon {
+		width: 1.5rem;
+		height: 1.5rem;
+		color: var(--icons-blue-dark);
+		margin-right: 0.75rem;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	h3 {
+		color: var(--text-subtitle);
+		font-size: medium;
 	}
 }
