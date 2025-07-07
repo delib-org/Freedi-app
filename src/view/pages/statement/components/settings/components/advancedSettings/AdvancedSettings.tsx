@@ -6,11 +6,14 @@ import Checkbox from '@/view/components/checkbox/Checkbox';
 import './AdvancedSettings.scss';
 import { setStatementSettingToDB } from '@/controllers/db/statementSettings/setStatementSettings';
 import { StatementSettings, StatementType } from 'delib-npm';
+import { toggleStatementHide } from '@/controllers/db/statements/setStatements';
 
 const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 	const { t } = useUserConfig();
 
 	const statementSettings: StatementSettings = getStatementSettings(statement);
+
+	const { hide } = statement;
 
 	const {
 		inVotingGetOnlyResults = false,
@@ -42,6 +45,13 @@ const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 	return (
 		<div className='advanced-settings'>
 			<h3 className='title'>{t('Advanced')}</h3>
+			<Checkbox
+				label={'Hide this statement'}
+				isChecked={hide}
+				onChange={() =>
+					toggleStatementHide(statement.statementId)
+				}
+			/>
 			<Checkbox
 				label={'Chat'}
 				isChecked={hasChat}
