@@ -7,7 +7,6 @@ import './AdvancedSettings.scss';
 import { setStatementSettingToDB } from '@/controllers/db/statementSettings/setStatementSettings';
 import { StatementSettings, StatementType } from 'delib-npm';
 import { toggleStatementHide } from '@/controllers/db/statements/setStatements';
-import { stat } from 'fs';
 
 const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 	const { t } = useUserConfig();
