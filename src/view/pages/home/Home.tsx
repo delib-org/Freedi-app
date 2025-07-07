@@ -39,7 +39,7 @@ export default function Home() {
 		let unsubscribeInAppNotifications: () => void = () => { };
 		try {
 			if (user) {
-				unsubscribe = listenToStatementSubscriptions(user.uid, 100);
+				unsubscribe = listenToStatementSubscriptions(user.uid, 30);
 				updatesUnsubscribe = getNewStatementsFromSubscriptions(
 					user.uid
 				);

@@ -1,12 +1,10 @@
 import { FC, useEffect } from 'react';
 import DeleteIcon from '@/assets/icons/delete.svg?react';
 import EditIcon from '@/assets/icons/editIcon.svg?react';
-import EyeIcon from '@/assets/icons/eye.svg?react';
-import EyeCrossIcon from '@/assets/icons/eyeCross.svg?react';
 import LightBulbIcon from '@/assets/icons/lightBulbIcon.svg?react';
 import QuestionMarkIcon from '@/assets/icons/questionIcon.svg?react';
 import { deleteStatementFromDB } from '@/controllers/db/statements/deleteStatements';
-import { toggleStatementHide, updateIsQuestion } from '@/controllers/db/statements/setStatements';
+import { updateIsQuestion } from '@/controllers/db/statements/setStatements';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import Menu from '@/view/components/menu/Menu';
 import MenuOption from '@/view/components/menu/MenuOption';
@@ -40,7 +38,6 @@ const SolutionMenu: FC<Props> = ({
 	const isCreator = statement.creatorId === user?.uid;
 	const isCreatorOrAdmin = isCreator || isAdmin;
 	const isOption = statement.statementType === StatementType.option;
-	const isHide = statement.hide ? true : false;
 	const isResearch = statement.statementType === StatementType.question;
 
 	useEffect(() => {
@@ -52,11 +49,6 @@ const SolutionMenu: FC<Props> = ({
 			return () => clearTimeout(timer);
 		}
 	}, [isCardMenuOpen]);
-
-	function handleToggleHideStatement() {
-		toggleStatementHide(statement.statementId);
-
-	}
 
 	if (!isAuthorized) return null;
 
@@ -104,21 +96,6 @@ const SolutionMenu: FC<Props> = ({
 					}
 					onOptionClick={() => {
 						updateIsQuestion(statement);
-						setIsCardMenuOpen(false);
-					}}
-				/>
-			)}
-			{isAuthorized && (
-				<MenuOption
-					isOptionSelected={isHide}
-					icon={isHide ? <EyeIcon /> : <EyeCrossIcon />}
-					label={
-						isHide
-							? t('Unhide')
-							: t('Hide')
-					}
-					onOptionClick={() => {
-						handleToggleHideStatement();
 						setIsCardMenuOpen(false);
 					}}
 				/>

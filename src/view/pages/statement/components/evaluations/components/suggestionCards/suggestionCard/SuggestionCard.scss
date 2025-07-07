@@ -1,129 +1,123 @@
 .statement-evaluation-card {
-	display: flex;
-	flex-direction: row-reverse;
-	border-radius: 4px;
-	background-color: var(--inputBackground);
-	box-shadow: 2px 2px 4px var(--shadow);
-	transition: all 1s ease-in-out;
-	border-left: 8px solid white;
+  display: flex;
+  flex-direction: row-reverse;
+  border-radius: 4px;
+  background-color: var(--inputBackground);
+  box-shadow: 2px 2px 4px var(--shadow);
+  transition: all 1s ease-in-out;
+  border-left: 8px solid white;
 
-	width: 100%;
-	box-sizing: border-box;
-	gap: 0.4rem;
-	position: absolute;
+  width: 100%;
+  box-sizing: border-box;
+  gap: 0.4rem;
+  position: absolute;
 
-	@media screen and (max-width: 768px) {
-		margin: 0rem 2%;
-		width: 96%;
+  @media screen and (max-width: 768px) {
+    margin: 0rem 2%;
+    width: 96%;
 
-	}
+  }
 
-	&--hidden {
-		opacity: 0.5;
-		pointer-events: none;
+  .selected-option {
+    color: white;
+    color: #57a193;
+    font-size: 0.8rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 
-	}
+    width: 10px;
 
-	.selected-option {
-		color: white;
-		color: #57a193;
-		font-size: 0.8rem;
-		display: flex;
-		justify-content: center;
-		align-items: center;
+    div {
+      transform: rotate(270deg) translate(0, -0.35rem);
+    }
+  }
 
-		width: 10px;
+  .main {
+    width: 100%;
+    padding: 1rem 1rem 1rem 0rem;
 
-		div {
-			transform: rotate(270deg) translate(0, -0.35rem);
-		}
-	}
+    .info {
+      color: var(--text-body);
+      display: flex;
+      width: 100%;
 
-	.main {
-		width: 100%;
-		padding: 1rem 1rem 1rem 0rem;
+      .text {
+        // display: flex;
+        // justify-content: space-between;
+        flex: 1;
+        width: 100%;
+        background-color: var(--background-color-info-text);
+        padding: 0rem;
 
-		.info {
-			color: var(--text-body);
-			display: flex;
-			width: 100%;
+        p {
+          margin: 3px 0px;
+        }
+      }
+    }
 
-			.text {
-				// display: flex;
-				// justify-content: space-between;
-				flex: 1;
-				width: 100%;
-				background-color: var(--background-color-info-text);
-				padding: 0rem;
+    .actions {
+      display: flex;
+      flex-direction: row;
+      justify-content: space-around;
+      align-items: center;
+      margin-top: 1rem;
+      padding-top: 1rem;
+      gap: 1rem;
+      border-top: 1px solid var(--shadow);
 
-				p {
-					margin: 3px 0px;
-				}
-			}
-		}
+      .add-sub-question-button svg {
+        color: #4e88c7;
+        width: 24px;
+        height: 24px;
+      }
 
-		.actions {
-			display: flex;
-			flex-direction: row;
-			justify-content: space-around;
-			align-items: center;
-			margin-top: 1rem;
-			padding-top: 1rem;
-			gap: 1rem;
-			border-top: 1px solid var(--shadow);
+      @media screen and (max-width: 500px) {
+        margin-top: 0.6rem;
+        padding-top: 0.5rem;
 
-			.add-sub-question-button svg {
-				color: #4e88c7;
-				width: 24px;
-				height: 24px;
-			}
+        .evolution-element {
+          display: flex;
+          justify-content: end;
+          padding: 5px;
+        }
 
-			@media screen and (max-width: 500px) {
-				margin-top: 0.6rem;
-				padding-top: 0.5rem;
+        .chat-more-element {
+          width: 30px;
+          height: 30px;
+        }
 
-				.evolution-element {
-					display: flex;
-					justify-content: end;
-					padding: 5px;
-				}
+        .more-question {
+          display: flex;
+          justify-content: end;
+          padding: 5px;
+        }
 
-				.chat-more-element {
-					width: 30px;
-					height: 30px;
-				}
+      }
+    }
 
-				.more-question {
-					display: flex;
-					justify-content: end;
-					padding: 5px;
-				}
+    &:nth-child(-1) {
+      border-left: 0.71rem solid var(--accent);
+    }
 
-			}
-		}
+    .menu-option svg {
+      color: #226cbc;
+    }
+  }
 
-		&:nth-child(-1) {
-			border-left: 0.71rem solid var(--accent);
-		}
+  &--new {
+    animation: newCard 1s ease-in-out;
 
-		.menu-option svg {
-			color: #226cbc;
-		}
-	}
+    @keyframes newCard {
+      0% {
+        background-color: var(--blue);
+        transform: translateY(6rem) scale(0.8);
+      }
 
-	&--new {
-		animation: newCard 1s ease-in-out;
-
-		@keyframes newCard {
-			0% {
-				background-color: var(--blue);
-				transform: translateY(6rem) scale(0.8);
-			}
-
-			100% {
-				background-color: white;
-				transform: translateY(0rem) scale(1);
-			}
-		}
-	}
+      100% {
+        background-color: white;
+        transform: translateY(0rem) scale(1);
+      }
+    }
+  }
 }

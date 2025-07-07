@@ -7,14 +7,13 @@ import LoadingPage from '../loadingPage/LoadingPage';
 import Page404 from '../page404/Page404';
 import UnAuthorizedPage from '../unAuthorizedPage/UnAuthorizedPage';
 import StatementHeader from './components/header/StatementHeader';
-import NewStatement from './components/newStatement/NewStatement';
+import NewStatement from './components/newStatemement/newStatement';
 import Switch from './components/switch/Switch';
 import { StatementContext } from './StatementCont';
 import {
 	listenToStatement,
 	listenToAllDescendants,
 	listenToSubStatements,
-	listenToStatementSubscription,
 } from '@/controllers/db/statements/listenToStatements';
 
 // Redux Store
@@ -29,7 +28,7 @@ import {
 } from '@/redux/statements/statementsSlice';
 import { StatementType, QuestionType, User, Role } from 'delib-npm';
 import { useAuthorization } from '@/controllers/hooks/useAuthorization';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { notificationService } from '@/services/notificationService';
 import {
@@ -45,7 +44,6 @@ import {
 	selectUserQuestionsByStatementId,
 } from '@/redux/userData/userDataSlice';
 import UserDataQuestions from './components/userDataQuestions/UserDataQuestions';
-import { selectNewStatementShowModal, setShowNewStatementModal } from '@/redux/statements/newStatementSlice';
 
 // Create selectors
 export const subStatementsSelector = createSelector(
@@ -60,11 +58,7 @@ export const subStatementsSelector = createSelector(
 export default function StatementMain() {
 	// Hooks
 	const { statementId, stageId, screen } = useParams();
-
 	const statement = useSelector(statementSelector(statementId));
-	const showNewStatement = useSelector(selectNewStatementShowModal);
-	const dispatch = useDispatch();
-
 	const userDataQuestions = useSelector(
 		selectUserQuestionsByStatementId(statementId || '')
 	);
@@ -75,7 +69,6 @@ export default function StatementMain() {
 		statementSelector(statement?.topParentId)
 	);
 	const role = useSelector(statementSubscriptionSelector(statementId))?.role;
-
 	const { isAuthorized, loading, isWaitingForApproval } =
 		useAuthorization(statementId);
 
@@ -91,7 +84,7 @@ export default function StatementMain() {
 	// Use states
 	const [talker, setTalker] = useState<User | null>(null);
 	const [isStatementNotFound, setIsStatementNotFound] = useState(false);
-
+	const [showNewStatement, setShowNewStatement] = useState<boolean>(false);
 	const [newStatementType, setNewStatementType] = useState<StatementType>(
 		StatementType.group
 	);
@@ -110,6 +103,15 @@ export default function StatementMain() {
 			setTalker(null);
 		}
 	};
+
+	function handleSetNewStatement(showPopup?: boolean) {
+		if (showPopup === undefined) {
+			setShowNewStatement(!showNewStatement);
+
+			return;
+		}
+		setShowNewStatement(showPopup);
+	}
 
 	//in case the url is of undefined screen, navigate to the first available screen
 	useEffect(() => {
@@ -133,7 +135,6 @@ export default function StatementMain() {
 			unsubscribeFunctions.push(
 				listenToStatement(statementId, setIsStatementNotFound)
 			);
-			unsubscribeFunctions.push(listenToStatementSubscription(statementId, creator));
 			unsubscribeFunctions.push(listenToUserQuestions(statementId));
 
 			unsubscribeFunctions.push(listenToUserAnswers(statementId));
@@ -258,13 +259,11 @@ export default function StatementMain() {
 			talker,
 			handleShowTalker,
 			role,
+			handleSetNewStatement,
 			setNewStatementType,
 			newStatementType,
 			setNewQuestionType,
 			newQuestionType,
-			handleSetNewStatement: () => {
-				dispatch(setShowNewStatementModal(true));
-			},
 		}),
 		[
 			statement,
@@ -272,9 +271,9 @@ export default function StatementMain() {
 			talker,
 			role,
 			handleShowTalker,
+			handleSetNewStatement,
 			setNewStatementType,
 			newStatementType,
-			dispatch,
 		]
 	);
 
@@ -291,7 +290,7 @@ export default function StatementMain() {
 						<Modal
 							closeModal={(e) => {
 								if (e.target === e.currentTarget)
-									dispatch(setShowNewStatementModal(false));
+									setShowNewStatement(false);
 							}}
 						>
 							<NewStatement />

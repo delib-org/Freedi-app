@@ -150,8 +150,6 @@ const SuggestionCard: FC<Props> = ({
 				borderLeft: `8px solid ${statement.isChosen ? 'var(--approve)' : statementColor.backgroundColor || 'white'}`,
 				color: statementColor.color,
 				flexDirection: dir === 'ltr' ? 'row' : 'row-reverse',
-				opacity: statement.hide ? 0.5 : 1,
-				pointerEvents: (statement.hide && !isAuthorized ? 'none' : 'auto'),
 			}}
 			ref={elementRef}
 			id={statement.statementId}

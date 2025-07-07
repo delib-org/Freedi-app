@@ -24,7 +24,9 @@
 	},
 	"include": ["src", "./functions/src"],
 	"exclude": ["node_modules"],
-	"references": [{
-		"path": "./tsconfig.node.json"
-	}]
+	"references": [
+		{
+			"path": "./tsconfig.node.json"
+		}
+	]
 }

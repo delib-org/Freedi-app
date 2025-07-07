@@ -31,14 +31,9 @@ const StatementVote: FC = () => {
 	const { t } = useUserConfig();
 	const { user } = useAuthentication();
 	const { statement } = useContext(StatementContext);
-	const inVotingGetOnlyResults = statement?.statementSettings?.inVotingGetOnlyResults;
-	const topOptionsCount = statement?.resultsSettings?.numberOfResults ?? 3;
-
-	const _subStatements = useSelector(
+	const subStatements = useSelector(
 		statementSubsSelector(statement?.statementId)
 	);
-
-	const subStatements = inVotingGetOnlyResults ? _subStatements.sort((b, a) => a.consensus - b.consensus).slice(0, topOptionsCount) : _subStatements;
 
 	const currentStep = statement?.questionSettings?.currentStep;
 	const isCurrentStepVoting = currentStep === QuestionStep.voting;

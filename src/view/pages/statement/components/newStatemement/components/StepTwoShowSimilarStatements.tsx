@@ -1,5 +1,5 @@
 import React from 'react';
-import { DisplayStatement } from '../NewStatement';
+import { DisplayStatement } from '../newStatement';
 import SendIcon from '@/assets/icons/send-icon-pointing-up-and-right.svg?react';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import Button, { ButtonType } from '@/view/components/buttons/button/Button';

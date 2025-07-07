@@ -23,8 +23,6 @@ export interface PolarizationStatement {
 	statement?: string;
 	totalEvaluators: number;
 	overallMAD: number;
-	overallMean: number;
-	overallN: number;
 	averageAgreement: number;
 	lastUpdated?: number;
 	color?: string;

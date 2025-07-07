@@ -10,7 +10,6 @@ import { notificationsSlicer } from './notificationsSlice/notificationsSlice';
 import creatorReducer from './creator/creatorSlice';
 import SubscriptionsReducer from './subscriptions/subscriptionsSlice';
 import userDataReducer from './userData/userDataSlice';
-import newStatementReducer from './statements/newStatementSlice';
 
 export const store = configureStore({
 	reducer: {
@@ -25,7 +24,6 @@ export const store = configureStore({
 		creator: creatorReducer,
 		subscriptions: SubscriptionsReducer.reducer,
 		userData: userDataReducer,
-		newStatement: newStatementReducer
 	},
 });
 

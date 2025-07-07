@@ -4,7 +4,7 @@ import './newStatement.scss';
 
 import GetInitialStatementData from './components/01-form/GetInitialStatementData';
 
-import { NewStatementContext } from './NewStatementCont';
+import { NewStatementContext } from './newStatementCont';
 
 export interface DisplayStatement {
 	title: string;

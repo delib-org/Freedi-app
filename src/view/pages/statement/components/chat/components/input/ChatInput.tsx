@@ -74,7 +74,7 @@ const ChatInput: FC<Props> = ({ statement, hasEvaluation }) => {
 
 	return (
 		<div className={styles.chatInput}>
-			{hasEvaluation && <div className={styles.eval}><EnhancedEvaluation statement={statement} /></div>}
+			{hasEvaluation && <div className={styles.eval}><EnhancedEvaluation statement={statement} shouldDisplayScore={false} /></div>}
 			<form
 				onSubmit={(e) => handleSubmitInput(e)}
 				name='theForm'

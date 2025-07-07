@@ -10,7 +10,6 @@ import { useSelector } from 'react-redux';
 import IconButton from '../iconButton/IconButton';
 import './Menu.scss';
 import useClickOutside from '@/controllers/hooks/useClickOutside';
-import { Link } from 'react-router';
 
 interface MenuProps extends ComponentProps<'div'> {
 	iconColor: string;
@@ -34,7 +33,7 @@ const Menu: FC<MenuProps> = ({
 	isCardMenu = false,
 	footer,
 	statement,
-	isNavMenu = true
+	isNavMenu=true
 }) => {
 	const { dir } = useUserConfig();
 	const user = useSelector((state: RootState) => state.creator.creator);
@@ -48,7 +47,7 @@ const Menu: FC<MenuProps> = ({
 	const menuRef = useClickOutside(handleClickOutside);
 
 	return (
-		<div ref={(node) => { if (menuRef) menuRef.current = node; }} className='menu'>
+		<div ref={(node) => {if (menuRef) menuRef.current = node;}} className='menu'>
 			<IconButton onClick={() => setIsOpen(!isMenuOpen)}>
 				{isHamburger ? (
 					<BurgerIcon style={{ color: iconColor }} />
@@ -60,12 +59,12 @@ const Menu: FC<MenuProps> = ({
 			<div
 				className={`menu-content ${dir}${isCardMenu ? '--card-menu' : ''} ${isMenuOpen ? 'open' : ''}`}
 			>
-				{isNavMenu && <div
+				{isNavMenu&&<div
 					className={`menu-header ${dir}`}
 					style={{ backgroundColor }}
 				>
 					<h2 className='menu-title'>FreeDi</h2>
-					<Link to='/my' className='menu-user'>
+					<div className='menu-user'>
 						<img
 							className='menu-avatar'
 							src={avatarSrc}
@@ -74,7 +73,7 @@ const Menu: FC<MenuProps> = ({
 						<span className='menu-username'>
 							{user?.displayName}
 						</span>
-					</Link>
+					</div>
 				</div>}
 				{children}
 				{footer && (

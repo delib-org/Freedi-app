@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import '@/view/style/homePage.scss';
-import styles from './HomeMain.module.scss';
+
+// Third party libraries
+import { useNavigate } from 'react-router';
 
 // Redux store
 import MainCard from './mainCard/MainCard';
@@ -11,31 +13,33 @@ import { statementsSubscriptionsSelector, topSubscriptionsSelector } from '@/red
 // Custom components
 import Footer from '@/view/components/footer/Footer';
 import PeopleLoader from '@/view/components/loaders/PeopleLoader';
+import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { StatementType } from 'delib-npm';
 import MainQuestionCard from './mainQuestionCard/MainQuestionCard';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
-import NewStatement from '../../statement/components/newStatement/NewStatement';
-import { selectNewStatementShowModal } from '@/redux/statements/newStatementSlice';
-import { useSelector } from 'react-redux';
-import { creatorSelector } from '@/redux/creator/creatorSlice';
 
 const HomeMain = () => {
 	// Hooks
-	const showNewStatementModal = useAppSelector(selectNewStatementShowModal);
+	const navigate = useNavigate();
 	const [loading, setLoading] = useState(true);
 	const [subPage, setSubPage] = useState<"decisions" | "groups">("groups");
 	const [subPageTitle, setSubPageTitle] = useState<"Decisions" | "Groups">("Decisions");
-	const user = useSelector(creatorSelector);
+	const { user } = useAuthentication();
 	const { t } = useUserConfig();
-	const userId = user?.uid || "";
 
 	const topSubscriptions = useAppSelector(topSubscriptionsSelector)
 		.sort((a, b) => b.lastUpdate - a.lastUpdate)
-		.filter((sub) => sub.user?.uid === user?.uid && sub.statement.statementType === StatementType.group);
+		.filter((sub) => sub.user?.uid === user?.uid);
 
 	const latestDecisions = useAppSelector(statementsSubscriptionsSelector)
 		.filter((sub) => sub.statement.statementType === StatementType.question)
 		.sort((a, b) => b.lastUpdate - a.lastUpdate)
+
+	function handleAddStatement() {
+		navigate('/home/addStatement', {
+			state: { from: window.location.pathname },
+		});
+	}
 
 	useEffect(() => {
 		setTimeout(() => {
@@ -46,15 +50,6 @@ const HomeMain = () => {
 			setLoading(false);
 		}
 	}, [topSubscriptions]);
-
-	useEffect(() => {
-		if (userId && user.advanceUser) {
-			setSubPage("groups");
-		}
-		else {
-			setSubPage("decisions");
-		}
-	}, [userId])
 
 	useEffect(() => {
 		setSubPageTitle(subPage === "decisions" ? "Decisions" : "Groups");
@@ -76,9 +71,6 @@ const HomeMain = () => {
 						topSubscriptions.length > 0 ? 'start' : 'center',
 				}}
 			>
-				{showNewStatementModal && <div className={styles.addStatementModal}>
-					<NewStatement />
-				</div>}
 				<h2>{t(subPageTitle)}</h2>
 				{(() => {
 					if (loading) {
@@ -104,7 +96,7 @@ const HomeMain = () => {
 					));
 				})()}
 			</div>
-			<Footer setSubPage={setSubPage} subPage={subPage} />
+			<Footer addGroup={handleAddStatement} setSubPage={setSubPage} subPage={subPage} />
 		</main>
 	);
 };

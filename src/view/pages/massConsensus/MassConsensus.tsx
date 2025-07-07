@@ -12,7 +12,6 @@ import { useUserConfig } from '@/controllers/hooks/useUserConfig'
 import { setMassConsensusMemberToDB } from '@/controllers/db/massConsensus/setMassConsensus'
 import { setMassConsensusProcess } from '@/redux/massConsensus/massConsensusSlice'
 import { getMassConsensusProcess } from '@/controllers/db/massConsensus/getMassConsensus'
-import Accessibility from '@/view/components/accessibility/Accessibility'
 
 const MassConsensus = () => {
 	const navigate = useNavigate()
@@ -53,7 +52,6 @@ const MassConsensus = () => {
 	return (
 		<HeaderProvider>
 			<HeaderMassConsensus />
-			<Accessibility />
 			<div className={styles.massConsensus} style={{ direction: dir }}>
 				<div className={styles.massConsensus__wrapper}>
 					<Outlet />

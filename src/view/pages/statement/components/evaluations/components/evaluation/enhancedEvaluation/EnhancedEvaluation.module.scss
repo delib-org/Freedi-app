@@ -1,122 +1,106 @@
-.evaluation {
-	display: flex;
-	gap: .5rem;
-	align-items: center;
+.enhanced-evaluation {
+	display: grid;
+	grid-template-columns: auto 1fr auto;
+	grid-template-rows: auto auto;
+	gap: 0.5rem;
 
-
-	.enhanced-evaluation {
+	@media screen and (max-width: 500px) {
 		display: flex;
 		flex-direction: column;
-		gap: 0.3rem;
+		width: fit-content;
+		margin: auto;
+		margin-top: 1rem;
+	}
 
-		@media screen and (max-width: 500px) {
+	.evaluation-thumbs {
+		display: flex;
+		flex-direction: row-reverse;
+		width: fit-content;
+		// direction: ltr; // Default direction
+		gap: 0.5rem;
+
+		.evaluation-thumb {
+			transition: all 0.3s;
 			display: flex;
-			flex-direction: column;
-			width: fit-content;
-			margin: auto;
-			margin-top: 1rem;
-		}
-
-		.evaluation-thumbs {
-			display: flex;
-			flex-direction: row-reverse;
-			width: fit-content;
-			// direction: ltr; // Default direction
-			gap: 0.5rem;
-
-			.evaluation-thumb {
-				transition: all 0.3s;
-				display: flex;
-				border-radius: 3rem;
-				justify-content: center;
-				align-items: center;
-				height: 2rem;
-				min-width: 2rem;
-				cursor: pointer;
-				user-select: none;
-				opacity: 0.8;
-
-				&.active {
-					transform: scale(1.2);
-					z-index: 0;
-					opacity: 1;
-				}
-			}
-		}
-
-		.evaluation-bar {
-			background-color: teal;
-			width: 100%;
-			position: relative;
-
-			&__indicator {
-				background-color: tomato;
-
-				height: .3rem;
-				position: absolute;
-				border-radius: 3px;
-				transition: all 0.3s;
-			}
-		}
-
-		.evaluation-score {
-			display: flex;
-			gap: 0.2rem;
-			align-items: center;
+			border-radius: 3rem;
 			justify-content: center;
-			color: var(--text-body);
-			color: var(--emoji-happy);
+			align-items: center;
+			height: 2rem;
+			min-width: 2rem;
+			cursor: pointer;
+			user-select: none;
+			opacity: 0.8;
 
-			// Adding new styles for tooltips
-			.scoreValue {
-				font-weight: 500;
-				padding: 0.15rem 0.25rem;
-				border-radius: 3px;
-				transition: background-color 0.2s ease;
-				direction: ltr;
-
-				&:hover {
-					background-color: rgba(0, 0, 0, 0.05); // subtle highlight on hover
-				}
+			&.active {
+				transform: scale(1.2);
+				z-index: 0;
+				opacity: 1;
 			}
-
-			&.negative .scoreValue {
-				color: var(--emoji-thinking);
-			}
-
-
-		}
-
-		.explain {
-			justify-content: space-between;
-			color: var(--text-label);
-
-			&--ltr {
-				flex-direction: row-reverse;
-			}
-		}
-
-
-		.evaluation-explain {
-			display: flex;
-			justify-content: space-between;
-			font-weight: 300;
-			font-size: 0.8rem;
-			color: rgba(0, 0, 0, 0.711);
-			text-align: center;
-			width: 100%;
 		}
 	}
 
-	.total-evaluators {
-		direction: ltr;
-		opacity: 0.8;
-		transition: opacity 0.2s ease;
+	.evaluation-score {
+		display: flex;
+		gap: 0.2rem;
+		align-items: center;
+		justify-content: center;
+		color: var(--text-body);
+		color: var(--emoji-happy);
+
+		// Adding new styles for tooltips
+		.scoreValue {
+			font-weight: 500;
+			padding: 0.15rem 0.25rem;
+			border-radius: 3px;
+			transition: background-color 0.2s ease;
+			direction: ltr;
+
+			&:hover {
+				background-color: rgba(0, 0, 0, 0.05); // subtle highlight on hover
+			}
+		}
+
+		&.negative .scoreValue {
+			color: var(--emoji-thinking);
+		}
+
+		.total-evaluators {
+			direction: ltr;
+			opacity: 0.8;
+			transition: opacity 0.2s ease;
+
+			&:hover {
+				opacity: 1;
+			}
+		}
+	}
+
+	.explain {
+		justify-content: space-between;
 		color: var(--text-label);
 
-		&:hover {
-			opacity: 1;
+		&--ltr {
+			flex-direction: row-reverse;
 		}
+	}
+
+	.evaluation-bar {
+		display: flex;
+		align-items: center;
+		flex-direction: column;
+		gap: 0.6rem;
+		color: rgba(0, 0, 0, 0.711);
+		font-size: 0.8rem;
+	}
+
+	.evaluation-explain {
+		display: flex;
+		justify-content: space-between;
+		font-weight: 300;
+		font-size: 0.8rem;
+		color: rgba(0, 0, 0, 0.711);
+		text-align: center;
+		width: 100%;
 	}
 }
 

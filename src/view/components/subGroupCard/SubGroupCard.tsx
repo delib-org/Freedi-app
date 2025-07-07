@@ -15,7 +15,7 @@ const SubGroupCard: FC<Props> = ({ statement }) => {
 	const { Icon, backgroundColor, text } = useSubGroupCard(statement);
 
 	try {
-		const { results, topVotedOption, evaluationSettings, hide } = statement;
+		const { results, topVotedOption, evaluationSettings } = statement;
 		const evaluationUI = evaluationSettings?.evaluationUI;
 		const isDecidedByVoting = evaluationUI === EvaluationUI.voting;
 		const shouldSeeVoting = isDecidedByVoting && topVotedOption;
@@ -28,7 +28,6 @@ const SubGroupCard: FC<Props> = ({ statement }) => {
 				style={{
 					border: `1px solid ${backgroundColor}`,
 					borderLeft: `5px solid ${backgroundColor}`,
-					opacity: hide ? 0.5 : 1
 				}}
 			>
 				<Link

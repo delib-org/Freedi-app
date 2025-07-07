@@ -127,6 +127,7 @@ const NodeMenu: FC<Props> = ({
 			{statement.statementType === StatementType.option && (
 				<div className={styles.rateMenuContainer}>
 					<EnhancedEvaluation
+						shouldDisplayScore={false}
 						statement={statement}
 					/>
 				</div>

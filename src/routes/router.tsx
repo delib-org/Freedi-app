@@ -33,7 +33,6 @@ import Page404 from '@/view/pages/page404/Page404';
 import ThankYou from '@/view/pages/massConsensus/thankYou/ThankYou';
 import { MassConsensusPageUrls } from 'delib-npm';
 import UserDemographicMC from '@/view/pages/massConsensus/massConsesusQuestion/userDemographicMC/UserDemographicMC';
-import My from '@/view/pages/my/My';
 
 // Define errorRoutes
 const errorRoutes = [
@@ -179,10 +178,6 @@ export const router = createBrowserRouter([
 				element: <ProtectedLayout />,
 				children: protectedRoutes,
 			},
-			{
-				element: <My />,
-				path: 'my',
-			}
 		],
 	},
 	// Error routes at root level.

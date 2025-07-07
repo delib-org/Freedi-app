@@ -42,14 +42,13 @@ function CustomNode({ data }: NodeProps) {
 	const { result, parentStatement, dimensions } = data;
 	const { statementId, statement } = result.top as Statement;
 
-	const { shortVersion: nodeTitle } = statementTitleToDisplay(statement, 100);
+	const { shortVersion: nodeTitle } = statementTitleToDisplay(statement, 80);
 	const { mapContext, setMapContext } = useMapContext();
 	const selectedId = mapContext?.selectedId ?? null;
 	const showBtns = selectedId === statementId;
 	const [isEdit, setIsEdit] = useState(false);
 	const [title, setTitle] = useState(nodeTitle);
 	const [localStatement, setLocalStatement] = useState(result.top);
-	const [wordLength, setWordLength] = useState<null | number>(null);
 
 	const statementColor = useStatementColor({ statement: localStatement });
 	const [showMenu, setShowMenu] = useState(false);
@@ -68,22 +67,9 @@ function CustomNode({ data }: NodeProps) {
 	const menuButtonRef = useRef(null);
 	const menuContainerRef = useRef(null);
 
-	const getNodeWidth = () => {
-		if (isEdit && wordLength) {
-			return `${Math.max(wordLength * 8, 100)}px`;
-		}
-		if (dimensions) {
-			return `${dimensions.width}px`;
-		}
-
-		return 'auto';
-	};
-
-	const nodeWidth = getNodeWidth();
-
 	const dynamicNodeStyle = {
 		...nodeStyle(statementColor),
-		width: nodeWidth,
+		width: dimensions ? `${dimensions.width}px` : 'auto',
 		minHeight: 'auto',
 	};
 
@@ -177,12 +163,7 @@ function CustomNode({ data }: NodeProps) {
 			updateStatementText(result.top, title);
 			setIsEdit(false);
 			setTitle(title);
-			setWordLength(null);
 		}
-	}
-	function onTextChang(e) {
-		const textLength = e.target.value.length;
-		setWordLength(textLength);
 	}
 
 	return (
@@ -199,10 +180,10 @@ function CustomNode({ data }: NodeProps) {
 				className='node__content'
 			>
 				{isEdit ? (
-					<textarea
+					<input
+						type='text'
 						defaultValue={title}
 						onBlur={() => setIsEdit(false)}
-						onChange={(e) => onTextChang(e)}
 						onKeyUp={(e) => handleUpdateStatement(e)}
 					/>
 				) : (

@@ -11,7 +11,6 @@ import { Creator } from 'delib-npm';
 import { convertFirebaseUserToCreator } from '@/types/user/userUtils';
 import { LocalStorageObjects } from '@/types/localStorage/LocalStorageObjects';
 import { setCreator } from '@/redux/creator/creatorSlice';
-import { setUserToDB } from '../db/user/setUser';
 
 interface AuthState {
 	isAuthenticated: boolean;
@@ -21,7 +20,7 @@ interface AuthState {
 	initialRoute?: string;
 }
 
-export const useAuthentication = (): AuthState => {
+export const useAuthentication = ():AuthState => {
 	const [authState, setAuthState] = useState<AuthState>({
 		isAuthenticated: false,
 		isLoading: true,
@@ -42,10 +41,9 @@ export const useAuthentication = (): AuthState => {
 	// Main auth effect
 	useEffect(() => {
 		const unsubscribe = onAuthStateChanged(auth, (user) => {
-
+		
 			if (user) {
 				// User is authenticated
-
 				setAuthState({
 					isAuthenticated: true,
 					isLoading: false,
@@ -54,7 +52,6 @@ export const useAuthentication = (): AuthState => {
 					initialRoute: initialRoute.current?.pathname,
 				});
 				dispatch(setCreator(convertFirebaseUserToCreator(user)));
-				setUserToDB(convertFirebaseUserToCreator(user));
 			} else {
 				// User is not authenticated
 				setAuthState({

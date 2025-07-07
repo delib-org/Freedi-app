@@ -142,9 +142,9 @@ export const setStatementToDB = async ({
 	parentStatement,
 }: SetStatementToDBParams): Promise<
 	| {
-		statementId: string;
-		statement: Statement;
-	}
+			statementId: string;
+			statement: Statement;
+	  }
 	| undefined
 > => {
 	try {
@@ -173,8 +173,8 @@ export const setStatementToDB = async ({
 			parentStatement === 'top'
 				? statement.statementId
 				: statement?.topParentId ||
-				parentStatement?.topParentId ||
-				'top';
+					parentStatement?.topParentId ||
+					'top';
 
 		const siblingOptions = getSiblingOptionsByParentId(
 			parentId,
@@ -259,13 +259,13 @@ export function createStatement({
 	statementType,
 	questionType,
 	enableAddEvaluationOption = true,
-	enableNavigationalElements,
+	enableNavigationalElements = true,
 	enableAddVotingOption = true,
 	enhancedEvaluation = true,
 	showEvaluation = true,
 	resultsBy = ResultsBy.consensus,
 	numberOfResults = 1,
-	hasChildren,
+	hasChildren = true,
 	defaultLanguage,
 	membership,
 	stageSelectionType,
@@ -283,12 +283,6 @@ export function createStatement({
 		if (!creator) throw new Error('Creator is undefined');
 		if (!statementType) throw new Error('Statement type is undefined');
 		const statementId = getRandomUID();
-
-		//get default values for simple or advanced users
-		enableNavigationalElements = defaultValue(
-			enableNavigationalElements, creator?.advanceUser
-		);
-		hasChildren = defaultValue(hasChildren, creator?.advanceUser);
 
 		const parentId =
 			parentStatement !== 'top' ? parentStatement?.statementId : 'top';
@@ -385,12 +379,6 @@ export function createStatement({
 		}
 
 		return newStatement;
-
-		function defaultValue(value: boolean | undefined, isAdvanceUser: boolean | undefined): boolean {
-			if (value !== undefined) return value;
-
-			return isAdvanceUser ? true : false;
-		}
 	} catch (error) {
 		console.error(error);
 
@@ -713,32 +701,5 @@ export async function updateStatementsOrderToDB(statements: Statement[]) {
 		await batch.commit();
 	} catch (error) {
 		console.error(error);
-	}
-}
-
-export async function toggleStatementHide(statementId: string): Promise<boolean | undefined> {
-	try {
-		if (!statementId) throw new Error('Statement ID is undefined');
-
-		const statementRef = doc(
-			FireStore,
-			Collections.statements,
-			statementId
-		);
-
-		const statementDB = await getDoc(statementRef);
-
-		if (!statementDB.exists()) throw new Error('Statement not found');
-		const statementDBData = statementDB.data() as Statement;
-
-		const hide = !(statementDBData.hide === true);
-
-		await updateDoc(statementRef, { hide });
-
-		return hide;
-	} catch (error) {
-		console.error(error);
-
-		return undefined;
 	}
 }
