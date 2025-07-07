@@ -28,6 +28,7 @@ import Loader from '@/view/components/loaders/Loader';
 import { StatementSubscription, Role, Statement, StatementType } from 'delib-npm';
 import MembershipSettings from '../membershipSettings/MembershipSettings';
 import UserDataSetting from '../UserDataSettings/UserDataSetting';
+import MembersSettings from '../membership/MembersSettings';
 
 interface StatementSettingsFormProps {
 	statement: Statement;
@@ -129,7 +130,9 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 						{t('Save')}
 					</button>
 				</form>
+
 				<MembershipSettings statement={statement} setStatementToEdit={setStatementToEdit} />
+				<MembersSettings statement={statement} />
 				{statement.statementType === StatementType.question && <ChoseBySettings {...statementSettingsProps} />}
 				{!isNewStatement && (
 					<>

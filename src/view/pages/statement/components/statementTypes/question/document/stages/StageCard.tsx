@@ -20,7 +20,7 @@ interface Props {
 
 const StageCard: FC<Props> = ({ statement, isDescription, isSuggestions }) => {
 	const { dir, t } = useUserConfig();
-	const [expanded, setExpanded] = useState(false);
+	const [expanded, setExpanded] = useState(true);
 	const contentRef = useRef<HTMLDivElement>(null);
 	const [contentHeight, setContentHeight] = useState(0);
 
@@ -87,11 +87,7 @@ const StageCard: FC<Props> = ({ statement, isDescription, isSuggestions }) => {
 					<NavLink to={`/stage/${statement.statementId}`}>
 						<Button
 							buttonType={ButtonType.SECONDARY}
-							text={
-								chosen.length > 0
-									? t('View other suggestions')
-									: t('Add your suggestion')
-							}
+							text={t('Enter sub-question')}
 						/>
 					</NavLink>
 				)}

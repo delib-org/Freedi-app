@@ -1,10 +1,16 @@
-.install-pwa {
+.installPwa {
   position: fixed;
   bottom: 20px;
   right: 20px;
   z-index: 9999;
 
-  .install-button {
+  @media screen and (max-width: 1024px) {
+    bottom: 115px;
+    right: 50%;
+    transform: translateX(50%);
+  }
+
+  .installButton {
     display: flex;
     align-items: center;
     background-color: #3367d6;
@@ -22,7 +28,7 @@
       background-color: #2a56c6;
     }
 
-    .install-icon {
+    .installIcon {
       margin-inline-end: 8px;
       width: 22px;
       height: 22px;

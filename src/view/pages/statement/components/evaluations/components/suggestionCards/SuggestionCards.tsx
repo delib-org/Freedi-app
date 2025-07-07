@@ -5,15 +5,17 @@ import { sortSubStatements } from '../../statementsEvaluationCont';
 import SuggestionCard from './suggestionCard/SuggestionCard';
 import styles from './SuggestionCards.module.scss';
 import EmptyScreen from '../emptyScreen/EmptyScreen';
-import { Statement, SortType, SelectionFunction } from 'delib-npm';
+import { Statement, SortType, SelectionFunction, Role } from 'delib-npm';
 import { getStatementFromDB } from '@/controllers/db/statements/getStatement';
 import {
 	setStatement,
 	statementOptionsSelector,
 	statementSelector,
+	statementSubscriptionSelector,
 } from '@/redux/statements/statementsSlice';
 
 import { listenToEvaluations } from '@/controllers/db/evaluation/getEvaluation';
+import { creatorSelector } from '@/redux/creator/creatorSlice';
 
 interface Props {
 	propSort?: SortType;
@@ -29,6 +31,9 @@ const SuggestionCards: FC<Props> = ({
 	const { sort: _sort, statementId } = useParams();
 
 	const sort = propSort || _sort || SortType.newest;
+	const creator = useSelector(creatorSelector);
+	const parentSubscription = useSelector(statementSubscriptionSelector(statementId));
+	const isAdmin = creator?.uid === parentSubscription?.statement?.creatorId || parentSubscription?.role === Role.admin;
 
 	const dispatch = useDispatch();
 	const statement = useSelector(statementSelector(statementId));
@@ -39,14 +44,16 @@ const SuggestionCards: FC<Props> = ({
 		statementOptionsSelector(statement?.statementId)
 	);
 
+	const sortedSubStatementIds = _subStatements.sort((a, b) => a.consensus - b.consensus).map((sub: Statement) => sub.statementId).join("");
+
 	const subStatements =
-		propSubStatements ||
-		(selectionFunction
-			? _subStatements.filter(
-				(sub: Statement) =>
-					sub.evaluation.selectionFunction === selectionFunction
-			)
-			: _subStatements);
+		(propSubStatements ||
+			(selectionFunction
+				? _subStatements.filter(
+					(sub: Statement) =>
+						sub.evaluation.selectionFunction === selectionFunction
+				)
+				: _subStatements)).filter(sub => sub.hide !== true || sub.creatorId === creator?.uid || isAdmin) || [];
 
 	useEffect(() => {
 		if (!statement && statementId)
@@ -69,7 +76,7 @@ const SuggestionCards: FC<Props> = ({
 			30
 		);
 		setTotalHeight(_totalHeight);
-	}, [sort]);
+	}, [sort, sortedSubStatementIds]);
 
 	useEffect(() => {
 		const _totalHeight = subStatements.reduce(
