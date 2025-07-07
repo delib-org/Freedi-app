@@ -17,9 +17,10 @@ interface Props {
 	onDeleteOption: (questionIndex: number, optionIndex: number) => void;
 	onDeleteQuestion: (questionIndex: number) => void;
 	onUpdateQuestion?: (questionIndex: number, updatedQuestion: Partial<UserQuestion>) => void;
+	onRequiredQuestion?: (questionIndex: number, isChecked: boolean) => void;
 }
 
-const UserQuestionComp = ({ userQuestions, questionIndex, onAddOption, onDeleteOption, onDeleteQuestion, onUpdateQuestion }: Props) => {
+const UserQuestionComp = ({ userQuestions, questionIndex, onAddOption, onDeleteOption, onDeleteQuestion, onUpdateQuestion, onRequiredQuestion }: Props) => {
 	const { t } = useUserConfig();
 	const dispatch = useDispatch();
 	const [newOptionText, setNewOptionText] = useState('');
@@ -79,9 +80,10 @@ const UserQuestionComp = ({ userQuestions, questionIndex, onAddOption, onDeleteO
 	// 	}
 	// };
 
-  const handleRequiredQuestion = () => {
-
-  }
+	  const handleEditQuestion = () => {
+		setIsEditingQuestion(true);
+		setEditedQuestionText(userQuestions.question)
+  	}
 
 	function handleChangeOptionColor(optionIndex: number, color: string) {
 
@@ -124,7 +126,7 @@ const UserQuestionComp = ({ userQuestions, questionIndex, onAddOption, onDeleteO
 					</div>
 				) : (
 					<>
-						<p className={styles.questionTitle} onClick={() => setIsEditingQuestion(true)}>
+						<p className={styles.questionTitle} onClick={() => handleEditQuestion()}>
 							{userQuestions.question}
 						</p>
 						<div className={styles.questionActions}>
@@ -186,8 +188,8 @@ const UserQuestionComp = ({ userQuestions, questionIndex, onAddOption, onDeleteO
 				<h3 className={styles.switcherText}>required</h3>
 					<CustomSwitchSmall
 						label='Document Question'
-						checked={false}
-						setChecked={handleRequiredQuestion}
+						checked={userQuestions.required === true}
+						setChecked={(isChecked: boolean) => onRequiredQuestion?.(questionIndex, isChecked)}
 						textChecked={t('')}
 						textUnchecked={t('')}
 						imageChecked={""}

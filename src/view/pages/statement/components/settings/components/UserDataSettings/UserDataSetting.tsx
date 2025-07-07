@@ -41,7 +41,8 @@ const UserDataSetting: FC<Props> = ({ statement }) => {
 	const [openDeleteQuestion, setOpenDeleteQuestion] = useState(false);
 	const userQuestions: UserQuestion[] = useSelector(selectUserQuestionsByStatementId(statement.statementId));
 	const [newQuestionText, setNewQuestionText] = useState('');
-	const [currentlyEditingQuestionId, setCurrentlyEditingQuestionId] = useState('');
+	const [newQuestionRequired, setNewQuestionRequired] = useState(false);
+
 	const [newCardCreate, setNewCardCreate] = useState(true);
 	
 	function closeModal() {
@@ -50,48 +51,35 @@ const UserDataSetting: FC<Props> = ({ statement }) => {
 
 	const handleQuestionInputChange = (value: string) => {
 		setNewQuestionText(value);
-
-		const normalizedInput = value.trim().toLowerCase();
-
-		const existing = userQuestions.find(
-			(q) => q.question.trim().toLowerCase() === normalizedInput
-		);
-
-		setCurrentlyEditingQuestionId(existing ? existing.userQuestionId : null);
 	};
 
 	const handleAddNewQuestion = () => {
 		 const newQuestion = newQuestionText.trim();
 		if (!newQuestion) return;
 
-		if (currentlyEditingQuestionId) {
-			// Update existing
-			const existingIndex = userQuestions.findIndex(
-			(q) => q.userQuestionId === currentlyEditingQuestionId
-			);
-
-			const updatedQuestion = {
-			...userQuestions[existingIndex],
-			question: newQuestion,
-			};
-
-			dispatch(setUserQuestion(updatedQuestion));
-			setUserDataQuestion(statement, updatedQuestion);
-		} else {
-			// Create new
 			const newQuestionObj: UserQuestion = {
-			userQuestionId: getRandomUID(),
-			question: newQuestion,
-			type: selectedOption.type,
-			statementId: statement.statementId,
-			options: [],
+				userQuestionId: getRandomUID(),
+				question: newQuestion,
+				type: selectedOption.type,
+				statementId: statement.statementId,
+				options: [],
+				required: newQuestionRequired,
 			};
+
+			setNewQuestionRequired(false);
 			setNewCardCreate(false);
 			setNewQuestionText('');
 			dispatch(setUserQuestion(newQuestionObj));
 			setUserDataQuestion(statement, newQuestionObj);
-  		}
+  		// }
 	}
+
+	const handleKeyPressOnAddQuestion = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  		if (e.key === 'Enter') {
+    		e.preventDefault();
+    		handleAddNewQuestion();
+  		}
+	};
 
 	const handleDeleteQuestion = (questionIndex: number) => {
 		const questionToDelete = userQuestions[questionIndex]
@@ -153,9 +141,15 @@ const UserDataSetting: FC<Props> = ({ statement }) => {
 		setOpen(false);
   };
 
-  const handleRequiredQuestion = () => {
+  const handleRequiredQuestion = (questionIndex: number, isChecked: boolean) => {
+	const question = userQuestions[questionIndex];
+	if (!question || !question.userQuestionId) return;
 
-  }
+	const updatedQuestion = { ...question, required: isChecked };
+
+	dispatch(setUserQuestion(updatedQuestion));
+	setUserDataQuestion(statement, updatedQuestion);
+};
 
 	return (
 		<div>
@@ -173,6 +167,7 @@ const UserDataSetting: FC<Props> = ({ statement }) => {
 								name="newQuestion"
 								value={newQuestionText}
 								onChange={(e) => handleQuestionInputChange(e.target.value)}
+								onKeyDown={handleKeyPressOnAddQuestion}
 								onBlur={() => handleAddNewQuestion()}
 								placeholder={t('Write question here...')}
 								className={styles.questionInput}
@@ -212,10 +207,8 @@ const UserDataSetting: FC<Props> = ({ statement }) => {
 									<h3 className={styles.switcherText}>required</h3>
 									<CustomSwitchSmall
 										label='Document Question'
-										checked={
-											false
-										}
-										setChecked={handleRequiredQuestion}
+										checked={newQuestionRequired}
+										setChecked={setNewQuestionRequired}
 										textChecked={t('')}
 										textUnchecked={t('')}
 										imageChecked={""}
@@ -244,6 +237,7 @@ const UserDataSetting: FC<Props> = ({ statement }) => {
 								onDeleteOption={handleDeleteOption}
 								onDeleteQuestion={handleDeleteQuestion}
 								onUpdateQuestion={handleUpdateQuestion}
+								onRequiredQuestion={handleRequiredQuestion}
 							/>
 						))}
 						<div className={styles.modalButtons}>
