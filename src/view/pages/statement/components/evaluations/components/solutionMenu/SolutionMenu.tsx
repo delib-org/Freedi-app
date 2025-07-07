@@ -6,7 +6,7 @@ import EyeCrossIcon from '@/assets/icons/eyeCross.svg?react';
 import LightBulbIcon from '@/assets/icons/lightBulbIcon.svg?react';
 import QuestionMarkIcon from '@/assets/icons/questionIcon.svg?react';
 import { deleteStatementFromDB } from '@/controllers/db/statements/deleteStatements';
-import { updateIsQuestion } from '@/controllers/db/statements/setStatements';
+import { toggleStatementHide, updateIsQuestion } from '@/controllers/db/statements/setStatements';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import Menu from '@/view/components/menu/Menu';
 import MenuOption from '@/view/components/menu/MenuOption';
@@ -52,6 +52,11 @@ const SolutionMenu: FC<Props> = ({
 			return () => clearTimeout(timer);
 		}
 	}, [isCardMenuOpen]);
+
+	function handleToggleHideStatement() {
+		toggleStatementHide(statement.statementId);
+
+	}
 
 	if (!isAuthorized) return null;
 
@@ -113,7 +118,7 @@ const SolutionMenu: FC<Props> = ({
 							: t('Hide')
 					}
 					onOptionClick={() => {
-						updateIsQuestion(statement);
+						handleToggleHideStatement();
 						setIsCardMenuOpen(false);
 					}}
 				/>

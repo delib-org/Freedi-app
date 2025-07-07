@@ -715,3 +715,30 @@ export async function updateStatementsOrderToDB(statements: Statement[]) {
 		console.error(error);
 	}
 }
+
+export async function toggleStatementHide(statementId: string): Promise<boolean | undefined> {
+	try {
+		if (!statementId) throw new Error('Statement ID is undefined');
+
+		const statementRef = doc(
+			FireStore,
+			Collections.statements,
+			statementId
+		);
+
+		const statementDB = await getDoc(statementRef);
+
+		if (!statementDB.exists()) throw new Error('Statement not found');
+		const statementDBData = statementDB.data() as Statement;
+
+		const hide = !(statementDBData.hide === true);
+
+		await updateDoc(statementRef, { hide });
+
+		return hide;
+	} catch (error) {
+		console.error(error);
+
+		return undefined;
+	}
+}
