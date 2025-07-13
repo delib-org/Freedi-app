@@ -115,12 +115,14 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 						statement={statement}
 						setStatementToEdit={setStatementToEdit}
 					/>
-
-					<SectionTitle title={t('General Settings')} />
-					<section className='switches-area'>
-						<AdvancedSettings {...statementSettingsProps} />
-					</section>
-
+					{!isNewStatement && (
+						<>
+							<SectionTitle title={t('General Settings')} />
+							<section className='switches-area'>
+								<AdvancedSettings {...statementSettingsProps} />
+							</section>
+						</>
+					)}
 					<button
 						type='submit'
 						className='submit-button btn'
@@ -130,12 +132,12 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 						{t('Save')}
 					</button>
 				</form>
-
-				<MembershipSettings statement={statement} setStatementToEdit={setStatementToEdit} />
-				<MembersSettings statement={statement} />
-				{statement.statementType === StatementType.question && <ChoseBySettings {...statementSettingsProps} />}
 				{!isNewStatement && (
 					<>
+						<MembershipSettings statement={statement} setStatementToEdit={setStatementToEdit} />
+						<MembersSettings statement={statement} />
+						{statement.statementType === StatementType.question && <ChoseBySettings {...statementSettingsProps} />}
+
 						<UploadImage
 							statement={statementSettingsProps.statement}
 							image={image}
