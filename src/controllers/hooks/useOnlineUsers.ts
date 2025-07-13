@@ -4,16 +4,16 @@ import {
 	setUserOnlineToDB,
 	updateUserTabFocusToDB,
 } from '../db/online/setOnline';
-import { store } from '@/redux/store';
 import { ListenToOnlineUsers } from '../db/online/getOnline';
+import { useAuthentication } from './useAuthentication';
 
 export const useOnlineUsers = (statementId) => {
 	const [onlineUsers, setOnlineUsers] = useState([]);
 	const [isLoading, setIsLoading] = useState(true);
 	const [error, setError] = useState(null);
 
-	const currentUser = store.getState()?.creator?.creator;
-
+	const { creator: currentUser, isLoading: userLoading } =
+		useAuthentication();
 	const isInitializedRef = useRef(false);
 	const previousStatementRef = useRef(null);
 
@@ -32,7 +32,8 @@ export const useOnlineUsers = (statementId) => {
 		if (
 			previousStatementId &&
 			previousStatementId !== statementId &&
-			currentUser
+			currentUser &&
+			!userLoading
 		) {
 			cleanup(previousStatementId, currentUser);
 		}
@@ -45,7 +46,13 @@ export const useOnlineUsers = (statementId) => {
 	}, [statementId, currentUser]);
 	// Initialize user as online when hook mounts
 	useEffect(() => {
-		if (!statementId || !currentUser || isInitializedRef.current) return;
+		if (
+			!statementId ||
+			!currentUser ||
+			userLoading ||
+			isInitializedRef.current
+		)
+			return;
 
 		const initializeOnlineUser = async () => {
 			try {
