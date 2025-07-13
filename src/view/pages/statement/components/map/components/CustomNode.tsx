@@ -1,18 +1,20 @@
-import React, { useEffect, useState, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 // Third party
 import { useNavigate } from 'react-router';
 import { Handle, NodeProps, useStore } from 'reactflow';
 // Hooks
+// Styles
+import '../mapHelpers/reactFlow.scss';
 // Icons
-import PlusIcon from '@/assets/icons/plusIcon.svg?react';
 import EllipsisIcon from '@/assets/icons/ellipsisIcon.svg?react';
+import PlusIcon from '@/assets/icons/plusIcon.svg?react';
 // Statements functions
+import { updateStatementText } from '@/controllers/db/statements/setStatements';
 import { statementTitleToDisplay } from '@/controllers/general/helpers';
 import { useMapContext } from '@/controllers/hooks/useMap';
 import useStatementColor from '@/controllers/hooks/useStatementColor';
 import { Statement } from 'delib-npm';
 import NodeMenu from './nodeMenu/NodeMenu';
-import { updateStatementText } from '@/controllers/db/statements/setStatements';
 
 const nodeStyle = (statementColor: {
 	backgroundColor: string;
@@ -186,17 +188,17 @@ function CustomNode({ data }: NodeProps) {
 	}
 
 	return (
-		<>
+		<div className={`node__container`}>
 			<button
 				onDoubleClick={handleNodeDoubleClick}
 				onClick={handleNodeClick}
 				data-id={statementId}
+				className={`node__content ${data.animate ? 'tremble-animate' : ''}`}
 				style={{
 					...dynamicNodeStyle,
 					textAlign: 'center',
 					wordBreak: 'break-word',
 				}}
-				className='node__content'
 			>
 				{isEdit ? (
 					<textarea
@@ -292,7 +294,7 @@ function CustomNode({ data }: NodeProps) {
 			)}
 			<Handle type='target' position={mapContext.targetPosition} />
 			<Handle type='source' position={mapContext.sourcePosition} />
-		</>
+		</div>
 	);
 }
 export default CustomNode;
