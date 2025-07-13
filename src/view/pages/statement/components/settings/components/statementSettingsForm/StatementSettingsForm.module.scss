@@ -1,4 +1,4 @@
-.statement-settings-form {
+.statementSettingsForm {
 	position: relative;
 	display: flex;
 	flex-direction: column;
@@ -25,13 +25,13 @@
 		color: #232f4a;
 	}
 
-	.switches-area {
+	.switchesArea {
 		display: flex;
 		flex-wrap: wrap;
 		gap: 3rem 5rem;
 	}
 
-	.get-members-area {
+	.getMembersArea {
 		height: fit-content;
 		display: flex;
 		flex-direction: column;
@@ -39,16 +39,16 @@
 		gap: 1rem;
 		padding-block: 1rem;
 
-		.evaluators-button {
+		.evaluatorsButton {
 			color: var(--text-blue);
 		}
 
-		.voters-button {
+		.votersButton {
 			color: var(--text-blue);
 		}
 	}
 
-	.submit-button {
+	.submitButton {
 		transform: scale(1.25);
 		transition: all 0.13s ease-in-out;
 		color: var(--white);
@@ -65,7 +65,7 @@
 		}
 	}
 
-	.form-button {
+	.formButton {
 		display: flex;
 		padding: 0.40625rem var(--Spacing-16, 1rem);
 		justify-content: center;
@@ -75,7 +75,7 @@
 		border: var(--Spacing-0, 1px) solid var(--btn-tertiary);
 	}
 
-	.loader-box {
+	.loaderBox {
 		display: flex;
 		justify-content: center;
 		align-items: center;
