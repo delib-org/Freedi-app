@@ -18,7 +18,7 @@ import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import UploadImage from '@/view/components/uploadImage/UploadImage';
 
 // Hooks & Helpers
-import './StatementSettingsForm.scss';
+import styles from './StatementSettingsForm.module.scss';
 
 // icons
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
@@ -96,8 +96,8 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 
 		if (loading)
 			return (
-				<div className='statement-settings-form'>
-					<div className='loader-box'>
+				<div className={styles.statementSettingsForm}>
+					<div className={styles.loaderBox}>
 						<Loader />
 					</div>
 				</div>
@@ -108,7 +108,7 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 			<div className="wrapper">
 				<form
 					onSubmit={handleSubmit}
-					className='statement-settings-form'
+					className={styles.statementSettingsForm}
 					data-cy='statement-settings-form'
 				>
 					<TitleAndDescription
@@ -118,14 +118,14 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 					{!isNewStatement && (
 						<>
 							<SectionTitle title={t('General Settings')} />
-							<section className='switches-area'>
+							<section className={styles.switchesArea}>
 								<AdvancedSettings {...statementSettingsProps} />
 							</section>
 						</>
 					)}
 					<button
 						type='submit'
-						className='submit-button btn'
+						className={`${!isNewStatement && styles.submitButton} btn btn--primary`}
 						aria-label='Submit button'
 						data-cy='settings-statement-submit-btn'
 					>
@@ -146,13 +146,13 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 						<QuestionSettings {...statementSettingsProps} />
 						{isQuestion && <UserDataSetting statement={statement} />}
 						<SectionTitle title={t('Members')} />
-						<section className='get-members-area'>
+						<section className={styles.getMembersArea}>
 							<GetVoters
 								statementId={statementId}
 								joinedMembers={joinedMembers}
 							/>
 						</section>
-						<section className='get-members-area'>
+						<section className={styles.getMembersArea}>
 							<GetEvaluators statementId={statementId} />
 						</section>
 					</>
