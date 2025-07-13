@@ -44,17 +44,17 @@ function CustomNode({ data }: NodeProps) {
 	const { result, parentStatement, dimensions } = data;
 	const { statementId, statement } = result.top as Statement;
 
-	const { shortVersion: nodeTitle } = statementTitleToDisplay(statement, 100);
 	const { mapContext, setMapContext } = useMapContext();
 	const selectedId = mapContext?.selectedId ?? null;
 	const showBtns = selectedId === statementId;
 	const [isEdit, setIsEdit] = useState(false);
-	const [title, setTitle] = useState(nodeTitle);
 	const [localStatement, setLocalStatement] = useState(result.top);
 	const [wordLength, setWordLength] = useState<null | number>(null);
 
 	const statementColor = useStatementColor({ statement: localStatement });
 	const [showMenu, setShowMenu] = useState(false);
+
+	const { shortVersion: title } = statementTitleToDisplay(statement, 100);
 
 	const { isVoted, isChosen, statementType } = result.top;
 	useEffect(() => {
@@ -178,7 +178,6 @@ function CustomNode({ data }: NodeProps) {
 
 			updateStatementText(result.top, title);
 			setIsEdit(false);
-			setTitle(title);
 			setWordLength(null);
 		}
 	}
