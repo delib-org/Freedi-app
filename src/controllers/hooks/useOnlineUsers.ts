@@ -15,29 +15,34 @@ export const useOnlineUsers = (statementId) => {
 	const currentUser = store.getState()?.creator?.creator;
 
 	const isInitializedRef = useRef(false);
-	const cleanupRef = useRef({ statementId: null, currentUser: null });
+	const previousStatementRef = useRef(null);
 
 	// Define cleanup function first
-	const cleanup = () => {
-		const {
-			statementId: cleanupStatementId,
-			currentUser: cleanupCurrentUser,
-		} = cleanupRef.current;
-		if (cleanupStatementId && cleanupCurrentUser) {
-			removeUserFromOnlineToDB(
-				cleanupStatementId,
-				cleanupCurrentUser.uid
-			).catch((err) =>
-				console.error('Error removing user from online:', err)
+	const cleanup = (targetStatementId, targetUser) => {
+		if (targetStatementId && targetUser) {
+			removeUserFromOnlineToDB(targetStatementId, targetUser.uid).catch(
+				(err) => console.error('Error removing user from online:', err)
 			);
 		}
 	};
-
-	// Update cleanup ref when values change
 	useEffect(() => {
-		cleanupRef.current = { statementId, currentUser };
-	}, [statementId, currentUser]);
+		const previousStatementId = previousStatementRef.current;
 
+		// If we have a previous statement and it's different from current, clean it up
+		if (
+			previousStatementId &&
+			previousStatementId !== statementId &&
+			currentUser
+		) {
+			cleanup(previousStatementId, currentUser);
+		}
+
+		// Update the ref with current statementId
+		previousStatementRef.current = statementId;
+
+		// Reset initialization flag when statementId changes
+		isInitializedRef.current = false;
+	}, [statementId, currentUser]);
 	// Initialize user as online when hook mounts
 	useEffect(() => {
 		if (!statementId || !currentUser || isInitializedRef.current) return;
@@ -136,21 +141,20 @@ export const useOnlineUsers = (statementId) => {
 	useEffect(() => {
 		if (!statementId || !currentUser) return;
 
-		window.addEventListener('beforeunload', cleanup);
-		window.addEventListener('unload', cleanup);
+		const handleBeforeUnload = () => {
+			cleanup(statementId, currentUser);
+		};
 
+		window.addEventListener('beforeunload', handleBeforeUnload);
+		window.addEventListener('unload', handleBeforeUnload);
+
+		// Cleanup on component unmount
 		return () => {
-			window.removeEventListener('beforeunload', cleanup);
-			window.removeEventListener('unload', cleanup);
+			window.removeEventListener('beforeunload', handleBeforeUnload);
+			window.removeEventListener('unload', handleBeforeUnload);
+			cleanup(statementId, currentUser);
 		};
 	}, [statementId, currentUser]);
-
-	// Cleanup ONLY on component unmount (empty dependency array)
-	useEffect(() => {
-		return () => {
-			cleanup();
-		};
-	}, []);
 
 	// Helper functions for component use
 	const getActiveUsers = () => {
