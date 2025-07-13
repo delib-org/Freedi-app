@@ -1,0 +1,22 @@
+.updates {
+	background-color: teal;
+	line-height: 1.2rem;
+
+
+	&Group {
+
+		color: var(--text-secondary);
+		font-weight: 600;
+		margin-bottom: 0rem;
+	}
+
+	&Text {
+
+		color: var(--text-tertiary);
+		margin-bottom: .5rem;
+	}
+
+	&Time {
+		color: var(--lighter);
+	}
+}
