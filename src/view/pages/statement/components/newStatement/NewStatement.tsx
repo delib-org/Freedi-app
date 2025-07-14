@@ -12,7 +12,7 @@ export interface DisplayStatement {
 	statementId: string;
 }
 
-function CurrenScreen(currentStep: 0 | 1 | 2 | 3 | 4) {
+function CurrentScreen(currentStep: 0 | 1 | 2 | 3 | 4) {
 	switch (currentStep) {
 		case 0:
 			return <GetInitialStatementData />;
@@ -21,23 +21,24 @@ function CurrenScreen(currentStep: 0 | 1 | 2 | 3 | 4) {
 		case 2:
 			return <>Step 2</>;
 		default:
-			return <>Error: Could't fins the step</>;
+			return <>Error: Couldn't find the step</>;
 	}
 }
 
 export default function NewStatement() {
 	const [title, setTitle] = useState<string>('');
 	const [description, setDescription] = useState<string>('');
+	const [lookingForSimilarStatements, setLookingForSimilarStatements] = useState<boolean>(false);
 	const [currentStep, setCurrentStep] = useState<0 | 1 | 2 | 3 | 4>(0);
 
 	const contextValue = useMemo(
-		() => ({ title, setTitle, description, setDescription, setCurrentStep }),
-		[title, description]
+		() => ({ title, setTitle, description, setDescription, setCurrentStep, lookingForSimilarStatements, setLookingForSimilarStatements }),
+		[title, description, lookingForSimilarStatements]
 	);
 
 	return (
 		<NewStatementContext.Provider value={contextValue}>
-			<div className='newStatement'>{CurrenScreen(currentStep)}</div>
+			<div className='newStatement'>{CurrentScreen(currentStep)}</div>
 		</NewStatementContext.Provider>
 	);
 

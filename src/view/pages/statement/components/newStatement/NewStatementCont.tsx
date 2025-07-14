@@ -7,6 +7,8 @@ interface NewStatementContextProps {
 	setTitle: (statement: string) => void;
 	setDescription: (description: string) => void;
 	setCurrentStep: React.Dispatch<React.SetStateAction<0 | 1 | 2 | 3 | 4>>;
+	lookingForSimilarStatements?: boolean;
+	setLookingForSimilarStatements: (lookingForSimilarStatements: boolean) => void;
 }
 
 export const NewStatementContext = createContext<NewStatementContextProps>({
@@ -15,6 +17,8 @@ export const NewStatementContext = createContext<NewStatementContextProps>({
 	setTitle: () => { return; },
 	setDescription: () => { return; },
 	setCurrentStep: () => { return; },
+	lookingForSimilarStatements: false,
+	setLookingForSimilarStatements: () => { return; },
 });
 
 // export const NewStatementProvider: React.FC<{ children: ReactNode }> = ({ children }) => {

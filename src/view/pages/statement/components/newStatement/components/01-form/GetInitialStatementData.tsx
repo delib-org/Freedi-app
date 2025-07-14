@@ -1,4 +1,4 @@
-import { FormEvent } from 'react';
+import { FormEvent, useContext } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import styles from './GetInitialStatementData.module.scss';
 import {
@@ -15,8 +15,11 @@ import { useDispatch, useSelector } from 'react-redux';
 import { clearNewStatement, selectNewStatement, selectParentStatementForNewStatement, setShowNewStatementModal } from '@/redux/statements/newStatementSlice';
 import { setStatement, setStatementSubscription } from '@/redux/statements/statementsSlice';
 import { creatorSelector } from '@/redux/creator/creatorSlice';
+import Checkbox from '@/view/components/checkbox/Checkbox';
+import { NewStatementContext } from '../../NewStatementCont';
 
 export default function GetInitialStatementData() {
+	const { lookingForSimilarStatements, setLookingForSimilarStatements } = useContext(NewStatementContext);
 	const { t, currentLanguage } = useUserConfig();
 	const location = useLocation();
 	const navigate = useNavigate();
@@ -95,6 +98,11 @@ export default function GetInitialStatementData() {
 				<Textarea
 					label={t(descriptionLabel)}
 					name='description'
+				/>
+				<Checkbox
+					label={t('Search for similar statements')}
+					isChecked={lookingForSimilarStatements}
+					onChange={setLookingForSimilarStatements}
 				/>
 				<div className='btns'>
 					<Button
