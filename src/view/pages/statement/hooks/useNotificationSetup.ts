@@ -27,8 +27,8 @@ export const useNotificationSetup = ({ statement, setError }: UseNotificationSet
 				}
 			} catch (error) {
 				console.error('Error in notification setup:', error);
-				const errorMessage = error instanceof Error 
-					? error.message 
+				const errorMessage = error instanceof Error
+					? error.message
 					: ERROR_MESSAGES.NOTIFICATION_SETUP;
 				setError(errorMessage);
 			}

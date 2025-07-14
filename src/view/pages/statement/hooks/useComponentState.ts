@@ -25,14 +25,14 @@ export const useComponentState = ({
 	error,
 	role
 }: UseComponentStateProps): ComponentStateResult => {
-	
+
 	const currentState = useMemo((): ComponentState => {
 		if (error) return COMPONENT_STATES.ERROR;
 		if (isStatementNotFound) return COMPONENT_STATES.NOT_FOUND;
 		if (isWaitingForApproval || role === Role.waiting) return COMPONENT_STATES.WAITING_APPROVAL;
 		if (loading) return COMPONENT_STATES.LOADING;
 		if (isAuthorized) return COMPONENT_STATES.AUTHORIZED;
-		
+
 		return COMPONENT_STATES.UNAUTHORIZED;
 	}, [error, isStatementNotFound, isWaitingForApproval, role, loading, isAuthorized]);
 

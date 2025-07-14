@@ -10,24 +10,24 @@ import { useStatementUIState } from './useStatementUIState';
 export const useStatementData = () => {
 	// Get params
 	const { statementId, stageId, screen } = useStatementParams();
-	
+
 	// Get statement data
 	const { statement, stage, topParentStatement, role } = useStatementSelectors(
-		statementId, 
+		statementId,
 		stageId
 	);
-	
+
 	// Get user data
 	const { userDataQuestions, userData, showUserQuestions } = useUserData(statementId || '');
-	
+
 	// Get UI state
 	const uiState = useStatementUIState();
-	
+
 	// Get additional selectors
 	const showNewStatement = useSelector(selectNewStatementShowModal);
 
 	// Computed values
-	const isMassConsensus = useMemo(() => 
+	const isMassConsensus = useMemo(() =>
 		statement?.questionSettings?.questionType === QuestionType.massConsensus,
 		[statement?.questionSettings?.questionType]
 	);

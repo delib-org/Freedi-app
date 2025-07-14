@@ -13,7 +13,7 @@ export const useUserData = (statementId: string) => {
 		selectUserDataByStatementId(statementId)
 	);
 
-	const showUserQuestions = useMemo(() => 
+	const showUserQuestions = useMemo(() =>
 		userDataQuestions &&
 		userDataQuestions.length > 0 &&
 		userData.length < userDataQuestions.length,

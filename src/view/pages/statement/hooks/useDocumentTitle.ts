@@ -12,13 +12,13 @@ export const useDocumentTitle = ({ statement, screen }: UseDocumentTitleProps) =
 	useEffect(() => {
 		if (!statement || !screen) {
 			document.title = APP_CONSTANTS.DOCUMENT_TITLE_PREFIX;
-			
+
 			return;
 		}
 
 		try {
 			const { shortVersion } = statementTitleToDisplay(
-				statement.statement, 
+				statement.statement,
 				APP_CONSTANTS.TITLE_MAX_LENGTH
 			);
 			document.title = `${APP_CONSTANTS.DOCUMENT_TITLE_PREFIX} - ${shortVersion}`;
