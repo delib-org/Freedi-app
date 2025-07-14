@@ -1,5 +1,6 @@
 import { db } from ".."; // Import db from your index file
-import { Collections, Statement, StatementSimple } from "../types/statement-types";
+import { Collections, Statement } from "delib-npm";
+import { StatementSimple } from "../types/statement-types";
 
 /**
  * Fetches a parent statement by ID

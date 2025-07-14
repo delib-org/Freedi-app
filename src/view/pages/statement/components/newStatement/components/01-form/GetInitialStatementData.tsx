@@ -1,19 +1,14 @@
 import { FormEvent, useContext, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import styles from './GetInitialStatementData.module.scss';
-import {
-	createStatement,
-	setStatementToDB,
-} from '@/controllers/db/statements/setStatements';
+import { createStatementWithSubscription } from '@/controllers/db/statements/createStatementWithSubscription';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import Button, { ButtonType } from '@/view/components/buttons/button/Button';
 import Input from '@/view/components/input/Input';
 import Textarea from '@/view/components/textarea/Textarea';
-import { StatementType, Statement, QuestionType, Role, getStatementSubscriptionId } from 'delib-npm';
-import { LanguagesEnum } from '@/context/UserConfigContext';
+import { StatementType, QuestionType } from 'delib-npm';
 import { useDispatch, useSelector } from 'react-redux';
 import { clearNewStatement, selectNewStatement, selectParentStatementForNewStatement, setShowNewStatementModal } from '@/redux/statements/newStatementSlice';
-import { setStatement, setStatementSubscription } from '@/redux/statements/statementsSlice';
 import { creatorSelector } from '@/redux/creator/creatorSlice';
 import Checkbox from '@/view/components/checkbox/Checkbox';
 import { NewStatementContext, SimilaritySteps } from '../../NewStatementCont';
@@ -70,38 +65,17 @@ export default function GetInitialStatementData() {
 				}
 			}
 
-			const lang =
-				newStatementQuestionType === QuestionType.massConsensus
-					? (currentLanguage as LanguagesEnum)
-					: '';
-
-			const _newStatement: Statement | undefined = createStatement({
-				parentStatement: newStatementParent,
-				text: title,
+			const statementId = await createStatementWithSubscription({
+				newStatementParent,
+				title,
 				description,
-				defaultLanguage: lang,
-				statementType: newStatement?.statementType || StatementType.group,
-				questionType: newStatementQuestionType,
-			});
-			if (!_newStatement) throw new Error('newStatement is not defined');
-
-			const { statementId } = await setStatementToDB({
-				parentStatement: newStatementParent,
-				statement: _newStatement,
+				newStatement,
+				newStatementQuestionType,
+				currentLanguage,
+				user,
+				dispatch,
 			});
 
-			dispatch(setStatement(_newStatement));
-			const now = new Date().getTime();
-			dispatch(setStatementSubscription({
-				role: Role.admin,
-				statement: _newStatement,
-				statementsSubscribeId: getStatementSubscriptionId(statementId, user),
-				statementId: statementId,
-				user: user,
-				lastUpdate: now,
-				createdAt: now,
-				userId: user?.uid || '',
-			}))
 			dispatch(setShowNewStatementModal(false));
 			dispatch(clearNewStatement());
 			if (isHomePage) {

@@ -1,29 +1,62 @@
 import React, { useContext } from 'react';
 import { DisplayStatement } from '../NewStatement';
-import SendIcon from '@/assets/icons/send-icon-pointing-up-and-right.svg?react';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
-import Button, { ButtonType } from '@/view/components/buttons/button/Button';
 import { NewStatementContext, SimilaritySteps } from '../NewStatementCont';
 import styles from './SimilarStatements.module.scss';
-import { useDispatch } from 'react-redux';
-import { clearNewStatement, setShowNewStatementModal } from '@/redux/statements/newStatementSlice';
+import { useDispatch, useSelector } from 'react-redux';
+import { clearNewStatement, setShowNewStatementModal, selectNewStatement, selectParentStatementForNewStatement } from '@/redux/statements/newStatementSlice';
+import { createStatementWithSubscription } from '@/controllers/db/statements/createStatementWithSubscription';
+import { creatorSelector } from '@/redux/creator/creatorSlice';
+import { QuestionType } from 'delib-npm';
+import { useLocation, useNavigate } from 'react-router';
 
 export default function SimilarStatements() {
 
 	const dispatch = useDispatch();
-	const { t } = useUserConfig();
-	const { similarStatements, setCurrentStep, title } = useContext(NewStatementContext);
+	const { t, currentLanguage } = useUserConfig();
+	const { similarStatements, setCurrentStep, title, description } = useContext(NewStatementContext);
+	const newStatementParent = useSelector(selectParentStatementForNewStatement);
+	const newStatement = useSelector(selectNewStatement);
+	const newStatementQuestionType =
+		newStatement?.questionSettings?.questionType || QuestionType.multiStage;
+	const user = useSelector(creatorSelector);
+	const location = useLocation();
+	const navigate = useNavigate();
+	const isHomePage = location.pathname === '/home';
 
 	const handleViewSimilarStatement = (statement: DisplayStatement) => {
 		const anchor = document.getElementById(statement.statementId);
 
 		if (anchor) anchor.scrollIntoView({ behavior: 'smooth' });
 
-		setShowModal(false);
+		dispatch(setShowNewStatementModal(false));
 	};
 
-	const handleSubmit = () => {
-		console.log("first submit");
+	const handleSubmit = async () => {
+		try {
+			if (!user) throw new Error('User is not defined');
+			if (!newStatementParent) throw new Error('Statement is not defined');
+			if (!title) throw new Error('Title is required');
+
+			const statementId = await createStatementWithSubscription({
+				newStatementParent,
+				title,
+				description: description || '',
+				newStatement,
+				newStatementQuestionType,
+				currentLanguage,
+				user,
+				dispatch,
+			});
+
+			dispatch(setShowNewStatementModal(false));
+			dispatch(clearNewStatement());
+			if (isHomePage) {
+				navigate(`/statement/${statementId}`);
+			}
+		} catch (error) {
+			console.error(error);
+		}
 	};
 
 	function handleClose() {
@@ -37,7 +70,7 @@ export default function SimilarStatements() {
 			<h1 className='similarities__title'>{t('Similar suggestions')}</h1>
 			<h4>{t("Your suggestion")}</h4>
 			<div className={styles.similarStatements}>
-				<button className={styles.statement}>
+				<button className={styles.statement} onClick={handleSubmit}>
 					{title}
 				</button>
 			</div>
@@ -49,7 +82,11 @@ export default function SimilarStatements() {
 					<button
 						key={index}
 						className={styles.statement}
-						onClick={() => handleViewSimilarStatement(statement)}
+						onClick={() => handleViewSimilarStatement({
+							title: statement.statement,
+							description: statement.description || '',
+							statementId: statement.statementId
+						})}
 					>
 						<p className='suggestion__title'>{statement.statement}</p>
 						<p className='suggestion__description'>
