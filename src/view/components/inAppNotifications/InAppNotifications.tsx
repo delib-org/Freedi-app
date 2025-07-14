@@ -5,10 +5,13 @@ import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import { NotificationType } from 'delib-npm';
 import { creatorSelector } from '@/redux/creator/creatorSlice';
 import NotificationCard from '../notificationCard/NotificationCard';
+import ClearNotificationsButton from '../notificationCard/clearNotificationsButton/ClearNotificationsButton';
 
 const InAppNotifications = () => {
 	const creator = useSelector(creatorSelector);
-	const inAppNotifications: NotificationType[] = useSelector(inAppNotificationsSelector).filter(n => n.creatorId !== creator?.uid);
+	const inAppNotifications: NotificationType[] = useSelector(
+		inAppNotificationsSelector
+	).filter((n) => n.creatorId !== creator?.uid);
 
 	const { t } = useUserConfig();
 
@@ -16,19 +19,26 @@ const InAppNotifications = () => {
 		<div className={styles.inAppNotifications}>
 			{inAppNotifications && inAppNotifications.length > 0 ? (
 				<>
-					<span className={styles.notificationTitle}>{t('Notifications')}</span>
+					<span className={styles.notificationTitle}>
+						{t('Notifications')}
+					</span>
+					<ClearNotificationsButton />
 					{inAppNotifications.map((notification) => {
-
 						return (
-							<NotificationCard key={notification.notificationId} {...notification} />
+							<NotificationCard
+								key={notification.notificationId}
+								{...notification}
+							/>
 						);
 					})}
 				</>
 			) : (
-				<div className={styles.noNotifications}>{t('You have no new notifications')}</div>
+				<div className={styles.noNotifications}>
+					{t('You have no new notifications')}
+				</div>
 			)}
 		</div>
-	)
-}
+	);
+};
 
-export default InAppNotifications
+export default InAppNotifications;
