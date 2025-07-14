@@ -1,4 +1,4 @@
-import { FormEvent, useContext } from 'react';
+import { FormEvent, useContext, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import styles from './GetInitialStatementData.module.scss';
 import {
@@ -16,10 +16,11 @@ import { clearNewStatement, selectNewStatement, selectParentStatementForNewState
 import { setStatement, setStatementSubscription } from '@/redux/statements/statementsSlice';
 import { creatorSelector } from '@/redux/creator/creatorSlice';
 import Checkbox from '@/view/components/checkbox/Checkbox';
-import { NewStatementContext } from '../../NewStatementCont';
+import { NewStatementContext, SimilaritySteps } from '../../NewStatementCont';
+import { getSimilarOptions } from './GetInitialStatementDataCont';
 
 export default function GetInitialStatementData() {
-	const { lookingForSimilarStatements, setLookingForSimilarStatements } = useContext(NewStatementContext);
+	const { lookingForSimilarStatements, setLookingForSimilarStatements, setSimilarStatements, setCurrentStep } = useContext(NewStatementContext);
 	const { t, currentLanguage } = useUserConfig();
 	const location = useLocation();
 	const navigate = useNavigate();
@@ -32,15 +33,41 @@ export default function GetInitialStatementData() {
 		newStatement?.questionSettings?.questionType || QuestionType.multiStage;
 	const user = useSelector(creatorSelector);
 
+	const [error, setError] = useState<string>('');
+	const [loading, setLoading] = useState<boolean>(false);
+
 	const handleSubmit = async (ev: FormEvent<HTMLFormElement>) => {
 		ev.preventDefault();
 		try {
 			if (!user) throw new Error('User is not defined');
+			setLoading(true);
 			const form = new FormData(ev.target as HTMLFormElement);
 			const title = form.get('title') as string;
 			const description = (form.get('description') as string) || '';
 
 			if (!newStatementParent) throw new Error('Statement is not defined');
+
+			if (!title) throw new Error('Title is required');
+
+			if (lookingForSimilarStatements && typeof newStatementParent === 'object' && newStatementParent?.statementId !== 'top') {
+				console.log('Looking for similar statements');
+				//get api to find similar statements
+				const similarStatements = await getSimilarOptions(
+					newStatementParent.statementId,
+					title,
+					user.uid,
+					setError
+				);
+				setLoading(false);
+				if (similarStatements) {
+					setSimilarStatements(similarStatements);
+					setCurrentStep(SimilaritySteps.SIMILARITIES);
+
+					return;
+				}
+
+			}
+
 			const lang =
 				newStatementQuestionType === QuestionType.massConsensus
 					? (currentLanguage as LanguagesEnum)
@@ -90,20 +117,25 @@ export default function GetInitialStatementData() {
 		<>
 			<h4>{t(header)}</h4>
 			<form className={styles.form} onSubmit={handleSubmit}>
-				<Input
-					label={t(titleLabel)}
-					name='title'
-					autoFocus={true}
-				/>
-				<Textarea
-					label={t(descriptionLabel)}
-					name='description'
-				/>
-				<Checkbox
-					label={t('Search for similar statements')}
-					isChecked={lookingForSimilarStatements}
-					onChange={setLookingForSimilarStatements}
-				/>
+				{!loading ?
+					<><Input
+						label={t(titleLabel)}
+						name='title'
+						autoFocus={true}
+					/>
+						<Textarea
+							label={t(descriptionLabel)}
+							name='description'
+						/>
+						<Checkbox
+							label={t('Search for similar statements')}
+							isChecked={lookingForSimilarStatements}
+							onChange={setLookingForSimilarStatements}
+						/>
+					</>
+					: <p>{t('Searching for similar statements')}...</p>}
+
+				{error && <p className={styles.error}>{t(error)}</p>}
 				<div className='btns'>
 					<Button
 						type='submit'

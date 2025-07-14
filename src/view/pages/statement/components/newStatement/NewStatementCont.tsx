@@ -1,3 +1,4 @@
+import { Statement } from 'delib-npm';
 import React, { createContext, useContext } from 'react';
 
 export enum SimilaritySteps {
@@ -13,6 +14,8 @@ interface NewStatementContextProps {
 	setCurrentStep: React.Dispatch<React.SetStateAction<SimilaritySteps>>;
 	lookingForSimilarStatements?: boolean;
 	setLookingForSimilarStatements: (lookingForSimilarStatements: boolean) => void;
+	similarStatements: Statement[];
+	setSimilarStatements: React.Dispatch<React.SetStateAction<Statement[]>>;
 }
 
 export const NewStatementContext = createContext<NewStatementContextProps>({
@@ -23,6 +26,8 @@ export const NewStatementContext = createContext<NewStatementContextProps>({
 	setCurrentStep: () => { return; },
 	lookingForSimilarStatements: false,
 	setLookingForSimilarStatements: () => { return; },
+	similarStatements: [],
+	setSimilarStatements: () => { return; }
 });
 
 // export const NewStatementProvider: React.FC<{ children: ReactNode }> = ({ children }) => {

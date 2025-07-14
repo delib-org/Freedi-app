@@ -1,0 +1,9 @@
+.similarStatements {
+	display: flex;
+	flex-direction: column;
+	gap: .5rem;
+
+	.statement {
+		background-color: rgb(232, 255, 255);
+	}
+}
