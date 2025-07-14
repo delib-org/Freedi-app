@@ -323,5 +323,6 @@
 	"Search for similar statements": "חיפוש אמירות דומות",
 	"Searching for similar statements": "מחפש אמירות דומות",
 	"Similar suggestions": "הצעות דומות",
-	"Choose one of the suggestions above or select your own suggestion": "בחר/י אחת מההצעות למעלה או בחר/י את ההצעה שלך"
+	"Choose one of the suggestions above or select your own suggestion": "בחר/י אחת מההצעות למעלה או בחר/י את ההצעה שלך",
+	"By default, look for similar statements": " חפש אמירות דומות, כברירת מחדל"
 }
