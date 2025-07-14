@@ -1,12 +1,16 @@
 import React, { createContext, useContext } from 'react';
 
+export enum SimilaritySteps {
+	FORM = "form",
+	SIMILARITIES = "similarities"
+}
 interface NewStatementContextProps {
 
 	title?: string;
 	description?: string;
 	setTitle: (statement: string) => void;
 	setDescription: (description: string) => void;
-	setCurrentStep: React.Dispatch<React.SetStateAction<0 | 1 | 2 | 3 | 4>>;
+	setCurrentStep: React.Dispatch<React.SetStateAction<SimilaritySteps>>;
 	lookingForSimilarStatements?: boolean;
 	setLookingForSimilarStatements: (lookingForSimilarStatements: boolean) => void;
 }

@@ -4,7 +4,7 @@ import './newStatement.scss';
 
 import GetInitialStatementData from './components/01-form/GetInitialStatementData';
 
-import { NewStatementContext } from './NewStatementCont';
+import { NewStatementContext, SimilaritySteps } from './NewStatementCont';
 
 export interface DisplayStatement {
 	title: string;
@@ -12,14 +12,12 @@ export interface DisplayStatement {
 	statementId: string;
 }
 
-function CurrentScreen(currentStep: 0 | 1 | 2 | 3 | 4) {
+function CurrentScreen(currentStep: SimilaritySteps) {
 	switch (currentStep) {
-		case 0:
+		case SimilaritySteps.FORM:
 			return <GetInitialStatementData />;
-		case 1:
+		case SimilaritySteps.SIMILARITIES:
 			return <>Step 1</>;
-		case 2:
-			return <>Step 2</>;
 		default:
 			return <>Error: Couldn't find the step</>;
 	}
@@ -29,7 +27,7 @@ export default function NewStatement() {
 	const [title, setTitle] = useState<string>('');
 	const [description, setDescription] = useState<string>('');
 	const [lookingForSimilarStatements, setLookingForSimilarStatements] = useState<boolean>(false);
-	const [currentStep, setCurrentStep] = useState<0 | 1 | 2 | 3 | 4>(0);
+	const [currentStep, setCurrentStep] = useState<SimilaritySteps>(SimilaritySteps.FORM);
 
 	const contextValue = useMemo(
 		() => ({ title, setTitle, description, setDescription, setCurrentStep, lookingForSimilarStatements, setLookingForSimilarStatements }),
