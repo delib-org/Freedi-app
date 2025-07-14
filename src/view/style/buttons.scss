@@ -49,6 +49,7 @@ button {
 	&--cancel {
 		background-color: var(--red);
 		color: var(--white);
+		border: 1px solid red;
 	}
 
 	&--agree {

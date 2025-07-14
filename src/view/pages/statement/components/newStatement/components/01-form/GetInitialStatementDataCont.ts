@@ -3,8 +3,7 @@ import { Statement } from "delib-npm";
 
 export async function getSimilarOptions(statementId: string, userInput: string, creatorId: string, setError: (error: string) => void): Promise<{ similarStatements: Statement[], similarTexts: string[], userText: string | null } | null> {
 	try {
-		console.log("statementId:", statementId);
-		console.log("userInput:", userInput);
+
 		const endPoint = similarOptionsEndPoint;
 		const response = await fetch(endPoint, {
 			method: 'POST',
@@ -14,6 +13,7 @@ export async function getSimilarOptions(statementId: string, userInput: string, 
 			body: JSON.stringify({
 				statementId,
 				userInput,
+				generateIfNeeded: false,
 				creatorId,
 			}),
 		});
@@ -24,8 +24,6 @@ export async function getSimilarOptions(statementId: string, userInput: string, 
 		}
 
 		const data = await response.json();
-
-		console.log(data);
 
 		const { similarStatements, similarTexts, userText } = data;
 		if (!similarStatements || !Array.isArray(similarStatements)) {

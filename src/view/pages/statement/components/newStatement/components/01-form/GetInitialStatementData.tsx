@@ -20,7 +20,7 @@ import { NewStatementContext, SimilaritySteps } from '../../NewStatementCont';
 import { getSimilarOptions } from './GetInitialStatementDataCont';
 
 export default function GetInitialStatementData() {
-	const { lookingForSimilarStatements, setLookingForSimilarStatements, setSimilarStatements, setCurrentStep } = useContext(NewStatementContext);
+	const { lookingForSimilarStatements, setLookingForSimilarStatements, setSimilarStatements, setCurrentStep, setTitle } = useContext(NewStatementContext);
 	const { t, currentLanguage } = useUserConfig();
 	const location = useLocation();
 	const navigate = useNavigate();
@@ -48,10 +48,11 @@ export default function GetInitialStatementData() {
 			if (!newStatementParent) throw new Error('Statement is not defined');
 
 			if (!title) throw new Error('Title is required');
+			setTitle(title);
 
 			if (lookingForSimilarStatements && typeof newStatementParent === 'object' && newStatementParent?.statementId !== 'top') {
 				setLoading(true);
-				console.log('Looking for similar statements');
+
 				//get api to find similar statements
 				const { similarStatements } = await getSimilarOptions(
 					newStatementParent.statementId,
@@ -61,7 +62,7 @@ export default function GetInitialStatementData() {
 				);
 				setLoading(false);
 				if (similarStatements) {
-					console.log("similarStatements", similarStatements);
+
 					setSimilarStatements(similarStatements);
 					setCurrentStep(SimilaritySteps.SIMILARITIES);
 

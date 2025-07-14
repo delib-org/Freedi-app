@@ -110,17 +110,14 @@ async function getAIResponseAsList(prompt: string, maxRetries: number = 3): Prom
 			logger.info(`AI request attempt ${attempt}/${maxRetries}`);
 
 			const result = await model.generateContent(prompt);
-			console.log("result:", result.response);
+
 			const responseText = result.response.text();
-			console.log(responseText)
+
 			// Try to parse as JSON first
 			try {
 				const parsedJson = JSON.parse(responseText);
-				console.log("Parsed JSON:", parsedJson);
 				if (parsedJson && Array.isArray(parsedJson.strings)) {
 					logger.info(`AI request successful on attempt ${attempt}`);
-
-					console.log("Parsed JSON strings:", parsedJson.strings);
 
 					return parsedJson.strings;
 				}
