@@ -13,7 +13,7 @@ import './StatementBottomNav.scss';
 import StartHere from '@/view/components/startHere/StartHere';
 import { StatementContext } from '../../../StatementCont';
 import { sortItems } from './StatementBottomNavModal';
-import { Role, SortType, StatementType } from 'delib-npm';
+import { EvaluationUI, Role, SortType, StatementType } from 'delib-npm';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import { useDecreaseLearningRemain } from '@/controllers/hooks/useDecreaseLearningRemain';
 import { useDispatch, useSelector } from 'react-redux';
@@ -39,7 +39,10 @@ const StatementBottomNav: FC<Props> = () => {
 	const decreaseLearning = useDecreaseLearningRemain();
 
 	const timesRemainToLearnAddOption = learning.addOptions;
-	const canAddOption = statement.statementSettings?.enableAddEvaluationOption ?? false;
+	const canAddOptionSuggestions = statement.statementSettings?.enableAddEvaluationOption ?? false;
+	const canAddOptionVoting = statement.statementSettings?.enableAddVotingOption ?? false;
+	const evaluatingSettings: EvaluationUI = statement.evaluationSettings.evaluationUI;
+	const canAddOption = (canAddOptionSuggestions && evaluatingSettings === EvaluationUI.suggestions) || (canAddOptionVoting && evaluatingSettings === EvaluationUI.voting);
 
 	const [showSorting, setShowSorting] = useState(false);
 	const [showStartHere, setShowStartHere] = useState(
@@ -85,7 +88,7 @@ const StatementBottomNav: FC<Props> = () => {
 
 	return (
 		<>
-			{showStartHere && <StartHere setShow={setShowStartHere} />}
+			{showStartHere && canAddOption && <StartHere setShow={setShowStartHere} />}
 			<div
 				className={
 					showSorting
