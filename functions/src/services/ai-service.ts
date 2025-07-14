@@ -19,7 +19,7 @@ let _generativeModel: GenerativeModel | null = null;
  */
 function getGenAI(): GoogleGenerativeAI {
 	const apiKey = process.env.GOOGLE_API_KEY;
-	console.log("apiKey:", apiKey); // Debugging line to check if the API key is set
+
 	if (!apiKey) {
 		throw new Error("Missing GOOGLE_API_KEY environment variable");
 	}
@@ -38,7 +38,7 @@ async function getGenerativeAIModel(): Promise<GenerativeModel> {
 	logger.info("Initializing new GenerativeModel instance...");
 
 	try {
-		const modelName = process.env.AI_MODEL_NAME || "gemini-1.5-flash";
+		const modelName = process.env.AI_MODEL_NAME || "gemini-2.5-flash";
 		logger.info(`Using AI model: ${modelName}`);
 
 		const genAI = getGenAI();
@@ -110,13 +110,17 @@ async function getAIResponseAsList(prompt: string, maxRetries: number = 3): Prom
 			logger.info(`AI request attempt ${attempt}/${maxRetries}`);
 
 			const result = await model.generateContent(prompt);
+			console.log("result:", result.response);
 			const responseText = result.response.text();
-
+			console.log(responseText)
 			// Try to parse as JSON first
 			try {
 				const parsedJson = JSON.parse(responseText);
+				console.log("Parsed JSON:", parsedJson);
 				if (parsedJson && Array.isArray(parsedJson.strings)) {
 					logger.info(`AI request successful on attempt ${attempt}`);
+
+					console.log("Parsed JSON strings:", parsedJson.strings);
 
 					return parsedJson.strings;
 				}

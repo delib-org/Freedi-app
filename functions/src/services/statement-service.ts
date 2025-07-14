@@ -5,6 +5,7 @@ import { Collections, Statement, StatementSimple } from "../types/statement-type
  * Fetches a parent statement by ID
  */
 export async function getParentStatement(statementId: string): Promise<Statement | null> {
+
 	const ref = db.collection(Collections.statements);
 	const parentDoc = await ref.doc(statementId).get();
 

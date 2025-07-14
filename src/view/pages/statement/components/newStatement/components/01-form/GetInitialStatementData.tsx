@@ -40,7 +40,7 @@ export default function GetInitialStatementData() {
 		ev.preventDefault();
 		try {
 			if (!user) throw new Error('User is not defined');
-			setLoading(true);
+
 			const form = new FormData(ev.target as HTMLFormElement);
 			const title = form.get('title') as string;
 			const description = (form.get('description') as string) || '';
@@ -50,9 +50,10 @@ export default function GetInitialStatementData() {
 			if (!title) throw new Error('Title is required');
 
 			if (lookingForSimilarStatements && typeof newStatementParent === 'object' && newStatementParent?.statementId !== 'top') {
+				setLoading(true);
 				console.log('Looking for similar statements');
 				//get api to find similar statements
-				const similarStatements = await getSimilarOptions(
+				const { similarStatements } = await getSimilarOptions(
 					newStatementParent.statementId,
 					title,
 					user.uid,
@@ -60,12 +61,12 @@ export default function GetInitialStatementData() {
 				);
 				setLoading(false);
 				if (similarStatements) {
+					console.log("similarStatements", similarStatements);
 					setSimilarStatements(similarStatements);
 					setCurrentStep(SimilaritySteps.SIMILARITIES);
 
 					return;
 				}
-
 			}
 
 			const lang =
