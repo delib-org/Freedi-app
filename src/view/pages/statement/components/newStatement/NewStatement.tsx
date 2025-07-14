@@ -34,7 +34,7 @@ export default function NewStatement() {
 
 	const contextValue = useMemo(
 		() => ({ title, setTitle, description, setDescription, setCurrentStep, lookingForSimilarStatements, setLookingForSimilarStatements, similarStatements, setSimilarStatements }),
-		[title, description, lookingForSimilarStatements, setSimilarStatements, setTitle, setDescription, setCurrentStep]
+		[title, description, lookingForSimilarStatements, similarStatements]
 	);
 
 	return (
