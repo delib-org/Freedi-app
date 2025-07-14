@@ -1,25 +1,17 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { DisplayStatement } from '../NewStatement';
 import SendIcon from '@/assets/icons/send-icon-pointing-up-and-right.svg?react';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import Button, { ButtonType } from '@/view/components/buttons/button/Button';
+import { NewStatementContext, SimilaritySteps } from '../NewStatementCont';
+import styles from './SimilarStatements.module.scss';
 
-interface SimilarStatementsSuggestionProps {
-	setCurrentStep: React.Dispatch<React.SetStateAction<number>>;
-	newStatementInput: DisplayStatement;
-	setShowModal: React.Dispatch<React.SetStateAction<boolean>>;
-	setViewSimilarStatement: React.Dispatch<
-		React.SetStateAction<DisplayStatement>
-	>;
-	similarStatements: DisplayStatement[];
-}
-
-export default function StepTwoShowSimilarStatements({
-	setCurrentStep,
-	setShowModal,
-	similarStatements,
-}: SimilarStatementsSuggestionProps) {
+export default function SimilarStatements() {
 	const { t } = useUserConfig();
+	const { similarStatements, setCurrentStep } = useContext(NewStatementContext);
+
+	console.log(similarStatements, "similarStatements");
+
 	const handleViewSimilarStatement = (statement: DisplayStatement) => {
 		const anchor = document.getElementById(statement.statementId);
 
@@ -29,7 +21,7 @@ export default function StepTwoShowSimilarStatements({
 	};
 
 	const handleSubmit = () => {
-		setCurrentStep((prev) => prev + 2);
+		console.log("first submit");
 	};
 
 	return (
@@ -41,25 +33,24 @@ export default function StepTwoShowSimilarStatements({
 				)}
 				:
 			</h4>
-			<section className='similarities__suggestions'>
+			<section className={styles.similarStatements}>
 				{similarStatements.map((statement, index) => (
 					<button
 						key={index}
-						className='suggestion'
+						className={styles.statement}
 						onClick={() => handleViewSimilarStatement(statement)}
 					>
-						<p className='suggestion__title'>{statement.title}</p>
+						<p className='suggestion__title'>{statement.statement}</p>
 						<p className='suggestion__description'>
 							{statement.description}
 						</p>
 
-						<hr />
 					</button>
 				))}
-				<div className='similarities__buttonBox'>
+				<div className='btns'>
 					<Button
 						text={t('Back')}
-						onClick={() => setCurrentStep(0)}
+						onClick={() => setCurrentStep(SimilaritySteps.FORM)}
 						buttonType={ButtonType.SECONDARY}
 					/>
 					<Button
