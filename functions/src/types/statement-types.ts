@@ -1,8 +1,4 @@
-// Import types from delib-npm package
-import { Collections, StatementType, Statement } from "delib-npm";
-
-// Re-export for use in other modules
-export { Collections, StatementType, Statement };
+import { Statement } from "delib-npm";
 
 export interface StatementSimple {
 	statement: string;

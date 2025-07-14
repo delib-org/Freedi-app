@@ -1,26 +1,21 @@
 import { FormEvent, useContext, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import styles from './GetInitialStatementData.module.scss';
-import {
-	createStatement,
-	setStatementToDB,
-} from '@/controllers/db/statements/setStatements';
+import { createStatementWithSubscription } from '@/controllers/db/statements/createStatementWithSubscription';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import Button, { ButtonType } from '@/view/components/buttons/button/Button';
 import Input from '@/view/components/input/Input';
 import Textarea from '@/view/components/textarea/Textarea';
-import { StatementType, Statement, QuestionType, Role, getStatementSubscriptionId } from 'delib-npm';
-import { LanguagesEnum } from '@/context/UserConfigContext';
+import { StatementType, QuestionType } from 'delib-npm';
 import { useDispatch, useSelector } from 'react-redux';
 import { clearNewStatement, selectNewStatement, selectParentStatementForNewStatement, setShowNewStatementModal } from '@/redux/statements/newStatementSlice';
-import { setStatement, setStatementSubscription } from '@/redux/statements/statementsSlice';
 import { creatorSelector } from '@/redux/creator/creatorSlice';
 import Checkbox from '@/view/components/checkbox/Checkbox';
 import { NewStatementContext, SimilaritySteps } from '../../NewStatementCont';
 import { getSimilarOptions } from './GetInitialStatementDataCont';
 
 export default function GetInitialStatementData() {
-	const { lookingForSimilarStatements, setLookingForSimilarStatements, setSimilarStatements, setCurrentStep } = useContext(NewStatementContext);
+	const { lookingForSimilarStatements, setLookingForSimilarStatements, setSimilarStatements, setCurrentStep, setTitle } = useContext(NewStatementContext);
 	const { t, currentLanguage } = useUserConfig();
 	const location = useLocation();
 	const navigate = useNavigate();
@@ -40,7 +35,7 @@ export default function GetInitialStatementData() {
 		ev.preventDefault();
 		try {
 			if (!user) throw new Error('User is not defined');
-			setLoading(true);
+
 			const form = new FormData(ev.target as HTMLFormElement);
 			const title = form.get('title') as string;
 			const description = (form.get('description') as string) || '';
@@ -48,11 +43,13 @@ export default function GetInitialStatementData() {
 			if (!newStatementParent) throw new Error('Statement is not defined');
 
 			if (!title) throw new Error('Title is required');
+			setTitle(title);
 
 			if (lookingForSimilarStatements && typeof newStatementParent === 'object' && newStatementParent?.statementId !== 'top') {
-				console.log('Looking for similar statements');
+				setLoading(true);
+
 				//get api to find similar statements
-				const similarStatements = await getSimilarOptions(
+				const { similarStatements } = await getSimilarOptions(
 					newStatementParent.statementId,
 					title,
 					user.uid,
@@ -60,46 +57,25 @@ export default function GetInitialStatementData() {
 				);
 				setLoading(false);
 				if (similarStatements) {
+
 					setSimilarStatements(similarStatements);
 					setCurrentStep(SimilaritySteps.SIMILARITIES);
 
 					return;
 				}
-
 			}
 
-			const lang =
-				newStatementQuestionType === QuestionType.massConsensus
-					? (currentLanguage as LanguagesEnum)
-					: '';
-
-			const _newStatement: Statement | undefined = createStatement({
-				parentStatement: newStatementParent,
-				text: title,
+			const statementId = await createStatementWithSubscription({
+				newStatementParent,
+				title,
 				description,
-				defaultLanguage: lang,
-				statementType: newStatement?.statementType || StatementType.group,
-				questionType: newStatementQuestionType,
-			});
-			if (!_newStatement) throw new Error('newStatement is not defined');
-
-			const { statementId } = await setStatementToDB({
-				parentStatement: newStatementParent,
-				statement: _newStatement,
+				newStatement,
+				newStatementQuestionType,
+				currentLanguage,
+				user,
+				dispatch,
 			});
 
-			dispatch(setStatement(_newStatement));
-			const now = new Date().getTime();
-			dispatch(setStatementSubscription({
-				role: Role.admin,
-				statement: _newStatement,
-				statementsSubscribeId: getStatementSubscriptionId(statementId, user),
-				statementId: statementId,
-				user: user,
-				lastUpdate: now,
-				createdAt: now,
-				userId: user?.uid || '',
-			}))
 			dispatch(setShowNewStatementModal(false));
 			dispatch(clearNewStatement());
 			if (isHomePage) {

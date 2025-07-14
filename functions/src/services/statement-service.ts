@@ -1,10 +1,12 @@
 import { db } from ".."; // Import db from your index file
-import { Collections, Statement, StatementSimple } from "../types/statement-types";
+import { Collections, Statement } from "delib-npm";
+import { StatementSimple } from "../types/statement-types";
 
 /**
  * Fetches a parent statement by ID
  */
 export async function getParentStatement(statementId: string): Promise<Statement | null> {
+
 	const ref = db.collection(Collections.statements);
 	const parentDoc = await ref.doc(statementId).get();
 
