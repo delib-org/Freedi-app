@@ -239,11 +239,7 @@ const SuggestionCards: FC<SuggestionCardsProps> = ({
 
 	if (!filteredSubStatements.length) {
 		return (
-			<EmptyScreen
-				setShowModal={() => {
-					// No-op function for compatibility
-				}}
-			/>
+			<EmptyScreen />
 		);
 	}
 
