@@ -19,6 +19,11 @@ service cloud.firestore {
                      request.auth.uid == request.resource.data.userId &&
                      request.resource.data.accepted == true;
     }
+	
+	match /online/{onlineId} {
+ 	 allow read: if request.auth.uid != null;
+  	allow write: if request.auth.uid != null;
+	}
 
     match /awaitingUsers/{document=**} {
       allow read, write: if request.auth != null;
@@ -32,6 +37,29 @@ service cloud.firestore {
     match /version/{version=**} {
       allow read;
     }
+
+	match /polarizationIndex/{statementId=**} {
+	  allow read: if request.auth.uid != null;
+	
+	}
+
+	match /userData/{userId=**} {
+	  allow read: if request.auth.uid != null && request.auth.uid == userId;
+	  allow write: if request.auth.uid != null && request.auth.uid == userId;
+	}
+
+	match /userDataQuestions/{questionId=**} {
+		function isAdmin() {
+			let question = resource != null ? resource : request.resource;
+			let statementId = question.data.statementId;
+			let subId = string(request.auth.uid) + '--' + cleanPath(string(statementId));
+			let subscription = get(/databases/$(database)/documents/statementsSubscribe/$(subId)).data;
+			return subscription != null && subscription.role == 'admin';
+		}
+		
+		allow read: if request.auth.uid != null;
+		allow write: if request.auth.uid != null && isAdmin();
+	}
 
     match /statements/{statementId} {
       function isAdmin() {

@@ -1,4 +1,4 @@
-import { Statement, Role, StatementType } from "delib-npm";
+import { Statement, Role, StatementType, Screen } from "delib-npm";
 import { ReactNode } from "react";
 import GroupPage from "../statementTypes/group/GroupPage";
 import QuestionPage from "../statementTypes/question/QuestionPage";
@@ -8,6 +8,7 @@ import MindMap from "../map/MindMap";
 import Chat from "../chat/Chat";
 import StatementSettings from "../settings/StatementSettings";
 import SuggestionChat from "@/view/pages/suggestionChat/SuggestionChat";
+import PolarizationIndex from "@/view/components/polarizationIndex/PolarizationIndex";
 
 interface SwitchScreenProps {
 	statement: Statement | undefined;
@@ -31,15 +32,17 @@ function SwitchScreen({
 	}
 
 	switch (screen) {
-		case 'agreement-map':
+		case Screen.polarizationIndex:
+			return <PolarizationIndex />
+		case Screen.agreementMap:
 			return <Triangle />;
-		case 'mind-map':
+		case Screen.mindMap:
 			return <MindMap />;
-		case 'chat':
+		case Screen.chat:
 			return <Chat />;
-		case 'settings':
+		case Screen.settings:
 			return <StatementSettings />;
-		case 'main':
+		case "main":
 			return <SwitchStatementType statement={statement} />;
 		default:
 			return <SwitchStatementType statement={statement} />;

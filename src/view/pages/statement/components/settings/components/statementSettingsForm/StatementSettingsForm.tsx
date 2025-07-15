@@ -18,7 +18,7 @@ import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import UploadImage from '@/view/components/uploadImage/UploadImage';
 
 // Hooks & Helpers
-import './StatementSettingsForm.scss';
+import styles from './StatementSettingsForm.module.scss';
 
 // icons
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
@@ -27,6 +27,8 @@ import { RootState } from '@/redux/store';
 import Loader from '@/view/components/loaders/Loader';
 import { StatementSubscription, Role, Statement, StatementType } from 'delib-npm';
 import MembershipSettings from '../membershipSettings/MembershipSettings';
+import UserDataSetting from '../UserDataSettings/UserDataSetting';
+import MembersSettings from '../membership/MembersSettings';
 
 interface StatementSettingsFormProps {
 	statement: Statement;
@@ -85,6 +87,7 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 		};
 
 		const isNewStatement = !statementId;
+		const isQuestion = statement.statementType === StatementType.question;
 
 		const statementSettingsProps = {
 			statement,
@@ -93,8 +96,8 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 
 		if (loading)
 			return (
-				<div className='statement-settings-form'>
-					<div className='loader-box'>
+				<div className={styles.statementSettingsForm}>
+					<div className={styles.loaderBox}>
 						<Loader />
 					</div>
 				</div>
@@ -105,46 +108,51 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 			<div className="wrapper">
 				<form
 					onSubmit={handleSubmit}
-					className='statement-settings-form'
+					className={styles.statementSettingsForm}
 					data-cy='statement-settings-form'
 				>
 					<TitleAndDescription
 						statement={statement}
 						setStatementToEdit={setStatementToEdit}
 					/>
-
-					<SectionTitle title={t('General Settings')} />
-					<section className='switches-area'>
-						<AdvancedSettings {...statementSettingsProps} />
-					</section>
-
+					{!isNewStatement && (
+						<>
+							<SectionTitle title={t('General Settings')} />
+							<section className={styles.switchesArea}>
+								<AdvancedSettings {...statementSettingsProps} />
+							</section>
+						</>
+					)}
 					<button
 						type='submit'
-						className='submit-button btn'
+						className={`${!isNewStatement && styles.submitButton} btn btn--primary`}
 						aria-label='Submit button'
 						data-cy='settings-statement-submit-btn'
 					>
 						{t('Save')}
 					</button>
 				</form>
-				<MembershipSettings statement={statement} setStatementToEdit={setStatementToEdit} />
-				{statement.statementType === StatementType.question && <ChoseBySettings {...statementSettingsProps} />}
 				{!isNewStatement && (
 					<>
+						<MembershipSettings statement={statement} setStatementToEdit={setStatementToEdit} />
+						<MembersSettings statement={statement} />
+						{statement.statementType === StatementType.question && <ChoseBySettings {...statementSettingsProps} />}
+
 						<UploadImage
 							statement={statementSettingsProps.statement}
 							image={image}
 							setImage={setImage}
 						/>
 						<QuestionSettings {...statementSettingsProps} />
+						{isQuestion && <UserDataSetting statement={statement} />}
 						<SectionTitle title={t('Members')} />
-						<section className='get-members-area'>
+						<section className={styles.getMembersArea}>
 							<GetVoters
 								statementId={statementId}
 								joinedMembers={joinedMembers}
 							/>
 						</section>
-						<section className='get-members-area'>
+						<section className={styles.getMembersArea}>
 							<GetEvaluators statementId={statementId} />
 						</section>
 					</>

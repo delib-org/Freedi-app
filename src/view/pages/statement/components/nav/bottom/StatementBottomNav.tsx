@@ -13,22 +13,36 @@ import './StatementBottomNav.scss';
 import StartHere from '@/view/components/startHere/StartHere';
 import { StatementContext } from '../../../StatementCont';
 import { sortItems } from './StatementBottomNavModal';
-import { SortType, StatementType } from 'delib-npm';
+import { EvaluationUI, Role, SortType, StatementType } from 'delib-npm';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import { useDecreaseLearningRemain } from '@/controllers/hooks/useDecreaseLearningRemain';
+import { useDispatch, useSelector } from 'react-redux';
+import { setNewStatementModal } from '@/redux/statements/newStatementSlice';
+import { statementSubscriptionSelector } from '@/redux/statements/statementsSlice';
 
 interface Props {
 	showNav?: boolean;
 }
 
 const StatementBottomNav: FC<Props> = () => {
-	const { sort } = useParams();
-	const { statement, setNewStatementType, handleSetNewStatement } =
+
+	const { statementId } = useParams<{ statementId: string }>();
+	const dispatch = useDispatch();
+
+	const { statement } =
 		useContext(StatementContext);
+	const subscription = useSelector(statementSubscriptionSelector(statementId));
+
+	const role = subscription?.role;
+	const isAdmin = role === 'admin' || role === Role.creator;
 	const { dir, learning } = useUserConfig();
 	const decreaseLearning = useDecreaseLearningRemain();
 
 	const timesRemainToLearnAddOption = learning.addOptions;
+	const canAddOptionSuggestions = statement.statementSettings?.enableAddEvaluationOption ?? false;
+	const canAddOptionVoting = statement.statementSettings?.enableAddVotingOption ?? false;
+	const evaluatingSettings: EvaluationUI = statement.evaluationSettings.evaluationUI;
+	const canAddOption = (canAddOptionSuggestions && evaluatingSettings === EvaluationUI.suggestions) || (canAddOptionVoting && evaluatingSettings === EvaluationUI.voting);
 
 	const [showSorting, setShowSorting] = useState(false);
 	const [showStartHere, setShowStartHere] = useState(
@@ -43,8 +57,15 @@ const StatementBottomNav: FC<Props> = () => {
 	const statementColor = useStatementColor({ statement });
 
 	function handleCreateNewOption() {
-		setNewStatementType(StatementType.option);
-		handleSetNewStatement(true);
+		dispatch(setNewStatementModal({
+			parentStatement: statement,
+			newStatement: {
+				statementType: StatementType.option,
+			},
+			showModal: true,
+			isLoading: false,
+			error: null,
+		}))
 	}
 
 	const handleAddOption = () => {
@@ -59,9 +80,15 @@ const StatementBottomNav: FC<Props> = () => {
 		setShowSorting(!showSorting);
 	}
 
+	function getBaseRoute() {
+		const path = window.location.pathname;
+
+		return path.includes('/stage/') ? 'stage' : 'statement';
+	}
+
 	return (
 		<>
-			{showStartHere && <StartHere setShow={setShowStartHere} />}
+			{showStartHere && canAddOption && <StartHere setShow={setShowStartHere} />}
 			<div
 				className={
 					showSorting
@@ -72,7 +99,7 @@ const StatementBottomNav: FC<Props> = () => {
 				<div
 					className={`add-option-button-wrapper ${dir === 'ltr' ? 'add-option-button-wrapper--ltr' : ''}`}
 				>
-					<button
+					{(canAddOption || isAdmin) && <button
 						className='add-option-button'
 						aria-label='Add option'
 						style={statementColor}
@@ -81,6 +108,7 @@ const StatementBottomNav: FC<Props> = () => {
 					>
 						<PlusIcon style={{ color: statementColor.color }} />
 					</button>
+					}
 					<div className='sort-menu'>
 						{sortItems.map((navItem, i) => (
 							<div
@@ -89,7 +117,7 @@ const StatementBottomNav: FC<Props> = () => {
 							>
 								<Link
 									className={`open-nav-icon ${showSorting ? 'active' : ''}`}
-									to={sort ? `./${navItem.link}` : `./${navItem.link}`}
+									to={`/${getBaseRoute()}/${statement?.statementId}/${navItem.link}`}
 									aria-label='Sorting options'
 									key={navItem.id}
 									onClick={() => setShowSorting(false)}
@@ -113,7 +141,7 @@ const StatementBottomNav: FC<Props> = () => {
 						</button>
 					</div>
 				</div>
-			</div>
+			</div >
 		</>
 	);
 };

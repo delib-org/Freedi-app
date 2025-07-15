@@ -311,5 +311,18 @@
 	"View other suggestions": "צפייה בהצעות אחרות",
 	"Add your suggestion": "הוספת הצעה שלך",
 	"Proposed solution": "הצעת פתרון",
-	"Preliminary questions": "שאלות מקדימות"
+	"Preliminary questions": "שאלות מקדימות",
+	"Enable Joining an option": "אפשר הצטרפות לאופציה",
+	"Leave": "עזיבה",
+	"Enable add new sub-questions button": "הצג כפתור הוספת תת-שאלות ",
+	"Enter sub-question": "הכנס/י לשאלה משנית",
+	"Hide": "הסתרה",
+	"Unhide": "הצגה",
+	"Hide this statement": "הסתרה של אמירה זו",
+	"Last Updates": "עדכונים אחרונים",
+	"Search for similar statements": "חיפוש אמירות דומות",
+	"Searching for similar statements": "מחפש אמירות דומות",
+	"Similar suggestions": "הצעות דומות",
+	"Choose one of the suggestions above or select your own suggestion": "בחר/י אחת מההצעות למעלה או בחר/י את ההצעה שלך",
+	"By default, look for similar statements": " חפש אמירות דומות, כברירת מחדל"
 }

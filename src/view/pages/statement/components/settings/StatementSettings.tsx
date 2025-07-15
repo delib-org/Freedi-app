@@ -123,7 +123,6 @@ const StatementSettings: FC = () => {
 						parentStatement={parentStatement}
 						setStatementToEdit={setStatementToEdit}
 					/>
-
 					{isMassConsensus && <MassConsensusSettings />}
 				</>
 			)}

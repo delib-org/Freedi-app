@@ -140,13 +140,18 @@ export const listenToSubStatements = (
 		// This should be enough for most use cases while dramatically improving load time
 		const descAsc = topBottom === 'top' ? 'desc' : 'asc';
 
-		const q = query(
+		// Build the base query
+		let q = query(
 			statementsRef,
 			where('parentId', '==', statementId),
 			where('statementType', '!=', StatementType.document),
-			orderBy('createdAt', descAsc),
-			limit(numberOfOptions)
+			orderBy('createdAt', descAsc)
 		);
+
+		// Only add limit if numberOfOptions is provided
+		if (numberOfOptions) {
+			q = query(q, limit(numberOfOptions));
+		}
 
 		let isFirstCall = true;
 

@@ -2,6 +2,7 @@ import { FC, useEffect } from 'react';
 import { Link } from 'react-router';
 import { getStatementFromDB } from '@/controllers/db/statements/getStatement';
 import { getTime, truncateString } from '@/controllers/general/helpers';
+import styles from './updateMainCard.module.scss';
 
 import {
 	setStatement,
@@ -30,6 +31,7 @@ const UpdateMainCard: FC<Props> = ({ statement }) => {
 			});
 		}
 	}, [parentStatement]);
+
 	try {
 
 		const group = parentStatement
@@ -38,17 +40,20 @@ const UpdateMainCard: FC<Props> = ({ statement }) => {
 		const text = statement.statement;
 
 		return (
-			<Link to={`/statement/${statement.parentId}/chat`}>
-				<p>
+			<Link className={styles.updates} to={`/statement/${statement.parentId}`}>
+				<div className={styles.updatesGroup}>
 					{parentStatement ? (
-						<span>{truncateString(group)}: </span>
+						<span>{group} </span>
 					) : null}
-					<span>{truncateString(text, 32)} </span>
-					<span className='time'>
+				</div>
+				<div className={styles.updatesText}>
+					<span>{truncateString(text, 120)} </span>
+					<span className={styles.updatesTime}>
 						{getTime(statement.lastUpdate)}
 					</span>
-				</p>
-			</Link>
+
+				</div>
+			</Link >
 		);
 	} catch (error) {
 		console.error(error);

@@ -165,6 +165,9 @@ export const getStatementSettings = (statement: Statement) => {
 		enableAddEvaluationOption: Boolean(
 			statementSettings.enableAddEvaluationOption
 		),
+		defaultLookForSimilarities: Boolean(
+			statementSettings.defaultLookForSimilarities
+		),
 		enableAddVotingOption: Boolean(statementSettings.enableAddVotingOption),
 		enhancedEvaluation: Boolean(statementSettings.enhancedEvaluation),
 		showEvaluation: Boolean(statementSettings.showEvaluation),
@@ -180,6 +183,10 @@ export const getStatementSettings = (statement: Statement) => {
 		),
 		hasChat: Boolean(statementSettings.hasChat),
 		hasChildren: Boolean(statementSettings.hasChildren),
+		joiningEnabled: Boolean(statementSettings.joiningEnabled),
+		enableAddNewSubQuestionsButton: Boolean(
+			statementSettings.enableAddNewSubQuestionsButton
+		)
 	};
 };
 

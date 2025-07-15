@@ -1,0 +1,104 @@
+.addingStatementWrapper {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 5rem;
+
+	.header {
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+		align-items: center;
+		width: 27rem;
+		text-align: center;
+		color: var(--h2Color);
+		word-spacing: .3rem;
+		gap: 3rem;
+
+		.title {
+			font-weight: 600;
+			font-size: 0.7rem;
+		}
+
+		h1 {
+			font-weight: 600;
+			font-size: 1.25rem;
+		}
+
+		.titleSpan {
+			color: #668FD1;
+			font-weight: 600;
+			font-size: 1.2rem;
+		}
+	}
+
+	.ideaImage {
+		width: 12rem;
+		height: 21rem;
+		display: block;
+		margin: 0 auto;
+	}
+}
+
+.plusButton {
+	width: 13.47rem;
+	height: 2.77rem;
+	background-color: #739EE4;
+	border-radius: 26px;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	cursor: pointer;
+	margin-top: -1rem;
+	gap: .5rem;
+	box-shadow: 0px 3.33px 6.67px rgba(50, 90, 134, 0.1), 0px 11.67px 11.67px rgba(50, 90, 134, 0.09),
+		0px 26.67px 16.67px rgba(50, 90, 134, 0.05), 0px 46.67px 18.33px rgba(50, 90, 134, 0.01),
+		0px 73.33px 20px rgba(50, 90, 134, 0);
+
+	p {
+		color: white;
+		font-size: 1.17rem;
+		font-weight: 400;
+	}
+}
+
+@media screen and (max-width: 1024px) {
+	.addingStatementWrapper {
+		gap: 3rem;
+		background: linear-gradient(180deg, rgba(242, 246, 255, 0) 5.91%, #F2F6FF 31.82%);
+		padding-bottom: 1rem;
+
+		.header {
+			width: 20rem;
+		}
+
+		.ideaImage {
+			height: 17.9rem;
+			width: 10rem;
+		}
+	}
+
+	.plusButton {
+		width: 3rem;
+		height: 3rem;
+		border-radius: 50%;
+		background-color: #739EE4;
+	}
+}
+
+@media screen and (min-width: 1024px) and (max-width: 1440px) {
+	.addingStatementWrapper {
+		gap: 4rem;
+		background: linear-gradient(180deg, rgba(242, 246, 255, 0) 5.91%, #F2F6FF 31.82%);
+
+		.header {
+			width: 19rem;
+			gap: 5rem;
+		}
+
+		.ideaImage {
+			width: 15rem;
+			height: 22.9rem;
+		}
+	}
+}

@@ -16,7 +16,7 @@ const Evaluation: FC<EvaluationProps> = ({ statement }) => {
 	try {
 
 		if (!parentStatement) return null;
-		console.log(window.innerWidth)
+
 		let shouldDisplayScore: boolean = !!parentStatement.statementSettings?.showEvaluation && window.innerWidth >= 768; //also checks for mobile
 		if (statement.evaluation?.selectionFunction) shouldDisplayScore = false;
 
@@ -24,7 +24,6 @@ const Evaluation: FC<EvaluationProps> = ({ statement }) => {
 			return (
 				<EnhancedEvaluation
 					statement={statement}
-					shouldDisplayScore={shouldDisplayScore}
 				/>
 			);
 		}

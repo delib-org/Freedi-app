@@ -6,7 +6,7 @@
 @use "./buttons.scss";
 @use "./pageAnimation.scss";
 
-@import url("https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,300;1,400;1,500;1,600;1,700;1,800&family=Patrick+Hand&display=swap&family=Roboto");
+@import "../../assets/fonts.css";
 
 :root {
 	writing-mode: horizontal-tb;
@@ -17,6 +17,18 @@
 	--statementBackground: #f2f6ff;
 	--inputBackground: #f5fcff;
 	--mainBackgroundError: #ff0000;
+
+	--text-primary: rgba(33, 36, 48, 1);
+	--text-primary-contrast: rgba(33, 36, 48, 1);
+
+	--text-secondary: rgba(56, 62, 84, 1);
+	--text-secondary-contrast: rgb(35, 39, 54);
+
+	--text-tertiary: rgba(85, 87, 116, 1);
+	--text-tertiary-contrast: rgb(49, 51, 68);
+
+	--lighter: rgba(137, 140, 167, 1);
+	--lighter-contrast: rgb(93, 95, 113);
 
 	//alerts
 	--alert: #dd90b6;
@@ -32,12 +44,16 @@
 	--result-text: white;
 
 	//question
-	--question: #1093fd;
+	--question: #47B4EF;
 	--question-text: white;
+
+	--question-contrast: #1093FD;
 
 	//group
 	--group: #b893e7;
 	--group-text: white;
+
+	--group-contrast: #A080E0;
 
 	//evaluation
 	--agree: #57c6b2;
@@ -109,7 +125,7 @@
 	--btn-primary-default: #5f88e5;
 	--btn-primary-hover: #80a0ea;
 	--btn-primary-selected: #285edc;
-	--btn-primary-disabled: #e2e6ee;
+	--btn-primary-disabled: #C6CDDC;
 
 	--btn-secondary: #5f88e5;
 	--btn-secondary-default: #5f88e5;
@@ -134,7 +150,7 @@
 	--btn-primary-default-contrast: #165bfa;
 	--btn-primary-hover-contrast: #467cfb;
 	--btn-primary-selected-contrast: #0544d7;
-	--btn-primary-disabled-contrast: #dce0ea;
+	--btn-primary-disabled-contrast: #DCE0EA;
 
 	--btn-secondary-contrast: #165bfa;
 	--btn-secondary-default-contrast: #165bfa;
@@ -142,6 +158,17 @@
 	--btn-secondary-selected-border-contrast: #0544d7;
 	--btn-secondary-selected-fill-contrast: #e5edff;
 	--btn-secondary-disabled-contrast: #424e6c;
+
+	--btn-purple-default: #A879E1;
+	--btn-purple-hover: ##B893E7;
+	--btn-purple-selected: #823FD4;
+	--btn-purple-disable: #DCC9F3;
+
+	--btn-purple-default-contrast: ##8A62D8;
+	--btn-purple-hover-contrast: ##A080E0;
+	--btn-purple-selected-contrast: #6432C8;
+	--btn-purple-disable-contrast: #D1C2F0;
+
 
 	--btn-white-default-contrast: #ffffff;
 	--btn-white-hover-contrast: #a9e0fe;
@@ -153,6 +180,7 @@
 	--btn-orange-selected-contrast: #f53105;
 
 	--add-btn-contrast: #0443d6;
+	--btn-disabled-contrast: #93A0BD;
 
 	// accessibility buttons
 	--btn-accessibility-icons: #5f88e5;

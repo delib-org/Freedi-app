@@ -31,7 +31,7 @@ const EvaluationPopup: FC<Props> = ({ parentStatement }) => {
 				/>
 			</button> :
 				<button onClick={() => setShowAllEvaluations(false)} className={styles['evaluation-popup__thumbs']}>
-					<EnhancedEvaluation statement={parentStatement} shouldDisplayScore={false} />
+					<EnhancedEvaluation statement={parentStatement} />
 				</button>
 			}
 		</div>

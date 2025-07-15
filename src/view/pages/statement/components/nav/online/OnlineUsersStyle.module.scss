@@ -1,0 +1,55 @@
+.container {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.5rem 0;
+  width: 100%;
+  max-width: 40rem;
+  margin: 0 auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  align-items: center;
+}
+
+@media screen and (max-width: 600px) {
+  .container {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+}
+.userItem {
+  position: relative;
+}
+.avatar {
+  height: 2rem;
+  width: 2rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+
+  &.activeRing {
+    border: 1px solid green;
+  }
+}
+
+.avatarImage {
+  height: 1.75rem;
+  width: 1.75rem;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+}
+
+.avatarDefault {
+  background: linear-gradient(135deg, #60a5fa, #a855f7);
+}
+
+.initial {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--card-default);
+}
+
+
+
