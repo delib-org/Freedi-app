@@ -1,5 +1,5 @@
 import { Dispatch, FC } from 'react';
-import styles from '../../StatementSolutionsPage.module.scss';
+import styles from './EmptyScreen.module.scss';
 import ideaImage from '@/assets/images/manWithIdeaLamp.png';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import useWindowDimensions from '@/controllers/hooks/useWindowDimentions';
@@ -12,7 +12,6 @@ interface Props {
 }
 
 const EmptyScreen: FC<Props> = ({ setShowModal }) => {
-	const currentPage = 'suggestion';
 	const { t } = useUserConfig();
 	const { width } = useWindowDimensions();
 	const smallScreen = width < 1024;
@@ -31,20 +30,20 @@ const EmptyScreen: FC<Props> = ({ setShowModal }) => {
 					<h1 className={styles.h1}>
 						{smallScreen ? (
 							<>
-								{t(`Click on`)}{' '}
+								{t('Click on')}{' '}
 								<span className={styles.titleSpan}>
-									{t(`”+”`)}
+									{t('Add suggestion button')}
 								</span>{' '}
-								{t(`to add your ${currentPage}`)}
+								{t('to add your suggestion')}
 							</>
 						) : (
 							<h1>
-								{`Click on `}
+								{t('Click on')}{' '}
 								<span className={styles.titleSpan}>
-									{`” ${t(`Add ${currentPage} button`)} ”`}
+									{t('Add suggestion button')}
 								</span>
 								<br />
-								{` to add your ${t(`${currentPage}`)}`}
+								{t('to add your suggestion')}
 							</h1>
 						)}
 					</h1>
@@ -58,13 +57,12 @@ const EmptyScreen: FC<Props> = ({ setShowModal }) => {
 						<WhitePlusIcon />
 					) : (
 						<p>
-							{' '}
-							{t(`Add ${currentPage}`)} <WhitePlusIcon />{' '}
+							{t('Add suggestion')} <WhitePlusIcon />
 						</p>
 					)}
 				</button>
 			</div>
-			<img src={ideaImage} alt='' className={styles.ideaImage} />
+			<img src={ideaImage} alt={t('Compose your suggestion')} className={styles.ideaImage} />
 		</div>
 	);
 };
