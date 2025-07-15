@@ -70,6 +70,11 @@ export function isMassConsensus(questionType: QuestionType): boolean {
 
 	return false;
 }
+export function isOption(statementType: StatementType): boolean {
+	if (statementType === StatementType.option) return true;
+
+	return false;
+}
 function isUserAuthorizedByRole(
 	role: Role,
 	authorizedRoles?: Array<Role>
