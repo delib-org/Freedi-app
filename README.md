@@ -86,6 +86,20 @@ cd functions && npm install && cd ..
 
 Create `.env.development` file in the root directory:
 
+    - Go to [Firebase Console](https://console.firebase.google.com/)
+    - Click "Add project" and follow the setup wizard
+    - Enable Authentication, Firestore, and Hosting
+
+2. **Set up project configuration files:**
+    - Create `.firebaserc` file in the root directory
+    - Copy the template from `firebase-config-files.txt` and replace `your_project_id` with your actual Firebase project ID
+    - Run: `firebase use your_project_id`
+    - Set up your `firebase.json` file by copying the template from `firebase-config-files.txt`
+
+### Step 4: Create Environment Files
+
+Create `.env.development` in the root directory:
+
 ```env
 VITE_FIREBASE_API_KEY=your_api_key_here
 VITE_FIREBASE_AUTH_DOMAIN=your_project_id.firebaseapp.com

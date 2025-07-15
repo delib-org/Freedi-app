@@ -46,7 +46,7 @@ export class NotificationService {
 	public isSupported(): boolean {
 		return isServiceWorkerSupported() && isNotificationSupported();
 	}
-	
+
 	/**
 	 * Safe way to check notification permission that works on all browsers
 	 * including iOS where Notification API might exist but not be fully supported
@@ -55,11 +55,12 @@ export class NotificationService {
 		if (!this.isSupported()) {
 			return 'unsupported';
 		}
-		
+
 		try {
 			return Notification.permission;
 		} catch (error) {
 			console.error('Error accessing Notification.permission:', error);
+
 			return 'unsupported';
 		}
 	}

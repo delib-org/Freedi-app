@@ -28,10 +28,13 @@ import {
 	EvaluationUI,
 	Creator,
 	CutoffBy,
-	ResultsSettings
+	ResultsSettings,
 } from 'delib-npm';
 
 import { number, parse, string } from 'valibot';
+import { isStatementTypeAllowedAsChildren } from '@/controllers/general/helpers';
+import { setNewProcessToDB } from '../massConsensus/setMassConsensus';
+import { LanguagesEnum } from '@/context/UserConfigContext';
 
 export const resultsSettingsDefault: ResultsSettings = {
 	resultsBy: ResultsBy.consensus,
@@ -80,6 +83,7 @@ export async function saveStatementToDB({
 	resultsBy,
 	numberOfResults,
 	hasChildren,
+	defaultLanguage,
 	membership,
 	stageSelectionType,
 }: CreateStatementProps): Promise<Statement | undefined> {
@@ -96,13 +100,14 @@ export async function saveStatementToDB({
 			resultsBy,
 			numberOfResults,
 			hasChildren,
+			defaultLanguage,
 			membership,
 			stageSelectionType,
 		});
 
 		if (!statement) throw new Error('Statement is undefined');
 
-		setStatementToDB({
+		await setStatementToDB({
 			statement,
 			parentStatement,
 		});
@@ -111,8 +116,11 @@ export async function saveStatementToDB({
 			statement.resultsSettings = {
 				...statement.resultsSettings,
 				resultsBy: resultsBy || statement.resultsSettings.resultsBy,
-				numberOfResults: numberOfResults || statement.resultsSettings.numberOfResults,
-				cutoffBy: statement.resultsSettings.cutoffBy || CutoffBy.topOptions,
+				numberOfResults:
+					numberOfResults ||
+					statement.resultsSettings.numberOfResults,
+				cutoffBy:
+					statement.resultsSettings.cutoffBy || CutoffBy.topOptions,
 			};
 		}
 
@@ -239,6 +247,7 @@ export interface CreateStatementProps {
 	resultsBy?: ResultsBy;
 	numberOfResults?: number;
 	hasChildren?: boolean;
+	defaultLanguage?: string;
 	membership?: Membership;
 	stageSelectionType?: StageSelectionType;
 }
@@ -250,24 +259,36 @@ export function createStatement({
 	statementType,
 	questionType,
 	enableAddEvaluationOption = true,
-	enableNavigationalElements = true,
+	enableNavigationalElements,
 	enableAddVotingOption = true,
 	enhancedEvaluation = true,
 	showEvaluation = true,
 	resultsBy = ResultsBy.consensus,
 	numberOfResults = 1,
-	hasChildren = true,
+	hasChildren,
+	defaultLanguage,
 	membership,
 	stageSelectionType,
 }: CreateStatementProps): Statement | undefined {
 	try {
+		if (questionType === QuestionType.massConsensus) {
+			hasChildren = false;
+			defaultLanguage = defaultLanguage ?? LanguagesEnum.he;
+		}
 		const storeState = store.getState();
 		const creator = storeState.creator?.creator;
-
+		if (!isStatementTypeAllowedAsChildren(parentStatement, statementType)) {
+			return;
+		}
 		if (!creator) throw new Error('Creator is undefined');
 		if (!statementType) throw new Error('Statement type is undefined');
-
 		const statementId = getRandomUID();
+
+		//get default values for simple or advanced users
+		enableNavigationalElements = defaultValue(
+			enableNavigationalElements, creator?.advanceUser
+		);
+		hasChildren = defaultValue(hasChildren, creator?.advanceUser);
 
 		const parentId =
 			parentStatement !== 'top' ? parentStatement?.statementId : 'top';
@@ -298,8 +319,9 @@ export function createStatement({
 			parents,
 			topParentId,
 			creator,
+			...(defaultLanguage && { defaultLanguage: defaultLanguage }),
 			creatorId: creator.uid,
-			membership: membership || { access: Access.open },
+			membership: membership || { access: Access.openToAll },
 			statementSettings: {
 				enhancedEvaluation,
 				showEvaluation,
@@ -316,6 +338,9 @@ export function createStatement({
 				numberOfResults: Number(numberOfResults) || 1,
 				cutoffNumber: 1,
 				cutoffBy: CutoffBy.topOptions,
+			},
+			questionSettings: {
+				...(questionType && { questionType }),
 			},
 			hasChildren,
 			consensus: 0,
@@ -355,8 +380,17 @@ export function createStatement({
 		}
 
 		parse(StatementSchema, newStatement);
+		if (questionType === QuestionType.massConsensus) {
+			setNewProcessToDB(newStatement.statementId);
+		}
 
 		return newStatement;
+
+		function defaultValue(value: boolean | undefined, isAdvanceUser: boolean | undefined): boolean {
+			if (value !== undefined) return value;
+
+			return isAdvanceUser ? true : false;
+		}
 	} catch (error) {
 		console.error(error);
 
@@ -637,23 +671,23 @@ export async function updateStatementMainImage(
 }
 
 export async function setFollowMeDB(
-	statement: Statement,
+	topParentStatement: Statement,
 	path: string | undefined
 ): Promise<void> {
 	try {
 		parse(string(), path);
-		parse(StatementSchema, statement);
+		parse(StatementSchema, topParentStatement);
 
-		const statementRef = doc(
+		const topParentStatementRef = doc(
 			FireStore,
 			Collections.statements,
-			statement.statementId
+			topParentStatement.statementId
 		);
 
 		if (path) {
-			await updateDoc(statementRef, { followMe: path });
+			await updateDoc(topParentStatementRef, { followMe: path });
 		} else {
-			await updateDoc(statementRef, { followMe: '' });
+			await updateDoc(topParentStatementRef, { followMe: '' });
 		}
 	} catch (error) {
 		console.error(error);
@@ -679,5 +713,32 @@ export async function updateStatementsOrderToDB(statements: Statement[]) {
 		await batch.commit();
 	} catch (error) {
 		console.error(error);
+	}
+}
+
+export async function toggleStatementHide(statementId: string): Promise<boolean | undefined> {
+	try {
+		if (!statementId) throw new Error('Statement ID is undefined');
+
+		const statementRef = doc(
+			FireStore,
+			Collections.statements,
+			statementId
+		);
+
+		const statementDB = await getDoc(statementRef);
+
+		if (!statementDB.exists()) throw new Error('Statement not found');
+		const statementDBData = statementDB.data() as Statement;
+
+		const hide = !(statementDBData.hide === true);
+
+		await updateDoc(statementRef, { hide });
+
+		return hide;
+	} catch (error) {
+		console.error(error);
+
+		return undefined;
 	}
 }

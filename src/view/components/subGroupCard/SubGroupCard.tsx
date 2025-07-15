@@ -15,7 +15,7 @@ const SubGroupCard: FC<Props> = ({ statement }) => {
 	const { Icon, backgroundColor, text } = useSubGroupCard(statement);
 
 	try {
-		const { results, topVotedOption, evaluationSettings } = statement;
+		const { results, topVotedOption, evaluationSettings, hide } = statement;
 		const evaluationUI = evaluationSettings?.evaluationUI;
 		const isDecidedByVoting = evaluationUI === EvaluationUI.voting;
 		const shouldSeeVoting = isDecidedByVoting && topVotedOption;
@@ -28,19 +28,21 @@ const SubGroupCard: FC<Props> = ({ statement }) => {
 				style={{
 					border: `1px solid ${backgroundColor}`,
 					borderLeft: `5px solid ${backgroundColor}`,
+					opacity: hide ? 0.5 : 1
 				}}
 			>
 				<Link
 					to={`/statement/${statement.statementId}`}
 					className={styles.type}
 				>
-					<div className={styles.text}>{text}</div>
-					<div
+					<div className={styles.text}>{text}</div>					<div
 						className={styles.iconWrapper}
 						style={{ color: backgroundColor }}
 					>
 						{Icon}
-						<div><StatementChatMore statement={statement} onlyCircle={true} /></div>
+						<div onClick={(e) => e.stopPropagation()}>
+							<StatementChatMore statement={statement} onlyCircle={true} />
+						</div>
 					</div>
 				</Link>
 				{shouldSeeVoting ? (

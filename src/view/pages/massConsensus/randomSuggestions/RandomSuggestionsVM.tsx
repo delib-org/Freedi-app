@@ -1,11 +1,10 @@
-import firebaseConfig from '@/controllers/db/configKey';
 import { listenToEvaluation } from '@/controllers/db/evaluation/getEvaluation';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
+import { APIEndPoint } from '@/controllers/general/helpers';
 import { setMassConsensusStatements } from '@/redux/statements/statementsSlice';
 import {
 	Statement,
 	MassConsensusPageUrls,
-	functionConfig,
 	SelectionFunction,
 } from 'delib-npm';
 
@@ -49,13 +48,13 @@ export function useRandomSuggestions() {
 	}, [subStatements, user]);
 
 	const fetchRandomStatements = async () => {
-		const endPoint =
-			location.hostname === 'localhost'
-				? `http://localhost:5001/${firebaseConfig.projectId}/${functionConfig.region}/getRandomStatements?parentId=${statementId}&limit=6`
-				: `${import.meta.env.VITE_APP_RANDOM_STATEMENTS_ENDPOINT}?parentId=${statementId}&limit=6`;
-
 		if (statementId) {
 			try {
+				const endPoint = APIEndPoint('getRandomStatements', {
+					parentId: statementId,
+					limit: 6,
+				});
+
 				const response = await fetch(endPoint);
 				if (!response.ok) {
 					const { error } = await response.json();

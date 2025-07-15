@@ -1,7 +1,6 @@
-import { FC, MouseEvent } from 'react';
+import React, { FC, useState, useRef, useEffect } from 'react';
 import styles from './StageCard.module.scss';
-import Button, { ButtonType } from '@/view/components/buttons/button/Button';
-import { NavLink, useNavigate } from 'react-router';
+import { NavLink } from 'react-router';
 import {
 	Statement,
 	SimpleStatement,
@@ -9,6 +8,9 @@ import {
 } from 'delib-npm';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import StatementChatMore from '../../../../chat/components/statementChatMore/StatementChatMore';
+import Button, { ButtonType } from '@/view/components/buttons/button/Button';
+import PlusIcon from '@/assets/icons/plusIcon.svg?react';
+import MinusIcon from '@/assets/icons/minusIcon.svg?react';
 
 interface Props {
 	statement: Statement;
@@ -18,9 +20,10 @@ interface Props {
 
 const StageCard: FC<Props> = ({ statement, isDescription, isSuggestions }) => {
 	const { dir, t } = useUserConfig();
+	const [expanded, setExpanded] = useState(true);
+	const contentRef = useRef<HTMLDivElement>(null);
+	const [contentHeight, setContentHeight] = useState(0);
 
-	const navigate = useNavigate();
-	const stageUrl = `/stage/${statement.statementId}`;
 	const isVoting =
 		statement.evaluationSettings?.evaluationUI === EvaluationUI.voting;
 
@@ -28,11 +31,6 @@ const StageCard: FC<Props> = ({ statement, isDescription, isSuggestions }) => {
 	const chosen: SimpleStatement[] = isVoting && votingResults
 		? [votingResults]
 		: statement.results;
-
-	function suggestNewSuggestion(ev: MouseEvent<HTMLButtonElement>) {
-		ev.stopPropagation();
-		navigate(stageUrl);
-	}
 
 	const getTitle = () => {
 		if (isDescription) return 'Description';
@@ -43,71 +41,56 @@ const StageCard: FC<Props> = ({ statement, isDescription, isSuggestions }) => {
 
 	const title = getTitle();
 
-	const direction = dir === 'rtl' ? 'card--rtl' : 'card--ltr';
-	let suggestionsClass = '';
-	if (isSuggestions) {
-		suggestionsClass =
-			dir === 'ltr' ? 'card--suggestions' : 'card--suggestions-rtl';
-	}
+	const handleCardClick = (e: React.MouseEvent | React.TouchEvent) => {
+		e.preventDefault();
+		setExpanded(!expanded);
+	};
+
+	useEffect(() => {
+		if (contentRef.current) {
+			setContentHeight(expanded ? contentRef.current.scrollHeight : 0);
+		}
+	}, [expanded, chosen]);
 
 	return (
 		<div
-			className={`${styles.card} ${styles[direction]} ${styles[suggestionsClass]}`}
+			dir={dir}
+			className={styles.card}
+		>			<button
+			className={`${styles.title} ${styles.item}`}
+			style={expanded ? { backgroundColor: 'transparent' } : {}}
+			onClick={handleCardClick}
 		>
-			<div className={`${styles.title}`}>
 				<div className={`${styles.notification}`}>
-					<StatementChatMore statement={statement} onlyCircle={true} />
+					<StatementChatMore statement={statement} onlyCircle={true} asButton={false} />
 				</div>
-				<h3>{t(title)}</h3>
-			</div>
-
-			{
-				chosen.length === 0 ? (
-					<p>{t('No suggestion so far')}</p>
-				) : (
-					<>
-						<ul>
-							{chosen.map((opt: SimpleStatement) => (
-								<NavLink
-									key={opt.statementId}
-									to={`/statement/${opt.statementId}`}
-								>
-									<ol className={styles.suggestions}>
-										<li>
-											<div>{opt.statement}</div>
-											{opt.description && (
-												<div
-													className={
-														styles.statement__description
-													}
-												>
-													{opt.description}
-												</div>
-											)}
-										</li>
-									</ol>
-								</NavLink>
-							))}
-						</ul>
-						{!isSuggestions && (
-							<NavLink to={`/statement/${statement.statementId}`}>
-								<p
-									className={`${styles.seeMore} ${dir === 'ltr' ? styles.rtl : styles.ltr}`}
-								>
-									{t('Read more...')}
-								</p>{' '}
-							</NavLink>
-						)}
-					</>
-				)
-			}
-
-			<div className={`btns ${styles.btn}`}>
-				<Button
-					text={t('Add Suggestion')}
-					buttonType={ButtonType.SECONDARY}
-					onClick={suggestNewSuggestion}
-				/>
+				<p>{t(title)} {isSuggestions && `: ${statement.statement}`}</p>
+				{expanded ? <MinusIcon /> : <PlusIcon />}
+			</button>
+			<div
+				ref={contentRef}
+				className={styles.previewContent}
+				style={{
+					maxHeight: `${contentHeight}px`,
+					overflow: 'hidden',
+					transition: 'max-height 0.3s ease-in-out, opacity 0.3s ease-in-out',
+					opacity: expanded ? 1 : 0,
+				}}
+			>
+				{chosen.map((opt: SimpleStatement) => (
+					<div key={opt.statementId} className={`${styles.item} ${styles.suggestions}`}>
+						<p className={styles.suggestionTitle}>{opt.statement}</p>
+						{opt.description && <p>{opt.description}</p>}
+					</div>
+				))}
+				{expanded && (
+					<NavLink to={`/stage/${statement.statementId}`}>
+						<Button
+							buttonType={ButtonType.SECONDARY}
+							text={t('Enter sub-question')}
+						/>
+					</NavLink>
+				)}
 			</div>
 		</div >
 	);

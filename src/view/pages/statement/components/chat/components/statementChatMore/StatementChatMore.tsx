@@ -9,47 +9,80 @@ import ChatIcon from '@/assets/icons/roundedChatDotIcon.svg?react';
 
 import { SimpleStatement, Statement } from 'delib-npm';
 import { useSelector } from 'react-redux';
-import { inAppNotificationsCountSelectorForStatement } from '@/redux/notificationsSlice/notificationsSlice';
-import { useAuthentication } from '@/controllers/hooks/useAuthentication';
+import { inAppNotificationsSelector } from '@/redux/notificationsSlice/notificationsSlice';
+import { NotificationType } from '@/types/notification/Notification';
+import { creatorSelector } from '@/redux/creator/creatorSlice';
 
 interface Props {
 	statement: Statement | SimpleStatement;
 	onlyCircle?: boolean;
 	useLink?: boolean;
+	asButton?: boolean;
 }
 
-const StatementChatMore: FC<Props> = ({ statement, onlyCircle, useLink = true }) => {
-
+const StatementChatMore: FC<Props> = ({
+	statement,
+	onlyCircle,
+	useLink = true,
+	asButton = true,
+}) => {
 	const navigate = useNavigate();
-	const { user } = useAuthentication();
 
 	// Redux store
-	const notifications = useSelector(inAppNotificationsCountSelectorForStatement(statement.statementId))
 
-	const countMessages = notifications.filter(notification => notification.creatorName !== user?.displayName).length;
+	const creator = useSelector(creatorSelector);
 
-	return (
+	const inAppNotificationsList: NotificationType[] = useSelector(
+		inAppNotificationsSelector
+	).filter(
+		(n) =>
+			n.creatorId !== creator?.uid && n.parentId === statement.statementId
+	);
+
+	const handleClick = () => {
+		if (useLink) {
+			navigate(`/statement/${statement.statementId}/chat`, {
+				state: { from: window.location.pathname },
+			});
+		}
+	};
+
+	const content = (
+		<div className='icon'>
+			{inAppNotificationsList.length > 0 && (
+				<div className='redCircle'>
+					{inAppNotificationsList.length < 10
+						? inAppNotificationsList.length
+						: `9+`}
+				</div>
+			)}
+			{!onlyCircle && <ChatIcon />}
+		</div>
+	);
+
+	return asButton ? (
 		<button
 			className='statementChatMore'
 			aria-label='Chat more button'
-			onClick={() => {
-				if (useLink)
-					navigate(`/statement/${statement.statementId}/chat`, {
-						state: { from: window.location.pathname },
-					})
-			}}
+			onClick={handleClick}
 		>
-			<div className='icon'>
-				{countMessages > 0 && (
-					<div className='redCircle'>
-						{countMessages < 10
-							? countMessages
-							: `9+`}
-					</div>
-				)}
-				{!onlyCircle && < ChatIcon />}
-			</div>
+			{content}
 		</button>
+	) : (
+		<div
+			className='statementChatMore'
+			onClick={handleClick}
+			role='button'
+			tabIndex={0}
+			onKeyDown={(e) => {
+				if (e.key === 'Enter' || e.key === ' ') {
+					handleClick();
+				}
+			}}
+			aria-label='Chat more button'
+		>
+			{content}
+		</div>
 	);
 };
 

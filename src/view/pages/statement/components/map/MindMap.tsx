@@ -1,12 +1,10 @@
-import { useState, FC } from 'react';
+import { useState, FC, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { ReactFlowProvider } from 'reactflow';
 import CreateStatementModal from '../createStatementModal/CreateStatementModal';
 import MindMapChart from './components/MindMapChart';
 import { isAdmin } from '@/controllers/general/helpers';
-import {
-	FilterType
-} from '@/controllers/general/sorting';
+import { FilterType } from '@/controllers/general/sorting';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import { useMapContext } from '@/controllers/hooks/useMap';
@@ -24,10 +22,14 @@ const MindMap: FC = () => {
 
 	const { statementId } = useParams();
 	const statement = useSelector(statementSelector(statementId));
+	const [statementParent, setStatementParent] = useState<typeof current>();
 
-	// Safely access statement.statementId with optional chaining
+	const rootStatementId = statement?.topParentId ?? statement?.statementId;
+
 	const userSubscription = useAppSelector(
-		statementSubscriptionSelector(statement?.statementId)
+		rootStatementId
+			? statementSubscriptionSelector(rootStatementId)
+			: () => undefined
 	);
 
 	// Use the fixed hook
@@ -38,6 +40,7 @@ const MindMap: FC = () => {
 
 	const { t } = useUserConfig();
 	const { mapContext, setMapContext } = useMapContext();
+	const selectedId = mapContext?.selectedId ?? null;
 
 	const [filterBy, setFilterBy] = useState<FilterType>(
 		FilterType.questionsResultsOptions
@@ -49,6 +52,20 @@ const MindMap: FC = () => {
 			showModal: show,
 		}));
 	};
+	const current = useSelector(
+		selectedId ? statementSelector(selectedId) : () => undefined
+	);
+
+	useEffect(() => {
+		if (current) {
+			setStatementParent(current);
+		}
+	}, [current]);
+
+	const isDefaultOption: boolean =
+		statementParent?.statementType === StatementType.question;
+	const isOptionAllowed =
+		statementParent?.statementType !== StatementType.group;
 
 	// Only render if we have the necessary data
 	if (!statement) {
@@ -93,6 +110,7 @@ const MindMap: FC = () => {
 						<MindMapChart
 							descendants={results}
 							isAdmin={_isAdmin}
+							filterBy={filterBy}
 						/>
 					) : (
 						<div>Loading mind map data...</div>
@@ -103,11 +121,11 @@ const MindMap: FC = () => {
 					<Modal>
 						<CreateStatementModal
 							allowedTypes={[
-								StatementType.option,
+								isOptionAllowed && StatementType.option,
 								StatementType.question,
 							]}
 							parentStatement={mapContext.parentStatement}
-							isOption={mapContext.isOption}
+							isOption={isDefaultOption}
 							setShowModal={toggleModal}
 						/>
 					</Modal>

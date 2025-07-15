@@ -40,6 +40,7 @@ import React from 'react';
 export const listenToStatementSubscription = (
 	statementId: string,
 	creator: Creator,
+	setHasSubscription?: React.Dispatch<React.SetStateAction<boolean>>
 ): Unsubscribe => {
 	try {
 		const dispatch = store.dispatch;
@@ -53,6 +54,8 @@ export const listenToStatementSubscription = (
 			try {
 				if (!statementSubscriptionDB.exists()) {
 					console.info('No subscription found');
+
+					if (setHasSubscription) setHasSubscription(false);
 
 					return;
 				}
@@ -79,7 +82,7 @@ export const listenToStatementSubscription = (
 	} catch (error) {
 		console.error(error);
 
-		return () => { };
+		return () => {};
 	}
 };
 
@@ -119,7 +122,7 @@ export const listenToStatement = (
 		console.error(error);
 		if (setIsStatementNotFound) setIsStatementNotFound(true);
 
-		return () => { };
+		return () => {};
 	}
 };
 
@@ -137,13 +140,18 @@ export const listenToSubStatements = (
 		// This should be enough for most use cases while dramatically improving load time
 		const descAsc = topBottom === 'top' ? 'desc' : 'asc';
 
-		const q = query(
+		// Build the base query
+		let q = query(
 			statementsRef,
 			where('parentId', '==', statementId),
 			where('statementType', '!=', StatementType.document),
-			orderBy('createdAt', descAsc),
-			limit(numberOfOptions)
+			orderBy('createdAt', descAsc)
 		);
+
+		// Only add limit if numberOfOptions is provided
+		if (numberOfOptions) {
+			q = query(q, limit(numberOfOptions));
+		}
 
 		let isFirstCall = true;
 
@@ -181,7 +189,7 @@ export const listenToSubStatements = (
 	} catch (error) {
 		console.error(error);
 
-		return () => { };
+		return () => {};
 	}
 };
 
@@ -311,10 +319,7 @@ export function listenToAllDescendants(statementId: string): Unsubscribe {
 				statementsDB.docChanges().forEach((change) => {
 					const statement = parse(StatementSchema, change.doc.data());
 
-					if (
-						change.type === 'added' ||
-						change.type === 'modified'
-					) {
+					if (change.type === 'added' || change.type === 'modified') {
 						store.dispatch(setStatement(statement));
 					} else if (change.type === 'removed') {
 						store.dispatch(deleteStatement(statement.statementId));

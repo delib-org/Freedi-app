@@ -1,76 +1,87 @@
 /* eslint-disable @typescript-eslint/no-unsafe-function-type */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {
-	onDocumentUpdated,
-	onDocumentCreated,
-	onDocumentWritten,
-	onDocumentDeleted,
-} from 'firebase-functions/v2/firestore';
-import { onRequest } from 'firebase-functions/v2/https';
-import { Request, Response } from 'firebase-functions/v1';
+  onDocumentUpdated,
+  onDocumentCreated,
+  onDocumentWritten,
+  onDocumentDeleted,
+} from "firebase-functions/v2/firestore";
+import { onRequest } from "firebase-functions/v2/https";
+import { Request, Response } from "firebase-functions/v1";
 // The Firebase Admin SDK
-import { initializeApp } from 'firebase-admin/app';
-import { getFirestore } from 'firebase-admin/firestore';
+import { initializeApp } from "firebase-admin/app";
+import { getFirestore } from "firebase-admin/firestore";
 
 // Import collection constants
-import { Collections, functionConfig } from 'delib-npm';
+import { Collections, functionConfig } from "delib-npm";
 
 // Import function modules
 import {
-	deleteEvaluation,
-	newEvaluation,
-	updateChosenOptions,
-	updateEvaluation,
-} from './fn_evaluation';
-import { updateResultsSettings } from './fn_results';
+  deleteEvaluation,
+  newEvaluation,
+  updateChosenOptions,
+  updateEvaluation,
+} from "./fn_evaluation";
+import { updateResultsSettings } from "./fn_results";
 import {
-	getQuestionOptions,
-	// updateNumberOfNewSubStatements,
-} from './fn_statements';
-import { updateVote } from './fn_vote';
+  getQuestionOptions,
+  // updateNumberOfNewSubStatements,
+} from "./fn_statements";
+import { updateVote } from "./fn_vote";
 import {
-	setAdminsToNewStatement,
-	updateSubscriptionsSimpleStatement,
-} from './fn_subscriptions';
+  onNewSubscription,
+  onStatementDeletionDeleteSubscriptions,
+  setAdminsToNewStatement,
+  updateSubscriptionsSimpleStatement,
+} from "./fn_subscriptions";
 import {
-	getRandomStatements,
-	getTopStatements,
-	getUserOptions,
-} from './fn_httpRequests';
-import { findSimilarStatements } from './fn_findSimilarStatements';
-import { updateApprovalResults } from './fn_approval';
-import { setImportanceToStatement } from './fn_importance';
-import { updateAgrees } from './fn_agree';
-import { updateStatementWithViews } from './fn_views';
-import { getInitialMCData, addMassConsensusMember, addOptionToMassConsensus, removeOptionFromMassConsensus, updateOptionInMassConsensus, addMemberToMassConsensus } from './fn_massConsensus';
-import { updateInAppNotifications } from './fn_notifications';
+  getRandomStatements,
+  getTopStatements,
+  getUserOptions,
+} from "./fn_httpRequests";
+import { findSimilarStatements } from "./fn_findSimilarStatements";
+import { updateApprovalResults } from "./fn_approval";
+import { setImportanceToStatement } from "./fn_importance";
+import { updateAgrees } from "./fn_agree";
+import { updateStatementWithViews } from "./fn_views";
+import {
+  getInitialMCData,
+  addMassConsensusMember,
+  addOptionToMassConsensus,
+  removeOptionFromMassConsensus,
+  updateOptionInMassConsensus,
+  addMemberToMassConsensus,
+} from "./fn_massConsensus";
+import { updateInAppNotifications } from "./fn_notifications";
+import { getCluster, recoverLastSnapshot } from "./fn_clusters";
+import { checkProfanity } from "./fn_profanityChecker";
 
 // Initialize Firebase
 initializeApp();
 export const db = getFirestore();
 
 // Environment configuration
-const isProduction = process.env.NODE_ENV === 'production';
-console.info('Environment:', isProduction ? 'Production' : 'Development');
+const isProduction = process.env.NODE_ENV === "production";
+console.info("Environment:", isProduction ? "Production" : "Development");
 
 /**
  * CORS configuration based on environment
  */
 const corsConfig = isProduction
-	? [
-		'https://freedi.tech',
-		'https://delib.web.app',
-		'https://freedi-test.web.app',
-		'https://delib-5.web.app',
-		'https://delib.web.app',
-	]
-	: [
-		'http://localhost:5173',
-		'http://localhost:5174',
-		'http://localhost:5175',
-		'http://localhost:5176',
-		'http://localhost:5177',
-	];
+  ? [
+      "https://freedi.tech",
+      "https://delib.web.app",
+      "https://freedi-test.web.app",
+      "https://delib-5.web.app",
+      "https://delib.web.app",
+    ]
+  : [
+      "http://localhost:5173",
+      "http://localhost:5174",
+      "http://localhost:5175",
+      "http://localhost:5176",
+      "http://localhost:5177",
+    ];
 
 /**
  * Creates a wrapper for HTTP functions with standardized error handling
@@ -78,22 +89,22 @@ const corsConfig = isProduction
  * @returns {Function} - Wrapped function with error handling
  */
 const wrapHttpFunction = (
-	handler: (req: Request, res: Response) => Promise<void>
+  handler: (req: Request, res: Response) => Promise<void>
 ) => {
-	return onRequest(
-		{
-			...functionConfig,
-			cors: corsConfig,
-		},
-		async (req, res) => {
-			try {
-				await handler(req, res);
-			} catch (error) {
-				console.error('Error in HTTP function:', error);
-				res.status(500).send('Internal Server Error');
-			}
-		}
-	);
+  return onRequest(
+    {
+      ...functionConfig,
+      cors: corsConfig,
+    },
+    async (req, res) => {
+      try {
+        await handler(req, res);
+      } catch (error) {
+        console.error("Error in HTTP function:", error);
+        res.status(500).send("Internal Server Error");
+      }
+    }
+  );
 };
 
 /**
@@ -107,25 +118,25 @@ const wrapHttpFunction = (
 
 //@ts-ignore
 const createFirestoreFunction = (
-	path: string,
-	triggerType: any,
-	callback: Function,
-	functionName: string
+  path: string,
+  triggerType: any,
+  callback: Function,
+  functionName: string
 ) => {
-	return triggerType(
-		{
-			document: path,
-			...functionConfig,
-		},
-		async (event: any) => {
-			try {
-				await callback(event);
-			} catch (error) {
-				console.error(`Error in ${functionName}:`, error);
-				throw error;
-			}
-		}
-	);
+  return triggerType(
+    {
+      document: path,
+      ...functionConfig,
+    },
+    async (event: any) => {
+      try {
+        await callback(event);
+      } catch (error) {
+        console.error(`Error in ${functionName}:`, error);
+        throw error;
+      }
+    }
+  );
 };
 
 // --------------------------
@@ -138,6 +149,9 @@ exports.checkForSimilarStatements = wrapHttpFunction(findSimilarStatements);
 exports.massConsensusGetInitialData = wrapHttpFunction(getInitialMCData);
 exports.getQuestionOptions = wrapHttpFunction(getQuestionOptions);
 exports.massConsensusAddMember = wrapHttpFunction(addMassConsensusMember);
+exports.getCluster = wrapHttpFunction(getCluster);
+exports.recoverLastSnapshot = wrapHttpFunction(recoverLastSnapshot);
+exports.checkProfanity = checkProfanity;
 
 // --------------------------
 // FIRESTORE TRIGGER FUNCTIONS
@@ -152,137 +166,142 @@ exports.massConsensusAddMember = wrapHttpFunction(addMassConsensusMember);
 // );
 
 exports.updateInAppNotifications = createFirestoreFunction(
-	`/${Collections.statements}/{statementId}`,
-	onDocumentCreated,
-	updateInAppNotifications,
-	'updateInAppNotifications'
+  `/${Collections.statements}/{statementId}`,
+  onDocumentCreated,
+  updateInAppNotifications,
+  "updateInAppNotifications"
 );
 
 exports.setAdminsToNewStatement = createFirestoreFunction(
-	`/${Collections.statements}/{statementId}`,
-	onDocumentCreated,
-	setAdminsToNewStatement,
-	'setAdminsToNewStatement'
+  `/${Collections.statements}/{statementId}`,
+  onDocumentCreated,
+  setAdminsToNewStatement,
+  "setAdminsToNewStatement"
 );
 exports.updateChosenOptionsOnOptionCreate = createFirestoreFunction(
-	`/${Collections.statements}/{statementId}`,
-	onDocumentCreated,
-	updateChosenOptions,
-	'updateChosenOptionsOnOptionCreate'
+  `/${Collections.statements}/{statementId}`,
+  onDocumentCreated,
+  updateChosenOptions,
+  "updateChosenOptionsOnOptionCreate"
 );
 exports.updateStatementWithViews = createFirestoreFunction(
-	`/${Collections.statementViews}/{viewId}`,
-	onDocumentCreated,
-	updateStatementWithViews,
-	'updateStatementWithViews'
+  `/${Collections.statementViews}/{viewId}`,
+  onDocumentCreated,
+  updateStatementWithViews,
+  "updateStatementWithViews"
+);
+exports.onStatementDeletion = createFirestoreFunction(
+  `/${Collections.statements}/{statementId}`,
+  onDocumentDeleted,
+  onStatementDeletionDeleteSubscriptions,
+  `onStatementDeletionDeleteSubscriptions`
+);
+// Subscription functions
+exports.updateNumberOfMembers = createFirestoreFunction(
+  `/${Collections.statementsSubscribe}/{subscriptionId}`,
+  onDocumentCreated,
+  onNewSubscription,
+  "updateNumberOfMembers"
 );
 
-// Subscription functions
-// exports.updateNumberOfMembers = createFirestoreFunction(
-// 	`/${Collections.statementsSubscribe}/{subscriptionId}`,
-// 	onDocumentCreated,
-// 	updateStatementNumberOfMembers,
-// 	'updateNumberOfMembers'
-// );
-
 exports.updateSubscriptionsSimpleStatement = createFirestoreFunction(
-	`/${Collections.statements}/{statementId}`,
-	onDocumentUpdated,
-	updateSubscriptionsSimpleStatement,
-	'updateSubscriptionsSimpleStatement'
+  `/${Collections.statements}/{statementId}`,
+  onDocumentUpdated,
+  updateSubscriptionsSimpleStatement,
+  "updateSubscriptionsSimpleStatement"
 );
 
 // Mass Consensus functions
 
 //update number of options in mass consensus
 exports.addOptionToMassConsensus = createFirestoreFunction(
-	`/${Collections.statements}/{statementId}`,
-	onDocumentCreated,
-	addOptionToMassConsensus,
-	'addOptionToMassConsensus'
+  `/${Collections.statements}/{statementId}`,
+  onDocumentCreated,
+  addOptionToMassConsensus,
+  "addOptionToMassConsensus"
 );
 exports.removeOptionFromMassConsensus = createFirestoreFunction(
-	`/${Collections.statements}/{statementId}`,
-	onDocumentDeleted,
-	removeOptionFromMassConsensus,
-	'removeOptionFromMassConsensus'
+  `/${Collections.statements}/{statementId}`,
+  onDocumentDeleted,
+  removeOptionFromMassConsensus,
+  "removeOptionFromMassConsensus"
 );
 exports.updateOptionInMassConsensus = createFirestoreFunction(
-	`/${Collections.statements}/{statementId}`,
-	onDocumentUpdated,
-	updateOptionInMassConsensus,
-	'updateOptionInMassConsensus'
+  `/${Collections.statements}/{statementId}`,
+  onDocumentUpdated,
+  updateOptionInMassConsensus,
+  "updateOptionInMassConsensus"
 );
 
 exports.addMemberToMassConsensus = createFirestoreFunction(
-	`/${Collections.massConsensusMembers}/{memberId}`,
-	onDocumentCreated,
-	addMemberToMassConsensus,
-	'addMemberToMassConsensus'
+  `/${Collections.massConsensusMembers}/{memberId}`,
+  onDocumentCreated,
+  addMemberToMassConsensus,
+  "addMemberToMassConsensus"
 );
 
 // Evaluation functions
 exports.onSetChoseBySettings = createFirestoreFunction(
-	`/${Collections.choseBy}/{statementId}`,
-	onDocumentWritten,
-	updateChosenOptions,
-	'onSetChoseBySettings'
+  `/${Collections.choseBy}/{statementId}`,
+  onDocumentWritten,
+  updateChosenOptions,
+  "onSetChoseBySettings"
 );
 
 exports.newEvaluation = createFirestoreFunction(
-	`/${Collections.evaluations}/{evaluationId}`,
-	onDocumentCreated,
-	newEvaluation,
-	'newEvaluation'
+  `/${Collections.evaluations}/{evaluationId}`,
+  onDocumentCreated,
+  newEvaluation,
+  "newEvaluation"
 );
 
 exports.deleteEvaluation = createFirestoreFunction(
-	`/${Collections.evaluations}/{evaluationId}`,
-	onDocumentDeleted,
-	deleteEvaluation,
-	'deleteEvaluation'
+  `/${Collections.evaluations}/{evaluationId}`,
+  onDocumentDeleted,
+  deleteEvaluation,
+  "deleteEvaluation"
 );
 
 exports.updateEvaluation = createFirestoreFunction(
-	`/${Collections.evaluations}/{evaluationId}`,
-	onDocumentUpdated,
-	updateEvaluation,
-	'updateEvaluation'
+  `/${Collections.evaluations}/{evaluationId}`,
+  onDocumentUpdated,
+  updateEvaluation,
+  "updateEvaluation"
 );
 
 // Results functions
 exports.updateResultsSettings = createFirestoreFunction(
-	`/${Collections.resultsTriggers}/{statementId}`,
-	onDocumentWritten,
-	updateResultsSettings,
-	'updateResultsSettings'
+  `/${Collections.resultsTriggers}/{statementId}`,
+  onDocumentWritten,
+  updateResultsSettings,
+  "updateResultsSettings"
 );
 
 // Voting and approval functions
 exports.addVote = createFirestoreFunction(
-	'/votes/{voteId}',
-	onDocumentWritten,
-	updateVote,
-	'addVote'
+  "/votes/{voteId}",
+  onDocumentWritten,
+  updateVote,
+  "addVote"
 );
 
 exports.updateDocumentApproval = createFirestoreFunction(
-	`/${Collections.approval}/{approvalId}`,
-	onDocumentWritten,
-	updateApprovalResults,
-	'updateDocumentApproval'
+  `/${Collections.approval}/{approvalId}`,
+  onDocumentWritten,
+  updateApprovalResults,
+  "updateDocumentApproval"
 );
 
 exports.setImportanceToStatement = createFirestoreFunction(
-	`/${Collections.importance}/{importanceId}`,
-	onDocumentWritten,
-	setImportanceToStatement,
-	'setImportanceToStatement'
+  `/${Collections.importance}/{importanceId}`,
+  onDocumentWritten,
+  setImportanceToStatement,
+  "setImportanceToStatement"
 );
 
 exports.updateAgrees = createFirestoreFunction(
-	`/${Collections.agrees}/{agreeId}`,
-	onDocumentWritten,
-	updateAgrees,
-	'updateAgrees'
+  `/${Collections.agrees}/{agreeId}`,
+  onDocumentWritten,
+  updateAgrees,
+  "updateAgrees"
 );

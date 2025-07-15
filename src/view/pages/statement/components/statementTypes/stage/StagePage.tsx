@@ -6,8 +6,13 @@ import StatementVote from '../../vote/StatementVote';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import { StatementContext } from '../../../StatementCont';
 import { Statement, EvaluationUI } from 'delib-npm';
+import Clustering from '../../clustering/Clustering';
 
-const StagePage = () => {
+interface Props {
+	showStageTitle?: boolean;
+}
+
+const StagePage = ({ showStageTitle = true }: Props) => {
 	const { t } = useUserConfig();
 	const { statement } = useContext(StatementContext);
 	const stageRef = useRef<HTMLDivElement>(null);
@@ -35,15 +40,15 @@ const StagePage = () => {
 	}, []);
 
 	const stageName = statement?.statement ? `: ${t(statement.statement)}` : '';
+	const isClustering = statement?.evaluationSettings?.evaluationUI === EvaluationUI.clustering;
 
 	return (
 		<>
 			<div className={`${styles['stage-page']} wrapper`}>
-				<h2>
+				{!isClustering && showStageTitle && <h2>
 					{t('Stage')}
 					{statement?.statement && stageName}
-				</h2>
-				<p className='mb-4'>Stage description</p>
+				</h2>}
 				<StagePageSwitch statement={statement} />
 			</div>
 			<div className={styles.bottomNav}>
@@ -62,11 +67,14 @@ interface StagePageSwitchProps {
 function StagePageSwitch({ statement }: StagePageSwitchProps) {
 	const evaluationUI = statement?.evaluationSettings?.evaluationUI;
 
-	if (evaluationUI === EvaluationUI.suggestions) {
-		return <SuggestionCards />;
-	} else if (evaluationUI === EvaluationUI.voting) {
-		return <StatementVote />;
-	} else {
-		return <SuggestionCards />;
+	switch (evaluationUI) {
+		case EvaluationUI.suggestions:
+			return <SuggestionCards />;
+		case EvaluationUI.voting:
+			return <StatementVote />;
+		case EvaluationUI.clustering:
+			return <Clustering />;
+		default:
+			return <SuggestionCards />;
 	}
 }

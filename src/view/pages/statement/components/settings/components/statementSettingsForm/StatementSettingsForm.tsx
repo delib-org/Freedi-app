@@ -11,7 +11,6 @@ import AdvancedSettings from './../../components/advancedSettings/AdvancedSettin
 import ChoseBySettings from '../choseBy/ChoseBySettings';
 import GetEvaluators from './../../components/GetEvaluators';
 import GetVoters from './../../components/GetVoters';
-import MembersSettings from './../../components/membership/MembersSettings';
 import SectionTitle from './../../components/sectionTitle/SectionTitle';
 import TitleAndDescription from './../../components/titleAndDescription/TitleAndDescription';
 import { setNewStatement } from './../../statementSettingsCont';
@@ -19,15 +18,17 @@ import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import UploadImage from '@/view/components/uploadImage/UploadImage';
 
 // Hooks & Helpers
-import './StatementSettingsForm.scss';
+import styles from './StatementSettingsForm.module.scss';
 
 // icons
-import SaveIcon from '@/assets/icons/save.svg?react';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { createSelector } from '@reduxjs/toolkit';
 import { RootState } from '@/redux/store';
 import Loader from '@/view/components/loaders/Loader';
-import { StatementSubscription, Role, Statement } from 'delib-npm';
+import { StatementSubscription, Role, Statement, StatementType } from 'delib-npm';
+import MembershipSettings from '../membershipSettings/MembershipSettings';
+import UserDataSetting from '../UserDataSettings/UserDataSetting';
+import MembersSettings from '../membership/MembersSettings';
 
 interface StatementSettingsFormProps {
 	statement: Statement;
@@ -86,6 +87,7 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 		};
 
 		const isNewStatement = !statementId;
+		const isQuestion = statement.statementType === StatementType.question;
 
 		const statementSettingsProps = {
 			statement,
@@ -94,62 +96,69 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 
 		if (loading)
 			return (
-				<div className='statement-settings-form'>
-					<div className='loader-box'>
+				<div className={styles.statementSettingsForm}>
+					<div className={styles.loaderBox}>
 						<Loader />
 					</div>
 				</div>
 			);
 
 		return (
-			<>
+
+			<div className="wrapper">
 				<form
 					onSubmit={handleSubmit}
-					className='statement-settings-form'
+					className={styles.statementSettingsForm}
 					data-cy='statement-settings-form'
 				>
 					<TitleAndDescription
 						statement={statement}
 						setStatementToEdit={setStatementToEdit}
 					/>
-					<SectionTitle title={t('General Settings')} />
-					<section className='switches-area'>
-						<AdvancedSettings {...statementSettingsProps} />
-					</section>
-					<ChoseBySettings {...statementSettingsProps} />
+					{!isNewStatement && (
+						<>
+							<SectionTitle title={t('General Settings')} />
+							<section className={styles.switchesArea}>
+								<AdvancedSettings {...statementSettingsProps} />
+							</section>
+						</>
+					)}
 					<button
 						type='submit'
-						className='submit-button'
+						className={`${!isNewStatement && styles.submitButton} btn btn--primary`}
 						aria-label='Submit button'
 						data-cy='settings-statement-submit-btn'
 					>
-						<SaveIcon />
+						{t('Save')}
 					</button>
 				</form>
-
 				{!isNewStatement && (
 					<>
+						<MembershipSettings statement={statement} setStatementToEdit={setStatementToEdit} />
+						<MembersSettings statement={statement} />
+						{statement.statementType === StatementType.question && <ChoseBySettings {...statementSettingsProps} />}
+
 						<UploadImage
 							statement={statementSettingsProps.statement}
 							image={image}
 							setImage={setImage}
 						/>
 						<QuestionSettings {...statementSettingsProps} />
+						{isQuestion && <UserDataSetting statement={statement} />}
 						<SectionTitle title={t('Members')} />
-						<MembersSettings statement={statement} />
-						<section className='get-members-area'>
+						<section className={styles.getMembersArea}>
 							<GetVoters
 								statementId={statementId}
 								joinedMembers={joinedMembers}
 							/>
 						</section>
-						<section className='get-members-area'>
+						<section className={styles.getMembersArea}>
 							<GetEvaluators statementId={statementId} />
 						</section>
 					</>
 				)}
+			</div>
 
-			</>
 		);
 	} catch (error) {
 		console.error(error);

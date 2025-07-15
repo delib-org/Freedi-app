@@ -117,6 +117,7 @@ const StatementSettings: FC = () => {
 				</div>
 			) : (
 				<>
+
 					<StatementSettingsForm
 						statement={statementToEdit}
 						parentStatement={parentStatement}

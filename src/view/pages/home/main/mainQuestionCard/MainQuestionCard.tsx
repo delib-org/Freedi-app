@@ -1,9 +1,6 @@
 import { FC, useEffect } from 'react';
 import { Link } from 'react-router';
 import styles from './MainQuestionCard.module.scss';
-//img
-
-import ImgThumb from '@/assets/images/ImgThumb.png';
 import { listenToStatement } from '@/controllers/db/statements/listenToStatements';
 import { statementSelector } from '@/redux/statements/statementsSlice';
 import StatementChatMore from '@/view/pages/statement/components/chat/components/statementChatMore/StatementChatMore';
@@ -18,7 +15,6 @@ interface Props {
 const MainQuestionCard: FC<Props> = ({ simpleStatement }) => {
 
 	const statement: Statement | undefined = useSelector(statementSelector(simpleStatement.statementId))
-	const statementImgUrl = simpleStatement.imageURL || undefined;
 	const lastMessage = statement?.lastMessage;
 
 	useEffect(() => {
@@ -33,17 +29,12 @@ const MainQuestionCard: FC<Props> = ({ simpleStatement }) => {
 		<Link
 			className={styles.mainCard}
 			to={`/statement/${simpleStatement.statementId}/`}
-		>
-			<div
-				style={{
-					backgroundImage: `url(${statementImgUrl ?? ImgThumb})`,
-				}}
-				className={styles.img}
-			></div>
-			<div className={styles.info}>
+		>			<div className={styles.info}>
 				<div className={styles.title}>
 					<div>{simpleStatement.statement}</div>
-					<StatementChatMore statement={simpleStatement} />
+					<div onClick={(e) => e.stopPropagation()}>
+						<StatementChatMore statement={simpleStatement} />
+					</div>
 				</div>
 
 				{lastMessage && <div className={styles.updates}>

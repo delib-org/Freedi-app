@@ -11,6 +11,7 @@ import { subStatementsByTopParentIdMemo } from '@/redux/statements/statementsSli
 import Text from '@/view/components/text/Text';
 import StatementChatMore from '@/view/pages/statement/components/chat/components/statementChatMore/StatementChatMore';
 import { SimpleStatement, Statement } from 'delib-npm';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 
 interface Props {
 	simpleStatement: SimpleStatement;
@@ -23,7 +24,8 @@ const MainCard: FC<Props> = ({ simpleStatement }) => {
 		.filter((s) => s.statementId !== simpleStatement.statementId)
 		.sort((a, b) => a.lastUpdate - b.lastUpdate);
 
-	const subStatements = getLastElements(_subStatements, 7) as Statement[];
+	const { t } = useUserConfig();
+	const subStatements = getLastElements(_subStatements, 3) as Statement[];
 	const statementImgUrl = simpleStatement.imageURL || undefined;
 	const description = simpleStatement.description?.length > 30
 		? `${simpleStatement.description.slice(0, 144)} ...`
@@ -50,15 +52,20 @@ const MainCard: FC<Props> = ({ simpleStatement }) => {
 						}}
 						className={styles.img}
 					></div>
-					<StatementChatMore statement={simpleStatement} />
+					<div onClick={(e) => e.stopPropagation()}>
+						<StatementChatMore statement={simpleStatement} />
+					</div>
 				</div>
 
-				<h2>{simpleStatement.statement}</h2>
 				<div className={styles.contentText}>
-					<Text description={description} />
+					<h2>{simpleStatement.statement}</h2>
+					<div className={styles["contentText__description"]}>
+						<Text description={description} />
+					</div>
 				</div>
 			</Link>
 			<div className={styles.updates}>
+				{subStatements.length > 0 && <h3>{t('Last Updates')}</h3>}
 				{subStatements.map((subStatement: Statement) => (
 					<UpdateMainCard
 						key={subStatement.statementId}

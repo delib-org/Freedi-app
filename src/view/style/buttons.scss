@@ -4,6 +4,10 @@
 	justify-content: center;
 	gap: 1rem;
 	// width: 100%;
+
+	&--end {
+		justify-content: flex-end;
+	}
 }
 
 button {
@@ -38,13 +42,14 @@ button {
 
 	&--add {
 		width: fit-content;
-		background-color: var(--question-header);
+		background-color: var(--add-btn);
 		color: var(--white);
 	}
 
 	&--cancel {
 		background-color: var(--red);
 		color: var(--white);
+		border: 1px solid red;
 	}
 
 	&--agree {
@@ -71,7 +76,8 @@ button {
 
 	&--small {
 		font-size: 0.8rem;
-		padding: 0.5rem;
+		padding: .1rem .4rem;
+		width: fit-content;
 	}
 
 	&--img {
@@ -95,7 +101,7 @@ button {
 	&--secondary {
 		background-color: var(--white);
 		color: var(--btn-secondary);
-		border: 2px solid var(--btn-secondary);
+		border: 1px solid var(--btn-secondary);
 	}
 
 	&--disabled {
@@ -108,7 +114,70 @@ button {
 	&--massConsensus {
 		padding: 0.5rem 3rem;
 	}
+
+	&--approve {
+		background-color: #4fab9a !important;
+		color: white;
+		width: 165px;
+		height: 44px;
+		padding: 8px 12px;
+		border-radius: 25px;
+		font-size: 15px;
+		cursor: pointer;
+		box-shadow:
+			0px 2px 4px 0px #26385438,
+			0px 9px 6px 0px #2638541c,
+			0px 16px 7px 0px #26385408;
+
+		&:hover {
+			background-color: #37756a !important;
+		}
+	}
+
+	&--reject {
+		background: transparent;
+		color: var(--Text-Error, #f74a4d);
+		border: 1px solid var(--Text-Error, #f74a4d);
+		font-family:
+			"Gill Sans", "Gill Sans MT", Calibri, "Trebuchet MS", sans-serif;
+		font-size: 16px;
+		padding: 8px 12px;
+		border-radius: 25px;
+		font-weight: 800;
+		cursor: pointer;
+		width: 98px;
+		height: 44px;
+
+		&:hover {
+			color: var(--Text-Error, #be3b3d);
+			border: 1px solid var(--Text-Error, #be3b3d);
+			background-color: rgb(228, 228, 228);
+		}
+	}
+
+	&--Close {
+		align-self: center;
+		margin: 2rem 0 1rem 0;
+		width: 89px;
+		height: 44px;
+		color: #285edc;
+		border: 1px solid #285edc;
+		border-radius: 20px;
+		font-size: 16px;
+		font-weight: 600;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 8px;
+		cursor: pointer;
+		transition: background-color 0.2s ease;
+
+		&:hover {
+			background-color: rgba(40, 94, 220, 0.1);
+		}
+	}
 }
+
 .buttonOutlineWhite {
 	background: none;
 	border: 1px solid white;
@@ -181,7 +250,7 @@ button {
 		right: 5vw;
 	}
 
-	& > div {
+	&>div {
 		z-index: 100;
 		background: var(--accent);
 		width: 3.2rem;

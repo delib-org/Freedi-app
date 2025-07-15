@@ -7,7 +7,6 @@ import {
 } from 'react';
 import { StatementContext } from '../../../../StatementCont';
 import styles from './MultiStageQuestion.module.scss';
-import Button, { ButtonType } from '@/view/components/buttons/button/Button';
 import Modal from '@/view/components/modal/Modal';
 import AddStage from './addStage/AddStage';
 import { useDispatch, useSelector } from 'react-redux';
@@ -19,6 +18,8 @@ import StageCard from './stages/StageCard';
 import { updateStatementsOrderToDB } from '@/controllers/db/statements/setStatements';
 import { Statement, StatementType } from 'delib-npm';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import StagePage from '../../stage/StagePage';
+import Text from '@/view/components/text/Text';
 
 const MultiStageQuestion: FC = () => {
 	const { statement } = useContext(StatementContext);
@@ -41,7 +42,7 @@ const MultiStageQuestion: FC = () => {
 
 	const [showAddStage, setShowAddStage] = useState<boolean>(false);
 	const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
-	const [draggedItem, setDraggedItem] = useState<null | { index: number;indexOffset: number; y: number }>(null);
+	const [draggedItem, setDraggedItem] = useState<null | { index: number; indexOffset: number; y: number }>(null);
 
 	const handleDragStart = (
 		e: DragEvent<HTMLDivElement>,
@@ -49,8 +50,8 @@ const MultiStageQuestion: FC = () => {
 	): void => {
 		setDraggedIndex(index);
 		const topOfTarget = e.currentTarget.getBoundingClientRect().top
-		setDraggedItem({ 
-			index, 
+		setDraggedItem({
+			index,
 			indexOffset: e.clientY - topOfTarget,
 			y: topOfTarget
 		});
@@ -87,6 +88,8 @@ const MultiStageQuestion: FC = () => {
 		setDraggedIndex(null);
 	};
 
+	const hasStages = initialStages.length > 0;
+
 	return (
 		<>
 			{showAddStage && (
@@ -94,56 +97,65 @@ const MultiStageQuestion: FC = () => {
 					<AddStage setShowAddStage={setShowAddStage} />
 				</Modal>
 			)}
-
-			<div className={styles.stagesWrapper}>
-				<h2 className={styles.title}>
-					{t('Document')}: {statement.statement}
-				</h2>
-				<div className={styles.description}>
-					{statement?.description}
+			{!hasStages && <div className={`${styles.description} description`}>
+				<Text description={statement?.description} fontSize='1.2rem' />
+			</div>}
+			{statement.statementSettings?.enableAddNewSubQuestionsButton && (
+				<div className={`btns ${styles['add-stage']}`}>
+					<button
+						className='btn btn--secondary'
+						onClick={() => setShowAddStage(true)}
+					>{t('Add sub-question')}</button>
 				</div>
-				{initialStages.map((stage, index) => (
-					<div
-						key={stage.statementId}
-						className={`${styles.stageContainer} ${draggedIndex === index ? styles.dragging : ''}`}
-						draggable
-						onDragStart={(e) => handleDragStart(e, index)}
-						onDragOver={(e) => handleDragOver(e)}
-						onDrop={(e) => handleDrop(e, index)}
-						onDragEnd={handleDragEnd}
-						aria-label={`Draggable stage ${index + 1}`}
-					>
-						<div
-							className={styles.dragHandle}
-							aria-hidden='true'
-						></div>
-						<StageCard statement={stage} />
-					</div>
-				))}
-				{draggedItem && (
-					<div
-						className={styles.ghostItem}
-						style={{
-						top: `${draggedItem.y}px`,
-						position: "absolute",
-						transform: "translateX(-20%)",
-						opacity: 0.5,
-						pointerEvents: "none",
-						}}
-					>
-						<StageCard statement={initialStages[draggedItem.index]} />
+			)}
+			{!hasStages ? (
+				<StagePage showStageTitle={false} />) :
+				(
+					<div className={styles.stagesWrapper}>
+						<h2 className={styles.title}>
+							{t('Document')}: {statement.statement}
+						</h2>
+						<div className={styles.description}>
+							{statement?.description}
+						</div>
+						<h3 className={styles.h3}>{t('Preliminary questions')}</h3>
+						{initialStages.map((stage, index) => (
+							<div
+								key={stage.statementId}
+								className={`${styles.stageContainer} ${draggedIndex === index ? styles.dragging : ''}`}
+								draggable
+								onDragStart={(e) => handleDragStart(e, index)}
+								onDragOver={(e) => handleDragOver(e)}
+								onDrop={(e) => handleDrop(e, index)}
+								onDragEnd={handleDragEnd}
+								aria-label={`Draggable stage ${index + 1}`}
+							>
+								{/* <div
+									className={styles.dragHandle}
+									aria-hidden='true'
+								></div> */}
+								<StageCard statement={stage} />
+							</div>
+						))}
+						{draggedItem && (
+							<div
+								className={styles.ghostItem}
+								style={{
+									top: `${draggedItem.y}px`,
+									position: "absolute",
+									transform: "translateX(-20%)",
+									opacity: 0.5,
+									pointerEvents: "none",
+								}}
+							>
+								<StageCard statement={initialStages[draggedItem.index]} />
+							</div>
+						)}
+						<h3 className={styles.h3}>{t("Proposed solution")}</h3>
+						<StageCard statement={statement} isSuggestions={true} />
 					</div>
 				)}
-				<StageCard statement={statement} isSuggestions={true} />
-			</div>
-			<div className={`btns ${styles['add-stage']}`}>
-				<Button
-					text={t('Add sub-question')}
-					type='button'
-					buttonType={ButtonType.PRIMARY}
-					onClick={() => setShowAddStage(true)}
-				/>
-			</div>
+
 		</>
 	);
 };

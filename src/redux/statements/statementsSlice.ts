@@ -159,20 +159,23 @@ export const statementsSlicer = createSlice({
 		) => {
 			try {
 				const newStatementSubscription = action.payload;
-				const oldStatementSubscription = state.statements.find(
+				const index = state.statementSubscription.findIndex(
 					(statement) =>
 						statement.statementId ===
 						newStatementSubscription.statementId
 				);
-				const isEqualStatements =
-					JSON.stringify(oldStatementSubscription) ===
-					JSON.stringify(newStatementSubscription);
-				if (!isEqualStatements)
+
+				if (
+					index === -1 ||
+					JSON.stringify(state.statementSubscription[index]) !==
+					JSON.stringify(newStatementSubscription)
+				) {
 					state.statementSubscription = updateArray(
 						state.statementSubscription,
-						action.payload,
+						newStatementSubscription,
 						'statementsSubscribeId'
 					);
+				}
 				state.statementSubscription = updateArray(
 					state.statementSubscription,
 					newStatementSubscription,

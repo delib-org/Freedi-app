@@ -1,6 +1,6 @@
 import React from 'react';
 import CreateStatementModal from '../createStatementModal/CreateStatementModal';
-import SimilarStatementsSuggestion from '../newStatemement/newStatement';
+import SimilarStatementsSuggestion from '../newStatement/NewStatement';
 import { StatementType, Statement } from 'delib-npm';
 
 interface CreateStatementModalSwitchProps {

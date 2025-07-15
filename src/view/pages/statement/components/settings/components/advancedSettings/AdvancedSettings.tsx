@@ -5,12 +5,15 @@ import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import Checkbox from '@/view/components/checkbox/Checkbox';
 import './AdvancedSettings.scss';
 import { setStatementSettingToDB } from '@/controllers/db/statementSettings/setStatementSettings';
-import { StatementSettings } from 'delib-npm';
+import { StatementSettings, StatementType } from 'delib-npm';
+import { toggleStatementHide } from '@/controllers/db/statements/setStatements';
 
 const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 	const { t } = useUserConfig();
 
 	const statementSettings: StatementSettings = getStatementSettings(statement);
+
+	const { hide } = statement;
 
 	const {
 		inVotingGetOnlyResults = false,
@@ -22,6 +25,9 @@ const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 		enableNavigationalElements = false,
 		hasChat = false,
 		hasChildren = false,
+		joiningEnabled = false,
+		enableAddNewSubQuestionsButton = false,
+		defaultLookForSimilarities = false
 	} = statementSettings;
 
 	function handleAdvancedSettingChange(
@@ -41,12 +47,44 @@ const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 		<div className='advanced-settings'>
 			<h3 className='title'>{t('Advanced')}</h3>
 			<Checkbox
+				label={'Hide this statement'}
+				isChecked={hide}
+				onChange={() =>
+					toggleStatementHide(statement.statementId)
+				}
+			/>
+			<Checkbox
 				label={'Chat'}
 				isChecked={hasChat}
 				onChange={(checked) =>
 					handleAdvancedSettingChange('hasChat', checked)
 				}
 			/>
+			{statement.statementType === StatementType.question && (
+				<>
+					<Checkbox
+						label={'Enable Joining an option'}
+						isChecked={joiningEnabled}
+						onChange={(checked) =>
+							handleAdvancedSettingChange('joiningEnabled', checked)
+						}
+					/>
+					<Checkbox
+						label={'Enable add new sub-questions button'}
+						isChecked={enableAddNewSubQuestionsButton}
+						onChange={(checked) =>
+							handleAdvancedSettingChange('enableAddNewSubQuestionsButton', checked)
+						}
+					/>
+					<Checkbox
+						label={'By default, look for similar statements'}
+						isChecked={defaultLookForSimilarities}
+						onChange={(checked) =>
+							handleAdvancedSettingChange('defaultLookForSimilarities', checked)
+						}
+					/>
+				</>
+			)}
 			<Checkbox
 				label={'Enable Sub-Conversations'}
 				isChecked={hasChildren}

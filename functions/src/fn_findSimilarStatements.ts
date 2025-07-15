@@ -1,9 +1,19 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
-import { Response, onInit, Request } from 'firebase-functions/v1';
-import { db } from '.';
-import 'dotenv/config';
-import { Collections, Statement } from 'delib-npm';
+import { Request, Response } from "firebase-functions/v1";
+import { findSimilarStatementsAI, generateSimilar } from "./services/ai-service";
+import {
+	getParentStatement,
+	getSubStatements,
+	getUserStatements,
+	convertToSimpleStatements,
+	getStatementsFromTexts,
+	removeDuplicateStatement,
+	hasReachedMaxStatements,
+} from "./services/statement-service";
 
+/**
+ * Main Cloud Function to find or generate similar statements.
+ * HTTP function that handles the business logic for finding similar statements.
+ */
 export async function findSimilarStatements(
 	request: Request,
 	response: Response
@@ -12,216 +22,118 @@ export async function findSimilarStatements(
 		const numberOfOptionsToGenerate = 5;
 		const parsedBody = request.body;
 
-		const { statementId, userInput, generateIfNeeded = 6 } = parsedBody;
-		//generateIfNeeded is a boolean that indicates if we should generate similar statements if no similar statements are found
+		const {
+			statementId,
+			userInput,
+			creatorId,
+			generateIfNeeded = true,
+		} = parsedBody;
 
-		const ref = db.collection(Collections.statements);
-		const query = ref.where('parentId', '==', statementId);
+		// --- 1. Fetch Parent Statement and Validate ---
+		const parentStatement = await getParentStatement(statementId);
+		if (!parentStatement) {
+			response
+				.status(404)
+				.send({ ok: false, error: "Parent statement not found" });
 
-		const subStatementsDB = await query.get();
+			return;
+		}
 
-		const subStatements = subStatementsDB.docs.map((doc) =>
-			doc.data()
-		) as Statement[];
+		// --- 2. Fetch Existing Sub-statements and Check User Limits ---
+		const subStatements = await getSubStatements(statementId);
+		const userStatements = getUserStatements(subStatements, creatorId);
+		const maxAllowed = parentStatement.statementSettings?.numberOfOptionsPerUser ?? Infinity;
 
-		const statementSimple: { statement: string; id: string }[] =
-			subStatements.map((subStatement) => ({
-				statement: subStatement.statement,
-				id: subStatement.statementId,
-			}));
-
-		//if no options on the DB generate similar options by AI
-		if (statementSimple.length === 0) {
-			const textsByAI = await generateSimilar(
-				userInput,
-				numberOfOptionsToGenerate
-			);
-			response.status(200).send({
-				similarTexts: textsByAI,
-				ok: true,
-				userText: userInput,
+		if (hasReachedMaxStatements(userStatements, maxAllowed)) {
+			response.status(403).send({
+				ok: false,
+				error: "You have reached the maximum number of suggestions allowed.",
 			});
 
 			return;
 		}
 
-		//if there are options in the DB
-		const _similarStatementsAI: string[] = await findSimilarStatementsAI(
+		const statementSimple = convertToSimpleStatements(subStatements);
+
+		// --- 3. Handle Case: No Existing Options ---
+		if (statementSimple.length === 0) {
+			if (generateIfNeeded) {
+				const textsByAI = await generateSimilar(
+					userInput,
+					parentStatement.statement,
+					numberOfOptionsToGenerate
+				);
+
+				response.status(200).send({
+					similarTexts: textsByAI,
+					ok: true,
+					userText: userInput,
+				});
+			} else {
+				// If AI generation is disabled or fails, just return the user input
+				response.status(200).send({
+					similarTexts: [userInput],
+					ok: true,
+					userText: userInput,
+				});
+			}
+
+			return;
+		}
+
+		// --- 4. Handle Case: Find Similar Among Existing Options ---
+		const similarStatementsAI = await findSimilarStatementsAI(
 			statementSimple.map((s) => s.statement),
 			userInput,
+			parentStatement.statement,
 			generateIfNeeded,
 			numberOfOptionsToGenerate
 		);
 
-		const similarStatements = getStatementsFromTextsOfStatements(
+		const similarStatements = getStatementsFromTexts(
 			statementSimple,
-			_similarStatementsAI,
+			similarStatementsAI,
 			subStatements
 		);
-		const duplicateStatement = similarStatements.find(
-			(stat) => stat.statement === userInput
+
+		const { statements: cleanedStatements, duplicateStatement } = removeDuplicateStatement(
+			similarStatements,
+			userInput
 		);
 
-		if (duplicateStatement) {
-			const index = similarStatements.indexOf(duplicateStatement);
-			if (index !== -1) {
-				similarStatements.splice(index, 1);
-			}
-		}
-		const statementsLeftToGenerate =
-			numberOfOptionsToGenerate - similarStatements.length;
+		const statementsLeftToGenerate = numberOfOptionsToGenerate - cleanedStatements.length;
 
-		//if there are not enough similar statements in the DB and we need to generate more
-		if (statementsLeftToGenerate > 0) {
-			const generated: string[] = await generateSimilar(
+		// --- 5. Generate More if Needed ---
+		if (statementsLeftToGenerate > 0 && generateIfNeeded) {
+			const generated = await generateSimilar(
 				userInput,
+				parentStatement.statement,
 				statementsLeftToGenerate
 			);
 
 			response.status(200).send({
-				similarStatements,
+				similarStatements: cleanedStatements,
 				similarTexts: generated,
-				userText: duplicateStatement || userInput,
+				userText: duplicateStatement?.statement || userInput,
 				ok: true,
 			});
 
 			return;
 		}
 
-		// If there are enough similar statements in the DB send them
-
+		// --- 6. If there are enough similar statements in the DB send them ---
 		response.status(200).send({
-			similarStatements,
+			similarStatements: cleanedStatements,
 			ok: true,
-			userText: duplicateStatement || userInput,
+			userText: duplicateStatement?.statement || userInput,
 		});
-	} catch (error) {
-		response.status(500).send({ error: error, ok: false });
-		console.error('error', { error });
 
 		return;
-	}
 
-	function getStatementsFromTextsOfStatements(
-		statementSimple: { statement: string; id: string }[],
-		_similarStatementsAI: string[],
-		subStatements: Statement[]
-	): Statement[] {
-		const similarStatementsIds = statementSimple
-			.filter((subStatement) =>
-				_similarStatementsAI.includes(subStatement.statement)
-			)
-			.map((s) => s.id);
-
-		const statements = similarStatementsIds
-			.map((id) =>
-				subStatements.find(
-					(subStatement) => subStatement.statementId === id
-				)
-			)
-			.filter((s) => s !== undefined);
-
-		return statements;
-	}
-}
-
-let genAI: GoogleGenerativeAI;
-
-onInit(() => {
-	try {
-		if (!process.env.GOOGLE_API_KEY) {
-			throw new Error('Missing GOOGLE_API_KEY environment variable');
-		}
-
-		genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
 	} catch (error) {
-		console.error('Error initializing GenAI', error);
-	}
-});
+		response.status(500).send({ error: error, ok: false });
+		console.error("error", { error });
 
-export async function findSimilarStatementsAI(
-	allStatements: string[],
-	userInput: string,
-	generateIfNeeded?: boolean,
-	numberOfSimilarStatements: number = 6
-) {
-	try {
-		const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
-
-		const prompt = `
-		Find up to ${numberOfSimilarStatements} sentences in the following strings:  ${allStatements},  that are similar to the user input '${userInput}'. 
-		The use Input can be either in English or in Hebrew. Look for similar strings to the user input in both languages.
-		Consider a match if the sentence shares at least 60% similarity in meaning the user input.
-		Give answer back in this json format: { strings: ['string1', 'string2', ...] }
-		`;
-
-		const result = await model.generateContent(prompt);
-
-		const response = result.response;
-		const text = response.text();
-
-		return extractAndParseJsonString(text).strings;
-	} catch (error) {
-		console.error('Error running GenAI', error);
-
-		return [];
-	}
-}
-
-export async function generateSimilar(
-	userInput: string,
-	optionsToBeGeneratedByAI: number = 5
-): Promise<string[]> {
-	try {
-		const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
-
-		const prompt = `
-		create ${optionsToBeGeneratedByAI} similar sentences to the user input '${userInput}' but never the same.
-		Give answer back in this json format: { strings: ['string1', 'string2', ...] }
-		`;
-
-		const result = await model.generateContent(prompt);
-
-		const response = result.response;
-		const text = response.text();
-
-		return extractAndParseJsonString(text).strings;
-	} catch (error) {
-		console.error('Error running GenAI', error);
-
-		return [];
-	}
-}
-
-function extractAndParseJsonString(input: string): { strings: string[] } {
-	try {
-		// Find the first '{' and the last '}'
-		const startIndex = input.indexOf('{');
-		const endIndex = input.lastIndexOf('}');
-
-		if (startIndex === -1 || endIndex === -1 || startIndex >= endIndex) {
-			console.error('Invalid JSON format');
-
-			return { strings: [''] };
-		}
-
-		// Extract the JSON substring
-		const jsonString = input.substring(startIndex, endIndex + 1);
-
-		// Parse the JSON string
-		const parsedObject = JSON.parse(jsonString);
-
-		// Validate the structure of the parsed object
-		if (parsedObject && Array.isArray(parsedObject.strings)) {
-			return parsedObject;
-		} else {
-			console.error('Invalid JSON structure');
-
-			return { strings: [''] };
-		}
-	} catch (error) {
-		console.error('Error parsing JSON', error);
-
-		return { strings: [''] };
+		return;
 	}
 }

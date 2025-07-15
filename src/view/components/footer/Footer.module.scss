@@ -47,7 +47,7 @@
 		}
 
 		&Active {
-			background-color: #8cff6f6b;
+			background-color: var(--member-awaiting);
 			color: black;
 			border-radius: 2rem;
 
@@ -55,7 +55,7 @@
 
 
 		&:hover {
-			background-color: #8cff6f6b;
+			background-color: var(--member-awaiting);
 			color: black;
 			transition: all 0.2s ease-in-out;
 		}
@@ -66,7 +66,7 @@
 }
 
 .addStatementButton {
-	background: #5899e0;
+	background: var(--btn-primary);
 	flex: 1;
 	margin: .1rem 0;
 	height: 3.125rem;
@@ -95,7 +95,7 @@
 .redCircle {
 	position: absolute;
 	left: 35%;
-	background-color: red;
+	background-color: var(--icons-blue-dark);
 	color: white;
 	border-radius: 50%;
 	width: 1.2rem;

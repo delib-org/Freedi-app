@@ -1,15 +1,11 @@
 import { Statement, StatementType } from 'delib-npm';
 import styles from './SuggestionComment.module.scss';
 import { FC, KeyboardEvent, useEffect, useState, useRef, ChangeEvent } from 'react';
-import { useSuggestionComment } from './SuggestionCommentMV';
-import CreatorEvaluationIcon from './CreatorEvaluationIcon/CreatorEvaluationIcon';
 import { saveStatementToDB } from '@/controllers/db/statements/setStatements';
 import { useDispatch, useSelector } from 'react-redux';
 import { statementSubscriptionSelector, statementSubsSelector } from '@/redux/statements/statementsSlice';
 import { listenToSubStatements } from '@/controllers/db/statements/listenToStatements';
-import SubComment from './subComment/SubComment';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
-import ProfileImage from '@/view/components/profileImage/ProfileImage';
 import { evaluationSelector } from '@/redux/evaluations/evaluationsSlice';
 import EvaluationPopup from './evaluationPopup/EvaluationPopup';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
@@ -17,6 +13,9 @@ import StatementChatMore from '../../statement/components/chat/components/statem
 import { setStatementSubscriptionToDB } from '@/controllers/db/subscriptions/setSubscriptions';
 import { clearInAppNotifications } from '@/controllers/db/inAppNotifications/db_inAppNotifications';
 import { deleteInAppNotificationsByParentId } from '@/redux/notificationsSlice/notificationsSlice';
+import Arrow from '@/assets/icons/arrow-down.svg?react';
+import Button, { ButtonType } from '@/view/components/buttons/button/Button';
+import CommentCard, { ClassNameType } from './CommentCard/CommentCard';
 
 interface Props {
 	parentStatement: Statement
@@ -30,7 +29,6 @@ const SuggestionComment: FC<Props> = ({ statement, parentStatement }) => {
 	const initialStatement = useRef(parentStatement.statement);
 	const initialDescription = useRef(parentStatement.description);
 	const { user } = useAuthentication();
-	const { evaluationNumber } = useSuggestionComment({ parentStatement, statement });
 	const comments = useSelector(statementSubsSelector(statement.statementId));
 	const previousEvaluation = useSelector(evaluationSelector(parentStatement.statementId, user?.uid));
 	const [isOpen, setIsOpen] = useState(false);
@@ -141,38 +139,34 @@ const SuggestionComment: FC<Props> = ({ statement, parentStatement }) => {
 
 	return (
 		<div className={styles.suggestionComment}>
-			<button
+			<div
 				className={styles.commentHeader}
 				onClick={toggleAccordion}
 				onKeyDown={(e) => { if (e.key === 'Enter') toggleAccordion(); }}
 				tabIndex={0}
+				role="button"
+				aria-expanded={isOpen}
 			>
-				<div className={styles.creatorText}>
-					<div className={styles.commentCreator}>
-						<ProfileImage statement={statement} />
-						<CreatorEvaluationIcon evaluationNumber={evaluationNumber} />
-					</div>
-					<div className={styles.commentText} style={{ userSelect: 'text' }} >
-						{statement.statement}
-					</div>
+				<div className={styles.commentCard}>
+					<CommentCard statement={statement} parentStatement={parentStatement} />
+
 					<div className={styles.notifications}>
 						<StatementChatMore statement={statement} onlyCircle={true} useLink={false} />
 					</div>
 				</div>
 
 				<span className={`${styles.accordionIcon} ${isOpen ? styles.open : ''}`}>
-					▼
+					<Arrow />
 				</span>
-			</button>
+			</div>
 			{isOpen && (
-				<>
-					<div ref={commentsRef} className={styles.subComments}>
-						<SubComment statement={statement} />
-						{comments.map((comment) => (
-							<SubComment key={comment.statementId} statement={comment} />
-						))}
-					</div>
 
+				<div ref={commentsRef} className={styles.subComments}>
+					{comments.map((comment) => (
+						<CommentCard key={comment.statementId} statement={comment} parentStatement={parentStatement} className={ClassNameType.SubCommentCard} />
+					))}
+
+					{!showInput && <Button buttonType={ButtonType.SECONDARY} text={t("Add comment")} className={styles.replyButton} onClick={() => setShowInput(true)} />}
 					{showInput && <div className={styles.commentInput}>
 						<textarea
 							ref={textareaRef}
@@ -185,9 +179,8 @@ const SuggestionComment: FC<Props> = ({ statement, parentStatement }) => {
 						/>
 						{!isCreator && <EvaluationPopup parentStatement={parentStatement} />}
 					</div>}
-					{!showInput && <button className={styles.replyButton} onClick={() => setShowInput(true)}>השב/י</button>}
+				</div>
 
-				</>
 			)}
 		</div>
 	);

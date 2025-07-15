@@ -1,4 +1,4 @@
-import { FC, useEffect, useRef, useState } from 'react';
+import React, { FC, useEffect, useRef, useState } from 'react';
 
 // Third Party
 
@@ -20,8 +20,10 @@ import { setStatementElementHight } from '@/redux/statements/statementsSlice';
 import EditTitle from '@/view/components/edit/EditTitle';
 import IconButton from '@/view/components/iconButton/IconButton';
 import './SuggestionCard.scss';
-import { Screen, StatementType, Statement } from 'delib-npm';
+import { StatementType, Statement } from 'delib-npm';
 import { useAuthorization } from '@/controllers/hooks/useAuthorization';
+import { toggleJoining } from '@/controllers/db/joining/setJoining';
+import Joined from '@/view/components/joined/Joined';
 
 interface Props {
 	statement: Statement | undefined;
@@ -38,8 +40,9 @@ const SuggestionCard: FC<Props> = ({
 	if (!parentStatement) console.error('parentStatement is not defined');
 
 	const { t, dir } = useUserConfig();
-	const { isAuthorized } = useAuthorization(statement.statementId);
+	const { isAuthorized, isAdmin, creator } = useAuthorization(statement.statementId);
 	const { sort } = useParams();
+	const enableJoining = parentStatement?.statementSettings?.joiningEnabled;
 
 	// Redux Store
 	const dispatch = useAppDispatch();
@@ -47,22 +50,25 @@ const SuggestionCard: FC<Props> = ({
 	// Use Refs
 	const elementRef = useRef<HTMLDivElement>(null);
 
+	const hasJoinedServer = statement?.joined?.find(
+		(c) => c.uid === creator?.uid
+	) ? true : false;
+
+	// Optimistic state for instant UI updates
+	const [hasJoinedOptimistic, setHasJoinedOptimistic] = useState(hasJoinedServer);
+	const [isJoinLoading, setIsJoinLoading] = useState(false);
+
+	// Update optimistic state when server state changes
+	useEffect(() => {
+		setHasJoinedOptimistic(hasJoinedServer);
+	}, [hasJoinedServer]);
+
 	// Use States
 
 	const [isEdit, setIsEdit] = useState(false);
 	const [shouldShowAddSubQuestionModal, setShouldShowAddSubQuestionModal] =
 		useState(false);
 	const [isCardMenuOpen, setIsCardMenuOpen] = useState(false);
-
-	useEffect(() => {
-		if (
-			sort !== Screen.OPTIONS_RANDOM &&
-			sort !== Screen.QUESTIONS_RANDOM &&
-			sort !== 'random'
-		) {
-			sortSubStatements(siblingStatements, sort, 30);
-		}
-	}, [statement?.consensus]);
 
 	useEffect(() => {
 		sortSubStatements(siblingStatements, sort, 30);
@@ -103,13 +109,37 @@ const SuggestionCard: FC<Props> = ({
 		}
 	}
 
+	async function handleJoin() {
+		// Optimistically update the UI immediately
+		setHasJoinedOptimistic(!hasJoinedOptimistic);
+		setIsJoinLoading(true);
+
+		try {
+			// Call the API function in the background
+			await toggleJoining(statement.statementId);
+		} catch (error) {
+			// If the API call fails, revert the optimistic update
+			console.error('Failed to toggle joining:', error);
+			setHasJoinedOptimistic(hasJoinedOptimistic); // revert to original state
+			// Optionally show an error message to the user here
+		} finally {
+			setIsJoinLoading(false);
+		}
+	}
+
 	const statementAge = new Date().getTime() - statement.createdAt;
 	const hasChildren = parentStatement?.statementSettings?.hasChildren;
 
 	if (!statement) return null;
 
+	function handleRightClick(e: React.MouseEvent) {
+		e.preventDefault();
+		setIsCardMenuOpen(!isCardMenuOpen);
+	}
+
 	return (
 		<div
+			onContextMenu={(e) => handleRightClick(e)}
 			className={
 				statementAge < 10000
 					? 'statement-evaluation-card statement-evaluation-card--new'
@@ -120,6 +150,8 @@ const SuggestionCard: FC<Props> = ({
 				borderLeft: `8px solid ${statement.isChosen ? 'var(--approve)' : statementColor.backgroundColor || 'white'}`,
 				color: statementColor.color,
 				flexDirection: dir === 'ltr' ? 'row' : 'row-reverse',
+				opacity: statement.hide ? 0.5 : 1,
+				pointerEvents: (statement.hide && !isAuthorized ? 'none' : 'auto'),
 			}}
 			ref={elementRef}
 			id={statement.statementId}
@@ -128,13 +160,13 @@ const SuggestionCard: FC<Props> = ({
 				className='selected-option'
 				style={{
 					backgroundColor:
-						statement.selected === true ? 'var(--approve)' : '',
+						statement.isVoted === true ? 'var(--approve)' : '',
 				}}
 			>
 				<div
 					style={{
 						color: statementColor.color,
-						display: statement.selected ? 'block' : 'none',
+						display: statement.isVoted ? 'block' : 'none',
 					}}
 				>
 					{t('Selected')}
@@ -149,11 +181,31 @@ const SuggestionCard: FC<Props> = ({
 							setEdit={setIsEdit}
 							isTextArea={true}
 						/>
+						{enableJoining &&
+							<div className="btns btns--end">
+								<Joined statement={statement} />
+								<button
+									onClick={handleJoin}
+									disabled={isJoinLoading}
+									className="btn btn--small"
+									style={{
+										backgroundColor: hasJoinedOptimistic ? 'var(--approve)' : 'inherit',
+										color: hasJoinedOptimistic ? 'white' : 'inherit',
+										borderColor: hasJoinedOptimistic ? 'var(--approve)' : 'inherit',
+										opacity: isJoinLoading ? 0.7 : 1,
+										cursor: isJoinLoading ? 'not-allowed' : 'pointer'
+									}}
+								>
+									{hasJoinedOptimistic ? t('Leave') : t('Join')}
+								</button>
+							</div>
+						}
 					</div>
 					<div className='more'>
 						<SolutionMenu
 							statement={statement}
 							isAuthorized={isAuthorized}
+							isAdmin={isAdmin}
 							isCardMenuOpen={isCardMenuOpen}
 							setIsCardMenuOpen={setIsCardMenuOpen}
 							isEdit={isEdit}
@@ -170,15 +222,15 @@ const SuggestionCard: FC<Props> = ({
 						</div>
 					)}
 					<div className='evolution-element'>
-						<Evaluation
-							statement={statement}
-						/>
+						<Evaluation statement={statement} />
 					</div>
 					{hasChildren && (
 						<IconButton
 							className='add-sub-question-button more-question'
-							onClick={() =>
-								setShouldShowAddSubQuestionModal(true)
+							style={{ display: 'none', cursor: 'default' }} // changed to display none for it to not take dom space
+							onClick={
+								() => { } //delete the brackets and uncomment the line below for functionality
+								//	setShouldShowAddSubQuestionModal(true)
 							}
 						>
 							<AddQuestionIcon />

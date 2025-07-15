@@ -1,4 +1,12 @@
-import { StatementSubscription, Statement, Role, Screen, Access } from 'delib-npm';
+import firebaseConfig from '@/controllers/db/configKey';
+import {
+	functionConfig,
+	StatementSubscription,
+	Statement,
+	Role,
+	StatementType,
+	QuestionType,
+} from 'delib-npm';
 import { useAuthentication } from '../hooks/useAuthentication';
 import { EnhancedEvaluationThumb } from '@/view/pages/statement/components/evaluations/components/evaluation/enhancedEvaluation/EnhancedEvaluationModel';
 
@@ -12,22 +20,24 @@ export function isAuthorized(
 		if (!statement) throw new Error('No statement');
 
 		const { user } = useAuthentication();
-		if (statement.membership.access === Access.close && !user?.uid) return true
-		else if (user?.uid) {
+		if (!user) return false;
 
-			if (statement.creator?.uid === user.uid) return true;
+		if (
+			isUserCreator(
+				user.uid,
+				statement,
+				parentStatementCreatorId,
+				statementSubscription
+			)
+		) {
+			return true;
+		}
 
-			if (parentStatementCreatorId === user.uid) return true;
-
-			if (!statementSubscription) return false;
-
-			const role = statementSubscription?.role;
-
-			if (role === Role.admin) {
-				return true;
-			}
-
-			if (authorizedRoles?.includes(role)) return true;
+		if (
+			statementSubscription &&
+			isUserAuthorizedByRole(statementSubscription.role, authorizedRoles)
+		) {
+			return true;
 		}
 
 		return false;
@@ -36,6 +46,35 @@ export function isAuthorized(
 
 		return false;
 	}
+}
+
+function isUserCreator(
+	userId: string,
+	statement: Statement,
+	parentStatementCreatorId?: string,
+	statementSubscription?: StatementSubscription
+): boolean {
+	return (
+		statement.creator?.uid === userId ||
+		statement.creator?.uid === parentStatementCreatorId ||
+		statement.creator?.uid === statementSubscription?.userId
+	);
+}
+export function isChatMessage(statementType: StatementType): boolean {
+	if (statementType === StatementType.statement) return true;
+
+	return false;
+}
+export function isMassConsensus(questionType: QuestionType): boolean {
+	if (questionType === QuestionType.massConsensus) return true;
+
+	return false;
+}
+function isUserAuthorizedByRole(
+	role: Role,
+	authorizedRoles?: Array<Role>
+): boolean {
+	return role === Role.admin || (authorizedRoles?.includes(role) ?? false);
 }
 
 export function isAdmin(role: Role | undefined): boolean {
@@ -73,7 +112,25 @@ export function generateRandomLightColor(uuid: string) {
 
 	return hexColor;
 }
+export function isStatementTypeAllowedAsChildren(
+	parentStatement: string | { statementType: StatementType },
+	childType: StatementType
+): boolean {
+	// Handle 'top' case and string case
+	if (parentStatement === 'top' || typeof parentStatement === 'string') {
+		return true;
+	}
 
+	// Handle the group/option case
+	if (
+		parentStatement.statementType === StatementType.group &&
+		childType === StatementType.option
+	) {
+		return false;
+	}
+
+	return true;
+}
 export const statementTitleToDisplay = (
 	statement: string,
 	titleLength: number
@@ -161,25 +218,6 @@ export function getStatementSubscriptionId(
 		console.error(error);
 
 		return undefined;
-	}
-}
-
-export function getFirstScreen(array: Array<Screen>): Screen {
-	try {
-		//get the first screen from the array by this order: home, questions, options, chat, vote
-		if (!array) throw new Error('No array');
-
-		if (array.includes(Screen.HOME)) return Screen.HOME;
-		if (array.includes(Screen.QUESTIONS)) return Screen.QUESTIONS;
-		if (array.includes(Screen.OPTIONS)) return Screen.OPTIONS;
-		if (array.includes(Screen.CHAT)) return Screen.CHAT;
-		if (array.includes(Screen.VOTE)) return Screen.VOTE;
-
-		return Screen.CHAT;
-	} catch (error) {
-		console.error(error);
-
-		return Screen.CHAT;
 	}
 }
 
@@ -318,7 +356,10 @@ export const emojiTransformer = (text: string): string => {
  * @param {number} targetValue - The value to find the closest match for (-1 to 1)
  * @returns {Object} - The object with the closest evaluation value
  */
-export function findClosestEvaluation(array: EnhancedEvaluationThumb[], targetValue = 0) {
+export function findClosestEvaluation(
+	array: EnhancedEvaluationThumb[],
+	targetValue = 0
+) {
 	// Validate input
 	if (!Array.isArray(array) || array.length === 0) {
 		throw new Error('Input must be a non-empty array');
@@ -335,4 +376,40 @@ export function findClosestEvaluation(array: EnhancedEvaluationThumb[], targetVa
 
 		return currentDiff < closestDiff ? current : closest;
 	}, array[0]);
+}
+
+/**
+ * Generates an API endpoint for Firebase Cloud Functions
+ * @param {string} functionName - The name of the Firebase function
+ * @param {Record<string, string|number>} queryParams - Query parameters to append to the URL
+ * @param {string} envVarName - Optional environment variable name to use for production endpoints
+ * @returns {string} - The complete API endpoint URL
+ */
+export function APIEndPoint(
+	functionName: string,
+	queryParams: Record<string, string | number>,
+	envVarName?: string
+): string {
+	// Convert query parameters to URL search params
+	const queryString = Object.entries(queryParams)
+		.map(([key, value]) => `${key}=${encodeURIComponent(value)}`)
+		.join('&');
+
+	// Check if running on localhost
+	if (window.location.hostname === 'localhost') {
+		return `http://localhost:5001/${firebaseConfig.projectId}/${functionConfig.region}/${functionName}${queryString ? '?' : ''}${queryString}`;
+	}
+
+	// For production, use the provided environment variable or construct a default one
+	const envVar = envVarName
+		? import.meta.env[envVarName]
+		: import.meta.env[`VITE_APP_${functionName.toUpperCase()}_ENDPOINT`];
+
+	// If the environment variable exists, use it, otherwise use a standard pattern
+	if (envVar) {
+		return `${envVar}?${queryString}`;
+	}
+
+	// Fallback if no environment variable is found
+	return `https://${functionConfig.region}-${firebaseConfig.projectId}.cloudfunctions.net/${functionName}?${queryString}`;
 }

@@ -1,45 +1,35 @@
-$bottomCard:1.5rem;
+$bottomCard: 1.5rem;
 
 .card {
+	display: flex;
+	flex-direction: column;
+	gap: var(--padding);
+	text-align: start;
+	flex: 1;
+	margin-bottom: $bottomCard;
+	margin-inline: 1rem;
 
 	.title {
 		position: relative;
-		width: fit-content;
+		border-inline-start: 4px solid var(--header-question);
+		display: flex;
+		justify-content: space-between;
+		background-color: white;
+		width: 100%;
+		cursor: grab;
 
 		.notification {
 			position: absolute;
 			top: -10px;
 			left: -10px;
-
 		}
-	}
 
-	background-color: white;
-	text-align: start;
-	width: 100%;
-
-	&--rtl {
-		padding: 0 0 $bottomCard var(--padding);
-	}
-
-	&--ltr {
-		padding: 0 var(--padding) $bottomCard 0;
-	}
-
-	&--suggestions {
-		padding-left: 36px;
-	}
-
-	&--suggestions-rtl {
-		padding-right: 36px;
-	}
-
-	p {
-		color: var(--text);
-		font-size: 0.941rem;
-		/* 16px */
-		margin: 0.882rem;
-		/* 15px */
+		svg {
+			color: var(--icons-blue-dark);
+			cursor: pointer;
+			width: 1.8rem;
+			height: 1.8rem;
+		}
 	}
 
 	&__description {
@@ -50,69 +40,38 @@ $bottomCard:1.5rem;
 		/* 15px */
 	}
 
-	h4 {
-		margin: 1.529rem;
-		/* 26px */
-		margin-left: 0;
-		font-weight: 400;
-
-	}
-
-	h3 {
-		font-weight: 500;
-		opacity: .85;
-	}
-
-	ul {
-		list-style-type: none;
-		padding: 0;
-
-		li {
-			color: var(--text);
-			margin: 0.941rem;
-			/* 16px */
-		}
-	}
-
-	.rtl {
-		text-align: right;
-	}
-
-	.ltr {
-		text-align: left;
-	}
-
-	.seeMore {
-		display: block;
-		font-size: 0.941rem;
-		/* 16px */
-		color: var(--btn-primary-default);
-		padding: 1rem 0.5rem 0.7rem 0;
-		opacity: 0.5;
+	a {
+		width: fit-content;
+		margin: auto;
 	}
 
 	.suggestions {
-		font-size: 0.941rem;
-		/* 16px */
-		color: var(--text-body);
-	}
+		background-color: #e8edf5;
+		border-inline-start: 4px solid (--header-chosen);
 
-	a {
-		color: navy;
+		&:nth-child(even) {
+			background-color: transparent;
+		}
 
-		.active {
-			color: blue;
+		.suggestionTitle {
+			font-weight: bold;
+			margin-inline-start: 0.2rem;
 		}
 	}
 
-	.statement {
-		&__description {
-			color: var(--text-caption)
-		}
+	.previewContent {
+		color: var(--text-subtitle);
+		font-size: 14px;
+		margin-inline-start: 1.5rem;
+		display: flex;
+		flex-direction: column;
+		gap: var(--padding);
+		cursor: default;
 	}
 
-	.btn {
-		justify-content: end;
-		opacity: 0.5;
+	.item {
+		border-start-start-radius: 0.4rem;
+		border-end-start-radius: 0.4rem;
+		padding: 1rem;
 	}
 }

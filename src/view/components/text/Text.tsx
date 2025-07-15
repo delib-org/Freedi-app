@@ -5,8 +5,9 @@ import styles from './Text.module.scss';
 interface Props {
 	statement?: string;
 	description?: string;
+	fontSize?: string;
 }
-const Text: FC<Props> = ({ statement, description }) => {
+const Text: FC<Props> = ({ statement, description, fontSize = "inherent" }) => {
 	try {
 		if (!statement && !description) return null;
 
@@ -16,40 +17,41 @@ const Text: FC<Props> = ({ statement, description }) => {
 		const paragraphs = !description
 			? ''
 			: description
-					.split('\n')
-					.filter((p) => p)
-					.map((paragraph: string, i: number) => {
-						//if paragraph has * at some point and has some * at some other point make the string between the * bold
-						if (paragraph.includes('*')) {
-							const boldedParagraph = paragraph
-								.split('*')
-								.map((p, i) => {
-									if (i % 2 === 1)
-										return (
-											<b key={`${textId}--${i}`}>
-												<UrlParser text={p} />
-											</b>
-										);
+				.split('\n')
+				.filter((p) => p)
+				.map((paragraph: string, i: number) => {
+					//if paragraph has * at some point and has some * at some other point make the string between the * bold
+					if (paragraph.includes('*')) {
+						const boldedParagraph = paragraph
+							.split('*')
+							.map((p, i) => {
+								if (i % 2 === 1)
+									return (
+										<b key={`${textId}--${i}`}>
+											<UrlParser text={p} />
+										</b>
+									);
 
-									return p;
-								});
-
-							return (
-								<p
-									className={`${styles['p--bold']} ${styles.p}`}
-									key={`${textId}--${i}`}
-								>
-									{boldedParagraph}
-								</p>
-							);
-						}
+								return p;
+							});
 
 						return (
-							<p className={styles.p} key={`${textId}--${i}`}>
-								<UrlParser text={paragraph} />
+							<p
+								className={`${styles['p--bold']} ${styles.p}`}
+								key={`${textId}--${i}`}
+								style={{ fontSize: fontSize }}
+							>
+								{boldedParagraph}
 							</p>
 						);
-					});
+					}
+
+					return (
+						<p className={styles.p} key={`${textId}--${i}`} style={{ fontSize: fontSize }}>
+							<UrlParser text={paragraph} />
+						</p>
+					);
+				});
 
 		return (
 			<>

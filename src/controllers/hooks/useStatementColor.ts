@@ -21,27 +21,25 @@ export default function useStatementColor({
   // Only run the effect when the `statement` is available
   useEffect(() => {
     if (!statement) return;
-
-    const { statementType, isResult } = statement;
-
+    const { statementType, isChosen, isVoted } = statement;
     if (statementType === StatementType.group) {
       setStyle({
-        backgroundColor: "var(--group, #b893e7)", // Purple shade for group type
+        backgroundColor: "var(--header-group)", // Purple shade for group type
         color: "var(--group-text, #ffffff)", // Text color for group (white)
       });
-    } else if (statementType === StatementType.option && isResult) {
+    } else if (isVoted || isChosen) {
       setStyle({
-        backgroundColor: "var(--agree, #008000)", // Green for agreement
+        backgroundColor: "var(--header-chosen, #008000)", // Green for agreement
         color: "var(--header, #000000)", // Text color for result
       });
     } else if (statementType === StatementType.option) {
       setStyle({
-        backgroundColor: "var(--option, #123abc)", // Custom option color
+        backgroundColor: "var(--header-not-chosen, #123abc)", // Custom option color
         color: "var(--white, #ffffff)", // Text color for options
       });
     } else if (statementType === StatementType.question) {
       setStyle({
-        backgroundColor: "var(--question, #123def)", // Custom question color
+        backgroundColor: "var(--header-question, #123def)", // Custom question color
         color: "var(--question-text, #fff)", // Text color for questions
       });
     } else {
@@ -51,5 +49,4 @@ export default function useStatementColor({
   }, [statement]);
 
   return style;
-
 }
