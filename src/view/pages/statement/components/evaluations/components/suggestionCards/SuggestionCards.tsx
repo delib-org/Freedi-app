@@ -1,4 +1,4 @@
-import { FC, useEffect, useState } from 'react';
+import { FC, useEffect, useState, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useParams } from 'react-router';
 import { sortSubStatements } from '../../statementsEvaluationCont';
@@ -29,67 +29,110 @@ const SuggestionCards: FC<Props> = ({
 	subStatements: propSubStatements,
 }) => {
 	const { sort: _sort, statementId } = useParams();
+	const dispatch = useDispatch();
 
 	const sort = propSort || _sort || SortType.newest;
 	const creator = useSelector(creatorSelector);
 	const parentSubscription = useSelector(statementSubscriptionSelector(statementId));
-	const isAdmin = creator?.uid === parentSubscription?.statement?.creatorId || parentSubscription?.role === Role.admin;
-
-	const dispatch = useDispatch();
 	const statement = useSelector(statementSelector(statementId));
+	const _subStatements = useSelector(statementOptionsSelector(statement?.statementId));
 
 	const [totalHeight, setTotalHeight] = useState(0);
+	const [isAnimating, setIsAnimating] = useState(false);
 
-	const _subStatements = useSelector(
-		statementOptionsSelector(statement?.statementId)
+	// Memoized admin check
+	const isAdmin = useMemo(() =>
+		creator?.uid === parentSubscription?.statement?.creatorId ||
+		parentSubscription?.role === Role.admin,
+		[creator?.uid, parentSubscription?.statement?.creatorId, parentSubscription?.role]
 	);
 
-	const sortedSubStatementIds = _subStatements.sort((a, b) => a.consensus - b.consensus).map((sub: Statement) => sub.statementId).join("");
-
-	const subStatements =
-		(propSubStatements ||
+	// Memoized filtered statements
+	const filteredSubStatements = useMemo(() => {
+		const baseStatements = propSubStatements ||
 			(selectionFunction
-				? _subStatements.filter(
-					(sub: Statement) =>
-						sub.evaluation.selectionFunction === selectionFunction
-				)
-				: _subStatements)).filter(sub => sub.hide !== true || sub.creatorId === creator?.uid || isAdmin) || [];
+				? _subStatements.filter(sub => sub.evaluation.selectionFunction === selectionFunction)
+				: _subStatements
+			);
 
+		return baseStatements?.filter(sub =>
+			sub.hide !== true || sub.creatorId === creator?.uid || isAdmin
+		) || [];
+	}, [propSubStatements, _subStatements, selectionFunction, creator?.uid, isAdmin]);
+
+	// Memoized sorted statements with optimized sorting
+	const sortedSubStatements = useMemo(() => {
+		if (!filteredSubStatements.length) return [];
+
+		// Create a copy to avoid mutating the original array
+		let sorted = [...filteredSubStatements];
+
+		switch (sort) {
+			case SortType.accepted:
+				sorted = sorted.sort((a, b) => b.consensus - a.consensus);
+				break;
+			case SortType.newest:
+				sorted = sorted.sort((a, b) => b.createdAt - a.createdAt);
+				break;
+			case SortType.random:
+				sorted = sorted.sort(() => Math.random() - 0.5);
+				break;
+			case SortType.mostUpdated:
+				sorted = sorted.sort((a, b) => b.lastUpdate - a.lastUpdate);
+				break;
+			default:
+				break;
+		}
+
+		return sorted;
+	}, [filteredSubStatements, sort]);
+
+	// Memoized height calculation
+	const calculatedHeight = useMemo(() => {
+		return sortedSubStatements.reduce((acc, sub) =>
+			acc + (sub.elementHight ?? 200) + 30, 0
+		);
+	}, [sortedSubStatements]);
+
+	// Update total height with animation trigger
 	useEffect(() => {
-		if (!statement && statementId)
+		if (calculatedHeight !== totalHeight) {
+			setIsAnimating(true);
+			setTotalHeight(calculatedHeight);
+
+			// Reset animation state after transition
+			const timer = setTimeout(() => setIsAnimating(false), 300);
+
+			return () => clearTimeout(timer);
+		}
+	}, [calculatedHeight, totalHeight]);
+
+	// Trigger sorting animation updates in Redux (for positioning)
+	useEffect(() => {
+		if (sortedSubStatements.length > 0) {
+			sortSubStatements(sortedSubStatements, sort, 30);
+		}
+	}, [sortedSubStatements, sort]);
+
+	// Load statement if needed
+	useEffect(() => {
+		if (!statement && statementId) {
 			getStatementFromDB(statementId).then((statement: Statement) =>
 				dispatch(setStatement(statement))
 			);
-	}, [statement, statementId]);
+		}
+	}, [statement, statementId, dispatch]);
 
+	// Listen to evaluations
 	useEffect(() => {
+		if (!statementId) return;
 
 		const unsubscribe = listenToEvaluations(statementId);
 
-		return () => unsubscribe();
-	}, [])
+		return unsubscribe;
+	}, [statementId]);
 
-	useEffect(() => {
-		const { totalHeight: _totalHeight } = sortSubStatements(
-			subStatements,
-			sort,
-			30
-		);
-		setTotalHeight(_totalHeight);
-	}, [sort, sortedSubStatementIds]);
-
-	useEffect(() => {
-		const _totalHeight = subStatements.reduce(
-			(acc: number, sub: Statement) => {
-				return acc + (sub.elementHight ?? 200) + 30;
-			},
-			0
-		);
-		setTotalHeight(_totalHeight);
-		sortSubStatements(subStatements, sort, 30);
-	}, [subStatements.length]);
-
-	if (!subStatements) {
+	if (!filteredSubStatements.length) {
 		return (
 			<EmptyScreen
 				setShowModal={() => {
@@ -103,19 +146,20 @@ const SuggestionCards: FC<Props> = ({
 
 	return (
 		<div
-			className={styles['suggestions-wrapper']}
-			style={{ height: `${totalHeight + 60}px` }}
+			className={`${styles['suggestions-wrapper']} ${isAnimating ? styles['animating'] : ''}`}
+			style={{
+				height: `${totalHeight + 60}px`,
+				transition: isAnimating ? 'height 0.3s ease-in-out' : 'none'
+			}}
 		>
-			{subStatements?.map((statementSub: Statement) => {
-				return (
-					<SuggestionCard
-						key={statementSub.statementId}
-						parentStatement={statement}
-						siblingStatements={subStatements}
-						statement={statementSub}
-					/>
-				);
-			})}
+			{sortedSubStatements?.map((statementSub: Statement) => (
+				<SuggestionCard
+					key={statementSub.statementId}
+					parentStatement={statement}
+					siblingStatements={sortedSubStatements}
+					statement={statementSub}
+				/>
+			))}
 		</div>
 	);
 };
