@@ -37,14 +37,14 @@ const EmptyScreen: FC<Props> = ({ setShowModal }) => {
 								{t('to add your suggestion')}
 							</>
 						) : (
-							<h1>
+							<>
 								{t('Click on')}{' '}
 								<span className={styles.titleSpan}>
 									{t('Add suggestion button')}
 								</span>
 								<br />
 								{t('to add your suggestion')}
-							</h1>
+							</>
 						)}
 					</h1>
 				</div>
