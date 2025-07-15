@@ -20,11 +20,8 @@ interface EnhancedEvaluationProps {
 
 const indicatorWidth = 32; // Width of the bar in pixels, used for calculations
 
-const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({
-	statement,
-
-}) => {
-	const { t, learning } = useUserConfig();
+const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({ statement }) => {
+	const { t, learning, dir } = useUserConfig();
 	const [barWidth, setBarWidth] = useState<number>(0);
 	const evaluationBarRef = useRef<HTMLDivElement>(null);
 	const shouldDisplayScore = statement.statementSettings?.showEvaluation;
@@ -37,7 +34,11 @@ const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({
 		sumPro: 0,
 		sumCon: 0,
 		numberOfEvaluators: 0,
-	}; const avg = numberOfEvaluators !== 0 ? Math.round(((sumPro - sumCon) / numberOfEvaluators) * 100) / 100 : 0;
+	};
+	const avg =
+		numberOfEvaluators !== 0
+			? Math.round(((sumPro - sumCon) / numberOfEvaluators) * 100) / 100
+			: 0;
 	const consensus = Math.round(_consensus * 100) / 100;
 
 	useEffect(() => {
@@ -48,14 +49,21 @@ const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({
 	}, []);
 
 	function barPosition(width: number, avg: number): number {
-		return (((avg + 1) / 2) * ((width - indicatorWidth) / width) * width);
+		const normalizedPosition =
+			((avg + 1) / 2) * ((width - indicatorWidth) / width) * width;
+
+		if (dir === 'ltr') {
+			return width - indicatorWidth - normalizedPosition;
+		}
+
+		return normalizedPosition;
 	}
 
 	function barColor(avg: number): string {
 		const colors = enhancedEvaluationsThumbs.map(
 			(thumb) => thumb.colorSelected
 		);
-		const index = Math.round(((avg + 1) / 2) * (colors.length - 1));
+		const index = Math.round((1 - (avg + 1) / 2) * (colors.length - 1));
 
 		return colors[index] || colors[0];
 	}
@@ -73,11 +81,26 @@ const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({
 						/>
 					))}
 				</div>
-				{shouldDisplayScore && <Tooltip content={`${t("Average score")}: ${avg}`} position="top">
-					<div className={styles['evaluation-bar']} ref={evaluationBarRef}>
-						<div className={styles['evaluation-bar__indicator']} style={{ width: `${indicatorWidth}px`, right: `${barPosition(barWidth, avg)}px`, backgroundColor: barColor(avg) }}></div>
-					</div>
-				</Tooltip>}
+				{shouldDisplayScore && (
+					<Tooltip
+						content={`${t('Average score')}: ${avg}`}
+						position='top'
+					>
+						<div
+							className={styles['evaluation-bar']}
+							ref={evaluationBarRef}
+						>
+							<div
+								className={styles['evaluation-bar__indicator']}
+								style={{
+									width: `${indicatorWidth}px`,
+									right: `${barPosition(barWidth, avg)}px`,
+									backgroundColor: barColor(avg),
+								}}
+							></div>
+						</div>
+					</Tooltip>
+				)}
 				{learning.evaluation > 0 && (
 					<div className={styles.explain}>
 						<div className={`${styles['evaluation-explain']}`}>
@@ -86,17 +109,20 @@ const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({
 						</div>
 					</div>
 				)}
-
 			</div>
 			<div
 				className={`${styles['evaluation-score']} ${statement.consensus < 0 ? styles.negative : ''}`}
 			>
 				{shouldDisplayScore &&
-					numberOfEvaluators &&
-					numberOfEvaluators > 0 ? (
-					<Tooltip content={`${t("Number of evaluators")}. ${t("Consensus")}: ${consensus}`} position="bottom">
+				numberOfEvaluators &&
+				numberOfEvaluators > 0 ? (
+					<Tooltip
+						content={`${t('Number of evaluators')}. ${t('Consensus')}: ${consensus}`}
+						position='bottom'
+					>
 						<span className={styles['total-evaluators']}>
-							{' '}({numberOfEvaluators})
+							{' '}
+							({numberOfEvaluators})
 						</span>
 					</Tooltip>
 				) : null}
