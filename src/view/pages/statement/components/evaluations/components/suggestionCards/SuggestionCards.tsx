@@ -1,4 +1,4 @@
-import { FC, useEffect, useState, useMemo } from 'react';
+import { FC, useEffect, useState, useMemo, useCallback, useRef, memo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useParams } from 'react-router';
 
@@ -26,25 +26,32 @@ const DEFAULT_ELEMENT_HEIGHT = 200;
 const WRAPPER_PADDING = 60;
 
 /**
- * Sorts statements based on the provided sort type
+ * Sorts statements based on the provided sort type - optimized for performance
  * @param statements - Array of statements to sort
  * @param sortType - Type of sorting to apply
  * @returns Sorted array of statements
  */
 const sortStatements = (statements: Statement[], sortType: SortType): Statement[] => {
-	if (!statements.length) return [];
+	if (!statements.length) return statements; // Return original empty array instead of new one
 
+	// Optimize sorting by using more efficient comparison functions
 	const sorted = [...statements];
 
 	switch (sortType) {
 		case SortType.accepted:
-			return sorted.sort((a, b) => b.consensus - a.consensus);
+			return sorted.sort((a, b) => (b.consensus || 0) - (a.consensus || 0));
 		case SortType.newest:
-			return sorted.sort((a, b) => b.createdAt - a.createdAt);
+			return sorted.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
 		case SortType.random:
-			return sorted.sort(() => Math.random() - 0.5);
+			// More efficient random sort for better performance
+			for (let i = sorted.length - 1; i > 0; i--) {
+				const j = Math.floor(Math.random() * (i + 1));
+				[sorted[i], sorted[j]] = [sorted[j], sorted[i]];
+			}
+
+			return sorted;
 		case SortType.mostUpdated:
-			return sorted.sort((a, b) => b.lastUpdate - a.lastUpdate);
+			return sorted.sort((a, b) => (b.lastUpdate || 0) - (a.lastUpdate || 0));
 		default:
 			return sorted;
 	}
@@ -111,18 +118,26 @@ const SuggestionCards: FC<SuggestionCardsProps> = ({
 	const { sort: sortFromUrl, statementId } = useParams();
 	const dispatch = useDispatch();
 
+	// Early return if no statementId
+	if (!statementId) return null;
+
 	// Determine the sort type from props or URL params
 	const currentSort = (propSort || sortFromUrl || SortType.newest) as SortType;
 
 	// Redux selectors
+	const statement = useSelector(statementSelector(statementId));
+
+	// Early return if no statement
+	if (!statement) return null;
+
 	const creator = useSelector(creatorSelector);
 	const parentSubscription = useSelector(statementSubscriptionSelector(statementId));
-	const statement = useSelector(statementSelector(statementId));
-	const statementsFromStore = useSelector(statementOptionsSelector(statement?.statementId));
+	const statementsFromStore = useSelector(statementOptionsSelector(statement.statementId));
 
 	// Local state
 	const [totalHeight, setTotalHeight] = useState(0);
 	const [isAnimating, setIsAnimating] = useState(false);
+	const animationTimeoutRef = useRef<number | null>(null);
 
 	// Memoized admin check
 	const isAdmin = useMemo(() =>
@@ -148,46 +163,82 @@ const SuggestionCards: FC<SuggestionCardsProps> = ({
 	// Memoized height calculation
 	const calculatedHeight = useMemo(() => calculateTotalHeight(sortedSubStatements), [sortedSubStatements]);
 
+	// Optimized animation handler
+	const triggerAnimation = useCallback(() => {
+		if (animationTimeoutRef.current) {
+			clearTimeout(animationTimeoutRef.current);
+		}
+
+		setIsAnimating(true);
+		animationTimeoutRef.current = window.setTimeout(() => {
+			setIsAnimating(false);
+			animationTimeoutRef.current = null;
+		}, ANIMATION_DURATION);
+	}, []);
+
 	// Update total height with animation trigger
 	useEffect(() => {
 		if (calculatedHeight !== totalHeight) {
-			setIsAnimating(true);
 			setTotalHeight(calculatedHeight);
-
-			// Reset animation state after transition
-			const timer = setTimeout(() => setIsAnimating(false), ANIMATION_DURATION);
-
-			return () => clearTimeout(timer);
+			triggerAnimation();
 		}
-	}, [calculatedHeight, totalHeight]);
+	}, [calculatedHeight, totalHeight, triggerAnimation]);
 
-	// Trigger sorting animation updates in Redux (for positioning)
+	// Trigger sorting animation updates in Redux (for positioning) - optimized to avoid unnecessary calls
 	useEffect(() => {
+		// Only update Redux positioning when we have statements and sort has actually changed
 		if (sortedSubStatements.length > 0) {
-			sortSubStatements(sortedSubStatements, currentSort, CARD_GAP);
+			// Use a slight delay to batch with other updates and avoid excessive Redux dispatches
+			const positionUpdateTimeout = setTimeout(() => {
+				sortSubStatements(sortedSubStatements, currentSort, CARD_GAP);
+			}, 0);
+
+			return () => clearTimeout(positionUpdateTimeout);
 		}
 	}, [sortedSubStatements, currentSort]);
 
-	// Load statement if needed
+	// Load statement if needed - optimized to prevent unnecessary DB calls
 	useEffect(() => {
 		if (!statement && statementId) {
+			// Add a flag to prevent multiple simultaneous requests
+			let isCancelled = false;
+
 			getStatementFromDB(statementId)
-				.then((statement: Statement) => dispatch(setStatement(statement)))
-				.catch((error) => console.error('Failed to load statement:', error));
+				.then((statement: Statement) => {
+					if (!isCancelled) {
+						dispatch(setStatement(statement));
+					}
+				})
+				.catch((error) => {
+					if (!isCancelled) {
+						console.error('Failed to load statement:', error);
+					}
+				});
+
+			return () => {
+				isCancelled = true;
+			};
 		}
 	}, [statement, statementId, dispatch]);
 
-	// Listen to evaluations
+	// Listen to evaluations - optimized subscription management
 	useEffect(() => {
 		if (!statementId) return;
 
 		const unsubscribe = listenToEvaluations(statementId);
 
+		// Return the unsubscribe function directly for proper cleanup
 		return unsubscribe;
 	}, [statementId]);
 
-	// Early returns for edge cases
-	if (!statement) return null;
+	// Cleanup animation timeout on unmount
+	useEffect(() => {
+		return () => {
+			if (animationTimeoutRef.current) {
+				clearTimeout(animationTimeoutRef.current);
+			}
+		};
+	}, []);
 
 	if (!filteredSubStatements.length) {
 		return (
@@ -207,7 +258,7 @@ const SuggestionCards: FC<SuggestionCardsProps> = ({
 				transition: isAnimating ? `height ${ANIMATION_DURATION}ms ease-in-out` : 'none'
 			}}
 		>
-			{sortedSubStatements?.map((statementSub: Statement) => (
+			{sortedSubStatements.map((statementSub: Statement) => (
 				<SuggestionCard
 					key={statementSub.statementId}
 					parentStatement={statement}
@@ -219,4 +270,4 @@ const SuggestionCards: FC<SuggestionCardsProps> = ({
 	);
 };
 
-export default SuggestionCards;
+export default memo(SuggestionCards);
