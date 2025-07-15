@@ -32,7 +32,7 @@ const InvitePanel: FC<Props> = ({ setShowModal, statementId, pathname }) => {
 				}
 			}
 		);
-	}, []);
+	}, [pathname, statementId]);
 
 	function invitationNumberToArray(invitationNumber: number) {
 		let number = invitationNumber;

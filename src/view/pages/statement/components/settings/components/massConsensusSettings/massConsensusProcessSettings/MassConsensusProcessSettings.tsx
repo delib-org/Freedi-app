@@ -58,8 +58,8 @@ const MassConsensusProcessSettings = () => {
 		userDataQuestions.length > 0
 			? rawStepsDefault
 			: rawStepsDefault.filter(
-					(step) => step !== MassConsensusPageUrls.userDemographics
-				);
+				(step) => step !== MassConsensusPageUrls.userDemographics
+			);
 	const { steps: stepsGoogle, processName: processNameGoogle } =
 		processList.loginTypes?.google || {};
 	const { steps: stepsAnonymous, processName: processNameAnonymous } =
@@ -71,7 +71,7 @@ const MassConsensusProcessSettings = () => {
 		return () => {
 			unsubscribe();
 		};
-	}, []);
+	}, [statementId]);
 
 	function handleSetCheckbox(loginType: LoginType) {
 		updateMassConsensusLoginTypeProcess(statementId, loginType);

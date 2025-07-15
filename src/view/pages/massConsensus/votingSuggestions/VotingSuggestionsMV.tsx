@@ -18,22 +18,6 @@ export function VotingSuggestionsMV() {
 			`/mass-consensus/${statementId}/${MassConsensusPageUrls.leaveFeedback}`
 		);
 
-	async function fetchTopStatements() {
-
-		const endPoint = location.hostname === 'localhost'
-			? `http://localhost:5001/${firebaseConfig.projectId}/${functionConfig.region}/getTopStatements?parentId=${statementId}&limit=4`
-			: `${import.meta.env.VITE_APP_TOP_STATEMENTS_ENDPOINT}?parentId=${statementId}&limit=4`;
-
-		fetch(endPoint)
-			.then((res) => res.json())
-			.then((data) => {
-				const statements = data.statements;
-
-				setSubStatements(statements);
-			})
-			.catch((err) => console.error(err));
-	}
-
 	useEffect(() => {
 		const unsubscribe = listenToStatement(statementId);
 
@@ -41,13 +25,28 @@ export function VotingSuggestionsMV() {
 	}, [statementId]);
 
 	useEffect(() => {
+		async function fetchTopStatements() {
+			const endPoint = location.hostname === 'localhost'
+				? `http://localhost:5001/${firebaseConfig.projectId}/${functionConfig.region}/getTopStatements?parentId=${statementId}&limit=4`
+				: `${import.meta.env.VITE_APP_TOP_STATEMENTS_ENDPOINT}?parentId=${statementId}&limit=4`;
+
+			fetch(endPoint)
+				.then((res) => res.json())
+				.then((data) => {
+					const statements = data.statements;
+
+					setSubStatements(statements);
+				})
+				.catch((err) => console.error(err));
+		}
+
 		fetchTopStatements();
 		const unsubscribe = subStatements.map((subStatement) =>
 			listenToStatement(subStatement.statementId)
 		);
 
 		return () => unsubscribe.forEach((u) => u());
-	}, [subStatements, fetchTopStatements]);
+	}, [subStatements, statementId]);
 
 	useEffect(() => {
 		if (!isLoading && !user)

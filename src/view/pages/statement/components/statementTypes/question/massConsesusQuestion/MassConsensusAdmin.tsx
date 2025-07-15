@@ -41,7 +41,7 @@ const MassConsensusAdmin = () => {
 		const unsubscribe = listenToSubStatements(statementId, 'bottom');
 
 		return () => unsubscribe();
-	}, [statementId]);
+	}, [statementId, statement]);
 
 	return (
 		<div className={styles.massConsensusAdmin}>

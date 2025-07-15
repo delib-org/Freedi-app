@@ -104,7 +104,7 @@ const StatementSettings: FC = () => {
 		} catch (error) {
 			console.error(error);
 		}
-	}, [statementId]);
+	}, [statementId, dispatch, statement]);
 
 	const isMassConsensus = statement?.questionSettings?.questionType === QuestionType.massConsensus;
 

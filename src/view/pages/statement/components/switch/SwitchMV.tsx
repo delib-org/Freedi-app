@@ -30,7 +30,7 @@ export function useSwitchMV() {
 				}
 			});
 		}
-	}, [parentStatement?.statementId, statement?.statementId, statementId]);
+	}, [parentStatement, statement?.parentId, statement?.statementType, statementId, dispatch]);
 
 	return { parentStatement };
 }

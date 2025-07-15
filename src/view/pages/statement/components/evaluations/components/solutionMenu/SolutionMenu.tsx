@@ -51,7 +51,7 @@ const SolutionMenu: FC<Props> = ({
 
 			return () => clearTimeout(timer);
 		}
-	}, [isCardMenuOpen]);
+	}, [isCardMenuOpen, setIsCardMenuOpen]);
 
 	function handleToggleHideStatement() {
 		toggleStatementHide(statement.statementId);

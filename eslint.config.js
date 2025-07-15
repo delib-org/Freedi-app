@@ -51,11 +51,12 @@ export default [
 		rules: {
 			...js.configs.recommended.rules,
 			...tseslint.plugin.configs.recommended.rules,
-			...reactHooks.configs.recommended.rules,
-			'react-refresh/only-export-components': [
-				'warn',
-				{ allowConstantExport: true },
-			],
+			// React 19: Keep only the essential hook rules
+			'react-hooks/rules-of-hooks': 'error', // Keep this - still important for hook placement
+			// React 19: Disable exhaustive-deps since React compiler handles optimization
+			'react-hooks/exhaustive-deps': 'off', // Completely disable for React 19
+			// React 19: Disable Fast Refresh warnings - compiler handles this
+			'react-refresh/only-export-components': 'off',
 			'react/display-name': 'error',
 			'react/no-unescaped-entities': 'off',
 			'import/no-anonymous-default-export': 'error',

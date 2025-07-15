@@ -96,7 +96,7 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
 		if (isEdit && textareaRef.current) {
 			textareaRef.current.focus();
 		}
-	}, [isEdit]);
+	}, [isEdit, textareaRef]);
 
 	useEffect(() => {
 		if (isCardMenuOpen) {

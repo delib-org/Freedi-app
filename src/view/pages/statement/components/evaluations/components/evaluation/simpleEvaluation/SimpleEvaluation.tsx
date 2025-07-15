@@ -38,7 +38,7 @@ const SimpleEvaluation: FC<Props> = ({
 	useEffect(() => {
 		setConVotesCount(initialContVotesCount);
 		setProVotesCount(initialProVotesCount);
-	}, [statement.con, statement.pro]);
+	}, [statement.con, statement.pro, initialContVotesCount, initialProVotesCount]);
 
 	return (
 		<div className='simple-evaluation'>

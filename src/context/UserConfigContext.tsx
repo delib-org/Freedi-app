@@ -200,3 +200,23 @@ export const UserConfigProvider: React.FC<UserConfigProviderProps> = ({
 		</UserConfigContext.Provider>
 	);
 };
+
+// Re-export the context for backward compatibility
+export { UserConfigContext } from './userConfig/context';
+// Re-export specific constants needed
+export {
+	LanguagesEnum,
+	DEFAULT_FONT_SIZE,
+	DEFAULT_LANGUAGE,
+	DEFAULT_COLOR_CONTRAST,
+	DEFAULT_LEARNING_SETTINGS,
+	DEFAULT_CONFIG,
+} from './userConfig/types';
+// Re-export types
+export type {
+	UserConfig,
+	LearningSettings,
+	Direction,
+	RowDirection,
+	UserConfigContextType
+} from './userConfig/types';

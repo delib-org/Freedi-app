@@ -54,10 +54,10 @@ export function useMindMap() {
 				}
 			});
 		};
-	}, [descendants.length]);
+	}, [descendants, statementId]);
 	useEffect(() => {
 		setFlat(isFlat(descendants, statementId));
-	}, [descendants.length, statementId]);
+	}, [descendants, statementId]);
 
 	// Calculate results only when descendants or statement change
 	useEffect(() => {

@@ -20,7 +20,7 @@ export function useSuggestionComment({ parentStatement, statement }: Props) {
 		const unsubscribe = listenToEvaluation(parentStatement.statementId, creator?.uid);
 
 		return () => unsubscribe();
-	}, [creator?.uid]);
+	}, [creator?.uid, parentStatement.statementId]);
 
 	useEffect(() => {
 		if (_evaluationNumber !== undefined) {

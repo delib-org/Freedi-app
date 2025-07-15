@@ -65,7 +65,7 @@ const UserQuestionInput: FC<UserQuestionInputProps> = ({
 		if (required) {
 			validateInput(value);
 		}
-	}, [value, required]);
+	}, [value, required, validateInput]);
 
 	const renderInput = () => {
 		switch (question.type) {

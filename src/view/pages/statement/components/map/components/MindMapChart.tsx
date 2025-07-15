@@ -122,7 +122,7 @@ export default function MindMapChart({ descendants, isAdmin, filterBy }: Readonl
 			);
 			onSave();
 		}, 1000);
-	}, [descendants, filterBy]);
+	}, [descendants, filterBy, filtered, mapContext.direction, mapContext.nodeHeight, mapContext.nodeWidth, onSave, setEdges, setNodes]);
 
 	const onLayout = useCallback(
 		(direction: 'TB' | 'LR') => {

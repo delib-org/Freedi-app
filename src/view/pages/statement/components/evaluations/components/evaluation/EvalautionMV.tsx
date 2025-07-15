@@ -13,7 +13,7 @@ export function useEvaluation(statement: Statement | undefined) {
 			listenToStatement(statement.parentId);
 
 		return () => unsubscribe();
-	}, [parentStatement?.statementId]);
+	}, [parentStatement, statement.parentId]);
 
 	return { parentStatement };
 
