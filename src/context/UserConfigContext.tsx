@@ -1,52 +1,21 @@
 // UserConfigContext.tsx
 import React, {
-	createContext,
 	useState,
-	useCallback,
 	useEffect,
 	ReactNode,
-	useMemo,
 } from 'react';
-
-// Types and Enums
-export enum LanguagesEnum {
-	en = 'en',
-	ar = 'ar',
-	he = 'he',
-	de = 'de',
-	es = 'es',
-	nl = 'nl',
-}
-
-// Learning settings interface
-export interface LearningSettings {
-	evaluation: number;
-	addOptions: number;
-}
-
-export interface UserConfig {
-	chosenLanguage: LanguagesEnum;
-	fontSize: number;
-	colorContrast: boolean;
-	learning: LearningSettings; // Added learning settings
-}
-
-export type Direction = 'ltr' | 'rtl';
-export type RowDirection = 'row' | 'row-reverse';
-
-export type UserConfigContextType = {
-	currentLanguage: string;
-	changeLanguage: (newLanguage: LanguagesEnum) => void;
-	t: (text: string) => string;
-	dir: Direction;
-	rowDirection: RowDirection;
-	fontSize: number;
-	changeFontSize: (newSize: number) => void;
-	colorContrast: boolean;
-	setColorContrast: (value: boolean) => void;
-	learning: LearningSettings;
-	decrementLearning: (type: 'evaluation' | 'addOptions') => void;
-};
+import {
+	LanguagesEnum,
+	UserConfig,
+	Direction,
+	RowDirection,
+	DEFAULT_CONFIG,
+	DEFAULT_LANGUAGE,
+	DEFAULT_FONT_SIZE,
+	DEFAULT_COLOR_CONTRAST,
+	DEFAULT_LEARNING_SETTINGS,
+} from './userConfig/types';
+import { UserConfigContext } from './userConfig/context';
 
 type UserConfigProviderProps = {
 	children: ReactNode;
@@ -62,27 +31,6 @@ import nl from '../assets/Languages/nl.json';
 import { LocalStorageObjects } from '@/types/localStorage/LocalStorageObjects';
 
 const languages: Record<string, string>[] = [en, ar, he, de, es, nl];
-
-// Default values
-export const DEFAULT_FONT_SIZE = 16;
-export const DEFAULT_LANGUAGE = LanguagesEnum.he;
-export const DEFAULT_COLOR_CONTRAST = false;
-export const DEFAULT_LEARNING_SETTINGS: LearningSettings = {
-	evaluation: 7, // Adjust as needed
-	addOptions: 3, // Adjust as needed
-};
-
-export const DEFAULT_CONFIG: UserConfig = {
-	chosenLanguage: DEFAULT_LANGUAGE,
-	fontSize: DEFAULT_FONT_SIZE,
-	colorContrast: DEFAULT_COLOR_CONTRAST,
-	learning: DEFAULT_LEARNING_SETTINGS,
-};
-
-// Create context
-export const UserConfigContext = createContext<
-	UserConfigContextType | undefined
->(undefined);
 
 // Helper to determine directions based on language
 const getDirections = (
@@ -160,52 +108,46 @@ export const UserConfigProvider: React.FC<UserConfigProviderProps> = ({
 	}, [config.fontSize]);
 
 	// Language change handler
-	const changeLanguage = useCallback((newLanguage: LanguagesEnum) => {
+	const changeLanguage = (newLanguage: LanguagesEnum) => {
 		setConfig((prev) => ({
 			...prev,
 			chosenLanguage: newLanguage,
 		}));
-	}, []);
+	};
 
 	// Font size change handler
-	const changeFontSize = useCallback((newSize: number) => {
+	const changeFontSize = (newSize: number) => {
 		setConfig((prev) => ({
 			...prev,
 			fontSize: newSize,
 		}));
-	}, []);
+	};
 
 	// Color contrast handler
-	const setColorContrast = useCallback((value: boolean) => {
+	const setColorContrast = (value: boolean) => {
 		setConfig((prev) => ({
 			...prev,
 			colorContrast: value,
 		}));
-	}, []);
+	};
 
 	// Learning decrement handler
-	const decrementLearning = useCallback(
-		(type: 'evaluation' | 'addOptions') => {
-			setConfig((prev) => {
-				const learning = { ...prev.learning };
+	const decrementLearning = (type: 'evaluation' | 'addOptions') => {
+		setConfig((prev) => {
+			const learning = { ...prev.learning };
 
-				if (learning[type] > 0) {
-					learning[type] = learning[type] - 1;
-				}
+			if (learning[type] > 0) {
+				learning[type] = learning[type] - 1;
+			}
 
-				return { ...prev, learning };
-			});
-		},
-		[]
-	);
+			return { ...prev, learning };
+		});
+	};
 
 	// Translation function
-	const t = useCallback(
-		(text: string) => {
-			return languageData[text] || text;
-		},
-		[languageData]
-	);
+	const t = (text: string) => {
+		return languageData[text] || text;
+	};
 
 	// Load language data when language changes
 	useEffect(() => {
@@ -238,32 +180,19 @@ export const UserConfigProvider: React.FC<UserConfigProviderProps> = ({
 	}, [config.colorContrast]);
 
 	// Create context value
-	const contextValue = useMemo(
-		() => ({
-			currentLanguage: config.chosenLanguage,
-			changeLanguage,
-			t,
-			dir: getDirections(config.chosenLanguage).dir,
-			rowDirection: getDirections(config.chosenLanguage).rowDirection,
-			fontSize: config.fontSize,
-			changeFontSize,
-			colorContrast: config.colorContrast,
-			setColorContrast,
-			learning: config.learning,
-			decrementLearning,
-		}),
-		[
-			config.chosenLanguage,
-			config.fontSize,
-			config.colorContrast,
-			config.learning,
-			changeLanguage,
-			changeFontSize,
-			setColorContrast,
-			decrementLearning,
-			t,
-		]
-	);
+	const contextValue = {
+		currentLanguage: config.chosenLanguage,
+		changeLanguage,
+		t,
+		dir: getDirections(config.chosenLanguage).dir,
+		rowDirection: getDirections(config.chosenLanguage).rowDirection,
+		fontSize: config.fontSize,
+		changeFontSize,
+		colorContrast: config.colorContrast,
+		setColorContrast,
+		learning: config.learning,
+		decrementLearning,
+	};
 
 	return (
 		<UserConfigContext.Provider value={contextValue}>

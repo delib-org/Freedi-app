@@ -19,7 +19,7 @@ export function VotingSuggestionsMV() {
 		);
 
 	async function fetchTopStatements() {
-		
+
 		const endPoint = location.hostname === 'localhost'
 			? `http://localhost:5001/${firebaseConfig.projectId}/${functionConfig.region}/getTopStatements?parentId=${statementId}&limit=4`
 			: `${import.meta.env.VITE_APP_TOP_STATEMENTS_ENDPOINT}?parentId=${statementId}&limit=4`;
@@ -38,7 +38,7 @@ export function VotingSuggestionsMV() {
 		const unsubscribe = listenToStatement(statementId);
 
 		return () => unsubscribe();
-	}, []);
+	}, [statementId]);
 
 	useEffect(() => {
 		fetchTopStatements();
@@ -47,14 +47,14 @@ export function VotingSuggestionsMV() {
 		);
 
 		return () => unsubscribe.forEach((u) => u());
-	}, [subStatements.length]);
+	}, [subStatements, fetchTopStatements]);
 
 	useEffect(() => {
 		if (!isLoading && !user)
 			navigate(
 				`/mass-consensus/${statementId}/${MassConsensusPageUrls.introduction}`
 			);
-	}, [user, isLoading]);
+	}, [user, isLoading, navigate, statementId]);
 
 	return { subStatements, statementId, navigateToFeedback };
 }

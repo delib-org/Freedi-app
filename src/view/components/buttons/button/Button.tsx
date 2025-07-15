@@ -1,12 +1,8 @@
 import React, { FC } from 'react';
 import styles from './Button.module.scss';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { ButtonType } from './types';
 
-export enum ButtonType {
-	PRIMARY = 'primary',
-	SECONDARY = 'secondary',
-	DISABLED = 'disabled',
-}
 interface Props {
 	buttonType?: ButtonType;
 	text: string;

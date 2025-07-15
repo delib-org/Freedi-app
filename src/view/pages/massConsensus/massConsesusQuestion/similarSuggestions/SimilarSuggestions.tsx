@@ -14,7 +14,7 @@ import Loader from '@/view/components/loaders/Loader';
 import { getStepNavigation, useMassConsensusSteps } from '../../MassConsensusVM';
 import TitleMassConsensus from '../../TitleMassConsensus/TitleMassConsensus';
 
-const SimilarSuggestions = ({stage, setIfButtonEnabled}) => {
+const SimilarSuggestions = ({ stage, setIfButtonEnabled }) => {
 	const navigate = useNavigate();
 	const { statementId } = useParams<{ statementId: string }>();
 	const similarSuggestions = useSelector(selectSimilarStatements);
@@ -35,15 +35,15 @@ const SimilarSuggestions = ({stage, setIfButtonEnabled}) => {
 		} else {
 			setLoadingStatements(false);
 		}
-	}, [similarSuggestions, navigate, statementId]);
+	}, [similarSuggestions, navigate, statementId, nextStep]);
 
 	useEffect(() => {
-		if ( stage === "submitting" ) handleSetSuggestionToDB(similarSuggestions[selected]);
-	}, [stage])
+		if (stage === "submitting") handleSetSuggestionToDB(similarSuggestions[selected]);
+	}, [stage, handleSetSuggestionToDB, similarSuggestions, selected])
 
 	useEffect(() => {
 		setIfButtonEnabled(selected !== null)
-	}, [selected])
+	}, [selected, setIfButtonEnabled])
 
 	return (
 		<>

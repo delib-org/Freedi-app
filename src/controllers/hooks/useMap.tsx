@@ -1,53 +1,11 @@
-import { Statement } from 'delib-npm';
-import {
-	Dispatch,
-	createContext,
-	useContext,
-	useState,
-	FC,
-	useMemo,
-	SetStateAction,
-	ReactNode,
-} from 'react';
+import { useState, FC, ReactNode } from 'react';
 import { Position } from 'reactflow';
-
-// Define the context
-interface MapProps {
-	mapContext: MapProviderState;
-	setMapContext: Dispatch<SetStateAction<MapProviderState>>;
-}
-
-const MapModelContext = createContext<MapProps | undefined>(undefined);
-
-// Define a hook to use the context
-export const useMapContext = (): MapProps => {
-	const context = useContext(MapModelContext);
-	if (!context) {
-		throw new Error(
-			'useMapContext must be used within a MyContextProvider'
-		);
-	}
-
-	return context;
-};
+import { MapProviderState } from './map/types';
+import { MapModelContext } from './map/context';
 
 // Create a provider component
 interface MapProviderProps {
 	children: ReactNode;
-}
-
-interface MapProviderState {
-	showModal: boolean;
-	moveStatementModal: boolean;
-	parentStatement: 'top' | Statement;
-	isOption: boolean;
-	isQuestion: boolean;
-	targetPosition: Position;
-	sourcePosition: Position;
-	nodeWidth: number;
-	nodeHeight: number;
-	direction: 'TB' | 'LR';
-	selectedId: string | null;
 }
 
 export const MapProvider: FC<MapProviderProps> = ({ children }) => {
@@ -65,13 +23,10 @@ export const MapProvider: FC<MapProviderProps> = ({ children }) => {
 		selectedId: null,
 	});
 
-	const contextValue = useMemo(
-		() => ({
-			mapContext,
-			setMapContext,
-		}),
-		[mapContext, setMapContext]
-	);
+	const contextValue = {
+		mapContext,
+		setMapContext,
+	};
 
 	return (
 		<MapModelContext.Provider value={contextValue}>
