@@ -1,0 +1,64 @@
+.myContainer {
+  margin-top: 2rem;
+
+  .profilePicTitle {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    color: var(--Text-lighter, #898ca7);
+  }
+
+  .profilePicPH {
+    margin: 2rem auto 1rem auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 220px;
+    height: 270px;
+    object-fit: cover;
+    cursor: pointer;
+    border-radius: 8px;
+  }
+
+  .membershipSettings {
+    margin-top: 2rem;
+    padding: 1rem;
+    border-top: 1px solid #ddd;
+
+    h2 {
+      font-size: 1.3rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .membership-desc {
+      font-size: 1rem;
+      margin-bottom: 1rem;
+      color: #666;
+    }
+
+    .radio-group {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+
+      label {
+        display: flex;
+        flex-direction: column;
+        font-size: 1rem;
+        cursor: pointer;
+
+        input[type="radio"] {
+          margin-bottom: 0.3rem;
+        }
+
+        .radio-sub {
+          font-size: 0.9rem;
+          color: #888;
+          padding-left: 1.2rem;
+        }
+      }
+    }
+  }
+}
