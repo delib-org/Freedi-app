@@ -349,6 +349,7 @@ export function getNewStatementsFromSubscriptions(userId: string): Unsubscribe {
 					where('role', '==', Role.member)
 				)
 			),
+			orderBy('statement.statementType'),
 			orderBy('lastUpdate', 'desc'),
 			limit(40)
 		);

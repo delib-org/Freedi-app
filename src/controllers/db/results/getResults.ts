@@ -68,6 +68,7 @@ export function listenToDescendants(statementId: string) {
 			statementsRef,
 			where('parents', 'array-contains', statementId),
 			where("statementType", "!=", StatementType.statement),
+			orderBy("statementType"),
 			orderBy("createdAt", "asc"),
 			limit(40)
 		);
