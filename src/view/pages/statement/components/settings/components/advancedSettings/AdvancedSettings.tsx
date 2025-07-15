@@ -27,6 +27,7 @@ const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 		hasChildren = false,
 		joiningEnabled = false,
 		enableAddNewSubQuestionsButton = false,
+		defaultLookForSimilarities = false
 	} = statementSettings;
 
 	function handleAdvancedSettingChange(
@@ -73,6 +74,13 @@ const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 						isChecked={enableAddNewSubQuestionsButton}
 						onChange={(checked) =>
 							handleAdvancedSettingChange('enableAddNewSubQuestionsButton', checked)
+						}
+					/>
+					<Checkbox
+						label={'By default, look for similar statements'}
+						isChecked={defaultLookForSimilarities}
+						onChange={(checked) =>
+							handleAdvancedSettingChange('defaultLookForSimilarities', checked)
 						}
 					/>
 				</>

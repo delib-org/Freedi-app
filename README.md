@@ -1,96 +1,241 @@
-# Freedi-app Setup Guide
+# Freedi - Deliberative Democracy Platform
 
-Freedi-app is a B2C deliberative platform enabling diverse discussion methods to find optimal solutions while minimizing stakeholder impact. See our [project wiki](https://github.com/delib-org/delib-5/wiki) for details.
+**Freedi** is a comprehensive deliberative democracy platform that transforms how groups make decisions. It provides structured, inclusive, and transparent processes for reaching consensus on complex topics through diverse discussion methods and consensus-building tools.
 
-## Prerequisites
+## 🌟 Key Features
 
-- Node.js and npm
-- Java JDK 17+ ([Download](https://www.oracle.com/il-en/java/technologies/downloads/#java21))
-- Firebase CLI (`npm install -g firebase-tools`)
-- Git
-- VS Code (recommended)
+### **Structured Decision-Making**
+- **Statement Hierarchy**: Organize discussions into Groups → Questions → Options
+- **Mass Consensus Process**: Guided multi-stage consensus building for large groups
+- **Democratic Voting**: Multiple voting mechanisms with result aggregation
+- **Evaluation Systems**: Multi-criteria assessment and ranking of options
 
-## Quick Start
+### **Interactive Deliberation Tools**
+- **Mind Maps**: Visual representation of discussion structures and connections
+- **Agreement Visualization**: Triangular consensus tracking and agreement mapping
+- **Real-time Chat**: Contextual messaging within discussion threads
+- **Structured Workflows**: Step-by-step guidance through deliberative processes
 
-1. Clone and install dependencies:
+### **Collaboration Features**
+- **Multi-language Support**: Built-in internationalization for global use
+- **Role-based Access**: Admin, member, and viewer permissions
+- **Invitation System**: Easy participant management and onboarding
+- **Notification System**: In-app and push notifications for updates
+
+### **Advanced Capabilities**
+- **Similarity Detection**: AI-powered identification of similar statements
+- **Image Integration**: Rich media support for enhanced discussions
+- **Offline Support**: Progressive web app with offline capabilities
+- **Accessibility**: Full screen reader support and accessibility features
+
+## 🚀 Use Cases
+
+- **Community Decision Making**: Local government, neighborhood associations
+- **Organizational Deliberation**: Corporate decisions, team consensus building
+- **Educational Settings**: Classroom discussions, academic deliberation
+- **Policy Development**: Public consultation and policy feedback
+- **Event Planning**: Collaborative decision-making for events and activities
+
+## 🛠️ Technology Stack
+
+- **Frontend**: React 18, TypeScript, Redux Toolkit, SCSS
+- **Backend**: Firebase (Firestore, Functions, Auth, Storage)
+- **Deployment**: Firebase Hosting with CI/CD
+- **Testing**: Jest, TypeScript strict mode
+- **Development**: Vite, ESLint, Prettier
+
+## 📋 Prerequisites
+
+- **Node.js** 18+ and npm
+- **Java JDK 17+** ([Download](https://www.oracle.com/java/technologies/downloads/#java21))
+- **Firebase CLI**: `npm install -g firebase-tools`
+- **Git**
+- **VS Code** (recommended)
+
+## 🏗️ Installation
+
+### 1. Clone and Install Dependencies
 
 ```bash
 git clone https://github.com/delib-org/Freedi-app.git
-cd freedi-app
+cd Freedi-app
 npm install
-cd functions && npm install
+cd functions && npm install && cd ..
 ```
 
-2. Set up Firebase:
+### 2. Firebase Setup
 
-3. Configure Firebase project:
+1. **Create Firebase Project**:
+   - Go to [Firebase Console](https://console.firebase.google.com/)
+   - Create a new project
+   - Enable Authentication, Firestore, Storage, and Functions
 
-- Create project at [Firebase Console](https://console.firebase.google.com/)
--
+2. **Configure Firebase CLI**:
+   ```bash
+   firebase login
+   firebase init emulators
+   ```
 
-```bash
-firebase login
-firebase init emulators
-```
+3. **Setup Configuration Files**:
+   - Copy templates from `firebase-config-files.txt`
+   - Create `.firebaserc` and replace `your_project_id` with your Firebase project ID
+   - Create `firebase.json` using the provided template
+   - Run `firebase use your_project_id`
 
-- Create `.firebaserc` and `firebase.json` files in the root project
-- Set up `.firebaserc` according to template in "firebase-config-files.txt", replace your_project_id with the project id from your new firebase project
-- Run `firebase use your_project_id` to select the new project
-- Set up your `firebase.json` file by copying the template from "firebase-config-files.txt". You do not have to adjust any attributes
+### 3. Environment Configuration
 
-1. Create environment files:
-   `.env.development` (`.env.testing` will be provided by the project leader if needed):
+Create `.env.development` file in the root directory:
+
+    - Go to [Firebase Console](https://console.firebase.google.com/)
+    - Click "Add project" and follow the setup wizard
+    - Enable Authentication, Firestore, and Hosting
+
+2. **Set up project configuration files:**
+    - Create `.firebaserc` file in the root directory
+    - Copy the template from `firebase-config-files.txt` and replace `your_project_id` with your actual Firebase project ID
+    - Run: `firebase use your_project_id`
+    - Set up your `firebase.json` file by copying the template from `firebase-config-files.txt`
+
+### Step 4: Create Environment Files
+
+Create `.env.development` in the root directory:
 
 ```env
-VITE_FIREBASE_API_KEY=__YOUR_CONFIG__
-VITE_FIREBASE_AUTH_DOMAIN=__YOUR_CONFIG__
-VITE_FIREBASE_DATABASE_URL=__YOUR_CONFIG__
-VITE_FIREBASE_PROJECT_ID=__YOUR_CONFIG__
-VITE_FIREBASE_STORAGE_BUCKET=__YOUR_CONFIG__
-VITE_FIREBASE_MESSAGING_SENDER_ID=__YOUR_CONFIG__
-VITE_FIREBASE_APP_ID=__YOUR_CONFIG__
-VITE_FIREBASE_MEASUREMENT_ID=__YOUR_CONFIG__
-VITE_FIREBASE_VAPID_KEY=__YOUR_CONFIG__
+VITE_FIREBASE_API_KEY=your_api_key_here
+VITE_FIREBASE_AUTH_DOMAIN=your_project_id.firebaseapp.com
+VITE_FIREBASE_DATABASE_URL=https://your_project_id.firebaseio.com
+VITE_FIREBASE_PROJECT_ID=your_project_id
+VITE_FIREBASE_STORAGE_BUCKET=your_project_id.appspot.com
+VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+VITE_FIREBASE_APP_ID=your_app_id
+VITE_FIREBASE_MEASUREMENT_ID=your_measurement_id
+VITE_FIREBASE_VAPID_KEY=your_vapid_key
 ```
 
-On functions create
+> **Note**: Get these values from your Firebase project settings → General → Your apps → Config
 
-```env
-GOOGLE_API_KEY=your-key
+## 🚀 Development
 
-BREVO_USER=some user
-BREVO_PASSWORD=some password
-
-DOMAIN=localhost
-```
-
-## Development
-
-### VS Code Setup
-
-- Open the project using workspace file: `freedi.code-workspace`
-- Install recommended extensions when prompted
-- This ensures consistent linting rules across the project
-
-### Start local environment
+### Start Development Environment
 
 ```bash
 npm run dev:all
 ```
 
-#### Access points
+This runs:
+- Frontend dev server (`npm run dev`)
+- Firebase emulators (`npm run deve`)
+- Functions in watch mode (`npm run devf`)
 
-- App: `http://localhost:5173`
-- Emulators: `http://localhost:5002`
+### Access Points
 
-## Git Workflow
+- **App**: http://localhost:5173
+- **Firebase Emulators**: http://localhost:5002
+- **Functions**: http://localhost:5001
 
-Branch naming conventions are documented in `Branch-naming-convention.md`. Please follow these guidelines when creating new branches.
+### VS Code Setup
 
-## Troubleshooting
+1. Open the workspace file: `freedi.code-workspace`
+2. Install recommended extensions when prompted
+3. This ensures consistent linting and formatting
 
-Common issues:
+## 🧪 Testing
 
-- Firebase emulator requires Java JDK 17+
-- Environment variables must match Firebase project settings exactly
-- Ensure all dependencies are installed in both root and functions directories
+### Frontend Tests
+```bash
+npm run test
+```
+
+### Functions Tests
+```bash
+cd functions
+npm test
+# Watch mode
+npm run test:watch
+# Specific test
+npm test -- -t 'test name'
+```
+
+### Code Quality
+```bash
+npm run lint          # Check linting
+npm run lint:fix      # Fix linting issues
+npm run typecheck     # TypeScript checking
+npm run check-all     # Run all checks + build
+```
+
+## 📦 Deployment
+
+### Development Environment
+```bash
+npm run deploy:dev
+```
+
+### Production Environment
+```bash
+npm run deploy:prod
+```
+
+### Individual Services
+```bash
+# Deploy only hosting
+npm run deploy:h:prod
+
+# Deploy only functions
+npm run deploy:f:prod
+
+# Deploy only Firestore rules
+npm run deploy:rules:prod
+```
+
+## 🔧 Git Workflow
+
+Branch naming conventions are documented in `Branch-naming-convention.md`. Please follow these guidelines:
+
+- `feature/description` - New features
+- `fix/description` - Bug fixes
+- `refactor/description` - Code refactoring
+- `docs/description` - Documentation updates
+
+## 🐛 Troubleshooting
+
+### Common Issues
+
+**Firebase Emulator Issues**:
+- Ensure Java JDK 17+ is installed
+- Check that ports 5000, 5001, 5002, 8080, 9099, 9199 are available
+
+**Environment Variables**:
+- Verify all Firebase config values match your project exactly
+- Ensure `.env.development` file is in the root directory
+
+**Dependencies**:
+- Run `npm install` in both root and `functions` directories
+- Clear node_modules if having issues: `npm run clean`
+
+**Build Issues**:
+- Check TypeScript errors: `npm run typecheck`
+- Verify linting: `npm run lint`
+- Ensure all tests pass: `npm run test`
+
+### Getting Help
+
+- Check the [Project Wiki](https://github.com/delib-org/delib-5/wiki) for detailed documentation
+- Review `Branch-naming-convention.md` for development guidelines
+- Examine `CLAUDE.md` for additional development instructions
+
+## 📄 License
+
+This project is licensed under the terms specified in `LICENSE.md`.
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch following naming conventions
+3. Make your changes with tests
+4. Ensure all checks pass: `npm run check-all`
+5. Submit a pull request
+
+---
+
+**Freedi** - Empowering communities through structured deliberation and democratic decision-making.

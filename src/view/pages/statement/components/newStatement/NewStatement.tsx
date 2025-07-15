@@ -7,6 +7,9 @@ import GetInitialStatementData from './components/01-form/GetInitialStatementDat
 import { NewStatementContext, SimilaritySteps } from './NewStatementCont';
 import { Statement } from 'delib-npm/dist/models/statement/StatementTypes';
 import SimilarStatements from './components/SimilarStatements';
+import { useParams } from 'react-router';
+import { useSelector } from 'react-redux';
+import { statementSelectorById } from '@/redux/statements/statementsSlice';
 
 export interface DisplayStatement {
 	title: string;
@@ -26,9 +29,15 @@ function CurrentScreen(currentStep: SimilaritySteps) {
 }
 
 export default function NewStatement() {
+
+	const { statementId } = useParams<{ statementId: string }>();
+
+	const statement = useSelector(statementSelectorById(statementId || ''));
+	const defaultLookForSimilarities = statement?.statementSettings?.defaultLookForSimilarities || false;
+
 	const [title, setTitle] = useState<string>('');
 	const [description, setDescription] = useState<string>('');
-	const [lookingForSimilarStatements, setLookingForSimilarStatements] = useState<boolean>(false);
+	const [lookingForSimilarStatements, setLookingForSimilarStatements] = useState<boolean>(defaultLookForSimilarities);
 	const [currentStep, setCurrentStep] = useState<SimilaritySteps>(SimilaritySteps.FORM);
 	const [similarStatements, setSimilarStatements] = useState<Statement[]>([]);
 
