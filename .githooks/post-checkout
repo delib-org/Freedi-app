@@ -1,0 +1,48 @@
+#!/bin/bash
+
+# Git hook to automatically handle React version switching
+# This script runs after 'git checkout' to ensure dependencies match branch
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+echo -e "${BLUE}🔄 Post-checkout hook: Checking React version compatibility...${NC}"
+
+# Check if package.json exists
+if [ ! -f package.json ]; then
+    echo -e "${RED}❌ package.json not found${NC}"
+    exit 0
+fi
+
+# Get current branch name
+BRANCH=$(git rev-parse --abbrev-ref HEAD)
+echo -e "${BLUE}📍 Current branch: ${BRANCH}${NC}"
+
+# Check React version in package.json
+REACT_VERSION=$(node -p "require('./package.json').dependencies.react" 2>/dev/null || echo "unknown")
+
+if [[ $REACT_VERSION == *"19"* ]]; then
+    echo -e "${GREEN}✅ Detected React 19 branch${NC}"
+    echo -e "${YELLOW}📦 Installing React 19 dependencies...${NC}"
+    npm install
+    echo -e "${GREEN}✅ React 19 dependencies installed${NC}"
+elif [[ $REACT_VERSION == *"18"* ]]; then
+    echo -e "${GREEN}✅ Detected React 18 branch${NC}"  
+    echo -e "${YELLOW}📦 Installing React 18 dependencies...${NC}"
+    npm install
+    echo -e "${GREEN}✅ React 18 dependencies installed${NC}"
+else
+    echo -e "${YELLOW}⚠️  Unknown React version: ${REACT_VERSION}${NC}"
+    echo -e "${YELLOW}📦 Installing dependencies anyway...${NC}"
+    npm install
+fi
+
+# Show current React version
+echo -e "${BLUE}📋 Current React version:${NC}"
+npm list react react-dom 2>/dev/null || echo "React not found in node_modules"
+
+echo -e "${GREEN}✅ Branch switch complete!${NC}"

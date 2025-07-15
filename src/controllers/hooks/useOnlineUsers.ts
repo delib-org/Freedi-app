@@ -43,7 +43,7 @@ export const useOnlineUsers = (statementId) => {
 
 		// Reset initialization flag when statementId changes
 		isInitializedRef.current = false;
-	}, [statementId, currentUser]);
+	}, [statementId, currentUser, userLoading]);
 	// Initialize user as online when hook mounts
 	useEffect(() => {
 		if (
@@ -68,7 +68,7 @@ export const useOnlineUsers = (statementId) => {
 		};
 
 		initializeOnlineUser();
-	}, [statementId, currentUser]);
+	}, [statementId, currentUser, userLoading]);
 
 	// Subscribe to online users changes
 	useEffect(() => {
@@ -81,7 +81,7 @@ export const useOnlineUsers = (statementId) => {
 		);
 
 		return () => unsubscribe();
-	}, [statementId, isInitializedRef.current]);
+	}, [statementId]);
 
 	// Handle tab focus/blur events
 	useEffect(() => {
@@ -142,7 +142,7 @@ export const useOnlineUsers = (statementId) => {
 				handleVisibilityChange
 			);
 		};
-	}, [statementId, currentUser, isInitializedRef.current]);
+	}, [statementId, currentUser]);
 
 	// Cleanup on window close
 	useEffect(() => {

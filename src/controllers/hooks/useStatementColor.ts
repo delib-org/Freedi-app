@@ -6,15 +6,16 @@ export interface StyleProps {
   color: string;
 }
 
+const initStyle = {
+  backgroundColor: "var(--header-home)",
+  color: "white",
+};
+
 export default function useStatementColor({
   statement,
 }: {
   statement: Statement | undefined;
 }): StyleProps {
-  const initStyle = {
-    backgroundColor: "var(--header-home)",
-    color: "white",
-  };
 
   const [style, setStyle] = useState(initStyle);
 

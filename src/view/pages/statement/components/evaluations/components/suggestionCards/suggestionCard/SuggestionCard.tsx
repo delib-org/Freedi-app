@@ -72,7 +72,7 @@ const SuggestionCard: FC<Props> = ({
 
 	useEffect(() => {
 		sortSubStatements(siblingStatements, sort, 30);
-	}, [statement?.elementHight]);
+	}, [statement?.elementHight, siblingStatements, sort]);
 
 	const statementColor: StyleProps = useStatementColor({
 		statement,
@@ -90,7 +90,7 @@ const SuggestionCard: FC<Props> = ({
 				);
 			}, 0);
 		}
-	}, [elementRef.current?.clientHeight]);
+	}, [elementRef.current?.clientHeight, dispatch, statement.statementId]);
 
 	function handleSetOption() {
 		try {

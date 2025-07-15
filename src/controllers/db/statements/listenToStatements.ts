@@ -145,6 +145,7 @@ export const listenToSubStatements = (
 			statementsRef,
 			where('parentId', '==', statementId),
 			where('statementType', '!=', StatementType.document),
+			orderBy('statementType'),
 			orderBy('createdAt', descAsc)
 		);
 
@@ -204,6 +205,7 @@ export const listenToMembers =
 				membersRef,
 				where('statementId', '==', statementId),
 				where('statement.statementType', '!=', StatementType.document),
+				orderBy('statement.statementType'),
 				orderBy('createdAt', 'desc')
 			);
 

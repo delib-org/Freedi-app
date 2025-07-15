@@ -25,14 +25,14 @@ function LeaveFeedback() {
 			isIntro: false,
 			setHeader,
 		});
-	}, []);
+	}, [setHeader, t]);
 
 	useEffect(() => {
 		if (mailStatus === 'valid')
 			navigate(
 				`/mass-consensus/${statementId}/${MassConsensusPageUrls.thankYou}`
 			);
-	}, [mailStatus]);
+	}, [mailStatus, navigate, statementId]);
 
 	return (
 		<div>

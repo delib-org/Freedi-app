@@ -29,7 +29,7 @@ const Introduction = () => {
 			isIntro: true,
 			setHeader,
 		});
-	}, []);
+	}, [setHeader, t]);
 	const statementId = statement?.statementId;
 	const uid = user?.uid;
 	useEffect(() => {

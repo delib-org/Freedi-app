@@ -63,7 +63,7 @@ const StatementEvaluationPage: FC<StatementEvaluationPageProps> = ({
 			//redirect us react router dom to voting page
 			navigate(`/statement/${statement.statementId}/vote`);
 		}
-	}, [statement.questionSettings?.currentStep, questions]);
+	}, [statement.questionSettings?.currentStep, questions, currentStep, isMultiStage, navigate, showToast, statement.statementId]);
 	try {
 		const message = currentStep || false;
 

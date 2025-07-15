@@ -8,7 +8,7 @@ import {
 	SelectionFunction,
 } from 'delib-npm';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useDispatch } from 'react-redux';
 import { useNavigate, useParams } from 'react-router';
 
@@ -30,11 +30,7 @@ export function useRandomSuggestions() {
 			navigate(
 				`/mass-consensus/${statementId}/${MassConsensusPageUrls.introduction}`
 			);
-	}, [user, isLoading]);
-
-	useEffect(() => {
-		fetchRandomStatements();
-	}, [statementId]);
+	}, [user, isLoading, navigate, statementId]);
 
 	useEffect(() => {
 		if (!user) return;
@@ -47,7 +43,7 @@ export function useRandomSuggestions() {
 		};
 	}, [subStatements, user]);
 
-	const fetchRandomStatements = async () => {
+	const fetchRandomStatements = useCallback(async () => {
 		if (statementId) {
 			try {
 				const endPoint = APIEndPoint('getRandomStatements', {
@@ -77,7 +73,11 @@ export function useRandomSuggestions() {
 				console.error('Error:', error);
 			}
 		}
-	};
+	}, [statementId, dispatch]);
+
+	useEffect(() => {
+		fetchRandomStatements();
+	}, [statementId, fetchRandomStatements]);
 
 	return { subStatements, navigateToTop, loadingStatements };
 }

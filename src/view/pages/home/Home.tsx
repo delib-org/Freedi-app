@@ -31,7 +31,7 @@ export default function Home() {
 		} else {
 			setDisplayHeader(true);
 		}
-	}, [location]);
+	}, [location, statementId]);
 
 	useEffect(() => {
 		let unsubscribe: () => void = () => { };

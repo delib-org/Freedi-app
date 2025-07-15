@@ -1,0 +1,104 @@
+.formContainer {
+	max-width: 500px;
+	margin: 0 auto;
+	padding: 2rem;
+	background: white;
+	border-radius: 8px;
+	box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.form {
+	display: flex;
+	flex-direction: column;
+	gap: 1.5rem;
+}
+
+.inputGroup {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+}
+
+.inputGroup label {
+	font-weight: 600;
+	color: #333;
+	font-size: 0.9rem;
+}
+
+.input, .textarea {
+	padding: 0.75rem;
+	border: 1px solid #ddd;
+	border-radius: 4px;
+	font-size: 1rem;
+	transition: border-color 0.2s;
+	
+	&:focus {
+		outline: none;
+		border-color: #007bff;
+		box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+	}
+}
+
+.textarea {
+	resize: vertical;
+	min-height: 100px;
+}
+
+.message {
+	padding: 0.75rem;
+	border-radius: 4px;
+	font-size: 0.9rem;
+	
+	&.success {
+		background-color: #d4edda;
+		color: #155724;
+		border: 1px solid #c3e6cb;
+	}
+	
+	&.error {
+		background-color: #f8d7da;
+		color: #721c24;
+		border: 1px solid #f5c6cb;
+	}
+}
+
+.buttonGroup {
+	display: flex;
+	gap: 1rem;
+	justify-content: flex-end;
+}
+
+.submitButton {
+	background-color: #007bff;
+	color: white;
+	border: none;
+	padding: 0.75rem 1.5rem;
+	border-radius: 4px;
+	cursor: pointer;
+	font-size: 1rem;
+	transition: background-color 0.2s;
+	
+	&:hover:not(:disabled) {
+		background-color: #0056b3;
+	}
+	
+	&:disabled {
+		opacity: 0.6;
+		cursor: not-allowed;
+	}
+}
+
+.cancelButton {
+	background-color: #6c757d;
+	color: white;
+	border: none;
+	padding: 0.75rem 1.5rem;
+	border-radius: 4px;
+	cursor: pointer;
+	font-size: 1rem;
+	transition: background-color 0.2s;
+	
+	&:hover {
+		background-color: #545b62;
+	}
+}

@@ -89,7 +89,7 @@ export const useAuthentication = (): AuthState => {
 		});
 
 		return () => unsubscribe();
-	}, []);
+	}, [dispatch, location.pathname, navigate]);
 
 	return authState;
 };

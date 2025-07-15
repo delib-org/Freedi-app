@@ -30,7 +30,7 @@ const UpdateMainCard: FC<Props> = ({ statement }) => {
 				if (st) dispatch(setStatement(st));
 			});
 		}
-	}, [parentStatement]);
+	}, [parentStatement, dispatch, statement.parentId]);
 
 	try {
 

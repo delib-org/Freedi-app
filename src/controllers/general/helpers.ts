@@ -6,11 +6,12 @@ import {
 	Role,
 	StatementType,
 	QuestionType,
+	User,
 } from 'delib-npm';
-import { useAuthentication } from '../hooks/useAuthentication';
 import { EnhancedEvaluationThumb } from '@/view/pages/statement/components/evaluations/components/evaluation/enhancedEvaluation/EnhancedEvaluationModel';
 
 export function isAuthorized(
+	user: User | null,
 	statement: Statement | undefined,
 	statementSubscription: StatementSubscription | undefined,
 	parentStatementCreatorId?: string | undefined,
@@ -18,8 +19,6 @@ export function isAuthorized(
 ) {
 	try {
 		if (!statement) throw new Error('No statement');
-
-		const { user } = useAuthentication();
 		if (!user) return false;
 
 		if (
@@ -67,6 +66,11 @@ export function isChatMessage(statementType: StatementType): boolean {
 }
 export function isMassConsensus(questionType: QuestionType): boolean {
 	if (questionType === QuestionType.massConsensus) return true;
+
+	return false;
+}
+export function isOption(statementType: StatementType): boolean {
+	if (statementType === StatementType.option) return true;
 
 	return false;
 }
