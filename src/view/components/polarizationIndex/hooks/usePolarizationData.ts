@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { useParams } from 'react-router';
 import { listenToPolarizationIndex } from '@/controllers/db/polarizationIndex/getPolarizationIndex';
@@ -12,7 +12,10 @@ export const usePolarizationData = () => {
 	const [selectedGroup, setSelectedGroup] = useState<number | null>(null);
 	const [isLoading, setIsLoading] = useState(true);
 	// Get polarization data from Redux
-	const polarizationIndexes: PolarizationIndex[] = useSelector(selectPolarizationIndexByParentId(statementId)) || [];
+	const rawPolarizationIndexes = useSelector(selectPolarizationIndexByParentId(statementId));
+	const polarizationIndexes: PolarizationIndex[] = useMemo(() => {
+		return rawPolarizationIndexes || [];
+	}, [rawPolarizationIndexes]);
 	// Safety check: Get current statement data with fallback
 	const currentStatementData = polarizationIndexes[selectedStatementIndex];
 	const hasData = polarizationIndexes.length > 0 && !!currentStatementData;

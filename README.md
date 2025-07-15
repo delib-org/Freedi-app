@@ -38,11 +38,11 @@
 
 ## 🛠️ Technology Stack
 
-- **Frontend**: React 18, TypeScript, Redux Toolkit, SCSS
+- **Frontend**: React 19, TypeScript, Redux Toolkit, SCSS
 - **Backend**: Firebase (Firestore, Functions, Auth, Storage)
 - **Deployment**: Firebase Hosting with CI/CD
 - **Testing**: Jest, TypeScript strict mode
-- **Development**: Vite, ESLint, Prettier
+- **Development**: Vite 6, ESLint, Prettier
 
 ## 📋 Prerequisites
 

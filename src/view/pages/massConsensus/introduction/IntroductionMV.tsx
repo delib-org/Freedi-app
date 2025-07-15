@@ -30,7 +30,7 @@ export function useIntroductionMV() {
 		if (statement.defaultLanguage) {
 			changeLanguage(statement.defaultLanguage as LanguagesEnum);
 		}
-	}, [defaultLanguage]);
+	}, [defaultLanguage, changeLanguage, statement]);
 
 	useEffect(() => {
 		if (!statementId) return;
@@ -42,7 +42,7 @@ export function useIntroductionMV() {
 
 			setLoading(false);
 		});
-	}, [statementId]);
+	}, [statementId, dispatch]);
 
 	return { statement, loading, error, subscription };
 }

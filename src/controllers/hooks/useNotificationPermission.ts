@@ -22,7 +22,7 @@ const useNotificationPermission = (token: string) => {
 			Notification.permission === "granted" &&
 			hasToken,
 		);
-	}, [hasToken, Notification.permission]);
+	}, [hasToken]);
 
 	return permission;
 

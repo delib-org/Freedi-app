@@ -54,7 +54,7 @@ const HomeMain = () => {
 		else {
 			setSubPage("decisions");
 		}
-	}, [userId])
+	}, [userId, user.advanceUser])
 
 	useEffect(() => {
 		setSubPageTitle(subPage === "decisions" ? "Decisions" : "Groups");

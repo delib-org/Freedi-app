@@ -1,4 +1,4 @@
-import { FC, useEffect, useState, useRef, useContext } from 'react';
+import { FC, useEffect, useState, useRef, useContext, useCallback } from 'react';
 import { useLocation, useParams } from 'react-router';
 import { StatementContext } from '../../StatementCont';
 import styles from './Chat.module.scss';
@@ -26,7 +26,7 @@ const Chat: FC = () => {
 
 	const [numberOfNewMessages, setNumberOfNewMessages] = useState<number>(0);
 
-	function scrollToHash() {
+	const scrollToHash = useCallback(() => {
 		if (location.hash) {
 			const element = document.querySelector(location.hash);
 
@@ -37,7 +37,7 @@ const Chat: FC = () => {
 				return;
 			}
 		}
-	}
+	}, [location.hash]);
 
 	useEffect(() => {
 		// const updateChatHeight = () => {
@@ -53,7 +53,7 @@ const Chat: FC = () => {
 	}, []);
 
 	//scroll to bottom
-	const scrollToBottom = () => {
+	const scrollToBottom = useCallback(() => {
 		if (!messagesEndRef) return;
 		if (!messagesEndRef.current) return;
 		if (location.hash) return;
@@ -63,7 +63,7 @@ const Chat: FC = () => {
 		} else {
 			messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
 		}
-	};
+	}, [location.hash]);
 
 	useEffect(() => {
 		firstTime = true;
@@ -73,7 +73,7 @@ const Chat: FC = () => {
 		return () => {
 			unsubscribe();
 		};
-	}, []);
+	}, [statementId]);
 
 	//effects
 	useEffect(() => {
@@ -85,7 +85,7 @@ const Chat: FC = () => {
 			scrollToBottom();
 		}
 		firstTime = false;
-	}, [subStatements]);
+	}, [subStatements, location.hash, scrollToBottom, scrollToHash]);
 
 	useEffect(() => {
 		//if new sub-statement was not created by the user, then set numberOfNewMessages to the number of new subStatements
@@ -100,7 +100,7 @@ const Chat: FC = () => {
 		} else {
 			scrollToBottom();
 		}
-	}, [subStatements.length]);
+	}, [subStatements.length, scrollToBottom, subStatements, user?.uid]);
 
 	return (
 		<div className={styles.chat} ref={chatRef}>

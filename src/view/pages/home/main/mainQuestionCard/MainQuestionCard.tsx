@@ -23,7 +23,7 @@ const MainQuestionCard: FC<Props> = ({ simpleStatement }) => {
 		return () => {
 			unsubscribe();
 		};
-	}, []);
+	}, [simpleStatement.statementId]);
 
 	return (
 		<Link

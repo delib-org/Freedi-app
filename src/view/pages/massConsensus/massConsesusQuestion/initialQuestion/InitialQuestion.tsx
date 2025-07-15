@@ -33,19 +33,19 @@ const InitialQuestion = ({
 
 	useEffect(() => {
 		if (stage === 'loading') handleSetInitialSuggestion();
-	}, [stage]);
+	}, [stage, handleSetInitialSuggestion]);
 
 	useEffect(() => {
 		if (error) setReachedLimit(true);
-	}, [error]);
+	}, [error, setReachedLimit]);
 
 	useEffect(() => {
 		if (ready && !error) updateStage('suggestions');
-	}, [ready, error]);
+	}, [ready, error, updateStage]);
 
 	useEffect(() => {
 		setIfButtonEnabled(description !== '');
-	}, [description]);
+	}, [description, setIfButtonEnabled]);
 
 	async function handleSubmitInitialQuestionText(e) {
 		e.preventDefault();

@@ -1,23 +1,51 @@
-import { Dispatch, FC } from 'react';
+import { Dispatch, FC, useContext } from 'react';
 import styles from './EmptyScreen.module.scss';
 import ideaImage from '@/assets/images/manWithIdeaLamp.png';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import useWindowDimensions from '@/controllers/hooks/useWindowDimentions';
+import { useDispatch } from 'react-redux';
+import { StatementContext } from "@/view/pages/statement/StatementCont";
+import { setNewStatementModal } from '@/redux/statements/newStatementSlice';
+import { StatementType } from 'delib-npm';
+import { useDecreaseLearningRemain } from '@/controllers/hooks/useDecreaseLearningRemain';
 
 // /graphics
 import WhitePlusIcon from '@/view/components/icons/WhitePlusIcon';
 
 interface Props {
-	setShowModal: Dispatch<boolean>;
+	setShowModal?: Dispatch<boolean>;
 }
 
 const EmptyScreen: FC<Props> = ({ setShowModal }) => {
 	const { t } = useUserConfig();
 	const { width } = useWindowDimensions();
 	const smallScreen = width < 1024;
+	const dispatch = useDispatch();
+	const { statement } = useContext(StatementContext);
+	const decreaseLearning = useDecreaseLearningRemain();
+
+	function handleCreateNewOption() {
+		if (!statement) return;
+
+		dispatch(setNewStatementModal({
+			parentStatement: statement,
+			newStatement: {
+				statementType: StatementType.option,
+			},
+			showModal: true,
+			isLoading: false,
+			error: null,
+		}))
+	}
 
 	const handlePlusIconClick = () => {
-		setShowModal(true);
+		handleCreateNewOption();
+		if (setShowModal) {
+			setShowModal(false);
+		}
+		decreaseLearning({
+			addOption: true,
+		});
 	};
 
 	return (
@@ -37,14 +65,14 @@ const EmptyScreen: FC<Props> = ({ setShowModal }) => {
 								{t('to add your suggestion')}
 							</>
 						) : (
-							<h1>
+							<>
 								{t('Click on')}{' '}
 								<span className={styles.titleSpan}>
 									{t('Add suggestion button')}
 								</span>
 								<br />
 								{t('to add your suggestion')}
-							</h1>
+							</>
 						)}
 					</h1>
 				</div>

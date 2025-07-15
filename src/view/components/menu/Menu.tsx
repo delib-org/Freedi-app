@@ -5,7 +5,7 @@ import useStatementColor from '@/controllers/hooks/useStatementColor';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import { RootState } from '@/redux/store';
 import { Statement } from 'delib-npm';
-import { ComponentProps, FC, ReactNode, useCallback } from 'react';
+import { ComponentProps, FC, ReactNode } from 'react';
 import { useSelector } from 'react-redux';
 import IconButton from '../iconButton/IconButton';
 import './Menu.scss';
@@ -41,9 +41,9 @@ const Menu: FC<MenuProps> = ({
 	const avatarSrc = user?.photoURL || DefaultAvatar;
 	const { backgroundColor } = useStatementColor({ statement });
 
-	const handleClickOutside = useCallback(() => {
+	const handleClickOutside = () => {
 		if (isMenuOpen) setIsOpen(false);
-	}, [isMenuOpen, setIsOpen]);
+	};
 
 	const menuRef = useClickOutside(handleClickOutside);
 

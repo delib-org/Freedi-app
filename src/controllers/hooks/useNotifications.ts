@@ -32,9 +32,7 @@ export const useNotifications = (statementId?: string) => {
 
 	const params = useParams();
 	const currentStatementId = statementId || params.statementId;
-	const hasToken = currentStatementId
-		? useAppSelector(hasTokenSelector('', currentStatementId))
-		: false;
+	const hasToken = useAppSelector(hasTokenSelector('', currentStatementId || ''));
 
 	// Initialize notifications based on authentication state
 	useEffect(() => {
