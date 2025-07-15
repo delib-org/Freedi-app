@@ -21,7 +21,7 @@ const TopSuggestions = () => {
 			isIntro: false,
 			setHeader,
 		});
-	}, []);
+	}, [setHeader, t]);
 
 	return (
 		<div>

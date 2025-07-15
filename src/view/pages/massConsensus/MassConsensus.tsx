@@ -24,7 +24,7 @@ const MassConsensus = () => {
 
 	useEffect(() => {
 		navigate(`/mass-consensus/${statementId}/introduction`)
-	}, [])
+	}, [navigate, statementId])
 
 	useEffect(() => {
 		if (!subscription && user) {
@@ -35,7 +35,7 @@ const MassConsensus = () => {
 				}
 			})
 		}
-	}, [subscription, user])
+	}, [subscription, user, dispatch, statementId])
 
 	useEffect(() => {
 
@@ -48,7 +48,7 @@ const MassConsensus = () => {
 				}
 			})
 		}
-	}, [user])
+	}, [user, dispatch, statementId])
 
 	return (
 		<HeaderProvider>

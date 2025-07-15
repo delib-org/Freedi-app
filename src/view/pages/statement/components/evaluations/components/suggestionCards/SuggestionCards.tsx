@@ -118,26 +118,19 @@ const SuggestionCards: FC<SuggestionCardsProps> = ({
 	const { sort: sortFromUrl, statementId } = useParams();
 	const dispatch = useDispatch();
 
-	// Early return if no statementId
-	if (!statementId) return null;
-
-	// Determine the sort type from props or URL params
-	const currentSort = (propSort || sortFromUrl || SortType.newest) as SortType;
-
-	// Redux selectors
-	const statement = useSelector(statementSelector(statementId));
-
-	// Early return if no statement
-	if (!statement) return null;
-
+	// Redux selectors - must be called unconditionally
+	const statement = useSelector(statementSelector(statementId || ''));
 	const creator = useSelector(creatorSelector);
-	const parentSubscription = useSelector(statementSubscriptionSelector(statementId));
-	const statementsFromStore = useSelector(statementOptionsSelector(statement.statementId));
+	const parentSubscription = useSelector(statementSubscriptionSelector(statementId || ''));
+	const statementsFromStore = useSelector(statementOptionsSelector(statement?.statementId || ''));
 
-	// Local state
+	// Local state - must be called unconditionally
 	const [totalHeight, setTotalHeight] = useState(0);
 	const [isAnimating, setIsAnimating] = useState(false);
 	const animationTimeoutRef = useRef<number | null>(null);
+
+	// Determine the sort type from props or URL params
+	const currentSort = (propSort || sortFromUrl || SortType.newest) as SortType;
 
 	// Memoized admin check
 	const isAdmin = useMemo(() =>
@@ -239,6 +232,10 @@ const SuggestionCards: FC<SuggestionCardsProps> = ({
 			}
 		};
 	}, []);
+
+	// Early returns after all hooks
+	if (!statementId) return null;
+	if (!statement) return null;
 
 	if (!filteredSubStatements.length) {
 		return (

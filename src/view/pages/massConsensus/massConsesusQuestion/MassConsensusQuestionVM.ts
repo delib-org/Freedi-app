@@ -19,7 +19,7 @@ const useMassConsensusQuestion = () => {
 			isIntro: false,
 			setHeader,
 		});
-	}, []);
+	}, [setHeader, t]);
 
 	const handleNext = () => {
 		if (stage === 'question') {

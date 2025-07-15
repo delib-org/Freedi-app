@@ -37,7 +37,7 @@ const MainCard: FC<Props> = ({ simpleStatement }) => {
 		return () => {
 			unsubscribe();
 		};
-	}, []);
+	}, [simpleStatement.statementId]);
 
 	return (
 		<div className={styles.mainCard}>

@@ -26,13 +26,13 @@ export default function ProtectedLayout() {
 				else navigate("/404")
 			});
 		}
-	}, [_statementId]);
+	}, [_statementId, dispatch, navigate, statement, statementId]);
 
 	useEffect(() => {
 		if (!isAuthorized && !loading && !error && !isWaitingForApproval) {
 			navigate("/401");
 		}
-	}, [isAuthorized, loading, error, isWaitingForApproval]);
+	}, [isAuthorized, loading, error, isWaitingForApproval, navigate]);
 
 	if (isWaitingForApproval) {
 		return <WaitingPage />;

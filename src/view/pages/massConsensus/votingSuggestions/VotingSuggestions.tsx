@@ -35,7 +35,7 @@ const VotingSuggestions = () => {
 			isIntro: false,
 			setHeader,
 		});
-	}, []);
+	}, [setHeader, t]);
 
 	return (
 		<>

@@ -44,7 +44,7 @@ const SuggestionComment: FC<Props> = ({ statement, parentStatement }) => {
 			unsubscribe();
 			clearInAppNotifications(statement.statementId);
 		}
-	}, []);
+	}, [statement.statementId]);
 
 	useEffect(() => {
 		if (previousEvaluation) {
@@ -67,7 +67,7 @@ const SuggestionComment: FC<Props> = ({ statement, parentStatement }) => {
 				dispatch(deleteInAppNotificationsByParentId(statement.statementId));
 			}, 2000);
 		}
-	}, [isOpen])
+	}, [isOpen, dispatch, statement.statementId])
 
 	useEffect(() => {
 		if (user?.uid !== parentStatement.creator.uid) return;
@@ -89,7 +89,7 @@ const SuggestionComment: FC<Props> = ({ statement, parentStatement }) => {
 			initialDescription.current = parentStatement.description;
 		}
 
-	}, [parentStatement.statement, parentStatement.description]);
+	}, [parentStatement.statement, parentStatement.description, parentStatement.creator.uid, statement, t, user?.uid]);
 
 	const toggleAccordion = () => {
 		setIsOpen(!isOpen);

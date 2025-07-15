@@ -50,7 +50,7 @@ export const useAuthorization = (statementId?: string): AuthorizationState => {
 		return () => {
 			unsubscribe();
 		}
-	}, [statementId, topParentId]);
+	}, [statementId, topParentId, topParentStatement]);
 
 	// Set up subscription listener
 	useEffect(() => {
@@ -59,7 +59,7 @@ export const useAuthorization = (statementId?: string): AuthorizationState => {
 		const unsubscribe = listenToStatementSubscription(topParentId, creator, setHasSubscription);
 
 		return () => unsubscribe();
-	}, [topParentId, creator?.uid]);
+	}, [topParentId, creator, statementId]);
 
 	useEffect(() => {
 

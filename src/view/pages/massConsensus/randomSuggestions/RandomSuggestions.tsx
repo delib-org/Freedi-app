@@ -21,7 +21,7 @@ const RandomSuggestions = () => {
 			isIntro: false,
 			setHeader,
 		});
-	}, []);
+	}, [setHeader, t]);
 
 	return (
 		<>

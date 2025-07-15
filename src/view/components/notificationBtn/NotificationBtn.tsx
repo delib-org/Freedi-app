@@ -1,5 +1,5 @@
 import MailIcon from '@/assets/icons/mailIcon.svg?react';
-import { useCallback, useState } from 'react'
+import { useState } from 'react'
 import InAppNotifications from '../inAppNotifications/InAppNotifications';
 import { useSelector } from 'react-redux';
 import { creatorSelector } from '@/redux/creator/creatorSlice';
@@ -17,9 +17,9 @@ const NotificationBtn = () => {
 		setShowInAppNotifications(!showInAppNotifications);
 	}
 
-	const handleClickOutside = useCallback(() => {
+	const handleClickOutside = () => {
 		if (showInAppNotifications) setShowInAppNotifications(false);
-	}, [showInAppNotifications, setShowInAppNotifications]);
+	};
 	
 	const notifRef = useClickOutside(handleClickOutside);
 
