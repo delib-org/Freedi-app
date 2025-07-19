@@ -1,10 +1,22 @@
-.form {
+.button {
+	position: absolute;
+	bottom: 1rem;
+	left: 0;
+	width: 100%;
+
+	display: flex;
+	justify-content: center;
+}
+.title {
+	margin: 1rem;
+}
+
+.userDemographicContainer {
 	background-color: var(--card-default);
 	border: 1px solid #e5e7eb;
 	border-radius: 8px;
-}
-.button {
-	display: flex;
-	justify-content: center;
-	margin-bottom: 0.5rem;
+	min-height: 400px;
+	height: 60vh;
+	position: relative;
+	padding-bottom: 3rem;
 }

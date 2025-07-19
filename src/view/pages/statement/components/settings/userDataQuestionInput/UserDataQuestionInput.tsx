@@ -5,7 +5,7 @@ import styles from './UserDataQuestionInput.module.scss';
 interface UserQuestionInputProps {
 	question: UserQuestion;
 	value?: string | string[];
-	options?: { option: string, color?: string }[];
+	options?: { option: string; color?: string }[];
 	onChange: (value: string | string[]) => void;
 	className?: string;
 	required?: boolean;
@@ -35,7 +35,7 @@ const UserQuestionInput: FC<UserQuestionInputProps> = ({
 					!inputValue ||
 					(typeof inputValue === 'string' && inputValue.trim() === '')
 				) {
-					setValidationError('This field is required');
+					setValidationError('- This field is required');
 
 					return false;
 				}
