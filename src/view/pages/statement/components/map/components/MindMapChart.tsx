@@ -57,6 +57,8 @@ export default function MindMapChart({ descendants, isAdmin, filterBy }: Readonl
 	const [draggedNodeId, setDraggedNodeId] = useState('');
 	const { mapContext, setMapContext } = useMapContext();
 	const [isButtonVisible, setIsButtonVisible] = useState(false);
+	const [lastEditedNodeId, setLastEditedNodeId] = useState<string | null>(null);
+
 	const selectedId = mapContext?.selectedId ?? null;
 
 	const handleHamburgerClick = () => setIsButtonVisible(true);
@@ -95,13 +97,15 @@ export default function MindMapChart({ descendants, isAdmin, filterBy }: Readonl
 		const latestCreatedAt = Math.max(...layoutedNodes.map((n) => n.data?.createdAt || 0));
 
 		const animatedNodes = layoutedNodes.map((node) => {
-			const shouldAnimate = node.data?.createdAt === latestCreatedAt;
+			const isNewest = node.data?.createdAt === latestCreatedAt;
+			const isEdited = node.id === lastEditedNodeId;
 
 			return {
 				...node,
 				data: {
 					...node.data,
-					animate: shouldAnimate,
+					animate: isNewest || isEdited,
+					setLastEditedNodeId,
 				},
 			};
 		});
@@ -120,6 +124,7 @@ export default function MindMapChart({ descendants, isAdmin, filterBy }: Readonl
 					},
 				}))
 			);
+			setLastEditedNodeId(null);
 			onSave();
 		}, 1000);
 	}, [descendants, filterBy]);
@@ -250,6 +255,7 @@ export default function MindMapChart({ descendants, isAdmin, filterBy }: Readonl
 					const flow = reactFlowInstance.toObject();
 					localStorage.setItem('flowKey', JSON.stringify(flow));
 				}}
+
 			>
 				<Controls showInteractive={isAdmin} />
 				<Panel position='bottom-right' className='btnsPanel'>

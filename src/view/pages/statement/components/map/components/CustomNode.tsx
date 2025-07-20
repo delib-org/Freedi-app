@@ -1,14 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
-// Third party
 import { useNavigate } from 'react-router';
 import { Handle, NodeProps, useStore } from 'reactflow';
-// Hooks
-// Styles
 import '../mapHelpers/reactFlow.scss';
-// Icons
 import EllipsisIcon from '@/assets/icons/ellipsisIcon.svg?react';
 import PlusIcon from '@/assets/icons/plusIcon.svg?react';
-// Statements functions
 import { updateStatementText } from '@/controllers/db/statements/setStatements';
 import { statementTitleToDisplay } from '@/controllers/general/helpers';
 import { useMapContext } from '@/controllers/hooks/useMap';
@@ -39,7 +34,12 @@ const nodeStyle = (statementColor: {
 	return style;
 };
 
-function CustomNode({ data }: NodeProps) {
+function CustomNode(props: NodeProps) {
+	const { id, data } = props;
+
+	// ✅ Get the passed-in trigger function safely from node.data
+	const setLastEditedNodeId = data.setLastEditedNodeId as ((id: string) => void) | undefined;
+
 	const navigate = useNavigate();
 	const { result, parentStatement, dimensions } = data;
 	const { statementId, statement } = result.top as Statement;
@@ -53,18 +53,15 @@ function CustomNode({ data }: NodeProps) {
 
 	const statementColor = useStatementColor({ statement: localStatement });
 	const [showMenu, setShowMenu] = useState(false);
-
 	const { shortVersion: title } = statementTitleToDisplay(statement, 100);
-
 	const { isVoted, isChosen, statementType } = result.top;
+
 	useEffect(() => {
 		setLocalStatement(result.top);
 	}, [isVoted, isChosen, statementType]);
 
-	// Get zoom level from React Flow store
 	const zoom = useStore((state) => state.transform[2]);
 
-	// Create refs for buttons that need fixed sizing
 	const addChildRef = useRef(null);
 	const addSiblingRef = useRef(null);
 	const menuButtonRef = useRef(null);
@@ -89,50 +86,39 @@ function CustomNode({ data }: NodeProps) {
 		minHeight: 'auto',
 	};
 
-	// Apply inverse scale to buttons when zoom changes
 	useEffect(() => {
 		if (zoom && showBtns) {
-			const scale = 1 / zoom; // Inverse scaling factor
+			const scale = 1 / zoom;
 
-			// Apply scaling to all button refs
 			if (addChildRef.current) {
 				addChildRef.current.style.transform = `scale(${scale})`;
 				addChildRef.current.style.transformOrigin = 'center center';
 			}
-
 			if (addSiblingRef.current) {
 				addSiblingRef.current.style.transform = `scale(${scale})`;
 				addSiblingRef.current.style.transformOrigin = 'center center';
 			}
-
 			if (menuButtonRef.current) {
 				menuButtonRef.current.style.transform = `scale(${scale})`;
 				menuButtonRef.current.style.transformOrigin = 'center center';
 			}
-
 			if (menuContainerRef.current) {
-				// Scale the menu container
 				menuContainerRef.current.style.transform = `scale(${scale})`;
-				// Set transform origin to bottom right to maintain position
 				menuContainerRef.current.style.transformOrigin = 'bottom right';
 			}
 		}
 	}, [zoom, showBtns, showMenu]);
 
-	//effects
-	//close menu every time a node is selected
 	useEffect(() => {
 		setShowMenu(false);
 	}, [selectedId]);
 
-	//handlers
 	const handleNodeDoubleClick = () => {
-		if (isEdit) {
-			return;
+		if (!isEdit) {
+			navigate(`/statement/${statementId}/chat`, {
+				state: { from: window.location.pathname },
+			});
 		}
-		navigate(`/statement/${statementId}/chat`, {
-			state: { from: window.location.pathname },
-		});
 	};
 
 	const handleNodeClick = () => {
@@ -169,18 +155,24 @@ function CustomNode({ data }: NodeProps) {
 		}));
 	};
 
-	function handleMenuClick() {
+	const handleMenuClick = () => {
 		setShowMenu((prev) => !prev);
-	}
+	};
+
 	function handleUpdateStatement(e) {
 		if (e.key === 'Enter') {
-			const title = e.target.value;
+			const title = e.target.value.trim();
+			if (title) {
+				updateStatementText(result.top, title);
+				setIsEdit(false);
+				setWordLength(null);
 
-			updateStatementText(result.top, title);
-			setIsEdit(false);
-			setWordLength(null);
+				// ✅ Trigger animation for this edited node
+				setLastEditedNodeId?.(id);
+			}
 		}
 	}
+
 	function onTextChang(e) {
 		const textLength = e.target.value.length;
 		setWordLength(textLength);
@@ -203,8 +195,8 @@ function CustomNode({ data }: NodeProps) {
 					<textarea
 						defaultValue={title}
 						onBlur={() => setIsEdit(false)}
-						onChange={(e) => onTextChang(e)}
-						onKeyUp={(e) => handleUpdateStatement(e)}
+						onChange={onTextChang}
+						onKeyUp={handleUpdateStatement}
 					/>
 				) : (
 					title
@@ -220,14 +212,8 @@ function CustomNode({ data }: NodeProps) {
 						style={{
 							position: 'absolute',
 							cursor: 'pointer',
-							right:
-								mapContext.direction === 'TB'
-									? 'calc(50% - 0.5rem)'
-									: '-.8rem',
-							bottom:
-								mapContext.direction === 'TB'
-									? '-.8rem'
-									: 'calc(50% - 0.5rem)',
+							right: mapContext.direction === 'TB' ? 'calc(50% - 0.5rem)' : '-.8rem',
+							bottom: mapContext.direction === 'TB' ? '-.8rem' : 'calc(50% - 0.5rem)',
 						}}
 					>
 						<PlusIcon />
@@ -240,14 +226,8 @@ function CustomNode({ data }: NodeProps) {
 						style={{
 							position: 'absolute',
 							cursor: 'pointer',
-							left:
-								mapContext.direction === 'TB'
-									? '-.5rem'
-									: 'calc(50% - 0.5rem)',
-							top:
-								mapContext.direction === 'TB'
-									? 'calc(50% - 0.5rem)'
-									: '-.8rem',
+							left: mapContext.direction === 'TB' ? '-.5rem' : 'calc(50% - 0.5rem)',
+							top: mapContext.direction === 'TB' ? 'calc(50% - 0.5rem)' : '-.8rem',
 						}}
 					>
 						<PlusIcon />
@@ -274,9 +254,9 @@ function CustomNode({ data }: NodeProps) {
 								cursor: 'pointer',
 								right: '0',
 								bottom: '100%',
-								marginBottom: '10px', // Fixed distance regardless of zoom
+								marginBottom: '10px',
 								transformOrigin: 'bottom right',
-								zIndex: 999, // Ensure menu appears above other elements
+								zIndex: 999,
 							}}
 						>
 							<NodeMenu
@@ -296,4 +276,5 @@ function CustomNode({ data }: NodeProps) {
 		</div>
 	);
 }
+
 export default CustomNode;
