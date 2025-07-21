@@ -1,4 +1,4 @@
-import React, { MouseEvent, useCallback, useEffect, useState } from 'react';
+import { MouseEvent, useCallback, useEffect, useState } from 'react';
 
 // Styles
 import '@/view/pages/statement/components/createStatementModal/CreateStatementModal.scss';
@@ -6,18 +6,26 @@ import '@/view/pages/statement/components/createStatementModal/CreateStatementMo
 // React Flow imports
 import ReactFlow, {
 	Controls,
-	useNodesState,
-	useEdgesState,
+	Node,
 	Panel,
 	Position,
-	Node,
-	useReactFlow,
 	ReactFlowInstance,
+	useEdgesState,
+	useNodesState,
+	useReactFlow,
 } from 'reactflow';
-import '../mapHelpers/reactFlow.scss';
 import 'reactflow/dist/style.css';
+import '../mapHelpers/reactFlow.scss';
 
 // icons and components
+import MapCancelIcon from '@/assets/icons/MapCancelIcon.svg';
+import MapHamburgerIcon from '@/assets/icons/MapHamburgerIcon.svg';
+import MapHorizontalLayoutIcon from '@/assets/icons/MapHorizontalLayoutIcon.svg';
+import MapRestoreIcon from '@/assets/icons/MapRestoreIcon.svg';
+import MapSaveIcon from '@/assets/icons/MapSaveIcon.svg';
+import MapVerticalLayoutIcon from '@/assets/icons/MapVerticalLayoutIcon.svg';
+import { FilterType } from '@/controllers/general/sorting';
+import { Results, Statement, StatementType } from 'delib-npm';
 import { getStatementFromDB } from '../../../../../../controllers/db/statements/getStatement';
 import { updateStatementParents } from '../../../../../../controllers/db/statements/setStatements';
 import { useMapContext } from '../../../../../../controllers/hooks/useMap';
@@ -27,14 +35,6 @@ import {
 	getLayoutElements,
 } from '../mapHelpers/customNodeCont';
 import CustomNode from './CustomNode';
-import MapCancelIcon from '@/assets/icons/MapCancelIcon.svg';
-import MapHamburgerIcon from '@/assets/icons/MapHamburgerIcon.svg';
-import MapHorizontalLayoutIcon from '@/assets/icons/MapHorizontalLayoutIcon.svg';
-import MapRestoreIcon from '@/assets/icons/MapRestoreIcon.svg';
-import MapSaveIcon from '@/assets/icons/MapSaveIcon.svg';
-import MapVerticalLayoutIcon from '@/assets/icons/MapVerticalLayoutIcon.svg';
-import { Results, Statement, StatementType } from 'delib-npm';
-import { FilterType } from '@/controllers/general/sorting';
 
 const nodeTypes = {
 	custom: CustomNode,
@@ -97,14 +97,13 @@ export default function MindMapChart({ descendants, isAdmin, filterBy }: Readonl
 		const latestCreatedAt = Math.max(...layoutedNodes.map((n) => n.data?.createdAt || 0));
 
 		const animatedNodes = layoutedNodes.map((node) => {
-			const isNewest = node.data?.createdAt === latestCreatedAt;
-			const isEdited = node.id === lastEditedNodeId;
-
 			return {
 				...node,
 				data: {
 					...node.data,
-					animate: isNewest || isEdited,
+					animate: lastEditedNodeId
+						? node.id === lastEditedNodeId
+						: node.data?.createdAt === latestCreatedAt,
 					setLastEditedNodeId,
 				},
 			};

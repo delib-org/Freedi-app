@@ -37,7 +37,6 @@ const nodeStyle = (statementColor: {
 function CustomNode(props: NodeProps) {
 	const { id, data } = props;
 
-	// ✅ Get the passed-in trigger function safely from node.data
 	const setLastEditedNodeId = data.setLastEditedNodeId as ((id: string) => void) | undefined;
 
 	const navigate = useNavigate();
@@ -167,7 +166,6 @@ function CustomNode(props: NodeProps) {
 				setIsEdit(false);
 				setWordLength(null);
 
-				// ✅ Trigger animation for this edited node
 				setLastEditedNodeId?.(id);
 			}
 		}
