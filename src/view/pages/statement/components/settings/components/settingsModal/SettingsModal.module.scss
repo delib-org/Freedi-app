@@ -14,13 +14,29 @@
 	overflow-y: auto;
 	border: 1px solid #e8ecf5;
 
-
-
 	@media screen and (max-width: 768px) {
-
 		height: 100vh;
 		top: 0px;
 		border-radius: 0px;
+	}
+}
+.fullScreenModal {
+	background-color: var(--surface-background);
+	position: fixed;
+	top: 0px;
+	left: 0;
+	z-index: 1000;
+	width: 100vw;
+	padding: 20px;
+	border-radius: 8px;
+	height: 100svh;
+	box-shadow: 6px 6px 12px rgba(0, 0, 0, 0.1);
+	overflow-y: auto;
+	border: 1px solid #e8ecf5;
 
+	@media screen and (max-width: 768px) {
+		height: 100vh;
+		top: 0px;
+		border-radius: 0px;
 	}
 }
