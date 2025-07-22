@@ -10,9 +10,11 @@ import { connectFirestoreEmulator, getFirestore } from 'firebase/firestore';
 import { getStorage, connectStorageEmulator } from 'firebase/storage';
 import { isProduction } from '../general/helpers';
 import firebaseConfig from './configKey';
+import { CloudCog } from 'lucide-react';
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
+console.info(firebaseConfig);
 const FireStore = getFirestore(app);
 const DB = FireStore;
 const storage = getStorage(app);
