@@ -3,6 +3,7 @@
 	"testEnvironment": "jsdom",
 	"setupFilesAfterEnv": ["<rootDir>/src/setupTests.ts"],
 	"moduleNameMapper": {
+		"^.+\\.svg\\?react$": "<rootDir>/src/test-utils/svgMock.js",
 		"^@/(.*)$": "<rootDir>/src/$1",
 		"\\.(css|less|scss|sass)$": "identity-obj-proxy"
 	},
