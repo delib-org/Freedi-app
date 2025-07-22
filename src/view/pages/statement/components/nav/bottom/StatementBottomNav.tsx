@@ -1,5 +1,5 @@
 import { FC, useContext, useState, useEffect } from 'react';
-import { Link, useParams } from 'react-router';
+import { useParams, useNavigate } from 'react-router';
 
 // Icons
 import AgreementIcon from '@/assets/icons/agreementIcon.svg?react';
@@ -28,6 +28,7 @@ const StatementBottomNav: FC<Props> = () => {
 
 	const { statementId } = useParams<{ statementId: string }>();
 	const dispatch = useDispatch();
+	const navigate = useNavigate();
 
 	const { statement } =
 		useContext(StatementContext);
@@ -86,6 +87,17 @@ const StatementBottomNav: FC<Props> = () => {
 		return path.includes('/stage/') ? 'stage' : 'statement';
 	}
 
+	function handleSortClick(navItem: typeof sortItems[0]) {
+		setShowSorting(false);
+		
+		// For random sort, add a timestamp query parameter to force re-randomization
+		if (navItem.link === SortType.random) {
+			navigate(`/${getBaseRoute()}/${statement?.statementId}/${navItem.link}?t=${Date.now()}`);
+		} else {
+			navigate(`/${getBaseRoute()}/${statement?.statementId}/${navItem.link}`);
+		}
+	}
+
 	return (
 		<>
 			{showStartHere && canAddOption && <StartHere setShow={setShowStartHere} />}
@@ -115,18 +127,16 @@ const StatementBottomNav: FC<Props> = () => {
 								key={`item-id-${i}`}
 								className={`sort-menu__item  ${showSorting ? 'active' : ''}`}
 							>
-								<Link
+								<button
 									className={`open-nav-icon ${showSorting ? 'active' : ''}`}
-									to={`/${getBaseRoute()}/${statement?.statementId}/${navItem.link}`}
 									aria-label='Sorting options'
-									key={navItem.id}
-									onClick={() => setShowSorting(false)}
+									onClick={() => handleSortClick(navItem)}
 								>
 									<NavIcon
 										name={navItem.id}
 										color={statementColor.backgroundColor}
 									/>
-								</Link>
+								</button>
 								<span className='button-name'>
 									{navItem.name}
 								</span>
