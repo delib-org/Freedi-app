@@ -1,6 +1,6 @@
 import { FC, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useParams } from 'react-router';
+import { useParams, useLocation } from 'react-router';
 
 import { Statement, SortType, SelectionFunction, Role } from 'delib-npm';
 
@@ -31,6 +31,7 @@ const SuggestionCards: FC<Props> = ({
 	subStatements: propSubStatements,
 }) => {
 	const { sort: sortFromUrl, statementId } = useParams();
+	const location = useLocation();
 
 	const sort = propSort || sortFromUrl || SortType.newest;
 
@@ -40,6 +41,7 @@ const SuggestionCards: FC<Props> = ({
 	const parentSubscription = useSelector(statementSubscriptionSelector(statementId));
 
 	const [totalHeight, setTotalHeight] = useState(0);
+	const [randomSeed, setRandomSeed] = useState(Date.now());
 
 	const statementsFromStore = useSelector(
 		statementOptionsSelector(statement?.statementId)
@@ -80,13 +82,18 @@ const SuggestionCards: FC<Props> = ({
 	}, [statementId]);
 
 	useEffect(() => {
+		// Generate new random seed when switching to random sort or when query params change
+		if (sort === SortType.random) {
+			setRandomSeed(Date.now());
+		}
+		
 		const { totalHeight: _totalHeight } = sortSubStatements(
 			subStatements,
 			sort,
 			30
 		);
 		setTotalHeight(_totalHeight);
-	}, [sort]);
+	}, [sort, location.search]);
 
 	useEffect(() => {
 		const _totalHeight = subStatements.reduce(
@@ -97,7 +104,7 @@ const SuggestionCards: FC<Props> = ({
 		);
 		setTotalHeight(_totalHeight);
 		sortSubStatements(subStatements, sort, 30);
-	}, [subStatements.length, sort]);
+	}, [subStatements.length, sort, sort === SortType.random ? randomSeed : null]);
 
 	if (!subStatements || subStatements.length === 0) {
 		return (
