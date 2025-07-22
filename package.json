@@ -4,6 +4,10 @@
 	"version": "5.4.0",
 	"type": "module",
 	"scripts": {
+		"setup": "node scripts/setup-firebase.js",
+		"setup:deps": "npm install && cd functions && npm install && cd ..",
+		"setup:all": "npm run setup && npm run setup:deps",
+		"verify": "node scripts/verify-setup.js",
 		"preview": "vite preview",
 		"clean": "rm -rf node_modules package-lock.json dist && git rm -r --cache . && git reset && npm install && npm run build",
 		"dev": "vite --open",
