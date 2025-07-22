@@ -22,10 +22,11 @@ import {
 	deleteUserQuestion,
 	selectUserQuestionsByStatementId,
 } from '@/redux/userData/userDataSlice';
-import RadioButtonEmptyIcon from '@/assets/icons/radioButtonEmpty.svg?react';
 import { getRandomColor } from '@/controllers/general/helpers';
-import DeleteIcon from '@/assets/icons/delete.svg?react';
 import CheckIcon from '@/assets/icons/checkIcon.svg?react';
+import BackToMenuArrow from '@/assets/icons/backToMenuArrow.svg?react';
+import X from '@/assets/icons/x.svg?react';
+import QuestionOptionSurvey from './questionOptionSurvey/QuestionOptionSurvey';
 
 //mockData
 
@@ -48,15 +49,17 @@ const UserDataSetting: FC<Props> = ({ statement }) => {
 		{ option: '', color: '#0000ff' },
 		{ option: '', color: '#ff0000' },
 	];
-	const [isQuestionRequired, setIsQuestionRequired] = useState(false);
+	const [isQuestionRequired, setIsQuestionRequired] = useState(true);
 	const [options, setOptions] = useState<Option[]>(defaultOptions);
 	function closeModal() {
 		setShowModal(false);
 	}
 	const switchRequired = () => {
-		setIsQuestionRequired(!isQuestionRequired);
+		//TODO:uncomment when the ability to change required exists
+		setIsQuestionRequired(true);
 	};
-	const allowDelete = options.length > 2;
+	const minQuestionAmount = 2;
+	const allowDelete = options.length > minQuestionAmount;
 	const handleAddNewQuestion = (e: React.FormEvent) => {
 		e.preventDefault();
 
@@ -85,7 +88,12 @@ const UserDataSetting: FC<Props> = ({ statement }) => {
 
 		// Reset the form
 		form.reset();
-
+		setOptions(
+			defaultOptions.map((option) => ({
+				...option,
+				color: getRandomColor(),
+			}))
+		);
 		setUserDataQuestion(statement, newQuestionObj);
 	};
 
@@ -149,7 +157,10 @@ const UserDataSetting: FC<Props> = ({ statement }) => {
 		const questionToUpdate = userQuestions[questionIndex];
 
 		if (questionToUpdate && questionToUpdate.userQuestionId) {
-			const newOptionObj = { option: newOption.trim(), color: '' }; // You can set a default color or leave it empty
+			const newOptionObj = {
+				option: newOption.trim(),
+				color: getRandomColor(),
+			}; // You can set a default color or leave it empty
 			const updatedOptions = questionToUpdate.options
 				? [...questionToUpdate.options, newOptionObj]
 				: [newOptionObj];
@@ -196,8 +207,17 @@ const UserDataSetting: FC<Props> = ({ statement }) => {
 				</button>
 			</div>
 			{showModal && (
-				<SettingsModal closeModal={closeModal} isFullScreen={true}>
+				<SettingsModal
+					closeModal={closeModal}
+					isFullScreen={true}
+					customCloseWord={t('Save Setting')}
+				>
 					<div className={styles.userDataSettings}>
+						<div className={styles.topNavSurvey}>
+							<BackToMenuArrow onClick={closeModal} />
+							<div className={styles.spacer}></div>
+							<X className={styles.XBtn} onClick={closeModal} />
+						</div>
 						<h3>{t('Survey setting')}</h3>
 						{/* New Question Form */}
 						<form
@@ -224,43 +244,15 @@ const UserDataSetting: FC<Props> = ({ statement }) => {
 							</div>
 							<div className={styles.addOptionContainer}>
 								{options.map((option, indx) => (
-									<div className={styles.option} key={indx}>
-										<RadioButtonEmptyIcon />
-										<input
-											name={option.option}
-											placeholder={t('Write Answer here')}
-											required
-											type='text'
-											className={styles.inputAnswer}
-											value={option.option}
-											onChange={(e) =>
-												handleOptionChange(e, indx)
-											}
-										/>
-										<input
-											type='color'
-											className={styles.optionColor}
-											onChange={(e) =>
-												handleColorChange(e, indx)
-											}
-											value={option.color}
-										/>
-										<DeleteIcon
-											color={
-												allowDelete ? 'red' : 'white'
-											}
-											cursor={
-												allowDelete
-													? 'pointer'
-													: 'default'
-											}
-											onClick={() =>
-												allowDelete
-													? deleteOption(indx)
-													: ''
-											}
-										></DeleteIcon>
-									</div>
+									<QuestionOptionSurvey
+										option={option}
+										indx={indx}
+										allowDelete={allowDelete}
+										deleteOption={deleteOption}
+										key={option.option}
+										handleOptionChange={handleOptionChange}
+										handleColorChange={handleColorChange}
+									/>
 								))}
 								<div
 									className={styles.addOption}
@@ -302,9 +294,10 @@ const UserDataSetting: FC<Props> = ({ statement }) => {
 							) : (
 								userQuestions.map((question, index) => (
 									<UserQuestionComp
-										key={index}
+										key={question.answer}
 										userQuestions={question}
 										questionIndex={index}
+										minQuestionAmount={minQuestionAmount}
 										onAddOption={handleAddOption}
 										onDeleteOption={handleDeleteOption}
 										onDeleteQuestion={handleDeleteQuestion}

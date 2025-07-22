@@ -4,7 +4,28 @@
 	padding: 1rem;
 	max-width: 70%;
 	margin: 0 auto;
-
+	.topNavSurvey {
+		display: flex;
+		align-items: center;
+		margin-bottom: 1rem;
+		svg {
+			width: 3.5rem;
+			height: 3.5rem;
+			color: var(--text-blue);
+			cursor: pointer;
+		}
+		.XBtn {
+			width: 2rem;
+			height: 2rem;
+		}
+	}
+	.spacer {
+		flex: 1;
+	}
+	@media screen and (max-width: 768px) {
+		max-width: 100%;
+		padding: 0;
+	}
 	h3 {
 		margin: 0 0 1.5rem 0;
 		color: var(--text-primary);
@@ -16,9 +37,8 @@
 		padding: 2rem;
 		border-radius: 8px;
 		background-color: var(--menu-default);
-		.spacer {
-			flex: 1;
-		}
+		border-left: #83ccf6 6px solid;
+
 		.checkIcon {
 			color: green;
 			width: 2rem;
@@ -43,6 +63,10 @@
 		.addOption {
 			width: fit-content;
 			margin: 1rem;
+			@media screen and (max-width: 768px) {
+				margin: 0;
+				padding: 0;
+			}
 			h4 {
 				font-size: 1rem;
 				color: var(--text-blue);
@@ -55,7 +79,9 @@
 			display: flex;
 			flex-direction: column;
 			justify-content: center;
-
+			@media screen and (max-width: 768px) {
+				margin: 0;
+			}
 			.option {
 				display: flex;
 				margin-top: 1rem;
@@ -63,6 +89,14 @@
 					width: 3.5rem;
 					height: 3.5rem;
 					cursor: pointer;
+					@media screen and (max-width: 768px) {
+						width: 3rem;
+						height: 3rem;
+					}
+				}
+				input[type='color']::-webkit-color-swatch {
+					border: none;
+					border-radius: 0.2rem;
 				}
 				.inputAnswer {
 					font-size: 1rem;
@@ -72,6 +106,9 @@
 					flex-direction: row-reverse;
 					display: flex;
 					align-items: center;
+					@media screen and (max-width: 768px) {
+						flex: 1;
+					}
 					&:focus {
 						border: 1px solid #d2d3d7;
 						background-color: #cdd8e1;
@@ -82,6 +119,11 @@
 					margin: 1rem;
 					width: 24px;
 					height: 24px;
+					@media screen and (max-width: 768px) {
+						margin: 0;
+
+						margin-top: 1rem;
+					}
 				}
 			}
 		}
@@ -136,7 +178,8 @@
 		.slideButtonContainer {
 			width: 3rem;
 			height: 1rem;
-			background-color: #7484a9;
+			background-color: #bdcef4;
+
 			border-radius: 0.5rem;
 			transition: 0.3s;
 			margin: 1rem;
