@@ -83,7 +83,7 @@ Enable these services:
 
 ```bash
 # Copy the template
-cp firebase-config-templates/.env.example .env.development
+cp .env.example .env.development
 
 # Edit with your values
 nano .env.development  # or use your preferred editor

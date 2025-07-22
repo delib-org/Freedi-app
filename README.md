@@ -129,6 +129,15 @@ This will guide you through creating your own Firebase project and configuring e
 
 For detailed manual setup instructions, see [FIREBASE_SETUP.md](./FIREBASE_SETUP.md).
 
+1. Copy the example environment file:
+   ```bash
+   cp .env.example .env.development
+   ```
+
+2. Fill in your Firebase configuration values in `.env.development`
+
+3. Follow the detailed setup guide in [FIREBASE_SETUP.md](./FIREBASE_SETUP.md)
+
 
 ## 🚀 Development
 
