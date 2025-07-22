@@ -54,65 +54,22 @@
 
 ## 🏗️ Installation
 
-### 1. Clone and Install Dependencies
+### 🚀 Quick Setup (Recommended)
+
+Use our automated setup script for the fastest onboarding:
 
 ```bash
 git clone https://github.com/delib-org/Freedi-app.git
 cd Freedi-app
-npm install
-cd functions && npm install && cd ..
+npm run setup:all
 ```
 
-### 2. Firebase Setup
+This will guide you through creating your own Firebase project and configuring everything automatically.
 
-1. **Create Firebase Project**:
-   - Go to [Firebase Console](https://console.firebase.google.com/)
-   - Create a new project
-   - Enable Authentication, Firestore, Storage, and Functions
+### 📋 Manual Setup
 
-2. **Configure Firebase CLI**:
-   ```bash
-   firebase login
-   firebase init emulators
-   ```
+For detailed manual setup instructions, see [FIREBASE_SETUP.md](./FIREBASE_SETUP.md).
 
-3. **Setup Configuration Files**:
-   - Copy templates from `firebase-config-files.txt`
-   - Create `.firebaserc` and replace `your_project_id` with your Firebase project ID
-   - Create `firebase.json` using the provided template
-   - Run `firebase use your_project_id`
-
-### 3. Environment Configuration
-
-Create `.env.development` file in the root directory:
-
-    - Go to [Firebase Console](https://console.firebase.google.com/)
-    - Click "Add project" and follow the setup wizard
-    - Enable Authentication, Firestore, and Hosting
-
-2. **Set up project configuration files:**
-    - Create `.firebaserc` file in the root directory
-    - Copy the template from `firebase-config-files.txt` and replace `your_project_id` with your actual Firebase project ID
-    - Run: `firebase use your_project_id`
-    - Set up your `firebase.json` file by copying the template from `firebase-config-files.txt`
-
-### Step 4: Create Environment Files
-
-Create `.env.development` in the root directory:
-
-```env
-VITE_FIREBASE_API_KEY=your_api_key_here
-VITE_FIREBASE_AUTH_DOMAIN=your_project_id.firebaseapp.com
-VITE_FIREBASE_DATABASE_URL=https://your_project_id.firebaseio.com
-VITE_FIREBASE_PROJECT_ID=your_project_id
-VITE_FIREBASE_STORAGE_BUCKET=your_project_id.appspot.com
-VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
-VITE_FIREBASE_APP_ID=your_app_id
-VITE_FIREBASE_MEASUREMENT_ID=your_measurement_id
-VITE_FIREBASE_VAPID_KEY=your_vapid_key
-```
-
-> **Note**: Get these values from your Firebase project settings → General → Your apps → Config
 
 ## 🚀 Development
 
@@ -135,7 +92,7 @@ This runs:
 
 ### VS Code Setup
 
-1. Open the workspace file: `freedi.code-workspace`
+1. Open the workspace file: `freediApp.code-workspace`
 2. Install recommended extensions when prompted
 3. This ensures consistent linting and formatting
 
