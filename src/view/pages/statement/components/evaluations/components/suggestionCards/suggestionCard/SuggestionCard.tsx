@@ -19,11 +19,12 @@ import useStatementColor, {
 import { setStatementElementHight } from '@/redux/statements/statementsSlice';
 import EditTitle from '@/view/components/edit/EditTitle';
 import IconButton from '@/view/components/iconButton/IconButton';
-import './SuggestionCard.scss';
+import styles from './SuggestionCard.module.scss';
 import { StatementType, Statement } from 'delib-npm';
 import { useAuthorization } from '@/controllers/hooks/useAuthorization';
 import { toggleJoining } from '@/controllers/db/joining/setJoining';
 import Joined from '@/view/components/joined/Joined';
+import { Link } from 'react-router';
 
 interface Props {
 	statement: Statement | undefined;
@@ -49,6 +50,7 @@ const SuggestionCard: FC<Props> = ({
 
 	// Use Refs
 	const elementRef = useRef<HTMLDivElement>(null);
+	const textContainerRef = useRef<HTMLDivElement>(null);
 
 	const hasJoinedServer = statement?.joined?.find(
 		(c) => c.uid === creator?.uid
@@ -64,7 +66,6 @@ const SuggestionCard: FC<Props> = ({
 	}, [hasJoinedServer]);
 
 	// Use States
-
 	const [isEdit, setIsEdit] = useState(false);
 	const [shouldShowAddSubQuestionModal, setShouldShowAddSubQuestionModal] =
 		useState(false);
@@ -91,6 +92,28 @@ const SuggestionCard: FC<Props> = ({
 			}, 0);
 		}
 	}, [elementRef.current?.clientHeight]);
+
+	// Check if text is clamped and add overflow class
+	useEffect(() => {
+		const checkOverflow = () => {
+			const textContainer = textContainerRef.current;
+			if (textContainer) {
+				const isOverflowing = textContainer.scrollHeight > textContainer.clientHeight;
+				const textElement = textContainer.parentElement;
+				
+				if (textElement) {
+					if (isOverflowing) {
+						textElement.classList.add(styles.hasOverflow);
+					} else {
+						textElement.classList.remove(styles.hasOverflow);
+					}
+				}
+			}
+		};
+
+		// Add a small delay to ensure rendering is complete
+		setTimeout(checkOverflow, 50);
+	}, [statement?.statement]);
 
 	function handleSetOption() {
 		try {
@@ -142,8 +165,8 @@ const SuggestionCard: FC<Props> = ({
 			onContextMenu={(e) => handleRightClick(e)}
 			className={
 				statementAge < 10000
-					? 'statement-evaluation-card statement-evaluation-card--new'
-					: 'statement-evaluation-card'
+					? `${styles['statement-evaluation-card']} ${styles['statement-evaluation-card--new']}`
+					: styles['statement-evaluation-card']
 			}
 			style={{
 				top: `${statement.top || 0}px`,
@@ -157,7 +180,7 @@ const SuggestionCard: FC<Props> = ({
 			id={statement.statementId}
 		>
 			<div
-				className='selected-option'
+				className={styles['selected-option']}
 				style={{
 					backgroundColor:
 						statement.isVoted === true ? 'var(--approve)' : '',
@@ -172,15 +195,20 @@ const SuggestionCard: FC<Props> = ({
 					{t('Selected')}
 				</div>
 			</div>
-			<div className='main'>
-				<div className='info'>
-					<div className='text'>
-						<EditTitle
-							statement={statement}
-							isEdit={isEdit}
-							setEdit={setIsEdit}
-							isTextArea={true}
-						/>
+			<div className={styles.main}>
+				<div className={styles.info}>
+					<div className={styles.text}>
+						<div className={styles.textContent} ref={textContainerRef}>
+							<EditTitle
+								statement={statement}
+								isEdit={isEdit}
+								setEdit={setIsEdit}
+								isTextArea={true}
+							/>
+						</div>
+						<Link to={`/statement/${statement.statementId}`} className={styles.showMore}>
+							{t('Show more')}
+						</Link>
 						{enableJoining &&
 							<div className="btns btns--end">
 								<Joined statement={statement} />
@@ -201,7 +229,7 @@ const SuggestionCard: FC<Props> = ({
 							</div>
 						}
 					</div>
-					<div className='more'>
+					<div className={styles.more}>
 						<SolutionMenu
 							statement={statement}
 							isAuthorized={isAuthorized}
@@ -215,18 +243,18 @@ const SuggestionCard: FC<Props> = ({
 					</div>
 				</div>
 
-				<div className='actions'>
+				<div className={styles.actions}>
 					{hasChildren && (
-						<div className='chat chat-more-element'>
+						<div className={`${styles.chat} ${styles['chat-more-element']}`}>
 							<StatementChatMore statement={statement} />
 						</div>
 					)}
-					<div className='evolution-element'>
+					<div className={styles['evolution-element']}>
 						<Evaluation statement={statement} />
 					</div>
 					{hasChildren && (
 						<IconButton
-							className='add-sub-question-button more-question'
+							className={`${styles['add-sub-question-button']} ${styles['more-question']}`}
 							style={{ display: 'none', cursor: 'default' }} // changed to display none for it to not take dom space
 							onClick={
 								() => { } //delete the brackets and uncomment the line below for functionality

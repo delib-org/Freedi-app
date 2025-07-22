@@ -55,9 +55,41 @@
 				width: 100%;
 				background-color: var(--background-color-info-text);
 				padding: 0rem;
+				position: relative;
+				
+				// Container for the clamped text
+				.textContent {
+					display: -webkit-box;
+					-webkit-line-clamp: 6;
+					line-clamp: 6;
+					-webkit-box-orient: vertical;
+					overflow: hidden;
+					line-height: 1.4;
+				}
 
 				p {
 					margin: 3px 0px;
+				}
+
+				.showMore {
+					position: absolute;
+					bottom: 0;
+					right: 0;
+					background: linear-gradient(to right, transparent, var(--background-color-info-text) 30%);
+					padding: 0 8px 0 20px;
+					color: var(--blue);
+					text-decoration: none;
+					font-size: 0.9rem;
+					display: none; // Hidden by default
+					
+					&:hover {
+						text-decoration: underline;
+					}
+				}
+
+				// Show the "show more" link only when text has overflow
+				&.hasOverflow .showMore {
+					display: block;
 				}
 			}
 		}
