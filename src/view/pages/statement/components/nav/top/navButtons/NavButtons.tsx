@@ -107,7 +107,7 @@ function NavButtons({
 							onOptionClick={handleAgreementMap}
 						/>
 						<MenuOption
-							label={t('Polarization Index')}
+							label={t('Collaboration Index')}
 							icon={<TriangleIcon style={{ color: '#4E88C7' }} />}
 							onOptionClick={handlePolarizationIndex}
 						/>
