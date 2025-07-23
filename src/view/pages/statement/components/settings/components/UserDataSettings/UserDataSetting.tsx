@@ -26,8 +26,8 @@ import { getRandomColor } from '@/controllers/general/helpers';
 import CheckIcon from '@/assets/icons/checkIcon.svg?react';
 import BackToMenuArrow from '@/assets/icons/backToMenuArrow.svg?react';
 import X from '@/assets/icons/x.svg?react';
-import QuestionOptionSurvey from './questionOptionSurvey/QuestionOptionSurvey';
-
+import RadioButtonEmptyIcon from '@/assets/icons/radioButtonEmpty.svg?react';
+import DeleteIcon from '@/assets/icons/delete.svg?react';
 //mockData
 
 interface Props {
@@ -244,15 +244,43 @@ const UserDataSetting: FC<Props> = ({ statement }) => {
 							</div>
 							<div className={styles.addOptionContainer}>
 								{options.map((option, indx) => (
-									<QuestionOptionSurvey
-										option={option}
-										indx={indx}
-										allowDelete={allowDelete}
-										deleteOption={deleteOption}
-										key={option.option}
-										handleOptionChange={handleOptionChange}
-										handleColorChange={handleColorChange}
-									/>
+									<div className={styles.option} key={indx}>
+										<RadioButtonEmptyIcon />
+										<input
+											name={option.option}
+											placeholder={t('Write Answer here')}
+											required
+											type='text'
+											className={styles.inputAnswer}
+											value={option.option}
+											onChange={(e) =>
+												handleOptionChange(e, indx)
+											}
+										/>
+										<input
+											type='color'
+											className={styles.optionColor}
+											onChange={(e) =>
+												handleColorChange(e, indx)
+											}
+											value={option.color}
+										/>
+										<DeleteIcon
+											color={
+												allowDelete ? 'red' : 'white'
+											}
+											cursor={
+												allowDelete
+													? 'pointer'
+													: 'default'
+											}
+											onClick={() =>
+												allowDelete
+													? deleteOption(indx)
+													: ''
+											}
+										></DeleteIcon>
+									</div>
 								))}
 								<div
 									className={styles.addOption}
