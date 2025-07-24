@@ -17,7 +17,7 @@ import ReactFlow, {
 import '../mapHelpers/reactFlow.scss';
 import 'reactflow/dist/style.css';
 
-// icons
+// icons and components
 import { getStatementFromDB } from '../../../../../../controllers/db/statements/getStatement';
 import { updateStatementParents } from '../../../../../../controllers/db/statements/setStatements';
 import { useMapContext } from '../../../../../../controllers/hooks/useMap';
@@ -36,12 +36,6 @@ import MapVerticalLayoutIcon from '@/assets/icons/MapVerticalLayoutIcon.svg';
 import { Results, Statement, StatementType } from 'delib-npm';
 import { FilterType } from '@/controllers/general/sorting';
 
-// Helper functions
-
-// Hooks
-
-// Custom components
-
 const nodeTypes = {
 	custom: CustomNode,
 };
@@ -52,35 +46,22 @@ interface Props {
 	isAdmin: boolean;
 }
 
-export default function MindMapChart({
-	descendants,
-	isAdmin,
-	filterBy,
-}: Readonly<Props>) {
+export default function MindMapChart({ descendants, isAdmin, filterBy }: Readonly<Props>) {
 	const { getIntersectingNodes } = useReactFlow();
 	const [nodes, setNodes, onNodesChange] = useNodesState([]);
 	const [edges, setEdges, onEdgesChange] = useEdgesState([]);
 	const [tempEdges, setTempEdges] = useState(edges);
-	const [rfInstance, setRfInstance] = useState<null | ReactFlowInstance<
-		unknown,
-		unknown
-	>>(null);
+	const [rfInstance, setRfInstance] = useState<null | ReactFlowInstance>(null);
 
 	const [intersectedNodeId, setIntersectedNodeId] = useState('');
 	const [draggedNodeId, setDraggedNodeId] = useState('');
-
 	const { mapContext, setMapContext } = useMapContext();
-
 	const [isButtonVisible, setIsButtonVisible] = useState(false);
 	const selectedId = mapContext?.selectedId ?? null;
 
-	const handleHamburgerClick = () => {
-		setIsButtonVisible(true);
-	};
+	const handleHamburgerClick = () => setIsButtonVisible(true);
+	const handleCancelClick = () => setIsButtonVisible(false);
 
-	const handleCancelClick = () => {
-		setIsButtonVisible(false);
-	};
 	function filterDescendants(results: Results): Results | null {
 		const { isVoted, isChosen } = results.top;
 		if (results.top.statementType === StatementType.option) {
@@ -96,31 +77,51 @@ export default function MindMapChart({
 			sub: filteredSub,
 		};
 	}
+
 	const filtered = filterDescendants(descendants);
+
 	useEffect(() => {
 		const { nodes: createdNodes, edges: createdEdges } =
-			createInitialNodesAndEdges(
-				filterBy !== FilterType.questionsResults
-					? descendants
-					: filtered
-			);
+			createInitialNodesAndEdges(filterBy !== FilterType.questionsResults ? descendants : filtered);
 
-		const { nodes: layoutedNodes, edges: layoutedEdges } =
-			getLayoutElements(
-				createdNodes,
-				createdEdges,
-				mapContext.nodeHeight,
-				mapContext.nodeWidth,
-				mapContext.direction
-			);
+		const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutElements(
+			createdNodes,
+			createdEdges,
+			mapContext.nodeHeight,
+			mapContext.nodeWidth,
+			mapContext.direction
+		);
 
-		setNodes(layoutedNodes);
+		const latestCreatedAt = Math.max(...layoutedNodes.map((n) => n.data?.createdAt || 0));
+
+		const animatedNodes = layoutedNodes.map((node) => {
+			const shouldAnimate = node.data?.createdAt === latestCreatedAt;
+
+			return {
+				...node,
+				data: {
+					...node.data,
+					animate: shouldAnimate,
+				},
+			};
+		});
+
+		setNodes(animatedNodes);
 		setEdges(layoutedEdges);
 		setTempEdges(layoutedEdges);
 
 		setTimeout(() => {
+			setNodes((prevNodes) =>
+				prevNodes.map((node) => ({
+					...node,
+					data: {
+						...node.data,
+						animate: false,
+					},
+				}))
+			);
 			onSave();
-		}, 500);
+		}, 1000);
 	}, [descendants, filterBy]);
 
 	const onLayout = useCallback(
@@ -130,17 +131,20 @@ export default function MindMapChart({
 
 			setMapContext((prev) => ({
 				...prev,
-				targetPosition:
-					direction === 'TB' ? Position.Top : Position.Left,
-				sourcePosition:
-					direction === 'TB' ? Position.Bottom : Position.Right,
+				targetPosition: direction === 'TB' ? Position.Top : Position.Left,
+				sourcePosition: direction === 'TB' ? Position.Bottom : Position.Right,
 				nodeWidth: width,
 				nodeHeight: height,
 				direction,
 			}));
 
-			const { nodes: layoutedNodes, edges: layoutedEdges } =
-				getLayoutElements(nodes, edges, height, width, direction);
+			const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutElements(
+				nodes,
+				edges,
+				height,
+				width,
+				direction
+			);
 
 			setNodes([...layoutedNodes]);
 			setEdges([...layoutedEdges]);
@@ -150,28 +154,21 @@ export default function MindMapChart({
 
 	const onNodeDragStop = async (_: MouseEvent, node: Node) => {
 		const intersections = getIntersectingNodes(node).map((n) => n.id);
-
 		if (intersections.length === 0) return setEdges(tempEdges);
 
 		setDraggedNodeId(node.id);
 		setIntersectedNodeId(intersections[0]);
-
-		setMapContext((prev) => ({
-			...prev,
-			moveStatementModal: true,
-		}));
+		setMapContext((prev) => ({ ...prev, moveStatementModal: true }));
 	};
 
 	const onNodeDrag = useCallback(
 		(_: MouseEvent, node: Node) => {
 			setEdges([]);
-
-			const intersections = getIntersectingNodes(node).find((n) => n.id);
-
+			const intersection = getIntersectingNodes(node).find((n) => n.id);
 			setNodes((ns) =>
 				ns.map((n) => ({
 					...n,
-					className: intersections?.id === n.id ? 'highlight' : '',
+					className: intersection?.id === n.id ? 'highlight' : '',
 				}))
 			);
 		},
@@ -189,30 +186,23 @@ export default function MindMapChart({
 		const restoreFlow = async () => {
 			const getFlow = localStorage.getItem('flowKey');
 			if (!getFlow) return;
-
 			const flow = JSON.parse(getFlow);
-
 			if (flow) {
 				setNodes(flow.nodes ?? []);
 				setEdges(flow.edges ?? []);
 			}
 		};
-
 		restoreFlow();
 	}, [setNodes, setEdges]);
 
 	const handleMoveStatement = async (move: boolean) => {
 		if (move) {
-			const [draggedStatement, newDraggedStatementParent] =
-				await Promise.all([
-					getStatementFromDB(draggedNodeId),
-					getStatementFromDB(intersectedNodeId),
-				]);
+			const [draggedStatement, newDraggedStatementParent] = await Promise.all([
+				getStatementFromDB(draggedNodeId),
+				getStatementFromDB(intersectedNodeId),
+			]);
 			if (!draggedStatement || !newDraggedStatementParent) return;
-			await updateStatementParents(
-				draggedStatement,
-				newDraggedStatementParent
-			);
+			await updateStatementParents(draggedStatement, newDraggedStatementParent);
 		} else {
 			onRestore();
 		}
@@ -224,7 +214,6 @@ export default function MindMapChart({
 
 	function findStatementById(results: Results, id: string): Statement | null {
 		if (results.top.statementId === id) return results.top;
-
 		for (const sub of results.sub) {
 			const found = findStatementById(sub, id);
 			if (found) return found;
@@ -232,9 +221,9 @@ export default function MindMapChart({
 
 		return null;
 	}
+
 	const handleAddSiblingNode = () => {
-		const hoveredStatement =
-			findStatementById(descendants, selectedId) ?? descendants.top;
+		const hoveredStatement = findStatementById(descendants, selectedId) ?? descendants.top;
 		setMapContext((prev) => ({
 			...prev,
 			showModal: true,
@@ -272,50 +261,37 @@ export default function MindMapChart({
 						</div>
 					)}
 					{isButtonVisible && (
-						<div
-							className={`arc-buttons ${isButtonVisible ? 'open' : ''}`}
-						>
+						<div className={`arc-buttons ${isButtonVisible ? 'open' : ''}`}>
 							<button onClick={handleCancelClick}>
 								<img src={MapCancelIcon} alt='Cancel' />
 							</button>
 							<button onClick={() => onLayout('TB')}>
-								<img
-									src={MapVerticalLayoutIcon}
-									alt='vertical layout'
-								/>
+								<img src={MapVerticalLayoutIcon} alt='vertical layout' />
 							</button>
 							<button onClick={() => onLayout('LR')}>
-								<img
-									src={MapHorizontalLayoutIcon}
-									alt='horizontal layout'
-								/>
+								<img src={MapHorizontalLayoutIcon} alt='horizontal layout' />
 							</button>
 							<button onClick={onRestore}>
 								<img src={MapRestoreIcon} alt='Restore' />
 							</button>
-							<button onClick={() => handleAddSiblingNode()}>
+							<button onClick={handleAddSiblingNode}>
 								<img src={MapSaveIcon} alt='Add' />
 							</button>
 						</div>
 					)}
 				</Panel>
 			</ReactFlow>
+
 			{mapContext.moveStatementModal && (
 				<Modal>
 					<div style={{ padding: '1rem' }}>
 						<h1>Are you sure you want to move statement here?</h1>
 						<br />
 						<div className='btnBox'>
-							<button
-								onClick={() => handleMoveStatement(true)}
-								className='btn btn--large btn--add'
-							>
+							<button onClick={() => handleMoveStatement(true)} className='btn btn--large btn--add'>
 								Yes
 							</button>
-							<button
-								onClick={() => handleMoveStatement(false)}
-								className='btn btn--large btn--disagree'
-							>
+							<button onClick={() => handleMoveStatement(false)} className='btn btn--large btn--disagree'>
 								No
 							</button>
 						</div>

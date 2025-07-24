@@ -4,6 +4,10 @@ import UserQuestionInput from '../settings/userDataQuestionInput/UserDataQuestio
 import { setUserAnswers } from '@/controllers/db/userData/setUserData';
 import Button, { ButtonType } from '@/view/components/buttons/button/Button';
 import styles from './UserDataQuestions.module.scss';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import BackToMenuArrow from '@/assets/icons/backToMenuArrow.svg?react';
+import X from '@/assets/icons/x.svg?react';
+import { useNavigate } from 'react-router';
 
 interface Props {
 	questions: UserQuestion[];
@@ -13,7 +17,11 @@ interface Props {
 const UserDataQuestions: FC<Props> = ({ questions, closeModal }) => {
 	const [userData, setUserData] = useState<UserQuestion[]>([]);
 	const [isSubmitting, setIsSubmitting] = useState(false);
-
+	const { t } = useUserConfig();
+	const isSurveyOptional = userData.some(
+		(survey) => survey.required === true
+	);
+	const navigate = useNavigate();
 	const handleQuestionChange = (
 		question: UserQuestion,
 		value: string | string[]
@@ -32,11 +40,11 @@ const UserDataQuestions: FC<Props> = ({ questions, closeModal }) => {
 					return prevData.map((q) =>
 						q.userQuestionId === question.userQuestionId
 							? {
-								...q,
-								answer: Array.isArray(value)
-									? value.join(',')
-									: value,
-							}
+									...q,
+									answer: Array.isArray(value)
+										? value.join(',')
+										: value,
+								}
 							: q
 					);
 				}
@@ -60,8 +68,8 @@ const UserDataQuestions: FC<Props> = ({ questions, closeModal }) => {
 						_value as string
 					)
 						? currentQuestion.answerOptions.filter(
-							(option) => option !== _value
-						)
+								(option) => option !== _value
+							)
 						: [...currentQuestion.answerOptions, _value as string];
 
 					return prevData.map((q) =>
@@ -134,25 +142,43 @@ const UserDataQuestions: FC<Props> = ({ questions, closeModal }) => {
 	};
 
 	return (
-		<form onSubmit={handleSubmit} className={styles.form}>
-			{questions.map((question: UserQuestion) => (
-				<UserQuestionInput
-					key={question.userQuestionId}
-					question={question}
-					value={''}
-					options={question.options || []}
-					onChange={(value) => handleQuestionChange(question, value)}
-					required={true}
-				/>
-			))}
-			<div className={styles.button}>
-				<Button
-					text={isSubmitting ? 'Submitting...' : 'Submit'}
-					buttonType={ButtonType.PRIMARY}
-					disabled={isSubmitting || !validateForm()}
-				></Button>
+		<div className={styles.userDemographicContainer}>
+			<div className={styles.surveyBody}>
+				<div className={styles.topNavSurvey}>
+					<BackToMenuArrow onClick={() => navigate('/')} />
+					{isSurveyOptional && (
+						<X className={styles.XBtn} onClick={closeModal} />
+					)}
+				</div>
+				<h1 className={styles.title}>{t('User Profile Setup')}</h1>
+				<p className={styles.description}>
+					{t('Complete these setup questions')}
+				</p>
+				<form onSubmit={handleSubmit}>
+					{questions.map((question: UserQuestion) => (
+						<UserQuestionInput
+							key={question.userQuestionId}
+							question={question}
+							value={''}
+							options={question.options || []}
+							onChange={(value) =>
+								handleQuestionChange(question, value)
+							}
+							required={true}
+						/>
+					))}
+					<div className={styles.button}>
+						<Button
+							text={
+								isSubmitting ? 'Submitting...' : 'Submit Survey'
+							}
+							buttonType={ButtonType.PRIMARY}
+							disabled={isSubmitting || !validateForm()}
+						></Button>
+					</div>
+				</form>
 			</div>
-		</form>
+		</div>
 	);
 };
 

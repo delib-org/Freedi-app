@@ -7,6 +7,7 @@ import styles from './PolarizationIndex.module.scss';
 import { Tooltip } from '../tooltip/Tooltip';
 import { PolarizationIndex, UserQuestion } from 'delib-npm';
 import { listenToUserQuestions } from '@/controllers/db/userData/getUserData';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 
 interface Group {
 	option: {
@@ -44,6 +45,7 @@ interface Point {
 
 const PolarizationIndexComp = () => {
 	const { statementId } = useParams();
+	const {t} = useUserConfig();
 	const polarizationIndexes = useSelector(selectPolarizationIndexByParentId(statementId));
 	const userQuestions: UserQuestion[] = useSelector(selectUserQuestionsByStatementId(statementId));
 
@@ -121,7 +123,7 @@ const PolarizationIndexComp = () => {
 	return (
 		<div>
 			<div className={styles.board}>
-				<div className={styles["board-inner"]}>Polarization Index</div>
+				<div className={styles["board-inner"]}>{t("Collaboration Index")}</div>
 				{points.map((point: Point) => (
 					<div className={styles.pointDiv} key={point.statementId} style={{ left: point.position.x + 'px', top: point.position.y + 'px' }}>
 						<Tooltip content={`${point.statement} MAD: ${point.overallMAD.toFixed(2)}, Mean: ${point.overallMean.toFixed(2)}, N: ${point.overallN}`} position={tooltipPosition(point.overallMAD, point.overallMean)}>

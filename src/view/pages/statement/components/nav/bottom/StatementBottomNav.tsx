@@ -1,5 +1,5 @@
 import { FC, useContext, useState, useEffect } from 'react';
-import { Link } from 'react-router';
+import { useParams, useNavigate } from 'react-router';
 
 // Icons
 import AgreementIcon from '@/assets/icons/agreementIcon.svg?react';
@@ -13,11 +13,12 @@ import './StatementBottomNav.scss';
 import StartHere from '@/view/components/startHere/StartHere';
 import { StatementContext } from '../../../StatementCont';
 import { sortItems } from './StatementBottomNavModal';
-import { SortType, StatementType } from 'delib-npm';
+import { EvaluationUI, Role, SortType, StatementType } from 'delib-npm';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import { useDecreaseLearningRemain } from '@/controllers/hooks/useDecreaseLearningRemain';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { setNewStatementModal } from '@/redux/statements/newStatementSlice';
+import { statementSubscriptionSelector } from '@/redux/statements/statementsSlice';
 
 interface Props {
 	showNav?: boolean;
@@ -25,13 +26,24 @@ interface Props {
 
 const StatementBottomNav: FC<Props> = () => {
 
+	const { statementId } = useParams<{ statementId: string }>();
 	const dispatch = useDispatch();
+	const navigate = useNavigate();
+
 	const { statement } =
 		useContext(StatementContext);
+	const subscription = useSelector(statementSubscriptionSelector(statementId));
+
+	const role = subscription?.role;
+	const isAdmin = role === 'admin' || role === Role.creator;
 	const { dir, learning } = useUserConfig();
 	const decreaseLearning = useDecreaseLearningRemain();
 
 	const timesRemainToLearnAddOption = learning.addOptions;
+	const canAddOptionSuggestions = statement.statementSettings?.enableAddEvaluationOption ?? false;
+	const canAddOptionVoting = statement.statementSettings?.enableAddVotingOption ?? false;
+	const evaluatingSettings: EvaluationUI = statement.evaluationSettings.evaluationUI;
+	const canAddOption = (canAddOptionSuggestions && evaluatingSettings === EvaluationUI.suggestions) || (canAddOptionVoting && evaluatingSettings === EvaluationUI.voting);
 
 	const [showSorting, setShowSorting] = useState(false);
 	const [showStartHere, setShowStartHere] = useState(
@@ -75,9 +87,20 @@ const StatementBottomNav: FC<Props> = () => {
 		return path.includes('/stage/') ? 'stage' : 'statement';
 	}
 
+	function handleSortClick(navItem: typeof sortItems[0]) {
+		setShowSorting(false);
+		
+		// For random sort, add a timestamp query parameter to force re-randomization
+		if (navItem.link === SortType.random) {
+			navigate(`/${getBaseRoute()}/${statement?.statementId}/${navItem.link}?t=${Date.now()}`);
+		} else {
+			navigate(`/${getBaseRoute()}/${statement?.statementId}/${navItem.link}`);
+		}
+	}
+
 	return (
 		<>
-			{showStartHere && <StartHere setShow={setShowStartHere} />}
+			{showStartHere && canAddOption && <StartHere setShow={setShowStartHere} />}
 			<div
 				className={
 					showSorting
@@ -88,7 +111,7 @@ const StatementBottomNav: FC<Props> = () => {
 				<div
 					className={`add-option-button-wrapper ${dir === 'ltr' ? 'add-option-button-wrapper--ltr' : ''}`}
 				>
-					<button
+					{(canAddOption || isAdmin) && <button
 						className='add-option-button'
 						aria-label='Add option'
 						style={statementColor}
@@ -97,24 +120,23 @@ const StatementBottomNav: FC<Props> = () => {
 					>
 						<PlusIcon style={{ color: statementColor.color }} />
 					</button>
+					}
 					<div className='sort-menu'>
 						{sortItems.map((navItem, i) => (
 							<div
 								key={`item-id-${i}`}
 								className={`sort-menu__item  ${showSorting ? 'active' : ''}`}
 							>
-								<Link
+								<button
 									className={`open-nav-icon ${showSorting ? 'active' : ''}`}
-									to={`/${getBaseRoute()}/${statement?.statementId}/${navItem.link}`}
 									aria-label='Sorting options'
-									key={navItem.id}
-									onClick={() => setShowSorting(false)}
+									onClick={() => handleSortClick(navItem)}
 								>
 									<NavIcon
 										name={navItem.id}
 										color={statementColor.backgroundColor}
 									/>
-								</Link>
+								</button>
 								<span className='button-name'>
 									{navItem.name}
 								</span>
@@ -129,7 +151,7 @@ const StatementBottomNav: FC<Props> = () => {
 						</button>
 					</div>
 				</div>
-			</div>
+			</div >
 		</>
 	);
 };

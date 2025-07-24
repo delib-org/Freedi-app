@@ -1,8 +1,8 @@
-import firebaseConfig from '@/controllers/db/configKey';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { setSimilarStatements } from '@/redux/massConsensus/massConsensusSlice';
 import { statementSubscriptionSelector } from '@/redux/statements/statementsSlice';
-import { functionConfig, StatementSubscription } from 'delib-npm';
+import { similarOptionsEndPoint } from '@/services/similarOptions';
+import { StatementSubscription } from 'delib-npm';
 import { useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useParams } from 'react-router';
@@ -78,10 +78,7 @@ async function getSimilarStatements(
 	setError
 ) {
 	try {
-		const endPoint =
-			location.hostname === 'localhost'
-				? `http://localhost:5001/${firebaseConfig.projectId}/${functionConfig.region}/checkForSimilarStatements`
-				: import.meta.env.VITE_APP_CHECK_SIMILARITIES_ENDPOINT;
+		const endPoint = similarOptionsEndPoint;
 
 		const response = await fetch(endPoint, {
 			method: 'POST',

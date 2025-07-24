@@ -13,6 +13,7 @@ import firebaseConfig from './configKey';
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
+
 const FireStore = getFirestore(app);
 const DB = FireStore;
 const storage = getStorage(app);

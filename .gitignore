@@ -3,7 +3,9 @@ vite.config.ts.timestamp-*
 .firebaserc
 firebase.json
 
+# Environment files (but not the example)
 .env*
+!.env.example
 node_modules/
 dist/
 *.log

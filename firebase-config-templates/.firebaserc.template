@@ -1,0 +1,16 @@
+{
+	"projects": {
+		"dev": "YOUR_PROJECT_ID"
+	},
+	"targets": {
+		"YOUR_PROJECT_ID": {
+			"hosting": {
+				"dev": [
+					"YOUR_PROJECT_ID"
+				]
+			}
+		}
+	},
+	"etags": {},
+	"dataconnectEmulatorConfig": {}
+}
