@@ -1,7 +1,8 @@
-import { getMessaging, getToken, onMessage, deleteToken, Messaging, MessagePayload } from "firebase/messaging";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { getMessaging, getToken, onMessage } from "firebase/messaging";
 import { app, DB } from "@/controllers/db/config";
 import { vapidKey } from "@/controllers/db/configKey";
-import { setDoc, doc, getFirestore, deleteDoc, getDoc, Timestamp } from "firebase/firestore";
+import { setDoc, doc, getFirestore } from "firebase/firestore";
 import { Collections } from "delib-npm";
 
 // Helper function to check if service workers are supported
@@ -12,21 +13,6 @@ const isNotificationSupported = () => 'Notification' in window;
 // Initialize Firebase components that don't require service workers
 const db = getFirestore(app);
 
-// Token refresh interval (30 days in milliseconds)
-const TOKEN_REFRESH_INTERVAL = 30 * 24 * 60 * 60 * 1000;
-
-interface TokenMetadata {
-	token: string;
-	userId: string;
-	lastUpdate: Date | Timestamp;
-	lastRefresh: Date | Timestamp;
-	platform: string;
-	deviceInfo: {
-		userAgent: string;
-		language: string;
-	};
-}
-
 /**
  * Service for handling push notifications using Firebase Cloud Messaging
  */
@@ -34,11 +20,9 @@ export class NotificationService {
 	private static instance: NotificationService;
 	private token: string | null = null;
 	private isTokenSentToServer = false;
-	private notificationHandler: ((payload: MessagePayload) => void) | null = null;
-	private messaging: Messaging | null = null; // Initialized lazily when needed
+	private notificationHandler: ((payload: any) => void) | null = null;
+	private messaging: any = null; // Initialized lazily when needed
 	private browserSupportsNotifications: boolean;
-	private tokenRefreshTimer: ReturnType<typeof setInterval> | null = null;
-	private userId: string | null = null;
 
 	private constructor() {
 		// Singleton pattern
@@ -139,8 +123,6 @@ export class NotificationService {
 		}
 
 		try {
-			this.userId = userId;
-
 			// Initialize messaging first
 			if (!this.initializeMessaging()) {
 				return;
@@ -159,77 +141,17 @@ export class NotificationService {
 
 			// Get FCM token
 			await this.getOrRefreshToken(userId);
-
-			// Set up automatic token refresh
-			this.setupTokenRefresh(userId);
 		} catch (error) {
 			console.error('Error initializing notifications:', error);
 		}
 	}
 
 	/**
-	 * Set up automatic token refresh
-	 */
-	private setupTokenRefresh(userId: string): void {
-		// Clear any existing timer
-		if (this.tokenRefreshTimer) {
-			clearInterval(this.tokenRefreshTimer);
-		}
-
-		// Check token freshness on startup
-		this.checkTokenFreshness(userId);
-
-		// Set up periodic refresh check (every 24 hours)
-		this.tokenRefreshTimer = setInterval(() => {
-			this.checkTokenFreshness(userId);
-		}, 24 * 60 * 60 * 1000);
-	}
-
-	/**
-	 * Check if token needs refresh and refresh if necessary
-	 */
-	private async checkTokenFreshness(userId: string): Promise<void> {
-		if (!this.token) return;
-
-		try {
-			// Get token metadata from Firestore
-			const tokenDoc = await getDoc(doc(db, 'pushNotifications', this.token));
-			
-			if (!tokenDoc.exists()) {
-				// Token not in database, refresh it
-				await this.getOrRefreshToken(userId, true);
-				
-return;
-			}
-
-			const metadata = tokenDoc.data() as TokenMetadata;
-			const lastRefresh = this.convertToDate(metadata.lastRefresh) || this.convertToDate(metadata.lastUpdate);
-			
-			if (!lastRefresh) {
-				// No refresh date, refresh token
-				await this.getOrRefreshToken(userId, true);
-				
-return;
-			}
-
-			const timeSinceRefresh = Date.now() - lastRefresh.getTime();
-			
-			if (timeSinceRefresh > TOKEN_REFRESH_INTERVAL) {
-				console.info('Token needs refresh, refreshing...');
-				await this.getOrRefreshToken(userId, true);
-			}
-		} catch (error) {
-			console.error('Error checking token freshness:', error);
-		}
-	}
-
-	/**
 	 * Get a new FCM token or refresh an existing one
 	 * @param userId The user ID to associate with the token
-	 * @param forceRefresh Force a new token even if one exists
 	 * @returns The FCM token
 	 */
-	public async getOrRefreshToken(userId: string, forceRefresh: boolean = false): Promise<string | null> {
+	public async getOrRefreshToken(userId: string): Promise<string | null> {
 		if (!this.isSupported()) {
 			return null;
 		}
@@ -246,16 +168,6 @@ return;
 				if (!permissionGranted) return null;
 			}
 
-			// Delete old token if force refresh
-			if (forceRefresh && this.token) {
-				try {
-					await deleteToken(this.messaging);
-					console.info('Old token deleted');
-				} catch (error) {
-					console.error('Error deleting old token:', error);
-				}
-			}
-
 			// Get token
 			const currentToken = await getToken(this.messaging, {
 				vapidKey,
@@ -263,12 +175,10 @@ return;
 			});
 
 			if (currentToken) {
-				// Check if token changed
-				const tokenChanged = this.token !== currentToken;
 				this.token = currentToken;
 
-				// Send token to server if new or changed
-				if (!this.isTokenSentToServer || tokenChanged || forceRefresh) {
+				// Send token to server if not already sent
+				if (!this.isTokenSentToServer) {
 					await this.sendTokenToServer(userId, currentToken);
 					this.isTokenSentToServer = true;
 				}
@@ -295,20 +205,17 @@ return;
 	 */
 	private async sendTokenToServer(userId: string, token: string): Promise<void> {
 		try {
-			const tokenMetadata: TokenMetadata = {
+			// Store token in pushNotifications collection
+			await setDoc(doc(db, 'pushNotifications', token), {
 				token,
 				userId,
 				lastUpdate: new Date(),
-				lastRefresh: new Date(),
 				platform: 'web',
 				deviceInfo: {
 					userAgent: navigator.userAgent,
 					language: navigator.language
 				}
-			};
-
-			// Store token in pushNotifications collection
-			await setDoc(doc(db, 'pushNotifications', token), tokenMetadata, { merge: true });
+			}, { merge: true });
 
 			console.info('FCM token sent to server in pushNotifications collection');
 			this.isTokenSentToServer = true;
@@ -353,14 +260,14 @@ return;
 				}
 			}
 
-			// Store in askedToBeNotified collection
+			// Store in askedToBeNotify collection
+
 			const notificationRef = doc(DB, Collections.askedToBeNotified, `${token}_${statementId}`);
 			await setDoc(notificationRef, {
 				token,
 				userId,
 				statementId,
-				lastUpdate: new Date(),
-				subscribed: true
+				lastUpdate: new Date()
 			}, { merge: true });
 
 			console.info(`Registered for notifications for statement ${statementId}`);
@@ -370,71 +277,6 @@ return;
 			console.error('Error registering for statement notifications:', error);
 
 			return false;
-		}
-	}
-
-	/**
-	 * Unregister from statement notifications
-	 */
-	public async unregisterFromStatementNotifications(
-		statementId: string
-	): Promise<boolean> {
-		try {
-			if (!this.token) {
-				console.error('No token available to unregister');
-				
-return false;
-			}
-
-			const notificationRef = doc(DB, Collections.askedToBeNotified, `${this.token}_${statementId}`);
-			await deleteDoc(notificationRef);
-
-			console.info(`Unregistered from notifications for statement ${statementId}`);
-			
-return true;
-		} catch (error) {
-			console.error('Error unregistering from statement notifications:', error);
-			
-return false;
-		}
-	}
-
-	/**
-	 * Clean up on user logout
-	 */
-	public async cleanup(): Promise<void> {
-		try {
-			// Clear token refresh timer
-			if (this.tokenRefreshTimer) {
-				clearInterval(this.tokenRefreshTimer);
-				this.tokenRefreshTimer = null;
-			}
-
-			// Delete token from server
-			if (this.token) {
-				// Remove from pushNotifications collection
-				await deleteDoc(doc(db, 'pushNotifications', this.token));
-
-				// Remove all askedToBeNotified entries for this token
-				// This would need a query to find all documents with this token
-				console.info('Token removed from server');
-			}
-
-			// Delete local token
-			if (this.messaging && this.token) {
-				try {
-					await deleteToken(this.messaging);
-				} catch (error) {
-					console.error('Error deleting FCM token:', error);
-				}
-			}
-
-			// Reset state
-			this.token = null;
-			this.isTokenSentToServer = false;
-			this.userId = null;
-		} catch (error) {
-			console.error('Error during cleanup:', error);
 		}
 	}
 
@@ -454,7 +296,7 @@ return false;
 				this.showForegroundNotification(payload);
 			}
 
-			// Call the registered handler if one exists
+			// Call any registered handler
 			if (this.notificationHandler) {
 				this.notificationHandler(payload);
 			}
@@ -465,7 +307,7 @@ return false;
 	 * Display a notification when the app is in the foreground
 	 * @param payload The FCM message payload
 	 */
-	private showForegroundNotification(payload: MessagePayload): void {
+	private showForegroundNotification(payload: any): void {
 		if (!this.isSupported()) {
 			return;
 		}
@@ -514,7 +356,7 @@ return false;
 	 * Register a handler for receiving notifications
 	 * @param handler A function that will be called with the notification payload
 	 */
-	public setNotificationHandler(handler: (payload: MessagePayload) => void): void {
+	public setNotificationHandler(handler: (payload: any) => void): void {
 		this.notificationHandler = handler;
 	}
 
@@ -532,73 +374,6 @@ return false;
 	 */
 	public getToken(): string | null {
 		return this.token;
-	}
-
-	/**
-	 * Convert Firestore Timestamp or Date to JavaScript Date
-	 */
-	private convertToDate(dateOrTimestamp: Date | Timestamp | undefined): Date | null {
-		if (!dateOrTimestamp) return null;
-		
-		if (dateOrTimestamp instanceof Date) {
-			return dateOrTimestamp;
-		}
-		
-		// Check if it's a Firestore Timestamp (has toDate method)
-		if (typeof dateOrTimestamp === 'object' && 'toDate' in dateOrTimestamp) {
-			return dateOrTimestamp.toDate();
-		}
-		
-		return null;
-	}
-
-	/**
-	 * Get diagnostic information for troubleshooting
-	 */
-	public async getDiagnostics(): Promise<{
-		supported: boolean;
-		permission: NotificationPermission | 'unsupported';
-		hasToken: boolean;
-		tokenAge: number | null;
-		serviceWorkerReady: boolean;
-		userId: string | null;
-	}> {
-		const diagnostics = {
-			supported: this.isSupported(),
-			permission: this.safeGetPermission(),
-			hasToken: !!this.token,
-			tokenAge: null as number | null,
-			serviceWorkerReady: false,
-			userId: this.userId
-		};
-
-		// Check service worker
-		if (isServiceWorkerSupported()) {
-			try {
-				const registration = await navigator.serviceWorker.getRegistration();
-				diagnostics.serviceWorkerReady = !!registration?.active;
-			} catch (error) {
-				console.error('Error checking service worker:', error);
-			}
-		}
-
-		// Check token age
-		if (this.token) {
-			try {
-				const tokenDoc = await getDoc(doc(db, 'pushNotifications', this.token));
-				if (tokenDoc.exists()) {
-					const metadata = tokenDoc.data() as TokenMetadata;
-					const lastRefresh = this.convertToDate(metadata.lastRefresh) || this.convertToDate(metadata.lastUpdate);
-					if (lastRefresh) {
-						diagnostics.tokenAge = Date.now() - lastRefresh.getTime();
-					}
-				}
-			} catch (error) {
-				console.error('Error getting token age:', error);
-			}
-		}
-
-		return diagnostics;
 	}
 }
 
