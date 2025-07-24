@@ -7,7 +7,8 @@ export const environment = {
 	isNativePlatform: Capacitor.isNativePlatform(),
 	
 	// Use production auth for mobile OAuth (Google login doesn't work with auth emulator on mobile)
-	useProductionAuth: Capacitor.isNativePlatform() && import.meta.env.DEV,
+	// Also use production auth if the app is served over HTTPS (to avoid mixed content)
+	useProductionAuth: (Capacitor.isNativePlatform() && import.meta.env.DEV) || window.location.protocol === 'https:',
 	
 	// Firebase emulator hosts
 	emulators: {
