@@ -46,7 +46,14 @@
 		"android:deploy-logs": "powershell -ExecutionPolicy Bypass -File .\\scripts\\deploy-android.ps1 -WatchLogs",
 		"android:debug": "powershell -ExecutionPolicy Bypass -File .\\scripts\\debug-android.ps1 -All",
 		"android:logs": "powershell -ExecutionPolicy Bypass -File .\\scripts\\debug-android.ps1 -Logs",
-		"android:errors": "powershell -ExecutionPolicy Bypass -File .\\scripts\\debug-android.ps1 -Errors"
+		"android:errors": "powershell -ExecutionPolicy Bypass -File .\\scripts\\debug-android.ps1 -Errors",
+		"cap:ios": "npm run build && npx cap sync ios && npx cap run ios",
+		"cap:ios:live": "npx cap run ios -l",
+		"cap:android": "npm run build && npx cap sync android && npx cap run android",
+		"cap:android:live": "npx cap run android -l",
+		"cap:build": "npm run build && npx cap sync",
+		"cap:open:ios": "npx cap open ios",
+		"cap:open:android": "npx cap open android"
 	},
 	"dependencies": {
 		"@capacitor/android": "^7.4.0",
