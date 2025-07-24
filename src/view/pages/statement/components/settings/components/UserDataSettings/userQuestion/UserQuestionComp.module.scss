@@ -1,9 +1,8 @@
 .userQuestion {
 	margin-bottom: 1.5rem;
 	padding: 1rem;
-	border: 1px solid #e0e6ff;
 	border-radius: 8px;
-	background-color: #f8faff;
+	background-color: #ffffff;
 
 	.questionHeader {
 		display: flex;
@@ -13,7 +12,6 @@
 
 		.deleteQuestionIcon {
 			cursor: pointer;
-			padding: 0.25rem;
 			color: #e74c3c;
 			border-radius: 50%;
 			transition: background-color 0.2s;
@@ -81,20 +79,33 @@
 		padding: 0.5rem;
 		background-color: white;
 		border-radius: 4px;
-		border: 1px solid #e8ecf5;
-
+		svg {
+			margin: 1rem;
+			width: 24px;
+			height: 24px;
+		}
 		.deleteIcon {
 			cursor: pointer;
-			padding: 0.25rem;
 			color: #e74c3c;
 			border-radius: 50%;
 			transition: background-color 0.2s;
-
 			&:hover {
 				background-color: #ffe5e5;
 			}
 		}
-
+		.optionColor {
+			width: 3.5rem;
+			height: 3.5rem;
+			border-radius: 50%;
+			cursor: pointer;
+		}
+		input[type='color']::-webkit-color-swatch {
+			border: none;
+			border-radius: 0.2rem;
+		}
+		.spacer {
+			flex: 1;
+		}
 		label {
 			display: flex;
 			align-items: center;
@@ -117,6 +128,23 @@
 
 		.btns {
 			margin-top: 0.5rem;
+		}
+		button {
+			display: flex;
+			font-size: 1rem;
+			align-items: center;
+		}
+		.addOptionPlus {
+			display: flex;
+			justify-content: center;
+			cursor: pointer;
+			color: var(--text-blue);
+			padding: 0;
+			.plusIcon {
+				stroke-width: 2px;
+				width: 2rem;
+				height: 2rem;
+			}
 		}
 	}
 
@@ -148,7 +176,6 @@
 	border: 2px dashed #bdcef4;
 	border-radius: 8px;
 	background-color: #f0f4ff;
-
 	h4 {
 		margin: 0 0 1rem 0;
 		color: #2c3e50;

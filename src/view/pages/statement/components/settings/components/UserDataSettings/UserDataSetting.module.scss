@@ -1,22 +1,132 @@
 // UserDataSetting.module.scss
+
 .userDataSettings {
 	padding: 1rem;
-	max-width: 800px;
+	max-width: 70%;
 	margin: 0 auto;
-
+	.topNavSurvey {
+		display: flex;
+		align-items: center;
+		margin-bottom: 1rem;
+		svg {
+			width: 3.5rem;
+			height: 3.5rem;
+			color: var(--text-blue);
+			cursor: pointer;
+		}
+		.XBtn {
+			width: 2rem;
+			height: 2rem;
+		}
+	}
+	.spacer {
+		flex: 1;
+	}
+	@media screen and (max-width: 768px) {
+		max-width: 100%;
+		padding: 0;
+	}
 	h3 {
 		margin: 0 0 1.5rem 0;
-		color: #2c3e50;
+		color: var(--text-primary);
 		font-size: 1.5rem;
-		text-align: center;
 	}
 
 	.newQuestionForm {
 		margin-bottom: 2rem;
-		padding: 1.5rem;
-		border: 2px dashed #bdcef4;
+		padding: 2rem;
 		border-radius: 8px;
-		background-color: #f0f4ff;
+		background-color: var(--menu-default);
+		border-left: #83ccf6 6px solid;
+
+		.checkIcon {
+			color: green;
+			width: 2rem;
+			height: 2rem;
+			stroke-width: 3px;
+			font-weight: bolder;
+			&:hover {
+				scale: 1.1;
+			}
+		}
+		.inputQuestion {
+			font-size: 1rem;
+			flex: 1;
+			border: 1px solid #bdcef4;
+			border-radius: 0.5rem;
+			padding: 1.25rem 1rem;
+			height: 100%;
+			display: flex;
+			align-items: center;
+			flex-direction: row-reverse;
+		}
+		.addOption {
+			width: fit-content;
+			margin: 1rem;
+			@media screen and (max-width: 768px) {
+				margin: 0;
+				padding: 0;
+			}
+			h4 {
+				font-size: 1rem;
+				color: var(--text-blue);
+				cursor: pointer;
+				user-select: none;
+			}
+		}
+		.addOptionContainer {
+			margin: 1rem;
+			display: flex;
+			flex-direction: column;
+			justify-content: center;
+			@media screen and (max-width: 768px) {
+				margin: 0;
+			}
+			.option {
+				display: flex;
+				margin-top: 1rem;
+				.optionColor {
+					width: 3.5rem;
+					height: 3.5rem;
+					cursor: pointer;
+					@media screen and (max-width: 768px) {
+						width: 3rem;
+						height: 3rem;
+					}
+				}
+				input[type='color']::-webkit-color-swatch {
+					border: none;
+					border-radius: 0.2rem;
+				}
+				.inputAnswer {
+					font-size: 1rem;
+					flex: 1;
+					padding: 1rem;
+					height: 100%;
+					flex-direction: row-reverse;
+					display: flex;
+					align-items: center;
+					@media screen and (max-width: 768px) {
+						flex: 1;
+					}
+					&:focus {
+						border: 1px solid #d2d3d7;
+						background-color: #cdd8e1;
+					}
+				}
+
+				svg {
+					margin: 1rem;
+					width: 24px;
+					height: 24px;
+					@media screen and (max-width: 768px) {
+						margin: 0;
+
+						margin-top: 1rem;
+					}
+				}
+			}
+		}
 
 		h4 {
 			margin: 0 0 1rem 0;
@@ -35,7 +145,7 @@
 			display: flex;
 			flex-direction: column;
 			gap: 0.5rem;
-
+			margin-top: 1rem;
 			label {
 				font-size: 1rem;
 				color: #7484a9;
@@ -44,8 +154,7 @@
 
 			select {
 				padding: 0.75rem;
-				border: 1px solid #bdcef4;
-				border-radius: 0.5rem;
+				border-bottom: 1px solid #c6d8f7;
 				font-size: 1rem;
 				background-color: #fff;
 				transition: border-color 0.2s;
@@ -57,7 +166,41 @@
 			}
 		}
 	}
+	.bottomBar {
+		border-top: 1px solid #c6d8f7;
+		display: flex;
+		padding-top: 1rem;
+		align-items: center;
+		h4 {
+			align-items: center;
+			margin: 0;
+		}
+		.slideButtonContainer {
+			width: 3rem;
+			height: 1rem;
+			background-color: #bdcef4;
 
+			border-radius: 0.5rem;
+			transition: 0.3s;
+			margin: 1rem;
+			cursor: pointer;
+			.slideButtonHandle {
+				width: 2rem;
+				height: 2rem;
+				transform: translateY(-0.5rem);
+				border: 1px black solid;
+				border-radius: 50%;
+				background-color: #f8faff;
+			}
+			.slideButtonHandle.active {
+				animation: slideHandle 0.3s forwards;
+			}
+
+			.slideButtonHandle.inactive {
+				animation: slideHandleReverse 0.3s forwards;
+			}
+		}
+	}
 	.existingQuestions {
 		h4 {
 			margin: 0 0 1rem 0;
@@ -74,5 +217,22 @@
 			border-radius: 8px;
 			border: 1px dashed #e0e6ff;
 		}
+	}
+}
+@keyframes slideHandle {
+	0% {
+		transform: translate(0, -0.5rem);
+	}
+	100% {
+		transform: translate(1rem, -0.5rem);
+	}
+}
+
+@keyframes slideHandleReverse {
+	0% {
+		transform: translate(1rem, -0.5rem);
+	}
+	100% {
+		transform: translate(0, -0.5rem);
 	}
 }
