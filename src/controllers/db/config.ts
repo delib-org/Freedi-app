@@ -10,6 +10,7 @@ import { connectFirestoreEmulator, getFirestore } from 'firebase/firestore';
 import { getStorage, connectStorageEmulator } from 'firebase/storage';
 import { isProduction } from '../general/helpers';
 import firebaseConfig from './configKey';
+import { environment } from '../../config/environment';
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
@@ -30,10 +31,19 @@ setPersistence(auth, browserLocalPersistence)
 //development
 if (!isProduction()) {
 	console.info('Running on development mode');
-
-	connectFirestoreEmulator(FireStore, '127.0.0.1', 8080);
-	connectAuthEmulator(auth, 'http://localhost:9099');
-	connectStorageEmulator(storage, '127.0.0.1', 9199);
+	
+	// Connect to Firestore and Storage emulators
+	connectFirestoreEmulator(FireStore, environment.emulators.firestore, 8080);
+	connectStorageEmulator(storage, environment.emulators.storage, 9199);
+	
+	// Only connect auth emulator if not using production auth
+	// (Google OAuth doesn't work well with auth emulator on mobile)
+	if (!environment.useProductionAuth) {
+		connectAuthEmulator(auth, `http://${environment.emulators.auth}:9099`);
+		console.info('Using Auth emulator');
+	} else {
+		console.info('Using production Auth for mobile development (OAuth compatibility)');
+	}
 }
 
 export { auth, FireStore, storage, app, DB };
