@@ -89,6 +89,37 @@
   gap: 0.5rem;
 }
 
+.warningSection {
+  margin-top: 1rem;
+  padding: 0.75rem;
+  background-color: #fef3c7;
+  border-radius: 0.5rem;
+  border: 1px solid #f59e0b;
+}
+
+.warningContent {
+  display: flex;
+  gap: 0.5rem;
+
+  svg {
+    color: #f59e0b;
+    flex-shrink: 0;
+    margin-top: 0.125rem;
+  }
+}
+
+.warningTitle {
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+  color: #92400e;
+}
+
+.warningText {
+  font-size: 0.875rem;
+  color: #92400e;
+  margin: 0;
+}
+
 .helpSection {
   margin-top: 1rem;
   padding: 0.75rem;

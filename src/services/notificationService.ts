@@ -132,38 +132,53 @@ export class NotificationService {
 	 * @returns A promise that resolves when initialization is complete
 	 */
 	public async initialize(userId: string): Promise<void> {
+		console.info('[NotificationService] Starting initialization for user:', userId);
+		
 		if (!this.isSupported()) {
-			console.info('This browser does not support the required features for notifications');
-
-			return;
+			console.info('[NotificationService] Browser does not support required features');
+			
+return;
 		}
 
 		try {
 			this.userId = userId;
 
+			// Wait for service worker to be ready first
+			console.info('[NotificationService] Waiting for service worker...');
+			await this.waitForServiceWorker();
+
 			// Initialize messaging first
+			console.info('[NotificationService] Initializing Firebase Messaging...');
 			if (!this.initializeMessaging()) {
-				return;
+				console.error('[NotificationService] Failed to initialize messaging');
+				
+return;
 			}
 
+			console.info('[NotificationService] Checking permission...');
 			const permission = await this.requestPermission();
 
 			if (!permission) {
-				console.info('Notification permission not granted');
-
-				return;
+				console.info('[NotificationService] Permission not granted');
+				
+return;
 			}
 
+			console.info('[NotificationService] Permission granted, setting up listeners...');
 			// Listen for foreground messages
 			this.setupForegroundListener();
 
 			// Get FCM token
-			await this.getOrRefreshToken(userId);
+			console.info('[NotificationService] Getting FCM token...');
+			const token = await this.getOrRefreshToken(userId);
+			console.info('[NotificationService] Token result:', token ? 'Token obtained' : 'Failed to get token');
 
 			// Set up automatic token refresh
 			this.setupTokenRefresh(userId);
+			
+			console.info('[NotificationService] Initialization complete');
 		} catch (error) {
-			console.error('Error initializing notifications:', error);
+			console.error('[NotificationService] Error during initialization:', error);
 		}
 	}
 
@@ -230,39 +245,73 @@ return;
 	 * @returns The FCM token
 	 */
 	public async getOrRefreshToken(userId: string, forceRefresh: boolean = false): Promise<string | null> {
+		console.info('[NotificationService] getOrRefreshToken called, forceRefresh:', forceRefresh);
+		
 		if (!this.isSupported()) {
-			return null;
+			console.info('[NotificationService] Browser not supported');
+			
+return null;
 		}
 
 		try {
 			// Initialize messaging if not already done
 			if (!this.initializeMessaging()) {
-				return null;
+				console.error('[NotificationService] Failed to initialize messaging in getOrRefreshToken');
+				
+return null;
 			}
 
 			// Request permission first if not granted
 			if (Notification.permission !== 'granted') {
+				console.info('[NotificationService] Permission not granted, requesting...');
 				const permissionGranted = await this.requestPermission();
-				if (!permissionGranted) return null;
+				if (!permissionGranted) {
+					console.info('[NotificationService] Permission denied by user');
+					
+return null;
+				}
 			}
 
 			// Delete old token if force refresh
 			if (forceRefresh && this.token) {
 				try {
 					await deleteToken(this.messaging);
-					console.info('Old token deleted');
+					console.info('[NotificationService] Old token deleted');
 				} catch (error) {
-					console.error('Error deleting old token:', error);
+					console.error('[NotificationService] Error deleting old token:', error);
 				}
 			}
 
+			// Check service worker registration
+			console.info('[NotificationService] Getting service worker registration...');
+			const swRegistration = await navigator.serviceWorker.getRegistration();
+			console.info('[NotificationService] Service worker registration:', swRegistration ? 'Found' : 'Not found');
+			
+			if (!swRegistration) {
+				console.error('[NotificationService] No service worker registration found!');
+				
+return null;
+			}
+
 			// Get token
+			console.info('[NotificationService] Requesting FCM token with vapidKey...');
+			console.info('[NotificationService] VAPID key present:', !!vapidKey);
+			console.info('[NotificationService] VAPID key length:', vapidKey ? vapidKey.length : 0);
+			console.info('[NotificationService] VAPID key preview:', vapidKey ? vapidKey.substring(0, 10) + '...' : 'undefined');
+			
+			if (!vapidKey || vapidKey === 'undefined' || vapidKey.length < 10) {
+				console.error('[NotificationService] VAPID key is missing or invalid! Check VITE_FIREBASE_VAPID_KEY in .env');
+				
+return null;
+			}
+			
 			const currentToken = await getToken(this.messaging, {
 				vapidKey,
-				serviceWorkerRegistration: await navigator.serviceWorker.getRegistration()
+				serviceWorkerRegistration: swRegistration
 			});
 
 			if (currentToken) {
+				console.info('[NotificationService] Token received:', currentToken.substring(0, 20) + '...');
 				// Check if token changed
 				const tokenChanged = this.token !== currentToken;
 				this.token = currentToken;
@@ -275,14 +324,19 @@ return;
 
 				return currentToken;
 			} else {
-				console.info('No registration token available');
+				console.error('[NotificationService] No token received from getToken()');
 				this.token = null;
 				this.isTokenSentToServer = false;
 
 				return null;
 			}
 		} catch (error) {
-			console.error('Error getting FCM token:', error);
+			console.error('[NotificationService] Error getting FCM token:', error);
+			console.error('[NotificationService] Error details:', {
+				name: (error as Error).name,
+				message: (error as Error).message,
+				stack: (error as Error).stack
+			});
 
 			return null;
 		}
@@ -550,6 +604,50 @@ return false;
 		}
 		
 		return null;
+	}
+
+	/**
+	 * Wait for service worker to be ready
+	 */
+	private async waitForServiceWorker(): Promise<void> {
+		if (!('serviceWorker' in navigator)) {
+			throw new Error('Service workers not supported');
+		}
+
+		try {
+			// Check if firebase-messaging-sw.js is already registered
+			let registration = await navigator.serviceWorker.getRegistration('/firebase-messaging-sw.js');
+			
+			if (!registration) {
+				console.info('[NotificationService] Firebase messaging SW not found, waiting for registration...');
+				// Wait for the service worker to be registered by PWAWrapper
+				await new Promise<void>((resolve) => {
+					const checkInterval = setInterval(async () => {
+						registration = await navigator.serviceWorker.getRegistration('/firebase-messaging-sw.js');
+						if (registration && registration.active) {
+							clearInterval(checkInterval);
+							console.info('[NotificationService] Firebase messaging SW is now active');
+							resolve();
+						}
+					}, 500);
+
+					// Timeout after 10 seconds
+					setTimeout(() => {
+						clearInterval(checkInterval);
+						console.error('[NotificationService] Timeout waiting for service worker');
+						resolve(); // Resolve anyway to continue
+					}, 10000);
+				});
+			} else if (!registration.active) {
+				console.info('[NotificationService] Service worker found but not active, waiting...');
+				await navigator.serviceWorker.ready;
+				console.info('[NotificationService] Service worker is now ready');
+			} else {
+				console.info('[NotificationService] Firebase messaging SW already active');
+			}
+		} catch (error) {
+			console.error('[NotificationService] Error waiting for service worker:', error);
+		}
 	}
 
 	/**

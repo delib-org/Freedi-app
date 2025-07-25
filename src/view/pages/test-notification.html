@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Notification Test</title>
+</head>
+<body>
+    <h1>Notification Test Page</h1>
+    <button onclick="testNotification()">Test Browser Notification</button>
+    <button onclick="checkServiceWorker()">Check Service Worker</button>
+    <div id="status"></div>
+
+    <script>
+        function updateStatus(message) {
+            document.getElementById('status').innerHTML += '<p>' + message + '</p>';
+        }
+
+        async function testNotification() {
+            updateStatus('Testing notifications...');
+            
+            // Check if notifications are supported
+            if (!('Notification' in window)) {
+                updateStatus('❌ This browser does not support notifications');
+                return;
+            }
+
+            updateStatus('Current permission: ' + Notification.permission);
+
+            // Request permission if needed
+            if (Notification.permission === 'default') {
+                const permission = await Notification.requestPermission();
+                updateStatus('Permission after request: ' + permission);
+            }
+
+            // Try to show a notification
+            if (Notification.permission === 'granted') {
+                try {
+                    new Notification('Test Notification', {
+                        body: 'If you see this, browser notifications are working!',
+                        icon: '/icons/logo-192px.png'
+                    });
+                    updateStatus('✅ Notification sent! Check if you see it.');
+                } catch (error) {
+                    updateStatus('❌ Error showing notification: ' + error);
+                }
+            } else {
+                updateStatus('❌ Notification permission denied');
+            }
+        }
+
+        async function checkServiceWorker() {
+            updateStatus('Checking service workers...');
+            
+            if ('serviceWorker' in navigator) {
+                const registrations = await navigator.serviceWorker.getRegistrations();
+                updateStatus('Found ' + registrations.length + ' service worker(s):');
+                
+                registrations.forEach(reg => {
+                    updateStatus('- ' + reg.scope + ' (active: ' + (reg.active ? 'yes' : 'no') + ')');
+                });
+
+                // Check specifically for Firebase messaging SW
+                const firebaseSW = registrations.find(reg => reg.active && reg.active.scriptURL.includes('firebase-messaging-sw.js'));
+                if (firebaseSW) {
+                    updateStatus('✅ Firebase messaging service worker is active');
+                } else {
+                    updateStatus('❌ Firebase messaging service worker not found');
+                }
+            } else {
+                updateStatus('❌ Service workers not supported');
+            }
+        }
+
+        // Check on load
+        window.onload = () => {
+            updateStatus('Page loaded. Notification permission: ' + Notification.permission);
+        };
+    </script>
+</body>
+</html>

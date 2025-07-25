@@ -271,6 +271,22 @@ return status ?
 					/>
 				</div>
 
+				{/* Safari Warning */}
+				{/Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent) && (
+					<div className={styles.warningSection}>
+						<div className={styles.warningContent}>
+							<AlertCircle className="w-5 h-5" />
+							<div>
+								<p className={styles.warningTitle}>Safari Browser Detected</p>
+								<p className={styles.warningText}>
+									Push notifications are not fully supported in Safari. For the best experience, 
+									please use Chrome, Firefox, or Edge browsers.
+								</p>
+							</div>
+						</div>
+					</div>
+				)}
+
 				{/* Help Text */}
 				<div className={styles.helpSection}>
 					<div className={styles.helpContent}>

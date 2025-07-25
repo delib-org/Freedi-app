@@ -34,6 +34,7 @@ import ThankYou from '@/view/pages/massConsensus/thankYou/ThankYou';
 import { MassConsensusPageUrls } from 'delib-npm';
 import UserDemographicMC from '@/view/pages/massConsensus/massConsesusQuestion/userDemographicMC/UserDemographicMC';
 import My from '@/view/pages/my/My';
+import Settings from '@/view/pages/settings/Settings';
 
 // Define errorRoutes
 const errorRoutes = [
@@ -182,7 +183,17 @@ export const router = createBrowserRouter([
 			{
 				element: <My />,
 				path: 'my',
-			}
+				children: [
+					{
+						path: 'settings',
+						element: <Settings />,
+					},
+				],
+			},
+			{
+				element: <Settings />,
+				path: 'settings',
+			},
 		],
 	},
 	// Error routes at root level.

@@ -113,6 +113,8 @@ export async function updateInAppNotifications(
 			}
 		);
 
+		logger.info(`Found ${fcmSubscribers.length} FCM subscribers for statement ${statement.parentId}`);
+
 		//update last message in the parent statement
 		await db.doc(`${Collections.statements}/${statement.parentId}`).update({
 			lastMessage: {
@@ -210,7 +212,7 @@ async function processInAppNotifications(
 }
 
 /**
- * Validates FCM tokens by sending a dry run message
+ * Validates FCM tokens - only marks tokens as invalid if they have specific invalid token errors
  */
 async function validateTokens(subscribers: FcmSubscriber[]): Promise<TokenValidationResult> {
 	const validTokens: FcmSubscriber[] = [];
@@ -225,19 +227,34 @@ async function validateTokens(subscribers: FcmSubscriber[]): Promise<TokenValida
 				notification: {
 					title: 'Test',
 					body: 'Test'
+				},
+				data: {
+					test: 'true'
 				}
 			}, true); // true = dry run
 			
 			validTokens.push(subscriber);
 		} catch (error) {
 			const errorCode = error instanceof Error && 'code' in error ? (error as { code: string }).code : 'unknown';
-			logger.warn(`Invalid token for user ${subscriber.userId}:`, errorCode);
-			invalidTokens.push(subscriber);
+			
+			// Only mark as invalid if it's a specific token error
+			if (errorCode === 'messaging/registration-token-not-registered' ||
+				errorCode === 'messaging/invalid-registration-token' ||
+				errorCode === 'messaging/invalid-argument') {
+				logger.warn(`Invalid token for user ${subscriber.userId}:`, errorCode);
+				invalidTokens.push(subscriber);
+			} else {
+				// For other errors (like quota, server errors, etc), consider the token valid
+				logger.info(`Token validation warning for user ${subscriber.userId}: ${errorCode}, treating as valid`);
+				validTokens.push(subscriber);
+			}
 		}
 	});
 
 	// Wait for all validations to complete
 	await Promise.all(validationPromises);
+
+	logger.info(`Token validation complete: ${validTokens.length} valid, ${invalidTokens.length} invalid`);
 
 	return { validTokens, invalidTokens };
 }
@@ -283,9 +300,20 @@ async function processFcmNotificationsImproved(
 		return result;
 	}
 
-	// First, validate all tokens
-	logger.info(`Validating ${fcmSubscribers.length} FCM tokens...`);
-	const { validTokens, invalidTokens } = await validateTokens(fcmSubscribers);
+	// First, validate all tokens (skip validation if in development to speed up)
+	const skipValidation = process.env.FUNCTIONS_EMULATOR === 'true' || process.env.NODE_ENV === 'development';
+	
+	let validTokens = fcmSubscribers;
+	let invalidTokens: FcmSubscriber[] = [];
+	
+	if (!skipValidation) {
+		logger.info(`Validating ${fcmSubscribers.length} FCM tokens...`);
+		const validationResult = await validateTokens(fcmSubscribers);
+		validTokens = validationResult.validTokens;
+		invalidTokens = validationResult.invalidTokens;
+	} else {
+		logger.info(`Skipping token validation (development mode) for ${fcmSubscribers.length} tokens`);
+	}
 	
 	// Remove invalid tokens from database
 	if (invalidTokens.length > 0) {
@@ -361,16 +389,18 @@ async function sendBatchWithRetry(
 		// Send messages individually instead of using sendAll
 		// Add a small delay between messages to avoid rate limiting
 		for (let i = 0; i < retryMessages.length; i++) {
+			const message = retryMessages[i] as admin.messaging.TokenMessage;
 			try {
-				await admin.messaging().send(retryMessages[i]);
+				logger.info(`Sending notification to token: ${message.token.substring(0, 20)}...`);
+				const messageId = await admin.messaging().send(retryMessages[i]);
 				result.successful++;
+				logger.info(`Successfully sent notification. Message ID: ${messageId}`);
 				
 				// Add 50ms delay between messages to avoid rate limiting
 				if (i < retryMessages.length - 1) {
 					await new Promise(resolve => setTimeout(resolve, 50));
 				}
 			} catch (error: unknown) {
-				const message = retryMessages[i] as admin.messaging.TokenMessage;
 				logger.error(`Failed to send to token ${message.token}:`, error);
 
 				// Type guard for Firebase errors

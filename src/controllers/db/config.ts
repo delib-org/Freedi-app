@@ -13,6 +13,7 @@ import firebaseConfig from './configKey';
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
+console.info('Firebase app initialized with config:', firebaseConfig.projectId);
 
 const FireStore = getFirestore(app);
 const DB = FireStore;
