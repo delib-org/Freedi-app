@@ -596,6 +596,22 @@ return false;
 	}
 
 	/**
+	 * Get the current user ID
+	 * @returns The current user ID or null if not set
+	 */
+	public getCurrentUserId(): string | null {
+		return this.userId;
+	}
+
+	/**
+	 * Check if the service is initialized
+	 * @returns True if the service has been initialized
+	 */
+	public isInitialized(): boolean {
+		return !!this.messaging && !!this.token;
+	}
+
+	/**
 	 * Convert Firestore Timestamp or Date to JavaScript Date
 	 */
 	private convertToDate(dateOrTimestamp: Date | Timestamp | undefined): Date | null {
@@ -680,17 +696,23 @@ return false;
 		supported: boolean;
 		permission: NotificationPermission | 'unsupported';
 		hasToken: boolean;
+		token: string | null;
 		tokenAge: number | null;
 		serviceWorkerReady: boolean;
 		userId: string | null;
+		isInitialized: boolean;
+		lastTokenUpdate: Date | null;
 	}> {
 		const diagnostics = {
 			supported: this.isSupported(),
 			permission: this.safeGetPermission(),
 			hasToken: !!this.token,
+			token: this.token,
 			tokenAge: null as number | null,
 			serviceWorkerReady: false,
-			userId: this.userId
+			userId: this.userId,
+			isInitialized: !!this.messaging,
+			lastTokenUpdate: null as Date | null
 		};
 
 		// Check service worker
@@ -703,7 +725,7 @@ return false;
 			}
 		}
 
-		// Check token age
+		// Check token age and get last update
 		if (this.token) {
 			try {
 				const tokenDoc = await getDoc(doc(db, 'pushNotifications', this.token));
@@ -712,12 +734,20 @@ return false;
 					const lastRefresh = this.convertToDate(metadata.lastRefresh) || this.convertToDate(metadata.lastUpdate);
 					if (lastRefresh) {
 						diagnostics.tokenAge = Date.now() - lastRefresh.getTime();
+						diagnostics.lastTokenUpdate = lastRefresh;
 					}
 				}
 			} catch (error) {
 				console.error('Error getting token age:', error);
 			}
 		}
+
+		console.info('[NotificationService] Diagnostics:', {
+			hasToken: diagnostics.hasToken,
+			userId: diagnostics.userId,
+			isInitialized: diagnostics.isInitialized,
+			tokenPreview: diagnostics.token ? diagnostics.token.substring(0, 20) + '...' : 'none'
+		});
 
 		return diagnostics;
 	}

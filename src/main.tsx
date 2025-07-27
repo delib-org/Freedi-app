@@ -19,9 +19,10 @@ if (import.meta.env.DEV || import.meta.env.MODE === 'testing') {
 	import('./utils/debugNotifications');
 	import('./utils/notificationDebugger');
 	import('./utils/testNotification');
+	import('./utils/notificationStatus');
 }
 
-console.info('[Main] Initializing app... v.1.0.2');
+console.info('[Main] Initializing app... v.1.0.5');
 
 const root = createRoot(document.getElementById('root')!);
 

@@ -145,8 +145,12 @@ export async function comprehensiveNotificationDebug() {
     console.info('%c6. Notification Service Status', 'color: green; font-weight: bold');
     try {
         const diagnostics = await notificationService.getDiagnostics();
-        results.notificationService = diagnostics;
-        console.info('Diagnostics:', JSON.stringify(diagnostics, null, 2));
+        results.notificationService = {
+            ...diagnostics,
+            tokenPreview: diagnostics.token ? diagnostics.token.substring(0, 30) + '...' : 'none',
+            token: undefined // Don't include full token in results for security
+        };
+        console.info('Diagnostics:', JSON.stringify(results.notificationService, null, 2));
         
         // Try to get token if user is authenticated
         if (user) {
