@@ -182,15 +182,16 @@ export const router = createBrowserRouter([
 					...protectedRoutes,
 				],
 			},
+			// User profile routes that need authentication but not statement authorization
+			{
+				path: 'my',
+				element: <My />,
+			},
+			{
+				path: 'my/check-notifications',
+				element: <CheckNotifications />,
+			},
 		],
-	},
-	{
-		path: 'my',
-		element: <My />,
-	},
-	{
-		path: 'my/check-notifications',
-		element: <CheckNotifications />,
 	},
 	// Error routes at root level.
 	...errorRoutes,
