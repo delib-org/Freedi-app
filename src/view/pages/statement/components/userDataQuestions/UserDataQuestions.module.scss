@@ -1,22 +1,64 @@
-.button {
-	position: absolute;
-	bottom: 1rem;
-	left: 0;
-	width: 100%;
-
-	display: flex;
-	justify-content: center;
-}
-.title {
-	margin: 1rem;
-}
-
 .userDemographicContainer {
-	background-color: var(--card-default);
-	border: 1px solid #e5e7eb;
 	border-radius: 8px;
 	min-height: 400px;
-	height: 60vh;
+	height: 100svh;
+	width: 100vw;
 	position: relative;
 	padding-bottom: 3rem;
+	background-color: var(--surface-background);
+	display: flex;
+	flex-direction: column;
+	place-items: center;
+	.surveyBody {
+		width: 70%;
+		@media screen and (max-width: 768px) {
+			width: 90%;
+		}
+	}
+
+	.button {
+		position: absolute;
+		bottom: 1rem;
+		left: 0;
+		width: 100%;
+
+		display: flex;
+		justify-content: center;
+	}
+	.title {
+		margin: 1rem;
+		margin-bottom: 0;
+		font-size: 1.44rem;
+		margin-top: 1rem;
+		align-self: flex-start;
+		text-align: left;
+	}
+	.description {
+		margin: 1rem;
+
+		margin-top: 0;
+		color: #898ca7;
+		margin-bottom: 2rem;
+	}
+}
+.topNavSurvey {
+	display: flex;
+	align-items: center;
+	margin-top: 1rem;
+	margin-bottom: 1rem;
+	justify-content: space-between;
+
+	svg {
+		width: 3.5rem;
+		height: 3.5rem;
+		color: var(--text-blue);
+		cursor: pointer;
+	}
+	.XBtn {
+		width: 2rem;
+		height: 2rem;
+	}
+}
+.spacer {
+	flex: 1;
 }

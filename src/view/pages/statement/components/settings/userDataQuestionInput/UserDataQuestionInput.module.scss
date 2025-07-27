@@ -1,17 +1,9 @@
 .container {
 	background-color: var(--card-default);
-	max-width: 700px;
 	max-height: fit-content;
-	width: 40vw;
 	height: 60vh;
 	padding: 1rem;
-	@media (max-width: 768px) {
-		width: 100vw;
-		height: 100vh;
-		position: fixed;
-		top: 0;
-		left: 0;
-	}
+	margin: 1rem;
 }
 
 .questionSection {
@@ -23,7 +15,10 @@
 	font-weight: 500;
 	color: var(--text-title);
 	margin: 0.75rem;
+	margin-top: 0;
+
 	display: flex;
+	margin-bottom: 1rem;
 }
 .selectedInput {
 	color: brown;
