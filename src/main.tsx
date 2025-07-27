@@ -10,6 +10,19 @@ import { router } from './routes/router';
 import { UserConfigProvider } from './context/UserConfigContext';
 import PWAWrapper from './view/components/pwa/PWAWrapper';
 
+// Log environment info
+console.info('[Main] App starting, mode:', import.meta.env.MODE, 'dev:', import.meta.env.DEV, 'prod:', import.meta.env.PROD);
+
+// Import debug utilities in development and testing
+if (import.meta.env.DEV || import.meta.env.MODE === 'testing') {
+	console.info('[Main] Loading debug utilities...');
+	import('./utils/debugNotifications');
+	import('./utils/notificationDebugger');
+	import('./utils/testNotification');
+}
+
+console.info('[Main] Initializing app... v.1.0.2');
+
 const root = createRoot(document.getElementById('root')!);
 
 root.render(

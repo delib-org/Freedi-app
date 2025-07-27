@@ -93,12 +93,19 @@ export class NotificationService {
 
 		try {
 			if (!this.messaging) {
+				console.info('[NotificationService] Creating Firebase Messaging instance...');
 				this.messaging = getMessaging(app);
+				console.info('[NotificationService] Firebase Messaging instance created successfully');
 			}
 
 			return true;
 		} catch (error) {
-			console.error('Failed to initialize Firebase Messaging:', error);
+			console.error('[NotificationService] Failed to initialize Firebase Messaging:', error);
+			console.error('[NotificationService] Error details:', {
+				name: (error as Error).name,
+				message: (error as Error).message,
+				stack: (error as Error).stack
+			});
 
 			return false;
 		}
@@ -615,15 +622,31 @@ return false;
 		}
 
 		try {
+			// First, list all registrations
+			const allRegistrations = await navigator.serviceWorker.getRegistrations();
+			console.info('[NotificationService] All service worker registrations:', allRegistrations.length);
+			allRegistrations.forEach((reg, index) => {
+				console.info(`[NotificationService] SW ${index}: ${reg.scope}, active: ${!!reg.active}, scriptURL: ${reg.active?.scriptURL || 'none'}`);
+			});
+
 			// Check if firebase-messaging-sw.js is already registered
 			let registration = await navigator.serviceWorker.getRegistration('/firebase-messaging-sw.js');
+			
+			if (!registration) {
+				// Try to find it in all registrations
+				registration = allRegistrations.find(r => r.active?.scriptURL.includes('firebase-messaging-sw.js'));
+				if (registration) {
+					console.info('[NotificationService] Found Firebase messaging SW in registrations');
+				}
+			}
 			
 			if (!registration) {
 				console.info('[NotificationService] Firebase messaging SW not found, waiting for registration...');
 				// Wait for the service worker to be registered by PWAWrapper
 				await new Promise<void>((resolve) => {
 					const checkInterval = setInterval(async () => {
-						registration = await navigator.serviceWorker.getRegistration('/firebase-messaging-sw.js');
+						const regs = await navigator.serviceWorker.getRegistrations();
+						registration = regs.find(r => r.active?.scriptURL.includes('firebase-messaging-sw.js'));
 						if (registration && registration.active) {
 							clearInterval(checkInterval);
 							console.info('[NotificationService] Firebase messaging SW is now active');

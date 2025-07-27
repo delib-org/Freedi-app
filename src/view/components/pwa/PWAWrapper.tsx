@@ -73,6 +73,8 @@ const PWAWrapper: React.FC<PWAWrapperProps> = ({ children }) => {
 	const [showNotificationPrompt, setShowNotificationPrompt] = useState(false);
 
 	useEffect(() => {
+		console.info('[PWAWrapper] Initializing, mode:', import.meta.env.MODE, 'isProd:', import.meta.env.PROD);
+		
 		// Only set up the service worker in production
 		if (import.meta.env.PROD) {
 			// Clear badge when app is opened or focused

@@ -4,8 +4,17 @@ import { auth } from '@/controllers/db/config';
 export async function debugNotifications() {
     console.info('=== NOTIFICATION DEBUG START ===');
     
+    // 0. Check environment variables
+    console.info('0. Environment Variables:');
+    console.info('   - NODE_ENV:', import.meta.env.MODE);
+    console.info('   - DEV:', import.meta.env.DEV);
+    console.info('   - PROD:', import.meta.env.PROD);
+    console.info('   - VAPID Key exists:', !!import.meta.env.VITE_FIREBASE_VAPID_KEY);
+    console.info('   - VAPID Key length:', import.meta.env.VITE_FIREBASE_VAPID_KEY ? import.meta.env.VITE_FIREBASE_VAPID_KEY.length : 0);
+    console.info('   - Project ID:', import.meta.env.VITE_FIREBASE_PROJECT_ID || 'NOT SET');
+    
     // 1. Check browser support
-    console.info('1. Browser Support:');
+    console.info('\n1. Browser Support:');
     console.info('   - Service Worker:', 'serviceWorker' in navigator);
     console.info('   - Notifications:', 'Notification' in window);
     console.info('   - Push API:', 'PushManager' in window);
