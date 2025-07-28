@@ -1,0 +1,63 @@
+.SubQuestionNodeContainer {
+	display: flex;
+	flex-direction: row;
+	.node {
+		margin: 1rem;
+		color: var(--text-secondary);
+		width: 80%;
+		height: fit-content;
+		border-left: 5px var(--map-question) solid;
+		background-color: var(--surface-background);
+		border-radius: 10px;
+		padding: 0.5rem 1rem;
+		display: flex;
+		justify-content: space-between;
+		transition: all 0.3s;
+
+		h3 {
+			font-size: 1rem;
+		}
+		button {
+			background-color: var(--icons-white);
+			transform: scaleX(-1);
+			border-radius: 50%;
+			width: 1.5rem;
+			height: 1.5rem;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			transition: all 0.3s;
+
+			svg {
+				scale: 2;
+			}
+		}
+	}
+	.green {
+		border-left: 5px var(--icons-green) solid;
+		transition: all 0.3s;
+	}
+}
+.size1 {
+	width: 20px;
+	height: 20px;
+}
+.size2 {
+	width: 70px;
+	height: 20px;
+}
+.size3 {
+	width: 100px;
+	height: 20px;
+}
+.animate {
+	animation: move 0.3s forwards;
+}
+@keyframes move {
+	0% {
+		transform: scaleX(-1) translateX(0);
+	}
+	100% {
+		transform: scaleX(-1) translateX(-15px);
+	}
+}
