@@ -75,8 +75,9 @@ const PWAWrapper: React.FC<PWAWrapperProps> = ({ children }) => {
 	useEffect(() => {
 		console.info('[PWAWrapper] Initializing, mode:', import.meta.env.MODE, 'isProd:', import.meta.env.PROD);
 		
-		// Only set up the service worker in production
-		if (import.meta.env.PROD) {
+		// Set up the service worker in both production and development
+		// Note: In development, service workers might behave differently
+		if (true) { // Changed from import.meta.env.PROD to always register
 			// Clear badge when app is opened or focused
 			clearBadgeCount();
 

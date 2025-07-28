@@ -13,7 +13,7 @@ console.info('Current domain detected:', currentDomain);
 
 // Select Firebase config based on the domain
 let firebaseConfig;
-if (currentDomain === 'freedi.tech' || currentDomain === 'delib.web.app') {
+if (currentDomain === 'freedi.tech' || currentDomain === 'delib.web.app' || currentDomain === 'localhost' || currentDomain === '127.0.0.1') {
 	// Development config
 	firebaseConfig = {
 		apiKey: "AIzaSyBEumZUTCL3Jc9pt7_CjiSVTxmz9aMqSvo",

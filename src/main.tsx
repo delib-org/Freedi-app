@@ -20,6 +20,7 @@ if (import.meta.env.DEV || import.meta.env.MODE === 'testing') {
 	import('./utils/notificationDebugger');
 	import('./utils/testNotification');
 	import('./utils/notificationStatus');
+	import('./utils/debugGroupNotifications');
 }
 
 console.info('[Main] Initializing app... v.1.0.5');
