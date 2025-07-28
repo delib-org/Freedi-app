@@ -35,6 +35,8 @@ import { number, parse, string } from 'valibot';
 import { isStatementTypeAllowedAsChildren } from '@/controllers/general/helpers';
 import { setNewProcessToDB } from '../massConsensus/setMassConsensus';
 import { LanguagesEnum } from '@/context/UserConfigContext';
+import { analyticsService } from '@/services/analytics';
+import { logger } from '@/services/logger';
 
 export const resultsSettingsDefault: ResultsSettings = {
 	resultsBy: ResultsBy.consensus,
@@ -225,9 +227,23 @@ export const setStatementToDB = async ({
 		//add subscription
 		await Promise.all(statementPromises);
 
+		// Track statement creation
+		logger.info('Statement created', { 
+			statementId: statement.statementId, 
+			statementType: statement.statementType 
+		});
+		
+		analyticsService.logEvent('statement_created', {
+			statementId: statement.statementId,
+			statementType: statement.statementType,
+			hasImage: false, // Add image detection if needed
+			parentId: statement.parentId,
+			topParentId: statement.topParentId,
+		});
+
 		return { statementId: statement.statementId, statement };
 	} catch (error) {
-		console.error(error);
+		logger.error('Failed to create statement', error);
 
 		return undefined;
 	}
