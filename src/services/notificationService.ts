@@ -86,16 +86,15 @@ export class NotificationService {
 	 */
 	private initializeMessaging(): boolean {
 		if (!this.isSupported()) {
-			console.info('This browser does not support the required features for notifications');
+			// Browser does not support notifications
 
 			return false;
 		}
 
 		try {
 			if (!this.messaging) {
-				console.info('[NotificationService] Creating Firebase Messaging instance...');
+				// Create Firebase Messaging instance
 				this.messaging = getMessaging(app);
-				console.info('[NotificationService] Firebase Messaging instance created successfully');
 			}
 
 			return true;
@@ -117,7 +116,7 @@ export class NotificationService {
 	 */
 	public async requestPermission(): Promise<boolean> {
 		if (!this.isSupported()) {
-			console.info('This browser does not support the required features for notifications');
+			// Browser does not support notifications
 
 			return false;
 		}
@@ -139,10 +138,10 @@ export class NotificationService {
 	 * @returns A promise that resolves when initialization is complete
 	 */
 	public async initialize(userId: string): Promise<void> {
-		console.info('[NotificationService] Starting initialization for user:', userId);
+		// Start initialization for user
 		
 		if (!this.isSupported()) {
-			console.info('[NotificationService] Browser does not support required features');
+			// Browser does not support required features
 			
 return;
 		}
@@ -151,39 +150,39 @@ return;
 			this.userId = userId;
 
 			// Wait for service worker to be ready first
-			console.info('[NotificationService] Waiting for service worker...');
+			// Wait for service worker
 			await this.waitForServiceWorker();
 
 			// Initialize messaging first
-			console.info('[NotificationService] Initializing Firebase Messaging...');
+			// Initialize Firebase Messaging
 			if (!this.initializeMessaging()) {
 				console.error('[NotificationService] Failed to initialize messaging');
 				
 return;
 			}
 
-			console.info('[NotificationService] Checking permission...');
+			// Check notification permission
 			const permission = await this.requestPermission();
 
 			if (!permission) {
-				console.info('[NotificationService] Permission not granted');
+				// Permission not granted
 				
 return;
 			}
 
-			console.info('[NotificationService] Permission granted, setting up listeners...');
+			// Permission granted, set up listeners
 			// Listen for foreground messages
 			this.setupForegroundListener();
 
 			// Get FCM token
-			console.info('[NotificationService] Getting FCM token...');
+			// Get FCM token
 			const token = await this.getOrRefreshToken(userId);
-			console.info('[NotificationService] Token result:', token ? 'Token obtained' : 'Failed to get token');
+			// Token result processed
 
 			// Set up automatic token refresh
 			this.setupTokenRefresh(userId);
 			
-			console.info('[NotificationService] Initialization complete');
+			// Initialization complete
 		} catch (error) {
 			console.error('[NotificationService] Error during initialization:', error);
 		}
@@ -237,7 +236,7 @@ return;
 			const timeSinceRefresh = Date.now() - lastRefresh.getTime();
 			
 			if (timeSinceRefresh > TOKEN_REFRESH_INTERVAL) {
-				console.info('Token needs refresh, refreshing...');
+				// Token needs refresh, refreshing
 				await this.getOrRefreshToken(userId, true);
 			}
 		} catch (error) {
@@ -252,10 +251,10 @@ return;
 	 * @returns The FCM token
 	 */
 	public async getOrRefreshToken(userId: string, forceRefresh: boolean = false): Promise<string | null> {
-		console.info('[NotificationService] getOrRefreshToken called, forceRefresh:', forceRefresh);
+		// Get or refresh token
 		
 		if (!this.isSupported()) {
-			console.info('[NotificationService] Browser not supported');
+			// Browser not supported
 			
 return null;
 		}
@@ -270,10 +269,10 @@ return null;
 
 			// Request permission first if not granted
 			if (Notification.permission !== 'granted') {
-				console.info('[NotificationService] Permission not granted, requesting...');
+				// Permission not granted, requesting
 				const permissionGranted = await this.requestPermission();
 				if (!permissionGranted) {
-					console.info('[NotificationService] Permission denied by user');
+					// Permission denied by user
 					
 return null;
 				}
@@ -283,16 +282,16 @@ return null;
 			if (forceRefresh && this.token) {
 				try {
 					await deleteToken(this.messaging);
-					console.info('[NotificationService] Old token deleted');
+					// Old token deleted
 				} catch (error) {
 					console.error('[NotificationService] Error deleting old token:', error);
 				}
 			}
 
 			// Check service worker registration
-			console.info('[NotificationService] Getting service worker registration...');
+			// Get service worker registration
 			const swRegistration = await navigator.serviceWorker.getRegistration();
-			console.info('[NotificationService] Service worker registration:', swRegistration ? 'Found' : 'Not found');
+			// Check service worker registration
 			
 			if (!swRegistration) {
 				console.error('[NotificationService] No service worker registration found!');
@@ -301,10 +300,7 @@ return null;
 			}
 
 			// Get token
-			console.info('[NotificationService] Requesting FCM token with vapidKey...');
-			console.info('[NotificationService] VAPID key present:', !!vapidKey);
-			console.info('[NotificationService] VAPID key length:', vapidKey ? vapidKey.length : 0);
-			console.info('[NotificationService] VAPID key preview:', vapidKey ? vapidKey.substring(0, 10) + '...' : 'undefined');
+			// Request FCM token with VAPID key
 			
 			if (!vapidKey || vapidKey === 'undefined' || vapidKey.length < 10) {
 				console.error('[NotificationService] VAPID key is missing or invalid! Check VITE_FIREBASE_VAPID_KEY in .env');
@@ -318,7 +314,7 @@ return null;
 			});
 
 			if (currentToken) {
-				console.info('[NotificationService] Token received:', currentToken.substring(0, 20) + '...');
+				// Token received successfully
 				// Check if token changed
 				const tokenChanged = this.token !== currentToken;
 				this.token = currentToken;
@@ -371,7 +367,7 @@ return null;
 			// Store token in pushNotifications collection
 			await setDoc(doc(db, 'pushNotifications', token), tokenMetadata, { merge: true });
 
-			console.info('FCM token sent to server in pushNotifications collection');
+			// FCM token stored in database
 			this.isTokenSentToServer = true;
 		} catch (error) {
 			console.error('Error sending token to server:', error);
@@ -391,7 +387,7 @@ return null;
 		statementId: string
 	): Promise<boolean> {
 		if (!this.isSupported()) {
-			console.info('This browser does not support the required features for notifications');
+			// Browser does not support notifications
 
 			return false;
 		}
@@ -424,7 +420,7 @@ return null;
 				subscribed: true
 			}, { merge: true });
 
-			console.info(`Registered for notifications for statement ${statementId}`);
+			// Registered for notifications
 
 			return true;
 		} catch (error) {
@@ -450,7 +446,7 @@ return false;
 			const notificationRef = doc(DB, Collections.askedToBeNotified, `${this.token}_${statementId}`);
 			await deleteDoc(notificationRef);
 
-			console.info(`Unregistered from notifications for statement ${statementId}`);
+			// Unregistered from notifications
 			
 return true;
 		} catch (error) {
@@ -478,7 +474,7 @@ return false;
 
 				// Remove all askedToBeNotified entries for this token
 				// This would need a query to find all documents with this token
-				console.info('Token removed from server');
+				// Token removed from server
 			}
 
 			// Delete local token
@@ -508,7 +504,7 @@ return false;
 		}
 
 		onMessage(this.messaging, (payload) => {
-			console.info('Message received in foreground:', payload);
+			// Message received in foreground
 
 			// If we have a notification payload, show it
 			if (payload.notification) {
@@ -640,10 +636,7 @@ return false;
 		try {
 			// First, list all registrations
 			const allRegistrations = await navigator.serviceWorker.getRegistrations();
-			console.info('[NotificationService] All service worker registrations:', allRegistrations.length);
-			allRegistrations.forEach((reg, index) => {
-				console.info(`[NotificationService] SW ${index}: ${reg.scope}, active: ${!!reg.active}, scriptURL: ${reg.active?.scriptURL || 'none'}`);
-			});
+			// Check all service worker registrations
 
 			// Check if firebase-messaging-sw.js is already registered
 			let registration = await navigator.serviceWorker.getRegistration('/firebase-messaging-sw.js');
@@ -652,12 +645,12 @@ return false;
 				// Try to find it in all registrations
 				registration = allRegistrations.find(r => r.active?.scriptURL.includes('firebase-messaging-sw.js'));
 				if (registration) {
-					console.info('[NotificationService] Found Firebase messaging SW in registrations');
+					// Found Firebase messaging SW in registrations
 				}
 			}
 			
 			if (!registration) {
-				console.info('[NotificationService] Firebase messaging SW not found, waiting for registration...');
+				// Firebase messaging SW not found, waiting for registration
 				// Wait for the service worker to be registered by PWAWrapper
 				await new Promise<void>((resolve) => {
 					const checkInterval = setInterval(async () => {
@@ -665,7 +658,7 @@ return false;
 						registration = regs.find(r => r.active?.scriptURL.includes('firebase-messaging-sw.js'));
 						if (registration && registration.active) {
 							clearInterval(checkInterval);
-							console.info('[NotificationService] Firebase messaging SW is now active');
+							// Firebase messaging SW is now active
 							resolve();
 						}
 					}, 500);
@@ -678,11 +671,11 @@ return false;
 					}, 10000);
 				});
 			} else if (!registration.active) {
-				console.info('[NotificationService] Service worker found but not active, waiting...');
+				// Service worker found but not active, waiting...
 				await navigator.serviceWorker.ready;
-				console.info('[NotificationService] Service worker is now ready');
+				// Service worker is now ready
 			} else {
-				console.info('[NotificationService] Firebase messaging SW already active');
+				// Firebase messaging SW already active
 			}
 		} catch (error) {
 			console.error('[NotificationService] Error waiting for service worker:', error);
@@ -742,12 +735,7 @@ return false;
 			}
 		}
 
-		console.info('[NotificationService] Diagnostics:', {
-			hasToken: diagnostics.hasToken,
-			userId: diagnostics.userId,
-			isInitialized: diagnostics.isInitialized,
-			tokenPreview: diagnostics.token ? diagnostics.token.substring(0, 20) + '...' : 'none'
-		});
+		// Return diagnostics data
 
 		return diagnostics;
 	}

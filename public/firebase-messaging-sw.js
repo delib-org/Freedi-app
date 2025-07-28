@@ -9,7 +9,7 @@ importScripts(
 // Initialize the Firebase app in the service worker with the production configuration
 // First, determine the current domain
 const currentDomain = self.location.hostname;
-console.info('Current domain detected:', currentDomain);
+// Current domain detected: ' + currentDomain
 
 // Select Firebase config based on the domain
 let firebaseConfig;
@@ -64,14 +64,13 @@ let badgeCount = 0;
 
 // Add push event listener for debugging
 self.addEventListener('push', function(event) {
-	console.info('[firebase-messaging-sw.js] Push event received at:', new Date().toISOString());
-	console.info('[firebase-messaging-sw.js] Push data exists:', !!event.data);
+	// Push event received
 	
 	// Log the push event details
 	if (event.data) {
 		try {
 			const data = event.data.json();
-			console.info('[firebase-messaging-sw.js] Push JSON data:', data);
+			// Push JSON data received
 			
 			// Send message to main thread
 			self.clients.matchAll().then(clients => {
@@ -84,10 +83,10 @@ self.addEventListener('push', function(event) {
 				});
 			});
 		} catch (e) {
-			console.info('[firebase-messaging-sw.js] Push text data:', event.data.text());
+			// Push text data received
 		}
 	} else {
-		console.info('[firebase-messaging-sw.js] No push data in event');
+		// No push data in event
 	}
 	
 	// Let Firebase handle the push event as well
@@ -184,7 +183,7 @@ const playNotificationSound = async () => {
 // Handle background messages (when app is closed or in background)
 messaging.onBackgroundMessage(async function (payload) {
 	try {
-		console.info('[firebase-messaging-sw.js] Received background message:', payload);
+		// Received background message
 
 		// If there's no notification object, we can't show a notification
 		if (!payload.notification) {
@@ -302,7 +301,7 @@ messaging.onBackgroundMessage(async function (payload) {
 		// Try to play sound (though this typically won't work in service worker)
 		await playNotificationSound();
 
-		console.info('Notification displayed successfully');
+		// Notification displayed successfully
 	} catch (error) {
 		console.error('Error showing notification:', error);
 	}
@@ -310,7 +309,7 @@ messaging.onBackgroundMessage(async function (payload) {
 
 // Handle notification click
 self.addEventListener('notificationclick', function (event) {
-	console.info('Notification clicked:', event);
+	// Notification clicked
 
 	// Close the notification
 	event.notification.close();

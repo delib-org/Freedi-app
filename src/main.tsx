@@ -13,12 +13,8 @@ import PWAWrapper from './view/components/pwa/PWAWrapper';
 // Ensure Firebase service worker is registered
 import './utils/ensureFirebaseServiceWorker';
 
-// Log environment info
-console.info('[Main] App starting, mode:', import.meta.env.MODE, 'dev:', import.meta.env.DEV, 'prod:', import.meta.env.PROD);
-
 // Import debug utilities in development and testing
 if (import.meta.env.DEV || import.meta.env.MODE === 'testing') {
-	console.info('[Main] Loading debug utilities...');
 	import('./utils/debugNotifications');
 	import('./utils/notificationDebugger');
 	import('./utils/testNotification');
@@ -37,7 +33,6 @@ if (import.meta.env.DEV || import.meta.env.MODE === 'testing') {
 }
 
 export const AppVersion = '1.0.11'; // Update this version when making changes
-console.info(`[Main] App version: ${AppVersion}`);
 
 const root = createRoot(document.getElementById('root')!);
 

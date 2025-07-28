@@ -53,7 +53,7 @@ export const listenToStatementSubscription = (
 		return onSnapshot(statementsSubscribeRef, (statementSubscriptionDB) => {
 			try {
 				if (!statementSubscriptionDB.exists()) {
-					console.info('No subscription found');
+					// No subscription found
 
 					if (setHasSubscription) setHasSubscription(false);
 

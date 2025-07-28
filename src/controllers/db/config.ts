@@ -13,7 +13,7 @@ import firebaseConfig from './configKey';
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
-console.info('Firebase app initialized with config:', firebaseConfig.projectId);
+// Firebase app initialized
 
 const FireStore = getFirestore(app);
 const DB = FireStore;
@@ -22,7 +22,7 @@ const auth = getAuth();
 
 setPersistence(auth, browserLocalPersistence)
 	.then(() => {
-		console.info('Persistence set to local storage (cross-site safe).');
+		// Persistence set to local storage
 	})
 	.catch((error) => {
 		console.error('Error setting persistence:', error);

@@ -73,7 +73,7 @@ const PWAWrapper: React.FC<PWAWrapperProps> = ({ children }) => {
 	const [showNotificationPrompt, setShowNotificationPrompt] = useState(false);
 
 	useEffect(() => {
-		console.info('[PWAWrapper] Initializing, mode:', import.meta.env.MODE, 'isProd:', import.meta.env.PROD);
+		// Initialize PWA wrapper
 		
 		// Set up the service worker in both production and development
 		// Note: In development, service workers might behave differently
@@ -109,18 +109,18 @@ const PWAWrapper: React.FC<PWAWrapperProps> = ({ children }) => {
 				);
 				
 				if (!firebaseSW) {
-					console.info('[PWAWrapper] Registering Firebase Messaging SW...');
+					// Register Firebase Messaging SW
 					navigator.serviceWorker.register('/firebase-messaging-sw.js', {
 						scope: '/'
 					})
 					.then(registration => {
-						console.info('[PWAWrapper] Firebase Messaging SW registered with scope:', registration.scope);
+						// Firebase Messaging SW registered successfully
 						
 						// Wait for activation
 						if (registration.installing) {
 							registration.installing.addEventListener('statechange', function() {
 								if (this.state === 'activated') {
-									console.info('[PWAWrapper] Firebase Messaging SW activated');
+									// Firebase Messaging SW activated
 								}
 							});
 						}
@@ -129,7 +129,7 @@ const PWAWrapper: React.FC<PWAWrapperProps> = ({ children }) => {
 						console.error('[PWAWrapper] Firebase Messaging SW registration failed:', error);
 					});
 				} else {
-					console.info('[PWAWrapper] Firebase Messaging SW already registered:', firebaseSW.scope);
+					// Firebase Messaging SW already registered
 				}
 			});
 		}
@@ -143,12 +143,12 @@ const PWAWrapper: React.FC<PWAWrapperProps> = ({ children }) => {
 					console.info('App ready to work offline');
 				},
 				onRegisteredSW(swUrl, registration) {
-					console.info(`Service Worker registered: ${swUrl}`);
+					// Service Worker registered
 
 					// Check for updates frequently to ensure clients get the latest version
 					// This is the key requirement mentioned by the user - frequent update checks
 					const updateInterval = setInterval(() => {
-						console.info('Checking for Service Worker updates...');
+						// Check for Service Worker updates
 						registration?.update().catch(err => {
 							console.error('Error updating service worker:', err);
 						});
@@ -177,7 +177,7 @@ const PWAWrapper: React.FC<PWAWrapperProps> = ({ children }) => {
 
 			// Add event listeners for online/offline status
 			window.addEventListener('online', () => {
-				console.info('App is online. Checking for updates...');
+				// App is online, check for updates
 				updateFunc(false).catch(console.error);
 			});
 

@@ -48,5 +48,5 @@ if (typeof window !== 'undefined') {
     (window as { monitorNotifications?: typeof monitorNotifications }).monitorNotifications = monitorNotifications;
     
     // Auto-start monitoring
-    console.info('To start monitoring notifications, run: monitorNotifications()');
+    // Run monitorNotifications() to start monitoring
 }

@@ -11,12 +11,12 @@ let checkInterval: NodeJS.Timeout | null = null;
  */
 export async function ensureFirebaseServiceWorker() {
     if (!('serviceWorker' in navigator)) {
-        console.info('[FirebaseSW] Service workers not supported');
+        // Service workers not supported
         return;
     }
 
     if (isRegistering) {
-        console.info('[FirebaseSW] Already registering, skipping duplicate call');
+        // Already registering, skip duplicate call
         return;
     }
 
@@ -32,11 +32,11 @@ export async function ensureFirebaseServiceWorker() {
         );
 
         if (firebaseSW && firebaseSW.active) {
-            console.info('[FirebaseSW] Already registered and active');
+            // Firebase SW already registered and active
             return firebaseSW;
         }
 
-        console.info('[FirebaseSW] Not found, registering...');
+        // Firebase SW not found, registering
         
         // Register Firebase messaging service worker with explicit scope
         const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js', {
@@ -44,16 +44,16 @@ export async function ensureFirebaseServiceWorker() {
             updateViaCache: 'none' // Ensure fresh SW updates
         });
 
-        console.info('[FirebaseSW] Registration successful:', registration.scope);
+        // Firebase SW registration successful
 
         // Wait for the service worker to be ready
         if (registration.installing || registration.waiting) {
-            console.info('[FirebaseSW] Waiting for activation...');
+            // Wait for Firebase SW activation
             await new Promise((resolve) => {
                 const sw = registration.installing || registration.waiting;
                 sw!.addEventListener('statechange', function() {
                     if (this.state === 'activated') {
-                        console.info('[FirebaseSW] Activated');
+                        // Firebase SW activated
                         resolve(true);
                     }
                 });
@@ -61,7 +61,7 @@ export async function ensureFirebaseServiceWorker() {
                 setTimeout(() => resolve(false), 10000);
             });
         } else if (registration.active) {
-            console.info('[FirebaseSW] Already active');
+            // Firebase SW already active
         }
 
         // Initialize FCM with the registered service worker
@@ -73,9 +73,9 @@ export async function ensureFirebaseServiceWorker() {
             });
             
             if (token) {
-                console.info('[FirebaseSW] FCM token obtained successfully');
+                // FCM token obtained successfully
             } else {
-                console.warn('[FirebaseSW] Failed to get FCM token');
+                // Failed to get FCM token
             }
         } catch (error) {
             console.error('[FirebaseSW] Error getting token:', error);
@@ -103,7 +103,7 @@ export function startFirebaseServiceWorkerMonitor() {
         );
         
         if (!hasFirebaseSW) {
-            console.warn('[FirebaseSW] Missing from registrations, re-registering...');
+            // Firebase SW missing, re-registering
             ensureFirebaseServiceWorker();
         }
     }, 30000); // Check every 30 seconds
