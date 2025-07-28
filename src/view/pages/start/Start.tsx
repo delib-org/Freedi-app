@@ -6,7 +6,6 @@ import EnterNameModal from '../../components/enterNameModal/EnterNameModal';
 import styles from './Start.module.scss';
 import StartPageImage from '@/assets/images/StartPageImage.png';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
-import packageJson from '../../../../package.json';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { Navigate } from 'react-router';
 import { LocalStorageObjects } from '@/types/localStorage/LocalStorageObjects';
@@ -20,8 +19,6 @@ const Start = () => {
 	const { isAuthenticated, initialRoute } = useAuthentication();
 
 	const navigateTo = initialRoute ?? '/home';
-
-	
 
 	useEffect(() => {
 		if (isAuthenticated && initialRoute) {

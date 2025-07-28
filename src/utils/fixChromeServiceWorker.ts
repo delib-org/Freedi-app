@@ -76,7 +76,7 @@ export async function fixChromeServiceWorker() {
             try {
                 await deleteToken(messaging);
                 console.info('   - Old token deleted');
-            } catch (e) {
+            } catch {
                 console.info('   - No old token to delete');
             }
             
@@ -110,7 +110,7 @@ export async function fixChromeServiceWorker() {
         
         // Check if it's the correct one
         if (!firebaseSW.active?.scriptURL.includes('/firebase-messaging-sw.js')) {
-            console.warn('⚠️ Firebase SW URL looks incorrect:', firebaseSW.active?.scriptURL);
+            console.error('⚠️ Firebase SW URL looks incorrect:', firebaseSW.active?.scriptURL);
         }
     }
     

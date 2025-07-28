@@ -28,9 +28,9 @@ export async function debugServiceWorkerScopes() {
     const duplicateScopes = scopes.filter((scope, index) => scopes.indexOf(scope) !== index);
     
     if (duplicateScopes.length > 0) {
-        console.warn('%c⚠️ Scope conflict detected!', 'color: red; font-weight: bold');
-        console.warn('Duplicate scopes:', duplicateScopes);
-        console.warn('This can prevent service workers from working correctly.');
+        console.error('%c⚠️ Scope conflict detected!', 'color: red; font-weight: bold');
+        console.error('Duplicate scopes:', duplicateScopes);
+        console.error('This can prevent service workers from working correctly.');
     }
     
     // Check controller
@@ -39,18 +39,17 @@ export async function debugServiceWorkerScopes() {
         console.info('  Script URL:', navigator.serviceWorker.controller.scriptURL);
         console.info('  State:', navigator.serviceWorker.controller.state);
     } else {
-        console.warn('  No active controller');
+        console.error('  No active controller');
     }
     
     // Recommendation
     console.info('\n%cRecommendation:', 'color: green; font-weight: bold');
     const hasFirebaseSW = registrations.some(r => (r.active?.scriptURL || '').includes('firebase-messaging-sw.js'));
-    const hasPWASW = registrations.some(r => (r.active?.scriptURL || '').includes('sw.js'));
     
     if (!hasFirebaseSW) {
         console.error('❌ Firebase Messaging SW is missing! Run fixChromeServiceWorker()');
     } else if (scopes.filter(s => s.endsWith('/')).length > 1) {
-        console.warn('⚠️ Multiple SWs with root scope. Consider using different scopes.');
+        console.error('⚠️ Multiple SWs with root scope. Consider using different scopes.');
     } else {
         console.info('✅ Service workers are properly configured');
     }

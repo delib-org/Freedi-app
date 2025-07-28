@@ -1,7 +1,5 @@
 import { getMessaging, getToken, deleteToken } from 'firebase/messaging';
-import { app, DB } from '@/controllers/db/config';
-import { collection, query, where, getDocs, addDoc } from 'firebase/firestore';
-import { Collections } from 'delib-npm';
+import { app } from '@/controllers/db/config';
 import { vapidKey } from '@/controllers/db/configKey';
 
 export async function testChromeDelivery() {
@@ -62,7 +60,7 @@ export async function testChromeDelivery() {
             console.info('   - Is FCM endpoint:', isFCMEndpoint);
             
             if (!isFCMEndpoint) {
-                console.warn('   - WARNING: Not an FCM endpoint!');
+                console.error('   - WARNING: Not an FCM endpoint!');
             }
         } else {
             console.error('   - No push subscription found!');
@@ -88,7 +86,9 @@ export async function testChromeDelivery() {
     });
     
     // Monitor console for push events
+    // eslint-disable-next-line no-console
     const originalLog = console.log;
+    // eslint-disable-next-line no-console
     console.log = function(...args) {
         if (args.some(arg => String(arg).toLowerCase().includes('push') || String(arg).toLowerCase().includes('fcm'))) {
             originalLog.call(console, '%c[Intercepted Push Log]', 'color: green; font-weight: bold', ...args);

@@ -175,8 +175,7 @@ return;
 			this.setupForegroundListener();
 
 			// Get FCM token
-			// Get FCM token
-			const token = await this.getOrRefreshToken(userId);
+			await this.getOrRefreshToken(userId);
 			// Token result processed
 
 			// Set up automatic token refresh

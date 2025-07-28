@@ -9,7 +9,8 @@ export async function debugServiceWorkers() {
     
     if (!('serviceWorker' in navigator)) {
         console.error('   ❌ Service Workers not supported in this browser!');
-        return;
+        
+return;
     }
     
     // 2. List all registered service workers

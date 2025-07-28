@@ -18,7 +18,8 @@ export async function compareBrowserTokens() {
     const user = JSON.parse(localStorage.getItem('userAuth') || '{}');
     if (!user.uid) {
         console.error('No user logged in');
-        return;
+        
+return;
     }
     
     console.info('3. User ID:', user.uid);
