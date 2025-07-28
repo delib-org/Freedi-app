@@ -68,6 +68,7 @@ export async function refreshNotificationToken() {
     const user = auth.currentUser;
     if (!user) {
         console.error('No user logged in');
+        
         return;
     }
     

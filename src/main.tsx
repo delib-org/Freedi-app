@@ -10,6 +10,9 @@ import { router } from './routes/router';
 import { UserConfigProvider } from './context/UserConfigContext';
 import PWAWrapper from './view/components/pwa/PWAWrapper';
 
+// Ensure Firebase service worker is registered
+import './utils/ensureFirebaseServiceWorker';
+
 // Log environment info
 console.info('[Main] App starting, mode:', import.meta.env.MODE, 'dev:', import.meta.env.DEV, 'prod:', import.meta.env.PROD);
 
@@ -21,9 +24,11 @@ if (import.meta.env.DEV || import.meta.env.MODE === 'testing') {
 	import('./utils/testNotification');
 	import('./utils/notificationStatus');
 	import('./utils/debugGroupNotifications');
+	import('./utils/debugDeploymentNotifications');
+	import('./utils/debugServiceWorkers');
 }
 
-console.info('[Main] Initializing app... v.1.0.5');
+console.info('[Main] Initializing app... v.1.0.9');
 
 const root = createRoot(document.getElementById('root')!);
 

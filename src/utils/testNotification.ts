@@ -1,5 +1,4 @@
-import { getFunctions, httpsCallable } from 'firebase/functions';
-import { app } from '@/controllers/db/config';
+// Removed unused imports
 
 export async function testNotificationSend() {
     console.info('=== TEST NOTIFICATION SEND ===');
@@ -8,6 +7,7 @@ export async function testNotificationSend() {
         // First, check if we have notification permission
         if (Notification.permission !== 'granted') {
             console.error('Notification permission not granted');
+            
             return;
         }
         

@@ -1,4 +1,4 @@
-import { db } from '@/controllers/db/config';
+import { DB } from '@/controllers/db/config';
 import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
 import { Collections } from 'delib-npm';
 import { notificationService } from '@/services/notificationService';
@@ -33,6 +33,7 @@ export async function debugGroupNotifications(statementId?: string) {
     
     if (!currentUser) {
         console.error('No user logged in');
+        
         return;
     }
     
@@ -51,7 +52,7 @@ export async function debugGroupNotifications(statementId?: string) {
         // 1. Check stored FCM tokens for this user
         console.info('%c1. Checking FCM Tokens in pushNotifications collection:', 'color: green; font-weight: bold');
         const tokensQuery = query(
-            collection(db, 'pushNotifications'),
+            collection(DB, 'pushNotifications'),
             where('userId', '==', currentUser)
         );
         const tokensSnapshot = await getDocs(tokensQuery);
@@ -72,12 +73,12 @@ export async function debugGroupNotifications(statementId?: string) {
         console.info('%c2. Checking Statement Subscriptions:', 'color: green; font-weight: bold');
         const subscriptionsQuery = statementId 
             ? query(
-                collection(db, Collections.statementsSubscribe),
+                collection(DB, Collections.statementsSubscribe),
                 where('userId', '==', currentUser),
                 where('statementId', '==', statementId)
             )
             : query(
-                collection(db, Collections.statementsSubscribe),
+                collection(DB, Collections.statementsSubscribe),
                 where('userId', '==', currentUser)
             );
             
@@ -89,7 +90,7 @@ export async function debugGroupNotifications(statementId?: string) {
             // Get statement title
             let statementTitle = 'Unknown';
             try {
-                const stmtDoc = await getDoc(doc(db, Collections.statements, data.statementId));
+                const stmtDoc = await getDoc(doc(DB, Collections.statements, data.statementId));
                 if (stmtDoc.exists()) {
                     statementTitle = stmtDoc.data().statement || 'Untitled';
                 }
@@ -127,12 +128,12 @@ export async function debugGroupNotifications(statementId?: string) {
         if (currentToken) {
             const notifyQuery = statementId
                 ? query(
-                    collection(db, Collections.askedToBeNotified),
+                    collection(DB, Collections.askedToBeNotified),
                     where('token', '==', currentToken),
                     where('statementId', '==', statementId)
                 )
                 : query(
-                    collection(db, Collections.askedToBeNotified),
+                    collection(DB, Collections.askedToBeNotified),
                     where('token', '==', currentToken)
                 );
                 
@@ -222,21 +223,24 @@ export async function registerForStatementPushNotifications(statementId: string)
     
     if (!userId || !token) {
         console.error('Missing user ID or FCM token');
+        
         return false;
     }
     
     try {
         const result = await notificationService.registerForStatementNotifications(userId, token, statementId);
         console.info(`Registration result: ${result ? 'Success' : 'Failed'}`);
+        
         return result;
     } catch (error) {
         console.error('Error registering for notifications:', error);
+        
         return false;
     }
 }
 
 // Add to window for easy access
 if (typeof window !== 'undefined') {
-    (window as any).debugGroupNotifications = debugGroupNotifications;
-    (window as any).registerForStatementPushNotifications = registerForStatementPushNotifications;
+    (window as { debugGroupNotifications?: typeof debugGroupNotifications }).debugGroupNotifications = debugGroupNotifications;
+    (window as { registerForStatementPushNotifications?: typeof registerForStatementPushNotifications }).registerForStatementPushNotifications = registerForStatementPushNotifications;
 }

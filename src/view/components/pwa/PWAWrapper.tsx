@@ -77,38 +77,39 @@ const PWAWrapper: React.FC<PWAWrapperProps> = ({ children }) => {
 		
 		// Set up the service worker in both production and development
 		// Note: In development, service workers might behave differently
-		if (true) { // Changed from import.meta.env.PROD to always register
-			// Clear badge when app is opened or focused
-			clearBadgeCount();
+		// Always register service worker for notification support
+		
+		// Clear badge when app is opened or focused
+		clearBadgeCount();
 
-			// Set up visibility change listener to clear badge when app comes into focus
-			const handleVisibilityChange = () => {
-				if (document.visibilityState === 'visible') {
-					clearBadgeCount();
+		// Set up visibility change listener to clear badge when app comes into focus
+		const handleVisibilityChange = () => {
+			if (document.visibilityState === 'visible') {
+				clearBadgeCount();
 
-					// Also tell the service worker to clear notifications
-					if (navigator.serviceWorker.controller) {
-						navigator.serviceWorker.controller.postMessage({
-							type: 'CLEAR_NOTIFICATIONS'
-						});
-					}
-				}
-			};
-
-			document.addEventListener('visibilitychange', handleVisibilityChange);
-
-			// Explicitly register the Firebase Messaging Service Worker
-			if ('serviceWorker' in navigator) {
-				navigator.serviceWorker.register('/firebase-messaging-sw.js')
-					.then(registration => {
-						console.info('Firebase Messaging SW registered with scope:', registration.scope);
-					})
-					.catch(error => {
-						console.error('Firebase Messaging SW registration failed:', error);
+				// Also tell the service worker to clear notifications
+				if (navigator.serviceWorker.controller) {
+					navigator.serviceWorker.controller.postMessage({
+						type: 'CLEAR_NOTIFICATIONS'
 					});
+				}
 			}
+		};
 
-			const updateFunc = registerSW({
+		document.addEventListener('visibilitychange', handleVisibilityChange);
+
+		// Explicitly register the Firebase Messaging Service Worker
+		if ('serviceWorker' in navigator) {
+			navigator.serviceWorker.register('/firebase-messaging-sw.js')
+				.then(registration => {
+					console.info('Firebase Messaging SW registered with scope:', registration.scope);
+				})
+				.catch(error => {
+					console.error('Firebase Messaging SW registration failed:', error);
+				});
+		}
+
+		const updateFunc = registerSW({
 				onNeedRefresh() {
 					// Dispatch custom event to notify components an update is available
 					window.dispatchEvent(new CustomEvent('pwa:needRefresh'));
@@ -169,7 +170,6 @@ const PWAWrapper: React.FC<PWAWrapperProps> = ({ children }) => {
 						permissionStatus.onchange = handlePermissionChange;
 					})
 					.catch(console.error);
-			}
 		}
 	}, []);
 
