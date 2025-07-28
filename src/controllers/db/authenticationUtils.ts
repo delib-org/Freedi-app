@@ -4,6 +4,7 @@ import {
 	signInAnonymously,
 } from 'firebase/auth';
 import { auth } from './config';
+import { notificationService } from '@/services/notificationService';
 
 export function googleLogin() {
 	const provider = new GoogleAuthProvider();
@@ -18,6 +19,10 @@ export function googleLogin() {
 
 export const logOut = async () => {
 	try {
+		// Clean up notifications before signing out
+		await notificationService.cleanup();
+		
+		// Sign out from Firebase Auth
 		await auth.signOut();
 	} catch (error) {
 		console.error('Error during logout:', error);

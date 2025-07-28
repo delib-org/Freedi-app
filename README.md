@@ -277,6 +277,11 @@ This project is licensed under the terms specified in `LICENSE.md`.
 
 We welcome contributions from developers, researchers, and anyone interested in improving democratic deliberation. See [CONTRIBUTING.md](./CONTRIBUTING.md) for technical details.
 
+### Development Guidelines
+- **[Coding Style Guide](./CODING_STYLE_GUIDE.md)** - Comprehensive guide to coding standards and best practices
+- **[CLAUDE.md](./CLAUDE.md)** - Instructions for AI-assisted development
+- **[Branch Naming Convention](./Branch-naming-convention.md)** - Git workflow guidelines
+
 For research collaborations, please reach out through GitHub issues or discussions.
 
 ---
