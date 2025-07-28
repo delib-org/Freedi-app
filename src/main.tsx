@@ -26,9 +26,18 @@ if (import.meta.env.DEV || import.meta.env.MODE === 'testing') {
 	import('./utils/debugGroupNotifications');
 	import('./utils/debugDeploymentNotifications');
 	import('./utils/debugServiceWorkers');
+	import('./utils/debugChromeNotifications');
+	import('./utils/monitorNotifications');
+	import('./utils/debugFCMDelivery');
+	import('./utils/testChromeDelivery');
+	import('./utils/compareBrowserTokens');
+	import('./utils/fixChromeServiceWorker');
+	import('./utils/debugServiceWorkerScopes');
+	import('./utils/monitorPushEvents');
 }
 
-console.info('[Main] Initializing app... v.1.0.9');
+export const AppVersion = '1.0.11'; // Update this version when making changes
+console.info(`[Main] App version: ${AppVersion}`);
 
 const root = createRoot(document.getElementById('root')!);
 

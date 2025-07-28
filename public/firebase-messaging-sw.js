@@ -62,6 +62,38 @@ const notificationCache = new Map();
 // Badge counter in IndexedDB to persist across refreshes
 let badgeCount = 0;
 
+// Add push event listener for debugging
+self.addEventListener('push', function(event) {
+	console.info('[firebase-messaging-sw.js] Push event received at:', new Date().toISOString());
+	console.info('[firebase-messaging-sw.js] Push data exists:', !!event.data);
+	
+	// Log the push event details
+	if (event.data) {
+		try {
+			const data = event.data.json();
+			console.info('[firebase-messaging-sw.js] Push JSON data:', data);
+			
+			// Send message to main thread
+			self.clients.matchAll().then(clients => {
+				clients.forEach(client => {
+					client.postMessage({
+						type: 'PUSH_RECEIVED',
+						data: data,
+						timestamp: new Date().toISOString()
+					});
+				});
+			});
+		} catch (e) {
+			console.info('[firebase-messaging-sw.js] Push text data:', event.data.text());
+		}
+	} else {
+		console.info('[firebase-messaging-sw.js] No push data in event');
+	}
+	
+	// Let Firebase handle the push event as well
+	// The onBackgroundMessage handler will be called after this
+});
+
 // Initialize badge counter from IndexedDB
 const initBadgeCount = async () => {
 	try {
@@ -372,6 +404,17 @@ self.addEventListener('notificationclick', function (event) {
 // Listen for messages from the main app
 self.addEventListener('message', (event) => {
 	console.info('Message received in SW:', event.data);
+
+	// Handle push support check
+	if (event.data && event.data.type === 'CHECK_PUSH_SUPPORT') {
+		event.ports[0]?.postMessage({
+			type: 'PUSH_SUPPORT_RESPONSE',
+			supported: true,
+			messaging: !!messaging,
+			pushManager: 'PushManager' in self
+		});
+		return;
+	}
 
 	if (event.data && event.data.type === 'CLEAR_NOTIFICATIONS') {
 		// Clear all displayed notifications

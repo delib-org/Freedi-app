@@ -12,6 +12,7 @@ import { Navigate } from 'react-router';
 import { LocalStorageObjects } from '@/types/localStorage/LocalStorageObjects';
 import LogoStart from '../../../assets/icons/LogoStart.svg?react';
 import ChangeLanguage from '@/view/components/changeLanguage/ChangeLanguage';
+import { AppVersion } from '@/main';
 
 const Start = () => {
 	const [shouldShowNameModal, setShouldShowNameModal] = useState(false);
@@ -20,7 +21,7 @@ const Start = () => {
 
 	const navigateTo = initialRoute ?? '/home';
 
-	const version = packageJson.version;
+	
 
 	useEffect(() => {
 		if (isAuthenticated && initialRoute) {
@@ -38,7 +39,7 @@ const Start = () => {
 					{t('Fostering Collaborations')}
 				</span>
 			</div>
-			<div className={styles.version}>v: {version}</div>
+			<div className={styles.version}>v: {AppVersion}</div>
 			<div className={styles.interactionComponents}>
 				<ChangeLanguage />
 

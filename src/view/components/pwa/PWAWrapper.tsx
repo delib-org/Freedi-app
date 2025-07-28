@@ -100,13 +100,38 @@ const PWAWrapper: React.FC<PWAWrapperProps> = ({ children }) => {
 
 		// Explicitly register the Firebase Messaging Service Worker
 		if ('serviceWorker' in navigator) {
-			navigator.serviceWorker.register('/firebase-messaging-sw.js')
-				.then(registration => {
-					console.info('Firebase Messaging SW registered with scope:', registration.scope);
-				})
-				.catch(error => {
-					console.error('Firebase Messaging SW registration failed:', error);
-				});
+			// First check if it's already registered
+			navigator.serviceWorker.getRegistrations().then(registrations => {
+				const firebaseSW = registrations.find(r => 
+					r.active?.scriptURL.includes('firebase-messaging-sw.js') ||
+					r.installing?.scriptURL.includes('firebase-messaging-sw.js') ||
+					r.waiting?.scriptURL.includes('firebase-messaging-sw.js')
+				);
+				
+				if (!firebaseSW) {
+					console.info('[PWAWrapper] Registering Firebase Messaging SW...');
+					navigator.serviceWorker.register('/firebase-messaging-sw.js', {
+						scope: '/'
+					})
+					.then(registration => {
+						console.info('[PWAWrapper] Firebase Messaging SW registered with scope:', registration.scope);
+						
+						// Wait for activation
+						if (registration.installing) {
+							registration.installing.addEventListener('statechange', function() {
+								if (this.state === 'activated') {
+									console.info('[PWAWrapper] Firebase Messaging SW activated');
+								}
+							});
+						}
+					})
+					.catch(error => {
+						console.error('[PWAWrapper] Firebase Messaging SW registration failed:', error);
+					});
+				} else {
+					console.info('[PWAWrapper] Firebase Messaging SW already registered:', firebaseSW.scope);
+				}
+			});
 		}
 
 		const updateFunc = registerSW({
