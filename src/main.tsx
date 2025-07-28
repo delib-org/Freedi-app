@@ -10,6 +10,7 @@ import { router } from "./routes/router";
 import { UserConfigProvider } from "./context/UserConfigContext";
 import PWAWrapper from "./view/components/pwa/PWAWrapper";
 import { initSentry } from "./services/monitoring/sentry";
+import RootErrorBoundary from "./components/ErrorBoundary/RootErrorBoundary";
 
 // Initialize Sentry before anything else
 initSentry();
@@ -43,12 +44,14 @@ const root = createRoot(document.getElementById("root")!);
 
 root.render(
   <React.StrictMode>
-    <Provider store={store}>
-      <UserConfigProvider>
-        <PWAWrapper>
-          <RouterProvider router={router} />
-        </PWAWrapper>
-      </UserConfigProvider>
-    </Provider>
+    <RootErrorBoundary>
+      <Provider store={store}>
+        <UserConfigProvider>
+          <PWAWrapper>
+            <RouterProvider router={router} />
+          </PWAWrapper>
+        </UserConfigProvider>
+      </Provider>
+    </RootErrorBoundary>
   </React.StrictMode>,
 );
