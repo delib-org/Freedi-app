@@ -1,30 +1,16 @@
-// React
-import { useCallback, useEffect, useState, useRef } from 'react';
-
-// Types
-import { StatementType, Statement, Screen } from 'delib-npm';
-
-// Hooks
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
-import useClickOutside from '@/controllers/hooks/useClickOutside';
+import { FC } from 'react';
+import { Statement, Screen } from 'delib-npm';
 
 // Components
 import NavigationButtons from '../navigationButtons/NavigationButtons';
 import HomeButton from '../../../header/HomeButton';
 import Back from '../../../header/Back';
-import MenuOption from '@/view/components/menu/MenuOption';
 import NotificationSettingsButton from '@/view/components/notifications/NotificationSettingsButton';
 import ApproveMembers from '@/view/components/approveMemebers/WaitingList';
-
-// Icons
-import TriangleIcon from '@/assets/icons/triangle.svg?react';
-import QuestionIcon from '@/assets/icons/navQuestionsIcon.svg?react';
-import GroupIcon from '@/assets/icons/group.svg?react';
-import View from '@/assets/icons/view.svg?react';
-import MapIcon from '@/assets/icons/navMainPageIcon.svg?react';
+import ViewsDropdown from '../viewsDropdown/ViewsDropdown';
 
 // Styles
-import styles from '../StatementTopNav.module.scss';
+import styles from './NavButtons.module.scss';
 
 interface NavButtonsProps {
 	parentStatement?: Statement;
@@ -35,142 +21,63 @@ interface NavButtonsProps {
 	statement?: Statement;
 }
 
-function NavButtons({
+const NavButtons: FC<NavButtonsProps> = ({
 	screen,
 	handleNavigation,
 	headerStyle,
 	allowNavigation,
 	statement,
 	parentStatement,
-}: Readonly<NavButtonsProps>) {
-	const { t } = useUserConfig();
-	const [openViews, setOpenViews] = useState(true);
-
-	useEffect(() => {
-		setOpenViews(false);
-	}, [screen]);
-
-	useEffect(() => {
-		if (screen === 'view') {
-			setOpenViews(true);
-		}
-	}, [screen]);
-
-	const handleClickOutside = useCallback(() => {
-		if (openViews) setOpenViews(false);
-	}, [openViews, setOpenViews]);
-
-	const btnRef = useClickOutside(handleClickOutside);
-
-	function handleAgreementMap() {
-		handleNavigation(Screen.agreementMap);
-	}
-
-	function handleMindMap() {
-		handleNavigation(Screen.mindMap);
-	}
-
-	function handleView() {
-		if (screen === Screen.settings || screen === Screen.chat || screen === Screen.agreementMap || screen === Screen.mindMap) {
-			handleNavigation('view');
-		} else {
-			setOpenViews(!openViews);
-		}
-	}
-
-	function handlePolarizationIndex() {
-		handleNavigation(Screen.polarizationIndex);
-	}
+}) => {
+	const handleNavigateToScreen = (targetScreen: Screen) => {
+		handleNavigation(targetScreen);
+	};
 
 	return (
-		<div className={styles.navButtonsContainer}>
-			{/* Left side items */}
-			{allowNavigation && (
-				<NavigationButtons
-					statement={parentStatement || statement}
-					handleNavigation={handleNavigation}
-					headerStyle={headerStyle}
-				/>
-			)}
-			{allowNavigation && (
-				<button className={styles.home}>
-					<HomeButton headerColor={headerStyle} />
-				</button>
-			)}
-			
-			{/* Center items */}
-			<ApproveMembers />
-			
-			{/* Spacer to push right side items */}
-			<div className={styles.spacer} />
-			
-			{/* Right side items */}
-			<div
-				className={`${styles.views} ${styles.button}`}
-				onClick={handleView}
-				role='button'
-			>
-				<NavIcon
-					statement={statement}
-					screen={screen}
-					headerStyle={headerStyle}
-				/>
-				{openViews && (
-					<div ref={(node) => {
-						if (btnRef) btnRef.current = node;
-					}} className={styles.views__dropdown}>
-						<MenuOption
-							label={t('Agreement Map')}
-							icon={<TriangleIcon style={{ color: '#4E88C7' }} />}
-							onOptionClick={handleAgreementMap}
+		<div className={styles.container}>
+			{/* Left Section - Navigation & Home */}
+			<div className={styles.leftSection}>
+				{allowNavigation && (
+					<>
+						<NavigationButtons
+							statement={parentStatement || statement}
+							handleNavigation={handleNavigation}
+							headerStyle={headerStyle}
 						/>
-						<MenuOption
-							label={t('Collaboration Index')}
-							icon={<TriangleIcon style={{ color: '#4E88C7' }} />}
-							onOptionClick={handlePolarizationIndex}
+						<HomeButton headerColor={headerStyle} />
+					</>
+				)}
+			</div>
+
+			{/* Center Section - Approve Members */}
+			<div className={styles.centerSection}>
+				<ApproveMembers />
+			</div>
+
+			{/* Right Section - Views, Notifications, Back */}
+			<div className={styles.rightSection}>
+				{statement && (
+					<>
+						<ViewsDropdown
+							statement={statement}
+							screen={screen}
+							headerStyle={headerStyle}
+							onNavigate={handleNavigateToScreen}
 						/>
-						<MenuOption
-							label={t('Mind Map')}
-							icon={<MapIcon style={{ color: '#4E88C7' }} />}
-							onOptionClick={handleMindMap}
+						<NotificationSettingsButton
+							statementId={statement.statementId}
+							headerStyle={headerStyle}
 						/>
+					</>
+				)}
+				{allowNavigation && (
+					<div className={styles.back}>
+						<Back statement={statement} headerColor={headerStyle} />
 					</div>
 				)}
 			</div>
-			{statement && (
-				<NotificationSettingsButton 
-					statementId={statement.statementId} 
-					headerStyle={headerStyle} 
-				/>
-			)}
-			{allowNavigation && (
-				<Back statement={statement} headerColor={headerStyle} />
-			)}
 		</div>
 	);
-}
+};
 
 export default NavButtons;
-
-function NavIcon({
-	statement,
-	screen,
-	headerStyle,
-}: {
-	readonly statement: Statement;
-	readonly screen: string | undefined;
-	readonly headerStyle: {
-		readonly color: string;
-		readonly backgroundColor: string;
-	};
-}) {
-	if (screen === 'view' || screen === undefined) {
-		return <View color={headerStyle.color} />;
-	} else if (statement.statementType === StatementType.question) {
-		return <QuestionIcon color={headerStyle.color} />;
-	} else if (statement.statementType === StatementType.group) {
-		return <GroupIcon color={headerStyle.color} />;
-	} else {
-		return <View color={headerStyle.color} />;
-	}
-}

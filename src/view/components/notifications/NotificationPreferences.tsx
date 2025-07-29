@@ -47,13 +47,15 @@ const NotificationPreferences: React.FC<NotificationPreferencesProps> = ({ state
 
 				if (!auth.currentUser) {
 					setIsLoading(false);
-					return;
+					
+return;
 				}
 
 				const subscriptionId = getStatementSubscriptionId(statementId, auth.currentUser.uid);
 				if (!subscriptionId) {
 					setIsLoading(false);
-					return;
+					
+return;
 				}
 
 				const docRef = doc(db, Collections.statementsSubscribe, subscriptionId);
@@ -85,7 +87,8 @@ const NotificationPreferences: React.FC<NotificationPreferencesProps> = ({ state
 
 			if (!auth.currentUser) {
 				setIsSaving(false);
-				return;
+				
+return;
 			}
 
 			// Update local state

@@ -1,0 +1,84 @@
+$svgHeight: 1.7rem;
+$svgWidth: 1.7rem;
+
+.container {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  padding: 0 1rem;
+  gap: 1rem;
+}
+
+.leftSection {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  
+  // Navigation buttons should be grouped together
+  > * {
+    flex-shrink: 0;
+  }
+}
+
+.centerSection {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  // Don't let center content push other sections too much
+  min-width: 0;
+}
+
+.rightSection {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  
+  // All items should maintain their size
+  > * {
+    flex-shrink: 0;
+  }
+
+  .back{
+    transform: rotate(180deg);
+  }
+}
+
+// Ensure consistent button styling across all nav items
+button {
+  background-color: transparent;
+  border: none;
+  padding: 0.6rem 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  svg {
+    height: $svgHeight;
+    width: $svgWidth;
+  }
+  
+  &:hover {
+    opacity: 0.8;
+  }
+}
+
+// Mobile adjustments
+@media (max-width: 768px) {
+  .container {
+    padding: 0 0.5rem;
+    gap: 0.5rem;
+  }
+  
+  .leftSection,
+  .rightSection {
+    gap: 0.25rem;
+  }
+  
+  button {
+    padding: 0.4rem 0.6rem;
+  }
+}

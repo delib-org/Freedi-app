@@ -705,7 +705,8 @@ return false;
 	public async syncTokenWithSubscriptions(userId: string): Promise<void> {
 		if (!this.token) {
 			console.error('No token available to sync');
-			return;
+			
+return;
 		}
 
 		try {
@@ -721,7 +722,8 @@ return false;
 			// Add current token to all subscriptions
 			const updatePromises = subscriptionsSnapshot.docs.map(doc => {
 				const subscription = doc.data();
-				return addTokenToSubscription(subscription.statementId, userId, this.token!);
+				
+return addTokenToSubscription(subscription.statementId, userId, this.token!);
 			});
 			
 			await Promise.all(updatePromises);
@@ -747,7 +749,8 @@ return false;
 			// Remove token from all subscriptions
 			const removePromises = subscriptionsSnapshot.docs.map(doc => {
 				const subscription = doc.data();
-				return removeTokenFromSubscription(subscription.statementId, userId, token);
+				
+return removeTokenFromSubscription(subscription.statementId, userId, token);
 			});
 			
 			await Promise.all(removePromises);
