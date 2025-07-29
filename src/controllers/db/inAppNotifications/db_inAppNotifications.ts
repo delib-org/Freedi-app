@@ -47,8 +47,17 @@ export function listenToInAppNotifications(): Unsubscribe {
 
 export async function clearInAppNotifications(statementId: string) {
 	try {
+		if (!statementId) {
+			console.error("clearInAppNotifications: statementId is required");
+			return;
+		}
+		
 		const user = store.getState().creator.creator;
-		if (!user) throw new Error('User not found');
+		if (!user) {
+			console.error("clearInAppNotifications: User not found");
+			return;
+		}
+		
 		const inAppNotificationsRef = collection(DB, Collections.inAppNotifications);
 		const q = query(inAppNotificationsRef, where("parentId", "==", statementId), where("userId", "==", user.uid));
 
@@ -57,6 +66,6 @@ export async function clearInAppNotifications(statementId: string) {
 			deleteDoc(ntf.ref);
 		});
 	} catch (error) {
-		console.error("In markInAppNotificationAsRead", error.message);
+		console.error("In clearInAppNotifications", error.message);
 	}
 }
