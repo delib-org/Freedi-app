@@ -43,7 +43,7 @@ export async function updateInAppNotifications(
 		const statement = parse(StatementSchema, newStatement);
 
 		// Fetch all required data in parallel
-		const [subscribersDB, parentStatementDB, askedToBeNotifiedDB] =
+		const [subscribersDB, parentStatementDB, pushSubscribersDB] =
 			await fetchNotificationData(statement.parentId);
 
 		const subscribersInApp = subscribersDB.docs.map(
@@ -100,20 +100,41 @@ export async function updateInAppNotifications(
 			return true;
 		});
 
-		//get fcm subscribers
-		const fcmSubscribers: FcmSubscriber[] = askedToBeNotifiedDB.docs.map(
-			(ntfDB: QueryDocumentSnapshot) => {
-				const data = ntfDB.data();
-
-				return {
-					userId: data.userId,
-					token: data.token,
-					documentId: ntfDB.id,
-				};
-			}
+		// Get push notification subscribers
+		const pushSubscribers = pushSubscribersDB.docs.map(
+			(doc: QueryDocumentSnapshot) => doc.data() as StatementSubscription
 		);
+		
+		// Also get push subscribers from top-level if needed
+		let allPushSubscribers = [...pushSubscribers];
+		if (statement.parentId !== 'top' && topLevelSubscribers.length > 0) {
+			const topLevelPushSubscribers = topLevelSubscribers.filter(
+				sub => sub.getPushNotification === true
+			);
+			// Combine and dedupe by userId
+			const seenPushUserIds = new Set(pushSubscribers.map(s => s.userId));
+			topLevelPushSubscribers.forEach(sub => {
+				if (!seenPushUserIds.has(sub.userId)) {
+					allPushSubscribers.push(sub);
+				}
+			});
+		}
 
-		logger.info(`Found ${fcmSubscribers.length} FCM subscribers for statement ${statement.parentId}`);
+		// Convert to FCM subscriber format
+		const fcmSubscribers: FcmSubscriber[] = [];
+		allPushSubscribers.forEach(subscriber => {
+			if (subscriber.tokens && subscriber.tokens.length > 0) {
+				subscriber.tokens.forEach(token => {
+					fcmSubscribers.push({
+						userId: subscriber.userId,
+						token: token,
+						documentId: `${subscriber.userId}_${statement.parentId}`
+					});
+				});
+			}
+		});
+
+		logger.info(`Found ${fcmSubscribers.length} FCM tokens from ${allPushSubscribers.length} push subscribers for statement ${statement.parentId}`);
 
 		//update last message in the parent statement
 		await db.doc(`${Collections.statements}/${statement.parentId}`).update({
@@ -147,16 +168,20 @@ export async function updateInAppNotifications(
  * Fetches all data needed for notification processing in parallel.
  */
 async function fetchNotificationData(parentId: string) {
-	// Query for in-app and FCM notification subscribers
+	// Query for in-app notification subscribers
 	const parentStatementSubscribersCB = db
 		.collection(Collections.statementsSubscribe)
 		.where('statementId', '==', parentId)
 		.where('getInAppNotification', '==', true)
 		.get();
-	const askedToBeNotifiedCB = db
-		.collection(Collections.askedToBeNotified)
+	
+	// Query for push notification subscribers
+	const pushStatementSubscribersCB = db
+		.collection(Collections.statementsSubscribe)
 		.where('statementId', '==', parentId)
+		.where('getPushNotification', '==', true)
 		.get();
+		
 	const parentStatementCB = db
 		.doc(`${Collections.statements}/${parentId}`)
 		.get();
@@ -164,7 +189,7 @@ async function fetchNotificationData(parentId: string) {
 	return await Promise.all([
 		parentStatementSubscribersCB,
 		parentStatementCB,
-		askedToBeNotifiedCB,
+		pushStatementSubscribersCB,
 	]);
 }
 

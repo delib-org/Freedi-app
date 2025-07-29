@@ -3,7 +3,9 @@ import './notificationSubscriptionButton.scss';
 import { notificationService } from '@/services/notificationService';
 import { getAuth } from 'firebase/auth';
 import { doc, getDoc, getFirestore, deleteDoc } from 'firebase/firestore';
-import { Collections } from 'delib-npm';
+import { Collections, StatementSubscription } from 'delib-npm';
+import { getStatementSubscriptionId } from '@/controllers/general/helpers';
+import { updateNotificationPreferences } from '@/controllers/db/subscriptions/setSubscriptions';
 import BellIcon from '@/assets/icons/bellIcon.svg?react';
 import BellSlashIcon from '@/assets/icons/bellSlashIcon.svg?react';
 
@@ -43,18 +45,15 @@ const NotificationSubscriptionButton: React.FC<NotificationSubscriptionButtonPro
 					return;
 				}
 
-				// Initialize notification service to get token
-				const permissionState = notificationService.safeGetPermission();
-				if (permissionState === 'granted') {
-					await notificationService.initialize(auth.currentUser.uid);
-					const token = notificationService.getToken();
+				// Check subscription preferences
+				const subscriptionId = getStatementSubscriptionId(statementId, auth.currentUser.uid);
+				if (subscriptionId) {
+					const docRef = doc(db, Collections.statementsSubscribe, subscriptionId);
+					const docSnap = await getDoc(docRef);
 
-					if (token) {
-						// Check if subscription exists in the database
-						const docRef = doc(db, Collections.askedToBeNotified, `${token}_${statementId}`);
-						const docSnap = await getDoc(docRef);
-
-						setIsSubscribed(docSnap.exists());
+					if (docSnap.exists()) {
+						const data = docSnap.data() as StatementSubscription;
+						setIsSubscribed(data.getPushNotification ?? false);
 					}
 				}
 
@@ -112,12 +111,19 @@ const NotificationSubscriptionButton: React.FC<NotificationSubscriptionButtonPro
 			}
 
 			if (isSubscribed) {
-				// Unsubscribe
-				const docRef = doc(db, Collections.askedToBeNotified, `${token}_${statementId}`);
-				await deleteDoc(docRef);
+				// Unsubscribe - update preference
+				await updateNotificationPreferences(statementId, auth.currentUser.uid, {
+					getPushNotification: false
+				});
+				// Also unregister from notification service
+				await notificationService.unregisterFromStatementNotifications(statementId);
 				setIsSubscribed(false);
 			} else {
-				// Subscribe
+				// Subscribe - update preference and register token
+				await updateNotificationPreferences(statementId, auth.currentUser.uid, {
+					getPushNotification: true
+				});
+				// Register for notifications
 				const success = await notificationService.registerForStatementNotifications(
 					auth.currentUser.uid,
 					token,

@@ -1,8 +1,9 @@
 import { getMessaging, getToken, onMessage, deleteToken, Messaging, MessagePayload } from "firebase/messaging";
 import { app, DB } from "@/controllers/db/config";
 import { vapidKey } from "@/controllers/db/configKey";
-import { setDoc, doc, getFirestore, deleteDoc, getDoc, Timestamp } from "firebase/firestore";
+import { setDoc, doc, getFirestore, deleteDoc, getDoc, Timestamp, getDocs, query, where, collection } from "firebase/firestore";
 import { Collections } from "delib-npm";
+import { addTokenToSubscription, removeTokenFromSubscription } from "@/controllers/db/subscriptions/setSubscriptions";
 
 // Helper function to check if service workers are supported
 const isServiceWorkerSupported = () => 'serviceWorker' in navigator;
@@ -177,6 +178,11 @@ return;
 			// Get FCM token
 			await this.getOrRefreshToken(userId);
 			// Token result processed
+
+			// Sync token with all user's subscriptions
+			if (this.token) {
+				await this.syncTokenWithSubscriptions(userId);
+			}
 
 			// Set up automatic token refresh
 			this.setupTokenRefresh(userId);
@@ -409,7 +415,7 @@ return null;
 				}
 			}
 
-			// Store in askedToBeNotified collection
+			// Store in askedToBeNotified collection (for backward compatibility)
 			const notificationRef = doc(DB, Collections.askedToBeNotified, `${token}_${statementId}`);
 			await setDoc(notificationRef, {
 				token,
@@ -418,6 +424,9 @@ return null;
 				lastUpdate: new Date(),
 				subscribed: true
 			}, { merge: true });
+
+			// Also add token to the statement subscription
+			await addTokenToSubscription(statementId, userId, token);
 
 			// Registered for notifications
 
@@ -445,6 +454,11 @@ return false;
 			const notificationRef = doc(DB, Collections.askedToBeNotified, `${this.token}_${statementId}`);
 			await deleteDoc(notificationRef);
 
+			// Also remove token from statement subscription
+			if (this.userId) {
+				await removeTokenFromSubscription(statementId, this.userId, this.token);
+			}
+
 			// Unregistered from notifications
 			
 return true;
@@ -467,9 +481,12 @@ return false;
 			}
 
 			// Delete token from server
-			if (this.token) {
+			if (this.token && this.userId) {
 				// Remove from pushNotifications collection
 				await deleteDoc(doc(db, 'pushNotifications', this.token));
+
+				// Remove token from all user's subscriptions
+				await this.removeTokenFromAllSubscriptions(this.userId, this.token);
 
 				// Remove all askedToBeNotified entries for this token
 				// This would need a query to find all documents with this token
@@ -678,6 +695,65 @@ return false;
 			}
 		} catch (error) {
 			console.error('[NotificationService] Error waiting for service worker:', error);
+		}
+	}
+
+	/**
+	 * Sync current token with all user's statement subscriptions
+	 * This ensures all subscriptions have the current device token
+	 */
+	public async syncTokenWithSubscriptions(userId: string): Promise<void> {
+		if (!this.token) {
+			console.error('No token available to sync');
+			return;
+		}
+
+		try {
+			// Get all user's subscriptions
+			const subscriptionsQuery = query(
+				collection(db, Collections.statementsSubscribe),
+				where('userId', '==', userId),
+				where('getPushNotification', '==', true)
+			);
+			
+			const subscriptionsSnapshot = await getDocs(subscriptionsQuery);
+			
+			// Add current token to all subscriptions
+			const updatePromises = subscriptionsSnapshot.docs.map(doc => {
+				const subscription = doc.data();
+				return addTokenToSubscription(subscription.statementId, userId, this.token!);
+			});
+			
+			await Promise.all(updatePromises);
+			console.info(`Synced token with ${updatePromises.length} subscriptions`);
+		} catch (error) {
+			console.error('Error syncing token with subscriptions:', error);
+		}
+	}
+
+	/**
+	 * Remove token from all user's subscriptions (used on logout or token refresh)
+	 */
+	public async removeTokenFromAllSubscriptions(userId: string, token: string): Promise<void> {
+		try {
+			// Get all user's subscriptions
+			const subscriptionsQuery = query(
+				collection(db, Collections.statementsSubscribe),
+				where('userId', '==', userId)
+			);
+			
+			const subscriptionsSnapshot = await getDocs(subscriptionsQuery);
+			
+			// Remove token from all subscriptions
+			const removePromises = subscriptionsSnapshot.docs.map(doc => {
+				const subscription = doc.data();
+				return removeTokenFromSubscription(subscription.statementId, userId, token);
+			});
+			
+			await Promise.all(removePromises);
+			console.info(`Removed token from ${removePromises.length} subscriptions`);
+		} catch (error) {
+			console.error('Error removing token from subscriptions:', error);
 		}
 	}
 

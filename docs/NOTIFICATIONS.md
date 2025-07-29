@@ -4,6 +4,43 @@
 
 The Freedi app uses Firebase Cloud Messaging (FCM) for push notifications. This document covers the notification system architecture, key components, and debugging utilities.
 
+## Centralized Notification Management
+
+As of the latest update, the notification system supports centralized management of notifications across all user devices. This allows users to control their notification preferences from a single point, affecting all their registered devices.
+
+### Key Features:
+
+1. **Multi-Device Token Storage**
+   - All device FCM tokens are stored in the `tokens` array within `statementsSubscribe` collection
+   - Tokens are automatically synced when users log in from new devices
+   - Old/invalid tokens are automatically cleaned up
+
+2. **Granular Notification Control**
+   - `getInAppNotification`: Controls in-app notifications
+   - `getPushNotification`: Controls push notifications across all devices
+   - `getEmailNotification`: Controls email notifications
+
+3. **Token Management Functions**
+   ```typescript
+   // Add token to subscription
+   addTokenToSubscription(statementId, userId, token)
+   
+   // Remove token from subscription
+   removeTokenFromSubscription(statementId, userId, token)
+   
+   // Update notification preferences
+   updateNotificationPreferences(statementId, userId, {
+     getPushNotification: true,
+     getInAppNotification: true,
+     getEmailNotification: false
+   })
+   ```
+
+4. **Automatic Token Synchronization**
+   - On login: Current device token is added to all user's subscriptions
+   - On logout: Token is removed from all subscriptions
+   - On token refresh: Old token replaced with new token
+
 ## Architecture
 
 ### Core Components
@@ -140,11 +177,21 @@ React component that manages service worker registration and PWA features.
 
 **`updateInAppNotifications`** (`/functions/src/fn_notifications.ts`)
 - Triggered when a new statement is created
-- Sends push notifications to all subscribed users
-- Creates in-app notifications for subscribed users
+- Sends push notifications to all subscribed users who have `getPushNotification: true`
+- Creates in-app notifications for subscribed users who have `getInAppNotification: true`
 - Includes support for nested reply notifications (notifies top-level subscribers)
 
+**Updated Notification Flow:**
+1. Fetches subscribers from `statementsSubscribe` collection
+2. Filters subscribers based on notification preferences:
+   - In-app notifications: `getInAppNotification === true`
+   - Push notifications: `getPushNotification === true && tokens.length > 0`
+3. Extracts all tokens from subscribers' `tokens` arrays
+4. Sends notifications to all registered devices
+
 **Key Features:**
+- Uses tokens from `statementsSubscribe` collection instead of `askedToBeNotified`
+- Respects user's notification preferences per statement
 - Token validation with dry-run testing
 - Automatic removal of invalid tokens
 - Batch sending with 500 message limit
@@ -425,6 +472,26 @@ function MyComponent() {
 }
 ```
 
+### NotificationPreferences Component (`/src/view/components/notifications/NotificationPreferences.tsx`)
+Comprehensive UI component for managing all notification settings for a statement.
+
+**Features:**
+- Toggle in-app notifications
+- Toggle push notifications (across all devices)
+- Toggle email notifications
+- Real-time preference updates
+- Loading and saving states
+
+**Usage:**
+```typescript
+import NotificationPreferences from '@/view/components/notifications/NotificationPreferences';
+
+<NotificationPreferences statementId={statementId} />
+```
+
+### NotificationSubscriptionButton Component
+Quick toggle button for push notifications with permission handling.
+
 ### NotificationDiagnostics Component
 UI component for displaying notification system status and debugging.
 
@@ -436,17 +503,22 @@ UI component for displaying notification system status and debugging.
    
 2. FCM token generated
    └─> NotificationService.getOrRefreshToken()
-       └─> Token stored in Firestore (pushNotifications collection)
+       ├─> Token stored in Firestore (pushNotifications collection)
+       └─> Token synced to all user's subscriptions (tokens array)
    
-3. User subscribes to statement
-   └─> NotificationService.registerForStatementNotifications()
-       └─> Subscription stored (askedToBeNotified collection)
+3. User subscribes to statement / Updates preferences
+   └─> updateNotificationPreferences() or NotificationService.registerForStatementNotifications()
+       ├─> Preferences updated in statementsSubscribe collection
+       ├─> Token added to subscription's tokens array
+       └─> Legacy: Also stored in askedToBeNotified collection
    
 4. New statement created
    └─> Firebase Function triggered (updateInAppNotifications)
-       ├─> Fetch subscribers
-       ├─> Create in-app notifications
-       └─> Send FCM messages
+       ├─> Fetch subscribers from statementsSubscribe
+       ├─> Filter by notification preferences
+       │   ├─> getInAppNotification: true → Create in-app notifications
+       │   └─> getPushNotification: true → Extract tokens for push
+       └─> Send FCM messages to all tokens
    
 5. Push notification received
    ├─> App in foreground: onMessage handler
@@ -456,6 +528,11 @@ UI component for displaying notification system status and debugging.
 6. User clicks notification
    └─> Service Worker opens/focuses app
        └─> Deep links to relevant content
+
+7. Multi-device management
+   ├─> Login on new device: Token added to all subscriptions
+   ├─> Logout: Token removed from all subscriptions
+   └─> Preference change: Affects all devices immediately
 ```
 
 ## Performance Considerations
@@ -482,6 +559,22 @@ UI component for displaying notification system status and debugging.
 - Service workers have restrictions
 - Use `safeGetPermission()` for compatibility
 - Badge API may not be supported
+
+## Migration Notes
+
+### Moving from askedToBeNotified to statementsSubscribe
+
+The notification system has been updated to use the `statementsSubscribe` collection as the primary source for notification preferences and tokens. The `askedToBeNotified` collection is maintained for backward compatibility but should be considered deprecated.
+
+**Key Changes:**
+1. FCM tokens are now stored in the `tokens` array within each subscription document
+2. Notification preferences are controlled by boolean flags in the subscription
+3. All devices for a user can be managed from a single subscription document
+
+**Migration Path:**
+- Existing `askedToBeNotified` entries continue to work
+- New registrations update both collections for compatibility
+- Future updates should phase out `askedToBeNotified` collection
 
 ## Additional Resources
 

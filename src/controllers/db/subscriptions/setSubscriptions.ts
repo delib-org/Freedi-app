@@ -1,4 +1,4 @@
-import { doc, updateDoc, setDoc, Timestamp, getDoc } from 'firebase/firestore';
+import { doc, updateDoc, setDoc, Timestamp, getDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
 import { FireStore } from '../config';
 import { getStatementSubscriptionId } from '@/controllers/general/helpers';
 import {
@@ -173,5 +173,104 @@ export async function updateMemberRole(
 		await updateDoc(statementSubscriptionRef, { role: newRole });
 	} catch (error) {
 		console.error('Error updating member role:', error);
+	}
+}
+
+/**
+ * Add a FCM token to a user's statement subscription
+ */
+export async function addTokenToSubscription(
+	statementId: string,
+	userId: string,
+	token: string
+): Promise<void> {
+	try {
+		const statementSubscriptionId = getStatementSubscriptionId(
+			statementId,
+			userId
+		);
+		if (!statementSubscriptionId)
+			throw new Error('Error in getting statementSubscriptionId');
+
+		const statementSubscriptionRef = doc(
+			FireStore,
+			Collections.statementsSubscribe,
+			statementSubscriptionId
+		);
+
+		// Add token to the tokens array if it doesn't exist
+		await updateDoc(statementSubscriptionRef, {
+			tokens: arrayUnion(token),
+			lastUpdate: Timestamp.now().toMillis()
+		});
+	} catch (error) {
+		console.error('Error adding token to subscription:', error);
+	}
+}
+
+/**
+ * Remove a FCM token from a user's statement subscription
+ */
+export async function removeTokenFromSubscription(
+	statementId: string,
+	userId: string,
+	token: string
+): Promise<void> {
+	try {
+		const statementSubscriptionId = getStatementSubscriptionId(
+			statementId,
+			userId
+		);
+		if (!statementSubscriptionId)
+			throw new Error('Error in getting statementSubscriptionId');
+
+		const statementSubscriptionRef = doc(
+			FireStore,
+			Collections.statementsSubscribe,
+			statementSubscriptionId
+		);
+
+		// Remove token from the tokens array
+		await updateDoc(statementSubscriptionRef, {
+			tokens: arrayRemove(token),
+			lastUpdate: Timestamp.now().toMillis()
+		});
+	} catch (error) {
+		console.error('Error removing token from subscription:', error);
+	}
+}
+
+/**
+ * Update notification preferences for a subscription
+ */
+export async function updateNotificationPreferences(
+	statementId: string,
+	userId: string,
+	preferences: {
+		getInAppNotification?: boolean;
+		getEmailNotification?: boolean;
+		getPushNotification?: boolean;
+	}
+): Promise<void> {
+	try {
+		const statementSubscriptionId = getStatementSubscriptionId(
+			statementId,
+			userId
+		);
+		if (!statementSubscriptionId)
+			throw new Error('Error in getting statementSubscriptionId');
+
+		const statementSubscriptionRef = doc(
+			FireStore,
+			Collections.statementsSubscribe,
+			statementSubscriptionId
+		);
+
+		await updateDoc(statementSubscriptionRef, {
+			...preferences,
+			lastUpdate: Timestamp.now().toMillis()
+		});
+	} catch (error) {
+		console.error('Error updating notification preferences:', error);
 	}
 }
