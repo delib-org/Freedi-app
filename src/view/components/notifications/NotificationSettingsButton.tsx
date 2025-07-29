@@ -5,6 +5,7 @@ import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import useClickOutside from '@/controllers/hooks/useClickOutside';
 import NotificationPreferences from './NotificationPreferences';
 import BellIcon from '@/assets/icons/bellIcon.svg?react';
+import BellSlashIcon from '@/assets/icons/bellSlashIcon.svg?react';
 import styles from './NotificationSettingsButton.module.scss';
 
 interface NotificationSettingsButtonProps {
@@ -21,6 +22,7 @@ const NotificationSettingsButton: React.FC<NotificationSettingsButtonProps> = ({
 	const [permissionState, setPermissionState] = useState<NotificationPermission | 'unsupported'>('default');
 	const [isSupported, setIsSupported] = useState(false);
 	const [isMobile, setIsMobile] = useState(false);
+	const [allNotificationsOff, setAllNotificationsOff] = useState(false);
 	const dropdownRef = useRef<HTMLDivElement>(null);
 
 	useEffect(() => {
@@ -44,12 +46,81 @@ const NotificationSettingsButton: React.FC<NotificationSettingsButtonProps> = ({
 		
 		return () => window.removeEventListener('resize', checkMobile);
 	}, []);
+	
+	// Check notification preferences
+	useEffect(() => {
+		const checkNotificationPreferences = async () => {
+			try {
+				const { getAuth } = await import('firebase/auth');
+				const { doc, getDoc, getFirestore } = await import('firebase/firestore');
+				const { Collections, StatementSubscription } = await import('delib-npm');
+				const { getStatementSubscriptionId } = await import('@/controllers/general/helpers');
+				
+				const auth = getAuth();
+				const db = getFirestore();
+				
+				if (!auth.currentUser) return;
+				
+				const subscriptionId = getStatementSubscriptionId(statementId, auth.currentUser.uid);
+				if (!subscriptionId) return;
+				
+				const docRef = doc(db, Collections.statementsSubscribe, subscriptionId);
+				const docSnap = await getDoc(docRef);
+				
+				if (docSnap.exists()) {
+					const data = docSnap.data() as StatementSubscription;
+					const allOff = !data.getInAppNotification && 
+								  !data.getEmailNotification && 
+								  !data.getPushNotification;
+					setAllNotificationsOff(allOff);
+				}
+			} catch (error) {
+				console.error('Error checking notification preferences:', error);
+			}
+		};
+		
+		checkNotificationPreferences();
+		
+		// Re-check when settings modal opens/closes
+		if (!openSettings) {
+			checkNotificationPreferences();
+		}
+	}, [statementId, openSettings]);
 
+	// Handle click outside for desktop (non-portal)
 	const handleClickOutside = React.useCallback(() => {
-		if (openSettings) setOpenSettings(false);
-	}, [openSettings]);
+		if (openSettings && !isMobile) setOpenSettings(false);
+	}, [openSettings, isMobile]);
 
 	const containerRef = useClickOutside(handleClickOutside);
+	
+	// Handle click outside for mobile (portal) manually
+	useEffect(() => {
+		if (!isMobile || !openSettings) return;
+		
+		const handleMobileClickOutside = (event: MouseEvent) => {
+			// Check if click is on backdrop
+			const target = event.target as HTMLElement;
+			if (target.classList.contains(styles.backdrop)) {
+				return; // Backdrop has its own click handler
+			}
+			
+			// Check if click is inside dropdown
+			if (dropdownRef.current && dropdownRef.current.contains(target)) {
+				return; // Don't close if clicking inside dropdown
+			}
+			
+			// Close if clicking outside
+			setOpenSettings(false);
+		};
+		
+		// Use mousedown to match the useClickOutside hook behavior
+		document.addEventListener('mousedown', handleMobileClickOutside);
+		
+		return () => {
+			document.removeEventListener('mousedown', handleMobileClickOutside);
+		};
+	}, [isMobile, openSettings]);
 
 	const handleRequestPermission = async () => {
 		try {
@@ -80,7 +151,11 @@ const NotificationSettingsButton: React.FC<NotificationSettingsButtonProps> = ({
 				onClick={() => setOpenSettings(!openSettings)}
 				title={t('Notification Settings')}
 			>
-				<BellIcon style={{ color: headerStyle?.color }} />
+				{allNotificationsOff ? (
+					<BellSlashIcon style={{ color: headerStyle?.color }} />
+				) : (
+					<BellIcon style={{ color: headerStyle?.color }} />
+				)}
 			</button>
 			
 			{openSettings && isMobile && ReactDOM.createPortal(
@@ -89,7 +164,11 @@ const NotificationSettingsButton: React.FC<NotificationSettingsButtonProps> = ({
 						className={styles.backdrop} 
 						onClick={() => setOpenSettings(false)}
 					/>
-					<div className={styles.dropdown} ref={dropdownRef}>
+					<div 
+						className={styles.dropdown} 
+						ref={dropdownRef}
+						onClick={(e) => e.stopPropagation()}
+					>
 						{permissionState === 'default' ? (
 							<div className={styles.permissionPrompt}>
 								<h3>{t('Enable Notifications')}</h3>
@@ -120,7 +199,10 @@ const NotificationSettingsButton: React.FC<NotificationSettingsButtonProps> = ({
 			)}
 			
 			{openSettings && !isMobile && (
-				<div className={styles.dropdown} ref={dropdownRef}>
+				<div 
+					className={styles.dropdown}
+					onClick={(e) => e.stopPropagation()}
+				>
 					{permissionState === 'default' ? (
 						<div className={styles.permissionPrompt}>
 							<h3>{t('Enable Notifications')}</h3>

@@ -83,7 +83,8 @@ function NavButtons({
 	}
 
 	return (
-		<>
+		<div className={styles.navButtonsContainer}>
+			{/* Left side items */}
 			{allowNavigation && (
 				<NavigationButtons
 					statement={parentStatement || statement}
@@ -91,13 +92,19 @@ function NavButtons({
 					headerStyle={headerStyle}
 				/>
 			)}
-			{statement && (
-				<NotificationSettingsButton 
-					statementId={statement.statementId} 
-					headerStyle={headerStyle} 
-				/>
+			{allowNavigation && (
+				<button className={styles.home}>
+					<HomeButton headerColor={headerStyle} />
+				</button>
 			)}
+			
+			{/* Center items */}
 			<ApproveMembers />
+			
+			{/* Spacer to push right side items */}
+			<div className={styles.spacer} />
+			
+			{/* Right side items */}
 			<div
 				className={`${styles.views} ${styles.button}`}
 				onClick={handleView}
@@ -130,15 +137,16 @@ function NavButtons({
 					</div>
 				)}
 			</div>
-			{allowNavigation && (
-				<button className={styles.home}>
-					<HomeButton headerColor={headerStyle} />
-				</button>
+			{statement && (
+				<NotificationSettingsButton 
+					statementId={statement.statementId} 
+					headerStyle={headerStyle} 
+				/>
 			)}
 			{allowNavigation && (
 				<Back statement={statement} headerColor={headerStyle} />
 			)}
-		</>
+		</div>
 	);
 }
 

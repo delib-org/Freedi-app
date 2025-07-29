@@ -64,6 +64,10 @@ $svgWidth: 1.7rem;
 	.back {
 		transform: rotate(180deg);
 	}
+	
+	.home {
+		// Home button specific styles if needed
+	}
 
 	.views {
 		position: relative;
@@ -74,6 +78,55 @@ $svgWidth: 1.7rem;
 			box-shadow: 0px 3px 9px #00000026;
 			left: 50%;
 			top: 3rem;
+		}
+	}
+	
+	.navButtonsContainer {
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		width: 100%;
+		gap: 0.5rem;
+		
+		// Spacer to push items to right
+		.spacer {
+			flex: 1;
+		}
+		
+		// Ensure all direct children are flex items
+		> * {
+			flex-shrink: 0;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+		}
+		
+		// Ensure buttons have proper styling
+		button {
+			background-color: transparent;
+			border: none;
+			padding: 0.6rem 1rem;
+			cursor: pointer;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			
+			svg {
+				height: $svgHeight;
+				width: $svgWidth;
+			}
+		}
+		
+		// Ensure the notification button from NotificationSettingsButton aligns properly
+		> div:not(.spacer) {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+		}
+		
+		// Views dropdown should not grow
+		.views {
+			flex-shrink: 0;
 		}
 	}
 }
