@@ -1,6 +1,6 @@
 .SubQuestionNodeContainer {
 	display: flex;
-	flex-direction: row;
+	flex-direction: row-reverse;
 	.node {
 		margin: 1rem;
 		color: var(--text-secondary);
@@ -11,9 +11,10 @@
 		border-radius: 10px;
 		padding: 0.5rem 1rem;
 		display: flex;
+		margin-left: auto;
+		flex: 1;
 		justify-content: space-between;
 		transition: all 0.3s;
-
 		h3 {
 			font-size: 1rem;
 		}
@@ -37,18 +38,33 @@
 		border-left: 5px var(--icons-green) solid;
 		transition: all 0.3s;
 	}
+	.group {
+		border-left: 5px var(--header-group) solid;
+		transition: all 0.3s;
+	}
 }
-.size1 {
-	width: 20px;
-	height: 20px;
+.borderRight {
+	width: 1rem;
+	height: auto;
+	border-right: 1px solid black;
+	transform: translateY(50%);
+
+	margin-right: 1rem;
 }
-.size2 {
-	width: 70px;
-	height: 20px;
+.borderRightEmpty {
+	width: 1rem;
+	height: auto;
+
+	transform: translateY(50%);
+
+	margin-right: 1rem;
 }
-.size3 {
-	width: 100px;
-	height: 20px;
+.borderTop {
+	width: 100%;
+	height: auto;
+	border-top: 1px solid black;
+
+	margin-left: auto;
 }
 .animate {
 	animation: move 0.3s forwards;

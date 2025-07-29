@@ -7,9 +7,14 @@ import { Statement } from 'delib-npm';
 interface SubQuestionNodeProps {
 	statement: Statement;
 	runTimes: number;
+	last?: boolean;
 }
 
-const SubQuestionNode: FC<SubQuestionNodeProps> = ({ statement, runTimes }) => {
+const SubQuestionNode: FC<SubQuestionNodeProps> = ({
+	statement,
+	runTimes = -1,
+	last = false,
+}) => {
 	const navigate = useNavigate();
 	const { statementId } = useParams();
 	const [clicked, setClicked] = useState(false);
@@ -23,19 +28,11 @@ const SubQuestionNode: FC<SubQuestionNodeProps> = ({ statement, runTimes }) => {
 		}, 302);
 	};
 	const isInStatement = statement.statementId === statementId;
-	const getStyle = () => {
-		if (runTimes === 0) return '';
-		if (runTimes === 1) return styles.size1;
-		if (runTimes === 2) return styles.size2;
-
-		return styles.size3;
-	};
 
 	return (
 		<div className={styles.SubQuestionNodeContainer}>
-			<div className={getStyle()}></div>
 			<div
-				className={`${styles.node} ${isInStatement ? styles.green : ''}`}
+				className={`${styles.node} ${isInStatement ? styles.green : ''}${runTimes < 0 ? styles.group : ''}`}
 			>
 				<h3>{statement.statement}</h3>
 				{!isInStatement && (
@@ -46,6 +43,12 @@ const SubQuestionNode: FC<SubQuestionNodeProps> = ({ statement, runTimes }) => {
 						<ArrowLeft></ArrowLeft>
 					</button>
 				)}
+			</div>
+			<div
+				className={!last ? styles.borderRight : styles.borderRightEmpty}
+				style={{ marginLeft: `${runTimes}rem` }}
+			>
+				{runTimes > 0 && <div className={styles.borderTop}></div>}
 			</div>
 		</div>
 	);

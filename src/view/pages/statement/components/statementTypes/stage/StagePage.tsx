@@ -7,7 +7,6 @@ import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import { StatementContext } from '../../../StatementCont';
 import { Statement, EvaluationUI } from 'delib-npm';
 import Clustering from '../../clustering/Clustering';
-import SubQuestionsMap from '../../subQuestionsMap/SubQuestionsMap';
 
 interface Props {
 	showStageTitle?: boolean;
@@ -54,7 +53,6 @@ const StagePage = ({ showStageTitle = true }: Props) => {
 					</h2>
 				)}
 				<StagePageSwitch statement={statement} />
-				<SubQuestionsMap statement={statement} />
 			</div>
 			<div className={styles.bottomNav}>
 				<StatementBottomNav />
