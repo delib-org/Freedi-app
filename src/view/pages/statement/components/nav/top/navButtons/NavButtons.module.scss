@@ -46,26 +46,6 @@ $svgWidth: 1.7rem;
   }
 }
 
-// Ensure consistent button styling across all nav items
-button {
-  background-color: transparent;
-  border: none;
-  padding: 0.6rem 1rem;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  
-  svg {
-    height: $svgHeight;
-    width: $svgWidth;
-  }
-  
-  &:hover {
-    opacity: 0.8;
-  }
-}
-
 // Mobile adjustments
 @media (max-width: 768px) {
   .container {

@@ -53,7 +53,7 @@ const NotificationSettingsButton: React.FC<NotificationSettingsButtonProps> = ({
 			try {
 				const { getAuth } = await import('firebase/auth');
 				const { doc, getDoc, getFirestore } = await import('firebase/firestore');
-				const { Collections, StatementSubscription } = await import('delib-npm');
+				const { Collections } = await import('delib-npm');
 				const { getStatementSubscriptionId } = await import('@/controllers/general/helpers');
 				
 				const auth = getAuth();
@@ -68,7 +68,7 @@ const NotificationSettingsButton: React.FC<NotificationSettingsButtonProps> = ({
 				const docSnap = await getDoc(docRef);
 				
 				if (docSnap.exists()) {
-					const data = docSnap.data() as StatementSubscription;
+					const data = docSnap.data();
 					const allOff = !data.getInAppNotification && 
 								  !data.getEmailNotification && 
 								  !data.getPushNotification;

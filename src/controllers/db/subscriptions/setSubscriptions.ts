@@ -12,6 +12,7 @@ import {
 	Creator
 } from 'delib-npm';
 import { parse } from 'valibot';
+import { notificationService } from '@/services/notificationService';
 
 interface SetSubscriptionProps {
 	statement: Statement,
@@ -76,6 +77,15 @@ export async function setStatementSubscriptionToDB({
 		await setDoc(statementsSubscribeRef, parsedStatementSubscription, {
 			merge: true,
 		});
+
+		// If user wants push notifications and notification service is initialized, add their token
+		if (getPushNotification && notificationService.isInitialized()) {
+			const token = notificationService.getToken();
+			if (token) {
+				// Add the current FCM token to the subscription
+				await addTokenToSubscription(statementId, creator.uid, token);
+			}
+		}
 	} catch (error) {
 		console.error(error);
 	}

@@ -505,7 +505,7 @@ export const hasTokenSelector =
 			(statement) => statement.statementId === statementId
 		);
 
-		return statement?.token?.includes(token) || false;
+		return statement?.tokens?.includes(token) || false;
 	};
 
 export const subscriptionParentStatementSelector = (parentId: string) =>
