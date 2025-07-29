@@ -5,9 +5,10 @@ import { getStatementSubscriptionId } from '@/controllers/general/helpers';
 import { getAuth } from 'firebase/auth';
 import { doc, getDoc, getFirestore } from 'firebase/firestore';
 import { Collections, StatementSubscription } from 'delib-npm';
+import { notificationService } from '@/services/notificationService';
 import BellIcon from '@/assets/icons/bellIcon.svg?react';
-import MailIcon from '@/assets/icons/mailIcon.svg?react';
-import PhoneIcon from '@/assets/icons/phoneIcon.svg?react';
+import MailIcon from '@/assets/icons/bellIcon.svg?react';
+import PhoneIcon from '@/assets/icons/bellIcon.svg?react';
 
 interface NotificationPreferencesProps {
 	statementId: string;
@@ -30,8 +31,13 @@ const NotificationPreferences: React.FC<NotificationPreferencesProps> = ({ state
 	});
 	const [isLoading, setIsLoading] = useState<boolean>(true);
 	const [isSaving, setIsSaving] = useState<boolean>(false);
+	const [hasNotificationPermission, setHasNotificationPermission] = useState<boolean>(false);
 
 	useEffect(() => {
+		// Check notification permission
+		const permission = notificationService.safeGetPermission();
+		setHasNotificationPermission(permission === 'granted');
+		
 		// Load current preferences
 		const loadPreferences = async () => {
 			try {
@@ -138,6 +144,11 @@ const NotificationPreferences: React.FC<NotificationPreferencesProps> = ({ state
 					<div>
 						<h4>Push Notifications</h4>
 						<p>Get notified on all your devices even when the app is closed</p>
+						{!hasNotificationPermission && preferences.getPushNotification && (
+							<p className="warning-text">
+								⚠️ Browser notifications must be enabled first
+							</p>
+						)}
 					</div>
 				</div>
 				<label className="switch">
@@ -145,7 +156,9 @@ const NotificationPreferences: React.FC<NotificationPreferencesProps> = ({ state
 						type="checkbox"
 						checked={preferences.getPushNotification}
 						onChange={(e) => handlePreferenceChange('getPushNotification', e.target.checked)}
-						disabled={isSaving}
+						disabled={isSaving || (!hasNotificationPermission && !preferences.getPushNotification)}
+						title={!hasNotificationPermission && !preferences.getPushNotification ? 
+							"Please enable browser notifications first" : ""}
 					/>
 					<span className="slider"></span>
 				</label>

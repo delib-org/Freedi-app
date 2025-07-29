@@ -4,6 +4,27 @@
 	padding: 1.5rem;
 	max-width: 500px;
 	margin: 0 auto;
+	position: relative;
+	
+	// Mobile adjustments
+	@media (max-width: 768px) {
+		padding: 2rem 1rem 1.5rem;
+		border-radius: 0;
+		max-width: 100%;
+		
+		// Add drag handle for mobile bottom sheet
+		&::before {
+			content: '';
+			position: absolute;
+			top: 0.75rem;
+			left: 50%;
+			transform: translateX(-50%);
+			width: 40px;
+			height: 4px;
+			background-color: var(--border-color, #ddd);
+			border-radius: 2px;
+		}
+	}
 
 	&.loading {
 		text-align: center;
@@ -63,6 +84,13 @@
 					font-size: 0.875rem;
 					color: var(--text-secondary);
 					line-height: 1.4;
+					
+					&.warning-text {
+						color: #ff9800;
+						font-size: 0.75rem;
+						margin-top: 0.25rem;
+						font-weight: 500;
+					}
 				}
 			}
 		}

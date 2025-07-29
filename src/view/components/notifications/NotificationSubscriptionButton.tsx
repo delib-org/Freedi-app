@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, FC } from 'react';
 import './notificationSubscriptionButton.scss';
 import { notificationService } from '@/services/notificationService';
 import { getAuth } from 'firebase/auth';
@@ -16,7 +16,7 @@ interface NotificationSubscriptionButtonProps {
 /**
  * Button that allows users to subscribe to or unsubscribe from push notifications for a statement
  */
-const NotificationSubscriptionButton: React.FC<NotificationSubscriptionButtonProps> = ({ statementId }) => {
+const NotificationSubscriptionButton: FC<NotificationSubscriptionButtonProps> = ({ statementId }) => {
 	const [isSubscribed, setIsSubscribed] = useState<boolean>(false);
 	const [isLoading, setIsLoading] = useState<boolean>(true);
 	const [permissionState, setPermissionState] = useState<NotificationPermission>('default');

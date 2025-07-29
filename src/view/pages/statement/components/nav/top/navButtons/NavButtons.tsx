@@ -1,20 +1,30 @@
+// React
+import { useCallback, useEffect, useState, useRef } from 'react';
+
+// Types
+import { StatementType, Statement, Screen } from 'delib-npm';
+
+// Hooks
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import useClickOutside from '@/controllers/hooks/useClickOutside';
+
+// Components
 import NavigationButtons from '../navigationButtons/NavigationButtons';
 import HomeButton from '../../../header/HomeButton';
-import { useCallback, useEffect, useState } from 'react';
-import MenuOption from '@/view/components/menu/MenuOption';
 import Back from '../../../header/Back';
+import MenuOption from '@/view/components/menu/MenuOption';
+import NotificationSettingsButton from '@/view/components/notifications/NotificationSettingsButton';
+import ApproveMembers from '@/view/components/approveMemebers/WaitingList';
+
+// Icons
 import TriangleIcon from '@/assets/icons/triangle.svg?react';
 import QuestionIcon from '@/assets/icons/navQuestionsIcon.svg?react';
 import GroupIcon from '@/assets/icons/group.svg?react';
 import View from '@/assets/icons/view.svg?react';
 import MapIcon from '@/assets/icons/navMainPageIcon.svg?react';
 
+// Styles
 import styles from '../StatementTopNav.module.scss';
-import { StatementType, Statement, Screen } from 'delib-npm';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
-import NotificationSubscriptionButton from '@/view/components/notifications/NotificationSubscriptionButton';
-import ApproveMembers from '@/view/components/approveMemebers/WaitingList';
-import useClickOutside from '@/controllers/hooks/useClickOutside';
 
 interface NavButtonsProps {
 	parentStatement?: Statement;
@@ -82,8 +92,9 @@ function NavButtons({
 				/>
 			)}
 			{statement && (
-				<NotificationSubscriptionButton
-					statementId={statement.statementId}
+				<NotificationSettingsButton 
+					statementId={statement.statementId} 
+					headerStyle={headerStyle} 
 				/>
 			)}
 			<ApproveMembers />
