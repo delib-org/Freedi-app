@@ -8,13 +8,18 @@ interface SubQuestionNodeProps {
 	statement: Statement;
 	runTimes: number;
 	last?: boolean;
+	hasChildren?: boolean;
+	height?: number;
 }
 
 const SubQuestionNode: FC<SubQuestionNodeProps> = ({
 	statement,
 	runTimes = -1,
+	height = 0,
 	last = false,
+	hasChildren = false,
 }) => {
+	const topStatement = runTimes <= 1;
 	const navigate = useNavigate();
 	const { statementId } = useParams();
 	const [clicked, setClicked] = useState(false);
@@ -29,10 +34,26 @@ const SubQuestionNode: FC<SubQuestionNodeProps> = ({
 	};
 	const isInStatement = statement.statementId === statementId;
 
+	const styleGraph = () => {
+		const classNames = [styles.borderDefault];
+
+		if (
+			((!last && statement.topParentId !== statement.parentId) ||
+				hasChildren) &&
+			height < 1
+		)
+			classNames.push(styles.borderRight);
+		if (hasChildren && height < 1) classNames.push(styles.borderBottom);
+		if (statement.topParentId === statement.parentId)
+			classNames.push(styles.borderTop);
+
+		return classNames.join(' ');
+	};
+
 	return (
 		<div className={styles.SubQuestionNodeContainer}>
 			<div
-				className={`${styles.node} ${isInStatement ? styles.green : ''}${runTimes < 0 ? styles.group : ''}`}
+				className={`${styles.node} ${isInStatement ? styles.green : ''}${runTimes <= 1 ? styles.group : ''}`}
 			>
 				<h3>{statement.statement}</h3>
 				{!isInStatement && (
@@ -44,12 +65,24 @@ const SubQuestionNode: FC<SubQuestionNodeProps> = ({
 					</button>
 				)}
 			</div>
-			<div
-				className={!last ? styles.borderRight : styles.borderRightEmpty}
-				style={{ marginLeft: `${runTimes}rem` }}
-			>
-				{runTimes > 0 && <div className={styles.borderTop}></div>}
-			</div>
+
+			{
+				<div
+					className={styleGraph()}
+					style={{ marginLeft: `${runTimes}rem` }}
+				>
+					{topStatement && (
+						<div
+							className={styles.borderRightTop}
+							style={{
+								marginLeft: `${runTimes}rem`,
+								height: `${height * 4.6}rem`,
+							}}
+						></div>
+					)}
+					<div className={styles.blueDot}>●</div>
+				</div>
+			}
 		</div>
 	);
 };

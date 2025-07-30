@@ -1,6 +1,7 @@
 .SubQuestionNodeContainer {
 	display: flex;
 	flex-direction: row-reverse;
+
 	.node {
 		margin: 1rem;
 		color: var(--text-secondary);
@@ -15,9 +16,11 @@
 		flex: 1;
 		justify-content: space-between;
 		transition: all 0.3s;
+
 		h3 {
 			font-size: 1rem;
 		}
+
 		button {
 			background-color: var(--icons-white);
 			transform: scaleX(-1);
@@ -34,41 +37,59 @@
 			}
 		}
 	}
+
 	.green {
 		border-left: 5px var(--icons-green) solid;
-		transition: all 0.3s;
 	}
+
 	.group {
 		border-left: 5px var(--header-group) solid;
-		transition: all 0.3s;
+	}
+
+	.borderDefault {
+		margin-left: auto;
+		width: 1rem;
+		height: auto;
+		transform: translateY(50%) scaleX(-1);
+	}
+	.borderRightTop {
+		border-right: 1px solid var(--icons-primary);
+		position: absolute;
+		margin-left: auto;
+		top: 0;
+		right: 0.02rem;
+		width: 1rem;
+		height: auto;
+	}
+	.borderRight {
+		border-right: 1px solid var(--icons-primary);
+	}
+
+	.borderBottom {
+		border-bottom: 1px solid var(--icons-primary);
+	}
+	.borderTop {
+		&::before {
+			content: '';
+			position: absolute;
+			left: 1rem;
+			width: calc(100%);
+			border-top: 1px solid var(--icons-primary);
+		}
+	}
+
+	.blueDot {
+		color: var(--icons-primary);
+		align-self: center;
+		transform: translate(70%, -52%);
+		user-select: none;
 	}
 }
-.borderRight {
-	width: 1rem;
-	height: auto;
-	border-right: 1px solid black;
-	transform: translateY(50%);
 
-	margin-right: 1rem;
-}
-.borderRightEmpty {
-	width: 1rem;
-	height: auto;
-
-	transform: translateY(50%);
-
-	margin-right: 1rem;
-}
-.borderTop {
-	width: 100%;
-	height: auto;
-	border-top: 1px solid black;
-
-	margin-left: auto;
-}
 .animate {
 	animation: move 0.3s forwards;
 }
+
 @keyframes move {
 	0% {
 		transform: scaleX(-1) translateX(0);
