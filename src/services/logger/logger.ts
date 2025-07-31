@@ -17,7 +17,8 @@ interface LogContext {
 
 class Logger {
   private isDevelopment = import.meta.env.DEV;
-  private logLevel = this.isDevelopment ? LogLevel.DEBUG : LogLevel.INFO;
+  // Set to ERROR to only show errors in both dev and prod
+  private logLevel = LogLevel.ERROR;
 
   private formatMessage(level: string, message: string, context?: LogContext): string {
     const timestamp = new Date().toISOString();
@@ -74,7 +75,10 @@ class Logger {
 
   // Track specific events (useful for analytics)
   trackEvent(eventName: string, properties?: Record<string, unknown>) {
-    this.info(`Event: ${eventName}`, { metadata: properties });
+    // Only log in development mode to avoid console noise
+    if (this.isDevelopment) {
+      this.debug(`Event: ${eventName}`, { metadata: properties });
+    }
     
     // Future: Send to Firebase Analytics or other analytics service
     // if (window.gtag) {
@@ -84,9 +88,12 @@ class Logger {
 
   // Performance tracking
   trackPerformance(metricName: string, value: number, unit: string = 'ms') {
-    this.info(`Performance: ${metricName}`, { 
-      metadata: { value, unit } 
-    });
+    // Only log in development mode to avoid console noise
+    if (this.isDevelopment) {
+      this.debug(`Performance: ${metricName}`, { 
+        metadata: { value, unit } 
+      });
+    }
     
     // Send performance metrics to Sentry
     if (!this.isDevelopment) {

@@ -1,5 +1,6 @@
+
 export function monitorPushEvents() {
-    console.info('%c=== MONITORING PUSH EVENTS ===', 'color: purple; font-weight: bold; font-size: 16px');
+    console.info('=== MONITORING PUSH EVENTS ===');
     console.info('Listening for push events in both main thread and service worker...\n');
     
     let eventCount = 0;
@@ -8,13 +9,13 @@ export function monitorPushEvents() {
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.addEventListener('message', (event) => {
             eventCount++;
-            console.info(`%c[Event ${eventCount}] Service Worker Message`, 'color: green; font-weight: bold');
-            console.info('Time:', new Date().toISOString());
-            console.info('Data:', event.data);
+            console.info(`[Event ${eventCount}] Service Worker Message`);
+            console.info('Time:', { timestamp: new Date().toISOString() });
+            console.info('Data:', { data: event.data });
             
             if (event.data?.type === 'PUSH_RECEIVED') {
-                console.info('%c🔔 PUSH NOTIFICATION RECEIVED!', 'color: green; font-size: 16px; font-weight: bold');
-                console.info('Push data:', event.data.data);
+                console.info('🔔 PUSH NOTIFICATION RECEIVED!');
+                console.info('Push data:', { data: event.data.data });
             }
             
             console.info('---\n');
@@ -28,9 +29,9 @@ export function monitorPushEvents() {
         // @ts-ignore
         window.Notification = function(...args) {
             eventCount++;
-            console.info(`%c[Event ${eventCount}] Notification Created`, 'color: blue; font-weight: bold');
-            console.info('Title:', args[0]);
-            console.info('Options:', args[1]);
+            console.info(`[Event ${eventCount}] Notification Created`);
+            console.info('Title:', { title: args[0] });
+            console.info('Options:', { options: args[1] });
             console.info('---\n');
             
             // @ts-ignore
@@ -43,7 +44,7 @@ export function monitorPushEvents() {
     
     // Check service worker state
     navigator.serviceWorker.getRegistrations().then(registrations => {
-        console.info('%cService Worker Status:', 'color: orange; font-weight: bold');
+        console.info('Service Worker Status:');
         registrations.forEach(reg => {
             if (reg.active?.scriptURL.includes('firebase-messaging-sw.js')) {
                 console.info('✅ Firebase SW: Active');
@@ -51,13 +52,13 @@ export function monitorPushEvents() {
                 // Check if we can communicate with it
                 const channel = new MessageChannel();
                 channel.port1.onmessage = (e) => {
-                    console.info('✅ Firebase SW responded:', e.data);
+                    console.info('✅ Firebase SW responded:', { data: e.data });
                 };
                 
                 reg.active.postMessage({ type: 'PING' }, [channel.port2]);
             }
         });
-        console.info('---\n');
+        logger.info('---\n');
     });
     
     console.info('Monitor is active. When a push notification is sent:');
