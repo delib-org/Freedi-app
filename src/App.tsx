@@ -6,6 +6,7 @@ import LoadingPage from './view/pages/loadingPage/LoadingPage';
 import Accessibility from './view/components/accessibility/Accessibility';
 import NotificationTester from './view/components/notifications/NotificationTester';
 import './utils/debugNotifications'; // Load debug utilities
+import InAppSnackbar from './view/components/inAppSnackbar/InAppSnackbar';
 
 export default function App() {
 	const { isLoading, user } = useAuthentication();
@@ -18,6 +19,7 @@ export default function App() {
 		<Suspense fallback={<LoadingPage />}>
 			<Accessibility />
 			<AgreementProvider user={user}>
+				<InAppSnackbar />
 				<Outlet />
 				<NotificationTester />
 			</AgreementProvider>

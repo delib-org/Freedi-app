@@ -8,7 +8,7 @@ import FCMTokenDisplay from './FCMTokenDisplay';
 const NotificationTester: React.FC = () => {
   // Only show in development mode
   if (!import.meta.env.DEV) return null;
-  
+
   return <FCMTokenDisplay />;
 };
 
