@@ -501,11 +501,11 @@ export const statementMembershipSelector =
 
 export const hasTokenSelector =
 	(token: string, statementId: string | undefined) => (state: RootState) => {
-		const statement = state.statements.statementSubscription.find(
+		const subscription = state.statements.statementSubscription.find(
 			(statement) => statement.statementId === statementId
 		);
 
-		return statement?.tokens?.includes(token) || false;
+		return subscription?.tokens?.includes(token) || false;
 	};
 
 export const subscriptionParentStatementSelector = (parentId: string) =>
