@@ -8,4 +8,10 @@
 	border-top-left-radius: 10px;
 	overflow-y: auto;
 	z-index: 9999;
+	@media (max-width: 867px) {
+		display: none;
+	}
+	.title {
+		padding: 1rem;
+	}
 }

@@ -5,7 +5,6 @@ import FollowMeToast from '../followMeToast/FollowMeToast';
 import styles from './Switch.module.scss';
 import { useSwitchMV } from './SwitchMV';
 import { Role, StatementType } from 'delib-npm';
-
 import SwitchScreen from './SwitchScreen';
 import { updateStatementText } from '@/controllers/db/statements/setStatements';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
@@ -67,7 +66,6 @@ const Switch = () => {
 			)}
 			<OnlineUsers statementId={statement?.statementId} />
 			<SubQuestionsMap statement={statement} />
-
 			<SwitchScreen statement={statement} role={role} />
 		</main>
 	);

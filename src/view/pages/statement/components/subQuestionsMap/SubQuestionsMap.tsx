@@ -3,12 +3,22 @@ import styles from './SubQuestionsMap.module.scss';
 import SubQuestionNode from './subQuestionNode/SubQuestionNode';
 import { useMindMap } from '../map/MindMapMV';
 import { type JSX } from 'react';
+import { useParams } from 'react-router';
 
 interface SubQuestionsMapProps {
 	readonly statement: Statement;
 }
+
 const SubQuestionsMap = ({ statement }: SubQuestionsMapProps) => {
 	const { results } = useMindMap(statement.topParentId);
+	const { screen } = useParams();
+
+	if (
+		screen === 'mind-map' ||
+		screen === 'polarization-index' ||
+		screen === 'agreement-map'
+	)
+		return null;
 
 	if (!results) return null;
 	const defaultDepth = 1;
@@ -35,9 +45,8 @@ const SubQuestionsMap = ({ statement }: SubQuestionsMapProps) => {
 		return tResults.sub.map((res, index) => (
 			<div key={res.top.statement + index}>
 				<SubQuestionNode
-					key={res.top.statement + index}
 					statement={res.top}
-					runTimes={currentDepth}
+					depth={currentDepth}
 					last={index === tResults.sub.length - 1}
 					hasChildren={res.sub.length !== 0}
 				/>
@@ -45,6 +54,7 @@ const SubQuestionsMap = ({ statement }: SubQuestionsMapProps) => {
 			</div>
 		));
 	};
+
 	const calculateTopParentHeight = (cResults: Results, height = 0) => {
 		cResults.sub.forEach((res, index) => {
 			height++;
@@ -58,9 +68,12 @@ const SubQuestionsMap = ({ statement }: SubQuestionsMapProps) => {
 
 	return (
 		<div className={styles.subQuestionsMapContainer}>
+			<div className={styles.title}>
+				<h3>Statement Map</h3>
+			</div>
 			<SubQuestionNode
 				statement={results.top}
-				runTimes={defaultDepth}
+				depth={defaultDepth}
 				hasChildren={results.sub.length > 0}
 				height={calculateTopParentHeight(filteredResults)}
 			/>

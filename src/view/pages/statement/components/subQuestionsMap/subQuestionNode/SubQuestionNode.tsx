@@ -6,7 +6,7 @@ import { Statement } from 'delib-npm';
 
 interface SubQuestionNodeProps {
 	statement: Statement;
-	runTimes: number;
+	depth: number;
 	last?: boolean;
 	hasChildren?: boolean;
 	height?: number;
@@ -14,12 +14,12 @@ interface SubQuestionNodeProps {
 
 const SubQuestionNode: FC<SubQuestionNodeProps> = ({
 	statement,
-	runTimes = -1,
+	depth = -1,
 	height = 0,
 	last = false,
 	hasChildren = false,
 }) => {
-	const topStatement = runTimes <= 1;
+	const topStatement = depth <= 1;
 	const navigate = useNavigate();
 	const { statementId } = useParams();
 	const [clicked, setClicked] = useState(false);
@@ -33,7 +33,8 @@ const SubQuestionNode: FC<SubQuestionNodeProps> = ({
 		}, 302);
 	};
 	const isInStatement = statement.statementId === statementId;
-
+	const styleMargin = 4.6;
+	const marginLeft = `${depth}rem`;
 	const styleGraph = () => {
 		const classNames = [styles.borderDefault];
 
@@ -53,7 +54,7 @@ const SubQuestionNode: FC<SubQuestionNodeProps> = ({
 	return (
 		<div className={styles.SubQuestionNodeContainer}>
 			<div
-				className={`${styles.node} ${isInStatement ? styles.green : ''}${runTimes <= 1 ? styles.group : ''}`}
+				className={`${styles.node} ${isInStatement ? styles.green : ''} ${depth <= 1 && !isInStatement ? styles.group : ''}`}
 			>
 				<h3>{statement.statement}</h3>
 				{!isInStatement && (
@@ -69,14 +70,14 @@ const SubQuestionNode: FC<SubQuestionNodeProps> = ({
 			{
 				<div
 					className={styleGraph()}
-					style={{ marginLeft: `${runTimes}rem` }}
+					style={{ marginLeft: marginLeft }}
 				>
 					{topStatement && (
 						<div
 							className={styles.borderRightTop}
 							style={{
-								marginLeft: `${runTimes}rem`,
-								height: `${height * 4.6}rem`,
+								marginLeft: `${depth}rem`,
+								height: `${height * styleMargin}rem`,
 							}}
 						></div>
 					)}
