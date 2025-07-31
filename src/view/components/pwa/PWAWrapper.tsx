@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { registerSW } from 'virtual:pwa-register';
 // import InstallPWA from './InstallPWA';
-import PWAUpdateToast from './PWAUpdateToast';
 import NotificationPrompt from '../notifications/NotificationPrompt';
 
 // Function to clear badge count
@@ -135,24 +134,35 @@ const PWAWrapper: React.FC<PWAWrapperProps> = ({ children }) => {
 		}
 
 		const updateFunc = registerSW({
+				immediate: true, // Register immediately
 				onNeedRefresh() {
-					// Dispatch custom event to notify components an update is available
-					window.dispatchEvent(new CustomEvent('pwa:needRefresh'));
+					// For autoUpdate mode, this won't be called
+					// Updates happen automatically
 				},
 				onOfflineReady() {
 					console.info('App ready to work offline');
 				},
+				onRegistered(registration) {
+					// Listen for controller changes (new SW taking control)
+					if (navigator.serviceWorker) {
+						navigator.serviceWorker.addEventListener('controllerchange', () => {
+							// New service worker has taken control
+							// Reload the page to ensure users get the latest version
+							window.location.reload();
+						});
+					}
+				},
 				onRegisteredSW(swUrl, registration) {
 					// Service Worker registered
 
-					// Check for updates frequently to ensure clients get the latest version
-					// This is the key requirement mentioned by the user - frequent update checks
+					// Check for updates periodically
+					// Using a reasonable interval to avoid excessive update prompts
 					const updateInterval = setInterval(() => {
 						// Check for Service Worker updates
 						registration?.update().catch(err => {
 							console.error('Error updating service worker:', err);
 						});
-					}, 60 * 1000); // Check every minute
+					}, 60 * 60 * 1000); // Check every hour instead of every minute
 
 					// Check if we should show notification prompt
 					if ('Notification' in window && Notification.permission === 'default') {
@@ -202,7 +212,7 @@ const PWAWrapper: React.FC<PWAWrapperProps> = ({ children }) => {
 		<>
 			{children}
 
-			{updateSW && <PWAUpdateToast registerUpdate={updateSW} />}
+			{/* Auto-update mode: no toast needed */}
 			{showNotificationPrompt && (
 				<NotificationPrompt onClose={() => setShowNotificationPrompt(false)} />
 			)}
