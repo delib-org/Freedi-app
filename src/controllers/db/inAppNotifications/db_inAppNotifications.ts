@@ -49,13 +49,15 @@ export async function clearInAppNotifications(statementId: string) {
 	try {
 		if (!statementId) {
 			console.error("clearInAppNotifications: statementId is required");
-			return;
+			
+return;
 		}
 		
 		const user = store.getState().creator.creator;
 		if (!user) {
 			console.error("clearInAppNotifications: User not found");
-			return;
+			
+return;
 		}
 		
 		const inAppNotificationsRef = collection(DB, Collections.inAppNotifications);

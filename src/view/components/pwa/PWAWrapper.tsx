@@ -68,7 +68,6 @@ interface PWAWrapperProps {
 }
 
 const PWAWrapper: React.FC<PWAWrapperProps> = ({ children }) => {
-	const [updateSW, setUpdateSW] = useState<((reload?: boolean) => Promise<void>) | null>(null);
 	const [showNotificationPrompt, setShowNotificationPrompt] = useState(false);
 
 	useEffect(() => {
@@ -142,7 +141,7 @@ const PWAWrapper: React.FC<PWAWrapperProps> = ({ children }) => {
 				onOfflineReady() {
 					console.info('App ready to work offline');
 				},
-				onRegistered(registration) {
+				onRegistered() {
 					// Listen for controller changes (new SW taking control)
 					if (navigator.serviceWorker) {
 						navigator.serviceWorker.addEventListener('controllerchange', () => {
@@ -183,7 +182,7 @@ const PWAWrapper: React.FC<PWAWrapperProps> = ({ children }) => {
 				}
 			});
 
-			setUpdateSW(() => updateFunc);
+			// Auto-update mode: no need to store update function
 
 			// Add event listeners for online/offline status
 			window.addEventListener('online', () => {

@@ -88,19 +88,22 @@ export async function removeUserFromOnlineToDB(
 		// Early return if either parameter is null/undefined
 		if (!statementId || !userId) {
 			console.info('removeUserFromOnlineToDB: Skipping - missing statementId or userId');
-			return;
+			
+return;
 		}
 
 		// Validate that parameters are valid strings
 		if (typeof statementId !== 'string' || typeof userId !== 'string') {
 			console.error('removeUserFromOnlineToDB: Invalid parameter types');
-			return;
+			
+return;
 		}
 
 		// Additional validation to prevent empty strings
 		if (statementId.trim() === '' || userId.trim() === '') {
 			console.error('removeUserFromOnlineToDB: Empty statementId or userId');
-			return;
+			
+return;
 		}
 
 		const onlineId = `${userId}--${statementId}`;
