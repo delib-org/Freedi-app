@@ -20,6 +20,8 @@ const SubQuestionNode: FC<SubQuestionNodeProps> = ({
 	hasChildren = false,
 }) => {
 	const topStatement = depth <= 1;
+	const topParent =
+		statement.topParentId === statement.parentId && hasChildren;
 	const navigate = useNavigate();
 	const { statementId } = useParams();
 	const [clicked, setClicked] = useState(false);
@@ -38,11 +40,7 @@ const SubQuestionNode: FC<SubQuestionNodeProps> = ({
 	const styleGraph = () => {
 		const classNames = [styles.borderDefault];
 
-		if (
-			((!last && statement.topParentId !== statement.parentId) ||
-				hasChildren) &&
-			height < 1
-		)
+		if (((!last && topParent && hasChildren) || hasChildren) && height < 1)
 			classNames.push(styles.borderRight);
 		if (hasChildren && height < 1) classNames.push(styles.borderBottom);
 		if (statement.topParentId === statement.parentId)
