@@ -9,11 +9,11 @@ importScripts(
 // Initialize the Firebase app in the service worker with the production configuration
 // First, determine the current domain
 const currentDomain = self.location.hostname;
-console.info('Current domain detected:', currentDomain);
+// Current domain detected: ' + currentDomain
 
 // Select Firebase config based on the domain
 let firebaseConfig;
-if (currentDomain === 'freedi.tech' || currentDomain === 'delib.web.app') {
+if (currentDomain === 'freedi.tech' || currentDomain === 'delib.web.app' || currentDomain === 'localhost' || currentDomain === '127.0.0.1') {
 	// Development config
 	firebaseConfig = {
 		apiKey: "AIzaSyBEumZUTCL3Jc9pt7_CjiSVTxmz9aMqSvo",
@@ -61,6 +61,37 @@ const notificationCache = new Map();
 
 // Badge counter in IndexedDB to persist across refreshes
 let badgeCount = 0;
+
+// Add push event listener for debugging
+self.addEventListener('push', function(event) {
+	// Push event received
+	
+	// Log the push event details
+	if (event.data) {
+		try {
+			const data = event.data.json();
+			// Push JSON data received
+			
+			// Send message to main thread
+			self.clients.matchAll().then(clients => {
+				clients.forEach(client => {
+					client.postMessage({
+						type: 'PUSH_RECEIVED',
+						data: data,
+						timestamp: new Date().toISOString()
+					});
+				});
+			});
+		} catch (e) {
+			// Push text data received
+		}
+	} else {
+		// No push data in event
+	}
+	
+	// Let Firebase handle the push event as well
+	// The onBackgroundMessage handler will be called after this
+});
 
 // Initialize badge counter from IndexedDB
 const initBadgeCount = async () => {
@@ -152,7 +183,7 @@ const playNotificationSound = async () => {
 // Handle background messages (when app is closed or in background)
 messaging.onBackgroundMessage(async function (payload) {
 	try {
-		console.info('[firebase-messaging-sw.js] Received background message:', payload);
+		// Received background message
 
 		// If there's no notification object, we can't show a notification
 		if (!payload.notification) {
@@ -270,7 +301,7 @@ messaging.onBackgroundMessage(async function (payload) {
 		// Try to play sound (though this typically won't work in service worker)
 		await playNotificationSound();
 
-		console.info('Notification displayed successfully');
+		// Notification displayed successfully
 	} catch (error) {
 		console.error('Error showing notification:', error);
 	}
@@ -278,7 +309,7 @@ messaging.onBackgroundMessage(async function (payload) {
 
 // Handle notification click
 self.addEventListener('notificationclick', function (event) {
-	console.info('Notification clicked:', event);
+	// Notification clicked
 
 	// Close the notification
 	event.notification.close();
@@ -372,6 +403,17 @@ self.addEventListener('notificationclick', function (event) {
 // Listen for messages from the main app
 self.addEventListener('message', (event) => {
 	console.info('Message received in SW:', event.data);
+
+	// Handle push support check
+	if (event.data && event.data.type === 'CHECK_PUSH_SUPPORT') {
+		event.ports[0]?.postMessage({
+			type: 'PUSH_SUPPORT_RESPONSE',
+			supported: true,
+			messaging: !!messaging,
+			pushManager: 'PushManager' in self
+		});
+		return;
+	}
 
 	if (event.data && event.data.type === 'CLEAR_NOTIFICATIONS') {
 		// Clear all displayed notifications

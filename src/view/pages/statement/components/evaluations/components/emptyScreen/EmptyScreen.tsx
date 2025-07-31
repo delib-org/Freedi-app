@@ -6,19 +6,33 @@ import useWindowDimensions from '@/controllers/hooks/useWindowDimentions';
 
 // /graphics
 import WhitePlusIcon from '@/view/components/icons/WhitePlusIcon';
+import { useDispatch } from 'react-redux';
+import { setNewStatementModal } from '@/redux/statements/newStatementSlice';
+import { Statement, StatementType } from 'delib-npm';
 
 interface Props {
-	setShowModal: Dispatch<boolean>;
+	statement: Statement;
 }
 
-const EmptyScreen: FC<Props> = ({ setShowModal }) => {
+const EmptyScreen: FC<Props> = ({ statement }) => {
+	const dispatch = useDispatch();
 	const { t } = useUserConfig();
 	const { width } = useWindowDimensions();
 	const smallScreen = width < 1024;
 
-	const handlePlusIconClick = () => {
-		setShowModal(true);
-	};
+	function handleCreateNewOption() {
+			dispatch(setNewStatementModal({
+				parentStatement: statement,
+				newStatement: {
+					statementType: StatementType.option,
+				},
+				showModal: true,
+				isLoading: false,
+				error: null,
+			}))
+		}
+
+	
 
 	return (
 		<div
@@ -37,20 +51,20 @@ const EmptyScreen: FC<Props> = ({ setShowModal }) => {
 								{t('to add your suggestion')}
 							</>
 						) : (
-							<h1>
+							<>
 								{t('Click on')}{' '}
 								<span className={styles.titleSpan}>
 									{t('Add suggestion button')}
 								</span>
 								<br />
 								{t('to add your suggestion')}
-							</h1>
+							</>
 						)}
 					</h1>
 				</div>
 				<button
 					className={styles.plusButton}
-					onClick={handlePlusIconClick}
+					onClick={handleCreateNewOption}
 					style={smallScreen ? { width: '4rem', height: '4rem' } : {}}
 				>
 					{smallScreen ? (

@@ -449,6 +449,7 @@ function getSortedOptions(statements: Statement[], resultsSettings: ResultsSetti
 		[ResultsBy.consensus]: (a: Statement, b: Statement) => b.consensus - a.consensus,
 		[ResultsBy.mostLiked]: (a: Statement, b: Statement) => (b.evaluation?.sumPro ?? 0) - (a.evaluation?.sumPro ?? 0),
 		[ResultsBy.averageLikesDislikes]: (a: Statement, b: Statement) => (b.evaluation?.sumEvaluations ?? 0) - (a.evaluation?.sumEvaluations ?? 0),
+		[ResultsBy.topOptions]: (a: Statement, b: Statement) => b.consensus - a.consensus,
 	};
 
 	return statements.sort(sortComparisons[resultsBy] || sortComparisons[ResultsBy.consensus]);
@@ -488,6 +489,7 @@ function getEvaluationField(resultsBy: ResultsBy): string {
 		[ResultsBy.consensus]: 'consensus',
 		[ResultsBy.mostLiked]: 'evaluation.sumPro',
 		[ResultsBy.averageLikesDislikes]: 'evaluation.sumEvaluations',
+		[ResultsBy.topOptions]: 'consensus',
 	};
 
 	return fieldMap[resultsBy] || 'consensus';

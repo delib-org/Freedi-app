@@ -16,6 +16,8 @@ import { useStatementListeners } from './hooks/useStatementListeners';
 import { useNotificationSetup } from './hooks/useNotificationSetup';
 import { useDocumentTitle } from './hooks/useDocumentTitle';
 import { useComponentState } from './hooks/useComponentState';
+import { useStatementViewTracking } from '@/hooks/useStatementViewTracking';
+import { analyticsService } from '@/services/analytics';
 
 // Components
 import { StatementProvider } from './components/StatementProvider';
@@ -86,6 +88,21 @@ const StatementMain: React.FC = () => {
 
 	// Set document title
 	useDocumentTitle({ statement, screen });
+	
+	// Track statement view and interaction time
+	const { elementRef } = useStatementViewTracking({
+		statementId: statementId || '',
+		threshold: 0.5,
+		minViewTime: 1000,
+	});
+	// TODO: Use markInteraction when user votes or comments
+	
+	// Track initial view when statement loads
+	React.useEffect(() => {
+		if (statement && statementId) {
+			analyticsService.trackStatementView(statementId, 'direct');
+		}
+	}, [statementId, statement]);
 
 	// Handle different states
 	const renderContent = () => {
@@ -132,7 +149,9 @@ const StatementMain: React.FC = () => {
 
 	return (
 		<StatementErrorBoundary>
-			{renderContent()}
+			<div ref={elementRef}>
+				{renderContent()}
+			</div>
 		</StatementErrorBoundary>
 	);
 };

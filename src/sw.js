@@ -72,5 +72,22 @@ registerRoute(
   })
 );
 
+// Skip waiting and claim clients immediately for automatic updates
+self.addEventListener('install', (event) => {
+  self.skipWaiting();
+});
+
+self.addEventListener('activate', (event) => {
+  // Take control of all pages immediately
+  event.waitUntil(clients.claim());
+});
+
+// Listen for messages from the client
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});
+
 // The rest of the custom service worker code will be injected
 // by the vite-plugin-pwa from public/custom-sw.js

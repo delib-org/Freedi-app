@@ -19,9 +19,9 @@ export const useOnlineUsers = (statementId) => {
 
 	// Define cleanup function first
 	const cleanup = (targetStatementId, targetUser) => {
-		if (targetStatementId && targetUser) {
+		if (targetStatementId && targetUser?.uid) {
 			removeUserFromOnlineToDB(targetStatementId, targetUser.uid).catch(
-				(err) => console.error('Error removing user from online:', err)
+				(err) => console.error('Error in cleanup:', err)
 			);
 		}
 	};
