@@ -1,6 +1,5 @@
 import React from 'react';
-
-import './fullScreenModal.scss';
+import styles from './fullScreenModal.module.scss';
 
 interface FullScreenModalProps {
 	children: React.ReactNode;
@@ -10,7 +9,7 @@ export default function FullScreenModal({
 	children,
 }: FullScreenModalProps) {
 	return (
-		<div className='fullScreenModal'>
+		<div className={styles.fullScreenModal}>
 			{children}
 		</div>
 	);

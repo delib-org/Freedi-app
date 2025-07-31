@@ -20,11 +20,11 @@
 }
 .loader:before {
 	transform: rotateX(70deg);
-	animation: 1s spin-blue linear infinite;
+	animation: 1s spinBlue linear infinite;
 }
 .loader:after {
 	transform: rotateY(70deg);
-	animation: 1s spin-orange linear infinite;
+	animation: 1s spinOrange linear infinite;
 	animation-delay: 0.4s;
 }
 @keyframes rotate {
@@ -43,7 +43,7 @@
 		transform: translate(-50%, -50%) rotate(-360deg);
 	}
 }
-@keyframes spin-blue {
+@keyframes spinBlue {
 	0%,
 	100% {
 		box-shadow: 0.2em 0px 0 0px navy;
@@ -70,7 +70,7 @@
 		box-shadow: 0.2em -0.2em 0 0 navy;
 	}
 }
-@keyframes spin-orange {
+@keyframes spinOrange {
 	0%,
 	100% {
 		box-shadow: 0.2em 0px 0 0px #ff3d00;

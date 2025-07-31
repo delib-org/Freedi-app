@@ -1,17 +1,16 @@
-.loader {
+.peopleLoader {
     width: 48px;
     height: 24px;
-    color: #fff;
+    color: var(--agree);
     background: currentColor;
     border-radius: 50% 50% 0 0;
     position: relative;
     display: block;
-    margin: 60px auto 0;
-    box-sizing: border-box;
-    animation: animloader 4s linear infinite;
     margin: auto;
+    box-sizing: border-box;
+    animation: animpeopleLoader 4s linear infinite;
 }
-.loader::after {
+.peopleLoader::after {
     content: "";
     position: absolute;
     left: 50%;
@@ -22,10 +21,10 @@
     background: currentColor;
     top: -34px;
     box-sizing: border-box;
-    animation: animloader1 4s linear infinite;
+    animation: animpeopleLoader1 4s linear infinite;
 }
 
-@keyframes animloader {
+@keyframes animpeopleLoader {
     0% {
         box-shadow:
             0 0 0 -2px,
@@ -71,7 +70,7 @@
     }
 }
 
-@keyframes animloader1 {
+@keyframes animpeopleLoader1 {
     0% {
         box-shadow:
             0 0 0 -2px,

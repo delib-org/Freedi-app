@@ -11,7 +11,7 @@
         display: none;
     }
 
-    .checkbox-icon {
+    .checkboxIcon {
         min-width: 24px;
 
         svg {
@@ -21,17 +21,17 @@
         }
     }
 
-    .checkbox-label {
+    .checkboxLabel {
         flex: 1;
         color: var(--text-disabled);
     }
 
     &.checked {
-        .checkbox-label {
+        .checkboxLabel {
             color: var(--text-body);
         }
 
-        .checkbox-icon svg {
+        .checkboxIcon svg {
             color: var(--icons-blue-dark);
         }
     }

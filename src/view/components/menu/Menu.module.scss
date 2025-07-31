@@ -2,7 +2,7 @@
   position: relative;
   margin: auto;
 
-  .menu-header {
+  .menuHeader {
     width: 100%;
     flex-flow: column;
     position: relative;
@@ -10,20 +10,20 @@
     font-family: "Roboto", sans-serif;
     z-index: 20;
 
-    .menu-title {
+    .menuTitle {
       display: flex;
       justify-content: left;
       padding: 1.2rem;
       font-size: headline/medium;
     }
 
-    .menu-user {
+    .menuUser {
       display: flex;
       padding: 0.5rem 1.2rem;
       gap: 1.5rem;
       letter-spacing: 0.5px;
 
-      .menu-avatar {
+      .menuAvatar {
         width: 32px;
         height: 32px;
         border-radius: 50%;
@@ -34,7 +34,7 @@
     }
   }
 
-  .menu-content {
+  .menuContent {
     position: absolute;
     display: flex;
     border-radius: 15px;
@@ -81,20 +81,20 @@
   }
 
   @media (max-width: 1080px) {
-    .menu-content {
+    .menuContent {
       transform: translateX(20px);
     }
   }
 }
 
-.menu-footer {
+.menuFooter {
   display: flex;
   height: 83px;
   cursor: pointer;
   pointer-events: auto;
   z-index: 1000;
 
-  .menu-option {
+  .menuOption {
     border-bottom: none;
     background-color: none;
     color: white;
