@@ -4,7 +4,7 @@ import { app } from '@/controllers/db/config';
 let messageCount = 0;
 
 export function monitorNotifications() {
-    console.info('%c=== STARTING NOTIFICATION MONITOR ===', 'color: green; font-weight: bold; font-size: 16px');
+    console.info('=== STARTING NOTIFICATION MONITOR ===');
     
     try {
         const messaging = getMessaging(app);
@@ -12,11 +12,11 @@ export function monitorNotifications() {
         // Monitor foreground messages
         onMessage(messaging, (payload) => {
             messageCount++;
-            console.info(`%c[NOTIFICATION ${messageCount}] Message received!`, 'color: green; font-weight: bold');
-            console.info('Payload:', payload);
-            console.info('From:', payload.from);
-            console.info('Notification:', payload.notification);
-            console.info('Data:', payload.data);
+            console.info(`[NOTIFICATION ${messageCount}] Message received!`);
+            console.info('Payload:', { payload });
+            console.info('From:', { from: payload.from });
+            console.info('Notification:', { notification: payload.notification });
+            console.info('Data:', { data: payload.data });
             console.info('---');
             
             // Check if notification should be shown
@@ -39,7 +39,7 @@ export function monitorNotifications() {
 // Also monitor service worker messages
 if ('serviceWorker' in navigator) {
     navigator.serviceWorker.addEventListener('message', (event) => {
-        console.info('%c[SW MESSAGE]', 'color: blue; font-weight: bold', event.data);
+        console.info('[SW MESSAGE]', { data: event.data });
     });
 }
 

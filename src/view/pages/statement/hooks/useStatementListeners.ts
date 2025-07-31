@@ -56,7 +56,10 @@ export const useStatementListeners = ({
 		};
 
 		try {
-			clearInAppNotifications(statementId);
+			// Only clear notifications if we have a valid statementId
+			if (statementId) {
+				clearInAppNotifications(statementId);
+			}
 
 			// Core listeners
 			unsubscribersRef.current.push(

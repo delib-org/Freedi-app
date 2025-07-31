@@ -6,6 +6,7 @@ import { setStatementSubscriptionToDB } from '../db/subscriptions/setSubscriptio
 import { useSelector } from 'react-redux';
 import { creatorSelector } from '@/redux/creator/creatorSlice';
 import { listenToStatement, listenToStatementSubscription } from '../db/statements/listenToStatements';
+import { notificationService } from '@/services/notificationService';
 
 export interface AuthorizationState {
 	isAuthorized: boolean;
@@ -115,11 +116,17 @@ export const useAuthorization = (statementId?: string): AuthorizationState => {
 
 		// Case 3: Open group - auto-subscribe as member
 		if (isOpenAccess(topParentStatement, creator, role)) {
+			// Check if user has granted push notification permission
+			const pushNotificationsEnabled = notificationService.isInitialized() && 
+				notificationService.safeGetPermission() === 'granted';
 
 			setStatementSubscriptionToDB({
 				statement: topParentStatement,
 				creator,
-				role: Role.member
+				role: Role.member,
+				getInAppNotification: true,
+				getEmailNotification: false,
+				getPushNotification: pushNotificationsEnabled
 			});
 
 			setAuthState({

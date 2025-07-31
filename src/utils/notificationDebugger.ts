@@ -54,12 +54,12 @@ interface DebugResults {
 }
 
 export async function comprehensiveNotificationDebug() {
-    console.info('%c=== COMPREHENSIVE NOTIFICATION DEBUG ===', 'color: blue; font-weight: bold; font-size: 16px');
+    console.info('=== COMPREHENSIVE NOTIFICATION DEBUG ===');
     
     const results: DebugResults = {};
     
     // 1. Environment Check
-    console.info('%c1. Environment Check', 'color: green; font-weight: bold');
+    console.info('1. Environment Check');
     results.environment = {
         mode: import.meta.env.MODE,
         isDev: import.meta.env.DEV,
@@ -68,10 +68,10 @@ export async function comprehensiveNotificationDebug() {
         currentDomain: window.location.hostname,
         protocol: window.location.protocol
     };
-    console.info('Environment:', JSON.stringify(results.environment, null, 2));
+    console.info('Environment:', { data: JSON.stringify(results.environment, null, 2) });
     
     // 2. Firebase Configuration
-    console.info('%c2. Firebase Configuration', 'color: green; font-weight: bold');
+    console.info('2. Firebase Configuration');
     results.firebase = {
         projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || 'NOT_SET',
         messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || 'NOT_SET',
@@ -81,20 +81,20 @@ export async function comprehensiveNotificationDebug() {
         vapidKeyValue: vapidKey === 'undefined' ? 'STRING_UNDEFINED' : (vapidKey || 'NOT_SET'),
         vapidKeyPreview: vapidKey && vapidKey !== 'undefined' ? vapidKey.substring(0, 20) + '...' : 'INVALID'
     };
-    console.info('Firebase Config:', JSON.stringify(results.firebase, null, 2));
+    console.info('Firebase Config:', { data: JSON.stringify(results.firebase, null, 2) });
     
     // 3. Browser Capabilities
-    console.info('%c3. Browser Capabilities', 'color: green; font-weight: bold');
+    console.info('3. Browser Capabilities');
     results.browserSupport = {
         serviceWorker: 'serviceWorker' in navigator,
         notifications: 'Notification' in window,
         pushManager: 'PushManager' in window,
         permission: 'Notification' in window ? Notification.permission : 'not-supported'
     };
-    console.info('Browser Support:', JSON.stringify(results.browserSupport, null, 2));
+    console.info('Browser Support:', { data: JSON.stringify(results.browserSupport, null, 2) });
     
     // 4. Service Workers
-    console.info('%c4. Service Workers', 'color: green; font-weight: bold');
+    console.info('4. Service Workers');
     if ('serviceWorker' in navigator) {
         const registrations = await navigator.serviceWorker.getRegistrations();
         results.serviceWorkers = {
@@ -107,7 +107,7 @@ export async function comprehensiveNotificationDebug() {
                 isFirebaseMessaging: reg.active?.scriptURL.includes('firebase-messaging-sw.js') || false
             }))
         };
-        console.info('Service Workers:', JSON.stringify(results.serviceWorkers?.registrations, null, 2));
+        console.info('Service Workers:', { data: JSON.stringify(results.serviceWorkers?.registrations, null, 2) });
         
         // Check specific Firebase SW
         const firebaseSW = registrations.find(r => r.active?.scriptURL.includes('firebase-messaging-sw.js'));
@@ -117,7 +117,7 @@ export async function comprehensiveNotificationDebug() {
             // Check if it's registered under a different scope
             const fbSwRegistration = await navigator.serviceWorker.getRegistration('/firebase-messaging-sw.js');
             if (fbSwRegistration) {
-                console.info('✅ Firebase messaging SW found under specific scope:', fbSwRegistration.scope);
+                console.info('✅ Firebase messaging SW found under specific scope:', { scope: fbSwRegistration.scope });
                 results.serviceWorkers.registrations.push({
                     scope: fbSwRegistration.scope,
                     active: !!fbSwRegistration.active,
@@ -132,17 +132,17 @@ export async function comprehensiveNotificationDebug() {
     }
     
     // 5. Authentication Status
-    console.info('%c5. Authentication Status', 'color: green; font-weight: bold');
+    console.info('5. Authentication Status');
     const user = auth.currentUser;
     results.auth = {
         isAuthenticated: !!user,
         userId: user?.uid || 'NOT_LOGGED_IN',
         email: user?.email || 'NOT_LOGGED_IN'
     };
-    console.info('Auth Status:', JSON.stringify(results.auth, null, 2));
+    console.info('Auth Status:', { data: JSON.stringify(results.auth, null, 2) });
     
     // 6. Notification Service Status
-    console.info('%c6. Notification Service Status', 'color: green; font-weight: bold');
+    console.info('6. Notification Service Status');
     try {
         const diagnostics = await notificationService.getDiagnostics();
         results.notificationService = {
@@ -150,7 +150,7 @@ export async function comprehensiveNotificationDebug() {
             tokenPreview: diagnostics.token ? diagnostics.token.substring(0, 30) + '...' : 'none',
             token: undefined // Don't include full token in results for security
         };
-        console.info('Diagnostics:', JSON.stringify(results.notificationService, null, 2));
+        console.info('Diagnostics:', { data: JSON.stringify(results.notificationService, null, 2) });
         
         // Try to get token if user is authenticated
         if (user) {
@@ -161,7 +161,7 @@ export async function comprehensiveNotificationDebug() {
                 tokenPreview: token ? token.substring(0, 30) + '...' : 'FAILED',
                 tokenLength: token ? token.length : 0
             };
-            console.info('FCM Token Result:', JSON.stringify(results.fcmToken, null, 2));
+            console.info('FCM Token Result:', { data: JSON.stringify(results.fcmToken, null, 2) });
         }
     } catch (error) {
         console.error('Error getting notification diagnostics:', error);
@@ -172,7 +172,7 @@ export async function comprehensiveNotificationDebug() {
     }
     
     // 7. Common Issues Check
-    console.info('%c7. Common Issues Check', 'color: orange; font-weight: bold');
+    console.info('7. Common Issues Check');
     const issues = [];
     
     if (!vapidKey || vapidKey === 'undefined' || vapidKey.length < 10) {
@@ -205,14 +205,14 @@ export async function comprehensiveNotificationDebug() {
     }
     
     if (issues.length > 0) {
-        console.error('%cIssues Found:', 'color: red; font-weight: bold');
+        console.error('Issues Found:');
         issues.forEach(issue => console.error(issue));
     } else {
-        console.info('%c✅ No obvious issues found', 'color: green; font-weight: bold');
+        console.info('✅ No obvious issues found');
     }
     
     // 8. Recommendations
-    console.info('%c8. Recommendations', 'color: purple; font-weight: bold');
+    console.info('8. Recommendations');
     if (!vapidKey || vapidKey === 'undefined') {
         console.info('1. Add VAPID key to your environment file:');
         console.info('   - For development: Add to .env.development');
@@ -225,7 +225,7 @@ export async function comprehensiveNotificationDebug() {
         console.info('2. Request notification permission by calling: notificationService.requestPermission()');
     }
     
-    console.info('%c=== END DEBUG ===', 'color: blue; font-weight: bold; font-size: 16px');
+    console.info('=== END DEBUG ===');
     
     return results;
 }

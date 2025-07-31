@@ -3,7 +3,7 @@ import { app } from '@/controllers/db/config';
 import { vapidKey } from '@/controllers/db/configKey';
 
 export async function testChromeDelivery() {
-    console.info('%c=== CHROME DELIVERY TEST ===', 'color: red; font-weight: bold; font-size: 20px');
+    console.info('=== CHROME DELIVERY TEST ===');
     
     const messaging = getMessaging(app);
     
@@ -16,9 +16,9 @@ export async function testChromeDelivery() {
         
         // Get new token
         const newToken = await getToken(messaging, { vapidKey });
-        console.info('   - New token generated:', newToken ? 'Success' : 'Failed');
+        console.info('   - New token generated:', { result: newToken ? 'Success' : 'Failed' });
         if (newToken) {
-            console.info('   - Token:', newToken);
+            console.info('   - Token:', { token: newToken });
             console.info('   - Copy this token for testing');
         }
     } catch (error) {
@@ -37,7 +37,7 @@ export async function testChromeDelivery() {
         // Create a message channel for response
         const channel = new MessageChannel();
         channel.port1.onmessage = (event) => {
-            console.info('   - SW Response:', event.data);
+            console.info('   - SW Response:', { data: event.data });
         };
         
         firebaseSW.active?.postMessage({ type: 'CHECK_PUSH_SUPPORT' }, [channel.port2]);
@@ -53,11 +53,11 @@ export async function testChromeDelivery() {
         
         if (subscription) {
             console.info('   - Push subscription active');
-            console.info('   - Endpoint:', subscription.endpoint);
+            console.info('   - Endpoint:', { endpoint: subscription.endpoint });
             
             // Check if it's a valid FCM endpoint
             const isFCMEndpoint = subscription.endpoint.includes('fcm.googleapis.com');
-            console.info('   - Is FCM endpoint:', isFCMEndpoint);
+            console.info('   - Is FCM endpoint:', { isFCMEndpoint });
             
             if (!isFCMEndpoint) {
                 console.error('   - WARNING: Not an FCM endpoint!');
@@ -71,7 +71,7 @@ export async function testChromeDelivery() {
                 userVisibleOnly: true,
                 applicationServerKey: vapidKey
             });
-            console.info('   - New subscription created:', newSub.endpoint);
+            console.info('   - New subscription created:', { endpoint: newSub.endpoint });
         }
     } catch (error) {
         console.error('Push API error:', error);
@@ -82,7 +82,7 @@ export async function testChromeDelivery() {
     
     // Listen for messages from service worker
     navigator.serviceWorker.addEventListener('message', (event) => {
-        console.info('%c[SW->Main Message]', 'color: blue; font-weight: bold', new Date().toISOString(), event.data);
+        console.info('[SW->Main Message]', { timestamp: new Date().toISOString(), data: event.data });
     });
     
     // Monitor console for push events
@@ -91,13 +91,13 @@ export async function testChromeDelivery() {
     // eslint-disable-next-line no-console
     console.log = function(...args) {
         if (args.some(arg => String(arg).toLowerCase().includes('push') || String(arg).toLowerCase().includes('fcm'))) {
-            originalLog.call(console, '%c[Intercepted Push Log]', 'color: green; font-weight: bold', ...args);
+            originalLog.call(console, '[Intercepted Push Log]', ...args);
         } else {
             originalLog.apply(console, args);
         }
     };
     
-    console.info('\n%c=== Test Setup Complete ===', 'color: red; font-weight: bold; font-size: 16px');
+    console.info('\n=== Test Setup Complete ===');
     console.info('Now have Firefox send a message and watch for any activity above.');
     console.info('If nothing appears, Chrome is not receiving push events at all.');
 }

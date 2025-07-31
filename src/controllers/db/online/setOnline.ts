@@ -3,6 +3,7 @@ import {
 	doc,
 	setDoc,
 	deleteDoc,
+	getDoc,
 } from 'firebase/firestore';
 import { FireStore } from '../config';
 import { Collections, Creator, Online, OnlineSchema } from 'delib-npm';
@@ -80,18 +81,41 @@ export async function updateUserTabFocusToDB(
 }
 
 export async function removeUserFromOnlineToDB(
-	statementId: string,
-	userId: string
+	statementId: string | null | undefined,
+	userId: string | null | undefined
 ): Promise<void> {
 	try {
-		if (!statementId) throw new Error('Statement ID is undefined');
-		if (!userId) throw new Error('User ID is undefined');
+		// Early return if either parameter is null/undefined
+		if (!statementId || !userId) {
+			console.info('removeUserFromOnlineToDB: Skipping - missing statementId or userId');
+			return;
+		}
+
+		// Validate that parameters are valid strings
+		if (typeof statementId !== 'string' || typeof userId !== 'string') {
+			console.error('removeUserFromOnlineToDB: Invalid parameter types');
+			return;
+		}
+
+		// Additional validation to prevent empty strings
+		if (statementId.trim() === '' || userId.trim() === '') {
+			console.error('removeUserFromOnlineToDB: Empty statementId or userId');
+			return;
+		}
 
 		const onlineId = `${userId}--${statementId}`;
 
+		// Check if document exists before trying to delete
 		const onlineUserRef = doc(FireStore, Collections.online, onlineId);
-		await deleteDoc(onlineUserRef);
+		const docSnapshot = await getDoc(onlineUserRef);
+		
+		if (docSnapshot.exists()) {
+			await deleteDoc(onlineUserRef);
+		}
 	} catch (error) {
-		console.error('Error removing user from online:', error);
+		// Only log actual errors, not permission issues from non-existent docs
+		if (error.code !== 'permission-denied' || error.message?.includes('document does not exist')) {
+			console.error('Error removing user from online:', error);
+		}
 	}
 }

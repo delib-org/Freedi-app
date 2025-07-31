@@ -56,12 +56,16 @@ const Footer: FC<Props> = ({ setSubPage, subPage }) => {
 							? inAppNotificationsList.length
 							: `9+`}
 					</div>}
-					<TargetIcon />
+					<div className={styles.buttonIcon}>
+						<TargetIcon />
+					</div>
 				</div>
 				<span className={`${subPage === "decisions" ? styles.activeText : ""}`}>{t("Decisions")}</span>
 			</button>
 			<button onClick={() => setSubPage("groups")} className={`${styles.button} ${subPage === "groups" ? styles.buttonActive : ""}`}>
-				<GroupIcon className={`${styles.buttonImage}`} />
+				<div className={styles.buttonIcon}>
+					<GroupIcon />
+				</div>
 				<span className={`${subPage === "groups" ? styles.activeText : ""}`}>{t("Groups")}</span>
 			</button>
 
