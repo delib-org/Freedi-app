@@ -22,8 +22,9 @@
 
 	.button {
 		position: relative;
-		flex: 1;
+
 		height: 100%;
+		width: 2rem;
 		border-radius: 4rem;
 		transition: all 0.2s ease-in-out;
 		display: flex;
@@ -36,10 +37,12 @@
 			font-weight: 600;
 		}
 
-		.buttonImage {
+		.buttonIcon {
+			position: relative;
 			width: 6.5rem;
 			height: 1.5rem;
-			padding: .2rem;
+			transform: translateY(0.2rem);
+			
 
 
 

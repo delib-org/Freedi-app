@@ -5,6 +5,7 @@ import { useAuthentication } from './controllers/hooks/useAuthentication';
 import LoadingPage from './view/pages/loadingPage/LoadingPage';
 import Accessibility from './view/components/accessibility/Accessibility';
 import NotificationTester from './view/components/notifications/NotificationTester';
+import './utils/debugNotifications'; // Load debug utilities
 
 export default function App() {
 	const { isLoading, user } = useAuthentication();

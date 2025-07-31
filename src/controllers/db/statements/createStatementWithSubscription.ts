@@ -2,6 +2,8 @@ import { Statement, QuestionType, Role, getStatementSubscriptionId, StatementTyp
 import { createStatement, setStatementToDB } from './setStatements';
 import { setStatement, setStatementSubscription } from '@/redux/statements/statementsSlice';
 import { Dispatch } from '@reduxjs/toolkit';
+import { setStatementSubscriptionToDB } from '@/controllers/db/subscriptions/setSubscriptions';
+import { notificationService } from '@/services/notificationService';
 
 interface CreateStatementWithSubscriptionParams {
 	newStatementParent: Statement | 'top';
@@ -57,6 +59,19 @@ export async function createStatementWithSubscription({
 		createdAt: now,
 		userId: user?.uid || '',
 	}));
+
+	// Create subscription in Firestore with push notifications enabled if user has granted permission
+	const pushNotificationsEnabled = notificationService.isInitialized() && 
+		notificationService.safeGetPermission() === 'granted';
+	
+	await setStatementSubscriptionToDB({
+		statement: _newStatement,
+		creator: user,
+		role: Role.admin,
+		getInAppNotification: true,
+		getEmailNotification: false,
+		getPushNotification: pushNotificationsEnabled
+	});
 
 	return statementId;
 }

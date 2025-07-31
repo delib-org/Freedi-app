@@ -10,7 +10,7 @@ import profilePicPH from '@/assets/images/user-page.png';
 import React, { useRef, useState } from 'react';
 import RadioButtonWithLabel from '@/view/components/radioButtonWithLabel/RadioButtonWithLabel';
 import Button from '@/view/components/buttons/button/Button';
-import { useNavigate } from 'react-router';
+import { useNavigate, Link } from 'react-router';
 
 const My = () => {
 	const user = useSelector(creatorSelector);
@@ -79,6 +79,13 @@ const My = () => {
 						text='save'
 						onClick={() => navigate('/')}
 					/>
+				</div>
+				
+				{/* Settings button using SCSS classes */}
+				<div className="btns" style={{ marginTop: '2rem' }}>
+					<Link to="/my/check-notifications" className="btn btn--seciondary">
+						{t('Check Notifications')}
+					</Link>
 				</div>
 			</div>
 		</div>

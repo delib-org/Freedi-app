@@ -10,6 +10,7 @@ import {
 	Collections, StatementType,
 	Statement,
 	StatementSchema,
+	LastMessage,
 } from 'delib-npm';
 import { FirestoreEvent } from 'firebase-functions/firestore';
 import { parse } from 'valibot';
@@ -26,8 +27,8 @@ export async function updateNumberOfNewSubStatements(
 	if (!e.data) return;
 	try {
 		//get parentId
-		const _statement = parse(StatementSchema, e.data.data());
-		const { parentId, topParentId, statementId, statement } = _statement;
+		const _statement:Statement = parse(StatementSchema, e.data.data());
+		const { parentId, topParentId, statementId } = _statement;
 
 		if (parentId === 'top') return;
 
@@ -37,7 +38,11 @@ export async function updateNumberOfNewSubStatements(
 		const parentRef = db.doc(`${Collections.statements}/${parentId}`);
 
 		//update parent
-		const lastMessage = statement;
+		const lastMessage:LastMessage = {
+			message: _statement.statement,
+			creator: _statement.creator.displayName || "Anonymous",
+			createdAt: Timestamp.now().toMillis(),
+		}
 		const lastUpdate = Timestamp.now().toMillis();
 		parentRef.update({
 			lastMessage,

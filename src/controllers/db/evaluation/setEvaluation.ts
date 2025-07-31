@@ -2,6 +2,8 @@ import { Timestamp, doc, setDoc, updateDoc } from 'firebase/firestore';
 import { FireStore } from '../config';
 import { number, parse } from 'valibot';
 import { EvaluationSchema, Collections, Statement, User, EvaluationUI } from 'delib-npm';
+import { analyticsService } from '@/services/analytics';
+import { logger } from '@/services/logger';
 
 export async function setEvaluationToDB(
 	statement: Statement,
@@ -42,8 +44,24 @@ export async function setEvaluationToDB(
 		parse(EvaluationSchema, evaluationData);
 
 		await setDoc(evaluationRef, evaluationData);
+		
+		// Track evaluation/vote
+		logger.info('Evaluation set', { 
+			statementId, 
+			evaluation,
+			userId: creator.uid 
+		});
+		
+		analyticsService.trackStatementVote(
+			statementId, 
+			evaluation, // -1 to 1 scale
+			'button' // Could be passed as parameter if needed
+		);
 	} catch (error) {
-		console.error(error);
+		logger.error('Failed to set evaluation', error, {
+			statementId: statement.statementId,
+			userId: creator.uid
+		});
 	}
 }
 
@@ -51,7 +69,7 @@ export function setEvaluationUIType(statementId: string, evaluationUI: Evaluatio
 
 	const evaluationUIRef = doc(FireStore, Collections.statements, statementId);
 	updateDoc(evaluationUIRef, { evaluationSettings: { evaluationUI: evaluationUI } }).catch(error => {
-		console.error('Error updating evaluation UI:', error);
+		logger.error('Error updating evaluation UI', error, { statementId });
 	});
 
 	return evaluationUIRef;

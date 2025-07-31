@@ -8,20 +8,34 @@ import {
 } from 'firebase/auth';
 import { connectFirestoreEmulator, getFirestore } from 'firebase/firestore';
 import { getStorage, connectStorageEmulator } from 'firebase/storage';
+import { getAnalytics, isSupported } from 'firebase/analytics';
 import { isProduction } from '../general/helpers';
 import firebaseConfig from './configKey';
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
+// Firebase app initialized
 
 const FireStore = getFirestore(app);
 const DB = FireStore;
 const storage = getStorage(app);
 const auth = getAuth();
 
+// Initialize Analytics only in production and if supported
+let analytics: ReturnType<typeof getAnalytics> | null = null;
+if (isProduction()) {
+	isSupported().then((supported) => {
+		if (supported) {
+			analytics = getAnalytics(app);
+		}
+	}).catch(() => {
+		// Analytics not supported
+	});
+}
+
 setPersistence(auth, browserLocalPersistence)
 	.then(() => {
-		console.info('Persistence set to local storage (cross-site safe).');
+		// Persistence set to local storage
 	})
 	.catch((error) => {
 		console.error('Error setting persistence:', error);
@@ -36,4 +50,4 @@ if (!isProduction()) {
 	connectStorageEmulator(storage, '127.0.0.1', 9199);
 }
 
-export { auth, FireStore, storage, app, DB };
+export { auth, FireStore, storage, app, DB, analytics };

@@ -34,6 +34,7 @@ import ThankYou from '@/view/pages/massConsensus/thankYou/ThankYou';
 import { MassConsensusPageUrls } from 'delib-npm';
 import UserDemographicMC from '@/view/pages/massConsensus/massConsesusQuestion/userDemographicMC/UserDemographicMC';
 import My from '@/view/pages/my/My';
+import CheckNotifications from '@/view/pages/settings/ChecNotifications';
 
 // Define errorRoutes
 const errorRoutes = [
@@ -177,12 +178,19 @@ export const router = createBrowserRouter([
 			// Protected routes wrapped in ProtectedLayout that contains user Authorization for Statement.
 			{
 				element: <ProtectedLayout />,
-				children: protectedRoutes,
+				children: [
+					...protectedRoutes,
+				],
+			},
+			// User profile routes that need authentication but not statement authorization
+			{
+				path: 'my',
+				element: <My />,
 			},
 			{
-				element: <My />,
-				path: 'my',
-			}
+				path: 'my/check-notifications',
+				element: <CheckNotifications />,
+			},
 		],
 	},
 	// Error routes at root level.
