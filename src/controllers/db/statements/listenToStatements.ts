@@ -33,7 +33,7 @@ import {
 	Creator,
 } from 'delib-npm';
 
-import { parse, safeParse, flatten, isValiError } from 'valibot';
+import { parse, safeParse, flatten } from 'valibot';
 import React from 'react';
 
 // Helpers
@@ -317,7 +317,8 @@ export function listenToAllSubStatements(
 						});
 					}
 					console.error('=== END VALIDATION ERROR ===\n');
-					return;
+					
+return;
 				}
 				
 				// Successfully parsed
