@@ -1,26 +1,30 @@
 .votingArea {
-    position: relative;
-    width: 100%;
-}
+    &.horizontal {
+        right: 0;
+        display: flex;
+        direction: ltr;
+        padding: 1.5rem 0;
+        height: 100svw;
+        rotate: 90deg;
+    }
 
-.horizontal {
-    @extend .votingArea;
-    right: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    direction: ltr;
-    padding: 1.5rem 0;
-    height: 100svw;
-    rotate: 90deg;
-}
-
-.vertical {
-    @extend .votingArea;
-    display: flex;
-    justify-content: center;
-    align-items: flex-end;
-    direction: rtl;
-    margin: 0 auto;
-    height: 100%;
+    &.vertical {
+        display: flex;
+        direction: rtl;
+        margin: 0 auto;
+        height: 100%;
+        position: relative;
+        overflow-x: auto;
+        padding: 0 60px;
+        box-sizing: border-box;
+        
+        &::-webkit-scrollbar {
+            height: 8px;
+        }
+        
+        &::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 4px;
+        }
+    }
 }

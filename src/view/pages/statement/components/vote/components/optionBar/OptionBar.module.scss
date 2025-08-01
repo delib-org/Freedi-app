@@ -24,8 +24,8 @@
         align-items: center;
         transition: all 150ms ease-in-out;
 
-        :hover,
-        :active {
+        &:hover,
+        &:active {
             overflow: visible;
         }
 
