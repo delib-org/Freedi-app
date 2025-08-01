@@ -3,42 +3,61 @@ import { RootState } from "@/redux/store";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import "./InAppSnackbar.scss";
-import { useUserConfig } from './../../../controllers/hooks/useUserConfig';
+import { useUserConfig } from "../../../controllers/hooks/useUserConfig";
+
+interface SnackbarState {
+    open: boolean;
+    title: string;
+    content: string;
+    type: "alert" | "info" | "confirmation";
+    buttons?: { label: string; action?: () => void }[];
+}
 
 const InAppSnackbar = () => {
     const dispatch = useDispatch();
-    const { open, title, content, type, buttons } = useSelector(
-        (state: RootState) => state.snackbar
-    );
-
+    const snackbarState = useSelector((state: RootState) => state.snackbar);
     const [visible, setVisible] = useState(false);
+    const [shouldRender, setShouldRender] = useState(false);
+    const [localSnackbar, setLocalSnackbar] = useState<SnackbarState>(snackbarState);
+
+    const dismissSnackbar = () => {
+        setVisible(false);
+        setTimeout(() => {
+            setShouldRender(false);
+            dispatch(hideSnackbar());
+        }, 300);
+    };
 
     useEffect(() => {
-        if (open) {
+        if (snackbarState.open) {
+            setLocalSnackbar(snackbarState);
+            setShouldRender(true);
             setVisible(true);
 
-            if (type !== "alert") {
+            if (snackbarState.type !== "alert") {
                 const timer = setTimeout(() => {
-                    setVisible(false); // 👈 triggers fadeOut
-                    setTimeout(() => dispatch(hideSnackbar()), 300); // 👈 give time to fade out
+                    dismissSnackbar();
                 }, 4000);
 
                 return () => clearTimeout(timer);
             }
         } else {
             setVisible(false);
-            const timeout = setTimeout(() => dispatch(hideSnackbar()), 300);
+            const timeout = setTimeout(() => {
+                setShouldRender(false);
+                dispatch(hideSnackbar());
+            }, 300);
 
             return () => clearTimeout(timeout);
         }
-    }, [open, type, dispatch]);
+    }, [snackbarState, dispatch]);
 
-    if (!open && !visible) return null;
+    if (!shouldRender) return null;
 
     const bgClass =
-        type === "alert"
+        localSnackbar.type === "alert"
             ? "snackbar--alert"
-            : type === "info"
+            : localSnackbar.type === "info"
                 ? "snackbar--info"
                 : "snackbar--confirmation";
 
@@ -48,22 +67,24 @@ const InAppSnackbar = () => {
         <div
             className={`snackbar ${bgClass} ${visible ? "snackbar--visible" : "snackbar--hidden"
                 }`}
-            dir={dir}>
-            <div className="snackbar__title">{title}</div>
-            <div className="snackbar__content">{content}</div>
+            dir={dir}
+        >
+            <div className="snackbar__title">{localSnackbar.title}</div>
+            <div className="snackbar__content">{localSnackbar.content}</div>
             <div className="snackbar__buttons">
-                {buttons?.map((btn, idx) => (
-                    <button key={idx} onClick={btn.action}>
+                {localSnackbar.buttons?.map((btn, idx) => (
+                    <button
+                        key={idx}
+                        onClick={() => {
+                            btn.action?.();
+                            dismissSnackbar();
+                        }}
+                    >
                         {btn.label}
                     </button>
                 ))}
-                {!buttons?.length && (
-                    <button onClick={() => {
-                        setVisible(false);
-                        setTimeout(() => dispatch(hideSnackbar()), 300);
-                    }}>
-                        Dismiss
-                    </button>
+                {!localSnackbar.buttons?.length && (
+                    <button onClick={dismissSnackbar}>Dismiss</button>
                 )}
             </div>
         </div>
