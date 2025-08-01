@@ -6,7 +6,7 @@ import { Role } from 'delib-npm';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import { statementSelector, statementSubscriptionSelector } from '@/redux/statements/statementsSlice';
-import './FollowMeToast.scss';
+import styles from './FollowMeToast.module.scss';
 import { StatementContext } from '../../StatementCont';
 import { useSelector } from 'react-redux';
 
@@ -51,7 +51,7 @@ const FollowMeToast: FC = () => {
 
 	function ToastInner() {
 		return (
-			<button className='follow-me-toast' onClick={handleRemoveToast}>
+			<button className={styles.followMeToast} onClick={handleRemoveToast}>
 				<span>
 					{t(_isAdmin ? 'Follow Mode Active' : 'Follow Instructor')}
 				</span>

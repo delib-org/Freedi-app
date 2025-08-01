@@ -1,0 +1,120 @@
+$SwitchWidth: 6.9rem;
+$SwitchHeight: 2.6729rem;
+
+.customSwitchSmall {
+    display: flex;
+    flex-direction: column;
+    width: fit-content;
+    align-items: start;
+
+    input {
+        display: none;
+    }
+}
+
+.switchInput {
+    display: none;
+}
+
+.background {
+    position: relative;
+    width: $SwitchWidth;
+    height: $SwitchHeight;
+    background-position: center;
+    background-size: cover;
+    background-repeat: no-repeat;
+}
+
+.backgroundLtr {
+    @extend .background;
+    transform: scale(-1, 1);
+}
+
+.text {
+    margin: 5px 0px 0px 0px;
+    font-size: .9rem;
+    color: var(--text-label);
+    position: relative;
+}
+
+.ball {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: $SwitchHeight;
+    width: $SwitchHeight;
+    position: absolute;
+    border-radius: 100%;
+}
+
+.ballBackground {
+    @extend .ball;
+    color: var(--toggle-background);
+}
+
+.ballBackgroundOff {
+    @extend .ballBackground;
+    position: absolute;
+    left: 0rem;
+}
+
+.ballSwitch {
+    @extend .ball;
+    color: var(--icons-white);
+    animation-duration: 0.15s;
+    animation-timing-function: ease-in-out;
+}
+
+.ballSwitchChecked {
+    @extend .ballSwitch;
+    background-color: var(--toggle-enabled);
+    filter: drop-shadow(0px -2.1px 4.2px rgba(90, 174, 159, 0.30)) drop-shadow(0px 2.1px 4.2px rgba(90, 174, 159, 0.40));
+    left: 4.15rem;
+    animation-name: toChecked;
+    animation-fill-mode: forwards;
+    animation-direction: normal;
+}
+
+.ballSwitchUnchecked {
+    @extend .ballSwitch;
+    background-color: rgb(206, 206, 206);
+    filter: drop-shadow(0px -2.1px 4.2px rgba(223, 136, 136, 0.30)) drop-shadow(0px 2.1px 4.2px rgba(223, 136, 136, 0.40));
+    left: 0;
+    animation-name: toUnchecked;
+    animation-fill-mode: forwards;
+    animation-direction: reverse;
+}
+
+@keyframes toUnchecked {
+    0% {
+        left: 4.15rem;
+        scale: 1;
+    }
+
+    50% {
+        left: 2.07rem;
+        scale: .4;
+    }
+
+    100% {
+        left: 0;
+        scale: 1;
+    }
+}
+
+@keyframes toChecked {
+    0% {
+        left: 4.15rem;
+        scale: 1;
+    }
+
+    50% {
+        left: 2.07rem;
+        scale: .4;
+    }
+
+    100% {
+        left: 0;
+        scale: 1;
+    }
+}

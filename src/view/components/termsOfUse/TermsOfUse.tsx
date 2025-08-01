@@ -1,7 +1,7 @@
 import Button, { ButtonType } from '../buttons/button/Button';
 import Modal from '../modal/Modal';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
-import './TermsOfUse.scss';
+import styles from './TermsOfUse.module.scss';
 
 interface Props {
 	handleAgreement: (agree: boolean, agreement: string) => void;
@@ -16,8 +16,8 @@ export default function TermsOfUse({
 
 	return (
 		<Modal>
-			<div className='terms-of-use' data-cy='termsOfUse'>
-				<h1 className='terms-of-use-title'>{t('terms of use')}</h1>
+			<div className={styles.termsOfUse} data-cy='termsOfUse'>
+				<h1 className={styles.termsOfUseTitle}>{t('terms of use')}</h1>
 				<p>{agreement}</p>
 				<div className='btns'>
 					<Button
