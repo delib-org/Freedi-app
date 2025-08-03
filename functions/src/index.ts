@@ -32,8 +32,9 @@ import {
   onNewSubscription,
   onStatementDeletionDeleteSubscriptions,
   setAdminsToNewStatement,
-  updateSubscriptionsSimpleStatement,
+  updateSubscriptionsSimpleStatement
 } from "./fn_subscriptions";
+import { updateParentStatementOnChildChange } from "./fn_statement_updates";
 import {
   getRandomStatements,
   getTopStatements,
@@ -204,12 +205,10 @@ exports.updateNumberOfMembers = createFirestoreFunction(
   "updateNumberOfMembers"
 );
 
-exports.updateSubscriptionsSimpleStatement = createFirestoreFunction(
-  `/${Collections.statements}/{statementId}`,
-  onDocumentUpdated,
-  updateSubscriptionsSimpleStatement,
-  "updateSubscriptionsSimpleStatement"
-);
+// New v2 functions to update statements and subscriptions efficiently
+// These are v2 functions, so we export them directly without the wrapper
+exports.updateParentStatementOnChildChange = updateParentStatementOnChildChange;
+exports.updateSubscriptionsSimpleStatement = updateSubscriptionsSimpleStatement;
 
 // Mass Consensus functions
 

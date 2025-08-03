@@ -95,7 +95,7 @@ const HomeMain = () => {
 						subPage === "groups" ?
 							<MainCard
 								key={sub.statementId}
-								simpleStatement={sub.statement}
+								subscription={sub}
 							/> :
 							<MainQuestionCard
 								key={sub.statementId}

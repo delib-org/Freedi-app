@@ -91,23 +91,23 @@ export async function setStatementSubscriptionToDB({
 	}
 }
 
-export async function updateSubscriberForStatementSubStatements(
-	statement: Statement,
+export async function updateLastReadTimestamp(
+	statementId: string,
 	userId: string
 ) {
 	try {
-		const statementsSubscribeId = `${userId}--${statement.statementId}`;
+		if(!statementId || !userId) throw new Error('statementId and userId are required');
+		const statementsSubscribeId = `${userId}--${statementId}`;
 
 		const statementsSubscribeRef = doc(
 			FireStore,
 			Collections.statementsSubscribe,
 			statementsSubscribeId
 		);
-		const newSubStatementsRead = {
-			totalSubStatementsRead: statement.totalSubStatements || 0,
-		};
 
-		await updateDoc(statementsSubscribeRef, newSubStatementsRead);
+		await updateDoc(statementsSubscribeRef, {
+			lastReadTimestamp: new Date().getTime()
+		});
 	} catch (error) {
 		console.error(error);
 	}
