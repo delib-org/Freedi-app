@@ -23,16 +23,42 @@ export const updateParentStatementOnChildChange = onDocumentWritten({
         // Skip if this is a deletion or no parent
         if (!after || !after.parentId) return;
 
+        // Check if this update was triggered by our own function to prevent loops
+        // Skip if only lastChildUpdate, lastUpdate, or lastSubStatements changed
+        if (before && after) {
+            const beforeCopy = { ...before };
+            const afterCopy = { ...after };
+            
+            // Remove fields that this function updates
+            delete beforeCopy.lastChildUpdate;
+            delete beforeCopy.lastUpdate;
+            delete beforeCopy.lastSubStatements;
+            delete afterCopy.lastChildUpdate;
+            delete afterCopy.lastUpdate;
+            delete afterCopy.lastSubStatements;
+            
+            // If nothing else changed, this is likely our own update
+            if (JSON.stringify(beforeCopy) === JSON.stringify(afterCopy)) {
+                logger.info('Skipping update - appears to be triggered by parent update function');
+                return;
+            }
+        }
+
         // Check if this is a significant change
         const isNewStatement = !before && after;
         const hasContentChange = before && after && (
             before.statement !== after.statement ||
-            before.description !== after.description
+            before.description !== after.description ||
+            before.consensus !== after.consensus
         );
 
-        if (!isNewStatement && !hasContentChange) {
-            logger.info('No significant changes, skipping parent update');
+        // For options/questions, check if statementType changed
+        const hasTypeChange = before && after && (
+            before.statementType !== after.statementType
+        );
 
+        if (!isNewStatement && !hasContentChange && !hasTypeChange) {
+            logger.info('No significant changes, skipping parent update');
             return;
         }
 
