@@ -32,8 +32,9 @@ import {
   onNewSubscription,
   onStatementDeletionDeleteSubscriptions,
   setAdminsToNewStatement,
-  updateSubscriptionsSimpleStatement,
+  // updateSubscriptionsSimpleStatement, // DISABLED - see line 208
 } from "./fn_subscriptions";
+import { updateParentStatementOnChildChange } from "./fn_statement_updates";
 import {
   getRandomStatements,
   getTopStatements,
@@ -204,11 +205,22 @@ exports.updateNumberOfMembers = createFirestoreFunction(
   "updateNumberOfMembers"
 );
 
-exports.updateSubscriptionsSimpleStatement = createFirestoreFunction(
+// DISABLED: This function caused massive performance issues by updating ALL subscriptions
+// when a statement changed. Replaced by updateParentStatementOnChildChange which only
+// updates the parent statement with lastSubStatements array.
+// exports.updateSubscriptionsSimpleStatement = createFirestoreFunction(
+//   `/${Collections.statements}/{statementId}`,
+//   onDocumentUpdated,
+//   updateSubscriptionsSimpleStatement,
+//   "updateSubscriptionsSimpleStatement"
+// );
+
+// New function to update parent statements instead of all subscriptions
+exports.updateParentStatementOnChildChange = createFirestoreFunction(
   `/${Collections.statements}/{statementId}`,
-  onDocumentUpdated,
-  updateSubscriptionsSimpleStatement,
-  "updateSubscriptionsSimpleStatement"
+  onDocumentWritten,
+  updateParentStatementOnChildChange,
+  "updateParentStatementOnChildChange"
 );
 
 // Mass Consensus functions
