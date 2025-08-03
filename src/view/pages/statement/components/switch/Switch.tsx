@@ -32,7 +32,10 @@ const Switch = () => {
   }
 
   function handleStartEdit() {
-    if (isCreator) setEdit(true);
+    if (isAdmin) {
+      console.log("Editing statement");
+      setEdit(true);
+    }
   }
 
   return (
