@@ -27,16 +27,16 @@ export default function GroupPage() {
 
 	return (
 		<div className={styles.groupPage}>
-			<div className={styles.mainWrapper}>
+			<div className={`wrapper`}>
 				<p>{statement?.description}</p>
 				{subGroups.length > 0 && <h4>{t("Groups")}</h4>}
-				<div className={styles.subElementsWrapper}>
+				<div className={styles.wrapper}>
 					{subGroups.map((sub) => (
 						<SubGroupCard key={sub.statementId} statement={sub} />
 					))}
 				</div>
 				{subQuestions.length > 0 && <h4>{t("Questions")}</h4>}
-				<div className={styles.subElementsWrapper}>
+				<div className={styles.wrapper}>
 					{subQuestions.map((sub) => (
 						<SubGroupCard key={sub.statementId} statement={sub} />
 					))}
