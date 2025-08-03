@@ -171,7 +171,8 @@ export const updateSubscriptionsSimpleStatement = onDocumentUpdated({
 		//update all statement subscriptions
 		if (statementSubscriptions.length === 0) {
 			logger.info('No subscriptions found for statement ' + statementId);
-			return;
+			
+return;
 		}
 		
 		logger.info(`Updating ${statementSubscriptions.length} subscriptions for statement ${statementId}`);

@@ -8,7 +8,6 @@ import { Role, StatementType } from "delib-npm";
 
 import SwitchScreen from "./SwitchScreen";
 import { updateStatementText } from "@/controllers/db/statements/setStatements";
-import { useAuthentication } from "@/controllers/hooks/useAuthentication";
 import { useAuthorization } from "@/controllers/hooks/useAuthorization";
 import OnlineUsers from "../nav/online/OnlineUsers";
 
@@ -16,8 +15,6 @@ const Switch = () => {
   const { statement } = useContext(StatementContext);
   const { role } = useAuthorization(statement?.statementId);
   const { parentStatement } = useSwitchMV();
-  const { user } = useAuthentication();
-  const isCreator = statement?.creator.uid === user?.uid;
   const isAdmin = role === Role.admin || role === Role.creator;
 
   const [edit, setEdit] = useState(false);
@@ -33,7 +30,6 @@ const Switch = () => {
 
   function handleStartEdit() {
     if (isAdmin) {
-      console.log("Editing statement");
       setEdit(true);
     }
   }

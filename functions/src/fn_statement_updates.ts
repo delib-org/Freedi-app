@@ -8,7 +8,6 @@ import {
     statementToSimpleStatement,
 } from 'delib-npm';
 
-
 /**
  * Updates parent statement when a child statement is created or modified
  * This replaces the need to update all subscription documents
@@ -66,8 +65,6 @@ async function updateParentWithLatestChildren(parentId: string) {
             return;
         }
 
-        
-
         // Convert to SimpleStatement array
         const lastSubStatements: SimpleStatement[] = subStatementsQuery.docs.map(doc => {
             const statement = doc.data() as Statement;
@@ -102,7 +99,6 @@ async function updateParentSubscriptions(statementId: string, timestamp: number,
     try {
 
         const LIMIT = 500; // Safety limit to prevent runaway updates
-      
 
         // Get all subscriptions for this specific statement
         const subscriptionsQuery = await db
@@ -113,7 +109,8 @@ async function updateParentSubscriptions(statementId: string, timestamp: number,
 
         if (subscriptionsQuery.empty) {
             logger.info(`No subscriptions found for statement ${statementId}`);
-            return;
+            
+return;
         }
 
         if (subscriptionsQuery.size >= LIMIT) {
@@ -138,8 +135,6 @@ async function updateParentSubscriptions(statementId: string, timestamp: number,
         logger.error(`Error updating subscriptions for statement ${statementId}:`, error);
     }
 }
-
-
 
 /**
  * Optional: Function to backfill existing statements with lastSubStatements

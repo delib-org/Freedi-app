@@ -11,8 +11,7 @@ import {
 import { FireStore } from '@/controllers/db/config';
 import { 
     Collections, 
-    Statement, 
-    StatementSubscription 
+    Statement
 } from 'delib-npm';
 import { store } from '@/redux/store';
 import { setStatement } from '@/redux/statements/statementsSlice';
@@ -36,7 +35,8 @@ class SubscriptionManager {
         if (this.activeListeners.has(statementId)) {
             const listener = this.activeListeners.get(statementId)!;
             listener.lastAccessed = Date.now();
-            return listener.unsubscribe;
+            
+return listener.unsubscribe;
         }
 
         // Clean up old listeners if at capacity
