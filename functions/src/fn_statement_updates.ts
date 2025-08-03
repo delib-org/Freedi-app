@@ -86,18 +86,8 @@ async function updateParentWithLatestChildren(parentId: string) {
 
         logger.info(`Updated parent ${parentId} with ${lastSubStatements.length} sub-statements`);
 
-        // Get parent data to check for grandparent
-        const parentDoc = await parentRef.get();
-        const parentData = parentDoc.data() as Statement;
-
         // Update ONLY direct parent subscriptions (not cascading to all statements)
-        await updateParentSubscriptionsTimestamp(parentId, timestamp);
-
-        // Propagate timestamp update to grandparent if exists
-        if (parentData.parentId && parentData.parentId !== 'top') {
-            logger.info(`Propagating update to grandparent ${parentData.parentId}`);
-            await updateGrandparentTimestamp(parentData.parentId);
-        }
+        await updateParentSubscriptions(parentId, timestamp, lastSubStatements);
 
     } catch (error) {
         logger.error(`Error updating parent ${parentId}:`, error);
@@ -108,13 +98,17 @@ async function updateParentWithLatestChildren(parentId: string) {
  * Updates the lastUpdate timestamp for all subscriptions to a specific statement
  * This is limited to ONLY the direct parent statement to avoid cascading
  */
-async function updateParentSubscriptionsTimestamp(statementId: string, timestamp: number) {
+async function updateParentSubscriptions(statementId: string, timestamp: number,lastSubStatements: SimpleStatement[] ) {
     try {
+
+        const LIMIT = 500; // Safety limit to prevent runaway updates
+      
+
         // Get all subscriptions for this specific statement
         const subscriptionsQuery = await db
             .collection(Collections.statementsSubscribe)
             .where('statementId', '==', statementId)
-            .limit(1000) // Safety limit to prevent runaway updates
+            .limit(LIMIT) // Safety limit to prevent runaway updates
             .get();
 
         if (subscriptionsQuery.empty) {
@@ -122,8 +116,8 @@ async function updateParentSubscriptionsTimestamp(statementId: string, timestamp
             return;
         }
 
-        if (subscriptionsQuery.size >= 1000) {
-            logger.warn(`Found more than 1000 subscriptions for statement ${statementId}, consider batching updates`);
+        if (subscriptionsQuery.size >= LIMIT) {
+            logger.warn(`Found more than ${LIMIT} subscriptions for statement ${statementId}, consider batching updates`);
         }
 
         logger.info(`Updating ${subscriptionsQuery.size} subscriptions for statement ${statementId}`);
@@ -133,6 +127,7 @@ async function updateParentSubscriptionsTimestamp(statementId: string, timestamp
         subscriptionsQuery.docs.forEach(doc => {
             batch.update(doc.ref, {
                 lastUpdate: timestamp,
+                lastSubStatements: lastSubStatements
             });
         });
 
@@ -144,23 +139,7 @@ async function updateParentSubscriptionsTimestamp(statementId: string, timestamp
     }
 }
 
-/**
- * Updates grandparent's lastChildUpdate timestamp
- * This ensures updates propagate up the entire hierarchy
- */
-async function updateGrandparentTimestamp(grandparentId: string) {
-    try {
-        const timestamp = Date.now();
-        await db.collection(Collections.statements).doc(grandparentId).update({
-            lastChildUpdate: timestamp
-        });
 
-        // Also update grandparent's subscriptions
-        await updateParentSubscriptionsTimestamp(grandparentId, timestamp);
-    } catch (error) {
-        logger.error(`Error updating grandparent ${grandparentId}:`, error);
-    }
-}
 
 /**
  * Optional: Function to backfill existing statements with lastSubStatements
