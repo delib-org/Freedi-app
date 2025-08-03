@@ -148,6 +148,14 @@ export const updateSubscriptionsSimpleStatement = onDocumentUpdated({
 		
 		if (!_statementBefore || !_statementAfter) return;
 
+		// Skip if this is an update caused by other functions (check for typical function-updated fields)
+		if (_statementBefore.lastUpdate !== _statementAfter.lastUpdate && 
+			_statementBefore.statement === _statementAfter.statement &&
+			_statementBefore.description === _statementAfter.description) {
+			logger.info('Skipping subscription update - only metadata changed');
+			return;
+		}
+
 		const simpleStatementBefore =
 			statementToSimpleStatement(_statementBefore);
 		const simpleStatementAfter =
@@ -157,8 +165,10 @@ export const updateSubscriptionsSimpleStatement = onDocumentUpdated({
 		if (
 			simpleStatementBefore.statement === simpleStatementAfter.statement &&
 			simpleStatementBefore.description === simpleStatementAfter.description
-		)
+		) {
+			logger.info('No content changes in statement, skipping subscription update');
 			return;
+		}
 
 		const statement = parse(StatementSchema, _statementAfter);
 

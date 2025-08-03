@@ -140,10 +140,14 @@ export async function updateOptionInMassConsensus(change: any) {
 
 		if (!beforeData || !afterData) return;
 
-		// Check if the statement type changed
-		if (beforeData.statementType === afterData.statementType) return;
-		if (beforeData.statementType !== StatementType.option && afterData.statementType !== StatementType.option
-		) return;
+		// Only process if this is an option
+		if (afterData.statementType !== StatementType.option) return;
+
+		// Check if the statement type changed (only care about type changes)
+		if (beforeData.statementType === afterData.statementType) {
+			logger.info('No statement type change for option, skipping mass consensus update');
+			return;
+		}
 
 		const parentRef = db.collection(Collections.statements).doc(afterData.parentId);
 

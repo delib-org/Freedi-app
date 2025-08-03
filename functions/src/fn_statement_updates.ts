@@ -26,8 +26,8 @@ export const updateParentStatementOnChildChange = onDocumentWritten({
         // Check if this update was triggered by our own function to prevent loops
         // Skip if only lastChildUpdate, lastUpdate, or lastSubStatements changed
         if (before && after) {
-            const beforeCopy = { ...before };
-            const afterCopy = { ...after };
+            const beforeCopy: any = { ...before };
+            const afterCopy: any = { ...after };
             
             // Remove fields that this function updates
             delete beforeCopy.lastChildUpdate;
