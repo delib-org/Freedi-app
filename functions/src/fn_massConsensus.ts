@@ -133,17 +133,40 @@ export async function removeOptionFromMassConsensus(ev: any) {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export async function updateOptionInMassConsensus(change: any) {
+export async function updateOptionInMassConsensus(event: any) {
 	try {
+		// Handle both v1 and v2 function signatures
+		const change = event.data || event;
 		const beforeData = change.before?.data() as Statement || undefined;
 		const afterData = change.after?.data() as Statement || undefined;
 
 		if (!beforeData || !afterData) return;
 
-		// Check if the statement type changed
-		if (beforeData.statementType === afterData.statementType) return;
-		if (beforeData.statementType !== StatementType.option && afterData.statementType !== StatementType.option
-		) return;
+		// Only process if this is an option
+		if (afterData.statementType !== StatementType.option) {
+			logger.info('Not an option statement, skipping mass consensus update');
+			return;
+		}
+
+		// Skip if only metadata fields changed (not statementType)
+		const relevantFieldsChanged = beforeData.statementType !== afterData.statementType;
+		
+		if (!relevantFieldsChanged) {
+			// Check if this is just a metadata update from other functions
+			const metadataOnlyUpdate = (
+				beforeData.lastUpdate !== afterData.lastUpdate ||
+				beforeData.lastChildUpdate !== afterData.lastChildUpdate ||
+				JSON.stringify(beforeData.lastSubStatements) !== JSON.stringify(afterData.lastSubStatements)
+			) && beforeData.statement === afterData.statement;
+			
+			if (metadataOnlyUpdate) {
+				logger.info('Only metadata changed for option, skipping mass consensus update');
+				return;
+			}
+			
+			logger.info('No relevant changes for mass consensus, skipping update');
+			return;
+		}
 
 		const parentRef = db.collection(Collections.statements).doc(afterData.parentId);
 

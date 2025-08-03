@@ -148,6 +148,14 @@ export const updateSubscriptionsSimpleStatement = onDocumentUpdated({
 		
 		if (!_statementBefore || !_statementAfter) return;
 
+		// Skip if this is an update caused by other functions (check for typical function-updated fields)
+		if (_statementBefore.lastUpdate !== _statementAfter.lastUpdate && 
+			_statementBefore.statement === _statementAfter.statement &&
+			_statementBefore.description === _statementAfter.description) {
+			logger.info('Skipping subscription update - only metadata changed');
+			return;
+		}
+
 		const simpleStatementBefore =
 			statementToSimpleStatement(_statementBefore);
 		const simpleStatementAfter =
@@ -157,8 +165,10 @@ export const updateSubscriptionsSimpleStatement = onDocumentUpdated({
 		if (
 			simpleStatementBefore.statement === simpleStatementAfter.statement &&
 			simpleStatementBefore.description === simpleStatementAfter.description
-		)
+		) {
+			logger.info('No content changes in statement, skipping subscription update');
 			return;
+		}
 
 		const statement = parse(StatementSchema, _statementAfter);
 
@@ -231,24 +241,69 @@ export async function setAdminsToNewStatement(
 		}
 	>
 ) {
-	//Caution: This function grants administrative privileges to statement creators throughout the entire statement hierarchy. This approach has potential drawbacks:
-
-	//Administrative Overhead: Exponentially increasing admin counts can strain database resources.
-	//Security Concerns: Grants broad access privileges to potentially non-top-level admins.
-
-	//Recommendations:
-	//Re-evaluate Authorization Model: Consider a more fine-grained permission system that prevents excessive admin proliferation.
-	//Future Enhancement: Implement a more scalable and secure solution for managing administrative rights.
-	// Tal Yaron, Deliberation Team, 3rd May 2024
+	// This function implements a hybrid admin inheritance model:
+	// 1. Creator becomes admin of their new statement
+	// 2. Top group admins (root level) are admins of ALL sub-statements
+	// 3. Direct parent admins are admins of immediate children only
+	// This prevents exponential admin growth while maintaining hierarchy control
 
 	if (!ev.data) return;
 
 	try {
-		//get parent statement ID
 		const statement = parse(StatementSchema, ev.data.data());
+		
+		// List to track all admins to add (using Set to avoid duplicates)
+		const adminsToAdd = new Set<string>();
 
-		//subscribe the creator to the new statement
-		const subscription = createSubscription({
+		// 1. Always add the creator as admin
+		adminsToAdd.add(statement.creator.uid);
+		
+		logger.info(`Setting up admins for new statement ${statement.statementId}`);
+
+		// 2. Add top group admins (if this isn't already a top-level statement)
+		const topParentId = statement.topParentId || statement.parentId;
+		if (topParentId && topParentId !== 'top' && topParentId !== statement.statementId) {
+			const topAdminsDB = await db
+				.collection(Collections.statementsSubscribe)
+				.where('statementId', '==', topParentId)
+				.where('role', '==', Role.admin)
+				.get();
+			
+			topAdminsDB.docs.forEach(doc => {
+				const adminSub = parse(StatementSubscriptionSchema, doc.data());
+				adminsToAdd.add(adminSub.user.uid);
+			});
+			
+			logger.info(`Added ${topAdminsDB.size} top group admins from ${topParentId}`);
+		}
+
+		// 3. Add direct parent admins (if not same as top parent)
+		const { parentId } = statement;
+		if (parentId && parentId !== 'top' && parentId !== topParentId) {
+			const parentAdminsDB = await db
+				.collection(Collections.statementsSubscribe)
+				.where('statementId', '==', parentId)
+				.where('role', '==', Role.admin)
+				.get();
+			
+			parentAdminsDB.docs.forEach(doc => {
+				const adminSub = parse(StatementSubscriptionSchema, doc.data());
+				adminsToAdd.add(adminSub.user.uid);
+			});
+			
+			logger.info(`Added ${parentAdminsDB.size} direct parent admins from ${parentId}`);
+		}
+
+		// Get user details for all admins
+		const adminUserIds = Array.from(adminsToAdd);
+		logger.info(`Total unique admins to add: ${adminUserIds.length}`);
+
+		// Batch create all admin subscriptions
+		const batch = db.batch();
+		let addedCount = 0;
+
+		// First, always add the creator's subscription
+		const creatorSubscription = createSubscription({
 			statement,
 			role: Role.admin,
 			user: statement.creator,
@@ -257,65 +312,80 @@ export async function setAdminsToNewStatement(
 			getPushNotification: true,
 		});
 
-		if (!subscription) throw new Error('No subscription');
-		if (!subscription.statementsSubscribeId)
-			throw new Error('No subscriptionId');
+		if (!creatorSubscription || !creatorSubscription.statementsSubscribeId) {
+			throw new Error('Failed to create creator subscription');
+		}
 
-		await db
-			.collection(Collections.statementsSubscribe)
-			.doc(subscription.statementsSubscribeId)
-			.set(subscription);
-
-		const { parentId } = statement;
-
-		//get all admins of the parent statement
-		const adminsDB = await db
-			.collection(Collections.statementsSubscribe)
-			.where('statementId', '==', parentId)
-			.where('role', '==', Role.admin)
-			.get();
-		const adminsSubscriptions = adminsDB.docs.map((doc) =>
-			parse(StatementSubscriptionSchema, doc.data())
+		batch.set(
+			db.collection(Collections.statementsSubscribe).doc(creatorSubscription.statementsSubscribeId),
+			creatorSubscription
 		);
+		addedCount++;
 
-		//subscribe the admins to the new statement
-		adminsSubscriptions.forEach(async (adminSub: StatementSubscription) => {
-			try {
+		// Then add other admins (excluding creator to avoid duplicate)
+		const otherAdminIds = adminUserIds.filter(uid => uid !== statement.creator.uid);
+		
+		// Fetch user data for other admins if needed
+		if (otherAdminIds.length > 0) {
+			// Note: You'll need to fetch user data for these admins
+			// For now, we'll get them from existing subscriptions
+			const existingSubscriptions = await db
+				.collection(Collections.statementsSubscribe)
+				.where('userId', 'in', otherAdminIds)
+				.where('statementId', 'in', [topParentId, parentId].filter(Boolean))
+				.get();
+
+			const userMap = new Map();
+			existingSubscriptions.docs.forEach(doc => {
+				const sub = doc.data() as StatementSubscription;
+				userMap.set(sub.user.uid, sub.user);
+			});
+
+			// Create subscriptions for other admins
+			otherAdminIds.forEach(adminId => {
+				const user = userMap.get(adminId);
+				if (!user) {
+					logger.warn(`Could not find user data for admin ${adminId}`);
+					return;
+				}
+
 				const statementsSubscribeId = getStatementSubscriptionId(
 					statement.statementId,
-					adminSub.user
+					user
 				);
-				if (!statementsSubscribeId)
-					throw new Error('No statementsSubscribeId');
+				
+				if (!statementsSubscribeId) {
+					logger.warn(`Could not generate subscription ID for admin ${adminId}`);
+					return;
+				}
 
-				const newSubscription: StatementSubscription | undefined =
-					createSubscription({
-						statement,
-						role: Role.admin,
-						user: adminSub.user,
-						getEmailNotification: true,
-						getInAppNotification: true,
-						getPushNotification: true,
-					});
-				if (!newSubscription)
-					throw new Error(
-						`No newSubscription for admin ${adminSub.user.uid}`
-					);
+				const newSubscription = createSubscription({
+					statement,
+					role: Role.admin,
+					user: user,
+					getEmailNotification: true,
+					getInAppNotification: true,
+					getPushNotification: true,
+				});
+				
+				if (!newSubscription) {
+					logger.warn(`Could not create subscription for admin ${adminId}`);
+					return;
+				}
 
-				parse(StatementSubscriptionSchema, newSubscription);
-
-				await db
-					.collection(Collections.statementsSubscribe)
-					.doc(statementsSubscribeId)
-					.set(newSubscription);
-			} catch (error) {
-				logger.error(
-					'In setAdminsToNewStatement, on subscribe the admins to the new statement'
+				batch.set(
+					db.collection(Collections.statementsSubscribe).doc(statementsSubscribeId),
+					newSubscription
 				);
-				logger.error(error);
-			}
-		});
+				addedCount++;
+			});
+		}
+
+		// Commit all subscriptions in one batch
+		await batch.commit();
+		logger.info(`Successfully added ${addedCount} admin subscriptions for statement ${statement.statementId}`);
+
 	} catch (error) {
-		logger.error(error);
+		logger.error('Error in setAdminsToNewStatement:', error);
 	}
 }
