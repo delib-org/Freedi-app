@@ -34,7 +34,11 @@ import {
   setAdminsToNewStatement,
   updateSubscriptionsSimpleStatement
 } from "./fn_subscriptions";
-import { updateParentStatementOnChildChange } from "./fn_statement_updates";
+import { 
+  updateParentOnChildCreate,
+  updateParentOnChildUpdate,
+  updateParentStatementOnChildChange 
+} from "./fn_statement_updates";
 import {
   getRandomStatements,
   getTopStatements,
@@ -207,8 +211,12 @@ exports.updateNumberOfMembers = createFirestoreFunction(
 
 // New v2 functions to update statements and subscriptions efficiently
 // These are v2 functions, so we export them directly without the wrapper
-exports.updateParentStatementOnChildChange = updateParentStatementOnChildChange;
+exports.updateParentOnChildCreate = updateParentOnChildCreate;
+exports.updateParentOnChildUpdate = updateParentOnChildUpdate;
 exports.updateSubscriptionsSimpleStatement = updateSubscriptionsSimpleStatement;
+
+// DEPRECATED: Keeping for backward compatibility until Firebase updates
+exports.updateParentStatementOnChildChange = updateParentStatementOnChildChange;
 
 // Mass Consensus functions
 

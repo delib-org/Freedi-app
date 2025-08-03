@@ -1,4 +1,4 @@
-import { onDocumentWritten } from 'firebase-functions/v2/firestore';
+import { onDocumentWritten, onDocumentCreated, onDocumentUpdated } from 'firebase-functions/v2/firestore';
 import { db } from '.';
 import { logger } from 'firebase-functions';
 import {
@@ -9,65 +9,94 @@ import {
 } from 'delib-npm';
 
 /**
- * Updates parent statement when a child statement is created or modified
- * This replaces the need to update all subscription documents
+ * Updates parent statement when a child statement is created
  */
-export const updateParentStatementOnChildChange = onDocumentWritten({
+export const updateParentOnChildCreate = onDocumentCreated({
+    document: `${Collections.statements}/{statementId}`,
+    region: 'europe-west1'
+}, async (event) => {
+    try {
+        const newStatement = event.data?.data() as Statement | undefined;
+        
+        // Skip if no parent
+        if (!newStatement || !newStatement.parentId) return;
+        
+        logger.info(`New child statement created, updating parent ${newStatement.parentId}`);
+        
+        // Update parent statement with latest children
+        await updateParentWithLatestChildren(newStatement.parentId);
+        
+    } catch (error) {
+        logger.error('Error in updateParentOnChildCreate:', error);
+    }
+});
+
+/**
+ * Updates parent statement when a child statement is modified (content changes only)
+ */
+export const updateParentOnChildUpdate = onDocumentUpdated({
     document: `${Collections.statements}/{statementId}`,
     region: 'europe-west1'
 }, async (event) => {
     try {
         const before = event.data?.before.data() as Statement | undefined;
         const after = event.data?.after.data() as Statement | undefined;
-
-        // Skip if this is a deletion or no parent
-        if (!after || !after.parentId) return;
-
+        
+        // Skip if no data or no parent
+        if (!before || !after || !after.parentId) return;
+        
         // Check if this update was triggered by our own function to prevent loops
         // Skip if only lastChildUpdate, lastUpdate, or lastSubStatements changed
-        if (before && after) {
-            const beforeCopy: any = { ...before };
-            const afterCopy: any = { ...after };
-            
-            // Remove fields that this function updates
-            delete beforeCopy.lastChildUpdate;
-            delete beforeCopy.lastUpdate;
-            delete beforeCopy.lastSubStatements;
-            delete afterCopy.lastChildUpdate;
-            delete afterCopy.lastUpdate;
-            delete afterCopy.lastSubStatements;
-            
-            // If nothing else changed, this is likely our own update
-            if (JSON.stringify(beforeCopy) === JSON.stringify(afterCopy)) {
-                logger.info('Skipping update - appears to be triggered by parent update function');
-                return;
-            }
+        const beforeCopy: any = { ...before };
+        const afterCopy: any = { ...after };
+        
+        // Remove fields that this function updates
+        delete beforeCopy.lastChildUpdate;
+        delete beforeCopy.lastUpdate;
+        delete beforeCopy.lastSubStatements;
+        delete afterCopy.lastChildUpdate;
+        delete afterCopy.lastUpdate;
+        delete afterCopy.lastSubStatements;
+        
+        // If nothing else changed, this is likely our own update
+        if (JSON.stringify(beforeCopy) === JSON.stringify(afterCopy)) {
+            logger.info('Skipping update - appears to be triggered by parent update function');
+            return;
         }
-
-        // Check if this is a significant change
-        const isNewStatement = !before && after;
-        const hasContentChange = before && after && (
+        
+        // Check if this is a significant content change
+        const hasContentChange = (
             before.statement !== after.statement ||
             before.description !== after.description ||
             before.consensus !== after.consensus
         );
-
-        // For options/questions, check if statementType changed
-        const hasTypeChange = before && after && (
-            before.statementType !== after.statementType
-        );
-
-        if (!isNewStatement && !hasContentChange && !hasTypeChange) {
-            logger.info('No significant changes, skipping parent update');
+        
+        if (!hasContentChange) {
+            logger.info('No significant content changes, skipping parent update');
             return;
         }
-
-        // Update parent statement and propagate up the hierarchy
+        
+        logger.info(`Child statement content changed, updating parent ${after.parentId}`);
+        
+        // Update parent statement with latest children
         await updateParentWithLatestChildren(after.parentId);
-
+        
     } catch (error) {
-        logger.error('Error in updateParentStatementOnChildChange:', error);
+        logger.error('Error in updateParentOnChildUpdate:', error);
     }
+});
+
+/**
+ * DEPRECATED: Use updateParentOnChildCreate and updateParentOnChildUpdate instead
+ * This function is disabled to prevent duplicate executions
+ */
+export const updateParentStatementOnChildChange = onDocumentWritten({
+    document: `${Collections.statements}/{statementId}`,
+    region: 'europe-west1'
+}, async () => {
+    // DISABLED: This function is replaced by updateParentOnChildCreate and updateParentOnChildUpdate
+    logger.info('DEPRECATED: updateParentStatementOnChildChange called but disabled - using new split functions instead');
+    return;
 });
 
 /**
