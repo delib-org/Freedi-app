@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import './fcmTokenDisplay.scss';
+import styles from './fcmTokenDisplay.module.scss';
 import { getAuth } from 'firebase/auth';
 import { notificationService } from '@/services/notificationService';
 
@@ -89,21 +89,21 @@ const FCMTokenDisplay: React.FC = () => {
 
 	if (!expanded) {
 		return (
-			<div className="fcm-token-display-toggle" onClick={() => setExpanded(true)}>
+			<div className={styles.fcmTokenDisplayToggle} onClick={() => setExpanded(true)}>
 				Show FCM Token
 			</div>
 		);
 	}
 
 	return (
-		<div className="fcm-token-display">
+		<div className={styles.fcmTokenDisplay}>
 			<div className="fcm-token-display-header">
 				<h3>FCM Token for Testing</h3>
-				<button onClick={() => setExpanded(false)} className="close-button">×</button>
+				<button onClick={() => setExpanded(false)} className={styles.closeButton}>×</button>
 			</div>
 
 			<div className="fcm-token-display-content">
-				<div className="fcm-token-status">
+				<div className={styles.fcmTokenStatus}>
 					<span>Permission: </span>
 					<span className={`status-badge ${Notification.permission}`}>
 						{Notification.permission}
@@ -111,7 +111,7 @@ const FCMTokenDisplay: React.FC = () => {
 				</div>
 
 				{userInfo && (
-					<div className="fcm-token-user">
+					<div className={styles.fcmTokenUser}>
 						<p><strong>User ID:</strong> {userInfo.uid}</p>
 						<p><strong>Email:</strong> {userInfo.email}</p>
 					</div>
@@ -120,13 +120,13 @@ const FCMTokenDisplay: React.FC = () => {
 				{Notification.permission !== 'granted' ? (
 					<button
 						onClick={handleRequestPermission}
-						className="request-permission-button"
+						className={styles.requestPermissionButton}
 					>
 						Request Notification Permission
 					</button>
 				) : (
 					<>
-						<div className="fcm-token-value">
+						<div className={styles.fcmTokenValue}>
 							<textarea
 								readOnly
 								value={token || 'No token available'}
@@ -134,18 +134,18 @@ const FCMTokenDisplay: React.FC = () => {
 							/>
 						</div>
 
-						<div className="fcm-token-actions">
+						<div className={styles.fcmTokenActions}>
 							<button
 								onClick={handleCopyToken}
 								disabled={!token}
-								className="copy-button"
+								className={styles.copyButton}
 							>
 								Copy Token
 							</button>
 
 							<button
 								onClick={handleTestNotification}
-								className="test-button"
+								className={styles.testButton}
 							>
 								Test Notification
 							</button>

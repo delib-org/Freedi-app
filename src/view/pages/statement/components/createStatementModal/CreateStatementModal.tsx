@@ -4,7 +4,7 @@ import newOptionGraphic from "@/assets/images/newOptionGraphic.png";
 import newQuestionGraphic from "@/assets/images/newQuestionGraphic.png";
 import { useUserConfig } from "@/controllers/hooks/useUserConfig";
 import Modal from "@/view/components/modal/Modal";
-import "./CreateStatementModal.scss";
+import styles from './CreateStatementModal.module.scss';
 import Button, { ButtonType } from "@/view/components/buttons/button/Button";
 import { StatementType, Statement } from "delib-npm";
 import { useAuthentication } from "@/controllers/hooks/useAuthentication";
@@ -59,9 +59,9 @@ const CreateStatementModal: FC<CreateStatementModalProps> = ({
   };
 
   return (
-    <Modal className="create-statement-modal">
-      <form className="overlay" onSubmit={onFormSubmit}>
-        <div className="modal-image">
+    <Modal className={styles.createStatementModal}>
+      <form className={styles.overlay} onSubmit={onFormSubmit}>
+        <div className={styles.modalImage}>
           <img
             src={isOptionSelected ? newOptionGraphic : newQuestionGraphic}
             alt="New Statement"
@@ -74,7 +74,7 @@ const CreateStatementModal: FC<CreateStatementModalProps> = ({
           allowedTypes={allowedTypes}
         />
 
-        <div className="form-inputs">
+        <div className={styles.formInputs}>
           <input
             data-cy="statement-title-simple"
             autoComplete="off"
@@ -124,7 +124,7 @@ const Tabs: FC<TabsProps> = ({
   ];
 
   return (
-    <div className="tabs">
+    <div className={styles.tabs}>
       {availableTypes.includes(StatementType.option) && (
         <button
           type="button"
@@ -132,7 +132,7 @@ const Tabs: FC<TabsProps> = ({
           className={`tab question ${isOptionChosen ? "active" : ""}`}
         >
           {t("Option")}
-          {isOptionChosen && <div className="block" />}
+          {isOptionChosen && <div className={styles.block} />}
         </button>
       )}
       {availableTypes.includes(StatementType.question) && (
@@ -142,7 +142,7 @@ const Tabs: FC<TabsProps> = ({
           className={`tab question ${!isOptionChosen ? "active" : ""}`}
         >
           {t("Question")}
-          {!isOptionChosen && <div className="block" />}
+          {!isOptionChosen && <div className={styles.block} />}
         </button>
       )}
     </div>
@@ -161,7 +161,7 @@ const CreateStatementButtons: FC<CreateStatementButtonsProps> = ({
   const { t } = useUserConfig();
 
   return (
-    <div className="create-statement-buttons">
+    <div className={styles.createStatementButtons}>
     
       <Button
         text={t(`Add ${isOption ? "Option" : "Question"}`)}
@@ -172,7 +172,7 @@ const CreateStatementButtons: FC<CreateStatementButtonsProps> = ({
         text={t("Cancel")}
         onClick={onCancel}
         buttonType={ButtonType.SECONDARY}
-        className="cancel-button"
+        className={styles.cancelButton}
       />
     </div>
   );

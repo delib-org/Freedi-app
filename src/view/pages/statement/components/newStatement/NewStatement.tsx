@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 
-import './newStatement.scss';
+import styles from './newStatement.module.scss';
 
 import GetInitialStatementData from './components/01-form/GetInitialStatementData';
 
@@ -48,7 +48,7 @@ export default function NewStatement() {
 
 	return (
 		<NewStatementContext.Provider value={contextValue}>
-			<div className='newStatement'>{CurrentScreen(currentStep)}</div>
+			<div className={styles.newStatement}>{CurrentScreen(currentStep)}</div>
 		</NewStatementContext.Provider>
 	);
 

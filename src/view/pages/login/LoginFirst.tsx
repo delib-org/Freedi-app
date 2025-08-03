@@ -1,6 +1,6 @@
 import GoogleLoginButton from "../../components/buttons/GoogleLoginButton";
 import image from "@/assets/images/loginFirstImage.png";
-import "./LoginFirst.scss";
+import styles from './LoginFirst.module.scss';
 
 export default function LoginPage() {
 	const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
@@ -8,8 +8,8 @@ export default function LoginPage() {
 	// const cameFrom = location.state.from ? location.state.from : "/";
 
 	return (
-		<div className="login-first">
-			<div className="content-container">
+		<div className={styles.loginFirst}>
+			<div className={styles.contentContainer}>
 				<img
 					src={image}
 					alt="login-first-image"

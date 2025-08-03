@@ -11,7 +11,7 @@ import { useAppDispatch } from '@/controllers/hooks/reduxHooks';
 // Custom components
 import Button from '@/view/components/buttons/button/Button';
 import Modal from '@/view/components/modal/Modal';
-import './StatementVote.scss';
+import styles from './StatementVote.module.scss';
 
 // Helpers
 import Toast from '@/view/components/toast/Toast';
@@ -70,7 +70,7 @@ const StatementVote: FC = () => {
 
 	return (
 		<>
-			<div className='statement-vote'>
+			<div className={styles.statementVote}>
 				{showMultiStageMessage && (
 					<Toast
 						text={t(`${toastMessage}`)}
@@ -86,7 +86,7 @@ const StatementVote: FC = () => {
 						/>
 					</Toast>
 				)}
-				<div className='number-of-votes-mark'>
+				<div className={styles.numberOfVotesMark}>
 					<HandIcon /> {totalVotes}
 				</div>
 				<VotingArea

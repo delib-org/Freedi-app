@@ -1,4 +1,4 @@
-import { Dispatch, FC } from 'react';
+import { FC } from 'react';
 import styles from './EmptyScreen.module.scss';
 import ideaImage from '@/assets/images/manWithIdeaLamp.png';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
@@ -31,8 +31,6 @@ const EmptyScreen: FC<Props> = ({ statement }) => {
 				error: null,
 			}))
 		}
-
-	
 
 	return (
 		<div

@@ -9,7 +9,7 @@ import RandomIcon from '@/assets/icons/randomIcon.svg?react';
 import SortIcon from '@/assets/icons/sort.svg?react';
 import UpdateIcon from '@/assets/icons/updateIcon.svg?react';
 import useStatementColor from '@/controllers/hooks/useStatementColor';
-import './StatementBottomNav.scss';
+import styles from './StatementBottomNav.module.scss';
 import StartHere from '@/view/components/startHere/StartHere';
 import { StatementContext } from '../../../StatementCont';
 import { sortItems } from './StatementBottomNavModal';
@@ -104,15 +104,15 @@ const StatementBottomNav: FC<Props> = () => {
 			<div
 				className={
 					showSorting
-						? 'statement-bottom-nav statement-bottom-nav--show'
-						: 'statement-bottom-nav'
+						? `${styles.statementBottomNav} ${styles.statementBottomNavShow}`
+						: styles.statementBottomNav
 				}
 			>
 				<div
-					className={`add-option-button-wrapper ${dir === 'ltr' ? 'add-option-button-wrapper--ltr' : ''}`}
+					className={`${styles.addOptionButtonWrapper} ${dir === 'ltr' ? styles.addOptionButtonWrapperLtr : ''}`}
 				>
 					{(canAddOption || isAdmin) && <button
-						className='add-option-button'
+						className={styles.addOptionButton}
 						aria-label='Add option'
 						style={statementColor}
 						onClick={handleAddOption}
@@ -121,14 +121,14 @@ const StatementBottomNav: FC<Props> = () => {
 						<PlusIcon style={{ color: statementColor.color }} />
 					</button>
 					}
-					<div className='sort-menu'>
+					<div className={styles.sortMenu}>
 						{sortItems.map((navItem, i) => (
 							<div
 								key={`item-id-${i}`}
-								className={`sort-menu__item  ${showSorting ? 'active' : ''}`}
+								className={`${styles.sortMenu__item} ${showSorting ? styles.active : ''}`}
 							>
 								<button
-									className={`open-nav-icon ${showSorting ? 'active' : ''}`}
+									className={`${styles.openNavIcon} ${showSorting ? styles.active : ''}`}
 									aria-label='Sorting options'
 									onClick={() => handleSortClick(navItem)}
 								>
@@ -137,13 +137,13 @@ const StatementBottomNav: FC<Props> = () => {
 										color={statementColor.backgroundColor}
 									/>
 								</button>
-								<span className='button-name'>
+								<span className={styles.buttonName}>
 									{navItem.name}
 								</span>
 							</div>
 						))}
 						<button
-							className='sort-button'
+							className={styles.sortButton}
 							onClick={handleSortingClick}
 							aria-label='Sort items'
 						>

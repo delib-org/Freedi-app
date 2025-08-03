@@ -1,5 +1,5 @@
 import { ComponentProps, FC, ReactNode } from "react";
-import "./MenuOption.scss";
+import styles from "./MenuOption.module.scss";
 
 interface MenuOptionProps extends ComponentProps<"button"> {
 	onOptionClick: () => void;
@@ -19,7 +19,7 @@ const MenuOption: FC<MenuOptionProps> = ({
 }) => {
 	return (
 		<button
-			className={`menu-option ${isOptionSelected ? "selected" : ""}`}
+			className={`${styles.menuOption} ${isOptionSelected ? styles.selected : ""}`}
 			onClick={onOptionClick}
 			onKeyDown={(e) => {
 				if (e.key === "Enter" || e.key === " ") {
@@ -28,7 +28,7 @@ const MenuOption: FC<MenuOptionProps> = ({
 			}}
 		>
 			{icon}
-			<div className="label" style={style}>{label}</div>
+			<div className={styles.label} style={style}>{label}</div>
 			{children}
 		</button>
 	);

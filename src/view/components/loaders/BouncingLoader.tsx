@@ -1,5 +1,5 @@
-import "./bouncingLoader.css";
+import styles from "./BouncingLoader.module.scss";
 
 export default function BouncingLoader() {
-	return <span className="bouncingLoader"></span>;
+	return <span className={styles.bouncingLoader}></span>;
 }

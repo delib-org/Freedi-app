@@ -3,7 +3,7 @@ import { StatementSettingsProps } from '../../settingsTypeHelpers';
 import { getStatementSettings } from '../../statementSettingsCont';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import Checkbox from '@/view/components/checkbox/Checkbox';
-import './AdvancedSettings.scss';
+import styles from './AdvancedSettings.module.scss';
 import { setStatementSettingToDB } from '@/controllers/db/statementSettings/setStatementSettings';
 import { StatementSettings, StatementType } from 'delib-npm';
 import { toggleStatementHide } from '@/controllers/db/statements/setStatements';
@@ -44,7 +44,7 @@ const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 	}
 
 	return (
-		<div className='advanced-settings'>
+		<div className={styles.advancedSettings}>
 			<h3 className='title'>{t('Advanced')}</h3>
 			<Checkbox
 				label={'Hide this statement'}

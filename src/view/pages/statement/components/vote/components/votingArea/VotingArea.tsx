@@ -1,7 +1,7 @@
 import React, { FC } from 'react';
 import { useParams } from 'react-router';
 import OptionBar from '../optionBar/OptionBar';
-import './VotingArea.scss';
+import styles from './VotingArea.module.scss';
 import { getSortedVotingOptions, isVerticalOptionBar } from './VotingAreaCont';
 import useWindowDimensions from '@/controllers/hooks/useWindowDimentions';
 
@@ -48,7 +48,7 @@ const VotingArea: FC<VotingAreaProps> = ({
 
 	return (
 		<div
-			className={`voting-area ${shouldShowVerticalBar ? 'vertical' : 'horizontal'}`}
+			className={`${styles.votingArea} ${shouldShowVerticalBar ? styles.vertical : styles.horizontal}`}
 		>
 			{options.map((option, i) => {
 				return (

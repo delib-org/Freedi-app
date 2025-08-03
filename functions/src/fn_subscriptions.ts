@@ -89,7 +89,7 @@ export async function onStatementDeletionDeleteSubscriptions(
 		if (!deletedStatement) {
 			throw new Error('No statement data found');
 		}
-	
+
 		const statementId = event.params.statementId;
 		logger.info(`Processing deletion of statement: ${statementId}`);
 
@@ -193,14 +193,28 @@ export async function updateSubscriptionsSimpleStatement(
 export async function getStatementSubscriptions(
 	statementId: string
 ): Promise<StatementSubscription[]> {
-	const statementSubscriptions = await db
-		.collection(Collections.statementsSubscribe)
-		.where('statementId', '==', statementId)
-		.get();
+	try {
 
-	return statementSubscriptions.docs.map(
-		(doc) => doc.data() as StatementSubscription
-	);
+		const statementSubscriptions = await db
+			.collection(Collections.statementsSubscribe)
+			.where('statementId', '==', statementId)
+			.get();
+
+		if (statementSubscriptions.size > 100) throw new Error(`CIRCUIT BREAKER: Skipping update for ${statementSubscriptions.size} subscriptions`);
+
+		return statementSubscriptions.docs.map(
+			(doc) => doc.data() as StatementSubscription
+		);
+
+
+	} catch (error) {
+		logger.error(
+			`Error in getStatementSubscriptions for statementId ${statementId}:`,
+			error
+		);
+		return [];
+
+	}
 }
 
 export async function setAdminsToNewStatement(

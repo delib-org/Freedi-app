@@ -3,7 +3,7 @@ import IconButton from '../iconButton/IconButton';
 import AccessibilityIcon from '@/assets/icons/accessibilityIcon.svg?react';
 import HighContrastIcon from '@/assets/icons/highContrast.svg?react';
 import LightContrastIcon from '@/assets/icons/lightContrast.svg?react';
-import './Accessibility.scss';
+import styles from './Accessibility.module.scss';
 import { useAutoClose } from '@/controllers/hooks/useAutoClose';
 import useClickOutside from '@/controllers/hooks/useClickOutside';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
@@ -129,42 +129,42 @@ export default function Accessibility() {
 	return (
 		<div
 			ref={accessibilityRef}
-			className={`accessibility ${isOpen ? 'is-open' : ''}`}
+			className={`${styles.accessibility} ${isOpen ? styles.isOpen : ''}`}
 			style={{ fontSize, top: `${position.top}px` }}
 		>
 			<button
-				className='accessibility-button'
+				className={styles.accessibilityButton}
 				ref={buttonRef}
 				aria-label={t('Accessibility options')}
 			>
 				<AccessibilityIcon />
 			</button>
-			<div className='accessibility-panel'>
-				<div className='accessibility-panel__fonts'>
+			<div className={styles.accessibilityPanel}>
+				<div className={styles.accessibilityPanel__fonts}>
 					<IconButton
-						className='change-font-size-button'
+						className={styles.changeFontSizeButton}
 						onClick={() => changeFontSize(fontSize + 1)}
 					>
 						+
 					</IconButton>
-					<span className='accessibility__fonts__size'>Aa</span>
+					<span className={styles.accessibilityFontsSize}>Aa</span>
 					<IconButton
-						className='change-font-size-button'
+						className={styles.changeFontSizeButton}
 						onClick={() => changeFontSize(fontSize - 1)}
 					>
 						-
 					</IconButton>
 				</div>
-				<div className='accessibility-panel__contrast'>
+				<div className={styles.accessibilityPanel__contrast}>
 					<button
 						onClick={() => setColorContrast(true)}
-						className='high-contrast'
+						className={styles.highContrast}
 					>
 						<HighContrastIcon /> {t('High contrast')}
 					</button>
 					<button
 						onClick={() => setColorContrast(false)}
-						className='light-contrast'
+						className={styles.lightContrast}
 					>
 						<LightContrastIcon /> {t('Light contrast')}
 					</button>
