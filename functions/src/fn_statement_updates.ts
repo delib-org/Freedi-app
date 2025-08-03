@@ -1,5 +1,4 @@
 import { onDocumentWritten } from 'firebase-functions/v2/firestore';
-import { FieldValue } from 'firebase-admin/firestore';
 import { db } from '.';
 import { logger } from 'firebase-functions';
 import { 
@@ -33,7 +32,8 @@ export const updateParentStatementOnChildChange = onDocumentWritten({
         
         if (!isNewStatement && !hasContentChange) {
             logger.info('No significant changes, skipping parent update');
-            return;
+            
+return;
         }
         
         // Update parent statement and propagate up the hierarchy
@@ -61,20 +61,22 @@ async function updateParentWithLatestChildren(parentId: string) {
         
         if (subStatementsQuery.empty) {
             logger.info(`No sub-statements found for parent ${parentId}`);
-            return;
+            
+return;
         }
         
         // Convert to SimpleStatement array
         const lastSubStatements: SimpleStatement[] = subStatementsQuery.docs.map(doc => {
             const statement = doc.data() as Statement;
-            return statementToSimpleStatement(statement);
+            
+return statementToSimpleStatement(statement);
         });
         
         // Update parent with new sub-statements and timestamp
         await parentRef.update({
             lastSubStatements: lastSubStatements,
-            lastUpdate: FieldValue.serverTimestamp(),
-            lastChildUpdate: FieldValue.serverTimestamp()
+            lastUpdate: Date.now(),
+            lastChildUpdate: Date.now()
         });
         
         logger.info(`Updated parent ${parentId} with ${lastSubStatements.length} sub-statements`);
@@ -103,7 +105,7 @@ async function updateParentWithLatestChildren(parentId: string) {
 async function updateGrandparentTimestamp(grandparentId: string) {
     try {
         await db.collection(Collections.statements).doc(grandparentId).update({
-            lastChildUpdate: FieldValue.serverTimestamp()
+            lastChildUpdate: Date.now()
         });
     } catch (error) {
         logger.error(`Error updating grandparent ${grandparentId}:`, error);

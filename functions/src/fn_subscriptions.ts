@@ -206,13 +206,13 @@ export async function getStatementSubscriptions(
 			(doc) => doc.data() as StatementSubscription
 		);
 
-
 	} catch (error) {
 		logger.error(
 			`Error in getStatementSubscriptions for statementId ${statementId}:`,
 			error
 		);
-		return [];
+		
+return [];
 
 	}
 }

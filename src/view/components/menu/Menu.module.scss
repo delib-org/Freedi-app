@@ -63,7 +63,7 @@
     }
 
     &.ltr {
-      left: -10px;
+      right: 10px;
 
       &--card-menu {
         right: 10px;
@@ -72,9 +72,10 @@
 
     &.rtl {
       transform: translateX(10px);
+      left:0px;
 
       &--card-menu {
-        left: 10px;
+        left: 0px;
       }
      
     }

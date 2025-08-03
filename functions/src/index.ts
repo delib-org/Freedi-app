@@ -205,7 +205,6 @@ exports.updateNumberOfMembers = createFirestoreFunction(
   "updateNumberOfMembers"
 );
 
-
 // New function to update parent statements instead of all subscriptions
 // This is a v2 function, so we export it directly without the wrapper
 exports.updateParentStatementOnChildChange = updateParentStatementOnChildChange;
