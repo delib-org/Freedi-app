@@ -8,7 +8,6 @@ import Text from '@/view/components/text/Text';
 import StatementChatMore from '@/view/pages/statement/components/chat/components/statementChatMore/StatementChatMore';
 import { SimpleStatement, StatementSubscription } from 'delib-npm';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
-import { CloudCog } from 'lucide-react';
 
 interface Props {
 	subscription: StatementSubscription;
@@ -20,7 +19,6 @@ const MainCard: FC<Props> = ({ subscription }) => {
 	
 	// Use lastSubStatements from subscription if available, otherwise fall back to old method
 	const subStatements = subscription.lastSubStatements || [];
-	console.log('subStatements', subStatements);
 	
 	const statementImgUrl = simpleStatement.imageURL || undefined;
 	const description = simpleStatement.description?.length > 30

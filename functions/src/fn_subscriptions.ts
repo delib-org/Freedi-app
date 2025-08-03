@@ -1,4 +1,5 @@
-import { Change, logger } from 'firebase-functions';
+import { logger } from 'firebase-functions';
+import { onDocumentUpdated } from 'firebase-functions/v2/firestore';
 import {
 	Collections,
 	Role,
@@ -137,20 +138,14 @@ export async function onStatementDeletionDeleteSubscriptions(
 	}
 }
 
-export async function updateSubscriptionsSimpleStatement(
-	event: FirestoreEvent<
-		Change<DocumentSnapshot> | undefined,
-		{ subscriptionId: string }
-	>
-) {
-	if (!event.data) return;
+export const updateSubscriptionsSimpleStatement = onDocumentUpdated({
+	document: `${Collections.statements}/{statementId}`,
+	region: 'europe-west1'
+}, async (event) => {
 	try {
-		const _statementBefore = event.data.before.data() as
-			| Statement
-			| undefined;
-		const _statementAfter = event.data.after.data() as
-			| Statement
-			| undefined;
+		const _statementBefore = event.data?.before.data() as Statement | undefined;
+		const _statementAfter = event.data?.after.data() as Statement | undefined;
+		
 		if (!_statementBefore || !_statementAfter) return;
 
 		const simpleStatementBefore =
@@ -158,10 +153,10 @@ export async function updateSubscriptionsSimpleStatement(
 		const simpleStatementAfter =
 			statementToSimpleStatement(_statementAfter);
 
-		//check if changes in the areas of simpleStatement where changed
+		//check if statement or description changed
 		if (
-			JSON.stringify(simpleStatementBefore) ===
-			JSON.stringify(simpleStatementAfter)
+			simpleStatementBefore.statement === simpleStatementAfter.statement &&
+			simpleStatementBefore.description === simpleStatementAfter.description
 		)
 			return;
 
@@ -174,21 +169,31 @@ export async function updateSubscriptionsSimpleStatement(
 			await getStatementSubscriptions(statementId);
 
 		//update all statement subscriptions
-		if (statementSubscriptions.length === 0)
-			throw new Error('no subscriptions found');
+		if (statementSubscriptions.length === 0) {
+			logger.info('No subscriptions found for statement ' + statementId);
+			return;
+		}
+		
+		logger.info(`Updating ${statementSubscriptions.length} subscriptions for statement ${statementId}`);
 
 		const batch = db.batch();
+		const timestamp = Date.now();
 		statementSubscriptions.forEach((subscription) => {
 			const subscriptionRef = db
 				.collection(Collections.statementsSubscribe)
 				.doc(subscription.statementsSubscribeId);
-			batch.update(subscriptionRef, { statement: statement });
+			batch.update(subscriptionRef, { 
+				statement: simpleStatementAfter,
+				lastUpdate: timestamp 
+			});
 		});
 		await batch.commit();
+		
+		logger.info(`Successfully updated ${statementSubscriptions.length} subscriptions`);
 	} catch (error) {
 		logger.error('Error updating updateMembersWithSimpleStatement', error);
 	}
-}
+});
 
 export async function getStatementSubscriptions(
 	statementId: string

@@ -32,7 +32,7 @@ import {
   onNewSubscription,
   onStatementDeletionDeleteSubscriptions,
   setAdminsToNewStatement,
-  // updateSubscriptionsSimpleStatement, // DISABLED - see line 208
+  updateSubscriptionsSimpleStatement
 } from "./fn_subscriptions";
 import { updateParentStatementOnChildChange } from "./fn_statement_updates";
 import {
@@ -205,9 +205,10 @@ exports.updateNumberOfMembers = createFirestoreFunction(
   "updateNumberOfMembers"
 );
 
-// New function to update parent statements instead of all subscriptions
-// This is a v2 function, so we export it directly without the wrapper
+// New v2 functions to update statements and subscriptions efficiently
+// These are v2 functions, so we export them directly without the wrapper
 exports.updateParentStatementOnChildChange = updateParentStatementOnChildChange;
+exports.updateSubscriptionsSimpleStatement = updateSubscriptionsSimpleStatement;
 
 // Mass Consensus functions
 
