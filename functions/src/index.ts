@@ -205,23 +205,10 @@ exports.updateNumberOfMembers = createFirestoreFunction(
   "updateNumberOfMembers"
 );
 
-// DISABLED: This function caused massive performance issues by updating ALL subscriptions
-// when a statement changed. Replaced by updateParentStatementOnChildChange which only
-// updates the parent statement with lastSubStatements array.
-// exports.updateSubscriptionsSimpleStatement = createFirestoreFunction(
-//   `/${Collections.statements}/{statementId}`,
-//   onDocumentUpdated,
-//   updateSubscriptionsSimpleStatement,
-//   "updateSubscriptionsSimpleStatement"
-// );
 
 // New function to update parent statements instead of all subscriptions
-exports.updateParentStatementOnChildChange = createFirestoreFunction(
-  `/${Collections.statements}/{statementId}`,
-  onDocumentWritten,
-  updateParentStatementOnChildChange,
-  "updateParentStatementOnChildChange"
-);
+// This is a v2 function, so we export it directly without the wrapper
+exports.updateParentStatementOnChildChange = updateParentStatementOnChildChange;
 
 // Mass Consensus functions
 

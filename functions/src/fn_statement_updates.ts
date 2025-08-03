@@ -13,37 +13,36 @@ import {
  * Updates parent statement when a child statement is created or modified
  * This replaces the need to update all subscription documents
  */
-export const updateParentStatementOnChildChange = onDocumentWritten(
-    `${Collections.statements}/{statementId}`,
-    async (event) => {
-        try {
-            console.log
-            const before = event.data?.before.data() as Statement | undefined;
-            const after = event.data?.after.data() as Statement | undefined;
-            
-            // Skip if this is a deletion or no parent
-            if (!after || after.parentId === 'top') return;
-            
-            // Check if this is a significant change
-            const isNewStatement = !before && after;
-            const hasContentChange = before && after && (
-                before.statement !== after.statement ||
-                before.description !== after.description 
-            );
-            
-            if (!isNewStatement && !hasContentChange) {
-                logger.info('No significant changes, skipping parent update');
-                return;
-            }
-            
-            // Update parent statement and propagate up the hierarchy
-            await updateParentWithLatestChildren(after.parentId);
-            
-        } catch (error) {
-            logger.error('Error in updateParentStatementOnChildChange:', error);
+export const updateParentStatementOnChildChange = onDocumentWritten({
+    document: `${Collections.statements}/{statementId}`,
+    region: 'europe-west1'
+}, async (event) => {
+    try {
+        const before = event.data?.before.data() as Statement | undefined;
+        const after = event.data?.after.data() as Statement | undefined;
+        
+        // Skip if this is a deletion or no parent
+        if (!after || !after.parentId) return;
+        
+        // Check if this is a significant change
+        const isNewStatement = !before && after;
+        const hasContentChange = before && after && (
+            before.statement !== after.statement ||
+            before.description !== after.description 
+        );
+        
+        if (!isNewStatement && !hasContentChange) {
+            logger.info('No significant changes, skipping parent update');
+            return;
         }
+        
+        // Update parent statement and propagate up the hierarchy
+        await updateParentWithLatestChildren(after.parentId);
+        
+    } catch (error) {
+        logger.error('Error in updateParentStatementOnChildChange:', error);
     }
-);
+});
 
 /**
  * Updates parent statement with the latest 3 sub-statements
