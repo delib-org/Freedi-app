@@ -6,9 +6,7 @@ import {
     Statement,
     SimpleStatement,
     statementToSimpleStatement,
-    StatementSchema
 } from 'delib-npm';
-import { parse } from 'valibot';
 
 
 /**
