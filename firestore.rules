@@ -48,6 +48,30 @@ service cloud.firestore {
 	  allow write: if request.auth.uid != null && request.auth.uid == userId;
 	}
 
+	match /questionnaires/{questionnaireId} {
+	  function getParentStatementId() {
+	    return resource != null ? resource.data.parentStatementId : request.resource.data.parentStatementId;
+	  }
+	  
+	  function isAdminOfParent() {
+	    let parentStatementId = getParentStatementId();
+	    let subId = string(request.auth.uid) + '--' + cleanPath(string(parentStatementId));
+	    let subscription = get(/databases/$(database)/documents/statementsSubscribe/$(subId)).data;
+	    return subscription != null && subscription.role == 'admin';
+	  }
+	  
+	  function isCreatorOfParent() {
+	    let parentStatementId = getParentStatementId();
+	    let parentStatement = get(/databases/$(database)/documents/statements/$(parentStatementId)).data;
+	    return parentStatement != null && parentStatement.creatorId == request.auth.uid;
+	  }
+	  
+	  allow read: if request.auth.uid != null;
+	  allow create: if request.auth.uid != null && (isAdminOfParent() || isCreatorOfParent());
+	  allow update: if request.auth.uid != null && (isAdminOfParent() || isCreatorOfParent());
+	  allow delete: if request.auth.uid != null && (isAdminOfParent() || isCreatorOfParent());
+	}
+
 	match /userDataQuestions/{questionId=**} {
 		function isAdmin() {
 			let question = resource != null ? resource : request.resource;

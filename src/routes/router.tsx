@@ -36,7 +36,8 @@ import UserDemographicMC from '@/view/pages/massConsensus/massConsesusQuestion/u
 import My from '@/view/pages/my/My';
 import CheckNotifications from '@/view/pages/settings/ChecNotifications';
 import Questionnaire from '@/view/pages/statement/components/questionnaire/questionnaire/Questionnaire';
-import QuestionnaireSettings from '@/view/pages/statement/components/questionnaire/questionnaireSttings/QuestionnaireSettings';
+import QuestionnaireSettings from '@/view/pages/statement/components/questionnaire/questionnaireSettings/QuestionnaireSettings';
+
 
 // Define errorRoutes
 const errorRoutes = [

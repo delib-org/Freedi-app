@@ -44,7 +44,8 @@
     "@sentry/react": "^9.42.1",
     "@sentry/vite-plugin": "^4.0.1",
     "@swc/core": "^1.13.1",
-    "delib-npm": "^5.6.9",
+    "@types/uuid": "^10.0.0",
+    "delib-npm": "^5.6.13",
     "esbuild": "0.25.2",
     "firebase": "^11.0.2",
     "lucide-react": "^0.474.0",
@@ -53,6 +54,7 @@
     "react-redux": "^8.1.1",
     "react-router": "^7.1.5",
     "reactflow": "^11.11.1",
+    "uuid": "^11.1.0",
     "valibot": "^1.0.0-rc.1"
   },
   "devDependencies": {
