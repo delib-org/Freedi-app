@@ -25,7 +25,6 @@ export default function AddButton() {
 	const handleAction = (
 		action: 'question' | 'mass-consensus' | 'subgroup' | 'questionnaire'
 	) => {
-		console.log('Action:', action);
 		setActionsOpen(false);
 		switch (action) {
 			case 'question':

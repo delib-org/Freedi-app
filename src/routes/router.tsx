@@ -35,6 +35,8 @@ import { MassConsensusPageUrls } from 'delib-npm';
 import UserDemographicMC from '@/view/pages/massConsensus/massConsesusQuestion/userDemographicMC/UserDemographicMC';
 import My from '@/view/pages/my/My';
 import CheckNotifications from '@/view/pages/settings/ChecNotifications';
+import Questionnaire from '@/view/pages/statement/components/questionnaire/questionnaire/Questionnaire';
+import QuestionnaireSettings from '@/view/pages/statement/components/questionnaire/questionnaireSttings/QuestionnaireSettings';
 
 // Define errorRoutes
 const errorRoutes = [
@@ -128,7 +130,14 @@ const protectedRoutes = [
 		path: 'stage/:statementId/:sort',
 		element: <StatementMain />,
 	},
-	// ... other protected routes
+	{
+		path: 'questionnaire/:statementId',
+		element: <Questionnaire />,
+	},
+	{
+		path: 'questionnaire-settings/:statementId',
+		element: <QuestionnaireSettings />,
+	},
 ];
 
 // Define publicRoutes
