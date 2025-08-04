@@ -11,6 +11,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { setNewStatementModal, setShowNewStatementModal } from '@/redux/statements/newStatementSlice';
 import { useParams } from 'react-router';
 import { statementSelectorById } from '@/redux/statements/statementsSlice';
+import BurgerIcon from '@/assets/icons/burgerIcon.svg?react';
 
 export default function AddButton() {
 	const { statementId } = useParams<{ statementId: string }>();
@@ -22,8 +23,9 @@ export default function AddButton() {
 	const radius = 5;
 
 	const handleAction = (
-		action: 'question' | 'mass-consensus' | 'subgroup'
+		action: 'question' | 'mass-consensus' | 'subgroup' | 'questionnaire'
 	) => {
+		console.log('Action:', action);
 		setActionsOpen(false);
 		switch (action) {
 			case 'question':
@@ -56,6 +58,20 @@ export default function AddButton() {
 				}));
 
 				break;
+			case 'questionnaire':
+				dispatch(setNewStatementModal({
+					parentStatement: statement,
+					newStatement: {
+						statementType: StatementType.question,
+						questionSettings: {
+							questionType: QuestionType.questionnaire,
+						},
+					},
+					isLoading: false,
+					error: null,
+					showModal: true,
+				}));
+				break;
 			case 'subgroup':
 				dispatch(setNewStatementModal({
 					parentStatement: statement,
@@ -86,6 +102,11 @@ export default function AddButton() {
 			key: 'mass-consensus',
 			action: 'mass-consensus' as const,
 			icon: <AddMassConsensusIcon />,
+		},
+		{
+			key: 'questionnaire',
+			action: 'questionnaire' as const,
+			icon: <BurgerIcon />,
 		},
 		{
 			key: 'subgroup',

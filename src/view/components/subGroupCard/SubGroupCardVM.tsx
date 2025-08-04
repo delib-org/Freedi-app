@@ -21,7 +21,7 @@ const getIconByType = (
 		case StatementType.group:
 			return <GroupIcon />;
 		case StatementType.question:
-			return questionType === QuestionType.massConsensus ? (
+			return questionType === QuestionType.massConsensus || questionType === QuestionType.questionnaire ? (
 				<DocumentIcon />
 			) : (
 				<QuestionIcon />
@@ -42,7 +42,7 @@ export default function useSubGroupCard(
 				statement.statementType as StatementType,
 				statement.questionSettings?.questionType
 			),
-			backgroundColor,
+			backgroundColor: statement.questionSettings?.questionType === QuestionType.questionnaire ? "teal" : backgroundColor,
 			text: statement.statement,
 		};
 	} catch (error) {

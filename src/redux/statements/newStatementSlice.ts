@@ -22,7 +22,7 @@ const newStatementSlice = createSlice({
 	initialState,
 	reducers: {
 		setNewStatementModal: (state, action: PayloadAction<NewStatementState>) => {
-
+console.log('Setting new statement modal with action:', action.payload);
 			const { parentStatement, newStatement, isLoading, showModal, error } = action.payload;
 			state.parentStatement = action.payload.parentStatement = parentStatement || null;
 			state.newStatement = newStatement || null;
