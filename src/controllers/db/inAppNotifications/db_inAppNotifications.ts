@@ -17,13 +17,13 @@ import {
   showSnackbar,
   hideSnackbar,
 } from "@/redux/snackbarSlice/snackbarSlice";
+import { useUserConfig } from "@/controllers/hooks/useUserConfig";
 
 let previousIds: Set<string> = new Set();
 
 export function listenToInAppNotifications(): Unsubscribe {
   try {
     const user = store.getState().creator.creator;
-
     if (!user) throw new Error("User not found");
 
     const inAppNotificationsRef = collection(
@@ -37,6 +37,8 @@ export function listenToInAppNotifications(): Unsubscribe {
       limit(100)
     );
 
+    const { t } = useUserConfig();
+
     return onSnapshot(
       q,
       (snapshot) => {
@@ -47,7 +49,6 @@ export function listenToInAppNotifications(): Unsubscribe {
           snapshot.forEach((doc) => {
             const data = doc.data() as NotificationType;
             notifications.push(data);
-
             if (!previousIds.has(data.notificationId)) {
               latest = data;
             }
@@ -63,6 +64,7 @@ export function listenToInAppNotifications(): Unsubscribe {
               | "comment"
               | "question"
               | "group";
+
             const { text, statementId } = latest;
 
             const title =
@@ -84,19 +86,21 @@ export function listenToInAppNotifications(): Unsubscribe {
                 type,
                 title,
                 content:
-                  statementType === "comment" ? `${text}\n• Tap to read` : text,
+                  statementType === "comment"
+                    ? `${text}\n• ${t("Tap to read")}`
+                    : text,
                 buttons:
                   statementType === "option"
                     ? [
                         {
-                          label: "Vote",
+                          label: t("Vote"),
                           action: () => {
                             window.location.href = `/statements/${statementId}`;
                             store.dispatch(hideSnackbar());
                           },
                         },
                         {
-                          label: "Later",
+                          label: t("Later"),
                           action: () => store.dispatch(hideSnackbar()),
                         },
                       ]
@@ -115,9 +119,7 @@ export function listenToInAppNotifications(): Unsubscribe {
   } catch (error) {
     console.error("In listenToInAppNotifications", error.message);
 
-    return () => {
-      return;
-    };
+    return () => {};
   }
 }
 
