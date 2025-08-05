@@ -13,19 +13,21 @@ import { stat } from 'fs';
 
 interface Props {
   setQuestion: (question: QuestionnaireQuestion) => void;
+  question?: QuestionnaireQuestion ;
 }
 
-const QuestionnaireQuestionSettings: React.FC<Props> = ({ setQuestion }) => {
+const QuestionnaireQuestionSettings: React.FC<Props> = ({ setQuestion, question }) => {
 
   const { t } = useUserConfig();
   const { statementId } = useParams<{ statementId: string }>();
   const statement = useSelector(statementSelectorById(statementId)) as Statement;
   const subQuestions = useSelector(subQuestionsSelector(statement?.parentId));
+  
 
-  const [question, setQuestionText] = React.useState<string | null>(null);
-  const [description, setDescription] = React.useState<string | null>(null);
-  const [questionType, setQuestionType] = React.useState<QuestionType | null>(null);
-  const [evaluationUI, setEvaluationUI] = React.useState<EvaluationUI | null>(null);
+  const [_question, setQuestionText] = React.useState<string | null>(question?.question || null);
+  const [description, setDescription] = React.useState<string | null>(question?.description || null);
+  const [questionType, setQuestionType] = React.useState<QuestionType | null>(question?.questionType || null);
+  const [evaluationUI, setEvaluationUI] = React.useState<EvaluationUI | null>(question?.evaluationUI || null);
 
   const [cutoffBy, setCutoffBy] = React.useState<CutoffBy | null>(null);
   const [save, setSave] = React.useState<boolean>(false);
@@ -57,10 +59,10 @@ const QuestionnaireQuestionSettings: React.FC<Props> = ({ setQuestion }) => {
         questionnaireId: statementId,
         questionnaireQuestion: {
           statementId: newStatementId,
-          question,
+          question:_question || '',
           description,
           questionType,
-          EvaluationUI: evaluationUI,
+          evaluationUI: evaluationUI,
           cutoffBy,
           order: subQuestions.length + 1,
           questionnaireQuestionId: getRandomUID(),
@@ -115,8 +117,8 @@ const QuestionnaireQuestionSettings: React.FC<Props> = ({ setQuestion }) => {
     <div>
       <h4>{t("Question Settings")}</h4>
       <form className={styles.form} onSubmit={handleSubmit}>
-        <input type="text" name="question" id="question" placeholder={t("Enter your question")} onChange={(e) => setQuestionText(e.target.value)} />
-        <textarea name="description" id="description" placeholder={t("Enter question description (optional)")} onChange={(e) => setDescription(e.target.value)}></textarea>
+        <input type="text" name="question" id="question" placeholder={t("Enter your question")} onChange={(e) => setQuestionText(e.target.value)} defaultValue={question?.question || ''} />
+        <textarea name="description" id="description" placeholder={t("Enter question description (optional)")} onChange={(e) => setDescription(e.target.value)} defaultValue={question?.description || ''}></textarea>
         <select name="statement" id="statement" defaultValue="none">
           <option value="none" disabled className='select--disabled'>{t("Select Question question")}</option>
           <option value="new">{t("New question")}</option>
@@ -126,17 +128,17 @@ const QuestionnaireQuestionSettings: React.FC<Props> = ({ setQuestion }) => {
             </option>
           ))}
         </select>
-        <select name="questionType" id="questionType" defaultValue="none" onChange={(e) => setQuestionType(e.target.value as QuestionType)}>
+        <select name="questionType" id="questionType" defaultValue={question?.questionType || 'none'} onChange={(e) => setQuestionType(e.target.value as QuestionType)}>
           <option value="none" disabled>{t("Select Question Type")}</option>
           <option value={QuestionType.simple}>{t("Simple Question")}</option>
           <option value={QuestionType.massConsensus}>{t("Mass Consensus")}</option>
         </select>
-        <select name="evaluationUI" id="evaluationUI" defaultValue="none" onChange={(e) => setEvaluationUI(e.target.value as EvaluationUI)}>
+        <select name="evaluationUI" id="evaluationUI" defaultValue={question?.evaluationUI || 'none'} onChange={(e) => setEvaluationUI(e.target.value as EvaluationUI)}>
           <option value="none" disabled>{t("Select Evaluation UI")}</option>
           <option value={EvaluationUI.suggestions}>{t('Suggestions')}</option>
           <option value={EvaluationUI.voting}>{t('Voting')}</option>
         </select>
-        <select name="cutoffBy" id="cutoffBy" defaultValue="none" onChange={(e) => setCutoffBy(e.target.value as CutoffBy)}>
+        <select name="cutoffBy" id="cutoffBy" defaultValue={question?.cutoffBy || 'none'} onChange={(e) => setCutoffBy(e.target.value as CutoffBy)}>
           <option value="none" disabled>{t("Select Cutoff By")}</option>
           <option value={CutoffBy.aboveThreshold}>{t("Above Threshold")}</option>
           <option value={CutoffBy.topOptions}>{t("Top Options")}</option>
