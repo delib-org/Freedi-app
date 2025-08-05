@@ -159,6 +159,12 @@ button {
 		}
 	}
 
+	&--danger {
+		background-color: var(--Text-Error, #f74a4d);
+		color: var(--white);
+		border: 1px solid var(--Text-Error, #f74a4d);
+	}	
+
 	&--Close {
 		align-self: center;
 		margin: 2rem 0 1rem 0;

@@ -7,7 +7,7 @@ import { useSelector } from 'react-redux';
 import { useParams } from 'react-router';
 import styles from './QuestionnaireQuestionSettings.module.scss';
 import SavedIcon from '@/assets/icons/checkIcon.svg?react';
-import { setQuestionnaireQuestion } from '@/controllers/db/questionnaries/setQuestionnairs';
+import { deleteQuestionnaireQuestion, setQuestionnaireQuestion } from '@/controllers/db/questionnaries/setQuestionnairs';
 import { saveStatementToDB, setStatementToDB } from '@/controllers/db/statements/setStatements';
 import { stat } from 'fs';
 
@@ -24,6 +24,7 @@ const QuestionnaireQuestionSettings: React.FC<Props> = ({ setQuestion, question 
   const subQuestions = useSelector(subQuestionsSelector(statement?.parentId));
   
 
+  const [showQuestion, setShowQuestion] = React.useState<boolean>(true);
   const [_question, setQuestionText] = React.useState<string | null>(question?.question || null);
   const [description, setDescription] = React.useState<string | null>(question?.description || null);
   const [questionType, setQuestionType] = React.useState<QuestionType | null>(question?.questionType || null);
@@ -39,7 +40,7 @@ const QuestionnaireQuestionSettings: React.FC<Props> = ({ setQuestion, question 
     const formData = new FormData(event.currentTarget);
     const dataObj = Object.fromEntries(formData.entries());
 
-    const newStatementId = dataObj.statement === 'new' ? getRandomUID() : dataObj.statement as string;
+    const newStatementId = dataObj.statement === 'new' ? getRandomUID() : question?.statementId || getRandomUID();
 
     if (dataObj.statement === 'new') {
       //save new statement to the database
@@ -108,10 +109,25 @@ const QuestionnaireQuestionSettings: React.FC<Props> = ({ setQuestion, question 
     }
   }
 
+  function handleDelete() {
+    if (question) {
+      deleteQuestionnaireQuestion({
+        questionnaireId: statementId,
+        questionnaireQuestionId: question.questionnaireQuestionId,
+      }).then(() => {
+        setShowQuestion(false);
+      }).catch(error => {
+        console.error('Error deleting questionnaire question:', error);
+      });
+    }
+  }
+
   useEffect(() => {
     setSave(false);
-    if (question && questionType && evaluationUI && cutoffBy) setCanSave(true);
-  }, [question, description, questionType, evaluationUI, cutoffBy]);
+    if (_question && questionType && evaluationUI && cutoffBy) setCanSave(true);
+  }, [_question, description, questionType, evaluationUI, cutoffBy]);
+
+  if (!showQuestion) return null;
 
   return (
     <div>
@@ -149,7 +165,10 @@ const QuestionnaireQuestionSettings: React.FC<Props> = ({ setQuestion, question 
         {cutoffBy && cutoffBy === CutoffBy.aboveThreshold && (
           <input type="number" name="cutoffValue" step={0.001} id="cutoffValue" placeholder={t("Enter cutoff value")} />
         )}
+        <div className="btns">
+          <button type="button" className={`btn btn--secondary btn--danger ${styles.cancelButton}`} onClick={handleDelete}>{t("Delete")}</button>
         <button type="submit" disabled={!canSave} className={`btn ${canSave ? "btn--active" : "btn--disabled"} ${styles.saveButton}`}>{t(save ? "Changes Saved" : "Save Changes")} {save && <SavedIcon />}</button>
+        </div>
       </form>
     </div>
   )

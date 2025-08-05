@@ -1,6 +1,6 @@
 import { logger } from "@sentry/react";
 import { Collections, Questionnaire, QuestionnaireQuestion, QuestionnaireQuestionSchema, QuestionnaireSchema, Statement } from "delib-npm";
-import { arrayUnion, doc, setDoc, updateDoc } from "firebase/firestore"; // Add setDoc import
+import { arrayUnion, doc, setDoc, updateDoc, deleteField } from "firebase/firestore"; // Add setDoc import
 import { DB } from "../config";
 import { check, safeParse } from "valibot";
 import { checkValidationErrors } from "@/utils/validation";
@@ -57,6 +57,25 @@ export async function setQuestionnaireQuestion({ questionnaireId, questionnaireQ
     } catch (error) {
         console.error("Error setting questionnaire question:", error);
         logger.error("Error setting questionnaire question:", error);
+        return false;
+    }
+}
+
+export async function deleteQuestionnaireQuestion({ questionnaireId, questionnaireQuestionId }: { questionnaireId: string; questionnaireQuestionId: string }): Promise<boolean> {
+    try {
+        const statementRef = doc(DB, Collections.statements, questionnaireId);
+
+        // Remove the question from the questions object
+        await updateDoc(statementRef, {
+            [`questionnaire.questions.${questionnaireQuestionId}`]: deleteField(),
+        });
+
+        logger.info("Questionnaire question deleted successfully");
+        return true;
+
+    } catch (error) {
+        console.error("Error deleting questionnaire question:", error);
+        logger.error("Error deleting questionnaire question:", error);
         return false;
     }
 }
