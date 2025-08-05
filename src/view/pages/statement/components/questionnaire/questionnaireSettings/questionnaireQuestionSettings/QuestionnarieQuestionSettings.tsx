@@ -1,6 +1,5 @@
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
-import { setStatement, statementSelectorById, subQuestionsSelector } from '@/redux/statements/statementsSlice';
-import { RootState } from '@/redux/store';
+import { statementSelectorById, subQuestionsSelector } from '@/redux/statements/statementsSlice';
 import { CutoffBy, EvaluationUI, getRandomUID, QuestionnaireQuestion, QuestionType, ResultsBy, Statement, StatementType } from 'delib-npm';
 import React, { useEffect } from 'react'
 import { useSelector } from 'react-redux';
@@ -8,8 +7,7 @@ import { useParams } from 'react-router';
 import styles from './QuestionnaireQuestionSettings.module.scss';
 import SavedIcon from '@/assets/icons/checkIcon.svg?react';
 import { deleteQuestionnaireQuestion, setQuestionnaireQuestion } from '@/controllers/db/questionnaries/setQuestionnairs';
-import { saveStatementToDB, setStatementToDB } from '@/controllers/db/statements/setStatements';
-import { stat } from 'fs';
+import { setStatementToDB } from '@/controllers/db/statements/setStatements';
 
 interface Props {
   setQuestion: (question: QuestionnaireQuestion) => void;
@@ -22,7 +20,6 @@ const QuestionnaireQuestionSettings: React.FC<Props> = ({ setQuestion, question 
   const { statementId } = useParams<{ statementId: string }>();
   const statement = useSelector(statementSelectorById(statementId)) as Statement;
   const subQuestions = useSelector(subQuestionsSelector(statement?.parentId));
-  
 
   const [showQuestion, setShowQuestion] = React.useState<boolean>(true);
   const [isDeleting, setIsDeleting] = React.useState<boolean>(false);
@@ -31,9 +28,20 @@ const QuestionnaireQuestionSettings: React.FC<Props> = ({ setQuestion, question 
   const [questionType, setQuestionType] = React.useState<QuestionType | null>(question?.questionType || null);
   const [evaluationUI, setEvaluationUI] = React.useState<EvaluationUI | null>(question?.evaluationUI || null);
 
-  const [cutoffBy, setCutoffBy] = React.useState<CutoffBy | null>(null);
+  const [cutoffBy, setCutoffBy] = React.useState<CutoffBy | null>(question?.cutoffBy || null);
   const [save, setSave] = React.useState<boolean>(false);
   const [canSave, setCanSave] = React.useState<boolean>(false);
+  
+  // Store original values for change detection
+  const [originalValues] = React.useState({
+    question: question?.question || null,
+    description: question?.description || null,
+    questionType: question?.questionType || null,
+    evaluationUI: question?.evaluationUI || null,
+    cutoffBy: question?.cutoffBy || null,
+    statementId: question?.statementId || null
+  });
+  const [selectedStatement, setSelectedStatement] = React.useState<string>(question?.statementId || 'none');
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -41,19 +49,13 @@ const QuestionnaireQuestionSettings: React.FC<Props> = ({ setQuestion, question 
     const formData = new FormData(event.currentTarget);
     const dataObj = Object.fromEntries(formData.entries());
 
-    const newStatementId = dataObj.statement === 'new' ? getRandomUID() : question?.statementId || getRandomUID();
+    const newStatementId = selectedStatement === 'new' ? getRandomUID() : selectedStatement || question?.statementId || getRandomUID();
 
-    if (dataObj.statement === 'new') {
+    if (selectedStatement === 'new') {
       //save new statement to the database
       if (!statement?.parentId) throw new Error('Parent ID is required for new statements');
 
-      console.log('Creating new statement with ID:', newStatementId);
-
-
       await _createNewStatement(newStatementId);
-
-
-
     }
 
     const newQuestionData = {
@@ -78,9 +80,6 @@ const QuestionnaireQuestionSettings: React.FC<Props> = ({ setQuestion, question 
     if (!question) {
       setQuestion(newQuestionData);
     }
-
-
-
 
     async function _createNewStatement(newStatementId: string): Promise<Statement> {
       const newStatement: Statement = {
@@ -123,6 +122,7 @@ const QuestionnaireQuestionSettings: React.FC<Props> = ({ setQuestion, question 
       const confirmDelete = window.confirm(t("Are you sure you want to delete this question? This action cannot be undone."));
       
       if (!confirmDelete) {
+        
         return;
       }
       
@@ -147,8 +147,27 @@ const QuestionnaireQuestionSettings: React.FC<Props> = ({ setQuestion, question 
 
   useEffect(() => {
     setSave(false);
-    if (_question && questionType && evaluationUI && cutoffBy) setCanSave(true);
-  }, [_question, description, questionType, evaluationUI, cutoffBy]);
+    
+    // Check if all required fields are filled
+    const requiredFieldsFilled = !!(_question && questionType && evaluationUI && cutoffBy);
+    
+    if (!question) {
+      // For new questions, enable save when required fields are filled
+      setCanSave(requiredFieldsFilled);
+    } else {
+      // For existing questions, check if any values have changed from the original
+      const hasChanges = 
+        _question !== originalValues.question ||
+        description !== originalValues.description ||
+        questionType !== originalValues.questionType ||
+        evaluationUI !== originalValues.evaluationUI ||
+        cutoffBy !== originalValues.cutoffBy ||
+        selectedStatement !== originalValues.statementId;
+      
+      // Enable save button if required fields are filled AND there are changes
+      setCanSave(requiredFieldsFilled && hasChanges);
+    }
+  }, [_question, description, questionType, evaluationUI, cutoffBy, selectedStatement, originalValues, question]);
 
   if (!showQuestion) return null;
 
@@ -159,7 +178,7 @@ const QuestionnaireQuestionSettings: React.FC<Props> = ({ setQuestion, question 
         <input type="text" name="question" id="question" placeholder={t("Enter your question")} onChange={(e) => setQuestionText(e.target.value)} defaultValue={question?.question || ''} />
         <textarea name="description" id="description" placeholder={t("Enter question description (optional)")} onChange={(e) => setDescription(e.target.value)} defaultValue={question?.description || ''}></textarea>
         <label htmlFor="statement">{t("Question")}</label>
-        <select name="statement" id="statement" defaultValue={question?.statementId || 'none'}>
+        <select name="statement" id="statement" value={selectedStatement} onChange={(e) => setSelectedStatement(e.target.value)}>
           <option value="none" disabled className='select--disabled'>{t("Select Question question")}</option>
           <option value="new">{t("New question")}</option>
           {subQuestions.map((subStatement: Statement) => (
