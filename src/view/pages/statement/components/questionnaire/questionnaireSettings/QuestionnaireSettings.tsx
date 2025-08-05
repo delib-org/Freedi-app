@@ -110,7 +110,8 @@ const QuestionnaireSettings: FC = () => {
         setDraggedIndex(index);
         e.dataTransfer.effectAllowed = 'move';
         // Add data to enable drag on Firefox
-        e.dataTransfer.setData('text/html', e.currentTarget.innerHTML);
+        e.dataTransfer.setData('text/html', 'dragging');
+        logger.info(`Started dragging question at index ${index}`);
     };
 
     const handleDragOver = (e: React.DragEvent<HTMLDivElement>, index: number) => {
@@ -139,14 +140,20 @@ const QuestionnaireSettings: FC = () => {
         // Create a new array with all questions
         const newQuestions = [...questions];
         
-        // Remove the dragged item and store it
-        const [draggedQuestion] = newQuestions.splice(draggedIndex, 1);
+        // Get the dragged question
+        const draggedQuestion = newQuestions[draggedIndex];
         
-        // Calculate the insertion index
-        // If dragging down, we need to account for the removed element
-        const insertIndex = draggedIndex < dropIndex ? dropIndex - 1 : dropIndex;
+        // Remove it from the original position
+        newQuestions.splice(draggedIndex, 1);
         
-        // Insert it at the new position
+        // Calculate where to insert
+        let insertIndex = dropIndex;
+        if (draggedIndex < dropIndex) {
+            // If dragging down, adjust index since we removed an item
+            insertIndex = Math.max(0, dropIndex - 1);
+        }
+        
+        // Insert at the new position
         newQuestions.splice(insertIndex, 0, draggedQuestion);
         
         // Update order values
@@ -245,6 +252,7 @@ const QuestionnaireSettings: FC = () => {
                         <div className={styles.questionsList}>
                             {questions.map((question, index) => {
                                 const isExpanded = expandedQuestions.has(question.questionnaireQuestionId);
+                                
                                 return (
                                     <div 
                                         key={question.questionnaireQuestionId} 
@@ -258,7 +266,7 @@ const QuestionnaireSettings: FC = () => {
                                     >
                                         <div 
                                             className={styles.questionHeader}
-                                            draggable
+                                            draggable={true}
                                             onDragStart={(e) => handleDragStart(e, index)}
                                             onDragOver={(e) => handleDragOver(e, index)}
                                             onDragLeave={handleDragLeave}
@@ -277,7 +285,11 @@ const QuestionnaireSettings: FC = () => {
                                             </div>
                                             <button 
                                                 className={styles.expandButton}
-                                                onClick={() => toggleQuestionExpanded(question.questionnaireQuestionId)}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    toggleQuestionExpanded(question.questionnaireQuestionId);
+                                                }}
+                                                onMouseDown={(e) => e.stopPropagation()}
                                                 type="button"
                                             >
                                                 {isExpanded ? '▼' : '▶'}
@@ -294,6 +306,19 @@ const QuestionnaireSettings: FC = () => {
                                     </div>
                                 );
                             })}
+                            {/* Drop zone at the end */}
+                            {draggedIndex !== null && (
+                                <div 
+                                    className={`${styles.dropZone} ${
+                                        dragOverIndex === questions.length ? styles.dragOver : ''
+                                    }`}
+                                    onDragOver={(e) => handleDragOver(e, questions.length)}
+                                    onDragLeave={handleDragLeave}
+                                    onDrop={(e) => handleDrop(e, questions.length)}
+                                >
+                                    <span>Drop here</span>
+                                </div>
+                            )}
                         </div>
 
                         {!isAddingQuestion && (
