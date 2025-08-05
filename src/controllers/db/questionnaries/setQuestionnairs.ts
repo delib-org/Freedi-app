@@ -1,8 +1,7 @@
 import { logger } from "@sentry/react";
-import { Collections, Questionnaire, QuestionnaireQuestion, QuestionnaireQuestionSchema, QuestionnaireSchema, Statement } from "delib-npm";
-import { arrayUnion, doc, setDoc, updateDoc, deleteField } from "firebase/firestore"; // Add setDoc import
+import { Collections, QuestionnaireQuestion, QuestionnaireQuestionSchema } from "delib-npm";
+import { doc, updateDoc, deleteField } from "firebase/firestore";
 import { DB } from "../config";
-import { check, safeParse } from "valibot";
 import { checkValidationErrors } from "@/utils/validation";
 
 export async function updateQuestionnaireDetails({
@@ -23,40 +22,36 @@ export async function updateQuestionnaireDetails({
             "questionnaire.description": description || "",
             "questionnaire.lastUpdate": Date.now(),
         });
-
+        
         return true;
 
     } catch (error) {
         console.error("Error updating questionnaire details:", error);
         logger.error("Error updating questionnaire details:", error);
-        return false;
+        
+return false;
     }
 }
 
 export async function setQuestionnaireQuestion({ questionnaireId, questionnaireQuestion }: { questionnaireId: string; questionnaireQuestion: QuestionnaireQuestion }): Promise<boolean> {
     try {
-        console.log("setting questionnaire question:", questionnaireId);
+        logger.info(`setting questionnaire question: ${questionnaireId}`);
         const statementRef = doc(DB, Collections.statements, questionnaireId);
 
         checkValidationErrors(QuestionnaireQuestionSchema, questionnaireQuestion);
 
-        console.log({
-            questionnaire: {
-                questions: {
-                    [questionnaireQuestion.questionnaireQuestionId]: questionnaireQuestion,
-                }
-            }
-        });
         await updateDoc(statementRef, {
             [`questionnaire.questions.${questionnaireQuestion.questionnaireQuestionId}`]: questionnaireQuestion,
         });
 
         logger.info("Questionnaire question set successfully");
+        
         return true;
 
     } catch (error) {
         console.error("Error setting questionnaire question:", error);
         logger.error("Error setting questionnaire question:", error);
+        
         return false;
     }
 }
@@ -71,11 +66,42 @@ export async function deleteQuestionnaireQuestion({ questionnaireId, questionnai
         });
 
         logger.info("Questionnaire question deleted successfully");
+        
         return true;
 
     } catch (error) {
         console.error("Error deleting questionnaire question:", error);
         logger.error("Error deleting questionnaire question:", error);
+        
+        return false;
+    }
+}
+
+export async function updateQuestionOrder({ 
+    questionnaireId, 
+    questionnaireQuestionId, 
+    order 
+}: { 
+    questionnaireId: string; 
+    questionnaireQuestionId: string; 
+    order: number;
+}): Promise<boolean> {
+    try {
+        const statementRef = doc(DB, Collections.statements, questionnaireId);
+
+        // Update only the order field of the specific question
+        await updateDoc(statementRef, {
+            [`questionnaire.questions.${questionnaireQuestionId}.order`]: order,
+        });
+
+        logger.info("Question order updated successfully");
+        
+        return true;
+
+    } catch (error) {
+        console.error("Error updating question order:", error);
+        logger.error("Error updating question order:", error);
+        
         return false;
     }
 }

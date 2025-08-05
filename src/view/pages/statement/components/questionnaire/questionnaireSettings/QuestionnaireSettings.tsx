@@ -1,7 +1,7 @@
-import { FC, useEffect, useState } from 'react';
+import React, { FC, useEffect, useState } from 'react';
 import styles from './QuestionnaireSettings.module.scss';
-import { QuestionnaireQuestion } from 'delib-npm/dist/models/questionnaire/questionnaireModel';
-import { updateQuestionnaireDetails } from '@/controllers/db/questionnaries/setQuestionnairs';
+import { QuestionnaireQuestion, QuestionType, EvaluationUI, CutoffBy } from 'delib-npm';
+import { updateQuestionnaireDetails, updateQuestionOrder } from '@/controllers/db/questionnaries/setQuestionnairs';
 import { useDispatch, useSelector } from 'react-redux';
 import { logger } from '@/services/logger/logger';
 import QuestionnaireQuestionSettings from './questionnaireQuestionSettings/QuestionnarieQuestionSettings';
@@ -23,6 +23,9 @@ const QuestionnaireSettings: FC = () => {
     const [isAddingQuestion, setIsAddingQuestion] = useState(false);
     const [detailsSaved, setDetailsSaved] = useState(false);
     const [animatingQuestions, setAnimatingQuestions] = useState<string[]>([]);
+    const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+    const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+    const [expandedQuestions, setExpandedQuestions] = useState<Set<string>>(new Set());
 
     // New question form state
     const [newQuestion, setNewQuestion] = useState<QuestionnaireQuestion | null>(null);
@@ -48,7 +51,12 @@ const QuestionnaireSettings: FC = () => {
         if (statement) {
             setTitle(statement.questionnaire?.question || '');
             setDescription(statement.questionnaire?.description || '');
-            setQuestions(Object.values(statement.questionnaire?.questions || {}));
+            const questionsArray = Object.values(statement.questionnaire?.questions || {});
+            logger.info('Questions before sort:', questionsArray.map(q => ({ id: q.questionnaireQuestionId, order: q.order })));
+            // Sort questions by order field
+            questionsArray.sort((a, b) => (a.order || 0) - (b.order || 0));
+            logger.info('Questions after sort:', questionsArray.map(q => ({ id: q.questionnaireQuestionId, order: q.order })));
+            setQuestions(questionsArray);
         }
     }, [statement]);
 
@@ -87,7 +95,7 @@ const QuestionnaireSettings: FC = () => {
                 statementId: statementId,
                 question: dataObj.question as string,
                 description: dataObj.description as string,
-            }).then(result => {
+            }).then(() => {
                 setDetailsSaved(true);
             }).catch(error => {
                 logger.error('Error updating questionnaire details:', error);
@@ -96,6 +104,99 @@ const QuestionnaireSettings: FC = () => {
         } catch (error) {
             logger.error('Error saving questionnaire:', error);
         }
+    };
+
+    const handleDragStart = (e: React.DragEvent<HTMLDivElement>, index: number) => {
+        setDraggedIndex(index);
+        e.dataTransfer.effectAllowed = 'move';
+        // Add data to enable drag on Firefox
+        e.dataTransfer.setData('text/html', e.currentTarget.innerHTML);
+    };
+
+    const handleDragOver = (e: React.DragEvent<HTMLDivElement>, index: number) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        
+        if (draggedIndex !== null && draggedIndex !== index) {
+            setDragOverIndex(index);
+        }
+    };
+
+    const handleDragLeave = () => {
+        setDragOverIndex(null);
+    };
+
+    const handleDrop = async (e: React.DragEvent<HTMLDivElement>, dropIndex: number) => {
+        e.preventDefault();
+        setDragOverIndex(null);
+
+        logger.info(`Dropping item from index ${draggedIndex} to index ${dropIndex}`);
+
+        if (draggedIndex === null || draggedIndex === dropIndex) {
+            return;
+        }
+
+        // Create a new array with all questions
+        const newQuestions = [...questions];
+        
+        // Remove the dragged item and store it
+        const [draggedQuestion] = newQuestions.splice(draggedIndex, 1);
+        
+        // Calculate the insertion index
+        // If dragging down, we need to account for the removed element
+        const insertIndex = draggedIndex < dropIndex ? dropIndex - 1 : dropIndex;
+        
+        // Insert it at the new position
+        newQuestions.splice(insertIndex, 0, draggedQuestion);
+        
+        // Update order values
+        const updatedQuestions = newQuestions.map((q, idx) => ({
+            ...q,
+            order: idx + 1
+        }));
+        
+        logger.info('Updated questions order:', updatedQuestions.map(q => ({ id: q.questionnaireQuestionId, order: q.order })));
+        
+        setQuestions(updatedQuestions);
+        
+        // Save the new order to the database
+        try {
+            // Update all questions in parallel for better performance
+            const updatePromises = updatedQuestions.map(question => 
+                updateQuestionOrder({
+                    questionnaireId: statementId!,
+                    questionnaireQuestionId: question.questionnaireQuestionId,
+                    order: question.order
+                })
+            );
+            
+            await Promise.all(updatePromises);
+            logger.info('Order saved to database successfully');
+            
+            // Force re-fetch the statement to ensure we have the latest data
+            if (statementId) {
+                getStatementFromDB(statementId);
+            }
+        } catch (error) {
+            logger.error('Error updating question order:', error);
+        }
+        
+        setDraggedIndex(null);
+    };
+
+    const handleDragEnd = () => {
+        setDraggedIndex(null);
+        setDragOverIndex(null);
+    };
+
+    const toggleQuestionExpanded = (questionId: string) => {
+        const newExpanded = new Set(expandedQuestions);
+        if (newExpanded.has(questionId)) {
+            newExpanded.delete(questionId);
+        } else {
+            newExpanded.add(questionId);
+        }
+        setExpandedQuestions(newExpanded);
     };
 
     return (
@@ -142,21 +243,57 @@ const QuestionnaireSettings: FC = () => {
                     <section>
                         <h3>Questions</h3>
                         <div className={styles.questionsList}>
-                            {questions.map((question) => (
-                                <div 
-                                    key={question.questionnaireQuestionId} 
-                                    className={`${styles.questionItem} ${
-                                        animatingQuestions.includes(question.questionnaireQuestionId) 
-                                            ? styles.slideIn 
-                                            : ''
-                                    }`}
-                                >
-                                    <QuestionnaireQuestionSettings
-                                        question={question}
-                                        setQuestion={setNewQuestion}
-                                    />
-                                </div>
-                            ))}
+                            {questions.map((question, index) => {
+                                const isExpanded = expandedQuestions.has(question.questionnaireQuestionId);
+                                return (
+                                    <div 
+                                        key={question.questionnaireQuestionId} 
+                                        className={`${styles.questionItem} ${
+                                            animatingQuestions.includes(question.questionnaireQuestionId) 
+                                                ? styles.slideIn 
+                                                : ''
+                                        } ${draggedIndex === index ? styles.dragging : ''} ${
+                                            dragOverIndex === index ? styles.dragOver : ''
+                                        }`}
+                                    >
+                                        <div 
+                                            className={styles.questionHeader}
+                                            draggable
+                                            onDragStart={(e) => handleDragStart(e, index)}
+                                            onDragOver={(e) => handleDragOver(e, index)}
+                                            onDragLeave={handleDragLeave}
+                                            onDrop={(e) => handleDrop(e, index)}
+                                            onDragEnd={handleDragEnd}
+                                        >
+                                            <div className={styles.dragHandle}>⋮⋮</div>
+                                            <div className={styles.questionInfo}>
+                                                <span className={styles.questionNumber}>Q{index + 1}</span>
+                                                <h4 className={styles.questionTitle}>
+                                                    {question.question || 'Untitled Question'}
+                                                </h4>
+                                                {question.questionType && (
+                                                    <span className={styles.questionType}>{question.questionType}</span>
+                                                )}
+                                            </div>
+                                            <button 
+                                                className={styles.expandButton}
+                                                onClick={() => toggleQuestionExpanded(question.questionnaireQuestionId)}
+                                                type="button"
+                                            >
+                                                {isExpanded ? '▼' : '▶'}
+                                            </button>
+                                        </div>
+                                        {isExpanded && (
+                                            <div className={styles.questionContent}>
+                                                <QuestionnaireQuestionSettings
+                                                    question={question}
+                                                    setQuestion={setNewQuestion}
+                                                />
+                                            </div>
+                                        )}
+                                    </div>
+                                );
+                            })}
                         </div>
 
                         {!isAddingQuestion && (
@@ -170,7 +307,19 @@ const QuestionnaireSettings: FC = () => {
 
                         {isAddingQuestion && (
                             <div className={styles.addQuestionForm}>
-                                <QuestionnaireQuestionSettings setQuestion={setNewQuestion} />
+                                <QuestionnaireQuestionSettings 
+                                    setQuestion={setNewQuestion} 
+                                    question={{
+                                        questionnaireQuestionId: '',
+                                        statementId: '',
+                                        question: '',
+                                        description: '',
+                                        questionType: null as unknown as QuestionType,
+                                        evaluationUI: null as unknown as EvaluationUI,
+                                        cutoffBy: null as unknown as CutoffBy,
+                                        order: questions.length + 1
+                                    }}
+                                />
                                 <button 
                                     className="btn btn--secondary"
                                     onClick={() => setIsAddingQuestion(false)}

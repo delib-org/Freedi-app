@@ -65,7 +65,7 @@ const QuestionnaireQuestionSettings: React.FC<Props> = ({ setQuestion, question 
       questionType,
       evaluationUI: evaluationUI,
       cutoffBy,
-      order: subQuestions.length + 1,
+      order: question?.order || 999,
       questionnaireQuestionId: question?.questionnaireQuestionId || getRandomUID(),
     };
 
@@ -112,6 +112,7 @@ const QuestionnaireQuestionSettings: React.FC<Props> = ({ setQuestion, question 
         statement: newStatement,
         parentStatement: statement,
       });
+      
       return newStatementFrmDB;
     }
   }

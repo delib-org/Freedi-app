@@ -1,5 +1,3 @@
-
-
 const Questionnaire = () => {
     return (
         <div>

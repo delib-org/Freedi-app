@@ -166,7 +166,6 @@ export async function getChildStatements(
 	}
 }
 
-
 export async function getSubQuestions(statementId: string): Promise<Statement[]> {
 	try {
 		const statementsRef = collection(FireStore, Collections.statements);

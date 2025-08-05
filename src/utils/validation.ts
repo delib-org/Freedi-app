@@ -45,9 +45,11 @@ function buildFieldPath(path?: Array<{ type: string; key?: unknown; [key: string
         if (typeof pathItem.key === 'number') {
           return `[${pathItem.key}]`;
         }
-        return String(pathItem.key);
+        
+return String(pathItem.key);
       }
-      return '';
+      
+return '';
     })
     .filter(Boolean)
     .join('.');

@@ -22,5 +22,3 @@ export const selectQuestionnairesArray = createSelector(
     [selectQuestionnaires],
     (questionnaires) => Object.values(questionnaires)
 );
-
-

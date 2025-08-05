@@ -130,11 +130,52 @@
         flex-direction: column;
         gap: 12px;
         margin-bottom: 20px;
+        padding-left: 35px;
+        position: relative;
     }
 
     .questionItem {
         transition: all 0.3s ease-out;
         transform-origin: top center;
+        position: relative;
+        cursor: move;
+        
+        &.dragging {
+            opacity: 0.5;
+            transform: scale(0.95);
+        }
+        
+        &.dragOver {
+            position: relative;
+            
+            &::before {
+                content: '';
+                position: absolute;
+                top: -2px;
+                left: 0;
+                right: 0;
+                height: 4px;
+                background-color: var(--primary-color);
+                border-radius: 2px;
+                z-index: 10;
+            }
+        }
+        
+        .dragHandle {
+            position: absolute;
+            left: -25px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: grab;
+            color: var(--text-secondary);
+            font-size: 20px;
+            line-height: 1;
+            user-select: none;
+            
+            &:active {
+                cursor: grabbing;
+            }
+        }
     }
 
     .footer {

@@ -61,7 +61,8 @@ export const updateParentOnChildUpdate = onDocumentUpdated({
         // If nothing else changed, this is likely our own update
         if (JSON.stringify(beforeCopy) === JSON.stringify(afterCopy)) {
             logger.info('Skipping update - appears to be triggered by parent update function');
-            return;
+            
+return;
         }
         
         // Check if this is a significant content change
@@ -73,7 +74,8 @@ export const updateParentOnChildUpdate = onDocumentUpdated({
         
         if (!hasContentChange) {
             logger.info('No significant content changes, skipping parent update');
-            return;
+            
+return;
         }
         
         logger.info(`Child statement content changed, updating parent ${after.parentId}`);
@@ -96,7 +98,8 @@ export const updateParentStatementOnChildChange = onDocumentWritten({
 }, async () => {
     // DISABLED: This function is replaced by updateParentOnChildCreate and updateParentOnChildUpdate
     logger.info('DEPRECATED: updateParentStatementOnChildChange called but disabled - using new split functions instead');
-    return;
+    
+return;
 });
 
 /**

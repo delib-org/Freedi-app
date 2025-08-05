@@ -7,8 +7,6 @@ enum CutoffBy {
     aboveThreshold = 'aboveThreshold'
 }
 
-
-
 interface QuestionnaireResponse {
     questionnaireId: string;
     userId: string;
@@ -68,9 +66,6 @@ const questionnaireSlice = createSlice({
         deleteQuestionnaire: (state, action: PayloadAction<string>) => {
             delete state.questionnaires[action.payload];
         },
-        
-       
-        
        
     },
 });
