@@ -158,7 +158,8 @@ const QuestionnaireQuestionSettings: React.FC<Props> = ({ setQuestion, question 
       <form className={styles.form} onSubmit={handleSubmit}>
         <input type="text" name="question" id="question" placeholder={t("Enter your question")} onChange={(e) => setQuestionText(e.target.value)} defaultValue={question?.question || ''} />
         <textarea name="description" id="description" placeholder={t("Enter question description (optional)")} onChange={(e) => setDescription(e.target.value)} defaultValue={question?.description || ''}></textarea>
-        <select name="statement" id="statement" defaultValue="none">
+        <label htmlFor="statement">{t("Question")}</label>
+        <select name="statement" id="statement" defaultValue={question?.statementId || 'none'}>
           <option value="none" disabled className='select--disabled'>{t("Select Question question")}</option>
           <option value="new">{t("New question")}</option>
           {subQuestions.map((subStatement: Statement) => (
@@ -167,21 +168,25 @@ const QuestionnaireQuestionSettings: React.FC<Props> = ({ setQuestion, question 
             </option>
           ))}
         </select>
+        <label htmlFor="questionType">{t("Question Type")}</label>
         <select name="questionType" id="questionType" defaultValue={question?.questionType || 'none'} onChange={(e) => setQuestionType(e.target.value as QuestionType)}>
           <option value="none" disabled>{t("Select Question Type")}</option>
           <option value={QuestionType.simple}>{t("Simple Question")}</option>
           <option value={QuestionType.massConsensus}>{t("Mass Consensus")}</option>
         </select>
+        <label htmlFor="evaluationUI">{t("Evaluation UI")}</label>
         <select name="evaluationUI" id="evaluationUI" defaultValue={question?.evaluationUI || 'none'} onChange={(e) => setEvaluationUI(e.target.value as EvaluationUI)}>
           <option value="none" disabled>{t("Select Evaluation UI")}</option>
           <option value={EvaluationUI.suggestions}>{t('Suggestions')}</option>
           <option value={EvaluationUI.voting}>{t('Voting')}</option>
         </select>
+        <label htmlFor="cutoffBy">{t("Cutoff By")}</label>
         <select name="cutoffBy" id="cutoffBy" defaultValue={question?.cutoffBy || 'none'} onChange={(e) => setCutoffBy(e.target.value as CutoffBy)}>
           <option value="none" disabled>{t("Select Cutoff By")}</option>
           <option value={CutoffBy.aboveThreshold}>{t("Above Threshold")}</option>
           <option value={CutoffBy.topOptions}>{t("Top Options")}</option>
         </select>
+        
         {cutoffBy && cutoffBy === CutoffBy.topOptions && (
           <input type="number" name="cutoffValue" step={1} id="cutoffValue" placeholder={t("How many options to include")} />
         )}
