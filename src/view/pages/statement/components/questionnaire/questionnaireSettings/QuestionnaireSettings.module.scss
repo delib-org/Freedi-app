@@ -125,94 +125,16 @@
         }
     }
 
-    .questionList {
+    .questionsList {
         display: flex;
         flex-direction: column;
         gap: 12px;
+        margin-bottom: 20px;
     }
 
     .questionItem {
-        background: var(--background-tertiary);
-        border: 1px solid var(--border-color);
-        border-radius: 8px;
-        padding: 16px;
-
-        .questionHeader {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 12px;
-
-            .questionNumber {
-                font-weight: 600;
-                color: var(--primary-color);
-            }
-
-            .questionControls {
-                display: flex;
-                gap: 4px;
-
-                button {
-                    width: 32px;
-                    height: 32px;
-                    border: 1px solid var(--border-color);
-                    background: var(--background-primary);
-                    border-radius: 4px;
-                    cursor: pointer;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-
-                    &:hover {
-                        background: var(--background-secondary);
-                    }
-
-                    &:disabled {
-                        opacity: 0.3;
-                        cursor: not-allowed;
-                    }
-
-                    &.removeButton {
-                        color: var(--error-color);
-                        font-size: 20px;
-                        font-weight: bold;
-
-                        &:hover {
-                            background: var(--error-light);
-                            border-color: var(--error-color);
-                        }
-                    }
-                }
-            }
-        }
-
-        .questionContent {
-            .questionText {
-                font-size: 16px;
-                font-weight: 500;
-                margin-bottom: 8px;
-                color: var(--text-primary);
-            }
-
-            .questionDescription {
-                font-size: 14px;
-                color: var(--text-secondary);
-                margin-bottom: 12px;
-            }
-
-            .questionMeta {
-                display: flex;
-                gap: 16px;
-                font-size: 12px;
-                color: var(--text-tertiary);
-
-                span {
-                    background: var(--background-secondary);
-                    padding: 4px 8px;
-                    border-radius: 4px;
-                }
-            }
-        }
+        transition: all 0.3s ease-out;
+        transform-origin: top center;
     }
 
     .footer {
@@ -249,5 +171,48 @@
                 }
             }
         }
+    }
+
+    .addQuestionForm {
+        background: var(--background-secondary);
+        border: 2px dashed var(--primary-color);
+        border-radius: 8px;
+        padding: 20px;
+        margin-top: 20px;
+        animation: fadeIn 0.3s ease-out;
+
+        button {
+            margin-top: 16px;
+        }
+    }
+
+    .slideIn {
+        animation: slideInFromBottom 0.6s ease-out forwards;
+    }
+}
+
+@keyframes slideInFromBottom {
+    0% {
+        opacity: 0;
+        transform: translateY(50px) scale(0.95);
+    }
+    60% {
+        opacity: 1;
+        transform: translateY(-10px) scale(1.02);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes fadeIn {
+    0% {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
     }
 }

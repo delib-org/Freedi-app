@@ -56,21 +56,28 @@ const QuestionnaireQuestionSettings: React.FC<Props> = ({ setQuestion, question 
 
     }
 
+    const newQuestionData = {
+      statementId: newStatementId,
+      question:_question || '',
+      description,
+      questionType,
+      evaluationUI: evaluationUI,
+      cutoffBy,
+      order: subQuestions.length + 1,
+      questionnaireQuestionId: question?.questionnaireQuestionId || getRandomUID(),
+    };
+
     setQuestionnaireQuestion(
       {
         questionnaireId: statementId,
-        questionnaireQuestion: {
-          statementId: newStatementId,
-          question:_question || '',
-          description,
-          questionType,
-          evaluationUI: evaluationUI,
-          cutoffBy,
-          order: subQuestions.length + 1,
-          questionnaireQuestionId: getRandomUID(),
-        }
+        questionnaireQuestion: newQuestionData
       }
-    )
+    );
+
+    // If this is a new question (not editing), trigger the animation
+    if (!question) {
+      setQuestion(newQuestionData);
+    }
 
 
 
