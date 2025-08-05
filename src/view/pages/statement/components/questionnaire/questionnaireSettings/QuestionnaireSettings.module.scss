@@ -135,34 +135,37 @@
     }
 
     .questionItem {
-        transition: all 0.3s ease-out;
-        transform-origin: top center;
         position: relative;
         background: var(--white);
-        border-radius: 8px;
-        overflow: hidden;
+        border-radius: 12px;
+        overflow: visible;
         border: 1px solid var(--border-color);
+        margin-bottom: 12px;
+        transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+        
+        &:hover:not(.dragging) {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
         
         &.dragging {
             opacity: 0.5;
-            transform: scale(0.95);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            transform: scale(0.98);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+            cursor: grabbing;
+            z-index: 1000;
         }
         
         &.dragOver {
-            position: relative;
-            
             &::before {
                 content: '';
                 position: absolute;
-                top: -3px;
-                left: -10px;
-                right: -10px;
-                height: 6px;
-                background-color: var(--primary-color);
-                border-radius: 3px;
+                top: -4px;
+                left: 0;
+                right: 0;
+                height: 4px;
+                background: var(--primary-color);
+                border-radius: 2px;
                 z-index: 10;
-                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
             }
         }
         
@@ -170,23 +173,29 @@
             display: flex;
             align-items: center;
             padding: 16px 20px;
-            cursor: move;
+            cursor: grab;
             background: var(--background-primary);
             border-bottom: 1px solid var(--border-color);
             position: relative;
+            transition: all 0.2s ease;
             
             &:hover {
                 background: var(--background-tertiary);
                 
                 .dragHandle {
                     opacity: 1;
+                    transform: translateY(-50%) scale(1.2);
                 }
+            }
+            
+            &:active {
+                cursor: grabbing;
             }
         }
         
         .dragHandle {
             position: absolute;
-            left: -25px;
+            left: -28px;
             top: 50%;
             transform: translateY(-50%);
             cursor: grab;
@@ -194,8 +203,15 @@
             font-size: 20px;
             line-height: 1;
             user-select: none;
-            opacity: 0.5;
-            transition: opacity 0.2s;
+            opacity: 0.6;
+            padding: 8px;
+            margin: -8px;
+            touch-action: none;
+            
+            &:hover {
+                opacity: 1;
+                color: var(--primary-color);
+            }
             
             &:active {
                 cursor: grabbing;
@@ -211,13 +227,15 @@
         }
         
         .questionNumber {
-            background: var(--primary-color);
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
             color: white;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 12px;
-            font-weight: 600;
+            padding: 6px 10px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 700;
             white-space: nowrap;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            letter-spacing: 0.5px;
         }
         
         .questionTitle {
@@ -229,16 +247,26 @@
             text-overflow: ellipsis;
             white-space: nowrap;
             flex: 1;
+            padding: 0 12px;
         }
         
         .questionType {
             background: var(--background-tertiary);
             color: var(--text-secondary);
-            padding: 4px 12px;
-            border-radius: 12px;
+            padding: 6px 14px;
+            border-radius: 16px;
             font-size: 12px;
             text-transform: capitalize;
             white-space: nowrap;
+            font-weight: 500;
+            border: 1px solid var(--border-color);
+            transition: all 0.2s ease;
+            
+            &:hover {
+                background: var(--background-secondary);
+                border-color: var(--primary-color);
+                color: var(--primary-color);
+            }
         }
         
         .expandButton {
@@ -273,22 +301,15 @@
         }
     }
 
-    .dropZone {
-        height: 60px;
-        border: 2px dashed var(--border-color);
-        border-radius: 8px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: var(--text-secondary);
-        font-size: 14px;
-        transition: all 0.2s;
-        margin-top: 12px;
+    .dragOverlay {
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+        background: var(--white);
+        cursor: grabbing;
+        opacity: 0.9;
+        transform: scale(1.02) rotate(2deg);
         
-        &.dragOver {
-            border-color: var(--primary-color);
-            background: var(--background-secondary);
-            color: var(--primary-color);
+        .questionHeader {
+            background: var(--background-primary);
         }
     }
 
@@ -380,5 +401,20 @@
     100% {
         opacity: 1;
         max-height: 1000px;
+    }
+}
+
+@keyframes pulse {
+    0% {
+        opacity: 0.8;
+        transform: translateX(-50%) scale(0.95);
+    }
+    50% {
+        opacity: 1;
+        transform: translateX(-50%) scale(1.05);
+    }
+    100% {
+        opacity: 0.8;
+        transform: translateX(-50%) scale(0.95);
     }
 }

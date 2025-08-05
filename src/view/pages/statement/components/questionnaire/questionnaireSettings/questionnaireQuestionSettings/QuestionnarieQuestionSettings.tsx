@@ -8,6 +8,7 @@ import styles from './QuestionnaireQuestionSettings.module.scss';
 import SavedIcon from '@/assets/icons/checkIcon.svg?react';
 import { deleteQuestionnaireQuestion, setQuestionnaireQuestion } from '@/controllers/db/questionnaries/setQuestionnairs';
 import { setStatementToDB } from '@/controllers/db/statements/setStatements';
+import { logger } from '@/services/logger/logger';
 
 interface Props {
   setQuestion: (question: QuestionnaireQuestion) => void;
@@ -46,17 +47,21 @@ const QuestionnaireQuestionSettings: React.FC<Props> = ({ setQuestion, question 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setSave(true);
-    const formData = new FormData(event.currentTarget);
-    const dataObj = Object.fromEntries(formData.entries());
+    
+    try {
+      const formData = new FormData(event.currentTarget);
+      const dataObj = Object.fromEntries(formData.entries());
 
-    const newStatementId = selectedStatement === 'new' ? getRandomUID() : selectedStatement || question?.statementId || getRandomUID();
+      const newStatementId = selectedStatement === 'new' ? getRandomUID() : selectedStatement || question?.statementId || getRandomUID();
 
-    if (selectedStatement === 'new') {
-      //save new statement to the database
-      if (!statement?.parentId) throw new Error('Parent ID is required for new statements');
+      if (selectedStatement === 'new') {
+        //save new statement to the database
+        if (!statement?.parentId) {
+          throw new Error('Parent ID is required for new statements');
+        }
 
-      await _createNewStatement(newStatementId);
-    }
+        await _createNewStatement(newStatementId, dataObj);
+      }
 
     const newQuestionData = {
       statementId: newStatementId,
@@ -69,52 +74,76 @@ const QuestionnaireQuestionSettings: React.FC<Props> = ({ setQuestion, question 
       questionnaireQuestionId: question?.questionnaireQuestionId || getRandomUID(),
     };
 
-    setQuestionnaireQuestion(
-      {
-        questionnaireId: statementId,
-        questionnaireQuestion: newQuestionData
-      }
-    );
-
-    // If this is a new question (not editing), trigger the animation
-    if (!question) {
-      setQuestion(newQuestionData);
-    }
-
-    async function _createNewStatement(newStatementId: string): Promise<Statement> {
-      const newStatement: Statement = {
-        statementId: newStatementId,
-        consensus: 0,
-        topParentId: statement?.topParentId || statementId,
-        parents: [...statement.parents, statementId],
-        creatorId: statement?.creatorId,
-        creator: statement?.creator,
-        lastUpdate: Date.now(),
-        createdAt: Date.now(),
-        statement: dataObj.question as string,
-        description: dataObj.description as string,
-        parentId: statement?.statementId || '',
-        statementType: StatementType.question,
-        questionSettings: {
-          questionType: dataObj.questionType as QuestionType,
-        },
-        resultsSettings: {
-          resultsBy: ResultsBy.consensus,
-          cutoffBy: dataObj.cutoffBy as CutoffBy,
-          cutoffNumber: dataObj.cutoffValue ? parseFloat(dataObj.cutoffValue as string) : undefined,
-          numberOfResults: dataObj.cutoffValue ? parseInt(dataObj.cutoffValue as string, 10) : undefined,
-        },
-        evaluationSettings: {
-          evaluationUI: dataObj.evaluationUI as EvaluationUI,
+      setQuestionnaireQuestion(
+        {
+          questionnaireId: statementId,
+          questionnaireQuestion: newQuestionData
         }
-      };
-      const { statement: newStatementFrmDB } = await setStatementToDB({
-        statement: newStatement,
-        parentStatement: statement,
-      });
-      
-      return newStatementFrmDB;
+      );
+
+      // If this is a new question (not editing), trigger the animation
+      if (!question || !question.questionnaireQuestionId) {
+        setQuestion(newQuestionData);
+        
+        // Reset form for new question
+        setTimeout(() => {
+          setSave(false);
+          setQuestionText('');
+          setDescription('');
+          setQuestionType(null);
+          setEvaluationUI(null);
+          setCutoffBy(null);
+          setSelectedStatement('none');
+          setCanSave(false);
+        }, 1000); // Wait a bit to show the "saved" state
+      }
+    } catch (error) {
+      logger.error('Error saving question:', error);
+      setSave(false);
     }
+  }
+
+  async function _createNewStatement(newStatementId: string, dataObj: { [key: string]: FormDataEntryValue }): Promise<Statement> {
+    const newStatement: Statement = {
+      statementId: newStatementId,
+      consensus: 0,
+      topParentId: statement?.topParentId || statementId,
+      parents: [...statement.parents, statementId],
+      creatorId: statement?.creatorId,
+      creator: statement?.creator,
+      lastUpdate: Date.now(),
+      createdAt: Date.now(),
+      statement: _question || '',
+      description: description || '',
+      parentId: statement?.statementId || '',
+      statementType: StatementType.question,
+      questionSettings: {
+        questionType: questionType || QuestionType.simple,
+      },
+      resultsSettings: {
+        resultsBy: ResultsBy.consensus,
+        cutoffBy: cutoffBy || CutoffBy.topOptions,
+        ...(cutoffBy === CutoffBy.aboveThreshold && dataObj.cutoffValue 
+          ? { cutoffNumber: parseFloat(dataObj.cutoffValue as string) }
+          : {}),
+        ...(cutoffBy === CutoffBy.topOptions && dataObj.cutoffValue
+          ? { numberOfResults: parseInt(dataObj.cutoffValue as string, 10) }
+          : {}),
+      },
+      evaluationSettings: {
+        evaluationUI: evaluationUI || EvaluationUI.voting,
+      }
+    };
+    const result = await setStatementToDB({
+      statement: newStatement,
+      parentStatement: statement,
+    });
+    
+    if (!result || !result.statement) {
+      throw new Error('Failed to create statement');
+    }
+    
+    return result.statement;
   }
 
   function handleDelete() {
@@ -176,8 +205,8 @@ const QuestionnaireQuestionSettings: React.FC<Props> = ({ setQuestion, question 
     <div className={`${styles.questionContainer} ${isDeleting ? styles.deleting : ''}`}>
       <h4>{t("Question Settings")}</h4>
       <form className={styles.form} onSubmit={handleSubmit}>
-        <input type="text" name="question" id="question" placeholder={t("Enter your question")} onChange={(e) => setQuestionText(e.target.value)} defaultValue={question?.question || ''} />
-        <textarea name="description" id="description" placeholder={t("Enter question description (optional)")} onChange={(e) => setDescription(e.target.value)} defaultValue={question?.description || ''}></textarea>
+        <input type="text" name="question" id="question" placeholder={t("Enter your question")} onChange={(e) => setQuestionText(e.target.value)} value={_question || ''} />
+        <textarea name="description" id="description" placeholder={t("Enter question description (optional)")} onChange={(e) => setDescription(e.target.value)} value={description || ''}></textarea>
         <label htmlFor="statement">{t("Question")}</label>
         <select name="statement" id="statement" value={selectedStatement} onChange={(e) => setSelectedStatement(e.target.value)}>
           <option value="none" disabled className='select--disabled'>{t("Select Question question")}</option>
@@ -189,19 +218,19 @@ const QuestionnaireQuestionSettings: React.FC<Props> = ({ setQuestion, question 
           ))}
         </select>
         <label htmlFor="questionType">{t("Question Type")}</label>
-        <select name="questionType" id="questionType" defaultValue={question?.questionType || 'none'} onChange={(e) => setQuestionType(e.target.value as QuestionType)}>
+        <select name="questionType" id="questionType" value={questionType || 'none'} onChange={(e) => setQuestionType(e.target.value as QuestionType)}>
           <option value="none" disabled>{t("Select Question Type")}</option>
           <option value={QuestionType.simple}>{t("Simple Question")}</option>
           <option value={QuestionType.massConsensus}>{t("Mass Consensus")}</option>
         </select>
         <label htmlFor="evaluationUI">{t("Evaluation UI")}</label>
-        <select name="evaluationUI" id="evaluationUI" defaultValue={question?.evaluationUI || 'none'} onChange={(e) => setEvaluationUI(e.target.value as EvaluationUI)}>
+        <select name="evaluationUI" id="evaluationUI" value={evaluationUI || 'none'} onChange={(e) => setEvaluationUI(e.target.value as EvaluationUI)}>
           <option value="none" disabled>{t("Select Evaluation UI")}</option>
           <option value={EvaluationUI.suggestions}>{t('Suggestions')}</option>
           <option value={EvaluationUI.voting}>{t('Voting')}</option>
         </select>
         <label htmlFor="cutoffBy">{t("Cutoff By")}</label>
-        <select name="cutoffBy" id="cutoffBy" defaultValue={question?.cutoffBy || 'none'} onChange={(e) => setCutoffBy(e.target.value as CutoffBy)}>
+        <select name="cutoffBy" id="cutoffBy" value={cutoffBy || 'none'} onChange={(e) => setCutoffBy(e.target.value as CutoffBy)}>
           <option value="none" disabled>{t("Select Cutoff By")}</option>
           <option value={CutoffBy.aboveThreshold}>{t("Above Threshold")}</option>
           <option value={CutoffBy.topOptions}>{t("Top Options")}</option>

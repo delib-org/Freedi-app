@@ -10,6 +10,111 @@ import { useParams } from 'react-router';
 import { getStatementFromDB, getSubQuestions } from '@/controllers/db/statements/getStatement';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import CheckIcon from '@/assets/icons/checkIcon.svg?react';
+import {
+    DndContext,
+    closestCenter,
+    KeyboardSensor,
+    PointerSensor,
+    useSensor,
+    useSensors,
+    DragEndEvent,
+    DragOverlay,
+    DragStartEvent,
+} from '@dnd-kit/core';
+import {
+    arrayMove,
+    SortableContext,
+    sortableKeyboardCoordinates,
+    verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import {
+    useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+
+// Sortable Question Item Component
+interface SortableItemProps {
+    id: string;
+    question: QuestionnaireQuestion;
+    index: number;
+    isExpanded: boolean;
+    onToggleExpand: () => void;
+    setQuestion: (question: QuestionnaireQuestion) => void;
+    animatingQuestions: string[];
+}
+
+const SortableQuestionItem: React.FC<SortableItemProps> = ({
+    id,
+    question,
+    index,
+    isExpanded,
+    onToggleExpand,
+    setQuestion,
+    animatingQuestions,
+}) => {
+    const {
+        attributes,
+        listeners,
+        setNodeRef,
+        transform,
+        transition,
+        isDragging,
+    } = useSortable({ id });
+
+    const style = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+    };
+
+    return (
+        <div
+            ref={setNodeRef}
+            style={style}
+            className={`${styles.questionItem} ${
+                animatingQuestions.includes(question.questionnaireQuestionId)
+                    ? styles.slideIn
+                    : ''
+            } ${isDragging ? styles.dragging : ''}`}
+        >
+            <div className={styles.questionHeader}>
+                <div
+                    className={styles.dragHandle}
+                    {...attributes}
+                    {...listeners}
+                >
+                    ⋮⋮
+                </div>
+                <div className={styles.questionInfo}>
+                    <span className={styles.questionNumber}>Q{index + 1}</span>
+                    <h4 className={styles.questionTitle}>
+                        {question.question || 'Untitled Question'}
+                    </h4>
+                    {question.questionType && (
+                        <span className={styles.questionType}>{question.questionType}</span>
+                    )}
+                </div>
+                <button
+                    className={styles.expandButton}
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        onToggleExpand();
+                    }}
+                    type="button"
+                >
+                    {isExpanded ? '▼' : '▶'}
+                </button>
+            </div>
+            {isExpanded && (
+                <div className={styles.questionContent}>
+                    <QuestionnaireQuestionSettings
+                        question={question}
+                        setQuestion={setQuestion}
+                    />
+                </div>
+            )}
+        </div>
+    );
+};
 
 const QuestionnaireSettings: FC = () => {
     const { t } = useUserConfig();
@@ -23,12 +128,23 @@ const QuestionnaireSettings: FC = () => {
     const [isAddingQuestion, setIsAddingQuestion] = useState(false);
     const [detailsSaved, setDetailsSaved] = useState(false);
     const [animatingQuestions, setAnimatingQuestions] = useState<string[]>([]);
-    const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
-    const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
     const [expandedQuestions, setExpandedQuestions] = useState<Set<string>>(new Set());
+    const [activeId, setActiveId] = useState<string | null>(null);
 
     // New question form state
     const [newQuestion, setNewQuestion] = useState<QuestionnaireQuestion | null>(null);
+
+    // DnD Kit sensors
+    const sensors = useSensors(
+        useSensor(PointerSensor, {
+            activationConstraint: {
+                distance: 8,
+            },
+        }),
+        useSensor(KeyboardSensor, {
+            coordinateGetter: sortableKeyboardCoordinates,
+        })
+    );
 
     useEffect(() => {
         if (statementId && !statement) {
@@ -52,10 +168,10 @@ const QuestionnaireSettings: FC = () => {
             setTitle(statement.questionnaire?.question || '');
             setDescription(statement.questionnaire?.description || '');
             const questionsArray = Object.values(statement.questionnaire?.questions || {});
-            logger.info('Questions before sort:', questionsArray.map(q => ({ id: q.questionnaireQuestionId, order: q.order })));
+            logger.info('Questions before sort:', { questions: questionsArray.map(q => ({ id: q.questionnaireQuestionId, order: q.order })) });
             // Sort questions by order field
             questionsArray.sort((a, b) => (a.order || 0) - (b.order || 0));
-            logger.info('Questions after sort:', questionsArray.map(q => ({ id: q.questionnaireQuestionId, order: q.order })));
+            logger.info('Questions after sort:', { questions: questionsArray.map(q => ({ id: q.questionnaireQuestionId, order: q.order })) });
             setQuestions(questionsArray);
         }
     }, [statement]);
@@ -71,6 +187,15 @@ const QuestionnaireSettings: FC = () => {
             setQuestions(prev => [...prev, newQuestionWithAnimation]);
             setAnimatingQuestions(prev => [...prev, newQuestion.questionnaireQuestionId]);
             
+            // Scroll to the new question
+            setTimeout(() => {
+                const questionElements = document.querySelectorAll(`.${styles.questionItem}`);
+                const lastQuestion = questionElements[questionElements.length - 1];
+                if (lastQuestion) {
+                    lastQuestion.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }, 100);
+            
             // Remove from animating list after animation completes
             setTimeout(() => {
                 setAnimatingQuestions(prev => 
@@ -78,11 +203,12 @@ const QuestionnaireSettings: FC = () => {
                 );
             }, 600); // Match animation duration
             
-            // Reset the form
+            // Reset the form but keep it visible
             setNewQuestion(null);
-            setIsAddingQuestion(false);
+            // Keep the form open so user can add more questions
+            // setIsAddingQuestion(false);
         }
-    }, [newQuestion]);
+    }, [newQuestion, styles.questionItem]);
 
     const handleSave = (e) => {
         e.preventDefault();
@@ -106,70 +232,37 @@ const QuestionnaireSettings: FC = () => {
         }
     };
 
-    const handleDragStart = (e: React.DragEvent<HTMLDivElement>, index: number) => {
-        setDraggedIndex(index);
-        e.dataTransfer.effectAllowed = 'move';
-        // Add data to enable drag on Firefox
-        e.dataTransfer.setData('text/html', 'dragging');
-        logger.info(`Started dragging question at index ${index}`);
+    const handleDragStart = (event: DragStartEvent) => {
+        setActiveId(event.active.id as string);
     };
 
-    const handleDragOver = (e: React.DragEvent<HTMLDivElement>, index: number) => {
-        e.preventDefault();
-        e.dataTransfer.dropEffect = 'move';
+    const handleDragEnd = async (event: DragEndEvent) => {
+        const { active, over } = event;
         
-        if (draggedIndex !== null && draggedIndex !== index) {
-            setDragOverIndex(index);
+        if (over && active.id !== over.id) {
+            const oldIndex = questions.findIndex(q => q.questionnaireQuestionId === active.id);
+            const newIndex = questions.findIndex(q => q.questionnaireQuestionId === over.id);
+            
+            const newQuestions = arrayMove(questions, oldIndex, newIndex);
+            
+            // Update order values
+            const updatedQuestions = newQuestions.map((q, idx) => ({
+                ...q,
+                order: idx + 1
+            }));
+            
+            setQuestions(updatedQuestions);
+            
+            // Save to database
+            await saveQuestionOrder(updatedQuestions);
         }
+        
+        setActiveId(null);
     };
-
-    const handleDragLeave = () => {
-        setDragOverIndex(null);
-    };
-
-    const handleDrop = async (e: React.DragEvent<HTMLDivElement>, dropIndex: number) => {
-        e.preventDefault();
-        setDragOverIndex(null);
-
-        logger.info(`Dropping item from index ${draggedIndex} to index ${dropIndex}`);
-
-        if (draggedIndex === null || draggedIndex === dropIndex) {
-            return;
-        }
-
-        // Create a new array with all questions
-        const newQuestions = [...questions];
-        
-        // Get the dragged question
-        const draggedQuestion = newQuestions[draggedIndex];
-        
-        // Remove it from the original position
-        newQuestions.splice(draggedIndex, 1);
-        
-        // Calculate where to insert
-        let insertIndex = dropIndex;
-        if (draggedIndex < dropIndex) {
-            // If dragging down, adjust index since we removed an item
-            insertIndex = Math.max(0, dropIndex - 1);
-        }
-        
-        // Insert at the new position
-        newQuestions.splice(insertIndex, 0, draggedQuestion);
-        
-        // Update order values
-        const updatedQuestions = newQuestions.map((q, idx) => ({
-            ...q,
-            order: idx + 1
-        }));
-        
-        logger.info('Updated questions order:', updatedQuestions.map(q => ({ id: q.questionnaireQuestionId, order: q.order })));
-        
-        setQuestions(updatedQuestions);
-        
-        // Save the new order to the database
+    
+    const saveQuestionOrder = async (reorderedQuestions: QuestionnaireQuestion[]) => {
         try {
-            // Update all questions in parallel for better performance
-            const updatePromises = updatedQuestions.map(question => 
+            const updatePromises = reorderedQuestions.map(question => 
                 updateQuestionOrder({
                     questionnaireId: statementId!,
                     questionnaireQuestionId: question.questionnaireQuestionId,
@@ -179,21 +272,9 @@ const QuestionnaireSettings: FC = () => {
             
             await Promise.all(updatePromises);
             logger.info('Order saved to database successfully');
-            
-            // Force re-fetch the statement to ensure we have the latest data
-            if (statementId) {
-                getStatementFromDB(statementId);
-            }
         } catch (error) {
             logger.error('Error updating question order:', error);
         }
-        
-        setDraggedIndex(null);
-    };
-
-    const handleDragEnd = () => {
-        setDraggedIndex(null);
-        setDragOverIndex(null);
     };
 
     const toggleQuestionExpanded = (questionId: string) => {
@@ -249,77 +330,49 @@ const QuestionnaireSettings: FC = () => {
                 {detailsSaved && (
                     <section>
                         <h3>Questions</h3>
-                        <div className={styles.questionsList}>
-                            {questions.map((question, index) => {
-                                const isExpanded = expandedQuestions.has(question.questionnaireQuestionId);
-                                
-                                return (
-                                    <div 
-                                        key={question.questionnaireQuestionId} 
-                                        className={`${styles.questionItem} ${
-                                            animatingQuestions.includes(question.questionnaireQuestionId) 
-                                                ? styles.slideIn 
-                                                : ''
-                                        } ${draggedIndex === index ? styles.dragging : ''} ${
-                                            dragOverIndex === index ? styles.dragOver : ''
-                                        }`}
-                                    >
-                                        <div 
-                                            className={styles.questionHeader}
-                                            draggable={true}
-                                            onDragStart={(e) => handleDragStart(e, index)}
-                                            onDragOver={(e) => handleDragOver(e, index)}
-                                            onDragLeave={handleDragLeave}
-                                            onDrop={(e) => handleDrop(e, index)}
-                                            onDragEnd={handleDragEnd}
-                                        >
+                        <DndContext
+                            sensors={sensors}
+                            collisionDetection={closestCenter}
+                            onDragStart={handleDragStart}
+                            onDragEnd={handleDragEnd}
+                        >
+                            <SortableContext
+                                items={questions.map(q => q.questionnaireQuestionId)}
+                                strategy={verticalListSortingStrategy}
+                            >
+                                <div className={styles.questionsList}>
+                                    {questions.map((question, index) => (
+                                        <SortableQuestionItem
+                                            key={question.questionnaireQuestionId}
+                                            id={question.questionnaireQuestionId}
+                                            question={question}
+                                            index={index}
+                                            isExpanded={expandedQuestions.has(question.questionnaireQuestionId)}
+                                            onToggleExpand={() => toggleQuestionExpanded(question.questionnaireQuestionId)}
+                                            setQuestion={setNewQuestion}
+                                            animatingQuestions={animatingQuestions}
+                                        />
+                                    ))}
+                                </div>
+                            </SortableContext>
+                            <DragOverlay>
+                                {activeId ? (
+                                    <div className={`${styles.questionItem} ${styles.dragOverlay}`}>
+                                        <div className={styles.questionHeader}>
                                             <div className={styles.dragHandle}>⋮⋮</div>
                                             <div className={styles.questionInfo}>
-                                                <span className={styles.questionNumber}>Q{index + 1}</span>
+                                                <span className={styles.questionNumber}>
+                                                    Q{questions.findIndex(q => q.questionnaireQuestionId === activeId) + 1}
+                                                </span>
                                                 <h4 className={styles.questionTitle}>
-                                                    {question.question || 'Untitled Question'}
+                                                    {questions.find(q => q.questionnaireQuestionId === activeId)?.question || 'Untitled Question'}
                                                 </h4>
-                                                {question.questionType && (
-                                                    <span className={styles.questionType}>{question.questionType}</span>
-                                                )}
                                             </div>
-                                            <button 
-                                                className={styles.expandButton}
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    toggleQuestionExpanded(question.questionnaireQuestionId);
-                                                }}
-                                                onMouseDown={(e) => e.stopPropagation()}
-                                                type="button"
-                                            >
-                                                {isExpanded ? '▼' : '▶'}
-                                            </button>
                                         </div>
-                                        {isExpanded && (
-                                            <div className={styles.questionContent}>
-                                                <QuestionnaireQuestionSettings
-                                                    question={question}
-                                                    setQuestion={setNewQuestion}
-                                                />
-                                            </div>
-                                        )}
                                     </div>
-                                );
-                            })}
-                            {/* Drop zone at the end */}
-                            {draggedIndex !== null && (
-                                <div 
-                                    className={`${styles.dropZone} ${
-                                        dragOverIndex === questions.length ? styles.dragOver : ''
-                                    }`}
-                                    onDragOver={(e) => handleDragOver(e, questions.length)}
-                                    onDragLeave={handleDragLeave}
-                                    onDrop={(e) => handleDrop(e, questions.length)}
-                                >
-                                    <span>Drop here</span>
-                                </div>
-                            )}
-                        </div>
+                                ) : null}
+                            </DragOverlay>
+                        </DndContext>
 
                         {!isAddingQuestion && (
                             <button
@@ -333,6 +386,7 @@ const QuestionnaireSettings: FC = () => {
                         {isAddingQuestion && (
                             <div className={styles.addQuestionForm}>
                                 <QuestionnaireQuestionSettings 
+                                    key={`new-question-${questions.length}`} // Force re-render with new key
                                     setQuestion={setNewQuestion} 
                                     question={{
                                         questionnaireQuestionId: '',
