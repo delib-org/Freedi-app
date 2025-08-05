@@ -25,6 +25,7 @@ const QuestionnaireQuestionSettings: React.FC<Props> = ({ setQuestion, question 
   
 
   const [showQuestion, setShowQuestion] = React.useState<boolean>(true);
+  const [isDeleting, setIsDeleting] = React.useState<boolean>(false);
   const [_question, setQuestionText] = React.useState<string | null>(question?.question || null);
   const [description, setDescription] = React.useState<string | null>(question?.description || null);
   const [questionType, setQuestionType] = React.useState<QuestionType | null>(question?.questionType || null);
@@ -111,14 +112,29 @@ const QuestionnaireQuestionSettings: React.FC<Props> = ({ setQuestion, question 
 
   function handleDelete() {
     if (question) {
-      deleteQuestionnaireQuestion({
-        questionnaireId: statementId,
-        questionnaireQuestionId: question.questionnaireQuestionId,
-      }).then(() => {
-        setShowQuestion(false);
-      }).catch(error => {
-        console.error('Error deleting questionnaire question:', error);
-      });
+      // Ask for confirmation before deleting
+      const confirmDelete = window.confirm(t("Are you sure you want to delete this question? This action cannot be undone."));
+      
+      if (!confirmDelete) {
+        return;
+      }
+      
+      // Start the animation
+      setIsDeleting(true);
+      
+      // Wait for animation to complete before actually deleting
+      setTimeout(() => {
+        deleteQuestionnaireQuestion({
+          questionnaireId: statementId,
+          questionnaireQuestionId: question.questionnaireQuestionId,
+        }).then(() => {
+          setShowQuestion(false);
+        }).catch(error => {
+          console.error('Error deleting questionnaire question:', error);
+          // Reset deleting state if there's an error
+          setIsDeleting(false);
+        });
+      }, 500); // Match the animation duration
     }
   }
 
@@ -130,7 +146,7 @@ const QuestionnaireQuestionSettings: React.FC<Props> = ({ setQuestion, question 
   if (!showQuestion) return null;
 
   return (
-    <div>
+    <div className={`${styles.questionContainer} ${isDeleting ? styles.deleting : ''}`}>
       <h4>{t("Question Settings")}</h4>
       <form className={styles.form} onSubmit={handleSubmit}>
         <input type="text" name="question" id="question" placeholder={t("Enter your question")} onChange={(e) => setQuestionText(e.target.value)} defaultValue={question?.question || ''} />
