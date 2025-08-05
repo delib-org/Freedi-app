@@ -14,6 +14,7 @@ import {
 	Statement, StatementSchema, Collections,
 	StatementType,
 	DeliberativeElement,
+	QuestionType,
 } from 'delib-npm';
 import { parse } from 'valibot';
 
@@ -149,6 +150,32 @@ export async function getChildStatements(
 					)
 				),
 				where('parents', 'array-contains', statementId)
+			)
+		);
+		const statementsDB = await getDocs(q);
+
+		const subStatements = statementsDB.docs.map((doc) =>
+			parse(StatementSchema, doc.data())
+		);
+
+		return subStatements;
+	} catch (error) {
+		console.error(error);
+
+		return [];
+	}
+}
+
+
+export async function getSubQuestions(statementId: string): Promise<Statement[]> {
+	try {
+		const statementsRef = collection(FireStore, Collections.statements);
+		const q = query(
+			statementsRef,
+			and(
+				where('parentId', '==', statementId),
+				where('statementType', '==', StatementType.question),
+				where('questionSettings.questionType', '!=', QuestionType.questionnaire)
 			)
 		);
 		const statementsDB = await getDocs(q);

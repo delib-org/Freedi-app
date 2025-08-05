@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction, createSelector } from '@reduxjs/toolkit';
 import { RootState } from '../store';
-import { Statement, StatementSubscription, SelectionFunction, StatementType, updateArray, ResultsSettings } from 'delib-npm';
+import { Statement, StatementSubscription, SelectionFunction, StatementType, updateArray, ResultsSettings, QuestionType } from 'delib-npm';
 
 enum StatementScreen {
 	chat = 'chat',
@@ -525,6 +525,18 @@ export const statementsOfMultiStepSelectorByStatementId = (
 		(statements) =>
 			statements.filter(
 				(st) => st.isInMultiStage && st.parentId === statementId
+			)
+	);
+
+export const subQuestionsSelector = (parentId: string | undefined) =>
+	createSelector(
+		(state: RootState) => state.statements.statements,
+		(statements) =>
+			statements.filter(
+				(s: Statement) =>
+					s.parentId === parentId &&
+					s.statementType === StatementType.question &&
+					s.questionSettings?.questionType !== QuestionType.questionnaire
 			)
 	);
 
