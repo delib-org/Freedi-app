@@ -1,28 +1,122 @@
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
-import { statementSelectorById, subQuestionsSelector } from '@/redux/statements/statementsSlice';
+import { setStatement, statementSelectorById, subQuestionsSelector } from '@/redux/statements/statementsSlice';
 import { RootState } from '@/redux/store';
-import { CutoffBy, EvaluationUI, QuestionnaireQuestion, QuestionType, Statement, StatementType } from 'delib-npm';
-import React from 'react'
+import { CutoffBy, EvaluationUI, getRandomUID, QuestionnaireQuestion, QuestionType, ResultsBy, Statement, StatementType } from 'delib-npm';
+import React, { useEffect } from 'react'
 import { useSelector } from 'react-redux';
 import { useParams } from 'react-router';
 import styles from './QuestionnaireQuestionSettings.module.scss';
+import SavedIcon from '@/assets/icons/checkIcon.svg?react';
+import { setQuestionnaireQuestion } from '@/controllers/db/questionnaries/setQuestionnairs';
+import { saveStatementToDB, setStatementToDB } from '@/controllers/db/statements/setStatements';
+import { stat } from 'fs';
 
 interface Props {
   setQuestion: (question: QuestionnaireQuestion) => void;
 }
 
 const QuestionnaireQuestionSettings: React.FC<Props> = ({ setQuestion }) => {
+
   const { t } = useUserConfig();
-  const {statementId} = useParams<{ statementId: string }>();
+  const { statementId } = useParams<{ statementId: string }>();
   const statement = useSelector(statementSelectorById(statementId)) as Statement;
   const subQuestions = useSelector(subQuestionsSelector(statement?.parentId));
+
+  const [question, setQuestionText] = React.useState<string | null>(null);
+  const [description, setDescription] = React.useState<string | null>(null);
+  const [questionType, setQuestionType] = React.useState<QuestionType | null>(null);
+  const [evaluationUI, setEvaluationUI] = React.useState<EvaluationUI | null>(null);
+
+  const [cutoffBy, setCutoffBy] = React.useState<CutoffBy | null>(null);
+  const [save, setSave] = React.useState<boolean>(false);
+  const [canSave, setCanSave] = React.useState<boolean>(false);
+
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setSave(true);
+    const formData = new FormData(event.currentTarget);
+    const dataObj = Object.fromEntries(formData.entries());
+
+    const newStatementId = dataObj.statement === 'new' ? getRandomUID() : dataObj.statement as string;
+
+    if (dataObj.statement === 'new') {
+      //save new statement to the database
+      if (!statement?.parentId) throw new Error('Parent ID is required for new statements');
+
+      console.log('Creating new statement with ID:', newStatementId);
+
+
+      await _createNewStatement(newStatementId);
+
+
+
+    }
+
+    setQuestionnaireQuestion(
+      {
+        questionnaireId: statementId,
+        questionnaireQuestion: {
+          statementId: newStatementId,
+          question,
+          description,
+          questionType,
+          EvaluationUI: evaluationUI,
+          cutoffBy,
+          order: subQuestions.length + 1,
+          questionnaireQuestionId: getRandomUID(),
+        }
+      }
+    )
+
+
+
+
+    async function _createNewStatement(newStatementId: string): Promise<Statement> {
+      const newStatement: Statement = {
+        statementId: newStatementId,
+        consensus: 0,
+        topParentId: statement?.topParentId || statementId,
+        parents: [...statement.parents, statementId],
+        creatorId: statement?.creatorId,
+        creator: statement?.creator,
+        lastUpdate: Date.now(),
+        createdAt: Date.now(),
+        statement: dataObj.question as string,
+        description: dataObj.description as string,
+        parentId: statement?.statementId || '',
+        statementType: StatementType.question,
+        questionSettings: {
+          questionType: dataObj.questionType as QuestionType,
+        },
+        resultsSettings: {
+          resultsBy: ResultsBy.consensus,
+          cutoffBy: dataObj.cutoffBy as CutoffBy,
+          cutoffNumber: dataObj.cutoffValue ? parseFloat(dataObj.cutoffValue as string) : undefined,
+          numberOfResults: dataObj.cutoffValue ? parseInt(dataObj.cutoffValue as string, 10) : undefined,
+        },
+        evaluationSettings: {
+          evaluationUI: dataObj.evaluationUI as EvaluationUI,
+        }
+      };
+      const { statement: newStatementFrmDB } = await setStatementToDB({
+        statement: newStatement,
+        parentStatement: statement,
+      });
+      return newStatementFrmDB;
+    }
+  }
+
+  useEffect(() => {
+    setSave(false);
+    if (question && questionType && evaluationUI && cutoffBy) setCanSave(true);
+  }, [question, description, questionType, evaluationUI, cutoffBy]);
 
   return (
     <div>
       <h4>{t("Question Settings")}</h4>
-      <form className={styles.form}>
-        <input type="text" name="question" id="question" placeholder={t("Enter your question")} />
-         <textarea name="description" id="description" placeholder={t("Enter question description (optional)")}></textarea>
+      <form className={styles.form} onSubmit={handleSubmit}>
+        <input type="text" name="question" id="question" placeholder={t("Enter your question")} onChange={(e) => setQuestionText(e.target.value)} />
+        <textarea name="description" id="description" placeholder={t("Enter question description (optional)")} onChange={(e) => setDescription(e.target.value)}></textarea>
         <select name="statement" id="statement" defaultValue="none">
           <option value="none" disabled className='select--disabled'>{t("Select Question question")}</option>
           <option value="new">{t("New question")}</option>
@@ -32,22 +126,28 @@ const QuestionnaireQuestionSettings: React.FC<Props> = ({ setQuestion }) => {
             </option>
           ))}
         </select>
-        <select name="questionType" id="questionType" defaultValue="none">
+        <select name="questionType" id="questionType" defaultValue="none" onChange={(e) => setQuestionType(e.target.value as QuestionType)}>
           <option value="none" disabled>{t("Select Question Type")}</option>
           <option value={QuestionType.simple}>{t("Simple Question")}</option>
           <option value={QuestionType.massConsensus}>{t("Mass Consensus")}</option>
         </select>
-        <select name="evaluationUI" id="evaluationUI" defaultValue="none">
+        <select name="evaluationUI" id="evaluationUI" defaultValue="none" onChange={(e) => setEvaluationUI(e.target.value as EvaluationUI)}>
           <option value="none" disabled>{t("Select Evaluation UI")}</option>
           <option value={EvaluationUI.suggestions}>{t('Suggestions')}</option>
           <option value={EvaluationUI.voting}>{t('Voting')}</option>
         </select>
-        <select name="cutoffBy" id="cutoffBy" defaultValue="none">
+        <select name="cutoffBy" id="cutoffBy" defaultValue="none" onChange={(e) => setCutoffBy(e.target.value as CutoffBy)}>
           <option value="none" disabled>{t("Select Cutoff By")}</option>
           <option value={CutoffBy.aboveThreshold}>{t("Above Threshold")}</option>
           <option value={CutoffBy.topOptions}>{t("Top Options")}</option>
         </select>
-        <input type="number" name="cutoffValue" id="cutoffValue" placeholder={t("Enter cutoff value")} />
+        {cutoffBy && cutoffBy === CutoffBy.topOptions && (
+          <input type="number" name="cutoffValue" step={1} id="cutoffValue" placeholder={t("How many options to include")} />
+        )}
+        {cutoffBy && cutoffBy === CutoffBy.aboveThreshold && (
+          <input type="number" name="cutoffValue" step={0.001} id="cutoffValue" placeholder={t("Enter cutoff value")} />
+        )}
+        <button type="submit" disabled={!canSave} className={`btn ${canSave ? "btn--active" : "btn--disabled"} ${styles.saveButton}`}>{t(save ? "Changes Saved" : "Save Changes")} {save && <SavedIcon />}</button>
       </form>
     </div>
   )

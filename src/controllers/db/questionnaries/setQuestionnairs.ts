@@ -1,30 +1,62 @@
 import { logger } from "@sentry/react";
-import { Collections, Questionnaire, QuestionnaireSchema } from "delib-npm";
-import { doc, setDoc } from "firebase/firestore"; // Add setDoc import
+import { Collections, Questionnaire, QuestionnaireQuestion, QuestionnaireQuestionSchema, QuestionnaireSchema, Statement } from "delib-npm";
+import { arrayUnion, doc, setDoc, updateDoc } from "firebase/firestore"; // Add setDoc import
 import { DB } from "../config";
-import { safeParse } from "valibot";
+import { check, safeParse } from "valibot";
+import { checkValidationErrors } from "@/utils/validation";
 
-export async function setQuestionnaire(questionnaire: Questionnaire): Promise<boolean> {
+export async function updateQuestionnaireDetails({
+    statementId,
+    question,
+    description,
+}: {
+    statementId: string;
+    question: string;
+    description?: string;
+}): Promise<boolean> {
     try {
-        const questionnaireRef = doc(DB, Collections.questionnaires, questionnaire.questionnaireId);
-        const results = safeParse(QuestionnaireSchema, questionnaire);
-        
-        if (!results.success) {
-            // At this point, TypeScript should know results.issues exists
-            logger.error("Invalid questionnaire data:", { issues: results.issues });
-            throw new Error(`Invalid questionnaire data: ${results.issues.map(i => i.message).join(', ')}`);
-        }
+        const questionnaireRef = doc(DB, Collections.statements, statementId);
 
-        
-        
-        // Actually write to the database
-        await setDoc(questionnaireRef, questionnaire);
-        
-        logger.info("Questionnaire saved successfully");
+        // Update the document in Firestore using dot notation to avoid overwriting
+        await updateDoc(questionnaireRef, {
+            "questionnaire.question": question,
+            "questionnaire.description": description || "",
+            "questionnaire.lastUpdate": Date.now(),
+        });
+
         return true;
-        
+
     } catch (error) {
-        logger.error("Error setting questionnaire:", error);
+        console.error("Error updating questionnaire details:", error);
+        logger.error("Error updating questionnaire details:", error);
+        return false;
+    }
+}
+
+export async function setQuestionnaireQuestion({ questionnaireId, questionnaireQuestion }: { questionnaireId: string; questionnaireQuestion: QuestionnaireQuestion }): Promise<boolean> {
+    try {
+        console.log("setting questionnaire question:", questionnaireId);
+        const statementRef = doc(DB, Collections.statements, questionnaireId);
+
+        checkValidationErrors(QuestionnaireQuestionSchema, questionnaireQuestion);
+
+        console.log({
+            questionnaire: {
+                questions: {
+                    [questionnaireQuestion.questionnaireQuestionId]: questionnaireQuestion,
+                }
+            }
+        });
+        await updateDoc(statementRef, {
+            [`questionnaire.questions.${questionnaireQuestion.questionnaireQuestionId}`]: questionnaireQuestion,
+        });
+
+        logger.info("Questionnaire question set successfully");
+        return true;
+
+    } catch (error) {
+        console.error("Error setting questionnaire question:", error);
+        logger.error("Error setting questionnaire question:", error);
         return false;
     }
 }

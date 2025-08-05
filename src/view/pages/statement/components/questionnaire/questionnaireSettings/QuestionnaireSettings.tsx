@@ -2,7 +2,7 @@ import { FC, useEffect, useState } from 'react';
 import { getRandomUID, Questionnaire } from 'delib-npm';
 import styles from './QuestionnaireSettings.module.scss';
 import { QuestionnaireQuestion } from 'delib-npm/dist/models/questionnaire/questionnaireModel';
-import { setQuestionnaire } from '@/controllers/db/questionnaries/setQuestionnairs';
+import { updateQuestionnaireDetails } from '@/controllers/db/questionnaries/setQuestionnairs';
 import { useDispatch, useSelector } from 'react-redux';
 import { creatorSelector } from '@/redux/creator/creatorSlice';
 import { logger } from '@/services/logger/logger';
@@ -11,9 +11,13 @@ import { setStatements, statementSelectorById } from '@/redux/statements/stateme
 import { useParams } from 'react-router';
 import { get } from 'http';
 import { getSubQuestions } from '@/controllers/db/statements/getStatement';
-
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import CheckIcon from '@/assets/icons/checkIcon.svg?react';
+import { title } from 'process';
+import { description } from 'valibot';
 
 const QuestionnaireSettings: FC = () => {
+    const { t } = useUserConfig();
     const dispatch = useDispatch();
     const { statementId } = useParams<{ statementId: string }>();
     const statement = useSelector(statementSelectorById(statementId));
@@ -23,6 +27,7 @@ const QuestionnaireSettings: FC = () => {
     const [description, setDescription] = useState<string | null>(null);
     const [questions, setQuestions] = useState<QuestionnaireQuestion[]>([]);
     const [isAddingQuestion, setIsAddingQuestion] = useState(false);
+    const [detailsSaved, setDetailsSaved] = useState(false);
 
     // New question form state
     const [newQuestion, setNewQuestion] = useState<QuestionnaireQuestion | null>(null);
@@ -37,31 +42,51 @@ const QuestionnaireSettings: FC = () => {
         }
     }, [parentId]);
 
-    const handleSave = () => {
+    useEffect(() => {
+        setDetailsSaved(false);
+    }, [title, description]);
+
+    const handleSave = (e) => {
+        e.preventDefault();
         try {
-            if (!title.trim()) {
-                alert('Please enter a questionnaire title');
-                return;
-            }
 
-            if (questions.length === 0) {
-                alert('Please add at least one question');
-                return;
-            }
+            const data = new FormData(e.target);
+            const dataObj = Object.fromEntries(data.entries());
+            console.log(dataObj);
 
-            if (!creator || !creator.uid) throw new Error('Creator is not defined');
+            updateQuestionnaireDetails({
+                statementId: statementId,
+                question: dataObj.question as string,
+                description: dataObj.description as string,
+            }).then(result=>{
+                console.log('Questionnaire details updated:', result);
+                setDetailsSaved(true);
+            }).catch(error => {
+                logger.error('Error updating questionnaire details:', error) ;
+            });
+            // if (!title.trim()) {
+            //     alert('Please enter a questionnaire title');
+            //     return;
+            // }
 
-            const questionnaire: Questionnaire = {
-                creatorId: creator?.uid,
-                question: title,
-                description: description || undefined,
-                questionnaireId: getRandomUID(),
-                createdAt: Date.now(),
-                updatedAt: Date.now(),
-                questions: [],
-            };
+            // if (questions.length === 0) {
+            //     alert('Please add at least one question');
+            //     return;
+            // }
 
-            setQuestionnaire(questionnaire);
+            // if (!creator || !creator.uid) throw new Error('Creator is not defined');
+
+            // const questionnaire: Questionnaire = {
+            //     creatorId: creator?.uid,
+            //     question: title,
+            //     description: description || undefined,
+            //     questionnaireId: getRandomUID(),
+            //     createdAt: Date.now(),
+            //     updatedAt: Date.now(),
+            //     questions: [],
+            // };
+
+            // setQuestionnaire(questionnaire);
         } catch (error) {
             logger.error('Error saving questionnaire:', error);
         }
@@ -76,52 +101,62 @@ const QuestionnaireSettings: FC = () => {
 
             </div>
             <section>
-                <div className={styles.formGroup}>
-                    <label htmlFor="title">Title</label>
-                    <input
-                        type="text"
-                        id="title"
-                        value={title || ''}
-                        onChange={(e) => setTitle(e.target.value)}
-                        placeholder="Enter questionnaire title"
-                    />
-                </div>
-
-                <div className={styles.formGroup}>
-                    <label htmlFor="description">Description</label>
-                    <textarea
-                        id="description"
-                        value={description || ''}
-                        onChange={(e) => setDescription(e.target.value)}
-                        placeholder="Enter questionnaire description"
-                    />
-                </div>
-            </section>
-            <section>
-                <h3>Questions</h3>
-                <div className={styles.questionsList}>
-                    {questions.map((question, index) => (
-                        <div key={index} className={styles.questionItem}>
-                            <p>{question.question}</p>
-                            {/* Add more question details as needed */}
-                        </div>
-                    ))}
-                </div>
-
-                <button
-                    className="btn btn--secondary"
-                    onClick={() => setIsAddingQuestion(true)}
-                >
-                    Add Question
-                </button>
-
-                {isAddingQuestion && (
-                    <div className={styles.addQuestionForm}>
-                        {/* Implement your question form here */}
-                        <QuestionnaireQuestionSettings setQuestion={setNewQuestion} />
+                <form onSubmit={handleSave} className={styles.form}>
+                    <div className={styles.formGroup}>
+                        <label htmlFor="title">Title</label>
+                        <input
+                            required
+                            autoFocus
+                            type="text" 
+                            id="title"
+                            name="question"
+                            value={title || ''}
+                            onChange={(e) => setTitle(e.target.value)}
+                            placeholder="Enter questionnaire title"
+                        />
                     </div>
-                )}
+
+                    <div className={styles.formGroup}>
+                        <label htmlFor="description">Description</label>
+                        <textarea
+                            id="description"
+                            name="description"
+                            value={description || ''}
+                            onChange={(e) => setDescription(e.target.value)} 
+                            placeholder="Enter questionnaire description"
+                        />
+                    </div>
+                    <div className="btns">
+                        <button type='submit' className='btn btn--secondary'>{t(detailsSaved ? "Details Saved" : "Save Details")} {detailsSaved && <CheckIcon />}</button>
+                    </div>
+                </form>
             </section>
+            {detailsSaved && (
+                <section>
+                    <h3>Questions</h3>
+                    <div className={styles.questionsList}>
+                        {questions.map((question, index) => (
+                            <div key={index} className={styles.questionItem}>
+                                <p>{question.question}</p>
+                                {/* Add more question details as needed */}
+                            </div>
+                        ))}
+                    </div>
+
+                    <button
+                        className="btn btn--secondary"
+                        onClick={() => setIsAddingQuestion(true)}
+                    >
+                        Add Question
+                    </button>
+
+                    {isAddingQuestion && (
+                        <div className={styles.addQuestionForm}>
+                            {/* Implement your question form here */}
+                            <QuestionnaireQuestionSettings setQuestion={setNewQuestion} />
+                        </div>
+                    )}
+                </section>)}
 
             <div className={styles.footer}>
                 <button className="btn btn--primary" onClick={handleSave}>

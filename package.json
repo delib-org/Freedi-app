@@ -45,7 +45,7 @@
     "@sentry/vite-plugin": "^4.0.1",
     "@swc/core": "^1.13.1",
     "@types/uuid": "^10.0.0",
-    "delib-npm": "^5.6.17",
+    "delib-npm": "^5.6.19",
     "esbuild": "0.25.2",
     "firebase": "^11.0.2",
     "lucide-react": "^0.474.0",
