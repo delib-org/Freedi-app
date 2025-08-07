@@ -15,7 +15,7 @@ import { useNavigate, Link } from 'react-router';
 const My = () => {
 	const user = useSelector(creatorSelector);
 	const { t } = useUserConfig();
-	const isAdvancedUser = user?.advanceUser;
+	const isAdvancedUser = user?.advanceUser ?? false;
 	const [selectedImage, setSelectedImage] = useState<string | null>(null);
 	const fileInputRef = useRef<HTMLInputElement | null>(null);
 	const navigate = useNavigate();
