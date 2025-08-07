@@ -6,12 +6,12 @@ import EnterNameModal from '../../components/enterNameModal/EnterNameModal';
 import styles from './Start.module.scss';
 import StartPageImage from '@/assets/images/StartPageImage.png';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
-import packageJson from '../../../../package.json';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { Navigate } from 'react-router';
 import { LocalStorageObjects } from '@/types/localStorage/LocalStorageObjects';
 import LogoStart from '../../../assets/icons/LogoStart.svg?react';
 import ChangeLanguage from '@/view/components/changeLanguage/ChangeLanguage';
+import { AppVersion } from '@/main';
 
 const Start = () => {
 	const [shouldShowNameModal, setShouldShowNameModal] = useState(false);
@@ -19,8 +19,6 @@ const Start = () => {
 	const { isAuthenticated, initialRoute } = useAuthentication();
 
 	const navigateTo = initialRoute ?? '/home';
-
-	const version = packageJson.version;
 
 	useEffect(() => {
 		if (isAuthenticated && initialRoute) {
@@ -38,7 +36,7 @@ const Start = () => {
 					{t('Fostering Collaborations')}
 				</span>
 			</div>
-			<div className={styles.version}>v: {version}</div>
+			<div className={styles.version}>v: {AppVersion}</div>
 			<div className={styles.interactionComponents}>
 				<ChangeLanguage />
 

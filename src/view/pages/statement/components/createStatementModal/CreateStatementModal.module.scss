@@ -1,0 +1,136 @@
+.createStatementModal {
+	.overlay {
+		height: 70vh;
+		max-height: 600px;
+		width: 80vw;
+		max-width: 400px;
+		display: flex;
+		gap: 1rem;
+		align-items: center;
+		flex-direction: column;
+		z-index: 2000;
+
+		@media screen and (max-width: 768px) {
+			width: 100vw;
+			height: 100svh;
+
+			max-width: 100%;
+			display: flex;
+		}
+
+		.modalImage {
+			width: 100%;
+			position: relative;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+
+			@media screen and (max-width: 768px) {
+				display: none;
+			}
+
+			img {
+				height: 260px;
+				width: auto;
+				margin-top: -86px;
+				cursor: unset;
+				@media screen and (max-width: 768px) {
+					display: none;
+				}
+			}
+		}
+
+		.tabs {
+			width: 70%;
+			display: flex;
+			justify-content: space-around;
+			padding-bottom: 0.5rem;
+
+			.tab {
+				font-family: 'Roboto', 'Open Sans', sans-serif;
+				font-weight: 400;
+				font-size: 1rem;
+				color: var(--text-disabled-paragraph);
+				cursor: pointer;
+				position: relative;
+				background: none;
+				
+				.block {
+					width: 0.8rem;
+					height: 2px;
+					border-radius: 10px;
+					position: absolute;
+					bottom: -10px;
+					left: 32%;
+				}
+
+				&.active {
+					font-weight: 500;
+
+					color: var(--text-blue);
+					.block {
+						background-color: var(--text-blue);
+					}
+				}
+			}
+		}
+
+		.formInputs {
+			width: 84%;
+			display: flex;
+			flex-direction: column;
+			gap: 1rem;
+			height: auto;
+			
+			input {
+				font-style: italic;
+				border: 1px solid rgb(182, 182, 182);
+			}
+		}
+
+		textarea {
+			font-style: italic;
+			border: 1px solid rgb(182, 182, 182);
+		}
+
+		.createStatementButtons {
+			display: flex;
+			width: 84%;
+			justify-content: space-between;
+			flex-direction: row-reverse;
+			align-items: center;
+			margin-top: 20%;
+			@media screen and (max-width: 768px) {
+				margin-top: 0;
+				margin-bottom: 10%;
+			}
+
+			button {
+				font-family: 'Roboto', 'Open Sans', sans-serif;
+				font-weight: 400;
+				font-size: 0.8rem;
+				display: flex;
+				text-align: center;
+				margin: 1rem;
+			}
+
+			.addButton {
+				color: var(--text-white);
+				border-radius: var(--Radius-Radius-L, 1.25rem);
+				background: var(--btn-secondary);
+				box-shadow:
+					0px 27px 8px 0px rgba(38, 56, 84, 0),
+					0px 17px 7px 0px rgba(38, 56, 84, 0.01),
+					0px 10px 6px 0px rgba(38, 56, 84, 0.05),
+					0px 4px 4px 0px rgba(38, 56, 84, 0.09),
+					0px 1px 2px 0px rgba(38, 56, 84, 0.1);
+			}
+
+			.cancelButton {
+				border-radius: var(--Radius-Radius-L, 1.25rem);
+				border: var(--Spacing-0, 1px) solid var(--btn-tertiary);
+				color: var(--text-blue);
+			}
+		}
+	}
+}

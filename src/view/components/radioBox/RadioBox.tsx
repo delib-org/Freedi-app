@@ -1,6 +1,6 @@
 import RadioButtonCheckedIcon from "@/assets/icons/radioButtonChecked.svg?react";
 import RadioButtonEmptyIcon from "@/assets/icons/radioButtonEmpty.svg?react";
-import "./RadioBox.scss";
+import styles from "./RadioBox.module.scss";
 import React from "react";
 
 interface Props {
@@ -19,7 +19,7 @@ export default function RadioBox({
 	const checked = currentValue === radioValue;
 
 	return (
-		<button className="radio-box" onClick={() => setCurrentValue(radioValue)}>
+		<button className={styles.radioBox} onClick={() => setCurrentValue(radioValue)}>
 			{checked ? <RadioButtonCheckedIcon /> : <RadioButtonEmptyIcon />}
 			<input
 				type="radio"

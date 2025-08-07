@@ -2,7 +2,7 @@ import { FC, useEffect, useState } from 'react';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { evaluationSelector } from '@/redux/evaluations/evaluationsSlice';
 import Thumb from '@/view/components/thumb/Thumb';
-import './SimpleEvaluation.scss';
+import styles from './SimpleEvaluation.module.scss';
 import { Statement } from 'delib-npm';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 
@@ -41,13 +41,13 @@ const SimpleEvaluation: FC<Props> = ({
 	}, [statement.con, statement.pro]);
 
 	return (
-		<div className='simple-evaluation'>
+		<div className={styles.simpleEvaluation}>
 			<div
-				className='evaluation-box'
+				className={styles.evaluationBox}
 				style={{ flexDirection: rowDirection }}
 			>
 				{shouldDisplayScore && <span>{conVotesCount}</span>}
-				<div className='thumb-icon'>
+				<div className={styles.thumbIcon}>
 					<Thumb
 						evaluation={evaluation || 0}
 						upDown='down'
@@ -56,7 +56,7 @@ const SimpleEvaluation: FC<Props> = ({
 						setProVote={setProVotesCount}
 					/>
 				</div>
-				<div className='thumb-icon'>
+				<div className={styles.thumbIcon}>
 					<Thumb
 						evaluation={evaluation || 0}
 						upDown='up'
@@ -68,7 +68,7 @@ const SimpleEvaluation: FC<Props> = ({
 				{shouldDisplayScore && <span>{proVotesCount}</span>}
 			</div>
 			{shouldDisplayScore && (
-				<div className='total-evaluations'>{consensusToDisplay}</div>
+				<div className={styles.totalEvaluations}>{consensusToDisplay}</div>
 			)}
 		</div>
 	);

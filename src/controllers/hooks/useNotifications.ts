@@ -4,6 +4,8 @@ import { useAppSelector } from './reduxHooks';
 import { hasTokenSelector } from '@/redux/statements/statementsSlice';
 import { notificationService } from '@/services/notificationService';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import { analyticsService, AnalyticsEvents } from '@/services/analytics';
+import { logger } from '@/services/logger';
 
 // Helper to check if service workers are supported
 const isServiceWorkerSupported = () => 'serviceWorker' in navigator;
@@ -125,6 +127,12 @@ export const useNotifications = (statementId?: string) => {
 						token,
 						serviceWorkerSupported: true
 					});
+					
+					// Track notification enabled
+					logger.info('Notifications enabled', { userId: auth.currentUser.uid });
+					analyticsService.logEvent(AnalyticsEvents.NOTIFICATION_ENABLED, {
+						notificationType: 'all'
+					});
 				}
 			} else {
 				setPermissionState({
@@ -133,11 +141,13 @@ export const useNotifications = (statementId?: string) => {
 					token: null,
 					serviceWorkerSupported: true
 				});
+				
+				logger.info('Notification permission denied', { result });
 			}
 
 			return result;
 		} catch (error) {
-			console.error('Error requesting notification permission:', error);
+			logger.error('Error requesting notification permission', error);
 			setPermissionState(prev => ({ ...prev, loading: false }));
 
 			return 'denied';

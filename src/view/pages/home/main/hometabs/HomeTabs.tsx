@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import './home-tabs.scss';
+import styles from './home-tabs.module.scss';
 import ClockActive from '@/assets/icons/clock-filled-ac.png';
 import Clock from '@/assets/icons/clock-filled-in.png';
 import GroupActive from '@/assets/icons/group-filled-ac.png';
@@ -27,7 +27,7 @@ const HomeTabs: React.FC = () => {
 	};
 
 	return (
-		<div className='homebar-main'>
+		<div className={styles.homebarMain}>
 			{tabs.map((tab) => (
 				<button
 					key={tab.name}

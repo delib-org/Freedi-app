@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import './notificationPrompt.scss';
+import styles from './notificationPrompt.module.scss';
 import useNotifications from '@/controllers/hooks/useNotifications';
 
 interface NotificationPromptProps {
@@ -50,7 +50,7 @@ const NotificationPrompt: React.FC<NotificationPromptProps> = ({ onClose }) => {
   if (!visible) return null;
   
   return (
-    <div className="notification-prompt">
+    <div className={styles.notificationPrompt}>
       <div className="notification-prompt-content">
         <div className="notification-prompt-icon">
           <img src="/icons/logo-96px.png" alt="FreeDi App" />
@@ -62,13 +62,13 @@ const NotificationPrompt: React.FC<NotificationPromptProps> = ({ onClose }) => {
         <div className="notification-prompt-actions">
           <button 
             onClick={handleDismissClick}
-            className="notification-prompt-dismiss"
+            className={styles.notificationPromptDismiss}
           >
             Not Now
           </button>
           <button 
             onClick={handleEnableClick}
-            className="notification-prompt-enable"
+            className={styles.notificationPromptEnable}
           >
             Enable Notifications
           </button>

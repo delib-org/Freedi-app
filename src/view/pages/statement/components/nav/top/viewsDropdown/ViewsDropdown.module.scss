@@ -1,0 +1,42 @@
+$svgHeight: 1.7rem;
+$svgWidth: 1.7rem;
+
+.viewsDropdown {
+  position: relative;
+  
+  &__trigger {
+    background-color: transparent;
+    border: none;
+    padding: 0.6rem 1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    svg {
+      height: $svgHeight;
+      width: $svgWidth;
+    }
+    
+    &:hover {
+      opacity: 0.8;
+    }
+  }
+  
+  &__menu {
+    position: absolute;
+    background-color: white;
+    box-shadow: 0px 3px 9px #00000026;
+    border-radius: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    top: calc(100% + 0.5rem);
+    min-width: 200px;
+    z-index: 1000;
+    
+    // Prevent closing when clicking inside
+    * {
+      pointer-events: auto;
+    }
+  }
+}

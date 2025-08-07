@@ -9,7 +9,7 @@ import InfoIcon from '@/assets/icons/infoCircleIcon.svg?react';
 import HandIcon from '@/assets/icons/handIcon.svg?react';
 import LikeIcon from '@/assets/icons/likeIcon.svg?react';
 import { OptionBarProps } from '../../voteTypesHelper';
-import './OptionBar.scss';
+import styles from './OptionBar.module.scss';
 import { getBarWidth } from './OptionBarCont';
 import { getStatementFromDB } from '@/controllers/db/statements/getStatement';
 import { setVoteToDB } from '@/controllers/db/vote/setVote';
@@ -76,23 +76,23 @@ export const OptionBar: FC<OptionBarProps> = ({
 
 	return (
 		<div
-			className={`option-bar ${isVertical ? 'vertical' : 'horizontal'}`}
+			className={`${styles.optionBar} ${isVertical ? styles.vertical : styles.horizontal}`}
 			style={containerStyle}
 		>
-			<div className='column' style={{ width: `${barWidth}px` }}>
+			<div className={styles.column} style={{ width: `${barWidth}px` }}>
 				{shouldShowStat && (
-					<div className='percentage-text'>{barHeight}%</div>
+					<div className={styles.percentageText}>{barHeight}%</div>
 				)}
-				<div className='bar drop-shadow' style={barStyle}>
-					<div className='number-of-selections'>{selections}</div>
+				<div className={`${styles.bar} ${styles.dropShadow}`} style={barStyle}>
+					<div className={styles.numberOfSelections}>{selections}</div>
 				</div>
 			</div>
-			<div className='vote-button-container drop-shadow'>
+			<div className={`${styles.voteButtonContainer} ${styles.dropShadow}`}>
 				<button
 					onClick={handleVotePress}
 					aria-label='Vote button'
 					style={voteButtonStyle}
-					className={`vote-button ${isOptionSelected ? 'selected' : ''}`}
+					className={`${styles.voteButton} ${isOptionSelected ? styles.selected : ''}`}
 				>
 					{isOptionSelected ? (
 						<LikeIcon />
@@ -102,7 +102,7 @@ export const OptionBar: FC<OptionBarProps> = ({
 				</button>
 			</div>
 			<button
-				className='info-icon'
+				className={styles.infoIcon}
 				aria-label='Info button'
 				onClick={() => {
 					setStatementInfo(option);
@@ -113,7 +113,7 @@ export const OptionBar: FC<OptionBarProps> = ({
 					style={{ color: barHeight > 10 ? 'white' : '#6E8AA6' }}
 				/>
 			</button>
-			<div className={`title ${barWidth < 90 ? 'is-bar-small' : ''}`}>
+			<div className={`${styles.title} ${barWidth < 90 ? styles.isBarSmall : ''}`}>
 				{shortVersion}
 			</div>
 		</div>

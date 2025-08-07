@@ -1,5 +1,5 @@
 import React, { FC } from "react";
-import "./Toast.scss";
+import styles from "./Toast.module.scss";
 import X from "@/assets/icons/x.svg?react";
 
 interface Props {
@@ -14,11 +14,11 @@ const Toast: FC<Props> = ({ text, type, show, setShow, children }) => {
 	if (!show) return null;
 
 	return (
-		<div className="toast" style={{ backgroundColor: getToastColor(type) }}>
-			<p className="toast__text"> {text}</p>
-			{children && <div className="toast__children">{children}</div>}
-			{!children && <div className="toast__close">
-				<button className="toast__close__x" onClick={() => setShow(false)}>
+		<div className={styles.toast} style={{ backgroundColor: getToastColor(type) }}>
+			<p className={styles.toast__text}> {text}</p>
+			{children && <div className={styles.toast__children}>{children}</div>}
+			{!children && <div className={styles.toast__close}>
+				<button className={styles.toast__close__x} onClick={() => setShow(false)}>
 					<X />
 				</button>
 			</div>}

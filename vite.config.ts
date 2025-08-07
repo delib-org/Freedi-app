@@ -16,7 +16,7 @@ export default defineConfig(({ mode }) => {
 				include: '**/*.svg?react',
 			}),
 			VitePWA({
-				registerType: 'prompt',
+				registerType: 'autoUpdate',
 				includeAssets: ['favicon.ico', 'robots.txt', 'icons/*.png'],
 				manifest: false, // We're using our own manifest file
 				strategies: 'injectManifest',
@@ -39,7 +39,7 @@ export default defineConfig(({ mode }) => {
 								cacheName: 'html-cache',
 								expiration: {
 									maxEntries: 10,
-									maxAgeSeconds: 60, // Cache HTML for only 1 minute
+									maxAgeSeconds: 60 * 60, // Cache HTML for 1 hour instead of 1 minute
 								},
 							}
 						},
@@ -62,7 +62,7 @@ export default defineConfig(({ mode }) => {
 								cacheName: 'static-resources',
 								expiration: {
 									maxEntries: 50,
-									maxAgeSeconds: 60 * 60, // 1 hour
+									maxAgeSeconds: 60 * 60 * 24, // 24 hours for JS/CSS files
 								}
 							}
 						}

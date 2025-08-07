@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import './UploadImage.scss';
+import styles from './UploadImage.module.scss';
 import { setImageLocally } from './uploadImageCont';
 import { Statement } from 'delib-npm';
 
@@ -54,7 +54,7 @@ export default function UploadImage({
 
 	return (
 		<label
-			className={`dropZone ${isDragging ? 'dropZoneActive' : ''}`}
+			className={`${styles.dropZone} ${isDragging ? styles.dropZoneActive : ''}`}
 			style={{ border: image === '' ? '2px dashed #ccc' : 'none' }}
 			onDragEnter={handleDragEnter}
 			onDragLeave={handleDragLeave}
@@ -66,7 +66,7 @@ export default function UploadImage({
 				type='file'
 				accept='image/*'
 				onChange={handleFileChange}
-				className='fileInput'
+				className={styles.fileInput}
 			/>
 
 			{image !== '' && (
@@ -74,7 +74,7 @@ export default function UploadImage({
 					style={{
 						backgroundImage: `url(${image})`,
 					}}
-					className='imagePreview'
+					className={styles.imagePreview}
 				/>
 			)}
 

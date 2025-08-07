@@ -1,0 +1,19 @@
+.headerMenu {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  min-width: 3rem;
+}
+
+.menuFooter {
+  display: flex;
+  height: 83px;
+  cursor: pointer;
+  pointer-events: auto;
+  z-index: 1000;
+
+  svg {
+    color: white;
+  }
+}

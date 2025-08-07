@@ -7,7 +7,7 @@ import infoGraphic from '@/assets/images/infoGraphic.png';
 import { isAuthorized } from '@/controllers/general/helpers';
 
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
-import './StatementInfo.scss';
+import styles from './StatementInfo.module.scss';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import {
 	statementSelector,
@@ -48,14 +48,14 @@ const StatementInfo: FC<Props> = ({ statement, setShowInfo }) => {
 	);
 
 	return (
-		<div className='statement-info'>
-			<div className='info-graphic'>
+		<div className={styles.statementInfo}>
+			<div className={styles.infoGraphic}>
 				<img src={infoGraphic} alt='info' />
 			</div>
 
 			{isInEditMode ? (
 				<form
-					className='form'
+					className={styles.form}
 					onSubmit={(e) =>
 						handleSubmitInfo(
 							e,
@@ -66,7 +66,7 @@ const StatementInfo: FC<Props> = ({ statement, setShowInfo }) => {
 						)
 					}
 				>
-					<div className='inputs'>
+					<div className={styles.inputs}>
 						<input
 							type='text'
 							value={formData.title}
@@ -89,27 +89,27 @@ const StatementInfo: FC<Props> = ({ statement, setShowInfo }) => {
 							placeholder={t('description')}
 						/>
 					</div>
-					<div className='form-buttons'>
+					<div className={styles.formButtons}>
 						<button
 							type='button'
-							className='cancel-button'
+							className={styles.cancelButton}
 							onClick={() => setIsInEditMode(false)}
 						>
 							{t('Cancel')}
 						</button>
-						<button type='submit' className='save-button'>
+						<button type='submit' className={styles.saveButton}>
 							{t('Save')}
 						</button>
 					</div>
 				</form>
 			) : (
 				<>
-					<div className='texts'>
+					<div className={styles.texts}>
 						<h3>
 							{formData.title}
 							{_isAuthorized && (
 								<button
-									className='edit-icon'
+									className={styles.editIcon}
 									onClick={() => setIsInEditMode(true)}
 									aria-label='Edit'
 								>
@@ -117,13 +117,13 @@ const StatementInfo: FC<Props> = ({ statement, setShowInfo }) => {
 								</button>
 							)}
 						</h3>
-						<div className='text'>
+						<div className={styles.text}>
 							<Text description={formData.description || ''} />
 						</div>
 					</div>
-					<div className='form-buttons'>
+					<div className={styles.formButtons}>
 						<button
-							className='close-button'
+							className={styles.closeButton}
 							onClick={() => setShowInfo(false)}
 						>
 							{t('Close')}
