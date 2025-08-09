@@ -21,6 +21,7 @@ interface Props {
 	isTextArea?: boolean;
 	useTitle?: boolean;
 	useDescription?: boolean;
+	onSave?: (newTitle: string) => void;
 }
 
 const EditTitle: FC<Props> = ({
@@ -30,6 +31,7 @@ const EditTitle: FC<Props> = ({
 	isEdit,
 	setEdit,
 	isTextArea,
+	onSave,
 }) => {
 	const [description, setDescription] = useState(
 		statement?.description || ''
@@ -60,6 +62,7 @@ const EditTitle: FC<Props> = ({
 
 	function handleEnter(e: React.KeyboardEvent<HTMLInputElement>) {
 		if (e.key === 'Enter') {
+			e.preventDefault();
 			handleSave();
 		}
 	}
@@ -71,6 +74,8 @@ const EditTitle: FC<Props> = ({
 
 			updateStatementText(statement, title, description);
 			setEdit(false);
+
+			onSave?.(title);
 		} catch (error) {
 			console.error(error);
 		}

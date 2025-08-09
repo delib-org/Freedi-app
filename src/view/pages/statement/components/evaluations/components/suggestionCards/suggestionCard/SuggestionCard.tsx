@@ -23,6 +23,7 @@ import './SuggestionCard.scss';
 import { StatementType, Statement } from 'delib-npm';
 import { useAuthorization } from '@/controllers/hooks/useAuthorization';
 import { toggleJoining } from '@/controllers/db/joining/setJoining';
+import { markLastEdited } from '@/controllers/general/helpers';
 import Joined from '@/view/components/joined/Joined';
 
 interface Props {
@@ -180,6 +181,7 @@ const SuggestionCard: FC<Props> = ({
 							isEdit={isEdit}
 							setEdit={setIsEdit}
 							isTextArea={true}
+							onSave={() => markLastEdited(statement.statementId)}
 						/>
 						{enableJoining &&
 							<div className="btns btns--end">

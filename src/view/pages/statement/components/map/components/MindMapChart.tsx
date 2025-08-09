@@ -1,4 +1,4 @@
-import { MouseEvent, useCallback, useEffect, useState } from 'react';
+import { MouseEvent, useCallback, useEffect, useState, useRef } from 'react';
 
 // Styles
 import '@/view/pages/statement/components/createStatementModal/CreateStatementModal.scss';
@@ -35,6 +35,7 @@ import {
 	getLayoutElements,
 } from '../mapHelpers/customNodeCont';
 import CustomNode from './CustomNode';
+import { peekLastEdited, clearLastEdited } from '@/controllers/general/helpers';
 
 const nodeTypes = {
 	custom: CustomNode,
@@ -81,6 +82,7 @@ export default function MindMapChart({ descendants, isAdmin, filterBy }: Readonl
 	}
 
 	const filtered = filterDescendants(descendants);
+	const persistedLastEditedRef = useRef<string | null>(null);
 
 	useEffect(() => {
 		const { nodes: createdNodes, edges: createdEdges } =
@@ -92,7 +94,26 @@ export default function MindMapChart({ descendants, isAdmin, filterBy }: Readonl
 			mapContext.nodeHeight,
 			mapContext.nodeWidth,
 			mapContext.direction
+
 		);
+
+		// Read ONCE (survives React 18 double-effect)
+		if (persistedLastEditedRef.current === null) {
+			persistedLastEditedRef.current = peekLastEdited(); // <- read without clearing
+		}
+
+		// Resolve to an actual node id in the graph
+		let targetNodeId: string | null = null;
+		const persisted = persistedLastEditedRef.current;
+		if (persisted) {
+			const match = layoutedNodes.find(n =>
+				n.id === persisted ||
+				n.data?.result?.top?.statementId === persisted ||
+				n.data?.statement?.statementId === persisted ||
+				n.data?.top?.statementId === persisted
+			);
+			if (match) targetNodeId = match.id;
+		}
 
 		const latestCreatedAt = Math.max(...layoutedNodes.map((n) => n.data?.createdAt || 0));
 
@@ -103,7 +124,9 @@ export default function MindMapChart({ descendants, isAdmin, filterBy }: Readonl
 					...node.data,
 					animate: lastEditedNodeId
 						? node.id === lastEditedNodeId
-						: node.data?.createdAt === latestCreatedAt,
+						: targetNodeId
+							? node.id === targetNodeId
+							: node.data?.createdAt === latestCreatedAt,
 					setLastEditedNodeId,
 				},
 			};
@@ -113,19 +136,19 @@ export default function MindMapChart({ descendants, isAdmin, filterBy }: Readonl
 		setEdges(layoutedEdges);
 		setTempEdges(layoutedEdges);
 
-		setTimeout(() => {
-			setNodes((prevNodes) =>
-				prevNodes.map((node) => ({
-					...node,
-					data: {
-						...node.data,
-						animate: false,
-					},
-				}))
+		const t = setTimeout(() => {
+			setNodes(prev =>
+				prev.map(node => ({ ...node, data: { ...node.data, animate: false } }))
 			);
 			setLastEditedNodeId(null);
+
+			clearLastEdited();                 // <- clear after animation finishes
+			persistedLastEditedRef.current = null;
+
 			onSave();
 		}, 1000);
+
+		return () => clearTimeout(t);
 	}, [descendants, filterBy]);
 
 	const onLayout = useCallback(
