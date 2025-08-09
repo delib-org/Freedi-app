@@ -424,7 +424,7 @@ export function markLastEdited(id: string) {
     // ignore storage errors
   }
 }
-// NEW: read without clearing
+// Read without clearing
 export function peekLastEdited(): string | null {
   try {
     return typeof window !== "undefined"
@@ -435,7 +435,7 @@ export function peekLastEdited(): string | null {
   }
 }
 
-// NEW: clear when you're done animating
+// Clear when you're done animating
 export function clearLastEdited() {
   try {
     if (typeof window !== "undefined") localStorage.removeItem(LAST_EDITED_KEY);
