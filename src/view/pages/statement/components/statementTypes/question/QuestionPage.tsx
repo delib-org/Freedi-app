@@ -3,7 +3,7 @@ import { StatementContext } from '../../../StatementCont';
 
 import { QuestionType } from 'delib-npm';
 import MassConsensusAdmin from './massConsesusQuestion/MassConsensusAdmin';
-import MultiStageQuestion from './document/MultiStageQuestion';
+import SimpleQuestion from './simpleQuestion/SimpleQuestion';
 import { useLocation } from 'react-router';
 import StagePage from '../stage/StagePage';
 
@@ -20,7 +20,7 @@ const QuestionPage = () => {
 	} else if (massConsensus) {
 		return <MassConsensusAdmin />;
 	} else {
-		return <MultiStageQuestion />;
+		return <SimpleQuestion />;
 	}
 };
 
