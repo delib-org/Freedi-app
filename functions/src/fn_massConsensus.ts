@@ -145,7 +145,8 @@ export async function updateOptionInMassConsensus(event: any) {
 		// Only process if this is an option
 		if (afterData.statementType !== StatementType.option) {
 			logger.info('Not an option statement, skipping mass consensus update');
-			return;
+			
+return;
 		}
 
 		// Skip if only metadata fields changed (not statementType)
@@ -161,11 +162,13 @@ export async function updateOptionInMassConsensus(event: any) {
 			
 			if (metadataOnlyUpdate) {
 				logger.info('Only metadata changed for option, skipping mass consensus update');
-				return;
+				
+return;
 			}
 			
 			logger.info('No relevant changes for mass consensus, skipping update');
-			return;
+			
+return;
 		}
 
 		const parentRef = db.collection(Collections.statements).doc(afterData.parentId);

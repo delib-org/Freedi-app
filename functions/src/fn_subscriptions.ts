@@ -153,7 +153,8 @@ export const updateSubscriptionsSimpleStatement = onDocumentUpdated({
 			_statementBefore.statement === _statementAfter.statement &&
 			_statementBefore.description === _statementAfter.description) {
 			logger.info('Skipping subscription update - only metadata changed');
-			return;
+			
+return;
 		}
 
 		const simpleStatementBefore =
@@ -167,7 +168,8 @@ export const updateSubscriptionsSimpleStatement = onDocumentUpdated({
 			simpleStatementBefore.description === simpleStatementAfter.description
 		) {
 			logger.info('No content changes in statement, skipping subscription update');
-			return;
+			
+return;
 		}
 
 		const statement = parse(StatementSchema, _statementAfter);
@@ -346,7 +348,8 @@ export async function setAdminsToNewStatement(
 				const user = userMap.get(adminId);
 				if (!user) {
 					logger.warn(`Could not find user data for admin ${adminId}`);
-					return;
+					
+return;
 				}
 
 				const statementsSubscribeId = getStatementSubscriptionId(
@@ -356,7 +359,8 @@ export async function setAdminsToNewStatement(
 				
 				if (!statementsSubscribeId) {
 					logger.warn(`Could not generate subscription ID for admin ${adminId}`);
-					return;
+					
+return;
 				}
 
 				const newSubscription = createSubscription({
@@ -370,7 +374,8 @@ export async function setAdminsToNewStatement(
 				
 				if (!newSubscription) {
 					logger.warn(`Could not create subscription for admin ${adminId}`);
-					return;
+					
+return;
 				}
 
 				batch.set(
