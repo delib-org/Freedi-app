@@ -2,7 +2,7 @@ import { FC } from 'react';
 
 import { StatementSettingsProps } from '../../settingsTypeHelpers';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
-import './ResultsRange.scss';
+import styles from './ResultsRange.module.scss';
 import { defaultResultsSettings } from 'delib-npm';
 
 const ResultsRange: FC<StatementSettingsProps> = ({
@@ -15,11 +15,11 @@ const ResultsRange: FC<StatementSettingsProps> = ({
 	const title = `${t('Number of Results to Display')}: `;
 
 	return (
-		<section className='results-range'>
+		<section className={styles.resultsRange}>
 			<div className='title'>{title}</div>
-			<div className='range-box'>
+			<div className={styles.rangeBox}>
 				<input
-					className='range'
+					className={styles.range}
 					type='range'
 					aria-label='Number Of Results'
 					name='numberOfResults'
@@ -36,7 +36,7 @@ const ResultsRange: FC<StatementSettingsProps> = ({
 						});
 					}}
 				/>
-				<span className='number-of-results'>
+				<span className={styles.numberOfResults}>
 					{resultsSettings.numberOfResults}
 				</span>
 			</div>

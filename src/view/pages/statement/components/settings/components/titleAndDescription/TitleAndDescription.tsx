@@ -3,7 +3,7 @@ import { FC, useEffect, useRef } from 'react';
 // Hooks & Helpers
 import { StatementSettingsProps } from '../../settingsTypeHelpers';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
-import './TitleAndDescription.scss';
+import styles from './TitleAndDescription.module.scss';
 import VisuallyHidden from '@/view/components/accessibility/toScreenReaders/VisuallyHidden';
 import Button, { ButtonType } from '@/view/components/buttons/button/Button';
 import { useNavigate } from 'react-router';
@@ -30,7 +30,7 @@ const TitleAndDescription: FC<StatementSettingsProps> = ({
 	}, []);
 
 	return (
-		<div className='title-and-description'>
+		<div className={styles.titleAndDescription}>
 			<label htmlFor='statement-title'>
 				<VisuallyHidden labelName={t('Group Title')}></VisuallyHidden>
 				<input
@@ -70,7 +70,7 @@ const TitleAndDescription: FC<StatementSettingsProps> = ({
 					}}
 				/>
 			</label>
-			<div className='btns'>
+			<div className={styles.btns}>
 				<Button
 					text={t('Save')}
 					aria-label='Submit button'

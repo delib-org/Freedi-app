@@ -1,6 +1,6 @@
 import { FC } from 'react';
 import LightCogIcon from '@/assets/icons/lightCogIcon.svg?react';
-import './SectionTitle.scss';
+import styles from './SectionTitle.module.scss';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 
 interface SectionTitleProps {
@@ -11,7 +11,7 @@ const SectionTitle: FC<SectionTitleProps> = ({ title }) => {
 	const { dir } = useUserConfig();
 
 	return (
-		<h2 className={`section-title ${dir}`}>
+		<h2 className={`${styles.sectionTitle} ${styles[dir]}`}>
 			{title} <LightCogIcon />
 		</h2>
 	);

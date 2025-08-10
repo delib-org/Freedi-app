@@ -1,6 +1,6 @@
 import React, { Component, ErrorInfo, ReactNode } from "react";
 import * as Sentry from "@sentry/react";
-import "./ErrorBoundary.scss";
+import styles from "./ErrorBoundary.module.scss";
 
 interface Props {
   children: ReactNode;
@@ -102,23 +102,23 @@ const DefaultErrorFallback: React.FC<{
   const isDev = import.meta.env.DEV;
 
   return (
-    <div className="error-fallback">
-      <div className="error-fallback__container">
-        <div className="error-fallback__icon">⚠️</div>
+    <div className={styles.errorFallback}>
+      <div className={styles.errorFallback__container}>
+        <div className={styles.errorFallback__icon}>⚠️</div>
 
-        <h1 className="error-fallback__title">
+        <h1 className={styles.errorFallback__title}>
           משהו השתבש / Something went wrong
         </h1>
 
-        <div className="error-fallback__message">
+        <div className={styles.errorFallback__message}>
           <p>אנחנו מצטערים, אירעה שגיאה בלתי צפויה.</p>
           <p>We're sorry, an unexpected error occurred.</p>
         </div>
 
         {isDev && (
-          <details className="error-fallback__details">
+          <details className={styles.errorFallback__details}>
             <summary>Error details (Development only)</summary>
-            <pre className="error-fallback__stack">
+            <pre className={styles.errorFallback__stack}>
               {error.toString()}
               {"\n\n"}
               {error.stack}
@@ -126,15 +126,15 @@ const DefaultErrorFallback: React.FC<{
           </details>
         )}
 
-        <div className="error-fallback__actions">
+        <div className={styles.errorFallback__actions}>
           <button
-            className="error-fallback__button error-fallback__button--primary"
+            className={`${styles.errorFallback__button} ${styles['errorFallback__button--primary']}`}
             onClick={resetError}
           >
             נסה שוב / Try again
           </button>
           <button
-            className="error-fallback__button error-fallback__button--secondary"
+            className={`${styles.errorFallback__button} ${styles['errorFallback__button--secondary']}`}
             onClick={() => (window.location.href = "/")}
           >
             חזור לדף הבית / Go to home
@@ -142,7 +142,7 @@ const DefaultErrorFallback: React.FC<{
         </div>
 
         {!isDev && (
-          <p className="error-fallback__report">
+          <p className={styles.errorFallback__report}>
             השגיאה דווחה אוטומטית לצוות הטכני שלנו.
             <br />
             The error has been automatically reported to our technical team.

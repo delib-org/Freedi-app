@@ -32,8 +32,10 @@ const Switch = () => {
 	}
 
 	function handleStartEdit() {
-		if (isCreator) setEdit(true);
-	}
+    if (isAdmin) {
+      setEdit(true);
+    }
+  }
 
 	return (
 		<main className='page__main'>

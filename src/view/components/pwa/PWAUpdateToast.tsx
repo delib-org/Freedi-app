@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import './pwaUpdateToast.scss';
+import styles from './pwaUpdateToast.module.scss';
 
 interface PWAUpdateToastProps {
   registerUpdate: (skipCallback: boolean) => Promise<void>;
@@ -54,23 +54,23 @@ const PWAUpdateToast: React.FC<PWAUpdateToastProps> = ({ registerUpdate }) => {
   if (!needsUpdate) return null;
 
   return (
-    <div className="pwa-update-toast">
-      <div className="pwa-update-content">
+    <div className={styles.pwaUpdateToast}>
+      <div className={styles.pwaUpdateContent}>
         <img 
           src="/src/assets/icons/updateIcon.svg"
           alt="Update"
-          className="update-icon"
+          className={styles.updateIcon}
         />
-        <div className="update-message">
+        <div className={styles.updateMessage}>
           <p>New content available</p>
-          <p className="update-sub">Update now for the latest features</p>
+          <p className={styles.updateSub}>Update now for the latest features</p>
         </div>
       </div>
-      <div className="pwa-update-actions">
-        <button onClick={handleDismiss} className="dismiss-button">
+      <div className={styles.pwaUpdateActions}>
+        <button onClick={handleDismiss} className={styles.dismissButton}>
           Later
         </button>
-        <button onClick={handleUpdate} className="update-button">
+        <button onClick={handleUpdate} className={styles.updateButton}>
           Update Now
         </button>
       </div>

@@ -4,7 +4,7 @@ import RadioBox from '../../components/radioBox/RadioBox';
 import { pricingPlans } from './pricingModel';
 import pricingImg from '@/assets/images/pricing.png';
 
-import './PricingPlan.scss';
+import styles from './PricingPlan.module.scss';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 
 export default function PricingPlan() {
@@ -34,14 +34,14 @@ export default function PricingPlan() {
 
 	return (
 		<div className='page'>
-			<div className='pricing-plan'>
-				<h1 className='title'>Pricing plans</h1>
+			<div className={styles.pricingPlan}>
+				<h1 className={styles.title}>Pricing plans</h1>
 				<img src={pricingImg} alt='pricing-illustration' width='40%' />
-				<p className='text'>
+				<p className={styles.text}>
 					Select the appropriate plan to maximize your performance and
 					get better results
 				</p>
-				<div className='radio-boxes-container'>
+				<div className={styles.radioBoxesContainer}>
 					{pricingPlans.map((item) => (
 						<RadioBox
 							key={item.price}
@@ -49,10 +49,10 @@ export default function PricingPlan() {
 							setCurrentValue={setPlan}
 							radioValue={item.price}
 						>
-							<div className='pricing-description'>
-								<div className='icon'>{item.icon}</div>
+							<div className={styles.pricingDescription}>
+								<div className={styles.icon}>{item.icon}</div>
 								<div className='textArea'>
-									<p className='range-text'>
+									<p className={styles.rangeText}>
 										{item.from && item.to ? (
 											<>
 												<span>{item.range}</span>{' '}
@@ -73,7 +73,7 @@ export default function PricingPlan() {
 										)}{' '}
 										participants
 									</p>
-									<p className='price'>
+									<p className={styles.price}>
 										{item.price === 'free'
 											? 'Free'
 											: `$${item.price}`}
@@ -84,7 +84,7 @@ export default function PricingPlan() {
 					))}
 				</div>
 				<button
-					className='choose-plan-button'
+					className={styles.choosePlanButton}
 					onClick={handleChoosePlan}
 				>
 					Choose your plan

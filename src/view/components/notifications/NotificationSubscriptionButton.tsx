@@ -1,5 +1,5 @@
 import React, { useEffect, useState, FC } from 'react';
-import './notificationSubscriptionButton.scss';
+import styles from './notificationSubscriptionButton.module.scss';
 import { notificationService } from '@/services/notificationService';
 import { getAuth } from 'firebase/auth';
 import { doc, getDoc, getFirestore } from 'firebase/firestore';
@@ -157,7 +157,7 @@ const NotificationSubscriptionButton: FC<NotificationSubscriptionButtonProps> = 
 			}
 		>
 			{isLoading ? (
-				<span className="loading-indicator"></span>
+				<span className={styles.loadingIndicator}></span>
 			) : (
 				<>
 					{isSubscribed ? <BellIcon /> : <BellSlashIcon />}
