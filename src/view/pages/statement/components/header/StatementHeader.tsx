@@ -30,7 +30,6 @@ const StatementHeader: FC<Props> = ({
 	const [showInvitationPanel, setShowInvitationPanel] = useState(false);
 
 	const isMaps = (isConsensusMap || isCollaborationMap || isMindMap);
-	console.log(isMaps);
 
 	const { t, dir } = useUserConfig();
 

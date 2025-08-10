@@ -8,6 +8,7 @@ import {
 } from 'firebase/firestore';
 import { FireStore } from '../config';
 import { store } from '@/redux/store';
+import { setStatement } from '@/redux/statements/statementsSlice';
 import {
 	getExistingOptionColors,
 	getSiblingOptionsByParentId,
@@ -705,6 +706,11 @@ export async function setFollowMeDB(
 		} else {
 			await updateDoc(topParentStatementRef, { followMe: '' });
 		}
+		
+		// Update Redux store with the new followMe value
+		const updatedStatement = { ...topParentStatement, followMe: path || '' };
+		store.dispatch(setStatement(updatedStatement));
+		
 	} catch (error) {
 		console.error(error);
 	}
