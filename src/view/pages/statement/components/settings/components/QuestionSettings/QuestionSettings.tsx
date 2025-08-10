@@ -2,7 +2,7 @@ import CustomSwitchSmall from '@/view/components/switch/customSwitchSmall/Custom
 import { FC } from 'react';
 import { StatementSettingsProps } from '../../settingsTypeHelpers';
 import SectionTitle from '../sectionTitle/SectionTitle';
-import './QuestionSettings.scss';
+import styles from './QuestionSettings.module.scss';
 import { setQuestionTypeToDB } from '@/controllers/db/statementSettings/setStatementSettings';
 import { EvaluationUI, QuestionType, StatementType } from 'delib-npm';
 import DocumentIcon from '@/assets/icons/paper.svg?react';
@@ -34,7 +34,7 @@ const QuestionSettings: FC<StatementSettingsProps> = ({
 		}
 
 		return (
-			<div className='question-settings'>
+			<div className={styles.questionSettings}>
 				<SectionTitle title={t('Evaluation Type')} />
 				<MultiSwitch
 					options={[

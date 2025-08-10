@@ -8,11 +8,11 @@ import {
 	setStatement,
 	statementSelectorById,
 } from '@/redux/statements/statementsSlice';
-import { Statement } from 'delib-npm';
+import { Statement, SimpleStatement } from 'delib-npm';
 import { useDispatch, useSelector } from 'react-redux';
 
 interface Props {
-	statement: Statement;
+	statement: Statement | SimpleStatement;
 }
 
 const UpdateMainCard: FC<Props> = ({ statement }) => {

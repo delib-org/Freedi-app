@@ -13,6 +13,8 @@ import { Statement } from 'delib-npm';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { useDecreaseLearningRemain } from '@/controllers/hooks/useDecreaseLearningRemain';
 import { Tooltip } from '@/view/components/tooltip/Tooltip';
+import { useSelector } from 'react-redux';
+import { statementSelectorById } from '@/redux/statements/statementsSlice';
 
 interface EnhancedEvaluationProps {
 	statement: Statement;
@@ -23,8 +25,9 @@ const indicatorWidth = 32; // Width of the bar in pixels, used for calculations
 const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({ statement }) => {
 	const { t, learning, dir } = useUserConfig();
 	const [barWidth, setBarWidth] = useState<number>(0);
+	const parentStatement = useSelector(statementSelectorById(statement.parentId));
 	const evaluationBarRef = useRef<HTMLDivElement>(null);
-	const shouldDisplayScore = statement.statementSettings?.showEvaluation;
+	const showEvaluation = parentStatement?.statementSettings?.showEvaluation;
 
 	const evaluationScore = useAppSelector(
 		evaluationSelector(statement.statementId)
@@ -81,7 +84,7 @@ const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({ statement }) => {
 						/>
 					))}
 				</div>
-				{shouldDisplayScore && (
+				{showEvaluation && (
 					<Tooltip
 						content={`${t('Average score')}: ${avg}`}
 						position='top'
@@ -113,7 +116,7 @@ const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({ statement }) => {
 			<div
 				className={`${styles['evaluation-score']} ${statement.consensus < 0 ? styles.negative : ''}`}
 			>
-				{shouldDisplayScore &&
+				{showEvaluation &&
 				numberOfEvaluators &&
 				numberOfEvaluators > 0 ? (
 					<Tooltip

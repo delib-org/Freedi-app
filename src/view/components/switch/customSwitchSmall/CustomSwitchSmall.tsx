@@ -1,5 +1,5 @@
 import React, { FC, useState } from 'react';
-import './CustomSwitchSmall.scss';
+import styles from './CustomSwitchSmall.module.scss';
 import VisuallyHidden from '../../accessibility/toScreenReaders/VisuallyHidden';
 import BackgroundImage from './customSwitchSmallBackground.svg';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
@@ -40,7 +40,7 @@ const CustomSwitchSmall: FC<Props> = ({
 
 	return (
 		<div
-			className='custom-switch-small'
+			className={styles.customSwitchSmall}
 			onClick={handleChange}
 			onKeyDown={handleKeyDown}
 			role='switch'
@@ -49,32 +49,32 @@ const CustomSwitchSmall: FC<Props> = ({
 		>
 			<div
 				className={
-					dir === 'rtl' ? 'background' : 'background background--ltr'
+					dir === 'rtl' ? styles.background : `${styles.background} ${styles.backgroundLtr}`
 				}
 				style={{ backgroundImage: `url(${BackgroundImage})` }}
 			>
 				<div
-					className='ball ball-background'
+					className={`${styles.ball} ${styles.ballBackground}`}
 					style={{ left: '4.15rem' }}
 					aria-hidden='true'
 				>
 					{imageUnchecked}
 				</div>
 				<div
-					className='ball ball-background ball-background-off'
+					className={`${styles.ball} ${styles.ballBackground} ${styles.ballBackgroundOff}`}
 					aria-hidden='true'
 				>
 					{imageChecked}
 				</div>
 				<div
-					className={`ball ball-switch ball-switch--${isChecked ? 'checked' : 'unchecked'}`}
+					className={`${styles.ball} ${styles.ballSwitch} ${isChecked ? styles.ballSwitchChecked : styles.ballSwitchUnchecked}`}
 					style={{ left: `${isChecked ? 0 : 4.15}rem` }}
 					aria-hidden='true'
 				>
 					{isChecked ? imageChecked : imageUnchecked}
 				</div>
 			</div>
-			<div className='text' aria-hidden='true'>
+			<div className={styles.text} aria-hidden='true'>
 				{isChecked ? textChecked : textUnchecked}
 			</div>
 			<label htmlFor={`toggleSwitchSimple-${label}`}>
@@ -84,7 +84,7 @@ const CustomSwitchSmall: FC<Props> = ({
 				type='checkbox'
 				name={label}
 				id={`toggleSwitchSimple-${label}`}
-				className='switch-input'
+				className={styles.switchInput}
 				onChange={handleChange}
 				value={isChecked ? 'on' : 'off'}
 				checked={isChecked}

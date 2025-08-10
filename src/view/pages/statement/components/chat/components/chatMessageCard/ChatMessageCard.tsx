@@ -22,7 +22,7 @@ import EditTitle from '@/view/components/edit/EditTitle';
 import Menu from '@/view/components/menu/Menu';
 import MenuOption from '@/view/components/menu/MenuOption';
 import CreateStatementModal from '@/view/pages/statement/components/createStatementModal/CreateStatementModal';
-import './ChatMessageCard.scss';
+import styles from './ChatMessageCard.module.scss';
 import { deleteStatementFromDB } from '@/controllers/db/statements/deleteStatements';
 import Evaluation from '../../../evaluations/components/evaluation/Evaluation';
 import useAutoFocus from '@/controllers/hooks/useAutoFocus ';
@@ -155,7 +155,7 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
 			className={`chat-message-card ${isAlignedLeft && 'aligned-left'} ${dir}`}
 		>
 			{!isPreviousFromSameAuthor && (
-				<div className='user'>
+				<div className={styles.user}>
 					<UserAvatar user={statement.creator} />
 					<span>{statement.creator.displayName}</span>
 				</div>
@@ -173,13 +173,13 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
 						: statementColor.backgroundColor,
 				}}
 			>
-				{!isPreviousFromSameAuthor && <div className='triangle' />}
+				{!isPreviousFromSameAuthor && <div className={styles.triangle} />}
 
-				<div className='info'>
-					<div className='info-text'>
+				<div className={styles.info}>
+					<div className={styles.infoText}>
 						{isEdit ? (
 							<div
-								className='input-wrapper'
+								className={styles.inputWrapper}
 								style={{
 									flexDirection: isAlignedLeft
 										? 'row'
@@ -188,7 +188,7 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
 							>
 								<textarea
 									ref={textareaRef} // Ref for managing focus
-									className='edit-input'
+									className={styles.editInput}
 									value={text}
 									onChange={handleTextChange}
 									style={{ direction: dir }}
@@ -196,7 +196,7 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
 								<button onClick={handleSave}>
 									<img
 										src={SaveTextIcon}
-										className='save-icon'
+										className={styles.saveIcon}
 										alt='Save Icon'
 									/>
 								</button>
@@ -292,8 +292,8 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
 					/>
 				</div>
 
-				<div className='bottom-icons'>
-					<div className='chat-more-element'>
+				<div className={styles.bottomIcons}>
+					<div className={styles.chatMoreElement}>
 						<StatementChatMore statement={statement} />
 					</div>
 					<Evaluation

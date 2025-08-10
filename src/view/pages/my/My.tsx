@@ -5,7 +5,7 @@ import { useSelector } from 'react-redux';
 import GeneralHeader from '@/view/components/generalHeader/GeneralHeader';
 import { setUserAdvanceUserToDB } from '@/controllers/db/user/setUser';
 
-import './my.scss';
+import styles from './my.module.scss';
 import profilePicPH from '@/assets/images/user-page.png';
 import React, { useRef, useState } from 'react';
 import RadioButtonWithLabel from '@/view/components/radioButtonWithLabel/RadioButtonWithLabel';
@@ -39,7 +39,7 @@ const My = () => {
 		<div className='page'>
 			<GeneralHeader />
 
-			<div className='myContainer'>
+			<div className={styles.myContainer}>
 				<h1>
 					{t('Hello')} {user?.displayName}
 				</h1>
@@ -48,7 +48,7 @@ const My = () => {
 				<img
 					src={selectedImage || user?.photoURL || profilePicPH}
 					alt='Profile'
-					className='profilePicPH'
+					className={styles.profilePicPH}
 					onClick={handleImageClick}
 				/>
 				<input
@@ -58,8 +58,8 @@ const My = () => {
 					style={{ display: 'none' }}
 					onChange={handleImageChange}
 				/>
-				<p className='profilePicTitle'>Change profile picture</p>
-				<div className='radioContainer'>
+				<p className={styles.profilePicTitle}>Change profile picture</p>
+				<div className={styles.radioContainer}>
 					<h3>Profile Setting</h3>
 
 					<RadioButtonWithLabel
@@ -75,7 +75,7 @@ const My = () => {
 						onChange={() => setUserAdvanceUserToDB(true)}
 					/>
 					<Button
-						className='save'
+						className={styles.save}
 						text='save'
 						onClick={() => navigate('/')}
 					/>

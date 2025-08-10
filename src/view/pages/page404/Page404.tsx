@@ -1,4 +1,4 @@
-import './page404.scss';
+import styles from './page404.module.scss';
 import { useNavigate } from 'react-router';
 import img404 from '@/assets/images/404.png';
 
@@ -19,7 +19,7 @@ const Page404 = () => {
 	}
 
 	return (
-		<div className='page404'>
+		<div className={styles.page404}>
 			<img className='page404__cloud1' src={Cloud1} alt='Cloud 1' />
 			<img className='page404__cloud2' src={Cloud2} alt='Cloud 2' />
 			<img className='page404__cloud3' src={Cloud3} alt='Cloud 3' />

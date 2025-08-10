@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import './notificationPreferences.scss';
+import styles from './notificationPreferences.module.scss';
 import { updateNotificationPreferences } from '@/controllers/db/subscriptions/setSubscriptions';
 import { getStatementSubscriptionId } from '@/controllers/general/helpers';
 import { getAuth } from 'firebase/auth';
@@ -118,43 +118,43 @@ return;
 	}
 
 	return (
-		<div className="notification-preferences">
+		<div className={styles.notificationPreferences}>
 			<h3>Notification Settings</h3>
-			<p className="description">Choose how you want to be notified about updates to this statement</p>
+			<p className={styles.description}>Choose how you want to be notified about updates to this statement</p>
 			
-			<div className="preference-item">
-				<div className="preference-info">
-					<BellIcon className="icon" />
+			<div className={styles.preferenceItem}>
+				<div className={styles.preferenceInfo}>
+					<BellIcon className={styles.icon} />
 					<div>
 						<h4>In-App Notifications</h4>
 						<p>See notifications when you're using the app</p>
 					</div>
 				</div>
-				<label className="switch">
+				<label className={styles.switch}>
 					<input
 						type="checkbox"
 						checked={preferences.getInAppNotification}
 						onChange={(e) => handlePreferenceChange('getInAppNotification', e.target.checked)}
 						disabled={isSaving}
 					/>
-					<span className="slider"></span>
+					<span className={styles.slider}></span>
 				</label>
 			</div>
 
-			<div className="preference-item">
-				<div className="preference-info">
-					<PhoneIcon className="icon" />
+			<div className={styles.preferenceItem}>
+				<div className={styles.preferenceInfo}>
+					<PhoneIcon className={styles.icon} />
 					<div>
 						<h4>Push Notifications</h4>
 						<p>Get notified on all your devices even when the app is closed</p>
 						{!hasNotificationPermission && preferences.getPushNotification && (
-							<p className="warning-text">
+							<p className={styles.warningText}>
 								⚠️ Browser notifications must be enabled first
 							</p>
 						)}
 					</div>
 				</div>
-				<label className="switch">
+				<label className={styles.switch}>
 					<input
 						type="checkbox"
 						checked={preferences.getPushNotification}
@@ -163,30 +163,30 @@ return;
 						title={!hasNotificationPermission && !preferences.getPushNotification ? 
 							"Please enable browser notifications first" : ""}
 					/>
-					<span className="slider"></span>
+					<span className={styles.slider}></span>
 				</label>
 			</div>
 
-			<div className="preference-item">
-				<div className="preference-info">
-					<MailIcon className="icon" />
+			<div className={styles.preferenceItem}>
+				<div className={styles.preferenceInfo}>
+					<MailIcon className={styles.icon} />
 					<div>
 						<h4>Email Notifications</h4>
 						<p>Receive updates via email</p>
 					</div>
 				</div>
-				<label className="switch">
+				<label className={styles.switch}>
 					<input
 						type="checkbox"
 						checked={preferences.getEmailNotification}
 						onChange={(e) => handlePreferenceChange('getEmailNotification', e.target.checked)}
 						disabled={isSaving}
 					/>
-					<span className="slider"></span>
+					<span className={styles.slider}></span>
 				</label>
 			</div>
 
-			{isSaving && <p className="saving-indicator">Saving...</p>}
+			{isSaving && <p className={styles.savingIndicator}>Saving...</p>}
 		</div>
 	);
 };

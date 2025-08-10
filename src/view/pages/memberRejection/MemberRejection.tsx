@@ -1,4 +1,4 @@
-import './style.scss';
+import styles from './style.module.scss';
 import image from '@/assets/images/MemberRsejectionImage.png';
 import { logOut } from '@/controllers/db/authenticationUtils';
 
@@ -6,7 +6,7 @@ export default function MemberRejection() {
 	const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
 	return (
-		<div className='memberRejectionPage'>
+		<div className={styles.memberRejectionPage}>
 			<div className='memberRejectionPage__wrapper'>
 				<img
 					src={image}

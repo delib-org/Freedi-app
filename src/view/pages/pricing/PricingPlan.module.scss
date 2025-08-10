@@ -1,0 +1,85 @@
+.pricingPlan {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-around;
+    gap: 1rem;
+    height: 100%;
+    width: 100%;
+    max-width: 75ch;
+    margin: 0 auto;
+    padding: 1rem;
+    padding-bottom: 100px;
+    overflow: auto;
+
+    .title {
+        font-family: Inter;
+        font-size: 1.5rem;
+        font-weight: 500;
+    }
+    .text {
+        font-family: Roboto;
+        font-size: 0.9rem;
+        font-weight: 400;
+        line-height: 1.3rem;
+        text-align: center;
+        width: 70%;
+    }
+
+    .radioBoxesContainer {
+        display: flex;
+        flex-direction: column;
+        align-items: start;
+        gap: 1rem;
+
+        .radioBox svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        .pricingDescription {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            gap: 1rem;
+
+            .icon {
+                width: 2rem;
+                text-align: center;
+            }
+
+            .textArea {
+                flex: 1;
+                display: flex;
+                align-items: start;
+                justify-content: space-between;
+                width: 100%;
+                gap: 1rem;
+
+                .rangeText {
+                    font-family: Roboto;
+                    font-size: 1rem;
+                    font-weight: 400;
+                    line-height: 22px;
+                    letter-spacing: 0em;
+                    text-align: left;
+                    b {
+                        font-size: 0.8rem;
+                    }
+                }
+
+                .price {
+                    color: var(--light-blue);
+                }
+            }
+        }
+    }
+
+    .choosePlanButton {
+        margin-top: 1rem;
+        background-color: var(--light-blue);
+        color: white;
+        padding: 0.5rem 3rem;
+        font-size: 20px;
+    }
+}

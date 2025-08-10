@@ -1,8 +1,5 @@
 import React, { MouseEvent, useCallback, useEffect, useState } from 'react';
 
-// Styles
-import '@/view/pages/statement/components/createStatementModal/CreateStatementModal.scss';
-
 // React Flow imports
 import ReactFlow, {
 	Controls,

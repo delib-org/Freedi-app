@@ -1,0 +1,179 @@
+.fcmTokenDisplayToggle {
+  position: fixed;
+  right: 20px;
+  top: 100px;
+  background-color: #3367D6;
+  color: white;
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  z-index: 9998;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  
+  &:hover {
+    background-color: #2a56c6;
+  }
+}
+
+.fcmTokenDisplay {
+  position: fixed;
+  right: 20px;
+  top: 100px;
+  width: 360px;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 9999;
+  overflow: hidden;
+  
+  &-header {
+    background-color: #3367D6;
+    color: white;
+    padding: 12px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    
+    h3 {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 500;
+    }
+    
+    .closeButton {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 20px;
+      cursor: pointer;
+      padding: 0;
+      width: 24px;
+      height: 24px;
+      line-height: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      
+      &:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+      }
+    }
+  }
+  
+  &-content {
+    padding: 16px;
+  }
+  
+  .fcmTokenStatus {
+    margin-bottom: 16px;
+    font-size: 14px;
+    
+    .statusBadge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 500;
+      margin-left: 8px;
+      
+      &.granted {
+        background-color: #4caf50;
+        color: white;
+      }
+      
+      &.denied {
+        background-color: #f44336;
+        color: white;
+      }
+      
+      &.default {
+        background-color: #ffc107;
+        color: #333;
+      }
+    }
+  }
+  
+  .fcmTokenUser {
+    margin-bottom: 16px;
+    font-size: 14px;
+    
+    p {
+      margin: 4px 0;
+    }
+  }
+  
+  .fcmTokenValue {
+    margin-bottom: 16px;
+    
+    textarea {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 12px;
+      resize: none;
+    }
+  }
+  
+  .fcmTokenActions {
+    display: flex;
+    gap: 8px;
+    
+    button {
+      padding: 8px 12px;
+      border-radius: 4px;
+      font-size: 14px;
+      cursor: pointer;
+      border: none;
+      
+      &.copyButton {
+        background-color: #f5f5f5;
+        color: #333;
+        
+        &:hover {
+          background-color: #e0e0e0;
+        }
+        
+        &:disabled {
+          background-color: #f5f5f5;
+          color: #999;
+          cursor: not-allowed;
+        }
+      }
+      
+      &.testButton {
+        background-color: #4caf50;
+        color: white;
+        
+        &:hover {
+          background-color: #43a047;
+        }
+      }
+    }
+  }
+  
+  .requestPermissionButton {
+    width: 100%;
+    padding: 10px;
+    background-color: #4caf50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 14px;
+    cursor: pointer;
+    
+    &:hover {
+      background-color: #43a047;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .fcmTokenDisplay {
+    width: calc(100% - 40px);
+    right: 20px;
+  }
+}

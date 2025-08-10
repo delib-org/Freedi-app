@@ -1,5 +1,5 @@
 import { ComponentProps, FC } from "react";
-import "./IconButton.scss";
+import styles from './IconButton.module.scss';
 
 const IconButton: FC<ComponentProps<"button">>  = ({
 	className = "action-btn",
@@ -8,7 +8,7 @@ const IconButton: FC<ComponentProps<"button">>  = ({
 }) => {
 	return (
 		<button
-			className={`icon-button ${className}`}
+			className={`${styles.iconButton} ${className}`}
 			aria-label="Icon button"
 			{...props}
 		/>

@@ -1,10 +1,10 @@
 import { Link } from 'react-router';
-import './unAuthorizedPage.scss';
+import styles from './unAuthorizedPage.module.scss';
 import unAuthImage from '@/assets/images/secure-private-by-design.svg';
 
 const UnAuthorizedPage = () => {
 	return (
-		<main className='page unAuth'>
+		<main className={`page ${styles.unAuth}`}>
 			<h1>Page Not Authorized</h1>
 			<img src={unAuthImage} alt='401 - unauthorized page' />
 			<Link to='/home'>Please go to main Page</Link>

@@ -1,5 +1,5 @@
 import { FC } from 'react';
-import './StatementChatMore.scss';
+import styles from './StatementChatMore.module.scss';
 
 // Icons
 import { useNavigate } from 'react-router';
@@ -48,9 +48,9 @@ const StatementChatMore: FC<Props> = ({
 	};
 
 	const content = (
-		<div className='icon'>
+		<div className={styles.icon}>
 			{inAppNotificationsList.length > 0 && (
-				<div className='redCircle'>
+				<div className={styles.redCircle}>
 					{inAppNotificationsList.length < 10
 						? inAppNotificationsList.length
 						: `9+`}
@@ -62,7 +62,7 @@ const StatementChatMore: FC<Props> = ({
 
 	return asButton ? (
 		<button
-			className='statementChatMore'
+			className={styles.statementChatMore}
 			aria-label='Chat more button'
 			onClick={handleClick}
 		>
@@ -70,7 +70,7 @@ const StatementChatMore: FC<Props> = ({
 		</button>
 	) : (
 		<div
-			className='statementChatMore'
+			className={styles.statementChatMore}
 			onClick={handleClick}
 			role='button'
 			tabIndex={0}

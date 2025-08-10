@@ -18,6 +18,8 @@ import { useDocumentTitle } from './hooks/useDocumentTitle';
 import { useComponentState } from './hooks/useComponentState';
 import { useStatementViewTracking } from '@/hooks/useStatementViewTracking';
 import { analyticsService } from '@/services/analytics';
+import { updateLastReadTimestamp } from '@/controllers/db/subscriptions/setSubscriptions';
+import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 
 // Components
 import { StatementProvider } from './components/StatementProvider';
@@ -25,6 +27,7 @@ import { StatementErrorBoundary } from './components/StatementErrorBoundary';
 
 // Constants
 import { COMPONENT_STATES } from './constants';
+import { creatorSelector } from '@/redux/creator/creatorSlice';
 
 // Create selectors
 export const subStatementsSelector = createSelector(
@@ -97,12 +100,16 @@ const StatementMain: React.FC = () => {
 	});
 	// TODO: Use markInteraction when user votes or comments
 	
-	// Track initial view when statement loads
+	// Get user from store
+	const user = useAppSelector(creatorSelector);
+
+	// Track initial view when statement loads and update read timestamp
 	React.useEffect(() => {
-		if (statement && statementId) {
+		if (statement && statementId && user?.uid) {
 			analyticsService.trackStatementView(statementId, 'direct');
+			updateLastReadTimestamp(statementId, user.uid);
 		}
-	}, [statementId, statement]);
+	}, [statementId, statement, user?.uid]);
 
 	// Handle different states
 	const renderContent = () => {
