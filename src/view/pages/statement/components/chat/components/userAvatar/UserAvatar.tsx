@@ -3,7 +3,7 @@ import {
 	generateRandomLightColor,
 	getInitials,
 } from '@/controllers/general/helpers';
-import './UserAvatar.scss';
+import styles from './UserAvatar.module.scss';
 import { StatementContext } from '@/view/pages/statement/StatementCont';
 import { User } from 'delib-npm';
 
@@ -20,7 +20,7 @@ const UserAvatar: FC<UserAvatarProps> = ({ user }) => {
 
 	return (
 		<button
-			className='user-avatar'
+			className={styles.userAvatar}
 			onClick={() => handleShowTalker(user)}
 			style={
 				photoURL

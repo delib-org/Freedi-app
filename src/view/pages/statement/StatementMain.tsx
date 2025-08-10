@@ -16,6 +16,10 @@ import { useStatementListeners } from './hooks/useStatementListeners';
 import { useNotificationSetup } from './hooks/useNotificationSetup';
 import { useDocumentTitle } from './hooks/useDocumentTitle';
 import { useComponentState } from './hooks/useComponentState';
+import { useStatementViewTracking } from '@/hooks/useStatementViewTracking';
+import { analyticsService } from '@/services/analytics';
+import { updateLastReadTimestamp } from '@/controllers/db/subscriptions/setSubscriptions';
+import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 
 // Components
 import { StatementProvider } from './components/StatementProvider';
@@ -23,6 +27,7 @@ import { StatementErrorBoundary } from './components/StatementErrorBoundary';
 
 // Constants
 import { COMPONENT_STATES } from './constants';
+import { creatorSelector } from '@/redux/creator/creatorSlice';
 
 // Create selectors
 export const subStatementsSelector = createSelector(
@@ -86,6 +91,25 @@ const StatementMain: React.FC = () => {
 
 	// Set document title
 	useDocumentTitle({ statement, screen });
+	
+	// Track statement view and interaction time
+	const { elementRef } = useStatementViewTracking({
+		statementId: statementId || '',
+		threshold: 0.5,
+		minViewTime: 1000,
+	});
+	// TODO: Use markInteraction when user votes or comments
+	
+	// Get user from store
+	const user = useAppSelector(creatorSelector);
+
+	// Track initial view when statement loads and update read timestamp
+	React.useEffect(() => {
+		if (statement && statementId && user?.uid) {
+			analyticsService.trackStatementView(statementId, 'direct');
+			updateLastReadTimestamp(statementId, user.uid);
+		}
+	}, [statementId, statement, user?.uid]);
 
 	// Handle different states
 	const renderContent = () => {
@@ -132,7 +156,9 @@ const StatementMain: React.FC = () => {
 
 	return (
 		<StatementErrorBoundary>
-			{renderContent()}
+			<div ref={elementRef}>
+				{renderContent()}
+			</div>
 		</StatementErrorBoundary>
 	);
 };

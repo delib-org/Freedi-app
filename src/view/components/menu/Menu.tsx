@@ -8,7 +8,7 @@ import { Statement } from 'delib-npm';
 import { ComponentProps, FC, ReactNode, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import IconButton from '../iconButton/IconButton';
-import './Menu.scss';
+import styles from './Menu.module.scss';
 import useClickOutside from '@/controllers/hooks/useClickOutside';
 import { Link } from 'react-router';
 
@@ -48,7 +48,7 @@ const Menu: FC<MenuProps> = ({
 	const menuRef = useClickOutside(handleClickOutside);
 
 	return (
-		<div ref={(node) => { if (menuRef) menuRef.current = node; }} className='menu'>
+		<div ref={(node) => { if (menuRef) menuRef.current = node; }} className={styles.menu}>
 			<IconButton onClick={() => setIsOpen(!isMenuOpen)}>
 				{isHamburger ? (
 					<BurgerIcon style={{ color: iconColor }} />
@@ -58,20 +58,20 @@ const Menu: FC<MenuProps> = ({
 			</IconButton>
 
 			<div
-				className={`menu-content ${dir}${isCardMenu ? '--card-menu' : ''} ${isMenuOpen ? 'open' : ''}`}
+				className={`${styles.menuContent} ${styles[dir]}${isCardMenu ? styles[`${dir}--card-menu`] : ''} ${isMenuOpen ? styles.open : ''}`}
 			>
 				{isNavMenu && <div
-					className={`menu-header ${dir}`}
+					className={`${styles.menuHeader} ${styles[dir]}`}
 					style={{ backgroundColor }}
 				>
-					<h2 className='menu-title'>FreeDi</h2>
-					<Link to='/my' className='menu-user'>
+					<h2 className={styles.menuTitle}>FreeDi</h2>
+					<Link to='/my' className={styles.menuUser}>
 						<img
-							className='menu-avatar'
+							className={styles.menuAvatar}
 							src={avatarSrc}
 							alt='User avatar'
 						/>
-						<span className='menu-username'>
+						<span className={styles.menuUsername}>
 							{user?.displayName}
 						</span>
 					</Link>
@@ -79,7 +79,7 @@ const Menu: FC<MenuProps> = ({
 				{children}
 				{footer && (
 					<div
-						className='menu-footer'
+						className={styles.menuFooter}
 						onClick={(e) => e.stopPropagation()}
 						style={{ backgroundColor }}
 					>
@@ -87,7 +87,7 @@ const Menu: FC<MenuProps> = ({
 					</div>
 				)}
 				<button
-					className='invisibleBackground'
+					className={styles.invisibleBackground}
 					onClick={() => setIsOpen(false)}
 					aria-label='Close menu'
 				/>

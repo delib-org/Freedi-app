@@ -5,12 +5,12 @@ import { useSelector } from 'react-redux';
 import GeneralHeader from '@/view/components/generalHeader/GeneralHeader';
 import { setUserAdvanceUserToDB } from '@/controllers/db/user/setUser';
 
-import './my.scss';
+import styles from './my.module.scss';
 import profilePicPH from '@/assets/images/user-page.png';
 import React, { useRef, useState } from 'react';
 import RadioButtonWithLabel from '@/view/components/radioButtonWithLabel/RadioButtonWithLabel';
 import Button from '@/view/components/buttons/button/Button';
-import { useNavigate } from 'react-router';
+import { useNavigate, Link } from 'react-router';
 
 const My = () => {
 	const user = useSelector(creatorSelector);
@@ -39,7 +39,7 @@ const My = () => {
 		<div className='page'>
 			<GeneralHeader />
 
-			<div className='myContainer'>
+			<div className={styles.myContainer}>
 				<h1>
 					{t('Hello')} {user?.displayName}
 				</h1>
@@ -48,7 +48,7 @@ const My = () => {
 				<img
 					src={selectedImage || user?.photoURL || profilePicPH}
 					alt='Profile'
-					className='profilePicPH'
+					className={styles.profilePicPH}
 					onClick={handleImageClick}
 				/>
 				<input
@@ -58,8 +58,8 @@ const My = () => {
 					style={{ display: 'none' }}
 					onChange={handleImageChange}
 				/>
-				<p className='profilePicTitle'>Change profile picture</p>
-				<div className='radioContainer'>
+				<p className={styles.profilePicTitle}>Change profile picture</p>
+				<div className={styles.radioContainer}>
 					<h3>Profile Setting</h3>
 
 					<RadioButtonWithLabel
@@ -75,10 +75,17 @@ const My = () => {
 						onChange={() => setUserAdvanceUserToDB(true)}
 					/>
 					<Button
-						className='save'
+						className={styles.save}
 						text='save'
 						onClick={() => navigate('/')}
 					/>
+				</div>
+				
+				{/* Settings button using SCSS classes */}
+				<div className="btns" style={{ marginTop: '2rem' }}>
+					<Link to="/my/check-notifications" className="btn btn--seciondary">
+						{t('Check Notifications')}
+					</Link>
 				</div>
 			</div>
 		</div>

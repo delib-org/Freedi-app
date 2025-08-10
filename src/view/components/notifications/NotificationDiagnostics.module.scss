@@ -1,0 +1,192 @@
+.card {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin: 1rem 0;
+}
+
+.cardHeader {
+  padding: 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.cardTitle {
+  font-size: 1.25rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 0.5rem 0;
+}
+
+.cardDescription {
+  color: #6b7280;
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+.cardContent {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 2rem;
+  color: #6b7280;
+}
+
+.error {
+  color: #ef4444;
+  text-align: center;
+  padding: 2rem;
+}
+
+.diagnosticItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem;
+  background-color: #f9fafb;
+  border-radius: 0.5rem;
+}
+
+.diagnosticLabel {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.diagnosticValue {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.diagnosticActions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.smallButton {
+  padding: 0.25rem 0.75rem;
+  font-size: 0.875rem;
+}
+
+.fullButton {
+  width: 100%;
+}
+
+.actions {
+  padding-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.warningSection {
+  margin-top: 1rem;
+  padding: 0.75rem;
+  background-color: #fef3c7;
+  border-radius: 0.5rem;
+  border: 1px solid #f59e0b;
+}
+
+.warningContent {
+  display: flex;
+  gap: 0.5rem;
+
+  svg {
+    color: #f59e0b;
+    flex-shrink: 0;
+    margin-top: 0.125rem;
+  }
+}
+
+.warningTitle {
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+  color: #92400e;
+}
+
+.warningText {
+  font-size: 0.875rem;
+  color: #92400e;
+  margin: 0;
+}
+
+.helpSection {
+  margin-top: 1rem;
+  padding: 0.75rem;
+  background-color: #dbeafe;
+  border-radius: 0.5rem;
+}
+
+.helpContent {
+  display: flex;
+  gap: 0.5rem;
+
+  svg {
+    color: #3b82f6;
+    flex-shrink: 0;
+    margin-top: 0.125rem;
+  }
+}
+
+.helpTitle {
+  font-weight: 500;
+  margin-bottom: 0.25rem;
+  color: #1e40af;
+}
+
+.helpList {
+  list-style: disc;
+  list-style-position: inside;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.875rem;
+  color: #1e40af;
+}
+
+// Animations
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+// Responsive
+@media (max-width: 640px) {
+  .card {
+    margin: 0.5rem 0;
+  }
+
+  .cardHeader,
+  .cardContent {
+    padding: 1rem;
+  }
+
+  .diagnosticItem {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .diagnosticActions {
+    width: 100%;
+    justify-content: space-between;
+  }
+}

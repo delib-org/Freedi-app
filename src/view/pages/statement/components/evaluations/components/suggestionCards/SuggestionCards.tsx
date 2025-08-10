@@ -108,11 +108,7 @@ const SuggestionCards: FC<Props> = ({
 
 	if (!subStatements || subStatements.length === 0) {
 		return (
-			<EmptyScreen
-				setShowModal={() => {
-					return;
-				}}
-			/>
+			<EmptyScreen statement={statement}/>
 		);
 	}
 

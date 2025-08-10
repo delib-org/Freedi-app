@@ -1,0 +1,38 @@
+.checkbox {
+
+    font-family: "Roboto", sans-serif;
+    line-height: 150%;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    cursor: pointer;
+
+    input {
+        display: none;
+    }
+
+    .checkboxIcon {
+        min-width: 24px;
+
+        svg {
+            color: var(--icons-disabled);
+            width: 24px;
+            height: 24px;
+        }
+    }
+
+    .checkboxLabel {
+        flex: 1;
+        color: var(--text-disabled);
+    }
+
+    &.checked {
+        .checkboxLabel {
+            color: var(--text-body);
+        }
+
+        .checkboxIcon svg {
+            color: var(--icons-blue-dark);
+        }
+    }
+}

@@ -1,7 +1,7 @@
-import "./loaderGlass.scss";
+import styles from "./LoaderGlass.module.scss";
 
 const LoaderGlass = () => {
-	return <span className="loader-glass"></span>;
+	return <span className={styles.loaderGlass}></span>;
 };
 
 export default LoaderGlass;

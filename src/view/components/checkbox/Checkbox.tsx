@@ -2,7 +2,7 @@ import React, { FC } from 'react';
 import CheckboxCheckedIcon from '@/assets/icons/checkboxCheckedIcon.svg?react';
 import CheckboxEmptyIcon from '@/assets/icons/checkboxEmptyIcon.svg?react';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
-import './Checkbox.scss';
+import styles from './Checkbox.module.scss';
 import VisuallyHidden from '../accessibility/toScreenReaders/VisuallyHidden';
 
 interface CheckboxProps {
@@ -38,7 +38,7 @@ const Checkbox: FC<CheckboxProps> = ({
 
 	return (
 		<div
-			className={`checkbox ${checkedValue ? 'checked' : ''} ${className ?? ''}`}
+			className={`${styles.checkbox} ${checkedValue ? styles.checked : ''} ${className ?? ''}`}
 			onClick={handleChange}
 			onKeyDown={handleKeyDown}
 			role='checkbox'
@@ -48,7 +48,7 @@ const Checkbox: FC<CheckboxProps> = ({
 			<label htmlFor={`checkbox-${label}`}>
 				<VisuallyHidden labelName={t(label)} />
 			</label>
-			<div className='checkbox-icon' aria-hidden='true'>
+			<div className={styles.checkboxIcon} aria-hidden='true'>
 				{checkedValue ? <CheckboxCheckedIcon /> : <CheckboxEmptyIcon />}
 			</div>
 			<input
@@ -64,7 +64,7 @@ const Checkbox: FC<CheckboxProps> = ({
 					pointerEvents: 'none',
 				}}
 			/>
-			<div className='checkbox-label'>{t(label)}</div>
+			<div className={styles.checkboxLabel}>{t(label)}</div>
 		</div>
 	);
 };

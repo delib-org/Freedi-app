@@ -28,8 +28,19 @@ export async function getStatementFromDB(
 			statementId
 		);
 		const statementDB = await getDoc(statementRef);
+		
+		const data = statementDB.data();
+		if (!data) return undefined;
 
-		return statementDB.data() as Statement | undefined;
+		// Convert Firestore timestamps to milliseconds if they are Timestamp objects
+		if (data.lastUpdate && typeof data.lastUpdate === 'object' && typeof data.lastUpdate.toMillis === 'function') {
+			data.lastUpdate = data.lastUpdate.toMillis();
+		}
+		if (data.createdAt && typeof data.createdAt === 'object' && typeof data.createdAt.toMillis === 'function') {
+			data.createdAt = data.createdAt.toMillis();
+		}
+
+		return data as Statement;
 	} catch (error) {
 		console.error(error);
 

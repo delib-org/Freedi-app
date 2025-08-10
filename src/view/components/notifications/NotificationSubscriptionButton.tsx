@@ -1,9 +1,11 @@
-import React, { useEffect, useState } from 'react';
-import './notificationSubscriptionButton.scss';
+import React, { useEffect, useState, FC } from 'react';
+import styles from './notificationSubscriptionButton.module.scss';
 import { notificationService } from '@/services/notificationService';
 import { getAuth } from 'firebase/auth';
-import { doc, getDoc, getFirestore, deleteDoc } from 'firebase/firestore';
-import { Collections } from 'delib-npm';
+import { doc, getDoc, getFirestore } from 'firebase/firestore';
+import { Collections, StatementSubscription } from 'delib-npm';
+import { getStatementSubscriptionId } from '@/controllers/general/helpers';
+import { updateNotificationPreferences } from '@/controllers/db/subscriptions/setSubscriptions';
 import BellIcon from '@/assets/icons/bellIcon.svg?react';
 import BellSlashIcon from '@/assets/icons/bellSlashIcon.svg?react';
 
@@ -14,7 +16,7 @@ interface NotificationSubscriptionButtonProps {
 /**
  * Button that allows users to subscribe to or unsubscribe from push notifications for a statement
  */
-const NotificationSubscriptionButton: React.FC<NotificationSubscriptionButtonProps> = ({ statementId }) => {
+const NotificationSubscriptionButton: FC<NotificationSubscriptionButtonProps> = ({ statementId }) => {
 	const [isSubscribed, setIsSubscribed] = useState<boolean>(false);
 	const [isLoading, setIsLoading] = useState<boolean>(true);
 	const [permissionState, setPermissionState] = useState<NotificationPermission>('default');
@@ -43,18 +45,15 @@ const NotificationSubscriptionButton: React.FC<NotificationSubscriptionButtonPro
 					return;
 				}
 
-				// Initialize notification service to get token
-				const permissionState = notificationService.safeGetPermission();
-				if (permissionState === 'granted') {
-					await notificationService.initialize(auth.currentUser.uid);
-					const token = notificationService.getToken();
+				// Check subscription preferences
+				const subscriptionId = getStatementSubscriptionId(statementId, auth.currentUser.uid);
+				if (subscriptionId) {
+					const docRef = doc(db, Collections.statementsSubscribe, subscriptionId);
+					const docSnap = await getDoc(docRef);
 
-					if (token) {
-						// Check if subscription exists in the database
-						const docRef = doc(db, Collections.askedToBeNotified, `${token}_${statementId}`);
-						const docSnap = await getDoc(docRef);
-
-						setIsSubscribed(docSnap.exists());
+					if (docSnap.exists()) {
+						const data = docSnap.data() as StatementSubscription;
+						setIsSubscribed(data.getPushNotification ?? false);
 					}
 				}
 
@@ -72,7 +71,6 @@ const NotificationSubscriptionButton: React.FC<NotificationSubscriptionButtonPro
 		try {
 			setIsLoading(true);
 			const auth = getAuth();
-			const db = getFirestore();
 
 			if (!auth.currentUser) {
 				setIsLoading(false);
@@ -112,12 +110,19 @@ const NotificationSubscriptionButton: React.FC<NotificationSubscriptionButtonPro
 			}
 
 			if (isSubscribed) {
-				// Unsubscribe
-				const docRef = doc(db, Collections.askedToBeNotified, `${token}_${statementId}`);
-				await deleteDoc(docRef);
+				// Unsubscribe - update preference
+				await updateNotificationPreferences(statementId, auth.currentUser.uid, {
+					getPushNotification: false
+				});
+				// Also unregister from notification service
+				await notificationService.unregisterFromStatementNotifications(statementId);
 				setIsSubscribed(false);
 			} else {
-				// Subscribe
+				// Subscribe - update preference and register token
+				await updateNotificationPreferences(statementId, auth.currentUser.uid, {
+					getPushNotification: true
+				});
+				// Register for notifications
 				const success = await notificationService.registerForStatementNotifications(
 					auth.currentUser.uid,
 					token,
@@ -152,7 +157,7 @@ const NotificationSubscriptionButton: React.FC<NotificationSubscriptionButtonPro
 			}
 		>
 			{isLoading ? (
-				<span className="loading-indicator"></span>
+				<span className={styles.loadingIndicator}></span>
 			) : (
 				<>
 					{isSubscribed ? <BellIcon /> : <BellSlashIcon />}

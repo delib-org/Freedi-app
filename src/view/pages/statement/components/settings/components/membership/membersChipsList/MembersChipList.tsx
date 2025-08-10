@@ -1,6 +1,6 @@
 import { FC } from 'react';
 import Chip from '@/view/components/chip/Chip';
-import './MembersChipList.scss';
+import styles from './MembersChipList.module.scss';
 import { User } from 'delib-npm';
 
 interface MembersChipsListProps {
@@ -9,7 +9,7 @@ interface MembersChipsListProps {
 
 const MembersChipsList: FC<MembersChipsListProps> = ({ members }) => {
 	return (
-		<div className='members-chips-list'>
+		<div className={styles.membersChipsList}>
 			{members.map((member) => {
 				return <Chip key={member.uid} user={member} />;
 			})}

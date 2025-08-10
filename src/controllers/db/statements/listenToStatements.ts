@@ -33,7 +33,7 @@ import {
 	Creator,
 } from 'delib-npm';
 
-import { parse } from 'valibot';
+import { parse, safeParse, flatten } from 'valibot';
 import React from 'react';
 
 // Helpers
@@ -53,7 +53,7 @@ export const listenToStatementSubscription = (
 		return onSnapshot(statementsSubscribeRef, (statementSubscriptionDB) => {
 			try {
 				if (!statementSubscriptionDB.exists()) {
-					console.info('No subscription found');
+					// No subscription found
 
 					if (setHasSubscription) setHasSubscription(false);
 
@@ -249,8 +249,81 @@ export function listenToAllSubStatements(
 
 		return onSnapshot(q, (statementsDB) => {
 			statementsDB.docChanges().forEach((change) => {
-				const statement = parse(StatementSchema, change.doc.data());
-
+				const data = change.doc.data();
+				const docId = change.doc.id;
+				
+				// Use safeParse to get detailed validation information
+				const result = safeParse(StatementSchema, data);
+				
+				if (!result.success) {
+					// Get flattened error messages for easier reading
+					const flatErrors = flatten(result.issues);
+					
+					console.error('=== STATEMENT VALIDATION ERROR ===');
+					console.error('Document ID:', docId);
+					console.error('Full data received:', JSON.stringify(data, null, 2));
+					console.error('Data type:', typeof data);
+					
+					// Log detailed validation issues
+					console.error('Validation Issues:');
+					result.issues.forEach((issue, index) => {
+						console.error(`Issue ${index + 1}:`, {
+							kind: issue.kind,
+							type: issue.type,
+							input: issue.input,
+							expected: issue.expected,
+							received: issue.received,
+							message: issue.message,
+							path: issue.path?.map(p => p.key).join('.'),
+							requirement: issue.requirement,
+						});
+					});
+					
+					// Log flattened errors
+					console.error('Flattened errors:', flatErrors);
+					
+					// Log specific field analysis
+					if (data && typeof data === 'object') {
+						console.error('Field analysis:', {
+							hasRequiredFields: {
+								statement: 'statement' in data,
+								statementId: 'statementId' in data,
+								creatorId: 'creatorId' in data,
+								creator: 'creator' in data,
+								statementType: 'statementType' in data,
+								parentId: 'parentId' in data,
+								topParentId: 'topParentId' in data,
+								lastUpdate: 'lastUpdate' in data,
+								createdAt: 'createdAt' in data,
+								consensus: 'consensus' in data,
+							},
+							fieldTypes: {
+								statement: typeof data.statement,
+								statementId: typeof data.statementId,
+								creatorId: typeof data.creatorId,
+								creator: typeof data.creator,
+								statementType: typeof data.statementType,
+								parentId: typeof data.parentId,
+								topParentId: typeof data.topParentId,
+								lastUpdate: typeof data.lastUpdate,
+								createdAt: typeof data.createdAt,
+								consensus: typeof data.consensus,
+							},
+							problematicFields: {
+								resultsSettings: data.resultsSettings,
+								resultsSettingsType: typeof data.resultsSettings,
+								cutoffBy: data.resultsSettings?.cutoffBy,
+							}
+						});
+					}
+					console.error('=== END VALIDATION ERROR ===\n');
+					
+return;
+				}
+				
+				// Successfully parsed
+				const statement = result.output;
+				
 				if (statement.statementId === statementId) return;
 
 				switch (change.type) {

@@ -1,5 +1,5 @@
 import { FC, ReactNode } from 'react';
-import './QuestionStageRadioBtn.scss';
+import styles from './QuestionStageRadioBtn.module.scss';
 import ArrowUp from '@/assets/icons/arrowUpIcon.svg?react';
 import EvaluationsIcon from '@/assets/icons/evaluations2Icon.svg?react';
 import FlagIcon from '@/assets/icons/flagIcon.svg?react';
@@ -31,7 +31,7 @@ const QuestionStageRadioBtn: FC<Props> = ({ step, statement }) => {
 
 	return (
 		<div
-			className='question-stage-radio-btn'
+			className={styles.questionStageRadioBtn}
 			style={{ transform: isSelected ? 'scale(1.04)' : 'scale(1)' }}
 		>
 			<div
@@ -41,9 +41,9 @@ const QuestionStageRadioBtn: FC<Props> = ({ step, statement }) => {
 					opacity: isSelected ? 1 : 0.5,
 				}}
 			>
-				{stepInfo ? stepInfo.icon : <LightBulbIcon className='img' />}
+				{stepInfo ? stepInfo.icon : <LightBulbIcon className={styles.img} />}
 				{step === QuestionStep.suggestion && (
-					<div className='number'>{numberOfEvaluators}</div>
+					<div className={styles.number}>{numberOfEvaluators}</div>
 				)}
 			</div>
 			<button
@@ -56,7 +56,7 @@ const QuestionStageRadioBtn: FC<Props> = ({ step, statement }) => {
 				}}
 			>
 				<div
-					className='radio-button'
+					className={styles.radioButton}
 					style={{ backgroundColor: btnBackgroundColor }}
 				>
 					<input
@@ -93,7 +93,7 @@ export function getStepsInfo(
 			case QuestionStep.explanation:
 				return {
 					name: 'Explanation',
-					icon: <LightBulbIcon className='img' />,
+					icon: <LightBulbIcon className={styles.img} />,
 					color: '--green',
 					message: undefined,
 				};
@@ -101,7 +101,7 @@ export function getStepsInfo(
 			case QuestionStep.suggestion:
 				return {
 					name: 'Suggestions',
-					icon: <LightBulbIcon className='img' />,
+					icon: <LightBulbIcon className={styles.img} />,
 					color: '--settings-suggestions',
 					message: 'Please suggest a solution to the question',
 				};
@@ -109,7 +109,7 @@ export function getStepsInfo(
 			case QuestionStep.randomEvaluation:
 				return {
 					name: 'Random options',
-					icon: <EvaluationsIcon className='img' />,
+					icon: <EvaluationsIcon className={styles.img} />,
 					color: '--settings-first-evaluation',
 					message: `Please evaluate each solution in the next set of solutions. For each solution, indicate your rating using the smiley (positive) or frown (negative) icons`,
 				};
@@ -117,7 +117,7 @@ export function getStepsInfo(
 			case QuestionStep.topEvaluation:
 				return {
 					name: 'Top options',
-					icon: <ArrowUp className='img' />,
+					icon: <ArrowUp className={styles.img} />,
 					color: '--settings-second-evaluation',
 					message: 'Please evaluate the top solutions',
 				};
@@ -125,7 +125,7 @@ export function getStepsInfo(
 			case QuestionStep.voting:
 				return {
 					name: 'Voting',
-					icon: <HandIcon className='img' />,
+					icon: <HandIcon className={styles.img} />,
 					color: '--settings-voting',
 					message: 'Please chose your preferred solution',
 				};
@@ -133,7 +133,7 @@ export function getStepsInfo(
 			case QuestionStep.finished:
 				return {
 					name: 'Finished',
-					icon: <FlagIcon className='img' />,
+					icon: <FlagIcon className={styles.img} />,
 					color: '--settings-finished',
 					message:
 						'The voting process for this question has concluded',

@@ -1,4 +1,4 @@
-import { doc, updateDoc, setDoc, Timestamp, getDoc } from 'firebase/firestore';
+import { doc, updateDoc, setDoc, Timestamp, getDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
 import { FireStore } from '../config';
 import { getStatementSubscriptionId } from '@/controllers/general/helpers';
 import {
@@ -12,6 +12,7 @@ import {
 	Creator
 } from 'delib-npm';
 import { parse } from 'valibot';
+import { notificationService } from '@/services/notificationService';
 
 interface SetSubscriptionProps {
 	statement: Statement,
@@ -76,28 +77,37 @@ export async function setStatementSubscriptionToDB({
 		await setDoc(statementsSubscribeRef, parsedStatementSubscription, {
 			merge: true,
 		});
+
+		// If user wants push notifications and notification service is initialized, add their token
+		if (getPushNotification && notificationService.isInitialized()) {
+			const token = notificationService.getToken();
+			if (token) {
+				// Add the current FCM token to the subscription
+				await addTokenToSubscription(statementId, creator.uid, token);
+			}
+		}
 	} catch (error) {
 		console.error(error);
 	}
 }
 
-export async function updateSubscriberForStatementSubStatements(
-	statement: Statement,
+export async function updateLastReadTimestamp(
+	statementId: string,
 	userId: string
 ) {
 	try {
-		const statementsSubscribeId = `${userId}--${statement.statementId}`;
+		if(!statementId || !userId) throw new Error('statementId and userId are required');
+		const statementsSubscribeId = `${userId}--${statementId}`;
 
 		const statementsSubscribeRef = doc(
 			FireStore,
 			Collections.statementsSubscribe,
 			statementsSubscribeId
 		);
-		const newSubStatementsRead = {
-			totalSubStatementsRead: statement.totalSubStatements || 0,
-		};
 
-		await updateDoc(statementsSubscribeRef, newSubStatementsRead);
+		await updateDoc(statementsSubscribeRef, {
+			lastReadTimestamp: new Date().getTime()
+		});
 	} catch (error) {
 		console.error(error);
 	}
@@ -173,5 +183,104 @@ export async function updateMemberRole(
 		await updateDoc(statementSubscriptionRef, { role: newRole });
 	} catch (error) {
 		console.error('Error updating member role:', error);
+	}
+}
+
+/**
+ * Add a FCM token to a user's statement subscription
+ */
+export async function addTokenToSubscription(
+	statementId: string,
+	userId: string,
+	token: string
+): Promise<void> {
+	try {
+		const statementSubscriptionId = getStatementSubscriptionId(
+			statementId,
+			userId
+		);
+		if (!statementSubscriptionId)
+			throw new Error('Error in getting statementSubscriptionId');
+
+		const statementSubscriptionRef = doc(
+			FireStore,
+			Collections.statementsSubscribe,
+			statementSubscriptionId
+		);
+
+		// Add token to the tokens array if it doesn't exist
+		await updateDoc(statementSubscriptionRef, {
+			tokens: arrayUnion(token),
+			lastUpdate: Timestamp.now().toMillis()
+		});
+	} catch (error) {
+		console.error('Error adding token to subscription:', error);
+	}
+}
+
+/**
+ * Remove a FCM token from a user's statement subscription
+ */
+export async function removeTokenFromSubscription(
+	statementId: string,
+	userId: string,
+	token: string
+): Promise<void> {
+	try {
+		const statementSubscriptionId = getStatementSubscriptionId(
+			statementId,
+			userId
+		);
+		if (!statementSubscriptionId)
+			throw new Error('Error in getting statementSubscriptionId');
+
+		const statementSubscriptionRef = doc(
+			FireStore,
+			Collections.statementsSubscribe,
+			statementSubscriptionId
+		);
+
+		// Remove token from the tokens array
+		await updateDoc(statementSubscriptionRef, {
+			tokens: arrayRemove(token),
+			lastUpdate: Timestamp.now().toMillis()
+		});
+	} catch (error) {
+		console.error('Error removing token from subscription:', error);
+	}
+}
+
+/**
+ * Update notification preferences for a subscription
+ */
+export async function updateNotificationPreferences(
+	statementId: string,
+	userId: string,
+	preferences: {
+		getInAppNotification?: boolean;
+		getEmailNotification?: boolean;
+		getPushNotification?: boolean;
+	}
+): Promise<void> {
+	try {
+		const statementSubscriptionId = getStatementSubscriptionId(
+			statementId,
+			userId
+		);
+		if (!statementSubscriptionId)
+			throw new Error('Error in getting statementSubscriptionId');
+
+		const statementSubscriptionRef = doc(
+			FireStore,
+			Collections.statementsSubscribe,
+			statementSubscriptionId
+		);
+
+		await updateDoc(statementSubscriptionRef, {
+			...preferences,
+			lastUpdate: Timestamp.now().toMillis()
+		});
+	} catch (error) {
+		console.error('Error updating notification preferences:', error);
 	}
 }

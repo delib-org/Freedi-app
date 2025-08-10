@@ -17,7 +17,7 @@ import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 // Hooks & Helpers
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import { RootState } from '@/redux/store';
-import './MembersSettings.scss';
+import styles from './MembersSettings.module.scss';
 import { StatementSubscription, Role, Statement, Collections } from 'delib-npm';
 
 interface MembersSettingsProps {
@@ -78,9 +78,9 @@ const MembersSettings: FC<MembersSettingsProps> = ({ statement }) => {
 	const bannedUser = members.filter((member) => member.role === Role.banned);
 
 	return (
-		<div className='members-settings'>
+		<div className={styles.membersSettings}>
 			<button
-				className='link-anonymous'
+				className={styles.linkAnonymous}
 				onClick={() => handleShare(statement)}
 			>
 				{t('Send a link to anonymous users')}
@@ -92,7 +92,7 @@ const MembersSettings: FC<MembersSettingsProps> = ({ statement }) => {
 			<div className='title'>
 				{t('Joined members')} ({`${userCount}`})
 			</div>
-			<div className='members-box'>
+			<div className={styles.membersBox}>
 				{joinedMembers.map((member) => (
 					<MembershipLine key={member.user.uid} member={member} />
 				))}
@@ -101,7 +101,7 @@ const MembersSettings: FC<MembersSettingsProps> = ({ statement }) => {
 			<div className='title'>
 				{t('Banned users')} ({bannedUser.length})
 			</div>
-			<div className='members-box'>
+			<div className={styles.membersBox}>
 				{bannedUser.map((member) => (
 					<MembershipLine key={member.user.uid} member={member} />
 				))}

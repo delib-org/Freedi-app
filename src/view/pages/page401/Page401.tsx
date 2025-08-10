@@ -1,4 +1,4 @@
-import './page401.scss';
+import styles from './page401.module.scss';
 import { useNavigate } from 'react-router';
 import UnAuthorizedImage from '@/assets/images/401-img.png';
 import UnAuthorizedErrorImage from '@/assets/images/401-error.png';
@@ -11,7 +11,7 @@ const Page401 = () => {
 	}
 
 	return (
-		<div className='page401'>
+		<div className={styles.page401}>
 			<img
 				className='page401__titleImg'
 				src={UnAuthorizedErrorImage}
