@@ -6,7 +6,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { logger } from '@/services/logger/logger';
 import QuestionnaireQuestionSettings from './questionnaireQuestionSettings/QuestionnarieQuestionSettings';
 import { setStatements, statementSelectorById } from '@/redux/statements/statementsSlice';
-import { useParams } from 'react-router';
+import { useNavigate, useParams } from 'react-router';
 import { getStatementFromDB, getSubQuestions } from '@/controllers/db/statements/getStatement';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import CheckIcon from '@/assets/icons/checkIcon.svg?react';
@@ -119,6 +119,7 @@ const SortableQuestionItem: React.FC<SortableItemProps> = ({
 const QuestionnaireSettings: FC = () => {
     const { t } = useUserConfig();
     const dispatch = useDispatch();
+    const navigate = useNavigate();
     const { statementId } = useParams<{ statementId: string }>();
     const statement = useSelector(statementSelectorById(statementId));
     const { parentId } = statement || {};
@@ -259,6 +260,10 @@ const QuestionnaireSettings: FC = () => {
         
         setActiveId(null);
     };
+
+    function handleFinish(){
+        navigate(`/statement/${parentId}`);
+    }
     
     const saveQuestionOrder = async (reorderedQuestions: QuestionnaireQuestion[]) => {
         try {
@@ -410,11 +415,11 @@ const QuestionnaireSettings: FC = () => {
                     </section>)}
 
                 <div className={styles.footer}>
-                    <button className="btn btn--primary" onClick={handleSave}>
-                        Create Questionnaire
+                    <button className="btn btn--primary" onClick={handleFinish}>
+                        {t("Finish")}
                     </button>
                     <button className="btn btn--secondary" onClick={() => window.history.back()}>
-                        Cancel
+                        {t("Cancel")}
                     </button>
                 </div>
             </div>
