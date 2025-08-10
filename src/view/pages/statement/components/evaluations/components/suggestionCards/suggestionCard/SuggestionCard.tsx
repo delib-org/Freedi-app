@@ -44,6 +44,7 @@ const SuggestionCard: FC<Props> = ({
 	const { isAuthorized, isAdmin, creator } = useAuthorization(statement.statementId);
 	const { sort } = useParams();
 	const enableJoining = parentStatement?.statementSettings?.joiningEnabled;
+	const showEvaluation = parentStatement?.statementSettings?.showEvaluation;
 
 	// Redux Store
 	const dispatch = useAppDispatch();
@@ -100,7 +101,7 @@ const SuggestionCard: FC<Props> = ({
 			if (textContainer) {
 				const isOverflowing = textContainer.scrollHeight > textContainer.clientHeight;
 				const textElement = textContainer.parentElement;
-				
+
 				if (textElement) {
 					if (isOverflowing) {
 						textElement.classList.add(styles.hasOverflow);
@@ -160,6 +161,8 @@ const SuggestionCard: FC<Props> = ({
 		setIsCardMenuOpen(!isCardMenuOpen);
 	}
 
+	const selectedOptionIndicator = `8px solid ${statement.isChosen ? 'var(--approve)' : statementColor.backgroundColor || 'white'}`;
+
 	return (
 		<div
 			onContextMenu={(e) => handleRightClick(e)}
@@ -170,7 +173,7 @@ const SuggestionCard: FC<Props> = ({
 			}
 			style={{
 				top: `${statement.top || 0}px`,
-				borderLeft: `8px solid ${statement.isChosen ? 'var(--approve)' : statementColor.backgroundColor || 'white'}`,
+				borderLeft: showEvaluation ? selectedOptionIndicator : '12px solid transparent',
 				color: statementColor.color,
 				flexDirection: dir === 'ltr' ? 'row' : 'row-reverse',
 				opacity: statement.hide ? 0.5 : 1,
@@ -179,7 +182,7 @@ const SuggestionCard: FC<Props> = ({
 			ref={elementRef}
 			id={statement.statementId}
 		>
-			<div
+			{showEvaluation && <div
 				className={styles['selected-option']}
 				style={{
 					backgroundColor:
@@ -195,6 +198,7 @@ const SuggestionCard: FC<Props> = ({
 					{t('Selected')}
 				</div>
 			</div>
+			}
 			<div className={styles.main}>
 				<div className={styles.info}>
 					<div className={styles.text}>

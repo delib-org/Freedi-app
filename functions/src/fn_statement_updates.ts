@@ -47,9 +47,10 @@ export const updateParentOnChildUpdate = onDocumentUpdated({
         
         // Check if this update was triggered by our own function to prevent loops
         // Skip if only lastChildUpdate, lastUpdate, or lastSubStatements changed
-        const beforeCopy: any = { ...before };
-        const afterCopy: any = { ...after };
-        
+        // Create shallow copies and cast to allow deletion of optional fields
+        const beforeCopy = { ...before } as Partial<Statement>;
+        const afterCopy = { ...after } as Partial<Statement>;
+
         // Remove fields that this function updates
         delete beforeCopy.lastChildUpdate;
         delete beforeCopy.lastUpdate;
