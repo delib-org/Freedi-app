@@ -11,17 +11,26 @@ interface Props {
 	statement: Statement | undefined;
 	topParentStatement: Statement | undefined;
 	parentStatement: Statement | undefined;
+	isConsensusMap?: boolean;
+	isCollaborationMap?: boolean;
+	isMindMap?: boolean;
 }
 
 const StatementHeader: FC<Props> = ({
 	statement,
 	topParentStatement,
 	parentStatement,
+	isConsensusMap,
+	isCollaborationMap,
+	isMindMap
 }) => {
 	// Hooks
 	const { pathname } = useLocation();
 	const [isHeaderMenuOpen, setIsHeaderMenuOpen] = useState(false);
 	const [showInvitationPanel, setShowInvitationPanel] = useState(false);
+
+	const isMaps = (isConsensusMap || isCollaborationMap || isMindMap);
+	console.log(isMaps);
 
 	const { t, dir } = useUserConfig();
 
@@ -69,6 +78,7 @@ const StatementHeader: FC<Props> = ({
 	return (
 		<div className={`page__header ${dir}`}>
 			<StatementTopNav
+				isMaps={isMaps}
 				statement={statement}
 				parentStatement={parentStatement}
 				handleShare={handleShare}

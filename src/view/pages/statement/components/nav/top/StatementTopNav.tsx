@@ -30,6 +30,7 @@ interface Props {
   handleLogout: () => void;
   setIsHeaderMenuOpen: (value: boolean) => void;
   isHeaderMenuOpen: boolean;
+  isMaps: boolean;
 }
 
 const StatementTopNav: FC<Props> = ({
@@ -41,6 +42,7 @@ const StatementTopNav: FC<Props> = ({
   handleInvitePanel,
   isHeaderMenuOpen,
   handleShare,
+  isMaps = true,
 }) => {
   const { t, currentLanguage } = useUserConfig();
   const { user } = useAuthentication();
@@ -107,6 +109,7 @@ return;
           />
         )}
         <NavButtons
+          isMaps={isMaps}
           statement={statement}
           parentStatement={parentStatement}
           screen={screen}

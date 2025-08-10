@@ -19,6 +19,7 @@ interface NavButtonsProps {
 	headerStyle: { color: string; backgroundColor: string };
 	allowNavigation: boolean;
 	statement?: Statement;
+	isMaps: boolean;
 }
 
 const NavButtons: FC<NavButtonsProps> = ({
@@ -28,6 +29,7 @@ const NavButtons: FC<NavButtonsProps> = ({
 	allowNavigation,
 	statement,
 	parentStatement,
+	isMaps = true,
 }) => {
 	const handleNavigateToScreen = (targetScreen: Screen) => {
 		handleNavigation(targetScreen);
@@ -59,6 +61,7 @@ const NavButtons: FC<NavButtonsProps> = ({
 				{statement && (
 					<>
 						<ViewsDropdown
+							isMaps={isMaps}
 							statement={statement}
 							screen={screen}
 							headerStyle={headerStyle}

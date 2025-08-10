@@ -23,6 +23,7 @@ interface ViewsDropdownProps {
   screen: string | undefined;
   headerStyle: { color: string; backgroundColor: string };
   onNavigate: (screen: Screen) => void;
+  isMaps: boolean;
 }
 
 const ViewsDropdown: FC<ViewsDropdownProps> = ({
@@ -30,6 +31,7 @@ const ViewsDropdown: FC<ViewsDropdownProps> = ({
   screen,
   headerStyle,
   onNavigate,
+  isMaps = true,
 }) => {
   const { t } = useUserConfig();
   const [isOpen, setIsOpen] = useState(false);
@@ -63,6 +65,8 @@ const ViewsDropdown: FC<ViewsDropdownProps> = ({
     onNavigate(targetScreen);
     setIsOpen(false);
   };
+
+  if(!isMaps) return null;
 
   return (
     <div className={styles.viewsDropdown}>
