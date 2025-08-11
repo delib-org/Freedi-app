@@ -65,7 +65,10 @@ export default function GetInitialStatementData() {
 				}
 			}
 
-			const statementId = await createStatementWithSubscription({
+			dispatch(setShowNewStatementModal(false));
+			dispatch(clearNewStatement());
+			
+			const statementIdPromise = createStatementWithSubscription({
 				newStatementParent,
 				title,
 				description,
@@ -76,10 +79,10 @@ export default function GetInitialStatementData() {
 				dispatch,
 			});
 
-			dispatch(setShowNewStatementModal(false));
-			dispatch(clearNewStatement());
 			if (isHomePage) {
-				navigate(`/statement/${statementId}`);
+				statementIdPromise.then(statementId => {
+					navigate(`/statement/${statementId}`);
+				});
 			}
 		} catch (error) {
 			console.error(error);
