@@ -1,5 +1,3 @@
-$sortBtnPosition: 70px;
-$sortBtnPositionMobile: 55px;
 $addOptionSize: 60px;
 
 @media screen and (max-width: 600px) {
@@ -103,6 +101,10 @@ $addOptionSize: 60px;
   color: var(--text-headline);
   white-space: nowrap;
   line-height: 1;
+
+  @media screen and (max-width: 600px) {
+    font-size: 0.85rem; /* smaller label on mobile */
+  }
 }
 
 /* --- Directional grow on first load --- */
@@ -168,9 +170,15 @@ $addOptionSize: 60px;
   }
 }
 
+/* ===== Sort menu ===== */
+/* Defaults live on the parent element so children can read the vars */
 .sortMenu {
   position: relative;
   flex: auto;
+
+  /* default offsets (when pill is NOT showing) */
+  --sort-btn-position: 70px;
+  --sort-btn-position-mobile: 55px;
 
   &__item {
     display: flex;
@@ -189,16 +197,15 @@ $addOptionSize: 60px;
 
       &:nth-child(1) {
         z-index: 20;
-        left: $sortBtnPosition;
+        left: var(--sort-btn-position, 70px);
 
         @media screen and (max-width: 600px) {
-          left: calc($sortBtnPositionMobile);
+          left: var(--sort-btn-position-mobile, 55px);
         }
 
         .openNavIcon {
           transform: rotate(360deg);
         }
-
         .buttonName {
           opacity: 1;
           display: block;
@@ -207,16 +214,15 @@ $addOptionSize: 60px;
 
       &:nth-child(2) {
         z-index: 20;
-        left: calc($sortBtnPosition * 2);
+        left: calc(var(--sort-btn-position, 70px) * 2);
 
         @media screen and (max-width: 600px) {
-          left: calc($sortBtnPositionMobile * 2);
+          left: calc(var(--sort-btn-position-mobile, 50px) * 2);
         }
 
         .openNavIcon {
           transform: rotate(360deg);
         }
-
         .buttonName {
           opacity: 1;
           display: block;
@@ -225,16 +231,15 @@ $addOptionSize: 60px;
 
       &:nth-child(3) {
         z-index: 20;
-        left: calc($sortBtnPosition * 3);
+        left: calc(var(--sort-btn-position, 70px) * 3);
 
         @media screen and (max-width: 600px) {
-          left: calc($sortBtnPositionMobile * 3);
+          left: calc(var(--sort-btn-position-mobile, 50px) * 3);
         }
 
         .openNavIcon {
           transform: rotate(360deg);
         }
-
         .buttonName {
           opacity: 1;
           display: block;
@@ -243,22 +248,31 @@ $addOptionSize: 60px;
 
       &:nth-child(4) {
         z-index: 20;
-        left: calc($sortBtnPosition * 4);
+        left: calc(var(--sort-btn-position, 70px) * 4);
 
-        @media screen and (max-width: 600px) {
-          left: calc($sortBtnPositionMobile * 4);
+        @media screen and (max-width: 790px) {
+          left: calc(var(--sort-btn-position-mobile, 50px) * 4);
         }
 
         .openNavIcon {
           transform: rotate(360deg);
         }
-
         .buttonName {
           opacity: 1;
           display: block;
         }
       }
     }
+  }
+}
+
+/* Modifier applied when the pill is visible to push icons further */
+.sortMenuLearning {
+  --sort-btn-position: 90px;
+  --sort-btn-position-mobile: 65px;
+
+  @media screen and (max-width: 800px) {
+    --sort-btn-position: 70px;
   }
 }
 

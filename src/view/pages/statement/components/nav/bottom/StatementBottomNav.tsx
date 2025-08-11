@@ -113,6 +113,9 @@ const StatementBottomNav: FC<Props> = () => {
 		}
 	}
 
+	const sortMenuClass = `${styles.sortMenu} ${isLearningFace ? styles.sortMenuLearning : ''
+		}`;
+
 	return (
 		<>
 			<div
@@ -140,7 +143,9 @@ const StatementBottomNav: FC<Props> = () => {
 							onClick={handleAddOption}
 							data-cy="bottom-nav-mid-icon"
 						>
-							<PlusIcon style={{ color: statementColor.color }} />
+							{/* Show + only when short (post-learning) */}
+							{!isLearningFace && <PlusIcon style={{ color: statementColor.color }} />}
+
 							{isLearningFace && (
 								<span className={styles.addOptionButtonLabel} dir={dir}>
 									{t('Add Solution')}
@@ -149,7 +154,7 @@ const StatementBottomNav: FC<Props> = () => {
 						</button>
 					)}
 
-					<div className={styles.sortMenu}>
+					<div className={sortMenuClass}>
 						{sortItems.map((navItem, i) => (
 							<div
 								key={`item-id-${i}`}
