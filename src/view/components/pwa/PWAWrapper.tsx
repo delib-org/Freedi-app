@@ -132,11 +132,11 @@ const PWAWrapper: React.FC<PWAWrapperProps> = ({ children }) => {
 			});
 		}
 
-		const updateFunc = registerSW({
+		registerSW({
 				immediate: true, // Register immediately
 				onNeedRefresh() {
-					// For autoUpdate mode, this won't be called
-					// Updates happen automatically
+					// Prompt mode: let user decide when to update
+					console.info('New app version available. Refresh to update.');
 				},
 				onOfflineReady() {
 					console.info('App ready to work offline');
@@ -183,13 +183,9 @@ const PWAWrapper: React.FC<PWAWrapperProps> = ({ children }) => {
 				}
 			});
 
-			// Auto-update mode: no need to store update function
-
-			// Add event listeners for online/offline status
-			window.addEventListener('online', () => {
-				// App is online, check for updates
-				updateFunc(false).catch(console.error);
-			});
+			// Store update function for manual updates if needed
+			
+			// Note: Removed automatic update on online event to prevent refresh loops
 
 			// Listen for notification permission changes
 			const handlePermissionChange = () => {
