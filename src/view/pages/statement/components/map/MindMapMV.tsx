@@ -11,8 +11,9 @@ import { Statement, Results } from 'delib-npm';
 import { APIEndPoint, isChatMessage } from '@/controllers/general/helpers';
 import { listenToEvaluations } from '@/controllers/db/evaluation/getEvaluation';
 
-export function useMindMap() {
-	const { statementId } = useParams();
+export function useMindMap(statementIdPassed: string | null = null) {
+	const { statementId: paramsStatement } = useParams();
+	const statementId = statementIdPassed ?? paramsStatement;
 	const statement = useSelector(statementSelector(statementId));
 	const allDescendants: Statement[] = useSelector(
 		statementDescendantsSelector(statementId)

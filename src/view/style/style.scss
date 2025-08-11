@@ -1,12 +1,12 @@
-@use "./homePage.scss";
-@use "./input.scss";
-@use "./start.scss";
-@use "./room.scss";
-@use "./page.scss";
-@use "./buttons.scss";
-@use "./pageAnimation.scss";
+@use './homePage.scss';
+@use './input.scss';
+@use './start.scss';
+@use './room.scss';
+@use './page.scss';
+@use './buttons.scss';
+@use './pageAnimation.scss';
 
-@import "../../assets/fonts.css";
+@import '../../assets/fonts.css';
 
 :root {
 	writing-mode: horizontal-tb;
@@ -44,16 +44,16 @@
 	--result-text: white;
 
 	//question
-	--question: #47B4EF;
+	--question: #47b4ef;
 	--question-text: white;
 
-	--question-contrast: #1093FD;
+	--question-contrast: #1093fd;
 
 	//group
 	--group: #b893e7;
 	--group-text: white;
 
-	--group-contrast: #A080E0;
+	--group-contrast: #a080e0;
 
 	//evaluation
 	--agree: #57c6b2;
@@ -125,7 +125,7 @@
 	--btn-primary-default: #5f88e5;
 	--btn-primary-hover: #80a0ea;
 	--btn-primary-selected: #285edc;
-	--btn-primary-disabled: #C6CDDC;
+	--btn-primary-disabled: #c6cddc;
 
 	--btn-secondary: #5f88e5;
 	--btn-secondary-default: #5f88e5;
@@ -150,7 +150,7 @@
 	--btn-primary-default-contrast: #165bfa;
 	--btn-primary-hover-contrast: #467cfb;
 	--btn-primary-selected-contrast: #0544d7;
-	--btn-primary-disabled-contrast: #DCE0EA;
+	--btn-primary-disabled-contrast: #dce0ea;
 
 	--btn-secondary-contrast: #165bfa;
 	--btn-secondary-default-contrast: #165bfa;
@@ -159,16 +159,15 @@
 	--btn-secondary-selected-fill-contrast: #e5edff;
 	--btn-secondary-disabled-contrast: #424e6c;
 
-	--btn-purple-default: #A879E1;
-	--btn-purple-hover: ##B893E7;
-	--btn-purple-selected: #823FD4;
-	--btn-purple-disable: #DCC9F3;
+	--btn-purple-default: #a879e1;
+	--btn-purple-hover: ##b893e7;
+	--btn-purple-selected: #823fd4;
+	--btn-purple-disable: #dcc9f3;
 
-	--btn-purple-default-contrast: ##8A62D8;
-	--btn-purple-hover-contrast: ##A080E0;
-	--btn-purple-selected-contrast: #6432C8;
-	--btn-purple-disable-contrast: #D1C2F0;
-
+	--btn-purple-default-contrast: ##8a62d8;
+	--btn-purple-hover-contrast: ##a080e0;
+	--btn-purple-selected-contrast: #6432c8;
+	--btn-purple-disable-contrast: #d1c2f0;
 
 	--btn-white-default-contrast: #ffffff;
 	--btn-white-hover-contrast: #a9e0fe;
@@ -180,7 +179,7 @@
 	--btn-orange-selected-contrast: #f53105;
 
 	--add-btn-contrast: #0443d6;
-	--btn-disabled-contrast: #93A0BD;
+	--btn-disabled-contrast: #93a0bd;
 
 	// accessibility buttons
 	--btn-accessibility-icons: #5f88e5;
@@ -312,6 +311,7 @@
 
 	//icons
 	--icons-blue: #5f88e5;
+	--icons-primary: #3a60d6;
 	--icons-blue-dark: #1b45a7;
 	--icons-white: #ffffff;
 	--icons-red: #f74a4d;
@@ -608,14 +608,12 @@
 	--wrapper: 75ch;
 }
 
-
 * {
 	margin: 0;
 	padding: 0;
 	box-sizing: border-box;
-	font-family: "Roboto", sans-serif;
+	font-family: 'Roboto', sans-serif;
 }
-
 
 html {
 	margin: 0px;
@@ -627,7 +625,7 @@ body {
 	width: 100svw;
 	height: 100svh;
 	margin: 0px;
-	font-family: "Open Sans", sans-serif;
+	font-family: 'Open Sans', sans-serif;
 	font-size: 1.0625rem;
 	line-height: 150%;
 	background: var(--statementBackground);
@@ -663,8 +661,6 @@ h5 {
 	font-weight: 400;
 }
 
-
-
 h1,
 h2 {
 	text-align: center;
@@ -676,10 +672,9 @@ a {
 }
 
 b {
-	font-family: "Open Sans", sans-serif;
+	font-family: 'Open Sans', sans-serif;
 	user-select: text;
 }
-
 
 p {
 	font-size: 1rem;
@@ -698,7 +693,6 @@ p {
 	width: var(--wrapper);
 	margin: auto;
 }
-
 
 .wrapper {
 	flex: auto;
@@ -733,27 +727,23 @@ p {
 		font-size: var(--size15);
 	}
 
-
 	p {
 		color: var(--text-paragraph);
 		font-size: var(--size13);
 	}
 }
 
-
 .hand {
-	font-family: "Patrick Hand", cursive;
+	font-family: 'Patrick Hand', cursive;
 }
 
 .hidden {
 	display: none;
 }
 
-
 .scroll {
 	overflow-y: auto;
 }
-
 
 .icon {
 	cursor: pointer;
@@ -779,7 +769,6 @@ p {
 .draggable {
 	cursor: grab;
 }
-
 
 .href {
 	&--undecorated {
