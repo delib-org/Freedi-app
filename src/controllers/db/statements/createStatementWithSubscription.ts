@@ -42,23 +42,25 @@ export async function createStatementWithSubscription({
 
 	if (!_newStatement) throw new Error('newStatement is not defined');
 
-	const { statementId } = await setStatementToDB({
-		parentStatement: newStatementParent,
-		statement: _newStatement,
-	});
-
-	dispatch(setStatement(_newStatement));
+	// Immediately add to Redux with optimistic state
 	const now = new Date().getTime();
+	dispatch(setStatement(_newStatement));
 	dispatch(setStatementSubscription({
 		role: Role.admin,
 		statement: _newStatement,
-		statementsSubscribeId: getStatementSubscriptionId(statementId, user),
-		statementId: statementId,
+		statementsSubscribeId: getStatementSubscriptionId(_newStatement.statementId, user),
+		statementId: _newStatement.statementId,
 		user: user,
 		lastUpdate: now,
 		createdAt: now,
 		userId: user?.uid || '',
 	}));
+
+	// Then save to database in the background
+	const { statementId } = await setStatementToDB({
+		parentStatement: newStatementParent,
+		statement: _newStatement,
+	});
 
 	// Create subscription in Firestore with push notifications enabled if user has granted permission
 	const pushNotificationsEnabled = notificationService.isInitialized() && 

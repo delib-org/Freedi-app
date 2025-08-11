@@ -1,43 +1,28 @@
 // This file will be merged with the workbox-generated service worker
 
-// Force activation when a new version is available
+// Pre-cache the offline page without forcing immediate activation
 self.addEventListener('install', (event) => {
-  // Pre-cache the offline page
   event.waitUntil(
     caches.open('offline-cache').then((cache) => {
       return cache.add('/offline.html');
-    }).then(() => {
-      // Activate immediately
-      return self.skipWaiting();
     })
   );
 });
 
+// Clean up old caches on activation
 self.addEventListener('activate', (event) => {
-  // Take control of all clients immediately
   event.waitUntil(
-    Promise.all([
-      self.clients.claim(),
-      // Clean up old caches
-      caches.keys().then(cacheNames => {
-        return Promise.all(
-          cacheNames.filter(cacheName => {
-            // Delete old version caches
-            return cacheName.startsWith('workbox-') && cacheName !== 'workbox-precache';
-          }).map(cacheName => {
-            return caches.delete(cacheName);
-          })
-        );
-      })
-    ])
+    caches.keys().then(cacheNames => {
+      return Promise.all(
+        cacheNames.filter(cacheName => {
+          // Delete old version caches
+          return cacheName.startsWith('workbox-') && cacheName !== 'workbox-precache';
+        }).map(cacheName => {
+          return caches.delete(cacheName);
+        })
+      );
+    })
   );
-});
-
-// Respond to a 'SKIP_WAITING' message to force service worker activation
-self.addEventListener('message', (event) => {
-  if (event.data && event.data.type === 'SKIP_WAITING') {
-    self.skipWaiting();
-  }
 });
 
 // Show offline page when offline and navigation fails
