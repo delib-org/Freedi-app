@@ -120,8 +120,8 @@ const QuestionnaireSettings: FC = () => {
     const { t } = useUserConfig();
     const dispatch = useDispatch();
     const navigate = useNavigate();
-    const { statementId } = useParams<{ statementId: string }>();
-    const statement = useSelector(statementSelectorById(statementId));
+    const { questionnaireId } = useParams<{ questionnaireId: string }>();
+    const statement = useSelector(statementSelectorById(questionnaireId));
     const { parentId } = statement || {};
     const [title, setTitle] = useState<string | null>(null);
     const [description, setDescription] = useState<string | null>(null);
@@ -148,11 +148,11 @@ const QuestionnaireSettings: FC = () => {
     );
 
     useEffect(() => {
-        if (statementId && !statement) {
-            getStatementFromDB(statementId);
+        if (questionnaireId && !statement) {
+            getStatementFromDB(questionnaireId);
         }
 
-    }, [statementId]);
+    }, [questionnaireId]);
 
     useEffect(() => {
         if (parentId) {
@@ -219,7 +219,7 @@ const QuestionnaireSettings: FC = () => {
             const dataObj = Object.fromEntries(data.entries());
 
             updateQuestionnaireDetails({
-                statementId: statementId,
+                statementId: questionnaireId,
                 question: dataObj.question as string,
                 description: dataObj.description as string,
             }).then(() => {
@@ -269,7 +269,7 @@ const QuestionnaireSettings: FC = () => {
         try {
             const updatePromises = reorderedQuestions.map(question => 
                 updateQuestionOrder({
-                    questionnaireId: statementId!,
+                    questionnaireId: questionnaireId!,
                     questionnaireQuestionId: question.questionnaireQuestionId,
                     order: question.order
                 })

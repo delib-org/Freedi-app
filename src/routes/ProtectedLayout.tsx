@@ -10,7 +10,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Outlet, useNavigate, useParams } from 'react-router';
 
 export default function ProtectedLayout() {
-	const { statementId } = useParams();
+	const { statementId, questionnaireId } = useParams();
 	const dispatch = useDispatch();
 	const navigate = useNavigate();
 	const { loading, error, isAuthorized, isWaitingForApproval } = useAuthorization(statementId);
@@ -19,7 +19,7 @@ export default function ProtectedLayout() {
 
 	useEffect(() => {
 		if (!statement) {
-			getStatementFromDB(statementId).then((statement) => {
+			getStatementFromDB(statementId || questionnaireId).then((statement) => {
 				if (statement) {
 					dispatch(setStatement(statement));
 				}

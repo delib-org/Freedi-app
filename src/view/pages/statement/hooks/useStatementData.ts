@@ -9,7 +9,8 @@ import { useStatementUIState } from './useStatementUIState';
 
 export const useStatementData = () => {
 	// Get params
-	const { statementId, stageId, screen } = useStatementParams();
+	const { statementId: _statementId, stageId, screen, questionnaireId } = useStatementParams();
+	const statementId = _statementId || questionnaireId; // Use questionnaireId if statementId is not available
 
 	// Get statement data
 	const { statement, stage, topParentStatement, role } = useStatementSelectors(

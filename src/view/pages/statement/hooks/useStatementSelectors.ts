@@ -7,17 +7,19 @@ import {
 } from '@/redux/statements/statementsSlice';
 
 export const useStatementParams = () => {
-	const { statementId, stageId, screen } = useParams<{
+	const { statementId, stageId, screen, questionnaireId } = useParams<{
 		statementId?: string;
 		stageId?: string;
 		screen?: string;
+		questionnaireId?: string;
 	}>();
 
 	return useMemo(() => ({
 		statementId,
 		stageId,
-		screen
-	}), [statementId, stageId, screen]);
+		screen,
+		questionnaireId
+	}), [statementId, stageId, screen, questionnaireId]);
 };
 
 export const useStatementSelectors = (statementId?: string, stageId?: string) => {

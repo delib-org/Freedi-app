@@ -1,4 +1,4 @@
-import { User, Role, Statement, StatementType, QuestionType } from 'delib-npm';
+import { User, Role, Statement, StatementType, QuestionType, QuestionnaireQuestion } from 'delib-npm';
 import { createContext } from 'react';
 
 interface StatementContextProps {
@@ -12,6 +12,8 @@ interface StatementContextProps {
 	setNewQuestionType: (newQuestionType: QuestionType) => void;
 	newStatementType: StatementType; //used to determine the type of the new statement when created
 	newQuestionType: QuestionType; //used to determine the type of the new question when created
+	currentQuestion?: QuestionnaireQuestion; //used in questionnaire mode to track current question
+	currentQuestionStatement?: Statement; //the actual Statement for the current question
 }
 
 export const StatementContext = createContext<StatementContextProps>({
@@ -33,4 +35,6 @@ export const StatementContext = createContext<StatementContextProps>({
 	},
 	newStatementType: StatementType.group,
 	newQuestionType: QuestionType.multiStage,
+	currentQuestion: undefined,
+	currentQuestionStatement: undefined,
 });

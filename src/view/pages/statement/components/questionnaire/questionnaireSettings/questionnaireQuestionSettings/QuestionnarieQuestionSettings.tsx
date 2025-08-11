@@ -18,8 +18,8 @@ interface Props {
 const QuestionnaireQuestionSettings: React.FC<Props> = ({ setQuestion, question }) => {
 
   const { t } = useUserConfig();
-  const { statementId } = useParams<{ statementId: string }>();
-  const statement = useSelector(statementSelectorById(statementId)) as Statement;
+  const { questionnaireId } = useParams<{ questionnaireId: string }>();
+  const statement = useSelector(statementSelectorById(questionnaireId)) as Statement;
   const subQuestions = useSelector(subQuestionsSelector(statement?.parentId));
 
   const [showQuestion, setShowQuestion] = React.useState<boolean>(true);
@@ -40,7 +40,7 @@ const QuestionnaireQuestionSettings: React.FC<Props> = ({ setQuestion, question 
     questionType: question?.questionType || null,
     evaluationUI: question?.evaluationUI || null,
     cutoffBy: question?.cutoffBy || null,
-    statementId: question?.statementId || null
+    questionnaireId: question?.statementId || null
   });
   const [selectedStatement, setSelectedStatement] = React.useState<string>(question?.statementId || 'none');
 
@@ -76,7 +76,7 @@ const QuestionnaireQuestionSettings: React.FC<Props> = ({ setQuestion, question 
 
       setQuestionnaireQuestion(
         {
-          questionnaireId: statementId,
+          questionnaireId: questionnaireId,
           questionnaireQuestion: newQuestionData
         }
       );
@@ -107,8 +107,8 @@ const QuestionnaireQuestionSettings: React.FC<Props> = ({ setQuestion, question 
     const newStatement: Statement = {
       statementId: newStatementId,
       consensus: 0,
-      topParentId: statement?.topParentId || statementId,
-      parents: [...statement.parents, statementId],
+      topParentId: statement?.topParentId || questionnaireId,
+      parents: [...statement.parents, questionnaireId],
       creatorId: statement?.creatorId,
       creator: statement?.creator,
       lastUpdate: Date.now(),
@@ -162,7 +162,7 @@ const QuestionnaireQuestionSettings: React.FC<Props> = ({ setQuestion, question 
       // Wait for animation to complete before actually deleting
       setTimeout(() => {
         deleteQuestionnaireQuestion({
-          questionnaireId: statementId,
+          questionnaireId: questionnaireId,
           questionnaireQuestionId: question.questionnaireQuestionId,
         }).then(() => {
           setShowQuestion(false);
@@ -192,7 +192,7 @@ const QuestionnaireQuestionSettings: React.FC<Props> = ({ setQuestion, question 
         questionType !== originalValues.questionType ||
         evaluationUI !== originalValues.evaluationUI ||
         cutoffBy !== originalValues.cutoffBy ||
-        selectedStatement !== originalValues.statementId;
+        selectedStatement !== originalValues.questionnaireId;
       
       // Enable save button if required fields are filled AND there are changes
       setCanSave(requiredFieldsFilled && hasChanges);

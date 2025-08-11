@@ -1,5 +1,5 @@
 import { FC, useContext, useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router';
+import { useNavigate } from 'react-router';
 
 // Icons
 import AgreementIcon from '@/assets/icons/agreementIcon.svg?react';
@@ -19,6 +19,7 @@ import { useDecreaseLearningRemain } from '@/controllers/hooks/useDecreaseLearni
 import { useDispatch, useSelector } from 'react-redux';
 import { setNewStatementModal } from '@/redux/statements/newStatementSlice';
 import { statementSubscriptionSelector } from '@/redux/statements/statementsSlice';
+import { useStatementId } from '@/controllers/hooks/useStatementId';
 
 interface Props {
 	showNav?: boolean;
@@ -26,7 +27,7 @@ interface Props {
 
 const StatementBottomNav: FC<Props> = () => {
 
-	const { statementId } = useParams<{ statementId: string }>();
+	const statementId = useStatementId(); // Use custom hook to get correct statementId
 	const dispatch = useDispatch();
 	const navigate = useNavigate();
 

@@ -13,6 +13,7 @@ import {
 	statementSubscriptionSelector,
 } from '@/redux/statements/statementsSlice';
 import { creatorSelector } from '@/redux/creator/creatorSlice';
+import { useStatementId } from '@/controllers/hooks/useStatementId';
 
 import { sortSubStatements } from '../../statementsEvaluationCont';
 import SuggestionCard from './suggestionCard/SuggestionCard';
@@ -30,7 +31,8 @@ const SuggestionCards: FC<Props> = ({
 	selectionFunction,
 	subStatements: propSubStatements,
 }) => {
-	const { sort: sortFromUrl, statementId } = useParams();
+	const { sort: sortFromUrl } = useParams();
+	const statementId = useStatementId(); // Use custom hook
 	const location = useLocation();
 
 	const sort = propSort || sortFromUrl || SortType.newest;

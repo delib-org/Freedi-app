@@ -131,11 +131,15 @@ const protectedRoutes = [
 		element: <StatementMain />,
 	},
 	{
-		path: 'questionnaire/:statementId',
+		path: 'questionnaire/:questionnaireId',
 		element: <Questionnaire />,
 	},
 	{
-		path: 'questionnaire-settings/:statementId',
+		path: 'questionnaire/:questionnaireId/statement/:statementId',
+		element: <Questionnaire />
+	},
+	{
+		path: 'questionnaire-settings/:questionnaireId',
 		element: <QuestionnaireSettings />,
 	},
 ];

@@ -15,6 +15,30 @@
 	margin: auto;
 	overflow-y: auto;
 	flex: 1;
+	gap: 1rem;
+	padding: 1rem;
+}
+
+.questionSection {
+	margin-bottom: 1rem;
+	
+	.questionText {
+		font-size: 1.5rem;
+		font-weight: 600;
+		color: var(--text-primary);
+		margin: 0;
+		line-height: 1.4;
+	}
+}
+
+.descriptionSection {
+	margin-bottom: 1.5rem;
+	
+	p {
+		color: var(--text-secondary);
+		line-height: 1.6;
+		margin: 0;
+	}
 }
 
 .bottomNav {

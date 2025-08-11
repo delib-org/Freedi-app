@@ -1,26 +1,38 @@
 import { useContext } from 'react';
 import { StatementContext } from '../../../StatementCont';
 
-import { QuestionType } from 'delib-npm';
+import { QuestionnaireQuestion, QuestionType } from 'delib-npm';
 import MassConsensusAdmin from './massConsesusQuestion/MassConsensusAdmin';
 import SimpleQuestion from './simpleQuestion/SimpleQuestion';
 import { useLocation } from 'react-router';
 import StagePage from '../stage/StagePage';
+import { stat } from 'fs';
 
-const QuestionPage = () => {
+interface Props {
+	question?: QuestionnaireQuestion;
+}
+
+const QuestionPage = ({ question }: Props) => {
 	const location = useLocation();
 
 	const { statement } = useContext(StatementContext);
-	const massConsensus: boolean | undefined =
-		statement?.questionSettings?.questionType ===
-		QuestionType.massConsensus;
+	const StatementQuestionType = statement?.questionSettings?.questionType;
+	const questionQuestionType = question?.questionType;
 
-	if (location.pathname.includes('stage')) {
-		return <StagePage />;
-	} else if (massConsensus) {
-		return <MassConsensusAdmin />;
-	} else {
-		return <SimpleQuestion />;
+	const currentQuestionType = questionQuestionType ?? StatementQuestionType;
+
+	const isMassConsensus = currentQuestionType === QuestionType.massConsensus;
+	const isSimpleQuestion = currentQuestionType === QuestionType.simple;
+
+	switch (true) {
+		case location.pathname.includes('stage'):
+			return <StagePage />;
+		case isMassConsensus:
+			return <MassConsensusAdmin />;
+		case isSimpleQuestion:
+			return <SimpleQuestion />;
+		default:
+			return <SimpleQuestion />;
 	}
 };
 
