@@ -279,6 +279,7 @@ We welcome contributions from developers, researchers, and anyone interested in 
 
 ### Development Guidelines
 - **[Coding Style Guide](./CODING_STYLE_GUIDE.md)** - Comprehensive guide to coding standards and best practices
+- **[Application Architecture](./docs/FREEDI_ARCHITECTURE.md)** - Detailed architecture documentation including the unified statement model and semantic hierarchy
 - **[CLAUDE.md](./CLAUDE.md)** - Instructions for AI-assisted development
 - **[Branch Naming Convention](./Branch-naming-convention.md)** - Git workflow guidelines
 
