@@ -146,8 +146,9 @@ const PWAWrapper: React.FC<PWAWrapperProps> = ({ children }) => {
 					if (navigator.serviceWorker) {
 						navigator.serviceWorker.addEventListener('controllerchange', () => {
 							// New service worker has taken control
-							// Reload the page to ensure users get the latest version
-							window.location.reload();
+							// Instead of reloading immediately, just log it
+							// The autoUpdate mode will handle updates smoothly
+							console.info('New service worker has taken control');
 						});
 					}
 				},
@@ -161,7 +162,7 @@ const PWAWrapper: React.FC<PWAWrapperProps> = ({ children }) => {
 						registration?.update().catch(err => {
 							console.error('Error updating service worker:', err);
 						});
-					}, 60 * 60 * 1000); // Check every hour instead of every minute
+					}, 4 * 60 * 60 * 1000); // Check every 4 hours to reduce update frequency
 
 					// Check if we should show notification prompt
 					if ('Notification' in window && Notification.permission === 'default') {
