@@ -20,8 +20,6 @@ const SubQuestionsMap = ({ statement }: SubQuestionsMapProps) => {
 	)
 		return null;
 
-	if (true) return null; // Temporary disable for testing
-
 	if (!results) return null;
 	const defaultDepth = 1;
 	const filterResults = (results: Results): Results => {
@@ -51,18 +49,24 @@ const SubQuestionsMap = ({ statement }: SubQuestionsMapProps) => {
 					depth={currentDepth}
 					last={index === tResults.sub.length - 1}
 					hasChildren={res.sub.length !== 0}
+					height={calculateHeight(res)}
 				/>
 				{parseTree(filterResults(res), currentDepth)}
 			</div>
 		));
 	};
 
-	const calculateTopParentHeight = (cResults: Results, height = 0) => {
+	const calculateHeight = (
+		cResults: Results,
+		height = 0,
+		firstStatement = false
+	) => {
+		const number = firstStatement ? 0 : 1;
 		cResults.sub.forEach((res, index) => {
 			height++;
-			if (index === filteredResults.sub.length - 1) return height;
+			if (index === cResults.sub.length - number) return height;
 
-			height = calculateTopParentHeight(res, height);
+			height = calculateHeight(res, height, firstStatement);
 		});
 
 		return height;
@@ -77,7 +81,7 @@ const SubQuestionsMap = ({ statement }: SubQuestionsMapProps) => {
 				statement={results.top}
 				depth={defaultDepth}
 				hasChildren={results.sub.length > 0}
-				height={calculateTopParentHeight(filteredResults)}
+				height={calculateHeight(filteredResults, 0, true)}
 			/>
 			{parseTree(filteredResults, defaultDepth)}
 		</div>
