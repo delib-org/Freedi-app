@@ -6,6 +6,7 @@ import {
 	LoginType,
 	MassConsensusPageUrls,
 	MassConsensusProcess,
+	MassConsensusStep,
 } from 'delib-npm';
 import { defaultMassConsensusProcess } from '@/model/massConsensus/massConsensusModel';
 import { useSelector } from 'react-redux';
@@ -58,7 +59,16 @@ const MassConsensusProcessSettings = () => {
 		userDataQuestions.length > 0
 			? rawStepsDefault
 			: rawStepsDefault.filter(
-					(step) => step !== MassConsensusPageUrls.userDemographics
+					(step) => {
+						// Handle both old and new formats
+						if (typeof step === 'string') {
+							return step !== MassConsensusPageUrls.userDemographics;
+						} else if (step && typeof step === 'object' && 'screen' in step) {
+							return (step as MassConsensusStep).screen !== MassConsensusPageUrls.userDemographics;
+						}
+						
+						return true;
+					}
 				);
 	const { steps: stepsGoogle, processName: processNameGoogle } =
 		processList.loginTypes?.google || {};

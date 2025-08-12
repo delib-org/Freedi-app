@@ -4,12 +4,13 @@ import {
 	selectUserDataByStatementId,
 	selectUserQuestionsByStatementId,
 } from '@/redux/userData/userDataSlice';
-import { LoginType, MassConsensusPageUrls } from 'delib-npm';
+import { LoginType, MassConsensusPageUrls, MassConsensusStep } from 'delib-npm';
 import { useSelector } from 'react-redux';
 import { useLocation, useParams } from 'react-router';
+import { isNewStepFormat, convertLegacyStepsToNew } from '@/model/massConsensus/massConsensusModel';
 
 interface Props {
-	steps: MassConsensusPageUrls[];
+	steps: MassConsensusStep[];
 	loginType: LoginType;
 	currentStep: MassConsensusPageUrls;
 }
@@ -21,7 +22,17 @@ export function useMassConsensusSteps(): Props {
 	const loginType = user?.isAnonymous
 		? LoginType.anonymous
 		: LoginType.google;
-	let steps = useSelector(massConsensusStepsSelector(statementId, loginType));
+	let rawSteps = useSelector(massConsensusStepsSelector(statementId, loginType));
+	
+	// Convert to new format if needed
+	let steps: MassConsensusStep[] = [];
+	if (isNewStepFormat(rawSteps)) {
+		steps = rawSteps;
+	} else if (Array.isArray(rawSteps)) {
+		// Legacy format - convert to new format
+		steps = convertLegacyStepsToNew(rawSteps as MassConsensusPageUrls[], statementId || '');
+	}
+	
 	const pathSegments = location.pathname.split('/');
 	const userDataQuestions = useSelector(
 		selectUserQuestionsByStatementId(statementId || '')
@@ -35,7 +46,7 @@ export function useMassConsensusSteps(): Props {
 
 	if (!shouldShowUserDemographics) {
 		steps = steps.filter(
-			(step) => step !== MassConsensusPageUrls.userDemographics
+			(step) => step.screen !== MassConsensusPageUrls.userDemographics
 		);
 	}
 	const currentPage = pathSegments.find((segment) => {
@@ -60,7 +71,7 @@ export function useMassConsensusSteps(): Props {
 }
 
 export function getStepNavigation(
-	steps: MassConsensusPageUrls[],
+	steps: MassConsensusStep[],
 	currentStep: MassConsensusPageUrls = MassConsensusPageUrls.introduction
 ): {
 	nextStep: MassConsensusPageUrls | undefined;
@@ -76,24 +87,24 @@ export function getStepNavigation(
 
 	const nextStep =
 		nextStepIndex !== undefined
-			? steps[nextStepIndex] || MassConsensusPageUrls.introduction
+			? steps[nextStepIndex]?.screen || MassConsensusPageUrls.introduction
 			: undefined;
 	const previousStep =
 		previousStepIndex !== undefined
-			? steps[previousStepIndex] || MassConsensusPageUrls.introduction
+			? steps[previousStepIndex]?.screen || MassConsensusPageUrls.introduction
 			: undefined;
 	const resolvedCurrentStep =
-		steps[currentStepIndex] || MassConsensusPageUrls.introduction;
+		steps[currentStepIndex]?.screen || MassConsensusPageUrls.introduction;
 
 	return { nextStep, previousStep, currentStep: resolvedCurrentStep };
 }
 
 function getCurrentStepIndex(
-	steps: MassConsensusPageUrls[],
-	currentStep
+	steps: MassConsensusStep[],
+	currentStep: MassConsensusPageUrls
 ): number {
 	if (!steps) return -1;
-	const currentStepIndex = steps.findIndex((step) => step === currentStep);
+	const currentStepIndex = steps.findIndex((step) => step.screen === currentStep);
 
 	return currentStepIndex;
 }

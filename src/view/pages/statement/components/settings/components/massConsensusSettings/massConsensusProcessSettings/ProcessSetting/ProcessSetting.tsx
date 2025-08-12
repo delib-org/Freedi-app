@@ -1,25 +1,33 @@
 import React, { useState, useRef, useEffect } from 'react';
 import styles from './ProcessSettings.module.scss'
-import { defaultMassConsensusProcess } from '@/model/massConsensus/massConsensusModel';
-import { LoginType, MassConsensusPageUrls } from 'delib-npm';
+import { defaultMassConsensusProcess, isNewStepFormat, convertLegacyStepsToNew } from '@/model/massConsensus/massConsensusModel';
+import { LoginType, MassConsensusPageUrls, MassConsensusStep } from 'delib-npm';
 import { removeMassConsensusStep, reorderMassConsensusProcessToDB } from '@/controllers/db/massConsensus/setMassConsensus';
 import { useParams } from 'react-router';
 import DeleteIcon from '@/assets/icons/delete.svg?react';
 
 interface Props {
 	processName: string;
-	steps: MassConsensusPageUrls[];
+	steps: MassConsensusStep[] | MassConsensusPageUrls[];
 	loginType: LoginType;
 }
 
 const ProcessSetting = ({ processName, steps: _steps, loginType }: Props) => {
 	const { statementId } = useParams();
 
-	const [steps, setSteps] = useState<MassConsensusPageUrls[]>(_steps || defaultMassConsensusProcess);
+	// Convert to new format if needed
+	const initialSteps = isNewStepFormat(_steps) 
+		? _steps 
+		: convertLegacyStepsToNew(_steps as MassConsensusPageUrls[], statementId || '');
+	
+	const [steps, setSteps] = useState<MassConsensusStep[]>(initialSteps || defaultMassConsensusProcess);
 
 	useEffect(() => {
-		setSteps(_steps);
-	}, [_steps])
+		const convertedSteps = isNewStepFormat(_steps)
+			? _steps
+			: convertLegacyStepsToNew(_steps as MassConsensusPageUrls[], statementId || '');
+		setSteps(convertedSteps);
+	}, [_steps, statementId])
 
 	const dragItem = useRef<number | null>(null);
 	const dragOverItem = useRef<number | null>(null);
@@ -49,14 +57,14 @@ const ProcessSetting = ({ processName, steps: _steps, loginType }: Props) => {
 		}
 	};
 
-	function handleDelete(step: MassConsensusPageUrls) {
-		removeMassConsensusStep(statementId, loginType, step);
+	function handleDelete(step: MassConsensusStep) {
+		removeMassConsensusStep(statementId, loginType, step.screen);
 	}
 
 	return (
 		<div className={styles['process-setting']}>
 			<h4>{processName}</h4>
-			{steps && steps.map((process, index) => (
+			{steps && steps.map((step, index) => (
 				<div
 					key={`${loginType}-${index}`}
 					draggable
@@ -65,8 +73,8 @@ const ProcessSetting = ({ processName, steps: _steps, loginType }: Props) => {
 					onDragEnd={handleDragEnd}
 					className={styles['process-item']}
 				>
-					{index + 1}: {process}
-					<button onClick={() => handleDelete(process)}><DeleteIcon /></button>
+					{index + 1}: {step.screen}
+					<button onClick={() => handleDelete(step)}><DeleteIcon /></button>
 				</div>
 			))}
 		</div>
