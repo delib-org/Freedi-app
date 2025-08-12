@@ -60,7 +60,8 @@ export default function GetInitialStatementData() {
 				if (result && result.similarStatements && result.similarStatements.length > 0) {
 					setSimilarStatements(result.similarStatements);
 					setCurrentStep(SimilaritySteps.SIMILARITIES);
-					return;
+					
+return;
 				}
 			}
 
