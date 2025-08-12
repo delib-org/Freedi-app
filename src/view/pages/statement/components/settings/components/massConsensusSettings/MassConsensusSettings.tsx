@@ -1,12 +1,12 @@
 import React from 'react';
-import MassConsensusProcessSettings from './massConsensusProcessSettings/MassConsensusProcessSettings';
+import MCMultiQuestionSettings from './MCMultiQuestionSettings';
 import LimitOptionsSetting from './massConsensusProcessSettings/LimitOptionsSetting/LimitOptionsSetting';
 
 const MassConsensusSettings = () => {
 	return (
 		<>
 			<LimitOptionsSetting />
-			<MassConsensusProcessSettings />
+			<MCMultiQuestionSettings />
 		</>
 	);
 };

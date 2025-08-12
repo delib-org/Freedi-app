@@ -1,0 +1,118 @@
+.sessionsList {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.sessionCard {
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 1.25rem;
+  background: #fafafa;
+  transition: all 0.2s;
+  
+  &:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transform: translateY(-1px);
+  }
+}
+
+.sessionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.sessionTitle {
+  margin: 0 0 0.25rem 0;
+  font-size: 1.1rem;
+  color: #333;
+}
+
+.sessionDescription {
+  margin: 0;
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.statusBadge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  
+  &.draft {
+    background: #fff3cd;
+    color: #856404;
+  }
+  
+  &.active {
+    background: #d4edda;
+    color: #155724;
+  }
+  
+  &.completed {
+    background: #cce5ff;
+    color: #004085;
+  }
+  
+  &.archived {
+    background: #e2e3e5;
+    color: #383d41;
+  }
+}
+
+.sessionMeta {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.metaItem {
+  color: #666;
+  font-size: 0.85rem;
+}
+
+.sessionActions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.actionButton {
+  padding: 0.5rem 1rem;
+  border: 1px solid #ddd;
+  background: white;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  
+  &:hover {
+    background: #f8f9fa;
+    border-color: #999;
+  }
+  
+  &.publishButton {
+    background: #28a745;
+    color: white;
+    border-color: #28a745;
+    
+    &:hover {
+      background: #218838;
+    }
+  }
+  
+  &.archiveButton {
+    background: #6c757d;
+    color: white;
+    border-color: #6c757d;
+    
+    &:hover {
+      background: #5a6268;
+    }
+  }
+}

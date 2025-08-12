@@ -11,6 +11,7 @@ import creatorReducer from './creator/creatorSlice';
 import SubscriptionsReducer from './subscriptions/subscriptionsSlice';
 import userDataReducer from './userData/userDataSlice';
 import newStatementReducer from './statements/newStatementSlice';
+import mcSessionsReducer from './mcSessions/mcSessionsSlice';
 
 export const store = configureStore({
 	reducer: {
@@ -21,6 +22,7 @@ export const store = configureStore({
 		results: resultsSlice.reducer,
 		choseBys: choseBySlice.reducer,
 		massConsensus: massConsensusSlice.reducer,
+		mcSessions: mcSessionsReducer,
 		notifications: notificationsSlicer.reducer,
 		creator: creatorReducer,
 		subscriptions: SubscriptionsReducer.reducer,

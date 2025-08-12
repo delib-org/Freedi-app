@@ -484,5 +484,104 @@ service cloud.firestore {
       allow read: if request.auth.uid != null;
       allow write: if request.auth.uid == request.resource.data.creator.uid;
     }
+
+    // ============================================
+    // Multi-Question Mass Consensus Collections
+    // ============================================
+    
+    // Helper function to check if user is admin of the parent statement
+    function isStatementAdmin(statementId) {
+      let subId = string(request.auth.uid) + '--' + cleanPath(string(statementId));
+      let subscription = get(/databases/$(database)/documents/statementsSubscribe/$(subId)).data;
+      return subscription != null && subscription.role == 'admin';
+    }
+    
+    function isStatementCreator(statementId) {
+      let statement = get(/databases/$(database)/documents/statements/$(statementId)).data;
+      return statement != null && statement.creatorId == request.auth.uid;
+    }
+    
+    // mcSessions - Main sessions collection
+    match /mcSessions/{sessionId} {
+      function isSessionAdmin() {
+        let session = resource != null ? resource.data : request.resource.data;
+        return isStatementAdmin(session.statementId) || isStatementCreator(session.statementId);
+      }
+      
+      function isSessionCreator() {
+        return resource != null && resource.data.createdBy == request.auth.uid;
+      }
+      
+      // Everyone can read sessions
+      allow read: if isAuthenticated();
+      
+      // Only admins can create sessions
+      allow create: if isAuthenticated() && 
+        (isStatementAdmin(request.resource.data.statementId) || 
+         isStatementCreator(request.resource.data.statementId));
+      
+      // Only admins/creators can update
+      allow update: if isAuthenticated() && (isSessionAdmin() || isSessionCreator());
+      
+      // Only admins/creators can delete
+      allow delete: if isAuthenticated() && (isSessionAdmin() || isSessionCreator());
+      
+      // Questions subcollection
+      match /questions/{questionId} {
+        // Everyone can read questions
+        allow read: if isAuthenticated();
+        
+        // Only session admins can write questions
+        allow write: if isAuthenticated() && 
+          (isSessionAdmin() || isSessionCreator());
+      }
+    }
+    
+    // mcProgress - Progress tracking collection
+    match /mcProgress/{progressId} {
+      // Users can read their own progress, admins can read all
+      allow read: if isAuthenticated() && 
+        (resource.data.participantId == request.auth.uid || 
+         isStatementAdmin(resource.data.sessionId) ||
+         isStatementCreator(resource.data.sessionId));
+      
+      // Users can create/update their own progress
+      allow create: if isAuthenticated() && 
+        request.resource.data.participantId == request.auth.uid;
+      
+      allow update: if isAuthenticated() && 
+        resource.data.participantId == request.auth.uid;
+      
+      // Progress should never be deleted
+      allow delete: if false;
+    }
+    
+    // mcResponses - Response collection
+    match /mcResponses/{responseId} {
+      // Users can read their own responses, admins can read all
+      allow read: if isAuthenticated() && 
+        (resource.data.participantId == request.auth.uid || 
+         isStatementAdmin(resource.data.sessionId) ||
+         isStatementCreator(resource.data.sessionId));
+      
+      // Users can create their own responses
+      allow create: if isAuthenticated() && 
+        request.resource.data.participantId == request.auth.uid;
+      
+      // Responses are immutable once created
+      allow update: if false;
+      
+      // Responses should never be deleted
+      allow delete: if false;
+    }
+    
+    // mcAggregations - Aggregated results (read-only for users)
+    match /mcAggregations/{aggregationId} {
+      // Everyone can read aggregations
+      allow read: if isAuthenticated();
+      
+      // Only cloud functions can write aggregations
+      allow write: if false;
+    }
   }
 }

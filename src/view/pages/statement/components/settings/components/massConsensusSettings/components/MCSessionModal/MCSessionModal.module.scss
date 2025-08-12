@@ -1,0 +1,222 @@
+.modalContent {
+  width: 90vw;
+  max-width: 800px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  background: white;
+  border-radius: 8px;
+}
+
+.modalHeader {
+  padding: 1.5rem;
+  border-bottom: 1px solid #e0e0e0;
+  
+  h2 {
+    margin: 0;
+    color: #333;
+  }
+}
+
+.tabs {
+  display: flex;
+  border-bottom: 2px solid #e0e0e0;
+  background: #f8f9fa;
+}
+
+.tab {
+  flex: 1;
+  padding: 1rem;
+  background: none;
+  border: none;
+  font-size: 1rem;
+  color: #666;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s;
+  
+  &:hover {
+    background: #f0f0f0;
+  }
+  
+  &.active {
+    color: var(--primary-color);
+    font-weight: 600;
+    
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: var(--primary-color);
+    }
+  }
+}
+
+.tabContent {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.5rem;
+}
+
+.detailsTab {
+  .formGroup {
+    margin-bottom: 1.5rem;
+    
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: #333;
+      font-weight: 500;
+    }
+  }
+  
+  .input {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1rem;
+    
+    &:focus {
+      outline: none;
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 2px rgba(var(--primary-color-rgb), 0.1);
+    }
+  }
+  
+  .textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1rem;
+    resize: vertical;
+    font-family: inherit;
+    
+    &:focus {
+      outline: none;
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 2px rgba(var(--primary-color-rgb), 0.1);
+    }
+  }
+}
+
+.questionsTab {
+  .emptyQuestions {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: #666;
+    
+    p {
+      margin-bottom: 1.5rem;
+    }
+  }
+  
+  .addFirstQuestion,
+  .addQuestionButton {
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 6px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background 0.2s;
+    
+    &:hover {
+      background: var(--primary-color-dark);
+    }
+  }
+  
+  .addQuestionButton {
+    margin-top: 1rem;
+    width: 100%;
+  }
+}
+
+.settingsTab {
+  .settingGroup {
+    margin-bottom: 2rem;
+    
+    h4 {
+      margin: 0 0 0.5rem 0;
+      color: #333;
+    }
+  }
+  
+  .settingDescription {
+    margin: 0 0 1rem 0;
+    color: #666;
+    font-size: 0.9rem;
+  }
+  
+  .checkbox {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.75rem;
+    cursor: pointer;
+    
+    input[type="checkbox"] {
+      margin-right: 0.75rem;
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+    }
+    
+    span {
+      color: #333;
+      user-select: none;
+    }
+    
+    &:hover span {
+      color: #000;
+    }
+  }
+}
+
+.modalFooter {
+  padding: 1.5rem;
+  border-top: 1px solid #e0e0e0;
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  background: #f8f9fa;
+}
+
+.cancelButton,
+.saveButton {
+  padding: 0.75rem 1.5rem;
+  border-radius: 4px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.cancelButton {
+  background: white;
+  border: 1px solid #ddd;
+  color: #666;
+  
+  &:hover:not(:disabled) {
+    background: #f8f9fa;
+    border-color: #999;
+  }
+}
+
+.saveButton {
+  background: var(--primary-color);
+  border: 1px solid var(--primary-color);
+  color: white;
+  
+  &:hover:not(:disabled) {
+    background: var(--primary-color-dark);
+  }
+}

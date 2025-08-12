@@ -259,7 +259,7 @@ MCSessionManager/
 │
 └── MCSharedComponents/
     ├── MCModal (based on SettingsModal)
-    ├── MCQuestionList (native HTML5 drag-drop like ProcessSetting)
+    ├── MCQuestionList (using @dnd-kit for drag-drop)
     ├── MCStepBadge
     └── MCProgressBar
 ```
@@ -367,38 +367,103 @@ interface MCUIState {
 
 ## 7. Interaction Patterns
 
-### 7.1 Drag and Drop (Using Native HTML5 - Same as ProcessSetting)
-- Uses native HTML5 drag-and-drop API (no external library needed)
-- Pattern identical to existing `ProcessSetting.tsx` implementation
-- Visual feedback during drag (opacity change)
-- Drop zones highlighted
-- Smooth reordering animation
-- Touch-friendly drag handles
+### 7.1 Drag and Drop (Using @dnd-kit)
+- Uses @dnd-kit library for modern, accessible drag-and-drop
+- Touch-friendly and keyboard accessible
+- Smooth animations and auto-scrolling
+- Visual feedback during drag (opacity change and drag overlay)
+- Drop zones highlighted automatically
 
 ```typescript
-// Implementation pattern from ProcessSetting.tsx
-const dragItem = useRef<number | null>(null);
-const dragOverItem = useRef<number | null>(null);
+// Installation
+// npm install @dnd-kit/core @dnd-kit/sortable @dnd-kit/utilities
 
-const handleDragStart = (e: React.DragEvent<HTMLDivElement>, index: number) => {
-  dragItem.current = index;
-  e.dataTransfer.effectAllowed = 'move';
-};
+// Implementation pattern with @dnd-kit
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import {
+  useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
-const handleDragEnter = (e: React.DragEvent<HTMLDivElement>, index: number) => {
-  dragOverItem.current = index;
-};
+// Question List Component
+function MCQuestionList({ questions, onReorder }) {
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
-const handleDragEnd = () => {
-  if (dragItem.current !== null && dragOverItem.current !== null) {
-    const newQuestionsOrder = [...questions];
-    const draggedItemContent = newQuestionsOrder[dragItem.current];
-    newQuestionsOrder.splice(dragItem.current, 1);
-    newQuestionsOrder.splice(dragOverItem.current, 0, draggedItemContent);
-    setQuestions(newQuestionsOrder);
-    // Save to database
-  }
-};
+  const handleDragEnd = (event) => {
+    const { active, over } = event;
+    
+    if (active.id !== over.id) {
+      const oldIndex = questions.findIndex(q => q.questionId === active.id);
+      const newIndex = questions.findIndex(q => q.questionId === over.id);
+      const newOrder = arrayMove(questions, oldIndex, newIndex);
+      onReorder(newOrder);
+    }
+  };
+
+  return (
+    <DndContext
+      sensors={sensors}
+      collisionDetection={closestCenter}
+      onDragEnd={handleDragEnd}
+    >
+      <SortableContext
+        items={questions.map(q => q.questionId)}
+        strategy={verticalListSortingStrategy}
+      >
+        {questions.map((question) => (
+          <SortableQuestionCard key={question.questionId} question={question} />
+        ))}
+      </SortableContext>
+    </DndContext>
+  );
+}
+
+// Sortable Question Card
+function SortableQuestionCard({ question }) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: question.questionId });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} {...attributes}>
+      <div className="question-card">
+        <div className="drag-handle" {...listeners}>⋮⋮</div>
+        <div className="question-content">
+          {question.content.question}
+        </div>
+      </div>
+    </div>
+  );
+}
 ```
 
 ### 7.2 Progressive Disclosure
