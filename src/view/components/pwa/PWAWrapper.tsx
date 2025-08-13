@@ -132,11 +132,11 @@ const PWAWrapper: React.FC<PWAWrapperProps> = ({ children }) => {
 			});
 		}
 
-		const updateFunc = registerSW({
+		registerSW({
 				immediate: true, // Register immediately
 				onNeedRefresh() {
-					// For autoUpdate mode, this won't be called
-					// Updates happen automatically
+					// Prompt mode: let user decide when to update
+					console.info('New app version available. Refresh to update.');
 				},
 				onOfflineReady() {
 					console.info('App ready to work offline');
@@ -146,8 +146,9 @@ const PWAWrapper: React.FC<PWAWrapperProps> = ({ children }) => {
 					if (navigator.serviceWorker) {
 						navigator.serviceWorker.addEventListener('controllerchange', () => {
 							// New service worker has taken control
-							// Reload the page to ensure users get the latest version
-							window.location.reload();
+							// Instead of reloading immediately, just log it
+							// The autoUpdate mode will handle updates smoothly
+							console.info('New service worker has taken control');
 						});
 					}
 				},
@@ -161,7 +162,7 @@ const PWAWrapper: React.FC<PWAWrapperProps> = ({ children }) => {
 						registration?.update().catch(err => {
 							console.error('Error updating service worker:', err);
 						});
-					}, 60 * 60 * 1000); // Check every hour instead of every minute
+					}, 4 * 60 * 60 * 1000); // Check every 4 hours to reduce update frequency
 
 					// Check if we should show notification prompt
 					if ('Notification' in window && Notification.permission === 'default') {
@@ -182,13 +183,9 @@ const PWAWrapper: React.FC<PWAWrapperProps> = ({ children }) => {
 				}
 			});
 
-			// Auto-update mode: no need to store update function
-
-			// Add event listeners for online/offline status
-			window.addEventListener('online', () => {
-				// App is online, check for updates
-				updateFunc(false).catch(console.error);
-			});
+			// Store update function for manual updates if needed
+			
+			// Note: Removed automatic update on online event to prevent refresh loops
 
 			// Listen for notification permission changes
 			const handlePermissionChange = () => {

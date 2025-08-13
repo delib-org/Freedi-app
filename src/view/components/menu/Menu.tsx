@@ -40,12 +40,15 @@ const Menu: FC<MenuProps> = ({
 	const user = useSelector((state: RootState) => state.creator.creator);
 	const avatarSrc = user?.photoURL || DefaultAvatar;
 	const { backgroundColor } = useStatementColor({ statement });
+	const isUnderStatement = statement?.statementId !== undefined;
 
 	const handleClickOutside = useCallback(() => {
 		if (isMenuOpen) setIsOpen(false);
 	}, [isMenuOpen, setIsOpen]);
 
 	const menuRef = useClickOutside(handleClickOutside);
+
+	const mainClass = isUnderStatement? "": `menuContent--main--${dir}`
 
 	return (
 		<div ref={(node) => { if (menuRef) menuRef.current = node; }} className={styles.menu}>
@@ -58,7 +61,7 @@ const Menu: FC<MenuProps> = ({
 			</IconButton>
 
 			<div
-				className={`${styles.menuContent} ${styles[dir]}${isCardMenu ? styles[`${dir}--card-menu`] : ''} ${isMenuOpen ? styles.open : ''}`}
+				className={`${styles.menuContent} ${styles[mainClass]} ${styles[dir]}${isCardMenu ? styles[`${dir}--card-menu`] : ''} ${isMenuOpen ? styles.open : ''}`}
 			>
 				{isNavMenu && <div
 					className={`${styles.menuHeader} ${styles[dir]}`}

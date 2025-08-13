@@ -26,8 +26,10 @@ export async function getSimilarOptions(statementId: string, userInput: string, 
 		const data = await response.json();
 
 		const { similarStatements, similarTexts, userText } = data;
-		if (!similarStatements || !Array.isArray(similarStatements)) {
-			throw new Error('No similar statements found');
+		
+		// Return empty array if no similar statements found (this is not an error condition)
+		if (!similarStatements || !Array.isArray(similarStatements) || similarStatements.length === 0) {
+			return { similarStatements: [], similarTexts: [], userText: userText || null } as { similarStatements: Statement[], similarTexts: string[], userText: string | null };
 		}
 
 		return { similarStatements, similarTexts, userText } as { similarStatements: Statement[], similarTexts: string[], userText: string | null };

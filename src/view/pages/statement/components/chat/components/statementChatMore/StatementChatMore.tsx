@@ -7,10 +7,9 @@ import ChatIcon from '@/assets/icons/roundedChatDotIcon.svg?react';
 
 // Statements functions
 
-import { SimpleStatement, Statement } from 'delib-npm';
+import { SimpleStatement, Statement, NotificationType } from 'delib-npm';
 import { useSelector } from 'react-redux';
 import { inAppNotificationsSelector } from '@/redux/notificationsSlice/notificationsSlice';
-import { NotificationType } from '@/types/notification/Notification';
 import { creatorSelector } from '@/redux/creator/creatorSlice';
 
 interface Props {

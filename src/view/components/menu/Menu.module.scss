@@ -54,6 +54,16 @@
       opacity 0.3s ease-out,
       transform 0.3s ease-out;
 
+    &--main {
+      &--rtl {
+        left: 0px;
+      }
+
+      &--ltr {
+        right: 1rem;
+      }
+    }
+
     &.open {
       max-height: 800px;
       transform: translateY(1);
@@ -88,6 +98,7 @@
     color: white;
   }
 }
+
 .invisibleBackground {
   position: fixed;
   top: 0;

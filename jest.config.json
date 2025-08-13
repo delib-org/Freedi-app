@@ -7,7 +7,12 @@
 		"\\.(css|less|scss|sass)$": "identity-obj-proxy"
 	},
 	"transform": {
-		"^.+\\.(ts|tsx)$": "ts-jest"
+		"^.+\\.(ts|tsx)$": ["ts-jest", {
+			"tsconfig": {
+				"esModuleInterop": true,
+				"jsx": "react"
+			}
+		}]
 	},
 	"testMatch": [
 		"<rootDir>/src/**/__tests__/**/*.(ts|tsx|js)",
@@ -19,5 +24,10 @@
 		"!src/main.tsx",
 		"!src/vite-env.d.ts"
 	],
-	"moduleFileExtensions": ["ts", "tsx", "js", "jsx", "json", "node"]
+	"moduleFileExtensions": ["ts", "tsx", "js", "jsx", "json", "node"],
+	"globals": {
+		"ts-jest": {
+			"isolatedModules": true
+		}
+	}
 }

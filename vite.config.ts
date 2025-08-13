@@ -16,7 +16,7 @@ export default defineConfig(({ mode }) => {
 				include: '**/*.svg?react',
 			}),
 			VitePWA({
-				registerType: 'autoUpdate',
+				registerType: 'prompt', // Change from autoUpdate to prompt
 				includeAssets: ['favicon.ico', 'robots.txt', 'icons/*.png'],
 				manifest: false, // We're using our own manifest file
 				strategies: 'injectManifest',
@@ -26,9 +26,9 @@ export default defineConfig(({ mode }) => {
 				workbox: {
 					// Don't cache firebase messaging service worker
 					globIgnores: ['firebase-messaging-sw.js'],
-					// Force update on any content change
-					clientsClaim: true,
-					skipWaiting: true,
+					// Don't force immediate updates
+					clientsClaim: false,
+					skipWaiting: false,
 					// Set a very short cache expiration for any HTML or API content
 					// This ensures users always get the newest version
 					runtimeCaching: [

@@ -49,23 +49,26 @@ export default function GetInitialStatementData() {
 				setLoading(true);
 
 				//get api to find similar statements
-				const { similarStatements } = await getSimilarOptions(
+				const result = await getSimilarOptions(
 					newStatementParent.statementId,
 					title,
 					user.uid,
 					setError
 				);
 				setLoading(false);
-				if (similarStatements) {
-
-					setSimilarStatements(similarStatements);
+				
+				if (result && result.similarStatements && result.similarStatements.length > 0) {
+					setSimilarStatements(result.similarStatements);
 					setCurrentStep(SimilaritySteps.SIMILARITIES);
-
-					return;
+					
+return;
 				}
 			}
 
-			const statementId = await createStatementWithSubscription({
+			dispatch(setShowNewStatementModal(false));
+			dispatch(clearNewStatement());
+			
+			const statementIdPromise = createStatementWithSubscription({
 				newStatementParent,
 				title,
 				description,
@@ -76,10 +79,10 @@ export default function GetInitialStatementData() {
 				dispatch,
 			});
 
-			dispatch(setShowNewStatementModal(false));
-			dispatch(clearNewStatement());
 			if (isHomePage) {
-				navigate(`/statement/${statementId}`);
+				statementIdPromise.then(statementId => {
+					navigate(`/statement/${statementId}`);
+				});
 			}
 		} catch (error) {
 			console.error(error);

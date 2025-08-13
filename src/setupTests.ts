@@ -5,6 +5,28 @@ import { TextEncoder, TextDecoder } from 'util';
 global.TextEncoder = TextEncoder;
 global.TextDecoder = TextDecoder;
 
+// Mock import.meta for all files
+const mockImportMeta = {
+  env: {
+    DEV: false,
+    PROD: true,
+    MODE: 'test',
+    BASE_URL: '/'
+  }
+};
+
+// Replace import.meta in source files during transformation
+jest.mock('import.meta', () => mockImportMeta, { virtual: true });
+
+// Also define it globally
+Object.defineProperty(globalThis, 'import', {
+  value: {
+    meta: mockImportMeta
+  },
+  configurable: true,
+  writable: true
+});
+
 // Mock matchMedia for responsive tests
 Object.defineProperty(window, 'matchMedia', {
 	writable: true,
