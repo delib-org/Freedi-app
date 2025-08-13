@@ -41,12 +41,14 @@ interface ChatMessageCardProps {
 	statement: Statement;
 
 	previousStatement: Statement | undefined;
+	sideChat?: boolean;
 }
 
 const ChatMessageCard: FC<ChatMessageCardProps> = ({
 	parentStatement,
 	statement,
 	previousStatement,
+	sideChat = false,
 }) => {
 	const imageUrl = statement.imagesURL?.main ?? '';
 	const [image, setImage] = useState<string>(imageUrl);
@@ -152,7 +154,7 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
 
 	return (
 		<div
-			className={`chat-message-card ${isAlignedLeft && 'aligned-left'} ${dir}`}
+			className={`${styles.chatMessageCard} ${sideChat ? '' : styles.messageMargin} ${isAlignedLeft ? styles.alignedLeft : ''} ${styles[dir]}`}
 		>
 			{!isPreviousFromSameAuthor && (
 				<div className={styles.user}>
@@ -164,8 +166,8 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
 			<div
 				className={
 					isStatement
-						? 'message-box message-box--statement'
-						: 'message-box'
+						? `${styles.messageBox} ${styles['messageBox--statement']}`
+						: styles.messageBox
 				}
 				style={{
 					borderColor: isGeneral
@@ -173,7 +175,9 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
 						: statementColor.backgroundColor,
 				}}
 			>
-				{!isPreviousFromSameAuthor && <div className={styles.triangle} />}
+				{!isPreviousFromSameAuthor && (
+					<div className={styles.triangle} />
+				)}
 
 				<div className={styles.info}>
 					<div className={styles.infoText}>
@@ -296,18 +300,16 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
 					<div className={styles.chatMoreElement}>
 						<StatementChatMore statement={statement} />
 					</div>
-					<Evaluation
-						statement={statement}
-					/>
-					{shouldLinkToChildren && (
+					<Evaluation statement={statement} />
+					{/* {shouldLinkToChildren && (
 						<button
-							className='add-question-btn more-question'
+							className={`${styles.addQuestionBtn} ${styles.moreQuestion}`}
 							aria-label='Add question button'
 							onClick={() => setIsNewStatementModalOpen(true)}
 						>
 							<AddQuestionIcon />
 						</button>
-					)}
+					)} */}
 				</div>
 				{isNewStatementModalOpen && (
 					<CreateStatementModal

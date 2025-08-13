@@ -2,6 +2,7 @@ import { resultsSettingsDefault } from '@/controllers/db/statements/setStatement
 import { Statement, StatementType, Access } from 'delib-npm';
 
 export const defaultStatementSettings = {
+	hasChat: true,
 	enhancedEvaluation: true,
 	showEvaluation: true,
 	enableAddVotingOption: true,
@@ -32,6 +33,6 @@ export const defaultEmptyStatement: Statement = {
 	statementSettings: defaultStatementSettings,
 	hasChildren: true,
 	membership: {
-		access: Access.openToAll
-	}
+		access: Access.openToAll,
+	},
 } as const;

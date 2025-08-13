@@ -14,7 +14,9 @@
 		gap: 1rem;
 		padding-top: 0.5rem;
 	}
-
+	.messageSideBox {
+		width: 80%;
+	}
 	.messageBox {
 		height: fit-content;
 		display: flex;
@@ -61,7 +63,7 @@
 			border-top: 2px solid var(--statementBackground);
 			padding-top: 0.5rem;
 
-			>div {
+			> div {
 				display: flex;
 			}
 
@@ -83,11 +85,12 @@
 				direction: rtl;
 			}
 		}
-
-		.messageBox {
-			border-right: 0.65rem solid;
+		.messageMargin {
 			margin-left: 2rem;
 			margin-right: 1rem;
+		}
+		.messageBox {
+			border-right: 0.65rem solid;
 
 			&--statement {
 				border-right: 0rem solid !important;
@@ -115,9 +118,7 @@
 			@media screen and (max-width: 500px) {
 				margin-right: 0rem;
 				margin-left: 0rem;
-
 			}
-
 
 			.triangle {
 				clip-path: polygon(0 0, 0% 100%, 70% 0);

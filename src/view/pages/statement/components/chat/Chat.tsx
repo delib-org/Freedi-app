@@ -12,10 +12,17 @@ import Description from '../evaluations/components/description/Description';
 import { Statement } from 'delib-npm';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 
-let firstTime = true;
-let numberOfSubStatements = 0;
+interface ChatProps {
+	sideChat?: boolean;
+	firstTime?: boolean;
+	numberOfSubStatements?: number;
+}
 
-const Chat: FC = () => {
+const Chat: FC<ChatProps> = ({
+	sideChat = false,
+	firstTime = true,
+	numberOfSubStatements = 0,
+}) => {
 	const chatRef = useRef<HTMLDivElement>(null);
 	const { statementId } = useParams();
 	const { statement } = useContext(StatementContext);
@@ -115,6 +122,7 @@ const Chat: FC = () => {
 						parentStatement={statement}
 						statement={statementSub}
 						previousStatement={subStatements[index - 1]}
+						sideChat={sideChat}
 					/>
 				</div>
 			))}
@@ -123,7 +131,7 @@ const Chat: FC = () => {
 
 			{statement && (
 				<div className={styles.input}>
-					<ChatInput statement={statement} />
+					<ChatInput statement={statement} sideChat={sideChat} />
 				</div>
 			)}
 			<div>

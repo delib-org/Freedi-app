@@ -11,6 +11,7 @@ import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { useAuthorization } from '@/controllers/hooks/useAuthorization';
 import OnlineUsers from '../nav/online/OnlineUsers';
 import SubQuestionsMap from '../subQuestionsMap/SubQuestionsMap';
+import ChatPanel from '../chat/components/chatPanel/ChatPanel';
 
 const Switch = () => {
 	const { statement } = useContext(StatementContext);
@@ -31,10 +32,10 @@ const Switch = () => {
 	}
 
 	function handleStartEdit() {
-    if (isAdmin) {
-      setEdit(true);
-    }
-  }
+		if (isAdmin) {
+			setEdit(true);
+		}
+	}
 
 	return (
 		<main className='page__main'>
@@ -67,6 +68,7 @@ const Switch = () => {
 			)}
 			<OnlineUsers statementId={statement?.statementId} />
 			<SubQuestionsMap statement={statement} />
+			<ChatPanel />
 			<SwitchScreen statement={statement} role={role} />
 		</main>
 	);
