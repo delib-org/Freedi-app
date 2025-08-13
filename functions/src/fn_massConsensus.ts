@@ -1,241 +1,274 @@
-import { db } from '.';
-import { logger, Request, Response } from 'firebase-functions/v1';
-import { Collections, MassConsensusMember, Statement, StatementType } from 'delib-npm';
-import { FieldValue } from 'firebase-admin/firestore';
+import { db } from ".";
+import { logger, Request, Response } from "firebase-functions/v1";
+import {
+  Collections,
+  MassConsensusMember,
+  Statement,
+  StatementType,
+} from "delib-npm";
+import { FieldValue } from "firebase-admin/firestore";
 
 export const getInitialMCData = async (req: Request, res: Response) => {
-	try {
-		const statementId = req.query.statementId as string;
+  try {
+    const statementId = req.query.statementId as string;
 
-		if (!statementId?.trim()) {
-			res.status(400).send({
-				error: 'statementId is required',
-				ok: false,
-			});
-			logger.error('statementId is required', { statementId });
+    if (!statementId?.trim()) {
+      res.status(400).send({
+        error: "statementId is required",
+        ok: false,
+      });
+      logger.error("statementId is required", { statementId });
 
-			return;
-		}
+      return;
+    }
 
-		const statementDB = await db
-			.collection(Collections.statements)
-			.doc(statementId)
-			.get();
+    const statementDB = await db
+      .collection(Collections.statements)
+      .doc(statementId)
+      .get();
 
-		const statement = statementDB.data();
-		if (!statement) {
-			res.status(400).send({ error: 'statement not found', ok: false });
-			logger.error('Statement not found', { statementId });
+    const statement = statementDB.data();
+    if (!statement) {
+      res.status(400).send({ error: "statement not found", ok: false });
+      logger.error("Statement not found", { statementId });
 
-			return;
-		}
+      return;
+    }
 
-		res.send({ statement, ok: true });
-	} catch (error) {
-		const errorMessage =
-			error instanceof Error ? error.message : 'Unknown error occurred';
-		res.status(500).send({ error: errorMessage, ok: false });
-		logger.error(errorMessage, { statementId: req.query.statementId });
+    res.send({ statement, ok: true });
+  } catch (error) {
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error occurred";
+    res.status(500).send({ error: errorMessage, ok: false });
+    logger.error(errorMessage, { statementId: req.query.statementId });
 
-		return;
-	}
+    return;
+  }
 };
 
 export const addMassConsensusMember = async (req: Request, res: Response) => {
-	try {
-		const { statementId, lastUpdate, email, creator }: MassConsensusMember = req.body;
+  try {
+    const { statementId, lastUpdate, email, creator }: MassConsensusMember =
+      req.body;
 
-		if (!statementId?.trim() || !email?.trim() || !lastUpdate || !creator) {
-			res.status(400).send({ error: 'Missing required fields', ok: false });
+    if (!statementId?.trim() || !email?.trim() || !lastUpdate || !creator) {
+      res.status(400).send({ error: "Missing required fields", ok: false });
 
-			return;
-		}
+      return;
+    }
 
-		const newMember: MassConsensusMember = {
-			statementId,
-			lastUpdate,
-			email,
-			creator,
-		};
-		await db.collection(Collections.massConsensusMembers).doc(creator.uid).set(newMember);
+    const newMember: MassConsensusMember = {
+      statementId,
+      lastUpdate,
+      email,
+      creator,
+    };
+    await db
+      .collection(Collections.massConsensusMembers)
+      .doc(creator.uid)
+      .set(newMember);
 
-		res.send({ message: 'Member added successfully', ok: true });
-	} catch (error) {
-		const errorMessage =
-			error instanceof Error ? error.message : 'Unknown error occurred';
-		console.error(error);
-		res.status(500).send({ error: errorMessage, ok: false });
-	}
+    res.send({ message: "Member added successfully", ok: true });
+  } catch (error) {
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error occurred";
+    console.error(error);
+    res.status(500).send({ error: errorMessage, ok: false });
+  }
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function addOptionToMassConsensus(ev: any) {
-	try {
+  try {
+    const newStatement = (ev.data?.data() as Statement) || undefined;
+    if (!newStatement) return;
+    if (newStatement.statementType !== StatementType.option) return;
 
-		const newStatement = ev.data?.data() as Statement || undefined;
-		if (!newStatement) return;
-		if (newStatement.statementType !== StatementType.option) return;
+    const parentRef = db
+      .collection(Collections.statements)
+      .doc(newStatement.parentId);
 
-		const parentRef = db.collection(Collections.statements).doc(newStatement.parentId);
+    await db.runTransaction(async (transaction) => {
+      const parentDoc = await transaction.get(parentRef);
+      if (!parentDoc.exists) {
+        throw new Error("Parent statement does not exist");
+      }
 
-		await db.runTransaction(async (transaction) => {
-			const parentDoc = await transaction.get(parentRef);
-			if (!parentDoc.exists) {
-				throw new Error('Parent statement does not exist');
-			}
+      const parentData = parentDoc.data();
+      if (parentData && parentData.suggestions !== undefined) {
+        transaction.update(parentRef, {
+          suggestions: FieldValue.increment(1),
+        });
+      } else {
+        transaction.update(parentRef, {
+          suggestions: 1,
+        });
+      }
+    });
+  } catch (error) {
+    console.error(error);
 
-			const parentData = parentDoc.data();
-			if (parentData && parentData.suggestions !== undefined) {
-				transaction.update(parentRef, {
-					suggestions: FieldValue.increment(1)
-				});
-			} else {
-				transaction.update(parentRef, {
-					suggestions: 1
-				});
-			}
-		});
-	} catch (error) {
-		console.error(error);
-
-		return;
-
-	}
+    return;
+  }
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function removeOptionFromMassConsensus(ev: any) {
-	try {
-		const deletedStatement = ev.data?.data() as Statement || undefined;
-		if (!deletedStatement) return;
-		if (deletedStatement.statementType !== StatementType.option) return;
+  try {
+    const deletedStatement = (ev.data?.data() as Statement) || undefined;
+    if (!deletedStatement) return;
+    if (deletedStatement.statementType !== StatementType.option) return;
 
-		const parentRef = db.collection(Collections.statements).doc(deletedStatement.parentId);
+    const parentRef = db
+      .collection(Collections.statements)
+      .doc(deletedStatement.parentId);
 
-		await db.runTransaction(async (transaction) => {
-			const parentDoc = await transaction.get(parentRef);
-			if (!parentDoc.exists) {
-				throw new Error('Parent statement does not exist');
-			}
+    await db.runTransaction(async (transaction) => {
+      const parentDoc = await transaction.get(parentRef);
+      if (!parentDoc.exists) {
+        throw new Error("Parent statement does not exist");
+      }
 
-			const parentData = parentDoc.data();
-			if (parentData && parentData.suggestions !== undefined && parentData.suggestions > 0) {
-				transaction.update(parentRef, {
-					suggestions: FieldValue.increment(-1)
-				});
-			}
-		});
-	} catch (error) {
-		console.error(error);
+      const parentData = parentDoc.data();
+      if (
+        parentData &&
+        parentData.suggestions !== undefined &&
+        parentData.suggestions > 0
+      ) {
+        transaction.update(parentRef, {
+          suggestions: FieldValue.increment(-1),
+        });
+      }
+    });
+  } catch (error) {
+    console.error(error);
 
-		return;
-	}
+    return;
+  }
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function updateOptionInMassConsensus(event: any) {
-	try {
-		// Handle both v1 and v2 function signatures
-		const change = event.data || event;
-		const beforeData = change.before?.data() as Statement || undefined;
-		const afterData = change.after?.data() as Statement || undefined;
+  try {
+    // Handle both v1 and v2 function signatures
+    const change = event.data || event;
+    const beforeData = (change.before?.data() as Statement) || undefined;
+    const afterData = (change.after?.data() as Statement) || undefined;
 
-		if (!beforeData || !afterData) return;
+    if (!beforeData || !afterData) return;
 
-		// Only process if this is an option
-		if (afterData.statementType !== StatementType.option) {
-			logger.info('Not an option statement, skipping mass consensus update');
-			return;
-		}
+    // Only process if this is an option
+    if (afterData.statementType !== StatementType.option) {
+      logger.info("Not an option statement, skipping mass consensus update");
 
-		// Skip if only metadata fields changed (not statementType)
-		const relevantFieldsChanged = beforeData.statementType !== afterData.statementType;
-		
-		if (!relevantFieldsChanged) {
-			// Check if this is just a metadata update from other functions
-			const metadataOnlyUpdate = (
-				beforeData.lastUpdate !== afterData.lastUpdate ||
-				beforeData.lastChildUpdate !== afterData.lastChildUpdate ||
-				JSON.stringify(beforeData.lastSubStatements) !== JSON.stringify(afterData.lastSubStatements)
-			) && beforeData.statement === afterData.statement;
-			
-			if (metadataOnlyUpdate) {
-				logger.info('Only metadata changed for option, skipping mass consensus update');
-				return;
-			}
-			
-			logger.info('No relevant changes for mass consensus, skipping update');
-			return;
-		}
+      return;
+    }
 
-		const parentRef = db.collection(Collections.statements).doc(afterData.parentId);
+    // Skip if only metadata fields changed (not statementType)
+    const relevantFieldsChanged =
+      beforeData.statementType !== afterData.statementType;
 
-		await db.runTransaction(async (transaction) => {
-			const parentDoc = await transaction.get(parentRef);
-			if (!parentDoc.exists) {
-				throw new Error('Parent statement does not exist');
-			}
+    if (!relevantFieldsChanged) {
+      // Check if this is just a metadata update from other functions
+      const metadataOnlyUpdate =
+        (beforeData.lastUpdate !== afterData.lastUpdate ||
+          beforeData.lastChildUpdate !== afterData.lastChildUpdate ||
+          JSON.stringify(beforeData.lastSubStatements) !==
+            JSON.stringify(afterData.lastSubStatements)) &&
+        beforeData.statement === afterData.statement;
 
-			const parentData = parentDoc.data();
+      if (metadataOnlyUpdate) {
+        logger.info(
+          "Only metadata changed for option, skipping mass consensus update"
+        );
 
-			if (beforeData.statementType !== StatementType.option && afterData.statementType === StatementType.option) {
-				// Increment suggestions count
-				if (parentData && parentData.suggestions !== undefined) {
-					transaction.update(parentRef, {
-						suggestions: FieldValue.increment(1)
-					});
-				} else {
-					transaction.update(parentRef, {
-						suggestions: 1
-					});
-				}
-			} else if (beforeData.statementType === StatementType.option && afterData.statementType !== StatementType.option) {
-				// Decrement suggestions count
-				if (parentData && parentData.suggestions !== undefined && parentData.suggestions > 0) {
-					transaction.update(parentRef, {
-						suggestions: FieldValue.increment(-1)
-					});
-				}
-			}
-		});
-	} catch (error) {
-		console.error(error);
+        return;
+      }
 
-		return;
-	}
+      logger.info("No relevant changes for mass consensus, skipping update");
+
+      return;
+    }
+
+    const parentRef = db
+      .collection(Collections.statements)
+      .doc(afterData.parentId);
+
+    await db.runTransaction(async (transaction) => {
+      const parentDoc = await transaction.get(parentRef);
+      if (!parentDoc.exists) {
+        throw new Error("Parent statement does not exist");
+      }
+
+      const parentData = parentDoc.data();
+
+      if (
+        beforeData.statementType !== StatementType.option &&
+        afterData.statementType === StatementType.option
+      ) {
+        // Increment suggestions count
+        if (parentData && parentData.suggestions !== undefined) {
+          transaction.update(parentRef, {
+            suggestions: FieldValue.increment(1),
+          });
+        } else {
+          transaction.update(parentRef, {
+            suggestions: 1,
+          });
+        }
+      } else if (
+        beforeData.statementType === StatementType.option &&
+        afterData.statementType !== StatementType.option
+      ) {
+        // Decrement suggestions count
+        if (
+          parentData &&
+          parentData.suggestions !== undefined &&
+          parentData.suggestions > 0
+        ) {
+          transaction.update(parentRef, {
+            suggestions: FieldValue.increment(-1),
+          });
+        }
+      }
+    });
+  } catch (error) {
+    console.error(error);
+
+    return;
+  }
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function addMemberToMassConsensus(ev: any) {
-	try {
-		if (!ev.data.data()) return;
-		const newMember = ev.data.data() as MassConsensusMember;
-		if (!newMember) return;
-		const statementRef = db.collection(Collections.statements).doc(newMember.statementId);
+  try {
+    if (!ev.data.data()) return;
+    const newMember = ev.data.data() as MassConsensusMember;
+    if (!newMember) return;
+    const statementRef = db
+      .collection(Collections.statements)
+      .doc(newMember.statementId);
 
-		await db.runTransaction(async (transaction) => {
-			const statementDoc = await transaction.get(statementRef);
-			if (!statementDoc.exists) {
-				throw new Error('Statement does not exist');
-			}
+    await db.runTransaction(async (transaction) => {
+      const statementDoc = await transaction.get(statementRef);
+      if (!statementDoc.exists) {
+        throw new Error("Statement does not exist");
+      }
 
-			const statementData = statementDoc.data() as Statement;
-			if (statementData?.massMembers !== undefined) {
+      const statementData = statementDoc.data() as Statement;
+      if (statementData?.massMembers !== undefined) {
+        transaction.update(statementRef, {
+          massMembers: FieldValue.increment(1),
+        });
+      } else {
+        transaction.update(statementRef, {
+          massMembers: 1,
+        });
+      }
+    });
+  } catch (error) {
+    console.error(error);
 
-				transaction.update(statementRef, {
-					massMembers: FieldValue.increment(1)
-				});
-			} else {
-				transaction.update(statementRef, {
-					massMembers: 1
-				});
-			}
-		});
-
-	} catch (error) {
-		console.error(error);
-
-		return;
-
-	}
+    return;
+  }
 }
