@@ -110,7 +110,6 @@ const StatementBottomNav: FC<Props> = () => {
 		}
 	}
 
-	// Parent modifier can still shrink icon sizes while learning (optional)
 	const navRootClass = `${showSorting ? `${styles.statementBottomNav} ${styles.statementBottomNavShow}` : styles.statementBottomNav
 		} ${isLearningFace ? styles.statementBottomNavLearning : ''}`;
 

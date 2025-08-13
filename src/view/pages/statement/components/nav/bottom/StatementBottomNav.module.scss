@@ -32,7 +32,6 @@ $sortBtnPositionMobile: 42px;
   height: 100%;
 }
 
-/* (Optional) shrink ALL nav icons while the pill is visible */
 .statementBottomNavLearning {
   --nav-icon-size: 2.2rem;
   --nav-icon-size-active: 2.6rem;
@@ -97,7 +96,6 @@ $sortBtnPositionMobile: 42px;
   }
 }
 
-/* === Pill variant (during learning) === */
 .addOptionButtonPill {
   min-width: 180px;
   height: 50px;
@@ -125,7 +123,6 @@ $sortBtnPositionMobile: 42px;
   }
 }
 
-/* Directional grow/shrink animations */
 .addOptionButtonIntroLTR {
   animation: pill-grow-ltr 420ms ease-out 1 both;
 }
