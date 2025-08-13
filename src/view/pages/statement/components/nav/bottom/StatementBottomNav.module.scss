@@ -1,4 +1,14 @@
-$addOptionSize: 60px;
+$addOptionSize: 45px;
+
+:root {
+  --nav-icon-size: 2.5rem;
+  --nav-icon-size-active: 3rem;
+  --nav-icon-svg: 26px;
+  --sort-button-size: 51px;
+}
+
+$sortBtnPosition: 70px;
+$sortBtnPositionMobile: 42px;
 
 @media screen and (max-width: 600px) {
 }
@@ -20,6 +30,14 @@ $addOptionSize: 60px;
     rgba(255, 255, 255, 1) 100%
   );
   height: 100%;
+}
+
+/* (Optional) shrink ALL nav icons while the pill is visible */
+.statementBottomNavLearning {
+  --nav-icon-size: 2.2rem;
+  --nav-icon-size-active: 2.6rem;
+  --nav-icon-svg: 22px;
+  --sort-button-size: 45px;
 }
 
 .statementBottomNavShow {
@@ -53,7 +71,6 @@ $addOptionSize: 60px;
   flex-direction: row-reverse;
 }
 
-/* === Add Option button: round by default === */
 .addOptionButton {
   width: $addOptionSize;
   height: $addOptionSize;
@@ -66,35 +83,36 @@ $addOptionSize: 60px;
   gap: 0.5rem;
   padding: 0;
 
-  /* smooth morph pill <-> round */
   transition:
     width 220ms ease,
     min-width 220ms ease,
+    height 220ms ease,
     padding 220ms ease,
     border-radius 220ms ease;
 
   svg {
-    width: 26px;
-    height: 26px;
+    width: var(--nav-icon-svg);
+    height: var(--nav-icon-svg);
     flex: 0 0 auto;
   }
 }
 
-/* === Pill variant shown while the learning counter > 0 === */
+/* === Pill variant (during learning) === */
 .addOptionButtonPill {
   min-width: 180px;
-  height: $addOptionSize;
+  height: 50px;
   padding: 0 1rem;
-  border-radius: calc($addOptionSize / 2);
+  border-radius: 25px;
   justify-content: center;
 
-  @media screen and (max-width: 600px) {
-    min-width: 150px;
+  @media screen and (max-width: 700px) {
+    min-width: 128px;
     padding: 0 0.75rem;
+    height: 47px;
+    border-radius: 23.5px;
   }
 }
 
-/* Label inside the pill */
 .addOptionButtonLabel {
   font-weight: 600;
   font-size: 0.95rem;
@@ -102,20 +120,18 @@ $addOptionSize: 60px;
   white-space: nowrap;
   line-height: 1;
 
-  @media screen and (max-width: 600px) {
-    font-size: 0.85rem; /* smaller label on mobile */
+  @media screen and (max-width: 700px) {
+    font-size: 0.85rem;
   }
 }
 
-/* --- Directional grow on first load --- */
+/* Directional grow/shrink animations */
 .addOptionButtonIntroLTR {
   animation: pill-grow-ltr 420ms ease-out 1 both;
 }
 .addOptionButtonIntroRTL {
   animation: pill-grow-rtl 420ms ease-out 1 both;
 }
-
-/* After counter is exhausted, animate pill -> round */
 .addOptionButtonShrinking {
   animation: pill-shrink-to-round 360ms ease-in 1 both;
 }
@@ -123,45 +139,49 @@ $addOptionSize: 60px;
 @keyframes pill-grow-ltr {
   0% {
     min-width: $addOptionSize;
+    height: $addOptionSize;
     padding-inline: 0;
     border-radius: $addOptionSize;
     transform-origin: left center;
   }
   100% {
     min-width: 180px;
+    height: 50px;
     padding-inline: 1rem;
-    border-radius: calc($addOptionSize / 2);
+    border-radius: 25px;
   }
 }
-
 @keyframes pill-grow-rtl {
   0% {
     min-width: $addOptionSize;
+    height: $addOptionSize;
     padding-inline: 0;
     border-radius: $addOptionSize;
     transform-origin: right center;
   }
   100% {
     min-width: 180px;
+    height: 50px;
     padding-inline: 1rem;
-    border-radius: calc($addOptionSize / 2);
+    border-radius: 25px;
   }
 }
 
 @keyframes pill-shrink-to-round {
   0% {
     min-width: 180px;
+    height: 50px;
     padding-inline: 1rem;
-    border-radius: calc($addOptionSize / 2);
+    border-radius: 25px;
   }
   100% {
     min-width: $addOptionSize;
+    height: $addOptionSize;
     padding-inline: 0;
     border-radius: $addOptionSize;
   }
 }
 
-/* Respect reduced motion */
 @media (prefers-reduced-motion: reduce) {
   .addOptionButtonIntroLTR,
   .addOptionButtonIntroRTL,
@@ -170,15 +190,9 @@ $addOptionSize: 60px;
   }
 }
 
-/* ===== Sort menu ===== */
-/* Defaults live on the parent element so children can read the vars */
 .sortMenu {
   position: relative;
   flex: auto;
-
-  /* default offsets (when pill is NOT showing) */
-  --sort-btn-position: 70px;
-  --sort-btn-position-mobile: 55px;
 
   &__item {
     display: flex;
@@ -191,16 +205,16 @@ $addOptionSize: 60px;
 
     &.active {
       .openNavIcon {
-        width: 3rem;
-        height: 3rem;
+        width: var(--nav-icon-size-active);
+        height: var(--nav-icon-size-active);
       }
 
       &:nth-child(1) {
         z-index: 20;
-        left: var(--sort-btn-position, 70px);
+        left: $sortBtnPosition;
 
-        @media screen and (max-width: 600px) {
-          left: var(--sort-btn-position-mobile, 55px);
+        @media screen and (max-width: 700px) {
+          left: $sortBtnPositionMobile;
         }
 
         .openNavIcon {
@@ -214,10 +228,10 @@ $addOptionSize: 60px;
 
       &:nth-child(2) {
         z-index: 20;
-        left: calc(var(--sort-btn-position, 70px) * 2);
+        left: calc(#{$sortBtnPosition} * 2);
 
-        @media screen and (max-width: 600px) {
-          left: calc(var(--sort-btn-position-mobile, 50px) * 2);
+        @media screen and (max-width: 700px) {
+          left: calc(#{$sortBtnPositionMobile} * 2);
         }
 
         .openNavIcon {
@@ -231,10 +245,10 @@ $addOptionSize: 60px;
 
       &:nth-child(3) {
         z-index: 20;
-        left: calc(var(--sort-btn-position, 70px) * 3);
+        left: calc(#{$sortBtnPosition} * 3);
 
-        @media screen and (max-width: 600px) {
-          left: calc(var(--sort-btn-position-mobile, 50px) * 3);
+        @media screen and (max-width: 700px) {
+          left: calc(#{$sortBtnPositionMobile} * 3);
         }
 
         .openNavIcon {
@@ -248,10 +262,10 @@ $addOptionSize: 60px;
 
       &:nth-child(4) {
         z-index: 20;
-        left: calc(var(--sort-btn-position, 70px) * 4);
+        left: calc(#{$sortBtnPosition} * 4);
 
-        @media screen and (max-width: 790px) {
-          left: calc(var(--sort-btn-position-mobile, 50px) * 4);
+        @media screen and (max-width: 700px) {
+          left: calc(#{$sortBtnPositionMobile} * 4);
         }
 
         .openNavIcon {
@@ -266,16 +280,6 @@ $addOptionSize: 60px;
   }
 }
 
-/* Modifier applied when the pill is visible to push icons further */
-.sortMenuLearning {
-  --sort-btn-position: 90px;
-  --sort-btn-position-mobile: 65px;
-
-  @media screen and (max-width: 800px) {
-    --sort-btn-position: 70px;
-  }
-}
-
 .buttonName {
   display: none;
   font-size: 0.8rem;
@@ -285,8 +289,8 @@ $addOptionSize: 60px;
 }
 
 .openNavIcon {
-  width: 2.5rem;
-  height: 2.5rem;
+  width: var(--nav-icon-size);
+  height: var(--nav-icon-size);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -294,16 +298,19 @@ $addOptionSize: 60px;
   box-shadow: 2px 2px 5px var(--shadow);
   border-radius: 50%;
   cursor: pointer;
-  transition: all 1s ease;
+  transition:
+    width 200ms ease,
+    height 200ms ease,
+    transform 1s ease;
 
   svg {
-    width: 26px;
+    width: var(--nav-icon-svg);
   }
 }
 
 .sortButton {
-  width: 51px;
-  height: 51px;
+  width: var(--sort-button-size);
+  height: var(--sort-button-size);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -312,12 +319,15 @@ $addOptionSize: 60px;
   box-shadow: 2px 2px 5px var(--shadow);
   border-radius: 50%;
   cursor: pointer;
-  transition: all 1s ease;
+  transition:
+    width 200ms ease,
+    height 200ms ease;
+
   position: absolute;
   left: 0;
   z-index: 10000;
 
   svg {
-    width: 26px;
+    width: var(--nav-icon-svg);
   }
 }

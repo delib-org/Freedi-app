@@ -38,7 +38,7 @@ const StatementBottomNav: FC<Props> = () => {
 	const { dir, learning, t } = useUserConfig();
 	const decreaseLearning = useDecreaseLearningRemain();
 
-	// Real counter (no debug fallback)
+	// Learning counter controls the pill state
 	const timesRemainToLearnAddOption = Number(learning?.addOptions ?? 0);
 
 	// Permissions / UI mode
@@ -56,15 +56,13 @@ const StatementBottomNav: FC<Props> = () => {
 
 	const [showSorting, setShowSorting] = useState(false);
 
-	// Show pill while the learning counter > 0
+	// Pill shows while counter > 0
 	const isLearningFace = timesRemainToLearnAddOption > 0;
 	const isRTL = dir === 'rtl';
 
-	// Intro grow animation only once when we first see the pill
+	// Animations
 	const introPlayedRef = useRef(false);
 	const showIntro = isLearningFace && !introPlayedRef.current;
-
-	// Shrink animation when learning face just finished
 	const prevIsLearningFace = useRef(isLearningFace);
 	const justFinishedLearning = prevIsLearningFace.current && !isLearningFace;
 
@@ -90,7 +88,6 @@ const StatementBottomNav: FC<Props> = () => {
 
 	const handleAddOption = () => {
 		handleCreateNewOption();
-		// decrement the learning counter (3 → 2 → 1 → 0)
 		decreaseLearning({ addOption: true });
 	};
 
@@ -113,18 +110,13 @@ const StatementBottomNav: FC<Props> = () => {
 		}
 	}
 
-	const sortMenuClass = `${styles.sortMenu} ${isLearningFace ? styles.sortMenuLearning : ''
-		}`;
+	// Parent modifier can still shrink icon sizes while learning (optional)
+	const navRootClass = `${showSorting ? `${styles.statementBottomNav} ${styles.statementBottomNavShow}` : styles.statementBottomNav
+		} ${isLearningFace ? styles.statementBottomNavLearning : ''}`;
 
 	return (
 		<>
-			<div
-				className={
-					showSorting
-						? `${styles.statementBottomNav} ${styles.statementBottomNavShow}`
-						: styles.statementBottomNav
-				}
-			>
+			<div className={navRootClass}>
 				<div
 					className={`${styles.addOptionButtonWrapper} ${dir === 'ltr' ? styles.addOptionButtonWrapperLtr : ''
 						}`}
@@ -154,7 +146,8 @@ const StatementBottomNav: FC<Props> = () => {
 						</button>
 					)}
 
-					<div className={sortMenuClass}>
+					{/* Sort menu: static positions, not tied to pill */}
+					<div className={styles.sortMenu}>
 						{sortItems.map((navItem, i) => (
 							<div
 								key={`item-id-${i}`}
