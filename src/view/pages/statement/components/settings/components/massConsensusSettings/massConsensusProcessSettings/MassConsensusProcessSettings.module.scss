@@ -1,21 +1,74 @@
 .mcProcess {
 	padding: 1rem 2rem;
+
+	h3 {
+		margin-bottom: 1.5rem;
+		color: var(--text-title);
+		font-size: 1.25rem;
+	}
+}
+
+.loginTypeTabs {
+	display: flex;
+	gap: 1rem;
+	margin-bottom: 2rem;
+	padding-bottom: 1rem;
+	border-bottom: 1px solid var(--btn-primary-disabled);
+}
+
+.tab {
+	padding: 0.5rem 1.5rem;
+	background: var(--btn-white-default);
+	border: 1px solid var(--btn-primary-disabled);
+	border-radius: 50px;
+	cursor: pointer;
+	color: var(--text-body);
+	font-size: 0.95rem;
+	transition: all 0.2s;
+
+	&:hover:not(:disabled) {
+		background: var(--btn-white-hover);
+		border-color: var(--btn-primary);
+	}
+
+	&:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+}
+
+.tabActive {
+	background: var(--btn-primary);
+	color: var(--white);
+	border-color: var(--btn-primary);
+
+	&:hover {
+		background: var(--btn-primary-hover);
+	}
+}
+
+.tabWithCheckbox {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
 }
 
 .checkboxContainer {
 	display: flex;
 	justify-content: start;
 	align-items: center;
-	gap: 1rem;
 	cursor: pointer;
 	transition: all 0.3s ease-in-out;
+	padding: 0.25rem;
+	border-radius: var(--radius);
 
 	&:hover {
-		background-color: rgba(0, 0, 0, 0.1);
+		background-color: rgba(0, 0, 0, 0.05);
 	}
 
 	svg {
 		width: 1.2rem;
 		height: 1.2rem;
+		color: var(--icons-blue);
 	}
 }

@@ -34,47 +34,93 @@ interface MassConsensusProcessProps {
 
 export async function reorderMassConsensusProcessToDB({ steps, loginType, statementId, processName }: MassConsensusProcessProps) {
 	try {
-		const processRef = doc(DB, Collections.massConsensusProcesses, statementId);
-
-		// Prepare the update data based on loginType
-		let updateData = {
-			statementId,
-			loginTypes: {}
-		}; // Use 'any' type to handle dynamic key assignment
-
-		const type = loginType ?? "default";
-
-		updateData.loginTypes[type] = {
-			steps
-		};
-
-		if (processName) {
-			updateData.loginTypes[type].processName = processName;
+		if (!statementId) {
+			console.error('No statementId provided for reorderMassConsensusProcessToDB');
+			return;
 		}
 
+		const processRef = doc(DB, Collections.massConsensusProcesses, statementId);
+		const type = loginType ?? "default";
+
+		console.info('=== DATABASE UPDATE START ===');
+		console.info('Document Path:', `${Collections.massConsensusProcesses}/${statementId}`);
+		console.info('Login Type:', type);
+		console.info('Process Name:', processName || 'Not provided');
+		console.info('Steps Count:', steps.length);
+		console.info('Steps Order:', steps.map(s => s.screen));
+
+		// Get the current document first to preserve other loginTypes
+		const processDoc = await getDoc(processRef);
+		let existingData = processDoc.exists() ? processDoc.data() : { statementId, loginTypes: {} };
+
+		// Update only the specific loginType
+		if (!existingData.loginTypes) {
+			existingData.loginTypes = {};
+		}
+
+		// Create the update for this specific loginType
+		existingData.loginTypes[type] = {
+			steps: steps,
+			processName: processName || existingData.loginTypes[type]?.processName || "Default Process"
+		};
+
+		console.info('Full document to save:', JSON.stringify(existingData, null, 2));
+
+		// Validate the data
 		const PartialMassConsensusProcessSchema = partial(MassConsensusProcessSchema);
-		parse(PartialMassConsensusProcessSchema, updateData);
+		parse(PartialMassConsensusProcessSchema, existingData);
 
 		// Update the document in Firestore
-		await setDoc(processRef, updateData, { merge: true });
+		await setDoc(processRef, existingData, { merge: false }); // Use merge: false for complete replacement
+		console.info('=== DATABASE UPDATE SUCCESS ===');
+		console.info(`Document ${statementId} updated successfully`);
 
 	} catch (error) {
-		console.error(error);
-
+		console.error('=== DATABASE UPDATE ERROR ===');
+		console.error('Error details:', error);
+		console.error('Error updating mass consensus process:', error);
 	}
 }
 
 export async function removeMassConsensusStep(statementId: string, loginType: LoginType, step: MassConsensusStep): Promise<void> {
 	try {
-		const processRef = doc(DB, Collections.massConsensusProcesses, statementId);
-		await updateDoc(processRef, {
-			[`loginTypes.${loginType}.steps`]: arrayRemove(step)
+		if (!statementId) {
+			console.error('No statementId provided for removeMassConsensusStep');
+			return;
+		}
+
+		console.info('Removing step from DB:', {
+			statementId,
+			loginType,
+			stepScreen: step.screen
 		});
+
+		const processRef = doc(DB, Collections.massConsensusProcesses, statementId);
+		
+		// Get current document to manually filter steps
+		const processDoc = await getDoc(processRef);
+		if (!processDoc.exists()) {
+			console.error('Process document does not exist');
+			return;
+		}
+
+		const processData = processDoc.data();
+		const currentSteps = processData?.loginTypes?.[loginType]?.steps || [];
+		
+		// Filter out the step to remove
+		const updatedSteps = currentSteps.filter((s: MassConsensusStep) => 
+			s.screen !== step.screen || s.statementId !== step.statementId
+		);
+
+		// Update with filtered steps
+		await updateDoc(processRef, {
+			[`loginTypes.${loginType}.steps`]: updatedSteps
+		});
+
+		console.info('Successfully removed step from DB');
 	} catch (error) {
-		console.error(error);
-
+		console.error('Error removing step:', error);
 	}
-
 }
 
 export async function updateMassConsensusLoginTypeProcess(statementId: string, loginType: LoginType, processName?: string): Promise<void> {

@@ -1,0 +1,62 @@
+.panel {
+	background: var(--surface-background);
+	border-radius: var(--radius);
+	padding: 1.5rem;
+	min-height: 500px;
+}
+
+.header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 2rem;
+	padding-bottom: 1rem;
+	border-bottom: 1px solid var(--btn-primary-disabled);
+
+	h2 {
+		color: var(--text-title);
+		font-size: 1.5rem;
+		font-weight: 500;
+	}
+}
+
+.stage {
+	background: var(--card-default);
+	padding: 0.75rem 1.5rem;
+	border-radius: var(--radius);
+	color: var(--text-body);
+	font-weight: 500;
+	border: 1px solid var(--btn-primary-disabled);
+}
+
+.questions {
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+	margin-bottom: 2rem;
+}
+
+.addQuestionWrapper {
+	display: flex;
+	justify-content: center;
+	padding: 1rem 0;
+}
+
+.addQuestionBtn {
+	background: var(--btn-primary);
+	color: var(--white);
+	padding: 0.75rem 2rem;
+	border-radius: 50px;
+	border: none;
+	cursor: pointer;
+	font-size: 1rem;
+	transition: background-color 0.2s;
+
+	&:hover {
+		background: var(--btn-primary-hover);
+	}
+
+	&:active {
+		background: var(--btn-primary-selected);
+	}
+}

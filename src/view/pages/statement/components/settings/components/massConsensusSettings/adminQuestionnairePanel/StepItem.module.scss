@@ -1,0 +1,90 @@
+.stepItem {
+	display: flex;
+	align-items: center;
+	gap: 1rem;
+	background: var(--card-needs-surface); // Light green from design system
+	border: 1px solid var(--card-needs-top);
+	padding: 0.75rem 1rem;
+	border-radius: var(--radius);
+	transition: all 0.2s ease;
+	position: relative;
+
+	&:hover {
+		background: var(--card-needs-top);
+		transform: translateY(-1px);
+		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+	}
+
+	&--dragging {
+		opacity: 0.5;
+		background: var(--card-needs-top);
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+	}
+}
+
+.dragHandle {
+	cursor: grab;
+	display: flex;
+	align-items: center;
+	color: var(--icons-blue-dark);
+	padding: 0.25rem;
+	
+	&:active {
+		cursor: grabbing;
+	}
+}
+
+.dragIcon {
+	font-size: 1.2rem;
+	font-weight: bold;
+	user-select: none;
+	color: var(--icons-disabled);
+}
+
+.content {
+	flex: 1;
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	color: var(--text-body);
+	font-size: 0.95rem;
+}
+
+.index {
+	font-weight: 600;
+	color: var(--text-caption);
+	min-width: 1.5rem;
+}
+
+.name {
+	font-weight: 500;
+	color: var(--text-title);
+}
+
+.text {
+	color: var(--text-caption);
+	font-style: italic;
+	font-size: 0.9rem;
+}
+
+.deleteBtn {
+	background: none;
+	border: none;
+	cursor: pointer;
+	padding: 0.5rem;
+	color: var(--icons-red);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: var(--radius);
+	transition: background-color 0.2s;
+
+	&:hover {
+		background: rgba(247, 74, 77, 0.1);
+	}
+
+	svg {
+		width: 1.2rem;
+		height: 1.2rem;
+	}
+}
