@@ -1,21 +1,21 @@
 import React, { useState, useRef, useEffect } from 'react';
 import styles from './ProcessSettings.module.scss'
 import { defaultMassConsensusProcess } from '@/model/massConsensus/massConsensusModel';
-import { LoginType, MassConsensusPageUrls } from 'delib-npm';
+import { LoginType, MassConsensusStep } from 'delib-npm';
 import { removeMassConsensusStep, reorderMassConsensusProcessToDB } from '@/controllers/db/massConsensus/setMassConsensus';
 import { useParams } from 'react-router';
 import DeleteIcon from '@/assets/icons/delete.svg?react';
 
 interface Props {
 	processName: string;
-	steps: MassConsensusPageUrls[];
+	steps: MassConsensusStep[];
 	loginType: LoginType;
 }
 
 const ProcessSetting = ({ processName, steps: _steps, loginType }: Props) => {
 	const { statementId } = useParams();
 
-	const [steps, setSteps] = useState<MassConsensusPageUrls[]>(_steps || defaultMassConsensusProcess);
+	const [steps, setSteps] = useState<MassConsensusStep[]>(_steps || defaultMassConsensusProcess);
 
 	useEffect(() => {
 		setSteps(_steps);
@@ -44,19 +44,24 @@ const ProcessSetting = ({ processName, steps: _steps, loginType }: Props) => {
 			dragOverItem.current = null;
 			setSteps(newStepsOrder);
 
-			if (statementId)
-				reorderMassConsensusProcessToDB({ steps: newStepsOrder, statementId, loginType });
+			if (statementId) {
+				const stepsWithStatementId = newStepsOrder.map(step => ({
+					...step,
+					statementId
+				}));
+				reorderMassConsensusProcessToDB({ steps: stepsWithStatementId, statementId, loginType });
+			}
 		}
 	};
 
-	function handleDelete(step: MassConsensusPageUrls) {
+	function handleDelete(step: MassConsensusStep) {
 		removeMassConsensusStep(statementId, loginType, step);
 	}
 
 	return (
 		<div className={styles['process-setting']}>
 			<h4>{processName}</h4>
-			{steps && steps.map((process, index) => (
+			{steps && steps.map((step, index) => (
 				<div
 					key={`${loginType}-${index}`}
 					draggable
@@ -65,8 +70,9 @@ const ProcessSetting = ({ processName, steps: _steps, loginType }: Props) => {
 					onDragEnd={handleDragEnd}
 					className={styles['process-item']}
 				>
-					{index + 1}: {process}
-					<button onClick={() => handleDelete(process)}><DeleteIcon /></button>
+					{index + 1}: {step.screen}
+					{step.text && <span className={styles['step-text']}> - {step.text}</span>}
+					<button onClick={() => handleDelete(step)}><DeleteIcon /></button>
 				</div>
 			))}
 		</div>

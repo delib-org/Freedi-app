@@ -1,4 +1,4 @@
-import { Collections, Creator, getStatementSubscriptionId, LoginType, MassConsensusMember, MassConsensusPageUrls, MassConsensusProcess, MassConsensusProcessSchema, User } from "delib-npm";
+import { Collections, Creator, getStatementSubscriptionId, LoginType, MassConsensusMember, MassConsensusStep, MassConsensusProcess, MassConsensusProcessSchema, User } from "delib-npm";
 import { DB } from "../config";
 import { arrayRemove, deleteField, doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
 import { convertFirebaseUserToCreator } from "@/types/user/userUtils";
@@ -26,7 +26,7 @@ export async function setMassConsensusMemberToDB(creator: Creator | User, statem
 }
 
 interface MassConsensusProcessProps {
-	steps: MassConsensusPageUrls[];
+	steps: MassConsensusStep[];
 	loginType?: LoginType;
 	statementId: string;
 	processName?: string;
@@ -64,7 +64,7 @@ export async function reorderMassConsensusProcessToDB({ steps, loginType, statem
 	}
 }
 
-export async function removeMassConsensusStep(statementId: string, loginType: LoginType, step: MassConsensusPageUrls): Promise<void> {
+export async function removeMassConsensusStep(statementId: string, loginType: LoginType, step: MassConsensusStep): Promise<void> {
 	try {
 		const processRef = doc(DB, Collections.massConsensusProcesses, statementId);
 		await updateDoc(processRef, {
@@ -90,9 +90,13 @@ export async function updateMassConsensusLoginTypeProcess(statementId: string, l
 			if (!processData.loginTypes) throw new Error("No process data was found");
 			const processList = processData.loginTypes[loginType];
 			if (!processList) {
+				const stepsWithStatementId = defaultMassConsensusProcess.map(step => ({
+					...step,
+					statementId
+				}));
 				await updateDoc(processRef, {
 					[`loginTypes.${loginType}`]: {
-						steps: defaultMassConsensusProcess,
+						steps: stepsWithStatementId,
 						processName: processName || "Default Process for all users"
 					}
 				});
@@ -116,11 +120,16 @@ export async function setNewProcessToDB(statementId: string, loginType?: LoginTy
 	try {
 		const processRef = doc(DB, Collections.massConsensusProcesses, statementId);
 
+		const stepsWithStatementId = defaultMassConsensusProcess.map(step => ({
+			...step,
+			statementId
+		}));
+
 		const process = {
 			statementId,
 			loginTypes: {
 				default: {
-					steps: defaultMassConsensusProcess,
+					steps: stepsWithStatementId,
 					processName: "Default Process for all users"
 				}
 			}
@@ -128,7 +137,7 @@ export async function setNewProcessToDB(statementId: string, loginType?: LoginTy
 
 		if (loginType) {
 			process.loginTypes[loginType] = {
-				steps: defaultMassConsensusProcess,
+				steps: stepsWithStatementId,
 				processName: "Default Process for all users"
 			}
 		}

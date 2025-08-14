@@ -22,10 +22,13 @@ const MassConsensusProcessSettings = () => {
 	const { statementId } = useParams();
 
 	const defaultMassConsensusProcesses: MassConsensusProcess = {
-		statementId: '',
+		statementId: statementId || '',
 		loginTypes: {
 			default: {
-				steps: defaultMassConsensusProcess,
+				steps: defaultMassConsensusProcess.map(step => ({
+					...step,
+					statementId: statementId || ''
+				})),
 				processName: t('Default Process for all users'),
 			},
 		},
@@ -43,7 +46,10 @@ const MassConsensusProcessSettings = () => {
 
 	if (!processList.loginTypes?.default) {
 		processList.loginTypes.default = {
-			steps: defaultMassConsensusProcess,
+			steps: defaultMassConsensusProcess.map(step => ({
+				...step,
+				statementId: statementId || ''
+			})),
 			processName: t('Default Process for all users'),
 		};
 	}
@@ -58,7 +64,7 @@ const MassConsensusProcessSettings = () => {
 		userDataQuestions.length > 0
 			? rawStepsDefault
 			: rawStepsDefault.filter(
-					(step) => step !== MassConsensusPageUrls.userDemographics
+					(step) => step.screen !== MassConsensusPageUrls.userDemographics
 				);
 	const { steps: stepsGoogle, processName: processNameGoogle } =
 		processList.loginTypes?.google || {};
