@@ -17,7 +17,6 @@ const Switch = () => {
 	const { role } = useAuthorization(statement?.statementId);
 	const { parentStatement } = useSwitchMV();
 	const { user } = useAuthentication();
-	const isCreator = statement?.creator.uid === user?.uid;
 	const isAdmin = role === Role.admin || role === Role.creator;
 
 	const [edit, setEdit] = useState(false);
