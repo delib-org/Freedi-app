@@ -8,7 +8,6 @@ interface SubQuestionNodeProps {
   statement: Statement;
   depth: number;
   childAmount: number;
-  hasChildren?: boolean;
   height?: number;
 }
 
@@ -17,12 +16,13 @@ const SubQuestionNode: FC<SubQuestionNodeProps> = ({
   childAmount,
   depth = -1,
   height = 0,
-  hasChildren = false,
 }) => {
+  const hasChildren=childAmount>0;
   const topStatement = depth <= 1;
   const navigate = useNavigate();
   const { statementId } = useParams();
   const [clicked, setClicked] = useState(false);
+
   const handleClick = () => {
     setClicked(true);
     setTimeout(() => {
@@ -32,6 +32,7 @@ const SubQuestionNode: FC<SubQuestionNodeProps> = ({
       });
     }, 302);
   };
+  
   const isInStatement = statement.statementId === statementId;
   const styleMargin = 4.6;
   const marginLeft = `${depth}rem`;

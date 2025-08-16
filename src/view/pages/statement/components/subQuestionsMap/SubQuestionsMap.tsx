@@ -46,7 +46,6 @@ const SubQuestionsMap = ({ statement }: SubQuestionsMapProps) => {
         <SubQuestionNode
           statement={res.top}
           depth={currentDepth}
-          hasChildren={res.sub.length !== 0}
           childAmount={res.sub.length}
           height={calculateHeight(res, 0, true)}
         />
@@ -82,7 +81,6 @@ const SubQuestionsMap = ({ statement }: SubQuestionsMapProps) => {
         statement={results.top}
         depth={defaultDepth}
         childAmount={results.sub.length}
-        hasChildren={results.sub.length > 0}
         height={calculateHeight(filteredResults, 0, true)}
       />
       {parseTree(filteredResults, defaultDepth)}
