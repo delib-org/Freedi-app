@@ -121,7 +121,8 @@ export const createMockIntersectionObserver = () => {
     disconnect: jest.fn()
   });
   window.IntersectionObserver = mockIntersectionObserver as any;
-  return mockIntersectionObserver;
+  
+return mockIntersectionObserver;
 };
 
 export * from '@testing-library/react';
