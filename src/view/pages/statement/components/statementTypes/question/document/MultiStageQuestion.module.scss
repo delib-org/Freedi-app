@@ -26,6 +26,7 @@
 	display: grid;
 	grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
 	gap:.5rem;
+	margin-bottom: 1rem;
 }
 
 .stagesWrapper {

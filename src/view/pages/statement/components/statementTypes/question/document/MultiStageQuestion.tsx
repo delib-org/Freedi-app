@@ -14,6 +14,12 @@ import {
 	setStatements,
 	statementSubsSelector,
 } from '@/redux/statements/statementsSlice';
+import {
+	setParentStatement,
+	setNewStatementType,
+	setShowNewStatementModal,
+	selectNewStatementShowModal,
+} from '@/redux/statements/newStatementSlice';
 import StageCard from './stages/StageCard';
 import { updateStatementsOrderToDB } from '@/controllers/db/statements/setStatements';
 import { Statement, StatementType } from 'delib-npm';
@@ -21,6 +27,7 @@ import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import StagePage from '../../stage/StagePage';
 import Text from '@/view/components/text/Text';
 import SubGroupCard from '@/view/components/subGroupCard/SubGroupCard';
+import NewStatement from '../../../newStatement/NewStatement';
 
 const MultiStageQuestion: FC = () => {
 	const { statement } = useContext(StatementContext);
@@ -29,6 +36,7 @@ const MultiStageQuestion: FC = () => {
 	const statementsFromStore = useSelector(
 		statementSubsSelector(statement?.statementId)
 	);
+	const showNewStatementModal = useSelector(selectNewStatementShowModal);
 
 	const initialStages = useMemo(
 		() =>
@@ -89,6 +97,14 @@ const MultiStageQuestion: FC = () => {
 		setDraggedIndex(null);
 	};
 
+	const handleAddSubQuestion = (): void => {
+		if (statement) {
+			dispatch(setParentStatement(statement));
+			dispatch(setNewStatementType(StatementType.question));
+			dispatch(setShowNewStatementModal(true));
+		}
+	};
+
 	const hasStages = initialStages.length > 0;
 
 	return (
@@ -96,6 +112,17 @@ const MultiStageQuestion: FC = () => {
 			{showAddStage && (
 				<Modal>
 					<AddStage setShowAddStage={setShowAddStage} />
+				</Modal>
+			)}
+			{showNewStatementModal && (
+				<Modal
+					closeModal={(e) => {
+						if (e.target === e.currentTarget) {
+							dispatch(setShowNewStatementModal(false));
+						}
+					}}
+				>
+					<NewStatement />
 				</Modal>
 			)}
 			{!hasStages && <div className={`${styles.description} description`}>
@@ -136,6 +163,12 @@ const MultiStageQuestion: FC = () => {
 									<SubGroupCard statement={stage} />
 								</div>
 							))}
+						</div>
+						<div className={`btns ${styles['add-stage']}`}>
+							<button
+								className='btn btn--secondary'
+								onClick={handleAddSubQuestion}
+							>{t('Add Sub-Question')}</button>
 						</div>
 						{draggedItem && (
 							<div
