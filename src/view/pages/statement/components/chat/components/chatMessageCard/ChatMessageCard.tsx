@@ -152,7 +152,7 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
 
 	return (
 		<div
-			className={`${styles.chatMessageCard} ${isAlignedLeft && 'aligned-left'} ${dir}`}
+			className={`${styles.chatMessageCard} ${isAlignedLeft ? styles.alignedLeft : ''} ${styles[dir] || ''}`}
 		>
 			{!isPreviousFromSameAuthor && (
 				<div className={styles.user}>
@@ -164,8 +164,8 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
 			<div
 				className={
 					isStatement
-						? 'message-box message-box--statement'
-						: 'message-box'
+						? `${styles.messageBox} ${styles.messageBoxStatement}`
+						: styles.messageBox
 				}
 				style={{
 					borderColor: isGeneral
@@ -301,7 +301,7 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
 					/>
 					{shouldLinkToChildren && (
 						<button
-							className='add-question-btn more-question'
+							className={`${styles.addQuestionBtn} ${styles.moreQuestion}`}
 							aria-label='Add question button'
 							onClick={() => setIsNewStatementModalOpen(true)}
 						>
