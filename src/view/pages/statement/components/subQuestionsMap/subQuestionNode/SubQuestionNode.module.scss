@@ -51,12 +51,12 @@
     width: 1rem;
     height: auto;
     transform: translateY(50%) scaleX(-1);
+    
   }
   .borderRightTop {
     border-right: 1px solid var(--icons-primary);
     position: absolute;
     margin-left: auto;
-    top: 0;
     right: 1.002rem;
     width: 1rem;
     height: auto;
@@ -67,6 +67,8 @@
 
   .borderBottom {
     border-bottom: 1px solid var(--icons-primary);
+        top: 0;
+
   }
   .borderTop {
     &::before {

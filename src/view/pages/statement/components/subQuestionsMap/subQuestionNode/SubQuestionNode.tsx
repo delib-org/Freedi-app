@@ -37,12 +37,14 @@ const SubQuestionNode: FC<SubQuestionNodeProps> = ({
   const updateMap = (key: string, height: number) => {
     setNodeHeights((prev) => new Map(prev).set(key, height));
   };
-  useEffect(() => {
-    if (!isLast || (!ref.current && childCount < 1)) return;
-    const top = ref.current.offsetTop;
 
-    updateMap(statement.statementId, top - heightMargin);
-  }, [isLast]);
+  useEffect(() => {
+    if (!isLast || !ref.current && childCount < 1) return;
+    
+    const rect = ref.current.getBoundingClientRect();
+    const actualTop = rect.top ; 
+    updateMap(statement.statementId, actualTop - heightMargin );
+}, [isLast]);
 
   const handleClick = () => {
     setClicked(true);
@@ -57,10 +59,10 @@ const SubQuestionNode: FC<SubQuestionNodeProps> = ({
   const isInStatement = statement.statementId === statementId;
   const marginLeft = `${depth}rem`;
 
-  const graphStyle = `${styles.borderDefault} ${hasChildren ? styles.borderRight : ""} ${hasChildren ? styles.borderBottom : ""}`;
+  const graphStyle = `${styles.borderDefault} ${hasChildren ? styles.borderRight :0} ${hasChildren ? styles.borderBottom : ""}`;
 
   return (
-    <div className={styles.SubQuestionNodeContainer} ref={ref}>
+    <div className={styles.SubQuestionNodeContainer} >
       <div
         className={`${styles.node} ${isInStatement ? styles.green : ""} ${depth <= 1 && !isInStatement ? styles.group : ""}`}
       >
@@ -87,7 +89,7 @@ const SubQuestionNode: FC<SubQuestionNodeProps> = ({
               }}
             ></div>
           )}
-          <div className={styles.blueDot}>●</div>
+          <div className={styles.blueDot} ref={ref}>●</div>
         </div>
       }
     </div>
