@@ -47,6 +47,7 @@ const StepItem: React.FC<Props> = ({ id, step, index, questionId, loginType }) =
 
 	const getStepDisplayName = (screen: string | undefined): string => {
 		if (!screen) return 'Unknown Step';
+
 		return screen
 			.split('-')
 			.map(word => word.charAt(0).toUpperCase() + word.slice(1))

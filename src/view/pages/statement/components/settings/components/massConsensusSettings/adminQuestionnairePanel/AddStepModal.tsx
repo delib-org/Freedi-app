@@ -5,13 +5,11 @@ import styles from './AddStepModal.module.scss';
 import CloseIcon from '@/assets/icons/close.svg?react';
 
 interface Props {
-	questionId: string;
-	statementId: string;
 	onClose: () => void;
 	onConfirm: (step: MassConsensusStep) => void;
 }
 
-const AddStepModal: React.FC<Props> = ({ questionId, statementId, onClose, onConfirm }) => {
+const AddStepModal: React.FC<Props> = ({ onClose, onConfirm }) => {
 	const [selectedStep, setSelectedStep] = useState<MassConsensusPageUrls | ''>('');
 	const [customText, setCustomText] = useState('');
 
@@ -33,7 +31,6 @@ const AddStepModal: React.FC<Props> = ({ questionId, statementId, onClose, onCon
 		const newStep: MassConsensusStep = {
 			screen: selectedStep as MassConsensusPageUrls,
 			text: customText,
-			statementId: statementId,
 		};
 
 		onConfirm(newStep);

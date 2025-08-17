@@ -28,8 +28,8 @@ const QuestionSection: React.FC<Props> = ({
 	const [isExpanded, setIsExpanded] = useState(true);
 
 	const stepIds = steps.map((step, index) => 
-		step?.screen && step?.statementId 
-			? `${step.screen}-${step.statementId}-${index}` 
+		step?.screen 
+			? `${step.screen}-${questionId}-${index}` 
 			: `step-${questionId}-${index}`
 	);
 
@@ -53,9 +53,10 @@ const QuestionSection: React.FC<Props> = ({
 					>
 						<div className={styles.steps}>
 							{steps.map((step, index) => {
-								const stepId = step?.screen && step?.statementId 
-									? `${step.screen}-${step.statementId}-${index}` 
+								const stepId = step?.screen 
+									? `${step.screen}-${questionId}-${index}` 
 									: `step-${questionId}-${index}`;
+
 								return (
 									<StepItem
 										key={stepId}

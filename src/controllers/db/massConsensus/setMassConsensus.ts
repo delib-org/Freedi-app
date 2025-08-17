@@ -1,6 +1,6 @@
 import { Collections, Creator, getStatementSubscriptionId, LoginType, MassConsensusMember, MassConsensusStep, MassConsensusProcess, MassConsensusProcessSchema, User } from "delib-npm";
 import { DB } from "../config";
-import { arrayRemove, deleteField, doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
+import { deleteField, doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
 import { convertFirebaseUserToCreator } from "@/types/user/userUtils";
 import { parse, partial } from "valibot";
 import { defaultMassConsensusProcess } from "@/model/massConsensus/massConsensusModel";
@@ -36,6 +36,7 @@ export async function reorderMassConsensusProcessToDB({ steps, loginType, statem
 	try {
 		if (!statementId) {
 			console.error('No statementId provided for reorderMassConsensusProcessToDB');
+
 			return;
 		}
 
@@ -86,6 +87,7 @@ export async function removeMassConsensusStep(statementId: string, loginType: Lo
 	try {
 		if (!statementId) {
 			console.error('No statementId provided for removeMassConsensusStep');
+
 			return;
 		}
 
@@ -101,15 +103,16 @@ export async function removeMassConsensusStep(statementId: string, loginType: Lo
 		const processDoc = await getDoc(processRef);
 		if (!processDoc.exists()) {
 			console.error('Process document does not exist');
+
 			return;
 		}
 
 		const processData = processDoc.data();
 		const currentSteps = processData?.loginTypes?.[loginType]?.steps || [];
 		
-		// Filter out the step to remove
+		// Filter out the step to remove (comparing only screen since statementId is removed)
 		const updatedSteps = currentSteps.filter((s: MassConsensusStep) => 
-			s.screen !== step.screen || s.statementId !== step.statementId
+			s.screen !== step.screen
 		);
 
 		// Update with filtered steps

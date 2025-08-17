@@ -45,11 +45,7 @@ const ProcessSetting = ({ processName, steps: _steps, loginType }: Props) => {
 			setSteps(newStepsOrder);
 
 			if (statementId) {
-				const stepsWithStatementId = newStepsOrder.map(step => ({
-					...step,
-					statementId
-				}));
-				reorderMassConsensusProcessToDB({ steps: stepsWithStatementId, statementId, loginType });
+				reorderMassConsensusProcessToDB({ steps: newStepsOrder, statementId, loginType });
 			}
 		}
 	};

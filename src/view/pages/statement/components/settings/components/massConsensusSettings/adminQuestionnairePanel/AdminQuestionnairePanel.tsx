@@ -10,9 +10,7 @@ import {
 } from '@dnd-kit/core';
 import {
 	arrayMove,
-	SortableContext,
 	sortableKeyboardCoordinates,
-	verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { MassConsensusStep, MassConsensusProcess, LoginType } from 'delib-npm';
 import { useParams } from 'react-router';
@@ -23,7 +21,6 @@ import { reorderMassConsensusProcessToDB } from '@/controllers/db/massConsensus/
 import QuestionSection from './QuestionSection';
 import AddStepModal from './AddStepModal';
 import styles from './AdminQuestionnairePanel.module.scss';
-import Button from '@/view/components/buttons/button/Button';
 
 interface Props {
 	loginType: LoginType;
@@ -39,10 +36,7 @@ const AdminQuestionnairePanel: React.FC<Props> = ({ loginType }) => {
 		statementId: statementId || '',
 		loginTypes: {
 			[loginType]: {
-				steps: defaultMassConsensusProcess.map(step => ({
-					...step,
-					statementId: statementId || ''
-				})),
+				steps: defaultMassConsensusProcess,
 				processName: 'Process Configuration',
 			},
 		},
@@ -58,55 +52,16 @@ const AdminQuestionnairePanel: React.FC<Props> = ({ loginType }) => {
 
 	const { steps = [], processName = 'Process Configuration' } = processData;
 
-	// Group steps by statementId (questions)
+	// Single question with steps that move through stages
 	React.useEffect(() => {
-		if (!steps || steps.length === 0) {
-			setQuestions([{
-				id: statementId || 'main',
-				title: 'Main Question',
-				steps: []
-			}]);
-			return;
-		}
-
 		const validSteps = steps.filter(step => step && step.screen);
 		
-		const groupedQuestions = new Map<string, MassConsensusStep[]>();
-		
-		// If all steps have the same statementId, treat as single question
-		if (validSteps.every(step => step.statementId === statementId)) {
-			setQuestions([{
-				id: statementId || 'main',
-				title: 'Main Question',
-				steps: validSteps
-			}]);
-		} else {
-			// Group by different statementIds
-			validSteps.forEach(step => {
-				const qId = step.statementId || 'main';
-				if (!groupedQuestions.has(qId)) {
-					groupedQuestions.set(qId, []);
-				}
-				groupedQuestions.get(qId)?.push(step);
-			});
-
-			const questionsArray = Array.from(groupedQuestions.entries()).map(([id, questionSteps], index) => ({
-				id,
-				title: `Question ${index + 1}`,
-				steps: questionSteps
-			}));
-			
-			if (questionsArray.length === 0) {
-				setQuestions([{
-					id: statementId || 'main',
-					title: 'Main Question',
-					steps: []
-				}]);
-			} else {
-				setQuestions(questionsArray);
-			}
-		}
-	}, [steps.length, statementId]); // Minimal dependencies to avoid infinite loops
+		setQuestions([{
+			id: statementId || 'main',
+			title: 'Mass Consensus Process',
+			steps: validSteps
+		}]);
+	}, [steps.length, statementId]);
 
 	const sensors = useSensors(
 		useSensor(PointerSensor),
@@ -133,22 +88,28 @@ const AdminQuestionnairePanel: React.FC<Props> = ({ loginType }) => {
 		const activeQuestionId = active.data.current?.questionId;
 		const overQuestionId = over.data.current?.questionId;
 
-		if (activeQuestionId !== overQuestionId) return; // Don't allow moving between questions for now
+		if (activeQuestionId !== overQuestionId) {
+			return; // Don't allow moving between questions for now
+		}
 
 		const question = questions.find(q => q.id === activeQuestionId);
-		if (!question) return;
+		if (!question) {
+			return;
+		}
 
 		// Find indices based on the ID format that includes index
 		const oldIndex = question.steps.findIndex((step, idx) => {
-			const stepId = step?.screen && step?.statementId 
-				? `${step.screen}-${step.statementId}-${idx}` 
+			const stepId = step?.screen 
+				? `${step.screen}-${activeQuestionId}-${idx}` 
 				: `step-${activeQuestionId}-${idx}`;
+
 			return stepId === active.id;
 		});
 		const newIndex = question.steps.findIndex((step, idx) => {
-			const stepId = step?.screen && step?.statementId 
-				? `${step.screen}-${step.statementId}-${idx}` 
+			const stepId = step?.screen 
+				? `${step.screen}-${overQuestionId}-${idx}` 
 				: `step-${overQuestionId}-${idx}`;
+
 			return stepId === over.id;
 		});
 
@@ -170,11 +131,8 @@ const AdminQuestionnairePanel: React.FC<Props> = ({ loginType }) => {
 				return [...acc, ...q.steps];
 			}, [] as MassConsensusStep[]);
 
-			// Ensure each step has the correct statementId
-			const stepsWithStatementId = allSteps.map(step => ({
-				...step,
-				statementId: step.statementId || statementId || ''
-			}));
+			// Steps no longer need statementId
+			const stepsWithStatementId = allSteps;
 
 			if (statementId) {
 				console.info('=== SENDING TO DATABASE ===');
@@ -201,15 +159,6 @@ const AdminQuestionnairePanel: React.FC<Props> = ({ loginType }) => {
 		} else {
 			console.error('Could not find indices for reordering');
 		}
-	};
-
-	const handleAddQuestion = () => {
-		const newQuestionId = `question-${Date.now()}`;
-		setQuestions(prev => [...prev, {
-			id: newQuestionId,
-			title: `Question ${prev.length + 1}`,
-			steps: []
-		}]);
 	};
 
 	const handleAddStep = (questionId: string) => {
@@ -248,9 +197,9 @@ const AdminQuestionnairePanel: React.FC<Props> = ({ loginType }) => {
 	return (
 		<div className={styles.panel}>
 			<div className={styles.header}>
-				<h2>Admin Questionnaire Panel</h2>
+				<h2>Mass Consensus Process Configuration</h2>
 				<div className={styles.stage}>
-					Stage: {steps[0]?.screen || 'Introduction'}
+					Current Stage: {steps[0]?.screen || 'Introduction'}
 				</div>
 			</div>
 
@@ -273,18 +222,10 @@ const AdminQuestionnairePanel: React.FC<Props> = ({ loginType }) => {
 				</div>
 			</DndContext>
 
-			<div className={styles.addQuestionWrapper}>
-				<Button
-					text="add Question"
-					onClick={handleAddQuestion}
-					className={styles.addQuestionBtn}
-				/>
-			</div>
+			{/* Single question approach - removed add question button */}
 
 			{showAddStepModal && (
 				<AddStepModal
-					questionId={selectedQuestionId}
-					statementId={statementId || ''}
 					onClose={() => setShowAddStepModal(false)}
 					onConfirm={handleAddStepConfirm}
 				/>
