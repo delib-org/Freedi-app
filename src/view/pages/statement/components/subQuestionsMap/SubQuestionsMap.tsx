@@ -49,7 +49,7 @@ const SubQuestionsMap = ({ statement }: SubQuestionsMapProps) => {
           childCount={res.sub.length}
           height={getHeight(res)}
           setNodeHeights={setNodeHeights}
-          isLast={index === tResults.sub.length - 1}
+          firstChild={index === 0}
         />
         {renderStatementTree(filterResults(res), currentDepth)}
       </div>
@@ -64,15 +64,6 @@ const SubQuestionsMap = ({ statement }: SubQuestionsMapProps) => {
 
     return height;
   };
-  const getRootHeight = (res: Results) => {
-    if (res.sub.length < 1) return;
-    const height =
-      results.sub.length > 0
-        ? nodeHeights.get(results.sub[results.sub.length - 1].top.statementId)
-        : 0;
-
-    return height;
-  };
 
   return (
     <div className={styles.subQuestionsMapContainer}>
@@ -83,9 +74,9 @@ const SubQuestionsMap = ({ statement }: SubQuestionsMapProps) => {
         statement={results.top}
         depth={defaultDepth}
         childCount={results.sub.length}
-        height={getRootHeight(results)}
+        height={getHeight(results)}
         setNodeHeights={setNodeHeights}
-        isLast={false}
+        firstChild={false}
       />
       {renderStatementTree(filteredResults, defaultDepth)}
     </div>

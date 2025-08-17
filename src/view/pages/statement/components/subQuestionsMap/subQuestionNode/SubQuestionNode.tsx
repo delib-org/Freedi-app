@@ -10,18 +10,17 @@ interface SubQuestionNodeProps {
   childCount: number;
   height?: number;
   setNodeHeights?: React.Dispatch<React.SetStateAction<Map<string, number>>>;
-  isLast?: boolean;
+  firstChild?: boolean;
 }
 
 const SubQuestionNode: FC<SubQuestionNodeProps> = ({
   statement,
   childCount,
   setNodeHeights,
-  isLast = false,
+  firstChild = false,
   depth = -1,
   height = 0,
 }) => {
-
   const hasChildren = childCount > 0;
   const topStatement = depth <= 1;
 
@@ -31,20 +30,16 @@ const SubQuestionNode: FC<SubQuestionNodeProps> = ({
   const [clicked, setClicked] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
-  const heightMargin = 72;
-  const topMargin = 96;
-  
   const updateMap = (key: string, height: number) => {
     setNodeHeights((prev) => new Map(prev).set(key, height));
   };
 
   useEffect(() => {
-    if (!isLast || !ref.current && childCount < 1) return;
-    
+    if (!ref.current) return;
     const rect = ref.current.getBoundingClientRect();
-    const actualTop = rect.top ; 
-    updateMap(statement.statementId, actualTop - heightMargin );
-}, [isLast]);
+    const actualTop = rect.top;
+    updateMap(statement.statementId, actualTop);
+  }, [statement.statementId, ref.current, statement.statementId]);
 
   const handleClick = () => {
     setClicked(true);
@@ -59,10 +54,10 @@ const SubQuestionNode: FC<SubQuestionNodeProps> = ({
   const isInStatement = statement.statementId === statementId;
   const marginLeft = `${depth}rem`;
 
-  const graphStyle = `${styles.borderDefault} ${hasChildren ? styles.borderRight :0} ${hasChildren ? styles.borderBottom : ""}`;
+  const graphStyle = `${styles.borderDefault} ${hasChildren ? styles.borderRight : 0} ${firstChild ? styles.borderTop : ""}`;
 
   return (
-    <div className={styles.SubQuestionNodeContainer} >
+    <div className={styles.SubQuestionNodeContainer}>
       <div
         className={`${styles.node} ${isInStatement ? styles.green : ""} ${depth <= 1 && !isInStatement ? styles.group : ""}`}
       >
@@ -85,11 +80,12 @@ const SubQuestionNode: FC<SubQuestionNodeProps> = ({
               style={{
                 marginLeft: `${depth}rem`,
                 height: `${height}px`,
-                top: topMargin,
               }}
             ></div>
           )}
-          <div className={styles.blueDot} ref={ref}>●</div>
+          <div className={styles.blueDot} ref={ref}>
+            ●
+          </div>
         </div>
       }
     </div>
