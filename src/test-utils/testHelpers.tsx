@@ -3,10 +3,22 @@ import { render, RenderOptions } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
 import { MemoryRouter } from 'react-router';
-import { store as appStore } from '@/redux/store';
+import { store as appStore, RootState } from '@/redux/store';
+import { statementsSlicer } from '@/redux/statements/statementsSlice';
+import { statementMetaData } from '@/redux/statements/statementsMetaSlice';
+import { evaluationsSlicer } from '@/redux/evaluations/evaluationsSlice';
+import { votesSlicer } from '@/redux/vote/votesSlice';
+import { resultsSlice } from '@/redux/results/resultsSlice';
+import { choseBySlice } from '@/redux/choseBy/choseBySlice';
+import { massConsensusSlice } from '@/redux/massConsensus/massConsensusSlice';
+import { notificationsSlicer } from '@/redux/notificationsSlice/notificationsSlice';
+import creatorReducer from '@/redux/creator/creatorSlice';
+import SubscriptionsReducer from '@/redux/subscriptions/subscriptionsSlice';
+import userDataReducer from '@/redux/userData/userDataSlice';
+import newStatementReducer from '@/redux/statements/newStatementSlice';
 
 interface CustomRenderOptions extends Omit<RenderOptions, 'wrapper'> {
-  preloadedState?: any;
+  preloadedState?: Record<string, unknown>;
   store?: ReturnType<typeof configureStore>;
   route?: string;
 }
@@ -14,7 +26,6 @@ interface CustomRenderOptions extends Omit<RenderOptions, 'wrapper'> {
 export function renderWithProviders(
   ui: ReactElement,
   {
-    preloadedState = {},
     store = appStore,
     route = '/',
     ...renderOptions
@@ -37,9 +48,22 @@ export function renderWithProviders(
   return { store, ...render(ui, { wrapper: Wrapper, ...renderOptions }) };
 }
 
-export const createMockStore = (preloadedState = {}) => {
+export const createMockStore = (preloadedState: Partial<RootState> = {}) => {
   return configureStore({
-    reducer: appStore.reducer,
+    reducer: {
+      statements: statementsSlicer.reducer,
+      statementMetaData: statementMetaData.reducer,
+      evaluations: evaluationsSlicer.reducer,
+      votes: votesSlicer.reducer,
+      results: resultsSlice.reducer,
+      choseBys: choseBySlice.reducer,
+      massConsensus: massConsensusSlice.reducer,
+      notifications: notificationsSlicer.reducer,
+      creator: creatorReducer,
+      subscriptions: SubscriptionsReducer.reducer,
+      userData: userDataReducer,
+      newStatement: newStatementReducer
+    },
     preloadedState
   });
 };
@@ -120,8 +144,9 @@ export const createMockIntersectionObserver = () => {
     unobserve: jest.fn(),
     disconnect: jest.fn()
   });
-  window.IntersectionObserver = mockIntersectionObserver as any;
-  return mockIntersectionObserver;
+  window.IntersectionObserver = mockIntersectionObserver as unknown as typeof IntersectionObserver;
+  
+return mockIntersectionObserver;
 };
 
 export * from '@testing-library/react';

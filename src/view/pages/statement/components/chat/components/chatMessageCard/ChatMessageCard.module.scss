@@ -34,7 +34,7 @@
 			0px 0px 3px 0px rgba(66, 123, 158, 0.1);
 		position: relative;
 
-		&--statement {
+		&Statement {
 			border-left: 0rem solid !important;
 		}
 
@@ -92,7 +92,7 @@
 		.messageBox {
 			border-right: 0.65rem solid;
 
-			&--statement {
+			&Statement {
 				border-right: 0rem solid !important;
 			}
 
@@ -127,7 +127,7 @@
 		}
 	}
 
-	.menuOption svg {
+	:global(.menu-option) svg {
 		color: var(--icon-blue);
 	}
 

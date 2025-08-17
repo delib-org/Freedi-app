@@ -20,8 +20,6 @@ const SubQuestionsMap = ({ statement }: SubQuestionsMapProps) => {
 	)
 		return null;
 
-	if (true) return null; // Temporary disable for testing
-
 	if (!results) return null;
 	const defaultDepth = 1;
 	const filterResults = (results: Results): Results => {
