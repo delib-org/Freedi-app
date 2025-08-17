@@ -9,18 +9,18 @@ import userDataReducer, {
   setPolarizationIndexes,
   deletePolarizationIndex
 } from '../userDataSlice';
-import { UserQuestion, PolarizationIndex } from 'delib-npm';
-import { RootState } from '../../store';
+import { UserQuestionType } from 'delib-npm';
 
-// Selectors
-const selectUserQuestions = (state: RootState) => state.userData.userQuestions;
-const selectUserData = (state: RootState) => state.userData.userData;
-const selectPolarizationIndexes = (state: RootState) => state.userData.polarizationIndexes;
-const selectUserQuestionById = (state: RootState, id: string) => 
+// Test-specific selectors that work with our test store
+type TestState = { userData: ReturnType<typeof userDataReducer> };
+const selectUserQuestions = (state: TestState) => state.userData.userQuestions;
+const selectUserData = (state: TestState) => state.userData.userData;
+const selectPolarizationIndexes = (state: TestState) => state.userData.polarizationIndexes;
+const selectUserQuestionById = (state: TestState, id: string) => 
   state.userData.userQuestions.find(q => q.userQuestionId === id);
 
 describe('userDataSlice', () => {
-  let store: any;
+  let store: ReturnType<typeof configureStore>;
 
   beforeEach(() => {
     store = configureStore({
@@ -35,17 +35,15 @@ describe('userDataSlice', () => {
   });
 
   describe('userQuestions actions', () => {
-    const mockUserQuestion: any = {
+    const mockUserQuestion = {
       userQuestionId: 'uq1',
-      questionId: 'q1',
       userId: 'user1',
       question: 'Test question?',
+      type: UserQuestionType.radio,
       options: [
         { option: 'Option 1', color: '#FF0000' },
         { option: 'Option 2', color: '#00FF00' }
       ],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
       statementId: 'stmt1'
     };
 
@@ -79,7 +77,7 @@ describe('userDataSlice', () => {
     });
 
     it('should handle setUserQuestions', () => {
-      const questions: any[] = [
+      const questions = [
         mockUserQuestion,
         { ...mockUserQuestion, userQuestionId: 'uq2', question: 'Another question?' }
       ];
@@ -117,14 +115,12 @@ describe('userDataSlice', () => {
   });
 
   describe('userData actions', () => {
-    const mockUserData: any = {
+    const mockUserData = {
       userQuestionId: 'ud1',
-      questionId: 'q1',
       userId: 'user1',
       question: 'User data question?',
+      type: UserQuestionType.text,
       options: [],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
       statementId: 'stmt1'
     };
 
@@ -145,7 +141,7 @@ describe('userDataSlice', () => {
   });
 
   describe('polarizationIndexes actions', () => {
-    const mockPolarizationIndex: any = {
+    const mockPolarizationIndex = {
       statementId: 'stmt1',
       polarizationIndex: 0.75,
       variance: 0.25,
@@ -188,14 +184,12 @@ describe('userDataSlice', () => {
 
   describe('selectors', () => {
     it('should select user questions', () => {
-      const mockQuestion: any = {
+      const mockQuestion = {
         userQuestionId: 'uq1',
-        questionId: 'q1',
         userId: 'user1',
         question: 'Test?',
+        type: UserQuestionType.text,
         options: [],
-        createdAt: new Date(),
-        updatedAt: new Date(),
         statementId: 'stmt1'
       };
       
@@ -205,14 +199,12 @@ describe('userDataSlice', () => {
     });
 
     it('should select user question by ID', () => {
-      const mockQuestion: any = {
+      const mockQuestion = {
         userQuestionId: 'uq1',
-        questionId: 'q1',
         userId: 'user1',
         question: 'Test?',
+        type: UserQuestionType.text,
         options: [],
-        createdAt: new Date(),
-        updatedAt: new Date(),
         statementId: 'stmt1'
       };
       
