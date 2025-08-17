@@ -8,11 +8,12 @@ import Input from '@/view/components/input/Input';
 import Textarea from '@/view/components/textarea/Textarea';
 import { StatementType, QuestionType } from 'delib-npm';
 import { useDispatch, useSelector } from 'react-redux';
-import { clearNewStatement, selectNewStatement, selectParentStatementForNewStatement, setShowNewStatementModal } from '@/redux/statements/newStatementSlice';
+import { clearNewStatement, selectNewStatement, selectParentStatementForNewStatement, setNewQuestionType, setShowNewStatementModal } from '@/redux/statements/newStatementSlice';
 import { creatorSelector } from '@/redux/creator/creatorSlice';
 import Checkbox from '@/view/components/checkbox/Checkbox';
 import { NewStatementContext, SimilaritySteps } from '../../NewStatementCont';
 import { getSimilarOptions } from './GetInitialStatementDataCont';
+import MultiSwitch from '@/view/components/switch/multiSwitch/MultiSwitch';
 
 export default function GetInitialStatementData() {
 	const { lookingForSimilarStatements, setLookingForSimilarStatements, setSimilarStatements, setCurrentStep, setTitle } = useContext(NewStatementContext);
@@ -25,11 +26,16 @@ export default function GetInitialStatementData() {
 	const newStatement = useSelector(selectNewStatement);
 	const newStatementType = newStatement?.statementType || StatementType.group;
 	const newStatementQuestionType =
-		newStatement?.questionSettings?.questionType || QuestionType.multiStage;
+		newStatement?.questionSettings?.questionType || QuestionType.simple;
 	const user = useSelector(creatorSelector);
 
 	const [error, setError] = useState<string>('');
 	const [loading, setLoading] = useState<boolean>(false);
+
+	function handleQuestionType(questionType: QuestionType) {
+		console.log(questionType)
+		dispatch(setNewQuestionType(questionType));
+	}
 
 	const handleSubmit = async (ev: FormEvent<HTMLFormElement>) => {
 		ev.preventDefault();
@@ -56,18 +62,18 @@ export default function GetInitialStatementData() {
 					setError
 				);
 				setLoading(false);
-				
+
 				if (result && result.similarStatements && result.similarStatements.length > 0) {
 					setSimilarStatements(result.similarStatements);
 					setCurrentStep(SimilaritySteps.SIMILARITIES);
-					
-return;
+
+					return;
 				}
 			}
 
 			dispatch(setShowNewStatementModal(false));
 			dispatch(clearNewStatement());
-			
+
 			const statementIdPromise = createStatementWithSubscription({
 				newStatementParent,
 				title,
@@ -115,6 +121,7 @@ return;
 					: <p>{t('Searching for similar statements')}...</p>}
 
 				{error && <p className={styles.error}>{t(error)}</p>}
+
 				<div className='btns'>
 					<Button
 						type='submit'
@@ -131,6 +138,15 @@ return;
 					/>
 				</div>
 			</form>
+			<MultiSwitch
+				options={[
+					{ label: t('Simple Question'), value: QuestionType.simple, toolTip: t('Simple Question') },
+					{ label: t('Mass Consensus'), value: QuestionType.massConsensus, toolTip: t('Mass Consensus') },
+					{ label: t('Questionnaire'), value: QuestionType.questionnaire, toolTip: t('Questionnaire') },
+				]}
+				onClick={(value) => { handleQuestionType(value as QuestionType); }}
+				currentValue={newStatementQuestionType}
+			/>
 		</>
 	);
 }
