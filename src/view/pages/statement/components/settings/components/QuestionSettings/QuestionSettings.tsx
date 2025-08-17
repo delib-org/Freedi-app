@@ -23,44 +23,46 @@ const QuestionSettings: FC<StatementSettingsProps> = ({
 	try {
 		const { questionSettings } = statement;
 		if (statement.statementType !== StatementType.question) return null;
+		const isSimpleQuestion = questionSettings?.questionType === QuestionType.simple;
 
-		function handleQuestionType(isDocument: boolean) {
+
+		function handleQuestionType(questionType: QuestionType) {
+			console.log(questionType)
 			setQuestionTypeToDB({
 				statement,
-				questionType: isDocument
-					? QuestionType.multiStage
-					: QuestionType.massConsensus,
+				questionType,
 			});
 		}
 
 		return (
 			<div className={styles.questionSettings}>
-				<SectionTitle title={t('Evaluation Type')} />
+				<SectionTitle title='Question Settings' />
+				<h4>{t('Question Type')}</h4>
+
 				<MultiSwitch
 					options={[
-						{ label: t('Agreement'), value: EvaluationUI.suggestions, icon: <SuggestionsIcon />, toolTip: t('Consensus') },
-						{ label: t('Voting'), value: EvaluationUI.voting, icon: <VotingIcon />, toolTip: t('Voting') },
-						{ label: t('Approval'), value: EvaluationUI.checkbox, icon: <ConsentIcon />, toolTip: t('Consent') },
-						{ label: t('Cluster'), value: EvaluationUI.clustering, icon: <ClusterIcon />, toolTip: t('Clustering') },
+						{ label: t('Simple Question'), value: QuestionType.simple, toolTip: t('Simple Question') },
+						{ label: t('Mass Consensus'), value: QuestionType.massConsensus, toolTip: t('Mass Consensus') },
+						{ label: t('Questionnaire'), value: QuestionType.questionnaire, toolTip: t('Questionnaire') },
 					]}
-					onClick={(value) => { setEvaluationUIType(statement.statementId, value as EvaluationUI); }}
-					currentValue={statement.evaluationSettings?.evaluationUI}
+					onClick={(value) => { handleQuestionType(value as QuestionType); }}
+					currentValue={statement.questionSettings?.questionType}
 				/>
+				{isSimpleQuestion && <>
+					<h4>{t('Evaluation Type')}</h4>
+					<MultiSwitch
+						options={[
+							{ label: t('Agreement'), value: EvaluationUI.suggestions, icon: <SuggestionsIcon />, toolTip: t('Consensus') },
+							{ label: t('Voting'), value: EvaluationUI.voting, icon: <VotingIcon />, toolTip: t('Voting') },
+							{ label: t('Approval'), value: EvaluationUI.checkbox, icon: <ConsentIcon />, toolTip: t('Consent') },
+							{ label: t('Cluster'), value: EvaluationUI.clustering, icon: <ClusterIcon />, toolTip: t('Clustering') },
+						]}
+						onClick={(value) => { setEvaluationUIType(statement.statementId, value as EvaluationUI); }}
+						currentValue={statement.evaluationSettings?.evaluationUI}
+					/>
+				</>}
 
-				<SectionTitle title='Question Settings' />
 
-				<CustomSwitchSmall
-					label='Document Question'
-					checked={
-						questionSettings?.questionType ===
-						QuestionType.multiStage || false
-					}
-					setChecked={handleQuestionType}
-					textChecked={t('Document Question')}
-					imageChecked={<DocumentIcon />}
-					imageUnchecked={<SimpleIcon />}
-					textUnchecked={t('Simple Question')}
-				/>
 			</div>
 		);
 	} catch (error: unknown) {
