@@ -22,6 +22,12 @@
 	margin-bottom: 1rem;
 }
 
+.subElementsWrapper{
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+	gap:.5rem;
+}
+
 .stagesWrapper {
 	padding-top: 2rem;
 	display: flex;

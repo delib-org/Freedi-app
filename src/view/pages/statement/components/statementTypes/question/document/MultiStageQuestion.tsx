@@ -20,6 +20,7 @@ import { Statement, StatementType } from 'delib-npm';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import StagePage from '../../stage/StagePage';
 import Text from '@/view/components/text/Text';
+import SubGroupCard from '@/view/components/subGroupCard/SubGroupCard';
 
 const MultiStageQuestion: FC = () => {
 	const { statement } = useContext(StatementContext);
@@ -112,31 +113,30 @@ const MultiStageQuestion: FC = () => {
 				<StagePage showStageTitle={false} />) :
 				(
 					<div className={styles.stagesWrapper}>
-						<h2 className={styles.title}>
-							{t('Document')}: {statement.statement}
-						</h2>
 						<div className={styles.description}>
 							{statement?.description}
 						</div>
 						<h3 className={styles.h3}>{t('Preliminary questions')}</h3>
-						{initialStages.map((stage, index) => (
-							<div
-								key={stage.statementId}
-								className={`${styles.stageContainer} ${draggedIndex === index ? styles.dragging : ''}`}
-								draggable
-								onDragStart={(e) => handleDragStart(e, index)}
-								onDragOver={(e) => handleDragOver(e)}
-								onDrop={(e) => handleDrop(e, index)}
-								onDragEnd={handleDragEnd}
-								aria-label={`Draggable stage ${index + 1}`}
-							>
-								{/* <div
+						<div className={styles.subElementsWrapper}>
+							{initialStages.map((stage, index) => (
+								<div
+									key={stage.statementId}
+									className={`${styles.stageContainer} ${draggedIndex === index ? styles.dragging : ''}`}
+									draggable
+									onDragStart={(e) => handleDragStart(e, index)}
+									onDragOver={(e) => handleDragOver(e)}
+									onDrop={(e) => handleDrop(e, index)}
+									onDragEnd={handleDragEnd}
+									aria-label={`Draggable stage ${index + 1}`}
+								>
+									{/* <div
 									className={styles.dragHandle}
 									aria-hidden='true'
 								></div> */}
-								<StageCard statement={stage} />
-							</div>
-						))}
+									<SubGroupCard statement={stage} />
+								</div>
+							))}
+						</div>
 						{draggedItem && (
 							<div
 								className={styles.ghostItem}
