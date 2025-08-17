@@ -2,7 +2,7 @@ import { Results, Statement, StatementType } from 'delib-npm';
 import styles from './SubQuestionsMap.module.scss';
 import SubQuestionNode from './subQuestionNode/SubQuestionNode';
 import { useMindMap } from '../map/MindMapMV';
-import { type JSX } from 'react';
+import { type JSX, useState } from 'react';
 import { useParams } from 'react-router';
 
 interface SubQuestionsMapProps {
@@ -12,6 +12,7 @@ interface SubQuestionsMapProps {
 const SubQuestionsMap = ({ statement }: SubQuestionsMapProps) => {
 	const { results } = useMindMap(statement.topParentId);
 	const { screen } = useParams();
+	const [isOpen, setIsOpen] = useState(true);
 
 	if (
 		screen === 'mind-map' ||
@@ -67,17 +68,28 @@ const SubQuestionsMap = ({ statement }: SubQuestionsMapProps) => {
 	};
 
 	return (
-		<div className={styles.subQuestionsMapContainer}>
-			<div className={styles.title}>
-				<h3>Statement Map</h3>
+		<div className={`${styles.subQuestionsMapContainer} ${isOpen ? styles.open : styles.closed}`}>
+			<button 
+				className={styles.toggleButton}
+				onClick={() => setIsOpen(!isOpen)}
+				aria-label={isOpen ? 'Close statement map' : 'Open statement map'}
+			>
+				<span className={styles.toggleIcon}>
+					{isOpen ? '›' : '‹'}
+				</span>
+			</button>
+			<div className={styles.content}>
+				<div className={styles.title}>
+					<h3>Statement Map</h3>
+				</div>
+				<SubQuestionNode
+					statement={results.top}
+					depth={defaultDepth}
+					hasChildren={results.sub.length > 0}
+					height={calculateTopParentHeight(filteredResults)}
+				/>
+				{parseTree(filteredResults, defaultDepth)}
 			</div>
-			<SubQuestionNode
-				statement={results.top}
-				depth={defaultDepth}
-				hasChildren={results.sub.length > 0}
-				height={calculateTopParentHeight(filteredResults)}
-			/>
-			{parseTree(filteredResults, defaultDepth)}
 		</div>
 	);
 };
