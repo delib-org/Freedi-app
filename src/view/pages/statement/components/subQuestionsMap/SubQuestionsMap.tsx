@@ -2,7 +2,7 @@ import { Results, Statement, StatementType } from "delib-npm";
 import styles from "./SubQuestionsMap.module.scss";
 import SubQuestionNode from "./subQuestionNode/SubQuestionNode";
 import { useMindMap } from "../map/MindMapMV";
-import { type JSX } from "react";
+import { useState, type JSX } from "react";
 import { useParams } from "react-router";
 
 interface SubQuestionsMapProps {
@@ -12,7 +12,7 @@ interface SubQuestionsMapProps {
 const SubQuestionsMap = ({ statement }: SubQuestionsMapProps) => {
   const { results } = useMindMap(statement.topParentId);
   const { screen } = useParams();
-
+  const [nodeHeights, setNodeHeights] = useState(new Map<string, number>());
   if (
     screen === "mind-map" ||
     screen === "polarization-index" ||
@@ -35,7 +35,7 @@ const SubQuestionsMap = ({ statement }: SubQuestionsMapProps) => {
   };
   const filteredResults = filterResults(results);
 
-  const parseTree = (
+  const renderStatementTree = (
     tResults: Results,
     currentDepth: number
   ): JSX.Element[] => {
@@ -46,30 +46,23 @@ const SubQuestionsMap = ({ statement }: SubQuestionsMapProps) => {
         <SubQuestionNode
           statement={res.top}
           depth={currentDepth}
-          childAmount={res.sub.length}
-          height={calculateHeight(res, 0, true)}
+          childCount={res.sub.length}
+          height={getHeight(res)}
+          setNodeHeights={setNodeHeights}
+          isLast={index === tResults.sub.length - 1}
         />
-        {parseTree(filterResults(res), currentDepth)}
+        {renderStatementTree(filterResults(res), currentDepth)}
       </div>
     ));
   };
 
-  const calculateHeight = (cResults, height = 0, root = false) => {
-    if (root) {
-      for (let i = 0; i < cResults.sub.length - 1; i++) {
-        height += 1;
-        height = calculateHeight(cResults.sub[i], height, false);
-      }
-    } else {
-      height += 1;
-      if (cResults.sub && cResults.sub.length > 0) {
-        cResults.sub.forEach((child) => {
-          height = calculateHeight(child, height, false);
-        });
-      }
-    }
+  const getHeight = (res: Results) => {
+    if (res.sub.length < 1) return;
+    const height =
+      nodeHeights.get(res.sub[res.sub.length - 1].top.statementId) -
+        nodeHeights.get(res.top.statementId) || 0;
 
-    return root ? height - 1 : height;
+    return height;
   };
 
   return (
@@ -80,10 +73,14 @@ const SubQuestionsMap = ({ statement }: SubQuestionsMapProps) => {
       <SubQuestionNode
         statement={results.top}
         depth={defaultDepth}
-        childAmount={results.sub.length}
-        height={calculateHeight(filteredResults, 0, true)}
+        childCount={results.sub.length}
+        height={nodeHeights.get(
+          results.sub[results.sub.length - 1].top.statementId
+        )}
+        setNodeHeights={setNodeHeights}
+        isLast={false}
       />
-      {parseTree(filteredResults, defaultDepth)}
+      {renderStatementTree(filteredResults, defaultDepth)}
     </div>
   );
 };

@@ -1,27 +1,48 @@
 import { useNavigate, useParams } from "react-router";
 import styles from "./subQuestionNode.module.scss";
 import ArrowLeft from "@/assets/icons/backToMenuArrow.svg?react";
-import { FC, useState } from "react";
+import React, { FC, useEffect, useRef, useState } from "react";
 import { Statement } from "delib-npm";
 
 interface SubQuestionNodeProps {
   statement: Statement;
   depth: number;
-  childAmount: number;
+  childCount: number;
   height?: number;
+  setNodeHeights?: React.Dispatch<React.SetStateAction<Map<string, number>>>;
+  isLast?: boolean;
 }
 
 const SubQuestionNode: FC<SubQuestionNodeProps> = ({
   statement,
-  childAmount,
+  childCount,
+  setNodeHeights,
+  isLast = false,
   depth = -1,
   height = 0,
 }) => {
-  const hasChildren=childAmount>0;
+
+  const hasChildren = childCount > 0;
   const topStatement = depth <= 1;
+
   const navigate = useNavigate();
+
   const { statementId } = useParams();
   const [clicked, setClicked] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  const heightMargin = 72;
+  const topMargin = 96;
+  
+  const updateMap = (key: string, height: number) => {
+    setNodeHeights((prev) => new Map(prev).set(key, height));
+  };
+  useEffect(() => {
+    if (!isLast || (!ref.current && childCount < 1)) return;
+    const top = ref.current.offsetTop;
+
+    updateMap(statement.statementId, top - heightMargin);
+  }, [isLast]);
 
   const handleClick = () => {
     setClicked(true);
@@ -32,21 +53,14 @@ const SubQuestionNode: FC<SubQuestionNodeProps> = ({
       });
     }, 302);
   };
-  
+
   const isInStatement = statement.statementId === statementId;
-  const styleMargin = 4.6;
   const marginLeft = `${depth}rem`;
-  const styleGraph = () => {
-    const classNames = [styles.borderDefault];
-    if (hasChildren) classNames.push(styles.borderRight);
 
-    if (hasChildren) classNames.push(styles.borderBottom);
-
-    return classNames.join(" ");
-  };
+  const graphStyle = `${styles.borderDefault} ${hasChildren ? styles.borderRight : ""} ${hasChildren ? styles.borderBottom : ""}`;
 
   return (
-    <div className={styles.SubQuestionNodeContainer}>
+    <div className={styles.SubQuestionNodeContainer} ref={ref}>
       <div
         className={`${styles.node} ${isInStatement ? styles.green : ""} ${depth <= 1 && !isInStatement ? styles.group : ""}`}
       >
@@ -62,14 +76,14 @@ const SubQuestionNode: FC<SubQuestionNodeProps> = ({
       </div>
 
       {
-        <div className={styleGraph()} style={{ marginLeft: marginLeft }}>
-          {(topStatement || height > 0) && childAmount > 1 && (
+        <div className={graphStyle} style={{ marginLeft: marginLeft }}>
+          {(topStatement || height > 0) && childCount > 1 && (
             <div
               className={styles.borderRightTop}
               style={{
                 marginLeft: `${depth}rem`,
-                height: `${height * styleMargin}rem`,
-                top: `${hasChildren ? styleMargin : 0}rem`,
+                height: `${height}px`,
+                top: topMargin,
               }}
             ></div>
           )}
