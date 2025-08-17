@@ -28,6 +28,8 @@ import StagePage from '../../stage/StagePage';
 import Text from '@/view/components/text/Text';
 import SubGroupCard from '@/view/components/subGroupCard/SubGroupCard';
 import NewStatement from '../../../newStatement/NewStatement';
+import SuggestionCard from '../../../evaluations/components/suggestionCards/suggestionCard/SuggestionCard';
+import { Link } from 'react-router';
 
 const MultiStageQuestion: FC = () => {
 	const { statement } = useContext(StatementContext);
@@ -37,6 +39,8 @@ const MultiStageQuestion: FC = () => {
 		statementSubsSelector(statement?.statementId)
 	);
 	const showNewStatementModal = useSelector(selectNewStatementShowModal);
+	const topSuggestions = statement.results;
+	console.log(topSuggestions);
 
 	const initialStages = useMemo(
 		() =>
@@ -185,7 +189,27 @@ const MultiStageQuestion: FC = () => {
 							</div>
 						)}
 						<h3 className={styles.h3}>{t("Proposed solution")}</h3>
-						<StageCard statement={statement} isSuggestions={true} />
+						{topSuggestions.length > 0 && (
+							<div className={styles.subElementsWrapper}>
+								{topSuggestions.map((suggestion) => (
+									<SuggestionCard
+										key={suggestion.statementId}
+										statement={suggestion}
+										siblingStatements={statement.results}
+										parentStatement={statement}
+									/>
+								))}
+							</div>
+						)}
+						<div className={`btns ${styles['add-stage']}`}>
+							<Link to={`/stage/${statement.statementId}`}>
+							<button
+								className='btn btn--secondary'
+								onClick={handleAddSubQuestion}
+							>{t('see all suggestions')}
+							</button>
+							</Link>
+						</div>
 					</div>
 				)}
 

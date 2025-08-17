@@ -28,8 +28,8 @@ import { Link } from 'react-router';
 
 interface Props {
 	statement: Statement | undefined;
-	siblingStatements: Statement[];
-	parentStatement: Statement | undefined;
+	siblingStatements?: Statement[];
+	parentStatement?: Statement | undefined;
 }
 
 const SuggestionCard: FC<Props> = ({
