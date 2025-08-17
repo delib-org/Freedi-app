@@ -722,8 +722,15 @@ return;
 			// Add current token to all subscriptions
 			const updatePromises = subscriptionsSnapshot.docs.map(doc => {
 				const subscription = doc.data();
+				const statementId = subscription.statementId || subscription.statement?.statementId;
 				
-return addTokenToSubscription(subscription.statementId, userId, this.token!);
+				if (!statementId) {
+					console.error('No statementId found in subscription:', doc.id);
+
+					return Promise.resolve();
+				}
+				
+				return addTokenToSubscription(statementId, userId, this.token!);
 			});
 			
 			await Promise.all(updatePromises);
@@ -749,8 +756,15 @@ return addTokenToSubscription(subscription.statementId, userId, this.token!);
 			// Remove token from all subscriptions
 			const removePromises = subscriptionsSnapshot.docs.map(doc => {
 				const subscription = doc.data();
+				const statementId = subscription.statementId || subscription.statement?.statementId;
 				
-return removeTokenFromSubscription(subscription.statementId, userId, token);
+				if (!statementId) {
+					console.error('No statementId found in subscription:', doc.id);
+
+					return Promise.resolve();
+				}
+				
+				return removeTokenFromSubscription(statementId, userId, token);
 			});
 			
 			await Promise.all(removePromises);

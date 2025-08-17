@@ -105,9 +105,19 @@ export async function updateLastReadTimestamp(
 			statementsSubscribeId
 		);
 
-		await updateDoc(statementsSubscribeRef, {
-			lastReadTimestamp: new Date().getTime()
-		});
+		// Check if subscription exists first
+		const docSnap = await getDoc(statementsSubscribeRef);
+		
+		if (docSnap.exists()) {
+			// Document exists, update it
+			await updateDoc(statementsSubscribeRef, {
+				lastReadTimestamp: new Date().getTime(),
+				lastUpdate: Timestamp.now().toMillis(),
+				statementId: statementId // Include statementId to satisfy Firebase rules
+			});
+		}
+		// If document doesn't exist, don't create it - user should be subscribed first
+		// This prevents creating incomplete subscription objects
 	} catch (error) {
 		console.error(error);
 	}
@@ -180,7 +190,10 @@ export async function updateMemberRole(
 			Collections.statementsSubscribe,
 			statementSubscriptionId
 		);
-		await updateDoc(statementSubscriptionRef, { role: newRole });
+		await updateDoc(statementSubscriptionRef, { 
+			role: newRole,
+			statementId: statementId // Include statementId to satisfy Firebase rules
+		});
 	} catch (error) {
 		console.error('Error updating member role:', error);
 	}
@@ -208,11 +221,19 @@ export async function addTokenToSubscription(
 			statementSubscriptionId
 		);
 
-		// Add token to the tokens array if it doesn't exist
-		await updateDoc(statementSubscriptionRef, {
-			tokens: arrayUnion(token),
-			lastUpdate: Timestamp.now().toMillis()
-		});
+		// Check if document exists
+		const docSnap = await getDoc(statementSubscriptionRef);
+		
+		if (docSnap.exists()) {
+			// Document exists, use updateDoc
+			await updateDoc(statementSubscriptionRef, {
+				tokens: arrayUnion(token),
+				lastUpdate: Timestamp.now().toMillis(),
+				statementId: statementId // Include statementId to satisfy Firebase rules
+			});
+		}
+		// If document doesn't exist, don't create it - user should be subscribed first
+		// This prevents creating incomplete subscription objects
 	} catch (error) {
 		console.error('Error adding token to subscription:', error);
 	}
@@ -240,11 +261,18 @@ export async function removeTokenFromSubscription(
 			statementSubscriptionId
 		);
 
-		// Remove token from the tokens array
-		await updateDoc(statementSubscriptionRef, {
-			tokens: arrayRemove(token),
-			lastUpdate: Timestamp.now().toMillis()
-		});
+		// Check if document exists before trying to update
+		const docSnap = await getDoc(statementSubscriptionRef);
+		
+		if (docSnap.exists()) {
+			// Remove token from the tokens array
+			await updateDoc(statementSubscriptionRef, {
+				tokens: arrayRemove(token),
+				lastUpdate: Timestamp.now().toMillis(),
+				statementId: statementId // Include statementId to satisfy Firebase rules
+			});
+		}
+		// If document doesn't exist, nothing to remove from
 	} catch (error) {
 		console.error('Error removing token from subscription:', error);
 	}
@@ -276,10 +304,19 @@ export async function updateNotificationPreferences(
 			statementSubscriptionId
 		);
 
-		await updateDoc(statementSubscriptionRef, {
-			...preferences,
-			lastUpdate: Timestamp.now().toMillis()
-		});
+		// Check if document exists
+		const docSnap = await getDoc(statementSubscriptionRef);
+		
+		if (docSnap.exists()) {
+			// Document exists, use updateDoc
+			await updateDoc(statementSubscriptionRef, {
+				...preferences,
+				lastUpdate: Timestamp.now().toMillis(),
+				statementId: statementId // Include statementId to satisfy Firebase rules
+			});
+		}
+		// If document doesn't exist, don't create it - user should be subscribed first
+		// This prevents creating incomplete subscription objects
 	} catch (error) {
 		console.error('Error updating notification preferences:', error);
 	}

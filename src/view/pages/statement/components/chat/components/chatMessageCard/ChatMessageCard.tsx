@@ -1,7 +1,6 @@
 import { ChangeEvent, FC, useEffect, useRef, useState } from 'react';
 import StatementChatMore from '../statementChatMore/StatementChatMore';
 import UserAvatar from '../userAvatar/UserAvatar';
-import AddQuestionIcon from '@/assets/icons/addQuestion.svg?react';
 import DeleteIcon from '@/assets/icons/delete.svg?react';
 import EditIcon from '@/assets/icons/editIcon.svg?react';
 import LightBulbIcon from '@/assets/icons/lightBulbIcon.svg?react';
@@ -89,8 +88,6 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
 
 	const isAlignedLeft = (isMe && dir === 'ltr') || (!isMe && dir === 'rtl');
 
-	const shouldLinkToChildren = parentStatement?.hasChildren;
-
 	// Focus the textarea when in edit mode
 	useEffect(() => {
 		if (isEdit && textareaRef.current) {
@@ -152,7 +149,7 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
 
 	return (
 		<div
-			className={`chat-message-card ${isAlignedLeft && 'aligned-left'} ${dir}`}
+			className={`${styles.chatMessageCard} ${isAlignedLeft ? styles.alignedLeft : ''} ${styles[dir] || ''}`}
 		>
 			{!isPreviousFromSameAuthor && (
 				<div className={styles.user}>
@@ -164,8 +161,8 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
 			<div
 				className={
 					isStatement
-						? 'message-box message-box--statement'
-						: 'message-box'
+						? `${styles.messageBox} ${styles.messageBoxStatement}`
+						: styles.messageBox
 				}
 				style={{
 					borderColor: isGeneral
@@ -299,15 +296,6 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
 					<Evaluation
 						statement={statement}
 					/>
-					{shouldLinkToChildren && (
-						<button
-							className='add-question-btn more-question'
-							aria-label='Add question button'
-							onClick={() => setIsNewStatementModalOpen(true)}
-						>
-							<AddQuestionIcon />
-						</button>
-					)}
 				</div>
 				{isNewStatementModalOpen && (
 					<CreateStatementModal
