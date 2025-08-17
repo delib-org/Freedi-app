@@ -27,7 +27,7 @@ const QuestionSettings: FC<StatementSettingsProps> = ({
 
 
 		function handleQuestionType(questionType: QuestionType) {
-			console.log(questionType)
+		
 			setQuestionTypeToDB({
 				statement,
 				questionType,
@@ -37,7 +37,7 @@ const QuestionSettings: FC<StatementSettingsProps> = ({
 		return (
 			<div className={styles.questionSettings}>
 				<SectionTitle title='Question Settings' />
-				<h4>{t('Question Type')}</h4>
+				<h3>{t('Question Type')}</h3>
 
 				<MultiSwitch
 					options={[
@@ -49,7 +49,7 @@ const QuestionSettings: FC<StatementSettingsProps> = ({
 					currentValue={statement.questionSettings?.questionType}
 				/>
 				{isSimpleQuestion && <>
-					<h4>{t('Evaluation Type')}</h4>
+					<h3>{t('Evaluation Type')}</h3>
 					<MultiSwitch
 						options={[
 							{ label: t('Agreement'), value: EvaluationUI.suggestions, icon: <SuggestionsIcon />, toolTip: t('Consensus') },

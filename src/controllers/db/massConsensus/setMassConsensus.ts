@@ -43,13 +43,6 @@ export async function reorderMassConsensusProcessToDB({ steps, loginType, statem
 		const processRef = doc(DB, Collections.massConsensusProcesses, statementId);
 		const type = loginType ?? "default";
 
-		console.info('=== DATABASE UPDATE START ===');
-		console.info('Document Path:', `${Collections.massConsensusProcesses}/${statementId}`);
-		console.info('Login Type:', type);
-		console.info('Process Name:', processName || 'Not provided');
-		console.info('Steps Count:', steps.length);
-		console.info('Steps Order:', steps.map(s => s.screen));
-
 		// Get the current document first to preserve other loginTypes
 		const processDoc = await getDoc(processRef);
 		let existingData = processDoc.exists() ? processDoc.data() : { statementId, loginTypes: {} };
@@ -65,7 +58,6 @@ export async function reorderMassConsensusProcessToDB({ steps, loginType, statem
 			processName: processName || existingData.loginTypes[type]?.processName || "Default Process"
 		};
 
-		console.info('Full document to save:', JSON.stringify(existingData, null, 2));
 
 		// Validate the data
 		const PartialMassConsensusProcessSchema = partial(MassConsensusProcessSchema);
@@ -73,8 +65,6 @@ export async function reorderMassConsensusProcessToDB({ steps, loginType, statem
 
 		// Update the document in Firestore
 		await setDoc(processRef, existingData, { merge: false }); // Use merge: false for complete replacement
-		console.info('=== DATABASE UPDATE SUCCESS ===');
-		console.info(`Document ${statementId} updated successfully`);
 
 	} catch (error) {
 		console.error('=== DATABASE UPDATE ERROR ===');
@@ -90,12 +80,6 @@ export async function removeMassConsensusStep(statementId: string, loginType: Lo
 
 			return;
 		}
-
-		console.info('Removing step from DB:', {
-			statementId,
-			loginType,
-			stepScreen: step.screen
-		});
 
 		const processRef = doc(DB, Collections.massConsensusProcesses, statementId);
 		
@@ -120,7 +104,6 @@ export async function removeMassConsensusStep(statementId: string, loginType: Lo
 			[`loginTypes.${loginType}.steps`]: updatedSteps
 		});
 
-		console.info('Successfully removed step from DB');
 	} catch (error) {
 		console.error('Error removing step:', error);
 	}
