@@ -1,28 +1,56 @@
 .chatPanelContainer {
-	position: fixed;
-	left: 0;
-	width: 20vw;
-	height: 85%;
-	bottom: 0;
-	background-color: var(--menu-default);
-	overflow-y: auto;
+  position: fixed;
+  left: 0;
+  width: 20vw;
+  height: 85%;
+  bottom: 0;
+  background-color: var(--menu-default);
+  overflow-y: auto;
 }
-.sideChatTitle {
-	margin: 1rem 1rem 0.3rem 1rem;
-	display: flex;
-	flex-direction: row;
-	align-items: center;
-	color: var(--icons-primary);
-	h5 {
-		margin-left: 0.5rem;
+.chatPanelContainerClosed {
+  position: fixed;
+  left: 0;
+  width: 4vw;
+  height: 85%;
+  bottom: 0;
+  background-color: var(--menu-default);
+  overflow-y: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.openChatPanelBtn{
+	color:var(--icons-primary);
+	font-size: 2rem;
+	transform: scaleX(-1);
+	margin: 1rem;
+	cursor: pointer;
+	&:hover{
+		scale: 1.1;
 	}
 }
+.closeChatPanel{
+	position: absolute;
+	color:var(--icons-primary);
+	font-size: 2rem;
+	top: 1%;
+	right: 6%;
+}
+.sideChatTitle {
+  margin: 1rem 1rem 0.3rem 1rem;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  color: var(--icons-primary);
+  h5 {
+    margin-left: 0.5rem;
+  }
+}
 p {
-	line-height: 1.1;
-	padding: 0;
-	margin: 0;
-	font-size: 0.7rem;
-	margin-left: 1rem;
-	margin-bottom: 1rem;
-	color: var(--lighter);
+  line-height: 1.1;
+  padding: 0;
+  margin: 0;
+  font-size: 0.7rem;
+  margin-left: 1rem;
+  margin-bottom: 1rem;
+  color: var(--lighter);
 }
