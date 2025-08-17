@@ -152,7 +152,7 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
 
 	return (
 		<div
-			className={`chat-message-card ${isAlignedLeft && 'aligned-left'} ${dir}`}
+			className={`${styles.chatMessageCard} ${isAlignedLeft && 'aligned-left'} ${dir}`}
 		>
 			{!isPreviousFromSameAuthor && (
 				<div className={styles.user}>
