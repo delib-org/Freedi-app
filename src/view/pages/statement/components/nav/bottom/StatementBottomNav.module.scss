@@ -32,15 +32,15 @@ $addOptionSize: 45px;
 }
 
 /* Optional: slightly smaller icons while the pill is visible */
-.statementBottomNavLearning {
-  --nav-icon-size: 2.2rem;
-  --nav-icon-size-active: 2.6rem;
-  --nav-icon-svg: 22px;
-  --sort-button-size: 45px;
+// .statementBottomNavLearning {
+//   --nav-icon-size: 2.2rem;
+//   --nav-icon-size-active: 2.6rem;
+//   --nav-icon-svg: 22px;
+//   --sort-button-size: 45px;
 
-  --sort-gap: 70px;
-  --sort-gap-mobile: 72px;
-}
+//   --sort-gap: 70px;
+//   --sort-gap-mobile: 72px;
+// }
 
 .statementBottomNavShow {
   @extend .statementBottomNav;

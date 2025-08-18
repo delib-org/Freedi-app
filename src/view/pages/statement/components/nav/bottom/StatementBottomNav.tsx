@@ -112,7 +112,7 @@ const StatementBottomNav: FC<Props> = () => {
 
 	const navRootClass = [
 		showSorting ? `${styles.statementBottomNav} ${styles.statementBottomNavShow}` : styles.statementBottomNav,
-		isLearningFace ? styles.statementBottomNavLearning : '',
+		// isLearningFace ? styles.statementBottomNavLearning : '',
 		showSorting ? styles.mobileSortExpanded : '',
 	].join(' ');
 
