@@ -5,8 +5,8 @@ $addOptionSize: 45px;
   --nav-icon-size-active: 3rem;
   --nav-icon-svg: 26px;
   --sort-button-size: 51px;
-  --sort-gap: 80px;
-  --sort-gap-mobile: 50px;
+  --sort-gap: 90px;
+  --sort-gap-mobile: 62px;
 }
 
 @media screen and (max-width: 600px) {
@@ -16,8 +16,8 @@ $addOptionSize: 45px;
   width: 100%;
   position: relative;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  justify-content: space-evenly;
+  // align-items: center;
   bottom: 0px;
   z-index: 10;
   padding: 5px 5px 30px 5px;
@@ -31,6 +31,7 @@ $addOptionSize: 45px;
   height: 100%;
 }
 
+/* Optional: slightly smaller icons while the pill is visible */
 .statementBottomNavLearning {
   --nav-icon-size: 2.2rem;
   --nav-icon-size-active: 2.6rem;
@@ -38,7 +39,7 @@ $addOptionSize: 45px;
   --sort-button-size: 45px;
 
   --sort-gap: 70px;
-  --sort-gap-mobile: 42px;
+  --sort-gap-mobile: 72px;
 }
 
 .statementBottomNavShow {
@@ -72,6 +73,7 @@ $addOptionSize: 45px;
   flex-direction: row-reverse;
 }
 
+/* === Add Option button: round by default === */
 .addOptionButton {
   width: $addOptionSize;
   height: $addOptionSize;
@@ -98,6 +100,7 @@ $addOptionSize: 45px;
   }
 }
 
+/* === Pill variant === */
 .addOptionButtonPill {
   min-width: 180px;
   height: 50px;
@@ -125,6 +128,7 @@ $addOptionSize: 45px;
   }
 }
 
+/* Animations */
 .addOptionButtonIntroLTR {
   animation: pill-grow-ltr 420ms ease-out 1 both;
 }
@@ -165,7 +169,6 @@ $addOptionSize: 45px;
     border-radius: 25px;
   }
 }
-
 @keyframes pill-shrink-to-round {
   0% {
     min-width: 180px;
@@ -189,6 +192,7 @@ $addOptionSize: 45px;
   }
 }
 
+/* ===== Sort menu (desktop/tablet: absolute fan-out) ===== */
 .sortMenu {
   position: relative;
   flex: auto;
@@ -328,5 +332,56 @@ $addOptionSize: 45px;
 
   svg {
     width: var(--nav-icon-svg);
+  }
+}
+
+/* === Mobile-only full-width sort mode when the menu is open === */
+.mobileSortExpanded {
+  @media (max-width: 700px) {
+    /* Hide the Add (+ / pill) button entirely while expanded */
+    .addOptionButton {
+      display: none !important;
+    }
+
+    /* Hide the round Sort trigger while expanded */
+    .sortButton {
+      display: none !important;
+    }
+
+    /* Grid the 4 items across 100% width */
+    .sortMenu {
+      flex: 1 1 100%;
+      width: 100%;
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      align-items: start;
+      justify-items: center;
+      gap: 8px;
+      position: relative;
+      padding: 0 6px;
+    }
+
+    /* Turn off absolute “fan-out” positioning in mobile expanded mode */
+    .sortMenu__item {
+      position: static !important;
+      left: auto !important;
+      transform: none !important;
+      transition: none !important;
+
+      .openNavIcon {
+        width: var(--nav-icon-size);
+        height: var(--nav-icon-size);
+        transform: none !important;
+      }
+
+      .buttonName {
+        display: block !important;
+        opacity: 1 !important;
+        margin-top: 6px;
+        font-size: 0.8rem;
+        text-align: center;
+        white-space: nowrap;
+      }
+    }
   }
 }
