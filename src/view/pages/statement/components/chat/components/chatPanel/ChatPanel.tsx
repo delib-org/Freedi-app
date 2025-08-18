@@ -35,12 +35,12 @@ const ChatPanel = () => {
     return null;
 
   const closeChatPanel = () => {
-        setIsAnimatingOut(true); 
-        setTimeout(() => {
-            setIsSideChatOpen(false);
-            setIsAnimatingOut(false);
-        }, 502); 
-    };
+    setIsAnimatingOut(true);
+    setTimeout(() => {
+      setIsSideChatOpen(false);
+      setIsAnimatingOut(false);
+    }, 502);
+  };
 
   const content = (
     <div className={styles.icon}>
@@ -56,7 +56,7 @@ const ChatPanel = () => {
   );
 
   return (
-    <>
+    <div className={styles.chatPanel}>
       {isSideChatOpen ? (
         <div
           className={`${styles.chatPanelContainer} ${isAnimatingOut ? styles.chatPanelClosing : ""}`}
@@ -87,7 +87,7 @@ const ChatPanel = () => {
           <button className={styles.openChatPanelBtn}>{content} </button>
         </div>
       )}
-    </>
+    </div>
   );
 };
 

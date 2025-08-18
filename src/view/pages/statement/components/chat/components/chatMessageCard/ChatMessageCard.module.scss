@@ -126,14 +126,24 @@
   :global(.menu-option) svg {
     color: var(--icon-blue);
   }
+  .rowIcons {
+    flex-flow: row;
+  }
+  .columnIcons {
+    flex-flow: column;
+  }
+  .centered {
+    margin: 0 auto;
+    margin-top: 1rem;
+  }
+  .spacerLine {
+    margin-top: 0.5rem;
+  }
 
   .bottomIcons {
     display: flex;
-    flex-flow: row;
-    align-items: center;
     justify-content: space-between;
-    margin-top: auto;
-    /* Push icons to the bottom */
+    margin-top: 1rem;
 
     @media screen and (max-width: 500px) {
       display: grid;
