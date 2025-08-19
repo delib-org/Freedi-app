@@ -1,15 +1,12 @@
-$addOptionSize: 45px;
+$addOptionSize: 60px;
 
 :root {
-  --nav-icon-size: 2.5rem;
-  --nav-icon-size-active: 3rem;
-  --nav-icon-svg: 26px;
-  --sort-button-size: 51px;
+  --nav-icon-size: 48px;
+  --nav-icon-size-active: 48px;
+  --nav-icon-svg: 24px;
+  --sort-button-size: 48px;
   --sort-gap: 90px;
-  --sort-gap-mobile: 62px;
-}
-
-@media screen and (max-width: 600px) {
+  --sort-gap-mobile: 65px;
 }
 
 .statementBottomNav {
@@ -17,30 +14,18 @@ $addOptionSize: 45px;
   position: relative;
   display: flex;
   justify-content: space-evenly;
-  // align-items: center;
+  align-items: center;
   bottom: 0px;
   z-index: 10;
-  padding: 5px 5px 30px 5px;
-  background: rgb(252, 252, 252);
+  padding: 30px 20px;
   background: linear-gradient(
     180deg,
     rgba(252, 252, 252, 0) 0%,
-    rgba(255, 255, 255, 0.8687850140056023) 37%,
+    rgba(255, 255, 255, 0.8688) 37%,
     rgba(255, 255, 255, 1) 100%
   );
   height: 100%;
 }
-
-/* Optional: slightly smaller icons while the pill is visible */
-// .statementBottomNavLearning {
-//   --nav-icon-size: 2.2rem;
-//   --nav-icon-size-active: 2.6rem;
-//   --nav-icon-svg: 22px;
-//   --sort-button-size: 45px;
-
-//   --sort-gap: 70px;
-//   --sort-gap-mobile: 72px;
-// }
 
 .statementBottomNavShow {
   @extend .statementBottomNav;
@@ -60,6 +45,14 @@ $addOptionSize: 45px;
   }
 }
 
+.sortExpandedMobile {
+  @media (max-width: 730px) {
+    .addOptionButton {
+      display: none !important;
+    }
+  }
+}
+
 .addOptionButtonWrapper {
   position: relative;
   top: 0px;
@@ -73,7 +66,6 @@ $addOptionSize: 45px;
   flex-direction: row-reverse;
 }
 
-/* === Add Option button: round by default === */
 .addOptionButton {
   width: $addOptionSize;
   height: $addOptionSize;
@@ -100,19 +92,16 @@ $addOptionSize: 45px;
   }
 }
 
-/* === Pill variant === */
 .addOptionButtonPill {
   min-width: 180px;
-  height: 50px;
+  height: 48px;
   padding: 0 1rem;
-  border-radius: 25px;
+  border-radius: 24px;
   justify-content: center;
 
   @media screen and (max-width: 700px) {
     min-width: 128px;
     padding: 0 0.75rem;
-    height: 47px;
-    border-radius: 23.5px;
   }
 }
 
@@ -128,7 +117,6 @@ $addOptionSize: 45px;
   }
 }
 
-/* Animations */
 .addOptionButtonIntroLTR {
   animation: pill-grow-ltr 420ms ease-out 1 both;
 }
@@ -149,9 +137,9 @@ $addOptionSize: 45px;
   }
   100% {
     min-width: 180px;
-    height: 50px;
+    height: 48px;
     padding-inline: 1rem;
-    border-radius: 25px;
+    border-radius: 24px;
   }
 }
 @keyframes pill-grow-rtl {
@@ -164,21 +152,21 @@ $addOptionSize: 45px;
   }
   100% {
     min-width: 180px;
-    height: 50px;
+    height: 48px;
     padding-inline: 1rem;
-    border-radius: 25px;
+    border-radius: 24px;
   }
 }
 @keyframes pill-shrink-to-round {
   0% {
     min-width: 180px;
-    height: 50px;
+    height: 48px;
     padding-inline: 1rem;
-    border-radius: 25px;
+    border-radius: 24px;
   }
   100% {
-    min-width: $addOptionSize;
-    height: $addOptionSize;
+    min-width: $addOptionSize; /* 60px */
+    height: $addOptionSize; /* 60px */
     padding-inline: 0;
     border-radius: $addOptionSize;
   }
@@ -192,10 +180,10 @@ $addOptionSize: 45px;
   }
 }
 
-/* ===== Sort menu (desktop/tablet: absolute fan-out) ===== */
 .sortMenu {
   position: relative;
   flex: auto;
+  min-height: 50px;
 
   &__item {
     display: flex;
@@ -204,22 +192,23 @@ $addOptionSize: 45px;
     align-items: center;
     position: absolute;
     left: 0;
-    transition: all 1s ease;
+    transition:
+      left 600ms ease,
+      transform 1200ms ease,
+      opacity 350ms ease;
 
     &.active {
       .openNavIcon {
-        width: var(--nav-icon-size-active);
-        height: var(--nav-icon-size-active);
+        width: var(--nav-icon-size);
+        height: var(--nav-icon-size);
       }
 
       &:nth-child(1) {
         z-index: 20;
         left: var(--sort-gap);
-
         @media screen and (max-width: 700px) {
           left: var(--sort-gap-mobile);
         }
-
         .openNavIcon {
           transform: rotate(360deg);
         }
@@ -232,11 +221,9 @@ $addOptionSize: 45px;
       &:nth-child(2) {
         z-index: 20;
         left: calc(var(--sort-gap) * 2);
-
         @media screen and (max-width: 700px) {
           left: calc(var(--sort-gap-mobile) * 2);
         }
-
         .openNavIcon {
           transform: rotate(360deg);
         }
@@ -249,11 +236,9 @@ $addOptionSize: 45px;
       &:nth-child(3) {
         z-index: 20;
         left: calc(var(--sort-gap) * 3);
-
         @media screen and (max-width: 700px) {
           left: calc(var(--sort-gap-mobile) * 3);
         }
-
         .openNavIcon {
           transform: rotate(360deg);
         }
@@ -266,11 +251,9 @@ $addOptionSize: 45px;
       &:nth-child(4) {
         z-index: 20;
         left: calc(var(--sort-gap) * 4);
-
         @media screen and (max-width: 700px) {
           left: calc(var(--sort-gap-mobile) * 4);
         }
-
         .openNavIcon {
           transform: rotate(360deg);
         }
@@ -287,7 +270,7 @@ $addOptionSize: 45px;
   display: none;
   font-size: 0.8rem;
   opacity: 0;
-  transition: all 1s ease;
+  transition: opacity 200ms ease;
   color: var(--text-headline);
 }
 
@@ -308,6 +291,7 @@ $addOptionSize: 45px;
 
   svg {
     width: var(--nav-icon-svg);
+    height: var(--nav-icon-svg);
   }
 }
 
@@ -332,56 +316,12 @@ $addOptionSize: 45px;
 
   svg {
     width: var(--nav-icon-svg);
+    height: var(--nav-icon-svg);
   }
 }
-
-/* === Mobile-only full-width sort mode when the menu is open === */
-.mobileSortExpanded {
-  @media (max-width: 700px) {
-    /* Hide the Add (+ / pill) button entirely while expanded */
-    .addOptionButton {
-      display: none !important;
-    }
-
-    /* Hide the round Sort trigger while expanded */
-    .sortButton {
-      display: none !important;
-    }
-
-    /* Grid the 4 items across 100% width */
-    .sortMenu {
-      flex: 1 1 100%;
-      width: 100%;
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      align-items: start;
-      justify-items: center;
-      gap: 8px;
-      position: relative;
-      padding: 0 6px;
-    }
-
-    /* Turn off absolute “fan-out” positioning in mobile expanded mode */
-    .sortMenu__item {
-      position: static !important;
-      left: auto !important;
-      transform: none !important;
-      transition: none !important;
-
-      .openNavIcon {
-        width: var(--nav-icon-size);
-        height: var(--nav-icon-size);
-        transform: none !important;
-      }
-
-      .buttonName {
-        display: block !important;
-        opacity: 1 !important;
-        margin-top: 6px;
-        font-size: 0.8rem;
-        text-align: center;
-        white-space: nowrap;
-      }
-    }
-  }
+.whiteIcon,
+.whiteIcon * {
+  color: #fff !important;
+  fill: #fff !important;
+  stroke: #fff !important;
 }
