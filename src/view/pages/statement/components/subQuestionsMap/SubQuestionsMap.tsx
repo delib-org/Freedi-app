@@ -47,19 +47,38 @@ const SubQuestionsMap = ({ statement }: SubQuestionsMapProps) => {
           statement={res.top}
           depth={currentDepth}
           childCount={res.sub.length}
-          height={getHeight(res)}
+          height={getLineLength(res)}
+          heightMargin={getLineMargin(res)}
           setNodeHeights={setNodeHeights}
-          firstChild={index === 0}
+          isFirstChild={index === 0}
+          heightToChild={getLineToChild(res)}
         />
         {renderStatementTree(filterResults(res), currentDepth)}
       </div>
     ));
   };
 
-  const getHeight = (res: Results) => {
+  const getLineMargin = (res: Results) => {
+    if (res.sub.length < 1) return;
+    const margin =
+      nodeHeights.get(res.top.statementId) -
+        nodeHeights.get(res.sub[0].top.statementId) || 0;
+
+    return margin;
+  };
+  const getLineLength = (res: Results) => {
     if (res.sub.length < 1) return;
     const height =
       nodeHeights.get(res.sub[res.sub.length - 1].top.statementId) -
+        nodeHeights.get(res.sub[0].top.statementId) || 0;
+
+    return height;
+  };
+  const getLineToChild = (res: Results) => {
+    if (res.sub.length < 1) return;
+
+    const height =
+      nodeHeights.get(res.sub.length > 0 ? res.sub[0].top.statementId : "") -
         nodeHeights.get(res.top.statementId) || 0;
 
     return height;
@@ -74,9 +93,11 @@ const SubQuestionsMap = ({ statement }: SubQuestionsMapProps) => {
         statement={results.top}
         depth={defaultDepth}
         childCount={results.sub.length}
-        height={getHeight(results)}
+        height={getLineLength(results)}
         setNodeHeights={setNodeHeights}
-        firstChild={false}
+        isFirstChild={false}
+        heightMargin={getLineMargin(results)}
+        heightToChild={getLineToChild(results)}
       />
       {renderStatementTree(filteredResults, defaultDepth)}
     </div>

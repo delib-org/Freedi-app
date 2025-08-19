@@ -9,19 +9,23 @@ interface SubQuestionNodeProps {
   depth: number;
   childCount: number;
   height?: number;
+  heightMargin?: number;
+
   setNodeHeights?: React.Dispatch<React.SetStateAction<Map<string, number>>>;
-  firstChild?: boolean;
+  isFirstChild?: boolean;
+  heightToChild?: number;
 }
 
 const SubQuestionNode: FC<SubQuestionNodeProps> = ({
   statement,
   childCount,
   setNodeHeights,
-  firstChild = false,
+  heightMargin,
+  isFirstChild = false,
+  heightToChild = 0,
   depth = -1,
   height = 0,
 }) => {
-  const hasChildren = childCount > 0;
   const topStatement = depth <= 1;
 
   const navigate = useNavigate();
@@ -33,7 +37,6 @@ const SubQuestionNode: FC<SubQuestionNodeProps> = ({
   const updateMap = (key: string, height: number) => {
     setNodeHeights((prev) => new Map(prev).set(key, height));
   };
-
   useEffect(() => {
     if (!ref.current) return;
     const rect = ref.current.getBoundingClientRect();
@@ -54,7 +57,7 @@ const SubQuestionNode: FC<SubQuestionNodeProps> = ({
   const isInStatement = statement.statementId === statementId;
   const marginLeft = `${depth}rem`;
 
-  const graphStyle = `${styles.borderDefault} ${hasChildren ? styles.borderRight : 0} ${firstChild ? styles.borderTop : ""}`;
+  const graphStyle = `${styles.borderDefault}  ${isFirstChild ? styles.borderTop : ""}`;
 
   return (
     <div className={styles.SubQuestionNodeContainer}>
@@ -73,16 +76,29 @@ const SubQuestionNode: FC<SubQuestionNodeProps> = ({
       </div>
 
       {
+        //this border reaches to the parents Last child
         <div className={graphStyle} style={{ marginLeft: marginLeft }}>
-          {(topStatement || height > 0) && childCount > 1 && (
+          {(topStatement || height > 0) && childCount > 0 && (
             <div
               className={styles.borderRightTop}
               style={{
-                marginLeft: `${depth}rem`,
                 height: `${height}px`,
+                right: `1.002rem`,
+                top: `${-heightMargin}px`,
               }}
             ></div>
           )}
+          {
+            //this border reaches to the parents First child
+            (topStatement || heightToChild > 0) && childCount > 0 && (
+              <div
+                className={styles.borderRightTop}
+                style={{
+                  height: `${heightToChild}px`,
+                }}
+              ></div>
+            )
+          }
           <div className={styles.blueDot} ref={ref}>
             ●
           </div>
