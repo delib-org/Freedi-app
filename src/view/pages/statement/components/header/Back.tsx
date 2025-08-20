@@ -22,7 +22,7 @@ const Back: FC<Props> = ({ statement, headerColor }) => {
 				});
 			}
 			if (location.pathname.includes('stage')) {
-				return navigate(`/statement/${statement?.parentId}`, {
+				return navigate(`/statement/${statement?.statementId}`, {
 					state: { from: window.location.pathname },
 				});
 			}
