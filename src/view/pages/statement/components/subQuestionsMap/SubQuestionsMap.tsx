@@ -5,7 +5,6 @@ import { useMindMap } from '../map/MindMapMV';
 import SubQuestionNode from './subQuestionNode/SubQuestionNode';
 import styles from './SubQuestionsMap.module.scss';
 
-
 interface SubQuestionsMapProps {
   readonly statement: Statement;
 }
@@ -79,55 +78,42 @@ const SubQuestionsMap = ({ statement }: SubQuestionsMapProps) => {
   };
   const getLineToChild = (res: Results) => {
     if (res.sub.length < 1) return;
-
     const height =
       nodeHeights.get(res.sub.length > 0 ? res.sub[0].top.statementId : "") -
         nodeHeights.get(res.top.statementId) || 0;
 
-	return (
-		<div className={`${styles.subQuestionsMapContainer} ${isOpen ? styles.open : styles.closed}`}>
-			<button 
-				className={styles.toggleButton}
-				onClick={() => setIsOpen(!isOpen)}
-				aria-label={isOpen ? 'Close statement map' : 'Open statement map'}
-			>
-				<span className={styles.toggleIcon}>
-					{isOpen ? '›' : '‹'}
-				</span>
-			</button>
-			<div className={styles.content}>
-				<div className={styles.title}>
-					<h3>Statement Map</h3>
-				</div>
-				<SubQuestionNode
-					statement={results.top}
-					depth={defaultDepth}
-					hasChildren={results.sub.length > 0}
-					height={calculateTopParentHeight(filteredResults)}
-				/>
-				{parseTree(filteredResults, defaultDepth)}
-			</div>
-		</div>
-	);
     return height;
   };
 
   return (
-    <div className={styles.subQuestionsMapContainer}>
-      <div className={styles.title}>
-        <h3>Statement Map</h3>
-      </div>
-      <SubQuestionNode
-        statement={results.top}
-        depth={defaultDepth}
-        childCount={results.sub.length}
-        height={getLineLength(results)}
-        setNodeHeights={setNodeHeights}
-        isFirstChild={false}
-        heightMargin={getLineMargin(results)}
-        heightToChild={getLineToChild(results)}
-      />
-      {renderStatementTree(filteredResults, defaultDepth)}
+    <div className={`${styles.subQuestionsMapContainer} ${isOpen ? styles.open : styles.closed}`}>
+      <button 
+        className={styles.toggleButton}
+        onClick={() => setIsOpen(!isOpen)}
+        aria-label={isOpen ? 'Close statement map' : 'Open statement map'}
+      >
+        <span className={styles.toggleIcon}>
+          {isOpen ? '›' : '‹'}
+        </span>
+      </button>
+      {isOpen && (
+        <div className={styles.content}>
+          <div className={styles.title}>
+            <h3>Statement Map</h3>
+          </div>
+          <SubQuestionNode
+            statement={results.top}
+            depth={defaultDepth}
+            childCount={results.sub.length}
+            height={getLineLength(results)}
+            setNodeHeights={setNodeHeights}
+            isFirstChild={false}
+            heightMargin={getLineMargin(results)}
+            heightToChild={getLineToChild(results)}
+          />
+          {renderStatementTree(filteredResults, defaultDepth)}
+        </div>
+      )}
     </div>
   );
 };
