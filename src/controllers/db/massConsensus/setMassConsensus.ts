@@ -1,6 +1,6 @@
-import { Collections, Creator, getStatementSubscriptionId, LoginType, MassConsensusMember, MassConsensusPageUrls, MassConsensusProcess, MassConsensusProcessSchema, User } from "delib-npm";
+import { Collections, Creator, getStatementSubscriptionId, LoginType, MassConsensusMember, MassConsensusPageUrls, MassConsensusProcess, MassConsensusProcessSchema, MassConsensusStep, User } from "delib-npm";
 import { DB } from "../config";
-import { arrayRemove, deleteField, doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
+import { deleteField, doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
 import { convertFirebaseUserToCreator } from "@/types/user/userUtils";
 import { parse, partial } from "valibot";
 import { defaultMassConsensusProcess } from "@/model/massConsensus/massConsensusModel";
@@ -26,7 +26,7 @@ export async function setMassConsensusMemberToDB(creator: Creator | User, statem
 }
 
 interface MassConsensusProcessProps {
-	steps: MassConsensusPageUrls[];
+	steps: MassConsensusStep[];
 	loginType?: LoginType;
 	statementId: string;
 	processName?: string;
@@ -67,14 +67,19 @@ export async function reorderMassConsensusProcessToDB({ steps, loginType, statem
 export async function removeMassConsensusStep(statementId: string, loginType: LoginType, step: MassConsensusPageUrls): Promise<void> {
 	try {
 		const processRef = doc(DB, Collections.massConsensusProcesses, statementId);
+		const processDoc = await getDoc(processRef);
+		if (!processDoc.exists()) return;
+		
+		const processData = processDoc.data() as MassConsensusProcess;
+		const currentSteps = processData.loginTypes?.[loginType]?.steps || [];
+		const updatedSteps = currentSteps.filter(s => s.screen !== step);
+		
 		await updateDoc(processRef, {
-			[`loginTypes.${loginType}.steps`]: arrayRemove(step)
+			[`loginTypes.${loginType}.steps`]: updatedSteps
 		});
 	} catch (error) {
 		console.error(error);
-
 	}
-
 }
 
 export async function updateMassConsensusLoginTypeProcess(statementId: string, loginType: LoginType, processName?: string): Promise<void> {

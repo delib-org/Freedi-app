@@ -49,7 +49,7 @@ describe('userDataSlice', () => {
 
     it('should handle setUserQuestion', () => {
       store.dispatch(setUserQuestion(mockUserQuestion));
-      const state = store.getState();
+      const state = store.getState() as TestState;
       expect(selectUserQuestions(state)).toHaveLength(1);
       expect(selectUserQuestions(state)[0]).toEqual(mockUserQuestion);
     });
@@ -63,7 +63,7 @@ describe('userDataSlice', () => {
       };
       
       store.dispatch(setUserQuestion(updatedQuestion));
-      const state = store.getState();
+      const state = store.getState() as TestState;
       expect(selectUserQuestions(state)).toHaveLength(1);
       expect(selectUserQuestions(state)[0].question).toBe('Updated question?');
     });
@@ -72,7 +72,7 @@ describe('userDataSlice', () => {
       store.dispatch(setUserQuestion(mockUserQuestion));
       store.dispatch(deleteUserQuestion('uq1'));
       
-      const state = store.getState();
+      const state = store.getState() as TestState;
       expect(selectUserQuestions(state)).toHaveLength(0);
     });
 
@@ -83,7 +83,7 @@ describe('userDataSlice', () => {
       ];
       
       store.dispatch(setUserQuestions(questions));
-      const state = store.getState();
+      const state = store.getState() as TestState;
       expect(selectUserQuestions(state)).toHaveLength(2);
     });
 
@@ -95,7 +95,7 @@ describe('userDataSlice', () => {
         color: '#0000FF'
       }));
       
-      const state = store.getState();
+      const state = store.getState() as TestState;
       const question = selectUserQuestionById(state, 'uq1');
       expect(question?.options[0].color).toBe('#0000FF');
     });
@@ -108,7 +108,7 @@ describe('userDataSlice', () => {
         color: '#0000FF'
       }));
       
-      const state = store.getState();
+      const state = store.getState() as TestState;
       const question = selectUserQuestionById(state, 'uq1');
       expect(question?.options[0].color).toBe('#FF0000');
     });
@@ -126,7 +126,7 @@ describe('userDataSlice', () => {
 
     it('should handle setUserData', () => {
       store.dispatch(setUserData(mockUserData));
-      const state = store.getState();
+      const state = store.getState() as TestState;
       expect(selectUserData(state)).toHaveLength(1);
       expect(selectUserData(state)[0]).toEqual(mockUserData);
     });
@@ -135,7 +135,7 @@ describe('userDataSlice', () => {
       store.dispatch(setUserData(mockUserData));
       store.dispatch(deleteUserData('ud1'));
       
-      const state = store.getState();
+      const state = store.getState() as TestState;
       expect(selectUserData(state)).toHaveLength(0);
     });
   });
@@ -143,18 +143,20 @@ describe('userDataSlice', () => {
   describe('polarizationIndexes actions', () => {
     const mockPolarizationIndex = {
       statementId: 'stmt1',
-      polarizationIndex: 0.75,
-      variance: 0.25,
-      mean: 0.5,
-      standardDeviation: 0.1,
-      sampleSize: 100,
-      timestamp: new Date().toISOString(),
-      parentId: 'parent1'
+      averageAgreement: 3.5,
+      lastUpdated: Date.now(),
+      overallMAD: 0.45,
+      overallMean: 3.5,
+      overallN: 100,
+      parentId: 'parent1',
+      statement: 'Test statement',
+      color: '#000000',
+      axes: []
     };
 
     it('should handle setPolarizationIndexes', () => {
       store.dispatch(setPolarizationIndexes(mockPolarizationIndex));
-      const state = store.getState();
+      const state = store.getState() as TestState;
       expect(selectPolarizationIndexes(state)).toHaveLength(1);
       expect(selectPolarizationIndexes(state)[0]).toEqual(mockPolarizationIndex);
     });
@@ -164,20 +166,20 @@ describe('userDataSlice', () => {
       
       const updatedIndex = {
         ...mockPolarizationIndex,
-        polarizationIndex: 0.9
+        averageAgreement: 4.0
       };
       
       store.dispatch(setPolarizationIndexes(updatedIndex));
-      const state = store.getState();
+      const state = store.getState() as TestState;
       expect(selectPolarizationIndexes(state)).toHaveLength(1);
-      expect(selectPolarizationIndexes(state)[0].polarizationIndex).toBe(0.9);
+      expect(selectPolarizationIndexes(state)[0].averageAgreement).toBe(4.0);
     });
 
     it('should handle deletePolarizationIndex', () => {
       store.dispatch(setPolarizationIndexes(mockPolarizationIndex));
       store.dispatch(deletePolarizationIndex('stmt1'));
       
-      const state = store.getState();
+      const state = store.getState() as TestState;
       expect(selectPolarizationIndexes(state)).toHaveLength(0);
     });
   });
@@ -194,7 +196,7 @@ describe('userDataSlice', () => {
       };
       
       store.dispatch(setUserQuestion(mockQuestion));
-      const state = store.getState();
+      const state = store.getState() as TestState;
       expect(selectUserQuestions(state)).toContainEqual(mockQuestion);
     });
 
@@ -209,7 +211,7 @@ describe('userDataSlice', () => {
       };
       
       store.dispatch(setUserQuestion(mockQuestion));
-      const state = store.getState();
+      const state = store.getState() as TestState;
       expect(selectUserQuestionById(state, 'uq1')).toEqual(mockQuestion);
       expect(selectUserQuestionById(state, 'non-existent')).toBeUndefined();
     });
