@@ -1,198 +1,327 @@
-$sortBtnPosition:70px;
-$sortBtnPositionMobile: 55px;
 $addOptionSize: 60px;
 
-@media screen and (max-width: 600px) {}
+:root {
+  --nav-icon-size: 48px;
+  --nav-icon-size-active: 48px;
+  --nav-icon-svg: 24px;
+  --sort-button-size: 48px;
+  --sort-gap: 90px;
+  --sort-gap-mobile: 64px;
+}
 
 .statementBottomNav {
-	width: 100%;
-	position: relative;
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	bottom: 0px;
-	z-index: 10;
-	padding: 5px 5px 30px 5px;
-	background: rgb(252, 252, 252);
-	background: linear-gradient(180deg, rgba(252, 252, 252, 0) 0%, rgba(255, 255, 255, 0.8687850140056023) 37%, rgba(255, 255, 255, 1) 100%);
-	height: 100%;
+  width: 100%;
+  position: relative;
+  display: flex;
+  justify-content: space-evenly;
+  align-items: center;
+  bottom: 0px;
+  z-index: 10;
+  padding: 30px 20px;
+  background: linear-gradient(
+    180deg,
+    rgba(252, 252, 252, 0) 0%,
+    rgba(255, 255, 255, 0.8688) 37%,
+    rgba(255, 255, 255, 1) 100%
+  );
+  height: 100%;
 }
 
 .statementBottomNavShow {
-	@extend .statementBottomNav;
-	animation: showSortMenu 750ms linear 0s 1 forwards normal;
+  @extend .statementBottomNav;
+  animation: showSortMenu 750ms linear 0s 1 forwards normal;
 }
 
 .statementBottomNavLtr {
-	flex-direction: row-reverse;
+  flex-direction: row-reverse;
 }
 
 @keyframes showSortMenu {
-	0% {
-		opacity: 0;
-	}
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
 
-	100% {
-		opacity: 1;
-	}
+.sortExpandedMobile {
+  @media (max-width: 730px) {
+    .addOptionButton {
+      display: none !important;
+    }
+  }
 }
 
 .addOptionButtonWrapper {
-	position: relative;
-	top: 0px;
-	display: flex;
-	justify-content: space-between;
-	width: 100%;
+  position: relative;
+  top: 0px;
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
 }
 
 .addOptionButtonWrapperLtr {
-	@extend .addOptionButtonWrapper;
-	flex-direction: row-reverse;
+  @extend .addOptionButtonWrapper;
+  flex-direction: row-reverse;
 }
 
 .addOptionButton {
-	width: $addOptionSize;
-	height: $addOptionSize;
-	border-radius: $addOptionSize;
-	z-index: 10000;
+  width: $addOptionSize;
+  height: $addOptionSize;
+  border-radius: $addOptionSize;
+  z-index: 10000;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0;
+
+  transition:
+    width 220ms ease,
+    min-width 220ms ease,
+    height 220ms ease,
+    padding 220ms ease,
+    border-radius 220ms ease;
+
+  svg {
+    width: var(--nav-icon-svg);
+    height: var(--nav-icon-svg);
+    flex: 0 0 auto;
+  }
+}
+
+.addOptionButtonPill {
+  min-width: 180px;
+  height: 48px;
+  padding: 0 1rem;
+  border-radius: 24px;
+  justify-content: center;
+
+  @media screen and (max-width: 700px) {
+    min-width: 128px;
+    padding: 0 0.75rem;
+  }
+}
+
+.addOptionButtonLabel {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--text-headline);
+  white-space: nowrap;
+  line-height: 1;
+
+  @media screen and (max-width: 700px) {
+    font-size: 0.85rem;
+  }
+}
+
+.addOptionButtonIntroLTR {
+  animation: pill-grow-ltr 420ms ease-out 1 both;
+}
+.addOptionButtonIntroRTL {
+  animation: pill-grow-rtl 420ms ease-out 1 both;
+}
+.addOptionButtonShrinking {
+  animation: pill-shrink-to-round 360ms ease-in 1 both;
+}
+
+@keyframes pill-grow-ltr {
+  0% {
+    min-width: $addOptionSize;
+    height: $addOptionSize;
+    padding-inline: 0;
+    border-radius: $addOptionSize;
+    transform-origin: left center;
+  }
+  100% {
+    min-width: 180px;
+    height: 48px;
+    padding-inline: 1rem;
+    border-radius: 24px;
+  }
+}
+@keyframes pill-grow-rtl {
+  0% {
+    min-width: $addOptionSize;
+    height: $addOptionSize;
+    padding-inline: 0;
+    border-radius: $addOptionSize;
+    transform-origin: right center;
+  }
+  100% {
+    min-width: 180px;
+    height: 48px;
+    padding-inline: 1rem;
+    border-radius: 24px;
+  }
+}
+@keyframes pill-shrink-to-round {
+  0% {
+    min-width: 180px;
+    height: 48px;
+    padding-inline: 1rem;
+    border-radius: 24px;
+  }
+  100% {
+    min-width: $addOptionSize; /* 60px */
+    height: $addOptionSize; /* 60px */
+    padding-inline: 0;
+    border-radius: $addOptionSize;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .addOptionButtonIntroLTR,
+  .addOptionButtonIntroRTL,
+  .addOptionButtonShrinking {
+    animation: none !important;
+  }
 }
 
 .sortMenu {
-	position: relative;
-	flex: auto;
+  position: relative;
+  flex: auto;
+  min-height: 50px;
 
-	&__item {
-		display: flex;
-		flex-direction: column;
-		justify-content: center;
-		align-items: center;
-		position: absolute;
-		left: 0;
-		transition: all 1s ease;
+  &__item {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    position: absolute;
+    left: 0;
+    transition:
+      left 600ms ease,
+      transform 1200ms ease,
+      opacity 350ms ease;
 
-		&.active {
-			.openNavIcon {
-				width: 3rem;
-				height: 3rem;
-			}
+    &.active {
+      .openNavIcon {
+        width: var(--nav-icon-size);
+        height: var(--nav-icon-size);
+      }
 
-			&:nth-child(1) {
-				z-index: 20;
-				left: $sortBtnPosition;
+      &:nth-child(1) {
+        z-index: 20;
+        left: var(--sort-gap);
+        @media screen and (max-width: 700px) {
+          left: var(--sort-gap-mobile);
+        }
+        .openNavIcon {
+          transform: rotate(360deg);
+        }
+        .buttonName {
+          opacity: 1;
+          display: block;
+        }
+      }
 
-				@media screen and (max-width: 600px) {
-					left: calc($sortBtnPositionMobile);
-				}
+      &:nth-child(2) {
+        z-index: 20;
+        left: calc(var(--sort-gap) * 2);
+        @media screen and (max-width: 700px) {
+          left: calc(var(--sort-gap-mobile) * 2);
+        }
+        .openNavIcon {
+          transform: rotate(360deg);
+        }
+        .buttonName {
+          opacity: 1;
+          display: block;
+        }
+      }
 
-				.openNavIcon {
-					transform: rotate(360deg);
-				}
+      &:nth-child(3) {
+        z-index: 20;
+        left: calc(var(--sort-gap) * 3);
+        @media screen and (max-width: 700px) {
+          left: calc(var(--sort-gap-mobile) * 3);
+        }
+        .openNavIcon {
+          transform: rotate(360deg);
+        }
+        .buttonName {
+          opacity: 1;
+          display: block;
+        }
+      }
 
-				.buttonName {
-					opacity: 1;
-					display: block;
-				}
-			}
-
-			&:nth-child(2) {
-				z-index: 20;
-				left: calc($sortBtnPosition * 2);
-
-				@media screen and (max-width: 600px) {
-					left: calc($sortBtnPositionMobile *2);
-				}
-
-				.openNavIcon {
-					transform: rotate(360deg);
-				}
-
-				.buttonName {
-					opacity: 1;
-					display: block;
-				}
-			}
-
-			&:nth-child(3) {
-				z-index: 20;
-				left: calc($sortBtnPosition * 3);
-
-				@media screen and (max-width: 600px) {
-					left: calc($sortBtnPositionMobile * 3);
-				}
-
-				.openNavIcon {
-					transform: rotate(360deg);
-				}
-
-				.buttonName {
-					opacity: 1;
-					display: block;
-				}
-			}
-
-			&:nth-child(4) {
-				z-index: 20;
-				left: calc($sortBtnPosition * 4);
-
-				@media screen and (max-width: 600px) {
-					left: calc($sortBtnPositionMobile * 4);
-				}
-
-				.openNavIcon {
-					transform: rotate(360deg);
-				}
-
-				.buttonName {
-					opacity: 1;
-					display: block;
-				}
-			}
-		}
-	}
+      &:nth-child(4) {
+        z-index: 20;
+        left: calc(var(--sort-gap) * 4);
+        @media screen and (max-width: 700px) {
+          left: calc(var(--sort-gap-mobile) * 4);
+        }
+        .openNavIcon {
+          transform: rotate(360deg);
+        }
+        .buttonName {
+          opacity: 1;
+          display: block;
+        }
+      }
+    }
+  }
 }
 
 .buttonName {
-	display: none;
-	font-size: .8rem;
-	opacity: 0;
-	transition: all 1s ease;
-	color: var(--text-headline)
+  display: none;
+  font-size: 0.8rem;
+  opacity: 0;
+  transition: opacity 200ms ease;
+  color: var(--text-headline);
 }
 
 .openNavIcon {
-	width: 2.5rem;
-	height: 2.5rem;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	background-color: var(--white);
-	box-shadow: 2px 2px 5px var(--shadow);
-	border-radius: 50%;
-	cursor: pointer;
-	transition: all 1s ease;
+  width: var(--nav-icon-size);
+  height: var(--nav-icon-size);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--white);
+  box-shadow: 2px 2px 5px var(--shadow);
+  border-radius: 50%;
+  cursor: pointer;
+  transition:
+    width 200ms ease,
+    height 200ms ease,
+    transform 1s ease;
 
-	svg {
-		width: 26px;
-	}
+  svg {
+    width: var(--nav-icon-svg);
+    height: var(--nav-icon-svg);
+  }
 }
 
 .sortButton {
-	width: 51px;
-	height: 51px;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	background-color: var(--question);
-	color: white;
-	box-shadow: 2px 2px 5px var(--shadow);
-	border-radius: 50%;
-	cursor: pointer;
-	transition: all 1s ease;
-	position: absolute;
-	left: 0;
-	z-index: 10000;
+  width: var(--sort-button-size);
+  height: var(--sort-button-size);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--question);
+  color: white;
+  box-shadow: 2px 2px 5px var(--shadow);
+  border-radius: 50%;
+  cursor: pointer;
+  transition:
+    width 200ms ease,
+    height 200ms ease;
 
-	svg {
-		width: 26px;
-	}
+  position: absolute;
+  left: 0;
+  z-index: 10000;
+
+  svg {
+    width: var(--nav-icon-svg);
+    height: var(--nav-icon-svg);
+  }
+}
+.whiteIcon,
+.whiteIcon * {
+  color: #fff !important;
+  fill: #fff !important;
+  stroke: #fff !important;
 }
