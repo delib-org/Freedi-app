@@ -1,15 +1,10 @@
 import { Results, Statement, StatementType } from 'delib-npm';
-import styles from './SubQuestionsMap.module.scss';
-import SubQuestionNode from './subQuestionNode/SubQuestionNode';
-import { useMindMap } from '../map/MindMapMV';
 import { type JSX, useState } from 'react';
 import { useParams } from 'react-router';
-import { Results, Statement, StatementType } from "delib-npm";
-import styles from "./SubQuestionsMap.module.scss";
-import SubQuestionNode from "./subQuestionNode/SubQuestionNode";
-import { useMindMap } from "../map/MindMapMV";
-import { useState, type JSX } from "react";
-import { useParams } from "react-router";
+import { useMindMap } from '../map/MindMapMV';
+import SubQuestionNode from './subQuestionNode/SubQuestionNode';
+import styles from './SubQuestionsMap.module.scss';
+
 
 interface SubQuestionsMapProps {
   readonly statement: Statement;
@@ -17,9 +12,8 @@ interface SubQuestionsMapProps {
 
 const SubQuestionsMap = ({ statement }: SubQuestionsMapProps) => {
 	const { results } = useMindMap(statement.topParentId);
-	const { screen } = useParams();
 	const [isOpen, setIsOpen] = useState(true);
-  const { results } = useMindMap(statement.topParentId);
+
   const { screen } = useParams();
   const [nodeHeights, setNodeHeights] = useState(new Map<string, number>());
   if (
