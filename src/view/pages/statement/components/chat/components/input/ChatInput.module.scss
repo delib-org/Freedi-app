@@ -1,65 +1,66 @@
+.chatInput, .sideChatInput {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+    form {
+        width: 100%;
+        display: flex;
+        max-width: var(--wrapper);
+        position: relative;
+        user-select: none;
+        cursor: pointer;
+        background-color: #4e88c7;
+
+        textarea {
+            padding: 0.3rem 70px 0.2rem 0.2rem;
+            resize: none;
+            outline: none;
+            border: none;
+            color: #232f4a;
+            min-height: 4rem;
+            flex: auto;
+            box-shadow: 0px 2px 4px 0px rgba(181, 197, 232, 0.48);
+            box-shadow: 0px -2px 4px 0px rgba(195, 202, 217, 0.5);
+            font-size: 1rem;
+            transition: all 0.3s ease-in-out;
+
+            &::placeholder {
+                color: #979797;
+            }
+        }
+
+        button {
+            height: 100%;
+            width: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            position: absolute;
+            right: 0rem;
+            user-select: none;
+            cursor: pointer;
+            background-color: #4e88c7;
+        }
+    }
+}
+
+/* Specific styles that are not shared */
 .chatInput {
-	width: 100%;
+    width: 100%;
+}
 
-	display: flex;
-	flex-direction: column;
-	justify-content: center;
-	align-items: center;
+.sideChatInput {
+    width: 20%;
+    z-index: 999;
+}
 
-	.eval {
-		display: flex;
-		justify-content: center;
-		align-items: center;
-		gap: 1rem;
-		width: fit-content;
-	}
-
-	form {
-		width: 100%;
-		display: flex;
-
-		max-width: var(--wrapper);
-
-		position: relative;
-
-
-
-		user-select: none;
-		cursor: pointer;
-		background-color: #4e88c7;
-
-		textarea {
-			padding: 0.3rem 70px 0.2rem 0.2rem;
-			resize: none;
-			outline: none;
-			border: none;
-			color: #232f4a;
-			min-height: 4rem;
-			flex: auto;
-			box-shadow: 0px 2px 4px 0px rgba(181, 197, 232, 0.48);
-			box-shadow: 0px -2px 4px 0px rgba(195, 202, 217, 0.5);
-			font-size: 1rem;
-			transition: all 0.3s ease-in-out;
-
-			&::placeholder {
-				color: #979797;
-			}
-		}
-
-
-
-		button {
-			height: 100%;
-			width: 60px;
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			flex-direction: column;
-			position: absolute;
-			right: 0rem;
-			user-select: none;
-			cursor: pointer;
-			background-color: #4e88c7;
-		}
-	}
+.eval {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    width: fit-content;
 }

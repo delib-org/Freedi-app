@@ -346,6 +346,7 @@ export function createStatement({
 			membership: membership || { access: Access.openToAll },
 			statementSettings: {
 				enhancedEvaluation,
+				hasChat:true,
 				showEvaluation,
 				enableAddEvaluationOption,
 				enableAddVotingOption,

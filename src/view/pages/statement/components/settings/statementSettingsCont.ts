@@ -202,7 +202,6 @@ const getSetStatementData = (statement: Statement) => {
 
 	return {
 		hasChildren: Boolean(statement.hasChildren),
-
 		resultsBy,
 		numberOfResults,
 		enableAddEvaluationOption,

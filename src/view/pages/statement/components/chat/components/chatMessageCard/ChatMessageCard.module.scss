@@ -1,201 +1,208 @@
 .chatMessageCard {
-	display: flex;
-	flex-direction: column;
-	direction: rtl;
-	max-width: 75ch;
-	margin: auto;
-	padding: 0.3rem;
-	padding-inline: 1rem;
-	color: var(--text-paragraph);
+  display: flex;
+  flex-direction: column;
+  direction: rtl;
+  max-width: 75ch;
+  margin: auto;
+  padding: 0.3rem;
+  padding-inline: 1rem;
+  color: var(--text-paragraph);
 
-	.user {
-		display: flex;
-		align-items: center;
-		gap: 1rem;
-		padding-top: 0.5rem;
-	}
+  .user {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding-top: 0.5rem;
+  }
+  .messageSideBox {
+    width: 80%;
+  }
+  .messageBox {
+    height: fit-content;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 0.5rem;
+    background-color: var(--inputBackground);
+    padding: 1rem;
+    border-radius: 10px;
+    box-shadow:
+      1px 0px 9px 0px rgba(66, 123, 158, 0),
+      1px 0px 9px 0px rgba(66, 123, 158, 0.01),
+      0px 0px 7px 0px rgba(66, 123, 158, 0.05),
+      0px 0px 5px 0px rgba(66, 123, 158, 0.09),
+      0px 0px 3px 0px rgba(66, 123, 158, 0.1);
+    position: relative;
 
-	.messageBox {
-		height: fit-content;
-		display: flex;
-		flex-direction: column;
-		justify-content: space-between;
-		gap: 0.5rem;
-		background-color: var(--inputBackground);
-		padding: 1rem;
-		border-radius: 10px;
-		box-shadow:
-			1px 0px 9px 0px rgba(66, 123, 158, 0),
-			1px 0px 9px 0px rgba(66, 123, 158, 0.01),
-			0px 0px 7px 0px rgba(66, 123, 158, 0.05),
-			0px 0px 5px 0px rgba(66, 123, 158, 0.09),
-			0px 0px 3px 0px rgba(66, 123, 158, 0.1);
-		position: relative;
+    &Statement {
+      border-left: 0rem solid !important;
+    }
 
-		&Statement {
-			border-left: 0rem solid !important;
-		}
+    .triangle {
+      position: absolute;
+      background-color: inherit;
+      height: 2rem;
+      width: 2rem;
+      top: 0;
+    }
 
-		.triangle {
-			position: absolute;
-			background-color: inherit;
-			height: 2rem;
-			width: 2rem;
-			top: 0;
-		}
+    .info {
+      display: flex;
+      position: relative;
 
-		.info {
-			display: flex;
-			position: relative;
+      .infoText {
+        flex: 1;
+        user-select: text;
+        background-color: var(--background-color-info-text);
+      }
+    }
 
-			.infoText {
-				flex: 1;
-				user-select: text;
-				background-color: var(--background-color-info-text);
-			}
-		}
+    .actions {
+      display: flex;
+      justify-content: space-between;
+      border-top: 2px solid var(--statementBackground);
+      padding-top: 0.5rem;
 
-		.actions {
-			display: flex;
-			justify-content: space-between;
-			border-top: 2px solid var(--statementBackground);
-			padding-top: 0.5rem;
+      > div {
+        display: flex;
+      }
 
-			>div {
-				display: flex;
-			}
+      .actionsType {
+        gap: 1rem;
+      }
 
-			.actionsType {
-				gap: 1rem;
-			}
+      &.actionsEvaluations {
+        gap: 3rem;
+      }
+    }
+  }
 
-			&.actionsEvaluations {
-				gap: 3rem;
-			}
-		}
-	}
+  &.alignedLeft {
+    direction: ltr;
 
-	&.alignedLeft {
-		direction: ltr;
+    &.rtl {
+      .messageBox {
+        direction: rtl;
+      }
+    }
+    .messageMargin {
+      margin-left: 2rem;
+      margin-right: 1rem;
+    }
+    .messageBox {
+      border-right: 0.65rem solid;
 
-		&.rtl {
-			.messageBox {
-				direction: rtl;
-			}
-		}
+      &Statement {
+        border-right: 0rem solid !important;
+      }
 
-		.messageBox {
-			border-right: 0.65rem solid;
-			margin-left: 2rem;
-			margin-right: 1rem;
+      .triangle {
+        clip-path: polygon(30% 0, 100% 100%, 100% 0);
+        left: -1.2rem;
+      }
+    }
+  }
 
-			&Statement {
-				border-right: 0rem solid !important;
-			}
+  &:not(.alignedLeft) {
+    &.ltr {
+      .messageBox {
+        direction: ltr;
+      }
+    }
 
-			.triangle {
-				clip-path: polygon(30% 0, 100% 100%, 100% 0);
-				left: -1.2rem;
-			}
-		}
-	}
+    .messageBox {
+      border-left: 0.65rem solid;
 
-	&:not(.alignedLeft) {
-		&.ltr {
-			.messageBox {
-				direction: ltr;
-			}
-		}
+      .triangle {
+        clip-path: polygon(0 0, 0% 100%, 70% 0);
+        right: -1.2rem;
+      }
+    }
+  }
+  .messageMargin {
+    margin-right: 1.8rem;
+    margin-left: 1rem;
+  }
+  :global(.menu-option) svg {
+    color: var(--icon-blue);
+  }
+  .rowIcons {
+    flex-flow: row;
+  }
+  .columnIcons {
+    flex-flow: column;
+  }
+  .centered {
+    margin: 0 auto;
+    margin-top: 1rem;
+  }
+  .spacerLine {
+    margin-top: 0.5rem;
+  }
 
-		.messageBox {
-			border-left: 0.65rem solid;
-			margin-right: 1.8rem;
-			margin-left: 1rem;
+  .bottomIcons {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 1rem;
 
-			@media screen and (max-width: 500px) {
-				margin-right: 0rem;
-				margin-left: 0rem;
+    @media screen and (max-width: 500px) {
+      display: grid;
+      align-items: center;
+      justify-content: center;
+      grid-template-rows: auto 30px;
+      grid-template-columns: repeat(2, 1fr);
+      row-gap: 0px;
+      width: 100%;
 
-			}
+      grid-template-areas:
+        "evaluation evaluation"
+        "more question";
 
+      .evolutionElement {
+        grid-area: evaluation;
+      }
 
-			.triangle {
-				clip-path: polygon(0 0, 0% 100%, 70% 0);
-				right: -1.2rem;
-			}
-		}
-	}
+      .chatMoreElement {
+        grid-area: more;
+      }
 
-	:global(.menu-option) svg {
-		color: var(--icon-blue);
-	}
+      .moreQuestion {
+        grid-area: question;
+      }
+    }
 
-	.bottomIcons {
-		display: flex;
-		flex-flow: row;
-		align-items: center;
-		justify-content: space-between;
-		margin-top: auto;
-		/* Push icons to the bottom */
+    .addQuestionBtn {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: flex-end;
+      background: none;
+      border: none;
+      cursor: pointer;
+    }
+  }
 
-		@media screen and (max-width: 500px) {
-			display: grid;
-			align-items: center;
-			justify-content: center;
-			grid-template-rows: auto 30px;
-			grid-template-columns: repeat(2, 1fr);
-			row-gap: 0px;
-			width: 100%;
-
-			grid-template-areas:
-				'evaluation evaluation'
-				'more question';
-
-			.evolutionElement {
-				grid-area: evaluation;
-			}
-
-			.chatMoreElement {
-				grid-area: more;
-			}
-
-			.moreQuestion {
-				grid-area: question;
-			}
-		}
-
-		.addQuestionBtn {
-			display: flex;
-			flex-direction: row;
-			align-items: center;
-			justify-content: flex-end;
-			background: none;
-			border: none;
-			cursor: pointer;
-		}
-	}
-
-	.addQuestionSVG {
-		margin-top: 13px;
-		height: 22px;
-		width: 20px;
-		color: var(--icon-blue);
-	}
+  .addQuestionSVG {
+    margin-top: 13px;
+    height: 22px;
+    width: 20px;
+    color: var(--icon-blue);
+  }
 }
 
 .inputWrapper {
-	position: relative;
-	display: flex;
-	align-items: center;
-	background-color: var(--background-color-info-text);
+  position: relative;
+  display: flex;
+  align-items: center;
+  background-color: var(--background-color-info-text);
 }
 
 .editInput {
-	direction: rtl;
-	overflow: hidden;
+  direction: rtl;
+  overflow: hidden;
 }
 
 .saveIcon {
-	cursor: pointer;
-	color: var(--icon-blue);
+  cursor: pointer;
+  color: var(--icon-blue);
 }

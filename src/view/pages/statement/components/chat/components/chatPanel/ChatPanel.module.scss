@@ -1,0 +1,116 @@
+.chatPanel {
+  @media (max-width: 1440px) {
+    display: none;
+  }
+}
+.chatPanelContainer {
+  position: fixed;
+  left: 0;
+  width: 20vw;
+  height: 85%;
+  bottom: 0;
+  background-color: var(--menu-default);
+  overflow-y: auto;
+  animation: panelOpen 0.5s forwards;
+  @media (max-width: 1440px) {
+    display: none;
+  }
+  .sideChatTitle {
+    margin: 1rem 1rem 0.3rem 1rem;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    color: var(--icons-primary);
+
+    h5 {
+      margin: 0.5rem;
+    }
+  }
+
+  .closeChatPanel {
+    position: absolute;
+    color: var(--icons-primary);
+    font-size: 2rem;
+    top: 1%;
+    right: 6%;
+
+    &:hover {
+      scale: 1.1;
+    }
+  }
+}
+
+.chatPanelContainerClosed {
+  position: fixed;
+  left: 0;
+  width: 4vw;
+  height: 85%;
+  bottom: 0;
+  background-color: var(--menu-default);
+  overflow-y: hidden;
+  display: flex;
+  flex-direction: column;
+
+  .openChatPanelBtn {
+    color: var(--icons-primary);
+    font-size: 2rem;
+    margin: 0.5rem;
+    cursor: pointer;
+
+    &:hover {
+      scale: 1.1;
+    }
+
+    .notificationBtn {
+      position: relative;
+      color: var(--text-negative);
+    }
+  }
+}
+
+.redCircle {
+  position: absolute;
+  background-color: var(--icons-blue-dark);
+  border-radius: 50%;
+  width: 1.2rem;
+  height: 1.2rem;
+  text-align: center;
+}
+
+.toTheRight {
+  transform: scaleX(-1);
+}
+
+p {
+  line-height: 1.1;
+  padding: 0;
+  margin: 0;
+  font-size: 0.7rem;
+  margin-left: 1rem;
+  margin-bottom: 1rem;
+  color: var(--lighter);
+}
+.chatPanelClosing {
+  animation: panelClose 0.5s forwards;
+}
+@keyframes panelOpen {
+  0% {
+    left: -20vw;
+  }
+  100% {
+    left: 0;
+  }
+}
+@keyframes panelClose {
+  0% {
+    left: 0;
+    opacity: 1;
+  }
+  70% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    left: -20vw;
+  }
+}

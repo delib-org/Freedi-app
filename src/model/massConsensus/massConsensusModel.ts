@@ -1,12 +1,12 @@
-import { MassConsensusPageUrls } from 'delib-npm';
+import { MassConsensusPageUrls, MassConsensusStep } from 'delib-npm';
 
-export const defaultMassConsensusProcess = [
-	MassConsensusPageUrls.introduction,
-	MassConsensusPageUrls.userDemographics,
-	MassConsensusPageUrls.question,
-	MassConsensusPageUrls.randomSuggestions,
-	MassConsensusPageUrls.topSuggestions,
-	MassConsensusPageUrls.voting,
-	MassConsensusPageUrls.leaveFeedback,
-	MassConsensusPageUrls.thankYou,
+export const defaultMassConsensusProcess: MassConsensusStep[] = [
+	{ screen: MassConsensusPageUrls.introduction },
+	{ screen: MassConsensusPageUrls.userDemographics },
+	{ screen: MassConsensusPageUrls.question },
+	{ screen: MassConsensusPageUrls.randomSuggestions },
+	{ screen: MassConsensusPageUrls.topSuggestions },
+	{ screen: MassConsensusPageUrls.voting },
+	{ screen: MassConsensusPageUrls.leaveFeedback },
+	{ screen: MassConsensusPageUrls.thankYou },
 ];
