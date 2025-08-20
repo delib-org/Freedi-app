@@ -1,21 +1,21 @@
 import React, { useState, useRef, useEffect } from 'react';
 import styles from './ProcessSettings.module.scss'
 import { defaultMassConsensusProcess } from '@/model/massConsensus/massConsensusModel';
-import { LoginType, MassConsensusPageUrls } from 'delib-npm';
+import { LoginType, MassConsensusPageUrls, MassConsensusStep } from 'delib-npm';
 import { removeMassConsensusStep, reorderMassConsensusProcessToDB } from '@/controllers/db/massConsensus/setMassConsensus';
 import { useParams } from 'react-router';
 import DeleteIcon from '@/assets/icons/delete.svg?react';
 
 interface Props {
 	processName: string;
-	steps: MassConsensusPageUrls[];
+	steps: MassConsensusStep[];
 	loginType: LoginType;
 }
 
 const ProcessSetting = ({ processName, steps: _steps, loginType }: Props) => {
 	const { statementId } = useParams();
 
-	const [steps, setSteps] = useState<MassConsensusPageUrls[]>(_steps || defaultMassConsensusProcess);
+	const [steps, setSteps] = useState<MassConsensusStep[]>(_steps || defaultMassConsensusProcess);
 
 	useEffect(() => {
 		setSteps(_steps);
@@ -65,8 +65,8 @@ const ProcessSetting = ({ processName, steps: _steps, loginType }: Props) => {
 					onDragEnd={handleDragEnd}
 					className={styles['process-item']}
 				>
-					{index + 1}: {process}
-					<button onClick={() => handleDelete(process)}><DeleteIcon /></button>
+					{index + 1}: {process.screen}
+					<button onClick={() => handleDelete(process.screen)}><DeleteIcon /></button>
 				</div>
 			))}
 		</div>

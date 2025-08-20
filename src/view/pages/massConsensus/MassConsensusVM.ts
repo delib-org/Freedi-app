@@ -4,12 +4,12 @@ import {
 	selectUserDataByStatementId,
 	selectUserQuestionsByStatementId,
 } from '@/redux/userData/userDataSlice';
-import { LoginType, MassConsensusPageUrls } from 'delib-npm';
+import { LoginType, MassConsensusPageUrls, MassConsensusStep } from 'delib-npm';
 import { useSelector } from 'react-redux';
 import { useLocation, useParams } from 'react-router';
 
 interface Props {
-	steps: MassConsensusPageUrls[];
+	steps: MassConsensusStep[];
 	loginType: LoginType;
 	currentStep: MassConsensusPageUrls;
 }
@@ -35,7 +35,7 @@ export function useMassConsensusSteps(): Props {
 
 	if (!shouldShowUserDemographics) {
 		steps = steps.filter(
-			(step) => step !== MassConsensusPageUrls.userDemographics
+			(step) => step.screen !== MassConsensusPageUrls.userDemographics
 		);
 	}
 	const currentPage = pathSegments.find((segment) => {
@@ -60,7 +60,7 @@ export function useMassConsensusSteps(): Props {
 }
 
 export function getStepNavigation(
-	steps: MassConsensusPageUrls[],
+	steps: MassConsensusStep[],
 	currentStep: MassConsensusPageUrls = MassConsensusPageUrls.introduction
 ): {
 	nextStep: MassConsensusPageUrls | undefined;
@@ -76,24 +76,24 @@ export function getStepNavigation(
 
 	const nextStep =
 		nextStepIndex !== undefined
-			? steps[nextStepIndex] || MassConsensusPageUrls.introduction
+			? steps[nextStepIndex]?.screen || MassConsensusPageUrls.introduction
 			: undefined;
 	const previousStep =
 		previousStepIndex !== undefined
-			? steps[previousStepIndex] || MassConsensusPageUrls.introduction
+			? steps[previousStepIndex]?.screen || MassConsensusPageUrls.introduction
 			: undefined;
 	const resolvedCurrentStep =
-		steps[currentStepIndex] || MassConsensusPageUrls.introduction;
+		steps[currentStepIndex]?.screen || MassConsensusPageUrls.introduction;
 
 	return { nextStep, previousStep, currentStep: resolvedCurrentStep };
 }
 
 function getCurrentStepIndex(
-	steps: MassConsensusPageUrls[],
-	currentStep
+	steps: MassConsensusStep[],
+	currentStep: MassConsensusPageUrls
 ): number {
 	if (!steps) return -1;
-	const currentStepIndex = steps.findIndex((step) => step === currentStep);
+	const currentStepIndex = steps.findIndex((step) => step.screen === currentStep);
 
 	return currentStepIndex;
 }
