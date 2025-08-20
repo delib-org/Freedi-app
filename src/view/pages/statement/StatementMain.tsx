@@ -1,5 +1,6 @@
 import React from 'react';
 import { createSelector } from '@reduxjs/toolkit';
+import { useDispatch } from 'react-redux';
 
 // Components
 import LoadingPage from '../loadingPage/LoadingPage';
@@ -28,6 +29,7 @@ import { StatementErrorBoundary } from './components/StatementErrorBoundary';
 // Constants
 import { COMPONENT_STATES } from './constants';
 import { creatorSelector } from '@/redux/creator/creatorSlice';
+import { setShowNewStatementModal } from '@/redux/statements/newStatementSlice';
 
 // Create selectors
 export const subStatementsSelector = createSelector(

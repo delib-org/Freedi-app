@@ -109,6 +109,7 @@ const MultiStageQuestion: FC = () => {
 	};
 
 	const hasStages = initialStages.length > 0;
+	const hasTopSuggestions = topSuggestions.length > 0;
 
 	return (
 		<>
@@ -187,9 +188,9 @@ const MultiStageQuestion: FC = () => {
 								<StageCard statement={initialStages[draggedItem.index]} />
 							</div>
 						)}
-						<h3 className={styles.h3}>{t("Proposed solution")}</h3>
+						<h3 className={styles.h3}>{t("Top solutions")}</h3>
 						<div className={styles.suggestionsWrapper}>
-							{topSuggestions.length > 0 && (
+							{hasTopSuggestions && (
 								topSuggestions.map((suggestion) => (
 									<SuggestionCard
 										key={suggestion.statementId}
@@ -203,9 +204,9 @@ const MultiStageQuestion: FC = () => {
 							<div className={`btns ${styles['add-stage']}`}>
 							<Link to={`/stage/${statement.statementId}`}>
 								<button
-									className='btn btn--secondary'
+									className='btn btn--primary'
 									onClick={handleAddSubQuestion}
-								>{t('see all suggestions')}
+								>{t(hasTopSuggestions ? 'See all suggestions' : 'Add new suggestion')}
 								</button>
 							</Link>
 						</div>
