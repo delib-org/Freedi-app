@@ -115,7 +115,7 @@ const StatementMain: React.FC = () => {
 		}
 	}, [statementId, statement, user?.uid]);
 
-	// Reset new statement modal when component unmounts or statementId changes
+	// Reset new statement modal when component unmounts or navigating to a different statement
 	React.useEffect(() => {
 		return () => {
 			dispatch(setShowNewStatementModal(false));

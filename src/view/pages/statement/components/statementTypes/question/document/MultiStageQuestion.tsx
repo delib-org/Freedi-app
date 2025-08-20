@@ -205,7 +205,6 @@ const MultiStageQuestion: FC = () => {
 							<Link to={`/stage/${statement.statementId}`}>
 								<button
 									className='btn btn--primary'
-									onClick={handleAddSubQuestion}
 								>{t(hasTopSuggestions ? 'See all suggestions' : 'Add new suggestion')}
 								</button>
 							</Link>
