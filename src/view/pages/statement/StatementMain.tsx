@@ -42,6 +42,8 @@ export const subStatementsSelector = createSelector(
 );
 
 const StatementMain: React.FC = () => {
+	const dispatch = useDispatch();
+	
 	// Use custom hooks to manage data and side effects
 	const {
 		statementId,
@@ -112,6 +114,13 @@ const StatementMain: React.FC = () => {
 			updateLastReadTimestamp(statementId, user.uid);
 		}
 	}, [statementId, statement, user?.uid]);
+
+	// Reset new statement modal when component unmounts or statementId changes
+	React.useEffect(() => {
+		return () => {
+			dispatch(setShowNewStatementModal(false));
+		};
+	}, [statementId, dispatch]);
 
 	// Handle different states
 	const renderContent = () => {
