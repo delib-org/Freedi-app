@@ -286,17 +286,14 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
             setImage={setImage}
           />
         </div>
-        { sideChat &&<hr className={styles.spacerLine} />}
 
         <div
-          className={`${styles.bottomIcons} ${sideChat ? styles.columnIcons : styles.rowIcons} `}
+          className={styles.bottomIcons}
         >
           <div className={styles.chatMoreElement}>
             <StatementChatMore statement={statement} />
           </div>
-          <div className={sideChat?styles.centered:""}>
             <Evaluation statement={statement} />
-          </div>
         </div>
         {isNewStatementModalOpen && (
           <CreateStatementModal

@@ -126,25 +126,18 @@
   :global(.menu-option) svg {
     color: var(--icon-blue);
   }
-  .rowIcons {
-    flex-flow: row;
-  }
-  .columnIcons {
-    flex-flow: column;
-  }
-  .centered {
-    margin: 0 auto;
-    margin-top: 1rem;
-  }
-  .spacerLine {
-    margin-top: 0.5rem;
-  }
+
 
   .bottomIcons {
     display: flex;
     justify-content: space-between;
     margin-top: 1rem;
+    flex-flow: row;
+    align-items: center;
+    svg{
+              margin-right: .5rem;
 
+    }
     @media screen and (max-width: 500px) {
       display: grid;
       align-items: center;
