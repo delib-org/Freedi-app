@@ -15,9 +15,14 @@ import EnhancedEvaluation from '../../../evaluations/components/evaluation/enhan
 interface Props {
 	statement: Statement;
 	hasEvaluation?: boolean;
+	sideChat?: boolean;
 }
 
-const ChatInput: FC<Props> = ({ statement, hasEvaluation }) => {
+const ChatInput: FC<Props> = ({
+	statement,
+	hasEvaluation,
+	sideChat = false,
+}) => {
 	if (!statement) throw new Error('No statement');
 
 	// Redux hooks
@@ -73,8 +78,12 @@ const ChatInput: FC<Props> = ({ statement, hasEvaluation }) => {
 	};
 
 	return (
-		<div className={styles.chatInput}>
-			{hasEvaluation && <div className={styles.eval}><EnhancedEvaluation statement={statement} /></div>}
+		<div className={sideChat ? styles.sideChatInput : styles.chatInput}>
+			{hasEvaluation && (
+				<div className={styles.eval}>
+					<EnhancedEvaluation statement={statement} />
+				</div>
+			)}
 			<form
 				onSubmit={(e) => handleSubmitInput(e)}
 				name='theForm'
@@ -101,9 +110,7 @@ const ChatInput: FC<Props> = ({ statement, hasEvaluation }) => {
 					}}
 					required
 					placeholder={t('Type your message here...')}
-				>
-
-				</textarea>
+				></textarea>
 				<button
 					type='submit'
 					aria-label='Submit Button'
@@ -112,7 +119,6 @@ const ChatInput: FC<Props> = ({ statement, hasEvaluation }) => {
 				>
 					<SendIcon color={statementColor.color} />
 				</button>
-
 			</form>
 		</div>
 	);
