@@ -42,7 +42,7 @@ const StatementBottomNav: FC<Props> = () => {
 	const timesRemainToLearnAddOption = learning.addOptions;
 	const canAddOptionSuggestions = statement.statementSettings?.enableAddEvaluationOption ?? false;
 	const canAddOptionVoting = statement.statementSettings?.enableAddVotingOption ?? false;
-	const evaluatingSettings: EvaluationUI = statement.evaluationSettings.evaluationUI;
+	const evaluatingSettings: EvaluationUI = statement.evaluationSettings?.evaluationUI || EvaluationUI.suggestions;
 	const canAddOption = (canAddOptionSuggestions && evaluatingSettings === EvaluationUI.suggestions) || (canAddOptionVoting && evaluatingSettings === EvaluationUI.voting);
 
 	const [showSorting, setShowSorting] = useState(false);
