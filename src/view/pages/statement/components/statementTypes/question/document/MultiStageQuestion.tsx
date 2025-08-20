@@ -40,7 +40,6 @@ const MultiStageQuestion: FC = () => {
 	);
 	const showNewStatementModal = useSelector(selectNewStatementShowModal);
 	const topSuggestions = statement.results;
-	console.log(topSuggestions);
 
 	const initialStages = useMemo(
 		() =>
@@ -189,27 +188,29 @@ const MultiStageQuestion: FC = () => {
 							</div>
 						)}
 						<h3 className={styles.h3}>{t("Proposed solution")}</h3>
-						{topSuggestions.length > 0 && (
-							<div className={styles.subElementsWrapper}>
-								{topSuggestions.map((suggestion) => (
+						<div className={styles.suggestionsWrapper}>
+							{topSuggestions.length > 0 && (
+								topSuggestions.map((suggestion) => (
 									<SuggestionCard
 										key={suggestion.statementId}
 										statement={suggestion}
 										siblingStatements={statement.results}
 										parentStatement={statement}
+										positionAbsolute={false}
 									/>
-								))}
-							</div>
-						)}
-						<div className={`btns ${styles['add-stage']}`}>
+								))
+							)}
+							<div className={`btns ${styles['add-stage']}`}>
 							<Link to={`/stage/${statement.statementId}`}>
-							<button
-								className='btn btn--secondary'
-								onClick={handleAddSubQuestion}
-							>{t('see all suggestions')}
-							</button>
+								<button
+									className='btn btn--secondary'
+									onClick={handleAddSubQuestion}
+								>{t('see all suggestions')}
+								</button>
 							</Link>
 						</div>
+						</div>
+						
 					</div>
 				)}
 
