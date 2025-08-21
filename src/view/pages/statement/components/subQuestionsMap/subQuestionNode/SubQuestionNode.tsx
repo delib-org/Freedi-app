@@ -1,6 +1,5 @@
 import { useNavigate, useParams } from "react-router";
 import styles from "./subQuestionNode.module.scss";
-import ArrowLeft from "@/assets/icons/backToMenuArrow.svg?react";
 import React, { FC, useEffect, useRef, useState } from "react";
 import { Statement } from "delib-npm";
 
@@ -62,17 +61,10 @@ const SubQuestionNode: FC<SubQuestionNodeProps> = ({
   return (
     <div className={styles.SubQuestionNodeContainer}>
       <div
-        className={`${styles.node} ${isInStatement ? styles.green : ""} ${depth <= 1 && !isInStatement ? styles.group : ""}`}
+        className={`${styles.node} ${isInStatement ? styles.green : ""} ${depth <= 1 && !isInStatement ? styles.group : ""} ${!isInStatement ? styles.clickable : ""} ${clicked ? styles.animate : ""}`}
+        onClick={!isInStatement ? handleClick : undefined}
       >
         <h3>{statement.statement}</h3>
-        {!isInStatement && (
-          <button
-            className={clicked ? styles.animate : ""}
-            onClick={handleClick}
-          >
-            <ArrowLeft></ArrowLeft>
-          </button>
-        )}
       </div>
 
       {

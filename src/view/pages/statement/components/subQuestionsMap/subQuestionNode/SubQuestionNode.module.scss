@@ -20,21 +20,14 @@
     h3 {
       font-size: 1rem;
     }
+  }
 
-    button {
-      background-color: var(--icons-white);
-      transform: scaleX(-1);
-      border-radius: 50%;
-      width: 1.5rem;
-      height: 1.5rem;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      transition: all 0.3s;
-
-      svg {
-        scale: 2;
-      }
+  .clickable {
+    cursor: pointer;
+    
+    &:hover {
+    
+      transform: translateX(-2px);
     }
   }
 
@@ -86,15 +79,18 @@
 }
 
 .animate {
-  animation: move 0.3s forwards;
+  animation: click 0.3s forwards;
 }
 
-@keyframes move {
+@keyframes click {
   0% {
-    transform: scaleX(-1) translateX(0);
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(-8px);
   }
   100% {
-    transform: scaleX(-1) translateX(-15px);
+    transform: translateX(-5px);
   }
 }
 
