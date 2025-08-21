@@ -11,7 +11,7 @@ interface SubQuestionsMapProps {
 }
 
 const SubQuestionsMap = ({ statement }: SubQuestionsMapProps) => {
-	const { results } = useMindMap(statement.topParentId);
+	const { results } = useMindMap(statement?.topParentId);
 	const [isOpen, setIsOpen] = useState(true);
 	
 	const swipeRef = useSwipe({
@@ -26,6 +26,8 @@ const SubQuestionsMap = ({ statement }: SubQuestionsMapProps) => {
 
   const { screen } = useParams();
   const [nodeHeights, setNodeHeights] = useState(new Map<string, number>());
+  
+  if (!statement) return null;
   if (
     screen === "mind-map" ||
     screen === "polarization-index" ||

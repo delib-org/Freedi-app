@@ -494,16 +494,30 @@ return false;
 
 			// Delete token from server
 			if (tokenToClean && userIdToClean) {
-				// Remove from pushNotifications collection
+				// Remove from pushNotifications collection - check if document exists first
 				cleanupPromises.push(
-					deleteDoc(doc(db, 'pushNotifications', tokenToClean))
-						.catch(error => console.error('Error deleting push notification doc:', error))
+					(async () => {
+						try {
+							const docRef = doc(db, 'pushNotifications', tokenToClean);
+							await deleteDoc(docRef);
+						} catch (error) {
+							// Silently handle if document doesn't exist
+							if (error?.code !== 'permission-denied' && error?.code !== 'not-found') {
+								console.error('Error deleting push notification doc:', error);
+							}
+						}
+					})()
 				);
 
 				// Remove token from all user's subscriptions
 				cleanupPromises.push(
 					this.removeTokenFromAllSubscriptions(userIdToClean, tokenToClean)
-						.catch(error => console.error('Error removing token from subscriptions:', error))
+						.catch(error => {
+							// Silently handle null value errors
+							if (!error?.message?.includes('Null value error')) {
+								console.error('Error removing token from subscriptions:', error);
+							}
+						})
 				);
 			}
 
@@ -757,6 +771,11 @@ return;
 	 */
 	public async removeTokenFromAllSubscriptions(userId: string, token: string): Promise<void> {
 		try {
+			// Validate inputs
+			if (!userId || !token) {
+				return;
+			}
+			
 			// Get all user's subscriptions
 			const subscriptionsQuery = query(
 				collection(db, Collections.statementsSubscribe),
@@ -771,18 +790,24 @@ return;
 				const statementId = subscription.statementId || subscription.statement?.statementId;
 				
 				if (!statementId) {
-					console.error('No statementId found in subscription:', doc.id);
-
 					return Promise.resolve();
 				}
 				
-				return removeTokenFromSubscription(statementId, userId, token);
+				return removeTokenFromSubscription(statementId, userId, token)
+					.catch(err => {
+						// Silently handle individual subscription errors
+						if (!err?.message?.includes('Null value error')) {
+							console.error(`Error removing token from subscription ${statementId}:`, err);
+						}
+					});
 			});
 			
-			await Promise.all(removePromises);
-			console.info(`Removed token from ${removePromises.length} subscriptions`);
+			await Promise.allSettled(removePromises);
 		} catch (error) {
-			console.error('Error removing token from subscriptions:', error);
+			// Only log non-null value errors
+			if (!error?.message?.includes('Null value error')) {
+				console.error('Error removing token from subscriptions:', error);
+			}
 		}
 	}
 
