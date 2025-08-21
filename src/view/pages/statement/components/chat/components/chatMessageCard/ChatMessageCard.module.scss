@@ -3,10 +3,11 @@
   flex-direction: column;
   direction: rtl;
   max-width: 75ch;
-  margin: auto;
   padding: 0.3rem;
   padding-inline: 1rem;
   color: var(--text-paragraph);
+  align-self: flex-start;
+  width: 100%;
 
   .user {
     display: flex;
@@ -33,6 +34,7 @@
       0px 0px 5px 0px rgba(66, 123, 158, 0.09),
       0px 0px 3px 0px rgba(66, 123, 158, 0.1);
     position: relative;
+    max-width: 70%;
 
     &Statement {
       border-left: 0rem solid !important;
@@ -77,14 +79,30 @@
     }
   }
 
+  // User messages (aligned left in RTL, right in LTR)
   &.alignedLeft {
     direction: ltr;
 
     &.rtl {
+      align-self: flex-start;
       .messageBox {
         direction: rtl;
+        background-color: var(--card-needs-surface);
+        margin-left: auto;
+        margin-right: 3rem;
       }
     }
+    
+    &.ltr {
+      align-self: flex-end;
+      .messageBox {
+        direction: ltr;
+        background-color: var(--card-needs-surface);
+        margin-right: auto;
+        margin-left: 3rem;
+      }
+    }
+    
     .messageMargin {
       margin-left: 2rem;
       margin-right: 1rem;
@@ -103,10 +121,23 @@
     }
   }
 
+  // Other users' messages (aligned right in RTL, left in LTR)  
   &:not(.alignedLeft) {
+    &.rtl {
+      align-self: flex-end;
+      .messageBox {
+        direction: rtl;
+        margin-right: auto;
+        margin-left: 3rem;
+      }
+    }
+    
     &.ltr {
+      align-self: flex-start;
       .messageBox {
         direction: ltr;
+        margin-left: auto;
+        margin-right: 3rem;
       }
     }
 
