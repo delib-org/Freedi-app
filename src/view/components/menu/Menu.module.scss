@@ -40,20 +40,19 @@
     position: absolute;
     display: flex;
     border-radius: 15px;
-    width: 350px;
+    width: 250px;
     min-width: 200px;
     flex-direction: column;
     background-color: white;
     box-shadow: 0px 3px 9px #00000026;
     overflow: hidden;
     max-height: 0;
-    transform: translateY(0);
-    transform-origin: top;
+    opacity: 0;
+    transform-origin: top center;
 
     transition:
       max-height 0.3s ease-out,
-      opacity 0.3s ease-out,
-      transform 0.3s ease-out;
+      opacity 0.3s ease-out;
 
     &--main {
       &--rtl {
@@ -67,28 +66,52 @@
 
     &.open {
       max-height: 800px;
-      transform: translateY(1);
+      opacity: 1;
       transition:
-        max-height 0.9s ease-out,
-        opacity 0.9s ease-out;
+        max-height 0.3s ease-out,
+        opacity 0.3s ease-out;
     }
 
     &.ltr {
-
-
       &--card-menu {
-        right: 10px;
+        right: auto;
+        left: 50%;
+        transform: translateX(-50%);
       }
     }
 
     &.rtl {
-
-
-
       &--card-menu {
-        left: 0px;
+        left: 50%;
+        right: auto;
+        transform: translateX(-50%);
       }
-
+    }
+    
+    // Position modifiers for card menu
+    &.position--above {
+      bottom: 100%;
+      margin-bottom: 0.5rem;
+      top: auto;
+      transform-origin: bottom center;
+    }
+    
+    &.position--below {
+      top: 100%;
+      margin-top: 0.5rem;
+      bottom: auto;
+      transform-origin: top center;
+    }
+    
+    // Combined positioning for centered menus
+    &.ltr--card-menu.position--above,
+    &.rtl--card-menu.position--above {
+      transform: translateX(-50%) translateY(0);
+    }
+    
+    &.ltr--card-menu.position--below,
+    &.rtl--card-menu.position--below {
+      transform: translateX(-50%) translateY(0);
     }
   }
 
@@ -119,6 +142,7 @@
   left: 0;
   width: 100vw;
   height: 100svh;
-  z-index: 4;
+  z-index: 10000;
   background-color: transparent;
+  pointer-events: auto;
 }
