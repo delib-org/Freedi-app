@@ -56,7 +56,7 @@ const Chat: FC<ChatProps> = ({
       firstTime = false;
     } else {
       // Enhanced smooth scrolling with better animation
-      messagesEndRef.current.scrollIntoView({ 
+      messagesEndRef.current.scrollIntoView({
         behavior: "smooth",
         block: "end",
         inline: "nearest"
@@ -113,20 +113,14 @@ const Chat: FC<ChatProps> = ({
         </div>
       )}
       {subStatements?.map((statementSub: Statement, index) => (
-        <div 
-          key={statementSub.statementId}
-          className={styles.messageWrapper}
-          style={{
-            animationDelay: `${Math.min(index * 0.03, 0.3)}s`
-          }}
-        >
-          <ChatMessageCard
-            parentStatement={statement}
-            statement={statementSub}
-            previousStatement={subStatements[index - 1]}
-            sideChat={sideChat}
-          />
-        </div>
+
+        <ChatMessageCard
+          parentStatement={statement}
+          statement={statementSub}
+          previousStatement={subStatements[index - 1]}
+          sideChat={sideChat}
+        />
+
       ))}
 
       <div ref={messagesEndRef} />

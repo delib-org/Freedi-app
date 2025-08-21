@@ -82,14 +82,6 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
     }
   }, [isEdit]);
 
-  useEffect(() => {
-    if (isCardMenuOpen) {
-      setTimeout(() => {
-        setIsCardMenuOpen(false);
-      }, 5000);
-    }
-  }, [isCardMenuOpen]);
-
   function handleTextChange(
     e: ChangeEvent<HTMLTextAreaElement | HTMLInputElement>
   ) {
@@ -181,15 +173,16 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
               />
             )}
           </div>
-
-          <ChatMessageMenu
-            statement={statement}
-            isCardMenuOpen={isCardMenuOpen}
-            setIsCardMenuOpen={setIsCardMenuOpen}
-            isAuthorized={_isAuthorized}
-            setIsEdit={setIsEdit}
-            fileInputRef={fileInputRef}
-          />
+          <div className={styles.chatMenu}>
+            <ChatMessageMenu
+              statement={statement}
+              isCardMenuOpen={isCardMenuOpen}
+              setIsCardMenuOpen={setIsCardMenuOpen}
+              isAuthorized={_isAuthorized}
+              setIsEdit={setIsEdit}
+              fileInputRef={fileInputRef}
+            />
+          </div>
         </div>
 
         <div style={{ display: image ? "flex" : "none" }}>
