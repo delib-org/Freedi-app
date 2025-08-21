@@ -4,6 +4,7 @@ import { useParams } from 'react-router';
 import { useMindMap } from '../map/MindMapMV';
 import SubQuestionNode from './subQuestionNode/SubQuestionNode';
 import styles from './SubQuestionsMap.module.scss';
+import { useSwipe } from '@/controllers/hooks/useSwipe';
 
 interface SubQuestionsMapProps {
   readonly statement: Statement;
@@ -12,6 +13,15 @@ interface SubQuestionsMapProps {
 const SubQuestionsMap = ({ statement }: SubQuestionsMapProps) => {
 	const { results } = useMindMap(statement.topParentId);
 	const [isOpen, setIsOpen] = useState(true);
+	
+	const swipeRef = useSwipe({
+		onSwipeRight: () => {
+			if (isOpen) {
+				setIsOpen(false);
+			}
+		},
+		enabled: isOpen && window.innerWidth <= 768
+	});
 
   const { screen } = useParams();
   const [nodeHeights, setNodeHeights] = useState(new Map<string, number>());
@@ -86,7 +96,9 @@ const SubQuestionsMap = ({ statement }: SubQuestionsMapProps) => {
   };
 
   return (
-    <div className={`${styles.subQuestionsMapContainer} ${isOpen ? styles.open : styles.closed}`}>
+    <div 
+      className={`${styles.subQuestionsMapContainer} ${isOpen ? styles.open : styles.closed}`}
+      ref={swipeRef}>
       <button 
         className={styles.toggleButton}
         onClick={() => setIsOpen(!isOpen)}
