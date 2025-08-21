@@ -63,7 +63,7 @@ const Menu: FC<MenuProps> = ({
 			<div
 				className={`${styles.menuContent} ${styles[mainClass]} ${styles[dir]}${isCardMenu ? styles[`${dir}--card-menu`] : ''} ${isMenuOpen ? styles.open : ''}`}
 			>
-				{isNavMenu && <div
+				{isNavMenu && !isCardMenu && <div
 					className={`${styles.menuHeader} ${styles[dir]}`}
 					style={{ backgroundColor }}
 				>
