@@ -19,6 +19,16 @@ export const AnalyticsEvents = {
   STATEMENT_VIEW_TIME: 'statement_view_time',
   STATEMENT_ENGAGEMENT: 'statement_engagement',
   
+  // Mass Consensus events
+  MASS_CONSENSUS_ENTERED: 'mass_consensus_entered',
+  MASS_CONSENSUS_STAGE_COMPLETED: 'mass_consensus_stage_completed',
+  MASS_CONSENSUS_SKIPPED: 'mass_consensus_skipped',
+  MASS_CONSENSUS_SUBMISSION: 'mass_consensus_submission',
+  MASS_CONSENSUS_VOTE: 'mass_consensus_vote',
+  MASS_CONSENSUS_COMPLETED: 'mass_consensus_completed',
+  MASS_CONSENSUS_ABANDONED: 'mass_consensus_abandoned',
+  MASS_CONSENSUS_TIME_SPENT: 'mass_consensus_time_spent',
+  
   // Feature events
   NOTIFICATION_ENABLED: 'notification_enabled',
   SEARCH_PERFORMED: 'search_performed',
@@ -64,6 +74,41 @@ interface ValidationErrorParams extends BaseEventParams {
   fieldName?: string;
 }
 
+export type MassConsensusStage = 
+  | 'introduction' 
+  | 'question' 
+  | 'similar_suggestions'
+  | 'random_suggestions' 
+  | 'top_suggestions' 
+  | 'voting' 
+  | 'feedback';
+
+interface MassConsensusEventParams extends BaseEventParams {
+  statementId: string;
+  questionId: string;
+  userId: string;
+  sessionId: string;
+}
+
+interface MassConsensusStageParams extends MassConsensusEventParams {
+  stage: MassConsensusStage;
+  previousStage?: MassConsensusStage;
+  timeOnStage?: number;
+}
+
+interface MassConsensusSubmissionParams extends MassConsensusEventParams {
+  stage: MassConsensusStage;
+  submissionType: 'answer' | 'vote' | 'feedback';
+  content?: string;
+}
+
+interface MassConsensusVoteParams extends MassConsensusEventParams {
+  stage: MassConsensusStage;
+  suggestionId: string;
+  voteValue: number;
+  voteType: 'similar' | 'random' | 'top';
+}
+
 // Type-safe event parameters
 type EventParams = {
   [AnalyticsEvents.USER_SIGNUP]: UserLifecycleParams;
@@ -84,6 +129,14 @@ type EventParams = {
       avgViewTime: number;
     };
   };
+  [AnalyticsEvents.MASS_CONSENSUS_ENTERED]: MassConsensusEventParams;
+  [AnalyticsEvents.MASS_CONSENSUS_STAGE_COMPLETED]: MassConsensusStageParams;
+  [AnalyticsEvents.MASS_CONSENSUS_SKIPPED]: MassConsensusStageParams;
+  [AnalyticsEvents.MASS_CONSENSUS_SUBMISSION]: MassConsensusSubmissionParams;
+  [AnalyticsEvents.MASS_CONSENSUS_VOTE]: MassConsensusVoteParams;
+  [AnalyticsEvents.MASS_CONSENSUS_COMPLETED]: MassConsensusEventParams & { totalTime: number; completedStages: MassConsensusStage[] };
+  [AnalyticsEvents.MASS_CONSENSUS_ABANDONED]: MassConsensusEventParams & { lastStage: MassConsensusStage; totalTime: number };
+  [AnalyticsEvents.MASS_CONSENSUS_TIME_SPENT]: MassConsensusEventParams & { stage: MassConsensusStage; timeSpent: number };
   [AnalyticsEvents.NOTIFICATION_ENABLED]: { notificationType: 'all' | 'mentions' | 'updates' };
   [AnalyticsEvents.SEARCH_PERFORMED]: { searchTerm: string; resultsCount: number };
   [AnalyticsEvents.VALIDATION_ERROR]: ValidationErrorParams;
@@ -243,6 +296,45 @@ return;
       formName,
       fieldName,
     });
+  }
+
+  // Mass Consensus tracking methods
+  trackMassConsensusEntered(params: MassConsensusEventParams) {
+    this.logEvent(AnalyticsEvents.MASS_CONSENSUS_ENTERED, params);
+  }
+
+  trackMassConsensusStageCompleted(params: MassConsensusStageParams) {
+    this.logEvent(AnalyticsEvents.MASS_CONSENSUS_STAGE_COMPLETED, params);
+  }
+
+  trackMassConsensusSkipped(params: MassConsensusStageParams) {
+    this.logEvent(AnalyticsEvents.MASS_CONSENSUS_SKIPPED, params);
+  }
+
+  trackMassConsensusSubmission(params: MassConsensusSubmissionParams) {
+    this.logEvent(AnalyticsEvents.MASS_CONSENSUS_SUBMISSION, params);
+  }
+
+  trackMassConsensusVote(params: MassConsensusVoteParams) {
+    this.logEvent(AnalyticsEvents.MASS_CONSENSUS_VOTE, params);
+  }
+
+  trackMassConsensusCompleted(
+    params: MassConsensusEventParams & { totalTime: number; completedStages: MassConsensusStage[] }
+  ) {
+    this.logEvent(AnalyticsEvents.MASS_CONSENSUS_COMPLETED, params);
+  }
+
+  trackMassConsensusAbandoned(
+    params: MassConsensusEventParams & { lastStage: MassConsensusStage; totalTime: number }
+  ) {
+    this.logEvent(AnalyticsEvents.MASS_CONSENSUS_ABANDONED, params);
+  }
+
+  trackMassConsensusTimeSpent(
+    params: MassConsensusEventParams & { stage: MassConsensusStage; timeSpent: number }
+  ) {
+    this.logEvent(AnalyticsEvents.MASS_CONSENSUS_TIME_SPENT, params);
   }
 }
 

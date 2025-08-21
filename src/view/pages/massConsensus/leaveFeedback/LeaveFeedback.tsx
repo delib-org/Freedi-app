@@ -8,6 +8,7 @@ import { useLeaveFeedback } from './LeaveFeedbackVM';
 import { useHeader } from '../headerMassConsensus/HeaderContext';
 import { useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router';
+import { useMassConsensusAnalytics } from '@/hooks/useMassConsensusAnalytics';
 
 function LeaveFeedback() {
 	const { statementId } = useParams();
@@ -15,6 +16,7 @@ function LeaveFeedback() {
 	const { t } = useUserConfig();
 	const { handleSendButton, handleEmailChange, mailStatus } =
 		useLeaveFeedback();
+	const { trackStageCompleted, trackSubmission, trackStageSkipped } = useMassConsensusAnalytics();
 
 	const { setHeader } = useHeader();
 
@@ -28,10 +30,13 @@ function LeaveFeedback() {
 	}, []);
 
 	useEffect(() => {
-		if (mailStatus === 'valid')
+		if (mailStatus === 'valid') {
+			trackStageCompleted('feedback');
+			trackSubmission('feedback');
 			navigate(
 				`/mass-consensus/${statementId}/${MassConsensusPageUrls.thankYou}`
 			);
+		}
 	}, [mailStatus]);
 
 	return (
@@ -65,6 +70,7 @@ function LeaveFeedback() {
 				isNextActive={true}
 				onNext={handleSendButton}
 				isFeedback={true}
+				onSkip={() => trackStageSkipped('feedback')}
 			/>
 			<div style={{ textAlign: 'center', marginTop: '1rem' }}>
 				<a

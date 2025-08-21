@@ -1,42 +1,87 @@
 .triangle {
-	position: absolute;
-	top: 20%;
-	left: 20%;
-	width: 70%;
-	height: 70%;
-	border: 2px solid var(--map-question);
-	clip-path: polygon(0 0, 0 100%, 100% 100%);
+  position: absolute;
+  top: 20vh;
+  left: 35vw;
+  width: 35vw;
+  height: 70vh;
+  border: 2px solid var(--map-question);
+  clip-path: polygon(0 0, 0 100%, 100% 100%);
 
-	&--invisible {
-		position: absolute;
-		background-color: transparent;
-		border: none;
-		clip-path: none;
-	}
+  @media (max-width: 1700px) {
+    top: 20vh;
+    left: 35vw;
+    width: 45vw;
+    height: 70vh;
+  }
 
-	.xAxis {
-		position: absolute;
-		bottom: -2rem;
-		left: calc(100% - 3rem);
+  @media (max-width: 1080px) {
+    top: 20vh;
+    left: 30vw;
+    width: 65vw;
+    height: 70vh;
+  }
 
-	}
+  @media (max-width: 690px) {
+    top: 30vh;
+    left: 11vw;
+    width: 82vw;
+    height: 50vh;
+  }
 
-	.yAxis {
-		position: absolute;
-		left: -3rem;
-		transform: rotate(-90deg);
-	}
+  @media (max-height: 600px) {
+    top: 37vh;
+    left: 35vw;
+    max-width: 25vw;
+    height: 48vh;
+  }
 
-	.conflicts {
-		position: absolute;
-		bottom: 50%;
-		left: 50%;
-		transform: rotate(45deg);
-	}
+  &--invisible {
+    position: absolute;
+    background-color: transparent;
+    border: none;
+    clip-path: none;
+  }
 
-	.abstention {
-		position: absolute;
-		bottom: -2rem;
-		left: -3rem;
-	}
+  .xAxis {
+    position: absolute;
+    bottom: -2rem;
+    left: calc(100% - 5.7rem);
+    @media (max-height: 600px) {
+      left: calc(100% - 4.5rem);
+      bottom: -1.8rem;
+      font-size: 15px;
+    }
+  }
+
+  .yAxis {
+    position: absolute;
+    top: 1.8rem;
+    left: -3.7rem;
+    transform: rotate(-90deg);
+    @media (max-height: 600px) {
+      left: -3.2rem;
+      font-size: 15px;
+    }
+  }
+
+  .conflicts {
+    position: absolute;
+    bottom: 50%;
+    left: 50%;
+    transform: rotate(45deg);
+    @media (max-height: 600px) {
+      font-size: 15px;
+    }
+  }
+
+  .abstention {
+    position: absolute;
+    bottom: -2rem;
+    left: -0.1rem;
+    @media (max-height: 600px) {
+      bottom: -1.8rem;
+      left: -0.2rem;
+      font-size: 15px;
+    }
+  }
 }

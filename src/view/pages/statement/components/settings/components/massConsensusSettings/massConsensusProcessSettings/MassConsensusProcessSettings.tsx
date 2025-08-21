@@ -58,7 +58,7 @@ const MassConsensusProcessSettings = () => {
 		userDataQuestions.length > 0
 			? rawStepsDefault
 			: rawStepsDefault.filter(
-					(step) => step !== MassConsensusPageUrls.userDemographics
+					(step) => step.screen !== MassConsensusPageUrls.userDemographics
 				);
 	const { steps: stepsGoogle, processName: processNameGoogle } =
 		processList.loginTypes?.google || {};

@@ -163,20 +163,26 @@ export const setStatementToDB = async ({
 
 		const parentId = parentStatement === 'top' ? 'top' : statement.parentId;
 
-		statement.statementType =
-			statement.statementId === undefined
-				? StatementType.question
-				: statement.statementType;
+		// Create a mutable copy of the statement to avoid read-only property errors
+		const mutableStatement = { ...statement };
 
-		statement.creator = statement?.creator || creator;
-		statement.statementId = statement?.statementId || getRandomUID();
-		statement.parentId = parentId;
-		statement.topParentId =
+		mutableStatement.statementType =
+			mutableStatement.statementId === undefined
+				? StatementType.question
+				: mutableStatement.statementType;
+
+		mutableStatement.creator = mutableStatement?.creator || creator;
+		mutableStatement.statementId = mutableStatement?.statementId || getRandomUID();
+		mutableStatement.parentId = parentId;
+		mutableStatement.topParentId =
 			parentStatement === 'top'
-				? statement.statementId
-				: statement?.topParentId ||
+				? mutableStatement.statementId
+				: mutableStatement?.topParentId ||
 				parentStatement?.topParentId ||
 				'top';
+		
+		// Update statement reference to use the mutable copy
+		statement = mutableStatement;
 
 		const siblingOptions = getSiblingOptionsByParentId(
 			parentId,
@@ -340,6 +346,7 @@ export function createStatement({
 			membership: membership || { access: Access.openToAll },
 			statementSettings: {
 				enhancedEvaluation,
+				hasChat:true,
 				showEvaluation,
 				enableAddEvaluationOption,
 				enableAddVotingOption,
@@ -653,10 +660,20 @@ export async function updateIsQuestion(statement: Statement) {
 		);
 
 		let { statementType } = statement;
-		if (statementType === StatementType.question)
+		if (statementType === StatementType.question) {
 			statementType = StatementType.statement;
+		
+		}
 		else {
 			statementType = StatementType.question;
+			statement.questionSettings = {
+				...statement.questionSettings,
+			questionType: QuestionType.simple,
+			};
+			statement.evaluationSettings = {
+				...statement.evaluationSettings,
+				evaluationUI: EvaluationUI.suggestions,
+			};
 		}
 
 		const newStatementType = { statementType };

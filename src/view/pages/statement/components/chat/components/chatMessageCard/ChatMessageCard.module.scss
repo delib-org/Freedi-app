@@ -1,201 +1,282 @@
 .chatMessageCard {
-	display: flex;
-	flex-direction: column;
-	direction: rtl;
-	max-width: 75ch;
-	margin: auto;
-	padding: 0.3rem;
-	padding-inline: 1rem;
-	color: var(--text-paragraph);
+  display: flex;
+  flex-direction: column;
+  direction: rtl;
+  max-width: 75ch;
+  padding: 0.3rem;
+  padding-inline: 1rem;
+  color: var(--text-paragraph);
+  align-self: flex-start;
+  width: 100%;
 
-	.user {
-		display: flex;
-		align-items: center;
-		gap: 1rem;
-		padding-top: 0.5rem;
-	}
+  .user {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding-top: 0.5rem;
+    padding-inline: 1rem;
+  }
+  .messageSideBox {
+    width: 80%;
+  }
+  .messageBox {
+    height: fit-content;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 1rem;
+    border-radius: 10px;
+    box-shadow:
+      1px 0px 9px 0px rgba(66, 123, 158, 0),
+      1px 0px 9px 0px rgba(66, 123, 158, 0.01),
+      0px 0px 7px 0px rgba(66, 123, 158, 0.05),
+      0px 0px 5px 0px rgba(66, 123, 158, 0.09),
+      0px 0px 3px 0px rgba(66, 123, 158, 0.1);
+    position: relative;
+    max-width: 70%;
 
-	.messageBox {
-		height: fit-content;
-		display: flex;
-		flex-direction: column;
-		justify-content: space-between;
-		gap: 0.5rem;
-		background-color: var(--inputBackground);
-		padding: 1rem;
-		border-radius: 10px;
-		box-shadow:
-			1px 0px 9px 0px rgba(66, 123, 158, 0),
-			1px 0px 9px 0px rgba(66, 123, 158, 0.01),
-			0px 0px 7px 0px rgba(66, 123, 158, 0.05),
-			0px 0px 5px 0px rgba(66, 123, 158, 0.09),
-			0px 0px 3px 0px rgba(66, 123, 158, 0.1);
-		position: relative;
+    &Statement {
+      border-left: 0rem solid !important;
+    }
 
-		&--statement {
-			border-left: 0rem solid !important;
-		}
+    .triangle {
+      position: absolute;
+      background-color: inherit;
+      height: 2rem;
+      width: 2rem;
+      top: 0.5rem;
+    }
 
-		.triangle {
-			position: absolute;
-			background-color: inherit;
-			height: 2rem;
-			width: 2rem;
-			top: 0;
-		}
+    .info {
+      display: flex;
+      position: relative;
 
-		.info {
-			display: flex;
-			position: relative;
+      .infoText {
+        flex: 1;
+        user-select: text;
+        background-color: var(--background-color-info-text);
+      }
+    }
 
-			.infoText {
-				flex: 1;
-				user-select: text;
-				background-color: var(--background-color-info-text);
-			}
-		}
+    .actions {
+      display: flex;
+      justify-content: space-between;
+      border-top: 2px solid var(--statementBackground);
+      padding-top: 0.5rem;
 
-		.actions {
-			display: flex;
-			justify-content: space-between;
-			border-top: 2px solid var(--statementBackground);
-			padding-top: 0.5rem;
+      > div {
+        display: flex;
+      }
 
-			>div {
-				display: flex;
-			}
+      .actionsType {
+        gap: 1rem;
+      }
 
-			.actionsType {
-				gap: 1rem;
-			}
+      &.actionsEvaluations {
+        gap: 3rem;
+      }
+    }
+  }
 
-			&.actionsEvaluations {
-				gap: 3rem;
-			}
-		}
-	}
+  // User messages (aligned left in RTL, right in LTR)
+  &.alignedLeft {
+    direction: ltr;
 
-	&.alignedLeft {
-		direction: ltr;
+    &.rtl {
+      align-self: flex-start;
+      
+      .user {
+        flex-direction: row;
+        margin-left: 1rem;
+      }
+      
+      .messageBox {
+        direction: rtl;
+        background-color: var(--card-needs-surface);
+        margin-left: auto;
+        margin-right: 3rem;
+        border-left: 0.65rem solid var(--card-needs-surface);
+        border-right: none;
+        
+        .triangle {
+          clip-path: polygon(0 0, 0% 100%, 70% 0);
+          right: -1.5rem;
+          left: auto;
+        }
+      }
+    }
+    
+    &.ltr {
+      align-self: flex-end;
+      
+      .user {
+        flex-direction: row-reverse;
+        margin-right: 1rem;
+      }
+      
+      .messageBox {
+        direction: ltr;
+        background-color: var(--card-needs-surface);
+        margin-right: auto;
+        margin-left: 3rem;
+        border-right: 0.65rem solid var(--card-needs-surface);
+        border-left: none;
+        
+        .triangle {
+          clip-path: polygon(30% 0, 100% 100%, 100% 0);
+          left: -1.5rem;
+          right: auto;
+        }
+      }
+    }
+    
+    .messageMargin {
+      margin-left: 2rem;
+      margin-right: 1rem;
+    }
+    .messageBox {
+      &Statement {
+        border-right: 0rem solid !important;
+        border-left: 0rem solid !important;
+      }
+    }
+  }
 
-		&.rtl {
-			.messageBox {
-				direction: rtl;
-			}
-		}
+  // Other users' messages (aligned right in RTL, left in LTR)  
+  &:not(.alignedLeft) {
+    &.rtl {
+      align-self: flex-end;
+      
+      .user {
+        flex-direction: row-reverse;
+        margin-right: 1rem;
+      }
+      
+      .messageBox {
+        direction: rtl;
+        background-color: var(--card-other-message);
+        margin-right: auto;
+        margin-left: 3rem;
+        border-right: 0.65rem solid var(--card-other-message);
+        border-left: none;
+        
+        .triangle {
+          clip-path: polygon(30% 0, 100% 100%, 100% 0);
+          left: -1.5rem;
+          right: auto;
+        }
+      }
+    }
+    
+    &.ltr {
+      align-self: flex-start;
+      
+      .user {
+        flex-direction: row;
+        margin-left: 1rem;
+      }
+      
+      .messageBox {
+        direction: ltr;
+        background-color: var(--card-other-message);
+        margin-left: auto;
+        margin-right: 3rem;
+        border-left: 0.65rem solid var(--card-other-message);
+        border-right: none;
+        
+        .triangle {
+          clip-path: polygon(0 0, 0% 100%, 70% 0);
+          right: -1.5rem;
+          left: auto;
+        }
+      }
+    }
+  }
+  .messageMargin {
+    margin-right: 1.8rem;
+    margin-left: 1rem;
+  }
+  :global(.menu-option) svg {
+    color: var(--icon-blue);
+  }
 
-		.messageBox {
-			border-right: 0.65rem solid;
-			margin-left: 2rem;
-			margin-right: 1rem;
 
-			&--statement {
-				border-right: 0rem solid !important;
-			}
+  .bottomIcons {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 1rem;
+    flex-flow: row;
+    align-items: center;
+    svg{
+              margin-right: .5rem;
 
-			.triangle {
-				clip-path: polygon(30% 0, 100% 100%, 100% 0);
-				left: -1.2rem;
-			}
-		}
-	}
+    }
+    @media screen and (max-width: 500px) {
+      display: grid;
+      align-items: center;
+      justify-content: center;
+      grid-template-rows: auto 30px;
+      grid-template-columns: repeat(2, 1fr);
+      row-gap: 0px;
+      width: 100%;
 
-	&:not(.alignedLeft) {
-		&.ltr {
-			.messageBox {
-				direction: ltr;
-			}
-		}
+      grid-template-areas:
+        "evaluation evaluation"
+        "more question";
 
-		.messageBox {
-			border-left: 0.65rem solid;
-			margin-right: 1.8rem;
-			margin-left: 1rem;
+      .evolutionElement {
+        grid-area: evaluation;
+      }
 
-			@media screen and (max-width: 500px) {
-				margin-right: 0rem;
-				margin-left: 0rem;
+      .chatMoreElement {
+        grid-area: more;
+      }
 
-			}
+      .moreQuestion {
+        grid-area: question;
+      }
+    }
 
+    .addQuestionBtn {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: flex-end;
+      background: none;
+      border: none;
+      cursor: pointer;
+    }
+  }
 
-			.triangle {
-				clip-path: polygon(0 0, 0% 100%, 70% 0);
-				right: -1.2rem;
-			}
-		}
-	}
-
-	.menuOption svg {
-		color: var(--icon-blue);
-	}
-
-	.bottomIcons {
-		display: flex;
-		flex-flow: row;
-		align-items: center;
-		justify-content: space-between;
-		margin-top: auto;
-		/* Push icons to the bottom */
-
-		@media screen and (max-width: 500px) {
-			display: grid;
-			align-items: center;
-			justify-content: center;
-			grid-template-rows: auto 30px;
-			grid-template-columns: repeat(2, 1fr);
-			row-gap: 0px;
-			width: 100%;
-
-			grid-template-areas:
-				'evaluation evaluation'
-				'more question';
-
-			.evolutionElement {
-				grid-area: evaluation;
-			}
-
-			.chatMoreElement {
-				grid-area: more;
-			}
-
-			.moreQuestion {
-				grid-area: question;
-			}
-		}
-
-		.addQuestionBtn {
-			display: flex;
-			flex-direction: row;
-			align-items: center;
-			justify-content: flex-end;
-			background: none;
-			border: none;
-			cursor: pointer;
-		}
-	}
-
-	.addQuestionSVG {
-		margin-top: 13px;
-		height: 22px;
-		width: 20px;
-		color: var(--icon-blue);
-	}
+  .addQuestionSVG {
+    margin-top: 13px;
+    height: 22px;
+    width: 20px;
+    color: var(--icon-blue);
+  }
 }
 
 .inputWrapper {
-	position: relative;
-	display: flex;
-	align-items: center;
-	background-color: var(--background-color-info-text);
+  position: relative;
+  display: flex;
+  align-items: center;
+  background-color: var(--background-color-info-text);
 }
 
 .editInput {
-	direction: rtl;
-	overflow: hidden;
+  direction: rtl;
+  overflow: hidden;
 }
 
 .saveIcon {
-	cursor: pointer;
-	color: var(--icon-blue);
+  cursor: pointer;
+  color: var(--icon-blue);
+}
+
+.chatMenu {
+  position: relative;
+  top: 0.5rem;
+  right: 0.5rem;
+  
 }

@@ -57,10 +57,16 @@ export async function createStatementWithSubscription({
 	}));
 
 	// Then save to database in the background
-	const { statementId } = await setStatementToDB({
+	const result = await setStatementToDB({
 		parentStatement: newStatementParent,
 		statement: _newStatement,
 	});
+
+	if (!result) {
+		throw new Error('Failed to save statement to database');
+	}
+
+	const { statementId } = result;
 
 	// Create subscription in Firestore with push notifications enabled if user has granted permission
 	const pushNotificationsEnabled = notificationService.isInitialized() && 

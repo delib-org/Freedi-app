@@ -54,10 +54,8 @@ const StatementTopNav: FC<Props> = ({
   if (!statement) return null;
 
   const _statement = parentStatement || statement;
-
-  const enableNavigationalElements = Boolean(
-    _statement?.statementSettings?.enableNavigationalElements
-  );
+  
+  const enableNavigationalElements = _statement?.statementSettings?.enableNavigationalElements === false ? false : true;
 
   const isAdmin = role === Role.admin || user?.uid === statement?.creatorId;
   const allowNavigation = enableNavigationalElements || isAdmin;
@@ -71,8 +69,8 @@ const StatementTopNav: FC<Props> = ({
     if (Object.values(Screen).includes(path as Screen)) {
       setIsHeaderMenuOpen(false);
       navigate(`/statement-screen/${statement.statementId}/${path}`);
-      
-return;
+
+      return;
     }
 
     navigate(`/statement/${statement.statementId}/${path}`);
