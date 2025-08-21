@@ -18,13 +18,22 @@ export async function setStatementMembership({ statement, membershipAccess }: Pr
 			await updateDoc(statementRef, {
 				membership: deleteField(),
 			});
-		} else {
+		} else if (membershipAccess) {
+			// Validate that membershipAccess is defined and valid
+			if (!Object.values(Access).includes(membershipAccess)) {
+				console.error('Invalid membership access value:', membershipAccess);
+				throw new Error(`Invalid membership access value: ${membershipAccess}`);
+			}
+			
 			// Set specific membership access
 			await updateDoc(statementRef, {
 				membership: {
 					access: membershipAccess,
 				},
 			});
+		} else {
+			console.error('Undefined membership access value');
+			throw new Error('Membership access value is undefined');
 		}
 	} catch (error) {
 		console.error('Error updating statement membership:', error);

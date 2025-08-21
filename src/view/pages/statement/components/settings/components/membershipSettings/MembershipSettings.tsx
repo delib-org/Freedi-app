@@ -29,18 +29,6 @@ const MembershipSettings: FC<Props> = ({ statement, setStatementToEdit }) => {
 	const hasOwnMembership = Boolean(statement?.membership?.access) && !hasDeprecatedOpen;
 	const isInheriting = isTopLevel ? false : !hasOwnMembership;
 	
-	// Debug logging
-	console.info('MembershipSettings Debug:', {
-		statementId: statement?.statementId,
-		parentId: statement?.parentId,
-		isTopLevel,
-		hasDeprecatedOpen,
-		hasOwnMembership,
-		membershipAccess: statement?.membership?.access,
-		isInheriting,
-		topParentAccess: topParentStatement?.membership?.access
-	});
-	
 	const [inheritAccess, setInheritAccess] = useState<boolean>(isInheriting);
 	const [membershipAccess, setMembershipAccess] = useState<Access>(
 		// If it has deprecated 'open' and should inherit, use parent's access
@@ -51,21 +39,28 @@ const MembershipSettings: FC<Props> = ({ statement, setStatementToEdit }) => {
 
 	// Update state when statement changes
 	useEffect(() => {
-		const isDeprecatedOpen = statement?.membership?.access === 'open' && !isTopLevel;
-		const shouldInherit = isTopLevel ? false : (!statement?.membership?.access || isDeprecatedOpen);
+		// Recalculate values to avoid stale closures
+		const currentIsTopLevel = statement?.parentId === 'top';
+		const isDeprecatedOpen = statement?.membership?.access === 'open' && !currentIsTopLevel;
+		const shouldInherit = currentIsTopLevel ? false : (!statement?.membership?.access || isDeprecatedOpen);
+		
 		setInheritAccess(shouldInherit);
 		
+		// Determine the correct membership access
+		let newMembershipAccess: Access;
 		if (statement?.membership?.access && !isDeprecatedOpen) {
 			// Statement has its own valid access level
-			setMembershipAccess(statement.membership.access);
+			newMembershipAccess = statement.membership.access as Access;
 		} else if (topParentStatement?.membership?.access) {
 			// Use inherited access from top parent
-			setMembershipAccess(topParentStatement.membership.access);
+			newMembershipAccess = topParentStatement.membership.access;
 		} else {
 			// Default fallback
-			setMembershipAccess(Access.openToAll);
+			newMembershipAccess = Access.openToAll;
 		}
-	}, [statement?.parentId, statement?.membership?.access, topParentStatement?.membership?.access, isTopLevel]);
+		
+		setMembershipAccess(newMembershipAccess);
+	}, [statement?.parentId, statement?.membership?.access, topParentStatement?.membership?.access]);
 
 	if (!statement) return null;
 	
@@ -109,23 +104,35 @@ const MembershipSettings: FC<Props> = ({ statement, setStatementToEdit }) => {
 	};
 
 	const handleAccessChange = (newAccess: Access) => {
+		console.info('handleAccessChange called with:', newAccess, 'Access.public:', Access.public);
+		
+		// Validate the new access value
+		if (!newAccess && newAccess !== Access.public) {
+			console.error('Invalid access value:', newAccess);
+			
+			return;
+		}
+		
+		// First, automatically uncheck inherit if it was checked
+		if (inheritAccess) {
+			setInheritAccess(false);
+		}
+		
 		setMembershipAccess(newAccess);
 		
-		// Only save the access level if not inheriting
-		if (!inheritAccess) {
-			if (statement.statementId === "") {
-				// New statement - set membership with specific access
-				setStatementToEdit({
-					...statement,
-					membership: {
-						...statement.membership,
-						access: newAccess
-					}
-				});
-			} else {
-				// Existing statement - update database
-				setStatementMembership({ statement, membershipAccess: newAccess });
-			}
+		// Save the access level
+		if (statement.statementId === "") {
+			// New statement - set membership with specific access
+			setStatementToEdit({
+				...statement,
+				membership: {
+					...statement.membership,
+					access: newAccess
+				}
+			});
+		} else {
+			// Existing statement - update database
+			setStatementMembership({ statement, membershipAccess: newAccess });
 		}
 	};
 
@@ -185,31 +192,41 @@ const MembershipSettings: FC<Props> = ({ statement, setStatementToEdit }) => {
 							{
 								label: t('Public'),
 								toolTip: t('Anyone can view and interact without login'),
-								value: Access.public,
+								value: Access.public as string,
 							},
 							{
 								label: t('Open to all'),
 								toolTip: t('Anyone can join the group'),
-								value: Access.openToAll,
+								value: Access.openToAll as string,
 							},
 							{
 								label: t('Registered'),
 								toolTip: t('Only registered members can join'),
-								value: Access.openForRegistered,
+								value: Access.openForRegistered as string,
 							},
 							{
 								label: t('Moderated'),
 								toolTip: t('Requires approval to join'),
-								value: Access.moderated,
+								value: Access.moderated as string,
 							},
 							{
 								label: t('Secret'),
 								toolTip: t('Invitation only'),
-								value: Access.secret,
+								value: Access.secret as string,
 							}
 						]}
-						currentValue={membershipAccess}
-						onClick={(newValue) => handleAccessChange(newValue as Access)}
+						currentValue={membershipAccess as string}
+						onClick={(newValue) => {
+							console.info('MultiSwitch onClick value:', newValue, 'type:', typeof newValue);
+							console.info('Access enum values:', {
+								public: Access.public,
+								openToAll: Access.openToAll,
+								openForRegistered: Access.openForRegistered,
+								moderated: Access.moderated,
+								secret: Access.secret
+							});
+							handleAccessChange(newValue as Access);
+						}}
 					/>
 				</div>
 			)}
