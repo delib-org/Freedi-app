@@ -46,7 +46,7 @@ const Chat: FC<ChatProps> = ({
     }
   }
 
-  //scroll to bottom
+  //scroll to bottom with smooth animation
   const scrollToBottom = () => {
     if (!messagesEndRef) return;
     if (!messagesEndRef.current) return;
@@ -55,7 +55,12 @@ const Chat: FC<ChatProps> = ({
       messagesEndRef.current.scrollIntoView({ behavior: "auto" });
       firstTime = false;
     } else {
-      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+      // Enhanced smooth scrolling with better animation
+      messagesEndRef.current.scrollIntoView({ 
+        behavior: "smooth",
+        block: "end",
+        inline: "nearest"
+      });
     }
   };
 
@@ -90,20 +95,31 @@ const Chat: FC<ChatProps> = ({
       if (isNewMessages) {
         setNumberOfNewMessages((n) => n + 1);
       }
+      // For sideChat, auto-scroll to new messages
+      if (sideChat && isNewMessages) {
+        setTimeout(() => scrollToBottom(), 300);
+      }
     } else {
-      scrollToBottom();
+      // User's own message, scroll immediately
+      setTimeout(() => scrollToBottom(), 100);
     }
   }, [subStatements.length]);
 
   return (
-    <div className={styles.chat} ref={chatRef}>
-      {statement.description && (
+    <div className={`${styles.chat} ${sideChat ? styles.sideChat : ''}`} ref={chatRef}>
+      {statement.description && !sideChat && (
         <div className="wrapper">
           <Description />
         </div>
       )}
       {subStatements?.map((statementSub: Statement, index) => (
-        <div key={statementSub.statementId}>
+        <div 
+          key={statementSub.statementId}
+          className={styles.messageWrapper}
+          style={{
+            animationDelay: `${Math.min(index * 0.03, 0.3)}s`
+          }}
+        >
           <ChatMessageCard
             parentStatement={statement}
             statement={statementSub}
@@ -116,17 +132,19 @@ const Chat: FC<ChatProps> = ({
       <div ref={messagesEndRef} />
 
       {statement && (
-        <div className={styles.input}>
+        <div className={sideChat ? styles.sideChatInputWrapper : styles.input}>
           <ChatInput statement={statement} sideChat={sideChat} />
         </div>
       )}
-      <div>
-        <NewMessages
-          newMessages={numberOfNewMessages}
-          setNewMessages={setNumberOfNewMessages}
-          scrollToBottom={scrollToBottom}
-        />
-      </div>
+      {!sideChat && (
+        <div>
+          <NewMessages
+            newMessages={numberOfNewMessages}
+            setNewMessages={setNumberOfNewMessages}
+            scrollToBottom={scrollToBottom}
+          />
+        </div>
+      )}
     </div>
   );
 };

@@ -12,6 +12,7 @@ import {
 	listenToUserQuestions,
 } from '@/controllers/db/userData/getUserData';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
+import { useMassConsensusAnalytics } from '@/hooks/useMassConsensusAnalytics';
 
 const Introduction = () => {
 	const { t } = useUserConfig();
@@ -21,6 +22,7 @@ const Introduction = () => {
 	const role = subscription?.role;
 	const { user } = useAuthentication();
 	const { setHeader } = useHeader();
+	const { trackStageCompleted } = useMassConsensusAnalytics();
 
 	useEffect(() => {
 		setHeader({
@@ -97,7 +99,10 @@ const Introduction = () => {
 				</div>
 			)}
 
-			<FooterMassConsensus isIntro={true} />
+			<FooterMassConsensus 
+				isIntro={true} 
+				onNext={() => trackStageCompleted('introduction')}
+			/>
 		</>
 	);
 };

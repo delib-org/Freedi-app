@@ -28,14 +28,16 @@ import { Link } from 'react-router';
 
 interface Props {
 	statement: Statement | undefined;
-	siblingStatements: Statement[];
-	parentStatement: Statement | undefined;
+	siblingStatements?: Statement[];
+	parentStatement?: Statement | undefined;
+	positionAbsolute?: boolean;
 }
 
 const SuggestionCard: FC<Props> = ({
 	parentStatement,
 	siblingStatements,
 	statement,
+	positionAbsolute = true,
 }) => {
 	// Hooks
 	if (!parentStatement) console.error('parentStatement is not defined');
@@ -178,6 +180,7 @@ const SuggestionCard: FC<Props> = ({
 				flexDirection: dir === 'ltr' ? 'row' : 'row-reverse',
 				opacity: statement.hide ? 0.5 : 1,
 				pointerEvents: (statement.hide && !isAuthorized ? 'none' : 'auto'),
+				position: positionAbsolute ? 'absolute' : 'relative',
 			}}
 			ref={elementRef}
 			id={statement.statementId}

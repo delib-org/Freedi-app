@@ -660,10 +660,20 @@ export async function updateIsQuestion(statement: Statement) {
 		);
 
 		let { statementType } = statement;
-		if (statementType === StatementType.question)
+		if (statementType === StatementType.question) {
 			statementType = StatementType.statement;
+		
+		}
 		else {
 			statementType = StatementType.question;
+			statement.questionSettings = {
+				...statement.questionSettings,
+			questionType: QuestionType.simple,
+			};
+			statement.evaluationSettings = {
+				...statement.evaluationSettings,
+				evaluationUI: EvaluationUI.suggestions,
+			};
 		}
 
 		const newStatementType = { statementType };

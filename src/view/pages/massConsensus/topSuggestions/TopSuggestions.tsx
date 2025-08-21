@@ -7,10 +7,12 @@ import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import { useHeader } from '../headerMassConsensus/HeaderContext';
 import { useEffect } from 'react';
 import Loader from '@/view/components/loaders/Loader';
+import { useMassConsensusAnalytics } from '@/hooks/useMassConsensusAnalytics';
 
 const TopSuggestions = () => {
 	const { t } = useUserConfig();
 	const { navigateToVoting, loadingStatements } = useTopSuggestions();
+	const { trackStageCompleted, trackStageSkipped } = useMassConsensusAnalytics();
 
 	const { setHeader } = useHeader();
 
@@ -39,7 +41,11 @@ const TopSuggestions = () => {
 
 			<FooterMassConsensus
 				isNextActive={true}
-				onNext={navigateToVoting}
+				onNext={() => {
+					trackStageCompleted('top_suggestions');
+					navigateToVoting();
+				}}
+				onSkip={() => trackStageSkipped('top_suggestions')}
 			/>
 		</div>
 	);

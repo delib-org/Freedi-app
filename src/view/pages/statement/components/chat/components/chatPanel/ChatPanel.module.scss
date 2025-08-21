@@ -1,39 +1,180 @@
-.chatPanel {
-  @media (max-width: 1440px) {
-    display: none;
-  }
-}
-.chatPanelContainer {
+
+// Placeholders for shared styles
+%chat-panel-container-base {
   position: fixed;
-  left: 0;
+  left: -20vw;
   width: 20vw;
   height: 85%;
   bottom: 0;
   background-color: var(--menu-default);
-  overflow-y: auto;
-  animation: panelOpen 0.5s forwards;
-  @media (max-width: 1440px) {
-    display: none;
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+  border-top-right-radius: 10px;
+  z-index: 9999;
+  overflow: visible;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+  @media (max-width: 768px) {
+    width: 70vw;
+    left: -70vw;
+  }
+  @media (max-width: 480px) {
+    width: 85vw;
+    left: -85vw;
+  }
+}
+
+%toggle-button-base {
+  position: absolute;
+  right: -40px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 40px;
+  height: 80px;
+  background-color: var(--menu-default);
+  border-left: none;
+  border-top-right-radius: 10px;
+  border-bottom-right-radius: 10px;
+  cursor: pointer;
+  box-shadow: 1px 0 4px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  z-index: 10000;
+  overflow: visible;
+  padding: 0;
+  @media (max-width: 768px) {
+    width: 35px;
+    height: 60px;
+    right: -35px;
+    top: 40%;
+    transform: translateY(-40%);
+  }
+  @media (max-width: 480px) {
+    width: 30px;
+    height: 50px;
+    right: -30px;
+    top: 35%;
+    transform: translateY(-35%);
+  }
+}
+
+%toggle-icon-base {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--icons-primary);
+  transition: opacity 0.3s ease;
+  opacity: 0.9;
+  margin-left: 3px;
+  @media (max-width: 768px) {
+    margin-left: 2px;
+  }
+  svg {
+    width: 100%;
+    height: 100%;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1;
+    opacity: 0.8;
+  }
+  &:hover {
+    opacity: 1;
+  }
+}
+
+%notification-badge-base {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background-color: var(--icons-blue-dark);
+  color: white;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+}
+
+.chatPanel {
+  display: block;
+}
+
+.chatPanelContainer {
+  @extend %chat-panel-container-base;
+  transform: translateX(20vw);
+  
+  @media (max-width: 768px) {
+    transform: translateX(70vw);
+  }
+  
+  @media (max-width: 480px) {
+    transform: translateX(85vw);
+  }
+  .toggleButton {
+    @extend %toggle-button-base;
+    &:hover {
+      background-color: var(--lighter);
+      box-shadow: 3px 0 10px rgba(0, 0, 0, 0.15);
+      .toggleIcon {
+        opacity: 0.9;
+      }
+    }
+    &:active {
+      background-color: var(--lighter);
+      transform: translateY(-50%) scale(0.98);
+    }
+    .toggleIcon {
+      @extend %toggle-icon-base;
+    }
+    .notificationBadge {
+      @extend %notification-badge-base;
+    }
+  }
+  .content {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    position: relative;
   }
   .sideChatTitle {
-    margin: 1rem 1rem 0.3rem 1rem;
+    margin: 0.5rem 1rem;
+    padding: 0.3rem 0;
     display: flex;
     flex-direction: row;
     align-items: center;
+    gap: 0.5rem;
     color: var(--icons-primary);
+    height: auto;
+    overflow: visible;
+    svg {
 
+      min-width: 1.2rem;
+      min-height: 1.2rem;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1;
+      opacity: 0.8;
+      flex-shrink: 0;
+      display: block;
+    }
     h5 {
-      margin: 0.5rem;
+      margin: 0;
+      font-size: 0.9rem;
+      font-weight: 500;
+      line-height: 1.2;
     }
   }
-
   .closeChatPanel {
     position: absolute;
     color: var(--icons-primary);
     font-size: 2rem;
     top: 1%;
     right: 6%;
-
     &:hover {
       scale: 1.1;
     }
@@ -41,26 +182,38 @@
 }
 
 .chatPanelContainerClosed {
-  position: fixed;
-  left: 0;
-  width: 4vw;
-  height: 85%;
-  bottom: 0;
-  background-color: var(--menu-default);
-  overflow-y: hidden;
+  @extend %chat-panel-container-base;
   display: flex;
   flex-direction: column;
-
+  transform: translateX(0);
+  .toggleButton {
+    @extend %toggle-button-base;
+    &:hover {
+      background-color: var(--lighter);
+      box-shadow: 3px 0 10px rgba(0, 0, 0, 0.15);
+      .toggleIcon {
+        opacity: 0.9;
+      }
+    }
+    &:active {
+      background-color: var(--lighter);
+      transform: translateY(-50%) scale(0.98);
+    }
+    .toggleIcon {
+      @extend %toggle-icon-base;
+    }
+    .notificationBadge {
+      @extend %notification-badge-base;
+    }
+  }
   .openChatPanelBtn {
     color: var(--icons-primary);
     font-size: 2rem;
     margin: 0.5rem;
     cursor: pointer;
-
     &:hover {
       scale: 1.1;
     }
-
     .notificationBtn {
       position: relative;
       color: var(--text-negative);
@@ -77,6 +230,8 @@
   text-align: center;
 }
 
+
+
 .toTheRight {
   transform: scaleX(-1);
 }
@@ -89,28 +244,4 @@ p {
   margin-left: 1rem;
   margin-bottom: 1rem;
   color: var(--lighter);
-}
-.chatPanelClosing {
-  animation: panelClose 0.5s forwards;
-}
-@keyframes panelOpen {
-  0% {
-    left: -20vw;
-  }
-  100% {
-    left: 0;
-  }
-}
-@keyframes panelClose {
-  0% {
-    left: 0;
-    opacity: 1;
-  }
-  70% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0;
-    left: -20vw;
-  }
 }
