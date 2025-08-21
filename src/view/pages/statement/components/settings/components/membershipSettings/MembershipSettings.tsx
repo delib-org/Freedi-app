@@ -24,6 +24,11 @@ const MembershipSettings: FC<Props> = ({ statement, setStatementToEdit }) => {
 			<MultiSwitch
 				options={[
 					{
+						label: t('Public'),
+						toolTip: t('Anyone can view and interact with the statement'),
+						value: Access.public,
+					},
+					{
 						label: t('Open to all'),
 						toolTip: t('Anyone can join the group'),
 						value: Access.openToAll,

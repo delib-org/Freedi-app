@@ -43,7 +43,8 @@ export function generateTemporalName(): string {
   } while (usedNames.has(name));
   
   usedNames.add(name);
-  return name;
+  
+return name;
 }
 
 /**
