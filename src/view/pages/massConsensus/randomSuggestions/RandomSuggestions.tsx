@@ -7,10 +7,12 @@ import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import { useHeader } from '../headerMassConsensus/HeaderContext';
 import { useEffect } from 'react';
 import Loader from '@/view/components/loaders/Loader';
+import { useMassConsensusAnalytics } from '@/hooks/useMassConsensusAnalytics';
 
 const RandomSuggestions = () => {
 	const { navigateToTop, loadingStatements } = useRandomSuggestions();
 	const { t } = useUserConfig();
+	const { trackStageCompleted, trackStageSkipped } = useMassConsensusAnalytics();
 
 	const { setHeader } = useHeader();
 
@@ -35,7 +37,11 @@ const RandomSuggestions = () => {
 			)}
 			<FooterMassConsensus
 				isNextActive={true}
-				onNext={navigateToTop}
+				onNext={() => {
+					trackStageCompleted('random_suggestions');
+					navigateToTop();
+				}}
+				onSkip={() => trackStageSkipped('random_suggestions')}
 			/>
 		</>
 	);
