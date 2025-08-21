@@ -40,6 +40,9 @@
 
   .green {
     border-left: 5px var(--icons-green) solid;
+    box-shadow: 0 0 8px rgba(0, 123, 255, 0.3), 
+                0 0 16px rgba(0, 123, 255, 0.15);
+    animation: glow 3s ease-in-out infinite;
   }
 
   .group {
@@ -92,5 +95,16 @@
   }
   100% {
     transform: scaleX(-1) translateX(-15px);
+  }
+}
+
+@keyframes glow {
+  0%, 100% {
+    box-shadow: 0 0 8px rgba(0, 123, 255, 0.3), 
+                0 0 16px rgba(0, 123, 255, 0.15);
+  }
+  50% {
+    box-shadow: 0 0 12px rgba(0, 123, 255, 0.4), 
+                0 0 20px rgba(0, 123, 255, 0.2);
   }
 }
