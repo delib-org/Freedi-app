@@ -63,9 +63,6 @@ const ChatPanel = () => {
             <div className={styles.sideChatTitle}>
               <ChatIcon /> <h5>Free Discussion</h5>
             </div>
-            <p>
-              Questions and topics that emerged from the main discussion thread
-            </p>
             <Chat sideChat={true} />
           </div>
         ) : null}
