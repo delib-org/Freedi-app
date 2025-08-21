@@ -61,12 +61,12 @@ const SubQuestionNode: FC<SubQuestionNodeProps> = ({
 
   return (
     <div className={styles.SubQuestionNodeContainer}>
-      <div
+      <button
         className={`${styles.node} ${isInStatement ? styles.green : ""} ${depth <= 1 && !isInStatement ? styles.group : ""} ${!isInStatement ? styles.clickable : ""} ${clicked ? styles.animate : ""}`}
         onClick={!isInStatement ? handleClick : undefined}
       >
         <h3>{statement.statement}</h3>
-      </div>
+      </button>
 
       {
         //this border reaches to the parents Last child
