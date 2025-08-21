@@ -10,12 +10,14 @@ const FooterMassConsensus = ({
 	isNextActive,
 	isFeedback,
 	onNext,
+	onSkip,
 	blockNavigation,
 }: {
 	isIntro?: boolean;
 	isNextActive?: boolean;
 	isFeedback?: boolean;
 	onNext?: () => void;
+	onSkip?: () => void;
 	blockNavigation?: boolean;
 }) => {
 	const { statementId } = useParams<{ statementId: string }>();
@@ -35,6 +37,7 @@ const FooterMassConsensus = ({
 	};
 	const handleSkip = () => {
 		if (!goTo) return;
+		if (onSkip) onSkip();
 		setIsButtonClicked(true);
 
 		navigate(`/mass-consensus/${statementId}/${goTo}`);

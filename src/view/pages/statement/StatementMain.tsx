@@ -1,5 +1,6 @@
 import React from 'react';
 import { createSelector } from '@reduxjs/toolkit';
+import { useDispatch } from 'react-redux';
 
 // Components
 import LoadingPage from '../loadingPage/LoadingPage';
@@ -28,6 +29,7 @@ import { StatementErrorBoundary } from './components/StatementErrorBoundary';
 // Constants
 import { COMPONENT_STATES } from './constants';
 import { creatorSelector } from '@/redux/creator/creatorSlice';
+import { setShowNewStatementModal } from '@/redux/statements/newStatementSlice';
 
 // Create selectors
 export const subStatementsSelector = createSelector(
@@ -40,6 +42,8 @@ export const subStatementsSelector = createSelector(
 );
 
 const StatementMain: React.FC = () => {
+	const dispatch = useDispatch();
+	
 	// Use custom hooks to manage data and side effects
 	const {
 		statementId,
@@ -110,6 +114,13 @@ const StatementMain: React.FC = () => {
 			updateLastReadTimestamp(statementId, user.uid);
 		}
 	}, [statementId, statement, user?.uid]);
+
+	// Reset new statement modal when component unmounts or navigating to a different statement
+	React.useEffect(() => {
+		return () => {
+			dispatch(setShowNewStatementModal(false));
+		};
+	}, [statementId, dispatch]);
 
 	// Handle different states
 	const renderContent = () => {
