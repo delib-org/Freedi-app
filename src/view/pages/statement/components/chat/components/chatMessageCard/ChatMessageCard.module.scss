@@ -14,6 +14,7 @@
     align-items: center;
     gap: 1rem;
     padding-top: 0.5rem;
+    padding-inline: 1rem;
   }
   .messageSideBox {
     width: 80%;
@@ -84,6 +85,12 @@
 
     &.rtl {
       align-self: flex-start;
+      
+      .user {
+        flex-direction: row;
+        margin-left: 1rem;
+      }
+      
       .messageBox {
         direction: rtl;
         background-color: var(--card-needs-surface);
@@ -102,6 +109,12 @@
     
     &.ltr {
       align-self: flex-end;
+      
+      .user {
+        flex-direction: row-reverse;
+        margin-right: 1rem;
+      }
+      
       .messageBox {
         direction: ltr;
         background-color: var(--card-needs-surface);
@@ -134,6 +147,12 @@
   &:not(.alignedLeft) {
     &.rtl {
       align-self: flex-end;
+      
+      .user {
+        flex-direction: row-reverse;
+        margin-right: 1rem;
+      }
+      
       .messageBox {
         direction: rtl;
         background-color: var(--card-other-message);
@@ -152,6 +171,12 @@
     
     &.ltr {
       align-self: flex-start;
+      
+      .user {
+        flex-direction: row;
+        margin-left: 1rem;
+      }
+      
       .messageBox {
         direction: ltr;
         background-color: var(--card-other-message);

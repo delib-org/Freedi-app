@@ -115,6 +115,7 @@ const Chat: FC<ChatProps> = ({
       {subStatements?.map((statementSub: Statement, index) => (
 
         <ChatMessageCard
+          key={statementSub.statementId}
           parentStatement={statement}
           statement={statementSub}
           previousStatement={subStatements[index - 1]}
