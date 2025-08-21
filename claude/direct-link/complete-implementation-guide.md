@@ -1,14 +1,21 @@
 # Simplified Implementation Guide: Statement-Level Access Override
 
-## 🎉 Phase 1 Implementation Status: COMPLETED
+## 🎉 Phase 1 & 2 Implementation Status: COMPLETED
 
-**Date Completed**: 2025-08-21
+**Phase 1 Completed**: 2025-08-21 (Core functionality)
+**Phase 2 Completed**: 2025-08-21 (UI components)
 
 ### ✅ What's Been Implemented:
 1. **Temporal Name Generator** - Creates names like "Clear Thought 123"
 2. **Public Authentication Handler** - Auto-authenticates for public statements
 3. **Updated Authorization Hook** - Simplified two-level permission check
 4. **Updated StatementMain** - Triggers auto-auth for public access
+5. **Membership Settings UI** - Complete with inheritance checkbox
+6. **Statement Creation Flow** - Fixed to handle inheritance properly
+7. **Access Level Management** - Can override or inherit from parent
+
+### 🔴 Critical Issue Remaining:
+**Public statements still show login screen instead of auto-authenticating**
 
 All code passes TypeScript compilation and ESLint checks.
 
@@ -74,50 +81,70 @@ If Access.public:
   - Add effect to trigger auto-authentication for public statements
   - Handle direct link parameters (?direct=true)
 
-### Phase 2: UI Components ⏱️ 2-3 days
+### Phase 2: UI Components ⏱️ 2-3 days ✅ COMPLETED
 
-- [ ] **2.1 Create Access Level Indicator**
-  - File: `src/view/pages/statement/components/AccessLevelIndicator.tsx` (NEW)
-  - Show current access level (inherited or overridden)
-  - Visual indicator when statement overrides parent
+- [x] **2.1 Update Membership Settings** ✅ COMPLETED 2025-08-21
+  - File: `src/view/pages/statement/components/settings/components/membershipSettings/MembershipSettings.tsx`
+  - Complete rewrite with inheritance support
+  - Added "Inherit from parent group" checkbox
+  - Shows inherited access level when checkbox is checked
+  - Allows admins to override or clear override
+  - Fixed issues: SCSS imports, infinite loops, undefined access values
 
-- [ ] **2.2 Update Statement Settings**
-  - File: `src/view/pages/statement/components/settings/StatementSettings.tsx`
-  - Add membership.access selector
-  - Show "Inheriting from parent" when not set
-  - Allow admins to override or clear override
+- [x] **2.2 Update Statement Creation Flow** ✅ COMPLETED 2025-08-21
+  - File: `src/controllers/db/statements/setStatements.ts`
+  - Sub-statements no longer get membership field by default
+  - Only top-level statements get default membership
+  - Fixed deprecated Access.open handling
 
-- [ ] **2.3 Create Share Statement Component**
-  - File: `src/view/pages/statement/components/sharing/ShareStatement.tsx` (NEW)
-  - Generate direct links for public statements
-  - Show access level in sharing UI
+- [x] **2.3 Handle Access Level Changes** ✅ COMPLETED 2025-08-21
+  - File: `src/controllers/db/statements/setStatementMembership.ts`
+  - Created function to update statement membership
+  - Supports clearing membership (null) for inheritance
+  - Validates access values before updating
 
-### Phase 3: Backend Updates ⏱️ 2 days
+### Phase 3: Fix Public Access Auto-Authentication ⏱️ 1 day 🚧 IN PROGRESS
 
-- [ ] **3.1 Update Subscription Logic**
+- [ ] **3.1 Fix Login Screen Issue** 🔴 CRITICAL
+  - **Problem**: Users see login screen when accessing public statements
+  - **Expected**: Auto-authenticate without showing login
+  - **Tasks**:
+    - [ ] Check route guards and authentication flow
+    - [ ] Ensure handlePublicAutoAuth runs before login redirect
+    - [ ] Test with completely new users (incognito mode)
+    - [ ] Verify temporal names are assigned correctly
+
+- [ ] **3.2 Update Route Protection**
+  - [ ] Check if routes properly detect public statements
+  - [ ] Ensure public access bypasses login requirement
+  - [ ] Handle loading states during auto-authentication
+
+### Phase 4: Backend Updates ⏱️ 2 days
+
+- [ ] **4.1 Update Subscription Logic**
   - File: `functions/src/fn_subscriptions.ts`
   - Respect statement-level access overrides
   - Auto-subscribe for public statements
 
-- [ ] **3.2 Create Public Access Handler Function**
+- [ ] **4.2 Create Public Access Handler Function**
   - File: `functions/src/fn_public_access.ts` (NEW)
   - Validate public access
   - Create subscriptions for public statement access
 
-### Phase 4: Testing & Deployment ⏱️ 2-3 days
+### Phase 5: Testing & Deployment ⏱️ 2-3 days
 
-- [ ] **4.1 Test Access Override Logic**
-  - [ ] Statement with override uses its own access
-  - [ ] Statement without override uses topParent's access
-  - [ ] Public statements allow anonymous access
-  - [ ] Mixed access levels in same tree
+- [x] **5.1 Test Access Override Logic** ✅ PARTIAL
+  - [x] Statement with override uses its own access
+  - [x] Statement without override uses topParent's access
+  - [ ] Public statements allow anonymous access (FAILING - shows login)
+  - [x] Mixed access levels in same tree
 
-- [ ] **4.2 Test Auto-Authentication**
+- [ ] **5.2 Test Auto-Authentication**
   - [ ] Direct links to public statements work
   - [ ] Temporal names generated for anonymous users
   - [ ] Google users silently authenticate
 
-- [ ] **4.3 Deploy**
+- [ ] **5.3 Deploy**
   - [ ] Test on staging
   - [ ] Deploy to production
   - [ ] Monitor for issues
@@ -452,14 +479,14 @@ Main Group (Access.openForRegistered) - Registered users only
 
 ## Testing Checklist
 
-- [ ] Statement with `membership.access` uses its own access level
-- [ ] Statement without `membership.access` uses topParent's access
-- [ ] Public statements allow anonymous access without login
-- [ ] Direct links to public statements work (`?direct=true`)
-- [ ] Temporal names generated for anonymous users
-- [ ] Mixed access levels work in the same tree
-- [ ] Existing statements without membership field still work
-- [ ] Access indicator shows correct inheritance
+- [x] Statement with `membership.access` uses its own access level ✅
+- [x] Statement without `membership.access` uses topParent's access ✅
+- [ ] Public statements allow anonymous access without login 🔴 FAILING
+- [ ] Direct links to public statements work (`?direct=true`) 🔴 FAILING
+- [ ] Temporal names generated for anonymous users ⚠️ UNTESTED
+- [x] Mixed access levels work in the same tree ✅
+- [x] Existing statements without membership field still work ✅
+- [x] Access indicator shows correct inheritance ✅
 
 ## Benefits of This Approach
 
