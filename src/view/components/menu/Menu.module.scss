@@ -74,44 +74,27 @@
 
     &.ltr {
       &--card-menu {
+        position: fixed;
         right: auto;
-        left: 50%;
-        transform: translateX(-50%);
       }
     }
 
     &.rtl {
       &--card-menu {
-        left: 50%;
+        position: fixed;
         right: auto;
-        transform: translateX(-50%);
       }
     }
     
     // Position modifiers for card menu
     &.position--above {
-      bottom: 100%;
-      margin-bottom: 0.5rem;
-      top: auto;
+      position: fixed;
       transform-origin: bottom center;
     }
     
     &.position--below {
-      top: 100%;
-      margin-top: 0.5rem;
-      bottom: auto;
+      position: fixed;
       transform-origin: top center;
-    }
-    
-    // Combined positioning for centered menus
-    &.ltr--card-menu.position--above,
-    &.rtl--card-menu.position--above {
-      transform: translateX(-50%) translateY(0);
-    }
-    
-    &.ltr--card-menu.position--below,
-    &.rtl--card-menu.position--below {
-      transform: translateX(-50%) translateY(0);
     }
   }
 

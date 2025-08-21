@@ -60,6 +60,35 @@ const Menu: FC<MenuProps> = ({
 					const viewportHeight = window.innerHeight;
 					const buttonCenterY = buttonRect.top + buttonRect.height / 2;
 					
+					// Find the chat message box (parent with messageBox class)
+					const messageBox = buttonRef.current.closest('[class*="messageBox"]');
+					
+					if (messageBox) {
+						const messageBoxRect = messageBox.getBoundingClientRect();
+						const menuElement = menuRef.current?.querySelector('[class*="menuContent"]') as HTMLElement;
+						
+						if (menuElement) {
+							// Calculate horizontal center position relative to message box
+							const messageBoxCenter = messageBoxRect.left + (messageBoxRect.width / 2);
+							const menuWidth = 250; // Default menu width
+							const leftPosition = messageBoxCenter - (menuWidth / 2);
+							
+							// Set the position directly for horizontal centering
+							menuElement.style.left = `${leftPosition}px`;
+							
+							// Set vertical position based on button position
+							if (buttonCenterY > viewportHeight / 2) {
+								// Open above
+								menuElement.style.bottom = `${viewportHeight - buttonRect.top + 10}px`;
+								menuElement.style.top = 'auto';
+							} else {
+								// Open below
+								menuElement.style.top = `${buttonRect.bottom + 10}px`;
+								menuElement.style.bottom = 'auto';
+							}
+						}
+					}
+					
 					// If button is in the lower half of viewport, open menu above
 					if (buttonCenterY > viewportHeight / 2) {
 						setMenuPosition('above');
