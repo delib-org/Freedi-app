@@ -31,7 +31,7 @@
     border-top-right-radius: 10px;
     border-bottom-right-radius: 10px;
     cursor: pointer;
-    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.2);
+    box-shadow: 1px 0 4px rgba(0, 0, 0, 0.1);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -40,8 +40,11 @@
     
     &:hover {
       background-color: var(--lighter);
-      box-shadow: 4px 0 12px rgba(0, 0, 0, 0.25);
-      transform: translateY(-50%) scale(1.05);
+      box-shadow: 3px 0 10px rgba(0, 0, 0, 0.15);
+      
+      .toggleIcon {
+        opacity: 0.9;
+      }
     }
     
     &:active {
@@ -50,17 +53,25 @@
     }
     
     .toggleIcon {
-      width: 24px;
-      height: 24px;
+      width: 1.5rem;
+      height: 1.5rem;
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: transform 0.3s ease;
+      color: var(--icons-primary);
+      transition: opacity 0.3s ease;
+      opacity: 0.8;
       
       svg {
         width: 100%;
         height: 100%;
-        fill: var(--icons-primary);
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 1;
+      }
+      
+      &:hover {
+        opacity: 1;
       }
     }
     
@@ -94,6 +105,14 @@
     flex-direction: row;
     align-items: center;
     color: var(--icons-primary);
+    
+    svg {
+      width: 1.5rem;
+      height: 1.5rem;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1;
+    }
 
     h5 {
       margin: 0.5rem;
@@ -142,7 +161,7 @@
     border-top-right-radius: 10px;
     border-bottom-right-radius: 10px;
     cursor: pointer;
-    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.2);
+    box-shadow: 1px 0 4px rgba(0, 0, 0, 0.1);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -151,8 +170,11 @@
     
     &:hover {
       background-color: var(--lighter);
-      box-shadow: 4px 0 12px rgba(0, 0, 0, 0.25);
-      transform: translateY(-50%) scale(1.05);
+      box-shadow: 3px 0 10px rgba(0, 0, 0, 0.15);
+      
+      .toggleIcon {
+        opacity: 0.9;
+      }
     }
     
     &:active {
@@ -161,17 +183,25 @@
     }
     
     .toggleIcon {
-      width: 24px;
-      height: 24px;
+      width: 1.5rem;
+      height: 1.5rem;
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: transform 0.3s ease;
+      color: var(--icons-primary);
+      transition: opacity 0.3s ease;
+      opacity: 0.8;
       
       svg {
         width: 100%;
         height: 100%;
-        fill: var(--icons-primary);
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 1;
+      }
+      
+      &:hover {
+        opacity: 1;
       }
     }
     
