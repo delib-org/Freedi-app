@@ -138,7 +138,7 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
             : statementColor.backgroundColor,
         }}
       >
-        {!isPreviousFromSameAuthor && <div className={styles.triangle} />}
+        <div className={styles.triangle} />
 
         <div className={styles.info}>
           <div className={styles.infoText}>

@@ -24,7 +24,6 @@
     flex-direction: column;
     justify-content: space-between;
     gap: 0.5rem;
-    background-color: var(--inputBackground);
     padding: 1rem;
     border-radius: 10px;
     box-shadow:
@@ -45,7 +44,7 @@
       background-color: inherit;
       height: 2rem;
       width: 2rem;
-      top: 0;
+      top: 0.5rem;
     }
 
     .info {
@@ -90,6 +89,14 @@
         background-color: var(--card-needs-surface);
         margin-left: auto;
         margin-right: 3rem;
+        border-left: 0.65rem solid var(--card-needs-surface);
+        border-right: none;
+        
+        .triangle {
+          clip-path: polygon(0 0, 0% 100%, 70% 0);
+          right: -1.5rem;
+          left: auto;
+        }
       }
     }
     
@@ -100,6 +107,14 @@
         background-color: var(--card-needs-surface);
         margin-right: auto;
         margin-left: 3rem;
+        border-right: 0.65rem solid var(--card-needs-surface);
+        border-left: none;
+        
+        .triangle {
+          clip-path: polygon(30% 0, 100% 100%, 100% 0);
+          left: -1.5rem;
+          right: auto;
+        }
       }
     }
     
@@ -108,15 +123,9 @@
       margin-right: 1rem;
     }
     .messageBox {
-      border-right: 0.65rem solid;
-
       &Statement {
         border-right: 0rem solid !important;
-      }
-
-      .triangle {
-        clip-path: polygon(30% 0, 100% 100%, 100% 0);
-        left: -1.2rem;
+        border-left: 0rem solid !important;
       }
     }
   }
@@ -127,8 +136,17 @@
       align-self: flex-end;
       .messageBox {
         direction: rtl;
+        background-color: var(--card-other-message);
         margin-right: auto;
         margin-left: 3rem;
+        border-right: 0.65rem solid var(--card-other-message);
+        border-left: none;
+        
+        .triangle {
+          clip-path: polygon(30% 0, 100% 100%, 100% 0);
+          left: -1.5rem;
+          right: auto;
+        }
       }
     }
     
@@ -136,17 +154,17 @@
       align-self: flex-start;
       .messageBox {
         direction: ltr;
+        background-color: var(--card-other-message);
         margin-left: auto;
         margin-right: 3rem;
-      }
-    }
-
-    .messageBox {
-      border-left: 0.65rem solid;
-
-      .triangle {
-        clip-path: polygon(0 0, 0% 100%, 70% 0);
-        right: -1.2rem;
+        border-left: 0.65rem solid var(--card-other-message);
+        border-right: none;
+        
+        .triangle {
+          clip-path: polygon(0 0, 0% 100%, 70% 0);
+          right: -1.5rem;
+          left: auto;
+        }
       }
     }
   }
