@@ -15,6 +15,7 @@ const SubQuestionsMap = ({ statement }: SubQuestionsMapProps) => {
 
   const { screen } = useParams();
   const [nodeHeights, setNodeHeights] = useState(new Map<string, number>());
+  const numberOfElements =nodeHeights.size;
   if (
     screen === "mind-map" ||
     screen === "polarization-index" ||
@@ -50,6 +51,7 @@ const SubQuestionsMap = ({ statement }: SubQuestionsMapProps) => {
           depth={currentDepth}
           childCount={res.sub.length}
           height={getLineLength(res)}
+          numberOfElements={numberOfElements|0}
           heightMargin={getLineMargin(res)}
           setNodeHeights={setNodeHeights}
           isFirstChild={index === 0}
@@ -108,6 +110,7 @@ const SubQuestionsMap = ({ statement }: SubQuestionsMapProps) => {
             childCount={results.sub.length}
             height={getLineLength(results)}
             setNodeHeights={setNodeHeights}
+            numberOfElements={numberOfElements|0}
             isFirstChild={false}
             heightMargin={getLineMargin(results)}
             heightToChild={getLineToChild(results)}
