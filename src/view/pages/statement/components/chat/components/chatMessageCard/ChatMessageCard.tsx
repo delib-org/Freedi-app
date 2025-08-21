@@ -1,33 +1,21 @@
 import { ChangeEvent, FC, useEffect, useRef, useState } from "react";
 import StatementChatMore from "../statementChatMore/StatementChatMore";
 import UserAvatar from "../userAvatar/UserAvatar";
-import DeleteIcon from "@/assets/icons/delete.svg?react";
-import EditIcon from "@/assets/icons/editIcon.svg?react";
-import LightBulbIcon from "@/assets/icons/lightBulbIcon.svg?react";
-import QuestionMarkIcon from "@/assets/icons/questionIcon.svg?react";
 import SaveTextIcon from "@/assets/icons/SaveTextIcon.svg";
-import UploadImageIcon from "@/assets/icons/updateIcon.svg?react";
-import {
-  setStatementIsOption,
-  updateIsQuestion,
-  updateStatementText,
-} from "@/controllers/db/statements/setStatements";
+import { updateStatementText } from "@/controllers/db/statements/setStatements";
 import { isAuthorized } from "@/controllers/general/helpers";
 import { useAppSelector } from "@/controllers/hooks/reduxHooks";
 import { useUserConfig } from "@/controllers/hooks/useUserConfig";
 import useStatementColor from "@/controllers/hooks/useStatementColor";
 import { statementSubscriptionSelector } from "@/redux/statements/statementsSlice";
 import EditTitle from "@/view/components/edit/EditTitle";
-import Menu from "@/view/components/menu/Menu";
-import MenuOption from "@/view/components/menu/MenuOption";
 import CreateStatementModal from "@/view/pages/statement/components/createStatementModal/CreateStatementModal";
 import styles from "./ChatMessageCard.module.scss";
-import { deleteStatementFromDB } from "@/controllers/db/statements/deleteStatements";
-import Evaluation from "../../../evaluations/components/evaluation/Evaluation";
 import useAutoFocus from "@/controllers/hooks/useAutoFocus ";
 import UploadImage from "@/view/components/uploadImage/UploadImage";
 import { StatementType, Statement } from "delib-npm";
 import { useAuthentication } from "@/controllers/hooks/useAuthentication";
+import ChatMessageMenu from "./ChatMessageMenu";
 
 export interface NewQuestion {
   statement: Statement;
@@ -54,7 +42,7 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
   // Hooks
   const { statementType } = statement;
   const statementColor = useStatementColor({ statement });
-  const { t, dir } = useUserConfig();
+  const { dir } = useUserConfig();
   const { user } = useAuthentication();
 
   // Redux store
@@ -79,8 +67,6 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
     parentStatement?.creator.uid
   );
   const isMe = user?.uid === statement.creator?.uid;
-  const isQuestion = statementType === StatementType.question;
-  const isOption = statementType === StatementType.option;
   const isStatement = statementType === StatementType.statement;
   const textareaRef = useAutoFocus(isEdit);
 
@@ -95,31 +81,6 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
       textareaRef.current.focus();
     }
   }, [isEdit]);
-
-  useEffect(() => {
-    if (isCardMenuOpen) {
-      setTimeout(() => {
-        setIsCardMenuOpen(false);
-      }, 5000);
-    }
-  }, [isCardMenuOpen]);
-
-  function handleSetOption() {
-    try {
-      if (statement.statementType === StatementType.option) {
-        const cancelOption = window.confirm(
-          "Are you sure you want to cancel this option?"
-        );
-        if (cancelOption) {
-          setStatementIsOption(statement);
-        }
-      } else {
-        setStatementIsOption(statement);
-      }
-    } catch (error) {
-      console.error(error);
-    }
-  }
 
   function handleTextChange(
     e: ChangeEvent<HTMLTextAreaElement | HTMLInputElement>
@@ -177,7 +138,7 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
             : statementColor.backgroundColor,
         }}
       >
-        {!isPreviousFromSameAuthor && <div className={styles.triangle} />}
+        <div className={styles.triangle} />
 
         <div className={styles.info}>
           <div className={styles.infoText}>
@@ -212,70 +173,16 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
               />
             )}
           </div>
-
-          <Menu
-            setIsOpen={setIsCardMenuOpen}
-            isMenuOpen={isCardMenuOpen}
-            iconColor="var(--icon-blue)"
-            isCardMenu={true}
-          >
-            {_isAuthorized && (
-              <MenuOption
-                label={t("Edit Text")}
-                icon={<EditIcon />}
-                onOptionClick={() => {
-                  setIsEdit(!isEdit);
-                  setIsCardMenuOpen(false);
-                }}
-              />
-            )}
-            {_isAuthorized && (
-              <MenuOption
-                label={t("Upload Image")}
-                icon={<UploadImageIcon />}
-                onOptionClick={() => fileInputRef.current?.click()}
-              />
-            )}
-            {_isAuthorized && (
-              <MenuOption
-                isOptionSelected={isOption}
-                icon={<LightBulbIcon />}
-                label={
-                  isOption ? t("Unmark as a Solution") : t("Mark as a Solution")
-                }
-                onOptionClick={() => {
-                  handleSetOption();
-                  setIsCardMenuOpen(false);
-                }}
-              />
-            )}
-
-            {!isOption && (
-              <MenuOption
-                isOptionSelected={isQuestion}
-                label={
-                  isQuestion
-                    ? t("Unmark as a Question")
-                    : t("Mark as a Question")
-                }
-                icon={<QuestionMarkIcon />}
-                onOptionClick={() => {
-                  updateIsQuestion(statement);
-                  setIsCardMenuOpen(false);
-                }}
-              />
-            )}
-            {_isAuthorized && (
-              <MenuOption
-                label={t("Delete")}
-                icon={<DeleteIcon />}
-                onOptionClick={() => {
-                  deleteStatementFromDB(statement, !!_isAuthorized);
-                  setIsCardMenuOpen(false);
-                }}
-              />
-            )}
-          </Menu>
+          <div className={styles.chatMenu}>
+            <ChatMessageMenu
+              statement={statement}
+              isCardMenuOpen={isCardMenuOpen}
+              setIsCardMenuOpen={setIsCardMenuOpen}
+              isAuthorized={_isAuthorized}
+              setIsEdit={setIsEdit}
+              fileInputRef={fileInputRef}
+            />
+          </div>
         </div>
 
         <div style={{ display: image ? "flex" : "none" }}>
@@ -286,16 +193,12 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
             setImage={setImage}
           />
         </div>
-        { sideChat &&<hr className={styles.spacerLine} />}
 
         <div
-          className={`${styles.bottomIcons} ${sideChat ? styles.columnIcons : styles.rowIcons} `}
+          className={styles.bottomIcons}
         >
           <div className={styles.chatMoreElement}>
             <StatementChatMore statement={statement} />
-          </div>
-          <div className={sideChat?styles.centered:""}>
-            <Evaluation statement={statement} />
           </div>
         </div>
         {isNewStatementModalOpen && (

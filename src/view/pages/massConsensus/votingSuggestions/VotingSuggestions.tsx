@@ -13,6 +13,7 @@ import TitleMassConsensus from '../TitleMassConsensus/TitleMassConsensus';
 import FooterMassConsensus from '../footerMassConsensus/FooterMassConsensus';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import { useHeader } from '../headerMassConsensus/HeaderContext';
+import { useMassConsensusAnalytics } from '@/hooks/useMassConsensusAnalytics';
 
 const VotingSuggestions = () => {
 	const { subStatements, navigateToFeedback } = VotingSuggestionsMV();
@@ -25,6 +26,7 @@ const VotingSuggestions = () => {
 	);
 	const totalVotes = getTotalVoters(statement);
 	const { t } = useUserConfig();
+	const { trackStageCompleted, trackStageSkipped, trackProcessCompleted } = useMassConsensusAnalytics();
 
 	const { setHeader } = useHeader();
 
@@ -63,7 +65,15 @@ const VotingSuggestions = () => {
 
 			<FooterMassConsensus
 				isNextActive={true}
-				onNext={navigateToFeedback}
+				onNext={() => {
+					trackStageCompleted('voting');
+					trackProcessCompleted();
+					navigateToFeedback();
+				}}
+				onSkip={() => {
+					trackStageSkipped('voting');
+					trackProcessCompleted();
+				}}
 			/>
 		</>
 	);

@@ -1,16 +1,18 @@
-import { Results, Statement, StatementType } from "delib-npm";
-import styles from "./SubQuestionsMap.module.scss";
-import SubQuestionNode from "./subQuestionNode/SubQuestionNode";
-import { useMindMap } from "../map/MindMapMV";
-import { useState, type JSX } from "react";
-import { useParams } from "react-router";
+import { Results, Statement, StatementType } from 'delib-npm';
+import { type JSX, useState } from 'react';
+import { useParams } from 'react-router';
+import { useMindMap } from '../map/MindMapMV';
+import SubQuestionNode from './subQuestionNode/SubQuestionNode';
+import styles from './SubQuestionsMap.module.scss';
 
 interface SubQuestionsMapProps {
   readonly statement: Statement;
 }
 
 const SubQuestionsMap = ({ statement }: SubQuestionsMapProps) => {
-  const { results } = useMindMap(statement.topParentId);
+	const { results } = useMindMap(statement.topParentId);
+	const [isOpen, setIsOpen] = useState(true);
+
   const { screen } = useParams();
   const [nodeHeights, setNodeHeights] = useState(new Map<string, number>());
   if (
@@ -76,7 +78,6 @@ const SubQuestionsMap = ({ statement }: SubQuestionsMapProps) => {
   };
   const getLineToChild = (res: Results) => {
     if (res.sub.length < 1) return;
-
     const height =
       nodeHeights.get(res.sub.length > 0 ? res.sub[0].top.statementId : "") -
         nodeHeights.get(res.top.statementId) || 0;
@@ -85,21 +86,34 @@ const SubQuestionsMap = ({ statement }: SubQuestionsMapProps) => {
   };
 
   return (
-    <div className={styles.subQuestionsMapContainer}>
-      <div className={styles.title}>
-        <h3>Statement Map</h3>
-      </div>
-      <SubQuestionNode
-        statement={results.top}
-        depth={defaultDepth}
-        childCount={results.sub.length}
-        height={getLineLength(results)}
-        setNodeHeights={setNodeHeights}
-        isFirstChild={false}
-        heightMargin={getLineMargin(results)}
-        heightToChild={getLineToChild(results)}
-      />
-      {renderStatementTree(filteredResults, defaultDepth)}
+    <div className={`${styles.subQuestionsMapContainer} ${isOpen ? styles.open : styles.closed}`}>
+      <button 
+        className={styles.toggleButton}
+        onClick={() => setIsOpen(!isOpen)}
+        aria-label={isOpen ? 'Close statement map' : 'Open statement map'}
+      >
+        <span className={styles.toggleIcon}>
+          {isOpen ? '›' : '‹'}
+        </span>
+      </button>
+      {isOpen && (
+        <div className={styles.content}>
+          <div className={styles.title}>
+            <h3>Statement Map</h3>
+          </div>
+          <SubQuestionNode
+            statement={results.top}
+            depth={defaultDepth}
+            childCount={results.sub.length}
+            height={getLineLength(results)}
+            setNodeHeights={setNodeHeights}
+            isFirstChild={false}
+            heightMargin={getLineMargin(results)}
+            heightToChild={getLineToChild(results)}
+          />
+          {renderStatementTree(filteredResults, defaultDepth)}
+        </div>
+      )}
     </div>
   );
 };

@@ -3,16 +3,18 @@
   flex-direction: column;
   direction: rtl;
   max-width: 75ch;
-  margin: auto;
   padding: 0.3rem;
   padding-inline: 1rem;
   color: var(--text-paragraph);
+  align-self: flex-start;
+  width: 100%;
 
   .user {
     display: flex;
     align-items: center;
     gap: 1rem;
     padding-top: 0.5rem;
+    padding-inline: 1rem;
   }
   .messageSideBox {
     width: 80%;
@@ -23,7 +25,6 @@
     flex-direction: column;
     justify-content: space-between;
     gap: 0.5rem;
-    background-color: var(--inputBackground);
     padding: 1rem;
     border-radius: 10px;
     box-shadow:
@@ -33,6 +34,7 @@
       0px 0px 5px 0px rgba(66, 123, 158, 0.09),
       0px 0px 3px 0px rgba(66, 123, 158, 0.1);
     position: relative;
+    max-width: 70%;
 
     &Statement {
       border-left: 0rem solid !important;
@@ -43,7 +45,7 @@
       background-color: inherit;
       height: 2rem;
       width: 2rem;
-      top: 0;
+      top: 0.5rem;
     }
 
     .info {
@@ -77,45 +79,117 @@
     }
   }
 
+  // User messages (aligned left in RTL, right in LTR)
   &.alignedLeft {
     direction: ltr;
 
     &.rtl {
+      align-self: flex-start;
+      
+      .user {
+        flex-direction: row;
+        margin-left: 1rem;
+      }
+      
       .messageBox {
         direction: rtl;
+        background-color: var(--card-needs-surface);
+        margin-left: auto;
+        margin-right: 3rem;
+        border-left: 0.65rem solid var(--card-needs-surface);
+        border-right: none;
+        
+        .triangle {
+          clip-path: polygon(0 0, 0% 100%, 70% 0);
+          right: -1.5rem;
+          left: auto;
+        }
       }
     }
+    
+    &.ltr {
+      align-self: flex-end;
+      
+      .user {
+        flex-direction: row-reverse;
+        margin-right: 1rem;
+      }
+      
+      .messageBox {
+        direction: ltr;
+        background-color: var(--card-needs-surface);
+        margin-right: auto;
+        margin-left: 3rem;
+        border-right: 0.65rem solid var(--card-needs-surface);
+        border-left: none;
+        
+        .triangle {
+          clip-path: polygon(30% 0, 100% 100%, 100% 0);
+          left: -1.5rem;
+          right: auto;
+        }
+      }
+    }
+    
     .messageMargin {
       margin-left: 2rem;
       margin-right: 1rem;
     }
     .messageBox {
-      border-right: 0.65rem solid;
-
       &Statement {
         border-right: 0rem solid !important;
-      }
-
-      .triangle {
-        clip-path: polygon(30% 0, 100% 100%, 100% 0);
-        left: -1.2rem;
+        border-left: 0rem solid !important;
       }
     }
   }
 
+  // Other users' messages (aligned right in RTL, left in LTR)  
   &:not(.alignedLeft) {
-    &.ltr {
+    &.rtl {
+      align-self: flex-end;
+      
+      .user {
+        flex-direction: row-reverse;
+        margin-right: 1rem;
+      }
+      
       .messageBox {
-        direction: ltr;
+        direction: rtl;
+        background-color: var(--card-other-message);
+        margin-right: auto;
+        margin-left: 3rem;
+        border-right: 0.65rem solid var(--card-other-message);
+        border-left: none;
+        
+        .triangle {
+          clip-path: polygon(30% 0, 100% 100%, 100% 0);
+          left: -1.5rem;
+          right: auto;
+        }
       }
     }
-
-    .messageBox {
-      border-left: 0.65rem solid;
-
-      .triangle {
-        clip-path: polygon(0 0, 0% 100%, 70% 0);
-        right: -1.2rem;
+    
+    &.ltr {
+      align-self: flex-start;
+      
+      .user {
+        flex-direction: row;
+        margin-left: 1rem;
+      }
+      
+      .messageBox {
+        direction: ltr;
+        background-color: var(--card-other-message);
+        margin-left: auto;
+        margin-right: 3rem;
+        border-left: 0.65rem solid var(--card-other-message);
+        border-right: none;
+        
+        .triangle {
+          clip-path: polygon(0 0, 0% 100%, 70% 0);
+          right: -1.5rem;
+          left: auto;
+        }
       }
     }
   }
@@ -126,25 +200,18 @@
   :global(.menu-option) svg {
     color: var(--icon-blue);
   }
-  .rowIcons {
-    flex-flow: row;
-  }
-  .columnIcons {
-    flex-flow: column;
-  }
-  .centered {
-    margin: 0 auto;
-    margin-top: 1rem;
-  }
-  .spacerLine {
-    margin-top: 0.5rem;
-  }
+
 
   .bottomIcons {
     display: flex;
     justify-content: space-between;
     margin-top: 1rem;
+    flex-flow: row;
+    align-items: center;
+    svg{
+              margin-right: .5rem;
 
+    }
     @media screen and (max-width: 500px) {
       display: grid;
       align-items: center;
@@ -205,4 +272,11 @@
 .saveIcon {
   cursor: pointer;
   color: var(--icon-blue);
+}
+
+.chatMenu {
+  position: relative;
+  top: 0.5rem;
+  right: 0.5rem;
+  
 }
