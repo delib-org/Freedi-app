@@ -20,6 +20,7 @@ const SubQuestionsMap = ({ statement }: SubQuestionsMapProps) => {
 				setIsOpen(false);
 			}
 		},
+		threshold: 80,
 		enabled: isOpen && window.innerWidth <= 768
 	});
 

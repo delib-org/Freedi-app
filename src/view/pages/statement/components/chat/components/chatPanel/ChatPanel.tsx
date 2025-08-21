@@ -20,6 +20,7 @@ const ChatPanel = () => {
         setIsSideChatOpen(false);
       }
     },
+    threshold: 80,
     enabled: isSideChatOpen && window.innerWidth <= 768
   });
   
