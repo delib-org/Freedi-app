@@ -2,8 +2,10 @@
 // Placeholders for shared styles
 %chat-panel-container-base {
   position: fixed;
-  left: -20vw;
-  width: 20vw;
+  left: 0;
+  width: 28vw;
+  max-width: 600px;
+  min-width: 350px;
   height: 85%;
   bottom: 0;
   background-color: var(--menu-default);
@@ -15,11 +17,9 @@
 
   @media (max-width: 768px) {
     width: 70vw;
-    left: -70vw;
   }
   @media (max-width: 480px) {
     width: 85vw;
-    left: -85vw;
   }
 }
 
@@ -105,14 +105,14 @@
 
 .chatPanelContainer {
   @extend %chat-panel-container-base;
-  transform: translateX(20vw);
+  transform: translateX(0);
   
   @media (max-width: 768px) {
-    transform: translateX(70vw);
+    transform: translateX(0);
   }
   
   @media (max-width: 480px) {
-    transform: translateX(85vw);
+    transform: translateX(0);
   }
   .toggleButton {
     @extend %toggle-button-base;
@@ -185,7 +185,7 @@
   @extend %chat-panel-container-base;
   display: flex;
   flex-direction: column;
-  transform: translateX(0);
+  transform: translateX(-100%);
   .toggleButton {
     @extend %toggle-button-base;
     &:hover {
