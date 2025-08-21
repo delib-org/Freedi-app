@@ -1,17 +1,17 @@
-import { Results, Statement, StatementType } from 'delib-npm';
-import { type JSX, useState } from 'react';
-import { useParams } from 'react-router';
-import { useMindMap } from '../map/MindMapMV';
-import SubQuestionNode from './subQuestionNode/SubQuestionNode';
-import styles from './SubQuestionsMap.module.scss';
+import { Results, Statement, StatementType } from "delib-npm";
+import { type JSX, useState } from "react";
+import { useParams } from "react-router";
+import { useMindMap } from "../map/MindMapMV";
+import SubQuestionNode from "./subQuestionNode/SubQuestionNode";
+import styles from "./SubQuestionsMap.module.scss";
 
 interface SubQuestionsMapProps {
   readonly statement: Statement;
 }
 
 const SubQuestionsMap = ({ statement }: SubQuestionsMapProps) => {
-	const { results } = useMindMap(statement.topParentId);
-	const [isOpen, setIsOpen] = useState(true);
+  const { results } = useMindMap(statement.topParentId);
+  const [isOpen, setIsOpen] = useState(true);
 
   const { screen } = useParams();
   const [nodeHeights, setNodeHeights] = useState(new Map<string, number>());
@@ -86,15 +86,16 @@ const SubQuestionsMap = ({ statement }: SubQuestionsMapProps) => {
   };
 
   return (
-    <div className={`${styles.subQuestionsMapContainer} ${isOpen ? styles.open : styles.closed}`}>
-      <button 
+    <div
+      className={`${styles.subQuestionsMapContainer} ${isOpen ? styles.open : styles.closed}`}
+      dir="ltr"
+    >
+      <button
         className={styles.toggleButton}
         onClick={() => setIsOpen(!isOpen)}
-        aria-label={isOpen ? 'Close statement map' : 'Open statement map'}
+        aria-label={isOpen ? "Close statement map" : "Open statement map"}
       >
-        <span className={styles.toggleIcon}>
-          {isOpen ? '›' : '‹'}
-        </span>
+        <span className={styles.toggleIcon}>{isOpen ? "›" : "‹"}</span>
       </button>
       {isOpen && (
         <div className={styles.content}>
