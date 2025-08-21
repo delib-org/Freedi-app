@@ -96,8 +96,8 @@ const Chat: FC<ChatProps> = ({
   }, [subStatements.length]);
 
   return (
-    <div className={styles.chat} ref={chatRef}>
-      {statement.description && (
+    <div className={`${styles.chat} ${sideChat ? styles.sideChat : ''}`} ref={chatRef}>
+      {statement.description && !sideChat && (
         <div className="wrapper">
           <Description />
         </div>
@@ -116,17 +116,19 @@ const Chat: FC<ChatProps> = ({
       <div ref={messagesEndRef} />
 
       {statement && (
-        <div className={styles.input}>
+        <div className={sideChat ? styles.sideChatInputWrapper : styles.input}>
           <ChatInput statement={statement} sideChat={sideChat} />
         </div>
       )}
-      <div>
-        <NewMessages
-          newMessages={numberOfNewMessages}
-          setNewMessages={setNumberOfNewMessages}
-          scrollToBottom={scrollToBottom}
-        />
-      </div>
+      {!sideChat && (
+        <div>
+          <NewMessages
+            newMessages={numberOfNewMessages}
+            setNewMessages={setNumberOfNewMessages}
+            scrollToBottom={scrollToBottom}
+          />
+        </div>
+      )}
     </div>
   );
 };

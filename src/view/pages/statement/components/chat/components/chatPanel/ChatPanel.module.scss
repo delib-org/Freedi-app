@@ -1,19 +1,92 @@
 .chatPanel {
-  @media (max-width: 1440px) {
+  display: block;
+  
+  @media (max-width: 867px) {
     display: none;
   }
 }
 .chatPanelContainer {
   position: fixed;
-  left: 0;
+  left: -20vw;
   width: 20vw;
   height: 85%;
   bottom: 0;
   background-color: var(--menu-default);
-  overflow-y: auto;
-  animation: panelOpen 0.5s forwards;
-  @media (max-width: 1440px) {
-    display: none;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: translateX(20vw);
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+  border-top-right-radius: 10px;
+  z-index: 9999;
+  overflow: visible;
+  
+  .toggleButton {
+    position: absolute;
+    right: -40px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 40px;
+    height: 80px;
+    background-color: var(--menu-default);
+    border-left: none;
+    border-top-right-radius: 10px;
+    border-bottom-right-radius: 10px;
+    cursor: pointer;
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    z-index: 10000;
+    
+    &:hover {
+      background-color: var(--lighter);
+      box-shadow: 4px 0 12px rgba(0, 0, 0, 0.25);
+      transform: translateY(-50%) scale(1.05);
+    }
+    
+    &:active {
+      background-color: var(--lighter);
+      transform: translateY(-50%) scale(0.98);
+    }
+    
+    .toggleIcon {
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.3s ease;
+      
+      svg {
+        width: 100%;
+        height: 100%;
+        fill: var(--icons-primary);
+      }
+    }
+    
+    .notificationBadge {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background-color: var(--icons-blue-dark);
+      color: white;
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+    }
+  }
+  
+  .content {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    position: relative;
   }
   .sideChatTitle {
     margin: 1rem 1rem 0.3rem 1rem;
@@ -42,14 +115,82 @@
 
 .chatPanelContainerClosed {
   position: fixed;
-  left: 0;
-  width: 4vw;
+  left: -20vw;
+  width: 20vw;
   height: 85%;
   bottom: 0;
   background-color: var(--menu-default);
-  overflow-y: hidden;
+  overflow: visible;
   display: flex;
   flex-direction: column;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: translateX(0);
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+  border-top-right-radius: 10px;
+  z-index: 9999;
+
+  .toggleButton {
+    position: absolute;
+    right: -40px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 40px;
+    height: 80px;
+    background-color: var(--menu-default);
+  
+    border-left: none;
+    border-top-right-radius: 10px;
+    border-bottom-right-radius: 10px;
+    cursor: pointer;
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    z-index: 10000;
+    
+    &:hover {
+      background-color: var(--lighter);
+      box-shadow: 4px 0 12px rgba(0, 0, 0, 0.25);
+      transform: translateY(-50%) scale(1.05);
+    }
+    
+    &:active {
+      background-color: var(--lighter);
+      transform: translateY(-50%) scale(0.98);
+    }
+    
+    .toggleIcon {
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.3s ease;
+      
+      svg {
+        width: 100%;
+        height: 100%;
+        fill: var(--icons-primary);
+      }
+    }
+    
+    .notificationBadge {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background-color: var(--icons-blue-dark);
+      color: white;
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+    }
+  }
 
   .openChatPanelBtn {
     color: var(--icons-primary);
@@ -89,28 +230,4 @@ p {
   margin-left: 1rem;
   margin-bottom: 1rem;
   color: var(--lighter);
-}
-.chatPanelClosing {
-  animation: panelClose 0.5s forwards;
-}
-@keyframes panelOpen {
-  0% {
-    left: -20vw;
-  }
-  100% {
-    left: 0;
-  }
-}
-@keyframes panelClose {
-  0% {
-    left: 0;
-    opacity: 1;
-  }
-  70% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0;
-    left: -20vw;
-  }
 }
