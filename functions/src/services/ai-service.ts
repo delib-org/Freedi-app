@@ -113,7 +113,7 @@ export function extractAndParseJsonString(input: string): {
  */
 async function getAIResponseAsList(
   prompt: string,
-  maxRetries: number = 0
+  maxRetries: number = 3
 ): Promise<string[]> {
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
@@ -124,10 +124,6 @@ async function getAIResponseAsList(
       // Handle both strings or error
       try {
         const parsed = JSON.parse(responseText);
-
-        if (parsed.error) {
-          throw new Error(parsed.error); // stop if AI detected slur
-        }
 
         if (Array.isArray(parsed.strings)) {
           return parsed.strings;
@@ -189,7 +185,32 @@ async function handleError(
 
   return true;
 }
+export async function checkForInappropriateContent(userInput: string): Promise<{ isInappropriate: boolean; error?: string }> {
+  const prompt = `
+    You are a content moderator. Check if the following text contains any profanity, slurs, hate speech, sexually explicit language, or any other inappropriate content: "${userInput}"
+    
+    Return ONLY this JSON format:
+    - If inappropriate: { "inappropriate": true }
+    - If clean: { "inappropriate": false }
+  `;
 
+  try {
+    const model = await getGenerativeAIModel();
+    const result = await model.generateContent(prompt);
+    const responseText = result.response.text();
+    
+    const parsed = JSON.parse(responseText);
+    
+    return { 
+      isInappropriate: parsed.inappropriate === true 
+    };
+  } catch (error) {
+    logger.error("Error checking for inappropriate content:", error);
+    // If we can't check, assume it's inappropriate to be safe
+
+    return { isInappropriate: true, error: "Unable to verify content" };
+  }
+}
 /**
  * Finds existing statements that are semantically similar to the user's input.
  */
@@ -200,10 +221,6 @@ export async function findSimilarStatementsAI(
   numberOfSimilarStatements: number = 6
 ): Promise<string[]> {
   const prompt = `
-	  First, check if the user input contains any slur, hate speech, or explicit offensive language.
-    - If it does, STOP and return only this JSON: { "error": "Input contains slurs or offensive content." }
-    - Otherwise, continue as normal.
-
     Task: Find up to ${numberOfSimilarStatements} sentences in the following strings: ${JSON.stringify(allStatements)} that are similar to the user input '${userInput}'.
     The user input can be either in English or in Hebrew. Look for similar strings to the user input in both languages.
     Consider a match if the sentence shares at least 60% similarity in meaning. The user input here is the question the user was asked: '${question}'.

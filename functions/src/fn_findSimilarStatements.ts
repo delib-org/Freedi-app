@@ -1,5 +1,6 @@
 import { Request, Response } from "firebase-functions/v1";
 import {
+  checkForInappropriateContent,
   findSimilarStatementsAI,
 } from "./services/ai-service";
 import {
@@ -24,12 +25,17 @@ export async function findSimilarStatements(
     const numberOfOptionsToGenerate = 5;
     const parsedBody = request.body;
 
-    const {
-      statementId,
-      userInput,
-      creatorId,
-    } = parsedBody;
+    const { statementId, userInput, creatorId } = parsedBody;
+    const contentCheck = await checkForInappropriateContent(userInput);
 
+    if (contentCheck.isInappropriate || contentCheck.error) {
+      response.status(400).send({
+        ok: false,
+        error: "Input contains inappropriate content",
+      });
+      
+      return;
+    }
     // --- 1. Fetch Parent Statement and Validate ---
     const parentStatement = await getParentStatement(statementId);
     if (!parentStatement) {
@@ -58,7 +64,7 @@ export async function findSimilarStatements(
     const statementSimple = convertToSimpleStatements(subStatements);
 
     // --- Handle Case: Find Similar Among Existing Options ---
-	
+
     const similarStatementsAI = await findSimilarStatementsAI(
       statementSimple.map((s) => s.statement),
       userInput,

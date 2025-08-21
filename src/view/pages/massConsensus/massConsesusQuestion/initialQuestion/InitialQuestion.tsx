@@ -36,7 +36,7 @@ const InitialQuestion = ({
 	}, [stage]);
 
 	useEffect(() => {
-		if (error) setReachedLimit(true);
+		if (error?.blocking) setReachedLimit(true);
 	}, [error]);
 
 	useEffect(() => {
@@ -57,7 +57,7 @@ const InitialQuestion = ({
 
 			return;
 		}
-		if (error) return;
+		if (error?.blocking) return;
 		await updateStatementText(statement, title);
 
 		dispatch(setStatement({ ...statement, statement: title }));
@@ -106,9 +106,9 @@ const InitialQuestion = ({
 					</button>
 				</div>
 			)}
-			{error && <h3 className={styles.error}>{t(error)}</h3>}
+			{error?.message && <h3 className={styles.error}>{t(error.message)}</h3>}
 			<Textarea
-				isDisabled={stage === 'submitting' || error !== ''}
+				isDisabled={stage === 'submitting' || error?.blocking}
 				name='your-description'
 				label={t('Your suggestion')}
 				placeholder=''
