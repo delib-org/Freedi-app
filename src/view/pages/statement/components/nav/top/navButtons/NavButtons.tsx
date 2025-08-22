@@ -1,12 +1,11 @@
+import { Screen, Statement } from 'delib-npm';
 import { FC } from 'react';
-import { Statement, Screen } from 'delib-npm';
 
 // Components
-import NavigationButtons from '../navigationButtons/NavigationButtons';
-import HomeButton from '../../../header/HomeButton';
-import Back from '../../../header/Back';
-import NotificationSettingsButton from '@/view/components/notifications/NotificationSettingsButton';
 import ApproveMembers from '@/view/components/approveMemebers/WaitingList';
+import NotificationSettingsButton from '@/view/components/notifications/NotificationSettingsButton';
+import Back from '../../../header/Back';
+import HomeButton from '../../../header/HomeButton';
 import ViewsDropdown from '../viewsDropdown/ViewsDropdown';
 
 // Styles
@@ -27,7 +26,6 @@ const NavButtons: FC<NavButtonsProps> = ({
 	headerStyle,
 	allowNavigation,
 	statement,
-	parentStatement,
 }) => {
 	const handleNavigateToScreen = (targetScreen: Screen) => {
 		handleNavigation(targetScreen);
