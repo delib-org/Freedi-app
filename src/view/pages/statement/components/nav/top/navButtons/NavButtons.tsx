@@ -39,11 +39,11 @@ const NavButtons: FC<NavButtonsProps> = ({
 			<div className={styles.leftSection}>
 				{allowNavigation && (
 					<>
-						<NavigationButtons
+						{/* <NavigationButtons
 							statement={parentStatement || statement}
 							handleNavigation={handleNavigation}
 							headerStyle={headerStyle}
-						/>
+						/> */}
 						<HomeButton headerColor={headerStyle} />
 					</>
 				)}
