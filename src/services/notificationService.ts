@@ -474,38 +474,64 @@ return false;
 	 */
 	public async cleanup(): Promise<void> {
 		try {
-			// Clear token refresh timer
+			// Clear token refresh timer immediately
 			if (this.tokenRefreshTimer) {
 				clearInterval(this.tokenRefreshTimer);
 				this.tokenRefreshTimer = null;
 			}
 
-			// Delete token from server
-			if (this.token && this.userId) {
-				// Remove from pushNotifications collection
-				await deleteDoc(doc(db, 'pushNotifications', this.token));
+			// Store values for cleanup operations
+			const tokenToClean = this.token;
+			const userIdToClean = this.userId;
 
-				// Remove token from all user's subscriptions
-				await this.removeTokenFromAllSubscriptions(this.userId, this.token);
-
-				// Remove all askedToBeNotified entries for this token
-				// This would need a query to find all documents with this token
-				// Token removed from server
-			}
-
-			// Delete local token
-			if (this.messaging && this.token) {
-				try {
-					await deleteToken(this.messaging);
-				} catch (error) {
-					console.error('Error deleting FCM token:', error);
-				}
-			}
-
-			// Reset state
+			// Reset state immediately for faster logout
 			this.token = null;
 			this.isTokenSentToServer = false;
 			this.userId = null;
+
+			// Perform cleanup operations in parallel with error handling
+			const cleanupPromises: Promise<void>[] = [];
+
+			// Delete token from server
+			if (tokenToClean && userIdToClean) {
+				// Remove from pushNotifications collection - check if document exists first
+				cleanupPromises.push(
+					(async () => {
+						try {
+							const docRef = doc(db, 'pushNotifications', tokenToClean);
+							await deleteDoc(docRef);
+						} catch (error) {
+							// Silently handle if document doesn't exist
+							if (error?.code !== 'permission-denied' && error?.code !== 'not-found') {
+								console.error('Error deleting push notification doc:', error);
+							}
+						}
+					})()
+				);
+
+				// Remove token from all user's subscriptions
+				cleanupPromises.push(
+					this.removeTokenFromAllSubscriptions(userIdToClean, tokenToClean)
+						.catch(error => {
+							// Silently handle null value errors
+							if (!error?.message?.includes('Null value error')) {
+								console.error('Error removing token from subscriptions:', error);
+							}
+						})
+				);
+			}
+
+			// Delete local FCM token
+			if (this.messaging && tokenToClean) {
+				cleanupPromises.push(
+					deleteToken(this.messaging)
+						.then(() => undefined)
+						.catch(error => console.error('Error deleting FCM token:', error))
+				);
+			}
+
+			// Wait for all cleanup operations to complete (with error handling)
+			await Promise.allSettled(cleanupPromises);
 		} catch (error) {
 			console.error('Error during cleanup:', error);
 		}
@@ -745,6 +771,11 @@ return;
 	 */
 	public async removeTokenFromAllSubscriptions(userId: string, token: string): Promise<void> {
 		try {
+			// Validate inputs
+			if (!userId || !token) {
+				return;
+			}
+			
 			// Get all user's subscriptions
 			const subscriptionsQuery = query(
 				collection(db, Collections.statementsSubscribe),
@@ -759,18 +790,24 @@ return;
 				const statementId = subscription.statementId || subscription.statement?.statementId;
 				
 				if (!statementId) {
-					console.error('No statementId found in subscription:', doc.id);
-
 					return Promise.resolve();
 				}
 				
-				return removeTokenFromSubscription(statementId, userId, token);
+				return removeTokenFromSubscription(statementId, userId, token)
+					.catch(err => {
+						// Silently handle individual subscription errors
+						if (!err?.message?.includes('Null value error')) {
+							console.error(`Error removing token from subscription ${statementId}:`, err);
+						}
+					});
 			});
 			
-			await Promise.all(removePromises);
-			console.info(`Removed token from ${removePromises.length} subscriptions`);
+			await Promise.allSettled(removePromises);
 		} catch (error) {
-			console.error('Error removing token from subscriptions:', error);
+			// Only log non-null value errors
+			if (!error?.message?.includes('Null value error')) {
+				console.error('Error removing token from subscriptions:', error);
+			}
 		}
 	}
 

@@ -7,11 +7,23 @@ import { useSelector } from "react-redux";
 import { inAppNotificationsSelector } from "@/redux/notificationsSlice/notificationsSlice";
 import { NotificationType } from "delib-npm";
 import { creatorSelector } from "@/redux/creator/creatorSlice";
+import { useSwipe } from "@/controllers/hooks/useSwipe";
 
 const ChatPanel = () => {
   const { screen, statementId } = useParams();
   const [isSideChatOpen, setIsSideChatOpen] = useState(false);
   const chatPanelRef = useRef(null);
+  
+  const swipeRef = useSwipe({
+    onSwipeLeft: () => {
+      if (isSideChatOpen) {
+        setIsSideChatOpen(false);
+      }
+    },
+    threshold: 80,
+    enabled: isSideChatOpen && window.innerWidth <= 768
+  });
+  
   useEffect(() => {
     if (isSideChatOpen && chatPanelRef.current) {
       chatPanelRef.current.scrollTop = 0;
@@ -41,7 +53,10 @@ const ChatPanel = () => {
     <div className={styles.chatPanel}>
       <div
         className={isSideChatOpen ? styles.chatPanelContainer : styles.chatPanelContainerClosed}
-        ref={chatPanelRef}
+        ref={(el) => {
+          chatPanelRef.current = el;
+          swipeRef.current = el;
+        }}
       >
         <button
           onClick={toggleChatPanel}
