@@ -110,7 +110,7 @@ const InitialQuestion = ({
           </button>
         </div>
       )}
-      {error?.message && <h3 className={styles.error}>{t(error.message)}</h3>}
+      {error?.message && <h3 className={styles.error}>{t(error?.message)}</h3>}
       <Textarea
         isDisabled={stage === "submitting" || error?.blocking}
         name="your-description"

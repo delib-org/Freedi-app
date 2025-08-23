@@ -28,6 +28,7 @@ export function useSimilarSuggestions(statementId, nextStep) {
 		statement: Statement | GeneratedStatement
 	) {
 		try {
+			    if (!creator) return;
 			const parentStatement = await getStatementFromDB(parentId);
 			if (!parentStatement)
 				throw new Error('Error getting parent statement from DB');

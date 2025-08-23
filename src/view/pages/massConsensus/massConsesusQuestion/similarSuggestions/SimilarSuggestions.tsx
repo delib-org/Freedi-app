@@ -33,7 +33,6 @@ const SimilarSuggestions = ({ stage, setIfButtonEnabled }) => {
     setSelected(index);
   }
   useEffect(() => {
-
     if (similarSuggestions.length === 0) {
       navigate(`/mass-consensus/${statementId}/${nextStep}`);
     } else {
@@ -47,10 +46,12 @@ const SimilarSuggestions = ({ stage, setIfButtonEnabled }) => {
   }, [stage]);
 
   useEffect(() => {
-    if (similarSuggestions.length === 1) {
-             setSelected(similarSuggestions.length -1);
+    async function skipChoice() {
+      await handleSetSuggestionToDB(similarSuggestions[0]);
 
+      navigate(`/mass-consensus/${statementId}/${nextStep}`);
     }
+    if (similarSuggestions.length === 1) skipChoice();
   }, [similarSuggestions.length]);
 
   useEffect(() => {
