@@ -1,21 +1,33 @@
-import { Results, Statement, StatementType } from "delib-npm";
-import { type JSX, useState } from "react";
-import { useParams } from "react-router";
-import { useMindMap } from "../map/MindMapMV";
-import SubQuestionNode from "./subQuestionNode/SubQuestionNode";
-import styles from "./SubQuestionsMap.module.scss";
+import { Results, Statement, StatementType } from 'delib-npm';
+import { type JSX, useState } from 'react';
+import { useParams } from 'react-router';
+import { useMindMap } from '../map/MindMapMV';
+import SubQuestionNode from './subQuestionNode/SubQuestionNode';
+import styles from './SubQuestionsMap.module.scss';
+import { useSwipe } from '@/controllers/hooks/useSwipe';
 
 interface SubQuestionsMapProps {
   readonly statement: Statement;
 }
 
 const SubQuestionsMap = ({ statement }: SubQuestionsMapProps) => {
-  const { results } = useMindMap(statement.topParentId);
-  const [isOpen, setIsOpen] = useState(true);
+	const { results } = useMindMap(statement?.topParentId);
+	const [isOpen, setIsOpen] = useState(true);
+	
+	const swipeRef = useSwipe({
+		onSwipeRight: () => {
+			if (isOpen) {
+				setIsOpen(false);
+			}
+		},
+		threshold: 80,
+		enabled: isOpen && window.innerWidth <= 768
+	});
 
   const { screen } = useParams();
   const [nodeHeights, setNodeHeights] = useState(new Map<string, number>());
-  const numberOfElements =nodeHeights.size;
+  
+  if (!statement) return null;
   if (
     screen === "mind-map" ||
     screen === "polarization-index" ||
@@ -88,11 +100,10 @@ const SubQuestionsMap = ({ statement }: SubQuestionsMapProps) => {
   };
 
   return (
-    <div
+    <div 
       className={`${styles.subQuestionsMapContainer} ${isOpen ? styles.open : styles.closed}`}
-      dir="ltr"
-    >
-      <button
+      ref={swipeRef}>
+      <button 
         className={styles.toggleButton}
         onClick={() => setIsOpen(!isOpen)}
         aria-label={isOpen ? "Close statement map" : "Open statement map"}

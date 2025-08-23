@@ -65,7 +65,7 @@ const Switch = () => {
 				</div>
 			)}
 			<OnlineUsers statementId={statement?.statementId} />
-			<SubQuestionsMap statement={statement} />
+			{statement && <SubQuestionsMap statement={statement} />}
 			<ChatPanel />
 			<SwitchScreen statement={statement} role={role} />
 		</main>
