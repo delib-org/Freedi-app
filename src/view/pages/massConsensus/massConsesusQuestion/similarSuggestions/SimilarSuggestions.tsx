@@ -22,7 +22,7 @@ const SimilarSuggestions = ({ stage, setIfButtonEnabled }) => {
   const [loadingStatements, setLoadingStatements] = useState(true);
   const { steps, currentStep } = useMassConsensusSteps();
   const { nextStep } = getStepNavigation(steps, currentStep);
-  const { handleSetSuggestionToDB } = useSimilarSuggestions(
+  const { handleSetSuggestionToDB, isLoading } = useSimilarSuggestions(
     statementId,
     nextStep
   );
@@ -46,13 +46,14 @@ const SimilarSuggestions = ({ stage, setIfButtonEnabled }) => {
   }, [stage]);
 
   useEffect(() => {
-    async function skipChoice() {
-      await handleSetSuggestionToDB(similarSuggestions[0]);
+    if (similarSuggestions.length === 1 && !isLoading) {
+      (async () => {
+        setSelected(0);
 
-      navigate(`/mass-consensus/${statementId}/${nextStep}`);
+        await handleSetSuggestionToDB(similarSuggestions[0]);
+      })();
     }
-    if (similarSuggestions.length === 1) skipChoice();
-  }, [similarSuggestions.length]);
+  }, [similarSuggestions.length, isLoading]);
 
   useEffect(() => {
     setIfButtonEnabled(selected !== null);
