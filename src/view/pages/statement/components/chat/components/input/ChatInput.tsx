@@ -34,10 +34,10 @@ const ChatInput: FC<Props> = ({
 	const textareaRef = useRef<HTMLTextAreaElement>(null);
 
 	useEffect(() => {
-		if (textareaRef.current) {
+		if (textareaRef.current && !sideChat) {
 			textareaRef.current.focus();
 		}
-	}, []);
+	}, [sideChat]);
 
 	const adjustTextareaHeight = () => {
 		if (textareaRef.current) {

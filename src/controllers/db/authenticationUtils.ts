@@ -33,11 +33,13 @@ export const logOut = async () => {
 		// Track logout before cleaning up
 		analyticsService.trackUserLogout();
 		
-		// Clean up notifications before signing out
-		await notificationService.cleanup();
-		
-		// Sign out from Firebase Auth
+		// Sign out from Firebase Auth immediately for better UX
 		await auth.signOut();
+		
+		// Clean up notifications in the background (non-blocking)
+		notificationService.cleanup().catch((error) => {
+			logger.error('Error cleaning up notifications', error);
+		});
 		
 		logger.info('User logged out successfully');
 	} catch (error) {
