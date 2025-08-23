@@ -88,7 +88,10 @@ const HeaderMenu: FC<HeaderMenuProps> = ({
           <MenuOption
             label={currentLabel}
             icon={<LanguagesIcon style={menuIconStyle} />}
-            onOptionClick={() => setShowLanguageModal(true)}
+            onOptionClick={() => {
+              setIsMenuOpen(false);
+              setShowLanguageModal(true);
+            }}
           />
         )}
 
@@ -107,7 +110,10 @@ const HeaderMenu: FC<HeaderMenuProps> = ({
             <MenuOption
               label={currentLabel}
               icon={<LanguagesIcon style={menuIconStyle} />}
-              onOptionClick={() => setShowLanguageModal(true)}
+              onOptionClick={() => {
+                setIsMenuOpen(false);
+                setShowLanguageModal(true);
+              }}
             />
             <MenuOption
               label={t('Settings')}
@@ -123,7 +129,10 @@ const HeaderMenu: FC<HeaderMenuProps> = ({
           <ChangeLanguage
             sameDirMenu={true}
             background
-            setShowModal={() => setShowLanguageModal(false)}
+            setShowModal={() => {
+              setShowLanguageModal(false);
+              setIsMenuOpen(false);
+            }}
           />
         </Modal>
       )}
