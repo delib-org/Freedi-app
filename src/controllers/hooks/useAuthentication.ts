@@ -66,9 +66,15 @@ export const useAuthentication = (): AuthState => {
 				});
 
 				// Save current location before redirecting to start
+				// Don't redirect if we're on a statement route - it might be public
+				const isStatementRoute = location.pathname.includes('/statement/') || 
+					location.pathname.includes('/stage/') ||
+					location.pathname.includes('/statement-screen/');
+				
 				if (
 					location.pathname !== '/start' &&
-					location.pathname !== '/'
+					location.pathname !== '/' &&
+					!isStatementRoute
 				) {
 					const historyData = {
 						pathname: location.pathname,
