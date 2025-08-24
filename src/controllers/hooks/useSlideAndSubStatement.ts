@@ -20,7 +20,8 @@ const useSlideAndSubStatement = (parentId: string | undefined, statementId: stri
 				return { previousId: undefined, previousPath: '', count: 0 };
 			}
 		}
-		return { previousId: undefined, previousPath: '', count: 0 };
+		
+return { previousId: undefined, previousPath: '', count: 0 };
 	};
 	
 	const setStoredNavigation = (previousId: string | undefined, previousPath: string, count: number) => {
@@ -45,10 +46,10 @@ const useSlideAndSubStatement = (parentId: string | undefined, statementId: stri
 		if (statementId && !currentStatement) {
 			// Statement not loaded yet, try again in a moment
 			const timer = setTimeout(() => {
-				console.info('🎬 Re-checking after delay for statement load');
 				setForceUpdate(prev => prev + 1);
 			}, 100);
-			return () => clearTimeout(timer);
+			
+return () => clearTimeout(timer);
 		}
 	}, [statementId, currentStatement]);
 
@@ -62,24 +63,14 @@ const useSlideAndSubStatement = (parentId: string | undefined, statementId: stri
 		const previousNavKey = `${previousPathRef.current}-${previousStatementIdRef.current}`;
 		const isNewNavigation = currentNavKey !== previousNavKey;
 		
-		console.info('🎬 Hook triggered:', {
-			navigationCount: navigationCountRef.current,
-			current: { path: location.pathname, id: statementId, parentId },
-			previous: { path: previousPathRef.current, id: previousStatementIdRef.current },
-			isNewNavigation,
-			justMounted,
-			navKeys: { current: currentNavKey, previous: previousNavKey }
-		});
-		
 		// Skip only if same navigation AND not just mounted with stored state
 		if (!isNewNavigation && !justMounted) {
-			console.info('🎬 Skipping: Same navigation context');
 			return;
 		}
 		
 		// If just mounted but we have stored navigation state, treat it as a navigation
 		if (justMounted && previousStatementIdRef.current && statementId !== previousStatementIdRef.current) {
-			console.info('🎬 Component mounted with pending navigation from stored state');
+			// Navigation will be handled below
 		}
 		
 		// Increment navigation counter
@@ -92,44 +83,24 @@ const useSlideAndSubStatement = (parentId: string | undefined, statementId: stri
 		
 		// Initial load
 		if (navigationCountRef.current === 1 && !previousStatementIdRef.current) {
-			console.info('🎬 Initial load detected');
 			// Animate on initial load if we're on a statement
 			if (statementId) {
 				setToSlide(true);
 				setSlideInOrOut("slide-out");
-				console.info('🎬 APPLYING ANIMATION: Initial load (slide left)');
 			}
 			previousStatementIdRef.current = statementId;
 			previousPathRef.current = location.pathname;
-			return;
+			
+return;
 		}
 		
 		// Skip if not on a statement page
 		if (!statementId) {
-			console.info('🎬 Not on statement page, skipping animation');
 			previousStatementIdRef.current = undefined;
 			previousPathRef.current = location.pathname;
-			return;
+			
+return;
 		}
-		
-		// Log for debugging
-		console.info('Navigation Analysis:', {
-			previous: {
-				id: previousStatementIdRef.current,
-				statement: previousStatement?.statement?.substring(0, 30),
-				parentId: previousStatement?.parentId,
-				path: previousPathRef.current
-			},
-			current: {
-				id: statementId,
-				statement: currentStatement?.statement?.substring(0, 30),
-				parentId: currentStatement?.parentId,
-				path: location.pathname
-			},
-			isFromHome,
-			isToStage,
-			isFromStage
-		});
 		
 		let animationType = "slide-out"; // default
 		let shouldAnimate = true;
@@ -137,63 +108,47 @@ const useSlideAndSubStatement = (parentId: string | undefined, statementId: stri
 		// Priority 1: Stage navigation
 		if (isToStage && !isFromStage) {
 			animationType = "zoom-in";
-			console.info('Animation: Entering stage (zoom in)');
 		} 
 		else if (isFromStage && !isToStage) {
 			animationType = "zoom-out";
-			console.info('Animation: Leaving stage (zoom out)');
 		}
 		// Priority 2: From home
 		else if (isFromHome) {
 			animationType = "slide-out";
-			console.info('Animation: From home (slide left)');
 		}
 		// Priority 3: Statement to statement navigation
 		else if (previousStatementIdRef.current !== statementId) {
-			console.info('🎬 Different statement detected', {
-				prev: previousStatementIdRef.current,
-				curr: statementId,
-				hasCurrentStatement: !!currentStatement,
-				hasPreviousStatement: !!previousStatement
-			});
 			
 			// First try using the actual statement data if available
 			if (currentStatement && previousStatement) {
 				// Current is child of previous (going deeper)
 				if (currentStatement.parentId === previousStatement.statementId) {
 					animationType = "slide-out";
-					console.info('🎬 Animation: Parent→Child detected via parentId (slide left)');
 				}
 				// Current is parent of previous (going back up)
 				else if (previousStatement.parentId === currentStatement.statementId) {
 					animationType = "slide-in";
-					console.info('🎬 Animation: Child→Parent detected via parentId (slide right)');
 				}
 				// Check if they share the same parent (sibling navigation)
 				else if (currentStatement.parentId === previousStatement.parentId && currentStatement.parentId) {
 					animationType = "slide-out";
-					console.info('🎬 Animation: Sibling navigation (slide left)');
 				}
 				// Unrelated statements
 				else {
 					animationType = "slide-out";
-					console.info('🎬 Animation: Unrelated statements (slide left)');
 				}
 			}
 			// Try using the parentId passed to the hook
 			else if (parentId && previousStatementIdRef.current) {
 				if (parentId === previousStatementIdRef.current) {
 					animationType = "slide-out";
-					console.info('🎬 Animation: Parent→Child via passed parentId (slide left)');
 				} else {
 					animationType = "slide-out";
-					console.info('🎬 Animation: Default - statements not in Redux yet (slide left)');
 				}
 			}
 			// Always animate if we're changing statements
 			else {
 				animationType = "slide-out";
-				console.info('🎬 Animation: Fallback - always animate on statement change (slide left)');
 			}
 		}
 		// Priority 4: Same statement, different view
@@ -201,22 +156,18 @@ const useSlideAndSubStatement = (parentId: string | undefined, statementId: stri
 			// Same statement but different path (like chat to vote)
 			if (previousPathRef.current !== location.pathname) {
 				shouldAnimate = false;
-				console.info('Animation: Same statement, different view (no animation)');
 			} else {
 				shouldAnimate = false;
-				console.info('Animation: Same statement, same view (no animation)');
 			}
 		}
 		
 		// Apply animation
 		if (shouldAnimate) {
-			console.info(`🎬 APPLYING ANIMATION #${navigationCountRef.current}:`, animationType);
 			// Directly set the animation state
 			setToSlide(true);
 			setSlideInOrOut(animationType);
 			setToSubStatement(animationType === "slide-out" && currentStatement?.parentId === previousStatementIdRef.current);
 		} else {
-			console.info('🎬 NO ANIMATION');
 			setToSlide(false);
 		}
 		
