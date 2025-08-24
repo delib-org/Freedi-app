@@ -18,6 +18,16 @@
 		transform: translateX(100%);
 	}
 	
+	// On very large screens, calculate available space for panel
+	@media (min-width: 1441px) {
+		// Available space = (viewport width - center content width) / 2 - gap
+		// Center content is var(--wrapper-max-width) which is 75ch
+		// We subtract 40px for gap between panel and content
+		width: calc((100vw - var(--wrapper-max-width)) / 2 - 40px);
+		max-width: 500px; // Cap maximum width
+		min-width: 320px; // Ensure minimum usable width
+	}
+	
 	@media (max-width: 768px) {
 		width: 70%;
 	}
