@@ -32,6 +32,12 @@ export async function setStatementSubscriptionToDB({
 	getPushNotification = false
 }: SetSubscriptionProps): Promise<void> {
 	try {
+		// Validate inputs
+		if (!statement || !creator || !creator.uid) {
+			console.error('Invalid inputs for setStatementSubscriptionToDB', { statement, creator });
+			return;
+		}
+
 		const { statementId } = parse(StatementSchema, statement);
 
 		const statementsSubscribeId = getStatementSubscriptionId(
@@ -66,7 +72,7 @@ export async function setStatementSubscriptionToDB({
 			getPushNotification,
 		};
 
-		if (creator.uid === statement.creator.uid)
+		if (creator.uid && statement.creator?.uid && creator.uid === statement.creator.uid)
 			subscriptionData.role = Role.admin;
 
 		const parsedStatementSubscription = parse(

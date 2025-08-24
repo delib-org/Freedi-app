@@ -75,7 +75,7 @@ export const useAuthorization = (statementId?: string): AuthorizationState => {
 		const effectiveStatement = statement?.membership?.access ? statement : topParentStatement;
 
 		// if it is moderated group and user is not subscribed or not banned, set the subscription to waiting
-		if (!hasSubscription && isModeratedGroup(effectiveStatement, role) && creator && role !== Role.banned) {
+		if (!hasSubscription && isModeratedGroup(effectiveStatement, role) && creator && effectiveStatement && role !== Role.banned) {
 			setStatementSubscriptionToDB({
 				statement: effectiveStatement,
 				creator,
@@ -108,7 +108,7 @@ export const useAuthorization = (statementId?: string): AuthorizationState => {
 			});
 			
 			// Auto-subscribe if not already subscribed
-			if (!hasSubscription && effectiveStatement) {
+			if (!hasSubscription && effectiveStatement && creator) {
 				const pushNotificationsEnabled = notificationService.isInitialized() && 
 					notificationService.safeGetPermission() === 'granted';
 					
@@ -158,7 +158,7 @@ export const useAuthorization = (statementId?: string): AuthorizationState => {
 		}
 
 		// Case 3: Open group - auto-subscribe as member
-		if (isOpenAccess(effectiveStatement, creator, role)) {
+		if (isOpenAccess(effectiveStatement, creator, role) && effectiveStatement && creator) {
 			// Check if user has granted push notification permission
 			const pushNotificationsEnabled = notificationService.isInitialized() && 
 				notificationService.safeGetPermission() === 'granted';
@@ -187,7 +187,7 @@ export const useAuthorization = (statementId?: string): AuthorizationState => {
 		}
 
 		// Case 4: Moderated group - subscribe as waiting
-		if (isModeratedGroup(effectiveStatement, role)) {
+		if (isModeratedGroup(effectiveStatement, role) && effectiveStatement && creator) {
 			setStatementSubscriptionToDB({
 				statement: effectiveStatement,
 				creator,
