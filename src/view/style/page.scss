@@ -127,6 +127,18 @@
 		display: flex;
 		flex-direction: column;
 		align-items: center;
+		
+		// On large screens, add padding to prevent content being hidden by panels
+		@media (min-width: 1441px) {
+			// Padding = panel width + gap
+			// Panel width = (viewport width - center content width) / 2 - gap
+			// We add 20px extra for breathing room
+			padding-left: calc((100vw - var(--wrapper-max-width)) / 2 - 20px);
+			padding-right: calc((100vw - var(--wrapper-max-width)) / 2 - 20px);
+			// Ensure minimum padding when panels are at minimum width
+			padding-left: max(340px, calc((100vw - var(--wrapper-max-width)) / 2 - 20px));
+			padding-right: max(340px, calc((100vw - var(--wrapper-max-width)) / 2 - 20px));
+		}
 
 		.statement-inner {
 			display: flex;

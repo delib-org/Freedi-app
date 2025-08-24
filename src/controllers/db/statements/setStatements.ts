@@ -203,7 +203,11 @@ export const setStatementToDB = async ({
 		statement.lastUpdate = new Date().getTime();
 		statement.createdAt = statement?.createdAt || new Date().getTime();
 
-		statement.membership = statement.membership || { access: Access.open };
+		// Only set default membership for top-level statements
+		// Sub-statements should inherit from their parent unless explicitly set
+		if (parentId === 'top' && !statement.membership) {
+			statement.membership = { access: Access.openToAll };
+		}
 
 		//statement settings
 		if (!statement.statementSettings)
@@ -343,7 +347,9 @@ export function createStatement({
 			creator,
 			...(defaultLanguage && { defaultLanguage: defaultLanguage }),
 			creatorId: creator.uid,
-			membership: membership || { access: Access.openToAll },
+			// Only set membership for top-level statements or if explicitly provided
+			// Sub-statements should inherit from their parent by default
+			...(parentId === 'top' || membership ? { membership: membership || { access: Access.openToAll } } : {}),
 			statementSettings: {
 				enhancedEvaluation,
 				hasChat:true,
@@ -478,8 +484,11 @@ export function updateStatement({
 		});
 
 		newStatement.hasChildren = hasChildren;
-		newStatement.membership = membership ||
-			statement.membership || { access: Access.open };
+		// Only update membership if explicitly provided
+		// Otherwise keep the existing membership (which might be undefined for inheritance)
+		if (membership !== undefined) {
+			newStatement.membership = membership;
+		}
 
 		if (statementType) newStatement.statementType = statementType;
 

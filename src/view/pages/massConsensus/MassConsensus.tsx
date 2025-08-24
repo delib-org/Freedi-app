@@ -1,6 +1,7 @@
 import { getStatementSubscriptionFromDB } from '@/controllers/db/subscriptions/getSubscriptions'
 import { getStatementSubscriptionId } from '@/controllers/general/helpers'
 import { useAuthentication } from '@/controllers/hooks/useAuthentication'
+import { usePublicAccess } from '@/controllers/hooks/usePublicAccess'
 import { setStatementSubscription, statementSubscriptionSelector } from '@/redux/statements/statementsSlice'
 import { useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
@@ -13,6 +14,7 @@ import { setMassConsensusMemberToDB } from '@/controllers/db/massConsensus/setMa
 import { setMassConsensusProcess } from '@/redux/massConsensus/massConsensusSlice'
 import { getMassConsensusProcess } from '@/controllers/db/massConsensus/getMassConsensus'
 import Accessibility from '@/view/components/accessibility/Accessibility'
+import LoadingPage from '@/view/pages/loadingPage/LoadingPage'
 
 const MassConsensus = () => {
 	const navigate = useNavigate()
@@ -20,6 +22,7 @@ const MassConsensus = () => {
 	const dispatch = useDispatch();
 	const { statementId } = useParams()
 	const { user } = useAuthentication()
+	const { isCheckingAccess } = usePublicAccess(statementId);
 	const subscription = useSelector(statementSubscriptionSelector(statementId));
 
 	useEffect(() => {
@@ -49,6 +52,11 @@ const MassConsensus = () => {
 			})
 		}
 	}, [user])
+
+	// Show loading while checking public access
+	if (isCheckingAccess) {
+		return <LoadingPage />;
+	}
 
 	return (
 		<HeaderProvider>

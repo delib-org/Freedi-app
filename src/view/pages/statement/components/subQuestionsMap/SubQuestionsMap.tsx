@@ -5,6 +5,7 @@ import { useMindMap } from "../map/MindMapMV";
 import SubQuestionNode from "./subQuestionNode/SubQuestionNode";
 import styles from "./SubQuestionsMap.module.scss";
 import { useSwipe } from "@/controllers/hooks/useSwipe";
+import { usePanelState } from "@/controllers/hooks/usePanelState";
 
 interface SubQuestionsMapProps {
   readonly statement: Statement;
@@ -12,10 +13,14 @@ interface SubQuestionsMapProps {
 
 const SubQuestionsMap = ({ statement }: SubQuestionsMapProps) => {
   const { results } = useMindMap(statement?.topParentId);
-  const [isOpen, setIsOpen] = useState(true);
+  const [isOpen, setIsOpen] = usePanelState({
+    storageKey: 'freedi-subquestions-map-open',
+    defaultDesktopOpen: true,
+    defaultMobileOpen: false
+  });
 
   const swipeRef = useSwipe({
-    onSwipeRight: () => {
+    onSwipeLeft: () => {
       if (isOpen) {
         setIsOpen(false);
       }
