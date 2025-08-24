@@ -1,5 +1,5 @@
 import { FC, useState } from 'react';
-import { useLocation } from 'react-router';
+import { useLocation, useNavigate } from 'react-router';
 import StatementTopNav from '../nav/top/StatementTopNav';
 import InvitePanel from './invitePanel/InvitePanel';
 import { logOut } from '@/controllers/db/authenticationUtils';
@@ -20,6 +20,7 @@ const StatementHeader: FC<Props> = ({
 }) => {
 	// Hooks
 	const { pathname } = useLocation();
+	const navigate = useNavigate();
 	const [isHeaderMenuOpen, setIsHeaderMenuOpen] = useState(false);
 	const [showInvitationPanel, setShowInvitationPanel] = useState(false);
 
@@ -60,6 +61,8 @@ const StatementHeader: FC<Props> = ({
 	async function handleLogout() {
 		try {
 			setIsHeaderMenuOpen(false);
+			// Navigate away immediately for better UX
+			navigate('/');
 			await logOut();
 		} catch (error) {
 			console.error(error);
