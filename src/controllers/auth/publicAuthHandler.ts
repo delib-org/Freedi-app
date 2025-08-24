@@ -15,6 +15,8 @@ import {
 } from 'firebase/auth';
 import { auth } from '@/controllers/db/config';
 import { generateTemporalName } from '@/utils/temporalNameGenerator';
+import { setUserToDB } from '@/controllers/db/user/setUser';
+import { convertFirebaseUserToCreator } from '@/types/user/userUtils';
 
 /**
  * Attempts to silently sign in with Google if user has previous session
@@ -76,6 +78,10 @@ async function createAnonymousUser(): Promise<User> {
     sessionStorage.setItem('temporalName', temporalName);
     sessionStorage.setItem('isAnonymousUser', 'true');
     localStorage.setItem('lastAuthProvider', 'anonymous');
+    
+    // Save the user to the database with the temporal name
+    const creator = convertFirebaseUserToCreator(user);
+    await setUserToDB(creator);
     
     console.info(`Anonymous user created with name: ${temporalName}`);
     
