@@ -2,16 +2,21 @@ import { useParams } from "react-router";
 import styles from "./ChatPanel.module.scss";
 import Chat from "../../Chat";
 import ChatIcon from "@/assets/icons/roundedChatDotIcon.svg?react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { useSelector } from "react-redux";
 import { inAppNotificationsSelector } from "@/redux/notificationsSlice/notificationsSlice";
 import { NotificationType } from "delib-npm";
 import { creatorSelector } from "@/redux/creator/creatorSlice";
 import { useSwipe } from "@/controllers/hooks/useSwipe";
+import { usePanelState } from "@/controllers/hooks/usePanelState";
 
 const ChatPanel = () => {
   const { screen, statementId } = useParams();
-  const [isSideChatOpen, setIsSideChatOpen] = useState(false);
+  const [isSideChatOpen, setIsSideChatOpen] = usePanelState({
+    storageKey: 'freedi-chat-panel-open',
+    defaultDesktopOpen: true,
+    defaultMobileOpen: false
+  });
   const chatPanelRef = useRef(null);
   
   const swipeRef = useSwipe({
