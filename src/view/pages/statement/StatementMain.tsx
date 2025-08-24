@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { createSelector } from '@reduxjs/toolkit';
 import { useDispatch } from 'react-redux';
 
@@ -10,10 +10,6 @@ import UnAuthorizedPage from '../unAuthorizedPage/UnAuthorizedPage';
 // Types
 import { useAuthorization } from '@/controllers/hooks/useAuthorization';
 import { RootState } from '@/redux/store';
-import { Access } from 'delib-npm';
-
-// Auth
-import { handlePublicAutoAuth } from '@/controllers/auth/publicAuthHandler';
 
 // Custom hooks
 import { useStatementData } from './hooks/useStatementData';
@@ -74,7 +70,6 @@ const StatementMain: React.FC = () => {
 	} = useStatementData();
 
 	const { isAuthorized, loading, isWaitingForApproval } = useAuthorization(statementId);
-	const creator = useAppSelector(creatorSelector);
 
 	// Use component state machine
 	const { currentState } = useComponentState({
@@ -85,19 +80,6 @@ const StatementMain: React.FC = () => {
 		error,
 		role
 	});
-
-	// Auto-authenticate ONLY for public statements
-	useEffect(() => {
-		// Determine effective access - statement override or topParent
-		const effectiveAccess = statement?.membership?.access || topParentStatement?.membership?.access;
-		
-		// ONLY auto-authenticate for public access
-		// All other access levels should use normal login flow
-		if (effectiveAccess === Access.public && !creator?.uid) {
-			console.info('Public statement detected, initiating auto-authentication');
-			handlePublicAutoAuth();
-		}
-	}, [statement?.membership?.access, topParentStatement?.membership?.access, creator?.uid]);
 
 	// Set up listeners
 	useStatementListeners({
