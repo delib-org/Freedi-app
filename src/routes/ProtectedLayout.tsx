@@ -7,15 +7,17 @@ import Page401 from '@/view/pages/page401/Page401';
 import WaitingPage from '@/view/pages/waiting/WaitingPage';
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Outlet, useNavigate, useParams } from 'react-router';
+import { Outlet, useNavigate, useParams, useLocation } from 'react-router';
 import { Access } from 'delib-npm';
 import { handlePublicAutoAuth } from '@/controllers/auth/publicAuthHandler';
 import { creatorSelector } from '@/redux/creator/creatorSlice';
+import { LocalStorageObjects } from '@/types/localStorage/LocalStorageObjects';
 
 export default function ProtectedLayout() {
 	const { statementId } = useParams();
 	const dispatch = useDispatch();
 	const navigate = useNavigate();
+	const location = useLocation();
 	const [isCheckingPublicAccess, setIsCheckingPublicAccess] = useState(true);
 	const { loading, error, isAuthorized, isWaitingForApproval } = useAuthorization(statementId);
 	const statement = useSelector(statementSelector(statementId));
@@ -53,17 +55,34 @@ export default function ProtectedLayout() {
 			// Determine effective access
 			const effectiveAccess = statement?.membership?.access || topParentStatement?.membership?.access;
 
-			// If it's public and user is not authenticated, auto-authenticate
+			// ONLY auto-authenticate for public access
+			// All other access levels (openToAll, openForRegistered, moderated) should redirect to login
 			if (effectiveAccess === Access.public && !creator?.uid) {
 				console.info('Public statement detected in ProtectedLayout, initiating auto-authentication');
 				await handlePublicAutoAuth();
+			} else if (!creator?.uid && effectiveAccess !== Access.public) {
+				// For non-public statements without auth, save location and redirect to login
+				console.info('Non-public statement requires authentication, redirecting to login');
+				
+				// Save the current location so user can return after login
+				const historyData = {
+					pathname: location.pathname,
+					search: location.search,
+					hash: location.hash
+				};
+				localStorage.setItem(
+					LocalStorageObjects.InitialRoute,
+					JSON.stringify(historyData)
+				);
+				
+				navigate('/start', { replace: true });
 			}
 
 			setIsCheckingPublicAccess(false);
 		};
 
 		checkPublicAccess();
-	}, [statement, creator?.uid, dispatch, statementId]);
+	}, [statement, creator?.uid, dispatch, statementId, navigate, location]);
 
 	useEffect(() => {
 		// Don't redirect to 401 if we're still checking public access

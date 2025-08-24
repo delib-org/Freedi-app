@@ -86,12 +86,13 @@ const StatementMain: React.FC = () => {
 		role
 	});
 
-	// Auto-authenticate for public statements
+	// Auto-authenticate ONLY for public statements
 	useEffect(() => {
 		// Determine effective access - statement override or topParent
 		const effectiveAccess = statement?.membership?.access || topParentStatement?.membership?.access;
 		
-		// If statement has public access and user is not authenticated, auto-authenticate
+		// ONLY auto-authenticate for public access
+		// All other access levels should use normal login flow
 		if (effectiveAccess === Access.public && !creator?.uid) {
 			console.info('Public statement detected, initiating auto-authentication');
 			handlePublicAutoAuth();
