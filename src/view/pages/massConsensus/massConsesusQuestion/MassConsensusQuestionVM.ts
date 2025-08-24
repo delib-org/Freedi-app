@@ -6,7 +6,7 @@ const useMassConsensusQuestion = () => {
 	const { setHeader } = useHeader();
 	const { t } = useUserConfig();
 
-	const [stage, updateStage] = useState<
+	const [stage, setStage] = useState<
 		'question' | 'loading' | 'suggestions' | 'submitting'
 	>('question');
 	const [ifButtonEnabled, setIfButtonEnabled] = useState<boolean>(true);
@@ -23,9 +23,9 @@ const useMassConsensusQuestion = () => {
 
 	const handleNext = () => {
 		if (stage === 'question') {
-			updateStage('loading');
+			setStage('loading');
 		} else {
-			updateStage('submitting');
+			setStage('submitting');
 		}
 	};
 
@@ -37,7 +37,7 @@ const useMassConsensusQuestion = () => {
 
 	return {
 		stage,
-		updateStage,
+		setStage,
 		handleNext,
 		ifButtonEnabled,
 		setIfButtonEnabled,
