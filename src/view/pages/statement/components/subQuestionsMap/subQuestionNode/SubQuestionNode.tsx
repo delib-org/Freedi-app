@@ -9,7 +9,7 @@ interface SubQuestionNodeProps {
   childCount: number;
   height?: number;
   heightMargin?: number;
-
+  numberOfElements:number;
   setNodeHeights?: React.Dispatch<React.SetStateAction<Map<string, number>>>;
   isFirstChild?: boolean;
   heightToChild?: number;
@@ -20,6 +20,7 @@ const SubQuestionNode: FC<SubQuestionNodeProps> = ({
   childCount,
   setNodeHeights,
   heightMargin,
+  numberOfElements,
   isFirstChild = false,
   heightToChild = 0,
   depth = -1,
@@ -41,7 +42,7 @@ const SubQuestionNode: FC<SubQuestionNodeProps> = ({
     const rect = ref.current.getBoundingClientRect();
     const actualTop = rect.top;
     updateMap(statement.statementId, actualTop);
-  }, [statement.statementId, ref.current, statement.statementId]);
+  }, [statement.statementId, ref.current,numberOfElements]);
 
   const handleClick = () => {
     setClicked(true);
@@ -60,12 +61,12 @@ const SubQuestionNode: FC<SubQuestionNodeProps> = ({
 
   return (
     <div className={styles.SubQuestionNodeContainer}>
-      <div
+      <button
         className={`${styles.node} ${isInStatement ? styles.green : ""} ${depth <= 1 && !isInStatement ? styles.group : ""} ${!isInStatement ? styles.clickable : ""} ${clicked ? styles.animate : ""}`}
         onClick={!isInStatement ? handleClick : undefined}
       >
         <h3>{statement.statement}</h3>
-      </div>
+      </button>
 
       {
         //this border reaches to the parents Last child
