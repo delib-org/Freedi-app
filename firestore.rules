@@ -198,7 +198,13 @@ service cloud.firestore {
       function getAccess() {
         let statementId = getStatementId();
         let statement = get(/databases/$(database)/documents/statements/$(statementId)).data;
-        return statement != null ? statement.membership.access : null;
+        
+        // Check for statement's own access override first, then topParent's access
+        return statement != null && statement.membership != null && statement.membership.access != null 
+          ? statement.membership.access 
+          : (statement != null && statement.topParentId != null 
+            ? get(/databases/$(database)/documents/statements/$(statement.topParentId)).data.membership.access 
+            : null);
       }
       
       function isBanned() {
@@ -217,6 +223,10 @@ service cloud.firestore {
         return getAccess() == "moderated";
       }
       
+      function isPublic() {
+        return getAccess() == "public";
+      }
+      
       function isWaitingRole() {
         return request.resource.data.role == "waiting";
       }
@@ -233,7 +243,8 @@ service cloud.firestore {
       
       // For create
       allow create: if request.auth.uid != null &&
-                     (isOpenToAll() || 
+                     (isPublic() ||
+                      isOpenToAll() || 
                       isOpenForRegistered() ||
                       (isModerated() && isWaitingRole()));
       
@@ -244,7 +255,7 @@ service cloud.firestore {
                         (isRoleUnchanged() ||
                           (!isBanned() && 
                             ((isModerated() && isWaitingRole()) || 
-                             ((isOpenToAll() || isOpenForRegistered()) && isMemberRole())))
+                             ((isPublic() || isOpenToAll() || isOpenForRegistered()) && isMemberRole())))
                         )
                       ));
       

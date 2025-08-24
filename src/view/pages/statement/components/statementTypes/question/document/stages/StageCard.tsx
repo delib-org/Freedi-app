@@ -84,7 +84,7 @@ const StageCard: FC<Props> = ({ statement, isDescription, isSuggestions }) => {
 					</div>
 				))}
 				{expanded && (
-					<NavLink to={`/stage/${statement.statementId}`}>
+					<NavLink to={`/stage/${statement.statementId}`} state={{ from: window.location.pathname }}>
 						<Button
 							buttonType={ButtonType.SECONDARY}
 							text={t('Enter sub-question')}

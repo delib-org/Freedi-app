@@ -40,7 +40,7 @@ const UpdateMainCard: FC<Props> = ({ statement }) => {
 		const text = statement.statement;
 
 		return (
-			<Link className={styles.updates} to={`/statement/${statement.parentId}`}>
+			<Link className={styles.updates} to={`/statement/${statement.parentId}`} state={{ from: window.location.pathname }}>
 				<div className={styles.updatesGroup}>
 					{parentStatement ? (
 						<span>{group} </span>

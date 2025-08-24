@@ -202,7 +202,7 @@ const MultiStageQuestion: FC = () => {
 								))
 							)}
 							<div className={`btns ${styles['add-stage']}`}>
-							<Link to={`/stage/${statement.statementId}`}>
+							<Link to={`/stage/${statement.statementId}`} state={{ from: window.location.pathname }}>
 								<button
 									className='btn btn--primary'
 								>{t(hasTopSuggestions ? 'See all suggestions' : 'Add new suggestion')}

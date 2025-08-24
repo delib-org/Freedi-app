@@ -107,7 +107,7 @@ const Chat: FC<ChatProps> = ({
 
   return (
     <div className={`${styles.chat} ${sideChat ? styles.sideChat : ''}`} ref={chatRef}>
-      {statement.description && !sideChat && (
+      {statement?.description && !sideChat && (
         <div className="wrapper">
           <Description />
         </div>

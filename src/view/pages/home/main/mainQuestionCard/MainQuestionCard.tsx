@@ -29,6 +29,7 @@ const MainQuestionCard: FC<Props> = ({ simpleStatement }) => {
 		<Link
 			className={styles.mainCard}
 			to={`/statement/${simpleStatement.statementId}/`}
+			state={{ from: window.location.pathname }}
 		>			<div className={styles.info}>
 				<div className={styles.title}>
 					<div>{simpleStatement.statement}</div>

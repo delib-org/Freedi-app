@@ -1,7 +1,9 @@
 .SubQuestionNodeContainer {
   display: flex;
   flex-direction: row-reverse;
-
+  button {
+    all: unset;
+  }
   .node {
     margin: 1rem;
     color: var(--text-secondary);
@@ -24,17 +26,17 @@
 
   .clickable {
     cursor: pointer;
-    
+
     &:hover {
-    
       transform: translateX(-2px);
     }
   }
 
   .green {
     border-left: 5px var(--icons-green) solid;
-    box-shadow: 0 0 8px rgba(0, 123, 255, 0.3), 
-                0 0 16px rgba(0, 123, 255, 0.15);
+    box-shadow:
+      0 0 8px rgba(0, 123, 255, 0.3),
+      0 0 16px rgba(0, 123, 255, 0.15);
     animation: glow 3s ease-in-out infinite;
   }
 
@@ -95,12 +97,15 @@
 }
 
 @keyframes glow {
-  0%, 100% {
-    box-shadow: 0 0 8px rgba(0, 123, 255, 0.3), 
-                0 0 16px rgba(0, 123, 255, 0.15);
+  0%,
+  100% {
+    box-shadow:
+      0 0 8px rgba(0, 123, 255, 0.3),
+      0 0 16px rgba(0, 123, 255, 0.15);
   }
   50% {
-    box-shadow: 0 0 12px rgba(0, 123, 255, 0.4), 
-                0 0 20px rgba(0, 123, 255, 0.2);
+    box-shadow:
+      0 0 12px rgba(0, 123, 255, 0.4),
+      0 0 20px rgba(0, 123, 255, 0.2);
   }
 }

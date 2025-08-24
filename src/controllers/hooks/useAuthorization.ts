@@ -34,10 +34,16 @@ export const useAuthorization = (statementId?: string): AuthorizationState => {
 
 	const statement = useAppSelector(statementSelector(statementId));
 	const topParentStatement = useAppSelector(statementSelector(statement?.topParentId));
-	const topParentSubscription = useAppSelector(statementSubscriptionSelector(statement?.topParentId));
 	const creator = useSelector(creatorSelector);
-	const role = topParentSubscription?.role;
 	const topParentId = statement?.topParentId;
+	
+	// SIMPLIFIED: Determine effective access - statement override or topParent
+	const effectiveAccess = statement?.membership?.access || topParentStatement?.membership?.access;
+	
+	// Determine which subscription to use based on access override
+	const subscriptionId = statement?.membership?.access ? statementId : statement?.topParentId;
+	const subscription = useAppSelector(statementSubscriptionSelector(subscriptionId));
+	const role = subscription?.role;
 
 	//set up top parent statement listener
 	useEffect(() => {
@@ -53,21 +59,25 @@ export const useAuthorization = (statementId?: string): AuthorizationState => {
 		}
 	}, [statementId, topParentId]);
 
-	// Set up subscription listener
+	// Set up subscription listener - listen to the correct subscription based on access override
 	useEffect(() => {
 		if (!statementId || !creator?.uid) return;
 
-		const unsubscribe = listenToStatementSubscription(topParentId, creator, setHasSubscription);
+		// Listen to statement-specific subscription if it has its own access, otherwise topParent
+		const subscriptionToListenId = statement?.membership?.access ? statementId : topParentId;
+		const unsubscribe = listenToStatementSubscription(subscriptionToListenId, creator, setHasSubscription);
 
 		return () => unsubscribe();
-	}, [topParentId, creator?.uid]);
+	}, [statementId, topParentId, creator?.uid, statement?.membership?.access]);
 
 	useEffect(() => {
+		// Determine which statement to use for subscription based on access override
+		const effectiveStatement = statement?.membership?.access ? statement : topParentStatement;
 
 		// if it is moderated group and user is not subscribed or not banned, set the subscription to waiting
-		if (!hasSubscription && isModeratedGroup(topParentStatement, role) && creator && role !== Role.banned) {
+		if (!hasSubscription && isModeratedGroup(effectiveStatement, role) && creator && effectiveStatement && role !== Role.banned) {
 			setStatementSubscriptionToDB({
-				statement: topParentStatement,
+				statement: effectiveStatement,
 				creator,
 				role: Role.waiting,
 				getInAppNotification: false,
@@ -75,11 +85,45 @@ export const useAuthorization = (statementId?: string): AuthorizationState => {
 				getPushNotification: false,
 			})
 		}
-	}, [hasSubscription, topParentStatement, creator, role]);
+	}, [hasSubscription, statement, topParentStatement, creator, role]);
 
-	// Handle authorization logic
+	// Handle authorization logic with simplified access check
 	useEffect(() => {
 		if (!statement || !creator) return;
+		
+		// Determine which statement to use for authorization
+		const effectiveStatement = statement?.membership?.access ? statement : topParentStatement;
+		
+		// Special handling for public access
+		if (effectiveAccess === Access.public) {
+			setAuthState({
+				isAuthorized: true,
+				loading: false,
+				error: false,
+				errorMessage: '',
+				creator,
+				isWaitingForApproval: false,
+				role: role || Role.member,
+				isAdmin: isAdminRole(role),
+			});
+			
+			// Auto-subscribe if not already subscribed
+			if (!hasSubscription && effectiveStatement && creator) {
+				const pushNotificationsEnabled = notificationService.isInitialized() && 
+					notificationService.safeGetPermission() === 'granted';
+					
+				setStatementSubscriptionToDB({
+					statement: effectiveStatement,
+					creator,
+					role: Role.member,
+					getInAppNotification: true,
+					getEmailNotification: false,
+					getPushNotification: pushNotificationsEnabled
+				});
+			}
+			
+			return;
+		}
 
 		// Case 1: User is already a member or admin
 		if (isMemberRole(statement, creator.uid, role)) {
@@ -99,7 +143,6 @@ export const useAuthorization = (statementId?: string): AuthorizationState => {
 
 		// Case 2: User is waiting for approval
 		if (role === Role.waiting) {
-
 			setAuthState({
 				isAuthorized: false,
 				loading: false,
@@ -115,13 +158,13 @@ export const useAuthorization = (statementId?: string): AuthorizationState => {
 		}
 
 		// Case 3: Open group - auto-subscribe as member
-		if (isOpenAccess(topParentStatement, creator, role)) {
+		if (isOpenAccess(effectiveStatement, creator, role) && effectiveStatement && creator) {
 			// Check if user has granted push notification permission
 			const pushNotificationsEnabled = notificationService.isInitialized() && 
 				notificationService.safeGetPermission() === 'granted';
 
 			setStatementSubscriptionToDB({
-				statement: topParentStatement,
+				statement: effectiveStatement,
 				creator,
 				role: Role.member,
 				getInAppNotification: true,
@@ -132,8 +175,8 @@ export const useAuthorization = (statementId?: string): AuthorizationState => {
 			setAuthState({
 				isAuthorized: true,
 				loading: false,
-				role,
-				isAdmin: isAdminRole(role),
+				role: Role.member,
+				isAdmin: false,
 				error: false,
 				errorMessage: '',
 				creator,
@@ -144,10 +187,9 @@ export const useAuthorization = (statementId?: string): AuthorizationState => {
 		}
 
 		// Case 4: Moderated group - subscribe as waiting
-		if (isModeratedGroup(topParentStatement, role)) {
-
+		if (isModeratedGroup(effectiveStatement, role) && effectiveStatement && creator) {
 			setStatementSubscriptionToDB({
-				statement: topParentStatement,
+				statement: effectiveStatement,
 				creator,
 				role: Role.waiting,
 				getInAppNotification: false,
@@ -157,8 +199,8 @@ export const useAuthorization = (statementId?: string): AuthorizationState => {
 
 			setAuthState({
 				isAuthorized: false,
-				role: Role.banned,
-				isAdmin: isAdminRole(role),
+				role: Role.waiting,
+				isAdmin: false,
 				loading: false,
 				error: false,
 				errorMessage: '',
@@ -173,7 +215,7 @@ export const useAuthorization = (statementId?: string): AuthorizationState => {
 		setAuthState({
 			isAuthorized: false,
 			role: Role.banned,
-			isAdmin: isAdminRole(role),
+			isAdmin: false,
 			loading: false,
 			error: true,
 			errorMessage: 'You are not authorized to view this statement.',
@@ -181,7 +223,7 @@ export const useAuthorization = (statementId?: string): AuthorizationState => {
 			isWaitingForApproval: false
 		});
 
-	}, [statement, creator, topParentSubscription, role, topParentStatement]);
+	}, [statement, creator, subscription, role, topParentStatement, effectiveAccess, hasSubscription]);
 
 	return authState;
 };
@@ -211,6 +253,7 @@ function isOpenAccess(
 	if (role === Role.banned) return false;
 
 	return (
+		statement?.membership?.access === Access.public ||
 		statement?.membership?.access === Access.openToAll ||
 		(statement?.membership?.access === Access.openForRegistered && creator.isAnonymous === false)
 	);

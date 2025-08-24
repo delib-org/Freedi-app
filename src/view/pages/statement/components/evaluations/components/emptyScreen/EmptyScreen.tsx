@@ -21,16 +21,16 @@ const EmptyScreen: FC<Props> = ({ statement }) => {
 	const smallScreen = width < 1024;
 
 	function handleCreateNewOption() {
-			dispatch(setNewStatementModal({
-				parentStatement: statement,
-				newStatement: {
-					statementType: StatementType.option,
-				},
-				showModal: true,
-				isLoading: false,
-				error: null,
-			}))
-		}
+		dispatch(setNewStatementModal({
+			parentStatement: statement,
+			newStatement: {
+				statementType: StatementType.option,
+			},
+			showModal: true,
+			isLoading: false,
+			error: null,
+		}))
+	}
 
 	return (
 		<div
@@ -68,9 +68,9 @@ const EmptyScreen: FC<Props> = ({ statement }) => {
 					{smallScreen ? (
 						<WhitePlusIcon />
 					) : (
-						<p>
+						<span className={styles.addSuggestionText}>
 							{t('Add suggestion')} <WhitePlusIcon />
-						</p>
+						</span>
 					)}
 				</button>
 			</div>
