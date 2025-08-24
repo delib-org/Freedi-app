@@ -8,6 +8,25 @@
     animation-timing-function: cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
+// Slower animations for larger screens (1440px and above)
+@media (min-width: 1440px) {
+    .slide-in {
+        animation-duration: 0.9s;
+    }
+
+    .slide-out {
+        animation-duration: 0.9s;
+    }
+    
+    .zoom-in {
+        animation-duration: 0.9s;
+    }
+    
+    .zoom-out {
+        animation-duration: 0.9s;
+    }
+}
+
 @keyframes slideIn {
     0% {
         opacity: 0.3;
@@ -37,6 +56,48 @@
     100% {
         opacity: 1;
         transform: translateX(0);
+    }
+}
+
+.zoom-in {
+    animation: zoomIn 0.5s ease-out;
+    animation-timing-function: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.zoom-out {
+    animation: zoomOut 0.5s ease-out;
+    animation-timing-function: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+@keyframes zoomIn {
+    0% {
+        opacity: 0.3;
+        transform: scale(0.85);
+    }
+    
+    40% {
+        opacity: 0.8;
+    }
+
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes zoomOut {
+    0% {
+        opacity: 0.3;
+        transform: scale(1.15);
+    }
+    
+    40% {
+        opacity: 0.8;
+    }
+
+    100% {
+        opacity: 1;
+        transform: scale(1);
     }
 }
 

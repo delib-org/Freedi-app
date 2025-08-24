@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Statement, UserQuestion } from 'delib-npm';
 import StatementHeader from './header/StatementHeader';
 import Switch from './switch/Switch';
@@ -29,6 +29,16 @@ export const StatementContent: React.FC<StatementContentProps> = ({
 	
 	// Apply animation class when navigating between statements
 	const pageClassName = toSlide ? `page ${slideInOrOut}` : 'page';
+	
+	// Debug logging
+	useEffect(() => {
+		console.info('🎨 Render state:', { 
+			statementId: statement?.statementId,
+			toSlide, 
+			slideInOrOut,
+			pageClassName 
+		});
+	}, [statement?.statementId, toSlide, slideInOrOut, pageClassName]);
 	
 	return (
 		<div className={pageClassName}>
