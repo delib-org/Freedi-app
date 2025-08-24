@@ -32,6 +32,7 @@ const MainCard: FC<Props> = ({ subscription }) => {
 			<Link
 				to={`/statement/${simpleStatement.statementId}/`}
 				className={styles.link}
+				state={{ from: window.location.pathname }}
 			>
 				<div className={styles.content}>
 					<div

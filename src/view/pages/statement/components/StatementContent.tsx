@@ -4,6 +4,7 @@ import StatementHeader from './header/StatementHeader';
 import Switch from './switch/Switch';
 import { MapProvider } from '@/controllers/hooks/useMap';
 import { ConditionalModals } from './ConditionalModals';
+import useSlideAndSubStatement from '@/controllers/hooks/useSlideAndSubStatement';
 
 interface StatementContentProps {
 	statement: Statement | null;
@@ -24,8 +25,13 @@ export const StatementContent: React.FC<StatementContentProps> = ({
 	screen,
 	isMassConsensus,
 }) => {
+	const { toSlide, slideInOrOut } = useSlideAndSubStatement(statement?.parentId, statement?.statementId);
+	
+	// Apply animation class when navigating between statements
+	const pageClassName = toSlide ? `page ${slideInOrOut}` : 'page';
+	
 	return (
-		<div className='page'>
+		<div className={pageClassName}>
 			<ConditionalModals
 				showNewStatement={showNewStatement}
 				showUserQuestions={showUserQuestions}
