@@ -1,10 +1,12 @@
+import { useEffect, useRef, useState } from 'react';
 import Loader from '@/view/components/loaders/Loader';
 import InitialQuestion from './initialQuestion/InitialQuestion';
 import useMassConsensusQuestion from './MassConsensusQuestionVM';
 import SimilarSuggestions from './similarSuggestions/SimilarSuggestions';
 import FooterMassConsensus from '../footerMassConsensus/FooterMassConsensus';
 import { useMassConsensusAnalytics } from '@/hooks/useMassConsensusAnalytics';
-import { useEffect } from 'react';
+
+import styles from './MassConsesusQuestion.module.scss'
 
 const MassConsensusQuestion = () => {
 	const {
@@ -18,6 +20,29 @@ const MassConsensusQuestion = () => {
 	} = useMassConsensusQuestion();
 	const { trackStageCompleted, trackSubmission, trackStageSkipped } = useMassConsensusAnalytics();
 
+	const isBusy = stage === 'loading' || stage === 'submitting';
+
+	const [showLoader, setShowLoader] = useState(false);
+	const loaderStartRef = useRef<number | null>(null);
+
+	useEffect(() => {
+		if (isBusy) {
+			loaderStartRef.current = Date.now();
+			const showId = window.setTimeout(() => setShowLoader(true), 250);
+
+			return () => window.clearTimeout(showId);
+		} else {
+			if (loaderStartRef.current !== null) {
+				const elapsed = Date.now() - loaderStartRef.current;
+				const wait = Math.max(0, 500 - elapsed);
+				const hideId = window.setTimeout(() => setShowLoader(false), wait);
+				loaderStartRef.current = null;
+
+				return () => window.clearTimeout(hideId);
+			}
+			setShowLoader(false);
+		}
+	}, [isBusy]);
 	// Track submission when stage changes from question to loading
 	useEffect(() => {
 		if (stage === 'loading') {
@@ -36,9 +61,11 @@ const MassConsensusQuestion = () => {
 		trackStageSkipped('question');
 	};
 
+	const nextActive = !isBusy && ifButtonEnabled;
+
 	return (
 		<>
-			{stage === 'question' || stage === 'loading' ? (
+			{(stage === 'question' || stage === 'loading') ? (
 				<InitialQuestion
 					setReachedLimit={setReachedLimit}
 					stage={stage}
@@ -52,17 +79,27 @@ const MassConsensusQuestion = () => {
 				/>
 			)}
 
-			{stage === 'loading' || (stage === 'submitting' && <Loader />)}
+			{showLoader && (
+				<div
+					className={styles.loaderOverlay}
+					role="status"
+					aria-live="polite"
+					aria-busy="true"
+				>
+					<Loader />
+				</div>
+			)}
+
 			{reachedLimit ? (
 				<FooterMassConsensus
-					onNext={() => {}}
+					onNext={() => { }}
 					isNextActive={false}
 					blockNavigation={false}
 				/>
 			) : (
 				<FooterMassConsensus
 					onNext={handleNextWithTracking}
-					isNextActive={ifButtonEnabled}
+					isNextActive={nextActive}
 					blockNavigation={true}
 					onSkip={handleSkipWithTracking}
 				/>
