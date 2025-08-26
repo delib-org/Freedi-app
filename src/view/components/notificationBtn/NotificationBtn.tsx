@@ -1,5 +1,5 @@
 import MailIcon from '@/assets/icons/mailIcon.svg?react';
-import { useCallback, useState, useEffect } from 'react'
+import { useCallback, useState } from 'react'
 import InAppNotifications from '../inAppNotifications/InAppNotifications';
 import { useSelector, useDispatch } from 'react-redux';
 import { creatorSelector } from '@/redux/creator/creatorSlice';

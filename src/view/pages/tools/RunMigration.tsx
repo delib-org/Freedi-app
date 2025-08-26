@@ -15,7 +15,8 @@ const RunMigration: React.FC = () => {
   const runMigration = async () => {
     if (!user) {
       setMessage('Please log in first');
-      return;
+      
+return;
     }
 
     setStatus('running');

@@ -78,7 +78,8 @@ export async function markNotificationAsReadDB(notificationId: string): Promise<
 		const user = store.getState().creator.creator;
 		if (!user) {
 			console.error("markNotificationAsReadDB: User not found");
-			return;
+			
+return;
 		}
 
 		// Update in Firestore
@@ -101,7 +102,8 @@ export async function markMultipleNotificationsAsReadDB(notificationIds: string[
 		const user = store.getState().creator.creator;
 		if (!user || !notificationIds.length) {
 			console.error("markMultipleNotificationsAsReadDB: User not found or no notification IDs");
-			return;
+			
+return;
 		}
 
 		// Batch update in Firestore
@@ -128,7 +130,8 @@ export async function markStatementNotificationsAsReadDB(statementId: string): P
 		const user = store.getState().creator.creator;
 		if (!user || !statementId) {
 			console.error("markStatementNotificationsAsReadDB: User not found or no statement ID");
-			return;
+			
+return;
 		}
 
 		// Query notifications for this statement
@@ -168,7 +171,8 @@ export async function markNotificationsAsViewedInListDB(notificationIds: string[
 		const user = store.getState().creator.creator;
 		if (!user || !notificationIds.length) {
 			console.error("markNotificationsAsViewedInListDB: User not found or no notification IDs");
-			return;
+			
+return;
 		}
 
 		// Batch update in Firestore

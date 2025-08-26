@@ -6,8 +6,7 @@ import {
     markStatementNotificationsAsRead,
     markAllNotificationsAsRead,
     inAppNotificationsSelector,
-    unreadNotificationsSelector,
-    totalUnreadCountSelector
+    unreadNotificationsSelector
 } from '@/redux/notificationsSlice/notificationsSlice';
 import {
     markNotificationAsReadDB,
@@ -15,7 +14,6 @@ import {
     markStatementNotificationsAsReadDB
 } from '@/controllers/db/inAppNotifications/db_inAppNotifications';
 import { creatorSelector } from '@/redux/creator/creatorSlice';
-import { NotificationType } from 'delib-npm';
 
 /**
  * ✅ Custom hook for managing notification actions
@@ -26,7 +24,6 @@ export function useNotificationActions() {
     const creator = useSelector(creatorSelector);
     const allNotifications = useSelector(inAppNotificationsSelector);
     const unreadNotifications = useSelector(unreadNotificationsSelector);
-    const totalUnreadCount = useSelector(totalUnreadCountSelector);
     
     // Get notifications excluding current user's
     const userNotifications = allNotifications.filter(
@@ -111,7 +108,8 @@ export function useNotificationActions() {
      */
     const isNotificationRead = useCallback((notificationId: string): boolean => {
         const notification = allNotifications.find(n => n.notificationId === notificationId);
-        return notification?.read || false;
+        
+return notification?.read || false;
     }, [allNotifications]);
     
     return {

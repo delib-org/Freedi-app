@@ -8,7 +8,7 @@ import ChatIcon from '@/assets/icons/roundedChatDotIcon.svg?react';
 // Statements functions
 
 import { SimpleStatement, Statement, NotificationType } from 'delib-npm';
-import { useSelector, useDispatch } from 'react-redux';
+import { useSelector} from 'react-redux';
 import { inAppNotificationsSelector } from '@/redux/notificationsSlice/notificationsSlice';
 import { creatorSelector } from '@/redux/creator/creatorSlice';
 import { markStatementNotificationsAsReadDB } from '@/controllers/db/inAppNotifications/db_inAppNotifications';
@@ -27,7 +27,6 @@ const StatementChatMore: FC<Props> = ({
 	asButton = true,
 }) => {
 	const navigate = useNavigate();
-	const dispatch = useDispatch();
 
 	// Redux store
 	const creator = useSelector(creatorSelector);
