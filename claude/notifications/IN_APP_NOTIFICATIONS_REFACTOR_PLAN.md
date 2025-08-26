@@ -1,23 +1,43 @@
 # In-App Notifications Refactoring Plan
 
 ## Executive Summary
-Refactor the in-app notification system to ensure StatementChatMore component displays accurate unread message counts across all instances in the application.
+Refactor the in-app notification system to ensure both NotificationBtn (header) and StatementChatMore components display accurate unread message counts throughout the application.
+
+## Current State
+
+### Two Notification Display Contexts
+
+#### 1. NotificationBtn (Global Header)
+- **Location**: `src/view/components/notificationBtn/NotificationBtn.tsx`
+- **Used in**: `HomeHeader.tsx`
+- **Scope**: ALL notifications across the entire app
+- **Current Filter**: Only excludes current user's notifications
+- **Purpose**: Global notification center
+
+#### 2. StatementChatMore (Statement-Specific)
+- **Location**: `src/view/pages/statement/components/chat/components/statementChatMore/StatementChatMore.tsx`
+- **Used in**: Statement cards throughout the app
+- **Scope**: Notifications for a specific statement only
+- **Current Filter**: `parentId === statement.statementId` (this is correct and intentional)
+- **Purpose**: Shows activity for specific discussions
 
 ## Current Issues
 
-### 1. Notification Filtering Logic
-- **Problem**: Current implementation only filters by `parentId === statement.statementId`
-- **Impact**: May miss nested replies or related notifications
-- **Location**: `StatementChatMore.tsx` lines 34-39
+### 1. Read/Unread Status Tracking
+- **Problem**: No "read" status tracking in the notification model
+- **Impact**: Both components show ALL notifications (including already-seen ones) instead of just unread
+- **Current State**: `NotificationType` lacks read/unread tracking
 
-### 2. Read/Unread Status
-- **Problem**: No clear "read" status tracking in the notification model
-- **Impact**: All notifications appear as "new" even after being viewed
-- **Current State**: `NotificationType` doesn't have a reliable read tracking mechanism
-
-### 3. Notification Count Accuracy
-- **Problem**: Count shows all notifications, not just unread ones
+### 2. Notification Count Accuracy
+- **Problem**: Both components show total count, not unread count
 - **Impact**: Users see inflated numbers that don't reflect actual new content
+- **Examples**:
+  - Header shows "15" even if user has seen 14 of them
+  - Statement shows "3" even after user has read the messages
+
+### 3. Lack of Synchronization
+- **Problem**: No mechanism to mark notifications as read
+- **Impact**: Notification counts never decrease, causing notification fatigue
 
 ## Proposed Solution
 
@@ -77,16 +97,16 @@ export const unreadCountForStatementSelector = createSelector(
 );
 ```
 
-### Phase 3: StatementChatMore Component Refactor
+### Phase 3: Component Refactoring
 
-#### 3.1 Enhanced Component Logic
+#### 3.1 StatementChatMore Component (Statement-Specific)
 ```typescript
 const StatementChatMore: FC<Props> = ({ statement, onlyCircle, useLink = true }) => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const creator = useSelector(creatorSelector);
   
-  // Use memoized selector for unread count
+  // Get unread count for this specific statement only
   const unreadCount = useSelector(state => 
     unreadCountForStatementSelector(state, statement.statementId)
   );
@@ -94,8 +114,8 @@ const StatementChatMore: FC<Props> = ({ statement, onlyCircle, useLink = true })
   // Track when user clicks to view
   const handleClick = () => {
     if (useLink) {
-      // Mark notifications as "viewed in list" when navigating
-      dispatch(markStatementNotificationsAsViewed(statement.statementId));
+      // Mark notifications for this statement as read when navigating
+      dispatch(markStatementNotificationsAsRead(statement.statementId));
       navigate(`/statement/${statement.statementId}/chat`);
     }
   };
@@ -107,7 +127,7 @@ const StatementChatMore: FC<Props> = ({ statement, onlyCircle, useLink = true })
     <button onClick={handleClick} className={styles.statementChatMore}>
       <div className={styles.icon}>
         {unreadCount > 0 && (
-          <div className={styles.redCircle}>
+          <div className={styles.blueCircle}>
             {unreadCount < 10 ? unreadCount : '9+'}
           </div>
         )}
@@ -118,21 +138,84 @@ const StatementChatMore: FC<Props> = ({ statement, onlyCircle, useLink = true })
 };
 ```
 
+#### 3.2 NotificationBtn Component (Global Header)
+```typescript
+const NotificationBtn: FC = () => {
+  const dispatch = useDispatch();
+  const creator = useSelector(creatorSelector);
+  const [showDropdown, setShowDropdown] = useState(false);
+  
+  // Get ALL unread notifications count (excluding user's own)
+  const unreadCount = useSelector(state => {
+    const notifications = state.notifications.inAppNotifications;
+    return notifications.filter(n => 
+      n.creatorId !== creator?.uid && 
+      !n.read
+    ).length;
+  });
+  
+  // Get all notifications for dropdown (both read and unread)
+  const allNotifications = useSelector(inAppNotificationsSelector)
+    .filter(n => n.creatorId !== creator?.uid);
+  
+  const handleClick = () => {
+    setShowDropdown(!showDropdown);
+    if (!showDropdown) {
+      // Mark notifications as "viewed in list" after a delay
+      setTimeout(() => {
+        dispatch(markNotificationsAsViewedInList());
+      }, 2000);
+    }
+  };
+  
+  return (
+    <button onClick={handleClick} className={styles.notificationBtn}>
+      <div className={styles.icon}>
+        {unreadCount > 0 && (
+          <div className={styles.redCircle}>
+            {unreadCount < 10 ? unreadCount : '9+'}
+          </div>
+        )}
+      </div>
+      <MailIcon />
+      {showDropdown && (
+        <InAppNotifications 
+          notifications={allNotifications}
+          onNotificationClick={(notificationId) => {
+            dispatch(markNotificationAsRead(notificationId));
+          }}
+        />
+      )}
+    </button>
+  );
+};
+```
+
 ### Phase 4: Notification Marking Strategy
 
-#### 4.1 Auto-Mark as Read Triggers
-1. **In Chat View**: Mark all notifications for that statement as read when:
-   - User opens the chat page
-   - User scrolls to bottom of chat
-   - Chat window gains focus
+#### 4.1 Different Marking Contexts
 
-2. **In Notification Dropdown**: Mark as "viewed in list" when:
-   - User opens the notification dropdown
-   - Individual notification is visible for > 2 seconds
+##### For StatementChatMore (Statement-Specific)
+1. **Mark as Read When**:
+   - User clicks StatementChatMore button → navigates to chat
+   - User is viewing the chat page for that statement
+   - User scrolls through messages in that statement's chat
+   
+2. **Scope**: Only marks notifications where `parentId === statement.statementId`
 
-3. **On Navigation**: Mark as read when:
-   - User clicks on a notification card
-   - User navigates directly to statement
+##### For NotificationBtn (Global Header)
+1. **Mark as Viewed When**:
+   - User opens the dropdown (mark as "viewed in list" after 2 seconds)
+   - User clicks on a specific notification card
+   
+2. **Mark as Read When**:
+   - User clicks on notification → navigates to content
+   
+3. **Scope**: Can mark any/all notifications
+
+##### Synchronization
+- When notifications are marked as read in StatementChatMore, the count in NotificationBtn should also update
+- When user marks all as read from NotificationBtn, all StatementChatMore badges should clear
 
 #### 4.2 Implementation Hooks
 ```typescript
@@ -282,18 +365,37 @@ const q = query(
 ## Testing Strategy
 
 ### Unit Tests
+
+#### StatementChatMore Tests
 ```typescript
 describe('StatementChatMore', () => {
-  it('should show correct unread count', () => {
-    // Test unread count calculation
+  it('should show unread count only for its specific statement', () => {
+    // Test filtering by parentId === statement.statementId
   });
   
-  it('should mark notifications as read on click', () => {
-    // Test read marking behavior
+  it('should exclude current user notifications', () => {
+    // Test creatorId !== currentUser filter
   });
   
-  it('should not show badge for read notifications', () => {
-    // Test badge visibility logic
+  it('should mark only statement-specific notifications as read on click', () => {
+    // Test that only relevant notifications are marked
+  });
+});
+```
+
+#### NotificationBtn Tests
+```typescript
+describe('NotificationBtn', () => {
+  it('should show total unread count across all statements', () => {
+    // Test global unread count
+  });
+  
+  it('should update count when notifications are marked as read elsewhere', () => {
+    // Test synchronization with StatementChatMore actions
+  });
+  
+  it('should mark notifications as viewed when dropdown opens', () => {
+    // Test dropdown viewing behavior
   });
 });
 ```
@@ -377,12 +479,34 @@ async function migrateNotifications() {
 - **Cons**: Requires manual action
 - **Decision**: Include as supplementary feature
 
+## Key Differences Between Components
+
+| Aspect | NotificationBtn (Header) | StatementChatMore |
+|--------|-------------------------|-------------------|
+| **Scope** | All notifications globally | Single statement only |
+| **Filter** | `creatorId !== currentUser` | `parentId === statementId && creatorId !== currentUser` |
+| **Purpose** | Global activity indicator | Statement-specific activity |
+| **Badge Color** | Red (global alerts) | Blue (discussion activity) |
+| **Click Action** | Opens dropdown list | Navigates to statement chat |
+| **Mark as Read** | Individual or bulk | Statement-specific batch |
+
+## Implementation Priority
+
+1. **Phase 1**: Add read/unread field to NotificationType
+2. **Phase 2**: Update Redux to track read status
+3. **Phase 3**: Refactor NotificationBtn to show only unread count
+4. **Phase 4**: Refactor StatementChatMore to show only unread count  
+5. **Phase 5**: Implement marking mechanisms
+6. **Phase 6**: Add synchronization between components
+7. **Phase 7**: Testing and refinement
+
 ## Conclusion
 
 This refactoring will significantly improve the notification system by:
-1. Providing accurate unread counts
-2. Tracking read status properly
-3. Improving user experience across all StatementChatMore instances
-4. Setting foundation for future notification features
+1. **Providing accurate unread counts** in both global header and statement-specific contexts
+2. **Properly tracking read status** with synchronization between components
+3. **Maintaining clear separation** between global and statement-specific notifications
+4. **Reducing notification fatigue** by showing only truly new content
+5. **Setting foundation** for future notification features
 
-The phased approach ensures minimal disruption while delivering incremental improvements.
+The phased approach ensures minimal disruption while delivering incremental improvements to both NotificationBtn and StatementChatMore components.
