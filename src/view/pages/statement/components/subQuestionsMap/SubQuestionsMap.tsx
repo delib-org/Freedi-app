@@ -22,22 +22,12 @@ const SubQuestionsMap = ({ statement }: SubQuestionsMapProps) => {
   );
   const followMePath = topParentStatement?.followMe;
   
-  // Debug logging for followMe
-  console.info('SubQuestionsMap Debug:', {
-    statementId: statement?.statementId,
-    topParentId: statement?.topParentId,
-    topParentStatement: topParentStatement?.statement,
-    followMePath,
-    pathname
-  });
-  
   // Listen to topParentStatement for followMe updates
   useEffect(() => {
     if (!statement?.topParentId) return;
     
     // Only set up listener if topParentStatement doesn't exist yet
     if (!topParentStatement) {
-      console.info('SubQuestionsMap: Setting up listener for topParentStatement:', statement.topParentId);
       const unsubscribe = listenToStatement(statement.topParentId);
 
       return () => unsubscribe();

@@ -80,37 +80,17 @@ const SubQuestionNode: FC<SubQuestionNodeProps> = ({
   
   // Check if this statement's path matches the followMe path
   // Don't show animation if user is already on the followed statement's page
-  const followMeStatementId = followMePath?.split('/').pop();
-  const currentStatementId = pathname.split('/')[2]; // Extract statementId from /statement/ID/...
-  const userIsOnFollowedPage = followMeStatementId && currentStatementId === followMeStatementId;
+  // Extract the statement ID from the followMe path (e.g., /statement/ID or /statement/ID/chat)
+  const followMePathParts = followMePath?.split('/').filter(part => part); // Remove empty strings
+  const followMeStatementId = followMePathParts?.[1]; // Get the ID after 'statement'
+  
+  const userIsOnFollowedPage = followMePath && pathname.startsWith(followMePath.split('/').slice(0, 3).join('/'));
   
   // The statement should be highlighted if its ID matches the followMe statement ID
   // AND the user is NOT currently on that page
   const isFollowedStatement = followMeStatementId && 
                               statement.statementId === followMeStatementId && 
                               !userIsOnFollowedPage;
-  
-  // Debug only for the statement that should be highlighted
-  if (statement.statementId === 'vrXONPGKwRPy' || isFollowedStatement || userIsOnFollowedPage) {
-    console.info('SubQuestionNode Target Statement:', {
-      statementId: statement.statementId,
-      statementTitle: statement.statement,
-      followMePath,
-      followMeStatementId,
-      currentPath: pathname,
-      currentStatementId,
-      userIsOnFollowedPage,
-      isFollowedStatement,
-      appliedClasses: {
-        node: true,
-        green: isInStatement,
-        followMe: isFollowedStatement,
-        group: depth <= 1 && !isInStatement && !isFollowedStatement,
-        clickable: !isInStatement,
-        animate: clicked
-      }
-    });
-  }
 
   const graphStyle = `${styles.borderDefault}  ${isFirstChild ? styles.borderTop : ""}`;
 
