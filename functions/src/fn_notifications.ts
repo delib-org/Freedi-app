@@ -226,9 +226,13 @@ async function processInAppNotifications(
 			creatorName: newStatement.creator.displayName,
 			creatorImage: newStatement.creator.photoURL,
 			createdAt: newStatement.createdAt,
-			read: false,
+			read: false, // ✅ Set as unread by default
 			notificationId: notificationRef.id,
 			statementId: newStatement.statementId,
+			// ✅ New optional fields for tracking
+			viewedInList: false,
+			viewedInContext: false,
+			// readAt will be set when notification is marked as read
 		};
 		batch.create(notificationRef, newNotification);
 	});
