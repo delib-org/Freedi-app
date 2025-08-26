@@ -43,6 +43,7 @@
     position: relative;
     max-width: 70%;
     min-width: 120px;
+    box-sizing: border-box;
 
     &Statement {
       border: none !important;
@@ -62,7 +63,8 @@
       align-items: flex-start;
       justify-content: space-between;
       width: 100%;
-      gap: 0.5rem;
+      gap: .5rem;
+     
 
       .infoText {
         flex: 1;
@@ -79,6 +81,7 @@
       opacity: 0.3;
       transition: opacity 0.2s ease;
       flex-shrink: 0;
+      min-width: 26px;
       
       &:hover {
         opacity: 1;
@@ -89,10 +92,11 @@
         align-items: center;
         justify-content: center;
         cursor: pointer;
+       
         
         svg {
-          width: 16px;
-          height: 16px;
+          width: 24px;
+          height: 24px;
         }
       }
     }
