@@ -5,6 +5,7 @@ import Switch from './switch/Switch';
 import { MapProvider } from '@/controllers/hooks/useMap';
 import { ConditionalModals } from './ConditionalModals';
 import useSlideAndSubStatement from '@/controllers/hooks/useSlideAndSubStatement';
+import FollowMeToast from './followMeToast/FollowMeToast';
 
 interface StatementContentProps {
 	statement: Statement | null;
@@ -32,6 +33,8 @@ export const StatementContent: React.FC<StatementContentProps> = ({
 	
 	return (
 		<div className={pageClassName}>
+			<FollowMeToast />
+			
 			<ConditionalModals
 				showNewStatement={showNewStatement}
 				showUserQuestions={showUserQuestions}

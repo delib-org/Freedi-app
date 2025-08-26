@@ -14,6 +14,7 @@ import {
 	listenToUserAnswers,
 	listenToUserQuestions,
 } from '@/controllers/db/userData/getUserData';
+import { store } from '@/redux/store';
 
 interface UseStatementListenersProps {
 	statementId?: string;
@@ -96,7 +97,13 @@ export const useStatementListeners = ({
 	useEffect(() => {
 		if (!creator || !statementId) return;
 
-		// This will be handled by the statement selector automatically
-		// No need for separate listener
+		// Listen to the topParentStatement for followMe updates
+		const state = store.getState();
+		const statement = state.statements.statements.find(s => s.statementId === statementId);
+		
+		if (statement?.topParentId && statement.topParentId !== statementId) {
+			const unsubscribe = listenToStatement(statement.topParentId, () => {});
+			return () => unsubscribe();
+		}
 	}, [creator, statementId]);
 };

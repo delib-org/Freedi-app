@@ -15,6 +15,12 @@ const FollowMeToast: FC = () => {
 	const { statement } = useContext(StatementContext);
 	const { dir, t } = useUserConfig();
 	const { pathname } = useLocation();
+	
+	// Early return if no statement in context
+	if (!statement) {
+		return null;
+	}
+	
 	const role = useSelector(statementSubscriptionSelector(statement?.topParentId))?.role;
 	const _isAdmin = role === Role.admin;
 
@@ -28,24 +34,11 @@ const FollowMeToast: FC = () => {
 		
 		// Only set up listener if topParentStatement doesn't exist yet
 		if (!topParentStatement) {
-			console.info('Setting up listener for topParentStatement:', statement.topParentId);
 			const unsubscribe = listenToStatement(statement.topParentId);
 
 			return () => unsubscribe();
 		}
 	}, [statement?.topParentId, topParentStatement]);
-
-	// Debug logging
-	console.info('FollowMeToast Debug:', {
-		statement: statement?.statement,
-		statementId: statement?.statementId,
-		topParentId: statement?.topParentId,
-		topParentStatement: topParentStatement?.statement,
-		followMePath: topParentStatement?.followMe,
-		currentPath: pathname,
-		role,
-		isAdmin: _isAdmin
-	});
 
 	function handleRemoveToast() {
 
@@ -56,8 +49,11 @@ const FollowMeToast: FC = () => {
 	}
 
 	//in case the followers are in the page, turn off the follow me toast
-
-	if (pathname === topParentStatement?.followMe && !_isAdmin) return null;
+	// Check if the current pathname matches the followMe path
+	// Compare the base paths (without considering trailing segments like /chat, /main, etc.)
+	const followMePath = topParentStatement?.followMe;
+	
+	if (followMePath && pathname.startsWith(followMePath) && !_isAdmin) return null;
 
 	//if the follow me is empty, turn off the follow me toast
 	if (

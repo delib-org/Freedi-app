@@ -1,7 +1,6 @@
 import { useContext, useState } from 'react';
 
 import { StatementContext } from '../../StatementCont';
-import FollowMeToast from '../followMeToast/FollowMeToast';
 import styles from './Switch.module.scss';
 import { useSwitchMV } from './SwitchMV';
 import { Role, StatementType } from 'delib-npm';
@@ -37,7 +36,6 @@ const Switch = () => {
 
 	return (
 		<main className='page__main'>
-			<FollowMeToast />
 			{isAdmin ? (
 				<button className={styles.header} onClick={handleStartEdit}>
 					{!edit ? (
