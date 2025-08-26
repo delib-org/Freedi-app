@@ -154,6 +154,23 @@
     background-image: url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80"%3E%3Cg fill-opacity="0.02"%3E%3Cpolygon fill="%23000" points="40 0 45 0 40 10"/%3E%3Cpolygon fill="%23000" points="40 10 45 10 40 20"/%3E%3Cpolygon fill="%23000" points="40 20 45 20 40 30"/%3E%3Cpolygon fill="%23000" points="40 30 45 30 40 40"/%3E%3Cpolygon fill="%23000" points="40 40 45 40 40 50"/%3E%3Cpolygon fill="%23000" points="40 50 45 50 40 60"/%3E%3Cpolygon fill="%23000" points="40 60 45 60 40 70"/%3E%3Cpolygon fill="%23000" points="40 70 45 70 40 80"/%3E%3C/g%3E%3C/svg%3E');
     background-size: 50px 50px;
   }
+  .chatWrapper {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .inputWrapper {
+    position: relative;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    background-color: #e5ddd5;
+    box-shadow: 0px -2px 10px rgba(0, 0, 0, 0.1);
+    z-index: 10;
+  }
   .sideChatTitle {
     margin: 0;
     padding: 0.75rem 1rem;
