@@ -204,7 +204,7 @@ exports.onStatementDeletion = createFirestoreFunction(
 // Subscription functions
 exports.updateNumberOfMembers = createFirestoreFunction(
   `/${Collections.statementsSubscribe}/{subscriptionId}`,
-  onDocumentCreated,
+  onDocumentWritten,
   onNewSubscription,
   "updateNumberOfMembers"
 );
