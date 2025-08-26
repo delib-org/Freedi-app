@@ -19,13 +19,23 @@ import {
 	QueryDocumentSnapshot,
 } from 'firebase-functions/v1/firestore';
 import { FirestoreEvent } from 'firebase-functions/firestore';
+import { Change } from 'firebase-functions/v1';
 
 export async function onNewSubscription(
-	event: FirestoreEvent<DocumentSnapshot | undefined>
+	event: FirestoreEvent<Change<DocumentSnapshot> | undefined>
 ) {
 	try {
-		const snapshot = event.data as DocumentSnapshot | undefined;
-		if (!snapshot)
+		logger.info('onNewSubscription triggered');
+		
+		if (!event.data) throw new Error('No event data found');
+		
+		// Handle both create and update scenarios
+		const isCreate = !event.data.before.exists;
+		const snapshot = event.data.after;
+		
+		logger.info(`Subscription event - isCreate: ${isCreate}`);
+		
+		if (!snapshot.exists)
 			throw new Error('No snapshot found in onNewSubscription');
 
 		const subscription = parse(
@@ -33,30 +43,97 @@ export async function onNewSubscription(
 			snapshot.data()
 		) as StatementSubscription;
 
-		//if new subscription role is waiting, then update the collection waitingForApproval
+		// Check if this is a new subscription with waiting role, or an update to waiting role
 		const role = subscription.role;
 		const subscriptionId = subscription.statementsSubscribeId;
 		if (!subscriptionId) throw new Error('No subscriptionId found');
-		if (role === Role.waiting) {
+		
+		logger.info(`Subscription ${subscriptionId} has role: ${role}`);
+		
+		// For updates, check if role changed TO waiting
+		let shouldCreateAwaitingEntry = false;
+		if (isCreate && role === Role.waiting) {
+			// New subscription with waiting role
+			logger.info('New subscription with waiting role detected');
+			shouldCreateAwaitingEntry = true;
+		} else if (!isCreate && role === Role.waiting) {
+			// Updated subscription - check if role changed to waiting
+			const previousData = event.data.before.data();
+			if (previousData) {
+				const previousSubscription = parse(
+					StatementSubscriptionSchema,
+					previousData
+				) as StatementSubscription;
+				logger.info(`Previous role: ${previousSubscription.role}, Current role: ${role}`);
+				if (previousSubscription.role !== Role.waiting) {
+					// Role changed to waiting
+					logger.info('Role changed to waiting - will create awaiting entries');
+					shouldCreateAwaitingEntry = true;
+				}
+			}
+		}
+		
+		if (shouldCreateAwaitingEntry) {
+			logger.info('Creating awaiting entries...');
+			
 			//get all admins of the top parent statement
-			const statement = parse(StatementSchema, subscription.statement);
-			const topParentId =
-				statement.parentId === 'top'
-					? statement.statementId
-					: statement.topParentId;
+			const statement = subscription.statement;
+			if (!statement) {
+				logger.error('No statement found in subscription');
+				return;
+			}
+			
+			// Determine the top parent ID
+			let topParentId: string;
+			if (statement.parentId === 'top') {
+				// This is a top-level statement
+				topParentId = statement.statementId;
+			} else if (statement.topParentId) {
+				// This statement has a topParentId
+				topParentId = statement.topParentId;
+			} else {
+				// Fallback: use the statement's own ID if no topParentId is set
+				topParentId = statement.statementId;
+				logger.warn(`Statement ${statement.statementId} has no topParentId, using its own ID`);
+			}
+			
+			logger.info(`Looking for admins of statement: ${topParentId}`);
 
 			const adminsDB = await db
 				.collection(Collections.statementsSubscribe)
 				.where('statementId', '==', topParentId)
 				.where('role', '==', Role.admin)
 				.get();
-			if (adminsDB.empty) throw new Error('No admins found');
-			if (adminsDB.docs.length === 0) throw new Error('No admins found');
+			if (adminsDB.empty) {
+				logger.error(`No admins found for statement ${topParentId}`);
+				throw new Error('No admins found');
+			}
+			if (adminsDB.docs.length === 0) {
+				logger.error(`No admin documents for statement ${topParentId}`);
+				throw new Error('No admins found');
+			}
+			
+			logger.info(`Found ${adminsDB.docs.length} admins`);
 
 			const adminsSubscriptions = adminsDB.docs.map((doc) =>
 				parse(StatementSubscriptionSchema, doc.data())
 			) as StatementSubscription[];
 
+			// First, check and remove any existing awaitingUsers entries for this subscription
+			const existingAwaitingQuery = await db
+				.collection(Collections.awaitingUsers)
+				.where('statementsSubscribeId', '==', subscriptionId)
+				.get();
+			
+			if (!existingAwaitingQuery.empty) {
+				logger.info(`Removing ${existingAwaitingQuery.size} existing awaiting entries for ${subscriptionId}`);
+				const deleteBatch = db.batch();
+				existingAwaitingQuery.docs.forEach(doc => {
+					deleteBatch.delete(doc.ref);
+				});
+				await deleteBatch.commit();
+			}
+			
 			// Update the collection awaitingUsers for each admin
 			const batch = db.batch();
 
@@ -71,6 +148,9 @@ export async function onNewSubscription(
 				batch.set(adminRef, adminCall);
 			});
 			await batch.commit();
+			logger.info(`Successfully created ${adminsSubscriptions.length} awaiting entries for subscription ${subscriptionId}`);
+		} else {
+			logger.info(`No awaiting entries needed for subscription ${subscriptionId} with role ${role}`);
 		}
 	} catch (error) {
 		logger.error('Error onNewSubscription', error);
