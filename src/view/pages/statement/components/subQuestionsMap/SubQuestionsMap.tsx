@@ -1,11 +1,14 @@
 import { Results, Statement, StatementType } from "delib-npm";
-import { type JSX, useState } from "react";
-import { useParams } from "react-router";
+import { type JSX, useState, useEffect } from "react";
+import { useParams, useLocation } from "react-router";
 import { useMindMap } from "../map/MindMapMV";
 import SubQuestionNode from "./subQuestionNode/SubQuestionNode";
 import styles from "./SubQuestionsMap.module.scss";
 import { useSwipe } from "@/controllers/hooks/useSwipe";
 import { usePanelState } from "@/controllers/hooks/usePanelState";
+import { useAppSelector } from "@/controllers/hooks/reduxHooks";
+import { statementSelector } from "@/redux/statements/statementsSlice";
+import { listenToStatement } from "@/controllers/db/statements/listenToStatements";
 
 interface SubQuestionsMapProps {
   readonly statement: Statement;
@@ -13,6 +16,24 @@ interface SubQuestionsMapProps {
 
 const SubQuestionsMap = ({ statement }: SubQuestionsMapProps) => {
   const { results } = useMindMap(statement?.topParentId);
+  const { pathname } = useLocation();
+  const topParentStatement = useAppSelector(
+    statementSelector(statement?.topParentId)
+  );
+  const followMePath = topParentStatement?.followMe;
+  
+  // Listen to topParentStatement for followMe updates
+  useEffect(() => {
+    if (!statement?.topParentId) return;
+    
+    // Only set up listener if topParentStatement doesn't exist yet
+    if (!topParentStatement) {
+      const unsubscribe = listenToStatement(statement.topParentId);
+
+      return () => unsubscribe();
+    }
+  }, [statement?.topParentId, topParentStatement]);
+  
   const [isOpen, setIsOpen] = usePanelState({
     storageKey: 'freedi-subquestions-map-open',
     defaultDesktopOpen: true,
@@ -73,6 +94,8 @@ const SubQuestionsMap = ({ statement }: SubQuestionsMapProps) => {
           setNodeHeights={setNodeHeights}
           isFirstChild={index === 0}
           heightToChild={getLineToChild(res)}
+          followMePath={followMePath}
+          currentPath={pathname}
         />
         {renderStatementTree(filterResults(res), currentDepth)}
       </div>
@@ -132,6 +155,8 @@ const SubQuestionsMap = ({ statement }: SubQuestionsMapProps) => {
             isFirstChild={false}
             heightMargin={getLineMargin(results)}
             heightToChild={getLineToChild(results)}
+            followMePath={followMePath}
+            currentPath={pathname}
           />
           {renderStatementTree(filteredResults, defaultDepth)}
         </div>

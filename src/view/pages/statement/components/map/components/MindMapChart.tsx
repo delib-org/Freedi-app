@@ -236,7 +236,7 @@ export default function MindMapChart({ descendants, isAdmin, filterBy }: Readonl
 				nodeTypes={nodeTypes}
 				fitView
 				zoomOnDoubleClick={false}
-				style={{ height: `100vh` }}
+				style={{ height: `100vh`, width: `100vw` }}
 				nodesDraggable={isAdmin}
 				onNodesChange={onNodesChange}
 				onEdgesChange={onEdgesChange}

@@ -41,7 +41,7 @@ const StatementHeader: FC<Props> = ({
 	async function handleFollowMe() {
 		try {
 			if (!topParentStatement) throw new Error('No top parent statement');
-
+			
 			await setFollowMeDB(topParentStatement, pathname);
 		} catch (error) {
 			console.error(error);

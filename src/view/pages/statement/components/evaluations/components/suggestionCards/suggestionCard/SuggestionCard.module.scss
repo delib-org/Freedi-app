@@ -1,161 +1,162 @@
 .statement-evaluation-card {
-	display: flex;
-	flex-direction: row-reverse;
-	border-radius: 4px;
-	background-color: var(--inputBackground);
-	box-shadow: 2px 2px 4px var(--shadow);
-	transition: all 1s ease-in-out;
-	border-left: 8px solid white;
+  display: flex;
+  flex-direction: row-reverse;
+  border-radius: 4px;
+  background-color: var(--inputBackground);
+  box-shadow: 2px 2px 4px var(--shadow);
+  transition: all 1s ease-in-out;
+  border-left: 8px solid white;
 
-	width: 100%;
-	box-sizing: border-box;
-	gap: 0.4rem;
-	position: absolute;
+  width: 100%;
+  box-sizing: border-box;
+  gap: 0.4rem;
+  position: absolute;
 
-	@media screen and (max-width: 768px) {
-		margin: 0rem 2%;
-		width: 96%;
+  @media screen and (max-width: 768px) {
+    margin: 0rem 2%;
+    width: 96%;
+  }
 
-	}
+  &--hidden {
+    opacity: 0.5;
+    pointer-events: none;
+  }
 
-	&--hidden {
-		opacity: 0.5;
-		pointer-events: none;
+  .selected-option {
+    color: white;
+    color: #57a193;
+    font-size: 0.8rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 
-	}
+    width: 10px;
 
-	.selected-option {
-		color: white;
-		color: #57a193;
-		font-size: 0.8rem;
-		display: flex;
-		justify-content: center;
-		align-items: center;
+    div {
+      transform: rotate(270deg) translate(0, -0.35rem);
+    }
+  }
 
-		width: 10px;
+  .main {
+    width: 100%;
+    padding: 1rem 1rem 1rem 0rem;
 
-		div {
-			transform: rotate(270deg) translate(0, -0.35rem);
-		}
-	}
+    .info {
+      color: var(--text-body);
+      display: flex;
+      width: 100%;
 
-	.main {
-		width: 100%;
-		padding: 1rem 1rem 1rem 0rem;
+      .text {
+        // display: flex;
+        // justify-content: space-between;
+        flex: 1;
+        width: 100%;
+        background-color: var(--background-color-info-text);
+        padding: 0rem;
+        position: relative;
 
-		.info {
-			color: var(--text-body);
-			display: flex;
-			width: 100%;
+        // Container for the clamped text
+        .textContent {
+          display: -webkit-box;
+          -webkit-line-clamp: 6;
+          line-clamp: 6;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+          line-height: 1.4;
+        }
 
-			.text {
-				// display: flex;
-				// justify-content: space-between;
-				flex: 1;
-				width: 100%;
-				background-color: var(--background-color-info-text);
-				padding: 0rem;
-				position: relative;
-				
-				// Container for the clamped text
-				.textContent {
-					display: -webkit-box;
-					-webkit-line-clamp: 6;
-					line-clamp: 6;
-					-webkit-box-orient: vertical;
-					overflow: hidden;
-					line-height: 1.4;
-				}
+        p {
+          margin: 3px 0px;
+        }
 
-				p {
-					margin: 3px 0px;
-				}
+        .showMore {
+          position: absolute;
+          bottom: 0;
+          right: 0;
+          background: linear-gradient(
+            to right,
+            transparent,
+            var(--background-color-info-text) 30%
+          );
+          padding: 0 8px 0 20px;
+          color: var(--blue);
+          text-decoration: none;
+          font-size: 0.9rem;
+          display: none; // Hidden by default
 
-				.showMore {
-					position: absolute;
-					bottom: 0;
-					right: 0;
-					background: linear-gradient(to right, transparent, var(--background-color-info-text) 30%);
-					padding: 0 8px 0 20px;
-					color: var(--blue);
-					text-decoration: none;
-					font-size: 0.9rem;
-					display: none; // Hidden by default
-					
-					&:hover {
-						text-decoration: underline;
-					}
-				}
+          &:hover {
+            text-decoration: underline;
+          }
+        }
 
-				// Show the "show more" link only when text has overflow
-				&.hasOverflow .showMore {
-					display: block;
-				}
-			}
-		}
+        // Show the "show more" link only when text has overflow
+        &.hasOverflow .showMore {
+          display: block;
+        }
+      }
+    }
 
-		.actions {
-			display: flex;
-			flex-direction: row;
-			justify-content: space-around;
-			align-items: center;
-			margin-top: 1rem;
-			padding-top: 1rem;
-			gap: 1rem;
-			border-top: 1px solid var(--shadow);
+    .actions {
+      display: flex;
+      flex-direction: row;
+      justify-content: space-around;
+      align-items: center;
+      margin-top: 1rem;
+      padding-top: 1rem;
+      gap: 1rem;
+      border-top: 1px solid var(--shadow);
 
-			.add-sub-question-button svg {
-				color: #4e88c7;
-				width: 24px;
-				height: 24px;
-			}
+      .add-sub-question-button svg {
+        color: #4e88c7;
+        width: 24px;
+        height: 24px;
+      }
 
-			@media screen and (max-width: 500px) {
-				margin-top: 0.6rem;
-				padding-top: 0.5rem;
+      @media screen and (max-width: 500px) {
+        margin-top: 0.6rem;
+        padding-top: 0.5rem;
 
-				.evolution-element {
-					display: flex;
-					justify-content: end;
-					padding: 5px;
-				}
+        .evolution-element {
+          display: flex;
+          justify-content: end;
+          padding: 5px;
+        }
 
-				.chat-more-element {
-					width: 30px;
-					height: 30px;
-				}
+        .chat-more-element {
+          width: 30px;
+          height: 30px;
+        }
 
-				.more-question {
-					display: flex;
-					justify-content: end;
-					padding: 5px;
-				}
+        .more-question {
+          display: flex;
+          justify-content: end;
+          padding: 5px;
+        }
+      }
+    }
 
-			}
-		}
+    &:nth-child(-1) {
+      border-left: 0.71rem solid var(--accent);
+    }
 
-		&:nth-child(-1) {
-			border-left: 0.71rem solid var(--accent);
-		}
+    .menu-option svg {
+      color: #226cbc;
+    }
+  }
 
-		.menu-option svg {
-			color: #226cbc;
-		}
-	}
+  &--new {
+    animation: newCard 1s ease-in-out;
 
-	&--new {
-		animation: newCard 1s ease-in-out;
+    @keyframes newCard {
+      0% {
+        background-color: var(--blue);
+        transform: translateY(6rem) scale(0.8);
+      }
 
-		@keyframes newCard {
-			0% {
-				background-color: var(--blue);
-				transform: translateY(6rem) scale(0.8);
-			}
-
-			100% {
-				background-color: white;
-				transform: translateY(0rem) scale(1);
-			}
-		}
-	}
+      100% {
+        background-color: white;
+        transform: translateY(0rem) scale(1);
+      }
+    }
+  }
 }
