@@ -11,6 +11,7 @@ import { statementSubsSelector } from "@/redux/statements/statementsSlice";
 import Description from "../evaluations/components/description/Description";
 import { Statement } from "delib-npm";
 import { useAuthentication } from "@/controllers/hooks/useAuthentication";
+import { useNotificationActions } from "@/controllers/hooks/useNotificationActions";
 
 interface ChatProps {
   sideChat?: boolean;
@@ -34,6 +35,24 @@ const Chat: FC<ChatProps> = ({
   const location = useLocation();
 
   const [numberOfNewMessages, setNumberOfNewMessages] = useState<number>(0);
+  
+  // ✅ Auto-mark notifications as read when viewing chat
+  const { markStatementAsRead, getStatementUnreadCount } = useNotificationActions();
+  
+  // Mark notifications as read after viewing for 2 seconds
+  useEffect(() => {
+    if (!statementId) return;
+    
+    const unreadCount = getStatementUnreadCount(statementId);
+    if (unreadCount === 0) return;
+    
+    // Mark as read after 2 seconds of viewing the chat
+    const timer = setTimeout(() => {
+      markStatementAsRead(statementId);
+    }, 2000);
+    
+    return () => clearTimeout(timer);
+  }, [statementId, markStatementAsRead, getStatementUnreadCount]);
 
   function scrollToHash() {
     if (location.hash) {

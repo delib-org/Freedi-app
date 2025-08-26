@@ -8,9 +8,10 @@ import ChatIcon from '@/assets/icons/roundedChatDotIcon.svg?react';
 // Statements functions
 
 import { SimpleStatement, Statement, NotificationType } from 'delib-npm';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { inAppNotificationsSelector } from '@/redux/notificationsSlice/notificationsSlice';
 import { creatorSelector } from '@/redux/creator/creatorSlice';
+import { markStatementNotificationsAsReadDB } from '@/controllers/db/inAppNotifications/db_inAppNotifications';
 
 interface Props {
 	statement: Statement | SimpleStatement;
@@ -26,20 +27,28 @@ const StatementChatMore: FC<Props> = ({
 	asButton = true,
 }) => {
 	const navigate = useNavigate();
+	const dispatch = useDispatch();
 
 	// Redux store
-
 	const creator = useSelector(creatorSelector);
 
-	const inAppNotificationsList: NotificationType[] = useSelector(
+	// ✅ Filter for UNREAD notifications only (with fallback for missing field)
+	const unreadNotificationsList: NotificationType[] = useSelector(
 		inAppNotificationsSelector
 	).filter(
 		(n) =>
-			n.creatorId !== creator?.uid && n.parentId === statement.statementId
+			n.creatorId !== creator?.uid && 
+			n.parentId === statement.statementId &&
+			(!n.read || !('read' in n)) // ✅ Treat missing field as unread for backward compatibility
 	);
 
-	const handleClick = () => {
+	const handleClick = async () => {
 		if (useLink) {
+			// ✅ Mark notifications as read when navigating to chat
+			if (unreadNotificationsList.length > 0) {
+				await markStatementNotificationsAsReadDB(statement.statementId);
+			}
+			
 			navigate(`/statement/${statement.statementId}/chat`, {
 				state: { from: window.location.pathname },
 			});
@@ -48,10 +57,10 @@ const StatementChatMore: FC<Props> = ({
 
 	const content = (
 		<div className={styles.icon}>
-			{inAppNotificationsList.length > 0 && (
+			{unreadNotificationsList.length > 0 && (
 				<div className={styles.redCircle}>
-					{inAppNotificationsList.length < 10
-						? inAppNotificationsList.length
+					{unreadNotificationsList.length < 10
+						? unreadNotificationsList.length
 						: `9+`}
 				</div>
 			)}
