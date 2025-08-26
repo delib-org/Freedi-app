@@ -1,4 +1,4 @@
-import { FC, useContext } from 'react';
+import { FC, useContext, useEffect } from 'react';
 import { Link, useLocation } from 'react-router';
 import FollowMeIcon from '../../../../components/icons/FollowMeIcon';
 import { setFollowMeDB } from '@/controllers/db/statements/setStatements';
@@ -9,6 +9,7 @@ import { statementSelector, statementSubscriptionSelector } from '@/redux/statem
 import styles from './FollowMeToast.module.scss';
 import { StatementContext } from '../../StatementCont';
 import { useSelector } from 'react-redux';
+import { listenToStatement } from '@/controllers/db/statements/listenToStatements';
 
 const FollowMeToast: FC = () => {
 	const { statement } = useContext(StatementContext);
@@ -20,6 +21,31 @@ const FollowMeToast: FC = () => {
 	const topParentStatement = useAppSelector(
 		statementSelector(statement?.topParentId)
 	);
+
+	// Listen to topParentStatement for followMe updates
+	useEffect(() => {
+		if (!statement?.topParentId) return;
+		
+		// Only set up listener if topParentStatement doesn't exist yet
+		if (!topParentStatement) {
+			console.info('Setting up listener for topParentStatement:', statement.topParentId);
+			const unsubscribe = listenToStatement(statement.topParentId);
+
+			return () => unsubscribe();
+		}
+	}, [statement?.topParentId, topParentStatement]);
+
+	// Debug logging
+	console.info('FollowMeToast Debug:', {
+		statement: statement?.statement,
+		statementId: statement?.statementId,
+		topParentId: statement?.topParentId,
+		topParentStatement: topParentStatement?.statement,
+		followMePath: topParentStatement?.followMe,
+		currentPath: pathname,
+		role,
+		isAdmin: _isAdmin
+	});
 
 	function handleRemoveToast() {
 
