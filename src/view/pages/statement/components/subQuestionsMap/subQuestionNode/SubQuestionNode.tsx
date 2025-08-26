@@ -1,4 +1,4 @@
-import { useNavigate, useParams } from "react-router";
+import { useNavigate, useParams, useLocation } from "react-router";
 import styles from "./subQuestionNode.module.scss";
 import React, { FC, useEffect, useRef, useState } from "react";
 import { Statement } from "delib-npm";
@@ -49,6 +49,7 @@ const SubQuestionNode: FC<SubQuestionNodeProps> = ({
   const topStatement = depth <= 1;
 
   const navigate = useNavigate();
+  const { pathname } = useLocation();
 
   const { statementId } = useParams();
   const [clicked, setClicked] = useState(false);
@@ -78,14 +79,27 @@ const SubQuestionNode: FC<SubQuestionNodeProps> = ({
   const marginLeft = `${depth}rem`;
   
   // Check if this statement's path matches the followMe path
-  const isFollowedStatement = followMePath && followMePath.includes(statement.statementId);
+  // Don't show animation if user is already on the followed statement's page
+  const followMeStatementId = followMePath?.split('/').pop();
+  const currentStatementId = pathname.split('/')[2]; // Extract statementId from /statement/ID/...
+  const userIsOnFollowedPage = followMeStatementId && currentStatementId === followMeStatementId;
+  
+  // The statement should be highlighted if its ID matches the followMe statement ID
+  // AND the user is NOT currently on that page
+  const isFollowedStatement = followMeStatementId && 
+                              statement.statementId === followMeStatementId && 
+                              !userIsOnFollowedPage;
   
   // Debug only for the statement that should be highlighted
-  if (statement.statementId === 'vrXONPGKwRPy' || isFollowedStatement) {
+  if (statement.statementId === 'vrXONPGKwRPy' || isFollowedStatement || userIsOnFollowedPage) {
     console.info('SubQuestionNode Target Statement:', {
       statementId: statement.statementId,
       statementTitle: statement.statement,
       followMePath,
+      followMeStatementId,
+      currentPath: pathname,
+      currentStatementId,
+      userIsOnFollowedPage,
       isFollowedStatement,
       appliedClasses: {
         node: true,

@@ -43,6 +43,8 @@ const FollowMeToast: FC = () => {
 		topParentStatement: topParentStatement?.statement,
 		followMePath: topParentStatement?.followMe,
 		currentPath: pathname,
+		pathComparison: pathname === topParentStatement?.followMe,
+		shouldHideForUser: pathname === topParentStatement?.followMe && !_isAdmin,
 		role,
 		isAdmin: _isAdmin
 	});
@@ -56,8 +58,11 @@ const FollowMeToast: FC = () => {
 	}
 
 	//in case the followers are in the page, turn off the follow me toast
-
-	if (pathname === topParentStatement?.followMe && !_isAdmin) return null;
+	// Check if the current pathname contains the followMe statementId
+	const followMeStatementId = topParentStatement?.followMe?.split('/').pop();
+	const currentStatementId = pathname.split('/')[2]; // Extract statementId from /statement/ID/...
+	
+	if (followMeStatementId && currentStatementId === followMeStatementId && !_isAdmin) return null;
 
 	//if the follow me is empty, turn off the follow me toast
 	if (
