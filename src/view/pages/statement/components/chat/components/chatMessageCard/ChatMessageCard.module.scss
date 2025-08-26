@@ -44,6 +44,8 @@
     max-width: 70%;
     min-width: 120px;
     box-sizing: border-box;
+    border: none;
+    border-color: var(--inputBackground);
 
     &Statement {
       border: none !important;
@@ -71,6 +73,9 @@
         user-select: text;
         background-color: var(--background-color-info-text);
         word-break: break-word;
+        p{
+          font-size: .9rem;
+        }
       }
     }
     
@@ -138,6 +143,7 @@
         background-color: white;
         margin-left: auto;
         margin-right: 3rem;
+        border-left: 4px solid;
         border-top-right-radius: 8px;
         border-top-left-radius: 8px;
         border-bottom-left-radius: 8px;
@@ -162,6 +168,7 @@
         background-color: white;
         margin-right: auto;
         margin-left: 3rem;
+        border-right: 4px solid;
         border-top-left-radius: 8px;
         border-top-right-radius: 8px;
         border-bottom-right-radius: 8px;
@@ -199,6 +206,7 @@
         background-color: #dcf8c6;
         margin-right: auto;
         margin-left: 3rem;
+        border-right: 4px solid;
         border-top-left-radius: 8px;
         border-top-right-radius: 8px;
         border-bottom-right-radius: 8px;
@@ -223,6 +231,7 @@
         background-color: #dcf8c6;
         margin-left: auto;
         margin-right: 3rem;
+        border-left: 4px solid;
         border-top-right-radius: 8px;
         border-top-left-radius: 8px;
         border-bottom-left-radius: 8px;
