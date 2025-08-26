@@ -115,23 +115,48 @@ npm run test:watch
 - Name test files with `.test.ts` or `.test.tsx`
 - Aim for meaningful tests, not just coverage
 
-## 🎨 Code Style
+## 🎨 Code Style & Best Practices
 
 ### TypeScript
 - **Strict mode** - No `any` types allowed
 - Use proper types for all variables and functions
 - Prefer interfaces over type aliases for objects
+- Always define return types for functions
+- Use enums for fixed sets of values
 
 ### React
-- Functional components with hooks
-- Use `FC` type for components
+- Functional components with hooks only
+- Use `FC` type for components with proper prop typing
 - Implement proper error boundaries
+- Memoize expensive computations with `useMemo`
+- Use `useCallback` for stable function references
+- Keep components small and focused (< 200 lines)
+
+### State Management
+- Use Redux Toolkit for global state
+- Keep local state in components when appropriate
+- Follow Redux best practices (normalized state, selectors)
+- Use RTK Query for API calls when possible
+
+### Performance
+- Implement code splitting for large components
+- Use lazy loading for routes
+- Optimize images and assets
+- Monitor bundle size impact
+
+### Security
+- Never commit secrets or API keys
+- Sanitize user inputs
+- Use Firebase security rules properly
+- Follow OWASP guidelines
 
 ### General
 - No `console.log` - use `console.error` or `console.info`
 - Add newline after imports
 - Use camelCase for variables/functions
 - Use PascalCase for components/classes
+- Write self-documenting code (clear naming > comments)
+- Keep functions pure when possible
 
 ## 📁 Project Structure
 
@@ -192,12 +217,45 @@ Use conventional commit format:
 - Keep PRs focused and small
 - Respond to feedback constructively
 
+## 🛠️ Development Tools
+
+### Recommended VS Code Extensions
+- ESLint
+- Prettier
+- TypeScript and JavaScript Language Features
+- Firebase Explorer
+- GitLens
+- Redux DevTools
+
+### Useful Commands
+```bash
+# Check project health
+npm run check-all
+
+# Fix common issues
+npm run lint:fix
+
+# Clean install
+npm run clean
+
+# View bundle analysis
+npm run build -- --analyze
+```
+
+### Debugging
+- Use React DevTools for component debugging
+- Redux DevTools for state inspection
+- Firebase Emulator UI for backend debugging
+- Chrome DevTools for performance profiling
+
 ## 💡 Getting Help
 
 - Check existing [issues](https://github.com/delib-org/Freedi-app/issues)
 - Join our [discussions](https://github.com/delib-org/Freedi-app/discussions)
 - Read the [wiki](https://github.com/delib-org/delib-5/wiki)
+- Review [Architecture Docs](./docs/FREEDI_ARCHITECTURE.md)
 - Ask in PR comments
+- Check [CLAUDE.md](./CLAUDE.md) for AI-assisted development tips
 
 ## 🚫 What Not to Do
 

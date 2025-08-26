@@ -70,7 +70,7 @@ const MassConsensusQuestion = () => {
 				<InitialQuestion
 					setReachedLimit={setReachedLimit}
 					stage={stage}
-					updateStage={updateStage}
+					setStage={setStage}
 					setIfButtonEnabled={setIfButtonEnabled}
 				/>
 			) : (

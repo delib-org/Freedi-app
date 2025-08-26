@@ -150,33 +150,55 @@
     display: flex;
     flex-direction: column;
     position: relative;
+    background-color: #e5ddd5;
+    background-image: url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80"%3E%3Cg fill-opacity="0.02"%3E%3Cpolygon fill="%23000" points="40 0 45 0 40 10"/%3E%3Cpolygon fill="%23000" points="40 10 45 10 40 20"/%3E%3Cpolygon fill="%23000" points="40 20 45 20 40 30"/%3E%3Cpolygon fill="%23000" points="40 30 45 30 40 40"/%3E%3Cpolygon fill="%23000" points="40 40 45 40 40 50"/%3E%3Cpolygon fill="%23000" points="40 50 45 50 40 60"/%3E%3Cpolygon fill="%23000" points="40 60 45 60 40 70"/%3E%3Cpolygon fill="%23000" points="40 70 45 70 40 80"/%3E%3C/g%3E%3C/svg%3E');
+    background-size: 50px 50px;
+  }
+  .chatWrapper {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .inputWrapper {
+    position: relative;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    background-color: #e5ddd5;
+    box-shadow: 0px -2px 10px rgba(0, 0, 0, 0.1);
+    z-index: 10;
   }
   .sideChatTitle {
-    margin: 0.5rem 1rem;
-    padding: 0.3rem 0;
+    margin: 0;
+    padding: 0.75rem 1rem;
     display: flex;
     flex-direction: row;
     align-items: center;
     gap: 0.5rem;
-    color: var(--icons-primary);
+    background: var(--approve);
+    color: white;
     height: auto;
     overflow: visible;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
     svg {
-
       min-width: 1.2rem;
       min-height: 1.2rem;
       fill: none;
-      stroke: currentColor;
+      stroke: white;
       stroke-width: 1;
-      opacity: 0.8;
+      opacity: 0.9;
       flex-shrink: 0;
       display: block;
     }
     h5 {
       margin: 0;
-      font-size: 0.9rem;
+      font-size: 1rem;
       font-weight: 500;
       line-height: 1.2;
+      color: white;
     }
   }
   .closeChatPanel {

@@ -16,12 +16,14 @@ interface ChatProps {
   sideChat?: boolean;
   firstTime?: boolean;
   numberOfSubStatements?: number;
+  showInput?: boolean;
 }
 
 const Chat: FC<ChatProps> = ({
   sideChat = false,
   firstTime = true,
   numberOfSubStatements = 0,
+  showInput = true,
 }) => {
   const chatRef = useRef<HTMLDivElement>(null);
   const { statementId } = useParams();
@@ -126,7 +128,7 @@ const Chat: FC<ChatProps> = ({
 
       <div ref={messagesEndRef} />
 
-      {statement && (
+      {statement && showInput && (
         <div className={sideChat ? styles.sideChatInputWrapper : styles.input}>
           <ChatInput statement={statement} sideChat={sideChat} />
         </div>
