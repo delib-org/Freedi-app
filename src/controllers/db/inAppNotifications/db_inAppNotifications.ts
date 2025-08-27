@@ -1,5 +1,5 @@
 import { store } from "@/redux/store";
-import { collection, deleteDoc, getDocs, limit, onSnapshot, orderBy, query, Unsubscribe, where, doc, updateDoc, writeBatch, serverTimestamp } from "firebase/firestore";
+import { collection, deleteDoc, getDocs, limit, onSnapshot, orderBy, query, Unsubscribe, where, doc, updateDoc, writeBatch } from "firebase/firestore";
 import { DB } from "../config";
 import { Collections, NotificationType } from "delib-npm";
 import { setInAppNotificationsAll, markNotificationAsRead, markNotificationsAsRead, markStatementNotificationsAsRead } from "@/redux/notificationsSlice/notificationsSlice";
@@ -24,7 +24,15 @@ export function listenToInAppNotifications(): Unsubscribe {
 				try {
 					const notifications: NotificationType[] = [];
 					inAppNotDBs.forEach((inAppNotDB) => {
-						const inAppNot = inAppNotDB.data() as NotificationType;
+						const data = inAppNotDB.data();
+						// Convert Firestore Timestamp to milliseconds if it exists
+						const inAppNot = {
+							...data,
+							// Convert readAt from Firestore Timestamp to milliseconds if it exists
+							readAt: data.readAt?.toMillis ? data.readAt.toMillis() : data.readAt,
+							// Also ensure createdAt is in milliseconds
+							createdAt: data.createdAt?.toMillis ? data.createdAt.toMillis() : data.createdAt
+						} as NotificationType;
 						notifications.push(inAppNot);
 					});
 					store.dispatch(setInAppNotificationsAll(notifications));
@@ -86,7 +94,7 @@ return;
 		const notificationRef = doc(DB, Collections.inAppNotifications, notificationId);
 		await updateDoc(notificationRef, {
 			read: true,
-			readAt: serverTimestamp()
+			readAt: Date.now()
 		});
 
 		// Update in Redux
@@ -108,11 +116,12 @@ return;
 
 		// Batch update in Firestore
 		const batch = writeBatch(DB);
+		const now = Date.now();
 		notificationIds.forEach((notificationId) => {
 			const notificationRef = doc(DB, Collections.inAppNotifications, notificationId);
 			batch.update(notificationRef, {
 				read: true,
-				readAt: serverTimestamp()
+				readAt: now
 			});
 		});
 		await batch.commit();
@@ -148,10 +157,11 @@ return;
 		if (!snapshot.empty) {
 			// Batch update in Firestore
 			const batch = writeBatch(DB);
+			const now = Date.now();
 			snapshot.forEach((docSnapshot) => {
 				batch.update(docSnapshot.ref, {
 					read: true,
-					readAt: serverTimestamp(),
+					readAt: now,
 					viewedInContext: true
 				});
 			});

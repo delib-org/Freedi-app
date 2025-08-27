@@ -26,7 +26,7 @@ const InAppNotifications = () => {
 				<div className={styles.noNotifications}>{t('You have no new notifications')}</div>
 			)}
 		</div>
-	)
-}
+	);
+};
 
-export default InAppNotifications
+export default InAppNotifications;

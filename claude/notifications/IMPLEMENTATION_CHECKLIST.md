@@ -119,6 +119,12 @@
 - [x] Optimistic UI updates
 - [x] Efficient filtering
 
+## Default In-App Notifications for Subscriptions
+- [x] Verified default behavior: `getInAppNotification = true` by default
+- [x] All subscription scenarios enable in-app notifications
+- [x] Only moderated/waiting users have notifications disabled
+- [x] No code changes needed - feature already implemented
+
 ## Known Limitations
 - [ ] No notification sound yet
 - [ ] No user preferences for auto-marking
