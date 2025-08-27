@@ -80,7 +80,8 @@ export async function onNewSubscription(
 			const statement = subscription.statement;
 			if (!statement) {
 				logger.error('No statement found in subscription');
-				return;
+				
+return;
 			}
 			
 			// Determine the top parent ID

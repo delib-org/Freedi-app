@@ -2,6 +2,7 @@ import { useParams } from "react-router";
 import styles from "./ChatPanel.module.scss";
 import Chat from "../../Chat";
 import ChatIcon from "@/assets/icons/roundedChatDotIcon.svg?react";
+import ChatInput from "../input/ChatInput";
 import { useEffect, useRef } from "react";
 import { useSelector } from "react-redux";
 import { inAppNotificationsSelector } from "@/redux/notificationsSlice/notificationsSlice";
@@ -9,9 +10,11 @@ import { NotificationType } from "delib-npm";
 import { creatorSelector } from "@/redux/creator/creatorSlice";
 import { useSwipe } from "@/controllers/hooks/useSwipe";
 import { usePanelState } from "@/controllers/hooks/usePanelState";
+import { statementSelector } from "@/redux/statements/statementsSlice";
 
 const ChatPanel = () => {
   const { screen, statementId } = useParams();
+  const statement = useSelector(statementSelector(statementId));
   const [isSideChatOpen, setIsSideChatOpen] = usePanelState({
     storageKey: 'freedi-chat-panel-open',
     defaultDesktopOpen: true,
@@ -83,7 +86,14 @@ const ChatPanel = () => {
             <div className={styles.sideChatTitle}>
               <ChatIcon /> <h5>Free Discussion</h5>
             </div>
-            <Chat sideChat={true} />
+            <div className={styles.chatWrapper}>
+              <Chat sideChat={true} showInput={false} />
+            </div>
+            {statement && (
+              <div className={styles.inputWrapper}>
+                <ChatInput statement={statement} sideChat={true} />
+              </div>
+            )}
           </div>
         ) : null}
       </div>

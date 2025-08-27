@@ -141,6 +141,18 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
         <div className={styles.triangle} />
 
         <div className={styles.info}>
+          <div className={styles.messageActions}>
+            <div className={styles.chatMenu}>
+              <ChatMessageMenu
+                statement={statement}
+                isCardMenuOpen={isCardMenuOpen}
+                setIsCardMenuOpen={setIsCardMenuOpen}
+                isAuthorized={_isAuthorized}
+                setIsEdit={setIsEdit}
+                fileInputRef={fileInputRef}
+              />
+            </div>
+          </div>
           <div className={styles.infoText}>
             {isEdit ? (
               <div
@@ -173,15 +185,11 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
               />
             )}
           </div>
-          <div className={styles.chatMenu}>
-            <ChatMessageMenu
-              statement={statement}
-              isCardMenuOpen={isCardMenuOpen}
-              setIsCardMenuOpen={setIsCardMenuOpen}
-              isAuthorized={_isAuthorized}
-              setIsEdit={setIsEdit}
-              fileInputRef={fileInputRef}
-            />
+          <div className={styles.messageActions}>
+
+            <div className={styles.chatMoreElement}>
+              <StatementChatMore statement={statement} />
+            </div>
           </div>
         </div>
 
@@ -194,13 +202,6 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
           />
         </div>
 
-        <div
-          className={styles.bottomIcons}
-        >
-          <div className={styles.chatMoreElement}>
-            <StatementChatMore statement={statement} />
-          </div>
-        </div>
         {isNewStatementModalOpen && (
           <CreateStatementModal
             parentStatement={statement}

@@ -103,7 +103,8 @@ export const useStatementListeners = ({
 		
 		if (statement?.topParentId && statement.topParentId !== statementId) {
 			const unsubscribe = listenToStatement(statement.topParentId, () => {});
-			return () => unsubscribe();
+			
+return () => unsubscribe();
 		}
 	}, [creator, statementId]);
 };
