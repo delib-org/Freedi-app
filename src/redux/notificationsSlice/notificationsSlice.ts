@@ -175,35 +175,35 @@ export const inAppNotificationsCountSelectorForStatement = (statementId: string)
 			)
 	);
 
-// ✅ New selector: Get only unread notifications
+// ✅ New selector: Get only unread notifications (with backward compatibility)
 export const unreadNotificationsSelector = createSelector(
 	[(state: RootState) => state.notifications.inAppNotifications],
-	(notifications) => notifications.filter((n) => !n.read)
+	(notifications) => notifications.filter((n) => !n.read || n.read === undefined)
 );
 
-// ✅ New selector: Get unread count for a specific statement
+// ✅ New selector: Get unread count for a specific statement (with backward compatibility)
 export const unreadCountForStatementSelector = (statementId: string) =>
 	createSelector(
 		[(state: RootState) => state.notifications.inAppNotifications],
 		(notifications) =>
 			notifications.filter(
-				(n) => n.parentId === statementId && !n.read
+				(n) => n.parentId === statementId && (!n.read || n.read === undefined)
 			).length
 	);
 
-// ✅ New selector: Get total unread count
+// ✅ New selector: Get total unread count (with backward compatibility)
 export const totalUnreadCountSelector = createSelector(
 	[(state: RootState) => state.notifications.inAppNotifications],
-	(notifications) => notifications.filter((n) => !n.read).length
+	(notifications) => notifications.filter((n) => !n.read || n.read === undefined).length
 );
 
-// ✅ New selector: Get unread notifications for a statement
+// ✅ New selector: Get unread notifications for a statement (with backward compatibility)
 export const unreadNotificationsForStatementSelector = (statementId: string) =>
 	createSelector(
 		[(state: RootState) => state.notifications.inAppNotifications],
 		(notifications) =>
 			notifications.filter(
-				(n) => n.parentId === statementId && !n.read
+				(n) => n.parentId === statementId && (!n.read || n.read === undefined)
 			)
 	);
 

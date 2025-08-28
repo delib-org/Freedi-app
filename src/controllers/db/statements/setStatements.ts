@@ -203,9 +203,8 @@ export const setStatementToDB = async ({
 		statement.lastUpdate = new Date().getTime();
 		statement.createdAt = statement?.createdAt || new Date().getTime();
 
-		// Only set default membership for top-level statements
-		// Sub-statements should inherit from their parent unless explicitly set
-		if (parentId === 'top' && !statement.membership) {
+		// Always ensure membership is set - default to openToAll if not provided
+		if (!statement.membership) {
 			statement.membership = { access: Access.openToAll };
 		}
 
@@ -347,9 +346,8 @@ export function createStatement({
 			creator,
 			...(defaultLanguage && { defaultLanguage: defaultLanguage }),
 			creatorId: creator.uid,
-			// Only set membership for top-level statements or if explicitly provided
-			// Sub-statements should inherit from their parent by default
-			...(parentId === 'top' || membership ? { membership: membership || { access: Access.openToAll } } : {}),
+			// Always set membership - either provided, or default to openToAll
+			membership: membership || { access: Access.openToAll },
 			statementSettings: {
 				enhancedEvaluation,
 				hasChat:true,

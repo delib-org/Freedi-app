@@ -95,11 +95,11 @@ export function useNotificationActions() {
     }, [dispatch, userUnreadNotifications]);
     
     /**
-     * Get unread count for a specific statement
+     * Get unread count for a specific statement (with backward compatibility)
      */
     const getStatementUnreadCount = useCallback((statementId: string): number => {
         return userNotifications.filter(
-            n => n.parentId === statementId && !n.read
+            n => n.parentId === statementId && (!n.read || n.read === undefined)
         ).length;
     }, [userNotifications]);
     
