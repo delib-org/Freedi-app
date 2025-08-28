@@ -32,48 +32,35 @@ const NavButtons: FC<NavButtonsProps> = ({
 	};
 
 	return (
-		<div className={styles.container}>
-			{/* Left Section - Navigation & Home */}
-			<div className={styles.leftSection}>
-				{allowNavigation && (
-					<>
-						{/* <NavigationButtons
-							statement={parentStatement || statement}
-							handleNavigation={handleNavigation}
-							headerStyle={headerStyle}
-						/> */}
-						<HomeButton headerColor={headerStyle} />
-					</>
-				)}
-			</div>
+		<div className={styles.navRow}>
+			{allowNavigation && (
+				<div className={styles.padWrap}>
+					<HomeButton headerColor={headerStyle} />
+				</div>
+			)}
 
-			{/* Center Section - Approve Members */}
-			<div className={styles.centerSection}>
-				<ApproveMembers />
-			</div>
+			<ApproveMembers />
 
-			{/* Right Section - Views, Notifications, Back */}
-			<div className={styles.rightSection}>
-				{statement && (
-					<>
-						<ViewsDropdown
-							statement={statement}
-							screen={screen}
-							headerStyle={headerStyle}
-							onNavigate={handleNavigateToScreen}
-						/>
-						<NotificationSettingsButton
-							statementId={statement.statementId}
-							headerStyle={headerStyle}
-						/>
-					</>
-				)}
-				{allowNavigation && (
-					<div className={styles.back}>
-						<Back statement={statement} headerColor={headerStyle} />
-					</div>
-				)}
-			</div>
+			{statement && (
+				<>
+					<ViewsDropdown
+						statement={statement}
+						screen={screen}
+						headerStyle={headerStyle}
+						onNavigate={handleNavigateToScreen}
+					/>
+					<NotificationSettingsButton
+						statementId={statement.statementId}
+						headerStyle={headerStyle}
+					/>
+				</>
+			)}
+
+			{allowNavigation && (
+				<div className={`${styles.back} ${styles.padWrap}`}>
+					<Back statement={statement} headerColor={headerStyle} />
+				</div>
+			)}
 		</div>
 	);
 };
