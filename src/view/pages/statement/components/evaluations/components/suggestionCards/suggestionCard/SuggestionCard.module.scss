@@ -70,6 +70,7 @@
         }
 
         .showMore {
+          display: contents;
           position: absolute;
           bottom: 0;
           right: 0;
@@ -79,7 +80,7 @@
             var(--background-color-info-text) 30%
           );
           padding: 0 8px 0 20px;
-          color: var(--blue);
+          color: var(--link);
           text-decoration: none;
           font-size: 0.9rem;
           display: none; // Hidden by default
@@ -91,7 +92,7 @@
 
         // Show the "show more" link only when text has overflow
         &.hasOverflow .showMore {
-          display: block;
+          display: contents;
         }
       }
     }

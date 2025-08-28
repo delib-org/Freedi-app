@@ -38,7 +38,7 @@ if (import.meta.env.DEV || import.meta.env.MODE === "testing") {
   import("./utils/monitorPushEvents");
 }
 
-export const AppVersion = "5.5.24"; // Update this version when making changes
+export const AppVersion = "5.5.25"; // Update this version when making changes
 
 const root = createRoot(document.getElementById("root")!);
 
