@@ -35,7 +35,6 @@ const HomeMain = () => {
 	const userId = user?.uid || '';
 
 	const topSubscriptions = useAppSelector(topSubscriptionsSelector)
-		.sort((a, b) => b.statement.createdAt - a.statement.createdAt)
 		.filter(
 			(sub) =>
 				sub.user?.uid === user?.uid &&
@@ -43,8 +42,7 @@ const HomeMain = () => {
 		);
 	
 	const latestDecisions = useAppSelector(statementsSubscriptionsSelector)
-		.filter((sub) => sub.statement.statementType === StatementType.question)
-		.sort((a, b) => b.statement.createdAt - a.statement.createdAt);
+		.filter((sub) => sub.statement.statementType === StatementType.question);
 
 	useEffect(() => {
 		setTimeout(() => {
