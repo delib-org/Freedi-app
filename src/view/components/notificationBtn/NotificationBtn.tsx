@@ -18,7 +18,7 @@ const NotificationBtn = () => {
 		.filter(n => n.creatorId !== creator?.uid);
 	
 	// ✅ Count only UNREAD notifications for badge (with fallback for missing field)
-	const unreadCount = allNotificationsList.filter(n => !n.read || !('read' in n)).length;
+	const unreadCount = allNotificationsList.filter(n => !n.read || n.read === undefined).length;
 	
 	const [showInAppNotifications, setShowInAppNotifications] = useState(false);
 

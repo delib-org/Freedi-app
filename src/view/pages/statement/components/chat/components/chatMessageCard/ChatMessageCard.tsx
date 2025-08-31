@@ -1,17 +1,14 @@
-import { ChangeEvent, FC, useEffect, useRef, useState } from "react";
+import { FC, useRef, useState } from "react";
 import StatementChatMore from "../statementChatMore/StatementChatMore";
 import UserAvatar from "../userAvatar/UserAvatar";
-import SaveTextIcon from "@/assets/icons/SaveTextIcon.svg";
-import { updateStatementText } from "@/controllers/db/statements/setStatements";
 import { isAuthorized } from "@/controllers/general/helpers";
 import { useAppSelector } from "@/controllers/hooks/reduxHooks";
 import { useUserConfig } from "@/controllers/hooks/useUserConfig";
 import useStatementColor from "@/controllers/hooks/useStatementColor";
 import { statementSubscriptionSelector } from "@/redux/statements/statementsSlice";
-import EditTitle from "@/view/components/edit/EditTitle";
+import EditableStatement from "@/view/components/edit/EditableStatement";
 import CreateStatementModal from "@/view/pages/statement/components/createStatementModal/CreateStatementModal";
 import styles from "./ChatMessageCard.module.scss";
-import useAutoFocus from "@/controllers/hooks/useAutoFocus ";
 import UploadImage from "@/view/components/uploadImage/UploadImage";
 import { StatementType, Statement } from "delib-npm";
 import { useAuthentication } from "@/controllers/hooks/useAuthentication";
@@ -54,9 +51,6 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
   const [isEdit, setIsEdit] = useState(false);
   const [isNewStatementModalOpen, setIsNewStatementModalOpen] = useState(false);
   const [isCardMenuOpen, setIsCardMenuOpen] = useState(false);
-  const [text, setText] = useState(
-    `${statement?.statement}\n${statement.description}`
-  );
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -68,38 +62,15 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
   );
   const isMe = user?.uid === statement.creator?.uid;
   const isStatement = statementType === StatementType.statement;
-  const textareaRef = useAutoFocus(isEdit);
 
   const isPreviousFromSameAuthor =
     previousStatement?.creator.uid === statement.creator.uid;
 
   const isAlignedLeft = (isMe && dir === "ltr") || (!isMe && dir === "rtl");
 
-  // Focus the textarea when in edit mode
-  useEffect(() => {
-    if (isEdit && textareaRef.current) {
-      textareaRef.current.focus();
-    }
-  }, [isEdit]);
-
-  function handleTextChange(
-    e: ChangeEvent<HTMLTextAreaElement | HTMLInputElement>
-  ) {
-    setText(e.target.value);
-  }
-
-  function handleSave() {
-    try {
-      if (!text) return;
-      if (!statement) throw new Error("Statement is undefined");
-      const title = text.split("\n")[0];
-      const description = text.split("\n").slice(1).join("\n");
-
-      updateStatementText(statement, title, description);
-      setIsEdit(false);
-    } catch (error) {
-      console.error(error);
-    }
+  // Handle save callback
+  function handleSaveSuccess() {
+    setIsEdit(false);
   }
 
   const isGeneral =
@@ -154,36 +125,17 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
             </div>
           </div>
           <div className={styles.infoText}>
-            {isEdit ? (
-              <div
-                className={styles.inputWrapper}
-                style={{
-                  flexDirection: isAlignedLeft ? "row" : "row-reverse",
-                }}
-              >
-                <textarea
-                  ref={textareaRef} // Ref for managing focus
-                  className={styles.editInput}
-                  value={text}
-                  onChange={handleTextChange}
-                  style={{ direction: dir }}
-                />
-                <button onClick={handleSave}>
-                  <img
-                    src={SaveTextIcon}
-                    className={styles.saveIcon}
-                    alt="Save Icon"
-                  />
-                </button>
-              </div>
-            ) : (
-              <EditTitle
-                statement={statement}
-                isEdit={isEdit}
-                setEdit={setIsEdit}
-                isTextArea={true}
-              />
-            )}
+            <EditableStatement
+              statement={statement}
+              multiline={true}
+              forceEditing={isEdit}
+              onSaveSuccess={handleSaveSuccess}
+              onEditEnd={() => setIsEdit(false)}
+              className={styles.editableMessage}
+              inputClassName={styles.editInput}
+              containerClassName={styles.editContainer}
+              saveButtonClassName={styles.editButtons}
+            />
           </div>
           <div className={styles.messageActions}>
 

@@ -59,6 +59,7 @@ const SolutionMenu: FC<Props> = ({
 	}
 
 	if (!isAuthorized) return null;
+	if (!isCreatorOrAdmin && statement.statementType !== StatementType.statement) return null;
 
 	return (
 		<Menu

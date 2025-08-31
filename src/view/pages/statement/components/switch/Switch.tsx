@@ -2,8 +2,7 @@ import { useContext, useState } from 'react';
 
 import { StatementContext } from '../../StatementCont';
 import styles from './Switch.module.scss';
-import { useSwitchMV } from './SwitchMV';
-import { Role, StatementType } from 'delib-npm';
+import { Role } from 'delib-npm';
 import SwitchScreen from './SwitchScreen';
 import { updateStatementText } from '@/controllers/db/statements/setStatements';
 import { useAuthorization } from '@/controllers/hooks/useAuthorization';
@@ -14,7 +13,6 @@ import ChatPanel from '../chat/components/chatPanel/ChatPanel';
 const Switch = () => {
 	const { statement } = useContext(StatementContext);
 	const { role } = useAuthorization(statement?.statementId);
-	const { parentStatement } = useSwitchMV();
 	const isAdmin = role === Role.admin || role === Role.creator;
 
 	const [edit, setEdit] = useState(false);
@@ -40,11 +38,7 @@ const Switch = () => {
 				<button className={styles.header} onClick={handleStartEdit}>
 					{!edit ? (
 						<h1>
-							{parentStatement?.statementType ===
-								StatementType.question &&
-							statement?.statementType === StatementType.question
-								? parentStatement?.statement
-								: statement?.statement}
+							{statement?.statement}
 						</h1>
 					) : (
 						<h1>

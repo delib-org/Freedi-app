@@ -56,12 +56,12 @@ const Text: FC<Props> = ({ statement, description, fontSize = "inherent" }) => {
 		return (
 			<>
 				{statement && (
-					<span className='statement'>
+					<span className={styles.statement} style={{ fontSize: fontSize }}>
 						<UrlParser text={statement} />
 					</span>
 				)}
 				{description && paragraphs.length > 0 && (
-					<div className={styles.text}>{paragraphs}</div>
+					<div className={styles.description}>{paragraphs}</div>
 				)}
 			</>
 		);

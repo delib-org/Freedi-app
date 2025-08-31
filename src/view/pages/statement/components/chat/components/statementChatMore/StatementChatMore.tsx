@@ -38,7 +38,7 @@ const StatementChatMore: FC<Props> = ({
 		(n) =>
 			n.creatorId !== creator?.uid && 
 			n.parentId === statement.statementId &&
-			(!n.read || !('read' in n)) // ✅ Treat missing field as unread for backward compatibility
+			(!n.read || n.read === undefined) // ✅ Treat missing field as unread for backward compatibility
 	);
 
 	const handleClick = async () => {

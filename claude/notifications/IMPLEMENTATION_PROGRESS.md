@@ -154,8 +154,34 @@ After deployment, monitor:
 - Unread notification accumulation
 - User engagement with different statement types
 
+## ✅ Default In-App Notifications for Subscriptions
+
+### Implementation Status: COMPLETE
+- **Date Verified**: 2025-08-26
+- **Verified By**: Claude
+
+### Default Behavior Confirmed:
+All users who subscribe to statements now automatically receive in-app notifications by default:
+
+1. **setStatementSubscriptionToDB Function** (`/src/controllers/db/subscriptions/setSubscriptions.ts:30`)
+   - Default parameter: `getInAppNotification = true`
+   - Applies to all new subscriptions unless explicitly overridden
+
+2. **Subscription Scenarios with In-App Notifications Enabled:**
+   - ✅ **Creating new statements** - Admin gets notifications enabled
+   - ✅ **Public access statements** - Auto-subscription with notifications
+   - ✅ **Open groups** - Members auto-subscribed with notifications
+   - ✅ **Commenting on suggestions** - Commenter subscribed with notifications
+   - ⏸️ **Moderated groups** - Waiting users have notifications disabled until approved
+
+3. **Key Files Updated:**
+   - `createStatementWithSubscription.ts` - Line 79: Explicit `getInAppNotification: true`
+   - `useAuthorization.ts` - Lines 119, 170: Auto-subscription with notifications
+   - `SuggestionComment.tsx` - Line 119: Comment subscription with notifications
+
 ## 🐛 Known Issues / TODOs
 
+- [x] ~~Add default in-app notifications for subscriptions~~ ✅ Already implemented
 - [ ] Add "Mark all as read" button in notification dropdown
 - [ ] Consider adding notification preferences per user
 - [ ] Add sound/vibration for new notifications

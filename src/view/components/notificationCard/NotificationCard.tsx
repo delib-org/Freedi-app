@@ -19,7 +19,7 @@ const NotificationCard: React.FC<NotificationType> = (notification) => {
 	// ✅ Handle click to mark as read (with fallback for missing field)
 	const handleClick = async () => {
 		// If read field doesn't exist or is false, mark as read
-		if (!notification.read || !('read' in notification)) {
+		if (!notification.read || notification.read === undefined) {
 			await markNotificationAsReadDB(notification.notificationId);
 		}
 	};
@@ -28,10 +28,10 @@ const NotificationCard: React.FC<NotificationType> = (notification) => {
 		<Link
 			to={notificationType()}
 			key={notification.notificationId}
-			className={`${styles.notificationLink} ${notification.read && 'read' in notification ? styles.read : styles.unread}`}
+			className={`${styles.notificationLink} ${notification.read ? styles.read : styles.unread}`}
 			onClick={handleClick}
 		>
-			<div className={`${styles.notificationCard} ${notification.read && 'read' in notification ? '' : styles.unread}`}>
+			<div className={`${styles.notificationCard} ${notification.read ? '' : styles.unread}`}>
 				<img
 					className={styles.avatar}
 					src={

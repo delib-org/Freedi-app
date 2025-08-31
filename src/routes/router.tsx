@@ -35,7 +35,6 @@ import { MassConsensusPageUrls } from 'delib-npm';
 import UserDemographicMC from '@/view/pages/massConsensus/massConsesusQuestion/userDemographicMC/UserDemographicMC';
 import My from '@/view/pages/my/My';
 import CheckNotifications from '@/view/pages/settings/ChecNotifications';
-import RunMigration from '@/view/pages/tools/RunMigration';
 
 // Define errorRoutes
 const errorRoutes = [
@@ -191,10 +190,6 @@ export const router = createBrowserRouter([
 			{
 				path: 'my/check-notifications',
 				element: <CheckNotifications />,
-			},
-			{
-				path: 'run-migration',
-				element: <RunMigration />,
 			},
 		],
 	},

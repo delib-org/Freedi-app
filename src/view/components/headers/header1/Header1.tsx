@@ -1,35 +1,29 @@
-import { FC, useContext, useState } from "react";
-import EditTitle from "../../edit/EditTitle";
+import { FC, useContext } from "react";
+import EditableStatement from "../../edit/EditableStatement";
 import styles from "./Header1.module.scss";
 import { StatementContext } from "@/view/pages/statement/StatementCont";
 
 const Header1: FC = () => {
 	const { statement } = useContext(StatementContext);
-	const [edit, setEdit] = useState(false);
-
-	function handleSetEdit() {
-		if (!edit) setEdit(true);
-	}
 
 	return (
 		<div className={`wrapper ${styles.wrapper}`} >
-			<button className={styles.header1} onClick={handleSetEdit}>
+			<div className={styles.header1}>
 				{statement ? (
 					<h1>
-						{
-							<EditTitle
-								statement={statement}
-								useTitle={true}
-								useDescription={false}
-								isEdit={edit}
-								setEdit={setEdit}
-							/>
-						}
+						<EditableStatement
+							statement={statement}
+							variant="statement"
+							showDescription={false}
+							className={styles.editableHeader}
+							textClassName={styles.headerText}
+							inputClassName={styles.headerInput}
+						/>
 					</h1>
 				) : (
 					<h1>loading...</h1>
 				)}
-			</button>
+			</div>
 		</div>
 	);
 };
