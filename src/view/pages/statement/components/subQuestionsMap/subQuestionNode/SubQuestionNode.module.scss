@@ -1,7 +1,9 @@
 .SubQuestionNodeContainer {
   display: flex;
   flex-direction: row-reverse;
-
+  button {
+    all: unset;
+  }
   .node {
     margin: 1rem;
     color: var(--text-secondary);
@@ -24,22 +26,43 @@
 
   .clickable {
     cursor: pointer;
-    
+
     &:hover {
-    
       transform: translateX(-2px);
     }
   }
 
   .green {
     border-left: 5px var(--icons-green) solid;
-    box-shadow: 0 0 8px rgba(0, 123, 255, 0.3), 
-                0 0 16px rgba(0, 123, 255, 0.15);
+    box-shadow:
+      0 0 8px rgba(0, 123, 255, 0.3),
+      0 0 16px rgba(0, 123, 255, 0.15);
     animation: glow 3s ease-in-out infinite;
   }
 
   .group {
     border-left: 5px var(--header-group) solid;
+  }
+
+  .followMe {
+    border-left: 5px #ff0000 solid !important;
+    animation: followMeBlink 2s ease-in-out infinite !important;
+    position: relative;
+    z-index: 10;
+    
+    &::before {
+      content: '';
+      position: absolute;
+      top: -2px;
+      left: -2px;
+      right: -2px;
+      bottom: -2px;
+      border-radius: 10px;
+      background: rgba(255, 0, 0, 0.15);
+      animation: pulseBackground 2s ease-in-out infinite;
+      pointer-events: none;
+      z-index: -1;
+    }
   }
 
   .borderDefault {
@@ -95,12 +118,41 @@
 }
 
 @keyframes glow {
-  0%, 100% {
-    box-shadow: 0 0 8px rgba(0, 123, 255, 0.3), 
-                0 0 16px rgba(0, 123, 255, 0.15);
+  0%,
+  100% {
+    box-shadow:
+      0 0 8px rgba(0, 123, 255, 0.3),
+      0 0 16px rgba(0, 123, 255, 0.15);
   }
   50% {
-    box-shadow: 0 0 12px rgba(0, 123, 255, 0.4), 
-                0 0 20px rgba(0, 123, 255, 0.2);
+    box-shadow:
+      0 0 12px rgba(0, 123, 255, 0.4),
+      0 0 20px rgba(0, 123, 255, 0.2);
+  }
+}
+
+@keyframes followMeBlink {
+  0%, 100% {
+    background-color: var(--surface-background);
+    box-shadow: 
+      0 0 15px rgba(255, 0, 0, 0.4),
+      inset 0 0 10px rgba(255, 0, 0, 0.1);
+    transform: translateX(0);
+  }
+  50% {
+    background-color: rgba(255, 0, 0, 0.08);
+    box-shadow: 
+      0 0 25px rgba(255, 0, 0, 0.6),
+      inset 0 0 20px rgba(255, 0, 0, 0.2);
+    transform: translateX(-2px);
+  }
+}
+
+@keyframes pulseBackground {
+  0%, 100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 0.6;
   }
 }

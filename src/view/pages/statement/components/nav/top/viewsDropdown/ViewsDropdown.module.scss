@@ -3,7 +3,7 @@ $svgWidth: 1.7rem;
 
 .viewsDropdown {
   position: relative;
-  
+
   &__trigger {
     background-color: transparent;
     border: none;
@@ -12,17 +12,17 @@ $svgWidth: 1.7rem;
     display: flex;
     align-items: center;
     justify-content: center;
-    
+
     svg {
       height: $svgHeight;
       width: $svgWidth;
     }
-    
+
     &:hover {
       opacity: 0.8;
     }
   }
-  
+
   &__menu {
     position: absolute;
     background-color: white;
@@ -33,7 +33,7 @@ $svgWidth: 1.7rem;
     top: calc(100% + 0.5rem);
     min-width: 200px;
     z-index: 1000;
-    
+
     // Prevent closing when clicking inside
     * {
       pointer-events: auto;

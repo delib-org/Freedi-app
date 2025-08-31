@@ -17,7 +17,7 @@ import useStatementColor, {
 	StyleProps,
 } from '@/controllers/hooks/useStatementColor';
 import { setStatementElementHight } from '@/redux/statements/statementsSlice';
-import EditTitle from '@/view/components/edit/EditTitle';
+import EditableStatement from '@/view/components/edit/EditableStatement';
 import IconButton from '@/view/components/iconButton/IconButton';
 import styles from './SuggestionCard.module.scss';
 import { StatementType, Statement } from 'delib-npm';
@@ -206,11 +206,15 @@ const SuggestionCard: FC<Props> = ({
 				<div className={styles.info}>
 					<div className={styles.text}>
 						<div className={styles.textContent} ref={textContainerRef}>
-							<EditTitle
+							<EditableStatement
 								statement={statement}
-								isEdit={isEdit}
-								setEdit={setIsEdit}
-								isTextArea={true}
+								multiline={true}
+								forceEditing={isEdit}
+								onSaveSuccess={() => setIsEdit(false)}
+								onEditEnd={() => setIsEdit(false)}
+								className={styles.editableCard}
+								inputClassName={styles.editInput}
+								saveButtonClassName={styles.editButtons}
 							/>
 						</div>
 						<Link to={`/statement/${statement.statementId}`} className={styles.showMore}>

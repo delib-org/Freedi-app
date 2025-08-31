@@ -76,6 +76,76 @@ export const notificationsSlicer = createSlice({
 				console.error(error);
 			}
 		},
+		// ✅ Mark single notification as read
+		markNotificationAsRead: (state, action: PayloadAction<string>) => {
+			try {
+				const notification = state.inAppNotifications.find(
+					(n) => n.notificationId === action.payload
+				);
+				if (notification) {
+					notification.read = true;
+					notification.readAt = Date.now();
+				}
+			} catch (error) {
+				console.error(error);
+			}
+		},
+		// ✅ Mark multiple notifications as read
+		markNotificationsAsRead: (state, action: PayloadAction<string[]>) => {
+			try {
+				const notificationIds = new Set(action.payload);
+				state.inAppNotifications.forEach((notification) => {
+					if (notificationIds.has(notification.notificationId)) {
+						notification.read = true;
+						notification.readAt = Date.now();
+					}
+				});
+			} catch (error) {
+				console.error(error);
+			}
+		},
+		// ✅ Mark all notifications for a statement as read
+		markStatementNotificationsAsRead: (state, action: PayloadAction<string>) => {
+			try {
+				const statementId = action.payload;
+				state.inAppNotifications.forEach((notification) => {
+					if (notification.parentId === statementId && !notification.read) {
+						notification.read = true;
+						notification.readAt = Date.now();
+						notification.viewedInContext = true;
+					}
+				});
+			} catch (error) {
+				console.error(error);
+			}
+		},
+		// ✅ Mark notifications as viewed in list
+		markNotificationsAsViewedInList: (state, action: PayloadAction<string[]>) => {
+			try {
+				const notificationIds = new Set(action.payload);
+				state.inAppNotifications.forEach((notification) => {
+					if (notificationIds.has(notification.notificationId)) {
+						notification.viewedInList = true;
+					}
+				});
+			} catch (error) {
+				console.error(error);
+			}
+		},
+		// ✅ Mark all notifications as read
+		markAllNotificationsAsRead: (state) => {
+			try {
+				const now = Date.now();
+				state.inAppNotifications.forEach((notification) => {
+					if (!notification.read) {
+						notification.read = true;
+						notification.readAt = now;
+					}
+				});
+			} catch (error) {
+				console.error(error);
+			}
+		},
 	},
 });
 
@@ -85,6 +155,11 @@ export const {
 	setInAppNotifications,
 	deleteInAppNotification,
 	deleteInAppNotificationsByParentId,
+	markNotificationAsRead,
+	markNotificationsAsRead,
+	markStatementNotificationsAsRead,
+	markNotificationsAsViewedInList,
+	markAllNotificationsAsRead,
 } = notificationsSlicer.actions;
 
 // Other code such as selectors can use the imported `RootState` type
@@ -97,6 +172,38 @@ export const inAppNotificationsCountSelectorForStatement = (statementId: string)
 		(inAppNotifications) =>
 			inAppNotifications.filter(
 				(notification) => notification.parentId === statementId
+			)
+	);
+
+// ✅ New selector: Get only unread notifications (with backward compatibility)
+export const unreadNotificationsSelector = createSelector(
+	[(state: RootState) => state.notifications.inAppNotifications],
+	(notifications) => notifications.filter((n) => !n.read || n.read === undefined)
+);
+
+// ✅ New selector: Get unread count for a specific statement (with backward compatibility)
+export const unreadCountForStatementSelector = (statementId: string) =>
+	createSelector(
+		[(state: RootState) => state.notifications.inAppNotifications],
+		(notifications) =>
+			notifications.filter(
+				(n) => n.parentId === statementId && (!n.read || n.read === undefined)
+			).length
+	);
+
+// ✅ New selector: Get total unread count (with backward compatibility)
+export const totalUnreadCountSelector = createSelector(
+	[(state: RootState) => state.notifications.inAppNotifications],
+	(notifications) => notifications.filter((n) => !n.read || n.read === undefined).length
+);
+
+// ✅ New selector: Get unread notifications for a statement (with backward compatibility)
+export const unreadNotificationsForStatementSelector = (statementId: string) =>
+	createSelector(
+		[(state: RootState) => state.notifications.inAppNotifications],
+		(notifications) =>
+			notifications.filter(
+				(n) => n.parentId === statementId && (!n.read || n.read === undefined)
 			)
 	);
 

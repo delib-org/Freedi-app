@@ -73,7 +73,7 @@ const MindMap: FC = () => {
 	}
 
 	return (
-		<main className='page__main'>
+		<main className='page__main' style={{ padding: 0, alignItems: 'stretch' }}>
 			<ReactFlowProvider>
 				<select
 					aria-label='Select filter type for'
@@ -99,10 +99,10 @@ const MindMap: FC = () => {
 				</select>
 				<div
 					style={{
-						flex: 'auto',
-						height: '20vh',
-						width: '100%',
+						height: '100vh',
+						width: '100vw',
 						direction: 'ltr',
+						position: 'relative',
 					}}
 				>
 					{/* Only render chart when results are available */}

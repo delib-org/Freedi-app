@@ -1,5 +1,5 @@
 import { resultsSettingsDefault } from '@/controllers/db/statements/setStatements';
-import { Statement, StatementType, Access } from 'delib-npm';
+import { Statement, StatementType } from 'delib-npm';
 
 export const defaultStatementSettings = {
 	hasChat: true,
@@ -32,7 +32,7 @@ export const defaultEmptyStatement: Statement = {
 	resultsSettings: resultsSettingsDefault,
 	statementSettings: defaultStatementSettings,
 	hasChildren: true,
-	membership: {
-		access: Access.openToAll,
-	},
+	// Note: membership is intentionally NOT set here
+	// so that new sub-statements inherit from their parent by default
+	// Only top-level statements should have membership set
 } as const;

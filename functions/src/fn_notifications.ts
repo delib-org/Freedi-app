@@ -54,43 +54,39 @@ export async function updateInAppNotifications(
 			parentStatementDB.data()
 		);
 
-		// Also fetch subscribers for the top-level parent if this is a nested reply
-		let topLevelSubscribers: StatementSubscription[] = [];
-		if (statement.parentId !== 'top') {
-			// Find the top-level parent by traversing up
-			let currentParent = parentStatement;
-			while (currentParent && currentParent.parentId !== 'top') {
-				const parentDoc = await db
-					.doc(`${Collections.statements}/${currentParent.parentId}`)
-					.get();
-				if (parentDoc.exists) {
-					currentParent = parse(StatementSchema, parentDoc.data());
-				} else {
-					break;
-				}
-			}
-
-			if (
-				currentParent &&
-				currentParent.statementId !== statement.parentId
-			) {
-				const topSubscribersDB = await db
+		// Also fetch subscribers for ALL parent statements in the hierarchy
+		let allParentSubscribers: StatementSubscription[] = [];
+		if (statement.parentId !== 'top' && statement.parents && statement.parents.length > 0) {
+			// Get all parent statement IDs from the parents array
+			const parentIds = statement.parents.filter(id => id !== 'top');
+			
+			// Fetch subscribers for all parent statements in parallel
+			const parentSubscriberPromises = parentIds.map(async (parentId) => {
+				const subscribersDB = await db
 					.collection(Collections.statementsSubscribe)
-					.where('statementId', '==', currentParent.statementId)
+					.where('statementId', '==', parentId)
 					.where('getInAppNotification', '==', true)
 					.get();
-
-				topLevelSubscribers = topSubscribersDB.docs.map(
+				
+				return subscribersDB.docs.map(
 					(doc: QueryDocumentSnapshot) => doc.data() as StatementSubscription
 				);
-			}
+			});
+			
+			// Wait for all parent subscriber queries to complete
+			const parentSubscriberArrays = await Promise.all(parentSubscriberPromises);
+			
+			// Flatten the array of arrays into a single array
+			allParentSubscribers = parentSubscriberArrays.flat();
+			
+			logger.info(`Found ${allParentSubscribers.length} subscribers from ${parentIds.length} parent statements`);
 		}
 
-		// Combine subscribers
+		// Combine subscribers from direct parent and all ancestors
 		const seenUserIds = new Set();
 		const allSubscribers = [
 			...subscribersInApp,
-			...topLevelSubscribers,
+			...allParentSubscribers,
 		].filter((subscriber) => {
 			if (seenUserIds.has(subscriber.user.uid)) {
 				return false;
@@ -105,15 +101,15 @@ export async function updateInAppNotifications(
 			(doc: QueryDocumentSnapshot) => doc.data() as StatementSubscription
 		);
 		
-		// Also get push subscribers from top-level if needed
+		// Also get push subscribers from all parent statements
 		let allPushSubscribers = [...pushSubscribers];
-		if (statement.parentId !== 'top' && topLevelSubscribers.length > 0) {
-			const topLevelPushSubscribers = topLevelSubscribers.filter(
+		if (statement.parentId !== 'top' && allParentSubscribers.length > 0) {
+			const parentPushSubscribers = allParentSubscribers.filter(
 				sub => sub.getPushNotification === true
 			);
 			// Combine and dedupe by userId
 			const seenPushUserIds = new Set(pushSubscribers.map(s => s.userId));
-			topLevelPushSubscribers.forEach(sub => {
+			parentPushSubscribers.forEach(sub => {
 				if (!seenPushUserIds.has(sub.userId)) {
 					allPushSubscribers.push(sub);
 				}
@@ -226,9 +222,13 @@ async function processInAppNotifications(
 			creatorName: newStatement.creator.displayName,
 			creatorImage: newStatement.creator.photoURL,
 			createdAt: newStatement.createdAt,
-			read: false,
+			read: false, // ✅ Set as unread by default
 			notificationId: notificationRef.id,
 			statementId: newStatement.statementId,
+			// ✅ New optional fields for tracking
+			viewedInList: false,
+			viewedInContext: false,
+			// readAt will be set when notification is marked as read
 		};
 		batch.create(notificationRef, newNotification);
 	});

@@ -1,0 +1,29 @@
+.loaderOverlay {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.35);
+  z-index: 10000;
+  cursor: progress;
+  pointer-events: all;
+  color: white;
+}
+
+.loaderText {
+  color: white;
+  margin-bottom: 2rem;
+  font-size: 1.5rem;
+  text-align: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loaderOverlay {
+    animation: none !important;
+  }
+}

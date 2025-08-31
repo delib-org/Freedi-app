@@ -129,7 +129,7 @@ const Tabs: FC<TabsProps> = ({
         <button
           type="button"
           onClick={() => setIsOptionChosen(true)}
-          className={`tab question ${isOptionChosen ? "active" : ""}`}
+          className={`${styles.tab} question ${isOptionChosen ? styles.active : ""}`}
         >
           {t("Option")}
           {isOptionChosen && <div className={styles.block} />}
@@ -139,7 +139,7 @@ const Tabs: FC<TabsProps> = ({
         <button
           type="button"
           onClick={() => setIsOptionChosen(false)}
-          className={`tab question ${!isOptionChosen ? "active" : ""}`}
+          className={`${styles.tab} question ${!isOptionChosen ? styles.active : ""}`}
         >
           {t("Question")}
           {!isOptionChosen && <div className={styles.block} />}

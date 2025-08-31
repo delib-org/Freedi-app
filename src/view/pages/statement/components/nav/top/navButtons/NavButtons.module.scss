@@ -1,64 +1,49 @@
 $svgHeight: 1.7rem;
 $svgWidth: 1.7rem;
 
-.container {
+.navRow {
   display: flex;
   align-items: center;
+  justify-content: space-evenly;
   width: 100%;
   height: 100%;
-  padding: 0 1rem;
-  gap: 1rem;
-}
-
-.leftSection {
-  display: flex;
-  align-items: center;
+  padding: 0 0.5rem;
   gap: 0.5rem;
-  
-  // Navigation buttons should be grouped together
+
   > * {
-    flex-shrink: 0;
+    flex: 0 0 auto;
   }
 }
 
-.centerSection {
-  flex: 1;
-  display: flex;
+.padWrap {
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  
-  // Don't let center content push other sections too much
-  min-width: 0;
 }
 
-.rightSection {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  
-  // All items should maintain their size
-  > * {
-    flex-shrink: 0;
-  }
-
-  .back{
-    transform: rotate(180deg);
-  }
+/* apply padding to the actual clickable element rendered inside */
+.padWrap :global(button),
+.padWrap :global(a),
+.padWrap :global([role="button"]) {
+  padding: 0.6rem 1rem !important;
+  margin: 0 !important;
+  line-height: 1;
+  min-width: auto;
+  height: auto;
 }
 
-// Mobile adjustments
+/* don’t accidentally pad icons */
+.padWrap :global(svg) {
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+.back {
+  transform: rotate(180deg);
+}
+
 @media (max-width: 768px) {
-  .container {
-    padding: 0 0.5rem;
-    gap: 0.5rem;
-  }
-  
-  .leftSection,
-  .rightSection {
-    gap: 0.25rem;
-  }
-  
-  button {
-    padding: 0.4rem 0.6rem;
+  .navRow {
+    padding: 0 0.25rem;
+    gap: 0.4rem;
   }
 }

@@ -40,6 +40,7 @@ const MultiStageQuestion: FC = () => {
 	);
 	const showNewStatementModal = useSelector(selectNewStatementShowModal);
 	const topSuggestions = statement.results;
+	const imageUrl = statement.imagesURL?.main ?? '';
 
 	const initialStages = useMemo(
 		() =>
@@ -129,9 +130,10 @@ const MultiStageQuestion: FC = () => {
 					<NewStatement />
 				</Modal>
 			)}
-			{!hasStages && <div className={`${styles.description} description`}>
+			<div className={`${styles.description} description`}>
 				<Text description={statement?.description} fontSize='1.2rem' />
-			</div>}
+				{imageUrl && <img src={imageUrl} alt='Statement visual representation' />}
+			</div>
 			{statement.statementSettings?.enableAddNewSubQuestionsButton && (
 				<div className={`btns ${styles['add-stage']}`}>
 					<button
@@ -144,9 +146,6 @@ const MultiStageQuestion: FC = () => {
 				<StagePage showStageTitle={false} />) :
 				(
 					<div className={styles.stagesWrapper}>
-						<div className={styles.description}>
-							{statement?.description}
-						</div>
 						<h3 className={styles.h3}>{t('Preliminary questions')}</h3>
 						<div className={styles.subElementsWrapper}>
 							{initialStages.map((stage, index) => (
@@ -202,7 +201,7 @@ const MultiStageQuestion: FC = () => {
 								))
 							)}
 							<div className={`btns ${styles['add-stage']}`}>
-							<Link to={`/stage/${statement.statementId}`}>
+							<Link to={`/stage/${statement.statementId}`} state={{ from: window.location.pathname }}>
 								<button
 									className='btn btn--primary'
 								>{t(hasTopSuggestions ? 'See all suggestions' : 'Add new suggestion')}

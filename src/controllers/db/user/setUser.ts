@@ -28,6 +28,7 @@ export async function setUserToDB(user: Creator) {
 		const userDocRef = doc(DB, Collections.users, user.uid);
 		const userDB = await getDoc(userDocRef);
 		if (!userDB.exists()) {
+			// Create new user document
 			await setDoc(userDocRef, {
 				displayName: user.displayName || "",
 				email: user.email || "",
@@ -35,13 +36,28 @@ export async function setUserToDB(user: Creator) {
 				photoURL: user.photoURL || "",
 				uid: user.uid,
 			}, { merge: true }).then(() => {
-				console.info("User updated successfully");
+				console.info("User created successfully");
 			}).catch((error) => {
-				console.error("Error updating user:", error);
+				console.error("Error creating user:", error);
 			});
 		} else {
-			const user = userDB.data() as Creator;
-			dispatch(setUserAdvanceUser(user.advanceUser || false));
+			// Update existing user if needed
+			const existingUser = userDB.data() as Creator;
+			
+			// Only update displayName for anonymous users getting a new temporal name
+			// NEVER change isAnonymous status for existing users
+			if (user.isAnonymous && user.displayName && user.displayName !== existingUser.displayName) {
+				await updateDoc(userDocRef, {
+					displayName: user.displayName,
+					// DO NOT update isAnonymous - keep the existing value
+				}).then(() => {
+					console.info("Anonymous user displayName updated successfully");
+				}).catch((error) => {
+					console.error("Error updating anonymous user displayName:", error);
+				});
+			}
+			
+			dispatch(setUserAdvanceUser(existingUser.advanceUser || false));
 		}
 	} catch (error) {
 		console.error("Error updating user in DB:", error);

@@ -203,7 +203,10 @@ export const setStatementToDB = async ({
 		statement.lastUpdate = new Date().getTime();
 		statement.createdAt = statement?.createdAt || new Date().getTime();
 
-		statement.membership = statement.membership || { access: Access.open };
+		// Always ensure membership is set - default to openToAll if not provided
+		if (!statement.membership) {
+			statement.membership = { access: Access.openToAll };
+		}
 
 		//statement settings
 		if (!statement.statementSettings)
@@ -343,6 +346,7 @@ export function createStatement({
 			creator,
 			...(defaultLanguage && { defaultLanguage: defaultLanguage }),
 			creatorId: creator.uid,
+			// Always set membership - either provided, or default to openToAll
 			membership: membership || { access: Access.openToAll },
 			statementSettings: {
 				enhancedEvaluation,
@@ -478,8 +482,11 @@ export function updateStatement({
 		});
 
 		newStatement.hasChildren = hasChildren;
-		newStatement.membership = membership ||
-			statement.membership || { access: Access.open };
+		// Only update membership if explicitly provided
+		// Otherwise keep the existing membership (which might be undefined for inheritance)
+		if (membership !== undefined) {
+			newStatement.membership = membership;
+		}
 
 		if (statementType) newStatement.statementType = statementType;
 

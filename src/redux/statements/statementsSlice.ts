@@ -422,9 +422,11 @@ export const statementsRoomSolutions =
 			)
 			.sort((a, b) => a.createdAt - b.createdAt);
 
-export const statementsSubscriptionsSelector = (
-	state: RootState
-): StatementSubscription[] => state.statements.statementSubscription;
+export const statementsSubscriptionsSelector = createSelector(
+	(state: RootState) => state.statements.statementSubscription,
+	(statementSubscription) => 
+		[...statementSubscription].sort((a, b) => b.lastUpdate - a.lastUpdate)
+);
 export const statementSelector =
 	(statementId: string | undefined) => (state: RootState) =>
 		state.statements.statements.find(
@@ -434,9 +436,11 @@ export const statementSelector =
 export const topSubscriptionsSelector = createSelector(
 	(state: RootState) => state.statements.statementSubscription,
 	(statementSubscription) =>
-		statementSubscription.filter(
-			(sub: StatementSubscription) => sub.statement.parentId === 'top'
-		)
+		statementSubscription
+			.filter(
+				(sub: StatementSubscription) => sub.statement.parentId === 'top'
+			)
+			.sort((a, b) => b.lastUpdate - a.lastUpdate)
 );
 
 const selectStatements = (state: RootState) => state.statements.statements;

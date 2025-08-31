@@ -1,12 +1,11 @@
+import { Screen, Statement } from 'delib-npm';
 import { FC } from 'react';
-import { Statement, Screen } from 'delib-npm';
 
 // Components
-import NavigationButtons from '../navigationButtons/NavigationButtons';
-import HomeButton from '../../../header/HomeButton';
-import Back from '../../../header/Back';
-import NotificationSettingsButton from '@/view/components/notifications/NotificationSettingsButton';
 import ApproveMembers from '@/view/components/approveMemebers/WaitingList';
+import NotificationSettingsButton from '@/view/components/notifications/NotificationSettingsButton';
+import Back from '../../../header/Back';
+import HomeButton from '../../../header/HomeButton';
 import ViewsDropdown from '../viewsDropdown/ViewsDropdown';
 
 // Styles
@@ -27,55 +26,41 @@ const NavButtons: FC<NavButtonsProps> = ({
 	headerStyle,
 	allowNavigation,
 	statement,
-	parentStatement,
 }) => {
 	const handleNavigateToScreen = (targetScreen: Screen) => {
 		handleNavigation(targetScreen);
 	};
 
 	return (
-		<div className={styles.container}>
-			{/* Left Section - Navigation & Home */}
-			<div className={styles.leftSection}>
-				{allowNavigation && (
-					<>
-						<NavigationButtons
-							statement={parentStatement || statement}
-							handleNavigation={handleNavigation}
-							headerStyle={headerStyle}
-						/>
-						<HomeButton headerColor={headerStyle} />
-					</>
-				)}
-			</div>
+		<div className={styles.navRow}>
+			{allowNavigation && (
+				<div className={styles.padWrap}>
+					<HomeButton headerColor={headerStyle} />
+				</div>
+			)}
 
-			{/* Center Section - Approve Members */}
-			<div className={styles.centerSection}>
-				<ApproveMembers />
-			</div>
+			<ApproveMembers />
 
-			{/* Right Section - Views, Notifications, Back */}
-			<div className={styles.rightSection}>
-				{statement && (
-					<>
-						<ViewsDropdown
-							statement={statement}
-							screen={screen}
-							headerStyle={headerStyle}
-							onNavigate={handleNavigateToScreen}
-						/>
-						<NotificationSettingsButton
-							statementId={statement.statementId}
-							headerStyle={headerStyle}
-						/>
-					</>
-				)}
-				{allowNavigation && (
-					<div className={styles.back}>
-						<Back statement={statement} headerColor={headerStyle} />
-					</div>
-				)}
-			</div>
+			{statement && (
+				<>
+					<ViewsDropdown
+						statement={statement}
+						screen={screen}
+						headerStyle={headerStyle}
+						onNavigate={handleNavigateToScreen}
+					/>
+					<NotificationSettingsButton
+						statementId={statement.statementId}
+						headerStyle={headerStyle}
+					/>
+				</>
+			)}
+
+			{allowNavigation && (
+				<div className={`${styles.back} ${styles.padWrap}`}>
+					<Back statement={statement} headerColor={headerStyle} />
+				</div>
+			)}
 		</div>
 	);
 };

@@ -1,6 +1,7 @@
 import { AuthProvider } from '@/context/AuthContext';
 import { getStatementFromDB } from '@/controllers/db/statements/getStatement';
 import { useAuthorization } from '@/controllers/hooks/useAuthorization';
+import { usePublicAccess } from '@/controllers/hooks/usePublicAccess';
 import { setStatement, statementSelector } from '@/redux/statements/statementsSlice';
 import LoadingPage from '@/view/pages/loadingPage/LoadingPage';
 import Page401 from '@/view/pages/page401/Page401';
@@ -13,38 +14,39 @@ export default function ProtectedLayout() {
 	const { statementId } = useParams();
 	const dispatch = useDispatch();
 	const navigate = useNavigate();
+	const { isCheckingAccess } = usePublicAccess(statementId);
 	const { loading, error, isAuthorized, isWaitingForApproval } = useAuthorization(statementId);
 	const statement = useSelector(statementSelector(statementId));
-	const _statementId = statement?.statementId;
 
+	// First, fetch the statement if we don't have it
 	useEffect(() => {
-		if (!statement) {
-			getStatementFromDB(statementId).then((statement) => {
-				if (statement) {
-					dispatch(setStatement(statement));
+		if (!statement && statementId) {
+			getStatementFromDB(statementId).then((fetchedStatement) => {
+				if (fetchedStatement) {
+					dispatch(setStatement(fetchedStatement));
 				}
 				else navigate("/404")
 			});
 		}
-	}, [_statementId]);
+	}, [statementId, statement, dispatch, navigate]);
 
 	useEffect(() => {
-		if (!isAuthorized && !loading && !error && !isWaitingForApproval) {
+		// Don't redirect to 401 if we're still checking access
+		if (!isAuthorized && !loading && !error && !isWaitingForApproval && !isCheckingAccess) {
 			navigate("/401");
 		}
-	}, [isAuthorized, loading, error, isWaitingForApproval]);
+	}, [isAuthorized, loading, error, isWaitingForApproval, isCheckingAccess, navigate]);
+
+	// Show loading while checking access
+	if (isCheckingAccess || loading) {
+		return <LoadingPage />;
+	}
 
 	if (isWaitingForApproval) {
 		return <WaitingPage />;
 	}
 
-	if (loading) {
-
-		return <LoadingPage />;
-	}
-
 	if (error) {
-
 		return <Page401 />;
 	}
 

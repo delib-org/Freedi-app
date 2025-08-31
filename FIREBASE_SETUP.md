@@ -168,11 +168,48 @@ If you encounter issues:
 2. Search existing [GitHub Issues](https://github.com/delib-org/Freedi-app/issues)
 3. Create a new issue with details about your problem
 
+## 🔒 Security Best Practices
+
+When setting up your Firebase project:
+
+### Development Environment
+- Use Firebase emulators for all local development
+- Never use production data in development
+- Keep your Firebase config in environment variables
+- Use `.env.development` for local configs (never commit this file)
+
+### Firebase Security Rules
+- Always test security rules before deployment
+- Use the Firebase emulator to validate rules
+- Follow the principle of least privilege
+- Review rules in `firestore.rules` and `storage.rules`
+
+### API Keys
+- Firebase config keys are safe to expose (they're protected by security rules)
+- Never commit service account keys
+- Use environment variables for sensitive data
+- Rotate keys regularly
+
+## ⚡ Performance Optimization
+
+### Firebase Configuration
+- Enable Firestore offline persistence for better UX
+- Use Firebase hosting CDN for static assets
+- Configure appropriate cache headers
+- Enable compression in Firebase hosting
+
+### Development Tips
+- Use compound queries to reduce reads
+- Implement proper pagination for large datasets
+- Use Firestore bundles for initial data
+- Monitor usage in Firebase Console
+
 ## 🎯 Next Steps
 
 Once your development environment is running:
 1. Read the [Branch Naming Convention](./Branch-naming-convention.md)
 2. Check the [Development Guidelines](./CLAUDE.md)
-3. Explore the codebase and make your first contribution!
+3. Review the [Architecture Documentation](./docs/FREEDI_ARCHITECTURE.md)
+4. Explore the codebase and make your first contribution!
 
 Happy coding! 🚀

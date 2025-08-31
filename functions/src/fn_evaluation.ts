@@ -401,7 +401,7 @@ async function updateParentWithResults(parentId: string, chosenOptions: Statemen
 
 async function choseTopOptions(parentId: string, resultsSettings: ResultsSettings): Promise<Statement[] | undefined> {
 	try {
-		await clearPreviousChosenOptions();
+		await clearPreviousChosenOptions(parentId);
 
 		const chosenOptions = await getOptionsUsingMethod(parentId, resultsSettings);
 		if (!chosenOptions?.length) {
@@ -419,16 +419,23 @@ async function choseTopOptions(parentId: string, resultsSettings: ResultsSetting
 	}
 }
 
-async function clearPreviousChosenOptions(): Promise<void> {
-	const statementsRef = db.collection(Collections.statements);
-	const previousChosenDocs = await statementsRef.where('isChosen', '==', true).get();
+async function clearPreviousChosenOptions(parentId: string | undefined): Promise<void> {
+	try {
+		if (!parentId) throw new Error('Parent ID is required');
 
-	const batch = db.batch();
-	previousChosenDocs.forEach((doc) => {
-		batch.update(statementsRef.doc(doc.id), { isChosen: false });
-	});
+		const statementsRef = db.collection(Collections.statements);
+		const previousChosenDocs = await statementsRef.where('parentId', '==', parentId).where('isChosen', '==', true).get();
 
-	await batch.commit();
+		const batch = db.batch();
+		previousChosenDocs.forEach((doc) => {
+			batch.update(statementsRef.doc(doc.id), { isChosen: false });
+		});
+
+		await batch.commit();
+	} catch (error) {
+		console.error('Error clearing previous chosen options:', error);
+	}
+
 }
 
 async function markOptionsAsChosen(statements: Statement[]): Promise<void> {

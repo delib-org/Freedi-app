@@ -9,7 +9,6 @@ import NotificationCard from '../notificationCard/NotificationCard';
 const InAppNotifications = () => {
 	const creator = useSelector(creatorSelector);
 	const inAppNotifications: NotificationType[] = useSelector(inAppNotificationsSelector).filter(n => n.creatorId !== creator?.uid);
-
 	const { t } = useUserConfig();
 
 	return (
@@ -18,7 +17,6 @@ const InAppNotifications = () => {
 				<>
 					<span className={styles.notificationTitle}>{t('Notifications')}</span>
 					{inAppNotifications.map((notification) => {
-
 						return (
 							<NotificationCard key={notification.notificationId} {...notification} />
 						);
@@ -28,7 +26,7 @@ const InAppNotifications = () => {
 				<div className={styles.noNotifications}>{t('You have no new notifications')}</div>
 			)}
 		</div>
-	)
-}
+	);
+};
 
-export default InAppNotifications
+export default InAppNotifications;
