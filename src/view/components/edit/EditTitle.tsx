@@ -31,6 +31,8 @@ const EditTitle: FC<Props> = ({
 	setEdit,
 	isTextArea,
 }) => {
+	// DEPRECATED: This component is deprecated. Please use EditableStatement or EditText instead.
+	// TODO: Remove this component in a future version after all usages have been migrated
 	const [description, setDescription] = useState(
 		statement?.description || ''
 	);

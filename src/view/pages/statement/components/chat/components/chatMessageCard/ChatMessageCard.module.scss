@@ -277,6 +277,14 @@
   display: flex;
   align-items: center;
   background-color: var(--background-color-info-text);
+  
+  &.alignedLeft {
+    flex-direction: row;
+  }
+  
+  &.alignedRight {
+    flex-direction: row-reverse;
+  }
 }
 
 .editInput {
