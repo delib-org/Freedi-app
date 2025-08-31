@@ -1,8 +1,6 @@
 import { getMessaging, onMessage } from 'firebase/messaging';
 import { app } from '@/controllers/db/config';
 
-let messageCount = 0;
-
 export function monitorNotifications() {
     // console.info('=== STARTING NOTIFICATION MONITOR ===');
     
@@ -11,8 +9,7 @@ export function monitorNotifications() {
         
         // Monitor foreground messages
         onMessage(messaging, () => {
-            messageCount++;
-           
+            // console.info('[FC MESSAGE]', { data: message });
         });
         
     } catch (error) {
@@ -22,7 +19,7 @@ export function monitorNotifications() {
 
 // Also monitor service worker messages
 if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.addEventListener('message', (event) => {
+    navigator.serviceWorker.addEventListener('message', () => {
         // Uncomment for debugging service worker messages
         // console.info('[SW MESSAGE]', { data: event.data });
     });
