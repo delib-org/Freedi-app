@@ -7,6 +7,7 @@ export interface EditTextProps {
 	value: string;
 	secondaryValue?: string;
 	editable?: boolean;
+	editing?: boolean;
 	onSave?: (primary: string, secondary?: string) => void;
 	variant?: 'statement' | 'description' | 'both';
 	className?: string;
@@ -27,6 +28,7 @@ const EditText: FC<EditTextProps> = ({
 	value,
 	secondaryValue = '',
 	editable = false,
+	editing = false,
 	onSave,
 	variant = 'both',
 	className = '',
@@ -45,6 +47,7 @@ const EditText: FC<EditTextProps> = ({
 	const [isEditing, setIsEditing] = useState(false);
 	const [primaryText, setPrimaryText] = useState(value);
 	const [secondaryText, setSecondaryText] = useState(secondaryValue);
+	const [rawText, setRawText] = useState(''); // Track the raw text during editing
 	const inputRef = useRef<HTMLTextAreaElement | HTMLInputElement>(null);
 	const { dir: direction } = useUserConfig();
 	const align = direction === 'ltr' ? 'left' : 'right';
@@ -58,13 +61,37 @@ const EditText: FC<EditTextProps> = ({
 	}, [secondaryValue]);
 
 	useEffect(() => {
+		if (editing && !isEditing) {
+			handleStartEdit();
+		} else if (!editing && isEditing) {
+			handleCancel();
+		}
+	}, [editing]);
+
+	useEffect(() => {
 		if (isEditing && autoFocus && inputRef.current) {
 			inputRef.current.focus();
 		}
 	}, [isEditing, autoFocus]);
 
+	// Auto-resize textarea based on content
+	useEffect(() => {
+		if (isEditing && multiline && inputRef.current && 'style' in inputRef.current) {
+			const textarea = inputRef.current as HTMLTextAreaElement;
+			// Reset height to auto to get the correct scrollHeight
+			textarea.style.height = 'auto';
+			// Set height to scrollHeight
+			textarea.style.height = `${textarea.scrollHeight}px`;
+		}
+	}, [isEditing, multiline, rawText]);
+
 	const handleStartEdit = () => {
-		if (!editable) return;
+		if (!editable && !editing) return;
+		// Initialize raw text with current values
+		const initialText = secondaryValue 
+			? `${value}\n${secondaryValue}`
+			: value;
+		setRawText(initialText);
 		setIsEditing(true);
 		onEditStart?.();
 	};
@@ -73,10 +100,8 @@ const EditText: FC<EditTextProps> = ({
 		try {
 			if (required && !primaryText.trim()) return;
 			
-			const finalPrimary = variant === 'description' ? value : primaryText;
-			const finalSecondary = variant === 'statement' ? secondaryValue : secondaryText;
-			
-			onSave?.(finalPrimary, finalSecondary);
+			onSave?.(primaryText, secondaryText);
+			setRawText('');
 			setIsEditing(false);
 			onEditEnd?.();
 		} catch (error) {
@@ -87,6 +112,7 @@ const EditText: FC<EditTextProps> = ({
 	const handleCancel = () => {
 		setPrimaryText(value);
 		setSecondaryText(secondaryValue);
+		setRawText('');
 		setIsEditing(false);
 		onEditEnd?.();
 	};
@@ -100,16 +126,28 @@ const EditText: FC<EditTextProps> = ({
 		}
 	};
 
-	const handleTextAreaChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
-		if (variant === 'both' && multiline) {
-			const lines = e.target.value.split('\n');
-			setPrimaryText(lines[0] || '');
-			setSecondaryText(lines.slice(1).join('\n'));
-		} else if (variant === 'statement') {
-			setPrimaryText(e.target.value);
-		} else {
-			setSecondaryText(e.target.value);
+	const handleTextAreaKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+		if (e.key === 'Escape') {
+			handleCancel();
 		}
+		// Allow Enter and Shift+Enter to create new lines naturally
+	};
+
+	const handleTextAreaChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
+		const value = e.target.value;
+		setRawText(value); // Keep the raw text with all newlines
+		
+		// Split for saving purposes
+		const lines = value.split('\n');
+		const firstLine = lines[0] || '';
+		const restLines = lines.slice(1).join('\n');
+		setPrimaryText(firstLine);
+		setSecondaryText(restLines);
+		
+		// Auto-resize the textarea
+		const textarea = e.target;
+		textarea.style.height = 'auto';
+		textarea.style.height = `${textarea.scrollHeight}px`;
 	};
 
 	const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -122,15 +160,17 @@ const EditText: FC<EditTextProps> = ({
 		const displayContent = (
 			<div 
 				className={textClassName}
-				style={{ direction, textAlign: align }}
-				onClick={handleStartEdit}
-				role={editable ? 'button' : undefined}
-				tabIndex={editable ? 0 : undefined}
-				onKeyDown={editable ? (e) => e.key === 'Enter' && handleStartEdit() : undefined}
+				style={{ 
+					direction, 
+					textAlign: align,
+					cursor: editable && !editing ? 'pointer' : 'default'
+				}}
+				onClick={editable && !editing ? handleStartEdit : undefined}
+				role={editable && !editing ? 'button' : undefined}
+				tabIndex={editable && !editing ? 0 : undefined}
+				onKeyDown={editable && !editing ? (e) => e.key === 'Enter' && handleStartEdit() : undefined}
 			>
-				{variant === 'statement' && <Text statement={primaryText} />}
-				{variant === 'description' && <Text description={secondaryText} />}
-				{variant === 'both' && <Text statement={primaryText} description={secondaryText} />}
+				<Text statement={primaryText} description={secondaryText} />
 			</div>
 		);
 
@@ -139,26 +179,28 @@ const EditText: FC<EditTextProps> = ({
 
 	const renderEditContent = () => {
 		if (multiline) {
-			const textAreaValue = variant === 'both' 
-				? `${primaryText}${secondaryText ? '\n' + secondaryText : ''}`
-				: variant === 'statement' 
-					? primaryText 
-					: secondaryText;
-
 			return (
 				<textarea
 					ref={inputRef as React.RefObject<HTMLTextAreaElement>}
 					className={inputClassName}
-					style={{ direction, textAlign: align }}
-					value={textAreaValue}
+					style={{ 
+						direction, 
+						textAlign: align,
+						minHeight: '3rem',
+						overflow: 'hidden',
+						resize: 'none'
+					}}
+					value={rawText}
 					onChange={handleTextAreaChange}
-					placeholder={variant === 'description' ? secondaryPlaceholder : placeholder}
-					required={required && variant !== 'description'}
+					onKeyDown={handleTextAreaKeyDown}
+					placeholder={placeholder}
+					required={required}
 					data-cy="edit-text-textarea"
 				/>
 			);
 		}
 
+		// Non-multiline editing
 		if (variant === 'both') {
 			return (
 				<div className={containerClassName}>
@@ -176,9 +218,21 @@ const EditText: FC<EditTextProps> = ({
 					/>
 					<textarea
 						className={inputClassName}
-						style={{ direction, textAlign: align }}
+						style={{ 
+							direction, 
+							textAlign: align,
+							minHeight: '3rem',
+							overflow: 'hidden',
+							resize: 'none'
+						}}
 						value={secondaryText}
-						onChange={(e) => setSecondaryText(e.target.value)}
+						onChange={(e) => {
+							setSecondaryText(e.target.value);
+							// Auto-resize
+							e.target.style.height = 'auto';
+							e.target.style.height = `${e.target.scrollHeight}px`;
+						}}
+						onKeyDown={handleTextAreaKeyDown}
 						placeholder={secondaryPlaceholder}
 						data-cy="edit-text-secondary"
 					/>
@@ -191,9 +245,21 @@ const EditText: FC<EditTextProps> = ({
 				<textarea
 					ref={inputRef as React.RefObject<HTMLTextAreaElement>}
 					className={inputClassName}
-					style={{ direction, textAlign: align }}
+					style={{ 
+						direction, 
+						textAlign: align,
+						minHeight: '3rem',
+						overflow: 'hidden',
+						resize: 'none'
+					}}
 					value={secondaryText}
-					onChange={(e) => setSecondaryText(e.target.value)}
+					onChange={(e) => {
+						setSecondaryText(e.target.value);
+						// Auto-resize
+						e.target.style.height = 'auto';
+						e.target.style.height = `${e.target.scrollHeight}px`;
+					}}
+					onKeyDown={handleTextAreaKeyDown}
 					placeholder={secondaryPlaceholder}
 					data-cy="edit-text-description"
 				/>
@@ -220,24 +286,22 @@ const EditText: FC<EditTextProps> = ({
 		<div className={className}>
 			<div className={containerClassName}>
 				{renderEditContent()}
-				<button
-					className={saveButtonClassName}
-					onClick={handleSave}
-					aria-label="Save"
-					type="button"
-				>
-					<Save />
-				</button>
-				{editable && (
+				<div className={saveButtonClassName}>
 					<button
-						className={saveButtonClassName}
+						onClick={handleSave}
+						aria-label="Save"
+						type="button"
+					>
+						<Save />
+					</button>
+					<button
 						onClick={handleCancel}
 						aria-label="Cancel"
 						type="button"
 					>
 						Cancel
 					</button>
-				)}
+				</div>
 			</div>
 		</div>
 	);

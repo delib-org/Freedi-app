@@ -209,11 +209,12 @@ const SuggestionCard: FC<Props> = ({
 							<EditableStatement
 								statement={statement}
 								multiline={true}
-								forceEditable={isEdit}
+								forceEditing={isEdit}
 								onSaveSuccess={() => setIsEdit(false)}
 								onEditEnd={() => setIsEdit(false)}
 								className={styles.editableCard}
 								inputClassName={styles.editInput}
+								saveButtonClassName={styles.editButtons}
 							/>
 						</div>
 						<Link to={`/statement/${statement.statementId}`} className={styles.showMore}>

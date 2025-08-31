@@ -4,12 +4,13 @@ import EditText, { EditTextProps } from './EditText';
 import { useEditPermission } from '@/controllers/hooks/useEditPermission';
 import { updateStatementText } from '@/controllers/db/statements/setStatements';
 
-interface EditableStatementProps extends Omit<EditTextProps, 'value' | 'secondaryValue' | 'editable' | 'onSave'> {
+interface EditableStatementProps extends Omit<EditTextProps, 'value' | 'secondaryValue' | 'editable' | 'editing' | 'onSave'> {
 	statement: Statement | undefined;
 	showDescription?: boolean;
 	onSaveSuccess?: () => void;
 	onSaveError?: (error: Error) => void;
 	forceEditable?: boolean;
+	forceEditing?: boolean;
 }
 
 const EditableStatement: FC<EditableStatementProps> = ({
@@ -18,6 +19,7 @@ const EditableStatement: FC<EditableStatementProps> = ({
 	onSaveSuccess,
 	onSaveError,
 	forceEditable = false,
+	forceEditing = false,
 	variant = 'both',
 	...editTextProps
 }) => {
@@ -48,6 +50,7 @@ const EditableStatement: FC<EditableStatementProps> = ({
 			value={statement.statement || ''}
 			secondaryValue={statement.description || ''}
 			editable={isEditable}
+			editing={forceEditing}
 			onSave={handleSave}
 			variant={effectiveVariant}
 			{...editTextProps}

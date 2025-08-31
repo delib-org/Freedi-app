@@ -128,12 +128,13 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
             <EditableStatement
               statement={statement}
               multiline={true}
-              forceEditable={isEdit}
+              forceEditing={isEdit}
               onSaveSuccess={handleSaveSuccess}
               onEditEnd={() => setIsEdit(false)}
               className={styles.editableMessage}
               inputClassName={styles.editInput}
-              containerClassName={`${styles.inputWrapper} ${isAlignedLeft ? styles.alignedLeft : styles.alignedRight}`}
+              containerClassName={styles.editContainer}
+              saveButtonClassName={styles.editButtons}
             />
           </div>
           <div className={styles.messageActions}>

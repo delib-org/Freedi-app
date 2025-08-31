@@ -54,7 +54,7 @@ const StatementInfo: FC<Props> = ({ statement, setShowInfo }) => {
 						statement={statement}
 						variant="statement"
 						showDescription={false}
-						forceEditable={isInEditMode}
+						forceEditing={isInEditMode}
 						onEditStart={() => setIsInEditMode(true)}
 						onSaveSuccess={() => {
 							setIsInEditMode(false);
@@ -78,7 +78,7 @@ const StatementInfo: FC<Props> = ({ statement, setShowInfo }) => {
 					<EditableStatement
 						statement={statement}
 						variant="description"
-						forceEditable={isInEditMode}
+						forceEditing={isInEditMode}
 						onSaveSuccess={() => {
 							setIsInEditMode(false);
 						}}
