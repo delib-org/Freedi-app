@@ -9,3 +9,25 @@
     margin-bottom: 1rem;
     word-break: break-all;
 }
+
+.editableHeader {
+    width: 100%;
+}
+
+.headerText {
+    cursor: pointer;
+    
+    &:hover {
+        opacity: 0.8;
+    }
+}
+
+.headerInput {
+    width: 100%;
+    font-size: inherit;
+    font-weight: inherit;
+    border: 1px solid var(--border-color, #ccc);
+    border-radius: 4px;
+    padding: 0.5rem;
+    background: white;
+}
