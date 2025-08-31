@@ -8,7 +8,6 @@ import { useMassConsensusAnalytics } from '@/hooks/useMassConsensusAnalytics';
 
 import styles from './MassConsesusQuestion.module.scss'
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
-import BouncingLoader from '@/view/components/loaders/BouncingLoader';
 
 const MassConsensusQuestion = () => {
   const {
