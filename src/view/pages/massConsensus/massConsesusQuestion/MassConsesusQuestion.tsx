@@ -7,6 +7,8 @@ import FooterMassConsensus from '../footerMassConsensus/FooterMassConsensus';
 import { useMassConsensusAnalytics } from '@/hooks/useMassConsensusAnalytics';
 
 import styles from './MassConsesusQuestion.module.scss'
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import BouncingLoader from '@/view/components/loaders/BouncingLoader';
 
 const MassConsensusQuestion = () => {
   const {
@@ -22,7 +24,7 @@ const MassConsensusQuestion = () => {
     useMassConsensusAnalytics();
 
 	const isBusy = stage === 'loading' || stage === 'submitting';
-
+	const { t } = useUserConfig();
 	const [showLoader, setShowLoader] = useState(false);
 	const loaderStartRef = useRef<number | null>(null);
 
@@ -87,6 +89,9 @@ const MassConsensusQuestion = () => {
 					aria-live="polite"
 					aria-busy="true"
 				>
+					<h2 className={styles.loaderText}>
+						{t('Looking for similar suggestions... please wait.')}
+					</h2>
 					<Loader />
 				</div>
 			)}
