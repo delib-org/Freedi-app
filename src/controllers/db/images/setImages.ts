@@ -4,7 +4,8 @@ import { Statement, Collections } from 'delib-npm';
 
 export function uploadImageToStorage(
 	file: File,
-	statement: Statement
+	statement: Statement,
+	onProgress?: (progress: number) => void
 ): Promise<string> {
 	return new Promise((resolve, reject) => {
 		const imageRef = ref(
@@ -18,6 +19,9 @@ export function uploadImageToStorage(
 		uploadTask.on(
 			'state_changed',
 			(snapshot) => {
+				const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+				onProgress?.(progress);
+				
 				switch (snapshot.state) {
 					case 'paused':
 						console.info('Upload is paused');
@@ -33,6 +37,7 @@ export function uploadImageToStorage(
 			},
 			async () => {
 				try {
+					onProgress?.(100);
 					const downloadURL = await getDownloadURL(
 						uploadTask.snapshot.ref
 					);
