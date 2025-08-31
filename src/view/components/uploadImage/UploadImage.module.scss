@@ -1,9 +1,8 @@
 .dropZone {
 	position: relative;
 	width: 100%;
-	height: auto;
 	min-height: 200px;
-	max-height: 300px;
+	height: 300px;
 	margin: 0 auto;
 	border-radius: 8px;
 	display: flex;
@@ -35,17 +34,84 @@
 		cursor: pointer;
 	}
 
+.imageContainer {
+	position: relative;
+	width: 100%;
+	height: 100%;
+	min-height: 200px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
 .imagePreview {
-		width: 100%;
-		height: 100%;
-		background-size: contain;
-		background-repeat: no-repeat;
-		background-position: center;
-		border-radius: 8px;
-		text-align: center;
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	background-size: contain;
+	background-repeat: no-repeat;
+	background-position: center;
+	border-radius: 8px;
+}
+
+.successOverlay {
+	position: absolute;
+	top: 10px;
+	right: 10px;
+	background: rgba(40, 167, 69, 0.9);
+	color: white;
+	padding: 4px 8px;
+	border-radius: 4px;
+	font-size: 12px;
+	font-weight: 500;
+	
+	p {
+		margin: 0;
+		color: white;
+		font-size: 12px;
 	}
+}
 
 .dropZone p {
 		font-size: 16px;
 		color: #666;
 	}
+
+.progressContainer {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 8px;
+	width: 80%;
+	max-width: 300px;
+}
+
+.progressBar {
+	width: 100%;
+	height: 6px;
+	background-color: #e0e0e0;
+	border-radius: 3px;
+	overflow: hidden;
+}
+
+.progressFill {
+	height: 100%;
+	background: linear-gradient(90deg, #007bff, #0056b3);
+	border-radius: 3px;
+	transition: width 0.3s ease;
+}
+
+.successMessage {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	
+	p {
+		font-size: 14px;
+		color: #28a745;
+		font-weight: 500;
+		margin: 0;
+	}
+}

@@ -115,6 +115,11 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 						statement={statement}
 						setStatementToEdit={setStatementToEdit}
 					/>
+					<UploadImage
+							statement={statementSettingsProps.statement}
+							image={image}
+							setImage={setImage}
+						/>
 					{!isNewStatement && (
 						<>
 							<SectionTitle title={t('General Settings')} />
@@ -136,13 +141,7 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 					<>
 						<MembershipSettings statement={statement} setStatementToEdit={setStatementToEdit} />
 						<MembersSettings statement={statement} />
-						{statement.statementType === StatementType.question && <ChoseBySettings {...statementSettingsProps} />}
-
-						<UploadImage
-							statement={statementSettingsProps.statement}
-							image={image}
-							setImage={setImage}
-						/>
+						{statement.statementType === StatementType.question && <ChoseBySettings {...statementSettingsProps} />}						
 						<QuestionSettings {...statementSettingsProps} />
 						{isQuestion && <UserDataSetting statement={statement} />}
 						<SectionTitle title={t('Members')} />
