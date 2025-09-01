@@ -1,9 +1,7 @@
+/* src/view/components/menu/Menu.module.scss */
+
 .menu {
   position: relative;
-  [dir="rtl"] & .menuContent:not(.card) {
-    left: 0;
-    right: auto;
-  }
 
   .menuHeader {
     width: 100%;
@@ -37,11 +35,12 @@
     }
   }
 
+  /* BASE: non-card menus (user/nav/etc.) */
   .menuContent {
     z-index: 10001;
-    position: absolute; /* prevents layout shifts for icons */
+    position: absolute; /* stays out of flow, anchored to wrapper */
     top: calc(100% + 8px); /* open below the trigger by default */
-    right: 0; /* end-align in LTR; RTL override above flips it */
+    right: 0; /* base end-align (overridden below) */
     display: flex;
     flex-direction: column;
     width: 250px;
@@ -51,6 +50,7 @@
     box-shadow: 0 3px 9px #00000026;
     overflow: hidden;
 
+    /* simple open/close */
     max-height: 0;
     opacity: 0;
     transform-origin: top right;
@@ -65,20 +65,20 @@
       pointer-events: auto;
     }
 
-    /* CARD VARIANT: ONLY for the suggestion-card menu */
+    /* CARD VARIANT: suggestion-card menu only */
     &.card {
-      position: fixed; /* clamp to viewport (anchored by JS) */
+      position: fixed; /* clamp to viewport (JS sets top/left when open) */
 
-      /* 🔑 reset ONLY the sides we inherit from base; do NOT nuke top/left */
+      /* reset inherited sides from base; do NOT use inset:auto after top/left */
       right: auto;
       bottom: auto;
-      /* ⛔️ Do NOT put `inset: auto` here after top/left — it will zero them out */
+      will-change: transform, opacity;
 
-      /* off-screen baseline kills close flash */
+      /* off-screen baseline prevents close-flash */
       top: -9999px;
       left: -9999px;
 
-      /* avoid layout jank on card menus — just fade/slide */
+      /* fade/slide only — no layout jank */
       max-height: none;
       transform: translateY(-4px);
       transition:
@@ -95,6 +95,7 @@
       }
     }
   }
+
   .menuFooter {
     display: flex;
     height: 83px;
@@ -118,5 +119,47 @@
     z-index: 10000;
     background-color: transparent;
     pointer-events: auto;
+  }
+
+  /* =========================
+     Inner-side ALWAYS (LTR/RTL)
+     with iOS safe-area padding
+     ========================= */
+
+  /* LTR: anchor to inner-left at all widths, clamp to viewport */
+  &[dir="ltr"] .menuContent:not(.card) {
+    /* Respect iOS notch/rounded corners on the left */
+    left: max(8px, env(safe-area-inset-left));
+    right: auto;
+
+    /* Keep the menu inside the viewport width; 16px total breathing room */
+    width: min(250px, calc(100vw - 16px));
+    max-width: calc(100vw - 16px);
+
+    transform-origin: top left;
+  }
+
+  /* RTL: anchor to inner-right at all widths, clamp to viewport */
+  &[dir="rtl"] .menuContent:not(.card) {
+    /* Respect iOS notch/rounded corners on the right */
+    right: max(8px, env(safe-area-inset-right));
+    left: auto;
+
+    /* Keep the menu inside the viewport width; 16px total breathing room */
+    width: min(250px, calc(100vw - 16px));
+    max-width: calc(100vw - 16px);
+
+    transform-origin: top right;
+  }
+
+  /* Reduced-motion friendliness (optional but nice) */
+  @media (prefers-reduced-motion: reduce) {
+    .menuContent {
+      transition: none;
+    }
+    .menuContent.card {
+      transition: none;
+      transform: none;
+    }
   }
 }

@@ -117,6 +117,7 @@ const Menu: FC<MenuProps> = ({
 				menuRootRef.current = node;
 			}}
 			className={styles.menu}
+			dir={dir}
 		>
 			<IconButton
 				ref={buttonRef}
