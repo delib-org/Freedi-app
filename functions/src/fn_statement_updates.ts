@@ -1,4 +1,4 @@
-import { onDocumentWritten, onDocumentCreated, onDocumentUpdated } from 'firebase-functions/v2/firestore';
+import { onDocumentWritten, onDocumentCreated, onDocumentUpdated, onDocumentDeleted } from 'firebase-functions/v2/firestore';
 import { db } from '.';
 import { logger } from 'firebase-functions';
 import {
@@ -25,6 +25,15 @@ export const updateParentOnChildCreate = onDocumentCreated({
         
         // Update parent statement with latest children
         await updateParentWithLatestChildren(newStatement.parentId);
+        
+        // Also update top-level parent if different from direct parent
+        // AND if the current statement is not itself a top-level statement
+        if (newStatement.topParentId && 
+            newStatement.topParentId !== newStatement.parentId &&
+            newStatement.parentId !== 'top') {
+            logger.info(`Also updating top-level parent ${newStatement.topParentId}`);
+            await updateTopParentSubscriptions(newStatement.topParentId);
+        }
         
     } catch (error) {
         logger.error('Error in updateParentOnChildCreate:', error);
@@ -83,6 +92,15 @@ return;
         
         // Update parent statement with latest children
         await updateParentWithLatestChildren(after.parentId);
+        
+        // Also update top-level parent if different from direct parent
+        // AND if the current statement is not itself a top-level statement
+        if (after.topParentId && 
+            after.topParentId !== after.parentId && 
+            after.parentId !== 'top') {
+            logger.info(`Also updating top-level parent ${after.topParentId}`);
+            await updateTopParentSubscriptions(after.topParentId);
+        }
         
     } catch (error) {
         logger.error('Error in updateParentOnChildUpdate:', error);
@@ -192,6 +210,111 @@ return;
 
     } catch (error) {
         logger.error(`Error updating subscriptions for statement ${statementId}:`, error);
+    }
+}
+
+/**
+ * Updates parent statement when a child statement is deleted
+ */
+export const updateParentOnChildDelete = onDocumentDeleted({
+    document: `${Collections.statements}/{statementId}`,
+    region: 'europe-west1'
+}, async (event) => {
+    try {
+        const deletedStatement = event.data?.data() as Statement | undefined;
+        
+        // Skip if no parent
+        if (!deletedStatement || !deletedStatement.parentId) return;
+        
+        logger.info(`Child statement deleted, updating parent ${deletedStatement.parentId}`);
+        
+        // Update parent statement with latest children
+        await updateParentWithLatestChildren(deletedStatement.parentId);
+        
+        // Also update top-level parent if different from direct parent
+        // AND if the current statement is not itself a top-level statement
+        if (deletedStatement.topParentId && 
+            deletedStatement.topParentId !== deletedStatement.parentId &&
+            deletedStatement.parentId !== 'top') {
+            logger.info(`Also updating top-level parent ${deletedStatement.topParentId}`);
+            await updateTopParentSubscriptions(deletedStatement.topParentId);
+        }
+        
+    } catch (error) {
+        logger.error('Error in updateParentOnChildDelete:', error);
+    }
+});
+
+/**
+ * Updates only the subscriptions for a top-level parent without fetching sub-statements
+ * This is used when a nested child changes to update the top-level group's lastUpdate
+ */
+async function updateTopParentSubscriptions(topParentId: string) {
+    try {
+        const LIMIT = 500; // Safety limit to prevent runaway updates
+        const timestamp = Date.now();
+
+        // First, update the top-level statement document itself
+        // IMPORTANT: We only update lastUpdate field to avoid triggering content change detection
+        const topParentRef = db.collection(Collections.statements).doc(topParentId);
+        
+        // Check if the statement exists and hasn't been updated recently (within 1 second)
+        // This prevents rapid successive updates and potential loops
+        const topParentDoc = await topParentRef.get();
+        if (!topParentDoc.exists) {
+            logger.warn(`Top-level statement ${topParentId} not found`);
+            return;
+        }
+        
+        const currentData = topParentDoc.data() as Statement;
+        const lastUpdateTime = currentData.lastUpdate || 0;
+        
+        // Skip if this was updated within the last second (prevents rapid cascading)
+        if (timestamp - lastUpdateTime < 1000) {
+            logger.info(`Skipping update for ${topParentId} - was recently updated`);
+            return;
+        }
+        
+        // Update the statement's lastUpdate field
+        // This will trigger updateParentOnChildUpdate, but it will be filtered out
+        // because only lastUpdate changed (no content change)
+        await topParentRef.update({
+            lastUpdate: timestamp
+        });
+        logger.info(`Updated top-level statement ${topParentId} with new timestamp`);
+
+        // Get all subscriptions for this top-level statement
+        const subscriptionsQuery = await db
+            .collection(Collections.statementsSubscribe)
+            .where('statementId', '==', topParentId)
+            .limit(LIMIT)
+            .get();
+
+        if (subscriptionsQuery.empty) {
+            logger.info(`No subscriptions found for top-level statement ${topParentId}`);
+            
+            return;
+        }
+
+        if (subscriptionsQuery.size >= LIMIT) {
+            logger.warn(`Found more than ${LIMIT} subscriptions for top-level statement ${topParentId}, consider batching updates`);
+        }
+
+        logger.info(`Updating ${subscriptionsQuery.size} subscriptions for top-level statement ${topParentId}`);
+
+        // Batch update for efficiency - only update lastUpdate timestamp
+        const batch = db.batch();
+        subscriptionsQuery.docs.forEach(doc => {
+            batch.update(doc.ref, {
+                lastUpdate: timestamp
+            });
+        });
+
+        await batch.commit();
+        logger.info(`Successfully updated ${subscriptionsQuery.size} top-level subscriptions`);
+
+    } catch (error) {
+        logger.error(`Error updating top-level subscriptions for statement ${topParentId}:`, error);
     }
 }
 

@@ -37,6 +37,7 @@ import {
 import { 
   updateParentOnChildCreate,
   updateParentOnChildUpdate,
+  updateParentOnChildDelete,
   updateParentStatementOnChildChange 
 } from "./fn_statement_updates";
 import {
@@ -213,6 +214,7 @@ exports.updateNumberOfMembers = createFirestoreFunction(
 // These are v2 functions, so we export them directly without the wrapper
 exports.updateParentOnChildCreate = updateParentOnChildCreate;
 exports.updateParentOnChildUpdate = updateParentOnChildUpdate;
+exports.updateParentOnChildDelete = updateParentOnChildDelete;
 exports.updateSubscriptionsSimpleStatement = updateSubscriptionsSimpleStatement;
 
 // DEPRECATED: Keeping for backward compatibility until Firebase updates
