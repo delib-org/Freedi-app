@@ -1,5 +1,3 @@
-// src/view/components/menu/Menu.tsx
-
 import BurgerIcon from '@/assets/icons/burgerIcon.svg?react';
 import EllipsisIcon from '@/assets/icons/ellipsisIcon.svg?react';
 import DefaultAvatar from '@/assets/images/avatar.jpg';
@@ -48,7 +46,7 @@ const Menu: FC<MenuProps> = ({
 	statement,
 	isNavMenu = true,
 }) => {
-	const { dir } = useUserConfig(); // 'ltr' | 'rtl'
+	const { dir } = useUserConfig();
 	const user = useSelector((state: RootState) => state.creator.creator);
 	const avatarSrc = user?.photoURL || DefaultAvatar;
 	const { backgroundColor } = useStatementColor({ statement });

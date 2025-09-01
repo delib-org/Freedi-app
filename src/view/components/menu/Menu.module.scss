@@ -1,5 +1,3 @@
-/* src/view/components/menu/Menu.module.scss */
-
 .menu {
   position: relative;
 
@@ -38,9 +36,9 @@
   /* BASE: non-card menus (user/nav/etc.) */
   .menuContent {
     z-index: 10001;
-    position: absolute; /* stays out of flow, anchored to wrapper */
-    top: calc(100% + 8px); /* open below the trigger by default */
-    right: 0; /* base end-align (overridden below) */
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
     display: flex;
     flex-direction: column;
     width: 250px;
@@ -49,8 +47,6 @@
     background-color: white;
     box-shadow: 0 3px 9px #00000026;
     overflow: hidden;
-
-    /* simple open/close */
     max-height: 0;
     opacity: 0;
     transform-origin: top right;
@@ -67,18 +63,12 @@
 
     /* CARD VARIANT: suggestion-card menu only */
     &.card {
-      position: fixed; /* clamp to viewport (JS sets top/left when open) */
-
-      /* reset inherited sides from base; do NOT use inset:auto after top/left */
+      position: fixed;
       right: auto;
       bottom: auto;
       will-change: transform, opacity;
-
-      /* off-screen baseline prevents close-flash */
       top: -9999px;
       left: -9999px;
-
-      /* fade/slide only — no layout jank */
       max-height: none;
       transform: translateY(-4px);
       transition:
@@ -91,7 +81,6 @@
         opacity: 1;
         transform: translateY(0);
         pointer-events: auto;
-        /* top/left are injected inline by TS when open */
       }
     }
   }
@@ -121,38 +110,24 @@
     pointer-events: auto;
   }
 
-  /* =========================
-     Inner-side ALWAYS (LTR/RTL)
-     with iOS safe-area padding
-     ========================= */
-
-  /* LTR: anchor to inner-left at all widths, clamp to viewport */
   &[dir="ltr"] .menuContent:not(.card) {
     /* Respect iOS notch/rounded corners on the left */
     left: max(8px, env(safe-area-inset-left));
     right: auto;
-
-    /* Keep the menu inside the viewport width; 16px total breathing room */
     width: min(250px, calc(100vw - 16px));
     max-width: calc(100vw - 16px);
-
     transform-origin: top left;
   }
 
-  /* RTL: anchor to inner-right at all widths, clamp to viewport */
   &[dir="rtl"] .menuContent:not(.card) {
     /* Respect iOS notch/rounded corners on the right */
     right: max(8px, env(safe-area-inset-right));
     left: auto;
-
-    /* Keep the menu inside the viewport width; 16px total breathing room */
     width: min(250px, calc(100vw - 16px));
     max-width: calc(100vw - 16px);
-
     transform-origin: top right;
   }
 
-  /* Reduced-motion friendliness (optional but nice) */
   @media (prefers-reduced-motion: reduce) {
     .menuContent {
       transition: none;
