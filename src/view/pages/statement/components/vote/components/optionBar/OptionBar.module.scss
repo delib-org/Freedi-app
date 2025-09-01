@@ -120,13 +120,13 @@
         }
 
         .title {
-            transform: rotate(270deg) translate(11rem, -3rem);
+            transform: rotate(270deg) translate(11rem, -2rem);
             color: #6e8aa6;
             width: 19rem;
             text-align: end;
 
             &.isBarSmall {
-                transform: rotate(270deg) translate(11rem, -2.5rem);
+                transform: rotate(270deg) translate(11rem, -1.6rem);
             }
         }
     }
