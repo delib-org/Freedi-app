@@ -119,7 +119,6 @@ export async function updateLastReadTimestamp(
 			// Document exists, update it
 			await updateDoc(statementsSubscribeRef, {
 				lastReadTimestamp: new Date().getTime(),
-				lastUpdate: Timestamp.now().toMillis(),
 				statementId: statementId // Include statementId to satisfy Firebase rules
 			});
 		}
@@ -235,7 +234,6 @@ export async function addTokenToSubscription(
 			// Document exists, use updateDoc
 			await updateDoc(statementSubscriptionRef, {
 				tokens: arrayUnion(token),
-				lastUpdate: Timestamp.now().toMillis(),
 				statementId: statementId // Include statementId to satisfy Firebase rules
 			});
 		}
@@ -275,7 +273,6 @@ export async function removeTokenFromSubscription(
 			// Remove token from the tokens array
 			await updateDoc(statementSubscriptionRef, {
 				tokens: arrayRemove(token),
-				lastUpdate: Timestamp.now().toMillis(),
 				statementId: statementId // Include statementId to satisfy Firebase rules
 			});
 		}
@@ -318,7 +315,6 @@ export async function updateNotificationPreferences(
 			// Document exists, use updateDoc
 			await updateDoc(statementSubscriptionRef, {
 				...preferences,
-				lastUpdate: Timestamp.now().toMillis(),
 				statementId: statementId // Include statementId to satisfy Firebase rules
 			});
 		}
