@@ -8,12 +8,12 @@ $headerHeight: 4.2rem;
   z-index: 100;
 
   /* LTR default */
-  border-radius: 0 0 calc($headerHeight / 2) 0; /* LTR default */
+  border-radius: 0 0 calc($headerHeight / 2) 0;
 }
 
 /* Mirror the rounded corner in RTL */
 .nav[dir="rtl"] {
-  border-radius: 0 0 0 calc($headerHeight / 2); /* mirror in RTL */
+  border-radius: 0 0 0 calc($headerHeight / 2);
 }
 
 .wrapper {

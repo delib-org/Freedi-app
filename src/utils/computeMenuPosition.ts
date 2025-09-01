@@ -9,7 +9,7 @@ export function computeMenuPosition(opts: {
   dir: "ltr" | "rtl";
   padding?: number;
   gap?: number;
-  skipHiddenMeasure?: boolean; // when true, never hide the menu to measure
+  skipHiddenMeasure?: boolean;
 }): { top: number; left: number; placement: Placement } {
   const {
     triggerRect: rect,
@@ -27,11 +27,9 @@ export function computeMenuPosition(opts: {
   let measuredHeight: number;
 
   if (skipHiddenMeasure) {
-    // While open → read current size only (no visibility changes → no blink)
     measuredWidth = menuEl.offsetWidth || 250;
     measuredHeight = menuEl.scrollHeight || menuEl.offsetHeight || 300;
   } else {
-    // Opening pass → measure true height before first paint (no flash under cards)
     const prev = {
       visibility: menuEl.style.visibility,
       opacity: menuEl.style.opacity,
