@@ -21,14 +21,14 @@ const HeaderMassConsensus = () => {
 	const computedTitle = typeof title === 'function' ? title() : title;
 
 	return (
-		<div className={styles.headerMC} style={{ direction: dir }}>
-			<div className={styles.headerMC__wrapper}>
+		<div className={`app-header app-header--shadow ${styles.headerMC}`} style={{ direction: dir }}>
+			<div className={`app-header-wrapper ${styles.headerMC__wrapper}`}>
 				{previousStep && (
 					<Link
 						className={
-							dir === 'ltr'
-								? styles.icon
-								: `${styles.icon} ${styles['icon--ltr']}`
+							dir === 'rtl'
+								? `${styles.icon} ${styles['icon--rtl']}`
+								: styles.icon
 						}
 						to={
 							backToApp
@@ -43,7 +43,7 @@ const HeaderMassConsensus = () => {
 					className={styles['title-container']}
 					style={{ direction: dir }}
 				>
-					<h1 className={styles.title}>{computedTitle}</h1>
+					<h1 className={`app-header-title ${styles.title}`}>{computedTitle}</h1>
 				</div>
 
 				<div className={styles.rightIcons}>
