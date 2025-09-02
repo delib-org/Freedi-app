@@ -1,8 +1,8 @@
 import {
-	selectUserDataByStatementId,
-	selectUserQuestionsByStatementId,
-} from '@/redux/userData/userDataSlice';
-import UserDataQuestions from '@/view/pages/statement/components/userDataQuestions/UserDataQuestions';
+	selectUserDemographicByStatementId,
+	selectUserDemographicQuestionsByStatementId,
+} from '@/redux/userDemographic/userDemographicSlice';
+import UserDemographicQuestions from '@/view/pages/statement/components/userDemographicQuestions/UserDemographicQuestions';
 import { useSelector } from 'react-redux';
 import { useNavigate, useParams } from 'react-router';
 import {
@@ -15,11 +15,11 @@ const UserDemographicMC = () => {
 	const { steps, currentStep } = useMassConsensusSteps();
 	const { nextStep: goTo } = getStepNavigation(steps, currentStep);
 	const { statementId } = useParams();
-	const userDataQuestions = useSelector(
-		selectUserQuestionsByStatementId(statementId || '')
+	const userDemographicQuestions = useSelector(
+		selectUserDemographicQuestionsByStatementId(statementId || '')
 	);
-	const userData = useSelector(
-		selectUserDataByStatementId(statementId || '')
+	const userDemographic = useSelector(
+		selectUserDemographicByStatementId(statementId || '')
 	);
 
 	function next() {
@@ -27,21 +27,21 @@ const UserDemographicMC = () => {
 	}
 
 	// Loading state
-	if (userDataQuestions === undefined || userData === undefined) {
+	if (userDemographicQuestions === undefined || userDemographic === undefined) {
 		return <div>Loading...</div>;
 	}
 
 	// If no questions or all answered, show loading while navigating
 	if (
-		userDataQuestions.length === 0 ||
-		userData.length >= userDataQuestions.length
+		userDemographicQuestions.length === 0 ||
+		userDemographic.length >= userDemographicQuestions.length
 	) {
 		return <div>Proceeding to next step...</div>;
 	}
 
 	return (
-		<UserDataQuestions
-			questions={userDataQuestions}
+		<UserDemographicQuestions
+			questions={userDemographicQuestions}
 			closeModal={() => next()}
 		/>
 	);

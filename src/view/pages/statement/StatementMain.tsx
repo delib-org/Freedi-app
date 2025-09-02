@@ -50,9 +50,9 @@ const StatementMain: React.FC = () => {
 		statement,
 		topParentStatement,
 		role,
-		userDataQuestions,
+		userDemographicQuestions,
 		showNewStatement,
-		showUserQuestions,
+		showUserDemographicQuestions,
 		talker,
 		isStatementNotFound,
 		error,
@@ -151,8 +151,8 @@ const StatementMain: React.FC = () => {
 						newStatementType={newStatementType}
 						newQuestionType={newQuestionType}
 						showNewStatement={showNewStatement}
-						showUserQuestions={showUserQuestions}
-						userDataQuestions={userDataQuestions}
+						showUserDemographicQuestions={showUserDemographicQuestions}
+						userDemographicQuestions={userDemographicQuestions}
 						screen={screen}
 						isMassConsensus={isMassConsensus}
 						handleShowTalker={handleShowTalker}

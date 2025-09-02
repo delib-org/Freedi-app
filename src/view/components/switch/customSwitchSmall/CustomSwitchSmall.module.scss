@@ -6,6 +6,8 @@ $SwitchHeight: 2.6729rem;
     flex-direction: column;
     width: fit-content;
     align-items: start;
+    cursor: pointer;
+    user-select: none;
 
     input {
         display: none;
@@ -45,11 +47,17 @@ $SwitchHeight: 2.6729rem;
     width: $SwitchHeight;
     position: absolute;
     border-radius: 100%;
+    color: black;
+
+    svg {
+        width: 60%;
+        height: 60%;
+    }
 }
 
 .ballBackground {
     @extend .ball;
-    color: var(--toggle-background);
+    color: var(--text-label);
 }
 
 .ballBackgroundOff {

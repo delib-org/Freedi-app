@@ -42,7 +42,7 @@ const StatementTopNav: FC<Props> = ({
   isHeaderMenuOpen,
   handleShare,
 }) => {
-  const { t, currentLanguage } = useUserConfig();
+  const { t, dir, currentLanguage } = useUserConfig();
   const { user } = useAuthentication();
   const navigate = useNavigate();
   const { screen } = useParams();
@@ -54,7 +54,7 @@ const StatementTopNav: FC<Props> = ({
   if (!statement) return null;
 
   const _statement = parentStatement || statement;
-  
+
   const enableNavigationalElements = _statement?.statementSettings?.enableNavigationalElements === false ? false : true;
 
   const isAdmin = role === Role.admin || user?.uid === statement?.creatorId;
@@ -83,7 +83,8 @@ const StatementTopNav: FC<Props> = ({
 
   return (
     <nav
-      className={`${styles.nav} ${currentLanguage === "he" ? styles.rtl : styles.ltr}`}
+      className={styles.nav}
+      dir={dir}
       data-cy="statement-nav"
       style={{ backgroundColor: headerStyle.backgroundColor }}
     >

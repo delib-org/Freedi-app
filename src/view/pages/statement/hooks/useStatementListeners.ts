@@ -11,9 +11,9 @@ import {
 	clearInAppNotifications,
 } from '@/controllers/db/inAppNotifications/db_inAppNotifications';
 import {
-	listenToUserAnswers,
-	listenToUserQuestions,
-} from '@/controllers/db/userData/getUserData';
+	listenToUserDemographicAnswers,
+	listenToUserDemographicQuestions,
+} from '@/controllers/db/userDemographic/getUserDemographic';
 import { store } from '@/redux/store';
 
 interface UseStatementListenersProps {
@@ -66,8 +66,8 @@ export const useStatementListeners = ({
 			unsubscribersRef.current.push(
 				listenToStatement(statementId, setIsStatementNotFound),
 				listenToStatementSubscription(statementId, creator),
-				listenToUserQuestions(statementId),
-				listenToUserAnswers(statementId),
+				listenToUserDemographicQuestions(statementId),
+				listenToUserDemographicAnswers(statementId),
 				listenToInAppNotifications()
 			);
 

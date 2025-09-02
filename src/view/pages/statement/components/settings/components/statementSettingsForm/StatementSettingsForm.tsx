@@ -27,7 +27,7 @@ import { RootState } from '@/redux/store';
 import Loader from '@/view/components/loaders/Loader';
 import { StatementSubscription, Role, Statement, StatementType } from 'delib-npm';
 import MembershipSettings from '../membershipSettings/MembershipSettings';
-import UserDataSetting from '../UserDataSettings/UserDataSetting';
+import UserDemographicSetting from '../UserDemographicSettings/UserDemographicSetting';
 import MembersSettings from '../membership/MembersSettings';
 
 interface StatementSettingsFormProps {
@@ -143,7 +143,7 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 						<MembersSettings statement={statement} />
 						{statement.statementType === StatementType.question && <ChoseBySettings {...statementSettingsProps} />}						
 						<QuestionSettings {...statementSettingsProps} />
-						{isQuestion && <UserDataSetting statement={statement} />}
+						{isQuestion && <UserDemographicSetting statement={statement} />}
 						<SectionTitle title={t('Members')} />
 						<section className={styles.getMembersArea}>
 							<GetVoters

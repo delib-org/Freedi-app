@@ -1,9 +1,9 @@
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { massConsensusStepsSelector } from '@/redux/massConsensus/massConsensusSlice';
 import {
-	selectUserDataByStatementId,
-	selectUserQuestionsByStatementId,
-} from '@/redux/userData/userDataSlice';
+	selectUserDemographicByStatementId,
+	selectUserDemographicQuestionsByStatementId,
+} from '@/redux/userDemographic/userDemographicSlice';
 import { LoginType, MassConsensusPageUrls, MassConsensusStep } from 'delib-npm';
 import { useSelector } from 'react-redux';
 import { useLocation, useParams } from 'react-router';
@@ -23,15 +23,15 @@ export function useMassConsensusSteps(): Props {
 		: LoginType.google;
 	let steps = useSelector(massConsensusStepsSelector(statementId, loginType));
 	const pathSegments = location.pathname.split('/');
-	const userDataQuestions = useSelector(
-		selectUserQuestionsByStatementId(statementId || '')
+	const userDemographicQuestions = useSelector(
+		selectUserDemographicQuestionsByStatementId(statementId || '')
 	);
-	const userData = useSelector(
-		selectUserDataByStatementId(statementId || '')
+	const userDemographic = useSelector(
+		selectUserDemographicByStatementId(statementId || '')
 	);
 	const shouldShowUserDemographics =
-		userDataQuestions.length > 0 &&
-		userData.length < userDataQuestions.length;
+		userDemographicQuestions.length > 0 &&
+		userDemographic.length < userDemographicQuestions.length;
 
 	if (!shouldShowUserDemographics) {
 		steps = steps.filter(

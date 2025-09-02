@@ -1,7 +1,5 @@
 .menu {
   position: relative;
-  margin: auto;
-  
 
   .menuHeader {
     width: 100%;
@@ -35,97 +33,108 @@
     }
   }
 
+  /* BASE: non-card menus (user/nav/etc.) */
   .menuContent {
     z-index: 10001;
     position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
     display: flex;
-    border-radius: 15px;
+    flex-direction: column;
     width: 250px;
     min-width: 200px;
-    flex-direction: column;
+    border-radius: 15px;
     background-color: white;
-    box-shadow: 0px 3px 9px #00000026;
+    box-shadow: 0 3px 9px #00000026;
     overflow: hidden;
     max-height: 0;
     opacity: 0;
-    transform-origin: top center;
-
+    transform-origin: top right;
     transition:
-      max-height 0.3s ease-out,
-      opacity 0.3s ease-out;
-
-    &--main {
-      &--rtl {
-        left: 0px;
-      }
-
-      &--ltr {
-        right: 1rem;
-      }
-    }
+      max-height 0.2s ease-out,
+      opacity 0.15s ease-out;
+    pointer-events: none;
 
     &.open {
       max-height: 800px;
       opacity: 1;
+      pointer-events: auto;
+    }
+
+    /* CARD VARIANT: suggestion-card menu only */
+    &.card {
+      position: fixed;
+      right: auto;
+      bottom: auto;
+      will-change: transform, opacity;
+      top: -9999px;
+      left: -9999px;
+      max-height: none;
+      transform: translateY(-4px);
       transition:
-        max-height 0.3s ease-out,
-        opacity 0.3s ease-out;
-    }
+        opacity 120ms ease,
+        transform 120ms ease;
+      opacity: 0;
+      pointer-events: none;
 
-    &.ltr {
-      &--card-menu {
-        position: fixed;
-        right: auto;
+      &.open {
+        opacity: 1;
+        transform: translateY(0);
+        pointer-events: auto;
       }
-    }
-
-    &.rtl {
-      &--card-menu {
-        position: fixed;
-        right: auto;
-      }
-    }
-    
-    // Position modifiers for card menu
-    &.position--above {
-      position: fixed;
-      transform-origin: bottom center;
-    }
-    
-    &.position--below {
-      position: fixed;
-      transform-origin: top center;
     }
   }
 
-  @media (max-width: 1080px) {
+  .menuFooter {
+    display: flex;
+    height: 83px;
+    cursor: pointer;
+    pointer-events: auto;
+    z-index: 1000;
+
+    .menuOption {
+      border-bottom: none;
+      background-color: none;
+      color: white;
+    }
+  }
+
+  .invisibleBackground {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100svh;
+    z-index: 10000;
+    background-color: transparent;
+    pointer-events: auto;
+  }
+
+  &[dir="ltr"] .menuContent:not(.card) {
+    /* Respect iOS notch/rounded corners on the left */
+    left: max(8px, env(safe-area-inset-left));
+    right: auto;
+    width: min(250px, calc(100vw - 16px));
+    max-width: calc(100vw - 16px);
+    transform-origin: top left;
+  }
+
+  &[dir="rtl"] .menuContent:not(.card) {
+    /* Respect iOS notch/rounded corners on the right */
+    right: max(8px, env(safe-area-inset-right));
+    left: auto;
+    width: min(250px, calc(100vw - 16px));
+    max-width: calc(100vw - 16px);
+    transform-origin: top right;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
     .menuContent {
-      transform: translateX(20px);
+      transition: none;
+    }
+    .menuContent.card {
+      transition: none;
+      transform: none;
     }
   }
-}
-
-.menuFooter {
-  display: flex;
-  height: 83px;
-  cursor: pointer;
-  pointer-events: auto;
-  z-index: 1000;
-
-  .menuOption {
-    border-bottom: none;
-    background-color: none;
-    color: white;
-  }
-}
-
-.invisibleBackground {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100svh;
-  z-index: 10000;
-  background-color: transparent;
-  pointer-events: auto;
 }

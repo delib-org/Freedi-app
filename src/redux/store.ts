@@ -9,7 +9,7 @@ import { massConsensusSlice } from './massConsensus/massConsensusSlice';
 import { notificationsSlicer } from './notificationsSlice/notificationsSlice';
 import creatorReducer from './creator/creatorSlice';
 import SubscriptionsReducer from './subscriptions/subscriptionsSlice';
-import userDataReducer from './userData/userDataSlice';
+import userDemographicReducer from './userDemographic/userDemographicSlice';
 import newStatementReducer from './statements/newStatementSlice';
 
 export const store = configureStore({
@@ -24,7 +24,7 @@ export const store = configureStore({
 		notifications: notificationsSlicer.reducer,
 		creator: creatorReducer,
 		subscriptions: SubscriptionsReducer.reducer,
-		userData: userDataReducer,
+		userDemographic: userDemographicReducer,
 		newStatement: newStatementReducer
 	},
 });
