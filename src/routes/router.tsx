@@ -35,6 +35,7 @@ import { MassConsensusPageUrls } from 'delib-npm';
 import UserDemographicMC from '@/view/pages/massConsensus/massConsesusQuestion/userDemographicMC/UserDemographicMC';
 import My from '@/view/pages/my/My';
 import CheckNotifications from '@/view/pages/settings/ChecNotifications';
+import MySuggestions from '@/view/pages/my-suggestions/MySuggestions';
 
 // Define errorRoutes
 const errorRoutes = [
@@ -127,6 +128,10 @@ const protectedRoutes = [
 	{
 		path: 'stage/:statementId/:sort',
 		element: <StatementMain />,
+	},
+	{
+		path: 'my-suggestions/statement/:statementId',
+		element: <MySuggestions />,
 	},
 	// ... other protected routes
 ];

@@ -8,6 +8,7 @@ import { useHeader } from './HeaderContext';
 import { useSelector } from 'react-redux';
 import { statementSubscriptionSelector } from '@/redux/statements/statementsSlice';
 import { getStepNavigation, useMassConsensusSteps } from '../MassConsensusVM';
+import MySuggestionsIcon from '@/assets/icons/evaluations2Icon.svg?react';
 
 const HeaderMassConsensus = () => {
 	const { statementId } = useParams<{ statementId: string }>();
@@ -45,16 +46,25 @@ const HeaderMassConsensus = () => {
 					<h1 className={styles.title}>{computedTitle}</h1>
 				</div>
 
-				{isIntro ? (
-					''
-				) : (
-					<Link
-						className={styles.icon}
-						to={role === Role.admin ? `/statement/${statementId}` : `/mass-consensus/${statementId}/${MassConsensusPageUrls.introduction}`}
-					>
-						<HomeIcon />
-					</Link>
-				)}
+				<div className={styles.rightIcons}>
+					{!isIntro && (
+						<>
+							<Link
+								className={styles.icon}
+								to={`/my-suggestions/statement/${statementId}`}
+								title="My Suggestions"
+							>
+								<MySuggestionsIcon />
+							</Link>
+							<Link
+								className={styles.icon}
+								to={role === Role.admin ? `/statement/${statementId}` : `/mass-consensus/${statementId}/${MassConsensusPageUrls.introduction}`}
+							>
+								<HomeIcon />
+							</Link>
+						</>
+					)}
+				</div>
 			</div>
 		</div>
 	);

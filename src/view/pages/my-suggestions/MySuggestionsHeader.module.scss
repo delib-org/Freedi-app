@@ -1,0 +1,65 @@
+
+.nav {
+	width: 100%;
+	background-color: var(--header);
+	border-radius: 0 0 1rem 0;
+	box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
+	position: sticky;
+	top: 0;
+	z-index: 100;
+
+	.wrapper {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding: 1rem;
+		max-width: var(--wrapper-max-width);
+		margin: 0 auto;
+		gap: 1rem;
+	}
+
+	.backButton {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		background: transparent;
+		border: none;
+		cursor: pointer;
+		padding: 0.5rem;
+		border-radius: 50%;
+		transition: background-color 0.2s ease;
+		color: var(--white);
+		
+		&:hover {
+			background-color: rgba(255, 255, 255, 0.1);
+		}
+
+		svg {
+			width: 24px;
+			height: 24px;
+			color: var(--white);
+		}
+	}
+
+	.title {
+		flex: 1;
+		text-align: center;
+		font-size: 1.25rem;
+		font-weight: 500;
+		color: var(--white);
+	}
+
+	.spacer {
+		width: 40px; // Same width as back button for centering
+	}
+
+	&[dir="rtl"] {
+		.wrapper {
+			flex-direction: row-reverse;
+		}
+
+		.backButton svg {
+			transform: rotate(180deg);
+		}
+	}
+}

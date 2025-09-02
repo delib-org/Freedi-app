@@ -345,6 +345,63 @@ return;
 		};
 	}
 }
+export const listenToUserSuggestions = (
+	statementId: string | undefined,
+	userId: string | undefined
+): Unsubscribe => {
+	try {
+		const dispatch = store.dispatch;
+		if (!statementId) throw new Error('Statement id is undefined');
+		if (!userId) throw new Error('User id is undefined');
+		
+		const statementsRef = collection(FireStore, Collections.statements);
+		
+		// Query for options created by the user under this statement
+		const q = query(
+			statementsRef,
+			where('parentId', '==', statementId),
+			where('creatorId', '==', userId),
+			where('statementType', '==', StatementType.option),
+			orderBy('createdAt', 'desc')
+		);
+		
+		let isFirstCall = true;
+		
+		return onSnapshot(q, (statementsDB) => {
+			if (isFirstCall) {
+				const userOptions: Statement[] = [];
+				
+				statementsDB.forEach((doc) => {
+					const statement = doc.data() as Statement;
+					userOptions.push(statement);
+				});
+				
+				// Dispatch all user options at once
+				if (userOptions.length > 0) {
+					dispatch(setStatements(userOptions));
+				}
+				
+				isFirstCall = false;
+			} else {
+				// Handle individual changes after initial load
+				statementsDB.docChanges().forEach((change) => {
+					const statement = change.doc.data() as Statement;
+					
+					if (change.type === 'added' || change.type === 'modified') {
+						dispatch(setStatement(statement));
+					} else if (change.type === 'removed') {
+						dispatch(deleteStatement(statement.statementId));
+					}
+				});
+			}
+		});
+	} catch (error) {
+		console.error('Error listening to user suggestions:', error);
+		
+		return () => {};
+	}
+};
+
 export function listenToAllDescendants(statementId: string): Unsubscribe {
 	try {
 		const statementsRef = collection(FireStore, Collections.statements);
