@@ -43,7 +43,7 @@ service cloud.firestore {
 	
 	}
 
-	match /userData/{userId=**} {
+	match /userDemographic/{userId=**} {
 	  allow read: if request.auth.uid != null && request.auth.uid == userId;
 	  allow write: if request.auth.uid != null && request.auth.uid == userId;
 	}
@@ -53,7 +53,7 @@ service cloud.firestore {
 	  allow write: if request.auth.uid != null && request.auth.uid == userId;
 	}
 
-	match /userDataQuestions/{questionId=**} {
+	match /userDemographicQuestions/{questionId=**} {
 		function isAdmin() {
 			let question = resource != null ? resource : request.resource;
 			let statementId = question.data.statementId;

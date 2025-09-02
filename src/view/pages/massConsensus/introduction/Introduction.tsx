@@ -8,9 +8,9 @@ import { setStatement } from '@/redux/statements/statementsSlice';
 import Text from '@/view/components/text/Text';
 import { useHeader } from '../headerMassConsensus/HeaderContext';
 import {
-	listenToUserAnswers,
-	listenToUserQuestions,
-} from '@/controllers/db/userData/getUserData';
+	listenToUserDemographicAnswers,
+	listenToUserDemographicQuestions,
+} from '@/controllers/db/userDemographic/getUserDemographic';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { useMassConsensusAnalytics } from '@/hooks/useMassConsensusAnalytics';
 import styles from './Introduction.module.scss';
@@ -39,8 +39,8 @@ const Introduction = () => {
 	useEffect(() => {
 		if (!statementId || !uid) return;
 
-		const unsubscribeQuestions = listenToUserQuestions(statementId);
-		const unsubscribeAnswers = listenToUserAnswers(statementId);
+		const unsubscribeQuestions = listenToUserDemographicQuestions(statementId);
+		const unsubscribeAnswers = listenToUserDemographicAnswers(statementId);
 
 		return () => {
 			unsubscribeQuestions();

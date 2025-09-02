@@ -1,9 +1,9 @@
-import { UserQuestion, UserQuestionType } from 'delib-npm';
+import { UserDemographicQuestion, UserDemographicQuestionType } from 'delib-npm';
 import { FC, useEffect, useState } from 'react';
-import styles from './UserDataQuestionInput.module.scss';
+import styles from './UserDemographicQuestionInput.module.scss';
 
-interface UserQuestionInputProps {
-	question: UserQuestion;
+interface UserDemographicQuestionInputProps {
+	question: UserDemographicQuestion;
 	value?: string | string[];
 	options?: { option: string; color?: string }[];
 	onChange: (value: string | string[]) => void;
@@ -11,7 +11,7 @@ interface UserQuestionInputProps {
 	required?: boolean;
 }
 
-const UserQuestionInput: FC<UserQuestionInputProps> = ({
+const UserDemographicQuestionInput: FC<UserDemographicQuestionInputProps> = ({
 	question,
 	value = '',
 	onChange,
@@ -28,9 +28,9 @@ const UserQuestionInput: FC<UserQuestionInputProps> = ({
 		}
 
 		switch (question.type) {
-			case UserQuestionType.text:
-			case UserQuestionType.textarea:
-			case UserQuestionType.radio:
+			case UserDemographicQuestionType.text:
+			case UserDemographicQuestionType.textarea:
+			case UserDemographicQuestionType.radio:
 				if (
 					!inputValue ||
 					(typeof inputValue === 'string' && inputValue.trim() === '')
@@ -40,7 +40,7 @@ const UserQuestionInput: FC<UserQuestionInputProps> = ({
 					return false;
 				}
 				break;
-			case UserQuestionType.checkbox:
+			case UserDemographicQuestionType.checkbox:
 				if (!Array.isArray(inputValue) || inputValue.length === 0) {
 					setValidationError('Please select at least one option');
 
@@ -69,7 +69,7 @@ const UserQuestionInput: FC<UserQuestionInputProps> = ({
 
 	const renderInput = () => {
 		switch (question.type) {
-			case UserQuestionType.radio:
+			case UserDemographicQuestionType.radio:
 				return (
 					<div
 						className={styles.optionsContainer}
@@ -127,4 +127,4 @@ const UserQuestionInput: FC<UserQuestionInputProps> = ({
 	);
 };
 
-export default UserQuestionInput;
+export default UserDemographicQuestionInput;
