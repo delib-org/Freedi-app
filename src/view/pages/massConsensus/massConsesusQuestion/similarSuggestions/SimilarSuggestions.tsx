@@ -45,8 +45,12 @@ const SimilarSuggestions = ({ stage, setIfButtonEnabled }) => {
   }, [similarSuggestions, navigate, statementId]);
 
   useEffect(() => {
-    if (stage === "submitting")
-      handleSetSuggestionToDB(similarSuggestions[selected]);
+    if (stage === "submitting") {
+      const selectedSuggestion = similarSuggestions.find(
+        (s) => s.statementId === selected
+      );
+      handleSetSuggestionToDB(selectedSuggestion);
+    }
   }, [stage]);
 
   useEffect(() => {
