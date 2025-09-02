@@ -1,4 +1,4 @@
-import { FC } from 'react';
+import { FC, useState, useEffect } from 'react';
 
 // Redux store
 import { useAppDispatch, useAppSelector } from '@/controllers/hooks/reduxHooks';
@@ -32,10 +32,34 @@ export const OptionBar: FC<OptionBarProps> = ({
 	// * Redux * //
 	const dispatch = useAppDispatch();
 	const vote = useAppSelector(parentVoteSelector(option.parentId));
+	
+	// * Optimistic UI State * //
+	const [isVotePending, setIsVotePending] = useState(false);
+	const [optimisticVoteId, setOptimisticVoteId] = useState(vote?.statementId);
+	
+	useEffect(() => {
+		setOptimisticVoteId(vote?.statementId);
+		setIsVotePending(false);
+	}, [vote]);
 
 	// * Variables * //
 	const _optionOrder = option.order || 0;
-	const selections: number = getSelections(statement, option);
+	// Calculate optimistic selections based on current and optimistic vote state
+	const baseSelections: number = getSelections(statement, option);
+	const selections = (() => {
+		if (!isVotePending) return baseSelections;
+		
+		// If we're switching to this option
+		if (optimisticVoteId === option.statementId && vote?.statementId !== option.statementId) {
+			return baseSelections + 1;
+		}
+		// If we're switching away from this option
+		if (vote?.statementId === option.statementId && optimisticVoteId !== option.statementId) {
+			return Math.max(0, baseSelections - 1);
+		}
+		
+		return baseSelections;
+	})();
 
 	const barWidth = getBarWidth({
 		isVertical,
@@ -48,12 +72,28 @@ export const OptionBar: FC<OptionBarProps> = ({
 		selections > 0 && totalVotes > 0
 			? Math.round((selections / totalVotes) * 100)
 			: 0;
-	const handleVotePress = () => {
+	const handleVotePress = async () => {
+		// Optimistic update - immediately update UI
+		const newVoteId = optimisticVoteId === option.statementId 
+			? 'none' 
+			: option.statementId;
+		
+		setOptimisticVoteId(newVoteId);
+		setIsVotePending(true);
+		
+		// Update store optimistically
 		dispatch(setVoteToStore(option));
-		setVoteToDB(option, creator);
-		getStatementFromDB(option.statementId);
+		
+		// Database operations in background
+		try {
+			await setVoteToDB(option, creator);
+			await getStatementFromDB(option.statementId);
+		} finally {
+			setIsVotePending(false);
+		}
 	};
-	const isOptionSelected = vote?.statementId === option.statementId;
+	
+	const isOptionSelected = optimisticVoteId === option.statementId;
 
 	const containerInset = `${(_optionOrder - order) * barWidth}px`;
 	const containerStyle = {
@@ -92,7 +132,8 @@ export const OptionBar: FC<OptionBarProps> = ({
 					onClick={handleVotePress}
 					aria-label='Vote button'
 					style={voteButtonStyle}
-					className={`${styles.voteButton} ${isOptionSelected ? styles.selected : ''}`}
+					className={`${styles.voteButton} ${isOptionSelected ? styles.selected : ''} ${isVotePending ? styles.pending : ''}`}
+					disabled={isVotePending}
 				>
 					{isOptionSelected ? (
 						<LikeIcon />

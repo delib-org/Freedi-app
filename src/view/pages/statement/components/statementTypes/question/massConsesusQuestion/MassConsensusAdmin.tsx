@@ -17,6 +17,7 @@ import OptionMCCard from './components/deleteCard/OptionMCCard';
 import DeletionLadyImage from '@/assets/images/rejectLady.png';
 import Button, { ButtonType } from '@/view/components/buttons/button/Button';
 import SearchBar from './components/searchBar/SearchBar';
+import { Link } from 'react-router';
 
 const MassConsensusAdmin = () => {
 	const { statementId } = useParams<{ statementId: string }>();
@@ -46,16 +47,26 @@ const MassConsensusAdmin = () => {
 	return (
 		<div className={styles.massConsensusAdmin}>
 			<div className='wrapper'>
-				<Button
-					buttonType={ButtonType.PRIMARY}
-					className={styles.centered}
-					text='To Statement'
-					onClick={() =>
-						navigate(`/mass-consensus/${statementId}`, {
-							replace: true,
-						})
-					}
-				/>
+				<div className={styles.headerActions}>
+					<Button
+						buttonType={ButtonType.PRIMARY}
+						className={styles.centered}
+						text='To Statement'
+						onClick={() =>
+							navigate(`/mass-consensus/${statementId}`, {
+								replace: true,
+							})
+						}
+					/>
+					<Link to={`/my-suggestions/statement/${statementId}`} className={styles.mySuggestionsLink}>
+						<div className={styles.mySuggestionsButton}>
+							<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+								<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" fill="currentColor"/>
+							</svg>
+							<span>{t('My Suggestions')}</span>
+						</div>
+					</Link>
+				</div>
 				<Description />
 				<div className={`btns ${styles.share}`}>
 					<ShareButton

@@ -3,7 +3,7 @@ import { useDispatch } from 'react-redux';
 import { StatementContext } from '../StatementCont';
 import { StatementContent } from './StatementContent';
 import { setShowNewStatementModal } from '@/redux/statements/newStatementSlice';
-import { Statement, User, Role, StatementType, QuestionType, UserQuestion } from 'delib-npm';
+import { Statement, User, Role, StatementType, QuestionType, UserDemographicQuestion } from 'delib-npm';
 
 interface StatementProviderProps {
 	statement: Statement | null;
@@ -14,8 +14,8 @@ interface StatementProviderProps {
 	newStatementType: StatementType;
 	newQuestionType: QuestionType;
 	showNewStatement: boolean;
-	showUserQuestions: boolean;
-	userDataQuestions: UserQuestion[] | null;
+	showUserDemographicQuestions: boolean;
+	userDemographicQuestions: UserDemographicQuestion[] | null;
 	screen?: string;
 	isMassConsensus: boolean;
 	handleShowTalker: (user: User | null) => void;
@@ -32,8 +32,8 @@ export const StatementProvider: React.FC<StatementProviderProps> = ({
 	newStatementType,
 	newQuestionType,
 	showNewStatement,
-	showUserQuestions,
-	userDataQuestions,
+	showUserDemographicQuestions,
+	userDemographicQuestions,
 	screen,
 	isMassConsensus,
 	handleShowTalker,
@@ -77,8 +77,8 @@ export const StatementProvider: React.FC<StatementProviderProps> = ({
 				statement={statement}
 				topParentStatement={topParentStatement}
 				showNewStatement={showNewStatement}
-				showUserQuestions={showUserQuestions}
-				userDataQuestions={userDataQuestions}
+				showUserQuestions={showUserDemographicQuestions}
+				userDemographicQuestions={userDemographicQuestions}
 				screen={screen}
 				isMassConsensus={isMassConsensus}
 			/>

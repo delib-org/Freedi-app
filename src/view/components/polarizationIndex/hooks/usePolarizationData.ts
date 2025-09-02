@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { useParams } from 'react-router';
 import { listenToPolarizationIndex } from '@/controllers/db/polarizationIndex/getPolarizationIndex';
-import { selectPolarizationIndexByParentId } from '@/redux/userData/userDataSlice';
+import { selectPolarizationIndexByParentId } from '@/redux/userDemographic/userDemographicSlice';
 import { PolarizationIndex } from 'delib-npm';
 
 export const usePolarizationData = () => {

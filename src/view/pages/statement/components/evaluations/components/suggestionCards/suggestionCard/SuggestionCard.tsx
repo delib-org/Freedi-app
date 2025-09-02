@@ -174,7 +174,7 @@ const SuggestionCard: FC<Props> = ({
 					: styles['statement-evaluation-card']
 			}
 			style={{
-				top: `${statement.top || 0}px`,
+				top: `${positionAbsolute ? statement.top || 0 : 0}px`,
 				borderLeft: showEvaluation ? selectedOptionIndicator : '12px solid transparent',
 				color: statementColor.color,
 				flexDirection: dir === 'ltr' ? 'row' : 'row-reverse',

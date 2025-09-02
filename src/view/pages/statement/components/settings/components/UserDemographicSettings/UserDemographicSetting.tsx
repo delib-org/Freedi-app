@@ -4,24 +4,24 @@ import SectionTitle from '../sectionTitle/SectionTitle';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import SettingsModal from '../settingsModal/SettingsModal';
 import UserQuestionComp from './userQuestion/UserQuestionComp';
-import styles from './UserDataSetting.module.scss';
+import styles from './UserDemographicSetting.module.scss';
 import {
 	getRandomUID,
 	Statement,
-	UserQuestion,
-	UserQuestionType,
+	UserDemographicQuestion,
+	UserDemographicQuestionType,
 } from 'delib-npm';
 import {
-	deleteUserDataOption,
-	deleteUserDataQuestion,
-	setUserDataOption,
-	setUserDataQuestion,
-} from '@/controllers/db/userData/setUserData';
+	deleteUserDemographicOption,
+	deleteUserDemographicQuestion as deleteUserDemographicQuestionDB,
+	setUserDemographicOption,
+	setUserDemographicQuestion as setUserDemographicQuestionDB,
+} from '@/controllers/db/userDemographic/setUserDemographic';
 import {
-	setUserQuestion,
-	deleteUserQuestion,
-	selectUserQuestionsByStatementId,
-} from '@/redux/userData/userDataSlice';
+	setUserDemographicQuestion,
+	deleteUserDemographicQuestion,
+	selectUserDemographicQuestionsByStatementId,
+} from '@/redux/userDemographic/userDemographicSlice';
 import { getRandomColor } from '@/controllers/general/helpers';
 import CheckIcon from '@/assets/icons/checkIcon.svg?react';
 import BackToMenuArrow from '@/assets/icons/backToMenuArrow.svg?react';
@@ -42,8 +42,8 @@ const UserDataSetting: FC<Props> = ({ statement }) => {
 	const { t } = useUserConfig();
 	const dispatch = useDispatch();
 	const [showModal, setShowModal] = useState(false); // Get user questions from Redux store filtered by statement ID
-	const userQuestions: UserQuestion[] = useSelector(
-		selectUserQuestionsByStatementId(statement.statementId)
+	const userQuestions: UserDemographicQuestion[] = useSelector(
+		selectUserDemographicQuestionsByStatementId(statement.statementId)
 	);
 	const defaultOptions: Option[] = [
 		{ option: '', color: '#0000ff' },
@@ -68,23 +68,23 @@ const UserDataSetting: FC<Props> = ({ statement }) => {
 		const newQuestion = formData.get('newQuestion') as string;
 		const newQuestionType = formData.get(
 			'questionType'
-		) as UserQuestionType;
+		) as UserDemographicQuestionType;
 
 		if (!newQuestion.trim()) return;
 
-		const newQuestionObj: UserQuestion = {
+		const newQuestionObj: UserDemographicQuestion = {
 			userQuestionId: getRandomUID(),
 			question: newQuestion.trim(),
 			type: newQuestionType,
 			statementId: statement.statementId,
 			options:
-				newQuestionType === UserQuestionType.checkbox ||
-				newQuestionType === UserQuestionType.radio
+				newQuestionType === UserDemographicQuestionType.checkbox ||
+				newQuestionType === UserDemographicQuestionType.radio
 					? options
 					: [],
 		};
 
-		dispatch(setUserQuestion(newQuestionObj));
+		dispatch(setUserDemographicQuestion(newQuestionObj));
 
 		// Reset the form
 		form.reset();
@@ -94,7 +94,7 @@ const UserDataSetting: FC<Props> = ({ statement }) => {
 				color: getRandomColor(),
 			}))
 		);
-		setUserDataQuestion(statement, newQuestionObj);
+		setUserDemographicQuestionDB(statement, newQuestionObj);
 	};
 
 	const handleDeleteQuestion = (questionIndex: number) => {
@@ -105,24 +105,24 @@ const UserDataSetting: FC<Props> = ({ statement }) => {
 				(q) => q.userQuestionId === questionToDelete.userQuestionId
 			);
 			if (storeIndex !== -1) {
-				dispatch(deleteUserQuestion(questionToDelete.userQuestionId));
+				dispatch(deleteUserDemographicQuestion(questionToDelete.userQuestionId));
 			}
 
-			deleteUserDataQuestion(questionToDelete);
+			deleteUserDemographicQuestionDB(questionToDelete);
 		}
 	};
 	const handleUpdateQuestion = (
 		questionIndex: number,
-		updatedQuestion: Partial<UserQuestion>
+		updatedQuestion: Partial<UserDemographicQuestion>
 	) => {
 		const questionToUpdate = userQuestions[questionIndex];
 		if (questionToUpdate && questionToUpdate.userQuestionId) {
-			const updatedQuestionObj: UserQuestion = {
+			const updatedQuestionObj: UserDemographicQuestion = {
 				...questionToUpdate,
 				...updatedQuestion,
 			};
-			dispatch(setUserQuestion(updatedQuestionObj));
-			setUserDataQuestion(statement, updatedQuestionObj);
+			dispatch(setUserDemographicQuestion(updatedQuestionObj));
+			setUserDemographicQuestionDB(statement, updatedQuestionObj);
 		}
 	};
 	const createNewOption = () => {
@@ -164,12 +164,12 @@ const UserDataSetting: FC<Props> = ({ statement }) => {
 			const updatedOptions = questionToUpdate.options
 				? [...questionToUpdate.options, newOptionObj]
 				: [newOptionObj];
-			const updatedQuestion: UserQuestion = {
+			const updatedQuestion: UserDemographicQuestion = {
 				...questionToUpdate,
 				options: updatedOptions,
 			};
-			dispatch(setUserQuestion(updatedQuestion));
-			setUserDataOption(questionToUpdate, newOptionObj);
+			dispatch(setUserDemographicQuestion(updatedQuestion));
+			setUserDemographicOption(questionToUpdate, newOptionObj);
 		}
 	};
 
@@ -183,13 +183,13 @@ const UserDataSetting: FC<Props> = ({ statement }) => {
 			const updatedOptions = questionToUpdate.options.filter(
 				(_, idx) => idx !== optionIndex
 			);
-			const updatedQuestion: UserQuestion = {
+			const updatedQuestion: UserDemographicQuestion = {
 				...questionToUpdate,
 				options: updatedOptions,
 			};
-			dispatch(setUserQuestion(updatedQuestion));
+			dispatch(setUserDemographicQuestion(updatedQuestion));
 		}
-		deleteUserDataOption(
+		deleteUserDemographicOption(
 			questionToUpdate,
 			questionToUpdate.options[optionIndex].option
 		);
@@ -235,9 +235,9 @@ const UserDataSetting: FC<Props> = ({ statement }) => {
 								<select
 									id='questionType'
 									name='questionType'
-									defaultValue={UserQuestionType.text}
+									defaultValue={UserDemographicQuestionType.text}
 								>
-									<option value={UserQuestionType.radio}>
+									<option value={UserDemographicQuestionType.radio}>
 										◉ {t(' Single Choice (Radio)')}
 									</option>
 								</select>
@@ -322,7 +322,7 @@ const UserDataSetting: FC<Props> = ({ statement }) => {
 							) : (
 								userQuestions.map((question, index) => (
 									<UserQuestionComp
-										key={question.answer}
+										key={question.userQuestionId}
 										userQuestions={question}
 										questionIndex={index}
 										minQuestionAmount={minQuestionAmount}

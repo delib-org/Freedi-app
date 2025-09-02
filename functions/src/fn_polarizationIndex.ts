@@ -2,7 +2,7 @@
 // POLARIZATION INDEX HELPERS
 // ============================================================================
 
-import { AxesItem, Collections, PolarizationIndex, Statement, UserQuestion } from "delib-npm";
+import { AxesItem, Collections, PolarizationIndex, Statement, UserDemographicQuestion } from "delib-npm";
 import { getRandomColor } from "./helpers";
 import { db } from ".";
 import { logger } from "firebase-functions/v1";
@@ -32,7 +32,7 @@ export async function updateUserDemographicEvaluation(statement: Statement, user
 		}
 
 		//check if this statement has demographic settings. If it doesn't, skip the demographic evaluation update
-		const demographicSettings = await db.collection(Collections.userDataQuestions).where('statementId', '==', statement.parentId).limit(1).get();
+		const demographicSettings = await db.collection(Collections.userDemographicQuestions).where('statementId', '==', statement.parentId).limit(1).get();
 		if (demographicSettings.empty) return;
 
 		const { usersDemographicData, usersDemographicEvaluations } = await getUserDemographicData(userId, parentId, evaluation, statement);
@@ -68,7 +68,7 @@ export async function updateUserDemographicEvaluation(statement: Statement, user
 
 	}
 
-	function createAxes(usersDemographicEvaluations: UserDemographicEvaluation[], userDemographicData: UserQuestion[]): AxesItem[] {
+	function createAxes(usersDemographicEvaluations: UserDemographicEvaluation[], userDemographicData: UserDemographicQuestion[]): AxesItem[] {
 		const axesSet = new Set<string>();
 		usersDemographicEvaluations.forEach(evaluation => {
 			evaluation.demographic.forEach(demographic => {
@@ -118,7 +118,7 @@ export async function updateUserDemographicEvaluation(statement: Statement, user
 	// Improved version with better separation of concerns and readability
 
 	interface DemographicResult {
-		usersDemographicData: UserQuestion[];
+		usersDemographicData: UserDemographicQuestion[];
 		usersDemographicEvaluations: UserDemographicEvaluation[] | null;
 	}
 
@@ -162,21 +162,21 @@ export async function updateUserDemographicEvaluation(statement: Statement, user
 
 	// Helper functions for better separation of concerns
 
-	async function fetchUserDemographicData(userId: string, parentId: string): Promise<UserQuestion[]> {
+	async function fetchUserDemographicData(userId: string, parentId: string): Promise<UserDemographicQuestion[]> {
 		const snapshot = await db
 			.collection(Collections.usersData)
 			.where('userId', '==', userId)
 			.where('statementId', '==', parentId)
 			.get();
 
-		return snapshot.empty ? [] : snapshot.docs.map(doc => doc.data() as UserQuestion);
+		return snapshot.empty ? [] : snapshot.docs.map(doc => doc.data() as UserDemographicQuestion);
 	}
 
 	async function saveUserDemographicEvaluation(
 		userId: string,
 		statement: Statement,
 		evaluation: number,
-		demographicData: UserQuestion[]
+		demographicData: UserDemographicQuestion[]
 	): Promise<void> {
 		const evaluationRef = db
 			.collection(Collections.userDemographicEvaluations)
@@ -206,7 +206,7 @@ export async function updateUserDemographicEvaluation(statement: Statement, user
 		return snapshot.empty ? [] : snapshot.docs.map(doc => doc.data() as UserDemographicEvaluation);
 	}
 
-	function buildDemographicSummary(demographicData: UserQuestion[]) {
+	function buildDemographicSummary(demographicData: UserDemographicQuestion[]) {
 		return demographicData
 			.filter(item => item.answer && item.userQuestionId)
 			.map(item => ({

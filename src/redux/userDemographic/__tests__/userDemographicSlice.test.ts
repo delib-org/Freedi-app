@@ -1,23 +1,23 @@
 import { configureStore } from '@reduxjs/toolkit';
 import userDataReducer, {
-  setUserQuestion,
-  deleteUserQuestion,
-  setUserQuestions,
-  updateUserQuestionOptionColor,
-  setUserData,
-  deleteUserData,
+  setUserDemographicQuestion,
+  deleteUserDemographicQuestion,
+  setUserDemographicQuestions,
+  updateUserDemographicQuestionOptionColor,
+  setUserDemographic,
+  deleteUserDemographic,
   setPolarizationIndexes,
   deletePolarizationIndex
-} from '../userDataSlice';
-import { UserQuestionType } from 'delib-npm';
+} from '../userDemographicSlice';
+import { UserDemographicQuestionType } from 'delib-npm';
 
 // Test-specific selectors that work with our test store
 type TestState = { userData: ReturnType<typeof userDataReducer> };
-const selectUserQuestions = (state: TestState) => state.userData.userQuestions;
-const selectUserData = (state: TestState) => state.userData.userData;
+const selectUserQuestions = (state: TestState) => state.userData.userDemographicQuestions;
+const selectUserData = (state: TestState) => state.userData.userDemographic;
 const selectPolarizationIndexes = (state: TestState) => state.userData.polarizationIndexes;
 const selectUserQuestionById = (state: TestState, id: string) => 
-  state.userData.userQuestions.find(q => q.userQuestionId === id);
+  state.userData.userDemographicQuestions.find(q => q.userQuestionId === id);
 
 describe('userDataSlice', () => {
   let store: ReturnType<typeof configureStore>;
@@ -39,7 +39,7 @@ describe('userDataSlice', () => {
       userQuestionId: 'uq1',
       userId: 'user1',
       question: 'Test question?',
-      type: UserQuestionType.radio,
+      type: UserDemographicQuestionType.radio,
       options: [
         { option: 'Option 1', color: '#FF0000' },
         { option: 'Option 2', color: '#00FF00' }
@@ -47,49 +47,49 @@ describe('userDataSlice', () => {
       statementId: 'stmt1'
     };
 
-    it('should handle setUserQuestion', () => {
-      store.dispatch(setUserQuestion(mockUserQuestion));
+    it('should handle setUserDemographicQuestion', () => {
+      store.dispatch(setUserDemographicQuestion(mockUserQuestion));
       const state = store.getState() as TestState;
       expect(selectUserQuestions(state)).toHaveLength(1);
       expect(selectUserQuestions(state)[0]).toEqual(mockUserQuestion);
     });
 
-    it('should update existing userQuestion', () => {
-      store.dispatch(setUserQuestion(mockUserQuestion));
+    it('should update existing userDemographicQuestion', () => {
+      store.dispatch(setUserDemographicQuestion(mockUserQuestion));
       
       const updatedQuestion = {
         ...mockUserQuestion,
         question: 'Updated question?'
       };
       
-      store.dispatch(setUserQuestion(updatedQuestion));
+      store.dispatch(setUserDemographicQuestion(updatedQuestion));
       const state = store.getState() as TestState;
       expect(selectUserQuestions(state)).toHaveLength(1);
       expect(selectUserQuestions(state)[0].question).toBe('Updated question?');
     });
 
-    it('should handle deleteUserQuestion', () => {
-      store.dispatch(setUserQuestion(mockUserQuestion));
-      store.dispatch(deleteUserQuestion('uq1'));
+    it('should handle deleteUserDemographicQuestion', () => {
+      store.dispatch(setUserDemographicQuestion(mockUserQuestion));
+      store.dispatch(deleteUserDemographicQuestion('uq1'));
       
       const state = store.getState() as TestState;
       expect(selectUserQuestions(state)).toHaveLength(0);
     });
 
-    it('should handle setUserQuestions', () => {
+    it('should handle setUserDemographicQuestions', () => {
       const questions = [
         mockUserQuestion,
         { ...mockUserQuestion, userQuestionId: 'uq2', question: 'Another question?' }
       ];
       
-      store.dispatch(setUserQuestions(questions));
+      store.dispatch(setUserDemographicQuestions(questions));
       const state = store.getState() as TestState;
       expect(selectUserQuestions(state)).toHaveLength(2);
     });
 
-    it('should handle updateUserQuestionOptionColor', () => {
-      store.dispatch(setUserQuestion(mockUserQuestion));
-      store.dispatch(updateUserQuestionOptionColor({
+    it('should handle updateUserDemographicQuestionOptionColor', () => {
+      store.dispatch(setUserDemographicQuestion(mockUserQuestion));
+      store.dispatch(updateUserDemographicQuestionOptionColor({
         userQuestionId: 'uq1',
         option: 'Option 1',
         color: '#0000FF'
@@ -101,8 +101,8 @@ describe('userDataSlice', () => {
     });
 
     it('should not update non-existent option color', () => {
-      store.dispatch(setUserQuestion(mockUserQuestion));
-      store.dispatch(updateUserQuestionOptionColor({
+      store.dispatch(setUserDemographicQuestion(mockUserQuestion));
+      store.dispatch(updateUserDemographicQuestionOptionColor({
         userQuestionId: 'uq1',
         option: 'Non-existent',
         color: '#0000FF'
@@ -119,21 +119,21 @@ describe('userDataSlice', () => {
       userQuestionId: 'ud1',
       userId: 'user1',
       question: 'User data question?',
-      type: UserQuestionType.text,
+      type: UserDemographicQuestionType.text,
       options: [],
       statementId: 'stmt1'
     };
 
-    it('should handle setUserData', () => {
-      store.dispatch(setUserData(mockUserData));
+    it('should handle setUserDemographic', () => {
+      store.dispatch(setUserDemographic(mockUserData));
       const state = store.getState() as TestState;
       expect(selectUserData(state)).toHaveLength(1);
       expect(selectUserData(state)[0]).toEqual(mockUserData);
     });
 
-    it('should handle deleteUserData', () => {
-      store.dispatch(setUserData(mockUserData));
-      store.dispatch(deleteUserData('ud1'));
+    it('should handle deleteUserDemographic', () => {
+      store.dispatch(setUserDemographic(mockUserData));
+      store.dispatch(deleteUserDemographic('ud1'));
       
       const state = store.getState() as TestState;
       expect(selectUserData(state)).toHaveLength(0);
@@ -190,12 +190,12 @@ describe('userDataSlice', () => {
         userQuestionId: 'uq1',
         userId: 'user1',
         question: 'Test?',
-        type: UserQuestionType.text,
+        type: UserDemographicQuestionType.text,
         options: [],
         statementId: 'stmt1'
       };
       
-      store.dispatch(setUserQuestion(mockQuestion));
+      store.dispatch(setUserDemographicQuestion(mockQuestion));
       const state = store.getState() as TestState;
       expect(selectUserQuestions(state)).toContainEqual(mockQuestion);
     });
@@ -205,12 +205,12 @@ describe('userDataSlice', () => {
         userQuestionId: 'uq1',
         userId: 'user1',
         question: 'Test?',
-        type: UserQuestionType.text,
+        type: UserDemographicQuestionType.text,
         options: [],
         statementId: 'stmt1'
       };
       
-      store.dispatch(setUserQuestion(mockQuestion));
+      store.dispatch(setUserDemographicQuestion(mockQuestion));
       const state = store.getState() as TestState;
       expect(selectUserQuestionById(state, 'uq1')).toEqual(mockQuestion);
       expect(selectUserQuestionById(state, 'non-existent')).toBeUndefined();

@@ -207,6 +207,12 @@ const MultiStageQuestion: FC = () => {
 								>{t(hasTopSuggestions ? 'See all suggestions' : 'Add new suggestion')}
 								</button>
 							</Link>
+							<Link to={`/my-suggestions/statement/${statement.statementId}`}>
+								<button
+									className='btn btn--secondary'
+								>{t('View My Suggestions')}
+								</button>
+							</Link>
 						</div>
 						</div>
 						

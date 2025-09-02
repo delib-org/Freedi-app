@@ -9,7 +9,7 @@ interface Props {
 const HomeButton: FC<Props> = ({ headerColor }) => {
 	return (
 		<Link
-			className="page__header__wrapper__actions__iconButton"
+			className="app-header-back-button"
 			state={{ from: window.location.pathname }}
 			to={'/home'}
 			aria-label="Back to Home page"

@@ -27,10 +27,14 @@ const SimilarSuggestions = ({ stage, setIfButtonEnabled }) => {
     nextStep
   );
 
-  const [selected, setSelected] = React.useState<number | null>(null);
+  const existingSuggestions = similarSuggestions.filter((s) => s.statementId);
 
-  function handleSelect(index: number) {
-    setSelected(index);
+  const newSuggestion = similarSuggestions[0];
+
+  const [selected, setSelected] = React.useState<string | null>(null);
+
+  function handleSelect(id: string) {
+    setSelected(id);
   }
   useEffect(() => {
     if (similarSuggestions.length === 0) {
@@ -41,14 +45,18 @@ const SimilarSuggestions = ({ stage, setIfButtonEnabled }) => {
   }, [similarSuggestions, navigate, statementId]);
 
   useEffect(() => {
-    if (stage === "submitting")
-      handleSetSuggestionToDB(similarSuggestions[selected]);
+    if (stage === "submitting") {
+      const selectedSuggestion = similarSuggestions.find(
+        (s) => s.statementId === selected
+      );
+      handleSetSuggestionToDB(selectedSuggestion);
+    }
   }, [stage]);
 
   useEffect(() => {
     if (similarSuggestions.length === 1 && !isLoading) {
       (async () => {
-        setSelected(0);
+        setSelected(null);
 
         await handleSetSuggestionToDB(similarSuggestions[0]);
       })();
@@ -62,25 +70,39 @@ const SimilarSuggestions = ({ stage, setIfButtonEnabled }) => {
   return (
     <>
       <TitleMassConsensus title={t("Thank you for the suggestion!")} />
-      <h3>{t("Here are similar suggestions. which one fits best?")}</h3>
+      <h3>{t("This is your suggestion")}:</h3>
+      <div className={styles["user-suggestion"]}>
+        {newSuggestion ? (
+          <SimilarCard
+            key={`statement: ${newSuggestion.statementId} ${newSuggestion.statement}`}
+            statement={newSuggestion}
+            isUserStatement={true}
+            selected={selected !== null && selected === newSuggestion.statement}
+            handleSelect={handleSelect}
+          />
+        ) : (
+          <p>{t("No new suggestion available.")}</p>
+        )}
+      </div>
+      <h3>{t("Here are similar suggestions")}</h3>
       <div className={styles["similar-suggestions"]}>
         {loadingStatements ? (
           <Loader />
         ) : (
-          similarSuggestions.map(
+          existingSuggestions.map(
             (suggestion: Statement | GeneratedStatement, index: number) => (
               <SimilarCard
                 key={`statement: ${index} ${suggestion.statement}`}
                 statement={suggestion}
-                isUserStatement={index === 0}
-                selected={selected !== null && selected === index}
-                index={index}
+                isUserStatement={false}
+                selected={selected !== null && selected === suggestion.statementId}
                 handleSelect={handleSelect}
               />
             )
           )
         )}
       </div>
+      <h3>{t("Choose the your preferred suggestion")}</h3>
     </>
   );
 };

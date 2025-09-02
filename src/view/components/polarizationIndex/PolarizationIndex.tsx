@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { listenToPolarizationIndex } from '@/controllers/db/polarizationIndex/getPolarizationIndex';
-import { selectPolarizationIndexByParentId, selectUserQuestionsByStatementId } from '@/redux/userData/userDataSlice';
+import { selectPolarizationIndexByParentId, selectUserDemographicQuestionsByStatementId } from '@/redux/userDemographic/userDemographicSlice';
 import { useSelector } from 'react-redux';
 import { useParams } from 'react-router';
 import styles from './PolarizationIndex.module.scss';
 import { Tooltip } from '../tooltip/Tooltip';
-import { PolarizationIndex, UserQuestion } from 'delib-npm';
-import { listenToUserQuestions } from '@/controllers/db/userData/getUserData';
+import { PolarizationIndex, UserDemographicQuestion } from 'delib-npm';
+import { listenToUserDemographicQuestions } from '@/controllers/db/userDemographic/getUserDemographic';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 
 interface Group {
@@ -47,7 +47,7 @@ const PolarizationIndexComp = () => {
 	const { statementId } = useParams();
 	const {t} = useUserConfig();
 	const polarizationIndexes = useSelector(selectPolarizationIndexByParentId(statementId));
-	const userQuestions: UserQuestion[] = useSelector(selectUserQuestionsByStatementId(statementId));
+	const userQuestions: UserDemographicQuestion[] = useSelector(selectUserDemographicQuestionsByStatementId(statementId));
 
 	const [boardDimensions, setBoardDimensions] = useState({ width: 0, height: 0 });
 	const [showGroups, setShowGroups] = useState<string | null>(null);
@@ -62,7 +62,7 @@ const PolarizationIndexComp = () => {
 
 		if (statementId) {
 			unsubscribe = listenToPolarizationIndex(statementId);
-			userDataQuestionsUnsubscribe = listenToUserQuestions(statementId);
+			userDataQuestionsUnsubscribe = listenToUserDemographicQuestions(statementId);
 		}
 
 		return () => {
@@ -186,7 +186,7 @@ function calculatePosition(mad: number, mean: number, boardDimensions: { width: 
 	}
 }
 
-function calculatePositions(points: PolarizationIndex[], boardDimensions: { width: number; height: number }, userQuestions: UserQuestion[]): Point[] {
+function calculatePositions(points: PolarizationIndex[], boardDimensions: { width: number; height: number }, userQuestions: UserDemographicQuestion[]): Point[] {
 	try {
 
 		return points.map(point => {

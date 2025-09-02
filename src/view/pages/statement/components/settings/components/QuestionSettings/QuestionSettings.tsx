@@ -28,7 +28,7 @@ const QuestionSettings: FC<StatementSettingsProps> = ({
 			setQuestionTypeToDB({
 				statement,
 				questionType: isDocument
-					? QuestionType.multiStage
+					? QuestionType.simple
 					: QuestionType.massConsensus,
 			});
 		}
@@ -53,13 +53,15 @@ const QuestionSettings: FC<StatementSettingsProps> = ({
 					label='Document Question'
 					checked={
 						questionSettings?.questionType ===
-						QuestionType.multiStage || false
+						QuestionType.simple || false
 					}
 					setChecked={handleQuestionType}
-					textChecked={t('Document Question')}
-					imageChecked={<DocumentIcon />}
-					imageUnchecked={<SimpleIcon />}
-					textUnchecked={t('Simple Question')}
+					textChecked={t('Simple Question')}
+					imageChecked={<SimpleIcon />}
+					imageUnchecked={<DocumentIcon />}
+					textUnchecked={t('Mass Consensus')}
+					colorChecked='var(--question)'
+					colorUnchecked='var(--question)'
 				/>
 			</div>
 		);

@@ -53,10 +53,9 @@ const Back: FC<Props> = ({ statement, headerColor }) => {
 
 	return (
 		<button
-			className='page__header__wrapper__actions__iconButton'
+			className='app-header-back-button'
 			aria-label='Back Button'
 			onClick={handleBack}
-			style={{ cursor: 'pointer' }}
 			data-cy='back-icon-header'
 		>
 			<BackArrowIcon

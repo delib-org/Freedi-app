@@ -4,7 +4,7 @@ import { selectNewStatementShowModal } from '@/redux/statements/newStatementSlic
 import { QuestionType } from 'delib-npm';
 import { useStatementParams } from './useStatementSelectors';
 import { useStatementSelectors } from './useStatementSelectors';
-import { useUserData } from './useUserData';
+import { useUserDemographic } from './useUserDemographic';
 import { useStatementUIState } from './useStatementUIState';
 
 export const useStatementData = () => {
@@ -18,7 +18,7 @@ export const useStatementData = () => {
 	);
 
 	// Get user data
-	const { userDataQuestions, userData, showUserQuestions } = useUserData(statementId || '');
+	const { userDemographicQuestions, userDemographic, showUserDemographicQuestions } = useUserDemographic(statementId || '');
 
 	// Get UI state
 	const uiState = useStatementUIState();
@@ -43,11 +43,11 @@ export const useStatementData = () => {
 		topParentStatement,
 		// User data
 		role,
-		userDataQuestions,
-		userData,
+		userDemographicQuestions,
+		userDemographic,
 		// UI state
 		showNewStatement,
-		showUserQuestions,
+		showUserDemographicQuestions: showUserDemographicQuestions,
 		isMassConsensus,
 		// Spread UI state
 		...uiState,
