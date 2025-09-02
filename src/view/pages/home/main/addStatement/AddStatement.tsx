@@ -14,16 +14,33 @@ export const AddStatement = () => {
 		<main className={`page slide-out ${styles.addStatement}`}>
 			<div className={`page__header app-header ${dir} ${styles.header}`}>
 				<div className="app-header-wrapper">
-					<Link
-						to={'/home'}
-						state={{ from: window.location.pathname }}
-						className="app-header-back-button"
-						aria-label='Back to Home page'
-					>
-						<BackArrowIcon className="back-arrow-icon" />
-					</Link>
-					<h1 className="app-header-title">{t('Add New Group')}</h1>
-					<div className="app-header-spacer" />
+					{dir === 'rtl' ? (
+						<>
+							<div className="app-header-spacer" />
+							<h1 className="app-header-title">{t('Add New Group')}</h1>
+							<Link
+								to={'/home'}
+								state={{ from: window.location.pathname }}
+								className="app-header-back-button"
+								aria-label='Back to Home page'
+							>
+								<BackArrowIcon className="back-arrow-icon" />
+							</Link>
+						</>
+					) : (
+						<>
+							<Link
+								to={'/home'}
+								state={{ from: window.location.pathname }}
+								className="app-header-back-button"
+								aria-label='Back to Home page'
+							>
+								<BackArrowIcon className="back-arrow-icon" />
+							</Link>
+							<h1 className="app-header-title">{t('Add New Group')}</h1>
+							<div className="app-header-spacer" />
+						</>
+					)}
 				</div>
 			</div>
 			<StatementSettings />

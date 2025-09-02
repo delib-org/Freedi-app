@@ -118,13 +118,17 @@ $headerHeight: 4.2rem;
   }
   
   // RTL support - only rotate chevron/arrow icons, not home or other icons
-  [dir="rtl"] & svg.back-arrow-icon,
-  [dir="rtl"] & svg[class*="chevron"] {
-    transform: rotate(180deg);
-  }
 }
 
 .app-header-spacer {
   width: 40px; // Same width as back button for centering
   height: 40px;
+}
+
+// RTL icon rotation for back arrows
+[dir="rtl"] {
+  .back-arrow-icon,
+  svg[class*="chevron"] {
+    transform: rotate(180deg);
+  }
 }

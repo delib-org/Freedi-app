@@ -3,14 +3,24 @@ import styles from './GeneralHeader.module.scss';
 import Back from '@/view/pages/statement/components/header/Back';
 
 const GeneralHeader = () => {
-	const { t } = useUserConfig();
+	const { t, dir } = useUserConfig();
 
 	return (
 		<div className={`page__header app-header ${styles.myHeader}`}>
 			<div className="app-header-wrapper">
-				<Back />
-				<h1 className="app-header-title">{t("My Profile")}</h1>
-				<div className="app-header-spacer" />
+				{dir === 'rtl' ? (
+					<>
+						<div className="app-header-spacer" />
+						<h1 className="app-header-title">{t("My Profile")}</h1>
+						<Back />
+					</>
+				) : (
+					<>
+						<Back />
+						<h1 className="app-header-title">{t("My Profile")}</h1>
+						<div className="app-header-spacer" />
+					</>
+				)}
 			</div>
 		</div>
 	)

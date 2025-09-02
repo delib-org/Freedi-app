@@ -43,19 +43,35 @@ const MySuggestionsHeader: FC<Props> = ({ statement }) => {
 			style={{ backgroundColor: headerStyle.backgroundColor }}
 		>
 			<div className="app-header-wrapper" style={{ justifyContent: 'space-between' }}>
-				<button 
-					className="app-header-back-button"
-					onClick={handleBackToStatement}
-					aria-label="Back to statement"
-				>
-					<BackIcon className="back-arrow-icon" />
-				</button>
-				
-				<div className="app-header-title">
-					<span>My Suggestions</span>
-				</div>
-				
-				<div className="app-header-spacer" />
+				{dir === 'rtl' ? (
+					<>
+						<div className="app-header-spacer" />
+						<div className="app-header-title">
+							<span>My Suggestions</span>
+						</div>
+						<button 
+							className="app-header-back-button"
+							onClick={handleBackToStatement}
+							aria-label="Back to statement"
+						>
+							<BackIcon className="back-arrow-icon" />
+						</button>
+					</>
+				) : (
+					<>
+						<button 
+							className="app-header-back-button"
+							onClick={handleBackToStatement}
+							aria-label="Back to statement"
+						>
+							<BackIcon className="back-arrow-icon" />
+						</button>
+						<div className="app-header-title">
+							<span>My Suggestions</span>
+						</div>
+						<div className="app-header-spacer" />
+					</>
+				)}
 			</div>
 		</nav>
 	);
