@@ -1,0 +1,97 @@
+
+.mySuggestions {
+	padding: 1rem;
+	max-width: 800px;
+	margin: 0 auto;
+	min-height: 100vh;
+
+	.header {
+		margin-bottom: 2rem;
+		padding-bottom: 1rem;
+		border-bottom: 1px solid var(--border-color);
+
+		h1 {
+			font-size: 1.5rem;
+			color: var(--text-primary);
+			margin-bottom: 0.5rem;
+		}
+
+		h2 {
+			font-size: 1.1rem;
+			color: var(--text-secondary);
+			font-weight: normal;
+		}
+	}
+
+	.suggestionsList {
+		display: flex;
+		flex-direction: column;
+		gap: 1rem;
+	}
+
+	.suggestionCard {
+		background: var(--card-background);
+		border: 1px solid var(--border-color);
+		border-radius: 8px;
+		padding: 1rem;
+		transition: box-shadow 0.2s ease;
+
+		&:hover {
+			box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+		}
+
+		.content {
+			margin-bottom: 0.75rem;
+
+			p {
+				color: var(--text-primary);
+				line-height: 1.5;
+			}
+		}
+
+		.meta {
+			display: flex;
+			gap: 1rem;
+			flex-wrap: wrap;
+			font-size: 0.875rem;
+			color: var(--text-secondary);
+
+			.type {
+				background: var(--primary-color);
+				color: white;
+				padding: 0.25rem 0.5rem;
+				border-radius: 4px;
+				font-weight: 500;
+			}
+
+			.consensus {
+				display: flex;
+				align-items: center;
+				gap: 0.25rem;
+			}
+
+			.date {
+				margin-left: auto;
+			}
+		}
+	}
+
+	.empty {
+		text-align: center;
+		padding: 3rem 1rem;
+		color: var(--text-secondary);
+
+		p {
+			font-size: 1.1rem;
+		}
+	}
+
+	.loading {
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		min-height: 50vh;
+		color: var(--text-secondary);
+		font-size: 1.1rem;
+	}
+}
