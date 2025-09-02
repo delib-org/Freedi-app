@@ -1,25 +1,23 @@
 import { FC, useEffect, useMemo } from 'react';
-import { useParams, useNavigate } from 'react-router';
+import { useParams } from 'react-router';
 import { useSelector } from 'react-redux';
-import { StatementType, QuestionType, Role } from 'delib-npm';
-import { statementSelector, statementSubsSelector, statementSubscriptionSelector } from '@/redux/statements/statementsSlice';
+import { StatementType } from 'delib-npm';
+import { statementSelector, statementSubsSelector } from '@/redux/statements/statementsSlice';
 import { listenToStatement, listenToUserSuggestions } from '@/controllers/db/statements/listenToStatements';
 import { getStatementSubscriptionFromDB } from '@/controllers/db/subscriptions/getSubscriptions';
 import { getStatementSubscriptionId } from '@/controllers/general/helpers';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import styles from './MySuggestions.module.scss';
-import BackIcon from '@/assets/icons/chevronLeftIcon.svg?react';
 import { useDispatch } from 'react-redux';
 import { setStatementSubscription } from '@/redux/statements/statementsSlice';
 import SuggestionCard from '@/view/pages/statement/components/evaluations/components/suggestionCards/suggestionCard/SuggestionCard';
+import MySuggestionsHeader from './MySuggestionsHeader';
 
 const MySuggestions: FC = () => {
 	const { statementId } = useParams<{ statementId: string }>();
-	const navigate = useNavigate();
 	const dispatch = useDispatch();
 	const { user } = useAuthentication();
 	const statement = useSelector(statementSelector(statementId));
-	const subscription = useSelector(statementSubscriptionSelector(statementId));
 	const allSuggestions = useSelector(statementSubsSelector(statementId));
 	const userId = user?.uid;
 	
@@ -35,25 +33,6 @@ const MySuggestions: FC = () => {
 				suggestion.statementType === StatementType.option
 		);
 	}, [allSuggestions, userId]);
-
-	// Handle navigation back to statement
-	const handleBackToStatement = () => {
-		if (!statement) {
-			navigate(`/statement/${statementId}`, { replace: true });
-
-			return;
-		}
-		
-		const isMassConsensus = statement.statementType === StatementType.question && 
-			statement.questionSettings?.questionType === QuestionType.massConsensus;
-		const isAdmin = subscription?.role === Role.admin;
-
-		if (isMassConsensus && !isAdmin) {
-			navigate(`/mass-consensus/${statementId}/introduction`, { replace: true });
-		} else {
-			navigate(`/statement/${statementId}`, { replace: true });
-		}
-	};
 
 	useEffect(() => {
 		if (!statementId) return;
@@ -89,36 +68,32 @@ const MySuggestions: FC = () => {
 	}
 
 	return (
-		<div className="wrapper">
-			<div className={styles.header}>
-				<div className={styles.headerTop}>
-					<button onClick={handleBackToStatement} className={styles.backButton}>
-						<BackIcon />
-						<span>Back to Statement</span>
-					</button>
-				</div>
-				<h1>My Suggestions</h1>
-				<h2>{statement.statement}</h2>
-			</div>
-			
-			<div className={styles.suggestionsList}>
-				{userSuggestions.length === 0 ? (
-					<div className={styles.empty}>
-						<p>You haven't submitted any suggestions yet.</p>
+		<>
+			<MySuggestionsHeader statement={statement} />
+			<div className="wrapper">
+				<div className={styles.pageContent}>
+					{statement && <h1>{statement.statement}</h1>}
+					
+					<div className={styles.suggestionsList}>
+						{userSuggestions.length === 0 ? (
+							<div className={styles.empty}>
+								<p>You haven't submitted any suggestions yet.</p>
+							</div>
+						) : (
+							userSuggestions.map((suggestion) => (
+								<SuggestionCard
+									key={suggestion.statementId}
+									statement={suggestion}
+									siblingStatements={userSuggestions}
+									parentStatement={statement}
+									positionAbsolute={false}
+								/>
+							))
+						)}
 					</div>
-				) : (
-					userSuggestions.map((suggestion) => (
-						<SuggestionCard
-							key={suggestion.statementId}
-							statement={suggestion}
-							siblingStatements={userSuggestions}
-							parentStatement={statement}
-							positionAbsolute={false}
-						/>
-					))
-				)}
+				</div>
 			</div>
-		</div>
+		</>
 	);
 };
 
