@@ -31,10 +31,10 @@ const SimilarSuggestions = ({ stage, setIfButtonEnabled }) => {
 
   const newSuggestion = similarSuggestions[0];
 
-  const [selected, setSelected] = React.useState<number | null>(null);
+  const [selected, setSelected] = React.useState<string | null>(null);
 
-  function handleSelect(index: number) {
-    setSelected(index);
+  function handleSelect(id: string) {
+    setSelected(id);
   }
   useEffect(() => {
     if (similarSuggestions.length === 0) {
@@ -52,7 +52,7 @@ const SimilarSuggestions = ({ stage, setIfButtonEnabled }) => {
   useEffect(() => {
     if (similarSuggestions.length === 1 && !isLoading) {
       (async () => {
-        setSelected(0);
+        setSelected(null);
 
         await handleSetSuggestionToDB(similarSuggestions[0]);
       })();
@@ -72,9 +72,8 @@ const SimilarSuggestions = ({ stage, setIfButtonEnabled }) => {
           <SimilarCard
             key={`statement: ${newSuggestion.statementId} ${newSuggestion.statement}`}
             statement={newSuggestion}
-            isUserStatement={false}
-            selected={selected !== null && selected === 0}
-            index={0}
+            isUserStatement={true}
+            selected={selected !== null && selected === newSuggestion.statement}
             handleSelect={handleSelect}
           />
         ) : (
@@ -91,9 +90,8 @@ const SimilarSuggestions = ({ stage, setIfButtonEnabled }) => {
               <SimilarCard
                 key={`statement: ${index} ${suggestion.statement}`}
                 statement={suggestion}
-                isUserStatement={index === 0}
-                selected={selected !== null && selected === index}
-                index={index}
+                isUserStatement={false}
+                selected={selected !== null && selected === suggestion.statementId}
                 handleSelect={handleSelect}
               />
             )
