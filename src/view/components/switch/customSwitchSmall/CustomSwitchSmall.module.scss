@@ -6,6 +6,8 @@ $SwitchHeight: 2.6729rem;
     flex-direction: column;
     width: fit-content;
     align-items: start;
+    cursor: pointer;
+    user-select: none;
 
     input {
         display: none;
