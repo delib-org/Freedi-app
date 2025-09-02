@@ -1,0 +1,53 @@
+.tooltip {
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-bottom: 8px;
+    padding: 8px 12px;
+    background: rgba(31, 41, 55, 0.95);
+    backdrop-filter: blur(4px);
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    white-space: nowrap;
+    z-index: 1000;
+    animation: tooltipFadeIn 0.2s ease-out;
+    
+    .content {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+        
+        .votes {
+            color: white;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        .percentage {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 13px;
+        }
+    }
+    
+    .arrow {
+        position: absolute;
+        bottom: -4px;
+        left: 50%;
+        transform: translateX(-50%) rotate(45deg);
+        width: 8px;
+        height: 8px;
+        background: rgba(31, 41, 55, 0.95);
+    }
+}
+
+@keyframes tooltipFadeIn {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(4px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+}

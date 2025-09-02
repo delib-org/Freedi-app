@@ -1,4 +1,4 @@
-import { FC } from 'react';
+import { FC, useState } from 'react';
 
 // Redux store
 import { useAppDispatch, useAppSelector } from '@/controllers/hooks/reduxHooks';
@@ -16,6 +16,7 @@ import { setVoteToDB } from '@/controllers/db/vote/setVote';
 import { statementTitleToDisplay } from '@/controllers/general/helpers';
 import { parentVoteSelector, setVoteToStore } from '@/redux/vote/votesSlice';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
+import VoteTooltip from './VoteTooltip';
 
 export const OptionBar: FC<OptionBarProps> = ({
 	option,
@@ -32,6 +33,9 @@ export const OptionBar: FC<OptionBarProps> = ({
 	// * Redux * //
 	const dispatch = useAppDispatch();
 	const vote = useAppSelector(parentVoteSelector(option.parentId));
+	
+	// * State * //
+	const [showTooltip, setShowTooltip] = useState(false);
 
 	// * Variables * //
 	const _optionOrder = option.order || 0;
@@ -62,8 +66,8 @@ export const OptionBar: FC<OptionBarProps> = ({
 	};
 
 	const voteButtonStyle = {
-		width: `${barWidth - padding}px`,
-		backgroundColor: isOptionSelected ? option.color : 'White',
+		backgroundColor: isOptionSelected ? option.color : 'white',
+		borderColor: option.color,
 	};
 
 	const barStyle = {
@@ -90,28 +94,35 @@ export const OptionBar: FC<OptionBarProps> = ({
 			<div className={`${styles.voteButtonContainer} ${styles.dropShadow}`}>
 				<button
 					onClick={handleVotePress}
-					aria-label='Vote button'
+					onMouseEnter={() => setShowTooltip(true)}
+					onMouseLeave={() => setShowTooltip(false)}
+					aria-label={isOptionSelected ? 'Remove vote' : 'Vote for this option'}
+					title={isOptionSelected ? 'Click to remove your vote' : 'Click to vote for this option'}
 					style={voteButtonStyle}
 					className={`${styles.voteButton} ${isOptionSelected ? styles.selected : ''}`}
 				>
 					{isOptionSelected ? (
-						<LikeIcon />
+						<LikeIcon style={{ color: 'white' }} />
 					) : (
 						<HandIcon style={{ color: option.color }} />
 					)}
 				</button>
+				<VoteTooltip 
+					votes={selections} 
+					percentage={barHeight} 
+					isVisible={showTooltip && selections > 0}
+				/>
 			</div>
 			<button
 				className={styles.infoIcon}
-				aria-label='Info button'
+				aria-label='View more information about this option'
+				data-tooltip='More info'
 				onClick={() => {
 					setStatementInfo(option);
 					setShowInfo(true);
 				}}
 			>
-				<InfoIcon
-					style={{ color: barHeight > 10 ? 'white' : '#6E8AA6' }}
-				/>
+				<InfoIcon />
 			</button>
 			<div className={`${styles.title} ${barWidth < 90 ? styles.isBarSmall : ''}`}>
 				{shortVersion}
