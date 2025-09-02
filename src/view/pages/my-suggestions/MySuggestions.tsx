@@ -1,37 +1,84 @@
-import { FC, useEffect, useState } from 'react';
-import { useParams } from 'react-router';
+import { FC, useEffect, useMemo } from 'react';
+import { useParams, useNavigate } from 'react-router';
 import { useSelector } from 'react-redux';
-import { Statement, StatementType } from 'delib-npm';
-import { statementSelector, statementSubsSelector } from '@/redux/statements/statementsSlice';
+import { StatementType, QuestionType, Role } from 'delib-npm';
+import { statementSelector, statementSubsSelector, statementSubscriptionSelector } from '@/redux/statements/statementsSlice';
 import { listenToSubStatements } from '@/controllers/db/statements/listenToStatements';
-import { auth } from '@/controllers/db/config';
+import { listenToStatement } from '@/controllers/db/statements/listenToStatements';
+import { getStatementSubscriptionFromDB } from '@/controllers/db/subscriptions/getSubscriptions';
+import { getStatementSubscriptionId } from '@/controllers/general/helpers';
+import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import styles from './MySuggestions.module.scss';
+import BackIcon from '@/assets/icons/chevronLeftIcon.svg?react';
+import { useDispatch } from 'react-redux';
+import { setStatementSubscription } from '@/redux/statements/statementsSlice';
 
 const MySuggestions: FC = () => {
 	const { statementId } = useParams<{ statementId: string }>();
+	const navigate = useNavigate();
+	const dispatch = useDispatch();
+	const { user } = useAuthentication();
 	const statement = useSelector(statementSelector(statementId));
+	const subscription = useSelector(statementSubscriptionSelector(statementId));
 	const allSuggestions = useSelector(statementSubsSelector(statementId));
-	const [userSuggestions, setUserSuggestions] = useState<Statement[]>([]);
-	const userId = auth.currentUser?.uid;
-
-	useEffect(() => {
-		if (!statementId) return;
-		const unsubscribe = listenToSubStatements(statementId, 'top');
+	const userId = user?.uid;
+	
+	// Use useMemo to avoid recreating filtered array on every render
+	const userSuggestions = useMemo(() => {
+		if (!userId || !allSuggestions) return [];
 		
-		return () => unsubscribe();
-	}, [statementId]);
-
-	useEffect(() => {
-		if (!userId || !allSuggestions) return;
-		
-		const filteredSuggestions = allSuggestions.filter(
+		return allSuggestions.filter(
 			(suggestion) => 
 				suggestion.creatorId === userId && 
 				suggestion.statementType === StatementType.option
 		);
-		
-		setUserSuggestions(filteredSuggestions);
 	}, [allSuggestions, userId]);
+
+	// Handle navigation back to statement
+	const handleBackToStatement = () => {
+		if (!statement) {
+			navigate(`/statement/${statementId}`, { replace: true });
+
+			return;
+		}
+		
+		const isMassConsensus = statement.statementType === StatementType.question && 
+			statement.questionSettings?.questionType === QuestionType.massConsensus;
+		const isAdmin = subscription?.role === Role.admin;
+
+		if (isMassConsensus && !isAdmin) {
+			navigate(`/mass-consensus/${statementId}/introduction`, { replace: true });
+		} else {
+			navigate(`/statement/${statementId}`, { replace: true });
+		}
+	};
+
+	useEffect(() => {
+		if (!statementId) return;
+		
+		// Listen to the statement itself
+		const unsubscribeStatement = listenToStatement(statementId);
+		
+		// Listen to sub-statements
+		const unsubscribeSubStatements = listenToSubStatements(statementId, 'top');
+		
+		return () => {
+			unsubscribeStatement();
+			unsubscribeSubStatements();
+		};
+	}, [statementId]);
+
+	useEffect(() => {
+		// Fetch subscription if we have a user
+		if (!statementId || !userId) return;
+		
+		const subscriptionId = getStatementSubscriptionId(statementId, userId);
+		getStatementSubscriptionFromDB(subscriptionId).then(sub => {
+			if (sub) {
+				dispatch(setStatementSubscription(sub));
+			}
+		});
+	}, [statementId, userId, dispatch]);
 
 	if (!statement) {
 		return <div className={styles.loading}>Loading...</div>;
@@ -40,6 +87,12 @@ const MySuggestions: FC = () => {
 	return (
 		<div className={styles.mySuggestions}>
 			<div className={styles.header}>
+				<div className={styles.headerTop}>
+					<button onClick={handleBackToStatement} className={styles.backButton}>
+						<BackIcon />
+						<span>Back to Statement</span>
+					</button>
+				</div>
 				<h1>My Suggestions</h1>
 				<h2>{statement.statement}</h2>
 			</div>
