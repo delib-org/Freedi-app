@@ -2,7 +2,7 @@ import { collection, onSnapshot, query, where } from "firebase/firestore";
 import { FireStore } from "../config";
 import { Collections, PolarizationIndex } from "delib-npm";
 import { store } from "@/redux/store";
-import { deletePolarizationIndex, setPolarizationIndexes } from "@/redux/userData/userDataSlice";
+import { deletePolarizationIndex, setPolarizationIndexes } from "@/redux/userDemographic/userDemographicSlice";
 
 export function listenToPolarizationIndex(statementId: string) {
 	try {

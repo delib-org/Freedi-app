@@ -1,5 +1,5 @@
 import React from 'react';
-import { Statement, UserQuestion } from 'delib-npm';
+import { Statement, UserDemographicQuestion } from 'delib-npm';
 import StatementHeader from './header/StatementHeader';
 import Switch from './switch/Switch';
 import { MapProvider } from '@/controllers/hooks/useMap';
@@ -12,7 +12,7 @@ interface StatementContentProps {
 	topParentStatement: Statement | null;
 	showNewStatement: boolean;
 	showUserQuestions: boolean;
-	userDataQuestions: UserQuestion[] | null;
+	userDemographicQuestions: UserDemographicQuestion[] | null;
 	screen?: string;
 	isMassConsensus: boolean;
 }
@@ -22,7 +22,7 @@ export const StatementContent: React.FC<StatementContentProps> = ({
 	topParentStatement,
 	showNewStatement,
 	showUserQuestions,
-	userDataQuestions,
+	userDemographicQuestions,
 	screen,
 	isMassConsensus,
 }) => {
@@ -38,7 +38,7 @@ export const StatementContent: React.FC<StatementContentProps> = ({
 			<ConditionalModals
 				showNewStatement={showNewStatement}
 				showUserQuestions={showUserQuestions}
-				userDataQuestions={userDataQuestions}
+				userDemographicQuestions={userDemographicQuestions}
 				screen={screen}
 				isMassConsensus={isMassConsensus}
 			/>
