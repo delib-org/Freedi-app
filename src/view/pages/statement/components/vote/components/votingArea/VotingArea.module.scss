@@ -15,8 +15,11 @@
         height: 100%;
         position: relative;
         overflow-x: auto;
-        padding: 0 60px;
         box-sizing: border-box;
+
+        @media screen and (max-width: 440px) {
+         overflow-x: revert-layer;
+        }
         
         &::-webkit-scrollbar {
             height: 8px;

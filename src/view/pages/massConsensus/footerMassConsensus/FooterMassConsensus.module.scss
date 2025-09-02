@@ -1,31 +1,31 @@
 .footerMC {
   position: sticky;
-  top: 0;
+  bottom: 0;
   left: 0;
   width: 100%;
   display: flex;
   justify-content: center;
   align-items: center;
   gap: 1rem;
-  margin-top: 1rem;
-  padding-bottom: 2rem;
+  margin-top: 2rem;
+  padding: 1.5rem 1rem;
   background: linear-gradient(
-    to bottom,
-    rgba(0, 0, 0, 0) 0%,
-    var(--statementBackground) 20%
+    to top,
+    var(--statementBackground) 80%,
+    rgba(255, 255, 255, 0) 100%
   );
-
+  backdrop-filter: blur(10px);
   z-index: 100;
 
   @media (max-width: 768px) {
-    padding: 0.75rem;
-    position: fixed;
-	top: auto;
+    padding: 1rem 0.75rem;
+    position: sticky;
     bottom: 0;
   }
 
   @media (max-width: 630px) {
     justify-content: space-between;
+    padding: 1rem 1rem;
   }
 }
 
