@@ -3,8 +3,7 @@ import { useParams, useNavigate } from 'react-router';
 import { useSelector } from 'react-redux';
 import { StatementType, QuestionType, Role } from 'delib-npm';
 import { statementSelector, statementSubsSelector, statementSubscriptionSelector } from '@/redux/statements/statementsSlice';
-import { listenToSubStatements } from '@/controllers/db/statements/listenToStatements';
-import { listenToStatement } from '@/controllers/db/statements/listenToStatements';
+import { listenToStatement, listenToUserSuggestions } from '@/controllers/db/statements/listenToStatements';
 import { getStatementSubscriptionFromDB } from '@/controllers/db/subscriptions/getSubscriptions';
 import { getStatementSubscriptionId } from '@/controllers/general/helpers';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
@@ -12,6 +11,7 @@ import styles from './MySuggestions.module.scss';
 import BackIcon from '@/assets/icons/chevronLeftIcon.svg?react';
 import { useDispatch } from 'react-redux';
 import { setStatementSubscription } from '@/redux/statements/statementsSlice';
+import SuggestionCard from '@/view/pages/statement/components/evaluations/components/suggestionCards/suggestionCard/SuggestionCard';
 
 const MySuggestions: FC = () => {
 	const { statementId } = useParams<{ statementId: string }>();
@@ -23,10 +23,12 @@ const MySuggestions: FC = () => {
 	const allSuggestions = useSelector(statementSubsSelector(statementId));
 	const userId = user?.uid;
 	
-	// Use useMemo to avoid recreating filtered array on every render
+	// Use the suggestions from Redux store - they're already filtered by our listener
 	const userSuggestions = useMemo(() => {
-		if (!userId || !allSuggestions) return [];
+		if (!allSuggestions) return [];
 		
+		// Since we're using listenToUserSuggestions, these should already be filtered
+		// But let's double-check to be safe
 		return allSuggestions.filter(
 			(suggestion) => 
 				suggestion.creatorId === userId && 
@@ -59,14 +61,16 @@ const MySuggestions: FC = () => {
 		// Listen to the statement itself
 		const unsubscribeStatement = listenToStatement(statementId);
 		
-		// Listen to sub-statements
-		const unsubscribeSubStatements = listenToSubStatements(statementId, 'top');
+		// Listen to user's own suggestions only
+		const unsubscribeUserSuggestions = userId 
+			? listenToUserSuggestions(statementId, userId)
+			: () => {};
 		
 		return () => {
 			unsubscribeStatement();
-			unsubscribeSubStatements();
+			unsubscribeUserSuggestions();
 		};
-	}, [statementId]);
+	}, [statementId, userId]);
 
 	useEffect(() => {
 		// Fetch subscription if we have a user
@@ -85,7 +89,7 @@ const MySuggestions: FC = () => {
 	}
 
 	return (
-		<div className={styles.mySuggestions}>
+		<div className="wrapper">
 			<div className={styles.header}>
 				<div className={styles.headerTop}>
 					<button onClick={handleBackToStatement} className={styles.backButton}>
@@ -104,24 +108,13 @@ const MySuggestions: FC = () => {
 					</div>
 				) : (
 					userSuggestions.map((suggestion) => (
-						<div key={suggestion.statementId} className={styles.suggestionCard}>
-							<div className={styles.content}>
-								<p>{suggestion.statement}</p>
-							</div>
-							<div className={styles.meta}>
-								<span className={styles.type}>
-									Suggestion
-								</span>
-								{suggestion.consensus !== undefined && (
-									<span className={styles.consensus}>
-										Consensus: {Math.round(suggestion.consensus)}%
-									</span>
-								)}
-								<span className={styles.date}>
-									{new Date(suggestion.createdAt).toLocaleDateString()}
-								</span>
-							</div>
-						</div>
+						<SuggestionCard
+							key={suggestion.statementId}
+							statement={suggestion}
+							siblingStatements={userSuggestions}
+							parentStatement={statement}
+							positionAbsolute={false}
+						/>
 					))
 				)}
 			</div>
