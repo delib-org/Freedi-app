@@ -6,7 +6,6 @@ import { statementSubscriptionSelector } from '@/redux/statements/statementsSlic
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import useStatementColor from '@/controllers/hooks/useStatementColor';
 import BackIcon from '@/assets/icons/chevronLeftIcon.svg?react';
-import styles from './MySuggestionsHeader.module.scss';
 
 interface Props {
 	statement: Statement | undefined;
@@ -39,24 +38,24 @@ const MySuggestionsHeader: FC<Props> = ({ statement }) => {
 
 	return (
 		<nav
-			className={styles.nav}
+			className="app-header app-header--sticky app-header--shadow"
 			dir={dir}
 			style={{ backgroundColor: headerStyle.backgroundColor }}
 		>
-			<div className={styles.wrapper}>
+			<div className="app-header-wrapper" style={{ justifyContent: 'space-between' }}>
 				<button 
-					className={styles.backButton}
+					className="app-header-back-button"
 					onClick={handleBackToStatement}
 					aria-label="Back to statement"
 				>
-					<BackIcon />
+					<BackIcon className="back-arrow-icon" />
 				</button>
 				
-				<div className={styles.title}>
+				<div className="app-header-title">
 					<span>My Suggestions</span>
 				</div>
 				
-				<div className={styles.spacer} />
+				<div className="app-header-spacer" />
 			</div>
 		</nav>
 	);

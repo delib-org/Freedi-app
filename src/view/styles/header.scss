@@ -1,0 +1,130 @@
+// Common header styles for the entire application
+$headerHeight: 4.2rem;
+
+.app-header {
+  width: 100%;
+  height: $headerHeight;
+  box-shadow: 0px 3px 9px #00000026;
+  position: relative;
+  z-index: 100;
+  background-color: var(--header);
+  
+  // Default LTR rounded corner
+  border-radius: 0 0 calc($headerHeight / 2) 0;
+  
+  // RTL rounded corner
+  &[dir="rtl"] {
+    border-radius: 0 0 0 calc($headerHeight / 2);
+  }
+  
+  // Sticky variant
+  &--sticky {
+    position: sticky;
+    top: 0;
+  }
+  
+  // Fixed variant
+  &--fixed {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+  }
+  
+  // With shadow variant
+  &--shadow {
+    box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
+  }
+  
+  // Transparent variant
+  &--transparent {
+    background-color: transparent;
+    box-shadow: none;
+  }
+  
+  // Dark variant
+  &--dark {
+    background-color: var(--dark-header, #333);
+    color: var(--white);
+  }
+  
+  // Light variant
+  &--light {
+    background-color: var(--light-header, #fff);
+    color: var(--dark-text, #333);
+    
+    .app-header-title,
+    .app-header-back-button {
+      color: var(--dark-text, #333);
+    }
+    
+    .app-header-back-button svg {
+      color: var(--dark-text, #333);
+    }
+  }
+}
+
+.app-header-wrapper {
+  width: 100%;
+  height: 100%;
+  max-width: var(--wrapper);
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0 1rem;
+  
+  @media (max-width: 768px) {
+    padding: 0 0.5rem;
+    gap: 0.5rem;
+  }
+  
+  // RTL support - don't reverse direction, keep natural flow
+  // In RTL, flex naturally flows from right to left
+}
+
+.app-header-title {
+  flex: 1;
+  text-align: center;
+  font-size: 1.25rem;
+  font-weight: 500;
+  color: var(--white);
+  
+  @media (max-width: 768px) {
+    font-size: 1.1rem;
+  }
+}
+
+.app-header-back-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 50%;
+  transition: background-color 0.2s ease;
+  color: var(--white);
+  
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+  
+  svg {
+    width: 24px;
+    height: 24px;
+    color: var(--white);
+  }
+  
+  // RTL support - only rotate chevron/arrow icons, not home or other icons
+  [dir="rtl"] & svg.back-arrow-icon,
+  [dir="rtl"] & svg[class*="chevron"] {
+    transform: rotate(180deg);
+  }
+}
+
+.app-header-spacer {
+  width: 40px; // Same width as back button for centering
+  height: 40px;
+}

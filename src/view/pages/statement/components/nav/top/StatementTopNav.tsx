@@ -18,9 +18,6 @@ import { statementSubscriptionSelector } from "@/redux/statements/statementsSlic
 import NavButtons from "./navButtons/NavButtons";
 import HeaderMenu from "./headerMenu/HeaderMenu";
 
-// Styles
-import styles from "./StatementTopNav.module.scss";
-
 interface Props {
   statement?: Statement;
   parentStatement?: Statement;
@@ -83,12 +80,12 @@ const StatementTopNav: FC<Props> = ({
 
   return (
     <nav
-      className={styles.nav}
+      className="app-header"
       dir={dir}
       data-cy="statement-nav"
       style={{ backgroundColor: headerStyle.backgroundColor }}
     >
-      <div className={styles.wrapper}>
+      <div className="app-header-wrapper">
         {allowNavigation && statement && (
           <HeaderMenu
             statement={statement}

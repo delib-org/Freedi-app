@@ -6,9 +6,12 @@ const GeneralHeader = () => {
 	const { t } = useUserConfig();
 
 	return (
-		<div className={`page__header ${styles.myHeader}`}>
-			<h1>{t("My Profile")}</h1>
-			<Back />
+		<div className={`page__header app-header ${styles.myHeader}`}>
+			<div className="app-header-wrapper">
+				<Back />
+				<h1 className="app-header-title">{t("My Profile")}</h1>
+				<div className="app-header-spacer" />
+			</div>
 		</div>
 	)
 }
