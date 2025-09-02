@@ -151,27 +151,45 @@ export const EvaluationThumb: FC<EvaluationThumbProps> = ({
 }) => {
 	const { creator } = useAuthentication();
 	const decreaseLearning = useDecreaseLearningRemain();
+	const [isPending, setIsPending] = useState(false);
+	const [optimisticScore, setOptimisticScore] = useState<number | undefined>(evaluationScore);
+
+	useEffect(() => {
+		setOptimisticScore(evaluationScore);
+		setIsPending(false);
+	}, [evaluationScore]);
 
 	const handleSetEvaluation = (): void => {
-		setEvaluationToDB(statement, creator, evaluationThumb.evaluation);
+		// Immediate optimistic update
+		setOptimisticScore(evaluationThumb.evaluation);
+		setIsPending(true);
+		
+		// Database update
+		setEvaluationToDB(statement, creator, evaluationThumb.evaluation)
+			.finally(() => {
+				setIsPending(false);
+			});
+			
 		decreaseLearning({
 			evaluation: true,
 		});
 	};
 
 	const isThumbActive =
-		evaluationScore !== undefined &&
-		evaluationThumb.id === getEvaluationThumbIdByScore(evaluationScore);
+		(optimisticScore !== undefined &&
+			evaluationThumb.id === getEvaluationThumbIdByScore(optimisticScore)) ||
+		(isPending && optimisticScore === evaluationThumb.evaluation);
 
 	return (
 		<button
-			className={`${styles['evaluation-thumb']} ${isThumbActive ? styles.active : ''}`}
+			className={`${styles['evaluation-thumb']} ${isThumbActive ? styles.active : ''} ${isPending ? styles.pending : ''}`}
 			style={{
 				backgroundColor: isThumbActive
 					? evaluationThumb.colorSelected
 					: evaluationThumb.color,
 			}}
 			onClick={handleSetEvaluation}
+			disabled={isPending}
 		>
 			<img src={evaluationThumb.svg} alt={evaluationThumb.alt} />
 		</button>
