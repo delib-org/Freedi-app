@@ -236,7 +236,7 @@
   "Your suggestion": "ההצעה שלך",
   "similar suggestions": "הצעות דומות",
   "Thank you for the suggestion!": "תודה על ההצעה!",
-  "Here are similar suggestions. which one fits best?": "אלו הצעות דומות שעלו. מי מהן עדיפה בעינך?",
+  "Here are similar suggestions": "הנה הצעות דומות",
   "General suggestion evaluation": "הערכת כלל הצעות",
   "Leading suggestion evaluation": "הערכת הצעות המובילות",
   "Please rate the following suggestions": "אנא דרג/י את ההצעות הבאות",
@@ -330,5 +330,7 @@
   "Collaboration Index": "מדד שיתוף פעולה",
   "Top solutions": "פתרונות מובילים",
   "Show more": "הצג עוד",
-  "Looking for similar suggestions... please wait.": "מחפש הצעות דומות... אנא המתן/י."
+  "Looking for similar suggestions... please wait.": "מחפש הצעות דומות... אנא המתן/י.",
+  "This is your suggestion": "זו ההצעה שלך",
+  "Choose the your preferred suggestion": "בחר/י את ההצעה המועדפת עליך"
 }
