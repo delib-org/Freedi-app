@@ -50,7 +50,7 @@ const MySuggestionsHeader: FC<Props> = ({ statement }) => {
 							<span>My Suggestions</span>
 						</div>
 						<button 
-							className="app-header-back-button"
+							className="app-header-back-button no-rotate"
 							onClick={handleBackToStatement}
 							aria-label="Back to statement"
 						>
@@ -60,7 +60,7 @@ const MySuggestionsHeader: FC<Props> = ({ statement }) => {
 				) : (
 					<>
 						<button 
-							className="app-header-back-button"
+							className="app-header-back-button no-rotate"
 							onClick={handleBackToStatement}
 							aria-label="Back to statement"
 						>

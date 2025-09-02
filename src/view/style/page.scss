@@ -13,13 +13,6 @@
 		&.rtl {
 			border-bottom-right-radius: 0;
 			border-bottom-left-radius: 50px;
-
-			.back-arrow-icon {
-				transform: rotate(180deg);
-				color: white;
-				width: 24px;
-				height: 24px;
-			}
 		}
 
 		&__wrapper {

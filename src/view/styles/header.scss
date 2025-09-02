@@ -125,10 +125,9 @@ $headerHeight: 4.2rem;
   height: 40px;
 }
 
-// RTL icon rotation for back arrows
+// RTL icon rotation for back arrows (except when no-rotate class is present)
 [dir="rtl"] {
-  .back-arrow-icon,
-  svg[class*="chevron"] {
+  .app-header-back-button:not(.no-rotate) .back-arrow-icon {
     transform: rotate(180deg);
   }
 }
