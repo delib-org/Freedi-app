@@ -21,8 +21,6 @@ const RandomSuggestions = () => {
   const listOfStatementsIds = subStatements.map(st => st.statementId);
   const evaluationsLeft = useSelector(numberOfEvaluatedStatements(listOfStatementsIds));
 
-  console.log(evaluationsLeft);
-
   useEffect(() => {
     setHeader({
       title: t("General suggestion evaluation"),
