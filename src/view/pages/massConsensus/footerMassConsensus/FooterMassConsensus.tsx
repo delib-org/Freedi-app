@@ -12,7 +12,8 @@ const FooterMassConsensus = ({
 	onNext,
 	onSkip,
 	blockNavigation,
-	evaluationsLeft
+	evaluationsLeft,
+	canSkip = true
 }: {
 	isIntro?: boolean;
 	isNextActive?: boolean;
@@ -21,6 +22,7 @@ const FooterMassConsensus = ({
 	onSkip?: () => void;
 	blockNavigation?: boolean;
 	evaluationsLeft?: number;
+	canSkip?: boolean;
 }) => {
 	const { statementId } = useParams<{ statementId: string }>();
 	const navigate = useNavigate();
@@ -63,15 +65,15 @@ const FooterMassConsensus = ({
 				{evaluationsLeft > 0 && evaluationsLeft !== undefined && <p>{t('You have')} {evaluationsLeft} {t('evaluations left')}</p>}
 
 				<div className="btns">
-					<button
+					{canSkip &&<button
 						className='btn btn--massConsensus btn--secondary'
 						disabled={isButtonClicked}
 						onClick={() => handleSkip()}
 					>
 						{t('Skip')}
-					</button>
+					</button>}
 
-					<button
+					 <button
 						className={`btn btn--massConsensus btn--primary ${!isNextActive ? 'btn--disabled' : ''}`}
 						onClick={() => handleClick(onNext)}
 						disabled={isButtonClicked || !isNextActive}

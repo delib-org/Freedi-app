@@ -45,6 +45,7 @@ const RandomSuggestions = () => {
       
       <FooterMassConsensus
         isNextActive={evaluationsLeft === 0}
+        canSkip={false}
         evaluationsLeft={evaluationsLeft}
         onNext={() => {
           trackStageCompleted("random_suggestions");
