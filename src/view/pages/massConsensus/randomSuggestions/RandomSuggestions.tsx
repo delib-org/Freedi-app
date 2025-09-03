@@ -8,14 +8,20 @@ import { useHeader } from "../headerMassConsensus/HeaderContext";
 import { useEffect } from "react";
 import Loader from "@/view/components/loaders/Loader";
 import { useMassConsensusAnalytics } from "@/hooks/useMassConsensusAnalytics";
+import { useSelector } from "react-redux";
+import { numberOfEvaluatedStatements } from "@/redux/evaluations/evaluationsSlice";
 
 const RandomSuggestions = () => {
-  const { navigateToTop, loadingStatements } = useRandomSuggestions();
+  const { navigateToTop, loadingStatements, subStatements} = useRandomSuggestions();
   const { t } = useUserConfig();
   const { trackStageCompleted, trackStageSkipped } =
     useMassConsensusAnalytics();
 
   const { setHeader } = useHeader();
+  const listOfStatementsIds = subStatements.map(st => st.statementId);
+  const evaluationsLeft = useSelector(numberOfEvaluatedStatements(listOfStatementsIds));
+
+  console.log(evaluationsLeft);
 
   useEffect(() => {
     setHeader({
@@ -36,8 +42,9 @@ const RandomSuggestions = () => {
       ) : (
         <SuggestionCards selectionFunction={SelectionFunction.random} />
       )}
+      <p>{t("Please rate more")} {evaluationsLeft}  </p>
       <FooterMassConsensus
-        isNextActive={true}
+        isNextActive={evaluationsLeft === 0}
         onNext={() => {
           trackStageCompleted("random_suggestions");
           navigateToTop();
