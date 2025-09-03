@@ -1,38 +1,38 @@
-import { UserQuestion, UserQuestionType } from 'delib-npm';
+import { UserDemographicQuestion, UserDemographicQuestionType } from 'delib-npm';
 import { FC, useState, FormEvent } from 'react';
-import UserQuestionInput from '../settings/userDataQuestionInput/UserDataQuestionInput';
-import { setUserAnswers } from '@/controllers/db/userData/setUserData';
+import UserDemographicQuestionInput from '../settings/userDemographicQuestionInput/UserDemographicQuestionInput';
+import { setUserAnswers } from '@/controllers/db/userDemographic/setUserDemographic';
 import Button, { ButtonType } from '@/view/components/buttons/button/Button';
-import styles from './UserDataQuestions.module.scss';
+import styles from './UserDemographicQuestions.module.scss';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import BackToMenuArrow from '@/assets/icons/backToMenuArrow.svg?react';
 import X from '@/assets/icons/x.svg?react';
 import { useNavigate } from 'react-router';
 
 interface Props {
-	questions: UserQuestion[];
+	questions: UserDemographicQuestion[];
 	closeModal?: () => void;
 }
 
-const UserDataQuestions: FC<Props> = ({ questions, closeModal }) => {
-	const [userData, setUserData] = useState<UserQuestion[]>([]);
+const UserDemographicQuestions: FC<Props> = ({ questions, closeModal }) => {
+	const [userDemographic, setUserDemographic] = useState<UserDemographicQuestion[]>([]);
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const { t } = useUserConfig();
-	const isSurveyOptional = userData.some(
+	const isSurveyOptional = userDemographic.some(
 		(survey) => survey.required === true
 	);
 	const navigate = useNavigate();
 	const handleQuestionChange = (
-		question: UserQuestion,
+		question: UserDemographicQuestion,
 		value: string | string[]
 	) => {
-		// Update the statement with the new user data
+		// Update the statement with the new user demographic
 		if (
-			question.type === UserQuestionType.text ||
-			question.type === UserQuestionType.textarea ||
-			question.type === UserQuestionType.radio
+			question.type === UserDemographicQuestionType.text ||
+			question.type === UserDemographicQuestionType.textarea ||
+			question.type === UserDemographicQuestionType.radio
 		) {
-			setUserData((prevData) => {
+			setUserDemographic((prevData) => {
 				const currentQuestion = prevData.find(
 					(q) => q.userQuestionId === question.userQuestionId
 				);
@@ -57,8 +57,8 @@ const UserDataQuestions: FC<Props> = ({ questions, closeModal }) => {
 					},
 				];
 			});
-		} else if (question.type === UserQuestionType.checkbox) {
-			setUserData((prevData) => {
+		} else if (question.type === UserDemographicQuestionType.checkbox) {
+			setUserDemographic((prevData) => {
 				const currentQuestion = prevData.find(
 					(q) => q.userQuestionId === question.userQuestionId
 				);
@@ -90,7 +90,7 @@ const UserDataQuestions: FC<Props> = ({ questions, closeModal }) => {
 	const validateForm = (): boolean => {
 		// Check if all questions have been answered
 		for (const question of questions) {
-			const userAnswer = userData.find(
+			const userAnswer = userDemographic.find(
 				(q) => q.userQuestionId === question.userQuestionId
 			);
 
@@ -100,14 +100,14 @@ const UserDataQuestions: FC<Props> = ({ questions, closeModal }) => {
 
 			// Check based on question type
 			if (
-				question.type === UserQuestionType.text ||
-				question.type === UserQuestionType.textarea ||
-				question.type === UserQuestionType.radio
+				question.type === UserDemographicQuestionType.text ||
+				question.type === UserDemographicQuestionType.textarea ||
+				question.type === UserDemographicQuestionType.radio
 			) {
 				if (!userAnswer.answer || userAnswer.answer.trim() === '') {
 					return false;
 				}
-			} else if (question.type === UserQuestionType.checkbox) {
+			} else if (question.type === UserDemographicQuestionType.checkbox) {
 				if (
 					!userAnswer.answerOptions ||
 					userAnswer.answerOptions.length === 0
@@ -131,7 +131,7 @@ const UserDataQuestions: FC<Props> = ({ questions, closeModal }) => {
 		setIsSubmitting(true);
 
 		try {
-			await setUserAnswers(userData);
+			await setUserAnswers(userDemographic);
 			closeModal?.();
 		} catch (error) {
 			console.error('Error saving user answers:', error);
@@ -155,8 +155,8 @@ const UserDataQuestions: FC<Props> = ({ questions, closeModal }) => {
 					{t('Complete these setup questions')}
 				</p>
 				<form onSubmit={handleSubmit}>
-					{questions.map((question: UserQuestion) => (
-						<UserQuestionInput
+					{questions.map((question: UserDemographicQuestion) => (
+						<UserDemographicQuestionInput
 							key={question.userQuestionId}
 							question={question}
 							value={''}
@@ -182,4 +182,4 @@ const UserDataQuestions: FC<Props> = ({ questions, closeModal }) => {
 	);
 };
 
-export default UserDataQuestions;
+export default UserDemographicQuestions;

@@ -1,15 +1,11 @@
 .addStatement {
-	.page__header {
-		display: flex;
-		flex-direction: row;
-		align-items: center;
-		padding: 1.5rem;
-		padding-top: 1rem;
-
+	overflow-y: auto;
+	
+	.header {
+		background-color: var(--header-home);
+		
 		h1 {
-			flex: 1;
 			font-weight: 300;
 		}
 	}
-	overflow-y: auto;
 }

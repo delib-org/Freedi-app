@@ -1,5 +1,4 @@
 .introduction {
-	height: 100vh;
 	width: 100%;
 	display: flex;
 	flex-direction: column;
@@ -11,6 +10,7 @@
 		width: 100%;
 		max-width: var(--max-web-weight-of-wrapper);
 		padding: var(--padding);
+		margin-bottom: 1rem;
 		// gap: 2rem;
 
 		h1 {

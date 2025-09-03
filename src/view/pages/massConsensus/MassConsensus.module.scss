@@ -1,17 +1,18 @@
 .massConsensus {
-	height: 100vh;
 	width: 100vw;
 	display: flex;
 	flex-direction: column;
 	align-items: center;
 	text-align: inherit;
 	overflow-y: auto;
+	position: relative;
 	&__wrapper {
 		display: flex;
 		flex-direction: column;
 		width: 100%;
 		max-width: var(--wrapper-max-width);
 		padding: var(--padding);
+		padding-bottom: 0;
 	}
 
 	h1 {

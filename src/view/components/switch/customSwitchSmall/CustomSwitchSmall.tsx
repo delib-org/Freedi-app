@@ -1,7 +1,7 @@
 import React, { FC, useState } from 'react';
 import styles from './CustomSwitchSmall.module.scss';
 import VisuallyHidden from '../../accessibility/toScreenReaders/VisuallyHidden';
-import BackgroundImage from './customSwitchSmallBackground.svg';
+import BackgroundImage from './customSwitchSmallBackground.svg?url';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 
 interface Props {
@@ -12,6 +12,8 @@ interface Props {
 	imageUnchecked: React.ReactNode;
 	checked: boolean;
 	setChecked: (check: boolean) => void;
+	colorChecked?: string;
+	colorUnchecked?: string;
 }
 
 const CustomSwitchSmall: FC<Props> = ({
@@ -22,6 +24,8 @@ const CustomSwitchSmall: FC<Props> = ({
 	imageChecked,
 	imageUnchecked,
 	setChecked,
+	colorChecked,
+	colorUnchecked,
 }) => {
 	const { dir } = useUserConfig();
 	const [isChecked, setIsChecked] = useState(checked);
@@ -51,7 +55,7 @@ const CustomSwitchSmall: FC<Props> = ({
 				className={
 					dir === 'rtl' ? styles.background : `${styles.background} ${styles.backgroundLtr}`
 				}
-				style={{ backgroundImage: `url(${BackgroundImage})` }}
+				style={{ backgroundImage: `url("${BackgroundImage}")` }}
 			>
 				<div
 					className={`${styles.ball} ${styles.ballBackground}`}
@@ -68,7 +72,7 @@ const CustomSwitchSmall: FC<Props> = ({
 				</div>
 				<div
 					className={`${styles.ball} ${styles.ballSwitch} ${isChecked ? styles.ballSwitchChecked : styles.ballSwitchUnchecked}`}
-					style={{ left: `${isChecked ? 0 : 4.15}rem` }}
+					style={{ left: `${isChecked ? 0 : 4.15}rem`, backgroundColor:  isChecked ? colorChecked ?? '#4ade80' : colorUnchecked ?? '#ef4444' }}
 					aria-hidden='true'
 				>
 					{isChecked ? imageChecked : imageUnchecked}

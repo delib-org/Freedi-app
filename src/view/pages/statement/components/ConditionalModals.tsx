@@ -2,14 +2,14 @@ import React from 'react';
 import { useDispatch } from 'react-redux';
 import Modal from '@/view/components/modal/Modal';
 import NewStatement from './newStatement/NewStatement';
-import UserDataQuestions from './userDataQuestions/UserDataQuestions';
+import UserDemographicQuestions from './userDemographicQuestions/UserDemographicQuestions';
 import { setShowNewStatementModal } from '@/redux/statements/newStatementSlice';
-import { UserQuestion } from 'delib-npm';
+import { UserDemographicQuestion } from 'delib-npm';
 
 interface ConditionalModalsProps {
 	showNewStatement: boolean;
 	showUserQuestions: boolean;
-	userDataQuestions: UserQuestion[] | null;
+	userDemographicQuestions: UserDemographicQuestion[] | null;
 	screen?: string;
 	isMassConsensus: boolean;
 }
@@ -17,7 +17,7 @@ interface ConditionalModalsProps {
 export const ConditionalModals: React.FC<ConditionalModalsProps> = ({
 	showNewStatement,
 	showUserQuestions,
-	userDataQuestions,
+	userDemographicQuestions,
 	screen,
 	isMassConsensus,
 }) => {
@@ -40,9 +40,9 @@ export const ConditionalModals: React.FC<ConditionalModalsProps> = ({
 			{showUserQuestions &&
 				screen !== 'settings' &&
 				!isMassConsensus &&
-				userDataQuestions && (
+				userDemographicQuestions && (
 					<Modal>
-						<UserDataQuestions questions={userDataQuestions} />
+						<UserDemographicQuestions questions={userDemographicQuestions} />
 					</Modal>
 				)}
 		</>

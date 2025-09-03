@@ -22,11 +22,26 @@
         display: flex;
         justify-content: center;
         align-items: center;
-        transition: all 150ms ease-in-out;
+        transition: background-color 100ms ease-out, transform 50ms ease-out;
+        transform: scale(1);
 
-        &:hover,
-        &:active {
+        &:hover:not(:disabled) {
             overflow: visible;
+            transform: scale(1.02);
+        }
+        
+        &:active:not(:disabled) {
+            transform: scale(0.98);
+        }
+        
+        &.pending {
+            animation: votePulse 0.6s ease-in-out infinite;
+            cursor: wait;
+        }
+        
+        &:disabled {
+            cursor: not-allowed;
+            opacity: 0.9;
         }
 
         svg {
@@ -68,7 +83,7 @@
         display: flex;
         justify-content: center;
         align-items: end;
-        transition: all 500ms ease-in-out;
+        transition: height 300ms ease-out, width 300ms ease-out;
         border-radius: 2rem 0rem 0rem 0rem;
         clip-path: polygon(
             0% 0%,
@@ -96,7 +111,7 @@
         flex-direction: column;
         align-items: center;
         gap: 5px;
-        transition: all 500ms ease-in-out;
+        transition: right 300ms ease-out, left 300ms ease-out;
 
         .infoIcon {
             bottom: 70px;
@@ -137,7 +152,7 @@
         flex-direction: column;
         align-items: center;
         gap: 5px;
-        transition: all 500ms ease-in-out;
+        transition: right 300ms ease-out, left 300ms ease-out;
 
         .voteButton svg {
             transform: rotate(270deg) translate(-3px);
@@ -201,5 +216,14 @@
                 bottom: 9.8rem;
             }
         }
+    }
+}
+
+@keyframes votePulse {
+    0%, 100% {
+        opacity: 0.9;
+    }
+    50% {
+        opacity: 0.6;
     }
 }

@@ -98,7 +98,7 @@ const SuggestionCards: FC<Props> = ({
 	useEffect(() => {
 		const _totalHeight = subStatements.reduce(
 			(acc: number, sub: Statement) => {
-				return acc + (sub.elementHight ?? 200) + 30;
+				return acc + (sub.elementHight ?? 200)-30;
 			},
 			0
 		);
@@ -117,7 +117,7 @@ const SuggestionCards: FC<Props> = ({
 	return (
 		<div
 			className={styles['suggestions-wrapper']}
-			style={{ height: `${totalHeight + 60}px` }}
+			style={{ height: `${totalHeight}px` }}
 		>
 			{subStatements?.map((statementSub: Statement) => {
 				return (

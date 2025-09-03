@@ -7,20 +7,18 @@ interface Props {
 	statement: Statement | GeneratedStatement;
 	isUserStatement?: boolean;
 	selected?: boolean;
-	handleSelect?: (index: number) => void;
-	index?: number;
+	handleSelect?: (id: string) => void;
 }
 
 const SimilarCard: FC<Props> = ({
 	statement,
 	isUserStatement,
 	selected,
-	handleSelect,
-	index,
+	handleSelect
 }) => {
 	return (
 		<button
-			onClick={() => handleSelect(index)}
+			onClick={() => handleSelect(statement.statementId || statement.statement)}
 			className={`${styles['similar-card']} ${isUserStatement ? styles['similar-card--userStatement'] : ''} ${selected ? styles['similar-card--selected'] : ''}`}
 		>
 			{statement.statement}

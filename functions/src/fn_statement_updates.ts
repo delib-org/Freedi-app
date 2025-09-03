@@ -263,7 +263,8 @@ async function updateTopParentSubscriptions(topParentId: string) {
         const topParentDoc = await topParentRef.get();
         if (!topParentDoc.exists) {
             logger.warn(`Top-level statement ${topParentId} not found`);
-            return;
+            
+return;
         }
         
         const currentData = topParentDoc.data() as Statement;
@@ -272,7 +273,8 @@ async function updateTopParentSubscriptions(topParentId: string) {
         // Skip if this was updated within the last second (prevents rapid cascading)
         if (timestamp - lastUpdateTime < 1000) {
             logger.info(`Skipping update for ${topParentId} - was recently updated`);
-            return;
+            
+return;
         }
         
         // Update the statement's lastUpdate field

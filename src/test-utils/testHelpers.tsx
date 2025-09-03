@@ -14,7 +14,7 @@ import { massConsensusSlice } from '@/redux/massConsensus/massConsensusSlice';
 import { notificationsSlicer } from '@/redux/notificationsSlice/notificationsSlice';
 import creatorReducer from '@/redux/creator/creatorSlice';
 import SubscriptionsReducer from '@/redux/subscriptions/subscriptionsSlice';
-import userDataReducer from '@/redux/userData/userDataSlice';
+import userDemographicReducer from '@/redux/userDemographic/userDemographicSlice';
 import newStatementReducer from '@/redux/statements/newStatementSlice';
 
 interface CustomRenderOptions extends Omit<RenderOptions, 'wrapper'> {
@@ -61,7 +61,7 @@ export const createMockStore = (preloadedState: Partial<RootState> = {}) => {
       notifications: notificationsSlicer.reducer,
       creator: creatorReducer,
       subscriptions: SubscriptionsReducer.reducer,
-      userData: userDataReducer,
+      userDemographic: userDemographicReducer,
       newStatement: newStatementReducer
     },
     preloadedState

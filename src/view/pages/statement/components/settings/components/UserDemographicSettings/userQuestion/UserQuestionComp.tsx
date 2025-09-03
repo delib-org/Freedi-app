@@ -4,22 +4,22 @@ import DeleteIcon from '@/assets/icons/delete.svg?react';
 import PlusIcon from '@/assets/icons/plusIcon.svg?react';
 import Input from '@/view/components/input/Input';
 import styles from './UserQuestionComp.module.scss';
-import { DemographicOption, UserQuestion, UserQuestionType } from 'delib-npm';
-import { setDemographicOptionColor } from '@/controllers/db/userData/setUserData';
+import { DemographicOption, UserDemographicQuestion, UserDemographicQuestionType } from 'delib-npm';
+import { setDemographicOptionColor } from '@/controllers/db/userDemographic/setUserDemographic';
 import { useDispatch } from 'react-redux';
-import { updateUserQuestionOptionColor } from '@/redux/userData/userDataSlice';
+import { updateUserDemographicQuestionOptionColor } from '@/redux/userDemographic/userDemographicSlice';
 import RadioButtonEmptyIcon from '@/assets/icons/radioButtonEmpty.svg?react';
 import X from '@/assets/icons/x.svg?react';
 
 interface Props {
-	userQuestions: UserQuestion;
+	userQuestions: UserDemographicQuestion;
 	questionIndex: number;
 	onAddOption: (questionIndex: number, newOption: string) => void;
 	onDeleteOption: (questionIndex: number, optionIndex: number) => void;
 	onDeleteQuestion: (questionIndex: number) => void;
 	onUpdateQuestion?: (
 		questionIndex: number,
-		updatedQuestion: Partial<UserQuestion>
+		updatedQuestion: Partial<UserDemographicQuestion>
 	) => void;
 	minQuestionAmount?: number;
 }
@@ -46,8 +46,8 @@ const UserQuestionComp = ({
 	const allowDelete = userQuestions.options.length > minQuestionAmount;
 
 	const isMultiOptions =
-		userQuestions.type === UserQuestionType.checkbox ||
-		userQuestions.type === UserQuestionType.radio;
+		userQuestions.type === UserDemographicQuestionType.checkbox ||
+		userQuestions.type === UserDemographicQuestionType.radio;
 
 	const handleAddOption = () => {
 		if (newOptionText.trim()) {
@@ -83,13 +83,13 @@ const UserQuestionComp = ({
 		setIsEditingQuestion(false);
 	};
 
-	const handleTypeChange = (newType: UserQuestionType) => {
+	const handleTypeChange = (newType: UserDemographicQuestionType) => {
 		setSelectedType(newType);
 		if (onUpdateQuestion) {
 			// If changing to/from multi-option types, handle options appropriately
 			const needsOptions =
-				newType === UserQuestionType.checkbox ||
-				newType === UserQuestionType.radio;
+				newType === UserDemographicQuestionType.checkbox ||
+				newType === UserDemographicQuestionType.radio;
 			const currentHasOptions =
 				userQuestions.options && userQuestions.options.length > 0;
 
@@ -106,7 +106,7 @@ const UserQuestionComp = ({
 
 	function handleChangeOptionColor(optionIndex: number, color: string) {
 		dispatch(
-			updateUserQuestionOptionColor({
+			updateUserDemographicQuestionOptionColor({
 				userQuestionId: userQuestions.userQuestionId,
 				option: userQuestions.options[optionIndex].option,
 				color: color,
@@ -161,12 +161,12 @@ const UserQuestionComp = ({
 									value={selectedType}
 									onChange={(e) =>
 										handleTypeChange(
-											e.target.value as UserQuestionType
+											e.target.value as UserDemographicQuestionType
 										)
 									}
 									className={styles.typeSelect}
 								>
-									<option value={UserQuestionType.radio}>
+									<option value={UserDemographicQuestionType.radio}>
 										{t('Radio')}
 									</option>
 								</select>
@@ -184,7 +184,7 @@ const UserQuestionComp = ({
 
 			{/* Question Preview */}
 
-			{userQuestions.type === UserQuestionType.radio && (
+			{userQuestions.type === UserDemographicQuestionType.radio && (
 				<div>
 					{userQuestions.options?.map(
 						(option: DemographicOption, index: number) => (

@@ -15,7 +15,7 @@ import { listenToMassConsensusProcess } from '@/controllers/db/massConsensus/get
 import CheckBoxCheckIcon from '@/assets/icons/checkboxCheckedIcon.svg?react';
 import CheckBoxIcon from '@/assets/icons/checkboxEmptyIcon.svg?react';
 import { updateMassConsensusLoginTypeProcess } from '@/controllers/db/massConsensus/setMassConsensus';
-import { selectUserQuestionsByStatementId } from '@/redux/userData/userDataSlice';
+import { selectUserDemographicQuestionsByStatementId } from '@/redux/userDemographic/userDemographicSlice';
 
 const MassConsensusProcessSettings = () => {
 	const { t } = useUserConfig();
@@ -47,15 +47,15 @@ const MassConsensusProcessSettings = () => {
 			processName: t('Default Process for all users'),
 		};
 	}
-	const userDataQuestions = useSelector(
-		selectUserQuestionsByStatementId(statementId || '')
+	const userDemographicQuestions = useSelector(
+		selectUserDemographicQuestionsByStatementId(statementId || '')
 	);
 
 	const { steps: rawStepsDefault, processName: processNameDefault } =
 		processList.loginTypes.default;
 
 	const stepsDefault =
-		userDataQuestions.length > 0
+		userDemographicQuestions.length > 0
 			? rawStepsDefault
 			: rawStepsDefault.filter(
 					(step) => step.screen !== MassConsensusPageUrls.userDemographics

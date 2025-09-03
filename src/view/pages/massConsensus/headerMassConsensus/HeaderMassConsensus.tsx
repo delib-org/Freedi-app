@@ -8,6 +8,7 @@ import { useHeader } from './HeaderContext';
 import { useSelector } from 'react-redux';
 import { statementSubscriptionSelector } from '@/redux/statements/statementsSlice';
 import { getStepNavigation, useMassConsensusSteps } from '../MassConsensusVM';
+import MySuggestionsIcon from '@/assets/icons/evaluations2Icon.svg?react';
 
 const HeaderMassConsensus = () => {
 	const { statementId } = useParams<{ statementId: string }>();
@@ -20,14 +21,14 @@ const HeaderMassConsensus = () => {
 	const computedTitle = typeof title === 'function' ? title() : title;
 
 	return (
-		<div className={styles.headerMC} style={{ direction: dir }}>
-			<div className={styles.headerMC__wrapper}>
+		<div className={`app-header app-header--shadow ${styles.headerMC}`} style={{ direction: dir }}>
+			<div className={`app-header-wrapper ${styles.headerMC__wrapper}`}>
 				{previousStep && (
 					<Link
 						className={
-							dir === 'ltr'
-								? styles.icon
-								: `${styles.icon} ${styles['icon--ltr']}`
+							dir === 'rtl'
+								? `${styles.icon} ${styles['icon--rtl']}`
+								: styles.icon
 						}
 						to={
 							backToApp
@@ -42,19 +43,28 @@ const HeaderMassConsensus = () => {
 					className={styles['title-container']}
 					style={{ direction: dir }}
 				>
-					<h1 className={styles.title}>{computedTitle}</h1>
+					<h1 className={`app-header-title ${styles.title}`}>{computedTitle}</h1>
 				</div>
 
-				{isIntro ? (
-					''
-				) : (
-					<Link
-						className={styles.icon}
-						to={role === Role.admin ? `/statement/${statementId}` : `/mass-consensus/${statementId}/${MassConsensusPageUrls.introduction}`}
-					>
-						<HomeIcon />
-					</Link>
-				)}
+				<div className={styles.rightIcons}>
+					{!isIntro && (
+						<>
+							<Link
+								className={styles.icon}
+								to={`/my-suggestions/statement/${statementId}`}
+								title="My Suggestions"
+							>
+								<MySuggestionsIcon />
+							</Link>
+							<Link
+								className={styles.icon}
+								to={role === Role.admin ? `/statement/${statementId}` : `/mass-consensus/${statementId}/${MassConsensusPageUrls.introduction}`}
+							>
+								<HomeIcon />
+							</Link>
+						</>
+					)}
+				</div>
 			</div>
 		</div>
 	);
