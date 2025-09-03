@@ -33,7 +33,7 @@ export const Tooltip: FC<TooltipProps> = ({
 
 	// Handle outside clicks on mobile
 	useEffect(() => {
-		if (!isMobile) return;
+		if (!isMobile) return
 
 		const handleClickOutside = (event: MouseEvent) => {
 			if (
