@@ -42,9 +42,10 @@ const RandomSuggestions = () => {
       ) : (
         <SuggestionCards selectionFunction={SelectionFunction.random} />
       )}
-      <p>{t("Please rate more")} {evaluationsLeft}  </p>
+      
       <FooterMassConsensus
         isNextActive={evaluationsLeft === 0}
+        evaluationsLeft={evaluationsLeft}
         onNext={() => {
           trackStageCompleted("random_suggestions");
           navigateToTop();
