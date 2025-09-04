@@ -28,6 +28,7 @@ const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({ statement }) => {
 	const parentStatement = useSelector(statementSelectorById(statement.parentId));
 	const evaluationBarRef = useRef<HTMLDivElement>(null);
 	const showEvaluation = parentStatement?.statementSettings?.showEvaluation;
+	const totalEvaluators = parentStatement.evaluation?.asParentTotalEvaluators || 0;
 
 	const evaluationScore = useAppSelector(
 		evaluationSelector(statement.statementId)
@@ -117,15 +118,16 @@ const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({ statement }) => {
 				className={`${styles['evaluation-score']} ${statement.consensus < 0 ? styles.negative : ''}`}
 			>
 				{showEvaluation &&
+				totalEvaluators &&
 				numberOfEvaluators &&
 				numberOfEvaluators > 0 ? (
 					<Tooltip
-						content={`${t('Number of evaluators')}. ${t('Consensus')}: ${consensus}`}
+						content={`${t('Number of evaluators for this option / all evaluators')}. ${t('Consensus')}: ${consensus}`}
 						position='bottom'
 					>
 						<span className={styles['total-evaluators']}>
 							{' '}
-							({numberOfEvaluators})
+							({numberOfEvaluators}/{totalEvaluators})
 						</span>
 					</Tooltip>
 				) : null}
