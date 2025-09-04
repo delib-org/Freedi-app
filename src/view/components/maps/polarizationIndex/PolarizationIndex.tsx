@@ -4,7 +4,7 @@ import { selectPolarizationIndexByParentId, selectUserDemographicQuestionsByStat
 import { useSelector } from 'react-redux';
 import { useParams } from 'react-router';
 import styles from './PolarizationIndex.module.scss';
-import { Tooltip } from '../tooltip/Tooltip';
+import { Tooltip } from '../../tooltip/Tooltip';
 import { PolarizationIndex, UserDemographicQuestion } from 'delib-npm';
 import { listenToUserDemographicQuestions } from '@/controllers/db/userDemographic/getUserDemographic';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';

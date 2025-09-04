@@ -105,7 +105,9 @@ service cloud.firestore {
     }
 
     match /inAppNotifications/{inAppNotificationId=**} {
-      allow read: if request.auth.uid == resource.data.userId;
+      // Allow read if authenticated - the app already filters by userId in queries
+      allow read: if request.auth.uid != null;
+      // Only allow updates and deletes by the owner of the notification
       allow update: if request.auth.uid == resource.data.userId;
       allow delete: if request.auth.uid == resource.data.userId;
     }

@@ -32,7 +32,7 @@ const OptionMCCard: FC<Props> = ({ statement, isDelete }) => {
 
 				{isAdmin && isDelete && <button className={styles.optionMCCardBtn} onClick={handleDelete}><DeleteIcon /></button>}
 				{!isDelete && <div className={styles.smile}><SmileIcon /></div>}
-				<span className={styles.consensus}> {(Math.round(statement.consensus * 100) / 100).toFixed(2)}</span>
+				<span className={styles.consensus}> {(Math.round(statement.consensus * 100) / 100).toFixed(2)} ({statement.evaluation?.numberOfEvaluators})</span>
 			</div>
 		</div>
 	)
