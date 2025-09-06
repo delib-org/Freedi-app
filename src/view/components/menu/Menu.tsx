@@ -166,7 +166,7 @@ const Menu: FC<MenuProps> = ({
 					<div
 						className={styles.menuFooter}
 						onClick={(e) => e.stopPropagation()}
-						style={{ backgroundColor }}
+						style={{ backgroundColor, color: 'white' }}
 					>
 						{footer}
 					</div>

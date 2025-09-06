@@ -14,13 +14,18 @@ const MenuOption: FC<MenuOptionProps> = ({
 	label,
 	isOptionSelected = false,
 	icon,
+	className,
 	style,
 	children,
 }) => {
 	return (
 		<button
-			className={`${styles.menuOption} ${isOptionSelected ? styles.selected : ""}`}
-			onClick={onOptionClick}
+			className={[
+				styles.menuOption,
+				isOptionSelected ? styles.selected : "",
+				className || "" // ✅ forward className
+			].join(" ")}
+			style={style} onClick={onOptionClick}
 			onKeyDown={(e) => {
 				if (e.key === "Enter" || e.key === " ") {
 					onOptionClick();
