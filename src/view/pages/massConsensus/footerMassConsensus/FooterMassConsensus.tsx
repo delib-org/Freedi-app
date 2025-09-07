@@ -12,6 +12,8 @@ const FooterMassConsensus = ({
 	onNext,
 	onSkip,
 	blockNavigation,
+	evaluationsLeft,
+	canSkip = true
 }: {
 	isIntro?: boolean;
 	isNextActive?: boolean;
@@ -19,6 +21,8 @@ const FooterMassConsensus = ({
 	onNext?: () => void;
 	onSkip?: () => void;
 	blockNavigation?: boolean;
+	evaluationsLeft?: number;
+	canSkip?: boolean;
 }) => {
 	const { statementId } = useParams<{ statementId: string }>();
 	const navigate = useNavigate();
@@ -55,47 +59,31 @@ const FooterMassConsensus = ({
 			);
 		}
 
-		if (isFeedback) {
-			return (
-				<>
-					<button
+		return (
+			<div className={styles.btns}>
+
+				{evaluationsLeft > 0 && evaluationsLeft !== undefined && <p>{t('You have')} {evaluationsLeft} {t('evaluations left')}</p>}
+
+				<div className="btns">
+					{canSkip &&<button
 						className='btn btn--massConsensus btn--secondary'
 						disabled={isButtonClicked}
 						onClick={() => handleSkip()}
 					>
 						{t('Skip')}
-					</button>
+					</button>}
 
-					<button
+					 <button
 						className={`btn btn--massConsensus btn--primary ${!isNextActive ? 'btn--disabled' : ''}`}
 						onClick={() => handleClick(onNext)}
 						disabled={isButtonClicked || !isNextActive}
 					>
-						{t('Send')}
+						{t(isFeedback ? 'Send' : 'Next')}
 					</button>
-				</>
-			);
-		}
-
-		return (
-			<>
-				<button
-					className='btn btn--massConsensus btn--secondary'
-					disabled={isButtonClicked}
-					onClick={() => handleSkip()}
-				>
-					{t('Skip')}
-				</button>
-
-				<button
-					className={`btn btn--massConsensus btn--primary ${!isNextActive ? 'btn--disabled' : ''}`}
-					onClick={() => handleClick(onNext)}
-					disabled={isButtonClicked || !isNextActive}
-				>
-					{t('Next')}
-				</button>
-			</>
+				</div>
+			</div>
 		);
+
 	};
 
 	return (
