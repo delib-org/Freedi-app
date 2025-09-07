@@ -36,6 +36,7 @@ const SimilarSuggestions = ({ stage, setIfButtonEnabled }) => {
   function handleSelect(id: string) {
     setSelected(id);
   }
+
   useEffect(() => {
     if (similarSuggestions.length === 0) {
       navigate(`/mass-consensus/${statementId}/${nextStep}`);
@@ -46,10 +47,8 @@ const SimilarSuggestions = ({ stage, setIfButtonEnabled }) => {
 
   useEffect(() => {
     if (stage === "submitting") {
-      const selectedSuggestion = similarSuggestions.find(
-        (s) => s.statementId === selected
-      );
-      handleSetSuggestionToDB(selectedSuggestion);
+
+      handleSetSuggestionToDB(getSelectedSuggestion(selected));
     }
   }, [stage]);
 
@@ -58,7 +57,7 @@ const SimilarSuggestions = ({ stage, setIfButtonEnabled }) => {
       (async () => {
         setSelected(null);
 
-        await handleSetSuggestionToDB(similarSuggestions[0]);
+        await handleSetSuggestionToDB(newSuggestion);
       })();
     }
   }, [similarSuggestions.length, isLoading]);
@@ -66,6 +65,13 @@ const SimilarSuggestions = ({ stage, setIfButtonEnabled }) => {
   useEffect(() => {
     setIfButtonEnabled(selected !== null);
   }, [selected]);
+  
+  function getSelectedSuggestion(selected: string | null) {
+    const selectedSuggestion = similarSuggestions.find((s) => s.statementId === selected);
+    if (!selectedSuggestion) return newSuggestion;
+
+    return selectedSuggestion;
+  }
 
   return (
     <>
