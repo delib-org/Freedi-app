@@ -55,4 +55,12 @@ export const evaluationSelector =
 		)?.evaluation;
 	}
 
+export const numberOfEvaluatedStatements = (statementsIds:string[]) => (state: RootState) => {
+	const numberEvaluated =	state.evaluations.userEvaluations.filter(
+		(evaluation) => statementsIds.includes(evaluation.statementId)
+	).length;
+
+	return statementsIds.length - numberEvaluated;
+};
+
 export default evaluationsSlicer.reducer;

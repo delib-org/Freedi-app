@@ -24,7 +24,7 @@ const MassConsensusAdmin = () => {
 	const statement = useSelector(statementSelector(statementId));
 	const options = useSelector(statementSubsSelector(statementId)).filter(
 		(st) => st.statementType === StatementType.option
-	);
+	).sort((s1, s2) => s2.consensus - s1.consensus);
 	const sortedOptions = options
 		? [...options].sort((a, b) => b.consensus - a.consensus)
 		: [];

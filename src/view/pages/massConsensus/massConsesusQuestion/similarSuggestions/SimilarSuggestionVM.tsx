@@ -40,7 +40,7 @@ export function useSimilarSuggestions(statementId, nextStep) {
         throw new Error("Error getting parent statement from DB");
 
       //if statementId === null save new to DB
-      if (!statement.statementId) {
+      if (!statement?.statementId) {
         const newStatement: Statement = createStatement({
           text: statement.statement,
           parentStatement,

@@ -29,6 +29,24 @@
   }
 }
 
+.btns {
+  display: flex;
+  flex-direction: column;
+  gap: 0rem;
+  width: 100%;
+  justify-content: center;
+
+  p{
+    text-align: center;
+    margin: .1rem 0 .4rem;
+  }
+
+  @media (max-width: 630px) {
+    justify-content: space-between;
+  }
+}
+
 .btn {
   padding: 0 3rem;
+  
 }
