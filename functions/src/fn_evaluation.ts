@@ -57,7 +57,7 @@ interface CalcDiff {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function newEvaluation(event: any): Promise<void> {
 	try {
-		console.log("newEvaluation......................................................");
+		
 		const evaluation = event.data.data() as Evaluation;
 		const { statementId, parentId } = evaluation;
 		const userId = evaluation.evaluator?.uid;
@@ -356,10 +356,10 @@ function getSnapshotFromEvent(event: FirestoreEvent<Change<DocumentSnapshot> | D
 
 async function updateParentStatementWithTotalEvaluators(evaluation:Evaluation): Promise<void> {
 	try {
-		console.log("updateParentStatementWithTotalEvaluators", evaluation.parentId)
+
 		//check if this is the first time the user has evaluted in this parent Id
 		const isFirstEvaluation = await checkFirstEvaluation(evaluation);
-		console.log("isFirstEvaluation", isFirstEvaluation);
+		
 		if (isFirstEvaluation) {
 			//update the parent statement with the new total evaluators
 			await updateParentWithNewEvaluatorCount(evaluation);

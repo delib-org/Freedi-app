@@ -64,7 +64,7 @@ export function useRandomSuggestions() {
 
 				const { statements } = await response.json();
 				if (!statements) throw new Error('No statements found');
-
+				
 				setSubStatements(statements);
 				dispatch(
 					setMassConsensusStatements({
