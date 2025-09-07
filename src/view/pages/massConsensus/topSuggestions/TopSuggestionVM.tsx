@@ -23,7 +23,6 @@ const useTopSuggestions = () => {
 	const statement = useSelector(statementSelectorById(statementId));
 	const { user, isLoading } = useAuthentication();
 	const [loadingStatements, setLoadingStatements] = useState(true);
-
 	const [topStatements, setTopStatements] = useState<Statement[]>([]);
 
 	const navigateToVoting = () =>
@@ -96,7 +95,7 @@ const useTopSuggestions = () => {
 		};
 	}, [topStatements.length, user]);
 
-	return { navigateToVoting, loadingStatements };
+	return { navigateToVoting, loadingStatements, topStatements };
 };
 
 export default useTopSuggestions;
