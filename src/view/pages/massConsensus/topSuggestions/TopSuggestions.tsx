@@ -31,7 +31,7 @@ const TopSuggestions = () => {
 				title={t('Please rate the following suggestions')}
 			/>
 			{loadingStatements ? (
-				<div style={{margin:"0 auto",padding:"1rem"}}>
+				<div style={{ margin: "0 auto", padding: "1rem" }}>
 					<Loader />
 				</div>
 			) : (
@@ -50,7 +50,7 @@ const TopSuggestions = () => {
 			)}
 
 			<FooterMassConsensus
-			canSkip={false}
+				canSkip={false}
 				isNextActive={true}
 				onNext={() => {
 					trackStageCompleted('top_suggestions');
