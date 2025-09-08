@@ -1,0 +1,45 @@
+.bookmarksWrapper {
+  position: sticky;
+  top: 20%;
+  margin-left: auto;  
+  margin-top: -30%;
+ z-index: 99;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transform: translate(110%);
+  @media screen and (max-width: 768px) {
+    transform: none; 
+  }
+  .introductionMark {
+    background-color: #ecc806;
+  }
+  .questionsMark {
+    background-color: #5f88e5;
+  }
+  .solutionMark {
+    background-color: #58a99d;
+  }
+  .buttonMark {
+    width: 1.5rem;
+    margin-bottom: 1rem;
+    padding: 0.7rem 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    border-bottom-left-radius: 0.25rem;
+    border-top-left-radius: 0.25rem;
+
+    opacity: 0.6;
+  }
+  .selected {
+    padding: 1.7rem 0;
+    opacity: 1;
+  }
+  .magGlass {
+    font-size: 2rem;
+    color: white;
+  }
+}
