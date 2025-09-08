@@ -65,16 +65,21 @@ const FooterMassConsensus = ({
 				{evaluationsLeft > 0 && evaluationsLeft !== undefined && <p>{t('You have')} {evaluationsLeft} {t('evaluations left')}</p>}
 
 				<div className="btns">
-					{canSkip &&<button
-						className='btn btn--massConsensus btn--secondary'
+					<button
+						className='btn btn--secondary'
+					>
+						{t('Previous')}
+					</button>
+					{canSkip && <button
+						className='btn btn--secondary'
 						disabled={isButtonClicked}
 						onClick={() => handleSkip()}
 					>
 						{t('Skip')}
 					</button>}
 
-					 <button
-						className={`btn btn--massConsensus btn--primary ${!isNextActive ? 'btn--disabled' : ''}`}
+					<button
+						className={`btn btn--primary ${!isNextActive ? 'btn--disabled' : ''}`}
 						onClick={() => handleClick(onNext)}
 						disabled={isButtonClicked || !isNextActive}
 					>
