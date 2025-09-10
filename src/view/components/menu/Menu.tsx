@@ -11,16 +11,13 @@ import {
 	ReactNode,
 	useCallback,
 	useEffect,
-	useLayoutEffect,
 	useRef,
 	useState,
 } from 'react';
 import { useSelector } from 'react-redux';
 import IconButton from '../iconButton/IconButton';
 import styles from './Menu.module.scss';
-import useClickOutside from '@/controllers/hooks/useClickOutside';
 import { Link } from 'react-router';
-import { computeMenuPosition, Placement } from '@/utils/computeMenuPosition';
 
 interface MenuProps extends ComponentProps<'div'> {
 	iconColor: string;
@@ -33,6 +30,7 @@ interface MenuProps extends ComponentProps<'div'> {
 	currentPage?: string;
 	children: ReactNode;
 	isNavMenu?: boolean;
+	isChatMenu?: boolean;
 }
 
 const Menu: FC<MenuProps> = ({
@@ -45,75 +43,60 @@ const Menu: FC<MenuProps> = ({
 	footer,
 	statement,
 	isNavMenu = true,
+	isChatMenu = false,
 }) => {
 	const { dir } = useUserConfig();
 	const user = useSelector((state: RootState) => state.creator.creator);
 	const avatarSrc = user?.photoURL || DefaultAvatar;
 	const { backgroundColor } = useStatementColor({ statement });
 
+	const menuRef = useRef<HTMLDivElement>(null);
 	const buttonRef = useRef<HTMLButtonElement>(null);
-	const menuRootRef = useRef<HTMLDivElement | null>(null);
+	const [showAbove, setShowAbove] = useState(false);
 
-	const [coords, setCoords] = useState<{ top: number; left: number }>({ top: -9999, left: -9999 });
-	const [placement, setPlacement] = useState<Placement>('below');
+	// Simple click outside handler
+	useEffect(() => {
+		if (!isMenuOpen) return;
 
-	const handleClickOutside = useCallback(() => {
-		if (isMenuOpen) setIsOpen(false);
+		const handleClickOutside = (e: MouseEvent) => {
+			const target = e.target as HTMLElement;
+			
+			// Check if click is inside menu
+			if (menuRef.current?.contains(target)) {
+				return;
+			}
+			
+			// Close menu if clicked outside
+			setIsOpen(false);
+		};
+
+		// Add event listener
+		document.addEventListener('mousedown', handleClickOutside);
+
+		return () => {
+			document.removeEventListener('mousedown', handleClickOutside);
+		};
 	}, [isMenuOpen, setIsOpen]);
 
-	const menuRef = useClickOutside(handleClickOutside);
-
+	// Detect vertical position for chat menus only
 	useEffect(() => {
-		if (menuRef && menuRef.current) {
-			menuRootRef.current = menuRef.current;
-		}
-	}, [menuRef]);
+		if (!isChatMenu || !isMenuOpen || !buttonRef.current) return;
+
+		const buttonRect = buttonRef.current.getBoundingClientRect();
+		const windowHeight = window.innerHeight;
+		const buttonCenterY = buttonRect.top + buttonRect.height / 2;
+		
+		// If button is in bottom half of screen, show menu above
+		setShowAbove(buttonCenterY > windowHeight / 2);
+	}, [isMenuOpen, isChatMenu]);
 
 	const handleToggle = useCallback(() => {
-		if (!isMenuOpen) {
-			if (isCardMenu) {
-				const btn = buttonRef.current;
-				const root = menuRootRef.current;
-				if (btn && root) {
-					const menuEl = root.querySelector(`.${styles.menuContent}`) as HTMLElement | null;
-					if (menuEl) {
-						const rect = btn.getBoundingClientRect();
-						const next = computeMenuPosition({ triggerRect: rect, menuEl, dir, skipHiddenMeasure: false });
-						setCoords({ top: next.top, left: next.left });
-						setPlacement(next.placement);
-					}
-				}
-			}
-			setIsOpen(true);
-		} else {
-			setIsOpen(false);
-		}
-	}, [isMenuOpen, setIsOpen, dir, isCardMenu]);
-
-	useLayoutEffect(() => {
-		if (!isMenuOpen || !isCardMenu) return;
-		const onResize = () => {
-			const btn = buttonRef.current;
-			const root = menuRootRef.current;
-			if (!btn || !root) return;
-			const menuEl = root.querySelector(`.${styles.menuContent}`) as HTMLElement | null;
-			if (!menuEl) return;
-			const rect = btn.getBoundingClientRect();
-			const next = computeMenuPosition({ triggerRect: rect, menuEl, dir, skipHiddenMeasure: true });
-			setCoords({ top: next.top, left: next.left });
-			setPlacement(next.placement);
-		};
-		window.addEventListener('resize', onResize);
-
-		return () => window.removeEventListener('resize', onResize);
-	}, [isMenuOpen, isCardMenu, dir]);
+		setIsOpen(!isMenuOpen);
+	}, [isMenuOpen, setIsOpen]);
 
 	return (
 		<div
-			ref={(node) => {
-				if (menuRef) menuRef.current = node;
-				menuRootRef.current = node;
-			}}
+			ref={menuRef}
 			className={styles.menu}
 			dir={dir}
 		>
@@ -131,47 +114,38 @@ const Menu: FC<MenuProps> = ({
 			</IconButton>
 
 			{isMenuOpen && (
-				<button
-					className={styles.invisibleBackground}
-					onClick={() => setIsOpen(false)}
-					aria-label="Close menu"
-				/>
+				<div
+					className={[
+						styles.menuContent,
+						isCardMenu ? styles.card : '',
+						isChatMenu ? styles.chatMenu : '',
+						isChatMenu && showAbove ? styles.above : '',
+					].join(' ')}
+					role="menu"
+				>
+					{isNavMenu && !isCardMenu && (
+						<div className={styles.menuHeader} style={{ backgroundColor }}>
+							<h2 className={styles.menuTitle}>FreeDi</h2>
+							<Link to="/my" className={styles.menuUser}>
+								<img className={styles.menuAvatar} src={avatarSrc} alt="User avatar" />
+								<span className={styles.menuUsername}>{user?.displayName}</span>
+							</Link>
+						</div>
+					)}
+
+					{children}
+
+					{footer && (
+						<div
+							className={styles.menuFooter}
+							onClick={(e) => e.stopPropagation()}
+							style={{ backgroundColor, color: 'white' }}
+						>
+							{footer}
+						</div>
+					)}
+				</div>
 			)}
-
-			<div
-				className={[
-					styles.menuContent,
-					isCardMenu ? styles.card : '',
-					isMenuOpen ? styles.open : '',
-				].join(' ')}
-				style={
-					isCardMenu && isMenuOpen ? { top: coords.top, left: coords.left } : undefined
-				}
-				role="menu"
-				data-placement={placement}
-			>
-				{isNavMenu && !isCardMenu && (
-					<div className={styles.menuHeader} style={{ backgroundColor }}>
-						<h2 className={styles.menuTitle}>FreeDi</h2>
-						<Link to="/my" className={styles.menuUser}>
-							<img className={styles.menuAvatar} src={avatarSrc} alt="User avatar" />
-							<span className={styles.menuUsername}>{user?.displayName}</span>
-						</Link>
-					</div>
-				)}
-
-				{children}
-
-				{footer && (
-					<div
-						className={styles.menuFooter}
-						onClick={(e) => e.stopPropagation()}
-						style={{ backgroundColor, color: 'white' }}
-					>
-						{footer}
-					</div>
-				)}
-			</div>
 		</div>
 	);
 };
