@@ -1,7 +1,6 @@
 .subQuestionsMapContainer {
 	width: 30%;
 	height: 85%;
-	background-color: white;
 	position: fixed;
 	bottom: 0;
 	right: 0;
@@ -12,10 +11,14 @@
 	
 	&.open {
 		transform: translateX(0);
+			background-color: white;
+
 	}
 	
 	&.closed {
 		transform: translateX(100%);
+			background-color: transparent;
+
 	}
 	
 	// On very large screens, calculate available space for panel
