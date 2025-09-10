@@ -58,6 +58,7 @@ const ChatMessageMenu: FC<ChatMessageMenuProps> = ({
       isMenuOpen={isCardMenuOpen}
       iconColor="var(--icon-blue)"
       isCardMenu={true}
+      isChatMenu={true}
     >
       {isAuthorized && (
         <MenuOption
