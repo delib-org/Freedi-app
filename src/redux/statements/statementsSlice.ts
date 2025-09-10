@@ -173,14 +173,9 @@ export const statementsSlicer = createSlice({
 					state.statementSubscription = updateArray(
 						state.statementSubscription,
 						newStatementSubscription,
-						'statementsSubscribeId'
+						'statementId'
 					);
 				}
-				state.statementSubscription = updateArray(
-					state.statementSubscription,
-					newStatementSubscription,
-					'statementId'
-				);
 
 				//update last update if bigger than current
 				if (
