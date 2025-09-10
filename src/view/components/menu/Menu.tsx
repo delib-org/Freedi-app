@@ -30,6 +30,7 @@ interface MenuProps extends ComponentProps<'div'> {
 	currentPage?: string;
 	children: ReactNode;
 	isNavMenu?: boolean;
+	isChatMenu?: boolean;
 }
 
 const Menu: FC<MenuProps> = ({
@@ -42,6 +43,7 @@ const Menu: FC<MenuProps> = ({
 	footer,
 	statement,
 	isNavMenu = true,
+	isChatMenu = false,
 }) => {
 	const { dir } = useUserConfig();
 	const user = useSelector((state: RootState) => state.creator.creator);
@@ -76,9 +78,9 @@ const Menu: FC<MenuProps> = ({
 		};
 	}, [isMenuOpen, setIsOpen]);
 
-	// Detect position for card menus
+	// Detect vertical position for chat menus only
 	useEffect(() => {
-		if (!isCardMenu || !isMenuOpen || !buttonRef.current) return;
+		if (!isChatMenu || !isMenuOpen || !buttonRef.current) return;
 
 		const buttonRect = buttonRef.current.getBoundingClientRect();
 		const windowHeight = window.innerHeight;
@@ -86,7 +88,7 @@ const Menu: FC<MenuProps> = ({
 		
 		// If button is in bottom half of screen, show menu above
 		setShowAbove(buttonCenterY > windowHeight / 2);
-	}, [isMenuOpen, isCardMenu]);
+	}, [isMenuOpen, isChatMenu]);
 
 	const handleToggle = useCallback(() => {
 		setIsOpen(!isMenuOpen);
@@ -116,7 +118,8 @@ const Menu: FC<MenuProps> = ({
 					className={[
 						styles.menuContent,
 						isCardMenu ? styles.card : '',
-						isCardMenu && showAbove ? styles.above : '',
+						isChatMenu ? styles.chatMenu : '',
+						isChatMenu && showAbove ? styles.above : '',
 					].join(' ')}
 					role="menu"
 				>

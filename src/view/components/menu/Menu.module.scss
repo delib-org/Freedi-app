@@ -54,12 +54,18 @@
     &.card {
       position: absolute;
       top: 100%;
-      right: 0;
       margin-top: 4px;
       max-height: 400px;
       overflow-y: auto;
       overflow-x: hidden;
       z-index: 99999;
+
+      /* Chat menu centered horizontally */
+      &.chatMenu {
+        left: 50%;
+        transform: translateX(-50%);
+        right: auto;
+      }
 
       /* Position above the button when in bottom half of screen */
       &.above {
@@ -91,20 +97,36 @@
   }
 
 
-  &[dir="ltr"] .menuContent:not(.card) {
-    /* Respect iOS notch/rounded corners on the left */
-    left: max(8px, env(safe-area-inset-left));
-    right: auto;
-    width: min(250px, calc(100vw - 16px));
-    max-width: calc(100vw - 16px);
+  &[dir="ltr"] {
+    .menuContent:not(.card) {
+      /* Respect iOS notch/rounded corners on the left */
+      left: max(8px, env(safe-area-inset-left));
+      right: auto;
+      width: min(250px, calc(100vw - 16px));
+      max-width: calc(100vw - 16px);
+    }
+
+    /* Default LTR card position is on the right (except chat menus) */
+    .menuContent.card:not(.chatMenu) {
+      right: 0;
+      left: auto;
+    }
   }
 
-  &[dir="rtl"] .menuContent:not(.card) {
-    /* Respect iOS notch/rounded corners on the right */
-    right: max(8px, env(safe-area-inset-right));
-    left: auto;
-    width: min(250px, calc(100vw - 16px));
-    max-width: calc(100vw - 16px);
+  &[dir="rtl"] {
+    .menuContent:not(.card) {
+      /* Respect iOS notch/rounded corners on the right */
+      right: max(8px, env(safe-area-inset-right));
+      left: auto;
+      width: min(250px, calc(100vw - 16px));
+      max-width: calc(100vw - 16px);
+    }
+
+    /* Default RTL card position is on the left (except chat menus) */
+    .menuContent.card:not(.chatMenu) {
+      right: auto;
+      left: 0;
+    }
   }
 
 }
