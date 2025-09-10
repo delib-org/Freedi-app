@@ -11,7 +11,6 @@ import {
 	ReactNode,
 	useCallback,
 	useEffect,
-	useLayoutEffect,
 	useRef,
 	useState,
 } from 'react';
@@ -20,7 +19,6 @@ import IconButton from '../iconButton/IconButton';
 import styles from './Menu.module.scss';
 import useClickOutside from '@/controllers/hooks/useClickOutside';
 import { Link } from 'react-router';
-import { computeMenuPosition, Placement } from '@/utils/computeMenuPosition';
 
 interface MenuProps extends ComponentProps<'div'> {
 	iconColor: string;
@@ -53,9 +51,6 @@ const Menu: FC<MenuProps> = ({
 
 	const buttonRef = useRef<HTMLButtonElement>(null);
 	const menuRootRef = useRef<HTMLDivElement | null>(null);
-
-	const [coords, setCoords] = useState<{ top: number; left: number }>({ top: -9999, left: -9999 });
-	const [placement, setPlacement] = useState<Placement>('below');
 
 	const handleClickOutside = useCallback(() => {
 		if (isMenuOpen) setIsOpen(false);
@@ -133,42 +128,12 @@ const Menu: FC<MenuProps> = ({
 						menu.dispatchEvent(new Event('close-menu', { bubbles: true }));
 					}
 				});
-
-				const btn = buttonRef.current;
-				const root = menuRootRef.current;
-				if (btn && root) {
-					const menuEl = root.querySelector(`.${styles.menuContent}`) as HTMLElement | null;
-					if (menuEl) {
-						const rect = btn.getBoundingClientRect();
-						const next = computeMenuPosition({ triggerRect: rect, menuEl, dir, skipHiddenMeasure: false });
-						setCoords({ top: next.top, left: next.left });
-						setPlacement(next.placement);
-					}
-				}
 			}
 			setIsOpen(true);
 		} else {
 			setIsOpen(false);
 		}
-	}, [isMenuOpen, setIsOpen, dir, isCardMenu]);
-
-	useLayoutEffect(() => {
-		if (!isMenuOpen || !isCardMenu) return;
-		const onResize = () => {
-			const btn = buttonRef.current;
-			const root = menuRootRef.current;
-			if (!btn || !root) return;
-			const menuEl = root.querySelector(`.${styles.menuContent}`) as HTMLElement | null;
-			if (!menuEl) return;
-			const rect = btn.getBoundingClientRect();
-			const next = computeMenuPosition({ triggerRect: rect, menuEl, dir, skipHiddenMeasure: true });
-			setCoords({ top: next.top, left: next.left });
-			setPlacement(next.placement);
-		};
-		window.addEventListener('resize', onResize);
-
-		return () => window.removeEventListener('resize', onResize);
-	}, [isMenuOpen, isCardMenu, dir]);
+	}, [isMenuOpen, setIsOpen, isCardMenu]);
 
 	return (
 		<div
@@ -192,7 +157,6 @@ const Menu: FC<MenuProps> = ({
 				)}
 			</IconButton>
 
-
 			<div
 				className={[
 					styles.menuContent,
@@ -200,7 +164,6 @@ const Menu: FC<MenuProps> = ({
 					isMenuOpen ? styles.open : '',
 				].join(' ')}
 				role="menu"
-				data-placement={placement}
 			>
 				{isNavMenu && !isCardMenu && (
 					<div className={styles.menuHeader} style={{ backgroundColor }}>

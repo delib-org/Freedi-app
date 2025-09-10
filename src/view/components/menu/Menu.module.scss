@@ -64,18 +64,17 @@
 
     /* CARD VARIANT: suggestion-card menu only */
     &.card {
-      position: fixed;
-      right: auto;
-      bottom: auto;
-      top: -9999px;
-      left: -9999px;
-      max-height: calc(100vh - 32px);
-      max-width: calc(100vw - 16px);
+      position: absolute;
+      top: 100%;
+      right: 0;
+      margin-top: 4px;
+      max-height: 400px;
       overflow-y: auto;
       overflow-x: hidden;
       opacity: 0;
       pointer-events: none;
       transition: none;
+      z-index: 10001;
 
       &.open {
         opacity: 1;

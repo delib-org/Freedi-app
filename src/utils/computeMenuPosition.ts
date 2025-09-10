@@ -16,7 +16,7 @@ export function computeMenuPosition(opts: {
     menuEl,
     dir,
     padding = 8,
-    gap = 4,
+    gap = 0, // No gap - menu appears right next to button
     skipHiddenMeasure = false,
   } = opts;
 
@@ -56,37 +56,25 @@ export function computeMenuPosition(opts: {
   let top: number;
   let placement: Placement = "below";
   
-  // Vertical positioning - align top of menu with top of button
-  top = rect.top;
-  
-  // Horizontal positioning - position to the left of the button (since it's RTL)
+  // For RTL, always position below and to the left-aligned with button
   if (dir === "rtl") {
-    // RTL: Position menu to the left of the button
-    left = rect.left - measuredWidth - gap;
+    // Position menu below button, left-aligned
+    top = rect.bottom + 2; // Small gap below button
+    left = rect.left; // Align with left edge of button
+    placement = "below";
     
-    // If not enough space on the left, position to the right
+    // Ensure menu fits on screen
+    if (left + measuredWidth > vw - padding) {
+      left = rect.right - measuredWidth; // Align with right edge if doesn't fit
+    }
     if (left < padding) {
-      left = rect.right + gap;
-      
-      // If still doesn't fit on the right, position below button instead
-      if (left + measuredWidth > vw - padding) {
-        // Fall back to positioning below the button
-        top = rect.bottom + gap;
-        left = rect.left;
-        placement = "below";
-        
-        // Ensure menu fits on screen
-        if (left + measuredWidth > vw - padding) {
-          left = rect.right - measuredWidth;
-        }
-        if (left < padding) {
-          left = padding;
-        }
-      }
+      left = padding;
     }
   } else {
-    // LTR: Position menu to the right of the button
-    left = rect.right + gap;
+    // LTR: Position menu below button, right-aligned
+    top = rect.bottom + 2; // Small gap below button
+    left = rect.right - measuredWidth; // Align with right edge of button
+    placement = "below";
     
     // If not enough space on the right, position to the left
     if (left + measuredWidth > vw - padding) {
