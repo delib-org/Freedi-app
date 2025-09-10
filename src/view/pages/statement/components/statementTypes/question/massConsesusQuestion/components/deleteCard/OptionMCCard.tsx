@@ -4,6 +4,7 @@ import { FC } from 'react';
 import DeleteIcon from '@/assets/icons/delete.svg?react';
 import { deleteStatementFromDB } from '@/controllers/db/statements/deleteStatements';
 import { useSelector } from 'react-redux';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import { statementSelectorById, statementSubscriptionSelector } from '@/redux/statements/statementsSlice';
 import SmileIcon from '@/assets/icons/evaluation/evaluation1.svg?react';
 
@@ -16,11 +17,12 @@ const OptionMCCard: FC<Props> = ({ statement, isDelete }) => {
 	const role = useSelector(statementSubscriptionSelector(statement.parentId))?.role;
 	const parentStatement = useSelector(statementSelectorById(statement.parentId));
 	const totalEvaluators = parentStatement.evaluation?.asParentTotalEvaluators || 0;
+	const { t } = useUserConfig();
 
 	const isAdmin = role === 'admin';
 
 	function handleDelete() {
-		deleteStatementFromDB(statement, isAdmin);
+		deleteStatementFromDB(statement, isAdmin, t);
 	}
 
 	return (

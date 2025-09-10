@@ -337,5 +337,8 @@
   "Choose your preferred suggestion": "בחר/י את ההצעה המועדפת עליך",
   "Number of evaluators for this option / all evaluators": "מספר המעריכים לאופציה זו / סך כל המעריכים",
   "Voting Settings": "הגדרות הצבעה",
-  "Show voting Percentages per option": "הצג אחוזי הצבעה לכל אופציה"
+  "Show voting Percentages per option": "הצג אחוזי הצבעה לכל אופציה",
+  "Are you sure you want to delete": "האם את/ה בטוח/ה שברצונך למחוק את",
+  "You are not authorized to delete this statement": "אין לך הרשאה למחוק אמירה זו",
+  "cannot delete group": "לא ניתן למחוק קבוצה"
 }
