@@ -13,20 +13,21 @@ import { Collections, Statement, StatementType } from 'delib-npm';
 
 export async function deleteStatementFromDB(
 	statement: Statement,
-	isAuthorized: boolean
+	isAuthorized: boolean,
+	t: (key: string) => string
 ) {
 	try {
 		if (!statement) throw new Error('No statement');
 
 		if (!isAuthorized)
-			return alert('You are not authorized to delete this statement');
+			return alert(t('You are not authorized to delete this statement'));
 
 		if (statement.statementType === StatementType.group)
-			return alert('cannot delete group');
+			return alert(t('cannot delete group'))	;
 
 		if (!statement) throw new Error('No statement');
 		const confirmed = confirm(
-			`Are you sure you want to delete ${statement.statement}?`
+			`${t('Are you sure you want to delete')} ${statement.statement}?`
 		);
 		if (!confirmed) {
 			return;

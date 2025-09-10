@@ -13,6 +13,7 @@ import ClusterButton from './clusterButton/ClusterButton';
 
 import { deleteStatementFromDB } from '@/controllers/db/statements/deleteStatements';
 import { useAuthorization } from '@/controllers/hooks/useAuthorization';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import { Statement, StatementType } from 'delib-npm';
 import { changeStatementType } from '@/controllers/db/statements/changeStatementType';
 import EnhancedEvaluation from '../../../evaluations/components/evaluation/enhancedEvaluation/EnhancedEvaluation';
@@ -39,6 +40,7 @@ const NodeMenu: FC<Props> = ({
 	// Get the current zoom level from the react-flow store
 	const zoom = useStore((state) => state.transform[2]);
 	const { isAuthorized } = useAuthorization(selectedId);
+	const { t } = useUserConfig();
 
 	useEffect(() => {
 		if (nodeMenuRef.current && zoom) {
@@ -73,7 +75,7 @@ const NodeMenu: FC<Props> = ({
 		}
 	};
 	const deleteNode = async () => {
-		await deleteStatementFromDB(statement, isAuthorized);
+		await deleteStatementFromDB(statement, isAuthorized, t);
 	};
 	const changeNodeStatementType = async () => {
 		const newType =
