@@ -67,21 +67,25 @@
       position: fixed;
       right: auto;
       bottom: auto;
-      will-change: transform, opacity;
       top: -9999px;
       left: -9999px;
-      max-height: none;
-      transform: translateY(-4px);
-      transition:
-        opacity 120ms ease,
-        transform 120ms ease;
+      max-height: calc(100vh - 32px);
+      max-width: calc(100vw - 16px);
+      overflow-y: auto;
+      overflow-x: hidden;
       opacity: 0;
       pointer-events: none;
+      transition: none;
 
       &.open {
         opacity: 1;
-        transform: translateY(0);
         pointer-events: auto;
+      }
+
+      @media (max-width: 768px) {
+        min-width: 200px;
+        width: min(280px, calc(100vw - 16px));
+        max-height: calc(100vh - 100px);
       }
     }
   }
@@ -105,9 +109,13 @@
     left: 0;
     width: 100vw;
     height: 100svh;
-    z-index: 10000;
+    z-index: 9998;
     background-color: transparent;
     pointer-events: auto;
+    
+    &.allowClickThrough {
+      pointer-events: none;
+    }
   }
 
   &[dir="ltr"] .menuContent:not(.card) {
@@ -128,13 +136,4 @@
     transform-origin: top right;
   }
 
-  @media (prefers-reduced-motion: reduce) {
-    .menuContent {
-      transition: none;
-    }
-    .menuContent.card {
-      transition: none;
-      transform: none;
-    }
-  }
 }

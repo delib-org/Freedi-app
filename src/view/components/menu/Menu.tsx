@@ -69,9 +69,71 @@ const Menu: FC<MenuProps> = ({
 		}
 	}, [menuRef]);
 
+	// Listen for close-menu events
+	useEffect(() => {
+		const handleCloseMenu = () => {
+			if (isMenuOpen) {
+				setIsOpen(false);
+			}
+		};
+
+		if (buttonRef.current) {
+			buttonRef.current.addEventListener('close-menu', handleCloseMenu);
+
+			return () => {
+				if (buttonRef.current) {
+					buttonRef.current.removeEventListener('close-menu', handleCloseMenu);
+				}
+			};
+		}
+	}, [isMenuOpen, setIsOpen]);
+
+	// Handle clicks outside for card menus
+	useEffect(() => {
+		if (!isCardMenu || !isMenuOpen) return;
+
+		const handleClickOutside = (e: MouseEvent) => {
+			const target = e.target as HTMLElement;
+			
+			// Check if clicked on this menu or its button
+			if (menuRootRef.current?.contains(target)) {
+				return;
+			}
+			
+			// Check if clicked on another menu button
+			const clickedMenuButton = target.closest('[aria-haspopup="menu"]');
+			if (clickedMenuButton && clickedMenuButton !== buttonRef.current) {
+				// Close this menu immediately
+				setIsOpen(false);
+				// The other menu will open via its own click handler
+				return;
+			}
+			
+			// Otherwise, close the menu
+			setIsOpen(false);
+		};
+
+		// Use capture phase to intercept clicks before they reach other elements
+		document.addEventListener('click', handleClickOutside, true);
+		
+		return () => {
+			document.removeEventListener('click', handleClickOutside, true);
+		};
+	}, [isCardMenu, isMenuOpen, setIsOpen]);
+
 	const handleToggle = useCallback(() => {
 		if (!isMenuOpen) {
+			// Close any other open menus first
 			if (isCardMenu) {
+				// Find all open card menus and close them
+				const allOpenMenus = document.querySelectorAll('[aria-expanded="true"][aria-haspopup="menu"]');
+				allOpenMenus.forEach((menu) => {
+					if (menu !== buttonRef.current) {
+						// Dispatch close event to the menu
+						menu.dispatchEvent(new Event('close-menu', { bubbles: true }));
+					}
+				});
+
 				const btn = buttonRef.current;
 				const root = menuRootRef.current;
 				if (btn && root) {
@@ -130,13 +192,6 @@ const Menu: FC<MenuProps> = ({
 				)}
 			</IconButton>
 
-			{isMenuOpen && (
-				<button
-					className={styles.invisibleBackground}
-					onClick={() => setIsOpen(false)}
-					aria-label="Close menu"
-				/>
-			)}
 
 			<div
 				className={[
@@ -144,9 +199,6 @@ const Menu: FC<MenuProps> = ({
 					isCardMenu ? styles.card : '',
 					isMenuOpen ? styles.open : '',
 				].join(' ')}
-				style={
-					isCardMenu && isMenuOpen ? { top: coords.top, left: coords.left } : undefined
-				}
 				role="menu"
 				data-placement={placement}
 			>
