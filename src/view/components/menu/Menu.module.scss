@@ -48,19 +48,7 @@
     background-color: white;
     box-shadow: 0 3px 9px #00000026;
     overflow: hidden;
-    max-height: 0;
-    opacity: 0;
-    transform-origin: top right;
-    transition:
-      max-height 0.2s ease-out,
-      opacity 0.15s ease-out;
-    pointer-events: none;
-
-    &.open {
-      max-height: 800px;
-      opacity: 1;
-      pointer-events: auto;
-    }
+    max-height: 800px;
 
     /* CARD VARIANT: suggestion-card menu only */
     &.card {
@@ -71,14 +59,14 @@
       max-height: 400px;
       overflow-y: auto;
       overflow-x: hidden;
-      opacity: 0;
-      pointer-events: none;
-      transition: none;
-      z-index: 10001;
+      z-index: 99999;
 
-      &.open {
-        opacity: 1;
-        pointer-events: auto;
+      /* Position above the button when in bottom half of screen */
+      &.above {
+        top: auto;
+        bottom: 100%;
+        margin-top: 0;
+        margin-bottom: 4px;
       }
 
       @media (max-width: 768px) {
@@ -102,20 +90,6 @@
     }
   }
 
-  .invisibleBackground {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100svh;
-    z-index: 9998;
-    background-color: transparent;
-    pointer-events: auto;
-    
-    &.allowClickThrough {
-      pointer-events: none;
-    }
-  }
 
   &[dir="ltr"] .menuContent:not(.card) {
     /* Respect iOS notch/rounded corners on the left */
@@ -123,7 +97,6 @@
     right: auto;
     width: min(250px, calc(100vw - 16px));
     max-width: calc(100vw - 16px);
-    transform-origin: top left;
   }
 
   &[dir="rtl"] .menuContent:not(.card) {
@@ -132,7 +105,6 @@
     left: auto;
     width: min(250px, calc(100vw - 16px));
     max-width: calc(100vw - 16px);
-    transform-origin: top right;
   }
 
 }

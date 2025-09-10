@@ -17,7 +17,6 @@ import {
 import { useSelector } from 'react-redux';
 import IconButton from '../iconButton/IconButton';
 import styles from './Menu.module.scss';
-import useClickOutside from '@/controllers/hooks/useClickOutside';
 import { Link } from 'react-router';
 
 interface MenuProps extends ComponentProps<'div'> {
@@ -49,98 +48,53 @@ const Menu: FC<MenuProps> = ({
 	const avatarSrc = user?.photoURL || DefaultAvatar;
 	const { backgroundColor } = useStatementColor({ statement });
 
+	const menuRef = useRef<HTMLDivElement>(null);
 	const buttonRef = useRef<HTMLButtonElement>(null);
-	const menuRootRef = useRef<HTMLDivElement | null>(null);
+	const [showAbove, setShowAbove] = useState(false);
 
-	const handleClickOutside = useCallback(() => {
-		if (isMenuOpen) setIsOpen(false);
-	}, [isMenuOpen, setIsOpen]);
-
-	const menuRef = useClickOutside(handleClickOutside);
-
+	// Simple click outside handler
 	useEffect(() => {
-		if (menuRef && menuRef.current) {
-			menuRootRef.current = menuRef.current;
-		}
-	}, [menuRef]);
-
-	// Listen for close-menu events
-	useEffect(() => {
-		const handleCloseMenu = () => {
-			if (isMenuOpen) {
-				setIsOpen(false);
-			}
-		};
-
-		if (buttonRef.current) {
-			buttonRef.current.addEventListener('close-menu', handleCloseMenu);
-
-			return () => {
-				if (buttonRef.current) {
-					buttonRef.current.removeEventListener('close-menu', handleCloseMenu);
-				}
-			};
-		}
-	}, [isMenuOpen, setIsOpen]);
-
-	// Handle clicks outside for card menus
-	useEffect(() => {
-		if (!isCardMenu || !isMenuOpen) return;
+		if (!isMenuOpen) return;
 
 		const handleClickOutside = (e: MouseEvent) => {
 			const target = e.target as HTMLElement;
 			
-			// Check if clicked on this menu or its button
-			if (menuRootRef.current?.contains(target)) {
+			// Check if click is inside menu
+			if (menuRef.current?.contains(target)) {
 				return;
 			}
 			
-			// Check if clicked on another menu button
-			const clickedMenuButton = target.closest('[aria-haspopup="menu"]');
-			if (clickedMenuButton && clickedMenuButton !== buttonRef.current) {
-				// Close this menu immediately
-				setIsOpen(false);
-				// The other menu will open via its own click handler
-				return;
-			}
-			
-			// Otherwise, close the menu
+			// Close menu if clicked outside
 			setIsOpen(false);
 		};
 
-		// Use capture phase to intercept clicks before they reach other elements
-		document.addEventListener('click', handleClickOutside, true);
-		
+		// Add event listener
+		document.addEventListener('mousedown', handleClickOutside);
+
 		return () => {
-			document.removeEventListener('click', handleClickOutside, true);
+			document.removeEventListener('mousedown', handleClickOutside);
 		};
-	}, [isCardMenu, isMenuOpen, setIsOpen]);
+	}, [isMenuOpen, setIsOpen]);
+
+	// Detect position for card menus
+	useEffect(() => {
+		if (!isCardMenu || !isMenuOpen || !buttonRef.current) return;
+
+		const buttonRect = buttonRef.current.getBoundingClientRect();
+		const windowHeight = window.innerHeight;
+		const buttonCenterY = buttonRect.top + buttonRect.height / 2;
+		
+		// If button is in bottom half of screen, show menu above
+		setShowAbove(buttonCenterY > windowHeight / 2);
+	}, [isMenuOpen, isCardMenu]);
 
 	const handleToggle = useCallback(() => {
-		if (!isMenuOpen) {
-			// Close any other open menus first
-			if (isCardMenu) {
-				// Find all open card menus and close them
-				const allOpenMenus = document.querySelectorAll('[aria-expanded="true"][aria-haspopup="menu"]');
-				allOpenMenus.forEach((menu) => {
-					if (menu !== buttonRef.current) {
-						// Dispatch close event to the menu
-						menu.dispatchEvent(new Event('close-menu', { bubbles: true }));
-					}
-				});
-			}
-			setIsOpen(true);
-		} else {
-			setIsOpen(false);
-		}
-	}, [isMenuOpen, setIsOpen, isCardMenu]);
+		setIsOpen(!isMenuOpen);
+	}, [isMenuOpen, setIsOpen]);
 
 	return (
 		<div
-			ref={(node) => {
-				if (menuRef) menuRef.current = node;
-				menuRootRef.current = node;
-			}}
+			ref={menuRef}
 			className={styles.menu}
 			dir={dir}
 		>
@@ -157,36 +111,38 @@ const Menu: FC<MenuProps> = ({
 				)}
 			</IconButton>
 
-			<div
-				className={[
-					styles.menuContent,
-					isCardMenu ? styles.card : '',
-					isMenuOpen ? styles.open : '',
-				].join(' ')}
-				role="menu"
-			>
-				{isNavMenu && !isCardMenu && (
-					<div className={styles.menuHeader} style={{ backgroundColor }}>
-						<h2 className={styles.menuTitle}>FreeDi</h2>
-						<Link to="/my" className={styles.menuUser}>
-							<img className={styles.menuAvatar} src={avatarSrc} alt="User avatar" />
-							<span className={styles.menuUsername}>{user?.displayName}</span>
-						</Link>
-					</div>
-				)}
+			{isMenuOpen && (
+				<div
+					className={[
+						styles.menuContent,
+						isCardMenu ? styles.card : '',
+						isCardMenu && showAbove ? styles.above : '',
+					].join(' ')}
+					role="menu"
+				>
+					{isNavMenu && !isCardMenu && (
+						<div className={styles.menuHeader} style={{ backgroundColor }}>
+							<h2 className={styles.menuTitle}>FreeDi</h2>
+							<Link to="/my" className={styles.menuUser}>
+								<img className={styles.menuAvatar} src={avatarSrc} alt="User avatar" />
+								<span className={styles.menuUsername}>{user?.displayName}</span>
+							</Link>
+						</div>
+					)}
 
-				{children}
+					{children}
 
-				{footer && (
-					<div
-						className={styles.menuFooter}
-						onClick={(e) => e.stopPropagation()}
-						style={{ backgroundColor, color: 'white' }}
-					>
-						{footer}
-					</div>
-				)}
-			</div>
+					{footer && (
+						<div
+							className={styles.menuFooter}
+							onClick={(e) => e.stopPropagation()}
+							style={{ backgroundColor, color: 'white' }}
+						>
+							{footer}
+						</div>
+					)}
+				</div>
+			)}
 		</div>
 	);
 };
