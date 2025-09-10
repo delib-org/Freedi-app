@@ -14,6 +14,7 @@ import ClusterIcon from '@/assets/icons/networkIcon.svg?react';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import MultiSwitch from '@/view/components/switch/multiSwitch/MultiSwitch';
 import { setEvaluationUIType } from '@/controllers/db/evaluation/setEvaluation';
+import VotingSettings from './VotingSettings';
 
 const QuestionSettings: FC<StatementSettingsProps> = ({
 	statement,
@@ -23,6 +24,7 @@ const QuestionSettings: FC<StatementSettingsProps> = ({
 	try {
 		const { questionSettings } = statement;
 		if (statement.statementType !== StatementType.question) return null;
+		const isVoting = statement.evaluationSettings?.evaluationUI === EvaluationUI.voting;
 
 		function handleQuestionType(isDocument: boolean) {
 			setQuestionTypeToDB({
@@ -46,11 +48,11 @@ const QuestionSettings: FC<StatementSettingsProps> = ({
 					onClick={(value) => { setEvaluationUIType(statement.statementId, value as EvaluationUI); }}
 					currentValue={statement.evaluationSettings?.evaluationUI}
 				/>
-
-				<SectionTitle title='Question Settings' />
+				{isVoting && <VotingSettings />}
+				<SectionTitle title={t('Question Settings')} />
 
 				<CustomSwitchSmall
-					label='Document Question'
+					label={t('Document Question')}
 					checked={
 						questionSettings?.questionType ===
 						QuestionType.simple || false
