@@ -14,7 +14,7 @@ import ClusterIcon from '@/assets/icons/networkIcon.svg?react';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import MultiSwitch from '@/view/components/switch/multiSwitch/MultiSwitch';
 import { setEvaluationUIType } from '@/controllers/db/evaluation/setEvaluation';
-import VotingSettings from './VotingSettings';
+import VotingSettings from './votingSettings/VotingSettings';
 
 const QuestionSettings: FC<StatementSettingsProps> = ({
 	statement,

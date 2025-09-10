@@ -31,15 +31,15 @@ interface RangeProps {
 const ChoseBySettings: FC<StatementSettingsProps> = ({ statement: _statement }) => {
 	const { t } = useUserConfig();
 	const statement = useSelector(statementSelector(_statement.statementId)) as Statement;
-	if (!statement) return null;
-	const { resultsSettings } = statement;
-
 	const [rangeProps, setRangeProps] = useState<RangeProps>({
 		maxValue: 20,
 		minValue: 1,
 		step: 1,
-		value: resultsSettings.cutoffNumber ?? 1,
+		value: statement?.resultsSettings?.cutoffNumber ?? 1,
 	});
+	
+	if (!statement) return null;
+	const { resultsSettings } = statement;
 
 	function handleEvaluationChange(e: ChangeEvent<HTMLInputElement>) {
 		if (!e.target.id) return;

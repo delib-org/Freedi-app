@@ -205,7 +205,11 @@ service cloud.firestore {
         return statement != null && statement.membership != null && statement.membership.access != null 
           ? statement.membership.access 
           : (statement != null && statement.topParentId != null 
-            ? get(/databases/$(database)/documents/statements/$(statement.topParentId)).data.membership.access 
+            ? (get(/databases/$(database)/documents/statements/$(statement.topParentId)).data != null &&
+               get(/databases/$(database)/documents/statements/$(statement.topParentId)).data.membership != null &&
+               get(/databases/$(database)/documents/statements/$(statement.topParentId)).data.membership.access != null
+                 ? get(/databases/$(database)/documents/statements/$(statement.topParentId)).data.membership.access
+                 : null)
             : null);
       }
       

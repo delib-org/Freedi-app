@@ -1,11 +1,11 @@
 import React from 'react'
-import SectionTitle from '../sectionTitle/SectionTitle'
 import { useUserConfig } from '@/controllers/hooks/useUserConfig'
 import Checkbox from '@/view/components/checkbox/Checkbox';
 import { useParams } from 'react-router';
 import { useSelector } from 'react-redux';
 import { statementSelectorById } from '@/redux/statements/statementsSlice';
 import { setVotingSettingsToDB } from '@/controllers/db/vote/setVotingSettings';
+import styles from './VotingSettings.module.scss';
 
 const VotingSettings = () => {
     const { t } = useUserConfig();
@@ -16,14 +16,13 @@ const VotingSettings = () => {
 
     const showPercentage = statement.votingSettings?.showPercentages ?? false;
 
-    function handleShowPercentageChange(e) {
-    
-        console.log(e);
+    function handleShowPercentageChange(checked: boolean) {
+
         setVotingSettingsToDB({
             statementId: statement.statementId,
             votingSettings: {
                 ...statement.votingSettings,
-                showPercentages: e,
+                showPercentages: checked,
             }
         });
         // Update the voting settings in the database or state management
@@ -32,8 +31,7 @@ const VotingSettings = () => {
     }
 
   return (
-    <div>
-        <SectionTitle title={t('Voting Settings')} />
+    <div className={styles.votingSettings}>
         <Checkbox label={t('Show voting Percentages per option')} isChecked={showPercentage} onChange={handleShowPercentageChange} />
     </div>
   )
