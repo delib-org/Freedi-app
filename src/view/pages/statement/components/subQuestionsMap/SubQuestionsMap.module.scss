@@ -7,16 +7,17 @@
   border-top-left-radius: 10px;
   z-index: 9999;
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
 
   &.open {
     transform: translateX(0);
     background-color: white;
+    box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
   }
 
   &.closed {
     transform: translateX(100%);
     background-color: transparent;
+    box-shadow: none;
   }
 
   // On very large screens, calculate available space for panel
