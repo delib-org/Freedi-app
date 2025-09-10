@@ -98,7 +98,7 @@ const SuggestionCards: FC<Props> = ({
 	useEffect(() => {
 		const _totalHeight = subStatements.reduce(
 			(acc: number, sub: Statement) => {
-				return acc + (sub.elementHight ?? 200)-30;
+				return acc + (sub.elementHight ?? 200);
 			},
 			0
 		);
