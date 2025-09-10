@@ -110,7 +110,7 @@ const ChatMessageMenu: FC<ChatMessageMenuProps> = ({
           label={t("Delete")}
           icon={<DeleteIcon />}
           onOptionClick={() => {
-            deleteStatementFromDB(statement, !!isAuthorized);
+            deleteStatementFromDB(statement, !!isAuthorized, t);
             setIsCardMenuOpen(false);
           }}
         />
