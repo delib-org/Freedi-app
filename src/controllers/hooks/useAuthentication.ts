@@ -39,24 +39,35 @@ export const useAuthentication = (): AuthState => {
 		JSON.parse(localStorage.getItem(LocalStorageObjects.InitialRoute))
 	);
 
+	// Track if user has been set to prevent duplicate calls
+	const userSetRef = useRef<string | null>(null);
+
 	// Main auth effect
 	useEffect(() => {
 		const unsubscribe = onAuthStateChanged(auth, (user) => {
 
 			if (user) {
 				// User is authenticated
+				const creator = convertFirebaseUserToCreator(user);
 
 				setAuthState({
 					isAuthenticated: true,
 					isLoading: false,
 					user,
-					creator: convertFirebaseUserToCreator(user),
+					creator,
 					initialRoute: initialRoute.current?.pathname,
 				});
-				dispatch(setCreator(convertFirebaseUserToCreator(user)));
-				setUserToDB(convertFirebaseUserToCreator(user));
+				dispatch(setCreator(creator));
+				
+				// Only set user to DB if it's a new user or user has changed
+				if (userSetRef.current !== user.uid) {
+					userSetRef.current = user.uid;
+					setUserToDB(creator);
+				}
 			} else {
 				// User is not authenticated
+				userSetRef.current = null; // Reset the ref when user logs out
+				
 				setAuthState({
 					isAuthenticated: false,
 					isLoading: false,
