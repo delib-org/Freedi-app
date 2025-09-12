@@ -340,5 +340,8 @@
   "Show voting Percentages per option": "הצג אחוזי הצבעה לכל אופציה",
   "Are you sure you want to delete": "האם את/ה בטוח/ה שברצונך למחוק את",
   "You are not authorized to delete this statement": "אין לך הרשאה למחוק אמירה זו",
-  "cannot delete group": "לא ניתן למחוק קבוצה"
+  "cannot delete group": "לא ניתן למחוק קבוצה",
+  "Connected questions worth discussing": "שאלות קשורות שכדאי לדון בהן",
+  "Topic description": "תיאור הנושא"
+
 }
