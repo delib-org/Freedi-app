@@ -30,7 +30,6 @@ import Smile from "@/assets/icons/smile.svg?react";
 
 import Research from "@/assets/images/Research.png";
 import manWithIdeaLamp from "@/assets/images/manWithIdeaLamp.png";
-import BookmarkBar from "@/view/components/bookmarkBar/BookmarkBar";
 
 const MultiStageQuestion: FC = () => {
   const { statement } = useContext(StatementContext);
@@ -158,7 +157,7 @@ const MultiStageQuestion: FC = () => {
         <StagePage showStageTitle={false} />
       ) : (
         <div className={styles.stagesWrapper}>
-          <BookmarkBar />
+          {/* <BookmarkBar /> */}
 
           <div className={styles.stageCard} id="introduction">
             <div className={styles.imgContainer}>
