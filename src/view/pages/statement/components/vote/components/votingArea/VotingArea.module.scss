@@ -1,12 +1,17 @@
+body {
+  overflow: scroll;
+}
+
 .votingArea {
   overflow: visible;
   overflow-x: auto;
   overflow-y: auto;
+
   &.horizontal {
     right: 0;
     display: flex;
     direction: ltr;
-    padding: 1.5rem 0;
+    padding: 1.5rem;
     height: 100svw;
     rotate: 90deg;
   }
