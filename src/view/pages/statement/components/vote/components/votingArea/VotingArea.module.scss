@@ -1,4 +1,6 @@
 .votingArea {
+  overflow-x: auto;
+  overflow-y: auto;
   &.horizontal {
     right: 0;
     display: flex;
