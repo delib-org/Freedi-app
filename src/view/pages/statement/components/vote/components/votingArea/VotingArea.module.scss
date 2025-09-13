@@ -26,6 +26,10 @@ body {
     padding: 0 20px;
     box-sizing: border-box;
 
+    @media screen and (min-width: 1080px) {
+      right: 12%;
+    }
+
     @media screen and (max-width: 440px) {
       overflow-x: revert-layer;
       padding: 0;
