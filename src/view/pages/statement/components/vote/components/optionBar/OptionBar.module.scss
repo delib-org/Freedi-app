@@ -1,11 +1,9 @@
 .optionBar {
   .voteButtonContainer {
     display: flex;
-
-    @media (max-width: 900px) {
-      width: 40px;
-    }
+    width: auto;
   }
+
   .voteButton {
     border-radius: 5px;
     background-color: teal;
@@ -13,7 +11,7 @@
     color: white;
     user-select: none;
     cursor: pointer;
-    width: 120px;
+    width: var(--barInnerWidth);
     height: 35px;
     white-space: wrap;
     word-wrap: break-word;
@@ -85,7 +83,7 @@
   .bar {
     position: relative;
     height: 0px;
-    width: 120px;
+    width: var(--barInnerWidth);
     display: flex;
     justify-content: center;
     align-items: end;
@@ -175,7 +173,6 @@
       bottom: 0px;
       display: flex;
       align-items: center;
-
       @media (max-width: 1000px) {
         transform: translateY(-2.7rem) rotate(270deg);
       }
@@ -185,24 +182,24 @@
         height: 23px;
       }
     }
-    .bar {
-      width: 30px;
-      height: 30px;
-      border-radius: 15px 15px 0 0;
+    // .bar {
+    //   width: 30px;
+    //   height: 30px;
+    //   border-radius: 15px 15px 0 0;
 
-      .numberOfSelections {
-        top: 0;
-        transform: rotate(270deg);
-        background-color: white;
-        border-radius: 50%;
-        color: #3b4f7d;
-        width: 30px;
-        height: 30px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-    }
+    //   .numberOfSelections {
+    //     top: 0;
+    //     transform: rotate(270deg);
+    //     background-color: white;
+    //     border-radius: 50%;
+    //     color: #3b4f7d;
+    //     width: 30px;
+    //     height: 30px;
+    //     display: flex;
+    //     align-items: center;
+    //     justify-content: center;
+    //   }
+    // }
 
     .column {
       .percentageText {
