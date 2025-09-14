@@ -60,9 +60,9 @@ function SwitchStatementType({
 		case StatementType.group:
 			return <GroupPage />;
 		case StatementType.question:
-			return <QuestionPage />;
 		case StatementType.option:
-			return <SuggestionChat />;
+			return <QuestionPage />;
+
 		default:
 			return null;
 	}
