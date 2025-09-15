@@ -7,7 +7,6 @@ import Triangle from "@/view/components/maps/triangle/Triangle";
 import MindMap from "../map/MindMap";
 import Chat from "../chat/Chat";
 import StatementSettings from "../settings/StatementSettings";
-import SuggestionChat from "@/view/pages/suggestionChat/SuggestionChat";
 import PolarizationIndexComp from "@/view/components/maps/polarizationIndex/PolarizationIndex";
 
 interface SwitchScreenProps {
