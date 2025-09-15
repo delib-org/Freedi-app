@@ -6,7 +6,7 @@ import { useSelector } from 'react-redux';
 import { Role } from 'delib-npm';
 
 // Redux Store
-import { statementSubscriptionSelector } from '@/redux/statements/statementsSlice';
+import { statementSubscriptionSelector, userSuggestionsSelector } from '@/redux/statements/statementsSlice';
 
 // App Hooks
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
@@ -24,6 +24,7 @@ import { useMassConsensusSteps } from '../MassConsensusVM';
 import { getStepNavigation } from '../MassConsensusVM';
 
 import styles from './HeaderMassConsensus.module.scss';
+import { creatorSelector } from '@/redux/creator/creatorSlice';
 
 interface Props{
 	showMySuggestions?: boolean;
@@ -31,11 +32,14 @@ interface Props{
 
 const HeaderMassConsensus = ({ showMySuggestions = true }: Props) => {
 	const { statementId } = useParams<{ statementId: string }>();
-	const { dir } = useUserConfig();
+	const { dir} = useUserConfig();
+	const userId = useSelector(creatorSelector)?.uid
 	const { backToApp } = useHeader();
 	const role = useSelector(statementSubscriptionSelector(statementId))?.role;
 	const { steps, currentStep } = useMassConsensusSteps();
 	const { previousStep } = getStepNavigation(steps, currentStep);
+	const doesUserHaveSuggestions = useSelector(userSuggestionsSelector(statementId, userId)).length > 0;
+	const shouldShowMySuggestions = showMySuggestions && doesUserHaveSuggestions;
 
 	return (
 		<div className={`app-header app-header--shadow ${styles.headerMC}`} style={{ direction: dir }}>
@@ -64,7 +68,7 @@ const HeaderMassConsensus = ({ showMySuggestions = true }: Props) => {
 					>
 						<HomeIcon />
 					</Link>
-					{showMySuggestions && (
+					{shouldShowMySuggestions && (
 
 						<Link
 							className={styles.icon}

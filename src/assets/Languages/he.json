@@ -343,6 +343,9 @@
   "cannot delete group": "לא ניתן למחוק קבוצה",
   "Connected questions worth discussing": "שאלות קשורות שכדאי לדון בהן",
   "Topic description": "תיאור הנושא",
-  "Solutions for discussed issue": "פתרונות לבעיה שנדונה"
-
+  "Solutions for discussed issue": "פתרונות לבעיה שנדונה",
+  "Introduction": "הקדמה",
+  "Please suggest a solution": "אנא הצע/י פתרון",
+  "Choose the your preferred suggestion": "בחר/י את ההצעה המועדפת עליך",
+  "Please rate the following leading suggestions": "אנא דרג/י את ההצעות המובילות הבאות"
 }
