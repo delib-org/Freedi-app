@@ -527,4 +527,21 @@ export const statementsOfMultiStepSelectorByStatementId = (
 			)
 	);
 
+export const userSuggestionsSelector = (
+	parentId: string | undefined,
+	userId: string | undefined
+) =>
+	createSelector(
+		(state: RootState) => state.statements.statements,
+		(statements) =>
+			statements
+				.filter(
+					(statement) =>
+						statement.parentId === parentId &&
+						statement.creatorId === userId &&
+						statement.statementType === StatementType.option
+				)
+				.sort((a, b) => a.createdAt - b.createdAt)
+	);
+
 export default statementsSlicer.reducer;

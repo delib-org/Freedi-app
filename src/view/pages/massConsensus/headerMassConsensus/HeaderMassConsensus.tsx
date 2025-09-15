@@ -25,14 +25,17 @@ import { getStepNavigation } from '../MassConsensusVM';
 
 import styles from './HeaderMassConsensus.module.scss';
 
-const HeaderMassConsensus = () => {
+interface Props{
+	showMySuggestions?: boolean;
+}
+
+const HeaderMassConsensus = ({ showMySuggestions = true }: Props) => {
 	const { statementId } = useParams<{ statementId: string }>();
 	const { dir } = useUserConfig();
 	const { backToApp } = useHeader();
 	const role = useSelector(statementSubscriptionSelector(statementId))?.role;
 	const { steps, currentStep } = useMassConsensusSteps();
 	const { previousStep } = getStepNavigation(steps, currentStep);
-	const showMySuggestions = true; // TODO: add condition to show this icon only when the user has suggestions for this statement
 
 	return (
 		<div className={`app-header app-header--shadow ${styles.headerMC}`} style={{ direction: dir }}>
@@ -55,6 +58,12 @@ const HeaderMassConsensus = () => {
 				)}
 
 				<div className={styles.rightIcons}>
+					<Link
+						className={styles.icon}
+						to={role === Role.admin ? `/statement/${statementId}` : `/home`}
+					>
+						<HomeIcon />
+					</Link>
 					{showMySuggestions && (
 
 						<Link
@@ -65,12 +74,7 @@ const HeaderMassConsensus = () => {
 							<SmileIcon />
 						</Link>
 					)}
-					<Link
-						className={styles.icon}
-						to={role === Role.admin ? `/statement/${statementId}` : `/home`}
-					>
-						<HomeIcon />
-					</Link>
+					
 				</div>
 			</div>
 		</div>
