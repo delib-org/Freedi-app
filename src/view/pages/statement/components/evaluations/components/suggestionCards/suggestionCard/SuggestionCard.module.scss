@@ -22,6 +22,11 @@
     pointer-events: none;
   }
 
+  // Special border for community cards
+  &--community {
+    border-left-color: rgba(139, 92, 246, 0.7);
+  }
+
   .selected-option {
     color: white;
     color: #57a193;
@@ -111,6 +116,12 @@
         color: #4e88c7;
         width: 24px;
         height: 24px;
+      }
+
+      .badge-element {
+        display: flex;
+        align-items: center;
+        justify-content: center;
       }
 
       @media screen and (max-width: 500px) {
@@ -226,3 +237,4 @@
     margin: 0;
   }
 }
+

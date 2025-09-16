@@ -28,6 +28,8 @@ import { Link } from 'react-router';
 import ImprovementModal from '@/view/components/improvementModal/ImprovementModal';
 import { improveSuggestionWithTimeout } from '@/services/suggestionImprovement';
 import Loader from '@/view/components/loaders/Loader';
+import CommunityBadge from '@/view/components/badges/CommunityBadge';
+import AnchoredBadge from '@/view/components/badges/AnchoredBadge';
 
 interface Props {
 	statement: Statement | undefined;
@@ -51,6 +53,8 @@ const SuggestionCard: FC<Props> = ({
 	const enableJoining = parentStatement?.statementSettings?.joiningEnabled;
 	const showEvaluation = parentStatement?.statementSettings?.showEvaluation;
 	const enableAIImprovement = parentStatement?.statementSettings?.enableAIImprovement;
+	const showBadges = parentStatement?.evaluationSettings?.anchored?.differentiateBetweenAnchoredAndNot;
+	const isAnchored = statement?.anchored === true;
 
 	// Redux Store
 	const dispatch = useAppDispatch();
@@ -235,11 +239,11 @@ const SuggestionCard: FC<Props> = ({
 	return (
 		<div
 			onContextMenu={(e) => handleRightClick(e)}
-			className={
-				statementAge < 10000
-					? `${styles['statement-evaluation-card']} ${styles['statement-evaluation-card--new']}`
-					: styles['statement-evaluation-card']
-			}
+			className={`
+				${styles['statement-evaluation-card']}
+				${statementAge < 10000 ? styles['statement-evaluation-card--new'] : ''}
+				${showBadges && !isAnchored ? styles['statement-evaluation-card--community'] : ''}
+			`.trim()}
 			style={{
 				top: `${positionAbsolute ? statement.top || 0 : 0}px`,
 				borderLeft: showEvaluation ? selectedOptionIndicator : '12px solid transparent',
@@ -366,6 +370,12 @@ const SuggestionCard: FC<Props> = ({
 					<div className={styles['evolution-element']}>
 						<Evaluation statement={statement} />
 					</div>
+					{/* Badge for anchored/community statements */}
+					{showBadges && (
+						<div className={styles['badge-element']}>
+							{isAnchored ? <AnchoredBadge /> : <CommunityBadge />}
+						</div>
+					)}
 					{hasChildren && (
 						<IconButton
 							className={`${styles['add-sub-question-button']} ${styles['more-question']}`}
