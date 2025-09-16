@@ -173,14 +173,9 @@ export const statementsSlicer = createSlice({
 					state.statementSubscription = updateArray(
 						state.statementSubscription,
 						newStatementSubscription,
-						'statementsSubscribeId'
+						'statementId'
 					);
 				}
-				state.statementSubscription = updateArray(
-					state.statementSubscription,
-					newStatementSubscription,
-					'statementId'
-				);
 
 				//update last update if bigger than current
 				if (
@@ -530,6 +525,23 @@ export const statementsOfMultiStepSelectorByStatementId = (
 			statements.filter(
 				(st) => st.isInMultiStage && st.parentId === statementId
 			)
+	);
+
+export const userSuggestionsSelector = (
+	parentId: string | undefined,
+	userId: string | undefined
+) =>
+	createSelector(
+		(state: RootState) => state.statements.statements,
+		(statements) =>
+			statements
+				.filter(
+					(statement) =>
+						statement.parentId === parentId &&
+						statement.creatorId === userId &&
+						statement.statementType === StatementType.option
+				)
+				.sort((a, b) => a.createdAt - b.createdAt)
 	);
 
 export default statementsSlicer.reducer;

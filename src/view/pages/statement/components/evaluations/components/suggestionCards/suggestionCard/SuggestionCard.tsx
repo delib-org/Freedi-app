@@ -10,7 +10,7 @@ import { sortSubStatements } from '../../../statementsEvaluationCont';
 import Evaluation from '../../evaluation/Evaluation';
 import SolutionMenu from '../../solutionMenu/SolutionMenu';
 import AddQuestionIcon from '@/assets/icons/addQuestion.svg?react';
-import { setStatementIsOption } from '@/controllers/db/statements/setStatements';
+import { setStatementIsOption, updateStatementText } from '@/controllers/db/statements/setStatements';
 import { useAppDispatch } from '@/controllers/hooks/reduxHooks';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import useStatementColor, {
@@ -25,6 +25,11 @@ import { useAuthorization } from '@/controllers/hooks/useAuthorization';
 import { toggleJoining } from '@/controllers/db/joining/setJoining';
 import Joined from '@/view/components/joined/Joined';
 import { Link } from 'react-router';
+import ImprovementModal from '@/view/components/improvementModal/ImprovementModal';
+import { improveSuggestionWithTimeout } from '@/services/suggestionImprovement';
+import Loader from '@/view/components/loaders/Loader';
+import CommunityBadge from '@/view/components/badges/CommunityBadge';
+import AnchoredBadge from '@/view/components/badges/AnchoredBadge';
 
 interface Props {
 	statement: Statement | undefined;
@@ -47,6 +52,9 @@ const SuggestionCard: FC<Props> = ({
 	const { sort } = useParams();
 	const enableJoining = parentStatement?.statementSettings?.joiningEnabled;
 	const showEvaluation = parentStatement?.statementSettings?.showEvaluation;
+	const enableAIImprovement = parentStatement?.statementSettings?.enableAIImprovement;
+	const showBadges = parentStatement?.evaluationSettings?.anchored?.differentiateBetweenAnchoredAndNot;
+	const isAnchored = statement?.anchored === true;
 
 	// Redux Store
 	const dispatch = useAppDispatch();
@@ -73,6 +81,13 @@ const SuggestionCard: FC<Props> = ({
 	const [shouldShowAddSubQuestionModal, setShouldShowAddSubQuestionModal] =
 		useState(false);
 	const [isCardMenuOpen, setIsCardMenuOpen] = useState(false);
+
+	// Improvement feature states
+	const [showImprovementModal, setShowImprovementModal] = useState(false);
+	const [isImproving, setIsImproving] = useState(false);
+	const [originalTitle, setOriginalTitle] = useState<string | null>(null);
+	const [originalDescription, setOriginalDescription] = useState<string | null>(null);
+	const [hasBeenImproved, setHasBeenImproved] = useState(false);
 
 	useEffect(() => {
 		sortSubStatements(siblingStatements, sort, 30);
@@ -153,6 +168,62 @@ const SuggestionCard: FC<Props> = ({
 		}
 	}
 
+	async function handleImprove(instructions: string) {
+		try {
+			setIsImproving(true);
+			setShowImprovementModal(false);
+
+			// Store original title and description before improvement
+			if (!originalTitle) {
+				setOriginalTitle(statement.statement);
+				setOriginalDescription(statement.description || null);
+			}
+
+			// Call the improvement service with both title and description, including parent context
+			// Increased timeout to 45 seconds to handle longer AI processing times
+			const { improvedTitle, improvedDescription } = await improveSuggestionWithTimeout(
+				statement.statement,
+				statement.description,
+				instructions,
+				parentStatement?.statement,  // Parent question/title for context
+				parentStatement?.description, // Parent description for additional context
+				45000 // 45 seconds timeout
+			);
+
+			// Update both title and description in the database
+			await updateStatementText(statement, improvedTitle, improvedDescription);
+
+			// Mark as improved and enable edit mode
+			setHasBeenImproved(true);
+			setIsEdit(true);
+		} catch (error) {
+			console.error('Failed to improve suggestion:', error);
+			// Show more specific error message based on the error type
+			let errorMessage = t('Failed to improve suggestion. Please try again.');
+			if (error instanceof Error) {
+				if (error.message.includes('timed out')) {
+					errorMessage = t('The improvement request took too long. Please try again with simpler instructions.');
+				} else if (error.message.includes('network')) {
+					errorMessage = t('Network error. Please check your connection and try again.');
+				}
+			}
+			alert(errorMessage);
+		} finally {
+			setIsImproving(false);
+		}
+	}
+
+	function handleUndo() {
+		if (originalTitle) {
+			// Restore original title and description
+			updateStatementText(statement, originalTitle, originalDescription || undefined);
+			setHasBeenImproved(false);
+			setOriginalTitle(null);
+			setOriginalDescription(null);
+			setIsEdit(false);
+		}
+	}
+
 	const statementAge = new Date().getTime() - statement.createdAt;
 	const hasChildren = parentStatement?.statementSettings?.hasChildren;
 
@@ -168,13 +239,13 @@ const SuggestionCard: FC<Props> = ({
 	return (
 		<div
 			onContextMenu={(e) => handleRightClick(e)}
-			className={
-				statementAge < 10000
-					? `${styles['statement-evaluation-card']} ${styles['statement-evaluation-card--new']}`
-					: styles['statement-evaluation-card']
-			}
+			className={`
+				${styles['statement-evaluation-card']}
+				${statementAge < 10000 ? styles['statement-evaluation-card--new'] : ''}
+				${showBadges && !isAnchored ? styles['statement-evaluation-card--community'] : ''}
+			`.trim()}
 			style={{
-				top: `${statement.top || 0}px`,
+				top: `${positionAbsolute ? statement.top || 0 : 0}px`,
 				borderLeft: showEvaluation ? selectedOptionIndicator : '12px solid transparent',
 				color: statementColor.color,
 				flexDirection: dir === 'ltr' ? 'row' : 'row-reverse',
@@ -185,6 +256,13 @@ const SuggestionCard: FC<Props> = ({
 			ref={elementRef}
 			id={statement.statementId}
 		>
+			{/* Loader overlay when improving */}
+			{isImproving && (
+				<div className={styles.loaderOverlay}>
+					<Loader />
+					<p>{t('Improving suggestion...')}</p>
+				</div>
+			)}
 			{showEvaluation && <div
 				className={styles['selected-option']}
 				style={{
@@ -210,7 +288,15 @@ const SuggestionCard: FC<Props> = ({
 								statement={statement}
 								multiline={true}
 								forceEditing={isEdit}
-								onSaveSuccess={() => setIsEdit(false)}
+								onSaveSuccess={() => {
+									setIsEdit(false);
+									// Reset improvement state when user saves
+									if (hasBeenImproved) {
+										setHasBeenImproved(false);
+										setOriginalTitle(null);
+										setOriginalDescription(null);
+									}
+								}}
 								onEditEnd={() => setIsEdit(false)}
 								className={styles.editableCard}
 								inputClassName={styles.editInput}
@@ -220,25 +306,46 @@ const SuggestionCard: FC<Props> = ({
 						<Link to={`/statement/${statement.statementId}`} className={styles.showMore}>
 							{t('Show more')}
 						</Link>
-						{enableJoining &&
-							<div className="btns btns--end">
-								<Joined statement={statement} />
+						<div className="btns btns--end">
+							{/* Show Improve button only if AI improvement is enabled */}
+							{enableAIImprovement && !hasBeenImproved && (
 								<button
-									onClick={handleJoin}
-									disabled={isJoinLoading}
-									className="btn btn--small"
-									style={{
-										backgroundColor: hasJoinedOptimistic ? 'var(--approve)' : 'inherit',
-										color: hasJoinedOptimistic ? 'white' : 'inherit',
-										borderColor: hasJoinedOptimistic ? 'var(--approve)' : 'inherit',
-										opacity: isJoinLoading ? 0.7 : 1,
-										cursor: isJoinLoading ? 'not-allowed' : 'pointer'
-									}}
+									onClick={() => setShowImprovementModal(true)}
+									disabled={isImproving}
+									className={`btn btn--small btn--secondary ${isImproving ? 'btn--disabled' : ''}`}
 								>
-									{hasJoinedOptimistic ? t('Leave') : t('Join')}
+									{isImproving ? t('Improving...') : t('Improve')}
 								</button>
-							</div>
-						}
+							)}
+							{/* Show Undo button when suggestion has been improved and AI improvement is enabled */}
+							{enableAIImprovement && hasBeenImproved && (
+								<button
+									onClick={handleUndo}
+									className="btn btn--small btn--cancel"
+								>
+									{t('Undo')}
+								</button>
+							)}
+							{enableJoining && (
+								<>
+									<Joined statement={statement} />
+									<button
+										onClick={handleJoin}
+										disabled={isJoinLoading}
+										className="btn btn--small"
+										style={{
+											backgroundColor: hasJoinedOptimistic ? 'var(--approve)' : 'inherit',
+											color: hasJoinedOptimistic ? 'white' : 'inherit',
+											borderColor: hasJoinedOptimistic ? 'var(--approve)' : 'inherit',
+											opacity: isJoinLoading ? 0.7 : 1,
+											cursor: isJoinLoading ? 'not-allowed' : 'pointer'
+										}}
+									>
+										{hasJoinedOptimistic ? t('Leave') : t('Join')}
+									</button>
+								</>
+							)}
+						</div>
 					</div>
 					<div className={styles.more}>
 						<SolutionMenu
@@ -263,6 +370,12 @@ const SuggestionCard: FC<Props> = ({
 					<div className={styles['evolution-element']}>
 						<Evaluation statement={statement} />
 					</div>
+					{/* Badge for anchored/community statements */}
+					{showBadges && (
+						<div className={styles['badge-element']}>
+							{isAnchored ? <AnchoredBadge /> : <CommunityBadge />}
+						</div>
+					)}
 					{hasChildren && (
 						<IconButton
 							className={`${styles['add-sub-question-button']} ${styles['more-question']}`}
@@ -285,6 +398,14 @@ const SuggestionCard: FC<Props> = ({
 					/>
 				)}
 			</div>
+			{/* Improvement Modal */}
+			<ImprovementModal
+				isOpen={showImprovementModal}
+				onClose={() => setShowImprovementModal(false)}
+				onImprove={handleImprove}
+				isLoading={isImproving}
+				suggestionTitle={statement.statement}
+			/>
 		</div>
 	);
 };

@@ -18,9 +18,6 @@ import { statementSubscriptionSelector } from "@/redux/statements/statementsSlic
 import NavButtons from "./navButtons/NavButtons";
 import HeaderMenu from "./headerMenu/HeaderMenu";
 
-// Styles
-import styles from "./StatementTopNav.module.scss";
-
 interface Props {
   statement?: Statement;
   parentStatement?: Statement;
@@ -53,12 +50,7 @@ const StatementTopNav: FC<Props> = ({
 
   if (!statement) return null;
 
-  const _statement = parentStatement || statement;
-
-  const enableNavigationalElements = _statement?.statementSettings?.enableNavigationalElements === false ? false : true;
-
   const isAdmin = role === Role.admin || user?.uid === statement?.creatorId;
-  const allowNavigation = enableNavigationalElements || isAdmin;
 
   const currentLabel = LANGUAGES.find(
     (lang) => lang.code === currentLanguage
@@ -83,13 +75,13 @@ const StatementTopNav: FC<Props> = ({
 
   return (
     <nav
-      className={styles.nav}
+      className="app-header"
       dir={dir}
       data-cy="statement-nav"
       style={{ backgroundColor: headerStyle.backgroundColor }}
     >
-      <div className={styles.wrapper}>
-        {allowNavigation && statement && (
+      <div className="app-header-wrapper">
+        {statement && (
           <HeaderMenu
             statement={statement}
             isMenuOpen={isHeaderMenuOpen}
@@ -111,7 +103,7 @@ const StatementTopNav: FC<Props> = ({
           screen={screen}
           handleNavigation={handleNavigation}
           headerStyle={headerStyle}
-          allowNavigation={allowNavigation}
+          allowNavigation={true}
         />
       </div>
     </nav>

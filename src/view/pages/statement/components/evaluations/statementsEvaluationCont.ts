@@ -14,26 +14,33 @@ export function sortSubStatements(
 	try {
 		const dispatch = store.dispatch;
 		let _subStatements = [...subStatements];
-		switch (sort) {
-			case SortType.accepted:
-				_subStatements = subStatements.sort(
-					(a: Statement, b: Statement) => b.consensus - a.consensus
-				);
-				break;
-			case SortType.newest:
-				_subStatements = subStatements.sort(
-					(a: Statement, b: Statement) => b.createdAt - a.createdAt
-				);
-				break;
 
-			case SortType.random:
-				_subStatements = subStatements.sort(() => Math.random() - 0.5);
-				break;
-			case SortType.mostUpdated:
-				_subStatements = subStatements.sort(
-					(a: Statement, b: Statement) => b.lastUpdate - a.lastUpdate
-				);
-				break;
+		// Special case: preserve backend order for mass consensus random suggestions
+		if (sort === 'backend-order') {
+			// Keep the original order from backend
+			_subStatements = subStatements;
+		} else {
+			switch (sort) {
+				case SortType.accepted:
+					_subStatements = subStatements.sort(
+						(a: Statement, b: Statement) => b.consensus - a.consensus
+					);
+					break;
+				case SortType.newest:
+					_subStatements = subStatements.sort(
+						(a: Statement, b: Statement) => b.createdAt - a.createdAt
+					);
+					break;
+
+				case SortType.random:
+					_subStatements = subStatements.sort(() => Math.random() - 0.5);
+					break;
+				case SortType.mostUpdated:
+					_subStatements = subStatements.sort(
+						(a: Statement, b: Statement) => b.lastUpdate - a.lastUpdate
+					);
+					break;
+			}
 		}
 
 		let totalHeight = gap;

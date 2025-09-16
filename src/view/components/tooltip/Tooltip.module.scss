@@ -8,11 +8,14 @@
 	position: absolute;
 	width: max-content;
 	max-width: 300px;
+	word-wrap: break-word;
+	word-break: break-word;
 	z-index: 10;
 	padding: 0.5rem 0.8rem;
 	border-radius: 4px;
 	font-size: 0.8rem;
-	white-space: nowrap;
+	white-space: normal;
+	line-height: 1.4;
 	background-color: rgba(0, 0, 0, 0.85);
 	color: white;
 	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);

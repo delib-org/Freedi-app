@@ -1,5 +1,5 @@
 import CustomSwitchSmall from '@/view/components/switch/customSwitchSmall/CustomSwitchSmall';
-import { FC } from 'react';
+import React, { FC, useState } from 'react';
 import { StatementSettingsProps } from '../../settingsTypeHelpers';
 import SectionTitle from '../sectionTitle/SectionTitle';
 import styles from './QuestionSettings.module.scss';
@@ -11,18 +11,31 @@ import ConsentIcon from '@/assets/icons/doubleCheckIcon.svg?react';
 import SuggestionsIcon from '@/assets/icons/smile.svg?react';
 import VotingIcon from '@/assets/icons/votingIcon.svg?react';
 import ClusterIcon from '@/assets/icons/networkIcon.svg?react';
+import AnchorIcon from '@/assets/icons/anchor.svg?react';
+import UsersIcon from '@/assets/icons/users20px.svg?react';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import MultiSwitch from '@/view/components/switch/multiSwitch/MultiSwitch';
-import { setEvaluationUIType } from '@/controllers/db/evaluation/setEvaluation';
+import { setEvaluationUIType, setAnchoredEvaluationSettings } from '@/controllers/db/evaluation/setEvaluation';
+import VotingSettings from './votingSettings/VotingSettings';
 
 const QuestionSettings: FC<StatementSettingsProps> = ({
 	statement,
 	// setStatementToEdit,
 }) => {
 	const { t } = useUserConfig();
+	const [anchoredCount, setAnchoredCount] = useState(
+		statement.evaluationSettings?.anchored?.numberOfAnchoredStatements || 3
+	);
+	const [showCommunityBadges, setShowCommunityBadges] = useState(
+		statement.evaluationSettings?.anchored?.differentiateBetweenAnchoredAndNot || false
+	);
+
 	try {
 		const { questionSettings } = statement;
 		if (statement.statementType !== StatementType.question) return null;
+		const isVoting = statement.evaluationSettings?.evaluationUI === EvaluationUI.voting;
+		const isMassConsensus = questionSettings?.questionType === QuestionType.massConsensus;
+		const isAnchoredEnabled = statement.evaluationSettings?.anchored?.anchored || false;
 
 		function handleQuestionType(isDocument: boolean) {
 			setQuestionTypeToDB({
@@ -31,6 +44,39 @@ const QuestionSettings: FC<StatementSettingsProps> = ({
 					? QuestionType.simple
 					: QuestionType.massConsensus,
 			});
+		}
+
+		function handleAnchoredToggle(enabled: boolean) {
+			setAnchoredEvaluationSettings(statement.statementId, {
+				anchored: enabled,
+				numberOfAnchoredStatements: anchoredCount,
+				differentiateBetweenAnchoredAndNot: showCommunityBadges
+			});
+		}
+
+		function handleAnchoredCountChange(e: React.ChangeEvent<HTMLInputElement>) {
+			const value = Number(e.target.value);
+			if (value >= 1 && value <= 10) {
+				setAnchoredCount(value);
+				if (isAnchoredEnabled) {
+					setAnchoredEvaluationSettings(statement.statementId, {
+						anchored: true,
+						numberOfAnchoredStatements: value,
+						differentiateBetweenAnchoredAndNot: showCommunityBadges
+					});
+				}
+			}
+		}
+
+		function handleCommunityBadgesToggle(enabled: boolean) {
+			setShowCommunityBadges(enabled);
+			if (isAnchoredEnabled) {
+				setAnchoredEvaluationSettings(statement.statementId, {
+					anchored: true,
+					numberOfAnchoredStatements: anchoredCount,
+					differentiateBetweenAnchoredAndNot: enabled
+				});
+			}
 		}
 
 		return (
@@ -46,11 +92,11 @@ const QuestionSettings: FC<StatementSettingsProps> = ({
 					onClick={(value) => { setEvaluationUIType(statement.statementId, value as EvaluationUI); }}
 					currentValue={statement.evaluationSettings?.evaluationUI}
 				/>
-
-				<SectionTitle title='Question Settings' />
+				{isVoting && <VotingSettings />}
+				<SectionTitle title={t('Question Settings')} />
 
 				<CustomSwitchSmall
-					label='Document Question'
+					label={t('Document Question')}
 					checked={
 						questionSettings?.questionType ===
 						QuestionType.simple || false
@@ -63,6 +109,50 @@ const QuestionSettings: FC<StatementSettingsProps> = ({
 					colorChecked='var(--question)'
 					colorUnchecked='var(--question)'
 				/>
+
+				{isMassConsensus && (
+					<>
+						<SectionTitle title={t('Anchored Sampling')} />
+						<CustomSwitchSmall
+							label={t('Enable Anchored Sampling')}
+							checked={isAnchoredEnabled}
+							setChecked={handleAnchoredToggle}
+							textChecked={t('Anchored')}
+							textUnchecked={t('Standard')}
+							imageChecked={<AnchorIcon />}
+							imageUnchecked={<SuggestionsIcon />}
+							colorChecked='var(--question)'
+							colorUnchecked='var(--question)'
+						/>
+
+						{isAnchoredEnabled && (
+							<>
+								<div className={styles.anchoredCount}>
+									<label>{t('Number of anchored options in evaluation')}</label>
+									<input
+										type="number"
+										min="1"
+										max="10"
+										value={anchoredCount}
+										onChange={handleAnchoredCountChange}
+										data-cy="anchored-count-input"
+									/>
+								</div>
+								<CustomSwitchSmall
+									label={t('Show Community Recognition')}
+									checked={showCommunityBadges}
+									setChecked={handleCommunityBadgesToggle}
+									textChecked={t('Show Badges')}
+									textUnchecked={t('Hide Badges')}
+									imageChecked={<UsersIcon />}
+									imageUnchecked={<AnchorIcon />}
+									colorChecked='var(--question)'
+									colorUnchecked='var(--question)'
+								/>
+							</>
+						)}
+					</>
+				)}
 			</div>
 		);
 	} catch (error: unknown) {

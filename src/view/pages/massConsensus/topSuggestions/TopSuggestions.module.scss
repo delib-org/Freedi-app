@@ -1,0 +1,18 @@
+.suggestions-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem;
+  width: 100%;
+  box-sizing: border-box;
+  margin-bottom: 6rem;
+
+  .suggestion-wrapper {
+    width: 100%;
+    position: relative;
+    
+    @media screen and (max-width: 768px) {
+      padding: 0;
+    }
+  }
+}

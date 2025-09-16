@@ -71,7 +71,7 @@ const My = () => {
 					<RadioButtonWithLabel
 						id='advanced-user'
 						labelText={t('Advance User')}
-						checked={isAdvancedUser}
+						checked={!!isAdvancedUser}
 						onChange={() => setUserAdvanceUserToDB(true)}
 					/>
 					<Button

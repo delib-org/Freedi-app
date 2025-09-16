@@ -15,6 +15,7 @@ import TopSuggestions from '@/view/pages/massConsensus/topSuggestions/TopSuggest
 import VotingSuggestions from '@/view/pages/massConsensus/votingSuggestions/VotingSuggestions';
 
 import LeaveFeedback from '@/view/pages/massConsensus/leaveFeedback/LeaveFeedback';
+import MassConsensusMySuggestions from '@/view/pages/massConsensus/mySuggestions/MassConsensusMySuggestions';
 
 // Protected routes
 import StatementMain from '@/view/pages/statement/StatementMain';
@@ -35,6 +36,7 @@ import { MassConsensusPageUrls } from 'delib-npm';
 import UserDemographicMC from '@/view/pages/massConsensus/massConsesusQuestion/userDemographicMC/UserDemographicMC';
 import My from '@/view/pages/my/My';
 import CheckNotifications from '@/view/pages/settings/ChecNotifications';
+import MySuggestions from '@/view/pages/my-suggestions/MySuggestions';
 
 // Define errorRoutes
 const errorRoutes = [
@@ -94,6 +96,10 @@ const massConsensusRoutes = [
 				path: MassConsensusPageUrls.thankYou,
 				element: <ThankYou />,
 			},
+			{
+				path: 'my-suggestions',
+				element: <MassConsensusMySuggestions />,
+			},
 		],
 	},
 ];
@@ -127,6 +133,10 @@ const protectedRoutes = [
 	{
 		path: 'stage/:statementId/:sort',
 		element: <StatementMain />,
+	},
+	{
+		path: 'my-suggestions/statement/:statementId',
+		element: <MySuggestions />,
 	},
 	// ... other protected routes
 ];

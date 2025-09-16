@@ -2,6 +2,7 @@ import { useNavigate, useParams } from 'react-router';
 import styles from './FooterMassConsensus.module.scss';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import { getStepNavigation, useMassConsensusSteps } from '../MassConsensusVM';
+import './../../../../view/style/buttons.scss';
 
 import { useState } from 'react';
 
@@ -12,6 +13,8 @@ const FooterMassConsensus = ({
 	onNext,
 	onSkip,
 	blockNavigation,
+	evaluationsLeft,
+	canSkip = true
 }: {
 	isIntro?: boolean;
 	isNextActive?: boolean;
@@ -19,12 +22,14 @@ const FooterMassConsensus = ({
 	onNext?: () => void;
 	onSkip?: () => void;
 	blockNavigation?: boolean;
+	evaluationsLeft?: number;
+	canSkip?: boolean;
 }) => {
 	const { statementId } = useParams<{ statementId: string }>();
 	const navigate = useNavigate();
 	const { t, dir } = useUserConfig();
 	const { steps, currentStep } = useMassConsensusSteps();
-	const { nextStep: goTo } = getStepNavigation(steps, currentStep);
+	const { nextStep: goTo, previousStep } = getStepNavigation(steps, currentStep);
 	const [isButtonClicked, setIsButtonClicked] = useState(false);
 
 	const handleClick = (callback?: () => void) => {
@@ -42,6 +47,12 @@ const FooterMassConsensus = ({
 
 		navigate(`/mass-consensus/${statementId}/${goTo}`);
 	};
+
+	const handleBack = () => {
+		if (!previousStep) return;
+		setIsButtonClicked(true);
+		navigate(`/mass-consensus/${statementId}/${previousStep}`);
+	};
 	const renderButton = () => {
 		if (isIntro) {
 			return (
@@ -55,47 +66,43 @@ const FooterMassConsensus = ({
 			);
 		}
 
-		if (isFeedback) {
-			return (
-				<>
-					<button
-						className='btn btn--massConsensus btn--secondary'
-						disabled={isButtonClicked}
-						onClick={() => handleSkip()}
-					>
-						{t('Skip')}
-					</button>
+		return (
+			<div className={styles.btns}>
+
+				{evaluationsLeft > 0 && evaluationsLeft !== undefined && <p>{t('You have')} {evaluationsLeft} {t('evaluations left')}</p>}
+
+				<div className="btns">
+					{previousStep && (
+						<button
+							className='btn btn--massConsensus btn--secondary'
+							disabled={isButtonClicked}
+							onClick={() => handleBack()}
+						>
+							{t('Back')}
+						</button>
+					)}
+
+					{canSkip && (
+						<button
+							className='btn btn--massConsensus btn--secondary'
+							disabled={isButtonClicked}
+							onClick={() => handleSkip()}
+						>
+							{t('Skip')}
+						</button>
+					)}
 
 					<button
 						className={`btn btn--massConsensus btn--primary ${!isNextActive ? 'btn--disabled' : ''}`}
 						onClick={() => handleClick(onNext)}
 						disabled={isButtonClicked || !isNextActive}
 					>
-						{t('Send')}
+						{t(isFeedback ? 'Send' : 'Next')}
 					</button>
-				</>
-			);
-		}
-
-		return (
-			<>
-				<button
-					className='btn btn--massConsensus btn--secondary'
-					disabled={isButtonClicked}
-					onClick={() => handleSkip()}
-				>
-					{t('Skip')}
-				</button>
-
-				<button
-					className={`btn btn--massConsensus btn--primary ${!isNextActive ? 'btn--disabled' : ''}`}
-					onClick={() => handleClick(onNext)}
-					disabled={isButtonClicked || !isNextActive}
-				>
-					{t('Next')}
-				</button>
-			</>
+				</div>
+			</div>
 		);
+
 	};
 
 	return (

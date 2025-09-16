@@ -83,6 +83,7 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 			});
 			setLoading(false);
 			if (!newStatement) throw new Error('No new statement');
+			// Navigate to the statement page after saving
 			navigate(`/statement/${newStatement.statementId}`);
 		};
 

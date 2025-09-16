@@ -19,7 +19,7 @@
 	"main": "lib/functions/src/index.js",
 	"dependencies": {
 		"@google/generative-ai": "^0.15.0",
-		"delib-npm": "^5.6.33",
+		"delib-npm": "^5.6.43",
 		"dotenv": "^16.4.5",
 		"firebase-admin": "^12.6.0",
 		"firebase-functions": "^6.3.2",
@@ -27,10 +27,12 @@
 		"valibot": "^1.0.0-rc.1"
 	},
 	"devDependencies": {
-		"@types/jest": "^29.5.13",
+		"@firebase/testing": "^0.20.11",
+		"@types/jest": "^29.5.14",
 		"@types/parse5": "^6.0.3",
+		"firebase-functions-test": "^3.4.1",
 		"jest": "^29.7.0",
-		"ts-jest": "^29.2.5"
+		"ts-jest": "^29.4.2"
 	},
 	"private": true
 }

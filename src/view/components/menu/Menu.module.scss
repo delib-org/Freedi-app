@@ -44,43 +44,41 @@
     width: 250px;
     min-width: 200px;
     border-radius: 15px;
+    color: var(--text-primary);
     background-color: white;
     box-shadow: 0 3px 9px #00000026;
     overflow: hidden;
-    max-height: 0;
-    opacity: 0;
-    transform-origin: top right;
-    transition:
-      max-height 0.2s ease-out,
-      opacity 0.15s ease-out;
-    pointer-events: none;
-
-    &.open {
-      max-height: 800px;
-      opacity: 1;
-      pointer-events: auto;
-    }
+    max-height: 800px;
 
     /* CARD VARIANT: suggestion-card menu only */
     &.card {
-      position: fixed;
-      right: auto;
-      bottom: auto;
-      will-change: transform, opacity;
-      top: -9999px;
-      left: -9999px;
-      max-height: none;
-      transform: translateY(-4px);
-      transition:
-        opacity 120ms ease,
-        transform 120ms ease;
-      opacity: 0;
-      pointer-events: none;
+      position: absolute;
+      top: 100%;
+      margin-top: 4px;
+      max-height: 400px;
+      overflow-y: auto;
+      overflow-x: hidden;
+      z-index: 99999;
 
-      &.open {
-        opacity: 1;
-        transform: translateY(0);
-        pointer-events: auto;
+      /* Chat menu centered horizontally */
+      &.chatMenu {
+        left: 50%;
+        transform: translateX(-50%);
+        right: auto;
+      }
+
+      /* Position above the button when in bottom half of screen */
+      &.above {
+        top: auto;
+        bottom: 100%;
+        margin-top: 0;
+        margin-bottom: 4px;
+      }
+
+      @media (max-width: 768px) {
+        min-width: 200px;
+        width: min(280px, calc(100vw - 16px));
+        max-height: calc(100vh - 100px);
       }
     }
   }
@@ -95,46 +93,40 @@
     .menuOption {
       border-bottom: none;
       background-color: none;
-      color: white;
     }
   }
 
-  .invisibleBackground {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100svh;
-    z-index: 10000;
-    background-color: transparent;
-    pointer-events: auto;
-  }
 
-  &[dir="ltr"] .menuContent:not(.card) {
-    /* Respect iOS notch/rounded corners on the left */
-    left: max(8px, env(safe-area-inset-left));
-    right: auto;
-    width: min(250px, calc(100vw - 16px));
-    max-width: calc(100vw - 16px);
-    transform-origin: top left;
-  }
-
-  &[dir="rtl"] .menuContent:not(.card) {
-    /* Respect iOS notch/rounded corners on the right */
-    right: max(8px, env(safe-area-inset-right));
-    left: auto;
-    width: min(250px, calc(100vw - 16px));
-    max-width: calc(100vw - 16px);
-    transform-origin: top right;
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .menuContent {
-      transition: none;
+  &[dir="ltr"] {
+    .menuContent:not(.card) {
+      /* Respect iOS notch/rounded corners on the left */
+      left: max(8px, env(safe-area-inset-left));
+      right: auto;
+      width: min(250px, calc(100vw - 16px));
+      max-width: calc(100vw - 16px);
     }
-    .menuContent.card {
-      transition: none;
-      transform: none;
+
+    /* Default LTR card position is on the right (except chat menus) */
+    .menuContent.card:not(.chatMenu) {
+      right: 0;
+      left: auto;
     }
   }
+
+  &[dir="rtl"] {
+    .menuContent:not(.card) {
+      /* Respect iOS notch/rounded corners on the right */
+      right: max(8px, env(safe-area-inset-right));
+      left: auto;
+      width: min(250px, calc(100vw - 16px));
+      max-width: calc(100vw - 16px);
+    }
+
+    /* Default RTL card position is on the left (except chat menus) */
+    .menuContent.card:not(.chatMenu) {
+      right: auto;
+      left: 0;
+    }
+  }
+
 }

@@ -3,6 +3,7 @@ import Description from '../../../evaluations/components/description/Description
 import { useNavigate, useParams } from 'react-router';
 import HandsImage from '@/assets/images/hands.png';
 import BulbImage from '@/assets/images/bulb.png';
+import AnchorIcon from '@/assets/icons/anchor.svg?react';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import { useSelector } from 'react-redux';
 import {
@@ -17,13 +18,15 @@ import OptionMCCard from './components/deleteCard/OptionMCCard';
 import DeletionLadyImage from '@/assets/images/rejectLady.png';
 import Button, { ButtonType } from '@/view/components/buttons/button/Button';
 import SearchBar from './components/searchBar/SearchBar';
+import { Link } from 'react-router';
+import { toggleStatementAnchored } from '@/controllers/db/statements/setStatements';
 
 const MassConsensusAdmin = () => {
 	const { statementId } = useParams<{ statementId: string }>();
 	const statement = useSelector(statementSelector(statementId));
 	const options = useSelector(statementSubsSelector(statementId)).filter(
 		(st) => st.statementType === StatementType.option
-	);
+	).sort((s1, s2) => s2.consensus - s1.consensus);
 	const sortedOptions = options
 		? [...options].sort((a, b) => b.consensus - a.consensus)
 		: [];
@@ -36,6 +39,20 @@ const MassConsensusAdmin = () => {
 
 	const { t } = useUserConfig();
 	const navigate = useNavigate();
+
+	// Calculate anchored statistics
+	const anchoredOptions = options.filter(option => option.anchored);
+	const maxAnchoredAllowed = statement?.evaluationSettings?.anchored?.numberOfAnchoredStatements || 3;
+	const isAnchoredSamplingEnabled = statement?.evaluationSettings?.anchored?.anchored || false;
+
+	const handleAnchorToggle = async (optionId: string, shouldAnchor: boolean) => {
+		if (!statementId) return;
+		try {
+			await toggleStatementAnchored(optionId, shouldAnchor, statementId);
+		} catch (error) {
+			console.error('Error toggling anchor status:', error);
+		}
+	};
 	useEffect(() => {
 		if (!statement) return;
 		const unsubscribe = listenToSubStatements(statementId, 'bottom');
@@ -46,16 +63,26 @@ const MassConsensusAdmin = () => {
 	return (
 		<div className={styles.massConsensusAdmin}>
 			<div className='wrapper'>
-				<Button
-					buttonType={ButtonType.PRIMARY}
-					className={styles.centered}
-					text='To Statement'
-					onClick={() =>
-						navigate(`/mass-consensus/${statementId}`, {
-							replace: true,
-						})
-					}
-				/>
+				<div className={styles.headerActions}>
+					<Button
+						buttonType={ButtonType.PRIMARY}
+						className={styles.centered}
+						text='To Statement'
+						onClick={() =>
+							navigate(`/mass-consensus/${statementId}`, {
+								replace: true,
+							})
+						}
+					/>
+					<Link to={`/my-suggestions/statement/${statementId}`} className={styles.mySuggestionsLink}>
+						<div className={styles.mySuggestionsButton}>
+							<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+								<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" fill="currentColor"/>
+							</svg>
+							<span>{t('My Suggestions')}</span>
+						</div>
+					</Link>
+				</div>
 				<Description />
 				<div className={`btns ${styles.share}`}>
 					<ShareButton
@@ -82,6 +109,17 @@ const MassConsensusAdmin = () => {
 							{statement.suggestions || 0}
 						</div>
 					</div>
+
+					{isAnchoredSamplingEnabled && (
+						<div>
+							<AnchorIcon />
+							<div>
+								{t('Anchored options')}: {anchoredOptions.length}
+								<br />
+								<small>({maxAnchoredAllowed} {t('per evaluation')})</small>
+							</div>
+						</div>
+					)}
 				</div>
 				<details className={styles.allOptionsAccordion}>
 					<summary>
@@ -98,6 +136,7 @@ const MassConsensusAdmin = () => {
 									key={option.statementId}
 									statement={option}
 									isDelete={false}
+									onAnchorToggle={handleAnchorToggle}
 								/>
 							))}
 					</div>
@@ -109,6 +148,7 @@ const MassConsensusAdmin = () => {
 						key={option.statementId}
 						statement={option}
 						isDelete={false}
+						onAnchorToggle={handleAnchorToggle}
 					/>
 				))}
 

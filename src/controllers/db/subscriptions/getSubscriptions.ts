@@ -50,42 +50,51 @@ export const listenToStatementSubSubscriptions = (
 			limit(20)
 		);
 
-		return onSnapshot(q, (subscriptionsDB) => {
-			let firstCall = true;
-			const statementSubscriptions: StatementSubscription[] = [];
-			subscriptionsDB.docChanges().forEach((change) => {
-				const data = change.doc.data();
-				const statementSubscription = parse(
-					StatementSubscriptionSchema,
+		return onSnapshot(
+			q, 
+			(subscriptionsDB) => {
+				let firstCall = true;
+				const statementSubscriptions: StatementSubscription[] = [];
+				subscriptionsDB.docChanges().forEach((change) => {
+					const data = change.doc.data();
+					const statementSubscription = parse(
+						StatementSubscriptionSchema,
 
-					{
-						...data,
-						lastUpdated: data.lastUpdated?.toDate?.() ?? null,
+						{
+							...data,
+							lastUpdated: data.lastUpdated?.toDate?.() ?? null,
+						}
+					);
+					if (change.type === 'added') {
+						if (firstCall) {
+							statementSubscriptions.push(statementSubscription);
+						} else {
+							dispatch(
+								setStatementSubscription(statementSubscription)
+							);
+						}
 					}
-				);
-				if (change.type === 'added') {
-					if (firstCall) {
-						statementSubscriptions.push(statementSubscription);
-					} else {
+					if (change.type === 'modified') {
+						dispatch(setStatementSubscription(statementSubscription));
+					}
+					if (change.type === 'removed') {
 						dispatch(
-							setStatementSubscription(statementSubscription)
+							deleteSubscribedStatement(
+								statementSubscription.statementId
+							)
 						);
 					}
+				});
+				firstCall = false;
+				dispatch(setStatementsSubscription(statementSubscriptions));
+			},
+			(error) => {
+				// Handle permission errors silently for subscriptions
+				if (error.code !== 'permission-denied') {
+					console.error('Subscription listener error:', error);
 				}
-				if (change.type === 'modified') {
-					dispatch(setStatementSubscription(statementSubscription));
-				}
-				if (change.type === 'removed') {
-					dispatch(
-						deleteSubscribedStatement(
-							statementSubscription.statementId
-						)
-					);
-				}
-			});
-			firstCall = false;
-			dispatch(setStatementsSubscription(statementSubscriptions));
-		});
+			}
+		);
 	} catch (error) {
 		console.error(error);
 
@@ -111,31 +120,40 @@ export function listenToStatementSubscriptions(
 			limit(numberOfStatements)
 		);
 
-		return onSnapshot(q, (subscriptionsDB) => {
-			subscriptionsDB.docChanges().forEach((change) => {
-				try {
-					const statementSubscription =
-						change.doc.data() as StatementSubscription;
+		return onSnapshot(
+			q, 
+			(subscriptionsDB) => {
+				subscriptionsDB.docChanges().forEach((change) => {
+					try {
+						const statementSubscription =
+							change.doc.data() as StatementSubscription;
 
-					if (change.type === 'added' || change.type === 'modified')
-						dispatch(
-							setStatementSubscription(statementSubscription)
-						);
+						if (change.type === 'added' || change.type === 'modified')
+							dispatch(
+								setStatementSubscription(statementSubscription)
+							);
 
-					if (change.type === 'removed')
-						dispatch(
-							deleteSubscribedStatement(
-								statementSubscription.statementId
-							)
+						if (change.type === 'removed')
+							dispatch(
+								deleteSubscribedStatement(
+									statementSubscription.statementId
+								)
+							);
+					} catch (error) {
+						console.error(
+							'Listen to statement subscriptions each error',
+							error
 						);
-				} catch (error) {
-					console.error(
-						'Listen to statement subscriptions each error',
-						error
-					);
+					}
+				});
+			},
+			(error) => {
+				// Handle permission errors silently for subscriptions
+				if (error.code !== 'permission-denied') {
+					console.error('Statement subscriptions listener error:', error);
 				}
-			});
-		});
+			}
+		);
 	} catch (error) {
 		console.error('Listen to statement subscriptions error', error);
 

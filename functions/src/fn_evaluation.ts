@@ -57,6 +57,7 @@ interface CalcDiff {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function newEvaluation(event: any): Promise<void> {
 	try {
+		
 		const evaluation = event.data.data() as Evaluation;
 		const { statementId, parentId } = evaluation;
 		const userId = evaluation.evaluator?.uid;
@@ -69,16 +70,20 @@ export async function newEvaluation(event: any): Promise<void> {
 			throw new Error('User ID is required');
 		}
 
-		const statement = await updateStatementEvaluation({
-			statementId,
-			evaluationDiff: evaluation.evaluation,
-			addEvaluator: 1,
-			action: ActionTypes.new,
-			newEvaluation: evaluation.evaluation,
-			oldEvaluation: 0,
-			userId,
-			parentId
-		});
+		const [statement] = await Promise.all([
+			updateStatementEvaluation({
+				statementId,
+				evaluationDiff: evaluation.evaluation,
+				addEvaluator: 1,
+				action: ActionTypes.new,
+				newEvaluation: evaluation.evaluation,
+				oldEvaluation: 0,
+				userId,
+				parentId
+			}),
+			//calculate the number of total evaluators (N)
+			updateParentStatementWithTotalEvaluators(evaluation)
+		]);
 
 		if (!statement) {
 			throw new Error('Failed to update statement');
@@ -347,6 +352,51 @@ function getSnapshotFromEvent(event: FirestoreEvent<Change<DocumentSnapshot> | D
 	}
 
 	return event.data;
+}
+
+async function updateParentStatementWithTotalEvaluators(evaluation:Evaluation): Promise<void> {
+	try {
+
+		//check if this is the first time the user has evaluted in this parent Id
+		const isFirstEvaluation = await checkFirstEvaluation(evaluation);
+		
+		if (isFirstEvaluation) {
+			//update the parent statement with the new total evaluators
+			await updateParentWithNewEvaluatorCount(evaluation);
+		}
+	} catch (error) {
+		logger.error('Error updating parent statement total evaluators:', error);
+	}
+
+	async function checkFirstEvaluation(evaluation: Evaluation): Promise<boolean> {
+		try {
+			const userEvaluationsDB = await db.collection(Collections.evaluations).where("parentId", "==", evaluation.parentId).where("evaluatorId", "==", evaluation.evaluatorId).get();
+			if (userEvaluationsDB.size === 1) {
+				return true;
+			}
+
+			return false;
+		} catch (error) {
+			logger.error('Error checking first evaluation:', error);
+
+			return false;
+		}
+	}
+
+	async function updateParentWithNewEvaluatorCount(evaluation: Evaluation): Promise<void> {
+		try {
+			if (!evaluation.parentId) {
+				throw new Error('Parent ID is required');
+			}
+
+			const parentRef = db.collection(Collections.statements).doc(evaluation.parentId);
+			await parentRef.update({
+				'evaluation.asParentTotalEvaluators': FieldValue.increment(1),
+			});
+		} catch (error) {
+			logger.error('Error updating parent statement with new evaluator count:', error);
+		}
+	}
 }
 
 async function updateParentStatementWithChosenOptions(parentId: string | undefined): Promise<void> {

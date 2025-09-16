@@ -58,6 +58,7 @@ const ChatMessageMenu: FC<ChatMessageMenuProps> = ({
       isMenuOpen={isCardMenuOpen}
       iconColor="var(--icon-blue)"
       isCardMenu={true}
+      isChatMenu={true}
     >
       {isAuthorized && (
         <MenuOption
@@ -110,7 +111,7 @@ const ChatMessageMenu: FC<ChatMessageMenuProps> = ({
           label={t("Delete")}
           icon={<DeleteIcon />}
           onOptionClick={() => {
-            deleteStatementFromDB(statement, !!isAuthorized);
+            deleteStatementFromDB(statement, !!isAuthorized, t);
             setIsCardMenuOpen(false);
           }}
         />

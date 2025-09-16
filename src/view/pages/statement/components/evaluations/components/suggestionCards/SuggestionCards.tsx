@@ -20,7 +20,7 @@ import EmptyScreen from '../emptyScreen/EmptyScreen';
 import styles from './SuggestionCards.module.scss';
 
 interface Props {
-	propSort?: SortType;
+	propSort?: SortType | string;
 	selectionFunction?: SelectionFunction;
 	subStatements?: Statement[];
 }
@@ -98,7 +98,7 @@ const SuggestionCards: FC<Props> = ({
 	useEffect(() => {
 		const _totalHeight = subStatements.reduce(
 			(acc: number, sub: Statement) => {
-				return acc + (sub.elementHight ?? 200)-30;
+				return acc + (sub.elementHight ?? 200);
 			},
 			0
 		);

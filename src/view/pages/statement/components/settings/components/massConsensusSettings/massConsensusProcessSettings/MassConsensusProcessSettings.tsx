@@ -1,6 +1,6 @@
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import styles from './MassConsensusProcessSettings.module.scss';
-import ProcessSetting from './ProcessSetting/ProcessSetting';
+import ProcessSettingNative from './ProcessSetting/ProcessSettingNative';
 import { useEffect } from 'react';
 import {
 	LoginType,
@@ -81,7 +81,7 @@ const MassConsensusProcessSettings = () => {
 		<div className={styles.mcProcess}>
 			<h3>{t('Mass Consensus Process Settings')}</h3>
 
-			<ProcessSetting
+			<ProcessSettingNative
 				steps={stepsDefault}
 				processName={processNameDefault}
 				loginType={LoginType.default}
@@ -97,7 +97,7 @@ const MassConsensusProcessSettings = () => {
 				<span>{t('Google')}</span>
 			</div>
 			{processList.loginTypes.google && (
-				<ProcessSetting
+				<ProcessSettingNative
 					steps={stepsGoogle}
 					processName={processNameGoogle}
 					loginType={LoginType.google}
@@ -114,7 +114,7 @@ const MassConsensusProcessSettings = () => {
 				<span>{t('Anonymous')}</span>
 			</div>
 			{processList.loginTypes.anonymous && (
-				<ProcessSetting
+				<ProcessSettingNative
 					steps={stepsAnonymous}
 					processName={processNameAnonymous}
 					loginType={LoginType.anonymous}

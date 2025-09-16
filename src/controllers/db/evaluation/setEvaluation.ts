@@ -73,4 +73,35 @@ export function setEvaluationUIType(statementId: string, evaluationUI: Evaluatio
 	});
 
 	return evaluationUIRef;
-};
+}
+
+export async function setAnchoredEvaluationSettings(
+	statementId: string,
+	anchoredSettings: {
+		anchored: boolean;
+		numberOfAnchoredStatements: number;
+		differentiateBetweenAnchoredAndNot?: boolean;
+	}
+): Promise<void> {
+	try {
+		const statementRef = doc(FireStore, Collections.statements, statementId);
+
+		await updateDoc(statementRef, {
+			'evaluationSettings.anchored': anchoredSettings
+		});
+
+		// Log event
+		logger.info('Anchored Sampling Settings Changed', {
+			statementId,
+			enabled: anchoredSettings.anchored,
+			numberOfAnchored: anchoredSettings.numberOfAnchoredStatements
+		});
+
+	} catch (error) {
+		logger.error('Error updating anchored evaluation settings', error, {
+			statementId,
+			anchoredSettings
+		});
+		throw error;
+	}
+}

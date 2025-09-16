@@ -3,12 +3,12 @@ import { ReactNode } from "react";
 import GroupPage from "../statementTypes/group/GroupPage";
 import QuestionPage from "../statementTypes/question/QuestionPage";
 import { useParams } from "react-router";
-import Triangle from "@/view/components/triangle/Triangle";
+import Triangle from "@/view/components/maps/triangle/Triangle";
 import MindMap from "../map/MindMap";
 import Chat from "../chat/Chat";
 import StatementSettings from "../settings/StatementSettings";
 import SuggestionChat from "@/view/pages/suggestionChat/SuggestionChat";
-import PolarizationIndex from "@/view/components/polarizationIndex/PolarizationIndex";
+import PolarizationIndexComp from "@/view/components/maps/polarizationIndex/PolarizationIndex";
 
 interface SwitchScreenProps {
 	statement: Statement | undefined;
@@ -33,7 +33,7 @@ function SwitchScreen({
 
 	switch (screen) {
 		case Screen.polarizationIndex:
-			return <PolarizationIndex />
+			return <PolarizationIndexComp />
 		case Screen.agreementMap:
 			return <Triangle />;
 		case Screen.mindMap:

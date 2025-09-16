@@ -1,119 +1,180 @@
 .wrapper {
-	max-width: var(--wrapper);
-	margin: 1rem auto;
+  max-width: var(--wrapper);
+  margin: 1rem auto;
 }
 
 .title {
-	margin-top: 10px;
+  margin-top: 10px;
 }
+.imgContainer {
+  width: 100%;
+  display: flex;
 
+  align-items: center;
+}
+.graphic {
+  max-height: 310px;
+  min-height: 220px;
+  align-self: center;
+  margin: 0 auto;
+  user-select: none;
+  padding-bottom: 1rem;
+}
+.stageCard {
+  margin-top: 2rem;
+  width: 100%;
+  border-bottom: 2px solid var(--border-primary);
+
+  @media (max-width: 600px) {
+    height: 90vh;
+  }
+}
 .description {
-	max-width: var(--wrapper);
+  max-width: var(--wrapper);
 
-
-img{
-	width: 100%;
-}
-	
+  img {
+    width: 100%;
+  }
 }
 
 .add-stage {
-		margin-bottom: 1rem;
-		margin-top: 1rem;
-	}
+  margin-bottom: 1rem;
+  margin-top: 1rem;
+}
 
 .h3 {
-	margin-bottom: 1rem;
+  margin-bottom: 1rem;
 }
 
 .subElementsWrapper {
-	display: grid;
-	gap: .5rem;
-	margin-bottom: 1rem;
+  display: grid;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
 
-	@media (max-width: 600px) {
-		padding: .5rem;
-	}
+  @media (max-width: 600px) {
+    padding: 0.5rem;
+  }
+}
+.multiStageTitle {
+  margin: 1.5rem 0;
+  font-size: 1.5rem;
+  font-weight: bold;
+  @media (max-width: 600px) {
+    margin-left: 1rem;
+  }
+}
+.topicDescription {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  margin-bottom: 1rem;
+  height: fit-content;
+  @media (max-width: 600px) {
+    margin-left: 1rem;
+  }
+  h4 {
+    font-size: 1rem;
+    margin: 0;
+    padding: 0;
+    margin-left: 0.5rem;
+  }
+  .magGlass {
+    font-size: 2rem;
+    transform: scaleX(-1);
+    color: var(--icons-primary);
+  }
+  svg {
+    width: 24px;
+    font-weight: bolder;
+    color: var(--icons-primary);
+  }
+}
+.subDescription {
+  font-size: 1rem;
+  color: var(--text-tertiary);
+  padding-bottom: 2rem;
+  @media (max-width: 600px) {
+    margin-left: 1rem;
+  }
 }
 
 .stagesWrapper {
-	padding-top: 2rem;
-	display: flex;
-	flex-direction: column;
-	border-radius: var(--radius);
-	margin: 2rem 0;
-	max-width: var(--wrapper);
-	width: 100%;
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--radius);
+  margin-bottom: 2rem;
+  max-width: var(--wrapper);
+  width: 100%;
 
-	.description {
-		font-size: 1.1rem;
-		font-weight: 400;
-		margin: 1.8rem 36px 1rem 36px;
-		color: var(--text-body);
+  .description {
+    font-size: 1.1rem;
+    font-weight: 400;
+    margin: 1.8rem 36px 1rem 36px;
+    color: var(--text-body);
 
-		@media screen and (max-width: 600px) {
-			margin: 1.2rem 36px 3rem 36px;
-		}
-	}
+    @media screen and (max-width: 600px) {
+      margin: 1.2rem 36px 3rem 36px;
+    }
+  }
 
-	>div {
-		&:first-child {
-			border-radius: var(--radius) var(--radius) 0 0;
-		}
+  > div {
+    &:first-child {
+      border-radius: var(--radius) var(--radius) 0 0;
+    }
 
-		&:last-child {
-			border-radius: 0 0 var(--radius) var(--radius);
-			padding-bottom: 2rem;
-		}
-	}
+    &:last-child {
+      border-radius: 0 0 var(--radius) var(--radius);
+      padding-bottom: 2rem;
+    }
+  }
 }
 
 .suggestionsWrapper {
-	display: flex;
-	flex-direction: column;
-	position: relative;
-	gap:.5rem;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  gap: 0.5rem;
 }
 
 .stageContainer {
-	display: flex;
-	align-items: center;
-	cursor: grab;
+  display: flex;
+  align-items: center;
+  cursor: grab;
 
-	&.dragging {
-		opacity: 0;
-	}
+  &.dragging {
+    opacity: 0;
+  }
 
-	font: inherit;
+  font: inherit;
 }
 
 .dragHandle {
-	width: 24px;
-	height: 24px;
-	margin-right: 12px;
-	position: relative;
-	cursor: grab;
+  width: 24px;
+  height: 24px;
+  margin-right: 12px;
+  position: relative;
+  cursor: grab;
 
-	&::before,
-	&::after {
-		content: '';
-		position: absolute;
-		left: 50%;
-		width: 2px;
-		height: 2px;
-		background: #666;
-		box-shadow:
-			0 4px 0 #666,
-			0 8px 0 #666;
-	}
+  &::before,
+  &::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    width: 2px;
+    height: 2px;
+    background: #666;
+    box-shadow:
+      0 4px 0 #666,
+      0 8px 0 #666;
+  }
 
-	&::before {
-		top: 6px;
-		transform: translateX(-4px);
-	}
+  &::before {
+    top: 6px;
+    transform: translateX(-4px);
+  }
 
-	&::after {
-		top: 6px;
-		transform: translateX(2px);
-	}
+  &::after {
+    top: 6px;
+    transform: translateX(2px);
+  }
 }
