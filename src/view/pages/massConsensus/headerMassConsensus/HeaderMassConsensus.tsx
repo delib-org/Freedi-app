@@ -1,24 +1,45 @@
+// Third-party Libraries
 import { Link, useParams } from 'react-router';
+import { useSelector } from 'react-redux';
+
+// NPM Packages
+import { Role } from 'delib-npm';
+
+// Redux Store
+import { statementSubscriptionSelector, userSuggestionsSelector } from '@/redux/statements/statementsSlice';
+
+// App Hooks
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+
+// Icons
 import BackIcon from '@/assets/icons/chevronLeftIcon.svg?react';
 import HomeIcon from '@/assets/icons/homeIcon.svg?react';
-import styles from './HeaderMassConsensus.module.scss';
-import { MassConsensusPageUrls, Role } from 'delib-npm';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
-import { useHeader } from './HeaderContext';
-import { useSelector } from 'react-redux';
-import { statementSubscriptionSelector } from '@/redux/statements/statementsSlice';
-import { getStepNavigation, useMassConsensusSteps } from '../MassConsensusVM';
-import MySuggestionsIcon from '@/assets/icons/evaluations2Icon.svg?react';
+import SmileIcon from '@/assets/icons/smile.svg?react';
 
-const HeaderMassConsensus = () => {
+// Local Imports - Hooks
+import { useHeader } from './HeaderContext';
+import { useMassConsensusSteps } from '../MassConsensusVM';
+
+// Local Imports - Utilities
+import { getStepNavigation } from '../MassConsensusVM';
+
+import styles from './HeaderMassConsensus.module.scss';
+import { creatorSelector } from '@/redux/creator/creatorSlice';
+
+interface Props{
+	showMySuggestions?: boolean;
+}
+
+const HeaderMassConsensus = ({ showMySuggestions = true }: Props) => {
 	const { statementId } = useParams<{ statementId: string }>();
-	const { dir } = useUserConfig();
-	const { title, backToApp, isIntro } = useHeader();
+	const { dir} = useUserConfig();
+	const userId = useSelector(creatorSelector)?.uid
+	const { backToApp } = useHeader();
 	const role = useSelector(statementSubscriptionSelector(statementId))?.role;
 	const { steps, currentStep } = useMassConsensusSteps();
 	const { previousStep } = getStepNavigation(steps, currentStep);
-
-	const computedTitle = typeof title === 'function' ? title() : title;
+	const doesUserHaveSuggestions = useSelector(userSuggestionsSelector(statementId, userId)).length > 0;
+	const shouldShowMySuggestions = showMySuggestions && doesUserHaveSuggestions;
 
 	return (
 		<div className={`app-header app-header--shadow ${styles.headerMC}`} style={{ direction: dir }}>
@@ -39,31 +60,25 @@ const HeaderMassConsensus = () => {
 						<BackIcon />
 					</Link>
 				)}
-				<div
-					className={styles['title-container']}
-					style={{ direction: dir }}
-				>
-					<h1 className={`app-header-title ${styles.title}`}>{computedTitle}</h1>
-				</div>
 
 				<div className={styles.rightIcons}>
-					{!isIntro && (
-						<>
-							<Link
-								className={styles.icon}
-								to={`/my-suggestions/statement/${statementId}`}
-								title="My Suggestions"
-							>
-								<MySuggestionsIcon />
-							</Link>
-							<Link
-								className={styles.icon}
-								to={role === Role.admin ? `/statement/${statementId}` : `/mass-consensus/${statementId}/${MassConsensusPageUrls.introduction}`}
-							>
-								<HomeIcon />
-							</Link>
-						</>
+					<Link
+						className={styles.icon}
+						to={role === Role.admin ? `/statement/${statementId}` : `/home`}
+					>
+						<HomeIcon />
+					</Link>
+					{shouldShowMySuggestions && (
+
+						<Link
+							className={styles.icon}
+							to={`/my-suggestions/statement/${statementId}`}
+							title="My Suggestions"
+						>
+							<SmileIcon />
+						</Link>
 					)}
+					
 				</div>
 			</div>
 		</div>

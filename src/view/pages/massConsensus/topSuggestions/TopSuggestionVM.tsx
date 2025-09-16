@@ -12,6 +12,7 @@ import {
 	MassConsensusPageUrls,
 	SelectionFunction,
 } from 'delib-npm';
+
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useParams } from 'react-router';
@@ -95,7 +96,7 @@ const useTopSuggestions = () => {
 		};
 	}, [topStatements.length, user]);
 
-	return { navigateToVoting, loadingStatements, topStatements };
+	return { navigateToVoting, loadingStatements, topStatements, statement };
 };
 
 export default useTopSuggestions;

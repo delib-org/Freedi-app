@@ -1,7 +1,7 @@
 import { listenToEvaluation } from '@/controllers/db/evaluation/getEvaluation';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { APIEndPoint } from '@/controllers/general/helpers';
-import { setMassConsensusStatements } from '@/redux/statements/statementsSlice';
+import { setMassConsensusStatements, statementSelectorById } from '@/redux/statements/statementsSlice';
 import {
 	Statement,
 	MassConsensusPageUrls,
@@ -9,7 +9,7 @@ import {
 } from 'delib-npm';
 
 import { useEffect, useState } from 'react';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useParams } from 'react-router';
 
 export function useRandomSuggestions() {
@@ -19,6 +19,7 @@ export function useRandomSuggestions() {
 	const [subStatements, setSubStatements] = useState<Statement[]>([]);
 	const { statementId } = useParams<{ statementId: string }>();
 	const [loadingStatements, setLoadingStatements] = useState(true);
+	const statement = useSelector(statementSelectorById(statementId || ''));
 
 	const navigateToTop = () =>
 		navigate(
@@ -79,5 +80,5 @@ export function useRandomSuggestions() {
 		}
 	};
 
-	return { subStatements, navigateToTop, loadingStatements };
+	return { subStatements, navigateToTop, loadingStatements, statement};
 }
