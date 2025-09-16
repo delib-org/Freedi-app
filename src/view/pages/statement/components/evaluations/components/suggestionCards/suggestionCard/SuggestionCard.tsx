@@ -27,6 +27,7 @@ import Joined from '@/view/components/joined/Joined';
 import { Link } from 'react-router';
 import ImprovementModal from '@/view/components/improvementModal/ImprovementModal';
 import { improveSuggestionWithTimeout } from '@/services/suggestionImprovement';
+import Loader from '@/view/components/loaders/Loader';
 
 interface Props {
 	statement: Statement | undefined;
@@ -173,12 +174,15 @@ const SuggestionCard: FC<Props> = ({
 				setOriginalDescription(statement.description || null);
 			}
 
-			// Call the improvement service with both title and description
+			// Call the improvement service with both title and description, including parent context
+			// Increased timeout to 45 seconds to handle longer AI processing times
 			const { improvedTitle, improvedDescription } = await improveSuggestionWithTimeout(
 				statement.statement,
 				statement.description,
 				instructions,
-				30000
+				parentStatement?.statement,  // Parent question/title for context
+				parentStatement?.description, // Parent description for additional context
+				45000 // 45 seconds timeout
 			);
 
 			// Update both title and description in the database
@@ -189,8 +193,16 @@ const SuggestionCard: FC<Props> = ({
 			setIsEdit(true);
 		} catch (error) {
 			console.error('Failed to improve suggestion:', error);
-			// Show error message to user
-			alert(t('Failed to improve suggestion. Please try again.'));
+			// Show more specific error message based on the error type
+			let errorMessage = t('Failed to improve suggestion. Please try again.');
+			if (error instanceof Error) {
+				if (error.message.includes('timed out')) {
+					errorMessage = t('The improvement request took too long. Please try again with simpler instructions.');
+				} else if (error.message.includes('network')) {
+					errorMessage = t('Network error. Please check your connection and try again.');
+				}
+			}
+			alert(errorMessage);
 		} finally {
 			setIsImproving(false);
 		}
@@ -239,6 +251,13 @@ const SuggestionCard: FC<Props> = ({
 			ref={elementRef}
 			id={statement.statementId}
 		>
+			{/* Loader overlay when improving */}
+			{isImproving && (
+				<div className={styles.loaderOverlay}>
+					<Loader />
+					<p>{t('Improving suggestion...')}</p>
+				</div>
+			)}
 			{showEvaluation && <div
 				className={styles['selected-option']}
 				style={{

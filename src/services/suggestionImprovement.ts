@@ -13,6 +13,8 @@ interface ImproveSuggestionRequest {
 	title: string;
 	description?: string;
 	instructions?: string;
+	parentTitle?: string;
+	parentDescription?: string;
 }
 
 interface ImproveSuggestionResponse {
@@ -26,12 +28,16 @@ interface ImproveSuggestionResponse {
  * @param title - The original suggestion title
  * @param description - The original suggestion description
  * @param instructions - Optional user instructions for improvement
+ * @param parentTitle - The parent statement's title (question) for context
+ * @param parentDescription - The parent statement's description for context
  * @returns Promise containing the improved title, description and detected language
  */
 export async function improveSuggestion(
 	title: string,
 	description?: string,
-	instructions?: string
+	instructions?: string,
+	parentTitle?: string,
+	parentDescription?: string
 ): Promise<ImproveSuggestionResponse> {
 	try {
 		const endpoint = getImproveSuggestionEndpoint();
@@ -40,6 +46,8 @@ export async function improveSuggestion(
 			title,
 			description,
 			instructions,
+			parentTitle,
+			parentDescription,
 		};
 
 		const response = await fetch(endpoint, {
@@ -75,14 +83,18 @@ export async function improveSuggestion(
  * @param title - The original suggestion title
  * @param description - The original suggestion description
  * @param instructions - Optional user instructions for improvement
- * @param timeoutMs - Timeout in milliseconds (default: 30000)
+ * @param parentTitle - The parent statement's title (question) for context
+ * @param parentDescription - The parent statement's description for context
+ * @param timeoutMs - Timeout in milliseconds (default: 45000)
  * @returns Promise containing the improved title, description and detected language
  */
 export async function improveSuggestionWithTimeout(
 	title: string,
 	description?: string,
 	instructions?: string,
-	timeoutMs: number = 30000
+	parentTitle?: string,
+	parentDescription?: string,
+	timeoutMs: number = 45000
 ): Promise<ImproveSuggestionResponse> {
 	const timeoutPromise = new Promise<never>((_, reject) => {
 		setTimeout(() => reject(new Error('Improvement request timed out')), timeoutMs);
@@ -90,7 +102,7 @@ export async function improveSuggestionWithTimeout(
 
 	try {
 		return await Promise.race([
-			improveSuggestion(title, description, instructions),
+			improveSuggestion(title, description, instructions, parentTitle, parentDescription),
 			timeoutPromise,
 		]);
 	} catch (error) {

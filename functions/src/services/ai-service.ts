@@ -256,12 +256,16 @@ export async function generateSimilar(
  * @param title - The original suggestion title
  * @param description - The original suggestion description (optional)
  * @param instructions - Optional user instructions for improvement
+ * @param parentTitle - The parent statement's title (question) for context
+ * @param parentDescription - The parent statement's description for context
  * @returns Object containing improved title, description and detected language
  */
 export async function improveSuggestion(
   title: string,
   description?: string,
-  instructions?: string
+  instructions?: string,
+  parentTitle?: string,
+  parentDescription?: string
 ): Promise<{ improvedTitle: string; improvedDescription?: string; detectedLanguage: string }> {
   try {
     // Always detect language from the title (or description if title is too short)
@@ -270,13 +274,22 @@ export async function improveSuggestion(
 
     let prompt: string;
 
+    // Include parent context if available
+    const parentContext = parentTitle ? `
+        Context - This suggestion is responding to the following question/topic:
+        Question: "${parentTitle}"
+        ${parentDescription ? `Additional context: "${parentDescription}"` : ""}
+
+        ` : "";
+
     if (instructions && instructions.trim()) {
       // User provided specific instructions
       prompt = `
+        ${parentContext}
         Improve the following suggestion according to these specific instructions: "${instructions}"
 
-        Original title: "${title}"
-        ${description ? `Original description: "${description}"` : ""}
+        Original suggestion title: "${title}"
+        ${description ? `Original suggestion description: "${description}"` : ""}
 
         Requirements:
         1. Follow the user's instructions carefully
@@ -286,6 +299,7 @@ export async function improveSuggestion(
         5. Ensure proper grammar and structure
         6. Keep the title concise and impactful
         7. If there's a description, make it more detailed and explanatory
+        8. Ensure the suggestion is relevant to the question/topic provided in the context
 
         Return ONLY a JSON object with this format:
         {
@@ -296,10 +310,11 @@ export async function improveSuggestion(
     } else {
       // Automatic improvement without instructions
       prompt = `
+        ${parentContext}
         Improve the following suggestion to make it clearer, more articulate, and better structured:
 
-        Original title: "${title}"
-        ${description ? `Original description: "${description}"` : ""}
+        Original suggestion title: "${title}"
+        ${description ? `Original suggestion description: "${description}"` : ""}
 
         Requirements:
         1. Enhance clarity and readability
@@ -310,6 +325,7 @@ export async function improveSuggestion(
         6. Write in ${detectedLanguage || "the same language as the original"}
         7. Keep the title concise and impactful (usually under 100 characters)
         8. If there's a description, expand it to provide more context and details
+        9. Ensure the suggestion directly addresses the question/topic provided in the context
 
         Return ONLY a JSON object with this format:
         {

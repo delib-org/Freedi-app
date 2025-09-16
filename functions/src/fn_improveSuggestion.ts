@@ -6,6 +6,8 @@ interface ImproveSuggestionRequest {
   title: string;
   description?: string;
   instructions?: string;
+  parentTitle?: string;
+  parentDescription?: string;
 }
 
 interface ImproveSuggestionResponse {
@@ -32,7 +34,7 @@ export async function handleImproveSuggestion(
     }
 
     // Extract and validate request body
-    const { title, description, instructions } = req.body as ImproveSuggestionRequest;
+    const { title, description, instructions, parentTitle, parentDescription } = req.body as ImproveSuggestionRequest;
 
     if (!title || typeof title !== "string" || title.trim().length === 0) {
       res.status(400).json({ error: "Title is required and must be a non-empty string" });
@@ -45,10 +47,11 @@ export async function handleImproveSuggestion(
       titleLength: title.length,
       hasDescription: !!description,
       hasInstructions: !!instructions,
+      hasParentContext: !!parentTitle,
     });
 
     // Call the AI service to improve the suggestion - language will be detected by AI
-    const result = await improveSuggestion(title, description, instructions);
+    const result = await improveSuggestion(title, description, instructions, parentTitle, parentDescription);
 
     // Send successful response
     const response: ImproveSuggestionResponse = {
