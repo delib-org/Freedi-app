@@ -360,5 +360,20 @@
   "Toggle Participation & Collaboration settings": "Teilnahme & Zusammenarbeit umschalten",
   "Toggle Evaluation & Voting settings": "Bewertung & Abstimmung umschalten",
   "Toggle AI & Automation settings": "KI & Automatisierung umschalten",
-  "Toggle Navigation & Structure settings": "Navigation & Struktur umschalten"
+  "Toggle Navigation & Structure settings": "Navigation & Struktur umschalten",
+  "Introduction": "Einführung",
+  "User Demographics": "Demografische Daten",
+  "Question": "Frage",
+  "Random Suggestions": "Zufällige Vorschläge",
+  "Top Suggestions": "Top-Vorschläge",
+  "My Suggestions": "Meine Vorschläge",
+  "Voting": "Abstimmung",
+  "Leave Feedback": "Feedback hinterlassen",
+  "Thank You": "Danke",
+  "Add Step": "Schritt hinzufügen",
+  "All steps added": "Alle Schritte hinzugefügt",
+  "Select a step to add": "Schritt zum Hinzufügen auswählen",
+  "All steps have been added to this process": "Alle Schritte wurden zu diesem Prozess hinzugefügt",
+  "Initial Question": "Ausgangsfrage",
+  "Deliberative Democracy Institute": "Institut für Deliberative Demokratie"
 }

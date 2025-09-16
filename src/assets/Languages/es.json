@@ -360,5 +360,20 @@
   "Toggle Participation & Collaboration settings": "Alternar configuración de participación y colaboración",
   "Toggle Evaluation & Voting settings": "Alternar configuración de evaluación y votación",
   "Toggle AI & Automation settings": "Alternar configuración de IA y automatización",
-  "Toggle Navigation & Structure settings": "Alternar configuración de navegación y estructura"
+  "Toggle Navigation & Structure settings": "Alternar configuración de navegación y estructura",
+  "Introduction": "Introducción",
+  "User Demographics": "Datos demográficos",
+  "Question": "Pregunta",
+  "Random Suggestions": "Sugerencias aleatorias",
+  "Top Suggestions": "Mejores sugerencias",
+  "My Suggestions": "Mis sugerencias",
+  "Voting": "Votación",
+  "Leave Feedback": "Dejar comentarios",
+  "Thank You": "Gracias",
+  "Add Step": "Añadir paso",
+  "All steps added": "Todos los pasos añadidos",
+  "Select a step to add": "Selecciona un paso para añadir",
+  "All steps have been added to this process": "Se han añadido todos los pasos a este proceso",
+  "Initial Question": "Pregunta inicial",
+  "Deliberative Democracy Institute": "Instituto de Democracia Deliberativa"
 }

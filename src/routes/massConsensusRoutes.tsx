@@ -27,6 +27,10 @@ const LeaveFeedback = lazy(
 	() => import('@/view/pages/massConsensus/leaveFeedback/LeaveFeedback')
 );
 
+const MassConsensusMySuggestions = lazy(
+	() => import('@/view/pages/massConsensus/mySuggestions/MassConsensusMySuggestions')
+);
+
 export const massConsensusRoutes: RouteObject[] = [
 	{
 		path: 'mass-consensus/:statementId',
@@ -60,6 +64,10 @@ export const massConsensusRoutes: RouteObject[] = [
 			{
 				path: MassConsensusPageUrls.leaveFeedback,
 				element: withSuspense(LeaveFeedback),
+			},
+			{
+				path: 'my-suggestions',
+				element: withSuspense(MassConsensusMySuggestions),
 			},
 		],
 	},

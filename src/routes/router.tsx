@@ -15,6 +15,7 @@ import TopSuggestions from '@/view/pages/massConsensus/topSuggestions/TopSuggest
 import VotingSuggestions from '@/view/pages/massConsensus/votingSuggestions/VotingSuggestions';
 
 import LeaveFeedback from '@/view/pages/massConsensus/leaveFeedback/LeaveFeedback';
+import MassConsensusMySuggestions from '@/view/pages/massConsensus/mySuggestions/MassConsensusMySuggestions';
 
 // Protected routes
 import StatementMain from '@/view/pages/statement/StatementMain';
@@ -94,6 +95,10 @@ const massConsensusRoutes = [
 			{
 				path: MassConsensusPageUrls.thankYou,
 				element: <ThankYou />,
+			},
+			{
+				path: 'my-suggestions',
+				element: <MassConsensusMySuggestions />,
 			},
 		],
 	},

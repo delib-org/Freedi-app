@@ -360,5 +360,20 @@
   "Toggle Participation & Collaboration settings": "Toggle Participation & Collaboration settings",
   "Toggle Evaluation & Voting settings": "Toggle Evaluation & Voting settings",
   "Toggle AI & Automation settings": "Toggle AI & Automation settings",
-  "Toggle Navigation & Structure settings": "Toggle Navigation & Structure settings"
+  "Toggle Navigation & Structure settings": "Toggle Navigation & Structure settings",
+  "Introduction": "Introduction",
+  "User Demographics": "User Demographics",
+  "Random Suggestions": "Random Suggestions",
+  "Top Suggestions": "Top Suggestions",
+  "My Suggestions": "My Suggestions",
+  "Leave Feedback": "Leave Feedback",
+  "Thank You": "Thank You",
+  "Add Step": "Add Step",
+  "All steps added": "All steps added",
+  "Select a step to add": "Select a step to add",
+  "All steps have been added to this process": "All steps have been added to this process",
+  "Initial Question": "Initial Question",
+  "For": "For",
+  "You have not created any suggestions yet.": "You have not created any suggestions yet.",
+  "Your suggestions will appear here after you create them.": "Your suggestions will appear here after you create them."
 }

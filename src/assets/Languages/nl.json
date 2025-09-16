@@ -360,5 +360,20 @@
   "Toggle Participation & Collaboration settings": "Deelname & samenwerking schakelen",
   "Toggle Evaluation & Voting settings": "Evaluatie & stemming schakelen",
   "Toggle AI & Automation settings": "AI & automatisering schakelen",
-  "Toggle Navigation & Structure settings": "Navigatie & structuur schakelen"
+  "Toggle Navigation & Structure settings": "Navigatie & structuur schakelen",
+  "Introduction": "Introductie",
+  "User Demographics": "Demografische gegevens",
+  "Question": "Vraag",
+  "Random Suggestions": "Willekeurige suggesties",
+  "Top Suggestions": "Top suggesties",
+  "My Suggestions": "Mijn suggesties",
+  "Voting": "Stemmen",
+  "Leave Feedback": "Feedback achterlaten",
+  "Thank You": "Dank je",
+  "Add Step": "Stap toevoegen",
+  "All steps added": "Alle stappen toegevoegd",
+  "Select a step to add": "Selecteer een stap om toe te voegen",
+  "All steps have been added to this process": "Alle stappen zijn aan dit proces toegevoegd",
+  "Initial Question": "Initiële vraag",
+  "Deliberative Democracy Institute": "Instituut voor Deliberatieve Democratie"
 }
