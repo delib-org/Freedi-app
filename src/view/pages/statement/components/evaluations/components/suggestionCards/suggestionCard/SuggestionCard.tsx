@@ -307,7 +307,7 @@ const SuggestionCard: FC<Props> = ({
 								<button
 									onClick={() => setShowImprovementModal(true)}
 									disabled={isImproving}
-									className={`btn btn--small btn--primary ${isImproving ? 'btn--disabled' : ''}`}
+									className={`btn btn--small btn--secondary ${isImproving ? 'btn--disabled' : ''}`}
 								>
 									{isImproving ? t('Improving...') : t('Improve')}
 								</button>
