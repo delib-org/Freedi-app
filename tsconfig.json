@@ -23,7 +23,7 @@
 		}
 	},
 	"include": ["src", "./functions/src"],
-	"exclude": ["node_modules"],
+	"exclude": ["node_modules", "node_modules/delib-npm/src"],
 	"references": [{
 		"path": "./tsconfig.node.json"
 	}]
