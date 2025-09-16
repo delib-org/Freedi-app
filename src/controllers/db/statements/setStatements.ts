@@ -552,10 +552,10 @@ export async function updateStatementText(
 		if (!statement) throw new Error('Statement is undefined');
 
 		const updates: Partial<Statement> = {};
-		if (title && statement.statement !== title) {
+		if (title !== undefined && statement.statement !== title) {
 			updates.statement = title;
 		}
-		if (description && statement.description !== description) {
+		if (description !== undefined && statement.description !== description) {
 			updates.description = description;
 		}
 		if (Object.keys(updates).length === 0) return;

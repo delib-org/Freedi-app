@@ -19,7 +19,7 @@
 	"main": "lib/functions/src/index.js",
 	"dependencies": {
 		"@google/generative-ai": "^0.15.0",
-		"delib-npm": "^5.6.37",
+		"delib-npm": "^5.6.40",
 		"dotenv": "^16.4.5",
 		"firebase-admin": "^12.6.0",
 		"firebase-functions": "^6.3.2",
