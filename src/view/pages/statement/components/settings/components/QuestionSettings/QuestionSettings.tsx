@@ -12,6 +12,7 @@ import SuggestionsIcon from '@/assets/icons/smile.svg?react';
 import VotingIcon from '@/assets/icons/votingIcon.svg?react';
 import ClusterIcon from '@/assets/icons/networkIcon.svg?react';
 import AnchorIcon from '@/assets/icons/anchor.svg?react';
+import UsersIcon from '@/assets/icons/users20px.svg?react';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import MultiSwitch from '@/view/components/switch/multiSwitch/MultiSwitch';
 import { setEvaluationUIType, setAnchoredEvaluationSettings } from '@/controllers/db/evaluation/setEvaluation';
@@ -24,6 +25,9 @@ const QuestionSettings: FC<StatementSettingsProps> = ({
 	const { t } = useUserConfig();
 	const [anchoredCount, setAnchoredCount] = useState(
 		statement.evaluationSettings?.anchored?.numberOfAnchoredStatements || 3
+	);
+	const [showCommunityBadges, setShowCommunityBadges] = useState(
+		statement.evaluationSettings?.anchored?.differentiateBetweenAnchoredAndNot || false
 	);
 
 	try {
@@ -45,7 +49,8 @@ const QuestionSettings: FC<StatementSettingsProps> = ({
 		function handleAnchoredToggle(enabled: boolean) {
 			setAnchoredEvaluationSettings(statement.statementId, {
 				anchored: enabled,
-				numberOfAnchoredStatements: anchoredCount
+				numberOfAnchoredStatements: anchoredCount,
+				differentiateBetweenAnchoredAndNot: showCommunityBadges
 			});
 		}
 
@@ -56,9 +61,21 @@ const QuestionSettings: FC<StatementSettingsProps> = ({
 				if (isAnchoredEnabled) {
 					setAnchoredEvaluationSettings(statement.statementId, {
 						anchored: true,
-						numberOfAnchoredStatements: value
+						numberOfAnchoredStatements: value,
+						differentiateBetweenAnchoredAndNot: showCommunityBadges
 					});
 				}
+			}
+		}
+
+		function handleCommunityBadgesToggle(enabled: boolean) {
+			setShowCommunityBadges(enabled);
+			if (isAnchoredEnabled) {
+				setAnchoredEvaluationSettings(statement.statementId, {
+					anchored: true,
+					numberOfAnchoredStatements: anchoredCount,
+					differentiateBetweenAnchoredAndNot: enabled
+				});
 			}
 		}
 
@@ -109,17 +126,30 @@ const QuestionSettings: FC<StatementSettingsProps> = ({
 						/>
 
 						{isAnchoredEnabled && (
-							<div className={styles.anchoredCount}>
-								<label>{t('Number of anchored options in evaluation')}</label>
-								<input
-									type="number"
-									min="1"
-									max="10"
-									value={anchoredCount}
-									onChange={handleAnchoredCountChange}
-									data-cy="anchored-count-input"
+							<>
+								<div className={styles.anchoredCount}>
+									<label>{t('Number of anchored options in evaluation')}</label>
+									<input
+										type="number"
+										min="1"
+										max="10"
+										value={anchoredCount}
+										onChange={handleAnchoredCountChange}
+										data-cy="anchored-count-input"
+									/>
+								</div>
+								<CustomSwitchSmall
+									label={t('Show Community Recognition')}
+									checked={showCommunityBadges}
+									setChecked={handleCommunityBadgesToggle}
+									textChecked={t('Show Badges')}
+									textUnchecked={t('Hide Badges')}
+									imageChecked={<UsersIcon />}
+									imageUnchecked={<AnchorIcon />}
+									colorChecked='#8b5cf6'
+									colorUnchecked='var(--icon-grey)'
 								/>
-							</div>
+							</>
 						)}
 					</>
 				)}

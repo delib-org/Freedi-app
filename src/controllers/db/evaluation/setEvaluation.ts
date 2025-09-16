@@ -77,7 +77,11 @@ export function setEvaluationUIType(statementId: string, evaluationUI: Evaluatio
 
 export async function setAnchoredEvaluationSettings(
 	statementId: string,
-	anchoredSettings: { anchored: boolean; numberOfAnchoredStatements: number }
+	anchoredSettings: {
+		anchored: boolean;
+		numberOfAnchoredStatements: number;
+		differentiateBetweenAnchoredAndNot?: boolean;
+	}
 ): Promise<void> {
 	try {
 		const statementRef = doc(FireStore, Collections.statements, statementId);
