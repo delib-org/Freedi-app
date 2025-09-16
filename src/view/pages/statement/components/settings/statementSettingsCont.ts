@@ -186,7 +186,8 @@ export const getStatementSettings = (statement: Statement) => {
 		joiningEnabled: Boolean(statementSettings.joiningEnabled),
 		enableAddNewSubQuestionsButton: Boolean(
 			statementSettings.enableAddNewSubQuestionsButton
-		)
+		),
+		enableAIImprovement: Boolean(statementSettings.enableAIImprovement)
 	};
 };
 

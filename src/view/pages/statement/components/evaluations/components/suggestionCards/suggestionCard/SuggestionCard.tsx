@@ -50,6 +50,7 @@ const SuggestionCard: FC<Props> = ({
 	const { sort } = useParams();
 	const enableJoining = parentStatement?.statementSettings?.joiningEnabled;
 	const showEvaluation = parentStatement?.statementSettings?.showEvaluation;
+	const enableAIImprovement = parentStatement?.statementSettings?.enableAIImprovement;
 
 	// Redux Store
 	const dispatch = useAppDispatch();
@@ -302,8 +303,8 @@ const SuggestionCard: FC<Props> = ({
 							{t('Show more')}
 						</Link>
 						<div className="btns btns--end">
-							{/* Show Improve button - temporarily visible for all users for testing */}
-							{!hasBeenImproved && (
+							{/* Show Improve button only if AI improvement is enabled */}
+							{enableAIImprovement && !hasBeenImproved && (
 								<button
 									onClick={() => setShowImprovementModal(true)}
 									disabled={isImproving}
@@ -312,8 +313,8 @@ const SuggestionCard: FC<Props> = ({
 									{isImproving ? t('Improving...') : t('Improve')}
 								</button>
 							)}
-							{/* Show Undo button when suggestion has been improved */}
-							{hasBeenImproved && (
+							{/* Show Undo button when suggestion has been improved and AI improvement is enabled */}
+							{enableAIImprovement && hasBeenImproved && (
 								<button
 									onClick={handleUndo}
 									className="btn btn--small btn--cancel"

@@ -12,6 +12,8 @@ const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 	const { t } = useUserConfig();
 
 	const statementSettings: StatementSettings = getStatementSettings(statement);
+	console.info('Statement settings:', statementSettings);
+	console.info('enableAIImprovement value:', statementSettings?.enableAIImprovement);
 
 	const { hide } = statement;
 
@@ -27,14 +29,15 @@ const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 		hasChildren = false,
 		joiningEnabled = false,
 		enableAddNewSubQuestionsButton = false,
-		defaultLookForSimilarities = false
+		defaultLookForSimilarities = false,
+		enableAIImprovement = false
 	} = statementSettings;
 
 	function handleAdvancedSettingChange(
 		property: keyof StatementSettings,
 		newValue: boolean
 	) {
-
+		console.info(`Setting ${property} to ${newValue}`);
 		setStatementSettingToDB({
 			statement,
 			property,
@@ -104,6 +107,13 @@ const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 				isChecked={showEvaluation}
 				onChange={(checked) =>
 					handleAdvancedSettingChange('showEvaluation', checked)
+				}
+			/>
+			<Checkbox
+				label={t('Enable AI suggestion improvement')}
+				isChecked={enableAIImprovement}
+				onChange={(checked) =>
+					handleAdvancedSettingChange('enableAIImprovement', checked)
 				}
 			/>
 			<Checkbox
