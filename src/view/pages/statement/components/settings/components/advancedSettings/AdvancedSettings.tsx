@@ -12,8 +12,6 @@ const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 	const { t } = useUserConfig();
 
 	const statementSettings: StatementSettings = getStatementSettings(statement);
-	console.info('Statement settings:', statementSettings);
-	console.info('enableAIImprovement value:', statementSettings?.enableAIImprovement);
 
 	const { hide } = statement;
 

@@ -46,7 +46,8 @@ const MassConsensusMySuggestionsDebug = () => {
 		);
 	} catch (error) {
 		console.error('Error in MassConsensusMySuggestionsDebug:', error);
-		return (
+		
+return (
 			<div style={{ padding: '20px', color: 'red' }}>
 				<h2>Error in My Suggestions Component</h2>
 				<pre>{error instanceof Error ? error.stack : String(error)}</pre>

@@ -1,22 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import {
-	DndContext,
-	closestCenter,
-	KeyboardSensor,
-	useSensor,
-	useSensors,
-	DragEndEvent,
-	TouchSensor,
-	MouseSensor,
-} from '@dnd-kit/core';
-import {
-	arrayMove,
-	SortableContext,
-	sortableKeyboardCoordinates,
-	verticalListSortingStrategy,
-	useSortable,
-} from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
 import styles from './ProcessSettings.module.scss';
 import { defaultMassConsensusProcess } from '@/model/massConsensus/massConsensusModel';
 import { LoginType, MassConsensusPageUrls, MassConsensusStep } from 'delib-npm';
@@ -26,96 +8,12 @@ import DeleteIcon from '@/assets/icons/delete.svg?react';
 import PlusIcon from '@/assets/icons/plusIcon.svg?react';
 import CloseIcon from '@/assets/icons/close.svg?react';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
-import TestDragDrop from './TestDragDrop';
-import NativeDragTest from './NativeDragTest';
 
 interface Props {
 	processName: string;
 	steps: MassConsensusStep[];
 	loginType: LoginType;
 }
-
-interface SortableItemProps {
-	id: string;
-	index: number;
-	process: MassConsensusStep;
-	onDelete: (screen: MassConsensusPageUrls) => void;
-	t: (key: string) => string;
-}
-
-const SortableItem: React.FC<SortableItemProps> = ({
-	id,
-	index,
-	process,
-	onDelete,
-	t
-}) => {
-	const {
-		attributes,
-		listeners,
-		setNodeRef,
-		transform,
-		transition,
-		isDragging,
-	} = useSortable({ id });
-
-	const style = {
-		transform: CSS.Transform.toString(transform),
-		transition,
-		opacity: isDragging ? 0.5 : 1,
-		zIndex: isDragging ? 1000 : 'auto',
-		position: 'relative' as const,
-	};
-
-	const handleDelete = (e: React.MouseEvent) => {
-		e.preventDefault();
-		e.stopPropagation();
-		onDelete(process.screen);
-	};
-
-	// Log when component mounts to verify listeners
-	React.useEffect(() => {
-		console.info(`SortableItem ${id} mounted, listeners:`, listeners);
-	}, [id, listeners]);
-
-	return (
-		<div
-			ref={setNodeRef}
-			style={style}
-			className={styles['process-item']}
-			{...attributes}
-		>
-			<div
-				className={styles['process-item__drag-area']}
-				{...listeners}
-				style={{
-					cursor: isDragging ? 'grabbing' : 'grab',
-					touchAction: 'none',
-					WebkitTouchCallout: 'none',
-					WebkitUserSelect: 'none',
-					userSelect: 'none',
-				}}
-			>
-				<div className={styles['process-item__drag-handle']}>
-					<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-						<path d="M7 2a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0zM7 18a2 2 0 11-4 0 2 2 0 014 0zM17 2a2 2 0 11-4 0 2 2 0 014 0zM17 10a2 2 0 11-4 0 2 2 0 014 0zM17 18a2 2 0 11-4 0 2 2 0 014 0z"/>
-					</svg>
-				</div>
-				<span className={styles['process-item__content']}>
-					{index + 1}: {t(process.text || process.screen)} {isDragging && '(Dragging)'}
-				</span>
-			</div>
-			<button
-				onClick={handleDelete}
-				className={styles['process-item__delete']}
-				aria-label={`Delete ${process.text || process.screen}`}
-				type="button"
-			>
-				<DeleteIcon />
-			</button>
-		</div>
-	);
-};
 
 // Define all possible steps
 const ALL_STEPS: MassConsensusPageUrls[] = [
@@ -144,13 +42,15 @@ const STEP_DISPLAY_NAMES: Record<MassConsensusPageUrls, string> = {
 	[MassConsensusPageUrls.initialQuestion]: 'Initial Question',
 };
 
-const ProcessSetting = ({ processName, steps: _steps, loginType }: Props) => {
+const ProcessSettingNative = ({ processName, steps: _steps, loginType }: Props) => {
 	const { statementId } = useParams();
 	const { t } = useUserConfig();
 
 	const [steps, setSteps] = useState<MassConsensusStep[]>(_steps || defaultMassConsensusProcess);
 	const [showAddStep, setShowAddStep] = useState(false);
 	const [isLoading, setIsLoading] = useState(false);
+	const [draggedItem, setDraggedItem] = useState<string | null>(null);
+	const [draggedOverItem, setDraggedOverItem] = useState<string | null>(null);
 
 	useEffect(() => {
 		if (_steps && _steps.length > 0) {
@@ -164,62 +64,70 @@ const ProcessSetting = ({ processName, steps: _steps, loginType }: Props) => {
 		step => !currentStepScreens.includes(step)
 	);
 
-	const sensors = useSensors(
-		useSensor(MouseSensor, {
-			activationConstraint: {
-				distance: 5, // Small threshold to prevent accidental drags
-			},
-		}),
-		useSensor(TouchSensor, {
-			activationConstraint: {
-				delay: 100,
-				tolerance: 5,
-			},
-		}),
-		useSensor(KeyboardSensor, {
-			coordinateGetter: sortableKeyboardCoordinates,
-		})
-	);
-
-	const handleDragStart = (event: { active: { id: unknown } }) => {
-		console.info('Drag started:', event);
+	const handleDragStart = (e: React.DragEvent, screen: string) => {
+		console.info('Starting drag:', screen);
+		setDraggedItem(screen);
+		e.dataTransfer.effectAllowed = 'move';
+		e.dataTransfer.setData('text/plain', screen);
 	};
 
-	const handleDragEnd = async (event: DragEndEvent) => {
-		console.info('Drag end event:', event);
-		const { active, over } = event;
+	const handleDragOver = (e: React.DragEvent) => {
+		e.preventDefault();
+		e.dataTransfer.dropEffect = 'move';
+	};
 
-		if (over && active.id !== over.id) {
-			const oldIndex = steps.findIndex((step) => step.screen === active.id);
-			const newIndex = steps.findIndex((step) => step.screen === over.id);
+	const handleDragEnter = (e: React.DragEvent, screen: string) => {
+		e.preventDefault();
+		setDraggedOverItem(screen);
+	};
 
-			if (oldIndex === -1 || newIndex === -1) {
-				console.error('Invalid drag operation: step not found');
+	const handleDragLeave = (e: React.DragEvent) => {
+		e.preventDefault();
+		// Only clear if we're leaving the entire item
+		const relatedTarget = e.relatedTarget as HTMLElement;
+		if (!relatedTarget || !e.currentTarget.contains(relatedTarget)) {
+			setDraggedOverItem(null);
+		}
+	};
 
-				return;
-			}
+	const handleDrop = async (e: React.DragEvent, dropTargetScreen: string) => {
+		e.preventDefault();
+		console.info('Drop:', draggedItem, 'onto', dropTargetScreen);
 
-			const newStepsOrder = arrayMove(steps, oldIndex, newIndex);
-			setSteps(newStepsOrder);
+		if (draggedItem && draggedItem !== dropTargetScreen) {
+			const oldIndex = steps.findIndex(step => step.screen === draggedItem);
+			const newIndex = steps.findIndex(step => step.screen === dropTargetScreen);
 
-			if (!statementId) {
-				console.error('No statement ID available for saving drag order');
+			if (oldIndex !== -1 && newIndex !== -1) {
+				const newSteps = [...steps];
+				const [movedItem] = newSteps.splice(oldIndex, 1);
+				newSteps.splice(newIndex, 0, movedItem);
 
-				return;
-			}
+				setSteps(newSteps);
 
-			try {
-				await reorderMassConsensusProcessToDB({
-					steps: newStepsOrder,
-					statementId,
-					loginType
-				});
-			} catch (error) {
-				console.error('Failed to save step order:', error);
-				// Revert to original order on error
-				setSteps(steps);
+				if (statementId) {
+					try {
+						await reorderMassConsensusProcessToDB({
+							steps: newSteps,
+							statementId,
+							loginType
+						});
+					} catch (error) {
+						console.error('Failed to save step order:', error);
+						// Revert on error
+						setSteps(steps);
+					}
+				}
 			}
 		}
+
+		setDraggedItem(null);
+		setDraggedOverItem(null);
+	};
+
+	const handleDragEnd = () => {
+		setDraggedItem(null);
+		setDraggedOverItem(null);
 	};
 
 	function handleDelete(screen: MassConsensusPageUrls) {
@@ -269,47 +177,48 @@ const ProcessSetting = ({ processName, steps: _steps, loginType }: Props) => {
 		}
 	};
 
-	console.info('ProcessSetting render - steps:', steps, 'statementId:', statementId);
-
 	return (
 		<div className={styles['process-setting']}>
-			<NativeDragTest />
-			<TestDragDrop />
 			<h4>{processName}</h4>
-			<div style={{
-				isolation: 'isolate',
-				position: 'relative',
-				zIndex: 1,
-				// Reset any inherited styles
-				transform: 'none',
-				willChange: 'auto',
-			}}>
-				<DndContext
-					sensors={sensors}
-					collisionDetection={closestCenter}
-					onDragStart={handleDragStart}
-					onDragEnd={handleDragEnd}
-				>
-					<SortableContext
-						items={steps.map((step) => step.screen)}
-						strategy={verticalListSortingStrategy}
-					>
-						{steps && steps.map((process, index) => {
-							console.info(`Rendering item ${index}:`, process.screen);
+			<div className={styles['process-items-container']}>
+				{steps.map((process, index) => {
+					const isDragging = draggedItem === process.screen;
+					const isDraggedOver = draggedOverItem === process.screen;
 
-							return (
-								<SortableItem
-									key={process.screen}
-									id={process.screen}
-									index={index}
-									process={process}
-									onDelete={handleDelete}
-									t={t}
-								/>
-							);
-						})}
-					</SortableContext>
-				</DndContext>
+					return (
+						<div
+							key={process.screen}
+							draggable
+							onDragStart={(e) => handleDragStart(e, process.screen)}
+							onDragOver={handleDragOver}
+							onDragEnter={(e) => handleDragEnter(e, process.screen)}
+							onDragLeave={handleDragLeave}
+							onDrop={(e) => handleDrop(e, process.screen)}
+							onDragEnd={handleDragEnd}
+							className={styles['process-item']}
+							style={{
+								opacity: isDragging ? 0.5 : 1,
+								backgroundColor: isDraggedOver ? 'var(--background-hover, #f0f0f0)' : undefined,
+								transform: isDraggedOver ? 'scale(1.02)' : undefined,
+								transition: 'all 0.2s ease',
+							}}
+						>
+							<div className={styles['process-item__drag-area']}>
+								<span className={styles['process-item__content']}>
+									{index + 1}: {t(process.text || process.screen)}
+								</span>
+							</div>
+							<button
+								onClick={() => handleDelete(process.screen)}
+								className={styles['process-item__delete']}
+								aria-label={`Delete ${process.text || process.screen}`}
+								type="button"
+							>
+								<DeleteIcon />
+							</button>
+						</div>
+					);
+				})}
 			</div>
 
 			{/* Add Step Button / Dropdown */}
@@ -369,4 +278,4 @@ const ProcessSetting = ({ processName, steps: _steps, loginType }: Props) => {
 	);
 };
 
-export default ProcessSetting;
+export default ProcessSettingNative;
