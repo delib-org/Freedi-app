@@ -5,6 +5,7 @@ import { LoginType, MassConsensusPageUrls, MassConsensusStep } from 'delib-npm';
 import { removeMassConsensusStep, reorderMassConsensusProcessToDB } from '@/controllers/db/massConsensus/setMassConsensus';
 import { useParams } from 'react-router';
 import DeleteIcon from '@/assets/icons/delete.svg?react';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 
 interface Props {
 	processName: string;
@@ -14,6 +15,7 @@ interface Props {
 
 const ProcessSetting = ({ processName, steps: _steps, loginType }: Props) => {
 	const { statementId } = useParams();
+	const { t } = useUserConfig();
 
 	const [steps, setSteps] = useState<MassConsensusStep[]>(_steps || defaultMassConsensusProcess);
 
@@ -65,7 +67,7 @@ const ProcessSetting = ({ processName, steps: _steps, loginType }: Props) => {
 					onDragEnd={handleDragEnd}
 					className={styles['process-item']}
 				>
-					{index + 1}: {process.screen}
+					{index + 1}: {t(process.text || process.screen)}
 					<button onClick={() => handleDelete(process.screen)}><DeleteIcon /></button>
 				</div>
 			))}
