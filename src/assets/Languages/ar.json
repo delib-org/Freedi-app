@@ -360,5 +360,14 @@
   "Toggle Participation & Collaboration settings": "تبديل إعدادات المشاركة والتعاون",
   "Toggle Evaluation & Voting settings": "تبديل إعدادات التقييم والتصويت",
   "Toggle AI & Automation settings": "تبديل إعدادات الذكاء الاصطناعي والأتمتة",
-  "Toggle Navigation & Structure settings": "تبديل إعدادات التنقل والهيكل"
+  "Toggle Navigation & Structure settings": "تبديل إعدادات التنقل والهيكل",
+  "Introduction": "المقدمة",
+  "User Demographics": "البيانات الديموغرافية",
+  "Question": "السؤال",
+  "Random Suggestions": "اقتراحات عشوائية",
+  "Top Suggestions": "الاقتراحات الأعلى",
+  "My Suggestions": "اقتراحاتي",
+  "Voting": "التصويت",
+  "Leave Feedback": "اترك تعليقًا",
+  "Thank You": "شكراً لك"
 }
