@@ -121,8 +121,8 @@ const QuestionSettings: FC<StatementSettingsProps> = ({
 							textUnchecked={t('Standard')}
 							imageChecked={<AnchorIcon />}
 							imageUnchecked={<SuggestionsIcon />}
-							colorChecked='var(--icon-blue)'
-							colorUnchecked='var(--icon-grey)'
+							colorChecked='var(--question)'
+							colorUnchecked='var(--question)'
 						/>
 
 						{isAnchoredEnabled && (
@@ -146,8 +146,8 @@ const QuestionSettings: FC<StatementSettingsProps> = ({
 									textUnchecked={t('Hide Badges')}
 									imageChecked={<UsersIcon />}
 									imageUnchecked={<AnchorIcon />}
-									colorChecked='#8b5cf6'
-									colorUnchecked='var(--icon-grey)'
+									colorChecked='var(--question)'
+									colorUnchecked='var(--question)'
 								/>
 							</>
 						)}
