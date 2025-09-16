@@ -345,5 +345,20 @@
   "You have": "لديك",
   "evaluations left": "تقييمات متبقية",
   "Choose your preferred suggestion": "اختر اقتراحك المفضل",
-  "Number of evaluators for this option / all evaluators": "عدد المقيمين لهذا الخيار / جميع المقيمين"
+  "Number of evaluators for this option / all evaluators": "عدد المقيمين لهذا الخيار / جميع المقيمين",
+  "Advanced Settings": "الإعدادات المتقدمة",
+  "Visibility & Access": "الرؤية والوصول",
+  "Participation & Collaboration": "المشاركة والتعاون",
+  "Evaluation & Voting": "التقييم والتصويت",
+  "AI & Automation": "الذكاء الاصطناعي والأتمتة",
+  "Navigation & Structure": "التنقل والهيكل",
+  "Expand All": "توسيع الكل",
+  "Collapse All": "طي الكل",
+  "Expand all categories": "توسيع جميع الفئات",
+  "Collapse all categories": "طي جميع الفئات",
+  "Toggle Visibility & Access settings": "تبديل إعدادات الرؤية والوصول",
+  "Toggle Participation & Collaboration settings": "تبديل إعدادات المشاركة والتعاون",
+  "Toggle Evaluation & Voting settings": "تبديل إعدادات التقييم والتصويت",
+  "Toggle AI & Automation settings": "تبديل إعدادات الذكاء الاصطناعي والأتمتة",
+  "Toggle Navigation & Structure settings": "تبديل إعدادات التنقل والهيكل"
 }

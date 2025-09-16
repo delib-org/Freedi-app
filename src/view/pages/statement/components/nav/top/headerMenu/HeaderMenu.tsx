@@ -5,7 +5,6 @@ import { Statement } from 'delib-npm';
 import DisconnectIcon from '@/assets/icons/disconnectIcon.svg?react';
 import FollowMe from '@/assets/icons/follow.svg?react';
 import InvitationIcon from '@/assets/icons/invitation.svg?react';
-import SettingsIcon from '@/assets/icons/settings.svg?react';
 import ShareIcon from '@/assets/icons/shareIcon.svg?react';
 import LanguagesIcon from '@/assets/icons/languagesIcon.svg?react';
 
@@ -117,7 +116,6 @@ const HeaderMenu: FC<HeaderMenuProps> = ({
             />
             <MenuOption
               label={t('Settings')}
-              icon={<SettingsIcon style={menuIconStyle} />}
               onOptionClick={onNavigateToSettings}
             />
           </>
