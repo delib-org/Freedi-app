@@ -20,7 +20,7 @@ import EmptyScreen from '../emptyScreen/EmptyScreen';
 import styles from './SuggestionCards.module.scss';
 
 interface Props {
-	propSort?: SortType;
+	propSort?: SortType | string;
 	selectionFunction?: SelectionFunction;
 	subStatements?: Statement[];
 }

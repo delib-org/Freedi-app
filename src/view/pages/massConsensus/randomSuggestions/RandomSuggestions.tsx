@@ -38,7 +38,11 @@ const RandomSuggestions = () => {
           <Loader />
         </div>
       ) : (
-        <SuggestionCards selectionFunction={SelectionFunction.random} />
+        <SuggestionCards
+          selectionFunction={SelectionFunction.random}
+          subStatements={subStatements}
+          propSort="backend-order"
+        />
       )}
       
       <FooterMassConsensus
