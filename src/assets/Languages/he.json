@@ -380,5 +380,10 @@
   "My Suggestions": "ההצעות שלי",
   "Voting": "הצבעה",
   "Leave Feedback": "השאר משוב",
-  "Thank You": "תודה"
+  "Thank You": "תודה",
+  "Add Step": "הוסף שלב",
+  "All steps added": "כל השלבים נוספו",
+  "Select a step to add": "בחר שלב להוספה",
+  "All steps have been added to this process": "כל השלבים נוספו לתהליך זה",
+  "Initial Question": "שאלה ראשונית"
 }

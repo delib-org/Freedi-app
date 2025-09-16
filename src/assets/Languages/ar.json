@@ -369,5 +369,10 @@
   "My Suggestions": "اقتراحاتي",
   "Voting": "التصويت",
   "Leave Feedback": "اترك تعليقًا",
-  "Thank You": "شكراً لك"
+  "Thank You": "شكراً لك",
+  "Add Step": "إضافة خطوة",
+  "All steps added": "تم إضافة جميع الخطوات",
+  "Select a step to add": "اختر خطوة لإضافتها",
+  "All steps have been added to this process": "تم إضافة جميع الخطوات إلى هذه العملية",
+  "Initial Question": "السؤال الأولي"
 }

@@ -369,5 +369,10 @@
   "My Suggestions": "Meine Vorschläge",
   "Voting": "Abstimmung",
   "Leave Feedback": "Feedback hinterlassen",
-  "Thank You": "Danke"
+  "Thank You": "Danke",
+  "Add Step": "Schritt hinzufügen",
+  "All steps added": "Alle Schritte hinzugefügt",
+  "Select a step to add": "Schritt zum Hinzufügen auswählen",
+  "All steps have been added to this process": "Alle Schritte wurden zu diesem Prozess hinzugefügt",
+  "Initial Question": "Ausgangsfrage"
 }
