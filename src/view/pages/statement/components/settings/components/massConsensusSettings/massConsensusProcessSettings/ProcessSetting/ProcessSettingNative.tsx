@@ -65,7 +65,6 @@ const ProcessSettingNative = ({ processName, steps: _steps, loginType }: Props) 
 	);
 
 	const handleDragStart = (e: React.DragEvent, screen: string) => {
-		console.info('Starting drag:', screen);
 		setDraggedItem(screen);
 		e.dataTransfer.effectAllowed = 'move';
 		e.dataTransfer.setData('text/plain', screen);
@@ -92,7 +91,6 @@ const ProcessSettingNative = ({ processName, steps: _steps, loginType }: Props) 
 
 	const handleDrop = async (e: React.DragEvent, dropTargetScreen: string) => {
 		e.preventDefault();
-		console.info('Drop:', draggedItem, 'onto', dropTargetScreen);
 
 		if (draggedItem && draggedItem !== dropTargetScreen) {
 			const oldIndex = steps.findIndex(step => step.screen === draggedItem);
