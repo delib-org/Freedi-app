@@ -264,7 +264,15 @@ const SuggestionCard: FC<Props> = ({
 								statement={statement}
 								multiline={true}
 								forceEditing={isEdit}
-								onSaveSuccess={() => setIsEdit(false)}
+								onSaveSuccess={() => {
+									setIsEdit(false);
+									// Reset improvement state when user saves
+									if (hasBeenImproved) {
+										setHasBeenImproved(false);
+										setOriginalTitle(null);
+										setOriginalDescription(null);
+									}
+								}}
 								onEditEnd={() => setIsEdit(false)}
 								className={styles.editableCard}
 								inputClassName={styles.editInput}
@@ -275,16 +283,12 @@ const SuggestionCard: FC<Props> = ({
 							{t('Show more')}
 						</Link>
 						<div className="btns btns--end">
-							{/* Show Improve button only for admins/creators */}
-							{(isAdmin || isAuthorized) && !hasBeenImproved && (
+							{/* Show Improve button - temporarily visible for all users for testing */}
+							{!hasBeenImproved && (
 								<button
 									onClick={() => setShowImprovementModal(true)}
 									disabled={isImproving}
-									className="btn btn--small"
-									style={{
-										opacity: isImproving ? 0.7 : 1,
-										cursor: isImproving ? 'not-allowed' : 'pointer'
-									}}
+									className={`btn btn--small btn--primary ${isImproving ? 'btn--disabled' : ''}`}
 								>
 									{isImproving ? t('Improving...') : t('Improve')}
 								</button>
@@ -293,12 +297,7 @@ const SuggestionCard: FC<Props> = ({
 							{hasBeenImproved && (
 								<button
 									onClick={handleUndo}
-									className="btn btn--small"
-									style={{
-										backgroundColor: 'var(--warning)',
-										color: 'white',
-										borderColor: 'var(--warning)'
-									}}
+									className="btn btn--small btn--cancel"
 								>
 									{t('Undo')}
 								</button>

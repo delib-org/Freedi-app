@@ -70,7 +70,7 @@ const ImprovementModal: FC<ImprovementModalProps> = ({
 						{t('Cancel')}
 					</button>
 					<button
-						className="btn btn--primary"
+						className={`btn btn--primary ${isLoading ? 'btn--disabled' : ''}`}
 						onClick={handleImprove}
 						disabled={isLoading}
 					>
