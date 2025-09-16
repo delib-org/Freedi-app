@@ -1,0 +1,130 @@
+import { Request, Response } from 'firebase-functions/v1';
+import { StatementService } from '../services/statements/statementService';
+import { RequestValidator } from '../utils/validation';
+
+export class StatementController {
+	private statementService: StatementService;
+
+	constructor(statementService?: StatementService) {
+		this.statementService = statementService || new StatementService();
+	}
+
+	/**
+	 * Get user options endpoint
+	 */
+	async getUserOptions(req: Request, res: Response): Promise<void> {
+		try {
+			// Validate request parameters
+			const validator = new RequestValidator();
+			const userId = req.query.userId as string;
+			const parentId = req.query.parentId as string;
+
+			validator
+				.requireString(parentId, 'parentId')
+				.requireString(userId, 'userId');
+
+			if (!validator.isValid()) {
+				res.status(400).send({
+					error: validator.getErrorMessage(),
+					ok: false,
+				});
+
+				return;
+			}
+
+			// Get statements from service
+			const statements = await this.statementService.getUserOptions({
+				userId,
+				parentId,
+			});
+
+			res.send({ statements, ok: true });
+		} catch (error) {
+			this.handleError(res, error);
+		}
+	}
+
+	/**
+	 * Get random statements endpoint
+	 */
+	async getRandomStatements(req: Request, res: Response): Promise<void> {
+		try {
+			// Validate request parameters
+			const validator = new RequestValidator();
+			const parentId = req.query.parentId as string;
+
+			validator.requireString(parentId, 'parentId');
+
+			if (!validator.isValid()) {
+				res.status(400).send({
+					error: validator.getErrorMessage(),
+					ok: false,
+				});
+
+				return;
+			}
+
+			// Parse optional limit
+			const limit = validator.optionalNumber(req.query.limit, 'limit', 6, 50);
+
+			// Get random statements
+			const statements = await this.statementService.getRandomStatements({
+				parentId,
+				limit,
+			});
+
+			// Update view counts
+			await this.statementService.updateStatementViewCounts(statements);
+
+			res.status(200).send({ statements, ok: true });
+		} catch (error) {
+			this.handleError(res, error);
+		}
+	}
+
+	/**
+	 * Get top statements endpoint
+	 */
+	async getTopStatements(req: Request, res: Response): Promise<void> {
+		try {
+			// Validate request parameters
+			const validator = new RequestValidator();
+			const parentId = req.query.parentId as string;
+
+			validator.requireString(parentId, 'parentId');
+
+			if (!validator.isValid()) {
+				res.status(400).send({
+					error: validator.getErrorMessage(),
+					ok: false,
+				});
+				
+				return;
+			}
+
+			// Parse optional limit
+			const limit = validator.optionalNumber(req.query.limit, 'limit', 6, 50);
+
+			// Get top statements
+			const statements = await this.statementService.getTopStatements({
+				parentId,
+				limit,
+			});
+
+			res.send({ statements, ok: true });
+		} catch (error) {
+			this.handleError(res, error);
+		}
+	}
+
+	/**
+	 * Handle errors consistently
+	 */
+	private handleError(res: Response, error: unknown): void {
+		const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
+		res.status(500).send({
+			error: errorMessage,
+			ok: false,
+		});
+	}
+}

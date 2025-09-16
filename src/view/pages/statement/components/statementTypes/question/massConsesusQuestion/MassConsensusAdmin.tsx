@@ -3,6 +3,7 @@ import Description from '../../../evaluations/components/description/Description
 import { useNavigate, useParams } from 'react-router';
 import HandsImage from '@/assets/images/hands.png';
 import BulbImage from '@/assets/images/bulb.png';
+import AnchorIcon from '@/assets/icons/anchor.svg?react';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import { useSelector } from 'react-redux';
 import {
@@ -18,6 +19,7 @@ import DeletionLadyImage from '@/assets/images/rejectLady.png';
 import Button, { ButtonType } from '@/view/components/buttons/button/Button';
 import SearchBar from './components/searchBar/SearchBar';
 import { Link } from 'react-router';
+import { toggleStatementAnchored } from '@/controllers/db/statements/setStatements';
 
 const MassConsensusAdmin = () => {
 	const { statementId } = useParams<{ statementId: string }>();
@@ -37,6 +39,20 @@ const MassConsensusAdmin = () => {
 
 	const { t } = useUserConfig();
 	const navigate = useNavigate();
+
+	// Calculate anchored statistics
+	const anchoredOptions = options.filter(option => option.anchored);
+	const maxAnchoredAllowed = statement?.evaluationSettings?.anchored?.numberOfAnchoredStatements || 3;
+	const isAnchoredSamplingEnabled = statement?.evaluationSettings?.anchored?.anchored || false;
+
+	const handleAnchorToggle = async (optionId: string, shouldAnchor: boolean) => {
+		if (!statementId) return;
+		try {
+			await toggleStatementAnchored(optionId, shouldAnchor, statementId);
+		} catch (error) {
+			console.error('Error toggling anchor status:', error);
+		}
+	};
 	useEffect(() => {
 		if (!statement) return;
 		const unsubscribe = listenToSubStatements(statementId, 'bottom');
@@ -93,6 +109,17 @@ const MassConsensusAdmin = () => {
 							{statement.suggestions || 0}
 						</div>
 					</div>
+
+					{isAnchoredSamplingEnabled && (
+						<div>
+							<AnchorIcon />
+							<div>
+								{t('Anchored options')}: {anchoredOptions.length}
+								<br />
+								<small>({maxAnchoredAllowed} {t('per evaluation')})</small>
+							</div>
+						</div>
+					)}
 				</div>
 				<details className={styles.allOptionsAccordion}>
 					<summary>
@@ -109,6 +136,7 @@ const MassConsensusAdmin = () => {
 									key={option.statementId}
 									statement={option}
 									isDelete={false}
+									onAnchorToggle={handleAnchorToggle}
 								/>
 							))}
 					</div>
@@ -120,6 +148,7 @@ const MassConsensusAdmin = () => {
 						key={option.statementId}
 						statement={option}
 						isDelete={false}
+						onAnchorToggle={handleAnchorToggle}
 					/>
 				))}
 

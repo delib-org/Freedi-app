@@ -1,5 +1,4 @@
-import SuggestionCards from "../../statement/components/evaluations/components/suggestionCards/SuggestionCards";
-import { SelectionFunction } from "delib-npm";
+import SimpleSuggestionCards from "../../statement/components/evaluations/components/simpleSuggestionCards/SimpleSuggestionCards";
 import FooterMassConsensus from "../footerMassConsensus/FooterMassConsensus";
 import { useRandomSuggestions } from "./RandomSuggestionsVM";
 import { useUserConfig } from "@/controllers/hooks/useUserConfig";
@@ -38,7 +37,9 @@ const RandomSuggestions = () => {
           <Loader />
         </div>
       ) : (
-        <SuggestionCards selectionFunction={SelectionFunction.random} />
+        <SimpleSuggestionCards
+          subStatements={subStatements}
+        />
       )}
       
       <FooterMassConsensus

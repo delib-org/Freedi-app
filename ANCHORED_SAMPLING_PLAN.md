@@ -374,7 +374,22 @@ anchored: optional(object({
 - [ ] Test backwards compatibility
 
 ### Phase 7: UI Visual Testing with MCP Playwright
+
+#### Prerequisites for Testing Mass Consensus
+1. **Switch to Advanced User Mode**:
+   - Navigate to user profile
+   - Change to "Advanced User" mode
+   - This enables creating groups and Mass Consensus questions
+
+2. **Create Test Mass Consensus Question**:
+   - Click the plus (+) button (only visible in advanced mode)
+   - Create a new group
+   - Create a Mass Consensus question within the group
+
 - [ ] Use MCP Playwright to verify UI consistency
+  - [ ] Navigate to user profile and switch to advanced mode
+  - [ ] Create a new group
+  - [ ] Create a Mass Consensus question
   - [ ] Navigate to MassConsensus admin page
   - [ ] Take screenshots of current design (baseline)
   - [ ] Implement anchored options UI
