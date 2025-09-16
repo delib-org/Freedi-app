@@ -112,6 +112,7 @@ const MassConsensusMySuggestions = () => {
 					isNextActive={true}
 					onNext={handleNext}
 					onSkip={handleSkip}
+					canSkip={false}
 				/>
 			</div>
 		</div>

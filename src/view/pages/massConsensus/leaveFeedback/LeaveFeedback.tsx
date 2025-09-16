@@ -71,6 +71,7 @@ function LeaveFeedback() {
 				onNext={handleSendButton}
 				isFeedback={true}
 				onSkip={() => trackStageSkipped('feedback')}
+				canSkip={false}
 			/>
 			<div style={{ textAlign: 'center', marginTop: '1rem' }}>
 				<a

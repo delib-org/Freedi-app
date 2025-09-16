@@ -10,7 +10,7 @@ const ThankYou = () => {
             <img src={Dove} alt="a dove that says thanks" />
             <h2>{t("Thank you for the registration")}</h2>
             <p>{t("You have successfully registered to receive updates. We will send you a message when there is news.")}</p>
-            <a href="https://freedi.co" className="btn btn--primary">{t("Back to home")}</a>
+            <a href="https://delib.org" className="btn btn--primary">{t("Deliberative Democracy Institute")}</a>
         </div>
     )
 }

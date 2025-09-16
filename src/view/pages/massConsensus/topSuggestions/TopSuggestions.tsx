@@ -39,6 +39,7 @@ const TopSuggestions = () => {
 
 			<FooterMassConsensus
 				isNextActive={true}
+				canSkip={false}
 				onNext={() => {
 					trackStageCompleted('top_suggestions');
 					navigateToVoting();
