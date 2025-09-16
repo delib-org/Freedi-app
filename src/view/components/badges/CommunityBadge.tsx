@@ -8,7 +8,7 @@ interface Props {
 	compact?: boolean;
 }
 
-const CommunityBadge: FC<Props> = ({ compact = false }) => {
+const CommunityBadge: FC<Props> = () => {
 	const [isExpanded, setIsExpanded] = useState(false);
 	const { t } = useUserConfig();
 

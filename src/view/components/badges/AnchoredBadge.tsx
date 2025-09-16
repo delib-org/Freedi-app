@@ -8,7 +8,7 @@ interface Props {
 	compact?: boolean;
 }
 
-const AnchoredBadge: FC<Props> = ({ compact = false }) => {
+const AnchoredBadge: FC<Props> = () => {
 	const [isExpanded, setIsExpanded] = useState(false);
 	const { t } = useUserConfig();
 
