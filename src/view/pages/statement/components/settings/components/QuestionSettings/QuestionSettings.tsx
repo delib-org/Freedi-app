@@ -17,6 +17,7 @@ import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import MultiSwitch from '@/view/components/switch/multiSwitch/MultiSwitch';
 import { setEvaluationUIType, setAnchoredEvaluationSettings } from '@/controllers/db/evaluation/setEvaluation';
 import VotingSettings from './votingSettings/VotingSettings';
+import { useNavigate } from 'react-router';
 
 const QuestionSettings: FC<StatementSettingsProps> = ({
 	statement,

@@ -263,12 +263,6 @@ const SuggestionCard: FC<Props> = ({
 					<p>{t('Improving suggestion...')}</p>
 				</div>
 			)}
-			{/* Badge for anchored/community statements */}
-			{showBadges && (
-				<div className={styles.badge}>
-					{isAnchored ? <AnchoredBadge /> : <CommunityBadge />}
-				</div>
-			)}
 			{showEvaluation && <div
 				className={styles['selected-option']}
 				style={{
@@ -376,6 +370,12 @@ const SuggestionCard: FC<Props> = ({
 					<div className={styles['evolution-element']}>
 						<Evaluation statement={statement} />
 					</div>
+					{/* Badge for anchored/community statements */}
+					{showBadges && (
+						<div className={styles['badge-element']}>
+							{isAnchored ? <AnchoredBadge /> : <CommunityBadge />}
+						</div>
+					)}
 					{hasChildren && (
 						<IconButton
 							className={`${styles['add-sub-question-button']} ${styles['more-question']}`}

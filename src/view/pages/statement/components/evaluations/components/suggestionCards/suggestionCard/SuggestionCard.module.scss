@@ -22,18 +22,9 @@
     pointer-events: none;
   }
 
-  // Badge positioning
-  .badge {
-    position: absolute;
-    top: 0.5rem;
-    right: 0.5rem;
-    z-index: 10;
-  }
-
-  // Special border glow for community cards
+  // Special border for community cards
   &--community {
     border-left-color: rgba(139, 92, 246, 0.7);
-    animation: communityGlow 3s ease-in-out infinite;
   }
 
   .selected-option {
@@ -125,6 +116,12 @@
         color: #4e88c7;
         width: 24px;
         height: 24px;
+      }
+
+      .badge-element {
+        display: flex;
+        align-items: center;
+        justify-content: center;
       }
 
       @media screen and (max-width: 500px) {
@@ -241,12 +238,3 @@
   }
 }
 
-// Animation for community card glow
-@keyframes communityGlow {
-  0%, 100% {
-    box-shadow: 2px 2px 4px var(--shadow);
-  }
-  50% {
-    box-shadow: 0 0 20px rgba(139, 92, 246, 0.3), 2px 2px 4px var(--shadow);
-  }
-}
