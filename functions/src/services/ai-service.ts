@@ -244,9 +244,145 @@ export async function generateSimilar(
   const prompt = `
 		Create ${optionsToBeGeneratedByAI} similar sentences to the user input '${userInput}'. Try to keep it in the same spirit of the user input but never the same.
 		Here is the question the user was asked: '${question}'.
-		
+
 		Return your answer ONLY as a JSON object in the following format: { "strings": ["generated_string_1", "generated_string_2", ...] }
 	`;
 
   return getAIResponseAsList(prompt);
+}
+
+/**
+ * Improves a suggestion title and description using AI, with optional user instructions
+ * @param title - The original suggestion title
+ * @param description - The original suggestion description (optional)
+ * @param instructions - Optional user instructions for improvement
+ * @returns Object containing improved title, description and detected language
+ */
+export async function improveSuggestion(
+  title: string,
+  description?: string,
+  instructions?: string
+): Promise<{ improvedTitle: string; improvedDescription?: string; detectedLanguage: string }> {
+  try {
+    // Always detect language from the title (or description if title is too short)
+    const textForDetection = title.length > 10 ? title : (description || title);
+    const detectedLanguage = await detectLanguage(textForDetection);
+
+    let prompt: string;
+
+    if (instructions && instructions.trim()) {
+      // User provided specific instructions
+      prompt = `
+        Improve the following suggestion according to these specific instructions: "${instructions}"
+
+        Original title: "${title}"
+        ${description ? `Original description: "${description}"` : ""}
+
+        Requirements:
+        1. Follow the user's instructions carefully
+        2. Maintain the original meaning and intent
+        3. Write the improved version in ${detectedLanguage || "the same language as the original"}
+        4. Make the text clearer and more articulate
+        5. Ensure proper grammar and structure
+        6. Keep the title concise and impactful
+        7. If there's a description, make it more detailed and explanatory
+
+        Return ONLY a JSON object with this format:
+        {
+          "improvedTitle": "improved title here",
+          ${description ? '"improvedDescription": "improved description here"' : ""}
+        }
+      `;
+    } else {
+      // Automatic improvement without instructions
+      prompt = `
+        Improve the following suggestion to make it clearer, more articulate, and better structured:
+
+        Original title: "${title}"
+        ${description ? `Original description: "${description}"` : ""}
+
+        Requirements:
+        1. Enhance clarity and readability
+        2. Improve grammar and sentence structure
+        3. Make the point more compelling and well-articulated
+        4. Maintain the original meaning and intent
+        5. Keep the same tone and style
+        6. Write in ${detectedLanguage || "the same language as the original"}
+        7. Keep the title concise and impactful (usually under 100 characters)
+        8. If there's a description, expand it to provide more context and details
+
+        Return ONLY a JSON object with this format:
+        {
+          "improvedTitle": "improved title here",
+          ${description ? '"improvedDescription": "improved description here"' : ""}
+        }
+      `;
+    }
+
+    const model = await getGenerativeAIModel();
+    const result = await model.generateContent(prompt);
+    const responseText = result.response.text();
+
+    try {
+      const parsed = JSON.parse(responseText);
+
+      if (parsed.improvedTitle && typeof parsed.improvedTitle === "string") {
+        return {
+          improvedTitle: parsed.improvedTitle,
+          improvedDescription: parsed.improvedDescription,
+          detectedLanguage: detectedLanguage || "en",
+        };
+      }
+
+      throw new Error("Invalid response format from AI");
+    } catch {
+      logger.error("Failed to parse AI response for improvement:", responseText);
+      throw new Error("Failed to parse improvement response");
+    }
+  } catch (error) {
+    logger.error("Error improving suggestion:", error);
+    throw error;
+  }
+}
+
+/**
+ * Detects the language of the given text
+ * @param text - Text to detect language for
+ * @returns Language code (e.g., "en", "he", "es")
+ */
+async function detectLanguage(text: string): Promise<string> {
+  try {
+    const prompt = `
+      Detect the language of this text: "${text}"
+
+      Return ONLY a JSON object with the ISO 639-1 language code:
+      { "language": "xx" }
+
+      Examples:
+      - English: "en"
+      - Hebrew: "he"
+      - Spanish: "es"
+      - German: "de"
+      - Dutch: "nl"
+      - Arabic: "ar"
+    `;
+
+    const model = await getGenerativeAIModel();
+    const result = await model.generateContent(prompt);
+    const responseText = result.response.text();
+
+    try {
+      const parsed = JSON.parse(responseText);
+
+      return parsed.language || "en";
+    } catch {
+      logger.warn("Failed to detect language, defaulting to English");
+
+      return "en";
+    }
+  } catch (error) {
+    logger.error("Error detecting language:", error);
+
+    return "en"; // Default to English on error
+  }
 }

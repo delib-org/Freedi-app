@@ -10,7 +10,7 @@ import { sortSubStatements } from '../../../statementsEvaluationCont';
 import Evaluation from '../../evaluation/Evaluation';
 import SolutionMenu from '../../solutionMenu/SolutionMenu';
 import AddQuestionIcon from '@/assets/icons/addQuestion.svg?react';
-import { setStatementIsOption } from '@/controllers/db/statements/setStatements';
+import { setStatementIsOption, updateStatementText } from '@/controllers/db/statements/setStatements';
 import { useAppDispatch } from '@/controllers/hooks/reduxHooks';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import useStatementColor, {
@@ -25,6 +25,8 @@ import { useAuthorization } from '@/controllers/hooks/useAuthorization';
 import { toggleJoining } from '@/controllers/db/joining/setJoining';
 import Joined from '@/view/components/joined/Joined';
 import { Link } from 'react-router';
+import ImprovementModal from '@/view/components/improvementModal/ImprovementModal';
+import { improveSuggestionWithTimeout } from '@/services/suggestionImprovement';
 
 interface Props {
 	statement: Statement | undefined;
@@ -73,6 +75,13 @@ const SuggestionCard: FC<Props> = ({
 	const [shouldShowAddSubQuestionModal, setShouldShowAddSubQuestionModal] =
 		useState(false);
 	const [isCardMenuOpen, setIsCardMenuOpen] = useState(false);
+
+	// Improvement feature states
+	const [showImprovementModal, setShowImprovementModal] = useState(false);
+	const [isImproving, setIsImproving] = useState(false);
+	const [originalTitle, setOriginalTitle] = useState<string | null>(null);
+	const [originalDescription, setOriginalDescription] = useState<string | null>(null);
+	const [hasBeenImproved, setHasBeenImproved] = useState(false);
 
 	useEffect(() => {
 		sortSubStatements(siblingStatements, sort, 30);
@@ -153,6 +162,51 @@ const SuggestionCard: FC<Props> = ({
 		}
 	}
 
+	async function handleImprove(instructions: string) {
+		try {
+			setIsImproving(true);
+			setShowImprovementModal(false);
+
+			// Store original title and description before improvement
+			if (!originalTitle) {
+				setOriginalTitle(statement.statement);
+				setOriginalDescription(statement.description || null);
+			}
+
+			// Call the improvement service with both title and description
+			const { improvedTitle, improvedDescription } = await improveSuggestionWithTimeout(
+				statement.statement,
+				statement.description,
+				instructions,
+				30000
+			);
+
+			// Update both title and description in the database
+			await updateStatementText(statement, improvedTitle, improvedDescription);
+
+			// Mark as improved and enable edit mode
+			setHasBeenImproved(true);
+			setIsEdit(true);
+		} catch (error) {
+			console.error('Failed to improve suggestion:', error);
+			// Show error message to user
+			alert(t('Failed to improve suggestion. Please try again.'));
+		} finally {
+			setIsImproving(false);
+		}
+	}
+
+	function handleUndo() {
+		if (originalTitle) {
+			// Restore original title and description
+			updateStatementText(statement, originalTitle, originalDescription || undefined);
+			setHasBeenImproved(false);
+			setOriginalTitle(null);
+			setOriginalDescription(null);
+			setIsEdit(false);
+		}
+	}
+
 	const statementAge = new Date().getTime() - statement.createdAt;
 	const hasChildren = parentStatement?.statementSettings?.hasChildren;
 
@@ -220,25 +274,55 @@ const SuggestionCard: FC<Props> = ({
 						<Link to={`/statement/${statement.statementId}`} className={styles.showMore}>
 							{t('Show more')}
 						</Link>
-						{enableJoining &&
-							<div className="btns btns--end">
-								<Joined statement={statement} />
+						<div className="btns btns--end">
+							{/* Show Improve button only for admins/creators */}
+							{(isAdmin || isAuthorized) && !hasBeenImproved && (
 								<button
-									onClick={handleJoin}
-									disabled={isJoinLoading}
+									onClick={() => setShowImprovementModal(true)}
+									disabled={isImproving}
 									className="btn btn--small"
 									style={{
-										backgroundColor: hasJoinedOptimistic ? 'var(--approve)' : 'inherit',
-										color: hasJoinedOptimistic ? 'white' : 'inherit',
-										borderColor: hasJoinedOptimistic ? 'var(--approve)' : 'inherit',
-										opacity: isJoinLoading ? 0.7 : 1,
-										cursor: isJoinLoading ? 'not-allowed' : 'pointer'
+										opacity: isImproving ? 0.7 : 1,
+										cursor: isImproving ? 'not-allowed' : 'pointer'
 									}}
 								>
-									{hasJoinedOptimistic ? t('Leave') : t('Join')}
+									{isImproving ? t('Improving...') : t('Improve')}
 								</button>
-							</div>
-						}
+							)}
+							{/* Show Undo button when suggestion has been improved */}
+							{hasBeenImproved && (
+								<button
+									onClick={handleUndo}
+									className="btn btn--small"
+									style={{
+										backgroundColor: 'var(--warning)',
+										color: 'white',
+										borderColor: 'var(--warning)'
+									}}
+								>
+									{t('Undo')}
+								</button>
+							)}
+							{enableJoining && (
+								<>
+									<Joined statement={statement} />
+									<button
+										onClick={handleJoin}
+										disabled={isJoinLoading}
+										className="btn btn--small"
+										style={{
+											backgroundColor: hasJoinedOptimistic ? 'var(--approve)' : 'inherit',
+											color: hasJoinedOptimistic ? 'white' : 'inherit',
+											borderColor: hasJoinedOptimistic ? 'var(--approve)' : 'inherit',
+											opacity: isJoinLoading ? 0.7 : 1,
+											cursor: isJoinLoading ? 'not-allowed' : 'pointer'
+										}}
+									>
+										{hasJoinedOptimistic ? t('Leave') : t('Join')}
+									</button>
+								</>
+							)}
+						</div>
 					</div>
 					<div className={styles.more}>
 						<SolutionMenu
@@ -285,6 +369,14 @@ const SuggestionCard: FC<Props> = ({
 					/>
 				)}
 			</div>
+			{/* Improvement Modal */}
+			<ImprovementModal
+				isOpen={showImprovementModal}
+				onClose={() => setShowImprovementModal(false)}
+				onImprove={handleImprove}
+				isLoading={isImproving}
+				suggestionTitle={statement.statement}
+			/>
 		</div>
 	);
 };
