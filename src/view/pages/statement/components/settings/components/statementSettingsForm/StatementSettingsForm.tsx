@@ -83,7 +83,10 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 			});
 			setLoading(false);
 			if (!newStatement) throw new Error('No new statement');
-			navigate(`/statement/${newStatement.statementId}`);
+			// Only navigate away if it's a new statement
+			if (isNewStatement) {
+				navigate(`/statement/${newStatement.statementId}`);
+			}
 		};
 
 		const isNewStatement = !statementId;

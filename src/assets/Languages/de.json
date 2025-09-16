@@ -345,5 +345,20 @@
   "You have": "Sie haben",
   "evaluations left": "Bewertungen übrig",
   "Choose your preferred suggestion": "Wählen Sie Ihren bevorzugten Vorschlag",
-  "Number of evaluators for this option / all evaluators": "Anzahl der Bewerter für diese Option / alle Bewerter"
+  "Number of evaluators for this option / all evaluators": "Anzahl der Bewerter für diese Option / alle Bewerter",
+  "Advanced Settings": "Erweiterte Einstellungen",
+  "Visibility & Access": "Sichtbarkeit & Zugriff",
+  "Participation & Collaboration": "Teilnahme & Zusammenarbeit",
+  "Evaluation & Voting": "Bewertung & Abstimmung",
+  "AI & Automation": "KI & Automatisierung",
+  "Navigation & Structure": "Navigation & Struktur",
+  "Expand All": "Alles erweitern",
+  "Collapse All": "Alles einklappen",
+  "Expand all categories": "Alle Kategorien erweitern",
+  "Collapse all categories": "Alle Kategorien einklappen",
+  "Toggle Visibility & Access settings": "Sichtbarkeit & Zugriff umschalten",
+  "Toggle Participation & Collaboration settings": "Teilnahme & Zusammenarbeit umschalten",
+  "Toggle Evaluation & Voting settings": "Bewertung & Abstimmung umschalten",
+  "Toggle AI & Automation settings": "KI & Automatisierung umschalten",
+  "Toggle Navigation & Structure settings": "Navigation & Struktur umschalten"
 }

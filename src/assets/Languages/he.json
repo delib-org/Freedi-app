@@ -357,5 +357,20 @@
   "Introduction": "הקדמה",
   "Please suggest a solution": "אנא הצע/י פתרון",
   "Choose the your preferred suggestion": "בחר/י את ההצעה המועדפת עליך",
-  "Please rate the following leading suggestions": "אנא דרג/י את ההצעות המובילות הבאות"
+  "Please rate the following leading suggestions": "אנא דרג/י את ההצעות המובילות הבאות",
+  "Advanced Settings": "הגדרות מתקדמות",
+  "Visibility & Access": "נראות וגישה",
+  "Participation & Collaboration": "השתתפות ושיתוף פעולה",
+  "Evaluation & Voting": "הערכה והצבעה",
+  "AI & Automation": "בינה מלאכותית ואוטומציה",
+  "Navigation & Structure": "ניווט ומבנה",
+  "Expand All": "הרחב הכל",
+  "Collapse All": "כווץ הכל",
+  "Expand all categories": "הרחב את כל הקטגוריות",
+  "Collapse all categories": "כווץ את כל הקטגוריות",
+  "Toggle Visibility & Access settings": "החלף הגדרות נראות וגישה",
+  "Toggle Participation & Collaboration settings": "החלף הגדרות השתתפות ושיתוף פעולה",
+  "Toggle Evaluation & Voting settings": "החלף הגדרות הערכה והצבעה",
+  "Toggle AI & Automation settings": "החלף הגדרות בינה מלאכותית ואוטומציה",
+  "Toggle Navigation & Structure settings": "החלף הגדרות ניווט ומבנה"
 }

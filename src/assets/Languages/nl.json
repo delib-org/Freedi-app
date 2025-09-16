@@ -345,5 +345,20 @@
   "You have": "Je hebt",
   "evaluations left": "evaluaties over",
   "Choose your preferred suggestion": "Kies je favoriete suggestie",
-  "Number of evaluators for this option / all evaluators": "Aantal evaluators voor deze optie / alle evaluators"
+  "Number of evaluators for this option / all evaluators": "Aantal evaluators voor deze optie / alle evaluators",
+  "Advanced Settings": "Geavanceerde instellingen",
+  "Visibility & Access": "Zichtbaarheid & toegang",
+  "Participation & Collaboration": "Deelname & samenwerking",
+  "Evaluation & Voting": "Evaluatie & stemming",
+  "AI & Automation": "AI & automatisering",
+  "Navigation & Structure": "Navigatie & structuur",
+  "Expand All": "Alles uitvouwen",
+  "Collapse All": "Alles inklappen",
+  "Expand all categories": "Alle categorieën uitvouwen",
+  "Collapse all categories": "Alle categorieën inklappen",
+  "Toggle Visibility & Access settings": "Zichtbaarheid & toegang schakelen",
+  "Toggle Participation & Collaboration settings": "Deelname & samenwerking schakelen",
+  "Toggle Evaluation & Voting settings": "Evaluatie & stemming schakelen",
+  "Toggle AI & Automation settings": "AI & automatisering schakelen",
+  "Toggle Navigation & Structure settings": "Navigatie & structuur schakelen"
 }
