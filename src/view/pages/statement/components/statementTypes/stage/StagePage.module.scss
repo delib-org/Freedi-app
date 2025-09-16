@@ -1,42 +1,39 @@
 .stage-page {
-	margin-top: 1rem;
+  margin-top: 1rem;
+  left: 2.5rem;
 
-	h2 {
-		margin-bottom: 0.5rem;
-	}
+  h2 {
+    margin-bottom: 0.5rem;
+  }
 }
 
 .stage {
-
-	display: flex;
-	flex-direction: column;
-	overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
 }
 
 .wrapper {
-	position: relative;
-	display: flex;
-	flex-direction: column;
-	max-width: var(--wrapper);
-	width: 100vw;
-	height: 100%;
-	margin: auto;
-	flex: 1;
-
-
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  max-width: var(--wrapper);
+  width: 100vw;
+  height: 100%;
+  margin: auto;
+  flex: 1;
 }
 
 .bottomNav {
-	position: fixed;
-	bottom: 0px;
-	left: 50%;
-	transform: translateX(-50%);
-	max-width: var(--wrapper);
-	width: 90vw;
-	min-height: 6rem;
+  position: fixed;
+  bottom: 0px;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: var(--wrapper);
+  width: 90vw;
+  min-height: 6rem;
 
-	@media screen and (max-width: 600px) {
-		width: 100vw;
-
-	}
+  @media screen and (max-width: 600px) {
+    width: 100vw;
+  }
 }

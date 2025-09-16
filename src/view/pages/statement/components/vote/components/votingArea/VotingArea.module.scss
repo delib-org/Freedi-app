@@ -1,9 +1,18 @@
+body {
+  overflow: scroll;
+}
+
 .votingArea {
+  overflow: visible;
+  overflow-x: auto;
+  overflow-y: auto;
+
   &.horizontal {
     right: 0;
     display: flex;
     direction: ltr;
-    padding: 1.5rem 0;
+    margin-right: 3.5rem;
+    padding: 1.5rem;
     height: 100svw;
     rotate: 90deg;
   }
@@ -17,6 +26,10 @@
     overflow-x: auto;
     padding: 0 20px;
     box-sizing: border-box;
+
+    @media screen and (min-width: 1080px) {
+      right: 12%;
+    }
 
     @media screen and (max-width: 440px) {
       overflow-x: revert-layer;

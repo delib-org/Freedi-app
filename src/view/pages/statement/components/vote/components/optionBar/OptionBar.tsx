@@ -32,11 +32,11 @@ export const OptionBar: FC<OptionBarProps> = ({
 	// * Redux * //
 	const dispatch = useAppDispatch();
 	const vote = useAppSelector(parentVoteSelector(option.parentId));
-	
+
 	// * Optimistic UI State * //
 	const [isVotePending, setIsVotePending] = useState(false);
 	const [optimisticVoteId, setOptimisticVoteId] = useState(vote?.statementId);
-	
+
 	useEffect(() => {
 		setOptimisticVoteId(vote?.statementId);
 		setIsVotePending(false);
@@ -48,7 +48,7 @@ export const OptionBar: FC<OptionBarProps> = ({
 	const baseSelections: number = getSelections(statement, option);
 	const selections = (() => {
 		if (!isVotePending) return baseSelections;
-		
+
 		// If we're switching to this option
 		if (optimisticVoteId === option.statementId && vote?.statementId !== option.statementId) {
 			return baseSelections + 1;
@@ -57,7 +57,7 @@ export const OptionBar: FC<OptionBarProps> = ({
 		if (vote?.statementId === option.statementId && optimisticVoteId !== option.statementId) {
 			return Math.max(0, baseSelections - 1);
 		}
-		
+
 		return baseSelections;
 	})();
 
@@ -74,16 +74,16 @@ export const OptionBar: FC<OptionBarProps> = ({
 			: 0;
 	const handleVotePress = async () => {
 		// Optimistic update - immediately update UI
-		const newVoteId = optimisticVoteId === option.statementId 
-			? 'none' 
+		const newVoteId = optimisticVoteId === option.statementId
+			? 'none'
 			: option.statementId;
-		
+
 		setOptimisticVoteId(newVoteId);
 		setIsVotePending(true);
-		
+
 		// Update store optimistically
 		dispatch(setVoteToStore(option));
-		
+
 		// Database operations in background
 		try {
 			await setVoteToDB(option, creator);
@@ -92,13 +92,16 @@ export const OptionBar: FC<OptionBarProps> = ({
 			setIsVotePending(false);
 		}
 	};
-	
+
 	const isOptionSelected = optimisticVoteId === option.statementId;
 
 	const containerInset = `${(_optionOrder - order) * barWidth}px`;
 	const containerStyle = {
 		[isVertical ? 'right' : 'left']: containerInset,
 		width: `${barWidth}px`,
+		['--barWidth']: `${barWidth}px`,
+		['--barPad']: `${padding}px`,
+		['--barInnerWidth']: `${innerWidth}px`,
 	};
 
 	const voteButtonStyle = {
