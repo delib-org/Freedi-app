@@ -74,14 +74,15 @@ interface ValidationErrorParams extends BaseEventParams {
   fieldName?: string;
 }
 
-export type MassConsensusStage = 
-  | 'introduction' 
-  | 'question' 
+export type MassConsensusStage =
+  | 'introduction'
+  | 'question'
   | 'similar_suggestions'
-  | 'random_suggestions' 
-  | 'top_suggestions' 
-  | 'voting' 
-  | 'feedback';
+  | 'random_suggestions'
+  | 'top_suggestions'
+  | 'voting'
+  | 'feedback'
+  | 'my_suggestions';
 
 interface MassConsensusEventParams extends BaseEventParams {
   statementId: string;

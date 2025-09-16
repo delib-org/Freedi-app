@@ -372,5 +372,8 @@
   "All steps added": "All steps added",
   "Select a step to add": "Select a step to add",
   "All steps have been added to this process": "All steps have been added to this process",
-  "Initial Question": "Initial Question"
+  "Initial Question": "Initial Question",
+  "For": "For",
+  "You have not created any suggestions yet.": "You have not created any suggestions yet.",
+  "Your suggestions will appear here after you create them.": "Your suggestions will appear here after you create them."
 }
