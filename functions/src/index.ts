@@ -44,6 +44,10 @@ import {
   getRandomStatements,
   getTopStatements,
   getUserOptions,
+  maintainRole,
+  maintainDeliberativeElement,
+  maintainStatement,
+  maintainSubscriptionToken
 } from "./fn_httpRequests";
 import { findSimilarStatements } from "./fn_findSimilarStatements";
 import { updateApprovalResults } from "./fn_approval";
@@ -158,6 +162,12 @@ exports.massConsensusAddMember = wrapHttpFunction(addMassConsensusMember);
 exports.getCluster = wrapHttpFunction(getCluster);
 exports.recoverLastSnapshot = wrapHttpFunction(recoverLastSnapshot);
 exports.checkProfanity = checkProfanity;
+
+// Maintenance HTTP functions
+exports.maintainRole = wrapHttpFunction(maintainRole);
+exports.maintainDeliberativeElement = wrapHttpFunction(maintainDeliberativeElement);
+exports.maintainStatement = wrapHttpFunction(maintainStatement);
+exports.maintainSubscriptionToken = wrapHttpFunction(maintainSubscriptionToken);
 
 // --------------------------
 // FIRESTORE TRIGGER FUNCTIONS

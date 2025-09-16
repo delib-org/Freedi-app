@@ -1,5 +1,5 @@
 import CustomSwitchSmall from '@/view/components/switch/customSwitchSmall/CustomSwitchSmall';
-import { FC, useState } from 'react';
+import React, { FC, useState } from 'react';
 import { StatementSettingsProps } from '../../settingsTypeHelpers';
 import SectionTitle from '../sectionTitle/SectionTitle';
 import styles from './QuestionSettings.module.scss';
