@@ -39,6 +39,20 @@ $duplicateToMobileScale: 1.5;
 			width: calc(#{$badgeIconSize} * 1.66);
 			height: calc(#{$badgeIconSize} * 1.66);
 		}
+
+		// Style for custom image icons - with !important to ensure it always applies
+		&--custom {
+			width: 0.875rem !important;
+			height: 0.875rem !important;
+			object-fit: cover !important;
+			border-radius: 50% !important;
+			flex-shrink: 0 !important;
+
+			@media screen and (max-width: 440px) {
+				width: calc(#{$badgeIconSize} * 1.66) !important;
+				height: calc(#{$badgeIconSize} * 1.66) !important;
+			}
+		}
 	}
 
 	&__text {
