@@ -22,7 +22,7 @@
 
 	.button {
 		position: relative;
-
+		cursor: pointer;
 		height: 100%;
 		width: 2rem;
 		border-radius: 4rem;
@@ -81,7 +81,7 @@
 	border-radius: 4rem;
 	box-shadow: 0px 10px 30px 0px rgba(52, 103, 157, 0.108);
 	user-select: none;
-	cursor: pointer;
+	cursor:pointer;
 	z-index: 200;
 
 	svg {

@@ -16,3 +16,34 @@ yarn.lock
 .playwright-mcp/
 
 .DS_Store
+
+# Downloaded files (Hebrew)
+*.הורדה
+*הורדה*
+*.download
+*.tmp
+*_files/
+
+# API Keys and secrets
+**/firebase-config.js
+**/google-config.js
+**/*credentials*
+**/*secret*
+**/*apikey*
+**/*api_key*
+**/*API_KEY*
+
+# Analytics files that might contain keys
+**/analytics.js
+**/gtag.js
+**/google-analytics.js
+!**/analytics.test.js
+
+# Backup files
+*.backup
+*.bak
+*.old
+
+# Local environment configs
+.runtimeconfig.json
+functions/.runtimeconfig.json

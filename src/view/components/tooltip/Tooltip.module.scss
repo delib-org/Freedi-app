@@ -7,15 +7,18 @@
 .tooltip {
 	position: absolute;
 	width: max-content;
-	max-width: 300px;
+	max-width: 180px; // Reduced from 300px
+	min-width: 80px; // Ensure minimum width
 	word-wrap: break-word;
 	word-break: break-word;
+	hyphens: auto; // Add hyphenation for long words
 	z-index: 10;
-	padding: 0.5rem 0.8rem;
+	padding: 0.4rem 0.6rem; // Smaller padding
 	border-radius: 4px;
-	font-size: 0.8rem;
+	font-size: 0.75rem; // Smaller font
 	white-space: normal;
-	line-height: 1.4;
+	line-height: 1.3;
+	text-align: center; // Center text for better look
 	background-color: rgba(0, 0, 0, 0.85);
 	color: white;
 	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
@@ -123,11 +126,12 @@
 // Mobile adjustments
 @media screen and (max-width: 768px) {
 	.tooltip {
-		max-width: 200px;
+		max-width: 140px; // Further reduced for mobile
+		min-width: 60px;
 		white-space: normal;
 		text-align: center;
-		padding: 0.4rem 0.6rem;
-		font-size: 0.75rem;
+		padding: 0.3rem 0.5rem;
+		font-size: 0.7rem;
 		// Add a subtle border for better visibility on mobile
 		border: 1px solid rgba(255, 255, 255, 0.1);
 	}

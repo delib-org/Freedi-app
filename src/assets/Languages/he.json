@@ -395,5 +395,12 @@
   "Select a step to add": "בחר שלב להוספה",
   "All steps have been added to this process": "כל השלבים נוספו לתהליך זה",
   "Initial Question": "שאלה ראשונית",
-  "Deliberative Democracy Institute": "המכון לדמוקרטיה דיונית"
+  "Deliberative Democracy Institute": "המכון לדמוקרטיה דיונית",
+  "Feedback": "משוב",
+  "Help us improve": "עזרו לנו להשתפר",
+  "Your feedback helps us make Freedi better for everyone": "המשוב שלכם עוזר לנו לשפר את פרידי עבור כולם",
+  "Share your thoughts about this process...": "שתפו את המחשבות שלכם על התהליך...",
+  "Optional: Leave your email for updates": "אופציונלי: השאירו את המייל שלכם לעדכונים",
+  "your@email.com": "your@email.com",
+  "Invalid email format": "פורמט אימייל לא תקין"
 }

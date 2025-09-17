@@ -6,9 +6,12 @@ import { Tooltip } from '@/view/components/tooltip/Tooltip';
 
 interface Props {
 	compact?: boolean;
+	customIcon?: string;
+	customDescription?: string;
+	customLabel?: string;
 }
 
-const AnchoredBadge: FC<Props> = () => {
+const AnchoredBadge: FC<Props> = ({ customIcon, customDescription, customLabel }) => {
 	const [isExpanded, setIsExpanded] = useState(false);
 	const { t } = useUserConfig();
 
@@ -23,18 +26,29 @@ const AnchoredBadge: FC<Props> = () => {
 		setIsExpanded(false);
 	};
 
+	const tooltipContent = customDescription || t('Selected by the moderator');
+	const badgeLabel = customLabel || t('Anchored');
+
 	return (
-		<Tooltip content={t('Selected by the moderator')} position="top">
+		<Tooltip content={tooltipContent} position="top">
 			<div
 				className={`${styles.badge} ${styles['badge--anchored']} ${
 					isExpanded ? styles['badge--expanded'] : ''
 				}`}
-				aria-label={t('Anchored statement')}
+				aria-label={tooltipContent}
 				onMouseEnter={handleMouseEnter}
 				onMouseLeave={handleMouseLeave}
 			>
-				<AnchorIcon className={styles.badge__icon} />
-				<span className={styles.badge__text}>{t('Anchored')}</span>
+				{customIcon ? (
+					<img
+						src={customIcon}
+						alt={badgeLabel}
+						className={`${styles.badge__icon} ${styles['badge__icon--custom']}`}
+					/>
+				) : (
+					<AnchorIcon className={styles.badge__icon} />
+				)}
+				<span className={styles.badge__text}>{badgeLabel}</span>
 			</div>
 		</Tooltip>
 	);

@@ -384,5 +384,12 @@
   "Select a step to add": "اختر خطوة لإضافتها",
   "All steps have been added to this process": "تم إضافة جميع الخطوات إلى هذه العملية",
   "Initial Question": "السؤال الأولي",
-  "Deliberative Democracy Institute": "معهد الديمقراطية التداولية"
+  "Deliberative Democracy Institute": "معهد الديمقراطية التداولية",
+  "Feedback": "التعليقات",
+  "Help us improve": "ساعدنا في التحسين",
+  "Your feedback helps us make Freedi better for everyone": "تساعدنا ملاحظاتك في جعل فريدي أفضل للجميع",
+  "Share your thoughts about this process...": "شارك أفكارك حول هذه العملية...",
+  "Optional: Leave your email for updates": "اختياري: اترك بريدك الإلكتروني للحصول على التحديثات",
+  "your@email.com": "your@email.com",
+  "Invalid email format": "تنسيق البريد الإلكتروني غير صالح"
 }
