@@ -4,7 +4,69 @@
 	align-items: inherit;
 	text-align: inherit;
 	direction: inherit;
-	gap: 1rem;
+	gap: 1.5rem;
+	padding: 1rem;
+
+	.feedbackSection {
+		margin-top: 1rem;
+
+		.textareaWrapper {
+			position: relative;
+			display: flex;
+			flex-direction: column;
+			gap: 0.5rem;
+
+			.icon {
+				position: absolute;
+				top: 1rem;
+				left: 1rem;
+				color: var(--icons-blue);
+				width: 20px;
+				height: 20px;
+			}
+
+			.feedbackTextarea {
+				background-color: var(--background-card);
+				border: 1px solid #aebee2;
+				border-radius: 8px;
+				padding: 1rem 1rem 2rem 3rem;
+				font-size: 1.1rem;
+				font-family: 'Roboto', sans-serif;
+				resize: vertical;
+				min-height: 100px;
+				width: 100%;
+				transition: border-color 0.2s;
+
+				&:focus {
+					outline: none;
+					border-color: var(--primary-color);
+				}
+
+				&:disabled {
+					opacity: 0.6;
+					cursor: not-allowed;
+				}
+			}
+
+			.charCount {
+				position: absolute;
+				bottom: 0.5rem;
+				right: 1rem;
+				font-size: 0.85rem;
+				color: #7484a9;
+			}
+		}
+	}
+
+	.emailSection {
+		margin-top: 1rem;
+
+		.emailLabel {
+			font-size: 0.95rem;
+			color: #7484a9;
+			margin-bottom: 0.5rem;
+		}
+	}
 
 	.input {
 		display: flex;
@@ -13,13 +75,28 @@
 		gap: 1rem;
 		margin: 0 0 1rem 0;
 		width: 100%;
+		position: relative;
 
 		input {
 			background-color: transparent;
-			font-size: 1.3rem;
+			font-size: 1.1rem;
 			flex: 1;
 			font-family: 'Roboto', sans-serif;
 			border-bottom: solid 1px #aebee2;
+			padding: 0.5rem 0;
+
+			&:disabled {
+				opacity: 0.6;
+				cursor: not-allowed;
+			}
+		}
+
+		.errorMessage {
+			position: absolute;
+			bottom: -1.5rem;
+			left: 0;
+			font-size: 0.85rem;
+			color: #ff4444;
 		}
 
 		svg {

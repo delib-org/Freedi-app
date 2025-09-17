@@ -62,6 +62,7 @@ import {
   updateOptionInMassConsensus,
   addMemberToMassConsensus,
 } from "./fn_massConsensus";
+import { addFeedback } from "./fn_feedback";
 import { updateInAppNotifications } from "./fn_notifications";
 import { getCluster, recoverLastSnapshot } from "./fn_clusters";
 import { checkProfanity } from "./fn_profanityChecker";
@@ -164,6 +165,7 @@ exports.checkForSimilarStatements = wrapHttpFunction(findSimilarStatements);
 exports.massConsensusGetInitialData = wrapHttpFunction(getInitialMCData);
 exports.getQuestionOptions = wrapHttpFunction(getQuestionOptions);
 exports.massConsensusAddMember = wrapHttpFunction(addMassConsensusMember);
+exports.addFeedback = wrapHttpFunction(addFeedback);
 exports.getCluster = wrapHttpFunction(getCluster);
 exports.recoverLastSnapshot = wrapHttpFunction(recoverLastSnapshot);
 exports.checkProfanity = checkProfanity;
