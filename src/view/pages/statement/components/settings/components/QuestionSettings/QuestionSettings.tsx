@@ -342,14 +342,14 @@ const QuestionSettings: FC<StatementSettingsProps> = ({
 														onError={() => setIconError(true)}
 													/>
 													<div className={styles.dropZone__overlay}>
-														<div style={{ width: '30px', height: '30px', color: 'white' }}>📤</div>
+														<div style={{ fontSize: '24px', color: 'white' }}>📤</div>
 														<span>{t('Click or drag to replace')}</span>
 													</div>
 												</div>
 											) : (
 												<div className={styles.dropZone__empty}>
-													<div style={{ fontSize: '40px' }}>📤</div>
-													<p>{t('Drag & drop an image here')}</p>
+													<div style={{ fontSize: '32px' }}>📤</div>
+													<p>{t('Drag & drop image')}</p>
 													<p className={styles.dropZone__or}>{t('or')}</p>
 													<button type="button" className={styles.dropZone__button}>
 														{t('Choose File')}
