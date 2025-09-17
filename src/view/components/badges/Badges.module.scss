@@ -1,3 +1,8 @@
+$badgeSize: 1.5rem;
+$badgeFontSize: 0.625rem;
+$badgeIconSize: 0.875rem;
+$duplicateToMobileScale: 1.5;
+
 .badge {
 	display: inline-flex;
 	align-items: center;
@@ -14,6 +19,13 @@
 	cursor: pointer;
 	overflow: hidden;
 
+	@media screen and (max-width: 440px) {
+		width: calc(#{$badgeSize} * 1.66);
+		height:  calc(#{$badgeSize} * 1.66);
+	} 
+		
+	
+
 	&__icon {
 		width: 0.875rem;
 		height: 0.875rem;
@@ -22,6 +34,11 @@
 		z-index: 2;
 		position: relative;
 		flex-shrink: 0;
+
+		@media screen and (max-width: 440px) {
+			width: calc(#{$badgeIconSize} * 1.66);
+			height: calc(#{$badgeIconSize} * 1.66);
+		}
 	}
 
 	&__text {
@@ -82,20 +99,20 @@
 // Responsive
 @media screen and (max-width: 768px) {
 	.badge {
-		width: 1.25rem;
-		height: 1.25rem;
+		width: calc(#{$badgeSize} * #{$duplicateToMobileScale});
+		height: calc(#{$badgeSize} * #{$duplicateToMobileScale});
 
 		&__icon {
-			width: 0.75rem;
-			height: 0.75rem;
+			width: calc(#{$badgeIconSize} * #{$duplicateToMobileScale});
+			height: calc(#{$badgeIconSize} * #{$duplicateToMobileScale});
 		}
 
 		&__text {
-			font-size: 0.55rem;
+			font-size: calc(#{$badgeFontSize} * #{$duplicateToMobileScale});
 		}
 
 		&--expanded {
-			padding: 0 0.4rem 0 0.2rem;
+			padding: 0 calc(#{$badgeSize} * 0.4rem) 0 calc(#{$badgeSize} * 0.2rem);
 		}
 	}
 }

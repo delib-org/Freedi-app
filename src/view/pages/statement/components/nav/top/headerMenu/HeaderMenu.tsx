@@ -7,7 +7,7 @@ import FollowMe from '@/assets/icons/follow.svg?react';
 import InvitationIcon from '@/assets/icons/invitation.svg?react';
 import ShareIcon from '@/assets/icons/shareIcon.svg?react';
 import LanguagesIcon from '@/assets/icons/languagesIcon.svg?react';
-import SettingsIcon from '@/assets/icons/settingsIcon.svg?react';
+import SettingsIcon from '@/assets/icons/settings.svg?react';
 
 // Components
 import Menu from '@/view/components/menu/Menu';
