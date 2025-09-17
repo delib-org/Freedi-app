@@ -384,5 +384,12 @@
   "Select a step to add": "Selecciona un paso para añadir",
   "All steps have been added to this process": "Se han añadido todos los pasos a este proceso",
   "Initial Question": "Pregunta inicial",
-  "Deliberative Democracy Institute": "Instituto de Democracia Deliberativa"
+  "Deliberative Democracy Institute": "Instituto de Democracia Deliberativa",
+  "Feedback": "Comentarios",
+  "Help us improve": "Ayúdanos a mejorar",
+  "Your feedback helps us make Freedi better for everyone": "Tus comentarios nos ayudan a mejorar Freedi para todos",
+  "Share your thoughts about this process...": "Comparte tus pensamientos sobre este proceso...",
+  "Optional: Leave your email for updates": "Opcional: Deja tu correo para recibir actualizaciones",
+  "your@email.com": "tu@correo.com",
+  "Invalid email format": "Formato de correo inválido"
 }

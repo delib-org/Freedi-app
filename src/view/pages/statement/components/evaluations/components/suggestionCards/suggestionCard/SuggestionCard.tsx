@@ -55,6 +55,9 @@ const SuggestionCard: FC<Props> = ({
 	const enableAIImprovement = parentStatement?.statementSettings?.enableAIImprovement;
 	const showBadges = parentStatement?.evaluationSettings?.anchored?.differentiateBetweenAnchoredAndNot;
 	const isAnchored = statement?.anchored === true;
+	const anchorIcon = parentStatement?.evaluationSettings?.anchored?.anchorIcon;
+	const anchorDescription = parentStatement?.evaluationSettings?.anchored?.anchorDescription;
+	const anchorLabel = parentStatement?.evaluationSettings?.anchored?.anchorLabel;
 
 	// Redux Store
 	const dispatch = useAppDispatch();
@@ -373,7 +376,15 @@ const SuggestionCard: FC<Props> = ({
 					{/* Badge for anchored/community statements */}
 					{showBadges && (
 						<div className={styles['badge-element']}>
-							{isAnchored ? <AnchoredBadge /> : <CommunityBadge />}
+							{isAnchored ? (
+								<AnchoredBadge
+									customIcon={anchorIcon}
+									customDescription={anchorDescription}
+									customLabel={anchorLabel}
+								/>
+							) : (
+								<CommunityBadge />
+							)}
 						</div>
 					)}
 					{hasChildren && (

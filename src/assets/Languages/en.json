@@ -384,5 +384,12 @@
   "Initial Question": "Initial Question",
   "For": "For",
   "You have not created any suggestions yet.": "You have not created any suggestions yet.",
-  "Your suggestions will appear here after you create them.": "Your suggestions will appear here after you create them."
+  "Your suggestions will appear here after you create them.": "Your suggestions will appear here after you create them.",
+  "Feedback": "Feedback",
+  "Help us improve": "Help us improve",
+  "Your feedback helps us make Freedi better for everyone": "Your feedback helps us make Freedi better for everyone",
+  "Share your thoughts about this process...": "Share your thoughts about this process...",
+  "Optional: Leave your email for updates": "Optional: Leave your email for updates",
+  "your@email.com": "your@email.com",
+  "Invalid email format": "Invalid email format"
 }

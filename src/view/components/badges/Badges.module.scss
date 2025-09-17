@@ -1,11 +1,41 @@
+// Badge configuration variables
+$badgeSize: 1.5rem;
+$badgeFontSize: 0.625rem;
+$badgeIconSize: 0.875rem;
+
+// Responsive scaling factors
+$mobileScale-440: 1.66;
+$mobileScale-768: 1.5;
+
+// Breakpoints
+$breakpoint-mobile: 440px;
+$breakpoint-tablet: 768px;
+
+// Mixins for responsive sizing
+@mixin badge-size($width, $height) {
+	width: $width;
+	height: $height;
+}
+
+@mixin icon-size($size) {
+	width: $size;
+	height: $size;
+}
+
+@mixin circular-image {
+	object-fit: cover;
+	border-radius: 50%;
+	flex-shrink: 0;
+}
+
+// Main badge styles
 .badge {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	width: 1.5rem;
-	height: 1.5rem;
+	@include badge-size($badgeSize, $badgeSize);
 	border-radius: 50%;
-	font-size: 0.625rem;
+	font-size: $badgeFontSize;
 	font-weight: 600;
 	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 	backdrop-filter: blur(10px);
@@ -14,16 +44,64 @@
 	cursor: pointer;
 	overflow: hidden;
 
+	// Mobile responsive - 440px
+	@media screen and (max-width: $breakpoint-mobile) {
+		@include badge-size(
+			calc(#{$badgeSize} * #{$mobileScale-440}),
+			calc(#{$badgeSize} * #{$mobileScale-440})
+		);
+	}
+
+	// Tablet responsive - 768px
+	@media screen and (max-width: $breakpoint-tablet) and (min-width: #{$breakpoint-mobile + 1px}) {
+		@include badge-size(
+			calc(#{$badgeSize} * #{$mobileScale-768}),
+			calc(#{$badgeSize} * #{$mobileScale-768})
+		);
+	}
+
+	// Icon styles
 	&__icon {
-		width: 0.875rem;
-		height: 0.875rem;
+		@include icon-size($badgeIconSize);
 		fill: currentColor;
 		transition: transform 0.3s ease;
 		z-index: 2;
 		position: relative;
 		flex-shrink: 0;
+
+			@media screen and (max-width: $breakpoint-mobile) {
+				width: calc(#{$badgeIconSize} * #{$mobileScale-440}) !important;
+				height: calc(#{$badgeIconSize} * #{$mobileScale-440}) !important;
+			}
+
+			@media screen and (max-width: $breakpoint-tablet) and (min-width: #{$breakpoint-mobile + 1px}) {
+				width: calc(#{$badgeIconSize} * #{$mobileScale-768}) !important;
+				height: calc(#{$badgeIconSize} * #{$mobileScale-768}) !important;
+			}
+
+		// Custom image icon styles
+		&--custom {
+			@include icon-size($badgeSize);
+			@include circular-image;
+
+			// Force these styles with !important for specificity
+			width: $badgeSize !important;
+			height: $badgeSize !important;
+			border-radius: 50% !important;
+
+			@media screen and (max-width: $breakpoint-mobile) {
+				width: calc(#{$badgeSize} * #{$mobileScale-440}) !important;
+				height: calc(#{$badgeSize} * #{$mobileScale-440}) !important;
+			}
+
+			@media screen and (max-width: $breakpoint-tablet) and (min-width: #{$breakpoint-mobile + 1px}) {
+				width: calc(#{$badgeSize} * #{$mobileScale-768}) !important;
+				height: calc(#{$badgeSize} * #{$mobileScale-768}) !important;
+			}
+		}
 	}
 
+	// Text styles
 	&__text {
 		position: absolute;
 		left: 1.75rem;
@@ -31,13 +109,17 @@
 		opacity: 0;
 		transform: translateX(-10px);
 		transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-		font-size: 0.625rem;
+		font-size: $badgeFontSize;
 		text-transform: uppercase;
 		letter-spacing: 0.3px;
 		pointer-events: none;
+
+		@media screen and (max-width: $breakpoint-tablet) {
+			font-size: calc(#{$badgeFontSize} * #{$mobileScale-768});
+		}
 	}
 
-	// Expanded state
+	// State modifiers
 	&--expanded {
 		width: auto;
 		padding: 0 0.5rem 0 0.25rem;
@@ -53,20 +135,26 @@
 		.badge__icon {
 			transform: scale(0.9);
 		}
-	}
 
-	// Community badge - purple gradient with glow
-	&--community {
-		background: linear-gradient(135deg, rgba(139, 92, 246, 0.9), rgba(168, 85, 247, 0.9));
-		color: white;
-		box-shadow: 0 2px 6px rgba(139, 92, 246, 0.25);
-
-		&:hover {
-			box-shadow: 0 3px 10px rgba(139, 92, 246, 0.4);
+		@media screen and (max-width: $breakpoint-tablet) {
+			padding: 0 calc(0.5rem * #{$mobileScale-768}) 0 calc(0.25rem * #{$mobileScale-768});
 		}
 	}
 
-	// Anchored badge - subtle blue
+	// Theme variants
+	&--community {
+		background: var(--group, #b893e7);
+		color: var(--group-text, white);
+		box-shadow: 0 2px 8px rgba(184, 147, 231, 0.3);
+		border: 1px solid rgba(255, 255, 255, 0.2);
+
+		&:hover {
+			background: var(--group-contrast, #a080e0);
+			box-shadow: 0 4px 12px rgba(184, 147, 231, 0.5);
+			transform: translateY(-1px);
+		}
+	}
+
 	&--anchored {
 		background: rgba(59, 130, 246, 0.15);
 		color: var(--icon-blue, #3b82f6);
@@ -75,27 +163,6 @@
 		&:hover {
 			background: rgba(59, 130, 246, 0.25);
 			border-color: rgba(59, 130, 246, 0.5);
-		}
-	}
-}
-
-// Responsive
-@media screen and (max-width: 768px) {
-	.badge {
-		width: 1.25rem;
-		height: 1.25rem;
-
-		&__icon {
-			width: 0.75rem;
-			height: 0.75rem;
-		}
-
-		&__text {
-			font-size: 0.55rem;
-		}
-
-		&--expanded {
-			padding: 0 0.4rem 0 0.2rem;
 		}
 	}
 }

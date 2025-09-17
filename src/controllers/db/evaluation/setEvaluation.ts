@@ -81,6 +81,9 @@ export async function setAnchoredEvaluationSettings(
 		anchored: boolean;
 		numberOfAnchoredStatements: number;
 		differentiateBetweenAnchoredAndNot?: boolean;
+		anchorIcon?: string;
+		anchorDescription?: string;
+		anchorLabel?: string;
 	}
 ): Promise<void> {
 	try {
