@@ -10,8 +10,7 @@ import TopSuggestions from '@/view/pages/massConsensus/topSuggestions/TopSuggest
 import VotingSuggestions from '@/view/pages/massConsensus/votingSuggestions/VotingSuggestions';
 import LeaveFeedback from '@/view/pages/massConsensus/leaveFeedback/LeaveFeedback';
 import MassConsensusMySuggestions from '@/view/pages/massConsensus/mySuggestions/MassConsensusMySuggestions';
-// import ThankYou from '@/view/pages/massConsensus/thankYou/ThankYou';
-import ThankYou from '@/view/pages/massConsensus/thankYouTest/ThankYouTest';
+import ThankYou from '@/view/pages/massConsensus/thankYou/ThankYou';
 
 export const massConsensusRoutes: RouteObject[] = [
 	{
