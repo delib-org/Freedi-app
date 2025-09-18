@@ -19,7 +19,6 @@ const TopSuggestions = () => {
 			title: t('Leading suggestion evaluation'),
 			backToApp: false,
 			isIntro: false,
-			setHeader,
 		});
 	}, []);
 

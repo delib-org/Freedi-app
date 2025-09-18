@@ -24,7 +24,6 @@ const RandomSuggestions = () => {
       title: t("General suggestion evaluation"),
       backToApp: false,
       isIntro: false,
-      setHeader,
     });
   }, []);
 

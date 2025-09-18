@@ -35,7 +35,6 @@ const MassConsensusMySuggestions = () => {
 			title: t('My Suggestions'),
 			backToApp: false,
 			isIntro: false,
-			setHeader,
 		});
 	}, []);
 

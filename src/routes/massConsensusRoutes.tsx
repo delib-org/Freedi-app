@@ -1,73 +1,63 @@
+import React from 'react';
 import { RouteObject } from 'react-router';
 import { MassConsensusPageUrls } from 'delib-npm';
-import { lazy } from 'react';
-import withSuspense from './withSuspense';
 
-const MassConsensus = lazy(() => import('@/view/pages/massConsensus/MassConsensus'));
-
-const Introduction = lazy(
-	() => import('@/view/pages/massConsensus/introduction/Introduction')
-);
-const MassConsensusQuestion = lazy(
-	() => import('@/view/pages/massConsensus/massConsesusQuestion/MassConsesusQuestion')
-);
-const RandomSuggestions = lazy(
-	() =>
-		import('@/view/pages/massConsensus/randomSuggestions/RandomSuggestions')
-);
-const TopSuggestions = lazy(
-	() => import('@/view/pages/massConsensus/topSuggestions/TopSuggestions')
-);
-const VotingSuggestions = lazy(
-	() =>
-		import('@/view/pages/massConsensus/votingSuggestions/VotingSuggestions')
-);
-
-const LeaveFeedback = lazy(
-	() => import('@/view/pages/massConsensus/leaveFeedback/LeaveFeedback')
-);
-
-const MassConsensusMySuggestions = lazy(
-	() => import('@/view/pages/massConsensus/mySuggestions/MassConsensusMySuggestions')
-);
+import MassConsensus from '@/view/pages/massConsensus/MassConsensus';
+import Introduction from '@/view/pages/massConsensus/introduction/Introduction';
+import MassConsensusQuestion from '@/view/pages/massConsensus/massConsesusQuestion/MassConsesusQuestion';
+import RandomSuggestions from '@/view/pages/massConsensus/randomSuggestions/RandomSuggestions';
+import TopSuggestions from '@/view/pages/massConsensus/topSuggestions/TopSuggestions';
+import VotingSuggestions from '@/view/pages/massConsensus/votingSuggestions/VotingSuggestions';
+import LeaveFeedback from '@/view/pages/massConsensus/leaveFeedback/LeaveFeedback';
+import MassConsensusMySuggestions from '@/view/pages/massConsensus/mySuggestions/MassConsensusMySuggestions';
+// import ThankYou from '@/view/pages/massConsensus/thankYou/ThankYou';
+import ThankYou from '@/view/pages/massConsensus/thankYouTest/ThankYouTest';
 
 export const massConsensusRoutes: RouteObject[] = [
 	{
 		path: 'mass-consensus/:statementId',
-		element: withSuspense(MassConsensus),
+		element: <MassConsensus />,
 		children: [
 			{
 				index: true,
-				element: withSuspense(Introduction),
+				element: <Introduction />,
 			},
 			{
 				path: MassConsensusPageUrls.introduction,
-				element: withSuspense(Introduction),
+				element: <Introduction />,
 			},
 			{
 				path: MassConsensusPageUrls.question,
-				element: withSuspense(MassConsensusQuestion),
+				element: <MassConsensusQuestion />,
 			},
 			{
 				path: MassConsensusPageUrls.randomSuggestions,
-				element: withSuspense(RandomSuggestions),
+				element: <RandomSuggestions />,
 			},
 			{
 				path: MassConsensusPageUrls.topSuggestions,
-				element: withSuspense(TopSuggestions),
+				element: <TopSuggestions />,
 			},
 			{
 				path: MassConsensusPageUrls.voting,
-				element: withSuspense(VotingSuggestions),
+				element: <VotingSuggestions />,
 			},
 
 			{
 				path: MassConsensusPageUrls.leaveFeedback,
-				element: withSuspense(LeaveFeedback),
+				element: <LeaveFeedback />,
+			},
+			{
+				path: MassConsensusPageUrls.thankYou,
+				element: <ThankYou />,
 			},
 			{
 				path: 'my-suggestions',
-				element: withSuspense(MassConsensusMySuggestions),
+				element: <MassConsensusMySuggestions />,
+			},
+			{
+				path: '*',
+				element: <div>Catch all route - Path not found</div>,
 			},
 		],
 	},

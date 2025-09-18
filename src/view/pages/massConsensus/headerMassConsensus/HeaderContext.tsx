@@ -1,10 +1,13 @@
 import React, { createContext, useContext, useState } from 'react';
 
-interface HeaderContextProps {
+interface HeaderData {
 	title: string | (() => string);
 	backToApp?: boolean;
 	isIntro?: boolean;
-	setHeader: (value: HeaderContextProps) => void;
+}
+
+interface HeaderContextProps extends HeaderData {
+	setHeader: (value: HeaderData) => void;
 }
 
 const HeaderContext = createContext<HeaderContextProps>({
@@ -17,7 +20,7 @@ const HeaderContext = createContext<HeaderContextProps>({
 export const useHeader = () => useContext(HeaderContext);
 
 export const HeaderProvider = ({ children }: { children: React.ReactNode }) => {
-	const [header, setHeader] = useState<Omit<HeaderContextProps, 'setHeader'>>({
+	const [header, setHeader] = useState<HeaderData>({
 		title: '',
 		backToApp: false,
 		isIntro: false,

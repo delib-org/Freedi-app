@@ -70,6 +70,32 @@ interface PWAWrapperProps {
 const PWAWrapper: React.FC<PWAWrapperProps> = ({ children }) => {
 	const [showNotificationPrompt, setShowNotificationPrompt] = useState(false);
 
+	// Check if we're in the MassConsensus route using window.location
+	const checkIfInMassConsensus = () => {
+		return window.location.pathname.includes('/mass-consensus');
+	};
+
+	// Hide notification prompt if we navigate to MassConsensus
+	useEffect(() => {
+		const handleLocationChange = () => {
+			if (checkIfInMassConsensus() && showNotificationPrompt) {
+				setShowNotificationPrompt(false);
+			}
+		};
+
+		// Listen for URL changes
+		window.addEventListener('popstate', handleLocationChange);
+
+		// Also check on initial render and when showNotificationPrompt changes
+		if (checkIfInMassConsensus() && showNotificationPrompt) {
+			setShowNotificationPrompt(false);
+		}
+
+		return () => {
+			window.removeEventListener('popstate', handleLocationChange);
+		};
+	}, [showNotificationPrompt]);
+
 	useEffect(() => {
 		// Initialize PWA wrapper
 		
@@ -152,7 +178,7 @@ const PWAWrapper: React.FC<PWAWrapperProps> = ({ children }) => {
 						});
 					}
 				},
-				onRegisteredSW(swUrl, registration) {
+				onRegisteredSW(_swUrl, registration) {
 					// Service Worker registered
 
 					// Check for updates periodically
@@ -164,11 +190,14 @@ const PWAWrapper: React.FC<PWAWrapperProps> = ({ children }) => {
 						});
 					}, 4 * 60 * 60 * 1000); // Check every 4 hours to reduce update frequency
 
-					// Check if we should show notification prompt
-					if ('Notification' in window && Notification.permission === 'default') {
+					// Check if we should show notification prompt (but not in MassConsensus)
+					if ('Notification' in window && Notification.permission === 'default' && !checkIfInMassConsensus()) {
 						// Wait a bit before showing the notification prompt
 						setTimeout(() => {
-							setShowNotificationPrompt(true);
+							// Double-check we're not in MassConsensus when the timer fires
+							if (!checkIfInMassConsensus()) {
+								setShowNotificationPrompt(true);
+							}
 						}, 5000);
 					}
 
@@ -209,7 +238,8 @@ const PWAWrapper: React.FC<PWAWrapperProps> = ({ children }) => {
 			{children}
 
 			{/* Auto-update mode: no toast needed */}
-			{showNotificationPrompt && (
+			{/* Hide notification prompt in MassConsensus routes */}
+			{showNotificationPrompt && !checkIfInMassConsensus() && (
 				<NotificationPrompt onClose={() => setShowNotificationPrompt(false)} />
 			)}
 		</>
