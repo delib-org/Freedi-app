@@ -33,6 +33,14 @@
 		}
 	}
 
+	&__anonymousIndicator {
+		margin-top: 0.5rem;
+		color: var(--text-secondary);
+		font-style: italic;
+		text-align: center;
+		font-size: 0.9rem;
+	}
+
 	&__question {
 		text-align: center;
 		margin-bottom: 2rem;
@@ -108,46 +116,57 @@
 	&--user {
 		background: linear-gradient(135deg, #fff 0%, #f0f8ff 100%);
 		border: 2px solid rgba(71, 180, 239, 0.3);
-
-		.resultCard__userBadge {
-			position: absolute;
-			top: 1rem;
-			right: 1rem;
-			display: inline-flex;
-			align-items: center;
-			padding: 0.25rem 0.75rem;
-			background: linear-gradient(135deg, #47b4ef, #6db0f9);
-			color: white;
-			border-radius: 1rem;
-			font-size: 0.75rem;
-			font-weight: 600;
-			box-shadow: 0 2px 4px rgba(71, 180, 239, 0.3);
-		}
 	}
 
 	&__content {
 		padding: 1.25rem;
 	}
 
+	// Badge row for user suggestions
+	&__badgeRow {
+		display: flex;
+		align-items: center;
+		margin-bottom: 0.75rem;
+	}
+
+	// User badge styling
+	&__userBadge {
+		display: inline-flex;
+		align-items: center;
+		padding: 0.25rem 0.75rem;
+		background: linear-gradient(135deg, #47b4ef, #6db0f9);
+		color: white;
+		border-radius: 1rem;
+		font-size: 0.75rem;
+		font-weight: 600;
+		box-shadow: 0 2px 4px rgba(71, 180, 239, 0.3);
+		transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+		&:hover {
+			transform: translateY(-1px);
+			box-shadow: 0 3px 6px rgba(71, 180, 239, 0.4);
+		}
+	}
+
 	&__text {
-		padding-right: 3rem; // Space for user badge if present
+		// No extra padding needed since badge is in its own row
 	}
 
 	&__title {
 		font-size: 1rem;
-		font-weight: 600;
+		font-weight: 400;
 		color: var(--text-primary);
-		margin: 0 0 0.5rem 0;
+		margin: 0 0 0.25rem 0;
 		line-height: 1.4;
 	}
 
 	&__description {
-		font-size: 0.9rem;
+		font-size: 0.875rem;
 		color: var(--text-secondary);
 		margin: 0;
-		line-height: 1.5;
+		line-height: 1.4;
 		display: -webkit-box;
-		-webkit-line-clamp: 2;
+		-webkit-line-clamp: 3;
 		-webkit-box-orient: vertical;
 		overflow: hidden;
 		text-overflow: ellipsis;
@@ -166,16 +185,9 @@
 		border-left: 1px solid rgba(0, 0, 0, 0.08);
 		border-right: 5px solid var(--range-conflict-60); // Will be overridden by inline style
 
-		&--user {
-			.resultCard__userBadge {
-				right: auto;
-				left: 1rem;
-			}
-		}
-
-		&__text {
-			padding-right: 0;
-			padding-left: 3rem;
+		// Badge row naturally aligns correctly in RTL with flexbox
+		&__badgeRow {
+			// No special RTL handling needed - flexbox handles it
 		}
 	}
 }
@@ -228,11 +240,13 @@
 			padding: 0 1rem 0.75rem;
 		}
 
-		&--user {
-			.resultCard__userBadge {
-				font-size: 0.7rem;
-				padding: 0.2rem 0.5rem;
-			}
+		&__userBadge {
+			font-size: 0.7rem;
+			padding: 0.2rem 0.5rem;
+		}
+
+		&__badgeRow {
+			margin-bottom: 0.5rem;
 		}
 	}
 }

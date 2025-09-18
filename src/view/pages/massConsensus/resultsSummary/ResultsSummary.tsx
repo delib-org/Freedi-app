@@ -9,6 +9,7 @@ import Loader from '@/view/components/loaders/Loader';
 import { Statement } from 'delib-npm';
 import styles from './ResultsSummary.module.scss';
 import { calculateAgreement, getAgreementColor } from '@/utils/consensusColors';
+import { useAnonymousAuth } from './hooks/useAnonymousAuth';
 
 // Component to render a single suggestion card with results
 const ResultCard: FC<{
@@ -44,12 +45,14 @@ const ResultCard: FC<{
 			className={cardClasses}
 			style={cardStyle}
 		>
-			{isUserStatement && (
-				<div className={styles.resultCard__userBadge}>
-					{t('Your suggestion')}
-				</div>
-			)}
 			<div className={styles.resultCard__content}>
+				{isUserStatement && (
+					<div className={styles.resultCard__badgeRow}>
+						<span className={styles.resultCard__userBadge}>
+							{t('Your suggestion')}
+						</span>
+					</div>
+				)}
 				<div className={styles.resultCard__text}>
 					<h3 className={styles.resultCard__title}>{statement.statement}</h3>
 					{statement.description && (
@@ -70,6 +73,7 @@ const ResultCard: FC<{
 const ResultsSummary: FC = () => {
 	const { t, dir } = useUserConfig();
 	const { setHeader } = useHeader();
+	const { isAnonymous, ensureAuthentication } = useAnonymousAuth();
 	const {
 		statement,
 		sortedStatements,
@@ -93,6 +97,13 @@ const ResultsSummary: FC = () => {
 		[userStatements]
 	);
 
+	// Handle navigation with anonymous auth check
+	const handleNavigateToThankYou = async () => {
+		// Ensure authentication before navigation
+		await ensureAuthentication();
+		navigateToThankYou();
+	};
+
 	return (
 		<div className={styles.resultsSummary} style={{ direction: dir }}>
 			<div className={styles.resultsSummary__header}>
@@ -101,6 +112,11 @@ const ResultsSummary: FC = () => {
 					<div className={styles.resultsSummary__participants}>
 						<span className={styles.participantCount}>{totalParticipants}</span>
 						<span className={styles.participantLabel}>{t('Voters')}</span>
+					</div>
+				)}
+				{isAnonymous && (
+					<div className={styles.resultsSummary__anonymousIndicator}>
+						<small>{t('Viewing as guest')}</small>
 					</div>
 				)}
 			</div>
@@ -138,7 +154,7 @@ const ResultsSummary: FC = () => {
 			<FooterMassConsensus
 				isNextActive={true}
 				canSkip={false}
-				onNext={navigateToThankYou}
+				onNext={handleNavigateToThankYou}
 				blockNavigation={false}
 			/>
 		</div>
