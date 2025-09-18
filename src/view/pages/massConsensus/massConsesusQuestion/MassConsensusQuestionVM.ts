@@ -17,7 +17,6 @@ const useMassConsensusQuestion = () => {
 			title: t('offer a suggestion'),
 			backToApp: false,
 			isIntro: false,
-			setHeader,
 		});
 	}, []);
 

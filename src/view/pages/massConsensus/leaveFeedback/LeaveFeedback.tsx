@@ -31,7 +31,6 @@ function LeaveFeedback() {
 			title: t('Feedback'),
 			backToApp: false,
 			isIntro: false,
-			setHeader,
 		});
 	}, []);
 
