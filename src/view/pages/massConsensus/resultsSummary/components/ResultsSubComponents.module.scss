@@ -53,42 +53,97 @@
 			border-radius: 1rem;
 			min-width: 40px;
 			text-align: center;
+			opacity: 1;
+			position: relative;
+			background-color: transparent;
+		}
+
+		&__number {
+			position: relative;
+			z-index: 1;
+			opacity: 1;
 		}
 
 		&__iconValue {
 			display: flex;
 			align-items: center;
-			gap: 0.25rem;
-			padding: 0.25rem 0.5rem;
-			border-radius: 1rem;
+			justify-content: center;
+			gap: 0.4rem;
+			padding: 0.25rem 0.75rem 0.25rem 0.25rem;
+			border-radius: 2rem;
+			min-width: 70px;
+			height: 32px;
+			position: relative;
+			isolation: isolate;
+			background-color: transparent;
+			overflow: hidden;
 		}
 
 		&__icon {
 			width: 16px;
 			height: 16px;
+			display: block;
 		}
 
-		// Participants badge - Yellow circle
+		&__iconContainer {
+			position: relative;
+			z-index: 2;
+			width: 24px;
+			height: 24px;
+			border-radius: 50%;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			flex-shrink: 0;
+			box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+			border: 1px solid rgba(0, 0, 0, 0.1);
+		}
+
+		&__background {
+			will-change: opacity;
+			transition: opacity 0.3s ease;
+		}
+
+		// Participants badge - Option color circle
 		&--participants {
 			.badge__value {
-				background-color: #FFC107;
-				color: #000;
+				color: var(--option-text);
 			}
 		}
 
-		// Support badge - Blue circle
+		// Support badge - approve color background with approve face circle
 		&--support {
-			.badge__iconValue {
-				background-color: #2196F3;
-				color: white;
+			.badge__value {
+				position: relative;
+				z-index: 2;
+				color: var(--text-primary);
+				font-weight: 600;
+				font-size: 0.875rem;
+			}
+			.badge__iconContainer {
+				background-color: var(--approve);
+			}
+			.badge__icon {
+				// Make the icon white
+				filter: brightness(0) invert(1);
 			}
 		}
 
-		// Against badge - Red circle
+		// Against badge - reject color background with reject face circle
 		&--against {
-			.badge__iconValue {
-				background-color: #F44336;
-				color: white;
+			.badge__value {
+				position: relative;
+				z-index: 2;
+				color: var(--text-primary);
+				font-weight: 600;
+				font-size: 0.875rem;
+			}
+			.badge__iconContainer {
+				background-color: var(--reject);
+			}
+			.badge__icon {
+				// Make the icon white
+				filter: brightness(0) invert(1);
 			}
 		}
 	}
@@ -127,15 +182,25 @@
 				font-size: 0.7rem;
 			}
 
-			&__value,
-			&__iconValue {
+			&__value {
 				font-size: 0.75rem;
 				padding: 0.2rem 0.4rem;
+			}
+
+			&__iconValue {
+				padding: 0.15rem 0.5rem 0.15rem 0.15rem;
+				height: 28px;
+				min-width: 60px;
 			}
 
 			&__icon {
 				width: 14px;
 				height: 14px;
+			}
+
+			&__iconContainer {
+				width: 20px;
+				height: 20px;
 			}
 		}
 	}

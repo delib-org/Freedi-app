@@ -14,7 +14,8 @@ import { calculateAgreement, getAgreementColor } from '@/utils/consensusColors';
 const ResultCard: FC<{
 	statement: Statement;
 	isUserStatement: boolean;
-}> = ({ statement, isUserStatement }) => {
+	totalParticipants: number;
+}> = ({ statement, isUserStatement, totalParticipants }) => {
 	const { t, dir } = useUserConfig();
 
 	// Calculate agreement score using the same logic as Triangle
@@ -59,6 +60,7 @@ const ResultCard: FC<{
 			<div className={styles.resultCard__metrics}>
 				<ResultsSubComponents
 					statement={statement}
+					totalParticipants={totalParticipants}
 				/>
 			</div>
 		</div>
@@ -98,7 +100,7 @@ const ResultsSummary: FC = () => {
 				{totalParticipants > 0 && (
 					<div className={styles.resultsSummary__participants}>
 						<span className={styles.participantCount}>{totalParticipants}</span>
-						<span className={styles.participantLabel}>{t('Participants')}</span>
+						<span className={styles.participantLabel}>{t('Voters')}</span>
 					</div>
 				)}
 			</div>
@@ -126,6 +128,7 @@ const ResultsSummary: FC = () => {
 								key={subStatement.statementId}
 								statement={subStatement}
 								isUserStatement={userStatementIds.has(subStatement.statementId)}
+								totalParticipants={totalParticipants}
 							/>
 						))}
 					</div>
