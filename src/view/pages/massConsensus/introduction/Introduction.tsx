@@ -46,7 +46,6 @@ const Introduction = () => {
 			title: t('description'),
 			backToApp: false,
 			isIntro: true,
-			setHeader,
 		});
 	}, []);
 	const statementId = statement?.statementId;
