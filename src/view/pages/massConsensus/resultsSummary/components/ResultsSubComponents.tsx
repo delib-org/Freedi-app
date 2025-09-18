@@ -1,0 +1,64 @@
+import React, { FC } from 'react';
+import { Statement } from 'delib-npm';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import styles from './ResultsSubComponents.module.scss';
+import evaluation1 from "@/assets/icons/evaluation/evaluation1.svg";
+import evaluation5 from "@/assets/icons/evaluation/evaluation5.svg";
+
+interface Props {
+	statement: Statement;
+}
+
+const ResultsSubComponents: FC<Props> = ({ statement }) => {
+	const { t } = useUserConfig();
+
+	const participants = statement.evaluation?.numberOfEvaluators || 0;
+	const supportCount = statement.evaluation?.sumPro || 0;
+	const againstCount = Math.abs(statement.evaluation?.sumCon || 0);
+
+	// Calculate percentage support (0-100 scale)
+	const supportPercentage = participants > 0
+		? Math.round((supportCount / participants) * 100)
+		: 0;
+
+	return (
+		<div className={styles.resultsSubComponents}>
+			<div className={styles.metrics}>
+				{/* Left side - Participation rate */}
+				<div className={styles.participationRate}>
+					<span className={styles.label}>{supportPercentage}%</span>
+					<span className={styles.sublabel}>{t('Consensus score')}</span>
+				</div>
+
+				{/* Right side - Metrics badges */}
+				<div className={styles.badges}>
+					{/* Participants badge - Yellow */}
+					<div className={`${styles.badge} ${styles['badge--participants']}`}>
+						<span className={styles.badge__label}>{t('Voted')}</span>
+						<span className={styles.badge__value}>{participants}</span>
+					</div>
+
+					{/* Support badge - Blue with icon */}
+					<div className={`${styles.badge} ${styles['badge--support']}`}>
+						<span className={styles.badge__label}>{t('Support')}</span>
+						<div className={styles.badge__iconValue}>
+							<img src={evaluation1} alt="support" className={styles.badge__icon} />
+							<span className={styles.badge__value}>{supportCount.toFixed(1)}</span>
+						</div>
+					</div>
+
+					{/* Against badge - Red with icon */}
+					<div className={`${styles.badge} ${styles['badge--against']}`}>
+						<span className={styles.badge__label}>{t('Against')}</span>
+						<div className={styles.badge__iconValue}>
+							<img src={evaluation5} alt="against" className={styles.badge__icon} />
+							<span className={styles.badge__value}>{againstCount.toFixed(1)}</span>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	);
+};
+
+export default ResultsSubComponents;

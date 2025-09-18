@@ -1,0 +1,165 @@
+.resultsSubComponents {
+	width: 100%;
+	padding: 0.5rem 0;
+
+	.metrics {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		gap: 1rem;
+	}
+
+	.participationRate {
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+		min-width: 80px;
+
+		.label {
+			font-size: 1.25rem;
+			font-weight: 700;
+			color: var(--text-primary);
+			line-height: 1;
+		}
+
+		.sublabel {
+			font-size: 0.75rem;
+			color: var(--text-secondary);
+			margin-top: 0.25rem;
+		}
+	}
+
+	.badges {
+		display: flex;
+		gap: 0.75rem;
+		align-items: center;
+	}
+
+	.badge {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		font-size: 0.875rem;
+		font-weight: 500;
+
+		&__label {
+			color: var(--text-secondary);
+			font-size: 0.75rem;
+		}
+
+		&__value {
+			font-weight: 600;
+			padding: 0.25rem 0.5rem;
+			border-radius: 1rem;
+			min-width: 40px;
+			text-align: center;
+		}
+
+		&__iconValue {
+			display: flex;
+			align-items: center;
+			gap: 0.25rem;
+			padding: 0.25rem 0.5rem;
+			border-radius: 1rem;
+		}
+
+		&__icon {
+			width: 16px;
+			height: 16px;
+		}
+
+		// Participants badge - Yellow circle
+		&--participants {
+			.badge__value {
+				background-color: #FFC107;
+				color: #000;
+			}
+		}
+
+		// Support badge - Blue circle
+		&--support {
+			.badge__iconValue {
+				background-color: #2196F3;
+				color: white;
+			}
+		}
+
+		// Against badge - Red circle
+		&--against {
+			.badge__iconValue {
+				background-color: #F44336;
+				color: white;
+			}
+		}
+	}
+}
+
+// Mobile responsive
+@media (max-width: 768px) {
+	.resultsSubComponents {
+		.metrics {
+			flex-wrap: wrap;
+			gap: 0.5rem;
+		}
+
+		.participationRate {
+			width: 100%;
+			margin-bottom: 0.5rem;
+
+			.label {
+				font-size: 1.1rem;
+			}
+		}
+
+		.badges {
+			width: 100%;
+			justify-content: space-between;
+			gap: 0.5rem;
+		}
+
+		.badge {
+			flex-direction: column;
+			align-items: center;
+			gap: 0.25rem;
+			flex: 1;
+
+			&__label {
+				font-size: 0.7rem;
+			}
+
+			&__value,
+			&__iconValue {
+				font-size: 0.75rem;
+				padding: 0.2rem 0.4rem;
+			}
+
+			&__icon {
+				width: 14px;
+				height: 14px;
+			}
+		}
+	}
+}
+
+// RTL Support
+[dir='rtl'] {
+	.resultsSubComponents {
+		.metrics {
+			flex-direction: row-reverse;
+		}
+
+		.participationRate {
+			align-items: flex-end;
+		}
+
+		.badges {
+			flex-direction: row-reverse;
+		}
+
+		.badge {
+			&__iconValue {
+				flex-direction: row-reverse;
+			}
+		}
+	}
+}
