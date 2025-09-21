@@ -13,6 +13,15 @@
       ]
     },
     {
+        "collectionGroup": "statements",
+        "queryScope": "COLLECTION",
+        "fields": [
+          { "fieldPath": "parentId", "order": "ASCENDING" },
+          { "fieldPath": "statementType", "order": "ASCENDING" },
+          { "fieldPath": "evaluation.averageEvaluation", "order": "DESCENDING" }
+        ]
+    },
+    {
       "collectionGroup": "consultations",
       "queryScope": "COLLECTION",
       "fields": [{
