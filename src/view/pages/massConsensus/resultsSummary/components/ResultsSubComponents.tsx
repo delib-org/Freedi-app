@@ -17,9 +17,9 @@ const ResultsSubComponents: FC<Props> = ({ statement, totalParticipants }) => {
 	const supportCount = statement.evaluation?.sumPro || 0;
 	const againstCount = Math.abs(statement.evaluation?.sumCon || 0);
 
-	// Calculate percentage support (0-100 scale)
-	const supportPercentage = participants > 0
-		? Math.round((supportCount / participants) * 100)
+	// Calculate agreement score using (pro-con)/n formula
+	const agreementScore = participants > 0
+		? Math.round(((supportCount - againstCount) / participants) * 100)
 		: 0;
 
 	// Calculate opacity based on participation rate (0.3 minimum for visibility, 1.0 maximum)
@@ -44,7 +44,15 @@ const ResultsSubComponents: FC<Props> = ({ statement, totalParticipants }) => {
 			<div className={styles.metrics}>
 				{/* Left side - Participation rate */}
 				<div className={styles.participationRate}>
-					<span className={styles.label}>{supportPercentage}%</span>
+					<span
+						className={styles.label}
+						style={{
+							direction: 'ltr',
+							color: agreementScore < 0 ? 'var(--reject)' : 'inherit'
+						}}
+					>
+						{agreementScore}%
+					</span>
 					<span className={styles.sublabel}>{t('Consensus score')}</span>
 				</div>
 
