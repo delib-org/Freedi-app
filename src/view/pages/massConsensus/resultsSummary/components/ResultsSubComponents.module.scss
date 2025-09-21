@@ -228,3 +228,42 @@
 		}
 	}
 }
+
+// Dark Mode Support
+@media (prefers-color-scheme: dark) {
+	.resultsSubComponents {
+		.participationRate {
+			.label {
+				color: #ffffff; // White text for primary labels
+			}
+
+			.sublabel {
+				color: #b0b0b0; // Light gray for secondary labels
+			}
+		}
+
+		.badge {
+			&__label {
+				color: #a0a0a0; // Light gray for badge labels
+			}
+
+			&--participants {
+				.badge__value {
+					color: var(--option-text); // Keep original color for this badge
+				}
+			}
+
+			&--support {
+				.badge__value {
+					color: #ffffff; // White text for values
+				}
+			}
+
+			&--against {
+				.badge__value {
+					color: #ffffff; // White text for values
+				}
+			}
+		}
+	}
+}

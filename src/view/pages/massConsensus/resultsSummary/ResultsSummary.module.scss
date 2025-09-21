@@ -257,6 +257,16 @@
 	.resultsSummary {
 		background-color: #1a1a1a;
 
+		&__participants {
+			.participantCount {
+				color: #ffffff;
+			}
+
+			.participantLabel {
+				color: #b0b0b0;
+			}
+		}
+
 		&__question {
 			background-color: #2a2a2a;
 
@@ -276,11 +286,15 @@
 		}
 
 		&__title {
-			color: var(--text-title);
+			color: #ffffff; // Changed from var(--text-title) to white for visibility
 		}
 
 		&__description {
-			color: var(--text-body);
+			color: #d0d0d0; // Changed from var(--text-body) to light gray for visibility
+		}
+
+		&__metrics {
+			border-top: 1px solid rgba(255, 255, 255, 0.1);
 		}
 	}
 }
