@@ -61,6 +61,36 @@ export class MaintenanceController {
 	}
 
 	/**
+	 * Update average evaluation for a specific statement and its children
+	 */
+	async updateAverageEvaluation(req: Request, res: Response): Promise<void> {
+		try {
+			const statementId = req.query.statementId as string;
+
+			if (!statementId) {
+				res.status(400).send({
+					error: 'statementId is required',
+					ok: false
+				});
+				return;
+			}
+
+			// Import the migration function
+			const { updateStatementAndChildrenAverageEvaluation } = await import('../migrations/updateStatementAverageEvaluation');
+
+			const result = await updateStatementAndChildrenAverageEvaluation(statementId);
+
+			res.send({
+				ok: true,
+				statementId,
+				...result
+			});
+		} catch (error) {
+			this.handleError(res, error);
+		}
+	}
+
+	/**
 	 * Handle errors consistently
 	 */
 	private handleError(res: Response, error: unknown): void {

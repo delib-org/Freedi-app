@@ -249,6 +249,7 @@ function calculateEvaluation(statement: Statement, proConDiff: CalcDiff, evaluat
 		numberOfEvaluators: statement.totalEvaluators || 1,
 		sumPro: proConDiff.proDiff,
 		sumCon: proConDiff.conDiff,
+		averageEvaluation: 0,
 	};
 
 	if (statement.evaluation) {
@@ -257,6 +258,11 @@ function calculateEvaluation(statement: Statement, proConDiff: CalcDiff, evaluat
 		evaluation.sumPro = (evaluation.sumPro || 0) + proConDiff.proDiff;
 		evaluation.sumCon = (evaluation.sumCon || 0) + proConDiff.conDiff;
 	}
+
+	// Calculate average evaluation
+	evaluation.averageEvaluation = evaluation.numberOfEvaluators > 0
+		? evaluation.sumEvaluations / evaluation.numberOfEvaluators
+		: 0;
 
 	const agreement = calcAgreement(evaluation.sumEvaluations, evaluation.numberOfEvaluators);
 	evaluation.agreement = agreement;

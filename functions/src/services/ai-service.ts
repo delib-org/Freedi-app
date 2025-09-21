@@ -43,7 +43,7 @@ async function getGenerativeAIModel(): Promise<GenerativeModel> {
   logger.info("Initializing new GenerativeModel instance...");
 
   try {
-    const modelName = process.env.AI_MODEL_NAME || "gemini-2.5-flash";
+    const modelName = process.env.AI_MODEL_NAME || "gemini-1.5-flash";
     logger.info(`Using AI model: ${modelName}`);
 
     const genAI = getGenAI();
@@ -52,7 +52,7 @@ async function getGenerativeAIModel(): Promise<GenerativeModel> {
       model: modelName,
       generationConfig: {
         responseMimeType: "application/json",
-        temperature: 0.7,
+        temperature: 0.3, // Lower temperature for faster, more deterministic responses
       },
       safetySettings: [
         {
@@ -220,14 +220,10 @@ export async function findSimilarStatementsAI(
   question: string,
   numberOfSimilarStatements: number = 6
 ): Promise<string[]> {
-  const prompt = `
-    Task: Find up to ${numberOfSimilarStatements} sentences in the following strings: ${JSON.stringify(allStatements)} that are similar to the user input '${userInput}'.
-    The user input can be either in English or in Hebrew. Look for similar strings to the user input in both languages.
-    Consider a match if the sentence shares at least 60% similarity in meaning. The user input here is the question the user was asked: '${question}'.
-
-    Return ONLY as JSON:
-    { "strings": ["similar_string_1", "similar_string_2", ...] }
-  `;
+  // Only optimize the prompt format and processing, not the scope
+  const prompt = `Find up to ${numberOfSimilarStatements} similar sentences to "${userInput}" from: ${JSON.stringify(allStatements)}
+Consider 60%+ meaning similarity. Context: "${question}"
+Return JSON: {"strings": ["match1", "match2"...]}`;
 
   return getAIResponseAsList(prompt);
 }

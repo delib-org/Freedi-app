@@ -1,0 +1,230 @@
+.resultsSubComponents {
+	width: 100%;
+	padding: 0.5rem 0;
+
+	.metrics {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		gap: 1rem;
+	}
+
+	.participationRate {
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+		min-width: 80px;
+
+		.label {
+			font-size: 1.25rem;
+			font-weight: 700;
+			color: var(--text-primary);
+			line-height: 1;
+		}
+
+		.sublabel {
+			font-size: 0.75rem;
+			color: var(--text-secondary);
+			margin-top: 0.25rem;
+		}
+	}
+
+	.badges {
+		display: flex;
+		gap: 0.75rem;
+		align-items: center;
+	}
+
+	.badge {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		font-size: 0.875rem;
+		font-weight: 500;
+
+		&__label {
+			color: var(--text-secondary);
+			font-size: 0.75rem;
+		}
+
+		&__value {
+			font-weight: 600;
+			padding: 0.25rem 0.5rem;
+			border-radius: 1rem;
+			min-width: 40px;
+			text-align: center;
+			opacity: 1;
+			position: relative;
+			background-color: transparent;
+		}
+
+		&__number {
+			position: relative;
+			z-index: 1;
+			opacity: 1;
+		}
+
+		&__iconValue {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			gap: 0.4rem;
+			padding: 0.25rem 0.75rem 0.25rem 0.25rem;
+			border-radius: 2rem;
+			min-width: 70px;
+			height: 32px;
+			position: relative;
+			isolation: isolate;
+			background-color: transparent;
+			overflow: hidden;
+		}
+
+		&__icon {
+			width: 16px;
+			height: 16px;
+			display: block;
+		}
+
+		&__iconContainer {
+			position: relative;
+			z-index: 2;
+			width: 24px;
+			height: 24px;
+			border-radius: 50%;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			flex-shrink: 0;
+			box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+			border: 1px solid rgba(0, 0, 0, 0.1);
+		}
+
+		&__background {
+			will-change: opacity;
+			transition: opacity 0.3s ease;
+		}
+
+		// Participants badge - Option color circle
+		&--participants {
+			.badge__value {
+				color: var(--option-text);
+			}
+		}
+
+		// Support badge - approve color background with approve face circle
+		&--support {
+			.badge__value {
+				position: relative;
+				z-index: 2;
+				color: var(--text-primary);
+				font-weight: 600;
+				font-size: 0.875rem;
+			}
+			.badge__iconContainer {
+				background-color: var(--approve);
+			}
+			.badge__icon {
+				// Make the icon white
+				filter: brightness(0) invert(1);
+			}
+		}
+
+		// Against badge - reject color background with reject face circle
+		&--against {
+			.badge__value {
+				position: relative;
+				z-index: 2;
+				color: var(--text-primary);
+				font-weight: 600;
+				font-size: 0.875rem;
+			}
+			.badge__iconContainer {
+				background-color: var(--reject);
+			}
+			.badge__icon {
+				// Make the icon white
+				filter: brightness(0) invert(1);
+			}
+		}
+	}
+}
+
+// Mobile responsive
+@media (max-width: 768px) {
+	.resultsSubComponents {
+		.metrics {
+			flex-wrap: wrap;
+			gap: 0.5rem;
+		}
+
+		.participationRate {
+			width: 100%;
+			margin-bottom: 0.5rem;
+
+			.label {
+				font-size: 1.1rem;
+			}
+		}
+
+		.badges {
+			width: 100%;
+			justify-content: space-between;
+			gap: 0.5rem;
+		}
+
+		.badge {
+			flex-direction: column;
+			align-items: center;
+			gap: 0.25rem;
+			flex: 1;
+
+			&__label {
+				font-size: 0.7rem;
+			}
+
+			&__value {
+				font-size: 0.75rem;
+				padding: 0.2rem 0.4rem;
+			}
+
+			&__iconValue {
+				padding: 0.15rem 0.5rem 0.15rem 0.15rem;
+				height: 28px;
+				min-width: 60px;
+			}
+
+			&__icon {
+				width: 14px;
+				height: 14px;
+			}
+
+			&__iconContainer {
+				width: 20px;
+				height: 20px;
+			}
+		}
+	}
+}
+
+// RTL Support
+[dir='rtl'] {
+	.resultsSubComponents {
+		.metrics {
+			flex-direction: row-reverse;
+		}
+
+		.participationRate {
+			align-items: flex-end;
+		}
+
+		.badges {
+			flex-direction: row-reverse;
+		}
+
+		.badge {
+			&__iconValue {
+				flex-direction: row-reverse;
+			}
+		}
+	}
+}

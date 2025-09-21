@@ -11,6 +11,7 @@ import VotingSuggestions from '@/view/pages/massConsensus/votingSuggestions/Voti
 import LeaveFeedback from '@/view/pages/massConsensus/leaveFeedback/LeaveFeedback';
 import MassConsensusMySuggestions from '@/view/pages/massConsensus/mySuggestions/MassConsensusMySuggestions';
 import ThankYou from '@/view/pages/massConsensus/thankYou/ThankYou';
+import ResultsSummary from '@/view/pages/massConsensus/resultsSummary/ResultsSummary';
 
 export const massConsensusRoutes: RouteObject[] = [
 	{
@@ -41,7 +42,10 @@ export const massConsensusRoutes: RouteObject[] = [
 				path: MassConsensusPageUrls.voting,
 				element: <VotingSuggestions />,
 			},
-
+			{
+				path: MassConsensusPageUrls.results,
+				element: <ResultsSummary />,
+			},
 			{
 				path: MassConsensusPageUrls.leaveFeedback,
 				element: <LeaveFeedback />,

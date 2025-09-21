@@ -24,6 +24,7 @@ const ALL_STEPS: MassConsensusPageUrls[] = [
 	MassConsensusPageUrls.topSuggestions,
 	MassConsensusPageUrls.mySuggestions,
 	MassConsensusPageUrls.voting,
+	MassConsensusPageUrls.results,
 	MassConsensusPageUrls.leaveFeedback,
 	MassConsensusPageUrls.thankYou,
 ];
@@ -37,6 +38,7 @@ const STEP_DISPLAY_NAMES: Record<MassConsensusPageUrls, string> = {
 	[MassConsensusPageUrls.topSuggestions]: 'Top Suggestions',
 	[MassConsensusPageUrls.mySuggestions]: 'My Suggestions',
 	[MassConsensusPageUrls.voting]: 'Voting',
+	[MassConsensusPageUrls.results]: 'Results Summary',
 	[MassConsensusPageUrls.leaveFeedback]: 'Leave Feedback',
 	[MassConsensusPageUrls.thankYou]: 'Thank You',
 	[MassConsensusPageUrls.initialQuestion]: 'Initial Question',
