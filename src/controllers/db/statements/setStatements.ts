@@ -375,6 +375,7 @@ export function createStatement({
 				numberOfEvaluators: 0,
 				sumEvaluations: 0,
 				agreement: 0,
+				averageEvaluation: 0,
 				evaluationRandomNumber: Math.random(),
 				viewed: 0,
 			},
