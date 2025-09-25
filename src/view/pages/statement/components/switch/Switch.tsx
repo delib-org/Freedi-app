@@ -47,9 +47,6 @@ const Switch = () => {
     }
   }
 
-  console.log("Switch statement", statement.statement);
-  console.log("hasStages", hasStages);
-
   return (
     <main className="page__main">
       {isAdmin ? (
