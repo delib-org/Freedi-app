@@ -47,9 +47,15 @@ async function getTopOptionsDB(statement: Statement): Promise<Statement[]> {
 		);
 		const topOptionsSnap = await getDocs(q);
 
-		const topOptions = topOptionsSnap.docs.map((doc) =>
-			parse(StatementSchema, doc.data())
-		);
+		const topOptions = topOptionsSnap.docs.map((doc) => {
+			const data = doc.data();
+			// Ensure averageEvaluation exists if evaluation is present
+			if (data.evaluation && !('averageEvaluation' in data.evaluation)) {
+				data.evaluation.averageEvaluation = data.evaluation.sumEvaluations / Math.max(data.evaluation.numberOfEvaluators, 1);
+			}
+
+			return parse(StatementSchema, data);
+		});
 
 		return topOptions;
 	} catch (error) {
@@ -74,13 +80,23 @@ export function listenToDescendants(statementId: string) {
 
 		return onSnapshot(q, (sts) => {
 			sts.docChanges().forEach(change => {
-				const statement = parse(StatementSchema, change.doc.data());
-				if (change.type === 'added' || change.type === 'modified') {
+				try {
+					const data = change.doc.data();
+					// Ensure averageEvaluation exists if evaluation is present
+					if (data.evaluation && !('averageEvaluation' in data.evaluation)) {
+						data.evaluation.averageEvaluation = data.evaluation.sumEvaluations / Math.max(data.evaluation.numberOfEvaluators, 1);
+					}
+					const statement = parse(StatementSchema, data);
+					if (change.type === 'added' || change.type === 'modified') {
 
-					dispatch(setStatement(statement));
-				} else if (change.type === 'removed') {
-					dispatch(deleteStatement(statement.statementId));
+						dispatch(setStatement(statement));
+					} else if (change.type === 'removed') {
+						dispatch(deleteStatement(statement.statementId));
 
+					}
+				} catch (error) {
+					console.error('Error parsing statement:', error);
+					console.error('Statement data:', change.doc.data());
 				}
 			});
 		}
