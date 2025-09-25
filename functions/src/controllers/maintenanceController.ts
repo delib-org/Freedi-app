@@ -72,6 +72,7 @@ export class MaintenanceController {
 					error: 'statementId is required',
 					ok: false
 				});
+
 				return;
 			}
 
