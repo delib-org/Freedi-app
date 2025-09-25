@@ -42,12 +42,14 @@ const useTopSuggestions = () => {
 				if (!response.ok) {
 					throw new Error(`HTTP error! status: ${response.status}`);
 				}
+
 				return response.json();
 			})
 			.then((data) => {
 				if (!data.statements || !Array.isArray(data.statements)) {
 					console.error('Invalid response: missing statements array', data);
 					setLoadingStatements(false);
+
 					return;
 				}
 				const options = data.statements

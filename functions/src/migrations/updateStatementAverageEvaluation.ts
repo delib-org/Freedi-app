@@ -72,12 +72,14 @@ export async function updateStatementAndChildrenAverageEvaluation(statementId: s
 		}
 
 		logger.info(`Update complete. Processed: ${results.processed}, Updated: ${results.updated}`);
+
 		return results;
 
 	} catch (error) {
 		const errorMessage = `Error updating statement ${statementId}: ${error}`;
 		logger.error(errorMessage);
 		results.errors.push(errorMessage);
+
 		return results;
 	}
 }
@@ -100,6 +102,7 @@ async function updateSingleStatement(statementId: string, results: {
 			const error = `Statement ${statementId} not found`;
 			logger.warn(error);
 			results.errors.push(error);
+
 			return;
 		}
 
@@ -107,12 +110,14 @@ async function updateSingleStatement(statementId: string, results: {
 
 		if (!statement.evaluation) {
 			logger.info(`Statement ${statementId} has no evaluation data`);
+
 			return;
 		}
 
 		if (statement.evaluation.numberOfEvaluators === undefined ||
 			statement.evaluation.sumEvaluations === undefined) {
 			logger.info(`Statement ${statementId} missing required evaluation fields`);
+
 			return;
 		}
 

@@ -1,6 +1,7 @@
 import { db } from '../index';
 import { Collections, Statement } from 'delib-npm';
 import { logger } from 'firebase-functions/v1';
+import { DocumentSnapshot } from 'firebase-admin/firestore';
 
 /**
  * Migration script to add averageEvaluation field to all existing statements
@@ -11,7 +12,7 @@ export async function migrateAddAverageEvaluation(): Promise<void> {
 		logger.info('Starting migration to add averageEvaluation field');
 
 		const batchSize = 500; // Process in batches to avoid memory issues
-		let lastDoc: FirebaseFirestore.DocumentSnapshot | undefined;
+		let lastDoc: DocumentSnapshot | undefined;
 		let totalUpdated = 0;
 		let totalProcessed = 0;
 
@@ -94,6 +95,7 @@ export async function updateSingleStatementAverage(statementId: string): Promise
 
 		if (!statement.evaluation) {
 			logger.info(`Statement ${statementId} has no evaluation data`);
+
 			return;
 		}
 

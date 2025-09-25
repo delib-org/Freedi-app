@@ -47,9 +47,12 @@ const Switch = () => {
     }
   }
 
+  console.log("Switch statement", statement.statement);
+  console.log("hasStages", hasStages);
+
   return (
     <main className="page__main">
-    {!hasStages && (isAdmin ? (
+      {isAdmin ? (
         <button className={styles.header} onClick={handleStartEdit}>
           {!edit ? (
             <h1>{statement?.statement}</h1>
@@ -68,7 +71,7 @@ const Switch = () => {
         <div className={styles.header}>
           <h1>{statement?.statement}</h1>
         </div>
-      ))}
+      )}
       <OnlineUsers statementId={statement?.statementId} />
       {statement && <SubQuestionsMap statement={statement} />}
       <ChatPanel />
