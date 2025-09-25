@@ -326,7 +326,7 @@ export class StatementService {
 		const q: Query = topSolutionsRef
 			.where('parentId', '==', parentId)
 			.where('statementType', '==', StatementType.option)
-			.orderBy('consensus', 'desc')
+			.orderBy('evaluation.averageEvaluation', 'desc')
 			.limit(finalLimit);
 
 		const topSolutionsDB = await q.get();

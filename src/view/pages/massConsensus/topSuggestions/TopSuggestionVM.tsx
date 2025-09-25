@@ -38,20 +38,38 @@ const useTopSuggestions = () => {
 				: `${import.meta.env.VITE_APP_TOP_STATEMENTS_ENDPOINT}?parentId=${statementId}&limit=6`;
 
 		fetch(endPoint)
-			.then((response) => response.json())
+			.then((response) => {
+				if (!response.ok) {
+					throw new Error(`HTTP error! status: ${response.status}`);
+				}
+
+				return response.json();
+			})
 			.then((data) => {
-				const options = data.statements.map((st: Statement) => ({
-					...st,
-					evaluation: {
-						...st.evaluation,
-						selectionFunction: SelectionFunction.top,
-					},
-				}));
+				if (!data.statements || !Array.isArray(data.statements)) {
+					console.error('Invalid response: missing statements array', data);
+					setLoadingStatements(false);
+
+					return;
+				}
+				const options = data.statements
+					.map((st: Statement) => ({
+						...st,
+						evaluation: {
+							...st.evaluation,
+							selectionFunction: SelectionFunction.top,
+						},
+					}))
+					.sort((a, b) => (b.evaluation?.averageEvaluation ?? 0) - (a.evaluation?.averageEvaluation ?? 0));
 				dispatch(setStatements(options));
 				setTopStatements(options);
 				setLoadingStatements(false);
 			})
-			.catch((error) => console.error('Error:', error));
+			.catch((error) => {
+				console.error('Error fetching top statements:', error);
+				setLoadingStatements(false);
+				setTopStatements([]);
+			});
 	};
 
 	useEffect(() => {

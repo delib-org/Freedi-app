@@ -15,7 +15,7 @@ export function VotingSuggestionsMV() {
 
 	const navigateToFeedback = () =>
 		navigate(
-			`/mass-consensus/${statementId}/${MassConsensusPageUrls.leaveFeedback}`
+			`/mass-consensus/${statementId}/${MassConsensusPageUrls.results}`
 		);
 
 	async function fetchTopStatements() {

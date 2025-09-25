@@ -33,7 +33,8 @@ export async function getMassConsensusProcess(statementId: string): Promise<Mass
 		if (!stgDB.exists()) {
 			// Return default process when no process exists
 			console.info("No mass consensus process found for statement, using default process");
-			return {
+			
+return {
 				statementId,
 				loginTypes: {
 					default: {
