@@ -35,7 +35,7 @@ export default function useStatementColor({
     } else if (statementType === StatementType.option) {
       setStyle({
         backgroundColor: "var(--header-not-chosen, #123abc)", // Custom option color
-        color: "var(--white, #ffffff)", // Text color for options
+        color: "var(--option-text, #ffffff)", // Text color for options
       });
     } else if (statementType === StatementType.question) {
       setStyle({
