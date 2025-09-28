@@ -82,12 +82,20 @@ const NodeMenu: FC<Props> = ({
 			statement.statementType === StatementType.option
 				? StatementType.question
 				: StatementType.option;
-		const statementChange = await changeStatementType(
+		const result = await changeStatementType(
 			statement,
 			newType,
 			isAuthorized
 		);
-		if (!statementChange) return;
+
+		if (!result.success) {
+			if (result.error) {
+				alert(result.error);
+			}
+			
+return;
+		}
+
 		setStatement?.({ ...statement, statementType: newType });
 	};
 	const editStatement = () => {

@@ -121,6 +121,24 @@ export function generateRandomLightColor(uuid: string) {
 
 	return hexColor;
 }
+// Type restriction configuration for statement hierarchy
+export const TYPE_RESTRICTIONS: Record<StatementType, {
+	disallowedChildren?: StatementType[];
+	reason?: string;
+}> = {
+	[StatementType.option]: {
+		disallowedChildren: [StatementType.option],
+		reason: "Options cannot contain other options"
+	},
+	[StatementType.group]: {
+		disallowedChildren: [StatementType.option],
+		reason: "Groups cannot contain options"
+	},
+	[StatementType.statement]: {},
+	[StatementType.question]: {},
+	[StatementType.document]: {}
+};
+
 export function isStatementTypeAllowedAsChildren(
 	parentStatement: string | { statementType: StatementType },
 	childType: StatementType
@@ -130,15 +148,42 @@ export function isStatementTypeAllowedAsChildren(
 		return true;
 	}
 
-	// Handle the group/option case
-	if (
-		parentStatement.statementType === StatementType.group &&
-		childType === StatementType.option
-	) {
-		return false;
+	const parentType = parentStatement.statementType;
+	const restrictions = TYPE_RESTRICTIONS[parentType];
+
+	if (restrictions?.disallowedChildren?.includes(childType)) {
+		// Log the restriction for debugging
+		console.info(
+			`Type restriction: Cannot create ${childType} under ${parentType}. ${restrictions.reason || ''}`
+		);
+		
+return false;
 	}
 
 	return true;
+}
+
+// Enhanced validation function with detailed error messages
+export function validateStatementTypeHierarchy(
+	parentStatement: string | { statementType: StatementType },
+	childType: StatementType
+): { allowed: boolean; reason?: string } {
+	// Handle 'top' case and string case
+	if (parentStatement === 'top' || typeof parentStatement === 'string') {
+		return { allowed: true };
+	}
+
+	const parentType = parentStatement.statementType;
+	const restrictions = TYPE_RESTRICTIONS[parentType];
+
+	if (restrictions?.disallowedChildren?.includes(childType)) {
+		return {
+			allowed: false,
+			reason: restrictions.reason || `Cannot create ${childType} under ${parentType}`
+		};
+	}
+
+	return { allowed: true };
 }
 export const statementTitleToDisplay = (
 	statement: string,

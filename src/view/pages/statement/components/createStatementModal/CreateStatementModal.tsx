@@ -7,6 +7,7 @@ import Modal from "@/view/components/modal/Modal";
 import styles from './CreateStatementModal.module.scss';
 import Button, { ButtonType } from "@/view/components/buttons/button/Button";
 import { StatementType, Statement } from "delib-npm";
+import { validateStatementTypeHierarchy } from "@/controllers/general/helpers";
 import { useAuthentication } from "@/controllers/hooks/useAuthentication";
 
 interface CreateStatementModalProps {
@@ -26,7 +27,11 @@ const CreateStatementModal: FC<CreateStatementModalProps> = ({
   isSendToStoreTemp,
   allowedTypes,
 }) => {
-  const [isOptionSelected, setIsOptionSelected] = useState(isOption);
+  // Default to question if parent is an option (since options can't be created under options)
+  const defaultIsOption = parentStatement !== 'top' && parentStatement.statementType === StatementType.option
+    ? false
+    : isOption;
+  const [isOptionSelected, setIsOptionSelected] = useState(defaultIsOption);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const { t } = useUserConfig();
@@ -72,6 +77,7 @@ const CreateStatementModal: FC<CreateStatementModalProps> = ({
           isOptionChosen={isOptionSelected}
           setIsOptionChosen={setIsOptionSelected}
           allowedTypes={allowedTypes}
+          parentStatement={parentStatement}
         />
 
         <div className={styles.formInputs}>
@@ -110,26 +116,48 @@ interface TabsProps {
   allowedTypes?: StatementType[];
   isOptionChosen: boolean;
   setIsOptionChosen: (isOptionChosen: boolean) => void;
+  parentStatement: Statement | "top";
 }
 
 const Tabs: FC<TabsProps> = ({
   allowedTypes,
   isOptionChosen,
   setIsOptionChosen,
+  parentStatement,
 }) => {
   const { t } = useUserConfig();
-  const availableTypes = allowedTypes ?? [
-    StatementType.option,
-    StatementType.question,
-  ];
+
+  // Determine available types based on parent restrictions
+  let availableTypes = allowedTypes;
+  if (!availableTypes) {
+    const defaultTypes = [StatementType.option, StatementType.question];
+
+    // Filter out types that aren't allowed under this parent
+    if (parentStatement && parentStatement !== 'top') {
+      availableTypes = defaultTypes.filter(type => {
+        const validation = validateStatementTypeHierarchy(parentStatement, type);
+        
+return validation.allowed;
+      });
+    } else {
+      availableTypes = defaultTypes;
+    }
+  }
+
+  // Check if option is disabled due to parent being an option
+  const isOptionDisabled = parentStatement !== 'top' &&
+    parentStatement.statementType === StatementType.option &&
+    !availableTypes.includes(StatementType.option);
 
   return (
     <div className={styles.tabs}>
-      {availableTypes.includes(StatementType.option) && (
+      {(availableTypes.includes(StatementType.option) || isOptionDisabled) && (
         <button
           type="button"
-          onClick={() => setIsOptionChosen(true)}
-          className={`${styles.tab} question ${isOptionChosen ? styles.active : ""}`}
+          onClick={() => !isOptionDisabled && setIsOptionChosen(true)}
+          className={`${styles.tab} question ${isOptionChosen ? styles.active : ""} ${isOptionDisabled ? styles.disabled : ""}`}
+          title={isOptionDisabled ? t("Options cannot be created under other options") : ""}
+          disabled={isOptionDisabled}
         >
           {t("Option")}
           {isOptionChosen && <div className={styles.block} />}
