@@ -95,6 +95,7 @@ export const nodeOptions = (
     },
     position,
     type: "custom",
+    // Don't set draggable here - let ReactFlow handle it via nodesDraggable prop
   };
 };
 
