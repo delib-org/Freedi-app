@@ -91,6 +91,7 @@ export const statementsSlicer = createSlice({
 						numberOfEvaluators: st.evaluation?.numberOfEvaluators ?? 0,
 						sumPro: st.evaluation?.sumPro ?? 0,
 						sumCon: st.evaluation?.sumCon ?? 0,
+						averageEvaluation: st.evaluation?.averageEvaluation ?? 0,
 						viewed: st.evaluation?.viewed ?? 0,
 						evaluationRandomNumber: st.evaluation?.evaluationRandomNumber,
 						selectionFunction: action.payload.selectionFunction,
@@ -259,11 +260,13 @@ export const statementsSlicer = createSlice({
 							(statement) =>
 								statement.statementId === update.statementId
 						);
-						if (statement) statement.top = update.top;
-						else
-							throw new Error(
-								`statement ${update.statementId} not found`
+						if (statement) {
+							statement.top = update.top;
+						} else {
+							console.error(
+								`statement ${update.statementId} not found in updateStatementTop`
 							);
+						}
 					} catch (error) {
 						console.error('On updateStatementTop loop: ', error);
 					}
@@ -525,6 +528,23 @@ export const statementsOfMultiStepSelectorByStatementId = (
 			statements.filter(
 				(st) => st.isInMultiStage && st.parentId === statementId
 			)
+	);
+
+export const userSuggestionsSelector = (
+	parentId: string | undefined,
+	userId: string | undefined
+) =>
+	createSelector(
+		(state: RootState) => state.statements.statements,
+		(statements) =>
+			statements
+				.filter(
+					(statement) =>
+						statement.parentId === parentId &&
+						statement.creatorId === userId &&
+						statement.statementType === StatementType.option
+				)
+				.sort((a, b) => a.createdAt - b.createdAt)
 	);
 
 export default statementsSlicer.reducer;

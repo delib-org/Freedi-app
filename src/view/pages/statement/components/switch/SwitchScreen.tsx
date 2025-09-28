@@ -7,7 +7,6 @@ import Triangle from "@/view/components/maps/triangle/Triangle";
 import MindMap from "../map/MindMap";
 import Chat from "../chat/Chat";
 import StatementSettings from "../settings/StatementSettings";
-import SuggestionChat from "@/view/pages/suggestionChat/SuggestionChat";
 import PolarizationIndexComp from "@/view/components/maps/polarizationIndex/PolarizationIndex";
 
 interface SwitchScreenProps {
@@ -60,9 +59,8 @@ function SwitchStatementType({
 		case StatementType.group:
 			return <GroupPage />;
 		case StatementType.question:
-			return <QuestionPage />;
 		case StatementType.option:
-			return <SuggestionChat />;
+			return <QuestionPage />;
 		default:
 			return null;
 	}

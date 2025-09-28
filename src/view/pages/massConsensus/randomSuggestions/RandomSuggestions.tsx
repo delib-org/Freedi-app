@@ -1,7 +1,5 @@
-import SuggestionCards from "../../statement/components/evaluations/components/suggestionCards/SuggestionCards";
-import { SelectionFunction } from "delib-npm";
+import SimpleSuggestionCards from "../../statement/components/evaluations/components/simpleSuggestionCards/SimpleSuggestionCards";
 import FooterMassConsensus from "../footerMassConsensus/FooterMassConsensus";
-import TitleMassConsensus from "../TitleMassConsensus/TitleMassConsensus";
 import { useRandomSuggestions } from "./RandomSuggestionsVM";
 import { useUserConfig } from "@/controllers/hooks/useUserConfig";
 import { useHeader } from "../headerMassConsensus/HeaderContext";
@@ -12,7 +10,7 @@ import { useSelector } from "react-redux";
 import { numberOfEvaluatedStatements } from "@/redux/evaluations/evaluationsSlice";
 
 const RandomSuggestions = () => {
-  const { navigateToTop, loadingStatements, subStatements} = useRandomSuggestions();
+  const { navigateToTop, loadingStatements, subStatements, statement} = useRandomSuggestions();
   const { t } = useUserConfig();
   const { trackStageCompleted, trackStageSkipped } =
     useMassConsensusAnalytics();
@@ -26,19 +24,21 @@ const RandomSuggestions = () => {
       title: t("General suggestion evaluation"),
       backToApp: false,
       isIntro: false,
-      setHeader,
     });
   }, []);
 
   return (
     <>
-      <TitleMassConsensus title={t("Please rate the following suggestions")} />
+    <h1>{t("Question")}: {statement?.statement}</h1>
+      <h3>{t("Please rate the following suggestions")}</h3>
       {loadingStatements ? (
         <div style={{margin:"0 auto",padding:"1rem"}}>
           <Loader />
         </div>
       ) : (
-        <SuggestionCards selectionFunction={SelectionFunction.random} />
+        <SimpleSuggestionCards
+          subStatements={subStatements}
+        />
       )}
       
       <FooterMassConsensus

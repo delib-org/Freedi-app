@@ -1,18 +1,34 @@
-import { useIntroductionMV } from './IntroductionMV';
-import FooterMassConsensus from '../footerMassConsensus/FooterMassConsensus';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+// React Core
 import { useEffect, useState } from 'react';
-import { updateStatementText } from '@/controllers/db/statements/setStatements';
+
+// Third-party Libraries
 import { useDispatch } from 'react-redux';
+
+// Redux Store
 import { setStatement } from '@/redux/statements/statementsSlice';
-import Text from '@/view/components/text/Text';
-import { useHeader } from '../headerMassConsensus/HeaderContext';
+
+// Database
+import { updateStatementText } from '@/controllers/db/statements/setStatements';
 import {
 	listenToUserDemographicAnswers,
 	listenToUserDemographicQuestions,
 } from '@/controllers/db/userDemographic/getUserDemographic';
+
+// App Hooks
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { useMassConsensusAnalytics } from '@/hooks/useMassConsensusAnalytics';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+
+// Components
+import Text from '@/view/components/text/Text';
+
+// Local Imports - Components
+import FooterMassConsensus from '../footerMassConsensus/FooterMassConsensus';
+import { useHeader } from '../headerMassConsensus/HeaderContext';
+
+// Local Imports - Hooks
+import { useIntroductionMV } from './IntroductionMV';
+
 import styles from './Introduction.module.scss';
 
 const Introduction = () => {
@@ -30,7 +46,6 @@ const Introduction = () => {
 			title: t('description'),
 			backToApp: false,
 			isIntro: true,
-			setHeader,
 		});
 	}, []);
 	const statementId = statement?.statementId;
@@ -68,7 +83,9 @@ const Introduction = () => {
 	return (
 		<div className={styles.introduction}>
 			<div className={styles.wrapper}>
-				<h1>{statement?.statement}</h1>
+				<h1>{t("Question")}: {statement?.statement}</h1>
+				<h2>{t('Introduction')}</h2>
+				
 				{!edit ? (
 					<Text description={statement?.description} />
 				) : (

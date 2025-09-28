@@ -40,5 +40,53 @@
         cursor:unset;
     }
 
-  
+    .anchorBtn{
+        // Un-anchored (unpressed) state - light/transparent appearance
+        background-color: rgba(59, 130, 246, 0.1);
+        border: 2px solid rgba(59, 130, 246, 0.3);
+        width: 2.0rem;
+        height: 2.0rem;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+
+        svg {
+            color: var(--icon-blue);
+            width: 1.2rem;
+            height: 1.2rem;
+            transition: all 0.3s ease;
+        }
+
+        &:hover {
+            background-color: rgba(59, 130, 246, 0.2);
+            border-color: rgba(59, 130, 246, 0.4);
+            transform: scale(1.05);
+            box-shadow: 0 2px 5px rgba(59, 130, 246, 0.2);
+        }
+
+        // Anchored (pressed) state - solid/filled appearance
+        &.anchored {
+            background-color: var(--icon-blue, #3b82f6);
+            border: 2px solid var(--icon-blue, #3b82f6);
+            box-shadow: 0 2px 6px rgba(66, 79, 108, 0.4);
+
+            svg {
+                color: white;
+                transform: scale(1.1);
+            }
+
+            &:hover {
+                background-color: var(--icon-blue, #3b82f6);
+                border-color: var(--icon-blue, #3b82f6);
+                transform: scale(1.08);
+                box-shadow: 0 3px 8px rgba(66, 79, 108, 0.5);
+            }
+        }
+    }
+
+
 }

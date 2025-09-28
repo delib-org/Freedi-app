@@ -26,24 +26,83 @@ export async function findSimilarStatements(
     const parsedBody = request.body;
 
     const { statementId, userInput, creatorId } = parsedBody;
-    const contentCheck = await checkForInappropriateContent(userInput);
 
-    if (contentCheck.isInappropriate || contentCheck.error) {
-      response.status(400).send({
+    // Start content check and data fetching in parallel
+    const [contentCheckResult, dataFetchResult] = await Promise.allSettled([
+      checkForInappropriateContent(userInput),
+      fetchDataAndProcess(statementId, userInput, creatorId, numberOfOptionsToGenerate)
+    ]);
+
+    // Check content first - if inappropriate, ignore data fetch results
+    if (contentCheckResult.status === 'fulfilled') {
+      const contentCheck = contentCheckResult.value;
+      if (contentCheck.isInappropriate || contentCheck.error) {
+        response.status(400).send({
+          ok: false,
+          error: "Input contains inappropriate content",
+        });
+
+        return;
+      }
+    } else {
+      response.status(500).send({
         ok: false,
-        error: "Input contains inappropriate content",
+        error: "Unable to verify content safety",
       });
-      
+
       return;
     }
+
+    // If content is OK, use the data fetch results
+    if (dataFetchResult.status === 'fulfilled') {
+      const result = dataFetchResult.value;
+
+      if (result.error) {
+        response.status(result.statusCode || 500).send({
+          ok: false,
+          error: result.error,
+        });
+
+        return;
+      }
+
+      response.status(200).send({
+        similarStatements: result.cleanedStatements,
+        ok: true,
+        userText: result.userText,
+      });
+
+      return;
+    } else {
+      response.status(500).send({
+        ok: false,
+        error: "Failed to process similarity search",
+      });
+
+      return;
+    }
+  } catch (error) {
+    response.status(500).send({ error: error, ok: false });
+    console.error("error", { error });
+
+    return;
+  }
+}
+
+async function fetchDataAndProcess(
+  statementId: string,
+  userInput: string,
+  creatorId: string,
+  numberOfOptionsToGenerate: number
+) {
+  try {
     // --- 1. Fetch Parent Statement and Validate ---
     const parentStatement = await getParentStatement(statementId);
     if (!parentStatement) {
-      response
-        .status(404)
-        .send({ ok: false, error: "Parent statement not found" });
-
-      return;
+      return {
+        error: "Parent statement not found",
+        statusCode: 404
+      };
     }
 
     // --- 2. Fetch Existing Sub-statements and Check User Limits ---
@@ -53,18 +112,15 @@ export async function findSimilarStatements(
       parentStatement.statementSettings?.numberOfOptionsPerUser ?? Infinity;
 
     if (hasReachedMaxStatements(userStatements, maxAllowed)) {
-      response.status(403).send({
-        ok: false,
+      return {
         error: "You have reached the maximum number of suggestions allowed.",
-      });
-
-      return;
+        statusCode: 403
+      };
     }
 
     const statementSimple = convertToSimpleStatements(subStatements);
 
-    // --- Handle Case: Find Similar Among Existing Options ---
-
+    // --- 3. Find Similar Among Existing Options ---
     const similarStatementsAI = await findSimilarStatementsAI(
       statementSimple.map((s) => s.statement),
       userInput,
@@ -81,18 +137,16 @@ export async function findSimilarStatements(
     const { statements: cleanedStatements, duplicateStatement } =
       removeDuplicateStatement(similarStatements, userInput);
 
-    // --- 6. If there are enough similar statements in the DB send them ---
-    response.status(200).send({
-      similarStatements: cleanedStatements,
-      ok: true,
-      userText: duplicateStatement?.statement || userInput,
-    });
+    return {
+      cleanedStatements,
+      userText: duplicateStatement?.statement || userInput
+    };
+  } catch (processingError) {
+    console.error("Error in fetchDataAndProcess:", processingError);
 
-    return;
-  } catch (error) {
-    response.status(500).send({ error: error, ok: false });
-    console.error("error", { error });
-
-    return;
+    return {
+      error: "Failed to process data",
+      statusCode: 500
+    };
   }
 }

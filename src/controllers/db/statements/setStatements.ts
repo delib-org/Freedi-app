@@ -375,6 +375,7 @@ export function createStatement({
 				numberOfEvaluators: 0,
 				sumEvaluations: 0,
 				agreement: 0,
+				averageEvaluation: 0,
 				evaluationRandomNumber: Math.random(),
 				viewed: 0,
 			},
@@ -552,10 +553,10 @@ export async function updateStatementText(
 		if (!statement) throw new Error('Statement is undefined');
 
 		const updates: Partial<Statement> = {};
-		if (title && statement.statement !== title) {
+		if (title !== undefined && statement.statement !== title) {
 			updates.statement = title;
 		}
-		if (description && statement.description !== description) {
+		if (description !== undefined && statement.description !== description) {
 			updates.description = description;
 		}
 		if (Object.keys(updates).length === 0) return;
@@ -780,5 +781,51 @@ export async function toggleStatementHide(statementId: string): Promise<boolean 
 		console.error(error);
 
 		return undefined;
+	}
+}
+
+export async function toggleStatementAnchored(
+	statementId: string,
+	anchored: boolean,
+	parentId: string
+): Promise<void> {
+	try {
+		if (!statementId) throw new Error('Statement ID is undefined');
+		if (!parentId) throw new Error('Parent ID is undefined');
+
+		// Check if user is admin
+		const role = store.getState().statements.statementSubscription
+			.find(sub => sub.statementId === parentId)?.role;
+
+		if (role !== 'admin') {
+			throw new Error('Only admins can anchor statements');
+		}
+
+		// Get parent statement to check settings
+		const parentRef = doc(FireStore, Collections.statements, parentId);
+		const parentDoc = await getDoc(parentRef);
+
+		if (!parentDoc.exists()) {
+			throw new Error('Parent statement not found');
+		}
+
+		// No limit on how many statements can be anchored
+		// The numberOfAnchoredStatements setting only determines how many
+		// anchored options are randomly selected for each evaluation
+
+		// Update the statement
+		const statementRef = doc(FireStore, Collections.statements, statementId);
+		await updateDoc(statementRef, { anchored });
+
+		// Log analytics event
+		logger.info('Statement Anchored', {
+			statementId,
+			anchored,
+			parentId
+		});
+
+	} catch (error) {
+		console.error('Error toggling anchored status:', error);
+		throw error;
 	}
 }

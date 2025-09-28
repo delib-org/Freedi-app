@@ -501,5 +501,23 @@ service cloud.firestore {
       allow read: if request.auth.uid != null;
       allow write: if request.auth.uid == request.resource.data.creator.uid;
     }
+
+    // Feedback collection rules
+    match /feedback/{feedbackId} {
+      // Only authenticated users can create feedback
+      allow create: if request.auth != null &&
+                      request.auth.uid == request.resource.data.creator.uid &&
+                      request.resource.data.feedbackText != null &&
+                      request.resource.data.feedbackText != "";
+
+      // Only the feedback creator or admins can read their feedback
+      // In production, you may want to allow statement admins to read feedback
+      allow read: if request.auth != null &&
+                    (request.auth.uid == resource.data.creator.uid ||
+                     request.auth.token.email == "tal.yaron@gmail.com");
+
+      // Feedback cannot be updated or deleted once submitted
+      allow update, delete: if false;
+    }
   }
 }

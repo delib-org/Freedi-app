@@ -94,7 +94,10 @@ export async function setStatementSubscriptionToDB({
 			}
 		}
 	} catch (error) {
-		console.error(error);
+		// Only log non-permission errors
+		if (error.code !== 'permission-denied') {
+			console.error('Error setting subscription:', error);
+		}
 	}
 }
 
@@ -125,7 +128,10 @@ export async function updateLastReadTimestamp(
 		// If document doesn't exist, don't create it - user should be subscribed first
 		// This prevents creating incomplete subscription objects
 	} catch (error) {
-		console.error(error);
+		// Only log non-permission errors
+		if (error.code !== 'permission-denied') {
+			console.error('Error updating last read timestamp:', error);
+		}
 	}
 }
 

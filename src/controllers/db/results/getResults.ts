@@ -10,6 +10,7 @@ import {
 import { FireStore } from '../config';
 import { Collections, StatementType, Statement, StatementSchema, ResultsBy } from 'delib-npm';
 import { parse } from 'valibot';
+import { convertTimestampsToMillis } from '@/helpers/timestampHelpers';
 
 import { store } from '@/redux/store';
 import { deleteStatement, setStatement } from '@/redux/statements/statementsSlice';
@@ -47,9 +48,19 @@ async function getTopOptionsDB(statement: Statement): Promise<Statement[]> {
 		);
 		const topOptionsSnap = await getDocs(q);
 
-		const topOptions = topOptionsSnap.docs.map((doc) =>
-			parse(StatementSchema, doc.data())
-		);
+		const topOptions = topOptionsSnap.docs.map((doc) => {
+			let data = doc.data();
+
+			// Convert Timestamp objects to milliseconds
+			data = convertTimestampsToMillis(data);
+
+			// Ensure averageEvaluation exists if evaluation is present
+			if (data.evaluation && !('averageEvaluation' in data.evaluation)) {
+				data.evaluation.averageEvaluation = data.evaluation.sumEvaluations / Math.max(data.evaluation.numberOfEvaluators, 1);
+			}
+
+			return parse(StatementSchema, data);
+		});
 
 		return topOptions;
 	} catch (error) {
@@ -74,13 +85,27 @@ export function listenToDescendants(statementId: string) {
 
 		return onSnapshot(q, (sts) => {
 			sts.docChanges().forEach(change => {
-				const statement = parse(StatementSchema, change.doc.data());
-				if (change.type === 'added' || change.type === 'modified') {
+				try {
+					let data = change.doc.data();
 
-					dispatch(setStatement(statement));
-				} else if (change.type === 'removed') {
-					dispatch(deleteStatement(statement.statementId));
+					// Convert Timestamp objects to milliseconds
+					data = convertTimestampsToMillis(data);
 
+					// Ensure averageEvaluation exists if evaluation is present
+					if (data.evaluation && !('averageEvaluation' in data.evaluation)) {
+						data.evaluation.averageEvaluation = data.evaluation.sumEvaluations / Math.max(data.evaluation.numberOfEvaluators, 1);
+					}
+					const statement = parse(StatementSchema, data);
+					if (change.type === 'added' || change.type === 'modified') {
+
+						dispatch(setStatement(statement));
+					} else if (change.type === 'removed') {
+						dispatch(deleteStatement(statement.statementId));
+
+					}
+				} catch (error) {
+					console.error('Error parsing statement:', error);
+					console.error('Statement data:', change.doc.data());
 				}
 			});
 		}

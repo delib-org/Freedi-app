@@ -9,7 +9,7 @@ import {
 import { onRequest } from "firebase-functions/v2/https";
 import { Request, Response } from "firebase-functions/v1";
 // The Firebase Admin SDK
-import { initializeApp } from "firebase-admin/app";
+import { initializeApp, getApps } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
 
 // Import collection constants
@@ -44,6 +44,11 @@ import {
   getRandomStatements,
   getTopStatements,
   getUserOptions,
+  maintainRole,
+  maintainDeliberativeElement,
+  maintainStatement,
+  maintainSubscriptionToken,
+  updateAverageEvaluation
 } from "./fn_httpRequests";
 import { findSimilarStatements } from "./fn_findSimilarStatements";
 import { updateApprovalResults } from "./fn_approval";
@@ -58,12 +63,16 @@ import {
   updateOptionInMassConsensus,
   addMemberToMassConsensus,
 } from "./fn_massConsensus";
+import { addFeedback } from "./fn_feedback";
 import { updateInAppNotifications } from "./fn_notifications";
 import { getCluster, recoverLastSnapshot } from "./fn_clusters";
 import { checkProfanity } from "./fn_profanityChecker";
+import { handleImproveSuggestion } from "./fn_improveSuggestion";
 
-// Initialize Firebase
-initializeApp();
+// Initialize Firebase only if not already initialized
+if (!getApps().length) {
+  initializeApp();
+}
 export const db = getFirestore();
 
 // Environment configuration
@@ -87,6 +96,8 @@ const corsConfig = isProduction
       "http://localhost:5175",
       "http://localhost:5176",
       "http://localhost:5177",
+      "http://localhost:5178",
+      "http://localhost:5179",
     ];
 
 /**
@@ -155,9 +166,18 @@ exports.checkForSimilarStatements = wrapHttpFunction(findSimilarStatements);
 exports.massConsensusGetInitialData = wrapHttpFunction(getInitialMCData);
 exports.getQuestionOptions = wrapHttpFunction(getQuestionOptions);
 exports.massConsensusAddMember = wrapHttpFunction(addMassConsensusMember);
+exports.addFeedback = wrapHttpFunction(addFeedback);
 exports.getCluster = wrapHttpFunction(getCluster);
 exports.recoverLastSnapshot = wrapHttpFunction(recoverLastSnapshot);
 exports.checkProfanity = checkProfanity;
+exports.improveSuggestion = wrapHttpFunction(handleImproveSuggestion);
+
+// Maintenance HTTP functions
+exports.maintainRole = wrapHttpFunction(maintainRole);
+exports.maintainDeliberativeElement = wrapHttpFunction(maintainDeliberativeElement);
+exports.maintainStatement = wrapHttpFunction(maintainStatement);
+exports.maintainSubscriptionToken = wrapHttpFunction(maintainSubscriptionToken);
+exports.updateAverageEvaluation = wrapHttpFunction(updateAverageEvaluation);
 
 // --------------------------
 // FIRESTORE TRIGGER FUNCTIONS

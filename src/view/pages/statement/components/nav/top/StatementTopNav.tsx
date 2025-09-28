@@ -50,12 +50,7 @@ const StatementTopNav: FC<Props> = ({
 
   if (!statement) return null;
 
-  const _statement = parentStatement || statement;
-
-  const enableNavigationalElements = _statement?.statementSettings?.enableNavigationalElements === false ? false : true;
-
   const isAdmin = role === Role.admin || user?.uid === statement?.creatorId;
-  const allowNavigation = enableNavigationalElements || isAdmin;
 
   const currentLabel = LANGUAGES.find(
     (lang) => lang.code === currentLanguage
@@ -86,7 +81,7 @@ const StatementTopNav: FC<Props> = ({
       style={{ backgroundColor: headerStyle.backgroundColor }}
     >
       <div className="app-header-wrapper">
-        {allowNavigation && statement && (
+        {statement && (
           <HeaderMenu
             statement={statement}
             isMenuOpen={isHeaderMenuOpen}
@@ -108,7 +103,7 @@ const StatementTopNav: FC<Props> = ({
           screen={screen}
           handleNavigation={handleNavigation}
           headerStyle={headerStyle}
-          allowNavigation={allowNavigation}
+          allowNavigation={true}
         />
       </div>
     </nav>

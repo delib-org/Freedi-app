@@ -35,7 +35,6 @@ const VotingSuggestions = () => {
 			title: t('Voting'),
 			backToApp: false,
 			isIntro: false,
-			setHeader,
 		});
 	}, []);
 

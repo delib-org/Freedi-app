@@ -30,7 +30,6 @@ import Smile from "@/assets/icons/smile.svg?react";
 
 import Research from "@/assets/images/Research.png";
 import manWithIdeaLamp from "@/assets/images/manWithIdeaLamp.png";
-import BookmarkBar from "@/view/components/bookmarkBar/BookmarkBar";
 
 const MultiStageQuestion: FC = () => {
   const { statement } = useContext(StatementContext);
@@ -40,7 +39,7 @@ const MultiStageQuestion: FC = () => {
     statementSubsSelector(statement?.statementId)
   );
   const showNewStatementModal = useSelector(selectNewStatementShowModal);
-  const topSuggestions = statement.results;
+  const topSuggestions = statement.results || [];
   const imageUrl = statement.imagesURL?.main ?? "";
 
   const initialStages = useMemo(
@@ -115,8 +114,8 @@ const MultiStageQuestion: FC = () => {
     }
   };
 
-  const hasStages = initialStages.length > 0;
-  const hasTopSuggestions = topSuggestions.length > 0;
+  const hasStages = initialStages?.length > 0;
+  const hasTopSuggestions = topSuggestions?.length > 0;
 
   return (
     <>
@@ -158,7 +157,7 @@ const MultiStageQuestion: FC = () => {
         <StagePage showStageTitle={false} />
       ) : (
         <div className={styles.stagesWrapper}>
-          <BookmarkBar />
+          {/* <BookmarkBar /> */}
 
           <div className={styles.stageCard} id="introduction">
             <div className={styles.imgContainer}>

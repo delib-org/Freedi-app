@@ -13,8 +13,10 @@ import MassConsensusQuestion from '@/view/pages/massConsensus/massConsesusQuesti
 import RandomSuggestions from '@/view/pages/massConsensus/randomSuggestions/RandomSuggestions';
 import TopSuggestions from '@/view/pages/massConsensus/topSuggestions/TopSuggestions';
 import VotingSuggestions from '@/view/pages/massConsensus/votingSuggestions/VotingSuggestions';
+import ResultsSummary from '@/view/pages/massConsensus/resultsSummary/ResultsSummary';
 
 import LeaveFeedback from '@/view/pages/massConsensus/leaveFeedback/LeaveFeedback';
+import MassConsensusMySuggestions from '@/view/pages/massConsensus/mySuggestions/MassConsensusMySuggestions';
 
 // Protected routes
 import StatementMain from '@/view/pages/statement/StatementMain';
@@ -30,8 +32,8 @@ import MemberRejection from '@/view/pages/memberRejection/MemberRejection';
 
 import Page401 from '@/view/pages/page401/Page401';
 import Page404 from '@/view/pages/page404/Page404';
-import ThankYou from '@/view/pages/massConsensus/thankYou/ThankYou';
 import { MassConsensusPageUrls } from 'delib-npm';
+import ThankYou from '@/view/pages/massConsensus/thankYou/ThankYou';
 import UserDemographicMC from '@/view/pages/massConsensus/massConsesusQuestion/userDemographicMC/UserDemographicMC';
 import My from '@/view/pages/my/My';
 import CheckNotifications from '@/view/pages/settings/ChecNotifications';
@@ -88,12 +90,20 @@ const massConsensusRoutes = [
 				element: <VotingSuggestions />,
 			},
 			{
+				path: MassConsensusPageUrls.results,
+				element: <ResultsSummary />,
+			},
+			{
 				path: MassConsensusPageUrls.leaveFeedback,
 				element: <LeaveFeedback />,
 			},
 			{
 				path: MassConsensusPageUrls.thankYou,
 				element: <ThankYou />,
+			},
+			{
+				path: 'my-suggestions',
+				element: <MassConsensusMySuggestions />,
 			},
 		],
 	},

@@ -3,6 +3,7 @@ import { doc, getDoc, onSnapshot, Unsubscribe } from "firebase/firestore";
 import { DB } from "../config";
 import { store } from "@/redux/store";
 import { setMassConsensusProcess } from "@/redux/massConsensus/massConsensusSlice";
+import { defaultMassConsensusProcess } from "@/model/massConsensus/massConsensusModel";
 
 export function listenToMassConsensusProcess(statementId: string): Unsubscribe {
 	try {
@@ -28,7 +29,21 @@ export async function getMassConsensusProcess(statementId: string): Promise<Mass
 	try {
 		const mcProcessSettingRef = doc(DB, Collections.massConsensusProcesses, statementId);
 		const stgDB = await getDoc(mcProcessSettingRef);
-		if (!stgDB.exists()) throw new Error("Mass consensus process not found");
+
+		if (!stgDB.exists()) {
+			// Return default process when no process exists
+			console.info("No mass consensus process found for statement, using default process");
+			
+return {
+				statementId,
+				loginTypes: {
+					default: {
+						steps: defaultMassConsensusProcess,
+						processName: "Default Process"
+					}
+				}
+			} as MassConsensusProcess;
+		}
 
 		return stgDB.data() as MassConsensusProcess;
 

@@ -219,6 +219,60 @@ async function updateStatementEvaluation(props: UpdateStatementEvaluationProps):
 // STATEMENT UPDATE HELPERS
 // ============================================================================
 
+async function ensureAverageEvaluationForAllOptions(parentId: string): Promise<void> {
+	try {
+		// Get all options under this parent
+		const optionsSnapshot = await db.collection(Collections.statements)
+			.where('parentId', '==', parentId)
+			.where('statementType', '==', StatementType.option)
+			.get();
+
+		if (optionsSnapshot.empty) {
+			return;
+		}
+
+		const batch = db.batch();
+		let needsUpdate = false;
+
+		optionsSnapshot.docs.forEach(doc => {
+			const data = doc.data();
+
+			// Check if evaluation exists and has averageEvaluation
+			if (!data.evaluation || data.evaluation.averageEvaluation === undefined) {
+				needsUpdate = true;
+
+				// Calculate the average if we have the data
+				const evaluation = data.evaluation || {
+					sumEvaluations: 0,
+					numberOfEvaluators: 0,
+					agreement: 0,
+					sumPro: 0,
+					sumCon: 0,
+					evaluationRandomNumber: Math.random(),
+					viewed: 0,
+				};
+
+				// Ensure averageEvaluation is calculated
+				evaluation.averageEvaluation = evaluation.numberOfEvaluators > 0
+					? evaluation.sumEvaluations / evaluation.numberOfEvaluators
+					: 0;
+
+				batch.update(doc.ref, {
+					evaluation,
+					lastUpdate: Date.now()
+				});
+			}
+		});
+
+		if (needsUpdate) {
+			await batch.commit();
+			logger.info(`Fixed averageEvaluation for ${optionsSnapshot.size} options under parent ${parentId}`);
+		}
+	} catch (error) {
+		logger.error('Error fixing averageEvaluation for options:', error);
+	}
+}
+
 async function updateStatementInTransaction(
 	statementId: string,
 	evaluationDiff: number,
@@ -228,7 +282,45 @@ async function updateStatementInTransaction(
 	await db.runTransaction(async (transaction) => {
 		const statementRef = db.collection(Collections.statements).doc(statementId);
 		const statementDoc = await transaction.get(statementRef);
-		const statement = parse(StatementSchema, statementDoc.data());
+		const statementData = statementDoc.data();
+
+		if (!statementData) {
+			throw new Error('Statement not found');
+		}
+
+		// Check if this statement is missing averageEvaluation
+		if (statementData.statementType === StatementType.option &&
+			(!statementData.evaluation || statementData.evaluation.averageEvaluation === undefined)) {
+
+			// Log that we detected a missing field
+			logger.info(`Detected missing averageEvaluation for option ${statementId}, will fix all siblings under parent ${statementData.parentId}`);
+
+			// Schedule the fix after transaction completes to avoid conflicts
+			setImmediate(() => {
+				ensureAverageEvaluationForAllOptions(statementData.parentId);
+			});
+
+			// For now, ensure this statement has the field to prevent immediate error
+			if (!statementData.evaluation) {
+				statementData.evaluation = {
+					sumEvaluations: 0,
+					numberOfEvaluators: 0,
+					agreement: 0,
+					sumPro: 0,
+					sumCon: 0,
+					averageEvaluation: 0,
+					evaluationRandomNumber: Math.random(),
+					viewed: 0,
+				};
+			} else {
+				// Calculate based on existing data
+				statementData.evaluation.averageEvaluation = statementData.evaluation.numberOfEvaluators > 0
+					? statementData.evaluation.sumEvaluations / statementData.evaluation.numberOfEvaluators
+					: 0;
+			}
+		}
+
+		const statement = parse(StatementSchema, statementData);
 
 		const { agreement, evaluation } = calculateEvaluation(statement, proConDiff, evaluationDiff, addEvaluator);
 
@@ -249,6 +341,9 @@ function calculateEvaluation(statement: Statement, proConDiff: CalcDiff, evaluat
 		numberOfEvaluators: statement.totalEvaluators || 1,
 		sumPro: proConDiff.proDiff,
 		sumCon: proConDiff.conDiff,
+		averageEvaluation: 0,
+		evaluationRandomNumber: Math.random(),
+		viewed: 0,
 	};
 
 	if (statement.evaluation) {
@@ -256,7 +351,14 @@ function calculateEvaluation(statement: Statement, proConDiff: CalcDiff, evaluat
 		evaluation.numberOfEvaluators += addEvaluator;
 		evaluation.sumPro = (evaluation.sumPro || 0) + proConDiff.proDiff;
 		evaluation.sumCon = (evaluation.sumCon || 0) + proConDiff.conDiff;
+		// Ensure averageEvaluation exists even for old data
+		evaluation.averageEvaluation = evaluation.averageEvaluation ?? 0;
 	}
+
+	// Calculate average evaluation
+	evaluation.averageEvaluation = evaluation.numberOfEvaluators > 0
+		? evaluation.sumEvaluations / evaluation.numberOfEvaluators
+		: 0;
 
 	const agreement = calcAgreement(evaluation.sumEvaluations, evaluation.numberOfEvaluators);
 	evaluation.agreement = agreement;

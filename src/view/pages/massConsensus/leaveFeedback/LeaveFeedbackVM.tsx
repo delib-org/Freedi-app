@@ -1,49 +1,90 @@
 import React, { useState } from "react";
 import firebaseConfig from '@/controllers/db/configKey';
-import { functionConfig, Creator } from "delib-npm";
+import { functionConfig, Feedback } from "delib-npm";
 import { useParams } from "react-router";
 import { useAuthentication } from "@/controllers/hooks/useAuthentication";
-
-interface MassConsensusMember {
-	statementId: string;
-	lastUpdate: number;
-	email: string;
-	creator: Creator;
-} //TODO: add to types
+import { useSelector } from "react-redux";
+import { statementSelector } from "@/redux/statements/statementsSlice";
 
 export function useLeaveFeedback() {
 	const [email, setEmail] = useState('');
-	const [mailStatus, setMailStatus] = useState<string>("pending");
+	const [feedbackText, setFeedbackText] = useState('');
+	const [mailStatus, setMailStatus] = useState<'pending' | 'invalid' | 'submitted'>('pending');
+	const [isSubmitting, setIsSubmitting] = useState(false);
 	const { statementId } = useParams();
 	const { creator } = useAuthentication();
+	const statement = useSelector(statementSelector(statementId));
 	const emailRegex = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
 
-	const handleSendButton = () => {
-		setMailStatus(emailRegex.test(email) ? "valid" : "invalid");
-		if (mailStatus !== "valid") return;
-
-		const massConsensusMember: MassConsensusMember = {
-			statementId: statementId,
-			lastUpdate: Date.now(),
-			email: email,
-			creator: creator
+	const handleSendButton = async () => {
+		// Validate feedback text
+		if (!feedbackText.trim()) {
+			return;
 		}
-		addMassConsensusMember(massConsensusMember);
+
+		// Validate email if provided
+		if (email && !emailRegex.test(email)) {
+			setMailStatus('invalid');
+			
+return;
+		}
+
+		setIsSubmitting(true);
+
+		try {
+			// Generate unique ID for feedback
+			const feedbackId = `${statementId}_${creator.uid}_${Date.now()}`;
+
+			const feedback: Feedback = {
+				feedbackId,
+				statementId: statementId || '',
+				statementTitle: statement?.statement || 'Mass Consensus',
+				feedbackText: feedbackText.trim(),
+				createdAt: Date.now(),
+				creator,
+				email: email || undefined
+			};
+
+			const success = await submitFeedback(feedback);
+
+			if (success) {
+				setMailStatus('submitted');
+			}
+		} catch (error) {
+			console.error('Error submitting feedback:', error);
+			setIsSubmitting(false);
+		}
 	};
 
 	const handleEmailChange = (event: React.ChangeEvent<HTMLInputElement>) => {
 		const value = event.target.value;
 		setEmail(value);
+		if (mailStatus === 'invalid' && (value === '' || emailRegex.test(value))) {
+			setMailStatus('pending');
+		}
 	};
 
-	return { handleSendButton, handleEmailChange, mailStatus };
+	const handleFeedbackChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+		const value = event.target.value;
+		if (value.length <= 500) {
+			setFeedbackText(value);
+		}
+	};
+
+	return {
+		handleSendButton,
+		handleEmailChange,
+		handleFeedbackChange,
+		mailStatus,
+		feedbackText,
+		isSubmitting
+	};
 }
 
-async function addMassConsensusMember(
-	member: MassConsensusMember
-): Promise<{ success: boolean; error?: string }> {
-	const deployedEndPoint = import.meta.env.VITE_APP_MASS_CONSENSUS_ENDPOINT;
-	const localEndPoint = `http://localhost:5001/${firebaseConfig.projectId}/${functionConfig.region}/massConsensusAddMember`;
+async function submitFeedback(feedback: Feedback): Promise<boolean> {
+	const deployedEndPoint = import.meta.env.VITE_APP_FEEDBACK_ENDPOINT ||
+		`https://${functionConfig.region}-${firebaseConfig.projectId}.cloudfunctions.net/addFeedback`;
+	const localEndPoint = `http://localhost:5001/${firebaseConfig.projectId}/${functionConfig.region}/addFeedback`;
 
 	const requestUrl = location.hostname === 'localhost' ? localEndPoint : deployedEndPoint;
 
@@ -53,18 +94,20 @@ async function addMassConsensusMember(
 			headers: {
 				'Content-Type': 'application/json',
 			},
-			body: JSON.stringify(member),
+			body: JSON.stringify(feedback),
 		});
 
 		const data = await response.json();
 		if (response.ok) {
-			return { success: true };
+			return true;
 		} else {
-			return { success: false, error: data.error || 'Unknown error occurred' };
+			console.error('Failed to submit feedback:', data.error || 'Unknown error occurred');
+			
+return false;
 		}
 	} catch (err) {
-		console.error(err);
-
-		return { success: false, error: err.message };
+		console.error('Error submitting feedback:', err);
+		
+return false;
 	}
 }
