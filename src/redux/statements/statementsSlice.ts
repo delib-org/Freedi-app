@@ -260,11 +260,13 @@ export const statementsSlicer = createSlice({
 							(statement) =>
 								statement.statementId === update.statementId
 						);
-						if (statement) statement.top = update.top;
-						else
-							throw new Error(
-								`statement ${update.statementId} not found`
+						if (statement) {
+							statement.top = update.top;
+						} else {
+							console.error(
+								`statement ${update.statementId} not found in updateStatementTop`
 							);
+						}
 					} catch (error) {
 						console.error('On updateStatementTop loop: ', error);
 					}
