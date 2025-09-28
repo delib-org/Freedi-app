@@ -39,7 +39,7 @@ const MultiStageQuestion: FC = () => {
     statementSubsSelector(statement?.statementId)
   );
   const showNewStatementModal = useSelector(selectNewStatementShowModal);
-  const topSuggestions = statement.results;
+  const topSuggestions = statement.results || [];
   const imageUrl = statement.imagesURL?.main ?? "";
 
   const initialStages = useMemo(
@@ -114,8 +114,8 @@ const MultiStageQuestion: FC = () => {
     }
   };
 
-  const hasStages = initialStages.length > 0;
-  const hasTopSuggestions = topSuggestions.length > 0;
+  const hasStages = initialStages?.length > 0;
+  const hasTopSuggestions = topSuggestions?.length > 0;
 
   return (
     <>
