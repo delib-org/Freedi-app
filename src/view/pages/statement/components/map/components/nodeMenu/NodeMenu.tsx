@@ -92,12 +92,15 @@ const NodeMenu: FC<Props> = ({
 			if (result.error) {
 				alert(result.error);
 			}
-			
+
 return;
 		}
 
 		setStatement?.({ ...statement, statementType: newType });
 	};
+
+	// Check if we can add child nodes (options cannot have children)
+	const canAddChild = statement?.statementType !== StatementType.option;
 	const editStatement = () => {
 		setIsEdit(true);
 	};
@@ -108,9 +111,11 @@ return;
 				<button ref={addToIconsRef} onClick={handleAddSiblingNode}>
 					<AddSiblingStatement />
 				</button>
-				<button ref={addToIconsRef} onClick={handleAddChildNode}>
-					<AddChildStatement />
-				</button>
+				{canAddChild && (
+					<button ref={addToIconsRef} onClick={handleAddChildNode}>
+						<AddChildStatement />
+					</button>
+				)}
 				<button ref={addToIconsRef} onClick={changeNodeStatementType}>
 					<ChangeStatementType />
 				</button>

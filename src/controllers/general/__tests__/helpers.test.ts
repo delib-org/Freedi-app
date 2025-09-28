@@ -1,4 +1,4 @@
-import { StatementType } from 'delib-npm';
+import { StatementType, Statement } from 'delib-npm';
 import {
   isStatementTypeAllowedAsChildren,
   validateStatementTypeHierarchy,
@@ -152,17 +152,17 @@ describe('Statement Type Validation', () => {
   describe('Edge cases', () => {
     it('should handle undefined parent gracefully', () => {
       // This would be caught by TypeScript, but testing runtime behavior
-      const undefinedParent = undefined as any;
+      const undefinedParent = undefined as unknown as Statement;
       expect(() => isStatementTypeAllowedAsChildren(undefinedParent, StatementType.option)).not.toThrow();
     });
 
     it('should handle null parent gracefully', () => {
-      const nullParent = null as any;
+      const nullParent = null as unknown as Statement;
       expect(() => isStatementTypeAllowedAsChildren(nullParent, StatementType.option)).not.toThrow();
     });
 
     it('should handle parent without statementType property', () => {
-      const invalidParent = { someOtherProp: 'value' } as any;
+      const invalidParent = { someOtherProp: 'value' } as unknown as Statement;
       const result = validateStatementTypeHierarchy(invalidParent, StatementType.option);
       // Should default to allowing since restrictions wouldn't apply
       expect(result.allowed).toBe(true);

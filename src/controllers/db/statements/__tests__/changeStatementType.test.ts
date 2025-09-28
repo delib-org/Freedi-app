@@ -1,5 +1,5 @@
 // Jest test file
-import { doc, getDoc, updateDoc, collection, query, where, getDocs } from 'firebase/firestore';
+import { getDoc, updateDoc, getDocs } from 'firebase/firestore';
 import { StatementType, Statement, QuestionType, EvaluationUI } from 'delib-npm';
 import { changeStatementType } from '../changeStatementType';
 
@@ -74,10 +74,10 @@ describe('changeStatementType', () => {
         data: () => ({ statementType: StatementType.statement }),
       };
 
-      (getDoc as any).mockResolvedValue(mockParentDoc);
-      (validateStatementTypeHierarchy as any).mockReturnValue({ allowed: true });
-      (getDocs as any).mockResolvedValue({ empty: true });
-      (updateDoc as any).mockResolvedValue(undefined);
+      (getDoc as jest.Mock).mockResolvedValue(mockParentDoc);
+      (validateStatementTypeHierarchy as jest.Mock).mockReturnValue({ allowed: true });
+      (getDocs as jest.Mock).mockResolvedValue({ empty: true });
+      (updateDoc as jest.Mock).mockResolvedValue(undefined);
 
       const result = await changeStatementType(mockStatement, StatementType.option, true);
 
@@ -108,8 +108,8 @@ describe('changeStatementType', () => {
         data: () => ({ statementType: StatementType.option }),
       };
 
-      (getDoc as any).mockResolvedValue(mockParentDoc);
-      (validateStatementTypeHierarchy as any).mockReturnValue({
+      (getDoc as jest.Mock).mockResolvedValue(mockParentDoc);
+      (validateStatementTypeHierarchy as jest.Mock).mockReturnValue({
         allowed: false,
         reason: 'Options cannot contain other options',
       });
@@ -127,10 +127,10 @@ describe('changeStatementType', () => {
         data: () => ({ statementType: StatementType.question }),
       };
 
-      (getDoc as any).mockResolvedValue(mockParentDoc);
-      (validateStatementTypeHierarchy as any).mockReturnValue({ allowed: true });
-      (getDocs as any).mockResolvedValue({ empty: true });
-      (updateDoc as any).mockResolvedValue(undefined);
+      (getDoc as jest.Mock).mockResolvedValue(mockParentDoc);
+      (validateStatementTypeHierarchy as jest.Mock).mockReturnValue({ allowed: true });
+      (getDocs as jest.Mock).mockResolvedValue({ empty: true });
+      (updateDoc as jest.Mock).mockResolvedValue(undefined);
 
       const result = await changeStatementType(mockStatement, StatementType.option, true);
 
@@ -144,8 +144,8 @@ describe('changeStatementType', () => {
         parentId: 'top',
       };
 
-      (getDocs as any).mockResolvedValue({ empty: true });
-      (updateDoc as any).mockResolvedValue(undefined);
+      (getDocs as jest.Mock).mockResolvedValue({ empty: true });
+      (updateDoc as jest.Mock).mockResolvedValue(undefined);
 
       const result = await changeStatementType(topLevelStatement, StatementType.option, true);
 
@@ -160,12 +160,12 @@ describe('changeStatementType', () => {
         empty: false,
       };
 
-      (getDoc as any).mockResolvedValue({
+      (getDoc as jest.Mock).mockResolvedValue({
         exists: () => true,
         data: () => ({ statementType: StatementType.statement }),
       });
-      (validateStatementTypeHierarchy as any).mockReturnValue({ allowed: true });
-      (getDocs as any).mockResolvedValue(mockChildrenSnapshot);
+      (validateStatementTypeHierarchy as jest.Mock).mockReturnValue({ allowed: true });
+      (getDocs as jest.Mock).mockResolvedValue(mockChildrenSnapshot);
 
       const result = await changeStatementType(mockStatement, StatementType.option, true);
 
@@ -178,12 +178,12 @@ describe('changeStatementType', () => {
         empty: false,
       };
 
-      (getDoc as any).mockResolvedValue({
+      (getDoc as jest.Mock).mockResolvedValue({
         exists: () => true,
         data: () => ({ statementType: StatementType.statement }),
       });
-      (validateStatementTypeHierarchy as any).mockReturnValue({ allowed: true });
-      (getDocs as any).mockResolvedValue(mockChildrenSnapshot);
+      (validateStatementTypeHierarchy as jest.Mock).mockReturnValue({ allowed: true });
+      (getDocs as jest.Mock).mockResolvedValue(mockChildrenSnapshot);
 
       const result = await changeStatementType(mockStatement, StatementType.group, true);
 
@@ -196,13 +196,13 @@ describe('changeStatementType', () => {
         empty: true,
       };
 
-      (getDoc as any).mockResolvedValue({
+      (getDoc as jest.Mock).mockResolvedValue({
         exists: () => true,
         data: () => ({ statementType: StatementType.statement }),
       });
-      (validateStatementTypeHierarchy as any).mockReturnValue({ allowed: true });
-      (getDocs as any).mockResolvedValue(mockChildrenSnapshot);
-      (updateDoc as any).mockResolvedValue(undefined);
+      (validateStatementTypeHierarchy as jest.Mock).mockReturnValue({ allowed: true });
+      (getDocs as jest.Mock).mockResolvedValue(mockChildrenSnapshot);
+      (updateDoc as jest.Mock).mockResolvedValue(undefined);
 
       const result = await changeStatementType(mockStatement, StatementType.option, true);
 
@@ -212,17 +212,18 @@ describe('changeStatementType', () => {
 
   describe('Question type specific settings', () => {
     it('should add question settings when changing to question', async () => {
-      (getDoc as any).mockResolvedValue({
+      (getDoc as jest.Mock).mockResolvedValue({
         exists: () => true,
         data: () => ({ statementType: StatementType.statement }),
       });
-      (validateStatementTypeHierarchy as any).mockReturnValue({ allowed: true });
-      (getDocs as any).mockResolvedValue({ empty: true });
+      (validateStatementTypeHierarchy as jest.Mock).mockReturnValue({ allowed: true });
+      (getDocs as jest.Mock).mockResolvedValue({ empty: true });
 
-      let capturedUpdateData: any = null;
-      (updateDoc as any).mockImplementation((ref, data) => {
+      let capturedUpdateData: Record<string, unknown> | null = null;
+      (updateDoc as jest.Mock).mockImplementation((ref, data) => {
         capturedUpdateData = data;
-        return Promise.resolve();
+        
+return Promise.resolve();
       });
 
       await changeStatementType(mockStatement, StatementType.question, true);
@@ -240,17 +241,18 @@ describe('changeStatementType', () => {
     });
 
     it('should not add question settings when changing to other types', async () => {
-      (getDoc as any).mockResolvedValue({
+      (getDoc as jest.Mock).mockResolvedValue({
         exists: () => true,
         data: () => ({ statementType: StatementType.statement }),
       });
-      (validateStatementTypeHierarchy as any).mockReturnValue({ allowed: true });
-      (getDocs as any).mockResolvedValue({ empty: true });
+      (validateStatementTypeHierarchy as jest.Mock).mockReturnValue({ allowed: true });
+      (getDocs as jest.Mock).mockResolvedValue({ empty: true });
 
-      let capturedUpdateData: any = null;
-      (updateDoc as any).mockImplementation((ref, data) => {
+      let capturedUpdateData: Record<string, unknown> | null = null;
+      (updateDoc as jest.Mock).mockImplementation((ref, data) => {
         capturedUpdateData = data;
-        return Promise.resolve();
+        
+return Promise.resolve();
       });
 
       await changeStatementType(mockStatement, StatementType.option, true);
@@ -265,14 +267,14 @@ describe('changeStatementType', () => {
 
   describe('Error handling', () => {
     it('should handle missing statement gracefully', async () => {
-      const result = await changeStatementType(null as any, StatementType.option, true);
+      const result = await changeStatementType(null as unknown as Statement, StatementType.option, true);
 
       expect(result.success).toBe(false);
       expect(result.error).toBe('Failed to change statement type');
     });
 
     it('should handle Firestore errors gracefully', async () => {
-      (getDoc as any).mockRejectedValue(new Error('Firestore error'));
+      (getDoc as jest.Mock).mockRejectedValue(new Error('Firestore error'));
 
       const result = await changeStatementType(mockStatement, StatementType.option, true);
 
@@ -281,13 +283,13 @@ describe('changeStatementType', () => {
     });
 
     it('should handle update errors gracefully', async () => {
-      (getDoc as any).mockResolvedValue({
+      (getDoc as jest.Mock).mockResolvedValue({
         exists: () => true,
         data: () => ({ statementType: StatementType.statement }),
       });
-      (validateStatementTypeHierarchy as any).mockReturnValue({ allowed: true });
-      (getDocs as any).mockResolvedValue({ empty: true });
-      (updateDoc as any).mockRejectedValue(new Error('Update failed'));
+      (validateStatementTypeHierarchy as jest.Mock).mockReturnValue({ allowed: true });
+      (getDocs as jest.Mock).mockResolvedValue({ empty: true });
+      (updateDoc as jest.Mock).mockRejectedValue(new Error('Update failed'));
 
       const result = await changeStatementType(mockStatement, StatementType.option, true);
 
@@ -298,13 +300,13 @@ describe('changeStatementType', () => {
 
   describe('Integration scenarios', () => {
     it('should successfully change statement to option when all validations pass', async () => {
-      (getDoc as any).mockResolvedValue({
+      (getDoc as jest.Mock).mockResolvedValue({
         exists: () => true,
         data: () => ({ statementType: StatementType.question }),
       });
-      (validateStatementTypeHierarchy as any).mockReturnValue({ allowed: true });
-      (getDocs as any).mockResolvedValue({ empty: true });
-      (updateDoc as any).mockResolvedValue(undefined);
+      (validateStatementTypeHierarchy as jest.Mock).mockReturnValue({ allowed: true });
+      (getDocs as jest.Mock).mockResolvedValue({ empty: true });
+      (updateDoc as jest.Mock).mockResolvedValue(undefined);
 
       const result = await changeStatementType(mockStatement, StatementType.option, true);
 
@@ -326,8 +328,8 @@ describe('changeStatementType', () => {
         data: () => ({ statementType: StatementType.option }),
       };
 
-      (getDoc as any).mockResolvedValue(optionParent);
-      (validateStatementTypeHierarchy as any).mockReturnValue({
+      (getDoc as jest.Mock).mockResolvedValue(optionParent);
+      (validateStatementTypeHierarchy as jest.Mock).mockReturnValue({
         allowed: false,
         reason: 'Options cannot contain other options',
       });

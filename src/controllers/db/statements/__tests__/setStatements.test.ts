@@ -89,7 +89,7 @@ describe('createStatement with validation', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    (helpers.isStatementTypeAllowedAsChildren as any).mockReturnValue(true);
+    (helpers.isStatementTypeAllowedAsChildren as jest.Mock).mockReturnValue(true);
   });
 
   describe('Basic creation', () => {
@@ -132,7 +132,7 @@ describe('createStatement with validation', () => {
         statementType: StatementType.option,
       };
 
-      (helpers.isStatementTypeAllowedAsChildren as any).mockReturnValue(false);
+      (helpers.isStatementTypeAllowedAsChildren as jest.Mock).mockReturnValue(false);
 
       const props: CreateStatementProps = {
         text: 'Option under Option',
@@ -155,7 +155,7 @@ describe('createStatement with validation', () => {
         statementType: StatementType.option,
       };
 
-      (helpers.isStatementTypeAllowedAsChildren as any).mockReturnValue(true);
+      (helpers.isStatementTypeAllowedAsChildren as jest.Mock).mockReturnValue(true);
 
       const props: CreateStatementProps = {
         text: 'Question under Option',
@@ -175,7 +175,7 @@ describe('createStatement with validation', () => {
         statementType: StatementType.group,
       };
 
-      (helpers.isStatementTypeAllowedAsChildren as any).mockReturnValue(false);
+      (helpers.isStatementTypeAllowedAsChildren as jest.Mock).mockReturnValue(false);
 
       const props: CreateStatementProps = {
         text: 'Option under Group',
@@ -207,7 +207,7 @@ describe('createStatement with validation', () => {
           statementType: parentType,
         };
 
-        (helpers.isStatementTypeAllowedAsChildren as any).mockReturnValue(true);
+        (helpers.isStatementTypeAllowedAsChildren as jest.Mock).mockReturnValue(true);
 
         const props: CreateStatementProps = {
           text: `Statement under ${parentType}`,
@@ -283,11 +283,17 @@ describe('createStatement with validation', () => {
   });
 
   describe('Error handling', () => {
-    it('should return undefined when creator is not found', () => {
-      jest.spyOn(require('@/redux/store').store, 'getState').mockReturnValueOnce({
+    it('should return undefined when creator is not found', async () => {
+      jest.spyOn((await import('@/redux/store')).store, 'getState').mockReturnValueOnce({
         creator: { creator: null },
-        statements: { statements: [] },
-      });
+        statements: {
+          statements: [],
+          statementSubscription: [],
+          statementSubscriptionLastUpdate: 0,
+          statementMembership: [],
+          screen: 'none'
+        },
+      } as unknown as ReturnType<typeof import('@/redux/store').store.getState>);
 
       const props: CreateStatementProps = {
         text: 'Statement without creator',
@@ -316,7 +322,7 @@ describe('createStatement with validation', () => {
       const props: CreateStatementProps = {
         text: 'Statement without type',
         parentStatement: mockParentStatement,
-        statementType: undefined as any,
+        statementType: undefined as unknown as StatementType,
       };
 
       const result = createStatement(props);
@@ -357,7 +363,7 @@ describe('createStatement with validation', () => {
           statementType: parent,
         };
 
-        (helpers.isStatementTypeAllowedAsChildren as any).mockReturnValue(allowed);
+        (helpers.isStatementTypeAllowedAsChildren as jest.Mock).mockReturnValue(allowed);
 
         const props: CreateStatementProps = {
           text: `Test ${child} under ${parent}`,
