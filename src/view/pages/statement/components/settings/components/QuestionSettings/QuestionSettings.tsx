@@ -267,7 +267,8 @@ const QuestionSettings: FC<StatementSettingsProps> = ({
 
 				{isMassConsensus && (
 					<>
-						<SectionTitle title={t('Anchored Sampling')} />
+						<h3 className='title'>{t('Anchored Sampling')}</h3>
+						<p>{t('Anchored sampling allows the admin to insert certain pre-defined options into the evaluation process. These options are prepared in advance and will always appear to participants, no matter what other options are being sampled.')}</p>
 						<CustomSwitchSmall
 							label={t('Enable Anchored Sampling')}
 							checked={isAnchoredEnabled}
