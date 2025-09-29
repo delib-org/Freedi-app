@@ -7,6 +7,7 @@ import {
 	QuestionSettings,
 	QuestionStep,
 } from 'delib-npm';
+import { getDefaultQuestionType } from '@/model/questionTypeDefaults';
 
 interface SetStatementStageParams {
 	statementId: string;
@@ -25,7 +26,7 @@ export async function setQuestionStage({
 		);
 		const questionSettings: QuestionSettings = {
 			currentStep: step,
-			questionType: QuestionType.multiStage,
+			questionType: getDefaultQuestionType(),
 		};
 		await updateDoc(statementRef, { questionSettings });
 	} catch (error) {
@@ -41,7 +42,7 @@ interface SetStatementTypeProps {
 
 export async function setQuestionType({
 	statementId,
-	type = QuestionType.multiStage,
+	type = getDefaultQuestionType(),
 	stage = QuestionStage.suggestion,
 }: SetStatementTypeProps) {
 	try {

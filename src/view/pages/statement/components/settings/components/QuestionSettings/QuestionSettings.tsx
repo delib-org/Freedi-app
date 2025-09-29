@@ -252,10 +252,9 @@ const QuestionSettings: FC<StatementSettingsProps> = ({
 				<SectionTitle title={t('Question Settings')} />
 
 				<CustomSwitchSmall
-					label={t('Document Question')}
+					label={t('Question Type')}
 					checked={
-						questionSettings?.questionType ===
-						QuestionType.simple || false
+						questionSettings?.questionType ===	QuestionType.simple
 					}
 					setChecked={handleQuestionType}
 					textChecked={t('Simple Question')}

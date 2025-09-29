@@ -1,7 +1,6 @@
 import {
 	Collections,
 	NotificationType,
-	QuestionType,
 	Statement,
 	StatementSchema,
 	StatementSubscription,
@@ -12,6 +11,7 @@ import { db } from './index';
 import { FirestoreEvent } from 'firebase-functions/v2/firestore';
 import { QueryDocumentSnapshot } from 'firebase-admin/firestore';
 import * as admin from 'firebase-admin';
+import { getDefaultQuestionType } from './model/questionTypeDefaults';
 
 interface FcmSubscriber {
 	userId: string;
@@ -209,7 +209,7 @@ async function processInAppNotifications(
 
 		const questionType =
 			newStatement.questionSettings?.questionType ??
-			QuestionType.multiStage;
+			getDefaultQuestionType();
 
 		const newNotification: NotificationType = {
 			userId: subscriber.user.uid,
