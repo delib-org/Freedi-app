@@ -4,11 +4,9 @@ import EditIcon from "@/assets/icons/editIcon.svg?react";
 import LightBulbIcon from "@/assets/icons/lightBulbIcon.svg?react";
 import QuestionMarkIcon from "@/assets/icons/questionIcon.svg?react";
 import UploadImageIcon from "@/assets/icons/updateIcon.svg?react";
-import {
-  setStatementIsOption,
-  updateIsQuestion,
-} from "@/controllers/db/statements/setStatements";
+import { changeStatementType } from "@/controllers/db/statements/changeStatementType";
 import { deleteStatementFromDB } from "@/controllers/db/statements/deleteStatements";
+import { validateStatementTypeHierarchy } from "@/controllers/general/helpers";
 import { useUserConfig } from "@/controllers/hooks/useUserConfig";
 import Menu from "@/view/components/menu/Menu";
 import MenuOption from "@/view/components/menu/MenuOption";
@@ -16,6 +14,7 @@ import { Statement, StatementType } from "delib-npm";
 
 interface ChatMessageMenuProps {
   statement: Statement;
+  parentStatement?: Statement;
   isCardMenuOpen: boolean;
   setIsCardMenuOpen: (isOpen: boolean) => void;
   isAuthorized: boolean;
@@ -25,6 +24,7 @@ interface ChatMessageMenuProps {
 
 const ChatMessageMenu: FC<ChatMessageMenuProps> = ({
   statement,
+  parentStatement,
   isCardMenuOpen,
   setIsCardMenuOpen,
   isAuthorized,
@@ -35,17 +35,27 @@ const ChatMessageMenu: FC<ChatMessageMenuProps> = ({
   const isQuestion = statement.statementType === StatementType.question;
   const isOption = statement.statementType === StatementType.option;
 
-  function handleSetOption() {
+  // Check if we can create/convert to option under the parent statement
+  const canCreateOption = parentStatement
+    ? validateStatementTypeHierarchy(parentStatement, StatementType.option).allowed
+    : true;
+
+  async function handleSetOption() {
     try {
       if (statement.statementType === StatementType.option) {
         const cancelOption = window.confirm(
           "Are you sure you want to cancel this option?"
         );
-        if (cancelOption) {
-          setStatementIsOption(statement);
-        }
-      } else {
-        setStatementIsOption(statement);
+        if (!cancelOption) return;
+      }
+
+      const newType = statement.statementType === StatementType.option
+        ? StatementType.statement
+        : StatementType.option;
+
+      const result = await changeStatementType(statement, newType, isAuthorized);
+      if (!result.success && result.error) {
+        alert(result.error);
       }
     } catch (error) {
       console.error(error);
@@ -77,7 +87,7 @@ const ChatMessageMenu: FC<ChatMessageMenuProps> = ({
           onOptionClick={() => fileInputRef.current?.click()}
         />
       )}
-      {isAuthorized && (
+      {isAuthorized && canCreateOption && (
         <MenuOption
           isOptionSelected={isOption}
           icon={<LightBulbIcon />}
@@ -100,8 +110,14 @@ const ChatMessageMenu: FC<ChatMessageMenuProps> = ({
               : t("Mark as a Question")
           }
           icon={<QuestionMarkIcon />}
-          onOptionClick={() => {
-            updateIsQuestion(statement);
+          onOptionClick={async () => {
+            const newType = statement.statementType === StatementType.question
+              ? StatementType.statement
+              : StatementType.question;
+            const result = await changeStatementType(statement, newType, isAuthorized);
+            if (!result.success && result.error) {
+              alert(result.error);
+            }
             setIsCardMenuOpen(false);
           }}
         />

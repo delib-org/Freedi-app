@@ -10,6 +10,7 @@ import {
 import { FireStore } from '../config';
 import { Collections, StatementType, Statement, StatementSchema, ResultsBy } from 'delib-npm';
 import { parse } from 'valibot';
+import { convertTimestampsToMillis } from '@/helpers/timestampHelpers';
 
 import { store } from '@/redux/store';
 import { deleteStatement, setStatement } from '@/redux/statements/statementsSlice';
@@ -48,7 +49,11 @@ async function getTopOptionsDB(statement: Statement): Promise<Statement[]> {
 		const topOptionsSnap = await getDocs(q);
 
 		const topOptions = topOptionsSnap.docs.map((doc) => {
-			const data = doc.data();
+			let data = doc.data();
+
+			// Convert Timestamp objects to milliseconds
+			data = convertTimestampsToMillis(data);
+
 			// Ensure averageEvaluation exists if evaluation is present
 			if (data.evaluation && !('averageEvaluation' in data.evaluation)) {
 				data.evaluation.averageEvaluation = data.evaluation.sumEvaluations / Math.max(data.evaluation.numberOfEvaluators, 1);
@@ -81,7 +86,11 @@ export function listenToDescendants(statementId: string) {
 		return onSnapshot(q, (sts) => {
 			sts.docChanges().forEach(change => {
 				try {
-					const data = change.doc.data();
+					let data = change.doc.data();
+
+					// Convert Timestamp objects to milliseconds
+					data = convertTimestampsToMillis(data);
+
 					// Ensure averageEvaluation exists if evaluation is present
 					if (data.evaluation && !('averageEvaluation' in data.evaluation)) {
 						data.evaluation.averageEvaluation = data.evaluation.sumEvaluations / Math.max(data.evaluation.numberOfEvaluators, 1);

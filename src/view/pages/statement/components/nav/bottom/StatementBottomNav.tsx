@@ -67,10 +67,16 @@ const StatementBottomNav: FC<Props> = () => {
 
 	function handleCreateNewOption() {
 		if (!statement) return;
+
+		// Default to question if parent is an option (options can't be created under options)
+		const defaultType = statement.statementType === StatementType.option
+			? StatementType.question
+			: StatementType.option;
+
 		dispatch(
 			setNewStatementModal({
 				parentStatement: statement,
-				newStatement: { statementType: StatementType.option },
+				newStatement: { statementType: defaultType },
 				showModal: true,
 				isLoading: false,
 				error: null,

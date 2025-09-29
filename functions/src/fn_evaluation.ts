@@ -259,7 +259,7 @@ async function ensureAverageEvaluationForAllOptions(parentId: string): Promise<v
 
 				batch.update(doc.ref, {
 					evaluation,
-					lastUpdate: FieldValue.serverTimestamp()
+					lastUpdate: Date.now()
 				});
 			}
 		});

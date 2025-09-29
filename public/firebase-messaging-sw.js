@@ -406,42 +406,64 @@ self.addEventListener('message', (event) => {
 
 	// Handle push support check
 	if (event.data && event.data.type === 'CHECK_PUSH_SUPPORT') {
-		event.ports[0]?.postMessage({
-			type: 'PUSH_SUPPORT_RESPONSE',
-			supported: true,
-			messaging: !!messaging,
-			pushManager: 'PushManager' in self
-		});
+		// Use ports if available for proper response
+		if (event.ports && event.ports[0]) {
+			event.ports[0].postMessage({
+				type: 'PUSH_SUPPORT_RESPONSE',
+				supported: true,
+				messaging: !!messaging,
+				pushManager: 'PushManager' in self
+			});
+		}
 		return;
 	}
 
 	if (event.data && event.data.type === 'CLEAR_NOTIFICATIONS') {
-		// Clear all displayed notifications
-		self.registration.getNotifications().then(notifications => {
-			notifications.forEach(notification => notification.close());
-		});
+		// Wrap async operations in waitUntil to prevent early termination
+		event.waitUntil(
+			(async () => {
+				try {
+					// Clear all displayed notifications
+					const notifications = await self.registration.getNotifications();
+					notifications.forEach(notification => notification.close());
 
-		// Clear app badge
-		try {
-			// Reset badge count
-			badgeCount = 0;
-			saveBadgeCount(0);
+					// Reset badge count
+					badgeCount = 0;
+					await saveBadgeCount(0);
 
-			// Clear badge using standard or experimental APIs based on browser support
-			if ('clearAppBadge' in navigator) {
-				// Standard Badging API (Chrome, Edge, Safari)
-				navigator.clearAppBadge().catch(err => console.error('Error clearing badge:', err));
-			} else if ('clearExperimentalAppBadge' in navigator) {
-				// Experimental API for some browsers
-				// @ts-ignore - Experimental API
-				navigator.clearExperimentalAppBadge().catch(err => console.error('Error clearing experimental badge:', err));
-			} else if ('ExperimentalBadge' in window) {
-				// Another experimental API seen in some browsers
-				// @ts-ignore - Experimental API
-				window.ExperimentalBadge.clear().catch(err => console.error('Error clearing ExperimentalBadge:', err));
-			}
-		} catch (error) {
-			console.error('Error clearing badge:', error);
-		}
+					// Clear badge using standard or experimental APIs based on browser support
+					if ('clearAppBadge' in navigator) {
+						// Standard Badging API (Chrome, Edge, Safari)
+						await navigator.clearAppBadge().catch(err => console.error('Error clearing badge:', err));
+					} else if ('clearExperimentalAppBadge' in navigator) {
+						// Experimental API for some browsers
+						// @ts-ignore - Experimental API
+						await navigator.clearExperimentalAppBadge().catch(err => console.error('Error clearing experimental badge:', err));
+					} else if ('ExperimentalBadge' in window) {
+						// Another experimental API seen in some browsers
+						// @ts-ignore - Experimental API
+						await window.ExperimentalBadge.clear().catch(err => console.error('Error clearing ExperimentalBadge:', err));
+					}
+
+					// Send confirmation back if ports are available
+					if (event.ports && event.ports[0]) {
+						event.ports[0].postMessage({
+							type: 'CLEAR_NOTIFICATIONS_RESPONSE',
+							success: true
+						});
+					}
+				} catch (error) {
+					console.error('Error clearing notifications:', error);
+					// Send error back if ports are available
+					if (event.ports && event.ports[0]) {
+						event.ports[0].postMessage({
+							type: 'CLEAR_NOTIFICATIONS_RESPONSE',
+							success: false,
+							error: error.message
+						});
+					}
+				}
+			})()
+		);
 	}
 });

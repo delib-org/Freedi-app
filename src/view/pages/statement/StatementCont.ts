@@ -1,5 +1,6 @@
 import { User, Role, Statement, StatementType, QuestionType } from 'delib-npm';
 import { createContext } from 'react';
+import { getDefaultQuestionType } from '@/model/questionTypeDefaults';
 
 interface StatementContextProps {
 	statement: Statement | undefined;
@@ -32,5 +33,5 @@ export const StatementContext = createContext<StatementContextProps>({
 		return;
 	},
 	newStatementType: StatementType.group,
-	newQuestionType: QuestionType.multiStage,
+	newQuestionType: getDefaultQuestionType(),
 });

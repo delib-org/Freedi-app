@@ -24,18 +24,31 @@ const MindMap: FC = () => {
 	const statement = useSelector(statementSelector(statementId));
 	const [statementParent, setStatementParent] = useState<typeof current>();
 
-	const rootStatementId = statement?.topParentId ?? statement?.statementId;
+	// Fix: Use statementId directly for subscription lookup
+	// The subscription should be based on the current statement, not the root
+	const subscriptionStatementId = statementId;
 
 	const userSubscription = useAppSelector(
-		rootStatementId
+		subscriptionStatementId
+			? statementSubscriptionSelector(subscriptionStatementId)
+			: () => undefined
+	);
+
+	// Also try to get subscription from root if current doesn't have one
+	const rootStatementId = statement?.topParentId ?? statement?.statementId;
+	const rootSubscription = useAppSelector(
+		rootStatementId && !userSubscription
 			? statementSubscriptionSelector(rootStatementId)
 			: () => undefined
 	);
 
+	// Use whichever subscription is available
+	const effectiveSubscription = userSubscription || rootSubscription;
+
 	// Use the fixed hook
 	const { results } = useMindMap();
 
-	const role = userSubscription ? userSubscription.role : Role.member;
+	const role = effectiveSubscription ? effectiveSubscription.role : Role.member;
 	const _isAdmin = isAdmin(role);
 
 	const { t } = useUserConfig();
@@ -64,8 +77,11 @@ const MindMap: FC = () => {
 
 	const isDefaultOption: boolean =
 		statementParent?.statementType === StatementType.question;
+	// Options are allowed only under questions (not under groups or other options)
 	const isOptionAllowed =
-		statementParent?.statementType !== StatementType.group;
+		mapContext.parentStatement && typeof mapContext.parentStatement === 'object' && 'statementType' in mapContext.parentStatement
+			? mapContext.parentStatement.statementType === StatementType.question
+			: false;
 
 	// Only render if we have the necessary data
 	if (!statement) {

@@ -13,7 +13,7 @@ import { updateStatementText } from '@/controllers/db/statements/setStatements';
 import { statementTitleToDisplay } from '@/controllers/general/helpers';
 import { useMapContext } from '@/controllers/hooks/useMap';
 import useStatementColor from '@/controllers/hooks/useStatementColor';
-import { Statement } from 'delib-npm';
+import { Statement, StatementType } from 'delib-npm';
 import NodeMenu from './nodeMenu/NodeMenu';
 
 const nodeStyle = (statementColor: {
@@ -57,6 +57,9 @@ function CustomNode({ data }: NodeProps) {
 	const { shortVersion: title } = statementTitleToDisplay(statement, 100);
 
 	const { isVoted, isChosen, statementType } = result.top;
+
+	// Check if we can add child nodes (options cannot have children)
+	const canAddChild = result.top.statementType !== StatementType.option;
 	useEffect(() => {
 		setLocalStatement(result.top);
 	}, [isVoted, isChosen, statementType]);
@@ -212,26 +215,28 @@ function CustomNode({ data }: NodeProps) {
 			</button>
 			{showBtns && (
 				<>
-					<button
-						className='addIcon'
-						onClick={handleAddChildNode}
-						aria-label='Add child node'
-						ref={addChildRef}
-						style={{
-							position: 'absolute',
-							cursor: 'pointer',
-							right:
-								mapContext.direction === 'TB'
-									? 'calc(50% - 0.5rem)'
-									: '-.8rem',
-							bottom:
-								mapContext.direction === 'TB'
-									? '-.8rem'
-									: 'calc(50% - 0.5rem)',
-						}}
-					>
-						<PlusIcon />
-					</button>
+					{canAddChild && (
+						<button
+							className='addIcon'
+							onClick={handleAddChildNode}
+							aria-label='Add child node'
+							ref={addChildRef}
+							style={{
+								position: 'absolute',
+								cursor: 'pointer',
+								right:
+									mapContext.direction === 'TB'
+										? 'calc(50% - 0.5rem)'
+										: '-.8rem',
+								bottom:
+									mapContext.direction === 'TB'
+										? '-.8rem'
+										: 'calc(50% - 0.5rem)',
+							}}
+						>
+							<PlusIcon />
+						</button>
+					)}
 					<button
 						className='addIcon'
 						onClick={handleAddSiblingNode}

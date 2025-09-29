@@ -82,14 +82,25 @@ const NodeMenu: FC<Props> = ({
 			statement.statementType === StatementType.option
 				? StatementType.question
 				: StatementType.option;
-		const statementChange = await changeStatementType(
+		const result = await changeStatementType(
 			statement,
 			newType,
 			isAuthorized
 		);
-		if (!statementChange) return;
+
+		if (!result.success) {
+			if (result.error) {
+				alert(result.error);
+			}
+
+return;
+		}
+
 		setStatement?.({ ...statement, statementType: newType });
 	};
+
+	// Check if we can add child nodes (options cannot have children)
+	const canAddChild = statement?.statementType !== StatementType.option;
 	const editStatement = () => {
 		setIsEdit(true);
 	};
@@ -100,9 +111,11 @@ const NodeMenu: FC<Props> = ({
 				<button ref={addToIconsRef} onClick={handleAddSiblingNode}>
 					<AddSiblingStatement />
 				</button>
-				<button ref={addToIconsRef} onClick={handleAddChildNode}>
-					<AddChildStatement />
-				</button>
+				{canAddChild && (
+					<button ref={addToIconsRef} onClick={handleAddChildNode}>
+						<AddChildStatement />
+					</button>
+				)}
 				<button ref={addToIconsRef} onClick={changeNodeStatementType}>
 					<ChangeStatementType />
 				</button>
