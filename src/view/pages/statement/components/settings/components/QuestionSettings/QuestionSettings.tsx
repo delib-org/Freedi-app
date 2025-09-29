@@ -5,7 +5,6 @@ import SectionTitle from '../sectionTitle/SectionTitle';
 import styles from './QuestionSettings.module.scss';
 import { setQuestionTypeToDB } from '@/controllers/db/statementSettings/setStatementSettings';
 import { EvaluationUI, QuestionType, StatementType } from 'delib-npm';
-import DocumentIcon from '@/assets/icons/paper.svg?react';
 import SimpleIcon from '@/assets/icons/navQuestionsIcon.svg?react';
 import ConsentIcon from '@/assets/icons/doubleCheckIcon.svg?react';
 import SuggestionsIcon from '@/assets/icons/smile.svg?react';
@@ -19,6 +18,7 @@ import { setEvaluationUIType, setAnchoredEvaluationSettings } from '@/controller
 import VotingSettings from './votingSettings/VotingSettings';
 import AnchoredBadge from '@/view/components/badges/AnchoredBadge';
 import { uploadAnchorIcon, validateImageFile } from '@/controllers/db/storage/uploadHelpers';
+import AddMassConsensusIcon from '@/assets/icons/massConsensusIcon.svg?react';
 
 const QuestionSettings: FC<StatementSettingsProps> = ({
 	statement,
@@ -259,7 +259,7 @@ const QuestionSettings: FC<StatementSettingsProps> = ({
 					setChecked={handleQuestionType}
 					textChecked={t('Simple Question')}
 					imageChecked={<SimpleIcon />}
-					imageUnchecked={<DocumentIcon />}
+					imageUnchecked={<AddMassConsensusIcon />}
 					textUnchecked={t('Mass Consensus')}
 					colorChecked='var(--question)'
 					colorUnchecked='var(--question)'
