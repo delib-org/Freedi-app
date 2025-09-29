@@ -7,8 +7,8 @@ import { useDispatch, useSelector } from 'react-redux';
 import { clearNewStatement, setShowNewStatementModal, selectNewStatement, selectParentStatementForNewStatement } from '@/redux/statements/newStatementSlice';
 import { createStatementWithSubscription } from '@/controllers/db/statements/createStatementWithSubscription';
 import { creatorSelector } from '@/redux/creator/creatorSlice';
-import { QuestionType } from 'delib-npm';
 import { useLocation, useNavigate } from 'react-router';
+import { getDefaultQuestionType } from '@/model/questionTypeDefaults';
 
 export default function SimilarStatements() {
 
@@ -18,7 +18,7 @@ export default function SimilarStatements() {
 	const newStatementParent = useSelector(selectParentStatementForNewStatement);
 	const newStatement = useSelector(selectNewStatement);
 	const newStatementQuestionType =
-		newStatement?.questionSettings?.questionType || QuestionType.multiStage;
+		newStatement?.questionSettings?.questionType || getDefaultQuestionType();
 	const user = useSelector(creatorSelector);
 	const location = useLocation();
 	const navigate = useNavigate();

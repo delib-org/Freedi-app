@@ -48,6 +48,15 @@
 
 			.tab {
 				font-family: 'Roboto', 'Open Sans', sans-serif;
+
+				&.disabled {
+					opacity: 0.5;
+					cursor: not-allowed;
+
+					&:hover {
+						background-color: inherit;
+					}
+				}
 				font-weight: 400;
 				font-size: 1rem;
 				color: var(--text-tertiary);

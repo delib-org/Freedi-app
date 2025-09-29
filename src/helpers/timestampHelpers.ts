@@ -2,16 +2,19 @@
  * Convert Firebase Timestamp objects to milliseconds recursively
  * This helper ensures all timestamp fields are numbers for valibot validation
  */
-export function convertTimestampsToMillis(data: any): any {
+export function convertTimestampsToMillis(data: unknown): unknown {
 	// Handle null/undefined
 	if (data == null) return data;
 
 	// Handle primitive types
 	if (typeof data !== 'object') return data;
 
+	// Type guard for object with toMillis method
+	const obj = data as Record<string, unknown> & { toMillis?: () => number };
+
 	// Check if the object itself is a Timestamp
-	if (data.toMillis && typeof data.toMillis === 'function') {
-		return data.toMillis();
+	if (obj.toMillis && typeof obj.toMillis === 'function') {
+		return obj.toMillis();
 	}
 
 	// Handle arrays recursively
@@ -20,14 +23,15 @@ export function convertTimestampsToMillis(data: any): any {
 	}
 
 	// Handle objects recursively
-	const result: any = {};
-	for (const key in data) {
-		if (data.hasOwnProperty(key)) {
-			const value = data[key];
+	const result: Record<string, unknown> = {};
+	for (const key in obj) {
+		if (Object.prototype.hasOwnProperty.call(obj, key)) {
+			const value = obj[key];
 
 			// Check if value is a Timestamp
-			if (value?.toMillis && typeof value.toMillis === 'function') {
-				result[key] = value.toMillis();
+			const valueObj = value as Record<string, unknown> & { toMillis?: () => number };
+			if (valueObj?.toMillis && typeof valueObj.toMillis === 'function') {
+				result[key] = valueObj.toMillis();
 			}
 			// Recursively handle nested objects and arrays
 			else if (value != null && typeof value === 'object') {
@@ -48,6 +52,6 @@ export function convertTimestampsToMillis(data: any): any {
  * Ensures all timestamps are in milliseconds format
  * This is just an alias for convertTimestampsToMillis for backward compatibility
  */
-export function preprocessFirestoreData(data: any): any {
+export function preprocessFirestoreData(data: unknown): unknown {
 	return convertTimestampsToMillis(data);
 }

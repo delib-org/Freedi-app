@@ -77,8 +77,11 @@ const MindMap: FC = () => {
 
 	const isDefaultOption: boolean =
 		statementParent?.statementType === StatementType.question;
+	// Options are allowed only under questions (not under groups or other options)
 	const isOptionAllowed =
-		statementParent?.statementType !== StatementType.group;
+		mapContext.parentStatement && typeof mapContext.parentStatement === 'object' && 'statementType' in mapContext.parentStatement
+			? mapContext.parentStatement.statementType === StatementType.question
+			: false;
 
 	// Only render if we have the necessary data
 	if (!statement) {

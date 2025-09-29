@@ -6,13 +6,14 @@ import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import Button, { ButtonType } from '@/view/components/buttons/button/Button';
 import Input from '@/view/components/input/Input';
 import Textarea from '@/view/components/textarea/Textarea';
-import { StatementType, QuestionType } from 'delib-npm';
+import { StatementType } from 'delib-npm';
 import { useDispatch, useSelector } from 'react-redux';
 import { clearNewStatement, selectNewStatement, selectParentStatementForNewStatement, setShowNewStatementModal } from '@/redux/statements/newStatementSlice';
 import { creatorSelector } from '@/redux/creator/creatorSlice';
 import Checkbox from '@/view/components/checkbox/Checkbox';
 import { NewStatementContext, SimilaritySteps } from '../../NewStatementCont';
 import { getSimilarOptions } from './GetInitialStatementDataCont';
+import { getDefaultQuestionType } from '@/model/questionTypeDefaults';
 
 export default function GetInitialStatementData() {
 	const { lookingForSimilarStatements, setLookingForSimilarStatements, setSimilarStatements, setCurrentStep, setTitle } = useContext(NewStatementContext);
@@ -25,7 +26,7 @@ export default function GetInitialStatementData() {
 	const newStatement = useSelector(selectNewStatement);
 	const newStatementType = newStatement?.statementType || StatementType.group;
 	const newStatementQuestionType =
-		newStatement?.questionSettings?.questionType || QuestionType.multiStage;
+		newStatement?.questionSettings?.questionType || getDefaultQuestionType();
 	const user = useSelector(creatorSelector);
 
 	const [error, setError] = useState<string>('');

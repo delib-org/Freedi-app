@@ -5,6 +5,7 @@ import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import { updateQuestionType } from '@/controllers/db/statementSettings/setStatementSettings';
 import { Link } from 'react-router';
 import { MassConsensusPageUrls, QuestionType } from 'delib-npm';
+import { getDefaultQuestionType } from '@/model/questionTypeDefaults';
 
 const QuestionSelector: FC = () => {
 	const { statement } = useContext(StatementContext);
@@ -26,7 +27,7 @@ const QuestionSelector: FC = () => {
 				className={styles.questionSelector}
 				defaultValue={
 					statement?.questionSettings?.questionType ??
-					QuestionType.multiStage
+					getDefaultQuestionType()
 				}
 			>
 				<option value={QuestionType.multiStage}>

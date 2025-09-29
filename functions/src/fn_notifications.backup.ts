@@ -1,7 +1,6 @@
 import {
 	Collections,
 	NotificationType,
-	QuestionType,
 	Statement,
 	StatementSchema,
 	StatementSubscription,
@@ -12,6 +11,7 @@ import { db } from '.';
 import { FirestoreEvent } from 'firebase-functions/firestore';
 import { QueryDocumentSnapshot } from 'firebase-admin/firestore';
 import * as admin from 'firebase-admin';
+import { getDefaultQuestionType } from './model/questionTypeDefaults';
 
 /**
  * Updates in-app notifications when a new statement is created as a reply.
@@ -160,7 +160,7 @@ async function processInAppNotifications(
 
 		const questionType =
 			newStatement.questionSettings?.questionType ??
-			QuestionType.multiStage;
+			getDefaultQuestionType();
 
 		const newNotification: NotificationType = {
 			userId: subscriber.user.uid,

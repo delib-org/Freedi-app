@@ -116,6 +116,7 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
             <div className={styles.chatMenu}>
               <ChatMessageMenu
                 statement={statement}
+                parentStatement={parentStatement}
                 isCardMenuOpen={isCardMenuOpen}
                 setIsCardMenuOpen={setIsCardMenuOpen}
                 isAuthorized={_isAuthorized}

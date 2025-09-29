@@ -11,6 +11,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { setNewStatementModal, setShowNewStatementModal } from '@/redux/statements/newStatementSlice';
 import { useParams } from 'react-router';
 import { statementSelectorById } from '@/redux/statements/statementsSlice';
+import { getDefaultQuestionType } from '@/model/questionTypeDefaults';
 
 export default function AddButton() {
 	const { statementId } = useParams<{ statementId: string }>();
@@ -32,7 +33,7 @@ export default function AddButton() {
 					newStatement: {
 						statementType: StatementType.question,
 						questionSettings: {
-							questionType: QuestionType.multiStage,
+							questionType: getDefaultQuestionType(),
 						},
 					},
 					isLoading: false,
