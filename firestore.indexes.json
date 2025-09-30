@@ -1,48 +1,401 @@
 {
-  "indexes": [{
+  "indexes": [
+    {
+      "collectionGroup": "approval",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "documentId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "userId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "__name__",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "askedToBeNotified",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "statementId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "userId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "__name__",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
       "collectionGroup": "chatMessages",
       "queryScope": "COLLECTION",
-      "fields": [{
+      "fields": [
+        {
           "fieldPath": "postId",
           "order": "DESCENDING"
         },
         {
           "fieldPath": "time",
           "order": "DESCENDING"
-        }
-      ]
-    },
-    {
-        "collectionGroup": "statements",
-        "queryScope": "COLLECTION",
-        "fields": [
-          { "fieldPath": "parentId", "order": "ASCENDING" },
-          { "fieldPath": "statementType", "order": "ASCENDING" },
-          { "fieldPath": "evaluation.averageEvaluation", "order": "DESCENDING" }
-        ]
-    },
-    {
-      "collectionGroup": "consultations",
-      "queryScope": "COLLECTION",
-      "fields": [{
-          "fieldPath": "groupType",
-          "order": "ASCENDING"
         },
         {
-          "fieldPath": "time.updated",
-          "order": "ASCENDING"
+          "fieldPath": "__name__",
+          "order": "DESCENDING"
         }
       ]
     },
     {
       "collectionGroup": "consultations",
       "queryScope": "COLLECTION",
-      "fields": [{
+      "fields": [
+        {
           "fieldPath": "groupType",
           "order": "ASCENDING"
         },
         {
           "fieldPath": "time.updated",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "__name__",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "consultations",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "groupType",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "time.updated",
+          "order": "DESCENDING"
+        },
+        {
+          "fieldPath": "__name__",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "consultations",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "groupType",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "time.updated.seconds",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "__name__",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "consultations",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "members",
+          "arrayConfig": "CONTAINS"
+        },
+        {
+          "fieldPath": "time.updated",
+          "order": "DESCENDING"
+        },
+        {
+          "fieldPath": "__name__",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "evaluations",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "parentId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "evaluatorId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "__name__",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "evaluations",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "parentId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "evaluatorId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "evaluation.selectionFunction",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "__name__",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "importance",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "parentId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "userId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "__name__",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "inAppNotifications",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "parentId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "userId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "__name__",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "inAppNotifications",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "userId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "DESCENDING"
+        },
+        {
+          "fieldPath": "__name__",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "invitations",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "lastUpdate",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "number",
+          "order": "DESCENDING"
+        },
+        {
+          "fieldPath": "__name__",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "invitations",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "number",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "lastUpdate",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "__name__",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "messages",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "groupId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "created",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "__name__",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "messages",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "groupId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "updated",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "__name__",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "news",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "groupId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "update",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "__name__",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "news",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "groupId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "update",
+          "order": "DESCENDING"
+        },
+        {
+          "fieldPath": "__name__",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "options",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "searchString",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "heName",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "__name__",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "options",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "type",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "consensusPrecentage",
+          "order": "DESCENDING"
+        },
+        {
+          "fieldPath": "__name__",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "posts",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "councilId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "time",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "__name__",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "posts",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "councilId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "time",
+          "order": "DESCENDING"
+        },
+        {
+          "fieldPath": "__name__",
           "order": "DESCENDING"
         }
       ]
@@ -50,7 +403,12 @@
     {
       "collectionGroup": "statements",
       "queryScope": "COLLECTION",
-      "fields": [{
+      "fields": [
+        {
+          "fieldPath": "creatorId",
+          "order": "ASCENDING"
+        },
+        {
           "fieldPath": "parentId",
           "order": "ASCENDING"
         },
@@ -59,7 +417,7 @@
           "order": "ASCENDING"
         },
         {
-          "fieldPath": "evaluation.sumPro",
+          "fieldPath": "__name__",
           "order": "ASCENDING"
         }
       ]
@@ -67,7 +425,128 @@
     {
       "collectionGroup": "statements",
       "queryScope": "COLLECTION",
-      "fields": [{
+      "fields": [
+        {
+          "fieldPath": "deliberativeElement",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "parents",
+          "arrayConfig": "CONTAINS"
+        },
+        {
+          "fieldPath": "__name__",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "statements",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "parentId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "isCluster",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "__name__",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "statements",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "parentId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "isVoted",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "__name__",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "statements",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "parentId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "statementType",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "consensus",
+          "order": "DESCENDING"
+        },
+        {
+          "fieldPath": "__name__",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "statements",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "parentId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "statementType",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "__name__",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "statements",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "parentId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "statementType",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "DESCENDING"
+        },
+        {
+          "fieldPath": "__name__",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "statements",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
           "fieldPath": "parentId",
           "order": "ASCENDING"
         },
@@ -78,135 +557,195 @@
         {
           "fieldPath": "evaluation.sumEvaluations",
           "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "__name__",
+          "order": "ASCENDING"
         }
       ]
     },
     {
-      "collectionGroup": "consultations",
+      "collectionGroup": "statements",
       "queryScope": "COLLECTION",
-      "fields": [{
-          "fieldPath": "groupType",
+      "fields": [
+        {
+          "fieldPath": "parentId",
           "order": "ASCENDING"
         },
         {
-          "fieldPath": "time.updated.seconds",
+          "fieldPath": "statementType",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "evaluation.sumPro",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "__name__",
           "order": "ASCENDING"
         }
       ]
     },
     {
-      "collectionGroup": "consultations",
+      "collectionGroup": "statements",
       "queryScope": "COLLECTION",
-      "fields": [{
-          "fieldPath": "members",
+      "fields": [
+        {
+          "fieldPath": "parentId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "statementType",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "evaluation.viewed",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "evaluation.evaluationRandomNumber",
+          "order": "DESCENDING"
+        },
+        {
+          "fieldPath": "__name__",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "statements",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "parents",
           "arrayConfig": "CONTAINS"
         },
         {
-          "fieldPath": "time.updated",
+          "fieldPath": "statementType",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "__name__",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "statements",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "topParentId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "statementId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "DESCENDING"
+        },
+        {
+          "fieldPath": "__name__",
           "order": "DESCENDING"
         }
       ]
     },
     {
-      "collectionGroup": "messages",
+      "collectionGroup": "statementSnapShots",
       "queryScope": "COLLECTION",
-      "fields": [{
-          "fieldPath": "groupId",
+      "fields": [
+        {
+          "fieldPath": "topic.statementId",
           "order": "ASCENDING"
         },
         {
-          "fieldPath": "created",
-          "order": "ASCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "messages",
-      "queryScope": "COLLECTION",
-      "fields": [{
-          "fieldPath": "groupId",
-          "order": "ASCENDING"
+          "fieldPath": "createdAt",
+          "order": "DESCENDING"
         },
         {
-          "fieldPath": "updated",
-          "order": "ASCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "news",
-      "queryScope": "COLLECTION",
-      "fields": [{
-          "fieldPath": "groupId",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "update",
-          "order": "ASCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "news",
-      "queryScope": "COLLECTION",
-      "fields": [{
-          "fieldPath": "groupId",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "update",
+          "fieldPath": "__name__",
           "order": "DESCENDING"
         }
       ]
     },
     {
-      "collectionGroup": "options",
+      "collectionGroup": "statementsSubscribe",
       "queryScope": "COLLECTION",
-      "fields": [{
-          "fieldPath": "searchString",
+      "fields": [
+        {
+          "fieldPath": "statement.parentId",
           "order": "ASCENDING"
         },
         {
-          "fieldPath": "heName",
+          "fieldPath": "userId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "__name__",
           "order": "ASCENDING"
         }
       ]
     },
     {
-      "collectionGroup": "options",
+      "collectionGroup": "statementsSubscribe",
       "queryScope": "COLLECTION",
-      "fields": [{
-          "fieldPath": "type",
+      "fields": [
+        {
+          "fieldPath": "statementId",
           "order": "ASCENDING"
         },
         {
-          "fieldPath": "consensusPrecentage",
+          "fieldPath": "getInAppNotification",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "__name__",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "statementsSubscribe",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "statementId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "role",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "__name__",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "statementsSubscribe",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "statementId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "statement.statementType",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "createdAt",
           "order": "DESCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "posts",
-      "queryScope": "COLLECTION",
-      "fields": [{
-          "fieldPath": "councilId",
-          "order": "ASCENDING"
         },
         {
-          "fieldPath": "time",
-          "order": "ASCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "posts",
-      "queryScope": "COLLECTION",
-      "fields": [{
-          "fieldPath": "councilId",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "time",
+          "fieldPath": "__name__",
           "order": "DESCENDING"
         }
       ]
@@ -225,6 +764,10 @@
         },
         {
           "fieldPath": "lastUpdate",
+          "order": "DESCENDING"
+        },
+        {
+          "fieldPath": "__name__",
           "order": "DESCENDING"
         }
       ]
@@ -248,19 +791,63 @@
         {
           "fieldPath": "lastUpdate",
           "order": "DESCENDING"
+        },
+        {
+          "fieldPath": "__name__",
+          "order": "DESCENDING"
         }
       ]
     },
     {
-      "collectionGroup": "statementsSubscribe",
+      "collectionGroup": "userDemographicEvaluations",
       "queryScope": "COLLECTION",
       "fields": [
         {
-          "fieldPath": "statement.parentId",
+          "fieldPath": "statementId",
           "order": "ASCENDING"
         },
         {
+          "fieldPath": "parentId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "__name__",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "usersData",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
           "fieldPath": "userId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "statementId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "__name__",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "votes",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "parentId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "voterId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "__name__",
           "order": "ASCENDING"
         }
       ]
@@ -275,6 +862,10 @@
         },
         {
           "fieldPath": "createdAt",
+          "order": "DESCENDING"
+        },
+        {
+          "fieldPath": "__name__",
           "order": "DESCENDING"
         }
       ]

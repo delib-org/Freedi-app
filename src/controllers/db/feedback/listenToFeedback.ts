@@ -14,10 +14,11 @@ export function listenToFeedback(
 			return () => {};
 		}
 
+		// Start with a simpler query to avoid index issues
+		// We'll sort client-side instead
 		const feedbackQuery = query(
 			collection(DB, Collections.feedback),
-			where('statementId', '==', statementId),
-			orderBy('createdAt', 'desc')
+			where('statementId', '==', statementId)
 		);
 
 		const unsubscribe = onSnapshot(
@@ -27,8 +28,23 @@ export function listenToFeedback(
 					const feedbackList: Feedback[] = [];
 					snapshot.forEach((doc) => {
 						const data = convertTimestampsToMillis(doc.data()) as Feedback;
-						feedbackList.push(data);
+						// Only add if data has required fields
+						if (data && data.feedbackText) {
+							feedbackList.push({
+								...data,
+								// Ensure creator exists with at least uid
+								creator: data.creator || { uid: 'unknown' }
+							});
+						}
 					});
+
+					// Sort client-side by createdAt (newest first)
+					feedbackList.sort((a, b) => {
+						const aTime = a.createdAt || 0;
+						const bTime = b.createdAt || 0;
+						return bTime - aTime;
+					});
+
 					callback(feedbackList);
 				} catch (error) {
 					console.error('Error processing feedback snapshot:', error);
@@ -37,6 +53,10 @@ export function listenToFeedback(
 			},
 			(error) => {
 				console.error('Error in feedback listener:', error);
+				// If it's an index error, provide helpful message
+				if (error.message?.includes('index')) {
+					console.info('Consider adding a composite index for better performance');
+				}
 				callback([]);
 			}
 		);
