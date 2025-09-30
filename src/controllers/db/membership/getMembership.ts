@@ -1,9 +1,9 @@
-import { collection, onSnapshot, query, Unsubscribe, where, getDocs, limit } from "firebase/firestore";
+import { collection, query, Unsubscribe, where, getDocs, limit } from "firebase/firestore";
 import { DB } from "../config";
 import { Collections, WaitingMember } from "delib-npm";
 import { store } from "@/redux/store";
 import { removeWaitingMember, setWaitingMember } from "@/redux/subscriptions/subscriptionsSlice";
-import { listenerManager } from "@/controllers/utils/ListenerManager";
+import { createManagedCollectionListener, generateListenerKey } from "@/controllers/utils/firestoreListenerHelpers";
 
 /**
  * Check if the user has admin role in any statement
@@ -45,51 +45,47 @@ export function listenToWaitingForMembership(): Unsubscribe {
 			return () => {};
 		}
 
-		const listenerKey = `waiting-members-${user.uid}`;
-
-		// Setup function for the listener
-		const setupListener = () => {
-			const waitingList = collection(DB, Collections.awaitingUsers);
-			const q = query(waitingList, where("adminId", "==", user.uid));
-
-			const unsubscribe = onSnapshot(
-				q,
-				(waitingMembersDB) => {
-					try {
-						waitingMembersDB.docChanges().forEach((change) => {
-							const subscription = change.doc.data() as WaitingMember;
-							if (change.type === "added" || change.type === "modified") {
-								dispatch(setWaitingMember(subscription));
-							} else if (change.type === "removed") {
-								dispatch(removeWaitingMember(subscription.statementsSubscribeId));
-							}
-						});
-					} catch (error) {
-						console.error("Error processing waiting members snapshot:", error);
-					}
-				},
-				(error) => {
-					console.error("Error in waiting members listener:", error);
-					// Remove the failed listener from manager
-					listenerManager.removeListener(listenerKey);
-				}
-			);
-
-			return unsubscribe;
-		};
+		const listenerKey = generateListenerKey('waiting-members', 'user', user.uid);
+		let unsubscribe: Unsubscribe | null = null;
 
 		// Check if user is admin before setting up listener
 		checkIfUserIsAdmin(user.uid).then(isAdmin => {
 			if (isAdmin) {
-				// Use ListenerManager to prevent duplicates
-				listenerManager.addListener(listenerKey, setupListener);
+				const waitingList = collection(DB, Collections.awaitingUsers);
+				const q = query(waitingList, where("adminId", "==", user.uid));
+
+				// Use managed collection listener with document counting
+				unsubscribe = createManagedCollectionListener(
+					q,
+					listenerKey,
+					(waitingMembersDB) => {
+						try {
+							waitingMembersDB.docChanges().forEach((change) => {
+								const subscription = change.doc.data() as WaitingMember;
+								if (change.type === "added" || change.type === "modified") {
+									dispatch(setWaitingMember(subscription));
+								} else if (change.type === "removed") {
+									dispatch(removeWaitingMember(subscription.statementsSubscribeId));
+								}
+							});
+						} catch (error) {
+							console.error("Error processing waiting members snapshot:", error);
+						}
+					},
+					(error) => {
+						console.error("Error in waiting members listener:", error);
+					},
+					'query'
+				);
 			}
 			// Removed console.info to reduce noise - this is expected behavior for non-admins
 		});
 
-		// Return a cleanup function that removes the listener from the manager
+		// Return a cleanup function
 		return () => {
-			listenerManager.removeListener(listenerKey);
+			if (unsubscribe) {
+				unsubscribe();
+			}
 		};
 	} catch (error) {
 		console.error("Error setting up waiting members listener:", error);

@@ -4,7 +4,6 @@ import {
 	collection,
 	doc,
 	limit,
-	onSnapshot,
 	or,
 	orderBy,
 	query,
@@ -35,6 +34,11 @@ import {
 
 import { parse, safeParse, flatten } from 'valibot';
 import React from 'react';
+import {
+	createManagedDocumentListener,
+	createManagedCollectionListener,
+	generateListenerKey,
+} from '@/controllers/utils/firestoreListenerHelpers';
 
 // Helpers
 export const listenToStatementSubscription = (
@@ -44,41 +48,53 @@ export const listenToStatementSubscription = (
 ): Unsubscribe => {
 	try {
 		const dispatch = store.dispatch;
+		const docId = `${creator.uid}--${statementId}`;
 		const statementsSubscribeRef = doc(
 			FireStore,
 			Collections.statementsSubscribe,
-			`${creator.uid}--${statementId}`
+			docId
 		);
 
-		return onSnapshot(statementsSubscribeRef, (statementSubscriptionDB) => {
-			try {
-				if (!statementSubscriptionDB.exists()) {
-					// No subscription found
+		const listenerKey = generateListenerKey(
+			'statement-subscription',
+			'subscription',
+			docId
+		);
 
-					if (setHasSubscription) setHasSubscription(false);
+		return createManagedDocumentListener(
+			statementsSubscribeRef,
+			listenerKey,
+			(statementSubscriptionDB) => {
+				try {
+					if (!statementSubscriptionDB.exists()) {
+						// No subscription found
 
-					return;
+						if (setHasSubscription) setHasSubscription(false);
+
+						return;
+					}
+					const statementSubscription =
+						statementSubscriptionDB.data() as StatementSubscription;
+
+					const { role } = statementSubscription;
+
+					//@ts-ignore
+					if (role === 'statement-creator') {
+						statementSubscription.role = Role.admin;
+					} else if (role === undefined) {
+						statementSubscription.role = Role.unsubscribed;
+						console.info(
+							'Role is undefined. Setting role to unsubscribed'
+						);
+					}
+
+					dispatch(setStatementSubscription(statementSubscription));
+				} catch (error) {
+					console.error(error);
 				}
-				const statementSubscription =
-					statementSubscriptionDB.data() as StatementSubscription;
-
-				const { role } = statementSubscription;
-
-				//@ts-ignore
-				if (role === 'statement-creator') {
-					statementSubscription.role = Role.admin;
-				} else if (role === undefined) {
-					statementSubscription.role = Role.unsubscribed;
-					console.info(
-						'Role is undefined. Setting role to unsubscribed'
-					);
-				}
-
-				dispatch(setStatementSubscription(statementSubscription));
-			} catch (error) {
-				console.error(error);
-			}
-		});
+			},
+			(error) => console.error('Error in statement subscription listener:', error)
+		);
 	} catch (error) {
 		console.error(error);
 
@@ -99,8 +115,15 @@ export const listenToStatement = (
 			statementId
 		);
 
-		return onSnapshot(
+		const listenerKey = generateListenerKey(
+			'statement',
+			'statement',
+			statementId
+		);
+
+		return createManagedDocumentListener(
 			statementRef,
+			listenerKey,
 			(statementDB) => {
 				try {
 					if (!statementDB.exists()) {
@@ -116,7 +139,10 @@ export const listenToStatement = (
 					if (setIsStatementNotFound) setIsStatementNotFound(true);
 				}
 			},
-			(error) => console.error(error)
+			(error) => {
+				console.error('Error in statement listener:', error);
+				if (setIsStatementNotFound) setIsStatementNotFound(true);
+			}
 		);
 	} catch (error) {
 		console.error(error);
@@ -153,39 +179,51 @@ export const listenToSubStatements = (
 			q = query(q, limit(numberOfOptions));
 		}
 
+		const listenerKey = generateListenerKey(
+			'sub-statements',
+			'statement',
+			`${statementId}-${topBottom || 'all'}-${numberOfOptions || 'all'}`
+		);
+
 		let isFirstCall = true;
 
-		return onSnapshot(q, (statementsDB) => {
-			// For the first call, batch process all statements at once
-			if (isFirstCall) {
-				const startStatements: Statement[] = [];
+		return createManagedCollectionListener(
+			q,
+			listenerKey,
+			(statementsDB) => {
+				// For the first call, batch process all statements at once
+				if (isFirstCall) {
+					const startStatements: Statement[] = [];
 
-				statementsDB.forEach((doc) => {
-					const statement = doc.data() as Statement;
-					startStatements.push(statement);
-				});
+					statementsDB.forEach((doc) => {
+						const statement = doc.data() as Statement;
+						startStatements.push(statement);
+					});
 
-				// Dispatch all statements at once instead of individually
-				if (startStatements.length > 0) {
-					dispatch(setStatements(startStatements));
-				}
-
-				isFirstCall = false;
-			} else {
-				// After initial load, handle individual changes
-				statementsDB.docChanges().forEach((change) => {
-					const statement = change.doc.data() as Statement;
-
-					if (change.type === 'added') {
-						dispatch(setStatement(statement));
-					} else if (change.type === 'modified') {
-						dispatch(setStatement(statement));
-					} else if (change.type === 'removed') {
-						dispatch(deleteStatement(statement.statementId));
+					// Dispatch all statements at once instead of individually
+					if (startStatements.length > 0) {
+						dispatch(setStatements(startStatements));
 					}
-				});
-			}
-		});
+
+					isFirstCall = false;
+				} else {
+					// After initial load, handle individual changes
+					statementsDB.docChanges().forEach((change) => {
+						const statement = change.doc.data() as Statement;
+
+						if (change.type === 'added') {
+							dispatch(setStatement(statement));
+						} else if (change.type === 'modified') {
+							dispatch(setStatement(statement));
+						} else if (change.type === 'removed') {
+							dispatch(deleteStatement(statement.statementId));
+						}
+					});
+				}
+			},
+			(error) => console.error('Error in sub-statements listener:', error),
+			'query'
+		);
 	} catch (error) {
 		console.error(error);
 
@@ -207,26 +245,40 @@ export const listenToMembers =
 				orderBy('createdAt', 'desc')
 			);
 
-			return onSnapshot(q, (subsDB) => {
-				subsDB.docChanges().forEach((change) => {
-					const member = change.doc.data() as StatementSubscription;
-					if (change.type === 'added') {
-						dispatch(setMembership(member));
-					}
+			const listenerKey = generateListenerKey(
+				'members',
+				'statement',
+				statementId
+			);
 
-					if (change.type === 'modified') {
-						dispatch(setMembership(member));
-					}
+			return createManagedCollectionListener(
+				q,
+				listenerKey,
+				(subsDB) => {
+					subsDB.docChanges().forEach((change) => {
+						const member = change.doc.data() as StatementSubscription;
+						if (change.type === 'added') {
+							dispatch(setMembership(member));
+						}
 
-					if (change.type === 'removed') {
-						dispatch(
-							removeMembership(member.statementsSubscribeId)
-						);
-					}
-				});
-			});
+						if (change.type === 'modified') {
+							dispatch(setMembership(member));
+						}
+
+						if (change.type === 'removed') {
+							dispatch(
+								removeMembership(member.statementsSubscribeId)
+							);
+						}
+					});
+				},
+				(error) => console.error('Error in members listener:', error),
+				'query'
+			);
 		} catch (error) {
 			console.error(error);
+			
+return () => {};
 		}
 	};
 
@@ -247,7 +299,16 @@ export function listenToAllSubStatements(
 			limit(numberOfLastMessages)
 		);
 
-		return onSnapshot(q, (statementsDB) => {
+		const listenerKey = generateListenerKey(
+			'all-sub-statements',
+			'statement',
+			`${statementId}-${numberOfLastMessages}`
+		);
+
+		return createManagedCollectionListener(
+			q,
+			listenerKey,
+			(statementsDB) => {
 			statementsDB.docChanges().forEach((change) => {
 				const data = change.doc.data();
 				const docId = change.doc.id;
@@ -336,7 +397,10 @@ return;
 						break;
 				}
 			});
-		});
+			},
+			(error) => console.error('Error in all sub-statements listener:', error),
+			'query'
+		);
 	} catch (error) {
 		console.error(error);
 
@@ -353,9 +417,9 @@ export const listenToUserSuggestions = (
 		const dispatch = store.dispatch;
 		if (!statementId) throw new Error('Statement id is undefined');
 		if (!userId) throw new Error('User id is undefined');
-		
+
 		const statementsRef = collection(FireStore, Collections.statements);
-		
+
 		// Query for options created by the user under this statement
 		const q = query(
 			statementsRef,
@@ -364,40 +428,52 @@ export const listenToUserSuggestions = (
 			where('statementType', '==', StatementType.option),
 			orderBy('createdAt', 'desc')
 		);
-		
+
+		const listenerKey = generateListenerKey(
+			'user-suggestions',
+			'statement',
+			`${statementId}-${userId}`
+		);
+
 		let isFirstCall = true;
-		
-		return onSnapshot(q, (statementsDB) => {
-			if (isFirstCall) {
-				const userOptions: Statement[] = [];
-				
-				statementsDB.forEach((doc) => {
-					const statement = doc.data() as Statement;
-					userOptions.push(statement);
-				});
-				
-				// Dispatch all user options at once
-				if (userOptions.length > 0) {
-					dispatch(setStatements(userOptions));
-				}
-				
-				isFirstCall = false;
-			} else {
-				// Handle individual changes after initial load
-				statementsDB.docChanges().forEach((change) => {
-					const statement = change.doc.data() as Statement;
-					
-					if (change.type === 'added' || change.type === 'modified') {
-						dispatch(setStatement(statement));
-					} else if (change.type === 'removed') {
-						dispatch(deleteStatement(statement.statementId));
+
+		return createManagedCollectionListener(
+			q,
+			listenerKey,
+			(statementsDB) => {
+				if (isFirstCall) {
+					const userOptions: Statement[] = [];
+
+					statementsDB.forEach((doc) => {
+						const statement = doc.data() as Statement;
+						userOptions.push(statement);
+					});
+
+					// Dispatch all user options at once
+					if (userOptions.length > 0) {
+						dispatch(setStatements(userOptions));
 					}
-				});
-			}
-		});
+
+					isFirstCall = false;
+				} else {
+					// Handle individual changes after initial load
+					statementsDB.docChanges().forEach((change) => {
+						const statement = change.doc.data() as Statement;
+
+						if (change.type === 'added' || change.type === 'modified') {
+							dispatch(setStatement(statement));
+						} else if (change.type === 'removed') {
+							dispatch(deleteStatement(statement.statementId));
+						}
+					});
+				}
+			},
+			(error) => console.error('Error listening to user suggestions:', error),
+			'query'
+		);
 	} catch (error) {
-		console.error('Error listening to user suggestions:', error);
-		
+		console.error('Error setting up user suggestions listener:', error);
+
 		return () => {};
 	}
 };
@@ -426,37 +502,49 @@ export function listenToAllDescendants(statementId: string): Unsubscribe {
 			limit(50)
 		);
 
+		const listenerKey = generateListenerKey(
+			'all-descendants',
+			'statement',
+			statementId
+		);
+
 		// Use batched updates for better performance
 		let isFirstBatch = true;
 		const statements: Statement[] = [];
 
-		return onSnapshot(q, (statementsDB) => {
-			if (isFirstBatch) {
-				// Process the initial batch of statements all at once
-				statementsDB.forEach((doc) => {
-					const statement = parse(StatementSchema, doc.data());
-					statements.push(statement);
-				});
+		return createManagedCollectionListener(
+			q,
+			listenerKey,
+			(statementsDB) => {
+				if (isFirstBatch) {
+					// Process the initial batch of statements all at once
+					statementsDB.forEach((doc) => {
+						const statement = parse(StatementSchema, doc.data());
+						statements.push(statement);
+					});
 
-				// Dispatch all statements at once instead of one by one
-				if (statements.length > 0) {
-					store.dispatch(setStatements(statements));
-				}
-
-				isFirstBatch = false;
-			} else {
-				// After initial load, process changes individually
-				statementsDB.docChanges().forEach((change) => {
-					const statement = parse(StatementSchema, change.doc.data());
-
-					if (change.type === 'added' || change.type === 'modified') {
-						store.dispatch(setStatement(statement));
-					} else if (change.type === 'removed') {
-						store.dispatch(deleteStatement(statement.statementId));
+					// Dispatch all statements at once instead of one by one
+					if (statements.length > 0) {
+						store.dispatch(setStatements(statements));
 					}
-				});
-			}
-		});
+
+					isFirstBatch = false;
+				} else {
+					// After initial load, process changes individually
+					statementsDB.docChanges().forEach((change) => {
+						const statement = parse(StatementSchema, change.doc.data());
+
+						if (change.type === 'added' || change.type === 'modified') {
+							store.dispatch(setStatement(statement));
+						} else if (change.type === 'removed') {
+							store.dispatch(deleteStatement(statement.statementId));
+						}
+					});
+				}
+			},
+			(error) => console.error('Error in all descendants listener:', error),
+			'query'
+		);
 	} catch (error) {
 		console.error(error);
 
