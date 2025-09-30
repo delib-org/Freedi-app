@@ -83,9 +83,8 @@ export function listenToWaitingForMembership(): Unsubscribe {
 			if (isAdmin) {
 				// Use ListenerManager to prevent duplicates
 				listenerManager.addListener(listenerKey, setupListener);
-			} else {
-				console.info("User is not an admin, skipping waiting members listener");
 			}
+			// Removed console.info to reduce noise - this is expected behavior for non-admins
 		});
 
 		// Return a cleanup function that removes the listener from the manager
