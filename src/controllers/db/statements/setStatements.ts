@@ -8,6 +8,7 @@ import {
 } from 'firebase/firestore';
 import { FireStore } from '../config';
 import { store } from '@/redux/store';
+import { getDefaultQuestionType } from '@/model/questionTypeDefaults';
 import {
 	getExistingOptionColors,
 	getSiblingOptionsByParentId,
@@ -384,7 +385,7 @@ export function createStatement({
 
 		if (newStatement.statementType === StatementType.question) {
 			newStatement.questionSettings = {
-				questionType: questionType ?? QuestionType.multiStage,
+				questionType: questionType ?? getDefaultQuestionType(),
 			};
 
 			newStatement.evaluationSettings = {

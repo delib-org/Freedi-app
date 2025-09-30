@@ -1,40 +1,37 @@
 import { listenToWaitingForMembership } from "@/controllers/db/membership/getMembership";
 import { creatorSelector } from "@/redux/creator/creatorSlice";
 import { selectWaitingMember } from "@/redux/subscriptions/subscriptionsSlice";
-import { Unsubscribe } from "firebase/firestore";
 import { useEffect, useMemo } from "react";
 import { useSelector } from "react-redux";
 
 export function useApproveMembership() {
 	const user = useSelector(creatorSelector);
-	const waitingListFromStore = useSelector(selectWaitingMember)
+	const waitingListFromStore = useSelector(selectWaitingMember);
 	const waitingList = useMemo(() => waitingListFromStore, [waitingListFromStore]);
 	const userId = user?.uid;
-	try {
 
-		useEffect(() => {
+	useEffect(() => {
+		if (!userId) {
+			return;
+		}
 
-			let unsubscribe: Unsubscribe | undefined = undefined;
+		// The listener now handles all the logic internally:
+		// - Checks if user is admin
+		// - Uses ListenerManager to prevent duplicates
+		// - Only sets up listener if needed
+		const unsubscribe = listenToWaitingForMembership();
 
-			if (!userId) return;
-
-			unsubscribe = listenToWaitingForMembership();
-
-			// This is the actual cleanup function for useEffect
-			return () => {
-
-				if (unsubscribe) {
+		// Cleanup function
+		return () => {
+			if (unsubscribe) {
+				try {
 					unsubscribe();
+				} catch (error) {
+					console.error("Error cleaning up waiting membership listener:", error);
 				}
-			};
-		}, [userId]);
+			}
+		};
+	}, [userId]);
 
-		return { waitingList }
-
-	} catch (error) {
-		// Handle error appropriately, e.g., log it or rethrow it
-		console.error("Error in useApproveMembership:", error);
-		throw error; // Rethrow the error if needed
-
-	}
+	return { waitingList };
 } 

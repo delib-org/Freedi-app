@@ -52,19 +52,19 @@ const NotificationSettingsButton: React.FC<NotificationSettingsButtonProps> = ({
 		const checkNotificationPreferences = async () => {
 			try {
 				const { getAuth } = await import('firebase/auth');
-				const { doc, getDoc, getFirestore } = await import('firebase/firestore');
+				const { doc, getDoc } = await import('firebase/firestore');
+				const { DB } = await import('@/controllers/db/config');
 				const { Collections } = await import('delib-npm');
 				const { getStatementSubscriptionId } = await import('@/controllers/general/helpers');
-				
+
 				const auth = getAuth();
-				const db = getFirestore();
-				
+
 				if (!auth.currentUser) return;
-				
+
 				const subscriptionId = getStatementSubscriptionId(statementId, auth.currentUser.uid);
 				if (!subscriptionId) return;
-				
-				const docRef = doc(db, Collections.statementsSubscribe, subscriptionId);
+
+				const docRef = doc(DB, Collections.statementsSubscribe, subscriptionId);
 				const docSnap = await getDoc(docRef);
 				
 				if (docSnap.exists()) {

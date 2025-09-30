@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { StatementType, QuestionType, User } from 'delib-npm';
+import { getDefaultQuestionType } from '@/model/questionTypeDefaults';
 
 export const useStatementUIState = () => {
 	// Local state
@@ -10,7 +11,7 @@ export const useStatementUIState = () => {
 		StatementType.group
 	);
 	const [newQuestionType, setNewQuestionType] = useState<QuestionType>(
-		QuestionType.multiStage
+		getDefaultQuestionType()
 	);
 
 	const handleShowTalker = useCallback((user: User | null) => {

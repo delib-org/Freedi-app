@@ -1,7 +1,7 @@
 import { getMessaging, getToken, onMessage, deleteToken, Messaging, MessagePayload } from "firebase/messaging";
 import { app, DB } from "@/controllers/db/config";
 import { vapidKey } from "@/controllers/db/configKey";
-import { setDoc, doc, getFirestore, deleteDoc, getDoc, Timestamp, getDocs, query, where, collection } from "firebase/firestore";
+import { setDoc, doc, deleteDoc, getDoc, Timestamp, getDocs, query, where, collection } from "firebase/firestore";
 import { Collections } from "delib-npm";
 import { addTokenToSubscription, removeTokenFromSubscription } from "@/controllers/db/subscriptions/setSubscriptions";
 
@@ -10,8 +10,8 @@ const isServiceWorkerSupported = () => 'serviceWorker' in navigator;
 // Helper function to check if notifications are supported
 const isNotificationSupported = () => 'Notification' in window;
 
-// Initialize Firebase components that don't require service workers
-const db = getFirestore(app);
+// Use the singleton DB instance from config
+const db = DB;
 
 // Token refresh interval (30 days in milliseconds)
 const TOKEN_REFRESH_INTERVAL = 30 * 24 * 60 * 60 * 1000;
@@ -176,16 +176,21 @@ return;
 			this.setupForegroundListener();
 
 			// Get FCM token
-			await this.getOrRefreshToken(userId);
+			const token = await this.getOrRefreshToken(userId);
 			// Token result processed
 
-			// Sync token with all user's subscriptions
-			if (this.token) {
+			// Only proceed with token-dependent operations if we have a valid token
+			if (token) {
+				// Sync token with all user's subscriptions
 				await this.syncTokenWithSubscriptions(userId);
-			}
 
-			// Set up automatic token refresh
-			this.setupTokenRefresh(userId);
+				// Set up automatic token refresh
+				this.setupTokenRefresh(userId);
+			} else {
+				// No token available (e.g., VAPID key not configured)
+				// Notifications will work in foreground only (browser notifications)
+				console.info('[NotificationService] Initialized without FCM token - browser notifications only');
+			}
 			
 			// Initialization complete
 		} catch (error) {
@@ -306,10 +311,14 @@ return null;
 
 			// Get token
 			// Request FCM token with VAPID key
-			
-			if (!vapidKey || vapidKey === 'undefined' || vapidKey.length < 10) {
-				console.error('[NotificationService] VAPID key is missing or invalid! Check VITE_FIREBASE_VAPID_KEY in .env');
-				
+
+			// Check for invalid/placeholder VAPID keys
+			const invalidKeys = ['your-vapid-key', 'undefined', 'null', ''];
+			if (!vapidKey || invalidKeys.includes(vapidKey) || vapidKey.length < 65) {
+				// Valid VAPID keys are typically 65+ characters
+				console.info('[NotificationService] FCM notifications disabled - VAPID key not configured');
+				console.info('[NotificationService] To enable push notifications, add a valid VAPID key to VITE_FIREBASE_VAPID_KEY in .env');
+
 return null;
 			}
 			

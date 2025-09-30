@@ -1,5 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { QuestionType, Statement, StatementType } from 'delib-npm';
+import { getDefaultQuestionType } from '@/model/questionTypeDefaults';
 
 interface NewStatementState {
 	parentStatement: Statement | null | "top";
@@ -44,7 +45,7 @@ const newStatementSlice = createSlice({
 				...state.newStatement,
 				questionSettings: {
 					...state.newStatement?.questionSettings,
-					questionType: action.payload || QuestionType.multiStage, // Default to multi-stage if no type is provided
+					questionType: action.payload || getDefaultQuestionType(), // Use centralized default
 				}
 			};
 

@@ -1,0 +1,49 @@
+.batchControls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 2rem 0;
+  padding: 1rem 0;
+  gap: 0.5rem;
+
+  .hint {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    text-align: center;
+    margin: 0;
+  }
+}
+
+// Loading state
+.loadingOverlay {
+  position: relative;
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+// Mobile responsiveness
+@media (max-width: 768px) {
+  .batchControls {
+    margin: 1rem 0;
+    padding: 0.75rem 0;
+  }
+}
+
+// Very small screens
+@media (max-width: 360px) {
+  .batchControls {
+    margin: 0.75rem 0;
+    padding: 0.5rem 0;
+  }
+}

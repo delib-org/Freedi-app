@@ -6,7 +6,8 @@ import EyeCrossIcon from '@/assets/icons/eyeCross.svg?react';
 import LightBulbIcon from '@/assets/icons/lightBulbIcon.svg?react';
 import QuestionMarkIcon from '@/assets/icons/questionIcon.svg?react';
 import { deleteStatementFromDB } from '@/controllers/db/statements/deleteStatements';
-import { toggleStatementHide, updateIsQuestion } from '@/controllers/db/statements/setStatements';
+import { toggleStatementHide } from '@/controllers/db/statements/setStatements';
+import { changeStatementType } from '@/controllers/db/statements/changeStatementType';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import Menu from '@/view/components/menu/Menu';
 import MenuOption from '@/view/components/menu/MenuOption';
@@ -103,8 +104,14 @@ const SolutionMenu: FC<Props> = ({
 							? t('Unmark as a Question')
 							: t('Mark as a Question')
 					}
-					onOptionClick={() => {
-						updateIsQuestion(statement);
+					onOptionClick={async () => {
+						const newType = statement.statementType === StatementType.question
+							? StatementType.statement
+							: StatementType.question;
+						const result = await changeStatementType(statement, newType, isAuthorized);
+						if (!result.success && result.error) {
+							alert(result.error);
+						}
 						setIsCardMenuOpen(false);
 					}}
 				/>

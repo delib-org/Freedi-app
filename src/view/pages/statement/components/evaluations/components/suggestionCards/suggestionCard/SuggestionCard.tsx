@@ -10,7 +10,8 @@ import { sortSubStatements } from '../../../statementsEvaluationCont';
 import Evaluation from '../../evaluation/Evaluation';
 import SolutionMenu from '../../solutionMenu/SolutionMenu';
 import AddQuestionIcon from '@/assets/icons/addQuestion.svg?react';
-import { setStatementIsOption, updateStatementText } from '@/controllers/db/statements/setStatements';
+import { updateStatementText } from '@/controllers/db/statements/setStatements';
+import { changeStatementType } from '@/controllers/db/statements/changeStatementType';
 import { useAppDispatch } from '@/controllers/hooks/reduxHooks';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import useStatementColor, {
@@ -136,17 +137,22 @@ const SuggestionCard: FC<Props> = ({
 		setTimeout(checkOverflow, 50);
 	}, [statement?.statement]);
 
-	function handleSetOption() {
+	async function handleSetOption() {
 		try {
-			if (statement?.statementType === 'option') {
+			if (statement?.statementType === StatementType.option) {
 				const cancelOption = window.confirm(
 					'Are you sure you want to cancel this option?'
 				);
-				if (cancelOption) {
-					setStatementIsOption(statement);
-				}
-			} else {
-				setStatementIsOption(statement);
+				if (!cancelOption) return;
+			}
+
+			const newType = statement?.statementType === StatementType.option
+				? StatementType.statement
+				: StatementType.option;
+
+			const result = await changeStatementType(statement, newType, isAuthorized);
+			if (!result.success && result.error) {
+				alert(result.error);
 			}
 		} catch (error) {
 			console.error(error);
