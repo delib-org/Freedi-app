@@ -1,4 +1,4 @@
-import { collection, onSnapshot, query, where, orderBy } from 'firebase/firestore';
+import { collection, onSnapshot, query, where } from 'firebase/firestore';
 import { Collections, Feedback } from 'delib-npm';
 import { DB } from '../config';
 import { convertTimestampsToMillis } from '@/helpers/timestampHelpers';
@@ -45,7 +45,8 @@ export function listenToFeedback(
 					feedbackList.sort((a, b) => {
 						const aTime = a.createdAt || 0;
 						const bTime = b.createdAt || 0;
-						return bTime - aTime;
+						
+return bTime - aTime;
 					});
 
 					callback(feedbackList);
