@@ -13,13 +13,16 @@ import {
 import ShareButton from '@/view/components/buttons/shareButton/ShareButton';
 import { useEffect, useState } from 'react';
 import { listenToSubStatements } from '@/controllers/db/statements/listenToStatements';
-import { StatementType } from 'delib-npm';
+import { Feedback, StatementType } from 'delib-npm';
 import OptionMCCard from './components/deleteCard/OptionMCCard';
 import DeletionLadyImage from '@/assets/images/rejectLady.png';
 import Button, { ButtonType } from '@/view/components/buttons/button/Button';
 import SearchBar from './components/searchBar/SearchBar';
 import { Link } from 'react-router';
 import { toggleStatementAnchored } from '@/controllers/db/statements/setStatements';
+import { listenToFeedback } from '@/controllers/db/feedback/listenToFeedback';
+import FeedbackCard from './components/feedbackCard/FeedbackCard';
+import { listenerManager } from '@/controllers/utils/ListenerManager';
 
 const MassConsensusAdmin = () => {
 	const { statementId } = useParams<{ statementId: string }>();
@@ -36,6 +39,7 @@ const MassConsensusAdmin = () => {
 		: [];
 	const bottomOptions = sortedBottomOptions.slice(0, 5);
 	const [isSearching, setIsSearching] = useState(false);
+	const [feedbackList, setFeedbackList] = useState<Feedback[]>([]);
 
 	const { t } = useUserConfig();
 	const navigate = useNavigate();
@@ -58,6 +62,20 @@ const MassConsensusAdmin = () => {
 		const unsubscribe = listenToSubStatements(statementId, 'bottom');
 
 		return () => unsubscribe();
+	}, [statementId]);
+
+	useEffect(() => {
+		if (!statementId) return;
+
+		// Use ListenerManager to prevent duplicate feedback listeners
+		const listenerKey = `feedback-${statementId}`;
+		listenerManager.addListener(listenerKey, () => {
+			return listenToFeedback(statementId, setFeedbackList);
+		});
+
+		return () => {
+			listenerManager.removeListener(listenerKey);
+		};
 	}, [statementId]);
 
 	return (
@@ -165,6 +183,18 @@ const MassConsensusAdmin = () => {
 						isDelete={true}
 					/>
 				))}
+
+				<h3>{t('User Feedback')} ({feedbackList.length})</h3>
+				{feedbackList.length === 0 ? (
+					<p className={styles.noFeedback}>{t('No feedback received yet')}</p>
+				) : (
+					feedbackList.map((feedback) => (
+						<FeedbackCard
+							key={feedback.feedbackId}
+							feedback={feedback}
+						/>
+					))
+				)}
 			</div>
 		</div>
 	);

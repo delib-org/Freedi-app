@@ -1,6 +1,6 @@
 import { doc, setDoc } from 'firebase/firestore';
 import { Collections, Feedback } from 'delib-npm';
-import { FireStore } from '../config';
+import { DB } from '../config';
 
 export async function setFeedbackToDB(feedback: Feedback): Promise<void> {
 	try {
@@ -16,7 +16,7 @@ export async function setFeedbackToDB(feedback: Feedback): Promise<void> {
 			throw new Error('Feedback text is required');
 		}
 
-		const feedbackRef = doc(FireStore, Collections.feedback, feedback.feedbackId);
+		const feedbackRef = doc(DB, Collections.feedback, feedback.feedbackId);
 		await setDoc(feedbackRef, feedback);
 
 		console.info('Feedback saved successfully:', feedback.feedbackId);

@@ -1,0 +1,52 @@
+.feedbackCard {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-bottom: 1.3rem;
+    padding: 1rem;
+    background-color: rgba(66, 79, 108, 0.05);
+    border-radius: 8px;
+    border-left: 4px solid var(--icon-blue);
+}
+
+.feedbackHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.userInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.userName {
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.userEmail {
+    font-size: 0.85rem;
+    color: var(--icon-blue);
+    text-decoration: none;
+
+    &:hover {
+        text-decoration: underline;
+    }
+}
+
+.date {
+    font-size: 0.85rem;
+    color: gray;
+    font-weight: 200;
+}
+
+.feedbackText {
+    font-weight: 300;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
