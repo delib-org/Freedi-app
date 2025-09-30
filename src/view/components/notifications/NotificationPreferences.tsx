@@ -3,7 +3,8 @@ import styles from './notificationPreferences.module.scss';
 import { updateNotificationPreferences } from '@/controllers/db/subscriptions/setSubscriptions';
 import { getStatementSubscriptionId } from '@/controllers/general/helpers';
 import { getAuth } from 'firebase/auth';
-import { doc, getDoc, getFirestore } from 'firebase/firestore';
+import { doc, getDoc } from 'firebase/firestore';
+import { DB } from '@/controllers/db/config';
 import { Collections, StatementSubscription } from 'delib-npm';
 import { notificationService } from '@/services/notificationService';
 import BellIcon from '@/assets/icons/bellIcon.svg?react';
@@ -43,22 +44,21 @@ const NotificationPreferences: React.FC<NotificationPreferencesProps> = ({ state
 			try {
 				setIsLoading(true);
 				const auth = getAuth();
-				const db = getFirestore();
 
 				if (!auth.currentUser) {
 					setIsLoading(false);
-					
+
 return;
 				}
 
 				const subscriptionId = getStatementSubscriptionId(statementId, auth.currentUser.uid);
 				if (!subscriptionId) {
 					setIsLoading(false);
-					
+
 return;
 				}
 
-				const docRef = doc(db, Collections.statementsSubscribe, subscriptionId);
+				const docRef = doc(DB, Collections.statementsSubscribe, subscriptionId);
 				const docSnap = await getDoc(docRef);
 
 				if (docSnap.exists()) {
