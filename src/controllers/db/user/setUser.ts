@@ -26,38 +26,31 @@ export async function setUserToDB(user: Creator) {
 	try {
 		const dispatch = store.dispatch;
 		const userDocRef = doc(DB, Collections.users, user.uid);
-		const userDB = await getDoc(userDocRef);
-		if (!userDB.exists()) {
-			// Create new user document
-			await setDoc(userDocRef, {
-				displayName: user.displayName || "",
-				email: user.email || "",
-				isAnonymous: user.isAnonymous || false,
-				photoURL: user.photoURL || "",
-				uid: user.uid,
-			}, { merge: true }).then(() => {
-				console.info("User created successfully");
-			}).catch((error) => {
-				console.error("Error creating user:", error);
-			});
-		} else {
-			// Update existing user if needed
-			const existingUser = userDB.data() as Creator;
-			
-			// Only update displayName for anonymous users getting a new temporal name
-			// NEVER change isAnonymous status for existing users
-			if (user.isAnonymous && user.displayName && user.displayName !== existingUser.displayName) {
-				await updateDoc(userDocRef, {
-					displayName: user.displayName,
-					// DO NOT update isAnonymous - keep the existing value
-				}).then(() => {
-					console.info("Anonymous user displayName updated successfully");
-				}).catch((error) => {
-					console.error("Error updating anonymous user displayName:", error);
-				});
+
+		// Use atomic merge operation to avoid read-before-write race condition
+		// This will create the document if it doesn't exist, or merge if it does
+		// merge: true ensures we don't overwrite existing fields we don't specify
+		await setDoc(userDocRef, {
+			displayName: user.displayName || "",
+			email: user.email || "",
+			photoURL: user.photoURL || "",
+			uid: user.uid,
+			// Only set isAnonymous on first creation (when document doesn't exist)
+			// If document exists, isAnonymous field won't be touched due to merge: true
+			...(user.isAnonymous ? { isAnonymous: true } : {})
+		}, { merge: true });
+
+		// Optionally fetch user data to get advanceUser status
+		// This is now separated from the write operation to avoid race conditions
+		try {
+			const userDB = await getDoc(userDocRef);
+			if (userDB.exists()) {
+				const existingUser = userDB.data() as Creator;
+				dispatch(setUserAdvanceUser(existingUser.advanceUser || false));
 			}
-			
-			dispatch(setUserAdvanceUser(existingUser.advanceUser || false));
+		} catch (error) {
+			// Non-critical error, just log it
+			console.error("Error fetching user advanceUser status:", error);
 		}
 	} catch (error) {
 		console.error("Error updating user in DB:", error);

@@ -1,6 +1,6 @@
 import { collection, onSnapshot, query, where, orderBy } from 'firebase/firestore';
 import { Collections, Feedback } from 'delib-npm';
-import { FireStore } from '../config';
+import { DB } from '../config';
 import { convertTimestampsToMillis } from '@/helpers/timestampHelpers';
 
 export function listenToFeedback(
@@ -15,7 +15,7 @@ export function listenToFeedback(
 		}
 
 		const feedbackQuery = query(
-			collection(FireStore, Collections.feedback),
+			collection(DB, Collections.feedback),
 			where('statementId', '==', statementId),
 			orderBy('createdAt', 'desc')
 		);

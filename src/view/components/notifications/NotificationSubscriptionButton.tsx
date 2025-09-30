@@ -2,7 +2,8 @@ import React, { useEffect, useState, FC } from 'react';
 import styles from './notificationSubscriptionButton.module.scss';
 import { notificationService } from '@/services/notificationService';
 import { getAuth } from 'firebase/auth';
-import { doc, getDoc, getFirestore } from 'firebase/firestore';
+import { doc, getDoc } from 'firebase/firestore';
+import { DB } from '@/controllers/db/config';
 import { Collections, StatementSubscription } from 'delib-npm';
 import { getStatementSubscriptionId } from '@/controllers/general/helpers';
 import { updateNotificationPreferences } from '@/controllers/db/subscriptions/setSubscriptions';
@@ -37,7 +38,6 @@ const NotificationSubscriptionButton: FC<NotificationSubscriptionButtonProps> = 
 			try {
 				setIsLoading(true);
 				const auth = getAuth();
-				const db = getFirestore();
 
 				if (!auth.currentUser) {
 					setIsLoading(false);
@@ -48,7 +48,7 @@ const NotificationSubscriptionButton: FC<NotificationSubscriptionButtonProps> = 
 				// Check subscription preferences
 				const subscriptionId = getStatementSubscriptionId(statementId, auth.currentUser.uid);
 				if (subscriptionId) {
-					const docRef = doc(db, Collections.statementsSubscribe, subscriptionId);
+					const docRef = doc(DB, Collections.statementsSubscribe, subscriptionId);
 					const docSnap = await getDoc(docRef);
 
 					if (docSnap.exists()) {

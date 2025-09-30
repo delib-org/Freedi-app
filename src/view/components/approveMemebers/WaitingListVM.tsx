@@ -1,8 +1,7 @@
 import { listenToWaitingForMembership } from "@/controllers/db/membership/getMembership";
 import { creatorSelector } from "@/redux/creator/creatorSlice";
 import { selectWaitingMember } from "@/redux/subscriptions/subscriptionsSlice";
-import { Unsubscribe } from "firebase/firestore";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo } from "react";
 import { useSelector } from "react-redux";
 
 export function useApproveMembership() {
@@ -10,41 +9,23 @@ export function useApproveMembership() {
 	const waitingListFromStore = useSelector(selectWaitingMember);
 	const waitingList = useMemo(() => waitingListFromStore, [waitingListFromStore]);
 	const userId = user?.uid;
-	const listenerRef = useRef<Unsubscribe | null>(null);
-	const isSettingUp = useRef(false);
 
 	useEffect(() => {
-		// Prevent multiple simultaneous setups
-		if (isSettingUp.current) {
-			return;
-		}
-
 		if (!userId) {
 			return;
 		}
 
-		// If listener already exists, don't set up another one
-		if (listenerRef.current) {
-			return;
-		}
-
-		isSettingUp.current = true;
-
-		try {
-			const unsubscribe = listenToWaitingForMembership();
-			listenerRef.current = unsubscribe;
-		} catch (error) {
-			console.error("Error setting up waiting membership listener:", error);
-		} finally {
-			isSettingUp.current = false;
-		}
+		// The listener now handles all the logic internally:
+		// - Checks if user is admin
+		// - Uses ListenerManager to prevent duplicates
+		// - Only sets up listener if needed
+		const unsubscribe = listenToWaitingForMembership();
 
 		// Cleanup function
 		return () => {
-			if (listenerRef.current) {
+			if (unsubscribe) {
 				try {
-					listenerRef.current();
-					listenerRef.current = null;
+					unsubscribe();
 				} catch (error) {
 					console.error("Error cleaning up waiting membership listener:", error);
 				}

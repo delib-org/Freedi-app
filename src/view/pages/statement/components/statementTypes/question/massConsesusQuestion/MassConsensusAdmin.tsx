@@ -22,6 +22,7 @@ import { Link } from 'react-router';
 import { toggleStatementAnchored } from '@/controllers/db/statements/setStatements';
 import { listenToFeedback } from '@/controllers/db/feedback/listenToFeedback';
 import FeedbackCard from './components/feedbackCard/FeedbackCard';
+import { listenerManager } from '@/controllers/utils/ListenerManager';
 
 const MassConsensusAdmin = () => {
 	const { statementId } = useParams<{ statementId: string }>();
@@ -65,9 +66,16 @@ const MassConsensusAdmin = () => {
 
 	useEffect(() => {
 		if (!statementId) return;
-		const unsubscribe = listenToFeedback(statementId, setFeedbackList);
 
-		return () => unsubscribe();
+		// Use ListenerManager to prevent duplicate feedback listeners
+		const listenerKey = `feedback-${statementId}`;
+		listenerManager.addListener(listenerKey, () => {
+			return listenToFeedback(statementId, setFeedbackList);
+		});
+
+		return () => {
+			listenerManager.removeListener(listenerKey);
+		};
 	}, [statementId]);
 
 	return (

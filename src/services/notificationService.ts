@@ -1,7 +1,7 @@
 import { getMessaging, getToken, onMessage, deleteToken, Messaging, MessagePayload } from "firebase/messaging";
 import { app, DB } from "@/controllers/db/config";
 import { vapidKey } from "@/controllers/db/configKey";
-import { setDoc, doc, getFirestore, deleteDoc, getDoc, Timestamp, getDocs, query, where, collection } from "firebase/firestore";
+import { setDoc, doc, deleteDoc, getDoc, Timestamp, getDocs, query, where, collection } from "firebase/firestore";
 import { Collections } from "delib-npm";
 import { addTokenToSubscription, removeTokenFromSubscription } from "@/controllers/db/subscriptions/setSubscriptions";
 
@@ -10,8 +10,8 @@ const isServiceWorkerSupported = () => 'serviceWorker' in navigator;
 // Helper function to check if notifications are supported
 const isNotificationSupported = () => 'Notification' in window;
 
-// Initialize Firebase components that don't require service workers
-const db = getFirestore(app);
+// Use the singleton DB instance from config
+const db = DB;
 
 // Token refresh interval (30 days in milliseconds)
 const TOKEN_REFRESH_INTERVAL = 30 * 24 * 60 * 60 * 1000;
