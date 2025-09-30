@@ -53,7 +53,7 @@ const RandomSuggestions = () => {
       {/* Get New Suggestions Button */}
       <div className={styles.batchControls}>
         <button
-          className={styles.refreshButton}
+          className={`btn btn--secondary btn--img ${evaluationsLeft > 0 || isRefreshing ? 'btn--disabled' : ''}`}
           onClick={handleGetNewSuggestions}
           disabled={evaluationsLeft > 0 || isRefreshing}
           aria-label={t("Get new suggestions")}
