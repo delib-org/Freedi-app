@@ -504,16 +504,24 @@ service cloud.firestore {
 
     // Feedback collection rules
     match /feedback/{feedbackId} {
+      function isStatementAdmin() {
+        let feedback = resource != null ? resource : request.resource;
+        let statementId = feedback.data.statementId;
+        let subId = string(request.auth.uid) + '--' + cleanPath(string(statementId));
+        let subscription = get(/databases/$(database)/documents/statementsSubscribe/$(subId)).data;
+        return subscription != null && subscription.role == 'admin';
+      }
+
       // Only authenticated users can create feedback
       allow create: if request.auth != null &&
                       request.auth.uid == request.resource.data.creator.uid &&
                       request.resource.data.feedbackText != null &&
                       request.resource.data.feedbackText != "";
 
-      // Only the feedback creator or admins can read their feedback
-      // In production, you may want to allow statement admins to read feedback
+      // Feedback creator, statement admins, or tal.yaron@gmail.com can read feedback
       allow read: if request.auth != null &&
                     (request.auth.uid == resource.data.creator.uid ||
+                     isStatementAdmin() ||
                      request.auth.token.email == "tal.yaron@gmail.com");
 
       // Feedback cannot be updated or deleted once submitted

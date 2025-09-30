@@ -2,39 +2,55 @@ import { listenToWaitingForMembership } from "@/controllers/db/membership/getMem
 import { creatorSelector } from "@/redux/creator/creatorSlice";
 import { selectWaitingMember } from "@/redux/subscriptions/subscriptionsSlice";
 import { Unsubscribe } from "firebase/firestore";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useSelector } from "react-redux";
 
 export function useApproveMembership() {
 	const user = useSelector(creatorSelector);
-	const waitingListFromStore = useSelector(selectWaitingMember)
+	const waitingListFromStore = useSelector(selectWaitingMember);
 	const waitingList = useMemo(() => waitingListFromStore, [waitingListFromStore]);
 	const userId = user?.uid;
-	try {
+	const listenerRef = useRef<Unsubscribe | null>(null);
+	const isSettingUp = useRef(false);
 
-		useEffect(() => {
+	useEffect(() => {
+		// Prevent multiple simultaneous setups
+		if (isSettingUp.current) {
+			return;
+		}
 
-			let unsubscribe: Unsubscribe | undefined = undefined;
+		if (!userId) {
+			return;
+		}
 
-			if (!userId) return;
+		// If listener already exists, don't set up another one
+		if (listenerRef.current) {
+			return;
+		}
 
-			unsubscribe = listenToWaitingForMembership();
+		isSettingUp.current = true;
 
-			// This is the actual cleanup function for useEffect
-			return () => {
+		try {
+			const unsubscribe = listenToWaitingForMembership();
+			listenerRef.current = unsubscribe;
+		} catch (error) {
+			console.error("Error setting up waiting membership listener:", error);
+		} finally {
+			isSettingUp.current = false;
+		}
 
-				if (unsubscribe) {
-					unsubscribe();
+		// Cleanup function
+		return () => {
+			if (listenerRef.current) {
+				try {
+					listenerRef.current();
+					listenerRef.current = null;
+				} catch (error) {
+					console.error("Error cleaning up waiting membership listener:", error);
 				}
-			};
-		}, [userId]);
+			}
+		};
+	}, [userId]);
 
-		return { waitingList }
-
-	} catch (error) {
-		// Handle error appropriately, e.g., log it or rethrow it
-		console.error("Error in useApproveMembership:", error);
-		throw error; // Rethrow the error if needed
-
-	}
+	return { waitingList };
 } 
