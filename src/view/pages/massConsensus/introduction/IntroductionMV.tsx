@@ -52,6 +52,7 @@ async function getInitialMCData(
 ): Promise<{ statement: Statement | null; error: string }> {
 	const deployedEndPoint = import.meta.env.VITE_APP_MASS_CONSENSUS_ENDPOINT;
 
+	// Use the project ID from the Firebase configuration
 	const localEndPoint = `http://localhost:5001/${firebaseConfig.projectId}/${functionConfig.region}/massConsensusGetInitialData`;
 
 	const requestUrl =

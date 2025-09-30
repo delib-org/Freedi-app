@@ -451,6 +451,7 @@ export function APIEndPoint(
 
 	// Check if running on localhost
 	if (window.location.hostname === 'localhost') {
+		// Use the project ID from the Firebase configuration
 		return `http://localhost:5001/${firebaseConfig.projectId}/${functionConfig.region}/${functionName}${queryString ? '?' : ''}${queryString}`;
 	}
 

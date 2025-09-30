@@ -75,10 +75,7 @@ export class ListenerManager {
 	): Promise<boolean> {
 		// Check if listener already exists or is being set up
 		if (this.listeners.has(key) || this.pendingListeners.has(key)) {
-			if (this.shouldLog()) {
-				console.info(`Listener '${key}' already exists or is being set up, skipping`);
-			}
-
+			// Silent skip - no console output
 			return false;
 		}
 
@@ -115,9 +112,7 @@ export class ListenerManager {
 			// Remove from pending
 			this.pendingListeners.delete(key);
 
-			if (this.shouldLog()) {
-				console.info(`Listener '${key}' added successfully`);
-			}
+			// Silent success - no console output
 
 			return true;
 		} catch (error) {
@@ -139,9 +134,7 @@ export class ListenerManager {
 			try {
 				listenerInfo.unsubscribe();
 				this.listeners.delete(key);
-				if (this.shouldLog()) {
-					console.info(`Listener '${key}' removed successfully (fetched ${listenerInfo.stats.documentCount} docs in ${listenerInfo.stats.updateCount} updates)`);
-				}
+				// Silent removal - no console output
 
 				return true;
 			} catch (error) {

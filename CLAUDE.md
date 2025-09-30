@@ -34,3 +34,4 @@
   const data = convertTimestampsToMillis(doc.data());
   ```
 - **Valibot validation**: All timestamp fields must be `z.number()` or `z.ZodNumber`
+- never never import style from a component, unless it is it own scss module. all the globla styles are imported on main.tsx from style.scss
