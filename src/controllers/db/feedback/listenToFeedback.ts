@@ -32,8 +32,11 @@ export function listenToFeedback(
 						if (data && data.feedbackText) {
 							feedbackList.push({
 								...data,
-								// Ensure creator exists with at least uid
-								creator: data.creator || { uid: 'unknown' }
+								// Ensure creator exists with required fields
+								creator: data.creator || {
+									uid: 'unknown',
+									displayName: 'Unknown User'
+								}
 							});
 						}
 					});
