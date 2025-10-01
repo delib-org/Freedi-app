@@ -34,12 +34,20 @@ export function sortSubStatements(
 					break;
 
 				case SortType.random:
-					// Use a seeded random for consistent sorting
+					// Use a seeded random for consistent sorting within a session
 					if (randomSeed) {
-						// Simple seeded random using the seed and statement IDs
+						// Create a hash that combines the seed with statement IDs
+						// This ensures different orders for different seeds
 						_subStatements = subStatements.sort((a, b) => {
-							const hashA = (randomSeed + a.statementId).split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-							const hashB = (randomSeed + b.statementId).split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+							// Combine seed with statement ID and create a pseudo-random hash
+							const hashA = `${randomSeed}-${a.statementId}`.split('').reduce(
+								(acc, char, index) => acc + char.charCodeAt(0) * (index + 1) * randomSeed % 10000,
+								0
+							);
+							const hashB = `${randomSeed}-${b.statementId}`.split('').reduce(
+								(acc, char, index) => acc + char.charCodeAt(0) * (index + 1) * randomSeed % 10000,
+								0
+							);
 							return hashA - hashB;
 						});
 					} else {
