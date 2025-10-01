@@ -117,6 +117,25 @@ const SuggestionCards: FC<Props> = ({
 		[subStatements]
 	);
 
+	// Create a key that includes consensus values to trigger re-sort when evaluations change
+	const consensusKey = useMemo(() => {
+		if (sort === SortType.accepted) {
+			// Only track consensus when sorting by agreement
+			return subStatements.map(s => `${s.statementId}:${s.consensus || 0}`).sort().join(',');
+		}
+		return ''; // Don't track for other sort types
+	}, [subStatements, sort]);
+
+	// Create a key that includes dates to trigger re-sort when statements are updated
+	const datesKey = useMemo(() => {
+		if (sort === SortType.newest) {
+			return subStatements.map(s => `${s.statementId}:${s.createdAt}`).sort().join(',');
+		} else if (sort === SortType.mostUpdated) {
+			return subStatements.map(s => `${s.statementId}:${s.lastUpdate}`).sort().join(',');
+		}
+		return ''; // Don't track for other sort types
+	}, [subStatements, sort]);
+
 	// Memoize the sort operation to prevent unnecessary recalculations
 	useEffect(() => {
 		// Only calculate if we have subStatements
@@ -133,7 +152,7 @@ const SuggestionCards: FC<Props> = ({
 			randomSeed
 		);
 		setTotalHeight(_totalHeight);
-	}, [subStatementsKey, heightsKey, sort, randomSeed]); // Use stable keys instead of array reference
+	}, [subStatementsKey, heightsKey, consensusKey, datesKey, sort, randomSeed]); // Use stable keys instead of array reference
 
 	if (!subStatements || subStatements.length === 0) {
 		return (
