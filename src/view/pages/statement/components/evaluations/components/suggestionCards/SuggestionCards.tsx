@@ -102,6 +102,18 @@ const SuggestionCards: FC<Props> = ({
 		}
 	}, [sort]);
 
+	// Create a stable key from statement IDs to prevent infinite loops
+	const subStatementsKey = useMemo(() =>
+		subStatements.map(s => s.statementId).sort().join(','),
+		[subStatements]
+	);
+
+	// Create a key that includes heights to trigger re-sort when heights change
+	const heightsKey = useMemo(() =>
+		subStatements.map(s => `${s.statementId}:${s.elementHight || 0}`).sort().join(','),
+		[subStatements]
+	);
+
 	// Memoize the sort operation to prevent unnecessary recalculations
 	useEffect(() => {
 		// Only calculate if we have subStatements
@@ -114,10 +126,11 @@ const SuggestionCards: FC<Props> = ({
 		const { totalHeight: _totalHeight } = sortSubStatements(
 			subStatements,
 			sort,
-			30
+			30,
+			randomSeed
 		);
 		setTotalHeight(_totalHeight);
-	}, [subStatements, sort, randomSeed]);
+	}, [subStatementsKey, heightsKey, sort, randomSeed]); // Use stable keys instead of array reference
 
 	if (!subStatements || subStatements.length === 0) {
 		return (

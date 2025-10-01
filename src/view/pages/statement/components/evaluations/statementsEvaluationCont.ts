@@ -9,7 +9,8 @@ import { Statement, SortType } from 'delib-npm';
 export function sortSubStatements(
 	subStatements: Statement[],
 	sort: string | undefined,
-	gap = 30
+	gap = 30,
+	randomSeed?: number
 ): { totalHeight: number } {
 	try {
 		const dispatch = store.dispatch;
@@ -33,7 +34,17 @@ export function sortSubStatements(
 					break;
 
 				case SortType.random:
-					_subStatements = subStatements.sort(() => Math.random() - 0.5);
+					// Use a seeded random for consistent sorting
+					if (randomSeed) {
+						// Simple seeded random using the seed and statement IDs
+						_subStatements = subStatements.sort((a, b) => {
+							const hashA = (randomSeed + a.statementId).split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+							const hashB = (randomSeed + b.statementId).split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+							return hashA - hashB;
+						});
+					} else {
+						_subStatements = subStatements.sort(() => Math.random() - 0.5);
+					}
 					break;
 				case SortType.mostUpdated:
 					_subStatements = subStatements.sort(
@@ -43,15 +54,26 @@ export function sortSubStatements(
 			}
 		}
 
+		// Check if all heights have been measured
+		const allMeasured = _subStatements.every(s => s.elementHight && s.elementHight > 0);
+
 		let totalHeight = gap;
 		const updates: { statementId: string; top: number }[] = _subStatements
-			.map((subStatement) => {
+			.map((subStatement, index) => {
 				try {
 					const update = {
 						statementId: subStatement.statementId,
 						top: totalHeight,
 					};
-					totalHeight += (subStatement.elementHight || 0) + gap;
+
+					if (allMeasured) {
+						// All heights measured - calculate real positions
+						totalHeight += subStatement.elementHight + gap;
+					} else {
+						// Not all measured yet - stack with minimal offset to allow measurement
+						// Use small offset to prevent complete overlap during measurement
+						totalHeight = gap + (index * 5);
+					}
 
 					return update;
 				} catch (error) {
