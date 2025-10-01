@@ -98,9 +98,12 @@ const SuggestionCards: FC<Props> = ({
 	useEffect(() => {
 		// Generate new random seed when switching to random sort
 		if (sort === SortType.random) {
-			setRandomSeed(Date.now());
+			// Use timestamp from URL query parameter if available (for re-randomization)
+			const searchParams = new URLSearchParams(location.search);
+			const timestamp = searchParams.get('t');
+			setRandomSeed(timestamp ? parseInt(timestamp, 10) : Date.now());
 		}
-	}, [sort]);
+	}, [sort, location.search]);
 
 	// Create a stable key from statement IDs to prevent infinite loops
 	const subStatementsKey = useMemo(() =>
