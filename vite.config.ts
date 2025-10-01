@@ -101,7 +101,7 @@ export default defineConfig(({ mode }) => {
 				output: {
 					manualChunks: {
 						'vendor-react': ['react', 'react-dom', 'react-router'],
-						statement: ['./src/view/pages/statement/StatementMain'],
+						// Removed statement manual chunking to allow better code splitting
 						styles: ['./src/view/style/style.scss'],
 					},
 					assetFileNames: (assetInfo) => {

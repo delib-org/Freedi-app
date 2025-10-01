@@ -86,5 +86,5 @@ def analyze_har(har_path):
 
 if __name__ == '__main__':
     import sys
-    har_path = sys.argv[1] if len(sys.argv) > 1 else '/Users/talyaron/Downloads/freedi-test.web.app4.har'
+    har_path = sys.argv[1] if len(sys.argv) > 1 else '/Users/talyaron/Downloads/freedi-test.web.app5.har'
     analyze_har(har_path)

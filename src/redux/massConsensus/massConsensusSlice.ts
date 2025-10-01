@@ -1,6 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
-import { RootState } from '../store';
+import { RootState } from '../types';
 import { Statement, GeneratedStatement, MassConsensusProcess, updateArray, LoginType } from 'delib-npm';
 import { defaultMassConsensusProcess } from '@/model/massConsensus/massConsensusModel';
 

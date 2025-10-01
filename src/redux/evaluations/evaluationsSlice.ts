@@ -1,6 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
-import { RootState } from '../store';
+import { RootState } from '../types';
 import { Evaluation, EvaluationSchema, updateArray } from 'delib-npm';
 import { parse } from 'valibot';
 
