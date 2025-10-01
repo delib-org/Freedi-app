@@ -176,19 +176,14 @@ return;
 			this.setupForegroundListener();
 
 			// Get FCM token
-			const previousToken = this.token;
 			const token = await this.getOrRefreshToken(userId);
 			// Token result processed
 
 			// Only proceed with token-dependent operations if we have a valid token
 			if (token) {
-				// Only sync with subscriptions if token changed or is new
-				if (previousToken !== token) {
-					console.info('[NotificationService] Token changed, syncing with subscriptions');
-					await this.syncTokenWithSubscriptions(userId);
-				} else {
-					console.info('[NotificationService] Token unchanged, skipping subscription sync');
-				}
+				// Token is already stored centrally in pushNotifications collection
+				// No need to sync with individual subscriptions - backend should look it up there
+				console.info('[NotificationService] Token registered in pushNotifications collection');
 
 				// Set up automatic token refresh
 				this.setupTokenRefresh(userId);
@@ -440,8 +435,8 @@ return null;
 				subscribed: true
 			}, { merge: true });
 
-			// Also add token to the statement subscription
-			await addTokenToSubscription(statementId, userId, token);
+			// Token is already stored in pushNotifications collection
+			// Backend should look it up there - no need to duplicate in subscription
 
 			// Registered for notifications
 
