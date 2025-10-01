@@ -1,7 +1,7 @@
 import { getMessaging, getToken, onMessage, deleteToken, Messaging, MessagePayload } from "firebase/messaging";
 import { app, DB } from "@/controllers/db/config";
 import { vapidKey } from "@/controllers/db/configKey";
-import { setDoc, doc, deleteDoc, getDoc, Timestamp, getDocs, query, where, collection } from "firebase/firestore";
+import { setDoc, doc, deleteDoc, getDoc, Timestamp, getDocs, query, where, collection, writeBatch } from "firebase/firestore";
 import { Collections } from "delib-npm";
 import { addTokenToSubscription, removeTokenFromSubscription } from "@/controllers/db/subscriptions/setSubscriptions";
 
@@ -181,8 +181,9 @@ return;
 
 			// Only proceed with token-dependent operations if we have a valid token
 			if (token) {
-				// Sync token with all user's subscriptions
-				await this.syncTokenWithSubscriptions(userId);
+				// Token is already stored centrally in pushNotifications collection
+				// No need to sync with individual subscriptions - backend should look it up there
+				console.info('[NotificationService] Token registered in pushNotifications collection');
 
 				// Set up automatic token refresh
 				this.setupTokenRefresh(userId);
@@ -434,8 +435,8 @@ return null;
 				subscribed: true
 			}, { merge: true });
 
-			// Also add token to the statement subscription
-			await addTokenToSubscription(statementId, userId, token);
+			// Token is already stored in pushNotifications collection
+			// Backend should look it up there - no need to duplicate in subscription
 
 			// Registered for notifications
 
@@ -740,7 +741,7 @@ return false;
 	public async syncTokenWithSubscriptions(userId: string): Promise<void> {
 		if (!this.token) {
 			console.error('No token available to sync');
-			
+
 return;
 		}
 
@@ -751,25 +752,48 @@ return;
 				where('userId', '==', userId),
 				where('getPushNotification', '==', true)
 			);
-			
+
 			const subscriptionsSnapshot = await getDocs(subscriptionsQuery);
-			
-			// Add current token to all subscriptions
-			const updatePromises = subscriptionsSnapshot.docs.map(doc => {
+
+			// Batch updates for efficiency (Firestore allows max 500 per batch)
+			const BATCH_SIZE = 500;
+			const batches = [];
+			let currentBatch = writeBatch(db);
+			let operationCount = 0;
+
+			for (const doc of subscriptionsSnapshot.docs) {
 				const subscription = doc.data();
 				const statementId = subscription.statementId || subscription.statement?.statementId;
-				
+
 				if (!statementId) {
 					console.error('No statementId found in subscription:', doc.id);
-
-					return Promise.resolve();
+					continue;
 				}
-				
-				return addTokenToSubscription(statementId, userId, this.token!);
-			});
-			
-			await Promise.all(updatePromises);
-			console.info(`Synced token with ${updatePromises.length} subscriptions`);
+
+				// Update the subscription with the token
+				const subscriptionRef = doc.ref;
+				currentBatch.update(subscriptionRef, {
+					token: this.token,
+					lastTokenUpdate: new Date()
+				});
+
+				operationCount++;
+
+				// If we've hit the batch limit, start a new batch
+				if (operationCount % BATCH_SIZE === 0) {
+					batches.push(currentBatch.commit());
+					currentBatch = writeBatch(db);
+				}
+			}
+
+			// Commit the last batch if it has operations
+			if (operationCount % BATCH_SIZE !== 0) {
+				batches.push(currentBatch.commit());
+			}
+
+			// Execute all batches
+			await Promise.all(batches);
+			console.info(`Synced token with ${operationCount} subscriptions in ${batches.length} batch(es)`);
 		} catch (error) {
 			console.error('Error syncing token with subscriptions:', error);
 		}

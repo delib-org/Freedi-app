@@ -1,8 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
 import ReactDOM from 'react-dom';
+import { getAuth } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
+import { Collections } from 'delib-npm';
 import { notificationService } from '@/services/notificationService';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import useClickOutside from '@/controllers/hooks/useClickOutside';
+import { DB } from '@/controllers/db/config';
+import { getStatementSubscriptionId } from '@/controllers/general/helpers';
 import NotificationPreferences from './NotificationPreferences';
 import BellIcon from '@/assets/icons/bellIcon.svg?react';
 import BellSlashIcon from '@/assets/icons/bellSlashIcon.svg?react';
@@ -51,12 +56,6 @@ const NotificationSettingsButton: React.FC<NotificationSettingsButtonProps> = ({
 	useEffect(() => {
 		const checkNotificationPreferences = async () => {
 			try {
-				const { getAuth } = await import('firebase/auth');
-				const { doc, getDoc } = await import('firebase/firestore');
-				const { DB } = await import('@/controllers/db/config');
-				const { Collections } = await import('delib-npm');
-				const { getStatementSubscriptionId } = await import('@/controllers/general/helpers');
-
 				const auth = getAuth();
 
 				if (!auth.currentUser) return;
@@ -66,11 +65,11 @@ const NotificationSettingsButton: React.FC<NotificationSettingsButtonProps> = ({
 
 				const docRef = doc(DB, Collections.statementsSubscribe, subscriptionId);
 				const docSnap = await getDoc(docRef);
-				
+
 				if (docSnap.exists()) {
 					const data = docSnap.data();
-					const allOff = !data.getInAppNotification && 
-								  !data.getEmailNotification && 
+					const allOff = !data.getInAppNotification &&
+								  !data.getEmailNotification &&
 								  !data.getPushNotification;
 					setAllNotificationsOff(allOff);
 				}
@@ -126,10 +125,11 @@ const NotificationSettingsButton: React.FC<NotificationSettingsButtonProps> = ({
 		try {
 			const permission = await notificationService.requestPermission();
 			setPermissionState(permission ? 'granted' : 'denied');
-			
+
 			// If permission was granted, initialize the service
 			if (permission) {
-				const user = await import('firebase/auth').then(m => m.getAuth().currentUser);
+				const auth = getAuth();
+				const user = auth.currentUser;
 				if (user) {
 					await notificationService.initialize(user.uid);
 				}

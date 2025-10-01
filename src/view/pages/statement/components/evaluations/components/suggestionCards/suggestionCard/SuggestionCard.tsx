@@ -49,7 +49,8 @@ const SuggestionCard: FC<Props> = ({
 	if (!parentStatement) console.error('parentStatement is not defined');
 
 	const { t, dir } = useUserConfig();
-	const { isAuthorized, isAdmin, creator } = useAuthorization(statement.statementId);
+	// Use parent's authorization instead of individual card authorization
+	const { isAuthorized, isAdmin, creator } = useAuthorization(parentStatement?.statementId);
 	const { sort } = useParams();
 	const enableJoining = parentStatement?.statementSettings?.joiningEnabled;
 	const showEvaluation = parentStatement?.statementSettings?.showEvaluation;

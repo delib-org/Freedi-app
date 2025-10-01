@@ -18,6 +18,7 @@ interface ListenerInfo {
 	unsubscribe: () => void;
 	stats: ListenerStats;
 	type?: 'collection' | 'document' | 'query';
+	refCount: number; // Track how many components are using this listener
 }
 
 export class ListenerManager {
@@ -60,11 +61,33 @@ export class ListenerManager {
 	}
 
 	/**
+	 * Register intent to use a listener (synchronous)
+	 * This immediately marks the listener as being used to prevent duplicates
+	 */
+	public registerListenerIntent(key: string): boolean {
+		// If listener already exists, just increment ref count
+		const existingListener = this.listeners.get(key);
+		if (existingListener) {
+			existingListener.refCount++;
+			return false; // Listener already exists, no need to set up
+		}
+
+		// Check if being set up by another caller
+		if (this.pendingListeners.has(key)) {
+			return false; // Already being set up, skip
+		}
+
+		// Mark as pending immediately to prevent race conditions
+		this.pendingListeners.add(key);
+		return true; // Caller should proceed with setup
+	}
+
+	/**
 	 * Add a listener with a unique key and optional document counting
 	 * @param key Unique identifier for the listener
 	 * @param setupFn Function that sets up the listener and returns an unsubscribe function
 	 * @param options Options for the listener including type and document count callback
-	 * @returns true if listener was added, false if it already exists
+	 * @returns true if listener was added or ref count increased, false on error
 	 */
 	public async addListener(
 		key: string,
@@ -73,15 +96,11 @@ export class ListenerManager {
 			type?: 'collection' | 'document' | 'query';
 		}
 	): Promise<boolean> {
-		// Check if listener already exists or is being set up
-		if (this.listeners.has(key) || this.pendingListeners.has(key)) {
-			// Silent skip - no console output
-			return false;
-		}
+		// Check if we should set up this listener
+		// This check is now done synchronously via registerListenerIntent
 
 		try {
-			// Mark as pending to prevent duplicate setup attempts
-			this.pendingListeners.add(key);
+			// We assume pendingListeners was already set by registerListenerIntent
 
 			// Create stats for this listener
 			const stats: ListenerStats = {
@@ -102,11 +121,12 @@ export class ListenerManager {
 			// Setup the listener with document counting
 			const unsubscribe = await setupFn(onDocumentCount);
 
-			// Store the listener info
+			// Store the listener info with initial ref count of 1
 			this.listeners.set(key, {
 				unsubscribe,
 				stats,
-				type: options?.type
+				type: options?.type,
+				refCount: 1
 			});
 
 			// Remove from pending
@@ -124,26 +144,34 @@ export class ListenerManager {
 	}
 
 	/**
-	 * Remove a specific listener
+	 * Remove a specific listener (decrements ref count, only unsubscribes at 0)
 	 * @param key Unique identifier for the listener
-	 * @returns true if listener was removed, false if it didn't exist
+	 * @returns true if ref count was decremented, false if it didn't exist
 	 */
 	public removeListener(key: string): boolean {
 		const listenerInfo = this.listeners.get(key);
 		if (listenerInfo) {
-			try {
-				listenerInfo.unsubscribe();
-				this.listeners.delete(key);
-				// Silent removal - no console output
+			// Decrement ref count
+			listenerInfo.refCount--;
 
-				return true;
-			} catch (error) {
-				console.error(`Error removing listener '${key}':`, error);
-				// Still remove from map even if unsubscribe failed
-				this.listeners.delete(key);
+			// Only actually unsubscribe when ref count reaches 0
+			if (listenerInfo.refCount <= 0) {
+				try {
+					listenerInfo.unsubscribe();
+					this.listeners.delete(key);
+					// Silent removal - no console output
 
-				return false;
+					return true;
+				} catch (error) {
+					console.error(`Error removing listener '${key}':`, error);
+					// Still remove from map even if unsubscribe failed
+					this.listeners.delete(key);
+
+					return false;
+				}
 			}
+
+			return true; // Successfully decremented ref count
 		}
 
 		return false;
@@ -190,6 +218,19 @@ export class ListenerManager {
 	 */
 	public getActiveListenerKeys(): string[] {
 		return Array.from(this.listeners.keys());
+	}
+
+	/**
+	 * Log debug info about all listeners
+	 */
+	public debugListeners(): void {
+		console.info('=== Active Listeners Debug ===');
+		console.info(`Total active listeners: ${this.listeners.size}`);
+		console.info(`Pending listeners: ${this.pendingListeners.size}`);
+		this.listeners.forEach((info, key) => {
+			console.info(`  ${key}: refCount=${info.refCount}, type=${info.type}`);
+		});
+		console.info('==============================');
 	}
 
 	/**

@@ -5,8 +5,10 @@ import ErrorPage from '@/view/pages/error/ErrorPage';
 import ProtectedLayout from './ProtectedLayout';
 
 // Error pages
+import Page401 from '@/view/pages/page401/Page401';
+import Page404 from '@/view/pages/page404/Page404';
 
-// Mass Consensus pages
+// Mass Consensus pages - Direct imports for instant navigation
 import MassConsensus from '@/view/pages/massConsensus/MassConsensus';
 import Introduction from '@/view/pages/massConsensus/introduction/Introduction';
 import MassConsensusQuestion from '@/view/pages/massConsensus/massConsesusQuestion/MassConsesusQuestion';
@@ -14,9 +16,10 @@ import RandomSuggestions from '@/view/pages/massConsensus/randomSuggestions/Rand
 import TopSuggestions from '@/view/pages/massConsensus/topSuggestions/TopSuggestions';
 import VotingSuggestions from '@/view/pages/massConsensus/votingSuggestions/VotingSuggestions';
 import ResultsSummary from '@/view/pages/massConsensus/resultsSummary/ResultsSummary';
-
 import LeaveFeedback from '@/view/pages/massConsensus/leaveFeedback/LeaveFeedback';
 import MassConsensusMySuggestions from '@/view/pages/massConsensus/mySuggestions/MassConsensusMySuggestions';
+import ThankYou from '@/view/pages/massConsensus/thankYou/ThankYou';
+import UserDemographicMC from '@/view/pages/massConsensus/massConsesusQuestion/userDemographicMC/UserDemographicMC';
 
 // Protected routes
 import StatementMain from '@/view/pages/statement/StatementMain';
@@ -28,16 +31,13 @@ import AddStatement from '@/view/pages/home/main/addStatement/AddStatement';
 import LoginPage from '@/view/pages/login/LoginFirst';
 import MemberRejection from '@/view/pages/memberRejection/MemberRejection';
 
-// Mass Consensus URLs
-
-import Page401 from '@/view/pages/page401/Page401';
-import Page404 from '@/view/pages/page404/Page404';
-import { MassConsensusPageUrls } from 'delib-npm';
-import ThankYou from '@/view/pages/massConsensus/thankYou/ThankYou';
-import UserDemographicMC from '@/view/pages/massConsensus/massConsesusQuestion/userDemographicMC/UserDemographicMC';
+// User pages
 import My from '@/view/pages/my/My';
 import CheckNotifications from '@/view/pages/settings/ChecNotifications';
 import MySuggestions from '@/view/pages/my-suggestions/MySuggestions';
+
+// Mass Consensus URLs
+import { MassConsensusPageUrls } from 'delib-npm';
 
 // Define errorRoutes
 const errorRoutes = [

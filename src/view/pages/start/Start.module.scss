@@ -1,5 +1,6 @@
-@import url('https://fonts.googleapis.com/css2?family=Bruno+Ace&display=swap');
-@import url('https://fonts.cdnfonts.com/css/overused-grotesk');
+// Special fonts temporarily disabled - using system fallbacks
+// @import url('https://fonts.googleapis.com/css2?family=Bruno+Ace&display=swap');
+// @import url('https://fonts.cdnfonts.com/css/overused-grotesk');
 
 :root {
 	--height-of-interaction-component: 2.5rem;
@@ -54,7 +55,7 @@ body {
 	}
 
 	&__slogan {
-		font-family: 'Overused Grotesk', sans-serif;
+		font-family: system-ui, -apple-system, 'Segoe UI', sans-serif; // Fallback until Overused Grotesk is local
 		display: inline-block;
 		text-align: center;
 		white-space: nowrap;
