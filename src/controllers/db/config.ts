@@ -45,9 +45,30 @@ setPersistence(auth, browserLocalPersistence)
 if (!isProduction()) {
 	console.info('Running on development mode');
 
-	connectFirestoreEmulator(FireStore, '127.0.0.1', 8080);
-	connectAuthEmulator(auth, 'http://localhost:9099');
-	connectStorageEmulator(storage, '127.0.0.1', 9199);
+	try {
+		// Check if emulators are already connected to avoid duplicate connections
+		// @ts-ignore - accessing private property for debugging
+		if (!FireStore._settings?.host?.includes('localhost')) {
+			connectFirestoreEmulator(FireStore, 'localhost', 8080);
+			console.info('Connected to Firestore emulator on localhost:8080');
+		}
+	} catch (error) {
+		console.error('Failed to connect to Firestore emulator:', error);
+	}
+
+	try {
+		connectAuthEmulator(auth, 'http://localhost:9099', { disableWarnings: true });
+		console.info('Connected to Auth emulator on localhost:9099');
+	} catch (error) {
+		console.error('Failed to connect to Auth emulator:', error);
+	}
+
+	try {
+		connectStorageEmulator(storage, 'localhost', 9199);
+		console.info('Connected to Storage emulator on localhost:9199');
+	} catch (error) {
+		console.error('Failed to connect to Storage emulator:', error);
+	}
 }
 
 export { auth, FireStore, storage, app, DB, analytics };

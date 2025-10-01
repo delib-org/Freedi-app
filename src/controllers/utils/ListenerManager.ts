@@ -5,14 +5,48 @@
  * 1. Preventing duplicate listeners for the same resource
  * 2. Managing lifecycle properly
  * 3. Providing clean unsubscribe functionality
+ * 4. Tracking document counts and query statistics
  */
+
+interface ListenerStats {
+	documentCount: number;
+	lastUpdate: number;
+	updateCount: number;
+}
+
+interface ListenerInfo {
+	unsubscribe: () => void;
+	stats: ListenerStats;
+	type?: 'collection' | 'document' | 'query';
+	refCount: number; // Track how many components are using this listener
+}
+
 export class ListenerManager {
 	private static instance: ListenerManager;
-	private listeners = new Map<string, () => void>();
+	private listeners = new Map<string, ListenerInfo>();
 	private pendingListeners = new Set<string>();
+	private totalDocumentsFetched = 0;
+	private totalUpdates = 0;
+	private debugMode = false;
 
 	private constructor() {
 		// Singleton pattern
+		this.logStats = this.logStats.bind(this);
+		// Removed automatic logging - will only log when explicitly requested
+	}
+
+	/**
+	 * Enable or disable debug mode for console logging
+	 */
+	public setDebugMode(enabled: boolean): void {
+		this.debugMode = enabled;
+	}
+
+	/**
+	 * Check if debug logging is enabled
+	 */
+	private shouldLog(): boolean {
+		return this.debugMode;
 	}
 
 	/**
@@ -27,36 +61,78 @@ export class ListenerManager {
 	}
 
 	/**
-	 * Add a listener with a unique key
+	 * Register intent to use a listener (synchronous)
+	 * This immediately marks the listener as being used to prevent duplicates
+	 */
+	public registerListenerIntent(key: string): boolean {
+		// If listener already exists, just increment ref count
+		const existingListener = this.listeners.get(key);
+		if (existingListener) {
+			existingListener.refCount++;
+			return false; // Listener already exists, no need to set up
+		}
+
+		// Check if being set up by another caller
+		if (this.pendingListeners.has(key)) {
+			return false; // Already being set up, skip
+		}
+
+		// Mark as pending immediately to prevent race conditions
+		this.pendingListeners.add(key);
+		return true; // Caller should proceed with setup
+	}
+
+	/**
+	 * Add a listener with a unique key and optional document counting
 	 * @param key Unique identifier for the listener
 	 * @param setupFn Function that sets up the listener and returns an unsubscribe function
-	 * @returns true if listener was added, false if it already exists
+	 * @param options Options for the listener including type and document count callback
+	 * @returns true if listener was added or ref count increased, false on error
 	 */
 	public async addListener(
 		key: string,
-		setupFn: () => (() => void) | Promise<() => void>
-	): Promise<boolean> {
-		// Check if listener already exists or is being set up
-		if (this.listeners.has(key) || this.pendingListeners.has(key)) {
-			console.info(`Listener '${key}' already exists or is being set up, skipping`);
-
-			return false;
+		setupFn: (onDocumentCount?: (count: number) => void) => (() => void) | Promise<() => void>,
+		options?: {
+			type?: 'collection' | 'document' | 'query';
 		}
+	): Promise<boolean> {
+		// Check if we should set up this listener
+		// This check is now done synchronously via registerListenerIntent
 
 		try {
-			// Mark as pending to prevent duplicate setup attempts
-			this.pendingListeners.add(key);
+			// We assume pendingListeners was already set by registerListenerIntent
 
-			// Setup the listener
-			const unsubscribe = await setupFn();
+			// Create stats for this listener
+			const stats: ListenerStats = {
+				documentCount: 0,
+				lastUpdate: Date.now(),
+				updateCount: 0
+			};
 
-			// Store the unsubscribe function
-			this.listeners.set(key, unsubscribe);
+			// Document count callback
+			const onDocumentCount = (count: number) => {
+				stats.documentCount = count;
+				stats.lastUpdate = Date.now();
+				stats.updateCount++;
+				this.totalDocumentsFetched += count;
+				this.totalUpdates++;
+			};
+
+			// Setup the listener with document counting
+			const unsubscribe = await setupFn(onDocumentCount);
+
+			// Store the listener info with initial ref count of 1
+			this.listeners.set(key, {
+				unsubscribe,
+				stats,
+				type: options?.type,
+				refCount: 1
+			});
 
 			// Remove from pending
 			this.pendingListeners.delete(key);
 
-			console.info(`Listener '${key}' added successfully`);
+			// Silent success - no console output
 
 			return true;
 		} catch (error) {
@@ -68,26 +144,34 @@ export class ListenerManager {
 	}
 
 	/**
-	 * Remove a specific listener
+	 * Remove a specific listener (decrements ref count, only unsubscribes at 0)
 	 * @param key Unique identifier for the listener
-	 * @returns true if listener was removed, false if it didn't exist
+	 * @returns true if ref count was decremented, false if it didn't exist
 	 */
 	public removeListener(key: string): boolean {
-		const unsubscribe = this.listeners.get(key);
-		if (unsubscribe) {
-			try {
-				unsubscribe();
-				this.listeners.delete(key);
-				console.info(`Listener '${key}' removed successfully`);
+		const listenerInfo = this.listeners.get(key);
+		if (listenerInfo) {
+			// Decrement ref count
+			listenerInfo.refCount--;
 
-				return true;
-			} catch (error) {
-				console.error(`Error removing listener '${key}':`, error);
-				// Still remove from map even if unsubscribe failed
-				this.listeners.delete(key);
+			// Only actually unsubscribe when ref count reaches 0
+			if (listenerInfo.refCount <= 0) {
+				try {
+					listenerInfo.unsubscribe();
+					this.listeners.delete(key);
+					// Silent removal - no console output
 
-				return false;
+					return true;
+				} catch (error) {
+					console.error(`Error removing listener '${key}':`, error);
+					// Still remove from map even if unsubscribe failed
+					this.listeners.delete(key);
+
+					return false;
+				}
 			}
+
+			return true; // Successfully decremented ref count
 		}
 
 		return false;
@@ -137,6 +221,19 @@ export class ListenerManager {
 	}
 
 	/**
+	 * Log debug info about all listeners
+	 */
+	public debugListeners(): void {
+		console.info('=== Active Listeners Debug ===');
+		console.info(`Total active listeners: ${this.listeners.size}`);
+		console.info(`Pending listeners: ${this.pendingListeners.size}`);
+		this.listeners.forEach((info, key) => {
+			console.info(`  ${key}: refCount=${info.refCount}, type=${info.type}`);
+		});
+		console.info('==============================');
+	}
+
+	/**
 	 * Remove all listeners
 	 */
 	public removeAllListeners(): void {
@@ -151,7 +248,7 @@ export class ListenerManager {
 	 */
 	public cleanupStatementListeners(statementId: string): void {
 		const removed = this.removeMatchingListeners(`statement-${statementId}`);
-		if (removed > 0) {
+		if (removed > 0 && this.shouldLog()) {
 			console.info(`Cleaned up ${removed} listeners for statement ${statementId}`);
 		}
 	}
@@ -162,8 +259,105 @@ export class ListenerManager {
 	 */
 	public cleanupUserListeners(userId: string): void {
 		const removed = this.removeMatchingListeners(`user-${userId}`);
-		if (removed > 0) {
+		if (removed > 0 && this.shouldLog()) {
 			console.info(`Cleaned up ${removed} listeners for user ${userId}`);
+		}
+	}
+
+	/**
+	 * Get statistics for a specific listener
+	 * @param key Unique identifier for the listener
+	 */
+	public getListenerStats(key: string): ListenerStats | null {
+		const listener = this.listeners.get(key);
+		
+return listener ? { ...listener.stats } : null;
+	}
+
+	/**
+	 * Get overall statistics for all listeners
+	 */
+	public getOverallStats() {
+		const stats = {
+			activeListeners: this.listeners.size,
+			totalDocumentsFetched: this.totalDocumentsFetched,
+			totalUpdates: this.totalUpdates,
+			averageDocsPerUpdate: this.totalUpdates > 0
+				? Math.round(this.totalDocumentsFetched / this.totalUpdates)
+				: 0,
+			listenerBreakdown: {
+				collection: 0,
+				document: 0,
+				query: 0,
+				unknown: 0
+			},
+			topListeners: [] as Array<{
+				key: string;
+				documentCount: number;
+				updateCount: number;
+				type?: string;
+			}>
+		};
+
+		// Calculate breakdown and collect listener details
+		const listenerDetails: Array<{
+			key: string;
+			documentCount: number;
+			updateCount: number;
+			type?: string;
+		}> = [];
+
+		for (const [key, info] of this.listeners) {
+			const type = info.type || 'unknown';
+			stats.listenerBreakdown[type as keyof typeof stats.listenerBreakdown]++;
+
+			listenerDetails.push({
+				key,
+				documentCount: info.stats.documentCount,
+				updateCount: info.stats.updateCount,
+				type: info.type
+			});
+		}
+
+		// Sort by document count and get top 10
+		stats.topListeners = listenerDetails
+			.sort((a, b) => b.documentCount - a.documentCount)
+			.slice(0, 10);
+
+		return stats;
+	}
+
+	/**
+	 * Log current statistics
+	 */
+	public logStats(): void {
+		const stats = this.getOverallStats();
+		console.info('=== ListenerManager Statistics ===');
+		console.info(`Active Listeners: ${stats.activeListeners}`);
+		console.info(`Total Documents Fetched: ${stats.totalDocumentsFetched}`);
+		console.info(`Total Updates: ${stats.totalUpdates}`);
+		console.info(`Average Docs/Update: ${stats.averageDocsPerUpdate}`);
+		console.info(`Breakdown: Collections: ${stats.listenerBreakdown.collection}, Documents: ${stats.listenerBreakdown.document}, Queries: ${stats.listenerBreakdown.query}`);
+
+		if (stats.topListeners.length > 0) {
+			console.info('Top Listeners by Document Count:');
+			stats.topListeners.forEach((listener, index) => {
+				console.info(`  ${index + 1}. ${listener.key}: ${listener.documentCount} docs in ${listener.updateCount} updates`);
+			});
+		}
+		console.info('================================');
+	}
+
+	/**
+	 * Reset all statistics (useful for testing)
+	 */
+	public resetStats(): void {
+		this.totalDocumentsFetched = 0;
+		this.totalUpdates = 0;
+		for (const [, info] of this.listeners) {
+			info.stats.documentCount = 0;
+			info.stats.updateCount = 0;
+			info.stats.lastUpdate = Date.now();
 		}
 	}
 }

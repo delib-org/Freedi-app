@@ -85,14 +85,9 @@ export async function setStatementSubscriptionToDB({
 			merge: true,
 		});
 
-		// If user wants push notifications and notification service is initialized, add their token
-		if (getPushNotification && notificationService.isInitialized()) {
-			const token = notificationService.getToken();
-			if (token) {
-				// Add the current FCM token to the subscription
-				await addTokenToSubscription(statementId, creator.uid, token);
-			}
-		}
+		// Token is stored centrally in pushNotifications collection
+		// Backend should look it up there when sending notifications
+		// No need to duplicate token in each subscription
 	} catch (error) {
 		// Only log non-permission errors
 		if (error.code !== 'permission-denied') {

@@ -62,7 +62,19 @@ export function sortSubStatements(
 				statementId: string;
 				top: number;
 			}[];
-		dispatch(updateStatementTop(updates));
+
+		// Only dispatch if the top values have actually changed
+		const currentState = store.getState();
+		const hasChanges = updates.some((update) => {
+			const statement = currentState.statements.statements.find(
+				(s) => s.statementId === update.statementId
+			);
+			return !statement || statement.top !== update.top;
+		});
+
+		if (hasChanges) {
+			dispatch(updateStatementTop(updates));
+		}
 
 		return { totalHeight };
 	} catch (error) {

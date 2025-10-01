@@ -51,6 +51,7 @@ export function useRandomSuggestions() {
 	const fetchRandomStatements = async () => {
 		if (statementId) {
 			try {
+				setLoadingStatements(true);
 				const endPoint = APIEndPoint('getRandomStatements', {
 					parentId: statementId,
 					limit: 6,
@@ -65,7 +66,7 @@ export function useRandomSuggestions() {
 
 				const { statements } = await response.json();
 				if (!statements) throw new Error('No statements found');
-				
+
 				setSubStatements(statements);
 				dispatch(
 					setMassConsensusStatements({
@@ -76,9 +77,10 @@ export function useRandomSuggestions() {
 				setLoadingStatements(false);
 			} catch (error) {
 				console.error('Error:', error);
+				setLoadingStatements(false);
 			}
 		}
 	};
 
-	return { subStatements, navigateToTop, loadingStatements, statement};
+	return { subStatements, navigateToTop, loadingStatements, statement, fetchRandomStatements};
 }

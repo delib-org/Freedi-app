@@ -49,12 +49,17 @@ const SimpleSuggestionCards: FC<Props> = ({
 			);
 	}, [statement, statementId, dispatch]);
 
+	// Listen to evaluations
 	useEffect(() => {
 		if (!statementId) return;
 
 		const unsubscribe = listenToEvaluations(statementId);
 
-		return () => unsubscribe();
+		return () => {
+			if (unsubscribe) {
+				unsubscribe();
+			}
+		};
 	}, [statementId]);
 
 	if (!subStatements || subStatements.length === 0) {

@@ -1,5 +1,5 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { RootState } from '../store';
+import { RootState } from '../types';
 import { Results } from 'delib-npm';
 
 // Define a type for the slice state

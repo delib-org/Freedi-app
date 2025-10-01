@@ -1,4 +1,4 @@
-import { FC, useEffect, useState } from 'react';
+import { FC, useEffect, useState, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useParams, useLocation } from 'react-router';
 
@@ -30,10 +30,12 @@ const SuggestionCards: FC<Props> = ({
 	selectionFunction,
 	subStatements: propSubStatements,
 }) => {
-	const { sort: sortFromUrl, statementId } = useParams();
+	const params = useParams();
 	const location = useLocation();
 
-	const sort = propSort || sortFromUrl || SortType.newest;
+	// Memoize statementId to prevent unnecessary effect re-runs
+	const statementId = useMemo(() => params.statementId, [params.statementId]);
+	const sort = propSort || params.sort || SortType.newest;
 
 	const dispatch = useDispatch();
 	const statement = useSelector(statementSelector(statementId));
@@ -48,23 +50,29 @@ const SuggestionCards: FC<Props> = ({
 	);
 
 	// Check if user is admin
-	const isAdmin = 
+	const isAdmin =
 		creator?.uid === parentSubscription?.statement?.creatorId ||
 		parentSubscription?.role === Role.admin;
 
-	// Filter statements based on visibility and permissions
-	const visibleStatements = statementsFromStore.filter(st => 
-		st.hide !== true || st.creatorId === creator?.uid || isAdmin
+	// Memoize filtered statements to prevent unnecessary recalculations
+	const visibleStatements = useMemo(() =>
+		statementsFromStore.filter(st =>
+			st.hide !== true || st.creatorId === creator?.uid || isAdmin
+		),
+		[statementsFromStore, creator?.uid, isAdmin]
 	);
 
-	const subStatements =
+	// Memoize subStatements to prevent unnecessary recalculations
+	const subStatements = useMemo(() =>
 		propSubStatements ||
 		(selectionFunction
 			? visibleStatements.filter(
 				(sub: Statement) =>
 					sub.evaluation.selectionFunction === selectionFunction
 			)
-			: visibleStatements);
+			: visibleStatements),
+		[propSubStatements, selectionFunction, visibleStatements]
+	);
 
 	useEffect(() => {
 		if (!statement && statementId)
@@ -73,38 +81,43 @@ const SuggestionCards: FC<Props> = ({
 			);
 	}, [statement, statementId, dispatch]);
 
+	// Listen to evaluations - but only when statementId is truly available and stable
 	useEffect(() => {
+		// Only set up listener if we have a real statementId (not undefined or changing)
 		if (!statementId) return;
 
 		const unsubscribe = listenToEvaluations(statementId);
 
-		return () => unsubscribe();
-	}, [statementId]);
+		return () => {
+			if (unsubscribe) {
+				unsubscribe();
+			}
+		};
+	}, [statementId]); // Only re-run if statementId actually changes
 
 	useEffect(() => {
-		// Generate new random seed when switching to random sort or when query params change
+		// Generate new random seed when switching to random sort
 		if (sort === SortType.random) {
 			setRandomSeed(Date.now());
 		}
-		
+	}, [sort]);
+
+	// Memoize the sort operation to prevent unnecessary recalculations
+	useEffect(() => {
+		// Only calculate if we have subStatements
+		if (!subStatements || subStatements.length === 0) {
+			setTotalHeight(0);
+			return;
+		}
+
+		// Calculate heights and sort substatements
 		const { totalHeight: _totalHeight } = sortSubStatements(
 			subStatements,
 			sort,
 			30
 		);
 		setTotalHeight(_totalHeight);
-	}, [sort, location.search]);
-
-	useEffect(() => {
-		const _totalHeight = subStatements.reduce(
-			(acc: number, sub: Statement) => {
-				return acc + (sub.elementHight ?? 200);
-			},
-			0
-		);
-		setTotalHeight(_totalHeight);
-		sortSubStatements(subStatements, sort, 30);
-	}, [subStatements.length, sort, sort === SortType.random ? randomSeed : null]);
+	}, [subStatements, sort, randomSeed]);
 
 	if (!subStatements || subStatements.length === 0) {
 		return (
