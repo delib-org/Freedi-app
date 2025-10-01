@@ -24,6 +24,17 @@ export function createManagedDocumentListener(
 	onNext: (snapshot: DocumentSnapshot) => void,
 	onError?: (error: FirestoreError) => void
 ): Unsubscribe {
+	// SYNCHRONOUS check - prevents race conditions
+	const shouldSetup = listenerManager.registerListenerIntent(key);
+
+	if (!shouldSetup) {
+		// Listener already exists or is being set up
+		// Return unsubscribe that just decrements ref count
+		return () => {
+			listenerManager.removeListener(key);
+		};
+	}
+
 	// Setup function that will be called by ListenerManager
 	const setupFn = (onDocumentCount?: (count: number) => void) => {
 		return onSnapshot(
@@ -39,10 +50,15 @@ export function createManagedDocumentListener(
 		);
 	};
 
-	// Add listener to manager
-	listenerManager.addListener(key, setupFn, { type: 'document' });
+	// Add listener to manager (we already registered intent synchronously)
+	listenerManager.addListener(key, setupFn, { type: 'document' }).catch(error => {
+		console.error(`Failed to add listener ${key}:`, error);
+		// Clean up pending state if setup fails
+		listenerManager.removeListener(key);
+	});
 
-	// Return unsubscribe function that removes from manager
+	// Always return unsubscribe function that removes from manager
+	// The manager will handle ref counting and only unsubscribe when count reaches 0
 	return () => {
 		listenerManager.removeListener(key);
 	};
@@ -63,6 +79,17 @@ export function createManagedCollectionListener(
 	onError?: (error: FirestoreError) => void,
 	type: 'collection' | 'query' = 'query'
 ): Unsubscribe {
+	// SYNCHRONOUS check - prevents race conditions
+	const shouldSetup = listenerManager.registerListenerIntent(key);
+
+	if (!shouldSetup) {
+		// Listener already exists or is being set up
+		// Return unsubscribe that just decrements ref count
+		return () => {
+			listenerManager.removeListener(key);
+		};
+	}
+
 	// Setup function that will be called by ListenerManager
 	const setupFn = (onDocumentCount?: (count: number) => void) => {
 		let isFirstCall = true;
@@ -91,10 +118,15 @@ export function createManagedCollectionListener(
 		);
 	};
 
-	// Add listener to manager
-	listenerManager.addListener(key, setupFn, { type });
+	// Add listener to manager (we already registered intent synchronously)
+	listenerManager.addListener(key, setupFn, { type }).catch(error => {
+		console.error(`Failed to add listener ${key}:`, error);
+		// Clean up pending state if setup fails
+		listenerManager.removeListener(key);
+	});
 
-	// Return unsubscribe function that removes from manager
+	// Always return unsubscribe function that removes from manager
+	// The manager will handle ref counting and only unsubscribe when count reaches 0
 	return () => {
 		listenerManager.removeListener(key);
 	};

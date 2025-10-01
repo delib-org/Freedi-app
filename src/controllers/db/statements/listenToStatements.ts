@@ -208,7 +208,9 @@ export const listenToSubStatements = (
 					isFirstCall = false;
 				} else {
 					// After initial load, handle individual changes
-					statementsDB.docChanges().forEach((change) => {
+					const changes = statementsDB.docChanges();
+
+					changes.forEach((change) => {
 						const statement = change.doc.data() as Statement;
 
 						if (change.type === 'added') {

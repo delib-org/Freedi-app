@@ -9,7 +9,6 @@ import { useParams } from 'react-router';
 import { resultsByParentId } from './mapCont';
 import { Statement, Results } from 'delib-npm';
 import { APIEndPoint, isChatMessage } from '@/controllers/general/helpers';
-import { listenToEvaluations } from '@/controllers/db/evaluation/getEvaluation';
 
 export function useMindMap(statementIdPassed: string | null = null) {
 	const { statementId: paramsStatement } = useParams();
@@ -41,21 +40,9 @@ export function useMindMap(statementIdPassed: string | null = null) {
 			unsubscribe();
 		};
 	}, [statementId]);
-	useEffect(() => {
-		if (!statementId) return;
-
-		const unsubscribes = descendants.map(
-			(statement) => listenToEvaluations(statement.parentId) // assuming listenToEvaluation takes a statementId
-		);
-
-		return () => {
-			unsubscribes.forEach((unsubscribe) => {
-				if (typeof unsubscribe === 'function') {
-					unsubscribe();
-				}
-			});
-		};
-	}, [descendants.length]);
+	// REMOVED: Individual evaluation listeners for each descendant
+	// This caused excessive Firestore requests (one listener per descendant)
+	// Evaluations are now handled centrally in useStatementListeners
 	useEffect(() => {
 		setFlat(isFlat(descendants, statementId));
 	}, [descendants.length, statementId]);
