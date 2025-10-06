@@ -54,8 +54,7 @@ export async function updateInAppNotifications(
 		let parentStatement: Statement | null = null;
 		if (statement.parentId === 'top') {
 			// For top-level statements, we don't have a parent statement
-			// Create a minimal parent statement object or skip parent-specific logic
-			logger.info(`Processing notification for top-level statement ${statement.statementId}`);
+			// Skip parent-specific logic
 		} else if (!parentStatementDB.exists) {
 			logger.error(`Parent statement ${statement.parentId} not found`);
 			return;
@@ -142,8 +141,6 @@ export async function updateInAppNotifications(
 			}
 		});
 
-		logger.info(`Found ${fcmSubscribers.length} FCM tokens from ${allPushSubscribers.length} push subscribers for statement ${statement.parentId}`);
-
 		//update last message in the parent statement (only if not top-level)
 		if (statement.parentId !== 'top') {
 			await db.doc(`${Collections.statements}/${statement.parentId}`).update({
@@ -163,12 +160,10 @@ export async function updateInAppNotifications(
 		);
 		
 		// Process FCM notifications with improved error handling
-		const sendResult = await processFcmNotificationsImproved(
-			fcmSubscribers, 
+		await processFcmNotificationsImproved(
+			fcmSubscribers,
 			newStatement
 		);
-		
-		logger.info('FCM notification send result:', sendResult);
 	} catch (error) {
 		logger.error('Error in updateInAppNotifications:', error);
 	}

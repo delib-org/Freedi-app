@@ -25,15 +25,11 @@ export async function onNewSubscription(
 	event: FirestoreEvent<Change<DocumentSnapshot> | undefined>
 ) {
 	try {
-		logger.info('onNewSubscription triggered');
-		
 		if (!event.data) throw new Error('No event data found');
-		
+
 		// Handle both create and update scenarios
 		const isCreate = !event.data.before.exists;
 		const snapshot = event.data.after;
-		
-		logger.info(`Subscription event - isCreate: ${isCreate}`);
 		
 		if (!snapshot.exists)
 			throw new Error('No snapshot found in onNewSubscription');
@@ -47,14 +43,11 @@ export async function onNewSubscription(
 		const role = subscription.role;
 		const subscriptionId = subscription.statementsSubscribeId;
 		if (!subscriptionId) throw new Error('No subscriptionId found');
-		
-		logger.info(`Subscription ${subscriptionId} has role: ${role}`);
-		
+
 		// For updates, check if role changed TO waiting
 		let shouldCreateAwaitingEntry = false;
 		if (isCreate && role === Role.waiting) {
 			// New subscription with waiting role
-			logger.info('New subscription with waiting role detected');
 			shouldCreateAwaitingEntry = true;
 		} else if (!isCreate && role === Role.waiting) {
 			// Updated subscription - check if role changed to waiting
@@ -64,17 +57,14 @@ export async function onNewSubscription(
 					StatementSubscriptionSchema,
 					previousData
 				) as StatementSubscription;
-				logger.info(`Previous role: ${previousSubscription.role}, Current role: ${role}`);
 				if (previousSubscription.role !== Role.waiting) {
 					// Role changed to waiting
-					logger.info('Role changed to waiting - will create awaiting entries');
 					shouldCreateAwaitingEntry = true;
 				}
 			}
 		}
 		
 		if (shouldCreateAwaitingEntry) {
-			logger.info('Creating awaiting entries...');
 			
 			//get all admins of the top parent statement
 			const statement = subscription.statement;
@@ -150,8 +140,6 @@ return;
 			});
 			await batch.commit();
 			logger.info(`Successfully created ${adminsSubscriptions.length} awaiting entries for subscription ${subscriptionId}`);
-		} else {
-			logger.info(`No awaiting entries needed for subscription ${subscriptionId} with role ${role}`);
 		}
 	} catch (error) {
 		logger.error('Error onNewSubscription', error);
@@ -340,8 +328,6 @@ export async function setAdminsToNewStatement(
 
 		// 1. Always add the creator as admin
 		adminsToAdd.add(statement.creator.uid);
-		
-		logger.info(`Setting up admins for new statement ${statement.statementId}`);
 
 		// 2. Add top group admins (if this isn't already a top-level statement)
 		const topParentId = statement.topParentId || statement.parentId;
@@ -357,7 +343,6 @@ export async function setAdminsToNewStatement(
 				adminsToAdd.add(adminSub.user.uid);
 			});
 			
-			logger.info(`Added ${topAdminsDB.size} top group admins from ${topParentId}`);
 		}
 
 		// 3. Add direct parent admins (if not same as top parent)
@@ -374,12 +359,10 @@ export async function setAdminsToNewStatement(
 				adminsToAdd.add(adminSub.user.uid);
 			});
 			
-			logger.info(`Added ${parentAdminsDB.size} direct parent admins from ${parentId}`);
 		}
 
 		// Get user details for all admins
 		const adminUserIds = Array.from(adminsToAdd);
-		logger.info(`Total unique admins to add: ${adminUserIds.length}`);
 
 		// Batch create all admin subscriptions
 		const batch = db.batch();
@@ -469,7 +452,6 @@ return;
 
 		// Commit all subscriptions in one batch
 		await batch.commit();
-		logger.info(`Successfully added ${addedCount} admin subscriptions for statement ${statement.statementId}`);
 
 	} catch (error) {
 		logger.error('Error in setAdminsToNewStatement:', error);
