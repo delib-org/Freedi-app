@@ -7,6 +7,7 @@ import { useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { Outlet, useNavigate, useParams, useLocation } from 'react-router'
 import { HeaderProvider } from './headerMassConsensus/HeaderContext'
+import { ExplanationProvider } from '@/contexts/massConsensus/ExplanationProvider'
 import HeaderMassConsensus from './headerMassConsensus/HeaderMassConsensus'
 import styles from './MassConsensus.module.scss'
 import { useUserConfig } from '@/controllers/hooks/useUserConfig'
@@ -82,22 +83,24 @@ const MassConsensus = () => {
 	}
 
 	return (
-		<HeaderProvider>
-			<HeaderMassConsensus />
-			<Accessibility />
-			<div className={styles.massConsensus} style={{ direction: dir }}>
-				<div className={styles.massConsensus__wrapper}>
-					<ErrorBoundary
-						FallbackComponent={MassConsensusErrorFallback}
-						onError={(error) => {
-							console.error('MassConsensus ErrorBoundary caught:', error);
-						}}
-					>
-						<Outlet />
-					</ErrorBoundary>
+		<ExplanationProvider>
+			<HeaderProvider>
+				<HeaderMassConsensus />
+				<Accessibility />
+				<div className={styles.massConsensus} style={{ direction: dir }}>
+					<div className={styles.massConsensus__wrapper}>
+						<ErrorBoundary
+							FallbackComponent={MassConsensusErrorFallback}
+							onError={(error) => {
+								console.error('MassConsensus ErrorBoundary caught:', error);
+							}}
+						>
+							<Outlet />
+						</ErrorBoundary>
+					</div>
 				</div>
-			</div>
-		</HeaderProvider>
+			</HeaderProvider>
+		</ExplanationProvider>
 	)
 }
 

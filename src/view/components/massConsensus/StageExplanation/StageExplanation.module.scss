@@ -1,0 +1,485 @@
+// SCSS Module - global styles are imported in main.tsx
+// Using CSS variables and classes that are already available globally
+
+// Animation mixins
+@mixin fadeIn {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@mixin fadeOut {
+  animation: fadeOut 0.3s ease-in-out;
+}
+
+@mixin slideInUp {
+  animation: slideInUp 0.3s ease-in-out;
+}
+
+@mixin slideOutDown {
+  animation: slideOutDown 0.3s ease-in-out;
+}
+
+// Animations
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes slideInUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideOutDown {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+}
+
+// Card style
+.explanationCard {
+  background: var(--bg-secondary);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 20px;
+  border-left: 4px solid var(--primary);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  @include fadeIn;
+
+  &.dismissing {
+    @include fadeOut;
+  }
+
+  .cardHeader {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+
+    .iconWrapper {
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--primary);
+
+      svg {
+        width: 100%;
+        height: 100%;
+      }
+    }
+
+    .title {
+      flex: 1;
+      margin: 0;
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .closeButton {
+      background: none;
+      border: none;
+      padding: 4px;
+      cursor: pointer;
+      color: var(--text-secondary);
+      transition: color 0.2s;
+
+      &:hover {
+        color: var(--text-primary);
+      }
+
+      svg {
+        width: 20px;
+        height: 20px;
+      }
+    }
+  }
+
+  .cardContent {
+    color: var(--text-primary);
+    line-height: 1.5;
+
+    p {
+      margin: 0;
+    }
+  }
+
+  .cardFooter {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border-color);
+
+    .dontShowButton {
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      cursor: pointer;
+      text-decoration: underline;
+
+      &:hover {
+        color: var(--text-primary);
+      }
+    }
+  }
+
+  // RTL support
+  [dir="rtl"] & {
+    border-left: none;
+    border-right: 4px solid var(--primary);
+  }
+}
+
+// Inline style
+.explanationInline {
+  background: var(--bg-info);
+  padding: 12px;
+  margin-bottom: 16px;
+  border-radius: 8px;
+  @include fadeIn;
+
+  &.dismissing {
+    @include fadeOut;
+  }
+
+  .inlineContent {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    .inlineIcon {
+      width: 20px;
+      height: 20px;
+      color: var(--info);
+      flex-shrink: 0;
+    }
+
+    p {
+      flex: 1;
+      margin: 0;
+      color: var(--text-primary);
+      font-size: 0.95rem;
+      line-height: 1.4;
+    }
+
+    .inlineClose {
+      background: none;
+      border: none;
+      padding: 4px;
+      cursor: pointer;
+      color: var(--text-secondary);
+      flex-shrink: 0;
+
+      &:hover {
+        color: var(--text-primary);
+      }
+
+      svg {
+        width: 16px;
+        height: 16px;
+      }
+    }
+  }
+}
+
+// Tooltip style
+.explanationTooltip {
+  position: absolute;
+  background: var(--bg-tooltip, #333);
+  color: white;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  max-width: 250px;
+  z-index: 1000;
+  pointer-events: none;
+  @include fadeIn;
+
+  &.dismissing {
+    @include fadeOut;
+  }
+
+  .tooltipArrow {
+    position: absolute;
+    bottom: -6px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-top: 6px solid var(--bg-tooltip, #333);
+  }
+
+  .tooltipContent {
+    p {
+      margin: 0;
+    }
+  }
+}
+
+// Modal style
+.explanationModal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .modalBackdrop {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    @include fadeIn;
+  }
+
+  &.dismissing .modalBackdrop {
+    @include fadeOut;
+  }
+
+  .modalContent {
+    position: relative;
+    background: var(--bg-primary);
+    border-radius: 16px;
+    max-width: 500px;
+    width: 90%;
+    max-height: 80vh;
+    overflow: auto;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    @include slideInUp;
+
+    @media (max-width: 768px) {
+      max-width: 95%;
+      margin: 20px;
+    }
+  }
+
+  &.dismissing .modalContent {
+    @include slideOutDown;
+  }
+
+  .modalHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px;
+    border-bottom: 1px solid var(--border-color);
+
+    h2 {
+      margin: 0;
+      font-size: 1.3rem;
+      color: var(--text-primary);
+    }
+
+    .modalClose {
+      background: none;
+      border: none;
+      padding: 4px;
+      cursor: pointer;
+      color: var(--text-secondary);
+
+      &:hover {
+        color: var(--text-primary);
+      }
+
+      svg {
+        width: 24px;
+        height: 24px;
+      }
+    }
+  }
+
+  .modalBody {
+    padding: 20px;
+    color: var(--text-primary);
+    line-height: 1.5;
+
+    p {
+      margin: 0;
+    }
+  }
+
+  .modalFooter {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-top: 1px solid var(--border-color);
+    gap: 12px;
+
+    .dontShowButton {
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      cursor: pointer;
+      text-decoration: underline;
+
+      &:hover {
+        color: var(--text-primary);
+      }
+    }
+
+    .modalOkButton {
+      // Button styling handled by global classes in JSX
+      margin-left: auto;
+    }
+  }
+}
+
+// Toast style
+.explanationToast {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: 360px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 9999;
+  @include slideInUp;
+
+  &.dismissing {
+    @include slideOutDown;
+  }
+
+  @media (max-width: 768px) {
+    right: 10px;
+    left: 10px;
+    max-width: none;
+  }
+
+  .toastIcon {
+    width: 20px;
+    height: 20px;
+    color: var(--primary);
+    flex-shrink: 0;
+  }
+
+  p {
+    flex: 1;
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+  }
+
+  .toastClose {
+    background: none;
+    border: none;
+    padding: 4px;
+    cursor: pointer;
+    color: var(--text-secondary);
+    flex-shrink: 0;
+
+    &:hover {
+      color: var(--text-primary);
+    }
+
+    svg {
+      width: 16px;
+      height: 16px;
+    }
+  }
+
+  // RTL support
+  [dir="rtl"] & {
+    right: auto;
+    left: 20px;
+
+    @media (max-width: 768px) {
+      right: 10px;
+    }
+  }
+}
+
+// Banner style
+.explanationBanner {
+  background: linear-gradient(90deg, var(--primary), var(--primary-dark));
+  color: white;
+  padding: 12px 20px;
+  margin-bottom: 20px;
+  @include fadeIn;
+
+  &.dismissing {
+    @include fadeOut;
+  }
+
+  .bannerContent {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    max-width: 1200px;
+    margin: 0 auto;
+
+    .bannerIcon {
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0;
+    }
+
+    .bannerTitle {
+      font-weight: 600;
+      margin-right: 8px;
+    }
+
+    .bannerText {
+      flex: 1;
+      font-size: 0.95rem;
+    }
+
+    .bannerClose {
+      background: none;
+      border: none;
+      padding: 4px;
+      cursor: pointer;
+      color: rgba(255, 255, 255, 0.8);
+      flex-shrink: 0;
+
+      &:hover {
+        color: white;
+      }
+
+      svg {
+        width: 20px;
+        height: 20px;
+      }
+    }
+  }
+}

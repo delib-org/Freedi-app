@@ -5,6 +5,10 @@ import useMassConsensusQuestion from './MassConsensusQuestionVM';
 import SimilarSuggestions from './similarSuggestions/SimilarSuggestions';
 import FooterMassConsensus from '../footerMassConsensus/FooterMassConsensus';
 import { useMassConsensusAnalytics } from '@/hooks/useMassConsensusAnalytics';
+import StageExplanation from '@/view/components/massConsensus/StageExplanation/StageExplanation';
+import ActionFeedback from '@/view/components/massConsensus/ActionFeedback/ActionFeedback';
+import { useNavigate, useParams } from 'react-router';
+import { ExplanationConfig, PostActionConfig, MassConsensusStageType } from 'delib-npm';
 
 import styles from './MassConsesusQuestion.module.scss'
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
@@ -26,6 +30,35 @@ const MassConsensusQuestion = () => {
 	const { t } = useUserConfig();
 	const [showLoader, setShowLoader] = useState(false);
 	const loaderStartRef = useRef<number | null>(null);
+	const navigate = useNavigate();
+	const { statementId } = useParams<{ statementId: string }>();
+
+	// State for showing feedback after submission
+	const [showFeedback, setShowFeedback] = useState(false);
+	const [userSuggestionsCount, setUserSuggestionsCount] = useState(0);
+
+	// Default explanation for question stage
+	const questionExplanation: ExplanationConfig = {
+		enabled: true,
+		title: t('Share Your Suggestion'),
+		content: t('Submit your idea for this question. Your suggestion will be randomly shown to other participants for evaluation. Similar ideas will be grouped together.'),
+		displayMode: 'card',
+		showOnlyFirstTime: true,
+		dismissible: true
+	};
+
+	// Default post-action feedback
+	const submissionFeedback: PostActionConfig = {
+		enabled: true,
+		content: t('Your suggestion has been successfully added!'),
+		successMessage: t('It will now be randomly shown to other participants for evaluation.'),
+		buttons: [
+			{ label: t('View My Suggestions'), action: 'viewMySuggestions' as const, primary: false },
+			{ label: t('Add Another'), action: 'addAnother' as const, primary: false },
+			{ label: t('Continue'), action: 'continue' as const, primary: true }
+		],
+		displayMode: 'modal'
+	};
 
 	useEffect(() => {
 		if (isBusy) {
@@ -50,6 +83,12 @@ const MassConsensusQuestion = () => {
 		if (stage === 'loading') {
 			trackSubmission('answer');
 		}
+		// Show feedback when submission is successful (stage changes to suggestions)
+		if (stage === 'suggestions' && !showFeedback) {
+			setShowFeedback(true);
+			// TODO: Get actual count of user suggestions from database
+			setUserSuggestionsCount(prev => prev + 1);
+		}
 	}, [stage, trackSubmission]);
 
   const handleNextWithTracking = () => {
@@ -65,8 +104,28 @@ const MassConsensusQuestion = () => {
 
 	const nextActive = !isBusy && ifButtonEnabled;
 
+	// Handlers for feedback actions
+	const handleFeedbackContinue = () => {
+		setShowFeedback(false);
+		handleNext();
+	};
+
+	const handleFeedbackAddAnother = () => {
+		setShowFeedback(false);
+		setStage('question');
+		// Reset the form (this will be handled in InitialQuestion)
+	};
+
 	return (
 		<>
+			{/* Show explanation at the beginning */}
+			{stage === 'question' && (
+				<StageExplanation
+					stageId="question"
+					explanation={questionExplanation}
+				/>
+			)}
+
 			{(stage === 'question' || stage === 'loading') ? (
 				<InitialQuestion
 					setReachedLimit={setReachedLimit}
@@ -78,6 +137,18 @@ const MassConsensusQuestion = () => {
 				<SimilarSuggestions
 					stage={stage}
 					setIfButtonEnabled={setIfButtonEnabled}
+				/>
+			)}
+
+			{/* Show feedback after successful submission */}
+			{showFeedback && (
+				<ActionFeedback
+					stageId="question"
+					config={submissionFeedback}
+					suggestionCount={userSuggestionsCount}
+					onContinue={handleFeedbackContinue}
+					onAddAnother={handleFeedbackAddAnother}
+					onDismiss={() => setShowFeedback(false)}
 				/>
 			)}
 

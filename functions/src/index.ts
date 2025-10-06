@@ -250,6 +250,7 @@ exports.onStatementDeletion = createFirestoreFunction(
 );
 
 // Subscription functions
+// This function handles waiting role subscriptions and needs to track both creates and updates
 exports.updateNumberOfMembers = createFirestoreFunction(
   `/${Collections.statementsSubscribe}/{subscriptionId}`,
   onDocumentWritten,
