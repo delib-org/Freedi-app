@@ -30,6 +30,83 @@ interface ExplanationProviderProps {
 
 const STORAGE_KEY_PREFIX = 'mc_explanations_';
 
+// Default explanations for testing/demo purposes
+const DEFAULT_EXPLANATIONS: Record<string, MassConsensusStage> = {
+  introduction: {
+    id: 'introduction',
+    type: 'introduction' as MassConsensusStageType,
+    order: 1,
+    beforeStage: {
+      enabled: true,
+      content: 'Welcome to the Mass Consensus process. We will guide you through several stages to reach a collective decision.',
+      displayMode: 'card',
+      dismissible: true,
+      showOnlyFirstTime: false
+    }
+  },
+  question: {
+    id: 'question',
+    type: 'question' as MassConsensusStageType,
+    order: 2,
+    beforeStage: {
+      enabled: true,
+      content: 'Please read the question carefully and provide your thoughtful response.',
+      displayMode: 'inline',
+      dismissible: true
+    },
+    afterAction: {
+      enabled: true,
+      content: 'Your suggestion has been successfully added',
+      successMessage: 'It will now be randomly shown to other participants for evaluation',
+      buttons: [
+        { label: 'View My Suggestions', action: 'viewMySuggestions' },
+        { label: 'Add Another', action: 'addAnother' },
+        { label: 'Continue', action: 'continue', primary: true }
+      ],
+      displayMode: 'modal'
+    }
+  },
+  randomSuggestions: {
+    id: 'randomSuggestions',
+    type: 'randomSuggestions' as MassConsensusStageType,
+    order: 3,
+    beforeStage: {
+      enabled: true,
+      title: '🎲 Random Suggestions Stage',
+      content: 'You will now evaluate random suggestions from other participants. This randomization ensures all voices are heard equally and prevents bias. Rate each suggestion based on its merit.',
+      displayMode: 'card',
+      dismissible: true,
+      showOnlyFirstTime: false
+    }
+  },
+  topSuggestions: {
+    id: 'topSuggestions',
+    type: 'topSuggestions' as MassConsensusStageType,
+    order: 4,
+    beforeStage: {
+      enabled: true,
+      title: '⭐ Top Suggestions',
+      content: 'These are the highest-rated suggestions based on community evaluations. Please review them carefully before proceeding to the final vote.',
+      displayMode: 'card',
+      dismissible: true,
+      showOnlyFirstTime: false
+    }
+  },
+  voting: {
+    id: 'voting',
+    type: 'voting' as MassConsensusStageType,
+    order: 5,
+    beforeStage: {
+      enabled: true,
+      title: '🗳️ Final Vote',
+      content: 'Time to cast your final vote! Choose the suggestion that best addresses the question. Your vote will help determine the collective decision.',
+      displayMode: 'card',
+      dismissible: true,
+      showOnlyFirstTime: false
+    }
+  }
+};
+
 export const ExplanationProvider: FC<ExplanationProviderProps> = ({ children }) => {
   const { statementId } = useParams<{ statementId: string }>();
   const process = useSelector(massConsensusProcessSelector(statementId));
@@ -85,10 +162,21 @@ export const ExplanationProvider: FC<ExplanationProviderProps> = ({ children }) 
   }, [process, window.location.pathname]);
 
   const getStageExplanation = (stageId: string): ExplanationConfig | undefined => {
-    if (dontShowExplanations) return undefined;
+    if (dontShowExplanations) {
+      return undefined;
+    }
 
-    const stage = process?.stages?.find(s => s.id === stageId);
-    if (!stage?.beforeStage) return undefined;
+    // First try to get from process if it has stages
+    let stage = process?.stages?.find(s => s.id === stageId);
+
+    // If no stages in process, use default explanations
+    if (!stage && DEFAULT_EXPLANATIONS[stageId]) {
+      stage = DEFAULT_EXPLANATIONS[stageId];
+    }
+
+    if (!stage?.beforeStage) {
+      return undefined;
+    }
 
     // Check if should show only first time
     if (stage.beforeStage.showOnlyFirstTime && seenExplanations.has(stageId)) {
@@ -99,7 +187,14 @@ export const ExplanationProvider: FC<ExplanationProviderProps> = ({ children }) 
   };
 
   const getPostActionConfig = (stageId: string): PostActionConfig | undefined => {
-    const stage = process?.stages?.find(s => s.id === stageId);
+    // First try to get from process if it has stages
+    let stage = process?.stages?.find(s => s.id === stageId);
+
+    // If no stages in process, use default explanations
+    if (!stage && DEFAULT_EXPLANATIONS[stageId]) {
+      stage = DEFAULT_EXPLANATIONS[stageId];
+    }
+
     return stage?.afterAction;
   };
 
@@ -131,7 +226,7 @@ export const ExplanationProvider: FC<ExplanationProviderProps> = ({ children }) 
     setDontShowExplanations,
     getDontShowExplanations,
     currentStage,
-    stages: process?.stages || []
+    stages: process?.stages || Object.values(DEFAULT_EXPLANATIONS)
   };
 
   return (

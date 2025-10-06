@@ -83,19 +83,19 @@ const MassConsensusQuestion = () => {
 		if (stage === 'loading') {
 			trackSubmission('answer');
 		}
-		// Show feedback when submission is successful (stage changes to suggestions)
-		if (stage === 'suggestions' && !showFeedback) {
-			setShowFeedback(true);
-			// TODO: Get actual count of user suggestions from database
-			setUserSuggestionsCount(prev => prev + 1);
-		}
+		// Don't show feedback immediately after submission
+		// The feedback should only show after the user completes the similar suggestions stage
 	}, [stage, trackSubmission]);
 
   const handleNextWithTracking = () => {
     if (stage === "suggestions") {
       trackStageCompleted("question");
+      // Show feedback after user completes the similar suggestions selection
+      setShowFeedback(true);
+      setUserSuggestionsCount(prev => prev + 1);
+    } else {
+      handleNext();
     }
-    handleNext();
   };
 
   const handleSkipWithTracking = () => {

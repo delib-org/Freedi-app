@@ -182,7 +182,10 @@ export const ActionFeedback: FC<ActionFeedbackProps> = ({
 
             <div className={styles.successAnimation}>
               <div className={styles.checkCircle}>
-                <CheckIcon />
+                <svg viewBox="0 0 52 52" className={styles.checkmark}>
+                  <circle className={styles.checkmarkCircle} cx="26" cy="26" r="25" fill="none"/>
+                  <path className={styles.checkmarkCheck} fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+                </svg>
               </div>
             </div>
 
