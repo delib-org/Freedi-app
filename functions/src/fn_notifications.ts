@@ -49,10 +49,22 @@ export async function updateInAppNotifications(
 		const subscribersInApp = subscribersDB.docs.map(
 			(doc: QueryDocumentSnapshot) => doc.data() as StatementSubscription
 		);
-		const parentStatement = parse(
-			StatementSchema,
-			parentStatementDB.data()
-		);
+
+		// Handle top-level statements (no parent) and check if parent exists
+		let parentStatement: Statement | null = null;
+		if (statement.parentId === 'top') {
+			// For top-level statements, we don't have a parent statement
+			// Create a minimal parent statement object or skip parent-specific logic
+			logger.info(`Processing notification for top-level statement ${statement.statementId}`);
+		} else if (!parentStatementDB.exists) {
+			logger.error(`Parent statement ${statement.parentId} not found`);
+			return;
+		} else {
+			parentStatement = parse(
+				StatementSchema,
+				parentStatementDB.data()
+			);
+		}
 
 		// Also fetch subscribers for ALL parent statements in the hierarchy
 		let allParentSubscribers: StatementSubscription[] = [];
@@ -132,14 +144,16 @@ export async function updateInAppNotifications(
 
 		logger.info(`Found ${fcmSubscribers.length} FCM tokens from ${allPushSubscribers.length} push subscribers for statement ${statement.parentId}`);
 
-		//update last message in the parent statement
-		await db.doc(`${Collections.statements}/${statement.parentId}`).update({
-			lastMessage: {
-				message: newStatement.statement,
-				creator: newStatement.creator.displayName || 'Anonymous',
-				createdAt: newStatement.createdAt,
-			},
-		});
+		//update last message in the parent statement (only if not top-level)
+		if (statement.parentId !== 'top') {
+			await db.doc(`${Collections.statements}/${statement.parentId}`).update({
+				lastMessage: {
+					message: newStatement.statement,
+					creator: newStatement.creator.displayName || 'Anonymous',
+					createdAt: newStatement.createdAt,
+				},
+			});
+		}
 
 		// Process notifications
 		await processInAppNotifications(
@@ -195,7 +209,7 @@ async function fetchNotificationData(parentId: string) {
 async function processInAppNotifications(
 	subscribersInApp: StatementSubscription[],
 	newStatement: Statement,
-	parentStatement: Statement
+	parentStatement: Statement | null
 ) {
 	//here we should have all the subscribers for the parent notification
 
@@ -214,7 +228,7 @@ async function processInAppNotifications(
 		const newNotification: NotificationType = {
 			userId: subscriber.user.uid,
 			parentId: newStatement.parentId,
-			parentStatement: parentStatement.statement,
+			parentStatement: parentStatement ? parentStatement.statement : 'top',
 			statementType: newStatement.statementType,
 			questionType: questionType,
 			text: newStatement.statement,
