@@ -14,7 +14,8 @@ import FooterMassConsensus from '../footerMassConsensus/FooterMassConsensus';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import { useHeader } from '../headerMassConsensus/HeaderContext';
 import { useMassConsensusAnalytics } from '@/hooks/useMassConsensusAnalytics';
-import StageExplanation from '@/view/components/massConsensus/StageExplanation/StageExplanation';
+import StageExplanationScreen from '@/view/components/massConsensus/StageExplanationScreen/StageExplanationScreen';
+import { useExplanations } from '@/contexts/massConsensus/ExplanationProvider';
 
 const VotingSuggestions = () => {
 	const { subStatements, navigateToFeedback } = VotingSuggestionsMV();
@@ -28,6 +29,8 @@ const VotingSuggestions = () => {
 	const totalVotes = getTotalVoters(statement);
 	const { t } = useUserConfig();
 	const { trackStageCompleted, trackStageSkipped, trackProcessCompleted } = useMassConsensusAnalytics();
+	const [showExplanation, setShowExplanation] = useState(true);
+	const { hasSeenExplanation, getDontShowExplanations } = useExplanations();
 
 	const { setHeader } = useHeader();
 
@@ -39,10 +42,26 @@ const VotingSuggestions = () => {
 		});
 	}, []);
 
+	// Check if we should show explanation
+	useEffect(() => {
+		if (hasSeenExplanation('voting') || getDontShowExplanations()) {
+			setShowExplanation(false);
+		}
+	}, []);
+
+	// Show full-screen explanation if needed
+	if (showExplanation) {
+		return (
+			<StageExplanationScreen
+				stageId="voting"
+				onContinue={() => setShowExplanation(false)}
+				previousStageUrl={`/mass-consensus/${statementId}/top-suggestions`}
+			/>
+		);
+	}
+
 	return (
 		<>
-			{/* Show explanation for voting stage */}
-			<StageExplanation stageId="voting" />
 
 			<TitleMassConsensus
 				title={t('Please vote for the best suggestion')}

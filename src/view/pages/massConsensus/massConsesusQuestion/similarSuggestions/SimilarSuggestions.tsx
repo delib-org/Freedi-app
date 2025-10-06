@@ -14,7 +14,7 @@ import {
 } from "../../MassConsensusVM";
 import TitleMassConsensus from "../../TitleMassConsensus/TitleMassConsensus";
 
-const SimilarSuggestions = ({ stage, setIfButtonEnabled }) => {
+const SimilarSuggestions = ({ stage, setIfButtonEnabled, onSuggestionSaved }) => {
   const navigate = useNavigate();
   const { statementId } = useParams<{ statementId: string }>();
   const similarSuggestions = useSelector(selectSimilarStatements);
@@ -47,17 +47,37 @@ const SimilarSuggestions = ({ stage, setIfButtonEnabled }) => {
 
   useEffect(() => {
     if (stage === "submitting") {
-
-      handleSetSuggestionToDB(getSelectedSuggestion(selected));
+      // User selected from multiple suggestions - submit and notify parent
+      (async () => {
+        const success = await handleSetSuggestionToDB(getSelectedSuggestion(selected));
+        if (success) {
+          // Let parent know the suggestion was saved successfully
+          if (onSuggestionSaved) {
+            onSuggestionSaved();
+          } else {
+            // If no callback, navigate directly
+            navigate(`/mass-consensus/${statementId}/${nextStep}`);
+          }
+        }
+      })();
     }
   }, [stage]);
 
   useEffect(() => {
     if (similarSuggestions.length === 1 && !isLoading) {
+      // Only one suggestion (user's own) - auto-submit and notify parent
       (async () => {
         setSelected(null);
-
-        await handleSetSuggestionToDB(newSuggestion);
+        const success = await handleSetSuggestionToDB(newSuggestion);
+        if (success) {
+          // Let parent know the suggestion was saved successfully
+          if (onSuggestionSaved) {
+            onSuggestionSaved();
+          } else {
+            // If no callback, navigate directly
+            navigate(`/mass-consensus/${statementId}/${nextStep}`);
+          }
+        }
       })();
     }
   }, [similarSuggestions.length, isLoading]);

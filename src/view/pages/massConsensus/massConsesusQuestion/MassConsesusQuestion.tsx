@@ -5,10 +5,10 @@ import useMassConsensusQuestion from './MassConsensusQuestionVM';
 import SimilarSuggestions from './similarSuggestions/SimilarSuggestions';
 import FooterMassConsensus from '../footerMassConsensus/FooterMassConsensus';
 import { useMassConsensusAnalytics } from '@/hooks/useMassConsensusAnalytics';
-import StageExplanation from '@/view/components/massConsensus/StageExplanation/StageExplanation';
-import ActionFeedback from '@/view/components/massConsensus/ActionFeedback/ActionFeedback';
-import { useNavigate, useParams } from 'react-router';
-import { ExplanationConfig, PostActionConfig, MassConsensusStageType } from 'delib-npm';
+import StageExplanationScreen from '@/view/components/massConsensus/StageExplanationScreen/StageExplanationScreen';
+import { useParams, useNavigate } from 'react-router';
+import { ExplanationConfig } from 'delib-npm';
+import { useExplanations } from '@/contexts/massConsensus/ExplanationProvider';
 
 import styles from './MassConsesusQuestion.module.scss'
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
@@ -32,10 +32,12 @@ const MassConsensusQuestion = () => {
 	const loaderStartRef = useRef<number | null>(null);
 	const navigate = useNavigate();
 	const { statementId } = useParams<{ statementId: string }>();
+	const { hasSeenExplanation, getDontShowExplanations } = useExplanations();
 
-	// State for showing feedback after submission
-	const [showFeedback, setShowFeedback] = useState(false);
-	const [userSuggestionsCount, setUserSuggestionsCount] = useState(0);
+	// State for showing explanation screen
+	const [showExplanationScreen, setShowExplanationScreen] = useState(true);
+	const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+
 
 	// Default explanation for question stage
 	const questionExplanation: ExplanationConfig = {
@@ -47,18 +49,12 @@ const MassConsensusQuestion = () => {
 		dismissible: true
 	};
 
-	// Default post-action feedback
-	const submissionFeedback: PostActionConfig = {
-		enabled: true,
-		content: t('Your suggestion has been successfully added!'),
-		successMessage: t('It will now be randomly shown to other participants for evaluation.'),
-		buttons: [
-			{ label: t('View My Suggestions'), action: 'viewMySuggestions' as const, primary: false },
-			{ label: t('Add Another'), action: 'addAnother' as const, primary: false },
-			{ label: t('Continue'), action: 'continue' as const, primary: true }
-		],
-		displayMode: 'modal'
-	};
+	// Check if we should show explanation screen
+	useEffect(() => {
+		// For testing, always show the explanation
+		// Later we can check: if (hasSeenExplanation('question') || getDontShowExplanations())
+		setShowExplanationScreen(true);
+	}, []);
 
 	useEffect(() => {
 		if (isBusy) {
@@ -90,12 +86,18 @@ const MassConsensusQuestion = () => {
   const handleNextWithTracking = () => {
     if (stage === "suggestions") {
       trackStageCompleted("question");
-      // Show feedback after user completes the similar suggestions selection
-      setShowFeedback(true);
-      setUserSuggestionsCount(prev => prev + 1);
-    } else {
-      handleNext();
     }
+    handleNext();
+  };
+
+  const handleSuggestionSaved = () => {
+    // Show success message briefly, then navigate
+    setShowSuccessMessage(true);
+    trackStageCompleted("question");
+    setTimeout(() => {
+      setShowSuccessMessage(false);
+      navigate(`/mass-consensus/${statementId}/random-suggestions`);
+    }, 2000);
   };
 
   const handleSkipWithTracking = () => {
@@ -104,28 +106,20 @@ const MassConsensusQuestion = () => {
 
 	const nextActive = !isBusy && ifButtonEnabled;
 
-	// Handlers for feedback actions
-	const handleFeedbackContinue = () => {
-		setShowFeedback(false);
-		handleNext();
-	};
-
-	const handleFeedbackAddAnother = () => {
-		setShowFeedback(false);
-		setStage('question');
-		// Reset the form (this will be handled in InitialQuestion)
-	};
+	// Show full-screen explanation if needed
+	if (showExplanationScreen && stage === 'question') {
+		return (
+			<StageExplanationScreen
+				stageId="question"
+				explanation={questionExplanation}
+				onContinue={() => setShowExplanationScreen(false)}
+				previousStageUrl={`/mass-consensus/${statementId}/introduction`}
+			/>
+		);
+	}
 
 	return (
 		<>
-			{/* Show explanation at the beginning */}
-			{stage === 'question' && (
-				<StageExplanation
-					stageId="question"
-					explanation={questionExplanation}
-				/>
-			)}
-
 			{(stage === 'question' || stage === 'loading') ? (
 				<InitialQuestion
 					setReachedLimit={setReachedLimit}
@@ -137,19 +131,18 @@ const MassConsensusQuestion = () => {
 				<SimilarSuggestions
 					stage={stage}
 					setIfButtonEnabled={setIfButtonEnabled}
+					onSuggestionSaved={handleSuggestionSaved}
 				/>
 			)}
 
-			{/* Show feedback after successful submission */}
-			{showFeedback && (
-				<ActionFeedback
-					stageId="question"
-					config={submissionFeedback}
-					suggestionCount={userSuggestionsCount}
-					onContinue={handleFeedbackContinue}
-					onAddAnother={handleFeedbackAddAnother}
-					onDismiss={() => setShowFeedback(false)}
-				/>
+			{/* Show success message after submission */}
+			{showSuccessMessage && (
+				<div className={styles.successOverlay}>
+					<div className={styles.successMessage}>
+						<h2>{t('Your suggestion has been successfully added!')}</h2>
+						<p>{t('Redirecting to next stage...')}</p>
+					</div>
+				</div>
 			)}
 
 			{showLoader && (
