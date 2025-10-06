@@ -17,12 +17,12 @@ export const updateParentOnChildCreate = onDocumentCreated({
 }, async (event) => {
     try {
         const newStatement = event.data?.data() as Statement | undefined;
-        
-        // Skip if no parent
-        if (!newStatement || !newStatement.parentId) return;
-        
+
+        // Skip if no parent or if parent is 'top' (special case for root-level statements)
+        if (!newStatement || !newStatement.parentId || newStatement.parentId === 'top') return;
+
         logger.info(`New child statement created, updating parent ${newStatement.parentId}`);
-        
+
         // Update parent statement with latest children
         await updateParentWithLatestChildren(newStatement.parentId);
         
@@ -50,9 +50,9 @@ export const updateParentOnChildUpdate = onDocumentUpdated({
     try {
         const before = event.data?.before.data() as Statement | undefined;
         const after = event.data?.after.data() as Statement | undefined;
-        
-        // Skip if no data or no parent
-        if (!before || !after || !after.parentId) return;
+
+        // Skip if no data or no parent or if parent is 'top'
+        if (!before || !after || !after.parentId || after.parentId === 'top') return;
         
         // Check if this update was triggered by our own function to prevent loops
         // Skip if only lastChildUpdate, lastUpdate, or lastSubStatements changed
@@ -126,6 +126,12 @@ return;
  */
 async function updateParentWithLatestChildren(parentId: string) {
     try {
+        // Skip if parentId is 'top' since it's not a real document
+        if (parentId === 'top') {
+            logger.info('Skipping update for "top" parent - not a real document');
+            return;
+        }
+
         const parentRef = db.collection(Collections.statements).doc(parentId);
 
         // Get last 3 sub-statements ordered by creation date
@@ -222,9 +228,9 @@ export const updateParentOnChildDelete = onDocumentDeleted({
 }, async (event) => {
     try {
         const deletedStatement = event.data?.data() as Statement | undefined;
-        
-        // Skip if no parent
-        if (!deletedStatement || !deletedStatement.parentId) return;
+
+        // Skip if no parent or if parent is 'top'
+        if (!deletedStatement || !deletedStatement.parentId || deletedStatement.parentId === 'top') return;
         
         logger.info(`Child statement deleted, updating parent ${deletedStatement.parentId}`);
         
@@ -251,6 +257,12 @@ export const updateParentOnChildDelete = onDocumentDeleted({
  */
 async function updateTopParentSubscriptions(topParentId: string) {
     try {
+        // Skip if topParentId is 'top' since it's not a real document
+        if (topParentId === 'top') {
+            logger.info('Skipping subscription update for "top" parent - not a real document');
+            return;
+        }
+
         const LIMIT = 500; // Safety limit to prevent runaway updates
         const timestamp = Date.now();
 
