@@ -309,6 +309,11 @@
 
   input[type="checkbox"] {
     margin-right: 0.5rem;
+
+    [dir="rtl"] & {
+      margin-right: 0;
+      margin-left: 0.5rem;
+    }
   }
 
   span:first-of-type {
@@ -324,6 +329,11 @@
   margin-left: 1.5rem;
   font-size: 0.75rem;
   color: var(--text-secondary);
+
+  [dir="rtl"] & {
+    margin-left: 0;
+    margin-right: 1.5rem;
+  }
 }
 
 // Switch Component (reused from GlobalSettings)
@@ -431,6 +441,11 @@
   &.inline {
     background: var(--info-light);
     border-left: 4px solid var(--info-color);
+
+    [dir="rtl"] & {
+      border-left: none;
+      border-right: 4px solid var(--info-color);
+    }
   }
 
   &.modal {
@@ -478,6 +493,11 @@
   font-size: 0.875rem;
   color: var(--text-secondary);
 
+  [dir="rtl"] & {
+    right: auto;
+    left: 0.5rem;
+  }
+
   &:hover {
     background: var(--background-secondary);
   }
@@ -505,31 +525,4 @@
   font-style: italic;
   text-align: center;
   padding: 2rem;
-}
-
-// RTL Support
-[dir="rtl"] & {
-  .checkboxLabel input[type="checkbox"] {
-    margin-right: 0;
-    margin-left: 0.5rem;
-  }
-
-  .checkboxHint {
-    margin-left: 0;
-    margin-right: 1.5rem;
-  }
-
-  .switch:checked + .switchSlider::before {
-    transform: translateX(-18px);
-  }
-
-  .mockupClose {
-    right: auto;
-    left: 0.5rem;
-  }
-
-  .mockupCard.inline {
-    border-left: none;
-    border-right: 4px solid var(--info-color);
-  }
 }

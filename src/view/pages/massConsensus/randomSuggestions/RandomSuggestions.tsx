@@ -10,6 +10,7 @@ import { useSelector } from "react-redux";
 import { numberOfEvaluatedStatements } from "@/redux/evaluations/evaluationsSlice";
 import styles from "./RandomSuggestions.module.scss";
 import RandomIcon from "@/assets/icons/randomIcon.svg?react";
+import StageExplanation from "@/view/components/massConsensus/StageExplanation/StageExplanation";
 
 const RandomSuggestions = () => {
   const { navigateToTop, loadingStatements, subStatements, statement, fetchRandomStatements} = useRandomSuggestions();
@@ -38,6 +39,9 @@ const RandomSuggestions = () => {
 
   return (
     <>
+    {/* Show explanation for random suggestions stage */}
+    <StageExplanation stageId="randomSuggestions" />
+
     <h1>{t("Question")}: {statement?.statement}</h1>
       <h3>{t("Please rate the following suggestions")}</h3>
       {loadingStatements ? (

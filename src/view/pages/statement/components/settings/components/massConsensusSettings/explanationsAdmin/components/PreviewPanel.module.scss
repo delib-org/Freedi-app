@@ -155,6 +155,11 @@
   gap: 0.5rem;
   margin-right: 1rem;
 
+  [dir="rtl"] & {
+    margin-right: 0;
+    margin-left: 1rem;
+  }
+
   span {
     width: 12px;
     height: 12px;
@@ -290,6 +295,10 @@
   font-weight: 500;
   cursor: not-allowed;
   opacity: 0.8;
+
+  [dir="rtl"] & {
+    align-self: flex-start;
+  }
 }
 
 .suggestionCard {
@@ -421,6 +430,11 @@
     margin: 0 0 0.75rem 0;
     padding-left: 1rem;
     font-weight: 600;
+
+    [dir="rtl"] & {
+      padding-left: 0;
+      padding-right: 1rem;
+    }
   }
 }
 
@@ -437,39 +451,22 @@
     color: var(--text-secondary);
     line-height: 1.5;
 
+    [dir="rtl"] & {
+      padding-left: 0;
+      padding-right: 1.5rem;
+    }
+
     &::before {
       content: '•';
       position: absolute;
       left: 0;
       color: var(--primary-color);
       font-weight: bold;
-    }
-  }
-}
 
-// RTL Support
-[dir="rtl"] & {
-  .browserDots {
-    margin-right: 0;
-    margin-left: 1rem;
-  }
-
-  .mockButton {
-    align-self: flex-start;
-  }
-
-  .configList dd {
-    padding-left: 0;
-    padding-right: 1rem;
-  }
-
-  .notesList li {
-    padding-left: 0;
-    padding-right: 1.5rem;
-
-    &::before {
-      left: auto;
-      right: 0;
+      [dir="rtl"] & {
+        left: auto;
+        right: 0;
+      }
     }
   }
 }

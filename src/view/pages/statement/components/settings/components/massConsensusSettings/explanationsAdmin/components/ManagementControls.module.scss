@@ -137,6 +137,10 @@
     font-size: 0.75rem;
     color: var(--text-secondary);
     line-height: 1.4;
+
+    [dir="rtl"] & {
+      flex-direction: row-reverse;
+    }
   }
 }
 
@@ -190,6 +194,11 @@
   span {
     color: var(--text-secondary);
     margin-left: auto;
+
+    [dir="rtl"] & {
+      margin-left: 0;
+      margin-right: auto;
+    }
   }
 }
 
@@ -207,17 +216,5 @@
     .buttonText {
       display: inline;
     }
-  }
-}
-
-// RTL Support
-[dir="rtl"] & {
-  .shortcut span {
-    margin-left: 0;
-    margin-right: auto;
-  }
-
-  .tipsList li {
-    flex-direction: row-reverse;
   }
 }

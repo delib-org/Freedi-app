@@ -6,7 +6,6 @@ import { useExplanations } from '@/contexts/massConsensus/ExplanationProvider';
 import styles from './ActionFeedback.module.scss';
 import CheckIcon from '@/assets/icons/checkIcon.svg?react';
 import X from '@/assets/icons/x.svg?react';
-import ArrowRight from '@/assets/icons/arrowRight.svg?react';
 
 interface ActionFeedbackProps {
   stageId: string;
@@ -142,8 +141,7 @@ export const ActionFeedback: FC<ActionFeedbackProps> = ({
             className={`btn btn--primary`}
             onClick={handleContinue}
           >
-            {t('Continue')}
-            <ArrowRight />
+            {t('Continue')} →
           </button>
         </div>
       );
@@ -159,7 +157,7 @@ export const ActionFeedback: FC<ActionFeedbackProps> = ({
           >
             {t(button.label)}
             {button.action === 'viewMySuggestions' && suggestionCount > 0 && ` (${suggestionCount})`}
-            {button.action === 'continue' && <ArrowRight />}
+            {button.action === 'continue' && ' →'}
           </button>
         ))}
       </div>

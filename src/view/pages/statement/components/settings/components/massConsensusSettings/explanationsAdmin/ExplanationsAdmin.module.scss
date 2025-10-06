@@ -144,11 +144,20 @@
   border-right: 1px solid var(--border-color, #e0e0e0);
   overflow-y: auto;
 
+  [dir="rtl"] & {
+    border-right: none;
+    border-left: 1px solid var(--border-color, #e0e0e0);
+  }
+
   @media (max-width: 1024px) {
     width: 100%;
     border-right: none;
     border-bottom: 1px solid var(--border-color, #e0e0e0);
     max-height: 300px;
+
+    [dir="rtl"] & {
+      border-left: none;
+    }
   }
 }
 
@@ -158,6 +167,14 @@
   &.expanded {
     .expandIcon {
       transform: rotate(0deg);
+    }
+  }
+
+  [dir="rtl"] & {
+    &.expanded {
+      .expandIcon {
+        transform: rotate(0deg);
+      }
     }
   }
 }
@@ -173,6 +190,10 @@
   cursor: pointer;
   transition: background 0.2s ease;
   text-align: left;
+
+  [dir="rtl"] & {
+    text-align: right;
+  }
 
   &:hover {
     background: var(--background-hover, #f5f5f5);
@@ -196,6 +217,10 @@
   color: var(--text-secondary);
   transition: transform 0.2s ease;
   transform: rotate(-90deg);
+
+  [dir="rtl"] & {
+    transform: rotate(90deg);
+  }
 }
 
 .sectionContent {
@@ -232,6 +257,10 @@
   text-align: left;
   position: relative;
 
+  [dir="rtl"] & {
+    text-align: right;
+  }
+
   &:hover {
     background: var(--background-hover, #f5f5f5);
   }
@@ -248,6 +277,13 @@
       bottom: 0;
       width: 3px;
       background: var(--primary-color);
+    }
+
+    [dir="rtl"] & {
+      &::before {
+        left: auto;
+        right: 0;
+      }
     }
   }
 }
@@ -301,6 +337,11 @@
   padding: 1.5rem;
   overflow-y: auto;
 
+  [dir="rtl"] & {
+    border-left: none;
+    border-right: 1px solid var(--border-color, #e0e0e0);
+  }
+
   @media (max-width: 1280px) {
     display: none;
   }
@@ -334,11 +375,21 @@
     color: var(--text-secondary);
     line-height: 1.5;
 
+    [dir="rtl"] & {
+      padding-left: 0;
+      padding-right: 1.5rem;
+    }
+
     &::before {
       content: '💡';
       position: absolute;
       left: 0;
       top: 0;
+    }
+
+    [dir="rtl"] &::before {
+      left: auto;
+      right: 0;
     }
   }
 }
@@ -363,6 +414,10 @@
       background: var(--primary-color-light);
       border-color: var(--primary-color);
       transform: translateX(2px);
+    }
+
+    [dir="rtl"] &:hover {
+      transform: translateX(-2px);
     }
   }
 }
@@ -456,54 +511,5 @@
   .errorIcon {
     font-size: 1.25rem;
     margin: 0;
-  }
-}
-
-// RTL Support
-[dir="rtl"] & {
-  .sectionHeader,
-  .stageItem {
-    text-align: right;
-  }
-
-  .expandIcon {
-    transform: rotate(90deg);
-
-    .sidebarSection.expanded & {
-      transform: rotate(0deg);
-    }
-  }
-
-  .stageItem.active::before {
-    left: auto;
-    right: 0;
-  }
-
-  .tipsList li {
-    padding-left: 0;
-    padding-right: 1.5rem;
-
-    &::before {
-      left: auto;
-      right: 0;
-    }
-  }
-
-  .variablesList code:hover {
-    transform: translateX(-2px);
-  }
-
-  .sidebar {
-    border-right: none;
-    border-left: 1px solid var(--border-color, #e0e0e0);
-
-    @media (max-width: 1024px) {
-      border-left: none;
-    }
-  }
-
-  .helpPanel {
-    border-left: none;
-    border-right: 1px solid var(--border-color, #e0e0e0);
   }
 }

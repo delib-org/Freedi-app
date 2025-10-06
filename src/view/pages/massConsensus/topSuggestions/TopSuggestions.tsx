@@ -6,6 +6,7 @@ import { useEffect } from 'react';
 import Loader from '@/view/components/loaders/Loader';
 import { useMassConsensusAnalytics } from '@/hooks/useMassConsensusAnalytics';
 import SimpleSuggestionCards from '../../statement/components/evaluations/components/simpleSuggestionCards/SimpleSuggestionCards';
+import StageExplanation from '@/view/components/massConsensus/StageExplanation/StageExplanation';
 
 const TopSuggestions = () => {
 	const { t } = useUserConfig();
@@ -24,6 +25,9 @@ const TopSuggestions = () => {
 
 	return (
 		<>
+			{/* Show explanation for top suggestions stage */}
+			<StageExplanation stageId="topSuggestions" />
+
 			<h1>{t("Question")}: {statement?.statement}</h1>
 			<h3>{t('Please rate the following leading suggestions')}</h3>
 			{loadingStatements ? (

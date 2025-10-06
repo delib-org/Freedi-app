@@ -14,6 +14,7 @@ import FooterMassConsensus from '../footerMassConsensus/FooterMassConsensus';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import { useHeader } from '../headerMassConsensus/HeaderContext';
 import { useMassConsensusAnalytics } from '@/hooks/useMassConsensusAnalytics';
+import StageExplanation from '@/view/components/massConsensus/StageExplanation/StageExplanation';
 
 const VotingSuggestions = () => {
 	const { subStatements, navigateToFeedback } = VotingSuggestionsMV();
@@ -40,6 +41,9 @@ const VotingSuggestions = () => {
 
 	return (
 		<>
+			{/* Show explanation for voting stage */}
+			<StageExplanation stageId="voting" />
+
 			<TitleMassConsensus
 				title={t('Please vote for the best suggestion')}
 			/>
