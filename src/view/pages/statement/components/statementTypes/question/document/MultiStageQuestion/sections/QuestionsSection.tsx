@@ -2,8 +2,8 @@ import React, { FC, DragEvent } from 'react';
 import { Statement } from 'delib-npm';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import SubGroupCard from '@/view/components/subGroupCard/SubGroupCard';
-import Research from '@/assets/images/Research.png';
 import styles from '../MultiStageQuestion.module.scss';
+import QuestionIcon from '@/assets/icons/questionIcon.svg?react';
 
 interface QuestionsSectionProps {
   stages: Statement[];
@@ -28,17 +28,11 @@ export const QuestionsSection: FC<QuestionsSectionProps> = ({
 
   return (
     <div className={styles.stageCard} id="questions">
-      <div className={styles.imgContainer}>
-        <img
-          draggable={false}
-          src={Research}
-          alt={t("Research Graphic")}
-          className={styles.graphic}
-        />
-      </div>
       <div className={styles.topicDescription}>
-        <div className={styles.magGlass}>⌕</div>
-        <h4>{t("Preliminary questions")}</h4>
+        <div className={styles.icon}>
+          <QuestionIcon />
+        </div>
+        <h2>{t("Preliminary questions")}</h2>
       </div>
       <div className={styles.subDescription}>
         <h5>{t("Connected questions worth discussing")}</h5>

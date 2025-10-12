@@ -3,7 +3,6 @@ import { Link } from 'react-router';
 import { Statement } from 'delib-npm';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import SuggestionCard from '@/view/pages/statement/components/evaluations/components/suggestionCards/suggestionCard/SuggestionCard';
-import manWithIdeaLamp from '@/assets/images/manWithIdeaLamp.png';
 import Smile from '@/assets/icons/smile.svg?react';
 import styles from '../MultiStageQuestion.module.scss';
 
@@ -22,16 +21,9 @@ export const SolutionsSection: FC<SolutionsSectionProps> = ({
 
   return (
     <div className={styles.stageCard} id="solution">
-      <div className={styles.imgContainer}>
-        <img
-          className={styles.graphic}
-          src={manWithIdeaLamp}
-          alt="man With Idea Lamp Graphic"
-        />
-      </div>
       <div className={styles.topicDescription}>
         <Smile />
-        <h4>{t("Top solutions")}</h4>
+        <h2>{t("Top solutions")}</h2>
       </div>
       <div className={styles.subDescription}>
         <h5>{t("Solutions for discussed issue")}</h5>

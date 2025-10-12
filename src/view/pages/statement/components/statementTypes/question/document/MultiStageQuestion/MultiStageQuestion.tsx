@@ -46,6 +46,8 @@ const MultiStageQuestion: FC = () => {
     handleDragEnd,
   } = useDragAndDrop({ stages: initialStages });
 
+  const isDescription = !!statement?.description;
+
   return (
     <>
       <StageModals
@@ -75,7 +77,7 @@ const MultiStageQuestion: FC = () => {
         <StagePage showStageTitle={false} />
       ) : (
         <div className={styles.stagesWrapper}>
-          <IntroductionSection statement={statement} />
+          {isDescription && <IntroductionSection statement={statement} />}
 
           <QuestionsSection
             stages={initialStages}
