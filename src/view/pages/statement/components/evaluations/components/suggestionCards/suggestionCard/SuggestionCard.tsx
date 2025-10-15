@@ -6,7 +6,6 @@ import React, { FC, useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router';
 import StatementChatMore from '../../../../chat/components/statementChatMore/StatementChatMore';
 import CreateStatementModal from '../../../../createStatementModal/CreateStatementModal';
-import { sortSubStatements } from '../../../statementsEvaluationCont';
 import Evaluation from '../../evaluation/Evaluation';
 import SolutionMenu from '../../solutionMenu/SolutionMenu';
 import AddQuestionIcon from '@/assets/icons/addQuestion.svg?react';
@@ -49,8 +48,8 @@ const SuggestionCard: FC<Props> = ({
 	if (!parentStatement) console.error('parentStatement is not defined');
 
 	const { t, dir } = useUserConfig();
-	const { isAuthorized, isAdmin, creator } = useAuthorization(statement.statementId);
-	const { sort } = useParams();
+	// Use parent's authorization instead of individual card authorization
+	const { isAuthorized, isAdmin, creator } = useAuthorization(parentStatement?.statementId);
 	const enableJoining = parentStatement?.statementSettings?.joiningEnabled;
 	const showEvaluation = parentStatement?.statementSettings?.showEvaluation;
 	const enableAIImprovement = parentStatement?.statementSettings?.enableAIImprovement;
@@ -93,9 +92,7 @@ const SuggestionCard: FC<Props> = ({
 	const [originalDescription, setOriginalDescription] = useState<string | null>(null);
 	const [hasBeenImproved, setHasBeenImproved] = useState(false);
 
-	useEffect(() => {
-		sortSubStatements(siblingStatements, sort, 30);
-	}, [statement?.elementHight]);
+	// Removed sortSubStatements call - sorting is handled at parent level in SuggestionCards
 
 	const statementColor: StyleProps = useStatementColor({
 		statement,

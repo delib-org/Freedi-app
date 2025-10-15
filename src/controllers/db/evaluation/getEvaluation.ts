@@ -20,6 +20,11 @@ import {
 	UserSchema,
 } from 'delib-npm';
 import { getStatementSubscriptionId } from '@/controllers/general/helpers';
+import {
+	createManagedCollectionListener,
+	createManagedDocumentListener,
+	generateListenerKey
+} from '@/controllers/utils/firestoreListenerHelpers';
 
 export const listenToEvaluations = (
 	parentId: string,
@@ -50,24 +55,38 @@ export const listenToEvaluations = (
 				where('evaluatorId', '==', evaluatorId)
 			);
 
-		return onSnapshot(q, (evaluationsDB) => {
-			try {
-				evaluationsDB.forEach((evaluationDB) => {
-					try {
-						const evaluation = parse(
-							EvaluationSchema,
-							evaluationDB.data()
-						);
+		// Generate unique key for this listener
+		const listenerKey = generateListenerKey(
+			'evaluations',
+			'statement',
+			`${parentId}-${evaluatorId}-${selectionFunction || 'all'}`
+		);
 
-						dispatch(setEvaluationToStore(evaluation));
-					} catch (error) {
-						console.error(error);
-					}
-				});
-			} catch (error) {
-				console.error(error);
-			}
-		});
+		// Use managed listener system
+		return createManagedCollectionListener(
+			q,
+			listenerKey,
+			(evaluationsDB) => {
+				try {
+					evaluationsDB.forEach((evaluationDB) => {
+						try {
+							const evaluation = parse(
+								EvaluationSchema,
+								evaluationDB.data()
+							);
+
+							dispatch(setEvaluationToStore(evaluation));
+						} catch (error) {
+							console.error(error);
+						}
+					});
+				} catch (error) {
+					console.error(error);
+				}
+			},
+			(error) => console.error('Error in evaluations listener:', error),
+			'query'
+		);
 	} catch (error) {
 		console.error(error);
 
@@ -88,16 +107,29 @@ export function listenToEvaluation(
 			evaluationId
 		);
 
-		return onSnapshot(evaluationsRef, (evaluationDB) => {
-			try {
-				if (!evaluationDB.exists()) return;
-				const evaluation = parse(EvaluationSchema, evaluationDB.data());
+		// Generate unique key for this listener
+		const listenerKey = generateListenerKey(
+			'evaluation',
+			'single',
+			evaluationId
+		);
 
-				store.dispatch(setEvaluationToStore(evaluation));
-			} catch (error) {
-				console.error(error);
-			}
-		});
+		// Use managed listener system
+		return createManagedDocumentListener(
+			evaluationsRef,
+			listenerKey,
+			(evaluationDB) => {
+				try {
+					if (!evaluationDB.exists()) return;
+					const evaluation = parse(EvaluationSchema, evaluationDB.data());
+
+					store.dispatch(setEvaluationToStore(evaluation));
+				} catch (error) {
+					console.error(error);
+				}
+			},
+			(error) => console.error('Error in evaluation listener:', error)
+		);
 	} catch (error) {
 		console.error(error);
 

@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction, createSelector } from '@reduxjs/toolkit';
-import { RootState } from '../store';
+import { RootState } from '../types';
 import { WaitingMember } from 'delib-npm';
 
 interface SubscriptionsState {

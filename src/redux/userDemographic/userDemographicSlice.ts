@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction, createSelector } from '@reduxjs/toolkit';
 import { PolarizationIndex, updateArray, UserDemographicQuestion } from 'delib-npm';
-import { RootState } from '../store';
+import { RootState } from '../types';
 
 interface UserDemographicState {
 	userDemographicQuestions: UserDemographicQuestion[];
