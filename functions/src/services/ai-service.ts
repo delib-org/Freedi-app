@@ -43,7 +43,7 @@ async function getGenerativeAIModel(): Promise<GenerativeModel> {
   logger.info("Initializing new GenerativeModel instance...");
 
   try {
-    const modelName = process.env.AI_MODEL_NAME || "gemini-1.5-flash";
+    const modelName = process.env.AI_MODEL_NAME || "gemini-2.5-flash";
     logger.info(`Using AI model: ${modelName}`);
 
     const genAI = getGenAI();
@@ -68,7 +68,10 @@ async function getGenerativeAIModel(): Promise<GenerativeModel> {
   } catch (error) {
     logger.error("Error initializing GenerativeModel", error);
     const genAI = getGenAI();
-    _generativeModel = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    // Use the same model from environment or fall back to a supported model
+    const fallbackModel = process.env.AI_MODEL_NAME || "gemini-2.5-flash";
+    logger.info(`Using fallback model: ${fallbackModel}`);
+    _generativeModel = genAI.getGenerativeModel({ model: fallbackModel });
 
     return _generativeModel;
   }
