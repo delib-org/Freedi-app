@@ -19,7 +19,7 @@ const Triangle: FC = () => {
 	if (!statement || !statementId) {
 		return (
 			<div className={styles.triangle}>
-				<div style={{ padding: '2rem', textAlign: 'center' }}>
+				<div className={styles.triangle__loading}>
 					{t('Loading statement data...')}
 				</div>
 			</div>
