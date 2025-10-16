@@ -1,6 +1,7 @@
 import SimpleSuggestionCards from "../../statement/components/evaluations/components/simpleSuggestionCards/SimpleSuggestionCards";
 import FooterMassConsensus from "../footerMassConsensus/FooterMassConsensus";
 import { useRandomSuggestions } from "./RandomSuggestionsVM";
+import { useEvaluationTracking } from "./useEvaluationTracking";
 import { useUserConfig } from "@/controllers/hooks/useUserConfig";
 import { useHeader } from "../headerMassConsensus/HeaderContext";
 import { useEffect, useState } from "react";
@@ -15,18 +16,30 @@ import { useExplanations } from "@/contexts/massConsensus/ExplanationProvider";
 import { useParams } from "react-router";
 
 const RandomSuggestions = () => {
-  const { navigateToTop, loadingStatements, subStatements, statement, fetchRandomStatements} = useRandomSuggestions();
+  const {
+    navigateToTop,
+    loadingStatements,
+    subStatements,
+    statement,
+    fetchRandomStatements,
+    canGetNewSuggestions,
+    isLoadingNew,
+    currentBatch,
+    totalBatchesViewed
+  } = useRandomSuggestions();
   const { t } = useUserConfig();
   const { statementId } = useParams<{ statementId: string }>();
   const { trackStageCompleted, trackStageSkipped } =
     useMassConsensusAnalytics();
-  const [isRefreshing, setIsRefreshing] = useState(false);
   const [showExplanation, setShowExplanation] = useState(true);
   const { hasSeenExplanation, getDontShowExplanations } = useExplanations();
 
   const { setHeader } = useHeader();
   const listOfStatementsIds = subStatements.map(st => st.statementId);
   const evaluationsLeft = useSelector(numberOfEvaluatedStatements(listOfStatementsIds));
+
+  // Track evaluations for batch management
+  useEvaluationTracking(listOfStatementsIds);
 
   useEffect(() => {
     setHeader({
@@ -44,9 +57,7 @@ const RandomSuggestions = () => {
   }, []);
 
   const handleGetNewSuggestions = async () => {
-    setIsRefreshing(true);
     await fetchRandomStatements();
-    setIsRefreshing(false);
   };
 
   // Show full-screen explanation if needed
@@ -64,6 +75,14 @@ const RandomSuggestions = () => {
     <>
     <h1>{t("Question")}: {statement?.statement}</h1>
       <h3>{t("Please rate the following suggestions")}</h3>
+
+      {/* Batch indicator */}
+      {totalBatchesViewed > 1 && (
+        <div className={styles.batchIndicator}>
+          {t("Batch")} {currentBatch + 1} {t("of suggestions")}
+        </div>
+      )}
+
       {loadingStatements ? (
         <div style={{margin:"0 auto",padding:"1rem"}}>
           <Loader />
@@ -77,17 +96,27 @@ const RandomSuggestions = () => {
       {/* Get New Suggestions Button */}
       <div className={styles.batchControls}>
         <button
-          className={`btn btn--secondary btn--img ${evaluationsLeft > 0 || isRefreshing ? 'btn--disabled' : ''}`}
+          className={`btn btn--secondary btn--img ${!canGetNewSuggestions || isLoadingNew ? 'btn--disabled' : ''}`}
           onClick={handleGetNewSuggestions}
-          disabled={evaluationsLeft > 0 || isRefreshing}
+          disabled={!canGetNewSuggestions || isLoadingNew}
           aria-label={t("Get new suggestions")}
         >
-          <RandomIcon />
-          <span>{t("Get New Suggestions")}</span>
+          {isLoadingNew ? (
+            <>
+              <Loader />
+              <span>{t("Loading new suggestions...")}</span>
+            </>
+          ) : (
+            <>
+              <RandomIcon />
+              <span>{t("Get New Suggestions")}</span>
+            </>
+          )}
         </button>
         {evaluationsLeft > 0 && (
           <p className={styles.hint}>
             {t("Evaluate all suggestions to get new ones")}
+            {` (${evaluationsLeft} ${t("left")})`}
           </p>
         )}
       </div>
