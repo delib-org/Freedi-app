@@ -66,8 +66,11 @@ const SuggestionCard: FC<Props> = ({
 	const elementRef = useRef<HTMLDivElement>(null);
 	const textContainerRef = useRef<HTMLDivElement>(null);
 
+	// Early return if statement is not defined
+	if (!statement) return null;
+
 	const hasJoinedServer = statement?.joined?.find(
-		(c) => c.uid === creator?.uid
+		(c) => c?.uid === creator?.uid
 	) ? true : false;
 
 	// Optimistic state for instant UI updates
@@ -232,8 +235,6 @@ const SuggestionCard: FC<Props> = ({
 
 	const statementAge = new Date().getTime() - statement.createdAt;
 	const hasChildren = parentStatement?.statementSettings?.hasChildren;
-
-	if (!statement) return null;
 
 	function handleRightClick(e: React.MouseEvent) {
 		e.preventDefault();

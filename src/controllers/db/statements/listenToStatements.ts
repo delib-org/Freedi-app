@@ -93,7 +93,16 @@ export const listenToStatementSubscription = (
 					console.error(error);
 				}
 			},
-			(error) => console.error('Error in statement subscription listener:', error)
+			(error) => {
+				// Handle permission errors more gracefully
+				if (error.code === 'permission-denied') {
+					console.info('User does not have permission to access this statement subscription');
+					if (setHasSubscription) setHasSubscription(false);
+					// Don't log as error, this is expected for some users
+				} else {
+					console.error('Error in statement subscription listener:', error);
+				}
+			}
 		);
 	} catch (error) {
 		console.error(error);

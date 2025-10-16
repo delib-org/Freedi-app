@@ -39,7 +39,7 @@ const StatementInfo: FC<Props> = ({ statement, setShowInfo }) => {
 	const _isAuthorized = isAuthorized(
 		statement,
 		statementSubscription,
-		parentStatement?.creator.uid
+		parentStatement?.creator?.uid
 	);
 
 	return (
