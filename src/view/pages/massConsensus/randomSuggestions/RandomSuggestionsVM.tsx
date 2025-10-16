@@ -10,6 +10,7 @@ import {
 	selectRandomSuggestionsState,
 	selectHasPrefetchedBatches,
 	prefetchTopStatements,
+	dismissRecycleMessage,
 } from '@/redux/massConsensus/massConsensusSlice';
 import {
 	Statement,
@@ -36,7 +37,10 @@ export function useRandomSuggestions() {
 		isLoadingNew,
 		hasPrefetchedBatches,
 		currentBatch,
-		totalBatchesViewed
+		totalBatchesViewed,
+		cyclesCompleted,
+		showRecycleMessage,
+		allSuggestionsViewed
 	} = useSelector(selectRandomSuggestionsState);
 
 	const navigateToTop = () =>
@@ -148,6 +152,10 @@ export function useRandomSuggestions() {
 		dispatch(prefetchRandomBatches({ statementId, batchCount: 2 }) as any);
 	};
 
+	const handleDismissRecycleMessage = () => {
+		dispatch(dismissRecycleMessage());
+	};
+
 	return {
 		subStatements,
 		navigateToTop,
@@ -157,6 +165,10 @@ export function useRandomSuggestions() {
 		canGetNewSuggestions,
 		isLoadingNew,
 		currentBatch,
-		totalBatchesViewed
+		totalBatchesViewed,
+		cyclesCompleted,
+		showRecycleMessage,
+		allSuggestionsViewed,
+		handleDismissRecycleMessage
 	};
 }

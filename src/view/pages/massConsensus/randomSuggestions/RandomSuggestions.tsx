@@ -25,7 +25,11 @@ const RandomSuggestions = () => {
     canGetNewSuggestions,
     isLoadingNew,
     currentBatch,
-    totalBatchesViewed
+    totalBatchesViewed,
+    cyclesCompleted,
+    showRecycleMessage,
+    allSuggestionsViewed,
+    handleDismissRecycleMessage
   } = useRandomSuggestions();
   const { t } = useUserConfig();
   const { statementId } = useParams<{ statementId: string }>();
@@ -80,6 +84,31 @@ const RandomSuggestions = () => {
       {totalBatchesViewed > 1 && (
         <div className={styles.batchIndicator}>
           {t("Batch")} {currentBatch + 1} {t("of suggestions")}
+          {cyclesCompleted > 0 && (
+            <span className={styles.cycleIndicator}>
+              {" "}({t("Cycle")} {cyclesCompleted + 1})
+            </span>
+          )}
+        </div>
+      )}
+
+      {/* Recycle message */}
+      {showRecycleMessage && (
+        <div className={styles.recycleMessage}>
+          <div className={styles.recycleMessageContent}>
+            <p>
+              {cyclesCompleted === 1
+                ? t("You've seen all available suggestions! Starting a new cycle...")
+                : t("Starting cycle {{count}} of suggestions", { count: cyclesCompleted + 1 })}
+            </p>
+            <button
+              className="btn btn--text"
+              onClick={handleDismissRecycleMessage}
+              aria-label={t("Dismiss message")}
+            >
+              {t("Got it")}
+            </button>
+          </div>
         </div>
       )}
 

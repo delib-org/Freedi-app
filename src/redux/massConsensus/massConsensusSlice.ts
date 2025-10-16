@@ -44,6 +44,9 @@ interface MassConsensusState {
 		evaluationsPerBatch: Record<number, number>;
 		canGetNewSuggestions: boolean;
 		totalBatchesViewed: number;
+		cyclesCompleted: number;  // Track how many times we've recycled through all suggestions
+		allSuggestionsViewed: boolean;  // Flag when all available suggestions have been seen
+		showRecycleMessage: boolean;  // Show message when recycling suggestions
 	};
 
 	// Error states
@@ -60,28 +63,55 @@ const isCacheFresh = (timestamp: number): boolean => {
 
 // Async thunk for fetching a new batch of random statements
 export const fetchNewRandomBatch = createAsyncThunk<
-	Statement[],
+	{ statements: Statement[]; isRecycled: boolean },
 	string, // statementId
 	{ state: RootState }
 >(
 	'massConsensus/fetchNewRandomBatch',
-	async (statementId: string, { getState }) => {
+	async (statementId: string, { getState, dispatch }) => {
 		const state = getState();
-		const viewedIds = state.massConsensus.viewedStatementIds;
+		let viewedIds = state.massConsensus.viewedStatementIds;
+		let isRecycled = false;
 
-		const endPoint = APIEndPoint('getRandomStatements', {
+		// First attempt with current viewed IDs
+		let endPoint = APIEndPoint('getRandomStatements', {
 			parentId: statementId,
 			limit: 6,
 			excludeIds: viewedIds.join(',')
 		});
 
-		const response = await fetch(endPoint);
+		let response = await fetch(endPoint);
 		if (!response.ok) {
 			throw new Error(`Failed to fetch: ${response.status}`);
 		}
 
-		const { statements } = await response.json();
-		return statements as Statement[];
+		let { statements } = await response.json();
+
+		// If no statements returned, we've seen everything - reset and try again
+		if (!statements || statements.length === 0) {
+			console.info('All suggestions viewed, recycling through suggestions...');
+			isRecycled = true;
+
+			// Reset viewed IDs to allow recycling
+			dispatch(massConsensusSlice.actions.resetViewedStatements());
+
+			// Fetch again without excludeIds
+			endPoint = APIEndPoint('getRandomStatements', {
+				parentId: statementId,
+				limit: 6,
+				excludeIds: ''
+			});
+
+			response = await fetch(endPoint);
+			if (!response.ok) {
+				throw new Error(`Failed to fetch recycled: ${response.status}`);
+			}
+
+			const recycledData = await response.json();
+			statements = recycledData.statements || [];
+		}
+
+		return { statements: statements as Statement[], isRecycled };
 	}
 );
 
@@ -177,6 +207,9 @@ const initialState: MassConsensusState = {
 		evaluationsPerBatch: {},
 		canGetNewSuggestions: false,
 		totalBatchesViewed: 1,
+		cyclesCompleted: 0,
+		allSuggestionsViewed: false,
+		showRecycleMessage: false,
 	},
 
 	// Error states
@@ -283,6 +316,21 @@ export const massConsensusSlice = createSlice({
 			state.ui.evaluationsPerBatch = {};
 			state.ui.canGetNewSuggestions = false;
 			state.ui.totalBatchesViewed = 1;
+			state.ui.cyclesCompleted = 0;
+			state.ui.allSuggestionsViewed = false;
+			state.ui.showRecycleMessage = false;
+		},
+
+		resetViewedStatements: (state) => {
+			// Reset viewed statements to allow recycling
+			state.viewedStatementIds = [];
+			state.ui.cyclesCompleted++;
+			state.ui.allSuggestionsViewed = true;
+			state.ui.showRecycleMessage = true;
+		},
+
+		dismissRecycleMessage: (state) => {
+			state.ui.showRecycleMessage = false;
 		}
 	},
 
@@ -295,6 +343,7 @@ export const massConsensusSlice = createSlice({
 			})
 			.addCase(fetchNewRandomBatch.fulfilled, (state, action) => {
 				state.loading.fetchingNewRandom = false;
+				const { statements, isRecycled } = action.payload;
 
 				// Save current batch to history
 				if (state.randomStatements.length > 0) {
@@ -302,12 +351,17 @@ export const massConsensusSlice = createSlice({
 				}
 
 				// Set new batch
-				state.randomStatements = action.payload;
+				state.randomStatements = statements;
 				state.currentRandomBatch++;
 				state.ui.totalBatchesViewed++;
 
+				// If this is recycled content, show the message
+				if (isRecycled) {
+					state.ui.showRecycleMessage = true;
+				}
+
 				// Mark as viewed
-				action.payload.forEach(s => {
+				statements.forEach(s => {
 					if (!state.viewedStatementIds.includes(s.statementId)) {
 						state.viewedStatementIds.push(s.statementId);
 					}
@@ -361,7 +415,9 @@ export const {
 	updateEvaluationCount,
 	clearPrefetchedRandomBatches,
 	clearPrefetchedTopStatements,
-	resetRandomSuggestions
+	resetRandomSuggestions,
+	resetViewedStatements,
+	dismissRecycleMessage
 } = massConsensusSlice.actions;
 
 // Original selectors
@@ -404,6 +460,15 @@ export const selectViewedStatementIds = (state: RootState) =>
 export const selectHasPrefetchedBatches = (state: RootState) =>
 	state.massConsensus.prefetch.randomBatches.length > 0;
 
+export const selectCyclesCompleted = (state: RootState) =>
+	state.massConsensus.ui.cyclesCompleted;
+
+export const selectShowRecycleMessage = (state: RootState) =>
+	state.massConsensus.ui.showRecycleMessage;
+
+export const selectAllSuggestionsViewed = (state: RootState) =>
+	state.massConsensus.ui.allSuggestionsViewed;
+
 // Memoized selector for random suggestions state
 export const selectRandomSuggestionsState = createSelector(
 	[(state: RootState) => state.massConsensus],
@@ -416,6 +481,9 @@ export const selectRandomSuggestionsState = createSelector(
 		totalBatchesViewed: massConsensus.ui.totalBatchesViewed,
 		evaluationsPerBatch: massConsensus.ui.evaluationsPerBatch,
 		viewedStatementIds: massConsensus.viewedStatementIds,
+		cyclesCompleted: massConsensus.ui.cyclesCompleted,
+		allSuggestionsViewed: massConsensus.ui.allSuggestionsViewed,
+		showRecycleMessage: massConsensus.ui.showRecycleMessage,
 	})
 );
 
