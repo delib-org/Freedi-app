@@ -1,5 +1,5 @@
-import { db } from "..";
 import { logger } from "firebase-functions";
+import { getFirestore } from "firebase-admin/firestore";
 
 interface CacheEntry {
   value: any;
@@ -14,7 +14,7 @@ interface CacheEntry {
  * Provides a simple key-value cache with TTL support
  */
 class FirestoreCacheService {
-  private collection = db.collection("_cache");
+  private collection = getFirestore().collection("_cache");
 
   /**
    * Retrieves a cached value by key
@@ -98,7 +98,7 @@ class FirestoreCacheService {
   async clearAll(): Promise<void> {
     try {
       const snapshot = await this.collection.get();
-      const batch = db.batch();
+      const batch = getFirestore().batch();
 
       snapshot.docs.forEach((doc) => {
         batch.delete(doc.ref);
@@ -126,7 +126,7 @@ class FirestoreCacheService {
         return;
       }
 
-      const batch = db.batch();
+      const batch = getFirestore().batch();
       snapshot.docs.forEach((doc) => {
         batch.delete(doc.ref);
       });
