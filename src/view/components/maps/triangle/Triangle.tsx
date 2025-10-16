@@ -14,6 +14,18 @@ const Triangle: FC = () => {
 	const { t } = useUserConfig();
 	const { statementId } = useParams();
 	const statement = useSelector(statementSelector(statementId));
+
+	// Return early if statement is not found
+	if (!statement || !statementId) {
+		return (
+			<div className={styles.triangle}>
+				<div style={{ padding: '2rem', textAlign: 'center' }}>
+					{t('Loading statement data...')}
+				</div>
+			</div>
+		);
+	}
+
 	const subStatements: Statement[] = useSelector(
 		statementOptionsSelector(statement.statementId)
 	).filter((s: Statement) => s.evaluation?.sumCon !== undefined);
