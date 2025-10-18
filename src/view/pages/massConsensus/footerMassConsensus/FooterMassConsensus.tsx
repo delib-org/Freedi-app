@@ -108,7 +108,7 @@ const FooterMassConsensus = ({
 	return (
 		<div
 			className={styles.footerMC}
-			style={{ direction: dir === 'ltr' ? 'rtl' : 'ltr' }}
+			style={{ direction: dir}}
 		>
 			{renderButton()}
 		</div>

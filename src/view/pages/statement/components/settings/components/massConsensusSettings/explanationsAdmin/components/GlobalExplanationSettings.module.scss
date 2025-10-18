@@ -84,7 +84,7 @@
   cursor: pointer;
 
   &:checked + .switchSlider {
-    background: var(--primary-color);
+    background: var(--header-question);
 
     &::before {
       transform: translateX(20px);
