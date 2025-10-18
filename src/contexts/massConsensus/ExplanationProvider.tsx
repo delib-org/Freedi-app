@@ -16,7 +16,6 @@ import {
 import { useParams } from "react-router";
 import { useSelector } from "react-redux";
 import { massConsensusProcessSelector } from "@/redux/massConsensus/massConsensusSlice";
-import RandomSuggestions from "@/view/pages/massConsensus/randomSuggestions/RandomSuggestions";
 
 interface ExplanationContextType {
   // Get explanation for current stage

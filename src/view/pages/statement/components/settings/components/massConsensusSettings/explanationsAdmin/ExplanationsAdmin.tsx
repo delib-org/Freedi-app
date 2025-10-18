@@ -40,7 +40,7 @@ const ExplanationsAdmin: FC<ExplanationsAdminProps> = ({
   onSave,
   initialConfig,
 }) => {
-  const { t, dir, language } = useUserConfig();
+  const { t, dir, currentLanguage } = useUserConfig();
 
   // Use the custom hook for configuration management
   const {
@@ -126,7 +126,7 @@ const ExplanationsAdmin: FC<ExplanationsAdminProps> = ({
 
   // Handle reset to defaults
   const handleResetToDefaults = useCallback(() => {
-    const confirmReset = window.confirm(
+    const confirmReset = globalThis.confirm(
       t("Are you sure you want to reset all explanation settings to defaults?")
     );
     if (confirmReset) {
@@ -188,7 +188,7 @@ const ExplanationsAdmin: FC<ExplanationsAdminProps> = ({
           <h3>{t("Error Loading Configurations")}</h3>
           <p>{error}</p>
           <button
-            onClick={() => window.location.reload()}
+            onClick={() => globalThis.location.reload()}
             className={styles.retryButton}
           >
             {t("Retry")}
@@ -235,7 +235,7 @@ const ExplanationsAdmin: FC<ExplanationsAdminProps> = ({
           <Button
             text={t("Cancel")}
             className={styles.cancelButton}
-            onClick={() => window.location.reload()}
+            onClick={() => globalThis.location.reload()}
             disabled={!hasUnsavedChanges}
           ></Button>
           <Button
@@ -331,8 +331,9 @@ const ExplanationsAdmin: FC<ExplanationsAdminProps> = ({
                 const input = document.createElement("input");
                 input.type = "file";
                 input.accept = ".json";
-                input.onchange = async (e: any) => {
-                  const file = e.target.files?.[0];
+                input.onchange = async (e: Event) => {
+                  const target = e.target as HTMLInputElement; 
+                  const file = target.files?.[0];
                   if (file) {
                     try {
                       await importConfigurations(file);
@@ -370,7 +371,7 @@ const ExplanationsAdmin: FC<ExplanationsAdminProps> = ({
                 stageInfo={activeStageInfo}
                 config={activeStageConfig}
                 globalSettings={globalSettings}
-                language={language}
+                language={currentLanguage}
                 onChange={(updates) =>
                   handleStageConfigChange(activeStageId, updates)
                 }
@@ -419,7 +420,7 @@ const ExplanationsAdmin: FC<ExplanationsAdminProps> = ({
           </span>
           <span className={styles.separator}>•</span>
           <span>
-            {t("Language")}: {language}
+            {t("Language")}: {currentLanguage}
           </span>
           <span className={styles.separator}>•</span>
           <span>

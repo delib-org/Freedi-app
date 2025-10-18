@@ -58,17 +58,17 @@ const MassConsensusQuestion = () => {
   useEffect(() => {
     if (isBusy) {
       loaderStartRef.current = Date.now();
-      const showId = window.setTimeout(() => setShowLoader(true), 250);
+      const showId = globalThis.setTimeout(() => setShowLoader(true), 250);
 
-      return () => window.clearTimeout(showId);
+      return () => globalThis.clearTimeout(showId);
     } else {
       if (loaderStartRef.current !== null) {
         const elapsed = Date.now() - loaderStartRef.current;
         const wait = Math.max(0, 500 - elapsed);
-        const hideId = window.setTimeout(() => setShowLoader(false), wait);
+        const hideId = globalThis.setTimeout(() => setShowLoader(false), wait);
         loaderStartRef.current = null;
 
-        return () => window.clearTimeout(hideId);
+        return () => globalThis.clearTimeout(hideId);
       }
       setShowLoader(false);
     }
@@ -145,9 +145,8 @@ const MassConsensusQuestion = () => {
       )}
 
       {showLoader && (
-        <div
+        <output
           className={styles.loaderOverlay}
-          role="status"
           aria-live="polite"
           aria-busy="true"
         >
@@ -155,7 +154,7 @@ const MassConsensusQuestion = () => {
             {t("Looking for similar suggestions... please wait.")}
           </h2>
           <Loader />
-        </div>
+        </output>
       )}
 
       {reachedLimit ? (
