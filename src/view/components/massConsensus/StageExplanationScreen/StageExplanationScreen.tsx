@@ -1,17 +1,18 @@
-import React, { FC, useState } from 'react';
-import { ExplanationConfig } from 'delib-npm';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
-import { useExplanations } from '@/contexts/massConsensus/ExplanationProvider';
-import { useNavigate } from 'react-router';
-import styles from './StageExplanationScreen.module.scss';
-import InfoIcon from '@/assets/icons/infoIcon.svg?react';
+import React, { FC, useState } from "react";
+import { ExplanationConfig } from "delib-npm";
+import { useUserConfig } from "@/controllers/hooks/useUserConfig";
+import {
+  explanationTextList,
+  useExplanations,
+} from "@/contexts/massConsensus/ExplanationProvider";
+import { useNavigate } from "react-router";
+import styles from "./StageExplanationScreen.module.scss";
 
 interface StageExplanationScreenProps {
   stageId: string;
   explanation?: ExplanationConfig;
   onContinue: () => void;
   onBack?: () => void;
-  nextStageUrl?: string;
   previousStageUrl?: string;
 }
 
@@ -20,8 +21,7 @@ export const StageExplanationScreen: FC<StageExplanationScreenProps> = ({
   explanation: explicitExplanation,
   onContinue,
   onBack,
-  nextStageUrl,
-  previousStageUrl
+  previousStageUrl,
 }) => {
   const { t, dir } = useUserConfig();
   const navigate = useNavigate();
@@ -29,7 +29,7 @@ export const StageExplanationScreen: FC<StageExplanationScreenProps> = ({
     getStageExplanation,
     markExplanationSeen,
     setDontShowExplanations,
-    getDontShowExplanations
+    getDontShowExplanations,
   } = useExplanations();
 
   const [dontShowAgain, setDontShowAgain] = useState(false);
@@ -40,6 +40,7 @@ export const StageExplanationScreen: FC<StageExplanationScreenProps> = ({
   // If no explanation or disabled, continue directly
   if (!explanation?.enabled || getDontShowExplanations()) {
     onContinue();
+
     return null;
   }
 
@@ -65,19 +66,39 @@ export const StageExplanationScreen: FC<StageExplanationScreenProps> = ({
 
   const getIconForStage = () => {
     switch (stageId) {
-      case 'randomSuggestions':
-        return '🎲';
-      case 'topSuggestions':
-        return '⭐';
-      case 'voting':
-        return '🗳️';
-      case 'question':
-        return '💡';
-      case 'introduction':
-        return '👋';
+      case "randomSuggestions":
+        return "🎲";
+      case "topSuggestions":
+        return "⭐";
+      case "voting":
+        return "🗳️";
+      case "question":
+        return "💡";
+      case "introduction":
+        return "👋";
       default:
-        return '📋';
+        return "📋";
     }
+  };
+
+  const getExplanationReasons = () => {
+    const reason =
+      explanationTextList[stageId as keyof typeof explanationTextList];
+    if (!reason) return null;
+
+    return (
+      <div
+        className={styles.infoBox}
+        style={{ textAlign: dir === "ltr" ? "left" : "right" }}
+      >
+        <h3>{t(reason.titleText)}</h3>
+        <ul>
+          <li>{t(reason.firstReason)}</li>
+          <li>{t(reason.secondReason)}</li>
+          <li>{t(reason.thirdReason)}</li>
+        </ul>
+      </div>
+    );
   };
 
   return (
@@ -97,40 +118,7 @@ export const StageExplanationScreen: FC<StageExplanationScreenProps> = ({
           </div>
 
           {/* Additional info sections if needed */}
-          <div className={styles.infoSections}>
-            {stageId === 'randomSuggestions' && (
-              <div className={styles.infoBox}>
-                <h3>{t('Why Random?')}</h3>
-                <ul>
-                  <li>{t('Ensures fair representation of all ideas')}</li>
-                  <li>{t('Prevents popularity bias')}</li>
-                  <li>{t('Gives every suggestion equal chance')}</li>
-                </ul>
-              </div>
-            )}
-
-            {stageId === 'topSuggestions' && (
-              <div className={styles.infoBox}>
-                <h3>{t('What are Top Suggestions?')}</h3>
-                <ul>
-                  <li>{t('Highest rated by the community')}</li>
-                  <li>{t('Based on collective evaluation')}</li>
-                  <li>{t('Refined through peer review')}</li>
-                </ul>
-              </div>
-            )}
-
-            {stageId === 'voting' && (
-              <div className={styles.infoBox}>
-                <h3>{t('Your Vote Matters')}</h3>
-                <ul>
-                  <li>{t('This is the final decision stage')}</li>
-                  <li>{t('Each vote has equal weight')}</li>
-                  <li>{t('The result represents collective wisdom')}</li>
-                </ul>
-              </div>
-            )}
-          </div>
+          <div className={styles.infoSections}>{getExplanationReasons()}</div>
 
           {/* Don't show again checkbox */}
           <div className={styles.dontShowWrapper}>
@@ -148,11 +136,8 @@ export const StageExplanationScreen: FC<StageExplanationScreenProps> = ({
         {/* Navigation buttons */}
         <div className={styles.navigation}>
           {(onBack || previousStageUrl) && (
-            <button
-              className="btn btn--secondary"
-              onClick={handleBack}
-            >
-              ← {t('Previous')}
+            <button className="btn btn--secondary" onClick={handleBack}>
+              {dir == "ltr" ? "←" : "→"} {t("Previous")}
             </button>
           )}
 
@@ -160,7 +145,7 @@ export const StageExplanationScreen: FC<StageExplanationScreenProps> = ({
             className="btn btn--primary btn--large"
             onClick={handleContinue}
           >
-            {t('Continue')} →
+            {t("Continue")} {dir == "ltr" ? "→" : "←"}
           </button>
         </div>
       </div>

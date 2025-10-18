@@ -4,7 +4,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: var(--white);
+  background: var(--statementBackground);
   z-index: 1000;
   display: flex;
   align-items: center;
@@ -118,15 +118,24 @@
   gap: 1.5rem;
   animation: slideInUp 0.5s ease-out 0.4s both;
 }
-
 .infoBox {
   background: var(--light-gray-bg);
   border-radius: 12px;
   padding: 1.5rem;
   text-align: left;
 
-  [dir="rtl"] & {
+  &[dir="rtl"] {
     text-align: right;
+
+    ul li {
+      padding-left: 0;
+      padding-right: 1.75rem;
+
+      &::before {
+        left: auto;
+        right: 0;
+      }
+    }
   }
 
   h3 {
@@ -143,34 +152,25 @@
 
     li {
       position: relative;
-      padding-left: 1.75rem;
+      padding:  0 .7rem;
       margin-bottom: 0.75rem;
       font-size: 1rem;
       color: var(--dark-text);
       line-height: 1.5;
-
-      [dir="rtl"] & {
-        padding-left: 0;
-        padding-right: 1.75rem;
-      }
 
       &:last-child {
         margin-bottom: 0;
       }
 
       &::before {
-        content: '✓';
-        position: absolute;
-        left: 0;
+        content: "✓";
+        position: relative;
+        padding: 0 0.5rem;
         top: 0;
+        left: 0;
         color: var(--active);
         font-weight: bold;
         font-size: 1.125rem;
-
-        [dir="rtl"] & {
-          left: auto;
-          right: 0;
-        }
       }
     }
   }
@@ -196,6 +196,7 @@
     accent-color: var(--active);
 
     [dir="rtl"] & {
+      flex-direction: row-reverse;
       margin-right: 0;
       margin-left: 0.75rem;
     }
