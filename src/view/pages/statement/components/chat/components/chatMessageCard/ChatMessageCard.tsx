@@ -58,13 +58,13 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
   const _isAuthorized = isAuthorized(
     statement,
     statementSubscription,
-    parentStatement?.creator.uid
+    parentStatement?.creator?.uid
   );
   const isMe = user?.uid === statement.creator?.uid;
   const isStatement = statementType === StatementType.statement;
 
   const isPreviousFromSameAuthor =
-    previousStatement?.creator.uid === statement.creator.uid;
+    previousStatement?.creator?.uid === statement?.creator?.uid;
 
   const isAlignedLeft = (isMe && dir === "ltr") || (!isMe && dir === "rtl");
 

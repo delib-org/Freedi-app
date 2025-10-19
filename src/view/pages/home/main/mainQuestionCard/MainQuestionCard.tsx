@@ -38,9 +38,11 @@ const MainQuestionCard: FC<Props> = ({ simpleStatement }) => {
 					</div>
 				</div>
 
-				{lastMessage && <div className={styles.updates}>
-					{lastMessage?.creator}: {lastMessage?.message}, {getTime(lastMessage?.createdAt)}
-				</div>}
+				{lastMessage?.creator && lastMessage?.message && lastMessage?.createdAt && (
+					<div className={styles.updates}>
+						{lastMessage.creator}: {lastMessage.message}, {getTime(lastMessage.createdAt)}
+					</div>
+				)}
 			</div>
 
 		</Link>

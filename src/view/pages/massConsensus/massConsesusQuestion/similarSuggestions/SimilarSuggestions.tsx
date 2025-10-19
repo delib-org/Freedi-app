@@ -29,7 +29,7 @@ const SimilarSuggestions = ({ stage, setIfButtonEnabled }) => {
 
   const existingSuggestions = similarSuggestions.filter((s) => s.statementId);
 
-  const newSuggestion = similarSuggestions[0];
+  const newSuggestion = similarSuggestions.length > 0 ? similarSuggestions[0] : null;
 
   const [selected, setSelected] = React.useState<string | null>(null);
 
