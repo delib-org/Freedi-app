@@ -16,10 +16,9 @@ const SingleLikeEvaluation: FC<Props> = ({
 	statement,
 	shouldDisplayScore = true,
 }) => {
+	const _totalEvaluators = statement.evaluation?.numberOfEvaluators || 0;
 	const [likesCount, setLikesCount] = useState(statement.pro || 0);
-	const [totalEvaluators, setTotalEvaluators] = useState(
-		(statement.pro || 0) + (statement.con || 0)
-	);
+	const [totalEvaluators, setTotalEvaluators] = useState(_totalEvaluators);
 	const [isProcessing, setIsProcessing] = useState(false);
 
 	const evaluation = useAppSelector(
@@ -30,8 +29,8 @@ const SingleLikeEvaluation: FC<Props> = ({
 
 	useEffect(() => {
 		setLikesCount(statement.pro || 0);
-		setTotalEvaluators((statement.pro || 0) + (statement.con || 0));
-	}, [statement.pro, statement.con]);
+		setTotalEvaluators(_totalEvaluators);
+	}, [_totalEvaluators]);
 
 	const handleLikeToggle = async () => {
 		if (isProcessing) return;
@@ -66,7 +65,7 @@ const SingleLikeEvaluation: FC<Props> = ({
 			console.error('Error setting evaluation:', error);
 			// Rollback on error
 			setLikesCount(statement.pro || 0);
-			setTotalEvaluators((statement.pro || 0) + (statement.con || 0));
+			setTotalEvaluators(statement.evaluation?.numberOfEvaluators || 0);
 		} finally {
 			setIsProcessing(false);
 		}
