@@ -131,6 +131,57 @@
 			}
 		}
 	}
+
+	// Vote limit styles
+	.voteLimit {
+		margin-top: 0.5rem;
+		text-align: center;
+
+		.voteLimitText {
+			font-size: 0.85rem;
+			color: var(--text-secondary);
+			background: rgba(100, 149, 237, 0.05);
+			padding: 0.25rem 0.5rem;
+			border-radius: 12px;
+			display: inline-block;
+
+			&.limitReached {
+				color: #dc3545;
+				background: rgba(220, 53, 69, 0.1);
+				font-weight: 600;
+			}
+		}
+	}
+
+	.limitMessage {
+		margin-top: 0.5rem;
+		padding: 0.75rem;
+		background: rgba(220, 53, 69, 0.05);
+		border: 1px solid rgba(220, 53, 69, 0.2);
+		border-radius: 8px;
+		color: #dc3545;
+		font-size: 0.9rem;
+		text-align: center;
+		animation: slideDown 0.3s ease-out;
+
+		.manageButton {
+			display: inline-block;
+			margin-left: 0.5rem;
+			padding: 0.25rem 0.75rem;
+			background: #dc3545;
+			color: white;
+			border: none;
+			border-radius: 4px;
+			font-size: 0.85rem;
+			cursor: pointer;
+			transition: all 0.2s;
+
+			&:hover {
+				background: #c82333;
+				transform: translateY(-1px);
+			}
+		}
+	}
 }
 
 // Animations
@@ -152,5 +203,16 @@
 	}
 	50% {
 		opacity: 1;
+	}
+}
+
+@keyframes slideDown {
+	from {
+		opacity: 0;
+		transform: translateY(-10px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
 	}
 }

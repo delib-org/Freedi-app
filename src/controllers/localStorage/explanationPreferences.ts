@@ -45,7 +45,8 @@ export function saveExplanationPreferences(prefs: ExplanationPreferences): void 
 // Check if user has seen an explanation
 export function hasSeenExplanation(statementId: string, stageId: string): boolean {
   const prefs = getExplanationPreferences();
-  return prefs.seenExplanations[statementId]?.[stageId] || false;
+  
+return prefs.seenExplanations[statementId]?.[stageId] || false;
 }
 
 // Mark explanation as seen
@@ -70,7 +71,8 @@ export function setDontShowAgainForStatement(statementId: string, value: boolean
 // Get don't show again for a statement
 export function getDontShowAgainForStatement(statementId: string): boolean {
   const prefs = getExplanationPreferences();
-  return prefs.dontShowAgain[statementId] || prefs.globalDontShow || false;
+  
+return prefs.dontShowAgain[statementId] || prefs.globalDontShow || false;
 }
 
 // Set global don't show
@@ -100,7 +102,8 @@ export function getUserExperienceLevel(statementId: string): 'new' | 'returning'
 
   if (seenCount === 0) return 'new';
   if (seenCount < 5) return 'returning';
-  return 'power';
+  
+return 'power';
 }
 
 // Set preferred display mode
@@ -113,5 +116,6 @@ export function setPreferredDisplayMode(mode: 'card' | 'tooltip' | 'modal' | 'in
 // Get preferred display mode
 export function getPreferredDisplayMode(): 'card' | 'tooltip' | 'modal' | 'inline' | 'toast' | undefined {
   const prefs = getExplanationPreferences();
-  return prefs.preferredDisplayMode;
+  
+return prefs.preferredDisplayMode;
 }

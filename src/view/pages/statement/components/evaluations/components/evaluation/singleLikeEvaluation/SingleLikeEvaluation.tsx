@@ -1,11 +1,14 @@
 import { FC, useEffect, useState } from 'react';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
-import { evaluationSelector } from '@/redux/evaluations/evaluationsSlice';
+import { evaluationSelector, userVotesInParentSelector } from '@/redux/evaluations/evaluationsSlice';
 import { Statement, User } from 'delib-npm';
 import { setEvaluationToDB } from '@/controllers/db/evaluation/setEvaluation';
 import { auth } from '@/controllers/db/config';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import styles from './SingleLikeEvaluation.module.scss';
 import LikeIcon from '@/assets/icons/likeIcon.svg?react';
+import EvaluationManagementModal from '@/view/components/evaluationManagement/EvaluationManagementModal';
+import Snackbar from '@/view/components/snackbar/Snackbar';
 
 interface Props {
 	statement: Statement;
@@ -18,6 +21,8 @@ const SingleLikeEvaluation: FC<Props> = ({
 	parentStatement,
 	shouldDisplayScore = true,
 }) => {
+	const { t } = useUserConfig();
+
 	// Get initial values from statement
 	// Use parent's total evaluators if available, otherwise fall back to statement's count
 	const _totalEvaluators = parentStatement?.evaluation?.asParentTotalEvaluators ||
@@ -28,12 +33,21 @@ const SingleLikeEvaluation: FC<Props> = ({
 	const [likesCount, setLikesCount] = useState(_likesCount);
 	const [totalEvaluators, setTotalEvaluators] = useState(_totalEvaluators);
 	const [isProcessing, setIsProcessing] = useState(false);
+	const [showVoteModal, setShowVoteModal] = useState(false);
+	const [showSnackbar, setShowSnackbar] = useState(false);
 
 	const evaluation = useAppSelector(
 		evaluationSelector(statement.statementId)
 	);
 
+	const userVoteCount = useAppSelector(
+		userVotesInParentSelector(parentStatement?.statementId)
+	);
+
 	const isLiked = evaluation === 1;
+	const maxVotes = parentStatement?.evaluationSettings?.axVotesPerUser;
+	const hasVoteLimit = maxVotes && maxVotes > 0;
+	const isAtVoteLimit = hasVoteLimit && userVoteCount >= maxVotes;
 
 	useEffect(() => {
 		// Update counts when statement or parent changes
@@ -59,6 +73,13 @@ const SingleLikeEvaluation: FC<Props> = ({
 		const user = auth.currentUser;
 		if (!user) return;
 
+		// Check if trying to like when at vote limit
+		if (!isLiked && isAtVoteLimit) {
+			setShowVoteModal(true);
+
+			return;
+		}
+
 		const creator: User = {
 			displayName: user.displayName || 'Anonymous',
 			email: user.email || '',
@@ -80,6 +101,11 @@ const SingleLikeEvaluation: FC<Props> = ({
 			}
 
 			await setEvaluationToDB(statement, creator, newEvaluation);
+
+			// Show vote count snackbar after successful vote
+			if (hasVoteLimit) {
+				setShowSnackbar(true);
+			}
 		} catch (error) {
 			console.error('Error setting evaluation:', error);
 			// Rollback on error
@@ -131,6 +157,34 @@ const SingleLikeEvaluation: FC<Props> = ({
 						aria-label={`${likePercentage}% of users liked this`}
 					/>
 				</div>
+			)}
+
+			{/* Evaluation Management Modal */}
+			{showVoteModal && parentStatement && (
+				<EvaluationManagementModal
+					parentStatement={parentStatement}
+					maxVotes={maxVotes || 0}
+					onClose={() => {
+						setShowVoteModal(false);
+					}}
+					onVoteRemoved={() => {
+						setShowVoteModal(false);
+						// Show snackbar after removing a vote
+						setShowSnackbar(true);
+					}}
+				/>
+			)}
+
+			{/* Snackbar for vote count */}
+			{hasVoteLimit && (
+				<Snackbar
+					message={`${userVoteCount}/${maxVotes} ${t('votes used')}`}
+					subMessage={isAtVoteLimit ? t("You've reached the maximum of") + ` ${maxVotes} ${t('votes')}` : undefined}
+					isVisible={showSnackbar}
+					duration={5000}
+					onClose={() => setShowSnackbar(false)}
+					type={isAtVoteLimit ? 'warning' : 'info'}
+				/>
 			)}
 		</div>
 	);

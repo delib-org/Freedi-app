@@ -108,3 +108,29 @@ export async function setAnchoredEvaluationSettings(
 		throw error;
 	}
 }
+
+export async function setMaxVotesPerUser(
+	statementId: string,
+	maxVotes: number | undefined
+): Promise<void> {
+	try {
+		const statementRef = doc(FireStore, Collections.statements, statementId);
+
+		await updateDoc(statementRef, {
+			'evaluationSettings.axVotesPerUser': maxVotes || null
+		});
+
+		// Log event
+		logger.info('Max Votes Per User Setting Changed', {
+			statementId,
+			maxVotes: maxVotes || 'unlimited'
+		});
+
+	} catch (error) {
+		logger.error('Error updating max votes per user', error, {
+			statementId,
+			maxVotes
+		});
+		throw error;
+	}
+}

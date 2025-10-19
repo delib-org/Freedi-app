@@ -131,7 +131,8 @@ const SuggestionCards: FC<Props> = ({
 				return subStatements.map(s => `${s.statementId}:${s.consensus || 0}`).sort().join(',');
 			}
 		}
-		return ''; // Don't track for other sort types
+		
+return ''; // Don't track for other sort types
 	}, [subStatements, sort, statement?.statementSettings?.evaluationType]);
 
 	// Create a key that includes dates to trigger re-sort when statements are updated
@@ -141,7 +142,8 @@ const SuggestionCards: FC<Props> = ({
 		} else if (sort === SortType.mostUpdated) {
 			return subStatements.map(s => `${s.statementId}:${s.lastUpdate}`).sort().join(',');
 		}
-		return ''; // Don't track for other sort types
+		
+return ''; // Don't track for other sort types
 	}, [subStatements, sort]);
 
 	// Memoize the sort operation to prevent unnecessary recalculations
@@ -149,7 +151,8 @@ const SuggestionCards: FC<Props> = ({
 		// Only calculate if we have subStatements
 		if (!subStatements || subStatements.length === 0) {
 			setTotalHeight(0);
-			return;
+			
+return;
 		}
 
 		// Calculate heights and sort substatements

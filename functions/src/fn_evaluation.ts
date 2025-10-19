@@ -530,7 +530,8 @@ async function updateParentTotalEvaluators(parentId: string): Promise<void> {
 
 		if (!parentDoc.exists) {
 			logger.warn(`Parent statement ${parentId} not found`);
-			return;
+			
+return;
 		}
 
 		const parentData = parentDoc.data() as Statement;

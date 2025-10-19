@@ -51,9 +51,11 @@ export const ActionFeedback: FC<ActionFeedbackProps> = ({
           if (prev === null || prev <= 1) {
             clearInterval(countdownInterval);
             handleAutoAdvance();
-            return null;
+            
+return null;
           }
-          return prev - 1;
+          
+return prev - 1;
         });
       }, 1000);
 

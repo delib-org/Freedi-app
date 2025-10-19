@@ -245,7 +245,8 @@ async function createNotificationsForStatement(statement: Statement): Promise<vo
 		// Check if parent exists (for non-top statements)
 		if (!parentStatementDB.exists) {
 			logger.error(`Parent statement ${statement.parentId} not found`);
-			return;
+			
+return;
 		}
 
 		const parentStatement = parse(StatementSchema, parentStatementDB.data());
