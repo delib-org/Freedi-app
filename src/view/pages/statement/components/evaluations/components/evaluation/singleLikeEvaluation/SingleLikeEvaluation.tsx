@@ -9,15 +9,20 @@ import LikeIcon from '@/assets/icons/likeIcon.svg?react';
 
 interface Props {
 	statement: Statement;
+	parentStatement?: Statement;
 	shouldDisplayScore?: boolean;
 }
 
 const SingleLikeEvaluation: FC<Props> = ({
 	statement,
+	parentStatement,
 	shouldDisplayScore = true,
 }) => {
 	// Get initial values from statement
-	const _totalEvaluators = statement.evaluation?.numberOfEvaluators || 0;
+	// Use parent's total evaluators if available, otherwise fall back to statement's count
+	const _totalEvaluators = parentStatement?.evaluation?.asParentTotalEvaluators ||
+							parentStatement?.totalEvaluators ||
+							statement.evaluation?.numberOfEvaluators || 0;
 	const _likesCount = statement.evaluation?.sumPro || statement.pro || 0;
 
 	const [likesCount, setLikesCount] = useState(_likesCount);
@@ -31,13 +36,22 @@ const SingleLikeEvaluation: FC<Props> = ({
 	const isLiked = evaluation === 1;
 
 	useEffect(() => {
-		// Update counts when statement changes
+		// Update counts when statement or parent changes
 		const newLikesCount = statement.evaluation?.sumPro || statement.pro || 0;
-		const newTotalEvaluators = statement.evaluation?.numberOfEvaluators || 0;
+		// Use parent's total evaluators if available
+		const newTotalEvaluators = parentStatement?.evaluation?.asParentTotalEvaluators ||
+								parentStatement?.totalEvaluators ||
+								statement.evaluation?.numberOfEvaluators || 0;
 
 		setLikesCount(newLikesCount);
 		setTotalEvaluators(newTotalEvaluators);
-	}, [statement.evaluation?.sumPro, statement.evaluation?.numberOfEvaluators, statement.pro]);
+	}, [
+		statement.evaluation?.sumPro,
+		statement.evaluation?.numberOfEvaluators,
+		statement.pro,
+		parentStatement?.evaluation?.asParentTotalEvaluators,
+		parentStatement?.totalEvaluators
+	]);
 
 	const handleLikeToggle = async () => {
 		if (isProcessing) return;
@@ -57,12 +71,10 @@ const SingleLikeEvaluation: FC<Props> = ({
 		try {
 			const newEvaluation = isLiked ? 0 : 1;
 
-			// Optimistic update
+			// Optimistic update - only update likes, not total evaluators
+			// (total evaluators comes from parent and is managed by Firebase)
 			if (newEvaluation === 1) {
 				setLikesCount(prev => prev + 1);
-				if (evaluation === 0 || evaluation === undefined) {
-					setTotalEvaluators(prev => prev + 1);
-				}
 			} else {
 				setLikesCount(prev => Math.max(0, prev - 1));
 			}
@@ -72,7 +84,9 @@ const SingleLikeEvaluation: FC<Props> = ({
 			console.error('Error setting evaluation:', error);
 			// Rollback on error
 			const rollbackLikes = statement.evaluation?.sumPro || statement.pro || 0;
-			const rollbackEvaluators = statement.evaluation?.numberOfEvaluators || 0;
+			const rollbackEvaluators = parentStatement?.evaluation?.asParentTotalEvaluators ||
+									parentStatement?.totalEvaluators ||
+									statement.evaluation?.numberOfEvaluators || 0;
 			setLikesCount(rollbackLikes);
 			setTotalEvaluators(rollbackEvaluators);
 		} finally {

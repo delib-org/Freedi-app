@@ -32,6 +32,7 @@ const Evaluation: FC<EvaluationProps> = ({ statement }) => {
 					return (
 						<SingleLikeEvaluation
 							statement={statement}
+							parentStatement={parentStatement}
 							shouldDisplayScore={shouldDisplayScore}
 						/>
 					);

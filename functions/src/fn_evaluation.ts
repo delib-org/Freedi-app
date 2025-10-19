@@ -496,8 +496,67 @@ async function updateParentStatementWithChosenOptions(parentId: string | undefin
 		if (chosenOptions) {
 			await updateParentWithResults(parentId, chosenOptions);
 		}
+
+		// Update parent's total evaluator count
+		await updateParentTotalEvaluators(parentId);
 	} catch (error) {
 		logger.error('Error updating parent statement:', error);
+	}
+}
+
+async function updateParentTotalEvaluators(parentId: string): Promise<void> {
+	try {
+		// Get all evaluations for child options
+		const evaluationsSnapshot = await db
+			.collection(Collections.evaluations)
+			.where('parentId', '==', parentId)
+			.get();
+
+		// Count unique evaluators (users who have evaluated at least one option)
+		const uniqueEvaluators = new Set<string>();
+		evaluationsSnapshot.forEach(doc => {
+			const evaluation = doc.data() as Evaluation;
+			// Only count evaluators with non-zero evaluations
+			if (evaluation.evaluator?.uid && evaluation.evaluation !== 0) {
+				uniqueEvaluators.add(evaluation.evaluator.uid);
+			}
+		});
+
+		const totalUniqueEvaluators = uniqueEvaluators.size;
+
+		// Update parent statement with the total count
+		const parentRef = db.collection(Collections.statements).doc(parentId);
+		const parentDoc = await parentRef.get();
+
+		if (!parentDoc.exists) {
+			logger.warn(`Parent statement ${parentId} not found`);
+			return;
+		}
+
+		const parentData = parentDoc.data() as Statement;
+		const parentEvaluation = parentData.evaluation || {
+			agreement: 0,
+			sumEvaluations: 0,
+			numberOfEvaluators: 0,
+			sumPro: 0,
+			sumCon: 0,
+			averageEvaluation: 0,
+			evaluationRandomNumber: Math.random(),
+			viewed: 0,
+		};
+
+		// Update asParentTotalEvaluators field
+		parentEvaluation.asParentTotalEvaluators = totalUniqueEvaluators;
+
+		await parentRef.update({
+			evaluation: parentEvaluation,
+			totalEvaluators: totalUniqueEvaluators, // Also update the legacy field for compatibility
+			lastUpdate: Date.now()
+		});
+
+		logger.info(`Updated parent ${parentId} with ${totalUniqueEvaluators} total unique evaluators`);
+	} catch (error) {
+		logger.error('Error updating parent total evaluators:', error);
 	}
 }
 
