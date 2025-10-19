@@ -349,10 +349,10 @@ async function updateStatementInTransaction(
 function calculateEvaluation(statement: Statement, proConDiff: CalcDiff, evaluationDiff: number, addEvaluator: number) {
 	const evaluation = statement.evaluation || {
 		agreement: statement.consensus || 0,
-		sumEvaluations: evaluationDiff,
-		numberOfEvaluators: statement.totalEvaluators || 1,
-		sumPro: proConDiff.proDiff,
-		sumCon: proConDiff.conDiff,
+		sumEvaluations: 0,
+		numberOfEvaluators: statement.totalEvaluators || 0,
+		sumPro: 0,
+		sumCon: 0,
 		averageEvaluation: 0,
 		evaluationRandomNumber: Math.random(),
 		viewed: 0,
@@ -365,6 +365,12 @@ function calculateEvaluation(statement: Statement, proConDiff: CalcDiff, evaluat
 		evaluation.sumCon = (evaluation.sumCon || 0) + proConDiff.conDiff;
 		// Ensure averageEvaluation exists even for old data
 		evaluation.averageEvaluation = evaluation.averageEvaluation ?? 0;
+	} else {
+		// For new evaluations, apply the diffs and evaluator count
+		evaluation.sumEvaluations = evaluationDiff;
+		evaluation.numberOfEvaluators = addEvaluator;
+		evaluation.sumPro = proConDiff.proDiff;
+		evaluation.sumCon = proConDiff.conDiff;
 	}
 
 	// Calculate average evaluation

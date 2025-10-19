@@ -16,8 +16,11 @@ const SingleLikeEvaluation: FC<Props> = ({
 	statement,
 	shouldDisplayScore = true,
 }) => {
+	// Get initial values from statement
 	const _totalEvaluators = statement.evaluation?.numberOfEvaluators || 0;
-	const [likesCount, setLikesCount] = useState(statement.pro || 0);
+	const _likesCount = statement.evaluation?.sumPro || statement.pro || 0;
+
+	const [likesCount, setLikesCount] = useState(_likesCount);
 	const [totalEvaluators, setTotalEvaluators] = useState(_totalEvaluators);
 	const [isProcessing, setIsProcessing] = useState(false);
 
@@ -28,9 +31,13 @@ const SingleLikeEvaluation: FC<Props> = ({
 	const isLiked = evaluation === 1;
 
 	useEffect(() => {
-		setLikesCount(statement.pro || 0);
-		setTotalEvaluators(_totalEvaluators);
-	}, [_totalEvaluators]);
+		// Update counts when statement changes
+		const newLikesCount = statement.evaluation?.sumPro || statement.pro || 0;
+		const newTotalEvaluators = statement.evaluation?.numberOfEvaluators || 0;
+
+		setLikesCount(newLikesCount);
+		setTotalEvaluators(newTotalEvaluators);
+	}, [statement.evaluation?.sumPro, statement.evaluation?.numberOfEvaluators, statement.pro]);
 
 	const handleLikeToggle = async () => {
 		if (isProcessing) return;
@@ -64,8 +71,10 @@ const SingleLikeEvaluation: FC<Props> = ({
 		} catch (error) {
 			console.error('Error setting evaluation:', error);
 			// Rollback on error
-			setLikesCount(statement.pro || 0);
-			setTotalEvaluators(statement.evaluation?.numberOfEvaluators || 0);
+			const rollbackLikes = statement.evaluation?.sumPro || statement.pro || 0;
+			const rollbackEvaluators = statement.evaluation?.numberOfEvaluators || 0;
+			setLikesCount(rollbackLikes);
+			setTotalEvaluators(rollbackEvaluators);
 		} finally {
 			setIsProcessing(false);
 		}
