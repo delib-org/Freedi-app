@@ -120,11 +120,19 @@ const SuggestionCards: FC<Props> = ({
 	// Create a key that includes consensus values to trigger re-sort when evaluations change
 	const consensusKey = useMemo(() => {
 		if (sort === SortType.accepted) {
-			// Only track consensus when sorting by agreement
-			return subStatements.map(s => `${s.statementId}:${s.consensus || 0}`).sort().join(',');
+			// Check if using single-like evaluation type
+			const isSingleLike = statement?.statementSettings?.evaluationType === 'single-like';
+
+			if (isSingleLike) {
+				// Track sumPro (likes) for single-like evaluation
+				return subStatements.map(s => `${s.statementId}:${s.evaluation?.sumPro || s.pro || 0}`).sort().join(',');
+			} else {
+				// Track consensus for other evaluation types
+				return subStatements.map(s => `${s.statementId}:${s.consensus || 0}`).sort().join(',');
+			}
 		}
 		return ''; // Don't track for other sort types
-	}, [subStatements, sort]);
+	}, [subStatements, sort, statement?.statementSettings?.evaluationType]);
 
 	// Create a key that includes dates to trigger re-sort when statements are updated
 	const datesKey = useMemo(() => {
@@ -149,10 +157,11 @@ const SuggestionCards: FC<Props> = ({
 			subStatements,
 			sort,
 			30,
-			randomSeed
+			randomSeed,
+			statement
 		);
 		setTotalHeight(_totalHeight);
-	}, [subStatementsKey, heightsKey, consensusKey, datesKey, sort, randomSeed]); // Use stable keys instead of array reference
+	}, [subStatementsKey, heightsKey, consensusKey, datesKey, sort, randomSeed, statement]); // Use stable keys instead of array reference
 
 	if (!subStatements || subStatements.length === 0) {
 		return (
