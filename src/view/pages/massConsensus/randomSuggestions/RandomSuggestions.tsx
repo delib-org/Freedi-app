@@ -10,13 +10,19 @@ import { useSelector } from "react-redux";
 import { numberOfEvaluatedStatements } from "@/redux/evaluations/evaluationsSlice";
 import styles from "./RandomSuggestions.module.scss";
 import RandomIcon from "@/assets/icons/randomIcon.svg?react";
+import StageExplanationScreen from "@/view/components/massConsensus/StageExplanationScreen/StageExplanationScreen";
+import { useExplanations } from "@/contexts/massConsensus/ExplanationProvider";
+import { useParams } from "react-router";
 
 const RandomSuggestions = () => {
   const { navigateToTop, loadingStatements, subStatements, statement, fetchRandomStatements} = useRandomSuggestions();
   const { t } = useUserConfig();
+  const { statementId } = useParams<{ statementId: string }>();
   const { trackStageCompleted, trackStageSkipped } =
     useMassConsensusAnalytics();
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [showExplanation, setShowExplanation] = useState(true);
+  const { hasSeenExplanation, getDontShowExplanations } = useExplanations();
 
   const { setHeader } = useHeader();
   const listOfStatementsIds = subStatements.map(st => st.statementId);
@@ -30,11 +36,29 @@ const RandomSuggestions = () => {
     });
   }, []);
 
+  // Check if we should show explanation
+  useEffect(() => {
+    if (hasSeenExplanation('randomSuggestions') || getDontShowExplanations()) {
+      setShowExplanation(false);
+    }
+  }, []);
+
   const handleGetNewSuggestions = async () => {
     setIsRefreshing(true);
     await fetchRandomStatements();
     setIsRefreshing(false);
   };
+
+  // Show full-screen explanation if needed
+  if (showExplanation) {
+    return (
+      <StageExplanationScreen
+        stageId="randomSuggestions"
+        onContinue={() => setShowExplanation(false)}
+        previousStageUrl={`/mass-consensus/${statementId}/question`}
+      />
+    );
+  }
 
   return (
     <>

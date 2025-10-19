@@ -15,10 +15,9 @@ import {
 } from "delib-npm";
 import { useEffect } from "react";
 
-import { useNavigate, useParams } from "react-router";
+import { useParams } from "react-router";
 
 export function useSimilarSuggestions(statementId, nextStep) {
-  const navigate = useNavigate();
   const { statementId: parentId } = useParams<{ statementId: string }>();
   const { creator, isLoading } = useAuthentication();
 
@@ -59,8 +58,7 @@ export function useSimilarSuggestions(statementId, nextStep) {
         await setEvaluationToDB(newStatement, creator, 1);
       }
 
-      navigate(`/mass-consensus/${statementId}/${nextStep}`);
-
+      // Don't navigate here - let the parent component handle navigation after showing feedback
       return true;
     } catch (error) {
       console.error(error);
@@ -72,5 +70,6 @@ export function useSimilarSuggestions(statementId, nextStep) {
   return {
     handleSetSuggestionToDB,
     isLoading,
+    nextStep,
   };
 }
