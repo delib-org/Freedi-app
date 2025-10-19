@@ -1,9 +1,10 @@
 import { resultsSettingsDefault } from '@/controllers/db/statements/setStatements';
-import { Statement, StatementType } from 'delib-npm';
+import { Statement, StatementType, evaluationType } from 'delib-npm';
 
 export const defaultStatementSettings = {
 	hasChat: true,
-	enhancedEvaluation: true,
+	enhancedEvaluation: true, // Keep for backward compatibility
+	evaluationType: evaluationType.range, // Default to range (5-point scale)
 	showEvaluation: true,
 	enableAddVotingOption: true,
 	enableAddEvaluationOption: true,

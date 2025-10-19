@@ -62,6 +62,22 @@
                 grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
                 gap: 1rem;
             }
+
+            // Evaluation type section styles
+            .evaluationTypeSection {
+                display: flex;
+                flex-direction: column;
+                gap: 0.75rem;
+                grid-column: 1 / -1; // Span full width in grid
+                width: 100%;
+
+                .sectionLabel {
+                    font-weight: 600;
+                    color: var(--text-primary);
+                    margin-bottom: 0.5rem;
+                    font-size: 1rem;
+                }
+            }
         }
     }
 

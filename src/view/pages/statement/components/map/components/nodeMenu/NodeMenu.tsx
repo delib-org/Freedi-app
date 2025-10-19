@@ -16,7 +16,7 @@ import { useAuthorization } from '@/controllers/hooks/useAuthorization';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import { Statement, StatementType } from 'delib-npm';
 import { changeStatementType } from '@/controllers/db/statements/changeStatementType';
-import EnhancedEvaluation from '../../../evaluations/components/evaluation/enhancedEvaluation/EnhancedEvaluation';
+import Evaluation from '../../../evaluations/components/evaluation/Evaluation';
 
 interface Props {
 	selectedId?: string;
@@ -141,7 +141,7 @@ return;
 			</div>
 			{statement.statementType === StatementType.option && (
 				<div className={styles.rateMenuContainer}>
-					<EnhancedEvaluation
+					<Evaluation
 						statement={statement}
 					/>
 				</div>

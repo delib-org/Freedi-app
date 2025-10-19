@@ -5,8 +5,9 @@ import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import Checkbox from '@/view/components/checkbox/Checkbox';
 import styles from './AdvancedSettings.module.scss';
 import { setStatementSettingToDB } from '@/controllers/db/statementSettings/setStatementSettings';
-import { StatementSettings, StatementType } from 'delib-npm';
+import { StatementSettings, StatementType, evaluationType } from 'delib-npm';
 import { toggleStatementHide } from '@/controllers/db/statements/setStatements';
+import EvaluationTypeSelector from './EvaluationTypeSelector/EvaluationTypeSelector';
 
 const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 	const { t } = useUserConfig();
@@ -18,6 +19,7 @@ const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 	const {
 		inVotingGetOnlyResults = false,
 		enhancedEvaluation = false,
+		evaluationType: currentEvaluationType,
 		showEvaluation = false,
 		enableAddVotingOption = false,
 		enableAddEvaluationOption = false,
@@ -31,9 +33,19 @@ const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 		enableAIImprovement = false
 	} = statementSettings;
 
+	// Determine the current evaluation type with backward compatibility
+	const getEvaluationType = (): evaluationType => {
+		if (currentEvaluationType) {
+			return currentEvaluationType;
+		}
+		// Backward compatibility with enhancedEvaluation boolean
+
+		return enhancedEvaluation ? evaluationType.range : evaluationType.likeDislike;
+	};
+
 	function handleAdvancedSettingChange(
 		property: keyof StatementSettings,
-		newValue: boolean
+		newValue: boolean | string
 	) {
 		console.info(`Setting ${property} to ${newValue}`);
 		setStatementSettingToDB({
@@ -122,13 +134,15 @@ const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 					</span>
 				</div>
 				<div className={styles.categoryContent}>
-					<Checkbox
-						label={'Enhanced Evaluation'}
-						isChecked={enhancedEvaluation}
-						onChange={(checked) =>
-							handleAdvancedSettingChange('enhancedEvaluation', checked)
-						}
-					/>
+					<div className={styles.evaluationTypeSection}>
+						<label className={styles.sectionLabel}>
+							{t('Evaluation Type')}
+						</label>
+						<EvaluationTypeSelector
+							currentType={getEvaluationType()}
+							onChange={(type) => handleAdvancedSettingChange('evaluationType', type)}
+						/>
+					</div>
 					<Checkbox
 						label={'Show Evaluations results'}
 						isChecked={showEvaluation}
