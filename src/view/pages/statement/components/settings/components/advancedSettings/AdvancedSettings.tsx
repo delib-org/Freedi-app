@@ -1,4 +1,4 @@
-import { FC } from 'react';
+import { FC, useState, useEffect } from 'react';
 import { StatementSettingsProps } from '../../settingsTypeHelpers';
 import { getStatementSettings } from '../../statementSettingsCont';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
@@ -18,7 +18,6 @@ const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 
 	const {
 		inVotingGetOnlyResults = false,
-		enhancedEvaluation = false,
 		evaluationType: currentEvaluationType,
 		showEvaluation = false,
 		enableAddVotingOption = false,
@@ -33,15 +32,23 @@ const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 		enableAIImprovement = false
 	} = statementSettings;
 
-	// Determine the current evaluation type with backward compatibility
-	const getEvaluationType = (): evaluationType => {
+	// Determine the initial evaluation type with backward compatibility
+	const getInitialEvaluationType = (): evaluationType => {
 		if (currentEvaluationType) {
 			return currentEvaluationType;
 		}
 		// Backward compatibility with enhancedEvaluation boolean
 
-		return enhancedEvaluation ? evaluationType.range : evaluationType.likeDislike;
+		return evaluationType.range;
 	};
+
+	// Use local state to immediately reflect changes
+	const [selectedEvaluationType, setSelectedEvaluationType] = useState<evaluationType>(getInitialEvaluationType());
+
+	// Update local state when statement changes (e.g., on page reload)
+	useEffect(() => {
+		setSelectedEvaluationType(getInitialEvaluationType());
+	}, [statement.statementId, currentEvaluationType]);
 
 	function handleAdvancedSettingChange(
 		property: keyof StatementSettings,
@@ -139,8 +146,11 @@ const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 							{t('Evaluation Type')}
 						</label>
 						<EvaluationTypeSelector
-							currentType={getEvaluationType()}
-							onChange={(type) => handleAdvancedSettingChange('evaluationType', type)}
+							currentType={selectedEvaluationType}
+							onChange={(type) => {
+								setSelectedEvaluationType(type);
+								handleAdvancedSettingChange('evaluationType', type);
+							}}
 						/>
 					</div>
 					<Checkbox
