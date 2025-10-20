@@ -10,23 +10,15 @@ export const massConsensusApi = createApi({
     endpoints: (builder) => ({
         getStatementSubscription: builder.query<StatementSubscription | undefined, { statementId: string; userId: string }>({
             queryFn: async ({ statementId, userId }) => {
-                try {
-                    const subscriptionId = `${statementId}_${userId}`;
-                    const subscription = await getStatementSubscriptionFromDB(subscriptionId);
-                    return { data: subscription };
-                } catch (error) {
-                    return { error };
-                }
+                const subscriptionId = `${statementId}_${userId}`;
+                const subscription = await getStatementSubscriptionFromDB(subscriptionId);
+                return { data: subscription };
             },
         }),
         getMassConsensusProcess: builder.query<MassConsensusProcess | undefined, string>({
             queryFn: async (statementId) => {
-                try {
-                    const process = await getMassConsensusProcess(statementId);
-                    return { data: process };
-                } catch (error) {
-                    return { error };
-                }
+                const process = await getMassConsensusProcess(statementId);
+                return { data: process };
             },
         }),
     }),

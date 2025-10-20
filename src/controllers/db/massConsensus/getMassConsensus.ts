@@ -7,50 +7,41 @@ import { defaultMassConsensusProcess } from "@/model/massConsensus/massConsensus
 import { parse } from "valibot";
 
 export function listenToMassConsensusProcess(statementId: string): Unsubscribe {
-    try {
-        const dispatch = store.dispatch;
-        const mcProcessSettingRef = doc(DB, Collections.massConsensusProcesses, statementId);
+    const dispatch = store.dispatch;
+    const mcProcessSettingRef = doc(DB, Collections.massConsensusProcesses, statementId);
 
-        return onSnapshot(mcProcessSettingRef, (stgDB) => {
-            if (stgDB.exists()) {
-                try {
-                    const processes = parse(MassConsensusProcessSchema, stgDB.data());
-                    dispatch(setMassConsensusProcess(processes));
-                } catch (error) {
-                    console.error('Validation error in listenToMassConsensusProcess:', error);
-                }
+    return onSnapshot(mcProcessSettingRef, (stgDB) => {
+        if (stgDB.exists()) {
+            try {
+                const processes = parse(MassConsensusProcessSchema, stgDB.data());
+                dispatch(setMassConsensusProcess(processes));
+            } catch (error) {
+                throw new Error('Validation error in listenToMassConsensusProcess');
             }
-        });
-    } catch (error) {
-        console.error(error);
-
-        return () => { return; };
-    }
+        }
+    });
 }
 
-export async function getMassConsensusProcess(statementId: string): Promise<MassConsensusProcess | undefined> {
+export async function getMassConsensusProcess(statementId: string): Promise<MassConsensusProcess> {
+    const mcProcessSettingRef = doc(DB, Collections.massConsensusProcesses, statementId);
+    const stgDB = await getDoc(mcProcessSettingRef);
+
+    if (!stgDB.exists()) {
+        // Return default process when no process exists
+        console.info("No mass consensus process found for statement, using default process");
+        
+        return {
+            statementId,
+            stages: defaultMassConsensusProcess,
+            version: '1.0',
+            createdAt: new Date().getTime(),
+            createdBy: 'system',
+        } as MassConsensusProcess;
+    }
+
     try {
-        const mcProcessSettingRef = doc(DB, Collections.massConsensusProcesses, statementId);
-        const stgDB = await getDoc(mcProcessSettingRef);
-
-        if (!stgDB.exists()) {
-            // Return default process when no process exists
-            console.info("No mass consensus process found for statement, using default process");
-            
-            return {
-                statementId,
-                stages: defaultMassConsensusProcess,
-                version: '1.0',
-                createdAt: new Date().getTime(),
-                createdBy: 'system',
-            } as MassConsensusProcess;
-        }
-
         return parse(MassConsensusProcessSchema, stgDB.data());
-
     } catch (error) {
-        console.error(error);
-
-        return undefined;
+        throw new Error('Validation error in getMassConsensusProcess');
     }
 }

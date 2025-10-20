@@ -6,88 +6,66 @@ import { parse, partial } from "valibot";
 import { defaultMassConsensusProcess } from "@/model/massConsensus/massConsensusModel";
 
 export async function setMassConsensusMemberToDB(creator: Creator | User, statementId: string) {
-	try {
-		const newMember: MassConsensusMember = {
-			statementId,
-			lastUpdate: new Date().getTime(),
-			creator: convertFirebaseUserToCreator(creator)
-		};
-		parse(MassConsensusMemberSchema, newMember);
-		const memberId = getStatementSubscriptionId(statementId, creator);
-		if (!memberId) throw new Error('Error getting member id');
-		const memberRef = doc(DB, Collections.massConsensusMembers, memberId);
-		await setDoc(memberRef, newMember, { merge: true });
-
-		return { message: 'Member added successfully', ok: true };
-	} catch (error) {
-		console.error(error);
-
-		return { message: 'Error adding member', ok: false };
-	}
+    const newMember: MassConsensusMember = {
+        statementId,
+        lastUpdate: new Date().getTime(),
+        creator: convertFirebaseUserToCreator(creator)
+    };
+    parse(MassConsensusMemberSchema, newMember);
+    const memberId = getStatementSubscriptionId(statementId, creator);
+    if (!memberId) throw new Error('Error getting member id');
+    const memberRef = doc(DB, Collections.massConsensusMembers, memberId);
+    await setDoc(memberRef, newMember, { merge: true });
 }
+
 interface MassConsensusProcessProps {
 	stages: MassConsensusStage[];
 	statementId: string;
 }
 
 export async function reorderMassConsensusProcessToDB({ stages, statementId }: MassConsensusProcessProps) {
-	try {
-		const processRef = doc(DB, Collections.massConsensusProcesses, statementId);
+    const processRef = doc(DB, Collections.massConsensusProcesses, statementId);
 
-		const updateData = {
-			statementId,
-			stages
-		};
+    const updateData = {
+        statementId,
+        stages
+    };
 
-		const PartialMassConsensusProcessSchema = partial(MassConsensusProcessSchema);
-		parse(PartialMassConsensusProcessSchema, updateData);
+    const PartialMassConsensusProcessSchema = partial(MassConsensusProcessSchema);
+    parse(PartialMassConsensusProcessSchema, updateData);
 
-		await setDoc(processRef, updateData, { merge: true });
-
-	} catch (error) {
-		console.error(error);
-	}
+    await setDoc(processRef, updateData, { merge: true });
 }
 
 export async function removeMassConsensusStage(statementId: string, stageUrl: MassConsensusPageUrls): Promise<void> {
-	try {
-		const processRef = doc(DB, Collections.massConsensusProcesses, statementId);
-		const processDoc = await getDoc(processRef);
+    const processRef = doc(DB, Collections.massConsensusProcesses, statementId);
+    const processDoc = await getDoc(processRef);
 
-		if (!processDoc.exists()) return;
-		
-		const processData = parse(MassConsensusProcessSchema, processDoc.data());
-		const currentStages = processData.stages || [];
-		const updatedStages = currentStages.filter(s => s.url !== stageUrl);
-		
-		await updateDoc(processRef, {
-			stages: updatedStages
-		});
-	} catch (error) {
-		console.error(error);
-	}
+    if (!processDoc.exists()) return;
+    
+    const processData = parse(MassConsensusProcessSchema, processDoc.data());
+    const currentStages = processData.stages || [];
+    const updatedStages = currentStages.filter(s => s.url !== stageUrl);
+    
+    await updateDoc(processRef, {
+        stages: updatedStages
+    });
 }
 
-export async function setNewProcessToDB(statementId: string): Promise<MassConsensusProcess | undefined> {
-	try {
-		const processRef = doc(DB, Collections.massConsensusProcesses, statementId);
+export async function setNewProcessToDB(statementId: string): Promise<MassConsensusProcess> {
+    const processRef = doc(DB, Collections.massConsensusProcesses, statementId);
 
-		const process: Partial<MassConsensusProcess> = {
-			statementId,
-			stages: defaultMassConsensusProcess,
-			version: '1.0',
-			createdAt: new Date().getTime(),
-			createdBy: 'system'
-		}
+    const process: Partial<MassConsensusProcess> = {
+        statementId,
+        stages: defaultMassConsensusProcess,
+        version: '1.0',
+        createdAt: new Date().getTime(),
+        createdBy: 'system'
+    }
 
-		const parsedProcess = parse(MassConsensusProcessSchema, process);
+    const parsedProcess = parse(MassConsensusProcessSchema, process);
 
-		await setDoc(processRef, parsedProcess, { merge: true });
+    await setDoc(processRef, parsedProcess, { merge: true });
 
-		return parsedProcess as MassConsensusProcess;
-	} catch (error) {
-		console.error(error);
-
-		return undefined;
-	}
+    return parsedProcess as MassConsensusProcess;
 }
