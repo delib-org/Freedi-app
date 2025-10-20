@@ -12,9 +12,10 @@ import { useNavigate } from 'react-router';
 interface Props {
 	questions: UserDemographicQuestion[];
 	closeModal?: () => void;
+	isMandatory?: boolean; // Flag to indicate if the survey is mandatory
 }
 
-const UserDemographicQuestions: FC<Props> = ({ questions, closeModal }) => {
+const UserDemographicQuestions: FC<Props> = ({ questions, closeModal, isMandatory = true }) => {
 	const [userDemographic, setUserDemographic] = useState<UserDemographicQuestion[]>([]);
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const { t } = useUserConfig();
@@ -137,14 +138,18 @@ const UserDemographicQuestions: FC<Props> = ({ questions, closeModal }) => {
 		<div className={styles.userDemographicContainer}>
 			<div className={styles.surveyBody}>
 				<div className={styles.topNavSurvey}>
-					<BackToMenuArrow onClick={() => navigate('/')} />
-					{isSurveyOptional && (
+					{!isMandatory && (
+						<BackToMenuArrow onClick={() => navigate('/')} />
+					)}
+					{!isMandatory && closeModal && (
 						<X className={styles.XBtn} onClick={closeModal} />
 					)}
 				</div>
 				<h1 className={styles.title}>{t('User Profile Setup')}</h1>
 				<p className={styles.description}>
-					{t('Complete these setup questions')}
+					{isMandatory
+						? t('Please complete this survey to access the discussion')
+						: t('Complete these setup questions')}
 				</p>
 				<form onSubmit={handleSubmit}>
 					{questions.map((question: UserDemographicQuestion) => {

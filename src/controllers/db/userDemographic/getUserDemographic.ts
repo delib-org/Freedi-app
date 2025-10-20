@@ -33,6 +33,8 @@ export async function getUserDemographicQuestions(statementId: string): Promise<
 		// Execute the query
 		const querySnapshot = await getDocs(q);
 
+		console.info(`Found ${querySnapshot.size} user demographic questions for statement ${statementId}`);
+
 		// Map the documents to UserDemographicQuestion objects with validation
 
 		const userQuestions: UserDemographicQuestion[] = querySnapshot.docs
@@ -50,6 +52,8 @@ export async function getUserDemographicQuestions(statementId: string): Promise<
 			})
 			.filter((question): question is UserDemographicQuestion => question !== null);
 
+		console.info('Dispatching user demographic questions:', userQuestions);
+
 		// Dispatch the questions to Redux store
 		dispatch(setUserDemographicQuestions(userQuestions));
 
@@ -66,6 +70,8 @@ export function listenToUserDemographicQuestions(statementId: string): () => voi
 			throw new Error('Statement ID is required to listen for user demographic questions');
 		}
 
+		console.info(`Setting up listener for user demographic questions for statement: ${statementId}`);
+
 		const userQuestionsRef = collection(FireStore, Collections.userDemographicQuestions);
 		const q = query(
 			userQuestionsRef,
@@ -73,10 +79,14 @@ export function listenToUserDemographicQuestions(statementId: string): () => voi
 		);
 
 		return onSnapshot(q, (userQuestionsDB) => {
+			console.info(`User demographic questions listener fired, ${userQuestionsDB.size} documents found`);
+
 			userQuestionsDB.docChanges().forEach((change) => {
 				try {
 					const data = change.doc.data();
 					const validatedQuestion = parse(UserDemographicQuestionSchema, data);
+
+					console.info(`Processing user demographic question change: ${change.type}`, validatedQuestion);
 
 					if (change.type === 'added' || change.type === 'modified') {
 						store.dispatch(setUserDemographicQuestion(validatedQuestion));
@@ -105,6 +115,8 @@ export function listenToUserDemographicAnswers(statementId: string) {
 		}
 		const uid = user.uid;
 
+		console.info(`Setting up listener for user demographic answers for statement: ${statementId}, user: ${uid}`);
+
 		const userAnswersRef = collection(FireStore, Collections.usersData);
 		const q = query(
 			userAnswersRef,
@@ -114,10 +126,14 @@ export function listenToUserDemographicAnswers(statementId: string) {
 
 		return onSnapshot(q, (userAnswersDB) => {
 
+			console.info(`User demographic answers listener fired, ${userAnswersDB.size} documents found for user ${uid}`);
+
 			userAnswersDB.docChanges().forEach((change) => {
 				try {
 					const data = change.doc.data() as UserDemographicQuestion;
 					const validatedAnswer = parse(UserDemographicQuestionSchema, data);
+
+					console.info(`Processing user demographic answer change: ${change.type}`, validatedAnswer);
 
 					if (change.type === 'added' || change.type === 'modified') {
 						store.dispatch(setUserDemographic(validatedAnswer));
