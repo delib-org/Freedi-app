@@ -55,79 +55,104 @@ export function renderWithProviders(
   return { store, ...render(ui, { wrapper: Wrapper, ...renderOptions }) };
 }
 
-export const getMockRootState = (overrides: Partial<RootState> = {}): RootState => ({
-    statements: {
-        statements: [],
-        statementSubscription: [],
-        statementSubscriptionLastUpdate: 0,
-        statementMembership: [],
-        screen: StatementScreen.chat,
-    },
-    statementMetaData: {
-        statementsMetaData: [],
-    },
-    evaluations: {
-        userEvaluations: [],
-    },
-    votes: {
-        votes: [],
-    },
-    results: {
-        results: [],
-    },
-    choseBys: {
-        statements: [],
-    },
-    massConsensus: {
-        similarStatements: [],
-        massConsensusProcess: [],
-        randomStatements: [],
-        randomStatementsBatches: [],
-        currentRandomBatch: 0,
-        viewedStatementIds: [],
-        prefetch: {
-            randomBatches: [],
-            randomBatchesTimestamp: 0,
-            randomBatchesParentId: '',
-            topStatements: [],
-            topStatementsTimestamp: 0,
-            topStatementsParentId: '',
+export const getMockRootState = (overrides: Partial<RootState> = {}): RootState => {
+    // Create the base mock state
+    const baseMockState = {
+        statements: {
+            statements: [],
+            statementSubscription: [],
+            statementSubscriptionLastUpdate: 0,
+            statementMembership: [],
+            screen: StatementScreen.chat,
         },
-        loading: {
-            fetchingNewRandom: false,
-            prefetchingRandom: false,
-            prefetchingTop: false,
+        statementMetaData: {
+            statementsMetaData: [],
         },
-        ui: {
-            evaluationsPerBatch: {},
-            canGetNewSuggestions: false,
-            totalBatchesViewed: 1,
-            cyclesCompleted: 0,
-            allSuggestionsViewed: false,
-            showRecycleMessage: false,
+        evaluations: {
+            userEvaluations: [],
         },
-        errors: {},
-    },
-    notifications: {
-        inAppNotifications: [],
-    },
-    creator: {
-        creator: null,
-    },
-    subscriptions: {
-        waitingList: [],
-    },
-    userDemographic: {
-        userDemographicQuestions: [],
-        userDemographic: [],
-        polarizationIndexes: [],
-    },
-    newStatement: {
-        parentStatement: null,
-        newStatement: null,
-        isLoading: false,
-        error: null,
-        showModal: false,
-    },
-    ...overrides,
-});
+        votes: {
+            votes: [],
+        },
+        results: {
+            results: [],
+        },
+        choseBys: {
+            statements: [],
+        },
+        massConsensus: {
+            similarStatements: [],
+            massConsensusProcess: [],
+            randomStatements: [],
+            randomStatementsBatches: [],
+            currentRandomBatch: 0,
+            viewedStatementIds: [],
+            prefetch: {
+                randomBatches: [],
+                randomBatchesTimestamp: 0,
+                randomBatchesParentId: '',
+                topStatements: [],
+                topStatementsTimestamp: 0,
+                topStatementsParentId: '',
+            },
+            loading: {
+                fetchingNewRandom: false,
+                prefetchingRandom: false,
+                prefetchingTop: false,
+            },
+            ui: {
+                evaluationsPerBatch: {},
+                canGetNewSuggestions: false,
+                totalBatchesViewed: 1,
+                cyclesCompleted: 0,
+                allSuggestionsViewed: false,
+                showRecycleMessage: false,
+            },
+            errors: {},
+        },
+        notifications: {
+            inAppNotifications: [],
+        },
+        creator: {
+            creator: null,
+        },
+        subscriptions: {
+            waitingList: [],
+        },
+        userDemographic: {
+            userDemographicQuestions: [],
+            userDemographic: [],
+            polarizationIndexes: [],
+        },
+        newStatement: {
+            parentStatement: null,
+            newStatement: null,
+            isLoading: false,
+            error: null,
+            showModal: false,
+        },
+        // Add the RTK Query massConsensusApi state
+        massConsensusApi: {
+            queries: {},
+            mutations: {},
+            provided: {},
+            subscriptions: {},
+            config: {
+                online: true,
+                focused: true,
+                middlewareRegistered: true,
+                refetchOnFocus: false,
+                refetchOnReconnect: false,
+                refetchOnMountOrArgChange: false,
+                keepUnusedDataFor: 60,
+                reducerPath: 'massConsensusApi',
+            },
+        },
+    };
+
+    // Merge with overrides
+    return {
+        ...baseMockState,
+        ...overrides,
+    } as RootState;
+};
