@@ -22,7 +22,7 @@ export async function getCachedParentStatement(
     if (cached) {
       logger.info(`Cache hit for parent statement: ${statementId}`);
 
-      return cached;
+return cached;
     }
 
     // Fetch from database
@@ -38,7 +38,8 @@ export async function getCachedParentStatement(
   } catch (error) {
     logger.error(`Error in getCachedParentStatement for ${statementId}:`, error);
     // Fall back to direct database fetch on error
-    return getParentStatement(statementId);
+
+return getParentStatement(statementId);
   }
 }
 
@@ -58,7 +59,7 @@ export async function getCachedSubStatements(
     if (cached) {
       logger.info(`Cache hit for sub-statements: ${parentId}`);
 
-      return cached;
+return cached;
     }
 
     // Fetch from database
@@ -74,7 +75,8 @@ export async function getCachedSubStatements(
   } catch (error) {
     logger.error(`Error in getCachedSubStatements for ${parentId}:`, error);
     // Fall back to direct database fetch on error
-    return getSubStatements(parentId);
+
+return getSubStatements(parentId);
   }
 }
 

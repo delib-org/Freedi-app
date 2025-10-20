@@ -3,7 +3,6 @@ import React, { FC, useEffect, useRef, useState } from 'react';
 // Third Party
 
 // Redux Store
-import { useParams } from 'react-router';
 import StatementChatMore from '../../../../chat/components/statementChatMore/StatementChatMore';
 import CreateStatementModal from '../../../../createStatementModal/CreateStatementModal';
 import Evaluation from '../../evaluation/Evaluation';
@@ -31,17 +30,16 @@ import Loader from '@/view/components/loaders/Loader';
 import CommunityBadge from '@/view/components/badges/CommunityBadge';
 import AnchoredBadge from '@/view/components/badges/AnchoredBadge';
 import UploadImage from '@/view/components/uploadImage/UploadImage';
+import StatementImage from './StatementImage';
 
 interface Props {
 	statement: Statement | undefined;
-	siblingStatements?: Statement[];
 	parentStatement?: Statement | undefined;
 	positionAbsolute?: boolean;
 }
 
 const SuggestionCard: FC<Props> = ({
 	parentStatement,
-	siblingStatements,
 	statement,
 	positionAbsolute = true,
 }) => {
@@ -100,8 +98,14 @@ const SuggestionCard: FC<Props> = ({
 	// Image states
 	const imageUrl = statement?.imagesURL?.main ?? "";
 	const [image, setImage] = useState<string>(imageUrl);
-	const [imageDisplayMode, setImageDisplayMode] = useState<'above' | 'inline'>('above');
 	const [showImageUpload, setShowImageUpload] = useState(false);
+
+	// Real-time listener for image changes
+	useEffect(() => {
+		if (statement?.imagesURL?.main !== undefined) {
+			setImage(statement.imagesURL.main);
+		}
+	}, [statement?.imagesURL?.main]);
 
 	// Removed sortSubStatements call - sorting is handled at parent level in SuggestionCards
 
@@ -249,16 +253,6 @@ const SuggestionCard: FC<Props> = ({
 		setIsCardMenuOpen(!isCardMenuOpen);
 	}
 
-	function handleToggleImageMode() {
-		setImageDisplayMode(prev => prev === 'above' ? 'inline' : 'above');
-	}
-
-	function handleImageUploadClick() {
-		if (fileInputRef.current) {
-			fileInputRef.current.click();
-		}
-	}
-
 	const selectedOptionIndicator = `8px solid ${statement.isChosen ? 'var(--approve)' : statementColor.backgroundColor || 'white'}`;
 
 	return (
@@ -305,49 +299,24 @@ const SuggestionCard: FC<Props> = ({
 				</div>
 			</div>
 			}
+			{/* Image - Display image at the top of card */}
+			{image && (
+				<StatementImage
+					statement={statement}
+					image={image}
+					setImage={setImage}
+					displayMode="above"
+					onRemove={async () => {
+						setImage('');
+						await updateStatementMainImage(statement, '');
+					}}
+					isAdmin={isAdmin}
+					fileInputRef={fileInputRef}
+				/>
+			)}
 			<div className={styles.main}>
-				{/* Image Above Mode - Display image at the top of card */}
-				{image && imageDisplayMode === 'above' && (
-					<div className={styles.imageAbove}>
-						<UploadImage
-							statement={statement}
-							fileInputRef={fileInputRef}
-							image={image}
-							setImage={setImage}
-						/>
-						{isAuthorized && (
-							<button
-								className={styles.imageToggleBtn}
-								onClick={handleToggleImageMode}
-								title={t('Switch to inline mode')}
-							>
-								⇄
-							</button>
-						)}
-					</div>
-				)}
 				<div className={styles.info}>
 					<div className={styles.text}>
-						{/* Image Inline Mode - Display image at start of text */}
-						{image && imageDisplayMode === 'inline' && (
-							<div className={styles.imageInline} style={{ float: dir === 'ltr' ? 'left' : 'right' }}>
-								<UploadImage
-									statement={statement}
-									fileInputRef={fileInputRef}
-									image={image}
-									setImage={setImage}
-								/>
-								{isAuthorized && (
-									<button
-										className={styles.imageToggleBtn}
-										onClick={handleToggleImageMode}
-										title={t('Switch to above mode')}
-									>
-										⇅
-									</button>
-								)}
-							</div>
-						)}
 						<div className={styles.textContent} ref={textContainerRef}>
 							<EditableStatement
 								statement={statement}
@@ -371,27 +340,14 @@ const SuggestionCard: FC<Props> = ({
 						<Link to={`/statement/${statement.statementId}`} className={styles.showMore}>
 							{t('Show more')}
 						</Link>
-						<div className="btns btns--end">
-							{/* Show Add Image button if no image and user is authorized */}
-							{!image && isAuthorized && (
+						<div className={styles.buttonContainer}>
+							{/* Show Add Image button if no image and user is admin of parent statement */}
+							{!image && isAdmin && (
 								<button
 									onClick={() => setShowImageUpload(true)}
 									className="btn btn--small btn--secondary"
 								>
 									{t('Add Image')}
-								</button>
-							)}
-							{/* Show Remove Image button if image exists and user is authorized */}
-							{image && isAuthorized && (
-								<button
-									onClick={async () => {
-										setImage('');
-										// Update database to remove image
-										await updateStatementMainImage(statement, '');
-									}}
-									className="btn btn--small btn--cancel"
-								>
-									{t('Remove Image')}
 								</button>
 							)}
 							{/* Show Improve button only if AI improvement is enabled */}
@@ -512,6 +468,7 @@ const SuggestionCard: FC<Props> = ({
 							setImage(newImage);
 							setShowImageUpload(false);
 						}}
+						isAdmin={isAdmin}
 					/>
 					<button
 						onClick={() => setShowImageUpload(false)}

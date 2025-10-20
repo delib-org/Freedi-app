@@ -2,7 +2,7 @@ import { logger } from "firebase-functions";
 import { getFirestore } from "firebase-admin/firestore";
 
 interface CacheEntry {
-  value: any;
+  value: unknown;
   expiresAt: number;
   createdAt: number;
   hitCount: number;
@@ -66,7 +66,7 @@ class FirestoreCacheService {
    * @param value - The value to cache
    * @param ttlMinutes - Time to live in minutes (default: 5)
    */
-  async set(key: string, value: any, ttlMinutes: number = 5): Promise<void> {
+  async set(key: string, value: unknown, ttlMinutes: number = 5): Promise<void> {
     try {
       await this.collection.doc(key).set({
         value,

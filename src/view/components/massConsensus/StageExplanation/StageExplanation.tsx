@@ -1,11 +1,10 @@
 import React, { FC, useState, useEffect } from 'react';
-import { ExplanationConfig, ExplanationDisplayMode } from 'delib-npm';
+import { ExplanationConfig } from 'delib-npm';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import { useExplanations } from '@/contexts/massConsensus/ExplanationProvider';
 import styles from './StageExplanation.module.scss';
 import X from '@/assets/icons/x.svg?react';
 import InfoIcon from '@/assets/icons/infoIcon.svg?react';
-import CheckIcon from '@/assets/icons/checkIcon.svg?react';
 
 interface StageExplanationProps {
   stageId: string;

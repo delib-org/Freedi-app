@@ -30,14 +30,16 @@ const EvaluationPopup: FC<Props> = ({ parentStatement }) => {
 			return currentEvaluationType;
 		}
 		// Backward compatibility
-		return enhancedEvaluation ? evaluationType.range : evaluationType.likeDislike;
+
+return enhancedEvaluation ? evaluationType.range : evaluationType.likeDislike;
 	};
 
 	const evalType = getEvaluationType();
 
 	// Handle single-like evaluation type
 	if (evalType === evaluationType.singleLike) {
-		return (
+
+return (
 			<div className={styles['evaluation-popup']}>
 				<div className={styles['evaluation-popup__single-like']}>
 					<SingleLikeEvaluation statement={parentStatement} shouldDisplayScore={false} />

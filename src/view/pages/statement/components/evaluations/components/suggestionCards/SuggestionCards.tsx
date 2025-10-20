@@ -184,7 +184,6 @@ return;
 					<SuggestionCard
 						key={statementSub.statementId}
 						parentStatement={statement}
-						siblingStatements={subStatements}
 						statement={statementSub}
 					/>
 				);

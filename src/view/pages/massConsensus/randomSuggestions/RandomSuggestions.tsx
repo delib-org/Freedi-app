@@ -28,7 +28,6 @@ const RandomSuggestions = () => {
     totalBatchesViewed,
     cyclesCompleted,
     showRecycleMessage,
-    allSuggestionsViewed,
     handleDismissRecycleMessage
   } = useRandomSuggestions();
   const { t } = useUserConfig();

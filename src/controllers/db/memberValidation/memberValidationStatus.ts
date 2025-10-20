@@ -1,6 +1,5 @@
 import { doc, setDoc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { FireStore } from '../config';
-import { Collections } from 'delib-npm';
 
 export interface MemberValidationStatus {
 	statementId: string;
@@ -72,7 +71,8 @@ export async function getMemberValidationStatus(
 		return null;
 	} catch (error) {
 		console.error('Error getting member validation status:', error);
-		return null;
+		
+return null;
 	}
 }
 
@@ -97,6 +97,7 @@ export async function getAllMemberValidationStatuses(
 		return statusMap;
 	} catch (error) {
 		console.error('Error getting all member validation statuses:', error);
-		return new Map();
+		
+return new Map();
 	}
 }

@@ -1,8 +1,7 @@
 import React from 'react';
-import { screen, fireEvent, waitFor } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import RandomSuggestions from '../RandomSuggestions';
-import { setRandomStatements, updateEvaluationCount } from '@/redux/massConsensus/massConsensusSlice';
 import { Statement, StatementType, Creator } from 'delib-npm';
 import { renderWithProviders, getMockRootState } from '@/test-utils/test-utils';
 
@@ -36,7 +35,8 @@ const mockFetchRandomStatements = jest.fn();
 
 const createMockStatement = (overrides: Partial<Statement>): Statement => {
     const defaultCreator: Creator = { uid: 'user1', displayName: 'Test User', photoURL: '' };
-    return {
+    
+return {
         statementId: 'stmt1',
         statement: 'Test statement',
         creatorId: 'user1',
@@ -59,7 +59,8 @@ describe('RandomSuggestions Component', () => {
 
   const renderComponent = () => {
     const preloadedState = getMockRootState();
-    return renderWithProviders(
+    
+return renderWithProviders(
         <BrowserRouter>
           <RandomSuggestions />
         </BrowserRouter>,

@@ -1,6 +1,6 @@
-import { collection, deleteDoc, doc, getDocs, query, where, writeBatch } from 'firebase/firestore';
+import { collection, doc, getDocs, query, where, writeBatch } from 'firebase/firestore';
 import { FireStore } from '../config';
-import { Collections, Evaluation, Vote } from 'delib-npm';
+import { Collections, Evaluation } from 'delib-npm';
 
 /**
  * Removes all evaluations and votes by a specific user for a statement and its options
@@ -57,14 +57,10 @@ export async function removeUserEvaluations(
 		const voteRef = doc(FireStore, Collections.votes, voteId);
 
 		// Check if vote exists and delete it
-		try {
-			// Note: We can't check existence in a batch, so we'll try to delete
-			// If it doesn't exist, it will just be a no-op
-			batch.delete(voteRef);
-			votesRemoved = 1; // Assume one vote per user per statement
-		} catch (error) {
-			console.info('No vote found to remove for user:', userId);
-		}
+		// Note: We can't check existence in a batch, so we'll try to delete
+		// If it doesn't exist, it will just be a no-op
+		batch.delete(voteRef);
+		votesRemoved = 1; // Assume one vote per user per statement
 
 		// Commit all deletions in a single batch operation
 		await batch.commit();

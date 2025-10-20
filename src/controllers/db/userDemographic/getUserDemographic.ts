@@ -235,6 +235,7 @@ export async function getUserDemographicResponses(statementId: string): Promise<
 		return memberReviews;
 	} catch (error) {
 		console.error('Error fetching user demographic responses for review:', error);
-		return [];
+		
+return [];
 	}
 }

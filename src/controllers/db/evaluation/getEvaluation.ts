@@ -1,7 +1,6 @@
 import { Unsubscribe } from 'firebase/auth';
 import {
 	collection,
-	onSnapshot,
 	query,
 	where,
 	doc,

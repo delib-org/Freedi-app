@@ -1,4 +1,4 @@
-import { FC, useRef, useState } from "react";
+import { FC, useEffect, useRef, useState } from "react";
 import StatementChatMore from "../statementChatMore/StatementChatMore";
 import UserAvatar from "../userAvatar/UserAvatar";
 import { isAuthorized } from "@/controllers/general/helpers";
@@ -36,6 +36,14 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
 }) => {
   const imageUrl = statement.imagesURL?.main ?? "";
   const [image, setImage] = useState<string>(imageUrl);
+
+  // Real-time listener for image changes
+  useEffect(() => {
+    if (statement?.imagesURL?.main !== undefined) {
+      setImage(statement.imagesURL.main);
+    }
+  }, [statement?.imagesURL?.main]);
+
   // Hooks
   const { statementType } = statement;
   const statementColor = useStatementColor({ statement });

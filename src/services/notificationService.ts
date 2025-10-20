@@ -3,7 +3,7 @@ import { app, DB } from "@/controllers/db/config";
 import { vapidKey } from "@/controllers/db/configKey";
 import { setDoc, doc, deleteDoc, getDoc, Timestamp, getDocs, query, where, collection, writeBatch } from "firebase/firestore";
 import { Collections } from "delib-npm";
-import { addTokenToSubscription, removeTokenFromSubscription } from "@/controllers/db/subscriptions/setSubscriptions";
+import { removeTokenFromSubscription } from "@/controllers/db/subscriptions/setSubscriptions";
 
 // Helper function to check if service workers are supported
 const isServiceWorkerSupported = () => 'serviceWorker' in navigator;

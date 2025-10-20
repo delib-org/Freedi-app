@@ -27,7 +27,8 @@ const MemberReviewList: FC<Props> = ({ members, onMemberAction, statementId, onR
 			} else {
 				newSet.delete(userId);
 			}
-			return newSet;
+			
+return newSet;
 		});
 	};
 

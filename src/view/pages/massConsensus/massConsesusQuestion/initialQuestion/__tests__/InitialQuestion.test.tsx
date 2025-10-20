@@ -44,7 +44,8 @@ const mockSubscription = { role: Role.member };
 
 const createMockStatement = (overrides: Partial<Statement>): Statement => {
     const defaultCreator: Creator = { uid: 'creator1', displayName: 'Creator', photoURL: '' };
-    return {
+    
+return {
         statementId: 'test-statement-id',
         statement: 'Test Question',
         creatorId: 'creator1',

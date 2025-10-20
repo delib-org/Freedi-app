@@ -13,6 +13,7 @@ import { useUserConfig } from "@/controllers/hooks/useUserConfig";
 import Textarea from "@/view/components/textarea/Textarea";
 import { updateStatementText } from "@/controllers/db/statements/setStatements";
 import { prefetchRandomBatches, prefetchTopStatements } from "@/redux/massConsensus/massConsensusSlice";
+import type { AppDispatch } from "@/redux/types";
 
 const InitialQuestion = ({
   stage,
@@ -23,7 +24,7 @@ const InitialQuestion = ({
   const { statementId } = useParams<{ statementId: string }>();
   const statement = useSelector(statementSelector(statementId));
   const [description, setDescription] = useState("");
-  const dispatch = useDispatch(); // Dispatch to update the redux state
+  const dispatch = useDispatch<AppDispatch>(); // Dispatch to update the redux state
   const { handleSetInitialSuggestion, ready, error, subscription } =
     useInitialQuestion(description);
   const { t } = useUserConfig();
@@ -61,14 +62,14 @@ const InitialQuestion = ({
       dispatch(prefetchRandomBatches({
         statementId,
         batchCount: 3
-      }) as any);
+      }));
 
       // Also prefetch top statements
-      dispatch(prefetchTopStatements(statementId) as any);
+      dispatch(prefetchTopStatements(statementId));
     }
   }, [description, statementId, dispatch]);
 
-  async function handleSubmitInitialQuestionText(e) {
+  async function handleSubmitInitialQuestionText(e: { preventDefault: () => void }): Promise<void> {
     e.preventDefault();
 
     if (title.trim().length < 5) {

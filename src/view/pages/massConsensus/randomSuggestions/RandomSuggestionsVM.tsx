@@ -8,7 +8,6 @@ import {
 	prefetchRandomBatches,
 	loadNextRandomBatch,
 	selectRandomSuggestionsState,
-	selectHasPrefetchedBatches,
 	prefetchTopStatements,
 	dismissRecycleMessage,
 } from '@/redux/massConsensus/massConsensusSlice';
@@ -17,6 +16,7 @@ import {
 	MassConsensusPageUrls,
 	SelectionFunction,
 } from 'delib-npm';
+import type { AppDispatch } from '@/redux/types';
 
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
@@ -25,7 +25,7 @@ import { useNavigate, useParams } from 'react-router';
 export function useRandomSuggestions() {
 	const navigate = useNavigate();
 	const { user, isLoading } = useAuthentication();
-	const dispatch = useDispatch();
+	const dispatch = useDispatch<AppDispatch>();
 	const { statementId } = useParams<{ statementId: string }>();
 	const [loadingStatements, setLoadingStatements] = useState(true);
 	const statement = useSelector(statementSelectorById(statementId || ''));
@@ -60,9 +60,9 @@ export function useRandomSuggestions() {
 		if (statementId && subStatements.length === 0) {
 			fetchRandomStatements();
 			// Prefetch additional batches for smooth experience
-			dispatch(prefetchRandomBatches({ statementId, batchCount: 3 }) as any);
+			dispatch(prefetchRandomBatches({ statementId, batchCount: 3 }));
 			// Prefetch top statements while user is here
-			dispatch(prefetchTopStatements(statementId) as any);
+			dispatch(prefetchTopStatements(statementId));
 		}
 	}, [statementId]);
 
@@ -117,7 +117,7 @@ export function useRandomSuggestions() {
 				}
 
 				// Prefetch more batches in background
-				dispatch(prefetchRandomBatches({ statementId, batchCount: 2 }) as any);
+				dispatch(prefetchRandomBatches({ statementId, batchCount: 2 }));
 			} catch (error) {
 				console.error('Error:', error);
 				setLoadingStatements(false);
@@ -134,22 +134,22 @@ export function useRandomSuggestions() {
 			// Use prefetched data (instant)
 			dispatch(loadNextRandomBatch());
 			// Update the statements slice as well
-			const state = (window as any).__REDUX_STORE__?.getState();
+			const state = (window as Window & { __REDUX_STORE__?: { getState: () => { massConsensus?: { randomStatements?: unknown[] } } } }).__REDUX_STORE__?.getState();
 			if (state?.massConsensus?.randomStatements) {
 				dispatch(
 					setMassConsensusStatements({
-						statements: state.massConsensus.randomStatements,
+						statements: state.massConsensus.randomStatements as Statement[],
 						selectionFunction: SelectionFunction.random,
 					})
 				);
 			}
 		} else {
 			// Fetch new batch from API
-			await dispatch(fetchNewRandomBatch(statementId) as any).unwrap();
+			await dispatch(fetchNewRandomBatch(statementId)).unwrap();
 		}
 
 		// Prefetch more batches in background
-		dispatch(prefetchRandomBatches({ statementId, batchCount: 2 }) as any);
+		dispatch(prefetchRandomBatches({ statementId, batchCount: 2 }));
 	};
 
 	const handleDismissRecycleMessage = () => {
