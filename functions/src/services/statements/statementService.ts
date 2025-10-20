@@ -15,6 +15,7 @@ export interface GetUserOptionsParams {
 export interface GetRandomStatementsParams {
 	parentId: string;
 	limit?: number;
+	excludeIds?: string[];
 }
 
 export interface GetTopStatementsParams {
@@ -150,7 +151,7 @@ export class StatementService {
 	 * This design scales to millions of statements and users while maintaining
 	 * millisecond query response times.
 	 */
-	async getRandomStatements({ parentId, limit = 6 }: GetRandomStatementsParams): Promise<Statement[]> {
+	async getRandomStatements({ parentId, limit = 6, excludeIds = [] }: GetRandomStatementsParams): Promise<Statement[]> {
 		// Validate and cap limit
 		const finalLimit = Math.min(limit, 50);
 
@@ -159,10 +160,10 @@ export class StatementService {
 		const parentStatement = parentDoc.data() as Statement | undefined;
 
 		if (parentStatement?.evaluationSettings?.anchored?.anchored) {
-			return this.getRandomStatementsWithAnchored(parentId, finalLimit, parentStatement);
+			return this.getRandomStatementsWithAnchored(parentId, finalLimit, parentStatement, excludeIds);
 		}
 
-		return this.getStandardRandomStatements(parentId, finalLimit);
+		return this.getStandardRandomStatements(parentId, finalLimit, excludeIds);
 	}
 
 	/**
@@ -171,16 +172,18 @@ export class StatementService {
 	private async getRandomStatementsWithAnchored(
 		parentId: string,
 		limit: number,
-		parentStatement: Statement
+		parentStatement: Statement,
+		excludeIds: string[] = []
 	): Promise<Statement[]> {
 		const numberOfAnchoredStatements = parentStatement.evaluationSettings?.anchored?.numberOfAnchoredStatements || 3;
 		const allSolutionStatementsRef = db.collection(Collections.statements);
 
-		// Get anchored statements pool
+		// Get anchored statements pool (excluding already viewed)
 		const anchoredPool = await this.getAnchoredStatements(parentId, allSolutionStatementsRef);
+		const filteredAnchoredPool = anchoredPool.filter(s => !excludeIds.includes(s.statementId));
 
 		// Randomly select N anchored statements
-		const selectedAnchored = getRandomSample(anchoredPool, Math.min(numberOfAnchoredStatements, anchoredPool.length));
+		const selectedAnchored = getRandomSample(filteredAnchoredPool, Math.min(numberOfAnchoredStatements, filteredAnchoredPool.length));
 
 		// Get non-anchored statements for remaining slots
 		const remainingSlots = Math.max(0, limit - selectedAnchored.length);
@@ -191,7 +194,8 @@ export class StatementService {
 				parentId,
 				remainingSlots,
 				anchoredPool.length,
-				allSolutionStatementsRef
+				allSolutionStatementsRef,
+				excludeIds
 			);
 			statements = [...selectedAnchored, ...nonAnchoredStatements];
 		} else {
@@ -226,7 +230,8 @@ export class StatementService {
 		parentId: string,
 		remainingSlots: number,
 		anchoredPoolSize: number,
-		collectionRef: CollectionReference
+		collectionRef: CollectionReference,
+		excludeIds: string[] = []
 	): Promise<Statement[]> {
 		// First try with explicit anchored field query
 		const nonAnchoredQuery: Query = collectionRef
@@ -238,7 +243,9 @@ export class StatementService {
 			.limit(remainingSlots);
 
 		const nonAnchoredDocs = await nonAnchoredQuery.get();
-		let randomStatements = nonAnchoredDocs.docs.map(doc => doc.data() as Statement);
+		let randomStatements = nonAnchoredDocs.docs
+			.map(doc => doc.data() as Statement)
+			.filter(s => !excludeIds.includes(s.statementId));
 
 		// Fallback if not enough statements found
 		if (randomStatements.length < remainingSlots) {
@@ -247,7 +254,8 @@ export class StatementService {
 				remainingSlots,
 				anchoredPoolSize,
 				randomStatements.length,
-				collectionRef
+				collectionRef,
+				excludeIds
 			);
 			randomStatements = [...randomStatements, ...additionalStatements];
 		}
@@ -263,7 +271,8 @@ export class StatementService {
 		remainingSlots: number,
 		anchoredPoolSize: number,
 		currentCount: number,
-		collectionRef: CollectionReference
+		collectionRef: CollectionReference,
+		excludeIds: string[] = []
 	): Promise<Statement[]> {
 		const allOptionsQuery: Query = collectionRef
 			.where('parentId', '==', parentId)
@@ -276,25 +285,38 @@ export class StatementService {
 
 		return allOptionsDocs.docs
 			.map(doc => doc.data() as Statement)
-			.filter(statement => statement.anchored !== true)
+			.filter(statement => statement.anchored !== true && !excludeIds.includes(statement.statementId))
 			.slice(0, remainingSlots - currentCount);
 	}
 
 	/**
 	 * Get standard random statements without anchored sampling
 	 */
-	private async getStandardRandomStatements(parentId: string, limit: number): Promise<Statement[]> {
+	private async getStandardRandomStatements(parentId: string, limit: number, excludeIds: string[] = []): Promise<Statement[]> {
 		const allSolutionStatementsRef = db.collection(Collections.statements);
+
+		// Firestore 'not-in' queries are limited to 10 items
+		// So we fetch more than needed and filter client-side if necessary
+		const fetchLimit = excludeIds.length > 0 ? limit * 2 : limit;
+
 		const q: Query = allSolutionStatementsRef
 			.where('parentId', '==', parentId)
 			.where('statementType', '==', StatementType.option)
 			.orderBy('evaluation.viewed', 'asc')
 			.orderBy('evaluation.evaluationRandomNumber', 'desc')
-			.limit(limit);
+			.limit(fetchLimit);
 
 		const randomStatementsDB = await q.get();
 
-		return randomStatementsDB.docs.map((doc) => doc.data() as Statement);
+		let statements = randomStatementsDB.docs.map((doc) => doc.data() as Statement);
+
+		// Filter out excluded IDs if any
+		if (excludeIds.length > 0) {
+			statements = statements.filter(s => !excludeIds.includes(s.statementId));
+		}
+
+		// Return only the requested limit
+		return statements.slice(0, limit);
 	}
 
 	/**
