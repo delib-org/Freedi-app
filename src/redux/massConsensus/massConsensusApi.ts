@@ -8,17 +8,23 @@ export const massConsensusApi = createApi({
     reducerPath: 'massConsensusApi',
     baseQuery: fakeBaseQuery(),
     endpoints: (builder) => ({
-        getStatementSubscription: builder.query<StatementSubscription | undefined, { statementId: string; userId: string }>({
+        getStatementSubscription: builder.query<StatementSubscription, { statementId: string; userId: string }>({
             queryFn: async ({ statementId, userId }) => {
                 const subscriptionId = `${statementId}_${userId}`;
                 const subscription = await getStatementSubscriptionFromDB(subscriptionId);
-                return { data: subscription };
+                if (subscription) {
+                    return { data: subscription };
+                }
+                return { error: { message: 'Subscription not found' } };
             },
         }),
-        getMassConsensusProcess: builder.query<MassConsensusProcess | undefined, string>({
+        getMassConsensusProcess: builder.query<MassConsensusProcess, string>({
             queryFn: async (statementId) => {
                 const process = await getMassConsensusProcess(statementId);
-                return { data: process };
+                if (process) {
+                    return { data: process };
+                }
+                return { error: { message: 'Mass consensus process not found' } };
             },
         }),
     }),

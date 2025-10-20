@@ -5,15 +5,11 @@ import {
 import UserDemographicQuestions from '@/view/pages/statement/components/userDemographicQuestions/UserDemographicQuestions';
 import { useSelector } from 'react-redux';
 import { useNavigate, useParams } from 'react-router';
-import {
-    getStageNavigation,
-    useMassConsensusStages,
-} from '../../MassConsensusVM';
+import { useStageNavigation } from '../../MassConsensusVM';
 
 const UserDemographicMC = () => {
     const navigate = useNavigate();
-    const { stages, currentStage } = useMassConsensusStages();
-    const { nextStage: goTo } = getStageNavigation(stages, currentStage);
+    const { nextStage: goTo } = useStageNavigation();
     const { statementId } = useParams();
     const userDemographicQuestions = useSelector(
         selectUserDemographicQuestionsByStatementId(statementId || '')

@@ -8,10 +8,7 @@ import styles from "./SimilarSuggestions.module.scss";
 import { useSimilarSuggestions } from "./SimilarSuggestionVM";
 import { useUserConfig } from "@/controllers/hooks/useUserConfig";
 import Loader from "@/view/components/loaders/Loader";
-import {
-  getStageNavigation,
-  useMassConsensusStages,
-} from "../../MassConsensusVM";
+import { useStageNavigation } from "../../MassConsensusVM";
 import TitleMassConsensus from "../../TitleMassConsensus/TitleMassConsensus";
 
 const SimilarSuggestions = ({ stage, setIfButtonEnabled, onSuggestionSaved }) => {
@@ -20,8 +17,7 @@ const SimilarSuggestions = ({ stage, setIfButtonEnabled, onSuggestionSaved }) =>
   const similarSuggestions = useSelector(selectSimilarStatements);
   const { t } = useUserConfig();
   const [loadingStatements, setLoadingStatements] = useState(true);
-  const { stages, currentStage } = useMassConsensusStages();
-  const { nextStage } = getStageNavigation(stages, currentStage);
+  const { nextStage } = useStageNavigation();
   const { handleSetSuggestionToDB, isLoading } = useSimilarSuggestions(
     statementId,
     nextStage

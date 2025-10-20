@@ -18,10 +18,7 @@ import SmileIcon from '@/assets/icons/smile.svg?react';
 
 // Local Imports - Hooks
 import { useHeader } from './HeaderContext';
-import { useMassConsensusStages } from '../MassConsensusVM';
-
-// Local Imports - Utilities
-import { getStageNavigation } from '../MassConsensusVM';
+import { useStageNavigation } from '../MassConsensusVM';
 
 import styles from './HeaderMassConsensus.module.scss';
 import { creatorSelector } from '@/redux/creator/creatorSlice';
@@ -36,8 +33,7 @@ const HeaderMassConsensus = ({ showMySuggestions = true }: Props) => {
     const userId = useSelector(creatorSelector)?.uid
     const { backToApp } = useHeader();
     const role = useSelector(statementSubscriptionSelector(statementId))?.role;
-    const { stages, currentStage } = useMassConsensusStages();
-    const { previousStage } = getStageNavigation(stages, currentStage);
+    const { previousStage } = useStageNavigation();
     const doesUserHaveSuggestions = useSelector(userSuggestionsSelector(statementId, userId)).length > 0;
     const shouldShowMySuggestions = showMySuggestions && doesUserHaveSuggestions;
 

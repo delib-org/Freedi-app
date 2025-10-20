@@ -1,7 +1,7 @@
 import { useNavigate, useParams } from 'react-router';
 import styles from './FooterMassConsensus.module.scss';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
-import { getStageNavigation, useMassConsensusStages } from '../MassConsensusVM';
+import { useStageNavigation } from '../MassConsensusVM';
 import './../../../../view/style/buttons.scss';
 
 import { useState } from 'react';
@@ -28,8 +28,7 @@ const FooterMassConsensus = ({
     const { statementId } = useParams<{ statementId: string }>();
     const navigate = useNavigate();
     const { t, dir } = useUserConfig();
-    const { stages, currentStage } = useMassConsensusStages();
-    const { nextStage: goTo, previousStage } = getStageNavigation(stages, currentStage);
+    const { nextStage: goTo, previousStage } = useStageNavigation();
     const [isButtonClicked, setIsButtonClicked] = useState(false);
 
     const handleClick = (callback?: () => void) => {

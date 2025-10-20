@@ -27,9 +27,10 @@ export const store = configureStore({
 		subscriptions: SubscriptionsReducer.reducer,
 		userDemographic: userDemographicReducer,
 		newStatement: newStatementReducer,
+        [massConsensusApi.reducerPath]: massConsensusApi.reducer,
+	},
 	middleware: (getDefaultMiddleware) =>
 		getDefaultMiddleware().concat(massConsensusApi.middleware),
-	},
 });
 
 // Infer the `RootState` and `AppDispatch` types from the store itself
