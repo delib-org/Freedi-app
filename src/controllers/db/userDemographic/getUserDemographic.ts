@@ -5,6 +5,7 @@ import { parse } from 'valibot';
 import { store } from '@/redux/store';
 import { deleteUserDemographic, deleteUserDemographicQuestion, setUserDemographic, setUserDemographicQuestion, setUserDemographicQuestions } from '@/redux/userDemographic/userDemographicSlice';
 import { MemberReviewData } from '@/view/pages/statement/components/settings/components/memberValidation/MemberValidation';
+import { getAllMemberValidationStatuses } from '../memberValidation/memberValidationStatus';
 
 /**
  * Fetches user demographic questions from the database for a specific statement ID
@@ -169,6 +170,9 @@ export async function getUserDemographicResponses(statementId: string): Promise<
 		const responsesQuery = query(responsesRef, where('statementId', '==', statementId));
 		const responsesSnapshot = await getDocs(responsesQuery);
 
+		// Get all validation statuses for this statement
+		const validationStatuses = await getAllMemberValidationStatuses(statementId);
+
 		// Group responses by user
 		const userResponsesMap = new Map<string, MemberReviewData>();
 
@@ -176,6 +180,9 @@ export async function getUserDemographicResponses(statementId: string): Promise<
 			const response = doc.data() as UserDemographic;
 
 			if (!userResponsesMap.has(response.userId)) {
+				// Get the validation status for this user, default to 'pending' if not found
+				const validationStatus = validationStatuses.get(response.userId);
+
 				// Initialize user data
 				userResponsesMap.set(response.userId, {
 					userId: response.userId,
@@ -186,7 +193,7 @@ export async function getUserDemographicResponses(statementId: string): Promise<
 					responses: [],
 					joinedAt: response.createdAt,
 					flags: [],
-					status: 'pending'
+					status: validationStatus?.status || 'pending'
 				});
 			}
 
@@ -207,9 +214,6 @@ export async function getUserDemographicResponses(statementId: string): Promise<
 
 		// Convert map to array
 		const memberReviews = Array.from(userResponsesMap.values());
-
-		// TODO: Load member validation status from database
-		// For now, all members are pending
 
 		return memberReviews;
 	} catch (error) {

@@ -10,9 +10,10 @@ interface Props {
 	members: MemberReviewData[];
 	onMemberAction: (userId: string, action: 'approve' | 'flag' | 'ban', reason?: string) => void;
 	statementId: string;
+	onRefresh?: () => void;
 }
 
-const MemberReviewList: FC<Props> = ({ members, onMemberAction, statementId }) => {
+const MemberReviewList: FC<Props> = ({ members, onMemberAction, statementId, onRefresh }) => {
 	const { t } = useUserConfig();
 	const [selectedMembers, setSelectedMembers] = useState<Set<string>>(new Set());
 	const [banModalData, setBanModalData] = useState<{ member: MemberReviewData } | null>(null);
@@ -39,10 +40,32 @@ const MemberReviewList: FC<Props> = ({ members, onMemberAction, statementId }) =
 		setSelectAll(!selectAll);
 	};
 
-	const handleBulkAction = (action: 'approve' | 'flag' | 'ban') => {
-		selectedMembers.forEach(userId => {
-			onMemberAction(userId, action);
-		});
+	const handleBulkAction = async (action: 'approve' | 'flag' | 'ban') => {
+		// For bulk bans, we should also handle the banMember function
+		if (action === 'ban') {
+			for (const userId of selectedMembers) {
+				// Call the actual ban function for each member
+				await banMember(
+					statementId,
+					userId,
+					'Bulk ban action',
+					true // removeVotes
+				);
+				// Update the UI state
+				await onMemberAction(userId, action, 'Bulk ban action');
+			}
+			// Refresh after all bans are complete
+			if (onRefresh) {
+				setTimeout(() => {
+					onRefresh();
+				}, 500);
+			}
+		} else {
+			// For approve and flag actions, just update the status
+			for (const userId of selectedMembers) {
+				await onMemberAction(userId, action);
+			}
+		}
 		setSelectedMembers(new Set());
 		setSelectAll(false);
 	};
@@ -63,8 +86,15 @@ const MemberReviewList: FC<Props> = ({ members, onMemberAction, statementId }) =
 				);
 
 				// Update the UI state
-				onMemberAction(banModalData.member.userId, 'ban', reason);
+				await onMemberAction(banModalData.member.userId, 'ban', reason);
 				setBanModalData(null);
+
+				// Refresh the members list to ensure UI is up to date
+				if (onRefresh) {
+					setTimeout(() => {
+						onRefresh();
+					}, 500); // Small delay to ensure Firestore has updated
+				}
 
 				// Show success feedback
 				console.info('Member banned successfully');

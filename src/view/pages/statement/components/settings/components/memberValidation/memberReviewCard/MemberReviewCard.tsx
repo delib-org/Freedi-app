@@ -69,6 +69,47 @@ const MemberReviewCard: FC<Props> = ({
 
 	const suspiciousFlags = detectSuspiciousPatterns();
 
+	// Generate a brief identifier from user responses
+	const getUserIdentifier = () => {
+		// If user has a display name that's not "Anonymous", prefer to use it
+		if (member.user.displayName && member.user.displayName !== 'Anonymous' && member.user.displayName !== 'Guest') {
+			return member.user.displayName;
+		}
+
+		// Otherwise, create an identifier from their responses
+		const meaningfulAnswers: string[] = [];
+
+		// Collect up to 2 meaningful responses
+		for (const response of member.responses) {
+			if (meaningfulAnswers.length >= 2) break;
+
+			if (typeof response.answer === 'string' && response.answer.trim().length > 0) {
+				// Truncate long answers
+				const truncated = response.answer.length > 40
+					? response.answer.substring(0, 40) + '...'
+					: response.answer;
+				meaningfulAnswers.push(truncated);
+			} else if (Array.isArray(response.answer) && response.answer.length > 0) {
+				// For checkbox responses, show selections
+				const selections = response.answer.slice(0, 3).join(', ');
+				const truncated = selections.length > 40
+					? selections.substring(0, 40) + '...'
+					: selections;
+				meaningfulAnswers.push(truncated);
+			}
+		}
+
+		// If we have meaningful answers, join them
+		if (meaningfulAnswers.length > 0) {
+			return meaningfulAnswers.join(' | ');
+		}
+
+		// Fallback: if no meaningful responses, show "No responses provided"
+		return t('No responses provided');
+	};
+
+	const userIdentifier = getUserIdentifier();
+
 	return (
 		<div className={`${styles.memberCard} ${member.status === 'banned' ? styles.banned : ''}`}>
 			<div className={styles.header}>
@@ -81,11 +122,16 @@ const MemberReviewCard: FC<Props> = ({
 					/>
 					<div className={styles.userInfo}>
 						<div className={styles.nameRow}>
-							<h4>{member.user.displayName || t('Anonymous')}</h4>
+							<h4>{userIdentifier}</h4>
 							{getStatusBadge()}
 						</div>
 						{member.user.email && (
 							<span className={styles.email}>{member.user.email}</span>
+						)}
+						{member.joinedAt && (
+							<span className={styles.joinDate}>
+								{t('Joined')}: {new Date(member.joinedAt).toLocaleDateString()}
+							</span>
 						)}
 					</div>
 				</div>

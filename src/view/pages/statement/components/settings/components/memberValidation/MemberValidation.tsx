@@ -6,6 +6,8 @@ import SettingsModal from '../settingsModal/SettingsModal';
 import MemberReviewList from './memberReviewList/MemberReviewList';
 import styles from './MemberValidation.module.scss';
 import { getUserDemographicResponses } from '@/controllers/db/userDemographic/getUserDemographic';
+import { saveMemberValidationStatus } from '@/controllers/db/memberValidation/memberValidationStatus';
+import { store } from '@/redux/store';
 
 interface Props {
 	statement: Statement;
@@ -33,10 +35,9 @@ const MemberValidation: FC<Props> = ({ statement }) => {
 	const [filter, setFilter] = useState<'all' | 'pending' | 'flagged' | 'approved' | 'banned'>('all');
 
 	useEffect(() => {
-		if (showModal) {
-			loadMemberResponses();
-		}
-	}, [showModal, statement.statementId]);
+		// Load member responses on mount and when modal opens
+		loadMemberResponses();
+	}, [statement.statementId]);
 
 	const loadMemberResponses = async () => {
 		setLoading(true);
@@ -56,15 +57,32 @@ const MemberValidation: FC<Props> = ({ statement }) => {
 		setShowModal(false);
 	};
 
-	const handleMemberAction = async (userId: string, action: 'approve' | 'flag' | 'ban') => {
-		// This will be implemented with actual database operations
-		console.info(`Action ${action} for user ${userId}`);
-		// Update local state
-		setMembers(prev => prev.map(member =>
-			member.userId === userId
-				? { ...member, status: action === 'approve' ? 'approved' : action === 'flag' ? 'flagged' : 'banned' }
-				: member
-		));
+	const handleMemberAction = async (userId: string, action: 'approve' | 'flag' | 'ban', reason?: string) => {
+		try {
+			// Get current user as reviewer
+			const currentUser = store.getState().creator.creator;
+			const reviewedBy = currentUser?.uid;
+
+			// Save the validation status to Firestore
+			await saveMemberValidationStatus(
+				statement.statementId,
+				userId,
+				action === 'approve' ? 'approved' : action === 'flag' ? 'flagged' : 'banned',
+				reason,
+				reviewedBy
+			);
+
+			// Update local state
+			setMembers(prev => prev.map(member =>
+				member.userId === userId
+					? { ...member, status: action === 'approve' ? 'approved' : action === 'flag' ? 'flagged' : 'banned' }
+					: member
+			));
+
+			console.info(`Action ${action} for user ${userId} saved successfully`);
+		} catch (error) {
+			console.error(`Error performing action ${action} for user ${userId}:`, error);
+		}
 	};
 
 	const filteredMembers = members.filter(member => {
@@ -151,6 +169,7 @@ const MemberValidation: FC<Props> = ({ statement }) => {
 								members={filteredMembers}
 								onMemberAction={handleMemberAction}
 								statementId={statement.statementId}
+								onRefresh={loadMemberResponses}
 							/>
 						)}
 					</div>
