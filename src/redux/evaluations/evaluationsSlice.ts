@@ -3,7 +3,6 @@ import type { PayloadAction } from '@reduxjs/toolkit';
 import { RootState } from '../types';
 import { Evaluation, EvaluationSchema, updateArray } from 'delib-npm';
 import { parse } from 'valibot';
-import { updateEvaluationCount } from '../massConsensus/massConsensusSlice';
 
 // Define a type for the slice state
 interface EvaluationsState {

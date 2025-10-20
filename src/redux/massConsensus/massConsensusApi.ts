@@ -1,4 +1,3 @@
-
 import { createApi, fakeBaseQuery } from '@reduxjs/toolkit/query/react';
 import { getStatementSubscriptionFromDB } from '@/controllers/db/subscriptions/getSubscriptions';
 import { getMassConsensusProcess } from '@/controllers/db/massConsensus/getMassConsensus';
@@ -15,7 +14,8 @@ export const massConsensusApi = createApi({
                 if (subscription) {
                     return { data: subscription };
                 }
-                return { error: { message: 'Subscription not found' } };
+                
+return { error: { message: 'Subscription not found' } };
             },
         }),
         getMassConsensusProcess: builder.query<MassConsensusProcess, string>({
@@ -24,7 +24,8 @@ export const massConsensusApi = createApi({
                 if (process) {
                     return { data: process };
                 }
-                return { error: { message: 'Mass consensus process not found' } };
+                
+return { error: { message: 'Mass consensus process not found' } };
             },
         }),
     }),

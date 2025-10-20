@@ -170,7 +170,8 @@ export const prefetchTopStatements = createAsyncThunk<
         }
 
         const { statements } = await response.json();
-        return statements as Statement[];
+        
+return statements as Statement[];
     }
 );
 
@@ -285,7 +286,7 @@ export const massConsensusSlice = createSlice({
             }
         },
 
-        updateEvaluationCount: (state, action: PayloadAction<string>) => {
+        updateEvaluationCount: (state) => {
             const currentBatch = state.currentRandomBatch;
             if (!state.ui.evaluationsPerBatch[currentBatch]) {
                 state.ui.evaluationsPerBatch[currentBatch] = 0;
@@ -494,7 +495,8 @@ export const selectPrefetchedTopStatements = createSelector(
     (prefetch) => {
         if (!prefetch.topStatements.length) return null;
         if (!isCacheFresh(prefetch.topStatementsTimestamp)) return null;
-        return prefetch.topStatements;
+        
+return prefetch.topStatements;
     }
 );
 
@@ -508,7 +510,8 @@ export const selectCurrentBatchEvaluationProgress = createSelector(
     (statements, evaluationsPerBatch, currentBatch) => {
         const total = statements.length;
         const evaluated = evaluationsPerBatch[currentBatch] || 0;
-        return {
+        
+return {
             evaluated,
             total,
             remaining: total - evaluated,

@@ -44,8 +44,7 @@ return bLikes - aLikes;
 						);
 					}
 					break;
-			}
-				case SortType.newest:
+			}				case SortType.newest:
 					_subStatements = subStatements.sort(
 						(a: Statement, b: Statement) => b.createdAt - a.createdAt
 					);

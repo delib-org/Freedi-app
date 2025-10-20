@@ -41,7 +41,7 @@ const MassConsensus = () => {
 	const { user } = useAuthentication();
 	const { isCheckingAccess } = usePublicAccess(statementId);
 
-	const { data: subscription, isLoading: isSubscriptionLoading } = useGetStatementSubscriptionQuery({
+	const { isLoading: isSubscriptionLoading } = useGetStatementSubscriptionQuery({
 		statementId: statementId || '',
 		userId: user?.uid || '',
 	}, { skip: !statementId || !user });

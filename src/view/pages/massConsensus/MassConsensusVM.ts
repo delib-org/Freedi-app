@@ -1,4 +1,3 @@
-import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { massConsensusStagesSelector } from '@/redux/massConsensus/massConsensusSlice';
 import {
     selectUserDemographicByStatementId,
@@ -11,7 +10,6 @@ import { useLocation, useParams } from 'react-router';
 export function useMassConsensusStages(): [MassConsensusStage[], MassConsensusPageUrls] {
     const { statementId } = useParams<{ statementId: string }>();
     const location = useLocation();
-    const { user } = useAuthentication();
 
     if (!statementId) {
         throw new Error("Statement ID is missing in URL parameters.");

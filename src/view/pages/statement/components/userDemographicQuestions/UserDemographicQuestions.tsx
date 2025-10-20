@@ -19,9 +19,6 @@ const UserDemographicQuestions: FC<Props> = ({ questions, closeModal, isMandator
 	const [userDemographic, setUserDemographic] = useState<UserDemographicQuestion[]>([]);
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const { t } = useUserConfig();
-	const isSurveyOptional = userDemographic.some(
-		(survey) => survey.required === true
-	);
 	const navigate = useNavigate();
 	const handleQuestionChange = (
 		question: UserDemographicQuestion,

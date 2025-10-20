@@ -15,7 +15,7 @@ export function listenToMassConsensusProcess(statementId: string): Unsubscribe {
             try {
                 const processes = parse(MassConsensusProcessSchema, stgDB.data());
                 dispatch(setMassConsensusProcess(processes));
-            } catch (error) {
+            } catch {
                 throw new Error('Validation error in listenToMassConsensusProcess');
             }
         }
@@ -41,7 +41,7 @@ export async function getMassConsensusProcess(statementId: string): Promise<Mass
 
     try {
         return parse(MassConsensusProcessSchema, stgDB.data());
-    } catch (error) {
+    } catch {
         throw new Error('Validation error in getMassConsensusProcess');
     }
 }

@@ -21,8 +21,9 @@ const ManagementControls: FC<ManagementControlsProps> = ({
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = '.json';
-    input.onchange = (e: any) => {
-      const file = e.target.files?.[0];
+    input.onchange = (e: Event) => {
+      const target = e.target as HTMLInputElement;
+      const file = target.files?.[0];
       if (file) {
         const reader = new FileReader();
         reader.onload = (event) => {

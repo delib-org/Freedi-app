@@ -87,7 +87,8 @@ const MemberValidation: FC<Props> = ({ statement }) => {
 
 	const filteredMembers = members.filter(member => {
 		if (filter === 'all') return true;
-		return member.status === filter;
+		
+return member.status === filter;
 	});
 
 	const getStatusCounts = () => {

@@ -366,8 +366,7 @@ export async function setAdminsToNewStatement(
 
 		// Batch create all admin subscriptions
 		const batch = db.batch();
-		let addedCount = 0;
-
+	
 		// First, always add the creator's subscription
 		const creatorSubscription = createSubscription({
 			statement,
@@ -386,7 +385,6 @@ export async function setAdminsToNewStatement(
 			db.collection(Collections.statementsSubscribe).doc(creatorSubscription.statementsSubscribeId),
 			creatorSubscription
 		);
-		addedCount++;
 
 		// Then add other admins (excluding creator to avoid duplicate)
 		const otherAdminIds = adminUserIds.filter(uid => uid !== statement.creator.uid);
@@ -446,7 +444,6 @@ return;
 					db.collection(Collections.statementsSubscribe).doc(statementsSubscribeId),
 					newSubscription
 				);
-				addedCount++;
 			});
 		}
 

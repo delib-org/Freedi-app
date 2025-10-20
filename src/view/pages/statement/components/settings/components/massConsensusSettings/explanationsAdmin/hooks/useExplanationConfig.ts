@@ -209,8 +209,10 @@ export const useExplanationConfig = (): UseExplanationConfigReturn => {
       }
 
       // Validate each configuration
-      const validConfigs = data.configurations.filter((config: any) => {
-        return config.id && typeof config.enabled === 'boolean';
+      const validConfigs = data.configurations.filter((config: unknown): config is StageConfiguration => {
+        const c = config as Partial<StageConfiguration>;
+
+return c.id !== undefined && typeof c.enabled === 'boolean';
       });
 
       if (validConfigs.length === 0) {

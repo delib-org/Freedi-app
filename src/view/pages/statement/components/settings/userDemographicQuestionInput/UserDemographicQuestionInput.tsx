@@ -124,7 +124,8 @@ const UserDemographicQuestionInput: FC<UserDemographicQuestionInputProps> = ({
 					>
 						{question.options?.map((option, index) => {
 							const isChecked = Array.isArray(value) && value.includes(option.option);
-							return (
+							
+return (
 								<label key={index} className={styles.optionLabel}>
 									<input
 										type='checkbox'

@@ -34,7 +34,8 @@ const SuggestionLoader = ({
   useEffect(() => {
     if (!show) {
       setCurrentMessageIndex(0);
-      return;
+      
+return;
     }
 
     const interval = setInterval(() => {

@@ -1,3 +1,4 @@
+import { Statement } from "delib-npm";
 import { cache } from "./cache-service";
 import { findSimilarStatementsAI } from "./ai-service";
 import { logger } from "firebase-functions";
@@ -55,7 +56,8 @@ export async function getCachedSimilarStatements(
   } catch (error) {
     logger.error("Error in getCachedSimilarStatements:", error);
     // Fall back to direct AI call on cache error
-    return findSimilarStatementsAI(
+
+return findSimilarStatementsAI(
       statements,
       userInput,
       question,
@@ -72,7 +74,7 @@ export async function getCachedSimilarityResponse(
   statementId: string,
   userInput: string,
   creatorId: string
-): Promise<{ similarStatements: any[]; userText: string } | null> {
+): Promise<{ similarStatements: Statement[]; userText: string } | null> {
   const cacheKey = cache.generateKey(
     "full_response",
     statementId,
@@ -81,7 +83,7 @@ export async function getCachedSimilarityResponse(
   );
 
   try {
-    const cached = await cache.get<{ similarStatements: any[]; userText: string }>(
+    const cached = await cache.get<{ similarStatements: Statement[]; userText: string }>(
       cacheKey
     );
 
@@ -106,7 +108,7 @@ export async function saveCachedSimilarityResponse(
   statementId: string,
   userInput: string,
   creatorId: string,
-  response: { similarStatements: any[]; userText: string }
+  response: { similarStatements: Statement[]; userText: string }
 ): Promise<void> {
   const cacheKey = cache.generateKey(
     "full_response",

@@ -1,4 +1,5 @@
 import { Request, Response } from "firebase-functions/v1";
+import { Statement } from "delib-npm";
 import { findSimilarStatements } from "../fn_findSimilarStatements";
 import * as aiService from "../services/ai-service";
 import * as cachedStatementService from "../services/cached-statement-service";
@@ -140,11 +141,11 @@ describe("findSimilarStatements - Optimized", () => {
 
       jest
         .spyOn(cachedStatementService, "getCachedParentStatement")
-        .mockResolvedValue(mockParentStatement as any);
+        .mockResolvedValue(mockParentStatement as Partial<Statement> as Statement);
 
       jest
         .spyOn(cachedStatementService, "getCachedSubStatements")
-        .mockResolvedValue(mockSubStatements as any);
+        .mockResolvedValue(mockSubStatements as Partial<Statement>[] as Statement[]);
 
       jest
         .spyOn(statementService, "getUserStatements")
@@ -167,12 +168,12 @@ describe("findSimilarStatements - Optimized", () => {
 
       jest
         .spyOn(statementService, "getStatementsFromTexts")
-        .mockReturnValue([mockSubStatements[0]] as any);
+        .mockReturnValue([mockSubStatements[0]] as Partial<Statement>[] as Statement[]);
 
       jest
         .spyOn(statementService, "removeDuplicateStatement")
         .mockReturnValue({
-          statements: [mockSubStatements[0]] as any,
+          statements: [mockSubStatements[0]] as Partial<Statement>[] as Statement[],
           duplicateStatement: undefined,
         });
 
@@ -230,11 +231,11 @@ describe("findSimilarStatements - Optimized", () => {
 
       const parentSpy = jest
         .spyOn(cachedStatementService, "getCachedParentStatement")
-        .mockReturnValue(parentPromise as any);
+        .mockReturnValue(parentPromise as Promise<Statement | null>);
 
       const subsSpy = jest
         .spyOn(cachedStatementService, "getCachedSubStatements")
-        .mockReturnValue(subsPromise as any);
+        .mockReturnValue(subsPromise as Promise<Statement[]>);
 
       jest.spyOn(statementService, "getUserStatements").mockReturnValue([]);
       jest.spyOn(statementService, "hasReachedMaxStatements").mockReturnValue(false);
@@ -268,11 +269,11 @@ describe("findSimilarStatements - Optimized", () => {
 
       jest
         .spyOn(cachedStatementService, "getCachedParentStatement")
-        .mockResolvedValue(mockParentStatement as any);
+        .mockResolvedValue(mockParentStatement as Partial<Statement> as Statement);
 
       jest
         .spyOn(cachedStatementService, "getCachedSubStatements")
-        .mockResolvedValue(mockSubStatements as any);
+        .mockResolvedValue(mockSubStatements as Partial<Statement>[] as Statement[]);
 
       jest.spyOn(statementService, "getUserStatements").mockReturnValue([]);
 
@@ -290,12 +291,12 @@ describe("findSimilarStatements - Optimized", () => {
 
       jest
         .spyOn(statementService, "getStatementsFromTexts")
-        .mockReturnValue([mockSubStatements[0]] as any);
+        .mockReturnValue([mockSubStatements[0]] as Partial<Statement>[] as Statement[]);
 
       jest
         .spyOn(statementService, "removeDuplicateStatement")
         .mockReturnValue({
-          statements: [mockSubStatements[0]] as any,
+          statements: [mockSubStatements[0]] as Partial<Statement>[] as Statement[],
           duplicateStatement: undefined,
         });
 
@@ -356,15 +357,15 @@ describe("findSimilarStatements - Optimized", () => {
 
       jest
         .spyOn(cachedStatementService, "getCachedParentStatement")
-        .mockResolvedValue(mockParentStatement as any);
+        .mockResolvedValue(mockParentStatement as Partial<Statement> as Statement);
 
       jest
         .spyOn(cachedStatementService, "getCachedSubStatements")
-        .mockResolvedValue(mockSubStatements as any);
+        .mockResolvedValue(mockSubStatements as Partial<Statement>[] as Statement[]);
 
       jest
         .spyOn(statementService, "getUserStatements")
-        .mockReturnValue(mockSubStatements as any);
+        .mockReturnValue(mockSubStatements as Partial<Statement>[] as Statement[]);
 
       jest
         .spyOn(statementService, "hasReachedMaxStatements")

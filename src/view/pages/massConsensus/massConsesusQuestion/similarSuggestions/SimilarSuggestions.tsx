@@ -17,7 +17,7 @@ interface SimilarSuggestionsProps {
   onSuggestionSaved?: () => void;
 }
 
-const SimilarSuggestions: React.FC<SimilarSuggestionsProps> = ({ stage, setIfButtonEnabled, onSuggestionSaved }) => {
+const SimilarSuggestions: React.FC<SimilarSuggestionsProps> = ({ setIfButtonEnabled, onSuggestionSaved }) => {
   const navigate = useNavigate();
   const { statementId } = useParams<{ statementId: string }>();
   const similarSuggestions = useSelector(selectSimilarStatements);
@@ -63,7 +63,6 @@ const SimilarSuggestions: React.FC<SimilarSuggestionsProps> = ({ stage, setIfBut
       setLoadingStatements(false);
     }
   }, [similarSuggestions, navigate, statementId, nextStage]);
-
 
   useEffect(() => {
     if (similarSuggestions.length === 1 && !isLoading) {

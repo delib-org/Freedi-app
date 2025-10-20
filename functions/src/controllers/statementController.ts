@@ -1,4 +1,5 @@
 import { Request, Response } from 'firebase-functions/v1';
+import { Statement } from 'delib-npm';
 import { StatementService } from '../services/statements/statementService';
 import { RequestValidator } from '../utils/validation';
 import { cache } from '../services/cache-service';
@@ -77,13 +78,14 @@ export class StatementController {
 			// Check cache first (only for requests without excludeIds)
 			if (excludeIds.length === 0) {
 				const cacheKey = cache.generateKey('random', parentId, String(limit));
-				const cachedData = await cache.get<{ statements: any[] }>(cacheKey);
+				const cachedData = await cache.get<{ statements: Statement[] }>(cacheKey);
 
 				if (cachedData) {
 					// Update view counts asynchronously (don't wait)
 					this.statementService.updateStatementViewCounts(cachedData.statements);
 					res.status(200).send({ ...cachedData, ok: true });
-					return;
+					
+return;
 				}
 			}
 
@@ -134,11 +136,12 @@ export class StatementController {
 
 			// Check cache first
 			const cacheKey = cache.generateKey('top', parentId, String(limit));
-			const cachedData = await cache.get<{ statements: any[] }>(cacheKey);
+			const cachedData = await cache.get<{ statements: Statement[] }>(cacheKey);
 
 			if (cachedData) {
 				res.send({ ...cachedData, ok: true });
-				return;
+				
+return;
 			}
 
 			// Get top statements

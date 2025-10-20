@@ -1,12 +1,33 @@
 import React, { FC } from 'react';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import StageExplanation from '@/view/components/massConsensus/StageExplanation/StageExplanation';
+import { ExplanationConfig, PostActionConfig, ExplanationDisplayMode } from 'delib-npm';
 import styles from './PreviewPanel.module.scss';
 
+interface StageInfo {
+  id: string;
+  label: string;
+  icon: string;
+}
+
+interface StageConfiguration {
+  id: string;
+  enabled: boolean;
+  beforeStage?: ExplanationConfig;
+  afterAction?: PostActionConfig;
+}
+
+interface GlobalSettings {
+  enabled: boolean;
+  defaultDisplayMode: ExplanationDisplayMode;
+  showProgressIndicator: boolean;
+  allowUserDismiss: boolean;
+}
+
 interface PreviewPanelProps {
-  stageConfig: any;
-  stageInfo: any;
-  globalSettings: any;
+  stageConfig: StageConfiguration;
+  stageInfo: StageInfo;
+  globalSettings: GlobalSettings;
 }
 
 const PreviewPanel: FC<PreviewPanelProps> = ({ stageConfig, stageInfo, globalSettings }) => {
