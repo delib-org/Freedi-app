@@ -12,6 +12,7 @@ import {
 	dismissRecycleMessage,
 } from '@/redux/massConsensus/massConsensusSlice';
 import {
+	Statement,
 	MassConsensusPageUrls,
 	SelectionFunction,
 } from 'delib-npm';
@@ -133,11 +134,11 @@ export function useRandomSuggestions() {
 			// Use prefetched data (instant)
 			dispatch(loadNextRandomBatch());
 			// Update the statements slice as well
-			const state = (window as Window & { __REDUX_STORE__?: { getState: () => unknown } }).__REDUX_STORE__?.getState();
+			const state = (window as Window & { __REDUX_STORE__?: { getState: () => { massConsensus?: { randomStatements?: unknown[] } } } }).__REDUX_STORE__?.getState();
 			if (state?.massConsensus?.randomStatements) {
 				dispatch(
 					setMassConsensusStatements({
-						statements: state.massConsensus.randomStatements,
+						statements: state.massConsensus.randomStatements as Statement[],
 						selectionFunction: SelectionFunction.random,
 					})
 				);

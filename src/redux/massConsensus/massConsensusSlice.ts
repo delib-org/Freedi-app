@@ -286,7 +286,7 @@ export const massConsensusSlice = createSlice({
             }
         },
 
-        updateEvaluationCount: (state) => {
+        updateEvaluationCount: (state, _action: PayloadAction<string>) => {
             const currentBatch = state.currentRandomBatch;
             if (!state.ui.evaluationsPerBatch[currentBatch]) {
                 state.ui.evaluationsPerBatch[currentBatch] = 0;

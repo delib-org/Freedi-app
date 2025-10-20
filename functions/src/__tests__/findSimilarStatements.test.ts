@@ -97,13 +97,13 @@ describe("findSimilarStatements - Optimized", () => {
 
     it("should return cached response when available", async () => {
       const cachedData = {
-        similarStatements: [{ statement: "cached statement" }],
+        similarStatements: [{ statement: "cached statement", statementId: "cached1", creatorId: "user1", creator: { uid: "user1", displayName: "Test" }, statementType: "option", createdAt: Date.now(), lastUpdate: Date.now() } as Partial<Statement>] as Statement[],
         userText: "cached user text",
       };
 
       jest
         .spyOn(cachedAiService, "getCachedSimilarityResponse")
-        .mockResolvedValue(cachedData);
+        .mockResolvedValue(cachedData as any);
 
       await findSimilarStatements(
         mockRequest as Request,
