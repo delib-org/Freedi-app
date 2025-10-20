@@ -8,16 +8,6 @@ import { MassConsensusPageUrls, MassConsensusStage } from 'delib-npm';
 import { useSelector } from 'react-redux';
 import { useLocation, useParams } from 'react-router';
 
-import { useAuthentication } from '@/controllers/hooks/useAuthentication';
-import { massConsensusStagesSelector } from '@/redux/massConsensus/massConsensusSlice';
-import {
-    selectUserDemographicByStatementId,
-    selectUserDemographicQuestionsByStatementId,
-} from '@/redux/userDemographic/userDemographicSlice';
-import { MassConsensusPageUrls, MassConsensusStage } from 'delib-npm';
-import { useSelector } from 'react-redux';
-import { useLocation, useParams } from 'react-router';
-
 export function useMassConsensusStages(): [MassConsensusStage[], MassConsensusPageUrls] {
     const { statementId } = useParams<{ statementId: string }>();
     const location = useLocation();
