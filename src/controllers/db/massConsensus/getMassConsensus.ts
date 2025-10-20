@@ -1,9 +1,10 @@
-import { Collections, MassConsensusProcess } from "delib-npm";
+import { Collections, MassConsensusProcess, MassConsensusProcessSchema } from "delib-npm";
 import { doc, getDoc, onSnapshot, Unsubscribe } from "firebase/firestore";
 import { DB } from "../config";
 import { store } from "@/redux/store";
 import { setMassConsensusProcess } from "@/redux/massConsensus/massConsensusSlice";
 import { defaultMassConsensusProcess } from "@/model/massConsensus/massConsensusModel";
+import { parse } from "valibot";
 
 export function listenToMassConsensusProcess(statementId: string): Unsubscribe {
     try {
@@ -12,8 +13,12 @@ export function listenToMassConsensusProcess(statementId: string): Unsubscribe {
 
         return onSnapshot(mcProcessSettingRef, (stgDB) => {
             if (stgDB.exists()) {
-                const processes = stgDB.data() as MassConsensusProcess;
-                dispatch(setMassConsensusProcess(processes));
+                try {
+                    const processes = parse(MassConsensusProcessSchema, stgDB.data());
+                    dispatch(setMassConsensusProcess(processes));
+                } catch (error) {
+                    console.error('Validation error in listenToMassConsensusProcess:', error);
+                }
             }
         });
     } catch (error) {
@@ -41,7 +46,7 @@ export async function getMassConsensusProcess(statementId: string): Promise<Mass
             } as MassConsensusProcess;
         }
 
-        return stgDB.data() as MassConsensusProcess;
+        return parse(MassConsensusProcessSchema, stgDB.data());
 
     } catch (error) {
         console.error(error);

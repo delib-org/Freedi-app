@@ -1,4 +1,4 @@
-import { Collections, Creator, getStatementSubscriptionId, MassConsensusMember, MassConsensusPageUrls, MassConsensusProcess, MassConsensusProcessSchema, MassConsensusStage, User } from "delib-npm";
+import { Collections, Creator, getStatementSubscriptionId, MassConsensusMember, MassConsensusMemberSchema, MassConsensusPageUrls, MassConsensusProcess, MassConsensusProcessSchema, MassConsensusStage, User } from "delib-npm";
 import { DB } from "../config";
 import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
 import { convertFirebaseUserToCreator } from "@/types/user/userUtils";
@@ -12,6 +12,7 @@ export async function setMassConsensusMemberToDB(creator: Creator | User, statem
 			lastUpdate: new Date().getTime(),
 			creator: convertFirebaseUserToCreator(creator)
 		};
+		parse(MassConsensusMemberSchema, newMember);
 		const memberId = getStatementSubscriptionId(statementId, creator);
 		if (!memberId) throw new Error('Error getting member id');
 		const memberRef = doc(DB, Collections.massConsensusMembers, memberId);
@@ -24,7 +25,6 @@ export async function setMassConsensusMemberToDB(creator: Creator | User, statem
 		return { message: 'Error adding member', ok: false };
 	}
 }
-
 interface MassConsensusProcessProps {
 	stages: MassConsensusStage[];
 	statementId: string;
@@ -56,7 +56,7 @@ export async function removeMassConsensusStage(statementId: string, stageUrl: Ma
 
 		if (!processDoc.exists()) return;
 		
-		const processData = processDoc.data() as MassConsensusProcess;
+		const processData = parse(MassConsensusProcessSchema, processDoc.data());
 		const currentStages = processData.stages || [];
 		const updatedStages = currentStages.filter(s => s.url !== stageUrl);
 		
@@ -80,9 +80,11 @@ export async function setNewProcessToDB(statementId: string): Promise<MassConsen
 			createdBy: 'system'
 		}
 
-		await setDoc(processRef, process, { merge: true });
+		const parsedProcess = parse(MassConsensusProcessSchema, process);
 
-		return process as MassConsensusProcess;
+		await setDoc(processRef, parsedProcess, { merge: true });
+
+		return parsedProcess as MassConsensusProcess;
 	} catch (error) {
 		console.error(error);
 
