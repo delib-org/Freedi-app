@@ -103,6 +103,13 @@ const SuggestionCard: FC<Props> = ({
 	const [imageDisplayMode, setImageDisplayMode] = useState<'above' | 'inline'>('above');
 	const [showImageUpload, setShowImageUpload] = useState(false);
 
+	// Real-time listener for image changes
+	useEffect(() => {
+		if (statement?.imagesURL?.main !== undefined) {
+			setImage(statement.imagesURL.main);
+		}
+	}, [statement?.imagesURL?.main]);
+
 	// Removed sortSubStatements call - sorting is handled at parent level in SuggestionCards
 
 	const statementColor: StyleProps = useStatementColor({
