@@ -62,6 +62,68 @@
                 grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
                 gap: 1rem;
             }
+
+            // Evaluation type section styles
+            .evaluationTypeSection {
+                display: flex;
+                flex-direction: column;
+                gap: 0.75rem;
+                grid-column: 1 / -1; // Span full width in grid
+                width: 100%;
+
+                .sectionLabel {
+                    font-weight: 600;
+                    color: var(--text-primary);
+                    margin-bottom: 0.5rem;
+                    font-size: 1rem;
+                }
+            }
+
+            // Vote limit section styles
+            .voteLimitSection {
+                grid-column: 1 / -1; // Span full width in grid
+                display: flex;
+                flex-direction: column;
+                gap: 0.75rem;
+                padding: 1rem;
+                background: rgba(var(--accent-rgb), 0.05);
+                border-radius: 8px;
+                border: 1px solid rgba(var(--accent-rgb), 0.2);
+
+                .voteLimitInput {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 0.5rem;
+                    margin-left: 2rem;
+
+                    label {
+                        font-size: 0.9rem;
+                        color: var(--text-primary);
+                        font-weight: 500;
+                    }
+
+                    .numberInput {
+                        width: 100px;
+                        padding: 0.5rem;
+                        border: 1px solid var(--border-color);
+                        border-radius: 4px;
+                        font-size: 1rem;
+                        background: white;
+
+                        &:focus {
+                            outline: none;
+                            border-color: var(--accent);
+                            box-shadow: 0 0 0 2px rgba(var(--accent-rgb), 0.1);
+                        }
+                    }
+
+                    .helperText {
+                        font-size: 0.85rem;
+                        color: var(--text-secondary);
+                        margin-top: 0.25rem;
+                    }
+                }
+            }
         }
     }
 

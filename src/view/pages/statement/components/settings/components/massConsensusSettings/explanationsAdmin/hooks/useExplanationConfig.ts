@@ -65,9 +65,9 @@ export const useExplanationConfig = (): UseExplanationConfigReturn => {
               dismissible: true
             },
             afterAction: {
+              content: '',
               successMessage: 'Thank you for your response!',
-              autoAdvance: true,
-              autoAdvanceDelay: 2000
+              autoAdvance: { enabled: true, delay: 2000 }
             }
           },
           {
@@ -101,9 +101,9 @@ export const useExplanationConfig = (): UseExplanationConfigReturn => {
               dismissible: false
             },
             afterAction: {
+              content: '',
               successMessage: 'Your vote has been recorded!',
-              autoAdvance: true,
-              autoAdvanceDelay: 3000
+              autoAdvance: { enabled: true, delay: 3000 }
             }
           },
           {

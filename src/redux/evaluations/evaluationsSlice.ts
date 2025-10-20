@@ -3,6 +3,7 @@ import type { PayloadAction } from '@reduxjs/toolkit';
 import { RootState } from '../types';
 import { Evaluation, EvaluationSchema, updateArray } from 'delib-npm';
 import { parse } from 'valibot';
+import { updateEvaluationCount } from '../massConsensus/massConsensusSlice';
 
 // Define a type for the slice state
 interface EvaluationsState {
@@ -62,5 +63,35 @@ export const numberOfEvaluatedStatements = (statementsIds:string[]) => (state: R
 
 	return statementsIds.length - numberEvaluated;
 };
+
+// Selector to count positive votes (value === 1) for a user within a parent statement
+export const userVotesInParentSelector =
+	(parentId: string | undefined, userId?: string) => (state: RootState): number => {
+		if (!parentId) return 0;
+		const evaluatorId = userId ?? state.creator.creator?.uid;
+
+		return state.evaluations.userEvaluations.filter(
+			(evaluation) =>
+				evaluation.parentId === parentId &&
+				evaluation.evaluatorId === evaluatorId &&
+				evaluation.evaluation === 1 // Only count positive votes for single-like
+		).length;
+	}
+
+// Selector to get all user's positive votes with statement IDs for a parent
+export const userVotedStatementsInParentSelector =
+	(parentId: string | undefined, userId?: string) => (state: RootState): string[] => {
+		if (!parentId) return [];
+		const evaluatorId = userId ?? state.creator.creator?.uid;
+
+		return state.evaluations.userEvaluations
+			.filter(
+				(evaluation) =>
+					evaluation.parentId === parentId &&
+					evaluation.evaluatorId === evaluatorId &&
+					evaluation.evaluation === 1
+			)
+			.map(evaluation => evaluation.statementId);
+	}
 
 export default evaluationsSlicer.reducer;

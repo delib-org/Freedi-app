@@ -10,7 +10,8 @@ export function sortSubStatements(
 	subStatements: Statement[],
 	sort: string | undefined,
 	gap = 30,
-	randomSeed?: number
+	randomSeed?: number,
+	parentStatement?: Statement
 ): { totalHeight: number } {
 	try {
 		const dispatch = store.dispatch;
@@ -23,9 +24,25 @@ export function sortSubStatements(
 		} else {
 			switch (sort) {
 				case SortType.accepted:
-					_subStatements = subStatements.sort(
-						(a: Statement, b: Statement) => b.consensus - a.consensus
-					);
+					// Check if parent has single-like evaluation type
+					const isSingleLike = parentStatement?.statementSettings?.evaluationType === 'single-like';
+
+					if (isSingleLike) {
+						// Sort by likes (pro) for single-like evaluation
+						_subStatements = subStatements.sort(
+							(a: Statement, b: Statement) => {
+								const aLikes = a.evaluation?.sumPro || a.pro || 0;
+								const bLikes = b.evaluation?.sumPro || b.pro || 0;
+								
+return bLikes - aLikes;
+							}
+						);
+					} else {
+						// Default: sort by consensus
+						_subStatements = subStatements.sort(
+							(a: Statement, b: Statement) => b.consensus - a.consensus
+						);
+					}
 					break;
 				case SortType.newest:
 					_subStatements = subStatements.sort(
@@ -48,7 +65,8 @@ export function sortSubStatements(
 								(acc, char, index) => acc + char.charCodeAt(0) * (index + 1) * randomSeed % 10000,
 								0
 							);
-							return hashA - hashB;
+							
+return hashA - hashB;
 						});
 					} else {
 						_subStatements = subStatements.sort(() => Math.random() - 0.5);
@@ -99,7 +117,8 @@ export function sortSubStatements(
 			const statement = currentState.statements.statements.find(
 				(s) => s.statementId === update.statementId
 			);
-			return !statement || statement.top !== update.top;
+			
+return !statement || statement.top !== update.top;
 		});
 
 		if (hasChanges) {

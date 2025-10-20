@@ -8,7 +8,6 @@ import {
 import { useAuthentication } from "@/controllers/hooks/useAuthentication";
 
 import {
-  GeneratedStatement,
   QuestionType,
   Statement,
   StatementType,
@@ -17,7 +16,7 @@ import { useEffect } from "react";
 
 import { useParams } from "react-router";
 
-export function useSimilarSuggestions(statementId, nextStep) {
+export function useSimilarSuggestions(statementId: string | undefined, nextStep: string | undefined) {
   const { statementId: parentId } = useParams<{ statementId: string }>();
   const { creator, isLoading } = useAuthentication();
 
@@ -29,10 +28,10 @@ export function useSimilarSuggestions(statementId, nextStep) {
     return () => unsubscribe();
   }, [parentId]);
   async function handleSetSuggestionToDB(
-    statement: Statement | GeneratedStatement
-  ) {
+    statement: Statement | null
+  ): Promise<boolean> {
     try {
-      if (isLoading || !creator) return false;
+      if (isLoading || !creator || !statement) return false;
 
       const parentStatement = await getStatementFromDB(parentId);
       if (!parentStatement)

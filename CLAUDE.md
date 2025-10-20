@@ -42,6 +42,34 @@
   import styles from './MyComponent.module.scss';
   ```
 
+### Design System Guidelines
+- **ALWAYS follow design system guidelines** from `docs/design-guide.md`
+- **All UI/UX decisions must align** with the design guide
+- **Color palette**: Use only CSS variables from the design system (e.g., `var(--btn-primary)`, `var(--agree)`)
+  - Never hardcode colors: `#5f88e5` ❌, use `var(--btn-primary)` ✅
+- **Typography**: Follow type scale (h1-h6, p) and use design tokens
+- **Spacing**: Use 8-point grid system with spacing tokens (`var(--padding)`)
+- **Component patterns**: Follow established patterns in design guide (buttons, cards, forms, modals)
+- **Animations**: Use standard timing functions and durations from design guide
+- **Accessibility**: All components must meet WCAG AA standards
+- **Responsive**: Mobile-first approach with established breakpoints
+- Examples:
+  ```scss
+  // ❌ WRONG - Hardcoded values
+  .myButton {
+    background-color: #5f88e5;
+    padding: 16px;
+    border-radius: 20px;
+  }
+
+  // ✅ CORRECT - Design tokens
+  .myButton {
+    background-color: var(--btn-primary);
+    padding: var(--padding);
+    border-radius: 20px; // Specific to button pattern
+  }
+  ```
+
 ## Commands
 - Build: `npm run build`
 - Dev: `npm run dev`

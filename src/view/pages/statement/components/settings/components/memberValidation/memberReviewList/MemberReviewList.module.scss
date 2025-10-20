@@ -1,0 +1,55 @@
+.memberReviewList {
+	.bulkActions {
+		background: var(--card-default);
+		border-radius: 0.5rem;
+		padding: 1rem;
+		margin-bottom: 1rem;
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+		.selectionInfo {
+			display: flex;
+			align-items: center;
+			gap: 0.5rem;
+			font-size: 0.9rem;
+			color: var(--text-body);
+
+			input[type="checkbox"] {
+				width: 1.2rem;
+				height: 1.2rem;
+				cursor: pointer;
+			}
+		}
+
+		.actions {
+			display: flex;
+			gap: 0.5rem;
+
+			button {
+				padding: 0.4rem 0.8rem;
+				font-size: 0.85rem;
+			}
+		}
+	}
+
+	.membersList {
+		display: flex;
+		flex-direction: column;
+		gap: 1rem;
+	}
+
+	.emptyState {
+		text-align: center;
+		padding: 3rem;
+		background: var(--card-default);
+		border-radius: 0.5rem;
+		color: var(--text-body);
+
+		p {
+			margin: 0;
+			font-size: 1rem;
+		}
+	}
+}

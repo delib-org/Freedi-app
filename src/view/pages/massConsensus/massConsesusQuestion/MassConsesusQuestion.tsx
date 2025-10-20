@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import Loader from "@/view/components/loaders/Loader";
+import SuggestionLoader from "@/view/components/loaders/SuggestionLoader";
 import InitialQuestion from "./initialQuestion/InitialQuestion";
 import useMassConsensusQuestion from "./MassConsensusQuestionVM";
 import SimilarSuggestions from "./similarSuggestions/SimilarSuggestions";
@@ -144,18 +144,8 @@ const MassConsensusQuestion = () => {
         </div>
       )}
 
-      {showLoader && (
-        <output
-          className={styles.loaderOverlay}
-          aria-live="polite"
-          aria-busy="true"
-        >
-          <h2 className={styles.loaderText}>
-            {t("Looking for similar suggestions... please wait.")}
-          </h2>
-          <Loader />
-        </output>
-      )}
+      {/* Improved suggestion loader with better UX */}
+      <SuggestionLoader show={showLoader} />
 
       {reachedLimit ? (
         <FooterMassConsensus

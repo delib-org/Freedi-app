@@ -8,6 +8,8 @@ export function uploadImageToStorage(
 	onProgress?: (progress: number) => void
 ): Promise<string> {
 	return new Promise((resolve, reject) => {
+		// Use the statement's ID for the image path
+		// This ensures the user can upload to their own statement
 		const imageRef = ref(
 			storage,
 			`${Collections.statements}/${statement.statementId

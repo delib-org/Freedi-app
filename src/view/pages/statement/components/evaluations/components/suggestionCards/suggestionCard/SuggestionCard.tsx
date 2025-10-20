@@ -9,7 +9,7 @@ import CreateStatementModal from '../../../../createStatementModal/CreateStateme
 import Evaluation from '../../evaluation/Evaluation';
 import SolutionMenu from '../../solutionMenu/SolutionMenu';
 import AddQuestionIcon from '@/assets/icons/addQuestion.svg?react';
-import { updateStatementText } from '@/controllers/db/statements/setStatements';
+import { updateStatementText, updateStatementMainImage } from '@/controllers/db/statements/setStatements';
 import { changeStatementType } from '@/controllers/db/statements/changeStatementType';
 import { useAppDispatch } from '@/controllers/hooks/reduxHooks';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
@@ -30,6 +30,7 @@ import { improveSuggestionWithTimeout } from '@/services/suggestionImprovement';
 import Loader from '@/view/components/loaders/Loader';
 import CommunityBadge from '@/view/components/badges/CommunityBadge';
 import AnchoredBadge from '@/view/components/badges/AnchoredBadge';
+import UploadImage from '@/view/components/uploadImage/UploadImage';
 
 interface Props {
 	statement: Statement | undefined;
@@ -65,6 +66,7 @@ const SuggestionCard: FC<Props> = ({
 	// Use Refs
 	const elementRef = useRef<HTMLDivElement>(null);
 	const textContainerRef = useRef<HTMLDivElement>(null);
+	const fileInputRef = useRef<HTMLInputElement>(null);
 
 	// Early return if statement is not defined
 	if (!statement) return null;
@@ -94,6 +96,12 @@ const SuggestionCard: FC<Props> = ({
 	const [originalTitle, setOriginalTitle] = useState<string | null>(null);
 	const [originalDescription, setOriginalDescription] = useState<string | null>(null);
 	const [hasBeenImproved, setHasBeenImproved] = useState(false);
+
+	// Image states
+	const imageUrl = statement?.imagesURL?.main ?? "";
+	const [image, setImage] = useState<string>(imageUrl);
+	const [imageDisplayMode, setImageDisplayMode] = useState<'above' | 'inline'>('above');
+	const [showImageUpload, setShowImageUpload] = useState(false);
 
 	// Removed sortSubStatements call - sorting is handled at parent level in SuggestionCards
 
@@ -241,6 +249,16 @@ const SuggestionCard: FC<Props> = ({
 		setIsCardMenuOpen(!isCardMenuOpen);
 	}
 
+	function handleToggleImageMode() {
+		setImageDisplayMode(prev => prev === 'above' ? 'inline' : 'above');
+	}
+
+	function handleImageUploadClick() {
+		if (fileInputRef.current) {
+			fileInputRef.current.click();
+		}
+	}
+
 	const selectedOptionIndicator = `8px solid ${statement.isChosen ? 'var(--approve)' : statementColor.backgroundColor || 'white'}`;
 
 	return (
@@ -288,8 +306,48 @@ const SuggestionCard: FC<Props> = ({
 			</div>
 			}
 			<div className={styles.main}>
+				{/* Image Above Mode - Display image at the top of card */}
+				{image && imageDisplayMode === 'above' && (
+					<div className={styles.imageAbove}>
+						<UploadImage
+							statement={statement}
+							fileInputRef={fileInputRef}
+							image={image}
+							setImage={setImage}
+						/>
+						{isAuthorized && (
+							<button
+								className={styles.imageToggleBtn}
+								onClick={handleToggleImageMode}
+								title={t('Switch to inline mode')}
+							>
+								⇄
+							</button>
+						)}
+					</div>
+				)}
 				<div className={styles.info}>
 					<div className={styles.text}>
+						{/* Image Inline Mode - Display image at start of text */}
+						{image && imageDisplayMode === 'inline' && (
+							<div className={styles.imageInline} style={{ float: dir === 'ltr' ? 'left' : 'right' }}>
+								<UploadImage
+									statement={statement}
+									fileInputRef={fileInputRef}
+									image={image}
+									setImage={setImage}
+								/>
+								{isAuthorized && (
+									<button
+										className={styles.imageToggleBtn}
+										onClick={handleToggleImageMode}
+										title={t('Switch to above mode')}
+									>
+										⇅
+									</button>
+								)}
+							</div>
+						)}
 						<div className={styles.textContent} ref={textContainerRef}>
 							<EditableStatement
 								statement={statement}
@@ -314,6 +372,28 @@ const SuggestionCard: FC<Props> = ({
 							{t('Show more')}
 						</Link>
 						<div className="btns btns--end">
+							{/* Show Add Image button if no image and user is authorized */}
+							{!image && isAuthorized && (
+								<button
+									onClick={() => setShowImageUpload(true)}
+									className="btn btn--small btn--secondary"
+								>
+									{t('Add Image')}
+								</button>
+							)}
+							{/* Show Remove Image button if image exists and user is authorized */}
+							{image && isAuthorized && (
+								<button
+									onClick={async () => {
+										setImage('');
+										// Update database to remove image
+										await updateStatementMainImage(statement, '');
+									}}
+									className="btn btn--small btn--cancel"
+								>
+									{t('Remove Image')}
+								</button>
+							)}
 							{/* Show Improve button only if AI improvement is enabled */}
 							{enableAIImprovement && !hasBeenImproved && (
 								<button
@@ -421,6 +501,26 @@ const SuggestionCard: FC<Props> = ({
 				isLoading={isImproving}
 				suggestionTitle={statement.statement}
 			/>
+			{/* Upload area for initial image upload */}
+			{!image && showImageUpload && (
+				<div className={styles.uploadArea}>
+					<UploadImage
+						statement={statement}
+						fileInputRef={fileInputRef}
+						image={image}
+						setImage={(newImage) => {
+							setImage(newImage);
+							setShowImageUpload(false);
+						}}
+					/>
+					<button
+						onClick={() => setShowImageUpload(false)}
+						className={styles.closeUploadBtn}
+					>
+						✕
+					</button>
+				</div>
+			)}
 		</div>
 	);
 };

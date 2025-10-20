@@ -11,7 +11,7 @@ import {
 interface SetStatementSettingsProps {
 	statement: Statement;
 	property: keyof StatementSettings | keyof QuestionSettings;
-	newValue: boolean | number;
+	newValue: boolean | number | string;
 	settingsSection: keyof Statement;
 }
 

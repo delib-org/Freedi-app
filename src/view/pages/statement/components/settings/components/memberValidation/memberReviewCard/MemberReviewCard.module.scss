@@ -1,0 +1,179 @@
+.memberCard {
+	background: var(--card-default);
+	border-radius: 0.5rem;
+	overflow: hidden;
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+	transition: all 0.2s;
+
+	&.banned {
+		opacity: 0.6;
+		background: var(--card-disabled);
+	}
+
+	.header {
+		padding: 1rem;
+		display: flex;
+		justify-content: space-between;
+		align-items: flex-start;
+		border-bottom: 1px solid var(--border-color);
+
+		.selectionAndInfo {
+			display: flex;
+			align-items: flex-start;
+			gap: 0.75rem;
+			flex: 1;
+
+			input[type="checkbox"] {
+				margin-top: 0.25rem;
+				width: 1.2rem;
+				height: 1.2rem;
+				cursor: pointer;
+			}
+
+			.userInfo {
+				flex: 1;
+
+				.nameRow {
+					display: flex;
+					align-items: center;
+					gap: 0.5rem;
+					margin-bottom: 0.25rem;
+
+					h4 {
+						margin: 0;
+						font-size: 1.1rem;
+						color: var(--text-title);
+					}
+				}
+
+				.email {
+					color: var(--text-caption);
+					font-size: 0.85rem;
+				}
+			}
+		}
+
+		.warnings {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 0.5rem;
+			margin: 0 1rem;
+
+			.warningBadge {
+				padding: 0.25rem 0.5rem;
+				background: #fff3cd;
+				color: #856404;
+				border-radius: 0.25rem;
+				font-size: 0.8rem;
+				border: 1px solid #ffeaa7;
+			}
+		}
+
+		.expandBtn {
+			background: transparent;
+			border: none;
+			color: var(--text-body);
+			cursor: pointer;
+			font-size: 1rem;
+			padding: 0.25rem 0.5rem;
+			transition: transform 0.2s;
+
+			&:hover {
+				color: var(--text-title);
+			}
+		}
+	}
+
+	.badge {
+		padding: 0.2rem 0.5rem;
+		border-radius: 0.25rem;
+		font-size: 0.75rem;
+		font-weight: 500;
+		display: inline-flex;
+		align-items: center;
+		gap: 0.25rem;
+
+		&.pending {
+			background: #e3f2fd;
+			color: #1976d2;
+		}
+
+		&.approved {
+			background: #e8f5e9;
+			color: #2e7d32;
+		}
+
+		&.flagged {
+			background: #fff3cd;
+			color: #856404;
+		}
+
+		&.banned {
+			background: #ffebee;
+			color: #c62828;
+		}
+	}
+
+	.content {
+		padding: 1rem;
+		background: var(--card-hover);
+
+		.responses {
+			margin-bottom: 1rem;
+
+			h5 {
+				margin: 0 0 0.75rem 0;
+				color: var(--text-title);
+				font-size: 0.95rem;
+			}
+
+			.response {
+				margin-bottom: 0.75rem;
+				padding: 0.5rem;
+				background: var(--card-default);
+				border-radius: 0.25rem;
+
+				.question {
+					font-weight: 500;
+					color: var(--text-body);
+					margin-bottom: 0.25rem;
+					font-size: 0.9rem;
+				}
+
+				.answer {
+					color: var(--text-caption);
+					font-size: 0.85rem;
+					padding-left: 1rem;
+				}
+			}
+		}
+
+		.actions {
+			display: flex;
+			gap: 0.5rem;
+			padding-top: 0.5rem;
+			border-top: 1px solid var(--border-color);
+
+			button {
+				font-size: 0.85rem;
+				padding: 0.4rem 0.8rem;
+			}
+		}
+
+		.bannedNotice {
+			padding: 1rem;
+			background: #ffebee;
+			color: #c62828;
+			border-radius: 0.25rem;
+			text-align: center;
+			font-size: 0.9rem;
+
+			small {
+				display: block;
+				margin-top: 0.5rem;
+				font-size: 0.8rem;
+				opacity: 0.8;
+			}
+		}
+	}
+}

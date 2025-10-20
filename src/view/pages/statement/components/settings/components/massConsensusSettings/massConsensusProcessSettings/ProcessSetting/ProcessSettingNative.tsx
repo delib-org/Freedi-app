@@ -1,281 +1,260 @@
 import React, { useState, useEffect } from 'react';
 import styles from './ProcessSettings.module.scss';
 import { defaultMassConsensusProcess } from '@/model/massConsensus/massConsensusModel';
-import { LoginType, MassConsensusPageUrls, MassConsensusStep } from 'delib-npm';
-import { removeMassConsensusStep, reorderMassConsensusProcessToDB } from '@/controllers/db/massConsensus/setMassConsensus';
+import { MassConsensusPageUrls, MassConsensusStage, MassConsensusStageType } from 'delib-npm';
+import { removeMassConsensusStage, reorderMassConsensusProcessToDB } from '@/controllers/db/massConsensus/setMassConsensus';
 import { useParams } from 'react-router';
 import DeleteIcon from '@/assets/icons/delete.svg?react';
 import PlusIcon from '@/assets/icons/plusIcon.svg?react';
 import CloseIcon from '@/assets/icons/close.svg?react';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { v4 as uuidv4 } from 'uuid';
 
 interface Props {
-	processName: string;
-	steps: MassConsensusStep[];
-	loginType: LoginType;
+    processName: string;
+    stages: MassConsensusStage[];
 }
 
-// Define all possible steps
-const ALL_STEPS: MassConsensusPageUrls[] = [
-	MassConsensusPageUrls.introduction,
-	MassConsensusPageUrls.userDemographics,
-	MassConsensusPageUrls.question,
-	MassConsensusPageUrls.randomSuggestions,
-	MassConsensusPageUrls.topSuggestions,
-	MassConsensusPageUrls.mySuggestions,
-	MassConsensusPageUrls.voting,
-	MassConsensusPageUrls.results,
-	MassConsensusPageUrls.leaveFeedback,
-	MassConsensusPageUrls.thankYou,
-];
+const ALL_STAGES: MassConsensusPageUrls[] = Object.values(MassConsensusPageUrls);
 
-// Map of step names for display
-const STEP_DISPLAY_NAMES: Record<MassConsensusPageUrls, string> = {
-	[MassConsensusPageUrls.introduction]: 'Introduction',
-	[MassConsensusPageUrls.userDemographics]: 'User Demographics',
-	[MassConsensusPageUrls.question]: 'Question',
-	[MassConsensusPageUrls.randomSuggestions]: 'Random Suggestions',
-	[MassConsensusPageUrls.topSuggestions]: 'Top Suggestions',
-	[MassConsensusPageUrls.mySuggestions]: 'My Suggestions',
-	[MassConsensusPageUrls.voting]: 'Voting',
-	[MassConsensusPageUrls.results]: 'Results Summary',
-	[MassConsensusPageUrls.leaveFeedback]: 'Leave Feedback',
-	[MassConsensusPageUrls.thankYou]: 'Thank You',
-	[MassConsensusPageUrls.initialQuestion]: 'Initial Question',
+const STAGE_DISPLAY_NAMES: Record<MassConsensusPageUrls, string> = {
+    [MassConsensusPageUrls.introduction]: 'Introduction',
+    [MassConsensusPageUrls.userDemographics]: 'User Demographics',
+    [MassConsensusPageUrls.question]: 'Question',
+    [MassConsensusPageUrls.randomSuggestions]: 'Random Suggestions',
+    [MassConsensusPageUrls.topSuggestions]: 'Top Suggestions',
+    [MassConsensusPageUrls.mySuggestions]: 'My Suggestions',
+    [MassConsensusPageUrls.voting]: 'Voting',
+    [MassConsensusPageUrls.results]: 'Results Summary',
+    [MassConsensusPageUrls.leaveFeedback]: 'Leave Feedback',
+    [MassConsensusPageUrls.thankYou]: 'Thank You',
+    [MassConsensusPageUrls.initialQuestion]: 'Initial Question',
 };
 
-const ProcessSettingNative = ({ processName, steps: _steps, loginType }: Props) => {
-	const { statementId } = useParams();
-	const { t } = useUserConfig();
+const ProcessSettingNative = ({ processName, stages: _stages }: Props) => {
+    const { statementId } = useParams<{ statementId: string }>();
+    const { t } = useUserConfig();
 
-	const [steps, setSteps] = useState<MassConsensusStep[]>(_steps || defaultMassConsensusProcess);
-	const [showAddStep, setShowAddStep] = useState(false);
-	const [isLoading, setIsLoading] = useState(false);
-	const [draggedItem, setDraggedItem] = useState<string | null>(null);
-	const [draggedOverItem, setDraggedOverItem] = useState<string | null>(null);
+    const [stages, setStages] = useState<MassConsensusStage[]>(_stages || defaultMassConsensusProcess);
+    const [showAddStage, setShowAddStage] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+    const [draggedItem, setDraggedItem] = useState<string | null>(null);
+    const [draggedOverItem, setDraggedOverItem] = useState<string | null>(null);
 
-	useEffect(() => {
-		if (_steps && _steps.length > 0) {
-			setSteps(_steps);
-		}
-	}, [_steps]);
+    useEffect(() => {
+        if (_stages && _stages.length > 0) {
+            setStages(_stages);
+        }
+    }, [_stages]);
 
-	// Calculate available steps (not already in the current process)
-	const currentStepScreens = steps.map(s => s.screen);
-	const availableSteps = ALL_STEPS.filter(
-		step => !currentStepScreens.includes(step)
-	);
+    const currentStageUrls = stages.map(s => s.url);
+    const availableStages = ALL_STAGES.filter(
+        stage => !currentStageUrls.includes(stage)
+    );
 
-	const handleDragStart = (e: React.DragEvent, screen: string) => {
-		setDraggedItem(screen);
-		e.dataTransfer.effectAllowed = 'move';
-		e.dataTransfer.setData('text/plain', screen);
-	};
+    const handleDragStart = (e: React.DragEvent, url: string) => {
+        setDraggedItem(url);
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', url);
+    };
 
-	const handleDragOver = (e: React.DragEvent) => {
-		e.preventDefault();
-		e.dataTransfer.dropEffect = 'move';
-	};
+    const handleDragOver = (e: React.DragEvent) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+    };
 
-	const handleDragEnter = (e: React.DragEvent, screen: string) => {
-		e.preventDefault();
-		setDraggedOverItem(screen);
-	};
+    const handleDragEnter = (e: React.DragEvent, url: string) => {
+        e.preventDefault();
+        setDraggedOverItem(url);
+    };
 
-	const handleDragLeave = (e: React.DragEvent) => {
-		e.preventDefault();
-		// Only clear if we're leaving the entire item
-		const relatedTarget = e.relatedTarget as HTMLElement;
-		if (!relatedTarget || !e.currentTarget.contains(relatedTarget)) {
-			setDraggedOverItem(null);
-		}
-	};
+    const handleDragLeave = (e: React.DragEvent) => {
+        e.preventDefault();
+        const relatedTarget = e.relatedTarget as HTMLElement;
+        if (!relatedTarget || !e.currentTarget.contains(relatedTarget)) {
+            setDraggedOverItem(null);
+        }
+    };
 
-	const handleDrop = async (e: React.DragEvent, dropTargetScreen: string) => {
-		e.preventDefault();
+    const handleDrop = async (e: React.DragEvent, dropTargetUrl: string) => {
+        e.preventDefault();
 
-		if (draggedItem && draggedItem !== dropTargetScreen) {
-			const oldIndex = steps.findIndex(step => step.screen === draggedItem);
-			const newIndex = steps.findIndex(step => step.screen === dropTargetScreen);
+        if (draggedItem && draggedItem !== dropTargetUrl) {
+            const oldIndex = stages.findIndex(stage => stage.url === draggedItem);
+            const newIndex = stages.findIndex(stage => stage.url === dropTargetUrl);
 
-			if (oldIndex !== -1 && newIndex !== -1) {
-				const newSteps = [...steps];
-				const [movedItem] = newSteps.splice(oldIndex, 1);
-				newSteps.splice(newIndex, 0, movedItem);
+            if (oldIndex !== -1 && newIndex !== -1) {
+                const newStages = [...stages];
+                const [movedItem] = newStages.splice(oldIndex, 1);
+                newStages.splice(newIndex, 0, movedItem);
 
-				setSteps(newSteps);
+                // Re-order
+                const reorderedStages = newStages.map((stage, index) => ({ ...stage, order: index + 1 }));
 
-				if (statementId) {
-					try {
-						await reorderMassConsensusProcessToDB({
-							steps: newSteps,
-							statementId,
-							loginType
-						});
-					} catch (error) {
-						console.error('Failed to save step order:', error);
-						// Revert on error
-						setSteps(steps);
-					}
-				}
-			}
-		}
+                setStages(reorderedStages);
 
-		setDraggedItem(null);
-		setDraggedOverItem(null);
-	};
+                if (statementId) {
+                    try {
+                        await reorderMassConsensusProcessToDB({
+                            stages: reorderedStages,
+                            statementId,
+                        });
+                    } catch (error) {
+                        console.error('Failed to save stage order:', error);
+                        setStages(stages); // Revert on error
+                    }
+                }
+            }
+        }
 
-	const handleDragEnd = () => {
-		setDraggedItem(null);
-		setDraggedOverItem(null);
-	};
+        setDraggedItem(null);
+        setDraggedOverItem(null);
+    };
 
-	function handleDelete(screen: MassConsensusPageUrls) {
-		if (!statementId) {
-			console.error('No statement ID available for deleting step');
+    const handleDragEnd = () => {
+        setDraggedItem(null);
+        setDraggedOverItem(null);
+    };
 
-			return;
-		}
+    function handleDelete(url: MassConsensusPageUrls) {
+        if (!statementId) return;
 
-		try {
-			removeMassConsensusStep(statementId, loginType, screen);
-		} catch (error) {
-			console.error('Failed to delete step:', error);
-		}
-	}
+        try {
+            removeMassConsensusStage(statementId, url);
+        } catch (error) {
+            console.error('Failed to delete stage:', error);
+        }
+    }
 
-	const handleAddStep = async (screen: MassConsensusPageUrls) => {
-		if (!statementId) {
-			console.error('No statement ID available for adding step');
+    const handleAddStage = async (url: MassConsensusPageUrls) => {
+        if (!statementId) return;
 
-			return;
-		}
+        setIsLoading(true);
 
-		setIsLoading(true);
+        try {
+            const newStage: MassConsensusStage = {
+                id: uuidv4(),
+                url,
+                title: STAGE_DISPLAY_NAMES[url] || url,
+                type: MassConsensusStageType.introduction, // Default type
+                order: stages.length + 1,
+                skipable: true, // Default value
+            };
+            const updatedStages = [...stages, newStage];
+            setStages(updatedStages);
 
-		try {
-			const newStep: MassConsensusStep = {
-				screen,
-				text: STEP_DISPLAY_NAMES[screen] || screen
-			};
-			const updatedSteps = [...steps, newStep];
-			setSteps(updatedSteps);
+            await reorderMassConsensusProcessToDB({
+                stages: updatedStages,
+                statementId,
+            });
 
-			await reorderMassConsensusProcessToDB({
-				steps: updatedSteps,
-				statementId,
-				loginType
-			});
+            setShowAddStage(false);
+        } catch (error) {
+            console.error('Failed to add stage:', error);
+            setStages(stages); // Revert on error
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
-			setShowAddStep(false);
-		} catch (error) {
-			console.error('Failed to add step:', error);
-			// Revert step addition on error
-			setSteps(steps);
-		} finally {
-			setIsLoading(false);
-		}
-	};
+    return (
+        <div className={styles['process-setting']}>
+            <h4>{processName}</h4>
+            <div className={styles['process-items-container']}>
+                {stages.map((stage, index) => {
+                    const isDragging = draggedItem === stage.url;
+                    const isDraggedOver = draggedOverItem === stage.url;
 
-	return (
-		<div className={styles['process-setting']}>
-			<h4>{processName}</h4>
-			<div className={styles['process-items-container']}>
-				{steps.map((process, index) => {
-					const isDragging = draggedItem === process.screen;
-					const isDraggedOver = draggedOverItem === process.screen;
+                    return (
+                        <div
+                            key={stage.url}
+                            draggable
+                            onDragStart={(e) => handleDragStart(e, stage.url!)}
+                            onDragOver={handleDragOver}
+                            onDragEnter={(e) => handleDragEnter(e, stage.url!)}
+                            onDragLeave={handleDragLeave}
+                            onDrop={(e) => handleDrop(e, stage.url!)}
+                            onDragEnd={handleDragEnd}
+                            className={styles['process-item']}
+                            style={{
+                                opacity: isDragging ? 0.5 : 1,
+                                backgroundColor: isDraggedOver ? 'var(--background-hover, #f0f0f0)' : undefined,
+                                transform: isDraggedOver ? 'scale(1.02)' : undefined,
+                                transition: 'all 0.2s ease',
+                            }}
+                        >
+                            <div className={styles['process-item__drag-area']}>
+                                <span className={styles['process-item__content']}>
+                                    {index + 1}: {t(stage.title || stage.url)}
+                                </span>
+                            </div>
+                            <button
+                                onClick={() => handleDelete(stage.url! as MassConsensusPageUrls)}
+                                className={styles['process-item__delete']}
+                                aria-label={`Delete ${stage.title || stage.url}`}
+                                type="button"
+                            >
+                                <DeleteIcon />
+                            </button>
+                        </div>
+                    );
+                })}
+            </div>
 
-					return (
-						<div
-							key={process.screen}
-							draggable
-							onDragStart={(e) => handleDragStart(e, process.screen)}
-							onDragOver={handleDragOver}
-							onDragEnter={(e) => handleDragEnter(e, process.screen)}
-							onDragLeave={handleDragLeave}
-							onDrop={(e) => handleDrop(e, process.screen)}
-							onDragEnd={handleDragEnd}
-							className={styles['process-item']}
-							style={{
-								opacity: isDragging ? 0.5 : 1,
-								backgroundColor: isDraggedOver ? 'var(--background-hover, #f0f0f0)' : undefined,
-								transform: isDraggedOver ? 'scale(1.02)' : undefined,
-								transition: 'all 0.2s ease',
-							}}
-						>
-							<div className={styles['process-item__drag-area']}>
-								<span className={styles['process-item__content']}>
-									{index + 1}: {t(process.text || process.screen)}
-								</span>
-							</div>
-							<button
-								onClick={() => handleDelete(process.screen)}
-								className={styles['process-item__delete']}
-								aria-label={`Delete ${process.text || process.screen}`}
-								type="button"
-							>
-								<DeleteIcon />
-							</button>
-						</div>
-					);
-				})}
-			</div>
-
-			{/* Add Step Button / Dropdown */}
-			{!showAddStep ? (
-				<button
-					className={styles['add-step-button']}
-					onClick={() => setShowAddStep(true)}
-					aria-label="Add new step to process"
-					aria-expanded={showAddStep}
-					disabled={availableSteps.length === 0 || isLoading || !statementId}
-				>
-					<PlusIcon className={styles['add-step-button__icon']} />
-					<span className={styles['add-step-button__text']}>
-						{isLoading
-							? t('Adding...')
-							: availableSteps.length === 0
-								? t('All steps added')
-								: !statementId
-									? t('Statement ID required')
-									: t('Add Step')}
-					</span>
-				</button>
-			) : (
-				<div className={styles['add-step-dropdown']}>
-					<div className={styles['add-step-dropdown__header']}>
-						<span>{t('Select a step to add')}</span>
-						<button
-							onClick={() => setShowAddStep(false)}
-							aria-label="Close add step menu"
-							className={styles['add-step-dropdown__close']}
-						>
-							<CloseIcon />
-						</button>
-					</div>
-					<div className={styles['add-step-dropdown__list']}>
-						{availableSteps.length > 0 ? (
-							availableSteps.map(step => (
-								<button
-									key={step}
-									className={styles['add-step-dropdown__item']}
-									onClick={() => handleAddStep(step)}
-									aria-label={`Add ${STEP_DISPLAY_NAMES[step]} to process`}
-									disabled={isLoading}
-								>
-									{t(STEP_DISPLAY_NAMES[step] || step)}
-								</button>
-							))
-						) : (
-							<div className={styles['add-step-dropdown__empty']}>
-								{t('All steps have been added to this process')}
-							</div>
-						)}
-					</div>
-				</div>
-			)}
-		</div>
-	);
+            {!showAddStage ? (
+                <button
+                    className={styles['add-step-button']}
+                    onClick={() => setShowAddStage(true)}
+                    aria-label="Add new stage to process"
+                    aria-expanded={showAddStage}
+                    disabled={availableStages.length === 0 || isLoading || !statementId}
+                >
+                    <PlusIcon className={styles['add-step-button__icon']} />
+                    <span className={styles['add-step-button__text']}>
+                        {isLoading
+                            ? t('Adding...')
+                            : availableStages.length === 0
+                                ? t('All stages added')
+                                : !statementId
+                                    ? t('Statement ID required')
+                                    : t('Add Stage')}
+                    </span>
+                </button>
+            ) : (
+                <div className={styles['add-step-dropdown']}>
+                    <div className={styles['add-step-dropdown__header']}>
+                        <span>{t('Select a stage to add')}</span>
+                        <button
+                            onClick={() => setShowAddStage(false)}
+                            aria-label="Close add stage menu"
+                            className={styles['add-step-dropdown__close']}
+                        >
+                            <CloseIcon />
+                        </button>
+                    </div>
+                    <div className={styles['add-step-dropdown__list']}>
+                        {availableStages.length > 0 ? (
+                            availableStages.map(stage => (
+                                <button
+                                    key={stage}
+                                    className={styles['add-step-dropdown__item']}
+                                    onClick={() => handleAddStage(stage)}
+                                    aria-label={`Add ${STAGE_DISPLAY_NAMES[stage]} to process`}
+                                    disabled={isLoading}
+                                >
+                                    {t(STAGE_DISPLAY_NAMES[stage] || stage)}
+                                </button>
+                            ))
+                        ) : (
+                            <div className={styles['add-step-dropdown__empty']}>
+                                {t('All stages have been added to this process')}
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
+        </div>
+    );
 };
 
 export default ProcessSettingNative;

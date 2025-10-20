@@ -57,7 +57,8 @@ export async function updateInAppNotifications(
 			// Skip parent-specific logic
 		} else if (!parentStatementDB.exists) {
 			logger.error(`Parent statement ${statement.parentId} not found`);
-			return;
+			
+return;
 		} else {
 			parentStatement = parse(
 				StatementSchema,

@@ -65,6 +65,12 @@ const StatementBottomNav: FC<Props> = () => {
 
 	const statementColor = useStatementColor({ statement });
 
+	// Filter out the Agreement sort option if showEvaluation is false
+	const showEvaluation = statement?.statementSettings?.showEvaluation ?? true;
+	const filteredSortItems = showEvaluation
+		? sortItems
+		: sortItems.filter(item => item.id !== SortType.accepted);
+
 	function handleCreateNewOption() {
 		if (!statement) return;
 
@@ -99,7 +105,7 @@ const StatementBottomNav: FC<Props> = () => {
 		return path.includes('/stage/') ? 'stage' : 'statement';
 	}
 
-	function handleSortClick(navItem: typeof sortItems[0]) {
+	function handleSortClick(navItem: typeof filteredSortItems[0]) {
 		setShowSorting(false);
 		if (navItem.link === SortType.random) {
 			navigate(`/${getBaseRoute()}/${statement?.statementId}/${navItem.link}?t=${Date.now()}`);
@@ -138,7 +144,7 @@ const StatementBottomNav: FC<Props> = () => {
 
 					{/* Sort menu (absolute fan-out like main branch) */}
 					<div className={styles.sortMenu}>
-						{sortItems.map((navItem, i) => (
+						{filteredSortItems.map((navItem, i) => (
 							<div
 								key={`item-id-${i}`}
 								className={`${styles.sortMenu__item} ${showSorting ? styles.active : ''}`}

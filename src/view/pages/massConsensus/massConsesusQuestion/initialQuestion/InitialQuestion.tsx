@@ -5,13 +5,14 @@ import {
   setStatement,
   statementSelector,
 } from "@/redux/statements/statementsSlice";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useInitialQuestion } from "./InitialQuestionVM";
 import { Role } from "delib-npm";
 import styles from "./InitialQuestion.module.scss";
 import { useUserConfig } from "@/controllers/hooks/useUserConfig";
 import Textarea from "@/view/components/textarea/Textarea";
 import { updateStatementText } from "@/controllers/db/statements/setStatements";
+import { prefetchRandomBatches, prefetchTopStatements } from "@/redux/massConsensus/massConsensusSlice";
 
 const InitialQuestion = ({
   stage,
@@ -28,6 +29,7 @@ const InitialQuestion = ({
   const { t } = useUserConfig();
   const [edit, setEdit] = useState(false);
   const [title, setTitle] = useState(statement ? statement.statement : "");
+  const hasPrefetched = useRef(false);
 
   const isAdmin = subscription?.role === Role.admin;
 
@@ -49,7 +51,22 @@ const InitialQuestion = ({
 
   useEffect(() => {
     setIfButtonEnabled(description !== "");
-  }, [description]);
+
+    // Start prefetching when user types enough text (more than 10 characters)
+    // Only prefetch once per session
+    if (description.length > 10 && !hasPrefetched.current && statementId) {
+      hasPrefetched.current = true;
+
+      // Prefetch random batches for smoother experience
+      dispatch(prefetchRandomBatches({
+        statementId,
+        batchCount: 3
+      }) as any);
+
+      // Also prefetch top statements
+      dispatch(prefetchTopStatements(statementId) as any);
+    }
+  }, [description, statementId, dispatch]);
 
   async function handleSubmitInitialQuestionText(e) {
     e.preventDefault();

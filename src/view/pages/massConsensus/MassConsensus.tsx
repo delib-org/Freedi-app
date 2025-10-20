@@ -1,10 +1,7 @@
-import { getStatementSubscriptionFromDB } from '@/controllers/db/subscriptions/getSubscriptions'
-import { getStatementSubscriptionId } from '@/controllers/general/helpers'
 import { useAuthentication } from '@/controllers/hooks/useAuthentication'
 import { usePublicAccess } from '@/controllers/hooks/usePublicAccess'
-import { setStatementSubscription, statementSubscriptionSelector } from '@/redux/statements/statementsSlice'
 import { useEffect } from 'react'
-import { useDispatch, useSelector } from 'react-redux'
+import { useDispatch } from 'react-redux'
 import { Outlet, useNavigate, useParams, useLocation } from 'react-router'
 import { HeaderProvider } from './headerMassConsensus/HeaderContext'
 import { ExplanationProvider } from '@/contexts/massConsensus/ExplanationProvider'
@@ -13,7 +10,7 @@ import styles from './MassConsensus.module.scss'
 import { useUserConfig } from '@/controllers/hooks/useUserConfig'
 import { setMassConsensusMemberToDB } from '@/controllers/db/massConsensus/setMassConsensus'
 import { setMassConsensusProcess } from '@/redux/massConsensus/massConsensusSlice'
-import { getMassConsensusProcess } from '@/controllers/db/massConsensus/getMassConsensus'
+import { useGetStatementSubscriptionQuery, useGetMassConsensusProcessQuery } from '@/redux/massConsensus/massConsensusApi';
 import Accessibility from '@/view/components/accessibility/Accessibility'
 import LoadingPage from '@/view/pages/loadingPage/LoadingPage'
 import { ErrorBoundary } from 'react-error-boundary'
@@ -40,45 +37,38 @@ const MassConsensus = () => {
 	const location = useLocation()
 	const { dir } = useUserConfig();
 	const dispatch = useDispatch();
-	const { statementId } = useParams()
-	const { user } = useAuthentication()
+	const { statementId } = useParams<{ statementId: string }>();
+	const { user } = useAuthentication();
 	const { isCheckingAccess } = usePublicAccess(statementId);
-	const subscription = useSelector(statementSubscriptionSelector(statementId));
+
+	const { data: subscription, isLoading: isSubscriptionLoading } = useGetStatementSubscriptionQuery({
+		statementId: statementId || '',
+		userId: user?.uid || '',
+	}, { skip: !statementId || !user });
+
+	const { data: process, isLoading: isProcessLoading } = useGetMassConsensusProcessQuery(statementId || '', { skip: !statementId });
 
 	useEffect(() => {
-		// Only redirect to introduction if we're at the base path
 		if (location.pathname === `/mass-consensus/${statementId}` ||
-		    location.pathname === `/mass-consensus/${statementId}/`) {
-			navigate(`/mass-consensus/${statementId}/introduction`)
+			location.pathname === `/mass-consensus/${statementId}/`) {
+			navigate(`/mass-consensus/${statementId}/introduction`);
 		}
-	}, [])
+	}, [location.pathname, navigate, statementId]);
 
 	useEffect(() => {
-		if (!subscription && user) {
-			const subscriptionId = getStatementSubscriptionId(statementId, user.uid)
-			getStatementSubscriptionFromDB(subscriptionId).then(subscription => {
-				if (subscription) {
-					dispatch(setStatementSubscription(subscription))
-				}
-			})
+		if (process) {
+			dispatch(setMassConsensusProcess(process));
 		}
-	}, [subscription, user])
+	}, [process, dispatch]);
 
 	useEffect(() => {
-
-		if (user) {
+		if (user && statementId) {
 			setMassConsensusMemberToDB(user, statementId);
-
-			getMassConsensusProcess(statementId).then((process) => {
-				if (process) {
-					dispatch(setMassConsensusProcess(process))
-				}
-			})
 		}
-	}, [user])
+	}, [user, statementId]);
 
-	// Show loading while checking public access
-	if (isCheckingAccess) {
+	// Show loading while checking public access or fetching data
+	if (isCheckingAccess || isSubscriptionLoading || isProcessLoading) {
 		return <LoadingPage />;
 	}
 

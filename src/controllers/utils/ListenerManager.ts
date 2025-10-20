@@ -69,7 +69,8 @@ export class ListenerManager {
 		const existingListener = this.listeners.get(key);
 		if (existingListener) {
 			existingListener.refCount++;
-			return false; // Listener already exists, no need to set up
+			
+return false; // Listener already exists, no need to set up
 		}
 
 		// Check if being set up by another caller
@@ -79,7 +80,8 @@ export class ListenerManager {
 
 		// Mark as pending immediately to prevent race conditions
 		this.pendingListeners.add(key);
-		return true; // Caller should proceed with setup
+		
+return true; // Caller should proceed with setup
 	}
 
 	/**

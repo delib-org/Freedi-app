@@ -341,11 +341,11 @@ const StageExplanationEditor: FC<StageExplanationEditorProps> = ({
               <label className={styles.checkboxLabel}>
                 <input
                   type="checkbox"
-                  checked={config.afterAction?.autoAdvance || false}
+                  checked={config.afterAction?.autoAdvance?.enabled || false}
                   onChange={(e) => onChange({
                     afterAction: {
                       ...config.afterAction,
-                      autoAdvance: e.target.checked
+                      autoAdvance: { ...config.afterAction?.autoAdvance, enabled: e.target.checked }
                     }
                   })}
                   disabled={!config.enabled}
@@ -355,17 +355,17 @@ const StageExplanationEditor: FC<StageExplanationEditorProps> = ({
               </label>
             </div>
 
-            {config.afterAction?.autoAdvance && (
+            {config.afterAction?.autoAdvance?.enabled && (
               <div className={styles.field}>
                 <label className={styles.fieldLabel}>{t('Auto-advance Delay')}</label>
                 <div className={styles.durationInput}>
                   <input
                     type="number"
-                    value={config.afterAction?.autoAdvanceDelay || 2000}
+                    value={config.afterAction?.autoAdvance?.delay || 2000}
                     onChange={(e) => onChange({
                       afterAction: {
                         ...config.afterAction,
-                        autoAdvanceDelay: parseInt(e.target.value) || 0
+                        autoAdvance: { ...config.afterAction?.autoAdvance, delay: parseInt(e.target.value) || 0 }
                       }
                     })}
                     min="0"

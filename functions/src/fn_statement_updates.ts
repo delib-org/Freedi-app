@@ -129,7 +129,8 @@ async function updateParentWithLatestChildren(parentId: string) {
         // Skip if parentId is 'top' since it's not a real document
         if (parentId === 'top') {
             logger.info('Skipping update for "top" parent - not a real document');
-            return;
+            
+return;
         }
 
         const parentRef = db.collection(Collections.statements).doc(parentId);
@@ -260,7 +261,8 @@ async function updateTopParentSubscriptions(topParentId: string) {
         // Skip if topParentId is 'top' since it's not a real document
         if (topParentId === 'top') {
             logger.info('Skipping subscription update for "top" parent - not a real document');
-            return;
+            
+return;
         }
 
         const LIMIT = 500; // Safety limit to prevent runaway updates
