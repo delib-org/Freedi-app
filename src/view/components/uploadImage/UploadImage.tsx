@@ -3,12 +3,15 @@ import styles from './UploadImage.module.scss';
 import { setImageLocally } from './uploadImageCont';
 import { Statement } from 'delib-npm';
 
+type SizeVariant = 'default' | 'compact' | 'inline';
+
 interface Props {
 	readonly statement: Statement | undefined;
 	readonly fileInputRef?: React.RefObject<HTMLInputElement> | null;
 	readonly image: string;
 	readonly setImage: React.Dispatch<React.SetStateAction<string>>;
 	readonly isAdmin?: boolean;
+	readonly variant?: SizeVariant;
 }
 
 export default function UploadImage({
@@ -17,6 +20,7 @@ export default function UploadImage({
 	image,
 	setImage,
 	isAdmin = true, // Default to true for backwards compatibility
+	variant = 'default', // Default variant
 }: Props) {
 	const [isDragging, setIsDragging] = useState(false);
 	const [progress, setProgress] = useState(0);
@@ -42,6 +46,7 @@ export default function UploadImage({
 			if (!statement) throw new Error('statement is undefined');
 			if (!isAdmin) {
 				console.error('Unauthorized: Only admins can upload images');
+
 				return;
 			}
 
@@ -65,6 +70,7 @@ export default function UploadImage({
 			if (!statement) throw new Error('statement is undefined');
 			if (!isAdmin) {
 				console.error('Unauthorized: Only admins can upload images');
+				
 				return;
 			}
 
@@ -76,9 +82,11 @@ export default function UploadImage({
 		}
 	};
 
+	const variantClass = variant === 'inline' ? styles.inline : variant === 'compact' ? styles.compact : '';
+
 	return (
 		<label
-			className={`${styles.dropZone} ${isDragging ? styles.dropZoneActive : ''} ${!isAdmin ? styles.disabled : ''}`}
+			className={`${styles.dropZone} ${variantClass} ${isDragging ? styles.dropZoneActive : ''} ${!isAdmin ? styles.disabled : ''}`}
 			style={{
 				border: image === '' ? '2px dashed #ccc' : 'none',
 				cursor: !isAdmin ? 'default' : 'pointer',
@@ -100,10 +108,9 @@ export default function UploadImage({
 
 			{image !== '' && (
 				<div className={styles.imageContainer}>
-					<div
-						style={{
-							backgroundImage: `url(${image})`,
-						}}
+					<img
+						src={image}
+						alt={`image of ${statement?.statement || 'statement'}`}
 						className={styles.imagePreview}
 					/>
 					{showSuccess && (
