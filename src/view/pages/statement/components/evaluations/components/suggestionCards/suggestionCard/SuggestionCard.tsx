@@ -314,8 +314,9 @@ const SuggestionCard: FC<Props> = ({
 							fileInputRef={fileInputRef}
 							image={image}
 							setImage={setImage}
+							isAdmin={isAdmin}
 						/>
-						{isAuthorized && (
+						{isAdmin && (
 							<button
 								className={styles.imageToggleBtn}
 								onClick={handleToggleImageMode}
@@ -336,8 +337,9 @@ const SuggestionCard: FC<Props> = ({
 									fileInputRef={fileInputRef}
 									image={image}
 									setImage={setImage}
+									isAdmin={isAdmin}
 								/>
-								{isAuthorized && (
+								{isAdmin && (
 									<button
 										className={styles.imageToggleBtn}
 										onClick={handleToggleImageMode}
@@ -372,8 +374,8 @@ const SuggestionCard: FC<Props> = ({
 							{t('Show more')}
 						</Link>
 						<div className="btns btns--end">
-							{/* Show Add Image button if no image and user is authorized */}
-							{!image && isAuthorized && (
+							{/* Show Add Image button if no image and user is admin of parent statement */}
+							{!image && isAdmin && (
 								<button
 									onClick={() => setShowImageUpload(true)}
 									className="btn btn--small btn--secondary"
@@ -381,8 +383,8 @@ const SuggestionCard: FC<Props> = ({
 									{t('Add Image')}
 								</button>
 							)}
-							{/* Show Remove Image button if image exists and user is authorized */}
-							{image && isAuthorized && (
+							{/* Show Remove Image button if image exists and user is admin of parent statement */}
+							{image && isAdmin && (
 								<button
 									onClick={async () => {
 										setImage('');
@@ -512,6 +514,7 @@ const SuggestionCard: FC<Props> = ({
 							setImage(newImage);
 							setShowImageUpload(false);
 						}}
+						isAdmin={isAdmin}
 					/>
 					<button
 						onClick={() => setShowImageUpload(false)}
