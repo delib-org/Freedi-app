@@ -11,6 +11,7 @@ import creatorReducer from './creator/creatorSlice';
 import SubscriptionsReducer from './subscriptions/subscriptionsSlice';
 import userDemographicReducer from './userDemographic/userDemographicSlice';
 import newStatementReducer from './statements/newStatementSlice';
+import { massConsensusApi } from './massConsensus/massConsensusApi';
 
 export const store = configureStore({
 	reducer: {
@@ -25,7 +26,9 @@ export const store = configureStore({
 		creator: creatorReducer,
 		subscriptions: SubscriptionsReducer.reducer,
 		userDemographic: userDemographicReducer,
-		newStatement: newStatementReducer
+		newStatement: newStatementReducer,
+	middleware: (getDefaultMiddleware) =>
+		getDefaultMiddleware().concat(massConsensusApi.middleware),
 	},
 });
 
