@@ -9,6 +9,7 @@ import { setDemographicOptionColor } from '@/controllers/db/userDemographic/setU
 import { useDispatch } from 'react-redux';
 import { updateUserDemographicQuestionOptionColor } from '@/redux/userDemographic/userDemographicSlice';
 import RadioButtonEmptyIcon from '@/assets/icons/radioButtonEmpty.svg?react';
+import CheckboxEmptyIcon from '@/assets/icons/checkboxEmptyIcon.svg?react';
 import X from '@/assets/icons/x.svg?react';
 
 interface Props {
@@ -166,8 +167,17 @@ const UserQuestionComp = ({
 									}
 									className={styles.typeSelect}
 								>
+									<option value={UserDemographicQuestionType.text}>
+										{t('Text Input')}
+									</option>
+									<option value={UserDemographicQuestionType.textarea}>
+										{t('Text Area')}
+									</option>
 									<option value={UserDemographicQuestionType.radio}>
 										{t('Radio')}
+									</option>
+									<option value={UserDemographicQuestionType.checkbox}>
+										{t('Checkbox')}
 									</option>
 								</select>
 							</div>
@@ -184,12 +194,76 @@ const UserQuestionComp = ({
 
 			{/* Question Preview */}
 
+			{userQuestions.type === UserDemographicQuestionType.text && (
+				<div className={styles.previewSection}>
+					<input
+						type="text"
+						placeholder={t('User will enter text here')}
+						disabled
+						className={styles.previewInput}
+					/>
+				</div>
+			)}
+
+			{userQuestions.type === UserDemographicQuestionType.textarea && (
+				<div className={styles.previewSection}>
+					<textarea
+						placeholder={t('User will enter longer text here')}
+						disabled
+						className={styles.previewTextarea}
+						rows={3}
+					/>
+				</div>
+			)}
+
 			{userQuestions.type === UserDemographicQuestionType.radio && (
 				<div>
 					{userQuestions.options?.map(
 						(option: DemographicOption, index: number) => (
 							<div key={index} className={styles.optionItem}>
 								<RadioButtonEmptyIcon />
+								{option.option}
+								<div className={styles.spacer}></div>
+								<input
+									type='color'
+									name={`user-question-${questionIndex}-${index}`}
+									value={option.color}
+									className={styles.optionColor}
+									onChange={(e) =>
+										handleChangeOptionColor(
+											index,
+											e.target.value
+										)
+									}
+									onBlur={(e) =>
+										handleChangeOptionColor(
+											index,
+											e.target.value
+										)
+									}
+								/>
+								<DeleteIcon
+									color={allowDelete ? 'red' : 'white'}
+									cursor={allowDelete ? 'pointer' : 'default'}
+									onClick={() =>
+										allowDelete
+											? handleDeleteOption(index)
+											: ''
+									}
+									title={t('Delete Option')}
+								/>
+							</div>
+						)
+					)}
+				</div>
+			)}
+
+			{userQuestions.type === UserDemographicQuestionType.checkbox && (
+				<div>
+					{userQuestions.options?.map(
+						(option: DemographicOption, index: number) => (
+							<div key={index} className={styles.optionItem}>
+								<CheckboxEmptyIcon />
 								{option.option}
 								<div className={styles.spacer}></div>
 								<input
