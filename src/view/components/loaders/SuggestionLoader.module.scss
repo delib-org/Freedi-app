@@ -1,0 +1,307 @@
+@keyframes dotPulse {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.5;
+    background-color: var(--btn-primary);
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 1;
+    background-color: var(--btn-primary-hover);
+  }
+  100% {
+    transform: scale(0.8);
+    opacity: 0.5;
+    background-color: var(--btn-primary);
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes progressGlow {
+  0% {
+    box-shadow: 0 0 5px var(--btn-primary);
+  }
+  50% {
+    box-shadow: 0 0 20px var(--btn-primary), 0 0 40px var(--btn-primary-hover);
+  }
+  100% {
+    box-shadow: 0 0 5px var(--btn-primary);
+  }
+}
+
+.loaderOverlay {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg,
+    rgba(31, 88, 149, 0.95) 0%,
+    rgba(95, 136, 229, 0.9) 100%);
+  backdrop-filter: blur(10px);
+  z-index: 10000;
+  animation: fadeInUp 0.3s ease-out;
+}
+
+.loaderContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+  padding: 3rem;
+  background: var(--card-default);
+  border-radius: 20px;
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.3),
+    0 0 100px rgba(95, 136, 229, 0.2);
+  max-width: 500px;
+  width: 90%;
+  position: relative;
+  overflow: hidden;
+
+  // Subtle background pattern
+  &::before {
+    content: "";
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(
+      circle at center,
+      transparent 0%,
+      rgba(95, 136, 229, 0.03) 50%,
+      transparent 100%
+    );
+    animation: rotate 20s linear infinite;
+  }
+
+  @media screen and (max-width: 768px) {
+    padding: 2rem;
+    width: 95%;
+  }
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.dotsLoader {
+  display: flex;
+  gap: 0.75rem;
+  z-index: 1;
+}
+
+.dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background-color: var(--btn-primary);
+  animation: dotPulse 1.5s ease-in-out infinite;
+
+  &:nth-child(1) {
+    animation-delay: 0s;
+  }
+  &:nth-child(2) {
+    animation-delay: 0.2s;
+  }
+  &:nth-child(3) {
+    animation-delay: 0.4s;
+  }
+}
+
+.progressBar {
+  width: 100%;
+  height: 4px;
+  background-color: var(--surface-background);
+  border-radius: 2px;
+  overflow: hidden;
+  position: relative;
+  z-index: 1;
+}
+
+.progressFill {
+  height: 100%;
+  background: linear-gradient(90deg,
+    var(--btn-primary) 0%,
+    var(--btn-primary-hover) 100%);
+  border-radius: 2px;
+  transition: width 0.5s ease-out;
+  animation: progressGlow 2s ease-in-out infinite;
+}
+
+.messageContainer {
+  text-align: center;
+  animation: fadeInUp 0.5s ease-out;
+  z-index: 1;
+}
+
+.mainMessage {
+  font-size: 1.25rem;
+  color: var(--text-title);
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  line-height: 1.5;
+  transition: all 0.3s ease-out;
+}
+
+.subMessage {
+  font-size: 0.9rem;
+  color: var(--text-caption);
+  margin: 0;
+}
+
+.stepIndicators {
+  display: flex;
+  gap: 0.5rem;
+  z-index: 1;
+}
+
+.stepDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--surface-background);
+  transition: all 0.3s ease-out;
+
+  &.active {
+    background-color: var(--btn-primary);
+    transform: scale(1.2);
+    box-shadow: 0 0 10px var(--btn-primary-hover);
+  }
+}
+
+// Icon display styles
+.iconDisplay {
+  z-index: 1;
+  animation: fadeInUp 0.5s ease-out;
+}
+
+.stepIcon {
+  font-size: 3rem;
+  animation: bounce 2s ease-in-out infinite;
+  display: block;
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1));
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.stepIndicatorItem {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: var(--surface-background);
+  transition: all 0.3s ease-out;
+  position: relative;
+
+  &.active {
+    background-color: var(--btn-primary);
+    transform: scale(1.1);
+    box-shadow: 0 0 15px var(--btn-primary-hover);
+
+    .miniIcon {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+}
+
+.miniIcon {
+  font-size: 0.8rem;
+  opacity: 0.3;
+  transform: scale(0.8);
+  transition: all 0.3s ease-out;
+}
+
+// Minimal variant styles
+.loaderContainerMinimal {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 2rem;
+}
+
+.spinnerContainer {
+  position: relative;
+  width: 60px;
+  height: 60px;
+}
+
+.spinner {
+  width: 60px;
+  height: 60px;
+  border: 3px solid rgba(255, 255, 255, 0.2);
+  border-top-color: var(--white);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.minimalMessage {
+  color: var(--white);
+  font-size: 1.25rem;
+  font-weight: 400;
+  text-align: center;
+  max-width: 400px;
+  animation: fadeInUp 0.5s ease-out;
+}
+
+// Accessibility: Reduce motion for users who prefer it
+@media (prefers-reduced-motion: reduce) {
+  .loaderOverlay,
+  .loaderContainer::before,
+  .dot,
+  .progressFill,
+  .messageContainer,
+  .stepIcon,
+  .spinner {
+    animation: none !important;
+  }
+
+  .progressFill {
+    transition: width 0.1s linear;
+  }
+
+  .stepDot,
+  .stepIndicatorItem,
+  .miniIcon {
+    transition: all 0.1s linear;
+  }
+}
