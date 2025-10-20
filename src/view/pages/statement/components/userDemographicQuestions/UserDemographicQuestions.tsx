@@ -62,26 +62,18 @@ const UserDemographicQuestions: FC<Props> = ({ questions, closeModal }) => {
 				const currentQuestion = prevData.find(
 					(q) => q.userQuestionId === question.userQuestionId
 				);
-				const _value = value[0];
-				if (currentQuestion) {
-					const newOptions = currentQuestion.answerOptions.includes(
-						_value as string
-					)
-						? currentQuestion.answerOptions.filter(
-								(option) => option !== _value
-							)
-						: [...currentQuestion.answerOptions, _value as string];
 
+				if (currentQuestion) {
 					return prevData.map((q) =>
 						q.userQuestionId === question.userQuestionId
-							? { ...q, answerOptions: newOptions }
+							? { ...q, answerOptions: value as string[] }
 							: q
 					);
 				}
 
 				return [
 					...prevData,
-					{ ...question, answerOptions: [_value as string] },
+					{ ...question, answerOptions: value as string[] },
 				];
 			});
 		}
@@ -155,18 +147,31 @@ const UserDemographicQuestions: FC<Props> = ({ questions, closeModal }) => {
 					{t('Complete these setup questions')}
 				</p>
 				<form onSubmit={handleSubmit}>
-					{questions.map((question: UserDemographicQuestion) => (
-						<UserDemographicQuestionInput
-							key={question.userQuestionId}
-							question={question}
-							value={''}
-							options={question.options || []}
-							onChange={(value) =>
-								handleQuestionChange(question, value)
-							}
-							required={true}
-						/>
-					))}
+					{questions.map((question: UserDemographicQuestion) => {
+						const currentAnswer = userDemographic.find(
+							(q) => q.userQuestionId === question.userQuestionId
+						);
+						let value: string | string[] = '';
+
+						if (question.type === UserDemographicQuestionType.checkbox) {
+							value = currentAnswer?.answerOptions || [];
+						} else {
+							value = currentAnswer?.answer || '';
+						}
+
+						return (
+							<UserDemographicQuestionInput
+								key={question.userQuestionId}
+								question={question}
+								value={value}
+								options={question.options || []}
+								onChange={(value) =>
+									handleQuestionChange(question, value)
+								}
+								required={true}
+							/>
+						);
+					})}
 					<div className={styles.button}>
 						<Button
 							text={
