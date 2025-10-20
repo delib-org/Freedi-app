@@ -27,7 +27,7 @@ export const StatementContent: React.FC<StatementContentProps> = ({
 	isMassConsensus,
 }) => {
 	const { toSlide, slideInOrOut } = useSlideAndSubStatement(statement?.parentId, statement?.statementId);
-	
+
 	// Apply animation class when navigating between statements
 	const pageClassName = toSlide ? `page ${slideInOrOut}` : 'page';
 
@@ -51,7 +51,11 @@ export const StatementContent: React.FC<StatementContentProps> = ({
 				filter: isSurveyMandatory ? 'blur(3px)' : 'none',
 				pointerEvents: isSurveyMandatory ? 'none' : 'auto',
 				opacity: isSurveyMandatory ? 0.5 : 1,
-				transition: 'all 0.3s ease'
+				transition: 'all 0.3s ease',
+				display: 'flex',
+				flexDirection: 'column',
+				height: '100%',
+				overflow: 'hidden'
 			}}>
 				<StatementHeader
 					statement={statement}

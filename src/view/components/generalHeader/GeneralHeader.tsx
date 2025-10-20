@@ -6,7 +6,7 @@ const GeneralHeader = () => {
 	const { t, dir } = useUserConfig();
 
 	return (
-		<div className={`page__header app-header ${styles.myHeader}`}>
+		<div className={`page__header app-header app-header--sticky ${styles.myHeader}`}>
 			<div className="app-header-wrapper">
 				{dir === 'rtl' ? (
 					<>

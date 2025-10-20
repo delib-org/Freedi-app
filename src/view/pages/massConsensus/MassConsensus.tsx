@@ -75,19 +75,21 @@ const MassConsensus = () => {
 	return (
 		<ExplanationProvider>
 			<HeaderProvider>
-				<HeaderMassConsensus />
-				<Accessibility />
-				<div className={styles.massConsensus} style={{ direction: dir }}>
-					<div className={styles.massConsensus__wrapper}>
-						<ErrorBoundary
-							FallbackComponent={MassConsensusErrorFallback}
-							onError={(error) => {
-								console.error('MassConsensus ErrorBoundary caught:', error);
-							}}
-						>
-							<Outlet />
-						</ErrorBoundary>
-					</div>
+				<div className={styles.massConsensusPage}>
+					<HeaderMassConsensus />
+					<Accessibility />
+					<main className={styles.massConsensusMain} style={{ direction: dir }}>
+						<div className={styles.massConsensusMain__wrapper}>
+							<ErrorBoundary
+								FallbackComponent={MassConsensusErrorFallback}
+								onError={(error) => {
+									console.error('MassConsensus ErrorBoundary caught:', error);
+								}}
+							>
+								<Outlet />
+							</ErrorBoundary>
+						</div>
+					</main>
 				</div>
 			</HeaderProvider>
 		</ExplanationProvider>

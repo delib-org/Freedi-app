@@ -38,7 +38,7 @@ const HeaderMassConsensus = ({ showMySuggestions = true }: Props) => {
     const shouldShowMySuggestions = showMySuggestions && doesUserHaveSuggestions;
 
     return (
-        <div className={`app-header app-header--shadow ${styles.headerMC}`} style={{ direction: dir }}>
+        <div className={`app-header app-header--sticky app-header--shadow ${styles.headerMC}`} style={{ direction: dir }}>
             <div className={`app-header-wrapper ${styles.headerMC__wrapper}`}>
                 {previousStage && (
                     <Link
