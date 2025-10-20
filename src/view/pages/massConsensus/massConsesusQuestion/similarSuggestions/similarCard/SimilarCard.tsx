@@ -23,7 +23,7 @@ const SimilarCard: React.FC<SimilarCardProps> = ({ statement, isUserStatement, s
 
     return (
         <div
-            className={`${styles.card} ${selected ? styles.selected : ''}`}
+            className={`${styles["similar-card"]} ${selected ? styles.selected : ''}`}
             onClick={handleClick}
         >
             <p>{text}</p>
