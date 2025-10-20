@@ -8,12 +8,17 @@ import { MassConsensusPageUrls, MassConsensusStage } from 'delib-npm';
 import { useSelector } from 'react-redux';
 import { useLocation, useParams } from 'react-router';
 
-interface Props {
-    stages: MassConsensusStage[];
-    currentStage: MassConsensusPageUrls;
-}
+import { useAuthentication } from '@/controllers/hooks/useAuthentication';
+import { massConsensusStagesSelector } from '@/redux/massConsensus/massConsensusSlice';
+import {
+    selectUserDemographicByStatementId,
+    selectUserDemographicQuestionsByStatementId,
+} from '@/redux/userDemographic/userDemographicSlice';
+import { MassConsensusPageUrls, MassConsensusStage } from 'delib-npm';
+import { useSelector } from 'react-redux';
+import { useLocation, useParams } from 'react-router';
 
-export function useMassConsensusStages(): Props {
+export function useMassConsensusStages(): [MassConsensusStage[], MassConsensusPageUrls] {
     const { statementId } = useParams<{ statementId: string }>();
     const location = useLocation();
     const { user } = useAuthentication();
@@ -51,26 +56,15 @@ export function useMassConsensusStages(): Props {
         (currentPage as MassConsensusPageUrls) ||
         MassConsensusPageUrls.introduction;
 
-    try {
-        return { stages, currentStage };
-    } catch (error) {
-        console.error('Error in useMassConsensusStages:', error);
-
-        return {
-            stages: [],
-            currentStage: MassConsensusPageUrls.introduction,
-        };
-    }
+    return [stages, currentStage];
 }
 
-export function getStageNavigation(
-    stages: MassConsensusStage[],
-    currentStage: MassConsensusPageUrls = MassConsensusPageUrls.introduction
-): {
+export function useStageNavigation(): {
     nextStage: MassConsensusPageUrls | undefined;
     previousStage: MassConsensusPageUrls | undefined;
     currentStage: MassConsensusPageUrls;
 } {
+    const [stages, currentStage] = useMassConsensusStages();
     const currentStageIndex = getCurrentStageIndex(stages, currentStage);
 
     const nextStageIndex =
