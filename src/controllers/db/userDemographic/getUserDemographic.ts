@@ -1,6 +1,6 @@
 import { collection, query, where, getDocs, onSnapshot } from 'firebase/firestore';
 import { FireStore } from '../config';
-import { Collections, UserDemographicQuestion, UserDemographicQuestionSchema, UserDemographic, User } from 'delib-npm';
+import { Collections, UserDemographicQuestion, UserDemographicQuestionSchema, User } from 'delib-npm';
 import { parse } from 'valibot';
 import { store } from '@/redux/store';
 import { deleteUserDemographic, deleteUserDemographicQuestion, setUserDemographic, setUserDemographicQuestion, setUserDemographicQuestions } from '@/redux/userDemographic/userDemographicSlice';
@@ -193,7 +193,8 @@ export async function getUserDemographicResponses(statementId: string): Promise<
 		const userResponsesMap = new Map<string, MemberReviewData>();
 
 		responsesSnapshot.forEach((doc) => {
-			const response = doc.data() as UserDemographic;
+			const responseData = doc.data();
+            const response = responseData as UserDemographicQuestion;
 
 			if (!userResponsesMap.has(response.userId)) {
 				// Get the validation status for this user, default to 'pending' if not found
@@ -202,12 +203,12 @@ export async function getUserDemographicResponses(statementId: string): Promise<
 				// Initialize user data
 				userResponsesMap.set(response.userId, {
 					userId: response.userId,
-					user: response.user || {
+					user: responseData.user || {
 						uid: response.userId,
 						displayName: 'Anonymous',
 					} as User,
 					responses: [],
-					joinedAt: response.createdAt,
+					joinedAt: responseData.createdAt,
 					flags: [],
 					status: validationStatus?.status || 'pending'
 				});
@@ -223,7 +224,7 @@ export async function getUserDemographicResponses(statementId: string): Promise<
 					questionId: response.userQuestionId,
 					question: question.question,
 					answer: response.answer || response.answerOptions || '',
-					answeredAt: response.createdAt
+					answeredAt: responseData.createdAt
 				});
 			}
 		});

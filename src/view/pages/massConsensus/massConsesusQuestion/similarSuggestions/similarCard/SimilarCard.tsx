@@ -1,29 +1,34 @@
-import { GeneratedStatement, Statement } from 'delib-npm';
-
-import { FC } from 'react';
+import React from 'react';
+import { Statement } from 'delib-npm';
 import styles from './SimilarCard.module.scss';
 
-interface Props {
-	statement: Statement | GeneratedStatement;
-	isUserStatement?: boolean;
-	selected?: boolean;
-	handleSelect?: (id: string) => void;
+interface SimilarCardProps {
+    statement: Statement;
+    isUserStatement: boolean;
+    selected: boolean;
+    handleSelect: (id: string) => void;
 }
 
-const SimilarCard: FC<Props> = ({
-	statement,
-	isUserStatement,
-	selected,
-	handleSelect
-}) => {
-	return (
-		<button
-			onClick={() => handleSelect(statement.statementId || statement.statement)}
-			className={`${styles['similar-card']} ${isUserStatement ? styles['similar-card--userStatement'] : ''} ${selected ? styles['similar-card--selected'] : ''}`}
-		>
-			{statement.statement}
-		</button>
-	);
+const SimilarCard: React.FC<SimilarCardProps> = ({ statement, isUserStatement, selected, handleSelect }) => {
+    const { statement: text, statementId } = statement;
+
+    const handleClick = () => {
+        if (isUserStatement) {
+            handleSelect(text);
+        }
+        else {
+            handleSelect(statementId!);
+        }
+    };
+
+    return (
+        <div
+            className={`${styles.card} ${selected ? styles.selected : ''}`}
+            onClick={handleClick}
+        >
+            <p>{text}</p>
+        </div>
+    );
 };
 
 export default SimilarCard;

@@ -32,7 +32,7 @@ export function useEvaluationTracking(statementIds: string[]) {
     const newEvaluations: string[] = [];
 
     evaluatedStatements.forEach(evaluation => {
-      const evaluationKey = `${evaluation.statementId}-${evaluation.userId || 'anonymous'}`;
+      const evaluationKey = `${evaluation.statementId}-${evaluation.evaluatorId || 'anonymous'}`;
       if (!countedEvaluations.current.has(evaluationKey)) {
         countedEvaluations.current.add(evaluationKey);
         newEvaluations.push(evaluation.statementId);

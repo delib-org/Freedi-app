@@ -3,14 +3,14 @@ import { useNavigate, useParams } from "react-router";
 import { useSelector } from "react-redux";
 import { selectSimilarStatements } from "@/redux/massConsensus/massConsensusSlice";
 import SimilarCard from "./similarCard/SimilarCard";
-import { Statement, GeneratedStatement } from "delib-npm";
+import { Statement } from "delib-npm";
 import styles from "./SimilarSuggestions.module.scss";
 import { useSimilarSuggestions } from "./SimilarSuggestionVM";
 import { useUserConfig } from "@/controllers/hooks/useUserConfig";
 import Loader from "@/view/components/loaders/Loader";
 import {
-  getStepNavigation,
-  useMassConsensusSteps,
+  getStageNavigation,
+  useMassConsensusStages,
 } from "../../MassConsensusVM";
 import TitleMassConsensus from "../../TitleMassConsensus/TitleMassConsensus";
 
@@ -20,11 +20,11 @@ const SimilarSuggestions = ({ stage, setIfButtonEnabled, onSuggestionSaved }) =>
   const similarSuggestions = useSelector(selectSimilarStatements);
   const { t } = useUserConfig();
   const [loadingStatements, setLoadingStatements] = useState(true);
-  const { steps, currentStep } = useMassConsensusSteps();
-  const { nextStep } = getStepNavigation(steps, currentStep);
+  const { stages, currentStage } = useMassConsensusStages();
+  const { nextStage } = getStageNavigation(stages, currentStage);
   const { handleSetSuggestionToDB, isLoading } = useSimilarSuggestions(
     statementId,
-    nextStep
+    nextStage
   );
 
   const existingSuggestions = similarSuggestions.filter((s) => s.statementId);
@@ -39,11 +39,11 @@ const SimilarSuggestions = ({ stage, setIfButtonEnabled, onSuggestionSaved }) =>
 
   useEffect(() => {
     if (similarSuggestions.length === 0) {
-      navigate(`/mass-consensus/${statementId}/${nextStep}`);
+      navigate(`/mass-consensus/${statementId}/${nextStage}`);
     } else {
       setLoadingStatements(false);
     }
-  }, [similarSuggestions, navigate, statementId]);
+  }, [similarSuggestions, navigate, statementId, nextStage]);
 
   useEffect(() => {
     if (stage === "submitting") {
@@ -56,7 +56,7 @@ const SimilarSuggestions = ({ stage, setIfButtonEnabled, onSuggestionSaved }) =>
             onSuggestionSaved();
           } else {
             // If no callback, navigate directly
-            navigate(`/mass-consensus/${statementId}/${nextStep}`);
+            navigate(`/mass-consensus/${statementId}/${nextStage}`);
           }
         }
       })();
@@ -75,7 +75,7 @@ const SimilarSuggestions = ({ stage, setIfButtonEnabled, onSuggestionSaved }) =>
             onSuggestionSaved();
           } else {
             // If no callback, navigate directly
-            navigate(`/mass-consensus/${statementId}/${nextStep}`);
+            navigate(`/mass-consensus/${statementId}/${nextStage}`);
           }
         }
       })();
@@ -86,7 +86,7 @@ const SimilarSuggestions = ({ stage, setIfButtonEnabled, onSuggestionSaved }) =>
     setIfButtonEnabled(selected !== null);
   }, [selected]);
   
-  function getSelectedSuggestion(selected: string | null) {
+  function getSelectedSuggestion(selected: string | null): Statement | null {
     const selectedSuggestion = similarSuggestions.find((s) => s.statementId === selected);
     if (!selectedSuggestion) return newSuggestion;
 
@@ -116,7 +116,7 @@ const SimilarSuggestions = ({ stage, setIfButtonEnabled, onSuggestionSaved }) =>
           <Loader />
         ) : (
           existingSuggestions.map(
-            (suggestion: Statement | GeneratedStatement, index: number) => (
+            (suggestion: Statement, index: number) => (
               <SimilarCard
                 key={`statement: ${index} ${suggestion.statement}`}
                 statement={suggestion}

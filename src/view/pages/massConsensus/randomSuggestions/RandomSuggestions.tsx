@@ -99,8 +99,7 @@ const RandomSuggestions = () => {
             <p>
               {cyclesCompleted === 1
                 ? t("You've seen all available suggestions! Starting a new cycle...")
-                : t("Starting cycle {{count}} of suggestions", { count: cyclesCompleted + 1 })}
-            </p>
+                : t("Starting cycle " + (cyclesCompleted + 1) + " of suggestions")}            </p>
             <button
               className="btn btn--text"
               onClick={handleDismissRecycleMessage}
