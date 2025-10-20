@@ -1,9 +1,10 @@
 import { collection, query, where, getDocs, onSnapshot } from 'firebase/firestore';
 import { FireStore } from '../config';
-import { Collections, UserDemographicQuestion, UserDemographicQuestionSchema } from 'delib-npm';
+import { Collections, UserDemographicQuestion, UserDemographicQuestionSchema, UserDemographic, User } from 'delib-npm';
 import { parse } from 'valibot';
 import { store } from '@/redux/store';
 import { deleteUserDemographic, deleteUserDemographicQuestion, setUserDemographic, setUserDemographicQuestion, setUserDemographicQuestions } from '@/redux/userDemographic/userDemographicSlice';
+import { MemberReviewData } from '@/view/pages/statement/components/settings/components/memberValidation/MemberValidation';
 
 /**
  * Fetches user demographic questions from the database for a specific statement ID
@@ -132,5 +133,108 @@ export function listenToUserDemographicAnswers(statementId: string) {
 
 		return () => { return; } // Return a no-op function in case of error
 
+	}
+}
+
+/**
+ * Fetches all user demographic responses for admin review
+ * This function is used by admins to review and validate member responses
+ * @param statementId - The ID of the statement to fetch responses for
+ * @returns Promise<MemberReviewData[]> - Array of member review data
+ */
+export async function getUserDemographicResponses(statementId: string): Promise<MemberReviewData[]> {
+	try {
+		if (!statementId) {
+			throw new Error('Statement ID is required to get user demographic responses');
+		}
+
+		// Get all questions for this statement
+		const questionsRef = collection(FireStore, Collections.userDemographicQuestions);
+		const questionsQuery = query(questionsRef, where('statementId', '==', statementId));
+		const questionsSnapshot = await getDocs(questionsQuery);
+
+		const questions: UserDemographicQuestion[] = [];
+		questionsSnapshot.forEach((doc) => {
+			try {
+				const data = doc.data();
+				const validatedQuestion = parse(UserDemographicQuestionSchema, data);
+				questions.push(validatedQuestion);
+			} catch (error) {
+				console.error('Error validating question:', error);
+			}
+		});
+
+		// Get all user responses for this statement
+		const responsesRef = collection(FireStore, Collections.usersData);
+		const responsesQuery = query(responsesRef, where('statementId', '==', statementId));
+		const responsesSnapshot = await getDocs(responsesQuery);
+
+		console.info('Fetching member responses:', {
+			statementId,
+			questionsCount: questions.length,
+			responsesCount: responsesSnapshot.size
+		});
+
+		// Group responses by user
+		const userResponsesMap = new Map<string, MemberReviewData>();
+
+		responsesSnapshot.forEach((doc) => {
+			const response = doc.data() as UserDemographic;
+
+			console.info('Processing response:', {
+				docId: doc.id,
+				userId: response.userId,
+				userQuestionId: response.userQuestionId,
+				answer: response.answer,
+				answerOptions: response.answerOptions
+			});
+
+			if (!userResponsesMap.has(response.userId)) {
+				// Initialize user data
+				userResponsesMap.set(response.userId, {
+					userId: response.userId,
+					user: response.user || {
+						uid: response.userId,
+						displayName: 'Anonymous',
+					} as User,
+					responses: [],
+					joinedAt: response.createdAt,
+					flags: [],
+					status: 'pending'
+				});
+			}
+
+			const userData = userResponsesMap.get(response.userId)!;
+
+			// Find the matching question
+			const question = questions.find(q => q.userQuestionId === response.userQuestionId);
+
+			if (question) {
+				userData.responses.push({
+					questionId: response.userQuestionId,
+					question: question.question,
+					answer: response.answer || response.answerOptions || '',
+					answeredAt: response.createdAt
+				});
+			} else {
+				console.error('No matching question found for response:', response.userQuestionId);
+			}
+		});
+
+		// Convert map to array
+		const memberReviews = Array.from(userResponsesMap.values());
+
+		console.info('Final member reviews:', {
+			totalMembers: memberReviews.length,
+			members: memberReviews
+		});
+
+		// TODO: Load member validation status from database
+		// For now, all members are pending
+
+		return memberReviews;
+	} catch (error) {
+		console.error('Error fetching user demographic responses for review:', error);
+		return [];
 	}
 }

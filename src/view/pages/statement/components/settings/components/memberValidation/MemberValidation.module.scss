@@ -1,0 +1,56 @@
+.memberValidation {
+	padding: 1rem;
+	max-width: 1200px;
+	margin: 0 auto;
+
+	h2 {
+		color: var(--text-title);
+		margin-bottom: 1.5rem;
+		font-size: 1.5rem;
+	}
+
+	.filterTabs {
+		display: flex;
+		gap: 0.5rem;
+		margin-bottom: 1.5rem;
+		border-bottom: 2px solid var(--border-color);
+		padding-bottom: 0.5rem;
+
+		button {
+			padding: 0.5rem 1rem;
+			background: transparent;
+			border: none;
+			color: var(--text-body);
+			cursor: pointer;
+			font-size: 0.9rem;
+			transition: all 0.2s;
+			position: relative;
+
+			&:hover {
+				color: var(--text-title);
+			}
+
+			&.active {
+				color: var(--btn-primary-default);
+				font-weight: 600;
+
+				&::after {
+					content: '';
+					position: absolute;
+					bottom: -0.5rem;
+					left: 0;
+					right: 0;
+					height: 2px;
+					background: var(--btn-primary-default);
+				}
+			}
+		}
+	}
+
+	.loading {
+		text-align: center;
+		padding: 3rem;
+		color: var(--text-body);
+		font-size: 1rem;
+	}
+}
