@@ -91,16 +91,6 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 		const isNewStatement = !statementId;
 		const isQuestion = statement.statementType === StatementType.question;
 
-		// Debug logging to check rendering conditions
-		console.info('Statement Settings Debug:', {
-			statementId,
-			isNewStatement,
-			isQuestion,
-			statementType: statement.statementType,
-			StatementTypeQuestion: StatementType.question,
-			shouldShowMemberValidation: !isNewStatement && isQuestion
-		});
-
 		const statementSettingsProps = {
 			statement,
 			setStatementToEdit,

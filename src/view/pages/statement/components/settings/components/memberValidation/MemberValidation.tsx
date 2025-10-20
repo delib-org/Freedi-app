@@ -32,12 +32,6 @@ const MemberValidation: FC<Props> = ({ statement }) => {
 	const [loading, setLoading] = useState(false);
 	const [filter, setFilter] = useState<'all' | 'pending' | 'flagged' | 'approved' | 'banned'>('all');
 
-	console.info('MemberValidation Component Rendered:', {
-		statementId: statement.statementId,
-		statementType: statement.statementType,
-		statementTitle: statement.statement
-	});
-
 	useEffect(() => {
 		if (showModal) {
 			loadMemberResponses();
@@ -47,12 +41,7 @@ const MemberValidation: FC<Props> = ({ statement }) => {
 	const loadMemberResponses = async () => {
 		setLoading(true);
 		try {
-			console.info('Loading member responses for statement:', statement.statementId);
 			const responses = await getUserDemographicResponses(statement.statementId);
-			console.info('Received member responses:', {
-				count: responses.length,
-				responses
-			});
 			// Transform responses into MemberReviewData format
 			// This will be implemented with actual data fetching
 			setMembers(responses as MemberReviewData[]);

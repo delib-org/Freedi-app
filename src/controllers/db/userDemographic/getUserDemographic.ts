@@ -169,25 +169,11 @@ export async function getUserDemographicResponses(statementId: string): Promise<
 		const responsesQuery = query(responsesRef, where('statementId', '==', statementId));
 		const responsesSnapshot = await getDocs(responsesQuery);
 
-		console.info('Fetching member responses:', {
-			statementId,
-			questionsCount: questions.length,
-			responsesCount: responsesSnapshot.size
-		});
-
 		// Group responses by user
 		const userResponsesMap = new Map<string, MemberReviewData>();
 
 		responsesSnapshot.forEach((doc) => {
 			const response = doc.data() as UserDemographic;
-
-			console.info('Processing response:', {
-				docId: doc.id,
-				userId: response.userId,
-				userQuestionId: response.userQuestionId,
-				answer: response.answer,
-				answerOptions: response.answerOptions
-			});
 
 			if (!userResponsesMap.has(response.userId)) {
 				// Initialize user data
@@ -216,18 +202,11 @@ export async function getUserDemographicResponses(statementId: string): Promise<
 					answer: response.answer || response.answerOptions || '',
 					answeredAt: response.createdAt
 				});
-			} else {
-				console.error('No matching question found for response:', response.userQuestionId);
 			}
 		});
 
 		// Convert map to array
 		const memberReviews = Array.from(userResponsesMap.values());
-
-		console.info('Final member reviews:', {
-			totalMembers: memberReviews.length,
-			members: memberReviews
-		});
 
 		// TODO: Load member validation status from database
 		// For now, all members are pending

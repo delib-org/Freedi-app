@@ -4,6 +4,7 @@ import MemberReviewCard from '../memberReviewCard/MemberReviewCard';
 import BanConfirmationModal from '../banConfirmationModal/BanConfirmationModal';
 import styles from './MemberReviewList.module.scss';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { banMember } from '@/controllers/db/membership/banMember';
 
 interface Props {
 	members: MemberReviewData[];
@@ -50,10 +51,27 @@ const MemberReviewList: FC<Props> = ({ members, onMemberAction, statementId }) =
 		setBanModalData({ member });
 	};
 
-	const handleBanConfirm = (banType: 'soft' | 'hard', reason: string) => {
+	const handleBanConfirm = async (banType: 'soft' | 'hard', reason: string, removeVotes: boolean) => {
 		if (banModalData) {
-			onMemberAction(banModalData.member.userId, 'ban', reason);
-			setBanModalData(null);
+			try {
+				// Call the actual ban function
+				await banMember(
+					statementId,
+					banModalData.member.userId,
+					reason || 'No reason provided',
+					removeVotes
+				);
+
+				// Update the UI state
+				onMemberAction(banModalData.member.userId, 'ban', reason);
+				setBanModalData(null);
+
+				// Show success feedback
+				console.info('Member banned successfully');
+			} catch (error) {
+				console.error('Error banning member:', error);
+				// TODO: Show error notification to user
+			}
 		}
 	};
 
@@ -117,6 +135,7 @@ const MemberReviewList: FC<Props> = ({ members, onMemberAction, statementId }) =
 			{banModalData && (
 				<BanConfirmationModal
 					member={banModalData.member}
+					statementId={statementId}
 					onConfirm={handleBanConfirm}
 					onCancel={() => setBanModalData(null)}
 				/>

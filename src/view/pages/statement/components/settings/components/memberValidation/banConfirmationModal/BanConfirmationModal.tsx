@@ -5,7 +5,8 @@ import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 
 interface Props {
 	member: MemberReviewData;
-	onConfirm: (banType: 'soft' | 'hard', reason: string) => void;
+	statementId: string;
+	onConfirm: (banType: 'soft' | 'hard', reason: string, removeVotes: boolean) => void;
 	onCancel: () => void;
 }
 
@@ -16,9 +17,8 @@ const BanConfirmationModal: FC<Props> = ({ member, onConfirm, onCancel }) => {
 	const [removeVotes, setRemoveVotes] = useState(true); // Default to removing votes
 
 	const handleConfirm = () => {
-		// TODO: When implementing the backend, include removeVotes flag
-		// This will trigger removal of all votes/evaluations from this user
-		onConfirm(banType, reason);
+		// Pass the removeVotes flag to the parent component
+		onConfirm(banType, reason, removeVotes);
 	};
 
 	return (
