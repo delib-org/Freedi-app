@@ -42,7 +42,6 @@ export const SolutionsSection: FC<SolutionsSectionProps> = ({
             <SuggestionCard
               key={suggestion.statementId}
               statement={suggestion}
-              siblingStatements={statement.results}
               parentStatement={statement}
               positionAbsolute={false}
             />

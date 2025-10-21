@@ -1,12 +1,15 @@
-import { FC } from 'react';
+import { FC, useState, useEffect } from 'react';
+import React from 'react';
 import { StatementSettingsProps } from '../../settingsTypeHelpers';
 import { getStatementSettings } from '../../statementSettingsCont';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import Checkbox from '@/view/components/checkbox/Checkbox';
 import styles from './AdvancedSettings.module.scss';
 import { setStatementSettingToDB } from '@/controllers/db/statementSettings/setStatementSettings';
-import { StatementSettings, StatementType } from 'delib-npm';
+import { StatementSettings, StatementType, evaluationType } from 'delib-npm';
 import { toggleStatementHide } from '@/controllers/db/statements/setStatements';
+import EvaluationTypeSelector from './EvaluationTypeSelector/EvaluationTypeSelector';
+import { setMaxVotesPerUser } from '@/controllers/db/evaluation/setEvaluation';
 
 const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 	const { t } = useUserConfig();
@@ -17,7 +20,7 @@ const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 
 	const {
 		inVotingGetOnlyResults = false,
-		enhancedEvaluation = false,
+		evaluationType: currentEvaluationType,
 		showEvaluation = false,
 		enableAddVotingOption = false,
 		enableAddEvaluationOption = false,
@@ -31,9 +34,31 @@ const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 		enableAIImprovement = false
 	} = statementSettings;
 
+	// Determine the initial evaluation type with backward compatibility
+	const getInitialEvaluationType = (): evaluationType => {
+		if (currentEvaluationType) {
+			return currentEvaluationType;
+		}
+		// Backward compatibility with enhancedEvaluation boolean
+
+		return evaluationType.range;
+	};
+
+	// Use local state to immediately reflect changes
+	const [selectedEvaluationType, setSelectedEvaluationType] = useState<evaluationType>(getInitialEvaluationType());
+	const [isVoteLimitEnabled, setIsVoteLimitEnabled] = useState<boolean>(!!statement.evaluationSettings?.axVotesPerUser);
+	const [maxVotes, setMaxVotes] = useState<number>(statement.evaluationSettings?.axVotesPerUser || 3);
+
+	// Update local state when statement changes (e.g., on page reload)
+	useEffect(() => {
+		setSelectedEvaluationType(getInitialEvaluationType());
+		setIsVoteLimitEnabled(!!statement.evaluationSettings?.axVotesPerUser);
+		setMaxVotes(statement.evaluationSettings?.axVotesPerUser || 3);
+	}, [statement.statementId, currentEvaluationType, statement.evaluationSettings?.axVotesPerUser]);
+
 	function handleAdvancedSettingChange(
 		property: keyof StatementSettings,
-		newValue: boolean
+		newValue: boolean | string
 	) {
 		console.info(`Setting ${property} to ${newValue}`);
 		setStatementSettingToDB({
@@ -42,6 +67,25 @@ const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 			newValue,
 			settingsSection: 'statementSettings',
 		});
+	}
+
+	function handleVoteLimitToggle(enabled: boolean) {
+		setIsVoteLimitEnabled(enabled);
+		if (enabled) {
+			setMaxVotesPerUser(statement.statementId, maxVotes);
+		} else {
+			setMaxVotesPerUser(statement.statementId, undefined);
+		}
+	}
+
+	function handleMaxVotesChange(e: React.ChangeEvent<HTMLInputElement>) {
+		const value = Number(e.target.value);
+		if (value >= 1 && value <= 100) {
+			setMaxVotes(value);
+			if (isVoteLimitEnabled) {
+				setMaxVotesPerUser(statement.statementId, value);
+			}
+		}
 	}
 
 	return (
@@ -122,13 +166,46 @@ const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 					</span>
 				</div>
 				<div className={styles.categoryContent}>
-					<Checkbox
-						label={'Enhanced Evaluation'}
-						isChecked={enhancedEvaluation}
-						onChange={(checked) =>
-							handleAdvancedSettingChange('enhancedEvaluation', checked)
-						}
-					/>
+					<div className={styles.evaluationTypeSection}>
+						<label className={styles.sectionLabel}>
+							{t('Evaluation Type')}
+						</label>
+						<EvaluationTypeSelector
+							currentType={selectedEvaluationType}
+							onChange={(type) => {
+								setSelectedEvaluationType(type);
+								handleAdvancedSettingChange('evaluationType', type);
+							}}
+						/>
+					</div>
+
+					{/* Vote Limiting for Single-Like Evaluation */}
+					{selectedEvaluationType === evaluationType.singleLike && (
+						<div className={styles.voteLimitSection}>
+							<Checkbox
+								label={t('Limit votes per user')}
+								isChecked={isVoteLimitEnabled}
+								onChange={handleVoteLimitToggle}
+							/>
+							{isVoteLimitEnabled && (
+								<div className={styles.voteLimitInput}>
+									<label>{t('Maximum votes per user')}</label>
+									<input
+										type="number"
+										min="1"
+										max="100"
+										value={maxVotes}
+										onChange={handleMaxVotesChange}
+										className={styles.numberInput}
+									/>
+									<span className={styles.helperText}>
+										{t('Users can vote for up to')} {maxVotes} {t('options')}
+									</span>
+								</div>
+							)}
+						</div>
+					)}
+
 					<Checkbox
 						label={'Show Evaluations results'}
 						isChecked={showEvaluation}

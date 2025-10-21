@@ -11,6 +11,7 @@ import creatorReducer from './creator/creatorSlice';
 import SubscriptionsReducer from './subscriptions/subscriptionsSlice';
 import userDemographicReducer from './userDemographic/userDemographicSlice';
 import newStatementReducer from './statements/newStatementSlice';
+import { massConsensusApi } from './massConsensus/massConsensusApi';
 
 export const store = configureStore({
 	reducer: {
@@ -25,11 +26,13 @@ export const store = configureStore({
 		creator: creatorReducer,
 		subscriptions: SubscriptionsReducer.reducer,
 		userDemographic: userDemographicReducer,
-		newStatement: newStatementReducer
+		newStatement: newStatementReducer,
+        [massConsensusApi.reducerPath]: massConsensusApi.reducer,
 	},
+	middleware: (getDefaultMiddleware) =>
+		getDefaultMiddleware().concat(massConsensusApi.middleware),
 });
 
 // Infer the `RootState` and `AppDispatch` types from the store itself
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;
-

@@ -57,7 +57,7 @@ interface CalcDiff {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function newEvaluation(event: any): Promise<void> {
 	try {
-		
+
 		const evaluation = event.data.data() as Evaluation;
 		const { statementId, parentId } = evaluation;
 		const userId = evaluation.evaluator?.uid;
@@ -70,20 +70,18 @@ export async function newEvaluation(event: any): Promise<void> {
 			throw new Error('User ID is required');
 		}
 
-		const [statement] = await Promise.all([
-			updateStatementEvaluation({
-				statementId,
-				evaluationDiff: evaluation.evaluation,
-				addEvaluator: 1,
-				action: ActionTypes.new,
-				newEvaluation: evaluation.evaluation,
-				oldEvaluation: 0,
-				userId,
-				parentId
-			}),
-			//calculate the number of total evaluators (N)
-			updateParentStatementWithTotalEvaluators(evaluation)
-		]);
+		// Note: The evaluator count is now properly tracked in updateStatementEvaluation
+		// which handles the logic for when to actually increment the evaluator count
+		const statement = await updateStatementEvaluation({
+			statementId,
+			evaluationDiff: evaluation.evaluation,
+			addEvaluator: 0, // Will be calculated in updateStatementEvaluation
+			action: ActionTypes.new,
+			newEvaluation: evaluation.evaluation,
+			oldEvaluation: 0,
+			userId,
+			parentId
+		});
 
 		if (!statement) {
 			throw new Error('Failed to update statement');
@@ -117,7 +115,7 @@ export async function deleteEvaluation(event: any): Promise<void> {
 		const statement = await updateStatementEvaluation({
 			statementId,
 			evaluationDiff: -1 * evaluationValue,
-			addEvaluator: -1,
+			addEvaluator: 0, // Will be calculated in updateStatementEvaluation
 			action: ActionTypes.delete,
 			newEvaluation: 0,
 			oldEvaluation: evaluationValue,
@@ -186,7 +184,7 @@ export async function updateEvaluation(event: any): Promise<void> {
 // ============================================================================
 
 async function updateStatementEvaluation(props: UpdateStatementEvaluationProps): Promise<Statement | undefined> {
-	const { statementId, evaluationDiff, addEvaluator = 0, action, newEvaluation, oldEvaluation } = props;
+	const { statementId, evaluationDiff, action, newEvaluation, oldEvaluation } = props;
 
 	try {
 		if (!statementId) {
@@ -197,10 +195,24 @@ async function updateStatementEvaluation(props: UpdateStatementEvaluationProps):
 
 		// Calculate pro/con differences
 		const proConDiff = calcDiffEvaluation({ newEvaluation, oldEvaluation, action });
-		// const userEvaluationValue = proConDiff.proDiff - proConDiff.conDiff;
+
+		// Determine if we should actually add an evaluator
+		// Only count as a new evaluator if:
+		// 1. It's a truly new evaluation (action = new AND newEvaluation is not 0)
+		// 2. It's transitioning from no evaluation (0) to having an evaluation
+		let actualAddEvaluator = 0;
+		if (action === ActionTypes.new && newEvaluation !== 0) {
+			actualAddEvaluator = 1;
+		} else if (action === ActionTypes.update && oldEvaluation === 0 && newEvaluation !== 0) {
+			actualAddEvaluator = 1;
+		} else if (action === ActionTypes.update && oldEvaluation !== 0 && newEvaluation === 0) {
+			actualAddEvaluator = -1;
+		} else if (action === ActionTypes.delete && oldEvaluation !== 0) {
+			actualAddEvaluator = -1;
+		}
 
 		// Update statement evaluation
-		await updateStatementInTransaction(statementId, evaluationDiff, addEvaluator, proConDiff);
+		await updateStatementInTransaction(statementId, evaluationDiff, actualAddEvaluator, proConDiff);
 
 		// Return updated statement
 		const statementRef = db.collection(Collections.statements).doc(statementId);
@@ -337,10 +349,10 @@ async function updateStatementInTransaction(
 function calculateEvaluation(statement: Statement, proConDiff: CalcDiff, evaluationDiff: number, addEvaluator: number) {
 	const evaluation = statement.evaluation || {
 		agreement: statement.consensus || 0,
-		sumEvaluations: evaluationDiff,
-		numberOfEvaluators: statement.totalEvaluators || 1,
-		sumPro: proConDiff.proDiff,
-		sumCon: proConDiff.conDiff,
+		sumEvaluations: 0,
+		numberOfEvaluators: statement.totalEvaluators || 0,
+		sumPro: 0,
+		sumCon: 0,
 		averageEvaluation: 0,
 		evaluationRandomNumber: Math.random(),
 		viewed: 0,
@@ -353,6 +365,12 @@ function calculateEvaluation(statement: Statement, proConDiff: CalcDiff, evaluat
 		evaluation.sumCon = (evaluation.sumCon || 0) + proConDiff.conDiff;
 		// Ensure averageEvaluation exists even for old data
 		evaluation.averageEvaluation = evaluation.averageEvaluation ?? 0;
+	} else {
+		// For new evaluations, apply the diffs and evaluator count
+		evaluation.sumEvaluations = evaluationDiff;
+		evaluation.numberOfEvaluators = addEvaluator;
+		evaluation.sumPro = proConDiff.proDiff;
+		evaluation.sumCon = proConDiff.conDiff;
 	}
 
 	// Calculate average evaluation
@@ -456,50 +474,10 @@ function getSnapshotFromEvent(event: FirestoreEvent<Change<DocumentSnapshot> | D
 	return event.data;
 }
 
-async function updateParentStatementWithTotalEvaluators(evaluation:Evaluation): Promise<void> {
-	try {
-
-		//check if this is the first time the user has evaluted in this parent Id
-		const isFirstEvaluation = await checkFirstEvaluation(evaluation);
-		
-		if (isFirstEvaluation) {
-			//update the parent statement with the new total evaluators
-			await updateParentWithNewEvaluatorCount(evaluation);
-		}
-	} catch (error) {
-		logger.error('Error updating parent statement total evaluators:', error);
-	}
-
-	async function checkFirstEvaluation(evaluation: Evaluation): Promise<boolean> {
-		try {
-			const userEvaluationsDB = await db.collection(Collections.evaluations).where("parentId", "==", evaluation.parentId).where("evaluatorId", "==", evaluation.evaluatorId).get();
-			if (userEvaluationsDB.size === 1) {
-				return true;
-			}
-
-			return false;
-		} catch (error) {
-			logger.error('Error checking first evaluation:', error);
-
-			return false;
-		}
-	}
-
-	async function updateParentWithNewEvaluatorCount(evaluation: Evaluation): Promise<void> {
-		try {
-			if (!evaluation.parentId) {
-				throw new Error('Parent ID is required');
-			}
-
-			const parentRef = db.collection(Collections.statements).doc(evaluation.parentId);
-			await parentRef.update({
-				'evaluation.asParentTotalEvaluators': FieldValue.increment(1),
-			});
-		} catch (error) {
-			logger.error('Error updating parent statement with new evaluator count:', error);
-		}
-	}
-}
+// Note: Removed updateParentStatementWithTotalEvaluators function
+// The evaluator counting logic is now handled properly through the
+// addEvaluator parameter in updateStatementEvaluation which tracks
+// actual new evaluations vs updates to existing evaluations
 
 async function updateParentStatementWithChosenOptions(parentId: string | undefined): Promise<void> {
 	if (!parentId) return;
@@ -518,8 +496,68 @@ async function updateParentStatementWithChosenOptions(parentId: string | undefin
 		if (chosenOptions) {
 			await updateParentWithResults(parentId, chosenOptions);
 		}
+
+		// Update parent's total evaluator count
+		await updateParentTotalEvaluators(parentId);
 	} catch (error) {
 		logger.error('Error updating parent statement:', error);
+	}
+}
+
+async function updateParentTotalEvaluators(parentId: string): Promise<void> {
+	try {
+		// Get all evaluations for child options
+		const evaluationsSnapshot = await db
+			.collection(Collections.evaluations)
+			.where('parentId', '==', parentId)
+			.get();
+
+		// Count unique evaluators (users who have evaluated at least one option)
+		const uniqueEvaluators = new Set<string>();
+		evaluationsSnapshot.forEach(doc => {
+			const evaluation = doc.data() as Evaluation;
+			// Only count evaluators with non-zero evaluations
+			if (evaluation.evaluator?.uid && evaluation.evaluation !== 0) {
+				uniqueEvaluators.add(evaluation.evaluator.uid);
+			}
+		});
+
+		const totalUniqueEvaluators = uniqueEvaluators.size;
+
+		// Update parent statement with the total count
+		const parentRef = db.collection(Collections.statements).doc(parentId);
+		const parentDoc = await parentRef.get();
+
+		if (!parentDoc.exists) {
+			logger.warn(`Parent statement ${parentId} not found`);
+			
+return;
+		}
+
+		const parentData = parentDoc.data() as Statement;
+		const parentEvaluation = parentData.evaluation || {
+			agreement: 0,
+			sumEvaluations: 0,
+			numberOfEvaluators: 0,
+			sumPro: 0,
+			sumCon: 0,
+			averageEvaluation: 0,
+			evaluationRandomNumber: Math.random(),
+			viewed: 0,
+		};
+
+		// Update asParentTotalEvaluators field
+		parentEvaluation.asParentTotalEvaluators = totalUniqueEvaluators;
+
+		await parentRef.update({
+			evaluation: parentEvaluation,
+			totalEvaluators: totalUniqueEvaluators, // Also update the legacy field for compatibility
+			lastUpdate: Date.now()
+		});
+
+		logger.info(`Updated parent ${parentId} with ${totalUniqueEvaluators} total unique evaluators`);
+	} catch (error) {
+		logger.error('Error updating parent total evaluators:', error);
 	}
 }
 

@@ -2,126 +2,57 @@ import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import styles from './MassConsensusProcessSettings.module.scss';
 import ProcessSettingNative from './ProcessSetting/ProcessSettingNative';
 import { useEffect } from 'react';
-import {
-	LoginType,
-	MassConsensusPageUrls,
-	MassConsensusProcess,
-} from 'delib-npm';
+import { MassConsensusPageUrls, MassConsensusProcess } from 'delib-npm';
 import { defaultMassConsensusProcess } from '@/model/massConsensus/massConsensusModel';
 import { useSelector } from 'react-redux';
 import { massConsensusProcessSelector } from '@/redux/massConsensus/massConsensusSlice';
 import { useParams } from 'react-router';
 import { listenToMassConsensusProcess } from '@/controllers/db/massConsensus/getMassConsensus';
-import CheckBoxCheckIcon from '@/assets/icons/checkboxCheckedIcon.svg?react';
-import CheckBoxIcon from '@/assets/icons/checkboxEmptyIcon.svg?react';
-import { updateMassConsensusLoginTypeProcess } from '@/controllers/db/massConsensus/setMassConsensus';
 import { selectUserDemographicQuestionsByStatementId } from '@/redux/userDemographic/userDemographicSlice';
 
 const MassConsensusProcessSettings = () => {
-	const { t } = useUserConfig();
-	const { statementId } = useParams();
+    const { t } = useUserConfig();
+    const { statementId } = useParams<{ statementId: string }>();
 
-	const defaultMassConsensusProcesses: MassConsensusProcess = {
-		statementId: '',
-		loginTypes: {
-			default: {
-				steps: defaultMassConsensusProcess,
-				processName: t('Default Process for all users'),
-			},
-		},
-	};
+    const defaultMassConsensusProcesses: MassConsensusProcess = {
+        statementId: statementId || '',
+        version: '1.0',
+        createdAt: Date.now(),
+        createdBy: 'system',
+        stages: defaultMassConsensusProcess,
+    };
 
-	const processList =
-		useSelector(massConsensusProcessSelector(statementId)) ||
-		defaultMassConsensusProcesses;
-	const showGoogle =
-		processList.loginTypes?.google &&
-		processList.loginTypes.google.steps?.length > 0;
-	const showAnonymous =
-		processList.loginTypes?.anonymous &&
-		processList.loginTypes?.anonymous.steps?.length > 0;
+    const processList =
+        useSelector(massConsensusProcessSelector(statementId!)) ||
+        defaultMassConsensusProcesses;
 
-	if (!processList.loginTypes?.default) {
-		processList.loginTypes.default = {
-			steps: defaultMassConsensusProcess,
-			processName: t('Default Process for all users'),
-		};
-	}
-	const userDemographicQuestions = useSelector(
-		selectUserDemographicQuestionsByStatementId(statementId || '')
-	);
+    const userDemographicQuestions = useSelector(
+        selectUserDemographicQuestionsByStatementId(statementId || '')
+    );
 
-	const { steps: rawStepsDefault, processName: processNameDefault } =
-		processList.loginTypes.default;
+    const stages = processList.stages.filter(stage => 
+        userDemographicQuestions.length > 0 || stage.url !== MassConsensusPageUrls.userDemographics
+    );
 
-	const stepsDefault =
-		userDemographicQuestions.length > 0
-			? rawStepsDefault
-			: rawStepsDefault.filter(
-					(step) => step.screen !== MassConsensusPageUrls.userDemographics
-				);
-	const { steps: stepsGoogle, processName: processNameGoogle } =
-		processList.loginTypes?.google || {};
-	const { steps: stepsAnonymous, processName: processNameAnonymous } =
-		processList.loginTypes?.anonymous || {};
+    useEffect(() => {
+        if (!statementId) return;
+        const unsubscribe = listenToMassConsensusProcess(statementId);
 
-	useEffect(() => {
-		const unsubscribe = listenToMassConsensusProcess(statementId);
+        return () => {
+            unsubscribe();
+        };
+    }, [statementId]);
 
-		return () => {
-			unsubscribe();
-		};
-	}, []);
+    return (
+        <div className={styles.mcProcess}>
+            <h3>{t('Mass Consensus Process Settings')}</h3>
 
-	function handleSetCheckbox(loginType: LoginType) {
-		updateMassConsensusLoginTypeProcess(statementId, loginType);
-	}
-
-	return (
-		<div className={styles.mcProcess}>
-			<h3>{t('Mass Consensus Process Settings')}</h3>
-
-			<ProcessSettingNative
-				steps={stepsDefault}
-				processName={processNameDefault}
-				loginType={LoginType.default}
-			/>
-			<div
-				className={styles.checkboxContainer}
-				onClick={() => handleSetCheckbox(LoginType.google)}
-			>
-				{showGoogle && (
-					<CheckBoxCheckIcon className={styles.checkbox} />
-				)}
-				{!showGoogle && <CheckBoxIcon className={styles.checkbox} />}
-				<span>{t('Google')}</span>
-			</div>
-			{processList.loginTypes.google && (
-				<ProcessSettingNative
-					steps={stepsGoogle}
-					processName={processNameGoogle}
-					loginType={LoginType.google}
-				/>
-			)}
-			<div
-				className={styles.checkboxContainer}
-				onClick={() => handleSetCheckbox(LoginType.anonymous)}
-			>
-				{showAnonymous && (
-					<CheckBoxCheckIcon className={styles.checkbox} />
-				)}
-				{!showAnonymous && <CheckBoxIcon className={styles.checkbox} />}
-				<span>{t('Anonymous')}</span>
-			</div>
-			{processList.loginTypes.anonymous && (
-				<ProcessSettingNative
-					steps={stepsAnonymous}
-					processName={processNameAnonymous}
-					loginType={LoginType.anonymous}
-				/>
-			)}
-		</div>
-	);
+            <ProcessSettingNative
+                stages={stages}
+                processName={t('Default Process for all users')}
+            />
+        </div>
+    );
 };
 
 export default MassConsensusProcessSettings;

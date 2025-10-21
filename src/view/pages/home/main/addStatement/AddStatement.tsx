@@ -12,7 +12,7 @@ export const AddStatement = () => {
 
 	return (
 		<main className={`page slide-out ${styles.addStatement}`}>
-			<div className={`page__header app-header ${dir} ${styles.header}`}>
+			<div className={`page__header app-header app-header--sticky ${dir} ${styles.header}`}>
 				<div className="app-header-wrapper">
 					{dir === 'rtl' ? (
 						<>

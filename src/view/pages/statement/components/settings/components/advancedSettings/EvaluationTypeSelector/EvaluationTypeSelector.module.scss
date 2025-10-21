@@ -1,0 +1,316 @@
+.evaluationTypeSelector {
+	width: 100%;
+	margin: 1rem 0;
+}
+
+.selectorGrid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+	gap: 1rem;
+
+	@media (min-width: 768px) {
+		grid-template-columns: repeat(3, 1fr);
+	}
+
+	@media (max-width: 768px) {
+		grid-template-columns: 1fr;
+		gap: 0.75rem;
+	}
+}
+
+.optionCard {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+	padding: 1.25rem;
+	background: white;
+	border: 2px solid var(--border-primary);
+	border-radius: 12px;
+	cursor: pointer;
+	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+	min-height: 180px;
+	text-align: left;
+	overflow: hidden;
+
+	&:hover:not(.selected) {
+		border-color: var(--btn-primary-hover);
+		background: rgba(var(--btn-primary), 0.03);
+		transform: translateY(-2px);
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+
+		.optionTitle {
+			color: var(--btn-primary);
+		}
+
+		.previewContainer {
+			transform: scale(1.05);
+		}
+	}
+
+	&.selected {
+		background: linear-gradient(135deg, rgba(var(--btn-primary), 0.08) 0%, rgba(var(--btn-primary), 0.04) 100%);
+		border-color: var(--btn-primary-selected);
+		box-shadow: 0 2px 8px rgba(var(--btn-primary), 0.15);
+
+		.optionTitle {
+			color: var(--btn-primary-selected);
+			font-weight: 600;
+		}
+
+		.optionDescription {
+			color: var(--text-body);
+		}
+	}
+
+	&:focus {
+		outline: 2px solid var(--btn-primary);
+		outline-offset: 2px;
+	}
+
+	&:active:not(.selected) {
+		transform: translateY(0);
+		transition: transform 0.1s;
+	}
+}
+
+.cardHeader {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+.optionTitle {
+	font-size: 1.1rem;
+	font-weight: 500;
+	color: var(--text-title);
+	margin: 0;
+	transition: color 0.3s ease;
+}
+
+.selectedBadge {
+	display: inline-flex;
+	align-items: center;
+	padding: 0.25rem 0.75rem;
+	background: var(--btn-primary);
+	color: white;
+	border-radius: 12px;
+	font-size: 0.75rem;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+	animation: fadeIn 0.3s ease;
+}
+
+.optionDescription {
+	font-size: 0.9rem;
+	color: var(--text-caption);
+	line-height: 1.4;
+	margin: 0;
+}
+
+.previewContainer {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	padding: 1rem 0;
+	margin-top: auto;
+	min-height: 60px;
+	transition: transform 0.3s ease;
+}
+
+// Like/Dislike preview
+.previewIcons {
+	display: flex;
+	gap: 1.5rem;
+	align-items: center;
+}
+
+.thumbPreview {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 48px;
+	height: 48px;
+	border-radius: 12px;
+	background: var(--surface-background);
+	transition: all 0.3s ease;
+
+	&:hover {
+		background: var(--btn-white-hover);
+		transform: scale(1.1);
+	}
+
+	svg {
+		width: 28px;
+		height: 28px;
+		color: var(--icons-disabled);
+		transition: color 0.3s ease;
+	}
+
+	&:first-child svg {
+		color: var(--emoji-sad);
+	}
+
+	&:last-child svg,
+	&.singleThumb svg {
+		color: var(--emoji-smiley);
+	}
+}
+
+.thumbIcon {
+	&.active {
+		color: var(--icons-blue-dark);
+	}
+}
+
+// Range preview
+.previewEmojis {
+	display: flex;
+	gap: 0.5rem;
+	align-items: center;
+
+	@media (max-width: 350px) {
+		gap: 0.25rem;
+	}
+}
+
+.emojiPreview {
+	width: 32px;
+	height: 32px;
+	padding: 4px;
+	border-radius: 8px;
+	background: rgba(0, 0, 0, 0.05);
+	transition: all 0.3s ease;
+	cursor: pointer;
+
+	&:hover {
+		transform: scale(1.15) translateY(-2px);
+		background: rgba(0, 0, 0, 0.08);
+	}
+
+	&.active {
+		background: var(--emoji-neutral);
+		transform: scale(1.1);
+		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+	}
+
+	@media (max-width: 350px) {
+		width: 28px;
+		height: 28px;
+		padding: 3px;
+	}
+}
+
+// Single Like preview
+.previewSingle {
+	display: flex;
+	align-items: center;
+	gap: 1rem;
+}
+
+.singleThumb {
+	background: var(--btn-primary-hover);
+
+	svg {
+		color: white !important;
+	}
+}
+
+.likeCount {
+	font-size: 1.5rem;
+	font-weight: 600;
+	color: var(--btn-primary);
+	animation: countUp 0.5s ease;
+}
+
+// Selected indicator
+.selectedIndicator {
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	height: 4px;
+	background: linear-gradient(90deg, var(--btn-primary) 0%, var(--btn-primary-selected) 100%);
+	animation: slideIn 0.3s ease;
+}
+
+// Animations
+@keyframes fadeIn {
+	from {
+		opacity: 0;
+		transform: translateX(10px);
+	}
+	to {
+		opacity: 1;
+		transform: translateX(0);
+	}
+}
+
+@keyframes slideIn {
+	from {
+		transform: scaleX(0);
+	}
+	to {
+		transform: scaleX(1);
+	}
+}
+
+@keyframes countUp {
+	from {
+		transform: scale(0.8);
+		opacity: 0;
+	}
+	to {
+		transform: scale(1);
+		opacity: 1;
+	}
+}
+
+// Accessibility
+@media (prefers-reduced-motion: reduce) {
+	.optionCard,
+	.previewContainer,
+	.thumbPreview,
+	.emojiPreview,
+	.selectedBadge,
+	.selectedIndicator {
+		transition: none !important;
+		animation: none !important;
+	}
+}
+
+// Dark mode support
+@media (prefers-color-scheme: dark) {
+	.optionCard {
+		background: #1a1a1a;
+		border-color: rgba(255, 255, 255, 0.1);
+
+		&:hover:not(.selected) {
+			background: rgba(95, 136, 229, 0.1);
+			border-color: rgba(95, 136, 229, 0.5);
+		}
+
+		&.selected {
+			background: linear-gradient(135deg, rgba(95, 136, 229, 0.2) 0%, rgba(95, 136, 229, 0.1) 100%);
+			border-color: var(--btn-primary);
+		}
+	}
+
+	.thumbPreview {
+		background: rgba(255, 255, 255, 0.05);
+
+		&:hover {
+			background: rgba(255, 255, 255, 0.1);
+		}
+	}
+
+	.emojiPreview {
+		background: rgba(255, 255, 255, 0.05);
+
+		&:hover {
+			background: rgba(255, 255, 255, 0.1);
+		}
+	}
+}

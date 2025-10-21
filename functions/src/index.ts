@@ -19,8 +19,8 @@ import { Collections, functionConfig } from "delib-npm";
 import {
   deleteEvaluation,
   newEvaluation,
-  updateChosenOptions,
   updateEvaluation,
+  updateChosenOptions,
 } from "./fn_evaluation";
 import { updateResultsSettings } from "./fn_results";
 import {
@@ -31,14 +31,11 @@ import { updateVote } from "./fn_vote";
 import {
   onNewSubscription,
   onStatementDeletionDeleteSubscriptions,
-  setAdminsToNewStatement,
   updateSubscriptionsSimpleStatement
 } from "./fn_subscriptions";
-import { 
-  updateParentOnChildCreate,
+import {
   updateParentOnChildUpdate,
-  updateParentOnChildDelete,
-  updateParentStatementOnChildChange 
+  updateParentOnChildDelete
 } from "./fn_statement_updates";
 import {
   getRandomStatements,
@@ -58,16 +55,15 @@ import { updateStatementWithViews } from "./fn_views";
 import {
   getInitialMCData,
   addMassConsensusMember,
-  addOptionToMassConsensus,
   removeOptionFromMassConsensus,
   updateOptionInMassConsensus,
   addMemberToMassConsensus,
 } from "./fn_massConsensus";
 import { addFeedback } from "./fn_feedback";
-import { updateInAppNotifications } from "./fn_notifications";
 import { getCluster, recoverLastSnapshot } from "./fn_clusters";
 import { checkProfanity } from "./fn_profanityChecker";
 import { handleImproveSuggestion } from "./fn_improveSuggestion";
+import { onStatementCreated } from "./fn_statementCreation";
 
 // Initialize Firebase only if not already initialized
 if (!getApps().length) {
@@ -191,38 +187,70 @@ exports.updateAverageEvaluation = wrapHttpFunction(updateAverageEvaluation);
 // 	'updateNumberOfNewSubStatements'
 // );
 
-exports.updateInAppNotifications = createFirestoreFunction(
+// ============================================
+// CONSOLIDATED STATEMENT CREATION FUNCTION
+// ============================================
+// This single function replaces multiple individual functions to reduce triggers
+exports.onStatementCreated = createFirestoreFunction(
   `/${Collections.statements}/{statementId}`,
   onDocumentCreated,
-  updateInAppNotifications,
-  "updateInAppNotifications"
+  onStatementCreated,
+  "onStatementCreated"
 );
 
-exports.setAdminsToNewStatement = createFirestoreFunction(
-  `/${Collections.statements}/{statementId}`,
-  onDocumentCreated,
-  setAdminsToNewStatement,
-  "setAdminsToNewStatement"
-);
-exports.updateChosenOptionsOnOptionCreate = createFirestoreFunction(
-  `/${Collections.statements}/{statementId}`,
-  onDocumentCreated,
-  updateChosenOptions,
-  "updateChosenOptionsOnOptionCreate"
-);
+// ============================================
+// DEPRECATED: Individual statement creation functions
+// Commented out in favor of consolidated onStatementCreated
+// ============================================
+// exports.updateInAppNotifications = createFirestoreFunction(
+//   `/${Collections.statements}/{statementId}`,
+//   onDocumentCreated,
+//   updateInAppNotifications,
+//   "updateInAppNotifications"
+// );
+
+// exports.setAdminsToNewStatement = createFirestoreFunction(
+//   `/${Collections.statements}/{statementId}`,
+//   onDocumentCreated,
+//   setAdminsToNewStatement,
+//   "setAdminsToNewStatement"
+// );
+
+// exports.updateChosenOptionsOnOptionCreate = createFirestoreFunction(
+//   `/${Collections.statements}/{statementId}`,
+//   onDocumentCreated,
+//   updateChosenOptions,
+//   "updateChosenOptionsOnOptionCreate"
+// );
+
+// exports.addOptionToMassConsensus = createFirestoreFunction(
+//   `/${Collections.statements}/{statementId}`,
+//   onDocumentCreated,
+//   addOptionToMassConsensus,
+//   "addOptionToMassConsensus"
+// );
+
+// exports.updateParentOnChildCreate - Now handled in onStatementCreated
+
+// ============================================
+// ACTIVE FUNCTIONS
+// ============================================
 exports.updateStatementWithViews = createFirestoreFunction(
   `/${Collections.statementViews}/{viewId}`,
   onDocumentCreated,
   updateStatementWithViews,
   "updateStatementWithViews"
 );
+
 exports.onStatementDeletion = createFirestoreFunction(
   `/${Collections.statements}/{statementId}`,
   onDocumentDeleted,
   onStatementDeletionDeleteSubscriptions,
   `onStatementDeletionDeleteSubscriptions`
 );
+
 // Subscription functions
+// This function handles waiting role subscriptions and needs to track both creates and updates
 exports.updateNumberOfMembers = createFirestoreFunction(
   `/${Collections.statementsSubscribe}/{subscriptionId}`,
   onDocumentWritten,
@@ -232,23 +260,17 @@ exports.updateNumberOfMembers = createFirestoreFunction(
 
 // New v2 functions to update statements and subscriptions efficiently
 // These are v2 functions, so we export them directly without the wrapper
-exports.updateParentOnChildCreate = updateParentOnChildCreate;
+// Note: updateParentOnChildCreate is now handled in onStatementCreated
+// exports.updateParentOnChildCreate = updateParentOnChildCreate;
 exports.updateParentOnChildUpdate = updateParentOnChildUpdate;
 exports.updateParentOnChildDelete = updateParentOnChildDelete;
 exports.updateSubscriptionsSimpleStatement = updateSubscriptionsSimpleStatement;
 
-// DEPRECATED: Keeping for backward compatibility until Firebase updates
-exports.updateParentStatementOnChildChange = updateParentStatementOnChildChange;
+// DEPRECATED: This function is no longer needed
+// exports.updateParentStatementOnChildChange = updateParentStatementOnChildChange;
 
-// Mass Consensus functions
-
-//update number of options in mass consensus
-exports.addOptionToMassConsensus = createFirestoreFunction(
-  `/${Collections.statements}/{statementId}`,
-  onDocumentCreated,
-  addOptionToMassConsensus,
-  "addOptionToMassConsensus"
-);
+// Mass Consensus functions (for updates and deletes only)
+// Create is now handled in onStatementCreated
 exports.removeOptionFromMassConsensus = createFirestoreFunction(
   `/${Collections.statements}/{statementId}`,
   onDocumentDeleted,
@@ -304,6 +326,14 @@ exports.updateResultsSettings = createFirestoreFunction(
   onDocumentWritten,
   updateResultsSettings,
   "updateResultsSettings"
+);
+
+// This handles evaluation-based chosen option updates (different from statement creation)
+exports.onSetChoseBySettings = createFirestoreFunction(
+  `/${Collections.choseBy}/{statementId}`,
+  onDocumentWritten,
+  updateChosenOptions,
+  "onSetChoseBySettings"
 );
 
 // Voting and approval functions

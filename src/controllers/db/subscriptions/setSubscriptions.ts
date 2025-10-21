@@ -12,7 +12,6 @@ import {
 	Creator
 } from 'delib-npm';
 import { parse } from 'valibot';
-import { notificationService } from '@/services/notificationService';
 
 interface SetSubscriptionProps {
 	statement: Statement,

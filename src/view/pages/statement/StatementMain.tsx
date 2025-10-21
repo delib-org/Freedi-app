@@ -167,7 +167,7 @@ const StatementMain: React.FC = () => {
 
 	return (
 		<StatementErrorBoundary>
-			<div ref={elementRef}>
+			<div ref={elementRef} style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
 				{renderContent()}
 			</div>
 		</StatementErrorBoundary>

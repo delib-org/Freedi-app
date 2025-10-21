@@ -13,7 +13,7 @@ import {
 import ShareButton from '@/view/components/buttons/shareButton/ShareButton';
 import { useEffect, useState } from 'react';
 import { listenToSubStatements } from '@/controllers/db/statements/listenToStatements';
-import { Feedback, StatementType } from 'delib-npm';
+import { Feedback, StatementType, Statement } from 'delib-npm';
 import OptionMCCard from './components/deleteCard/OptionMCCard';
 import DeletionLadyImage from '@/assets/images/rejectLady.png';
 import Button, { ButtonType } from '@/view/components/buttons/button/Button';
@@ -23,6 +23,8 @@ import { toggleStatementAnchored } from '@/controllers/db/statements/setStatemen
 import { listenToFeedback } from '@/controllers/db/feedback/listenToFeedback';
 import FeedbackCard from './components/feedbackCard/FeedbackCard';
 import { listenerManager } from '@/controllers/utils/ListenerManager';
+
+type TabType = 'overview' | 'top-options' | 'low-options' | 'feedback';
 
 const MassConsensusAdmin = () => {
 	const { statementId } = useParams<{ statementId: string }>();
@@ -40,6 +42,8 @@ const MassConsensusAdmin = () => {
 	const bottomOptions = sortedBottomOptions.slice(0, 5);
 	const [isSearching, setIsSearching] = useState(false);
 	const [feedbackList, setFeedbackList] = useState<Feedback[]>([]);
+	const [activeTab, setActiveTab] = useState<TabType>('overview');
+	const [isLoading, setIsLoading] = useState(true);
 
 	const { t } = useUserConfig();
 	const navigate = useNavigate();
@@ -59,7 +63,11 @@ const MassConsensusAdmin = () => {
 	};
 	useEffect(() => {
 		if (!statement) return;
+		setIsLoading(true);
 		const unsubscribe = listenToSubStatements(statementId, 'bottom');
+
+		// Simulate loading complete after data fetch
+		setTimeout(() => setIsLoading(false), 500);
 
 		return () => unsubscribe();
 	}, [statementId]);
@@ -78,6 +86,175 @@ const MassConsensusAdmin = () => {
 		};
 	}, [statementId]);
 
+	const renderConsensusBar = (option: Statement, totalEvaluators: number) => {
+		const percentage = totalEvaluators > 0 ? ((option.evaluation?.numberOfEvaluators || 0) / totalEvaluators) * 100 : 0;
+		const consensusLevel = option.consensus;
+
+		let barColor = 'var(--neutral)';
+		if (consensusLevel > 0.5) barColor = 'var(--agree)';
+		else if (consensusLevel < -0.5) barColor = 'var(--disagree)';
+
+		return (
+			<div className={styles.consensusVisualization}>
+				<div className={styles.consensusBar}>
+					<div
+						className={styles.consensusProgress}
+						style={{
+							width: `${percentage}%`,
+							backgroundColor: barColor
+						}}
+					/>
+				</div>
+				<div className={styles.consensusStats}>
+					<span className={styles.consensusValue}>{consensusLevel.toFixed(2)}</span>
+					<span className={styles.evaluatorCount}>
+						{option.evaluation?.numberOfEvaluators || 0}/{totalEvaluators}
+					</span>
+				</div>
+			</div>
+		);
+	};
+
+	const renderOverviewTab = () => (
+		<div className={styles.tabContent}>
+			<div className={styles.dashboardMetrics}>
+				<div className={styles.metricCard}>
+					<img src={HandsImage} alt='Total participants' />
+					<div className={styles.metricContent}>
+						<span className={styles.metricLabel}>{t('Total participants')}</span>
+						<span className={styles.metricValue}>{statement?.massMembers || 0}</span>
+					</div>
+				</div>
+
+				<div className={styles.metricCard}>
+					<img src={BulbImage} alt='Total Suggestions' />
+					<div className={styles.metricContent}>
+						<span className={styles.metricLabel}>{t('Total suggestions')}</span>
+						<span className={styles.metricValue}>{statement?.suggestions || 0}</span>
+					</div>
+				</div>
+
+				{isAnchoredSamplingEnabled && (
+					<div className={styles.metricCard}>
+						<AnchorIcon />
+						<div className={styles.metricContent}>
+							<span className={styles.metricLabel}>{t('Anchored options')}</span>
+							<span className={styles.metricValue}>
+								{anchoredOptions.length}/{maxAnchoredAllowed}
+							</span>
+						</div>
+					</div>
+				)}
+			</div>
+
+			<div className={styles.quickOverview}>
+				<div className={styles.overviewSection}>
+					<h4>{t('Top Performing Options')}</h4>
+					{topOptions.slice(0, 3).map((option) => (
+						<div key={option.statementId} className={styles.quickOptionCard}>
+							<p className={styles.optionText}>{option.statement}</p>
+							{renderConsensusBar(option, statement?.evaluation?.asParentTotalEvaluators || 0)}
+						</div>
+					))}
+				</div>
+
+				<div className={styles.overviewSection}>
+					<h4>{t('Recent Activity')}</h4>
+					<p className={styles.activityText}>
+						{options.length} {t('total options')} • {feedbackList.length} {t('feedback items')}
+					</p>
+				</div>
+			</div>
+		</div>
+	);
+
+	const renderTopOptionsTab = () => (
+		<div className={styles.tabContent}>
+			<SearchBar setIsSearching={setIsSearching} options={topOptions} />
+			<div className={styles.optionsList}>
+				{!isSearching && topOptions.length === 0 ? (
+					<div className={styles.emptyState}>
+						<img src={BulbImage} alt='No options' className={styles.emptyStateImage} />
+						<p className={styles.emptyStateText}>{t('No options yet')}</p>
+						<p className={styles.emptyStateSubtext}>{t('Options will appear here as they are added')}</p>
+					</div>
+				) : (
+					!isSearching && topOptions.map((option) => (
+						<OptionMCCard
+							key={option.statementId}
+							statement={option}
+							isDelete={false}
+							onAnchorToggle={handleAnchorToggle}
+						/>
+					))
+				)}
+			</div>
+		</div>
+	);
+
+	const renderLowOptionsTab = () => (
+		<div className={styles.tabContent}>
+			<div className={styles.deletionHeader}>
+				<img
+					className={styles.deletionImage}
+					src={DeletionLadyImage}
+					alt='Options for deletion'
+				/>
+				<p className={styles.deletionDescription}>
+					{t('These options have the lowest consensus and may be candidates for removal')}
+				</p>
+			</div>
+			<div className={styles.optionsList}>
+				{bottomOptions.length === 0 ? (
+					<div className={styles.emptyState}>
+						<p className={styles.emptyStateText}>{t('No low-performing options')}</p>
+					</div>
+				) : (
+					bottomOptions.map((option) => (
+						<OptionMCCard
+							key={option.statementId}
+							statement={option}
+							isDelete={true}
+						/>
+					))
+				)}
+			</div>
+		</div>
+	);
+
+	const renderFeedbackTab = () => (
+		<div className={styles.tabContent}>
+			{feedbackList.length === 0 ? (
+				<div className={styles.emptyState}>
+					<p className={styles.emptyStateText}>{t('No feedback received yet')}</p>
+					<p className={styles.emptyStateSubtext}>{t('User feedback will appear here')}</p>
+				</div>
+			) : (
+				<div className={styles.feedbackList}>
+					{feedbackList.map((feedback) => (
+						<FeedbackCard
+							key={feedback.feedbackId}
+							feedback={feedback}
+						/>
+					))}
+				</div>
+			)}
+		</div>
+	);
+
+	if (isLoading) {
+		return (
+			<div className={styles.massConsensusAdmin}>
+				<div className='wrapper'>
+					<div className={styles.loadingState}>
+						<div className={styles.spinner}></div>
+						<p>{t('Loading consensus data...')}</p>
+					</div>
+				</div>
+			</div>
+		);
+	}
+
 	return (
 		<div className={styles.massConsensusAdmin}>
 			<div className='wrapper'>
@@ -85,7 +262,7 @@ const MassConsensusAdmin = () => {
 					<Button
 						buttonType={ButtonType.PRIMARY}
 						className={styles.centered}
-						text='To Statement'
+						text={t('To Statement')}
 						onClick={() =>
 							navigate(`/mass-consensus/${statementId}`, {
 								replace: true,
@@ -101,100 +278,55 @@ const MassConsensusAdmin = () => {
 						</div>
 					</Link>
 				</div>
+
 				<Description />
-				<div className={`btns ${styles.share}`}>
+
+				<div className={styles.shareSection}>
 					<ShareButton
-						title='Share this statement'
-						text='Share'
+						title={t('Share this statement')}
+						text={t('Share')}
 						url={`/mass-consensus/${statementId}`}
 					/>
 				</div>
 
-				<h3>{t('Results Summary')}</h3>
-				<div className={styles.summary}>
-					<div>
-						<img src={HandsImage} alt='Total participants' />
-						<div>
-							{t('Total participants')}:{' '}
-							{statement.massMembers || 0}
-						</div>
-					</div>
-
-					<div>
-						<img src={BulbImage} alt='Total Suggestions' />
-						<div>
-							{t('Total suggestions')}:{' '}
-							{statement.suggestions || 0}
-						</div>
-					</div>
-
-					{isAnchoredSamplingEnabled && (
-						<div>
-							<AnchorIcon />
-							<div>
-								{t('Anchored options')}: {anchoredOptions.length}
-								<br />
-								<small>({maxAnchoredAllowed} {t('per evaluation')})</small>
-							</div>
-						</div>
-					)}
+				<div className={styles.tabNavigation}>
+					<button
+						className={`${styles.tab} ${activeTab === 'overview' ? styles.tabActive : ''}`}
+						onClick={() => setActiveTab('overview')}
+					>
+						<span className={styles.tabIcon}>📊</span>
+						<span className={styles.tabText}>{t('Overview')}</span>
+					</button>
+					<button
+						className={`${styles.tab} ${activeTab === 'top-options' ? styles.tabActive : ''}`}
+						onClick={() => setActiveTab('top-options')}
+					>
+						<span className={styles.tabIcon}>⭐</span>
+						<span className={styles.tabText}>{t('Top Options')}</span>
+						<span className={styles.tabBadge}>{topOptions.length}</span>
+					</button>
+					<button
+						className={`${styles.tab} ${activeTab === 'low-options' ? styles.tabActive : ''}`}
+						onClick={() => setActiveTab('low-options')}
+					>
+						<span className={styles.tabIcon}>⚠️</span>
+						<span className={styles.tabText}>{t('Low Options')}</span>
+						<span className={styles.tabBadge}>{bottomOptions.length}</span>
+					</button>
+					<button
+						className={`${styles.tab} ${activeTab === 'feedback' ? styles.tabActive : ''}`}
+						onClick={() => setActiveTab('feedback')}
+					>
+						<span className={styles.tabIcon}>💬</span>
+						<span className={styles.tabText}>{t('Feedback')}</span>
+						<span className={styles.tabBadge}>{feedbackList.length}</span>
+					</button>
 				</div>
-				<details className={styles.allOptionsAccordion}>
-					<summary>
-						{t('All Options')} ({options.length})
-					</summary>
-					<SearchBar
-						setIsSearching={setIsSearching}
-						options={topOptions}
-					/>
-					<div className={styles.allOptionsContent}>
-						{!isSearching &&
-							options.map((option) => (
-								<OptionMCCard
-									key={option.statementId}
-									statement={option}
-									isDelete={false}
-									onAnchorToggle={handleAnchorToggle}
-								/>
-							))}
-					</div>
-				</details>
-				<h3>{t('Top options')}</h3>
 
-				{topOptions?.map((option) => (
-					<OptionMCCard
-						key={option.statementId}
-						statement={option}
-						isDelete={false}
-						onAnchorToggle={handleAnchorToggle}
-					/>
-				))}
-
-				<h3>{t('Options for deletion')}</h3>
-				<img
-					className={styles.deletionImage}
-					src={DeletionLadyImage}
-					alt='Options for deletion'
-				/>
-				{bottomOptions?.map((option) => (
-					<OptionMCCard
-						key={option.statementId}
-						statement={option}
-						isDelete={true}
-					/>
-				))}
-
-				<h3>{t('User Feedback')} ({feedbackList.length})</h3>
-				{feedbackList.length === 0 ? (
-					<p className={styles.noFeedback}>{t('No feedback received yet')}</p>
-				) : (
-					feedbackList.map((feedback) => (
-						<FeedbackCard
-							key={feedback.feedbackId}
-							feedback={feedback}
-						/>
-					))
-				)}
+				{activeTab === 'overview' && renderOverviewTab()}
+				{activeTab === 'top-options' && renderTopOptionsTab()}
+				{activeTab === 'low-options' && renderLowOptionsTab()}
+				{activeTab === 'feedback' && renderFeedbackTab()}
 			</div>
 		</div>
 	);

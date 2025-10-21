@@ -3,13 +3,12 @@ import React, { FC, useEffect, useRef, useState } from 'react';
 // Third Party
 
 // Redux Store
-import { useParams } from 'react-router';
 import StatementChatMore from '../../../../chat/components/statementChatMore/StatementChatMore';
 import CreateStatementModal from '../../../../createStatementModal/CreateStatementModal';
 import Evaluation from '../../evaluation/Evaluation';
 import SolutionMenu from '../../solutionMenu/SolutionMenu';
 import AddQuestionIcon from '@/assets/icons/addQuestion.svg?react';
-import { updateStatementText } from '@/controllers/db/statements/setStatements';
+import { updateStatementText, updateStatementMainImage } from '@/controllers/db/statements/setStatements';
 import { changeStatementType } from '@/controllers/db/statements/changeStatementType';
 import { useAppDispatch } from '@/controllers/hooks/reduxHooks';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
@@ -30,17 +29,17 @@ import { improveSuggestionWithTimeout } from '@/services/suggestionImprovement';
 import Loader from '@/view/components/loaders/Loader';
 import CommunityBadge from '@/view/components/badges/CommunityBadge';
 import AnchoredBadge from '@/view/components/badges/AnchoredBadge';
+import UploadImage from '@/view/components/uploadImage/UploadImage';
+import StatementImage from './StatementImage';
 
 interface Props {
 	statement: Statement | undefined;
-	siblingStatements?: Statement[];
 	parentStatement?: Statement | undefined;
 	positionAbsolute?: boolean;
 }
 
 const SuggestionCard: FC<Props> = ({
 	parentStatement,
-	siblingStatements,
 	statement,
 	positionAbsolute = true,
 }) => {
@@ -65,9 +64,13 @@ const SuggestionCard: FC<Props> = ({
 	// Use Refs
 	const elementRef = useRef<HTMLDivElement>(null);
 	const textContainerRef = useRef<HTMLDivElement>(null);
+	const fileInputRef = useRef<HTMLInputElement>(null);
+
+	// Early return if statement is not defined
+	if (!statement) return null;
 
 	const hasJoinedServer = statement?.joined?.find(
-		(c) => c.uid === creator?.uid
+		(c) => c?.uid === creator?.uid
 	) ? true : false;
 
 	// Optimistic state for instant UI updates
@@ -91,6 +94,18 @@ const SuggestionCard: FC<Props> = ({
 	const [originalTitle, setOriginalTitle] = useState<string | null>(null);
 	const [originalDescription, setOriginalDescription] = useState<string | null>(null);
 	const [hasBeenImproved, setHasBeenImproved] = useState(false);
+
+	// Image states
+	const imageUrl = statement?.imagesURL?.main ?? "";
+	const [image, setImage] = useState<string>(imageUrl);
+	const [showImageUpload, setShowImageUpload] = useState(false);
+
+	// Real-time listener for image changes
+	useEffect(() => {
+		if (statement?.imagesURL?.main !== undefined) {
+			setImage(statement.imagesURL.main);
+		}
+	}, [statement?.imagesURL?.main]);
 
 	// Removed sortSubStatements call - sorting is handled at parent level in SuggestionCards
 
@@ -233,8 +248,6 @@ const SuggestionCard: FC<Props> = ({
 	const statementAge = new Date().getTime() - statement.createdAt;
 	const hasChildren = parentStatement?.statementSettings?.hasChildren;
 
-	if (!statement) return null;
-
 	function handleRightClick(e: React.MouseEvent) {
 		e.preventDefault();
 		setIsCardMenuOpen(!isCardMenuOpen);
@@ -286,6 +299,21 @@ const SuggestionCard: FC<Props> = ({
 				</div>
 			</div>
 			}
+			{/* Image - Display image at the top of card */}
+			{image && (
+				<StatementImage
+					statement={statement}
+					image={image}
+					setImage={setImage}
+					displayMode="above"
+					onRemove={async () => {
+						setImage('');
+						await updateStatementMainImage(statement, '');
+					}}
+					isAdmin={isAdmin}
+					fileInputRef={fileInputRef}
+				/>
+			)}
 			<div className={styles.main}>
 				<div className={styles.info}>
 					<div className={styles.text}>
@@ -312,7 +340,16 @@ const SuggestionCard: FC<Props> = ({
 						<Link to={`/statement/${statement.statementId}`} className={styles.showMore}>
 							{t('Show more')}
 						</Link>
-						<div className="btns btns--end">
+						<div className={styles.buttonContainer}>
+							{/* Show Add Image button if no image and user is admin of parent statement */}
+							{!image && isAdmin && (
+								<button
+									onClick={() => setShowImageUpload(true)}
+									className="btn btn--small btn--secondary"
+								>
+									{t('Add Image')}
+								</button>
+							)}
 							{/* Show Improve button only if AI improvement is enabled */}
 							{enableAIImprovement && !hasBeenImproved && (
 								<button
@@ -420,6 +457,27 @@ const SuggestionCard: FC<Props> = ({
 				isLoading={isImproving}
 				suggestionTitle={statement.statement}
 			/>
+			{/* Upload area for initial image upload */}
+			{!image && showImageUpload && (
+				<div className={styles.uploadArea}>
+					<UploadImage
+						statement={statement}
+						fileInputRef={fileInputRef}
+						image={image}
+						setImage={(newImage) => {
+							setImage(newImage);
+							setShowImageUpload(false);
+						}}
+						isAdmin={isAdmin}
+					/>
+					<button
+						onClick={() => setShowImageUpload(false)}
+						className={styles.closeUploadBtn}
+					>
+						✕
+					</button>
+				</div>
+			)}
 		</div>
 	);
 };

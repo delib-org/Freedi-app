@@ -28,6 +28,7 @@ import BackToMenuArrow from '@/assets/icons/backToMenuArrow.svg?react';
 import X from '@/assets/icons/x.svg?react';
 import RadioButtonEmptyIcon from '@/assets/icons/radioButtonEmpty.svg?react';
 import DeleteIcon from '@/assets/icons/delete.svg?react';
+import CheckboxEmptyIcon from '@/assets/icons/checkboxEmptyIcon.svg?react';
 //mockData
 
 interface Props {
@@ -51,6 +52,7 @@ const UserDataSetting: FC<Props> = ({ statement }) => {
 	];
 	const [isQuestionRequired, setIsQuestionRequired] = useState(true);
 	const [options, setOptions] = useState<Option[]>(defaultOptions);
+	const [selectedQuestionType, setSelectedQuestionType] = useState<UserDemographicQuestionType>(UserDemographicQuestionType.text);
 	function closeModal() {
 		setShowModal(false);
 	}
@@ -235,61 +237,78 @@ const UserDataSetting: FC<Props> = ({ statement }) => {
 								<select
 									id='questionType'
 									name='questionType'
-									defaultValue={UserDemographicQuestionType.text}
+									value={selectedQuestionType}
+									onChange={(e) => setSelectedQuestionType(e.target.value as UserDemographicQuestionType)}
 								>
+									<option value={UserDemographicQuestionType.text}>
+										📝 {t('Text Input')}
+									</option>
+									<option value={UserDemographicQuestionType.textarea}>
+										📄 {t('Text Area')}
+									</option>
 									<option value={UserDemographicQuestionType.radio}>
-										◉ {t(' Single Choice (Radio)')}
+										◉ {t('Single Choice (Radio)')}
+									</option>
+									<option value={UserDemographicQuestionType.checkbox}>
+										☑️ {t('Multiple Choice (Checkbox)')}
 									</option>
 								</select>
 							</div>
-							<div className={styles.addOptionContainer}>
-								{options.map((option, indx) => (
-									<div className={styles.option} key={indx}>
-										<RadioButtonEmptyIcon />
-										<input
-											name={option.option}
-											placeholder={t('Write Answer here')}
-											required
-											type='text'
-											className={styles.inputAnswer}
-											value={option.option}
-											onChange={(e) =>
-												handleOptionChange(e, indx)
+							{(selectedQuestionType === UserDemographicQuestionType.radio ||
+							  selectedQuestionType === UserDemographicQuestionType.checkbox) && (
+								<div className={styles.addOptionContainer}>
+									{options.map((option, indx) => (
+										<div className={styles.option} key={indx}>
+											{selectedQuestionType === UserDemographicQuestionType.radio ?
+												<RadioButtonEmptyIcon /> :
+												<CheckboxEmptyIcon />
 											}
-										/>
-										<input
-											type='color'
-											className={styles.optionColor}
-											onChange={(e) =>
-												handleColorChange(e, indx)
-											}
-											value={option.color}
-										/>
-										<DeleteIcon
-											color={
-												allowDelete ? 'red' : 'white'
-											}
-											cursor={
-												allowDelete
-													? 'pointer'
-													: 'default'
-											}
-											onClick={() =>
-												allowDelete
-													? deleteOption(indx)
-													: ''
-											}
-										></DeleteIcon>
+											<input
+												name={option.option}
+												placeholder={t('Write Answer here')}
+												required
+												type='text'
+												className={styles.inputAnswer}
+												value={option.option}
+												onChange={(e) =>
+													handleOptionChange(e, indx)
+												}
+											/>
+											<input
+												type='color'
+												className={styles.optionColor}
+												onChange={(e) =>
+													handleColorChange(e, indx)
+												}
+												value={option.color}
+											/>
+											<DeleteIcon
+												color={
+													allowDelete ? 'red' : 'white'
+												}
+												cursor={
+													allowDelete
+														? 'pointer'
+														: 'default'
+												}
+												onClick={() =>
+													allowDelete
+														? deleteOption(indx)
+														: ''
+												}
+											></DeleteIcon>
+										</div>
+									))}
+									<div
+										className={styles.addOption}
+										onClick={createNewOption}
+									>
+										<h4>{t('add more options')}</h4>
 									</div>
-								))}
-								<div
-									className={styles.addOption}
-									onClick={createNewOption}
-								>
-									<h4>{t('add more options')}</h4>
 								</div>
+							)}
 
-								<div className={styles.bottomBar}>
+							<div className={styles.bottomBar}>
 									<h4>Required</h4>
 									<div
 										className={styles.slideButtonContainer}
@@ -311,7 +330,6 @@ const UserDataSetting: FC<Props> = ({ statement }) => {
 										/>
 									</button>
 								</div>
-							</div>
 						</form>
 						{/* Existing Questions */}
 						<div className={styles.existingQuestions}>

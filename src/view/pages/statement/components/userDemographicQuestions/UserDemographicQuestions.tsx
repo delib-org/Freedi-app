@@ -12,15 +12,13 @@ import { useNavigate } from 'react-router';
 interface Props {
 	questions: UserDemographicQuestion[];
 	closeModal?: () => void;
+	isMandatory?: boolean; // Flag to indicate if the survey is mandatory
 }
 
-const UserDemographicQuestions: FC<Props> = ({ questions, closeModal }) => {
+const UserDemographicQuestions: FC<Props> = ({ questions, closeModal, isMandatory = true }) => {
 	const [userDemographic, setUserDemographic] = useState<UserDemographicQuestion[]>([]);
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const { t } = useUserConfig();
-	const isSurveyOptional = userDemographic.some(
-		(survey) => survey.required === true
-	);
 	const navigate = useNavigate();
 	const handleQuestionChange = (
 		question: UserDemographicQuestion,
@@ -62,26 +60,18 @@ const UserDemographicQuestions: FC<Props> = ({ questions, closeModal }) => {
 				const currentQuestion = prevData.find(
 					(q) => q.userQuestionId === question.userQuestionId
 				);
-				const _value = value[0];
-				if (currentQuestion) {
-					const newOptions = currentQuestion.answerOptions.includes(
-						_value as string
-					)
-						? currentQuestion.answerOptions.filter(
-								(option) => option !== _value
-							)
-						: [...currentQuestion.answerOptions, _value as string];
 
+				if (currentQuestion) {
 					return prevData.map((q) =>
 						q.userQuestionId === question.userQuestionId
-							? { ...q, answerOptions: newOptions }
+							? { ...q, answerOptions: value as string[] }
 							: q
 					);
 				}
 
 				return [
 					...prevData,
-					{ ...question, answerOptions: [_value as string] },
+					{ ...question, answerOptions: value as string[] },
 				];
 			});
 		}
@@ -145,28 +135,45 @@ const UserDemographicQuestions: FC<Props> = ({ questions, closeModal }) => {
 		<div className={styles.userDemographicContainer}>
 			<div className={styles.surveyBody}>
 				<div className={styles.topNavSurvey}>
-					<BackToMenuArrow onClick={() => navigate('/')} />
-					{isSurveyOptional && (
+					{!isMandatory && (
+						<BackToMenuArrow onClick={() => navigate('/')} />
+					)}
+					{!isMandatory && closeModal && (
 						<X className={styles.XBtn} onClick={closeModal} />
 					)}
 				</div>
 				<h1 className={styles.title}>{t('User Profile Setup')}</h1>
 				<p className={styles.description}>
-					{t('Complete these setup questions')}
+					{isMandatory
+						? t('Please complete this survey to access the discussion')
+						: t('Complete these setup questions')}
 				</p>
 				<form onSubmit={handleSubmit}>
-					{questions.map((question: UserDemographicQuestion) => (
-						<UserDemographicQuestionInput
-							key={question.userQuestionId}
-							question={question}
-							value={''}
-							options={question.options || []}
-							onChange={(value) =>
-								handleQuestionChange(question, value)
-							}
-							required={true}
-						/>
-					))}
+					{questions.map((question: UserDemographicQuestion) => {
+						const currentAnswer = userDemographic.find(
+							(q) => q.userQuestionId === question.userQuestionId
+						);
+						let value: string | string[] = '';
+
+						if (question.type === UserDemographicQuestionType.checkbox) {
+							value = currentAnswer?.answerOptions || [];
+						} else {
+							value = currentAnswer?.answer || '';
+						}
+
+						return (
+							<UserDemographicQuestionInput
+								key={question.userQuestionId}
+								question={question}
+								value={value}
+								options={question.options || []}
+								onChange={(value) =>
+									handleQuestionChange(question, value)
+								}
+								required={true}
+							/>
+						);
+					})}
 					<div className={styles.button}>
 						<Button
 							text={

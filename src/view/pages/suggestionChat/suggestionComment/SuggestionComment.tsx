@@ -70,7 +70,7 @@ const SuggestionComment: FC<Props> = ({ statement, parentStatement }) => {
 	}, [isOpen])
 
 	useEffect(() => {
-		if (user?.uid !== parentStatement.creator.uid) return;
+		if (user?.uid !== parentStatement?.creator?.uid) return;
 
 		if (initialStatement.current !== parentStatement.statement) {
 			saveStatementToDB({
@@ -95,7 +95,7 @@ const SuggestionComment: FC<Props> = ({ statement, parentStatement }) => {
 		setIsOpen(!isOpen);
 	};
 
-	const isCreator = parentStatement.creator.uid === user?.uid;
+	const isCreator = parentStatement?.creator?.uid === user?.uid;
 
 	function handleCommentSubmit(ev: KeyboardEvent<HTMLTextAreaElement>): void {
 		if (ev.key === 'Enter' && !ev.shiftKey) {

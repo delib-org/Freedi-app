@@ -704,8 +704,28 @@ export async function updateStatementMainImage(
 			statement.statementId
 		);
 
+		// Use nested field update to preserve other imagesURL fields like displayMode
 		await updateDoc(statementRef, {
-			imagesURL: { main: imageURL },
+			'imagesURL.main': imageURL,
+		});
+	} catch (error) {
+		console.error(error);
+	}
+}
+
+export async function updateStatementImageDisplayMode(
+	statement: Statement,
+	displayMode: 'above' | 'inline'
+) {
+	try {
+		const statementRef = doc(
+			FireStore,
+			Collections.statements,
+			statement.statementId
+		);
+
+		await updateDoc(statementRef, {
+			'imagesURL.displayMode': displayMode,
 		});
 	} catch (error) {
 		console.error(error);
