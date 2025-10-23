@@ -188,7 +188,8 @@ export const getStatementSettings = (statement: Statement) => {
 		enableAddNewSubQuestionsButton: Boolean(
 			statementSettings.enableAddNewSubQuestionsButton
 		),
-		enableAIImprovement: Boolean(statementSettings.enableAIImprovement)
+		enableAIImprovement: Boolean(statementSettings.enableAIImprovement),
+		isSubmitMode: Boolean(statementSettings.isSubmitMode)
 	};
 };
 

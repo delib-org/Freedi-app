@@ -31,7 +31,8 @@ const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 		joiningEnabled = false,
 		enableAddNewSubQuestionsButton = false,
 		defaultLookForSimilarities = false,
-		enableAIImprovement = false
+		enableAIImprovement = false,
+		isSubmitMode = false
 	} = statementSettings;
 
 	// Determine the initial evaluation type with backward compatibility
@@ -46,15 +47,15 @@ const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 
 	// Use local state to immediately reflect changes
 	const [selectedEvaluationType, setSelectedEvaluationType] = useState<evaluationType>(getInitialEvaluationType());
-	const [isVoteLimitEnabled, setIsVoteLimitEnabled] = useState<boolean>(!!statement.evaluationSettings?.axVotesPerUser);
-	const [maxVotes, setMaxVotes] = useState<number>(statement.evaluationSettings?.axVotesPerUser || 3);
+	const [isVoteLimitEnabled, setIsVoteLimitEnabled] = useState<boolean>(!!statement.evaluationSettings?.maxVotesPerUser);
+	const [maxVotes, setMaxVotes] = useState<number>(statement.evaluationSettings?.maxVotesPerUser || 3);
 
 	// Update local state when statement changes (e.g., on page reload)
 	useEffect(() => {
 		setSelectedEvaluationType(getInitialEvaluationType());
-		setIsVoteLimitEnabled(!!statement.evaluationSettings?.axVotesPerUser);
-		setMaxVotes(statement.evaluationSettings?.axVotesPerUser || 3);
-	}, [statement.statementId, currentEvaluationType, statement.evaluationSettings?.axVotesPerUser]);
+		setIsVoteLimitEnabled(!!statement.evaluationSettings?.maxVotesPerUser);
+		setMaxVotes(statement.evaluationSettings?.maxVotesPerUser || 3);
+	}, [statement.statementId, currentEvaluationType, statement.evaluationSettings?.maxVotesPerUser]);
 
 	function handleAdvancedSettingChange(
 		property: keyof StatementSettings,
@@ -218,6 +219,13 @@ const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 						isChecked={inVotingGetOnlyResults}
 						onChange={(checked) =>
 							handleAdvancedSettingChange('inVotingGetOnlyResults', checked)
+						}
+					/>
+					<Checkbox
+						label={t('Enable Submit Mode')}
+						isChecked={isSubmitMode}
+						onChange={(checked) =>
+							handleAdvancedSettingChange('isSubmitMode', checked)
 						}
 					/>
 				</div>

@@ -1,6 +1,6 @@
 import { FC, useEffect, useState, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useParams, useLocation } from 'react-router';
+import { useParams, useLocation, useNavigate } from 'react-router';
 
 import { Statement, SortType, SelectionFunction, Role } from 'delib-npm';
 
@@ -17,6 +17,7 @@ import { creatorSelector } from '@/redux/creator/creatorSlice';
 import { sortSubStatements } from '../../statementsEvaluationCont';
 import SuggestionCard from './suggestionCard/SuggestionCard';
 import EmptyScreen from '../emptyScreen/EmptyScreen';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import styles from './SuggestionCards.module.scss';
 
 interface Props {
@@ -32,6 +33,8 @@ const SuggestionCards: FC<Props> = ({
 }) => {
 	const params = useParams();
 	const location = useLocation();
+	const navigate = useNavigate();
+	const { t } = useUserConfig();
 
 	// Memoize statementId to prevent unnecessary effect re-runs
 	const statementId = useMemo(() => params.statementId, [params.statementId]);
@@ -174,21 +177,39 @@ return;
 
 	if (!statement) return null;
 
+	const isSubmitMode = statement.statementSettings?.isSubmitMode;
+
+	const handleSubmit = () => {
+		navigate(`/statement/${statementId}/thank-you`);
+	};
+
 	return (
-		<div
-			className={styles['suggestions-wrapper']}
-			style={{ height: `${totalHeight}px` }}
-		>
-			{subStatements?.map((statementSub: Statement) => {
-				return (
-					<SuggestionCard
-						key={statementSub.statementId}
-						parentStatement={statement}
-						statement={statementSub}
-					/>
-				);
-			})}
-		</div>
+		<>
+			<div
+				className={styles['suggestions-wrapper']}
+				style={{ height: `${totalHeight}px` }}
+			>
+				{subStatements?.map((statementSub: Statement) => {
+					return (
+						<SuggestionCard
+							key={statementSub.statementId}
+							parentStatement={statement}
+							statement={statementSub}
+						/>
+					);
+				})}
+			</div>
+			{isSubmitMode && (
+				<div className={styles.submitButtonContainer}>
+					<button
+						onClick={handleSubmit}
+						className={styles.submitButton}
+					>
+						{t('Submit your vote')}
+					</button>
+				</div>
+			)}
+		</>
 	);
 };
 
