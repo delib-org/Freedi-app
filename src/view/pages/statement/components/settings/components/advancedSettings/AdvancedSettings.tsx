@@ -1,63 +1,35 @@
 import { FC, useState, useEffect } from 'react';
 import React from 'react';
 import { StatementSettingsProps } from '../../settingsTypeHelpers';
-import { getStatementSettings } from '../../statementSettingsCont';
+import { defaultStatementSettings } from '../../emptyStatementModel';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import Checkbox from '@/view/components/checkbox/Checkbox';
 import styles from './AdvancedSettings.module.scss';
 import { setStatementSettingToDB } from '@/controllers/db/statementSettings/setStatementSettings';
-import { StatementSettings, StatementType, evaluationType } from 'delib-npm';
-import { toggleStatementHide } from '@/controllers/db/statements/setStatements';
+import { StatementSettings, StatementType, evaluationType, Collections } from 'delib-npm';
+import { doc, setDoc } from 'firebase/firestore';
+import { FireStore } from '@/controllers/db/config';
 import EvaluationTypeSelector from './EvaluationTypeSelector/EvaluationTypeSelector';
 import { setMaxVotesPerUser } from '@/controllers/db/evaluation/setEvaluation';
 
 const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 	const { t } = useUserConfig();
 
-	const statementSettings: StatementSettings = getStatementSettings(statement);
+	// Direct access to settings with defaults - no transformation needed
+	const settings: StatementSettings = statement.statementSettings ?? defaultStatementSettings;
 
-	const { hide } = statement;
-
-	const {
-		inVotingGetOnlyResults = false,
-		evaluationType: currentEvaluationType,
-		showEvaluation = false,
-		enableAddVotingOption = false,
-		enableAddEvaluationOption = false,
-		enableSimilaritiesSearch = false,
-		enableNavigationalElements = false,
-		hasChat = false,
-		hasChildren = false,
-		joiningEnabled = false,
-		enableAddNewSubQuestionsButton = false,
-		defaultLookForSimilarities = false,
-		enableAIImprovement = false,
-		isSubmitMode = false
-	} = statementSettings;
-
-	// Determine the initial evaluation type with backward compatibility
-	const getInitialEvaluationType = (): evaluationType => {
-		if (currentEvaluationType) {
-			return currentEvaluationType;
-		}
-		// Backward compatibility with enhancedEvaluation boolean
-
-		return evaluationType.range;
-	};
-
-	// Use local state to immediately reflect changes
-	const [selectedEvaluationType, setSelectedEvaluationType] = useState<evaluationType>(getInitialEvaluationType());
+	// Vote limit state (this needs to remain as it's UI-specific state)
 	const [isVoteLimitEnabled, setIsVoteLimitEnabled] = useState<boolean>(!!statement.evaluationSettings?.maxVotesPerUser);
 	const [maxVotes, setMaxVotes] = useState<number>(statement.evaluationSettings?.maxVotesPerUser || 3);
 
-	// Update local state when statement changes (e.g., on page reload)
+	// Update vote limit state when statement changes
 	useEffect(() => {
-		setSelectedEvaluationType(getInitialEvaluationType());
 		setIsVoteLimitEnabled(!!statement.evaluationSettings?.maxVotesPerUser);
 		setMaxVotes(statement.evaluationSettings?.maxVotesPerUser || 3);
-	}, [statement.statementId, currentEvaluationType, statement.evaluationSettings?.maxVotesPerUser]);
+	}, [statement.statementId, statement.evaluationSettings?.maxVotesPerUser]);
 
-	function handleAdvancedSettingChange(
+	// Unified handler for all statement settings
+	function handleSettingChange(
 		property: keyof StatementSettings,
 		newValue: boolean | string
 	) {
@@ -68,6 +40,12 @@ const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 			newValue,
 			settingsSection: 'statementSettings',
 		});
+	}
+
+	// Handler for hide toggle (root-level property)
+	function handleHideChange(newValue: boolean) {
+		const statementRef = doc(FireStore, Collections.statements, statement.statementId);
+		setDoc(statementRef, { hide: newValue }, { merge: true });
 	}
 
 	function handleVoteLimitToggle(enabled: boolean) {
@@ -103,23 +81,21 @@ const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 				<div className={styles.categoryContent}>
 					<Checkbox
 						label={'Hide this statement'}
-						isChecked={hide}
-						onChange={() =>
-							toggleStatementHide(statement.statementId)
-						}
+						isChecked={statement.hide ?? false}
+						onChange={handleHideChange}
 					/>
 					<Checkbox
 						label={'Chat'}
-						isChecked={hasChat}
+						isChecked={settings.hasChat ?? false}
 						onChange={(checked) =>
-							handleAdvancedSettingChange('hasChat', checked)
+							handleSettingChange('hasChat', checked)
 						}
 					/>
 					<Checkbox
 						label={'Enable Sub-Conversations'}
-						isChecked={hasChildren}
+						isChecked={settings.hasChildren ?? false}
 						onChange={(checked) =>
-							handleAdvancedSettingChange('hasChildren', checked)
+							handleSettingChange('hasChildren', checked)
 						}
 					/>
 				</div>
@@ -136,24 +112,24 @@ const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 					{statement.statementType === StatementType.question && (
 						<Checkbox
 							label={'Enable Joining an option'}
-							isChecked={joiningEnabled}
+							isChecked={settings.joiningEnabled ?? false}
 							onChange={(checked) =>
-								handleAdvancedSettingChange('joiningEnabled', checked)
+								handleSettingChange('joiningEnabled', checked)
 							}
 						/>
 					)}
 					<Checkbox
 						label={'Allow participants to contribute options to the voting page'}
-						isChecked={enableAddVotingOption}
+						isChecked={settings.enableAddVotingOption ?? false}
 						onChange={(checked) =>
-							handleAdvancedSettingChange('enableAddVotingOption', checked)
+							handleSettingChange('enableAddVotingOption', checked)
 						}
 					/>
 					<Checkbox
 						label='Allow participants to contribute options to the evaluation page'
-						isChecked={enableAddEvaluationOption}
+						isChecked={settings.enableAddEvaluationOption ?? false}
 						onChange={(checked) =>
-							handleAdvancedSettingChange('enableAddEvaluationOption', checked)
+							handleSettingChange('enableAddEvaluationOption', checked)
 						}
 					/>
 				</div>
@@ -172,16 +148,15 @@ const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 							{t('Evaluation Type')}
 						</label>
 						<EvaluationTypeSelector
-							currentType={selectedEvaluationType}
+							currentType={settings.evaluationType ?? evaluationType.range}
 							onChange={(type) => {
-								setSelectedEvaluationType(type);
-								handleAdvancedSettingChange('evaluationType', type);
+								handleSettingChange('evaluationType', type);
 							}}
 						/>
 					</div>
 
 					{/* Vote Limiting for Single-Like Evaluation */}
-					{selectedEvaluationType === evaluationType.singleLike && (
+					{(settings.evaluationType ?? evaluationType.range) === evaluationType.singleLike && (
 						<div className={styles.voteLimitSection}>
 							<Checkbox
 								label={t('Limit votes per user')}
@@ -209,23 +184,23 @@ const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 
 					<Checkbox
 						label={'Show Evaluations results'}
-						isChecked={showEvaluation}
+						isChecked={settings.showEvaluation ?? false}
 						onChange={(checked) =>
-							handleAdvancedSettingChange('showEvaluation', checked)
+							handleSettingChange('showEvaluation', checked)
 						}
 					/>
 					<Checkbox
 						label='In Voting page, show only the results of the top options'
-						isChecked={inVotingGetOnlyResults}
+						isChecked={settings.inVotingGetOnlyResults ?? false}
 						onChange={(checked) =>
-							handleAdvancedSettingChange('inVotingGetOnlyResults', checked)
+							handleSettingChange('inVotingGetOnlyResults', checked)
 						}
 					/>
 					<Checkbox
 						label={t('Enable Submit Mode')}
-						isChecked={isSubmitMode}
+						isChecked={settings.isSubmitMode ?? false}
 						onChange={(checked) =>
-							handleAdvancedSettingChange('isSubmitMode', checked)
+							handleSettingChange('isSubmitMode', checked)
 						}
 					/>
 				</div>
@@ -241,24 +216,24 @@ const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 				<div className={styles.categoryContent}>
 					<Checkbox
 						label={t('Enable AI suggestion improvement')}
-						isChecked={enableAIImprovement}
+						isChecked={settings.enableAIImprovement ?? false}
 						onChange={(checked) =>
-							handleAdvancedSettingChange('enableAIImprovement', checked)
+							handleSettingChange('enableAIImprovement', checked)
 						}
 					/>
 					<Checkbox
 						label='Allow similarity search'
-						isChecked={enableSimilaritiesSearch}
+						isChecked={settings.enableSimilaritiesSearch ?? false}
 						onChange={(checked) =>
-							handleAdvancedSettingChange('enableSimilaritiesSearch', checked)
+							handleSettingChange('enableSimilaritiesSearch', checked)
 						}
 					/>
 					{statement.statementType === StatementType.question && (
 						<Checkbox
 							label={'By default, look for similar statements'}
-							isChecked={defaultLookForSimilarities}
+							isChecked={settings.defaultLookForSimilarities ?? false}
 							onChange={(checked) =>
-								handleAdvancedSettingChange('defaultLookForSimilarities', checked)
+								handleSettingChange('defaultLookForSimilarities', checked)
 							}
 						/>
 					)}
@@ -276,17 +251,17 @@ const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 					{statement.statementType === StatementType.question && (
 						<Checkbox
 							label={'Enable add new sub-questions button'}
-							isChecked={enableAddNewSubQuestionsButton}
+							isChecked={settings.enableAddNewSubQuestionsButton ?? false}
 							onChange={(checked) =>
-								handleAdvancedSettingChange('enableAddNewSubQuestionsButton', checked)
+								handleSettingChange('enableAddNewSubQuestionsButton', checked)
 							}
 						/>
 					)}
 					<Checkbox
 						label='Navigational elements'
-						isChecked={enableNavigationalElements}
+						isChecked={settings.enableNavigationalElements ?? false}
 						onChange={(checked) =>
-							handleAdvancedSettingChange('enableNavigationalElements', checked)
+							handleSettingChange('enableNavigationalElements', checked)
 						}
 					/>
 				</div>
