@@ -12,10 +12,13 @@ A collaborative thinking system that transforms question discussions into eviden
 
 ### Data Structure
 ```
-Question (popperHebbian: true)
-└── Options (Ideas to discuss)
-    └── Evidence Posts (Support or Challenge)
+Question (statementType: StatementType.question, popperianDiscussionEnabled: true)
+└── Options (statementType: StatementType.option - Ideas to discuss)
+    └── Evidence Posts (statementType: StatementType.statement with evidence field)
         └── Votes (Helpful or Not Helpful)
+
+Note: Evidence posts are regular statements (StatementType.statement) with the evidence field
+populated with support level, evidence types, and vote counts.
 ```
 
 ### How It Works
@@ -36,13 +39,18 @@ Question (popperHebbian: true)
 - ✅ **Positive & negative feedback**: Both helpful and not-helpful votes
 
 ### Data Models
-- `EvidencePost`: Content, type, support/challenge flag, vote counts, net score
-- `EvidenceVote`: User votes tracked separately
+- **Evidence Posts**: Regular `Statement` objects (StatementType.statement) with `evidence` field populated
+- `evidence` field contains:
+  - `evidenceType`: single type (data, testimony, argument, anecdote, fallacy)
+  - `support`: -1 to 1 scale (degree of support/challenge)
+  - `helpfulCount`, `notHelpfulCount`, `netScore`: voting metrics
+  - `evidenceWeight`: calculated weight based on type and quality
 - `RefinementSession`: AI dialogue history
-- `PopperHebbianScore`: Weighted support/challenge totals
+- `PopperHebbianScore`: Weighted total score and status
 
 ### Evidence Types & Weights
 - **Data/Research**: 3.0x base weight
+- **Testimony**: 2.0x base weight
 - **Logical Argument**: 1.0x base weight
 - **Anecdote**: 0.5x base weight
 - **Fallacy**: 0.1x base weight
@@ -67,8 +75,7 @@ finalWeight = baseWeight * (1 + netScore * 0.1)
 ### Frontend
 ```
 src/models/popperHebbian/
-  ├── EvidenceModels.ts
-  └── RefineryModels.ts
+  └── RefineryModels.ts  (Score interfaces only - evidence uses delib-npm)
 
 src/view/pages/statement/components/popperHebbian/
   ├── PopperHebbianDiscussion.tsx
@@ -122,6 +129,7 @@ functions/src/
 
 ### User Experience
 - **Simple language**: No jargon, encouraging tone
+- **User-friendly labels**: Negative support values displayed as "Challenges" or "Strongly Challenges" instead of raw numbers
 - **Visual feedback**: Color-coded status, progress bars
 - **Mobile-friendly**: Stack columns, touch-friendly buttons
 - **Real-time updates**: Scores update live as votes come in

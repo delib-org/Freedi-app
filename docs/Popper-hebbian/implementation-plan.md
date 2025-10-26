@@ -44,6 +44,7 @@ This document outlines the implementation plan for integrating the "Popper-Hebbi
    - Simple, encouraging, collaborative language
    - AI Guide handles structural and analytical heavy lifting
    - Feels like a guided workshop, not a technical exam
+   - **User-Friendly Language**: Negative support values displayed as "Challenges" or "Strongly Challenges" instead of raw numbers
 
 ## System Components
 
@@ -51,36 +52,45 @@ This document outlines the implementation plan for integrating the "Popper-Hebbi
 The central object of discussion - a clear, testable proposition that can be evaluated.
 
 **In Freedi's Context**:
-- The "Idea" = `Statement` with `statementType: option`
-- The parent "Question" = `Statement` with `statementType: question`
-- When Popper-Hebbian mode is enabled on a **question**, all its **option** sub-statements become "Ideas" to discuss
-- Evidence posts are created as children of these option statements
+- The "Idea" = `Statement` with `statementType: StatementType.option`
+- The parent "Question" = `Statement` with `statementType: StatementType.question`
+- Evidence posts = `Statement` with `statementType: StatementType.statement` (children of options)
+- When Popper-Hebbian mode is enabled on a **question**, all its **option** children become "Ideas" to discuss
+- Evidence posts are regular statements created as children of option statements
+- They carry metadata indicating whether they support or challenge the option
+- Standalone statements (not under a Popper-Hebbian question) work normally
 
 **Data Hierarchy**:
 ```
-Question Statement (statementType: question, popperHebbian: true)
-├── Option Statement 1 (statementType: option) - "Idea 1"
-│   ├── Evidence Post (support)
+Question Statement (statementType: StatementType.question, popperianDiscussionEnabled: true)
+├── Option Statement 1 (statementType: StatementType.option) - "Idea 1"
+│   ├── Evidence Post (statementType: StatementType.statement, support)
 │   │   ├── Vote 1 (helpful)
 │   │   └── Vote 2 (not-helpful)
-│   ├── Evidence Post (challenge)
-│   └── Evidence Post (support)
-├── Option Statement 2 (statementType: option) - "Idea 2"
-│   ├── Evidence Post (support)
-│   └── Evidence Post (challenge)
-└── Option Statement 3 (statementType: option) - "Idea 3"
-    └── Evidence Post (support)
+│   ├── Evidence Post (statementType: StatementType.statement, challenge)
+│   └── Evidence Post (statementType: StatementType.statement, support)
+├── Option Statement 2 (statementType: StatementType.option) - "Idea 2"
+│   ├── Evidence Post (statementType: StatementType.statement, support)
+│   └── Evidence Post (statementType: StatementType.statement, challenge)
+└── Option Statement 3 (statementType: StatementType.option) - "Idea 3"
+    └── Evidence Post (statementType: StatementType.statement, support)
+
+Note: Evidence posts are regular statements (StatementType.statement) that are children of options.
+They are marked as support/challenge via metadata, not via statementType.
 ```
 
 **Flow**:
-1. Admin creates question and enables `popperHebbian: true` in settings
-2. Users create option statements (ideas) under the question
-3. If refinery is enabled, ideas go through AI refinement before publishing
-4. Each option gets its own discussion page with Support/Challenge interface
-5. Users post evidence for/against each option
-6. Community votes on evidence quality (helpful/not-helpful)
-7. System calculates weighted scores for each option
-8. Options show status: looking-good, under-discussion, or needs-fixing
+1. Admin creates a **question** statement (`statementType: StatementType.question`)
+2. Admin enables `popperianDiscussionEnabled: true` in statement settings
+3. Users create **option** statements (`statementType: StatementType.option`) as children of the question
+4. If refinery is enabled, options go through AI refinement before publishing
+5. Each option gets its own discussion page with Support/Challenge interface
+6. Users post evidence for/against each option
+7. Community votes on evidence quality (helpful/not-helpful)
+8. System calculates weighted scores for each option
+9. Options show status: looking-good, under-discussion, or needs-fixing
+
+**Important**: Only works with question → option hierarchy. Regular statements (`statementType: StatementType.statement`) are standalone and don't participate in Popper-Hebbian discussions.
 
 ### 2. The "Post" (Evidence/Argument)
 The unit of contribution with the following types:
@@ -242,38 +252,47 @@ export enum Collections {
 }
 ```
 
-#### 1.3 Create Evidence Data Models
-**New File**: `src/models/popperHebbian/EvidenceModels.ts`
+#### 1.3 Evidence Data Models (Using delib-npm)
+
+Evidence posts use the standard `Statement` type from delib-npm with the `evidence` field populated:
 
 ```typescript
-export enum EvidenceType {
-  data = 'data',
-  anecdote = 'anecdote',
-  fallacy = 'fallacy',
-  argument = 'argument'
-}
+import { Statement, EvidenceType } from 'delib-npm';
 
-export interface EvidencePost {
-  postId: string;
-  statementId: string; // The option statement (idea) this evidence is for
-  parentId: string; // The question statement (for hierarchy)
-  userId: string;
-  content: string;
-  isSupport: boolean; // true = support, false = challenge
-  evidenceType: EvidenceType;
-  evidenceWeight: number; // default 1.0
-  helpfulCount: number; // positive votes
-  notHelpfulCount: number; // negative votes
-  netScore: number; // helpfulCount - notHelpfulCount
-  aiClassification?: string;
-  createdAt: number;
-  lastUpdate: number;
-}
+// Evidence posts are regular Statement objects (statementType: StatementType.statement)
+// with the evidence field populated
+// Example:
+// {
+//   statementId: "evidence123",
+//   statementType: StatementType.statement,
+//   parentId: "option456", // The option this is evidence for
+//   statement: "This is my evidence...",
+//   creatorId: "user789",
+//   createdAt: 1234567890,
+//   evidence: {
+//     evidenceType: EvidenceType.data,
+//     support: 0.8, // Strong support (0.8 on -1 to 1 scale)
+//     evidenceWeight: 3.24, // Calculated weight
+//     helpfulCount: 5,
+//     notHelpfulCount: 2,
+//     netScore: 3 // helpfulCount - notHelpfulCount
+//   }
+// }
+//
+// Support scale examples:
+//  1.0 = Strongly supports the idea (displayed as "Strongly Supports")
+//  0.5 = Moderately supports (displayed as "Supports")
+//  0.0 = Neutral (displayed as "Neutral")
+// -0.5 = Moderately challenges (displayed as "Challenges")
+// -1.0 = Strongly challenges/refutes the idea (displayed as "Strongly Challenges")
+//
+// IMPORTANT: Negative support values should ALWAYS be displayed using user-friendly
+// language like "Challenges" or "Strongly Challenges" - NEVER show raw negative numbers
+// to users in the UI (except in debug/admin views)
 
 export interface PopperHebbianScore {
   statementId: string;
-  supportScore: number; // weighted sum
-  challengeScore: number; // weighted sum
+  totalScore: number; // Sum of all (support * weight) - positive = supporting, negative = challenging
   status: 'looking-good' | 'under-discussion' | 'needs-fixing';
   lastCalculated: number;
 }
@@ -281,17 +300,22 @@ export interface PopperHebbianScore {
 
 #### 1.4 Evidence Weight Rules (MVP - Simple)
 ```typescript
-const EVIDENCE_WEIGHTS = {
-  data: 3.0,      // Research, studies
-  argument: 1.0,  // Logical reasoning
-  anecdote: 0.5,  // Personal stories
-  fallacy: 0.1    // Flagged content
+import { Statement, EvidenceType } from 'delib-npm';
+
+const EVIDENCE_WEIGHTS: Record<EvidenceType, number> = {
+  [EvidenceType.data]: 3.0,       // Research, studies
+  [EvidenceType.testimony]: 2.0,  // Expert testimony
+  [EvidenceType.argument]: 1.0,   // Logical reasoning
+  [EvidenceType.anecdote]: 0.5,   // Personal stories
+  [EvidenceType.fallacy]: 0.1     // Flagged content
 };
 
-// Net score affects weight
-function calculatePostWeight(post: EvidencePost): number {
-  const baseWeight = EVIDENCE_WEIGHTS[post.evidenceType];
-  const netScore = post.helpfulCount - post.notHelpfulCount;
+// Calculate weight for an evidence post
+function calculatePostWeight(post: Statement): number {
+  if (!post.evidence?.evidenceType) return 1.0;
+
+  const baseWeight = EVIDENCE_WEIGHTS[post.evidence.evidenceType];
+  const netScore = (post.evidence.helpfulCount || 0) - (post.evidence.notHelpfulCount || 0);
 
   // Positive net score increases weight, negative decreases
   // Each net vote changes weight by 10%
@@ -350,34 +374,75 @@ return isPopperHebbian ? (
 #### 3.2 Create PopperHebbianDiscussion Component
 **New File**: `src/view/pages/statement/components/popperHebbian/PopperHebbianDiscussion.tsx`
 
+Helper function for converting support values to user-friendly labels:
+```typescript
+function getSupportLabel(supportLevel: number): string {
+  if (supportLevel > 0.7) return 'Strongly Supports';
+  if (supportLevel > 0.3) return 'Supports';
+  if (supportLevel > -0.3) return 'Neutral';
+  if (supportLevel > -0.7) return 'Challenges';
+  return 'Strongly Challenges';
+}
+```
+
 Structure:
 ```typescript
 <div className={styles.popperHebbianDiscussion}>
   <IdeaScoreboard statement={statement} />
 
-  <div className={styles.actionButtons}>
-    <Button onClick={() => setMode('support')}>
-      [+] I Support This
-    </Button>
-    <Button onClick={() => setMode('challenge')}>
-      [-] I Challenge This
+  <div className={styles.addEvidence}>
+    <h3>Add Your Evidence</h3>
+    <textarea
+      placeholder="Share your evidence or reasoning..."
+      value={evidenceText}
+      onChange={(e) => setEvidenceText(e.target.value)}
+    />
+
+    <div className={styles.supportSlider}>
+      <label>How much does this evidence support or challenge the idea?</label>
+      <input
+        type="range"
+        min="-1"
+        max="1"
+        step="0.1"
+        value={supportLevel}
+        onChange={(e) => setSupportLevel(parseFloat(e.target.value))}
+      />
+      <div className={styles.sliderLabels}>
+        <span>Strongly Challenges (-1)</span>
+        <span>Neutral (0)</span>
+        <span>Strongly Supports (+1)</span>
+      </div>
+      <div className={styles.currentValue}>
+        {getSupportLabel(supportLevel)}
+      </div>
+    </div>
+
+    <div className={styles.evidenceTypeSelector}>
+      <label>What kind of evidence is this?</label>
+      <select
+        value={evidenceType}
+        onChange={(e) => setEvidenceType(e.target.value as EvidenceType)}
+      >
+        <option value={EvidenceType.data}>Data/Research (highest weight)</option>
+        <option value={EvidenceType.testimony}>Expert Testimony</option>
+        <option value={EvidenceType.argument}>Logical Argument</option>
+        <option value={EvidenceType.anecdote}>Personal Experience</option>
+      </select>
+    </div>
+
+    <Button onClick={handleSubmitEvidence}>
+      Submit Evidence
     </Button>
   </div>
 
-  <div className={styles.evidenceColumns}>
-    <div className={styles.supportColumn}>
-      <h3>Support Evidence</h3>
-      {supportPosts.map(post => (
-        <EvidencePost key={post.postId} post={post} />
+  <div className={styles.evidenceList}>
+    <h3>All Evidence</h3>
+    {evidencePosts
+      .sort((a, b) => Math.abs(b.evidence?.support || 0) - Math.abs(a.evidence?.support || 0))
+      .map(post => (
+        <EvidencePost key={post.statementId} post={post} />
       ))}
-    </div>
-
-    <div className={styles.challengeColumn}>
-      <h3>Challenge Evidence</h3>
-      {challengePosts.map(post => (
-        <EvidencePost key={post.postId} post={post} />
-      ))}
-    </div>
   </div>
 
   {showEvolutionPrompt && <EvolutionPrompt statement={statement} />}
@@ -389,6 +454,7 @@ Structure:
 
 Features:
 - Display post content
+- Show support level (-1 to 1)
 - Badge showing evidence type
 - Positive and negative voting buttons
 - Net score display
@@ -396,33 +462,47 @@ Features:
 
 ```typescript
 interface EvidencePostProps {
-  post: EvidencePost;
+  post: Statement; // Statement with evidence field populated
   currentUserVote?: 'helpful' | 'not-helpful' | null;
 }
 
 const EvidencePost: FC<EvidencePostProps> = ({ post, currentUserVote }) => {
+  const evidence = post.evidence;
+  if (!evidence) return null;
+
   const handleVote = (voteType: 'helpful' | 'not-helpful') => {
     if (currentUserVote === voteType) {
-      // Remove vote
-      removeVote(post.postId);
+      removeVote(post.statementId);
     } else {
-      // Add or change vote
-      submitVote(post.postId, voteType);
+      submitVote(post.statementId, voteType);
     }
   };
 
-  const netScore = post.helpfulCount - post.notHelpfulCount;
-  const scoreColor = netScore > 0 ? 'positive' : netScore < 0 ? 'negative' : 'neutral';
+  // Convert numeric support (-1 to 1) to user-friendly language
+  const supportLevel = evidence.support || 0;
+  const supportColor = supportLevel > 0.3 ? 'support' : supportLevel < -0.3 ? 'challenge' : 'neutral';
+  const supportLabel =
+    supportLevel > 0.7 ? 'Strongly Supports' :
+    supportLevel > 0.3 ? 'Supports' :
+    supportLevel > -0.3 ? 'Neutral' :
+    supportLevel > -0.7 ? 'Challenges' :
+    'Strongly Challenges';
 
   return (
-    <div className={styles.evidencePost}>
+    <div className={`${styles.evidencePost} ${styles[supportColor]}`}>
       <div className={styles.header}>
-        <EvidenceTypeBadge type={post.evidenceType} />
-        <UserInfo user={post.user} />
+        <div className={styles.supportIndicator}>
+          <span className={styles.supportLabel}>{supportLabel}</span>
+          <span className={styles.supportValue}>
+            {supportLevel > 0 ? '+' : ''}{supportLevel.toFixed(1)}
+          </span>
+        </div>
+        <EvidenceTypeBadge type={evidence.evidenceType} />
+        <UserInfo user={post.creator} />
       </div>
 
       <div className={styles.content}>
-        {post.content}
+        {post.statement}
       </div>
 
       <div className={styles.footer}>
@@ -432,7 +512,7 @@ const EvidencePost: FC<EvidencePostProps> = ({ post, currentUserVote }) => {
             className={currentUserVote === 'helpful' ? styles.active : ''}
             onClick={() => handleVote('helpful')}
           >
-            👍 Helpful ({post.helpfulCount})
+            👍 Helpful ({evidence.helpfulCount || 0})
           </Button>
 
           <Button
@@ -440,12 +520,12 @@ const EvidencePost: FC<EvidencePostProps> = ({ post, currentUserVote }) => {
             className={currentUserVote === 'not-helpful' ? styles.active : ''}
             onClick={() => handleVote('not-helpful')}
           >
-            👎 Not Helpful ({post.notHelpfulCount})
+            👎 Not Helpful ({evidence.notHelpfulCount || 0})
           </Button>
         </div>
 
-        <div className={`${styles.netScore} ${styles[scoreColor]}`}>
-          Net: {netScore > 0 ? '+' : ''}{netScore}
+        <div className={`${styles.netScore} ${(evidence.netScore || 0) >= 0 ? styles.positive : styles.negative}`}>
+          Net: {(evidence.netScore || 0) > 0 ? '+' : ''}{evidence.netScore || 0}
         </div>
       </div>
     </div>
@@ -458,6 +538,17 @@ const EvidencePost: FC<EvidencePostProps> = ({ post, currentUserVote }) => {
 #### 4.1 Create IdeaScoreboard Component
 **New File**: `src/view/pages/statement/components/popperHebbian/components/IdeaScoreboard/IdeaScoreboard.tsx`
 
+Helper function for interpreting total scores:
+```typescript
+function getScoreInterpretation(totalScore: number): string {
+  if (totalScore > 5) return 'Strong evidence supports this idea';
+  if (totalScore > 2) return 'Evidence leans toward supporting this idea';
+  if (totalScore > -2) return 'Evidence is mixed - discussion ongoing';
+  if (totalScore > -5) return 'Evidence is challenging this idea';
+  return 'Strong challenges suggest this idea needs rethinking';
+}
+```
+
 ```typescript
 <div className={styles.ideaScoreboard}>
   <h3>Idea Scoreboard</h3>
@@ -465,16 +556,14 @@ const EvidencePost: FC<EvidencePostProps> = ({ post, currentUserVote }) => {
   <StatusIndicator status={score.status} />
 
   <div className={styles.scoreDisplay}>
-    <div className={styles.supportBar}>
-      <label>Support</label>
-      <ProgressBar value={score.supportScore} max={totalScore} />
-      <span>{score.supportScore}</span>
-    </div>
-
-    <div className={styles.challengeBar}>
-      <label>Challenge</label>
-      <ProgressBar value={score.challengeScore} max={totalScore} />
-      <span>{score.challengeScore}</span>
+    <div className={styles.totalScore}>
+      <label>Overall Score</label>
+      <span className={score.totalScore >= 0 ? styles.positive : styles.negative}>
+        {score.totalScore > 0 ? '+' : ''}{score.totalScore.toFixed(1)}
+      </span>
+      <p className={styles.scoreInterpretation}>
+        {getScoreInterpretation(score.totalScore)}
+      </p>
     </div>
   </div>
 </div>
@@ -560,40 +649,50 @@ export const onEvidencePostCreate = functions.firestore
 
 Calculate weighted score:
 ```typescript
+import { Statement, EvidenceType } from 'delib-npm';
+
 async function recalculateScore(statementId: string) {
   const posts = await getEvidencePosts(statementId);
 
-  let supportScore = 0;
-  let challengeScore = 0;
+  let totalScore = 0; // Cumulative score from all evidence
 
   for (const post of posts) {
+    const evidence = post.evidence;
+    if (!evidence) continue;
+
     const weight = calculatePostWeight(post);
-    if (post.isSupport) {
-      supportScore += weight;
-    } else {
-      challengeScore += weight;
-    }
+    const contribution = (evidence.support || 0) * weight;
+    totalScore += contribution;
   }
 
-  const status = determineStatus(supportScore, challengeScore);
+  const status = determineStatus(totalScore);
 
   await updateStatementScore(statementId, {
-    supportScore,
-    challengeScore,
+    totalScore,
     status,
     lastCalculated: Date.now()
   });
 }
 
-function calculatePostWeight(post: EvidencePost): number {
-  const baseWeight = EVIDENCE_WEIGHTS[post.evidenceType];
-  const helpfulBonus = post.helpfulCount * HELPFUL_MULTIPLIER;
-  return baseWeight * (1 + helpfulBonus);
+function calculatePostWeight(post: Statement): number {
+  const evidence = post.evidence;
+  if (!evidence?.evidenceType) return 1.0;
+
+  const baseWeight = EVIDENCE_WEIGHTS[evidence.evidenceType];
+  const netScore = (evidence.helpfulCount || 0) - (evidence.notHelpfulCount || 0);
+
+  // Each net vote changes weight by 10%
+  const multiplier = 1 + (netScore * 0.1);
+
+  // Ensure weight never goes below 0.1
+  return Math.max(0.1, baseWeight * multiplier);
 }
 
-function determineStatus(support: number, challenge: number): Status {
-  if (support > challenge * 2) return 'looking-good';
-  if (challenge > support * 1.5) return 'needs-fixing';
+function determineStatus(totalScore: number): Status {
+  // Total score is sum of all (support * weight) values
+  // Positive = more support, Negative = more challenge
+  if (totalScore > 2) return 'looking-good';
+  if (totalScore < -2) return 'needs-fixing';
   return 'under-discussion';
 }
 ```
