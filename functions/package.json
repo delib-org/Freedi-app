@@ -2,7 +2,7 @@
 	"name": "functions",
 	"scripts": {
 		"clean": "rm -rf node_modules package-lock.json && git rm -r --cache . && git reset && npm install && npm run build",
-		"lint": "eslint --ext .js,.ts .",
+		"lint": "eslint --ext .js,.ts . --ignore-pattern 'lib/' --ignore-pattern 'coverage/'",
 		"build": "tsc",
 		"dev": "tsc --watch",
 		"serve": "npm run build && firebase emulators:start --only functions",
@@ -21,7 +21,7 @@
 		"@google/generative-ai": "^0.15.0",
 		"@sendgrid/mail": "^8.1.5",
 		"@types/nodemailer": "^7.0.1",
-		"delib-npm": "^5.6.56",
+		"delib-npm": "^5.6.57",
 		"dotenv": "^16.4.5",
 		"firebase-admin": "^12.6.0",
 		"firebase-functions": "^6.3.2",

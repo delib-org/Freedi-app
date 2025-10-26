@@ -23,18 +23,6 @@ export const ConditionalModals: React.FC<ConditionalModalsProps> = ({
 }) => {
 	const dispatch = useDispatch();
 
-	// Debug logging for survey modal conditions
-	const shouldShowSurvey = showUserQuestions && screen !== 'settings' && !isMassConsensus && userDemographicQuestions;
-
-	console.info('Survey modal conditions:', {
-		showUserQuestions,
-		screen,
-		isMassConsensus,
-		hasQuestions: !!userDemographicQuestions,
-		questionsLength: userDemographicQuestions?.length || 0,
-		shouldShowSurvey
-	});
-
 	return (
 		<>
 			{showNewStatement && (
