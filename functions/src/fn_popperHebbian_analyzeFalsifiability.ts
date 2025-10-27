@@ -69,8 +69,18 @@ Use simple, encouraging language.`;
 		try {
 			const model = getGeminiModel();
 
-			// Call Gemini API
-			const result = await model.generateContent(prompt);
+			// Configure generation settings
+			const generationConfig = {
+				temperature: 0.5,  // Balanced between creativity and consistency
+				responseMimeType: "application/json",  // Force JSON output
+			};
+
+			// Call Gemini API with strict configuration
+			const result = await model.generateContent({
+				contents: [{ role: "user", parts: [{ text: prompt }] }],
+				generationConfig
+			});
+
 			const response = await result.response;
 			const text = response.text();
 
@@ -88,36 +98,16 @@ Use simple, encouraging language.`;
 			if (language === 'he') {
 				// Hebrew messages
 				if (analysis.isTestable) {
-					initialMessage = `היי! זה רעיון מעניין, והוא כבר די ברור!
-
-עם זאת, יש לי כמה שאלות כדי לחזק אותו עוד יותר לדיון. זה יעזור לכולם להבין בדיוק למה אתה מתכוון ואיך להעריך את זה בצורה הוגנת.
-
-מוכנים לחדד את זה ביחד?`;
+					initialMessage = `${analysis.vagueTerms.length > 0 ? `כשאתה אומר "${analysis.vagueTerms[0]}", למה בדיוק אתה מתכוון?` : 'איזה פרטים נוספים תוכל לספק?'}`;
 				} else {
-					initialMessage = `היי! אני המדריך הדיגיטלי. זה רעיון מעניין!
-
-כדי לעזור לכולם לדון בזה בצורה הוגנת, **אנחנו צריכים להבהיר את זה לגמרי.** כרגע, זה קצת מעורפל.
-
-${analysis.vagueTerms.length > 0 ? `למשל, כשאתה אומר **"${analysis.vagueTerms[0]}"**, למה בדיוק אתה מתכוון?` : ''}
-
-תן לי לשאול אותך כמה שאלות כדי לעזור לחדד את הרעיון הזה. נשמע טוב?`;
+					initialMessage = `${analysis.vagueTerms.length > 0 ? `כשאתה אומר "${analysis.vagueTerms[0]}", למה בדיוק אתה מתכוון?` : 'איזה פרטים נוספים תוכל לספק?'}`;
 				}
 			} else {
 				// English messages (default)
 				if (analysis.isTestable) {
-					initialMessage = `Hey! That's an interesting idea, and it's already pretty clear!
-
-However, I have a few questions to make it even stronger for discussion. This will help everyone understand exactly what you mean and how to evaluate it fairly.
-
-Ready to sharpen it together?`;
+					initialMessage = `${analysis.vagueTerms.length > 0 ? `When you say "${analysis.vagueTerms[0]}", what exactly do you mean?` : 'What additional details can you provide?'}`;
 				} else {
-					initialMessage = `Hey! I'm the AI Guide. That's an interesting idea!
-
-To help everyone discuss this fairly, **we need to make it crystal clear.** Right now, it's a bit vague.
-
-${analysis.vagueTerms.length > 0 ? `For example, when you say **"${analysis.vagueTerms[0]}"**, what do you mean exactly?` : ''}
-
-Let me ask you a few questions to help sharpen this idea. Sound good?`;
+					initialMessage = `${analysis.vagueTerms.length > 0 ? `When you say "${analysis.vagueTerms[0]}", what exactly do you mean?` : 'What additional details can you provide?'}`;
 				}
 			}
 
