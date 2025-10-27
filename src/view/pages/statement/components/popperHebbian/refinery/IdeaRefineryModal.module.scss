@@ -3,19 +3,24 @@
 	border-radius: 0.5rem;
 	max-width: 900px;
 	width: 95vw;
-	height: 90vh;
+	height: 80vh; // Fixed height to ensure proper flex layout
+	max-height: 80vh; // Reduced to account for parent modal padding
 	display: flex;
 	flex-direction: column;
 	box-shadow: 0px 20px 50px #21253633;
+	overflow: hidden; // Prevent content overflow
+	position: relative; // Ensure proper stacking context
 }
 
 .modalHeader {
 	display: flex;
 	justify-content: space-between;
 	align-items: flex-start;
-	padding: var(--padding);
+	padding: 1rem; // Fixed padding value
 	border-bottom: 2px solid #f0f0f0;
 	background: linear-gradient(135deg, rgba(124, 172, 248, 0.05) 0%, rgba(87, 198, 178, 0.05) 100%);
+	flex-shrink: 0; // Prevent header from shrinking
+	min-height: 0; // Allow header to be as small as needed
 }
 
 .headerContent {
@@ -58,9 +63,11 @@
 }
 
 .originalIdeaSection {
-	padding: var(--padding);
+	padding: 1rem; // Fixed padding value
 	border-bottom: 1px solid #f0f0f0;
 	background: var(--statementBackground);
+	flex-shrink: 0; // Prevent this section from shrinking
+	min-height: 0; // Allow section to be as small as needed
 }
 
 .sectionTitle {
@@ -82,19 +89,20 @@
 }
 
 .conversationSection {
-	flex: 1;
+	flex: 1 1 auto; // Allow to grow and shrink
 	display: flex;
 	flex-direction: column;
-	overflow: hidden;
+	overflow: hidden; // Prevent overflow, children handle scrolling
+	min-height: 0; // Critical: allows flex child to shrink below content size
 }
 
 .messagesContainer {
-	flex: 1;
+	flex: 1 1 auto; // Ensure proper flex grow/shrink
 	overflow-y: auto;
-	padding: var(--padding);
+	padding: 1rem; // Fixed padding value
 	background: #fafafa;
-	min-height: 0; // Important: allows flex child to shrink
-	max-height: calc(90vh - 400px); // Reserve space for header, original idea, and input
+	min-height: 0; // Critical: allows flex child to shrink below content size
+	max-height: 100%; // Prevent overflow beyond parent
 }
 
 .loadingState {
@@ -188,10 +196,12 @@
 }
 
 .inputSection {
-	padding: var(--padding);
+	padding: 1rem; // Fixed padding value
 	border-top: 1px solid #f0f0f0;
 	background: white;
-	flex-shrink: 0; // Prevent input from being compressed
+	flex-shrink: 0; // Critical: Prevent input from being compressed
+	min-height: 0; // Allow section to be as small as needed
+	margin-top: auto; // Push to bottom if content is small
 }
 
 .userInput {
@@ -248,7 +258,8 @@
 @media (max-width: 768px) {
 	.refineryModal {
 		width: 100vw;
-		height: 100vh;
+		height: 85vh; // Fixed height for mobile
+		max-height: 85vh; // Adjusted for mobile viewport with padding
 		border-radius: 0;
 	}
 
@@ -266,5 +277,34 @@
 
 	.completionSection {
 		padding: 1rem;
+	}
+}
+
+// Handle very short viewports (landscape mobile, etc)
+@media (max-height: 600px) {
+	.refineryModal {
+		height: 90vh;
+		max-height: 90vh;
+	}
+
+	.modalHeader {
+		padding: 0.75rem;
+	}
+
+	.originalIdeaSection {
+		padding: 0.75rem;
+	}
+
+	.messagesContainer {
+		padding: 0.75rem;
+	}
+
+	.inputSection {
+		padding: 0.75rem;
+	}
+
+	.userInput {
+		padding: 0.5rem;
+		margin-bottom: 0.5rem;
 	}
 }

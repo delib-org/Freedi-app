@@ -21,6 +21,10 @@ import { useDispatch, useSelector } from 'react-redux';
 import { setNewStatementModal } from '@/redux/statements/newStatementSlice';
 import { statementSubscriptionSelector } from '@/redux/statements/statementsSlice';
 import IdeaRefineryModal from '../../popperHebbian/refinery/IdeaRefineryModal';
+import InitialIdeaModal from '../../popperHebbian/refinery/InitialIdeaModal';
+import { createStatementWithSubscription } from '@/controllers/db/statements/createStatementWithSubscription';
+import { useAuthentication } from '@/controllers/hooks/useAuthentication';
+import { QuestionType } from 'delib-npm';
 
 interface Props { showNav?: boolean; }
 
@@ -28,17 +32,19 @@ const StatementBottomNav: FC<Props> = () => {
 	const { statementId } = useParams<{ statementId: string }>();
 	const dispatch = useDispatch();
 	const navigate = useNavigate();
+	const { user } = useAuthentication();
 
 	const { statement } = useContext(StatementContext);
 	const subscription = useSelector(statementSubscriptionSelector(statementId));
 	const role = subscription?.role;
 	const isAdmin = role === 'admin' || role === Role.creator;
 
-	const { dir, learning, t } = useUserConfig();
+	const { dir, learning, t, currentLanguage } = useUserConfig();
 	const decreaseLearning = useDecreaseLearningRemain();
 
 	// Popper-Hebbian refinery modal state
 	const isPopperHebbianEnabled = statement?.statementSettings?.popperianDiscussionEnabled ?? false;
+	const [showInitialIdeaModal, setShowInitialIdeaModal] = useState(false);
 	const [showRefineryModal, setShowRefineryModal] = useState(false);
 	const [initialIdea, setInitialIdea] = useState('');
 
@@ -100,15 +106,10 @@ const StatementBottomNav: FC<Props> = () => {
 		console.info('Add Option clicked. Popper-Hebbian enabled:', isPopperHebbianEnabled);
 		console.info('Statement settings:', statement?.statementSettings);
 
-		// If Popper-Hebbian mode is enabled, show refinery modal first
+		// If Popper-Hebbian mode is enabled, show initial idea modal first
 		if (isPopperHebbianEnabled) {
-			console.info('Opening Popper-Hebbian refinery modal');
-			// Prompt user for their initial idea
-			const idea = window.prompt(t('What is your initial idea or solution?'));
-			if (idea && idea.trim()) {
-				setInitialIdea(idea.trim());
-				setShowRefineryModal(true);
-			}
+			console.info('Opening initial idea modal');
+			setShowInitialIdeaModal(true);
 			decreaseLearning({ addOption: true });
 		} else {
 			console.info('Using normal option creation flow');
@@ -118,32 +119,47 @@ const StatementBottomNav: FC<Props> = () => {
 		}
 	};
 
-	function handlePublishRefinedIdea(refinedText: string, _sessionId: string) {
-		if (!statement) return;
+	function handleInitialIdeaSubmit(idea: string) {
+		setInitialIdea(idea);
+		setShowInitialIdeaModal(false);
+		setShowRefineryModal(true);
+	}
 
-		// Close the refinery modal
-		setShowRefineryModal(false);
+	async function handlePublishRefinedIdea(refinedText: string, sessionId: string) {
+		if (!statement || !user) return;
 
-		// Reset initial idea
-		setInitialIdea('');
+		try {
+			// Close the refinery modal
+			setShowRefineryModal(false);
 
-		// Open the new statement modal with the refined text pre-filled
-		const defaultType = statement.statementType === StatementType.option
-			? StatementType.question
-			: StatementType.option;
+			// Reset initial idea
+			setInitialIdea('');
 
-		dispatch(
-			setNewStatementModal({
-				parentStatement: statement,
-				newStatement: {
-					statementType: defaultType,
-					statement: refinedText
-				},
-				showModal: true,
-				isLoading: false,
-				error: null,
-			})
-		);
+			// Automatically create the statement with the refined idea
+			const defaultType = statement.statementType === StatementType.option
+				? StatementType.question
+				: StatementType.option;
+
+			// Extract title (first line or first 100 chars) and use full refined text as description
+			const lines = refinedText.split('\n');
+			const title = lines[0].substring(0, 100);
+			const description = refinedText;
+
+			await createStatementWithSubscription({
+				newStatementParent: statement,
+				title,
+				description,
+				newStatement: { statementType: defaultType },
+				newStatementQuestionType: statement.questionType || QuestionType.singleQuestion,
+				currentLanguage,
+				user,
+				dispatch,
+			});
+
+			console.info('Refined idea published successfully', { sessionId, title });
+		} catch (error) {
+			console.error('Failed to publish refined idea:', error);
+		}
 	}
 
 	function handleSortingClick() {
@@ -220,6 +236,14 @@ const StatementBottomNav: FC<Props> = () => {
 					</div>
 				</div>
 			</div>
+
+			{/* Initial Idea Input Modal */}
+			{showInitialIdeaModal && (
+				<InitialIdeaModal
+					onSubmit={handleInitialIdeaSubmit}
+					onClose={() => setShowInitialIdeaModal(false)}
+				/>
+			)}
 
 			{/* Popper-Hebbian Idea Refinery Modal */}
 			{showRefineryModal && statement && initialIdea && (
