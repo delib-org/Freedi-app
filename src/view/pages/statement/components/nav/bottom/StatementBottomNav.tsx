@@ -103,16 +103,11 @@ const StatementBottomNav: FC<Props> = () => {
 	}
 
 	const handleAddOption = () => {
-		console.info('Add Option clicked. Popper-Hebbian enabled:', isPopperHebbianEnabled);
-		console.info('Statement settings:', statement?.statementSettings);
-
 		// If Popper-Hebbian mode is enabled, show initial idea modal first
 		if (isPopperHebbianEnabled) {
-			console.info('Opening initial idea modal');
 			setShowInitialIdeaModal(true);
 			decreaseLearning({ addOption: true });
 		} else {
-			console.info('Using normal option creation flow');
 			// Normal flow - directly create option
 			handleCreateNewOption();
 			decreaseLearning({ addOption: true });
@@ -156,8 +151,7 @@ const StatementBottomNav: FC<Props> = () => {
 				dispatch,
 			});
 
-			console.info('Refined idea published successfully', { sessionId, title });
-		} catch (error) {
+			} catch (error) {
 			console.error('Failed to publish refined idea:', error);
 		}
 	}

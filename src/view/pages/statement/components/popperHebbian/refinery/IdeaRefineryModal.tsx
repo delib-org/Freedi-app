@@ -106,12 +106,6 @@ const IdeaRefineryModal: FC<IdeaRefineryModalProps> = ({
 
 	const isReadyForDiscussion = session?.status === IdeaRefinementStatus.readyForDiscussion;
 
-	console.info('IdeaRefineryModal session:', session);
-	console.info('isReadyForDiscussion:', isReadyForDiscussion);
-	console.info('isInitializing:', isInitializing);
-	console.info('currentLanguage:', currentLanguage);
-	console.info('Should show input field:', !isInitializing && !isReadyForDiscussion);
-
 	return (
 		<Modal closeModal={onClose} title={t('AI Idea Refinery')}>
 			<div className={styles.refineryModal}>

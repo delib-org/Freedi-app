@@ -33,7 +33,6 @@ const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 		property: keyof StatementSettings,
 		newValue: boolean | string
 	) {
-		console.info(`Setting ${property} to ${newValue}`);
 		setStatementSettingToDB({
 			statement,
 			property,
