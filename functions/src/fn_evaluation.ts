@@ -212,7 +212,7 @@ async function updateStatementEvaluation(props: UpdateStatementEvaluationProps):
 		}
 
 		// Update statement evaluation
-		await updateStatementInTransaction(statementId, evaluationDiff, actualAddEvaluator, proConDiff);
+		await updateStatementInTransaction(statementId, evaluationDiff, actualAddEvaluator, proConDiff,newEvaluation,oldEvaluation);
 
 		// Return updated statement
 		const statementRef = db.collection(Collections.statements).doc(statementId);
@@ -262,6 +262,7 @@ async function ensureAverageEvaluationForAllOptions(parentId: string): Promise<v
 					sumCon: 0,
 					evaluationRandomNumber: Math.random(),
 					viewed: 0,
+					sumSquaredEvaluations: 0,
 				};
 
 				// Ensure averageEvaluation is calculated
@@ -289,7 +290,9 @@ async function updateStatementInTransaction(
 	statementId: string,
 	evaluationDiff: number,
 	addEvaluator: number,
-	proConDiff: CalcDiff
+	proConDiff: CalcDiff,
+	newEvaluation: number,
+	oldEvaluation: number
 ): Promise<void> {
 	await db.runTransaction(async (transaction) => {
 		const statementRef = db.collection(Collections.statements).doc(statementId);
@@ -323,6 +326,7 @@ async function updateStatementInTransaction(
 					averageEvaluation: 0,
 					evaluationRandomNumber: Math.random(),
 					viewed: 0,
+					sumSquaredEvaluations: 0,
 				};
 			} else {
 				// Calculate based on existing data
@@ -334,7 +338,7 @@ async function updateStatementInTransaction(
 
 		const statement = parse(StatementSchema, statementData);
 
-		const { agreement, evaluation } = calculateEvaluation(statement, proConDiff, evaluationDiff, addEvaluator);
+		const { agreement, evaluation } = calculateEvaluation(statement, proConDiff, evaluationDiff, addEvaluator,newEvaluation,oldEvaluation);
 
 		transaction.update(statementRef, {
 			totalEvaluators: FieldValue.increment(addEvaluator),
@@ -346,7 +350,7 @@ async function updateStatementInTransaction(
 	});
 }
 
-function calculateEvaluation(statement: Statement, proConDiff: CalcDiff, evaluationDiff: number, addEvaluator: number) {
+function calculateEvaluation(statement: Statement, proConDiff: CalcDiff, evaluationDiff: number, addEvaluator: number,newEvaluation: number,oldEvaluation: number) {
 	const evaluation = statement.evaluation || {
 		agreement: statement.consensus || 0,
 		sumEvaluations: 0,
@@ -356,6 +360,7 @@ function calculateEvaluation(statement: Statement, proConDiff: CalcDiff, evaluat
 		averageEvaluation: 0,
 		evaluationRandomNumber: Math.random(),
 		viewed: 0,
+		sumSquaredEvaluations: 0,
 	};
 
 	if (statement.evaluation) {
@@ -365,12 +370,15 @@ function calculateEvaluation(statement: Statement, proConDiff: CalcDiff, evaluat
 		evaluation.sumCon = (evaluation.sumCon || 0) + proConDiff.conDiff;
 		// Ensure averageEvaluation exists even for old data
 		evaluation.averageEvaluation = evaluation.averageEvaluation ?? 0;
+		evaluation.sumSquaredEvaluations = (evaluation.sumSquaredEvaluations ?? 0) + (newEvaluation * newEvaluation) - (oldEvaluation * oldEvaluation);
+
 	} else {
 		// For new evaluations, apply the diffs and evaluator count
 		evaluation.sumEvaluations = evaluationDiff;
 		evaluation.numberOfEvaluators = addEvaluator;
 		evaluation.sumPro = proConDiff.proDiff;
 		evaluation.sumCon = proConDiff.conDiff;
+		evaluation.sumSquaredEvaluations = (newEvaluation * newEvaluation);
 	}
 
 	// Calculate average evaluation
@@ -378,7 +386,7 @@ function calculateEvaluation(statement: Statement, proConDiff: CalcDiff, evaluat
 		? evaluation.sumEvaluations / evaluation.numberOfEvaluators
 		: 0;
 
-	const agreement = calcAgreement(evaluation.sumEvaluations, evaluation.numberOfEvaluators);
+	const agreement = calcAgreement(evaluation.sumEvaluations, evaluation.numberOfEvaluators, evaluation.sumSquaredEvaluations);
 	evaluation.agreement = agreement;
 
 	return { agreement, evaluation };
@@ -388,16 +396,32 @@ function calculateEvaluation(statement: Statement, proConDiff: CalcDiff, evaluat
 // AGREEMENT CALCULATION LOGIC
 // ============================================================================
 
-function calcAgreement(sumEvaluations: number, numberOfEvaluators: number): number {
+function calcAgreement(sumEvaluations: number, numberOfEvaluators: number, sumSquaredEvaluations: number): number {
 	try {
 		parse(number(), sumEvaluations);
 		parse(number(), numberOfEvaluators);
+		parse(number(), sumSquaredEvaluations);
 
-		if (numberOfEvaluators === 0) numberOfEvaluators = 1;
+		const n =numberOfEvaluators;
+		const sum = sumEvaluations;
+		const sumSquared = sumSquaredEvaluations;
 
-		const averageEvaluation = sumEvaluations / numberOfEvaluators;
-
-		return averageEvaluation * Math.sqrt(numberOfEvaluators);
+		if(n>=2){
+			const mean = sum / n;
+			const variance=Math.max(0,(sumSquared-(sum*sum)/n)/(n-1));
+			const stdDev=Math.sqrt(variance);
+			const sem=stdDev/Math.sqrt(n);
+			return mean-sem;
+		}else if(n===1){
+			// No variance with n = 1 , so apply conservative SEM = 1.0
+			// (the value can be changed later on)
+			// to avoid inflating score based on a single rating.
+			const mean=sum;
+			const sem=1;
+			return mean-sem;
+		}else{
+			return 0;
+		}
 	} catch (error) {
 		logger.error('Error calculating agreement:', error);
 
@@ -544,6 +568,7 @@ return;
 			averageEvaluation: 0,
 			evaluationRandomNumber: Math.random(),
 			viewed: 0,
+			sumSquaredEvaluations: 0,
 		};
 
 		// Update asParentTotalEvaluators field
