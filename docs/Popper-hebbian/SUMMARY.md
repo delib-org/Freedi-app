@@ -23,19 +23,20 @@ populated with support level, evidence types, and vote counts.
 
 ### How It Works
 1. **Admin enables Popper-Hebbian mode** on a question
-2. **Users create options** (ideas) - AI helps refine them
-3. **Community discusses** each option with evidence
-4. **Voting determines quality** - net score affects weight
-5. **System calculates** weighted support vs challenge scores
-6. **Status indicator** shows: Looking Good / Under Discussion / Needs Fixing
-7. **Evolution prompts** appear when ideas need improvement
+2. **Users create options** (ideas) - AI refinery modal helps refine them
+3. **Evidence appears under option** statement description
+4. **Users add evidence** via modal - set support level, AI classifies type
+5. **Community votes** on evidence quality (helpful/not-helpful)
+6. **System calculates** weighted scores based on evidence type and votes
+7. **Status indicator** shows: Looking Good / Under Discussion / Needs Fixing
+8. **Evolution prompts** appear when ideas need improvement
 
 ## Technical Highlights
 
 ### MVP Simplicity
 - ✅ **Gemini 2.5 Flash**: Free tier, simple setup, no complexity
 - ✅ **Basic weighted scoring**: Type-based + net votes
-- ✅ **Manual evidence typing**: No AI classification yet
+- ✅ **AI evidence classification**: Gemini automatically classifies evidence type
 - ✅ **Positive & negative feedback**: Both helpful and not-helpful votes
 
 ### Data Models
@@ -78,10 +79,10 @@ src/models/popperHebbian/
   └── RefineryModels.ts  (Score interfaces only - evidence uses delib-npm)
 
 src/view/pages/statement/components/popperHebbian/
-  ├── PopperHebbianDiscussion.tsx
-  ├── refinery/
-  │   └── IdeaRefineryModal.tsx
+  ├── PopperHebbianDiscussion.tsx  (displays under option description)
   └── components/
+      ├── AddEvidenceModal/  (modal for adding evidence)
+      ├── IdeaRefineryModal/  (modal for refining new options)
       ├── IdeaScoreboard/
       ├── EvidencePost/
       └── EvolutionPrompt/

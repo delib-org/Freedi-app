@@ -14,7 +14,7 @@ This document outlines the implementation plan for integrating the "Popper-Hebbi
 **Why simple for MVP**:
 - ✅ Use Gemini 2.5 Flash (free tier, 1-package setup)
 - ✅ Basic weighted scoring (no complex Hebbian ledger yet)
-- ✅ Manual evidence typing (no AI classification yet)
+- ✅ AI evidence classification (Gemini automatically classifies evidence type)
 - ✅ All functionality, minimal complexity
 
 **Setup time**: ~30 minutes
@@ -85,9 +85,12 @@ They are marked as support/challenge via metadata, not via statementType.
 3. Users create **option** statements (`statementType: StatementType.option`) as children of the question
 4. If refinery is enabled, options go through AI refinement before publishing
 5. Each option gets its own discussion page with Support/Challenge interface
-6. Users post evidence for/against each option
+6. Users post evidence for/against each option:
+   - User writes evidence text
+   - User sets support level (-1 to 1) via slider
+   - AI automatically classifies evidence type (data, testimony, argument, anecdote, fallacy)
 7. Community votes on evidence quality (helpful/not-helpful)
-8. System calculates weighted scores for each option
+8. System calculates weighted scores for each option based on evidence type and votes
 9. Options show status: looking-good, under-discussion, or needs-fixing
 
 **Important**: Only works with question → option hierarchy. Regular statements (`statementType: StatementType.statement`) are standalone and don't participate in Popper-Hebbian discussions.
@@ -357,22 +360,38 @@ Add new category section:
 
 ### Phase 3: Discussion/Gauntlet UI (Stage 2)
 
-#### 3.1 Conditional Rendering in EvaluationPage
-**File**: `src/view/pages/statement/components/evaluations/StatementsEvaluationPage.tsx`
+#### 3.1 UI Placement - Under Option Statement Description
+**File**: `src/view/pages/statement/components/statement/StatementBottomNav.tsx` or statement view component
+
+The Popper-Hebbian discussion UI should appear **under the statement description** for option statements when Popper-Hebbian mode is enabled on the parent question.
 
 ```typescript
-const isPopperHebbian = statement.statementSettings?.popperHebbian;
+// In the statement view component for options
+const parentQuestion = useParentStatement(statement.parentId);
+const isPopperHebbianOption =
+  statement.statementType === StatementType.option &&
+  parentQuestion?.statementSettings?.popperianDiscussionEnabled;
 
-return isPopperHebbian ? (
-  <PopperHebbianDiscussion statement={statement} />
-) : (
-  // Existing evaluation UI
-  <SuggestionCards />
+return (
+  <div className={styles.statementView}>
+    {/* Statement header, description, etc. */}
+    <StatementHeader statement={statement} />
+    <StatementDescription text={statement.description} />
+
+    {/* Popper-Hebbian Evidence Section (appears under description) */}
+    {isPopperHebbianOption && (
+      <PopperHebbianDiscussion statement={statement} />
+    )}
+
+    {/* Rest of statement UI */}
+  </div>
 );
 ```
 
 #### 3.2 Create PopperHebbianDiscussion Component
 **New File**: `src/view/pages/statement/components/popperHebbian/PopperHebbianDiscussion.tsx`
+
+This component displays under the option statement's description.
 
 Helper function for converting support values to user-friendly labels:
 ```typescript
@@ -388,54 +407,19 @@ function getSupportLabel(supportLevel: number): string {
 Structure:
 ```typescript
 <div className={styles.popperHebbianDiscussion}>
+  {/* Scoreboard shows overall status */}
   <IdeaScoreboard statement={statement} />
 
-  <div className={styles.addEvidence}>
-    <h3>Add Your Evidence</h3>
-    <textarea
-      placeholder="Share your evidence or reasoning..."
-      value={evidenceText}
-      onChange={(e) => setEvidenceText(e.target.value)}
-    />
+  {/* Button to open evidence modal */}
+  <Button
+    variant="primary"
+    onClick={() => setShowEvidenceModal(true)}
+    className={styles.addEvidenceButton}
+  >
+    + Add Evidence
+  </Button>
 
-    <div className={styles.supportSlider}>
-      <label>How much does this evidence support or challenge the idea?</label>
-      <input
-        type="range"
-        min="-1"
-        max="1"
-        step="0.1"
-        value={supportLevel}
-        onChange={(e) => setSupportLevel(parseFloat(e.target.value))}
-      />
-      <div className={styles.sliderLabels}>
-        <span>Strongly Challenges (-1)</span>
-        <span>Neutral (0)</span>
-        <span>Strongly Supports (+1)</span>
-      </div>
-      <div className={styles.currentValue}>
-        {getSupportLabel(supportLevel)}
-      </div>
-    </div>
-
-    <div className={styles.evidenceTypeSelector}>
-      <label>What kind of evidence is this?</label>
-      <select
-        value={evidenceType}
-        onChange={(e) => setEvidenceType(e.target.value as EvidenceType)}
-      >
-        <option value={EvidenceType.data}>Data/Research (highest weight)</option>
-        <option value={EvidenceType.testimony}>Expert Testimony</option>
-        <option value={EvidenceType.argument}>Logical Argument</option>
-        <option value={EvidenceType.anecdote}>Personal Experience</option>
-      </select>
-    </div>
-
-    <Button onClick={handleSubmitEvidence}>
-      Submit Evidence
-    </Button>
-  </div>
-
+  {/* List of all evidence posts */}
   <div className={styles.evidenceList}>
     <h3>All Evidence</h3>
     {evidencePosts
@@ -445,11 +429,103 @@ Structure:
       ))}
   </div>
 
+  {/* Evolution prompt when idea needs fixing */}
   {showEvolutionPrompt && <EvolutionPrompt statement={statement} />}
+
+  {/* Modal for adding evidence */}
+  {showEvidenceModal && (
+    <AddEvidenceModal
+      statement={statement}
+      onClose={() => setShowEvidenceModal(false)}
+      onSubmit={handleSubmitEvidence}
+    />
+  )}
 </div>
 ```
 
-#### 3.3 Create EvidencePost Component
+#### 3.3 Create AddEvidenceModal Component
+**New File**: `src/view/pages/statement/components/popperHebbian/components/AddEvidenceModal/AddEvidenceModal.tsx`
+
+Modal for adding new evidence:
+```typescript
+interface AddEvidenceModalProps {
+  statement: Statement; // The option being discussed
+  onClose: () => void;
+  onSubmit: (evidenceText: string, support: number) => void;
+}
+
+const AddEvidenceModal: FC<AddEvidenceModalProps> = ({ statement, onClose, onSubmit }) => {
+  const [evidenceText, setEvidenceText] = useState('');
+  const [supportLevel, setSupportLevel] = useState(0);
+
+  const handleSubmit = () => {
+    if (!evidenceText.trim()) return;
+    onSubmit(evidenceText, supportLevel);
+    onClose();
+  };
+
+  return (
+    <Modal onClose={onClose} className={styles.addEvidenceModal}>
+      <div className={styles.modalHeader}>
+        <h2>Add Evidence</h2>
+        <p>Discussing: {statement.statement}</p>
+      </div>
+
+      <div className={styles.modalBody}>
+        <div className={styles.textareaSection}>
+          <label>Your Evidence</label>
+          <textarea
+            placeholder="Share your evidence, research, or reasoning..."
+            value={evidenceText}
+            onChange={(e) => setEvidenceText(e.target.value)}
+            rows={6}
+            className={styles.evidenceTextarea}
+          />
+        </div>
+
+        <div className={styles.supportSlider}>
+          <label>How does this evidence relate to the idea?</label>
+          <input
+            type="range"
+            min="-1"
+            max="1"
+            step="0.1"
+            value={supportLevel}
+            onChange={(e) => setSupportLevel(parseFloat(e.target.value))}
+          />
+          <div className={styles.sliderLabels}>
+            <span>Strongly Challenges</span>
+            <span>Neutral</span>
+            <span>Strongly Supports</span>
+          </div>
+          <div className={styles.currentValue}>
+            {getSupportLabel(supportLevel)}
+          </div>
+        </div>
+
+        <p className={styles.helperText}>
+          💡 AI will automatically classify your evidence type (data, testimony, argument, or anecdote)
+        </p>
+      </div>
+
+      <div className={styles.modalFooter}>
+        <Button variant="subtle" onClick={onClose}>
+          Cancel
+        </Button>
+        <Button
+          variant="primary"
+          onClick={handleSubmit}
+          disabled={!evidenceText.trim()}
+        >
+          Submit Evidence
+        </Button>
+      </div>
+    </Modal>
+  );
+};
+```
+
+#### 3.4 Create EvidencePost Component
 **New File**: `src/view/pages/statement/components/popperHebbian/components/EvidencePost/EvidencePost.tsx`
 
 Features:
@@ -635,14 +711,72 @@ statements/{statementId}
 
 Triggered on evidence post creation:
 ```typescript
+import { Statement, EvidenceType } from 'delib-npm';
+import { GoogleGenerativeAI } from '@google/generative-ai';
+
+const genAI = new GoogleGenerativeAI(functions.config().gemini.key);
+
 export const onEvidencePostCreate = functions.firestore
-  .document('evidencePosts/{postId}')
+  .document('statements/{statementId}')
   .onCreate(async (snap, context) => {
-    // 1. Set default evidence type (for MVP: 'argument')
+    const statement = snap.data() as Statement;
+
+    // Only process statements with evidence field
+    if (!statement.evidence) return;
+
+    // 1. Call AI to classify evidence type
+    const evidenceType = await classifyEvidenceType(statement.statement);
+
     // 2. Calculate initial weight
-    // 3. Trigger score recalculation
-    // 4. [FUTURE] Call AI to classify evidence type
+    const weight = calculateInitialWeight(evidenceType);
+
+    // 3. Update statement with classification and weight
+    await snap.ref.update({
+      'evidence.evidenceType': evidenceType,
+      'evidence.evidenceWeight': weight,
+    });
+
+    // 4. Trigger score recalculation for parent option
+    await recalculateScore(statement.parentId);
   });
+
+async function classifyEvidenceType(evidenceText: string): Promise<EvidenceType> {
+  const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
+
+  const prompt = `Classify this evidence into ONE of these types:
+- data: Research, studies, statistics, verified facts
+- testimony: Expert testimony, verified reports from authorities
+- argument: Logical reasoning, deductive/inductive arguments
+- anecdote: Personal experience, observations, stories
+- fallacy: Logically flawed, off-topic, or misleading
+
+Evidence: "${evidenceText}"
+
+Respond with ONLY the type name (data, testimony, argument, anecdote, or fallacy).`;
+
+  const result = await model.generateContent(prompt);
+  const response = result.response.text().trim().toLowerCase();
+
+  // Validate and return
+  if (Object.values(EvidenceType).includes(response as EvidenceType)) {
+    return response as EvidenceType;
+  }
+
+  // Default to argument if classification fails
+  return EvidenceType.argument;
+}
+
+function calculateInitialWeight(evidenceType: EvidenceType): number {
+  const EVIDENCE_WEIGHTS: Record<EvidenceType, number> = {
+    [EvidenceType.data]: 3.0,
+    [EvidenceType.testimony]: 2.0,
+    [EvidenceType.argument]: 1.0,
+    [EvidenceType.anecdote]: 0.5,
+    [EvidenceType.fallacy]: 0.1,
+  };
+
+  return EVIDENCE_WEIGHTS[evidenceType];
+}
 ```
 
 **File**: `functions/src/fn_popperHebbian_recalculateScore.ts`
@@ -726,7 +860,17 @@ export const onVote = functions.firestore
 ### Phase 6: Stage 1 - AI Refinery Implementation
 
 #### 6.1 Overview
-The AI Refinery intercepts new statement submissions and guides users through a Socratic dialogue to refine vague ideas into clear, testable propositions before they're published for discussion.
+The AI Refinery opens as a **modal** when users create new option statements. It guides users through a Socratic dialogue to refine vague ideas into clear, testable propositions before they're published for discussion.
+
+**User Flow**:
+1. User clicks "Add Option" on a Popper-Hebbian question
+2. **Modal opens** with AI Refinery interface
+3. User types their initial idea
+4. AI analyzes for clarity and testability
+5. If needed, AI asks clarifying questions (chat-style in modal)
+6. User responds to AI questions
+7. AI confirms idea is ready or suggests improvements
+8. User publishes refined idea (modal closes, option appears)
 
 #### 6.2 Data Models
 
