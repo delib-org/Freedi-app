@@ -84,13 +84,44 @@ Use simple, encouraging language.`;
 			const response = await result.response;
 			const text = response.text();
 
-			// Extract JSON from response (may be wrapped in markdown code blocks)
-			const jsonMatch = text.match(/\{[\s\S]*\}/);
-			if (!jsonMatch) {
-				throw new Error('Invalid JSON response from AI');
+			// Parse JSON response directly (responseMimeType ensures valid JSON)
+			let analysis: FalsifiabilityAnalysis;
+			try {
+				const parsed = JSON.parse(text);
+			console.info('Parsed response:', JSON.stringify(parsed));
+
+			// Handle case where AI returns an array instead of a single object
+			if (Array.isArray(parsed)) {
+				// Find the object that has the analysis structure (with isTestable field)
+				const analysisObj = parsed.find((item: unknown) =>
+					item && typeof item === 'object' && 'isTestable' in item
+				);
+				if (!analysisObj) {
+					console.error('No valid analysis found in array:', parsed);
+					throw new Error('AI returned array without analysis object');
+				}
+				analysis = analysisObj as FalsifiabilityAnalysis;
+			} else {
+				analysis = parsed;
 			}
 
-			const analysis: FalsifiabilityAnalysis = JSON.parse(jsonMatch[0]);
+			console.info('Extracted analysis:', JSON.stringify(analysis));
+
+			// Validate the analysis structure
+			if (!analysis || typeof analysis !== 'object') {
+				console.error('Invalid analysis structure:', analysis);
+				throw new Error('AI returned invalid analysis structure');
+			}
+
+			// Ensure vagueTerms is an array
+			if (!analysis.vagueTerms || !Array.isArray(analysis.vagueTerms)) {
+				console.error('Missing or invalid vagueTerms in analysis:', analysis);
+				analysis.vagueTerms = [];
+			}
+			} catch (parseError) {
+				console.error('Failed to parse JSON response:', text);
+				throw new Error('Invalid JSON response from AI');
+			}
 
 			// Generate initial AI message based on analysis and language
 			let initialMessage: string;

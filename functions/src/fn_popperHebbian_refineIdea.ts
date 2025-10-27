@@ -54,41 +54,35 @@ export const refineIdea = onCall<RefineIdeaRequest>(
 			? `\n\nIMPORTANT: All your responses (aiMessage, refinedIdea, etc.) must be in ${languageName}. Conduct the entire dialogue in ${languageName}.`
 			: '';
 
-		const prompt = `You are helping refine vague ideas into clear proposals.${languageInstruction}
+		const prompt = `You are helping make answers clear and specific.${languageInstruction}
 
-STRICT INSTRUCTION: Your aiMessage must ONLY be ONE of these templates. Do not add any other text:
+Your task:
+1. Read the original question/topic
+2. Read the proposed answer
+3. Decide: Is this answer clear enough for someone to understand what's being proposed?
 
-TEMPLATE 1 - First question (when you need clarity on the main term):
-"כש[אתה/את] אומר '[המונח המעורפל]', למה בדיוק [אתה/את] מתכוון?"
-English: "When you say '[vague term]', what exactly do you mean?"
+If YES - the answer is clear:
+- Say "מושלם!" / "Perfect!"
+- Provide the refined version
 
-TEMPLATE 2 - Specific detail question:
-"איזה [פרט ספציפי] בדיוק?"
-English: "Which [specific detail] exactly?"
-
-TEMPLATE 3 - Time/location question:
-"מתי / איפה בדיוק?"
-English: "When / Where exactly?"
-
-TEMPLATE 4 - Acknowledgment + follow-up:
-"מצוין! [שאלת המשך קצרה]?"
-English: "Great! [short follow-up question]?"
-
-TEMPLATE 5 - Completion:
-"מושלם!"
-English: "Perfect!"
-
-RULES:
-- Use ONLY these templates
+If NO - the answer needs clarity:
+- Ask ONE simple question about the most important missing detail
+- Focus on: which, what type, when, where, who
+- Be natural and conversational
+- Keep it very short (one sentence)
 - Maximum 2-3 questions total
-- Each aiMessage = ONLY the question, no explanations
-- Check: Is this relevant to the parent question?
-- Focus: which place, what type, when, where - NOT success criteria
 
-Your goals:
-1. Verify relevance to original question
-2. Get specific details (which, what type, when, where)
-3. Keep it SHORT
+Your decision should be based on:
+- Can others understand exactly what's being proposed?
+- Does it have enough practical details?
+- Is it relevant to the original question?
+
+Examples of clarifying questions:
+- "איזו מסעדה?" / "Which restaurant?"
+- "מתי?" / "When?"
+- "איפה?" / "Where?"
+
+Be helpful and warm. Acknowledge responses: "מצוין!" / "Great!"
 
 CRITICAL Guidelines:
 - CHECK RELEVANCE FIRST: Does this proposal actually answer the original question? If someone asks "where to eat?" and proposes "go swimming", that's not relevant!
@@ -124,36 +118,27 @@ If BOTH YES, mark isComplete: true. If NO to either, ask ONE more focused questi
 
 Response format (JSON):
 
-MANDATORY: Use ONLY the templates above. Your aiMessage must match one of the 5 templates EXACTLY.
-
-Examples in Hebrew:
+If asking a question:
 {
-  "aiMessage": "כשאתה אומר 'מסעדה', למה בדיוק אתה מתכוון?",
+  "aiMessage": "Your natural, conversational question here",
   "isComplete": false
 }
 
+If the idea is now clear and complete:
 {
-  "aiMessage": "איזו מסעדה בדיוק?",
-  "isComplete": false
-}
-
-{
-  "aiMessage": "מצוין! מתי בדיוק?",
-  "isComplete": false
-}
-
-{
-  "aiMessage": "מושלם!",
+  "aiMessage": "מושלם!" (or "Perfect!" in English),
   "refinedIdea": "The clear, specific version with all practical details",
   "isComplete": true
-}`;
+}
+
+Think independently and ask what YOU think is most important to clarify.`;
 
 		try {
 			const model = getGeminiModel();
 
 			// Configure generation settings
 			const generationConfig = {
-				temperature: 0.5,  // Balanced between creativity and consistency
+				temperature: 0.7,  // More flexibility for natural conversation
 				responseMimeType: "application/json",  // Force JSON output
 			};
 
@@ -165,13 +150,14 @@ Examples in Hebrew:
 			const response = await result.response;
 			const text = response.text();
 
-			// Extract JSON from response
-			const jsonMatch = text.match(/\{[\s\S]*\}/);
-			if (!jsonMatch) {
+			// Parse JSON response directly (responseMimeType ensures valid JSON)
+			let refinementResult: RefineIdeaResponse;
+			try {
+				refinementResult = JSON.parse(text);
+			} catch (parseError) {
+				console.error('Failed to parse JSON response:', text);
 				throw new Error('Invalid JSON response from AI');
 			}
-
-			const refinementResult: RefineIdeaResponse = JSON.parse(jsonMatch[0]);
 
 			return refinementResult;
 

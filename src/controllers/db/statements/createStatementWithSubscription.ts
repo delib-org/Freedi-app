@@ -68,7 +68,8 @@ export async function createStatementWithSubscription({
 	});
 
 	if (!result) {
-		throw new Error('Failed to save statement to database');
+		// Check browser console for detailed error from setStatementToDB
+		throw new Error('Failed to save statement to database - check console for details');
 	}
 
 	const { statementId } = result;
