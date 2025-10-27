@@ -50,7 +50,12 @@ export async function createStatementWithSubscription({
 		statement: _newStatement,
 		statementsSubscribeId: getStatementSubscriptionId(_newStatement.statementId, user),
 		statementId: _newStatement.statementId,
-		user: user,
+		user: {
+			uid: user.uid,
+			displayName: user.displayName || '',
+			email: user.email || '',
+			photoURL: user.photoURL || '',
+		},
 		lastUpdate: now,
 		createdAt: now,
 		userId: user?.uid || '',
