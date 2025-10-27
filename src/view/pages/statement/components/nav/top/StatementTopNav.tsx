@@ -50,7 +50,7 @@ const StatementTopNav: FC<Props> = ({
 
   if (!statement) return null;
 
-  const isAdmin = role === Role.admin || user?.uid === statement?.creatorId;
+  const isAdmin = role === Role.admin || role === Role.creator || user?.uid === statement?.creatorId;
 
   const currentLabel = LANGUAGES.find(
     (lang) => lang.code === currentLanguage
