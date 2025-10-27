@@ -1,115 +1,78 @@
 .initialIdeaModal {
 	display: flex;
 	flex-direction: column;
-	background: white;
 	border-radius: 0.5rem;
 	min-width: 500px;
 	max-width: 600px;
 	width: 90vw;
-	height: 80vh; // Fixed height to ensure proper flex layout
-	max-height: 80vh; // Reduced to account for parent padding
-	overflow: hidden; // Parent hides overflow
-	position: relative; // Ensure proper stacking context
+	
 
 	@media (max-width: 768px) {
 		min-width: auto;
 		width: 95vw;
 		max-width: none;
-		height: 85vh; // Fixed height for mobile
-		max-height: 85vh; // Increased for mobile but still accounting for padding
 	}
 }
 
 .modalHeader {
-	display: flex;
-	align-items: flex-start;
-	gap: 1rem;
-	padding: 1.5rem;
+	padding: 0.75rem 1rem;
 	background: linear-gradient(135deg, rgba(124, 172, 248, 0.08) 0%, rgba(87, 198, 178, 0.08) 100%);
 	border-bottom: 2px solid var(--statementBackground);
-	flex-shrink: 0; // Prevent header from shrinking
-	min-height: 0; // Allow header to be as small as needed
-
-	@media (max-width: 480px) {
-		padding: 1rem;
-	}
+	display: flex;
+	align-items: flex-start;
+	gap: 0.75rem;
 }
 
 .headerIcon {
 	flex-shrink: 0;
-	width: 48px;
-	height: 48px;
+	width: 36px;
+	height: 36px;
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	background: linear-gradient(135deg, var(--accent), var(--agree));
-	border-radius: 12px;
+	border-radius: 8px;
 	box-shadow: 0px 4px 12px rgba(124, 172, 248, 0.2);
-
-	@media (max-width: 480px) {
-		width: 40px;
-		height: 40px;
-	}
 }
 
 .iconEmoji {
-	font-size: 1.5rem;
+	font-size: 1.25rem;
 	filter: grayscale(0) brightness(1.1);
-
-	@media (max-width: 480px) {
-		font-size: 1.25rem;
-	}
 }
 
 .headerContent {
 	flex: 1;
-	min-width: 0; // Allow text truncation
+	min-width: 0;
 }
 
 .modalTitle {
-	font-size: var(--h3-font-size);
+	font-size: 1.1rem;
 	font-weight: 600;
 	color: var(--text-primary);
-	margin: 0 0 0.5rem 0;
+	margin: 0 0 0.25rem 0;
 	line-height: 1.2;
-
-	@media (max-width: 480px) {
-		font-size: var(--h4-font-size);
-	}
 }
 
 .modalSubtitle {
-	font-size: 0.95rem;
+	font-size: 0.85rem;
 	color: var(--text-secondary);
 	margin: 0;
-	line-height: 1.5;
-
-	@media (max-width: 480px) {
-		font-size: 0.9rem;
-	}
+	line-height: 1.3;
 }
 
 .inputWrapper {
-	flex: 1 1 auto; // Allow to grow and shrink
-	overflow-y: auto; // Allow scrolling if content is too tall
-	padding: 1.5rem;
+	padding: 1rem;
 	background: var(--statementBackground);
-	min-height: 0; // Critical: allows flex child to shrink below content size
-	max-height: 100%; // Prevent overflow
-
-	@media (max-width: 480px) {
-		padding: 1rem;
-	}
 }
 
 .inputSection {
 	display: flex;
 	flex-direction: column;
-	gap: 0.75rem;
+	gap: 0.5rem;
 }
 
 .label {
-	font-size: 0.95rem;
+	font-size: 0.9rem;
 	font-weight: 500;
 	color: var(--text-primary);
 	display: flex;
@@ -128,16 +91,15 @@
 
 .textarea {
 	width: 100%;
-	padding: 1rem;
+	padding: 0.75rem;
 	border: 2px solid transparent;
 	border-radius: 12px;
 	background: white;
 	font-size: 1rem;
 	font-family: 'Open Sans', sans-serif;
-	line-height: 1.6;
-	resize: vertical;
-	min-height: 100px; // Reduced to prevent overflow
-	max-height: 200px; // Reduced to fit better in modal
+	line-height: 1.4;
+	resize: none;
+	height: 100px;
 	transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 	box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.08);
 	color: var(--text-primary);
@@ -158,16 +120,9 @@
 		opacity: 0.8;
 	}
 
-	// Better RTL support
 	[dir="rtl"] & {
 		text-align: right;
 		direction: rtl;
-	}
-
-	@media (max-width: 480px) {
-		padding: 0.75rem;
-		font-size: 0.95rem;
-		min-height: 120px;
 	}
 }
 
@@ -204,37 +159,27 @@
 .modalFooter {
 	display: flex;
 	justify-content: flex-end;
-	gap: 1rem;
-	padding: 1.5rem;
-	background: white;
+	gap: 0.75rem;
+	padding: 0.75rem 1rem;
 	border-top: 1px solid var(--statementBackground);
-	flex-shrink: 0; // Critical: Prevent footer from being compressed
-	min-height: 0; // Allow footer to be as small as needed
-	margin-top: auto; // Push footer to bottom if content is small
 
-	@media (max-width: 480px) {
-		padding: 1rem;
-		gap: 0.75rem;
-	}
-
-	// RTL support
 	[dir="rtl"] & {
 		flex-direction: row-reverse;
 	}
 }
 
 .button {
-	padding: 0.75rem 1.5rem;
-	border-radius: 25px;
-	font-size: 1rem;
+	padding: 0.6rem 1.25rem;
+	border-radius: 20px;
+	font-size: 0.95rem;
 	font-weight: 500;
 	border: none;
 	cursor: pointer;
 	transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 	display: flex;
 	align-items: center;
-	gap: 0.5rem;
-	min-height: 44px; // Accessibility - minimum touch target
+	gap: 0.4rem;
+	min-height: 40px;
 	position: relative;
 	overflow: hidden;
 
@@ -245,11 +190,6 @@
 	&:focus-visible {
 		outline: 2px solid var(--btn-primary);
 		outline-offset: 2px;
-	}
-
-	@media (max-width: 480px) {
-		padding: 0.6rem 1.2rem;
-		font-size: 0.95rem;
 	}
 }
 
@@ -328,94 +268,11 @@
 		transform: translateX(3px);
 	}
 
-	// RTL support - flip the arrow
 	[dir="rtl"] & {
 		transform: scaleX(-1);
 	}
 
 	[dir="rtl"] .buttonPrimary:hover & {
 		transform: scaleX(-1) translateX(3px);
-	}
-}
-
-// Animation for modal entrance
-@keyframes modalSlideIn {
-	from {
-		opacity: 0;
-		transform: translateY(20px) scale(0.95);
-	}
-	to {
-		opacity: 1;
-		transform: translateY(0) scale(1);
-	}
-}
-
-.initialIdeaModal {
-	animation: modalSlideIn 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-}
-
-// Focus trap styles for accessibility
-.initialIdeaModal:focus {
-	outline: none;
-}
-
-// Loading state (for future use)
-.loadingOverlay {
-	position: absolute;
-	top: 0;
-	left: 0;
-	right: 0;
-	bottom: 0;
-	background: rgba(255, 255, 255, 0.95);
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	z-index: 10;
-	border-radius: inherit;
-}
-
-// Responsive adjustments for very small screens
-@media (max-width: 360px) {
-	.modalHeader {
-		gap: 0.75rem;
-	}
-
-	.headerIcon {
-		width: 36px;
-		height: 36px;
-	}
-
-	.modalTitle {
-		font-size: 1.1rem;
-	}
-
-	.button {
-		padding: 0.5rem 1rem;
-		font-size: 0.9rem;
-	}
-}
-
-// Handle very short viewports (landscape mobile, etc)
-@media (max-height: 600px) {
-	.initialIdeaModal {
-		height: 90vh;
-		max-height: 90vh;
-	}
-
-	.modalHeader {
-		padding: 0.75rem;
-	}
-
-	.inputWrapper {
-		padding: 0.75rem;
-	}
-
-	.modalFooter {
-		padding: 0.75rem;
-	}
-
-	.textarea {
-		min-height: 60px;
-		max-height: 120px;
 	}
 }
