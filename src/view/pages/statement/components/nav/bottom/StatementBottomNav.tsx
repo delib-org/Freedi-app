@@ -20,6 +20,7 @@ import { useDecreaseLearningRemain } from '@/controllers/hooks/useDecreaseLearni
 import { useDispatch, useSelector } from 'react-redux';
 import { setNewStatementModal } from '@/redux/statements/newStatementSlice';
 import { statementSubscriptionSelector } from '@/redux/statements/statementsSlice';
+import IdeaRefineryModal from '../../popperHebbian/refinery/IdeaRefineryModal';
 
 interface Props { showNav?: boolean; }
 
@@ -35,6 +36,11 @@ const StatementBottomNav: FC<Props> = () => {
 
 	const { dir, learning, t } = useUserConfig();
 	const decreaseLearning = useDecreaseLearningRemain();
+
+	// Popper-Hebbian refinery modal state
+	const isPopperHebbianEnabled = statement?.statementSettings?.popperianDiscussionEnabled ?? false;
+	const [showRefineryModal, setShowRefineryModal] = useState(false);
+	const [initialIdea, setInitialIdea] = useState('');
 
 	// Learning counter → pill text while > 0
 	const timesRemainToLearnAddOption = Number(learning?.addOptions ?? 0);
@@ -91,9 +97,49 @@ const StatementBottomNav: FC<Props> = () => {
 	}
 
 	const handleAddOption = () => {
-		handleCreateNewOption();
-		decreaseLearning({ addOption: true });
+		// If Popper-Hebbian mode is enabled, show refinery modal first
+		if (isPopperHebbianEnabled) {
+			// Prompt user for their initial idea
+			const idea = window.prompt(t('What is your initial idea or solution?'));
+			if (idea && idea.trim()) {
+				setInitialIdea(idea.trim());
+				setShowRefineryModal(true);
+			}
+			decreaseLearning({ addOption: true });
+		} else {
+			// Normal flow - directly create option
+			handleCreateNewOption();
+			decreaseLearning({ addOption: true });
+		}
 	};
+
+	function handlePublishRefinedIdea(refinedText: string, sessionId: string) {
+		if (!statement) return;
+
+		// Close the refinery modal
+		setShowRefineryModal(false);
+
+		// Reset initial idea
+		setInitialIdea('');
+
+		// Open the new statement modal with the refined text pre-filled
+		const defaultType = statement.statementType === StatementType.option
+			? StatementType.question
+			: StatementType.option;
+
+		dispatch(
+			setNewStatementModal({
+				parentStatement: statement,
+				newStatement: {
+					statementType: defaultType,
+					statement: refinedText
+				},
+				showModal: true,
+				isLoading: false,
+				error: null,
+			})
+		);
+	}
 
 	function handleSortingClick() {
 		setShowSorting(v => !v);
@@ -169,6 +215,19 @@ const StatementBottomNav: FC<Props> = () => {
 					</div>
 				</div>
 			</div>
+
+			{/* Popper-Hebbian Idea Refinery Modal */}
+			{showRefineryModal && statement && initialIdea && (
+				<IdeaRefineryModal
+					parentStatementId={statement.statementId}
+					originalIdea={initialIdea}
+					onClose={() => {
+						setShowRefineryModal(false);
+						setInitialIdea('');
+					}}
+					onPublish={handlePublishRefinedIdea}
+				/>
+			)}
 		</>
 	);
 };

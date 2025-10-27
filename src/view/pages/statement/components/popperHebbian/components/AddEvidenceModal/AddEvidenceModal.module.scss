@@ -1,0 +1,251 @@
+.modalContainer {
+	background: white;
+	border-radius: 0.5rem;
+	max-width: 600px;
+	width: 90vw;
+	max-height: 90vh;
+	display: flex;
+	flex-direction: column;
+	box-shadow: 0px 20px 50px #21253633;
+}
+
+.modalHeader {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: var(--padding);
+	border-bottom: 1px solid #f0f0f0;
+}
+
+.modalTitle {
+	margin: 0;
+	font-size: var(--h3-font-size);
+	color: #333;
+}
+
+.closeButton {
+	background: none;
+	border: none;
+	font-size: 2rem;
+	line-height: 1;
+	color: #999;
+	cursor: pointer;
+	padding: 0;
+	width: 32px;
+	height: 32px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 50%;
+	transition: all 0.2s ease;
+
+	&:hover {
+		background: #f5f5f5;
+		color: #333;
+	}
+}
+
+.modalBody {
+	padding: var(--padding);
+	overflow-y: auto;
+	flex: 1;
+}
+
+.formGroup {
+	margin-bottom: 1.5rem;
+}
+
+.label {
+	display: block;
+	font-size: 1rem;
+	font-weight: 500;
+	color: #333;
+	margin-bottom: 0.5rem;
+}
+
+.textarea {
+	width: 100%;
+	padding: 0.75rem;
+	border: 1px solid #ddd;
+	border-radius: 8px;
+	font-size: 1rem;
+	font-family: inherit;
+	line-height: 1.5;
+	resize: vertical;
+	transition: border-color 0.2s ease;
+
+	&:focus {
+		outline: none;
+		border-color: var(--accent);
+		box-shadow: 0 0 0 3px rgba(124, 172, 248, 0.1);
+	}
+
+	&:disabled {
+		background: #f5f5f5;
+		cursor: not-allowed;
+	}
+}
+
+.supportDisplay {
+	text-align: center;
+	margin-bottom: 0.75rem;
+}
+
+.supportLabel {
+	display: inline-block;
+	padding: 0.5rem 1rem;
+	background: var(--statementBackground);
+	border-radius: 20px;
+	font-size: 1.1rem;
+	font-weight: 500;
+	color: var(--accent);
+}
+
+.sliderContainer {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+}
+
+.sliderLabelLeft,
+.sliderLabelRight {
+	font-size: 0.8rem;
+	color: #666;
+	white-space: nowrap;
+	min-width: 80px;
+}
+
+.sliderLabelLeft {
+	text-align: right;
+}
+
+.sliderLabelRight {
+	text-align: left;
+}
+
+.slider {
+	flex: 1;
+	height: 8px;
+	background: linear-gradient(to right, var(--disagree) 0%, #ccc 50%, var(--agree) 100%);
+	border-radius: 4px;
+	outline: none;
+	-webkit-appearance: none;
+
+	&::-webkit-slider-thumb {
+		-webkit-appearance: none;
+		appearance: none;
+		width: 20px;
+		height: 20px;
+		background: white;
+		border: 2px solid var(--accent);
+		border-radius: 50%;
+		cursor: pointer;
+		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+
+		&:hover {
+			transform: scale(1.1);
+		}
+	}
+
+	&::-moz-range-thumb {
+		width: 20px;
+		height: 20px;
+		background: white;
+		border: 2px solid var(--accent);
+		border-radius: 50%;
+		cursor: pointer;
+		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+
+		&:hover {
+			transform: scale(1.1);
+		}
+	}
+
+	&:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+}
+
+.helperText {
+	display: flex;
+	align-items: flex-start;
+	gap: 0.5rem;
+	padding: 0.75rem;
+	background: rgba(124, 172, 248, 0.05);
+	border-left: 3px solid var(--accent);
+	border-radius: 4px;
+	font-size: 0.9rem;
+	color: #555;
+	line-height: 1.5;
+}
+
+.helperIcon {
+	font-size: 1.1rem;
+	flex-shrink: 0;
+}
+
+.modalFooter {
+	display: flex;
+	justify-content: flex-end;
+	gap: 0.75rem;
+	padding: var(--padding);
+	border-top: 1px solid #f0f0f0;
+}
+
+.cancelButton,
+.submitButton {
+	padding: 0.5rem 1.5rem;
+	border-radius: 20px;
+	font-size: 1rem;
+	font-weight: 500;
+	cursor: pointer;
+	transition: all 0.2s ease;
+	border: none;
+
+	&:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+}
+
+.cancelButton {
+	background: white;
+	color: #666;
+	border: 1px solid #ddd;
+
+	&:hover:not(:disabled) {
+		background: #f5f5f5;
+	}
+}
+
+.submitButton {
+	background: var(--accent);
+	color: white;
+
+	&:hover:not(:disabled) {
+		background: #6a9ae6;
+		box-shadow: 0 2px 6px rgba(124, 172, 248, 0.3);
+	}
+}
+
+@media (max-width: 768px) {
+	.modalContainer {
+		width: 95vw;
+		max-height: 95vh;
+	}
+
+	.sliderLabelLeft,
+	.sliderLabelRight {
+		font-size: 0.7rem;
+		min-width: 60px;
+	}
+
+	.modalFooter {
+		flex-direction: column-reverse;
+
+		button {
+			width: 100%;
+		}
+	}
+}

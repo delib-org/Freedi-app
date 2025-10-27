@@ -1,6 +1,7 @@
 import { onDocumentUpdated } from 'firebase-functions/v2/firestore';
 import { getFirestore } from 'firebase-admin/firestore';
-import { Statement, EvidenceType, Collections } from 'delib-npm';
+import { Statement, Collections } from 'delib-npm';
+import { EvidenceType } from 'delib-npm/dist/models/evidence/evidenceModel';
 
 const EVIDENCE_WEIGHTS: Record<EvidenceType, number> = {
 	[EvidenceType.data]: 3.0,
@@ -97,7 +98,7 @@ export const onVoteUpdate = onDocumentUpdated(
 			try {
 				// Update net score
 				const netScore = (after.evidence.helpfulCount || 0) - (after.evidence.notHelpfulCount || 0);
-				await event.data.after.ref.update({
+				await event.data!.after.ref.update({
 					'evidence.netScore': netScore
 				});
 

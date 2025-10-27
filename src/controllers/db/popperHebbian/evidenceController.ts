@@ -1,6 +1,6 @@
 import { doc, setDoc, updateDoc, deleteDoc, getDoc, collection, query, where, onSnapshot, increment, Unsubscribe } from 'firebase/firestore';
-import { FireStore } from '../config';
-import { Collections, Statement, User, StatementType } from 'delib-npm';
+import { FireStore, auth } from '../config';
+import { Collections, Statement, StatementType, Creator } from 'delib-npm';
 import { logger } from '@/services/logger';
 
 function generateId(): string {
@@ -11,25 +11,49 @@ function generateId(): string {
  * Create an evidence post (statement with evidence field)
  */
 export async function createEvidencePost(
-	parentStatement: Statement,
+	parentStatementId: string,
 	content: string,
-	support: number, // -1 to 1
-	user: User
+	support: number // -1 to 1
 ): Promise<Statement> {
 	try {
+		// Get current user
+		const currentUser = auth.currentUser;
+		if (!currentUser) {
+			throw new Error('User must be authenticated to create evidence');
+		}
+
+		// Get parent statement to access topParentId
+		const parentRef = doc(FireStore, Collections.statements, parentStatementId);
+		const parentSnap = await getDoc(parentRef);
+
+		if (!parentSnap.exists()) {
+			throw new Error('Parent statement not found');
+		}
+
+		const parentStatement = parentSnap.data() as Statement;
+
 		if (support < -1 || support > 1) {
 			throw new Error('Support value must be between -1 and 1');
 		}
 
 		const statementId = generateId();
+
+		// Create creator object from current user
+		const creator: Creator = {
+			displayName: currentUser.displayName || 'Anonymous',
+			uid: currentUser.uid,
+			photoURL: currentUser.photoURL || undefined,
+			email: currentUser.email || undefined
+		};
+
 		const evidenceStatement: Statement = {
 			statementId,
 			statement: content,
 			statementType: StatementType.statement,
 			parentId: parentStatement.statementId,
 			topParentId: parentStatement.topParentId,
-			creatorId: user.uid,
-			creator: user,
+			creatorId: currentUser.uid,
+			creator,
 			createdAt: Date.now(),
 			lastUpdate: Date.now(),
 			consensus: 0,
@@ -52,8 +76,7 @@ export async function createEvidencePost(
 		return evidenceStatement;
 	} catch (error) {
 		logger.error('Failed to create evidence post', error, {
-			parentId: parentStatement.statementId,
-			userId: user.uid
+			parentId: parentStatementId
 		});
 		throw error;
 	}

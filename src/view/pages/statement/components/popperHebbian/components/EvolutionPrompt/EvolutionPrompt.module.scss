@@ -1,0 +1,117 @@
+.evolutionPrompt {
+	background: linear-gradient(135deg, rgba(247, 74, 77, 0.05) 0%, rgba(255, 107, 162, 0.05) 100%);
+	border: 2px solid var(--reject);
+	border-radius: 8px;
+	padding: 1.5rem;
+	margin: 1.5rem 0;
+	box-shadow: 0px 3px 6px rgba(247, 74, 77, 0.1);
+}
+
+.promptHeader {
+	margin-bottom: 1rem;
+}
+
+.aiGuide {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.5rem;
+	padding: 0.4rem 0.75rem;
+	background: white;
+	border-radius: 20px;
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.aiIcon {
+	font-size: 1.2rem;
+	line-height: 1;
+}
+
+.aiLabel {
+	font-size: 0.9rem;
+	font-weight: 500;
+	color: var(--reject);
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+}
+
+.promptBody {
+	margin-bottom: 1.5rem;
+}
+
+.promptTitle {
+	font-size: var(--h4-font-size);
+	color: #333;
+	margin: 0 0 1rem 0;
+}
+
+.challengeSummary {
+	font-size: 1rem;
+	color: #555;
+	line-height: 1.6;
+	margin: 0 0 1rem 0;
+	padding: 1rem;
+	background: white;
+	border-radius: 8px;
+	border-left: 4px solid var(--reject);
+}
+
+.evolutionExplanation {
+	font-size: 0.95rem;
+	color: #666;
+	line-height: 1.5;
+
+	p {
+		margin: 0;
+	}
+}
+
+.promptFooter {
+	display: flex;
+	justify-content: center;
+}
+
+.evolveButton {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	padding: 0.75rem 1.5rem;
+	background: var(--reject);
+	color: white;
+	border: none;
+	border-radius: 20px;
+	font-size: 1rem;
+	font-weight: 500;
+	cursor: pointer;
+	transition: all 0.2s ease;
+	box-shadow: 0 2px 4px rgba(247, 74, 77, 0.3);
+
+	&:hover {
+		background: #e63e41;
+		transform: translateY(-2px);
+		box-shadow: 0 4px 8px rgba(247, 74, 77, 0.4);
+	}
+
+	&:active {
+		transform: translateY(0);
+	}
+}
+
+.evolveIcon {
+	font-size: 1.2rem;
+	line-height: 1;
+}
+
+@media (max-width: 768px) {
+	.evolutionPrompt {
+		padding: 1rem;
+	}
+
+	.promptTitle {
+		font-size: var(--h5-font-size);
+	}
+
+	.evolveButton {
+		width: 100%;
+		justify-content: center;
+	}
+}

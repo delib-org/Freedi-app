@@ -31,6 +31,7 @@ import CommunityBadge from '@/view/components/badges/CommunityBadge';
 import AnchoredBadge from '@/view/components/badges/AnchoredBadge';
 import UploadImage from '@/view/components/uploadImage/UploadImage';
 import StatementImage from './StatementImage';
+import PopperHebbianDiscussion from '../../../../popperHebbian/PopperHebbianDiscussion';
 
 interface Props {
 	statement: Statement | undefined;
@@ -52,6 +53,7 @@ const SuggestionCard: FC<Props> = ({
 	const enableJoining = parentStatement?.statementSettings?.joiningEnabled;
 	const showEvaluation = parentStatement?.statementSettings?.showEvaluation;
 	const enableAIImprovement = parentStatement?.statementSettings?.enableAIImprovement;
+	const isPopperHebbianEnabled = parentStatement?.statementSettings?.popperianDiscussionEnabled ?? false;
 	const showBadges = parentStatement?.evaluationSettings?.anchored?.differentiateBetweenAnchoredAndNot;
 	const isAnchored = statement?.anchored === true;
 	const anchorIcon = parentStatement?.evaluationSettings?.anchored?.anchorIcon;
@@ -337,6 +339,18 @@ const SuggestionCard: FC<Props> = ({
 								saveButtonClassName={styles.editButtons}
 							/>
 						</div>
+
+						{/* Add PopperHebbianDiscussion for evidence-based discussion */}
+						{isPopperHebbianEnabled && statement.statementType === StatementType.option && (
+							<PopperHebbianDiscussion
+								statement={statement}
+								onCreateImprovedVersion={() => {
+									console.info('Creating improved version based on evidence');
+									// Could trigger a new refinement session based on collected evidence
+								}}
+							/>
+						)}
+
 						<Link to={`/statement/${statement.statementId}`} className={styles.showMore}>
 							{t('Show more')}
 						</Link>

@@ -1,7 +1,7 @@
 import { FirestoreEvent, QueryDocumentSnapshot } from 'firebase-functions/v2/firestore';
 import { logger } from 'firebase-functions';
 import { parse } from 'valibot';
-import * as admin from 'firebase-admin';
+import { FieldValue } from 'firebase-admin/firestore';
 import {
 	Collections,
 	Statement,

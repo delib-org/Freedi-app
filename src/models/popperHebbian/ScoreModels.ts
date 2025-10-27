@@ -1,9 +1,9 @@
-import { InferOutput, object, string, number, enum_ } from 'valibot';
+import { InferOutput, object, string, number, picklist } from 'valibot';
 
 export const PopperHebbianScoreSchema = object({
 	statementId: string(),
 	totalScore: number(), // Sum of all (support * weight) - positive = supporting, negative = challenging
-	status: enum_(['looking-good', 'under-discussion', 'needs-fixing']),
+	status: picklist(['looking-good', 'under-discussion', 'needs-fixing']),
 	lastCalculated: number()
 });
 

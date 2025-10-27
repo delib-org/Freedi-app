@@ -1,6 +1,7 @@
 import { onDocumentCreated } from 'firebase-functions/v2/firestore';
-import { getFirestore, FieldValue } from 'firebase-admin/firestore';
-import { Statement, EvidenceType, Collections } from 'delib-npm';
+import { getFirestore } from 'firebase-admin/firestore';
+import { Statement, Collections } from 'delib-npm';
+import { EvidenceType } from 'delib-npm/dist/models/evidence/evidenceModel';
 import { getGeminiModel, geminiApiKey } from './config/gemini';
 
 const EVIDENCE_WEIGHTS: Record<EvidenceType, number> = {
@@ -112,8 +113,6 @@ export const onEvidencePostCreate = onDocumentCreated(
 		if (!statement.evidence) {
 			return;
 		}
-
-		const db = getFirestore();
 
 		try {
 			// 1. Call AI to classify evidence type

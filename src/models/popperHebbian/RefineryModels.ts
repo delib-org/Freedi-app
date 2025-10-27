@@ -1,4 +1,4 @@
-import { InferOutput, object, string, number, array, enum_, optional, boolean } from 'valibot';
+import { InferOutput, object, string, number, array, picklist, optional, boolean } from 'valibot';
 
 export enum IdeaRefinementStatus {
 	draft = 'draft',
@@ -9,10 +9,10 @@ export enum IdeaRefinementStatus {
 
 export const RefinementMessageSchema = object({
 	messageId: string(),
-	role: enum_(['user', 'ai-guide']),
+	role: picklist(['user', 'ai-guide']),
 	content: string(),
 	timestamp: number(),
-	messageType: enum_(['question', 'answer', 'clarification', 'suggestion'])
+	messageType: picklist(['question', 'answer', 'clarification', 'suggestion'])
 });
 
 export type RefinementMessage = InferOutput<typeof RefinementMessageSchema>;
@@ -23,7 +23,7 @@ export const RefinementSessionSchema = object({
 	userId: string(),
 	originalIdea: string(),
 	refinedIdea: string(),
-	status: enum_(IdeaRefinementStatus),
+	status: picklist(['draft', 'in-refinement', 'ready-for-discussion', 'rejected']),
 	conversationHistory: array(RefinementMessageSchema),
 	vagueTerms: array(string()),
 	testabilityCriteria: array(string()),

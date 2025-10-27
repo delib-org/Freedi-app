@@ -40,8 +40,9 @@ function generateId(): string {
 }
 
 export async function startRefinementSession(
-	statement: Statement,
-	user: User
+	parentStatementId: string,
+	originalIdea: string,
+	userId: string
 ): Promise<RefinementSession> {
 	try {
 		// Call Firebase Function to analyze falsifiability
@@ -51,8 +52,8 @@ export async function startRefinementSession(
 		>(functions, 'analyzeFalsifiability');
 
 		const result = await analyzeFalsifiability({
-			ideaText: statement.statement,
-			context: statement.description
+			ideaText: originalIdea,
+			context: undefined
 		});
 
 		const { analysis, initialMessage } = result.data;
@@ -61,9 +62,9 @@ export async function startRefinementSession(
 		const sessionId = generateId();
 		const session: RefinementSession = {
 			sessionId,
-			statementId: statement.statementId,
-			userId: user.uid,
-			originalIdea: statement.statement,
+			statementId: parentStatementId,
+			userId,
+			originalIdea,
 			refinedIdea: '',
 			status: analysis.isTestable
 				? IdeaRefinementStatus.readyForDiscussion
@@ -89,13 +90,13 @@ export async function startRefinementSession(
 			session
 		);
 
-		logger.info('Refinement session started', { sessionId, userId: user.uid });
+		logger.info('Refinement session started', { sessionId, userId });
 
 		return session;
 	} catch (error) {
 		logger.error('Failed to start refinement session', error, {
-			statementId: statement.statementId,
-			userId: user.uid
+			parentStatementId,
+			userId
 		});
 		throw error;
 	}
@@ -179,9 +180,8 @@ export async function submitRefinementResponse(
 }
 
 export async function publishRefinedIdea(
-	sessionId: string,
-	statement: Statement
-): Promise<Statement> {
+	sessionId: string
+): Promise<RefinementSession> {
 	try {
 		const sessionRef = doc(FireStore, Collections.refinementSessions, sessionId);
 		const sessionSnap = await getDoc(sessionRef);
@@ -196,28 +196,15 @@ export async function publishRefinedIdea(
 			throw new Error('Session not ready for publication');
 		}
 
-		// Update statement with refined text
-		const refinedStatement: Statement = {
-			...statement,
-			statement: session.refinedIdea,
-			refinementMetadata: {
-				wasRefined: true,
-				originalIdea: session.originalIdea,
-				refinementSessionId: sessionId,
-				testabilityCriteria: session.testabilityCriteria,
-				refinedAt: Date.now()
-			}
-		};
+		// Mark session as published
+		await updateDoc(sessionRef, {
+			status: 'published',
+			lastUpdate: Date.now()
+		});
 
-		// Save refined statement
-		await setDoc(
-			doc(FireStore, Collections.statements, statement.statementId),
-			refinedStatement
-		);
+		logger.info('Refined idea published', { sessionId });
 
-		logger.info('Refined idea published', { sessionId, statementId: statement.statementId });
-
-		return refinedStatement;
+		return session;
 	} catch (error) {
 		logger.error('Failed to publish refined idea', error, { sessionId });
 		throw error;
