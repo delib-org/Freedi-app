@@ -44,13 +44,13 @@ const StatementTopNav: FC<Props> = ({
   const navigate = useNavigate();
   const { screen } = useParams();
   const role = useSelector(
-    statementSubscriptionSelector(statement?.topParentId)
+    statementSubscriptionSelector(statement?.statementId)
   )?.role;
   const headerStyle = useStatementColor({ statement });
 
   if (!statement) return null;
 
-  const isAdmin = role === Role.admin || role === Role.creator || user?.uid === statement?.creatorId;
+  const isAdmin = role === Role.admin || user?.uid === statement?.creatorId;
 
   const currentLabel = LANGUAGES.find(
     (lang) => lang.code === currentLanguage
