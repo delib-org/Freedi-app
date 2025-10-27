@@ -203,7 +203,7 @@ async function updateParentForNewChild(statement: Statement): Promise<void> {
 
 		// Update parent's child count and last update
 		await parentRef.update({
-			subStatementsCount: admin.firestore.FieldValue.increment(1),
+			subStatementsCount: FieldValue.increment(1),
 			lastChildUpdate: statement.createdAt,
 		});
 	} catch (error) {
