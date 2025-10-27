@@ -97,8 +97,12 @@ const StatementBottomNav: FC<Props> = () => {
 	}
 
 	const handleAddOption = () => {
+		console.info('Add Option clicked. Popper-Hebbian enabled:', isPopperHebbianEnabled);
+		console.info('Statement settings:', statement?.statementSettings);
+
 		// If Popper-Hebbian mode is enabled, show refinery modal first
 		if (isPopperHebbianEnabled) {
+			console.info('Opening Popper-Hebbian refinery modal');
 			// Prompt user for their initial idea
 			const idea = window.prompt(t('What is your initial idea or solution?'));
 			if (idea && idea.trim()) {
@@ -107,13 +111,14 @@ const StatementBottomNav: FC<Props> = () => {
 			}
 			decreaseLearning({ addOption: true });
 		} else {
+			console.info('Using normal option creation flow');
 			// Normal flow - directly create option
 			handleCreateNewOption();
 			decreaseLearning({ addOption: true });
 		}
 	};
 
-	function handlePublishRefinedIdea(refinedText: string, sessionId: string) {
+	function handlePublishRefinedIdea(refinedText: string, _sessionId: string) {
 		if (!statement) return;
 
 		// Close the refinery modal

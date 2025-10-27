@@ -42,8 +42,8 @@ export async function createEvidencePost(
 		const creator: Creator = {
 			displayName: currentUser.displayName || 'Anonymous',
 			uid: currentUser.uid,
-			photoURL: currentUser.photoURL || undefined,
-			email: currentUser.email || undefined
+			photoURL: currentUser.photoURL || '',
+			email: currentUser.email || ''
 		};
 
 		const evidenceStatement: Statement = {
@@ -258,12 +258,14 @@ export async function getUserVote(
 
 		if (voteSnap.exists()) {
 			const vote = voteSnap.data() as EvidenceVote;
-			return vote.voteType;
+			
+return vote.voteType;
 		}
 
 		return null;
 	} catch (error) {
 		logger.error('Failed to get user vote', error, { evidenceStatementId, userId });
-		return null;
+		
+return null;
 	}
 }

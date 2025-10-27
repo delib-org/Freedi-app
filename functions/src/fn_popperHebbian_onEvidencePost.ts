@@ -40,6 +40,7 @@ Respond with ONLY the type name (data, testimony, argument, anecdote, or fallacy
 	} catch (error) {
 		console.error('Error classifying evidence:', error);
 		// Default to argument if AI fails
+
 		return EvidenceType.argument;
 	}
 }
@@ -104,7 +105,8 @@ export const onEvidencePostCreate = onDocumentCreated(
 		const snapshot = event.data;
 		if (!snapshot) {
 			console.error('No data associated with the event');
-			return;
+			
+return;
 		}
 
 		const statement = snapshot.data() as Statement;

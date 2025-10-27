@@ -93,6 +93,8 @@
 	overflow-y: auto;
 	padding: var(--padding);
 	background: #fafafa;
+	min-height: 0; // Important: allows flex child to shrink
+	max-height: calc(90vh - 400px); // Reserve space for header, original idea, and input
 }
 
 .loadingState {
@@ -124,6 +126,7 @@
 	padding: 1.5rem;
 	background: linear-gradient(135deg, rgba(87, 198, 178, 0.05) 0%, rgba(79, 171, 154, 0.05) 100%);
 	border-top: 2px solid var(--agree);
+	flex-shrink: 0; // Prevent completion section from being compressed
 }
 
 .completionBadge {
@@ -188,6 +191,7 @@
 	padding: var(--padding);
 	border-top: 1px solid #f0f0f0;
 	background: white;
+	flex-shrink: 0; // Prevent input from being compressed
 }
 
 .userInput {

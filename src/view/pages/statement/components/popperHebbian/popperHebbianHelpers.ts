@@ -6,7 +6,8 @@ export function getSupportLabel(supportLevel: number): string {
 	if (supportLevel > 0.3) return 'Supports';
 	if (supportLevel > -0.3) return 'Neutral';
 	if (supportLevel > -0.7) return 'Challenges';
-	return 'Strongly Challenges';
+	
+return 'Strongly Challenges';
 }
 
 /**
@@ -17,7 +18,8 @@ export function getScoreInterpretation(totalScore: number): string {
 	if (totalScore > 2) return 'Evidence leans toward supporting this idea';
 	if (totalScore > -2) return 'Evidence is mixed - discussion ongoing';
 	if (totalScore > -5) return 'Evidence is challenging this idea';
-	return 'Strong challenges suggest this idea needs rethinking';
+	
+return 'Strong challenges suggest this idea needs rethinking';
 }
 
 /**
@@ -26,5 +28,6 @@ export function getScoreInterpretation(totalScore: number): string {
 export function getSupportColor(supportLevel: number): 'support' | 'challenge' | 'neutral' {
 	if (supportLevel > 0.3) return 'support';
 	if (supportLevel < -0.3) return 'challenge';
-	return 'neutral';
+	
+return 'neutral';
 }

@@ -1,7 +1,7 @@
 import { doc, setDoc, getDoc, updateDoc } from 'firebase/firestore';
 import { httpsCallable } from 'firebase/functions';
 import { FireStore, functions } from '../config';
-import { Collections, Statement, User } from 'delib-npm';
+import { Collections } from 'delib-npm';
 import {
 	RefinementSession,
 	IdeaRefinementStatus,
@@ -13,6 +13,7 @@ import { logger } from '@/services/logger';
 interface AnalyzeFalsifiabilityRequest {
 	ideaText: string;
 	context?: string;
+	language?: string;
 }
 
 interface AnalyzeFalsifiabilityResponse {
@@ -26,6 +27,7 @@ interface RefineIdeaRequest {
 	conversationHistory: RefinementMessage[];
 	originalIdea: string;
 	currentRefinedIdea?: string;
+	language?: string;
 }
 
 interface RefineIdeaResponse {
@@ -42,7 +44,8 @@ function generateId(): string {
 export async function startRefinementSession(
 	parentStatementId: string,
 	originalIdea: string,
-	userId: string
+	userId: string,
+	language?: string
 ): Promise<RefinementSession> {
 	try {
 		// Call Firebase Function to analyze falsifiability
@@ -53,7 +56,8 @@ export async function startRefinementSession(
 
 		const result = await analyzeFalsifiability({
 			ideaText: originalIdea,
-			context: undefined
+			context: undefined,
+			language: language || 'en'
 		});
 
 		const { analysis, initialMessage } = result.data;
@@ -104,7 +108,8 @@ export async function startRefinementSession(
 
 export async function submitRefinementResponse(
 	sessionId: string,
-	userResponse: string
+	userResponse: string,
+	language?: string
 ): Promise<RefinementSession> {
 	try {
 		// Get current session
@@ -139,7 +144,8 @@ export async function submitRefinementResponse(
 			userResponse,
 			conversationHistory: updatedHistory,
 			originalIdea: session.originalIdea,
-			currentRefinedIdea: session.refinedIdea
+			currentRefinedIdea: session.refinedIdea,
+			language: language || 'en'
 		});
 
 		const { aiMessage, refinedIdea, isComplete, testabilityCriteria } = result.data;
@@ -164,11 +170,24 @@ export async function submitRefinementResponse(
 				? IdeaRefinementStatus.readyForDiscussion
 				: IdeaRefinementStatus.inRefinement,
 			testabilityCriteria: testabilityCriteria || session.testabilityCriteria,
-			lastUpdate: Date.now(),
-			completedAt: isComplete ? Date.now() : undefined
+			lastUpdate: Date.now()
 		};
 
-		await updateDoc(sessionRef, updatedSession as Record<string, unknown>);
+		// Only add completedAt if the session is complete
+		if (isComplete) {
+			updatedSession.completedAt = Date.now();
+		}
+
+		// Remove undefined values before updating Firestore
+		const cleanedUpdate = Object.entries(updatedSession).reduce((acc, [key, value]) => {
+			if (value !== undefined) {
+				acc[key] = value;
+			}
+
+			return acc;
+		}, {} as Record<string, unknown>);
+
+		await updateDoc(sessionRef, cleanedUpdate);
 
 		logger.info('Refinement response submitted', { sessionId });
 

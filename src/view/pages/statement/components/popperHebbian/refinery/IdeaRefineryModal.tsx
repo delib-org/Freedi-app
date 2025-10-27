@@ -1,4 +1,4 @@
-import { FC, useState, useEffect, useRef } from 'react';
+import React, { FC, useState, useEffect, useRef } from 'react';
 import Modal from '@/view/components/modal/Modal';
 import RefinementMessage from './RefinementMessage';
 import { RefinementSession, IdeaRefinementStatus } from '@/models/popperHebbian/RefineryModels';
@@ -21,7 +21,7 @@ const IdeaRefineryModal: FC<IdeaRefineryModalProps> = ({
 	onPublish
 }) => {
 	const { user } = useAuthentication();
-	const { t } = useUserConfig();
+	const { t, currentLanguage } = useUserConfig();
 	const [session, setSession] = useState<RefinementSession | null>(null);
 	const [userInput, setUserInput] = useState('');
 	const [isProcessing, setIsProcessing] = useState(false);
@@ -46,7 +46,8 @@ const IdeaRefineryModal: FC<IdeaRefineryModalProps> = ({
 				const newSession = await startRefinementSession(
 					parentStatementId,
 					originalIdea,
-					user.uid
+					user.uid,
+					currentLanguage
 				);
 
 				setSession(newSession);
@@ -68,7 +69,8 @@ const IdeaRefineryModal: FC<IdeaRefineryModalProps> = ({
 		try {
 			const updatedSession = await submitRefinementResponse(
 				session.sessionId,
-				userInput.trim()
+				userInput.trim(),
+				currentLanguage
 			);
 
 			setSession(updatedSession);
@@ -103,6 +105,12 @@ const IdeaRefineryModal: FC<IdeaRefineryModalProps> = ({
 	};
 
 	const isReadyForDiscussion = session?.status === IdeaRefinementStatus.readyForDiscussion;
+
+	console.info('IdeaRefineryModal session:', session);
+	console.info('isReadyForDiscussion:', isReadyForDiscussion);
+	console.info('isInitializing:', isInitializing);
+	console.info('currentLanguage:', currentLanguage);
+	console.info('Should show input field:', !isInitializing && !isReadyForDiscussion);
 
 	return (
 		<Modal closeModal={onClose} title={t('AI Idea Refinery')}>

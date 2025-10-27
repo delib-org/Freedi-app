@@ -4,6 +4,7 @@ import { getGeminiModel, geminiApiKey } from './config/gemini';
 interface AnalyzeFalsifiabilityRequest {
 	ideaText: string;
 	context?: string;
+	language?: string;
 }
 
 interface FalsifiabilityAnalysis {
@@ -19,16 +20,31 @@ interface AnalyzeFalsifiabilityResponse {
 	initialMessage: string;
 }
 
+const LANGUAGE_NAMES: Record<string, string> = {
+	'he': 'Hebrew',
+	'ar': 'Arabic',
+	'en': 'English',
+	'es': 'Spanish',
+	'fr': 'French',
+	'de': 'German',
+	'nl': 'Dutch'
+};
+
 export const analyzeFalsifiability = onCall<AnalyzeFalsifiabilityRequest>(
 	{ secrets: [geminiApiKey] },
 	async (request): Promise<AnalyzeFalsifiabilityResponse> => {
-		const { ideaText, context } = request.data;
+		const { ideaText, context, language = 'en' } = request.data;
 
 		if (!ideaText) {
 			throw new HttpsError('invalid-argument', 'Idea text is required');
 		}
 
-		const prompt = `You are the AI Guide for a collaborative thinking platform. Your job is to analyze ideas for testability and clarity.
+		const languageName = LANGUAGE_NAMES[language] || 'English';
+		const languageInstruction = language !== 'en'
+			? `\n\nIMPORTANT: Your initial message to the user must be in ${languageName}. The JSON analysis can be in English, but all conversational text must be in ${languageName}.`
+			: '';
+
+		const prompt = `You are the AI Guide for a collaborative thinking platform. Your job is to analyze ideas for testability and clarity.${languageInstruction}
 
 An idea is "testable" if:
 1. It makes specific, measurable claims
@@ -66,23 +82,43 @@ Use simple, encouraging language.`;
 
 			const analysis: FalsifiabilityAnalysis = JSON.parse(jsonMatch[0]);
 
-			// Generate initial AI message based on analysis
+			// Generate initial AI message based on analysis and language
 			let initialMessage: string;
 
-			if (analysis.isTestable) {
-				initialMessage = `Hey! That's an interesting idea, and it's already pretty clear!
+			if (language === 'he') {
+				// Hebrew messages
+				if (analysis.isTestable) {
+					initialMessage = `היי! זה רעיון מעניין, והוא כבר די ברור!
+
+עם זאת, יש לי כמה שאלות כדי לחזק אותו עוד יותר לדיון. זה יעזור לכולם להבין בדיוק למה אתה מתכוון ואיך להעריך את זה בצורה הוגנת.
+
+מוכנים לחדד את זה ביחד?`;
+				} else {
+					initialMessage = `היי! אני המדריך הדיגיטלי. זה רעיון מעניין!
+
+כדי לעזור לכולם לדון בזה בצורה הוגנת, **אנחנו צריכים להבהיר את זה לגמרי.** כרגע, זה קצת מעורפל.
+
+${analysis.vagueTerms.length > 0 ? `למשל, כשאתה אומר **"${analysis.vagueTerms[0]}"**, למה בדיוק אתה מתכוון?` : ''}
+
+תן לי לשאול אותך כמה שאלות כדי לעזור לחדד את הרעיון הזה. נשמע טוב?`;
+				}
+			} else {
+				// English messages (default)
+				if (analysis.isTestable) {
+					initialMessage = `Hey! That's an interesting idea, and it's already pretty clear!
 
 However, I have a few questions to make it even stronger for discussion. This will help everyone understand exactly what you mean and how to evaluate it fairly.
 
 Ready to sharpen it together?`;
-			} else {
-				initialMessage = `Hey! I'm the AI Guide. That's an interesting idea!
+				} else {
+					initialMessage = `Hey! I'm the AI Guide. That's an interesting idea!
 
 To help everyone discuss this fairly, **we need to make it crystal clear.** Right now, it's a bit vague.
 
 ${analysis.vagueTerms.length > 0 ? `For example, when you say **"${analysis.vagueTerms[0]}"**, what do you mean exactly?` : ''}
 
 Let me ask you a few questions to help sharpen this idea. Sound good?`;
+				}
 			}
 
 			return {

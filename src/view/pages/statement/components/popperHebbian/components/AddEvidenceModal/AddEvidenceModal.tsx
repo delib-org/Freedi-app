@@ -1,4 +1,4 @@
-import { FC, useState } from 'react';
+import React, { FC, useState } from 'react';
 import Modal from '@/view/components/modal/Modal';
 import { getSupportLabel } from '../../popperHebbianHelpers';
 import { createEvidencePost } from '@/controllers/db/popperHebbian/evidenceController';

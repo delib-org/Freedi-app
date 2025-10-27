@@ -15,6 +15,7 @@ interface RefineIdeaRequest {
 	conversationHistory: RefinementMessage[];
 	originalIdea: string;
 	currentRefinedIdea?: string;
+	language?: string;
 }
 
 interface RefineIdeaResponse {
@@ -24,6 +25,16 @@ interface RefineIdeaResponse {
 	testabilityCriteria?: string[];
 }
 
+const LANGUAGE_NAMES: Record<string, string> = {
+	'he': 'Hebrew',
+	'ar': 'Arabic',
+	'en': 'English',
+	'es': 'Spanish',
+	'fr': 'French',
+	'de': 'German',
+	'nl': 'Dutch'
+};
+
 export const refineIdea = onCall<RefineIdeaRequest>(
 	{ secrets: [geminiApiKey] },
 	async (request): Promise<RefineIdeaResponse> => {
@@ -31,14 +42,20 @@ export const refineIdea = onCall<RefineIdeaRequest>(
 			userResponse,
 			conversationHistory,
 			originalIdea,
-			currentRefinedIdea
+			currentRefinedIdea,
+			language = 'en'
 		} = request.data;
 
 		const conversationContext = conversationHistory
 			.map(msg => `${msg.role}: ${msg.content}`)
 			.join('\n');
 
-		const prompt = `You are the AI Guide conducting a Socratic dialogue to refine vague ideas into testable propositions.
+		const languageName = LANGUAGE_NAMES[language] || 'English';
+		const languageInstruction = language !== 'en'
+			? `\n\nIMPORTANT: All your responses (aiMessage, refinedIdea, etc.) must be in ${languageName}. Conduct the entire dialogue in ${languageName}.`
+			: '';
+
+		const prompt = `You are the AI Guide conducting a Socratic dialogue to refine vague ideas into testable propositions.${languageInstruction}
 
 Your goals:
 1. Ask clarifying questions about vague terms
