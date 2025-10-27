@@ -235,25 +235,21 @@ Add to StatementSettingsSchema:
 popperHebbian: optional(boolean())
 ```
 
-#### 1.2 Update delib-npm Collections Enum
+#### 1.2 Collections (Already in delib-npm ✅)
 
-First, add new collections to `delib-npm`:
-
-**File**: `node_modules/delib-npm/src/models/collections.ts` (or similar)
+The following collections are already added to delib-npm:
 
 ```typescript
-export enum Collections {
-  // Existing collections...
-  statements = 'statements',
-  evaluations = 'evaluations',
-  // ... other existing collections
+import { Collections } from 'delib-npm';
 
-  // New Popper-Hebbian collections
-  refinementSessions = 'refinementSessions',
-  evidencePosts = 'evidencePosts',
-  evidenceVotes = 'evidenceVotes'
-}
+// Available collections:
+Collections.statements           // 'statements' - All statements including evidence posts
+Collections.refinementSessions  // 'refinementSessions' - AI refinery dialogue history
+Collections.evidencePosts        // 'evidencePosts' - (Optional) Separate evidence tracking
+Collections.evidenceVotes        // 'evidenceVotes' - Helpful/Not Helpful votes
 ```
+
+**Note**: Evidence posts are stored as regular `Statement` objects in `Collections.statements` with the `evidence` field populated. The `Collections.evidencePosts` is available for additional metadata or indexing if needed.
 
 #### 1.3 Evidence Data Models (Using delib-npm)
 
@@ -679,28 +675,57 @@ Shows when `status === 'needs-fixing'`:
 
 #### 5.1 Firestore Structure
 
-**Collection**: `evidencePosts` (or reuse `evaluations` with new fields)
+**Evidence Posts** (stored in `statements` collection):
 ```
-evidencePosts/{postId}
-  - postId: string
+statements/{evidenceStatementId}
   - statementId: string
-  - userId: string
-  - content: string
-  - isSupport: boolean
-  - evidenceType: EvidenceType
-  - evidenceWeight: number
-  - helpfulCount: number
+  - statementType: StatementType.statement
+  - parentId: string  // The option statement this evidence is for
+  - statement: string  // The evidence text
+  - creatorId: string
   - createdAt: number
   - lastUpdate: number
+  - evidence: {
+      evidenceType: EvidenceType
+      support: number  // -1 to 1
+      helpfulCount: number
+      notHelpfulCount: number
+      netScore: number
+      evidenceWeight: number
+    }
 ```
 
-**Computed Field on Statement**:
+**Evidence Votes** (stored in `evidenceVotes` collection):
 ```
-statements/{statementId}
-  - popperHebbianScore: {
-      supportScore: number
-      challengeScore: number
-      status: string
+evidenceVotes/{voteId}
+  - voteId: string
+  - evidenceStatementId: string
+  - userId: string
+  - voteType: 'helpful' | 'not-helpful'
+  - createdAt: number
+```
+
+**Refinement Sessions** (stored in `refinementSessions` collection):
+```
+refinementSessions/{sessionId}
+  - sessionId: string
+  - statementId: string
+  - userId: string
+  - originalIdea: string
+  - refinedIdea: string
+  - status: IdeaRefinementStatus
+  - conversationHistory: RefinementMessage[]
+  - createdAt: number
+  - completedAt?: number
+```
+
+**Score Metadata** (optional, stored on option statement):
+```
+statements/{optionStatementId}
+  - statementType: StatementType.option
+  - popperHebbianScore?: {
+      totalScore: number
+      status: 'looking-good' | 'under-discussion' | 'needs-fixing'
       lastCalculated: number
     }
 ```
