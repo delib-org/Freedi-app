@@ -12,3 +12,4 @@ coverage/
 
 # Environment variables
 .env
+.secret.local

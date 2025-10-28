@@ -1,5 +1,5 @@
 import React from 'react';
-import { Statement, UserDemographicQuestion } from 'delib-npm';
+import { Statement, UserDemographicQuestion, Role } from 'delib-npm';
 import StatementHeader from './header/StatementHeader';
 import Switch from './switch/Switch';
 import { MapProvider } from '@/controllers/hooks/useMap';
@@ -15,6 +15,7 @@ interface StatementContentProps {
 	userDemographicQuestions: UserDemographicQuestion[] | null;
 	screen?: string;
 	isMassConsensus: boolean;
+	role: Role | undefined;
 }
 
 export const StatementContent: React.FC<StatementContentProps> = ({
@@ -25,6 +26,7 @@ export const StatementContent: React.FC<StatementContentProps> = ({
 	userDemographicQuestions,
 	screen,
 	isMassConsensus,
+	role,
 }) => {
 	const { toSlide, slideInOrOut } = useSlideAndSubStatement(statement?.parentId, statement?.statementId);
 
@@ -44,6 +46,7 @@ export const StatementContent: React.FC<StatementContentProps> = ({
 				userDemographicQuestions={userDemographicQuestions}
 				screen={screen}
 				isMassConsensus={isMassConsensus}
+				role={role}
 			/>
 
 			{/* Apply blur and disable interaction when mandatory survey is showing */}

@@ -1,6 +1,6 @@
 import React from 'react';
 import { screen } from '@testing-library/react';
-import { BrowserRouter } from 'react-router-dom';
+import { BrowserRouter } from 'react-router';
 import RandomSuggestions from '../RandomSuggestions';
 import { Statement, StatementType, Creator } from 'delib-npm';
 import { renderWithProviders, getMockRootState } from '@/test-utils/test-utils';

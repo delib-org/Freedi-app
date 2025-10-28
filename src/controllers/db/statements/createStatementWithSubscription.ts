@@ -50,7 +50,12 @@ export async function createStatementWithSubscription({
 		statement: _newStatement,
 		statementsSubscribeId: getStatementSubscriptionId(_newStatement.statementId, user),
 		statementId: _newStatement.statementId,
-		user: user,
+		user: {
+			uid: user.uid,
+			displayName: user.displayName || '',
+			email: user.email || '',
+			photoURL: user.photoURL || '',
+		},
 		lastUpdate: now,
 		createdAt: now,
 		userId: user?.uid || '',
@@ -63,7 +68,8 @@ export async function createStatementWithSubscription({
 	});
 
 	if (!result) {
-		throw new Error('Failed to save statement to database');
+		// Check browser console for detailed error from setStatementToDB
+		throw new Error('Failed to save statement to database - check console for details');
 	}
 
 	const { statementId } = result;

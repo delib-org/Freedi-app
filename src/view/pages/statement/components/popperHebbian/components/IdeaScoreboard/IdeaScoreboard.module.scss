@@ -1,0 +1,144 @@
+.scoreboard {
+	background: white;
+	border-radius: 8px;
+	box-shadow: 0px 3px 6px #4162862b;
+	padding: var(--padding);
+	margin-bottom: 1.5rem;
+	transition: all 0.3s ease;
+
+	&--looking-good {
+		border-left: 4px solid var(--agree);
+	}
+
+	&--under-discussion {
+		border-left: 4px solid var(--accent);
+	}
+
+	&--needs-fixing {
+		border-left: 4px solid var(--reject);
+	}
+}
+
+.scoreboardHeader {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 1rem;
+}
+
+.statusBadge {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	padding: 0.25rem 0.75rem;
+	border-radius: 20px;
+	font-size: 0.9rem;
+	font-weight: 500;
+
+	.scoreboard--looking-good & {
+		background: rgba(87, 198, 178, 0.1);
+		color: var(--agree);
+	}
+
+	.scoreboard--under-discussion & {
+		background: rgba(124, 172, 248, 0.1);
+		color: var(--accent);
+	}
+
+	.scoreboard--needs-fixing & {
+		background: rgba(247, 74, 77, 0.1);
+		color: var(--reject);
+	}
+}
+
+.statusIcon {
+	font-size: 1.2rem;
+	line-height: 1;
+}
+
+.statusText {
+	font-weight: 500;
+}
+
+.scoreboardBody {
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+}
+
+.scoreDisplay {
+	text-align: center;
+}
+
+.scoreValue {
+	font-size: 3rem;
+	font-weight: 500;
+	line-height: 1;
+	margin-bottom: 0.25rem;
+
+	.scoreboard--looking-good & {
+		color: var(--agree);
+	}
+
+	.scoreboard--under-discussion & {
+		color: var(--accent);
+	}
+
+	.scoreboard--needs-fixing & {
+		color: var(--reject);
+	}
+}
+
+.scoreLabel {
+	font-size: 0.9rem;
+	color: #666;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+}
+
+.scoreInterpretation {
+	text-align: center;
+	font-size: 1rem;
+	color: #444;
+	padding: 0.75rem;
+	background: var(--statementBackground);
+	border-radius: 8px;
+	line-height: 1.5;
+}
+
+.scoreboardFooter {
+	margin-top: 1rem;
+}
+
+.scoreBar {
+	height: 8px;
+	background: #e0e0e0;
+	border-radius: 4px;
+	overflow: hidden;
+	position: relative;
+}
+
+.scoreBarFill {
+	height: 100%;
+	background: linear-gradient(90deg, var(--agree), var(--approve));
+	transition: width 0.5s ease;
+	border-radius: 4px;
+
+	.scoreboard--needs-fixing & {
+		background: linear-gradient(90deg, var(--reject), #ff6b6b);
+	}
+
+	.scoreboard--under-discussion & {
+		background: linear-gradient(90deg, var(--accent), var(--question));
+	}
+}
+
+@media (max-width: 768px) {
+	.scoreValue {
+		font-size: 2.5rem;
+	}
+
+	.scoreInterpretation {
+		font-size: 0.9rem;
+	}
+}

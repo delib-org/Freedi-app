@@ -1,5 +1,6 @@
 import { UserDemographicQuestion, UserDemographicQuestionType } from 'delib-npm';
 import { FC, useEffect, useState } from 'react';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import styles from './UserDemographicQuestionInput.module.scss';
 
 interface UserDemographicQuestionInputProps {
@@ -18,6 +19,7 @@ const UserDemographicQuestionInput: FC<UserDemographicQuestionInputProps> = ({
 	className = '',
 	required = false,
 }) => {
+	const { t } = useUserConfig();
 	const [validationError, setValidationError] = useState('');
 	const [isChosen, setIsChosen] = useState<number | null>(null);
 	const validateInput = (inputValue: string | string[]) => {
@@ -35,14 +37,14 @@ const UserDemographicQuestionInput: FC<UserDemographicQuestionInputProps> = ({
 					!inputValue ||
 					(typeof inputValue === 'string' && inputValue.trim() === '')
 				) {
-					setValidationError('- This field is required');
+					setValidationError(`- ${t('This field is required')}`);
 
 					return false;
 				}
 				break;
 			case UserDemographicQuestionType.checkbox:
 				if (!Array.isArray(inputValue) || inputValue.length === 0) {
-					setValidationError('Please select at least one option');
+					setValidationError(`- ${t('Please select at least one option')}`);
 
 					return false;
 				}
@@ -79,7 +81,7 @@ const UserDemographicQuestionInput: FC<UserDemographicQuestionInputProps> = ({
 							validateInput(newValue);
 							onChange(newValue);
 						}}
-						placeholder='Enter your answer'
+						placeholder={t('Enter your answer')}
 						className={styles.textInput}
 						required={required}
 						aria-required={required}
@@ -101,7 +103,7 @@ const UserDemographicQuestionInput: FC<UserDemographicQuestionInputProps> = ({
 							validateInput(newValue);
 							onChange(newValue);
 						}}
-						placeholder='Enter your detailed answer'
+						placeholder={t('Enter your detailed answer')}
 						className={styles.textareaInput}
 						rows={4}
 						required={required}

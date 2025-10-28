@@ -1,4 +1,4 @@
-import { UserDemographicQuestion, UserDemographicQuestionType } from 'delib-npm';
+import { UserDemographicQuestion, UserDemographicQuestionType, Role } from 'delib-npm';
 import { FC, useState, FormEvent } from 'react';
 import UserDemographicQuestionInput from '../settings/userDemographicQuestionInput/UserDemographicQuestionInput';
 import { setUserAnswers } from '@/controllers/db/userDemographic/setUserDemographic';
@@ -13,13 +13,17 @@ interface Props {
 	questions: UserDemographicQuestion[];
 	closeModal?: () => void;
 	isMandatory?: boolean; // Flag to indicate if the survey is mandatory
+	role?: Role; // User role to determine admin permissions
 }
 
-const UserDemographicQuestions: FC<Props> = ({ questions, closeModal, isMandatory = true }) => {
+const UserDemographicQuestions: FC<Props> = ({ questions, closeModal, isMandatory = true, role }) => {
 	const [userDemographic, setUserDemographic] = useState<UserDemographicQuestion[]>([]);
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const { t } = useUserConfig();
 	const navigate = useNavigate();
+
+	// Check if the user is an admin (admin or creator role)
+	const isAdmin = role === Role.admin || role === Role.creator;
 	const handleQuestionChange = (
 		question: UserDemographicQuestion,
 		value: string | string[]
@@ -113,7 +117,7 @@ const UserDemographicQuestions: FC<Props> = ({ questions, closeModal, isMandator
 	const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
 		if (!validateForm()) {
-			alert('Please answer all required fields before submitting.');
+			alert(t('Please answer all required fields before submitting'));
 
 			return;
 		}
@@ -131,6 +135,11 @@ const UserDemographicQuestions: FC<Props> = ({ questions, closeModal, isMandator
 		}
 	};
 
+	// Admin can close without filling or saving the form
+	const handleAdminClose = () => {
+		closeModal?.();
+	};
+
 	return (
 		<div className={styles.userDemographicContainer}>
 			<div className={styles.surveyBody}>
@@ -138,8 +147,8 @@ const UserDemographicQuestions: FC<Props> = ({ questions, closeModal, isMandator
 					{!isMandatory && (
 						<BackToMenuArrow onClick={() => navigate('/')} />
 					)}
-					{!isMandatory && closeModal && (
-						<X className={styles.XBtn} onClick={closeModal} />
+					{((!isMandatory && closeModal) || (isAdmin && closeModal)) && (
+						<X className={styles.XBtn} onClick={isAdmin ? handleAdminClose : closeModal} />
 					)}
 				</div>
 				<h1 className={styles.title}>{t('User Profile Setup')}</h1>
@@ -177,7 +186,7 @@ const UserDemographicQuestions: FC<Props> = ({ questions, closeModal, isMandator
 					<div className={styles.button}>
 						<Button
 							text={
-								isSubmitting ? 'Submitting...' : 'Submit Survey'
+								isSubmitting ? t('Submitting...') : t('Submit Survey')
 							}
 							buttonType={ButtonType.PRIMARY}
 							disabled={isSubmitting || !validateForm()}

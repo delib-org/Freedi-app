@@ -9,6 +9,7 @@ import {
 import { connectFirestoreEmulator, getFirestore } from 'firebase/firestore';
 import { getStorage, connectStorageEmulator } from 'firebase/storage';
 import { getAnalytics, isSupported } from 'firebase/analytics';
+import { getFunctions, connectFunctionsEmulator } from 'firebase/functions';
 import { isProduction } from '../general/helpers';
 import firebaseConfig from './configKey';
 
@@ -20,6 +21,7 @@ const FireStore = getFirestore(app);
 const DB = FireStore;
 const storage = getStorage(app);
 const auth = getAuth();
+const functions = getFunctions(app);
 
 // Initialize Analytics only in production and if supported
 let analytics: ReturnType<typeof getAnalytics> | null = null;
@@ -69,6 +71,13 @@ if (!isProduction()) {
 	} catch (error) {
 		console.error('Failed to connect to Storage emulator:', error);
 	}
+
+	try {
+		connectFunctionsEmulator(functions, 'localhost', 5001);
+		console.info('Connected to Functions emulator on localhost:5001');
+	} catch (error) {
+		console.error('Failed to connect to Functions emulator:', error);
+	}
 }
 
-export { auth, FireStore, storage, app, DB, analytics };
+export { auth, FireStore, storage, app, DB, analytics, functions };

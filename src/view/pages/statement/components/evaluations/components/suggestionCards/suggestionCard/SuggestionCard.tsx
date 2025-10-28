@@ -337,6 +337,7 @@ const SuggestionCard: FC<Props> = ({
 								saveButtonClassName={styles.editButtons}
 							/>
 						</div>
+
 						<Link to={`/statement/${statement.statementId}`} className={styles.showMore}>
 							{t('Show more')}
 						</Link>

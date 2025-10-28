@@ -33,7 +33,6 @@ const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 		property: keyof StatementSettings,
 		newValue: boolean | string
 	) {
-		console.info(`Setting ${property} to ${newValue}`);
 		setStatementSettingToDB({
 			statement,
 			property,
@@ -239,6 +238,29 @@ const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 					)}
 				</div>
 			</div>
+
+			{/* Discussion Framework Category */}
+			{statement.statementType === StatementType.question && (
+				<div className={styles.category}>
+					<div className={styles.categoryHeader}>
+						<span className={styles.categoryTitle}>
+							{t('Discussion Framework')}
+						</span>
+					</div>
+					<div className={styles.categoryContent}>
+						<Checkbox
+							label={t('Enable Popper-Hebbian Discussion Mode')}
+							isChecked={settings.popperianDiscussionEnabled ?? false}
+							onChange={(checked) =>
+								handleSettingChange('popperianDiscussionEnabled', checked)
+							}
+						/>
+						<p className={styles.helperText}>
+							{t('Transforms discussion into evidence-based Support/Challenge format with weighted scoring and AI-guided idea refinement')}
+						</p>
+					</div>
+				</div>
+			)}
 
 			{/* Navigation & Structure Category */}
 			<div className={styles.category}>
