@@ -1,10 +1,101 @@
 import { doc, setDoc, updateDoc, deleteDoc, getDoc, collection, query, where, onSnapshot, increment, Unsubscribe } from 'firebase/firestore';
-import { FireStore, auth } from '../config';
+import { httpsCallable } from 'firebase/functions';
+import { FireStore, auth, functions } from '../config';
 import { Collections, Statement, StatementType, Creator } from 'delib-npm';
 import { logger } from '@/services/logger';
+import { detectUrls } from '@/utils/urlHelpers';
+import { LocalStorageObjects } from '@/types/localStorage/LocalStorageObjects';
 
 function generateId(): string {
 	return `${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+}
+
+interface LinkMetadata {
+	url: string;
+	title: string;
+	summary: string;
+	domain: string;
+}
+
+interface LinkWithMetadata {
+	formattedText: string;
+	metadata: LinkMetadata | null;
+}
+
+/**
+ * Get user's language preference from the Freedi app config
+ */
+function getUserLanguage(): string {
+	try {
+		// Read userConfig from localStorage (where app stores all user preferences)
+		const savedConfig = localStorage.getItem(LocalStorageObjects.UserConfig);
+		if (savedConfig) {
+			const parsedConfig = JSON.parse(savedConfig);
+			const chosenLanguage = parsedConfig.chosenLanguage;
+			if (chosenLanguage) {
+				console.info('[Link Summary] Using app language preference:', chosenLanguage);
+
+				return chosenLanguage;
+			}
+		}
+	} catch (error) {
+		console.error('[Link Summary] Error reading userConfig from localStorage:', error);
+	}
+
+	// Fallback to browser language
+	const browserLanguage = navigator.language || navigator.languages?.[0];
+	if (browserLanguage) {
+		// Extract just the language code (e.g., 'en' from 'en-US')
+		const lang = browserLanguage.split('-')[0];
+		console.info('[Link Summary] Using browser language:', lang, 'from', browserLanguage);
+
+		return lang;
+	}
+
+	// Default to Hebrew (app default)
+	console.info('[Link Summary] Using default language: he');
+
+	return 'he';
+}
+
+/**
+ * Process text containing links - fetch metadata and format
+ */
+async function processLinks(text: string): Promise<LinkWithMetadata> {
+	const urls = detectUrls(text);
+
+	if (urls.length === 0) {
+		return { formattedText: text, metadata: null };
+	}
+
+	try {
+		// For now, only process the first link
+		const url = urls[0];
+
+		// Get user's language preference
+		const language = getUserLanguage();
+		console.info('[Link Summary] Processing link with language:', language, 'URL:', url);
+
+		// Call the summarizeLink function with language
+		const summarizeLinkFn = httpsCallable<{ url: string; language: string }, LinkMetadata>(
+			functions,
+			'summarizeLink'
+		);
+		const result = await summarizeLinkFn({ url, language });
+		console.info('[Link Summary] Received summary in language:', language);
+
+		const metadata = result.data;
+
+		// Replace the URL in the text with formatted markdown link
+		const formattedText = text.replace(url, `[${metadata.title}](${url})`);
+
+		return { formattedText, metadata };
+	} catch (error) {
+		logger.error('Failed to process link', error, { urls });
+
+		// Return original text if processing fails
+		return { formattedText: text, metadata: null };
+	}
 }
 
 /**
@@ -36,6 +127,9 @@ export async function createEvidencePost(
 			throw new Error('Support value must be between -1 and 1');
 		}
 
+		// Process any links in the content
+		const { formattedText, metadata: linkMetadata } = await processLinks(content);
+
 		const statementId = generateId();
 
 		// Create creator object from current user
@@ -48,7 +142,7 @@ export async function createEvidencePost(
 
 		const evidenceStatement: Statement = {
 			statementId,
-			statement: content,
+			statement: formattedText, // Use formatted text with link
 			statementType: StatementType.statement,
 			parentId: parentStatement.statementId,
 			topParentId: parentStatement.topParentId,
@@ -62,7 +156,8 @@ export async function createEvidencePost(
 				helpfulCount: 0,
 				notHelpfulCount: 0,
 				netScore: 0,
-				evidenceWeight: 1.0 // Will be updated by Firebase Function after AI classification
+				evidenceWeight: 1.0, // Will be updated by Firebase Function after AI classification
+				...(linkMetadata && { linkMetadata }) // Add link metadata if available
 			}
 		};
 
@@ -303,12 +398,22 @@ export async function updateEvidencePost(
 			throw new Error('Only the creator can edit this evidence');
 		}
 
+		// Process any links in the content
+		const { formattedText, metadata: linkMetadata } = await processLinks(content);
+
 		// Update the statement and evidence support level
-		await updateDoc(statementRef, {
-			statement: content,
+		const updateData: Record<string, unknown> = {
+			statement: formattedText,
 			'evidence.support': support,
 			lastUpdate: Date.now()
-		});
+		};
+
+		// Add or remove link metadata
+		if (linkMetadata) {
+			updateData['evidence.linkMetadata'] = linkMetadata;
+		}
+
+		await updateDoc(statementRef, updateData);
 
 		logger.info('Evidence post updated', { statementId });
 	} catch (error) {

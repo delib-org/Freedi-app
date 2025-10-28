@@ -1,4 +1,4 @@
-import { FC, useState, useEffect } from 'react';
+import React, { FC, useState, useEffect } from 'react';
 import { Statement } from 'delib-npm';
 import { EvidenceType } from 'delib-npm/dist/models/evidence/evidenceModel';
 import { getSupportLabel, getSupportColor } from '../../popperHebbianHelpers';
@@ -7,6 +7,25 @@ import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import AddEvidenceModal from '../AddEvidenceModal/AddEvidenceModal';
 import styles from './EvidencePost.module.scss';
+
+interface LinkMetadata {
+	url: string;
+	title: string;
+	summary: string;
+	domain: string;
+}
+
+interface EvidenceWithLink extends Statement {
+	evidence?: {
+		evidenceType?: EvidenceType;
+		support?: number;
+		helpfulCount?: number;
+		notHelpfulCount?: number;
+		netScore?: number;
+		evidenceWeight?: number;
+		linkMetadata?: LinkMetadata;
+	};
+}
 
 interface EvidencePostProps {
 	statement: Statement;
@@ -112,6 +131,46 @@ const EvidencePost: FC<EvidencePostProps> = ({ statement }) => {
 	const showReevaluationNotice = previousEvidenceType !== undefined &&
 		previousEvidenceType !== evidence?.evidenceType;
 
+	// Parse markdown links and render properly
+	const renderContent = (text: string): React.ReactElement => {
+		// Match markdown links [text](url)
+		const markdownLinkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
+		const parts: (string | React.ReactElement)[] = [];
+		let lastIndex = 0;
+		let match;
+
+		while ((match = markdownLinkRegex.exec(text)) !== null) {
+			// Add text before the link
+			if (match.index > lastIndex) {
+				parts.push(text.substring(lastIndex, match.index));
+			}
+
+			// Add the link
+			const linkText = match[1];
+			const linkUrl = match[2];
+			parts.push(
+				<a
+					key={match.index}
+					href={linkUrl}
+					target="_blank"
+					rel="noopener noreferrer"
+					className={styles.evidenceLink}
+				>
+					{linkText}
+				</a>
+			);
+
+			lastIndex = match.index + match[0].length;
+		}
+
+		// Add remaining text
+		if (lastIndex < text.length) {
+			parts.push(text.substring(lastIndex));
+		}
+
+		return <>{parts.length > 0 ? parts : text}</>;
+	};
+
 	return (
 		<>
 			<div className={`${styles.evidencePost} ${styles[`evidencePost--${supportColor}`]}`}>
@@ -146,7 +205,18 @@ const EvidencePost: FC<EvidencePostProps> = ({ statement }) => {
 				)}
 
 			<div className={styles.evidenceContent}>
-				<p>{statement.statement}</p>
+				<p>{renderContent(statement.statement)}</p>
+
+				{/* Display link summary if available */}
+				{(statement as EvidenceWithLink).evidence?.linkMetadata && (
+					<div className={styles.linkSummary}>
+						<div className={styles.linkSummaryHeader}>
+							<span className={styles.linkIcon}>🔗</span>
+							<span className={styles.linkDomain}>{(statement as EvidenceWithLink).evidence!.linkMetadata!.domain}</span>
+						</div>
+						<p className={styles.linkSummaryText}>{(statement as EvidenceWithLink).evidence!.linkMetadata!.summary}</p>
+					</div>
+				)}
 			</div>
 
 			<div className={styles.evidenceFooter}>

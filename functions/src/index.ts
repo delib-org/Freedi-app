@@ -70,6 +70,7 @@ import { analyzeFalsifiability } from "./fn_popperHebbian_analyzeFalsifiability"
 import { refineIdea } from "./fn_popperHebbian_refineIdea";
 import { onEvidencePostCreate, onEvidencePostUpdate } from "./fn_popperHebbian_onEvidencePost";
 import { onVoteUpdate } from "./fn_popperHebbian_onVote";
+import { summarizeLink } from "./fn_popperHebbian_summarizeLink";
 
 // Initialize Firebase only if not already initialized
 if (!getApps().length) {
@@ -377,3 +378,4 @@ exports.refineIdea = refineIdea;
 exports.onEvidencePostCreate = onEvidencePostCreate;
 exports.onEvidencePostUpdate = onEvidencePostUpdate;
 exports.onVoteUpdate = onVoteUpdate;
+exports.summarizeLink = summarizeLink;
