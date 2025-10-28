@@ -113,7 +113,7 @@ const UserDemographicQuestions: FC<Props> = ({ questions, closeModal, isMandator
 	const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
 		if (!validateForm()) {
-			alert('Please answer all required fields before submitting.');
+			alert(t('Please answer all required fields before submitting'));
 
 			return;
 		}
@@ -177,7 +177,7 @@ const UserDemographicQuestions: FC<Props> = ({ questions, closeModal, isMandator
 					<div className={styles.button}>
 						<Button
 							text={
-								isSubmitting ? 'Submitting...' : 'Submit Survey'
+								isSubmitting ? t('Submitting...') : t('Submit Survey')
 							}
 							buttonType={ButtonType.PRIMARY}
 							disabled={isSubmitting || !validateForm()}
