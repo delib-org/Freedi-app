@@ -1,4 +1,4 @@
-import { UserDemographicQuestion, UserDemographicQuestionType } from 'delib-npm';
+import { UserDemographicQuestion, UserDemographicQuestionType, Role } from 'delib-npm';
 import { FC, useState, FormEvent } from 'react';
 import UserDemographicQuestionInput from '../settings/userDemographicQuestionInput/UserDemographicQuestionInput';
 import { setUserAnswers } from '@/controllers/db/userDemographic/setUserDemographic';
@@ -12,16 +12,18 @@ import { useNavigate } from 'react-router';
 interface Props {
 	questions: UserDemographicQuestion[];
 	closeModal?: () => void;
+	isMandatory?: boolean; // Flag to indicate if the survey is mandatory
+	role?: Role; // User role to determine admin permissions
 }
 
-const UserDemographicQuestions: FC<Props> = ({ questions, closeModal }) => {
+const UserDemographicQuestions: FC<Props> = ({ questions, closeModal, isMandatory = true, role }) => {
 	const [userDemographic, setUserDemographic] = useState<UserDemographicQuestion[]>([]);
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const { t } = useUserConfig();
-	const isSurveyOptional = userDemographic.some(
-		(survey) => survey.required === true
-	);
 	const navigate = useNavigate();
+
+	// Check if the user is an admin (admin or creator role)
+	const isAdmin = role === Role.admin || role === Role.creator;
 	const handleQuestionChange = (
 		question: UserDemographicQuestion,
 		value: string | string[]
@@ -62,26 +64,18 @@ const UserDemographicQuestions: FC<Props> = ({ questions, closeModal }) => {
 				const currentQuestion = prevData.find(
 					(q) => q.userQuestionId === question.userQuestionId
 				);
-				const _value = value[0];
-				if (currentQuestion) {
-					const newOptions = currentQuestion.answerOptions.includes(
-						_value as string
-					)
-						? currentQuestion.answerOptions.filter(
-								(option) => option !== _value
-							)
-						: [...currentQuestion.answerOptions, _value as string];
 
+				if (currentQuestion) {
 					return prevData.map((q) =>
 						q.userQuestionId === question.userQuestionId
-							? { ...q, answerOptions: newOptions }
+							? { ...q, answerOptions: value as string[] }
 							: q
 					);
 				}
 
 				return [
 					...prevData,
-					{ ...question, answerOptions: [_value as string] },
+					{ ...question, answerOptions: value as string[] },
 				];
 			});
 		}
@@ -123,7 +117,7 @@ const UserDemographicQuestions: FC<Props> = ({ questions, closeModal }) => {
 	const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
 		if (!validateForm()) {
-			alert('Please answer all required fields before submitting.');
+			alert(t('Please answer all required fields before submitting'));
 
 			return;
 		}
@@ -141,36 +135,58 @@ const UserDemographicQuestions: FC<Props> = ({ questions, closeModal }) => {
 		}
 	};
 
+	// Admin can close without filling or saving the form
+	const handleAdminClose = () => {
+		closeModal?.();
+	};
+
 	return (
 		<div className={styles.userDemographicContainer}>
 			<div className={styles.surveyBody}>
 				<div className={styles.topNavSurvey}>
-					<BackToMenuArrow onClick={() => navigate('/')} />
-					{isSurveyOptional && (
-						<X className={styles.XBtn} onClick={closeModal} />
+					{!isMandatory && (
+						<BackToMenuArrow onClick={() => navigate('/')} />
+					)}
+					{((!isMandatory && closeModal) || (isAdmin && closeModal)) && (
+						<X className={styles.XBtn} onClick={isAdmin ? handleAdminClose : closeModal} />
 					)}
 				</div>
 				<h1 className={styles.title}>{t('User Profile Setup')}</h1>
 				<p className={styles.description}>
-					{t('Complete these setup questions')}
+					{isMandatory
+						? t('Please complete this survey to access the discussion')
+						: t('Complete these setup questions')}
 				</p>
 				<form onSubmit={handleSubmit}>
-					{questions.map((question: UserDemographicQuestion) => (
-						<UserDemographicQuestionInput
-							key={question.userQuestionId}
-							question={question}
-							value={''}
-							options={question.options || []}
-							onChange={(value) =>
-								handleQuestionChange(question, value)
-							}
-							required={true}
-						/>
-					))}
+					{questions.map((question: UserDemographicQuestion) => {
+						const currentAnswer = userDemographic.find(
+							(q) => q.userQuestionId === question.userQuestionId
+						);
+						let value: string | string[] = '';
+
+						if (question.type === UserDemographicQuestionType.checkbox) {
+							value = currentAnswer?.answerOptions || [];
+						} else {
+							value = currentAnswer?.answer || '';
+						}
+
+						return (
+							<UserDemographicQuestionInput
+								key={question.userQuestionId}
+								question={question}
+								value={value}
+								options={question.options || []}
+								onChange={(value) =>
+									handleQuestionChange(question, value)
+								}
+								required={true}
+							/>
+						);
+					})}
 					<div className={styles.button}>
 						<Button
 							text={
-								isSubmitting ? 'Submitting...' : 'Submit Survey'
+								isSubmitting ? t('Submitting...') : t('Submit Survey')
 							}
 							buttonType={ButtonType.PRIMARY}
 							disabled={isSubmitting || !validateForm()}

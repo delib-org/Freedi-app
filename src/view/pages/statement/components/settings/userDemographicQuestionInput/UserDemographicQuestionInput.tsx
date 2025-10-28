@@ -1,5 +1,6 @@
 import { UserDemographicQuestion, UserDemographicQuestionType } from 'delib-npm';
 import { FC, useEffect, useState } from 'react';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import styles from './UserDemographicQuestionInput.module.scss';
 
 interface UserDemographicQuestionInputProps {
@@ -18,6 +19,7 @@ const UserDemographicQuestionInput: FC<UserDemographicQuestionInputProps> = ({
 	className = '',
 	required = false,
 }) => {
+	const { t } = useUserConfig();
 	const [validationError, setValidationError] = useState('');
 	const [isChosen, setIsChosen] = useState<number | null>(null);
 	const validateInput = (inputValue: string | string[]) => {
@@ -35,14 +37,14 @@ const UserDemographicQuestionInput: FC<UserDemographicQuestionInputProps> = ({
 					!inputValue ||
 					(typeof inputValue === 'string' && inputValue.trim() === '')
 				) {
-					setValidationError('- This field is required');
+					setValidationError(`- ${t('This field is required')}`);
 
 					return false;
 				}
 				break;
 			case UserDemographicQuestionType.checkbox:
 				if (!Array.isArray(inputValue) || inputValue.length === 0) {
-					setValidationError('Please select at least one option');
+					setValidationError(`- ${t('Please select at least one option')}`);
 
 					return false;
 				}
@@ -69,6 +71,91 @@ const UserDemographicQuestionInput: FC<UserDemographicQuestionInputProps> = ({
 
 	const renderInput = () => {
 		switch (question.type) {
+			case UserDemographicQuestionType.text:
+				return (
+					<input
+						type='text'
+						value={typeof value === 'string' ? value : ''}
+						onChange={(e) => {
+							const newValue = e.target.value;
+							validateInput(newValue);
+							onChange(newValue);
+						}}
+						placeholder={t('Enter your answer')}
+						className={styles.textInput}
+						required={required}
+						aria-required={required}
+						aria-invalid={!!validationError}
+						aria-describedby={
+							validationError
+								? `${question.userQuestionId}-error`
+								: undefined
+						}
+					/>
+				);
+
+			case UserDemographicQuestionType.textarea:
+				return (
+					<textarea
+						value={typeof value === 'string' ? value : ''}
+						onChange={(e) => {
+							const newValue = e.target.value;
+							validateInput(newValue);
+							onChange(newValue);
+						}}
+						placeholder={t('Enter your detailed answer')}
+						className={styles.textareaInput}
+						rows={4}
+						required={required}
+						aria-required={required}
+						aria-invalid={!!validationError}
+						aria-describedby={
+							validationError
+								? `${question.userQuestionId}-error`
+								: undefined
+						}
+					/>
+				);
+
+			case UserDemographicQuestionType.checkbox:
+				return (
+					<div
+						className={styles.optionsContainer}
+						role='group'
+						aria-required={required}
+					>
+						{question.options?.map((option, index) => {
+							const isChecked = Array.isArray(value) && value.includes(option.option);
+							
+return (
+								<label key={index} className={styles.optionLabel}>
+									<input
+										type='checkbox'
+										name={`checkbox-${question.userQuestionId}`}
+										value={option.option}
+										checked={isChecked}
+										onChange={(e) => {
+											const newValue = e.target.checked
+												? Array.isArray(value)
+													? [...value, option.option]
+													: [option.option]
+												: Array.isArray(value)
+													? value.filter(v => v !== option.option)
+													: [];
+											validateInput(newValue);
+											onChange(newValue);
+										}}
+										className={styles.checkboxInput}
+									/>
+									<span className={styles.optionText}>
+										{option.option}
+									</span>
+								</label>
+							);
+						})}
+					</div>
+				);
+
 			case UserDemographicQuestionType.radio:
 				return (
 					<div

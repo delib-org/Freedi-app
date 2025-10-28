@@ -124,8 +124,8 @@ const PolarizationIndexComp = () => {
 		<div>
 			<div className={styles.board}>
 				<div className={styles["board-inner"]}>{t("Collaboration Index")}</div>
-				{points.map((point: Point) => (
-					<div className={styles.pointDiv} key={point.statementId} style={{ left: point.position.x + 'px', top: point.position.y + 'px' }}>
+				{points.filter(point => point.position).map((point: Point) => (
+					<div className={styles.pointDiv} key={point.statementId} style={{ left: point.position?.x ? point.position.x + 'px' : '0px', top: point.position?.y ? point.position.y + 'px' : '0px' }}>
 						<Tooltip content={`${point.statement} MAD: ${point.overallMAD.toFixed(2)}, Mean: ${point.overallMean.toFixed(2)}, N: ${point.overallN}`} position={tooltipPosition(point.overallMAD, point.overallMean)}>
 							<div
 								onClick={() => handleShowGroups(point.statementId)}
@@ -144,8 +144,8 @@ const PolarizationIndexComp = () => {
 										key={`${point.statementId}-${axis.questionId}-${group.option.option}-${i}`}
 										className={styles.axisGroup}
 										style={{
-											left: showGroups === point.statementId ? group.position.x + 'px' : point.position.x + 10 + 'px',
-											top: showGroups === point.statementId ? group.position.y + 'px' : point.position.y + 10 + 'px',
+											left: showGroups === point.statementId && group.position ? group.position.x + 'px' : point.position ? point.position.x + 10 + 'px' : '10px',
+											top: showGroups === point.statementId && group.position ? group.position.y + 'px' : point.position ? point.position.y + 10 + 'px' : '10px',
 											opacity: showGroups === point.statementId ? 1 : 0
 										}}>
 										<Tooltip content={`${group.option.option} MAD: ${group.mad.toFixed(2)}, Mean: ${group.mean.toFixed(2)}, N: ${group.n}`} position={tooltipPosition(group.mad, group.mean)}>

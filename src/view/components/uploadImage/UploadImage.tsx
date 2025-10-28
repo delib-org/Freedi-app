@@ -3,11 +3,15 @@ import styles from './UploadImage.module.scss';
 import { setImageLocally } from './uploadImageCont';
 import { Statement } from 'delib-npm';
 
+type SizeVariant = 'default' | 'compact' | 'inline';
+
 interface Props {
 	readonly statement: Statement | undefined;
 	readonly fileInputRef?: React.RefObject<HTMLInputElement> | null;
 	readonly image: string;
 	readonly setImage: React.Dispatch<React.SetStateAction<string>>;
+	readonly isAdmin?: boolean;
+	readonly variant?: SizeVariant;
 }
 
 export default function UploadImage({
@@ -15,6 +19,8 @@ export default function UploadImage({
 	fileInputRef,
 	image,
 	setImage,
+	isAdmin = true, // Default to true for backwards compatibility
+	variant = 'default', // Default variant
 }: Props) {
 	const [isDragging, setIsDragging] = useState(false);
 	const [progress, setProgress] = useState(0);
@@ -38,6 +44,11 @@ export default function UploadImage({
 	) => {
 		try {
 			if (!statement) throw new Error('statement is undefined');
+			if (!isAdmin) {
+				console.error('Unauthorized: Only admins can upload images');
+
+				return;
+			}
 
 			const file = event.target.files?.[0];
 			if (file) {
@@ -57,6 +68,11 @@ export default function UploadImage({
 
 		try {
 			if (!statement) throw new Error('statement is undefined');
+			if (!isAdmin) {
+				console.error('Unauthorized: Only admins can upload images');
+				
+				return;
+			}
 
 			const file = event.dataTransfer.files[0];
 
@@ -66,14 +82,20 @@ export default function UploadImage({
 		}
 	};
 
+	const variantClass = variant === 'inline' ? styles.inline : variant === 'compact' ? styles.compact : '';
+
 	return (
 		<label
-			className={`${styles.dropZone} ${isDragging ? styles.dropZoneActive : ''}`}
-			style={{ border: image === '' ? '2px dashed #ccc' : 'none' }}
-			onDragEnter={handleDragEnter}
-			onDragLeave={handleDragLeave}
-			onDragOver={(e) => e.preventDefault()}
-			onDrop={handleDrop}
+			className={`${styles.dropZone} ${variantClass} ${isDragging ? styles.dropZoneActive : ''} ${!isAdmin ? styles.disabled : ''}`}
+			style={{
+				border: image === '' ? '2px dashed #ccc' : 'none',
+				cursor: !isAdmin ? 'default' : 'pointer',
+				pointerEvents: !isAdmin && image ? 'none' : 'auto'
+			}}
+			onDragEnter={isAdmin ? handleDragEnter : undefined}
+			onDragLeave={isAdmin ? handleDragLeave : undefined}
+			onDragOver={isAdmin ? (e) => e.preventDefault() : undefined}
+			onDrop={isAdmin ? handleDrop : undefined}
 		>
 			<input
 				ref={fileInputRef}
@@ -81,14 +103,14 @@ export default function UploadImage({
 				accept='image/*'
 				onChange={handleFileChange}
 				className={styles.fileInput}
+				disabled={!isAdmin}
 			/>
 
 			{image !== '' && (
 				<div className={styles.imageContainer}>
-					<div
-						style={{
-							backgroundImage: `url(${image})`,
-						}}
+					<img
+						src={image}
+						alt={`image of ${statement?.statement || 'statement'}`}
 						className={styles.imagePreview}
 					/>
 					{showSuccess && (

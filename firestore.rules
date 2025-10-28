@@ -518,5 +518,55 @@ service cloud.firestore {
       // Feedback cannot be updated or deleted once submitted
       allow update, delete: if false;
     }
+
+    // Member validation status collection rules
+    match /memberValidationStatuses/{validationId} {
+      function isStatementAdmin() {
+        let validation = resource != null ? resource : request.resource;
+        let statementId = validation.data.statementId;
+        let subId = string(request.auth.uid) + '--' + cleanPath(string(statementId));
+        let subscription = get(/databases/$(database)/documents/statementsSubscribe/$(subId)).data;
+        return subscription != null && subscription.role == 'admin';
+      }
+
+      function isStatementCreator() {
+        let validation = resource != null ? resource : request.resource;
+        let statementId = validation.data.statementId;
+        let statement = get(/databases/$(database)/documents/statements/$(statementId)).data;
+        return statement != null && statement.creatorId == request.auth.uid;
+      }
+
+      // Allow read for authenticated users (needed to check member statuses)
+      allow read: if request.auth != null;
+
+      // Only allow create/update/delete for statement admins or creators
+      allow create, update: if request.auth != null && (isStatementAdmin() || isStatementCreator());
+      allow delete: if request.auth != null && (isStatementAdmin() || isStatementCreator());
+    }
+
+    // Popper-Hebbian Discussion System Rules
+
+    // Refinement Sessions - Users can only access their own sessions
+    match /refinementSessions/{sessionId} {
+      allow read: if request.auth != null &&
+                    resource.data.userId == request.auth.uid;
+      allow create: if request.auth != null &&
+                      request.resource.data.userId == request.auth.uid;
+      allow update: if request.auth != null &&
+                      resource.data.userId == request.auth.uid;
+      allow delete: if request.auth != null &&
+                      resource.data.userId == request.auth.uid;
+    }
+
+    // Evidence Votes - Users can manage their own votes
+    match /evidenceVotes/{voteId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null &&
+                      request.resource.data.userId == request.auth.uid;
+      allow update: if request.auth != null &&
+                      resource.data.userId == request.auth.uid;
+      allow delete: if request.auth != null &&
+                      resource.data.userId == request.auth.uid;
+    }
   }
 }

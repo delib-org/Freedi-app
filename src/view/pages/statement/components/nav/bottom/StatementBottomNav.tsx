@@ -20,6 +20,11 @@ import { useDecreaseLearningRemain } from '@/controllers/hooks/useDecreaseLearni
 import { useDispatch, useSelector } from 'react-redux';
 import { setNewStatementModal } from '@/redux/statements/newStatementSlice';
 import { statementSubscriptionSelector } from '@/redux/statements/statementsSlice';
+import IdeaRefineryModal from '../../popperHebbian/refinery/IdeaRefineryModal';
+import InitialIdeaModal from '../../popperHebbian/refinery/InitialIdeaModal';
+import { createStatementWithSubscription } from '@/controllers/db/statements/createStatementWithSubscription';
+import { useAuthentication } from '@/controllers/hooks/useAuthentication';
+import { QuestionType } from 'delib-npm';
 
 interface Props { showNav?: boolean; }
 
@@ -27,14 +32,21 @@ const StatementBottomNav: FC<Props> = () => {
 	const { statementId } = useParams<{ statementId: string }>();
 	const dispatch = useDispatch();
 	const navigate = useNavigate();
+	const { user } = useAuthentication();
 
 	const { statement } = useContext(StatementContext);
 	const subscription = useSelector(statementSubscriptionSelector(statementId));
 	const role = subscription?.role;
 	const isAdmin = role === 'admin' || role === Role.creator;
 
-	const { dir, learning, t } = useUserConfig();
+	const { dir, learning, t, currentLanguage } = useUserConfig();
 	const decreaseLearning = useDecreaseLearningRemain();
+
+	// Popper-Hebbian refinery modal state
+	const isPopperHebbianEnabled = statement?.statementSettings?.popperianDiscussionEnabled ?? false;
+	const [showInitialIdeaModal, setShowInitialIdeaModal] = useState(false);
+	const [showRefineryModal, setShowRefineryModal] = useState(false);
+	const [initialIdea, setInitialIdea] = useState('');
 
 	// Learning counter → pill text while > 0
 	const timesRemainToLearnAddOption = Number(learning?.addOptions ?? 0);
@@ -65,6 +77,12 @@ const StatementBottomNav: FC<Props> = () => {
 
 	const statementColor = useStatementColor({ statement });
 
+	// Filter out the Agreement sort option if showEvaluation is false
+	const showEvaluation = statement?.statementSettings?.showEvaluation ?? true;
+	const filteredSortItems = showEvaluation
+		? sortItems
+		: sortItems.filter(item => item.id !== SortType.accepted);
+
 	function handleCreateNewOption() {
 		if (!statement) return;
 
@@ -85,9 +103,58 @@ const StatementBottomNav: FC<Props> = () => {
 	}
 
 	const handleAddOption = () => {
-		handleCreateNewOption();
-		decreaseLearning({ addOption: true });
+		// If Popper-Hebbian mode is enabled, show initial idea modal first
+		if (isPopperHebbianEnabled) {
+			setShowInitialIdeaModal(true);
+			decreaseLearning({ addOption: true });
+		} else {
+			// Normal flow - directly create option
+			handleCreateNewOption();
+			decreaseLearning({ addOption: true });
+		}
 	};
+
+	function handleInitialIdeaSubmit(idea: string) {
+		setInitialIdea(idea);
+		setShowInitialIdeaModal(false);
+		setShowRefineryModal(true);
+	}
+
+	async function handlePublishRefinedIdea(refinedText: string) {
+		if (!statement || !user) return;
+
+		try {
+			// Close the refinery modal
+			setShowRefineryModal(false);
+
+			// Reset initial idea
+			setInitialIdea('');
+
+			// Automatically create the statement with the refined idea
+			const defaultType = statement.statementType === StatementType.option
+				? StatementType.question
+				: StatementType.option;
+
+			// Extract title (first line or first 100 chars) and use full refined text as description
+			const lines = refinedText.split('\n');
+			const title = lines[0].substring(0, 100);
+			const description = refinedText;
+
+			await createStatementWithSubscription({
+				newStatementParent: statement,
+				title,
+				description,
+				newStatement: { statementType: defaultType },
+				newStatementQuestionType: statement.questionSettings?.questionType || QuestionType.simple,
+				currentLanguage,
+				user,
+				dispatch,
+			});
+
+			} catch (error) {
+			console.error('Failed to publish refined idea:', error);
+		}
+	}
 
 	function handleSortingClick() {
 		setShowSorting(v => !v);
@@ -99,7 +166,7 @@ const StatementBottomNav: FC<Props> = () => {
 		return path.includes('/stage/') ? 'stage' : 'statement';
 	}
 
-	function handleSortClick(navItem: typeof sortItems[0]) {
+	function handleSortClick(navItem: typeof filteredSortItems[0]) {
 		setShowSorting(false);
 		if (navItem.link === SortType.random) {
 			navigate(`/${getBaseRoute()}/${statement?.statementId}/${navItem.link}?t=${Date.now()}`);
@@ -138,7 +205,7 @@ const StatementBottomNav: FC<Props> = () => {
 
 					{/* Sort menu (absolute fan-out like main branch) */}
 					<div className={styles.sortMenu}>
-						{sortItems.map((navItem, i) => (
+						{filteredSortItems.map((navItem, i) => (
 							<div
 								key={`item-id-${i}`}
 								className={`${styles.sortMenu__item} ${showSorting ? styles.active : ''}`}
@@ -163,6 +230,27 @@ const StatementBottomNav: FC<Props> = () => {
 					</div>
 				</div>
 			</div>
+
+			{/* Initial Idea Input Modal */}
+			{showInitialIdeaModal && (
+				<InitialIdeaModal
+					onSubmit={handleInitialIdeaSubmit}
+					onClose={() => setShowInitialIdeaModal(false)}
+				/>
+			)}
+
+			{/* Popper-Hebbian Idea Refinery Modal */}
+			{showRefineryModal && statement && initialIdea && (
+				<IdeaRefineryModal
+					parentStatementId={statement.statementId}
+					originalIdea={initialIdea}
+					onClose={() => {
+						setShowRefineryModal(false);
+						setInitialIdea('');
+					}}
+					onPublish={handlePublishRefinedIdea}
+				/>
+			)}
 		</>
 	);
 };

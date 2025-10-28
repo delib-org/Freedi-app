@@ -167,6 +167,35 @@
 		min-height: 80px;
 		resize: vertical;
 	}
+
+	.previewSection {
+		padding: 0.75rem;
+		background-color: #f8f9fa;
+		border-radius: 4px;
+		margin-bottom: 0.75rem;
+
+		.previewInput,
+		.previewTextarea {
+			width: 100%;
+			padding: 0.5rem;
+			border: 1px solid #d1d9e6;
+			border-radius: 4px;
+			font-size: 0.9rem;
+			background-color: white;
+
+			&:disabled {
+				cursor: not-allowed;
+				opacity: 0.6;
+				background-color: #f5f5f5;
+			}
+		}
+
+		.previewTextarea {
+			min-height: 60px;
+			resize: none;
+			font-family: inherit;
+		}
+	}
 }
 
 /* New Question Form Styles */

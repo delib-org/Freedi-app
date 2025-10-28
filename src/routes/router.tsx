@@ -35,6 +35,7 @@ import MemberRejection from '@/view/pages/memberRejection/MemberRejection';
 import My from '@/view/pages/my/My';
 import CheckNotifications from '@/view/pages/settings/ChecNotifications';
 import MySuggestions from '@/view/pages/my-suggestions/MySuggestions';
+import VotingThankYou from '@/view/pages/votingThankYou/VotingThankYou';
 
 // Mass Consensus URLs
 import { MassConsensusPageUrls } from 'delib-npm';
@@ -124,6 +125,10 @@ const protectedRoutes = [
 				element: <StatementMain />,
 			},
 		],
+	},
+	{
+		path: 'statement/:statementId/thank-you',
+		element: <VotingThankYou />,
 	},
 	{
 		path: 'statement-screen/:statementId',

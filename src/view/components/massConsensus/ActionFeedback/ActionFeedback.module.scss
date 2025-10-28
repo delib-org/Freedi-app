@@ -1,0 +1,499 @@
+// SCSS Module - global styles are imported in main.tsx
+// Using CSS variables and classes that are already available globally
+
+// Animations
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes slideInUp {
+  from {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideOutDown {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes checkmark {
+  0% {
+    stroke-dashoffset: 100;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+// Modal style
+.feedbackModal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .modalBackdrop {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    animation: fadeIn 0.3s ease-in-out;
+  }
+
+  &.dismissing .modalBackdrop {
+    animation: fadeOut 0.3s ease-in-out;
+  }
+
+  .modalContent {
+    position: relative;
+    background: var(--white);
+    border-radius: 20px;
+    max-width: 480px;
+    width: 90%;
+    padding: 32px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    animation: slideInUp 0.4s ease-out;
+    text-align: center;
+
+    @media (max-width: 768px) {
+      max-width: 95%;
+      padding: 24px;
+      margin: 20px;
+    }
+  }
+
+  &.dismissing .modalContent {
+    animation: slideOutDown 0.3s ease-in-out;
+  }
+
+  .closeButton {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: none;
+    border: none;
+    padding: 8px;
+    cursor: pointer;
+    color: var(--dark-text);
+    transition: all 0.2s;
+    border-radius: 50%;
+
+    &:hover {
+      background: var(--light-gray);
+      color: var(--dark);
+    }
+
+    svg {
+      width: 20px;
+      height: 20px;
+    }
+  }
+
+  .successAnimation {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 24px;
+
+    .checkCircle {
+      width: 100px;
+      height: 100px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: scaleIn 0.5s ease-out 0.2s both;
+
+      .checkmark {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        stroke-width: 2;
+        stroke-miterlimit: 10;
+        box-shadow: inset 0px 0px 0px var(--active);
+        animation: fill 0.4s ease-in-out 0.4s forwards, scale 0.3s ease-in-out 0.9s both;
+
+        .checkmarkCircle {
+          stroke-dasharray: 166;
+          stroke-dashoffset: 166;
+          stroke-width: 2;
+          stroke-miterlimit: 10;
+          stroke: var(--active);
+          fill: none;
+          animation: stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+        }
+
+        .checkmarkCheck {
+          transform-origin: 50% 50%;
+          stroke-dasharray: 48;
+          stroke-dashoffset: 48;
+          stroke: var(--white);
+          stroke-width: 3;
+          animation: stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
+        }
+      }
+    }
+  }
+
+  @keyframes stroke {
+    100% {
+      stroke-dashoffset: 0;
+    }
+  }
+
+  @keyframes scale {
+    0%, 100% {
+      transform: none;
+    }
+    50% {
+      transform: scale3d(1.1, 1.1, 1);
+    }
+  }
+
+  @keyframes fill {
+    100% {
+      box-shadow: inset 0px 0px 0px 50px var(--active);
+    }
+  }
+
+  .modalBody {
+    h2 {
+      margin: 0 0 12px 0;
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--dark);
+    }
+
+    .successMessage {
+      margin: 0 0 16px 0;
+      color: var(--dark-text);
+      font-size: 1rem;
+      line-height: 1.5;
+    }
+
+    .suggestionCount {
+      margin: 12px 0;
+      padding: 12px;
+      background: var(--light-gray-bg);
+      border-radius: 8px;
+      color: var(--dark);
+      font-size: 0.95rem;
+      font-weight: 500;
+    }
+
+    .countdown {
+      margin: 16px 0 0 0;
+      color: var(--dark-text);
+      font-size: 0.9rem;
+      font-style: italic;
+    }
+  }
+
+  .modalFooter {
+    margin-top: 32px;
+  }
+}
+
+// Toast style
+.feedbackToast {
+  position: fixed;
+  top: 80px;
+  right: 20px;
+  background: var(--bg-primary);
+  border: 2px solid var(--success, #4caf50);
+  border-radius: 12px;
+  padding: 16px;
+  max-width: 400px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+  z-index: 10000;
+  animation: slideInUp 0.4s ease-out;
+
+  &.dismissing {
+    animation: slideOutDown 0.3s ease-in-out;
+  }
+
+  @media (max-width: 768px) {
+    right: 10px;
+    left: 10px;
+    max-width: none;
+  }
+
+  .toastContent {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+
+    .toastIcon {
+      width: 24px;
+      height: 24px;
+      color: var(--success, #4caf50);
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .toastText {
+      flex: 1;
+
+      p {
+        margin: 0;
+        color: var(--text-primary);
+        font-weight: 500;
+        font-size: 1rem;
+      }
+
+      .toastSubtext {
+        display: block;
+        margin-top: 4px;
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+        font-weight: normal;
+      }
+    }
+
+    .toastCountdown {
+      padding: 4px 8px;
+      background: var(--bg-secondary);
+      border-radius: 4px;
+      color: var(--text-secondary);
+      font-size: 0.85rem;
+      font-weight: 500;
+    }
+
+    .toastClose {
+      background: none;
+      border: none;
+      padding: 4px;
+      cursor: pointer;
+      color: var(--text-secondary);
+      flex-shrink: 0;
+
+      &:hover {
+        color: var(--text-primary);
+      }
+
+      svg {
+        width: 18px;
+        height: 18px;
+      }
+    }
+  }
+
+  // RTL support
+  [dir="rtl"] & {
+    right: auto;
+    left: 20px;
+
+    @media (max-width: 768px) {
+      right: 10px;
+    }
+  }
+}
+
+// Inline style
+.feedbackInline {
+  background: var(--success-bg, #e8f5e9);
+  border: 1px solid var(--success, #4caf50);
+  border-radius: 12px;
+  padding: 20px;
+  margin: 20px 0;
+  animation: fadeIn 0.4s ease-in-out;
+
+  &.dismissing {
+    animation: fadeOut 0.3s ease-in-out;
+  }
+
+  .inlineHeader {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+
+    .inlineIcon {
+      width: 24px;
+      height: 24px;
+      color: var(--success, #4caf50);
+    }
+
+    h3 {
+      margin: 0;
+      color: var(--text-primary);
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+  }
+
+  .inlineMessage {
+    margin: 0 0 20px 36px;
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    line-height: 1.4;
+  }
+
+  .buttonGroup {
+    margin-left: 36px;
+  }
+}
+
+// Card style
+.feedbackCard {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 24px;
+  margin: 20px 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  animation: slideInUp 0.4s ease-out;
+
+  &.dismissing {
+    animation: slideOutDown 0.3s ease-in-out;
+  }
+
+  .cardHeader {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 16px;
+
+    .successIcon {
+      width: 40px;
+      height: 40px;
+      background: var(--success-bg, #e8f5e9);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+
+      svg {
+        width: 20px;
+        height: 20px;
+        color: var(--success, #4caf50);
+      }
+    }
+
+    h3 {
+      flex: 1;
+      margin: 0;
+      color: var(--text-primary);
+      font-size: 1.2rem;
+      font-weight: 600;
+    }
+
+    .cardClose {
+      background: none;
+      border: none;
+      padding: 4px;
+      cursor: pointer;
+      color: var(--text-secondary);
+
+      &:hover {
+        color: var(--text-primary);
+      }
+
+      svg {
+        width: 20px;
+        height: 20px;
+      }
+    }
+  }
+
+  .cardMessage {
+    margin: 0 0 16px 56px;
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    line-height: 1.5;
+  }
+
+  .cardCount {
+    margin: 0 0 20px 56px;
+    padding: 8px 12px;
+    background: var(--bg-secondary);
+    border-radius: 6px;
+    display: inline-block;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    font-weight: 500;
+  }
+
+  .buttonGroup {
+    margin-left: 56px;
+  }
+}
+
+// Shared button group styles
+.buttonGroup {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+
+    button {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+
+  button {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+
+    svg {
+      width: 16px;
+      height: 16px;
+    }
+  }
+
+  // RTL support
+  [dir="rtl"] & {
+    flex-direction: row-reverse;
+
+    @media (max-width: 768px) {
+      flex-direction: column;
+    }
+  }
+}

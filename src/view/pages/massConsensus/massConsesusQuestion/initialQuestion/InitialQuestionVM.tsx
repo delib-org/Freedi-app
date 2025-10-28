@@ -62,7 +62,7 @@ export function useInitialQuestion(description: string): InitialQuestionVM {
       const { similarStatements = [], similarTexts = [], userText } = result;
       dispatch(
         setSimilarStatements([
-          ...[userText],
+          userText,
           ...similarTexts,
           ...similarStatements,
         ])

@@ -1,8 +1,8 @@
 import { FC, useEffect, useState, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useParams, useLocation } from 'react-router';
+import { useParams, useLocation, useNavigate } from 'react-router';
 
-import { Statement, SortType, SelectionFunction, Role } from 'delib-npm';
+import { Statement, SortType, SelectionFunction, Role, StatementType } from 'delib-npm';
 
 import { getStatementFromDB } from '@/controllers/db/statements/getStatement';
 import { listenToEvaluations } from '@/controllers/db/evaluation/getEvaluation';
@@ -17,6 +17,7 @@ import { creatorSelector } from '@/redux/creator/creatorSlice';
 import { sortSubStatements } from '../../statementsEvaluationCont';
 import SuggestionCard from './suggestionCard/SuggestionCard';
 import EmptyScreen from '../emptyScreen/EmptyScreen';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import styles from './SuggestionCards.module.scss';
 
 interface Props {
@@ -32,13 +33,16 @@ const SuggestionCards: FC<Props> = ({
 }) => {
 	const params = useParams();
 	const location = useLocation();
-
+	const navigate = useNavigate();
+	const { t } = useUserConfig();
+	
 	// Memoize statementId to prevent unnecessary effect re-runs
 	const statementId = useMemo(() => params.statementId, [params.statementId]);
 	const sort = propSort || params.sort || SortType.newest;
 
 	const dispatch = useDispatch();
 	const statement = useSelector(statementSelector(statementId));
+	const isQuestion = statement?.statementType === StatementType.question;
 	const creator = useSelector(creatorSelector);
 	const parentSubscription = useSelector(statementSubscriptionSelector(statementId));
 
@@ -120,11 +124,20 @@ const SuggestionCards: FC<Props> = ({
 	// Create a key that includes consensus values to trigger re-sort when evaluations change
 	const consensusKey = useMemo(() => {
 		if (sort === SortType.accepted) {
-			// Only track consensus when sorting by agreement
-			return subStatements.map(s => `${s.statementId}:${s.consensus || 0}`).sort().join(',');
+			// Check if using single-like evaluation type
+			const isSingleLike = statement?.statementSettings?.evaluationType === 'single-like';
+
+			if (isSingleLike) {
+				// Track sumPro (likes) for single-like evaluation
+				return subStatements.map(s => `${s.statementId}:${s.evaluation?.sumPro || s.pro || 0}`).sort().join(',');
+			} else {
+				// Track consensus for other evaluation types
+				return subStatements.map(s => `${s.statementId}:${s.consensus || 0}`).sort().join(',');
+			}
 		}
+
 		return ''; // Don't track for other sort types
-	}, [subStatements, sort]);
+	}, [subStatements, sort, statement?.statementSettings?.evaluationType]);
 
 	// Create a key that includes dates to trigger re-sort when statements are updated
 	const datesKey = useMemo(() => {
@@ -133,6 +146,7 @@ const SuggestionCards: FC<Props> = ({
 		} else if (sort === SortType.mostUpdated) {
 			return subStatements.map(s => `${s.statementId}:${s.lastUpdate}`).sort().join(',');
 		}
+
 		return ''; // Don't track for other sort types
 	}, [subStatements, sort]);
 
@@ -141,43 +155,62 @@ const SuggestionCards: FC<Props> = ({
 		// Only calculate if we have subStatements
 		if (!subStatements || subStatements.length === 0) {
 			setTotalHeight(0);
+
 			return;
 		}
 
-		// Calculate heights and sort substatements
+		// Calculate heights and sort sub-statements
 		const { totalHeight: _totalHeight } = sortSubStatements(
 			subStatements,
 			sort,
 			30,
-			randomSeed
+			randomSeed,
+			statement
 		);
 		setTotalHeight(_totalHeight);
-	}, [subStatementsKey, heightsKey, consensusKey, datesKey, sort, randomSeed]); // Use stable keys instead of array reference
+	}, [subStatementsKey, heightsKey, consensusKey, datesKey, sort, randomSeed, statement]); // Use stable keys instead of array reference
 
-	if (!subStatements || subStatements.length === 0) {
+	if ((!subStatements || subStatements.length === 0) && isQuestion) {
 		return (
-			<EmptyScreen statement={statement}/>
+			<EmptyScreen statement={statement} />
 		);
 	}
 
 	if (!statement) return null;
 
+	const isSubmitMode = statement.statementSettings?.isSubmitMode;
+
+	const handleSubmit = () => {
+		navigate(`/statement/${statementId}/thank-you`);
+	};
+
 	return (
-		<div
-			className={styles['suggestions-wrapper']}
-			style={{ height: `${totalHeight}px` }}
-		>
-			{subStatements?.map((statementSub: Statement) => {
-				return (
-					<SuggestionCard
-						key={statementSub.statementId}
-						parentStatement={statement}
-						siblingStatements={subStatements}
-						statement={statementSub}
-					/>
-				);
-			})}
-		</div>
+		<>
+			<div
+				className={styles['suggestions-wrapper']}
+				style={{ height: `${totalHeight}px` }}
+			>
+				{subStatements?.map((statementSub: Statement) => {
+					return (
+						<SuggestionCard
+							key={statementSub.statementId}
+							parentStatement={statement}
+							statement={statementSub}
+						/>
+					);
+				})}
+			</div>
+			{isSubmitMode && (
+				<div className={styles.submitButtonContainer}>
+					<button
+						onClick={handleSubmit}
+						className={styles.submitButton}
+					>
+						{t('Submit your vote')}
+					</button>
+				</div>
+			)}
+		</>
 	);
 };
 

@@ -1,0 +1,150 @@
+.container {
+	min-height: 100vh;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: var(--statementBackground);
+	padding: var(--padding);
+}
+
+.card {
+	background: white;
+	border-radius: 8px;
+	box-shadow: 0px 3px 6px #4162862b;
+	padding: 2rem;
+	max-width: 500px;
+	width: 100%;
+	text-align: center;
+
+	@media (min-width: 768px) {
+		padding: 3rem;
+	}
+}
+
+.iconContainer {
+	margin-bottom: 1.5rem;
+}
+
+.successIcon {
+	width: 80px;
+	height: 80px;
+	color: var(--agree);
+	animation: scaleIn 0.5s cubic-bezier(0.92, -0.02, 0.86, 2.28);
+
+	@media (prefers-reduced-motion: reduce) {
+		animation: none;
+	}
+}
+
+.heading {
+	font-size: var(--h2-font-size);
+	color: var(--text-title);
+	margin-bottom: 1rem;
+	font-weight: 500;
+}
+
+.description {
+	font-size: var(--p-font-size);
+	color: var(--text-body);
+	line-height: 1.6;
+	margin-bottom: 2rem;
+}
+
+.contactInfo {
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+	margin-bottom: 1.5rem;
+	padding: 1.5rem;
+	background: var(--statementBackground);
+	border-radius: 8px;
+}
+
+.contactLink {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.5rem;
+	color: var(--btn-primary);
+	text-decoration: none;
+	font-size: var(--p-font-size);
+	transition: color 0.15s;
+
+	&:hover {
+		color: var(--btn-primary-hover);
+		text-decoration: underline;
+	}
+}
+
+.icon {
+	width: 20px;
+	height: 20px;
+	flex-shrink: 0;
+}
+
+.websiteInfo {
+	margin-bottom: 2rem;
+	text-align: center;
+}
+
+.websiteText {
+	font-size: var(--p-font-size);
+	color: var(--text-body);
+	margin-bottom: 0.5rem;
+}
+
+.websiteLink {
+	display: inline-block;
+	color: var(--btn-primary);
+	text-decoration: none;
+	font-size: var(--h4-font-size);
+	font-weight: 500;
+	transition: color 0.15s;
+
+	&:hover {
+		color: var(--btn-primary-hover);
+		text-decoration: underline;
+	}
+}
+
+.homeButton {
+	background: var(--btn-primary);
+	color: white;
+	padding: 0.75rem 2rem;
+	border-radius: 20px;
+	border: none;
+	font-size: var(--p-font-size);
+	font-weight: 500;
+	cursor: pointer;
+	box-shadow: 0px 3px 6px rgba(115, 138, 191, 0.2);
+	transition: all 0.15s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+
+	&:hover {
+		background: var(--btn-primary-hover);
+		transform: scale(1.05);
+	}
+
+	&:active {
+		transform: scale(0.95);
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		transition: none;
+
+		&:hover,
+		&:active {
+			transform: none;
+		}
+	}
+}
+
+@keyframes scaleIn {
+	from {
+		opacity: 0;
+		transform: scale(0.5);
+	}
+	to {
+		opacity: 1;
+		transform: scale(1);
+	}
+}

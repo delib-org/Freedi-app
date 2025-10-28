@@ -3,10 +3,20 @@ import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { APIEndPoint } from '@/controllers/general/helpers';
 import { setMassConsensusStatements, statementSelectorById } from '@/redux/statements/statementsSlice';
 import {
+	setRandomStatements,
+	fetchNewRandomBatch,
+	prefetchRandomBatches,
+	loadNextRandomBatch,
+	selectRandomSuggestionsState,
+	prefetchTopStatements,
+	dismissRecycleMessage,
+} from '@/redux/massConsensus/massConsensusSlice';
+import {
 	Statement,
 	MassConsensusPageUrls,
 	SelectionFunction,
 } from 'delib-npm';
+import type { AppDispatch } from '@/redux/types';
 
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
@@ -15,11 +25,23 @@ import { useNavigate, useParams } from 'react-router';
 export function useRandomSuggestions() {
 	const navigate = useNavigate();
 	const { user, isLoading } = useAuthentication();
-	const dispatch = useDispatch();
-	const [subStatements, setSubStatements] = useState<Statement[]>([]);
+	const dispatch = useDispatch<AppDispatch>();
 	const { statementId } = useParams<{ statementId: string }>();
 	const [loadingStatements, setLoadingStatements] = useState(true);
 	const statement = useSelector(statementSelectorById(statementId || ''));
+
+	// Use new Redux selectors
+	const {
+		randomStatements: subStatements,
+		canGetNewSuggestions,
+		isLoadingNew,
+		hasPrefetchedBatches,
+		currentBatch,
+		totalBatchesViewed,
+		cyclesCompleted,
+		showRecycleMessage,
+		allSuggestionsViewed
+	} = useSelector(selectRandomSuggestionsState);
 
 	const navigateToTop = () =>
 		navigate(
@@ -33,10 +55,18 @@ export function useRandomSuggestions() {
 			);
 	}, [user, isLoading]);
 
+	// Initial fetch and prefetch
 	useEffect(() => {
-		fetchRandomStatements();
+		if (statementId && subStatements.length === 0) {
+			fetchRandomStatements();
+			// Prefetch additional batches for smooth experience
+			dispatch(prefetchRandomBatches({ statementId, batchCount: 3 }));
+			// Prefetch top statements while user is here
+			dispatch(prefetchTopStatements(statementId));
+		}
 	}, [statementId]);
 
+	// Listen to evaluations
 	useEffect(() => {
 		if (!user) return;
 		const unsubscribes = subStatements.map((subStatement) => {
@@ -52,29 +82,42 @@ export function useRandomSuggestions() {
 		if (statementId) {
 			try {
 				setLoadingStatements(true);
-				const endPoint = APIEndPoint('getRandomStatements', {
-					parentId: statementId,
-					limit: 6,
-				});
 
-				const response = await fetch(endPoint);
-				if (!response.ok) {
-					const { error } = await response.json();
-					console.error('Error:', error);
-					throw new Error(`HTTP error! status: ${response.status}`);
+				// Check if we have prefetched data
+				if (hasPrefetchedBatches) {
+					// Use prefetched batch (instant)
+					dispatch(loadNextRandomBatch());
+					setLoadingStatements(false);
+				} else {
+					// Fetch from API
+					const endPoint = APIEndPoint('getRandomStatements', {
+						parentId: statementId,
+						limit: 6,
+					});
+
+					const response = await fetch(endPoint);
+					if (!response.ok) {
+						const { error } = await response.json();
+						console.error('Error:', error);
+						throw new Error(`HTTP error! status: ${response.status}`);
+					}
+
+					const { statements } = await response.json();
+					if (!statements) throw new Error('No statements found');
+
+					// Update Redux state
+					dispatch(setRandomStatements(statements));
+					dispatch(
+						setMassConsensusStatements({
+							statements,
+							selectionFunction: SelectionFunction.random,
+						})
+					);
+					setLoadingStatements(false);
 				}
 
-				const { statements } = await response.json();
-				if (!statements) throw new Error('No statements found');
-
-				setSubStatements(statements);
-				dispatch(
-					setMassConsensusStatements({
-						statements,
-						selectionFunction: SelectionFunction.random,
-					})
-				);
-				setLoadingStatements(false);
+				// Prefetch more batches in background
+				dispatch(prefetchRandomBatches({ statementId, batchCount: 2 }));
 			} catch (error) {
 				console.error('Error:', error);
 				setLoadingStatements(false);
@@ -82,5 +125,50 @@ export function useRandomSuggestions() {
 		}
 	};
 
-	return { subStatements, navigateToTop, loadingStatements, statement, fetchRandomStatements};
+	// Get new batch of suggestions
+	const getNewSuggestions = async () => {
+		if (!statementId) return;
+
+		// Check if we have prefetched batches
+		if (hasPrefetchedBatches) {
+			// Use prefetched data (instant)
+			dispatch(loadNextRandomBatch());
+			// Update the statements slice as well
+			const state = (window as Window & { __REDUX_STORE__?: { getState: () => { massConsensus?: { randomStatements?: unknown[] } } } }).__REDUX_STORE__?.getState();
+			if (state?.massConsensus?.randomStatements) {
+				dispatch(
+					setMassConsensusStatements({
+						statements: state.massConsensus.randomStatements as Statement[],
+						selectionFunction: SelectionFunction.random,
+					})
+				);
+			}
+		} else {
+			// Fetch new batch from API
+			await dispatch(fetchNewRandomBatch(statementId)).unwrap();
+		}
+
+		// Prefetch more batches in background
+		dispatch(prefetchRandomBatches({ statementId, batchCount: 2 }));
+	};
+
+	const handleDismissRecycleMessage = () => {
+		dispatch(dismissRecycleMessage());
+	};
+
+	return {
+		subStatements,
+		navigateToTop,
+		loadingStatements,
+		statement,
+		fetchRandomStatements: getNewSuggestions,
+		canGetNewSuggestions,
+		isLoadingNew,
+		currentBatch,
+		totalBatchesViewed,
+		cyclesCompleted,
+		showRecycleMessage,
+		allSuggestionsViewed,
+		handleDismissRecycleMessage
+	};
 }

@@ -1,0 +1,96 @@
+// Statement Image Container Styles
+.imageContainer {
+  position: relative;
+
+  // Above mode - full width image at top of card
+  &.above {
+    width: 100%;
+    max-height: 300px;
+    margin-bottom: 0rem;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    order: -1; // Force image to appear first in flex layout
+    flex-basis: 100%; // Take full width and force new line
+    padding: 1rem; // Add padding to stay within card bounds
+    box-sizing: border-box; // Include padding in width calculation
+  }
+
+  // Inline mode - small image floated next to text
+  &.inline {
+    max-width: 200px;
+    max-height: 200px;
+    margin: 0 1.5rem 1rem 0; // Right and bottom margins for LTR
+    flex-shrink: 0;
+    align-self: flex-start; // Align to start/top
+
+    // RTL support
+    [dir="rtl"] & {
+      float: right;
+      margin: 0 0 1rem 1.5rem; // Left and bottom margins for RTL
+    }
+  }
+}
+
+// Image control buttons (toggle and remove)
+.imageControls {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  z-index: 3;
+  display: flex;
+  gap: 0.5rem;
+
+  [dir="rtl"] & {
+    right: auto;
+    left: 0.5rem;
+  }
+}
+
+// Toggle button style
+.imageToggleBtn {
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid var(--shadow);
+  border-radius: 4px;
+  padding: 0.25rem 0.5rem;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: all 0.2s;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+  &:hover {
+    background: white;
+    transform: translateY(-1px);
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+  }
+
+  &:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+}
+
+// Remove button style
+.imageRemoveBtn {
+  background: rgba(247, 74, 77, 0.95);
+  color: white;
+  border: 1px solid var(--reject);
+  border-radius: 4px;
+  padding: 0.25rem 0.5rem;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: bold;
+  transition: all 0.2s;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+  &:hover {
+    background: var(--reject);
+    transform: translateY(-1px);
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+  }
+
+  &:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+}

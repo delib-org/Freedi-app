@@ -1,99 +1,85 @@
-import { useAuthentication } from '@/controllers/hooks/useAuthentication';
-import { massConsensusStepsSelector } from '@/redux/massConsensus/massConsensusSlice';
+import { massConsensusStagesSelector } from '@/redux/massConsensus/massConsensusSlice';
 import {
-	selectUserDemographicByStatementId,
-	selectUserDemographicQuestionsByStatementId,
+    selectUserDemographicByStatementId,
+    selectUserDemographicQuestionsByStatementId,
 } from '@/redux/userDemographic/userDemographicSlice';
-import { LoginType, MassConsensusPageUrls, MassConsensusStep } from 'delib-npm';
+import { MassConsensusPageUrls, MassConsensusStage } from 'delib-npm';
 import { useSelector } from 'react-redux';
 import { useLocation, useParams } from 'react-router';
 
-interface Props {
-	steps: MassConsensusStep[];
-	loginType: LoginType;
-	currentStep: MassConsensusPageUrls;
+export function useMassConsensusStages(): [MassConsensusStage[], MassConsensusPageUrls] {
+    const { statementId } = useParams<{ statementId: string }>();
+    const location = useLocation();
+
+    if (!statementId) {
+        throw new Error("Statement ID is missing in URL parameters.");
+    }
+
+    let stages = useSelector(massConsensusStagesSelector(statementId));
+    const pathSegments = location.pathname.split('/');
+    const userDemographicQuestions = useSelector(
+        selectUserDemographicQuestionsByStatementId(statementId)
+    );
+    const userDemographic = useSelector(
+        selectUserDemographicByStatementId(statementId)
+    );
+
+    const shouldShowUserDemographics =
+        userDemographicQuestions.length > 0 &&
+        userDemographic.length < userDemographicQuestions.length;
+
+    if (!shouldShowUserDemographics) {
+        stages = stages.filter(
+            (stage) => stage.url !== MassConsensusPageUrls.userDemographics
+        );
+    }
+
+    const currentPage = pathSegments.find((segment) => {
+        return Object.values(MassConsensusPageUrls).includes(
+            segment as MassConsensusPageUrls
+        );
+    });
+
+    const currentStage =
+        (currentPage as MassConsensusPageUrls) ||
+        MassConsensusPageUrls.introduction;
+
+    return [stages, currentStage];
 }
 
-export function useMassConsensusSteps(): Props {
-	const { statementId } = useParams();
-	const location = useLocation();
-	const { user } = useAuthentication();
-	const loginType = user?.isAnonymous
-		? LoginType.anonymous
-		: LoginType.google;
-	let steps = useSelector(massConsensusStepsSelector(statementId, loginType));
-	const pathSegments = location.pathname.split('/');
-	const userDemographicQuestions = useSelector(
-		selectUserDemographicQuestionsByStatementId(statementId || '')
-	);
-	const userDemographic = useSelector(
-		selectUserDemographicByStatementId(statementId || '')
-	);
-	const shouldShowUserDemographics =
-		userDemographicQuestions.length > 0 &&
-		userDemographic.length < userDemographicQuestions.length;
-
-	if (!shouldShowUserDemographics) {
-		steps = steps.filter(
-			(step) => step.screen !== MassConsensusPageUrls.userDemographics
-		);
-	}
-	const currentPage = pathSegments.find((segment) => {
-		return Object.values(MassConsensusPageUrls).includes(
-			segment as MassConsensusPageUrls
-		);
-	});
-	const currentStep =
-		(currentPage as MassConsensusPageUrls) ||
-		MassConsensusPageUrls.introduction;
-	try {
-		return { steps, loginType, currentStep };
-	} catch (error) {
-		console.error('Error in useMassConsensusSteps:', error);
-
-		return {
-			steps: [],
-			loginType: LoginType.anonymous,
-			currentStep: MassConsensusPageUrls.introduction,
-		};
-	}
-}
-
-export function getStepNavigation(
-	steps: MassConsensusStep[],
-	currentStep: MassConsensusPageUrls = MassConsensusPageUrls.introduction
-): {
-	nextStep: MassConsensusPageUrls | undefined;
-	previousStep: MassConsensusPageUrls | undefined;
-	currentStep: MassConsensusPageUrls;
+export function useStageNavigation(): {
+    nextStage: MassConsensusPageUrls | undefined;
+    previousStage: MassConsensusPageUrls | undefined;
+    currentStage: MassConsensusPageUrls;
 } {
-	const currentStepIndex = getCurrentStepIndex(steps, currentStep);
+    const [stages, currentStage] = useMassConsensusStages();
+    const currentStageIndex = getCurrentStageIndex(stages, currentStage);
 
-	const nextStepIndex =
-		currentStepIndex + 1 >= steps.length ? undefined : currentStepIndex + 1;
-	let previousStepIndex =
-		currentStepIndex === 0 ? undefined : currentStepIndex - 1;
+    const nextStageIndex =
+        currentStageIndex + 1 >= stages.length ? undefined : currentStageIndex + 1;
+    const previousStageIndex =
+        currentStageIndex === 0 ? undefined : currentStageIndex - 1;
 
-	const nextStep =
-		nextStepIndex !== undefined
-			? steps[nextStepIndex]?.screen || MassConsensusPageUrls.introduction
-			: undefined;
-	const previousStep =
-		previousStepIndex !== undefined
-			? steps[previousStepIndex]?.screen || MassConsensusPageUrls.introduction
-			: undefined;
-	const resolvedCurrentStep =
-		steps[currentStepIndex]?.screen || MassConsensusPageUrls.introduction;
+    const nextStage =
+        nextStageIndex !== undefined
+            ? stages[nextStageIndex]?.url as MassConsensusPageUrls
+            : undefined;
+    const previousStage =
+        previousStageIndex !== undefined
+            ? stages[previousStageIndex]?.url as MassConsensusPageUrls
+            : undefined;
+    const resolvedCurrentStage =
+        (stages[currentStageIndex]?.url || MassConsensusPageUrls.introduction) as MassConsensusPageUrls;
 
-	return { nextStep, previousStep, currentStep: resolvedCurrentStep };
+    return { nextStage, previousStage, currentStage: resolvedCurrentStage };
 }
 
-function getCurrentStepIndex(
-	steps: MassConsensusStep[],
-	currentStep: MassConsensusPageUrls
+function getCurrentStageIndex(
+    stages: MassConsensusStage[],
+    currentStage: MassConsensusPageUrls
 ): number {
-	if (!steps) return -1;
-	const currentStepIndex = steps.findIndex((step) => step.screen === currentStep);
+    if (!stages) return -1;
+    const currentStageIndex = stages.findIndex((stage) => stage.url === currentStage);
 
-	return currentStepIndex;
+    return currentStageIndex;
 }

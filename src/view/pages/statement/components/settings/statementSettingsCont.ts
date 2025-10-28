@@ -170,6 +170,7 @@ export const getStatementSettings = (statement: Statement) => {
 		),
 		enableAddVotingOption: Boolean(statementSettings.enableAddVotingOption),
 		enhancedEvaluation: Boolean(statementSettings.enhancedEvaluation),
+		evaluationType: statementSettings.evaluationType, // Add this field
 		showEvaluation: Boolean(statementSettings.showEvaluation),
 		subScreens: statementSettings.subScreens ?? [],
 		inVotingGetOnlyResults: Boolean(
@@ -187,7 +188,8 @@ export const getStatementSettings = (statement: Statement) => {
 		enableAddNewSubQuestionsButton: Boolean(
 			statementSettings.enableAddNewSubQuestionsButton
 		),
-		enableAIImprovement: Boolean(statementSettings.enableAIImprovement)
+		enableAIImprovement: Boolean(statementSettings.enableAIImprovement),
+		isSubmitMode: Boolean(statementSettings.isSubmitMode)
 	};
 };
 

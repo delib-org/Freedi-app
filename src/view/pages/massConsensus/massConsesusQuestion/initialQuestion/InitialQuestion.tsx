@@ -5,13 +5,15 @@ import {
   setStatement,
   statementSelector,
 } from "@/redux/statements/statementsSlice";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useInitialQuestion } from "./InitialQuestionVM";
 import { Role } from "delib-npm";
 import styles from "./InitialQuestion.module.scss";
 import { useUserConfig } from "@/controllers/hooks/useUserConfig";
 import Textarea from "@/view/components/textarea/Textarea";
 import { updateStatementText } from "@/controllers/db/statements/setStatements";
+import { prefetchRandomBatches, prefetchTopStatements } from "@/redux/massConsensus/massConsensusSlice";
+import type { AppDispatch } from "@/redux/types";
 
 const InitialQuestion = ({
   stage,
@@ -22,12 +24,13 @@ const InitialQuestion = ({
   const { statementId } = useParams<{ statementId: string }>();
   const statement = useSelector(statementSelector(statementId));
   const [description, setDescription] = useState("");
-  const dispatch = useDispatch(); // Dispatch to update the redux state
+  const dispatch = useDispatch<AppDispatch>(); // Dispatch to update the redux state
   const { handleSetInitialSuggestion, ready, error, subscription } =
     useInitialQuestion(description);
   const { t } = useUserConfig();
   const [edit, setEdit] = useState(false);
   const [title, setTitle] = useState(statement ? statement.statement : "");
+  const hasPrefetched = useRef(false);
 
   const isAdmin = subscription?.role === Role.admin;
 
@@ -49,9 +52,24 @@ const InitialQuestion = ({
 
   useEffect(() => {
     setIfButtonEnabled(description !== "");
-  }, [description]);
 
-  async function handleSubmitInitialQuestionText(e) {
+    // Start prefetching when user types enough text (more than 10 characters)
+    // Only prefetch once per session
+    if (description.length > 10 && !hasPrefetched.current && statementId) {
+      hasPrefetched.current = true;
+
+      // Prefetch random batches for smoother experience
+      dispatch(prefetchRandomBatches({
+        statementId,
+        batchCount: 3
+      }));
+
+      // Also prefetch top statements
+      dispatch(prefetchTopStatements(statementId));
+    }
+  }, [description, statementId, dispatch]);
+
+  async function handleSubmitInitialQuestionText(e: { preventDefault: () => void }): Promise<void> {
     e.preventDefault();
 
     if (title.trim().length < 5) {

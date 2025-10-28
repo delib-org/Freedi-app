@@ -26,9 +26,14 @@ const SuggestionChat = () => {
 	const statement = useSelector(statementSelector(statementId));
 	const comments = useSelector(statementSubsSelector(statementId));
 
-	// Derived state
-	const isStatementCreator = statement.creator.uid === creator.uid;
-	const hasCreatorCommented = comments.some(comment => comment.creator.uid === creator.uid);
+	// Return early if critical data is missing
+	if (!statement || !creator) {
+		return <div className={styles.suggestionChat}>Loading...</div>;
+	}
+
+	// Derived state - now safe to access
+	const isStatementCreator = statement?.creator?.uid === creator?.uid;
+	const hasCreatorCommented = comments.some(comment => comment?.creator?.uid === creator?.uid);
 
 	// Component render
 	return (

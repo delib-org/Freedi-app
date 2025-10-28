@@ -70,7 +70,6 @@ const MySuggestions: FC = () => {
 								<SuggestionCard
 									key={suggestion.statementId}
 									statement={suggestion}
-									siblingStatements={userSuggestions}
 									parentStatement={statement}
 									positionAbsolute={false}
 								/>

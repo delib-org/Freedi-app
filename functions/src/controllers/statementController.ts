@@ -1,6 +1,8 @@
 import { Request, Response } from 'firebase-functions/v1';
+import { Statement } from 'delib-npm';
 import { StatementService } from '../services/statements/statementService';
 import { RequestValidator } from '../utils/validation';
+import { cache } from '../services/cache-service';
 
 export class StatementController {
 	private statementService: StatementService;
@@ -64,14 +66,41 @@ export class StatementController {
 				return;
 			}
 
-			// Parse optional limit
+			// Parse optional parameters
 			const limit = validator.optionalNumber(req.query.limit, 'limit', 6, 50);
+
+			// Parse excludeIds (comma-separated string)
+			const excludeIdsParam = req.query.excludeIds as string;
+			const excludeIds = excludeIdsParam
+				? excludeIdsParam.split(',').filter(id => id.trim())
+				: [];
+
+			// Check cache first (only for requests without excludeIds)
+			if (excludeIds.length === 0) {
+				const cacheKey = cache.generateKey('random', parentId, String(limit));
+				const cachedData = await cache.get<{ statements: Statement[] }>(cacheKey);
+
+				if (cachedData) {
+					// Update view counts asynchronously (don't wait)
+					this.statementService.updateStatementViewCounts(cachedData.statements);
+					res.status(200).send({ ...cachedData, ok: true });
+					
+return;
+				}
+			}
 
 			// Get random statements
 			const statements = await this.statementService.getRandomStatements({
 				parentId,
 				limit,
+				excludeIds,
 			});
+
+			// Cache the result (only for requests without excludeIds)
+			if (excludeIds.length === 0) {
+				const cacheKey = cache.generateKey('random', parentId, String(limit));
+				cache.set(cacheKey, { statements }, 2); // 2 minute TTL
+			}
 
 			// Update view counts
 			await this.statementService.updateStatementViewCounts(statements);
@@ -105,11 +134,24 @@ export class StatementController {
 			// Parse optional limit
 			const limit = validator.optionalNumber(req.query.limit, 'limit', 6, 50);
 
+			// Check cache first
+			const cacheKey = cache.generateKey('top', parentId, String(limit));
+			const cachedData = await cache.get<{ statements: Statement[] }>(cacheKey);
+
+			if (cachedData) {
+				res.send({ ...cachedData, ok: true });
+				
+return;
+			}
+
 			// Get top statements
 			const statements = await this.statementService.getTopStatements({
 				parentId,
 				limit,
 			});
+
+			// Cache the result
+			cache.set(cacheKey, { statements }, 5); // 5 minute TTL for top statements (changes less frequently)
 
 			res.send({ statements, ok: true });
 		} catch (error) {

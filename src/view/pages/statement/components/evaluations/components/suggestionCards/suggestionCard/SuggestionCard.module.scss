@@ -2,6 +2,7 @@
   position: relative;
   display: flex;
   flex-direction: row-reverse;
+  flex-wrap: wrap;
   border-radius: 4px;
   background-color: var(--inputBackground);
   box-shadow: 2px 2px 4px var(--shadow);
@@ -52,13 +53,18 @@
       width: 100%;
 
       .text {
-        // display: flex;
-        // justify-content: space-between;
         flex: 1;
         width: 100%;
         background-color: var(--background-color-info-text);
         padding: 0rem;
         position: relative;
+
+        // Clearfix to contain floated images
+        &::after {
+          content: '';
+          display: table;
+          clear: both;
+        }
 
         // Container for the clamped text
         .textContent {
@@ -68,10 +74,34 @@
           -webkit-box-orient: vertical;
           overflow: hidden;
           line-height: 1.4;
+          // Ensure text wraps properly around floated images
+          overflow-wrap: break-word;
+          word-wrap: break-word;
         }
 
         p {
           margin: 3px 0px;
+        }
+
+        // Compact button container with proper spacing
+        .buttonContainer {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 0.5rem;
+          margin-top: 0.75rem;
+          align-items: center;
+          justify-content: flex-end;
+
+          // Make buttons more compact on smaller screens
+          @media screen and (max-width: 768px) {
+            gap: 0.25rem;
+            margin-top: 0.5rem;
+          }
+
+          // Ensure consistent button sizing
+          button {
+            flex-shrink: 0;
+          }
         }
 
         .showMore {
@@ -235,6 +265,43 @@
     color: var(--text-body);
     font-size: 0.9rem;
     margin: 0;
+  }
+}
+
+.uploadArea {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 90%;
+  max-width: 400px;
+  background: white;
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  z-index: 100;
+
+  .closeUploadBtn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: transparent;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--text-body);
+    padding: 0.25rem;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: background 0.2s;
+
+    &:hover {
+      background: var(--inputBackground);
+    }
   }
 }
 
