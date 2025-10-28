@@ -2,7 +2,7 @@ import { FC, useEffect, useState, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useParams, useLocation, useNavigate } from 'react-router';
 
-import { Statement, SortType, SelectionFunction, Role } from 'delib-npm';
+import { Statement, SortType, SelectionFunction, Role, StatementType } from 'delib-npm';
 
 import { getStatementFromDB } from '@/controllers/db/statements/getStatement';
 import { listenToEvaluations } from '@/controllers/db/evaluation/getEvaluation';
@@ -35,13 +35,14 @@ const SuggestionCards: FC<Props> = ({
 	const location = useLocation();
 	const navigate = useNavigate();
 	const { t } = useUserConfig();
-
+	
 	// Memoize statementId to prevent unnecessary effect re-runs
 	const statementId = useMemo(() => params.statementId, [params.statementId]);
 	const sort = propSort || params.sort || SortType.newest;
 
 	const dispatch = useDispatch();
 	const statement = useSelector(statementSelector(statementId));
+	const isQuestion = statement?.statementType === StatementType.question;
 	const creator = useSelector(creatorSelector);
 	const parentSubscription = useSelector(statementSubscriptionSelector(statementId));
 
@@ -134,8 +135,8 @@ const SuggestionCards: FC<Props> = ({
 				return subStatements.map(s => `${s.statementId}:${s.consensus || 0}`).sort().join(',');
 			}
 		}
-		
-return ''; // Don't track for other sort types
+
+		return ''; // Don't track for other sort types
 	}, [subStatements, sort, statement?.statementSettings?.evaluationType]);
 
 	// Create a key that includes dates to trigger re-sort when statements are updated
@@ -145,8 +146,8 @@ return ''; // Don't track for other sort types
 		} else if (sort === SortType.mostUpdated) {
 			return subStatements.map(s => `${s.statementId}:${s.lastUpdate}`).sort().join(',');
 		}
-		
-return ''; // Don't track for other sort types
+
+		return ''; // Don't track for other sort types
 	}, [subStatements, sort]);
 
 	// Memoize the sort operation to prevent unnecessary recalculations
@@ -154,11 +155,11 @@ return ''; // Don't track for other sort types
 		// Only calculate if we have subStatements
 		if (!subStatements || subStatements.length === 0) {
 			setTotalHeight(0);
-			
-return;
+
+			return;
 		}
 
-		// Calculate heights and sort substatements
+		// Calculate heights and sort sub-statements
 		const { totalHeight: _totalHeight } = sortSubStatements(
 			subStatements,
 			sort,
@@ -169,9 +170,9 @@ return;
 		setTotalHeight(_totalHeight);
 	}, [subStatementsKey, heightsKey, consensusKey, datesKey, sort, randomSeed, statement]); // Use stable keys instead of array reference
 
-	if (!subStatements || subStatements.length === 0) {
+	if ((!subStatements || subStatements.length === 0) && isQuestion) {
 		return (
-			<EmptyScreen statement={statement}/>
+			<EmptyScreen statement={statement} />
 		);
 	}
 

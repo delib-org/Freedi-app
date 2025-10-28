@@ -1,7 +1,10 @@
 import { FC, useContext } from "react";
+import { useSelector } from "react-redux";
 import { StatementContext } from "@/view/pages/statement/StatementCont";
 import { useUserConfig } from "@/controllers/hooks/useUserConfig";
 import StagePage from "@/view/pages/statement/components/statementTypes/stage/StagePage";
+import { statementSelectorById } from "@/redux/statements/statementsSlice";
+import PopperHebbianDiscussion from "../../../../popperHebbian/PopperHebbianDiscussion";
 
 // Hooks
 import { useDragAndDrop } from './hooks/useDragAndDrop';
@@ -24,6 +27,10 @@ const MultiStageQuestion: FC = () => {
   const { statementType } = statement || {};
   const isOption = statementType === StatementType.option;
   const { t } = useUserConfig();
+
+  // Get parent statement and check if Popper-Hebbian discussion is enabled
+  const parentStatement = useSelector(statementSelectorById(statement?.parentId || ""));
+  const isPopperHebbianEnabled = parentStatement?.statementSettings?.popperianDiscussionEnabled ?? false;
 
   // Use custom hooks for state management
   const {
@@ -57,6 +64,16 @@ const MultiStageQuestion: FC = () => {
         <EmptyStateSection
           description={statement?.description}
           imageUrl={imageUrl}
+        />
+      )}
+
+      {/* Show evidence section for options when Popper-Hebbian mode is enabled */}
+      {isOption && isPopperHebbianEnabled && statement && (
+        <PopperHebbianDiscussion
+          statement={statement}
+          onCreateImprovedVersion={() => {
+            // Could trigger a new refinement session based on collected evidence
+          }}
         />
       )}
 
