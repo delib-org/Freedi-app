@@ -1,6 +1,6 @@
 import React from 'react';
 import { screen, fireEvent, waitFor } from '@testing-library/react';
-import { BrowserRouter } from 'react-router-dom';
+import { BrowserRouter } from 'react-router';
 import InitialQuestion from '../InitialQuestion';
 import { Statement, StatementType, Role, Creator } from 'delib-npm';
 import { renderWithProviders, getMockRootState } from '@/test-utils/test-utils';
