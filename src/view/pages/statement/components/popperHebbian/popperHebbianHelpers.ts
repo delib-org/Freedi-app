@@ -1,25 +1,25 @@
 /**
  * Convert support level (-1 to 1) to user-friendly label
  */
-export function getSupportLabel(supportLevel: number): string {
-	if (supportLevel > 0.7) return 'Strongly Supports';
-	if (supportLevel > 0.3) return 'Supports';
-	if (supportLevel > -0.3) return 'Neutral';
-	if (supportLevel > -0.7) return 'Challenges';
-	
-return 'Strongly Challenges';
+export function getSupportLabel(supportLevel: number, t: (key: string) => string): string {
+	if (supportLevel > 0.7) return t('Strongly Supports');
+	if (supportLevel > 0.3) return t('Supports');
+	if (supportLevel > -0.3) return t('Neutral');
+	if (supportLevel > -0.7) return t('Challenges');
+
+	return t('Strongly Challenges');
 }
 
 /**
  * Get score interpretation text
  */
-export function getScoreInterpretation(totalScore: number): string {
-	if (totalScore > 5) return 'Strong evidence supports this idea';
-	if (totalScore > 2) return 'Evidence leans toward supporting this idea';
-	if (totalScore > -2) return 'Evidence is mixed - discussion ongoing';
-	if (totalScore > -5) return 'Evidence is challenging this idea';
-	
-return 'Strong challenges suggest this idea needs rethinking';
+export function getScoreInterpretation(totalScore: number, t: (key: string) => string): string {
+	if (totalScore > 5) return t('Strong evidence supports this idea');
+	if (totalScore > 2) return t('Evidence leans toward supporting this idea');
+	if (totalScore > -2) return t('Evidence is mixed - discussion ongoing');
+	if (totalScore > -5) return t('Evidence is challenging this idea');
+
+	return t('Strong challenges suggest this idea needs rethinking');
 }
 
 /**

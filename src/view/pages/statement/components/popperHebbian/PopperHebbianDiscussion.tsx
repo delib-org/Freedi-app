@@ -75,35 +75,35 @@ const PopperHebbianDiscussion: FC<PopperHebbianDiscussionProps> = ({
 			<div className={styles.evidenceSection}>
 				<div className={styles.evidenceHeader}>
 					<h3 className={styles.evidenceTitle}>
-						{t('Evidence')} ({evidencePosts.length})
+						{t('Discussion')} ({evidencePosts.length})
 					</h3>
 					<button
 						className={styles.addEvidenceButton}
 						onClick={() => setShowAddEvidenceModal(true)}
 					>
 						<span className={styles.addIcon}>+</span>
-						{t('Add Evidence')}
+						{t('Add Contribution')}
 					</button>
 				</div>
 
 				{isLoading ? (
 					<div className={styles.loadingState}>
-						<p>{t('Loading evidence...')}</p>
+						<p>{t('Loading discussion...')}</p>
 					</div>
 				) : evidencePosts.length === 0 ? (
 					<div className={styles.emptyState}>
 						<div className={styles.emptyIcon}>📊</div>
 						<h4 className={styles.emptyTitle}>
-							{t('No evidence yet')}
+							{t('No contributions yet')}
 						</h4>
 						<p className={styles.emptyText}>
-							{t('Be the first to add evidence supporting or challenging this idea.')}
+							{t('Be the first to add a claim, comment, or evidence about this idea.')}
 						</p>
 						<button
 							className={styles.emptyStateButton}
 							onClick={() => setShowAddEvidenceModal(true)}
 						>
-							{t('Add First Evidence')}
+							{t('Add First Contribution')}
 						</button>
 					</div>
 				) : (

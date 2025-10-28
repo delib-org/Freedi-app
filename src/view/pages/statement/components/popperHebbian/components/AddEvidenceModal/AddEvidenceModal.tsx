@@ -45,10 +45,10 @@ const AddEvidenceModal: FC<AddEvidenceModalProps> = ({ parentStatementId, onClos
 	const canSubmit = evidenceText.trim().length > 0 && !isSubmitting;
 
 	return (
-		<Modal closeModal={onClose} title={t('Add Evidence')}>
+		<Modal closeModal={onClose} title={t('Add Claim, Comment or Evidence')}>
 			<div className={styles.modalContainer}>
 				<div className={styles.modalHeader}>
-					<h2 className={styles.modalTitle}>{t('Add Evidence')}</h2>
+					<h2 className={styles.modalTitle}>{t('Add Claim, Comment or Evidence')}</h2>
 					<button
 						className={styles.closeButton}
 						onClick={onClose}
@@ -61,14 +61,14 @@ const AddEvidenceModal: FC<AddEvidenceModalProps> = ({ parentStatementId, onClos
 				<div className={styles.modalBody}>
 					<div className={styles.formGroup}>
 						<label htmlFor="evidence-text" className={styles.label}>
-							{t('Your Evidence')}
+							{t('Your Contribution')}
 						</label>
 						<textarea
 							id="evidence-text"
 							className={styles.textarea}
 							value={evidenceText}
 							onChange={(e) => setEvidenceText(e.target.value)}
-							placeholder={t('Share your evidence, data, or reasoning...')}
+							placeholder={t('Share your claim, comment, or evidence...')}
 							rows={5}
 							disabled={isSubmitting}
 						/>
@@ -76,11 +76,11 @@ const AddEvidenceModal: FC<AddEvidenceModalProps> = ({ parentStatementId, onClos
 
 					<div className={styles.formGroup}>
 						<label htmlFor="support-slider" className={styles.label}>
-							{t('How does this evidence relate to the idea?')}
+							{t('How does this relate to the idea?')}
 						</label>
 						<div className={styles.supportDisplay}>
 							<span className={styles.supportLabel}>
-								{getSupportLabel(supportLevel)}
+								{getSupportLabel(supportLevel, t)}
 							</span>
 						</div>
 						<div className={styles.sliderContainer}>
@@ -102,7 +102,7 @@ const AddEvidenceModal: FC<AddEvidenceModalProps> = ({ parentStatementId, onClos
 
 					<div className={styles.helperText}>
 						<span className={styles.helperIcon}>ℹ️</span>
-						{t('AI will automatically classify the type of evidence (data, testimony, argument, etc.) and calculate its weight in the discussion.')}
+						{t('AI will automatically classify your contribution (claim, comment, evidence type) and calculate its weight in the discussion.')}
 					</div>
 				</div>
 
@@ -119,7 +119,7 @@ const AddEvidenceModal: FC<AddEvidenceModalProps> = ({ parentStatementId, onClos
 						onClick={handleSubmit}
 						disabled={!canSubmit}
 					>
-						{isSubmitting ? t('Submitting...') : t('Submit Evidence')}
+						{isSubmitting ? t('Submitting...') : t('Submit')}
 					</button>
 				</div>
 			</div>

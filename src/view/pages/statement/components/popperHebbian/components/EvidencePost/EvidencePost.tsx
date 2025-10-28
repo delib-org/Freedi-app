@@ -4,6 +4,7 @@ import { EvidenceType } from 'delib-npm/dist/models/evidence/evidenceModel';
 import { getSupportLabel, getSupportColor } from '../../popperHebbianHelpers';
 import { submitVote, removeVote, getUserVote } from '@/controllers/db/popperHebbian/evidenceController';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import styles from './EvidencePost.module.scss';
 
 interface EvidencePostProps {
@@ -12,6 +13,7 @@ interface EvidencePostProps {
 
 const EvidencePost: FC<EvidencePostProps> = ({ statement }) => {
 	const { user } = useAuthentication();
+	const { t } = useUserConfig();
 	const [userVote, setUserVote] = useState<'helpful' | 'not-helpful' | null>(null);
 
 	const evidence = statement.evidence;
@@ -23,22 +25,22 @@ const EvidencePost: FC<EvidencePostProps> = ({ statement }) => {
 	const { support, evidenceType, helpfulCount = 0, notHelpfulCount = 0 } = evidence;
 	const netScore = helpfulCount - notHelpfulCount;
 	const supportColor = getSupportColor(support);
-	const supportLabel = getSupportLabel(support);
+	const supportLabel = getSupportLabel(support, t);
 
 	const getEvidenceTypeLabel = (type: EvidenceType): string => {
 		switch (type) {
 			case EvidenceType.data:
-				return 'Data';
+				return t('Data');
 			case EvidenceType.testimony:
-				return 'Testimony';
+				return t('Testimony');
 			case EvidenceType.argument:
-				return 'Argument';
+				return t('Argument');
 			case EvidenceType.anecdote:
-				return 'Anecdote';
+				return t('Anecdote');
 			case EvidenceType.fallacy:
-				return 'Fallacy';
+				return t('Fallacy');
 			default:
-				return 'Evidence';
+				return t('Evidence');
 		}
 	};
 
@@ -124,7 +126,7 @@ const EvidencePost: FC<EvidencePostProps> = ({ statement }) => {
 				</div>
 
 				<div className={styles.netScore}>
-					<span className={styles.netScoreLabel}>Net Score:</span>
+					<span className={styles.netScoreLabel}>{t('Net Score:')}</span>
 					<span className={`${styles.netScoreValue} ${netScore > 0 ? styles.netScorePositive : netScore < 0 ? styles.netScoreNegative : ''}`}>
 						{netScore > 0 ? '+' : ''}{netScore}
 					</span>

@@ -1,6 +1,7 @@
 import { FC } from 'react';
 import { PopperHebbianScore } from '@/models/popperHebbian/ScoreModels';
 import { getScoreInterpretation } from '../../popperHebbianHelpers';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import styles from './IdeaScoreboard.module.scss';
 
 interface IdeaScoreboardProps {
@@ -8,18 +9,19 @@ interface IdeaScoreboardProps {
 }
 
 const IdeaScoreboard: FC<IdeaScoreboardProps> = ({ score }) => {
+	const { t } = useUserConfig();
 	const { totalScore, status } = score;
 
 	const getStatusText = (status: string): string => {
 		switch (status) {
 			case 'looking-good':
-				return 'Looking Good';
+				return t('Looking Good');
 			case 'under-discussion':
-				return 'Under Discussion';
+				return t('Under Discussion');
 			case 'needs-fixing':
-				return 'Needs Improvement';
+				return t('Needs Improvement');
 			default:
-				return 'Under Discussion';
+				return t('Under Discussion');
 		}
 	};
 
@@ -51,11 +53,11 @@ const IdeaScoreboard: FC<IdeaScoreboardProps> = ({ score }) => {
 						{totalScore > 0 ? '+' : ''}
 						{totalScore.toFixed(1)}
 					</div>
-					<div className={styles.scoreLabel}>Overall Score</div>
+					<div className={styles.scoreLabel}>{t('Overall Score')}</div>
 				</div>
 
 				<div className={styles.scoreInterpretation}>
-					{getScoreInterpretation(totalScore)}
+					{getScoreInterpretation(totalScore, t)}
 				</div>
 			</div>
 
