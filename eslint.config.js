@@ -56,7 +56,7 @@ export default [
 			'react/display-name': 'error',
 			'react/no-unescaped-entities': 'off',
 			'import/no-anonymous-default-export': 'error',
-			'@typescript-eslint/no-unused-vars': 'error',
+			'@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
 			'@typescript-eslint/ban-ts-comment': 'off',
 			'@typescript-eslint/no-explicit-any': 'error',
 			'@typescript-eslint/no-non-null-assertion': 'off',

@@ -1,4 +1,5 @@
 import React, { FC, ReactNode } from "react";
+import { createPortal } from "react-dom";
 import styles from "./Modal.module.scss";
 
 interface Props {
@@ -19,7 +20,7 @@ const Modal: FC<Props> = ({ children, className = "", closeModal, title }) => {
 		}
 	};
 
-	return (
+	const modalContent = (
 		<div
 			role="dialog"
 			aria-modal="true"
@@ -39,6 +40,8 @@ const Modal: FC<Props> = ({ children, className = "", closeModal, title }) => {
 			</div>
 		</div>
 	);
+
+	return createPortal(modalContent, document.body);
 };
 
 export default Modal;

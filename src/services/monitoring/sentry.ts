@@ -3,10 +3,17 @@ import { useLocation, useNavigationType } from "react-router";
 import React, { useEffect } from "react";
 
 export function initSentry() {
-  // Only initialize in production
-  if (import.meta.env.PROD) {
+  const sentryDsn = import.meta.env.VITE_SENTRY_DSN;
+
+  // Only initialize in production and if we have a valid DSN
+  if (
+    import.meta.env.PROD &&
+    sentryDsn &&
+    sentryDsn !== "YOUR_SENTRY_DSN_HERE" &&
+    sentryDsn.startsWith("https://")
+  ) {
     Sentry.init({
-      dsn: import.meta.env.VITE_SENTRY_DSN,
+      dsn: sentryDsn,
       environment: import.meta.env.VITE_ENVIRONMENT || "production",
       integrations: [
         Sentry.browserTracingIntegration(),

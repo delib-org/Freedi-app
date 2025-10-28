@@ -45,7 +45,7 @@ const SingleLikeEvaluation: FC<Props> = ({
 	);
 
 	const isLiked = evaluation === 1;
-	const maxVotes = parentStatement?.evaluationSettings?.axVotesPerUser;
+	const maxVotes = parentStatement?.evaluationSettings?.maxVotesPerUser;
 	const hasVoteLimit = maxVotes && maxVotes > 0;
 	const isAtVoteLimit = hasVoteLimit && userVoteCount >= maxVotes;
 

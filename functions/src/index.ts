@@ -65,6 +65,13 @@ import { checkProfanity } from "./fn_profanityChecker";
 import { handleImproveSuggestion } from "./fn_improveSuggestion";
 import { onStatementCreated } from "./fn_statementCreation";
 
+// Popper-Hebbian functions
+import { analyzeFalsifiability } from "./fn_popperHebbian_analyzeFalsifiability";
+import { refineIdea } from "./fn_popperHebbian_refineIdea";
+import { onEvidencePostCreate, onEvidencePostUpdate } from "./fn_popperHebbian_onEvidencePost";
+import { onVoteUpdate } from "./fn_popperHebbian_onVote";
+import { summarizeLink } from "./fn_popperHebbian_summarizeLink";
+
 // Initialize Firebase only if not already initialized
 if (!getApps().length) {
   initializeApp();
@@ -364,3 +371,11 @@ exports.updateAgrees = createFirestoreFunction(
   updateAgrees,
   "updateAgrees"
 );
+
+// Popper-Hebbian functions
+exports.analyzeFalsifiability = analyzeFalsifiability;
+exports.refineIdea = refineIdea;
+exports.onEvidencePostCreate = onEvidencePostCreate;
+exports.onEvidencePostUpdate = onEvidencePostUpdate;
+exports.onVoteUpdate = onVoteUpdate;
+exports.summarizeLink = summarizeLink;

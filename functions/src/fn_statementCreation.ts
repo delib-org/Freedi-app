@@ -1,7 +1,7 @@
 import { FirestoreEvent, QueryDocumentSnapshot } from 'firebase-functions/v2/firestore';
 import { logger } from 'firebase-functions';
 import { parse } from 'valibot';
-import * as admin from 'firebase-admin';
+import { FieldValue } from 'firebase-admin/firestore';
 import {
 	Collections,
 	Statement,
@@ -203,7 +203,7 @@ async function updateParentForNewChild(statement: Statement): Promise<void> {
 
 		// Update parent's child count and last update
 		await parentRef.update({
-			subStatementsCount: admin.firestore.FieldValue.increment(1),
+			subStatementsCount: FieldValue.increment(1),
 			lastChildUpdate: statement.createdAt,
 		});
 	} catch (error) {
