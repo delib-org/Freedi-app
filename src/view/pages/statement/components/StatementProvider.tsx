@@ -81,6 +81,7 @@ export const StatementProvider: React.FC<StatementProviderProps> = ({
 				userDemographicQuestions={userDemographicQuestions}
 				screen={screen}
 				isMassConsensus={isMassConsensus}
+				role={role}
 			/>
 		</StatementContext.Provider>
 	);
