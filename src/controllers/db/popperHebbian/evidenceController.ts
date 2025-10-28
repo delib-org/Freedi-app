@@ -258,14 +258,61 @@ export async function getUserVote(
 
 		if (voteSnap.exists()) {
 			const vote = voteSnap.data() as EvidenceVote;
-			
+
 return vote.voteType;
 		}
 
 		return null;
 	} catch (error) {
 		logger.error('Failed to get user vote', error, { evidenceStatementId, userId });
-		
+
 return null;
+	}
+}
+
+/**
+ * Update an existing evidence post
+ * This will trigger AI re-evaluation via the backend function
+ */
+export async function updateEvidencePost(
+	statementId: string,
+	content: string,
+	support: number
+): Promise<void> {
+	try {
+		const currentUser = auth.currentUser;
+		if (!currentUser) {
+			throw new Error('User must be authenticated to update evidence');
+		}
+
+		if (support < -1 || support > 1) {
+			throw new Error('Support value must be between -1 and 1');
+		}
+
+		const statementRef = doc(FireStore, Collections.statements, statementId);
+		const statementSnap = await getDoc(statementRef);
+
+		if (!statementSnap.exists()) {
+			throw new Error('Statement not found');
+		}
+
+		const statement = statementSnap.data() as Statement;
+
+		// Check if user is the creator
+		if (statement.creatorId !== currentUser.uid) {
+			throw new Error('Only the creator can edit this evidence');
+		}
+
+		// Update the statement and evidence support level
+		await updateDoc(statementRef, {
+			statement: content,
+			'evidence.support': support,
+			lastUpdate: Date.now()
+		});
+
+		logger.info('Evidence post updated', { statementId });
+	} catch (error) {
+		logger.error('Failed to update evidence post', error, { statementId });
+		throw error;
 	}
 }

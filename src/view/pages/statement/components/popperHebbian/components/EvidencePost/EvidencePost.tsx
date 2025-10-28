@@ -5,6 +5,7 @@ import { getSupportLabel, getSupportColor } from '../../popperHebbianHelpers';
 import { submitVote, removeVote, getUserVote } from '@/controllers/db/popperHebbian/evidenceController';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import AddEvidenceModal from '../AddEvidenceModal/AddEvidenceModal';
 import styles from './EvidencePost.module.scss';
 
 interface EvidencePostProps {
@@ -15,6 +16,8 @@ const EvidencePost: FC<EvidencePostProps> = ({ statement }) => {
 	const { user } = useAuthentication();
 	const { t } = useUserConfig();
 	const [userVote, setUserVote] = useState<'helpful' | 'not-helpful' | null>(null);
+	const [showEditModal, setShowEditModal] = useState(false);
+	const [previousEvidenceType, setPreviousEvidenceType] = useState<EvidenceType | undefined>(undefined);
 
 	const evidence = statement.evidence;
 
@@ -88,18 +91,59 @@ const EvidencePost: FC<EvidencePostProps> = ({ statement }) => {
 		}
 	}, [statement.statementId, user?.uid]);
 
+	// Track evidence type changes for notification
+	useEffect(() => {
+		if (evidence && previousEvidenceType !== undefined && previousEvidenceType !== evidence.evidenceType) {
+			// Evidence type changed after re-evaluation
+			// Show notification briefly then clear
+			const timer = setTimeout(() => {
+				setPreviousEvidenceType(undefined);
+			}, 5000);
+
+			return () => clearTimeout(timer);
+		}
+
+		if (evidence && previousEvidenceType === undefined) {
+			setPreviousEvidenceType(evidence.evidenceType);
+		}
+	}, [evidence, previousEvidenceType]);
+
+	const isUserAuthor = user?.uid === statement.creatorId;
+	const showReevaluationNotice = previousEvidenceType !== undefined &&
+		previousEvidenceType !== evidence?.evidenceType;
+
 	return (
-		<div className={`${styles.evidencePost} ${styles[`evidencePost--${supportColor}`]}`}>
-			<div className={styles.evidenceHeader}>
-				<div className={styles.badges}>
-					<span className={`${styles.typeBadge} ${styles[`typeBadge--${getEvidenceTypeColor(evidenceType)}`]}`}>
-						{getEvidenceTypeLabel(evidenceType)}
-					</span>
-					<span className={`${styles.supportBadge} ${styles[`supportBadge--${supportColor}`]}`}>
-						{supportLabel}
-					</span>
+		<>
+			<div className={`${styles.evidencePost} ${styles[`evidencePost--${supportColor}`]}`}>
+				<div className={styles.evidenceHeader}>
+					<div className={styles.badges}>
+						<span className={`${styles.typeBadge} ${styles[`typeBadge--${getEvidenceTypeColor(evidenceType)}`]}`}>
+							{getEvidenceTypeLabel(evidenceType)}
+						</span>
+						<span className={`${styles.supportBadge} ${styles[`supportBadge--${supportColor}`]}`}>
+							{supportLabel}
+						</span>
+					</div>
+					{isUserAuthor && (
+						<button
+							className={styles.editButton}
+							onClick={() => setShowEditModal(true)}
+							aria-label="Edit evidence"
+							title={t('Edit')}
+						>
+							✏️
+						</button>
+					)}
 				</div>
-			</div>
+
+				{showReevaluationNotice && (
+					<div className={styles.reevaluationNotice}>
+						<span className={styles.noticeIcon}>🔄</span>
+						<span className={styles.noticeText}>
+							{t('AI re-evaluated: Changed from')} {getEvidenceTypeLabel(previousEvidenceType)} {t('to')} {getEvidenceTypeLabel(evidenceType)}
+						</span>
+					</div>
+				)}
 
 			<div className={styles.evidenceContent}>
 				<p>{statement.statement}</p>
@@ -133,6 +177,15 @@ const EvidencePost: FC<EvidencePostProps> = ({ statement }) => {
 				</div>
 			</div>
 		</div>
+
+		{showEditModal && (
+			<AddEvidenceModal
+				parentStatementId={statement.parentId || ''}
+				onClose={() => setShowEditModal(false)}
+				editingStatement={statement}
+			/>
+		)}
+		</>
 	);
 };
 

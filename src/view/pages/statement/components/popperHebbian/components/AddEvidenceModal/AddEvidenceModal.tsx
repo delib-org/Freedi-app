@@ -1,7 +1,8 @@
 import React, { FC, useState } from 'react';
 import Modal from '@/view/components/modal/Modal';
+import { Statement } from 'delib-npm';
 import { getSupportLabel } from '../../popperHebbianHelpers';
-import { createEvidencePost } from '@/controllers/db/popperHebbian/evidenceController';
+import { createEvidencePost, updateEvidencePost } from '@/controllers/db/popperHebbian/evidenceController';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import styles from './AddEvidenceModal.module.scss';
@@ -9,13 +10,24 @@ import styles from './AddEvidenceModal.module.scss';
 interface AddEvidenceModalProps {
 	parentStatementId: string;
 	onClose: () => void;
+	editingStatement?: Statement; // Optional: if provided, we're editing
 }
 
-const AddEvidenceModal: FC<AddEvidenceModalProps> = ({ parentStatementId, onClose }) => {
+const AddEvidenceModal: FC<AddEvidenceModalProps> = ({
+	parentStatementId,
+	onClose,
+	editingStatement
+}) => {
 	const { user } = useAuthentication();
 	const { t } = useUserConfig();
-	const [evidenceText, setEvidenceText] = useState('');
-	const [supportLevel, setSupportLevel] = useState(0);
+	const isEditMode = !!editingStatement;
+
+	const [evidenceText, setEvidenceText] = useState(
+		editingStatement?.statement || ''
+	);
+	const [supportLevel, setSupportLevel] = useState(
+		editingStatement?.evidence?.support || 0
+	);
 	const [isSubmitting, setIsSubmitting] = useState(false);
 
 	const handleSubmit = async (): Promise<void> => {
@@ -24,15 +36,25 @@ const AddEvidenceModal: FC<AddEvidenceModalProps> = ({ parentStatementId, onClos
 		setIsSubmitting(true);
 
 		try {
-			await createEvidencePost(
-				parentStatementId,
-				evidenceText.trim(),
-				supportLevel
-			);
+			if (isEditMode && editingStatement) {
+				// Update existing evidence
+				await updateEvidencePost(
+					editingStatement.statementId,
+					evidenceText.trim(),
+					supportLevel
+				);
+			} else {
+				// Create new evidence
+				await createEvidencePost(
+					parentStatementId,
+					evidenceText.trim(),
+					supportLevel
+				);
+			}
 
 			onClose();
 		} catch (error) {
-			console.error('Error creating evidence post:', error);
+			console.error(`Error ${isEditMode ? 'updating' : 'creating'} evidence post:`, error);
 		} finally {
 			setIsSubmitting(false);
 		}
@@ -45,10 +67,12 @@ const AddEvidenceModal: FC<AddEvidenceModalProps> = ({ parentStatementId, onClos
 	const canSubmit = evidenceText.trim().length > 0 && !isSubmitting;
 
 	return (
-		<Modal closeModal={onClose} title={t('Add Claim, Comment or Evidence')}>
+		<Modal closeModal={onClose} title={isEditMode ? t('Edit Evidence') : t('Add Claim, Comment or Evidence')}>
 			<div className={styles.modalContainer}>
 				<div className={styles.modalHeader}>
-					<h2 className={styles.modalTitle}>{t('Add Claim, Comment or Evidence')}</h2>
+					<h2 className={styles.modalTitle}>
+						{isEditMode ? t('Edit Evidence') : t('Add Claim, Comment or Evidence')}
+					</h2>
 					<button
 						className={styles.closeButton}
 						onClick={onClose}
@@ -119,7 +143,10 @@ const AddEvidenceModal: FC<AddEvidenceModalProps> = ({ parentStatementId, onClos
 						onClick={handleSubmit}
 						disabled={!canSubmit}
 					>
-						{isSubmitting ? t('Submitting...') : t('Submit')}
+						{isSubmitting
+							? (isEditMode ? t('Updating...') : t('Submitting...'))
+							: (isEditMode ? t('Update') : t('Submit'))
+						}
 					</button>
 				</div>
 			</div>

@@ -1,4 +1,4 @@
-import { onDocumentCreated } from 'firebase-functions/v2/firestore';
+import { onDocumentCreated, onDocumentUpdated } from 'firebase-functions/v2/firestore';
 import { getFirestore } from 'firebase-admin/firestore';
 import { Statement, Collections } from 'delib-npm';
 import { EvidenceType } from 'delib-npm/dist/models/evidence/evidenceModel';
@@ -136,6 +136,73 @@ return;
 
 		} catch (error) {
 			console.error('Error processing evidence post:', error);
+		}
+	}
+);
+
+export const onEvidencePostUpdate = onDocumentUpdated(
+	{
+		document: `${Collections.statements}/{statementId}`,
+		secrets: [geminiApiKey]
+	},
+	async (event) => {
+		const beforeSnapshot = event.data?.before;
+		const afterSnapshot = event.data?.after;
+
+		if (!beforeSnapshot || !afterSnapshot) {
+			console.error('No data associated with the event');
+
+return;
+		}
+
+		const beforeStatement = beforeSnapshot.data() as Statement;
+		const afterStatement = afterSnapshot.data() as Statement;
+
+		// Only process if this is an evidence statement
+		if (!afterStatement.evidence) {
+			return;
+		}
+
+		// Check if the statement text or support level changed
+		const contentChanged = beforeStatement.statement !== afterStatement.statement;
+		const supportChanged = beforeStatement.evidence?.support !== afterStatement.evidence?.support;
+
+		if (!contentChanged && !supportChanged) {
+			return;
+		}
+
+		try {
+			const oldEvidenceType = beforeStatement.evidence?.evidenceType;
+
+			// 1. Re-classify evidence type based on new content
+			const newEvidenceType = await classifyEvidenceType(afterStatement.statement);
+
+			// 2. Calculate new weight
+			const newWeight = calculateInitialWeight(newEvidenceType);
+
+			// 3. Update statement with new classification and weight
+			await afterSnapshot.ref.update({
+				'evidence.evidenceType': newEvidenceType,
+				'evidence.evidenceWeight': newWeight,
+				lastUpdate: Date.now()
+			});
+
+			// 4. Trigger score recalculation for parent option
+			if (afterStatement.parentId) {
+				await recalculateScore(afterStatement.parentId);
+			}
+
+			// Log the change for monitoring
+			console.info('Evidence re-evaluated:', {
+				statementId: afterStatement.statementId,
+				oldType: oldEvidenceType,
+				newType: newEvidenceType,
+				oldWeight: beforeStatement.evidence?.evidenceWeight,
+				newWeight
+			});
+
+		} catch (error) {
+			console.error('Error re-evaluating evidence post:', error);
 		}
 	}
 );

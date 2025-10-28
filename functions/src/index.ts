@@ -68,7 +68,7 @@ import { onStatementCreated } from "./fn_statementCreation";
 // Popper-Hebbian functions
 import { analyzeFalsifiability } from "./fn_popperHebbian_analyzeFalsifiability";
 import { refineIdea } from "./fn_popperHebbian_refineIdea";
-import { onEvidencePostCreate } from "./fn_popperHebbian_onEvidencePost";
+import { onEvidencePostCreate, onEvidencePostUpdate } from "./fn_popperHebbian_onEvidencePost";
 import { onVoteUpdate } from "./fn_popperHebbian_onVote";
 
 // Initialize Firebase only if not already initialized
@@ -375,4 +375,5 @@ exports.updateAgrees = createFirestoreFunction(
 exports.analyzeFalsifiability = analyzeFalsifiability;
 exports.refineIdea = refineIdea;
 exports.onEvidencePostCreate = onEvidencePostCreate;
+exports.onEvidencePostUpdate = onEvidencePostUpdate;
 exports.onVoteUpdate = onVoteUpdate;
