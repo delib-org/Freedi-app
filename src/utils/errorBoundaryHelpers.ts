@@ -2,6 +2,8 @@
  * Helper functions for error boundary components
  */
 
+import * as React from 'react';
+
 interface BugReportParams {
   error: Error;
   errorInfo?: React.ErrorInfo | null;

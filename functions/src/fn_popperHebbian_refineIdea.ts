@@ -154,7 +154,7 @@ Think independently and ask what YOU think is most important to clarify.`;
 			let refinementResult: RefineIdeaResponse;
 			try {
 				refinementResult = JSON.parse(text);
-			} catch (parseError) {
+			} catch {
 				console.error('Failed to parse JSON response:', text);
 				throw new Error('Invalid JSON response from AI');
 			}

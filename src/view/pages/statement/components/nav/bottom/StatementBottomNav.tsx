@@ -120,7 +120,7 @@ const StatementBottomNav: FC<Props> = () => {
 		setShowRefineryModal(true);
 	}
 
-	async function handlePublishRefinedIdea(refinedText: string, sessionId: string) {
+	async function handlePublishRefinedIdea(refinedText: string) {
 		if (!statement || !user) return;
 
 		try {
@@ -145,7 +145,7 @@ const StatementBottomNav: FC<Props> = () => {
 				title,
 				description,
 				newStatement: { statementType: defaultType },
-				newStatementQuestionType: statement.questionType || QuestionType.singleQuestion,
+				newStatementQuestionType: statement.questionSettings?.questionType || QuestionType.simple,
 				currentLanguage,
 				user,
 				dispatch,

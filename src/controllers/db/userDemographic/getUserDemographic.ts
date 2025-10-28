@@ -32,7 +32,6 @@ export async function getUserDemographicQuestions(statementId: string): Promise<
 
 		// Execute the query
 		const querySnapshot = await getDocs(q);
-
 	
 		// Map the documents to UserDemographicQuestion objects with validation
 
@@ -50,7 +49,6 @@ export async function getUserDemographicQuestions(statementId: string): Promise<
 				}
 			})
 			.filter((question): question is UserDemographicQuestion => question !== null);
-
 	
 		// Dispatch the questions to Redux store
 		dispatch(setUserDemographicQuestions(userQuestions));
@@ -67,7 +65,6 @@ export function listenToUserDemographicQuestions(statementId: string): () => voi
 		if (!statementId) {
 			throw new Error('Statement ID is required to listen for user demographic questions');
 		}
-
 	
 		const userQuestionsRef = collection(FireStore, Collections.userDemographicQuestions);
 		const q = query(
@@ -81,7 +78,6 @@ export function listenToUserDemographicQuestions(statementId: string): () => voi
 				try {
 					const data = change.doc.data();
 					const validatedQuestion = parse(UserDemographicQuestionSchema, data);
-
 	
 					if (change.type === 'added' || change.type === 'modified') {
 						store.dispatch(setUserDemographicQuestion(validatedQuestion));
@@ -109,7 +105,6 @@ export function listenToUserDemographicAnswers(statementId: string) {
 			throw new Error('User must be logged in to listen for user demographic answers');
 		}
 		const uid = user.uid;
-
 	
 		const userAnswersRef = collection(FireStore, Collections.usersData);
 		const q = query(
@@ -119,13 +114,11 @@ export function listenToUserDemographicAnswers(statementId: string) {
 		);
 
 		return onSnapshot(q, (userAnswersDB) => {
-
 	
 			userAnswersDB.docChanges().forEach((change) => {
 				try {
 					const data = change.doc.data() as UserDemographicQuestion;
 					const validatedAnswer = parse(UserDemographicQuestionSchema, data);
-
 	
 					if (change.type === 'added' || change.type === 'modified') {
 						store.dispatch(setUserDemographic(validatedAnswer));

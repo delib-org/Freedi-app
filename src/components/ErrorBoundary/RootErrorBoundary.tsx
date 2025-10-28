@@ -301,10 +301,26 @@ const DefaultErrorFallback: React.FC<{
   );
 };
 
+// Wrapper component for Sentry fallback that provides all required props
+const SentryFallback: React.FC<{ error: Error; resetError: () => void }> = ({ error, resetError }) => {
+  const [showDetails, setShowDetails] = React.useState(false);
+  const toggleDetails = () => setShowDetails(prev => !prev);
+
+  return (
+    <DefaultErrorFallback
+      error={error}
+      errorInfo={null}
+      resetError={resetError}
+      showDetails={showDetails}
+      toggleDetails={toggleDetails}
+    />
+  );
+};
+
 // Export the Sentry-wrapped version for automatic error tracking
 export default Sentry.withErrorBoundary(RootErrorBoundary, {
   fallback: ({ error, resetError }) => (
-    <DefaultErrorFallback error={error as Error} resetError={resetError} />
+    <SentryFallback error={error as Error} resetError={resetError} />
   ),
   showDialog: false,
 });

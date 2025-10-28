@@ -338,7 +338,6 @@ const SuggestionCard: FC<Props> = ({
 							/>
 						</div>
 
-
 						<Link to={`/statement/${statement.statementId}`} className={styles.showMore}>
 							{t('Show more')}
 						</Link>

@@ -149,6 +149,7 @@ Provide a clear, objective summary in ${languageName}:`;
 	} catch (error) {
 		console.error('Error summarizing content:', error);
 		// Return a basic fallback if AI fails
+
 		return `Article from this webpage. Click to read more.`;
 	}
 }
