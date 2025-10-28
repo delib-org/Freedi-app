@@ -119,7 +119,8 @@ Use simple, encouraging language.`;
 				analysis.vagueTerms = [];
 			}
 			} catch (parseError) {
-				console.error('Failed to parse JSON response:', text);
+				const errorMessage = parseError instanceof Error ? parseError.message : 'Unknown error';
+				console.error('Failed to parse JSON response:', text, errorMessage);
 				throw new Error('Invalid JSON response from AI');
 			}
 
