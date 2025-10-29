@@ -1,6 +1,11 @@
-import { Role } from 'delib-npm';
+import { Role, Collections } from 'delib-npm';
+import { doc, getDoc } from 'firebase/firestore';
 import { updateMemberRole } from '../subscriptions/setSubscriptions';
 import { removeUserEvaluations } from '../evaluation/removeUserEvaluations';
+import { getStatementFromDB } from '../statements/getStatement';
+import { getStatementSubscriptionId } from '@/controllers/general/helpers';
+import { FireStore } from '../config';
+import { canBanUser, getBanDisabledReason } from '@/helpers/roleHelpers';
 
 /**
  * Bans a member from a statement by updating their role to banned
@@ -20,6 +25,27 @@ export async function banMember(
 	try {
 		if (!statementId || !userId) {
 			throw new Error('Statement ID and User ID are required to ban a member');
+		}
+
+		// Validate that the user can be banned (not an admin or creator)
+		const subscriptionId = getStatementSubscriptionId(statementId, userId);
+		if (!subscriptionId) {
+			throw new Error('Error getting subscription ID');
+		}
+
+		const subscriptionRef = doc(FireStore, Collections.statementsSubscribe, subscriptionId);
+		const subscriptionDoc = await getDoc(subscriptionRef);
+
+		if (!subscriptionDoc.exists()) {
+			throw new Error('User subscription not found');
+		}
+
+		const currentRole = subscriptionDoc.data()?.role as Role;
+		const statement = await getStatementFromDB(statementId);
+
+		if (!canBanUser(currentRole, userId, statement)) {
+			const reason = getBanDisabledReason(currentRole, userId, statement);
+			throw new Error(reason || 'This user cannot be banned');
 		}
 
 		console.info('Banning member:', {

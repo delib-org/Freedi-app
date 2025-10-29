@@ -196,12 +196,34 @@ export async function updateMemberRole(
 			Collections.statementsSubscribe,
 			statementSubscriptionId
 		);
-		await updateDoc(statementSubscriptionRef, { 
+
+		// If changing role to banned, validate that the user can be banned
+		if (newRole === Role.banned) {
+			const { canBanUser, getBanDisabledReason } = await import('@/helpers/roleHelpers');
+			const { getStatementFromDB } = await import('../statements/getStatement');
+
+			// Get current subscription data to check role
+			const subscriptionDoc = await getDoc(statementSubscriptionRef);
+			if (!subscriptionDoc.exists()) {
+				throw new Error('User subscription not found');
+			}
+
+			const currentRole = subscriptionDoc.data()?.role as Role;
+			const statement = await getStatementFromDB(statementId);
+
+			if (!canBanUser(currentRole, userId, statement)) {
+				const reason = getBanDisabledReason(currentRole, userId, statement);
+				throw new Error(reason || 'This user cannot be banned');
+			}
+		}
+
+		await updateDoc(statementSubscriptionRef, {
 			role: newRole,
 			statementId: statementId // Include statementId to satisfy Firebase rules
 		});
 	} catch (error) {
 		console.error('Error updating member role:', error);
+		throw error;
 	}
 }
 

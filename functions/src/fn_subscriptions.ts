@@ -454,3 +454,56 @@ return;
 		logger.error('Error in setAdminsToNewStatement:', error);
 	}
 }
+
+/**
+ * Validates role changes to prevent banning admins or creators
+ * This function acts as a security layer to revert unauthorized role changes
+ */
+export async function validateRoleChange(
+	event: FirestoreEvent<Change<QueryDocumentSnapshot> | undefined>
+) {
+	try {
+		if (!event.data) {
+			logger.error('No event data found in validateRoleChange');
+
+			return;
+		}
+
+		const before = event.data.before;
+		const after = event.data.after;
+
+		if (!before.exists || !after.exists) {
+			// Document was created or deleted, not an update
+			return;
+		}
+
+		const beforeData = parse(StatementSubscriptionSchema, before.data()) as StatementSubscription;
+		const afterData = parse(StatementSubscriptionSchema, after.data()) as StatementSubscription;
+
+		// Check if role changed to banned
+		if (beforeData.role !== afterData.role && afterData.role === Role.banned) {
+			const userId = afterData.userId;
+			const statement = afterData.statement;
+
+			// Check if user was an admin or creator
+			const wasAdmin = beforeData.role === Role.admin || beforeData.role === Role.creator;
+			const isCreator = statement?.creator?.uid === userId;
+
+			if (wasAdmin || isCreator) {
+				logger.warn(`Unauthorized attempt to ban protected user: ${userId} with role ${beforeData.role}`);
+
+				// Revert the role change
+				await db
+					.collection(Collections.statementsSubscribe)
+					.doc(after.id)
+					.update({
+						role: beforeData.role // Restore original role
+					});
+
+				logger.info(`Reverted banned role for protected user ${userId} back to ${beforeData.role}`);
+			}
+		}
+	} catch (error) {
+		logger.error('Error in validateRoleChange:', error);
+	}
+}

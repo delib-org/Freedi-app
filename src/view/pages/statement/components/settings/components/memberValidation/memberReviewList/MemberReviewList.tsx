@@ -1,19 +1,22 @@
 import React, { FC, useState } from 'react';
+import { Statement } from 'delib-npm';
 import { MemberReviewData } from '../MemberValidation';
 import MemberReviewCard from '../memberReviewCard/MemberReviewCard';
 import BanConfirmationModal from '../banConfirmationModal/BanConfirmationModal';
 import styles from './MemberReviewList.module.scss';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import { banMember } from '@/controllers/db/membership/banMember';
+import { canBanUser } from '@/helpers/roleHelpers';
 
 interface Props {
 	members: MemberReviewData[];
 	onMemberAction: (userId: string, action: 'approve' | 'flag' | 'ban', reason?: string) => void;
 	statementId: string;
+	statement: Statement;
 	onRefresh?: () => void;
 }
 
-const MemberReviewList: FC<Props> = ({ members, onMemberAction, statementId, onRefresh }) => {
+const MemberReviewList: FC<Props> = ({ members, onMemberAction, statementId, statement, onRefresh }) => {
 	const { t } = useUserConfig();
 	const [selectedMembers, setSelectedMembers] = useState<Set<string>>(new Set());
 	const [banModalData, setBanModalData] = useState<{ member: MemberReviewData } | null>(null);
@@ -36,7 +39,9 @@ return newSet;
 		if (selectAll) {
 			setSelectedMembers(new Set());
 		} else {
-			setSelectedMembers(new Set(members.map(m => m.userId)));
+			// Only select members that can be banned (filter out admins/creators)
+			const bannableMembers = members.filter(m => canBanUser(m.role, m.userId, statement));
+			setSelectedMembers(new Set(bannableMembers.map(m => m.userId)));
 		}
 		setSelectAll(!selectAll);
 	};
@@ -150,23 +155,30 @@ return newSet;
 			)}
 
 			<div className={styles.membersList}>
-				{members.map(member => (
-					<MemberReviewCard
-						key={member.userId}
-						member={member}
-						isSelected={selectedMembers.has(member.userId)}
-						onSelect={handleSelectMember}
-						onApprove={() => onMemberAction(member.userId, 'approve')}
-						onFlag={() => onMemberAction(member.userId, 'flag')}
-						onBan={() => openBanModal(member)}
-					/>
-				))}
+				{members.map(member => {
+					const isBannable = canBanUser(member.role, member.userId, statement);
+
+					return (
+						<MemberReviewCard
+							key={member.userId}
+							member={member}
+							statement={statement}
+							isSelected={selectedMembers.has(member.userId)}
+							onSelect={handleSelectMember}
+							onApprove={() => onMemberAction(member.userId, 'approve')}
+							onFlag={() => onMemberAction(member.userId, 'flag')}
+							onBan={() => openBanModal(member)}
+							canBan={isBannable}
+						/>
+					);
+				})}
 			</div>
 
 			{banModalData && (
 				<BanConfirmationModal
 					member={banModalData.member}
 					statementId={statementId}
+					statement={statement}
 					onConfirm={handleBanConfirm}
 					onCancel={() => setBanModalData(null)}
 				/>
