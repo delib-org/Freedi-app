@@ -9,11 +9,13 @@ import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 interface Props {
 	statement: Statement;
 	shouldDisplayScore?: boolean;
+	enableEvaluation?: boolean;
 }
 
 const SimpleEvaluation: FC<Props> = ({
 	statement,
 	shouldDisplayScore = true,
+	enableEvaluation = true,
 }) => {
 	const { rowDirection } = useUserConfig();
 
@@ -54,6 +56,7 @@ const SimpleEvaluation: FC<Props> = ({
 						statement={statement}
 						setConVote={setConVotesCount}
 						setProVote={setProVotesCount}
+						enableEvaluation={enableEvaluation}
 					/>
 				</div>
 				<div className={styles.thumbIcon}>
@@ -63,6 +66,7 @@ const SimpleEvaluation: FC<Props> = ({
 						statement={statement}
 						setProVote={setProVotesCount}
 						setConVote={setConVotesCount}
+						enableEvaluation={enableEvaluation}
 					/>
 				</div>
 				{shouldDisplayScore && <span>{proVotesCount}</span>}

@@ -6,6 +6,7 @@ export const defaultStatementSettings = {
 	enhancedEvaluation: true, // Keep for backward compatibility
 	evaluationType: evaluationType.range, // Default to range (5-point scale)
 	showEvaluation: true,
+	enableEvaluation: true, // Controls whether users can vote/evaluate
 	enableAddVotingOption: true,
 	enableAddEvaluationOption: true,
 	subScreens: undefined,

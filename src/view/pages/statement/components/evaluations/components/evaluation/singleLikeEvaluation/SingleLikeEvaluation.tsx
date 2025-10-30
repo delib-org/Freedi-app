@@ -9,17 +9,20 @@ import styles from './SingleLikeEvaluation.module.scss';
 import LikeIcon from '@/assets/icons/likeIcon.svg?react';
 import EvaluationManagementModal from '@/view/components/evaluationManagement/EvaluationManagementModal';
 import Snackbar from '@/view/components/snackbar/Snackbar';
+import { Tooltip } from '@/view/components/tooltip/Tooltip';
 
 interface Props {
 	statement: Statement;
 	parentStatement?: Statement;
 	shouldDisplayScore?: boolean;
+	enableEvaluation?: boolean;
 }
 
 const SingleLikeEvaluation: FC<Props> = ({
 	statement,
 	parentStatement,
 	shouldDisplayScore = true,
+	enableEvaluation = true,
 }) => {
 	const { t } = useUserConfig();
 
@@ -124,17 +127,31 @@ const SingleLikeEvaluation: FC<Props> = ({
 		? Math.round((likesCount / totalEvaluators) * 100)
 		: 0;
 
+	const likeButton = (
+		<button
+			className={`${styles.likeButton} ${isLiked ? styles.liked : ''} ${isProcessing ? styles.processing : ''} ${!enableEvaluation ? styles.disabled : ''}`}
+			onClick={enableEvaluation ? handleLikeToggle : undefined}
+			aria-label={enableEvaluation ? (isLiked ? 'Unlike this suggestion' : 'Like this suggestion') : t('Voting disabled - view only')}
+			aria-pressed={isLiked}
+			aria-disabled={!enableEvaluation}
+			disabled={isProcessing || !enableEvaluation}
+		>
+			<LikeIcon className={styles.likeIcon} />
+		</button>
+	);
+
 	return (
 		<div className={styles.singleLikeEvaluation}>
-			<button
-				className={`${styles.likeButton} ${isLiked ? styles.liked : ''} ${isProcessing ? styles.processing : ''}`}
-				onClick={handleLikeToggle}
-				aria-label={isLiked ? 'Unlike this suggestion' : 'Like this suggestion'}
-				aria-pressed={isLiked}
-				disabled={isProcessing}
-			>
-				<LikeIcon className={styles.likeIcon} />
-			</button>
+			{!enableEvaluation ? (
+				<Tooltip
+					content={t('Voting is currently disabled by the moderator')}
+					position='top'
+				>
+					{likeButton}
+				</Tooltip>
+			) : (
+				likeButton
+			)}
 
 			{shouldDisplayScore && (
 				<div className={styles.stats}>

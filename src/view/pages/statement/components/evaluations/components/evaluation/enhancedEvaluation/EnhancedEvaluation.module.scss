@@ -56,6 +56,13 @@
 					cursor: not-allowed;
 				}
 
+				&.disabled {
+					opacity: 0.6;
+					cursor: not-allowed;
+					pointer-events: none;
+					filter: grayscale(30%);
+				}
+
 				img {
 					pointer-events: none;
 				}

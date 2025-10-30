@@ -21,6 +21,9 @@ const Evaluation: FC<EvaluationProps> = ({ statement }) => {
 		let shouldDisplayScore: boolean = !!parentStatement.statementSettings?.showEvaluation && window.innerWidth >= 768; //also checks for mobile
 		if (statement.evaluation?.selectionFunction) shouldDisplayScore = false;
 
+		// Check if evaluation is enabled (defaults to true for backward compatibility)
+		const enableEvaluation = parentStatement.statementSettings?.enableEvaluation ?? true;
+
 		// Check for evaluationType first, then fall back to enhancedEvaluation for backward compatibility
 		const evaluationType = parentStatement.statementSettings?.evaluationType;
 		const enhancedEvaluation = parentStatement.statementSettings?.enhancedEvaluation;
@@ -34,12 +37,14 @@ const Evaluation: FC<EvaluationProps> = ({ statement }) => {
 							statement={statement}
 							parentStatement={parentStatement}
 							shouldDisplayScore={shouldDisplayScore}
+							enableEvaluation={enableEvaluation}
 						/>
 					);
 				case 'range':
 					return (
 						<EnhancedEvaluation
 							statement={statement}
+							enableEvaluation={enableEvaluation}
 						/>
 					);
 				case 'like-dislike':
@@ -48,6 +53,7 @@ const Evaluation: FC<EvaluationProps> = ({ statement }) => {
 						<SimpleEvaluation
 							statement={statement}
 							shouldDisplayScore={shouldDisplayScore}
+							enableEvaluation={enableEvaluation}
 						/>
 					);
 			}
@@ -58,6 +64,7 @@ const Evaluation: FC<EvaluationProps> = ({ statement }) => {
 			return (
 				<EnhancedEvaluation
 					statement={statement}
+					enableEvaluation={enableEvaluation}
 				/>
 			);
 		}
@@ -66,6 +73,7 @@ const Evaluation: FC<EvaluationProps> = ({ statement }) => {
 			<SimpleEvaluation
 				statement={statement}
 				shouldDisplayScore={shouldDisplayScore}
+				enableEvaluation={enableEvaluation}
 			/>
 		);
 	} catch (error) {
