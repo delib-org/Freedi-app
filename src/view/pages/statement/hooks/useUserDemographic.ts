@@ -17,17 +17,6 @@ export const useUserDemographic = (statementId: string) => {
 		const hasQuestions = userDemographicQuestions && userDemographicQuestions.length > 0;
 		const hasUnansweredQuestions = hasQuestions && userDemographic.length < userDemographicQuestions.length;
 
-		// Debug logging
-		if (hasQuestions) {
-			console.info('User demographic survey check:', {
-				totalQuestions: userDemographicQuestions.length,
-				answeredQuestions: userDemographic.length,
-				shouldShowSurvey: hasUnansweredQuestions,
-				questions: userDemographicQuestions,
-				answers: userDemographic
-			});
-		}
-
 		return hasUnansweredQuestions;
 	}, [userDemographicQuestions, userDemographic]);
 
