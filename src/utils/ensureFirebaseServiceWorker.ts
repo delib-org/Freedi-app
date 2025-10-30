@@ -84,7 +84,9 @@ export async function ensureFirebaseServiceWorker() {
         return registration;
     } catch (error) {
         console.error('[FirebaseSW] Registration failed:', error);
-        throw error;
+        // Don't throw - fail gracefully to avoid unhandled rejections
+
+        return undefined;
     } finally {
         isRegistering = false;
     }
@@ -95,16 +97,22 @@ export function startFirebaseServiceWorkerMonitor() {
     if (checkInterval) return; // Already monitoring
     
     checkInterval = setInterval(async () => {
-        if (!navigator.serviceWorker) return;
-        
-        const registrations = await navigator.serviceWorker.getRegistrations();
-        const hasFirebaseSW = registrations.some(r => 
-            (r.active?.scriptURL || '').includes('firebase-messaging-sw.js')
-        );
-        
-        if (!hasFirebaseSW) {
-            // Firebase SW missing, re-registering
-            ensureFirebaseServiceWorker();
+        try {
+            if (!navigator.serviceWorker) return;
+
+            const registrations = await navigator.serviceWorker.getRegistrations();
+            const hasFirebaseSW = registrations.some(r =>
+                (r.active?.scriptURL || '').includes('firebase-messaging-sw.js')
+            );
+
+            if (!hasFirebaseSW) {
+                // Firebase SW missing, re-registering
+                ensureFirebaseServiceWorker().catch(error => {
+                    console.error('[FirebaseSW] Monitor re-registration failed:', error);
+                });
+            }
+        } catch (error) {
+            console.error('[FirebaseSW] Monitor check failed:', error);
         }
     }, 30000); // Check every 30 seconds
 }
@@ -121,7 +129,9 @@ export function stopFirebaseServiceWorkerMonitor() {
 if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
     // Ensure registration on various events
     const registerFirebaseSW = () => {
-        ensureFirebaseServiceWorker();
+        ensureFirebaseServiceWorker().catch(error => {
+            console.error('[FirebaseSW] Initial registration failed:', error);
+        });
         startFirebaseServiceWorkerMonitor();
     };
     
@@ -135,7 +145,9 @@ if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
     // Also register on page visibility change (in case SW was terminated)
     document.addEventListener('visibilitychange', () => {
         if (!document.hidden) {
-            ensureFirebaseServiceWorker();
+            ensureFirebaseServiceWorker().catch(error => {
+                console.error('[FirebaseSW] Visibility change registration failed:', error);
+            });
         }
     });
 }
