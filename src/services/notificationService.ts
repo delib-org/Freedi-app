@@ -10,6 +10,24 @@ const isServiceWorkerSupported = () => 'serviceWorker' in navigator;
 // Helper function to check if notifications are supported
 const isNotificationSupported = () => 'Notification' in window;
 
+// Helper function to check if we're on iOS (where Firebase Messaging has limited/no support)
+const isIOS = (): boolean => {
+	const userAgent = navigator.userAgent.toLowerCase();
+	
+return /iphone|ipad|ipod/.test(userAgent) ||
+		   (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+};
+
+// Helper to check if Firebase Messaging is supported (not on iOS)
+const isMessagingSupported = (): boolean => {
+	// Firebase Messaging is not supported on iOS browsers
+	if (isIOS()) {
+		return false;
+	}
+	
+return isServiceWorkerSupported() && isNotificationSupported();
+};
+
 // Use the singleton DB instance from config
 const db = DB;
 
@@ -86,9 +104,15 @@ export class NotificationService {
 	 * Initialize Firebase Messaging safely
 	 */
 	private initializeMessaging(): boolean {
+		// Don't attempt to initialize Firebase Messaging on iOS
+		if (!isMessagingSupported()) {
+			console.info('[NotificationService] Firebase Messaging not supported on this platform (iOS or missing features)');
+			
+return false;
+		}
+
 		if (!this.isSupported()) {
 			// Browser does not support notifications
-
 			return false;
 		}
 
@@ -101,11 +125,13 @@ export class NotificationService {
 			return true;
 		} catch (error) {
 			console.error('[NotificationService] Failed to initialize Firebase Messaging:', error);
-			console.error('[NotificationService] Error details:', {
-				name: (error as Error).name,
-				message: (error as Error).message,
-				stack: (error as Error).stack
-			});
+			const err = error as Error;
+			if (err.name && err.message) {
+				console.error('[NotificationService] Error details:', {
+					name: err.name,
+					message: err.message
+				});
+			}
 
 			return false;
 		}
@@ -350,11 +376,13 @@ return null;
 			}
 		} catch (error) {
 			console.error('[NotificationService] Error getting FCM token:', error);
-			console.error('[NotificationService] Error details:', {
-				name: (error as Error).name,
-				message: (error as Error).message,
-				stack: (error as Error).stack
-			});
+			const err = error as Error;
+			if (err.name && err.message) {
+				console.error('[NotificationService] Error details:', {
+					name: err.name,
+					message: err.message
+				});
+			}
 
 			return null;
 		}
@@ -512,7 +540,8 @@ return false;
 							await deleteDoc(docRef);
 						} catch (error) {
 							// Silently handle if document doesn't exist
-							if (error?.code !== 'permission-denied' && error?.code !== 'not-found') {
+							const err = error as { code?: string };
+							if (err?.code !== 'permission-denied' && err?.code !== 'not-found') {
 								console.error('Error deleting push notification doc:', error);
 							}
 						}
@@ -838,7 +867,8 @@ return;
 			await Promise.allSettled(removePromises);
 		} catch (error) {
 			// Only log non-null value errors
-			if (!error?.message?.includes('Null value error')) {
+			const err = error as { message?: string };
+			if (err?.message && !err.message.includes('Null value error')) {
 				console.error('Error removing token from subscriptions:', error);
 			}
 		}

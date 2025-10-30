@@ -95,7 +95,8 @@ export const listenToStatementSubscription = (
 			},
 			(error) => {
 				// Handle permission errors more gracefully
-				if (error.code === 'permission-denied') {
+				const err = error as { code?: string };
+				if (err?.code === 'permission-denied') {
 					console.info('User does not have permission to access this statement subscription');
 					if (setHasSubscription) setHasSubscription(false);
 					// Don't log as error, this is expected for some users

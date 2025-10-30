@@ -117,7 +117,8 @@ return;
 		}
 	} catch (error) {
 		// Only log actual errors, not permission issues from non-existent docs
-		if (error.code !== 'permission-denied' || error.message?.includes('document does not exist')) {
+		const err = error as { code?: string; message?: string };
+		if (err?.code !== 'permission-denied' || err?.message?.includes('document does not exist')) {
 			console.error('Error removing user from online:', error);
 		}
 	}

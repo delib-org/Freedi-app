@@ -89,7 +89,8 @@ export async function setStatementSubscriptionToDB({
 		// No need to duplicate token in each subscription
 	} catch (error) {
 		// Only log non-permission errors
-		if (error.code !== 'permission-denied') {
+		const err = error as { code?: string };
+		if (err?.code !== 'permission-denied') {
 			console.error('Error setting subscription:', error);
 		}
 	}
@@ -123,7 +124,8 @@ export async function updateLastReadTimestamp(
 		// This prevents creating incomplete subscription objects
 	} catch (error) {
 		// Only log non-permission errors
-		if (error.code !== 'permission-denied') {
+		const err = error as { code?: string };
+		if (err?.code !== 'permission-denied') {
 			console.error('Error updating last read timestamp:', error);
 		}
 	}
