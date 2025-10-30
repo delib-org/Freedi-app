@@ -31,6 +31,26 @@ import {
 } from 'delib-npm';
 import { parse } from 'valibot';
 
+// Helper to check if an error is IndexedDB-related
+function isIndexedDBError(error: unknown): boolean {
+	const errorMessage = error instanceof Error ? error.message : String(error);
+	const errorCode = (error as { code?: string })?.code;
+
+	const indexedDBPatterns = [
+		'IndexedDB',
+		'IDBDatabase',
+		'Connection to Indexed Database server lost',
+	];
+
+	const firestoreErrorCodes = ['failed-precondition', 'unavailable', 'aborted'];
+
+	return (
+		indexedDBPatterns.some((pattern) =>
+			errorMessage.toLowerCase().includes(pattern.toLowerCase())
+		) || (errorCode !== undefined && firestoreErrorCodes.includes(errorCode))
+	);
+}
+
 export const listenToStatementSubSubscriptions = (
 	statementId: string,
 	user: User,
@@ -89,6 +109,16 @@ export const listenToStatementSubSubscriptions = (
 				dispatch(setStatementsSubscription(statementSubscriptions));
 			},
 			(error) => {
+				// Handle IndexedDB errors with retry
+				if (isIndexedDBError(error)) {
+					console.error(
+						'IndexedDB connection lost in subscription listener. App will continue with limited offline features.',
+						error
+					);
+					// IndexedDB errors are handled globally by indexedDBErrorHandler
+					return;
+				}
+
 				// Handle permission errors silently for subscriptions
 				const err = error as { code?: string };
 				if (err?.code !== 'permission-denied') {
@@ -149,6 +179,16 @@ export function listenToStatementSubscriptions(
 				});
 			},
 			(error) => {
+				// Handle IndexedDB errors
+				if (isIndexedDBError(error)) {
+					console.error(
+						'IndexedDB connection lost in statement subscriptions listener. App will continue with limited offline features.',
+						error
+					);
+					// IndexedDB errors are handled globally by indexedDBErrorHandler
+					return;
+				}
+
 				// Handle permission errors silently for subscriptions
 				const err = error as { code?: string };
 				if (err?.code !== 'permission-denied') {
@@ -373,29 +413,49 @@ export function getNewStatementsFromSubscriptions(userId: string): Unsubscribe {
 			limit(40)
 		);
 
-		return onSnapshot(q, (subscriptionsDB) => {
-			subscriptionsDB.docChanges().forEach((change) => {
-				const data = change.doc.data();
-				const statementSubscription = parse(
-					StatementSubscriptionSchema,
-					{
-						...data,
-						lastUpdated: data.lastUpdated?.toDate?.() ?? null,
-					}
-				);
-
-				if (change.type === 'added' || change.type === 'modified') {
-					dispatch(setStatementSubscription(statementSubscription));
-				}
-				if (change.type === 'removed') {
-					dispatch(
-						deleteSubscribedStatement(
-							statementSubscription.statementId
-						)
+		return onSnapshot(
+			q,
+			(subscriptionsDB) => {
+				subscriptionsDB.docChanges().forEach((change) => {
+					const data = change.doc.data();
+					const statementSubscription = parse(
+						StatementSubscriptionSchema,
+						{
+							...data,
+							lastUpdated: data.lastUpdated?.toDate?.() ?? null,
+						}
 					);
+
+					if (change.type === 'added' || change.type === 'modified') {
+						dispatch(setStatementSubscription(statementSubscription));
+					}
+					if (change.type === 'removed') {
+						dispatch(
+							deleteSubscribedStatement(
+								statementSubscription.statementId
+							)
+						);
+					}
+				});
+			},
+			(error) => {
+				// Handle IndexedDB errors
+				if (isIndexedDBError(error)) {
+					console.error(
+						'IndexedDB connection lost in new statements listener. App will continue with limited offline features.',
+						error
+					);
+					// IndexedDB errors are handled globally by indexedDBErrorHandler
+					return;
 				}
-			});
-		});
+
+				// Handle permission errors silently
+				const err = error as { code?: string };
+				if (err?.code !== 'permission-denied') {
+					console.error('New statements listener error:', error);
+				}
+			}
+		);
 	} catch (error) {
 		console.error(error);
 

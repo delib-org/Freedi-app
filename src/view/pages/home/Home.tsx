@@ -37,17 +37,31 @@ export default function Home() {
 		let unsubscribe: () => void = () => { };
 		let updatesUnsubscribe: () => void = () => { };
 		let unsubscribeInAppNotifications: () => void = () => { };
-		try {
-			if (user) {
+
+		// Set up listeners sequentially with delays to avoid overwhelming IndexedDB
+		// This is especially important for iOS Safari which has strict connection limits
+		async function setupListenersSequentially(): Promise<void> {
+			try {
+				if (!user) return;
+
+				// Set up first listener
 				unsubscribe = listenToStatementSubscriptions(user.uid, 100);
-				updatesUnsubscribe = getNewStatementsFromSubscriptions(
-					user.uid
-				);
+
+				// Wait before setting up next listener (iOS Safari needs breathing room)
+				await new Promise(resolve => setTimeout(resolve, 300));
+
+				updatesUnsubscribe = getNewStatementsFromSubscriptions(user.uid);
+
+				// Wait before final listener
+				await new Promise(resolve => setTimeout(resolve, 300));
+
 				unsubscribeInAppNotifications = listenToInAppNotifications();
+			} catch (error) {
+				console.error('Error setting up listeners:', error);
 			}
-		} catch (error) {
-			console.error(error);
 		}
+
+		setupListenersSequentially();
 
 		return () => {
 			unsubscribe();
