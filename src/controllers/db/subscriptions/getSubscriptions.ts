@@ -90,7 +90,8 @@ export const listenToStatementSubSubscriptions = (
 			},
 			(error) => {
 				// Handle permission errors silently for subscriptions
-				if (error.code !== 'permission-denied') {
+				const err = error as { code?: string };
+				if (err?.code !== 'permission-denied') {
 					console.error('Subscription listener error:', error);
 				}
 			}
@@ -149,7 +150,8 @@ export function listenToStatementSubscriptions(
 			},
 			(error) => {
 				// Handle permission errors silently for subscriptions
-				if (error.code !== 'permission-denied') {
+				const err = error as { code?: string };
+				if (err?.code !== 'permission-denied') {
 					console.error('Statement subscriptions listener error:', error);
 				}
 			}

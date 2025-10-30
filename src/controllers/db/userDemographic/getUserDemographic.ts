@@ -1,11 +1,12 @@
-import { collection, query, where, getDocs, onSnapshot } from 'firebase/firestore';
+import { collection, query, where, getDocs, onSnapshot, doc, getDoc } from 'firebase/firestore';
 import { FireStore } from '../config';
-import { Collections, UserDemographicQuestion, UserDemographicQuestionSchema, User } from 'delib-npm';
+import { Collections, UserDemographicQuestion, UserDemographicQuestionSchema, User, Role } from 'delib-npm';
 import { parse } from 'valibot';
 import { store } from '@/redux/store';
 import { deleteUserDemographic, deleteUserDemographicQuestion, setUserDemographic, setUserDemographicQuestion, setUserDemographicQuestions } from '@/redux/userDemographic/userDemographicSlice';
 import { MemberReviewData } from '@/view/pages/statement/components/settings/components/memberValidation/MemberValidation';
 import { getAllMemberValidationStatuses } from '../memberValidation/memberValidationStatus';
+import { getStatementSubscriptionId } from '@/controllers/general/helpers';
 
 /**
  * Fetches user demographic questions from the database for a specific statement ID
@@ -192,6 +193,7 @@ export async function getUserDemographicResponses(statementId: string): Promise<
 						uid: response.userId,
 						displayName: 'Anonymous',
 					} as User,
+					role: undefined, // Will be fetched separately
 					responses: [],
 					joinedAt: responseData.createdAt,
 					flags: [],
@@ -214,8 +216,25 @@ export async function getUserDemographicResponses(statementId: string): Promise<
 			}
 		});
 
-		// Convert map to array
+		// Fetch role information for each user
 		const memberReviews = Array.from(userResponsesMap.values());
+
+		// Fetch roles for all users in parallel
+		await Promise.all(memberReviews.map(async (member) => {
+			try {
+				const subscriptionId = getStatementSubscriptionId(statementId, member.userId);
+				if (!subscriptionId) return;
+
+				const subscriptionRef = doc(FireStore, Collections.statementsSubscribe, subscriptionId);
+				const subscriptionDoc = await getDoc(subscriptionRef);
+
+				if (subscriptionDoc.exists()) {
+					member.role = subscriptionDoc.data()?.role as Role;
+				}
+			} catch (error) {
+				console.error(`Error fetching role for user ${member.userId}:`, error);
+			}
+		}));
 
 		return memberReviews;
 	} catch (error) {

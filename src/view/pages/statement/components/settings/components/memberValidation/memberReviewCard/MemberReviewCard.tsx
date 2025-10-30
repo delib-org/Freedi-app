@@ -1,27 +1,44 @@
 import React, { FC, useState } from 'react';
+import { Statement, Role } from 'delib-npm';
 import { MemberReviewData } from '../MemberValidation';
 import styles from './MemberReviewCard.module.scss';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { getBanDisabledReason } from '@/helpers/roleHelpers';
 
 interface Props {
 	member: MemberReviewData;
+	statement: Statement;
 	isSelected: boolean;
 	onSelect: (userId: string, selected: boolean) => void;
 	onApprove: () => void;
 	onFlag: () => void;
 	onBan: () => void;
+	canBan: boolean;
 }
 
 const MemberReviewCard: FC<Props> = ({
 	member,
+	statement,
 	isSelected,
 	onSelect,
 	onApprove,
 	onFlag,
-	onBan
+	onBan,
+	canBan
 }) => {
 	const { t } = useUserConfig();
 	const [expanded, setExpanded] = useState(false);
+
+	const getRoleBadge = () => {
+		if (member.role === Role.admin) {
+			return <span className={`${styles.badge} ${styles.admin}`}>{t('Admin')}</span>;
+		}
+		if (member.role === Role.creator || statement.creator?.uid === member.userId) {
+			return <span className={`${styles.badge} ${styles.creator}`}>{t('Creator')}</span>;
+		}
+
+		return null;
+	};
 
 	const getStatusBadge = () => {
 		switch (member.status) {
@@ -118,11 +135,13 @@ const MemberReviewCard: FC<Props> = ({
 						type="checkbox"
 						checked={isSelected}
 						onChange={(e) => onSelect(member.userId, e.target.checked)}
-						disabled={member.status === 'banned'}
+						disabled={member.status === 'banned' || !canBan}
+						title={!canBan ? getBanDisabledReason(member.role, member.userId, statement) || '' : ''}
 					/>
 					<div className={styles.userInfo}>
 						<div className={styles.nameRow}>
 							<h4>{userIdentifier}</h4>
+							{getRoleBadge()}
 							{getStatusBadge()}
 						</div>
 						{member.user.email && (
@@ -192,9 +211,16 @@ const MemberReviewCard: FC<Props> = ({
 							<button
 								className="btn btn--small btn--error"
 								onClick={onBan}
+								disabled={!canBan}
+								title={!canBan ? getBanDisabledReason(member.role, member.userId, statement) || '' : ''}
 							>
 								🚫 {t('Remove/Ban')}
 							</button>
+							{!canBan && (
+								<div className={styles.protectedNotice}>
+									{getBanDisabledReason(member.role, member.userId, statement)}
+								</div>
+							)}
 						</div>
 					)}
 

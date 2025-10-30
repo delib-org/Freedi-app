@@ -22,7 +22,7 @@ function SwitchScreen({
 	const { hasChat } = statement?.statementSettings || { hasChat: false };
 
 	//allowed screens
-	const hasPermission = role === Role.admin;
+	const hasPermission = role === Role.admin || role === Role.creator;
 	if (!hasPermission && screen === 'settings') {
 		screen = 'main';
 	}
