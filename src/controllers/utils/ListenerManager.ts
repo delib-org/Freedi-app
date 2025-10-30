@@ -28,6 +28,7 @@ export class ListenerManager {
 	private totalDocumentsFetched = 0;
 	private totalUpdates = 0;
 	private debugMode = false;
+	private listenerRecreationCount = new Map<string, number>();
 
 	private constructor() {
 		// Singleton pattern
@@ -122,6 +123,10 @@ return true; // Caller should proceed with setup
 
 			// Setup the listener with document counting
 			const unsubscribe = await setupFn(onDocumentCount);
+
+			// Track recreation count
+			const currentCount = this.listenerRecreationCount.get(key) || 0;
+			this.listenerRecreationCount.set(key, currentCount + 1);
 
 			// Store the listener info with initial ref count of 1
 			this.listeners.set(key, {
@@ -345,6 +350,18 @@ return listener ? { ...listener.stats } : null;
 			console.info('Top Listeners by Document Count:');
 			stats.topListeners.forEach((listener, index) => {
 				console.info(`  ${index + 1}. ${listener.key}: ${listener.documentCount} docs in ${listener.updateCount} updates`);
+			});
+		}
+
+		// Log recreation stats
+		const recreations = Array.from(this.listenerRecreationCount.entries())
+			.sort((a, b) => b[1] - a[1])
+			.slice(0, 10);
+
+		if (recreations.length > 0) {
+			console.info('Top Listener Recreations:');
+			recreations.forEach(([key, count], index) => {
+				console.info(`  ${index + 1}. ${key}: ${count} times`);
 			});
 		}
 		console.info('================================');
