@@ -1,6 +1,6 @@
-import { collection, query, Unsubscribe, where, getDocs, limit } from "firebase/firestore";
-import { DB } from "../config";
-import { Collections, WaitingMember } from "delib-npm";
+import { collection, query, Unsubscribe, where, getDocs, limit, orderBy, startAfter, DocumentSnapshot, QueryConstraint } from "firebase/firestore";
+import { DB, FireStore } from "../config";
+import { Collections, WaitingMember, StatementSubscription, Role, StatementType } from "delib-npm";
 import { store } from "@/redux/store";
 import { removeWaitingMember, setWaitingMember } from "@/redux/subscriptions/subscriptionsSlice";
 import { createManagedCollectionListener, generateListenerKey } from "@/controllers/utils/firestoreListenerHelpers";
@@ -102,5 +102,97 @@ export function listenToWaitingForMembership(): Unsubscribe {
 		console.error("Error setting up waiting members listener:", error);
 
 		return () => {};
+	}
+}
+
+/**
+ * Load more members with pagination support
+ * @param statementId Statement ID to fetch members for
+ * @param lastDoc Last document from previous fetch (for pagination)
+ * @param pageSize Number of members to fetch (default: 20)
+ * @param roleFilter Optional role filter (admin, member, banned)
+ * @returns Promise with members array and last document
+ */
+export async function loadMoreMembers(
+	statementId: string,
+	lastDoc: DocumentSnapshot | null = null,
+	pageSize: number = 20,
+	roleFilter?: Role
+): Promise<{ members: StatementSubscription[]; lastDoc: DocumentSnapshot | null; hasMore: boolean }> {
+	try {
+		const membersRef = collection(FireStore, Collections.statementsSubscribe);
+
+		// Build query constraints
+		const constraints: QueryConstraint[] = [
+			where('statementId', '==', statementId),
+			where('statement.statementType', '!=', StatementType.document),
+			orderBy('statement.statementType', 'asc'), // Required for != operator
+			orderBy('createdAt', 'desc')
+		];
+
+		// Add role filter if specified
+		if (roleFilter) {
+			constraints.push(where('role', '==', roleFilter));
+		}
+
+		// Add pagination if lastDoc provided
+		if (lastDoc) {
+			constraints.push(startAfter(lastDoc));
+		}
+
+		// Add limit (fetch one extra to check if there are more)
+		constraints.push(limit(pageSize + 1));
+
+		const q = query(membersRef, ...constraints);
+		const snapshot = await getDocs(q);
+
+		// Check if there are more results
+		const hasMore = snapshot.docs.length > pageSize;
+
+		// Get only the requested page size
+		const docs = hasMore ? snapshot.docs.slice(0, pageSize) : snapshot.docs;
+
+		const members = docs.map(doc => doc.data() as StatementSubscription);
+		const newLastDoc = docs.length > 0 ? docs[docs.length - 1] : null;
+
+		return { members, lastDoc: newLastDoc, hasMore };
+	} catch (error) {
+		console.error('Error loading more members:', error);
+
+		return { members: [], lastDoc: null, hasMore: false };
+	}
+}
+
+/**
+ * Get total count of members by role
+ * @param statementId Statement ID
+ * @param roleFilter Optional role filter
+ * @returns Promise with count
+ */
+export async function getMembersCount(
+	statementId: string,
+	roleFilter?: Role
+): Promise<number> {
+	try {
+		const membersRef = collection(FireStore, Collections.statementsSubscribe);
+
+		const constraints: QueryConstraint[] = [
+			where('statementId', '==', statementId),
+			where('statement.statementType', '!=', StatementType.document),
+			orderBy('statement.statementType', 'asc')
+		];
+
+		if (roleFilter) {
+			constraints.push(where('role', '==', roleFilter));
+		}
+
+		const q = query(membersRef, ...constraints);
+		const snapshot = await getDocs(q);
+
+		return snapshot.size;
+	} catch (error) {
+		console.error('Error getting members count:', error);
+
+		return 0;
 	}
 }
