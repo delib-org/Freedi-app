@@ -89,7 +89,8 @@ export async function setStatementSubscriptionToDB({
 		// No need to duplicate token in each subscription
 	} catch (error) {
 		// Only log non-permission errors
-		if (error.code !== 'permission-denied') {
+		const err = error as { code?: string };
+		if (err?.code !== 'permission-denied') {
 			console.error('Error setting subscription:', error);
 		}
 	}
@@ -123,7 +124,8 @@ export async function updateLastReadTimestamp(
 		// This prevents creating incomplete subscription objects
 	} catch (error) {
 		// Only log non-permission errors
-		if (error.code !== 'permission-denied') {
+		const err = error as { code?: string };
+		if (err?.code !== 'permission-denied') {
 			console.error('Error updating last read timestamp:', error);
 		}
 	}
@@ -196,12 +198,34 @@ export async function updateMemberRole(
 			Collections.statementsSubscribe,
 			statementSubscriptionId
 		);
-		await updateDoc(statementSubscriptionRef, { 
+
+		// If changing role to banned, validate that the user can be banned
+		if (newRole === Role.banned) {
+			const { canBanUser, getBanDisabledReason } = await import('@/helpers/roleHelpers');
+			const { getStatementFromDB } = await import('../statements/getStatement');
+
+			// Get current subscription data to check role
+			const subscriptionDoc = await getDoc(statementSubscriptionRef);
+			if (!subscriptionDoc.exists()) {
+				throw new Error('User subscription not found');
+			}
+
+			const currentRole = subscriptionDoc.data()?.role as Role;
+			const statement = await getStatementFromDB(statementId);
+
+			if (!canBanUser(currentRole, userId, statement)) {
+				const reason = getBanDisabledReason(currentRole, userId, statement);
+				throw new Error(reason || 'This user cannot be banned');
+			}
+		}
+
+		await updateDoc(statementSubscriptionRef, {
 			role: newRole,
 			statementId: statementId // Include statementId to satisfy Firebase rules
 		});
 	} catch (error) {
 		console.error('Error updating member role:', error);
+		throw error;
 	}
 }
 

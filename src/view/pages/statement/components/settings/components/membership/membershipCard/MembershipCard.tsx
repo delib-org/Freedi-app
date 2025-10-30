@@ -8,6 +8,7 @@ import MemberRemove from '@/assets/icons/memberRemove.svg?react';
 import { updateMemberRole } from '@/controllers/db/subscriptions/setSubscriptions';
 import { StatementSubscription, Role } from 'delib-npm';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
+import { canBanUser, getBanDisabledReason } from '@/helpers/roleHelpers';
 
 interface Props {
 	member: StatementSubscription;
@@ -26,7 +27,18 @@ const MembershipCard: FC<Props> = ({ member }) => {
 
 	if (member.user?.uid === user?.uid) return null;
 
+	// Check if this user can be banned (not admin or creator)
+	const userCanBeBanned = canBanUser(role, member.user.uid, member.statement);
+	const banDisabledReason = getBanDisabledReason(role, member.user.uid, member.statement);
+
 	async function handleRemoveMember() {
+		// If trying to ban, check if user can be banned
+		if (role !== Role.banned && !userCanBeBanned) {
+			console.error('Cannot ban this user:', banDisabledReason);
+
+			return;
+		}
+
 		const newRole = role === Role.banned ? Role.member : Role.banned;
 		try {
 			await updateMemberRole(
@@ -93,6 +105,12 @@ const MembershipCard: FC<Props> = ({ member }) => {
 						<button
 							onClick={handleRemoveMember}
 							className={styles['card__membership--remove']}
+							disabled={!userCanBeBanned}
+							title={banDisabledReason || ''}
+							style={{
+								opacity: userCanBeBanned ? 1 : 0.5,
+								cursor: userCanBeBanned ? 'pointer' : 'not-allowed'
+							}}
 						>
 							<MemberRemove />
 						</button>

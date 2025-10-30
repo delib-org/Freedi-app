@@ -1,22 +1,47 @@
 import React, { FC, useState } from 'react';
+import { Statement, Role } from 'delib-npm';
 import { MemberReviewData } from '../MemberValidation';
 import styles from './BanConfirmationModal.module.scss';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { canBanUser, getBanDisabledReason } from '@/helpers/roleHelpers';
 
 interface Props {
 	member: MemberReviewData;
 	statementId: string;
+	statement: Statement;
 	onConfirm: (banType: 'soft' | 'hard', reason: string, removeVotes: boolean) => void;
 	onCancel: () => void;
 }
 
-const BanConfirmationModal: FC<Props> = ({ member, onConfirm, onCancel }) => {
+const BanConfirmationModal: FC<Props> = ({ member, statement, onConfirm, onCancel }) => {
 	const { t } = useUserConfig();
 	const [banType, setBanType] = useState<'soft' | 'hard'>('soft');
 	const [reason, setReason] = useState('');
 	const [removeVotes, setRemoveVotes] = useState(true); // Default to removing votes
 
+	// Safety check: verify user can be banned
+	const userCanBeBanned = canBanUser(member.role, member.userId, statement);
+	const banDisabledReason = getBanDisabledReason(member.role, member.userId, statement);
+
+	const getRoleBadge = () => {
+		if (member.role === Role.admin) {
+			return <span className={`${styles.roleBadge} ${styles.admin}`}>{t('Admin')}</span>;
+		}
+		if (member.role === Role.creator || statement.creator?.uid === member.userId) {
+			return <span className={`${styles.roleBadge} ${styles.creator}`}>{t('Creator')}</span>;
+		}
+
+		return null;
+	};
+
 	const handleConfirm = () => {
+		// Final safety check before confirming
+		if (!userCanBeBanned) {
+			console.error('Attempted to ban protected user:', banDisabledReason);
+
+			return;
+		}
+
 		// Pass the removeVotes flag to the parent component
 		onConfirm(banType, reason, removeVotes);
 	};
@@ -24,11 +49,20 @@ const BanConfirmationModal: FC<Props> = ({ member, onConfirm, onCancel }) => {
 	return (
 		<div className={styles.modalOverlay}>
 			<div className={styles.modal}>
-				<h2>{t('Remove Member')}: {member.user.displayName}</h2>
+				<h2>
+					{t('Remove Member')}: {member.user.displayName}
+					{getRoleBadge()}
+				</h2>
 
-				<div className={styles.warningMessage}>
-					⚠️ {t('This action cannot be undone. Please review carefully before proceeding.')}
-				</div>
+				{!userCanBeBanned ? (
+					<div className={styles.errorMessage}>
+						🚫 {banDisabledReason}
+					</div>
+				) : (
+					<div className={styles.warningMessage}>
+						⚠️ {t('This action cannot be undone. Please review carefully before proceeding.')}
+					</div>
+				)}
 
 				<div className={styles.banOptions}>
 					<label className={styles.radioOption}>
@@ -110,6 +144,7 @@ const BanConfirmationModal: FC<Props> = ({ member, onConfirm, onCancel }) => {
 					<button
 						className="btn btn--error"
 						onClick={handleConfirm}
+						disabled={!userCanBeBanned}
 					>
 						{banType === 'hard' ? t('Ban Member') : t('Remove Member')}
 					</button>

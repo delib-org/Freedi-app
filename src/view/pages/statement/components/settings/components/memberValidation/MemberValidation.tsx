@@ -1,5 +1,5 @@
 import React, { FC, useState, useEffect } from 'react';
-import { Statement, User } from 'delib-npm';
+import { Statement, User, Role } from 'delib-npm';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import SectionTitle from '../sectionTitle/SectionTitle';
 import SettingsModal from '../settingsModal/SettingsModal';
@@ -16,6 +16,7 @@ interface Props {
 export interface MemberReviewData {
 	userId: string;
 	user: User;
+	role?: Role;
 	responses: {
 		questionId: string;
 		question: string;
@@ -170,6 +171,7 @@ return member.status === filter;
 								members={filteredMembers}
 								onMemberAction={handleMemberAction}
 								statementId={statement.statementId}
+								statement={statement}
 								onRefresh={loadMemberResponses}
 							/>
 						)}

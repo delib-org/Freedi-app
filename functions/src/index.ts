@@ -31,7 +31,8 @@ import { updateVote } from "./fn_vote";
 import {
   onNewSubscription,
   onStatementDeletionDeleteSubscriptions,
-  updateSubscriptionsSimpleStatement
+  updateSubscriptionsSimpleStatement,
+  validateRoleChange
 } from "./fn_subscriptions";
 import {
   updateParentOnChildUpdate,
@@ -263,6 +264,14 @@ exports.updateNumberOfMembers = createFirestoreFunction(
   onDocumentWritten,
   onNewSubscription,
   "updateNumberOfMembers"
+);
+
+// Validate role changes to prevent banning admins or creators
+exports.validateRoleChange = createFirestoreFunction(
+  `/${Collections.statementsSubscribe}/{subscriptionId}`,
+  onDocumentUpdated,
+  validateRoleChange,
+  "validateRoleChange"
 );
 
 // New v2 functions to update statements and subscriptions efficiently
