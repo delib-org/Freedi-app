@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { registerSW } from 'virtual:pwa-register';
 // import InstallPWA from './InstallPWA';
-import NotificationPrompt from '../notifications/NotificationPrompt';
 
 // Function to clear badge count
 const clearBadgeCount = async () => {
@@ -98,11 +97,11 @@ const PWAWrapper: React.FC<PWAWrapperProps> = ({ children }) => {
 
 	useEffect(() => {
 		// Initialize PWA wrapper
-		
+
 		// Set up the service worker in both production and development
 		// Note: In development, service workers might behave differently
 		// Always register service worker for notification support
-		
+
 		// Clear badge when app is opened or focused
 		clearBadgeCount();
 
@@ -122,16 +121,25 @@ const PWAWrapper: React.FC<PWAWrapperProps> = ({ children }) => {
 
 		document.addEventListener('visibilitychange', handleVisibilityChange);
 
+		// Helper function to check if we're on iOS
+		const isIOS = (): boolean => {
+			const userAgent = navigator.userAgent.toLowerCase();
+
+			return /iphone|ipad|ipod/.test(userAgent) ||
+				   (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+		};
+
 		// Explicitly register the Firebase Messaging Service Worker
-		if ('serviceWorker' in navigator) {
+		// DO NOT register on iOS - Firebase Messaging is not supported on iOS browsers
+		if ('serviceWorker' in navigator && !isIOS()) {
 			// First check if it's already registered
 			navigator.serviceWorker.getRegistrations().then(registrations => {
-				const firebaseSW = registrations.find(r => 
+				const firebaseSW = registrations.find(r =>
 					r.active?.scriptURL.includes('firebase-messaging-sw.js') ||
 					r.installing?.scriptURL.includes('firebase-messaging-sw.js') ||
 					r.waiting?.scriptURL.includes('firebase-messaging-sw.js')
 				);
-				
+
 				if (!firebaseSW) {
 					// Register Firebase Messaging SW
 					navigator.serviceWorker.register('/firebase-messaging-sw.js', {
@@ -139,7 +147,7 @@ const PWAWrapper: React.FC<PWAWrapperProps> = ({ children }) => {
 					})
 					.then(registration => {
 						// Firebase Messaging SW registered successfully
-						
+
 						// Wait for activation
 						if (registration.installing) {
 							registration.installing.addEventListener('statechange', function() {
@@ -156,6 +164,8 @@ const PWAWrapper: React.FC<PWAWrapperProps> = ({ children }) => {
 					// Firebase Messaging SW already registered
 				}
 			});
+		} else if (isIOS()) {
+			console.info('[PWAWrapper] Skipping Firebase Messaging SW registration on iOS (not supported)');
 		}
 
 		registerSW({
@@ -239,9 +249,10 @@ const PWAWrapper: React.FC<PWAWrapperProps> = ({ children }) => {
 
 			{/* Auto-update mode: no toast needed */}
 			{/* Hide notification prompt in MassConsensus routes */}
-			{showNotificationPrompt && !checkIfInMassConsensus() && (
+			{/* Temporarily disabled notification prompt */}
+			{/* {showNotificationPrompt && !checkIfInMassConsensus() && (
 				<NotificationPrompt onClose={() => setShowNotificationPrompt(false)} />
-			)}
+			)} */}
 		</>
 	);
 };

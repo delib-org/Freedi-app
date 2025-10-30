@@ -1,4 +1,4 @@
-import { getMessaging, getToken, onMessage, deleteToken, Messaging, MessagePayload } from "firebase/messaging";
+import type { Messaging, MessagePayload } from "firebase/messaging";
 import { app, DB } from "@/controllers/db/config";
 import { vapidKey } from "@/controllers/db/configKey";
 import { setDoc, doc, deleteDoc, getDoc, Timestamp, getDocs, query, where, collection, writeBatch } from "firebase/firestore";
@@ -103,12 +103,12 @@ export class NotificationService {
 	/**
 	 * Initialize Firebase Messaging safely
 	 */
-	private initializeMessaging(): boolean {
+	private async initializeMessaging(): Promise<boolean> {
 		// Don't attempt to initialize Firebase Messaging on iOS
 		if (!isMessagingSupported()) {
 			console.info('[NotificationService] Firebase Messaging not supported on this platform (iOS or missing features)');
-			
-return false;
+
+			return false;
 		}
 
 		if (!this.isSupported()) {
@@ -118,6 +118,8 @@ return false;
 
 		try {
 			if (!this.messaging) {
+				// Dynamically import getMessaging to avoid loading on iOS
+				const { getMessaging } = await import('firebase/messaging');
 				// Create Firebase Messaging instance
 				this.messaging = getMessaging(app);
 			}
@@ -318,6 +320,7 @@ return null;
 			// Delete old token if force refresh
 			if (forceRefresh && this.token) {
 				try {
+					const { deleteToken } = await import('firebase/messaging');
 					await deleteToken(this.messaging);
 					// Old token deleted
 				} catch (error) {
@@ -329,11 +332,11 @@ return null;
 			// Get service worker registration
 			const swRegistration = await navigator.serviceWorker.getRegistration();
 			// Check service worker registration
-			
+
 			if (!swRegistration) {
 				console.error('[NotificationService] No service worker registration found!');
-				
-return null;
+
+				return null;
 			}
 
 			// Get token
@@ -346,9 +349,10 @@ return null;
 				console.info('[NotificationService] FCM notifications disabled - VAPID key not configured');
 				console.info('[NotificationService] To enable push notifications, add a valid VAPID key to VITE_FIREBASE_VAPID_KEY in .env');
 
-return null;
+				return null;
 			}
-			
+
+			const { getToken } = await import('firebase/messaging');
 			const currentToken = await getToken(this.messaging, {
 				vapidKey,
 				serviceWorkerRegistration: swRegistration
@@ -563,9 +567,14 @@ return false;
 			// Delete local FCM token
 			if (this.messaging && tokenToClean) {
 				cleanupPromises.push(
-					deleteToken(this.messaging)
-						.then(() => undefined)
-						.catch(error => console.error('Error deleting FCM token:', error))
+					(async () => {
+						try {
+							const { deleteToken } = await import('firebase/messaging');
+							await deleteToken(this.messaging);
+						} catch (error) {
+							console.error('Error deleting FCM token:', error);
+						}
+					})()
 				);
 			}
 
@@ -579,24 +588,29 @@ return false;
 	/**
 	 * Set up a listener for foreground messages
 	 */
-	private setupForegroundListener(): void {
+	private async setupForegroundListener(): Promise<void> {
 		if (!this.isSupported() || !this.messaging) {
 			return;
 		}
 
-		onMessage(this.messaging, (payload) => {
-			// Message received in foreground
+		try {
+			const { onMessage } = await import('firebase/messaging');
+			onMessage(this.messaging, (payload) => {
+				// Message received in foreground
 
-			// If we have a notification payload, show it
-			if (payload.notification) {
-				this.showForegroundNotification(payload);
-			}
+				// If we have a notification payload, show it
+				if (payload.notification) {
+					this.showForegroundNotification(payload);
+				}
 
-			// Call the registered handler if one exists
-			if (this.notificationHandler) {
-				this.notificationHandler(payload);
-			}
-		});
+				// Call the registered handler if one exists
+				if (this.notificationHandler) {
+					this.notificationHandler(payload);
+				}
+			});
+		} catch (error) {
+			console.error('[NotificationService] Error setting up foreground listener:', error);
+		}
 	}
 
 	/**

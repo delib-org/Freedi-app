@@ -189,6 +189,13 @@ const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 						}
 					/>
 					<Checkbox
+						label={t('Enable user voting/evaluation')}
+						isChecked={settings.enableEvaluation ?? true}
+						onChange={(checked) =>
+							handleSettingChange('enableEvaluation', checked)
+						}
+					/>
+					<Checkbox
 						label='In Voting page, show only the results of the top options'
 						isChecked={settings.inVotingGetOnlyResults ?? false}
 						onChange={(checked) =>
