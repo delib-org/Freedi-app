@@ -1,17 +1,33 @@
-import { getMessaging, getToken } from 'firebase/messaging';
+import type { Messaging } from 'firebase/messaging';
 import { app } from '@/controllers/db/config';
 import { vapidKey } from '@/controllers/db/configKey';
 
 let isRegistering = false;
 let checkInterval: ReturnType<typeof setInterval> | null = null;
 
+// Helper function to check if we're on iOS
+const isIOS = (): boolean => {
+	const userAgent = navigator.userAgent.toLowerCase();
+
+	return /iphone|ipad|ipod/.test(userAgent) ||
+		   (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+};
+
 /**
  * Ensures Firebase Messaging Service Worker is registered
  * This is a safety fallback in case PWAWrapper fails to register it
+ * NOTE: This will not run on iOS as Firebase Messaging is not supported
  */
 export async function ensureFirebaseServiceWorker() {
     if (!('serviceWorker' in navigator)) {
         // Service workers not supported
+        return;
+    }
+
+    // Don't run on iOS - Firebase Messaging is not supported
+    if (isIOS()) {
+        console.info('[FirebaseSW] Skipping on iOS - Firebase Messaging not supported');
+
         return;
     }
 
@@ -22,10 +38,10 @@ export async function ensureFirebaseServiceWorker() {
 
     try {
         isRegistering = true;
-        
+
         // Check if Firebase SW is already registered
         const registrations = await navigator.serviceWorker.getRegistrations();
-        const firebaseSW = registrations.find(r => 
+        const firebaseSW = registrations.find(r =>
             r.active?.scriptURL.includes('firebase-messaging-sw.js') ||
             r.installing?.scriptURL.includes('firebase-messaging-sw.js') ||
             r.waiting?.scriptURL.includes('firebase-messaging-sw.js')
@@ -37,7 +53,7 @@ export async function ensureFirebaseServiceWorker() {
         }
 
         // Firebase SW not found, registering
-        
+
         // Register Firebase messaging service worker with explicit scope
         const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js', {
             scope: '/',
@@ -66,12 +82,14 @@ export async function ensureFirebaseServiceWorker() {
 
         // Initialize FCM with the registered service worker
         try {
-            const messaging = getMessaging(app);
+            // Dynamically import Firebase messaging functions to avoid loading on iOS
+            const { getMessaging, getToken } = await import('firebase/messaging');
+            const messaging: Messaging = getMessaging(app);
             const token = await getToken(messaging, {
                 vapidKey,
                 serviceWorkerRegistration: registration
             });
-            
+
             if (token) {
                 // FCM token obtained successfully
             } else {
@@ -125,8 +143,8 @@ export function stopFirebaseServiceWorkerMonitor() {
     }
 }
 
-// Auto-start on load
-if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+// Auto-start on load (but not on iOS)
+if (typeof window !== 'undefined' && 'serviceWorker' in navigator && !isIOS()) {
     // Ensure registration on various events
     const registerFirebaseSW = () => {
         ensureFirebaseServiceWorker().catch(error => {
@@ -134,14 +152,14 @@ if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
         });
         startFirebaseServiceWorkerMonitor();
     };
-    
+
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', registerFirebaseSW);
     } else {
         // DOM already loaded
         registerFirebaseSW();
     }
-    
+
     // Also register on page visibility change (in case SW was terminated)
     document.addEventListener('visibilitychange', () => {
         if (!document.hidden) {

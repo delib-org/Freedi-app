@@ -250,9 +250,10 @@ const PWAWrapper: React.FC<PWAWrapperProps> = ({ children }) => {
 
 			{/* Auto-update mode: no toast needed */}
 			{/* Hide notification prompt in MassConsensus routes */}
-			{showNotificationPrompt && !checkIfInMassConsensus() && (
+			{/* Temporarily disabled notification prompt */}
+			{/* {showNotificationPrompt && !checkIfInMassConsensus() && (
 				<NotificationPrompt onClose={() => setShowNotificationPrompt(false)} />
-			)}
+			)} */}
 		</>
 	);
 };
