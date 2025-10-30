@@ -23,6 +23,11 @@ export async function checkIfUserIsAdmin(userId: string): Promise<boolean> {
 
 		return !snapshot.empty;
 	} catch (error) {
+		const err = error as { code?: string };
+		// Permission-denied is expected for non-admins, don't log as error
+		if (err?.code === 'permission-denied') {
+			return false; // User is not admin
+		}
 		console.error("Error checking admin status:", error);
 
 		return false;
@@ -49,37 +54,42 @@ export function listenToWaitingForMembership(): Unsubscribe {
 		let unsubscribe: Unsubscribe | null = null;
 
 		// Check if user is admin before setting up listener
-		checkIfUserIsAdmin(user.uid).then(isAdmin => {
-			if (isAdmin) {
-				const waitingList = collection(DB, Collections.awaitingUsers);
-				const q = query(waitingList, where("adminId", "==", user.uid));
+		checkIfUserIsAdmin(user.uid)
+			.then(isAdmin => {
+				if (isAdmin) {
+					const waitingList = collection(DB, Collections.awaitingUsers);
+					const q = query(waitingList, where("adminId", "==", user.uid));
 
-				// Use managed collection listener with document counting
-				unsubscribe = createManagedCollectionListener(
-					q,
-					listenerKey,
-					(waitingMembersDB) => {
-						try {
-							waitingMembersDB.docChanges().forEach((change) => {
-								const subscription = change.doc.data() as WaitingMember;
-								if (change.type === "added" || change.type === "modified") {
-									dispatch(setWaitingMember(subscription));
-								} else if (change.type === "removed") {
-									dispatch(removeWaitingMember(subscription.statementsSubscribeId));
-								}
-							});
-						} catch (error) {
-							console.error("Error processing waiting members snapshot:", error);
-						}
-					},
-					(error) => {
-						console.error("Error in waiting members listener:", error);
-					},
-					'query'
-				);
-			}
-			// Removed console.info to reduce noise - this is expected behavior for non-admins
-		});
+					// Use managed collection listener with document counting
+					unsubscribe = createManagedCollectionListener(
+						q,
+						listenerKey,
+						(waitingMembersDB) => {
+							try {
+								waitingMembersDB.docChanges().forEach((change) => {
+									const subscription = change.doc.data() as WaitingMember;
+									if (change.type === "added" || change.type === "modified") {
+										dispatch(setWaitingMember(subscription));
+									} else if (change.type === "removed") {
+										dispatch(removeWaitingMember(subscription.statementsSubscribeId));
+									}
+								});
+							} catch (error) {
+								console.error("Error processing waiting members snapshot:", error);
+							}
+						},
+						(error) => {
+							console.error("Error in waiting members listener:", error);
+						},
+						'query'
+					);
+				}
+				// Removed console.info to reduce noise - this is expected behavior for non-admins
+			})
+			.catch(() => {
+				// Silently handle errors - user may not have permission to check admin status
+				// This is expected for non-admin users
+			});
 
 		// Return a cleanup function
 		return () => {
