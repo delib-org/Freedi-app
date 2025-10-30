@@ -58,7 +58,8 @@ export function listenToWaitingForMembership(): Unsubscribe {
 			.then(isAdmin => {
 				if (isAdmin) {
 					const waitingList = collection(DB, Collections.awaitingUsers);
-					const q = query(waitingList, where("adminId", "==", user.uid));
+					// PHASE 3 FIX: Updated to use adminIds array instead of adminId
+					const q = query(waitingList, where("adminIds", "array-contains", user.uid));
 
 					// Use managed collection listener with document counting
 					unsubscribe = createManagedCollectionListener(

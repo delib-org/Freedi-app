@@ -65,6 +65,7 @@ import { getCluster, recoverLastSnapshot } from "./fn_clusters";
 import { checkProfanity } from "./fn_profanityChecker";
 import { handleImproveSuggestion } from "./fn_improveSuggestion";
 import { onStatementCreated } from "./fn_statementCreation";
+import { analyzeSubscriptionPatterns } from "./fn_metrics";
 
 // Popper-Hebbian functions
 import { analyzeFalsifiability } from "./fn_popperHebbian_analyzeFalsifiability";
@@ -176,6 +177,9 @@ exports.recoverLastSnapshot = wrapHttpFunction(recoverLastSnapshot);
 exports.checkProfanity = checkProfanity;
 exports.improveSuggestion = wrapHttpFunction(handleImproveSuggestion);
 
+// PHASE 4 FIX: Metrics and monitoring functions
+exports.analyzeSubscriptionPatterns = analyzeSubscriptionPatterns;
+
 // Maintenance HTTP functions
 exports.maintainRole = wrapHttpFunction(maintainRole);
 exports.maintainDeliberativeElement = wrapHttpFunction(maintainDeliberativeElement);
@@ -258,12 +262,12 @@ exports.onStatementDeletion = createFirestoreFunction(
 );
 
 // Subscription functions
-// This function handles waiting role subscriptions and needs to track both creates and updates
-exports.updateNumberOfMembers = createFirestoreFunction(
+// PHASE 2 FIX: Renamed for clarity - handles waiting role subscriptions and admin notifications
+exports.handleWaitingRoleSubscriptions = createFirestoreFunction(
   `/${Collections.statementsSubscribe}/{subscriptionId}`,
   onDocumentWritten,
   onNewSubscription,
-  "updateNumberOfMembers"
+  "handleWaitingRoleSubscriptions"
 );
 
 // Validate role changes to prevent banning admins or creators
