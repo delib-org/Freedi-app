@@ -11,6 +11,8 @@ import SmileIcon from '@/assets/icons/smileIcon.svg?react';
 import { setEvaluationToDB } from '@/controllers/db/evaluation/setEvaluation';
 import { Statement } from 'delib-npm';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
+import { Tooltip } from '@/view/components/tooltip/Tooltip';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 
 interface ThumbProps {
 	evaluation: number;
@@ -18,6 +20,7 @@ interface ThumbProps {
 	statement: Statement;
 	setConVote: React.Dispatch<SetStateAction<number>>;
 	setProVote: React.Dispatch<SetStateAction<number>>;
+	enableEvaluation?: boolean;
 }
 
 const Thumb: FC<ThumbProps> = ({
@@ -26,8 +29,10 @@ const Thumb: FC<ThumbProps> = ({
 	statement,
 	setConVote,
 	setProVote,
+	enableEvaluation = true,
 }) => {
 	const { creator } = useAuthentication();
+	const { t } = useUserConfig();
 
 	const handleVote = (isUp: boolean) => {
 		if (isUp) {
@@ -66,14 +71,30 @@ const Thumb: FC<ThumbProps> = ({
 	const isUpVote = upDown === 'up';
 	const isActive = isUpVote ? isSmileActive : isFrownActive;
 
-	return (
+	const button = (
 		<button
-			className={`${styles.thumb} ${isActive ? '' : styles.inactive}`}
-			onClick={() => handleVote(isUpVote)}
+			className={`${styles.thumb} ${isActive ? '' : styles.inactive} ${!enableEvaluation ? styles.disabled : ''}`}
+			onClick={enableEvaluation ? () => handleVote(isUpVote) : undefined}
+			disabled={!enableEvaluation}
+			aria-disabled={!enableEvaluation}
+			aria-label={enableEvaluation ? (isUpVote ? 'Vote up' : 'Vote down') : t('Voting disabled - view only')}
 		>
 			{isUpVote ? <SmileIcon /> : <FrownIcon />}
 		</button>
 	);
+
+	if (!enableEvaluation) {
+		return (
+			<Tooltip
+				content={t('Voting is currently disabled by the moderator')}
+				position='top'
+			>
+				{button}
+			</Tooltip>
+		);
+	}
+
+	return button;
 };
 
 export default Thumb;

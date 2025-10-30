@@ -10,4 +10,10 @@
     &.inactive {
         opacity: 0.4;
     }
+    &.disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        pointer-events: none;
+        filter: grayscale(30%);
+    }
 }

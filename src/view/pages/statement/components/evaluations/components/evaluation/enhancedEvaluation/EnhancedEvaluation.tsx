@@ -18,11 +18,12 @@ import { statementSelectorById } from '@/redux/statements/statementsSlice';
 
 interface EnhancedEvaluationProps {
 	statement: Statement;
+	enableEvaluation?: boolean;
 }
 
 const indicatorWidth = 32; // Width of the bar in pixels, used for calculations
 
-const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({ statement }) => {
+const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({ statement, enableEvaluation = true }) => {
 	const { t, learning, dir } = useUserConfig();
 	const [barWidth, setBarWidth] = useState<number>(0);
 	const parentStatement = useSelector(statementSelectorById(statement.parentId));
@@ -82,6 +83,7 @@ const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({ statement }) => {
 							evaluationThumb={evaluationThumb}
 							evaluationScore={evaluationScore}
 							statement={statement}
+							enableEvaluation={enableEvaluation}
 						/>
 					))}
 				</div>
@@ -144,14 +146,17 @@ export interface EvaluationThumbProps {
 	statement: Statement;
 	evaluationScore: number | undefined;
 	evaluationThumb: EnhancedEvaluationThumb;
+	enableEvaluation?: boolean;
 }
 
 export const EvaluationThumb: FC<EvaluationThumbProps> = ({
 	evaluationThumb,
 	evaluationScore,
 	statement,
+	enableEvaluation = true,
 }) => {
 	const { creator } = useAuthentication();
+	const { t } = useUserConfig();
 	const decreaseLearning = useDecreaseLearningRemain();
 	const [isPending, setIsPending] = useState(false);
 	const [optimisticScore, setOptimisticScore] = useState<number | undefined>(evaluationScore);
@@ -182,18 +187,33 @@ export const EvaluationThumb: FC<EvaluationThumbProps> = ({
 			evaluationThumb.id === getEvaluationThumbIdByScore(optimisticScore)) ||
 		(isPending && optimisticScore === evaluationThumb.evaluation);
 
-	return (
+	const button = (
 		<button
-			className={`${styles['evaluation-thumb']} ${isThumbActive ? styles.active : ''} ${isPending ? styles.pending : ''}`}
+			className={`${styles['evaluation-thumb']} ${isThumbActive ? styles.active : ''} ${isPending ? styles.pending : ''} ${!enableEvaluation ? styles.disabled : ''}`}
 			style={{
 				backgroundColor: isThumbActive
 					? evaluationThumb.colorSelected
 					: evaluationThumb.color,
 			}}
-			onClick={handleSetEvaluation}
-			disabled={isPending}
+			onClick={enableEvaluation ? handleSetEvaluation : undefined}
+			disabled={isPending || !enableEvaluation}
+			aria-disabled={!enableEvaluation}
+			aria-label={enableEvaluation ? evaluationThumb.alt : t('Voting disabled - view only')}
 		>
 			<img src={evaluationThumb.svg} alt={evaluationThumb.alt} />
 		</button>
 	);
+
+	if (!enableEvaluation) {
+		return (
+			<Tooltip
+				content={t('Voting is currently disabled by the moderator')}
+				position='top'
+			>
+				{button}
+			</Tooltip>
+		);
+	}
+
+	return button;
 };

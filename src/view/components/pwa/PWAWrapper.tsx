@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { registerSW } from 'virtual:pwa-register';
 // import InstallPWA from './InstallPWA';
-import NotificationPrompt from '../notifications/NotificationPrompt';
 
 // Function to clear badge count
 const clearBadgeCount = async () => {
