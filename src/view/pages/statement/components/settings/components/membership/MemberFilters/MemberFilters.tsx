@@ -1,4 +1,4 @@
-import { FC, useState, useEffect, useCallback } from 'react';
+import { FC, useState, useEffect, useCallback, ChangeEvent } from 'react';
 import styles from './MemberFilters.module.scss';
 import { Role } from 'delib-npm';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
@@ -39,7 +39,7 @@ const MemberFilters: FC<MemberFiltersProps> = ({
     onSearchChange(debouncedSearch);
   }, [debouncedSearch, onSearchChange]);
 
-  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleSearchChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
   }, []);
 

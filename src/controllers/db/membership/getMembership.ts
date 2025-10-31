@@ -106,18 +106,20 @@ export function listenToWaitingForMembership(): Unsubscribe {
 }
 
 /**
- * Load more members with pagination support
+ * Search and filter members with pagination support (server-side)
  * @param statementId Statement ID to fetch members for
+ * @param searchTerm Optional search term for name prefix matching
+ * @param roleFilter Optional role filter (admin, member, banned)
  * @param lastDoc Last document from previous fetch (for pagination)
  * @param pageSize Number of members to fetch (default: 20)
- * @param roleFilter Optional role filter (admin, member, banned)
- * @returns Promise with members array and last document
+ * @returns Promise with members array, last document, and hasMore flag
  */
-export async function loadMoreMembers(
+export async function searchMembers(
 	statementId: string,
+	searchTerm?: string,
+	roleFilter?: Role,
 	lastDoc: DocumentSnapshot | null = null,
-	pageSize: number = 20,
-	roleFilter?: Role
+	pageSize: number = 20
 ): Promise<{ members: StatementSubscription[]; lastDoc: DocumentSnapshot | null; hasMore: boolean }> {
 	try {
 		const membersRef = collection(FireStore, Collections.statementsSubscribe);
@@ -127,12 +129,23 @@ export async function loadMoreMembers(
 			where('statementId', '==', statementId),
 			where('statement.statementType', '!=', StatementType.document),
 			orderBy('statement.statementType', 'asc'), // Required for != operator
-			orderBy('createdAt', 'desc')
 		];
 
 		// Add role filter if specified
 		if (roleFilter) {
 			constraints.push(where('role', '==', roleFilter));
+		}
+
+		// For name search, use prefix matching with displayName
+		// Note: Firestore doesn't support full-text search, so we use >= and <= for prefix
+		if (searchTerm && searchTerm.trim()) {
+			const searchLower = searchTerm.trim().toLowerCase();
+			constraints.push(where('user.displayName', '>=', searchLower));
+			constraints.push(where('user.displayName', '<=', searchLower + '\uf8ff'));
+			constraints.push(orderBy('user.displayName', 'asc'));
+		} else {
+			// If no search term, order by createdAt
+			constraints.push(orderBy('createdAt', 'desc'));
 		}
 
 		// Add pagination if lastDoc provided
@@ -157,42 +170,63 @@ export async function loadMoreMembers(
 
 		return { members, lastDoc: newLastDoc, hasMore };
 	} catch (error) {
-		console.error('Error loading more members:', error);
+		console.error('Error searching members:', error);
 
 		return { members: [], lastDoc: null, hasMore: false };
 	}
 }
 
 /**
- * Get total count of members by role
+ * Get member counts by role from statement metadata
+ * If numberOfMembers is not available, falls back to counting from subscriptions
  * @param statementId Statement ID
- * @param roleFilter Optional role filter
- * @returns Promise with count
+ * @returns Promise with counts object
  */
-export async function getMembersCount(
-	statementId: string,
-	roleFilter?: Role
-): Promise<number> {
+export async function getMembersCounts(
+	statementId: string
+): Promise<{ total: number; admins: number; members: number; banned: number }> {
 	try {
-		const membersRef = collection(FireStore, Collections.statementsSubscribe);
+		// Try to get from statement's numberOfMembers field first
+		const statementSnap = await getDocs(query(collection(FireStore, Collections.statements), where('__name__', '==', statementId)));
 
-		const constraints: QueryConstraint[] = [
+		// If statement has numberOfMembers, use it for total
+		let totalFromMetadata = 0;
+		if (!statementSnap.empty) {
+			const statementData = statementSnap.docs[0].data();
+			totalFromMetadata = statementData.numberOfMembers || 0;
+		}
+
+		// Count by role (we need to query for these)
+		const membersRef = collection(FireStore, Collections.statementsSubscribe);
+		const baseConstraints = [
 			where('statementId', '==', statementId),
 			where('statement.statementType', '!=', StatementType.document),
 			orderBy('statement.statementType', 'asc')
 		];
 
-		if (roleFilter) {
-			constraints.push(where('role', '==', roleFilter));
-		}
+		// Count admins
+		const adminsQuery = query(membersRef, ...baseConstraints, where('role', '==', Role.admin));
+		const adminsSnap = await getDocs(adminsQuery);
 
-		const q = query(membersRef, ...constraints);
-		const snapshot = await getDocs(q);
+		// Count banned
+		const bannedQuery = query(membersRef, ...baseConstraints, where('role', '==', Role.banned));
+		const bannedSnap = await getDocs(bannedQuery);
 
-		return snapshot.size;
+		// Count regular members
+		const membersQuery = query(membersRef, ...baseConstraints, where('role', '==', Role.member));
+		const membersSnap = await getDocs(membersQuery);
+
+		const total = totalFromMetadata || (adminsSnap.size + bannedSnap.size + membersSnap.size);
+
+		return {
+			total,
+			admins: adminsSnap.size,
+			members: membersSnap.size,
+			banned: bannedSnap.size
+		};
 	} catch (error) {
-		console.error('Error getting members count:', error);
+		console.error('Error getting members counts:', error);
 
-		return 0;
+		return { total: 0, admins: 0, members: 0, banned: 0 };
 	}
 }

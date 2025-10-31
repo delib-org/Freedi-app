@@ -38,6 +38,11 @@ function isIndexedDBError(error: unknown): boolean {
 		'IDBDatabase',
 		'Connection to Indexed Database server lost',
 		'indexed database',
+		'Database deleted by request of the user',
+		'idb-open',
+		'database deleted',
+		'database closed',
+		'unavailable or restricted',
 	];
 
 	// Check for Firestore persistence error codes

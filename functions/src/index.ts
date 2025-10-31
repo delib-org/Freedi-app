@@ -32,7 +32,8 @@ import {
   onNewSubscription,
   onStatementDeletionDeleteSubscriptions,
   updateSubscriptionsSimpleStatement,
-  validateRoleChange
+  validateRoleChange,
+  updateStatementMemberCount
 } from "./fn_subscriptions";
 import {
   updateParentOnChildUpdate,
@@ -276,6 +277,14 @@ exports.validateRoleChange = createFirestoreFunction(
   onDocumentUpdated,
   validateRoleChange,
   "validateRoleChange"
+);
+
+// Update statement's numberOfMembers count when subscriptions are created/deleted
+exports.updateStatementMemberCount = createFirestoreFunction(
+  `/${Collections.statementsSubscribe}/{subscriptionId}`,
+  onDocumentWritten,
+  updateStatementMemberCount,
+  "updateStatementMemberCount"
 );
 
 // New v2 functions to update statements and subscriptions efficiently

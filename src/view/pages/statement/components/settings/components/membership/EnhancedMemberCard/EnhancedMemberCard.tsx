@@ -47,7 +47,8 @@ const EnhancedMemberCard: FC<EnhancedMemberCardProps> = ({
     if (diffDays < 7) return `${diffDays} ${t('days ago')}`;
     if (diffDays < 30) return `${Math.floor(diffDays / 7)} ${t('weeks ago')}`;
     if (diffDays < 365) return `${Math.floor(diffDays / 30)} ${t('months ago')}`;
-    return `${Math.floor(diffDays / 365)} ${t('years ago')}`;
+    
+return `${Math.floor(diffDays / 365)} ${t('years ago')}`;
   }, [member.createdAt, t]);
 
   // Highlight search term in name
@@ -96,7 +97,8 @@ const EnhancedMemberCard: FC<EnhancedMemberCardProps> = ({
     // If trying to ban, check if user can be banned
     if (role !== Role.banned && !userCanBeBanned) {
       console.error('Cannot ban this user:', banDisabledReason);
-      return;
+      
+return;
     }
 
     try {

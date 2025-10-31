@@ -558,3 +558,67 @@ export async function validateRoleChange(
 		logger.error('Error in validateRoleChange:', error);
 	}
 }
+
+/**
+ * Update statement's numberOfMembers count when subscriptions change
+ * Triggered on subscription create/delete
+ * @param event Firestore event with subscription data
+ */
+export async function updateStatementMemberCount(
+	event: FirestoreEvent<Change<QueryDocumentSnapshot> | undefined>
+) {
+	try {
+		if (!event.data) {
+			logger.error('No event data found in updateStatementMemberCount');
+
+			return;
+		}
+
+		const before = event.data.before;
+		const after = event.data.after;
+
+		// Determine if this is a create or delete
+		const isCreate = !before.exists && after.exists;
+		const isDelete = before.exists && !after.exists;
+
+		if (!isCreate && !isDelete) {
+			// Not a create or delete, skip (role changes don't affect count)
+			return;
+		}
+
+		// Get subscription data
+		const subscriptionData = isCreate ? after.data() : before.data();
+		if (!subscriptionData) return;
+
+		const subscription = parse(
+			StatementSubscriptionSchema,
+			subscriptionData
+		) as StatementSubscription;
+
+		const statementId = subscription.statementId;
+
+		// Get current count from subscriptions collection
+		const subscriptionsRef = db.collection(Collections.statementsSubscribe);
+		const querySnapshot = await subscriptionsRef
+			.where('statementId', '==', statementId)
+			.where('statement.statementType', '!=', 'document')
+			.get();
+
+		const memberCount = querySnapshot.size;
+
+		// Update statement's numberOfMembers field
+		await db
+			.collection(Collections.statements)
+			.doc(statementId)
+			.update({
+				numberOfMembers: memberCount,
+				lastUpdate: Date.now()
+			});
+
+		logger.info(
+			`Updated numberOfMembers for statement ${statementId}: ${memberCount}`
+		);
+	} catch (error) {
+		logger.error('Error in updateStatementMemberCount:', error);
+	}
+}

@@ -116,6 +116,7 @@ export const listenToStatementSubSubscriptions = (
 						error
 					);
 					// IndexedDB errors are handled globally by indexedDBErrorHandler
+
 					return;
 				}
 
@@ -186,6 +187,7 @@ export function listenToStatementSubscriptions(
 						error
 					);
 					// IndexedDB errors are handled globally by indexedDBErrorHandler
+
 					return;
 				}
 
@@ -446,6 +448,7 @@ export function getNewStatementsFromSubscriptions(userId: string): Unsubscribe {
 						error
 					);
 					// IndexedDB errors are handled globally by indexedDBErrorHandler
+
 					return;
 				}
 

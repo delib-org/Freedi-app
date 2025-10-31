@@ -76,7 +76,8 @@ const FilteredMembersList: FC<FilteredMembersListProps> = ({
     const timer = setTimeout(() => {
       setIsInitialLoad(false);
     }, 500);
-    return () => clearTimeout(timer);
+    
+return () => clearTimeout(timer);
   }, []);
 
   const handleLoadMore = useCallback(async () => {

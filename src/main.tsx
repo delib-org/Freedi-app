@@ -17,6 +17,7 @@ initSentry();
 
 // Initialize IndexedDB error handler early to catch connection errors
 import { setupIndexedDBErrorHandler } from "./utils/indexedDBErrorHandler";
+
 setupIndexedDBErrorHandler();
 
 // Ensure Firebase service worker is registered
