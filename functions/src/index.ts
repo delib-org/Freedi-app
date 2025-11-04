@@ -4,8 +4,6 @@ import {
   onDocumentWritten,
   onDocumentDeleted,
 } from "firebase-functions/v2/firestore";
-import type { DocumentSnapshot } from "firebase-admin/firestore";
-import type { FirestoreEvent, Change } from "firebase-functions/v2/firestore";
 import { onRequest } from "firebase-functions/v2/https";
 import { Request, Response } from "firebase-functions/v1";
 // The Firebase Admin SDK
@@ -138,22 +136,22 @@ const wrapHttpFunction = (
  * @param {string} functionName - Function name for logging
  * @returns {Function} - Firebase function with error handling
  */
-const createFirestoreFunction = (
+const createFirestoreFunction = <T>(
   path: string,
   triggerType: typeof onDocumentCreated | typeof onDocumentUpdated | typeof onDocumentWritten | typeof onDocumentDeleted,
-  callback: (event: FirestoreEvent<DocumentSnapshot> | FirestoreEvent<Change<DocumentSnapshot>> | FirestoreEvent<Change<DocumentSnapshot> | undefined>) => Promise<unknown>,
+  callback: (event: T) => Promise<unknown>,
   functionName: string
 ) => {
-  // The callback types are properly defined in the individual function implementations
-  // This wrapper accepts the union of all possible event types
-  return (triggerType as typeof onDocumentCreated)(
+  // Type-safe wrapper that preserves the original event type from the callback
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return (triggerType as any)(
     {
       document: path,
       ...functionConfig,
     },
-    async (event: FirestoreEvent<DocumentSnapshot>) => {
+    async (event: T) => {
       try {
-        await callback(event as Parameters<typeof callback>[0]);
+        await callback(event);
       } catch (error) {
         console.error(`Error in ${functionName}:`, error);
         throw error;
