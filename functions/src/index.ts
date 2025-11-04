@@ -81,7 +81,20 @@ export const db = getFirestore();
 
 // Environment configuration
 const isProduction = process.env.NODE_ENV === "production";
-console.info("Environment:", isProduction ? "Production" : "Development");
+
+/**
+ * Gets current timestamp in HH:MM:SS.mmm format
+ */
+export const getTimestamp = (): string => {
+  const now = new Date();
+  const hours = String(now.getHours()).padStart(2, '0');
+  const minutes = String(now.getMinutes()).padStart(2, '0');
+  const seconds = String(now.getSeconds()).padStart(2, '0');
+  const ms = String(now.getMilliseconds()).padStart(3, '0');
+  return `${hours}:${minutes}:${seconds}.${ms}`;
+};
+
+console.info(`[${getTimestamp()}] Environment:`, isProduction ? "Production" : "Development");
 
 /**
  * CORS configuration based on environment
@@ -118,10 +131,20 @@ const wrapHttpFunction = (
       cors: corsConfig,
     },
     async (req, res) => {
+      const startTime = Date.now();
+      const startTimestamp = getTimestamp();
+      const functionName = handler.name || 'HTTP function';
+      console.info(`[${startTimestamp}] ▶ Starting ${functionName}`);
+
       try {
         await handler(req, res);
+        const duration = Date.now() - startTime;
+        const endTimestamp = getTimestamp();
+        console.info(`[${endTimestamp}] ✓ Completed ${functionName} in ${duration}ms`);
       } catch (error) {
-        console.error("Error in HTTP function:", error);
+        const duration = Date.now() - startTime;
+        const endTimestamp = getTimestamp();
+        console.error(`[${endTimestamp}] ✗ Error in ${functionName} after ${duration}ms:`, error);
         res.status(500).send("Internal Server Error");
       }
     }
@@ -150,10 +173,19 @@ const createFirestoreFunction = <T>(
       ...functionConfig,
     },
     async (event: T) => {
+      const startTime = Date.now();
+      const startTimestamp = getTimestamp();
+      console.info(`[${startTimestamp}] ▶ Starting ${functionName}`);
+
       try {
         await callback(event);
+        const duration = Date.now() - startTime;
+        const endTimestamp = getTimestamp();
+        console.info(`[${endTimestamp}] ✓ Completed ${functionName} in ${duration}ms`);
       } catch (error) {
-        console.error(`Error in ${functionName}:`, error);
+        const duration = Date.now() - startTime;
+        const endTimestamp = getTimestamp();
+        console.error(`[${endTimestamp}] ✗ Error in ${functionName} after ${duration}ms:`, error);
         throw error;
       }
     }
