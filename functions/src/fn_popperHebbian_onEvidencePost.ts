@@ -80,6 +80,7 @@ Respond with ONLY a single number between -1.0 and 1.0 (e.g., 0.7, -0.5, 0.0).`;
 		// Validate and clamp to [-1, 1]
 		if (isNaN(supportValue)) {
 			console.error('AI returned invalid support value:', response);
+
 			return 0.0; // Default to neutral
 		}
 
@@ -88,6 +89,7 @@ Respond with ONLY a single number between -1.0 and 1.0 (e.g., 0.7, -0.5, 0.0).`;
 	} catch (error) {
 		console.error('Error classifying support level:', error);
 		// Default to neutral if AI fails
+
 		return 0.0;
 	}
 }
@@ -164,7 +166,7 @@ export const onEvidencePostCreate = onDocumentCreated(
 		if (!snapshot) {
 			console.error('No data associated with the event');
 
-return;
+			return;
 		}
 
 		const statement = snapshot.data() as Statement;
@@ -233,7 +235,7 @@ export const onEvidencePostUpdate = onDocumentUpdated(
 		if (!beforeSnapshot || !afterSnapshot) {
 			console.error('No data associated with the event');
 
-return;
+			return;
 		}
 
 		const beforeStatement = beforeSnapshot.data() as Statement;
