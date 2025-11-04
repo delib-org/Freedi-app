@@ -100,11 +100,12 @@ async function processLinks(text: string): Promise<LinkWithMetadata> {
 
 /**
  * Create an evidence post (statement with evidence field)
+ * Note: support level is now auto-classified by AI, default is 0 (neutral)
  */
 export async function createEvidencePost(
 	parentStatementId: string,
 	content: string,
-	support: number // -1 to 1
+	support: number = 0 // Default to neutral, will be overridden by AI
 ): Promise<Statement> {
 	try {
 		// Get current user
@@ -368,11 +369,12 @@ return null;
 /**
  * Update an existing evidence post
  * This will trigger AI re-evaluation via the backend function
+ * Note: support level will be re-classified by AI after update
  */
 export async function updateEvidencePost(
 	statementId: string,
 	content: string,
-	support: number
+	support: number = 0 // Default to neutral, will be overridden by AI
 ): Promise<void> {
 	try {
 		const currentUser = auth.currentUser;

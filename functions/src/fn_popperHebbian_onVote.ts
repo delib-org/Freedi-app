@@ -3,26 +3,39 @@ import { getFirestore } from 'firebase-admin/firestore';
 import { Statement, Collections } from 'delib-npm';
 import { EvidenceType } from 'delib-npm/dist/models/evidence/evidenceModel';
 
+// Base weights now scaled to 0-1 range
+// 1.0 = scientific/peer-reviewed data
+// 0.1 = fallacious/unreliable
 const EVIDENCE_WEIGHTS: Record<EvidenceType, number> = {
-	[EvidenceType.data]: 3.0,
-	[EvidenceType.testimony]: 2.0,
-	[EvidenceType.argument]: 1.0,
-	[EvidenceType.anecdote]: 0.5,
-	[EvidenceType.fallacy]: 0.1
+	[EvidenceType.data]: 1.0,        // Peer-reviewed research
+	[EvidenceType.testimony]: 0.7,   // Expert testimony
+	[EvidenceType.argument]: 0.4,    // Logical reasoning
+	[EvidenceType.anecdote]: 0.2,    // Personal stories
+	[EvidenceType.fallacy]: 0.1      // Flagged content
 };
 
 function calculatePostWeight(statement: Statement): number {
 	const evidence = statement.evidence;
-	if (!evidence?.evidenceType) return 1.0;
+	if (!evidence?.evidenceType) return 0.4; // Default to argument weight
 
 	const baseWeight = EVIDENCE_WEIGHTS[evidence.evidenceType];
-	const netScore = (evidence.helpfulCount || 0) - (evidence.notHelpfulCount || 0);
+	const rawNetScore = (evidence.helpfulCount || 0) - (evidence.notHelpfulCount || 0);
 
-	// Each net vote changes weight by 10%
-	const multiplier = 1 + (netScore * 0.1);
+	// Normalize netScore to [-1, 1] using tanh
+	// Dividing by 10 makes ±10 votes reach ~76% of max effect
+	const normalizedNetScore = Math.tanh(rawNetScore / 10);
 
-	// Ensure weight never goes below 0.1
-	return Math.max(0.1, baseWeight * multiplier);
+	// Translate from [-1, 1] to [0, 1]
+	const voteMultiplier = (normalizedNetScore + 1) / 2;
+
+	// Final weight: baseWeight * voteMultiplier
+	// This gives range of [0, 1] where:
+	// - baseWeight determines evidence type quality
+	// - voteMultiplier determines community validation
+	const finalWeight = baseWeight * voteMultiplier;
+
+	// Ensure minimum weight to prevent complete dismissal
+	return Math.max(0.01, finalWeight);
 }
 
 async function recalculateScore(statementId: string): Promise<void> {
