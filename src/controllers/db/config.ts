@@ -6,18 +6,89 @@ import {
 	getAuth,
 	setPersistence,
 } from 'firebase/auth';
-import { connectFirestoreEmulator, getFirestore } from 'firebase/firestore';
+import {
+	connectFirestoreEmulator,
+	initializeFirestore,
+	persistentLocalCache,
+	persistentMultipleTabManager,
+	memoryLocalCache,
+	type Firestore
+} from 'firebase/firestore';
 import { getStorage, connectStorageEmulator } from 'firebase/storage';
 import { getAnalytics, isSupported } from 'firebase/analytics';
 import { getFunctions, connectFunctionsEmulator } from 'firebase/functions';
 import { isProduction } from '../general/helpers';
 import firebaseConfig from './configKey';
 
+// Helper to detect iOS devices
+function isIOS(): boolean {
+	const userAgent = navigator.userAgent.toLowerCase();
+	
+return (
+		/iphone|ipad|ipod/.test(userAgent) ||
+		(navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+	);
+}
+
+// Helper to check if IndexedDB is available and working
+async function isIndexedDBAvailable(): Promise<boolean> {
+	if (!('indexedDB' in window)) return false;
+
+	try {
+		const testDB = await new Promise<boolean>((resolve) => {
+			const request = indexedDB.open('test-db', 1);
+			request.onsuccess = () => {
+				request.result.close();
+				indexedDB.deleteDatabase('test-db');
+				resolve(true);
+			};
+			request.onerror = () => resolve(false);
+			request.onblocked = () => resolve(false);
+		});
+		
+return testDB;
+	} catch {
+		return false;
+	}
+}
+
+// Initialize Firestore with appropriate cache settings based on platform
+function initializeFirestoreWithCache(app: ReturnType<typeof initializeApp>): Firestore {
+	const isIOSDevice = isIOS();
+
+	// iOS Safari has issues with IndexedDB, use memory-only cache
+	if (isIOSDevice) {
+		console.info('iOS detected: Using memory-only cache for Firestore');
+		
+return initializeFirestore(app, {
+			localCache: memoryLocalCache(),
+		});
+	}
+
+	// For other browsers, attempt persistent cache with fallback
+	try {
+		return initializeFirestore(app, {
+			localCache: persistentLocalCache({
+				tabManager: persistentMultipleTabManager(),
+			}),
+		});
+	} catch (error) {
+		console.error(
+			'Failed to initialize with persistent cache, falling back to memory cache:',
+			error
+		);
+		
+return initializeFirestore(app, {
+			localCache: memoryLocalCache(),
+		});
+	}
+}
+
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 // Firebase app initialized
 
-const FireStore = getFirestore(app);
+const FireStore = initializeFirestoreWithCache(app);
 const DB = FireStore;
 const storage = getStorage(app);
 const auth = getAuth();
@@ -26,13 +97,24 @@ const functions = getFunctions(app);
 // Initialize Analytics only in production and if supported
 let analytics: ReturnType<typeof getAnalytics> | null = null;
 if (isProduction()) {
-	isSupported().then((supported) => {
-		if (supported) {
-			analytics = getAnalytics(app);
-		}
-	}).catch(() => {
-		// Analytics not supported
-	});
+	// Check both isSupported and IndexedDB availability before initializing analytics
+	Promise.all([isSupported(), isIndexedDBAvailable()])
+		.then(([supported, indexedDBAvailable]) => {
+			if (supported && indexedDBAvailable) {
+				try {
+					analytics = getAnalytics(app);
+				} catch (error) {
+					console.error('Failed to initialize Analytics:', error);
+					// Analytics initialization failed, but app continues
+				}
+			} else {
+				console.info('Analytics not initialized: isSupported=', supported, 'indexedDBAvailable=', indexedDBAvailable);
+			}
+		})
+		.catch((error) => {
+			console.error('Analytics initialization check failed:', error);
+			// Analytics not supported or error occurred
+		});
 }
 
 setPersistence(auth, browserLocalPersistence)

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { listenerManager } from '@/controllers/utils/ListenerManager';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
-import './ListenerStats.scss';
+import styles from './ListenerStats.module.scss';
 
 export const ListenerStats: React.FC = () => {
 	const [stats, setStats] = useState<ReturnType<typeof listenerManager.getOverallStats> | null>(null);
@@ -76,9 +76,9 @@ export const ListenerStats: React.FC = () => {
 	}
 
 	return (
-		<div className={`listener-stats ${isExpanded ? 'listener-stats--expanded' : ''}`}>
+		<div className={`${styles['listener-stats']} ${isExpanded ? styles['listener-stats--expanded'] : ''}`}>
 			<button
-				className="listener-stats__close"
+				className={styles['listener-stats__close']}
 				onClick={handleClose}
 				aria-label="Close statistics panel"
 				title="Close (Ctrl+Shift+L to reopen)"
@@ -86,53 +86,53 @@ export const ListenerStats: React.FC = () => {
 				×
 			</button>
 			<div
-				className="listener-stats__header"
+				className={styles['listener-stats__header']}
 				onClick={() => setIsExpanded(!isExpanded)}
 			>
-				<div className="listener-stats__title">
+				<div className={styles['listener-stats__title']}>
 					📊 Listeners: {stats.activeListeners}
 				</div>
-				<div className="listener-stats__summary">
+				<div className={styles['listener-stats__summary']}>
 					Docs: {stats.totalDocumentsFetched} | Updates: {stats.totalUpdates}
 				</div>
 			</div>
 
 			{isExpanded && (
-				<div className="listener-stats__content">
-					<div className="listener-stats__section">
+				<div className={styles['listener-stats__content']}>
+					<div className={styles['listener-stats__section']}>
 						<h3>Overall Statistics</h3>
-						<div className="listener-stats__grid">
-							<div className="listener-stats__item">
-								<span className="listener-stats__label">Active Listeners:</span>
-								<span className="listener-stats__value">{stats.activeListeners}</span>
+						<div className={styles['listener-stats__grid']}>
+							<div className={styles['listener-stats__item']}>
+								<span className={styles['listener-stats__label']}>Active Listeners:</span>
+								<span className={styles['listener-stats__value']}>{stats.activeListeners}</span>
 							</div>
-							<div className="listener-stats__item">
-								<span className="listener-stats__label">Total Documents:</span>
-								<span className="listener-stats__value">{stats.totalDocumentsFetched}</span>
+							<div className={styles['listener-stats__item']}>
+								<span className={styles['listener-stats__label']}>Total Documents:</span>
+								<span className={styles['listener-stats__value']}>{stats.totalDocumentsFetched}</span>
 							</div>
-							<div className="listener-stats__item">
-								<span className="listener-stats__label">Total Updates:</span>
-								<span className="listener-stats__value">{stats.totalUpdates}</span>
+							<div className={styles['listener-stats__item']}>
+								<span className={styles['listener-stats__label']}>Total Updates:</span>
+								<span className={styles['listener-stats__value']}>{stats.totalUpdates}</span>
 							</div>
-							<div className="listener-stats__item">
-								<span className="listener-stats__label">Avg Docs/Update:</span>
-								<span className="listener-stats__value">{stats.averageDocsPerUpdate}</span>
+							<div className={styles['listener-stats__item']}>
+								<span className={styles['listener-stats__label']}>Avg Docs/Update:</span>
+								<span className={styles['listener-stats__value']}>{stats.averageDocsPerUpdate}</span>
 							</div>
 						</div>
 					</div>
 
-					<div className="listener-stats__section">
+					<div className={styles['listener-stats__section']}>
 						<h3>Listener Types</h3>
-						<div className="listener-stats__types">
-							<div className="listener-stats__type">
+						<div className={styles['listener-stats__types']}>
+							<div className={styles['listener-stats__type']}>
 								<span>Collections:</span>
 								<span>{stats.listenerBreakdown.collection}</span>
 							</div>
-							<div className="listener-stats__type">
+							<div className={styles['listener-stats__type']}>
 								<span>Documents:</span>
 								<span>{stats.listenerBreakdown.document}</span>
 							</div>
-							<div className="listener-stats__type">
+							<div className={styles['listener-stats__type']}>
 								<span>Queries:</span>
 								<span>{stats.listenerBreakdown.query}</span>
 							</div>
@@ -140,15 +140,15 @@ export const ListenerStats: React.FC = () => {
 					</div>
 
 					{stats.topListeners.length > 0 && (
-						<div className="listener-stats__section">
+						<div className={styles['listener-stats__section']}>
 							<h3>Top Listeners (by document count)</h3>
-							<div className="listener-stats__top-listeners">
+							<div className={styles['listener-stats__top-listeners']}>
 								{stats.topListeners.map((listener, index) => (
-									<div key={listener.key} className="listener-stats__listener">
-										<span className="listener-stats__listener-rank">#{index + 1}</span>
-										<div className="listener-stats__listener-info">
-											<div className="listener-stats__listener-key">{listener.key}</div>
-											<div className="listener-stats__listener-stats">
+									<div key={listener.key} className={styles['listener-stats__listener']}>
+										<span className={styles['listener-stats__listener-rank']}>#{index + 1}</span>
+										<div className={styles['listener-stats__listener-info']}>
+											<div className={styles['listener-stats__listener-key']}>{listener.key}</div>
+											<div className={styles['listener-stats__listener-stats']}>
 												{listener.documentCount} docs | {listener.updateCount} updates
 												{listener.type && ` | ${listener.type}`}
 											</div>
@@ -159,15 +159,15 @@ export const ListenerStats: React.FC = () => {
 						</div>
 					)}
 
-					<div className="listener-stats__actions">
+					<div className={styles['listener-stats__actions']}>
 						<button
-							className="listener-stats__button"
+							className={styles['listener-stats__button']}
 							onClick={handleLogStats}
 						>
 							Log to Console
 						</button>
 						<button
-							className="listener-stats__button listener-stats__button--danger"
+							className={`${styles['listener-stats__button']} ${styles['listener-stats__button--danger']}`}
 							onClick={handleResetStats}
 						>
 							Reset Stats

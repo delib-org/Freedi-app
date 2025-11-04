@@ -28,6 +28,7 @@ export class ListenerManager {
 	private totalDocumentsFetched = 0;
 	private totalUpdates = 0;
 	private debugMode = false;
+	private listenerRecreationCount = new Map<string, number>();
 
 	private constructor() {
 		// Singleton pattern
@@ -122,6 +123,10 @@ return true; // Caller should proceed with setup
 
 			// Setup the listener with document counting
 			const unsubscribe = await setupFn(onDocumentCount);
+
+			// Track recreation count
+			const currentCount = this.listenerRecreationCount.get(key) || 0;
+			this.listenerRecreationCount.set(key, currentCount + 1);
 
 			// Store the listener info with initial ref count of 1
 			this.listeners.set(key, {
@@ -229,8 +234,25 @@ return true; // Caller should proceed with setup
 		console.info('=== Active Listeners Debug ===');
 		console.info(`Total active listeners: ${this.listeners.size}`);
 		console.info(`Pending listeners: ${this.pendingListeners.size}`);
-		this.listeners.forEach((info, key) => {
-			console.info(`  ${key}: refCount=${info.refCount}, type=${info.type}`);
+
+		// Convert to array and sort by document count
+		const sortedListeners = Array.from(this.listeners.entries())
+			.map(([key, info]) => ({
+				key,
+				refCount: info.refCount,
+				type: info.type,
+				documentCount: info.stats.documentCount,
+				updateCount: info.stats.updateCount,
+				recreationCount: this.listenerRecreationCount.get(key) || 0
+			}))
+			.sort((a, b) => b.documentCount - a.documentCount);
+
+		sortedListeners.forEach((listener, index) => {
+			console.info(
+				`  ${index + 1}. ${listener.key}:\n` +
+				`     Type: ${listener.type || 'unknown'}, RefCount: ${listener.refCount}\n` +
+				`     Docs: ${listener.documentCount}, Updates: ${listener.updateCount}, Recreations: ${listener.recreationCount}`
+			);
 		});
 		console.info('==============================');
 	}
@@ -336,15 +358,37 @@ return listener ? { ...listener.stats } : null;
 		const stats = this.getOverallStats();
 		console.info('=== ListenerManager Statistics ===');
 		console.info(`Active Listeners: ${stats.activeListeners}`);
-		console.info(`Total Documents Fetched: ${stats.totalDocumentsFetched}`);
+		console.info(`New Documents (excluding initial loads): ${stats.totalDocumentsFetched}`);
 		console.info(`Total Updates: ${stats.totalUpdates}`);
-		console.info(`Average Docs/Update: ${stats.averageDocsPerUpdate}`);
+		console.info(`Average New Docs/Update: ${stats.averageDocsPerUpdate}`);
 		console.info(`Breakdown: Collections: ${stats.listenerBreakdown.collection}, Documents: ${stats.listenerBreakdown.document}, Queries: ${stats.listenerBreakdown.query}`);
+		console.info(`Note: Counts only NEW documents after listener creation, not initial data loads`);
 
-		if (stats.topListeners.length > 0) {
-			console.info('Top Listeners by Document Count:');
-			stats.topListeners.forEach((listener, index) => {
-				console.info(`  ${index + 1}. ${listener.key}: ${listener.documentCount} docs in ${listener.updateCount} updates`);
+		// Get ALL listeners sorted by document count
+		const allListeners = Array.from(this.listeners.entries())
+			.map(([key, info]) => ({
+				key,
+				documentCount: info.stats.documentCount,
+				updateCount: info.stats.updateCount,
+				type: info.type
+			}))
+			.sort((a, b) => b.documentCount - a.documentCount);
+
+		if (allListeners.length > 0) {
+			console.info('ALL Listeners by Document Count:');
+			allListeners.forEach((listener, index) => {
+				console.info(`  ${index + 1}. ${listener.key}: ${listener.documentCount} docs in ${listener.updateCount} updates (${listener.type || 'unknown'})`);
+			});
+		}
+
+		// Log recreation stats
+		const recreations = Array.from(this.listenerRecreationCount.entries())
+			.sort((a, b) => b[1] - a[1]);
+
+		if (recreations.length > 0) {
+			console.info('ALL Listener Recreations:');
+			recreations.forEach(([key, count], index) => {
+				console.info(`  ${index + 1}. ${key}: ${count} times`);
 			});
 		}
 		console.info('================================');

@@ -1,0 +1,290 @@
+.memberCard {
+  display: flex;
+  align-items: center;
+  padding: 1rem;
+  background: white;
+  border-radius: 8px;
+  margin-bottom: 0.75rem;
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  border: 1px solid transparent;
+  position: relative;
+
+  &:hover {
+    box-shadow: 0px 3px 12px rgba(115, 138, 191, 0.15);
+    transform: translateY(-1px);
+  }
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+
+  &--banned {
+    opacity: 0.85;
+    background: rgba(254, 107, 162, 0.05);
+    border-color: rgba(254, 107, 162, 0.2);
+
+    &:hover {
+      opacity: 1;
+    }
+  }
+
+  @media (max-width: 480px) {
+    padding: 0.75rem;
+  }
+}
+
+.avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--group);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 500;
+  margin-right: 1rem;
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+
+    &.avatar--banned {
+      filter: grayscale(100%);
+      opacity: 0.7;
+    }
+  }
+
+  .avatarLetter {
+    font-size: 1.2rem;
+    font-weight: 500;
+    text-transform: uppercase;
+  }
+
+  @media (max-width: 480px) {
+    width: 40px;
+    height: 40px;
+    margin-right: 0.75rem;
+
+    .avatarLetter {
+      font-size: 1rem;
+    }
+  }
+}
+
+.info {
+  flex: 1;
+  min-width: 0; // Allow text truncation
+
+  .name {
+    font-size: var(--p-font-size);
+    color: var(--text-primary);
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    .highlight {
+      background: rgba(255, 235, 59, 0.5);
+      padding: 0 2px;
+      border-radius: 2px;
+      color: inherit;
+      font-weight: inherit;
+    }
+  }
+
+  .metadata {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    flex-wrap: wrap;
+
+    .roleBadge {
+      padding: 0.125rem 0.5rem;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+
+      &--admin {
+        background: rgba(184, 147, 231, 0.2);
+        color: var(--group);
+      }
+
+      &--member {
+        background: rgba(87, 198, 178, 0.2);
+        color: var(--agree);
+      }
+
+      &--banned {
+        background: rgba(254, 107, 162, 0.2);
+        color: var(--disagree);
+      }
+    }
+
+    .joinDate {
+      font-size: 0.75rem;
+      color: var(--text-tertiary);
+    }
+  }
+
+  @media (max-width: 480px) {
+    .name {
+      font-size: 0.9rem;
+    }
+
+    .metadata {
+      gap: 0.25rem;
+
+      .roleBadge {
+        font-size: 0.7rem;
+        padding: 0.1rem 0.4rem;
+      }
+
+      .joinDate {
+        font-size: 0.7rem;
+      }
+    }
+  }
+}
+
+.actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-shrink: 0;
+
+  button {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+
+    svg {
+      width: 20px;
+      height: 20px;
+      transition: transform 0.2s ease;
+    }
+
+    &:active:not(:disabled) svg {
+      transform: scale(0.9);
+    }
+
+    &:focus {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(95, 136, 229, 0.2);
+    }
+
+    &:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+  }
+
+  .adminToggle {
+    background: rgba(184, 147, 231, 0.1);
+    color: var(--group);
+
+    &:hover:not(:disabled) {
+      background: var(--group);
+      color: white;
+    }
+
+    &--active {
+      background: var(--group);
+      color: white;
+
+      &:hover:not(:disabled) {
+        background: var(--group-contrast, #a080e0);
+      }
+    }
+  }
+
+  .banToggle {
+    background: rgba(254, 107, 162, 0.1);
+    color: var(--disagree);
+
+    &:hover:not(:disabled) {
+      background: var(--disagree);
+      color: white;
+    }
+  }
+
+  .unbanButton {
+    background: rgba(87, 198, 178, 0.1);
+    color: var(--agree);
+
+    &:hover:not(:disabled) {
+      background: var(--agree);
+      color: white;
+    }
+  }
+
+  @media (max-width: 480px) {
+    gap: 0.25rem;
+
+    button {
+      width: 32px;
+      height: 32px;
+
+      svg {
+        width: 18px;
+        height: 18px;
+      }
+    }
+  }
+}
+
+// Animation for role change
+@keyframes roleChange {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(0.95);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+// Loading state for buttons
+button[disabled] {
+  position: relative;
+
+  &::after {
+    content: '';
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    border: 2px solid transparent;
+    border-top-color: currentColor;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+    opacity: 0;
+  }
+
+  &:disabled::after {
+    opacity: 1;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}

@@ -15,6 +15,11 @@ import RootErrorBoundary from "./components/ErrorBoundary/RootErrorBoundary";
 // Initialize Sentry before anything else
 initSentry();
 
+// Initialize IndexedDB error handler early to catch connection errors
+import { setupIndexedDBErrorHandler } from "./utils/indexedDBErrorHandler";
+
+setupIndexedDBErrorHandler();
+
 // Ensure Firebase service worker is registered
 import "./utils/ensureFirebaseServiceWorker";
 

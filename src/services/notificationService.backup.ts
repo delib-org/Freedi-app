@@ -1,5 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { getMessaging, getToken, onMessage } from "firebase/messaging";
+import { getMessaging, getToken, onMessage, Messaging, MessagePayload } from "firebase/messaging";
 import { app, DB } from "@/controllers/db/config";
 import { vapidKey } from "@/controllers/db/configKey";
 import { setDoc, doc, getFirestore } from "firebase/firestore";
@@ -20,8 +19,8 @@ export class NotificationService {
 	private static instance: NotificationService;
 	private token: string | null = null;
 	private isTokenSentToServer = false;
-	private notificationHandler: ((payload: any) => void) | null = null;
-	private messaging: any = null; // Initialized lazily when needed
+	private notificationHandler: ((payload: MessagePayload) => void) | null = null;
+	private messaging: Messaging | null = null; // Initialized lazily when needed
 	private browserSupportsNotifications: boolean;
 
 	private constructor() {
@@ -307,7 +306,7 @@ export class NotificationService {
 	 * Display a notification when the app is in the foreground
 	 * @param payload The FCM message payload
 	 */
-	private showForegroundNotification(payload: any): void {
+	private showForegroundNotification(payload: MessagePayload): void {
 		if (!this.isSupported()) {
 			return;
 		}
@@ -356,7 +355,7 @@ export class NotificationService {
 	 * Register a handler for receiving notifications
 	 * @param handler A function that will be called with the notification payload
 	 */
-	public setNotificationHandler(handler: (payload: any) => void): void {
+	public setNotificationHandler(handler: (payload: MessagePayload) => void): void {
 		this.notificationHandler = handler;
 	}
 

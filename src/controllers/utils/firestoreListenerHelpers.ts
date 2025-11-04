@@ -37,12 +37,18 @@ export function createManagedDocumentListener(
 
 	// Setup function that will be called by ListenerManager
 	const setupFn = (onDocumentCount?: (count: number) => void) => {
+		let isFirstCall = true;
+
 		return onSnapshot(
 			docRef,
 			(snapshot) => {
 				// Track document count (1 for single document)
-				if (onDocumentCount) {
+				// Skip counting on first call to avoid inflated counts on listener recreation
+				if (onDocumentCount && !isFirstCall) {
 					onDocumentCount(snapshot.exists() ? 1 : 0);
+				}
+				if (isFirstCall) {
+					isFirstCall = false;
 				}
 				onNext(snapshot);
 			},
@@ -100,11 +106,11 @@ export function createManagedCollectionListener(
 				// Track document count
 				if (onDocumentCount) {
 					if (isFirstCall) {
-						// On first call, count all documents
-						onDocumentCount(snapshot.size);
+						// On first call, DON'T count existing documents to avoid inflated counts on listener recreation
+						// We only want to track NEW documents added after the listener is established
 						isFirstCall = false;
 					} else {
-						// On subsequent calls, only count changes
+						// On subsequent calls, only count NEW documents (added)
 						const changes = snapshot.docChanges();
 						const addedCount = changes.filter(change => change.type === 'added').length;
 						if (addedCount > 0) {

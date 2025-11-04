@@ -1,0 +1,301 @@
+.membersListContainer {
+  background: var(--card-default, white);
+  border-radius: 8px;
+  padding: var(--padding);
+  box-shadow: 0px 3px 6px rgba(115, 138, 191, 0.1);
+}
+
+.membersList {
+  min-height: 200px;
+  max-height: 600px;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+
+  // Custom scrollbar styling
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: var(--statementBackground);
+    border-radius: 4px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: var(--lighter);
+    border-radius: 4px;
+    transition: background 0.3s ease;
+
+    &:hover {
+      background: var(--text-tertiary);
+    }
+  }
+
+  @media (max-width: 768px) {
+    max-height: 500px;
+    padding-right: 0;
+  }
+}
+
+// Empty State
+.emptyState {
+  padding: 3rem 2rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+
+  .emptyIcon {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 1.5rem;
+    background: var(--statementBackground);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.5s ease;
+
+    svg {
+      color: var(--lighter);
+      animation: bounceIn 0.6s ease 0.2s both;
+    }
+  }
+
+  .emptyTitle {
+    font-size: var(--h5-font-size);
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    animation: fadeInUp 0.5s ease 0.1s both;
+  }
+
+  .emptyDescription {
+    color: var(--text-tertiary);
+    font-size: var(--p-font-size);
+    max-width: 300px;
+    margin: 0 auto;
+    line-height: 1.5;
+    animation: fadeInUp 0.5s ease 0.2s both;
+  }
+}
+
+// Load More Button
+.loadMoreContainer {
+  padding: 2rem 1rem 0.5rem;
+  text-align: center;
+  border-top: 1px solid var(--statementBackground);
+  margin-top: 1rem;
+
+  .loadMoreButton {
+    padding: 0.75rem 2rem;
+    background: white;
+    color: var(--btn-primary);
+    border: 2px dashed var(--btn-primary);
+    border-radius: 25px;
+    font-size: var(--p-font-size);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    &:hover:not(:disabled) {
+      background: var(--btn-primary);
+      color: white;
+      border-style: solid;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(95, 136, 229, 0.3);
+    }
+
+    &:active:not(:disabled) {
+      transform: translateY(0);
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    &:focus {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(95, 136, 229, 0.2);
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      border: 2px solid currentColor;
+      border-top-color: transparent;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+    }
+  }
+
+  .loadingText {
+    margin-top: 0.5rem;
+    color: var(--text-tertiary);
+    font-size: 0.875rem;
+    animation: fadeIn 0.3s ease;
+  }
+}
+
+// Skeleton Loading
+.skeleton {
+  .skeletonCard {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    margin-bottom: 0.75rem;
+    border-radius: 8px;
+    background: white;
+
+    .skeletonAvatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: linear-gradient(
+        90deg,
+        var(--statementBackground) 25%,
+        rgba(255, 255, 255, 0.5) 50%,
+        var(--statementBackground) 75%
+      );
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+      margin-right: 1rem;
+      flex-shrink: 0;
+    }
+
+    .skeletonContent {
+      flex: 1;
+      min-width: 0;
+
+      .skeletonName {
+        height: 20px;
+        width: 150px;
+        max-width: 100%;
+        background: linear-gradient(
+          90deg,
+          var(--statementBackground) 25%,
+          rgba(255, 255, 255, 0.5) 50%,
+          var(--statementBackground) 75%
+        );
+        background-size: 200% 100%;
+        animation: shimmer 1.5s infinite;
+        border-radius: 4px;
+        margin-bottom: 0.5rem;
+      }
+
+      .skeletonMeta {
+        height: 16px;
+        width: 100px;
+        max-width: 100%;
+        background: linear-gradient(
+          90deg,
+          var(--statementBackground) 25%,
+          rgba(255, 255, 255, 0.5) 50%,
+          var(--statementBackground) 75%
+        );
+        background-size: 200% 100%;
+        animation: shimmer 1.5s infinite;
+        border-radius: 4px;
+      }
+    }
+
+    .skeletonActions {
+      display: flex;
+      gap: 0.5rem;
+      flex-shrink: 0;
+
+      .skeletonButton {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: linear-gradient(
+          90deg,
+          var(--statementBackground) 25%,
+          rgba(255, 255, 255, 0.5) 50%,
+          var(--statementBackground) 75%
+        );
+        background-size: 200% 100%;
+        animation: shimmer 1.5s infinite;
+      }
+    }
+
+    @media (max-width: 480px) {
+      padding: 0.75rem;
+
+      .skeletonAvatar {
+        width: 40px;
+        height: 40px;
+      }
+
+      .skeletonContent {
+        .skeletonName {
+          width: 120px;
+        }
+
+        .skeletonMeta {
+          width: 80px;
+        }
+      }
+    }
+  }
+}
+
+// Animations
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes bounceIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+  70% {
+    transform: scale(0.95);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
