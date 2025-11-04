@@ -8,7 +8,6 @@ import {
 	StatementSubscription,
 	StatementSubscriptionSchema,
 	createSubscription,
-	getRandomUID,
 	getStatementSubscriptionId,
 	statementToSimpleStatement,
 } from 'delib-npm';
@@ -24,6 +23,10 @@ import { Change } from 'firebase-functions/v1';
 export async function onNewSubscription(
 	event: FirestoreEvent<Change<DocumentSnapshot> | undefined>
 ) {
+	// PHASE 4 FIX: Add performance logging
+	const startTime = Date.now();
+	const eventType = !event.data?.before.exists ? 'create' : 'update';
+
 	try {
 		if (!event.data) throw new Error('No event data found');
 
@@ -38,6 +41,30 @@ export async function onNewSubscription(
 			StatementSubscriptionSchema,
 			snapshot.data()
 		) as StatementSubscription;
+
+		// PHASE 1 FIX: Skip if only metadata changed (prevents cascade loop)
+		if (!isCreate && event.data.before.exists) {
+			const beforeData = event.data.before.data();
+			if (beforeData) {
+				const beforeSubscription = parse(
+					StatementSubscriptionSchema,
+					beforeData
+				) as StatementSubscription;
+
+				// Check if only metadata fields changed (exclude metadata from comparison)
+				// eslint-disable-next-line @typescript-eslint/no-unused-vars
+				const { lastUpdate: _b1, lastSubStatements: _b2, ...beforeCopy } = beforeSubscription;
+				// eslint-disable-next-line @typescript-eslint/no-unused-vars
+				const { lastUpdate: _a1, lastSubStatements: _a2, ...afterCopy } = subscription;
+
+				// If nothing else changed, skip processing
+				if (JSON.stringify(beforeCopy) === JSON.stringify(afterCopy)) {
+					logger.info('Skipping onNewSubscription - only metadata updated (preventing cascade)');
+
+					return;
+				}
+			}
+		}
 
 		// Check if this is a new subscription with waiting role, or an update to waiting role
 		const role = subscription.role;
@@ -95,6 +122,17 @@ return;
 				.where('statementId', '==', topParentId)
 				.where('role', '==', Role.admin)
 				.get();
+
+			// PHASE 1 FIX: Circuit breaker for excessive admins
+			if (adminsDB.size > 50) {
+				logger.error(
+					`CIRCUIT BREAKER: Refusing to process ${adminsDB.size} admins for statement ${topParentId}. ` +
+					`This indicates a potential issue with admin inheritance or a malicious action.`
+				);
+
+				return;
+			}
+
 			if (adminsDB.empty) {
 				logger.error(`No admins found for statement ${topParentId}`);
 				throw new Error('No admins found');
@@ -125,24 +163,37 @@ return;
 				await deleteBatch.commit();
 			}
 			
-			// Update the collection awaitingUsers for each admin
+			// PHASE 3 FIX: Create ONE awaiting user entry with array of admin IDs (N instead of N×M)
 			const batch = db.batch();
-
 			const collectionRef = db.collection(Collections.awaitingUsers);
 
-			adminsSubscriptions.forEach((adminSub: StatementSubscription) => {
-				const adminRef = collectionRef.doc(getRandomUID());
-				const adminCall = {
-					...subscription,
-					adminId: adminSub.userId,
-				};
-				batch.set(adminRef, adminCall);
-			});
+			// Create single entry with array of all admin IDs
+			const adminIds = adminsSubscriptions.map(adminSub => adminSub.userId);
+			const awaitingEntry = {
+				...subscription,
+				adminIds: adminIds, // Array of admin user IDs
+				createdAt: Date.now(),
+			};
+
+			// Use subscription ID as document key for easier management
+			const awaitingRef = collectionRef.doc(subscriptionId);
+			batch.set(awaitingRef, awaitingEntry);
+
 			await batch.commit();
-			logger.info(`Successfully created ${adminsSubscriptions.length} awaiting entries for subscription ${subscriptionId}`);
+			logger.info(`Successfully created awaiting entry with ${adminIds.length} admins for subscription ${subscriptionId}`);
+		}
+
+		// PHASE 4 FIX: Log execution time
+		const duration = Date.now() - startTime;
+		logger.info(`onNewSubscription completed in ${duration}ms (${eventType})`);
+
+		// Alert if taking too long
+		if (duration > 2000) {
+			logger.warn(`SLOW EXECUTION: onNewSubscription took ${duration}ms for ${eventType}`);
 		}
 	} catch (error) {
-		logger.error('Error onNewSubscription', error);
+		const duration = Date.now() - startTime;
+		logger.error(`Error onNewSubscription after ${duration}ms (${eventType})`, error);
 
 		return;
 	}
@@ -505,5 +556,69 @@ export async function validateRoleChange(
 		}
 	} catch (error) {
 		logger.error('Error in validateRoleChange:', error);
+	}
+}
+
+/**
+ * Update statement's numberOfMembers count when subscriptions change
+ * Triggered on subscription create/delete
+ * @param event Firestore event with subscription data
+ */
+export async function updateStatementMemberCount(
+	event: FirestoreEvent<Change<QueryDocumentSnapshot> | undefined>
+) {
+	try {
+		if (!event.data) {
+			logger.error('No event data found in updateStatementMemberCount');
+
+			return;
+		}
+
+		const before = event.data.before;
+		const after = event.data.after;
+
+		// Determine if this is a create or delete
+		const isCreate = !before.exists && after.exists;
+		const isDelete = before.exists && !after.exists;
+
+		if (!isCreate && !isDelete) {
+			// Not a create or delete, skip (role changes don't affect count)
+			return;
+		}
+
+		// Get subscription data
+		const subscriptionData = isCreate ? after.data() : before.data();
+		if (!subscriptionData) return;
+
+		const subscription = parse(
+			StatementSubscriptionSchema,
+			subscriptionData
+		) as StatementSubscription;
+
+		const statementId = subscription.statementId;
+
+		// Get current count from subscriptions collection
+		const subscriptionsRef = db.collection(Collections.statementsSubscribe);
+		const querySnapshot = await subscriptionsRef
+			.where('statementId', '==', statementId)
+			.where('statement.statementType', '!=', 'document')
+			.get();
+
+		const memberCount = querySnapshot.size;
+
+		// Update statement's numberOfMembers field
+		await db
+			.collection(Collections.statements)
+			.doc(statementId)
+			.update({
+				numberOfMembers: memberCount,
+				lastUpdate: Date.now()
+			});
+
+		logger.info(
+			`Updated numberOfMembers for statement ${statementId}: ${memberCount}`
+		);
+	} catch (error) {
+		logger.error('Error in updateStatementMemberCount:', error);
 	}
 }

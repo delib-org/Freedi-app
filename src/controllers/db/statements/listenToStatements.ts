@@ -254,7 +254,8 @@ export const listenToMembers =
 				membersRef,
 				where('statementId', '==', statementId),
 				where('statement.statementType', '!=', StatementType.document),
-				orderBy('createdAt', 'desc')
+				orderBy('createdAt', 'desc'),
+				limit(10) // Load only last 10 members initially, more can be loaded on demand
 			);
 
 			const listenerKey = generateListenerKey(

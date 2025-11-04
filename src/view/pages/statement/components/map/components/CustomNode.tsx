@@ -3,8 +3,6 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { Handle, NodeProps, useStore } from 'reactflow';
 // Hooks
-// Styles
-import '../mapHelpers/reactFlow.scss';
 // Icons
 import EllipsisIcon from '@/assets/icons/ellipsisIcon.svg?react';
 import PlusIcon from '@/assets/icons/plusIcon.svg?react';

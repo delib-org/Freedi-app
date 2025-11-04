@@ -184,9 +184,9 @@ return;
 
 			// Initialize messaging first
 			// Initialize Firebase Messaging
-			if (!this.initializeMessaging()) {
+			if (!await this.initializeMessaging()) {
 				console.error('[NotificationService] Failed to initialize messaging');
-				
+
 return;
 			}
 
@@ -300,9 +300,9 @@ return null;
 
 		try {
 			// Initialize messaging if not already done
-			if (!this.initializeMessaging()) {
+			if (!await this.initializeMessaging()) {
 				console.error('[NotificationService] Failed to initialize messaging in getOrRefreshToken');
-				
+
 return null;
 			}
 

@@ -5,7 +5,7 @@ import {
 	FieldValue,
 	getFirestore,
 } from 'firebase-admin/firestore';
-import { FirestoreEvent } from 'firebase-functions/firestore';
+import type { FirestoreEvent } from 'firebase-functions/v2/firestore';
 import {
 	Evaluation,
 	Statement,
@@ -54,8 +54,7 @@ interface CalcDiff {
 // MAIN EVENT HANDLERS
 // ============================================================================
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export async function newEvaluation(event: any): Promise<void> {
+export async function newEvaluation(event: FirestoreEvent<DocumentSnapshot>): Promise<void> {
 	try {
 
 		const evaluation = event.data.data() as Evaluation;
@@ -101,8 +100,7 @@ export async function newEvaluation(event: any): Promise<void> {
 	}
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export async function deleteEvaluation(event: any): Promise<void> {
+export async function deleteEvaluation(event: FirestoreEvent<DocumentSnapshot>): Promise<void> {
 	try {
 		const evaluation = event.data.data() as Evaluation;
 		const { statementId, evaluation: evaluationValue } = evaluation;
@@ -134,8 +132,7 @@ export async function deleteEvaluation(event: any): Promise<void> {
 	}
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export async function updateEvaluation(event: any): Promise<void> {
+export async function updateEvaluation(event: FirestoreEvent<Change<DocumentSnapshot>>): Promise<void> {
 	try {
 		const before = event.data.before.data() as Evaluation;
 		const after = event.data.after.data() as Evaluation;

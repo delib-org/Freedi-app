@@ -1,7 +1,8 @@
 import { db } from '.';
 import { logger, Request, Response } from 'firebase-functions/v1';
 import { Collections, MassConsensusMember, Statement, StatementType } from 'delib-npm';
-import { FieldValue } from 'firebase-admin/firestore';
+import { FieldValue, DocumentSnapshot } from 'firebase-admin/firestore';
+import type { FirestoreEvent, Change } from 'firebase-functions/v2/firestore';
 
 export const getInitialMCData = async (req: Request, res: Response) => {
 	try {
@@ -68,8 +69,7 @@ export const addMassConsensusMember = async (req: Request, res: Response) => {
 	}
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export async function addOptionToMassConsensus(ev: any) {
+export async function addOptionToMassConsensus(ev: FirestoreEvent<DocumentSnapshot>) {
 	try {
 
 		const newStatement = ev.data?.data() as Statement || undefined;
@@ -103,8 +103,7 @@ export async function addOptionToMassConsensus(ev: any) {
 	}
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export async function removeOptionFromMassConsensus(ev: any) {
+export async function removeOptionFromMassConsensus(ev: FirestoreEvent<DocumentSnapshot>) {
 	try {
 		const deletedStatement = ev.data?.data() as Statement || undefined;
 		if (!deletedStatement) return;
@@ -132,13 +131,10 @@ export async function removeOptionFromMassConsensus(ev: any) {
 	}
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export async function updateOptionInMassConsensus(event: any) {
+export async function updateOptionInMassConsensus(event: FirestoreEvent<Change<DocumentSnapshot>>) {
 	try {
-		// Handle both v1 and v2 function signatures
-		const change = event.data || event;
-		const beforeData = change.before?.data() as Statement || undefined;
-		const afterData = change.after?.data() as Statement || undefined;
+		const beforeData = event.data.before?.data() as Statement || undefined;
+		const afterData = event.data.after?.data() as Statement || undefined;
 
 		if (!beforeData || !afterData) return;
 
@@ -208,8 +204,7 @@ return;
 	}
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export async function addMemberToMassConsensus(ev: any) {
+export async function addMemberToMassConsensus(ev: FirestoreEvent<DocumentSnapshot>) {
 	try {
 		if (!ev.data.data()) return;
 		const newMember = ev.data.data() as MassConsensusMember;

@@ -15,6 +15,7 @@ import {
 	listenToUserDemographicQuestions,
 } from '@/controllers/db/userDemographic/getUserDemographic';
 import { store } from '@/redux/store';
+import { listenerManager } from '@/controllers/utils/ListenerManager';
 
 interface UseStatementListenersProps {
 	statementId?: string;
@@ -37,10 +38,23 @@ export const useStatementListeners = ({
 }: UseStatementListenersProps) => {
 	const { creator } = useAuthentication();
 	const unsubscribersRef = useRef<(() => void)[]>([]);
+	const previousStatementIdRef = useRef<string | undefined>();
+
+	// Reset listener stats when navigating to a different statement
+	useEffect(() => {
+		if (statementId && statementId !== previousStatementIdRef.current) {
+			listenerManager.resetStats();
+			console.info(`Listener stats reset for new statement: ${statementId}`);
+			previousStatementIdRef.current = statementId;
+		}
+	}, [statementId]);
 
 	// Effect for main statement listening
 	useEffect(() => {
 		if (!creator || !statementId) return;
+
+		// Get current screen - using it directly in effect to react to path changes
+		const currentScreen = getScreenFromPath();
 
 		const cleanup = () => {
 			unsubscribersRef.current.forEach((unsubscribe) => {
@@ -72,7 +86,6 @@ export const useStatementListeners = ({
 			);
 
 			// Conditional listeners based on screen
-			const currentScreen = getScreenFromPath();
 			if (currentScreen === 'mind-map') {
 				unsubscribersRef.current.push(listenToAllDescendants(statementId));
 			} else {
