@@ -5,6 +5,7 @@ import { useAuthentication } from './controllers/hooks/useAuthentication';
 import LoadingPage from './view/pages/loadingPage/LoadingPage';
 import Accessibility from './view/components/accessibility/Accessibility';
 import { ListenerStats } from './view/components/ListenerStats';
+import NotificationPermissionWrapper from './view/components/notifications/NotificationPermissionWrapper';
 
 export default function App() {
 	const { isLoading, user } = useAuthentication();
@@ -17,6 +18,7 @@ export default function App() {
 		<Suspense fallback={<LoadingPage />}>
 			<Accessibility />
 			<ListenerStats />
+			<NotificationPermissionWrapper />
 			<AgreementProvider user={user}>
 				<Outlet />
 			</AgreementProvider>

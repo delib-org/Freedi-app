@@ -38,6 +38,8 @@ import { setNewProcessToDB } from '../massConsensus/setMassConsensus';
 import { LanguagesEnum } from '@/context/UserConfigContext';
 import { analyticsService } from '@/services/analytics';
 import { logger } from '@/services/logger';
+import { notificationPermissionManager } from '@/services/notificationPermissionManager';
+import { NOTIFICATION_PERMISSION_CONFIG } from '@/config/notificationPermission';
 
 export const resultsSettingsDefault: ResultsSettings = {
 	resultsBy: ResultsBy.consensus,
@@ -125,6 +127,24 @@ export async function saveStatementToDB({
 				cutoffBy:
 					statement.resultsSettings.cutoffBy || CutoffBy.topOptions,
 			};
+		}
+
+		// Trigger notification permission prompt after first post
+		try {
+			if (!notificationPermissionManager.hasUserPostedBefore()) {
+				// Mark that user has posted
+				notificationPermissionManager.markUserHasPosted();
+
+				// Trigger permission check after delay
+				setTimeout(() => {
+					notificationPermissionManager.checkAndPrompt('first_post');
+				}, NOTIFICATION_PERMISSION_CONFIG.delayAfterPostMs);
+
+				logger.info('First post detected - notification permission check scheduled');
+			}
+		} catch (error) {
+			// Don't let notification trigger errors break statement creation
+			logger.error('Error triggering notification permission prompt', error);
 		}
 
 		return statement;
