@@ -1,0 +1,576 @@
+// ============================================================================
+// Notification Permission Prompt Styles
+// ============================================================================
+// Three beautiful variants: minimal, card, and glass
+// All follow Freedi design system guidelines
+
+// ============================================================================
+// BASE STYLES (shared across all variants)
+// ============================================================================
+
+.notificationPrompt {
+	position: fixed;
+	z-index: 10000;
+	display: flex;
+	flex-direction: column;
+	opacity: 0;
+	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+	// Accessibility
+	&:focus-within {
+		outline: 2px solid var(--btn-primary);
+		outline-offset: 2px;
+	}
+}
+
+.content {
+	display: flex;
+	flex-direction: column;
+	width: 100%;
+}
+
+.messageWrapper {
+	margin-bottom: 1rem;
+}
+
+.message {
+	font-size: 1rem;
+	line-height: 1.5;
+	color: var(--text-body);
+	margin: 0;
+}
+
+.actions {
+	display: flex;
+	gap: 0.75rem;
+	justify-content: flex-end;
+	align-items: center;
+}
+
+// ============================================================================
+// BUTTON STYLES (shared)
+// ============================================================================
+
+.dismissButton,
+.acceptButton {
+	padding: 0.5rem 1rem;
+	border-radius: 20px;
+	font-size: 0.95rem;
+	font-weight: 500;
+	cursor: pointer;
+	transition: all 0.2s ease;
+	border: none;
+	font-family: 'Roboto', sans-serif;
+	min-height: 2rem;
+
+	&:hover {
+		transform: translateY(-1px);
+	}
+
+	&:active {
+		transform: scale(0.98);
+	}
+
+	&:focus-visible {
+		outline: 2px solid var(--btn-primary);
+		outline-offset: 2px;
+	}
+}
+
+.dismissButton {
+	background: transparent;
+	color: var(--text-caption);
+
+	&:hover {
+		background: rgba(0, 0, 0, 0.05);
+		color: var(--text-body);
+	}
+}
+
+.acceptButton {
+	background: var(--btn-primary);
+	color: white;
+	box-shadow: 0 2px 8px rgba(95, 136, 229, 0.3);
+
+	&:hover {
+		background: var(--btn-primary-hover);
+		box-shadow: 0 4px 12px rgba(95, 136, 229, 0.4);
+	}
+}
+
+// ============================================================================
+// VARIANT A: MINIMAL (Bottom Snackbar)
+// ============================================================================
+
+.minimal {
+	bottom: -100px;
+	left: 50%;
+	transform: translateX(-50%);
+	background: white;
+	padding: 1rem 1.25rem;
+	border-radius: 12px;
+	box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15),
+				0 0 0 1px rgba(0, 0, 0, 0.05);
+	min-width: 320px;
+	max-width: 500px;
+
+	&.visible {
+		bottom: 24px;
+		opacity: 1;
+		animation: slideUpBounce 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+	}
+
+	.content {
+		gap: 0;
+	}
+
+	.message {
+		font-weight: 500;
+		color: var(--text-title);
+	}
+
+	.actions {
+		margin-top: 0.75rem;
+	}
+
+	// Responsive
+	@media (max-width: 768px) {
+		left: 1rem;
+		right: 1rem;
+		transform: none;
+		min-width: unset;
+		max-width: none;
+
+		&.visible {
+			bottom: 1rem;
+		}
+	}
+
+	@media (max-width: 480px) {
+		padding: 1rem;
+
+		.actions {
+			flex-direction: column-reverse;
+			gap: 0.5rem;
+
+			button {
+				width: 100%;
+			}
+		}
+	}
+}
+
+// ============================================================================
+// VARIANT B: CARD (With Icon)
+// ============================================================================
+
+.card {
+	bottom: -150px;
+	left: 50%;
+	transform: translateX(-50%);
+	background: white;
+	padding: 1.5rem;
+	border-radius: 16px;
+	box-shadow: 0 8px 32px rgba(31, 88, 149, 0.12),
+				0 2px 8px rgba(0, 0, 0, 0.08);
+	min-width: 360px;
+	max-width: 420px;
+	border: 1px solid rgba(95, 136, 229, 0.1);
+
+	&.visible {
+		bottom: 24px;
+		opacity: 1;
+		animation: cardRise 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+	}
+
+	.content {
+		position: relative;
+		gap: 0.75rem;
+	}
+
+	.iconWrapper {
+		width: 48px;
+		height: 48px;
+		background: linear-gradient(135deg, var(--btn-primary) 0%, var(--accent) 100%);
+		border-radius: 12px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		margin-bottom: 0.5rem;
+		box-shadow: 0 4px 12px rgba(95, 136, 229, 0.3);
+
+		.icon {
+			color: white;
+			animation: bellRing 2s ease-in-out infinite;
+		}
+	}
+
+	.message {
+		font-size: 1.05rem;
+		font-weight: 500;
+		color: var(--text-title);
+		line-height: 1.6;
+	}
+
+	.actions {
+		margin-top: 0.5rem;
+	}
+
+	// Responsive
+	@media (max-width: 768px) {
+		left: 1rem;
+		right: 1rem;
+		transform: none;
+		min-width: unset;
+		max-width: none;
+
+		&.visible {
+			bottom: 1rem;
+		}
+	}
+
+	@media (max-width: 480px) {
+		padding: 1.25rem;
+
+		.iconWrapper {
+			width: 40px;
+			height: 40px;
+
+			.icon {
+				width: 20px;
+				height: 20px;
+			}
+		}
+
+		.actions {
+			flex-direction: column-reverse;
+			gap: 0.5rem;
+
+			button {
+				width: 100%;
+			}
+		}
+	}
+}
+
+.closeButton {
+	position: absolute;
+	top: 1rem;
+	right: 1rem;
+	background: transparent;
+	border: none;
+	color: var(--text-caption);
+	cursor: pointer;
+	padding: 0.25rem;
+	border-radius: 50%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	transition: all 0.2s ease;
+
+	&:hover {
+		background: rgba(0, 0, 0, 0.05);
+		color: var(--text-body);
+	}
+
+	&:active {
+		transform: scale(0.95);
+	}
+
+	&:focus-visible {
+		outline: 2px solid var(--btn-primary);
+		outline-offset: 2px;
+	}
+}
+
+// ============================================================================
+// VARIANT C: GLASS MORPHISM (Modern Premium)
+// ============================================================================
+
+.glass {
+	bottom: -150px;
+	left: 50%;
+	transform: translateX(-50%);
+	background: rgba(255, 255, 255, 0.85);
+	backdrop-filter: blur(20px) saturate(180%);
+	-webkit-backdrop-filter: blur(20px) saturate(180%);
+	padding: 1.5rem;
+	border-radius: 20px;
+	box-shadow: 0 8px 32px rgba(31, 88, 149, 0.2),
+				0 0 0 1px rgba(255, 255, 255, 0.5);
+	min-width: 380px;
+	max-width: 440px;
+	border: 1px solid rgba(255, 255, 255, 0.3);
+
+	// Gradient border effect
+	position: relative;
+
+	&::before {
+		content: '';
+		position: absolute;
+		inset: -1px;
+		border-radius: 20px;
+		padding: 1px;
+		background: linear-gradient(135deg,
+			rgba(95, 136, 229, 0.4) 0%,
+			rgba(124, 172, 248, 0.2) 50%,
+			rgba(87, 198, 178, 0.3) 100%);
+		-webkit-mask: linear-gradient(#fff 0 0) content-box,
+					  linear-gradient(#fff 0 0);
+		-webkit-mask-composite: xor;
+		mask-composite: exclude;
+		pointer-events: none;
+	}
+
+	&.visible {
+		bottom: 24px;
+		opacity: 1;
+		animation: glassFloat 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+	}
+
+	.content {
+		position: relative;
+		z-index: 1;
+		gap: 1rem;
+		align-items: center;
+	}
+
+	.iconWrapper {
+		width: 56px;
+		height: 56px;
+		background: linear-gradient(135deg,
+			var(--btn-primary) 0%,
+			var(--accent) 50%,
+			var(--agree) 100%);
+		border-radius: 16px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		box-shadow: 0 8px 24px rgba(95, 136, 229, 0.4);
+		position: relative;
+
+		// Glow effect
+		&::after {
+			content: '';
+			position: absolute;
+			inset: -4px;
+			border-radius: 18px;
+			background: linear-gradient(135deg,
+				rgba(95, 136, 229, 0.3) 0%,
+				rgba(87, 198, 178, 0.3) 100%);
+			filter: blur(8px);
+			z-index: -1;
+			opacity: 0;
+			animation: glowPulse 3s ease-in-out infinite;
+		}
+
+		.icon {
+			color: white;
+			filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+			animation: bellRing 2s ease-in-out infinite;
+		}
+	}
+
+	.messageWrapper {
+		text-align: center;
+		margin-bottom: 0.5rem;
+	}
+
+	.message {
+		font-size: 1.1rem;
+		font-weight: 500;
+		color: var(--text-title);
+		line-height: 1.6;
+		text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+	}
+
+	.actions {
+		width: 100%;
+		margin-top: 0.25rem;
+	}
+
+	// Enhanced buttons for glass variant
+	.acceptButton {
+		background: linear-gradient(135deg, var(--btn-primary) 0%, var(--accent) 100%);
+		box-shadow: 0 4px 16px rgba(95, 136, 229, 0.4);
+		flex: 1;
+
+		&:hover {
+			box-shadow: 0 6px 20px rgba(95, 136, 229, 0.5);
+		}
+	}
+
+	.dismissButton {
+		background: rgba(255, 255, 255, 0.5);
+		backdrop-filter: blur(10px);
+
+		&:hover {
+			background: rgba(255, 255, 255, 0.8);
+		}
+	}
+
+	// Responsive
+	@media (max-width: 768px) {
+		left: 1rem;
+		right: 1rem;
+		transform: none;
+		min-width: unset;
+		max-width: none;
+
+		&.visible {
+			bottom: 1rem;
+		}
+	}
+
+	@media (max-width: 480px) {
+		padding: 1.25rem;
+
+		.iconWrapper {
+			width: 48px;
+			height: 48px;
+
+			.icon {
+				width: 22px;
+				height: 22px;
+			}
+		}
+
+		.message {
+			font-size: 1rem;
+		}
+
+		.actions {
+			flex-direction: column-reverse;
+			gap: 0.5rem;
+
+			button {
+				width: 100%;
+			}
+		}
+	}
+}
+
+// ============================================================================
+// ANIMATIONS
+// ============================================================================
+
+@keyframes slideUpBounce {
+	0% {
+		bottom: -100px;
+		opacity: 0;
+	}
+	70% {
+		bottom: 32px;
+	}
+	100% {
+		bottom: 24px;
+		opacity: 1;
+	}
+}
+
+@keyframes cardRise {
+	0% {
+		bottom: -150px;
+		opacity: 0;
+		transform: translateX(-50%) scale(0.9);
+	}
+	50% {
+		opacity: 1;
+	}
+	100% {
+		bottom: 24px;
+		opacity: 1;
+		transform: translateX(-50%) scale(1);
+	}
+}
+
+@keyframes glassFloat {
+	0% {
+		bottom: -150px;
+		opacity: 0;
+		transform: translateX(-50%) scale(0.95) translateY(10px);
+	}
+	50% {
+		opacity: 0.8;
+	}
+	100% {
+		bottom: 24px;
+		opacity: 1;
+		transform: translateX(-50%) scale(1) translateY(0);
+	}
+}
+
+@keyframes bellRing {
+	0%, 100% {
+		transform: rotate(0deg);
+	}
+	5%, 15% {
+		transform: rotate(15deg);
+	}
+	10%, 20% {
+		transform: rotate(-15deg);
+	}
+	25% {
+		transform: rotate(0deg);
+	}
+}
+
+@keyframes glowPulse {
+	0%, 100% {
+		opacity: 0;
+	}
+	50% {
+		opacity: 1;
+	}
+}
+
+// ============================================================================
+// REDUCED MOTION
+// ============================================================================
+
+@media (prefers-reduced-motion: reduce) {
+	.notificationPrompt {
+		transition: opacity 0.2s ease, bottom 0.2s ease;
+
+		&.visible {
+			animation: none !important;
+		}
+	}
+
+	.iconWrapper .icon {
+		animation: none !important;
+	}
+
+	.iconWrapper::after {
+		animation: none !important;
+	}
+
+	.dismissButton,
+	.acceptButton {
+		&:hover {
+			transform: none;
+		}
+
+		&:active {
+			transform: none;
+		}
+	}
+}
+
+// ============================================================================
+// HIGH CONTRAST MODE
+// ============================================================================
+
+@media (prefers-contrast: high) {
+	.notificationPrompt {
+		border: 2px solid currentColor;
+	}
+
+	.acceptButton {
+		border: 2px solid white;
+	}
+
+	.dismissButton {
+		border: 2px solid var(--text-caption);
+	}
+}
