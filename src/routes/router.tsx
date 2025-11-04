@@ -37,6 +37,9 @@ import CheckNotifications from '@/view/pages/settings/ChecNotifications';
 import MySuggestions from '@/view/pages/my-suggestions/MySuggestions';
 import VotingThankYou from '@/view/pages/votingThankYou/VotingThankYou';
 
+// Test pages
+import TestNotificationsPrompt from '@/view/pages/test-notifications-prompt/TestNotificationsPrompt';
+
 // Mass Consensus URLs
 import { MassConsensusPageUrls } from 'delib-npm';
 
@@ -178,6 +181,10 @@ const publicRoutes = [
 	{
 		path: 'member-rejection',
 		element: <MemberRejection />,
+	},
+	{
+		path: 'test-notifications-prompt',
+		element: <TestNotificationsPrompt />,
 	},
 ];
 
