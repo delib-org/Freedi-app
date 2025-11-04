@@ -1,7 +1,6 @@
 import React, { FC, useState } from 'react';
 import Modal from '@/view/components/modal/Modal';
 import { Statement } from 'delib-npm';
-import { getSupportLabel } from '../../popperHebbianHelpers';
 import { createEvidencePost, updateEvidencePost } from '@/controllers/db/popperHebbian/evidenceController';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
@@ -25,9 +24,6 @@ const AddEvidenceModal: FC<AddEvidenceModalProps> = ({
 	const [evidenceText, setEvidenceText] = useState(
 		editingStatement?.statement || ''
 	);
-	const [supportLevel, setSupportLevel] = useState(
-		editingStatement?.evidence?.support || 0
-	);
 	const [isSubmitting, setIsSubmitting] = useState(false);
 
 	const handleSubmit = async (): Promise<void> => {
@@ -37,18 +33,16 @@ const AddEvidenceModal: FC<AddEvidenceModalProps> = ({
 
 		try {
 			if (isEditMode && editingStatement) {
-				// Update existing evidence
+				// Update existing evidence - AI will re-classify support level
 				await updateEvidencePost(
 					editingStatement.statementId,
-					evidenceText.trim(),
-					supportLevel
+					evidenceText.trim()
 				);
 			} else {
-				// Create new evidence
+				// Create new evidence - AI will classify support level
 				await createEvidencePost(
 					parentStatementId,
-					evidenceText.trim(),
-					supportLevel
+					evidenceText.trim()
 				);
 			}
 
@@ -58,10 +52,6 @@ const AddEvidenceModal: FC<AddEvidenceModalProps> = ({
 		} finally {
 			setIsSubmitting(false);
 		}
-	};
-
-	const handleSupportChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
-		setSupportLevel(Number(e.target.value));
 	};
 
 	const canSubmit = evidenceText.trim().length > 0 && !isSubmitting;
@@ -93,40 +83,19 @@ const AddEvidenceModal: FC<AddEvidenceModalProps> = ({
 							value={evidenceText}
 							onChange={(e) => setEvidenceText(e.target.value)}
 							placeholder={t('Share your claim, comment, or evidence...')}
-							rows={5}
+							rows={8}
 							disabled={isSubmitting}
 						/>
 					</div>
 
-					<div className={styles.formGroup}>
-						<label htmlFor="support-slider" className={styles.label}>
-							{t('How does this relate to the idea?')}
-						</label>
-						<div className={styles.supportDisplay}>
-							<span className={styles.supportLabel}>
-								{getSupportLabel(supportLevel, t)}
-							</span>
-						</div>
-						<div className={styles.sliderContainer}>
-							<span className={styles.sliderLabelLeft}>{t('Strongly Challenges')}</span>
-							<input
-								id="support-slider"
-								type="range"
-								min="-1"
-								max="1"
-								step="0.1"
-								value={supportLevel}
-								onChange={handleSupportChange}
-								className={styles.slider}
-								disabled={isSubmitting}
-							/>
-							<span className={styles.sliderLabelRight}>{t('Strongly Supports')}</span>
-						</div>
-					</div>
-
 					<div className={styles.helperText}>
-						<span className={styles.helperIcon}>ℹ️</span>
-						{t('AI will automatically classify your contribution (claim, comment, evidence type) and calculate its weight in the discussion.')}
+						<span className={styles.helperIcon}>🤖</span>
+						{t('AI will automatically analyze your contribution and determine:')}
+						<ul className={styles.helperList}>
+							<li>{t('Whether it supports, challenges, or is neutral to the idea')}</li>
+							<li>{t('The type of evidence (data, testimony, argument, anecdote, etc.)')}</li>
+							<li>{t('Its weight in the discussion based on quality')}</li>
+						</ul>
 					</div>
 				</div>
 

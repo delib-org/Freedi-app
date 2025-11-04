@@ -1,8 +1,8 @@
 # Popper-Hebbian Discussion System - Complete Guide
 
-**Version:** 2.0
+**Version:** 2.1
 **Project:** Collaborative Rationality Platform
-**Last Updated:** 2025-01-27
+**Last Updated:** 2025-11-04
 
 ---
 
@@ -18,6 +18,7 @@
 8. [Testing & Deployment](#testing--deployment)
 9. [API Reference](#api-reference)
 10. [Future Enhancements](#future-enhancements)
+11. [Changelog](#changelog)
 
 ---
 
@@ -26,9 +27,11 @@
 ### What It Is
 A collaborative thinking system that transforms question discussions into evidence-based idea evaluation using:
 - **AI Refinery**: Gemini helps clarify vague ideas before posting
-- **Support/Challenge Evidence**: Users post evidence for/against ideas
-- **Community Voting**: Positive and negative votes (👍 Helpful / 👎 Not Helpful)
-- **Weighted Scoring**: Evidence quality determines impact on overall score
+- **AI Evidence Classification**: Automatically determines if evidence supports/challenges/is neutral to ideas
+- **AI Evidence Quality Assessment**: Classifies evidence type (data, testimony, argument, anecdote, fallacy)
+- **Community Voting**: Positive and negative votes (👍 Helpful / 👎 Not Helpful) for community validation
+- **Weighted Scoring**: Evidence quality and community validation determine impact on overall score
+- **Vote Manipulation Prevention**: Tanh normalization prevents gaming the system with mass votes
 - **Idea Evolution**: Prompts users to improve ideas when challenged
 
 ### The Problem
@@ -54,9 +57,11 @@ Standard online discussion platforms fail to produce intellectual progress. They
 **3. User Experience Philosophy**
 - Complex philosophy abstracted from users
 - Simple, encouraging, collaborative language
-- AI Guide handles structural and analytical heavy lifting
+- AI handles all classification (support level, evidence type, quality assessment)
+- Users only need to write their evidence - AI does the rest
 - Feels like a guided workshop, not a technical exam
-- **User-Friendly Language**: Negative support values displayed as "Challenges" or "Strongly Challenges" instead of raw numbers
+- **User-Friendly Language**: AI-classified support values displayed as "Challenges" or "Strongly Challenges" instead of raw numbers
+- **No Manual Classification**: Users don't need to categorize their own evidence
 
 ---
 
@@ -90,12 +95,14 @@ Located in `functions/src/`:
   - Continues conversation until idea is testable
 
 - ✅ **fn_popperHebbian_onEvidencePost.ts**
-  - Auto-classifies evidence type using AI
-  - Calculates initial weight based on type
+  - Auto-classifies evidence type using AI (data/testimony/argument/anecdote/fallacy)
+  - Auto-classifies support level using AI (pro/con/neutral from -1 to 1)
+  - Calculates initial weight based on type (0-1 scale)
   - Triggers score recalculation
 
 - ✅ **fn_popperHebbian_onVote.ts**
-  - Recalculates evidence weight based on votes
+  - Recalculates evidence weight using tanh normalization (prevents vote manipulation)
+  - Normalizes vote scores to [-1, 1] range, then translates to [0, 1]
   - Updates parent statement score
   - Determines status (looking-good/under-discussion/needs-fixing)
 
@@ -181,11 +188,15 @@ firebase deploy --only hosting
 - 1500 requests/day = FREE
 - Perfect for MVP testing
 - ~100 refinement sessions per day
+- **v2.1 Note**: Each evidence post now makes 2 AI calls (evidence type + support level classification)
+  - ~50-75 evidence posts per day on free tier
 
 **Paid Tier** (if needed):
 - $0.075 per 1M input tokens
 - $0.30 per 1M output tokens
 - ~$0.01 per refinement session
+- ~$0.002 per evidence classification (2 AI calls)
+- Very affordable even at scale
 
 **Firestore**: Negligible (similar to existing evaluations)
 
@@ -226,19 +237,45 @@ Note: Evidence posts are regular statements (StatementType.statement) with the e
 populated with support level, evidence types, and vote counts.
 ```
 
-### Evidence Types & Weights
-- **Data/Research**: 3.0x base weight
-- **Testimony**: 2.0x base weight
-- **Logical Argument**: 1.0x base weight
-- **Anecdote**: 0.5x base weight
-- **Fallacy**: 0.1x base weight
+### Evidence Types & Weights (Scaled 0-1)
+- **Data/Research**: 1.0 base weight (peer-reviewed scientific quality)
+- **Testimony**: 0.7 base weight (expert testimony)
+- **Logical Argument**: 0.4 base weight (logical reasoning)
+- **Anecdote**: 0.2 base weight (personal stories)
+- **Fallacy**: 0.1 base weight (flagged content)
 
-### Weight Calculation
+### Weight Calculation (Updated Formula)
 ```typescript
-finalWeight = baseWeight * (1 + netScore * 0.1)
-// Minimum weight: 0.1
-// netScore = helpfulCount - notHelpfulCount
+// 1. Calculate raw net score from votes
+rawNetScore = helpfulCount - notHelpfulCount
+
+// 2. Normalize to [-1, 1] using tanh (prevents vote manipulation)
+normalizedNetScore = tanh(rawNetScore / 10)
+
+// 3. Translate to [0, 1] range (vote multiplier)
+voteMultiplier = (normalizedNetScore + 1) / 2
+
+// 4. Final weight combines evidence quality and community validation
+finalWeight = baseWeight * voteMultiplier
+
+// Minimum weight: 0.01 (prevents complete dismissal)
 ```
+
+**Example**: A Data/Research post (baseWeight=1.0) with 10 helpful votes and 2 not helpful votes:
+- rawNetScore = 10 - 2 = 8
+- normalizedNetScore = tanh(8/10) ≈ 0.66
+- voteMultiplier = (0.66 + 1) / 2 ≈ 0.83
+- finalWeight = 1.0 * 0.83 = 0.83
+
+### Support Level (Pro/Con/Neutral)
+**AI automatically classifies** whether evidence supports, challenges, or is neutral to the parent statement:
+- **Strongly Supports**: +0.8 to +1.0
+- **Moderately Supports**: +0.5 to +0.7
+- **Slightly Supports**: +0.3 to +0.4
+- **Neutral**: 0.0
+- **Slightly Challenges**: -0.3 to -0.4
+- **Moderately Challenges**: -0.5 to -0.7
+- **Strongly Challenges**: -0.8 to -1.0
 
 ### Data Flow
 
@@ -271,21 +308,23 @@ User views option
   ↓
 [User clicks "Add Evidence"]
   ↓
-[User writes evidence + sets support level (-1 to 1)]
+[User writes evidence (no manual support level needed)]
   ↓
 [Evidence posted as Statement]
   ↓
 [Firebase Function: onEvidencePostCreate]
   ↓
-[AI classifies evidence type]
+[AI classifies evidence type (data/testimony/argument/anecdote/fallacy)]
   ↓
-[Calculate initial weight]
+[AI classifies support level (pro/con/neutral from -1 to 1)]
+  ↓
+[Calculate initial weight based on evidence type]
   ↓
 [Community votes (Helpful/Not Helpful)]
   ↓
 [Firebase Function: onVote]
   ↓
-[Recalculate weights and score]
+[Recalculate weights using tanh normalization]
   ↓
 [Update status indicator]
   ↓
@@ -359,12 +398,12 @@ User views option
 5. Scores update in real-time
 
 **UI Components**:
-- `[+ Add Evidence]` button
+- `[+ Add Evidence]` button (opens modal with textarea only - no manual support slider)
 - Evidence cards with:
-  - Support level badge (Strongly Supports, Supports, Neutral, Challenges, Strongly Challenges)
-  - Evidence type badge (Data/Research, Testimony, Argument, Anecdote, Fallacy)
-  - `[👍 Helpful]` and `[👎 Not Helpful]` buttons
-  - Net score display
+  - AI-classified support level badge (Strongly Supports, Supports, Neutral, Challenges, Strongly Challenges)
+  - AI-classified evidence type badge (Data/Research, Testimony, Argument, Anecdote, Fallacy)
+  - `[👍 Helpful]` and `[👎 Not Helpful]` buttons (for community validation)
+  - Net score display (normalized using tanh)
 
 **Component Layout**:
 ```
@@ -528,23 +567,44 @@ PopperHebbianDiscussion now displays on option detail pages:
 **Evidence Weight Calculation**:
 ```typescript
 describe('calculatePostWeight', () => {
-  it('should calculate base weight correctly', () => {
+  it('should calculate base weight correctly with no votes', () => {
     const post = {
       evidenceType: EvidenceType.data,
       helpfulCount: 0,
       notHelpfulCount: 0
     };
-    expect(calculatePostWeight(post)).toBe(3.0);
+    // base 1.0 * voteMultiplier 0.5 (neutral) = 0.5
+    expect(calculatePostWeight(post)).toBe(0.5);
   });
 
-  it('should increase weight with positive net score', () => {
+  it('should increase weight with positive net score using tanh', () => {
     const post = {
       evidenceType: EvidenceType.argument,
-      helpfulCount: 5,
-      notHelpfulCount: 2
+      helpfulCount: 10,
+      notHelpfulCount: 0
     };
-    // base 1.0 * (1 + 3 * 0.1) = 1.3
-    expect(calculatePostWeight(post)).toBe(1.3);
+    // rawNetScore = 10
+    // normalizedNetScore = tanh(10/10) ≈ 0.76
+    // voteMultiplier = (0.76 + 1) / 2 ≈ 0.88
+    // base 0.4 * 0.88 ≈ 0.35
+    expect(calculatePostWeight(post)).toBeCloseTo(0.35, 2);
+  });
+
+  it('should prevent vote manipulation with tanh normalization', () => {
+    const post1 = {
+      evidenceType: EvidenceType.data,
+      helpfulCount: 10,
+      notHelpfulCount: 0
+    };
+    const post2 = {
+      evidenceType: EvidenceType.data,
+      helpfulCount: 100,
+      notHelpfulCount: 0
+    };
+    // Both should have similar weights due to tanh saturation
+    const weight1 = calculatePostWeight(post1);
+    const weight2 = calculatePostWeight(post2);
+    expect(weight2 - weight1).toBeLessThan(0.1);
   });
 });
 ```
@@ -586,15 +646,16 @@ describe('determineStatus', () => {
    - Click on option to view detail page
    - PopperHebbianDiscussion displays
    - Click "Add Evidence"
-   - Write evidence, set support level
+   - Write evidence (AI will auto-classify support level and evidence type)
    - Submit evidence
-   - See evidence appear in list
+   - Wait for AI classification (happens automatically)
+   - See evidence appear with AI-determined badges
 
 4. **Vote on Evidence**
    - Click "👍 Helpful" on evidence post
    - See vote count increase
-   - See score recalculate
-   - See status update
+   - See score recalculate with tanh-normalized weights
+   - See status update (looking-good/under-discussion/needs-fixing)
 
 5. **Evolution**
    - Add multiple challenging evidence posts
@@ -700,12 +761,12 @@ export async function publishRefinedIdea(
 ```typescript
 /**
  * Create evidence post as Statement with evidence field
+ * Note: support level is now auto-classified by AI
  */
 export async function createEvidencePost(
   statementId: string,
   content: string,
-  support: number, // -1 to 1
-  user: User
+  support: number = 0 // Default neutral, AI will override
 ): Promise<Statement>
 
 /**
@@ -743,6 +804,45 @@ export async function getUserVote(
 ```
 
 ### Firebase Functions
+
+#### classifyEvidenceType
+```typescript
+/**
+ * Classify evidence into one of five types using AI
+ */
+async function classifyEvidenceType(evidenceText: string): Promise<EvidenceType>
+// Returns: 'data' | 'testimony' | 'argument' | 'anecdote' | 'fallacy'
+```
+
+#### classifySupportLevel (NEW in v2.1)
+```typescript
+/**
+ * Automatically determine if evidence supports or challenges a statement
+ * Uses AI to analyze the relationship between evidence and parent statement
+ */
+async function classifySupportLevel(
+  evidenceText: string,
+  parentStatementText: string
+): Promise<number>
+// Returns: -1.0 to 1.0
+// Positive values = supports statement
+// Negative values = challenges statement
+// 0 = neutral
+```
+
+#### calculatePostWeight (UPDATED in v2.1)
+```typescript
+/**
+ * Calculate final weight using tanh normalization to prevent vote manipulation
+ */
+function calculatePostWeight(statement: Statement): number {
+  const baseWeight = EVIDENCE_WEIGHTS[evidenceType]; // 0-1 scale
+  const rawNetScore = helpfulCount - notHelpfulCount;
+  const normalizedNetScore = Math.tanh(rawNetScore / 10); // -1 to 1
+  const voteMultiplier = (normalizedNetScore + 1) / 2; // 0 to 1
+  return Math.max(0.01, baseWeight * voteMultiplier);
+}
+```
 
 #### analyzeFalsifiability
 ```typescript
@@ -932,8 +1032,10 @@ The Popper-Hebbian Discussion System represents a fundamental shift in how onlin
 
 1. **Ideas are refined** before they enter discussion
 2. **Evidence quality matters** more than quantity
-3. **Community validation** creates a self-reinforcing library of trusted knowledge
-4. **Ideas evolve** when challenged, rather than creating conflict
+3. **AI handles classification** - users just write, AI does the analysis
+4. **Vote manipulation is prevented** through tanh normalization
+5. **Community validation** creates a self-reinforcing library of trusted knowledge
+6. **Ideas evolve** when challenged, rather than creating conflict
 
 The implementation is complete, tested, and ready for deployment. All that remains is:
 - Configuring the Gemini API key
@@ -941,7 +1043,9 @@ The implementation is complete, tested, and ready for deployment. All that remai
 - Deploying to production
 
 The system is designed to be:
-- **Simple to use**: Intuitive UI with encouraging language
+- **Simple to use**: Intuitive UI - just write evidence, AI handles the rest
+- **Manipulation-resistant**: Tanh normalization prevents vote gaming
+- **AI-powered**: Automatic classification of support level and evidence type
 - **Fast to implement**: Built on Gemini 2.0 Flash (free tier available)
 - **Easy to extend**: Modular architecture allows for future enhancements
 - **Production ready**: All TypeScript types, design system compliance, and mobile responsiveness complete
@@ -950,6 +1054,71 @@ The system is designed to be:
 
 ---
 
-**Generated:** 2025-01-27
+## Changelog
+
+### Version 2.1 (2025-11-04)
+
+#### 🎯 Major Changes
+
+**1. AI Auto-Classification of Support Level**
+- ✅ Added `classifySupportLevel()` function in `fn_popperHebbian_onEvidencePost.ts`
+- ✅ AI automatically determines if evidence supports/challenges/is neutral to parent statement
+- ✅ Returns value from -1.0 (strongly challenges) to +1.0 (strongly supports)
+- ✅ Removes cognitive burden from users - they just write, AI analyzes
+
+**2. Base Weight Rescaling (0-1 Range)**
+- ✅ Changed from unlimited scale (0.1-3.0) to normalized scale (0-1)
+- ✅ New weights:
+  - Data/Research: 3.0 → **1.0** (peer-reviewed quality)
+  - Testimony: 2.0 → **0.7** (expert testimony)
+  - Argument: 1.0 → **0.4** (logical reasoning)
+  - Anecdote: 0.5 → **0.2** (personal stories)
+  - Fallacy: 0.1 → **0.1** (flagged content)
+
+**3. Tanh Normalization for Vote Scores**
+- ✅ Implemented tanh-based normalization to prevent vote manipulation
+- ✅ Formula: `normalizedNetScore = tanh(rawNetScore / 10)`
+- ✅ Translates [-1, 1] to [0, 1]: `voteMultiplier = (normalizedNetScore + 1) / 2`
+- ✅ Final weight: `baseWeight * voteMultiplier`
+- ✅ Prevents gaming: 10 votes ≈ 76% effect, 100 votes ≈ 100% effect (diminishing returns)
+
+**4. Simplified UI - Removed Manual Support Slider**
+- ✅ Removed support level slider from `AddEvidenceModal.tsx`
+- ✅ Simplified UI to single textarea - users just write evidence
+- ✅ Updated helper text to explain AI auto-classification
+- ✅ Cleaner, more intuitive user experience
+
+#### 📝 Updated Files
+
+**Backend (Firebase Functions):**
+- `functions/src/fn_popperHebbian_onVote.ts` - Updated weight calculation with tanh
+- `functions/src/fn_popperHebbian_onEvidencePost.ts` - Added support level classification
+
+**Frontend (React):**
+- `src/controllers/db/popperHebbian/evidenceController.ts` - Made support parameter optional with default
+- `src/view/pages/statement/components/popperHebbian/components/AddEvidenceModal/AddEvidenceModal.tsx` - Removed slider UI
+- `src/view/pages/statement/components/popperHebbian/components/AddEvidenceModal/AddEvidenceModal.module.scss` - Removed slider styles
+
+**Documentation:**
+- `docs/Popper-hebbian/COMPLETE_GUIDE.md` - Comprehensive updates to reflect v2.1 changes
+
+#### 🔬 Benefits of v2.1
+
+1. **Better UX**: Users don't need to categorize their own evidence
+2. **More Accurate**: AI is more consistent than human self-classification
+3. **Manipulation-Resistant**: Tanh normalization prevents vote brigading
+4. **Scientific Scale**: 0-1 weight range aligns with probability/confidence scales
+5. **Simpler Interface**: One textarea vs. textarea + slider + categories
+
+#### 🚀 Migration Notes
+
+- Existing evidence posts will be re-classified when edited
+- Vote weights will be recalculated on next vote update
+- No database schema changes required
+- Backward compatible with existing data
+
+---
+
+**Generated:** 2025-11-04
 **Status:** Implementation Complete (100%) - Ready for Deployment
-**Version:** 2.0
+**Version:** 2.1
