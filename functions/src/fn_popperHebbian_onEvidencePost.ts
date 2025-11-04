@@ -92,6 +92,17 @@ Respond with ONLY a single number between -1.0 and 1.0 (e.g., 0.7, -0.5, 0.0).`;
 	}
 }
 
+/**
+ * Calculate initial weight for new evidence (before any votes)
+ * New evidence starts optimistically at its base weight:
+ * - Data: 1.0 (highest credibility)
+ * - Testimony: 0.7
+ * - Argument: 0.4
+ * - Anecdote: 0.2
+ * - Fallacy: 0.1 (lowest credibility)
+ *
+ * As community votes come in, weight can move between -baseWeight and +baseWeight
+ */
 function calculateInitialWeight(evidenceType: EvidenceType): number {
 	return EVIDENCE_WEIGHTS[evidenceType];
 }
