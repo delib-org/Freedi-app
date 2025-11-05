@@ -4,6 +4,7 @@ import {
 	createStatement,
 	setStatementToDB,
 } from '@/controllers/db/statements/setStatements';
+import { closePanels } from '@/controllers/hooks/panelUtils';
 
 export function handleAddStatement(
 	message: string,
@@ -31,6 +32,9 @@ export function handleAddStatement(
 			statement: newStatement,
 			parentStatement: statement,
 		});
+
+		// Automatically close chatPanel and subQuestionsMap
+		closePanels();
 	} catch (error) {
 		console.error(error);
 	}
