@@ -133,7 +133,11 @@ Contact us through GitHub issues or email to discuss collaboration opportunities
 ### **Frontend**
 - **Framework**: React 18 with TypeScript (strict mode)
 - **State Management**: Redux Toolkit for predictable state updates
-- **Styling**: SCSS modules with responsive design
+- **Styling**: SCSS modules with Atomic Design System and BEM methodology
+  - **Atomic Design**: Atoms, molecules, and organisms for scalable component architecture
+  - **BEM Naming**: Block Element Modifier convention for maintainable CSS
+  - **Design Tokens**: CSS variables for consistent theming
+  - **SCSS First**: All styling in SCSS files, React as TypeScript wrappers
 - **Build Tool**: Vite with SWC for lightning-fast HMR
 - **PWA**: Service workers for offline functionality
 
@@ -361,6 +365,8 @@ We welcome contributions from developers, researchers, and anyone interested in 
 ### Development Guidelines
 - **[Coding Style Guide](./CODING_STYLE_GUIDE.md)** - Comprehensive guide to coding standards and best practices
 - **[Application Architecture](./docs/FREEDI_ARCHITECTURE.md)** - Detailed architecture documentation including the unified statement model and semantic hierarchy
+- **[Atomic Design System](./ATOMIC-DESIGN-SYSTEM.md)** - Complete guide to SCSS-first atomic design with BEM methodology
+- **[Design Guide](./docs/design-guide.md)** - UI/UX design system, component patterns, and visual language
 - **[CLAUDE.md](./CLAUDE.md)** - Instructions for AI-assisted development
 - **[Branch Naming Convention](./Branch-naming-convention.md)** - Git workflow guidelines
 

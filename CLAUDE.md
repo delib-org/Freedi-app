@@ -70,6 +70,226 @@
   }
   ```
 
+### Atomic Design System - SCSS First Approach
+- **ALWAYS use the atomic design system** for new UI components
+- **All styling in SCSS files** - React components are TypeScript wrappers only
+- **BEM naming convention** - Block Element Modifier for all CSS classes
+- **Read documentation first**: `ATOMIC-DESIGN-SYSTEM.md` and `src/view/components/atomic/README.md`
+
+#### Component Architecture
+```
+Atoms (Basic blocks)     → Button, Input, Badge, Icon
+Molecules (Combinations) → Card, Modal, Toast, Form Group
+Organisms (Sections)     → Header, Navigation, Complex layouts
+```
+
+#### File Organization
+```
+src/view/style/
+├── atoms/           # All atom SCSS (button, input, badge, etc.)
+├── molecules/       # All molecule SCSS (card, modal, toast, etc.)
+└── _mixins.scss     # Reusable SCSS patterns
+
+src/view/components/atomic/
+├── atoms/           # React wrappers for atoms
+└── molecules/       # React wrappers for molecules
+```
+
+#### Creating New Components
+
+**1. SCSS First (Required)**
+```scss
+// src/view/style/atoms/_my-atom.scss
+@import '../mixins';
+
+.my-atom {
+  // Base styles using design tokens
+  padding: var(--padding);
+
+  // Elements (parts of component)
+  &__element {
+    color: var(--text-body);
+  }
+
+  // Modifiers (variants)
+  &--primary {
+    background: var(--btn-primary);
+  }
+
+  &--large {
+    font-size: 1.2rem;
+  }
+}
+```
+
+**2. Add to Index**
+```scss
+// src/view/style/atoms/_index.scss
+@import 'button';
+@import 'my-atom';  // Add new atom
+```
+
+**3. React Component (TypeScript Wrapper Only)**
+```typescript
+// src/view/components/atomic/atoms/MyAtom/MyAtom.tsx
+import React from 'react';
+import clsx from 'clsx';
+
+export interface MyAtomProps {
+  variant?: 'default' | 'primary';
+  size?: 'small' | 'medium' | 'large';
+  className?: string;
+  children: React.ReactNode;
+}
+
+const MyAtom: React.FC<MyAtomProps> = ({
+  variant = 'default',
+  size = 'medium',
+  className,
+  children,
+}) => {
+  const classes = clsx(
+    'my-atom',                                    // Block
+    variant !== 'default' && `my-atom--${variant}`, // Modifier
+    size !== 'medium' && `my-atom--${size}`,        // Modifier
+    className
+  );
+
+  return <div className={classes}>{children}</div>;
+};
+
+export default MyAtom;
+```
+
+#### BEM Naming Rules
+```scss
+// Block (component)
+.button { }                  // ✅ Component name
+
+// Element (part of component)
+.button__text { }            // ✅ Double underscore
+.button__icon { }            // ✅ Part of button
+
+// Modifier (variant/state)
+.button--primary { }         // ✅ Double hyphen
+.button--large { }           // ✅ Variant
+.button--disabled { }        // ✅ State
+
+// ❌ WRONG - Don't nest blocks
+.card .button { }
+
+// ❌ WRONG - Don't create grandchildren
+.button__icon__svg { }
+
+// ❌ WRONG - Don't use camelCase
+.primaryButton { }
+```
+
+#### Usage Examples
+
+**Existing Atomic Components:**
+```typescript
+import { Button } from '@/view/components/atomic/atoms/Button';
+import { Card } from '@/view/components/atomic/molecules/Card';
+
+// Button variants
+<Button text="Submit" variant="primary" onClick={handleClick} />
+<Button text="Cancel" variant="secondary" />
+<Button text="Agree" variant="agree" />
+<Button text="Loading..." variant="primary" loading />
+
+// Card variants
+<Card variant="question" elevated title="Question">
+  <p>Content</p>
+</Card>
+
+<Card
+  variant="error"
+  footer={<Button text="Dismiss" variant="secondary" />}
+>
+  <p>Error message</p>
+</Card>
+```
+
+#### SCSS Patterns to Follow
+
+**Use Mixins:**
+```scss
+@import '../mixins';
+
+.my-component {
+  @include card-base;          // Reuse patterns
+  @include mobile {            // Responsive
+    padding: 0.5rem;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;           // Accessibility
+  }
+}
+```
+
+**Design Tokens Only:**
+```scss
+// ✅ CORRECT
+.component {
+  color: var(--text-body);
+  background: var(--card-default);
+  padding: var(--padding);
+  border-radius: 8px;          // OK if specific to pattern
+}
+
+// ❌ WRONG - Never hardcode
+.component {
+  color: #3d4d71;
+  background: #ffffff;
+  padding: 16px;
+}
+```
+
+#### What NOT to Do
+
+```typescript
+// ❌ WRONG - Don't put styling in React components
+const StyledButton = styled.button`
+  background: blue;
+  padding: 1rem;
+`;
+
+// ❌ WRONG - Don't use inline styles
+<button style={{ background: 'blue' }}>Click</button>
+
+// ❌ WRONG - Don't import global SCSS in components
+import './styles.scss';
+
+// ✅ CORRECT - Use atomic components
+import { Button } from '@/view/components/atomic/atoms/Button';
+<Button text="Click" variant="primary" />
+```
+
+#### Migration from Old Components
+
+**Coexistence Strategy:**
+```typescript
+// OLD (keep for now - don't change existing code)
+import Button from '@/view/components/buttons/button/Button';
+
+// NEW (use in new features)
+import { Button } from '@/view/components/atomic/atoms/Button';
+```
+
+**When to Migrate:**
+- ✅ New features → Use atomic components
+- ✅ Major refactor → Migrate to atomic
+- ⚠️ Small fixes → Keep existing (migrate later)
+- ❌ Don't migrate for no reason
+
+#### Resources
+- **Implementation Guide**: `ATOMIC-DESIGN-SYSTEM.md` - Complete system overview
+- **Component Docs**: `src/view/components/atomic/README.md` - Usage examples
+- **Design Guide**: `docs/design-guide.md` - Atomic Design & BEM sections
+- **Mixins**: `src/view/style/_mixins.scss` - All reusable patterns
+
 ## Commands
 - Build: `npm run build`
 - Dev: `npm run dev`
