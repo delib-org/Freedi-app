@@ -33,14 +33,6 @@ export function useMindMap(statementIdPassed: string | null = null) {
 	// when screen is 'mind-map', which calls listenToAllDescendants()
 	// This ensures all sub-statements are loaded correctly on direct navigation
 
-	// Log descendants for debugging
-	useEffect(() => {
-		console.info(`[MindMapMV] Statement: ${statementId}, Descendants count: ${descendants.length}`);
-		if (descendants.length > 0) {
-			console.info(`[MindMapMV] First few descendants:`, descendants.slice(0, 3).map(d => d.statementId));
-		}
-	}, [descendants.length, statementId]);
-
 	useEffect(() => {
 		setFlat(isFlat(descendants, statementId));
 	}, [descendants.length, statementId]);

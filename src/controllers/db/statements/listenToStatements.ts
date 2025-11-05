@@ -60,7 +60,11 @@ export const listenToStatementSubscription = (
 			docId
 		);
 
-		return createManagedDocumentListener(
+		// Track if we've already handled the error to prevent infinite loops
+		let errorHandled = false;
+		let unsubscribeFn: Unsubscribe | null = null;
+
+		const listener = createManagedDocumentListener(
 			statementsSubscribeRef,
 			listenerKey,
 			(statementSubscriptionDB) => {
@@ -93,17 +97,29 @@ export const listenToStatementSubscription = (
 				}
 			},
 			(error) => {
+				// Prevent infinite loops by only handling the error once
+				if (errorHandled) return;
+				errorHandled = true;
+
 				// Handle permission errors more gracefully
 				const err = error as { code?: string };
 				if (err?.code === 'permission-denied') {
-					console.info('User does not have permission to access this statement subscription');
+					// Permission denied is expected for some users, handle silently
 					if (setHasSubscription) setHasSubscription(false);
-					// Don't log as error, this is expected for some users
+					// Unsubscribe immediately to prevent repeated error callbacks
+					if (unsubscribeFn) {
+						unsubscribeFn();
+					}
 				} else {
 					console.error('Error in statement subscription listener:', error);
 				}
 			}
 		);
+
+		// Store the unsubscribe function so we can call it from the error handler
+		unsubscribeFn = listener;
+
+		return listener;
 	} catch (error) {
 		console.error(error);
 
@@ -492,7 +508,6 @@ export const listenToUserSuggestions = (
 
 export function listenToAllDescendants(statementId: string): Unsubscribe {
 	try {
-		console.info(`[listenToAllDescendants] Setting up listener for statement: ${statementId}`);
 		const statementsRef = collection(FireStore, Collections.statements);
 		// Query ONLY for questions, groups, and options (not any other types)
 		// Wrap in and() as required by Firestore for composite filters
@@ -525,7 +540,6 @@ export function listenToAllDescendants(statementId: string): Unsubscribe {
 			listenerKey,
 			(statementsDB) => {
 				if (isFirstBatch) {
-					console.info(`[listenToAllDescendants] Initial batch - found ${statementsDB.size} descendants`);
 					// Process the initial batch of statements all at once
 					statementsDB.forEach((doc) => {
 						try {
@@ -538,22 +552,13 @@ export function listenToAllDescendants(statementId: string): Unsubscribe {
 
 					// Dispatch all statements at once instead of one by one
 					if (statements.length > 0) {
-						const typeCount = statements.reduce((acc, s) => {
-							acc[s.statementType] = (acc[s.statementType] || 0) + 1;
-
-							return acc;
-						}, {} as Record<string, number>);
-						console.info(`[listenToAllDescendants] Dispatching ${statements.length} statements to Redux`, typeCount);
 						store.dispatch(setStatements(statements));
-					} else {
-						console.info(`[listenToAllDescendants] No descendants found for statement ${statementId}`);
 					}
 
 					isFirstBatch = false;
 				} else {
 					// After initial load, process changes individually
 					const changes = statementsDB.docChanges();
-					console.info(`[listenToAllDescendants] Processing ${changes.length} changes`);
 
 					changes.forEach((change) => {
 						try {
