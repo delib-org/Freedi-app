@@ -28,6 +28,7 @@ import { offlineManager } from '@/services/mindMap/OfflineManager';
 import { listenToMindMapData } from '@/controllers/db/statements/optimizedListeners';
 
 // Constants and types
+import { MindMapNode, MindMapData } from '@/services/mindMap/types';
 import { MINDMAP_CONFIG } from '@/constants/mindMap';
 import { MindMapLoadingState } from '@/services/mindMap/types';
 import { logError } from '@/utils/errorHandling';
@@ -71,8 +72,8 @@ const EnhancedMindMap: FC = () => {
 	const [loadingState, setLoadingState] = useState<MindMapLoadingState>(
 		MindMapLoadingState.IDLE
 	);
-	const [error, setError] = useState<Error | null>(null);
-	const [results, setResults] = useState<any>(null);
+	const [, setError] = useState<Error | null>(null);
+	const [results, setResults] = useState<MindMapNode | null>(null);
 	const [isOffline, setIsOffline] = useState(!navigator.onLine);
 	const [offlineDataAvailable, setOfflineDataAvailable] = useState(false);
 
@@ -137,7 +138,8 @@ const EnhancedMindMap: FC = () => {
 						setLoadingMessage('Loaded from offline storage');
 						setLoadingState(MindMapLoadingState.FULLY_LOADED);
 						clearTimeout(skeletonTimer);
-						return;
+						
+return;
 					}
 				}
 
@@ -145,7 +147,7 @@ const EnhancedMindMap: FC = () => {
 				unsubscribe = listenToMindMapData(statementId);
 
 				// Subscribe to updates
-				const updateCallback = (data: any) => {
+				const updateCallback = (data: MindMapData) => {
 					setResults(data.tree);
 					setNodeCount(data.nodeMap?.size || 0);
 					setLoadProgress(100);
@@ -154,7 +156,7 @@ const EnhancedMindMap: FC = () => {
 					// Save for offline access
 					if (data.loadingState === MindMapLoadingState.FULLY_LOADED) {
 						offlineManager.saveMindMap(data).catch(error => {
-							console.warn('[EnhancedMindMap] Failed to save offline:', error);
+							console.info('[EnhancedMindMap] Failed to save offline:', error);
 						});
 					}
 				};
@@ -277,7 +279,7 @@ const EnhancedMindMap: FC = () => {
 			if (validation.isValid) {
 				console.info('[EnhancedMindMap] Hierarchy is valid:', validation.stats);
 			} else {
-				console.warn('[EnhancedMindMap] Hierarchy validation issues:', validation.issues);
+				console.error('[EnhancedMindMap] Hierarchy validation issues:', validation.issues);
 			}
 		} catch (error) {
 			logError(error, {

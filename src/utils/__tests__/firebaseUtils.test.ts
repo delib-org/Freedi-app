@@ -6,7 +6,6 @@
 
 import {
 	createDocRef,
-	createCollectionRef,
 	createStatementRef,
 	createEvaluationRef,
 	createSubscriptionRef,
@@ -83,28 +82,28 @@ describe('Firebase Utilities', () => {
 	describe('executeBatchUpdates', () => {
 		it('should execute batch updates for small batches', async () => {
 			const updates = [
-				{ ref: { collection: 'test', id: '1' } as any, data: { value: 1 } },
-				{ ref: { collection: 'test', id: '2' } as any, data: { value: 2 } },
+				{ ref: { collection: 'test', id: '1' } as unknown as ReturnType<typeof createDocRef>, data: { value: 1 } },
+				{ ref: { collection: 'test', id: '2' } as unknown as ReturnType<typeof createDocRef>, data: { value: 2 } },
 			];
 
 			await executeBatchUpdates(updates);
 
 			// Should have created and committed one batch
-			const { writeBatch } = require('firebase/firestore');
+			const writeBatch = jest.requireMock('firebase/firestore').writeBatch;
 			expect(writeBatch).toHaveBeenCalledTimes(1);
 		});
 
 		it('should split large batches into multiple operations', async () => {
 			// Create 1000 updates (should split into 2 batches of 500)
 			const updates = Array.from({ length: 1000 }, (_, i) => ({
-				ref: { collection: 'test', id: `${i}` } as any,
+				ref: { collection: 'test', id: `${i}` } as unknown as ReturnType<typeof createDocRef>,
 				data: { value: i },
 			}));
 
 			await executeBatchUpdates(updates);
 
 			// Should have created 2 batches
-			const { writeBatch } = require('firebase/firestore');
+			const writeBatch = jest.requireMock('firebase/firestore').writeBatch;
 			expect(writeBatch).toHaveBeenCalledTimes(2);
 		});
 	});

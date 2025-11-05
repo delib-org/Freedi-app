@@ -11,7 +11,6 @@ import {
 	AuthenticationError,
 	AuthorizationError,
 	NetworkError,
-	logError,
 	withErrorHandling,
 	withErrorHandlingSync,
 	withRetry,

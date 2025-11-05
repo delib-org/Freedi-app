@@ -35,7 +35,15 @@ const importMetaEnv = {
 };
 
 // Define import.meta globally for Jest
-(globalThis as any).import = {
+interface ImportMetaGlobal {
+  import: {
+    meta: {
+      env: typeof importMetaEnv;
+    };
+  };
+}
+
+(globalThis as ImportMetaGlobal & typeof globalThis).import = {
   meta: {
     env: importMetaEnv
   }

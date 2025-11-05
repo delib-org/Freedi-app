@@ -1,8 +1,7 @@
-import { Statement, StatementType } from 'delib-npm';
+import { Statement } from 'delib-npm';
 import { Unsubscribe } from 'firebase/firestore';
 import { store } from '@/redux/store';
-import { setStatements } from '@/redux/statements/statementsSlice';
-import { listenToMindMapData, optimizedListener } from '@/controllers/db/statements/optimizedListeners';
+import { listenToMindMapData } from '@/controllers/db/statements/optimizedListeners';
 import { logError } from '@/utils/errorHandling';
 import { MINDMAP_CONFIG } from '@/constants/mindMap';
 import {
@@ -26,7 +25,7 @@ export class EnhancedMindMapService {
   private cache: Map<string, MindMapCacheEntry> = new Map();
   private activeListeners: Map<string, Unsubscribe[]> = new Map();
   private loadingStates: Map<string, MindMapLoadingState> = new Map();
-  private retryTimeouts: Map<string, NodeJS.Timeout> = new Map();
+  private retryTimeouts: Map<string, ReturnType<typeof setTimeout>> = new Map();
   private preloadQueue: Set<string> = new Set();
   private treeSelector = createMindMapTreeSelector();
 
@@ -42,7 +41,8 @@ export class EnhancedMindMapService {
     if (!EnhancedMindMapService.instance) {
       EnhancedMindMapService.instance = new EnhancedMindMapService();
     }
-    return EnhancedMindMapService.instance;
+    
+return EnhancedMindMapService.instance;
   }
 
   /**
@@ -55,7 +55,6 @@ export class EnhancedMindMapService {
     const {
       useCache = true,
       retryOnError = true,
-      maxDepth = MINDMAP_CONFIG.TREE.MAX_DEPTH,
     } = options;
 
     try {
@@ -64,7 +63,8 @@ export class EnhancedMindMapService {
         const cached = this.getFromCache(statementId);
         if (cached) {
           this.logPerformance('cache_hit', statementId, 0);
-          return cached;
+          
+return cached;
         }
       }
 
@@ -167,7 +167,7 @@ export class EnhancedMindMapService {
       this.activeListeners.set(statementId, [unsubscribe]);
 
       // Set up update callback
-      let updateTimer: NodeJS.Timeout | null = null;
+      let updateTimer: ReturnType<typeof setTimeout> | null = null;
 
       const handleUpdate = async () => {
         try {
@@ -287,7 +287,7 @@ export class EnhancedMindMapService {
   /**
    * Export to PNG format (placeholder - needs actual implementation)
    */
-  private async exportToPNG(data: MindMapData): Promise<Blob> {
+  private async exportToPNG(_data: MindMapData): Promise<Blob> {
     // This would require rendering the mind-map to canvas and converting to PNG
     // For now, throw an error indicating it needs implementation
     throw new Error('PNG export requires canvas rendering implementation');
@@ -296,10 +296,9 @@ export class EnhancedMindMapService {
   /**
    * Validate mind-map hierarchy
    */
-  public validateHierarchy(statementId: string): Promise<ValidationResult> {
-    return new Promise(async (resolve) => {
-      try {
-        const data = await this.loadHierarchy(statementId);
+  public async validateHierarchy(statementId: string): Promise<ValidationResult> {
+    try {
+      const data = await this.loadHierarchy(statementId);
         const issues: ValidationIssue[] = [];
 
         // Check for circular references
@@ -311,7 +310,8 @@ export class EnhancedMindMapService {
               statementId: node.statement.statementId,
               message: `Circular reference detected: ${path.join(' -> ')} -> ${node.statement.statementId}`,
             });
-            return;
+            
+return;
           }
 
           visited.add(node.statement.statementId);
@@ -343,7 +343,7 @@ export class EnhancedMindMapService {
 
         issues.push(...maxDepthViolations);
 
-        resolve({
+        return {
           isValid: issues.length === 0,
           issues,
           stats: {
@@ -352,7 +352,7 @@ export class EnhancedMindMapService {
             orphanedNodes: issues.filter(i => i.type === 'orphaned_node').length,
             circularReferences: issues.filter(i => i.type === 'circular_reference').length,
           }
-        });
+        };
 
       } catch (error) {
         logError(error, {
@@ -360,7 +360,7 @@ export class EnhancedMindMapService {
           statementId,
         });
 
-        resolve({
+        return {
           isValid: false,
           issues: [{
             type: 'validation_error',
@@ -373,10 +373,9 @@ export class EnhancedMindMapService {
             orphanedNodes: 0,
             circularReferences: 0,
           }
-        });
+        };
       }
-    });
-  }
+    }
 
   /**
    * Find depth violations in tree
@@ -447,7 +446,7 @@ export class EnhancedMindMapService {
         await this.loadHierarchy(statementId, { useCache: true });
 
         console.info(`[EnhancedMindMapService] Preloaded statement: ${statementId}`);
-      } catch (error) {
+      } catch {
         // Silent fail for preloading
         console.info(`[EnhancedMindMapService] Failed to preload: ${statementId}`);
       }
@@ -511,7 +510,8 @@ export class EnhancedMindMapService {
 
   private calculateCacheHitRate(): number {
     const total = this.cacheHits + this.cacheMisses;
-    return total > 0 ? (this.cacheHits / total) * 100 : 0;
+    
+return total > 0 ? (this.cacheHits / total) * 100 : 0;
   }
 
   /**
@@ -522,7 +522,8 @@ export class EnhancedMindMapService {
 
     if (!entry) {
       this.cacheMisses++;
-      return null;
+      
+return null;
     }
 
     // Check if cache is still valid
@@ -530,11 +531,13 @@ export class EnhancedMindMapService {
     if (age > MINDMAP_CONFIG.PERFORMANCE.CACHE_TTL) {
       this.cache.delete(statementId);
       this.cacheMisses++;
-      return null;
+      
+return null;
     }
 
     this.cacheHits++;
-    return entry.data;
+    
+return entry.data;
   }
 
   /**
@@ -604,7 +607,8 @@ export class EnhancedMindMapService {
     if (node.children.length === 0) {
       return node.depth;
     }
-    return Math.max(...node.children.map(child => this.calculateMaxDepth(child)));
+    
+return Math.max(...node.children.map(child => this.calculateMaxDepth(child)));
   }
 
   /**
@@ -638,7 +642,7 @@ export class EnhancedMindMapService {
             retryOnError: false, // Prevent infinite recursion
           });
           resolve(data);
-        } catch (error) {
+        } catch {
           // Try again
           this.retryLoad(statementId, options, attempt + 1)
             .then(resolve)

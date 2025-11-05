@@ -1,7 +1,6 @@
 import { Statement, StatementType } from 'delib-npm';
 import { Unsubscribe } from 'firebase/firestore';
 import { store } from '@/redux/store';
-import { setStatements } from '@/redux/statements/statementsSlice';
 import { listenToAllDescendants, listenToStatement } from '@/controllers/db/statements/listenToStatements';
 import { logError } from '@/utils/errorHandling';
 import { MINDMAP_CONFIG } from '@/constants/mindMap';
@@ -24,7 +23,7 @@ export class MindMapService {
   private cache: Map<string, MindMapCacheEntry> = new Map();
   private activeListeners: Map<string, Unsubscribe[]> = new Map();
   private loadingStates: Map<string, MindMapLoadingState> = new Map();
-  private retryTimeouts: Map<string, NodeJS.Timeout> = new Map();
+  private retryTimeouts: Map<string, ReturnType<typeof setTimeout>> = new Map();
 
   private constructor() {
     // Singleton
@@ -37,7 +36,8 @@ export class MindMapService {
     if (!MindMapService.instance) {
       MindMapService.instance = new MindMapService();
     }
-    return MindMapService.instance;
+    
+return MindMapService.instance;
   }
 
   /**
@@ -59,7 +59,8 @@ export class MindMapService {
         const cached = this.getFromCache(statementId);
         if (cached) {
           console.info(`[MindMapService] Loaded from cache: ${statementId}`);
-          return cached;
+          
+return cached;
         }
       }
 
@@ -127,7 +128,8 @@ export class MindMapService {
       this.loadingStates.set(statementId, MindMapLoadingState.FULLY_LOADED);
 
       console.info(`[MindMapService] Loaded hierarchy in ${loadTime}ms:`, stats);
-      return data;
+      
+return data;
 
     } catch (error) {
       logError(error, {
@@ -311,7 +313,8 @@ export class MindMapService {
     if (node.children.length === 0) {
       return node.depth;
     }
-    return Math.max(...node.children.map(child => this.calculateMaxDepth(child)));
+    
+return Math.max(...node.children.map(child => this.calculateMaxDepth(child)));
   }
 
   /**
@@ -328,7 +331,8 @@ export class MindMapService {
     const age = Date.now() - entry.timestamp;
     if (age > MINDMAP_CONFIG.PERFORMANCE.CACHE_TTL) {
       this.cache.delete(statementId);
-      return null;
+      
+return null;
     }
 
     return entry.data;
@@ -414,7 +418,7 @@ export class MindMapService {
             retryOnError: false, // Prevent infinite recursion
           });
           resolve(data);
-        } catch (error) {
+        } catch {
           // Try again
           this.retryLoad(statementId, options, attempt + 1)
             .then(resolve)

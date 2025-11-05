@@ -29,7 +29,8 @@ jest.mock('@/controllers/db/statements/setStatements', () => ({
 
 jest.mock('@/redux/massConsensus/massConsensusSlice', () => {
     const actual = jest.requireActual('@/redux/massConsensus/massConsensusSlice');
-    return {
+    
+return {
         ...actual,
         prefetchRandomBatches: jest.fn((params) => ({
             type: 'massConsensus/prefetchRandomBatches',

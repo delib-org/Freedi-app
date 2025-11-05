@@ -5,7 +5,6 @@ import { store } from '../redux/store';
 
 // Mock all the complex dependencies
 jest.mock('../App', () => {
-  const React = require('react');
   return {
     __esModule: true,
     default: function App() {

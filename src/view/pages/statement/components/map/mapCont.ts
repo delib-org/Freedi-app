@@ -105,7 +105,8 @@ export function resultsByParentId(parentStatement: Statement, subStatements: Sta
 		// Build tree recursively using map (no filtering needed)
 		function buildNode(statement: Statement): Results {
 			const children = childrenMap.get(statement.statementId) || [];
-			return {
+			
+return {
 				top: statement,
 				sub: children.map(child => buildNode(child))
 			};
