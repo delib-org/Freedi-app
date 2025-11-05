@@ -116,16 +116,30 @@ const SuggestionCard: FC<Props> = ({
 	useEffect(() => {
 		const element = elementRef.current;
 		if (element) {
-			setTimeout(() => {
+			const updateHeight = () => {
+				const height = element.clientHeight;
 				dispatch(
 					setStatementElementHight({
 						statementId: statement.statementId,
-						height: elementRef.current?.clientHeight,
+						height,
 					})
 				);
-			}, 0);
+			};
+
+			// Update height initially
+			setTimeout(updateHeight, 0);
+
+			// Optionally use ResizeObserver for dynamic height changes
+			const resizeObserver = new ResizeObserver(() => {
+				updateHeight();
+			});
+			resizeObserver.observe(element);
+
+			return () => {
+				resizeObserver.disconnect();
+			};
 		}
-	}, [elementRef.current?.clientHeight]);
+	}, [statement.statementId, dispatch]);
 
 	// Check if text is clamped and add overflow class
 	useEffect(() => {
