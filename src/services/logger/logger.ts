@@ -19,11 +19,12 @@ class Logger {
   // Helper to get dev mode safely
   private getIsDevelopment(): boolean {
     if (typeof process !== 'undefined' && process.env.NODE_ENV === 'test') {
-      return true; // In test mode, treat as development
+      return true;
     }
     try {
-      // eslint-disable-next-line no-eval
-      return eval('import.meta.env.DEV') || false;
+      // eslint-disable-next-line @typescript-eslint/no-implied-eval
+      const getMetaEnv = new Function('return import.meta.env.DEV || false');
+      return getMetaEnv();
     } catch {
       return false;
     }

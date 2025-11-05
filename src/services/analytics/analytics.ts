@@ -197,8 +197,9 @@ return;
         return 'test';
       }
       try {
-        // eslint-disable-next-line no-eval
-        return eval('import.meta.env.MODE') || 'production';
+        // eslint-disable-next-line @typescript-eslint/no-implied-eval
+        const getMetaEnv = new Function('return import.meta.env.MODE || "production"');
+        return getMetaEnv();
       } catch {
         return 'production';
       }

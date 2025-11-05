@@ -1,15 +1,15 @@
 import firebaseConfig from "@/controllers/db/configKey";
 import { functionConfig } from "delib-npm";
 
-// Helper to safely get env var (compatible with both Vite and Jest)
+// Helper to safely get environment variables (compatible with both Vite and Jest)
 const getEnvVar = (key: string): string | undefined => {
 	if (typeof process !== 'undefined' && process.env.NODE_ENV === 'test') {
 		return process.env[key];
 	}
 	try {
-		// eslint-disable-next-line no-eval
-		const envObj = eval('import.meta.env');
-		return envObj[key] as string | undefined;
+		// eslint-disable-next-line @typescript-eslint/no-implied-eval
+		const getMetaEnv = new Function('key', 'return import.meta.env[key]');
+		return getMetaEnv(key);
 	} catch {
 		return undefined;
 	}

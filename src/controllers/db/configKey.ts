@@ -1,15 +1,17 @@
-// Helper function to safely get environment variables (compatible with both Vite and Jest)
+// Helper to safely get environment variables (compatible with both Vite and Jest)
+// Note: In production build, Vite will statically replace import.meta.env references
+// In tests, we use process.env to avoid syntax errors
 function getEnvVar(key: string): string | undefined {
 	// In test environment, use process.env
 	if (typeof process !== 'undefined' && process.env.NODE_ENV === 'test') {
 		return process.env[key];
 	}
-	// In browser/Vite environment, use import.meta.env
-	// Use eval to avoid syntax errors in test environment
+	// In browser/Vite environment, try to access import.meta.env
+	// We use a try-catch with indirect eval to handle both dev and prod
 	try {
-		// eslint-disable-next-line no-eval
-		const envObj = eval('import.meta.env');
-		return envObj[key] as string | undefined;
+		// eslint-disable-next-line @typescript-eslint/no-implied-eval
+		const getMetaEnv = new Function('key', 'return import.meta.env[key]');
+		return getMetaEnv(key);
 	} catch {
 		return undefined;
 	}
