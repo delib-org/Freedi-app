@@ -10,7 +10,7 @@ import {
 	connectFirestoreEmulator,
 	initializeFirestore,
 	persistentLocalCache,
-	persistentMultipleTabManager,
+	persistentSingleTabManager,
 	memoryLocalCache,
 	type Firestore
 } from 'firebase/firestore';
@@ -65,11 +65,12 @@ return initializeFirestore(app, {
 		});
 	}
 
-	// For other browsers, attempt persistent cache with fallback
+	// For other browsers, use single-tab manager to avoid sync issues
+	// Multi-tab manager can cause "INTERNAL ASSERTION FAILED" errors
 	try {
 		return initializeFirestore(app, {
 			localCache: persistentLocalCache({
-				tabManager: persistentMultipleTabManager(),
+				tabManager: persistentSingleTabManager(),
 			}),
 		});
 	} catch (error) {
@@ -77,7 +78,7 @@ return initializeFirestore(app, {
 			'Failed to initialize with persistent cache, falling back to memory cache:',
 			error
 		);
-		
+
 return initializeFirestore(app, {
 			localCache: memoryLocalCache(),
 		});
