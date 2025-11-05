@@ -1,10 +1,8 @@
 import { Unsubscribe } from 'firebase/auth';
 import {
-	and,
 	collection,
 	doc,
 	limit,
-	or,
 	orderBy,
 	query,
 	where,
@@ -26,7 +24,6 @@ import {
 	Role,
 	Collections,
 	StatementType,
-	DeliberativeElement,
 	Statement,
 	StatementSchema,
 	Creator,
@@ -495,23 +492,14 @@ export function listenToAllDescendants(statementId: string): Unsubscribe {
 	try {
 		console.info(`[listenToAllDescendants] Setting up listener for statement: ${statementId}`);
 		const statementsRef = collection(FireStore, Collections.statements);
+		// Query for ALL descendants (questions, groups, options) via parents array
+		// Exclude documents and chat messages to keep the map clean
 		const q = query(
 			statementsRef,
-			and(
-				or(
-					where(
-						'deliberativeElement',
-						'==',
-						DeliberativeElement.option
-					),
-					where(
-						'deliberativeElement',
-						'==',
-						DeliberativeElement.research
-					)
-				),
-				where('parents', 'array-contains', statementId)
-			),
+			where('parents', 'array-contains', statementId),
+			where('statementType', '!=', StatementType.document),
+			orderBy('statementType'),
+			orderBy('createdAt', 'asc'),
 			// Increase performance by limiting batch size
 			limit(50)
 		);
@@ -544,7 +532,12 @@ export function listenToAllDescendants(statementId: string): Unsubscribe {
 
 					// Dispatch all statements at once instead of one by one
 					if (statements.length > 0) {
-						console.info(`[listenToAllDescendants] Dispatching ${statements.length} statements to Redux`);
+						const typeCount = statements.reduce((acc, s) => {
+							acc[s.statementType] = (acc[s.statementType] || 0) + 1;
+
+							return acc;
+						}, {} as Record<string, number>);
+						console.info(`[listenToAllDescendants] Dispatching ${statements.length} statements to Redux`, typeCount);
 						store.dispatch(setStatements(statements));
 					} else {
 						console.info(`[listenToAllDescendants] No descendants found for statement ${statementId}`);
