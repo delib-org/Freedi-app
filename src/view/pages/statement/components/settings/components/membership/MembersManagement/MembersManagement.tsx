@@ -4,7 +4,7 @@ import { useParams } from 'react-router';
 import styles from './MembersManagement.module.scss';
 import { StatementSubscription, Role, Statement } from 'delib-npm';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { RootState } from '@/redux/store';
 import MemberFilters from '../MemberFilters/MemberFilters';
 import FilteredMembersList from '../FilteredMembersList/FilteredMembersList';
@@ -16,7 +16,7 @@ interface MembersManagementProps {
 
 const MembersManagement: FC<MembersManagementProps> = ({ statement }) => {
   const { statementId } = useParams();
-  const { t } = useUserConfig();
+  const { t } = useTranslation();
 
   // State for filters
   const [searchTerm, setSearchTerm] = useState('');

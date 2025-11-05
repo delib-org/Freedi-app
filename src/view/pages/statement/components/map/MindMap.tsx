@@ -6,7 +6,7 @@ import MindMapChart from './components/MindMapChart';
 import { isAdmin } from '@/controllers/general/helpers';
 import { FilterType } from '@/controllers/general/sorting';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { useMapContext } from '@/controllers/hooks/useMap';
 import {
 	statementSelector,
@@ -51,7 +51,7 @@ const MindMap: FC = () => {
 	const role = effectiveSubscription ? effectiveSubscription.role : Role.member;
 	const _isAdmin = isAdmin(role);
 
-	const { t } = useUserConfig();
+	const { t } = useTranslation();
 	const { mapContext, setMapContext } = useMapContext();
 	const selectedId = mapContext?.selectedId ?? null;
 

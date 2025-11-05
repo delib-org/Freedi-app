@@ -2,7 +2,7 @@ import { FC, useState, useEffect, useCallback, useMemo } from 'react';
 import styles from './FilteredMembersList.module.scss';
 import { StatementSubscription, Role } from 'delib-npm';
 import MemberCard from '../EnhancedMemberCard/EnhancedMemberCard';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 
 interface FilteredMembersListProps {
   members: StatementSubscription[];
@@ -19,7 +19,7 @@ const FilteredMembersList: FC<FilteredMembersListProps> = ({
   initialLoadCount = 10,
   loadMoreCount = 20
 }) => {
-  const { t } = useUserConfig();
+  const { t } = useTranslation();
   const [displayCount, setDisplayCount] = useState(initialLoadCount);
   const [isLoading, setIsLoading] = useState(false);
   const [isInitialLoad, setIsInitialLoad] = useState(true);

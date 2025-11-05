@@ -2,7 +2,7 @@ import React, { FC, useState } from 'react';
 import styles from './CustomSwitchSmall.module.scss';
 import VisuallyHidden from '../../accessibility/toScreenReaders/VisuallyHidden';
 import BackgroundImage from './customSwitchSmallBackground.svg?url';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 
 interface Props {
 	label: string;
@@ -27,7 +27,7 @@ const CustomSwitchSmall: FC<Props> = ({
 	colorChecked,
 	colorUnchecked,
 }) => {
-	const { dir } = useUserConfig();
+	const { dir } = useTranslation();
 	const [isChecked, setIsChecked] = useState(checked);
 
 	const handleChange = () => {

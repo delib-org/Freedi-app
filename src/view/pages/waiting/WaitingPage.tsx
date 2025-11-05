@@ -1,10 +1,10 @@
-import { useUserConfig } from '@/controllers/hooks/useUserConfig'
+import { useTranslation } from '@/controllers/hooks/useTranslation'
 import BalloonsImage from '@/assets/images/wait.png'
 import styles from './WaitingPage.module.scss';
 import { Link } from 'react-router';
 
 const WaitingPage = () => {
-	const { t } = useUserConfig()
+	const { t } = useTranslation()
 
 	return (
 		<div className={`page ${styles.wait}`}>

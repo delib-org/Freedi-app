@@ -1,7 +1,7 @@
 import React from 'react';
 
 import styles from './SettingsModal.module.scss';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 
 interface Props {
 	children?: React.ReactNode;
@@ -16,7 +16,7 @@ const SettingsModal: React.FC<Props> = ({
 	isFullScreen = false,
 	customCloseWord = '',
 }) => {
-	const { t } = useUserConfig();
+	const { t } = useTranslation();
 
 	return (
 		<div className={isFullScreen ? styles.fullScreenModal : styles.modal}>

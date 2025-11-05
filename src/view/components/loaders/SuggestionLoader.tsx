@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import styles from "./SuggestionLoader.module.scss";
-import { useUserConfig } from "@/controllers/hooks/useUserConfig";
+import { useTranslation } from "@/controllers/hooks/useTranslation";
 
 interface SuggestionLoaderProps {
   show: boolean;
@@ -15,7 +15,7 @@ const SuggestionLoader = ({
   messageInterval = 2500,
   variant = 'modern'
 }: SuggestionLoaderProps) => {
-  const { t } = useUserConfig();
+  const { t } = useTranslation();
   const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
 
   // Default messages with progressive disclosure about what's happening

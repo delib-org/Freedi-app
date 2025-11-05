@@ -9,7 +9,7 @@ import { defaultEmptyStatement } from './emptyStatementModel';
 import { getStatementFromDB } from '@/controllers/db/statements/getStatement';
 import { listenToMembers } from '@/controllers/db/statements/listenToStatements';
 import { useAppDispatch, useAppSelector } from '@/controllers/hooks/reduxHooks';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import {
 	setStatement,
 	statementSelector,
@@ -26,7 +26,7 @@ import MembersManagement from './components/membership/MembersManagement';
 const StatementSettings: FC = () => {
 	// * Hooks * //
 	const { statementId } = useParams();
-	const { t } = useUserConfig();
+	const { t } = useTranslation();
 
 	// * State * //
 	const [parentStatement, setParentStatement] = useState<Statement | 'top'>(

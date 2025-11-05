@@ -4,7 +4,7 @@ import { StatementSubscription, Role } from 'delib-npm';
 import { updateMemberRole } from '@/controllers/db/subscriptions/setSubscriptions';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { canBanUser, getBanDisabledReason } from '@/helpers/roleHelpers';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 
 interface EnhancedMemberCardProps {
   member: StatementSubscription;
@@ -15,7 +15,7 @@ const EnhancedMemberCard: FC<EnhancedMemberCardProps> = ({
   member,
   searchTerm
 }) => {
-  const { t } = useUserConfig();
+  const { t } = useTranslation();
   const { user } = useAuthentication();
   const [role, setRole] = useState(member.role);
   const [isUpdating, setIsUpdating] = useState(false);

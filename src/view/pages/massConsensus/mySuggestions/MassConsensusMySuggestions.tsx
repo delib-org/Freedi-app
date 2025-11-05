@@ -9,7 +9,7 @@ import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { useDispatch } from 'react-redux';
 import { setStatementSubscription } from '@/redux/statements/statementsSlice';
 import { creatorSelector } from '@/redux/creator/creatorSlice';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { useHeader } from '../headerMassConsensus/HeaderContext';
 import SimpleSuggestionCards from '../../statement/components/evaluations/components/simpleSuggestionCards/SimpleSuggestionCards';
 import FooterMassConsensus from '../footerMassConsensus/FooterMassConsensus';
@@ -22,7 +22,7 @@ const MassConsensusMySuggestions = () => {
 	const dispatch = useDispatch();
 	const navigate = useNavigate();
 	const { user } = useAuthentication();
-	const { t } = useUserConfig();
+	const { t } = useTranslation();
 	const statement = useSelector(statementSelector(statementId));
 	const creator = useSelector(creatorSelector);
 	const userId = user?.uid || creator?.uid;

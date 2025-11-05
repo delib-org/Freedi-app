@@ -4,7 +4,7 @@ import { Statement } from 'delib-npm';
 import { getSupportLabel } from '../../popperHebbianHelpers';
 import { createEvidencePost, updateEvidencePost } from '@/controllers/db/popperHebbian/evidenceController';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import styles from './AddEvidenceModal.module.scss';
 
 interface AddEvidenceModalProps {
@@ -19,7 +19,7 @@ const AddEvidenceModal: FC<AddEvidenceModalProps> = ({
 	editingStatement
 }) => {
 	const { user } = useAuthentication();
-	const { t } = useUserConfig();
+	const { t } = useTranslation();
 	const isEditMode = !!editingStatement;
 
 	const [evidenceText, setEvidenceText] = useState(

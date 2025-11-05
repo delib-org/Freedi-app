@@ -4,7 +4,7 @@ import { useNavigate, useParams } from 'react-router';
 import HandsImage from '@/assets/images/hands.png';
 import BulbImage from '@/assets/images/bulb.png';
 import AnchorIcon from '@/assets/icons/anchor.svg?react';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { useSelector } from 'react-redux';
 import {
 	statementSelector,
@@ -45,7 +45,7 @@ const MassConsensusAdmin = () => {
 	const [activeTab, setActiveTab] = useState<TabType>('overview');
 	const [isLoading, setIsLoading] = useState(true);
 
-	const { t } = useUserConfig();
+	const { t } = useTranslation();
 	const navigate = useNavigate();
 
 	// Calculate anchored statistics

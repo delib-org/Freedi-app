@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router';
 import { useSelector } from 'react-redux';
 import { Statement, StatementType, QuestionType, Role } from 'delib-npm';
 import { statementSubscriptionSelector } from '@/redux/statements/statementsSlice';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import useStatementColor from '@/controllers/hooks/useStatementColor';
 import BackIcon from '@/assets/icons/chevronLeftIcon.svg?react';
 
@@ -14,7 +14,7 @@ interface Props {
 const MySuggestionsHeader: FC<Props> = ({ statement }) => {
 	const navigate = useNavigate();
 	const { statementId } = useParams<{ statementId: string }>();
-	const { dir } = useUserConfig();
+	const { dir } = useTranslation();
 	const subscription = useSelector(statementSubscriptionSelector(statementId));
 	const headerStyle = useStatementColor({ statement });
 

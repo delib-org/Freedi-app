@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import DeleteIcon from '@/assets/icons/delete.svg?react';
 import PlusIcon from '@/assets/icons/plusIcon.svg?react';
 import Input from '@/view/components/input/Input';
@@ -34,7 +34,7 @@ const UserQuestionComp = ({
 	onUpdateQuestion,
 	minQuestionAmount = 2,
 }: Props) => {
-	const { t } = useUserConfig();
+	const { t } = useTranslation();
 	const dispatch = useDispatch();
 	const [newOptionText, setNewOptionText] = useState('');
 	const [isEditingQuestion, setIsEditingQuestion] = useState(false);

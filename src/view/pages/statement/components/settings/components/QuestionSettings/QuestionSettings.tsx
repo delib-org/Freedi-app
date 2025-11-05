@@ -12,7 +12,7 @@ import VotingIcon from '@/assets/icons/votingIcon.svg?react';
 import ClusterIcon from '@/assets/icons/networkIcon.svg?react';
 import AnchorIcon from '@/assets/icons/anchor.svg?react';
 import UsersIcon from '@/assets/icons/users20px.svg?react';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import MultiSwitch from '@/view/components/switch/multiSwitch/MultiSwitch';
 import { setEvaluationUIType, setAnchoredEvaluationSettings } from '@/controllers/db/evaluation/setEvaluation';
 import VotingSettings from './votingSettings/VotingSettings';
@@ -24,7 +24,7 @@ const QuestionSettings: FC<StatementSettingsProps> = ({
 	statement,
 	// setStatementToEdit,
 }) => {
-	const { t } = useUserConfig();
+	const { t } = useTranslation();
 	const [anchoredCount, setAnchoredCount] = useState(
 		statement.evaluationSettings?.anchored?.numberOfAnchoredStatements || 3
 	);

@@ -1,5 +1,5 @@
 import { FC, ReactNode, useState, useEffect } from 'react';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { logOut } from '@/controllers/db/authenticationUtils';
 import TermsOfUse from '@/view/components/termsOfUse/TermsOfUse';
 import {
@@ -19,7 +19,7 @@ export const AgreementProvider: FC<AgreementProviderProps> = ({
 	children,
 	user,
 }) => {
-	const { t } = useUserConfig();
+	const { t } = useTranslation();
 	const [showSignAgreement, setShowSignAgreement] = useState(false);
 	const [agreement, setAgreement] = useState<string>('');
 	const [loading, setLoading] = useState(true);

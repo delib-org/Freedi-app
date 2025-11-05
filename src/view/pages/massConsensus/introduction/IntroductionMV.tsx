@@ -1,6 +1,6 @@
 import { LanguagesEnum } from '@/context/UserConfigContext';
 import firebaseConfig from '@/controllers/db/configKey';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import {
 	setStatement,
 	statementSelector,
@@ -19,7 +19,7 @@ export function useIntroductionMV() {
 	const subscription = useSelector(
 		statementSubscriptionSelector(statementId)
 	);
-	const { changeLanguage } = useUserConfig();
+	const { changeLanguage } = useTranslation();
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 

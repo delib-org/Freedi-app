@@ -1,7 +1,7 @@
 import { Statement } from 'delib-npm';
 import React, { FC, useState } from 'react';
 import styles from './SearchBar.module.scss';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import OptionMCCard from '../deleteCard/OptionMCCard';
 import Close from '@/assets/icons/close.svg?react';
 
@@ -14,7 +14,7 @@ const SearchBar: FC<SearchBarProps> = ({ options, setIsSearching }) => {
 	const [isSearchBarOpen, setIsSearchBarOpen] = useState(false);
 	const empty = '';
 	const [searchTerm, setSearchTerm] = useState(empty);
-	const { t } = useUserConfig();
+	const { t } = useTranslation();
 
 	if (!isSearchBarOpen) {
 		return (

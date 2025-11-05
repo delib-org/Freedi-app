@@ -1,6 +1,6 @@
 import React, { FC } from 'react';
 import { Statement } from 'delib-npm';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import newOptionGraphic from '@/assets/images/newOptionGraphic.png';
 import InfoIcon from '@/assets/icons/InfoIcon.svg?react';
 import styles from '../MultiStageQuestion.module.scss';
@@ -10,7 +10,7 @@ interface IntroductionSectionProps {
 }
 
 export const IntroductionSection: FC<IntroductionSectionProps> = ({ statement }) => {
-  const { t } = useUserConfig();
+  const { t } = useTranslation();
 
   return (
     <div className={styles.stageCard} id="introduction">

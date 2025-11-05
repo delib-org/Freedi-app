@@ -7,7 +7,7 @@ import ImgThumb from '@/assets/images/ImgThumb.png';
 import Text from '@/view/components/text/Text';
 import StatementChatMore from '@/view/pages/statement/components/chat/components/statementChatMore/StatementChatMore';
 import { SimpleStatement, StatementSubscription } from 'delib-npm';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 
 interface Props {
 	subscription: StatementSubscription;
@@ -15,7 +15,7 @@ interface Props {
 
 const MainCard: FC<Props> = ({ subscription }) => {
 	const { statement: simpleStatement } = subscription;
-	const { t } = useUserConfig();
+	const { t } = useTranslation();
 	
 	// Use lastSubStatements from subscription if available, otherwise fall back to old method
 	const subStatements = subscription.lastSubStatements || [];

@@ -3,7 +3,7 @@ import SuggestionCards from '../../evaluations/components/suggestionCards/Sugges
 import styles from './StagePage.module.scss';
 import StatementBottomNav from '../../nav/bottom/StatementBottomNav';
 import StatementVote from '../../vote/StatementVote';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { StatementContext } from '../../../StatementCont';
 import { Statement, EvaluationUI } from 'delib-npm';
 import Clustering from '../../clustering/Clustering';
@@ -13,7 +13,7 @@ interface Props {
 }
 
 const StagePage = ({ showStageTitle = true }: Props) => {
-	const { t } = useUserConfig();
+	const { t } = useTranslation();
 	const { statement } = useContext(StatementContext);
 	const stageRef = useRef<HTMLDivElement>(null);
 

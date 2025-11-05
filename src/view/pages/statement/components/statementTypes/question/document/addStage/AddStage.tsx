@@ -1,5 +1,5 @@
 import React, { FC, useContext, useState } from 'react';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import styles from './AddStage.module.scss';
 import Button, { ButtonType } from '@/view/components/buttons/button/Button';
 import { saveStatementToDB } from '@/controllers/db/statements/setStatements';
@@ -11,7 +11,7 @@ interface AddStageProps {
 }
 
 const AddStage: FC<AddStageProps> = ({ setShowAddStage }) => {
-	const { t } = useUserConfig();
+	const { t } = useTranslation();
 	const { statement } = useContext(StatementContext);
 	const [isShaking, setIsShaking] = useState(false);
 

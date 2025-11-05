@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useHeader } from '../headerMassConsensus/HeaderContext';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 
 const useMassConsensusQuestion = () => {
 	const { setHeader } = useHeader();
-	const { t } = useUserConfig();
+	const { t } = useTranslation();
 
 	const [stage, setStage] = useState<
 		'question' | 'loading' | 'suggestions' | 'submitting'

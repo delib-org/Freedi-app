@@ -11,7 +11,7 @@ import { Statement } from 'delib-npm';
 import { getTotalVoters } from '../../statement/components/vote/statementVoteCont';
 import TitleMassConsensus from '../TitleMassConsensus/TitleMassConsensus';
 import FooterMassConsensus from '../footerMassConsensus/FooterMassConsensus';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { useHeader } from '../headerMassConsensus/HeaderContext';
 import { useMassConsensusAnalytics } from '@/hooks/useMassConsensusAnalytics';
 import StageExplanationScreen from '@/view/components/massConsensus/StageExplanationScreen/StageExplanationScreen';
@@ -27,7 +27,7 @@ const VotingSuggestions = () => {
 		undefined
 	);
 	const totalVotes = getTotalVoters(statement);
-	const { t } = useUserConfig();
+	const { t } = useTranslation();
 	const { trackStageCompleted, trackStageSkipped, trackProcessCompleted } = useMassConsensusAnalytics();
 	const [showExplanation, setShowExplanation] = useState(true);
 	const { hasSeenExplanation, getDontShowExplanations } = useExplanations();

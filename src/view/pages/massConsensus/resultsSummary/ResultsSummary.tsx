@@ -1,5 +1,5 @@
 import React, { FC, useEffect, useMemo } from 'react';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { useHeader } from '../headerMassConsensus/HeaderContext';
 import TitleMassConsensus from '../TitleMassConsensus/TitleMassConsensus';
 import FooterMassConsensus from '../footerMassConsensus/FooterMassConsensus';
@@ -17,7 +17,7 @@ const ResultCard: FC<{
 	isUserStatement: boolean;
 	totalParticipants: number;
 }> = ({ statement, isUserStatement, totalParticipants }) => {
-	const { t, dir } = useUserConfig();
+	const { t, dir } = useTranslation();
 
 	// Calculate agreement score using the same logic as Triangle
 	const { sumPro = 0, sumCon = 0, numberOfEvaluators = 1 } = statement.evaluation || {};
@@ -71,7 +71,7 @@ const ResultCard: FC<{
 };
 
 const ResultsSummary: FC = () => {
-	const { t, dir } = useUserConfig();
+	const { t, dir } = useTranslation();
 	const { setHeader } = useHeader();
 	const { isAnonymous, ensureAuthentication } = useAnonymousAuth();
 	const {

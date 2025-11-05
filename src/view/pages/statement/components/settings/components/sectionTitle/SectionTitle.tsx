@@ -1,14 +1,14 @@
 import { FC } from 'react';
 import LightCogIcon from '@/assets/icons/lightCogIcon.svg?react';
 import styles from './SectionTitle.module.scss';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 
 interface SectionTitleProps {
 	title: string;
 }
 
 const SectionTitle: FC<SectionTitleProps> = ({ title }) => {
-	const { dir } = useUserConfig();
+	const { dir } = useTranslation();
 
 	return (
 		<h2 className={`${styles.sectionTitle} ${styles[dir]}`}>

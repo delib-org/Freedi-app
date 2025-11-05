@@ -5,7 +5,7 @@ import { setEvaluationToDB } from '@/controllers/db/evaluation/setEvaluation';
 import { auth } from '@/controllers/db/config';
 import { userVotedStatementsInParentSelector } from '@/redux/evaluations/evaluationsSlice';
 import { statementsSelector } from '@/redux/statements/statementsSlice';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import styles from './EvaluationManagementModal.module.scss';
 import CloseIcon from '@/assets/icons/close.svg?react';
 
@@ -22,7 +22,7 @@ const EvaluationManagementModal: FC<Props> = ({
 	onClose,
 	onVoteRemoved,
 }) => {
-	const { t } = useUserConfig();
+	const { t } = useTranslation();
 
 	const votedStatementIds = useAppSelector(
 		userVotedStatementsInParentSelector(parentStatement.statementId)

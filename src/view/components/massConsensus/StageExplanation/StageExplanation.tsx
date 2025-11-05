@@ -1,6 +1,6 @@
 import React, { FC, useState, useEffect } from 'react';
 import { ExplanationConfig } from 'delib-npm';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { useExplanations } from '@/contexts/massConsensus/ExplanationProvider';
 import styles from './StageExplanation.module.scss';
 import X from '@/assets/icons/x.svg?react';
@@ -19,7 +19,7 @@ export const StageExplanation: FC<StageExplanationProps> = ({
   onDismiss,
   className
 }) => {
-  const { t, dir } = useUserConfig();
+  const { t, dir } = useTranslation();
   const { getStageExplanation, markExplanationSeen, setDontShowExplanations } = useExplanations();
 
   const [isVisible, setIsVisible] = useState(true);

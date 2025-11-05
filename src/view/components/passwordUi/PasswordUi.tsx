@@ -12,7 +12,7 @@ import passwordUiImgRed from '../../../assets/images/passwordUiImgRed.png';
 import Button from '../buttons/button/Button';
 import PasswordInput from './PasswordInput.tsx';
 import styles from './passwordUi.module.scss';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 
 export default function PasswordUi({
 	setPasswordCheck,
@@ -20,7 +20,7 @@ export default function PasswordUi({
 	setPasswordCheck: Dispatch<SetStateAction<boolean>>;
 }>) {
 	const navigate = useNavigate();
-	const { t } = useUserConfig();
+	const { t } = useTranslation();
 
 	const PASSWORD_CODE = 7538;
 	const PASSWORD_LENGTH = 4;

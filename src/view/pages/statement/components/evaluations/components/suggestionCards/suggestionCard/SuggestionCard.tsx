@@ -11,7 +11,7 @@ import AddQuestionIcon from '@/assets/icons/addQuestion.svg?react';
 import { updateStatementText, updateStatementMainImage } from '@/controllers/db/statements/setStatements';
 import { changeStatementType } from '@/controllers/db/statements/changeStatementType';
 import { useAppDispatch } from '@/controllers/hooks/reduxHooks';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import useStatementColor, {
 	StyleProps,
 } from '@/controllers/hooks/useStatementColor';
@@ -46,7 +46,7 @@ const SuggestionCard: FC<Props> = ({
 	// Hooks
 	if (!parentStatement) console.error('parentStatement is not defined');
 
-	const { t, dir } = useUserConfig();
+	const { t, dir } = useTranslation();
 	// Use parent's authorization instead of individual card authorization
 	const { isAuthorized, isAdmin, creator } = useAuthorization(parentStatement?.statementId);
 	const enableJoining = parentStatement?.statementSettings?.joiningEnabled;

@@ -1,6 +1,6 @@
 import useTopSuggestions from './TopSuggestionVM';
 import FooterMassConsensus from '../footerMassConsensus/FooterMassConsensus';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { useHeader } from '../headerMassConsensus/HeaderContext';
 import { useEffect, useState } from 'react';
 import Loader from '@/view/components/loaders/Loader';
@@ -11,7 +11,7 @@ import { useExplanations } from '@/contexts/massConsensus/ExplanationProvider';
 import { useParams } from 'react-router';
 
 const TopSuggestions = () => {
-	const { t } = useUserConfig();
+	const { t } = useTranslation();
 	const { statementId } = useParams<{ statementId: string }>();
 	const { navigateToVoting, loadingStatements, topStatements, statement } = useTopSuggestions();
 	const { trackStageCompleted, trackStageSkipped } = useMassConsensusAnalytics();

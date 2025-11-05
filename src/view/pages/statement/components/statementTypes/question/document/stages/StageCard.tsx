@@ -6,7 +6,7 @@ import {
 	SimpleStatement,
 	EvaluationUI,
 } from 'delib-npm';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import StatementChatMore from '../../../../chat/components/statementChatMore/StatementChatMore';
 import Button, { ButtonType } from '@/view/components/buttons/button/Button';
 import PlusIcon from '@/assets/icons/plusIcon.svg?react';
@@ -19,7 +19,7 @@ interface Props {
 }
 
 const StageCard: FC<Props> = ({ statement, isDescription, isSuggestions }) => {
-	const { dir, t } = useUserConfig();
+	const { dir, t } = useTranslation();
 	const [expanded, setExpanded] = useState(true);
 	const contentRef = useRef<HTMLDivElement>(null);
 	const [contentHeight, setContentHeight] = useState(0);

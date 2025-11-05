@@ -1,7 +1,7 @@
 import React, { FC, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import SectionTitle from '../sectionTitle/SectionTitle';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import SettingsModal from '../settingsModal/SettingsModal';
 import UserQuestionComp from './userQuestion/UserQuestionComp';
 import styles from './UserDemographicSetting.module.scss';
@@ -40,7 +40,7 @@ interface Option {
 }
 
 const UserDataSetting: FC<Props> = ({ statement }) => {
-	const { t } = useUserConfig();
+	const { t } = useTranslation();
 	const dispatch = useDispatch();
 	const [showModal, setShowModal] = useState(false); // Get user questions from Redux store filtered by statement ID
 	const userQuestions: UserDemographicQuestion[] = useSelector(

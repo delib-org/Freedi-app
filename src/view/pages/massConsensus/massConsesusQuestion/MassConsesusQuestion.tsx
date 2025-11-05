@@ -10,7 +10,7 @@ import { useParams, useNavigate } from "react-router";
 import { ExplanationConfig } from "delib-npm";
 
 import styles from "./MassConsesusQuestion.module.scss";
-import { useUserConfig } from "@/controllers/hooks/useUserConfig";
+import { useTranslation } from "@/controllers/hooks/useTranslation";
 
 const MassConsensusQuestion = () => {
   const {
@@ -26,7 +26,7 @@ const MassConsensusQuestion = () => {
     useMassConsensusAnalytics();
 
   const isBusy = stage === "loading" || stage === "submitting";
-  const { t } = useUserConfig();
+  const { t } = useTranslation();
   const [showLoader, setShowLoader] = useState(false);
   const loaderStartRef = useRef<number | null>(null);
   const navigate = useNavigate();

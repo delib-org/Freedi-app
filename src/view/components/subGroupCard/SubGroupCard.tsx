@@ -3,7 +3,7 @@ import styles from './SubGroupCard.module.scss';
 import { Link, NavLink } from 'react-router';
 import useSubGroupCard from './SubGroupCardVM';
 import { EvaluationUI, Statement, StatementType } from 'delib-npm';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import StatementChatMore from '@/view/pages/statement/components/chat/components/statementChatMore/StatementChatMore';
 
 interface Props {
@@ -11,7 +11,7 @@ interface Props {
 }
 
 const SubGroupCard: FC<Props> = ({ statement }) => {
-	const { t } = useUserConfig();
+	const { t } = useTranslation();
 	const { Icon, backgroundColor, text } = useSubGroupCard(statement);
 
 	try {

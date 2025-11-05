@@ -7,7 +7,7 @@ import UploadImageIcon from "@/assets/icons/updateIcon.svg?react";
 import { changeStatementType } from "@/controllers/db/statements/changeStatementType";
 import { deleteStatementFromDB } from "@/controllers/db/statements/deleteStatements";
 import { validateStatementTypeHierarchy } from "@/controllers/general/helpers";
-import { useUserConfig } from "@/controllers/hooks/useUserConfig";
+import { useTranslation } from "@/controllers/hooks/useTranslation";
 import Menu from "@/view/components/menu/Menu";
 import MenuOption from "@/view/components/menu/MenuOption";
 import { Statement, StatementType } from "delib-npm";
@@ -31,7 +31,7 @@ const ChatMessageMenu: FC<ChatMessageMenuProps> = ({
   setIsEdit,
   fileInputRef,
 }) => {
-  const { t } = useUserConfig();
+  const { t } = useTranslation();
   const isQuestion = statement.statementType === StatementType.question;
   const isOption = statement.statementType === StatementType.option;
 

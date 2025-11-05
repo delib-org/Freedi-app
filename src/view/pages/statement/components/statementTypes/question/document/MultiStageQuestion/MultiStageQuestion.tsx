@@ -1,7 +1,7 @@
 import { FC, useContext } from "react";
 import { useSelector } from "react-redux";
 import { StatementContext } from "@/view/pages/statement/StatementCont";
-import { useUserConfig } from "@/controllers/hooks/useUserConfig";
+import { useTranslation } from "@/controllers/hooks/useTranslation";
 import StagePage from "@/view/pages/statement/components/statementTypes/stage/StagePage";
 import { statementSelectorById } from "@/redux/statements/statementsSlice";
 import PopperHebbianDiscussion from "../../../../popperHebbian/PopperHebbianDiscussion";
@@ -26,7 +26,7 @@ const MultiStageQuestion: FC = () => {
   const { statement } = useContext(StatementContext);
   const { statementType } = statement || {};
   const isOption = statementType === StatementType.option;
-  const { t } = useUserConfig();
+  const { t } = useTranslation();
 
   // Get parent statement and check if Popper-Hebbian discussion is enabled
   const parentStatement = useSelector(statementSelectorById(statement?.parentId || ""));

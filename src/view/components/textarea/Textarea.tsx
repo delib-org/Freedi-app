@@ -1,6 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import styles from './Textarea.module.scss';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 
 interface TextAreaProps {
 	label?: string;
@@ -25,7 +25,7 @@ const Textarea: React.FC<TextAreaProps> = ({
 	onKeyUp,
 	isDisabled = false,
 }) => {
-	const { t, dir } = useUserConfig();
+	const { t, dir } = useTranslation();
 	const textareaRef = useRef<HTMLTextAreaElement>(null);
 
 	const adjustHeight = () => {

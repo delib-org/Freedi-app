@@ -4,7 +4,7 @@ import FollowMeIcon from '../../../../components/icons/FollowMeIcon';
 import { setFollowMeDB } from '@/controllers/db/statements/setStatements';
 import { Role } from 'delib-npm';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { statementSelector, statementSubscriptionSelector } from '@/redux/statements/statementsSlice';
 import styles from './FollowMeToast.module.scss';
 import { StatementContext } from '../../StatementCont';
@@ -13,7 +13,7 @@ import { listenToStatement } from '@/controllers/db/statements/listenToStatement
 
 const FollowMeToast: FC = () => {
 	const { statement } = useContext(StatementContext);
-	const { dir, t } = useUserConfig();
+	const { dir, t } = useTranslation();
 	const { pathname } = useLocation();
 	
 	// Early return if no statement in context

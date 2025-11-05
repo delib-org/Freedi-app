@@ -2,7 +2,7 @@ import BurgerIcon from '@/assets/icons/burgerIcon.svg?react';
 import EllipsisIcon from '@/assets/icons/ellipsisIcon.svg?react';
 import DefaultAvatar from '@/assets/images/avatar.jpg';
 import useStatementColor from '@/controllers/hooks/useStatementColor';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { RootState } from '@/redux/store';
 import { Statement } from 'delib-npm';
 import {
@@ -45,7 +45,7 @@ const Menu: FC<MenuProps> = ({
 	isNavMenu = true,
 	isChatMenu = false,
 }) => {
-	const { dir } = useUserConfig();
+	const { dir } = useTranslation();
 	const user = useSelector((state: RootState) => state.creator.creator);
 	const avatarSrc = user?.photoURL || DefaultAvatar;
 	const { backgroundColor } = useStatementColor({ statement });

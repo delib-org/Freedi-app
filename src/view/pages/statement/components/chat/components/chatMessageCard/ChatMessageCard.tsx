@@ -3,7 +3,7 @@ import StatementChatMore from "../statementChatMore/StatementChatMore";
 import UserAvatar from "../userAvatar/UserAvatar";
 import { isAuthorized } from "@/controllers/general/helpers";
 import { useAppSelector } from "@/controllers/hooks/reduxHooks";
-import { useUserConfig } from "@/controllers/hooks/useUserConfig";
+import { useTranslation } from "@/controllers/hooks/useTranslation";
 import useStatementColor from "@/controllers/hooks/useStatementColor";
 import { statementSubscriptionSelector } from "@/redux/statements/statementsSlice";
 import EditableStatement from "@/view/components/edit/EditableStatement";
@@ -47,7 +47,7 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
   // Hooks
   const { statementType } = statement;
   const statementColor = useStatementColor({ statement });
-  const { dir } = useUserConfig();
+  const { dir } = useTranslation();
   const { user } = useAuthentication();
 
   // Redux store

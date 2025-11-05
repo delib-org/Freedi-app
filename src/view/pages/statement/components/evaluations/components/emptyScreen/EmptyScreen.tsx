@@ -1,7 +1,7 @@
 import { FC } from 'react';
 import styles from './EmptyScreen.module.scss';
 import ideaImage from '@/assets/images/manWithIdeaLamp.png';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import useWindowDimensions from '@/controllers/hooks/useWindowDimentions';
 
 // /graphics
@@ -16,7 +16,7 @@ interface Props {
 
 const EmptyScreen: FC<Props> = ({ statement }) => {
 	const dispatch = useDispatch();
-	const { t } = useUserConfig();
+	const { t } = useTranslation();
 	const { width } = useWindowDimensions();
 	const smallScreen = width < 1024;
 

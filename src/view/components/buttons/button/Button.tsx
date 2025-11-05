@@ -1,6 +1,6 @@
 import React, { FC } from 'react';
 import styles from './Button.module.scss';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 
 export enum ButtonType {
 	PRIMARY = 'primary',
@@ -28,7 +28,7 @@ const Button: FC<Props> = ({
 	buttonType = ButtonType.PRIMARY,
 	disabled = false,
 }) => {
-	let { dir } = useUserConfig();
+	let { dir } = useTranslation();
 	if (iconOnRight === false) {
 		if (dir === 'rtl') {
 			dir = 'ltr';

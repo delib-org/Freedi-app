@@ -2,7 +2,7 @@ import { FC, useState, useEffect } from 'react';
 import React from 'react';
 import { StatementSettingsProps } from '../../settingsTypeHelpers';
 import { defaultStatementSettings } from '../../emptyStatementModel';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import Checkbox from '@/view/components/checkbox/Checkbox';
 import styles from './AdvancedSettings.module.scss';
 import { setStatementSettingToDB } from '@/controllers/db/statementSettings/setStatementSettings';
@@ -13,7 +13,7 @@ import EvaluationTypeSelector from './EvaluationTypeSelector/EvaluationTypeSelec
 import { setMaxVotesPerUser } from '@/controllers/db/evaluation/setEvaluation';
 
 const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
-	const { t } = useUserConfig();
+	const { t } = useTranslation();
 
 	// Direct access to settings with defaults - no transformation needed
 	const settings: StatementSettings = statement.statementSettings ?? defaultStatementSettings;

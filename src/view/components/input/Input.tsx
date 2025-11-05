@@ -1,6 +1,6 @@
 import React, { useState, ChangeEvent } from 'react';
 import styles from './Input.module.scss';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import CloseIcon from '@/assets/icons/close.svg?react';
 
 interface SearchInputProps {
@@ -24,7 +24,7 @@ const Input: React.FC<SearchInputProps> = ({
 	name,
 	autoFocus = false,
 }) => {
-	const { dir } = useUserConfig();
+	const { dir } = useTranslation();
 	const [inputValue, setInputValue] = useState<string>(value);
 
 	const handleChange = (e: ChangeEvent<HTMLInputElement>): void => {
