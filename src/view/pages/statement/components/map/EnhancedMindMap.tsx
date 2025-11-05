@@ -3,6 +3,7 @@ import { useSelector } from 'react-redux';
 import { ReactFlowProvider } from 'reactflow';
 import { useParams } from 'react-router';
 import { StatementType, Role } from 'delib-npm';
+import { RootState } from '@/redux/store';
 
 // Components
 import CreateStatementModal from '../createStatementModal/CreateStatementModal';
@@ -32,6 +33,15 @@ import { MindMapNode, MindMapData } from '@/services/mindMap/types';
 import { MINDMAP_CONFIG } from '@/constants/mindMap';
 import { MindMapLoadingState } from '@/services/mindMap/types';
 import { logError } from '@/utils/errorHandling';
+import { Results } from 'delib-npm';
+
+// Helper to convert MindMapNode to Results
+function convertMindMapNodeToResults(node: MindMapNode): Results {
+	return {
+		top: node.statement,
+		sub: node.children.map(child => convertMindMapNodeToResults(child))
+	};
+}
 
 /**
  * Enhanced MindMap component with all performance and robustness improvements
@@ -85,7 +95,7 @@ const EnhancedMindMap: FC = () => {
 
 	// Use optimized selector
 	const treeSelector = useMemo(() => createMindMapTreeSelector(), []);
-	const treeData = useSelector((state) =>
+	const treeData = useSelector((state: RootState) =>
 		statementId ? treeSelector(state, statementId) : null
 	);
 
@@ -528,7 +538,7 @@ return;
 					}}>
 						{results ? (
 							<VirtualMindMapChart
-								descendants={results}
+								descendants={convertMindMapNodeToResults(results)}
 								isAdmin={_isAdmin}
 								filterBy={filterBy}
 							/>
