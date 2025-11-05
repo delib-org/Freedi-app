@@ -48,20 +48,13 @@ export const statementsSlicer = createSlice({
 					newStatement.results = [];
 
 				newStatement.order = 0;
-				const oldStatement = state.statements.find(
-					(statement) =>
-						statement.statementId === newStatement.statementId
-				);
 
-				const isEqualStatements =
-					JSON.stringify(oldStatement) ===
-					JSON.stringify(newStatement);
-				if (!isEqualStatements)
-					state.statements = updateArray(
-						state.statements,
-						action.payload,
-						'statementId'
-					);
+				// updateArray from delib-npm handles deduplication efficiently
+				state.statements = updateArray(
+					state.statements,
+					newStatement,
+					'statementId'
+				);
 
 				//update last update if bigger than current
 				if (
@@ -160,23 +153,13 @@ export const statementsSlicer = createSlice({
 		) => {
 			try {
 				const newStatementSubscription = action.payload;
-				const index = state.statementSubscription.findIndex(
-					(statement) =>
-						statement.statementId ===
-						newStatementSubscription.statementId
-				);
 
-				if (
-					index === -1 ||
-					JSON.stringify(state.statementSubscription[index]) !==
-					JSON.stringify(newStatementSubscription)
-				) {
-					state.statementSubscription = updateArray(
-						state.statementSubscription,
-						newStatementSubscription,
-						'statementId'
-					);
-				}
+				// updateArray from delib-npm handles deduplication efficiently
+				state.statementSubscription = updateArray(
+					state.statementSubscription,
+					newStatementSubscription,
+					'statementId'
+				);
 
 				//update last update if bigger than current
 				if (

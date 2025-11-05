@@ -1,4 +1,4 @@
-import React, { FC, useState } from 'react';
+import React, { FC, useState, memo, useMemo } from 'react';
 import { Statement, Role } from 'delib-npm';
 import { MemberReviewData } from '../MemberValidation';
 import styles from './MemberReviewCard.module.scss';
@@ -237,4 +237,4 @@ const MemberReviewCard: FC<Props> = ({
 	);
 };
 
-export default MemberReviewCard;
+export default memo(MemberReviewCard);

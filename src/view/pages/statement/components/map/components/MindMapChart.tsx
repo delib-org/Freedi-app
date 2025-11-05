@@ -1,4 +1,4 @@
-import React, { MouseEvent, useCallback, useEffect, useState } from 'react';
+import React, { MouseEvent, useCallback, useEffect, useState, memo } from 'react';
 
 // React Flow imports
 import ReactFlow, {
@@ -43,7 +43,7 @@ interface Props {
 	isAdmin: boolean;
 }
 
-export default function MindMapChart({ descendants, isAdmin, filterBy }: Readonly<Props>) {
+function MindMapChart({ descendants, isAdmin, filterBy }: Readonly<Props>) {
 	const { getIntersectingNodes } = useReactFlow();
 	const [nodes, setNodes, onNodesChange] = useNodesState([]);
 	const [edges, setEdges, onEdgesChange] = useEdgesState([]);
@@ -298,3 +298,5 @@ export default function MindMapChart({ descendants, isAdmin, filterBy }: Readonl
 		</>
 	);
 }
+
+export default memo(MindMapChart);

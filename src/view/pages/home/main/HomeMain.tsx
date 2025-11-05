@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import '@/view/style/homePage.scss';
 import styles from './HomeMain.module.scss';
 
@@ -34,15 +34,24 @@ const HomeMain = () => {
 	const { t } = useUserConfig();
 	const userId = user?.uid || '';
 
-	const topSubscriptions = useAppSelector(topSubscriptionsSelector)
-		.filter(
+	const allTopSubscriptions = useAppSelector(topSubscriptionsSelector);
+	const allStatementsSubscriptions = useAppSelector(statementsSubscriptionsSelector);
+
+	const topSubscriptions = useMemo(
+		() => allTopSubscriptions.filter(
 			(sub) =>
 				sub.user?.uid === user?.uid &&
 				sub.statement.statementType === StatementType.group
-		);
-	
-	const latestDecisions = useAppSelector(statementsSubscriptionsSelector)
-		.filter((sub) => sub.statement.statementType === StatementType.question);
+		),
+		[allTopSubscriptions, user?.uid]
+	);
+
+	const latestDecisions = useMemo(
+		() => allStatementsSubscriptions.filter(
+			(sub) => sub.statement.statementType === StatementType.question
+		),
+		[allStatementsSubscriptions]
+	);
 
 	useEffect(() => {
 		setTimeout(() => {
