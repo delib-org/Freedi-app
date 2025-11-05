@@ -1,0 +1,179 @@
+// Badge Atom - BEM Methodology
+// Usage: <span class="badge badge--notification">5</span>
+
+@import '../mixins';
+
+// ============================================================================
+// BADGE BLOCK
+// ============================================================================
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.25rem;
+  height: 1.25rem;
+  padding: 0.125rem 0.375rem;
+  border-radius: 10px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  background-color: var(--text-error);
+  color: var(--white);
+
+  // ============================================================================
+  // MODIFIERS (Variants of the badge)
+  // ============================================================================
+
+  &--notification {
+    background-color: var(--text-error);
+    color: var(--white);
+  }
+
+  &--unread {
+    background-color: var(--btn-primary);
+    color: var(--white);
+  }
+
+  &--success {
+    background-color: var(--agree);
+    color: var(--white);
+  }
+
+  &--warning {
+    background-color: var(--text-warning);
+    color: var(--white);
+  }
+
+  &--info {
+    background-color: var(--accent);
+    color: var(--white);
+  }
+
+  &--neutral {
+    background-color: var(--text-caption);
+    color: var(--white);
+  }
+
+  // Size variants
+  &--small {
+    min-width: 1rem;
+    height: 1rem;
+    font-size: 0.625rem;
+    padding: 0.0625rem 0.25rem;
+  }
+
+  &--medium {
+    // Default size
+  }
+
+  &--large {
+    min-width: 1.5rem;
+    height: 1.5rem;
+    font-size: 0.875rem;
+    padding: 0.25rem 0.5rem;
+  }
+
+  // Position variants (for absolute positioning)
+  &--top-right {
+    position: absolute;
+    top: -0.375rem;
+    right: -0.375rem;
+
+    @include rtl {
+      right: auto;
+      left: -0.375rem;
+    }
+  }
+
+  &--top-left {
+    position: absolute;
+    top: -0.375rem;
+    left: -0.375rem;
+
+    @include rtl {
+      left: auto;
+      right: -0.375rem;
+    }
+  }
+
+  &--bottom-right {
+    position: absolute;
+    bottom: -0.375rem;
+    right: -0.375rem;
+
+    @include rtl {
+      right: auto;
+      left: -0.375rem;
+    }
+  }
+
+  &--bottom-left {
+    position: absolute;
+    bottom: -0.375rem;
+    left: -0.375rem;
+
+    @include rtl {
+      left: auto;
+      right: -0.375rem;
+    }
+  }
+
+  // Display variants
+  &--dot {
+    min-width: 0.5rem;
+    width: 0.5rem;
+    height: 0.5rem;
+    padding: 0;
+    border-radius: 50%;
+  }
+
+  &--pill {
+    border-radius: 100px;
+    padding: 0.25rem 0.625rem;
+  }
+
+  &--square {
+    border-radius: 3px;
+  }
+
+  // State variants
+  &--pulse {
+    animation: badgePulse 2s ease-in-out infinite;
+
+    @media (prefers-reduced-motion: reduce) {
+      animation: none;
+    }
+  }
+
+  &--hidden {
+    display: none;
+  }
+}
+
+// ============================================================================
+// BADGE CONTAINER (For relative positioning)
+// ============================================================================
+
+.badge-container {
+  position: relative;
+  display: inline-flex;
+}
+
+// ============================================================================
+// ANIMATIONS
+// ============================================================================
+
+@keyframes badgePulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+
+  50% {
+    transform: scale(1.1);
+    opacity: 0.9;
+  }
+}

@@ -26,7 +26,6 @@ import {
 	Role,
 	Collections,
 	StatementType,
-	DeliberativeElement,
 	Statement,
 	StatementSchema,
 	Creator,
@@ -61,7 +60,11 @@ export const listenToStatementSubscription = (
 			docId
 		);
 
-		return createManagedDocumentListener(
+		// Track if we've already handled the error to prevent infinite loops
+		let errorHandled = false;
+		let unsubscribeFn: Unsubscribe | null = null;
+
+		const listener = createManagedDocumentListener(
 			statementsSubscribeRef,
 			listenerKey,
 			(statementSubscriptionDB) => {
@@ -94,17 +97,29 @@ export const listenToStatementSubscription = (
 				}
 			},
 			(error) => {
+				// Prevent infinite loops by only handling the error once
+				if (errorHandled) return;
+				errorHandled = true;
+
 				// Handle permission errors more gracefully
 				const err = error as { code?: string };
 				if (err?.code === 'permission-denied') {
-					console.info('User does not have permission to access this statement subscription');
+					// Permission denied is expected for some users, handle silently
 					if (setHasSubscription) setHasSubscription(false);
-					// Don't log as error, this is expected for some users
+					// Unsubscribe immediately to prevent repeated error callbacks
+					if (unsubscribeFn) {
+						unsubscribeFn();
+					}
 				} else {
 					console.error('Error in statement subscription listener:', error);
 				}
 			}
 		);
+
+		// Store the unsubscribe function so we can call it from the error handler
+		unsubscribeFn = listener;
+
+		return listener;
 	} catch (error) {
 		console.error(error);
 
@@ -494,22 +509,17 @@ export const listenToUserSuggestions = (
 export function listenToAllDescendants(statementId: string): Unsubscribe {
 	try {
 		const statementsRef = collection(FireStore, Collections.statements);
+		// Query ONLY for questions, groups, and options (not any other types)
+		// Wrap in and() as required by Firestore for composite filters
 		const q = query(
 			statementsRef,
 			and(
+				where('parents', 'array-contains', statementId),
 				or(
-					where(
-						'deliberativeElement',
-						'==',
-						DeliberativeElement.option
-					),
-					where(
-						'deliberativeElement',
-						'==',
-						DeliberativeElement.research
-					)
-				),
-				where('parents', 'array-contains', statementId)
+					where('statementType', '==', StatementType.question),
+					where('statementType', '==', StatementType.group),
+					where('statementType', '==', StatementType.option)
+				)
 			),
 			// Increase performance by limiting batch size
 			limit(50)
@@ -532,8 +542,12 @@ export function listenToAllDescendants(statementId: string): Unsubscribe {
 				if (isFirstBatch) {
 					// Process the initial batch of statements all at once
 					statementsDB.forEach((doc) => {
-						const statement = parse(StatementSchema, doc.data());
-						statements.push(statement);
+						try {
+							const statement = parse(StatementSchema, doc.data());
+							statements.push(statement);
+						} catch (error) {
+							console.error(`[listenToAllDescendants] Error parsing statement ${doc.id}:`, error);
+						}
 					});
 
 					// Dispatch all statements at once instead of one by one
@@ -544,22 +558,30 @@ export function listenToAllDescendants(statementId: string): Unsubscribe {
 					isFirstBatch = false;
 				} else {
 					// After initial load, process changes individually
-					statementsDB.docChanges().forEach((change) => {
-						const statement = parse(StatementSchema, change.doc.data());
+					const changes = statementsDB.docChanges();
 
-						if (change.type === 'added' || change.type === 'modified') {
-							store.dispatch(setStatement(statement));
-						} else if (change.type === 'removed') {
-							store.dispatch(deleteStatement(statement.statementId));
+					changes.forEach((change) => {
+						try {
+							const statement = parse(StatementSchema, change.doc.data());
+
+							if (change.type === 'added' || change.type === 'modified') {
+								store.dispatch(setStatement(statement));
+							} else if (change.type === 'removed') {
+								store.dispatch(deleteStatement(statement.statementId));
+							}
+						} catch (error) {
+							console.error(`[listenToAllDescendants] Error processing change for ${change.doc.id}:`, error);
 						}
 					});
 				}
 			},
-			(error) => console.error('Error in all descendants listener:', error),
+			(error) => {
+				console.error(`[listenToAllDescendants] Error in listener for statement ${statementId}:`, error);
+			},
 			'query'
 		);
 	} catch (error) {
-		console.error(error);
+		console.error(`[listenToAllDescendants] Failed to set up listener for statement ${statementId}:`, error);
 
 		return (): void => {
 			return;

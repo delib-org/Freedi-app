@@ -21,6 +21,7 @@ import { useStatementViewTracking } from '@/hooks/useStatementViewTracking';
 import { analyticsService } from '@/services/analytics';
 import { updateLastReadTimestamp } from '@/controllers/db/subscriptions/setSubscriptions';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
+import { closePanels } from '@/controllers/hooks/panelUtils';
 
 // Components
 import { StatementProvider } from './components/StatementProvider';
@@ -43,7 +44,8 @@ export const subStatementsSelector = createSelector(
 
 const StatementMain: React.FC = () => {
 	const dispatch = useDispatch();
-	
+	const prevStatementIdRef = React.useRef<string | undefined>(undefined);
+
 	// Use custom hooks to manage data and side effects
 	const {
 		statementId,
@@ -121,6 +123,16 @@ const StatementMain: React.FC = () => {
 			dispatch(setShowNewStatementModal(false));
 		};
 	}, [statementId, dispatch]);
+
+	// Close panels when navigating to a new statement (but not on initial mount)
+	React.useEffect(() => {
+		// Only close panels if statementId has changed (not on initial mount)
+		if (prevStatementIdRef.current !== undefined && prevStatementIdRef.current !== statementId) {
+			closePanels();
+		}
+		// Update the ref to the current statementId
+		prevStatementIdRef.current = statementId;
+	}, [statementId]);
 
 	// Handle different states
 	const renderContent = () => {

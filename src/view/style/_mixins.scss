@@ -1,0 +1,282 @@
+// Freedi App - SCSS Mixins
+// Reusable mixins for the design system
+
+// ============================================================================
+// RESPONSIVE MIXINS
+// ============================================================================
+
+@mixin mobile {
+  @media (max-width: 600px) {
+    @content;
+  }
+}
+
+@mixin tablet {
+  @media (min-width: 601px) and (max-width: 1024px) {
+    @content;
+  }
+}
+
+@mixin desktop {
+  @media (min-width: 1025px) {
+    @content;
+  }
+}
+
+@mixin large-desktop {
+  @media (min-width: 1440px) {
+    @content;
+  }
+}
+
+// ============================================================================
+// BUTTON MIXINS
+// ============================================================================
+
+@mixin button-base {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.4rem 1rem;
+  border-radius: 20px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  box-shadow:
+    0px 3px 6px 0px rgba(115, 138, 191, 0.1),
+    0px 11px 11px 0px rgba(115, 138, 191, 0.09),
+    0px 26px 16px 0px rgba(115, 138, 191, 0.05),
+    0px 46px 18px 0px rgba(115, 138, 191, 0.01),
+    0px 72px 20px 0px rgba(115, 138, 191, 0);
+  user-select: none;
+
+  &:focus {
+    outline: 2px solid var(--btn-primary);
+    outline-offset: 2px;
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
+}
+
+@mixin button-disabled {
+  background-color: var(--btn-disabled);
+  color: var(--btn-disabled-text);
+  border-color: var(--btn-disabled);
+  cursor: not-allowed;
+  opacity: 0.6;
+
+  &:hover,
+  &:active {
+    background-color: var(--btn-disabled);
+    transform: none;
+  }
+}
+
+// ============================================================================
+// CARD MIXINS
+// ============================================================================
+
+@mixin card-base {
+  background-color: var(--card-default);
+  border-radius: 8px;
+  padding: var(--padding);
+  box-shadow: 0px 3px 6px #4162862b;
+  transition: all 0.3s ease;
+}
+
+@mixin card-elevated {
+  box-shadow:
+    0px 3px 6px rgba(115, 138, 191, 0.15),
+    0px 11px 11px rgba(115, 138, 191, 0.12),
+    0px 26px 16px rgba(115, 138, 191, 0.08);
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow:
+      0px 5px 10px rgba(115, 138, 191, 0.2),
+      0px 15px 20px rgba(115, 138, 191, 0.15),
+      0px 30px 25px rgba(115, 138, 191, 0.1);
+  }
+}
+
+@mixin card-interactive {
+  cursor: pointer;
+  user-select: none;
+
+  &:hover {
+    box-shadow: 0px 5px 12px #41628640;
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
+}
+
+// ============================================================================
+// INPUT MIXINS
+// ============================================================================
+
+@mixin input-base {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border-light);
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  font-family: 'Roboto', sans-serif;
+  color: var(--text-body);
+  background-color: var(--white);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+  &::placeholder {
+    color: var(--text-caption);
+    opacity: 0.7;
+  }
+
+  &:focus {
+    outline: none;
+    border-color: var(--btn-primary);
+    box-shadow: 0 0 0 3px rgba(95, 136, 229, 0.1);
+  }
+
+  &:disabled {
+    background-color: var(--bg-disabled);
+    color: var(--text-disabled);
+    cursor: not-allowed;
+  }
+}
+
+@mixin input-error {
+  border-color: var(--text-error);
+
+  &:focus {
+    border-color: var(--text-error);
+    box-shadow: 0 0 0 3px rgba(247, 74, 77, 0.1);
+  }
+}
+
+// ============================================================================
+// TYPOGRAPHY MIXINS
+// ============================================================================
+
+@mixin heading-base {
+  font-family: 'Roboto', sans-serif;
+  font-weight: 600;
+  color: var(--text-title);
+  line-height: 1.3;
+  margin: 0;
+}
+
+@mixin body-text {
+  font-family: 'Open Sans', sans-serif;
+  font-size: var(--p-font-size);
+  color: var(--text-body);
+  line-height: 1.5;
+  margin: 0;
+}
+
+// ============================================================================
+// ANIMATION MIXINS
+// ============================================================================
+
+@mixin fade-in($duration: 0.3s) {
+  animation: fadeIn $duration ease-in-out;
+}
+
+@mixin slide-in-up($duration: 0.3s) {
+  animation: slideInUp $duration ease-out;
+}
+
+@mixin scale-in($duration: 0.2s) {
+  animation: scaleIn $duration ease-out;
+}
+
+// Respect user motion preferences
+@mixin respect-motion-preference {
+  @media (prefers-reduced-motion: reduce) {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+// ============================================================================
+// ACCESSIBILITY MIXINS
+// ============================================================================
+
+@mixin visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@mixin focus-visible {
+  &:focus-visible {
+    outline: 2px solid var(--btn-primary);
+    outline-offset: 2px;
+  }
+}
+
+// ============================================================================
+// RTL SUPPORT MIXINS
+// ============================================================================
+
+@mixin rtl {
+  [dir="rtl"] & {
+    @content;
+  }
+}
+
+@mixin ltr {
+  [dir="ltr"] & {
+    @content;
+  }
+}
+
+// ============================================================================
+// SHADOW MIXINS
+// ============================================================================
+
+@mixin shadow-subtle {
+  box-shadow: 0px 2px 4px rgba(115, 138, 191, 0.1);
+}
+
+@mixin shadow-card {
+  box-shadow: 0px 3px 6px #4162862b;
+}
+
+@mixin shadow-elevated {
+  box-shadow:
+    0px 3px 6px rgba(115, 138, 191, 0.15),
+    0px 11px 11px rgba(115, 138, 191, 0.12),
+    0px 26px 16px rgba(115, 138, 191, 0.08);
+}
+
+@mixin shadow-modal {
+  box-shadow: 0px 20px 50px #21253633;
+}
+
+// ============================================================================
+// TRUNCATION MIXINS
+// ============================================================================
+
+@mixin truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@mixin line-clamp($lines: 2) {
+  display: -webkit-box;
+  -webkit-line-clamp: $lines;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
