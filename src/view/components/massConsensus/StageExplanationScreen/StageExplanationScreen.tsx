@@ -1,6 +1,6 @@
 import React, { FC, useState } from "react";
 import { ExplanationConfig } from "delib-npm";
-import { useUserConfig } from "@/controllers/hooks/useUserConfig";
+import { useTranslation } from "@/controllers/hooks/useTranslation";
 import {
   explanationTextList,
   useExplanations,
@@ -23,7 +23,7 @@ export const StageExplanationScreen: FC<StageExplanationScreenProps> = ({
   onBack,
   previousStageUrl,
 }) => {
-  const { t, dir } = useUserConfig();
+  const { t, dir } = useTranslation();
   const navigate = useNavigate();
   const {
     getStageExplanation,

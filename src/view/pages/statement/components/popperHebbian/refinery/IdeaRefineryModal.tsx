@@ -4,7 +4,7 @@ import RefinementMessage from './RefinementMessage';
 import { RefinementSession, IdeaRefinementStatus } from '@/models/popperHebbian/RefineryModels';
 import { startRefinementSession, submitRefinementResponse, publishRefinedIdea } from '@/controllers/db/popperHebbian/refineryController';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import styles from './IdeaRefineryModal.module.scss';
 
 interface IdeaRefineryModalProps {
@@ -21,7 +21,7 @@ const IdeaRefineryModal: FC<IdeaRefineryModalProps> = ({
 	onPublish
 }) => {
 	const { user } = useAuthentication();
-	const { t, currentLanguage } = useUserConfig();
+	const { t, currentLanguage } = useTranslation();
 	const [session, setSession] = useState<RefinementSession | null>(null);
 	const [userInput, setUserInput] = useState('');
 	const [isProcessing, setIsProcessing] = useState(false);

@@ -1,4 +1,4 @@
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import styles from './MassConsensusProcessSettings.module.scss';
 import ProcessSettingNative from './ProcessSetting/ProcessSettingNative';
 import { useEffect } from 'react';
@@ -11,7 +11,7 @@ import { listenToMassConsensusProcess } from '@/controllers/db/massConsensus/get
 import { selectUserDemographicQuestionsByStatementId } from '@/redux/userDemographic/userDemographicSlice';
 
 const MassConsensusProcessSettings = () => {
-    const { t } = useUserConfig();
+    const { t } = useTranslation();
     const { statementId } = useParams<{ statementId: string }>();
 
     const defaultMassConsensusProcesses: MassConsensusProcess = {

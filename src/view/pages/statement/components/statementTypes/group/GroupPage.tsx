@@ -6,10 +6,10 @@ import styles from './groupPage.module.scss';
 import AddButton from '../../addButton/AddButton';
 import SubGroupCard from '@/view/components/subGroupCard/SubGroupCard';
 import { Role, StatementType } from "delib-npm"
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 
 export default function GroupPage() {
-	const { t } = useUserConfig();
+	const { t } = useTranslation();
 	const { statement } = useContext(StatementContext);
 	const subscription = useSelector(statementSubscriptionSelector(statement?.statementId));
 

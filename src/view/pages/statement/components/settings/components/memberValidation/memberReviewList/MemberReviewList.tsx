@@ -4,7 +4,7 @@ import { MemberReviewData } from '../MemberValidation';
 import MemberReviewCard from '../memberReviewCard/MemberReviewCard';
 import BanConfirmationModal from '../banConfirmationModal/BanConfirmationModal';
 import styles from './MemberReviewList.module.scss';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { banMember } from '@/controllers/db/membership/banMember';
 import { canBanUser } from '@/helpers/roleHelpers';
 
@@ -17,7 +17,7 @@ interface Props {
 }
 
 const MemberReviewList: FC<Props> = ({ members, onMemberAction, statementId, statement, onRefresh }) => {
-	const { t } = useUserConfig();
+	const { t } = useTranslation();
 	const [selectedMembers, setSelectedMembers] = useState<Set<string>>(new Set());
 	const [banModalData, setBanModalData] = useState<{ member: MemberReviewData } | null>(null);
 	const [selectAll, setSelectAll] = useState(false);

@@ -3,7 +3,7 @@ import type { PayloadAction } from '@reduxjs/toolkit';
 import { RootState } from '../types';
 import { Statement, MassConsensusProcess, updateArray, MassConsensusStage } from 'delib-npm';
 import { defaultMassConsensusProcess } from '@/model/massConsensus/massConsensusModel';
-import { APIEndPoint } from '@/controllers/general/helpers';
+import { APIEndPoint } from '@/controllers/general/apiEndpoint';
 
 export enum Status {
     idle = 'idle',

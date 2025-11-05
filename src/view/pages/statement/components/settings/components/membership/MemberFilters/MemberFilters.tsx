@@ -1,7 +1,7 @@
 import { FC, useState, useEffect, useCallback, ChangeEvent } from 'react';
 import styles from './MemberFilters.module.scss';
 import { Role } from 'delib-npm';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 
 interface MemberFiltersProps {
   onSearchChange: (searchTerm: string) => void;
@@ -21,7 +21,7 @@ const MemberFilters: FC<MemberFiltersProps> = ({
   memberCounts,
   activeFilter
 }) => {
-  const { t } = useUserConfig();
+  const { t } = useTranslation();
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
 

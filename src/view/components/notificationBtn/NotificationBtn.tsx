@@ -8,6 +8,7 @@ import { inAppNotificationsSelector, markNotificationsAsViewedInList } from '@/r
 import styles from './NotificationBtn.module.scss';
 import useClickOutside from '@/controllers/hooks/useClickOutside';
 import { markNotificationsAsViewedInListDB } from '@/controllers/db/inAppNotifications/db_inAppNotifications';
+import UnreadBadge from '../unreadBadge/UnreadBadge';
 
 const NotificationBtn = () => {
 	const creator = useSelector(creatorSelector);
@@ -48,16 +49,14 @@ const NotificationBtn = () => {
 
 	return (
 		<button onClick={handleShowInAppNotifications} className={styles.notificationBtn}>
-			<div className={styles.icon}>
-				{/* ✅ Show badge only if there are UNREAD notifications */}
-				{unreadCount > 0 && (
-					<div className={styles.redCircle}>
-						{unreadCount < 10
-							? unreadCount
-							: `9+`}
-					</div>
-				)}
-			</div>
+			{/* ✅ Show badge only if there are UNREAD notifications */}
+			{unreadCount > 0 && (
+				<UnreadBadge
+					count={unreadCount}
+					position="absolute"
+					ariaLabel={`${unreadCount} unread notification${unreadCount === 1 ? '' : 's'}`}
+				/>
+			)}
 			<MailIcon />
 			{showInAppNotifications && <div ref={(node) => {
 				if (notifRef) notifRef.current = node;}}>

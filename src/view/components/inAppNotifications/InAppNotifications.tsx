@@ -1,7 +1,7 @@
 import { inAppNotificationsSelector } from '@/redux/notificationsSlice/notificationsSlice';
 import { useSelector } from 'react-redux';
 import styles from './InAppNotifications.module.scss';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { NotificationType } from 'delib-npm';
 import { creatorSelector } from '@/redux/creator/creatorSlice';
 import NotificationCard from '../notificationCard/NotificationCard';
@@ -9,7 +9,7 @@ import NotificationCard from '../notificationCard/NotificationCard';
 const InAppNotifications = () => {
 	const creator = useSelector(creatorSelector);
 	const inAppNotifications: NotificationType[] = useSelector(inAppNotificationsSelector).filter(n => n.creatorId !== creator?.uid);
-	const { t } = useUserConfig();
+	const { t } = useTranslation();
 
 	return (
 		<div className={styles.inAppNotifications}>

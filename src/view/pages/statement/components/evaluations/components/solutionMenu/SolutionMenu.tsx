@@ -8,7 +8,7 @@ import QuestionMarkIcon from '@/assets/icons/questionIcon.svg?react';
 import { deleteStatementFromDB } from '@/controllers/db/statements/deleteStatements';
 import { toggleStatementHide } from '@/controllers/db/statements/setStatements';
 import { changeStatementType } from '@/controllers/db/statements/changeStatementType';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import Menu from '@/view/components/menu/Menu';
 import MenuOption from '@/view/components/menu/MenuOption';
 import { Statement, StatementType } from 'delib-npm';
@@ -36,7 +36,7 @@ const SolutionMenu: FC<Props> = ({
 	setIsEdit,
 	handleSetOption,
 }) => {
-	const { t } = useUserConfig();
+	const { t } = useTranslation();
 	const user = useSelector(creatorSelector);
 	const isCreator = statement.creatorId === user?.uid;
 	const isCreatorOrAdmin = isCreator || isAdmin;

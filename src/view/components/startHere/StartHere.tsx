@@ -1,7 +1,7 @@
 import React, { FC } from 'react';
 import styles from './StartHere.module.scss';
 import PointDown from '@/assets/images/handPointingDown.png';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { useDecreaseLearningRemain } from '@/controllers/hooks/useDecreaseLearningRemain';
 
 interface Props {
@@ -9,7 +9,7 @@ interface Props {
 }
 
 const StartHere: FC<Props> = ({ setShow }) => {
-	const { t, dir } = useUserConfig();
+	const { t, dir } = useTranslation();
 	const decreaseLearning = useDecreaseLearningRemain();
 
 	function handleCloseModal() {

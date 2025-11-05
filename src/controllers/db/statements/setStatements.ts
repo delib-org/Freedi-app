@@ -308,6 +308,7 @@ export function createStatement({
 		}
 		if (!creator) throw new Error('Creator is undefined');
 		if (!statementType) throw new Error('Statement type is undefined');
+		if (!text || text.trim() === '') return undefined;
 		const statementId = getRandomUID();
 
 		//get default values for simple or advanced users

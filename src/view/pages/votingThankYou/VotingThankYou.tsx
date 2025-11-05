@@ -1,11 +1,11 @@
 import { FC } from 'react';
 import { useNavigate } from 'react-router';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import styles from './VotingThankYou.module.scss';
 
 const VotingThankYou: FC = () => {
 	const navigate = useNavigate();
-	const { t } = useUserConfig();
+	const { t } = useTranslation();
 
 	const handleGoHome = () => {
 		navigate('/home');

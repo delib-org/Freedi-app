@@ -6,7 +6,7 @@ import AddMassConsensusIcon from '@/assets/icons/massConsensusIcon.svg?react';
 import AddSubGroupIcon from '@/assets/icons/team-group.svg?react';
 import styles from './AddButton.module.scss'
 import { QuestionType, StatementType } from 'delib-npm';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { useDispatch, useSelector } from 'react-redux';
 import { setNewStatementModal, setShowNewStatementModal } from '@/redux/statements/newStatementSlice';
 import { useParams } from 'react-router';
@@ -19,7 +19,7 @@ export default function AddButton() {
 	const dispatch = useDispatch();
 	const [actionsOpen, setActionsOpen] = React.useState(false);
 
-	const { dir } = useUserConfig();
+	const { dir } = useTranslation();
 	const radius = 5;
 
 	const handleAction = (

@@ -5,7 +5,7 @@ import { saveStatementToDB } from '@/controllers/db/statements/setStatements';
 import { useDispatch, useSelector } from 'react-redux';
 import { statementSubscriptionSelector, statementSubsSelector } from '@/redux/statements/statementsSlice';
 import { listenToSubStatements } from '@/controllers/db/statements/listenToStatements';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { evaluationSelector } from '@/redux/evaluations/evaluationsSlice';
 import EvaluationPopup from './evaluationPopup/EvaluationPopup';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
@@ -23,7 +23,7 @@ interface Props {
 }
 
 const SuggestionComment: FC<Props> = ({ statement, parentStatement }) => {
-	const { t } = useUserConfig();
+	const { t } = useTranslation();
 	const dispatch = useDispatch();
 	const subscription = useSelector(statementSubscriptionSelector(statement.statementId));
 	const initialStatement = useRef(parentStatement.statement);

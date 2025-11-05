@@ -4,7 +4,7 @@ import { evaluationSelector, userVotesInParentSelector } from '@/redux/evaluatio
 import { Statement, User } from 'delib-npm';
 import { setEvaluationToDB } from '@/controllers/db/evaluation/setEvaluation';
 import { auth } from '@/controllers/db/config';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import styles from './SingleLikeEvaluation.module.scss';
 import LikeIcon from '@/assets/icons/likeIcon.svg?react';
 import EvaluationManagementModal from '@/view/components/evaluationManagement/EvaluationManagementModal';
@@ -24,7 +24,7 @@ const SingleLikeEvaluation: FC<Props> = ({
 	shouldDisplayScore = true,
 	enableEvaluation = true,
 }) => {
-	const { t } = useUserConfig();
+	const { t } = useTranslation();
 
 	// Get initial values from statement
 	// Use parent's total evaluators if available, otherwise fall back to statement's count

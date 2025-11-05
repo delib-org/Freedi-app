@@ -92,22 +92,6 @@
   }
 }
 
-%notification-badge-base {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  background-color: var(--icons-blue-dark);
-  color: white;
-  border-radius: 50%;
-  width: 20px;
-  height: 20px;
-  font-size: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: bold;
-}
-
 .chatPanel {
   display: block;
 }
@@ -115,11 +99,11 @@
 .chatPanelContainer {
   @extend %chat-panel-container-base;
   transform: translateX(0);
-  
+
   @media (max-width: 768px) {
     transform: translateX(0);
   }
-  
+
   @media (max-width: 480px) {
     transform: translateX(0);
   }
@@ -138,9 +122,6 @@
     }
     .toggleIcon {
       @extend %toggle-icon-base;
-    }
-    .notificationBadge {
-      @extend %notification-badge-base;
     }
   }
   .content {
@@ -234,9 +215,6 @@
     .toggleIcon {
       @extend %toggle-icon-base;
     }
-    .notificationBadge {
-      @extend %notification-badge-base;
-    }
   }
   .openChatPanelBtn {
     color: var(--icons-primary);
@@ -251,15 +229,6 @@
       color: var(--text-negative);
     }
   }
-}
-
-.redCircle {
-  position: absolute;
-  background-color: var(--icons-blue-dark);
-  border-radius: 50%;
-  width: 1.2rem;
-  height: 1.2rem;
-  text-align: center;
 }
 
 

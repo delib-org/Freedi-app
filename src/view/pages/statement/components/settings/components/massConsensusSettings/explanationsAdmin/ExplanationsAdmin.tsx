@@ -1,5 +1,5 @@
 import React, { FC, useState, useCallback, useEffect } from "react";
-import { useUserConfig } from "@/controllers/hooks/useUserConfig";
+import { useTranslation } from "@/controllers/hooks/useTranslation";
 import {
   ExplanationConfig,
   PostActionConfig,
@@ -40,7 +40,7 @@ const ExplanationsAdmin: FC<ExplanationsAdminProps> = ({
   onSave,
   initialConfig,
 }) => {
-  const { t, dir, currentLanguage } = useUserConfig();
+  const { t, dir, currentLanguage } = useTranslation();
 
   // Use the custom hook for configuration management
   const {

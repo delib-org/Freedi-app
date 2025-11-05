@@ -1,7 +1,7 @@
 import { FC, useState, useRef } from 'react';
 import styles from './Dot.module.scss';
 import { Statement } from 'delib-npm';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 
 interface Props {
 	subStatement: Statement;
@@ -9,7 +9,7 @@ interface Props {
 }
 
 const Dot: FC<Props> = ({ subStatement, maxEvaluators }) => {
-	const { t } = useUserConfig();
+	const { t } = useTranslation();
 	const randomX = useRef<number>((Math.random()) * 0.04);
 	const randomY = useRef<number>((Math.random()) * 0.04);
 	const [show, setShow] = useState(false);

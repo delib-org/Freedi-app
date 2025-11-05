@@ -1,7 +1,7 @@
 import React, { FC } from 'react';
 import { Statement } from 'delib-npm';
 import UploadImage from '@/view/components/uploadImage/UploadImage';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import styles from './StatementImage.module.scss';
 
 interface Props {
@@ -23,7 +23,7 @@ const StatementImage: FC<Props> = ({
 	isAdmin,
 	fileInputRef,
 }) => {
-	const { t, dir } = useUserConfig();
+	const { t, dir } = useTranslation();
 
 	// Determine variant and container class based on display mode
 	const variant = displayMode === 'inline' ? 'inline' : 'compact';

@@ -8,10 +8,10 @@ import {
 } from '@/redux/statements/statementsSlice';
 import { Statement } from 'delib-npm';
 import { useParams } from 'react-router';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 
 const Triangle: FC = () => {
-	const { t } = useUserConfig();
+	const { t } = useTranslation();
 	const { statementId } = useParams();
 	const statement = useSelector(statementSelector(statementId));
 

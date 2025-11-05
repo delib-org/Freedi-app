@@ -12,7 +12,7 @@ import { setEvaluationToDB } from '@/controllers/db/evaluation/setEvaluation';
 import { Statement } from 'delib-npm';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { Tooltip } from '@/view/components/tooltip/Tooltip';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 
 interface ThumbProps {
 	evaluation: number;
@@ -32,7 +32,7 @@ const Thumb: FC<ThumbProps> = ({
 	enableEvaluation = true,
 }) => {
 	const { creator } = useAuthentication();
-	const { t } = useUserConfig();
+	const { t } = useTranslation();
 
 	const handleVote = (isUp: boolean) => {
 		if (isUp) {

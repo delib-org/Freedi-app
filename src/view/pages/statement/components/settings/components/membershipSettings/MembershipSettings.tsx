@@ -1,6 +1,6 @@
 import { FC, useState, useEffect } from 'react'
 import SectionTitle from '../sectionTitle/SectionTitle'
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { Access, Statement } from 'delib-npm';
 import MultiSwitch from '@/view/components/switch/multiSwitch/MultiSwitch';
 import Checkbox from '@/view/components/checkbox/Checkbox';
@@ -15,7 +15,7 @@ interface Props {
 }
 
 const MembershipSettings: FC<Props> = ({ statement, setStatementToEdit }) => {
-	const { t } = useUserConfig();
+	const { t } = useTranslation();
 	
 	// Get the top parent statement to check its access level
 	const topParentStatement = useAppSelector(statementSelector(statement?.topParentId));

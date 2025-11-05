@@ -1,5 +1,5 @@
 import React, { FC, useState } from 'react';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { ExplanationConfig, PostActionConfig, ExplanationDisplayMode } from 'delib-npm';
 import styles from './StageExplanationEditor.module.scss';
 
@@ -42,7 +42,7 @@ const StageExplanationEditor: FC<StageExplanationEditorProps> = ({
   language,
   onChange
 }) => {
-  const { t } = useUserConfig();
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<'before' | 'after'>('before');
   const [showVariables, setShowVariables] = useState(false);
   const [textStats, setTextStats] = useState({ chars: 0, words: 0 });

@@ -1,7 +1,7 @@
 import React, { FC } from 'react';
 import { Link } from 'react-router';
 import { Statement } from 'delib-npm';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import SuggestionCard from '@/view/pages/statement/components/evaluations/components/suggestionCards/suggestionCard/SuggestionCard';
 import manWithIdeaLamp from '@/assets/images/manWithIdeaLamp.png';
 import Smile from '@/assets/icons/smile.svg?react';
@@ -18,7 +18,7 @@ export const SolutionsSection: FC<SolutionsSectionProps> = ({
   topSuggestions,
   hasTopSuggestions,
 }) => {
-  const { t } = useUserConfig();
+  const { t } = useTranslation();
 
   return (
     <div className={styles.stageCard} id="solution">

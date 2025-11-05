@@ -7,7 +7,7 @@ import InvitationModal from './main/invitationModal/InvitationModal';
 import DisconnectIcon from '@/assets/icons/disconnectIcon.svg?react';
 import InstallIcon from '@/assets/icons/installIcon.svg?react';
 import InvitationIcon from '@/assets/icons/invitation.svg?react';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { logOut } from '@/controllers/db/authenticationUtils';
 import LanguagesIcon from '@/assets/icons/languagesIcon.svg?react';
 import Modal from '@/view/components/modal/Modal';
@@ -31,7 +31,7 @@ export default function HomeHeader() {
 	const [deferredPrompt, setDeferredPrompt] =
 		useState<BeforeInstallPromptEvent | null>(null);
 
-	const { t, dir, currentLanguage } = useUserConfig();
+	const { t, dir, currentLanguage } = useTranslation();
 
 	const currentLabel = LANGUAGES.find(
 		(lang) => lang.code === currentLanguage

@@ -2,14 +2,14 @@ import React, { FC } from 'react';
 import { handleGetEvaluators } from '../statementSettingsCont';
 import MembersChipsList from './membership/membersChipsList/MembersChipList';
 import { Evaluation, User } from 'delib-npm';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 
 interface GetEvaluatorsProps {
 	statementId: string;
 }
 
 const GetEvaluators: FC<GetEvaluatorsProps> = ({ statementId }) => {
-	const { t } = useUserConfig();
+	const { t } = useTranslation();
 
 	const [evaluators, setEvaluators] = React.useState<Evaluation[]>([]);
 	const [clicked, setClicked] = React.useState(false);

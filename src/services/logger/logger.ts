@@ -16,7 +16,13 @@ interface LogContext {
 }
 
 class Logger {
-  private isDevelopment = import.meta.env.DEV;
+  // Helper to get dev mode
+  // In tests, babel-plugin-transform-vite-meta-env transforms import.meta.env to process.env
+  private getIsDevelopment(): boolean {
+    return import.meta.env.DEV || false;
+  }
+
+  private isDevelopment = this.getIsDevelopment();
   // Set to ERROR to only show errors in both dev and prod
   private logLevel = LogLevel.ERROR;
 

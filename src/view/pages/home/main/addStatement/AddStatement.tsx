@@ -3,12 +3,12 @@ import { Link } from 'react-router';
 
 // Custom components
 import BackArrowIcon from '@/assets/icons/chevronLeftIcon.svg?react';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import StatementSettings from '@/view/pages/statement/components/settings/StatementSettings';
 import styles from './AddStatement.module.scss';
 
 export const AddStatement = () => {
-	const { t, dir } = useUserConfig();
+	const { t, dir } = useTranslation();
 
 	return (
 		<main className={`page slide-out ${styles.addStatement}`}>

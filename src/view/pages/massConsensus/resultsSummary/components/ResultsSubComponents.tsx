@@ -1,6 +1,6 @@
 import React, { FC } from 'react';
 import { Statement } from 'delib-npm';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import styles from './ResultsSubComponents.module.scss';
 import evaluation1 from "@/assets/icons/evaluation/evaluation1.svg";
 import evaluation5 from "@/assets/icons/evaluation/evaluation5.svg";
@@ -11,7 +11,7 @@ interface Props {
 }
 
 const ResultsSubComponents: FC<Props> = ({ statement, totalParticipants }) => {
-	const { t } = useUserConfig();
+	const { t } = useTranslation();
 
 	const participants = statement.evaluation?.numberOfEvaluators || 0;
 	const supportCount = statement.evaluation?.sumPro || 0;

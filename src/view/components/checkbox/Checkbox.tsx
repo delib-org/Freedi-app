@@ -1,7 +1,7 @@
 import React, { FC } from 'react';
 import CheckboxCheckedIcon from '@/assets/icons/checkboxCheckedIcon.svg?react';
 import CheckboxEmptyIcon from '@/assets/icons/checkboxEmptyIcon.svg?react';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import styles from './Checkbox.module.scss';
 import VisuallyHidden from '../accessibility/toScreenReaders/VisuallyHidden';
 
@@ -20,7 +20,7 @@ const Checkbox: FC<CheckboxProps> = ({
 	onChange,
 	className,
 }: CheckboxProps) => {
-	const { t } = useUserConfig();
+	const { t } = useTranslation();
 
 	// Ensure isChecked is always a boolean
 	const checkedValue = Boolean(isChecked);

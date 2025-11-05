@@ -15,7 +15,7 @@ import styles from './StatementVote.module.scss';
 
 // Helpers
 import Toast from '@/view/components/toast/Toast';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { StatementContext } from '../../StatementCont';
 import { Statement, QuestionStep } from 'delib-npm';
 import { statementSubsSelector } from '@/redux/statements/statementsSlice';
@@ -28,7 +28,7 @@ let getVoteFromDB = false;
 const StatementVote: FC = () => {
 	// * Hooks * //
 	const dispatch = useAppDispatch();
-	const { t } = useUserConfig();
+	const { t } = useTranslation();
 	const { user } = useAuthentication();
 	const { statement } = useContext(StatementContext);
 	const inVotingGetOnlyResults = statement?.statementSettings?.inVotingGetOnlyResults;

@@ -4,7 +4,7 @@ import { EvidenceType } from 'delib-npm/dist/models/evidence/evidenceModel';
 import { getSupportLabel, getSupportColor } from '../../popperHebbianHelpers';
 import { submitVote, removeVote, getUserVote } from '@/controllers/db/popperHebbian/evidenceController';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import AddEvidenceModal from '../AddEvidenceModal/AddEvidenceModal';
 import styles from './EvidencePost.module.scss';
 
@@ -33,7 +33,7 @@ interface EvidencePostProps {
 
 const EvidencePost: FC<EvidencePostProps> = ({ statement }) => {
 	const { user } = useAuthentication();
-	const { t } = useUserConfig();
+	const { t } = useTranslation();
 	const [userVote, setUserVote] = useState<'helpful' | 'not-helpful' | null>(null);
 	const [showEditModal, setShowEditModal] = useState(false);
 	const [previousEvidenceType, setPreviousEvidenceType] = useState<EvidenceType | undefined>(undefined);

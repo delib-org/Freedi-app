@@ -1,8 +1,8 @@
-import React, { FC, useState } from 'react';
+import React, { FC, useState, memo } from 'react';
 import { Statement, Role } from 'delib-npm';
 import { MemberReviewData } from '../MemberValidation';
 import styles from './MemberReviewCard.module.scss';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { getBanDisabledReason } from '@/helpers/roleHelpers';
 
 interface Props {
@@ -26,7 +26,7 @@ const MemberReviewCard: FC<Props> = ({
 	onBan,
 	canBan
 }) => {
-	const { t } = useUserConfig();
+	const { t } = useTranslation();
 	const [expanded, setExpanded] = useState(false);
 
 	const getRoleBadge = () => {
@@ -237,4 +237,4 @@ const MemberReviewCard: FC<Props> = ({
 	);
 };
 
-export default MemberReviewCard;
+export default memo(MemberReviewCard);

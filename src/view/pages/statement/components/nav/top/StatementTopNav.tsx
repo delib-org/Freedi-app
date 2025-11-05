@@ -8,7 +8,7 @@ import { LANGUAGES } from "@/constants/Languages";
 
 // Hooks
 import { useAuthentication } from "@/controllers/hooks/useAuthentication";
-import { useUserConfig } from "@/controllers/hooks/useUserConfig";
+import { useTranslation } from "@/controllers/hooks/useTranslation";
 import useStatementColor from "@/controllers/hooks/useStatementColor.ts";
 
 // Redux
@@ -39,7 +39,7 @@ const StatementTopNav: FC<Props> = ({
   isHeaderMenuOpen,
   handleShare,
 }) => {
-  const { t, dir, currentLanguage } = useUserConfig();
+  const { t, dir, currentLanguage } = useTranslation();
   const { user } = useAuthentication();
   const navigate = useNavigate();
   const { screen } = useParams();

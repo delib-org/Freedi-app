@@ -5,7 +5,7 @@ import InvitePanel from './invitePanel/InvitePanel';
 import { logOut } from '@/controllers/db/authenticationUtils';
 import { setFollowMeDB } from '@/controllers/db/statements/setStatements';
 import { Statement } from 'delib-npm';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 
 interface Props {
 	statement: Statement | undefined;
@@ -24,7 +24,7 @@ const StatementHeader: FC<Props> = ({
 	const [isHeaderMenuOpen, setIsHeaderMenuOpen] = useState(false);
 	const [showInvitationPanel, setShowInvitationPanel] = useState(false);
 
-	const { t, dir } = useUserConfig();
+	const { t, dir } = useTranslation();
 
 	function handleShare() {
 		const baseUrl = window.location.origin;

@@ -1,6 +1,6 @@
 import React from 'react';
 import SendIcon from '@/assets/icons/send-icon-pointing-up-and-right.svg?react';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import Button from '@/view/components/buttons/button/Button';
 
 interface StepThreeViewSimilarStatementProps {
@@ -14,7 +14,7 @@ export default function StepThreeViewSimilarStatement({
 	setCurrentStep,
 	setShowModal,
 }: Readonly<StepThreeViewSimilarStatementProps>) {
-	const { t } = useUserConfig();
+	const { t } = useTranslation();
 	const handleSimilarStatementChosen = () => {
 		setShowModal(false);
 	};

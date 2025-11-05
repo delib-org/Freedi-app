@@ -1,10 +1,10 @@
+import React, { useEffect, useState } from "react";
 import SimpleSuggestionCards from "../../statement/components/evaluations/components/simpleSuggestionCards/SimpleSuggestionCards";
 import FooterMassConsensus from "../footerMassConsensus/FooterMassConsensus";
 import { useRandomSuggestions } from "./RandomSuggestionsVM";
 import { useEvaluationTracking } from "./useEvaluationTracking";
-import { useUserConfig } from "@/controllers/hooks/useUserConfig";
+import { useTranslation } from "@/controllers/hooks/useTranslation";
 import { useHeader } from "../headerMassConsensus/HeaderContext";
-import { useEffect, useState } from "react";
 import Loader from "@/view/components/loaders/Loader";
 import { useMassConsensusAnalytics } from "@/hooks/useMassConsensusAnalytics";
 import { useSelector } from "react-redux";
@@ -30,7 +30,7 @@ const RandomSuggestions = () => {
     showRecycleMessage,
     handleDismissRecycleMessage
   } = useRandomSuggestions();
-  const { t } = useUserConfig();
+  const { t } = useTranslation();
   const { statementId } = useParams<{ statementId: string }>();
   const { trackStageCompleted, trackStageSkipped } =
     useMassConsensusAnalytics();

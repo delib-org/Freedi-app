@@ -1,3 +1,4 @@
+import { renderHook } from '@testing-library/react';
 import { useEvaluationTracking } from '../useEvaluationTracking';
 import { updateEvaluationCount } from '@/redux/massConsensus/massConsensusSlice';
 import * as ReactRedux from 'react-redux';
@@ -32,7 +33,7 @@ describe('useEvaluationTracking', () => {
     ];
     useSelectorMock.mockReturnValue(evaluations);
 
-    useEvaluationTracking(statementIds);
+    renderHook(() => useEvaluationTracking(statementIds));
 
     expect(dispatch).toHaveBeenCalledWith(updateEvaluationCount('stmt1'));
     expect(dispatch).toHaveBeenCalledWith(updateEvaluationCount('stmt2'));

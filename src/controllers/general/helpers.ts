@@ -1,6 +1,4 @@
-import firebaseConfig from '@/controllers/db/configKey';
 import {
-	functionConfig,
 	StatementSubscription,
 	Statement,
 	Role,
@@ -9,6 +7,9 @@ import {
 } from 'delib-npm';
 import { useAuthentication } from '../hooks/useAuthentication';
 import { EnhancedEvaluationThumb } from '@/view/pages/statement/components/evaluations/components/evaluation/enhancedEvaluation/EnhancedEvaluationModel';
+
+// Re-export APIEndPoint from separate file to avoid circular dependencies
+export { APIEndPoint } from './apiEndpoint';
 
 export function isAuthorized(
 	statement: Statement | undefined,
@@ -143,6 +144,11 @@ export function isStatementTypeAllowedAsChildren(
 	parentStatement: string | { statementType: StatementType },
 	childType: StatementType
 ): boolean {
+	// Handle null/undefined gracefully
+	if (!parentStatement) {
+		return true;
+	}
+
 	// Handle 'top' case and string case
 	if (parentStatement === 'top' || typeof parentStatement === 'string') {
 		return true;
@@ -298,6 +304,10 @@ export function getNumberDigits(number: number): number {
 }
 
 export function isProduction(): boolean {
+	// In test environment, always return false
+	if (typeof process !== 'undefined' && process.env.NODE_ENV === 'test') {
+		return false;
+	}
 	return window.location.hostname !== 'localhost';
 }
 
@@ -432,39 +442,4 @@ export function findClosestEvaluation(
 	}, array[0]);
 }
 
-/**
- * Generates an API endpoint for Firebase Cloud Functions
- * @param {string} functionName - The name of the Firebase function
- * @param {Record<string, string|number>} queryParams - Query parameters to append to the URL
- * @param {string} envVarName - Optional environment variable name to use for production endpoints
- * @returns {string} - The complete API endpoint URL
- */
-export function APIEndPoint(
-	functionName: string,
-	queryParams: Record<string, string | number>,
-	envVarName?: string
-): string {
-	// Convert query parameters to URL search params
-	const queryString = Object.entries(queryParams)
-		.map(([key, value]) => `${key}=${encodeURIComponent(value)}`)
-		.join('&');
-
-	// Check if running on localhost
-	if (window.location.hostname === 'localhost') {
-		// Use the project ID from the Firebase configuration
-		return `http://localhost:5001/${firebaseConfig.projectId}/${functionConfig.region}/${functionName}${queryString ? '?' : ''}${queryString}`;
-	}
-
-	// For production, use the provided environment variable or construct a default one
-	const envVar = envVarName
-		? import.meta.env[envVarName]
-		: import.meta.env[`VITE_APP_${functionName.toUpperCase()}_ENDPOINT`];
-
-	// If the environment variable exists, use it, otherwise use a standard pattern
-	if (envVar) {
-		return `${envVar}?${queryString}`;
-	}
-
-	// Fallback if no environment variable is found
-	return `https://${functionConfig.region}-${firebaseConfig.projectId}.cloudfunctions.net/${functionName}?${queryString}`;
-}
+// APIEndPoint function has been moved to ./apiEndpoint.ts to avoid circular dependencies

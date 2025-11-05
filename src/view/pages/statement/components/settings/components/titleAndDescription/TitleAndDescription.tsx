@@ -2,7 +2,7 @@ import { FC, useEffect, useRef } from 'react';
 
 // Hooks & Helpers
 import { StatementSettingsProps } from '../../settingsTypeHelpers';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import styles from './TitleAndDescription.module.scss';
 import VisuallyHidden from '@/view/components/accessibility/toScreenReaders/VisuallyHidden';
 import Button, { ButtonType } from '@/view/components/buttons/button/Button';
@@ -12,7 +12,7 @@ const TitleAndDescription: FC<StatementSettingsProps> = ({
 	statement,
 	setStatementToEdit,
 }) => {
-	const { t } = useUserConfig();
+	const { t } = useTranslation();
 	const navigate = useNavigate();
 
 	// * Variables * //

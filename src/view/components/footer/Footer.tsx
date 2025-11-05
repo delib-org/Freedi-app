@@ -5,7 +5,7 @@ import GroupIcon from "@/assets/icons/group.svg?react";
 // import GravelIcon from "@/assets/icons/gravel.svg?react";
 import TargetIcon from "@/assets/icons/target.svg?react";
 import styles from "./Footer.module.scss";
-import { useUserConfig } from "@/controllers/hooks/useUserConfig";
+import { useTranslation } from "@/controllers/hooks/useTranslation";
 import { NotificationType, StatementType } from "delib-npm";
 import { useDispatch, useSelector } from "react-redux";
 import { inAppNotificationsSelector } from "@/redux/notificationsSlice/notificationsSlice";
@@ -23,7 +23,7 @@ const Footer: FC<Props> = ({ setSubPage, subPage }) => {
 
 	const dispatch = useDispatch();
 	const navigate = useNavigate();
-	const { t } = useUserConfig();
+	const { t } = useTranslation();
 	const creator = useSelector(creatorSelector);
 	const inAppNotificationsList: NotificationType[] = useSelector(inAppNotificationsSelector).filter(n => n.creatorId !== creator?.uid);
 	const user = useSelector(creatorSelector);

@@ -5,7 +5,7 @@ import GoogleLoginButton from '../../components/buttons/GoogleLoginButton';
 import EnterNameModal from '../../components/enterNameModal/EnterNameModal';
 import styles from './Start.module.scss';
 import StartPageImage from '@/assets/images/StartPageImage.png';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { Navigate } from 'react-router';
 import { LocalStorageObjects } from '@/types/localStorage/LocalStorageObjects';
@@ -15,7 +15,7 @@ import { AppVersion } from '@/main';
 
 const Start = () => {
 	const [shouldShowNameModal, setShouldShowNameModal] = useState(false);
-	const { t, rowDirection } = useUserConfig();
+	const { t, rowDirection } = useTranslation();
 	const { isAuthenticated, initialRoute } = useAuthentication();
 
 	const navigateTo = initialRoute ?? '/home';

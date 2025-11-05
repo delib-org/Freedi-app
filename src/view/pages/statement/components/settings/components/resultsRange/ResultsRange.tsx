@@ -1,7 +1,7 @@
 import { FC } from 'react';
 
 import { StatementSettingsProps } from '../../settingsTypeHelpers';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import styles from './ResultsRange.module.scss';
 import { defaultResultsSettings } from 'delib-npm';
 
@@ -9,7 +9,7 @@ const ResultsRange: FC<StatementSettingsProps> = ({
 	statement,
 	setStatementToEdit,
 }) => {
-	const { t } = useUserConfig();
+	const { t } = useTranslation();
 	const resultsSettings = statement.resultsSettings ?? defaultResultsSettings;
 
 	const title = `${t('Number of Results to Display')}: `;

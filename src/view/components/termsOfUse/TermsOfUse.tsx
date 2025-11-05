@@ -1,6 +1,6 @@
 import Button, { ButtonType } from '../buttons/button/Button';
 import Modal from '../modal/Modal';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import styles from './TermsOfUse.module.scss';
 
 interface Props {
@@ -12,7 +12,7 @@ export default function TermsOfUse({
 	handleAgreement,
 	agreement,
 }: Readonly<Props>) {
-	const { t } = useUserConfig();
+	const { t } = useTranslation();
 
 	return (
 		<Modal>

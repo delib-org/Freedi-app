@@ -3,26 +3,64 @@ import { getFirestore } from 'firebase-admin/firestore';
 import { Statement, Collections } from 'delib-npm';
 import { EvidenceType } from 'delib-npm/dist/models/evidence/evidenceModel';
 
+// Base weights now scaled to 0-1 range
+// 1.0 = scientific/peer-reviewed data
+// 0.1 = fallacious/unreliable
 const EVIDENCE_WEIGHTS: Record<EvidenceType, number> = {
-	[EvidenceType.data]: 3.0,
-	[EvidenceType.testimony]: 2.0,
-	[EvidenceType.argument]: 1.0,
-	[EvidenceType.anecdote]: 0.5,
-	[EvidenceType.fallacy]: 0.1
+	[EvidenceType.data]: 1.0,        // Peer-reviewed research
+	[EvidenceType.testimony]: 0.7,   // Expert testimony
+	[EvidenceType.argument]: 0.4,    // Logical reasoning
+	[EvidenceType.anecdote]: 0.2,    // Personal stories
+	[EvidenceType.fallacy]: 0.1      // Flagged content
 };
 
+/**
+ * Calculate evidence weight based on community voting
+ * Returns value between -1 and 1:
+ * - +1: Fully credible, high quality evidence
+ * - 0: Neutral, no credibility
+ * - -1: Discredited, harmful evidence (bad evidence actually hurts the position it claims to support)
+ *
+ * New evidence starts optimistically at +1.0, then moves toward community consensus.
+ */
 function calculatePostWeight(statement: Statement): number {
 	const evidence = statement.evidence;
-	if (!evidence?.evidenceType) return 1.0;
+	if (!evidence?.evidenceType) return 0.0; // Default neutral if no type
 
-	const baseWeight = EVIDENCE_WEIGHTS[evidence.evidenceType];
-	const netScore = (evidence.helpfulCount || 0) - (evidence.notHelpfulCount || 0);
+	const baseWeight = EVIDENCE_WEIGHTS[evidence.evidenceType]; // 0 to 1
+	const helpfulCount = evidence.helpfulCount || 0;
+	const notHelpfulCount = evidence.notHelpfulCount || 0;
+	const totalVotes = helpfulCount + notHelpfulCount;
 
-	// Each net vote changes weight by 10%
-	const multiplier = 1 + (netScore * 0.1);
+	// New evidence starts optimistic: assume it's good until proven otherwise
+	if (totalVotes === 0) {
+		return baseWeight * 1.0; // Full credibility for new evidence
+	}
 
-	// Ensure weight never goes below 0.1
-	return Math.max(0.1, baseWeight * multiplier);
+	// Bayesian smoothing: add "virtual votes" to prevent wild swings from 1-2 votes
+	// Optimistic prior: 75% helpful, 25% not helpful (3:1 ratio)
+	const smoothing = 2;
+	const smoothedHelpful = helpfulCount + (smoothing * 0.75);
+	const smoothedNotHelpful = notHelpfulCount + (smoothing * 0.25);
+	const smoothedTotal = smoothedHelpful + smoothedNotHelpful;
+
+	// Calculate ratio of helpful votes (0 to 1)
+	const helpfulRatio = smoothedHelpful / smoothedTotal;
+
+	// Map ratio [0, 1] to vote credibility [-1, 1]
+	// - ratio = 1.0 (all helpful) → voteCredibility = +1.0
+	// - ratio = 0.5 (balanced) → voteCredibility = 0.0
+	// - ratio = 0.0 (all not helpful) → voteCredibility = -1.0
+	const voteCredibility = (helpfulRatio * 2) - 1;
+
+	// Combine evidence type quality with vote credibility
+	// - baseWeight (0-1): How inherently reliable is this type of evidence?
+	// - voteCredibility (-1 to 1): What does the community say?
+	// Result: weight in range [-baseWeight, +baseWeight]
+	const finalWeight = baseWeight * voteCredibility;
+
+	// Clamp to valid range [-1, 1]
+	return Math.max(-1.0, Math.min(1.0, finalWeight));
 }
 
 async function recalculateScore(statementId: string): Promise<void> {

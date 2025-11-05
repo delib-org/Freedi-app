@@ -17,7 +17,7 @@ import { creatorSelector } from '@/redux/creator/creatorSlice';
 import { sortSubStatements } from '../../statementsEvaluationCont';
 import SuggestionCard from './suggestionCard/SuggestionCard';
 import EmptyScreen from '../emptyScreen/EmptyScreen';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import styles from './SuggestionCards.module.scss';
 
 interface Props {
@@ -34,7 +34,7 @@ const SuggestionCards: FC<Props> = ({
 	const params = useParams();
 	const location = useLocation();
 	const navigate = useNavigate();
-	const { t } = useUserConfig();
+	const { t } = useTranslation();
 	
 	// Memoize statementId to prevent unnecessary effect re-runs
 	const statementId = useMemo(() => params.statementId, [params.statementId]);

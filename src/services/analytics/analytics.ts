@@ -191,10 +191,16 @@ return;
   // Type-safe event logging
   logEvent<T extends EventName>(event: T, params: EventParams[T]) {
     // Add common parameters
+    // Helper to get environment mode
+    // In tests, babel-plugin-transform-vite-meta-env transforms import.meta.env to process.env
+    const getEnvMode = (): string => {
+      return import.meta.env.MODE || 'production';
+    };
+
     const enrichedParams = {
       ...params,
       timestamp: Date.now(),
-      environment: import.meta.env.MODE,
+      environment: getEnvMode(),
     };
 
     // Log to our logger as well

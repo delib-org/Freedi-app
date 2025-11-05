@@ -4,7 +4,7 @@ import { getAuth } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { Collections } from 'delib-npm';
 import { notificationService } from '@/services/notificationService';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import useClickOutside from '@/controllers/hooks/useClickOutside';
 import { DB } from '@/controllers/db/config';
 import { getStatementSubscriptionId } from '@/controllers/general/helpers';
@@ -22,7 +22,7 @@ const NotificationSettingsButton: React.FC<NotificationSettingsButtonProps> = ({
 	statementId, 
 	headerStyle 
 }) => {
-	const { t } = useUserConfig();
+	const { t } = useTranslation();
 	const [openSettings, setOpenSettings] = useState(false);
 	const [permissionState, setPermissionState] = useState<NotificationPermission | 'unsupported'>('default');
 	const [isSupported, setIsSupported] = useState(false);

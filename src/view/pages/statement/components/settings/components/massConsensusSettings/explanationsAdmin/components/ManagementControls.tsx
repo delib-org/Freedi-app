@@ -1,5 +1,5 @@
 import React, { FC } from 'react';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import styles from './ManagementControls.module.scss';
 
 interface ManagementControlsProps {
@@ -15,7 +15,7 @@ const ManagementControls: FC<ManagementControlsProps> = ({
   onImport,
   onBulkToggle
 }) => {
-  const { t } = useUserConfig();
+  const { t } = useTranslation();
 
   const handleImportClick = () => {
     const input = document.createElement('input');

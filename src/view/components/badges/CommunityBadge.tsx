@@ -1,7 +1,7 @@
 import React, { FC, useState } from 'react';
 import styles from './Badges.module.scss';
 import UsersIcon from '@/assets/icons/users20px.svg?react';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { Tooltip } from '@/view/components/tooltip/Tooltip';
 
 interface Props {
@@ -10,7 +10,7 @@ interface Props {
 
 const CommunityBadge: FC<Props> = () => {
 	const [isExpanded, setIsExpanded] = useState(false);
-	const { t } = useUserConfig();
+	const { t } = useTranslation();
 
 	const handleMouseEnter = () => {
 		// Only expand on desktop hover

@@ -4,7 +4,7 @@ import UserDemographicQuestionInput from '../settings/userDemographicQuestionInp
 import { setUserAnswers } from '@/controllers/db/userDemographic/setUserDemographic';
 import Button, { ButtonType } from '@/view/components/buttons/button/Button';
 import styles from './UserDemographicQuestions.module.scss';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import BackToMenuArrow from '@/assets/icons/backToMenuArrow.svg?react';
 import X from '@/assets/icons/x.svg?react';
 import { useNavigate } from 'react-router';
@@ -19,7 +19,7 @@ interface Props {
 const UserDemographicQuestions: FC<Props> = ({ questions, closeModal, isMandatory = true, role }) => {
 	const [userDemographic, setUserDemographic] = useState<UserDemographicQuestion[]>([]);
 	const [isSubmitting, setIsSubmitting] = useState(false);
-	const { t } = useUserConfig();
+	const { t } = useTranslation();
 	const navigate = useNavigate();
 
 	// Check if the user is an admin (admin or creator role)

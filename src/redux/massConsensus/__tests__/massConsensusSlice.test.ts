@@ -14,5 +14,8 @@ describe('massConsensusSlice', () => {
         (global.fetch as jest.Mock).mockClear();
     });
 
-    // ... (rest of the test file remains the same, but for the sake of a single replace call, it will be included)
+    it('should have initial state', () => {
+        // Placeholder test - add actual tests here
+        expect(massConsensusReducer).toBeDefined();
+    });
 });

@@ -17,7 +17,7 @@ import {
 // App Hooks
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { useMassConsensusAnalytics } from '@/hooks/useMassConsensusAnalytics';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 
 // Components
 import Text from '@/view/components/text/Text';
@@ -32,7 +32,7 @@ import { useIntroductionMV } from './IntroductionMV';
 import styles from './Introduction.module.scss';
 
 const Introduction = () => {
-	const { t } = useUserConfig();
+	const { t } = useTranslation();
 	const dispatch = useDispatch();
 	const { statement, loading, error, subscription } = useIntroductionMV();
 	const [edit, setEdit] = useState(false);

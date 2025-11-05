@@ -8,11 +8,11 @@ import cableDog from '@/assets/images/CableDog.png';
 import Cloud1 from '@/assets/images/Cloud1.png';
 import Cloud2 from '@/assets/images/Cloud2.png';
 import Cloud3 from '@/assets/images/Cloud3.png';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 
 const Page404 = () => {
 	const navigate = useNavigate();
-	const { t } = useUserConfig();
+	const { t } = useTranslation();
 
 	function handleGoHome() {
 		navigate('/home', { replace: true });

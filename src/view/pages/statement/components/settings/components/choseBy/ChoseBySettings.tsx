@@ -5,7 +5,7 @@ import {
 	TouchEvent,
 	useState,
 } from 'react';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import RadioButtonWithLabel from '@/view/components/radioButtonWithLabel/RadioButtonWithLabel';
 import styles from './ChoseBySettings.module.scss';
 import { StatementSettingsProps } from '../../settingsTypeHelpers';
@@ -29,7 +29,7 @@ interface RangeProps {
 }
 
 const ChoseBySettings: FC<StatementSettingsProps> = ({ statement: _statement }) => {
-	const { t } = useUserConfig();
+	const { t } = useTranslation();
 	const statement = useSelector(statementSelector(_statement.statementId)) as Statement;
 	const [rangeProps, setRangeProps] = useState<RangeProps>({
 		maxValue: 20,
@@ -167,7 +167,7 @@ interface ComponentRangeProps {
 }
 
 function TopOptionsRange({ statement: statement, handleRangeChange }: ComponentRangeProps) {
-	const { t } = useUserConfig();
+	const { t } = useTranslation();
 	const [value, setValue] = useState<number>(statement.resultsSettings.numberOfResults ?? 1);
 	const rangeProps = {
 		maxValue: 20,
@@ -199,7 +199,7 @@ function TopOptionsRange({ statement: statement, handleRangeChange }: ComponentR
 	)
 }
 function AboveThresholdRange({ statement: statement, handleRangeChange }: ComponentRangeProps) {
-	const { t } = useUserConfig();
+	const { t } = useTranslation();
 	const [value, setValue] = useState<number>(statement.resultsSettings.cutoffNumber ?? 1);
 	const rangeProps = {
 		maxValue: 10,
