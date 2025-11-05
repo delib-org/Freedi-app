@@ -1,4 +1,4 @@
-import React, { FC, useState, memo, useMemo } from 'react';
+import React, { FC, useState, memo } from 'react';
 import { Statement, Role } from 'delib-npm';
 import { MemberReviewData } from '../MemberValidation';
 import styles from './MemberReviewCard.module.scss';
