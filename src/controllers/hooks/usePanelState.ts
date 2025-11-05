@@ -47,10 +47,26 @@ return false;
 
     if (typeof window !== 'undefined') {
       window.addEventListener('resize', handleResize);
-      
+
 return () => window.removeEventListener('resize', handleResize);
     }
   }, [storageKey, defaultDesktopOpen, defaultMobileOpen]);
+
+  // Listen for custom panelsClose event
+  useEffect(() => {
+    const handlePanelsClose = () => {
+      const stored = localStorage.getItem(storageKey);
+      if (stored === 'false') {
+        setIsOpenState(false);
+      }
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('panelsClose', handlePanelsClose);
+
+return () => window.removeEventListener('panelsClose', handlePanelsClose);
+    }
+  }, [storageKey]);
 
   const setIsOpen = (value: boolean) => {
     setIsOpenState(value);
