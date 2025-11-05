@@ -1,3 +1,4 @@
+import React, { useEffect, useState, useRef } from "react";
 import { useParams } from "react-router";
 import TitleMassConsensus from "../../TitleMassConsensus/TitleMassConsensus";
 import { useDispatch, useSelector } from "react-redux";
@@ -5,7 +6,6 @@ import {
   setStatement,
   statementSelector,
 } from "@/redux/statements/statementsSlice";
-import { useEffect, useState, useRef } from "react";
 import { useInitialQuestion } from "./InitialQuestionVM";
 import { Role } from "delib-npm";
 import styles from "./InitialQuestion.module.scss";

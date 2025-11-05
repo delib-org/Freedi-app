@@ -27,13 +27,10 @@ jest.mock('@/controllers/db/statements/setStatements', () => ({
   updateStatementText: jest.fn(),
 }));
 
-const mockPrefetchRandomBatches = jest.fn();
-const mockPrefetchTopStatements = jest.fn();
-
 jest.mock('@/redux/massConsensus/massConsensusSlice', () => ({
     ...jest.requireActual('@/redux/massConsensus/massConsensusSlice'),
-    prefetchRandomBatches: () => mockPrefetchRandomBatches(),
-    prefetchTopStatements: () => mockPrefetchTopStatements(),
+    prefetchRandomBatches: jest.fn(() => ({ type: 'massConsensus/prefetchRandomBatches' })),
+    prefetchTopStatements: jest.fn(() => ({ type: 'massConsensus/prefetchTopStatements' })),
 }));
 
 // Mock data

@@ -28,6 +28,30 @@ jest.mock('@/hooks/useMassConsensusAnalytics', () => ({
   }),
 }));
 
+// Mock the user config hook
+jest.mock('@/controllers/hooks/useUserConfig', () => ({
+  useUserConfig: () => ({
+    userConfig: {
+      fontSize: 'medium',
+      language: 'en',
+    },
+    t: (key: string) => key,
+    dir: 'ltr',
+  }),
+}));
+
+// Mock the explanations context hook
+jest.mock('@/contexts/massConsensus/ExplanationProvider', () => ({
+  useExplanations: () => ({
+    showExplanation: jest.fn(),
+    hideExplanation: jest.fn(),
+    isExplanationVisible: false,
+    getStageExplanation: jest.fn(() => null),
+    hasSeenExplanation: jest.fn(() => false),
+  }),
+  getDontShowExplanations: jest.fn(() => false),
+}));
+
 // Mock data
 let mockSubStatements: Statement[] = [];
 let mockCanGetNewSuggestions = false;

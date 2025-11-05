@@ -1,3 +1,4 @@
+import React from 'react';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import styles from './TitleMassConsensus.module.scss';
 
