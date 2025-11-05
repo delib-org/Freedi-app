@@ -1,3 +1,4 @@
+import React from 'react';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import styles from './TitleMassConsensus.module.scss';
 

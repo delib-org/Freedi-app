@@ -17,7 +17,7 @@ import {
 import { getStorage, connectStorageEmulator } from 'firebase/storage';
 import { getAnalytics, isSupported } from 'firebase/analytics';
 import { getFunctions, connectFunctionsEmulator } from 'firebase/functions';
-import { isProduction } from '../general/helpers';
+// Removed import to avoid circular dependency - isProduction is inlined below
 import firebaseConfig from './configKey';
 
 // Helper to detect iOS devices
@@ -96,7 +96,12 @@ const functions = getFunctions(app);
 
 // Initialize Analytics only in production and if supported
 let analytics: ReturnType<typeof getAnalytics> | null = null;
-if (isProduction()) {
+// Inline isProduction check to avoid circular dependency
+const isProduction = typeof process !== 'undefined' && process.env.NODE_ENV === 'test'
+	? false
+	: typeof window !== 'undefined' && window.location.hostname !== 'localhost';
+
+if (isProduction) {
 	// Check both isSupported and IndexedDB availability before initializing analytics
 	Promise.all([isSupported(), isIndexedDBAvailable()])
 		.then(([supported, indexedDBAvailable]) => {
@@ -126,7 +131,7 @@ setPersistence(auth, browserLocalPersistence)
 	});
 
 //development
-if (!isProduction()) {
+if (!isProduction) {
 	console.info('Running on development mode');
 
 	try {

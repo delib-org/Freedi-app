@@ -27,14 +27,20 @@ jest.mock('@/controllers/db/statements/setStatements', () => ({
   updateStatementText: jest.fn(),
 }));
 
-const mockPrefetchRandomBatches = jest.fn();
-const mockPrefetchTopStatements = jest.fn();
-
-jest.mock('@/redux/massConsensus/massConsensusSlice', () => ({
-    ...jest.requireActual('@/redux/massConsensus/massConsensusSlice'),
-    prefetchRandomBatches: () => mockPrefetchRandomBatches(),
-    prefetchTopStatements: () => mockPrefetchTopStatements(),
-}));
+jest.mock('@/redux/massConsensus/massConsensusSlice', () => {
+    const actual = jest.requireActual('@/redux/massConsensus/massConsensusSlice');
+    return {
+        ...actual,
+        prefetchRandomBatches: jest.fn((params) => ({
+            type: 'massConsensus/prefetchRandomBatches',
+            payload: params
+        })),
+        prefetchTopStatements: jest.fn((statementId) => ({
+            type: 'massConsensus/prefetchTopStatements',
+            payload: statementId
+        })),
+    };
+});
 
 // Mock data
 const mockHandleSetInitialSuggestion = jest.fn();
@@ -106,8 +112,16 @@ describe('InitialQuestion Component', () => {
     fireEvent.change(textarea, { target: { value: 'This is a longer suggestion text' } });
 
     await waitFor(() => {
-      expect(dispatchSpy).toHaveBeenCalledWith(mockPrefetchRandomBatches());
-      expect(dispatchSpy).toHaveBeenCalledWith(mockPrefetchTopStatements());
+      expect(dispatchSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'massConsensus/prefetchRandomBatches'
+        })
+      );
+      expect(dispatchSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'massConsensus/prefetchTopStatements'
+        })
+      );
     });
   });
 });

@@ -63,6 +63,9 @@
     "valibot": "^1.0.0-rc.1"
   },
   "devDependencies": {
+    "@babel/preset-env": "^7.28.5",
+    "@babel/preset-react": "^7.28.5",
+    "@babel/preset-typescript": "^7.28.5",
     "@dagrejs/dagre": "^1.0.4",
     "@eslint/js": "^9.18.0",
     "@swc/cli": "^0.7.8",
@@ -78,6 +81,8 @@
     "@types/uuid": "^10.0.0",
     "@typescript-eslint/eslint-plugin": "^8.20.0",
     "@vitejs/plugin-react-swc": "^3.7.2",
+    "babel-jest": "^30.2.0",
+    "babel-plugin-transform-vite-meta-env": "^1.0.3",
     "cross-env": "^7.0.3",
     "eslint": "^9.18.0",
     "eslint-config-prettier": "^10.0.1",

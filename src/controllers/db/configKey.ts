@@ -1,3 +1,6 @@
+// Firebase configuration
+// In test environment, Jest will use process.env
+// In browser, Vite will replace import.meta.env at build time
 const firebaseConfig = {
 	apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
 	authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,

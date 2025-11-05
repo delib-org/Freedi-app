@@ -1,24 +1,7 @@
 import { useNavigate, useParams, useLocation } from "react-router";
 import styles from "./subQuestionNode.module.scss";
-import React, { FC, useEffect, useRef, useState } from "react";
+import React, { FC, useEffect, useRef, useState, memo } from "react";
 import { Statement } from "delib-npm";
-
-// Add global keyframes for the animation
-// Using --alert color which is #dd90b6 (pinkish)
-const styleSheet = document.createElement("style");
-styleSheet.textContent = `
-  @keyframes followMeBlink {
-    0%, 100% {
-      background-color: #dd90b6;
-      color: white;
-    }
-    50% {
-      background-color: white;
-      color: #dd90b6;
-    }
-  }
-`;
-document.head.appendChild(styleSheet);
 
 interface SubQuestionNodeProps {
   statement: Statement;
@@ -94,25 +77,13 @@ const SubQuestionNode: FC<SubQuestionNodeProps> = ({
 
   const graphStyle = `${styles.borderDefault}  ${isFirstChild ? styles.borderTop : ""}`;
 
-  // Add inline styles for followMe effect
-  // Using --alert color (#dd90b6) to match the toast
-  const followMeStyles = isFollowedStatement ? {
-    borderLeft: '5px solid #dd90b6',
-    animation: 'followMeBlink 2s ease-in-out infinite',
-    boxShadow: '0 0 15px rgba(221, 144, 182, 0.4)',
-    backgroundColor: '#dd90b6',
-    color: 'white',
-    transition: 'background-color 0.5s ease, color 0.5s ease'
-  } : {};
-
   return (
     <div className={styles.SubQuestionNodeContainer}>
       <button
         className={`${styles.node} ${isInStatement ? styles.green : ""} ${isFollowedStatement ? styles.followMe : ""} ${depth <= 1 && !isInStatement && !isFollowedStatement ? styles.group : ""} ${!isInStatement ? styles.clickable : ""} ${clicked ? styles.animate : ""}`}
         onClick={!isInStatement ? handleClick : undefined}
-        style={followMeStyles}
       >
-        <h3 style={isFollowedStatement ? { color: 'inherit' } : {}}>{statement.statement}</h3>
+        <h3>{statement.statement}</h3>
       </button>
 
       {
@@ -148,4 +119,4 @@ const SubQuestionNode: FC<SubQuestionNodeProps> = ({
   );
 };
 
-export default SubQuestionNode;
+export default memo(SubQuestionNode);

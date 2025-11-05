@@ -1,11 +1,17 @@
 import firebaseConfig from "@/controllers/db/configKey";
 import { functionConfig } from "delib-npm";
 
+// Helper to get environment variables
+// In tests, babel-plugin-transform-vite-meta-env transforms import.meta.env to process.env
+const getEnvVar = (key: string): string | undefined => {
+	return import.meta.env[key];
+};
+
 // Endpoint configuration
 const getImproveSuggestionEndpoint = () => {
 	return location.hostname === 'localhost'
 		? `http://localhost:5001/${firebaseConfig.projectId}/${functionConfig.region}/improveSuggestion`
-		: import.meta.env.VITE_APP_IMPROVE_SUGGESTION_ENDPOINT ||
+		: getEnvVar('VITE_APP_IMPROVE_SUGGESTION_ENDPOINT') ||
 		  `https://${functionConfig.region}-${firebaseConfig.projectId}.cloudfunctions.net/improveSuggestion`;
 };
 
