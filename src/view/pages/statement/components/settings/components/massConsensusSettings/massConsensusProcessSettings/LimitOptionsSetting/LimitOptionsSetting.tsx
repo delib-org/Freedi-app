@@ -1,4 +1,4 @@
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { statementSelector } from '@/redux/statements/statementsSlice';
 import { ChangeEvent, MouseEvent, TouchEvent, useState } from 'react';
 import { useSelector } from 'react-redux';
@@ -7,7 +7,7 @@ import { useParams } from 'react-router';
 import { setStatementSettingToDB } from '@/controllers/db/statementSettings/setStatementSettings';
 
 const LimitOptionsSetting = () => {
-	const { t } = useUserConfig();
+	const { t } = useTranslation();
 	const { statementId } = useParams();
 	const statement = useSelector(statementSelector(statementId));
 	const { numberOfOptionsPerUser = 1 } = statement.statementSettings;

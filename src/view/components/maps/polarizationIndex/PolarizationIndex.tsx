@@ -7,7 +7,7 @@ import styles from './PolarizationIndex.module.scss';
 import { Tooltip } from '../../tooltip/Tooltip';
 import { PolarizationIndex, UserDemographicQuestion } from 'delib-npm';
 import { listenToUserDemographicQuestions } from '@/controllers/db/userDemographic/getUserDemographic';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 
 interface Group {
 	option: {
@@ -45,7 +45,7 @@ interface Point {
 
 const PolarizationIndexComp = () => {
 	const { statementId } = useParams();
-	const {t} = useUserConfig();
+	const {t} = useTranslation();
 	const polarizationIndexes = useSelector(selectPolarizationIndexByParentId(statementId));
 	const userQuestions: UserDemographicQuestion[] = useSelector(selectUserDemographicQuestionsByStatementId(statementId));
 

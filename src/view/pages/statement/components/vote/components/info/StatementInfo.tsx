@@ -7,7 +7,7 @@ import { isAuthorized } from '@/controllers/general/helpers';
 
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import styles from './StatementInfo.module.scss';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import {
 	statementSelector,
 	statementSubscriptionSelector,
@@ -22,7 +22,7 @@ interface Props {
 
 const StatementInfo: FC<Props> = ({ statement, setShowInfo }) => {
 	// Hooks
-	const { t } = useUserConfig();
+	const { t } = useTranslation();
 
 	// Redux
 	const statementSubscription = useAppSelector(

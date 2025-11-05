@@ -1,6 +1,6 @@
 import React, { useContext } from 'react';
 import { DisplayStatement } from '../NewStatement';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { NewStatementContext, SimilaritySteps } from '../NewStatementCont';
 import styles from './SimilarStatements.module.scss';
 import { useDispatch, useSelector } from 'react-redux';
@@ -13,7 +13,7 @@ import { getDefaultQuestionType } from '@/model/questionTypeDefaults';
 export default function SimilarStatements() {
 
 	const dispatch = useDispatch();
-	const { t, currentLanguage } = useUserConfig();
+	const { t, currentLanguage } = useTranslation();
 	const { similarStatements, setCurrentStep, title, description } = useContext(NewStatementContext);
 	const newStatementParent = useSelector(selectParentStatementForNewStatement);
 	const newStatement = useSelector(selectNewStatement);

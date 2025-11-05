@@ -1,6 +1,6 @@
 import { UserDemographicQuestion, UserDemographicQuestionType } from 'delib-npm';
 import { FC, useEffect, useState } from 'react';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import styles from './UserDemographicQuestionInput.module.scss';
 
 interface UserDemographicQuestionInputProps {
@@ -19,7 +19,7 @@ const UserDemographicQuestionInput: FC<UserDemographicQuestionInputProps> = ({
 	className = '',
 	required = false,
 }) => {
-	const { t } = useUserConfig();
+	const { t } = useTranslation();
 	const [validationError, setValidationError] = useState('');
 	const [isChosen, setIsChosen] = useState<number | null>(null);
 	const validateInput = (inputValue: string | string[]) => {

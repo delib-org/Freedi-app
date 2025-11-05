@@ -2,7 +2,7 @@ import { FormEvent, useContext, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import styles from './GetInitialStatementData.module.scss';
 import { createStatementWithSubscription } from '@/controllers/db/statements/createStatementWithSubscription';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import Button, { ButtonType } from '@/view/components/buttons/button/Button';
 import Input from '@/view/components/input/Input';
 import Textarea from '@/view/components/textarea/Textarea';
@@ -17,7 +17,7 @@ import { getDefaultQuestionType } from '@/model/questionTypeDefaults';
 
 export default function GetInitialStatementData() {
 	const { lookingForSimilarStatements, setLookingForSimilarStatements, setSimilarStatements, setCurrentStep, setTitle } = useContext(NewStatementContext);
-	const { t, currentLanguage } = useUserConfig();
+	const { t, currentLanguage } = useTranslation();
 	const location = useLocation();
 	const navigate = useNavigate();
 	const isHomePage = location.pathname === '/home';

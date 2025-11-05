@@ -1,7 +1,7 @@
 import collapseIcon from '@/assets/icons/Collapse.png'
 import expandIcon from '@/assets/icons/Expand.png'
 import avatar from '@/assets/images/avatar.jpg'
-import { useUserConfig } from '@/controllers/hooks/useUserConfig'
+import { useTranslation } from '@/controllers/hooks/useTranslation'
 import { approveSingle, rejectSingle } from '@/services/membershipActions'
 import { WaitingMember } from 'delib-npm'
 import { FC, useState } from 'react'
@@ -15,7 +15,7 @@ interface Props {
 	onCheckChange: (checked: boolean) => void;
 }
 const ApproveMember: FC<Props> = ({ wait, isChecked, onCheckChange }) => {
-	const { t } = useUserConfig();
+	const { t } = useTranslation();
 	const [showDetails, setShowDetails] = useState(false);
 	const [isVisible, setIsVisible] = useState(true);
 

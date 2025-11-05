@@ -2,7 +2,7 @@ import React, { FC, useState } from 'react';
 import { Statement, Role } from 'delib-npm';
 import { MemberReviewData } from '../MemberValidation';
 import styles from './BanConfirmationModal.module.scss';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { canBanUser, getBanDisabledReason } from '@/helpers/roleHelpers';
 
 interface Props {
@@ -14,7 +14,7 @@ interface Props {
 }
 
 const BanConfirmationModal: FC<Props> = ({ member, statement, onConfirm, onCancel }) => {
-	const { t } = useUserConfig();
+	const { t } = useTranslation();
 	const [banType, setBanType] = useState<'soft' | 'hard'>('soft');
 	const [reason, setReason] = useState('');
 	const [removeVotes, setRemoveVotes] = useState(true); // Default to removing votes

@@ -15,7 +15,7 @@ import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 // Custom components
 
 // Hooks & Helpers
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { RootState } from '@/redux/store';
 import styles from './MembersSettings.module.scss';
 import { StatementSubscription, Role, Statement, Collections } from 'delib-npm';
@@ -27,7 +27,7 @@ interface MembersSettingsProps {
 const MembersSettings: FC<MembersSettingsProps> = ({ statement }) => {
 	// * Hooks * //
 	const { statementId } = useParams();
-	const { t } = useUserConfig();
+	const { t } = useTranslation();
 	const [userCount, setUserCount] = useState<number>(0);
 
 	const statementMembershipSelector = (statementId: string | undefined) =>

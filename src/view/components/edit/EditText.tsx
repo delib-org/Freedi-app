@@ -1,7 +1,7 @@
 import React, { FC, useState, useEffect, useRef, KeyboardEvent, ChangeEvent } from 'react';
 import Save from '@/assets/icons/saveIcon.svg?react';
 import Text from '../text/Text';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 
 export interface EditTextProps {
 	value: string;
@@ -49,7 +49,7 @@ const EditText: FC<EditTextProps> = ({
 	const [secondaryText, setSecondaryText] = useState(secondaryValue);
 	const [rawText, setRawText] = useState(''); // Track the raw text during editing
 	const inputRef = useRef<HTMLTextAreaElement | HTMLInputElement>(null);
-	const { dir: direction } = useUserConfig();
+	const { dir: direction } = useTranslation();
 	const align = direction === 'ltr' ? 'left' : 'right';
 
 	useEffect(() => {

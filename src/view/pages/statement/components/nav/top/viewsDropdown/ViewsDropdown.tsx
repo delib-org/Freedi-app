@@ -2,7 +2,7 @@ import { FC, useState, useEffect, useCallback } from 'react';
 import { Statement, StatementType, Screen } from 'delib-npm';
 
 // Hooks
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import useClickOutside from '@/controllers/hooks/useClickOutside';
 
 // Icons
@@ -31,7 +31,7 @@ const ViewsDropdown: FC<ViewsDropdownProps> = ({
   headerStyle,
   onNavigate,
 }) => {
-  const { t } = useUserConfig();
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {

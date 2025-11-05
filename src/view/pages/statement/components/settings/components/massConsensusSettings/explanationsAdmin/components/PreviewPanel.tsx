@@ -1,5 +1,5 @@
 import React, { FC } from 'react';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import StageExplanation from '@/view/components/massConsensus/StageExplanation/StageExplanation';
 import { ExplanationConfig, PostActionConfig, ExplanationDisplayMode } from 'delib-npm';
 import styles from './PreviewPanel.module.scss';
@@ -31,7 +31,7 @@ interface PreviewPanelProps {
 }
 
 const PreviewPanel: FC<PreviewPanelProps> = ({ stageConfig, stageInfo, globalSettings }) => {
-  const { t, dir } = useUserConfig();
+  const { t, dir } = useTranslation();
 
   if (!stageConfig || !stageInfo) {
     return (

@@ -1,5 +1,5 @@
 // CustomSwitch.tsx
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import React, { FC, ReactNode } from 'react';
 import styles from './CustomSwitch.module.scss';
 import VisuallyHidden from '../../accessibility/toScreenReaders/VisuallyHidden';
@@ -19,7 +19,7 @@ const CustomSwitch: FC<Props> = ({
 	setChecked,
 	children,
 }) => {
-	const { t } = useUserConfig();
+	const { t } = useTranslation();
 
 	const handleChange = () => {
 		setChecked(!checked);

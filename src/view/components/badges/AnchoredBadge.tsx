@@ -1,7 +1,7 @@
 import React, { FC, useState } from 'react';
 import styles from './Badges.module.scss';
 import AnchorIcon from '@/assets/icons/anchor.svg?react';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { Tooltip } from '@/view/components/tooltip/Tooltip';
 
 interface Props {
@@ -13,7 +13,7 @@ interface Props {
 
 const AnchoredBadge: FC<Props> = ({ customIcon, customDescription, customLabel }) => {
 	const [isExpanded, setIsExpanded] = useState(false);
-	const { t } = useUserConfig();
+	const { t } = useTranslation();
 
 	const handleMouseEnter = () => {
 		// Only expand on desktop hover

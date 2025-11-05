@@ -1,6 +1,6 @@
 import React, { FC, useState } from 'react';
 import Modal from '@/view/components/modal/Modal';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import styles from './InitialIdeaModal.module.scss';
 
 interface InitialIdeaModalProps {
@@ -9,7 +9,7 @@ interface InitialIdeaModalProps {
 }
 
 const InitialIdeaModal: FC<InitialIdeaModalProps> = ({ onSubmit, onClose }) => {
-	const { t } = useUserConfig();
+	const { t } = useTranslation();
 	const [ideaText, setIdeaText] = useState('');
 
 	const handleSubmit = (): void => {

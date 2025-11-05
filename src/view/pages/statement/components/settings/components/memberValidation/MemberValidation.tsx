@@ -1,6 +1,6 @@
 import React, { FC, useState, useEffect } from 'react';
 import { Statement, User, Role } from 'delib-npm';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import SectionTitle from '../sectionTitle/SectionTitle';
 import SettingsModal from '../settingsModal/SettingsModal';
 import MemberReviewList from './memberReviewList/MemberReviewList';
@@ -29,7 +29,7 @@ export interface MemberReviewData {
 }
 
 const MemberValidation: FC<Props> = ({ statement }) => {
-	const { t } = useUserConfig();
+	const { t } = useTranslation();
 	const [showModal, setShowModal] = useState(false);
 	const [members, setMembers] = useState<MemberReviewData[]>([]);
 	const [loading, setLoading] = useState(false);

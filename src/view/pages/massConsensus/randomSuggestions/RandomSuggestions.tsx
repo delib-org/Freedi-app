@@ -2,7 +2,7 @@ import SimpleSuggestionCards from "../../statement/components/evaluations/compon
 import FooterMassConsensus from "../footerMassConsensus/FooterMassConsensus";
 import { useRandomSuggestions } from "./RandomSuggestionsVM";
 import { useEvaluationTracking } from "./useEvaluationTracking";
-import { useUserConfig } from "@/controllers/hooks/useUserConfig";
+import { useTranslation } from "@/controllers/hooks/useTranslation";
 import { useHeader } from "../headerMassConsensus/HeaderContext";
 import { useEffect, useState } from "react";
 import Loader from "@/view/components/loaders/Loader";
@@ -30,7 +30,7 @@ const RandomSuggestions = () => {
     showRecycleMessage,
     handleDismissRecycleMessage
   } = useRandomSuggestions();
-  const { t } = useUserConfig();
+  const { t } = useTranslation();
   const { statementId } = useParams<{ statementId: string }>();
   const { trackStageCompleted, trackStageSkipped } =
     useMassConsensusAnalytics();

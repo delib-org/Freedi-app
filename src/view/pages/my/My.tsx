@@ -1,4 +1,4 @@
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { creatorSelector } from '@/redux/creator/creatorSlice';
 
 import { useSelector } from 'react-redux';
@@ -14,7 +14,7 @@ import { useNavigate, Link } from 'react-router';
 
 const My = () => {
 	const user = useSelector(creatorSelector);
-	const { t } = useUserConfig();
+	const { t } = useTranslation();
 	const isAdvancedUser = user?.advanceUser;
 	const [selectedImage, setSelectedImage] = useState<string | null>(null);
 	const fileInputRef = useRef<HTMLInputElement | null>(null);

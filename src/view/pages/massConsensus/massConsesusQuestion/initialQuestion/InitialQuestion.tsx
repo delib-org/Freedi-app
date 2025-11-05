@@ -9,7 +9,7 @@ import { useEffect, useState, useRef } from "react";
 import { useInitialQuestion } from "./InitialQuestionVM";
 import { Role } from "delib-npm";
 import styles from "./InitialQuestion.module.scss";
-import { useUserConfig } from "@/controllers/hooks/useUserConfig";
+import { useTranslation } from "@/controllers/hooks/useTranslation";
 import Textarea from "@/view/components/textarea/Textarea";
 import { updateStatementText } from "@/controllers/db/statements/setStatements";
 import { prefetchRandomBatches, prefetchTopStatements } from "@/redux/massConsensus/massConsensusSlice";
@@ -27,7 +27,7 @@ const InitialQuestion = ({
   const dispatch = useDispatch<AppDispatch>(); // Dispatch to update the redux state
   const { handleSetInitialSuggestion, ready, error, subscription } =
     useInitialQuestion(description);
-  const { t } = useUserConfig();
+  const { t } = useTranslation();
   const [edit, setEdit] = useState(false);
   const [title, setTitle] = useState(statement ? statement.statement : "");
   const hasPrefetched = useRef(false);

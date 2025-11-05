@@ -20,8 +20,8 @@ jest.mock('react-router', () => ({
   ...jest.requireActual('react-router'),
   useParams: () => ({ statementId: 'test-statement-id' }),
 }));
-jest.mock('@/controllers/hooks/useUserConfig', () => ({
-  useUserConfig: () => ({ t: (key: string) => key }),
+jest.mock('@/controllers/hooks/useTranslation', () => ({
+  useTranslation: () => ({ t: (key: string) => key }),
 }));
 jest.mock('@/controllers/db/statements/setStatements', () => ({
   updateStatementText: jest.fn(),

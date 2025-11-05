@@ -7,7 +7,7 @@ import { useParams } from 'react-router';
 import DeleteIcon from '@/assets/icons/delete.svg?react';
 import PlusIcon from '@/assets/icons/plusIcon.svg?react';
 import CloseIcon from '@/assets/icons/close.svg?react';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { v4 as uuidv4 } from 'uuid';
 
 interface Props {
@@ -33,7 +33,7 @@ const STAGE_DISPLAY_NAMES: Record<MassConsensusPageUrls, string> = {
 
 const ProcessSettingNative = ({ processName, stages: _stages }: Props) => {
     const { statementId } = useParams<{ statementId: string }>();
-    const { t } = useUserConfig();
+    const { t } = useTranslation();
 
     const [stages, setStages] = useState<MassConsensusStage[]>(_stages || defaultMassConsensusProcess);
     const [showAddStage, setShowAddStage] = useState(false);

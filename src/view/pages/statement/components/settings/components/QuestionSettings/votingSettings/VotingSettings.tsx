@@ -1,5 +1,5 @@
 import React from 'react'
-import { useUserConfig } from '@/controllers/hooks/useUserConfig'
+import { useTranslation } from '@/controllers/hooks/useTranslation'
 import Checkbox from '@/view/components/checkbox/Checkbox';
 import { useParams } from 'react-router';
 import { useSelector } from 'react-redux';
@@ -8,7 +8,7 @@ import { setVotingSettingsToDB } from '@/controllers/db/vote/setVotingSettings';
 import styles from './VotingSettings.module.scss';
 
 const VotingSettings = () => {
-    const { t } = useUserConfig();
+    const { t } = useTranslation();
     const {statementId} = useParams();
     const statement = useSelector(statementSelectorById(statementId));
 

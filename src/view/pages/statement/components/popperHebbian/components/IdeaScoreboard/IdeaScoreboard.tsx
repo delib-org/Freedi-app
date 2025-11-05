@@ -1,7 +1,7 @@
 import { FC } from 'react';
 import { PopperHebbianScore } from '@/models/popperHebbian/ScoreModels';
 import { getScoreInterpretation } from '../../popperHebbianHelpers';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import styles from './IdeaScoreboard.module.scss';
 
 interface IdeaScoreboardProps {
@@ -9,7 +9,7 @@ interface IdeaScoreboardProps {
 }
 
 const IdeaScoreboard: FC<IdeaScoreboardProps> = ({ score }) => {
-	const { t } = useUserConfig();
+	const { t } = useTranslation();
 	const { totalScore, status } = score;
 
 	const getStatusText = (status: string): string => {

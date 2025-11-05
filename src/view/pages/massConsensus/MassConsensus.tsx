@@ -7,7 +7,7 @@ import { HeaderProvider } from './headerMassConsensus/HeaderContext'
 import { ExplanationProvider } from '@/contexts/massConsensus/ExplanationProvider'
 import HeaderMassConsensus from './headerMassConsensus/HeaderMassConsensus'
 import styles from './MassConsensus.module.scss'
-import { useUserConfig } from '@/controllers/hooks/useUserConfig'
+import { useTranslation } from '@/controllers/hooks/useTranslation'
 import { setMassConsensusMemberToDB } from '@/controllers/db/massConsensus/setMassConsensus'
 import { setMassConsensusProcess } from '@/redux/massConsensus/massConsensusSlice'
 import { useGetStatementSubscriptionQuery, useGetMassConsensusProcessQuery } from '@/redux/massConsensus/massConsensusApi';
@@ -35,7 +35,7 @@ const MassConsensusErrorFallback = ({ error, resetErrorBoundary }: { error: Erro
 const MassConsensus = () => {
 	const navigate = useNavigate()
 	const location = useLocation()
-	const { dir } = useUserConfig();
+	const { dir } = useTranslation();
 	const dispatch = useDispatch();
 	const { statementId } = useParams<{ statementId: string }>();
 	const { user } = useAuthentication();

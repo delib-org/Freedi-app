@@ -9,7 +9,7 @@ import { Role } from 'delib-npm';
 import { statementSubscriptionSelector, userSuggestionsSelector } from '@/redux/statements/statementsSlice';
 
 // App Hooks
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 
 // Icons
 import BackIcon from '@/assets/icons/chevronLeftIcon.svg?react';
@@ -29,7 +29,7 @@ interface Props{
 
 const HeaderMassConsensus = ({ showMySuggestions = true }: Props) => {
     const { statementId } = useParams<{ statementId: string }>();
-    const { dir} = useUserConfig();
+    const { dir} = useTranslation();
     const userId = useSelector(creatorSelector)?.uid
     const { backToApp } = useHeader();
     const role = useSelector(statementSubscriptionSelector(statementId))?.role;

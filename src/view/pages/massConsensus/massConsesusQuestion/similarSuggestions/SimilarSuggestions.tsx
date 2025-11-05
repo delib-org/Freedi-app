@@ -6,7 +6,7 @@ import SimilarCard from "./similarCard/SimilarCard";
 import { Statement } from "delib-npm";
 import styles from "./SimilarSuggestions.module.scss";
 import { useSimilarSuggestions } from "./SimilarSuggestionVM";
-import { useUserConfig } from "@/controllers/hooks/useUserConfig";
+import { useTranslation } from "@/controllers/hooks/useTranslation";
 import Loader from "@/view/components/loaders/Loader";
 import { useStageNavigation } from "../../MassConsensusVM";
 import TitleMassConsensus from "../../TitleMassConsensus/TitleMassConsensus";
@@ -21,7 +21,7 @@ const SimilarSuggestions: React.FC<SimilarSuggestionsProps> = ({ setIfButtonEnab
   const navigate = useNavigate();
   const { statementId } = useParams<{ statementId: string }>();
   const similarSuggestions = useSelector(selectSimilarStatements);
-  const { t } = useUserConfig();
+  const { t } = useTranslation();
   const [loadingStatements, setLoadingStatements] = useState(true);
   const { nextStage } = useStageNavigation();
   const { handleSetSuggestionToDB, isLoading } = useSimilarSuggestions(

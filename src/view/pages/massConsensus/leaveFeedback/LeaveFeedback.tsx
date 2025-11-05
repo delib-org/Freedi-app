@@ -3,7 +3,7 @@ import { MailIcon, MessageSquare } from 'lucide-react';
 import TitleMassConsensus from '../TitleMassConsensus/TitleMassConsensus';
 import FooterMassConsensus from '../footerMassConsensus/FooterMassConsensus';
 import styles from './LeaveFeedback.module.scss';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { useLeaveFeedback } from './LeaveFeedbackVM';
 import { useHeader } from '../headerMassConsensus/HeaderContext';
 import { useEffect } from 'react';
@@ -13,7 +13,7 @@ import { useMassConsensusAnalytics } from '@/hooks/useMassConsensusAnalytics';
 function LeaveFeedback() {
 	const { statementId } = useParams();
 	const navigate = useNavigate();
-	const { t } = useUserConfig();
+	const { t } = useTranslation();
 	const {
 		handleSendButton,
 		handleEmailChange,

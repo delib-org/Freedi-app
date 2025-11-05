@@ -3,10 +3,10 @@ import googleLogo from '@/assets/icons/googleSimpleLogo.svg';
 import MoreLeft from '../../../assets/icons/moreLeft.svg?react';
 import MoreRight from '../../../assets/icons/moreRight.svg?react';
 import { googleLogin } from '@/controllers/db/authenticationUtils';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 
 export default function GoogleLoginButton() {
-	const { t, rowDirection } = useUserConfig();
+	const { t, rowDirection } = useTranslation();
 
 	return (
 		<button

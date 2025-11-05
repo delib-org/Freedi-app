@@ -1,6 +1,6 @@
 import { FC } from 'react';
 import { PopperHebbianScore } from '@/models/popperHebbian/ScoreModels';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import styles from './EvolutionPrompt.module.scss';
 
 interface EvolutionPromptProps {
@@ -9,7 +9,7 @@ interface EvolutionPromptProps {
 }
 
 const EvolutionPrompt: FC<EvolutionPromptProps> = ({ score, onCreateImprovedVersion }) => {
-	const { t } = useUserConfig();
+	const { t } = useTranslation();
 
 	if (score.status !== 'needs-fixing') {
 		return null;

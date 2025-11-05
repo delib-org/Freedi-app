@@ -16,7 +16,7 @@ import Footer from '@/view/components/footer/Footer';
 import PeopleLoader from '@/view/components/loaders/PeopleLoader';
 import { StatementType } from 'delib-npm';
 import MainQuestionCard from './mainQuestionCard/MainQuestionCard';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import NewStatement from '../../statement/components/newStatement/NewStatement';
 import { selectNewStatementShowModal } from '@/redux/statements/newStatementSlice';
 import { useSelector } from 'react-redux';
@@ -31,7 +31,7 @@ const HomeMain = () => {
 		'Decisions'
 	);
 	const user = useSelector(creatorSelector);
-	const { t } = useUserConfig();
+	const { t } = useTranslation();
 	const userId = user?.uid || '';
 
 	const topSubscriptions = useAppSelector(topSubscriptionsSelector)

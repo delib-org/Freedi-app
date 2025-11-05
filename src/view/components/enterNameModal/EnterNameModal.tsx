@@ -9,7 +9,7 @@ import styles from './enterNameModal.module.scss';
 
 // Functions
 import { signAnonymously } from '@/controllers/db/authenticationUtils';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 
 interface Props {
 	closeModal: VoidFunction;
@@ -20,7 +20,7 @@ const EnterNameModal: FC<Props> = ({ closeModal }) => {
 	const [showStartBtn, setShowStartBtn] = useState<boolean>(false);
 	const inputRef = useRef<HTMLInputElement>(null); // Create a ref for the input
 		
-	const { t } = useUserConfig();
+	const { t } = useTranslation();
 
 	function handleSetName(ev: React.ChangeEvent<HTMLInputElement>) {
 		setDisplayName(ev.target.value);

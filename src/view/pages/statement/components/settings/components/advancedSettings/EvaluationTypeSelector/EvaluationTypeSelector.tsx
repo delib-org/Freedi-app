@@ -1,6 +1,6 @@
 import React, { FC } from 'react';
 import { evaluationType } from 'delib-npm';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import styles from './EvaluationTypeSelector.module.scss';
 
 // Import the evaluation icons
@@ -28,7 +28,7 @@ const EvaluationTypeSelector: FC<EvaluationTypeSelectorProps> = ({
 	currentType,
 	onChange,
 }) => {
-	const { t } = useUserConfig();
+	const { t } = useTranslation();
 
 	const evaluationOptions: EvaluationOption[] = [
 		{

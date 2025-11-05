@@ -1,6 +1,6 @@
 import { LanguagesEnum } from '@/context/UserConfigContext';
 import styles from './ChangeLanguage.module.scss';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { LANGUAGES } from '@/constants/Languages';
 import { FC } from 'react';
 import Button, { ButtonType } from '../buttons/button/Button';
@@ -20,7 +20,7 @@ const ChangeLanguage: FC<ChangeLanguageProps> = ({
 	setShowModal,
 	setShowMenu,
 }) => {
-	const { t, changeLanguage, currentLanguage } = useUserConfig();
+	const { t, changeLanguage, currentLanguage } = useTranslation();
 
 	function handleLanguageChange(code: string) {
 		const lang = code as LanguagesEnum;

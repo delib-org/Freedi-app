@@ -1,6 +1,6 @@
 import React, { FC, DragEvent } from 'react';
 import { Statement } from 'delib-npm';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import SubGroupCard from '@/view/components/subGroupCard/SubGroupCard';
 import Research from '@/assets/images/Research.png';
 import styles from '../MultiStageQuestion.module.scss';
@@ -24,7 +24,7 @@ export const QuestionsSection: FC<QuestionsSectionProps> = ({
   onDragEnd,
   onAddSubQuestion,
 }) => {
-  const { t } = useUserConfig();
+  const { t } = useTranslation();
 
   return (
     <div className={styles.stageCard} id="questions">

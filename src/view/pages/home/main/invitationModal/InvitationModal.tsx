@@ -7,7 +7,7 @@ import {
 	getMaxInvitationDigits,
 } from '@/controllers/db/invitations/getInvitations';
 import { handleCloseInviteModal } from '@/controllers/general/helpers';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import XIcon from '@/view/components/icons/XIcon';
 import InviteModal from '@/view/components/modal/InviteModal';
 
@@ -16,7 +16,7 @@ interface Props {
 }
 const InvitationModal: FC<Props> = ({ setShowModal }) => {
 	const navigate = useNavigate();
-	const { t } = useUserConfig();
+	const { t } = useTranslation();
 
 	const [errorMessage, setErrorMessage] = useState<string>('');
 	const [maxInvitation, setMaxInvitation] = useState<number | undefined>(

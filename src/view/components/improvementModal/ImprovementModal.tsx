@@ -1,7 +1,7 @@
 import React, { FC, useState } from 'react';
 import Modal from '@/view/components/modal/Modal';
 import styles from './ImprovementModal.module.scss';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import '@/view/style/buttons.scss';
 import '@/view/style/input.scss';
 
@@ -20,7 +20,7 @@ const ImprovementModal: FC<ImprovementModalProps> = ({
 	isLoading,
 	suggestionTitle,
 }) => {
-	const { t } = useUserConfig();
+	const { t } = useTranslation();
 	const [instructions, setInstructions] = useState('');
 
 	const handleImprove = async () => {

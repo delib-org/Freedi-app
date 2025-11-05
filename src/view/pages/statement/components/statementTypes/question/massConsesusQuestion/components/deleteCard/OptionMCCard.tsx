@@ -5,7 +5,7 @@ import DeleteIcon from '@/assets/icons/delete.svg?react';
 import AnchorIcon from '@/assets/icons/anchor.svg?react';
 import { deleteStatementFromDB } from '@/controllers/db/statements/deleteStatements';
 import { useSelector } from 'react-redux';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { statementSelectorById, statementSubscriptionSelector } from '@/redux/statements/statementsSlice';
 import SmileIcon from '@/assets/icons/evaluation/evaluation1.svg?react';
 
@@ -19,7 +19,7 @@ const OptionMCCard: FC<Props> = ({ statement, isDelete, onAnchorToggle }) => {
 	const role = useSelector(statementSubscriptionSelector(statement.parentId))?.role;
 	const parentStatement = useSelector(statementSelectorById(statement.parentId));
 	const totalEvaluators = parentStatement.evaluation?.asParentTotalEvaluators || 0;
-	const { t } = useUserConfig();
+	const { t } = useTranslation();
 
 	const isAdmin = role === 'admin';
 	const isAnchoredSamplingEnabled = parentStatement?.evaluationSettings?.anchored?.anchored || false;

@@ -1,9 +1,9 @@
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import styles from './GeneralHeader.module.scss';
 import Back from '@/view/pages/statement/components/header/Back';
 
 const GeneralHeader = () => {
-	const { t, dir } = useUserConfig();
+	const { t, dir } = useTranslation();
 
 	return (
 		<div className={`page__header app-header app-header--sticky ${styles.myHeader}`}>

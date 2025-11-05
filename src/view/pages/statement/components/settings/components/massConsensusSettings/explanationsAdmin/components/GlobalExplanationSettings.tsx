@@ -1,5 +1,5 @@
 import React, { FC } from 'react';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { ExplanationDisplayMode } from 'delib-npm';
 import styles from './GlobalExplanationSettings.module.scss';
 
@@ -55,7 +55,7 @@ const DISPLAY_MODES: { value: ExplanationDisplayMode; label: string; icon: strin
 ];
 
 const GlobalExplanationSettings: FC<GlobalExplanationSettingsProps> = ({ settings, onChange }) => {
-  const { t } = useUserConfig();
+  const { t } = useTranslation();
 
   return (
     <div className={styles.globalSettings}>

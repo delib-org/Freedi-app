@@ -1,7 +1,7 @@
 import React, { FC, useState, useEffect } from 'react';
 import { PostActionConfig } from 'delib-npm';
 import { useNavigate, useParams } from 'react-router';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { useExplanations } from '@/contexts/massConsensus/ExplanationProvider';
 import styles from './ActionFeedback.module.scss';
 import CheckIcon from '@/assets/icons/checkIcon.svg?react';
@@ -26,7 +26,7 @@ export const ActionFeedback: FC<ActionFeedbackProps> = ({
   onDismiss,
   className
 }) => {
-  const { t, dir } = useUserConfig();
+  const { t, dir } = useTranslation();
   const navigate = useNavigate();
   const { statementId } = useParams<{ statementId: string }>();
   const { getPostActionConfig } = useExplanations();

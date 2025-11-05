@@ -1,7 +1,7 @@
 import React, { FC, useContext } from 'react';
 import styles from './QuestionSelector.module.scss';
 import { StatementContext } from '@/view/pages/statement/StatementCont';
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { updateQuestionType } from '@/controllers/db/statementSettings/setStatementSettings';
 import { Link } from 'react-router';
 import { MassConsensusPageUrls, QuestionType } from 'delib-npm';
@@ -9,7 +9,7 @@ import { getDefaultQuestionType } from '@/model/questionTypeDefaults';
 
 const QuestionSelector: FC = () => {
 	const { statement } = useContext(StatementContext);
-	const { t, currentLanguage } = useUserConfig();
+	const { t, currentLanguage } = useTranslation();
 	const handleChangeQuestionType = (
 		ev: React.ChangeEvent<HTMLSelectElement>
 	) => {

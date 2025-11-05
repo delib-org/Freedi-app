@@ -1,6 +1,6 @@
 import closeList from "@/assets/icons/closeList.png";
 import MembersIcon from "@/assets/icons/group.svg?react";
-import { useUserConfig } from "@/controllers/hooks/useUserConfig";
+import { useTranslation } from "@/controllers/hooks/useTranslation";
 import { approveMultiple, rejectMultiple } from "@/services/membershipActions";
 import { useState } from "react";
 import Checkbox from "../checkbox/Checkbox";
@@ -12,7 +12,7 @@ import { useApproveMembership } from "./WaitingListVM";
 
 const WaitingList = () => {
 	const { waitingList } = useApproveMembership();
-	const { dir, t } = useUserConfig();
+	const { dir, t } = useTranslation();
 	const [show, setShow] = useState(false);
 	const [selectedIds, setSelectedIds] = useState<string[]>([]);
 

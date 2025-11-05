@@ -1,9 +1,9 @@
-import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import styles from './ThankYou.module.scss';
 import Dove from '@/assets/images/SubscriptionThanks.png';
 
 const ThankYou = () => {
-    const { t } = useUserConfig();
+    const { t } = useTranslation();
 
     return (
         <div className={styles.thanks}>
