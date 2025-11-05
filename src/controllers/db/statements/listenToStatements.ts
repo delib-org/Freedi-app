@@ -3,6 +3,7 @@ import {
 	collection,
 	doc,
 	limit,
+	or,
 	orderBy,
 	query,
 	where,
@@ -492,14 +493,15 @@ export function listenToAllDescendants(statementId: string): Unsubscribe {
 	try {
 		console.info(`[listenToAllDescendants] Setting up listener for statement: ${statementId}`);
 		const statementsRef = collection(FireStore, Collections.statements);
-		// Query for ALL descendants (questions, groups, options) via parents array
-		// Exclude documents and chat messages to keep the map clean
+		// Query ONLY for questions, groups, and options (not any other types)
 		const q = query(
 			statementsRef,
 			where('parents', 'array-contains', statementId),
-			where('statementType', '!=', StatementType.document),
-			orderBy('statementType'),
-			orderBy('createdAt', 'asc'),
+			or(
+				where('statementType', '==', StatementType.question),
+				where('statementType', '==', StatementType.group),
+				where('statementType', '==', StatementType.option)
+			),
 			// Increase performance by limiting batch size
 			limit(50)
 		);
