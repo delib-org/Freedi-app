@@ -1,5 +1,5 @@
 // Jest test file
-import { getDoc, updateDoc, getDocs } from 'firebase/firestore';
+import { getDoc, updateDoc, getDocs, doc } from 'firebase/firestore';
 import { StatementType, Statement, QuestionType, EvaluationUI } from 'delib-npm';
 import { changeStatementType } from '../changeStatementType';
 
@@ -57,6 +57,8 @@ describe('changeStatementType', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    // Setup doc mock to return a mock document reference
+    (doc as jest.Mock).mockReturnValue({ id: 'mock-doc-ref' });
   });
 
   describe('Authorization checks', () => {

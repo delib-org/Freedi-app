@@ -1,11 +1,25 @@
 import firebaseConfig from "@/controllers/db/configKey";
 import { functionConfig } from "delib-npm";
 
+// Helper to safely get env var (compatible with both Vite and Jest)
+const getEnvVar = (key: string): string | undefined => {
+	if (typeof process !== 'undefined' && process.env.NODE_ENV === 'test') {
+		return process.env[key];
+	}
+	try {
+		// eslint-disable-next-line no-eval
+		const envObj = eval('import.meta.env');
+		return envObj[key] as string | undefined;
+	} catch {
+		return undefined;
+	}
+};
+
 // Endpoint configuration
 const getImproveSuggestionEndpoint = () => {
 	return location.hostname === 'localhost'
 		? `http://localhost:5001/${firebaseConfig.projectId}/${functionConfig.region}/improveSuggestion`
-		: import.meta.env.VITE_APP_IMPROVE_SUGGESTION_ENDPOINT ||
+		: getEnvVar('VITE_APP_IMPROVE_SUGGESTION_ENDPOINT') ||
 		  `https://${functionConfig.region}-${firebaseConfig.projectId}.cloudfunctions.net/improveSuggestion`;
 };
 
