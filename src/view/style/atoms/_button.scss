@@ -1,0 +1,444 @@
+// Button Atom - BEM Methodology
+// Usage: <button class="button button--primary button--large">...</button>
+
+@import '../mixins';
+
+// ============================================================================
+// BUTTON BLOCK
+// ============================================================================
+
+.button {
+  @include button-base;
+  position: relative;
+  gap: 0.5rem;
+
+  // ============================================================================
+  // ELEMENTS (Parts of the button)
+  // ============================================================================
+
+  &__text {
+    display: inline-block;
+    white-space: nowrap;
+  }
+
+  &__icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    background-color: var(--button-blue);
+    border: 2px solid var(--white);
+    flex-shrink: 0;
+
+    svg {
+      width: 1.2rem;
+      height: 1.2rem;
+    }
+  }
+
+  &__loader {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 1rem;
+    height: 1rem;
+    border: 2px solid currentColor;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: buttonSpin 0.6s linear infinite;
+  }
+
+  // ============================================================================
+  // MODIFIERS (Variants of the button)
+  // ============================================================================
+
+  // Color variants
+  &--primary {
+    background-color: var(--btn-primary);
+    color: var(--white);
+    border-color: var(--btn-primary);
+
+    &:hover:not(:disabled) {
+      background-color: var(--btn-primary-hover);
+      border-color: var(--btn-primary-hover);
+    }
+
+    &:active:not(:disabled) {
+      background-color: var(--btn-primary-selected);
+      border-color: var(--btn-primary-selected);
+    }
+  }
+
+  &--secondary {
+    background-color: var(--white);
+    color: var(--btn-secondary);
+    border-color: var(--btn-secondary);
+
+    &:hover:not(:disabled) {
+      background-color: var(--btn-secondary-hover);
+    }
+
+    &:active:not(:disabled) {
+      background-color: var(--btn-white-selected);
+    }
+  }
+
+  &--agree {
+    background-color: var(--agree);
+    color: var(--white);
+    border-color: var(--agree);
+
+    &:hover:not(:disabled) {
+      background-color: #4bb5a0;
+    }
+
+    &:active:not(:disabled) {
+      background-color: #3d9a87;
+    }
+  }
+
+  &--disagree {
+    background-color: var(--disagree);
+    color: var(--white);
+    border-color: var(--disagree);
+
+    &:hover:not(:disabled) {
+      background-color: #fe8ab7;
+    }
+
+    &:active:not(:disabled) {
+      background-color: #fe4c8d;
+    }
+  }
+
+  &--approve {
+    background-color: var(--approve);
+    color: var(--white);
+    border-color: var(--approve);
+    width: 165px;
+    height: 44px;
+
+    &:hover:not(:disabled) {
+      background-color: #37756a;
+    }
+
+    &:active:not(:disabled) {
+      background-color: #2d5f56;
+    }
+  }
+
+  &--reject {
+    background-color: transparent;
+    color: var(--text-error);
+    border-color: var(--text-error);
+    font-weight: 800;
+    width: 98px;
+    height: 44px;
+
+    &:hover:not(:disabled) {
+      color: #be3b3d;
+      border-color: #be3b3d;
+      background-color: rgb(228, 228, 228);
+    }
+
+    &:active:not(:disabled) {
+      background-color: rgb(200, 200, 200);
+    }
+  }
+
+  &--add {
+    background-color: var(--add-btn);
+    color: var(--white);
+    border-color: var(--add-btn);
+    width: fit-content;
+
+    &:hover:not(:disabled) {
+      background-color: #1f4eb8;
+    }
+  }
+
+  &--cancel {
+    background-color: var(--red);
+    color: var(--white);
+    border-color: var(--red);
+
+    &:hover:not(:disabled) {
+      background-color: #d93636;
+    }
+  }
+
+  &--inactive {
+    background-color: var(--inactive);
+    color: var(--inactive-text);
+    border-color: var(--inactive);
+    cursor: default;
+  }
+
+  &--icon {
+    background-color: var(--icon-blue);
+    color: var(--white);
+
+    &:hover:not(:disabled) {
+      background-color: #2563c7;
+    }
+  }
+
+  &--affirmation {
+    background-color: var(--button-blue);
+    color: var(--white);
+
+    &:hover:not(:disabled) {
+      background-color: #2563c7;
+    }
+  }
+
+  // Outline variants
+  &--outline-white {
+    background: transparent;
+    border: 1px solid var(--white);
+    color: var(--white);
+
+    &:hover:not(:disabled) {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    &:active:not(:disabled) {
+      background: rgba(255, 255, 255, 0.2);
+    }
+  }
+
+  &--outline-gray {
+    background: transparent;
+    border: 1px solid rgb(63, 63, 63);
+    color: rgb(63, 63, 63);
+
+    &:hover:not(:disabled) {
+      background: rgba(126, 122, 122, 0.228);
+    }
+  }
+
+  // Size variants
+  &--small {
+    font-size: 0.8rem;
+    padding: 0.2rem 0.6rem;
+    height: auto;
+  }
+
+  &--medium {
+    // Default size - already set in base
+  }
+
+  &--large {
+    font-size: 1.2rem;
+    padding: 0.6rem 1.5rem;
+    border-radius: 5rem;
+    height: auto;
+  }
+
+  &--mass-consensus {
+    padding: 0.5rem 1.5rem;
+    min-width: 80px;
+    flex: 1;
+    max-width: 150px;
+
+    @include mobile {
+      padding: 0.5rem 1rem;
+      min-width: 60px;
+      font-size: 0.9rem;
+    }
+
+    @media (max-width: 360px) {
+      padding: 0.5rem 0.8rem;
+      min-width: 50px;
+      font-size: 0.85rem;
+    }
+  }
+
+  // Layout variants
+  &--full-width {
+    width: 100%;
+  }
+
+  &--with-image {
+    padding: 0.5rem 1rem;
+    height: auto;
+
+    img {
+      width: 2rem;
+      height: 2rem;
+    }
+  }
+
+  // State modifiers
+  &--disabled {
+    @include button-disabled;
+  }
+
+  &--loading {
+    position: relative;
+    color: transparent;
+    pointer-events: none;
+
+    .button__text,
+    .button__icon {
+      opacity: 0;
+    }
+  }
+
+  // Disabled state (native HTML attribute)
+  &:disabled {
+    @include button-disabled;
+  }
+
+  // ============================================================================
+  // RESPONSIVE
+  // ============================================================================
+
+  @include mobile {
+    font-size: 0.95rem;
+    padding: 0.35rem 0.85rem;
+  }
+
+  @media (max-width: 360px) {
+    font-size: 0.9rem;
+    padding: 0.3rem 0.7rem;
+  }
+
+  // ============================================================================
+  // ACCESSIBILITY
+  // ============================================================================
+
+  @include respect-motion-preference;
+}
+
+// ============================================================================
+// BUTTON GROUP CONTAINER
+// ============================================================================
+
+.button-group {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  width: 100%;
+  flex-wrap: wrap;
+
+  @include mobile {
+    gap: 0.5rem;
+  }
+
+  @media (max-width: 360px) {
+    gap: 0.3rem;
+  }
+
+  &--end {
+    justify-content: flex-end;
+  }
+
+  &--start {
+    justify-content: flex-start;
+  }
+
+  &--space-between {
+    justify-content: space-between;
+  }
+
+  &--vertical {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+// ============================================================================
+// FLOATING ACTION BUTTON (FAB)
+// ============================================================================
+
+.fab {
+  background: var(--btn-fab);
+  width: 4rem;
+  height: 4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  position: relative;
+  border-radius: 50%;
+  box-shadow: 8px 8px 16px rgba(0, 0, 0, 0.5);
+  user-select: none;
+  cursor: pointer;
+  z-index: 200;
+  border: none;
+
+  &:active {
+    box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+  }
+
+  &__inner {
+    z-index: 100;
+    background: var(--accent);
+    width: 3.2rem;
+    height: 3.2rem;
+    border-radius: 4rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  // Modifiers
+  &--blink {
+    animation: blinkFab 200ms ease-in-out 0s 35 alternate;
+  }
+
+  &--fixed {
+    position: absolute;
+
+    @media (max-width: 650px) {
+      right: 1.5rem;
+    }
+
+    @media (max-width: 300px) {
+      right: calc(50vw - 15ch);
+    }
+  }
+
+  &--up {
+    bottom: 24vh;
+    right: 5vw;
+  }
+}
+
+// ============================================================================
+// ANIMATIONS
+// ============================================================================
+
+@keyframes buttonSpin {
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+@keyframes blinkFab {
+  from {
+    transform: scale(1);
+  }
+
+  to {
+    transform: scale(0.9);
+  }
+}
+
+// ============================================================================
+// RTL SUPPORT
+// ============================================================================
+
+[dir="rtl"] {
+  .button {
+    &__icon {
+      svg {
+        transform: scaleX(-1);
+      }
+    }
+  }
+}

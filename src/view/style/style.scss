@@ -9,6 +9,19 @@
 
 @import "../../assets/fonts.css";
 
+// ============================================================================
+// DESIGN SYSTEM - ATOMIC ARCHITECTURE
+// ============================================================================
+
+// Import mixins (reusable patterns)
+@import './mixins';
+
+// Import atoms (basic building blocks)
+@import './atoms/index';
+
+// Import molecules (combinations of atoms)
+@import './molecules/index';
+
 :root {
   writing-mode: horizontal-tb;
   direction: ltr;

@@ -5,6 +5,8 @@
 ## Table of Contents
 - [Design Philosophy](#design-philosophy)
 - [Visual Design System](#visual-design-system)
+- [Atomic Design Architecture](#atomic-design-architecture)
+- [BEM Methodology](#bem-methodology)
 - [Component Library](#component-library)
 - [UX Patterns](#ux-patterns)
 - [Interaction Design](#interaction-design)
@@ -139,6 +141,404 @@ box-shadow: 0px 20px 50px #21253633
 - Buttons: `20px` - Friendly, approachable
 - Cards: `8px` - Modern card feel
 - Modals: `0.5rem` - Consistent with spacing system
+
+---
+
+## Atomic Design Architecture
+
+The Freedi design system is built using **Atomic Design Methodology** - a modular approach that breaks interfaces into fundamental building blocks.
+
+### Philosophy
+
+Think of interface design like chemistry:
+- **Atoms** are the basic building blocks (buttons, inputs, icons)
+- **Molecules** are combinations of atoms (cards, forms, search boxes)
+- **Organisms** are complex combinations of molecules (headers, navigation)
+- **Templates** define page structures
+- **Pages** are instances of templates with real content
+
+### Why Atomic Design?
+
+1. **Consistency**: Reusing the same atoms ensures visual consistency
+2. **Maintainability**: Changes to an atom propagate everywhere
+3. **Scalability**: Easy to add new components following established patterns
+4. **Collaboration**: Clear hierarchy helps teams understand the system
+5. **Performance**: Single source of truth reduces CSS duplication
+
+### File Structure
+
+```
+src/view/style/
+├── _mixins.scss              # Reusable SCSS mixins
+├── atoms/
+│   ├── _index.scss           # Import all atoms
+│   ├── _button.scss          # Button styles (BEM)
+│   ├── _input.scss           # Input styles (BEM)
+│   ├── _badge.scss           # Badge styles (BEM)
+│   └── ...
+├── molecules/
+│   ├── _index.scss           # Import all molecules
+│   ├── _card.scss            # Card styles (BEM)
+│   ├── _modal.scss           # Modal styles (BEM)
+│   ├── _toast.scss           # Toast styles (BEM)
+│   └── ...
+└── style.scss                # Main import file
+```
+
+### Component Types
+
+#### Atoms (Basic Building Blocks)
+
+**Definition**: Single-purpose, indivisible UI elements.
+
+**Examples**:
+- Button - Clickable action trigger
+- Input - Text input field
+- Checkbox - Boolean selection
+- Icon - SVG icon display
+- Badge - Notification indicator
+- Chip - Dismissible label
+- Avatar - User profile image
+
+**Characteristics**:
+- Self-contained and reusable
+- No dependencies on other components
+- Highly configurable through variants
+- All styling in SCSS files
+
+#### Molecules (Combinations of Atoms)
+
+**Definition**: Groups of atoms functioning together as a unit.
+
+**Examples**:
+- Card - Container with header/body/footer
+- Modal - Backdrop + card + close button
+- Form Group - Label + input + error message
+- Search Box - Input + icon + clear button
+- Toast - Message + icon + close button
+
+**Characteristics**:
+- Composed of multiple atoms
+- Represents a single functional unit
+- More complex than atoms but still reusable
+- All styling in SCSS files
+
+### React Components as Wrappers
+
+**IMPORTANT**: React components are **TypeScript wrappers only** - they don't contain styling logic.
+
+```typescript
+// ✅ CORRECT: Minimal TypeScript wrapper
+const Button: React.FC<ButtonProps> = ({ text, variant, onClick }) => {
+  return (
+    <button className={`button button--${variant}`} onClick={onClick}>
+      <span className="button__text">{text}</span>
+    </button>
+  );
+};
+
+// ❌ WRONG: Don't put styling in components
+const Button = styled.button`
+  background: blue;
+  padding: 1rem;
+`;
+```
+
+**Benefits**:
+- All styling in SCSS (single source of truth)
+- No runtime CSS-in-JS overhead
+- Better performance and caching
+- Easier to maintain and update
+
+---
+
+## BEM Methodology
+
+BEM (Block Element Modifier) is a naming convention that makes CSS predictable, maintainable, and scalable.
+
+### What is BEM?
+
+**BEM** = **B**lock **E**lement **M**odifier
+
+```
+.block               // Component
+.block__element      // Part of the component
+.block--modifier     // Variant of the component
+```
+
+### Why BEM?
+
+1. **Predictability**: Names clearly describe purpose and structure
+2. **Reusability**: Components are self-contained
+3. **Maintainability**: Easy to find and modify styles
+4. **No Conflicts**: Unique names prevent style collisions
+5. **Flat Hierarchy**: No deep nesting, better performance
+
+### BEM Naming Rules
+
+#### Block (Component Base)
+```scss
+.button { }           // ✅ Single word, lowercase
+.card { }             // ✅ Describes what it is
+.search-box { }       // ✅ Multi-word with hyphen
+```
+
+#### Element (Part of Block)
+```scss
+.button__text { }     // ✅ Double underscore
+.button__icon { }     // ✅ Describes part of button
+.card__header { }     // ✅ Part of card
+.card__footer { }     // ✅ Another part of card
+```
+
+#### Modifier (Variant of Block or Element)
+```scss
+.button--primary { }           // ✅ Double hyphen
+.button--large { }             // ✅ Size variant
+.button--disabled { }          // ✅ State variant
+.card__header--centered { }    // ✅ Element modifier
+```
+
+### BEM Examples
+
+#### Button Atom
+```scss
+// Block (base component)
+.button {
+  display: inline-flex;
+  padding: 0.4rem 1rem;
+  border-radius: 20px;
+
+  // Elements (parts of button)
+  &__text {
+    padding: 0 0.5rem;
+  }
+
+  &__icon {
+    width: 2rem;
+    height: 2rem;
+  }
+
+  // Modifiers (variants)
+  &--primary {
+    background: var(--btn-primary);
+    color: var(--white);
+  }
+
+  &--secondary {
+    background: var(--white);
+    color: var(--btn-secondary);
+  }
+
+  &--large {
+    font-size: 1.2rem;
+    padding: 0.6rem 1.5rem;
+  }
+
+  &--disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+```
+
+**HTML Usage**:
+```html
+<!-- Primary button -->
+<button class="button button--primary">
+  <span class="button__text">Submit</span>
+</button>
+
+<!-- Large secondary button -->
+<button class="button button--secondary button--large">
+  <span class="button__text">Cancel</span>
+</button>
+
+<!-- Primary button with icon -->
+<button class="button button--primary">
+  <span class="button__icon">→</span>
+  <span class="button__text">Next</span>
+</button>
+```
+
+#### Card Molecule
+```scss
+// Block
+.card {
+  background: var(--card-default);
+  border-radius: 8px;
+  padding: var(--padding);
+
+  // Elements
+  &__header {
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border-light);
+  }
+
+  &__title {
+    font-size: var(--h4-font-size);
+    color: var(--text-title);
+  }
+
+  &__body {
+    padding: 1rem 0;
+  }
+
+  &__footer {
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--border-light);
+  }
+
+  // Modifiers
+  &--elevated {
+    box-shadow: var(--shadow-elevated);
+  }
+
+  &--question {
+    background: var(--card-question-added);
+    border-left: 4px solid var(--question);
+  }
+
+  &--compact {
+    padding: 0.75rem;
+  }
+}
+```
+
+**HTML Usage**:
+```html
+<!-- Elevated question card -->
+<div class="card card--elevated card--question">
+  <div class="card__header">
+    <h3 class="card__title">Question Title</h3>
+  </div>
+  <div class="card__body">
+    Content goes here
+  </div>
+  <div class="card__footer">
+    <button class="button button--primary">Vote</button>
+  </div>
+</div>
+```
+
+### BEM Anti-Patterns (What NOT to Do)
+
+```scss
+// ❌ WRONG: Don't nest blocks
+.card .button { }
+
+// ❌ WRONG: Don't create grandchild elements
+.card__header__title { }
+
+// ❌ WRONG: Don't use tag selectors with BEM
+.button a { }
+
+// ❌ WRONG: Don't combine blocks in CSS
+.card.button { }
+
+// ✅ CORRECT: Flat structure
+.card { }
+.card__header { }
+.card__title { }
+.card--elevated { }
+```
+
+### BEM Best Practices
+
+1. **Keep it Flat**: Avoid deep nesting
+   ```scss
+   // ✅ Good
+   .card__header { }
+   .card__title { }
+
+   // ❌ Bad
+   .card__header__title { }
+   ```
+
+2. **One Block per File**: Each SCSS file = one block
+   ```
+   _button.scss    → .button
+   _card.scss      → .card
+   _modal.scss     → .modal
+   ```
+
+3. **Use Modifiers for Variants**: Don't create new blocks
+   ```scss
+   // ✅ Good
+   .button--large { }
+   .button--primary { }
+
+   // ❌ Bad
+   .large-button { }
+   .primary-button { }
+   ```
+
+4. **Elements Belong to Blocks**: Not to other elements
+   ```scss
+   // ✅ Good
+   .card__header { }
+   .card__title { }  // Belongs to card, not header
+
+   // ❌ Bad
+   .card__header__title { }
+   ```
+
+5. **Use Context Classes for Complex States**:
+   ```html
+   <!-- ✅ Add state to container -->
+   <div class="card card--loading">
+     <div class="card__body">...</div>
+   </div>
+   ```
+
+### BEM with SCSS Nesting
+
+SCSS allows nesting while maintaining flat CSS output:
+
+```scss
+.button {
+  padding: 0.4rem 1rem;
+
+  // Elements (nesting for organization)
+  &__text {
+    padding: 0 0.5rem;
+  }
+
+  &__icon {
+    width: 2rem;
+  }
+
+  // Modifiers (nesting for organization)
+  &--primary {
+    background: var(--btn-primary);
+  }
+
+  &--large {
+    font-size: 1.2rem;
+  }
+}
+
+// Compiles to flat CSS:
+// .button { }
+// .button__text { }
+// .button__icon { }
+// .button--primary { }
+// .button--large { }
+```
+
+### Combining Multiple Modifiers
+
+```html
+<!-- Multiple modifiers on one element -->
+<button class="button button--primary button--large button--full-width">
+  Large Primary Button
+</button>
+
+<!-- Card with multiple states -->
+<div class="card card--elevated card--question card--selected">
+  Selected Question Card
+</div>
+```
 
 ---
 

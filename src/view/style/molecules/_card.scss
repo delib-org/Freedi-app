@@ -1,0 +1,446 @@
+// Card Molecule - BEM Methodology
+// Usage: <div class="card card--elevated card--question">...</div>
+
+@import '../mixins';
+
+// ============================================================================
+// CARD BLOCK
+// ============================================================================
+
+.card {
+  @include card-base;
+  display: flex;
+  flex-direction: column;
+
+  // ============================================================================
+  // ELEMENTS (Parts of the card)
+  // ============================================================================
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border-light);
+  }
+
+  &__title {
+    @include heading-base;
+    font-size: var(--h4-font-size);
+    color: var(--text-title);
+    margin: 0;
+  }
+
+  &__subtitle {
+    font-size: var(--p-font-size);
+    color: var(--text-caption);
+    margin-top: 0.25rem;
+    font-weight: 400;
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  &__body {
+    @include body-text;
+    flex: 1;
+  }
+
+  &__footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    margin-top: 1rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--border-light);
+
+    &--space-between {
+      justify-content: space-between;
+    }
+
+    &--start {
+      justify-content: flex-start;
+    }
+
+    &--center {
+      justify-content: center;
+    }
+  }
+
+  &__media {
+    width: 100%;
+    border-radius: 5px;
+    margin-bottom: 1rem;
+    overflow: hidden;
+
+    img,
+    video {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+  }
+
+  &__badge {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+
+    @include rtl {
+      right: auto;
+      left: 0.75rem;
+    }
+  }
+
+  // ============================================================================
+  // MODIFIERS (Variants of the card)
+  // ============================================================================
+
+  // Visual variants
+  &--elevated {
+    @include card-elevated;
+  }
+
+  &--interactive {
+    @include card-interactive;
+  }
+
+  &--bordered {
+    border: 2px solid var(--border-light);
+  }
+
+  &--flat {
+    box-shadow: none;
+    border: 1px solid var(--border-light);
+  }
+
+  // Content type variants
+  &--question {
+    background-color: var(--card-question-added);
+    border-left: 4px solid var(--question);
+    position: relative;
+
+    &::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+      background-color: var(--question);
+    }
+  }
+
+  &--suggestion {
+    background-color: var(--card-suggestion-added);
+    border-left: 4px solid var(--option);
+    position: relative;
+
+    &::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+      background-color: var(--option);
+    }
+  }
+
+  &--message {
+    background-color: var(--card-other-message);
+  }
+
+  &--error {
+    background-color: #fff5f5;
+    border-left: 4px solid var(--text-error);
+  }
+
+  &--success {
+    background-color: #f0fdf4;
+    border-left: 4px solid var(--agree);
+  }
+
+  &--warning {
+    background-color: #fffbeb;
+    border-left: 4px solid var(--text-warning);
+  }
+
+  &--info {
+    background-color: #eff6ff;
+    border-left: 4px solid var(--accent);
+  }
+
+  // State variants
+  &--selected {
+    border: 2px solid var(--btn-primary);
+    box-shadow: 0 0 0 3px rgba(95, 136, 229, 0.1);
+  }
+
+  &--disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+
+  &--loading {
+    position: relative;
+    pointer-events: none;
+
+    &::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(255, 255, 255, 0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+    }
+  }
+
+  // Size variants
+  &--compact {
+    padding: 0.75rem;
+
+    .card__header {
+      margin-bottom: 0.5rem;
+      padding-bottom: 0.5rem;
+    }
+
+    .card__title {
+      font-size: 1.1rem;
+    }
+
+    .card__footer {
+      margin-top: 0.75rem;
+      padding-top: 0.5rem;
+    }
+  }
+
+  &--spacious {
+    padding: 2rem;
+
+    .card__header {
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+    }
+
+    .card__footer {
+      margin-top: 1.5rem;
+      padding-top: 1rem;
+    }
+  }
+
+  // Layout variants
+  &--horizontal {
+    flex-direction: row;
+    align-items: center;
+
+    .card__media {
+      width: 200px;
+      margin-bottom: 0;
+      margin-right: 1rem;
+      flex-shrink: 0;
+
+      @include rtl {
+        margin-right: 0;
+        margin-left: 1rem;
+      }
+    }
+
+    @include mobile {
+      flex-direction: column;
+
+      .card__media {
+        width: 100%;
+        margin-right: 0;
+        margin-bottom: 1rem;
+
+        @include rtl {
+          margin-left: 0;
+          margin-bottom: 1rem;
+        }
+      }
+    }
+  }
+
+  &--full-width {
+    width: 100%;
+  }
+
+  &--centered {
+    text-align: center;
+
+    .card__header,
+    .card__footer {
+      justify-content: center;
+    }
+  }
+
+  // Shadow variants
+  &--shadow-sm {
+    @include shadow-subtle;
+  }
+
+  &--shadow-md {
+    @include shadow-card;
+  }
+
+  &--shadow-lg {
+    @include shadow-elevated;
+  }
+
+  &--shadow-none {
+    box-shadow: none;
+  }
+
+  // ============================================================================
+  // RESPONSIVE
+  // ============================================================================
+
+  @include mobile {
+    padding: 0.75rem;
+
+    .card__title {
+      font-size: 1.1rem;
+    }
+
+    .card__header {
+      margin-bottom: 0.75rem;
+      padding-bottom: 0.5rem;
+    }
+
+    .card__footer {
+      margin-top: 0.75rem;
+      padding-top: 0.5rem;
+      flex-wrap: wrap;
+    }
+  }
+
+  // ============================================================================
+  // ACCESSIBILITY
+  // ============================================================================
+
+  @include respect-motion-preference;
+}
+
+// ============================================================================
+// CARD LIST (Multiple cards together)
+// ============================================================================
+
+.card-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: 100%;
+
+  &--grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1rem;
+
+    @include mobile {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  &--horizontal {
+    flex-direction: row;
+    overflow-x: auto;
+    gap: 1rem;
+    padding-bottom: 0.5rem;
+
+    .card {
+      flex-shrink: 0;
+      width: 300px;
+    }
+
+    @include mobile {
+      .card {
+        width: 280px;
+      }
+    }
+  }
+
+  &--compact {
+    gap: 0.5rem;
+  }
+
+  &--spacious {
+    gap: 2rem;
+  }
+}
+
+// ============================================================================
+// MESSAGE CARD (Chat bubble style)
+// ============================================================================
+
+.message-card {
+  @extend .card;
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  max-width: 70%;
+  position: relative;
+
+  &--user {
+    background-color: var(--white);
+    border: 1px solid var(--border-light);
+    align-self: flex-end;
+    border-bottom-right-radius: 4px;
+
+    @include rtl {
+      align-self: flex-start;
+      border-bottom-right-radius: 12px;
+      border-bottom-left-radius: 4px;
+    }
+  }
+
+  &--other {
+    background-color: #dcf8c6;
+    align-self: flex-start;
+    border-bottom-left-radius: 4px;
+
+    @include rtl {
+      align-self: flex-end;
+      border-bottom-left-radius: 12px;
+      border-bottom-right-radius: 4px;
+    }
+  }
+
+  @include mobile {
+    max-width: 85%;
+    padding: 0.625rem 0.875rem;
+  }
+}
+
+// ============================================================================
+// RTL SUPPORT
+// ============================================================================
+
+[dir="rtl"] {
+  .card {
+    &--question,
+    &--suggestion,
+    &--error,
+    &--success,
+    &--warning,
+    &--info {
+      border-left: none;
+      border-right: 4px solid;
+
+      &::before {
+        left: auto;
+        right: 0;
+      }
+    }
+  }
+}

@@ -1,0 +1,337 @@
+// Modal Molecule - BEM Methodology
+// Usage: <div class="modal modal--open"><div class="modal__content">...</div></div>
+
+@import '../mixins';
+
+// ============================================================================
+// MODAL BLOCK
+// ============================================================================
+
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  visibility: hidden;
+  opacity: 0;
+  transition: visibility 0s linear 0.3s, opacity 0.3s ease;
+
+  // ============================================================================
+  // ELEMENTS (Parts of the modal)
+  // ============================================================================
+
+  &__backdrop {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(2px);
+  }
+
+  &__content {
+    @include shadow-modal;
+    position: relative;
+    z-index: 1;
+    background-color: var(--white);
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    max-width: 90vw;
+    max-height: 90vh;
+    overflow: auto;
+    transform: scale(0.9);
+    transition: transform 0.3s ease;
+  }
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border-light);
+  }
+
+  &__title {
+    @include heading-base;
+    font-size: var(--h3-font-size);
+    color: var(--text-title);
+    margin: 0;
+  }
+
+  &__close-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border: none;
+    background: none;
+    cursor: pointer;
+    color: var(--text-caption);
+    border-radius: 50%;
+    transition: background-color 0.2s ease;
+    flex-shrink: 0;
+
+    &:hover {
+      background-color: var(--bg-hover);
+    }
+
+    &:focus {
+      outline: 2px solid var(--btn-primary);
+    }
+
+    svg {
+      width: 1.25rem;
+      height: 1.25rem;
+    }
+  }
+
+  &__body {
+    @include body-text;
+    margin-bottom: 1rem;
+  }
+
+  &__footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-light);
+
+    &--space-between {
+      justify-content: space-between;
+    }
+
+    &--center {
+      justify-content: center;
+    }
+
+    &--start {
+      justify-content: flex-start;
+    }
+  }
+
+  // ============================================================================
+  // MODIFIERS (Variants of the modal)
+  // ============================================================================
+
+  &--open {
+    visibility: visible;
+    opacity: 1;
+    transition-delay: 0s;
+
+    .modal__content {
+      transform: scale(1);
+    }
+  }
+
+  &--small {
+    .modal__content {
+      width: 400px;
+      max-width: 90vw;
+    }
+  }
+
+  &--medium {
+    .modal__content {
+      width: 600px;
+      max-width: 90vw;
+    }
+  }
+
+  &--large {
+    .modal__content {
+      width: 800px;
+      max-width: 90vw;
+    }
+  }
+
+  &--full-screen {
+    .modal__content {
+      width: 95vw;
+      height: 95vh;
+      max-width: none;
+      max-height: none;
+      border-radius: 0.5rem;
+    }
+
+    @include mobile {
+      .modal__content {
+        width: 100vw;
+        height: 100vh;
+        border-radius: 0;
+      }
+    }
+  }
+
+  &--bottom-sheet {
+    align-items: flex-end;
+
+    .modal__content {
+      width: 100%;
+      max-width: 100vw;
+      border-radius: 1rem 1rem 0 0;
+      transform: translateY(100%);
+      transition: transform 0.3s ease;
+    }
+
+    &.modal--open {
+      .modal__content {
+        transform: translateY(0);
+      }
+    }
+  }
+
+  &--centered {
+    .modal__content {
+      text-align: center;
+    }
+
+    .modal__footer {
+      justify-content: center;
+    }
+  }
+
+  &--no-padding {
+    .modal__content {
+      padding: 0;
+    }
+  }
+
+  // Color variants
+  &--primary {
+    .modal__content {
+      background: linear-gradient(135deg, var(--mainBackground) 0%, var(--btn-primary) 100%);
+      color: var(--white);
+    }
+
+    .modal__title {
+      color: var(--white);
+    }
+
+    .modal__body {
+      color: var(--white);
+    }
+
+    .modal__close-button {
+      color: var(--white);
+
+      &:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+      }
+    }
+  }
+
+  &--warning {
+    .modal__header {
+      border-bottom-color: var(--text-warning);
+    }
+
+    .modal__title {
+      color: var(--text-warning);
+    }
+  }
+
+  &--error {
+    .modal__header {
+      border-bottom-color: var(--text-error);
+    }
+
+    .modal__title {
+      color: var(--text-error);
+    }
+  }
+
+  &--success {
+    .modal__header {
+      border-bottom-color: var(--agree);
+    }
+
+    .modal__title {
+      color: var(--agree);
+    }
+  }
+
+  // ============================================================================
+  // RESPONSIVE
+  // ============================================================================
+
+  @include mobile {
+    .modal__content {
+      width: 95vw;
+      padding: 1rem;
+      max-height: 85vh;
+    }
+
+    .modal__header {
+      margin-bottom: 0.75rem;
+      padding-bottom: 0.75rem;
+    }
+
+    .modal__title {
+      font-size: 1.3rem;
+    }
+
+    .modal__footer {
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 0.75rem;
+      padding-top: 0.75rem;
+    }
+  }
+
+  // ============================================================================
+  // ACCESSIBILITY
+  // ============================================================================
+
+  @include respect-motion-preference;
+}
+
+// ============================================================================
+// MODAL ANIMATIONS
+// ============================================================================
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0.9);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+@keyframes slideInUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+// ============================================================================
+// BODY SCROLL LOCK (Applied to body when modal is open)
+// ============================================================================
+
+.modal-open {
+  overflow: hidden;
+  padding-right: var(--scrollbar-width, 0);
+}
