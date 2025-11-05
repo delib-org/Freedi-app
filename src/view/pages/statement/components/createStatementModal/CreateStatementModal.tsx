@@ -3,7 +3,6 @@ import { createStatementFromModal } from "../settings/statementSettingsCont";
 import newOptionGraphic from "@/assets/images/newOptionGraphic.png";
 import newQuestionGraphic from "@/assets/images/newQuestionGraphic.png";
 import { useTranslation } from "@/controllers/hooks/useTranslation";
-import Modal from "@/view/components/modal/Modal";
 import styles from './CreateStatementModal.module.scss';
 import Button, { ButtonType } from "@/view/components/buttons/button/Button";
 import { StatementType, Statement } from "delib-npm";
@@ -64,7 +63,7 @@ const CreateStatementModal: FC<CreateStatementModalProps> = ({
   };
 
   return (
-    <Modal className={styles.createStatementModal}>
+    <div className={styles.createStatementModal}>
       <form className={styles.overlay} onSubmit={onFormSubmit}>
         <div className={styles.modalImage}>
           <img
@@ -106,7 +105,7 @@ const CreateStatementModal: FC<CreateStatementModalProps> = ({
           onCancel={() => setShowModal(false)}
         />
       </form>
-    </Modal>
+    </div>
   );
 };
 
