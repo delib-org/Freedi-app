@@ -9,6 +9,7 @@ import {
 	query,
 	where,
 } from 'firebase/firestore';
+import { logError } from '@/utils/errorHandling';
 
 // Redux Store
 import { FireStore } from '../config';
@@ -511,6 +512,7 @@ export function listenToAllDescendants(statementId: string): Unsubscribe {
 		const statementsRef = collection(FireStore, Collections.statements);
 		// Query ONLY for questions, groups, and options (not any other types)
 		// Wrap in and() as required by Firestore for composite filters
+		// REMOVED LIMIT - now loads all descendants for completeness
 		const q = query(
 			statementsRef,
 			and(
@@ -520,9 +522,9 @@ export function listenToAllDescendants(statementId: string): Unsubscribe {
 					where('statementType', '==', StatementType.group),
 					where('statementType', '==', StatementType.option)
 				)
-			),
-			// Increase performance by limiting batch size
-			limit(50)
+			)
+			// NOTE: Removed limit(50) to ensure all descendants are loaded
+			// For very large trees, consider implementing pagination in the UI layer
 		);
 
 		const listenerKey = generateListenerKey(
@@ -534,6 +536,7 @@ export function listenToAllDescendants(statementId: string): Unsubscribe {
 		// Use batched updates for better performance
 		let isFirstBatch = true;
 		const statements: Statement[] = [];
+		let loadedCount = 0;
 
 		return createManagedCollectionListener(
 			q,
@@ -545,14 +548,23 @@ export function listenToAllDescendants(statementId: string): Unsubscribe {
 						try {
 							const statement = parse(StatementSchema, doc.data());
 							statements.push(statement);
+							loadedCount++;
 						} catch (error) {
-							console.error(`[listenToAllDescendants] Error parsing statement ${doc.id}:`, error);
+							logError(error, {
+								operation: 'listenToAllDescendants.parseInitial',
+								statementId: doc.id,
+								metadata: {
+									parentStatementId: statementId,
+									loadedCount
+								}
+							});
 						}
 					});
 
 					// Dispatch all statements at once instead of one by one
 					if (statements.length > 0) {
 						store.dispatch(setStatements(statements));
+						console.info(`[listenToAllDescendants] Loaded ${statements.length} descendants for statement ${statementId}`);
 					}
 
 					isFirstBatch = false;
@@ -570,18 +582,35 @@ export function listenToAllDescendants(statementId: string): Unsubscribe {
 								store.dispatch(deleteStatement(statement.statementId));
 							}
 						} catch (error) {
-							console.error(`[listenToAllDescendants] Error processing change for ${change.doc.id}:`, error);
+							logError(error, {
+								operation: 'listenToAllDescendants.processChange',
+								statementId: change.doc.id,
+								metadata: {
+									parentStatementId: statementId,
+									changeType: change.type,
+									loadedCount
+								}
+							});
 						}
 					});
 				}
 			},
 			(error) => {
-				console.error(`[listenToAllDescendants] Error in listener for statement ${statementId}:`, error);
+				logError(error, {
+					operation: 'listenToAllDescendants.listener',
+					metadata: {
+						parentStatementId: statementId,
+						loadedCount
+					}
+				});
 			},
 			'query'
 		);
 	} catch (error) {
-		console.error(`[listenToAllDescendants] Failed to set up listener for statement ${statementId}:`, error);
+		logError(error, {
+			operation: 'listenToAllDescendants.setup',
+			metadata: { parentStatementId: statementId }
+		});
 
 		return (): void => {
 			return;

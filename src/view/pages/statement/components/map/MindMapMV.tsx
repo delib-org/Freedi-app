@@ -8,6 +8,7 @@ import { useParams } from 'react-router';
 import { resultsByParentId } from './mapCont';
 import { Statement, Results } from 'delib-npm';
 import { APIEndPoint, isChatMessage } from '@/controllers/general/helpers';
+import { logError } from '@/utils/errorHandling';
 
 export function useMindMap(statementIdPassed: string | null = null) {
 	const { statementId: paramsStatement } = useParams();
@@ -70,7 +71,11 @@ export function useMindMap(statementIdPassed: string | null = null) {
 					: newResults;
 			});
 		} catch (error) {
-			console.error('Error calculating results:', error);
+			logError(error, {
+				operation: 'useMindMap.calculateResults',
+				statementId: statement?.statementId,
+				metadata: { descendantsCount: descendants?.length }
+			});
 		}
 	}, [descendants, statement]);
 
@@ -87,7 +92,10 @@ export function useMindMap(statementIdPassed: string | null = null) {
 			},
 		})
 			.catch((error) => {
-				console.error('Error fetching cluster data:', error);
+				logError(error, {
+					operation: 'useMindMap.handleCluster',
+					statementId
+				});
 			})
 			.finally(() => {
 				setLoading(false);
@@ -105,7 +113,10 @@ export function useMindMap(statementIdPassed: string | null = null) {
 			},
 		})
 			.catch((error) => {
-				console.error('Error fetching recover snapshot data:', error);
+				logError(error, {
+					operation: 'useMindMap.handleRecoverSnapshot',
+					metadata: { snapshotId: statementId }
+				});
 			})
 			.finally(() => {
 				setLoading(false);
