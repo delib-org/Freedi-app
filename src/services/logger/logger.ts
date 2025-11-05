@@ -16,18 +16,10 @@ interface LogContext {
 }
 
 class Logger {
-  // Helper to get dev mode safely
+  // Helper to get dev mode
+  // In tests, babel-plugin-transform-vite-meta-env transforms import.meta.env to process.env
   private getIsDevelopment(): boolean {
-    if (typeof process !== 'undefined' && process.env.NODE_ENV === 'test') {
-      return true;
-    }
-    try {
-      // eslint-disable-next-line @typescript-eslint/no-implied-eval
-      const getMetaEnv = new Function('return import.meta.env.DEV || false');
-      return getMetaEnv();
-    } catch {
-      return false;
-    }
+    return import.meta.env.DEV || false;
   }
 
   private isDevelopment = this.getIsDevelopment();

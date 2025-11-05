@@ -1,18 +1,10 @@
 import firebaseConfig from "@/controllers/db/configKey";
 import { functionConfig } from "delib-npm";
 
-// Helper to safely get environment variables (compatible with both Vite and Jest)
+// Helper to get environment variables
+// In tests, babel-plugin-transform-vite-meta-env transforms import.meta.env to process.env
 const getEnvVar = (key: string): string | undefined => {
-	if (typeof process !== 'undefined' && process.env.NODE_ENV === 'test') {
-		return process.env[key];
-	}
-	try {
-		// eslint-disable-next-line @typescript-eslint/no-implied-eval
-		const getMetaEnv = new Function('key', 'return import.meta.env[key]');
-		return getMetaEnv(key);
-	} catch {
-		return undefined;
-	}
+	return import.meta.env[key];
 };
 
 // Endpoint configuration

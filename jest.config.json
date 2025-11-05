@@ -9,7 +9,7 @@
 		"^@/(.*)$": "<rootDir>/src/$1"
 	},
 	"transform": {
-		"^.+\\.(ts|tsx)$": ["ts-jest", {
+		"^.+\\.(ts|tsx)$": ["<rootDir>/jest-transformer.cjs", {
 			"isolatedModules": true,
 			"tsconfig": {
 				"esModuleInterop": true,

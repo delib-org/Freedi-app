@@ -191,18 +191,10 @@ return;
   // Type-safe event logging
   logEvent<T extends EventName>(event: T, params: EventParams[T]) {
     // Add common parameters
-    // Helper to get environment mode safely
+    // Helper to get environment mode
+    // In tests, babel-plugin-transform-vite-meta-env transforms import.meta.env to process.env
     const getEnvMode = (): string => {
-      if (typeof process !== 'undefined' && process.env.NODE_ENV === 'test') {
-        return 'test';
-      }
-      try {
-        // eslint-disable-next-line @typescript-eslint/no-implied-eval
-        const getMetaEnv = new Function('return import.meta.env.MODE || "production"');
-        return getMetaEnv();
-      } catch {
-        return 'production';
-      }
+      return import.meta.env.MODE || 'production';
     };
 
     const enrichedParams = {
