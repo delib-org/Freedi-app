@@ -55,10 +55,8 @@ return () => window.removeEventListener('resize', handleResize);
   // Listen for custom panelsClose event
   useEffect(() => {
     const handlePanelsClose = () => {
-      const stored = localStorage.getItem(storageKey);
-      if (stored === 'false') {
-        setIsOpenState(false);
-      }
+      // Unconditionally close the panel when event is received
+      setIsOpenState(false);
     };
 
     if (typeof window !== 'undefined') {
