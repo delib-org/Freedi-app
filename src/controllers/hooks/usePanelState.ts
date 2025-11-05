@@ -55,13 +55,11 @@ return () => window.removeEventListener('resize', handleResize);
   // Listen for custom panelsClose event
   useEffect(() => {
     const handlePanelsClose = () => {
-      console.info(`usePanelState: Received panelsClose event for ${storageKey}`);
       // Unconditionally close the panel when event is received
       setIsOpenState(false);
     };
 
     if (typeof window !== 'undefined') {
-      console.info(`usePanelState: Setting up panelsClose listener for ${storageKey}`);
       window.addEventListener('panelsClose', handlePanelsClose);
 
 return () => window.removeEventListener('panelsClose', handlePanelsClose);

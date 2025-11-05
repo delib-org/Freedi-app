@@ -21,6 +21,7 @@ import { useStatementViewTracking } from '@/hooks/useStatementViewTracking';
 import { analyticsService } from '@/services/analytics';
 import { updateLastReadTimestamp } from '@/controllers/db/subscriptions/setSubscriptions';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
+import { closePanels } from '@/controllers/hooks/panelUtils';
 
 // Components
 import { StatementProvider } from './components/StatementProvider';
@@ -121,6 +122,11 @@ const StatementMain: React.FC = () => {
 			dispatch(setShowNewStatementModal(false));
 		};
 	}, [statementId, dispatch]);
+
+	// Close panels when navigating to a new statement
+	React.useEffect(() => {
+		closePanels();
+	}, [statementId]);
 
 	// Handle different states
 	const renderContent = () => {
