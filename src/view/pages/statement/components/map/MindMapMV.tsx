@@ -1,4 +1,3 @@
-import { listenToDescendants } from '@/controllers/db/results/getResults';
 import {
 	statementDescendantsSelector,
 	statementSelector,
@@ -30,19 +29,18 @@ export function useMindMap(statementIdPassed: string | null = null) {
 	// Initialize results state properly
 	const [results, setResults] = useState<Results | null>(null);
 
-	// Get descendants
+	// REMOVED: Duplicate listener - descendants are now loaded by useStatementListeners hook
+	// when screen is 'mind-map', which calls listenToAllDescendants()
+	// This ensures all sub-statements are loaded correctly on direct navigation
+
+	// Log descendants for debugging
 	useEffect(() => {
-		if (!statementId) return;
+		console.info(`[MindMapMV] Statement: ${statementId}, Descendants count: ${descendants.length}`);
+		if (descendants.length > 0) {
+			console.info(`[MindMapMV] First few descendants:`, descendants.slice(0, 3).map(d => d.statementId));
+		}
+	}, [descendants.length, statementId]);
 
-		const unsubscribe = listenToDescendants(statementId);
-
-		return () => {
-			unsubscribe();
-		};
-	}, [statementId]);
-	// REMOVED: Individual evaluation listeners for each descendant
-	// This caused excessive Firestore requests (one listener per descendant)
-	// Evaluations are now handled centrally in useStatementListeners
 	useEffect(() => {
 		setFlat(isFlat(descendants, statementId));
 	}, [descendants.length, statementId]);

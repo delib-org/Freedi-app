@@ -53,8 +53,10 @@ export const useStatementListeners = ({
 	useEffect(() => {
 		if (!creator || !statementId) return;
 
-		// Get current screen - using it directly in effect to react to path changes
-		const currentScreen = getScreenFromPath();
+		// Use the screen parameter from props - more reliable than reading from window.location
+		// Fallback to getScreenFromPath if screen is not provided
+		const currentScreen = screen || getScreenFromPath();
+		console.info(`[useStatementListeners] Setting up listeners - statementId: ${statementId}, screen param: ${screen}, currentScreen: ${currentScreen}`);
 
 		const cleanup = () => {
 			unsubscribersRef.current.forEach((unsubscribe) => {
@@ -87,7 +89,13 @@ export const useStatementListeners = ({
 
 			// Conditional listeners based on screen
 			if (currentScreen === 'mind-map') {
-				unsubscribersRef.current.push(listenToAllDescendants(statementId));
+				console.info(`Setting up MindMap listeners for statement: ${statementId}`);
+				// For MindMap, we need BOTH direct children (parentId) AND all descendants (parents array)
+				// This ensures we capture all sub-statements regardless of data structure
+				unsubscribersRef.current.push(
+					listenToAllDescendants(statementId),  // Gets descendants via parents array
+					listenToSubStatements(statementId)     // Gets direct children via parentId
+				);
 			} else {
 				unsubscribersRef.current.push(listenToSubStatements(statementId));
 			}
