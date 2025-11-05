@@ -1,5 +1,6 @@
 import { getResultsDB } from '@/controllers/db/results/getResults';
 import { ResultsBy, Results, Statement } from 'delib-npm';
+import { logError } from '@/utils/errorHandling';
 
 export async function getResults(
 	statement: Statement,
@@ -42,7 +43,14 @@ export async function getResults(
 
 		return result;
 	} catch (error) {
-		console.error(error);
+		logError(error, {
+			operation: 'mapCont.getResults',
+			statementId: statement?.statementId,
+			metadata: {
+				resultsBy,
+				numberOfResults
+			}
+		});
 
 		return { top: statement, sub: [] };
 	}
@@ -62,33 +70,56 @@ export function getResultsByOptions(
 
 		return _maxOptions;
 	} catch (error) {
-		console.error(error);
+		logError(error, {
+			operation: 'mapCont.getResultsByOptions',
+			metadata: {
+				numberOfResults,
+				subStatementsCount: subStatements?.length
+			}
+		});
 
 		return [];
 	}
 }
 
+/**
+ * Optimized O(n) algorithm for building tree structure
+ * Previous implementation was O(n²) due to filtering entire array for each node
+ */
 export function resultsByParentId(parentStatement: Statement, subStatements: Statement[]): Results {
 	try {
 		if (!parentStatement) throw new Error('No parentStatement');
 		if (!subStatements?.length) return { top: parentStatement, sub: [] };
 
-		// Create the result object
-		const result: Results = { top: parentStatement, sub: [] };
+		// Build parent-child map in single pass O(n)
+		const childrenMap = new Map<string, Statement[]>();
 
-		// Filter statements that have this parent as their parent
-		const directChildren = subStatements.filter(
-			(subStatement) => subStatement.parentId === parentStatement.statementId
-		);
+		subStatements.forEach(statement => {
+			if (statement.parentId) {
+				const siblings = childrenMap.get(statement.parentId) || [];
+				siblings.push(statement);
+				childrenMap.set(statement.parentId, siblings);
+			}
+		});
 
-		// For each direct child, recursively get its children
-		result.sub = directChildren.map((childStatement) =>
-			resultsByParentId(childStatement, subStatements)
-		);
+		// Build tree recursively using map (no filtering needed)
+		function buildNode(statement: Statement): Results {
+			const children = childrenMap.get(statement.statementId) || [];
+			return {
+				top: statement,
+				sub: children.map(child => buildNode(child))
+			};
+		}
 
-		return result;
+		return buildNode(parentStatement);
 	} catch (error) {
-		console.error(error);
+		logError(error, {
+			operation: 'mapCont.resultsByParentId',
+			metadata: {
+				parentStatementId: parentStatement?.statementId,
+				subStatementsCount: subStatements?.length
+			}
+		});
 
 		// Return a minimal valid result instead of undefined
 		return { top: parentStatement, sub: [] };

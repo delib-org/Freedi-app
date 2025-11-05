@@ -16,6 +16,7 @@ import Modal from '@/view/components/modal/Modal';
 import { StatementType, Role } from 'delib-npm';
 import { useParams } from 'react-router';
 import { useMindMap } from './MindMapMV';
+import { MINDMAP_CONFIG } from '@/constants/mindMap';
 
 const MindMap: FC = () => {
 	// Add a render counter for debugging - remove in production
@@ -59,6 +60,11 @@ const MindMap: FC = () => {
 		FilterType.questionsResultsOptions
 	);
 
+	// Add loading state tracking
+	const [isInitialLoad, setIsInitialLoad] = useState(true);
+	const [loadingMessage, setLoadingMessage] = useState('Loading mind map...');
+	const [showSkeleton, setShowSkeleton] = useState(false);
+
 	const toggleModal = (show: boolean) => {
 		setMapContext((prev) => ({
 			...prev,
@@ -75,6 +81,30 @@ const MindMap: FC = () => {
 		}
 	}, [current]);
 
+	// Track loading state with skeleton loader delay
+	useEffect(() => {
+		if (!statement || !results) {
+			// Show skeleton loader after delay to prevent flash
+			const skeletonTimer = setTimeout(() => {
+				setShowSkeleton(true);
+			}, MINDMAP_CONFIG.LOADING.SKELETON_DELAY);
+
+			// Update loading message after longer delay
+			const messageTimer = setTimeout(() => {
+				setLoadingMessage('Still loading... This might take a moment for large mind maps.');
+			}, 5000);
+
+			return () => {
+				clearTimeout(skeletonTimer);
+				clearTimeout(messageTimer);
+			};
+		} else {
+			// Data loaded, clear loading state
+			setIsInitialLoad(false);
+			setShowSkeleton(false);
+		}
+	}, [statement, results]);
+
 	const isDefaultOption: boolean =
 		statementParent?.statementType === StatementType.question;
 	// Options are allowed only under questions (not under groups or other options)
@@ -83,13 +113,45 @@ const MindMap: FC = () => {
 			? mapContext.parentStatement.statementType === StatementType.question
 			: false;
 
-	// Only render if we have the necessary data
+	// Enhanced loading states
 	if (!statement) {
-		return <div>Loading statement...</div>;
+		return (
+			<div className="mind-map-loading" style={{
+				display: 'flex',
+				alignItems: 'center',
+				justifyContent: 'center',
+				height: '100vh',
+				flexDirection: 'column',
+				gap: '1rem'
+			}}>
+				{showSkeleton && (
+					<div className="skeleton-loader" style={{
+						width: '60px',
+						height: '60px',
+						border: '5px solid #f3f3f3',
+						borderTop: '5px solid var(--btn-primary)',
+						borderRadius: '50%',
+						animation: 'spin 1s linear infinite'
+					}}></div>
+				)}
+				<div style={{ color: 'var(--text-body)', fontSize: '1.1rem' }}>
+					{loadingMessage}
+				</div>
+			</div>
+		);
 	}
+
+	// Add CSS for spinner animation
+	const spinnerStyle = `
+		@keyframes spin {
+			0% { transform: rotate(0deg); }
+			100% { transform: rotate(360deg); }
+		}
+	`;
 
 	return (
 		<main className='page__main' style={{ padding: 0, alignItems: 'stretch' }}>
+			<style>{spinnerStyle}</style>
 			<ReactFlowProvider>
 				<select
 					aria-label='Select filter type for'
@@ -129,7 +191,28 @@ const MindMap: FC = () => {
 							filterBy={filterBy}
 						/>
 					) : (
-						<div>Loading mind map data...</div>
+						<div style={{
+							display: 'flex',
+							alignItems: 'center',
+							justifyContent: 'center',
+							height: '100%',
+							flexDirection: 'column',
+							gap: '1rem'
+						}}>
+							{showSkeleton && (
+								<div className="skeleton-loader" style={{
+									width: '60px',
+									height: '60px',
+									border: '5px solid #f3f3f3',
+									borderTop: '5px solid var(--btn-primary)',
+									borderRadius: '50%',
+									animation: 'spin 1s linear infinite'
+								}}></div>
+							)}
+							<div style={{ color: 'var(--text-body)', fontSize: '1.1rem' }}>
+								{isInitialLoad ? 'Building mind map...' : 'Updating mind map...'}
+							</div>
+						</div>
 					)}
 				</div>
 
