@@ -330,7 +330,17 @@
   // ACCESSIBILITY
   // ============================================================================
 
-  @include respect-motion-preference;
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+
+    &:hover {
+      transform: none;
+    }
+
+    &:active {
+      transform: none;
+    }
+  }
 }
 
 // ============================================================================

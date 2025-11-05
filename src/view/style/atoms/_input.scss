@@ -265,7 +265,12 @@
   // ACCESSIBILITY
   // ============================================================================
 
-  @include respect-motion-preference;
+  @media (prefers-reduced-motion: reduce) {
+    .input__container,
+    .input__field {
+      transition: none;
+    }
+  }
 }
 
 // ============================================================================

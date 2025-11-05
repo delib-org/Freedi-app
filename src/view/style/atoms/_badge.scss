@@ -141,6 +141,10 @@
   // State variants
   &--pulse {
     animation: badgePulse 2s ease-in-out infinite;
+
+    @media (prefers-reduced-motion: reduce) {
+      animation: none;
+    }
   }
 
   &--hidden {
@@ -173,9 +177,3 @@
     opacity: 0.9;
   }
 }
-
-// ============================================================================
-// ACCESSIBILITY
-// ============================================================================
-
-@include respect-motion-preference;

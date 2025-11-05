@@ -252,7 +252,23 @@
   // ACCESSIBILITY
   // ============================================================================
 
-  @include respect-motion-preference;
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+    transform: translateY(0);
+
+    &--visible {
+      transform: translateY(0);
+    }
+
+    &--dismissing {
+      animation: none;
+      opacity: 0;
+    }
+
+    .toast__progress {
+      animation: none;
+    }
+  }
 }
 
 // ============================================================================
