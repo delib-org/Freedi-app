@@ -12,10 +12,16 @@ const SUBQUESTIONS_MAP_KEY = 'freedi-subquestions-map-open';
 export function closePanels(): void {
   if (typeof window === 'undefined') return;
 
+  console.info('closePanels: Closing both panels');
+
   // Update localStorage for both panels
   localStorage.setItem(CHAT_PANEL_KEY, 'false');
   localStorage.setItem(SUBQUESTIONS_MAP_KEY, 'false');
 
+  console.info('closePanels: localStorage updated, dispatching event');
+
   // Dispatch custom event to notify panels of the change
   window.dispatchEvent(new CustomEvent('panelsClose'));
+
+  console.info('closePanels: Event dispatched');
 }
