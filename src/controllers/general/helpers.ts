@@ -10,6 +10,23 @@ import {
 import { useAuthentication } from '../hooks/useAuthentication';
 import { EnhancedEvaluationThumb } from '@/view/pages/statement/components/evaluations/components/evaluation/enhancedEvaluation/EnhancedEvaluationModel';
 
+// Helper function to safely get environment variables (compatible with both Vite and Jest)
+function getEnvVar(key: string): string | undefined {
+	// In test environment, use process.env
+	if (typeof process !== 'undefined' && process.env.NODE_ENV === 'test') {
+		return process.env[key];
+	}
+	// In browser/Vite environment, use import.meta.env
+	// Use eval to avoid syntax errors in test environment
+	try {
+		// eslint-disable-next-line no-eval
+		const envObj = eval('import.meta.env');
+		return envObj[key] as string | undefined;
+	} catch {
+		return undefined;
+	}
+}
+
 export function isAuthorized(
 	statement: Statement | undefined,
 	statementSubscription: StatementSubscription | undefined,
@@ -298,6 +315,10 @@ export function getNumberDigits(number: number): number {
 }
 
 export function isProduction(): boolean {
+	// In test environment, always return false
+	if (typeof process !== 'undefined' && process.env.NODE_ENV === 'test') {
+		return false;
+	}
 	return window.location.hostname !== 'localhost';
 }
 
@@ -457,8 +478,8 @@ export function APIEndPoint(
 
 	// For production, use the provided environment variable or construct a default one
 	const envVar = envVarName
-		? import.meta.env[envVarName]
-		: import.meta.env[`VITE_APP_${functionName.toUpperCase()}_ENDPOINT`];
+		? getEnvVar(envVarName)
+		: getEnvVar(`VITE_APP_${functionName.toUpperCase()}_ENDPOINT`);
 
 	// If the environment variable exists, use it, otherwise use a standard pattern
 	if (envVar) {

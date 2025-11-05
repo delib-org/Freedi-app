@@ -191,10 +191,23 @@ return;
   // Type-safe event logging
   logEvent<T extends EventName>(event: T, params: EventParams[T]) {
     // Add common parameters
+    // Helper to get environment mode safely
+    const getEnvMode = (): string => {
+      if (typeof process !== 'undefined' && process.env.NODE_ENV === 'test') {
+        return 'test';
+      }
+      try {
+        // eslint-disable-next-line no-eval
+        return eval('import.meta.env.MODE') || 'production';
+      } catch {
+        return 'production';
+      }
+    };
+
     const enrichedParams = {
       ...params,
       timestamp: Date.now(),
-      environment: import.meta.env.MODE,
+      environment: getEnvMode(),
     };
 
     // Log to our logger as well

@@ -16,7 +16,20 @@ interface LogContext {
 }
 
 class Logger {
-  private isDevelopment = import.meta.env.DEV;
+  // Helper to get dev mode safely
+  private getIsDevelopment(): boolean {
+    if (typeof process !== 'undefined' && process.env.NODE_ENV === 'test') {
+      return true; // In test mode, treat as development
+    }
+    try {
+      // eslint-disable-next-line no-eval
+      return eval('import.meta.env.DEV') || false;
+    } catch {
+      return false;
+    }
+  }
+
+  private isDevelopment = this.getIsDevelopment();
   // Set to ERROR to only show errors in both dev and prod
   private logLevel = LogLevel.ERROR;
 

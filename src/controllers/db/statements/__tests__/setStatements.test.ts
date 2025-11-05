@@ -54,7 +54,7 @@ jest.mock('@/view/pages/statement/components/vote/votingColors', () => ({
   getRandomColor: jest.fn(() => '#5899E0'),
 }));
 
-jest.mock('../massConsensus/setMassConsensus', () => ({
+jest.mock('../../massConsensus/setMassConsensus', () => ({
   setNewProcessToDB: jest.fn(),
 }));
 

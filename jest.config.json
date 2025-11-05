@@ -3,11 +3,14 @@
 	"testEnvironment": "jsdom",
 	"setupFilesAfterEnv": ["<rootDir>/src/setupTests.ts"],
 	"moduleNameMapper": {
-		"^@/(.*)$": "<rootDir>/src/$1",
-		"\\.(css|less|scss|sass)$": "identity-obj-proxy"
+		"\\.svg\\?react$": "<rootDir>/src/__mocks__/svgMock.tsx",
+		"\\.(svg|png|jpg|jpeg|gif)$": "<rootDir>/src/__mocks__/fileMock.ts",
+		"\\.(css|less|scss|sass)$": "identity-obj-proxy",
+		"^@/(.*)$": "<rootDir>/src/$1"
 	},
 	"transform": {
 		"^.+\\.(ts|tsx)$": ["ts-jest", {
+			"isolatedModules": true,
 			"tsconfig": {
 				"esModuleInterop": true,
 				"jsx": "react"
@@ -24,10 +27,5 @@
 		"!src/main.tsx",
 		"!src/vite-env.d.ts"
 	],
-	"moduleFileExtensions": ["ts", "tsx", "js", "jsx", "json", "node"],
-	"globals": {
-		"ts-jest": {
-			"isolatedModules": true
-		}
-	}
+	"moduleFileExtensions": ["ts", "tsx", "js", "jsx", "json", "node"]
 }

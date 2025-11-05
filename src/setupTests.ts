@@ -5,6 +5,17 @@ import { TextEncoder, TextDecoder } from 'util';
 global.TextEncoder = TextEncoder;
 global.TextDecoder = TextDecoder;
 
+// Set up test Firebase environment variables
+process.env.VITE_FIREBASE_API_KEY = 'test-api-key';
+process.env.VITE_FIREBASE_AUTH_DOMAIN = 'test.firebaseapp.com';
+process.env.VITE_FIREBASE_DATABASE_URL = 'https://test.firebaseio.com';
+process.env.VITE_FIREBASE_PROJECT_ID = 'test-project';
+process.env.VITE_FIREBASE_STORAGE_BUCKET = 'test.appspot.com';
+process.env.VITE_FIREBASE_MESSAGING_SENDER_ID = '123456789';
+process.env.VITE_FIREBASE_APP_ID = '1:123456789:web:abcdef';
+process.env.VITE_FIREBASE_MEASUREMENT_ID = 'G-ABCDEF';
+process.env.VITE_FIREBASE_VAPID_KEY = 'test-vapid-key';
+
 // Mock import.meta for all files
 const mockImportMeta = {
   env: {
@@ -73,4 +84,30 @@ HTMLCanvasElement.prototype.getContext = jest.fn().mockReturnValue({
 Object.defineProperty(window, 'devicePixelRatio', {
 	writable: true,
 	value: 2,
+});
+
+// Mock localStorage
+const localStorageMock = (() => {
+	let store: Record<string, string> = {};
+
+	return {
+		getItem: (key: string) => store[key] || null,
+		setItem: (key: string, value: string) => {
+			store[key] = value.toString();
+		},
+		removeItem: (key: string) => {
+			delete store[key];
+		},
+		clear: () => {
+			store = {};
+		},
+	};
+})();
+
+Object.defineProperty(window, 'localStorage', {
+	value: localStorageMock,
+});
+
+Object.defineProperty(window, 'sessionStorage', {
+	value: localStorageMock,
 });
