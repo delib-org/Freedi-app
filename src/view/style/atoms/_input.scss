@@ -1,0 +1,376 @@
+// Input Atom - BEM Methodology
+// Usage: <div class="input"><input class="input__field" /></div>
+
+@import '../mixins';
+
+// ============================================================================
+// INPUT BLOCK
+// ============================================================================
+
+.input {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  font-family: 'Roboto', sans-serif;
+  width: 100%;
+
+  // ============================================================================
+  // ELEMENTS (Parts of the input)
+  // ============================================================================
+
+  &__label {
+    font-size: 1rem;
+    position: relative;
+    top: 0.875rem;
+    left: -0.5rem;
+    z-index: 1;
+    width: fit-content;
+    color: var(--text-caption);
+    padding: 0 0.5rem;
+    border-radius: 0.5rem;
+    background-color: var(--white);
+
+    @include rtl {
+      left: auto;
+      right: -0.5rem;
+    }
+  }
+
+  &__container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    flex: 1;
+    border: 1px solid var(--border-light);
+    border-radius: 0.5rem;
+    padding: 1.25rem 1rem;
+    height: 100%;
+    background-color: var(--white);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+    &:focus-within {
+      border-color: var(--btn-primary);
+      box-shadow: 0 0 0 3px rgba(95, 136, 229, 0.1);
+    }
+  }
+
+  &__field {
+    @include input-base;
+    border: none;
+    padding: 0;
+    box-shadow: none;
+
+    &:focus {
+      border: none;
+      box-shadow: none;
+    }
+
+    &::placeholder {
+      color: var(--text-caption);
+      opacity: 0.7;
+      font-style: italic;
+      font-weight: 300;
+    }
+  }
+
+  &__icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    pointer-events: none;
+    color: var(--text-caption);
+
+    svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    &--left {
+      margin-right: 0.75rem;
+
+      @include rtl {
+        margin-right: 0;
+        margin-left: 0.75rem;
+      }
+    }
+
+    &--right {
+      margin-left: 0.75rem;
+
+      @include rtl {
+        margin-left: 0;
+        margin-right: 0.75rem;
+      }
+    }
+  }
+
+  &__clear-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    padding: 0.5rem;
+    cursor: pointer;
+    color: var(--text-caption);
+    transition: opacity 0.2s ease;
+    flex-shrink: 0;
+
+    svg {
+      width: 20px;
+      height: 20px;
+      transform: scale(0.8);
+    }
+
+    &:hover {
+      opacity: 0.8;
+    }
+
+    &:focus {
+      outline: 2px solid var(--btn-primary);
+      border-radius: 4px;
+    }
+
+    @include mobile {
+      padding: 0.25rem;
+    }
+  }
+
+  &__helper-text {
+    font-size: 0.875rem;
+    color: var(--text-caption);
+    margin-top: 0.25rem;
+    padding: 0 0.5rem;
+  }
+
+  &__error-text {
+    font-size: 0.875rem;
+    color: var(--text-error);
+    margin-top: 0.25rem;
+    padding: 0 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+
+    &::before {
+      content: '⚠';
+    }
+  }
+
+  &__character-count {
+    font-size: 0.75rem;
+    color: var(--text-caption);
+    text-align: right;
+    margin-top: 0.25rem;
+    padding: 0 0.5rem;
+  }
+
+  // ============================================================================
+  // MODIFIERS (Variants of the input)
+  // ============================================================================
+
+  &--error {
+    .input__container {
+      border-color: var(--text-error);
+
+      &:focus-within {
+        border-color: var(--text-error);
+        box-shadow: 0 0 0 3px rgba(247, 74, 77, 0.1);
+      }
+    }
+
+    .input__field {
+      color: var(--text-error);
+    }
+  }
+
+  &--disabled {
+    .input__container {
+      background-color: var(--bg-disabled);
+      cursor: not-allowed;
+    }
+
+    .input__field {
+      background-color: transparent;
+      color: var(--text-disabled);
+      cursor: not-allowed;
+    }
+
+    .input__label {
+      color: var(--text-disabled);
+    }
+  }
+
+  &--success {
+    .input__container {
+      border-color: var(--approve);
+
+      &:focus-within {
+        border-color: var(--approve);
+        box-shadow: 0 0 0 3px rgba(79, 171, 154, 0.1);
+      }
+    }
+  }
+
+  &--small {
+    .input__container {
+      padding: 0.75rem 0.75rem;
+    }
+
+    .input__field {
+      font-size: 0.875rem;
+    }
+
+    .input__label {
+      font-size: 0.875rem;
+    }
+  }
+
+  &--large {
+    .input__container {
+      padding: 1.5rem 1.25rem;
+    }
+
+    .input__field {
+      font-size: 1.125rem;
+    }
+
+    .input__label {
+      font-size: 1.125rem;
+    }
+  }
+
+  &--full-width {
+    width: 100%;
+  }
+
+  // ============================================================================
+  // RESPONSIVE
+  // ============================================================================
+
+  @include mobile {
+    .input__container {
+      padding: 1rem 0.85rem;
+    }
+
+    .input__field {
+      font-size: 0.95rem;
+    }
+  }
+
+  // ============================================================================
+  // ACCESSIBILITY
+  // ============================================================================
+
+  @media (prefers-reduced-motion: reduce) {
+    .input__container,
+    .input__field {
+      transition: none;
+    }
+  }
+}
+
+// ============================================================================
+// TEXTAREA VARIANT
+// ============================================================================
+
+.textarea {
+  @extend .input;
+
+  &__field {
+    @extend .input__field;
+    resize: vertical;
+    min-height: 80px;
+    line-height: 1.5;
+    font-family: 'Roboto', sans-serif;
+
+    &--no-resize {
+      resize: none;
+    }
+
+    &--auto-resize {
+      resize: none;
+      overflow: hidden;
+    }
+  }
+
+  &__container {
+    @extend .input__container;
+    align-items: flex-start;
+  }
+}
+
+// ============================================================================
+// SEARCH INPUT VARIANT
+// ============================================================================
+
+.search-input {
+  @extend .input;
+
+  &__field {
+    @extend .input__field;
+    padding-left: 2.5rem;
+
+    @include rtl {
+      padding-left: 1rem;
+      padding-right: 2.5rem;
+    }
+  }
+
+  &__icon {
+    position: absolute;
+    left: 0.75rem;
+    color: var(--text-caption);
+
+    @include rtl {
+      left: auto;
+      right: 0.75rem;
+    }
+  }
+}
+
+// ============================================================================
+// INPUT GROUP (Multiple inputs together)
+// ============================================================================
+
+.input-group {
+  display: flex;
+  gap: 1rem;
+  width: 100%;
+
+  &--vertical {
+    flex-direction: column;
+  }
+
+  &--horizontal {
+    flex-direction: row;
+
+    .input {
+      flex: 1;
+    }
+  }
+
+  @include mobile {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+}
+
+// ============================================================================
+// RTL SUPPORT
+// ============================================================================
+
+[dir="rtl"] {
+  .input {
+    &__label {
+      text-align: right;
+    }
+
+    &__container {
+      flex-direction: row-reverse;
+    }
+  }
+}
