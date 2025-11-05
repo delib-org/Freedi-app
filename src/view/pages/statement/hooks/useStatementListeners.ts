@@ -53,8 +53,9 @@ export const useStatementListeners = ({
 	useEffect(() => {
 		if (!creator || !statementId) return;
 
-		// Get current screen - using it directly in effect to react to path changes
-		const currentScreen = getScreenFromPath();
+		// Use the screen parameter from props - more reliable than reading from window.location
+		// Fallback to getScreenFromPath if screen is not provided
+		const currentScreen = screen || getScreenFromPath();
 
 		const cleanup = () => {
 			unsubscribersRef.current.forEach((unsubscribe) => {
@@ -87,6 +88,7 @@ export const useStatementListeners = ({
 
 			// Conditional listeners based on screen
 			if (currentScreen === 'mind-map') {
+				console.info(`Setting up MindMap listeners for statement: ${statementId}`);
 				unsubscribersRef.current.push(listenToAllDescendants(statementId));
 			} else {
 				unsubscribersRef.current.push(listenToSubStatements(statementId));
