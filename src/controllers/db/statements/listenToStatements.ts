@@ -1,5 +1,6 @@
 import { Unsubscribe } from 'firebase/auth';
 import {
+	and,
 	collection,
 	doc,
 	limit,
@@ -494,13 +495,16 @@ export function listenToAllDescendants(statementId: string): Unsubscribe {
 		console.info(`[listenToAllDescendants] Setting up listener for statement: ${statementId}`);
 		const statementsRef = collection(FireStore, Collections.statements);
 		// Query ONLY for questions, groups, and options (not any other types)
+		// Wrap in and() as required by Firestore for composite filters
 		const q = query(
 			statementsRef,
-			where('parents', 'array-contains', statementId),
-			or(
-				where('statementType', '==', StatementType.question),
-				where('statementType', '==', StatementType.group),
-				where('statementType', '==', StatementType.option)
+			and(
+				where('parents', 'array-contains', statementId),
+				or(
+					where('statementType', '==', StatementType.question),
+					where('statementType', '==', StatementType.group),
+					where('statementType', '==', StatementType.option)
+				)
 			),
 			// Increase performance by limiting batch size
 			limit(50)
