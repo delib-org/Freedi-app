@@ -219,11 +219,15 @@ export function withMindMapErrorBoundary<P extends object>(
   Component: React.ComponentType<P>,
   fallback?: ReactNode
 ): React.FC<P> {
-  return (props: P) => (
+  const WrappedComponent: React.FC<P> = (props: P) => (
     <MindMapErrorBoundary fallback={fallback}>
       <Component {...props} />
     </MindMapErrorBoundary>
   );
+
+  WrappedComponent.displayName = `withMindMapErrorBoundary(${Component.displayName || Component.name || 'Component'})`;
+
+  return WrappedComponent;
 }
 
 /**

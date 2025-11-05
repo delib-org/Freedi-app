@@ -308,7 +308,8 @@ export function isProduction(): boolean {
 	if (typeof process !== 'undefined' && process.env.NODE_ENV === 'test') {
 		return false;
 	}
-	return window.location.hostname !== 'localhost';
+	
+return window.location.hostname !== 'localhost';
 }
 
 export const handleCloseInviteModal = (

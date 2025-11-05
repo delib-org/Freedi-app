@@ -236,13 +236,13 @@ function calculateMaxDepth(node: MindMapNode): number {
   if (node.children.length === 0) {
     return node.depth;
   }
-  return Math.max(...node.children.map(child => calculateMaxDepth(child)));
+  
+return Math.max(...node.children.map(child => calculateMaxDepth(child)));
 }
 
-function isNodeInViewport(node: MindMapNode, viewport: Viewport): boolean {
+function isNodeInViewport(_node: MindMapNode, _viewport: Viewport): boolean {
   // This is a placeholder - actual implementation would check node position
   // against viewport bounds considering the buffer zone
-  const buffer = MINDMAP_CONFIG.PERFORMANCE.VIRTUAL_RENDER_BUFFER;
 
   // For now, return true for all nodes
   // Real implementation would calculate based on node.position

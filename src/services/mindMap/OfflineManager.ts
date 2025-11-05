@@ -1,7 +1,24 @@
-import { Statement } from 'delib-npm';
 import { MindMapData, MindMapNode } from './types';
 import { logError } from '@/utils/errorHandling';
 import { MINDMAP_CONFIG } from '@/constants/mindMap';
+
+// Define types for serialized data
+interface SerializedNode {
+  statement: MindMapNode['statement'];
+  children: SerializedNode[];
+  depth: number;
+  isExpanded: boolean;
+  isLoading: boolean;
+}
+
+interface SerializedMindMapData {
+  rootStatement: MindMapData['rootStatement'];
+  tree: SerializedNode;
+  allStatements: MindMapData['allStatements'];
+  nodes: Array<{ id: string; node: SerializedNode }>;
+  loadingState: MindMapData['loadingState'];
+  error: MindMapData['error'];
+}
 
 /**
  * Offline manager for mind-map data using IndexedDB
@@ -25,7 +42,8 @@ export class OfflineManager {
     if (!OfflineManager.instance) {
       OfflineManager.instance = new OfflineManager();
     }
-    return OfflineManager.instance;
+    
+return OfflineManager.instance;
   }
 
   /**
@@ -33,8 +51,9 @@ export class OfflineManager {
    */
   private async initializeDB(): Promise<void> {
     if (!('indexedDB' in window)) {
-      console.warn('[OfflineManager] IndexedDB not supported');
-      return;
+      console.info('[OfflineManager] IndexedDB not supported');
+      
+return;
     }
 
     try {
@@ -162,7 +181,8 @@ export class OfflineManager {
           if (!record) {
             console.info(`[OfflineManager] No offline data for: ${statementId}`);
             resolve(null);
-            return;
+            
+return;
           }
 
           // Check if data is still fresh
@@ -172,7 +192,8 @@ export class OfflineManager {
             // Delete expired data
             this.deleteMindMap(statementId);
             resolve(null);
-            return;
+            
+return;
           }
 
           // Deserialize the data
@@ -197,7 +218,8 @@ export class OfflineManager {
         operation: 'OfflineManager.loadMindMap',
         statementId
       });
-      return null;
+      
+return null;
     }
   }
 
@@ -301,7 +323,8 @@ export class OfflineManager {
       logError(error, {
         operation: 'OfflineManager.getPendingUpdates'
       });
-      return [];
+      
+return [];
     }
   }
 
@@ -333,7 +356,8 @@ export class OfflineManager {
   public async syncPendingUpdates(): Promise<void> {
     if (!navigator.onLine) {
       console.info('[OfflineManager] Offline - skipping sync');
-      return;
+      
+return;
     }
 
     try {
@@ -389,7 +413,7 @@ export class OfflineManager {
         // Actual implementation would call Firebase functions here
         break;
       default:
-        console.warn(`[OfflineManager] Unknown update type: ${update.type}`);
+        console.error(`[OfflineManager] Unknown update type: ${update.type}`);
     }
   }
 
@@ -413,7 +437,7 @@ export class OfflineManager {
           // Delete if too many retries
           if (update.retryCount > 5) {
             store.delete(id);
-            console.warn(`[OfflineManager] Dropping update after 5 retries: ${id}`);
+            console.error(`[OfflineManager] Dropping update after 5 retries: ${id}`);
           } else {
             store.put(update);
           }
@@ -561,7 +585,7 @@ export class OfflineManager {
   /**
    * Serialize mind-map data for storage
    */
-  private serializeMindMapData(data: MindMapData): any {
+  private serializeMindMapData(data: MindMapData): SerializedMindMapData {
     // Convert Map to array for storage
     const nodesArray = Array.from(data.nodeMap.entries()).map(([id, node]) => ({
       id,
@@ -581,7 +605,7 @@ export class OfflineManager {
   /**
    * Serialize a node
    */
-  private serializeNode(node: MindMapNode): any {
+  private serializeNode(node: MindMapNode): SerializedNode {
     return {
       statement: node.statement,
       children: node.children.map(child => this.serializeNode(child)),
@@ -594,12 +618,12 @@ export class OfflineManager {
   /**
    * Deserialize mind-map data from storage
    */
-  private deserializeMindMapData(record: any): MindMapData {
+  private deserializeMindMapData(record: SerializedMindMapData): MindMapData {
     // Convert array back to Map
     const nodeMap = new Map<string, MindMapNode>();
 
     if (record.nodes) {
-      record.nodes.forEach((entry: any) => {
+      record.nodes.forEach((entry) => {
         nodeMap.set(entry.id, this.deserializeNode(entry.node));
       });
     }
@@ -617,10 +641,10 @@ export class OfflineManager {
   /**
    * Deserialize a node
    */
-  private deserializeNode(data: any): MindMapNode {
+  private deserializeNode(data: SerializedNode): MindMapNode {
     return {
       statement: data.statement,
-      children: data.children?.map((child: any) => this.deserializeNode(child)) || [],
+      children: data.children?.map((child) => this.deserializeNode(child)) || [],
       depth: data.depth,
       isExpanded: data.isExpanded,
       isLoading: data.isLoading,
@@ -671,7 +695,7 @@ interface PendingUpdate {
   id?: number;
   type: 'CREATE_STATEMENT' | 'UPDATE_STATEMENT' | 'DELETE_STATEMENT' | 'MOVE_STATEMENT';
   statementId: string;
-  data: any;
+  data: Record<string, unknown>;
   timestamp?: number;
   retryCount?: number;
   lastRetry?: number;

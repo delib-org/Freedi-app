@@ -65,7 +65,6 @@ export function listenToMindMapData(statementId: string): Unsubscribe {
     let loadedCount = 0;
     let isFirstBatch = true;
     const startTime = Date.now();
-    const statements: Statement[] = [];
 
     return createManagedCollectionListener(
       q,
@@ -200,7 +199,8 @@ export class OptimizedStatementListener {
     if (!OptimizedStatementListener.instance) {
       OptimizedStatementListener.instance = new OptimizedStatementListener();
     }
-    return OptimizedStatementListener.instance;
+    
+return OptimizedStatementListener.instance;
   }
 
   /**
@@ -228,7 +228,8 @@ export class OptimizedStatementListener {
     // Check if listener already exists
     if (this.listeners.has(statementId)) {
       console.info(`[OptimizedStatementListener] Reusing existing listener for ${statementId}`);
-      return () => this.unsubscribe(statementId);
+      
+return () => this.unsubscribe(statementId);
     }
 
     const unsubscribe = listenToMindMapData(statementId);

@@ -1,5 +1,5 @@
 import React from 'react';
-import { screen } from '@testing-library/react';
+import { } from '@testing-library/react';
 import { BrowserRouter } from 'react-router';
 import RandomSuggestions from '../RandomSuggestions';
 import { Statement, StatementType, Creator } from 'delib-npm';
@@ -58,7 +58,8 @@ jest.mock('@/controllers/hooks/useUserConfig', () => ({
 // Mock the explanations context hook
 jest.mock('@/contexts/massConsensus/ExplanationProvider', () => {
   const getDontShowExplanations = jest.fn(() => false);
-  return {
+  
+return {
     useExplanations: () => ({
       showExplanation: jest.fn(),
       hideExplanation: jest.fn(),
