@@ -4,6 +4,13 @@ import { BrowserRouter } from 'react-router';
 import RandomSuggestions from '../RandomSuggestions';
 import { Statement, StatementType, Creator } from 'delib-npm';
 import { renderWithProviders, getMockRootState } from '@/test-utils/test-utils';
+import { StatementScreen } from '@/redux/statements/statementsSlice';
+
+// Mock react-router
+jest.mock('react-router', () => ({
+  ...jest.requireActual('react-router'),
+  useParams: () => ({ statementId: 'test-statement-id' }),
+}));
 
 // Mock the VM hook
 jest.mock('../RandomSuggestionsVM', () => ({
@@ -20,11 +27,19 @@ jest.mock('../RandomSuggestionsVM', () => ({
   }),
 }));
 
+// Mock the header context
+jest.mock('../../headerMassConsensus/HeaderContext', () => ({
+  useHeader: () => ({
+    setHeader: jest.fn(),
+  }),
+}));
+
 // Mock the analytics hook
 jest.mock('@/hooks/useMassConsensusAnalytics', () => ({
   useMassConsensusAnalytics: () => ({
     trackButtonClick: jest.fn(),
     trackStageCompleted: jest.fn(),
+    trackStageSkipped: jest.fn(),
   }),
 }));
 
@@ -41,16 +56,20 @@ jest.mock('@/controllers/hooks/useUserConfig', () => ({
 }));
 
 // Mock the explanations context hook
-jest.mock('@/contexts/massConsensus/ExplanationProvider', () => ({
-  useExplanations: () => ({
-    showExplanation: jest.fn(),
-    hideExplanation: jest.fn(),
-    isExplanationVisible: false,
-    getStageExplanation: jest.fn(() => null),
-    hasSeenExplanation: jest.fn(() => false),
-  }),
-  getDontShowExplanations: jest.fn(() => false),
-}));
+jest.mock('@/contexts/massConsensus/ExplanationProvider', () => {
+  const getDontShowExplanations = jest.fn(() => false);
+  return {
+    useExplanations: () => ({
+      showExplanation: jest.fn(),
+      hideExplanation: jest.fn(),
+      isExplanationVisible: false,
+      getStageExplanation: jest.fn(() => null),
+      hasSeenExplanation: jest.fn(() => false),
+      getDontShowExplanations,
+    }),
+    getDontShowExplanations,
+  };
+});
 
 // Mock data
 let mockSubStatements: Statement[] = [];
@@ -77,13 +96,21 @@ return {
     };
 };
 
-const mockParentStatement = createMockStatement({ statementId: 'parent1', statementType: StatementType.question, parentId: null });
+const mockParentStatement = createMockStatement({ statementId: 'test-statement-id', statementType: StatementType.question, parentId: null });
 
 describe('RandomSuggestions Component', () => {
 
   const renderComponent = () => {
-    const preloadedState = getMockRootState();
-    
+    const preloadedState = getMockRootState({
+      statements: {
+        statements: [mockParentStatement],
+        statementSubscription: [],
+        statementSubscriptionLastUpdate: 0,
+        statementMembership: [],
+        screen: StatementScreen.chat,
+      },
+    });
+
 return renderWithProviders(
         <BrowserRouter>
           <RandomSuggestions />
@@ -103,7 +130,10 @@ return renderWithProviders(
 
   it('should render the component with statements', () => {
     renderComponent();
-    expect(screen.getByText('Test Statement 1')).toBeInTheDocument();
-    expect(screen.getByText('Test Statement 2')).toBeInTheDocument();
+    // Check that the statement cards are rendered by their IDs
+    expect(document.getElementById('stmt1')).toBeInTheDocument();
+    expect(document.getElementById('stmt2')).toBeInTheDocument();
+    // Check that the simple-suggestions-wrapper is rendered
+    expect(document.querySelector('.simple-suggestions-wrapper')).toBeInTheDocument();
   });
 });

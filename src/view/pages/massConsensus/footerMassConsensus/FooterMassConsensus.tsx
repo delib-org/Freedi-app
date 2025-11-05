@@ -1,8 +1,8 @@
+import React, { useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import styles from './FooterMassConsensus.module.scss';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import { useStageNavigation } from '../MassConsensusVM';
-import { useState } from 'react';
 
 const FooterMassConsensus = ({
     isIntro,
