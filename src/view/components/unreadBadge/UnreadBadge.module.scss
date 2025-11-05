@@ -1,0 +1,91 @@
+// UnreadBadge styles following Freedi design system
+// Uses CSS modules - NEVER import as global styles
+
+.badge {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	background-color: var(--icons-blue-dark);
+	color: white;
+	border-radius: 50%;
+	font-weight: 600;
+	line-height: 1;
+	text-align: center;
+	user-select: none;
+	font-size: 0.625rem; // 10px - following badge system
+	transition: all 0.15s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+	box-shadow: 0 2px 4px rgba(27, 69, 167, 0.3);
+
+	// WCAG AA compliant - white text on dark blue background
+	// Ensures accessibility
+
+	// Size variants
+	&--small {
+		width: 1rem; // 16px
+		height: 1rem;
+		font-size: 0.5625rem; // 9px
+		min-width: 1rem;
+	}
+
+	&--medium {
+		width: 1.2rem; // 19.2px (matches NotificationBtn)
+		height: 1.2rem;
+		font-size: 0.625rem; // 10px
+		min-width: 1.2rem;
+	}
+
+	&--large {
+		width: 1.5rem; // 24px
+		height: 1.5rem;
+		font-size: 0.75rem; // 12px
+		min-width: 1.5rem;
+	}
+
+	// Position variants
+	&--relative {
+		position: relative;
+	}
+
+	&--absolute {
+		position: absolute;
+		top: -0.5rem;
+		right: -0.5rem;
+		z-index: 10;
+	}
+
+	// Hover effect for interactive badges
+	&:hover {
+		transform: scale(1.05);
+		box-shadow: 0 3px 6px rgba(27, 69, 167, 0.4);
+	}
+
+	// Responsive adjustments for mobile
+	@media screen and (max-width: 440px) {
+		&--small {
+			width: 1.3rem;
+			height: 1.3rem;
+			font-size: 0.625rem;
+		}
+
+		&--medium {
+			width: 1.5rem;
+			height: 1.5rem;
+			font-size: 0.6875rem;
+		}
+
+		&--large {
+			width: 1.8rem;
+			height: 1.8rem;
+			font-size: 0.8125rem;
+		}
+	}
+
+	// Accessibility: Respect reduced motion preference
+	@media (prefers-reduced-motion: reduce) {
+		transition: none;
+
+		&:hover {
+			transform: none;
+		}
+	}
+}

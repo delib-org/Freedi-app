@@ -12,6 +12,7 @@ import { useSelector} from 'react-redux';
 import { inAppNotificationsSelector } from '@/redux/notificationsSlice/notificationsSlice';
 import { creatorSelector } from '@/redux/creator/creatorSlice';
 import { markStatementNotificationsAsReadDB } from '@/controllers/db/inAppNotifications/db_inAppNotifications';
+import UnreadBadge from '@/view/components/unreadBadge/UnreadBadge';
 
 interface Props {
 	statement: Statement | SimpleStatement;
@@ -57,11 +58,12 @@ const StatementChatMore: FC<Props> = ({
 	const content = (
 		<div className={styles.icon}>
 			{unreadNotificationsList.length > 0 && (
-				<div className={styles.redCircle}>
-					{unreadNotificationsList.length < 10
-						? unreadNotificationsList.length
-						: `9+`}
-				</div>
+				<UnreadBadge
+					count={unreadNotificationsList.length}
+					position="absolute"
+					size="small"
+					ariaLabel={`${unreadNotificationsList.length} unread response${unreadNotificationsList.length === 1 ? '' : 's'}`}
+				/>
 			)}
 			{!onlyCircle && <ChatIcon />}
 		</div>
