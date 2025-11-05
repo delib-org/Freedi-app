@@ -11,6 +11,7 @@ import { creatorSelector } from "@/redux/creator/creatorSlice";
 import { useSwipe } from "@/controllers/hooks/useSwipe";
 import { usePanelState } from "@/controllers/hooks/usePanelState";
 import { statementSelector } from "@/redux/statements/statementsSlice";
+import UnreadBadge from "@/view/components/unreadBadge/UnreadBadge";
 
 const ChatPanel = () => {
   const { screen, statementId } = useParams();
@@ -40,9 +41,14 @@ const ChatPanel = () => {
 
   const creator = useSelector(creatorSelector);
 
-  const inAppNotificationsList: NotificationType[] = useSelector(
+  // ✅ Filter for UNREAD notifications only for this statement
+  const unreadNotificationsList: NotificationType[] = useSelector(
     inAppNotificationsSelector
-  ).filter((n) => n.creatorId !== creator?.uid && n.parentId === statementId);
+  ).filter((n) =>
+    n.creatorId !== creator?.uid &&
+    n.parentId === statementId &&
+    (!n.read || n.read === undefined) // ✅ Treat missing field as unread for backward compatibility
+  );
 
   // Don't show ChatPanel on these specific screens
   if (
@@ -70,12 +76,13 @@ const ChatPanel = () => {
           onClick={toggleChatPanel}
           className={styles.toggleButton}
         >
-          {!isSideChatOpen && inAppNotificationsList.length > 0 && (
-            <div className={styles.notificationBadge}>
-              {inAppNotificationsList.length < 10
-                ? inAppNotificationsList.length
-                : `9+`}
-            </div>
+          {!isSideChatOpen && unreadNotificationsList.length > 0 && (
+            <UnreadBadge
+              count={unreadNotificationsList.length}
+              position="absolute"
+              size="small"
+              ariaLabel={`${unreadNotificationsList.length} unread message${unreadNotificationsList.length === 1 ? '' : 's'} in chat`}
+            />
           )}
           <div className={styles.toggleIcon}>
             <ChatIcon />
