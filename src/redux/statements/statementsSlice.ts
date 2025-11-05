@@ -1,6 +1,7 @@
 import { createSlice, PayloadAction, createSelector } from '@reduxjs/toolkit';
 import { RootState } from '../types';
 import { Statement, StatementSubscription, SelectionFunction, StatementType, updateArray, ResultsSettings } from 'delib-npm';
+import { logError } from '@/utils/errorHandling';
 
 export enum StatementScreen {
 	chat = 'chat',
@@ -65,7 +66,10 @@ export const statementsSlicer = createSlice({
 						newStatement.lastUpdate;
 				}
 			} catch (error) {
-				console.error(error);
+				logError(error, {
+					operation: 'statementsSlice.setStatement',
+					statementId: action.payload.statementId,
+				});
 			}
 		},
 		setMassConsensusStatements: (
@@ -133,7 +137,10 @@ export const statementsSlicer = createSlice({
 					);
 				});
 			} catch (error) {
-				console.error(error);
+				logError(error, {
+					operation: 'statementsSlice.setStatements',
+					metadata: { count: action.payload.length },
+				});
 			}
 		},
 		deleteStatement: (state, action: PayloadAction<string>) => {
@@ -144,7 +151,10 @@ export const statementsSlicer = createSlice({
 					(statement) => statement.statementId !== statementId
 				);
 			} catch (error) {
-				console.error(error);
+				logError(error, {
+					operation: 'statementsSlice.deleteStatement',
+					statementId: action.payload,
+				});
 			}
 		},
 		setStatementSubscription: (
@@ -170,7 +180,10 @@ export const statementsSlicer = createSlice({
 						newStatementSubscription.lastUpdate;
 				}
 			} catch (error) {
-				console.error(error);
+				logError(error, {
+					operation: 'statementsSlice.setStatementSubscription',
+					statementId: action.payload.statementId,
+				});
 			}
 		},
 		setStatementsSubscription: (
@@ -188,7 +201,10 @@ export const statementsSlicer = createSlice({
 					);
 				});
 			} catch (error) {
-				console.error(error);
+				logError(error, {
+					operation: 'statementsSlice.setStatementsSubscription',
+					metadata: { count: action.payload.length },
+				});
 			}
 		},
 		deleteSubscribedStatement: (state, action: PayloadAction<string>) => {
@@ -200,7 +216,10 @@ export const statementsSlicer = createSlice({
 						(statement) => statement.statementId !== statementId
 					);
 			} catch (error) {
-				console.error(error);
+				logError(error, {
+					operation: 'statementsSlice.deleteSubscribedStatement',
+					statementId: action.payload,
+				});
 			}
 		},
 		setStatementOrder: (state, action: PayloadAction<StatementOrder>) => {
@@ -211,7 +230,11 @@ export const statementsSlicer = createSlice({
 				);
 				if (statement) statement.order = order;
 			} catch (error) {
-				console.error(error);
+				logError(error, {
+					operation: 'statementsSlice.setStatementOrder',
+					statementId: action.payload.statementId,
+					metadata: { order: action.payload.order },
+				});
 			}
 		},
 		setStatementElementHight: (
@@ -228,7 +251,10 @@ export const statementsSlicer = createSlice({
 				);
 				if (statement) statement.elementHight = height;
 			} catch (error) {
-				console.error(error);
+				logError(error, {
+					operation: 'statementsSlice.setStatementElementHight',
+					statementId: action.payload.statementId,
+				});
 			}
 		},
 		updateStatementTop: (
@@ -246,23 +272,33 @@ export const statementsSlicer = createSlice({
 						if (statement) {
 							statement.top = update.top;
 						} else {
-							console.error(
-								`statement ${update.statementId} not found in updateStatementTop`
-							);
+							logError(new Error('Statement not found'), {
+								operation: 'statementsSlice.updateStatementTop',
+								statementId: update.statementId,
+							});
 						}
 					} catch (error) {
-						console.error('On updateStatementTop loop: ', error);
+						logError(error, {
+							operation: 'statementsSlice.updateStatementTop.forEach',
+							statementId: update.statementId,
+						});
 					}
 				});
 			} catch (error) {
-				console.error(error);
+				logError(error, {
+					operation: 'statementsSlice.updateStatementTop',
+					metadata: { updateCount: action.payload.length },
+				});
 			}
 		},
 		setScreen: (state, action: PayloadAction<StatementScreen>) => {
 			try {
 				state.screen = action.payload;
 			} catch (error) {
-				console.error(error);
+				logError(error, {
+					operation: 'statementsSlice.setScreen',
+					metadata: { screen: action.payload },
+				});
 			}
 		},
 
@@ -279,7 +315,10 @@ export const statementsSlicer = createSlice({
 					'statementsSubscribeId'
 				);
 			} catch (error) {
-				console.error(error);
+				logError(error, {
+					operation: 'statementsSlice.setMembership',
+					statementId: action.payload.statementId,
+				});
 			}
 		},
 		removeMembership: (state, action: PayloadAction<string>) => {
@@ -291,7 +330,10 @@ export const statementsSlicer = createSlice({
 						statementsSubscribeId
 				);
 			} catch (error) {
-				console.error(error);
+				logError(error, {
+					operation: 'statementsSlice.removeMembership',
+					metadata: { subscribeId: action.payload },
+				});
 			}
 		},
 		resetStatements: (state) => {
@@ -323,7 +365,10 @@ export const statementsSlicer = createSlice({
 					);
 				});
 			} catch (error) {
-				console.error(error);
+				logError(error, {
+					operation: 'statementsSlice.setCurrentMultiStepOptions',
+					metadata: { count: action.payload.length },
+				});
 			}
 		},
 		updateStoreResultsSettings: (state, action: PayloadAction<UpdateResultsSettings>) => {
