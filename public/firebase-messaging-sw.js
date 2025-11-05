@@ -402,7 +402,6 @@ self.addEventListener('notificationclick', function (event) {
 
 // Listen for messages from the main app
 self.addEventListener('message', (event) => {
-	console.info('Message received in SW:', event.data);
 
 	// Handle push support check
 	if (event.data && event.data.type === 'CHECK_PUSH_SUPPORT') {
