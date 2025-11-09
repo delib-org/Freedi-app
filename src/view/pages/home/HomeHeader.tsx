@@ -69,15 +69,8 @@ export default function HomeHeader() {
 		<div className={`homePage__header ${dir}`}>
 			<div className='homePage__header__wrapper'>
 				<h1 className='homePage__header__wrapper__title'>Delib.Org</h1>
-				<NotificationBtn />
 				<WaitingList />
 				<div className='homePage__header__wrapper__icons'>
-					{showInstallIcon && (
-						<IconButton onClick={handleInstallClick}>
-							<InstallIcon />
-						</IconButton>
-					)}
-
 					<Menu
 						isMenuOpen={isHomeMenuOpen}
 						setIsOpen={setIsHomeMenuOpen}
@@ -100,6 +93,14 @@ export default function HomeHeader() {
 							label={t('Join with PIN number')}
 							onOptionClick={() => handlePanel('invitation')} children={''} />
 					</Menu>
+
+					{showInstallIcon && (
+						<IconButton onClick={handleInstallClick}>
+							<InstallIcon />
+						</IconButton>
+					)}
+
+					<NotificationBtn />
 				</div>
 			</div>
 
