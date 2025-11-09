@@ -50,7 +50,7 @@ interface Props {
  * Enhanced MindMapChart with virtual rendering for large datasets
  */
 function VirtualMindMapChart({ descendants, isAdmin, filterBy }: Readonly<Props>) {
-	const { getIntersectingNodes, getViewport } = useReactFlow();
+	const { getIntersectingNodes } = useReactFlow();
 	const viewport = useViewport();
 	const [nodes, setNodes, onNodesChange] = useNodesState([]);
 	const [edges, setEdges, onEdgesChange] = useEdgesState([]);

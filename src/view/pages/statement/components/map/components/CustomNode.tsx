@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 // Third party
 import { useNavigate } from 'react-router';
-import { Handle, NodeProps, useStore } from 'reactflow';
+import { Handle, NodeProps } from 'reactflow';
 import clsx from 'clsx';
 // Hooks
 // Icons
@@ -87,7 +87,6 @@ function CustomNode({ data }: NodeProps) {
 		width: nodeWidth,
 		minHeight: 'auto',
 	};
-
 
 	//effects
 	//close menu every time a node is selected
