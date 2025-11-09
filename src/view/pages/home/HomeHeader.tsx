@@ -1,5 +1,5 @@
 // Helpers
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import IconButton from '../../components/iconButton/IconButton';
 import Menu from '../../components/menu/Menu';
 import MenuOption from '../../components/menu/MenuOption';
@@ -15,61 +15,22 @@ import ChangeLanguage from '@/view/components/changeLanguage/ChangeLanguage';
 import { LANGUAGES } from '@/constants/Languages';
 import NotificationBtn from '@/view/components/notificationBtn/NotificationBtn';
 import WaitingList from '@/view/components/approveMemebers/WaitingList';
+import { usePWAInstallPrompt } from '@/hooks/usePWAInstallPrompt';
 
 export default function HomeHeader() {
 	const [isHomeMenuOpen, setIsHomeMenuOpen] = useState(false);
 	const [showInvitationModal, setShowInvitationModal] = useState(false);
 	const [showLanguageModal, setShowLanguageModal] = useState(false);
 
-	const [isInstallable, setIsInstallable] = useState(false);
-
-	interface BeforeInstallPromptEvent extends Event {
-		prompt: () => void;
-		userChoice: Promise<{ outcome: string }>;
-	}
-
-	const [deferredPrompt, setDeferredPrompt] =
-		useState<BeforeInstallPromptEvent | null>(null);
-
 	const { t, dir, currentLanguage } = useTranslation();
+	const { isInstallable, isAppInstalled, handleInstall } = usePWAInstallPrompt();
 
 	const currentLabel = LANGUAGES.find(
 		(lang) => lang.code === currentLanguage
 	).label;
 
-	useEffect(() => {
-		window.addEventListener('beforeinstallprompt', (e: Event) => {
-			const beforeInstallPromptEvent = e as BeforeInstallPromptEvent;
-
-			// Prevent Chrome 67 and earlier from automatically showing the prompt
-			beforeInstallPromptEvent.preventDefault();
-
-			// Stash the event so it can be triggered later
-			setDeferredPrompt(beforeInstallPromptEvent);
-			setIsInstallable(true);
-		});
-	}, []);
-
-	function handleInstallApp() {
-		try {
-			if (deferredPrompt) {
-				deferredPrompt.prompt();
-				deferredPrompt.userChoice.then(
-					(choiceResult: { outcome: string }) => {
-						if (choiceResult.outcome === 'accepted') {
-							console.info('User accepted the install prompt');
-						} else {
-							console.info('User dismissed the install prompt');
-						}
-						setDeferredPrompt(null);
-						setIsInstallable(false);
-					}
-				);
-			}
-		} catch (error) {
-			console.error(error);
-		}
-	}
+	// Show install icon only if app is installable and not yet installed
+	const showInstallIcon = isInstallable && !isAppInstalled;
 
 	function handlePanel(modal: string) {
 		try {
@@ -92,8 +53,8 @@ export default function HomeHeader() {
 				<NotificationBtn />
 				<WaitingList />
 				<div className='homePage__header__wrapper__icons'>
-					{isInstallable && (
-						<IconButton onClick={handleInstallApp}>
+					{showInstallIcon && (
+						<IconButton onClick={handleInstall}>
 							<InstallIcon />
 						</IconButton>
 					)}

@@ -23,6 +23,8 @@ interface UsePWAInstallPromptResult {
 	shouldShowPrompt: boolean;
 	/** Whether the browser supports PWA installation */
 	isInstallable: boolean;
+	/** Whether the app is already installed */
+	isAppInstalled: boolean;
 	/** Show the install prompt */
 	showPrompt: () => void;
 	/** Handle install button click */
@@ -53,6 +55,23 @@ export const usePWAInstallPrompt = (): UsePWAInstallPromptResult => {
 	const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
 	const [shouldShowPrompt, setShouldShowPrompt] = useState(false);
 	const [isInstallable, setIsInstallable] = useState(false);
+	const [isAppInstalled, setIsAppInstalled] = useState(false);
+
+	/**
+	 * Check if app is already installed (running in standalone mode)
+	 */
+	const checkAppInstalled = useCallback((): boolean => {
+		// Check if running in standalone mode (iOS)
+		if (window.matchMedia('(display-mode: standalone)').matches) {
+			return true;
+		}
+		// Check if running as installed PWA (Android/iOS)
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		if ((window.navigator as any).standalone === true) {
+			return true;
+		}
+		return false;
+	}, []);
 
 	/**
 	 * Check if enough time has passed since last dismissal
@@ -70,39 +89,69 @@ export const usePWAInstallPrompt = (): UsePWAInstallPromptResult => {
 	 * Check if conditions are met to show the prompt
 	 */
 	const checkShouldShowPrompt = useCallback((): boolean => {
+		// Don't show if app is already installed
+		if (isAppInstalled) {
+			console.info('[PWA] Not showing prompt - app already installed');
+			return false;
+		}
+
 		// Don't show if user already responded
 		if (userResponded) {
+			console.info('[PWA] Not showing prompt - user already responded');
 			return false;
 		}
 
 		// Don't show if cooldown period hasn't passed
 		if (!canShowPromptAgain()) {
+			console.info('[PWA] Not showing prompt - cooldown period not passed');
 			return false;
 		}
 
 		// Don't show if browser doesn't support install
 		if (!isInstallable) {
+			console.info('[PWA] Not showing prompt - browser not installable');
 			return false;
 		}
 
 		// Check if user created a group (if enabled)
 		if (PWA.SHOW_AFTER_GROUP_CREATION && hasCreatedGroup) {
+			console.info('[PWA] Conditions met - user created a group');
 			return true;
 		}
 
 		// Check if user created enough options
 		if (optionsCreated >= PWA.MIN_OPTIONS_FOR_PROMPT) {
+			console.info(`[PWA] Conditions met - user created ${optionsCreated} options`);
 			return true;
 		}
 
+		console.info('[PWA] Not showing prompt - conditions not met', {
+			hasCreatedGroup,
+			optionsCreated,
+			minRequired: PWA.MIN_OPTIONS_FOR_PROMPT,
+		});
+
 		return false;
 	}, [
+		isAppInstalled,
 		userResponded,
 		canShowPromptAgain,
 		isInstallable,
 		hasCreatedGroup,
 		optionsCreated,
 	]);
+
+	/**
+	 * Check if app is installed on mount
+	 */
+	useEffect(() => {
+		const installed = checkAppInstalled();
+		setIsAppInstalled(installed);
+
+		if (installed) {
+			console.info('[PWA] App is already installed');
+		}
+	}, [checkAppInstalled]);
 
 	/**
 	 * Capture the beforeinstallprompt event
@@ -116,6 +165,8 @@ export const usePWAInstallPrompt = (): UsePWAInstallPromptResult => {
 			const promptEvent = e as BeforeInstallPromptEvent;
 			setDeferredPrompt(promptEvent);
 			setIsInstallable(true);
+
+			console.info('[PWA] beforeinstallprompt event captured - app is installable');
 		};
 
 		const handleAppInstalled = (): void => {
@@ -246,6 +297,7 @@ export const usePWAInstallPrompt = (): UsePWAInstallPromptResult => {
 	return {
 		shouldShowPrompt,
 		isInstallable,
+		isAppInstalled,
 		showPrompt,
 		handleInstall,
 		handleDismiss,
