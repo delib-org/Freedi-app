@@ -29,7 +29,8 @@ const loadPWATriggerData = (): Partial<PWAState> => {
 		const stored = localStorage.getItem(STORAGE_KEYS.PWA_INSTALL_TRIGGER_DATA);
 		if (stored) {
 			const data: PWATriggerData = JSON.parse(stored);
-			return {
+			
+return {
 				optionsCreated: data.optionsCreated || 0,
 				hasCreatedGroup: data.hasCreatedGroup || false,
 				lastPromptDismissedAt: data.lastPromptDismissedAt || null,
@@ -39,7 +40,8 @@ const loadPWATriggerData = (): Partial<PWAState> => {
 	} catch (error) {
 		console.error('Failed to load PWA trigger data:', error);
 	}
-	return {};
+	
+return {};
 };
 
 /**

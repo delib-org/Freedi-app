@@ -28,7 +28,7 @@ const PWAInstallPrompt: FC<PWAInstallPromptProps> = ({
 		return null;
 	}
 
-	const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>): void => {
+	const handleBackdropClick = (_e: React.MouseEvent<HTMLDivElement>): void => {
 		onDismiss();
 	};
 

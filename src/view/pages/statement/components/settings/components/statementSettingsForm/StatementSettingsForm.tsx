@@ -8,6 +8,7 @@ import { useNavigate, useParams } from 'react-router';
 // Custom components
 import QuestionSettings from '../QuestionSettings/QuestionSettings';
 import AdvancedSettings from './../../components/advancedSettings/AdvancedSettings';
+import EnhancedAdvancedSettings from './../../components/advancedSettings/EnhancedAdvancedSettings';
 import ChoseBySettings from '../choseBy/ChoseBySettings';
 import GetEvaluators from './../../components/GetEvaluators';
 import GetVoters from './../../components/GetVoters';
@@ -126,7 +127,7 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 						<>
 							<SectionTitle title={t('General Settings')} />
 							<section className={styles.switchesArea}>
-								<AdvancedSettings {...statementSettingsProps} />
+								<EnhancedAdvancedSettings {...statementSettingsProps} />
 							</section>
 						</>
 					)}
