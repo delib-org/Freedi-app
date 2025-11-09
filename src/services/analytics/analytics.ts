@@ -32,7 +32,13 @@ export const AnalyticsEvents = {
   // Feature events
   NOTIFICATION_ENABLED: 'notification_enabled',
   SEARCH_PERFORMED: 'search_performed',
-  
+
+  // PWA events
+  PWA_INSTALL_PROMPT_SHOWN: 'pwa_install_prompt_shown',
+  PWA_INSTALL_ACCEPTED: 'pwa_install_accepted',
+  PWA_INSTALL_DISMISSED: 'pwa_install_dismissed',
+  PWA_INSTALLED: 'pwa_installed',
+
   // Error events
   VALIDATION_ERROR: 'validation_error',
   OPERATION_FAILED: 'operation_failed',
@@ -72,6 +78,12 @@ interface ValidationErrorParams extends BaseEventParams {
   errorType: string;
   formName: string;
   fieldName?: string;
+}
+
+interface PWAInstallParams extends BaseEventParams {
+  trigger: 'group_created' | 'options_threshold' | 'manual';
+  optionsCount?: number;
+  hasCreatedGroup?: boolean;
 }
 
 export type MassConsensusStage =
@@ -140,6 +152,10 @@ type EventParams = {
   [AnalyticsEvents.MASS_CONSENSUS_TIME_SPENT]: MassConsensusEventParams & { stage: MassConsensusStage; timeSpent: number };
   [AnalyticsEvents.NOTIFICATION_ENABLED]: { notificationType: 'all' | 'mentions' | 'updates' };
   [AnalyticsEvents.SEARCH_PERFORMED]: { searchTerm: string; resultsCount: number };
+  [AnalyticsEvents.PWA_INSTALL_PROMPT_SHOWN]: PWAInstallParams;
+  [AnalyticsEvents.PWA_INSTALL_ACCEPTED]: PWAInstallParams;
+  [AnalyticsEvents.PWA_INSTALL_DISMISSED]: PWAInstallParams;
+  [AnalyticsEvents.PWA_INSTALLED]: PWAInstallParams;
   [AnalyticsEvents.VALIDATION_ERROR]: ValidationErrorParams;
   [AnalyticsEvents.OPERATION_FAILED]: { operation: string; error: string; context?: unknown };
 };
@@ -342,6 +358,35 @@ return;
     params: MassConsensusEventParams & { stage: MassConsensusStage; timeSpent: number }
   ) {
     this.logEvent(AnalyticsEvents.MASS_CONSENSUS_TIME_SPENT, params);
+  }
+
+  // PWA tracking methods
+  trackPWAInstallPromptShown(trigger: PWAInstallParams['trigger'], additionalData?: Partial<PWAInstallParams>) {
+    this.logEvent(AnalyticsEvents.PWA_INSTALL_PROMPT_SHOWN, {
+      trigger,
+      ...additionalData,
+    });
+  }
+
+  trackPWAInstallAccepted(trigger: PWAInstallParams['trigger'], additionalData?: Partial<PWAInstallParams>) {
+    this.logEvent(AnalyticsEvents.PWA_INSTALL_ACCEPTED, {
+      trigger,
+      ...additionalData,
+    });
+  }
+
+  trackPWAInstallDismissed(trigger: PWAInstallParams['trigger'], additionalData?: Partial<PWAInstallParams>) {
+    this.logEvent(AnalyticsEvents.PWA_INSTALL_DISMISSED, {
+      trigger,
+      ...additionalData,
+    });
+  }
+
+  trackPWAInstalled(trigger: PWAInstallParams['trigger'], additionalData?: Partial<PWAInstallParams>) {
+    this.logEvent(AnalyticsEvents.PWA_INSTALLED, {
+      trigger,
+      ...additionalData,
+    });
   }
 }
 
