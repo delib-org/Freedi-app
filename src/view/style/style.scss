@@ -1,3 +1,7 @@
+// All @use rules must come first
+@use './mixins' as *;
+@use './atoms/index' as *;
+@use './molecules/index' as *;
 @use './homePage.scss';
 @use './input.scss';
 @use './start.scss';
@@ -7,20 +11,8 @@
 @use './pageAnimation.scss';
 @use '../styles/header.scss';
 
+// @import rules come after @use rules
 @import "../../assets/fonts.css";
-
-// ============================================================================
-// DESIGN SYSTEM - ATOMIC ARCHITECTURE
-// ============================================================================
-
-// Import mixins (reusable patterns)
-@import './mixins';
-
-// Import atoms (basic building blocks)
-@import './atoms/index';
-
-// Import molecules (combinations of atoms)
-@import './molecules/index';
 
 :root {
   writing-mode: horizontal-tb;

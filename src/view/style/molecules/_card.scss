@@ -1,7 +1,7 @@
 // Card Molecule - BEM Methodology
 // Usage: <div class="card card--elevated card--question">...</div>
 
-@import '../mixins';
+@use '../mixins' as *;
 
 // ============================================================================
 // CARD BLOCK

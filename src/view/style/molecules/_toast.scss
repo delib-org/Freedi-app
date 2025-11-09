@@ -1,7 +1,7 @@
 // Toast Molecule - BEM Methodology
 // Usage: <div class="toast toast--success toast--top-right">...</div>
 
-@import '../mixins';
+@use '../mixins' as *;
 
 // ============================================================================
 // TOAST BLOCK

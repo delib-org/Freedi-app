@@ -50,7 +50,7 @@ interface Props {
  * Enhanced MindMapChart with virtual rendering for large datasets
  */
 function VirtualMindMapChart({ descendants, isAdmin, filterBy }: Readonly<Props>) {
-	const { getIntersectingNodes } = useReactFlow();
+	const { getIntersectingNodes, getViewport } = useReactFlow();
 	const viewport = useViewport();
 	const [nodes, setNodes, onNodesChange] = useNodesState([]);
 	const [edges, setEdges, onEdgesChange] = useEdgesState([]);
@@ -69,11 +69,15 @@ function VirtualMindMapChart({ descendants, isAdmin, filterBy }: Readonly<Props>
 		}
 
 		const buffer = MINDMAP_CONFIG.PERFORMANCE.VIRTUAL_RENDER_BUFFER;
+		// Use default viewport dimensions or get from ReactFlow instance
+		const viewportWidth = rfInstance ? rfInstance.getViewport().x : 1000;
+		const viewportHeight = rfInstance ? rfInstance.getViewport().y : 800;
+
 		const viewBounds = {
 			left: viewport.x - buffer,
-			right: viewport.x + viewport.width + buffer,
+			right: viewport.x + viewportWidth + buffer,
 			top: viewport.y - buffer,
-			bottom: viewport.y + viewport.height + buffer,
+			bottom: viewport.y + viewportHeight + buffer,
 		};
 
 		// Filter nodes within viewport bounds
@@ -90,7 +94,7 @@ function VirtualMindMapChart({ descendants, isAdmin, filterBy }: Readonly<Props>
 				nodeBottom > viewBounds.top
 			);
 		});
-	}, [nodes, viewport, isVirtualized]);
+	}, [nodes, viewport, isVirtualized, rfInstance]);
 
 	// Performance monitoring
 	useEffect(() => {
@@ -138,9 +142,8 @@ function VirtualMindMapChart({ descendants, isAdmin, filterBy }: Readonly<Props>
 			const startTime = performance.now();
 
 			// Get initial nodes and edges
-			const { initialNodes, initialEdges } = createInitialNodesAndEdges(
-				descendants,
-				filterBy
+			const { nodes: initialNodes, edges: initialEdges } = createInitialNodesAndEdges(
+				descendants
 			);
 
 			// Check if we should virtualize
@@ -181,8 +184,10 @@ function VirtualMindMapChart({ descendants, isAdmin, filterBy }: Readonly<Props>
 		} catch (error) {
 			logError(error, {
 				operation: 'VirtualMindMapChart.initialize',
-				descendantsCount: descendants?.sub?.length,
-				filterBy
+				metadata: {
+					descendantsCount: descendants?.sub?.length,
+					filterBy
+				}
 			});
 		}
 	}, [descendants, filterBy]);
@@ -220,7 +225,7 @@ function VirtualMindMapChart({ descendants, isAdmin, filterBy }: Readonly<Props>
 			} catch (error) {
 				logError(error, {
 					operation: 'VirtualMindMapChart.onLayout',
-					direction
+					metadata: { direction }
 				});
 			}
 		},
@@ -239,7 +244,7 @@ function VirtualMindMapChart({ descendants, isAdmin, filterBy }: Readonly<Props>
 		} catch (error) {
 			logError(error, {
 				operation: 'VirtualMindMapChart.onNodeDragStop',
-				nodeId: node.id
+				metadata: { nodeId: node.id }
 			});
 		}
 	};
@@ -293,7 +298,7 @@ function VirtualMindMapChart({ descendants, isAdmin, filterBy }: Readonly<Props>
 			} catch (error) {
 				logError(error, {
 					operation: 'VirtualMindMapChart.onSave',
-					nodeCount: nodes.length
+					metadata: { nodeCount: nodes.length }
 				});
 			}
 		}
@@ -337,18 +342,16 @@ function VirtualMindMapChart({ descendants, isAdmin, filterBy }: Readonly<Props>
 					throw new Error('Statement not found');
 				}
 
-				await updateStatementParents({
-					statement: draggedStatement,
-					newParentId: newDraggedStatementParent.statementId,
-					newParentStatement: newDraggedStatementParent,
-				});
+				await updateStatementParents(
+					draggedStatement,
+					newDraggedStatementParent
+				);
 
 				console.info('[VirtualMindMapChart] Statement moved successfully');
 			} catch (error) {
 				logError(error, {
 					operation: 'VirtualMindMapChart.handleMoveStatement',
-					draggedNodeId,
-					intersectedNodeId
+					metadata: { draggedNodeId, intersectedNodeId }
 				});
 			}
 		}
