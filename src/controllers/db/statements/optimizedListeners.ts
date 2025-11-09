@@ -17,7 +17,7 @@ import { store } from '@/redux/store';
 import { setStatement, setStatements, deleteStatement } from '@/redux/statements/statementsSlice';
 import { logError } from '@/utils/errorHandling';
 import { MINDMAP_CONFIG } from '@/constants/mindMap';
-import { createManagedCollectionListener, generateListenerKey } from './listenerHelpers';
+import { createManagedCollectionListener, generateListenerKey } from '@/controllers/utils/firestoreListenerHelpers';
 
 /**
  * Consolidated listener for mind-map data

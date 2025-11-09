@@ -1,7 +1,7 @@
 // Button Atom - BEM Methodology
 // Usage: <button class="button button--primary button--large">...</button>
 
-@import '../mixins';
+@use '../mixins' as *;
 
 // ============================================================================
 // BUTTON BLOCK

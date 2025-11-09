@@ -7,6 +7,7 @@ import Accessibility from './view/components/accessibility/Accessibility';
 import { ListenerStats } from './view/components/ListenerStats';
 import PWAInstallPrompt from './view/components/pwa/PWAInstallPrompt';
 import { usePWAInstallPrompt } from './hooks/usePWAInstallPrompt';
+import OfflineAlert from './view/components/offlineAlert/OfflineAlert';
 
 export default function App() {
 	const { isLoading, user } = useAuthentication();
@@ -25,6 +26,7 @@ export default function App() {
 				onInstall={handleInstall}
 				onDismiss={handleDismiss}
 			/>
+			<OfflineAlert />
 			<AgreementProvider user={user}>
 				<Outlet />
 			</AgreementProvider>

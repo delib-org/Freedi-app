@@ -1,7 +1,7 @@
 // Badge Atom - BEM Methodology
 // Usage: <span class="badge badge--notification">5</span>
 
-@import '../mixins';
+@use '../mixins' as *;
 
 // ============================================================================
 // BADGE BLOCK
