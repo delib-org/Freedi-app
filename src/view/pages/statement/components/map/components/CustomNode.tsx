@@ -88,6 +88,41 @@ function CustomNode({ data }: NodeProps) {
 		minHeight: 'auto',
 	};
 
+	// Apply inverse scale to buttons when zoom changes to maintain ~32px size
+	useEffect(() => {
+		if (zoom && showBtns) {
+			const scale = 1 / zoom; // Inverse scaling factor
+
+			// Apply scaling to all button refs
+			if (addChildRef.current) {
+				addChildRef.current.style.transform = `scale(${scale})`;
+				addChildRef.current.style.transformOrigin = 'center center';
+			}
+
+			if (addSiblingRef.current) {
+				addSiblingRef.current.style.transform = `scale(${scale})`;
+				addSiblingRef.current.style.transformOrigin = 'center center';
+			}
+
+			if (menuButtonRef.current) {
+				menuButtonRef.current.style.transform = `scale(${scale})`;
+				menuButtonRef.current.style.transformOrigin = 'center center';
+			}
+
+			if (menuContainerRef.current) {
+				// Scale the menu container
+				menuContainerRef.current.style.transform = `scale(${scale})`;
+				// Set transform origin based on orientation to avoid hiding buttons
+				if (mapContext.direction === 'TB') {
+					menuContainerRef.current.style.transformOrigin = 'bottom right';
+				} else {
+					// In horizontal mode, position menu on the left to avoid top-center sibling button
+					menuContainerRef.current.style.transformOrigin = 'top right';
+				}
+			}
+		}
+	}, [zoom, showBtns, showMenu, mapContext.direction]);
+
 	//effects
 	//close menu every time a node is selected
 	useEffect(() => {
@@ -191,38 +226,13 @@ function CustomNode({ data }: NodeProps) {
 									styles.nodeFab,
 									styles.addChild,
 									mapContext.direction === 'TB'
-										? styles.addChildTB
-										: styles.addChildLR
-								)}
-								onClick={handleAddChildNode}
-								aria-label='Add child node'
-								title='Add child node'
-								onMouseEnter={() => setHoveredButton('child')}
-								onMouseLeave={() => setHoveredButton(null)}
-							>
-								<AddChildIcon />
-							</button>
-							{hoveredButton === 'child' && (
-								<div className={clsx(styles.tooltip, styles.bottom, styles.visible)}>
-									Add child node
-								</div>
-							)}
-						</>
-					)}
-					<>
-						<button
-							className={clsx(
-								styles.nodeFab,
-								styles.addSibling,
-								mapContext.direction === 'TB'
-									? styles.addSiblingTB
-									: styles.addSiblingLR
-							)}
-							onClick={handleAddSiblingNode}
-							aria-label='Add sibling node'
-							title='Add sibling node'
-							onMouseEnter={() => setHoveredButton('sibling')}
-							onMouseLeave={() => setHoveredButton(null)}
+										? 'calc(50% - 16px)'
+										: '-16px',
+								bottom:
+									mapContext.direction === 'TB'
+										? '-16px'
+										: 'calc(50% - 16px)',
+							}}
 						>
 							<AddSiblingIcon />
 						</button>
@@ -233,12 +243,36 @@ function CustomNode({ data }: NodeProps) {
 						)}
 					</>
 					<button
-						aria-label='More options'
-						aria-expanded={showMenu}
-						className={styles.menuButton}
+						className='addIcon'
+						onClick={handleAddSiblingNode}
+						aria-label='Add sibling node'
+						ref={addSiblingRef}
+						style={{
+							position: 'absolute',
+							cursor: 'pointer',
+							left:
+								mapContext.direction === 'TB'
+									? '-16px'
+									: 'calc(50% - 16px)',
+							top:
+								mapContext.direction === 'TB'
+									? 'calc(50% - 16px)'
+									: '-16px',
+						}}
+					>
+						<PlusIcon />
+					</button>
+					<button
+						aria-label='open settings menu'
+						className='addIcon'
 						onClick={handleMenuClick}
-						onMouseEnter={() => setHoveredButton('menu')}
-						onMouseLeave={() => setHoveredButton(null)}
+						ref={menuButtonRef}
+						style={{
+							position: 'absolute',
+							cursor: 'pointer',
+							right: '-16px',
+							top: '-16px',
+						}}
 					>
 						<EllipsisIcon />
 					</button>
@@ -248,7 +282,20 @@ function CustomNode({ data }: NodeProps) {
 						</div>
 					)}
 					{showMenu && (
-						<div className={styles.menuContainer}>
+						<div
+							ref={menuContainerRef}
+							style={{
+								position: 'absolute',
+								cursor: 'pointer',
+								right: mapContext.direction === 'TB' ? '0' : 'auto',
+								left: mapContext.direction === 'LR' ? '0' : 'auto',
+								bottom: mapContext.direction === 'TB' ? '100%' : 'auto',
+								top: mapContext.direction === 'LR' ? '100%' : 'auto',
+								marginBottom: mapContext.direction === 'TB' ? '10px' : '0',
+								marginTop: mapContext.direction === 'LR' ? '10px' : '0',
+								zIndex: 999, // Ensure menu appears above other elements
+							}}
+						>
 							<NodeMenu
 								setStatement={setLocalStatement}
 								setIsEdit={setIsEdit}
