@@ -1,6 +1,6 @@
 // Atoms Index
-// Import all atomic components
+// Forward all atomic components
 
-@import 'button';
-@import 'input';
-@import 'badge';
+@forward 'button';
+@forward 'input';
+@forward 'badge';
