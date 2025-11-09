@@ -265,6 +265,20 @@ const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 						<p className={styles.helperText}>
 							{t('Transforms discussion into evidence-based Support/Challenge format with weighted scoring and AI-guided idea refinement')}
 						</p>
+						{settings.popperianDiscussionEnabled && (
+							<>
+								<Checkbox
+									label={t('Enable AI Pre-Check for Options')}
+									isChecked={settings.popperianPreCheckEnabled ?? false}
+									onChange={(checked) =>
+										handleSettingChange('popperianPreCheckEnabled', checked)
+									}
+								/>
+								<p className={styles.helperText}>
+									{t('When enabled, AI will help refine and clarify options before they are posted')}
+								</p>
+							</>
+						)}
 					</div>
 				</div>
 			)}
