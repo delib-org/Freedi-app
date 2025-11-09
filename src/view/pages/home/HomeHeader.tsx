@@ -29,8 +29,27 @@ export default function HomeHeader() {
 		(lang) => lang.code === currentLanguage
 	).label;
 
-	// Show install icon only if app is installable and not yet installed
-	const showInstallIcon = isInstallable && !isAppInstalled;
+	// Always show install icon if app is not installed, even if beforeinstallprompt hasn't fired
+	// This allows users to see the icon in development/testing
+	const showInstallIcon = !isAppInstalled;
+
+	// Debug logging for install icon visibility
+	console.info('[HomeHeader] Install icon state:', {
+		isInstallable,
+		isAppInstalled,
+		showInstallIcon,
+	});
+
+	function handleInstallClick() {
+		if (!isInstallable) {
+			// If beforeinstallprompt hasn't fired, show helpful message
+			console.info('[HomeHeader] Install not available - beforeinstallprompt event not fired');
+			alert('Install is not available. This browser may not support PWA installation, or the app is already installed.');
+			return;
+		}
+		// Use the hook's handleInstall if available
+		handleInstall();
+	}
 
 	function handlePanel(modal: string) {
 		try {
@@ -54,7 +73,7 @@ export default function HomeHeader() {
 				<WaitingList />
 				<div className='homePage__header__wrapper__icons'>
 					{showInstallIcon && (
-						<IconButton onClick={handleInstall}>
+						<IconButton onClick={handleInstallClick}>
 							<InstallIcon />
 						</IconButton>
 					)}
