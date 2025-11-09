@@ -231,26 +231,48 @@ function CustomNode({ data }: NodeProps) {
 			{showBtns && (
 				<div className={styles.nodeActions}>
 					{canAddChild && (
-						<button
-							className='addIcon'
-							onClick={handleAddSiblingNode}
-							aria-label='Add sibling node'
-							ref={addSiblingRef}
-							style={{
-								position: 'absolute',
-								cursor: 'pointer',
-								left:
-									mapContext.direction === 'TB'
-										? '-16px'
-										: 'calc(50% - 16px)',
-								top:
-									mapContext.direction === 'TB'
-										? 'calc(50% - 16px)'
-										: '-16px',
-							}}
-						>
-							<PlusIcon />
-						</button>
+						<>
+							<button
+								className='addIcon'
+								onClick={handleAddChildNode}
+								aria-label='Add child node'
+								ref={addChildRef}
+								style={{
+									position: 'absolute',
+									cursor: 'pointer',
+									right:
+										mapContext.direction === 'TB'
+											? 'calc(50% - 16px)'
+											: '-16px',
+									bottom:
+										mapContext.direction === 'TB'
+											? '-16px'
+											: 'calc(50% - 16px)',
+								}}
+							>
+								<AddChildIcon />
+							</button>
+							<button
+								className='addIcon'
+								onClick={handleAddSiblingNode}
+								aria-label='Add sibling node'
+								ref={addSiblingRef}
+								style={{
+									position: 'absolute',
+									cursor: 'pointer',
+									left:
+										mapContext.direction === 'TB'
+											? '-16px'
+											: 'calc(50% - 16px)',
+									top:
+										mapContext.direction === 'TB'
+											? 'calc(50% - 16px)'
+											: '-16px',
+								}}
+							>
+								<AddSiblingIcon />
+							</button>
+						</>
 					)}
 					<button
 						aria-label='open settings menu'
