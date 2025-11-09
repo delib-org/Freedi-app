@@ -1,5 +1,5 @@
 import { Statement, Role, StatementType, Screen } from "delib-npm";
-import { ReactNode } from "react";
+import { ReactNode, useEffect } from "react";
 import GroupPage from "../statementTypes/group/GroupPage";
 import QuestionPage from "../statementTypes/question/QuestionPage";
 import { useParams } from "react-router";
@@ -9,8 +9,10 @@ import Chat from "../chat/Chat";
 import StatementSettings from "../settings/StatementSettings";
 import PolarizationIndexComp from "@/view/components/maps/polarizationIndex/PolarizationIndex";
 import PopperHebbianDiscussion from "../popperHebbian/PopperHebbianDiscussion";
-import { useSelector } from "react-redux";
-import { statementSelectorById } from "@/redux/statements/statementsSlice";
+import { useSelector, useDispatch } from "react-redux";
+import { statementSelectorById, setStatement } from "@/redux/statements/statementsSlice";
+import { getStatementFromDB } from "@/controllers/db/statements/getStatement";
+import { logError } from "@/utils/errorHandling";
 
 interface SwitchScreenProps {
 	statement: Statement | undefined;
@@ -22,13 +24,38 @@ function SwitchScreen({
 	role,
 }: Readonly<SwitchScreenProps>): ReactNode {
 	let { screen } = useParams();
+	const dispatch = useDispatch();
 	const { hasChat } = statement?.statementSettings || { hasChat: false };
 
 	// Check if Popper-Hebbian discussion is enabled (check parent statement for options)
 	const parentStatement = useSelector(statementSelectorById(statement?.parentId || ""));
-	const isPopperHebbianEnabled = statement?.statementType === StatementType.option
-		? parentStatement?.statementSettings?.popperianDiscussionEnabled ?? false
-		: statement?.statementSettings?.popperianDiscussionEnabled ?? false;
+
+	// Fetch parent statement from DB if not in Redux store
+	useEffect(() => {
+		const fetchParentStatement = async () => {
+			// Only fetch if we have a parentId but no parent statement in Redux
+			if (statement?.parentId && !parentStatement) {
+				try {
+					const parentFromDB = await getStatementFromDB(statement.parentId);
+					if (parentFromDB) {
+						dispatch(setStatement(parentFromDB));
+					}
+				} catch (error) {
+					logError(error, {
+						operation: 'SwitchScreen.fetchParentStatement',
+						metadata: {
+							parentId: statement.parentId,
+							statementId: statement.statementId,
+						}
+					});
+				}
+			}
+		};
+
+		fetchParentStatement();
+	}, [statement?.parentId, parentStatement, dispatch, statement?.statementId]);
+
+	const isPopperHebbianEnabled = statement?.statementType === StatementType.option && parentStatement?.statementSettings?.popperianDiscussionEnabled === true;
 
 	// Debug logging
 	if (screen === 'chat') {
@@ -74,6 +101,7 @@ function SwitchScreen({
 					</>
 				);
 			}
+
 			return <Chat />;
 		case Screen.settings:
 			return <StatementSettings />;
