@@ -3,8 +3,8 @@
 	bottom: -100px;
 	left: 50%;
 	transform: translateX(-50%);
-	background: #333;
-	color: white;
+	background: var(--text-caption);
+	color: var(--white);
 	padding: 1rem 1.5rem;
 	border-radius: 8px;
 	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
@@ -19,19 +19,19 @@
 	}
 
 	&.info {
-		background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+		background: var(--btn-primary);
 	}
 
 	&.success {
-		background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+		background: var(--agree);
 	}
 
 	&.warning {
-		background: linear-gradient(135deg, #f6ad55 0%, #ed8936 100%);
+		background: var(--text-warning);
 	}
 
 	&.error {
-		background: linear-gradient(135deg, #fc5c65 0%, #eb3b5a 100%);
+		background: var(--red);
 	}
 
 	.content {
