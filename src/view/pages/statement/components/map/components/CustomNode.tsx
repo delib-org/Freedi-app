@@ -90,7 +90,7 @@ function CustomNode({ data }: NodeProps) {
 		minHeight: 'auto',
 	};
 
-	// Apply inverse scale to buttons when zoom changes
+	// Apply inverse scale to buttons when zoom changes to maintain ~32px size
 	useEffect(() => {
 		if (zoom && showBtns) {
 			const scale = 1 / zoom; // Inverse scaling factor
@@ -114,11 +114,16 @@ function CustomNode({ data }: NodeProps) {
 			if (menuContainerRef.current) {
 				// Scale the menu container
 				menuContainerRef.current.style.transform = `scale(${scale})`;
-				// Set transform origin to bottom right to maintain position
-				menuContainerRef.current.style.transformOrigin = 'bottom right';
+				// Set transform origin based on orientation to avoid hiding buttons
+				if (mapContext.direction === 'TB') {
+					menuContainerRef.current.style.transformOrigin = 'bottom right';
+				} else {
+					// In horizontal mode, position menu on the left to avoid top-center sibling button
+					menuContainerRef.current.style.transformOrigin = 'top right';
+				}
 			}
 		}
-	}, [zoom, showBtns, showMenu]);
+	}, [zoom, showBtns, showMenu, mapContext.direction]);
 
 	//effects
 	//close menu every time a node is selected
@@ -224,12 +229,12 @@ function CustomNode({ data }: NodeProps) {
 								cursor: 'pointer',
 								right:
 									mapContext.direction === 'TB'
-										? 'calc(50% - 0.5rem)'
-										: '-.8rem',
+										? 'calc(50% - 16px)'
+										: '-16px',
 								bottom:
 									mapContext.direction === 'TB'
-										? '-.8rem'
-										: 'calc(50% - 0.5rem)',
+										? '-16px'
+										: 'calc(50% - 16px)',
 							}}
 						>
 							<PlusIcon />
@@ -245,12 +250,12 @@ function CustomNode({ data }: NodeProps) {
 							cursor: 'pointer',
 							left:
 								mapContext.direction === 'TB'
-									? '-.5rem'
-									: 'calc(50% - 0.5rem)',
+									? '-16px'
+									: 'calc(50% - 16px)',
 							top:
 								mapContext.direction === 'TB'
-									? 'calc(50% - 0.5rem)'
-									: '-.8rem',
+									? 'calc(50% - 16px)'
+									: '-16px',
 						}}
 					>
 						<PlusIcon />
@@ -263,8 +268,8 @@ function CustomNode({ data }: NodeProps) {
 						style={{
 							position: 'absolute',
 							cursor: 'pointer',
-							right: '-.5rem',
-							top: '-.5rem',
+							right: '-16px',
+							top: '-16px',
 						}}
 					>
 						<EllipsisIcon />
@@ -275,10 +280,12 @@ function CustomNode({ data }: NodeProps) {
 							style={{
 								position: 'absolute',
 								cursor: 'pointer',
-								right: '0',
-								bottom: '100%',
-								marginBottom: '10px', // Fixed distance regardless of zoom
-								transformOrigin: 'bottom right',
+								right: mapContext.direction === 'TB' ? '0' : 'auto',
+								left: mapContext.direction === 'LR' ? '0' : 'auto',
+								bottom: mapContext.direction === 'TB' ? '100%' : 'auto',
+								top: mapContext.direction === 'LR' ? '100%' : 'auto',
+								marginBottom: mapContext.direction === 'TB' ? '10px' : '0',
+								marginTop: mapContext.direction === 'LR' ? '10px' : '0',
 								zIndex: 999, // Ensure menu appears above other elements
 							}}
 						>
