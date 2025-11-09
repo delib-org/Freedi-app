@@ -1,13 +1,14 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 // Third party
 import { useNavigate } from 'react-router';
-import { Handle, NodeProps } from 'reactflow';
+import { Handle, NodeProps, useReactFlow } from 'reactflow';
 import clsx from 'clsx';
 // Hooks
 // Icons
 import EllipsisIcon from '@/assets/icons/ellipsisIcon.svg?react';
 import AddChildIcon from '@/assets/icons/addChildIcon.svg?react';
 import AddSiblingIcon from '@/assets/icons/addSiblingIcon.svg?react';
+import PlusIcon from '@/assets/icons/plusIcon.svg?react';
 // Statements functions
 import { updateStatementText } from '@/controllers/db/statements/setStatements';
 import { statementTitleToDisplay } from '@/controllers/general/helpers';
@@ -46,6 +47,10 @@ function CustomNode({ data }: NodeProps) {
 	const { result, parentStatement, dimensions } = data;
 	const { statementId, statement } = result.top as Statement;
 
+	// Get zoom from React Flow
+	const { getZoom } = useReactFlow();
+	const zoom = getZoom();
+
 	const { mapContext, setMapContext } = useMapContext();
 	const selectedId = mapContext?.selectedId ?? null;
 	const showBtns = selectedId === statementId;
@@ -68,6 +73,12 @@ function CustomNode({ data }: NodeProps) {
 
 	// State for tooltips
 	const [hoveredButton, setHoveredButton] = useState<string | null>(null);
+
+	// Create refs for the buttons that need scaling
+	const addChildRef = useRef<HTMLButtonElement>(null);
+	const addSiblingRef = useRef<HTMLButtonElement>(null);
+	const menuButtonRef = useRef<HTMLButtonElement>(null);
+	const menuContainerRef = useRef<HTMLDivElement>(null);
 
 	const getNodeWidth = () => {
 		if (isEdit && wordLength) {
@@ -220,48 +231,27 @@ function CustomNode({ data }: NodeProps) {
 			{showBtns && (
 				<div className={styles.nodeActions}>
 					{canAddChild && (
-						<>
-							<button
-								className={clsx(
-									styles.nodeFab,
-									styles.addChild,
-									mapContext.direction === 'TB'
-										? 'calc(50% - 16px)'
-										: '-16px',
-								bottom:
+						<button
+							className='addIcon'
+							onClick={handleAddSiblingNode}
+							aria-label='Add sibling node'
+							ref={addSiblingRef}
+							style={{
+								position: 'absolute',
+								cursor: 'pointer',
+								left:
 									mapContext.direction === 'TB'
 										? '-16px'
 										: 'calc(50% - 16px)',
+								top:
+									mapContext.direction === 'TB'
+										? 'calc(50% - 16px)'
+										: '-16px',
 							}}
 						>
-							<AddSiblingIcon />
+							<PlusIcon />
 						</button>
-						{hoveredButton === 'sibling' && (
-							<div className={clsx(styles.tooltip, styles.left, styles.visible)}>
-								Add sibling node
-							</div>
-						)}
-					</>
-					<button
-						className='addIcon'
-						onClick={handleAddSiblingNode}
-						aria-label='Add sibling node'
-						ref={addSiblingRef}
-						style={{
-							position: 'absolute',
-							cursor: 'pointer',
-							left:
-								mapContext.direction === 'TB'
-									? '-16px'
-									: 'calc(50% - 16px)',
-							top:
-								mapContext.direction === 'TB'
-									? 'calc(50% - 16px)'
-									: '-16px',
-						}}
-					>
-						<PlusIcon />
-					</button>
+					)}
 					<button
 						aria-label='open settings menu'
 						className='addIcon'
