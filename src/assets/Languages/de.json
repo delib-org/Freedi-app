@@ -136,6 +136,8 @@
   "Enable AI suggestion improvement": "KI-Vorschlagsverbesserung aktivieren",
   "Enable Anchored Sampling": "Verankerte Stichprobe aktivieren",
   "Enable Popper-Hebbian Discussion Mode": "Popper-Hebbian-Diskussionsmodus aktivieren",
+  "Enable AI Pre-Check for Options": "KI-Vorprüfung für Optionen aktivieren",
+  "When enabled, AI will help refine and clarify options before they are posted": "Wenn aktiviert, hilft die KI, Optionen zu verfeinern und zu klären, bevor sie veröffentlicht werden",
   "Enable Joining an option": "Einer Option beitreten ermöglichen",
   "Enable Sub-Conversations": "Unterhaltungen aktivieren",
   "Enable Submit Mode": "Absendmodus aktivieren",

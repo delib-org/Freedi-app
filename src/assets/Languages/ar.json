@@ -140,6 +140,8 @@
   "Enable add new sub-questions button": "تمكين زر إضافة أسئلة فرعية جديدة",
   "Enable user voting/evaluation": "تمكين تصويت/تقييم المستخدمين",
   "Enable Popper-Hebbian Discussion Mode": "تفعيل وضع النقاش بوبر-هبيان",
+  "Enable AI Pre-Check for Options": "تمكين الفحص المسبق بالذكاء الاصطناعي للخيارات",
+  "When enabled, AI will help refine and clarify options before they are posted": "عند التمكين، سيساعد الذكاء الاصطناعي في تحسين وتوضيح الخيارات قبل نشرها",
   "English": "الإنجليزية",
   "Enhanced Evaluation": "تقييم محسن",
   "Enter badge label (e.g., \"Priority\", \"Essential\")": "أدخل تسمية الشارة (مثل \"أولوية\"، \"أساسي\")",

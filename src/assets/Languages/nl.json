@@ -136,6 +136,8 @@
   "Enable AI suggestion improvement": "AI-suggestieverbetering inschakelen",
   "Enable Anchored Sampling": "Verankerde Steekproef Inschakelen",
   "Enable Popper-Hebbian Discussion Mode": "Popper-Hebbian Discussiemodus Inschakelen",
+  "Enable AI Pre-Check for Options": "AI-voorcontrole voor opties inschakelen",
+  "When enabled, AI will help refine and clarify options before they are posted": "Indien ingeschakeld, helpt AI opties te verfijnen en te verduidelijken voordat ze worden geplaatst",
   "Enable Joining an option": "Deelnemen aan een optie inschakelen",
   "Enable Sub-Conversations": "Subgesprekken inschakelen",
   "Enable Submit Mode": "Indieningmodus inschakelen",

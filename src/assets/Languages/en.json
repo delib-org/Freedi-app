@@ -140,6 +140,8 @@
   "Enable add new sub-questions button": "Enable add new sub-questions button",
   "Enable user voting/evaluation": "Enable user voting/evaluation",
   "Enable Popper-Hebbian Discussion Mode": "Enable Popper-Hebbian Discussion Mode",
+  "Enable AI Pre-Check for Options": "Enable AI Pre-Check for Options",
+  "When enabled, AI will help refine and clarify options before they are posted": "When enabled, AI will help refine and clarify options before they are posted",
   "English": "English",
   "Evidence": "Evidence",
   "Evidence is challenging this idea": "Evidence is challenging this idea",

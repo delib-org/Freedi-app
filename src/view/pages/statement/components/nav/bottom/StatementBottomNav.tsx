@@ -44,6 +44,7 @@ const StatementBottomNav: FC<Props> = () => {
 
 	// Popper-Hebbian refinery modal state
 	const isPopperHebbianEnabled = statement?.statementSettings?.popperianDiscussionEnabled ?? false;
+	const isPopperPreCheckEnabled = statement?.statementSettings?.popperianPreCheckEnabled ?? false;
 	const [showInitialIdeaModal, setShowInitialIdeaModal] = useState(false);
 	const [showRefineryModal, setShowRefineryModal] = useState(false);
 	const [initialIdea, setInitialIdea] = useState('');
@@ -103,8 +104,8 @@ const StatementBottomNav: FC<Props> = () => {
 	}
 
 	const handleAddOption = () => {
-		// If Popper-Hebbian mode is enabled, show initial idea modal first
-		if (isPopperHebbianEnabled) {
+		// If Popper-Hebbian mode is enabled AND pre-check is enabled, show initial idea modal first
+		if (isPopperHebbianEnabled && isPopperPreCheckEnabled) {
 			setShowInitialIdeaModal(true);
 			decreaseLearning({ addOption: true });
 		} else {
