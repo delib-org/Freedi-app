@@ -136,6 +136,8 @@
   "Enable AI suggestion improvement": "Habilitar mejora de sugerencias con IA",
   "Enable Anchored Sampling": "Habilitar Muestreo Anclado",
   "Enable Popper-Hebbian Discussion Mode": "Habilitar Modo de Discusión Popper-Hebbian",
+  "Enable AI Pre-Check for Options": "Habilitar Verificación Previa de IA para Opciones",
+  "When enabled, AI will help refine and clarify options before they are posted": "Cuando está habilitado, la IA ayudará a refinar y aclarar las opciones antes de publicarlas",
   "Enable Joining an option": "Habilitar unirse a una opción",
   "Enable Sub-Conversations": "Habilitar Sub-Charlas",
   "Enable Submit Mode": "Habilitar Modo de Envío",

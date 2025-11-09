@@ -148,6 +148,8 @@
   "Enable add new sub-questions button": "הצג כפתור הוספת תת-שאלות ",
   "Enable user voting/evaluation": "אפשר למשתמשים להצביע/להעריך",
   "Enable Popper-Hebbian Discussion Mode": "אפשר מצב דיון פופר-הבי",
+  "Enable AI Pre-Check for Options": "הוספ/י טענה עם בדיקה מקדימה של AI",
+  "When enabled, AI will help refine and clarify options before they are posted": "כאשר מופעל, AI יעזור לחדד ולהבהיר טענות לפני פרסומן",
   "English": "אנגלית",
   "Enhanced Evaluation": "הערכה מגוונת",
   "Ensures fair representation of all ideas": "מבטיח ייצוג הוגן לכל הרעיונות",
