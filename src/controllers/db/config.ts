@@ -70,7 +70,7 @@ return initializeFirestore(app, {
 	try {
 		return initializeFirestore(app, {
 			localCache: persistentLocalCache({
-				tabManager: persistentSingleTabManager(),
+				tabManager: persistentSingleTabManager(undefined),
 			}),
 		});
 	} catch (error) {

@@ -11,6 +11,12 @@ import { doc, setDoc } from 'firebase/firestore';
 import { FireStore } from '@/controllers/db/config';
 import EvaluationTypeSelector from './EvaluationTypeSelector/EvaluationTypeSelector';
 import { setMaxVotesPerUser } from '@/controllers/db/evaluation/setEvaluation';
+import {
+  Eye, EyeOff, MessageCircle, GitBranch, Users, UserPlus, Vote,
+  ThumbsUp, BarChart3, CheckSquare, Send, Brain, Search,
+  MessageSquare, Navigation, Plus, Info, Settings,
+  Shield, Sparkles, ChevronDown, ChevronUp, HelpCircle
+} from 'lucide-react';
 
 const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 	const { t } = useTranslation();
@@ -21,6 +27,23 @@ const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 	// Vote limit state (this needs to remain as it's UI-specific state)
 	const [isVoteLimitEnabled, setIsVoteLimitEnabled] = useState<boolean>(!!statement.evaluationSettings?.maxVotesPerUser);
 	const [maxVotes, setMaxVotes] = useState<number>(statement.evaluationSettings?.maxVotesPerUser || 3);
+
+	// Category collapse state for better UX
+	const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({
+		visibility: true,
+		participation: true,
+		evaluation: true,
+		ai: false,
+		discussion: false,
+		navigation: false,
+	});
+
+	const toggleCategory = (category: string) => {
+		setExpandedCategories(prev => ({
+			...prev,
+			[category]: !prev[category]
+		}));
+	};
 
 	// Update vote limit state when statement changes
 	useEffect(() => {
@@ -265,6 +288,20 @@ const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 						<p className={styles.helperText}>
 							{t('Transforms discussion into evidence-based Support/Challenge format with weighted scoring and AI-guided idea refinement')}
 						</p>
+						{settings.popperianDiscussionEnabled && (
+							<>
+								<Checkbox
+									label={t('Enable AI Pre-Check for Options')}
+									isChecked={settings.popperianPreCheckEnabled ?? false}
+									onChange={(checked) =>
+										handleSettingChange('popperianPreCheckEnabled', checked)
+									}
+								/>
+								<p className={styles.helperText}>
+									{t('When enabled, AI will help refine and clarify options before they are posted')}
+								</p>
+							</>
+						)}
 					</div>
 				</div>
 			)}

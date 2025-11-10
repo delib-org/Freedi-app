@@ -67,7 +67,10 @@
       &__icons {
         position: relative;
         display: flex;
-        justify-content: space-between;
+        justify-content: space-evenly;
+        align-items: center;
+        gap: 1rem;
+        width: webkit-fit-content;
 
         svg {
           height: 27px;
@@ -90,6 +93,7 @@
           border-radius: 0.36rem;
           z-index: 1003;
           transform: translateX(-20%);
+          width: fit-content;
 
           svg {
             color: black;

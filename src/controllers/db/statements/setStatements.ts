@@ -38,6 +38,7 @@ import { setNewProcessToDB } from '../massConsensus/setMassConsensus';
 import { LanguagesEnum } from '@/context/UserConfigContext';
 import { analyticsService } from '@/services/analytics';
 import { logger } from '@/services/logger';
+import { incrementOptionsCreated, setHasCreatedGroup } from '@/redux/pwa/pwaSlice';
 
 export const resultsSettingsDefault: ResultsSettings = {
 	resultsBy: ResultsBy.consensus,
@@ -238,11 +239,11 @@ export const setStatementToDB = async ({
 		await Promise.all(statementPromises);
 
 		// Track statement creation
-		logger.info('Statement created', { 
-			statementId: statement.statementId, 
-			statementType: statement.statementType 
+		logger.info('Statement created', {
+			statementId: statement.statementId,
+			statementType: statement.statementType
 		});
-		
+
 		analyticsService.logEvent('statement_created', {
 			statementId: statement.statementId,
 			statementType: statement.statementType,
@@ -250,6 +251,16 @@ export const setStatementToDB = async ({
 			parentId: statement.parentId,
 			topParentId: statement.topParentId,
 		});
+
+		// Track PWA install prompt triggers
+		if (statement.statementType === StatementType.option) {
+			store.dispatch(incrementOptionsCreated());
+		}
+
+		// Track if user created a top-level group
+		if (statement.parentId === 'top') {
+			store.dispatch(setHasCreatedGroup(true));
+		}
 
 		return { statementId: statement.statementId, statement };
 	} catch (error) {

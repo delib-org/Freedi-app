@@ -11,6 +11,7 @@ import creatorReducer from './creator/creatorSlice';
 import SubscriptionsReducer from './subscriptions/subscriptionsSlice';
 import userDemographicReducer from './userDemographic/userDemographicSlice';
 import newStatementReducer from './statements/newStatementSlice';
+import pwaReducer from './pwa/pwaSlice';
 import { massConsensusApi } from './massConsensus/massConsensusApi';
 
 export const store = configureStore({
@@ -27,6 +28,7 @@ export const store = configureStore({
 		subscriptions: SubscriptionsReducer.reducer,
 		userDemographic: userDemographicReducer,
 		newStatement: newStatementReducer,
+		pwa: pwaReducer,
         [massConsensusApi.reducerPath]: massConsensusApi.reducer,
 	},
 	middleware: (getDefaultMiddleware) =>

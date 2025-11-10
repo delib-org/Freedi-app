@@ -110,6 +110,8 @@ export const STORAGE_KEYS = {
 	LANGUAGE: 'language',
 	AUTH_TOKEN: 'authToken',
 	LAST_VISITED: 'lastVisited',
+	PWA_USER_RESPONDED: 'pwa-user-responded',
+	PWA_INSTALL_TRIGGER_DATA: 'pwa-install-trigger-data',
 } as const;
 
 /**
@@ -132,4 +134,29 @@ export const FEATURES = {
 	ENABLE_SENTRY: true,
 	ENABLE_PWA: true,
 	ENABLE_NOTIFICATIONS: true,
+} as const;
+
+/**
+ * PWA Install Prompt Configuration
+ */
+export const PWA = {
+	/** Minimum number of options user must create before showing install prompt */
+	MIN_OPTIONS_FOR_PROMPT: 5,
+	/** Whether to show prompt after creating first group/statement */
+	SHOW_AFTER_GROUP_CREATION: true,
+	/** Delay before showing prompt after trigger condition is met (in ms) */
+	PROMPT_DELAY: 2 * TIME.SECOND,
+	/** How long to wait before allowing prompt to show again after dismissal (in days) */
+	PROMPT_COOLDOWN: 7,
+} as const;
+
+/**
+ * PWA Install Prompt Messages
+ */
+export const PWA_MESSAGES = {
+	TITLE: 'Install FreeDi',
+	DESCRIPTION: 'Install FreeDi on your device for a better experience. Get quick access and work offline!',
+	INSTALL_BUTTON: 'Install',
+	CANCEL_BUTTON: 'Not now',
+	SUCCESS: 'FreeDi installed successfully!',
 } as const;
