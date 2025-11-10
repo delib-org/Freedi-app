@@ -88,6 +88,7 @@ export const statementsSlicer = createSlice({
 						numberOfEvaluators: st.evaluation?.numberOfEvaluators ?? 0,
 						sumPro: st.evaluation?.sumPro ?? 0,
 						sumCon: st.evaluation?.sumCon ?? 0,
+						sumSquaredEvaluations: st.evaluation?.sumSquaredEvaluations ?? 0,
 						averageEvaluation: st.evaluation?.averageEvaluation ?? 0,
 						viewed: st.evaluation?.viewed ?? 0,
 						evaluationRandomNumber: st.evaluation?.evaluationRandomNumber,
