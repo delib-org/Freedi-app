@@ -68,18 +68,18 @@ export async function getRandomOptions(
   const randomSeed = Math.random();
 
   // Query 1: Get options with randomSeed >= random value
+  // Note: Not filtering by 'hide' in query because documents without 'hide' field won't match !=
   let query = db
     .collection(Collections.statements)
     .where('parentId', '==', questionId)
     .where('statementType', '==', StatementType.option)
-    .where('hide', '!=', true)
     .where('randomSeed', '>=', randomSeed)
     .limit(size);
 
   let snapshot = await query.get();
   let options_results = snapshot.docs
     .map((doc) => doc.data() as Statement)
-    .filter((opt) => !allExcludedIds.includes(opt.statementId));
+    .filter((opt) => !opt.hide && !allExcludedIds.includes(opt.statementId));
 
   // If not enough, fetch from other side
   if (options_results.length < size) {
@@ -87,14 +87,13 @@ export async function getRandomOptions(
       .collection(Collections.statements)
       .where('parentId', '==', questionId)
       .where('statementType', '==', StatementType.option)
-      .where('hide', '!=', true)
       .where('randomSeed', '<', randomSeed)
       .limit(size - options_results.length);
 
     const moreSnapshot = await moreQuery.get();
     const moreOptions = moreSnapshot.docs
       .map((doc) => doc.data() as Statement)
-      .filter((opt) => !allExcludedIds.includes(opt.statementId));
+      .filter((opt) => !opt.hide && !allExcludedIds.includes(opt.statementId));
 
     options_results = [...options_results, ...moreOptions];
   }
@@ -118,12 +117,13 @@ export async function getAllSolutionsSorted(
     .collection(Collections.statements)
     .where('parentId', '==', questionId)
     .where('statementType', '==', StatementType.option)
-    .where('hide', '!=', true)
     .orderBy('consensus', 'desc')
     .limit(limit)
     .get();
 
-  return snapshot.docs.map((doc) => doc.data() as Statement);
+  return snapshot.docs
+    .map((doc) => doc.data() as Statement)
+    .filter((statement) => !statement.hide);
 }
 
 /**

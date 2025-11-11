@@ -101,7 +101,7 @@ export default function SolutionFeedClient({
         setEvaluatedIds(new Set());
         setBatchCount((prev) => prev + 1);
       } else {
-        setError('No more solutions available. You've seen them all!');
+        setError('No more solutions available. You have seen them all!');
       }
     } catch (error) {
       console.error('Batch fetch error:', error);

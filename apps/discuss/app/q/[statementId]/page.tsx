@@ -46,22 +46,7 @@ export default async function QuestionPage({ params }: PageProps) {
       getRandomOptions(params.statementId, { size: 10 }),
     ]);
 
-    // Verify it's a mass consensus question
-    const isMassConsensus =
-      question.questionSettings?.questionType === 'massConsensus';
-
-    if (!isMassConsensus) {
-      return (
-        <div className="page">
-          <h1>This question is not configured for mass consensus</h1>
-          <p>Please visit the main app to participate in this discussion.</p>
-          <a href={`${process.env.NEXT_PUBLIC_MAIN_APP_URL || 'https://freedi.app'}/statement/${params.statementId}`}>
-            Go to main app →
-          </a>
-        </div>
-      );
-    }
-
+    // Works with any question type - mass consensus UI is universal
     return (
       <div className="page">
         {/* Server Component - Static header */}
