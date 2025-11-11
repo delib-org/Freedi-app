@@ -10,12 +10,12 @@ import {
   QuerySnapshot,
 } from 'firebase/firestore';
 import { Statement, StatementType, StatementSchema } from 'delib-npm';
-import { parse } from 'valibot';
 import { FireStore } from '../config';
 import { Collections } from 'delib-npm';
 import { store } from '@/redux/store';
 import { setStatement, setStatements, deleteStatement } from '@/redux/statements/statementsSlice';
-import { logError, extractErrorDetails } from '@/utils/errorHandling';
+import { logError } from '@/utils/errorHandling';
+import { safeParseWithDetails } from '@/utils/valibotHelpers';
 import { convertTimestampsToMillis } from '@/helpers/timestampHelpers';
 import { MINDMAP_CONFIG } from '@/constants/mindMap';
 import { createManagedCollectionListener, generateListenerKey } from '@/controllers/utils/firestoreListenerHelpers';
@@ -77,26 +77,23 @@ export function listenToMindMapData(statementId: string): Unsubscribe {
             const validStatements: Statement[] = [];
 
             snapshot.forEach((doc) => {
-              try {
-                // Convert Firestore Timestamps to milliseconds before parsing
-                const data = convertTimestampsToMillis(doc.data());
-                const statement = parse(StatementSchema, data);
-                validStatements.push(statement);
-                loadedCount++;
-              } catch (error) {
-                // Extract detailed validation error information safely
-                const errorMessage = extractErrorDetails(error);
-                const validationError = new Error(errorMessage);
+              // Convert Firestore Timestamps to milliseconds before parsing
+              const data = convertTimestampsToMillis(doc.data());
 
-                logError(validationError, {
-                  operation: 'listenToMindMapData.parseInitial',
-                  statementId: doc.id,
-                  metadata: {
-                    parentStatementId: statementId,
-                    loadedCount,
-                    documentData: doc.data()
-                  }
-                });
+              const result = safeParseWithDetails(StatementSchema, data, {
+                documentId: doc.id,
+                operation: 'listenToMindMapData.parseInitial',
+              });
+
+              if (result.success) {
+                validStatements.push(result.data);
+                loadedCount++;
+              }
+              // Show detailed error in development
+              if (result.success === false) {
+                if (process.env.NODE_ENV !== 'production') {
+                  console.error(result.error.getFormattedMessage());
+                }
               }
             });
 
@@ -129,10 +126,16 @@ export function listenToMindMapData(statementId: string): Unsubscribe {
             const changes = snapshot.docChanges();
 
             changes.forEach((change) => {
-              try {
-                // Convert Firestore Timestamps to milliseconds before parsing
-                const data = convertTimestampsToMillis(change.doc.data());
-                const statement = parse(StatementSchema, data);
+              // Convert Firestore Timestamps to milliseconds before parsing
+              const data = convertTimestampsToMillis(change.doc.data());
+
+              const result = safeParseWithDetails(StatementSchema, data, {
+                documentId: change.doc.id,
+                operation: 'listenToMindMapData.processChange',
+              });
+
+              if (result.success) {
+                const statement = result.data;
 
                 switch (change.type) {
                   case 'added':
@@ -143,21 +146,12 @@ export function listenToMindMapData(statementId: string): Unsubscribe {
                     store.dispatch(deleteStatement(statement.statementId));
                     break;
                 }
-              } catch (error) {
-                // Extract detailed validation error information safely
-                const errorMessage = extractErrorDetails(error);
-                const validationError = new Error(errorMessage);
-
-                logError(validationError, {
-                  operation: 'listenToMindMapData.processChange',
-                  statementId: change.doc.id,
-                  metadata: {
-                    parentStatementId: statementId,
-                    changeType: change.type,
-                    loadedCount,
-                    documentData: change.doc.data()
-                  }
-                });
+              }
+              // Show detailed error in development
+              if (result.success === false) {
+                if (process.env.NODE_ENV !== 'production') {
+                  console.error(result.error.getFormattedMessage());
+                }
               }
             });
           }

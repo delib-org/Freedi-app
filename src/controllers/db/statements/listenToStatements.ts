@@ -9,7 +9,8 @@ import {
 	query,
 	where,
 } from 'firebase/firestore';
-import { logError, extractErrorDetails } from '@/utils/errorHandling';
+import { logError } from '@/utils/errorHandling';
+import { safeParseWithDetails, DetailedValidationError } from '@/utils/valibotHelpers';
 import { convertTimestampsToMillis } from '@/helpers/timestampHelpers';
 
 // Redux Store
@@ -546,25 +547,25 @@ export function listenToAllDescendants(statementId: string): Unsubscribe {
 				if (isFirstBatch) {
 					// Process the initial batch of statements all at once
 					statementsDB.forEach((doc) => {
-						try {
-							// Convert Firestore Timestamps to milliseconds before parsing
-							const data = convertTimestampsToMillis(doc.data());
-							const statement = parse(StatementSchema, data);
-							statements.push(statement);
-							loadedCount++;
-						} catch (error) {
-							// Extract detailed validation error information safely
-							const errorMessage = extractErrorDetails(error);
-							const validationError = new Error(errorMessage);
+						// Convert Firestore Timestamps to milliseconds before parsing
+						const data = convertTimestampsToMillis(doc.data());
 
-							logError(validationError, {
-								operation: 'listenToAllDescendants.parseInitial',
-								statementId: doc.id,
-								metadata: {
-									parentStatementId: statementId,
-									loadedCount
-								}
-							});
+						// Parse with detailed error messages
+						const result = safeParseWithDetails(StatementSchema, data, {
+							documentId: doc.id,
+							operation: 'listenToAllDescendants.parseInitial',
+						});
+
+						if (result.success) {
+							statements.push(result.data);
+							loadedCount++;
+						}
+						// Error already logged by safeParseWithDetails
+						// In development, log the full formatted message
+						if (result.success === false) {
+							if (process.env.NODE_ENV !== 'production') {
+								console.error(result.error.getFormattedMessage());
+							}
 						}
 					});
 
@@ -580,31 +581,30 @@ export function listenToAllDescendants(statementId: string): Unsubscribe {
 					const changes = statementsDB.docChanges();
 
 					changes.forEach((change) => {
-						try {
-							// Convert Firestore Timestamps to milliseconds before parsing
-							const data = convertTimestampsToMillis(change.doc.data());
-							const statement = parse(StatementSchema, data);
+						// Convert Firestore Timestamps to milliseconds before parsing
+						const data = convertTimestampsToMillis(change.doc.data());
+
+						// Parse with detailed error messages
+						const result = safeParseWithDetails(StatementSchema, data, {
+							documentId: change.doc.id,
+							operation: 'listenToAllDescendants.processChange',
+						});
+
+						if (result.success) {
+							const statement = result.data;
 
 							if (change.type === 'added' || change.type === 'modified') {
 								store.dispatch(setStatement(statement));
 							} else if (change.type === 'removed') {
 								store.dispatch(deleteStatement(statement.statementId));
 							}
-						} catch (error) {
-							// Extract detailed validation error information safely
-							const errorMessage = extractErrorDetails(error);
-							const validationError = new Error(errorMessage);
-
-							logError(validationError, {
-								operation: 'listenToAllDescendants.processChange',
-								statementId: change.doc.id,
-								metadata: {
-									parentStatementId: statementId,
-									changeType: change.type,
-									loadedCount,
-									documentData: change.doc.data()
-								}
-							});
+						}
+						// Error already logged by safeParseWithDetails
+						// In development, log the full formatted message
+						if (result.success === false) {
+							if (process.env.NODE_ENV !== 'production') {
+								console.error(result.error.getFormattedMessage());
+							}
 						}
 					});
 				}
