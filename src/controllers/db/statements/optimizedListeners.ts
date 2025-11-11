@@ -82,12 +82,18 @@ export function listenToMindMapData(statementId: string): Unsubscribe {
                 validStatements.push(statement);
                 loadedCount++;
               } catch (error) {
-                logError(error, {
+                // Extract detailed validation error information
+                const validationError = error instanceof Error
+                  ? error
+                  : new Error('Validation failed: ' + JSON.stringify(error));
+
+                logError(validationError, {
                   operation: 'listenToMindMapData.parseInitial',
                   statementId: doc.id,
                   metadata: {
                     parentStatementId: statementId,
-                    loadedCount
+                    loadedCount,
+                    documentData: doc.data()
                   }
                 });
               }
@@ -136,13 +142,19 @@ export function listenToMindMapData(statementId: string): Unsubscribe {
                     break;
                 }
               } catch (error) {
-                logError(error, {
+                // Extract detailed validation error information
+                const validationError = error instanceof Error
+                  ? error
+                  : new Error('Validation failed: ' + JSON.stringify(error));
+
+                logError(validationError, {
                   operation: 'listenToMindMapData.processChange',
                   statementId: change.doc.id,
                   metadata: {
                     parentStatementId: statementId,
                     changeType: change.type,
-                    loadedCount
+                    loadedCount,
+                    documentData: change.doc.data()
                   }
                 });
               }
