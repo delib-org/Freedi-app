@@ -2,6 +2,11 @@ import { onDocumentUpdated } from 'firebase-functions/v2/firestore';
 import { getFirestore } from 'firebase-admin/firestore';
 import { Statement, Collections } from 'delib-npm';
 import { EvidenceType } from 'delib-npm/dist/models/evidence/evidenceModel';
+import {
+	calculateCorroborationLevel,
+	calculateConsensusValid,
+	determineStatus
+} from './helpers/consensusValidCalculator';
 
 // Base weights now scaled to 0-1 range
 // 1.0 = scientific/peer-reviewed data
@@ -66,6 +71,15 @@ function calculatePostWeight(statement: Statement): number {
 async function recalculateScore(statementId: string): Promise<void> {
 	const db = getFirestore();
 
+	// Get the parent statement to access consensus
+	const parentDoc = await db.collection(Collections.statements).doc(statementId).get();
+	if (!parentDoc.exists) {
+		console.error(`Parent statement ${statementId} not found`);
+
+		return;
+	}
+	const parentStatement = parentDoc.data() as Statement;
+
 	// Get all evidence posts for this statement
 	const evidencePostsSnapshot = await db
 		.collection(Collections.statements)
@@ -89,25 +103,31 @@ async function recalculateScore(statementId: string): Promise<void> {
 		totalScore += support * weight;
 	});
 
-	// Determine status based on total score
-	let status: 'looking-good' | 'under-discussion' | 'needs-fixing';
+	// Calculate normalized corroboration level [0, 1]
+	const evidenceCount = evidencePostsSnapshot.size;
+	const corroborationLevel = calculateCorroborationLevel(totalScore, evidenceCount);
 
-	if (totalScore > 2) {
-		status = 'looking-good';
-	} else if (totalScore < -2) {
-		status = 'needs-fixing';
-	} else {
-		status = 'under-discussion';
-	}
+	// Determine status based on corroboration level
+	const status = determineStatus(corroborationLevel);
 
-	// Update the parent statement with the score
+	// Create PopperHebbianScore object
+	const popperHebbianScore = {
+		statementId,
+		totalScore,
+		corroborationLevel,
+		evidenceCount,
+		status,
+		lastCalculated: Date.now()
+	};
+
+	// Calculate combined consensusValid score
+	const consensus = parentStatement.consensus || 0;
+	const consensusValid = calculateConsensusValid(consensus, popperHebbianScore);
+
+	// Update the parent statement with both scores
 	await db.collection(Collections.statements).doc(statementId).update({
-		popperHebbianScore: {
-			statementId,
-			totalScore,
-			status,
-			lastCalculated: Date.now()
-		}
+		PopperHebbianScore: popperHebbianScore,
+		consensusValid
 	});
 }
 
