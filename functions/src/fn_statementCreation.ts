@@ -218,9 +218,27 @@ async function updateParentForNewChild(statement: Statement): Promise<void> {
  */
 async function addStatementToMassConsensus(statement: Statement): Promise<void> {
 	try {
-		// Implementation from fn_massConsensus.ts
-		// For now, just log that it would run
-		logger.info(`Would add statement ${statement.statementId} to mass consensus`);
+		const parentRef = db.collection(Collections.statements).doc(statement.parentId);
+
+		await db.runTransaction(async (transaction) => {
+			const parentDoc = await transaction.get(parentRef);
+			if (!parentDoc.exists) {
+				throw new Error('Parent statement does not exist');
+			}
+
+			const parentData = parentDoc.data();
+			if (parentData && parentData.suggestions !== undefined) {
+				transaction.update(parentRef, {
+					suggestions: FieldValue.increment(1)
+				});
+			} else {
+				transaction.update(parentRef, {
+					suggestions: 1
+				});
+			}
+		});
+
+		logger.info(`Added statement ${statement.statementId} to mass consensus`);
 	} catch (error) {
 		logger.error('Error in addStatementToMassConsensus:', error);
 		throw error;
