@@ -20,6 +20,7 @@ import {
 
 import { number, parse } from 'valibot';
 import { updateUserDemographicEvaluation } from './fn_polarizationIndex';
+import { calculateConsensusValid } from './helpers/consensusValidCalculator';
 
 // import { getRandomColor } from './helpers';
 // import { user } from 'firebase-functions/v1/auth';
@@ -353,9 +354,13 @@ async function updateStatementInTransaction(
 			squaredEvaluationDiff
 		);
 
+		// Calculate consensusValid by combining consensus with corroborationLevel
+		const consensusValid = calculateConsensusValid(agreement, statement.PopperHebbianScore);
+
 		transaction.update(statementRef, {
 			totalEvaluators: FieldValue.increment(addEvaluator),
 			consensus: agreement,
+			consensusValid,
 			evaluation,
 			proSum: FieldValue.increment(proConDiff.proDiff),
 			conSum: FieldValue.increment(proConDiff.conDiff),
