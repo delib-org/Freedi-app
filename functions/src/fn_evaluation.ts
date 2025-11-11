@@ -17,6 +17,10 @@ import {
 	ResultsBy,
 	CutoffBy
 } from 'delib-npm';
+import type { PopperHebbianScore } from 'delib-npm/dist/models/popper/popperTypes';
+
+// Extend Statement type to include PopperHebbianScore (it exists but TypeScript doesn't see it during compilation)
+type StatementWithPopper = Statement & { PopperHebbianScore?: PopperHebbianScore };
 
 import { number, parse } from 'valibot';
 import { updateUserDemographicEvaluation } from './fn_polarizationIndex';
@@ -344,7 +348,7 @@ async function updateStatementInTransaction(
 			}
 		}
 
-		const statement = parse(StatementSchema, statementData);
+		const statement = parse(StatementSchema, statementData) as StatementWithPopper;
 
 		const { agreement, evaluation } = calculateEvaluation(
 			statement,
@@ -355,7 +359,7 @@ async function updateStatementInTransaction(
 		);
 
 		// Calculate consensusValid by combining consensus with corroborationLevel
-		const consensusValid = calculateConsensusValid(agreement, statement.PopperHebbianScore);
+		const consensusValid = calculateConsensusValid(agreement, statement.PopperHebbianScore ?? undefined);
 
 		transaction.update(statementRef, {
 			totalEvaluators: FieldValue.increment(addEvaluator),

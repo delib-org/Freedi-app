@@ -1,4 +1,5 @@
 import { Statement } from 'delib-npm';
+import { PopperHebbianScore } from 'delib-npm/dist/models/popper/popperTypes';
 
 /**
  * Configuration for consensusValid calculation
@@ -76,7 +77,7 @@ export function normalizeConsensus(
  */
 export function calculateConsensusValid(
 	consensus: number,
-	popperHebbianScore: Statement['PopperHebbianScore'],
+	popperHebbianScore: PopperHebbianScore | undefined,
 	config: Partial<ConsensusValidConfig> = {}
 ): number {
 	const finalConfig = { ...DEFAULT_CONFIG, ...config };

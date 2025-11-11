@@ -24,9 +24,11 @@ const PopperHebbianDiscussion: FC<PopperHebbianDiscussionProps> = ({
 	const [isLoading, setIsLoading] = useState(true);
 
 	// Get score from statement, or create a default one
-	const score = (statement as Statement & { popperHebbianScore?: PopperHebbianScore }).popperHebbianScore || {
+	const score: PopperHebbianScore = (statement as Statement & { popperHebbianScore?: PopperHebbianScore }).popperHebbianScore || {
 		statementId: statement.statementId,
 		totalScore: 0,
+		corroborationLevel: 0.5,
+		evidenceCount: 0,
 		status: 'under-discussion' as const,
 		lastCalculated: Date.now()
 	};

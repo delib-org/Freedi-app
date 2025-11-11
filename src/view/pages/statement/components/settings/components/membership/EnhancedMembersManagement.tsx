@@ -36,12 +36,6 @@ const roleConfig = {
     color: '#4caf50',
     description: 'Can participate and contribute'
   },
-  [Role.viewer]: {
-    label: 'Viewer',
-    icon: Eye,
-    color: '#2196f3',
-    description: 'Can view but not participate'
-  },
   [Role.banned]: {
     label: 'Banned',
     icon: Ban,
@@ -137,14 +131,6 @@ const MemberCard: FC<MemberCardProps> = ({
             {t('Make Member')}
           </button>
           <button
-            className={styles.actionMenuItem}
-            onClick={() => onRoleChange(member.user.uid, Role.viewer)}
-            disabled={member.role === Role.viewer}
-          >
-            <Eye size={16} />
-            {t('Make Viewer')}
-          </button>
-          <button
             className={`${styles.actionMenuItem} ${styles['actionMenuItem--danger']}`}
             onClick={() => onRoleChange(member.user.uid, Role.banned)}
             disabled={member.role === Role.banned}
@@ -171,19 +157,19 @@ const MemberCard: FC<MemberCardProps> = ({
               <span className={styles.statValue}>{lastActive}</span>
             </div>
             <div className={styles.statItem}>
-              <TrendingUp size={16} />
-              <span className={styles.statLabel}>{t('Contributions')}</span>
-              <span className={styles.statValue}>{member.statementsCount || 0}</span>
-            </div>
-            <div className={styles.statItem}>
-              <Star size={16} />
-              <span className={styles.statLabel}>{t('Votes Cast')}</span>
-              <span className={styles.statValue}>{member.evaluationsCount || 0}</span>
+              <Mail size={16} />
+              <span className={styles.statLabel}>{t('In-App')}</span>
+              <span className={styles.statValue}>{member.getInAppNotification ? t('On') : t('Off')}</span>
             </div>
             <div className={styles.statItem}>
               <Mail size={16} />
-              <span className={styles.statLabel}>{t('Notifications')}</span>
-              <span className={styles.statValue}>{member.notification ? t('On') : t('Off')}</span>
+              <span className={styles.statLabel}>{t('Email')}</span>
+              <span className={styles.statValue}>{member.getEmailNotification ? t('On') : t('Off')}</span>
+            </div>
+            <div className={styles.statItem}>
+              <Mail size={16} />
+              <span className={styles.statLabel}>{t('Push')}</span>
+              <span className={styles.statValue}>{member.getPushNotification ? t('On') : t('Off')}</span>
             </div>
           </div>
         </div>
@@ -247,7 +233,6 @@ const EnhancedMembersManagement: FC<EnhancedMembersManagementProps> = ({ stateme
     const stats = {
       [Role.admin]: 0,
       [Role.member]: 0,
-      [Role.viewer]: 0,
       [Role.banned]: 0,
     };
     members.forEach((m) => {

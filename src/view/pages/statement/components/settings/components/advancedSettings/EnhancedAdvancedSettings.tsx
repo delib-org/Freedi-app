@@ -417,14 +417,6 @@ const EnhancedAdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => 
                             isSelected={(settings.evaluationType ?? evaluationType.range) === evaluationType.singleLike}
                             onClick={() => handleSettingChange('evaluationType', evaluationType.singleLike)}
                           />
-                          <EvaluationCard
-                            type={evaluationType.preference}
-                            title={t('Preference Order')}
-                            description={t('Rank options by preference')}
-                            icon={TrendingUp}
-                            isSelected={(settings.evaluationType ?? evaluationType.range) === evaluationType.preference}
-                            onClick={() => handleSettingChange('evaluationType', evaluationType.preference)}
-                          />
                         </div>
                       </div>
 
@@ -451,7 +443,7 @@ const EnhancedAdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => 
                                   className={styles.numberInput}
                                 />
                                 <span className={styles.helperText}>
-                                  {t('Users can vote for up to {{count}} options', { count: maxVotes })}
+                                  {t('Users can vote for up to {{count}} options').replace('{{count}}', String(maxVotes))}
                                 </span>
                               </label>
                             </div>
