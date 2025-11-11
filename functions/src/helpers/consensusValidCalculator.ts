@@ -1,4 +1,3 @@
-import { Statement } from 'delib-npm';
 import { PopperHebbianScore } from 'delib-npm/dist/models/popper/popperTypes';
 
 /**
