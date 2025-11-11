@@ -229,6 +229,55 @@ export function getErrorMessage(error: unknown): string {
 /**
  * Create a user-friendly error message
  */
+/**
+ * Safely extract error details from any error type, including Valibot errors
+ * Handles circular references and complex error objects
+ */
+export function extractErrorDetails(error: unknown): string {
+	if (error instanceof Error) {
+		return error.message;
+	}
+
+	// Handle Valibot validation errors (which have circular references)
+	if (typeof error === 'object' && error !== null) {
+		try {
+			// Try to extract useful information without circular references
+			const errorObj = error as Record<string, unknown>;
+
+			// Common Valibot error properties
+			if ('issues' in errorObj && Array.isArray(errorObj.issues)) {
+				const issues = errorObj.issues.map((issue: unknown) => {
+					if (typeof issue === 'object' && issue !== null) {
+						const issueObj = issue as Record<string, unknown>;
+						return `${issueObj.path || 'unknown'}: ${issueObj.message || 'validation failed'}`;
+					}
+					return String(issue);
+				});
+				return `Validation failed: ${issues.join(', ')}`;
+			}
+
+			// Try to get message property
+			if ('message' in errorObj && typeof errorObj.message === 'string') {
+				return errorObj.message;
+			}
+
+			// Fallback: try to extract non-circular properties
+			const safeProps: Record<string, unknown> = {};
+			for (const key in errorObj) {
+				const value = errorObj[key];
+				if (typeof value !== 'object' && typeof value !== 'function') {
+					safeProps[key] = value;
+				}
+			}
+			return `Error: ${JSON.stringify(safeProps)}`;
+		} catch {
+			return 'Error: [Complex error object - see metadata for details]';
+		}
+	}
+
+	return String(error);
+}
+
 export function getUserFriendlyErrorMessage(error: unknown): string {
 	if (error instanceof ValidationError) {
 		return 'Please check your input and try again.';

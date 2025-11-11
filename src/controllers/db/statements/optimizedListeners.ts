@@ -15,7 +15,8 @@ import { FireStore } from '../config';
 import { Collections } from 'delib-npm';
 import { store } from '@/redux/store';
 import { setStatement, setStatements, deleteStatement } from '@/redux/statements/statementsSlice';
-import { logError } from '@/utils/errorHandling';
+import { logError, extractErrorDetails } from '@/utils/errorHandling';
+import { convertTimestampsToMillis } from '@/helpers/timestampHelpers';
 import { MINDMAP_CONFIG } from '@/constants/mindMap';
 import { createManagedCollectionListener, generateListenerKey } from '@/controllers/utils/firestoreListenerHelpers';
 
@@ -77,15 +78,15 @@ export function listenToMindMapData(statementId: string): Unsubscribe {
 
             snapshot.forEach((doc) => {
               try {
-                const data = doc.data();
+                // Convert Firestore Timestamps to milliseconds before parsing
+                const data = convertTimestampsToMillis(doc.data());
                 const statement = parse(StatementSchema, data);
                 validStatements.push(statement);
                 loadedCount++;
               } catch (error) {
-                // Extract detailed validation error information
-                const validationError = error instanceof Error
-                  ? error
-                  : new Error('Validation failed: ' + JSON.stringify(error));
+                // Extract detailed validation error information safely
+                const errorMessage = extractErrorDetails(error);
+                const validationError = new Error(errorMessage);
 
                 logError(validationError, {
                   operation: 'listenToMindMapData.parseInitial',
@@ -129,7 +130,8 @@ export function listenToMindMapData(statementId: string): Unsubscribe {
 
             changes.forEach((change) => {
               try {
-                const data = change.doc.data();
+                // Convert Firestore Timestamps to milliseconds before parsing
+                const data = convertTimestampsToMillis(change.doc.data());
                 const statement = parse(StatementSchema, data);
 
                 switch (change.type) {
@@ -142,10 +144,9 @@ export function listenToMindMapData(statementId: string): Unsubscribe {
                     break;
                 }
               } catch (error) {
-                // Extract detailed validation error information
-                const validationError = error instanceof Error
-                  ? error
-                  : new Error('Validation failed: ' + JSON.stringify(error));
+                // Extract detailed validation error information safely
+                const errorMessage = extractErrorDetails(error);
+                const validationError = new Error(errorMessage);
 
                 logError(validationError, {
                   operation: 'listenToMindMapData.processChange',

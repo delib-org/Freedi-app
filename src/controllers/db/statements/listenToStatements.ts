@@ -9,7 +9,8 @@ import {
 	query,
 	where,
 } from 'firebase/firestore';
-import { logError } from '@/utils/errorHandling';
+import { logError, extractErrorDetails } from '@/utils/errorHandling';
+import { convertTimestampsToMillis } from '@/helpers/timestampHelpers';
 
 // Redux Store
 import { FireStore } from '../config';
@@ -546,22 +547,22 @@ export function listenToAllDescendants(statementId: string): Unsubscribe {
 					// Process the initial batch of statements all at once
 					statementsDB.forEach((doc) => {
 						try {
-							const statement = parse(StatementSchema, doc.data());
+							// Convert Firestore Timestamps to milliseconds before parsing
+							const data = convertTimestampsToMillis(doc.data());
+							const statement = parse(StatementSchema, data);
 							statements.push(statement);
 							loadedCount++;
 						} catch (error) {
-							// Extract detailed validation error information
-							const validationError = error instanceof Error
-								? error
-								: new Error('Validation failed: ' + JSON.stringify(error));
+							// Extract detailed validation error information safely
+							const errorMessage = extractErrorDetails(error);
+							const validationError = new Error(errorMessage);
 
 							logError(validationError, {
 								operation: 'listenToAllDescendants.parseInitial',
 								statementId: doc.id,
 								metadata: {
 									parentStatementId: statementId,
-									loadedCount,
-									documentData: doc.data()
+									loadedCount
 								}
 							});
 						}
@@ -580,7 +581,9 @@ export function listenToAllDescendants(statementId: string): Unsubscribe {
 
 					changes.forEach((change) => {
 						try {
-							const statement = parse(StatementSchema, change.doc.data());
+							// Convert Firestore Timestamps to milliseconds before parsing
+							const data = convertTimestampsToMillis(change.doc.data());
+							const statement = parse(StatementSchema, data);
 
 							if (change.type === 'added' || change.type === 'modified') {
 								store.dispatch(setStatement(statement));
@@ -588,10 +591,9 @@ export function listenToAllDescendants(statementId: string): Unsubscribe {
 								store.dispatch(deleteStatement(statement.statementId));
 							}
 						} catch (error) {
-							// Extract detailed validation error information
-							const validationError = error instanceof Error
-								? error
-								: new Error('Validation failed: ' + JSON.stringify(error));
+							// Extract detailed validation error information safely
+							const errorMessage = extractErrorDetails(error);
+							const validationError = new Error(errorMessage);
 
 							logError(validationError, {
 								operation: 'listenToAllDescendants.processChange',
