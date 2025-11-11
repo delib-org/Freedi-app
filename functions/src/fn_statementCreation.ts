@@ -12,6 +12,8 @@ import {
 	createSubscription,
 	getStatementSubscriptionId,
 	NotificationType,
+	SimpleStatement,
+	statementToSimpleStatement,
 } from 'delib-npm';
 import { db } from './index';
 import { getDefaultQuestionType } from './model/questionTypeDefaults';
@@ -42,6 +44,13 @@ export async function onStatementCreated(
 		// Task 3: Update parent statement (if not top-level)
 		if (statement.parentId !== 'top') {
 			tasks.push(updateParentForNewChild(statement));
+
+			// Also update top-level parent subscriptions if different from direct parent
+			if (statement.topParentId &&
+				statement.topParentId !== statement.parentId &&
+				statement.topParentId !== 'top') {
+				tasks.push(updateTopParentSubscriptions(statement.topParentId));
+			}
 		}
 
 		// Task 4: Add to mass consensus (if applicable)
@@ -196,19 +205,99 @@ async function updateChosenOptionsForNewStatement(statement: Statement): Promise
 /**
  * Updates parent statement when a new child is created
  * (Replaces updateParentOnChildCreate)
+ * This includes updating the parent's lastSubStatements and all subscriptions
  */
 async function updateParentForNewChild(statement: Statement): Promise<void> {
 	try {
-		const parentRef = db.collection(Collections.statements).doc(statement.parentId);
+		const parentId = statement.parentId;
 
-		// Update parent's child count and last update
+		// Skip if parentId is 'top' since it's not a real document
+		if (parentId === 'top') {
+			logger.info('Skipping update for "top" parent - not a real document');
+			return;
+		}
+
+		const parentRef = db.collection(Collections.statements).doc(parentId);
+
+		// Get last 3 sub-statements ordered by creation date
+		const subStatementsQuery = await db
+			.collection(Collections.statements)
+			.where('parentId', '==', parentId)
+			.orderBy('createdAt', 'desc')
+			.limit(3)
+			.get();
+
+		// Convert to SimpleStatement array
+		const lastSubStatements: SimpleStatement[] = subStatementsQuery.docs.map(doc => {
+			const stmt = doc.data() as Statement;
+			return statementToSimpleStatement(stmt);
+		});
+
+		const timestamp = Date.now();
+
+		// Update parent with new sub-statements, timestamp, and increment count
 		await parentRef.update({
 			subStatementsCount: FieldValue.increment(1),
-			lastChildUpdate: statement.createdAt,
+			lastSubStatements: lastSubStatements,
+			lastUpdate: timestamp,
+			lastChildUpdate: timestamp,
 		});
+
+		logger.info(`Updated parent ${parentId} with ${lastSubStatements.length} sub-statements`);
+
+		// Update all subscriptions to the parent statement
+		await updateParentSubscriptions(parentId, timestamp, lastSubStatements);
+
 	} catch (error) {
 		logger.error('Error in updateParentForNewChild:', error);
 		throw error;
+	}
+}
+
+/**
+ * Updates the lastUpdate timestamp for all subscriptions to a specific statement
+ * This ensures that parent subscriptions reflect changes in child statements
+ */
+async function updateParentSubscriptions(
+	statementId: string,
+	timestamp: number,
+	lastSubStatements: SimpleStatement[]
+): Promise<void> {
+	try {
+		const LIMIT = 500; // Safety limit to prevent runaway updates
+
+		// Get all subscriptions for this specific statement
+		const subscriptionsQuery = await db
+			.collection(Collections.statementsSubscribe)
+			.where('statementId', '==', statementId)
+			.limit(LIMIT)
+			.get();
+
+		if (subscriptionsQuery.empty) {
+			logger.info(`No subscriptions found for statement ${statementId}`);
+			return;
+		}
+
+		if (subscriptionsQuery.size >= LIMIT) {
+			logger.warn(`Found more than ${LIMIT} subscriptions for statement ${statementId}, consider batching updates`);
+		}
+
+		logger.info(`Updating ${subscriptionsQuery.size} subscriptions for statement ${statementId}`);
+
+		// Batch update for efficiency
+		const batch = db.batch();
+		subscriptionsQuery.docs.forEach(doc => {
+			batch.update(doc.ref, {
+				lastUpdate: timestamp,
+				lastSubStatements: lastSubStatements,
+			});
+		});
+
+		await batch.commit();
+		logger.info(`Successfully updated ${subscriptionsQuery.size} subscriptions`);
+
+	} catch (error) {
+		logger.error(`Error updating subscriptions for statement ${statementId}:`, error);
 	}
 }
 
@@ -263,7 +352,7 @@ async function createNotificationsForStatement(statement: Statement): Promise<vo
 		// Check if parent exists (for non-top statements)
 		if (!parentStatementDB.exists) {
 			logger.error(`Parent statement ${statement.parentId} not found`);
-			
+
 return;
 		}
 
@@ -315,5 +404,79 @@ return;
 	} catch (error) {
 		logger.error('Error in createNotificationsForStatement:', error);
 		throw error;
+	}
+}
+
+/**
+ * Updates only the subscriptions for a top-level parent without fetching sub-statements
+ * This is used when a nested child changes to update the top-level group's lastUpdate
+ */
+async function updateTopParentSubscriptions(topParentId: string): Promise<void> {
+	try {
+		// Skip if topParentId is 'top' since it's not a real document
+		if (topParentId === 'top') {
+			logger.info('Skipping subscription update for "top" parent - not a real document');
+			return;
+		}
+
+		const LIMIT = 500; // Safety limit to prevent runaway updates
+		const timestamp = Date.now();
+
+		// First, update the top-level statement document itself
+		const topParentRef = db.collection(Collections.statements).doc(topParentId);
+
+		// Check if the statement exists and hasn't been updated recently (within 1 second)
+		const topParentDoc = await topParentRef.get();
+		if (!topParentDoc.exists) {
+			logger.warn(`Top-level statement ${topParentId} not found`);
+			return;
+		}
+
+		const currentData = topParentDoc.data() as Statement;
+		const lastUpdateTime = currentData.lastUpdate || 0;
+
+		// Skip if this was updated within the last second (prevents rapid cascading)
+		if (timestamp - lastUpdateTime < 1000) {
+			logger.info(`Skipping update for ${topParentId} - was recently updated`);
+			return;
+		}
+
+		// Update the statement's lastUpdate field
+		await topParentRef.update({
+			lastUpdate: timestamp,
+		});
+		logger.info(`Updated top-level statement ${topParentId} with new timestamp`);
+
+		// Get all subscriptions for this top-level statement
+		const subscriptionsQuery = await db
+			.collection(Collections.statementsSubscribe)
+			.where('statementId', '==', topParentId)
+			.limit(LIMIT)
+			.get();
+
+		if (subscriptionsQuery.empty) {
+			logger.info(`No subscriptions found for top-level statement ${topParentId}`);
+			return;
+		}
+
+		if (subscriptionsQuery.size >= LIMIT) {
+			logger.warn(`Found more than ${LIMIT} subscriptions for top-level statement ${topParentId}, consider batching updates`);
+		}
+
+		logger.info(`Updating ${subscriptionsQuery.size} subscriptions for top-level statement ${topParentId}`);
+
+		// Batch update for efficiency - only update lastUpdate timestamp
+		const batch = db.batch();
+		subscriptionsQuery.docs.forEach(doc => {
+			batch.update(doc.ref, {
+				lastUpdate: timestamp,
+			});
+		});
+
+		await batch.commit();
+		logger.info(`Successfully updated ${subscriptionsQuery.size} top-level subscriptions`);
+
+	} catch (error) {
+		logger.error(`Error updating top-level subscriptions for statement ${topParentId}:`, error);
 	}
 }
