@@ -103,6 +103,7 @@ export async function POST(
 
       transaction.update(questionRef, {
         suggestions: (questionData?.suggestions || 0) + 1,
+        numberOfOptions: (questionData?.numberOfOptions || 0) + 1,
         lastUpdate: Date.now(),
       });
     });

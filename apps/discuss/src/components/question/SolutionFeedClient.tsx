@@ -44,7 +44,7 @@ export default function SolutionFeedClient({
         const response = await fetch(`/api/user-evaluations/${questionId}?userId=${id}`);
         if (response.ok) {
           const data = await response.json();
-          const evaluatedSet = new Set(data.evaluatedOptionsIds || []);
+          const evaluatedSet = new Set<string>(data.evaluatedOptionsIds || []);
           setAllEvaluatedIds(evaluatedSet);
 
           // Check if all options are already evaluated
