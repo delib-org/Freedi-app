@@ -8,7 +8,7 @@ import AddSolutionForm from './AddSolutionForm';
 import styles from './SolutionFeed.module.css';
 
 interface SolutionFeedClientProps {
-  questionId: string;
+  question: Statement;
   initialSolutions: Statement[];
 }
 
@@ -18,21 +18,58 @@ interface SolutionFeedClientProps {
  * Inspired by RandomSuggestions.tsx
  */
 export default function SolutionFeedClient({
-  questionId,
+  question,
   initialSolutions,
 }: SolutionFeedClientProps) {
   const [solutions, setSolutions] = useState<Statement[]>(initialSolutions);
   const [userId, setUserId] = useState<string>('');
   const [evaluatedIds, setEvaluatedIds] = useState<Set<string>>(new Set());
+  const [allEvaluatedIds, setAllEvaluatedIds] = useState<Set<string>>(new Set());
   const [isLoadingBatch, setIsLoadingBatch] = useState(false);
   const [batchCount, setBatchCount] = useState(1);
   const [error, setError] = useState<string | null>(null);
+  const [allOptionsEvaluated, setAllOptionsEvaluated] = useState(false);
 
-  // Initialize user ID on mount
+  const questionId = question.statementId;
+  const totalOptionsCount = question.numberOfOptions || 0;
+
+  // Initialize user ID and load evaluation history on mount
   useEffect(() => {
     const id = getOrCreateAnonymousUser();
     setUserId(id);
-  }, []);
+
+    // Load user's evaluation history
+    const loadEvaluationHistory = async () => {
+      try {
+        const response = await fetch(`/api/user-evaluations/${questionId}?userId=${id}`);
+        if (response.ok) {
+          const data = await response.json();
+          const evaluatedSet = new Set(data.evaluatedOptionsIds || []);
+          setAllEvaluatedIds(evaluatedSet);
+
+          // Check if all options are already evaluated
+          if (totalOptionsCount > 0 && evaluatedSet.size >= totalOptionsCount) {
+            setAllOptionsEvaluated(true);
+          }
+
+          // Mark current batch items as evaluated if they were previously evaluated
+          const currentBatchEvaluated = new Set<string>();
+          solutions.forEach(solution => {
+            if (evaluatedSet.has(solution.statementId)) {
+              currentBatchEvaluated.add(solution.statementId);
+            }
+          });
+          setEvaluatedIds(currentBatchEvaluated);
+        }
+      } catch (error) {
+        console.error('Failed to load evaluation history:', error);
+      }
+    };
+
+    if (id) {
+      loadEvaluationHistory();
+    }
+  }, [questionId, totalOptionsCount, solutions]);
 
   // Track evaluated solutions count
   const evaluatedCount = evaluatedIds.size;
@@ -45,6 +82,7 @@ export default function SolutionFeedClient({
     try {
       // Optimistic update
       setEvaluatedIds((prev) => new Set(prev).add(solutionId));
+      setAllEvaluatedIds((prev) => new Set(prev).add(solutionId));
 
       // Call API
       const response = await fetch(`/api/evaluations/${solutionId}`, {
@@ -59,10 +97,21 @@ export default function SolutionFeedClient({
       if (!response.ok) {
         throw new Error('Failed to save evaluation');
       }
+
+      // Check if all options have been evaluated
+      const newTotalEvaluated = allEvaluatedIds.size + 1;
+      if (totalOptionsCount > 0 && newTotalEvaluated >= totalOptionsCount) {
+        setAllOptionsEvaluated(true);
+      }
     } catch (error) {
       console.error('Evaluation error:', error);
       // Revert optimistic update
       setEvaluatedIds((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(solutionId);
+        return newSet;
+      });
+      setAllEvaluatedIds((prev) => {
         const newSet = new Set(prev);
         newSet.delete(solutionId);
         return newSet;
@@ -75,7 +124,7 @@ export default function SolutionFeedClient({
    * Fetch new batch of solutions
    */
   const handleGetNewBatch = async () => {
-    if (!canGetNewBatch || isLoadingBatch) return;
+    if (!canGetNewBatch || isLoadingBatch || allOptionsEvaluated) return;
 
     setIsLoadingBatch(true);
     setError(null);
@@ -86,7 +135,7 @@ export default function SolutionFeedClient({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           userId,
-          excludeIds: solutions.map((s) => s.statementId),
+          excludeIds: Array.from(allEvaluatedIds), // Use all evaluated IDs, not just current batch
         }),
       });
 
@@ -98,10 +147,11 @@ export default function SolutionFeedClient({
 
       if (data.solutions && data.solutions.length > 0) {
         setSolutions(data.solutions);
-        setEvaluatedIds(new Set());
+        setEvaluatedIds(new Set()); // Reset current batch tracking
         setBatchCount((prev) => prev + 1);
       } else {
-        setError('No more solutions available. You have seen them all!');
+        // No more solutions available - all have been evaluated
+        setAllOptionsEvaluated(true);
       }
     } catch (error) {
       console.error('Batch fetch error:', error);
@@ -156,24 +206,41 @@ export default function SolutionFeedClient({
 
       {/* Batch controls */}
       <div className={styles.batchControls}>
-        <button
-          onClick={handleGetNewBatch}
-          disabled={!canGetNewBatch || isLoadingBatch}
-          className={`${styles.batchButton} ${
-            !canGetNewBatch || isLoadingBatch ? styles.disabled : ''
-          }`}
-        >
-          {isLoadingBatch ? (
-            <span>Loading new solutions...</span>
-          ) : (
-            <span>Get New Batch</span>
-          )}
-        </button>
+        {allOptionsEvaluated ? (
+          <div className={styles.completionMessage}>
+            <h3>🎉 Thank you!</h3>
+            <p>You have evaluated all {totalOptionsCount} available options.</p>
+            <p>Your feedback helps improve the quality of solutions.</p>
+          </div>
+        ) : (
+          <>
+            <button
+              onClick={handleGetNewBatch}
+              disabled={!canGetNewBatch || isLoadingBatch}
+              className={`${styles.batchButton} ${
+                !canGetNewBatch || isLoadingBatch ? styles.disabled : ''
+              }`}
+            >
+              {isLoadingBatch ? (
+                <span>Loading new solutions...</span>
+              ) : (
+                <span>
+                  Get New Batch
+                  {totalOptionsCount > 0 && (
+                    <span className={styles.progress}>
+                      {' '}({allEvaluatedIds.size}/{totalOptionsCount} evaluated)
+                    </span>
+                  )}
+                </span>
+              )}
+            </button>
 
-        {!canGetNewBatch && (
-          <p className={styles.hint}>
-            Evaluate all solutions to get new ones ({solutions.length - evaluatedCount} left)
-          </p>
+            {!canGetNewBatch && (
+              <p className={styles.hint}>
+                Evaluate all solutions to get new ones ({solutions.length - evaluatedCount} left in this batch)
+              </p>
+            )}
+          </>
         )}
       </div>
 

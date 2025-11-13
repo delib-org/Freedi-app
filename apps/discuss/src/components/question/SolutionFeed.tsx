@@ -2,7 +2,7 @@ import { Statement } from 'delib-npm';
 import SolutionFeedClient from './SolutionFeedClient';
 
 interface SolutionFeedProps {
-  questionId: string;
+  question: Statement;
   initialSolutions: Statement[];
 }
 
@@ -11,7 +11,7 @@ interface SolutionFeedProps {
  * Passes server-fetched data to client component
  */
 export default function SolutionFeed({
-  questionId,
+  question,
   initialSolutions
 }: SolutionFeedProps) {
   // Check if we have solutions
@@ -27,7 +27,7 @@ export default function SolutionFeed({
   // Pass to client component for interactivity
   return (
     <SolutionFeedClient
-      questionId={questionId}
+      question={question}
       initialSolutions={initialSolutions}
     />
   );

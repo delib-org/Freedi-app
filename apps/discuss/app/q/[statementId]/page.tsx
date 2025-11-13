@@ -55,7 +55,7 @@ export default async function QuestionPage({ params }: PageProps) {
         {/* Suspense boundary for streaming */}
         <Suspense fallback={<SkeletonLoader count={3} />}>
           <SolutionFeed
-            questionId={params.statementId}
+            question={question}
             initialSolutions={initialBatch}
           />
         </Suspense>

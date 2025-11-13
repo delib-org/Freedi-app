@@ -235,13 +235,21 @@ async function updateParentForNewChild(statement: Statement): Promise<void> {
 
 		const timestamp = Date.now();
 
-		// Update parent with new sub-statements, timestamp, and increment count
-		await parentRef.update({
+		// Prepare update object
+		const updateData: any = {
 			subStatementsCount: FieldValue.increment(1),
 			lastSubStatements: lastSubStatements,
 			lastUpdate: timestamp,
 			lastChildUpdate: timestamp,
-		});
+		};
+
+		// If the new statement is an option, also increment numberOfOptions
+		if (statement.statementType === 'option') {
+			updateData.numberOfOptions = FieldValue.increment(1);
+		}
+
+		// Update parent with new sub-statements, timestamp, and increment counts
+		await parentRef.update(updateData);
 
 		logger.info(`Updated parent ${parentId} with ${lastSubStatements.length} sub-statements`);
 
