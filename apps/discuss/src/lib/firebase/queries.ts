@@ -45,7 +45,7 @@ export async function getRandomOptions(
     excludeIds?: string[];
   } = {}
 ): Promise<Statement[]> {
-  const { size = 10, userId, excludeIds = [] } = options;
+  const { size = 6, userId, excludeIds = [] } = options;
   const db = getFirestoreAdmin();
 
   console.info('[getRandomOptions] Fetching options for question:', questionId);

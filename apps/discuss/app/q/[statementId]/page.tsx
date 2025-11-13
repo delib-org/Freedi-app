@@ -43,7 +43,7 @@ export default async function QuestionPage({ params }: PageProps) {
     // Parallel data fetching on server
     const [question, initialBatch] = await Promise.all([
       getQuestionFromFirebase(params.statementId),
-      getRandomOptions(params.statementId, { size: 10 }),
+      getRandomOptions(params.statementId, { size: 6 }),
     ]);
 
     // Works with any question type - mass consensus UI is universal

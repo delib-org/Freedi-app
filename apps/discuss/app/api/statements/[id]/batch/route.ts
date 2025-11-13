@@ -30,14 +30,14 @@ export async function POST(
 
     // Fetch random batch
     const solutions = await getRandomOptions(questionId, {
-      size: 10,
+      size: 6,
       userId: userId || undefined,
       excludeIds,
     });
 
     return NextResponse.json({
       solutions,
-      hasMore: solutions.length >= 10,
+      hasMore: solutions.length >= 6,
       count: solutions.length,
     });
   } catch (error) {
