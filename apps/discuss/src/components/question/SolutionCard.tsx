@@ -34,7 +34,7 @@ export default function SolutionCard({
           </span>
         )}
         <span className={styles.date}>
-          {new Date(solution.createdAt).toLocaleDateString()}
+          {new Date(solution.createdAt).toLocaleDateString('en-US')}
         </span>
       </div>
 

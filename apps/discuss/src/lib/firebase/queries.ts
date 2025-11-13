@@ -48,6 +48,8 @@ export async function getRandomOptions(
   const { size = 10, userId, excludeIds = [] } = options;
   const db = getFirestoreAdmin();
 
+  console.info('[getRandomOptions] Fetching options for question:', questionId);
+
   // Get user's evaluation history if userId provided
   let evaluatedIds: string[] = [];
   if (userId) {
@@ -60,11 +62,12 @@ export async function getRandomOptions(
     evaluatedIds = evaluationsSnapshot.docs.map(
       (doc) => (doc.data() as Evaluation).statementId
     );
+    console.info('[getRandomOptions] User has evaluated:', evaluatedIds.length, 'options');
   }
 
   const allExcludedIds = [...excludeIds, ...evaluatedIds];
 
-  // Use random seed for sampling
+  // Use random seed for sampling - ensures fair distribution at scale
   const randomSeed = Math.random();
 
   // Query 1: Get options with randomSeed >= random value
@@ -77,9 +80,13 @@ export async function getRandomOptions(
     .limit(size);
 
   let snapshot = await query.get();
+  console.info('[getRandomOptions] First query (randomSeed >=', randomSeed.toFixed(3), ') returned:', snapshot.size, 'docs');
+
   let options_results = snapshot.docs
     .map((doc) => doc.data() as Statement)
     .filter((opt) => !opt.hide && !allExcludedIds.includes(opt.statementId));
+
+  console.info('[getRandomOptions] After filtering (hide/excluded):', options_results.length, 'options');
 
   // If not enough, fetch from other side
   if (options_results.length < size) {
@@ -91,6 +98,8 @@ export async function getRandomOptions(
       .limit(size - options_results.length);
 
     const moreSnapshot = await moreQuery.get();
+    console.info('[getRandomOptions] Second query (randomSeed <', randomSeed.toFixed(3), ') returned:', moreSnapshot.size, 'docs');
+
     const moreOptions = moreSnapshot.docs
       .map((doc) => doc.data() as Statement)
       .filter((opt) => !opt.hide && !allExcludedIds.includes(opt.statementId));
@@ -98,6 +107,7 @@ export async function getRandomOptions(
     options_results = [...options_results, ...moreOptions];
   }
 
+  console.info('[getRandomOptions] Final result:', options_results.length, 'options');
   return options_results.slice(0, size);
 }
 

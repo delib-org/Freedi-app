@@ -22,7 +22,7 @@ export default function RootLayout({
       <head>
         <link rel="preconnect" href="https://firebasestorage.googleapis.com" />
       </head>
-      <body>
+      <body suppressHydrationWarning>
         {children}
       </body>
     </html>

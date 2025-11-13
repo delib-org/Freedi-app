@@ -18,10 +18,10 @@ export default function QuestionHeader({ question }: QuestionHeaderProps) {
       )}
       <div className={styles.meta}>
         <span className={styles.metaItem}>
-          {question.suggestions || 0} solutions
+          {question.totalSubStatements || question.suggestions || 0} solutions
         </span>
         <span className={styles.metaItem}>
-          Created {new Date(question.createdAt).toLocaleDateString()}
+          Created {new Date(question.createdAt).toLocaleDateString('en-US')}
         </span>
       </div>
     </header>
