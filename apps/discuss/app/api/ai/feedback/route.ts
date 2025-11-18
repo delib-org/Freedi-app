@@ -89,7 +89,8 @@ Be encouraging and specific. Avoid generic advice.
     return NextResponse.json({ feedback });
   } catch (error) {
     console.error('[API] AI feedback error:', error);
-    return NextResponse.json(
+    
+return NextResponse.json(
       {
         error: 'Failed to generate feedback',
         message: error instanceof Error ? error.message : 'Unknown error',

@@ -42,7 +42,8 @@ export async function POST(
     });
   } catch (error) {
     console.error('[API] Batch fetch error:', error);
-    return NextResponse.json(
+    
+return NextResponse.json(
       {
         error: 'Failed to fetch batch',
         message: error instanceof Error ? error.message : 'Unknown error',

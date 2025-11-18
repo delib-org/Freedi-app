@@ -6,9 +6,7 @@ import styles from './EnhancedMembersManagement.module.scss';
 import {
   Users, UserPlus, UserMinus, Shield, Search, Filter,
   ChevronDown, ChevronUp, Mail, Calendar, Activity,
-  Award, AlertCircle, CheckCircle, XCircle, MoreVertical,
-  Download, Upload, Ban, UserCheck, Eye, EyeOff,
-  Crown, Star, Clock, TrendingUp, Hash
+  XCircle, MoreVertical, Download, Ban, EyeOff, Crown
 } from 'lucide-react';
 
 interface EnhancedMembersManagementProps {
@@ -238,17 +236,18 @@ const EnhancedMembersManagement: FC<EnhancedMembersManagementProps> = ({ stateme
     members.forEach((m) => {
       stats[m.role]++;
     });
-    return stats;
+    
+return stats;
   }, [members]);
 
   const handleRoleChange = (userId: string, newRole: Role) => {
     // Implementation for role change
-    console.log('Change role for', userId, 'to', newRole);
+    console.info('Change role for', userId, 'to', newRole);
   };
 
   const handleRemoveMember = (userId: string) => {
     // Implementation for removing member
-    console.log('Remove member', userId);
+    console.info('Remove member', userId);
   };
 
   const toggleMemberExpand = (userId: string) => {
@@ -263,7 +262,7 @@ const EnhancedMembersManagement: FC<EnhancedMembersManagementProps> = ({ stateme
 
   const exportMembers = () => {
     // Implementation for exporting members list
-    console.log('Export members');
+    console.info('Export members');
   };
 
   return (
@@ -285,7 +284,8 @@ const EnhancedMembersManagement: FC<EnhancedMembersManagementProps> = ({ stateme
           {Object.entries(roleStats).map(([role, count]) => {
             const config = roleConfig[role as Role];
             const Icon = config.icon;
-            return (
+            
+return (
               <div
                 key={role}
                 className={`${styles.roleStat} ${styles[`roleStat--${role}`]}`}

@@ -10,11 +10,10 @@ import { setNewStatement } from './../../statementSettingsCont';
 import EnhancedAdvancedSettings from './../advancedSettings/EnhancedAdvancedSettings';
 import styles from './EnhancedStatementSettingsForm.module.scss';
 import {
-  Edit3, FileText, Image, Users, Vote, MessageSquare,
-  UserCheck, Settings, Hash, Save, X, Info, AlertCircle,
+  FileText, Users, MessageSquare,
+  UserCheck, Settings, Save, X, AlertCircle,
   Shield, ChevronRight, Upload, Type, AlignLeft,
-  Camera, Sparkles, Lock, Unlock, UserPlus, BarChart,
-  Target, Brain, Navigation, HelpCircle, CheckCircle
+  Camera, BarChart, HelpCircle
 } from 'lucide-react';
 
 // Import other components that we'll enhance

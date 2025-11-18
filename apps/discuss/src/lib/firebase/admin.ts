@@ -17,7 +17,8 @@ let firestore: Firestore;
 export function initializeFirebaseAdmin(): App {
   if (getApps().length > 0) {
     app = getApps()[0]!;
-    return app;
+    
+return app;
   }
 
   try {
@@ -71,7 +72,8 @@ export function getFirestoreAdmin(): Firestore {
       console.info('[Firebase Admin] Connected to production Firestore');
     }
   }
-  return firestore;
+  
+return firestore;
 }
 
 // Export singleton instance

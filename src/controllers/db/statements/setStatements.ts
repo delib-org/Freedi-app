@@ -373,8 +373,6 @@ export function createStatement({
 			createdAt: Timestamp.now().toMillis(),
 			lastUpdate: Timestamp.now().toMillis(),
 			color: getRandomColor(existingColors),
-			// Add randomSeed for efficient random sampling
-			randomSeed: Math.random(),
 			resultsSettings: {
 				resultsBy: resultsBy || ResultsBy.consensus,
 				numberOfResults: Number(numberOfResults) || 1,
