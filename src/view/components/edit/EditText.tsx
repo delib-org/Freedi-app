@@ -20,6 +20,7 @@ export interface EditTextProps {
 	secondaryPlaceholder?: string;
 	required?: boolean;
 	autoFocus?: boolean;
+	fontSize?: string;
 	onEditStart?: () => void;
 	onEditEnd?: () => void;
 }
@@ -41,6 +42,7 @@ const EditText: FC<EditTextProps> = ({
 	secondaryPlaceholder = 'Enter description',
 	required = false,
 	autoFocus = true,
+	fontSize,
 	onEditStart,
 	onEditEnd
 }) => {
@@ -180,11 +182,11 @@ const EditText: FC<EditTextProps> = ({
 				onKeyDown={editable && !editing ? (e) => e.key === 'Enter' && handleStartEdit() : undefined}
 			>
 				{variant === 'description' ? (
-					<Text description={secondaryText} />
+					<Text description={secondaryText} fontSize={fontSize} />
 				) : variant === 'statement' ? (
-					<Text statement={primaryText} />
+					<Text statement={primaryText} fontSize={fontSize} />
 				) : (
-					<Text statement={primaryText} description={secondaryText} />
+					<Text statement={primaryText} description={secondaryText} fontSize={fontSize} />
 				)}
 			</div>
 		);
@@ -198,12 +200,13 @@ const EditText: FC<EditTextProps> = ({
 				<textarea
 					ref={inputRef as React.RefObject<HTMLTextAreaElement>}
 					className={inputClassName}
-					style={{ 
-						direction, 
+					style={{
+						direction,
 						textAlign: align,
 						minHeight: '3rem',
 						overflow: 'hidden',
-						resize: 'none'
+						resize: 'none',
+						fontSize: fontSize || 'inherit'
 					}}
 					value={rawText}
 					onChange={handleTextAreaChange}
