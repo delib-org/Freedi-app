@@ -485,14 +485,6 @@ const ImprovedSettings: FC<StatementSettingsProps> = ({ statement }) => {
                 isSelected={(settings.evaluationType ?? evaluationType.range) === evaluationType.singleLike}
                 onClick={() => handleSettingChange('evaluationType', evaluationType.singleLike)}
               />
-              <EvaluationCard
-                type={evaluationType.multiSelect}
-                title={t('Multi-Select')}
-                description={t('Select multiple preferred options')}
-                icon={<Check size={24} />}
-                isSelected={(settings.evaluationType ?? evaluationType.range) === evaluationType.multiSelect}
-                onClick={() => handleSettingChange('evaluationType', evaluationType.multiSelect)}
-              />
             </div>
           </div>
 

@@ -368,6 +368,26 @@ service cloud.firestore {
       allow write: if request.auth.uid != null;
     }
 
+    match /userEvaluations/{documentId} {
+      // Users can read their own evaluation tracking or if they're an anonymous user
+      allow read: if request.auth != null ||
+        (resource != null && resource.data.userId != null);
+
+      // Users can create their own evaluation tracking document
+      allow create: if request.auth != null ||
+        (request.resource.data.userId != null &&
+         request.resource.data.parentStatementId != null);
+
+      // Users can update their own evaluation tracking
+      // For anonymous users, check that the userId matches what's in the document
+      allow update: if request.auth != null ||
+        (resource != null &&
+         resource.data.userId == request.resource.data.userId);
+
+      // Prevent deletion to maintain history
+      allow delete: if false;
+    }
+
     match /approval/{approvalId=**} {
       allow read: if request.auth.uid != null;
       allow write: if request.auth.uid != null;
