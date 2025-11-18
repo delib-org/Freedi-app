@@ -206,7 +206,9 @@ const EditText: FC<EditTextProps> = ({
 						minHeight: '3rem',
 						overflow: 'hidden',
 						resize: 'none',
-						fontSize: fontSize || 'inherit'
+						fontSize: fontSize || 'inherit',
+						width: '100%',
+						boxSizing: 'border-box'
 					}}
 					value={rawText}
 					onChange={handleTextAreaChange}
