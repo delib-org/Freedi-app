@@ -26,7 +26,7 @@ const EditableDescription: FC<EditableDescriptionProps> = ({
 	const handleSave = async (_primary: string, secondary?: string) => {
 		try {
 			if (!statement) throw new Error('Statement is undefined');
-			
+
 			await updateStatementText(statement, statement.statement, secondary || '');
 			onSaveSuccess?.();
 		} catch (error) {

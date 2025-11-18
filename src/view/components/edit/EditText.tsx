@@ -158,10 +158,10 @@ const EditText: FC<EditTextProps> = ({
 
 	if (!isEditing) {
 		const displayContent = (
-			<div 
+			<div
 				className={textClassName}
-				style={{ 
-					direction, 
+				style={{
+					direction,
 					textAlign: align,
 					cursor: editable && !editing ? 'pointer' : 'default'
 				}}
@@ -170,7 +170,13 @@ const EditText: FC<EditTextProps> = ({
 				tabIndex={editable && !editing ? 0 : undefined}
 				onKeyDown={editable && !editing ? (e) => e.key === 'Enter' && handleStartEdit() : undefined}
 			>
-				<Text statement={primaryText} description={secondaryText} />
+				{variant === 'description' ? (
+					<Text description={secondaryText} />
+				) : variant === 'statement' ? (
+					<Text statement={primaryText} />
+				) : (
+					<Text statement={primaryText} description={secondaryText} />
+				)}
 			</div>
 		);
 
