@@ -30,10 +30,17 @@
   }
 }
 .description {
+  width: 100%;
   max-width: var(--wrapper);
+  font-size: 1.1rem;
 
   img {
     width: 100%;
+  }
+
+  p {
+    width: 100%;
+    font-size: 1.1rem;
   }
 }
 
@@ -90,11 +97,17 @@
   }
 }
 .subDescription {
-  font-size: 1rem;
+  width: 100%;
+  font-size: 1.1rem;
   color: var(--text-tertiary);
   padding-bottom: 2rem;
   @media (max-width: 600px) {
     margin-left: 1rem;
+  }
+
+  p {
+    width: 100%;
+    font-size: 1.1rem;
   }
 }
 
