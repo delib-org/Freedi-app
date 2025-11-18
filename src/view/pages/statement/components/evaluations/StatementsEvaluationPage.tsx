@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router';
 import CreateStatementModalSwitch from '../createStatementModalSwitch/CreateStatementModalSwitch';
 import StatementBottomNav from '../nav/bottom/StatementBottomNav';
 import StatementInfo from '../vote/components/info/StatementInfo';
-import Description from './components/description/Description';
+import EditableDescription from './components/description/EditableDescription';
 import SuggestionCards from './components/suggestionCards/SuggestionCards';
 import styles from './statementEvaluationsPage.module.scss';
 import LightBulbIcon from '@/assets/icons/lightBulbIcon.svg?react';
@@ -81,7 +81,7 @@ const StatementEvaluationPage: FC<StatementEvaluationPageProps> = ({
 								{getToastButtons(currentStep)}
 							</Toast>
 						)}
-						<Description />
+						<EditableDescription />
 						<SuggestionCards />
 					</div>
 				</div>
