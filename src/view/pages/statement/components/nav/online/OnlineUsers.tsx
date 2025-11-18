@@ -12,13 +12,30 @@ const OnlineUsers: React.FC<OnlineUsersProps> = ({ statementId }) => {
 	const [hoveredUserId, setHoveredUserId] = useState<string | null>(null);
 	const [clickedUserId, setClickedUserId] = useState<string | null>(null);
 
-	const amountOfShownUsers = 5;
-	const shownUsers = onlineUsers.slice(0, amountOfShownUsers);
-	const hiddenCount = onlineUsers.length - shownUsers.length;
+	const handleClickOutside = (): void => {
+		setClickedUserId(null);
+	};
 
+	// Close clicked popover when clicking outside
+	// IMPORTANT: This hook must be called before any conditional returns
+	React.useEffect(() => {
+		if (clickedUserId) {
+			document.addEventListener('click', handleClickOutside);
+			return () => {
+				document.removeEventListener('click', handleClickOutside);
+			};
+		}
+		return undefined;
+	}, [clickedUserId]);
+
+	// Early return AFTER all hooks
 	if (isLoading || onlineUsers.length === 0) {
 		return null;
 	}
+
+	const amountOfShownUsers = 5;
+	const shownUsers = onlineUsers.slice(0, amountOfShownUsers);
+	const hiddenCount = onlineUsers.length - shownUsers.length;
 
 	const handleMouseEnter = (userId: string): void => {
 		setHoveredUserId(userId);
@@ -32,21 +49,6 @@ const OnlineUsers: React.FC<OnlineUsersProps> = ({ statementId }) => {
 		// Toggle: if already clicked, close it; otherwise open it
 		setClickedUserId((prev) => (prev === userId ? null : userId));
 	};
-
-	const handleClickOutside = (): void => {
-		setClickedUserId(null);
-	};
-
-	// Close clicked popover when clicking outside
-	React.useEffect(() => {
-		if (clickedUserId) {
-			document.addEventListener('click', handleClickOutside);
-			return () => {
-				document.removeEventListener('click', handleClickOutside);
-			};
-		}
-		return undefined;
-	}, [clickedUserId]);
 
 	return (
 		<div className={styles.container}>
