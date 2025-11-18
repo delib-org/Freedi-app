@@ -113,7 +113,8 @@ export async function POST(
     });
   } catch (error) {
     console.error('[API] Evaluation error:', error);
-    return NextResponse.json(
+    
+return NextResponse.json(
       {
         error: 'Failed to save evaluation',
         message: error instanceof Error ? error.message : 'Unknown error',
@@ -156,7 +157,8 @@ export async function GET(
     });
   } catch (error) {
     console.error('[API] Get evaluation error:', error);
-    return NextResponse.json(
+    
+return NextResponse.json(
       { error: 'Failed to get evaluation' },
       { status: 500 }
     );

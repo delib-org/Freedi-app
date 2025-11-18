@@ -109,12 +109,14 @@ export default function SolutionFeedClient({
       setEvaluatedIds((prev) => {
         const newSet = new Set(prev);
         newSet.delete(solutionId);
-        return newSet;
+        
+return newSet;
       });
       setAllEvaluatedIds((prev) => {
         const newSet = new Set(prev);
         newSet.delete(solutionId);
-        return newSet;
+        
+return newSet;
       });
       setError('Failed to save your evaluation. Please try again.');
     }

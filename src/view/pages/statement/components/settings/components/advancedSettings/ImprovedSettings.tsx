@@ -32,14 +32,10 @@ import {
   FlaskConical,
   BrainCircuit,
   Compass,
-  Navigation,
   PlusCircle,
   Settings,
   Shield,
-  Lock,
-  Globe,
   Zap,
-  Info,
   Check,
   X,
   ChevronDown,
@@ -116,7 +112,7 @@ interface EvaluationCardProps {
 }
 
 const EvaluationCard: FC<EvaluationCardProps> = ({
-  type,
+  type: _type,
   title,
   description,
   icon,

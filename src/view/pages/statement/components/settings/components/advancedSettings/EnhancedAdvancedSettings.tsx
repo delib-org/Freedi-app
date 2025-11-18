@@ -12,11 +12,10 @@ import { setMaxVotesPerUser } from '@/controllers/db/evaluation/setEvaluation';
 import {
   Eye, EyeOff, MessageCircle, GitBranch, Users, UserPlus, Vote,
   ThumbsUp, BarChart3, CheckSquare, Send, Brain, Search,
-  MessageSquare, Navigation, Plus, Info, Settings,
-  Shield, Sparkles, ChevronDown, ChevronUp, HelpCircle,
-  Zap, Database, Lightbulb, Award, Target, Layers,
-  Activity, PieChart, TrendingUp, Lock, Unlock,
-  FileText, Hash, Globe, UserCheck, AlertCircle
+  MessageSquare, Navigation, Plus, Settings,
+  ChevronDown, ChevronUp, HelpCircle,
+  Zap, Database, Lightbulb, Award, Target,
+  Activity, PieChart, Sparkles, Shield, Lock
 } from 'lucide-react';
 
 interface CategoryConfig {
@@ -207,7 +206,7 @@ const EnhancedAdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => 
     icon: React.ElementType;
     isSelected: boolean;
     onClick: () => void;
-  }> = ({ type, title, description, icon: Icon, isSelected, onClick }) => (
+  }> = ({ type: _type, title, description, icon: Icon, isSelected, onClick }) => (
     <button
       className={`${styles.evaluationCard} ${isSelected ? styles['evaluationCard--selected'] : ''}`}
       onClick={onClick}

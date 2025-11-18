@@ -21,11 +21,13 @@ const OnlineUsers: React.FC<OnlineUsersProps> = ({ statementId }) => {
 	React.useEffect(() => {
 		if (clickedUserId) {
 			document.addEventListener('click', handleClickOutside);
-			return () => {
+			
+return () => {
 				document.removeEventListener('click', handleClickOutside);
 			};
 		}
-		return undefined;
+		
+return undefined;
 	}, [clickedUserId]);
 
 	// Early return AFTER all hooks

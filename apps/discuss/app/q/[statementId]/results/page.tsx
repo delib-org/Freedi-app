@@ -94,7 +94,8 @@ export default async function ResultsPage({ params, searchParams }: PageProps) {
     );
   } catch (error) {
     console.error('Failed to load results:', error);
-    return (
+    
+return (
       <div className="page">
         <h1>Error Loading Results</h1>
         <p>Failed to load results. Please try again later.</p>

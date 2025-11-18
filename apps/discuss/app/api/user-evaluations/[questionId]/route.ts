@@ -51,7 +51,8 @@ export async function GET(
     });
   } catch (error) {
     console.error('[API] Get user evaluations error:', error);
-    return NextResponse.json(
+    
+return NextResponse.json(
       {
         error: 'Failed to get user evaluations',
         message: error instanceof Error ? error.message : 'Unknown error',

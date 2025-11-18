@@ -108,7 +108,8 @@ export async function getRandomOptions(
   }
 
   console.info('[getRandomOptions] Final result:', options_results.length, 'options');
-  return options_results.slice(0, size);
+  
+return options_results.slice(0, size);
 }
 
 /**

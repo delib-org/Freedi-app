@@ -42,7 +42,8 @@ export function getUserIdFromCookie(cookieHeader: string | null): string | null 
   if (!cookieHeader) return null;
 
   const match = cookieHeader.match(/userId=([^;]+)/);
-  return match ? match[1] : null;
+  
+return match ? match[1] : null;
 }
 
 /**
@@ -54,7 +55,9 @@ export function getAnonymousDisplayName(userId: string): string {
   const match = userId.match(/anon_(\d+)_/);
   if (match) {
     const timestamp = parseInt(match[1]);
-    return `User ${timestamp.toString().slice(-6)}`;
+    
+return `User ${timestamp.toString().slice(-6)}`;
   }
-  return 'Anonymous User';
+  
+return 'Anonymous User';
 }

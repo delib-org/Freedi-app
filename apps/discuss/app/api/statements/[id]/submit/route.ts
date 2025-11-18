@@ -115,7 +115,8 @@ export async function POST(
     });
   } catch (error) {
     console.error('[API] Submit solution error:', error);
-    return NextResponse.json(
+    
+return NextResponse.json(
       {
         error: 'Failed to submit solution',
         message: error instanceof Error ? error.message : 'Unknown error',
