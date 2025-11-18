@@ -1,6 +1,7 @@
 import { onDocumentWritten, onDocumentCreated, onDocumentUpdated, onDocumentDeleted } from 'firebase-functions/v2/firestore';
 import { db } from '.';
 import { logger } from 'firebase-functions';
+import { FieldValue } from 'firebase-admin/firestore';
 import {
     Collections,
     Statement,
@@ -232,21 +233,37 @@ export const updateParentOnChildDelete = onDocumentDeleted({
 
         // Skip if no parent or if parent is 'top'
         if (!deletedStatement || !deletedStatement.parentId || deletedStatement.parentId === 'top') return;
-        
+
         logger.info(`Child statement deleted, updating parent ${deletedStatement.parentId}`);
-        
+
+        // If the deleted statement was an option, decrement the numberOfOptions count
+        if (deletedStatement.statementType === 'option') {
+            const parentRef = db.collection(Collections.statements).doc(deletedStatement.parentId);
+            await parentRef.update({
+                numberOfOptions: FieldValue.increment(-1),
+                subStatementsCount: FieldValue.increment(-1),
+            });
+            logger.info(`Decremented numberOfOptions for parent ${deletedStatement.parentId}`);
+        } else {
+            // For non-option statements, just decrement subStatementsCount
+            const parentRef = db.collection(Collections.statements).doc(deletedStatement.parentId);
+            await parentRef.update({
+                subStatementsCount: FieldValue.increment(-1),
+            });
+        }
+
         // Update parent statement with latest children
         await updateParentWithLatestChildren(deletedStatement.parentId);
-        
+
         // Also update top-level parent if different from direct parent
         // AND if the current statement is not itself a top-level statement
-        if (deletedStatement.topParentId && 
+        if (deletedStatement.topParentId &&
             deletedStatement.topParentId !== deletedStatement.parentId &&
             deletedStatement.parentId !== 'top') {
             logger.info(`Also updating top-level parent ${deletedStatement.topParentId}`);
             await updateTopParentSubscriptions(deletedStatement.topParentId);
         }
-        
+
     } catch (error) {
         logger.error('Error in updateParentOnChildDelete:', error);
     }
