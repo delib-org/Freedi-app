@@ -1,0 +1,558 @@
+/* Progress Tracker - Gamification & Achievements */
+
+.container {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-xl);
+  margin-bottom: var(--spacing-xl);
+  box-shadow: var(--shadow-lg);
+  position: relative;
+  overflow: hidden;
+  animation: slideInRight 0.6s ease-out;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 200%;
+    height: 200%;
+    background: var(--primary-gradient);
+    opacity: 0.03;
+    border-radius: 50%;
+    animation: rotate 30s linear infinite;
+  }
+}
+
+/* Streak Section */
+.streakSection {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-lg);
+  margin-bottom: var(--spacing-xl);
+  position: relative;
+}
+
+.streakBadge {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  background: var(--accent-gradient);
+  color: white;
+  padding: var(--spacing-sm) var(--spacing-lg);
+  border-radius: var(--radius-full);
+  font-weight: bold;
+  box-shadow: var(--shadow-md);
+  animation: bounceIn 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: linear-gradient(45deg, #ff6b6b, #ffe66d, #ff6b6b);
+    border-radius: var(--radius-full);
+    opacity: 0;
+    z-index: -1;
+    animation: streakGlow 2s ease-in-out infinite;
+  }
+
+  &.fireHot {
+    background: linear-gradient(135deg, #ff6b6b 0%, #feca57 100%);
+
+    .fireEmoji {
+      animation: flameDanceIntense 0.5s ease-in-out infinite;
+      filter: drop-shadow(0 0 10px rgba(255, 107, 107, 0.6));
+    }
+
+    &::before {
+      opacity: 0.5;
+    }
+  }
+
+  &.fireWarm {
+    .fireEmoji {
+      animation: flameDance 1s ease-in-out infinite;
+      filter: drop-shadow(0 0 6px rgba(255, 202, 87, 0.4));
+    }
+  }
+
+  &.fireCool {
+    .fireEmoji {
+      animation: flameDance 1.5s ease-in-out infinite;
+    }
+  }
+}
+
+.fireEmoji {
+  font-size: 2rem;
+  transition: all var(--transition-spring);
+}
+
+.streakInfo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.streakNumber {
+  font-size: var(--text-2xl);
+  line-height: 1;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.streakLabel {
+  font-size: var(--text-sm);
+  opacity: 0.95;
+}
+
+.streakBonus {
+  padding: var(--spacing-xs) var(--spacing-md);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: var(--radius-full);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  animation: slideInLeft 0.5s ease-out 0.3s both;
+  box-shadow: var(--shadow-sm);
+}
+
+/* Level Section */
+.levelSection {
+  margin-bottom: var(--spacing-xl);
+  position: relative;
+}
+
+.levelHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-md);
+}
+
+.levelBadge {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-xs) var(--spacing-md);
+  background: var(--primary-gradient);
+  color: white;
+  border-radius: var(--radius-full);
+  font-weight: 600;
+  box-shadow: var(--shadow-sm);
+}
+
+.levelIcon {
+  font-size: var(--text-xl);
+  animation: starSpin 2s linear infinite;
+}
+
+.levelNumber {
+  font-size: var(--text-lg);
+}
+
+.levelStats {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+}
+
+.dot {
+  opacity: 0.5;
+}
+
+/* Progress Bar */
+.progressContainer {
+  position: relative;
+}
+
+.progressBar {
+  height: 12px;
+  background: linear-gradient(90deg,
+    rgba(124, 58, 237, 0.1) 0%,
+    rgba(124, 58, 237, 0.05) 100%);
+  border-radius: var(--radius-full);
+  position: relative;
+  overflow: hidden;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.progressFill {
+  height: 100%;
+  background: var(--primary-gradient);
+  border-radius: var(--radius-full);
+  transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  animation: progressGlow 2s ease-in-out infinite;
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 40px;
+    background: linear-gradient(90deg,
+      transparent,
+      rgba(255, 255, 255, 0.4),
+      transparent);
+    animation: shimmer 2s linear infinite;
+  }
+}
+
+.progressGlow {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 4px;
+  height: 20px;
+  background: white;
+  border-radius: 2px;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+}
+
+.milestone {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 20px;
+  height: 20px;
+  background: white;
+  border: 3px solid rgba(124, 58, 237, 0.3);
+  border-radius: 50%;
+  transition: all var(--transition-spring);
+  z-index: 1;
+
+  &.achieved {
+    background: var(--primary);
+    border-color: var(--primary);
+    animation: milestoneUnlock 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  }
+}
+
+.milestoneIcon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: var(--text-xs);
+  animation: sparkleRotate 2s linear infinite;
+}
+
+.progressLabel {
+  text-align: center;
+  margin-top: var(--spacing-sm);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+/* Achievements Section */
+.achievementsSection {
+  margin-bottom: var(--spacing-lg);
+  position: relative;
+}
+
+.achievementsTitle {
+  font-size: var(--text-lg);
+  font-weight: 600;
+  margin-bottom: var(--spacing-md);
+  background: var(--primary-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.achievementsList {
+  display: flex;
+  gap: var(--spacing-md);
+  flex-wrap: wrap;
+}
+
+.achievementBadge {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-xs) var(--spacing-md);
+  background: rgba(124, 58, 237, 0.1);
+  border: 2px solid rgba(124, 58, 237, 0.2);
+  border-radius: var(--radius-full);
+  font-size: var(--text-sm);
+  transition: all var(--transition-spring);
+  cursor: pointer;
+
+  &.unlocked {
+    background: var(--primary-gradient);
+    color: white;
+    border-color: transparent;
+    box-shadow: var(--shadow-md);
+    animation: achievementPop 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+    &:hover {
+      transform: translateY(-2px) scale(1.05);
+      box-shadow: var(--shadow-lg);
+    }
+  }
+
+  &.locked {
+    opacity: 0.5;
+    filter: grayscale(1);
+  }
+}
+
+.achievementIcon {
+  font-size: var(--text-lg);
+}
+
+.achievementName {
+  font-weight: 500;
+}
+
+/* Celebration Overlay */
+.celebrationOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.achievementUnlock {
+  background: white;
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-2xl);
+  text-align: center;
+  max-width: 400px;
+  position: relative;
+  animation: unlockBounce 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.unlockIcon {
+  font-size: 4rem;
+  margin-bottom: var(--spacing-md);
+  animation: iconSpin 0.8s ease-out;
+}
+
+.unlockTitle {
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  background: var(--primary-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: var(--spacing-sm);
+}
+
+.unlockName {
+  font-size: var(--text-xl);
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: var(--spacing-xs);
+}
+
+.unlockDescription {
+  font-size: var(--text-base);
+  color: var(--text-secondary);
+}
+
+.confetti {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.confettiPiece {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: var(--primary);
+  animation: confettiFall 1s ease-out forwards;
+
+  &:nth-child(odd) {
+    background: var(--accent-coral);
+  }
+
+  &:nth-child(3n) {
+    background: var(--accent-mint);
+  }
+
+  @for $i from 1 through 12 {
+    &:nth-child(#{$i}) {
+      left: random(200) - 100 + px;
+      animation-delay: random(300) + ms;
+      transform: rotate(random(360) + deg);
+    }
+  }
+}
+
+/* Daily Goal */
+.dailyGoal {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  padding-top: var(--spacing-lg);
+  border-top: 1px solid rgba(124, 58, 237, 0.1);
+}
+
+.goalProgress {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.goalIcon {
+  font-size: var(--text-xl);
+}
+
+.goalBar {
+  flex: 1;
+  height: 8px;
+  background: rgba(124, 58, 237, 0.1);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.goalFill {
+  height: 100%;
+  background: linear-gradient(90deg, #4ecdc4 0%, #44a3a0 100%);
+  border-radius: var(--radius-full);
+  transition: width 0.5s ease-out;
+}
+
+.goalText {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  font-weight: 500;
+  min-width: 100px;
+}
+
+.goalComplete {
+  padding: var(--spacing-xs) var(--spacing-md);
+  background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+  color: white;
+  border-radius: var(--radius-full);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  text-align: center;
+  animation: goalCelebrate 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+/* Animations */
+@keyframes rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes flameDance {
+  0%, 100% { transform: scale(1) rotate(0deg); }
+  25% { transform: scale(1.1) rotate(-5deg); }
+  75% { transform: scale(0.9) rotate(5deg); }
+}
+
+@keyframes flameDanceIntense {
+  0%, 100% { transform: scale(1) rotate(0deg); }
+  25% { transform: scale(1.2) rotate(-10deg); }
+  75% { transform: scale(0.8) rotate(10deg); }
+}
+
+@keyframes starSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes progressGlow {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.2); }
+}
+
+@keyframes shimmer {
+  from { transform: translateX(-40px); }
+  to { transform: translateX(40px); }
+}
+
+@keyframes milestoneUnlock {
+  0% { transform: translate(-50%, -50%) scale(0) rotate(0deg); }
+  50% { transform: translate(-50%, -50%) scale(1.2) rotate(180deg); }
+  100% { transform: translate(-50%, -50%) scale(1) rotate(360deg); }
+}
+
+@keyframes achievementPop {
+  0% { transform: scale(0); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+@keyframes unlockBounce {
+  0% { transform: scale(0) rotate(0deg); }
+  50% { transform: scale(1.1) rotate(5deg); }
+  70% { transform: scale(0.9) rotate(-5deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+
+@keyframes iconSpin {
+  from { transform: rotate(-360deg) scale(0); }
+  to { transform: rotate(0deg) scale(1); }
+}
+
+@keyframes confettiFall {
+  to {
+    transform: translateY(200px) rotate(720deg);
+    opacity: 0;
+  }
+}
+
+@keyframes goalCelebrate {
+  0% { transform: scale(0); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+@keyframes streakGlow {
+  0%, 100% { opacity: 0; }
+  50% { opacity: 0.3; }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .container {
+    padding: var(--spacing-lg);
+  }
+
+  .streakSection {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--spacing-md);
+  }
+
+  .levelHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-sm);
+  }
+
+  .achievementsList {
+    flex-direction: column;
+  }
+
+  .achievementBadge {
+    width: 100%;
+    justify-content: center;
+  }
+}

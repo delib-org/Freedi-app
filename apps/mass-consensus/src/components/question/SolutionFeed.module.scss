@@ -1,0 +1,402 @@
+/* Solution Feed - Stunning Styles */
+
+.feed {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xl);
+}
+
+.batchIndicator {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: 100px;
+  text-align: center;
+  font-size: 0.875rem;
+  font-weight: 600;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+  animation: fadeInDown 0.5s ease-out;
+}
+
+.error {
+  background: linear-gradient(135deg, #ffebee 0%, #fff5f5 100%);
+  border: 2px solid var(--disagree);
+  border-radius: 12px;
+  padding: var(--spacing-md);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--spacing-md);
+  animation: shake 0.5s ease-out;
+}
+
+.error p {
+  margin: 0;
+  color: var(--disagree);
+  font-weight: 500;
+}
+
+.error button {
+  background: var(--disagree);
+  color: white;
+  border: none;
+  padding: var(--spacing-xs) var(--spacing-md);
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+
+  &:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
+  }
+}
+
+.instructions {
+  text-align: center;
+  margin-bottom: var(--spacing-md);
+  animation: fadeIn 0.8s ease-out;
+}
+
+.instructions h3 {
+  margin-bottom: var(--spacing-sm);
+  color: var(--text-body);
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.instructions p {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+}
+
+.solutions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
+/* Batch Controls - SUPER VISIBLE & STUNNING */
+.batchControls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-md);
+  margin: var(--spacing-xl) 0;
+  padding: var(--spacing-xl);
+  background: linear-gradient(135deg,
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(240, 235, 255, 0.9) 100%);
+  backdrop-filter: blur(20px);
+  border-radius: 24px;
+  box-shadow:
+    0 10px 40px rgba(124, 58, 237, 0.1),
+    0 2px 10px rgba(0, 0, 0, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  position: relative;
+  overflow: hidden;
+  animation: slideUp 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle,
+      rgba(124, 58, 237, 0.1) 0%,
+      transparent 70%);
+    animation: rotate 20s linear infinite;
+  }
+
+  &::after {
+    content: '🚀';
+    position: absolute;
+    top: 20px;
+    right: 30px;
+    font-size: 2rem;
+    opacity: 0.5;
+    animation: float 6s ease-in-out infinite;
+  }
+}
+
+/* The Amazing Batch Button */
+.batchButton {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 20px 40px;
+  border-radius: 100px;
+  font-size: 1.2rem;
+  font-weight: 700;
+  min-width: 280px;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow:
+    0 10px 30px rgba(102, 126, 234, 0.4),
+    0 2px 10px rgba(0, 0, 0, 0.1);
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border: 2px solid transparent;
+  cursor: pointer;
+  animation: pulse 2s ease-in-out infinite;
+
+  // Animated gradient border
+  &::before {
+    content: '';
+    position: absolute;
+    inset: -3px;
+    background: linear-gradient(45deg,
+      #667eea,
+      #764ba2,
+      #f093fb,
+      #f5576c,
+      #4ecdc4,
+      #667eea);
+    background-size: 300% 300%;
+    border-radius: 100px;
+    z-index: -2;
+    animation: gradientRotate 6s ease infinite;
+    opacity: 0.8;
+  }
+
+  // Inner white background for contrast
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 2px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 100px;
+    z-index: -1;
+  }
+
+  // Shine effect
+  span {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+
+    &::before {
+      content: '→';
+      font-size: 1.5rem;
+      animation: arrowBounce 1s ease-in-out infinite;
+    }
+  }
+
+  .progress {
+    font-size: 0.9rem;
+    opacity: 0.95;
+    font-weight: 500;
+  }
+
+  &:hover:not(.disabled) {
+    transform: translateY(-5px) scale(1.05);
+    box-shadow:
+      0 20px 40px rgba(102, 126, 234, 0.5),
+      0 10px 20px rgba(0, 0, 0, 0.1);
+    animation-play-state: paused;
+
+    &::before {
+      animation-duration: 2s;
+    }
+
+    span::before {
+      animation-duration: 0.4s;
+    }
+  }
+
+  &:active:not(.disabled) {
+    transform: scale(0.98);
+  }
+
+  // Disabled state - still visible but muted
+  &.disabled {
+    background: linear-gradient(135deg, #9ca3af 0%, #6b7280 100%);
+    animation: none;
+    cursor: not-allowed;
+    opacity: 0.7;
+
+    &::before {
+      display: none;
+    }
+
+    &:hover {
+      transform: none;
+      box-shadow: 0 10px 30px rgba(156, 163, 175, 0.3);
+    }
+  }
+}
+
+.hint {
+  font-size: 1rem;
+  color: var(--text-secondary);
+  text-align: center;
+  margin: 0;
+  font-weight: 500;
+  position: relative;
+  z-index: 1;
+  padding: var(--spacing-md);
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+  border-radius: 100px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.completionMessage {
+  background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+  color: white;
+  padding: var(--spacing-2xl);
+  border-radius: 24px;
+  text-align: center;
+  box-shadow: 0 20px 40px rgba(17, 153, 142, 0.4);
+  animation: celebrateIn 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle,
+      rgba(255, 255, 255, 0.1) 0%,
+      transparent 70%);
+    animation: rotate 15s linear infinite;
+  }
+
+  h3 {
+    margin: 0 0 var(--spacing-md) 0;
+    font-size: 2rem;
+    font-weight: 700;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    position: relative;
+    z-index: 1;
+  }
+
+  p {
+    margin: var(--spacing-sm) 0;
+    font-size: 1.1rem;
+    opacity: 0.95;
+    position: relative;
+    z-index: 1;
+  }
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-10px); }
+  75% { transform: translateX(10px); }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    box-shadow:
+      0 10px 30px rgba(102, 126, 234, 0.4),
+      0 0 0 0 rgba(102, 126, 234, 0.4);
+  }
+  50% {
+    box-shadow:
+      0 10px 30px rgba(102, 126, 234, 0.4),
+      0 0 0 15px rgba(102, 126, 234, 0);
+  }
+}
+
+@keyframes gradientRotate {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes arrowBounce {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(5px); }
+}
+
+@keyframes celebrateIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.8) rotate(-5deg);
+  }
+  50% {
+    transform: scale(1.05) rotate(2deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0);
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .batchControls {
+    padding: var(--spacing-lg);
+    margin: var(--spacing-lg) 0;
+  }
+
+  .batchButton {
+    min-width: 240px;
+    font-size: 1rem;
+    padding: 16px 32px;
+  }
+
+  .completionMessage h3 {
+    font-size: 1.5rem;
+  }
+}

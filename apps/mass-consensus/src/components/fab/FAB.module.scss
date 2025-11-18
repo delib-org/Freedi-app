@@ -1,0 +1,548 @@
+/* Floating Action Button - Delightful & Engaging */
+
+/* Floating Decorative Elements */
+.floatingDecor {
+  position: fixed;
+  bottom: 120px;
+  right: 40px;
+  pointer-events: none;
+  z-index: 99;
+}
+
+.decorEmoji {
+  position: absolute;
+  font-size: 1.5rem;
+  opacity: 0.6;
+  animation: floatAround 8s ease-in-out infinite;
+
+  &:nth-child(1) {
+    top: -40px;
+    left: -30px;
+    animation-delay: 0s;
+    animation-duration: 10s;
+  }
+
+  &:nth-child(2) {
+    top: -60px;
+    right: -20px;
+    animation-delay: 2s;
+    animation-duration: 12s;
+  }
+
+  &:nth-child(3) {
+    bottom: -30px;
+    left: -40px;
+    animation-delay: 4s;
+    animation-duration: 14s;
+  }
+}
+
+/* FAB Container */
+.fabContainer {
+  position: fixed;
+  bottom: 40px;
+  right: 40px;
+  z-index: 100;
+  transition: all var(--transition-spring);
+
+  &.expanded {
+    bottom: 20px;
+    right: 20px;
+  }
+}
+
+/* FAB Button */
+.fabButton {
+  width: auto;
+  min-width: 64px;
+  height: 64px;
+  padding: 0 var(--spacing-lg);
+  background: var(--primary-gradient);
+  color: white;
+  border: none;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  cursor: pointer;
+  box-shadow: 0 10px 30px rgba(124, 58, 237, 0.4);
+  transition: all var(--transition-spring);
+  position: relative;
+  overflow: hidden;
+  animation: fabEntrance 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 70%);
+    transform: translate(-50%, -50%);
+    opacity: 0;
+    transition: opacity var(--transition-base);
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.2) 50%, transparent 70%);
+    transform: translateX(-100%);
+    animation: shimmer 3s ease-in-out infinite;
+  }
+
+  &:hover {
+    transform: scale(1.1) rotate(5deg);
+    box-shadow: 0 15px 40px rgba(124, 58, 237, 0.5), var(--hover-glow);
+
+    &::before {
+      opacity: 1;
+    }
+
+    .fabIcon {
+      transform: rotate(90deg);
+    }
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+
+  &.close {
+    background: var(--accent-gradient);
+    animation: rotateIn 0.3s ease-out;
+
+    .fabIcon {
+      transform: rotate(45deg);
+    }
+
+    &:hover .fabIcon {
+      transform: rotate(135deg);
+    }
+  }
+}
+
+.fabIcon {
+  font-size: 1.5rem;
+  font-weight: 300;
+  line-height: 1;
+  transition: transform var(--transition-spring);
+}
+
+.fabLabel {
+  font-weight: 600;
+  font-size: var(--text-base);
+  white-space: nowrap;
+}
+
+/* Expanded Content */
+.expandedContent {
+  position: absolute;
+  bottom: 80px;
+  right: 0;
+  width: 380px;
+  max-width: calc(100vw - 40px);
+  background: rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(124, 58, 237, 0.2);
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-xl);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  animation: expandForm 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: var(--primary-gradient);
+    opacity: 0.03;
+    border-radius: 50%;
+    animation: rotate 20s linear infinite;
+  }
+}
+
+.formTitle {
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: var(--spacing-lg);
+  text-align: center;
+  position: relative;
+  z-index: 1;
+}
+
+.solutionForm {
+  position: relative;
+  z-index: 1;
+}
+
+.inputWrapper {
+  position: relative;
+  margin-bottom: var(--spacing-lg);
+}
+
+.solutionInput {
+  width: 100%;
+  padding: var(--spacing-md);
+  background: white;
+  border: 2px solid rgba(124, 58, 237, 0.1);
+  border-radius: var(--radius-lg);
+  font-size: var(--text-base);
+  font-family: var(--font-sans);
+  color: var(--text-primary);
+  resize: none;
+  transition: all var(--transition-base);
+
+  &:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.1);
+  }
+
+  &::placeholder {
+    color: var(--text-tertiary);
+  }
+}
+
+.charCount {
+  position: absolute;
+  bottom: var(--spacing-sm);
+  right: var(--spacing-md);
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+
+  span.warning {
+    color: var(--accent-coral);
+    font-weight: 600;
+  }
+}
+
+.formActions {
+  display: flex;
+  gap: var(--spacing-md);
+  justify-content: flex-end;
+}
+
+.cancelButton {
+  padding: var(--spacing-sm) var(--spacing-lg);
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--text-tertiary);
+  border-radius: var(--radius-full);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-base);
+
+  &:hover:not(:disabled) {
+    background: rgba(0, 0, 0, 0.05);
+    border-color: var(--text-secondary);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.submitButton {
+  padding: var(--spacing-sm) var(--spacing-lg);
+  background: var(--primary-gradient);
+  color: white;
+  border: none;
+  border-radius: var(--radius-full);
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  transition: all var(--transition-spring);
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+  }
+
+  &:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(124, 58, 237, 0.3);
+
+    &::before {
+      width: 200px;
+      height: 200px;
+    }
+
+    .submitIcon {
+      transform: translateX(4px);
+    }
+  }
+
+  &:active:not(:disabled) {
+    transform: scale(0.95);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: linear-gradient(135deg, #9ca3af 0%, #6b7280 100%);
+  }
+}
+
+.submitIcon {
+  font-size: 1.2rem;
+  transition: transform var(--transition-spring);
+}
+
+.spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+/* Success Animation */
+.successAnimation {
+  position: absolute;
+  bottom: 80px;
+  right: 0;
+  width: 300px;
+  padding: var(--spacing-lg);
+  background: var(--agree-gradient);
+  color: white;
+  border-radius: var(--radius-lg);
+  box-shadow: 0 10px 30px rgba(111, 207, 151, 0.4);
+  animation: successSlideIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  z-index: 101;
+}
+
+.successContent {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  font-weight: 600;
+  font-size: var(--text-lg);
+}
+
+.successIcon {
+  font-size: 2rem;
+  animation: successBounce 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.successText {
+  animation: fadeInUp 0.5s ease-out 0.2s both;
+}
+
+.confettiContainer {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.confetti {
+  position: absolute;
+  font-size: 1.5rem;
+  animation: confettiFall 2s ease-out forwards;
+
+  &:nth-child(1) {
+    left: -60px;
+    animation-delay: 0s;
+  }
+  &:nth-child(2) {
+    left: -20px;
+    animation-delay: 0.1s;
+  }
+  &:nth-child(3) {
+    left: 20px;
+    animation-delay: 0.2s;
+  }
+  &:nth-child(4) {
+    left: 60px;
+    animation-delay: 0.3s;
+  }
+}
+
+/* Animations */
+@keyframes fabEntrance {
+  0% {
+    opacity: 0;
+    transform: scale(0) rotate(180deg);
+  }
+  50% {
+    transform: scale(1.2) rotate(360deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(360deg);
+  }
+}
+
+@keyframes floatAround {
+  0%, 100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  25% {
+    transform: translate(-15px, -20px) rotate(90deg);
+  }
+  50% {
+    transform: translate(10px, -30px) rotate(180deg);
+  }
+  75% {
+    transform: translate(-10px, -10px) rotate(270deg);
+  }
+}
+
+@keyframes expandForm {
+  0% {
+    opacity: 0;
+    transform: scale(0.8) translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes rotateIn {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(180deg);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(200%);
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes successSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateX(100px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes successBounce {
+  0% {
+    transform: scale(0);
+  }
+  50% {
+    transform: scale(1.3);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes confettiFall {
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-150px) rotate(720deg);
+    opacity: 0;
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .fabContainer {
+    bottom: 20px;
+    right: 20px;
+
+    &.expanded {
+      bottom: 10px;
+      right: 10px;
+    }
+  }
+
+  .expandedContent {
+    width: calc(100vw - 20px);
+    right: -10px;
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-lg);
+  }
+
+  .floatingDecor {
+    display: none;
+  }
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  .fabButton,
+  .expandedContent,
+  .confetti,
+  .decorEmoji {
+    animation: none;
+  }
+
+  .fabButton,
+  .fabIcon,
+  .submitButton {
+    transition: opacity var(--transition-fast);
+  }
+}

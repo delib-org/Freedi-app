@@ -1,0 +1,459 @@
+/* Progress Tracker - Gamified with Delight */
+
+.progressTracker {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-xl);
+  margin: var(--spacing-xl) 0;
+  box-shadow: var(--shadow-lg);
+  position: relative;
+  overflow: hidden;
+  animation: slideInRight 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 200%;
+    height: 200%;
+    background: var(--primary-gradient);
+    opacity: 0.03;
+    border-radius: 50%;
+    animation: rotate 30s linear infinite;
+  }
+}
+
+/* Streak Section */
+.streakSection {
+  display: flex;
+  justify-content: center;
+  margin-bottom: var(--spacing-lg);
+}
+
+.streakCounter {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md) var(--spacing-lg);
+  background: var(--accent-gradient);
+  border-radius: var(--radius-full);
+  color: white;
+  font-weight: 600;
+  font-size: var(--text-lg);
+  box-shadow: 0 10px 30px rgba(255, 107, 107, 0.3);
+  animation: bounceIn 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  transition: all var(--transition-spring);
+
+  &:hover {
+    transform: scale(1.05) rotate(2deg);
+  }
+
+  &.fire-small .streakEmoji {
+    font-size: 1.5rem;
+    animation: flameDance 2s ease-in-out infinite;
+  }
+
+  &.fire-medium .streakEmoji {
+    font-size: 2rem;
+    animation: flameDance 1.5s ease-in-out infinite;
+    filter: drop-shadow(0 0 10px rgba(255, 107, 107, 0.5));
+  }
+
+  &.fire-intense .streakEmoji {
+    font-size: 2.5rem;
+    animation: flameDance 1s ease-in-out infinite;
+    filter: drop-shadow(0 0 20px rgba(255, 107, 107, 0.8));
+  }
+}
+
+.streakEmoji {
+  display: inline-block;
+  transition: transform var(--transition-spring);
+}
+
+.streakNumber {
+  font-size: var(--text-2xl);
+  font-weight: 700;
+}
+
+.streakLabel {
+  font-size: var(--text-base);
+  opacity: 0.95;
+}
+
+/* Level Section */
+.levelSection {
+  margin-bottom: var(--spacing-lg);
+  position: relative;
+  z-index: 1;
+}
+
+.levelHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-md);
+}
+
+.levelBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--spacing-xs) var(--spacing-md);
+  background: var(--primary-gradient);
+  color: white;
+  border-radius: var(--radius-full);
+  font-weight: 600;
+  font-size: var(--text-sm);
+  box-shadow: var(--shadow-md);
+  animation: slideInLeft 0.6s ease-out;
+}
+
+.xpText {
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  animation: fadeIn 0.8s ease-out;
+}
+
+.progressBar {
+  height: 24px;
+  background: rgba(124, 58, 237, 0.1);
+  border-radius: var(--radius-full);
+  position: relative;
+  overflow: hidden;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.progressFill {
+  height: 100%;
+  background: var(--primary-gradient);
+  border-radius: var(--radius-full);
+  position: relative;
+  transition: width 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  box-shadow: 0 2px 10px rgba(124, 58, 237, 0.4);
+  overflow: hidden;
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.3) 50%,
+      transparent 100%);
+    animation: shimmer 2s ease-in-out infinite;
+  }
+}
+
+.progressGlow {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  width: 40px;
+  height: 40px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.8) 0%, transparent 70%);
+  border-radius: 50%;
+  transform: translate(50%, -50%);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.milestones {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+}
+
+.milestone {
+  position: absolute;
+  font-size: 1.2rem;
+  transform: translateX(-50%);
+  filter: grayscale(1);
+  opacity: 0.3;
+  transition: all var(--transition-spring);
+  animation: milestoneFloat 3s ease-in-out infinite;
+
+  &:nth-child(1) { animation-delay: 0s; }
+  &:nth-child(2) { animation-delay: 0.5s; }
+  &:nth-child(3) { animation-delay: 1s; }
+}
+
+.progressFill:has(+ .milestones) ~ .milestones .milestone {
+  &:nth-child(1) {
+    filter: grayscale(0);
+    opacity: 1;
+    transform: translateX(-50%) scale(1.2);
+  }
+}
+
+/* Daily Goal */
+.dailyGoal {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md);
+  background: linear-gradient(135deg,
+    rgba(78, 205, 196, 0.1) 0%,
+    rgba(124, 58, 237, 0.1) 100%);
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--spacing-lg);
+  animation: fadeInUp 0.8s ease-out 0.2s both;
+}
+
+.goalIcon {
+  font-size: 1.5rem;
+  animation: rotate 3s ease-in-out infinite;
+}
+
+.goalText {
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.goalComplete {
+  font-size: 1.2rem;
+  animation: bounceIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+/* Achievements */
+.achievements {
+  animation: fadeInUp 0.8s ease-out 0.4s both;
+}
+
+.achievementsTitle {
+  font-size: var(--text-sm);
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: var(--spacing-md);
+  text-align: center;
+}
+
+.achievementsList {
+  display: flex;
+  gap: var(--spacing-sm);
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.achievementBadge {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--accent-gradient);
+  color: white;
+  border-radius: var(--radius-full);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  box-shadow: var(--shadow-md);
+  opacity: 0;
+  animation: achievementUnlock 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+  transition: transform var(--transition-spring);
+
+  &:hover {
+    transform: translateY(-4px) scale(1.05);
+    box-shadow: var(--shadow-lg);
+  }
+}
+
+.achievementIcon {
+  font-size: 1rem;
+}
+
+.achievementText {
+  font-size: var(--text-xs);
+}
+
+/* Celebration */
+.celebration {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 10;
+}
+
+.confetti {
+  position: absolute;
+  font-size: 2rem;
+  animation: confettiBurst 3s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+
+  &:nth-child(1) {
+    animation-delay: 0s;
+    left: -30px;
+    top: -30px;
+  }
+  &:nth-child(2) {
+    animation-delay: 0.1s;
+    right: -30px;
+    top: -30px;
+  }
+  &:nth-child(3) {
+    animation-delay: 0.2s;
+    left: -30px;
+    bottom: -30px;
+  }
+  &:nth-child(4) {
+    animation-delay: 0.3s;
+    right: -30px;
+    bottom: -30px;
+  }
+  &:nth-child(5) {
+    animation-delay: 0.4s;
+    left: 0;
+    top: -40px;
+  }
+}
+
+/* Animations */
+@keyframes flameDance {
+  0%, 100% {
+    transform: scale(1) rotate(-5deg);
+  }
+  25% {
+    transform: scale(1.1) rotate(5deg);
+  }
+  50% {
+    transform: scale(1.05) rotate(-3deg);
+  }
+  75% {
+    transform: scale(1.15) rotate(3deg);
+  }
+}
+
+@keyframes milestoneFloat {
+  0%, 100% {
+    transform: translateX(-50%) translateY(0);
+  }
+  50% {
+    transform: translateX(-50%) translateY(-5px);
+  }
+}
+
+@keyframes achievementUnlock {
+  0% {
+    opacity: 0;
+    transform: scale(0) rotate(180deg);
+  }
+  50% {
+    transform: scale(1.2) rotate(360deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(360deg);
+  }
+}
+
+@keyframes confettiBurst {
+  0% {
+    transform: scale(0) rotate(0deg);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.5) rotate(180deg) translateY(-50px);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0.5) rotate(360deg) translateY(-200px);
+    opacity: 0;
+  }
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+@keyframes rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes bounceIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: translate(50%, -50%) scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: translate(50%, -50%) scale(1.5);
+    opacity: 0.5;
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .progressTracker {
+    padding: var(--spacing-md);
+  }
+
+  .achievementsList {
+    flex-direction: column;
+    align-items: center;
+  }
+}
