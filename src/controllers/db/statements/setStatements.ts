@@ -574,7 +574,10 @@ export async function updateStatementText(
 		if (description !== undefined && statement.description !== description) {
 			updates.description = description;
 		}
-		if (Object.keys(updates).length === 0) return;
+
+		if (Object.keys(updates).length === 0) {
+			return;
+		}
 
 		updates.lastUpdate = Timestamp.now().toMillis();
 

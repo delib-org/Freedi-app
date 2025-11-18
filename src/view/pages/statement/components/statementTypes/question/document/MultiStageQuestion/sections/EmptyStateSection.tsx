@@ -1,5 +1,7 @@
 import React, { FC } from 'react';
-import Text from '@/view/components/text/Text';
+import { useContext } from 'react';
+import { StatementContext } from '@/view/pages/statement/StatementCont';
+import EditableDescription from '@/view/components/edit/EditableDescription';
 import styles from '../MultiStageQuestion.module.scss';
 
 interface EmptyStateSectionProps {
@@ -8,12 +10,16 @@ interface EmptyStateSectionProps {
 }
 
 export const EmptyStateSection: FC<EmptyStateSectionProps> = ({
-  description,
   imageUrl,
 }) => {
+  const { statement } = useContext(StatementContext);
+
   return (
     <div className={`${styles.description} description`}>
-      <Text description={description} fontSize="1.2rem" />
+      <EditableDescription
+        statement={statement}
+        placeholder="Add a description..."
+      />
       {imageUrl && (
         <img src={imageUrl} alt="Statement visual representation" />
       )}
