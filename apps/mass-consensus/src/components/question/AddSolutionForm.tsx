@@ -7,11 +7,12 @@ import styles from './AddSolutionForm.module.css';
 interface AddSolutionFormProps {
   questionId: string;
   userId: string;
-  onSubmit: (solution: Statement) => void;
+  onSubmit: (solutionText: string) => void;
 }
 
 /**
  * Form for submitting new solutions
+ * Now integrated with similar solution detection flow
  */
 export default function AddSolutionForm({
   questionId,
@@ -20,8 +21,6 @@ export default function AddSolutionForm({
 }: AddSolutionFormProps) {
   const [text, setText] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [showSuccess, setShowSuccess] = useState(false);
 
   const characterCount = text.length;
   const isValid = characterCount >= 3 && characterCount <= 500;
@@ -32,61 +31,20 @@ export default function AddSolutionForm({
     if (!isValid || isSubmitting) return;
 
     setIsSubmitting(true);
-    setError(null);
 
-    try {
-      const response = await fetch(`/api/statements/${questionId}/submit`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          solutionText: text,
-          userId,
-        }),
-      });
+    // Pass text to parent for similar checking
+    onSubmit(text);
 
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Failed to submit solution');
-      }
-
-      const data = await response.json();
-
-      // Clear form
+    // Clear form after a short delay
+    setTimeout(() => {
       setText('');
-      setShowSuccess(true);
-
-      // Call onSubmit callback
-      if (data.solution) {
-        onSubmit(data.solution);
-      }
-
-      // Hide success message after 3 seconds
-      setTimeout(() => {
-        setShowSuccess(false);
-      }, 3000);
-    } catch (error) {
-      console.error('Submit error:', error);
-      setError(error instanceof Error ? error.message : 'Failed to submit solution');
-    } finally {
       setIsSubmitting(false);
-    }
+    }, 300);
   };
 
   return (
     <div className={styles.formContainer}>
       <h3 className={styles.title}>Add Your Solution</h3>
-
-      {showSuccess && (
-        <div className={styles.success}>
-          ✓ Thank you! Your solution has been submitted.
-        </div>
-      )}
-
-      {error && (
-        <div className={styles.error}>
-          {error}
-        </div>
-      )}
 
       <form onSubmit={handleSubmit} className={styles.form}>
         <textarea
@@ -110,7 +68,7 @@ export default function AddSolutionForm({
             disabled={!isValid || isSubmitting}
             className={`${styles.submitButton} ${!isValid || isSubmitting ? styles.disabled : ''}`}
           >
-            {isSubmitting ? 'Submitting...' : 'Submit Solution'}
+            {isSubmitting ? 'Checking...' : 'Submit Solution'}
           </button>
         </div>
       </form>

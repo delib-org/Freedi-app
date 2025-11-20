@@ -1,0 +1,284 @@
+.container {
+  max-width: 600px;
+  margin: 0 auto;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.header {
+  text-align: center;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #47b4ef 0%, #7cacf8 100%);
+  color: white;
+  border-radius: 12px 12px 0 0;
+  margin-bottom: 2rem;
+
+  h2 {
+    font-size: 1.5rem;
+    margin: 0 0 0.5rem 0;
+    font-weight: 500;
+
+    @media (max-width: 768px) {
+      font-size: 1.3rem;
+    }
+  }
+
+  p {
+    font-size: 0.9rem;
+    opacity: 0.95;
+    margin: 0;
+
+    @media (max-width: 768px) {
+      font-size: 0.85rem;
+    }
+  }
+}
+
+.section {
+  margin-bottom: 2rem;
+}
+
+.sectionTitle {
+  font-size: 1.1rem;
+  color: #3d4d71;
+  margin: 0 0 1rem 0;
+  font-weight: 500;
+  padding-left: 0.5rem;
+  border-left: 3px solid #7cacf8;
+}
+
+.yourSolutionCard {
+  position: relative;
+  background: linear-gradient(
+    135deg,
+    rgba(87, 198, 178, 0.1) 0%,
+    rgba(124, 172, 248, 0.1) 100%
+  );
+  border: 2px solid #57c6b2;
+  border-radius: 12px;
+  padding: 1.5rem;
+  animation: fadeInUp 0.4s ease-out;
+
+  &::before {
+    content: 'NEW';
+    position: absolute;
+    top: -10px;
+    right: 20px;
+    background: #57c6b2;
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+
+  @media (max-width: 768px) {
+    padding: 1.25rem;
+  }
+}
+
+.similarCard {
+  background: white;
+  border: 2px solid transparent;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  cursor: pointer;
+  animation: fadeInUp 0.4s ease-out;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+
+  &:hover {
+    border-color: #5f88e5;
+    box-shadow: 0 4px 12px rgba(95, 136, 229, 0.15);
+    transform: translateY(-2px);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+
+  @media (max-width: 768px) {
+    padding: 1.25rem;
+  }
+}
+
+.similarMeta {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.similarityScore {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.85rem;
+  color: #57c6b2;
+  font-weight: 600;
+
+  &::before {
+    content: '●';
+    font-size: 1.2rem;
+  }
+}
+
+.supportCount {
+  font-size: 0.85rem;
+  color: #5a6b8c;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.solutionText {
+  font-size: 1rem;
+  color: #3d4d71;
+  line-height: 1.6;
+  margin-bottom: 1rem;
+  max-height: 150px;
+  overflow-y: auto;
+  word-wrap: break-word;
+
+  @media (max-width: 768px) {
+    font-size: 0.95rem;
+  }
+}
+
+.chooseButton {
+  width: 100%;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 0.75rem;
+
+  @media (max-width: 768px) {
+    min-height: 48px;
+    font-size: 1rem;
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
+
+  &.primary {
+    background: #57c6b2;
+    color: white;
+
+    &:hover {
+      background: #4fab9a;
+      box-shadow: 0 4px 12px rgba(87, 198, 178, 0.3);
+      transform: translateY(-2px);
+    }
+  }
+
+  &.secondary {
+    background: #5f88e5;
+    color: white;
+
+    &:hover {
+      background: #7ca0f0;
+      box-shadow: 0 4px 12px rgba(95, 136, 229, 0.3);
+      transform: translateY(-2px);
+    }
+  }
+}
+
+.helpFooter {
+  margin: 2rem 0;
+  padding: 1rem;
+  background: rgba(124, 172, 248, 0.05);
+  border-left: 3px solid #7cacf8;
+  border-radius: 8px;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+
+  @media (max-width: 768px) {
+    padding: 0.75rem;
+  }
+}
+
+.helpIcon {
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.helpText {
+  font-size: 0.9rem;
+  color: #3d4d71;
+  line-height: 1.5;
+  margin: 0;
+
+  @media (max-width: 768px) {
+    font-size: 0.85rem;
+  }
+}
+
+.backButton {
+  width: 100%;
+  padding: 0.75rem 1.5rem;
+  background: transparent;
+  border: 2px solid #5f88e5;
+  border-radius: 8px;
+  color: #5f88e5;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+
+  @media (max-width: 768px) {
+    min-height: 48px;
+  }
+
+  &:hover {
+    background: rgba(95, 136, 229, 0.05);
+    transform: translateY(-2px);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+// Animations
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Respect reduced motion
+@media (prefers-reduced-motion: reduce) {
+  .container,
+  .yourSolutionCard,
+  .similarCard {
+    animation: none !important;
+  }
+
+  .similarCard:hover,
+  .chooseButton:hover,
+  .backButton:hover {
+    transform: none;
+  }
+}
