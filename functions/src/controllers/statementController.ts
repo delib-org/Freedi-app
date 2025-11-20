@@ -1,8 +1,9 @@
 import { Request, Response } from 'firebase-functions/v1';
-import { Statement } from 'delib-npm';
+import { Statement, Collections, UserEvaluation } from 'delib-npm';
 import { StatementService } from '../services/statements/statementService';
 import { RequestValidator } from '../utils/validation';
 import { cache } from '../services/cache-service';
+import { db } from '../db';
 
 export class StatementController {
 	private statementService: StatementService;
@@ -68,15 +69,31 @@ export class StatementController {
 
 			// Parse optional parameters
 			const limit = validator.optionalNumber(req.query.limit, 'limit', 6, 50);
+			const userId = req.query.userId as string | undefined;
 
 			// Parse excludeIds (comma-separated string)
 			const excludeIdsParam = req.query.excludeIds as string;
-			const excludeIds = excludeIdsParam
+			let excludeIds = excludeIdsParam
 				? excludeIdsParam.split(',').filter(id => id.trim())
 				: [];
 
-			// Check cache first (only for requests without excludeIds)
-			if (excludeIds.length === 0) {
+			// Fetch user's evaluated options if userId is provided
+			if (userId) {
+				const userEvaluationId = `${userId}--${parentId}`;
+				const userEvalDoc = await db
+					.collection(Collections.userEvaluations)
+					.doc(userEvaluationId)
+					.get();
+
+				if (userEvalDoc.exists) {
+					const userData = userEvalDoc.data() as UserEvaluation;
+					// Merge evaluated IDs with excludeIds
+					excludeIds = [...excludeIds, ...(userData.evaluatedOptionsIds || [])];
+				}
+			}
+
+			// Check cache first (only for requests without excludeIds and userId)
+			if (excludeIds.length === 0 && !userId) {
 				const cacheKey = cache.generateKey('random', parentId, String(limit));
 				const cachedData = await cache.get<{ statements: Statement[] }>(cacheKey);
 
@@ -84,7 +101,7 @@ export class StatementController {
 					// Update view counts asynchronously (don't wait)
 					this.statementService.updateStatementViewCounts(cachedData.statements);
 					res.status(200).send({ ...cachedData, ok: true });
-					
+
 return;
 				}
 			}
@@ -96,8 +113,8 @@ return;
 				excludeIds,
 			});
 
-			// Cache the result (only for requests without excludeIds)
-			if (excludeIds.length === 0) {
+			// Cache the result (only for requests without excludeIds and userId)
+			if (excludeIds.length === 0 && !userId) {
 				const cacheKey = cache.generateKey('random', parentId, String(limit));
 				cache.set(cacheKey, { statements }, 2); // 2 minute TTL
 			}
