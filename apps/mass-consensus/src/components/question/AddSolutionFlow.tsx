@@ -25,23 +25,19 @@ export default function AddSolutionFlow({
   const [flowState, setFlowState] = useState<FlowState>({ step: 'input' });
   const [userInput, setUserInput] = useState('');
 
-  // Step 1: Check for similar solutions via Cloud Function
+  // Step 1: Check for similar solutions via API proxy (avoids CORS)
   const handleCheckSimilar = async (solutionText: string) => {
     setUserInput(solutionText);
     setFlowState({ step: 'similar', data: { ok: true, similarStatements: [], userText: solutionText } });
 
     try {
-      const endpoint = process.env.CHECK_SIMILARITIES_ENDPOINT ||
-        `http://localhost:5001/freedi-test/us-central1/checkForSimilarStatements`;
-
-      const response = await fetch(endpoint, {
+      // Call Next.js API route which proxies to Cloud Function
+      const response = await fetch(`/api/statements/${questionId}/check-similar`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          statementId: questionId,
           userInput: solutionText,
-          creatorId: userId,
-          generateIfNeeded: false,
+          userId,
         }),
       });
 
