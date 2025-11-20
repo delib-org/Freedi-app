@@ -56,14 +56,6 @@ const Switch = () => {
         </div>
       )}
 
-      {statement && (
-        <EditableDescription
-          statement={statement}
-          placeholder="Add a description..."
-          fontSize="1.1rem"
-        />
-      )}
-
       <OnlineUsers statementId={statement?.statementId} />
       {statement && <SubQuestionsMap statement={statement} />}
       <ChatPanel />
