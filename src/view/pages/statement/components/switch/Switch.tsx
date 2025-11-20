@@ -9,7 +9,6 @@ import { useAuthorization } from "@/controllers/hooks/useAuthorization";
 import OnlineUsers from "../nav/online/OnlineUsers";
 import SubQuestionsMap from "../subQuestionsMap/SubQuestionsMap";
 import ChatPanel from "../chat/components/chatPanel/ChatPanel";
-import EditableDescription from "@/view/components/edit/EditableDescription";
 
 const Switch = () => {
   const { statement } = useContext(StatementContext);
