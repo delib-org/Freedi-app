@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { Statement } from 'delib-npm';
 import type { FlowState, SimilarCheckResponse } from '@/types/api';
 import AddSolutionForm from './AddSolutionForm';
 import EnhancedLoader from './EnhancedLoader';

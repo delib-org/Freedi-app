@@ -72,7 +72,7 @@ export default function SuccessMessage({
 
         {/* Solution Text Preview */}
         <div className={styles.solutionPreview}>
-          <p className={styles.solutionText}>"{solutionText}"</p>
+          <p className={styles.solutionText}>&quot;{solutionText}&quot;</p>
         </div>
 
         {/* Manual Continue Button */}

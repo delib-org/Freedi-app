@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { Statement } from 'delib-npm';
 import styles from './AddSolutionForm.module.css';
 
 interface AddSolutionFormProps {
@@ -15,8 +14,8 @@ interface AddSolutionFormProps {
  * Now integrated with similar solution detection flow
  */
 export default function AddSolutionForm({
-  questionId,
-  userId,
+  questionId: _questionId,
+  userId: _userId,
   onSubmit,
 }: AddSolutionFormProps) {
   const [text, setText] = useState('');

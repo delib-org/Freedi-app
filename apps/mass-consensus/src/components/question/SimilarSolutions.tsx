@@ -60,7 +60,7 @@ export default function SimilarSolutions({
                   {Math.max(85 - index * 10, 60)}% similar
                 </span>
                 <span className={styles.supportCount}>
-                  👥 {solution.evaluations || 0} {solution.evaluations === 1 ? 'person supports' : 'people support'} this
+                  👥 {solution.evaluation?.numberOfEvaluators || 0} {solution.evaluation?.numberOfEvaluators === 1 ? 'person supports' : 'people support'} this
                 </span>
               </div>
 
