@@ -5,7 +5,7 @@
  * Run with: npx tsx scripts/add-randomseed-to-statements.ts
  */
 
-import * as admin from 'firebase-admin';
+import admin from 'firebase-admin';
 import { Collections } from 'delib-npm';
 
 // Initialize Firebase Admin
@@ -16,10 +16,11 @@ if (!admin.apps.length) {
 }
 
 // Connect to emulator if running locally
-if (process.env.FIRESTORE_EMULATOR_HOST || true) {
-  const emulatorHost = process.env.FIRESTORE_EMULATOR_HOST || 'localhost:8080';
-  process.env.FIRESTORE_EMULATOR_HOST = emulatorHost;
+if (process.env.FIRESTORE_EMULATOR_HOST) {
+  const emulatorHost = process.env.FIRESTORE_EMULATOR_HOST;
   console.info('🔧 Connected to Firestore emulator:', emulatorHost);
+} else {
+  console.info('🌐 Connecting to production Firestore');
 }
 
 const db = admin.firestore();

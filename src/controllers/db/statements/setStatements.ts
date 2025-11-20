@@ -194,6 +194,7 @@ export const setStatementToDB = async ({
 
 		statement.consensus = 0;
 		statement.color = statement.color || getRandomColor(existingColors);
+		statement.randomSeed = statement.randomSeed ?? Math.random();
 
 		statement.statementType =
 			statement.statementType || StatementType.statement;
@@ -392,6 +393,7 @@ export function createStatement({
 				evaluationRandomNumber: Math.random(),
 				viewed: 0,
 			},
+			randomSeed: Math.random(),
 			results: [],
 		};
 
