@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
 import { Collections, StatementType, Statement } from 'delib-npm';
 import { getUserIdFromCookie, getAnonymousDisplayName } from '@/lib/utils/user';
+import { logError, ValidationError } from '@/lib/utils/errorHandling';
+import { VALIDATION, ERROR_MESSAGES } from '@/constants/common';
 import type { Firestore } from 'firebase-admin/firestore';
 
 /**
@@ -21,10 +23,14 @@ async function handleExistingSolution(
     .get();
 
   if (!statementDoc.exists) {
-    return NextResponse.json(
-      { error: 'Solution not found' },
-      { status: 404 }
-    );
+    logError(new ValidationError('Solution not found'), {
+      operation: 'api.submit.handleExistingSolution',
+      userId,
+      questionId,
+      statementId,
+    });
+
+    return NextResponse.json({ error: 'Solution not found' }, { status: 404 });
   }
 
   // Create evaluation (+1 for agreement)
@@ -100,16 +106,20 @@ export async function POST(
 
     const trimmedText = solutionText.trim();
 
-    if (trimmedText.length < 3) {
+    if (trimmedText.length < VALIDATION.MIN_SOLUTION_LENGTH) {
       return NextResponse.json(
-        { error: 'Solution must be at least 3 characters' },
+        {
+          error: `Solution must be at least ${VALIDATION.MIN_SOLUTION_LENGTH} characters`,
+        },
         { status: 400 }
       );
     }
 
-    if (trimmedText.length > 500) {
+    if (trimmedText.length > VALIDATION.MAX_SOLUTION_LENGTH) {
       return NextResponse.json(
-        { error: 'Solution must be less than 500 characters' },
+        {
+          error: `Solution must be less than ${VALIDATION.MAX_SOLUTION_LENGTH} characters`,
+        },
         { status: 400 }
       );
     }
@@ -232,12 +242,21 @@ export async function POST(
       evaluation,
     });
   } catch (error) {
-    console.error('[API] Submit solution error:', error);
-    
-return NextResponse.json(
+    const body = await request.json().catch(() => ({}));
+    const { userId } = body;
+    const questionId = params.id;
+
+    logError(error, {
+      operation: 'api.submit',
+      userId,
+      questionId,
+      metadata: { solutionTextLength: body.solutionText?.length },
+    });
+
+    return NextResponse.json(
       {
-        error: 'Failed to submit solution',
-        message: error instanceof Error ? error.message : 'Unknown error',
+        error: ERROR_MESSAGES.SUBMIT_FAILED,
+        message: error instanceof Error ? error.message : ERROR_MESSAGES.GENERIC,
       },
       { status: 500 }
     );

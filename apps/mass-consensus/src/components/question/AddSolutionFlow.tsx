@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import type { FlowState, SimilarCheckResponse } from '@/types/api';
+import { logError, NetworkError, ValidationError } from '@/lib/utils/errorHandling';
+import { ERROR_MESSAGES } from '@/constants/common';
 import AddSolutionForm from './AddSolutionForm';
 import EnhancedLoader from './EnhancedLoader';
 import SimilarSolutions from './SimilarSolutions';
@@ -28,7 +30,8 @@ export default function AddSolutionFlow({
   const handleCheckSimilar = async (solutionText: string) => {
     // Validate inputs before making request
     if (!solutionText || !userId) {
-      alert('Please provide a valid solution and ensure you are logged in.');
+      // TODO: Replace alert with Toast component
+      alert(ERROR_MESSAGES.MISSING_INPUT);
       return;
     }
 
@@ -54,19 +57,40 @@ export default function AddSolutionFlow({
         // Handle specific error codes
         if (response.status === 400) {
           // Inappropriate content or validation error
-          alert(data.error || 'Your submission contains inappropriate content. Please revise.');
+          const errorMessage = data.error || ERROR_MESSAGES.INAPPROPRIATE_CONTENT;
+          // TODO: Replace alert with Toast component
+          alert(errorMessage);
           setFlowState({ step: 'input' });
+
+          logError(new ValidationError(errorMessage), {
+            operation: 'AddSolutionFlow.handleCheckSimilar',
+            userId,
+            questionId,
+            metadata: { status: response.status },
+          });
           return;
         }
 
         if (response.status === 403) {
           // Limit reached
-          alert(data.error || "You've reached the maximum number of solutions for this question.");
+          const errorMessage = data.error || ERROR_MESSAGES.LIMIT_REACHED;
+          // TODO: Replace alert with Toast component
+          alert(errorMessage);
           setFlowState({ step: 'input' });
+
+          logError(new ValidationError(errorMessage), {
+            operation: 'AddSolutionFlow.handleCheckSimilar',
+            userId,
+            questionId,
+            metadata: { status: response.status },
+          });
           return;
         }
 
-        throw new Error(data.error || 'Failed to check for similar solutions');
+        throw new NetworkError(data.error || 'Failed to check for similar solutions', {
+          status: response.status,
+          questionId,
+        });
       }
 
       const data: SimilarCheckResponse = await response.json();
@@ -79,9 +103,16 @@ export default function AddSolutionFlow({
         await handleSelectSolution(null);
       }
     } catch (error) {
-      console.error('[AddSolutionFlow] Similar check error:', error);
+      logError(error, {
+        operation: 'AddSolutionFlow.handleCheckSimilar',
+        userId,
+        questionId,
+        metadata: { solutionTextLength: solutionText.length },
+      });
+
       // On error, reset to input form
-      alert('Unable to check for similar solutions. Please try again.');
+      // TODO: Replace alert with Toast component
+      alert(ERROR_MESSAGES.CHECK_SIMILAR_FAILED);
       setFlowState({ step: 'input' });
     }
   };
@@ -103,7 +134,11 @@ export default function AddSolutionFlow({
 
       if (!response.ok) {
         const data = await response.json();
-        throw new Error(data.error || 'Failed to submit solution');
+        throw new NetworkError(data.error || ERROR_MESSAGES.SUBMIT_FAILED, {
+          status: response.status,
+          statementId,
+          questionId,
+        });
       }
 
       const data = await response.json();
@@ -115,8 +150,18 @@ export default function AddSolutionFlow({
         solutionText: userInput,
       });
     } catch (error) {
-      console.error('[AddSolutionFlow] Submit error:', error);
-      alert(error instanceof Error ? error.message : 'Failed to submit solution');
+      logError(error, {
+        operation: 'AddSolutionFlow.handleSelectSolution',
+        userId,
+        questionId,
+        statementId: statementId || undefined,
+        metadata: { solutionTextLength: userInput.length },
+      });
+
+      // TODO: Replace alert with Toast component
+      const errorMessage =
+        error instanceof Error ? error.message : ERROR_MESSAGES.SUBMIT_FAILED;
+      alert(errorMessage);
       setFlowState({ step: 'input' });
     }
   };

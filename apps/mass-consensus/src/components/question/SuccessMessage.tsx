@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import { UI, TIME } from '@/constants/common';
 import styles from './SuccessMessage.module.scss';
 
 interface SuccessMessageProps {
@@ -16,12 +17,12 @@ export default function SuccessMessage({
   solutionText,
   voteCount,
   onComplete,
-  autoRedirectSeconds = 3,
+  autoRedirectSeconds = UI.AUTO_REDIRECT_SECONDS,
 }: SuccessMessageProps) {
   useEffect(() => {
     const timer = setTimeout(() => {
       onComplete();
-    }, autoRedirectSeconds * 1000);
+    }, autoRedirectSeconds * TIME.SECOND);
 
     return () => clearTimeout(timer);
   }, [onComplete, autoRedirectSeconds]);

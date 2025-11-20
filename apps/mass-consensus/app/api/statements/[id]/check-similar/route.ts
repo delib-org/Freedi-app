@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { logError, ValidationError } from '@/lib/utils/errorHandling';
+import { ERROR_MESSAGES } from '@/constants/common';
 
 /**
  * POST /api/statements/[id]/check-similar
@@ -34,7 +36,13 @@ export async function POST(
     const endpoint = process.env.CHECK_SIMILARITIES_ENDPOINT;
 
     if (!endpoint) {
-      console.error('CHECK_SIMILARITIES_ENDPOINT not configured');
+      const error = new ValidationError('CHECK_SIMILARITIES_ENDPOINT not configured');
+      logError(error, {
+        operation: 'api.checkSimilar',
+        userId,
+        questionId,
+      });
+
       return NextResponse.json(
         { error: 'Similar check service not configured' },
         { status: 500 }
@@ -62,11 +70,21 @@ export async function POST(
 
     return NextResponse.json(data);
   } catch (error) {
-    console.error('[API] Check similar error:', error);
+    const body = await request.json().catch(() => ({}));
+    const { userId } = body;
+    const questionId = params.id;
+
+    logError(error, {
+      operation: 'api.checkSimilar',
+      userId,
+      questionId,
+      metadata: { endpoint: process.env.CHECK_SIMILARITIES_ENDPOINT },
+    });
+
     return NextResponse.json(
       {
-        error: 'Failed to check for similar solutions',
-        message: error instanceof Error ? error.message : 'Unknown error',
+        error: ERROR_MESSAGES.CHECK_SIMILAR_FAILED,
+        message: error instanceof Error ? error.message : ERROR_MESSAGES.GENERIC,
       },
       { status: 500 }
     );

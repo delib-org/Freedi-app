@@ -1,6 +1,8 @@
 'use client';
 
+import { useEffect } from 'react';
 import { Statement } from 'delib-npm';
+import { VALIDATION, UI } from '@/constants/common';
 import styles from './SimilarSolutions.module.scss';
 
 interface SimilarSolutionsProps {
@@ -17,11 +19,22 @@ export default function SimilarSolutions({
   onBack,
 }: SimilarSolutionsProps) {
   // Show max 3 similar solutions
-  const topSimilar = similarSolutions.slice(0, 3);
+  const topSimilar = similarSolutions.slice(
+    0,
+    VALIDATION.MAX_SIMILAR_SOLUTIONS_DISPLAY
+  );
 
   // Auto-select if only user's suggestion (no similar found)
+  // Move setTimeout to useEffect to avoid setState during render
+  useEffect(() => {
+    if (topSimilar.length === 0) {
+      const timer = setTimeout(() => onSelect(null), UI.FORM_RESET_DELAY);
+      return () => clearTimeout(timer);
+    }
+  }, [topSimilar.length, onSelect]);
+
+  // Don't render if no similar solutions
   if (topSimilar.length === 0) {
-    setTimeout(() => onSelect(null), 300);
     return null;
   }
 

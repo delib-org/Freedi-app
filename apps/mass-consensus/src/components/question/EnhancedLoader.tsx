@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import type { LoadingStage } from '@/types/api';
+import { UI, LOADER_STAGES, PROGRESS, API } from '@/constants/common';
 import styles from './EnhancedLoader.module.scss';
 
 interface EnhancedLoaderProps {
@@ -26,9 +27,7 @@ const STAGES: StageConfig[] = [
     message: 'Checking for inappropriate content...',
     subMessage: 'Ensuring safe community standards',
     tip: 'AI scans for profanity and harmful content',
-    progressStart: 0,
-    progressEnd: 25,
-    duration: 8,
+    ...LOADER_STAGES.CONTENT_CHECK,
   },
   {
     stage: 'similarity-search',
@@ -36,9 +35,7 @@ const STAGES: StageConfig[] = [
     message: 'Finding similar solutions...',
     subMessage: 'Searching through community ideas',
     tip: 'Similar ideas are grouped to show consensus',
-    progressStart: 25,
-    progressEnd: 60,
-    duration: 10,
+    ...LOADER_STAGES.SIMILARITY_SEARCH,
   },
   {
     stage: 'comparison',
@@ -46,9 +43,7 @@ const STAGES: StageConfig[] = [
     message: 'Comparing with existing solutions...',
     subMessage: 'Analyzing similarity scores',
     tip: 'This helps prevent duplicate suggestions',
-    progressStart: 60,
-    progressEnd: 85,
-    duration: 7,
+    ...LOADER_STAGES.COMPARISON,
   },
   {
     stage: 'finalizing',
@@ -56,9 +51,7 @@ const STAGES: StageConfig[] = [
     message: 'Almost ready...',
     subMessage: 'Preparing your results',
     tip: 'Great solutions deserve careful review!',
-    progressStart: 85,
-    progressEnd: 100,
-    duration: 5,
+    ...LOADER_STAGES.FINALIZING,
   },
 ];
 
@@ -75,7 +68,7 @@ export default function EnhancedLoader({ onCancel }: EnhancedLoaderProps) {
     // Update elapsed time every second
     const timeInterval = setInterval(() => {
       setElapsedTime((prev) => prev + 1);
-    }, 1000);
+    }, UI.LOADER_TIME_UPDATE_INTERVAL);
 
     return () => {
       clearInterval(timeInterval);
@@ -88,15 +81,18 @@ export default function EnhancedLoader({ onCancel }: EnhancedLoaderProps) {
       const stage = STAGES[safeStageIndex];
 
       setProgress((prev) => {
-        const newProgress = prev + 0.5; // Increment by 0.5% every 150ms
+        const newProgress = prev + PROGRESS.INCREMENT_PERCENT;
 
         // Cap at 100%
-        if (newProgress >= 100) {
-          return 100;
+        if (newProgress >= PROGRESS.MAX_PERCENT) {
+          return PROGRESS.MAX_PERCENT;
         }
 
         // Check if we should move to next stage
-        if (newProgress >= stage.progressEnd && safeStageIndex < STAGES.length - 1) {
+        if (
+          newProgress >= stage.progressEnd &&
+          safeStageIndex < STAGES.length - 1
+        ) {
           // Schedule stage transition separately
           queueMicrotask(() => {
             setCurrentStageIndex((idx) => Math.min(idx + 1, STAGES.length - 1));
@@ -106,14 +102,14 @@ export default function EnhancedLoader({ onCancel }: EnhancedLoaderProps) {
 
         return newProgress;
       });
-    }, 150);
+    }, UI.LOADER_TICK_INTERVAL);
 
     return () => {
       clearInterval(progressInterval);
     };
   }, [safeStageIndex]);
 
-  const showCancelButton = elapsedTime > 30;
+  const showCancelButton = elapsedTime > UI.LOADER_CANCEL_THRESHOLD;
 
   return (
     <div className={styles.overlay}>
@@ -150,7 +146,7 @@ export default function EnhancedLoader({ onCancel }: EnhancedLoaderProps) {
         <p className={styles.subMessage}>{currentStage.subMessage}</p>
 
         {/* Duration Info */}
-        <p className={styles.durationInfo}>This may take up to 30 seconds</p>
+        <p className={styles.durationInfo}>{API.MAX_DURATION_MESSAGE}</p>
 
         {/* Educational Tip */}
         <div className={styles.tipContainer} key={currentStage.tip}>
