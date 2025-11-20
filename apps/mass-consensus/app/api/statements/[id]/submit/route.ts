@@ -193,9 +193,25 @@ export async function POST(
       hide: false,
     };
 
-    // Transaction to create solution and update question
+    // Create automatic +1 evaluation for the new solution
+    const evaluationRef = db.collection(Collections.evaluations).doc();
+    const evaluation = {
+      evaluationId: evaluationRef.id,
+      statementId: statementRef.id,
+      parentId: questionId,
+      evaluatorId: userId,
+      evaluation: 1, // Auto +1 when user creates their own solution
+      createdAt: Date.now(),
+      lastUpdate: Date.now(),
+    };
+
+    // Transaction to create solution, evaluation, and update question
     await db.runTransaction(async (transaction) => {
+      // Create new solution
       transaction.set(statementRef, newSolution);
+
+      // Create automatic evaluation
+      transaction.set(evaluationRef, evaluation);
 
       // Update parent question
       const questionRef = db.collection(Collections.statements).doc(questionId);
@@ -213,6 +229,7 @@ export async function POST(
       action: 'created' as const,
       statementId: statementRef.id,
       solution: newSolution,
+      evaluation,
     });
   } catch (error) {
     console.error('[API] Submit solution error:', error);

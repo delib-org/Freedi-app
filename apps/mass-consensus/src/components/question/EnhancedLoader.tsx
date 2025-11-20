@@ -79,16 +79,18 @@ export default function EnhancedLoader({ onCancel }: EnhancedLoaderProps) {
     const progressInterval = setInterval(() => {
       setProgress((prev) => {
         const newProgress = prev + 0.5; // Increment by 0.5% every 150ms
-
-        // Check if we should move to next stage
-        if (newProgress >= currentStage.progressEnd && currentStageIndex < STAGES.length - 1) {
-          setCurrentStageIndex((idx) => idx + 1);
-          return currentStage.progressEnd;
-        }
+        const stage = STAGES[currentStageIndex];
 
         // Cap at 100%
         if (newProgress >= 100) {
           return 100;
+        }
+
+        // Check if we should move to next stage
+        if (newProgress >= stage.progressEnd && currentStageIndex < STAGES.length - 1) {
+          // Schedule stage transition for next tick to avoid setState during render
+          setTimeout(() => setCurrentStageIndex((idx) => idx + 1), 0);
+          return stage.progressEnd;
         }
 
         return newProgress;
@@ -99,7 +101,7 @@ export default function EnhancedLoader({ onCancel }: EnhancedLoaderProps) {
       clearInterval(timeInterval);
       clearInterval(progressInterval);
     };
-  }, [currentStageIndex, currentStage.progressEnd]);
+  }, [currentStageIndex]);
 
   const showCancelButton = elapsedTime > 30;
 
