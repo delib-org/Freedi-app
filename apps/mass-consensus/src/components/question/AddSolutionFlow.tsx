@@ -27,8 +27,16 @@ export default function AddSolutionFlow({
 
   // Step 1: Check for similar solutions via API proxy (avoids CORS)
   const handleCheckSimilar = async (solutionText: string) => {
+    // Validate inputs before making request
+    if (!solutionText || !userId) {
+      alert('Please provide a valid solution and ensure you are logged in.');
+      return;
+    }
+
     setUserInput(solutionText);
-    setFlowState({ step: 'similar', data: { ok: true, similarStatements: [], userText: solutionText } });
+
+    // Show submitting state while checking
+    setFlowState({ step: 'submitting' });
 
     try {
       // Call Next.js API route which proxies to Cloud Function
@@ -46,7 +54,7 @@ export default function AddSolutionFlow({
 
         // Handle specific error codes
         if (response.status === 400) {
-          // Inappropriate content
+          // Inappropriate content or validation error
           alert(data.error || 'Your submission contains inappropriate content. Please revise.');
           setFlowState({ step: 'input' });
           return;
@@ -64,12 +72,17 @@ export default function AddSolutionFlow({
 
       const data: SimilarCheckResponse = await response.json();
 
-      // Update with actual results
-      setFlowState({ step: 'similar', data });
+      // Show results or proceed to submit if no similar found
+      if (data.similarStatements && data.similarStatements.length > 0) {
+        setFlowState({ step: 'similar', data });
+      } else {
+        // No similar solutions, proceed directly to submit
+        await handleSelectSolution(null);
+      }
     } catch (error) {
       console.error('[AddSolutionFlow] Similar check error:', error);
-      // On error, allow submission without check
-      alert('Unable to check for similar solutions. You can still submit your solution.');
+      // On error, reset to input form
+      alert('Unable to check for similar solutions. Please try again.');
       setFlowState({ step: 'input' });
     }
   };
@@ -132,11 +145,7 @@ export default function AddSolutionFlow({
         />
       )}
 
-      {flowState.step === 'similar' && flowState.data.similarStatements.length === 0 && (
-        <EnhancedLoader />
-      )}
-
-      {flowState.step === 'similar' && flowState.data.similarStatements.length > 0 && (
+      {flowState.step === 'similar' && (
         <SimilarSolutions
           userSuggestion={userInput}
           similarSolutions={flowState.data.similarStatements}

@@ -67,7 +67,9 @@ export default function EnhancedLoader({ onCancel }: EnhancedLoaderProps) {
   const [progress, setProgress] = useState(0);
   const [elapsedTime, setElapsedTime] = useState(0);
 
-  const currentStage = STAGES[currentStageIndex];
+  // Ensure stage index is always valid
+  const safeStageIndex = Math.min(currentStageIndex, STAGES.length - 1);
+  const currentStage = STAGES[safeStageIndex];
 
   useEffect(() => {
     // Update elapsed time every second
@@ -75,11 +77,18 @@ export default function EnhancedLoader({ onCancel }: EnhancedLoaderProps) {
       setElapsedTime((prev) => prev + 1);
     }, 1000);
 
+    return () => {
+      clearInterval(timeInterval);
+    };
+  }, []);
+
+  useEffect(() => {
     // Progress animation within current stage
     const progressInterval = setInterval(() => {
+      const stage = STAGES[safeStageIndex];
+
       setProgress((prev) => {
         const newProgress = prev + 0.5; // Increment by 0.5% every 150ms
-        const stage = STAGES[currentStageIndex];
 
         // Cap at 100%
         if (newProgress >= 100) {
@@ -87,9 +96,11 @@ export default function EnhancedLoader({ onCancel }: EnhancedLoaderProps) {
         }
 
         // Check if we should move to next stage
-        if (newProgress >= stage.progressEnd && currentStageIndex < STAGES.length - 1) {
-          // Schedule stage transition for next tick to avoid setState during render
-          setTimeout(() => setCurrentStageIndex((idx) => idx + 1), 0);
+        if (newProgress >= stage.progressEnd && safeStageIndex < STAGES.length - 1) {
+          // Schedule stage transition separately
+          queueMicrotask(() => {
+            setCurrentStageIndex((idx) => Math.min(idx + 1, STAGES.length - 1));
+          });
           return stage.progressEnd;
         }
 
@@ -98,10 +109,9 @@ export default function EnhancedLoader({ onCancel }: EnhancedLoaderProps) {
     }, 150);
 
     return () => {
-      clearInterval(timeInterval);
       clearInterval(progressInterval);
     };
-  }, [currentStageIndex]);
+  }, [safeStageIndex]);
 
   const showCancelButton = elapsedTime > 30;
 
@@ -110,7 +120,7 @@ export default function EnhancedLoader({ onCancel }: EnhancedLoaderProps) {
       <div className={styles.container}>
         {/* Animated Icon */}
         <div className={styles.iconContainer}>
-          <div className={styles.icon} key={currentStageIndex}>
+          <div className={styles.icon} key={safeStageIndex}>
             {currentStage.icon}
           </div>
         </div>
@@ -157,8 +167,8 @@ export default function EnhancedLoader({ onCancel }: EnhancedLoaderProps) {
               <div className={styles.stageIcon}>{stage.icon}</div>
               <div
                 className={`${styles.stageDot} ${
-                  index === currentStageIndex ? styles.active : ''
-                } ${index < currentStageIndex ? styles.completed : ''}`}
+                  index === safeStageIndex ? styles.active : ''
+                } ${index < safeStageIndex ? styles.completed : ''}`}
               />
             </div>
           ))}
