@@ -16,47 +16,120 @@ A high-performance Next.js application for crowdsourced solution discussions, op
 ## 📋 Prerequisites
 
 - Node.js 18+
-- Firebase project with Firestore
-- Google Gemini API key (for AI feedback feature)
+- Firebase project with Firestore (or use the included emulator for development)
+- Google Gemini API key (optional - only for AI feedback feature)
 - Existing Freedi app data model (uses delib-npm types)
 
-## 🛠️ Installation
+## 🚀 Quick Start
 
-1. **Install dependencies:**
-   ```bash
-   cd apps/discuss
-   npm install
-   ```
+**Get up and running in 3 steps:**
 
-2. **Set up environment variables:**
-   ```bash
-   cp .env.example .env
-   ```
+```bash
+# 1. Install dependencies
+cd apps/mass-consensus
+npm install
 
-   Edit `.env` with your credentials:
+# 2. Set up environment
+cp .env.example .env
+
+# 3. Start the app
+npm run dev
+```
+
+Open [http://localhost:3001](http://localhost:3001) - that's it!
+
+The app is pre-configured to work with the Firebase emulator. Just make sure the emulator is running in the main project directory.
+
+## 🛠️ Installation (Detailed)
+
+### 1. Install Dependencies
+
+```bash
+cd apps/mass-consensus
+npm install
+```
+
+### 2. Set Up Environment Variables
+
+```bash
+cp .env.example .env
+```
+
+The `.env.example` file comes with sensible defaults for development.
+
+#### Option A: Development with Firebase Emulator (Recommended)
+
+The `.env.example` is pre-configured for the emulator. No changes needed!
+
+**Just ensure the Firebase emulator is running:**
+
+```bash
+# From the main project directory (Freedi-app/)
+firebase emulators:start
+```
+
+**Configuration (already set in .env.example):**
+- Firestore emulator: `localhost:8081`
+- Project: `freedi-test`
+- All public Firebase config included
+
+#### Option B: Production / Custom Firebase Project
+
+If you want to use a production Firebase project or your own test project:
+
+1. Open `.env` in your editor
+2. **Comment out** the emulator settings:
    ```env
-   # Firebase Admin (Server-side)
-   FIREBASE_PROJECT_ID=your-project-id
-   FIREBASE_CLIENT_EMAIL=your-service-account-email
-   FIREBASE_PRIVATE_KEY="your-private-key"
-
-   # Gemini API
-   GEMINI_API_KEY=your-gemini-api-key
-
-   # App URLs
-   NEXT_PUBLIC_APP_URL=http://localhost:3001
-   NEXT_PUBLIC_MAIN_APP_URL=https://freedi.app
+   # USE_FIREBASE_EMULATOR=true
+   # FIRESTORE_EMULATOR_HOST=localhost:8081
+   # FIREBASE_PROJECT_ID=freedi-test
    ```
 
-3. **Update Firebase rules (if needed):**
-
-   Ensure your Firestore has a `randomSeed` field on statements for efficient random sampling:
-   ```javascript
-   // Add to existing statements
-   statements.where('statementType', '==', 'option').forEach(doc => {
-     doc.ref.update({ randomSeed: Math.random() });
-   });
+3. **Uncomment and configure** the production section:
+   ```env
+   FIREBASE_PROJECT_ID=your-production-project-id
+   FIREBASE_CLIENT_EMAIL=firebase-adminsdk-xxxxx@your-project-id.iam.gserviceaccount.com
+   FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...your-key...\n-----END PRIVATE KEY-----\n"
    ```
+
+4. **Get your Firebase Admin credentials:**
+   - Go to [Firebase Console](https://console.firebase.google.com/)
+   - Select your project > ⚙️ Settings > Service Accounts
+   - Click "Generate new private key"
+   - Copy values from the downloaded JSON file to your `.env`
+
+5. **Update public Firebase config** (if using a different project):
+   - Replace the `NEXT_PUBLIC_FIREBASE_*` values with your project's config
+   - Get from: Firebase Console > Project Settings > Your apps > Web app
+
+6. **(Optional) Add Gemini API key** for AI feedback:
+   ```env
+   GEMINI_API_KEY=your-gemini-api-key-here
+   ```
+   - Get from: [Google AI Studio](https://makersuite.google.com/app/apikey)
+
+**See `.env.example` for detailed comments and instructions.**
+
+### 3. Start Development Server
+
+```bash
+npm run dev
+```
+
+Open [http://localhost:3001](http://localhost:3001)
+
+### 4. Database Setup (Optional)
+
+If you're using an existing Firestore database, ensure statements have a `randomSeed` field for efficient random sampling:
+
+```javascript
+// Add to existing statements (run in Firebase Console or via script)
+statements.where('statementType', '==', 'option').forEach(doc => {
+  doc.ref.update({ randomSeed: Math.random() });
+});
+```
+
+**Note:** New statements created through the app will automatically include this field.
 
 ## 🚀 Development
 

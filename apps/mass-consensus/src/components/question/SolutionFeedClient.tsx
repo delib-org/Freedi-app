@@ -3,8 +3,9 @@
 import { useState, useEffect } from 'react';
 import { Statement } from 'delib-npm';
 import { getOrCreateAnonymousUser } from '@/lib/utils/user';
+import { ToastProvider } from '@/components/shared/Toast';
 import SolutionCard from './SolutionCard';
-import AddSolutionForm from './AddSolutionForm';
+import AddSolutionFlow from './AddSolutionFlow';
 import styles from './SolutionFeed.module.css';
 
 interface SolutionFeedClientProps {
@@ -164,15 +165,40 @@ return newSet;
   };
 
   /**
-   * Handle new solution submission
+   * Handle solution flow completion
+   * Refresh the feed to show new/updated solutions
    */
-  const handleSolutionSubmitted = (newSolution: Statement) => {
-    // Could add to current batch or show success message
-    console.info('New solution submitted:', newSolution.statementId);
+  const handleSolutionComplete = async () => {
+    // Fetch a new batch to show the latest solutions
+    setIsLoadingBatch(true);
+    try {
+      const response = await fetch(`/api/statements/${questionId}/batch`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId,
+          excludeIds: Array.from(allEvaluatedIds),
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.solutions && data.solutions.length > 0) {
+          setSolutions(data.solutions);
+          setEvaluatedIds(new Set());
+          setBatchCount((prev) => prev + 1);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to refresh after submission:', error);
+    } finally {
+      setIsLoadingBatch(false);
+    }
   };
 
   return (
-    <div className={styles.feed}>
+    <ToastProvider>
+      <div className={styles.feed}>
       {/* Batch indicator */}
       {batchCount > 1 && (
         <div className={styles.batchIndicator}>
@@ -246,12 +272,13 @@ return newSet;
         )}
       </div>
 
-      {/* Add solution form */}
-      <AddSolutionForm
-        questionId={questionId}
-        userId={userId}
-        onSubmit={handleSolutionSubmitted}
-      />
-    </div>
+        {/* Add solution flow with similar detection */}
+        <AddSolutionFlow
+          questionId={questionId}
+          userId={userId}
+          onComplete={handleSolutionComplete}
+        />
+      </div>
+    </ToastProvider>
   );
 }

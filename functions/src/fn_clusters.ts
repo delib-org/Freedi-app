@@ -135,6 +135,7 @@ export async function getCluster(req: Request, res: Response) {
 				creator: topic.creator,
 				creatorId: topic.creatorId,
 				consensus: 0,
+				randomSeed: Math.random(),
 				lastUpdate: new Date().getTime(),
 			}
 			batch.set(groupRef, newStatement);
