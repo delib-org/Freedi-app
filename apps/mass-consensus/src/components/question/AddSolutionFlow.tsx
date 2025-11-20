@@ -4,6 +4,7 @@ import { useState } from 'react';
 import type { FlowState, SimilarCheckResponse } from '@/types/api';
 import { logError, NetworkError, ValidationError } from '@/lib/utils/errorHandling';
 import { ERROR_MESSAGES } from '@/constants/common';
+import { useToast } from '@/components/shared/Toast';
 import AddSolutionForm from './AddSolutionForm';
 import EnhancedLoader from './EnhancedLoader';
 import SimilarSolutions from './SimilarSolutions';
@@ -25,13 +26,16 @@ export default function AddSolutionFlow({
 }: AddSolutionFlowProps) {
   const [flowState, setFlowState] = useState<FlowState>({ step: 'input' });
   const [userInput, setUserInput] = useState('');
+  const { showToast } = useToast();
 
   // Step 1: Check for similar solutions via API proxy (avoids CORS)
   const handleCheckSimilar = async (solutionText: string) => {
     // Validate inputs before making request
     if (!solutionText || !userId) {
-      // TODO: Replace alert with Toast component
-      alert(ERROR_MESSAGES.MISSING_INPUT);
+      showToast({
+        type: 'error',
+        message: ERROR_MESSAGES.MISSING_INPUT,
+      });
       return;
     }
 
@@ -58,8 +62,11 @@ export default function AddSolutionFlow({
         if (response.status === 400) {
           // Inappropriate content or validation error
           const errorMessage = data.error || ERROR_MESSAGES.INAPPROPRIATE_CONTENT;
-          // TODO: Replace alert with Toast component
-          alert(errorMessage);
+          showToast({
+            type: 'error',
+            title: 'Invalid Content',
+            message: errorMessage,
+          });
           setFlowState({ step: 'input' });
 
           logError(new ValidationError(errorMessage), {
@@ -74,8 +81,11 @@ export default function AddSolutionFlow({
         if (response.status === 403) {
           // Limit reached
           const errorMessage = data.error || ERROR_MESSAGES.LIMIT_REACHED;
-          // TODO: Replace alert with Toast component
-          alert(errorMessage);
+          showToast({
+            type: 'warning',
+            title: 'Limit Reached',
+            message: errorMessage,
+          });
           setFlowState({ step: 'input' });
 
           logError(new ValidationError(errorMessage), {
@@ -111,8 +121,11 @@ export default function AddSolutionFlow({
       });
 
       // On error, reset to input form
-      // TODO: Replace alert with Toast component
-      alert(ERROR_MESSAGES.CHECK_SIMILAR_FAILED);
+      showToast({
+        type: 'error',
+        title: 'Check Failed',
+        message: ERROR_MESSAGES.CHECK_SIMILAR_FAILED,
+      });
       setFlowState({ step: 'input' });
     }
   };
@@ -158,10 +171,13 @@ export default function AddSolutionFlow({
         metadata: { solutionTextLength: userInput.length },
       });
 
-      // TODO: Replace alert with Toast component
       const errorMessage =
         error instanceof Error ? error.message : ERROR_MESSAGES.SUBMIT_FAILED;
-      alert(errorMessage);
+      showToast({
+        type: 'error',
+        title: 'Submission Failed',
+        message: errorMessage,
+      });
       setFlowState({ step: 'input' });
     }
   };

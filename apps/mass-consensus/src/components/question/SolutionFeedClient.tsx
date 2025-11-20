@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Statement } from 'delib-npm';
 import { getOrCreateAnonymousUser } from '@/lib/utils/user';
+import { ToastProvider } from '@/components/shared/Toast';
 import SolutionCard from './SolutionCard';
 import AddSolutionFlow from './AddSolutionFlow';
 import styles from './SolutionFeed.module.css';
@@ -196,7 +197,8 @@ return newSet;
   };
 
   return (
-    <div className={styles.feed}>
+    <ToastProvider>
+      <div className={styles.feed}>
       {/* Batch indicator */}
       {batchCount > 1 && (
         <div className={styles.batchIndicator}>
@@ -270,12 +272,13 @@ return newSet;
         )}
       </div>
 
-      {/* Add solution flow with similar detection */}
-      <AddSolutionFlow
-        questionId={questionId}
-        userId={userId}
-        onComplete={handleSolutionComplete}
-      />
-    </div>
+        {/* Add solution flow with similar detection */}
+        <AddSolutionFlow
+          questionId={questionId}
+          userId={userId}
+          onComplete={handleSolutionComplete}
+        />
+      </div>
+    </ToastProvider>
   );
 }
