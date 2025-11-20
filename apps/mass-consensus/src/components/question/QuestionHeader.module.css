@@ -1,15 +1,16 @@
 .header {
-  margin-bottom: var(--spacing-xl);
+  margin-bottom: var(--spacing-2xl);
   padding-bottom: var(--spacing-lg);
-  border-bottom: 2px solid var(--btn-secondary);
+  border-bottom: 1px solid #e5e7eb;
 }
 
 .title {
-  font-size: 2rem;
+  font-size: 1.75rem;
   margin-bottom: var(--spacing-md);
-  color: var(--text-body);
-  font-weight: 600;
+  color: var(--text-primary);
+  font-weight: 700;
   line-height: 1.3;
+  letter-spacing: -0.02em;
 }
 
 .description {

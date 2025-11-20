@@ -1,20 +1,38 @@
 .card {
   background: var(--card-default);
-  border: 1px solid #e0e0e0;
-  border-radius: 12px;
+  border: none;
+  border-radius: var(--radius-lg);
   padding: var(--spacing-lg);
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
   position: relative;
+  box-shadow: var(--shadow-sm);
 }
 
 .card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-4px);
+}
+
+/* Colorful card variants - cycles through colors */
+.card:nth-child(4n+1) {
+  background: var(--card-blue);
+}
+
+.card:nth-child(4n+2) {
+  background: var(--card-orange);
+}
+
+.card:nth-child(4n+3) {
+  background: var(--card-pink);
+}
+
+.card:nth-child(4n) {
+  background: var(--card-purple);
 }
 
 .card.evaluated {
-  background: #f5f5f5;
-  border-color: var(--agree);
+  background: var(--card-green);
+  box-shadow: var(--shadow-sm);
 }
 
 .text {
@@ -48,10 +66,11 @@
   right: var(--spacing-md);
   background: var(--agree);
   color: white;
-  padding: var(--spacing-xs) var(--spacing-sm);
-  border-radius: 12px;
+  padding: var(--spacing-xs) var(--spacing-md);
+  border-radius: var(--radius-full);
   font-size: 0.75rem;
-  font-weight: 500;
+  font-weight: 600;
+  box-shadow: var(--shadow-sm);
 }
 
 @media (max-width: 768px) {
