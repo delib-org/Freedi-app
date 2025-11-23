@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Statement } from 'delib-npm';
 import { getOrCreateAnonymousUser } from '@/lib/utils/user';
 import { ToastProvider } from '@/components/shared/Toast';
 import SolutionCard from './SolutionCard';
 import AddSolutionFlow from './AddSolutionFlow';
+import SolutionPromptModal from './SolutionPromptModal';
 import styles from './SolutionFeed.module.css';
 
 interface SolutionFeedClientProps {
@@ -30,9 +31,39 @@ export default function SolutionFeedClient({
   const [batchCount, setBatchCount] = useState(1);
   const [error, setError] = useState<string | null>(null);
   const [allOptionsEvaluated, setAllOptionsEvaluated] = useState(false);
+  const [showSolutionPrompt, setShowSolutionPrompt] = useState(false);
+  const [hasCheckedUserSolutions, setHasCheckedUserSolutions] = useState(false);
+
+  const addSolutionRef = useRef<HTMLDivElement>(null);
 
   const questionId = question.statementId;
   const totalOptionsCount = question.numberOfOptions || 0;
+  // Type assertion needed as this property may not be in older delib-npm types
+  const questionSettings = question.questionSettings as { askUserForASolutionBeforeEvaluation?: boolean } | undefined;
+  const requiresSolution = questionSettings?.askUserForASolutionBeforeEvaluation || false;
+
+  // Check if user has submitted solutions (for "require solution first" feature)
+  useEffect(() => {
+    if (!userId || !requiresSolution || hasCheckedUserSolutions) return;
+
+    const checkUserSolutions = async () => {
+      try {
+        const response = await fetch(`/api/user-solutions/${questionId}?userId=${userId}`);
+        if (response.ok) {
+          const data = await response.json();
+          if (!data.hasSubmitted) {
+            setShowSolutionPrompt(true);
+          }
+        }
+        setHasCheckedUserSolutions(true);
+      } catch (error) {
+        console.error('Failed to check user solutions:', error);
+        setHasCheckedUserSolutions(true);
+      }
+    };
+
+    checkUserSolutions();
+  }, [userId, questionId, requiresSolution, hasCheckedUserSolutions]);
 
   // Initialize user ID and load evaluation history on mount
   useEffect(() => {
@@ -165,6 +196,13 @@ return newSet;
   };
 
   /**
+   * Scroll to the add solution section
+   */
+  const handleScrollToAddSolution = () => {
+    addSolutionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  };
+
+  /**
    * Handle solution flow completion
    * Refresh the feed to show new/updated solutions
    */
@@ -273,10 +311,19 @@ return newSet;
       </div>
 
         {/* Add solution flow with similar detection */}
-        <AddSolutionFlow
-          questionId={questionId}
-          userId={userId}
-          onComplete={handleSolutionComplete}
+        <div ref={addSolutionRef}>
+          <AddSolutionFlow
+            questionId={questionId}
+            userId={userId}
+            onComplete={handleSolutionComplete}
+          />
+        </div>
+
+        {/* Solution prompt modal */}
+        <SolutionPromptModal
+          isOpen={showSolutionPrompt}
+          onClose={() => setShowSolutionPrompt(false)}
+          onScrollToAdd={handleScrollToAddSolution}
         />
       </div>
     </ToastProvider>

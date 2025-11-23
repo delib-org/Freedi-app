@@ -13,6 +13,8 @@ import Button from '@/view/components/buttons/button/Button';
 import Modal from '@/view/components/modal/Modal';
 import Toast from '@/view/components/toast/Toast';
 import { QuestionStep, StatementType, Statement } from 'delib-npm';
+import { useEvaluationGuard } from '@/controllers/hooks/useEvaluationGuard';
+import AddSolutionPrompt from '@/view/components/evaluation/AddSolutionPrompt';
 
 interface StatementEvaluationPageProps {
 	statement: Statement;
@@ -30,6 +32,7 @@ const StatementEvaluationPage: FC<StatementEvaluationPageProps> = ({
 	const navigate = useNavigate();
 	const { t } = useTranslation();
 	const isMultiStage = false;
+	const { canEvaluate, requiresSolution } = useEvaluationGuard(statement);
 
 	const currentStep = statement.questionSettings?.currentStep;
 	const useSearchForSimilarStatements =
@@ -41,12 +44,20 @@ const StatementEvaluationPage: FC<StatementEvaluationPageProps> = ({
 	const [showExplanation, setShowExplanation] = useState<boolean>(
 		currentStep === QuestionStep.explanation && isMultiStage && !questions
 	);
+	const [showSolutionPrompt, setShowSolutionPrompt] = useState(false);
 
 	useEffect(() => {
 		if (questions) {
 			setShowToast(false);
 		}
 	}, [questions]);
+
+	// Show solution prompt on page load if required and user hasn't submitted
+	useEffect(() => {
+		if (requiresSolution && !canEvaluate) {
+			setShowSolutionPrompt(true);
+		}
+	}, [requiresSolution, canEvaluate]);
 
 	useEffect(() => {
 		if (!showToast && !questions) {
@@ -106,6 +117,11 @@ const StatementEvaluationPage: FC<StatementEvaluationPageProps> = ({
 						useSimilarStatements={useSearchForSimilarStatements}
 					/>
 				)}
+				<AddSolutionPrompt
+					show={showSolutionPrompt}
+					onClose={() => setShowSolutionPrompt(false)}
+					statement={statement}
+				/>
 			</>
 		);
 
