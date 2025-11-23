@@ -12,6 +12,7 @@ import VotingIcon from '@/assets/icons/votingIcon.svg?react';
 import ClusterIcon from '@/assets/icons/networkIcon.svg?react';
 import AnchorIcon from '@/assets/icons/anchor.svg?react';
 import UsersIcon from '@/assets/icons/users20px.svg?react';
+import ShareIcon from '@/assets/icons/shareIcon.svg?react';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import MultiSwitch from '@/view/components/switch/multiSwitch/MultiSwitch';
 import { setEvaluationUIType, setAnchoredEvaluationSettings } from '@/controllers/db/evaluation/setEvaluation';
@@ -44,7 +45,20 @@ const QuestionSettings: FC<StatementSettingsProps> = ({
 	const [iconError, setIconError] = useState(false);
 	const [isDragging, setIsDragging] = useState(false);
 	const [uploadProgress, setUploadProgress] = useState<string>('');
+	const [linkCopied, setLinkCopied] = useState(false);
 	const fileInputRef = useRef<HTMLInputElement>(null);
+
+	const questionLink = `${window.location.origin}/q/${statement.statementId}`;
+
+	const handleCopyLink = async () => {
+		try {
+			await navigator.clipboard.writeText(questionLink);
+			setLinkCopied(true);
+			setTimeout(() => setLinkCopied(false), 2000);
+		} catch (error) {
+			console.error('Failed to copy link:', error);
+		}
+	};
 
 	try {
 		const { questionSettings } = statement;
@@ -259,6 +273,26 @@ const QuestionSettings: FC<StatementSettingsProps> = ({
 				/>
 				{isVoting && <VotingSettings />}
 				<SectionTitle title={t('Question Settings')} />
+
+				<div className={styles.questionLink}>
+					<label>{t('Question Link')}</label>
+					<div className={styles.questionLink__container}>
+						<input
+							type="text"
+							value={questionLink}
+							readOnly
+							className={styles.questionLink__input}
+						/>
+						<button
+							type="button"
+							onClick={handleCopyLink}
+							className={styles.questionLink__button}
+						>
+							<ShareIcon />
+							<span>{linkCopied ? t('Copied!') : t('Copy Link')}</span>
+						</button>
+					</div>
+				</div>
 
 				<CustomSwitchSmall
 					label={t('Question Type')}
