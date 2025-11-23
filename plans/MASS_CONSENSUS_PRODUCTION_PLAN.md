@@ -306,6 +306,128 @@ apps/mass-consensus/src/components/question/SolutionFeedClient.tsx
 
 ---
 
+## 2.8 Public Results Page
+
+### Overview
+Create a public-facing results page showing the consensus outcomes for a question.
+
+### Tasks
+
+#### 2.8.1 Results Page Design
+- [ ] Show question title and description
+- [ ] Display top solutions ranked by consensus score
+- [ ] Show participant statistics (total participants, total evaluations)
+- [ ] Visual representation (bar charts, progress bars)
+- [ ] Responsive design for mobile
+
+#### 2.8.2 Results Page Features
+- [ ] Sort options: By consensus, By evaluations, Most recent
+- [ ] Filter: Show all vs Top 10
+- [ ] Share button (copy link, social share)
+- [ ] Export results (CSV, PDF)
+
+#### 2.8.3 Implementation
+```
+Route: /q/[statementId]/results
+Components:
+- ResultsHeader.tsx - Question info + stats
+- ResultsChart.tsx - Visual representation
+- ResultsList.tsx - Ranked solutions list
+- ShareResults.tsx - Share/export options
+```
+
+#### 2.8.4 Relevant Files
+```
+apps/mass-consensus/app/q/[statementId]/results/page.tsx (exists - needs enhancement)
+apps/mass-consensus/src/components/results/ResultsList.tsx (exists - needs enhancement)
+apps/mass-consensus/src/components/results/ResultsChart.tsx (new)
+apps/mass-consensus/src/components/results/ShareResults.tsx (new)
+```
+
+---
+
+## 2.9 Admin Results Notification System
+
+### Overview
+Allow admins to send results to subscribed users with a personal note.
+
+### Data Model
+
+#### Email Subscriptions (Already Implemented)
+```typescript
+// Collection: resultSubscriptions
+interface ResultSubscription {
+  email: string;
+  statementId: string;
+  userId: string;
+  createdAt: number;
+  notified: boolean;  // Track if notification was sent
+  notifiedAt?: number;
+}
+```
+
+#### Results Notification
+```typescript
+// Collection: resultNotifications
+interface ResultNotification {
+  notificationId: string;
+  statementId: string;
+  adminId: string;
+  adminNote: string;      // Personal message from admin
+  resultsUrl: string;     // Link to results page
+  sentAt: number;
+  recipientCount: number; // How many emails sent
+}
+```
+
+### Tasks
+
+#### 2.9.1 Admin Panel UI
+- [ ] List of subscribed emails for a question
+- [ ] Text area for admin's personal note/message
+- [ ] Preview email before sending
+- [ ] Send button with confirmation
+- [ ] History of sent notifications
+
+#### 2.9.2 Email Sending
+- [ ] Cloud Function to send emails
+- [ ] Email template with:
+  - Admin's personal note
+  - Link to results page
+  - Summary of top solutions
+  - Unsubscribe link
+- [ ] Rate limiting to prevent spam
+- [ ] Track delivery status
+
+#### 2.9.3 API Routes
+```
+POST /api/admin/statements/[id]/notify
+  - Send results notification to all subscribers
+  - Body: { adminNote: string }
+
+GET /api/admin/statements/[id]/subscribers
+  - List all subscribed emails for a question
+
+GET /api/admin/statements/[id]/notifications
+  - History of sent notifications
+```
+
+#### 2.9.4 Implementation Files
+```
+apps/mass-consensus/app/api/admin/statements/[id]/notify/route.ts
+apps/mass-consensus/app/api/admin/statements/[id]/subscribers/route.ts
+apps/mass-consensus/src/components/admin/NotifySubscribersPanel.tsx
+functions/src/fn_sendResultsNotification.ts (Cloud Function for email)
+```
+
+#### 2.9.5 Email Service Integration
+- [ ] Choose email provider (SendGrid, Mailgun, Firebase Extensions)
+- [ ] Configure email templates
+- [ ] Set up sender domain/email
+- [ ] Handle bounces and unsubscribes
+
+---
+
 ## 📋 Recommended Priority Order
 
 | Priority | Task | Status | Notes |
@@ -313,6 +435,8 @@ apps/mass-consensus/src/components/question/SolutionFeedClient.tsx
 | 1 | Enforce proposal submission before evaluation | ✅ Done | Critical for correct user experience |
 | 2 | Add Solution Modal with Similar Detection | ✅ Done | Modal with blur effect, check-similar flow, animations |
 | 2.5 | Post-Evaluation Completion Screen | ✅ Done | Badges, email subscription, celebration |
+| 2.8 | Public Results Page | Pending | Enhanced results display with charts |
+| 2.9 | Admin Results Notification | Pending | Send results to subscribers with note |
 | 3 | Tests and checks | Pending | Before deploy |
 | 4 | Deploy to Vercel | Pending | Test in real environment |
 | 5 | Set up Wizcol environment | Pending | Infrastructure |
