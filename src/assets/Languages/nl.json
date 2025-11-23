@@ -651,5 +651,11 @@
   "votes": "stemmen",
   "votes used": "stemmen gebruikt",
   "your@email.com": "jouw@email.com",
-  "العربية": "Arabisch"
+  "العربية": "Arabisch",
+  "Add Your Solution First": "Add Your Solution First",
+  "Not Required": "Not Required",
+  "Please submit your own solution before evaluating others.": "Please submit your own solution before evaluating others.",
+  "Require Solution Before Evaluation": "Require Solution Before Evaluation",
+  "Required": "Required",
+  "This helps ensure everyone contributes their ideas to the discussion.": "This helps ensure everyone contributes their ideas to the discussion."
 }
