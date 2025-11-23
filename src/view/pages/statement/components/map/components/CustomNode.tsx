@@ -8,7 +8,6 @@ import clsx from 'clsx';
 import EllipsisIcon from '@/assets/icons/ellipsisIcon.svg?react';
 import AddChildIcon from '@/assets/icons/addChildIcon.svg?react';
 import AddSiblingIcon from '@/assets/icons/addSiblingIcon.svg?react';
-import PlusIcon from '@/assets/icons/plusIcon.svg?react';
 // Statements functions
 import { updateStatementText } from '@/controllers/db/statements/setStatements';
 import { statementTitleToDisplay } from '@/controllers/general/helpers';
@@ -70,9 +69,6 @@ function CustomNode({ data }: NodeProps) {
 	useEffect(() => {
 		setLocalStatement(result.top);
 	}, [isVoted, isChosen, statementType]);
-
-	// State for tooltips
-	const [hoveredButton, setHoveredButton] = useState<string | null>(null);
 
 	// Create refs for the buttons that need scaling
 	const addChildRef = useRef<HTMLButtonElement>(null);
@@ -288,11 +284,6 @@ function CustomNode({ data }: NodeProps) {
 					>
 						<EllipsisIcon />
 					</button>
-					{hoveredButton === 'menu' && (
-						<div className={clsx(styles.tooltip, styles.top, styles.visible)}>
-							More options
-						</div>
-					)}
 					{showMenu && (
 						<div
 							ref={menuContainerRef}

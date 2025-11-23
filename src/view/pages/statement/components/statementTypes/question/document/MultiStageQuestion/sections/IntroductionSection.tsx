@@ -3,6 +3,7 @@ import { Statement } from 'delib-npm';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import newOptionGraphic from '@/assets/images/newOptionGraphic.png';
 import InfoIcon from '@/assets/icons/InfoIcon.svg?react';
+import EditableDescription from '@/view/components/edit/EditableDescription';
 import styles from '../MultiStageQuestion.module.scss';
 
 interface IntroductionSectionProps {
@@ -30,7 +31,10 @@ export const IntroductionSection: FC<IntroductionSectionProps> = ({ statement })
         <h4>{t("Topic description")}</h4>
       </div>
       <div className={styles.subDescription}>
-        <h5>{statement.description}</h5>
+        <EditableDescription
+          statement={statement}
+          placeholder={t("Add a description...")}
+        />
       </div>
     </div>
   );

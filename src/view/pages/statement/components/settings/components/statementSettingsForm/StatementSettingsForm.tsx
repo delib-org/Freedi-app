@@ -7,7 +7,6 @@ import { useNavigate, useParams } from 'react-router';
 
 // Custom components
 import QuestionSettings from '../QuestionSettings/QuestionSettings';
-import AdvancedSettings from './../../components/advancedSettings/AdvancedSettings';
 import EnhancedAdvancedSettings from './../../components/advancedSettings/EnhancedAdvancedSettings';
 import ChoseBySettings from '../choseBy/ChoseBySettings';
 import GetEvaluators from './../../components/GetEvaluators';

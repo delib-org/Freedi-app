@@ -1,0 +1,223 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  animation: fadeInScale 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  &.newSolution {
+    background: linear-gradient(
+      135deg,
+      rgba(87, 198, 178, 0.95) 0%,
+      rgba(75, 171, 154, 0.95) 100%
+    );
+  }
+
+  &.evaluated {
+    background: linear-gradient(
+      135deg,
+      rgba(71, 180, 239, 0.95) 0%,
+      rgba(124, 172, 248, 0.95) 100%
+    );
+  }
+}
+
+.card {
+  background: white;
+  padding: 3rem 2rem;
+  border-radius: 20px;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  max-width: 400px;
+  width: 90%;
+  animation: cardPop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  @media (max-width: 768px) {
+    width: 95%;
+    padding: 2.5rem 1.5rem;
+  }
+}
+
+.iconContainer {
+  margin-bottom: 1rem;
+}
+
+.icon {
+  font-size: 5rem;
+  display: inline-block;
+  animation: successPop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  @media (max-width: 768px) {
+    font-size: 4rem;
+  }
+}
+
+.title {
+  font-size: 1.7rem;
+  color: #3d4d71;
+  margin: 1rem 0 0.5rem 0;
+  font-weight: 500;
+
+  @media (max-width: 768px) {
+    font-size: 1.5rem;
+  }
+}
+
+.message {
+  font-size: 1rem;
+  color: #5a6b8c;
+  line-height: 1.6;
+  margin: 0 0 1.5rem 0;
+
+  @media (max-width: 768px) {
+    font-size: 0.95rem;
+  }
+}
+
+.voteCounter {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, #47b4ef 0%, #7cacf8 100%);
+  border-radius: 24px;
+  margin: 1rem 0;
+  animation: counterPulse 0.8s ease-out;
+}
+
+.voteNumber {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: white;
+}
+
+.voteLabel {
+  font-size: 0.9rem;
+  color: white;
+}
+
+.solutionPreview {
+  margin: 1.5rem 0;
+  padding: 1rem;
+  background: rgba(95, 136, 229, 0.05);
+  border-radius: 12px;
+  border-left: 3px solid #7cacf8;
+}
+
+.solutionText {
+  font-size: 0.9rem;
+  color: #3d4d71;
+  font-style: italic;
+  line-height: 1.5;
+  margin: 0;
+  max-height: 100px;
+  overflow-y: auto;
+
+  @media (max-width: 768px) {
+    font-size: 0.85rem;
+  }
+}
+
+.continueButton {
+  width: 100%;
+  padding: 0.75rem 1.5rem;
+  background: #5f88e5;
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 1rem;
+
+  @media (max-width: 768px) {
+    min-height: 48px;
+  }
+
+  &:hover {
+    background: #7ca0f0;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(95, 136, 229, 0.3);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+.autoRedirect {
+  font-size: 0.85rem;
+  color: #93b6da;
+  margin: 1rem 0 0 0;
+}
+
+// Animations
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes cardPop {
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes successPop {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes counterPulse {
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+// Respect reduced motion
+@media (prefers-reduced-motion: reduce) {
+  .overlay,
+  .card,
+  .icon,
+  .voteCounter {
+    animation: none !important;
+  }
+
+  .continueButton:hover {
+    transform: none;
+  }
+}

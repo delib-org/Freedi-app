@@ -194,6 +194,7 @@ export const setStatementToDB = async ({
 
 		statement.consensus = 0;
 		statement.color = statement.color || getRandomColor(existingColors);
+		statement.randomSeed = statement.randomSeed ?? Math.random();
 
 		statement.statementType =
 			statement.statementType || StatementType.statement;
@@ -373,8 +374,6 @@ export function createStatement({
 			createdAt: Timestamp.now().toMillis(),
 			lastUpdate: Timestamp.now().toMillis(),
 			color: getRandomColor(existingColors),
-			// Add randomSeed for efficient random sampling
-			randomSeed: Math.random(),
 			resultsSettings: {
 				resultsBy: resultsBy || ResultsBy.consensus,
 				numberOfResults: Number(numberOfResults) || 1,
@@ -394,6 +393,7 @@ export function createStatement({
 				evaluationRandomNumber: Math.random(),
 				viewed: 0,
 			},
+			randomSeed: Math.random(),
 			results: [],
 		};
 
@@ -574,7 +574,10 @@ export async function updateStatementText(
 		if (description !== undefined && statement.description !== description) {
 			updates.description = description;
 		}
-		if (Object.keys(updates).length === 0) return;
+
+		if (Object.keys(updates).length === 0) {
+			return;
+		}
 
 		updates.lastUpdate = Timestamp.now().toMillis();
 

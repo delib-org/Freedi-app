@@ -1,0 +1,332 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(
+    135deg,
+    rgba(71, 180, 239, 0.95) 0%,
+    rgba(95, 136, 229, 0.95) 100%
+  );
+  z-index: 10000;
+  animation: fadeIn 0.3s ease-out;
+  overscroll-behavior: contain;
+}
+
+.container {
+  background: white;
+  padding: 3rem 2rem;
+  border-radius: 20px;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  max-width: 500px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+
+  @media (max-width: 768px) {
+    width: 95vw;
+    padding: 2rem 1.5rem;
+  }
+
+  @media (max-width: 375px) {
+    padding: 1.5rem 1rem;
+  }
+}
+
+.iconContainer {
+  margin-bottom: 1rem;
+}
+
+.icon {
+  font-size: 4rem;
+  display: inline-block;
+  animation: iconBounce 2s ease-in-out infinite;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.15));
+
+  @media (max-width: 768px) {
+    font-size: 3rem;
+  }
+}
+
+.dotsLoader {
+  display: flex;
+  gap: 0.75rem;
+  margin: 1rem auto;
+  justify-content: center;
+}
+
+.dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #5f88e5;
+  animation: dotPulse 1.5s ease-in-out infinite;
+
+  &:nth-child(2) {
+    animation-delay: 0.2s;
+  }
+
+  &:nth-child(3) {
+    animation-delay: 0.4s;
+  }
+}
+
+.progressBar {
+  width: 100%;
+  height: 6px;
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 3px;
+  overflow: hidden;
+  margin: 1.5rem 0 0.5rem;
+}
+
+.progressFill {
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    #5f88e5 0%,
+    #7ca0f0 50%,
+    #7cacf8 100%
+  );
+  border-radius: 3px;
+  transition: width 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  animation: progressGlow 2s ease-in-out infinite;
+  box-shadow: 0 0 10px rgba(95, 136, 229, 0.5);
+}
+
+.progressText {
+  font-size: 0.9rem;
+  color: #5a6b8c;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.mainMessage {
+  font-size: 1.3rem;
+  color: #3d4d71;
+  margin: 1rem 0 0.5rem;
+  font-weight: 500;
+
+  @media (max-width: 768px) {
+    font-size: 1.1rem;
+  }
+}
+
+.subMessage {
+  font-size: 0.95rem;
+  color: #5a6b8c;
+  margin: 0 0 0.5rem;
+  opacity: 0.9;
+}
+
+.durationInfo {
+  font-size: 0.85rem;
+  color: #93b6da;
+  margin: 0 0 1.5rem;
+}
+
+.tipContainer {
+  margin: 2rem 0;
+  padding: 1rem;
+  background: rgba(95, 136, 229, 0.05);
+  border-radius: 12px;
+  border-left: 3px solid #7cacf8;
+  animation: fadeInUp 0.5s ease-out;
+  text-align: left;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+
+  @media (max-width: 768px) {
+    padding: 0.75rem;
+    font-size: 0.85rem;
+  }
+
+  @media (max-width: 375px) {
+    font-size: 0.8rem;
+  }
+}
+
+.tipIcon {
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.tipText {
+  font-size: 0.9rem;
+  color: #3d4d71;
+  line-height: 1.4;
+  margin: 0;
+
+  strong {
+    color: #5f88e5;
+    font-weight: 600;
+  }
+}
+
+.stageIndicators {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+
+  @media (max-width: 768px) {
+    gap: 0.5rem;
+  }
+}
+
+.stageIndicator {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.stageIcon {
+  font-size: 1.2rem;
+  opacity: 0.3;
+  transition: opacity 0.3s ease;
+
+  @media (max-width: 768px) {
+    font-size: 1rem;
+  }
+}
+
+.stageDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+
+  &.active {
+    background: #5f88e5;
+    box-shadow: 0 0 0 3px rgba(95, 136, 229, 0.2);
+    transform: scale(1.2);
+
+    & + .stageIcon {
+      opacity: 1;
+    }
+  }
+
+  &.completed {
+    background: #57c6b2;
+  }
+}
+
+.stageIndicator:has(.active) .stageIcon,
+.stageIndicator:has(.completed) .stageIcon {
+  opacity: 1;
+}
+
+.cancelContainer {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+  animation: fadeIn 0.3s ease-out;
+}
+
+.takingLonger {
+  font-size: 0.9rem;
+  color: #5a6b8c;
+  margin-bottom: 1rem;
+}
+
+.cancelButton {
+  padding: 0.75rem 2rem;
+  background: transparent;
+  border: 2px solid #5f88e5;
+  border-radius: 8px;
+  color: #5f88e5;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+
+  &:hover {
+    background: #5f88e5;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(95, 136, 229, 0.3);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+// Animations
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes iconBounce {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-15px) scale(1.05);
+  }
+}
+
+@keyframes dotPulse {
+  0%,
+  100% {
+    opacity: 0.3;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+}
+
+@keyframes progressGlow {
+  0%,
+  100% {
+    box-shadow: 0 0 10px rgba(95, 136, 229, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(95, 136, 229, 0.6);
+  }
+}
+
+// Respect user's motion preferences
+@media (prefers-reduced-motion: reduce) {
+  .icon,
+  .dot,
+  .progressFill,
+  .tipContainer {
+    animation: none !important;
+  }
+
+  .stageIndicator:hover {
+    transform: none;
+  }
+
+  .cancelButton:hover {
+    transform: none;
+  }
+}

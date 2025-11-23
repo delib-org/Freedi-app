@@ -52,7 +52,8 @@ describe('Consensus Scoring Algorithm (Mean - SEM)', () => {
 	function oldCalcAgreement(sumEvaluations: number, numberOfEvaluators: number): number {
 		if (numberOfEvaluators === 0) return 0;
 		const mean = sumEvaluations / numberOfEvaluators;
-		return mean * Math.sqrt(numberOfEvaluators);
+		
+return mean * Math.sqrt(numberOfEvaluators);
 	}
 
 	/**

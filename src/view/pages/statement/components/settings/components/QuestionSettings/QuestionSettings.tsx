@@ -3,7 +3,7 @@ import React, { FC, useState, useRef } from 'react';
 import { StatementSettingsProps } from '../../settingsTypeHelpers';
 import SectionTitle from '../sectionTitle/SectionTitle';
 import styles from './QuestionSettings.module.scss';
-import { setQuestionTypeToDB } from '@/controllers/db/statementSettings/setStatementSettings';
+import { setQuestionTypeToDB, setStatementSettingToDB } from '@/controllers/db/statementSettings/setStatementSettings';
 import { EvaluationUI, QuestionType, StatementType } from 'delib-npm';
 import SimpleIcon from '@/assets/icons/navQuestionsIcon.svg?react';
 import ConsentIcon from '@/assets/icons/doubleCheckIcon.svg?react';
@@ -59,6 +59,15 @@ const QuestionSettings: FC<StatementSettingsProps> = ({
 				questionType: isDocument
 					? QuestionType.simple
 					: QuestionType.massConsensus,
+			});
+		}
+
+		function handleRequireSolutionToggle(enabled: boolean) {
+			setStatementSettingToDB({
+				statement,
+				property: 'askUserForASolutionBeforeEvaluation',
+				newValue: enabled,
+				settingsSection: 'questionSettings',
 			});
 		}
 
@@ -267,6 +276,18 @@ const QuestionSettings: FC<StatementSettingsProps> = ({
 
 				{isMassConsensus && (
 					<>
+						<CustomSwitchSmall
+							label={t('Require Solution Before Evaluation')}
+							checked={questionSettings?.askUserForASolutionBeforeEvaluation || false}
+							setChecked={handleRequireSolutionToggle}
+							textChecked={t('Required')}
+							textUnchecked={t('Not Required')}
+							imageChecked={<SuggestionsIcon />}
+							imageUnchecked={<SuggestionsIcon />}
+							colorChecked='var(--question)'
+							colorUnchecked='var(--question)'
+						/>
+
 						<h3 className='title'>{t('Anchored Sampling')}</h3>
 						<p>{t('Anchored sampling allows the admin to insert certain pre-defined options into the evaluation process. These options are prepared in advance and will always appear to participants, no matter what other options are being sampled.')}</p>
 						<CustomSwitchSmall

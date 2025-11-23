@@ -1,0 +1,90 @@
+.card {
+  background: var(--card-default);
+  border: none;
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+  transition: all 0.3s ease;
+  position: relative;
+  box-shadow: var(--shadow-sm);
+}
+
+.card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-4px);
+}
+
+/* Colorful card variants - cycles through colors */
+.card:nth-child(4n+1) {
+  background: var(--card-blue);
+}
+
+.card:nth-child(4n+2) {
+  background: var(--card-orange);
+}
+
+.card:nth-child(4n+3) {
+  background: var(--card-pink);
+}
+
+.card:nth-child(4n) {
+  background: var(--card-purple);
+}
+
+.card.evaluated {
+  background: var(--card-green);
+  box-shadow: var(--shadow-sm);
+}
+
+.text {
+  font-size: 1.125rem;
+  line-height: 1.6;
+  color: var(--text-body);
+  margin-bottom: var(--spacing-md);
+}
+
+.meta {
+  display: flex;
+  gap: var(--spacing-md);
+  align-items: center;
+  margin-bottom: var(--spacing-md);
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.consensus {
+  font-weight: 500;
+  color: var(--btn-primary);
+}
+
+.date {
+  color: var(--text-secondary);
+}
+
+.evaluatedBadge {
+  position: absolute;
+  top: var(--spacing-md);
+  right: var(--spacing-md);
+  background: var(--agree);
+  color: white;
+  padding: var(--spacing-xs) var(--spacing-md);
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  font-weight: 600;
+  box-shadow: var(--shadow-sm);
+}
+
+@media (max-width: 768px) {
+  .card {
+    padding: var(--spacing-md);
+  }
+
+  .text {
+    font-size: 1rem;
+  }
+
+  .meta {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-xs);
+  }
+}

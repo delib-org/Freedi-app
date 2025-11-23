@@ -214,7 +214,8 @@ async function updateParentForNewChild(statement: Statement): Promise<void> {
 		// Skip if parentId is 'top' since it's not a real document
 		if (parentId === 'top') {
 			logger.info('Skipping update for "top" parent - not a real document');
-			return;
+			
+return;
 		}
 
 		const parentRef = db.collection(Collections.statements).doc(parentId);
@@ -230,7 +231,8 @@ async function updateParentForNewChild(statement: Statement): Promise<void> {
 		// Convert to SimpleStatement array
 		const lastSubStatements: SimpleStatement[] = subStatementsQuery.docs.map(doc => {
 			const stmt = doc.data() as Statement;
-			return statementToSimpleStatement(stmt);
+			
+return statementToSimpleStatement(stmt);
 		});
 
 		const timestamp = Date.now();
@@ -283,7 +285,8 @@ async function updateParentSubscriptions(
 
 		if (subscriptionsQuery.empty) {
 			logger.info(`No subscriptions found for statement ${statementId}`);
-			return;
+			
+return;
 		}
 
 		if (subscriptionsQuery.size >= LIMIT) {
@@ -424,7 +427,8 @@ async function updateTopParentSubscriptions(topParentId: string): Promise<void> 
 		// Skip if topParentId is 'top' since it's not a real document
 		if (topParentId === 'top') {
 			logger.info('Skipping subscription update for "top" parent - not a real document');
-			return;
+			
+return;
 		}
 
 		const LIMIT = 500; // Safety limit to prevent runaway updates
@@ -437,7 +441,8 @@ async function updateTopParentSubscriptions(topParentId: string): Promise<void> 
 		const topParentDoc = await topParentRef.get();
 		if (!topParentDoc.exists) {
 			logger.warn(`Top-level statement ${topParentId} not found`);
-			return;
+			
+return;
 		}
 
 		const currentData = topParentDoc.data() as Statement;
@@ -446,7 +451,8 @@ async function updateTopParentSubscriptions(topParentId: string): Promise<void> 
 		// Skip if this was updated within the last second (prevents rapid cascading)
 		if (timestamp - lastUpdateTime < 1000) {
 			logger.info(`Skipping update for ${topParentId} - was recently updated`);
-			return;
+			
+return;
 		}
 
 		// Update the statement's lastUpdate field
@@ -464,7 +470,8 @@ async function updateTopParentSubscriptions(topParentId: string): Promise<void> 
 
 		if (subscriptionsQuery.empty) {
 			logger.info(`No subscriptions found for top-level statement ${topParentId}`);
-			return;
+			
+return;
 		}
 
 		if (subscriptionsQuery.size >= LIMIT) {

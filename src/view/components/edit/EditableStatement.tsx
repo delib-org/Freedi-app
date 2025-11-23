@@ -31,10 +31,10 @@ const EditableStatement: FC<EditableStatementProps> = ({
 	const handleSave = async (primary: string, secondary?: string) => {
 		try {
 			if (!statement) throw new Error('Statement is undefined');
-			
+
 			const title = variant === 'description' ? statement.statement : primary;
 			const description = variant === 'statement' ? statement.description : (secondary || '');
-			
+
 			await updateStatementText(statement, title, description);
 			onSaveSuccess?.();
 		} catch (error) {

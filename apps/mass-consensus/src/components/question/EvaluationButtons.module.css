@@ -1,0 +1,68 @@
+.buttons {
+  display: flex;
+  gap: var(--spacing-xs);
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: white;
+  border: 2px solid #e5e7eb;
+  border-radius: var(--radius-md);
+  min-width: 60px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+}
+
+.button:hover:not(.disabled) {
+  border-color: var(--btn-primary);
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
+}
+
+.button.selected {
+  border-color: var(--btn-primary);
+  background: var(--btn-primary);
+  color: white;
+  box-shadow: var(--shadow-md);
+}
+
+.button.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.emoji {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.score {
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.button.selected .score {
+  color: white;
+}
+
+@media (max-width: 768px) {
+  .button {
+    min-width: 50px;
+    padding: var(--spacing-xs) var(--spacing-sm);
+  }
+
+  .emoji {
+    font-size: 1.25rem;
+  }
+
+  .score {
+    font-size: 0.625rem;
+  }
+}

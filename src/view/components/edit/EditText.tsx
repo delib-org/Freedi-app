@@ -20,6 +20,7 @@ export interface EditTextProps {
 	secondaryPlaceholder?: string;
 	required?: boolean;
 	autoFocus?: boolean;
+	fontSize?: string;
 	onEditStart?: () => void;
 	onEditEnd?: () => void;
 }
@@ -41,6 +42,7 @@ const EditText: FC<EditTextProps> = ({
 	secondaryPlaceholder = 'Enter description',
 	required = false,
 	autoFocus = true,
+	fontSize,
 	onEditStart,
 	onEditEnd
 }) => {
@@ -87,10 +89,13 @@ const EditText: FC<EditTextProps> = ({
 
 	const handleStartEdit = () => {
 		if (!editable && !editing) return;
-		// Initialize raw text with current values
-		const initialText = secondaryValue 
-			? `${value}\n${secondaryValue}`
-			: value;
+		// Initialize raw text with current values based on variant
+		let initialText = value;
+		if (variant === 'description') {
+			initialText = secondaryValue;
+		} else if (variant === 'both' && secondaryValue) {
+			initialText = `${value}\n${secondaryValue}`;
+		}
 		setRawText(initialText);
 		setIsEditing(true);
 		onEditStart?.();
@@ -136,14 +141,20 @@ const EditText: FC<EditTextProps> = ({
 	const handleTextAreaChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
 		const value = e.target.value;
 		setRawText(value); // Keep the raw text with all newlines
-		
-		// Split for saving purposes
-		const lines = value.split('\n');
-		const firstLine = lines[0] || '';
-		const restLines = lines.slice(1).join('\n');
-		setPrimaryText(firstLine);
-		setSecondaryText(restLines);
-		
+
+		// Handle based on variant
+		if (variant === 'description') {
+			// For description variant, everything goes to secondaryText
+			setSecondaryText(value);
+		} else {
+			// Split for saving purposes (for 'both' variant)
+			const lines = value.split('\n');
+			const firstLine = lines[0] || '';
+			const restLines = lines.slice(1).join('\n');
+			setPrimaryText(firstLine);
+			setSecondaryText(restLines);
+		}
+
 		// Auto-resize the textarea
 		const textarea = e.target;
 		textarea.style.height = 'auto';
@@ -158,10 +169,10 @@ const EditText: FC<EditTextProps> = ({
 
 	if (!isEditing) {
 		const displayContent = (
-			<div 
+			<div
 				className={textClassName}
-				style={{ 
-					direction, 
+				style={{
+					direction,
 					textAlign: align,
 					cursor: editable && !editing ? 'pointer' : 'default'
 				}}
@@ -170,7 +181,13 @@ const EditText: FC<EditTextProps> = ({
 				tabIndex={editable && !editing ? 0 : undefined}
 				onKeyDown={editable && !editing ? (e) => e.key === 'Enter' && handleStartEdit() : undefined}
 			>
-				<Text statement={primaryText} description={secondaryText} />
+				{variant === 'description' ? (
+					<Text description={secondaryText} fontSize={fontSize} />
+				) : variant === 'statement' ? (
+					<Text statement={primaryText} fontSize={fontSize} />
+				) : (
+					<Text statement={primaryText} description={secondaryText} fontSize={fontSize} />
+				)}
 			</div>
 		);
 
@@ -183,12 +200,15 @@ const EditText: FC<EditTextProps> = ({
 				<textarea
 					ref={inputRef as React.RefObject<HTMLTextAreaElement>}
 					className={inputClassName}
-					style={{ 
-						direction, 
+					style={{
+						direction,
 						textAlign: align,
 						minHeight: '3rem',
 						overflow: 'hidden',
-						resize: 'none'
+						resize: 'none',
+						fontSize: fontSize || 'inherit',
+						width: '100%',
+						boxSizing: 'border-box'
 					}}
 					value={rawText}
 					onChange={handleTextAreaChange}
