@@ -35,6 +35,26 @@
   box-shadow: var(--shadow-sm);
 }
 
+.content {
+  margin-bottom: var(--spacing-md);
+}
+
+.title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--text-body);
+  margin: 0 0 var(--spacing-sm) 0;
+}
+
+.description {
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--text-secondary);
+  margin: 0;
+  white-space: pre-wrap;
+}
+
 .text {
   font-size: 1.125rem;
   line-height: 1.6;
@@ -76,6 +96,14 @@
 @media (max-width: 768px) {
   .card {
     padding: var(--spacing-md);
+  }
+
+  .title {
+    font-size: 1rem;
+  }
+
+  .description {
+    font-size: 0.9375rem;
   }
 
   .text {

@@ -370,6 +370,83 @@ export async function improveSuggestion(
 }
 
 /**
+ * Generates a concise title and description from user's solution text
+ * @param userInput - The full text input from the user
+ * @param questionContext - The question/topic the solution is responding to
+ * @returns Object containing generated title and description
+ */
+export async function generateTitleAndDescription(
+  userInput: string,
+  questionContext: string
+): Promise<{ title: string; description: string }> {
+  try {
+    const prompt = `
+      You are helping to structure a user's solution/idea submission.
+
+      Question/Topic: "${questionContext}"
+      User's input: "${userInput}"
+
+      Generate a concise title and a fuller description from the user's input.
+
+      Requirements:
+      1. Title: A short, clear summary (max 80 characters) that captures the main idea
+      2. Description: The full explanation, properly formatted (can be multi-line if needed)
+      3. Keep the same language as the user's input
+      4. Preserve the original meaning and intent
+      5. If the input is already short (under 80 chars), use it as the title and create a brief description
+      6. Make both title and description clear and well-structured
+
+      Return ONLY a JSON object with this format:
+      {
+        "title": "concise title here",
+        "description": "fuller description here"
+      }
+    `;
+
+    const model = await getGenerativeAIModel();
+    const result = await model.generateContent(prompt);
+    let responseText = result.response.text();
+
+    // Strip markdown code blocks if present
+    responseText = responseText.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
+
+    try {
+      const parsed = JSON.parse(responseText);
+
+      if (parsed.title && typeof parsed.title === "string") {
+        return {
+          title: parsed.title,
+          description: parsed.description || userInput,
+        };
+      }
+
+      // Fallback: use user input as both
+      logger.warn("AI returned invalid format, using fallback");
+
+      return {
+        title: userInput.length > 80 ? userInput.substring(0, 77) + "..." : userInput,
+        description: userInput,
+      };
+    } catch {
+      logger.error("Failed to parse AI response for title/description:", responseText);
+
+      return {
+        title: userInput.length > 80 ? userInput.substring(0, 77) + "..." : userInput,
+        description: userInput,
+      };
+    }
+  } catch (error) {
+    logger.error("Error generating title and description:", error);
+
+    // Fallback on error
+    return {
+      title: userInput.length > 80 ? userInput.substring(0, 77) + "..." : userInput,
+      description: userInput,
+    };
+  }
+}
+
+/**
  * Detects the language of the given text
  * @param text - Text to detect language for
  * @returns Language code (e.g., "en", "he", "es")

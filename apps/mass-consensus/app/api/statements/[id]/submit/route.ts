@@ -83,7 +83,7 @@ export async function POST(
 ) {
   try {
     const body = await request.json();
-    const { solutionText, userId: bodyUserId, userName, existingStatementId } = body;
+    const { solutionText, userId: bodyUserId, userName, existingStatementId, generatedTitle, generatedDescription } = body;
 
     // Get user ID
     const cookieUserId = getUserIdFromCookie(request.headers.get('cookie'));
@@ -183,9 +183,20 @@ export async function POST(
 
     const displayName = userName || getAnonymousDisplayName(userId);
 
+    // Use title and description from check-similar response if provided,
+    // otherwise fallback to the original text
+    let title = generatedTitle || trimmedText;
+    let description = generatedDescription || trimmedText;
+
+    // Fallback: create title from first 80 chars if text is long and no generated title
+    if (!generatedTitle && trimmedText.length > 80) {
+      title = trimmedText.substring(0, 77) + '...';
+    }
+
     const newSolution: Partial<Statement> = {
       statementId: statementRef.id,
-      statement: trimmedText,
+      statement: title,
+      description: description,
       statementType: StatementType.option,
       parentId: questionId,
       creatorId: userId,

@@ -44,37 +44,53 @@ src/view/pages/massConsensus/MassConsensusVM.ts
 
 ---
 
-## 2. 📍 Proposals Box - Fixed to Bottom ✅ COMPLETED
+## 2. 📍 Add Solution Modal with Similar Detection ✅ COMPLETED
 
 ### Current State
-- Current footer (`FooterMassConsensus.tsx`) uses `position: sticky`
-- Input box is located in `InitialQuestion.tsx`
+- Replaced fixed bottom input panel with a large "Add a Solution" button
+- Modal opens with full similar-solution detection flow
+- Background blur effect when modal is open
 
 ### Tasks
 
-#### 2.1 Design Input Box at Bottom
-- [x] Create new component or update `InitialQuestion.tsx`
-- [x] Move Textarea to bottom with `position: fixed`
-- [x] Add padding-bottom to content so it doesn't hide content
+#### 2.1 Solution Modal Implementation
+- [x] Create modal-based solution input instead of bottom panel
+- [x] Large "Add a Solution" button fixed at bottom of page
+- [x] Modal with check-similar API integration
+- [x] Shows similar solutions if found (user can choose existing or add new)
+- [x] Background blur effect (`backdrop-filter: blur(8px)`)
+- [x] Smooth animations (fade-in for overlay, slide-up for modal)
 
 #### 2.2 Textarea Auto-Grow Feature
-- [x] Textarea starts small (1 line)
+- [x] Textarea starts small (2 rows)
 - [x] Grows automatically as text is added
 - [x] Stops growing at 8 lines and enables scrolling
+- [x] Character count display (e.g., "67/500")
 
-#### 2.3 Implementation Details
-**Updated Files:**
-- `src/view/components/textarea/Textarea.tsx` - Added `minRows` and `maxRows` props for auto-grow with scroll
-- `src/view/components/textarea/Textarea.module.scss` - Added `--scrollable` modifier for overflow
-- `src/view/pages/massConsensus/massConsesusQuestion/initialQuestion/InitialQuestion.tsx` - Restructured with fixed bottom layout
-- `src/view/pages/massConsensus/massConsesusQuestion/initialQuestion/InitialQuestion.module.scss` - Added `.fixedInput` styles with shadow and proper positioning
+#### 2.3 Flow States
+The modal handles multiple states:
+1. **Input** - User types solution, sees character count, submit when valid
+2. **Submitting** - Shows loading indicator while checking for similar solutions
+3. **Similar** - Shows similar existing solutions, user can select one or use their own
+4. **Success** - Confirmation message, auto-closes modal
 
-#### 2.4 Relevant Files
+#### 2.4 Implementation Details
+**Updated Files (apps/mass-consensus):**
+- `src/components/question/SolutionPromptModal.tsx` - Full modal with check-similar flow
+- `src/components/question/SolutionPromptModal.module.css` - Modal content styles
+- `src/components/question/SolutionFeedClient.tsx` - Replaced AddSolutionFlow with button + modal
+- `src/components/question/SolutionFeed.module.css` - Button styles with fixed positioning
+- `src/components/shared/Modal.module.css` - Added blur effect and animations
+
+#### 2.5 Relevant Files
 ```
-src/view/pages/massConsensus/massConsesusQuestion/initialQuestion/InitialQuestion.tsx
-src/view/pages/massConsensus/massConsesusQuestion/initialQuestion/InitialQuestion.module.scss
-src/view/components/textarea/Textarea.tsx
-src/view/components/textarea/Textarea.module.scss
+apps/mass-consensus/src/components/question/SolutionPromptModal.tsx
+apps/mass-consensus/src/components/question/SolutionFeedClient.tsx
+apps/mass-consensus/src/components/question/SimilarSolutions.tsx
+apps/mass-consensus/src/components/question/EnhancedLoader.tsx
+apps/mass-consensus/src/components/question/SuccessMessage.tsx
+apps/mass-consensus/src/components/shared/Modal.tsx
+apps/mass-consensus/src/components/shared/Modal.module.css
 ```
 
 ---
@@ -234,7 +250,7 @@ delib-npm (Statement type if field needs to be added)
 | Priority | Task | Status | Notes |
 |----------|------|--------|-------|
 | 1 | Enforce proposal submission before evaluation | ✅ Done | Critical for correct user experience |
-| 2 | Fixed proposals box at bottom | ✅ Done | UX improvement - auto-grow textarea with scroll |
+| 2 | Add Solution Modal with Similar Detection | ✅ Done | Modal with blur effect, check-similar flow, animations |
 | 3 | Tests and checks | Pending | Before deploy |
 | 4 | Deploy to Vercel | Pending | Test in real environment |
 | 5 | Set up Wizcol environment | Pending | Infrastructure |

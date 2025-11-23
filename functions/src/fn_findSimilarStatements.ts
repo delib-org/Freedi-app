@@ -2,6 +2,7 @@ import { Request, Response } from "firebase-functions/v1";
 import { logger } from "firebase-functions";
 import {
   checkForInappropriateContent,
+  generateTitleAndDescription,
 } from "./services/ai-service";
 import {
   getUserStatements,
@@ -112,10 +113,33 @@ export async function findSimilarStatements(
       return;
     }
 
-    // Step 4: Cache the complete response for future requests
+    // Step 4: Generate title and description for the user's input
+    let generatedTitle = userInput;
+    let generatedDescription = userInput;
+
+    try {
+      const questionContext = result.parentStatementText || "";
+      const generated = await generateTitleAndDescription(userInput, questionContext);
+      generatedTitle = generated.title;
+      generatedDescription = generated.description;
+      logger.info("Generated title and description", {
+        titleLength: generatedTitle.length,
+        descriptionLength: generatedDescription.length,
+      });
+    } catch (genError) {
+      logger.warn("Failed to generate title/description, using original", { error: genError });
+      // Fallback: truncate for title if too long
+      if (userInput.length > 80) {
+        generatedTitle = userInput.substring(0, 77) + "...";
+      }
+    }
+
+    // Step 5: Cache the complete response for future requests
     const responseData = {
       similarStatements: result.cleanedStatements || [],
       userText: result.userText || userInput,
+      generatedTitle,
+      generatedDescription,
     };
 
     await saveCachedSimilarityResponse(
@@ -216,7 +240,8 @@ async function fetchDataAndProcess(
 
     return {
       cleanedStatements,
-      userText: duplicateStatement?.statement || userInput
+      userText: duplicateStatement?.statement || userInput,
+      parentStatementText: parentStatement.statement,
     };
   } catch (processingError) {
     logger.error("Error in fetchDataAndProcess:", processingError);

@@ -36,6 +36,7 @@ export default function SolutionPromptModal({
   const [text, setText] = useState('');
   const [flowState, setFlowState] = useState<FlowState>({ step: 'input' });
   const [error, setError] = useState<string | null>(null);
+  const [generatedTitleDesc, setGeneratedTitleDesc] = useState<{ title?: string; description?: string }>({});
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const characterCount = text.length;
@@ -49,6 +50,7 @@ export default function SolutionPromptModal({
       setText('');
       setFlowState({ step: 'input' });
       setError(null);
+      setGeneratedTitleDesc({});
     }
   }, [isOpen]);
 
@@ -114,11 +116,19 @@ export default function SolutionPromptModal({
 
       const data: SimilarCheckResponse = await response.json();
 
+      // Store generated title/description for later use
+      if (data.generatedTitle || data.generatedDescription) {
+        setGeneratedTitleDesc({
+          title: data.generatedTitle,
+          description: data.generatedDescription,
+        });
+      }
+
       if (data.similarStatements && data.similarStatements.length > 0) {
         setFlowState({ step: 'similar', data });
       } else {
-        // No similar solutions, proceed to submit
-        await handleSelectSolution(null, text);
+        // No similar solutions, proceed to submit with generated title/description
+        await handleSelectSolution(null, text, data.generatedTitle, data.generatedDescription);
       }
     } catch (err) {
       logError(err, {
@@ -132,9 +142,18 @@ export default function SolutionPromptModal({
   };
 
   // Step 2: Submit solution (new or existing)
-  const handleSelectSolution = async (statementId: string | null, solutionText?: string) => {
+  const handleSelectSolution = async (
+    statementId: string | null,
+    solutionText?: string,
+    genTitle?: string,
+    genDescription?: string
+  ) => {
     const textToSubmit = solutionText || text;
     setFlowState({ step: 'submitting' });
+
+    // Use passed values or stored values from check-similar response
+    const titleToUse = genTitle || generatedTitleDesc.title;
+    const descriptionToUse = genDescription || generatedTitleDesc.description;
 
     try {
       const response = await fetch(`/api/statements/${questionId}/submit`, {
@@ -144,6 +163,8 @@ export default function SolutionPromptModal({
           solutionText: textToSubmit,
           userId,
           existingStatementId: statementId,
+          generatedTitle: titleToUse,
+          generatedDescription: descriptionToUse,
         }),
       });
 
