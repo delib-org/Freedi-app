@@ -690,10 +690,10 @@
   "⭐ Top Suggestions": "⭐ הצעות מובילות",
   "🎲 Random Suggestions Stage": "🎲 שלב הצעות אקראיות",
   "🗳️ Final Vote": "🗳️ הצבעה סופית",
-  "Add Your Solution First": "Add Your Solution First",
-  "Not Required": "Not Required",
-  "Please submit your own solution before evaluating others.": "Please submit your own solution before evaluating others.",
-  "Require Solution Before Evaluation": "Require Solution Before Evaluation",
-  "Required": "Required",
-  "This helps ensure everyone contributes their ideas to the discussion.": "This helps ensure everyone contributes their ideas to the discussion."
+  "Add Your Solution First": "הוסף את הפתרון שלך קודם",
+  "Don't ask": "לא לבקש",
+  "Please submit your own solution before evaluating others.": "אנא הוסף את הפתרון שלך לפני הערכת פתרונות אחרים.",
+  "Request solution at start": "בקש פתרון בהתחלה",
+  "Ask first": "בקש קודם",
+  "This helps ensure everyone contributes their ideas to the discussion.": "זה מבטיח שכולם יתרמו את הרעיונות שלהם לדיון."
 }

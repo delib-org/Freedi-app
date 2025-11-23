@@ -277,11 +277,11 @@ const QuestionSettings: FC<StatementSettingsProps> = ({
 				{isMassConsensus && (
 					<>
 						<CustomSwitchSmall
-							label={t('Require Solution Before Evaluation')}
+							label={t('Request solution at start')}
 							checked={questionSettings?.askUserForASolutionBeforeEvaluation || false}
 							setChecked={handleRequireSolutionToggle}
-							textChecked={t('Required')}
-							textUnchecked={t('Not Required')}
+							textChecked={t('Request solution at start')}
+							textUnchecked={t("Don't ask")}
 							imageChecked={<SuggestionsIcon />}
 							imageUnchecked={<SuggestionsIcon />}
 							colorChecked='var(--question)'
