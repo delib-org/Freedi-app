@@ -1,7 +1,17 @@
-# Mass Consensus - Production Development Plan
+# WizCol.com - Mass Consensus Production Plan
+
+<div align="center">
+
+![WizCol](https://wizcol.com/logo.png)
+
+**WizCol.com** - Collective Intelligence Platform
+
+</div>
+
+---
 
 ## Overview
-תוכנית פיתוח להכנת Mass Consensus לפרודקשן.
+תוכנית פיתוח להכנת Mass Consensus לפרודקשן עבור פלטפורמת **WizCol.com**.
 
 ---
 
