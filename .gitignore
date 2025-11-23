@@ -6,6 +6,10 @@ firebase.json
 # Environment files (but not the example)
 .env*
 !.env.example
+
+# Centralized env directory (keep example and loader)
+env/.env.*
+!env/.env.example
 node_modules/
 dist/
 *.log

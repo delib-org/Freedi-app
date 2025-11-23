@@ -4,6 +4,11 @@
   "version": "5.4.0",
   "type": "module",
   "scripts": {
+    "env:dev": "node env/env-loader.js dev",
+    "env:test": "node env/env-loader.js test",
+    "env:prod": "node env/env-loader.js prod",
+    "env:wizcol": "node env/env-loader.js wizcol",
+    "deploy": "node env/deploy.js",
     "setup": "node scripts/setup-firebase.js",
     "setup:deps": "npm install && cd functions && npm install && cd ..",
     "setup:all": "npm run setup && npm run setup:deps",

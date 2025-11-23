@@ -1,0 +1,235 @@
+#!/usr/bin/env node
+
+/**
+ * Environment Loader Script
+ *
+ * Reads a centralized environment file and generates app-specific .env files
+ * for all apps in the monorepo.
+ *
+ * Usage:
+ *   node env/env-loader.js dev    # Load development environment
+ *   node env/env-loader.js prod   # Load production environment
+ *
+ * Or via npm scripts:
+ *   npm run env:dev
+ *   npm run env:prod
+ */
+
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Configuration
+const ROOT_DIR = path.join(__dirname, '..');
+const ENV_DIR = __dirname;
+
+const APPS = {
+  root: {
+    path: ROOT_DIR,
+    filename: '.env.local',
+    prefix: 'VITE_',
+    // Map generic vars to Vite-prefixed vars
+    mapping: {
+      'FIREBASE_API_KEY': 'VITE_FIREBASE_API_KEY',
+      'FIREBASE_AUTH_DOMAIN': 'VITE_FIREBASE_AUTH_DOMAIN',
+      'FIREBASE_DATABASE_URL': 'VITE_FIREBASE_DATABASE_URL',
+      'FIREBASE_PROJECT_ID': 'VITE_FIREBASE_PROJECT_ID',
+      'FIREBASE_STORAGE_BUCKET': 'VITE_FIREBASE_STORAGE_BUCKET',
+      'FIREBASE_MESSAGING_SENDER_ID': 'VITE_FIREBASE_MESSAGING_SENDER_ID',
+      'FIREBASE_APP_ID': 'VITE_FIREBASE_APP_ID',
+      'FIREBASE_MEASUREMENT_ID': 'VITE_FIREBASE_MEASUREMENT_ID',
+      'FIREBASE_VAPID_KEY': 'VITE_FIREBASE_VAPID_KEY',
+      'SENTRY_DSN': 'VITE_SENTRY_DSN',
+      'ENVIRONMENT': 'VITE_ENVIRONMENT',
+      'APP_VERSION': 'VITE_APP_VERSION',
+      'APP_AGREE_ENDPOINT': 'VITE_APP_AGREE_ENDPOINT',
+    },
+    // Additional static content to append
+    extra: `
+# Multi-environment keys for service worker (same as main config)
+VITE_FIREBASE_API_KEY_DEV=\${VITE_FIREBASE_API_KEY}
+VITE_FIREBASE_AUTH_DOMAIN_DEV=\${VITE_FIREBASE_AUTH_DOMAIN}
+VITE_FIREBASE_DATABASE_URL_DEV=\${VITE_FIREBASE_DATABASE_URL}
+VITE_FIREBASE_PROJECT_ID_DEV=\${VITE_FIREBASE_PROJECT_ID}
+VITE_FIREBASE_STORAGE_BUCKET_DEV=\${VITE_FIREBASE_STORAGE_BUCKET}
+VITE_FIREBASE_MESSAGING_SENDER_ID_DEV=\${VITE_FIREBASE_MESSAGING_SENDER_ID}
+VITE_FIREBASE_APP_ID_DEV=\${VITE_FIREBASE_APP_ID}
+VITE_FIREBASE_MEASUREMENT_ID_DEV=\${VITE_FIREBASE_MEASUREMENT_ID}
+`.trim()
+  },
+  massConsensus: {
+    path: path.join(ROOT_DIR, 'apps', 'mass-consensus'),
+    filename: '.env',
+    // Map generic vars to Next.js vars (using array for multiple outputs from same source)
+    mappings: [
+      // Server-side vars (no prefix)
+      ['FIREBASE_PROJECT_ID', 'FIREBASE_PROJECT_ID'],
+      ['FIREBASE_CLIENT_EMAIL', 'FIREBASE_CLIENT_EMAIL'],
+      ['FIREBASE_PRIVATE_KEY', 'FIREBASE_PRIVATE_KEY'],
+      ['USE_FIREBASE_EMULATOR', 'USE_FIREBASE_EMULATOR'],
+      ['FIRESTORE_EMULATOR_HOST', 'FIRESTORE_EMULATOR_HOST'],
+      ['GEMINI_API_KEY', 'GEMINI_API_KEY'],
+      ['CHECK_SIMILARITIES_ENDPOINT', 'CHECK_SIMILARITIES_ENDPOINT'],
+      // Client-side vars (NEXT_PUBLIC_ prefix)
+      ['FIREBASE_API_KEY', 'NEXT_PUBLIC_FIREBASE_API_KEY'],
+      ['FIREBASE_AUTH_DOMAIN', 'NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN'],
+      ['FIREBASE_PROJECT_ID', 'NEXT_PUBLIC_FIREBASE_PROJECT_ID'],
+      ['FIREBASE_STORAGE_BUCKET', 'NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET'],
+      ['FIREBASE_MESSAGING_SENDER_ID', 'NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID'],
+      ['FIREBASE_APP_ID', 'NEXT_PUBLIC_FIREBASE_APP_ID'],
+      ['MASS_CONSENSUS_URL', 'NEXT_PUBLIC_APP_URL'],
+    ],
+    extra: ''
+  },
+  functions: {
+    path: path.join(ROOT_DIR, 'functions'),
+    filename: '.env',
+    // Cloud functions vars
+    mapping: {
+      'GEMINI_API_KEY': 'GOOGLE_API_KEY',
+      'ENVIRONMENT': 'ENVIRONMENT',
+    },
+    extra: `
+# AI Model Configuration
+AI_MODEL_NAME=gemini-1.5-flash
+`.trim()
+  }
+};
+
+/**
+ * Parse a .env file into key-value pairs
+ */
+function parseEnvFile(filepath) {
+  if (!fs.existsSync(filepath)) {
+    console.error(`Error: Environment file not found: ${filepath}`);
+    process.exit(1);
+  }
+
+  const content = fs.readFileSync(filepath, 'utf-8');
+  const vars = {};
+
+  content.split('\n').forEach(line => {
+    // Skip comments and empty lines
+    if (line.startsWith('#') || line.trim() === '') return;
+
+    const match = line.match(/^([^=]+)=(.*)$/);
+    if (match) {
+      const key = match[1].trim();
+      let value = match[2].trim();
+
+      // Remove surrounding quotes if present
+      if ((value.startsWith('"') && value.endsWith('"')) ||
+          (value.startsWith("'") && value.endsWith("'"))) {
+        value = value.slice(1, -1);
+      }
+
+      vars[key] = value;
+    }
+  });
+
+  return vars;
+}
+
+/**
+ * Generate an app-specific .env file
+ */
+function generateEnvFile(appConfig, sourceVars, envName) {
+  const outputPath = path.join(appConfig.path, appConfig.filename);
+  const lines = [
+    `# ============================================================================`,
+    `# AUTO-GENERATED - DO NOT EDIT DIRECTLY`,
+    `# ============================================================================`,
+    `# Generated by: npm run env:${envName}`,
+    `# Source: env/.env.${envName}`,
+    `# Generated at: ${new Date().toISOString()}`,
+    `# ============================================================================`,
+    ``
+  ];
+
+  // Process mappings (support both object and array formats)
+  if (appConfig.mappings) {
+    // Array format: [[sourceKey, targetKey], ...]
+    for (const [sourceKey, targetKey] of appConfig.mappings) {
+      if (sourceVars[sourceKey] !== undefined) {
+        lines.push(`${targetKey}=${sourceVars[sourceKey]}`);
+      }
+    }
+  } else if (appConfig.mapping) {
+    // Object format: { sourceKey: targetKey, ... }
+    for (const [sourceKey, targetKey] of Object.entries(appConfig.mapping)) {
+      if (sourceVars[sourceKey] !== undefined) {
+        lines.push(`${targetKey}=${sourceVars[sourceKey]}`);
+      }
+    }
+  }
+
+  // Add extra content if any
+  if (appConfig.extra) {
+    lines.push('');
+    // Replace ${VAR} placeholders with actual values
+    let extra = appConfig.extra;
+    for (const [key, value] of Object.entries(sourceVars)) {
+      const targetKey = appConfig.mapping?.[key];
+      if (targetKey) {
+        extra = extra.replace(new RegExp(`\\$\\{${targetKey}\\}`, 'g'), value);
+      }
+    }
+    lines.push(extra);
+  }
+
+  // Write file
+  fs.writeFileSync(outputPath, lines.join('\n') + '\n');
+  console.info(`  Generated: ${outputPath}`);
+}
+
+/**
+ * Main function
+ */
+function main() {
+  const args = process.argv.slice(2);
+
+  if (args.length === 0) {
+    console.info('Usage: node env/env-loader.js <environment>');
+    console.info('');
+    console.info('Available environments:');
+    console.info('  dev   - Development (freedi-test, with emulator)');
+    console.info('  prod  - Production (synthesistalyaron)');
+    console.info('');
+    console.info('Or use npm scripts:');
+    console.info('  npm run env:dev');
+    console.info('  npm run env:prod');
+    process.exit(0);
+  }
+
+  const envName = args[0];
+  const envFile = path.join(ENV_DIR, `.env.${envName}`);
+
+  console.info(`\nLoading environment: ${envName}`);
+  console.info(`Source file: ${envFile}\n`);
+
+  // Parse source environment file
+  const sourceVars = parseEnvFile(envFile);
+
+  // Generate app-specific files
+  console.info('Generating app-specific environment files:');
+
+  for (const [appName, appConfig] of Object.entries(APPS)) {
+    // Check if app directory exists
+    if (!fs.existsSync(appConfig.path)) {
+      console.info(`  Skipped: ${appName} (directory not found)`);
+      continue;
+    }
+
+    generateEnvFile(appConfig, sourceVars, envName);
+  }
+
+  console.info(`\nEnvironment '${envName}' loaded successfully!`);
+  console.info(`Firebase Project: ${sourceVars.FIREBASE_PROJECT_ID}`);
+  console.info(`Emulator: ${sourceVars.USE_FIREBASE_EMULATOR === 'true' ? 'enabled' : 'disabled'}`);
+  console.info('');
+}
+
+main();

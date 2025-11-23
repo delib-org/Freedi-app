@@ -319,17 +319,105 @@ All code must pass quality checks before committing:
 
 ## 📦 Deployment
 
-### Development Environment
+### Unified Deploy Command
+
+The project uses a centralized environment and deployment system. One command handles environment setup, building, and deployment:
+
 ```bash
-npm run deploy:dev
+npm run deploy <target> [options]
 ```
 
-### Production Environment
+### Available Targets
+
+| Target | Firebase Project | Description |
+|--------|-----------------|-------------|
+| `dev` | freedi-test | Local development (with emulator) |
+| `test` | freedi-test | Testing new features before production |
+| `prod` | synthesistalyaron | Current production |
+| `wizcol` | wizcol-app | Main production (Wizcol) |
+
+### Deployment Examples
+
 ```bash
-npm run deploy:prod
+# Full deploy to test
+npm run deploy test
+
+# Full deploy to production
+npm run deploy prod
+
+# Deploy only hosting to production
+npm run deploy prod --hosting
+
+# Deploy only functions to test
+npm run deploy test --functions
+
+# Deploy only Firestore/Storage rules
+npm run deploy prod --rules
+
+# Preview what will happen (dry run)
+npm run deploy prod --dry-run
+
+# Skip build step (use existing build)
+npm run deploy test --hosting --skip-build
 ```
 
-### Individual Services
+### What the Deploy Script Does
+
+1. **Loads environment** - Sets correct Firebase config for target
+2. **Selects Firebase project** - Runs `firebase use <target>`
+3. **Builds application** - Compiles frontend with correct environment
+4. **Builds functions** - Compiles Cloud Functions (if deploying functions)
+5. **Deploys to Firebase** - Deploys selected services
+
+### Environment Management
+
+Environments are managed centrally in the `/env` directory:
+
+```
+env/
+├── .env.dev          # Local development (freedi-test + emulator)
+├── .env.test         # Testing new features (freedi-test deployed)
+├── .env.prod         # Current production (synthesistalyaron)
+├── .env.wizcol       # Main production (wizcol-app)
+├── .env.example      # Template for new environments
+├── env-loader.js     # Script to sync environments
+└── deploy.js         # Unified deploy script
+```
+
+#### Switch Environment (without deploying)
+
+```bash
+# Switch to development environment
+npm run env:dev
+
+# Switch to production environment
+npm run env:prod
+```
+
+#### Add a New Environment
+
+1. Copy the template:
+   ```bash
+   cp env/.env.example env/.env.myenv
+   ```
+2. Fill in your Firebase configuration
+3. Add project to `.firebaserc`:
+   ```json
+   {
+     "projects": {
+       "myenv": "my-firebase-project"
+     }
+   }
+   ```
+4. Deploy:
+   ```bash
+   npm run deploy myenv
+   ```
+
+### Legacy Deploy Commands
+
+Individual service deployments are still available:
+
 ```bash
 # Deploy only hosting
 npm run deploy:h:prod

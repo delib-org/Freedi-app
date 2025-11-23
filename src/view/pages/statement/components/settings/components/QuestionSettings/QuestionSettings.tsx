@@ -276,6 +276,7 @@ const QuestionSettings: FC<StatementSettingsProps> = ({
 
 				{isMassConsensus && (
 					<>
+						<h3 className='title'>{t('Require original input before viewing others')}</h3>
 						<CustomSwitchSmall
 							label={t('Request solution at start')}
 							checked={questionSettings?.askUserForASolutionBeforeEvaluation || false}
