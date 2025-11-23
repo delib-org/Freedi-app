@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { Statement } from 'delib-npm';
 import { getOrCreateAnonymousUser } from '@/lib/utils/user';
 import { ToastProvider } from '@/components/shared/Toast';
@@ -33,8 +33,6 @@ export default function SolutionFeedClient({
   const [allOptionsEvaluated, setAllOptionsEvaluated] = useState(false);
   const [showSolutionPrompt, setShowSolutionPrompt] = useState(false);
   const [hasCheckedUserSolutions, setHasCheckedUserSolutions] = useState(false);
-
-  const addSolutionRef = useRef<HTMLDivElement>(null);
 
   const questionId = question.statementId;
   const totalOptionsCount = question.numberOfOptions || 0;
@@ -196,13 +194,6 @@ return newSet;
   };
 
   /**
-   * Scroll to the add solution section
-   */
-  const handleScrollToAddSolution = () => {
-    addSolutionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  };
-
-  /**
    * Handle solution flow completion
    * Refresh the feed to show new/updated solutions
    */
@@ -311,19 +302,19 @@ return newSet;
       </div>
 
         {/* Add solution flow with similar detection */}
-        <div ref={addSolutionRef}>
-          <AddSolutionFlow
-            questionId={questionId}
-            userId={userId}
-            onComplete={handleSolutionComplete}
-          />
-        </div>
+        <AddSolutionFlow
+          questionId={questionId}
+          userId={userId}
+          onComplete={handleSolutionComplete}
+        />
 
         {/* Solution prompt modal */}
         <SolutionPromptModal
           isOpen={showSolutionPrompt}
           onClose={() => setShowSolutionPrompt(false)}
-          onScrollToAdd={handleScrollToAddSolution}
+          questionId={questionId}
+          userId={userId}
+          onSubmitSuccess={handleSolutionComplete}
         />
       </div>
     </ToastProvider>
