@@ -168,4 +168,19 @@ if (!isProduction) {
 	}
 }
 
+/**
+ * Get the Firebase Functions URL based on the environment
+ * Returns the appropriate base URL for calling HTTP Firebase Functions
+ */
+export function getFunctionsUrl(): string {
+	if (!isProduction) {
+		return 'http://localhost:5001/delib-5/us-central1';
+	}
+
+	// Production URL - adjust project ID if needed
+	const projectId = firebaseConfig.projectId || 'delib-5';
+
+	return `https://us-central1-${projectId}.cloudfunctions.net`;
+}
+
 export { auth, FireStore, storage, app, DB, analytics, functions };

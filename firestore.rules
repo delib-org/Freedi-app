@@ -608,5 +608,42 @@ service cloud.firestore {
       allow delete: if request.auth != null &&
                       resource.data.userId == request.auth.uid;
     }
+
+    // Email Subscribers - for mass consensus email notifications
+    // Note: This collection is primarily written by Firebase Admin SDK (server-side)
+    // but we allow public creation for anonymous email subscriptions
+    match /emailSubscribers/{subscriberId} {
+      function isStatementAdmin() {
+        let subscriber = resource != null ? resource : request.resource;
+        let statementId = subscriber.data.statementId;
+        let subId = string(request.auth.uid) + '--' + cleanPath(string(statementId));
+        let subscription = get(/databases/$(database)/documents/statementsSubscribe/$(subId)).data;
+        return subscription != null && (subscription.role == 'admin' || subscription.role == 'statement-creator');
+      }
+
+      // Allow creation with valid email and statementId (for public subscription)
+      // Most writes happen through Firebase Admin SDK which bypasses rules
+      allow create: if request.resource.data.email != null &&
+                      request.resource.data.statementId != null &&
+                      request.resource.data.isActive == true;
+
+      // Allow reading for admins of the statement
+      allow read: if request.auth != null && isStatementAdmin();
+
+      // Allow users to update their own subscription (e.g., unsubscribe)
+      allow update: if request.auth != null &&
+                      (resource.data.userId == request.auth.uid || isStatementAdmin());
+
+      // Allow admins to delete subscriptions
+      allow delete: if request.auth != null && isStatementAdmin();
+    }
+
+    // Result Subscriptions - legacy collection for backwards compatibility
+    match /resultSubscriptions/{subscriptionId} {
+      allow create: if request.resource.data.email != null &&
+                      request.resource.data.statementId != null;
+      allow read: if request.auth != null;
+      allow update, delete: if false;
+    }
   }
 }

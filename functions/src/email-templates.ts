@@ -1,23 +1,5 @@
 import { logger } from 'firebase-functions/v1';
 
-// Helper function to get base URL based on environment
-function getBaseUrl(): string {
-	const currentDomain = process.env.DOMAIN || process.env.FUNCTION_TARGET;
-
-	logger.info('Current domain:', currentDomain);
-
-	switch (currentDomain) {
-		case 'freedi.tech':
-			return 'https://freedi.tech';
-		case 'freedi-test.web.app':
-			return 'https://freedi-test.web.app';
-		case 'localhost':
-			return 'http://localhost:5173';
-		default:
-			return 'https://freedi.tech'; // fallback to test environment
-	}
-}
-
 interface BaseEmailOptions {
 	title?: string;
 	message: string;
@@ -305,4 +287,67 @@ export function createStatementUpdateEmail({
 		buttonText,
 		recipientName,
 	});
+}
+
+/**
+ * Creates an email template for mass consensus notification
+ * Sent by admin to email subscribers from statement settings
+ * @param options - Configuration options for the notification
+ * @returns HTML string for email body
+ */
+export function createMassConsensusNotificationEmail({
+	statementId,
+	statementTitle,
+	message,
+	buttonText = 'View Discussion',
+	buttonUrl,
+	recipientName,
+}: {
+	statementId: string;
+	statementTitle?: string;
+	message: string;
+	buttonText?: string;
+	buttonUrl?: string;
+	recipientName?: string;
+}): string {
+	try {
+		const baseUrl = getBaseUrl();
+		const finalButtonUrl = buttonUrl || `${baseUrl}/statement/${statementId}`;
+		const title = statementTitle
+			? `Update: ${statementTitle}`
+			: 'Update from Freedi';
+
+		// Format message - convert newlines to <br> for HTML
+		const formattedMessage = message.replace(/\n/g, '<br>');
+
+		return createBaseEmailTemplate({
+			title,
+			message: formattedMessage,
+			buttonText,
+			buttonUrl: finalButtonUrl,
+			recipientName,
+			showButtonLink: true,
+		});
+	} catch (error) {
+		logger.error('Error creating mass consensus notification email:', error);
+		const baseUrl = getBaseUrl();
+
+		return `<p>${message}</p><p><a href="${baseUrl}/statement/${statementId}">View Discussion</a></p>`;
+	}
+}
+
+// Helper function exported for use in fn_emailNotifications
+function getBaseUrl(): string {
+	const currentDomain = process.env.DOMAIN || process.env.FUNCTION_TARGET;
+
+	switch (currentDomain) {
+		case 'freedi.tech':
+			return 'https://freedi.tech';
+		case 'freedi-test.web.app':
+			return 'https://freedi-test.web.app';
+		case 'localhost':
+			return 'http://localhost:5173';
+		default:
+			return 'https://freedi.tech';
+	}
 }
