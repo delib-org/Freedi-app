@@ -82,7 +82,22 @@ The modal handles multiple states:
 - `src/components/question/SolutionFeed.module.css` - Button styles with fixed positioning
 - `src/components/shared/Modal.module.css` - Added blur effect and animations
 
-#### 2.5 Relevant Files
+#### 2.5 AI-Generated Title & Description
+When a user submits a solution, the AI generates:
+- **Title** (`statement.statement`): Short 2-5 word rephrased title
+- **Description** (`statement.description`): 10-25 word explanation with benefits
+
+**Implementation:**
+- [x] `generateTitleAndDescription()` function in `ai-service.ts`
+- [x] Language detection (Hebrew/English prompts)
+- [x] Higher temperature (0.8) for creative variation
+- [x] Fallback handling if AI fails
+
+**AI Configuration:**
+- Model: `gemini-2.0-flash` (configured in `functions/.env`)
+- API Key: Set via `GOOGLE_API_KEY` in `functions/.env`
+
+#### 2.6 Relevant Files
 ```
 apps/mass-consensus/src/components/question/SolutionPromptModal.tsx
 apps/mass-consensus/src/components/question/SolutionFeedClient.tsx
@@ -91,6 +106,9 @@ apps/mass-consensus/src/components/question/EnhancedLoader.tsx
 apps/mass-consensus/src/components/question/SuccessMessage.tsx
 apps/mass-consensus/src/components/shared/Modal.tsx
 apps/mass-consensus/src/components/shared/Modal.module.css
+functions/src/services/ai-service.ts
+functions/src/fn_findSimilarStatements.ts
+functions/.env (AI_MODEL_NAME, GOOGLE_API_KEY)
 ```
 
 ---
