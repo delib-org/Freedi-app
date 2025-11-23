@@ -6,10 +6,24 @@
   margin-top: var(--spacing-xl);
 }
 
+.fixedContainer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #ffffff;
+  border-top: 1px solid #e5e7eb;
+  padding: 1rem;
+  padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+}
+
 .title {
-  font-size: 1.25rem;
-  margin-bottom: var(--spacing-md);
+  font-size: 1rem;
+  margin: 0 0 0.5rem 0;
   color: var(--text-body);
+  text-align: center;
 }
 
 .success {
@@ -41,14 +55,16 @@
 
 .textarea {
   width: 100%;
-  padding: var(--spacing-md);
+  padding: 0.75rem;
   border: 1px solid #d1d5db;
   border-radius: 8px;
   font-family: inherit;
   font-size: 1rem;
-  line-height: 1.6;
-  resize: vertical;
-  transition: border-color 0.2s ease;
+  line-height: 24px;
+  min-height: 24px;
+  resize: none;
+  transition: border-color 0.2s ease, height 0.1s ease;
+  overflow: hidden;
 }
 
 .textarea:focus {
@@ -106,6 +122,10 @@
 @media (max-width: 768px) {
   .formContainer {
     padding: var(--spacing-lg);
+  }
+
+  .fixedContainer {
+    padding: 0.75rem;
   }
 
   .footer {

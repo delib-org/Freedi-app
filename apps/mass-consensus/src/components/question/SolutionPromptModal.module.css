@@ -102,3 +102,11 @@
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+.loaderContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+  padding: 2rem;
+}

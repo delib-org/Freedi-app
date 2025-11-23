@@ -5,7 +5,6 @@ import { Statement } from 'delib-npm';
 import { getOrCreateAnonymousUser } from '@/lib/utils/user';
 import { ToastProvider } from '@/components/shared/Toast';
 import SolutionCard from './SolutionCard';
-import AddSolutionFlow from './AddSolutionFlow';
 import SolutionPromptModal from './SolutionPromptModal';
 import styles from './SolutionFeed.module.css';
 
@@ -301,20 +300,27 @@ return newSet;
         )}
       </div>
 
-        {/* Add solution flow with similar detection */}
-        <AddSolutionFlow
-          questionId={questionId}
-          userId={userId}
-          onComplete={handleSolutionComplete}
-        />
+        {/* Add Solution Button - Fixed at bottom */}
+        <div className={styles.addSolutionContainer}>
+          <button
+            className={styles.addSolutionButton}
+            onClick={() => setShowSolutionPrompt(true)}
+          >
+            Add a Solution
+          </button>
+        </div>
 
-        {/* Solution prompt modal */}
+        {/* Solution prompt modal - used for both initial prompt and manual add */}
         <SolutionPromptModal
           isOpen={showSolutionPrompt}
           onClose={() => setShowSolutionPrompt(false)}
           questionId={questionId}
           userId={userId}
           onSubmitSuccess={handleSolutionComplete}
+          title={requiresSolution && !hasCheckedUserSolutions ? 'Add Your Solution First' : 'Add a Solution'}
+          description={requiresSolution && !hasCheckedUserSolutions
+            ? 'Please share your idea before seeing and rating others.'
+            : 'Share your idea for this question.'}
         />
       </div>
     </ToastProvider>

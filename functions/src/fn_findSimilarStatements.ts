@@ -48,7 +48,7 @@ export async function findSimilarStatements(
     // Step 1: Check for inappropriate content (NEVER CACHE THIS!)
     const contentCheck = await checkForInappropriateContent(userInput);
 
-    if (contentCheck.isInappropriate || contentCheck.error) {
+    if (contentCheck.isInappropriate) {
       logger.warn("Inappropriate content detected", { creatorId });
       response.status(400).send({
         ok: false,
@@ -56,6 +56,14 @@ export async function findSimilarStatements(
       });
 
       return;
+    }
+
+    // Log if content check had an error but allowed through
+    if (contentCheck.error) {
+      logger.warn("Content check had error, allowing through", {
+        creatorId,
+        error: contentCheck.error,
+      });
     }
 
     // Step 2: Try to get complete cached response

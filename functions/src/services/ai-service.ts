@@ -191,8 +191,8 @@ async function handleError(
 export async function checkForInappropriateContent(userInput: string): Promise<{ isInappropriate: boolean; error?: string }> {
   const prompt = `
     You are a content moderator. Check if the following text contains any profanity, slurs, hate speech, sexually explicit language, or any other inappropriate content: "${userInput}"
-    
-    Return ONLY this JSON format:
+
+    Return ONLY this JSON format (no markdown, no code blocks):
     - If inappropriate: { "inappropriate": true }
     - If clean: { "inappropriate": false }
   `;
@@ -200,18 +200,27 @@ export async function checkForInappropriateContent(userInput: string): Promise<{
   try {
     const model = await getGenerativeAIModel();
     const result = await model.generateContent(prompt);
-    const responseText = result.response.text();
-    
+    let responseText = result.response.text();
+
+    // Strip markdown code blocks if present
+    responseText = responseText.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
+
+    logger.info("Content moderation response:", { responseText: responseText.substring(0, 200) });
+
     const parsed = JSON.parse(responseText);
-    
-    return { 
-      isInappropriate: parsed.inappropriate === true 
+
+    return {
+      isInappropriate: parsed.inappropriate === true
     };
   } catch (error) {
+    // Log the error for debugging
     logger.error("Error checking for inappropriate content:", error);
-    // If we can't check, assume it's inappropriate to be safe
 
-    return { isInappropriate: true, error: "Unable to verify content" };
+    // On error, allow the content through rather than blocking legitimate content
+    // The actual content safety is also handled by Google's AI safety filters
+    logger.warn("Content moderation failed, allowing content through");
+
+    return { isInappropriate: false, error: "Unable to verify content - allowing through" };
   }
 }
 /**

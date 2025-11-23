@@ -138,6 +138,42 @@
   }
 }
 
+/* Add Solution Button - Fixed at bottom */
+.addSolutionContainer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(to top, #ffffff 70%, transparent);
+  padding: var(--spacing-lg);
+  padding-bottom: calc(var(--spacing-lg) + env(safe-area-inset-bottom, 0px));
+  display: flex;
+  justify-content: center;
+  z-index: 100;
+}
+
+.addSolutionButton {
+  background: var(--btn-primary);
+  color: white;
+  padding: var(--spacing-md) var(--spacing-2xl);
+  border-radius: var(--radius-full);
+  font-size: 1.125rem;
+  font-weight: 600;
+  min-width: 250px;
+  transition: all 0.3s ease;
+  box-shadow: var(--shadow-lg);
+}
+
+.addSolutionButton:hover {
+  background: var(--btn-primary-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(27, 38, 80, 0.4);
+}
+
+.addSolutionButton:active {
+  transform: translateY(0);
+}
+
 @media (max-width: 768px) {
   .feed {
     gap: var(--spacing-lg);
@@ -145,5 +181,10 @@
 
   .batchButton {
     width: 100%;
+  }
+
+  .addSolutionButton {
+    width: 100%;
+    min-width: unset;
   }
 }

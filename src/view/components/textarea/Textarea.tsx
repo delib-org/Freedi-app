@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import styles from './Textarea.module.scss';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 
@@ -11,7 +11,9 @@ interface TextAreaProps {
 	name: string;
 	maxLength?: number;
 	onKeyUp?: (e: React.KeyboardEvent<HTMLTextAreaElement>) => void;
-	isDisabled?;
+	isDisabled?: boolean;
+	minRows?: number;
+	maxRows?: number;
 }
 
 const Textarea: React.FC<TextAreaProps> = ({
@@ -24,24 +26,35 @@ const Textarea: React.FC<TextAreaProps> = ({
 	maxLength,
 	onKeyUp,
 	isDisabled = false,
+	minRows = 1,
+	maxRows,
 }) => {
 	const { t, dir } = useTranslation();
 	const textareaRef = useRef<HTMLTextAreaElement>(null);
+	const [hasOverflow, setHasOverflow] = useState(false);
 
 	const adjustHeight = () => {
 		const textarea = textareaRef.current;
 		if (textarea) {
 			// Reset height to auto to get the correct scrollHeight
 			textarea.style.height = 'auto';
-			// Set new height based on scrollHeight
-			textarea.style.height = `${textarea.scrollHeight}px`;
+
+			const lineHeight = parseFloat(getComputedStyle(textarea).lineHeight) || 24;
+			const minHeight = lineHeight * minRows;
+			const maxHeight = maxRows ? lineHeight * maxRows : Infinity;
+
+			const newHeight = Math.min(Math.max(textarea.scrollHeight, minHeight), maxHeight);
+			textarea.style.height = `${newHeight}px`;
+
+			// Check if content exceeds max height
+			setHasOverflow(textarea.scrollHeight > maxHeight);
 		}
 	};
 
 	// Adjust height on initial render and when value changes
 	useEffect(() => {
 		adjustHeight();
-	}, [value]);
+	}, [value, minRows, maxRows]);
 
 	const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
 		adjustHeight();
@@ -63,11 +76,11 @@ const Textarea: React.FC<TextAreaProps> = ({
 					name={name}
 					disabled={isDisabled}
 					ref={textareaRef}
-					className={styles.textArea}
+					className={`${styles.textArea} ${hasOverflow ? styles['textArea--scrollable'] : ''}`}
 					placeholder={t(placeholder)}
 					defaultValue={value}
 					onChange={handleChange}
-					rows={3} // Start with one row
+					rows={minRows}
 					maxLength={maxLength}
 					onKeyUp={onKeyUp}
 				/>

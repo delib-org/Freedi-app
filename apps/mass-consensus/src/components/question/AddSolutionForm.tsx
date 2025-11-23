@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { VALIDATION, UI } from '@/constants/common';
 import styles from './AddSolutionForm.module.css';
 
@@ -10,9 +11,12 @@ interface AddSolutionFormProps {
   onSubmit: (solutionText: string) => void;
 }
 
+const MAX_ROWS = 8;
+const LINE_HEIGHT = 24; // px
+
 /**
  * Form for submitting new solutions
- * Now integrated with similar solution detection flow
+ * Fixed at bottom with auto-growing textarea
  */
 export default function AddSolutionForm({
   questionId: _questionId,
@@ -20,6 +24,29 @@ export default function AddSolutionForm({
   onSubmit,
 }: AddSolutionFormProps) {
   const [text, setText] = useState('');
+  const [mounted, setMounted] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // For portal to work in Next.js
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Auto-grow textarea
+  const adjustTextareaHeight = () => {
+    const textarea = textareaRef.current;
+    if (textarea) {
+      textarea.style.height = 'auto';
+      const maxHeight = LINE_HEIGHT * MAX_ROWS;
+      const newHeight = Math.min(textarea.scrollHeight, maxHeight);
+      textarea.style.height = `${newHeight}px`;
+      textarea.style.overflowY = textarea.scrollHeight > maxHeight ? 'auto' : 'hidden';
+    }
+  };
+
+  useEffect(() => {
+    adjustTextareaHeight();
+  }, [text]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const characterCount = text.length;
@@ -44,17 +71,18 @@ export default function AddSolutionForm({
     }, UI.FORM_RESET_DELAY);
   };
 
-  return (
-    <div className={styles.formContainer}>
+  const formContent = (
+    <div className={styles.fixedContainer}>
       <h3 className={styles.title}>Add Your Solution</h3>
 
       <form onSubmit={handleSubmit} className={styles.form}>
         <textarea
+          ref={textareaRef}
           value={text}
           onChange={(e) => setText(e.target.value)}
           placeholder="Type your solution here..."
           className={styles.textarea}
-          rows={4}
+          rows={1}
           maxLength={VALIDATION.MAX_SOLUTION_LENGTH}
           disabled={isSubmitting}
         />
@@ -82,4 +110,9 @@ export default function AddSolutionForm({
       </form>
     </div>
   );
+
+  // Use portal to render at body level for true fixed positioning
+  if (!mounted) return null;
+
+  return createPortal(formContent, document.body);
 }

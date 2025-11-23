@@ -11,30 +11,30 @@
 ---
 
 ## Overview
-תוכנית פיתוח להכנת Mass Consensus לפרודקשן עבור פלטפורמת **WizCol.com**.
+Development plan for preparing Mass Consensus for production on the **WizCol.com** platform.
 
 ---
 
-## 1. 🔒 אכיפת הגשת הצעה לפני הערכה
+## 1. 🔒 Enforce Proposal Submission Before Evaluation ✅ COMPLETED
 
-### מצב נוכחי
-- קיים hook `useEvaluationGuard.ts` שבודק את ההגדרה `askUserForASolutionBeforeEvaluation`
-- קיים קומפוננט `AddSolutionPrompt.tsx` שמציג מודל התראה
-- הלוגיקה קיימת אך צריך לוודא שהיא פועלת בכל המקומות הנכונים
+### Current State
+- Hook `useEvaluationGuard.ts` exists which checks the `askUserForASolutionBeforeEvaluation` setting
+- Component `AddSolutionPrompt.tsx` exists which displays an alert modal
+- The logic exists but needs to verify it works in all the right places
 
-### משימות
+### Tasks
 
-#### 1.1 בדיקת הלוגיקה הקיימת
-- [ ] וידוא ש-`useEvaluationGuard` מחזיר ערכים נכונים
-- [ ] בדיקה שההגדרה `askUserForASolutionBeforeEvaluation` נשמרת ונקראת כראוי מה-DB
-- [ ] וידוא שה-guard מופעל ב-`RandomSuggestions.tsx`
+#### 1.1 Check Existing Logic
+- [x] Verify `useEvaluationGuard` returns correct values
+- [x] Check that `askUserForASolutionBeforeEvaluation` setting is saved and read properly from DB
+- [x] Verify the guard is activated in `RandomSuggestions.tsx`
 
-#### 1.2 שיפור חוויית המשתמש
-- [ ] אם המשתמש לא הגיש הצעה - להפנות אותו ישירות לשלב הגשת ההצעה
-- [ ] להוסיף הודעה ברורה שמסבירה למה צריך להגיש הצעה קודם
-- [ ] להסתיר את כפתורי הניווט להערכה עד שהמשתמש הגיש הצעה
+#### 1.2 Improve User Experience
+- [x] If user hasn't submitted a proposal - redirect them directly to the proposal submission stage
+- [x] Add a clear message explaining why they need to submit a proposal first
+- [x] Hide navigation buttons to evaluation until user submits a proposal
 
-#### 1.3 קבצים רלוונטיים
+#### 1.3 Relevant Files
 ```
 src/controllers/hooks/useEvaluationGuard.ts
 src/view/components/evaluation/AddSolutionPrompt.tsx
@@ -44,69 +44,54 @@ src/view/pages/massConsensus/MassConsensusVM.ts
 
 ---
 
-## 2. 📍 תיבת ההצעות - Fixed לתחתית
+## 2. 📍 Proposals Box - Fixed to Bottom ✅ COMPLETED
 
-### מצב נוכחי
-- הפוטר הנוכחי (`FooterMassConsensus.tsx`) משתמש ב-`position: sticky`
-- תיבת הקלט נמצאת ב-`InitialQuestion.tsx`
+### Current State
+- Current footer (`FooterMassConsensus.tsx`) uses `position: sticky`
+- Input box is located in `InitialQuestion.tsx`
 
-### משימות
+### Tasks
 
-#### 2.1 עיצוב תיבת הקלט בתחתית
-- [ ] ליצור קומפוננט חדש או לעדכן את `InitialQuestion.tsx`
-- [ ] להעביר את ה-Textarea לתחתית עם `position: fixed`
-- [ ] להוסיף padding-bottom לתוכן כדי שלא יסתיר תוכן
+#### 2.1 Design Input Box at Bottom
+- [x] Create new component or update `InitialQuestion.tsx`
+- [x] Move Textarea to bottom with `position: fixed`
+- [x] Add padding-bottom to content so it doesn't hide content
 
-#### 2.2 עדכון ה-SCSS
-```scss
-// src/view/style/molecules/_proposal-input-fixed.scss (חדש)
-.proposal-input-fixed {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: var(--card-default);
-  padding: var(--padding);
-  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
-  z-index: 100;
+#### 2.2 Textarea Auto-Grow Feature
+- [x] Textarea starts small (1 line)
+- [x] Grows automatically as text is added
+- [x] Stops growing at 8 lines and enables scrolling
 
-  &__textarea {
-    width: 100%;
-    min-height: 80px;
-    resize: none;
-  }
+#### 2.3 Implementation Details
+**Updated Files:**
+- `src/view/components/textarea/Textarea.tsx` - Added `minRows` and `maxRows` props for auto-grow with scroll
+- `src/view/components/textarea/Textarea.module.scss` - Added `--scrollable` modifier for overflow
+- `src/view/pages/massConsensus/massConsesusQuestion/initialQuestion/InitialQuestion.tsx` - Restructured with fixed bottom layout
+- `src/view/pages/massConsensus/massConsesusQuestion/initialQuestion/InitialQuestion.module.scss` - Added `.fixedInput` styles with shadow and proper positioning
 
-  &__actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 0.5rem;
-    margin-top: 0.5rem;
-  }
-}
-```
-
-#### 2.3 קבצים רלוונטיים
+#### 2.4 Relevant Files
 ```
 src/view/pages/massConsensus/massConsesusQuestion/initialQuestion/InitialQuestion.tsx
 src/view/pages/massConsensus/massConsesusQuestion/initialQuestion/InitialQuestion.module.scss
-src/view/pages/massConsensus/footerMassConsensus/FooterMassConsensus.module.scss
+src/view/components/textarea/Textarea.tsx
+src/view/components/textarea/Textarea.module.scss
 ```
 
 ---
 
-## 3. 🚀 דחיפה ל-Vercel
+## 3. 🚀 Push to Vercel
 
-### משימות
+### Tasks
 
-#### 3.1 בדיקות לפני Deploy
-- [ ] הרצת `npm run check-all` (lint, typecheck, build)
-- [ ] בדיקה שכל הטסטים עוברים
-- [ ] וידוא שאין שגיאות TypeScript
+#### 3.1 Pre-Deploy Checks
+- [ ] Run `npm run check-all` (lint, typecheck, build)
+- [ ] Verify all tests pass
+- [ ] Verify no TypeScript errors
 
-#### 3.2 הגדרת Vercel
-- [ ] וידוא שקיים קובץ `vercel.json` עם הגדרות נכונות
-- [ ] בדיקת משתני סביבה (Environment Variables) ב-Vercel
-- [ ] הגדרת domain/subdomain מתאים
+#### 3.2 Vercel Configuration
+- [ ] Verify `vercel.json` file exists with correct settings
+- [ ] Check Environment Variables in Vercel
+- [ ] Configure appropriate domain/subdomain
 
 #### 3.3 Deploy
 ```bash
@@ -121,27 +106,27 @@ git push origin claude/mass-consensus-production-013vQPV9qibXPci9x4gAGzZd
 # Vercel will auto-deploy from branch (or manual trigger)
 ```
 
-#### 3.4 בדיקות Post-Deploy
-- [ ] בדיקה שהאתר עולה בכתובת הנכונה
-- [ ] בדיקת פונקציונליות Mass Consensus מקצה לקצה
-- [ ] בדיקת תאימות מובייל
-- [ ] בדיקת ביצועים (Lighthouse)
+#### 3.4 Post-Deploy Checks
+- [ ] Verify site loads at correct URL
+- [ ] Test Mass Consensus functionality end-to-end
+- [ ] Test mobile compatibility
+- [ ] Check performance (Lighthouse)
 
 ---
 
-## 4. 🏗️ הקמת סביבת Wizcol חדשה
+## 4. 🏗️ Set Up New Wizcol Environment
 
-### משימות
+### Tasks
 
-#### 4.1 הכנת הסביבה
-- [ ] יצירת פרויקט Firebase חדש (או שימוש בקיים)
-- [ ] הגדרת Firestore rules
-- [ ] הגדרת Authentication providers
-- [ ] הגדרת Cloud Functions (אם נדרש)
+#### 4.1 Environment Preparation
+- [ ] Create new Firebase project (or use existing)
+- [ ] Configure Firestore rules
+- [ ] Configure Authentication providers
+- [ ] Configure Cloud Functions (if needed)
 
-#### 4.2 משתני סביבה
-- [ ] יצירת קובץ `.env.wizcol` או `.env.production.wizcol`
-- [ ] הגדרת Firebase config:
+#### 4.2 Environment Variables
+- [ ] Create `.env.wizcol` or `.env.production.wizcol` file
+- [ ] Configure Firebase config:
   ```
   VITE_FIREBASE_API_KEY=
   VITE_FIREBASE_AUTH_DOMAIN=
@@ -151,7 +136,7 @@ git push origin claude/mass-consensus-production-013vQPV9qibXPci9x4gAGzZd
   VITE_FIREBASE_APP_ID=
   ```
 
-#### 4.3 קבצים רלוונטיים
+#### 4.3 Relevant Files
 ```
 .env.example
 firebase.json
@@ -161,61 +146,121 @@ firestore.indexes.json
 
 ---
 
-## 5. 🔗 חיבור Wizcol ו-Vercel
+## 5. 🔗 Connect Wizcol and Vercel
 
-### משימות
+### Tasks
 
-#### 5.1 הגדרת Vercel Project
-- [ ] יצירת פרויקט חדש ב-Vercel עבור wizcol
-- [ ] חיבור ל-Git repository
-- [ ] הגדרת branch לפריסה (production branch)
+#### 5.1 Vercel Project Configuration
+- [ ] Create new project in Vercel for wizcol
+- [ ] Connect to Git repository
+- [ ] Configure deployment branch (production branch)
 
-#### 5.2 Environment Variables ב-Vercel
-- [ ] העתקת כל משתני הסביבה מ-`.env.wizcol`
-- [ ] הגדרת משתנים שונים ל-Preview/Production
+#### 5.2 Environment Variables in Vercel
+- [ ] Copy all environment variables from `.env.wizcol`
+- [ ] Configure different variables for Preview/Production
 
 #### 5.3 Domain Configuration
-- [ ] הגדרת custom domain (אם יש)
-- [ ] הגדרת SSL certificate
-- [ ] בדיקת DNS settings
+- [ ] Configure custom domain (if applicable)
+- [ ] Configure SSL certificate
+- [ ] Check DNS settings
 
-#### 5.4 בדיקות אינטגרציה
-- [ ] בדיקה ש-deploy אוטומטי עובד מ-push
-- [ ] בדיקה שה-preview deployments עובדים
-- [ ] בדיקה ש-production deploy עובד
-
----
-
-## 📋 סדר עדיפויות מומלץ
-
-| עדיפות | משימה | הערות |
-|--------|-------|-------|
-| 1 | אכיפת הגשת הצעה לפני הערכה | קריטי לחוויית משתמש נכונה |
-| 2 | תיבת הצעות fixed לתחתית | שיפור UX |
-| 3 | בדיקות וטסטים | לפני deploy |
-| 4 | Deploy ל-Vercel | בדיקה בסביבה אמיתית |
-| 5 | הקמת סביבת Wizcol | תשתית |
-| 6 | חיבור Wizcol-Vercel | אינטגרציה סופית |
+#### 5.4 Integration Tests
+- [ ] Verify automatic deploy works from push
+- [ ] Verify preview deployments work
+- [ ] Verify production deploy works
 
 ---
 
-## 🧪 Checklist לפני Production
+## 6. 🌐 Multi-Language Support with Admin Control
 
-- [ ] כל הטסטים עוברים
-- [ ] אין שגיאות TypeScript
-- [ ] ESLint עובר ללא שגיאות
-- [ ] Build מצליח
-- [ ] נבדק במובייל
-- [ ] נבדק בדפדפנים שונים (Chrome, Firefox, Safari)
-- [ ] Error handling מלא
-- [ ] Analytics מוגדר
-- [ ] Performance נבדק (Lighthouse > 80)
+### Overview
+Enable multi-language support for Mass Consensus with admin ability to set the default language per statement/conversation.
+
+### Tasks
+
+#### 6.1 Admin Default Language Setting
+- [ ] Add `defaultLanguage` field to Statement model (in delib-npm if needed)
+- [ ] Create language selector component for admin settings
+- [ ] Save default language preference to Firestore with statement
+- [ ] Load and apply default language when users access the statement
+
+#### 6.2 Language Selection UI
+- [ ] Add language dropdown/selector in admin panel (statement settings)
+- [ ] Display current default language in settings
+- [ ] Support common languages: English, Hebrew, Arabic, Spanish, German, French, etc.
+- [ ] Add language labels in their native scripts (e.g., "עברית", "العربية", "Español")
+
+#### 6.3 User Language Experience
+- [ ] Apply admin's default language as initial language for new users
+- [ ] Allow users to override with their own preference (stored locally)
+- [ ] Remember user's language preference per session
+- [ ] Handle RTL languages properly (Hebrew, Arabic)
+
+#### 6.4 Translation Infrastructure
+- [ ] Ensure all Mass Consensus UI strings are in translation files
+- [ ] Add any missing translation keys to language JSON files
+- [ ] Verify translations exist for all supported languages
+- [ ] Add fallback to English for missing translations
+
+#### 6.5 Technical Implementation
+```typescript
+// Statement model addition
+interface Statement {
+  // ... existing fields
+  defaultLanguage?: LanguagesEnum; // Admin-set default language
+}
+
+// Admin settings component
+interface LanguageSettingProps {
+  statementId: string;
+  currentLanguage: LanguagesEnum;
+  onLanguageChange: (lang: LanguagesEnum) => void;
+}
+```
+
+#### 6.6 Relevant Files
+```
+src/view/pages/statement/components/settings/statementSettingsAdmin/
+src/controllers/general/helpers.ts (language utilities)
+src/assets/Languages/*.json (translation files)
+src/model/languageModel.ts
+delib-npm (Statement type if field needs to be added)
+```
 
 ---
 
-## 📝 הערות טכניות
+## 📋 Recommended Priority Order
 
-### Hook מרכזי - useEvaluationGuard
+| Priority | Task | Status | Notes |
+|----------|------|--------|-------|
+| 1 | Enforce proposal submission before evaluation | ✅ Done | Critical for correct user experience |
+| 2 | Fixed proposals box at bottom | ✅ Done | UX improvement - auto-grow textarea with scroll |
+| 3 | Tests and checks | Pending | Before deploy |
+| 4 | Deploy to Vercel | Pending | Test in real environment |
+| 5 | Set up Wizcol environment | Pending | Infrastructure |
+| 6 | Connect Wizcol-Vercel | Pending | Final integration |
+| 7 | Multi-language support with admin control | Pending | Internationalization |
+
+---
+
+## 🧪 Pre-Production Checklist
+
+- [ ] All tests pass
+- [ ] No TypeScript errors
+- [ ] ESLint passes without errors
+- [ ] Build succeeds
+- [ ] Tested on mobile
+- [ ] Tested on different browsers (Chrome, Firefox, Safari)
+- [ ] Complete error handling
+- [ ] Analytics configured
+- [ ] Performance checked (Lighthouse > 80)
+- [ ] Multi-language support verified (RTL and LTR languages)
+
+---
+
+## 📝 Technical Notes
+
+### Main Hook - useEvaluationGuard
 ```typescript
 // src/controllers/hooks/useEvaluationGuard.ts
 const { canEvaluate, requiresSolution, hasSubmittedSolution } = useEvaluationGuard(statement);
