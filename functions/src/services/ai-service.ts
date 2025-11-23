@@ -191,8 +191,8 @@ async function handleError(
 export async function checkForInappropriateContent(userInput: string): Promise<{ isInappropriate: boolean; error?: string }> {
   const prompt = `
     You are a content moderator. Check if the following text contains any profanity, slurs, hate speech, sexually explicit language, or any other inappropriate content: "${userInput}"
-    
-    Return ONLY this JSON format:
+
+    Return ONLY this JSON format (no markdown, no code blocks):
     - If inappropriate: { "inappropriate": true }
     - If clean: { "inappropriate": false }
   `;
@@ -200,18 +200,27 @@ export async function checkForInappropriateContent(userInput: string): Promise<{
   try {
     const model = await getGenerativeAIModel();
     const result = await model.generateContent(prompt);
-    const responseText = result.response.text();
-    
+    let responseText = result.response.text();
+
+    // Strip markdown code blocks if present
+    responseText = responseText.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
+
+    logger.info("Content moderation response:", { responseText: responseText.substring(0, 200) });
+
     const parsed = JSON.parse(responseText);
-    
-    return { 
-      isInappropriate: parsed.inappropriate === true 
+
+    return {
+      isInappropriate: parsed.inappropriate === true
     };
   } catch (error) {
+    // Log the error for debugging
     logger.error("Error checking for inappropriate content:", error);
-    // If we can't check, assume it's inappropriate to be safe
 
-    return { isInappropriate: true, error: "Unable to verify content" };
+    // On error, allow the content through rather than blocking legitimate content
+    // The actual content safety is also handled by Google's AI safety filters
+    logger.warn("Content moderation failed, allowing content through");
+
+    return { isInappropriate: false, error: "Unable to verify content - allowing through" };
   }
 }
 /**
@@ -357,6 +366,141 @@ export async function improveSuggestion(
   } catch (error) {
     logger.error("Error improving suggestion:", error);
     throw error;
+  }
+}
+
+/**
+ * Generates a concise title and description from user's solution text
+ * @param userInput - The full text input from the user
+ * @param questionContext - The question/topic the solution is responding to
+ * @returns Object containing generated title and description
+ */
+export async function generateTitleAndDescription(
+  userInput: string,
+  questionContext: string
+): Promise<{ title: string; description: string }> {
+  try {
+    // Detect language
+    const isHebrew = /[\u0590-\u05FF]/.test(userInput);
+
+    const prompt = isHebrew
+      ? `צור כותרת ותיאור עבור ההצעה הבאה. הם חייבים להיות שונים זה מזה.
+
+ההצעה: "${userInput}"
+${questionContext ? `הקשר: "${questionContext}"` : ""}
+
+כללים חשובים:
+1. כותרת: קצרה (2-5 מילים), נסח מחדש את הרעיון במילים אחרות
+2. תיאור: ארוך יותר (10-25 מילים), התחל עם "הצעה ל" ואז הסבר את היתרונות
+
+דוגמאות:
+- קלט: "נלך לאכול פיצה"
+  {"title": "ארוחה איטלקית משותפת", "description": "הצעה לצאת לאכול פיצה ביחד - הזדמנות נהדרת לבילוי משפחתי טעים"}
+
+- קלט: "נצא לטיול בטבע"
+  {"title": "יציאה לחיק הטבע", "description": "הצעה לצאת לטיול בטבע - דרך מצוינת להתאוורר וליהנות מהנוף היפה"}
+
+- קלט: "נשחק משחק לוח"
+  {"title": "ערב משחקים", "description": "הצעה לשחק משחק לוח יחד - פעילות מהנה שמחזקת את הקשר המשפחתי"}
+
+החזר JSON בלבד:`
+      : `Create a title and description for this proposal. They MUST be different.
+
+Proposal: "${userInput}"
+${questionContext ? `Context: "${questionContext}"` : ""}
+
+IMPORTANT RULES:
+1. TITLE: Short (2-5 words), rephrase the idea in different words
+2. DESCRIPTION: Longer (10-25 words), start with "Proposal to" and explain benefits
+
+Examples:
+- Input: "Let's go eat pizza"
+  {"title": "Italian dining outing", "description": "Proposal to go eat pizza together - a great opportunity for a delicious family meal"}
+
+- Input: "Watch a movie together"
+  {"title": "Cinema night", "description": "Proposal to watch a movie as a family - a fun and relaxing activity for everyone"}
+
+- Input: "Play a board game"
+  {"title": "Game night activity", "description": "Proposal to play a board game together - an enjoyable way to bond and have fun"}
+
+Return JSON ONLY:`;
+
+    // Use higher temperature for creative title/description generation
+    const genAI = getGenAI();
+    const creativeModel = genAI.getGenerativeModel({
+      model: process.env.AI_MODEL_NAME || "gemini-2.5-flash",
+      generationConfig: {
+        responseMimeType: "application/json",
+        temperature: 0.8, // Higher temperature for creative, varied output
+      },
+    });
+
+    const model = creativeModel;
+    const result = await model.generateContent(prompt);
+    let responseText = result.response.text();
+
+    logger.info("=== AI generateTitleAndDescription ===");
+    logger.info(`User input: ${userInput.substring(0, 50)}`);
+    logger.info(`Raw AI response: ${responseText.substring(0, 200)}`);
+
+    // Strip markdown code blocks if present
+    responseText = responseText.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
+
+    try {
+      const parsed = JSON.parse(responseText);
+
+      logger.info(`Parsed title: ${parsed.title}`);
+      logger.info(`Parsed description: ${parsed.description}`);
+      logger.info(`Title === Description? ${parsed.title === parsed.description}`);
+
+      if (parsed.title && typeof parsed.title === "string" &&
+          parsed.description && typeof parsed.description === "string" &&
+          parsed.title !== parsed.description) {
+        logger.info("Using AI-generated values (different title/description)");
+        return {
+          title: parsed.title,
+          description: parsed.description,
+        };
+      }
+
+      // Fallback: create different title and description
+      logger.warn("AI returned invalid or identical values, using fallback");
+      const fallback = createFallbackTitleDescription(userInput);
+      logger.info(`Fallback title: ${fallback.title}`);
+      logger.info(`Fallback description: ${fallback.description}`);
+
+      return fallback;
+    } catch {
+      logger.error("Failed to parse AI response for title/description:", responseText);
+
+      return createFallbackTitleDescription(userInput);
+    }
+  } catch (error) {
+    logger.error("Error generating title and description:", error);
+
+    return createFallbackTitleDescription(userInput);
+  }
+}
+
+/**
+ * Creates fallback title and description that are always different
+ */
+function createFallbackTitleDescription(userInput: string): { title: string; description: string } {
+  if (userInput.length > 60) {
+    // Long text: truncate for title, use full text as description base
+    return {
+      title: userInput.substring(0, 57) + "...",
+      description: userInput,
+    };
+  } else {
+    // Short text: use as title, add context-aware description
+    // Try to detect language and create appropriate description
+    const isHebrew = /[\u0590-\u05FF]/.test(userInput);
+    const descriptionPrefix = isHebrew ? "הצעה זו מציעה" : "This suggestion proposes";
+    return {
+      title: userInput,
+      description: `${descriptionPrefix}: ${userInput}`,
+    };
   }
 }
 

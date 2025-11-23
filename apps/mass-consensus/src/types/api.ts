@@ -15,6 +15,8 @@ export interface SimilarCheckResponse {
   ok: boolean;
   similarStatements: Statement[];
   userText: string;
+  generatedTitle?: string;
+  generatedDescription?: string;
   cached?: boolean;
   responseTime?: number;
 }

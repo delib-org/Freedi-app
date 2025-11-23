@@ -70,11 +70,18 @@ return findSimilarStatementsAI(
  * Complete cached response for the entire similarity search
  * Caches the final processed result to avoid reprocessing
  */
+interface CachedSimilarityResponse {
+  similarStatements: Statement[];
+  userText: string;
+  generatedTitle?: string;
+  generatedDescription?: string;
+}
+
 export async function getCachedSimilarityResponse(
   statementId: string,
   userInput: string,
   creatorId: string
-): Promise<{ similarStatements: Statement[]; userText: string } | null> {
+): Promise<CachedSimilarityResponse | null> {
   const cacheKey = cache.generateKey(
     "full_response",
     statementId,
@@ -83,9 +90,7 @@ export async function getCachedSimilarityResponse(
   );
 
   try {
-    const cached = await cache.get<{ similarStatements: Statement[]; userText: string }>(
-      cacheKey
-    );
+    const cached = await cache.get<CachedSimilarityResponse>(cacheKey);
 
     if (cached) {
       logger.info("Cache hit for complete similarity response");
@@ -108,7 +113,7 @@ export async function saveCachedSimilarityResponse(
   statementId: string,
   userInput: string,
   creatorId: string,
-  response: { similarStatements: Statement[]; userText: string }
+  response: CachedSimilarityResponse
 ): Promise<void> {
   const cacheKey = cache.generateKey(
     "full_response",
