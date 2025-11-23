@@ -652,10 +652,11 @@
   "votes used": "Stimmen verwendet",
   "your@email.com": "ihre@email.com",
   "العربية": "Arabisch",
-  "Add Your Solution First": "Add Your Solution First",
-  "Not Required": "Not Required",
-  "Please submit your own solution before evaluating others.": "Please submit your own solution before evaluating others.",
-  "Require Solution Before Evaluation": "Require Solution Before Evaluation",
-  "Required": "Required",
-  "This helps ensure everyone contributes their ideas to the discussion.": "This helps ensure everyone contributes their ideas to the discussion."
+  "Add Your Solution First": "Füge zuerst deine Lösung hinzu",
+  "Don't ask": "Nicht fragen",
+  "Please submit your own solution before evaluating others.": "Bitte reiche deine eigene Lösung ein, bevor du andere bewertest.",
+  "Require original input before viewing others": "Eigene Idee vor dem Anzeigen anderer erforderlich",
+  "Request solution at start": "Lösung zu Beginn anfordern",
+  "Ask first": "Zuerst fragen",
+  "This helps ensure everyone contributes their ideas to the discussion.": "Dies stellt sicher, dass alle ihre Ideen zur Diskussion beitragen."
 }

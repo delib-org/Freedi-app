@@ -648,10 +648,11 @@
   "votes used": "الأصوات المستخدمة",
   "your@email.com": "your@email.com",
   "العربية": "العربية",
-  "Add Your Solution First": "Add Your Solution First",
-  "Not Required": "Not Required",
-  "Please submit your own solution before evaluating others.": "Please submit your own solution before evaluating others.",
-  "Require Solution Before Evaluation": "Require Solution Before Evaluation",
-  "Required": "Required",
-  "This helps ensure everyone contributes their ideas to the discussion.": "This helps ensure everyone contributes their ideas to the discussion."
+  "Add Your Solution First": "أضف حلك أولاً",
+  "Don't ask": "لا تسأل",
+  "Please submit your own solution before evaluating others.": "يرجى تقديم حلك الخاص قبل تقييم الآخرين.",
+  "Require original input before viewing others": "يجب تقديم فكرة أصلية قبل عرض الآخرين",
+  "Request solution at start": "اطلب حلاً في البداية",
+  "Ask first": "اسأل أولاً",
+  "This helps ensure everyone contributes their ideas to the discussion.": "هذا يساعد على ضمان مساهمة الجميع بأفكارهم في النقاش."
 }
