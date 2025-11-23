@@ -336,26 +336,36 @@ npm run deploy <target> [options]
 | `prod` | synthesistalyaron | Current production |
 | `wizcol` | wizcol-app | Main production (Wizcol) |
 
-### Deployment Examples
+### Quick Commands
 
 ```bash
-# Full deploy to test
+# Test new features before production
 npm run deploy test
 
-# Full deploy to production
+# Deploy to current production (synthesistalyaron)
 npm run deploy prod
 
-# Deploy only hosting to production
+# Deploy to main production (Wizcol)
+npm run deploy wizcol
+
+# Preview without deploying
+npm run deploy wizcol --dry-run
+```
+
+### Deployment Options
+
+```bash
+# Deploy everything (default)
+npm run deploy test
+
+# Deploy only hosting
 npm run deploy prod --hosting
 
-# Deploy only functions to test
+# Deploy only functions
 npm run deploy test --functions
 
 # Deploy only Firestore/Storage rules
 npm run deploy prod --rules
-
-# Preview what will happen (dry run)
-npm run deploy prod --dry-run
 
 # Skip build step (use existing build)
 npm run deploy test --hosting --skip-build
