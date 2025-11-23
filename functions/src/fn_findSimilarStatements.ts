@@ -76,6 +76,40 @@ export async function findSimilarStatements(
 
     if (cachedResponse) {
       const cacheTime = Date.now() - startTime;
+
+      // Check if cached response has generatedTitle/Description
+      // If not (old cached data), or if it uses the old fallback pattern, regenerate
+      let { generatedTitle, generatedDescription } = cachedResponse;
+
+      // Detect if this is a fallback response that should be regenerated
+      const isFallbackPattern = generatedDescription?.startsWith("הצעה:") ||
+                                generatedDescription?.startsWith("הצעה זו מציעה:") ||
+                                generatedDescription?.startsWith("This suggestion proposes:");
+      const needsRegeneration = !generatedTitle ||
+                                !generatedDescription ||
+                                generatedTitle === generatedDescription ||
+                                isFallbackPattern;
+
+      if (needsRegeneration) {
+        try {
+          const generated = await generateTitleAndDescription(userInput, "");
+          generatedTitle = generated.title;
+          generatedDescription = generated.description;
+          logger.info("Generated title/description for cached response", {
+            reason: isFallbackPattern ? "fallback_pattern" : "missing_or_identical"
+          });
+        } catch (genError) {
+          logger.warn("Failed to generate title/description for cached response", { error: genError });
+          // Use fallback only if we don't already have values
+          if (!generatedTitle || !generatedDescription) {
+            const isHebrew = /[\u0590-\u05FF]/.test(userInput);
+            generatedTitle = userInput.length > 60 ? userInput.substring(0, 57) + "..." : userInput;
+            generatedDescription = userInput.length > 60 ? userInput :
+              (isHebrew ? `הצעה זו מציעה: ${userInput}` : `This suggestion proposes: ${userInput}`);
+          }
+        }
+      }
+
       logger.info("Returning cached response", {
         responseTime: cacheTime,
         type: "full_cache_hit",
@@ -83,6 +117,8 @@ export async function findSimilarStatements(
 
       response.status(200).send({
         ...cachedResponse,
+        generatedTitle,
+        generatedDescription,
         ok: true,
         cached: true,
         responseTime: cacheTime,
@@ -122,6 +158,7 @@ export async function findSimilarStatements(
       const generated = await generateTitleAndDescription(userInput, questionContext);
       generatedTitle = generated.title;
       generatedDescription = generated.description;
+
       logger.info("Generated title and description", {
         titleLength: generatedTitle.length,
         descriptionLength: generatedDescription.length,

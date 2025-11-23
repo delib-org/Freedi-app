@@ -184,13 +184,31 @@ export async function POST(
     const displayName = userName || getAnonymousDisplayName(userId);
 
     // Use title and description from check-similar response if provided,
-    // otherwise fallback to the original text
-    let title = generatedTitle || trimmedText;
-    let description = generatedDescription || trimmedText;
+    // otherwise create a simple title/description from the text
+    let title: string;
+    let description: string;
 
-    // Fallback: create title from first 80 chars if text is long and no generated title
-    if (!generatedTitle && trimmedText.length > 80) {
-      title = trimmedText.substring(0, 77) + '...';
+    console.log('=== SUBMIT: AI Generated Values ===');
+    console.log('generatedTitle:', generatedTitle);
+    console.log('generatedDescription:', generatedDescription);
+    console.log('Are they identical?', generatedTitle === generatedDescription);
+    console.log('===================================');
+
+    if (generatedTitle && generatedDescription) {
+      // Use AI-generated values
+      title = generatedTitle;
+      description = generatedDescription;
+    } else {
+      // Fallback: create title and description from the text
+      if (trimmedText.length > 60) {
+        // Long text: truncate title, use full text as description
+        title = trimmedText.substring(0, 57) + '...';
+        description = trimmedText;
+      } else {
+        // Short text: use as title, add context to description
+        title = trimmedText;
+        description = `Proposed solution: ${trimmedText}`;
+      }
     }
 
     const newSolution: Partial<Statement> = {

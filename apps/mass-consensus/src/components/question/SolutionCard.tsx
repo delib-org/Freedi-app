@@ -25,16 +25,17 @@ export default function SolutionCard({
 
   // Use statement as title, description if available
   const title = solution.statement;
-  const description = solution.description;
+  // For solutions without description, use the statement itself
+  const description = solution.description || solution.statement;
 
-  // Show description if it exists
-  const hasDescription = description && description.trim().length > 0;
+  // Only show description if it's different from title (avoid duplication)
+  const showDescription = description && description !== title;
 
   return (
     <div className={`${styles.card} ${isEvaluated ? styles.evaluated : ''}`}>
       <div className={styles.content}>
         <h3 className={styles.title}>{title}</h3>
-        {hasDescription && (
+        {showDescription && (
           <p className={styles.description}>{description}</p>
         )}
       </div>

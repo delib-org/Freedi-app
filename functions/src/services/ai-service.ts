@@ -380,32 +380,68 @@ export async function generateTitleAndDescription(
   questionContext: string
 ): Promise<{ title: string; description: string }> {
   try {
-    const prompt = `
-      You are helping to structure a user's solution/idea submission.
+    // Detect language
+    const isHebrew = /[\u0590-\u05FF]/.test(userInput);
 
-      Question/Topic: "${questionContext}"
-      User's input: "${userInput}"
+    const prompt = isHebrew
+      ? `צור כותרת ותיאור עבור ההצעה הבאה. הם חייבים להיות שונים זה מזה.
 
-      Generate a concise title and a fuller description from the user's input.
+ההצעה: "${userInput}"
+${questionContext ? `הקשר: "${questionContext}"` : ""}
 
-      Requirements:
-      1. Title: A short, clear summary (max 80 characters) that captures the main idea
-      2. Description: The full explanation, properly formatted (can be multi-line if needed)
-      3. Keep the same language as the user's input
-      4. Preserve the original meaning and intent
-      5. If the input is already short (under 80 chars), use it as the title and create a brief description
-      6. Make both title and description clear and well-structured
+כללים חשובים:
+1. כותרת: קצרה (2-5 מילים), נסח מחדש את הרעיון במילים אחרות
+2. תיאור: ארוך יותר (10-25 מילים), התחל עם "הצעה ל" ואז הסבר את היתרונות
 
-      Return ONLY a JSON object with this format:
-      {
-        "title": "concise title here",
-        "description": "fuller description here"
-      }
-    `;
+דוגמאות:
+- קלט: "נלך לאכול פיצה"
+  {"title": "ארוחה איטלקית משותפת", "description": "הצעה לצאת לאכול פיצה ביחד - הזדמנות נהדרת לבילוי משפחתי טעים"}
 
-    const model = await getGenerativeAIModel();
+- קלט: "נצא לטיול בטבע"
+  {"title": "יציאה לחיק הטבע", "description": "הצעה לצאת לטיול בטבע - דרך מצוינת להתאוורר וליהנות מהנוף היפה"}
+
+- קלט: "נשחק משחק לוח"
+  {"title": "ערב משחקים", "description": "הצעה לשחק משחק לוח יחד - פעילות מהנה שמחזקת את הקשר המשפחתי"}
+
+החזר JSON בלבד:`
+      : `Create a title and description for this proposal. They MUST be different.
+
+Proposal: "${userInput}"
+${questionContext ? `Context: "${questionContext}"` : ""}
+
+IMPORTANT RULES:
+1. TITLE: Short (2-5 words), rephrase the idea in different words
+2. DESCRIPTION: Longer (10-25 words), start with "Proposal to" and explain benefits
+
+Examples:
+- Input: "Let's go eat pizza"
+  {"title": "Italian dining outing", "description": "Proposal to go eat pizza together - a great opportunity for a delicious family meal"}
+
+- Input: "Watch a movie together"
+  {"title": "Cinema night", "description": "Proposal to watch a movie as a family - a fun and relaxing activity for everyone"}
+
+- Input: "Play a board game"
+  {"title": "Game night activity", "description": "Proposal to play a board game together - an enjoyable way to bond and have fun"}
+
+Return JSON ONLY:`;
+
+    // Use higher temperature for creative title/description generation
+    const genAI = getGenAI();
+    const creativeModel = genAI.getGenerativeModel({
+      model: process.env.AI_MODEL_NAME || "gemini-2.5-flash",
+      generationConfig: {
+        responseMimeType: "application/json",
+        temperature: 0.8, // Higher temperature for creative, varied output
+      },
+    });
+
+    const model = creativeModel;
     const result = await model.generateContent(prompt);
     let responseText = result.response.text();
+
+    logger.info("=== AI generateTitleAndDescription ===");
+    logger.info(`User input: ${userInput.substring(0, 50)}`);
+    logger.info(`Raw AI response: ${responseText.substring(0, 200)}`);
 
     // Strip markdown code blocks if present
     responseText = responseText.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
@@ -413,35 +449,57 @@ export async function generateTitleAndDescription(
     try {
       const parsed = JSON.parse(responseText);
 
-      if (parsed.title && typeof parsed.title === "string") {
+      logger.info(`Parsed title: ${parsed.title}`);
+      logger.info(`Parsed description: ${parsed.description}`);
+      logger.info(`Title === Description? ${parsed.title === parsed.description}`);
+
+      if (parsed.title && typeof parsed.title === "string" &&
+          parsed.description && typeof parsed.description === "string" &&
+          parsed.title !== parsed.description) {
+        logger.info("Using AI-generated values (different title/description)");
         return {
           title: parsed.title,
-          description: parsed.description || userInput,
+          description: parsed.description,
         };
       }
 
-      // Fallback: use user input as both
-      logger.warn("AI returned invalid format, using fallback");
+      // Fallback: create different title and description
+      logger.warn("AI returned invalid or identical values, using fallback");
+      const fallback = createFallbackTitleDescription(userInput);
+      logger.info(`Fallback title: ${fallback.title}`);
+      logger.info(`Fallback description: ${fallback.description}`);
 
-      return {
-        title: userInput.length > 80 ? userInput.substring(0, 77) + "..." : userInput,
-        description: userInput,
-      };
+      return fallback;
     } catch {
       logger.error("Failed to parse AI response for title/description:", responseText);
 
-      return {
-        title: userInput.length > 80 ? userInput.substring(0, 77) + "..." : userInput,
-        description: userInput,
-      };
+      return createFallbackTitleDescription(userInput);
     }
   } catch (error) {
     logger.error("Error generating title and description:", error);
 
-    // Fallback on error
+    return createFallbackTitleDescription(userInput);
+  }
+}
+
+/**
+ * Creates fallback title and description that are always different
+ */
+function createFallbackTitleDescription(userInput: string): { title: string; description: string } {
+  if (userInput.length > 60) {
+    // Long text: truncate for title, use full text as description base
     return {
-      title: userInput.length > 80 ? userInput.substring(0, 77) + "..." : userInput,
+      title: userInput.substring(0, 57) + "...",
       description: userInput,
+    };
+  } else {
+    // Short text: use as title, add context-aware description
+    // Try to detect language and create appropriate description
+    const isHebrew = /[\u0590-\u05FF]/.test(userInput);
+    const descriptionPrefix = isHebrew ? "הצעה זו מציעה" : "This suggestion proposes";
+    return {
+      title: userInput,
+      description: `${descriptionPrefix}: ${userInput}`,
     };
   }
 }
