@@ -4,7 +4,7 @@ import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { creatorSelector } from '@/redux/creator/creatorSlice';
 import { logError } from '@/utils/errorHandling';
-import { getFunctionsUrl } from '@/controllers/db/config';
+import { getFunctionsUrl, getMassConsensusResultsUrl } from '@/controllers/db/config';
 import styles from './EmailNotifications.module.scss';
 import SectionTitle from '../sectionTitle/SectionTitle';
 
@@ -121,7 +121,8 @@ const EmailNotifications: FC<EmailNotificationsProps> = ({ statement }) => {
 					subject: subject.trim(),
 					message: message.trim(),
 					adminId: creator.uid,
-					buttonText: t('View Discussion'),
+					buttonText: t('View Results'),
+					buttonUrl: getMassConsensusResultsUrl(statement.statementId),
 				}),
 			});
 
@@ -129,9 +130,7 @@ const EmailNotifications: FC<EmailNotificationsProps> = ({ statement }) => {
 
 			if (data.ok) {
 				setSuccess(
-					t('Email sent successfully to {{count}} subscribers', {
-						count: data.sentCount || 0,
-					})
+					`${t('Email sent successfully to')} ${data.sentCount || 0} ${t('subscribers')}`
 				);
 				// Clear form after successful send
 				setSubject('');
@@ -281,33 +280,13 @@ const EmailNotifications: FC<EmailNotificationsProps> = ({ statement }) => {
 					<div className={styles.actions}>
 						<button
 							type="submit"
-							className={styles.sendButton}
+							className={`btn btn--secondary ${(!isFormValid || isSending || !subscriberCount) ? 'btn--disabled' : ''}`}
 							disabled={!isFormValid || isSending || !subscriberCount}
 						>
-							{isSending ? (
-								<>
-									<span>{t('Sending...')}</span>
-								</>
-							) : (
-								<>
-									<svg
-										width="18"
-										height="18"
-										viewBox="0 0 24 24"
-										fill="none"
-										stroke="currentColor"
-										strokeWidth="2"
-									>
-										<line x1="22" y1="2" x2="11" y2="13" />
-										<polygon points="22 2 15 22 11 13 2 9 22 2" />
-									</svg>
-									<span>
-										{t('Send to {{count}} subscribers', {
-											count: subscriberCount ?? 0,
-										})}
-									</span>
-								</>
-							)}
+							{isSending
+								? t('Sending...')
+								: `${t('Send to')} ${subscriberCount ?? 0} ${t('subscribers')}`
+							}
 						</button>
 					</div>
 				</form>

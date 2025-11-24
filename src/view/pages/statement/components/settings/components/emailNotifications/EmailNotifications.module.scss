@@ -119,33 +119,6 @@
         margin-top: 0.5rem;
     }
 
-    .sendButton {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 0.75rem 1.5rem;
-        background: var(--btn-primary);
-        color: white;
-        border: none;
-        border-radius: 8px;
-        font-size: 1rem;
-        font-weight: 500;
-        cursor: pointer;
-        transition: background 0.2s ease, transform 0.2s ease;
-
-        &:hover:not(:disabled) {
-            background: var(--btn-primary-hover);
-            transform: translateY(-1px);
-        }
-
-        &:disabled {
-            background: var(--btn-secondary);
-            color: var(--text-secondary);
-            cursor: not-allowed;
-            transform: none;
-        }
-    }
-
     .success {
         display: flex;
         align-items: center;
