@@ -39,11 +39,16 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
  */
 export default async function QuestionPage({ params }: PageProps) {
   try {
+    console.info('[QuestionPage] Starting to fetch data for:', params.statementId);
+
     // Parallel data fetching on server
     const [question, initialBatch] = await Promise.all([
       getQuestionFromFirebase(params.statementId),
       getRandomOptions(params.statementId, { size: 6 }),
     ]);
+
+    console.info('[QuestionPage] Data fetched successfully, question:', question.statement?.substring(0, 30));
+    console.info('[QuestionPage] Initial batch size:', initialBatch.length);
 
     // Works with any question type - mass consensus UI is universal
     return (
@@ -60,7 +65,8 @@ export default async function QuestionPage({ params }: PageProps) {
         </Suspense>
       </div>
     );
-  } catch {
+  } catch (error) {
+    console.error('[QuestionPage] Error loading page:', error);
     notFound();
   }
 }
