@@ -106,6 +106,7 @@ return (
 }
 
 /**
- * Shorter revalidation for results page
+ * Force dynamic rendering - no caching
  */
-export const revalidate = 30;
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;

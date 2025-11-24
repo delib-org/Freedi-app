@@ -66,17 +66,8 @@ export default async function QuestionPage({ params }: PageProps) {
 }
 
 /**
- * Incremental Static Regeneration
- * Regenerate page every 60 seconds
+ * Force dynamic rendering - no caching
+ * Each user gets fresh random solutions
  */
-export const revalidate = 60;
-
-/**
- * Generate static params for popular questions (optional)
- * Can be populated with featured questions
- */
-export async function generateStaticParams() {
-  // TODO: Fetch popular/featured question IDs
-  // For now, return empty to generate on-demand
-  return [];
-}
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
