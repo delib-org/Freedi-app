@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
 import { Collections, UserEvaluation } from 'delib-npm';
 import { getUserIdFromCookie } from '@/lib/utils/user';
+import { logError } from '@/lib/utils/errorHandling';
 
 /**
  * GET /api/user-evaluations/[questionId]
@@ -50,9 +51,12 @@ export async function GET(
       lastUpdated: data.lastUpdated,
     });
   } catch (error) {
-    console.error('[API] Get user evaluations error:', error);
-    
-return NextResponse.json(
+    logError(error, {
+      operation: 'api.userEvaluations',
+      metadata: { questionId: params.questionId },
+    });
+
+    return NextResponse.json(
       {
         error: 'Failed to get user evaluations',
         message: error instanceof Error ? error.message : 'Unknown error',

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserSolutions } from '@/lib/firebase/queries';
 import { getUserIdFromCookie } from '@/lib/utils/user';
+import { logError } from '@/lib/utils/errorHandling';
 
 /**
  * GET /api/user-solutions/[questionId]
@@ -32,7 +33,10 @@ export async function GET(
       solutionCount: userSolutions.length,
     });
   } catch (error) {
-    console.error('[API] Get user solutions error:', error);
+    logError(error, {
+      operation: 'api.userSolutions',
+      metadata: { questionId: params.questionId },
+    });
 
     return NextResponse.json(
       {

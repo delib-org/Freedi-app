@@ -63,7 +63,10 @@ export default async function QResultsPage({ params }: PageProps) {
       userSolutions = await getUserSolutions(statementId, userId);
     }
   } catch (error) {
-    console.error('Error fetching results:', error);
+    console.error('[QResultsPage] Error fetching results:', {
+      error: error instanceof Error ? error.message : error,
+      statementId,
+    });
     notFound();
   }
 
