@@ -11,21 +11,27 @@ export async function getQuestionFromFirebase(
 ): Promise<Statement> {
   const db = getFirestoreAdmin();
 
+  console.info('[getQuestionFromFirebase] Fetching statement:', statementId);
+
   const docSnapshot = await db
     .collection(Collections.statements)
     .doc(statementId)
     .get();
 
   if (!docSnapshot.exists) {
+    console.error('[getQuestionFromFirebase] Document does not exist:', statementId);
     throw new Error('Question not found');
   }
 
   const statement = docSnapshot.data() as Statement;
+  console.info('[getQuestionFromFirebase] Found statement, type:', statement.statementType);
 
   if (statement.statementType !== StatementType.question) {
+    console.error('[getQuestionFromFirebase] Wrong type:', statement.statementType, 'expected: question');
     throw new Error('Statement is not a question');
   }
 
+  console.info('[getQuestionFromFirebase] Success:', statement.statement?.substring(0, 50));
   return statement;
 }
 
