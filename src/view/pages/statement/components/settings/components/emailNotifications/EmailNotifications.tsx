@@ -33,8 +33,9 @@ const EmailNotifications: FC<EmailNotificationsProps> = ({ statement }) => {
 	const { t } = useTranslation();
 	const creator = useAppSelector(creatorSelector);
 
-	const [subscriberCount, setSubscriberCount] = useState<number>(0);
+	const [subscriberCount, setSubscriberCount] = useState<number | null>(null);
 	const [isLoadingCount, setIsLoadingCount] = useState<boolean>(true);
+	const [serviceAvailable, setServiceAvailable] = useState<boolean>(true);
 	const [subject, setSubject] = useState<string>('');
 	const [message, setMessage] = useState<string>('');
 	const [isSending, setIsSending] = useState<boolean>(false);
@@ -50,16 +51,25 @@ const EmailNotifications: FC<EmailNotificationsProps> = ({ statement }) => {
 				const response = await fetch(
 					`${functionsUrl}/getEmailSubscriberCount?statementId=${statement.statementId}`
 				);
+
+				if (!response.ok) {
+					// Function not available (e.g., emulator not running)
+					console.info('Email notification service not available');
+					setServiceAvailable(false);
+
+					return;
+				}
+
 				const data: SubscriberCountResponse = await response.json();
 
 				if (data.ok) {
 					setSubscriberCount(data.count);
+					setServiceAvailable(true);
 				}
 			} catch (err) {
-				logError(err, {
-					operation: 'emailNotifications.fetchSubscriberCount',
-					statementId: statement.statementId,
-				});
+				// Network error or CORS - service not available
+				console.info('Email notification service not reachable:', err);
+				setServiceAvailable(false);
 			} finally {
 				setIsLoadingCount(false);
 			}
@@ -89,7 +99,7 @@ const EmailNotifications: FC<EmailNotificationsProps> = ({ statement }) => {
 			return;
 		}
 
-		if (subscriberCount === 0) {
+		if (subscriberCount === 0 || subscriberCount === null) {
 			setError(t('No subscribers to send notification to'));
 
 			return;
@@ -147,6 +157,21 @@ const EmailNotifications: FC<EmailNotificationsProps> = ({ statement }) => {
 		subject.length <= MAX_SUBJECT_LENGTH &&
 		message.length <= MAX_MESSAGE_LENGTH;
 
+	// Don't render if service is unavailable
+	if (!serviceAvailable && !isLoadingCount) {
+		return (
+			<div className={styles.emailNotifications}>
+				<SectionTitle title={t('Email Notifications')} />
+				<div className={styles.noSubscribers}>
+					<p>{t('Email notification service is currently unavailable')}</p>
+					<p className={styles.hint}>
+						{t('Please ensure the Firebase Functions are deployed and running')}
+					</p>
+				</div>
+			</div>
+		);
+	}
+
 	return (
 		<div className={styles.emailNotifications}>
 			<SectionTitle title={t('Email Notifications')} />
@@ -157,12 +182,12 @@ const EmailNotifications: FC<EmailNotificationsProps> = ({ statement }) => {
 				) : (
 					<div className={styles.subscriberCount}>
 						<span>{t('Email subscribers')}:</span>
-						<span className={styles.count}>{subscriberCount}</span>
+						<span className={styles.count}>{subscriberCount ?? 0}</span>
 					</div>
 				)}
 			</div>
 
-			{subscriberCount === 0 && !isLoadingCount ? (
+			{(subscriberCount === 0 || subscriberCount === null) && !isLoadingCount ? (
 				<div className={styles.noSubscribers}>
 					<p>{t('No email subscribers yet')}</p>
 					<p className={styles.hint}>
@@ -257,7 +282,7 @@ const EmailNotifications: FC<EmailNotificationsProps> = ({ statement }) => {
 						<button
 							type="submit"
 							className={styles.sendButton}
-							disabled={!isFormValid || isSending || subscriberCount === 0}
+							disabled={!isFormValid || isSending || !subscriberCount}
 						>
 							{isSending ? (
 								<>
@@ -278,7 +303,7 @@ const EmailNotifications: FC<EmailNotificationsProps> = ({ statement }) => {
 									</svg>
 									<span>
 										{t('Send to {{count}} subscribers', {
-											count: subscriberCount,
+											count: subscriberCount ?? 0,
 										})}
 									</span>
 								</>
