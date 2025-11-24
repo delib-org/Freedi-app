@@ -42,8 +42,18 @@ export function getUserIdFromCookie(cookieHeader: string | null): string | null 
   if (!cookieHeader) return null;
 
   const match = cookieHeader.match(/userId=([^;]+)/);
-  
+
 return match ? match[1] : null;
+}
+
+/**
+ * Get user ID from Next.js cookies API (server-side)
+ * @param cookieStore - Next.js cookies() return value
+ */
+export function getUserIdFromCookies(cookieStore: { get: (name: string) => { value: string } | undefined }): string | null {
+  const userIdCookie = cookieStore.get('userId');
+
+  return userIdCookie?.value ?? null;
 }
 
 /**
