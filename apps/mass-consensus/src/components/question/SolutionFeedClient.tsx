@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Statement } from 'delib-npm';
 import { getOrCreateAnonymousUser } from '@/lib/utils/user';
 import { ToastProvider } from '@/components/shared/Toast';
@@ -123,9 +123,9 @@ export default function SolutionFeedClient({
     }
   }, [questionId, totalOptionsCount, solutions]);
 
-  // Track evaluated solutions count
-  const evaluatedCount = evaluatedIds.size;
-  const canGetNewBatch = evaluatedCount >= solutions.length;
+  // Track evaluated solutions count - use useMemo to ensure stable computation during SSR hydration
+  const evaluatedCount = useMemo(() => evaluatedIds.size, [evaluatedIds]);
+  const canGetNewBatch = useMemo(() => evaluatedCount >= solutions.length, [evaluatedCount, solutions.length]);
 
   // Show completion screen when first batch is completed
   useEffect(() => {
