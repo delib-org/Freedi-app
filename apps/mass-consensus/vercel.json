@@ -50,10 +50,7 @@
     }
   },
   "crons": [],
-  "env": {
-    "NEXT_PUBLIC_APP_URL": "@next_public_app_url"
-  },
-  "git": {
+    "git": {
     "deploymentEnabled": {
       "main": true
     }
