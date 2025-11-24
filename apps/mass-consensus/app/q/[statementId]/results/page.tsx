@@ -27,7 +27,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       title: `Results: ${question.statement} | Freedi Discussion`,
       description: `View all solutions and their rankings for: ${question.statement}`,
     };
-  } catch (error) {
+  } catch {
     return {
       title: 'Results | Freedi Discussion',
     };

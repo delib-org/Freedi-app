@@ -72,14 +72,14 @@ export async function getRandomOptions(
 
   // Query 1: Get options with randomSeed >= random value
   // Note: Not filtering by 'hide' in query because documents without 'hide' field won't match !=
-  let query = db
+  const query = db
     .collection(Collections.statements)
     .where('parentId', '==', questionId)
     .where('statementType', '==', StatementType.option)
     .where('randomSeed', '>=', randomSeed)
     .limit(size);
 
-  let snapshot = await query.get();
+  const snapshot = await query.get();
   console.info('[getRandomOptions] First query (randomSeed >=', randomSeed.toFixed(3), ') returned:', snapshot.size, 'docs');
 
   let options_results = snapshot.docs

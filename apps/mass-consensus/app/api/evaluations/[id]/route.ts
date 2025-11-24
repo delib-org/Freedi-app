@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
-import { Collections, Evaluation, UserEvaluation } from 'delib-npm';
+import { Collections, Evaluation } from 'delib-npm';
 import { getUserIdFromCookie, getAnonymousDisplayName } from '@/lib/utils/user';
 import { updateStatementConsensus } from '@/lib/firebase/queries';
 import { FieldValue } from 'firebase-admin/firestore';
@@ -97,9 +97,9 @@ export async function POST(
       userEvaluationId,
       userId,
       parentStatementId: parentId,
-      evaluatedOptionsIds: FieldValue.arrayUnion(statementId) as any,
+      evaluatedOptionsIds: FieldValue.arrayUnion(statementId),
       lastUpdated: Date.now(),
-      createdAt: FieldValue.serverTimestamp() as any, // Will only set on create
+      createdAt: FieldValue.serverTimestamp(), // Will only set on create
     }, { merge: true });
 
     // Update statement consensus (async, don't wait)

@@ -188,11 +188,8 @@ export async function POST(
     let title: string;
     let description: string;
 
-    console.log('=== SUBMIT: AI Generated Values ===');
-    console.log('generatedTitle:', generatedTitle);
-    console.log('generatedDescription:', generatedDescription);
-    console.log('Are they identical?', generatedTitle === generatedDescription);
-    console.log('===================================');
+    console.info('[Submit] AI generated title:', generatedTitle);
+    console.info('[Submit] AI generated description:', generatedDescription);
 
     if (generatedTitle && generatedDescription) {
       // Use AI-generated values

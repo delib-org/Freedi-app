@@ -5,7 +5,7 @@ export default function NotFound() {
   return (
     <div className="page">
       <h1>Question Not Found</h1>
-      <p>The discussion you're looking for doesn't exist or has been removed.</p>
+      <p>The discussion you&apos;re looking for doesn&apos;t exist or has been removed.</p>
       <div style={{ marginTop: '2rem' }}>
         <a href="/" style={{ color: 'var(--btn-primary)', textDecoration: 'underline' }}>
           ← Back to home

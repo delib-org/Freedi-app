@@ -1,6 +1,5 @@
 import { Suspense } from 'react';
 import { Metadata } from 'next';
-import { Statement, StatementType } from 'delib-npm';
 import { getQuestionFromFirebase, getRandomOptions } from '@/lib/firebase/queries';
 import QuestionHeader from '@/components/question/QuestionHeader';
 import SolutionFeed from '@/components/question/SolutionFeed';
@@ -27,7 +26,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
         type: 'website',
       },
     };
-  } catch (error) {
+  } catch {
     return {
       title: 'Question Not Found | Freedi Discussion',
     };
@@ -61,8 +60,7 @@ export default async function QuestionPage({ params }: PageProps) {
         </Suspense>
       </div>
     );
-  } catch (error) {
-    console.error('Failed to load question:', error);
+  } catch {
     notFound();
   }
 }
