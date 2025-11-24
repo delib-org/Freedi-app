@@ -1,29 +1,33 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
-import { logError, ValidationError } from '@/lib/utils/errorHandling';
+import { logError } from '@/lib/utils/errorHandling';
 
-const COLLECTION_NAME = 'resultSubscriptions';
+// Use the same collection as the Firebase function for admin notifications
+const EMAIL_SUBSCRIBERS_COLLECTION = 'emailSubscribers';
 
-interface SubscriptionData {
+interface EmailSubscriber {
+  subscriberId: string;
   email: string;
   statementId: string;
-  userId: string;
+  userId?: string;
   createdAt: number;
-  notified: boolean;
+  isActive: boolean;
+  source: string;
 }
 
 /**
  * POST /api/statements/[id]/subscribe
- * Subscribe to receive email notification when results are ready
+ * Subscribe to receive email notifications for a statement
+ * Works with the admin email notification system in the main app
  */
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id: statementId } = await params;
     const body = await request.json();
     const { email, userId } = body;
-    const statementId = params.id;
 
     // Validate email
     if (!email || typeof email !== 'string') {
@@ -53,9 +57,10 @@ export async function POST(
 
     // Check if already subscribed (by email + statementId)
     const existingQuery = await db
-      .collection(COLLECTION_NAME)
+      .collection(EMAIL_SUBSCRIBERS_COLLECTION)
       .where('email', '==', email.toLowerCase())
       .where('statementId', '==', statementId)
+      .where('isActive', '==', true)
       .limit(1)
       .get();
 
@@ -65,28 +70,37 @@ export async function POST(
         success: true,
         message: 'Already subscribed',
         alreadySubscribed: true,
+        subscriberId: existingQuery.docs[0].id,
       });
     }
 
-    // Create subscription
-    const subscriptionRef = db.collection(COLLECTION_NAME).doc();
-    const subscription: SubscriptionData = {
+    // Create subscription ID matching the format in Firebase function
+    const subscriberId = `${statementId}--${email.toLowerCase().replace(/[^a-z0-9]/g, '_')}--${Date.now()}`;
+
+    const subscription: EmailSubscriber = {
+      subscriberId,
       email: email.toLowerCase(),
       statementId,
-      userId: userId || 'anonymous',
+      userId: userId || undefined,
       createdAt: Date.now(),
-      notified: false,
+      isActive: true,
+      source: 'mass-consensus',
     };
 
-    await subscriptionRef.set(subscription);
+    await db.collection(EMAIL_SUBSCRIBERS_COLLECTION).doc(subscriberId).set(subscription);
+
+    console.info('Email subscriber added from mass-consensus', {
+      subscriberId,
+      statementId,
+    });
 
     return NextResponse.json({
       success: true,
       message: 'Subscribed successfully',
-      subscriptionId: subscriptionRef.id,
+      subscriberId,
     });
   } catch (error) {
-    const questionId = params.id;
+    const { id: questionId } = await params;
 
     logError(error, {
       operation: 'api.subscribe',
@@ -106,12 +120,12 @@ export async function POST(
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id: statementId } = await params;
     const { searchParams } = new URL(request.url);
     const email = searchParams.get('email');
-    const statementId = params.id;
 
     if (!email) {
       return NextResponse.json(
@@ -123,9 +137,10 @@ export async function GET(
     const db = getFirestoreAdmin();
 
     const existingQuery = await db
-      .collection(COLLECTION_NAME)
+      .collection(EMAIL_SUBSCRIBERS_COLLECTION)
       .where('email', '==', email.toLowerCase())
       .where('statementId', '==', statementId)
+      .where('isActive', '==', true)
       .limit(1)
       .get();
 
@@ -133,13 +148,75 @@ export async function GET(
       subscribed: !existingQuery.empty,
     });
   } catch (error) {
+    const { id: questionId } = await params;
+
     logError(error, {
       operation: 'api.subscribe.check',
-      metadata: { questionId: params.id },
+      metadata: { questionId },
     });
 
     return NextResponse.json(
       { error: 'Failed to check subscription' },
+      { status: 500 }
+    );
+  }
+}
+
+/**
+ * DELETE /api/statements/[id]/subscribe
+ * Unsubscribe from email notifications
+ */
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id: statementId } = await params;
+    const { searchParams } = new URL(request.url);
+    const email = searchParams.get('email');
+    const subscriberId = searchParams.get('subscriberId');
+
+    const db = getFirestoreAdmin();
+
+    if (subscriberId) {
+      // Unsubscribe by subscriber ID
+      await db.collection(EMAIL_SUBSCRIBERS_COLLECTION).doc(subscriberId).update({
+        isActive: false,
+      });
+    } else if (email) {
+      // Unsubscribe by email and statement
+      const subscribersSnapshot = await db
+        .collection(EMAIL_SUBSCRIBERS_COLLECTION)
+        .where('email', '==', email.toLowerCase())
+        .where('statementId', '==', statementId)
+        .get();
+
+      const batch = db.batch();
+      subscribersSnapshot.docs.forEach((doc) => {
+        batch.update(doc.ref, { isActive: false });
+      });
+      await batch.commit();
+    } else {
+      return NextResponse.json(
+        { error: 'Either email or subscriberId is required' },
+        { status: 400 }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: 'Unsubscribed successfully',
+    });
+  } catch (error) {
+    const { id: questionId } = await params;
+
+    logError(error, {
+      operation: 'api.unsubscribe',
+      metadata: { questionId },
+    });
+
+    return NextResponse.json(
+      { error: 'Failed to unsubscribe' },
       { status: 500 }
     );
   }

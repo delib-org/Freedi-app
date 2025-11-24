@@ -60,6 +60,12 @@ import {
   addMemberToMassConsensus,
 } from "./fn_massConsensus";
 import { addFeedback } from "./fn_feedback";
+import {
+  addEmailSubscriber,
+  sendEmailToSubscribers,
+  getEmailSubscriberCount,
+  unsubscribeEmail,
+} from "./fn_emailNotifications";
 import { getCluster, recoverLastSnapshot } from "./fn_clusters";
 import { checkProfanity } from "./fn_profanityChecker";
 import { handleImproveSuggestion } from "./fn_improveSuggestion";
@@ -204,6 +210,12 @@ exports.massConsensusGetInitialData = wrapHttpFunction(getInitialMCData);
 exports.getQuestionOptions = wrapHttpFunction(getQuestionOptions);
 exports.massConsensusAddMember = wrapHttpFunction(addMassConsensusMember);
 exports.addFeedback = wrapHttpFunction(addFeedback);
+
+// Email notification functions
+exports.addEmailSubscriber = wrapHttpFunction(addEmailSubscriber);
+exports.sendEmailToSubscribers = wrapHttpFunction(sendEmailToSubscribers);
+exports.getEmailSubscriberCount = wrapHttpFunction(getEmailSubscriberCount);
+exports.unsubscribeEmail = wrapHttpFunction(unsubscribeEmail);
 exports.getCluster = wrapHttpFunction(getCluster);
 exports.recoverLastSnapshot = wrapHttpFunction(recoverLastSnapshot);
 exports.checkProfanity = checkProfanity;
