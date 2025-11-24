@@ -26,7 +26,7 @@ if (currentDomain === 'freedi.tech' || currentDomain === 'delib.web.app' || curr
 		measurementId: "G-XSGFFBXM9X",
 	};
 } else if (currentDomain === 'freedi-test.web.app') {
-	// Production config
+	// Freedi Test config
 	firebaseConfig = {
 		apiKey: 'AIzaSyBCgq3y9WjS8ZkB-q_lnkFM2BuUdLp2M-g',
 		authDomain: 'freedi-test.firebaseapp.com',
@@ -34,6 +34,16 @@ if (currentDomain === 'freedi.tech' || currentDomain === 'delib.web.app' || curr
 		storageBucket: 'freedi-test.firebasestorage.app',
 		messagingSenderId: '47037334917',
 		appId: '1:47037334917:web:f9bce2dd772b5efd29f0ec'
+	};
+} else if (currentDomain === 'wizcol-app.web.app') {
+	// Wizcol Production config
+	firebaseConfig = {
+		apiKey: 'AIzaSyBtm5USTMMQqf9KQ3ZIne6VbZ6AGOiT-Ts',
+		authDomain: 'wizcol-app.firebaseapp.com',
+		projectId: 'wizcol-app',
+		storageBucket: 'wizcol-app.firebasestorage.app',
+		messagingSenderId: '337833396726',
+		appId: '1:337833396726:web:b80268707145886ce95fd7'
 	};
 } else {
 	// Fallback or staging config
