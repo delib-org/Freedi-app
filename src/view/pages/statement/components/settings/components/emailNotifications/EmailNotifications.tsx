@@ -2,7 +2,7 @@ import { FC, useState, useEffect, FormEvent } from 'react';
 import { Statement } from 'delib-npm';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
-import { selectUser } from '@/redux/creator/creatorSlice';
+import { creatorSelector } from '@/redux/creator/creatorSlice';
 import { logError } from '@/utils/errorHandling';
 import { getFunctionsUrl } from '@/controllers/db/config';
 import styles from './EmailNotifications.module.scss';
@@ -31,7 +31,7 @@ const MAX_MESSAGE_LENGTH = 2000;
 
 const EmailNotifications: FC<EmailNotificationsProps> = ({ statement }) => {
 	const { t } = useTranslation();
-	const user = useAppSelector(selectUser);
+	const creator = useAppSelector(creatorSelector);
 
 	const [subscriberCount, setSubscriberCount] = useState<number>(0);
 	const [isLoadingCount, setIsLoadingCount] = useState<boolean>(true);
@@ -71,7 +71,7 @@ const EmailNotifications: FC<EmailNotificationsProps> = ({ statement }) => {
 	const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
 
-		if (!user?.uid) {
+		if (!creator?.uid) {
 			setError(t('You must be logged in to send notifications'));
 
 			return;
@@ -110,7 +110,7 @@ const EmailNotifications: FC<EmailNotificationsProps> = ({ statement }) => {
 					statementId: statement.statementId,
 					subject: subject.trim(),
 					message: message.trim(),
-					adminId: user.uid,
+					adminId: creator.uid,
 					buttonText: t('View Discussion'),
 				}),
 			});
@@ -133,7 +133,7 @@ const EmailNotifications: FC<EmailNotificationsProps> = ({ statement }) => {
 			logError(err, {
 				operation: 'emailNotifications.sendEmail',
 				statementId: statement.statementId,
-				userId: user.uid,
+				userId: creator?.uid,
 			});
 			setError(t('Failed to send email. Please try again.'));
 		} finally {
