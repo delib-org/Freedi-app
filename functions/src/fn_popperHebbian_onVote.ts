@@ -3,9 +3,10 @@ import { getFirestore } from 'firebase-admin/firestore';
 import { Statement, Collections } from 'delib-npm';
 import { EvidenceType } from 'delib-npm/dist/models/evidence/evidenceModel';
 import {
-	calculateCorroborationLevel,
 	calculateConsensusValid,
-	determineStatus
+	determineStatus,
+	updateHebbianScore,
+	migrateCorroborationScore
 } from './helpers/consensusValidCalculator';
 
 // Base weights now scaled to 0-1 range
@@ -68,6 +69,9 @@ function calculatePostWeight(statement: Statement): number {
 	return Math.max(-1.0, Math.min(1.0, finalWeight));
 }
 
+// Hebbian score constants
+const PRIOR = 0.6;  // Starting score (benefit of doubt)
+
 async function recalculateScore(statementId: string): Promise<void> {
 	const db = getFirestore();
 
@@ -87,37 +91,41 @@ async function recalculateScore(statementId: string): Promise<void> {
 		.where('evidence', '!=', null)
 		.get();
 
-	let totalScore = 0;
+	const evidenceCount = evidencePostsSnapshot.size;
 
+	// Start with prior (0.6) if no evidence
+	let hebbianScore = PRIOR;
+
+	// Apply multiplicative Popperian-Bayesian updates for each evidence post
 	evidencePostsSnapshot.forEach((doc) => {
 		const statement = doc.data() as Statement;
-		const weight = calculatePostWeight(statement);
-		const support = statement.evidence?.support || 0;
 
-		// Update the weight in the statement
+		// Calculate and update the weight based on votes
+		const weight = calculatePostWeight(statement);
 		doc.ref.update({
 			'evidence.evidenceWeight': weight
 		});
 
-		// Contribution = support (-1 to 1) * weight
-		totalScore += support * weight;
+		// Get corroboration score (with migration from old support field)
+		const corroborationScore = migrateCorroborationScore(statement.evidence || {});
+
+		// Apply Popperian-Bayesian update
+		hebbianScore = updateHebbianScore(hebbianScore, corroborationScore, Math.abs(weight));
 	});
 
-	// Calculate normalized corroboration level [0, 1]
-	const evidenceCount = evidencePostsSnapshot.size;
-	const corroborationLevel = calculateCorroborationLevel(totalScore, evidenceCount);
-
-	// Determine status based on corroboration level
-	const status = determineStatus(corroborationLevel);
+	// Determine status based on hebbianScore (threshold at 0.6)
+	const status = determineStatus(hebbianScore);
 
 	// Create PopperHebbianScore object
 	const popperHebbianScore = {
 		statementId,
-		totalScore,
-		corroborationLevel,
+		hebbianScore,
 		evidenceCount,
 		status,
-		lastCalculated: Date.now()
+		lastCalculated: Date.now(),
+		// Keep deprecated fields for backward compatibility
+		totalScore: 0,
+		corroborationLevel: hebbianScore
 	};
 
 	// Calculate combined consensusValid score

@@ -1,5 +1,5 @@
 import { FC } from 'react';
-import { PopperHebbianScore } from '@/models/popperHebbian/ScoreModels';
+import { PopperHebbianScore, HEBBIAN_CONFIG } from '@/models/popperHebbian/ScoreModels';
 import { getScoreInterpretation } from '../../popperHebbianHelpers';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import styles from './IdeaScoreboard.module.scss';
@@ -10,7 +10,9 @@ interface IdeaScoreboardProps {
 
 const IdeaScoreboard: FC<IdeaScoreboardProps> = ({ score }) => {
 	const { t } = useTranslation();
-	const { totalScore, status } = score;
+	// Use hebbianScore, fallback to corroborationLevel for backward compatibility
+	const hebbianScore = score.hebbianScore ?? score.corroborationLevel ?? HEBBIAN_CONFIG.PRIOR;
+	const { status } = score;
 
 	const getStatusText = (status: string): string => {
 		switch (status) {
@@ -38,6 +40,10 @@ const IdeaScoreboard: FC<IdeaScoreboardProps> = ({ score }) => {
 		}
 	};
 
+	// Convert 0-1 score to percentage for display
+	const scorePercentage = Math.round(hebbianScore * 100);
+	const thresholdPercentage = HEBBIAN_CONFIG.THRESHOLD * 100;
+
 	return (
 		<div className={`${styles.scoreboard} ${styles[`scoreboard--${status}`]}`}>
 			<div className={styles.scoreboardHeader}>
@@ -50,14 +56,13 @@ const IdeaScoreboard: FC<IdeaScoreboardProps> = ({ score }) => {
 			<div className={styles.scoreboardBody}>
 				<div className={styles.scoreDisplay}>
 					<div className={styles.scoreValue}>
-						{totalScore > 0 ? '+' : ''}
-						{totalScore.toFixed(1)}
+						{scorePercentage}%
 					</div>
-					<div className={styles.scoreLabel}>{t('Overall Score')}</div>
+					<div className={styles.scoreLabel}>{t('Validity Score')}</div>
 				</div>
 
 				<div className={styles.scoreInterpretation}>
-					{getScoreInterpretation(totalScore, t)}
+					{getScoreInterpretation(hebbianScore, t)}
 				</div>
 			</div>
 
@@ -65,11 +70,18 @@ const IdeaScoreboard: FC<IdeaScoreboardProps> = ({ score }) => {
 				<div className={styles.scoreBar}>
 					<div
 						className={styles.scoreBarFill}
-						style={{
-							width: `${Math.min(Math.abs(totalScore) * 10, 100)}%`,
-							transform: totalScore < 0 ? 'scaleX(-1)' : 'none'
-						}}
+						style={{ width: `${scorePercentage}%` }}
 					/>
+					{/* Threshold marker at 60% */}
+					<div
+						className={styles.thresholdMarker}
+						style={{ left: `${thresholdPercentage}%` }}
+					/>
+				</div>
+				<div className={styles.scoreBarLabels}>
+					<span>0%</span>
+					<span className={styles.thresholdLabel}>{thresholdPercentage}%</span>
+					<span>100%</span>
 				</div>
 			</div>
 		</div>

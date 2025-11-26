@@ -1,7 +1,7 @@
 import React, { FC, useState, useEffect } from 'react';
 import { Statement } from 'delib-npm';
 import { EvidenceType } from 'delib-npm/dist/models/evidence/evidenceModel';
-import { getSupportLabel, getSupportColor } from '../../popperHebbianHelpers';
+import { getCorroborationLabel, getCorroborationColor } from '../../popperHebbianHelpers';
 import { submitVote, removeVote, getUserVote } from '@/controllers/db/popperHebbian/evidenceController';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
@@ -19,6 +19,7 @@ interface EvidenceWithLink extends Statement {
 	evidence?: {
 		evidenceType?: EvidenceType;
 		support?: number;
+		corroborationScore?: number;  // NEW: 0-1 scale
 		helpfulCount?: number;
 		notHelpfulCount?: number;
 		netScore?: number;
@@ -44,10 +45,13 @@ const EvidencePost: FC<EvidencePostProps> = ({ statement }) => {
 		return null;
 	}
 
-	const { support, evidenceType, helpfulCount = 0, notHelpfulCount = 0 } = evidence;
+	const { evidenceType, helpfulCount = 0, notHelpfulCount = 0 } = evidence;
+	// Use corroborationScore (0-1) if available, fallback to migrated support
+	const corroborationScore = (evidence as EvidenceWithLink['evidence'])?.corroborationScore
+		?? (evidence.support !== undefined ? (evidence.support + 1) / 2 : 0.5);
 	const netScore = helpfulCount - notHelpfulCount;
-	const supportColor = getSupportColor(support);
-	const supportLabel = getSupportLabel(support, t);
+	const corroborationColor = getCorroborationColor(corroborationScore);
+	const corroborationLabel = getCorroborationLabel(corroborationScore, t);
 
 	const getEvidenceTypeLabel = (type: EvidenceType): string => {
 		switch (type) {
@@ -173,14 +177,14 @@ const EvidencePost: FC<EvidencePostProps> = ({ statement }) => {
 
 	return (
 		<>
-			<div className={`${styles.evidencePost} ${styles[`evidencePost--${supportColor}`]}`}>
+			<div className={`${styles.evidencePost} ${styles[`evidencePost--${corroborationColor}`]}`}>
 				<div className={styles.evidenceHeader}>
 					<div className={styles.badges}>
 						<span className={`${styles.typeBadge} ${styles[`typeBadge--${getEvidenceTypeColor(evidenceType)}`]}`}>
 							{getEvidenceTypeLabel(evidenceType)}
 						</span>
-						<span className={`${styles.supportBadge} ${styles[`supportBadge--${supportColor}`]}`}>
-							{supportLabel}
+						<span className={`${styles.supportBadge} ${styles[`supportBadge--${corroborationColor}`]}`}>
+							{corroborationLabel}
 						</span>
 					</div>
 					{isUserAuthor && (

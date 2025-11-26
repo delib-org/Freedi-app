@@ -1,6 +1,6 @@
 import { FC, useState, useEffect, useMemo } from 'react';
 import { Statement } from 'delib-npm';
-import { PopperHebbianScore, StatementVersion } from '@/models/popperHebbian';
+import { PopperHebbianScore, StatementVersion, HEBBIAN_CONFIG } from '@/models/popperHebbian';
 import { listenToEvidencePosts } from '@/controllers/db/popperHebbian/evidenceController';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
@@ -48,15 +48,22 @@ const PopperHebbianDiscussion: FC<PopperHebbianDiscussionProps> = ({
 	// Cast statement to extended type for version access
 	const extendedStatement = statement as ExtendedStatement;
 
-	// Get score from statement, or create a default one
-	const score: PopperHebbianScore = extendedStatement.popperHebbianScore || {
-		statementId: statement.statementId,
-		totalScore: 0,
-		corroborationLevel: 0.5,
-		evidenceCount: 0,
-		status: 'under-discussion' as const,
-		lastCalculated: Date.now()
-	};
+	// Get score from statement, or create a default one with PRIOR (0.6)
+	const score: PopperHebbianScore = extendedStatement.popperHebbianScore
+		? {
+			...extendedStatement.popperHebbianScore,
+			// Ensure hebbianScore exists (fallback to corroborationLevel for old data)
+			hebbianScore: extendedStatement.popperHebbianScore.hebbianScore
+				?? extendedStatement.popperHebbianScore.corroborationLevel
+				?? HEBBIAN_CONFIG.PRIOR
+		}
+		: {
+			statementId: statement.statementId,
+			hebbianScore: HEBBIAN_CONFIG.PRIOR,  // Start at 0.6
+			evidenceCount: 0,
+			status: 'looking-good' as const,  // At 0.6, status is looking-good
+			lastCalculated: Date.now()
+		};
 
 	useEffect(() => {
 		if (!statement.statementId) return;

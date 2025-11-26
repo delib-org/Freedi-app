@@ -15,6 +15,99 @@ const DEFAULT_CONFIG: ConsensusValidConfig = {
 	consensusSigmoidFactor: 20
 };
 
+// Hebbian score constants for Popperian-Bayesian formula
+const HEBBIAN_CONFIG = {
+	FALSIFICATION_STRENGTH: 0.7,   // Max 70% reduction per comment
+	CORROBORATION_STRENGTH: 0.15,  // Max ~6% boost per comment
+	RECOVERY_RESISTANCE: 0.6,      // Slower recovery from low scores
+	FLOOR: 0.05,                   // Never completely dead
+	CEILING: 0.95,                 // Never fully proven
+	THRESHOLD: 0.6                 // Corroborated threshold
+};
+
+/**
+ * Evidence type from Statement.evidence
+ */
+interface Evidence {
+	corroborationScore?: number;
+	support?: number;
+	evidenceType?: string;
+	evidenceWeight?: number;
+	helpfulCount?: number;
+	notHelpfulCount?: number;
+}
+
+/**
+ * Migrate old support field (-1 to 1) to new corroborationScore (0-1)
+ * Also handles reading the new corroborationScore field directly
+ */
+export function migrateCorroborationScore(evidence: Evidence): number {
+	// If new field exists, use it
+	if (typeof evidence.corroborationScore === 'number') {
+		return evidence.corroborationScore;
+	}
+
+	// Migrate from old support field (-1 to 1) → (0 to 1)
+	if (typeof evidence.support === 'number') {
+		return (evidence.support + 1) / 2;
+	}
+
+	// Default to neutral if no data
+	return 0.5;
+}
+
+/**
+ * Update Hebbian score using Popperian-Bayesian formula
+ *
+ * Properties:
+ * - Falsification-sensitive: Strong refutation significantly damages score
+ * - Multiplicative updates: Each comment compounds on current score
+ * - Recovery resistance: Low scores are harder to improve
+ * - Asymmetric: Easier to falsify than corroborate (Popperian)
+ *
+ * @param currentScore - Current Hebbian score [0, 1]
+ * @param corroborationScore - AI classification [0, 1]: 0=falsifies, 0.5=neutral, 1=corroborates
+ * @param weight - Evidence credibility weight [0, 1] from evidence type and votes
+ * @returns New Hebbian score [0, 1]
+ */
+export function updateHebbianScore(
+	currentScore: number,
+	corroborationScore: number,
+	weight: number
+): number {
+	const {
+		FALSIFICATION_STRENGTH,
+		CORROBORATION_STRENGTH,
+		RECOVERY_RESISTANCE,
+		FLOOR,
+		CEILING
+	} = HEBBIAN_CONFIG;
+
+	const isFalsifying = corroborationScore < 0.5;
+	const isCorroborating = corroborationScore > 0.5;
+
+	let newScore = currentScore;
+
+	if (isFalsifying) {
+		// Falsification: multiplicative damage
+		// Map 0-0.5 to 1-0 (0 = max falsification, 0.5 = no falsification)
+		const falsificationStrength = (0.5 - corroborationScore) * 2;
+		const damage = falsificationStrength * FALSIFICATION_STRENGTH * weight;
+		newScore = currentScore * (1 - damage);
+	} else if (isCorroborating) {
+		// Corroboration: additive boost with diminishing returns
+		// Map 0.5-1 to 0-1 (0.5 = no corroboration, 1 = max corroboration)
+		const corroborationStrength = (corroborationScore - 0.5) * 2;
+		const headroom = CEILING - currentScore;
+		const resistanceFactor = 1 - RECOVERY_RESISTANCE * (1 - currentScore);
+		const boost = corroborationStrength * CORROBORATION_STRENGTH * weight * headroom * resistanceFactor;
+		newScore = currentScore + boost;
+	}
+
+	// Clamp to valid range
+	return Math.max(FLOOR, Math.min(CEILING, newScore));
+}
+
 /**
  * Calculate corroboration level from raw totalScore
  *
@@ -61,13 +154,13 @@ export function normalizeConsensus(
 /**
  * Calculate combined consensusValid score
  *
- * Integrates traditional voting (consensus) with evidence-based validation (corroborationLevel)
+ * Integrates traditional voting (consensus) with evidence-based validation (hebbianScore)
  * to create a unified quality metric.
  *
  * Formula:
  * - normalizedConsensus = 1 / (1 + e^(-consensus/20))
- * - corroborationLevel = from PopperHebbianScore or 0.5 if not available
- * - consensusValid = (w1 × normalizedConsensus) + (w2 × corroborationLevel)
+ * - hebbianScore = from PopperHebbianScore or 0.6 (PRIOR) if not available
+ * - consensusValid = (w1 × normalizedConsensus) + (w2 × hebbianScore)
  *
  * @param consensus - Raw consensus score from traditional voting
  * @param popperHebbianScore - Popperian-Hebbian score object (optional)
@@ -87,29 +180,37 @@ export function calculateConsensusValid(
 		finalConfig.consensusSigmoidFactor
 	);
 
-	// Get corroboration level (default to 0.5 if no Popper-Hebbian score)
-	const corroborationLevel = popperHebbianScore?.corroborationLevel ?? 0.5;
+	// Get Hebbian score (default to 0.6 PRIOR if no Popper-Hebbian score)
+	// Use hebbianScore if available, fallback to corroborationLevel for backward compatibility
+	const hebbianScore = (popperHebbianScore as { hebbianScore?: number })?.hebbianScore
+		?? popperHebbianScore?.corroborationLevel
+		?? 0.6;
 
 	// Calculate weighted average
 	const consensusValid =
 		finalConfig.consensusWeight * normalizedConsensus +
-		finalConfig.corroborationWeight * corroborationLevel;
+		finalConfig.corroborationWeight * hebbianScore;
 
 	return consensusValid;
 }
 
 /**
- * Determine status based on corroboration level
+ * Determine status based on Hebbian score
  *
- * @param corroborationLevel - Normalized corroboration level [0, 1]
+ * Uses threshold of 0.6:
+ * - >= 0.6: looking-good (corroborated)
+ * - 0.4 - 0.6: under-discussion (developing)
+ * - <= 0.4: needs-fixing (falsified)
+ *
+ * @param hebbianScore - Hebbian score [0, 1]
  * @returns Status indicator
  */
 export function determineStatus(
-	corroborationLevel: number
+	hebbianScore: number
 ): 'looking-good' | 'under-discussion' | 'needs-fixing' {
-	if (corroborationLevel >= 0.7) {
+	if (hebbianScore >= HEBBIAN_CONFIG.THRESHOLD) {
 		return 'looking-good'; // Well corroborated
-	} else if (corroborationLevel <= 0.3) {
+	} else if (hebbianScore <= 0.4) {
 		return 'needs-fixing'; // Falsified / challenged
 	} else {
 		return 'under-discussion'; // Balanced / developing
