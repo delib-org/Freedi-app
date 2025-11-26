@@ -1,13 +1,24 @@
-import { FC, useState, useEffect } from 'react';
+import { FC, useState, useEffect, useMemo } from 'react';
 import { Statement } from 'delib-npm';
-import { PopperHebbianScore } from '@/models/popperHebbian/ScoreModels';
+import { PopperHebbianScore, StatementVersion } from '@/models/popperHebbian';
 import { listenToEvidencePosts } from '@/controllers/db/popperHebbian/evidenceController';
+import { canUserImprove } from '@/controllers/db/popperHebbian/improveProposalController';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
+import { useAuthentication } from '@/controllers/hooks/useAuthentication';
+import { useAppSelector } from '@/controllers/hooks/reduxHooks';
+import { statementSubscriptionSelector } from '@/redux/statements/statementsSlice';
 import IdeaScoreboard from './components/IdeaScoreboard/IdeaScoreboard';
 import EvidencePost from './components/EvidencePost/EvidencePost';
 import AddEvidenceModal from './components/AddEvidenceModal/AddEvidenceModal';
 import EvolutionPrompt from './components/EvolutionPrompt/EvolutionPrompt';
+import ImproveProposalModal from './components/ImproveProposalModal/ImproveProposalModal';
 import styles from './PopperHebbianDiscussion.module.scss';
+
+interface ExtendedStatement extends Statement {
+	popperHebbianScore?: PopperHebbianScore;
+	versions?: StatementVersion[];
+	currentVersion?: number;
+}
 
 interface PopperHebbianDiscussionProps {
 	statement: Statement;
@@ -19,12 +30,28 @@ const PopperHebbianDiscussion: FC<PopperHebbianDiscussionProps> = ({
 	onCreateImprovedVersion
 }) => {
 	const { t } = useTranslation();
+	const { user } = useAuthentication();
 	const [evidencePosts, setEvidencePosts] = useState<Statement[]>([]);
 	const [showAddEvidenceModal, setShowAddEvidenceModal] = useState(false);
+	const [showImproveModal, setShowImproveModal] = useState(false);
 	const [isLoading, setIsLoading] = useState(true);
 
+	// Get user's subscription for role check
+	const subscription = useAppSelector(statementSubscriptionSelector(statement.topParentId));
+	const userRole = subscription?.role;
+
+	// Check if user can improve this proposal
+	const canImprove = useMemo(() => {
+		if (!user) return false;
+
+		return canUserImprove(statement, user.uid, userRole);
+	}, [statement, user, userRole]);
+
+	// Cast statement to extended type for version access
+	const extendedStatement = statement as ExtendedStatement;
+
 	// Get score from statement, or create a default one
-	const score: PopperHebbianScore = (statement as Statement & { popperHebbianScore?: PopperHebbianScore }).popperHebbianScore || {
+	const score: PopperHebbianScore = extendedStatement.popperHebbianScore || {
 		statementId: statement.statementId,
 		totalScore: 0,
 		corroborationLevel: 0.5,
@@ -63,14 +90,35 @@ const PopperHebbianDiscussion: FC<PopperHebbianDiscussionProps> = ({
 		}
 	};
 
+	const handleOpenImproveModal = (): void => {
+		setShowImproveModal(true);
+	};
+
 	return (
 		<div className={styles.discussion}>
 			<IdeaScoreboard score={score} />
 
+			{/* Improve with AI button - visible to creator/admins when there are comments */}
+			{canImprove && evidencePosts.length > 0 && (
+				<div className={styles.improveSection}>
+					<button
+						className={styles.improveButton}
+						onClick={handleOpenImproveModal}
+						aria-label={t('Generate AI-improved version based on discussion')}
+					>
+						<span className={styles.improveIcon}>&#10024;</span>
+						{t('Improve with AI')}
+					</button>
+					<p className={styles.improveHint}>
+						{t('Get an AI-suggested improvement based on {{count}} comments').replace('{{count}}', String(evidencePosts.length))}
+					</p>
+				</div>
+			)}
+
 			{score.status === 'needs-fixing' && (
 				<EvolutionPrompt
 					score={score}
-					onCreateImprovedVersion={handleCreateImprovedVersion}
+					onCreateImprovedVersion={handleOpenImproveModal}
 				/>
 			)}
 
@@ -121,6 +169,16 @@ const PopperHebbianDiscussion: FC<PopperHebbianDiscussionProps> = ({
 				<AddEvidenceModal
 					parentStatementId={statement.statementId}
 					onClose={() => setShowAddEvidenceModal(false)}
+				/>
+			)}
+
+			{showImproveModal && (
+				<ImproveProposalModal
+					statement={extendedStatement}
+					onClose={() => setShowImproveModal(false)}
+					onSuccess={() => {
+						// Modal will close itself after success
+					}}
 				/>
 			)}
 		</div>

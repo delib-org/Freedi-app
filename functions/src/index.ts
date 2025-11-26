@@ -78,6 +78,7 @@ import { refineIdea } from "./fn_popperHebbian_refineIdea";
 import { onEvidencePostCreate, onEvidencePostUpdate } from "./fn_popperHebbian_onEvidencePost";
 import { onVoteUpdate } from "./fn_popperHebbian_onVote";
 import { summarizeLink } from "./fn_popperHebbian_summarizeLink";
+import { improveProposalWithAI } from "./fn_popperHebbian_improveProposal";
 
 // Initialize Firebase only if not already initialized
 if (!getApps().length) {
@@ -444,3 +445,4 @@ exports.onEvidencePostCreate = onEvidencePostCreate;
 exports.onEvidencePostUpdate = onEvidencePostUpdate;
 exports.onVoteUpdate = onVoteUpdate;
 exports.summarizeLink = summarizeLink;
+exports.improveProposalWithAI = improveProposalWithAI;
