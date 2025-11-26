@@ -126,7 +126,7 @@ async function recalculateScore(statementId: string): Promise<void> {
 
 	// Update the parent statement with both scores
 	await db.collection(Collections.statements).doc(statementId).update({
-		PopperHebbianScore: popperHebbianScore,
+		popperHebbianScore,
 		consensusValid
 	});
 }

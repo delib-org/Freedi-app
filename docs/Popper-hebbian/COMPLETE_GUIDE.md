@@ -1,8 +1,8 @@
 # Popper-Hebbian Discussion System - Complete Guide
 
-**Version:** 2.1
+**Version:** 2.3
 **Project:** Collaborative Rationality Platform
-**Last Updated:** 2025-11-04
+**Last Updated:** 2025-11-26
 
 ---
 
@@ -229,12 +229,17 @@ firebase deploy --only hosting
 ### Data Structure
 ```
 Question (statementType: StatementType.question, popperianDiscussionEnabled: true)
-└── Options (statementType: StatementType.option - Ideas to discuss)
-    └── Evidence Posts (statementType: StatementType.statement with evidence field)
-        └── Votes (Helpful or Not Helpful)
+└── Option (statementType: StatementType.option - Ideas to discuss)
+    ├── versions[] - Version history with AI improvements
+    └── Comment (statementType: StatementType.comment - Support/critique/feedback)
+        ├── evidence field - AI classification (type, support level, weight)
+        ├── Votes (👍 Helpful / 👎 Not Helpful) - community validation
+        └── Chat (statementType: StatementType.chat - Threaded replies)
 
-Note: Evidence posts are regular statements (StatementType.statement) with the evidence field
-populated with support level, evidence types, and vote counts.
+Note: Comments (formerly "Evidence Posts") have:
+- `evidence` field for AI classification (evidenceType, support, evidenceWeight)
+- Vote counts (helpfulCount, notHelpfulCount) for community validation
+- Users see "Add Comment" - the AI analyzes whether it supports or challenges the Option
 ```
 
 ### Evidence Types & Weights (Scaled 0-1)
@@ -435,14 +440,97 @@ User views option
 └─────────────────────────────────────────────────────┘
 ```
 
-#### Stage 3: "Improve the Idea" (Synthesis & Evolution)
+#### Stage 3: "Improve the Idea" (Full Implementation)
 
-**Goal**: Synthesize discussion and facilitate idea evolution
+**Goal**: AI-assisted proposal improvement based on discussion comments
 
 **Status Logic**:
 - `Looking Good`: totalScore > 2 (Corroborated by strong evidence)
 - `Under Discussion`: -2 ≤ totalScore ≤ 2 (Balanced evidence)
 - `Needs Fixing`: totalScore < -2 (Falsified or strongly challenged)
+
+**"Improve with AI" Feature**:
+Available to Option creator and group admins when there are comments on the Option.
+
+**Flow**:
+```
+User clicks "Improve with AI" button
+  ↓
+[Check permissions (creator or admin)]
+  ↓
+[Firebase Function: improveProposalWithAI]
+  ↓
+[Fetch all comments with evidence field]
+  ↓
+[Categorize: supporting vs challenging]
+  ↓
+[Build synthesis prompt for Gemini AI]
+  ↓
+[Generate improved proposal]
+  ↓
+[Show preview modal with side-by-side diff]
+  ↓
+[User reviews and accepts/rejects]
+  ↓
+[If accepted: Save version, update Option text]
+```
+
+**UI Components** (Updated v2.3 - Separate Title & Description):
+```
+┌─────────────────────────────────────────────────────┐
+│              ImproveProposalModal                    │
+│                                                      │
+│  ┌──────────────────────────────────────────────┐  │
+│  │  TITLE                                        │  │
+│  │  ┌────────────┐  ┌────────────┐              │  │
+│  │  │  Original  │  │  Improved  │              │  │
+│  │  │ Short text │  │ Short text │              │  │
+│  │  └────────────┘  └────────────┘              │  │
+│  └──────────────────────────────────────────────┘  │
+│                                                      │
+│  ┌──────────────────────────────────────────────┐  │
+│  │  DESCRIPTION                                  │  │
+│  │  ┌────────────┐  ┌────────────┐              │  │
+│  │  │  Original  │  │  Improved  │              │  │
+│  │  │ Detailed   │  │ Detailed   │              │  │
+│  │  │ text here  │  │ text here  │              │  │
+│  │  └────────────┘  └────────────┘              │  │
+│  └──────────────────────────────────────────────┘  │
+│                                                      │
+│  ┌──────────────────────────────────────────────┐  │
+│  │           What Changed                        │  │
+│  │  • Addressed privacy concerns                │  │
+│  │  • Added timeline clarification              │  │
+│  │  • Incorporated community feedback           │  │
+│  └──────────────────────────────────────────────┘  │
+│                                                      │
+│  [Discard]        [Version History]   [Apply ✓]    │
+└─────────────────────────────────────────────────────┘
+```
+
+**Title Guidelines:**
+- Concise (1-2 sentences max)
+- Captures the essence of the solution
+- Clear and understandable at a glance
+
+**Description Guidelines:**
+- Provides detailed explanation of the proposal
+- Addresses valid criticisms from challenging comments
+- Incorporates suggestions from supporting comments
+- Comprehensive but focused
+
+**Version Control Model** (Updated v2.3):
+```typescript
+interface StatementVersion {
+  version: number;
+  title: string;              // The proposal title
+  description?: string;       // The detailed description
+  timestamp: number;
+  changedBy: string;
+  changeType: 'manual' | 'ai-improved';
+  improvementSummary?: string;
+}
+```
 
 **Evolution Prompt** (when Status = `Needs Fixing`):
 ```
@@ -453,7 +541,7 @@ This is awesome! This is how we learn and find better answers.
 
 Can we improve this idea based on what we just found?"
 
-[Button: Click here to suggest an 'Improved Version']
+[Button: ✨ Let AI Help] - Opens ImproveProposalModal
 ```
 
 ### Color Palette
@@ -883,6 +971,73 @@ interface RefineIdeaResponse {
 }
 ```
 
+#### improveProposalWithAI (UPDATED - v2.3)
+```typescript
+interface ImproveProposalRequest {
+  statementId: string;
+  language?: string;  // 'en', 'he', 'ar', etc.
+}
+
+interface ImproveProposalResponse {
+  originalTitle: string;       // The original title (statement.statement)
+  originalDescription: string; // The original description (statement.description)
+  improvedTitle: string;       // AI-generated improved title
+  improvedDescription: string; // AI-generated improved description
+  improvementSummary: string;
+  changesHighlight: string[];
+  evidenceConsidered: number;
+  confidence: number;  // 0-1
+}
+```
+
+**Title vs Description Guidelines:**
+- **Title**: Concise (1-2 sentences max), captures essence of the solution, clear at a glance
+- **Description**: Detailed explanation, addresses feedback from comments, comprehensive but focused
+
+#### improveProposalController.ts (UPDATED - v2.3)
+```typescript
+/**
+ * Request AI improvement for a proposal
+ */
+export async function requestProposalImprovement(
+  statementId: string,
+  language?: string
+): Promise<ImproveProposalResponse>
+
+/**
+ * Apply AI improvement with version control
+ * Now handles both title and description separately
+ */
+export async function applyImprovement(
+  statementId: string,
+  currentTitle: string,
+  currentDescription: string,
+  improvedTitle: string,
+  improvedDescription: string,
+  improvementSummary: string,
+  currentVersion?: number
+): Promise<void>
+
+/**
+ * Revert to a previous version
+ * Restores both title and description
+ */
+export async function revertToVersion(
+  statementId: string,
+  versions: StatementVersion[],
+  targetVersion: number
+): Promise<void>
+
+/**
+ * Check if user can improve this proposal
+ */
+export function canUserImprove(
+  statement: Statement,
+  userId: string,
+  userRole?: string
+): boolean
+```
+
 ### Helper Functions
 
 ```typescript
@@ -985,11 +1140,12 @@ docs/Popper-hebbian/
 
 src/models/popperHebbian/
 ├── RefineryModels.ts
-└── ScoreModels.ts
+├── ScoreModels.ts
+└── ImproveProposalModels.ts (NEW - v2.2)
 
 src/view/pages/statement/components/popperHebbian/
 ├── popperHebbianHelpers.ts
-├── PopperHebbianDiscussion.tsx
+├── PopperHebbianDiscussion.tsx (UPDATED - v2.2)
 ├── PopperHebbianDiscussion.module.scss
 ├── refinery/
 │   ├── IdeaRefineryModal.tsx
@@ -1008,19 +1164,26 @@ src/view/pages/statement/components/popperHebbian/
     ├── AddEvidenceModal/
     │   ├── AddEvidenceModal.tsx
     │   └── AddEvidenceModal.module.scss
-    └── EvolutionPrompt/
-        ├── EvolutionPrompt.tsx
-        └── EvolutionPrompt.module.scss
+    ├── EvolutionPrompt/
+    │   ├── EvolutionPrompt.tsx (UPDATED - v2.2)
+    │   └── EvolutionPrompt.module.scss
+    └── ImproveProposalModal/ (NEW - v2.2)
+        ├── ImproveProposalModal.tsx
+        ├── ImproveProposalModal.module.scss
+        ├── DiffView.tsx
+        └── VersionHistory.tsx
 
 src/controllers/db/popperHebbian/
 ├── refineryController.ts
-└── evidenceController.ts
+├── evidenceController.ts
+└── improveProposalController.ts (NEW - v2.2)
 
 functions/src/
 ├── fn_popperHebbian_analyzeFalsifiability.ts
 ├── fn_popperHebbian_refineIdea.ts
 ├── fn_popperHebbian_onEvidencePost.ts
 ├── fn_popperHebbian_onVote.ts
+├── fn_popperHebbian_improveProposal.ts (NEW - v2.2)
 └── config/gemini.ts
 ```
 
@@ -1055,6 +1218,121 @@ The system is designed to be:
 ---
 
 ## Changelog
+
+### Version 2.3 (2025-11-26)
+
+#### 🎯 Major Changes
+
+**1. Separate Title and Description in AI Improvement**
+- ✅ AI now generates **separate title and description** instead of a single improved text
+- ✅ Title: Concise (1-2 sentences), captures essence of the solution
+- ✅ Description: Detailed explanation that addresses feedback from comments
+- ✅ Both original and improved versions shown side-by-side in preview modal
+
+**2. Updated Response Interface**
+- ✅ `ImproveProposalResponse` now returns:
+  - `originalTitle` and `originalDescription`
+  - `improvedTitle` and `improvedDescription`
+- ✅ Backend prompt updated with clear guidelines for title vs description
+
+**3. Version Control Updates**
+- ✅ `StatementVersion` schema updated: `text` → `title` + `description`
+- ✅ Version history displays both title and description
+- ✅ Revert restores both fields
+
+**4. Modal UI Improvements**
+- ✅ Two separate comparison sections: Title and Description
+- ✅ Each section shows original vs improved with DiffView
+- ✅ Clear section headers for better UX
+
+#### 📝 Updated Files
+
+**Backend:**
+- `functions/src/fn_popperHebbian_improveProposal.ts` - Updated prompt and response structure
+
+**Frontend:**
+- `src/models/popperHebbian/ImproveProposalModels.ts` - New schema with title/description
+- `src/controllers/db/popperHebbian/improveProposalController.ts` - Updated applyImprovement and revertToVersion
+- `src/view/.../ImproveProposalModal/ImproveProposalModal.tsx` - Two-section preview UI
+- `src/view/.../ImproveProposalModal/ImproveProposalModal.module.scss` - New styles for sections
+- `src/view/.../ImproveProposalModal/VersionHistory.tsx` - Display title + description
+
+**Translations:**
+- Added "No description" to `en.json` and `he.json`
+
+#### 🔬 Benefits of v2.3
+
+1. **Clearer Proposals**: Title provides quick understanding, description provides depth
+2. **Better AI Output**: Separate guidelines result in more appropriate content for each field
+3. **Improved Review**: Users can evaluate title and description changes independently
+4. **Complete Version History**: Both fields tracked through all versions
+
+---
+
+### Version 2.2 (2025-11-26)
+
+#### 🎯 Major Changes
+
+**1. Statement Type Hierarchy (delib-npm)**
+- ✅ Added `StatementType.comment` for evidence/critique on Options
+- ✅ Added `StatementType.chat` for threaded replies
+- ✅ New hierarchy: Group → Question → Option → Comment → Chat
+- ✅ Renamed "Evidence Posts" to "Comments" in UI (internal `evidence` field unchanged)
+
+**2. "Improve with AI" Feature (Stage 3 Complete)**
+- ✅ Created `fn_popperHebbian_improveProposal.ts` Firebase callable function
+- ✅ AI synthesizes all discussion comments using Gemini 2.0 Flash
+- ✅ Generates improved proposal that addresses challenges
+- ✅ Returns improvement summary, changes highlight, and confidence score
+- ✅ Available to Option creator and group admins only
+
+**3. Version Control System**
+- ✅ `versions[]` array on Statement for full history
+- ✅ Track version number, timestamp, author, change type
+- ✅ Revert to any previous version
+- ✅ First improvement saves original as version 0
+
+**4. Preview Modal with Diff View**
+- ✅ Side-by-side comparison (original vs improved)
+- ✅ "What Changed" bullet points from AI
+- ✅ Version history panel with revert option
+- ✅ Accept/Discard actions
+
+**5. Integration**
+- ✅ "Improve with AI" button in PopperHebbianDiscussion
+- ✅ EvolutionPrompt wired to AI improvement flow
+- ✅ Permission check: creator + admins only
+- ✅ Full RTL and mobile support
+
+#### 📝 New Files
+
+**Backend:**
+- `functions/src/fn_popperHebbian_improveProposal.ts` - Firebase callable for AI synthesis
+
+**Frontend:**
+- `src/models/popperHebbian/ImproveProposalModels.ts` - Types and Valibot schemas
+- `src/controllers/db/popperHebbian/improveProposalController.ts` - API calls and version control
+- `src/view/.../ImproveProposalModal/ImproveProposalModal.tsx` - Preview modal
+- `src/view/.../ImproveProposalModal/DiffView.tsx` - Side-by-side comparison
+- `src/view/.../ImproveProposalModal/VersionHistory.tsx` - Version history display
+
+#### 🔬 Benefits of v2.2
+
+1. **Complete Stage 3**: System now handles full idea lifecycle (create → discuss → improve)
+2. **Evidence-Based Improvement**: AI considers all supporting/challenging comments
+3. **Version Safety**: Never lose original or intermediate versions
+4. **Permission Control**: Only authorized users can modify proposals
+5. **Transparent Process**: Users see exactly what changed and why
+6. **Better Terminology**: "Comments" more intuitive than "Evidence Posts"
+
+#### 🚀 Migration Notes
+
+- Existing statements with `StatementType.statement` + `evidence` field continue to work
+- New comments will use `StatementType.comment`
+- `versions[]` field added to Options on first AI improvement
+- Backward compatible with existing data
+
+---
 
 ### Version 2.1 (2025-11-04)
 
@@ -1119,6 +1397,6 @@ The system is designed to be:
 
 ---
 
-**Generated:** 2025-11-04
+**Generated:** 2025-11-26
 **Status:** Implementation Complete (100%) - Ready for Deployment
-**Version:** 2.1
+**Version:** 2.3
