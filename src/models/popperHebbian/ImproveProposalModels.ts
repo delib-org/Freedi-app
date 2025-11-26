@@ -14,8 +14,10 @@ export type ImproveProposalRequest = InferOutput<typeof ImproveProposalRequestSc
  * Response schema from AI proposal improvement
  */
 export const ImproveProposalResponseSchema = object({
-	originalProposal: string(),
-	improvedProposal: string(),
+	originalTitle: string(),
+	originalDescription: optional(string()),
+	improvedTitle: string(),
+	improvedDescription: string(),
 	improvementSummary: string(),
 	changesHighlight: array(string()),
 	evidenceConsidered: number(),
@@ -29,7 +31,8 @@ export type ImproveProposalResponse = InferOutput<typeof ImproveProposalResponse
  */
 export const StatementVersionSchema = object({
 	version: number(),
-	text: string(),
+	title: string(),
+	description: optional(string()),
 	timestamp: number(),
 	changedBy: string(),
 	changeType: picklist(['manual', 'ai-improved']),

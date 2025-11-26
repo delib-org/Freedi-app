@@ -148,6 +148,25 @@
 	gap: 1.5rem;
 }
 
+// Comparison Section (for Title and Description)
+.comparisonSection {
+	padding-bottom: 1rem;
+	border-bottom: 1px solid #e5e7eb;
+
+	&:last-of-type {
+		border-bottom: none;
+	}
+}
+
+.sectionTitle {
+	margin: 0 0 0.75rem 0;
+	font-size: 1rem;
+	font-weight: 600;
+	color: #333;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+}
+
 // Diff View
 .diffView {
 	display: flex;

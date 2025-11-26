@@ -100,9 +100,15 @@ const VersionHistory: FC<VersionHistoryProps> = ({
 								)}
 							</div>
 							<p className={styles.versionText}>
-								{version.text.length > 200
-									? `${version.text.substring(0, 200)}...`
-									: version.text}
+								<strong>{version.title}</strong>
+								{version.description && (
+									<>
+										<br />
+										{version.description.length > 150
+											? `${version.description.substring(0, 150)}...`
+											: version.description}
+									</>
+								)}
 							</p>
 						</div>
 					))}

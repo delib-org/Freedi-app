@@ -9,8 +9,10 @@ interface ImproveProposalRequest {
 }
 
 interface ImproveProposalResponse {
-	originalProposal: string;
-	improvedProposal: string;
+	originalTitle: string;
+	originalDescription: string;
+	improvedTitle: string;
+	improvedDescription: string;
 	improvementSummary: string;
 	changesHighlight: string[];
 	evidenceConsidered: number;
@@ -94,6 +96,7 @@ export const improveProposalWithAI = onCall<ImproveProposalRequest>(
 		// 4. Build synthesis prompt
 		const prompt = buildSynthesisPrompt(
 			statement.statement,
+			statement.description || '',
 			comments,
 			language
 		);
@@ -114,7 +117,8 @@ export const improveProposalWithAI = onCall<ImproveProposalRequest>(
 			const text = response.text();
 
 			let aiResponse: {
-				improvedProposal: string;
+				improvedTitle: string;
+				improvedDescription: string;
 				improvementSummary: string;
 				changesHighlight: string[];
 				confidence: number;
@@ -128,14 +132,16 @@ export const improveProposalWithAI = onCall<ImproveProposalRequest>(
 			}
 
 			// Validate response structure
-			if (!aiResponse.improvedProposal || !aiResponse.improvementSummary) {
+			if (!aiResponse.improvedTitle || !aiResponse.improvedDescription || !aiResponse.improvementSummary) {
 				console.error('Invalid AI response structure:', aiResponse);
 				throw new HttpsError('internal', 'Invalid AI response structure');
 			}
 
 			return {
-				originalProposal: statement.statement,
-				improvedProposal: aiResponse.improvedProposal,
+				originalTitle: statement.statement,
+				originalDescription: statement.description || '',
+				improvedTitle: aiResponse.improvedTitle,
+				improvedDescription: aiResponse.improvedDescription,
 				improvementSummary: aiResponse.improvementSummary,
 				changesHighlight: aiResponse.changesHighlight || [],
 				evidenceConsidered: comments.length,
@@ -155,7 +161,8 @@ export const improveProposalWithAI = onCall<ImproveProposalRequest>(
  * Build the synthesis prompt for Gemini AI
  */
 function buildSynthesisPrompt(
-	proposalText: string,
+	proposalTitle: string,
+	proposalDescription: string,
 	comments: Statement[],
 	language: string
 ): string {
@@ -197,12 +204,16 @@ function buildSynthesisPrompt(
 		? neutral.map(n => `- ${n.text} (type: ${n.type})`).join('\n')
 		: 'None';
 
+	const descriptionSection = proposalDescription
+		? `\n## Original Description\n"${proposalDescription}"`
+		: '';
+
 	return `You are an expert deliberative facilitator. Your role is to evolve proposals toward genuine consensus by integrating feedback from the community discussion.
 
 IMPORTANT: Respond entirely in ${languageName}. All text in the response must be in ${languageName}.
 
-## Original Proposal
-"${proposalText}"
+## Original Title
+"${proposalTitle}"${descriptionSection}
 
 ## Supporting Comments (${supporting.length} items):
 ${supportingSection}
@@ -214,12 +225,19 @@ ${challengingSection}
 ${neutralSection}
 
 ## Your Task
-Improve the proposal by:
-1. Addressing valid criticisms and concerns raised in challenging comments
-2. Incorporating helpful suggestions from supporting comments
-3. Clarifying ambiguous parts mentioned in neutral comments
-4. Making it more balanced and responsive to the community
-5. Preserving the original intent and core idea
+Create an improved version with a clear TITLE and detailed DESCRIPTION:
+
+**Title Guidelines:**
+- Should be concise (1-2 sentences max)
+- Capture the essence of the solution
+- Be clear and understandable at a glance
+
+**Description Guidelines:**
+- Provide detailed explanation of the proposal
+- Address valid criticisms and concerns from challenging comments
+- Incorporate helpful suggestions from supporting comments
+- Clarify ambiguous parts mentioned in neutral comments
+- Be comprehensive but focused
 
 CRITICAL Rules:
 - Do NOT introduce ideas not grounded in the discussion
@@ -230,7 +248,8 @@ CRITICAL Rules:
 
 ## Response Format (JSON)
 {
-  "improvedProposal": "The improved proposal text in ${languageName}. Should be a refined version that addresses the feedback while maintaining the original intent.",
+  "improvedTitle": "A clear, concise title that captures the essence of the solution in ${languageName}",
+  "improvedDescription": "Detailed description that explains the proposal, addresses feedback, and provides context in ${languageName}",
   "improvementSummary": "Brief explanation of what was changed and why (2-3 sentences) in ${languageName}",
   "changesHighlight": ["Key change 1 in ${languageName}", "Key change 2 in ${languageName}", "..."],
   "confidence": 0.85

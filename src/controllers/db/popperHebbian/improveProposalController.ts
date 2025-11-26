@@ -42,8 +42,10 @@ export async function requestProposalImprovement(
  */
 export async function applyImprovement(
 	statementId: string,
-	currentText: string,
-	improvedText: string,
+	currentTitle: string,
+	currentDescription: string,
+	improvedTitle: string,
+	improvedDescription: string,
 	improvementSummary: string,
 	currentVersion: number = 0
 ): Promise<void> {
@@ -56,7 +58,8 @@ export async function applyImprovement(
 		const statementRef = doc(FireStore, Collections.statements, statementId);
 		const newVersion: StatementVersion = {
 			version: currentVersion + 1,
-			text: improvedText,
+			title: improvedTitle,
+			description: improvedDescription,
 			timestamp: getCurrentTimestamp(),
 			changedBy: currentUser.uid,
 			changeType: 'ai-improved',
@@ -65,7 +68,8 @@ export async function applyImprovement(
 
 		// Build update object
 		const updates: Record<string, unknown> = {
-			statement: improvedText,
+			statement: improvedTitle,
+			description: improvedDescription,
 			lastUpdate: getCurrentTimestamp(),
 			currentVersion: currentVersion + 1,
 		};
@@ -74,7 +78,8 @@ export async function applyImprovement(
 			// First improvement: save original as version 0
 			const originalVersion: StatementVersion = {
 				version: 0,
-				text: currentText,
+				title: currentTitle,
+				description: currentDescription,
 				timestamp: getCurrentTimestamp(),
 				changedBy: currentUser.uid,
 				changeType: 'manual',
@@ -101,7 +106,7 @@ export async function applyImprovement(
 
 /**
  * Revert to a previous version
- * Creates a new version entry that restores the text from the target version
+ * Creates a new version entry that restores the title and description from the target version
  */
 export async function revertToVersion(
 	statementId: string,
@@ -124,7 +129,8 @@ export async function revertToVersion(
 		// Create revert version entry
 		const revertVersion: StatementVersion = {
 			version: versions.length,
-			text: targetVersionData.text,
+			title: targetVersionData.title,
+			description: targetVersionData.description,
 			timestamp: getCurrentTimestamp(),
 			changedBy: currentUser.uid,
 			changeType: 'manual',
@@ -132,7 +138,8 @@ export async function revertToVersion(
 		};
 
 		await updateDoc(statementRef, {
-			statement: targetVersionData.text,
+			statement: targetVersionData.title,
+			description: targetVersionData.description || '',
 			lastUpdate: getCurrentTimestamp(),
 			currentVersion: versions.length,
 			versions: arrayUnion(revertVersion),

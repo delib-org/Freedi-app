@@ -95,7 +95,9 @@ const ImproveProposalModal: FC<ImproveProposalModalProps> = ({
 			await applyImprovement(
 				statement.statementId,
 				statement.statement,
-				modalState.data.improvedProposal,
+				statement.description || '',
+				modalState.data.improvedTitle,
+				modalState.data.improvedDescription,
 				modalState.data.improvementSummary,
 				statement.currentVersion || 0
 			);
@@ -163,10 +165,21 @@ const ImproveProposalModal: FC<ImproveProposalModalProps> = ({
 			case 'preview':
 				return (
 					<div className={styles.previewState}>
-						<DiffView
-							original={modalState.data.originalProposal}
-							improved={modalState.data.improvedProposal}
-						/>
+						<div className={styles.comparisonSection}>
+							<h4 className={styles.sectionTitle}>{t('Title')}</h4>
+							<DiffView
+								original={modalState.data.originalTitle}
+								improved={modalState.data.improvedTitle}
+							/>
+						</div>
+
+						<div className={styles.comparisonSection}>
+							<h4 className={styles.sectionTitle}>{t('Description')}</h4>
+							<DiffView
+								original={modalState.data.originalDescription || t('No description')}
+								improved={modalState.data.improvedDescription}
+							/>
+						</div>
 
 						<div className={styles.changesSection}>
 							<h4 className={styles.changesSectionTitle}>

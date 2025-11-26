@@ -1,8 +1,8 @@
 # Popper-Hebbian Discussion System - Complete Guide
 
-**Version:** 2.1
+**Version:** 2.3
 **Project:** Collaborative Rationality Platform
-**Last Updated:** 2025-11-04
+**Last Updated:** 2025-11-26
 
 ---
 
@@ -475,17 +475,25 @@ User clicks "Improve with AI" button
 [If accepted: Save version, update Option text]
 ```
 
-**UI Components**:
+**UI Components** (Updated v2.3 - Separate Title & Description):
 ```
 ┌─────────────────────────────────────────────────────┐
 │              ImproveProposalModal                    │
 │                                                      │
 │  ┌──────────────────────────────────────────────┐  │
-│  │           Side-by-Side Diff                   │  │
+│  │  TITLE                                        │  │
 │  │  ┌────────────┐  ┌────────────┐              │  │
 │  │  │  Original  │  │  Improved  │              │  │
-│  │  │            │  │            │              │  │
-│  │  │ Text here  │  │ Text here  │              │  │
+│  │  │ Short text │  │ Short text │              │  │
+│  │  └────────────┘  └────────────┘              │  │
+│  └──────────────────────────────────────────────┘  │
+│                                                      │
+│  ┌──────────────────────────────────────────────┐  │
+│  │  DESCRIPTION                                  │  │
+│  │  ┌────────────┐  ┌────────────┐              │  │
+│  │  │  Original  │  │  Improved  │              │  │
+│  │  │ Detailed   │  │ Detailed   │              │  │
+│  │  │ text here  │  │ text here  │              │  │
 │  │  └────────────┘  └────────────┘              │  │
 │  └──────────────────────────────────────────────┘  │
 │                                                      │
@@ -500,11 +508,23 @@ User clicks "Improve with AI" button
 └─────────────────────────────────────────────────────┘
 ```
 
-**Version Control Model**:
+**Title Guidelines:**
+- Concise (1-2 sentences max)
+- Captures the essence of the solution
+- Clear and understandable at a glance
+
+**Description Guidelines:**
+- Provides detailed explanation of the proposal
+- Addresses valid criticisms from challenging comments
+- Incorporates suggestions from supporting comments
+- Comprehensive but focused
+
+**Version Control Model** (Updated v2.3):
 ```typescript
 interface StatementVersion {
   version: number;
-  text: string;
+  title: string;              // The proposal title
+  description?: string;       // The detailed description
   timestamp: number;
   changedBy: string;
   changeType: 'manual' | 'ai-improved';
@@ -951,7 +971,7 @@ interface RefineIdeaResponse {
 }
 ```
 
-#### improveProposalWithAI (NEW - v2.2)
+#### improveProposalWithAI (UPDATED - v2.3)
 ```typescript
 interface ImproveProposalRequest {
   statementId: string;
@@ -959,8 +979,10 @@ interface ImproveProposalRequest {
 }
 
 interface ImproveProposalResponse {
-  originalProposal: string;
-  improvedProposal: string;
+  originalTitle: string;       // The original title (statement.statement)
+  originalDescription: string; // The original description (statement.description)
+  improvedTitle: string;       // AI-generated improved title
+  improvedDescription: string; // AI-generated improved description
   improvementSummary: string;
   changesHighlight: string[];
   evidenceConsidered: number;
@@ -968,7 +990,11 @@ interface ImproveProposalResponse {
 }
 ```
 
-#### improveProposalController.ts (NEW - v2.2)
+**Title vs Description Guidelines:**
+- **Title**: Concise (1-2 sentences max), captures essence of the solution, clear at a glance
+- **Description**: Detailed explanation, addresses feedback from comments, comprehensive but focused
+
+#### improveProposalController.ts (UPDATED - v2.3)
 ```typescript
 /**
  * Request AI improvement for a proposal
@@ -980,17 +1006,21 @@ export async function requestProposalImprovement(
 
 /**
  * Apply AI improvement with version control
+ * Now handles both title and description separately
  */
 export async function applyImprovement(
   statementId: string,
-  currentText: string,
-  improvedText: string,
+  currentTitle: string,
+  currentDescription: string,
+  improvedTitle: string,
+  improvedDescription: string,
   improvementSummary: string,
   currentVersion?: number
 ): Promise<void>
 
 /**
  * Revert to a previous version
+ * Restores both title and description
  */
 export async function revertToVersion(
   statementId: string,
@@ -1189,6 +1219,56 @@ The system is designed to be:
 
 ## Changelog
 
+### Version 2.3 (2025-11-26)
+
+#### 🎯 Major Changes
+
+**1. Separate Title and Description in AI Improvement**
+- ✅ AI now generates **separate title and description** instead of a single improved text
+- ✅ Title: Concise (1-2 sentences), captures essence of the solution
+- ✅ Description: Detailed explanation that addresses feedback from comments
+- ✅ Both original and improved versions shown side-by-side in preview modal
+
+**2. Updated Response Interface**
+- ✅ `ImproveProposalResponse` now returns:
+  - `originalTitle` and `originalDescription`
+  - `improvedTitle` and `improvedDescription`
+- ✅ Backend prompt updated with clear guidelines for title vs description
+
+**3. Version Control Updates**
+- ✅ `StatementVersion` schema updated: `text` → `title` + `description`
+- ✅ Version history displays both title and description
+- ✅ Revert restores both fields
+
+**4. Modal UI Improvements**
+- ✅ Two separate comparison sections: Title and Description
+- ✅ Each section shows original vs improved with DiffView
+- ✅ Clear section headers for better UX
+
+#### 📝 Updated Files
+
+**Backend:**
+- `functions/src/fn_popperHebbian_improveProposal.ts` - Updated prompt and response structure
+
+**Frontend:**
+- `src/models/popperHebbian/ImproveProposalModels.ts` - New schema with title/description
+- `src/controllers/db/popperHebbian/improveProposalController.ts` - Updated applyImprovement and revertToVersion
+- `src/view/.../ImproveProposalModal/ImproveProposalModal.tsx` - Two-section preview UI
+- `src/view/.../ImproveProposalModal/ImproveProposalModal.module.scss` - New styles for sections
+- `src/view/.../ImproveProposalModal/VersionHistory.tsx` - Display title + description
+
+**Translations:**
+- Added "No description" to `en.json` and `he.json`
+
+#### 🔬 Benefits of v2.3
+
+1. **Clearer Proposals**: Title provides quick understanding, description provides depth
+2. **Better AI Output**: Separate guidelines result in more appropriate content for each field
+3. **Improved Review**: Users can evaluate title and description changes independently
+4. **Complete Version History**: Both fields tracked through all versions
+
+---
+
 ### Version 2.2 (2025-11-26)
 
 #### 🎯 Major Changes
@@ -1317,6 +1397,6 @@ The system is designed to be:
 
 ---
 
-**Generated:** 2025-11-04
+**Generated:** 2025-11-26
 **Status:** Implementation Complete (100%) - Ready for Deployment
-**Version:** 2.1
+**Version:** 2.3
