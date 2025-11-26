@@ -2,11 +2,9 @@ import { FC, useState, useEffect, useMemo } from 'react';
 import { Statement } from 'delib-npm';
 import { PopperHebbianScore, StatementVersion } from '@/models/popperHebbian';
 import { listenToEvidencePosts } from '@/controllers/db/popperHebbian/evidenceController';
-import { canUserImprove } from '@/controllers/db/popperHebbian/improveProposalController';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
-import { useAppSelector } from '@/controllers/hooks/reduxHooks';
-import { statementSubscriptionSelector } from '@/redux/statements/statementsSlice';
+import { useAuthorization } from '@/controllers/hooks/useAuthorization';
 import IdeaScoreboard from './components/IdeaScoreboard/IdeaScoreboard';
 import EvidencePost from './components/EvidencePost/EvidencePost';
 import AddEvidenceModal from './components/AddEvidenceModal/AddEvidenceModal';
@@ -36,16 +34,16 @@ const PopperHebbianDiscussion: FC<PopperHebbianDiscussionProps> = ({
 	const [showImproveModal, setShowImproveModal] = useState(false);
 	const [isLoading, setIsLoading] = useState(true);
 
-	// Get user's subscription for role check
-	const subscription = useAppSelector(statementSubscriptionSelector(statement.topParentId));
-	const userRole = subscription?.role;
+	// Get authorization state which includes isAdmin check
+	const { isAdmin } = useAuthorization(statement.statementId);
 
-	// Check if user can improve this proposal
+	// Check if user can improve this proposal (creator or admin)
 	const canImprove = useMemo(() => {
 		if (!user) return false;
+		const isCreator = statement.creatorId === user.uid;
 
-		return canUserImprove(statement, user.uid, userRole);
-	}, [statement, user, userRole]);
+		return isCreator || isAdmin;
+	}, [statement.creatorId, user, isAdmin]);
 
 	// Cast statement to extended type for version access
 	const extendedStatement = statement as ExtendedStatement;
