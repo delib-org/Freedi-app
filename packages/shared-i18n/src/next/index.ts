@@ -3,6 +3,7 @@ export {
   getTranslations,
   getServerTranslations,
   detectLanguage,
+  isValidLanguage,
   type ServerTranslations,
 } from './getTranslations';
 

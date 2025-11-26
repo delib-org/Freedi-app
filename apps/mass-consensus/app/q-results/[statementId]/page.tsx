@@ -4,6 +4,7 @@ import { cookies } from 'next/headers';
 import { Statement } from 'delib-npm';
 import { getQuestionFromFirebase, getAllSolutionsSorted, getUserSolutions } from '@/lib/firebase/queries';
 import { getUserIdFromCookies } from '@/lib/utils/user';
+import { LanguageOverrideProvider } from '@/components/providers/LanguageOverrideProvider';
 import ResultCard from '@/components/q-results/ResultCard';
 import styles from './q-results.module.scss';
 
@@ -74,39 +75,41 @@ export default async function QResultsPage({ params }: PageProps) {
   const userSolutionIds = new Set(userSolutions.map((s) => s.statementId));
 
   return (
-    <div className={styles.resultsPage}>
-      <header className={styles.resultsPage__header}>
-        <h1 className={styles.resultsPage__title}>Results</h1>
-        {totalParticipants > 0 && (
-          <div className={styles.resultsPage__participants}>
-            <span className={styles.resultsPage__participantCount}>{totalParticipants}</span>
-            <span className={styles.resultsPage__participantLabel}>Voters</span>
-          </div>
-        )}
-      </header>
+    <LanguageOverrideProvider adminLanguage={question.defaultLanguage}>
+      <div className={styles.resultsPage}>
+        <header className={styles.resultsPage__header}>
+          <h1 className={styles.resultsPage__title}>Results</h1>
+          {totalParticipants > 0 && (
+            <div className={styles.resultsPage__participants}>
+              <span className={styles.resultsPage__participantCount}>{totalParticipants}</span>
+              <span className={styles.resultsPage__participantLabel}>Voters</span>
+            </div>
+          )}
+        </header>
 
-      <div className={styles.resultsPage__question}>
-        <h2>{question.statement}</h2>
+        <div className={styles.resultsPage__question}>
+          <h2>{question.statement}</h2>
+        </div>
+
+        <main className={styles.resultsPage__content}>
+          {solutions.length === 0 ? (
+            <div className={styles.resultsPage__emptyState}>
+              <p>No solutions to display yet</p>
+            </div>
+          ) : (
+            <div className={styles.resultsList}>
+              {solutions.map((solution) => (
+                <ResultCard
+                  key={solution.statementId}
+                  statement={solution}
+                  isUserStatement={userSolutionIds.has(solution.statementId)}
+                  totalParticipants={totalParticipants}
+                />
+              ))}
+            </div>
+          )}
+        </main>
       </div>
-
-      <main className={styles.resultsPage__content}>
-        {solutions.length === 0 ? (
-          <div className={styles.resultsPage__emptyState}>
-            <p>No solutions to display yet</p>
-          </div>
-        ) : (
-          <div className={styles.resultsList}>
-            {solutions.map((solution) => (
-              <ResultCard
-                key={solution.statementId}
-                statement={solution}
-                isUserStatement={userSolutionIds.has(solution.statementId)}
-                totalParticipants={totalParticipants}
-              />
-            ))}
-          </div>
-        )}
-      </main>
-    </div>
+    </LanguageOverrideProvider>
   );
 }

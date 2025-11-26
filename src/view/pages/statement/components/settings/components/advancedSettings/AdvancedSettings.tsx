@@ -10,6 +10,7 @@ import { StatementSettings, StatementType, evaluationType, Collections } from 'd
 import { doc, setDoc } from 'firebase/firestore';
 import { FireStore } from '@/controllers/db/config';
 import EvaluationTypeSelector from './EvaluationTypeSelector/EvaluationTypeSelector';
+import LanguageSelector from './LanguageSelector/LanguageSelector';
 import { setMaxVotesPerUser } from '@/controllers/db/evaluation/setEvaluation';
 
 const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
@@ -45,6 +46,12 @@ const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 	function handleHideChange(newValue: boolean) {
 		const statementRef = doc(FireStore, Collections.statements, statement.statementId);
 		setDoc(statementRef, { hide: newValue }, { merge: true });
+	}
+
+	// Handler for defaultLanguage (root-level property for survey language)
+	function handleDefaultLanguageChange(newLanguage: string) {
+		const statementRef = doc(FireStore, Collections.statements, statement.statementId);
+		setDoc(statementRef, { defaultLanguage: newLanguage, lastUpdate: Date.now() }, { merge: true });
 	}
 
 	function handleVoteLimitToggle(enabled: boolean) {
@@ -282,6 +289,29 @@ const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 					</div>
 				</div>
 			)}
+
+			{/* Localization Category */}
+			<div className={styles.category}>
+				<div className={styles.categoryHeader}>
+					<span className={styles.categoryTitle}>
+						{t('Localization')}
+					</span>
+				</div>
+				<div className={styles.categoryContent}>
+					<div className={styles.evaluationTypeSection}>
+						<label className={styles.sectionLabel}>
+							{t('Survey Default Language')}
+						</label>
+						<p className={styles.helperText}>
+							{t('This language will be used for surveys when users have no language preference set')}
+						</p>
+						<LanguageSelector
+							currentLanguage={statement.defaultLanguage}
+							onChange={handleDefaultLanguageChange}
+						/>
+					</div>
+				</div>
+			</div>
 
 			{/* Navigation & Structure Category */}
 			<div className={styles.category}>

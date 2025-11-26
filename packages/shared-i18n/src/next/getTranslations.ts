@@ -19,24 +19,31 @@ export interface ServerTranslations {
   dictionary: TranslationDictionary;
 }
 
-function isValidLanguage(lang: string): lang is LanguagesEnum {
+export function isValidLanguage(lang: string): lang is LanguagesEnum {
   return Object.values(LanguagesEnum).includes(lang as LanguagesEnum);
 }
 
 /**
- * Detect language from request headers and cookies.
+ * Detect language from request headers, cookies, and admin override.
  * For use in Next.js Server Components.
+ *
+ * Priority order:
+ * 1. User cookie preference (highest priority)
+ * 2. Browser Accept-Language header
+ * 3. Admin's statement.defaultLanguage (for surveys)
+ * 4. System default (fallback)
  */
 export async function detectLanguage(
   cookieValue?: string | null,
-  acceptLanguage?: string | null
+  acceptLanguage?: string | null,
+  adminDefaultLanguage?: string | null
 ): Promise<LanguagesEnum> {
-  // Option 1: Check cookie (user preference)
+  // Priority 1: Check cookie (user preference - highest priority)
   if (cookieValue && isValidLanguage(cookieValue)) {
     return cookieValue;
   }
 
-  // Option 2: Check Accept-Language header
+  // Priority 2: Check Accept-Language header (browser preference)
   if (acceptLanguage) {
     const preferred = acceptLanguage.split(',')[0]?.split('-')[0]?.toLowerCase();
     if (preferred && isValidLanguage(preferred)) {
@@ -44,6 +51,12 @@ export async function detectLanguage(
     }
   }
 
+  // Priority 3: Admin's default language (for surveys without user/browser preference)
+  if (adminDefaultLanguage && isValidLanguage(adminDefaultLanguage)) {
+    return adminDefaultLanguage;
+  }
+
+  // Priority 4: System default
   return DEFAULT_LANGUAGE;
 }
 

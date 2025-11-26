@@ -1,0 +1,184 @@
+.languageSelector {
+	width: 100%;
+	margin: 0.5rem 0;
+}
+
+.selectorGrid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+	gap: 0.75rem;
+
+	@media (min-width: 768px) {
+		grid-template-columns: repeat(6, 1fr);
+	}
+
+	@media (max-width: 767px) {
+		grid-template-columns: repeat(3, 1fr);
+	}
+
+	@media (max-width: 480px) {
+		grid-template-columns: repeat(2, 1fr);
+		gap: 0.5rem;
+	}
+}
+
+.optionCard {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 0.5rem;
+	padding: 1rem 0.75rem;
+	background: white;
+	border: 2px solid var(--border-primary);
+	border-radius: 12px;
+	cursor: pointer;
+	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+	min-height: 90px;
+	overflow: hidden;
+
+	&:hover:not(.selected) {
+		border-color: var(--btn-primary-hover);
+		background: rgba(var(--btn-primary-rgb, 95, 136, 229), 0.03);
+		transform: translateY(-2px);
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+
+		.flagIcon {
+			transform: scale(1.1);
+		}
+	}
+
+	&.selected {
+		background: linear-gradient(135deg, rgba(var(--btn-primary-rgb, 95, 136, 229), 0.08) 0%, rgba(var(--btn-primary-rgb, 95, 136, 229), 0.04) 100%);
+		border-color: var(--btn-primary-selected);
+		box-shadow: 0 2px 8px rgba(var(--btn-primary-rgb, 95, 136, 229), 0.15);
+
+		.languageLabel {
+			color: var(--btn-primary-selected);
+			font-weight: 600;
+		}
+	}
+
+	&:focus {
+		outline: 2px solid var(--btn-primary);
+		outline-offset: 2px;
+	}
+
+	&:active:not(.selected) {
+		transform: translateY(0);
+		transition: transform 0.1s;
+	}
+}
+
+.cardContent {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+.flagIcon {
+	width: 32px;
+	height: 32px;
+	transition: transform 0.3s ease;
+
+	@media (max-width: 480px) {
+		width: 28px;
+		height: 28px;
+	}
+}
+
+.languageLabel {
+	font-size: 0.9rem;
+	font-weight: 500;
+	color: var(--text-title);
+	text-align: center;
+	transition: color 0.3s ease;
+
+	@media (max-width: 480px) {
+		font-size: 0.8rem;
+	}
+}
+
+.selectedBadge {
+	position: absolute;
+	top: 0.25rem;
+	right: 0.25rem;
+	display: inline-flex;
+	align-items: center;
+	padding: 0.15rem 0.4rem;
+	background: var(--btn-primary);
+	color: white;
+	border-radius: 8px;
+	font-size: 0.65rem;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.3px;
+	animation: fadeIn 0.3s ease;
+
+	@media (max-width: 480px) {
+		font-size: 0.6rem;
+		padding: 0.1rem 0.3rem;
+	}
+}
+
+.selectedIndicator {
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	height: 3px;
+	background: linear-gradient(90deg, var(--btn-primary) 0%, var(--btn-primary-selected) 100%);
+	animation: slideIn 0.3s ease;
+}
+
+// Animations
+@keyframes fadeIn {
+	from {
+		opacity: 0;
+		transform: translateX(5px);
+	}
+	to {
+		opacity: 1;
+		transform: translateX(0);
+	}
+}
+
+@keyframes slideIn {
+	from {
+		transform: scaleX(0);
+	}
+	to {
+		transform: scaleX(1);
+	}
+}
+
+// Accessibility
+@media (prefers-reduced-motion: reduce) {
+	.optionCard,
+	.flagIcon,
+	.selectedBadge,
+	.selectedIndicator {
+		transition: none !important;
+		animation: none !important;
+	}
+}
+
+// Dark mode support
+@media (prefers-color-scheme: dark) {
+	.optionCard {
+		background: #1a1a1a;
+		border-color: rgba(255, 255, 255, 0.1);
+
+		&:hover:not(.selected) {
+			background: rgba(95, 136, 229, 0.1);
+			border-color: rgba(95, 136, 229, 0.5);
+		}
+
+		&.selected {
+			background: linear-gradient(135deg, rgba(95, 136, 229, 0.2) 0%, rgba(95, 136, 229, 0.1) 100%);
+			border-color: var(--btn-primary);
+		}
+	}
+}

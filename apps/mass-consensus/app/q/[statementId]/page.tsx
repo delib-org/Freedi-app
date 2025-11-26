@@ -4,6 +4,7 @@ import { getQuestionFromFirebase, getRandomOptions } from '@/lib/firebase/querie
 import QuestionHeader from '@/components/question/QuestionHeader';
 import SolutionFeed from '@/components/question/SolutionFeed';
 import SkeletonLoader from '@/components/shared/SkeletonLoader';
+import { LanguageOverrideProvider } from '@/components/providers/LanguageOverrideProvider';
 import { notFound } from 'next/navigation';
 
 interface PageProps {
@@ -52,18 +53,20 @@ export default async function QuestionPage({ params }: PageProps) {
 
     // Works with any question type - mass consensus UI is universal
     return (
-      <div className="page">
-        {/* Server Component - Static header */}
-        <QuestionHeader question={question} />
+      <LanguageOverrideProvider adminLanguage={question.defaultLanguage}>
+        <div className="page">
+          {/* Server Component - Static header */}
+          <QuestionHeader question={question} />
 
-        {/* Suspense boundary for streaming */}
-        <Suspense fallback={<SkeletonLoader count={3} />}>
-          <SolutionFeed
-            question={question}
-            initialSolutions={initialBatch}
-          />
-        </Suspense>
-      </div>
+          {/* Suspense boundary for streaming */}
+          <Suspense fallback={<SkeletonLoader count={3} />}>
+            <SolutionFeed
+              question={question}
+              initialSolutions={initialBatch}
+            />
+          </Suspense>
+        </div>
+      </LanguageOverrideProvider>
     );
   } catch (error) {
     console.error('[QuestionPage] Error loading page:', error);
