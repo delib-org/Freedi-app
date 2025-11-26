@@ -198,7 +198,7 @@ const StatementBottomNav: FC<Props> = () => {
 							{!isLearningFace && <PlusIcon style={{ color: statementColor.color }} />}
 							{isLearningFace && (
 								<span className={styles.addOptionButtonLabel} dir={dir}>
-									{t('Add Solution')}
+									{t('Add an answer')}
 								</span>
 							)}
 						</button>
