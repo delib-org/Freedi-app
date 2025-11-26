@@ -165,8 +165,9 @@
         }
 
         .chat-more-element {
-          width: 30px;
-          height: 30px;
+          // Allow chat bubble to grow for better visibility
+          min-width: 44px;
+          min-height: 44px;
         }
 
         .more-question {
