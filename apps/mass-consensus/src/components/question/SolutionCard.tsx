@@ -1,6 +1,7 @@
 'use client';
 
 import { Statement } from 'delib-npm';
+import { useTranslation } from '@freedi/shared-i18n/next';
 import EvaluationButtons from './EvaluationButtons';
 import styles from './SolutionCard.module.css';
 
@@ -19,6 +20,8 @@ export default function SolutionCard({
   onEvaluate,
   isEvaluated,
 }: SolutionCardProps) {
+  const { t } = useTranslation();
+
   const handleEvaluate = (score: number) => {
     onEvaluate(solution.statementId, score);
   };
@@ -47,7 +50,7 @@ export default function SolutionCard({
 
       {isEvaluated && (
         <div className={styles.evaluatedBadge}>
-          ✓ Evaluated
+          ✓ {t('Evaluated')}
         </div>
       )}
     </div>

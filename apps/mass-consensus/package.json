@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@freedi/shared-i18n": "file:../../packages/shared-i18n",
     "@google/generative-ai": "^0.21.0",
     "clsx": "^2.1.0",
     "delib-npm": "^5.6.71",
@@ -20,8 +21,8 @@
   },
   "devDependencies": {
     "@types/node": "^20.11.0",
-    "@types/react": "^18.3.0",
-    "@types/react-dom": "^18.3.0",
+    "@types/react": "18.3.0",
+    "@types/react-dom": "18.3.0",
     "eslint": "^8.57.0",
     "eslint-config-next": "^14.2.0",
     "sass": "^1.94.2",

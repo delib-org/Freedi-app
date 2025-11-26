@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+import { useTranslation } from '@freedi/shared-i18n/next';
 import styles from './EvaluationButtons.module.css';
 
 interface EvaluationButtonsProps {
@@ -9,12 +10,12 @@ interface EvaluationButtonsProps {
 }
 
 // Evaluation scale: -1, -0.5, 0, 0.5, 1
-const EVALUATION_OPTIONS = [
-  { score: -1, label: 'Strongly disagree', emoji: '👎👎' },
-  { score: -0.5, label: 'Disagree', emoji: '👎' },
-  { score: 0, label: 'Neutral', emoji: '🤷' },
-  { score: 0.5, label: 'Agree', emoji: '👍' },
-  { score: 1, label: 'Strongly agree', emoji: '👍👍' },
+const EVALUATION_SCORES = [
+  { score: -1, labelKey: 'Strongly disagree', emoji: '👎👎' },
+  { score: -0.5, labelKey: 'Disagree', emoji: '👎' },
+  { score: 0, labelKey: 'Neutral', emoji: '🤷' },
+  { score: 0.5, labelKey: 'Agree', emoji: '👍' },
+  { score: 1, labelKey: 'Strongly agree', emoji: '👍👍' },
 ];
 
 /**
@@ -25,7 +26,17 @@ export default function EvaluationButtons({
   onEvaluate,
   disabled,
 }: EvaluationButtonsProps) {
+  const { t } = useTranslation();
   const [selectedScore, setSelectedScore] = useState<number | null>(null);
+
+  const evaluationOptions = useMemo(
+    () =>
+      EVALUATION_SCORES.map((option) => ({
+        ...option,
+        label: t(option.labelKey),
+      })),
+    [t]
+  );
 
   const handleClick = (score: number) => {
     if (disabled) return;
@@ -36,7 +47,7 @@ export default function EvaluationButtons({
 
   return (
     <div className={styles.buttons}>
-      {EVALUATION_OPTIONS.map(({ score, label, emoji }) => (
+      {evaluationOptions.map(({ score, label, emoji }) => (
         <button
           key={score}
           onClick={() => handleClick(score)}

@@ -3,6 +3,9 @@ const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
 
+  // Transpile shared packages
+  transpilePackages: ['@freedi/shared-i18n'],
+
   // Optimize for production
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production' ? {

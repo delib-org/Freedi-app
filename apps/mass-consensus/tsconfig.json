@@ -19,7 +19,9 @@
       }
     ],
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@freedi/shared-i18n": ["../../packages/shared-i18n/src/index.ts"],
+      "@freedi/shared-i18n/*": ["../../packages/shared-i18n/src/*"]
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],

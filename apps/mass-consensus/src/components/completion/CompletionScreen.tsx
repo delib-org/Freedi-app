@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslation } from '@freedi/shared-i18n/next';
 import styles from './CompletionScreen.module.scss';
 import AchievementBadge, { BadgeType } from './AchievementBadge';
 
@@ -23,6 +24,7 @@ export default function CompletionScreen({
   estimatedDays = 3,
   onClose,
 }: CompletionScreenProps) {
+  const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubscribed, setIsSubscribed] = useState(false);
@@ -46,14 +48,14 @@ export default function CompletionScreen({
     e.preventDefault();
 
     if (!email.trim()) {
-      setError('Please enter your email');
+      setError(t('Please enter your email'));
       return;
     }
 
     // Basic email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      setError('Please enter a valid email');
+      setError(t('Invalid email'));
       return;
     }
 
@@ -74,7 +76,7 @@ export default function CompletionScreen({
       setIsSubscribed(true);
     } catch (err) {
       console.error('Subscription error:', err);
-      setError('Failed to subscribe. Please try again.');
+      setError(t('Something went wrong. Please try again!'));
     } finally {
       setIsSubmitting(false);
     }
@@ -99,24 +101,24 @@ export default function CompletionScreen({
         </div>
 
         {/* Title */}
-        <h1 className={styles.title}>Thank You!</h1>
-        <p className={styles.subtitle}>Your voice matters in shaping collective decisions</p>
+        <h1 className={styles.title}>{t('Thank You')}</h1>
+        <p className={styles.subtitle}>{t('Thank you for your participation')}</p>
 
         {/* Stats */}
         <div className={styles.stats}>
           <div className={styles.stat}>
             <span className={styles.statNumber}>{solutionsEvaluated}</span>
-            <span className={styles.statLabel}>Solutions Evaluated</span>
+            <span className={styles.statLabel}>{t('Solutions')}</span>
           </div>
           <div className={styles.stat}>
             <span className={styles.statNumber}>{participantCount}</span>
-            <span className={styles.statLabel}>Total Participants</span>
+            <span className={styles.statLabel}>{t('Total participants')}</span>
           </div>
         </div>
 
         {/* Achievement Badges */}
         <div className={styles.badgesSection}>
-          <h3 className={styles.badgesTitle}>Achievements Earned</h3>
+          <h3 className={styles.badgesTitle}>{t('Achievements Earned')}</h3>
           <div className={styles.badges}>
             {earnedBadges.map((badge) => (
               <AchievementBadge key={badge} type={badge} />
@@ -133,20 +135,20 @@ export default function CompletionScreen({
             </svg>
           </div>
           <p className={styles.timelineText}>
-            Results will be ready in approximately <strong>{estimatedDays} days</strong>
+            {t('Results')} <strong>{estimatedDays}</strong>
           </p>
         </div>
 
         {/* Email Subscription */}
         {!isSubscribed ? (
           <form className={styles.subscribeForm} onSubmit={handleSubscribe}>
-            <p className={styles.subscribeLabel}>Get notified when results are ready:</p>
+            <p className={styles.subscribeLabel}>{t('Please leave your email to receive updates')}</p>
             <div className={styles.inputGroup}>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="your@email.com"
+                placeholder={t('your@email.com')}
                 className={styles.emailInput}
                 disabled={isSubmitting}
               />
@@ -155,7 +157,7 @@ export default function CompletionScreen({
                 className={styles.subscribeButton}
                 disabled={isSubmitting}
               >
-                {isSubmitting ? 'Subscribing...' : 'Notify Me'}
+                {isSubmitting ? t('Submitting...') : t('Submit')}
               </button>
             </div>
             {error && <p className={styles.error}>{error}</p>}
@@ -163,13 +165,13 @@ export default function CompletionScreen({
         ) : (
           <div className={styles.subscribed}>
             <span className={styles.subscribedIcon}>✓</span>
-            <p>We&apos;ll email you when results are ready!</p>
+            <p>{t('You have successfully registered to receive updates. We will send you a message when there is news.')}</p>
           </div>
         )}
 
         {/* Close Button */}
         <button className={styles.closeButton} onClick={onClose}>
-          Done
+          {t('Close')}
         </button>
       </div>
     </div>

@@ -3,6 +3,9 @@
   "private": true,
   "version": "5.4.0",
   "type": "module",
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
     "env:dev": "node env/env-loader.js dev",
     "env:test": "node env/env-loader.js test",
