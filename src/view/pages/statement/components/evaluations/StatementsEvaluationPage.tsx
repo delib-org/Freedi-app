@@ -140,7 +140,7 @@ const StatementEvaluationPage: FC<StatementEvaluationPageProps> = ({
 									icon={<X />}
 								/>
 								<Button
-									text={t('Add a solution')}
+									text={t('Add an answer')}
 									iconOnRight={true}
 									onClick={() => {
 										setShowToast(false);
