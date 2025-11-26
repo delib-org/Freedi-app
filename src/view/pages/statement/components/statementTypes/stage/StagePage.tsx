@@ -10,9 +10,10 @@ import Clustering from '../../clustering/Clustering';
 
 interface Props {
 	showStageTitle?: boolean;
+	showBottomNav?: boolean;
 }
 
-const StagePage = ({ showStageTitle = true }: Props) => {
+const StagePage = ({ showStageTitle = true, showBottomNav = true }: Props) => {
 	const { t } = useTranslation();
 	const { statement } = useContext(StatementContext);
 	const stageRef = useRef<HTMLDivElement>(null);
@@ -54,9 +55,11 @@ const StagePage = ({ showStageTitle = true }: Props) => {
 				)}
 				<StagePageSwitch statement={statement} />
 			</div>
-			<div className={styles.bottomNav}>
-				<StatementBottomNav />
-			</div>
+			{showBottomNav && (
+				<div className={styles.bottomNav}>
+					<StatementBottomNav />
+				</div>
+			)}
 		</>
 	);
 };
