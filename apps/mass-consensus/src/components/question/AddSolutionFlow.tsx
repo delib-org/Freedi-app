@@ -110,7 +110,8 @@ export default function AddSolutionFlow({
         setFlowState({ step: 'similar', data });
       } else {
         // No similar solutions, proceed directly to submit
-        await handleSelectSolution(null);
+        // Pass solutionText directly to avoid React state timing issues
+        await handleSelectSolution(null, solutionText);
       }
     } catch (error) {
       logError(error, {
@@ -131,7 +132,10 @@ export default function AddSolutionFlow({
   };
 
   // Step 2: User selects their solution or an existing one
-  const handleSelectSolution = async (statementId: string | null) => {
+  // solutionText parameter is used when called directly from handleCheckSimilar
+  // to avoid React state timing issues
+  const handleSelectSolution = async (statementId: string | null, solutionText?: string) => {
+    const textToSubmit = solutionText || userInput;
     setFlowState({ step: 'submitting' });
 
     try {
@@ -139,7 +143,7 @@ export default function AddSolutionFlow({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          solutionText: userInput,
+          solutionText: textToSubmit,
           userId,
           existingStatementId: statementId,
         }),
@@ -160,7 +164,7 @@ export default function AddSolutionFlow({
       setFlowState({
         step: 'success',
         action: data.action,
-        solutionText: userInput,
+        solutionText: textToSubmit,
       });
     } catch (error) {
       logError(error, {
@@ -168,7 +172,7 @@ export default function AddSolutionFlow({
         userId,
         questionId,
         statementId: statementId || undefined,
-        metadata: { solutionTextLength: userInput.length },
+        metadata: { solutionTextLength: textToSubmit.length },
       });
 
       const errorMessage =

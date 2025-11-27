@@ -2,6 +2,7 @@ import { Request, Response } from "firebase-functions/v1";
 import { logger } from "firebase-functions";
 import {
   checkForInappropriateContent,
+  generateTitleAndDescription,
 } from "./services/ai-service";
 import {
   getUserStatements,
@@ -48,7 +49,7 @@ export async function findSimilarStatements(
     // Step 1: Check for inappropriate content (NEVER CACHE THIS!)
     const contentCheck = await checkForInappropriateContent(userInput);
 
-    if (contentCheck.isInappropriate || contentCheck.error) {
+    if (contentCheck.isInappropriate) {
       logger.warn("Inappropriate content detected", { creatorId });
       response.status(400).send({
         ok: false,
@@ -56,6 +57,14 @@ export async function findSimilarStatements(
       });
 
       return;
+    }
+
+    // Log if content check had an error but allowed through
+    if (contentCheck.error) {
+      logger.warn("Content check had error, allowing through", {
+        creatorId,
+        error: contentCheck.error,
+      });
     }
 
     // Step 2: Try to get complete cached response
@@ -67,6 +76,40 @@ export async function findSimilarStatements(
 
     if (cachedResponse) {
       const cacheTime = Date.now() - startTime;
+
+      // Check if cached response has generatedTitle/Description
+      // If not (old cached data), or if it uses the old fallback pattern, regenerate
+      let { generatedTitle, generatedDescription } = cachedResponse;
+
+      // Detect if this is a fallback response that should be regenerated
+      const isFallbackPattern = generatedDescription?.startsWith("הצעה:") ||
+                                generatedDescription?.startsWith("הצעה זו מציעה:") ||
+                                generatedDescription?.startsWith("This suggestion proposes:");
+      const needsRegeneration = !generatedTitle ||
+                                !generatedDescription ||
+                                generatedTitle === generatedDescription ||
+                                isFallbackPattern;
+
+      if (needsRegeneration) {
+        try {
+          const generated = await generateTitleAndDescription(userInput, "");
+          generatedTitle = generated.title;
+          generatedDescription = generated.description;
+          logger.info("Generated title/description for cached response", {
+            reason: isFallbackPattern ? "fallback_pattern" : "missing_or_identical"
+          });
+        } catch (genError) {
+          logger.warn("Failed to generate title/description for cached response", { error: genError });
+          // Use fallback only if we don't already have values
+          if (!generatedTitle || !generatedDescription) {
+            const isHebrew = /[\u0590-\u05FF]/.test(userInput);
+            generatedTitle = userInput.length > 60 ? userInput.substring(0, 57) + "..." : userInput;
+            generatedDescription = userInput.length > 60 ? userInput :
+              (isHebrew ? `הצעה זו מציעה: ${userInput}` : `This suggestion proposes: ${userInput}`);
+          }
+        }
+      }
+
       logger.info("Returning cached response", {
         responseTime: cacheTime,
         type: "full_cache_hit",
@@ -74,6 +117,8 @@ export async function findSimilarStatements(
 
       response.status(200).send({
         ...cachedResponse,
+        generatedTitle,
+        generatedDescription,
         ok: true,
         cached: true,
         responseTime: cacheTime,
@@ -104,10 +149,34 @@ export async function findSimilarStatements(
       return;
     }
 
-    // Step 4: Cache the complete response for future requests
+    // Step 4: Generate title and description for the user's input
+    let generatedTitle = userInput;
+    let generatedDescription = userInput;
+
+    try {
+      const questionContext = result.parentStatementText || "";
+      const generated = await generateTitleAndDescription(userInput, questionContext);
+      generatedTitle = generated.title;
+      generatedDescription = generated.description;
+
+      logger.info("Generated title and description", {
+        titleLength: generatedTitle.length,
+        descriptionLength: generatedDescription.length,
+      });
+    } catch (genError) {
+      logger.warn("Failed to generate title/description, using original", { error: genError });
+      // Fallback: truncate for title if too long
+      if (userInput.length > 80) {
+        generatedTitle = userInput.substring(0, 77) + "...";
+      }
+    }
+
+    // Step 5: Cache the complete response for future requests
     const responseData = {
       similarStatements: result.cleanedStatements || [],
       userText: result.userText || userInput,
+      generatedTitle,
+      generatedDescription,
     };
 
     await saveCachedSimilarityResponse(
@@ -208,7 +277,8 @@ async function fetchDataAndProcess(
 
     return {
       cleanedStatements,
-      userText: duplicateStatement?.statement || userInput
+      userText: duplicateStatement?.statement || userInput,
+      parentStatementText: parentStatement.statement,
     };
   } catch (processingError) {
     logger.error("Error in fetchDataAndProcess:", processingError);

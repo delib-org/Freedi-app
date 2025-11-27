@@ -21,7 +21,7 @@
   "Add Solution": "Lösung hinzufügen",
   "Add Step": "Schritt hinzufügen",
   "Add Suggestion": "Vorschlag hinzufügen",
-  "Add a solution": "Lösung hinzufügen",
+  "Add an answer": "Antwort hinzufügen",
   "Add comment": "Kommentar hinzufügen",
   "Add new option here": "Neue Option hier hinzufügen",
   "Add question": "Frage hinzufügen",
@@ -646,10 +646,18 @@
   "summary": "zusammenfassung",
   "terms of use": "Nutzungsbedingungen",
   "to add your question": "um Ihre Frage hinzuzufügen",
+  "to add your answer": "um Ihre Antwort hinzuzufügen",
   "to add your suggestion": "um Ihren Vorschlag hinzuzufügen",
   "vote": "Stimme",
   "votes": "Stimmen erreicht",
   "votes used": "Stimmen verwendet",
   "your@email.com": "ihre@email.com",
-  "العربية": "Arabisch"
+  "العربية": "Arabisch",
+  "Add Your Solution First": "Füge zuerst deine Lösung hinzu",
+  "Don't ask": "Nicht fragen",
+  "Please submit your own solution before evaluating others.": "Bitte reiche deine eigene Lösung ein, bevor du andere bewertest.",
+  "Require original input before viewing others": "Eigene Idee vor dem Anzeigen anderer erforderlich",
+  "Request solution at start": "Lösung zu Beginn anfordern",
+  "Ask first": "Zuerst fragen",
+  "This helps ensure everyone contributes their ideas to the discussion.": "Dies stellt sicher, dass alle ihre Ideen zur Diskussion beitragen."
 }

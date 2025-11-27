@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
+import { createPortal } from "react-dom";
 import { useParams } from "react-router";
 import TitleMassConsensus from "../../TitleMassConsensus/TitleMassConsensus";
 import { useDispatch, useSelector } from "react-redux";
@@ -15,12 +16,29 @@ import { updateStatementText } from "@/controllers/db/statements/setStatements";
 import { prefetchRandomBatches, prefetchTopStatements } from "@/redux/massConsensus/massConsensusSlice";
 import type { AppDispatch } from "@/redux/types";
 
+type QuestionStage = "question" | "loading" | "submitting" | "suggestions";
+
+interface InitialQuestionProps {
+  stage: QuestionStage;
+  setStage: React.Dispatch<React.SetStateAction<QuestionStage>>;
+  setIfButtonEnabled: (enabled: boolean) => void;
+  setReachedLimit: (reached: boolean) => void;
+  onNext?: () => void;
+  onSkip?: () => void;
+  onBack?: () => void;
+  isNextActive?: boolean;
+}
+
 const InitialQuestion = ({
   stage,
   setStage,
   setIfButtonEnabled,
   setReachedLimit,
-}) => {
+  onNext,
+  onSkip,
+  onBack,
+  isNextActive = false,
+}: InitialQuestionProps) => {
   const { statementId } = useParams<{ statementId: string }>();
   const statement = useSelector(statementSelector(statementId));
   const [description, setDescription] = useState("");
@@ -87,58 +105,21 @@ const InitialQuestion = ({
     setEdit(false);
   }
 
-  return (
-    <>
-      {!edit ? (
-        <TitleMassConsensus
-          title={`${t("Question")}: ${statement ? statement.statement : ""}`}
-        ></TitleMassConsensus>
-      ) : (
-        <form onSubmit={handleSubmitInitialQuestionText}>
-          <textarea
-            className={styles.textarea}
-            placeholder={statement ? statement.statement : ""}
-            onChange={(e) => setTitle(e.target.value)}
-            onKeyUp={(e) => {
-              if (e.key === "Enter") {
-                handleSubmitInitialQuestionText(e);
-              }
-            }}
-          />
-          <div className="btns">
-            <button className="btn btn--primary" type="submit">
-              {t("submit")}
-            </button>
-          </div>
-        </form>
-      )}
-      {isAdmin && !edit && (
-        <div className="btns">
-          <button
-            className="btn btn--secondary"
-            onClick={() => setEdit(true)}
-            onKeyUp={(e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                setEdit(true);
-              }
-            }}
-            tabIndex={0}
-          >
-            Edit
-          </button>
-        </div>
-      )}
-      <h3>{t("Please suggest a solution")}</h3>
+  const fixedInputContent = (
+    <div className={styles.fixedInput}>
+      <h3 className={styles.fixedInput__title}>{t("Please suggest a solution")}</h3>
       {error?.message && <h4 className={styles.error}>{t(error?.message)}</h4>}
       <Textarea
         isDisabled={stage === "submitting" || error?.blocking}
         name="your-description"
         label={t("Your suggestion")}
         placeholder=""
-        backgroundColor="var(--bg-screen)"
+        backgroundColor="var(--card-default)"
         maxLength={120}
         onChange={setDescription}
         value={description}
+        minRows={1}
+        maxRows={8}
         onKeyUp={(e) => {
           if (e.key === "Enter") {
             e.preventDefault();
@@ -146,7 +127,82 @@ const InitialQuestion = ({
           }
         }}
       />
-    </>
+      <div className={styles.fixedInput__buttons}>
+        {onBack && (
+          <button
+            className="btn btn--massConsensus btn--secondary"
+            onClick={onBack}
+          >
+            {t("Back")}
+          </button>
+        )}
+        {onSkip && (
+          <button
+            className="btn btn--massConsensus btn--secondary"
+            onClick={onSkip}
+          >
+            {t("Skip")}
+          </button>
+        )}
+        {onNext && (
+          <button
+            className={`btn btn--massConsensus btn--primary ${!isNextActive ? "btn--disabled" : ""}`}
+            onClick={onNext}
+            disabled={!isNextActive}
+          >
+            {t("Next")}
+          </button>
+        )}
+      </div>
+    </div>
+  );
+
+  return (
+    <div className={styles.initialQuestion}>
+      <div className={styles.content}>
+        {!edit ? (
+          <TitleMassConsensus
+            title={`${t("Question")}: ${statement ? statement.statement : ""}`}
+          ></TitleMassConsensus>
+        ) : (
+          <form onSubmit={handleSubmitInitialQuestionText}>
+            <textarea
+              className={styles.textarea}
+              placeholder={statement ? statement.statement : ""}
+              onChange={(e) => setTitle(e.target.value)}
+              onKeyUp={(e) => {
+                if (e.key === "Enter") {
+                  handleSubmitInitialQuestionText(e);
+                }
+              }}
+            />
+            <div className="btns">
+              <button className="btn btn--primary" type="submit">
+                {t("submit")}
+              </button>
+            </div>
+          </form>
+        )}
+        {isAdmin && !edit && (
+          <div className="btns">
+            <button
+              className="btn btn--secondary"
+              onClick={() => setEdit(true)}
+              onKeyUp={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  setEdit(true);
+                }
+              }}
+              tabIndex={0}
+            >
+              Edit
+            </button>
+          </div>
+        )}
+      </div>
+
+      {createPortal(fixedInputContent, document.body)}
+    </div>
   );
 };
 

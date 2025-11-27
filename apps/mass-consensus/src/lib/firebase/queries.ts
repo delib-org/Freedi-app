@@ -2,6 +2,17 @@ import { Statement, StatementType, Evaluation, Collections } from 'delib-npm';
 import { getFirestoreAdmin } from './admin';
 
 /**
+ * Helper to log query errors with context
+ */
+function logQueryError(operation: string, error: unknown, context: Record<string, unknown> = {}): void {
+  console.error(`[${operation}] Query error:`, {
+    error: error instanceof Error ? error.message : error,
+    stack: error instanceof Error ? error.stack : undefined,
+    ...context,
+  });
+}
+
+/**
  * Get a question statement by ID
  * @param statementId - The statement ID
  * @returns The statement if it's a question, throws error otherwise
@@ -11,21 +22,27 @@ export async function getQuestionFromFirebase(
 ): Promise<Statement> {
   const db = getFirestoreAdmin();
 
+  console.info('[getQuestionFromFirebase] Fetching statement:', statementId);
+
   const docSnapshot = await db
     .collection(Collections.statements)
     .doc(statementId)
     .get();
 
   if (!docSnapshot.exists) {
+    console.error('[getQuestionFromFirebase] Document does not exist:', statementId);
     throw new Error('Question not found');
   }
 
   const statement = docSnapshot.data() as Statement;
+  console.info('[getQuestionFromFirebase] Found statement, type:', statement.statementType);
 
   if (statement.statementType !== StatementType.question) {
+    console.error('[getQuestionFromFirebase] Wrong type:', statement.statementType, 'expected: question');
     throw new Error('Statement is not a question');
   }
 
+  console.info('[getQuestionFromFirebase] Success:', statement.statement?.substring(0, 50));
   return statement;
 }
 
@@ -72,14 +89,14 @@ export async function getRandomOptions(
 
   // Query 1: Get options with randomSeed >= random value
   // Note: Not filtering by 'hide' in query because documents without 'hide' field won't match !=
-  let query = db
+  const query = db
     .collection(Collections.statements)
     .where('parentId', '==', questionId)
     .where('statementType', '==', StatementType.option)
     .where('randomSeed', '>=', randomSeed)
     .limit(size);
 
-  let snapshot = await query.get();
+  const snapshot = await query.get();
   console.info('[getRandomOptions] First query (randomSeed >=', randomSeed.toFixed(3), ') returned:', snapshot.size, 'docs');
 
   let options_results = snapshot.docs
@@ -122,19 +139,26 @@ export async function getAllSolutionsSorted(
   questionId: string,
   limit = 100
 ): Promise<Statement[]> {
-  const db = getFirestoreAdmin();
+  try {
+    const db = getFirestoreAdmin();
 
-  const snapshot = await db
-    .collection(Collections.statements)
-    .where('parentId', '==', questionId)
-    .where('statementType', '==', StatementType.option)
-    .orderBy('consensus', 'desc')
-    .limit(limit)
-    .get();
+    const snapshot = await db
+      .collection(Collections.statements)
+      .where('parentId', '==', questionId)
+      .where('statementType', '==', StatementType.option)
+      .orderBy('consensus', 'desc')
+      .limit(limit)
+      .get();
 
-  return snapshot.docs
-    .map((doc) => doc.data() as Statement)
-    .filter((statement) => !statement.hide);
+    console.info('[getAllSolutionsSorted] Found', snapshot.size, 'solutions for question:', questionId);
+
+    return snapshot.docs
+      .map((doc) => doc.data() as Statement)
+      .filter((statement) => !statement.hide);
+  } catch (error) {
+    logQueryError('getAllSolutionsSorted', error, { questionId, limit });
+    throw error;
+  }
 }
 
 /**
@@ -147,17 +171,24 @@ export async function getUserSolutions(
   questionId: string,
   userId: string
 ): Promise<Statement[]> {
-  const db = getFirestoreAdmin();
+  try {
+    const db = getFirestoreAdmin();
 
-  const snapshot = await db
-    .collection(Collections.statements)
-    .where('parentId', '==', questionId)
-    .where('statementType', '==', StatementType.option)
-    .where('creatorId', '==', userId)
-    .orderBy('consensus', 'desc')
-    .get();
+    const snapshot = await db
+      .collection(Collections.statements)
+      .where('parentId', '==', questionId)
+      .where('statementType', '==', StatementType.option)
+      .where('creatorId', '==', userId)
+      .orderBy('consensus', 'desc')
+      .get();
 
-  return snapshot.docs.map((doc) => doc.data() as Statement);
+    console.info('[getUserSolutions] Found', snapshot.size, 'solutions for user:', userId);
+
+    return snapshot.docs.map((doc) => doc.data() as Statement);
+  } catch (error) {
+    logQueryError('getUserSolutions', error, { questionId, userId });
+    throw error;
+  }
 }
 
 /**

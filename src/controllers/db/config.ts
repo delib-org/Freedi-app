@@ -168,4 +168,40 @@ if (!isProduction) {
 	}
 }
 
+/**
+ * Get the Firebase Functions URL based on the environment
+ * Returns the appropriate base URL for calling HTTP Firebase Functions
+ */
+export function getFunctionsUrl(): string {
+	const projectId = firebaseConfig.projectId || 'delib-5';
+	// Most functions use me-west1 region as defined in functionConfig from delib-npm
+	const region = 'me-west1';
+
+	if (!isProduction) {
+		return `http://localhost:5001/${projectId}/${region}`;
+	}
+
+	return `https://${region}-${projectId}.cloudfunctions.net`;
+}
+
+/**
+ * Get the Mass Consensus app base URL based on the environment
+ * Returns the appropriate base URL for the mass-consensus Next.js app
+ */
+export function getMassConsensusUrl(): string {
+	if (!isProduction) {
+		return 'http://localhost:3001';
+	}
+
+	// Production URL for the mass-consensus app
+	return 'https://mass-consensus.freedi.tech';
+}
+
+/**
+ * Get the results page URL for a specific statement in the mass-consensus app
+ */
+export function getMassConsensusResultsUrl(statementId: string): string {
+	return `${getMassConsensusUrl()}/q/${statementId}/results`;
+}
+
 export { auth, FireStore, storage, app, DB, analytics, functions };

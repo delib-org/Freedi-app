@@ -21,7 +21,7 @@
   "Add Solution": "Añadir Solución",
   "Add Step": "Añadir paso",
   "Add Suggestion": "Añadir Sugerencia",
-  "Add a solution": "Añadir una solución",
+  "Add an answer": "Añadir una respuesta",
   "Add comment": "Añadir comentario",
   "Add new option here": "Añadir nueva opción aquí",
   "Add question": "Agregar pregunta",
@@ -646,10 +646,18 @@
   "summary": "resumen",
   "terms of use": "términos de uso",
   "to add your question": "para agregar tu pregunta",
+  "to add your answer": "para agregar tu respuesta",
   "to add your suggestion": "para agregar tu sugerencia",
   "vote": "voto",
   "votes": "votos",
   "votes used": "votos utilizados",
   "your@email.com": "tu@correo.com",
-  "العربية": "Árabe"
+  "العربية": "Árabe",
+  "Add Your Solution First": "Agrega tu solución primero",
+  "Don't ask": "No preguntar",
+  "Please submit your own solution before evaluating others.": "Por favor, envía tu propia solución antes de evaluar a otros.",
+  "Require original input before viewing others": "Requiere aporte original antes de ver otros",
+  "Request solution at start": "Solicitar solución al inicio",
+  "Ask first": "Preguntar primero",
+  "This helps ensure everyone contributes their ideas to the discussion.": "Esto ayuda a asegurar que todos contribuyan sus ideas a la discusión."
 }

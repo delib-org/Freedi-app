@@ -3,7 +3,7 @@ import React, { FC, useState, useRef } from 'react';
 import { StatementSettingsProps } from '../../settingsTypeHelpers';
 import SectionTitle from '../sectionTitle/SectionTitle';
 import styles from './QuestionSettings.module.scss';
-import { setQuestionTypeToDB } from '@/controllers/db/statementSettings/setStatementSettings';
+import { setQuestionTypeToDB, setStatementSettingToDB } from '@/controllers/db/statementSettings/setStatementSettings';
 import { EvaluationUI, QuestionType, StatementType } from 'delib-npm';
 import SimpleIcon from '@/assets/icons/navQuestionsIcon.svg?react';
 import ConsentIcon from '@/assets/icons/doubleCheckIcon.svg?react';
@@ -12,6 +12,7 @@ import VotingIcon from '@/assets/icons/votingIcon.svg?react';
 import ClusterIcon from '@/assets/icons/networkIcon.svg?react';
 import AnchorIcon from '@/assets/icons/anchor.svg?react';
 import UsersIcon from '@/assets/icons/users20px.svg?react';
+import ShareIcon from '@/assets/icons/shareIcon.svg?react';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import MultiSwitch from '@/view/components/switch/multiSwitch/MultiSwitch';
 import { setEvaluationUIType, setAnchoredEvaluationSettings } from '@/controllers/db/evaluation/setEvaluation';
@@ -44,7 +45,20 @@ const QuestionSettings: FC<StatementSettingsProps> = ({
 	const [iconError, setIconError] = useState(false);
 	const [isDragging, setIsDragging] = useState(false);
 	const [uploadProgress, setUploadProgress] = useState<string>('');
+	const [linkCopied, setLinkCopied] = useState(false);
 	const fileInputRef = useRef<HTMLInputElement>(null);
+
+	const questionLink = `${window.location.origin}/q/${statement.statementId}`;
+
+	const handleCopyLink = async () => {
+		try {
+			await navigator.clipboard.writeText(questionLink);
+			setLinkCopied(true);
+			setTimeout(() => setLinkCopied(false), 2000);
+		} catch (error) {
+			console.error('Failed to copy link:', error);
+		}
+	};
 
 	try {
 		const { questionSettings } = statement;
@@ -59,6 +73,15 @@ const QuestionSettings: FC<StatementSettingsProps> = ({
 				questionType: isDocument
 					? QuestionType.simple
 					: QuestionType.massConsensus,
+			});
+		}
+
+		function handleRequireSolutionToggle(enabled: boolean) {
+			setStatementSettingToDB({
+				statement,
+				property: 'askUserForASolutionBeforeEvaluation',
+				newValue: enabled,
+				settingsSection: 'questionSettings',
 			});
 		}
 
@@ -251,6 +274,26 @@ const QuestionSettings: FC<StatementSettingsProps> = ({
 				{isVoting && <VotingSettings />}
 				<SectionTitle title={t('Question Settings')} />
 
+				<div className={styles.questionLink}>
+					<label>{t('Question Link')}</label>
+					<div className={styles.questionLink__container}>
+						<input
+							type="text"
+							value={questionLink}
+							readOnly
+							className={styles.questionLink__input}
+						/>
+						<button
+							type="button"
+							onClick={handleCopyLink}
+							className={styles.questionLink__button}
+						>
+							<ShareIcon />
+							<span>{linkCopied ? t('Copied!') : t('Copy Link')}</span>
+						</button>
+					</div>
+				</div>
+
 				<CustomSwitchSmall
 					label={t('Question Type')}
 					checked={
@@ -267,6 +310,19 @@ const QuestionSettings: FC<StatementSettingsProps> = ({
 
 				{isMassConsensus && (
 					<>
+						<h3 className='title'>{t('Require original input before viewing others')}</h3>
+						<CustomSwitchSmall
+							label={t('Request solution at start')}
+							checked={questionSettings?.askUserForASolutionBeforeEvaluation || false}
+							setChecked={handleRequireSolutionToggle}
+							textChecked={t('Request solution at start')}
+							textUnchecked={t("Don't ask")}
+							imageChecked={<SuggestionsIcon />}
+							imageUnchecked={<SuggestionsIcon />}
+							colorChecked='var(--question)'
+							colorUnchecked='var(--question)'
+						/>
+
 						<h3 className='title'>{t('Anchored Sampling')}</h3>
 						<p>{t('Anchored sampling allows the admin to insert certain pre-defined options into the evaluation process. These options are prepared in advance and will always appear to participants, no matter what other options are being sampled.')}</p>
 						<CustomSwitchSmall

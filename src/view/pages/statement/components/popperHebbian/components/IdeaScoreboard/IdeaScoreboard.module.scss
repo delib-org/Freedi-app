@@ -114,7 +114,7 @@
 	height: 8px;
 	background: #e0e0e0;
 	border-radius: 4px;
-	overflow: hidden;
+	overflow: visible;
 	position: relative;
 }
 
@@ -130,6 +130,33 @@
 
 	.scoreboard--under-discussion & {
 		background: linear-gradient(90deg, var(--accent), var(--question));
+	}
+}
+
+.thresholdMarker {
+	position: absolute;
+	top: -4px;
+	width: 2px;
+	height: 16px;
+	background: var(--text-body);
+	transform: translateX(-50%);
+	border-radius: 1px;
+}
+
+.scoreBarLabels {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-top: 0.5rem;
+	font-size: 0.75rem;
+	color: #888;
+
+	.thresholdLabel {
+		position: absolute;
+		left: 60%;
+		transform: translateX(-50%);
+		font-weight: 500;
+		color: var(--text-body);
 	}
 }
 

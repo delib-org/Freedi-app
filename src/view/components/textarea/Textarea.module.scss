@@ -59,16 +59,17 @@
 	background: transparent;
 	font-family: 'Roboto', sans-serif;
 	font-size: 1rem;
-	line-height: 150%;
+	line-height: 1.5rem;
 	font-weight: 300;
 	font-style: italic;
 	color: #7484a9;
 	padding: 0;
-	min-height: 40px; // Or whatever minimum height you want
-	resize: none; // Optional: prevents manual resizing
-	overflow: hidden; // Prevents scrollbar from appearing
+	min-height: 1.5rem;
+	resize: none;
+	overflow: hidden;
 	box-sizing: border-box;
 	width: 100%;
+	transition: height 0.1s ease-out;
 
 	&::placeholder {
 		color: #b3c2e7;
@@ -76,6 +77,10 @@
 
 	&:focus {
 		outline: none;
+	}
+
+	&--scrollable {
+		overflow-y: auto;
 	}
 
 	&::-webkit-scrollbar {

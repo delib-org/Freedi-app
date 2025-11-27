@@ -44,18 +44,18 @@ const EmptyScreen: FC<Props> = ({ statement }) => {
 							<>
 								{t('Click on')}{' '}
 								<span className={styles.titleSpan}>
-									{t('Add suggestion button')}
+									{t('Add an answer')}
 								</span>{' '}
-								{t('to add your suggestion')}
+								{t('to add your answer')}
 							</>
 						) : (
 							<>
 								{t('Click on')}{' '}
 								<span className={styles.titleSpan}>
-									{t('Add suggestion button')}
+									{t('Add an answer')}
 								</span>
 								<br />
-								{t('to add your suggestion')}
+								{t('to add your answer')}
 							</>
 						)}
 					</h1>
@@ -69,7 +69,7 @@ const EmptyScreen: FC<Props> = ({ statement }) => {
 						<WhitePlusIcon />
 					) : (
 						<span className={styles.addSuggestionText}>
-							{t('Add suggestion')} <WhitePlusIcon />
+							{t('Add an answer')} <WhitePlusIcon />
 						</span>
 					)}
 				</button>

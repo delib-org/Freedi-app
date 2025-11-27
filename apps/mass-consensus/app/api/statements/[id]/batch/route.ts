@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getRandomOptions } from '@/lib/firebase/queries';
 import { getUserIdFromCookie } from '@/lib/utils/user';
+import { logError } from '@/lib/utils/errorHandling';
 
 /**
  * POST /api/statements/[id]/batch
@@ -41,9 +42,12 @@ export async function POST(
       count: solutions.length,
     });
   } catch (error) {
-    console.error('[API] Batch fetch error:', error);
-    
-return NextResponse.json(
+    logError(error, {
+      operation: 'api.batch',
+      metadata: { questionId: params.id },
+    });
+
+    return NextResponse.json(
       {
         error: 'Failed to fetch batch',
         message: error instanceof Error ? error.message : 'Unknown error',

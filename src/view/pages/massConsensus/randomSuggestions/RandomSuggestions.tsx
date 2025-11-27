@@ -14,6 +14,7 @@ import RandomIcon from "@/assets/icons/randomIcon.svg?react";
 import StageExplanationScreen from "@/view/components/massConsensus/StageExplanationScreen/StageExplanationScreen";
 import { useExplanations } from "@/contexts/massConsensus/ExplanationProvider";
 import { useParams } from "react-router";
+import { AllOptionsEvaluated } from "@/view/components/massConsensus/AllOptionsEvaluated";
 
 const RandomSuggestions = () => {
   const {
@@ -28,6 +29,7 @@ const RandomSuggestions = () => {
     totalBatchesViewed,
     cyclesCompleted,
     showRecycleMessage,
+    allOptionsEvaluated,
     handleDismissRecycleMessage
   } = useRandomSuggestions();
   const { t } = useTranslation();
@@ -114,39 +116,46 @@ const RandomSuggestions = () => {
         <div style={{margin:"0 auto",padding:"1rem"}}>
           <Loader />
         </div>
+      ) : allOptionsEvaluated ? (
+        <AllOptionsEvaluated
+          message={t("Thank you! You have evaluated all available options.")}
+          onViewResults={navigateToTop}
+        />
       ) : (
         <SimpleSuggestionCards
           subStatements={subStatements}
         />
       )}
 
-      {/* Get New Suggestions Button */}
-      <div className={styles.batchControls}>
-        <button
-          className={`btn btn--secondary btn--img ${!canGetNewSuggestions || isLoadingNew ? 'btn--disabled' : ''}`}
-          onClick={handleGetNewSuggestions}
-          disabled={!canGetNewSuggestions || isLoadingNew}
-          aria-label={t("Get new suggestions")}
-        >
-          {isLoadingNew ? (
-            <>
-              <Loader />
-              <span>{t("Loading new suggestions...")}</span>
-            </>
-          ) : (
-            <>
-              <RandomIcon />
-              <span>{t("Get New Suggestions")}</span>
-            </>
+      {/* Get New Suggestions Button - Hide when all options evaluated */}
+      {!allOptionsEvaluated && (
+        <div className={styles.batchControls}>
+          <button
+            className={`btn btn--secondary btn--img ${!canGetNewSuggestions || isLoadingNew ? 'btn--disabled' : ''}`}
+            onClick={handleGetNewSuggestions}
+            disabled={!canGetNewSuggestions || isLoadingNew}
+            aria-label={t("Get new suggestions")}
+          >
+            {isLoadingNew ? (
+              <>
+                <Loader />
+                <span>{t("Loading new suggestions...")}</span>
+              </>
+            ) : (
+              <>
+                <RandomIcon />
+                <span>{t("Get New Suggestions")}</span>
+              </>
+            )}
+          </button>
+          {evaluationsLeft > 0 && (
+            <p className={styles.hint}>
+              {t("Evaluate all suggestions to get new ones")}
+              {` (${evaluationsLeft} ${t("left")})`}
+            </p>
           )}
-        </button>
-        {evaluationsLeft > 0 && (
-          <p className={styles.hint}>
-            {t("Evaluate all suggestions to get new ones")}
-            {` (${evaluationsLeft} ${t("left")})`}
-          </p>
-        )}
-      </div>
+        </div>
+      )}
 
       <FooterMassConsensus
         isNextActive={evaluationsLeft === 0}

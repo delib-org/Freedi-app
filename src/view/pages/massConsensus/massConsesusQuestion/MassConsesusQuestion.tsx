@@ -8,6 +8,7 @@ import { useMassConsensusAnalytics } from "@/hooks/useMassConsensusAnalytics";
 import StageExplanationScreen from "@/view/components/massConsensus/StageExplanationScreen/StageExplanationScreen";
 import { useParams, useNavigate } from "react-router";
 import { ExplanationConfig } from "delib-npm";
+import { useStageNavigation } from "../MassConsensusVM";
 
 import styles from "./MassConsesusQuestion.module.scss";
 import { useTranslation } from "@/controllers/hooks/useTranslation";
@@ -24,6 +25,7 @@ const MassConsensusQuestion = () => {
   } = useMassConsensusQuestion();
   const { trackStageCompleted, trackSubmission, trackStageSkipped } =
     useMassConsensusAnalytics();
+  const { previousStage } = useStageNavigation();
 
   const isBusy = stage === "loading" || stage === "submitting";
   const { t } = useTranslation();
@@ -117,14 +119,26 @@ const MassConsensusQuestion = () => {
     );
   }
 
+  const handleBackNavigation = () => {
+    if (previousStage) {
+      navigate(`/mass-consensus/${statementId}/${previousStage}`);
+    }
+  };
+
+  const isQuestionStage = stage === "question" || stage === "loading";
+
   return (
     <>
-      {stage === "question" || stage === "loading" ? (
+      {isQuestionStage ? (
         <InitialQuestion
           setReachedLimit={setReachedLimit}
           stage={stage}
           setStage={setStage}
           setIfButtonEnabled={setIfButtonEnabled}
+          onNext={handleNextWithTracking}
+          onSkip={handleSkipWithTracking}
+          onBack={previousStage ? handleBackNavigation : undefined}
+          isNextActive={nextActive}
         />
       ) : (
         <SimilarSuggestions
@@ -147,19 +161,22 @@ const MassConsensusQuestion = () => {
       {/* Improved suggestion loader with better UX */}
       <SuggestionLoader show={showLoader} />
 
-      {reachedLimit ? (
-        <FooterMassConsensus
-          onNext={() => {}}
-          isNextActive={false}
-          blockNavigation={false}
-        />
-      ) : (
-        <FooterMassConsensus
-          onNext={handleNextWithTracking}
-          isNextActive={nextActive}
-          blockNavigation={true}
-          onSkip={handleSkipWithTracking}
-        />
+      {/* Only show footer for non-question stages */}
+      {!isQuestionStage && (
+        reachedLimit ? (
+          <FooterMassConsensus
+            onNext={() => {}}
+            isNextActive={false}
+            blockNavigation={false}
+          />
+        ) : (
+          <FooterMassConsensus
+            onNext={handleNextWithTracking}
+            isNextActive={nextActive}
+            blockNavigation={true}
+            onSkip={handleSkipWithTracking}
+          />
+        )
       )}
     </>
   );

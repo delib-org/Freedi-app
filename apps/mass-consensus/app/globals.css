@@ -33,6 +33,21 @@
   --agree-light: #81c784;
   --disagree: #f44336;
   --disagree-light: #e57373;
+  --approve: #4caf50;
+  --reject: #f44336;
+  --option: #FFD54F;
+  --option-text: #5D4600;
+
+  /* Consensus Range Colors */
+  --range-objections-100: #D32F2F;
+  --range-objections-60: #E57373;
+  --range-objections-30: #FFCDD2;
+  --range-conflict-100: #FFA000;
+  --range-conflict-60: #FFB74D;
+  --range-conflict-30: #FFE0B2;
+  --range-positive-30: #C8E6C9;
+  --range-positive-60: #81C784;
+  --range-positive-100: #388E3C;
 
   /* Spacing - 8px grid system */
   --spacing-xs: 0.5rem; /* 8px */
@@ -70,6 +85,7 @@ body {
   max-width: 800px;
   margin: 0 auto;
   padding: var(--spacing-lg);
+  padding-bottom: 200px; /* Space for fixed input at bottom */
   min-height: 100vh;
 }
 

@@ -12,7 +12,7 @@ interface SolutionCardProps {
 
 /**
  * Solution card component
- * Displays solution text and evaluation buttons
+ * Displays solution title (bold) and description, with evaluation buttons
  */
 export default function SolutionCard({
   solution,
@@ -23,19 +23,21 @@ export default function SolutionCard({
     onEvaluate(solution.statementId, score);
   };
 
+  // Use statement as title, description if available
+  const title = solution.statement;
+  // For solutions without description, use the statement itself
+  const description = solution.description || solution.statement;
+
+  // Only show description if it's different from title (avoid duplication)
+  const showDescription = description && description !== title;
+
   return (
     <div className={`${styles.card} ${isEvaluated ? styles.evaluated : ''}`}>
-      <p className={styles.text}>{solution.statement}</p>
-
-      <div className={styles.meta}>
-        {solution.consensus !== undefined && (
-          <span className={styles.consensus}>
-            Score: {solution.consensus.toFixed(2)}
-          </span>
+      <div className={styles.content}>
+        <h3 className={styles.title}>{title}</h3>
+        {showDescription && (
+          <p className={styles.description}>{description}</p>
         )}
-        <span className={styles.date}>
-          {new Date(solution.createdAt).toLocaleDateString('en-US')}
-        </span>
       </div>
 
       <EvaluationButtons

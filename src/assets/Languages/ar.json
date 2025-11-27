@@ -21,7 +21,7 @@
   "Add Solution": "أضف حلاً",
   "Add Step": "إضافة خطوة",
   "Add Suggestion": "أضف اقتراحاً",
-  "Add a solution": "أضف حلاً",
+  "Add an answer": "أضف إجابة",
   "Add comment": "إضافة تعليق",
   "Add new option here": "أضف خيارًا جديدًا هنا",
   "Add question": "أضف سؤالا",
@@ -642,10 +642,18 @@
   "summary": "ملخص",
   "terms of use": "شروط الاستخدام",
   "to add your question": "لإضافة سؤالك",
+  "to add your answer": "لإضافة إجابتك",
   "to add your suggestion": "لإضافة اقتراحك",
   "vote": "صوت",
   "votes": "أصوات",
   "votes used": "الأصوات المستخدمة",
   "your@email.com": "your@email.com",
-  "العربية": "العربية"
+  "العربية": "العربية",
+  "Add Your Solution First": "أضف حلك أولاً",
+  "Don't ask": "لا تسأل",
+  "Please submit your own solution before evaluating others.": "يرجى تقديم حلك الخاص قبل تقييم الآخرين.",
+  "Require original input before viewing others": "يجب تقديم فكرة أصلية قبل عرض الآخرين",
+  "Request solution at start": "اطلب حلاً في البداية",
+  "Ask first": "اسأل أولاً",
+  "This helps ensure everyone contributes their ideas to the discussion.": "هذا يساعد على ضمان مساهمة الجميع بأفكارهم في النقاش."
 }

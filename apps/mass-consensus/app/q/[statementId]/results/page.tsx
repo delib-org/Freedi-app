@@ -27,7 +27,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       title: `Results: ${question.statement} | Freedi Discussion`,
       description: `View all solutions and their rankings for: ${question.statement}`,
     };
-  } catch (error) {
+  } catch {
     return {
       title: 'Results | Freedi Discussion',
     };
@@ -106,6 +106,7 @@ return (
 }
 
 /**
- * Shorter revalidation for results page
+ * Force dynamic rendering - no caching
  */
-export const revalidate = 30;
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;

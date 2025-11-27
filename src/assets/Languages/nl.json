@@ -21,7 +21,7 @@
   "Add Solution": "Oplossing Toevoegen",
   "Add Step": "Stap toevoegen",
   "Add Suggestion": "Suggestie Toevoegen",
-  "Add a solution": "Een oplossing toevoegen",
+  "Add an answer": "Een antwoord toevoegen",
   "Add comment": "Reactie toevoegen",
   "Add new option here": "Voeg hier een nieuwe optie toe",
   "Add question": "Vraag toevoegen",
@@ -646,10 +646,18 @@
   "summary": "samenvatting",
   "terms of use": "gebruiksvoorwaarden",
   "to add your question": "om uw vraag toe te voegen",
+  "to add your answer": "om uw antwoord toe te voegen",
   "to add your suggestion": "om uw suggestie toe te voegen",
   "vote": "stem",
   "votes": "stemmen",
   "votes used": "stemmen gebruikt",
   "your@email.com": "jouw@email.com",
-  "العربية": "Arabisch"
+  "العربية": "Arabisch",
+  "Add Your Solution First": "Voeg eerst je oplossing toe",
+  "Don't ask": "Niet vragen",
+  "Please submit your own solution before evaluating others.": "Dien eerst je eigen oplossing in voordat je anderen beoordeelt.",
+  "Require original input before viewing others": "Eigen inbreng vereist voordat je anderen bekijkt",
+  "Request solution at start": "Vraag oplossing aan het begin",
+  "Ask first": "Eerst vragen",
+  "This helps ensure everyone contributes their ideas to the discussion.": "Dit zorgt ervoor dat iedereen zijn ideeën bijdraagt aan de discussie."
 }

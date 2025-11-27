@@ -56,7 +56,7 @@ export default function SuccessMessage({
             <>
               Your vote has been added to an existing solution.
               <br />
-              Together we're stronger! ✨
+              Together we&apos;re stronger! ✨
             </>
           )}
         </p>

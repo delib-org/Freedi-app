@@ -4,10 +4,23 @@ import { Statement, Collections } from 'delib-npm';
 import { EvidenceType } from 'delib-npm/dist/models/evidence/evidenceModel';
 import { getGeminiModel, geminiApiKey } from './config/gemini';
 import {
-	calculateCorroborationLevel,
 	calculateConsensusValid,
-	determineStatus
+	determineStatus,
+	updateHebbianScore,
+	migrateCorroborationScore
 } from './helpers/consensusValidCalculator';
+
+// Extended evidence interface with new corroborationScore field
+// (until delib-npm is updated)
+interface EvidenceWithCorroboration {
+	evidenceType?: EvidenceType;
+	support?: number;
+	corroborationScore?: number;  // NEW: 0-1 scale
+	helpfulCount?: number;
+	notHelpfulCount?: number;
+	netScore?: number;
+	evidenceWeight?: number;
+}
 
 // Base weights now scaled to 0-1 range
 // 1.0 = scientific/peer-reviewed data
@@ -53,49 +66,49 @@ Respond with ONLY the type name (data, testimony, argument, anecdote, or fallacy
 	}
 }
 
-async function classifySupportLevel(evidenceText: string, parentStatementText: string): Promise<number> {
+/**
+ * Classify how much evidence corroborates or falsifies a statement
+ * Returns 0-1 scale: 0=falsifies, 0.5=neutral, 1=corroborates
+ */
+async function classifyCorroborationScore(evidenceText: string, parentStatementText: string): Promise<number> {
 	try {
 		const model = getGeminiModel();
 
-		const prompt = `Analyze whether this evidence supports or challenges the following statement.
+		const prompt = `Analyze whether this evidence corroborates or falsifies the statement.
 
 Statement: "${parentStatementText}"
 
 Evidence: "${evidenceText}"
 
-Determine if the evidence is:
-- PRO (supports the statement): Return a value from 0.3 to 1.0
-  - Strongly supports: 0.8 to 1.0
-  - Moderately supports: 0.5 to 0.7
-  - Slightly supports: 0.3 to 0.4
-- NEUTRAL (neither clearly supports nor challenges): Return 0.0
-- CON (challenges the statement): Return a value from -0.3 to -1.0
-  - Slightly challenges: -0.3 to -0.4
-  - Moderately challenges: -0.5 to -0.7
-  - Strongly challenges: -0.8 to -1.0
+Rate the evidence on a scale of 0 to 1:
+- 0.0-0.2: Strongly falsifies the statement (provides counter-evidence)
+- 0.2-0.4: Partially falsifies (challenges some aspects)
+- 0.4-0.6: Neutral or irrelevant to the statement
+- 0.6-0.8: Partially corroborates (supports some aspects)
+- 0.8-1.0: Strongly corroborates (provides strong supporting evidence)
 
-Respond with ONLY a single number between -1.0 and 1.0 (e.g., 0.7, -0.5, 0.0).`;
+Respond with ONLY a single number between 0.0 and 1.0.`;
 
 		const result = await model.generateContent(prompt);
 		const response = result.response.text().trim();
 
 		// Parse the number
-		const supportValue = parseFloat(response);
+		const corroborationScore = parseFloat(response);
 
-		// Validate and clamp to [-1, 1]
-		if (isNaN(supportValue)) {
-			console.error('AI returned invalid support value:', response);
+		// Validate and clamp to [0, 1]
+		if (isNaN(corroborationScore)) {
+			console.error('AI returned invalid corroboration score:', response);
 
-			return 0.0; // Default to neutral
+			return 0.5; // Default to neutral
 		}
 
 		// Ensure it's within bounds
-		return Math.max(-1.0, Math.min(1.0, supportValue));
+		return Math.max(0.0, Math.min(1.0, corroborationScore));
 	} catch (error) {
-		console.error('Error classifying support level:', error);
+		console.error('Error classifying corroboration score:', error);
 		// Default to neutral if AI fails
 
-		return 0.0;
+		return 0.5;
 	}
 }
 
@@ -113,6 +126,9 @@ Respond with ONLY a single number between -1.0 and 1.0 (e.g., 0.7, -0.5, 0.0).`;
 function calculateInitialWeight(evidenceType: EvidenceType): number {
 	return EVIDENCE_WEIGHTS[evidenceType];
 }
+
+// Hebbian score constants
+const PRIOR = 0.6;  // Starting score (benefit of doubt)
 
 async function recalculateScore(statementId: string): Promise<void> {
 	const db = getFirestore();
@@ -133,36 +149,41 @@ async function recalculateScore(statementId: string): Promise<void> {
 		.where('evidence', '!=', null)
 		.get();
 
-	let totalScore = 0;
+	const evidenceCount = evidencePostsSnapshot.size;
 
+	// Start with prior (0.6) if no evidence
+	let hebbianScore = PRIOR;
+
+	// Apply multiplicative Popperian-Bayesian updates for each evidence post
 	evidencePostsSnapshot.forEach((doc) => {
 		const statement = doc.data() as Statement;
 		const evidence = statement.evidence;
 
 		if (!evidence) return;
 
-		const support = evidence.support || 0;
+		// Get corroboration score (with migration from old support field)
+		const corroborationScore = migrateCorroborationScore(evidence);
+
+		// Get weight (0-1) based on evidence type and votes
 		const weight = evidence.evidenceWeight || 1.0;
 
-		// Contribution = support (-1 to 1) * weight
-		totalScore += support * weight;
+		// Apply Popperian-Bayesian update
+		hebbianScore = updateHebbianScore(hebbianScore, corroborationScore, weight);
 	});
 
-	// Calculate normalized corroboration level [0, 1]
-	const evidenceCount = evidencePostsSnapshot.size;
-	const corroborationLevel = calculateCorroborationLevel(totalScore, evidenceCount);
-
-	// Determine status based on corroboration level
-	const status = determineStatus(corroborationLevel);
+	// Determine status based on hebbianScore (threshold at 0.6)
+	const status = determineStatus(hebbianScore);
 
 	// Create PopperHebbianScore object
 	const popperHebbianScore = {
 		statementId,
-		totalScore,
-		corroborationLevel,
+		hebbianScore,
 		evidenceCount,
 		status,
-		lastCalculated: Date.now()
+		lastCalculated: Date.now(),
+		// Keep deprecated fields for backward compatibility
+		totalScore: 0,
+		corroborationLevel: hebbianScore
 	};
 
 	// Calculate combined consensusValid score
@@ -171,7 +192,7 @@ async function recalculateScore(statementId: string): Promise<void> {
 
 	// Update the parent statement with both scores
 	await db.collection(Collections.statements).doc(statementId).update({
-		PopperHebbianScore: popperHebbianScore,
+		popperHebbianScore,
 		consensusValid
 	});
 }
@@ -212,8 +233,8 @@ export const onEvidencePostCreate = onDocumentCreated(
 			// 2. Call AI to classify evidence type
 			const evidenceType = await classifyEvidenceType(statement.statement);
 
-			// 3. Call AI to classify support level (pro/con/neutral)
-			const supportLevel = await classifySupportLevel(statement.statement, parentStatementText);
+			// 3. Call AI to classify corroboration score (0-1)
+			const corroborationScore = await classifyCorroborationScore(statement.statement, parentStatementText);
 
 			// 4. Calculate initial weight
 			const weight = calculateInitialWeight(evidenceType);
@@ -222,13 +243,15 @@ export const onEvidencePostCreate = onDocumentCreated(
 			await snapshot.ref.update({
 				'evidence.evidenceType': evidenceType,
 				'evidence.evidenceWeight': weight,
-				'evidence.support': supportLevel
+				'evidence.corroborationScore': corroborationScore,
+				// Keep support for backward compatibility (map 0-1 to -1 to 1)
+				'evidence.support': (corroborationScore * 2) - 1
 			});
 
 			console.info('Evidence classified:', {
 				statementId: statement.statementId,
 				evidenceType,
-				supportLevel,
+				corroborationScore,
 				initialWeight: weight
 			});
 
@@ -266,18 +289,20 @@ export const onEvidencePostUpdate = onDocumentUpdated(
 			return;
 		}
 
-		// Check if the statement text or support level changed
+		// Check if the statement text or corroboration score changed
 		const contentChanged = beforeStatement.statement !== afterStatement.statement;
-		const supportChanged = beforeStatement.evidence?.support !== afterStatement.evidence?.support;
+		const beforeEvidence = beforeStatement.evidence as EvidenceWithCorroboration | undefined;
+		const afterEvidence = afterStatement.evidence as EvidenceWithCorroboration | undefined;
+		const corroborationChanged = beforeEvidence?.corroborationScore !== afterEvidence?.corroborationScore;
 
-		if (!contentChanged && !supportChanged) {
+		if (!contentChanged && !corroborationChanged) {
 			return;
 		}
 
 		try {
 			const db = getFirestore();
-			const oldEvidenceType = beforeStatement.evidence?.evidenceType;
-			const oldSupportLevel = beforeStatement.evidence?.support;
+			const oldEvidenceType = beforeEvidence?.evidenceType;
+			const oldCorroborationScore = beforeEvidence?.corroborationScore;
 
 			// 1. Get parent statement for context
 			let parentStatementText = '';
@@ -292,8 +317,8 @@ export const onEvidencePostUpdate = onDocumentUpdated(
 			// 2. Re-classify evidence type based on new content
 			const newEvidenceType = await classifyEvidenceType(afterStatement.statement);
 
-			// 3. Re-classify support level
-			const newSupportLevel = await classifySupportLevel(afterStatement.statement, parentStatementText);
+			// 3. Re-classify corroboration score (0-1)
+			const newCorroborationScore = await classifyCorroborationScore(afterStatement.statement, parentStatementText);
 
 			// 4. Calculate new weight
 			const newWeight = calculateInitialWeight(newEvidenceType);
@@ -302,7 +327,9 @@ export const onEvidencePostUpdate = onDocumentUpdated(
 			await afterSnapshot.ref.update({
 				'evidence.evidenceType': newEvidenceType,
 				'evidence.evidenceWeight': newWeight,
-				'evidence.support': newSupportLevel,
+				'evidence.corroborationScore': newCorroborationScore,
+				// Keep support for backward compatibility
+				'evidence.support': (newCorroborationScore * 2) - 1,
 				lastUpdate: Date.now()
 			});
 
@@ -318,8 +345,8 @@ export const onEvidencePostUpdate = onDocumentUpdated(
 				newType: newEvidenceType,
 				oldWeight: beforeStatement.evidence?.evidenceWeight,
 				newWeight,
-				oldSupport: oldSupportLevel,
-				newSupport: newSupportLevel
+				oldCorroborationScore,
+				newCorroborationScore
 			});
 
 		} catch (error) {

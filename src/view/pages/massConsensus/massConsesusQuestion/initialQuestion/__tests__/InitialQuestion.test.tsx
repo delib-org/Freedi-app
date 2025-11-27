@@ -75,7 +75,7 @@ describe('InitialQuestion Component', () => {
 
   const renderComponent = (props = {}) => {
     const defaultProps = {
-      stage: 'question',
+      stage: 'question' as const,
       setStage: jest.fn(),
       setIfButtonEnabled: jest.fn(),
       setReachedLimit: jest.fn(),

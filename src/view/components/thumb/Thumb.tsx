@@ -1,4 +1,4 @@
-import React, { FC, SetStateAction } from 'react';
+import React, { FC, SetStateAction, useState } from 'react';
 
 // Third Party Imports
 
@@ -11,8 +11,10 @@ import SmileIcon from '@/assets/icons/smileIcon.svg?react';
 import { setEvaluationToDB } from '@/controllers/db/evaluation/setEvaluation';
 import { Statement } from 'delib-npm';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
+import { useEvaluationGuard } from '@/controllers/hooks/useEvaluationGuard';
 import { Tooltip } from '@/view/components/tooltip/Tooltip';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
+import AddSolutionPrompt from '@/view/components/evaluation/AddSolutionPrompt';
 
 interface ThumbProps {
 	evaluation: number;
@@ -33,8 +35,16 @@ const Thumb: FC<ThumbProps> = ({
 }) => {
 	const { creator } = useAuthentication();
 	const { t } = useTranslation();
+	const { canEvaluate, requiresSolution } = useEvaluationGuard(statement);
+	const [showPrompt, setShowPrompt] = useState(false);
 
 	const handleVote = (isUp: boolean) => {
+		// Check if user needs to add a solution first
+		if (!canEvaluate && requiresSolution) {
+			setShowPrompt(true);
+
+			return;
+		}
 		if (isUp) {
 			if (evaluation > 0) {
 				// Set evaluation in DB
@@ -85,16 +95,32 @@ const Thumb: FC<ThumbProps> = ({
 
 	if (!enableEvaluation) {
 		return (
-			<Tooltip
-				content={t('Voting is currently disabled by the moderator')}
-				position='top'
-			>
-				{button}
-			</Tooltip>
+			<>
+				<Tooltip
+					content={t('Voting is currently disabled by the moderator')}
+					position='top'
+				>
+					{button}
+				</Tooltip>
+				<AddSolutionPrompt
+					show={showPrompt}
+					onClose={() => setShowPrompt(false)}
+					statement={statement}
+				/>
+			</>
 		);
 	}
 
-	return button;
+	return (
+		<>
+			{button}
+			<AddSolutionPrompt
+				show={showPrompt}
+				onClose={() => setShowPrompt(false)}
+				statement={statement}
+			/>
+		</>
+	);
 };
 
 export default Thumb;
