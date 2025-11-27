@@ -153,6 +153,12 @@ const EnhancedAdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => 
     setDoc(statementRef, { defaultLanguage: newLanguage, lastUpdate: Date.now() }, { merge: true });
   }
 
+  // Handler for forceLanguage (root-level property for forcing survey language)
+  function handleForceLanguageChange(newValue: boolean) {
+    const statementRef = doc(FireStore, Collections.statements, statement.statementId);
+    setDoc(statementRef, { forceLanguage: newValue, lastUpdate: Date.now() }, { merge: true });
+  }
+
   function handleVoteLimitToggle(enabled: boolean) {
     setIsVoteLimitEnabled(enabled);
     if (enabled) {
@@ -574,19 +580,28 @@ const EnhancedAdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => 
 
                   {/* Localization */}
                   {category.id === 'localization' && (
-                    <div className={styles.languageSection}>
-                      <h4 className={styles.sectionTitle}>
-                        <Globe size={18} />
-                        {t('Survey Default Language')}
-                      </h4>
-                      <p className={styles.sectionDescription}>
-                        {t('This language will be used for surveys when users have no language preference set')}
-                      </p>
-                      <LanguageSelector
-                        currentLanguage={statement.defaultLanguage}
-                        onChange={handleDefaultLanguageChange}
+                    <>
+                      <div className={styles.languageSection}>
+                        <h4 className={styles.sectionTitle}>
+                          <Globe size={18} />
+                          {t('Survey Default Language')}
+                        </h4>
+                        <p className={styles.sectionDescription}>
+                          {t('This language will be used for surveys when users have no language preference set')}
+                        </p>
+                        <LanguageSelector
+                          currentLanguage={statement.defaultLanguage}
+                          onChange={handleDefaultLanguageChange}
+                        />
+                      </div>
+                      <ToggleSwitch
+                        isChecked={statement.forceLanguage ?? false}
+                        onChange={handleForceLanguageChange}
+                        label={t('Force survey language (override browser preferences)')}
+                        description={t('When enabled, all participants will see the survey in the default language regardless of their browser settings')}
+                        icon={Lock}
                       />
-                    </div>
+                    </>
                   )}
                 </div>
               )}

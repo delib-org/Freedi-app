@@ -75,7 +75,10 @@ export default async function QResultsPage({ params }: PageProps) {
   const userSolutionIds = new Set(userSolutions.map((s) => s.statementId));
 
   return (
-    <LanguageOverrideProvider adminLanguage={question.defaultLanguage}>
+    <LanguageOverrideProvider
+      adminLanguage={question.defaultLanguage}
+      forceLanguage={question.forceLanguage}
+    >
       <div className={styles.resultsPage}>
         <header className={styles.resultsPage__header}>
           <h1 className={styles.resultsPage__title}>Results</h1>

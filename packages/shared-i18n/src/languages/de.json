@@ -232,6 +232,8 @@
   "For example: We should go to the pool this weekend...": "Zum Beispiel: Wir sollten dieses Wochenende ins Schwimmbad gehen...",
   "For more information, visit our website": "Für weitere Informationen besuchen Sie unsere Website",
   "Formulate here the description. Add as much detail as you can to help others understand your suggestion": "Formulieren Sie hier die Beschreibung. Fügen Sie so viele Details wie möglich hinzu, um anderen zu helfen, Ihren Vorschlag zu verstehen",
+  "Force survey language (override browser preferences)": "Umfragesprache erzwingen (Browsereinstellungen überschreiben)",
+  "When enabled, all participants will see the survey in the default language regardless of their browser settings": "Wenn aktiviert, sehen alle Teilnehmer die Umfrage in der Standardsprache, unabhängig von ihren Browsereinstellungen",
   "Fostering Collaborations": "Förderung von Zusammenarbeit",
   "FreeDi: Empowering Agreements": "FreeDi: Vereinbarungen stärken",
   "From the Institute for Deliberative Democracy": "Vom Institut für Deliberative Demokratie",

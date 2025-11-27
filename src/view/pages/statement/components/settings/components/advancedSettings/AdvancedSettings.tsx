@@ -54,6 +54,12 @@ const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 		setDoc(statementRef, { defaultLanguage: newLanguage, lastUpdate: Date.now() }, { merge: true });
 	}
 
+	// Handler for forceLanguage (root-level property for forcing survey language)
+	function handleForceLanguageChange(newValue: boolean) {
+		const statementRef = doc(FireStore, Collections.statements, statement.statementId);
+		setDoc(statementRef, { forceLanguage: newValue, lastUpdate: Date.now() }, { merge: true });
+	}
+
 	function handleVoteLimitToggle(enabled: boolean) {
 		setIsVoteLimitEnabled(enabled);
 		if (enabled) {
@@ -310,6 +316,14 @@ const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 							onChange={handleDefaultLanguageChange}
 						/>
 					</div>
+					<Checkbox
+						label={t('Force survey language (override browser preferences)')}
+						isChecked={statement.forceLanguage ?? false}
+						onChange={handleForceLanguageChange}
+					/>
+					<p className={styles.helperText}>
+						{t('When enabled, all participants will see the survey in the default language regardless of their browser settings')}
+					</p>
 				</div>
 			</div>
 

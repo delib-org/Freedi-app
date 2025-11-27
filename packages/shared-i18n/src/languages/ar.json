@@ -231,6 +231,8 @@
   "For example: We should go to the pool this weekend...": "على سبيل المثال: يجب أن نذهب إلى المسبح هذا الأسبوع...",
   "For more information, visit our website": "لمزيد من المعلومات، قم بزيارة موقعنا",
   "Formulate here the description. Add as much detail as you can to help others understand your suggestion": "صياغة الوصف هنا. أضف قدر الإمكان من التفاصيل لمساعدة الآخرين على فهم اقتراحك",
+  "Force survey language (override browser preferences)": "فرض لغة الاستبيان (تجاوز تفضيلات المتصفح)",
+  "When enabled, all participants will see the survey in the default language regardless of their browser settings": "عند التفعيل، سيرى جميع المشاركين الاستبيان باللغة الافتراضية بغض النظر عن إعدادات متصفحهم",
   "Fostering Collaborations": "تعزيز التعاون",
   "FreeDi: Empowering Agreements": "FreeDi: تمكين الاتفاقات",
   "From the Institute for Deliberative Democracy": "من معهد الديمقراطية التداولية",

@@ -246,6 +246,8 @@
   "For example: We should go to the pool this weekend...": "For example: We should go to the pool this weekend...",
   "For more information, visit our website": "For more information, visit our website",
   "Formulate here the description. Add as much detail as you can to help others understand your suggestion": "Formulate here the description. Add as much detail as you can to help others understand your suggestion",
+  "Force survey language (override browser preferences)": "Force survey language (override browser preferences)",
+  "When enabled, all participants will see the survey in the default language regardless of their browser settings": "When enabled, all participants will see the survey in the default language regardless of their browser settings",
   "Fostering Collaborations": "Fostering Collaborations",
   "FreeDi: Empowering Agreements": "Delib: We are forming Collaboration",
   "From the Institute for Deliberative Democracy": "From the Institute for Deliberative Democracy",

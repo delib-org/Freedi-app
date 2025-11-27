@@ -53,7 +53,10 @@ export default async function QuestionPage({ params }: PageProps) {
 
     // Works with any question type - mass consensus UI is universal
     return (
-      <LanguageOverrideProvider adminLanguage={question.defaultLanguage}>
+      <LanguageOverrideProvider
+        adminLanguage={question.defaultLanguage}
+        forceLanguage={question.forceLanguage}
+      >
         <div className="page">
           {/* Server Component - Static header */}
           <QuestionHeader question={question} />
