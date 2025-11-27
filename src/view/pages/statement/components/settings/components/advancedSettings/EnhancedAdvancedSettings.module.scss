@@ -504,6 +504,26 @@
     }
   }
 
+  // Language Section
+  .languageSection {
+    .sectionTitle {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin: 0 0 0.5rem 0;
+    }
+
+    .sectionDescription {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      margin: 0 0 1rem 0;
+      line-height: 1.4;
+    }
+  }
+
   // Help Section
   .helpSection {
     display: flex;

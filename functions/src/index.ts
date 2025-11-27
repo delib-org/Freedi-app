@@ -114,6 +114,7 @@ const corsConfig = isProduction
       "https://freedi-test.web.app",
       "https://delib-5.web.app",
       "https://delib.web.app",
+      "https://wizcol-app.web.app",
     ]
   : [
       "http://localhost:5173",

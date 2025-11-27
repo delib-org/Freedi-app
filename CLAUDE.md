@@ -770,3 +770,4 @@ Before submitting PR, verify:
 3. **Test as you go** - Don't leave testing until the end
 4. **Ask for help** - If patterns are unclear, check documentation or ask
 5. **Follow the checklist** - Use the code review checklist above
+- If I am writing mc or MC i mean the mass-conesunsus app undeerd apps/
