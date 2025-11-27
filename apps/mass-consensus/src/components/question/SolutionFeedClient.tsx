@@ -8,6 +8,7 @@ import SolutionCard from './SolutionCard';
 import SolutionPromptModal from './SolutionPromptModal';
 import CompletionScreen from '@/components/completion/CompletionScreen';
 import styles from './SolutionFeed.module.css';
+import { useTranslation } from '@freedi/shared-i18n/next';
 
 interface SolutionFeedClientProps {
   question: Statement;
@@ -23,6 +24,7 @@ export default function SolutionFeedClient({
   question,
   initialSolutions,
 }: SolutionFeedClientProps) {
+  const { t, tWithParams } = useTranslation();
   const [solutions, setSolutions] = useState<Statement[]>(initialSolutions);
   const [userId, setUserId] = useState<string>('');
   const [evaluatedIds, setEvaluatedIds] = useState<Set<string>>(new Set());
@@ -286,8 +288,8 @@ return newSet;
 
       {/* Instructions */}
       <div className={styles.instructions}>
-        <h3>Please rate the following solutions</h3>
-        <p>Evaluate each solution from -1 (strongly disagree) to +1 (strongly agree)</p>
+        <h3>{t('Please rate the following suggestions')}</h3>
+        <p>{t('Evaluate each suggestion from -1 (strongly disagree) to +1 (strongly agree)')}</p>
       </div>
 
       {/* Solution cards */}
@@ -306,9 +308,9 @@ return newSet;
       <div className={styles.batchControls}>
         {allOptionsEvaluated ? (
           <div className={styles.completionMessage}>
-            <h3>🎉 Thank you!</h3>
-            <p>You have evaluated all {totalOptionsCount} available options.</p>
-            <p>Your feedback helps improve the quality of solutions.</p>
+            <h3>🎉 {t('Thank You')}!</h3>
+            <p>{tWithParams('You have evaluated all {{count}} available options', { count: totalOptionsCount })}</p>
+            <p>{t('Your feedback helps improve the quality of solutions')}</p>
           </div>
         ) : (
           <>
@@ -320,13 +322,13 @@ return newSet;
               }`}
             >
               {isLoadingBatch ? (
-                <span>Loading new solutions...</span>
+                <span>{t('Loading new suggestions...')}</span>
               ) : (
                 <span>
-                  Get New Batch
+                  {t('Get New Suggestions')}
                   {totalOptionsCount > 0 && (
                     <span className={styles.progress}>
-                      {' '}({allEvaluatedIds.size}/{totalOptionsCount} evaluated)
+                      {' '}({allEvaluatedIds.size}/{totalOptionsCount} {t('Evaluated').toLowerCase()})
                     </span>
                   )}
                 </span>
@@ -335,7 +337,7 @@ return newSet;
 
             {!canGetNewBatch && (
               <p className={styles.hint}>
-                Evaluate all solutions to get new ones ({solutions.length - evaluatedCount} left in this batch)
+                {t('Evaluate all suggestions to get new ones')} ({solutions.length - evaluatedCount} {t('left')})
               </p>
             )}
           </>
@@ -348,7 +350,7 @@ return newSet;
             className={styles.addSolutionButton}
             onClick={() => setShowSolutionPrompt(true)}
           >
-            Add a Solution
+            {t('Add Solution')}
           </button>
         </div>
 
@@ -359,10 +361,10 @@ return newSet;
           questionId={questionId}
           userId={userId}
           onSubmitSuccess={handleSolutionComplete}
-          title={requiresSolution && !hasCheckedUserSolutions ? 'Add Your Solution First' : 'Add a Solution'}
+          title={requiresSolution && !hasCheckedUserSolutions ? t('Add Your Solution First') : t('Add Solution')}
           description={requiresSolution && !hasCheckedUserSolutions
-            ? 'Please share your idea before seeing and rating others.'
-            : 'Share your idea for this question.'}
+            ? t('Please share your idea before seeing and rating others')
+            : t('Share your idea for this question')}
         />
 
         {/* Completion screen - shown after first batch evaluation */}
