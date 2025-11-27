@@ -11,6 +11,7 @@ export default defineConfig(({ mode }) => {
 	const isTestMinified = mode === 'test-minified';
 
 	return {
+		envDir: './env',
 		plugins: [
 			react(),
 			svgr({

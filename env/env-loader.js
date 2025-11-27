@@ -28,7 +28,7 @@ const ENV_DIR = __dirname;
 
 const APPS = {
   root: {
-    path: ROOT_DIR,
+    path: ENV_DIR,
     filename: '.env.local',
     prefix: 'VITE_',
     // Map generic vars to Vite-prefixed vars
