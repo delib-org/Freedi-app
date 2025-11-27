@@ -14,6 +14,17 @@ const LanguageSelector: FC<LanguageSelectorProps> = ({
 }) => {
 	const { t } = useTranslation();
 
+	// Handle click - toggle off if already selected, otherwise select
+	const handleLanguageClick = (code: string) => {
+		if (currentLanguage === code) {
+			// Toggle off - remove the default language
+			onChange('');
+		} else {
+			// Select the new language
+			onChange(code);
+		}
+	};
+
 	return (
 		<div className={styles.languageSelector}>
 			<div className={styles.selectorGrid}>
@@ -23,7 +34,7 @@ const LanguageSelector: FC<LanguageSelectorProps> = ({
 						className={`${styles.optionCard} ${
 							currentLanguage === code ? styles.selected : ''
 						}`}
-						onClick={() => onChange(code)}
+						onClick={() => handleLanguageClick(code)}
 						type="button"
 						aria-pressed={currentLanguage === code}
 						aria-label={`${t('Select')} ${label}`}
