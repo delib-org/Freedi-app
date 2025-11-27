@@ -23,12 +23,12 @@ const EnhancedMemberCard: FC<EnhancedMemberCardProps> = ({
   const firstLetter = member.user.displayName.charAt(0).toUpperCase();
   const displayImg = member.user.photoURL;
 
+  // Check if this is the current user (used for conditional rendering, not early return)
+  const isCurrentUser = member.user?.uid === user?.uid;
+
   useEffect(() => {
     if (member.role) setRole(member.role);
   }, [member.role]);
-
-  // Hide card if it's the current user
-  if (member.user?.uid === user?.uid) return null;
 
   // Check if this user can be banned
   const userCanBeBanned = canBanUser(role, member.user.uid, member.statement);
@@ -120,6 +120,9 @@ return;
 
   const isBanned = role === Role.banned;
   const isAdmin = role === Role.admin;
+
+  // Hide card if it's the current user (after all hooks)
+  if (isCurrentUser) return null;
 
   return (
     <article

@@ -194,7 +194,14 @@ export function getMassConsensusUrl(): string {
 	}
 
 	// Production URL for the mass-consensus app
-	return 'https://mass-consensus.freedi.tech';
+	return 'https://mc.wizcol.com';
+}
+
+/**
+ * Get the question page URL for a specific statement in the mass-consensus app
+ */
+export function getMassConsensusQuestionUrl(statementId: string): string {
+	return `${getMassConsensusUrl()}/q/${statementId}`;
 }
 
 /**
