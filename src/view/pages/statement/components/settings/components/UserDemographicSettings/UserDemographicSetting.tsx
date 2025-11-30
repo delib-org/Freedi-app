@@ -382,6 +382,7 @@ const UserDataSetting: FC<Props> = ({ statement }) => {
 										onDeleteOption={handleDeleteOption}
 										onDeleteQuestion={handleDeleteQuestion}
 										onUpdateQuestion={handleUpdateQuestion}
+										isTopParent={isTopParent}
 									/>
 								))
 							)}

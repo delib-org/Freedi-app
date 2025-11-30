@@ -123,15 +123,16 @@ export const useStatementListeners = ({
 	useEffect(() => {
 		if (!creator || !statementId || !topParentId) return;
 
-		// Only set up group listeners if this is a child statement (not the top parent itself)
-		if (topParentId === statementId) return;
-
 		const unsubscribers: (() => void)[] = [];
 
-		// Listen to top parent statement for followMe updates
-		unsubscribers.push(listenToStatement(topParentId, () => {}));
+		// If this is a child statement (not the top parent itself), also listen to top parent
+		if (topParentId !== statementId) {
+			// Listen to top parent statement for followMe updates
+			unsubscribers.push(listenToStatement(topParentId, () => {}));
+		}
 
-		// Listen to group-level demographic questions and answers
+		// Always listen to group-level demographic questions and answers for the group
+		// This ensures group surveys work both at the group level and in sub-statements
 		unsubscribers.push(listenToGroupDemographicQuestions(topParentId));
 		unsubscribers.push(listenToGroupDemographicAnswers(topParentId));
 

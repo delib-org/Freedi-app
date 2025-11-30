@@ -316,31 +316,43 @@ const EnhancedStatementSettingsForm: FC<EnhancedStatementSettingsFormProps> = ({
 
             {/* Question-specific settings */}
             {isQuestion && (
-              <>
-                <SettingsSection
-                  title={t('Question Configuration')}
-                  description={t('Specific settings for question statements')}
-                  icon={MessageSquare}
-                  priority="important"
-                  isCollapsible={true}
-                  defaultExpanded={false}
-                >
-                  <ChoseBySettings {...statementSettingsProps} />
-                  <QuestionSettings {...statementSettingsProps} />
-                </SettingsSection>
+              <SettingsSection
+                title={t('Question Configuration')}
+                description={t('Specific settings for question statements')}
+                icon={MessageSquare}
+                priority="important"
+                isCollapsible={true}
+                defaultExpanded={false}
+              >
+                <ChoseBySettings {...statementSettingsProps} />
+                <QuestionSettings {...statementSettingsProps} />
+              </SettingsSection>
+            )}
 
-                <SettingsSection
-                  title={t('Demographics & Validation')}
-                  description={t('Collect user information and validate members')}
-                  icon={UserCheck}
-                  priority="advanced"
-                  isCollapsible={true}
-                  defaultExpanded={false}
-                >
-                  <UserDemographicSetting statement={statement} />
-                  <MemberValidation statement={statement} />
-                </SettingsSection>
-              </>
+            {/* Survey - Available for all statement types */}
+            <SettingsSection
+              title={t('Survey')}
+              description={t('Collect member information')}
+              icon={UserCheck}
+              priority="important"
+              isCollapsible={true}
+              defaultExpanded={false}
+            >
+              <UserDemographicSetting statement={statement} />
+            </SettingsSection>
+
+            {/* Member Validation - Only for questions */}
+            {isQuestion && (
+              <SettingsSection
+                title={t('Member Validation')}
+                description={t('Validate members before participation')}
+                icon={Shield}
+                priority="advanced"
+                isCollapsible={true}
+                defaultExpanded={false}
+              >
+                <MemberValidation statement={statement} />
+              </SettingsSection>
             )}
 
             {/* Participation Metrics */}
