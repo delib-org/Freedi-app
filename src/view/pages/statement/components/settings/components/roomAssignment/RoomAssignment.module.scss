@@ -1,0 +1,297 @@
+.roomAssignment {
+	padding: var(--padding);
+	margin-bottom: 1rem;
+
+	&__header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		margin-bottom: 1rem;
+	}
+
+	&__content {
+		background: var(--card-default);
+		border-radius: 8px;
+		padding: 1rem;
+	}
+}
+
+.configForm {
+	display: flex;
+	flex-direction: column;
+	gap: 1.5rem;
+
+	&__field {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+	}
+
+	&__label {
+		font-weight: 500;
+		color: var(--text-body);
+	}
+
+	&__description {
+		font-size: 0.875rem;
+		color: var(--text-muted);
+	}
+
+	&__input {
+		padding: 0.75rem;
+		border: 1px solid var(--border-color);
+		border-radius: 8px;
+		font-size: 1rem;
+		width: 100%;
+		max-width: 150px;
+
+		&:focus {
+			outline: none;
+			border-color: var(--btn-primary);
+		}
+	}
+
+	&__preview {
+		background: var(--background-light);
+		border-radius: 8px;
+		padding: 1rem;
+
+		&Title {
+			font-weight: 500;
+			margin-bottom: 0.5rem;
+		}
+
+		&Stats {
+			display: flex;
+			gap: 2rem;
+			font-size: 0.875rem;
+			color: var(--text-muted);
+		}
+
+		&Stat {
+			display: flex;
+			gap: 0.25rem;
+
+			strong {
+				color: var(--text-body);
+			}
+		}
+	}
+
+	&__actions {
+		display: flex;
+		gap: 1rem;
+		margin-top: 1rem;
+	}
+}
+
+.questionSelector {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+
+	&__item {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+		padding: 0.75rem;
+		border: 1px solid var(--border-color);
+		border-radius: 8px;
+		cursor: pointer;
+		transition: background-color 0.2s;
+
+		&:hover {
+			background: var(--background-light);
+		}
+
+		&--selected {
+			background: var(--background-light);
+			border-color: var(--btn-primary);
+		}
+	}
+
+	&__checkbox {
+		width: 20px;
+		height: 20px;
+		border-radius: 4px;
+		border: 2px solid var(--border-color);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		flex-shrink: 0;
+
+		&--checked {
+			background: var(--btn-primary);
+			border-color: var(--btn-primary);
+			color: white;
+		}
+	}
+
+	&__questionText {
+		flex: 1;
+		font-size: 0.9375rem;
+	}
+
+	&__optionCount {
+		font-size: 0.75rem;
+		color: var(--text-muted);
+		padding: 0.25rem 0.5rem;
+		background: var(--background-light);
+		border-radius: 4px;
+	}
+
+	&__empty {
+		text-align: center;
+		padding: 2rem;
+		color: var(--text-muted);
+
+		p {
+			margin-top: 0.5rem;
+			font-size: 0.875rem;
+		}
+	}
+}
+
+.roomsList {
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+
+	&__header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		padding-bottom: 1rem;
+		border-bottom: 1px solid var(--border-color);
+	}
+
+	&__stats {
+		display: flex;
+		gap: 1.5rem;
+		font-size: 0.875rem;
+		color: var(--text-muted);
+
+		span {
+			display: flex;
+			align-items: center;
+			gap: 0.25rem;
+		}
+
+		strong {
+			color: var(--text-body);
+		}
+	}
+
+	&__actions {
+		display: flex;
+		gap: 0.75rem;
+	}
+
+	&__grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+		gap: 1rem;
+	}
+}
+
+.roomCard {
+	background: var(--card-default);
+	border: 1px solid var(--border-color);
+	border-radius: 8px;
+	overflow: hidden;
+
+	&__header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		padding: 0.75rem 1rem;
+		background: var(--background-light);
+		cursor: pointer;
+
+		&:hover {
+			background: #eff1f3;
+		}
+	}
+
+	&__title {
+		font-weight: 600;
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+
+		svg {
+			color: var(--btn-primary);
+		}
+	}
+
+	&__count {
+		font-size: 0.875rem;
+		color: var(--text-muted);
+	}
+
+	&__expandIcon {
+		transition: transform 0.2s;
+
+		&--expanded {
+			transform: rotate(180deg);
+		}
+	}
+
+	&__participants {
+		padding: 1rem;
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+	}
+}
+
+.participantChip {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	padding: 0.5rem 0.75rem;
+	background: var(--background-light);
+	border-radius: 6px;
+
+	&__name {
+		flex: 1;
+		font-size: 0.875rem;
+	}
+
+	&__tags {
+		display: flex;
+		gap: 0.25rem;
+		flex-wrap: wrap;
+	}
+
+	&__tag {
+		font-size: 0.6875rem;
+		padding: 0.125rem 0.375rem;
+		border-radius: 4px;
+		white-space: nowrap;
+	}
+}
+
+.confirmModal {
+	&__content {
+		padding: 1.5rem;
+		text-align: center;
+	}
+
+	&__title {
+		font-size: 1.125rem;
+		font-weight: 600;
+		margin-bottom: 0.5rem;
+	}
+
+	&__message {
+		color: var(--text-muted);
+		margin-bottom: 1.5rem;
+	}
+
+	&__actions {
+		display: flex;
+		gap: 1rem;
+		justify-content: center;
+	}
+}

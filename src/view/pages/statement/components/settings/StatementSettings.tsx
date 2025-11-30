@@ -22,6 +22,7 @@ import Loader from '@/view/components/loaders/Loader';
 import { QuestionType, Statement } from 'delib-npm';
 import MassConsensusSettings from './components/massConsensusSettings/MassConsensusSettings';
 import MembersManagement from './components/membership/MembersManagement';
+import { RoomAssignment } from './components/roomAssignment';
 
 const StatementSettings: FC = () => {
 	// * Hooks * //
@@ -125,6 +126,7 @@ const StatementSettings: FC = () => {
 						setStatementToEdit={setStatementToEdit}
 					/>
 					<MembersManagement statement={statementToEdit} />
+					<RoomAssignment statement={statementToEdit} />
 					{isMassConsensus && <MassConsensusSettings />}
 				</>
 			)}

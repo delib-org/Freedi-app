@@ -13,6 +13,7 @@ import userDemographicReducer from './userDemographic/userDemographicSlice';
 import newStatementReducer from './statements/newStatementSlice';
 import pwaReducer from './pwa/pwaSlice';
 import { massConsensusApi } from './massConsensus/massConsensusApi';
+import { roomAssignmentSlice } from './roomAssignment/roomAssignmentSlice';
 
 export const store = configureStore({
 	reducer: {
@@ -29,7 +30,8 @@ export const store = configureStore({
 		userDemographic: userDemographicReducer,
 		newStatement: newStatementReducer,
 		pwa: pwaReducer,
-        [massConsensusApi.reducerPath]: massConsensusApi.reducer,
+		roomAssignment: roomAssignmentSlice.reducer,
+		[massConsensusApi.reducerPath]: massConsensusApi.reducer,
 	},
 	middleware: (getDefaultMiddleware) =>
 		getDefaultMiddleware().concat(massConsensusApi.middleware),
