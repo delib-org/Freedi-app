@@ -5,6 +5,7 @@ import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { notifyRoomParticipants, deleteRoomAssignments } from '@/controllers/db/roomAssignment';
 import RoomCard from './RoomCard';
 import Button, { ButtonType } from '@/view/components/buttons/button/Button';
+import Snackbar from '@/view/components/snackbar/Snackbar';
 import styles from '../RoomAssignment.module.scss';
 
 interface RoomsListProps {
@@ -26,6 +27,11 @@ const RoomsList: FC<RoomsListProps> = ({
 	const [isNotifying, setIsNotifying] = useState(false);
 	const [isDeleting, setIsDeleting] = useState(false);
 	const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+	const [snackbar, setSnackbar] = useState<{
+		visible: boolean;
+		message: string;
+		type: 'success' | 'error' | 'info';
+	}>({ visible: false, message: '', type: 'info' });
 
 	// Group participants by room
 	const participantsByRoom = participants.reduce((acc, participant) => {
@@ -42,8 +48,24 @@ const RoomsList: FC<RoomsListProps> = ({
 		try {
 			const result = await notifyRoomParticipants(settings.settingsId, dispatch);
 			if (result?.success) {
-				// Success feedback could be added here
+				setSnackbar({
+					visible: true,
+					message: t('Notifications sent to {{count}} participants', { count: result.notified }),
+					type: 'success',
+				});
+			} else if (result?.message) {
+				setSnackbar({
+					visible: true,
+					message: result.message,
+					type: 'info',
+				});
 			}
+		} catch {
+			setSnackbar({
+				visible: true,
+				message: t('Failed to send notifications'),
+				type: 'error',
+			});
 		} finally {
 			setIsNotifying(false);
 		}
@@ -137,6 +159,14 @@ const RoomsList: FC<RoomsListProps> = ({
 					</div>
 				</div>
 			)}
+
+			{/* Snackbar for notifications */}
+			<Snackbar
+				message={snackbar.message}
+				isVisible={snackbar.visible}
+				type={snackbar.type}
+				onClose={() => setSnackbar({ ...snackbar, visible: false })}
+			/>
 		</div>
 	);
 };
