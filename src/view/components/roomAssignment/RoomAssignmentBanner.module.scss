@@ -1,0 +1,63 @@
+.banner {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	padding: 0.75rem 1rem;
+	background: linear-gradient(135deg, var(--btn-primary) 0%, #4a70c7 100%);
+	color: white;
+	border-radius: 8px;
+	margin: 0.5rem 0;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+	&__icon {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 32px;
+		height: 32px;
+		background: rgba(255, 255, 255, 0.2);
+		border-radius: 50%;
+		flex-shrink: 0;
+
+		svg {
+			width: 18px;
+			height: 18px;
+			fill: currentColor;
+		}
+	}
+
+	&__content {
+		flex: 1;
+	}
+
+	&__title {
+		font-weight: 600;
+		font-size: 0.9375rem;
+	}
+
+	&__subtitle {
+		font-size: 0.8125rem;
+		opacity: 0.9;
+		margin-top: 0.125rem;
+	}
+
+	&__roomNumber {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		min-width: 40px;
+		height: 40px;
+		background: white;
+		color: var(--btn-primary);
+		border-radius: 8px;
+		font-size: 1.25rem;
+		font-weight: 700;
+	}
+}
+
+.loading {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0.5rem;
+}

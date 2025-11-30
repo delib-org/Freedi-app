@@ -1,5 +1,5 @@
-import { useMemo } from 'react';
-import { useSelector } from 'react-redux';
+import { useMemo, useCallback } from 'react';
+import { shallowEqual, useSelector } from 'react-redux';
 import {
 	selectEffectiveQuestions,
 } from '@/redux/userDemographic/userDemographicSlice';
@@ -11,22 +11,32 @@ const DEMOGRAPHIC_SCOPE_GROUP = 'group' as const;
 export const useUserDemographic = (statementId: string, topParentId?: string) => {
 	// Use effective questions selector which combines group + statement questions
 	const effectiveTopParentId = topParentId || statementId;
-	const userDemographicQuestions = useSelector(
-		selectEffectiveQuestions(statementId, effectiveTopParentId)
+
+	// Memoize the selector to prevent creating new selector on each render
+	const questionsSelector = useMemo(
+		() => selectEffectiveQuestions(statementId, effectiveTopParentId),
+		[statementId, effectiveTopParentId]
 	);
 
-	// Get user's answers - both group-level and statement-level
-	const userDemographic = useSelector((state: RootState) => {
-		const allAnswers = state.userDemographic.userDemographic;
+	const userDemographicQuestions = useSelector(questionsSelector, shallowEqual);
 
-		// Filter answers that match either:
-		// 1. Group-level answers for this topParentId
-		// 2. Statement-level answers for this statementId
-		return allAnswers.filter(answer =>
-			(answer.topParentId === effectiveTopParentId && answer.scope === DEMOGRAPHIC_SCOPE_GROUP) ||
-			(answer.statementId === statementId && answer.scope !== DEMOGRAPHIC_SCOPE_GROUP)
-		);
-	});
+	// Create memoized selector for user demographic answers
+	const userDemographicSelector = useCallback(
+		(state: RootState) => {
+			const allAnswers = state.userDemographic.userDemographic;
+
+			// Filter answers that match either:
+			// 1. Group-level answers for this topParentId
+			// 2. Statement-level answers for this statementId
+			return allAnswers.filter(answer =>
+				(answer.topParentId === effectiveTopParentId && answer.scope === DEMOGRAPHIC_SCOPE_GROUP) ||
+				(answer.statementId === statementId && answer.scope !== DEMOGRAPHIC_SCOPE_GROUP)
+			);
+		},
+		[statementId, effectiveTopParentId]
+	);
+
+	const userDemographic = useSelector(userDemographicSelector, shallowEqual);
 
 	const showUserDemographicQuestions = useMemo(() => {
 		const hasQuestions = userDemographicQuestions && userDemographicQuestions.length > 0;
