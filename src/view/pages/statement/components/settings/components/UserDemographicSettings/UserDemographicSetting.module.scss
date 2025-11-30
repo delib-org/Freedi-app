@@ -165,6 +165,37 @@
 				}
 			}
 		}
+
+		.scopeToggle {
+			margin-top: 1rem;
+			padding: 1rem;
+			background-color: var(--card-default);
+			border-radius: 8px;
+			border: 1px solid var(--border-color);
+
+			.scopeLabel {
+				display: flex;
+				align-items: center;
+				gap: 0.5rem;
+				cursor: pointer;
+				font-weight: 500;
+				color: var(--text-primary);
+
+				input[type='checkbox'] {
+					width: 1.25rem;
+					height: 1.25rem;
+					cursor: pointer;
+					accent-color: var(--text-blue);
+				}
+			}
+
+			.scopeHint {
+				margin: 0.5rem 0 0 1.75rem;
+				font-size: 0.875rem;
+				color: var(--text-secondary);
+				line-height: 1.4;
+			}
+		}
 	}
 	.bottomBar {
 		border-top: 1px solid #c6d8f7;

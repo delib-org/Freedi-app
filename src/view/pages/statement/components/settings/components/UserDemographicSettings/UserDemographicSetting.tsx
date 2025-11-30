@@ -10,7 +10,12 @@ import {
 	Statement,
 	UserDemographicQuestion,
 	UserDemographicQuestionType,
+	DemographicQuestionScope,
 } from 'delib-npm';
+
+// Use string literals for scope since delib-npm exports DemographicQuestionScope as type-only
+const DEMOGRAPHIC_SCOPE_GROUP: DemographicQuestionScope = 'group' as DemographicQuestionScope;
+const DEMOGRAPHIC_SCOPE_STATEMENT: DemographicQuestionScope = 'statement' as DemographicQuestionScope;
 import {
 	deleteUserDemographicOption,
 	deleteUserDemographicQuestion as deleteUserDemographicQuestionDB,
@@ -53,6 +58,10 @@ const UserDataSetting: FC<Props> = ({ statement }) => {
 	const [isQuestionRequired, setIsQuestionRequired] = useState(true);
 	const [options, setOptions] = useState<Option[]>(defaultOptions);
 	const [selectedQuestionType, setSelectedQuestionType] = useState<UserDemographicQuestionType>(UserDemographicQuestionType.text);
+	const [applyToGroup, setApplyToGroup] = useState(true);
+
+	// Check if this is the top parent (group level)
+	const isTopParent = statement.parentId === 'top';
 	function closeModal() {
 		setShowModal(false);
 	}
@@ -74,11 +83,16 @@ const UserDataSetting: FC<Props> = ({ statement }) => {
 
 		if (!newQuestion.trim()) return;
 
+		// Determine the scope based on whether this is a top parent and user selection
+		const isGroupLevel = isTopParent && applyToGroup;
+
 		const newQuestionObj: UserDemographicQuestion = {
 			userQuestionId: getRandomUID(),
 			question: newQuestion.trim(),
 			type: newQuestionType,
 			statementId: statement.statementId,
+			topParentId: statement.topParentId || statement.statementId,
+			scope: isGroupLevel ? DEMOGRAPHIC_SCOPE_GROUP : DEMOGRAPHIC_SCOPE_STATEMENT,
 			options:
 				newQuestionType === UserDemographicQuestionType.checkbox ||
 				newQuestionType === UserDemographicQuestionType.radio
@@ -254,6 +268,24 @@ const UserDataSetting: FC<Props> = ({ statement }) => {
 									</option>
 								</select>
 							</div>
+							{isTopParent && (
+								<div className={styles.scopeToggle}>
+									<label className={styles.scopeLabel}>
+										<input
+											type='checkbox'
+											checked={applyToGroup}
+											onChange={(e) => setApplyToGroup(e.target.checked)}
+										/>
+										<span>{t('Apply to all sub-discussions')}</span>
+									</label>
+									<p className={styles.scopeHint}>
+										{applyToGroup
+											? t('Members will answer these questions once when joining the group')
+											: t('Members will answer these questions only for this discussion')
+										}
+									</p>
+								</div>
+							)}
 							{(selectedQuestionType === UserDemographicQuestionType.radio ||
 							  selectedQuestionType === UserDemographicQuestionType.checkbox) && (
 								<div className={styles.addOptionContainer}>

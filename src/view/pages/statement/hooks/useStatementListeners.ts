@@ -13,6 +13,8 @@ import {
 import {
 	listenToUserDemographicAnswers,
 	listenToUserDemographicQuestions,
+	listenToGroupDemographicQuestions,
+	listenToGroupDemographicAnswers,
 } from '@/controllers/db/userDemographic/getUserDemographic';
 import { store } from '@/redux/store';
 import { listenerManager } from '@/controllers/utils/ListenerManager';
@@ -111,18 +113,35 @@ export const useStatementListeners = ({
 		return cleanup;
 	}, [creator, statementId, stageId, screen, setIsStatementNotFound, setError]);
 
-	// Effect for top parent statement
+	// Effect for top parent statement and group-level demographic questions
 	useEffect(() => {
 		if (!creator || !statementId) return;
 
 		// Listen to the topParentStatement for followMe updates
 		const state = store.getState();
 		const statement = state.statements.statements.find(s => s.statementId === statementId);
-		
-		if (statement?.topParentId && statement.topParentId !== statementId) {
-			const unsubscribe = listenToStatement(statement.topParentId, () => {});
 
-			return () => unsubscribe();
+		if (statement?.topParentId && statement.topParentId !== statementId) {
+			const unsubscribers: (() => void)[] = [];
+
+			// Listen to top parent statement
+			unsubscribers.push(listenToStatement(statement.topParentId, () => {}));
+
+			// Listen to group-level demographic questions and answers
+			unsubscribers.push(listenToGroupDemographicQuestions(statement.topParentId));
+			unsubscribers.push(listenToGroupDemographicAnswers(statement.topParentId));
+
+			return () => {
+				unsubscribers.forEach(unsubscribe => {
+					try {
+						if (typeof unsubscribe === 'function') {
+							unsubscribe();
+						}
+					} catch (error) {
+						console.error('Error while unsubscribing from group listeners:', error);
+					}
+				});
+			};
 		}
 	}, [creator, statementId]);
 };

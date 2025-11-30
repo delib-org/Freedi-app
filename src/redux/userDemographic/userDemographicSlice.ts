@@ -2,16 +2,29 @@ import { createSlice, PayloadAction, createSelector } from '@reduxjs/toolkit';
 import { PolarizationIndex, updateArray, UserDemographicQuestion } from 'delib-npm';
 import { RootState } from '../types';
 
+// Use string literal for scope until delib-npm exports the enum value
+const DEMOGRAPHIC_SCOPE_GROUP = 'group' as const;
+
+interface GroupDemographicModalState {
+	show: boolean;
+	topParentId: string | null;
+}
+
 interface UserDemographicState {
 	userDemographicQuestions: UserDemographicQuestion[];
 	userDemographic: UserDemographicQuestion[];
 	polarizationIndexes: PolarizationIndex[];
+	showGroupDemographicModal: GroupDemographicModalState;
 }
 
 const initialState: UserDemographicState = {
 	userDemographicQuestions: [],
 	userDemographic: [],
-	polarizationIndexes: []
+	polarizationIndexes: [],
+	showGroupDemographicModal: {
+		show: false,
+		topParentId: null
+	}
 };
 
 const userDemographicSlice = createSlice({
@@ -49,6 +62,12 @@ const userDemographicSlice = createSlice({
 		},
 		deletePolarizationIndex: (state, action: PayloadAction<string>) => {
 			state.polarizationIndexes = state.polarizationIndexes.filter(pi => pi.statementId !== action.payload);
+		},
+		setShowGroupDemographicModal: (state, action: PayloadAction<GroupDemographicModalState>) => {
+			state.showGroupDemographicModal = action.payload;
+		},
+		hideGroupDemographicModal: (state) => {
+			state.showGroupDemographicModal = { show: false, topParentId: null };
 		}
 	}
 });
@@ -61,7 +80,9 @@ export const {
 	deleteUserDemographic,
 	setPolarizationIndexes,
 	deletePolarizationIndex,
-	updateUserDemographicQuestionOptionColor
+	updateUserDemographicQuestionOptionColor,
+	setShowGroupDemographicModal,
+	hideGroupDemographicModal
 } = userDemographicSlice.actions;
 
 // Selectors
@@ -79,5 +100,50 @@ export const selectPolarizationIndexByParentId = (parentId: string) => createSel
 	[(state: RootState) => state.userDemographic.polarizationIndexes],
 	(polarizationIndexes) => polarizationIndexes.filter(pi => pi.parentId === parentId)
 );
+
+// Group-level demographic selectors
+export const selectGroupQuestions = (topParentId: string) => createSelector(
+	[(state: RootState) => state.userDemographic.userDemographicQuestions],
+	(questions) => questions.filter(
+		q => q.topParentId === topParentId && q.scope === DEMOGRAPHIC_SCOPE_GROUP
+	)
+);
+
+// Select effective questions (group + statement merged)
+export const selectEffectiveQuestions = (statementId: string, topParentId: string) => createSelector(
+	[(state: RootState) => state.userDemographic.userDemographicQuestions],
+	(questions) => {
+		const groupQ = questions.filter(
+			q => q.topParentId === topParentId && q.scope === DEMOGRAPHIC_SCOPE_GROUP
+		);
+		const statementQ = questions.filter(
+			q => q.statementId === statementId && q.scope !== DEMOGRAPHIC_SCOPE_GROUP
+		);
+
+		return [...groupQ, ...statementQ];
+	}
+);
+
+// Select user's group-level answers
+export const selectUserGroupAnswers = (topParentId: string) => createSelector(
+	[(state: RootState) => state.userDemographic.userDemographic],
+	(answers) => answers.filter(
+		a => a.topParentId === topParentId && a.scope === DEMOGRAPHIC_SCOPE_GROUP
+	)
+);
+
+// Check unanswered group questions
+export const selectUnansweredGroupQuestions = (topParentId: string) => createSelector(
+	[
+		(state: RootState) => selectGroupQuestions(topParentId)(state),
+		(state: RootState) => state.userDemographic.userDemographic
+	],
+	(questions, answers) => questions.filter(
+		q => !answers.find(a => a.userQuestionId === q.userQuestionId)
+	)
+);
+
+// Select group demographic modal state
+export const selectShowGroupDemographicModal = (state: RootState) => state.userDemographic.showGroupDemographicModal;
 
 export default userDemographicSlice.reducer;

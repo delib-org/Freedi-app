@@ -187,6 +187,35 @@
 			}
 		}
 	}
+
+	// Question section styling
+	.questionSection {
+		margin-bottom: 1.5rem;
+		padding: 1rem;
+		background-color: var(--surface-background);
+		border-radius: 8px;
+		border-left: 4px solid var(--btn-primary);
+
+		.sectionTitle {
+			font-size: var(--h4-font-size);
+			font-weight: 600;
+			color: var(--text-title);
+			margin: 0 0 0.5rem 0;
+		}
+
+		.sectionDescription {
+			font-size: var(--small-font-size);
+			color: var(--text-caption);
+			margin: 0 0 1rem 0;
+			line-height: 1.4;
+		}
+
+		// Ensure form fields inside sections animate properly
+		> *:not(.sectionTitle):not(.sectionDescription) {
+			opacity: 1;
+			animation: none;
+		}
+	}
 }
 
 .topNavSurvey {
