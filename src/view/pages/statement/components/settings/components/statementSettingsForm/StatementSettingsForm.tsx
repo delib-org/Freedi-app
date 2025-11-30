@@ -146,7 +146,7 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 						<MembersSettings statement={statement} />
 						{statement.statementType === StatementType.question && <ChoseBySettings {...statementSettingsProps} />}
 						<QuestionSettings {...statementSettingsProps} />
-						{isQuestion && <UserDemographicSetting statement={statement} />}
+						<UserDemographicSetting statement={statement} />
 						{isQuestion && <MemberValidation statement={statement} />}
 						<EmailNotifications statement={statement} />
 						<SectionTitle title={t('Members')} />

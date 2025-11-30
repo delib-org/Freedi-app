@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { useSelector } from 'react-redux';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import {
 	listenToStatement,
@@ -13,8 +14,10 @@ import {
 import {
 	listenToUserDemographicAnswers,
 	listenToUserDemographicQuestions,
+	listenToGroupDemographicQuestions,
+	listenToGroupDemographicAnswers,
 } from '@/controllers/db/userDemographic/getUserDemographic';
-import { store } from '@/redux/store';
+import { statementSelector } from '@/redux/statements/statementsSlice';
 import { listenerManager } from '@/controllers/utils/ListenerManager';
 
 interface UseStatementListenersProps {
@@ -39,6 +42,10 @@ export const useStatementListeners = ({
 	const { creator } = useAuthentication();
 	const unsubscribersRef = useRef<(() => void)[]>([]);
 	const previousStatementIdRef = useRef<string | undefined>();
+
+	// Subscribe to statement from Redux to get topParentId reactively
+	const statement = useSelector(statementSelector(statementId));
+	const topParentId = statement?.topParentId;
 
 	// Reset listener stats when navigating to a different statement
 	useEffect(() => {
@@ -111,18 +118,34 @@ export const useStatementListeners = ({
 		return cleanup;
 	}, [creator, statementId, stageId, screen, setIsStatementNotFound, setError]);
 
-	// Effect for top parent statement
+	// Effect for top parent statement and group-level demographic questions
+	// This effect now properly depends on topParentId from Redux selector
 	useEffect(() => {
-		if (!creator || !statementId) return;
+		if (!creator || !statementId || !topParentId) return;
 
-		// Listen to the topParentStatement for followMe updates
-		const state = store.getState();
-		const statement = state.statements.statements.find(s => s.statementId === statementId);
-		
-		if (statement?.topParentId && statement.topParentId !== statementId) {
-			const unsubscribe = listenToStatement(statement.topParentId, () => {});
+		const unsubscribers: (() => void)[] = [];
 
-			return () => unsubscribe();
+		// If this is a child statement (not the top parent itself), also listen to top parent
+		if (topParentId !== statementId) {
+			// Listen to top parent statement for followMe updates
+			unsubscribers.push(listenToStatement(topParentId, () => {}));
 		}
-	}, [creator, statementId]);
+
+		// Always listen to group-level demographic questions and answers for the group
+		// This ensures group surveys work both at the group level and in sub-statements
+		unsubscribers.push(listenToGroupDemographicQuestions(topParentId));
+		unsubscribers.push(listenToGroupDemographicAnswers(topParentId));
+
+		return () => {
+			unsubscribers.forEach(unsubscribe => {
+				try {
+					if (typeof unsubscribe === 'function') {
+						unsubscribe();
+					}
+				} catch (error) {
+					console.error('Error while unsubscribing from group listeners:', error);
+				}
+			});
+		};
+	}, [creator, statementId, topParentId]);
 };

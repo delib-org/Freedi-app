@@ -1,5 +1,8 @@
 import { UserDemographicQuestion, UserDemographicQuestionType, Role } from 'delib-npm';
-import { FC, useState, FormEvent } from 'react';
+import { FC, useState, FormEvent, useMemo } from 'react';
+
+// Use string literal for scope until delib-npm exports the enum value
+const DEMOGRAPHIC_SCOPE_GROUP = 'group' as const;
 import UserDemographicQuestionInput from '../settings/userDemographicQuestionInput/UserDemographicQuestionInput';
 import { setUserAnswers } from '@/controllers/db/userDemographic/setUserDemographic';
 import Button, { ButtonType } from '@/view/components/buttons/button/Button';
@@ -24,6 +27,19 @@ const UserDemographicQuestions: FC<Props> = ({ questions, closeModal, isMandator
 
 	// Check if the user is an admin (admin or creator role)
 	const isAdmin = role === Role.admin || role === Role.creator;
+
+	// Separate questions by scope (group vs statement)
+	const { groupQuestions, statementQuestions } = useMemo(() => {
+		const groupQ = questions.filter(q => q.scope === DEMOGRAPHIC_SCOPE_GROUP);
+		const statementQ = questions.filter(q => q.scope !== DEMOGRAPHIC_SCOPE_GROUP);
+
+		return { groupQuestions: groupQ, statementQuestions: statementQ };
+	}, [questions]);
+
+	// Progress calculation
+	const answeredCount = userDemographic.length;
+	const totalCount = questions.length;
+	const progressPercent = totalCount > 0 ? (answeredCount / totalCount) * 100 : 0;
 	const handleQuestionChange = (
 		question: UserDemographicQuestion,
 		value: string | string[]
@@ -157,32 +173,97 @@ const UserDemographicQuestions: FC<Props> = ({ questions, closeModal, isMandator
 						? t('Please complete this survey to access the discussion')
 						: t('Complete these setup questions')}
 				</p>
-				<form onSubmit={handleSubmit}>
-					{questions.map((question: UserDemographicQuestion) => {
-						const currentAnswer = userDemographic.find(
-							(q) => q.userQuestionId === question.userQuestionId
-						);
-						let value: string | string[] = '';
 
-						if (question.type === UserDemographicQuestionType.checkbox) {
-							value = currentAnswer?.answerOptions || [];
-						} else {
-							value = currentAnswer?.answer || '';
-						}
-
-						return (
-							<UserDemographicQuestionInput
-								key={question.userQuestionId}
-								question={question}
-								value={value}
-								options={question.options || []}
-								onChange={(value) =>
-									handleQuestionChange(question, value)
-								}
-								required={true}
+				{/* Progress indicator */}
+				{questions.length > 1 && (
+					<div className={styles.progressContainer}>
+						<div className={styles.progressBar}>
+							<div
+								className={styles.progressFill}
+								style={{ width: `${progressPercent}%` }}
 							/>
-						);
-					})}
+						</div>
+						<span className={styles.progressText}>
+							{answeredCount} / {totalCount} {t('completed')}
+						</span>
+					</div>
+				)}
+
+				<form onSubmit={handleSubmit}>
+					{/* Group-level questions section */}
+					{groupQuestions.length > 0 && (
+						<section className={styles.questionSection}>
+							<h3 className={styles.sectionTitle}>{t('Group Profile')}</h3>
+							<p className={styles.sectionDescription}>
+								{t('Your answers apply to all discussions in this group')}
+							</p>
+							{groupQuestions.map((question: UserDemographicQuestion) => {
+								const currentAnswer = userDemographic.find(
+									(q) => q.userQuestionId === question.userQuestionId
+								);
+								let value: string | string[] = '';
+
+								if (question.type === UserDemographicQuestionType.checkbox) {
+									value = currentAnswer?.answerOptions || [];
+								} else {
+									value = currentAnswer?.answer || '';
+								}
+
+								return (
+									<UserDemographicQuestionInput
+										key={question.userQuestionId}
+										question={question}
+										value={value}
+										options={question.options || []}
+										onChange={(val) =>
+											handleQuestionChange(question, val)
+										}
+										required={true}
+									/>
+								);
+							})}
+						</section>
+					)}
+
+					{/* Statement-level questions section */}
+					{statementQuestions.length > 0 && (
+						<section className={styles.questionSection}>
+							{groupQuestions.length > 0 && (
+								<>
+									<h3 className={styles.sectionTitle}>{t('Discussion Questions')}</h3>
+									<p className={styles.sectionDescription}>
+										{t('These questions are specific to this discussion')}
+									</p>
+								</>
+							)}
+							{statementQuestions.map((question: UserDemographicQuestion) => {
+								const currentAnswer = userDemographic.find(
+									(q) => q.userQuestionId === question.userQuestionId
+								);
+								let value: string | string[] = '';
+
+								if (question.type === UserDemographicQuestionType.checkbox) {
+									value = currentAnswer?.answerOptions || [];
+								} else {
+									value = currentAnswer?.answer || '';
+								}
+
+								return (
+									<UserDemographicQuestionInput
+										key={question.userQuestionId}
+										question={question}
+										value={value}
+										options={question.options || []}
+										onChange={(val) =>
+											handleQuestionChange(question, val)
+										}
+										required={true}
+									/>
+								);
+							})}
+						</section>
+					)}
+
 					<div className={styles.button}>
 						<Button
 							text={

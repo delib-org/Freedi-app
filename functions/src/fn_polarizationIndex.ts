@@ -7,6 +7,9 @@ import { getRandomColor } from "./helpers";
 import { db } from ".";
 import { logger } from "firebase-functions/v1";
 
+// Use string literal for scope until delib-npm exports the enum value
+const DEMOGRAPHIC_SCOPE_GROUP = 'group' as const;
+
 interface UserDemographicEvaluation {
 	userId: string;
 	statementId: string;
@@ -31,9 +34,24 @@ export async function updateUserDemographicEvaluation(statement: Statement, user
 			return;
 		}
 
-		//check if this statement has demographic settings. If it doesn't, skip the demographic evaluation update
-		const demographicSettings = await db.collection(Collections.userDemographicQuestions).where('statementId', '==', statement.parentId).limit(1).get();
-		if (demographicSettings.empty) return;
+		// Check for demographic settings at BOTH group level (topParentId) AND statement level
+		const topParentId = statement.topParentId;
+
+		const [groupDemographicSettings, statementDemographicSettings] = await Promise.all([
+			// Group-level questions (scope = 'group')
+			topParentId
+				? db.collection(Collections.userDemographicQuestions)
+					.where('topParentId', '==', topParentId)
+					.where('scope', '==', DEMOGRAPHIC_SCOPE_GROUP)
+					.limit(1).get()
+				: Promise.resolve({ empty: true }),
+			// Statement-level questions (existing behavior)
+			db.collection(Collections.userDemographicQuestions)
+				.where('statementId', '==', statement.parentId)
+				.limit(1).get()
+		]);
+
+		if (groupDemographicSettings.empty && statementDemographicSettings.empty) return;
 
 		const { usersDemographicData, usersDemographicEvaluations } = await getUserDemographicData(userId, parentId, evaluation, statement);
 
@@ -163,13 +181,48 @@ export async function updateUserDemographicEvaluation(statement: Statement, user
 	// Helper functions for better separation of concerns
 
 	async function fetchUserDemographicData(userId: string, parentId: string): Promise<UserDemographicQuestion[]> {
-		const snapshot = await db
-			.collection(Collections.usersData)
-			.where('userId', '==', userId)
-			.where('statementId', '==', parentId)
-			.get();
+		const topParentId = statement.topParentId;
 
-		return snapshot.empty ? [] : snapshot.docs.map(doc => doc.data() as UserDemographicQuestion);
+		// Fetch both group-level and statement-level demographic answers
+		const [groupSnapshot, statementSnapshot] = await Promise.all([
+			// Group-level answers (scope = 'group')
+			topParentId
+				? db.collection(Collections.usersData)
+					.where('userId', '==', userId)
+					.where('topParentId', '==', topParentId)
+					.where('scope', '==', DEMOGRAPHIC_SCOPE_GROUP)
+					.get()
+				: Promise.resolve({ empty: true, docs: [] }),
+			// Statement-level answers (existing behavior)
+			db.collection(Collections.usersData)
+				.where('userId', '==', userId)
+				.where('statementId', '==', parentId)
+				.get()
+		]);
+
+		// Merge answers: group-level first, then statement-level (deduplicate by userQuestionId)
+		const answerMap = new Map<string, UserDemographicQuestion>();
+
+		if (!groupSnapshot.empty) {
+			groupSnapshot.docs.forEach(doc => {
+				const data = doc.data() as UserDemographicQuestion;
+				if (data.userQuestionId) {
+					answerMap.set(data.userQuestionId, data);
+				}
+			});
+		}
+
+		if (!statementSnapshot.empty) {
+			statementSnapshot.docs.forEach(doc => {
+				const data = doc.data() as UserDemographicQuestion;
+				// Only add statement-level if not already present from group
+				if (data.userQuestionId && !answerMap.has(data.userQuestionId)) {
+					answerMap.set(data.userQuestionId, data);
+				}
+			});
+		}
+
+		return Array.from(answerMap.values());
 	}
 
 	async function saveUserDemographicEvaluation(
