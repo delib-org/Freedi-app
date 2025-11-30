@@ -4,13 +4,17 @@ import DeleteIcon from '@/assets/icons/delete.svg?react';
 import PlusIcon from '@/assets/icons/plusIcon.svg?react';
 import Input from '@/view/components/input/Input';
 import styles from './UserQuestionComp.module.scss';
-import { DemographicOption, UserDemographicQuestion, UserDemographicQuestionType } from 'delib-npm';
+import { DemographicOption, UserDemographicQuestion, UserDemographicQuestionType, DemographicQuestionScope } from 'delib-npm';
 import { setDemographicOptionColor } from '@/controllers/db/userDemographic/setUserDemographic';
 import { useDispatch } from 'react-redux';
 import { updateUserDemographicQuestionOptionColor } from '@/redux/userDemographic/userDemographicSlice';
 import RadioButtonEmptyIcon from '@/assets/icons/radioButtonEmpty.svg?react';
 import CheckboxEmptyIcon from '@/assets/icons/checkboxEmptyIcon.svg?react';
 import X from '@/assets/icons/x.svg?react';
+
+// Use string literals for scope since delib-npm exports DemographicQuestionScope as type-only
+const DEMOGRAPHIC_SCOPE_GROUP: DemographicQuestionScope = 'group' as DemographicQuestionScope;
+const DEMOGRAPHIC_SCOPE_STATEMENT: DemographicQuestionScope = 'statement' as DemographicQuestionScope;
 
 interface Props {
 	userQuestions: UserDemographicQuestion;
@@ -23,6 +27,7 @@ interface Props {
 		updatedQuestion: Partial<UserDemographicQuestion>
 	) => void;
 	minQuestionAmount?: number;
+	isTopParent?: boolean;
 }
 
 const UserQuestionComp = ({
@@ -33,6 +38,7 @@ const UserQuestionComp = ({
 	onDeleteQuestion,
 	onUpdateQuestion,
 	minQuestionAmount = 2,
+	isTopParent = false,
 }: Props) => {
 	const { t } = useTranslation();
 	const dispatch = useDispatch();
@@ -119,6 +125,16 @@ const UserQuestionComp = ({
 			color: color,
 		});
 	}
+
+	const handleScopeToggle = (applyToGroup: boolean) => {
+		if (onUpdateQuestion) {
+			onUpdateQuestion(questionIndex, {
+				scope: applyToGroup ? DEMOGRAPHIC_SCOPE_GROUP : DEMOGRAPHIC_SCOPE_STATEMENT,
+			});
+		}
+	};
+
+	const isGroupScope = userQuestions.scope === DEMOGRAPHIC_SCOPE_GROUP;
 
 	return (
 		<div className={styles.userQuestion}>
@@ -340,6 +356,26 @@ const UserQuestionComp = ({
 							/>
 						</div>
 					)}
+				</div>
+			)}
+
+			{/* Scope Toggle - Only show for top parent */}
+			{isTopParent && (
+				<div className={styles.scopeToggle}>
+					<label className={styles.scopeLabel}>
+						<input
+							type='checkbox'
+							checked={isGroupScope}
+							onChange={(e) => handleScopeToggle(e.target.checked)}
+						/>
+						<span>{t('Apply to all sub-discussions')}</span>
+					</label>
+					<p className={styles.scopeHint}>
+						{isGroupScope
+							? t('Members will answer these questions once when joining the group')
+							: t('Members will answer these questions only for this discussion')
+						}
+					</p>
 				</div>
 			)}
 		</div>

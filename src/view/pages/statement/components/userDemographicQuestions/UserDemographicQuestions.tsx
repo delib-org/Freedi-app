@@ -35,6 +35,11 @@ const UserDemographicQuestions: FC<Props> = ({ questions, closeModal, isMandator
 
 		return { groupQuestions: groupQ, statementQuestions: statementQ };
 	}, [questions]);
+
+	// Progress calculation
+	const answeredCount = userDemographic.length;
+	const totalCount = questions.length;
+	const progressPercent = totalCount > 0 ? (answeredCount / totalCount) * 100 : 0;
 	const handleQuestionChange = (
 		question: UserDemographicQuestion,
 		value: string | string[]
@@ -168,6 +173,22 @@ const UserDemographicQuestions: FC<Props> = ({ questions, closeModal, isMandator
 						? t('Please complete this survey to access the discussion')
 						: t('Complete these setup questions')}
 				</p>
+
+				{/* Progress indicator */}
+				{questions.length > 1 && (
+					<div className={styles.progressContainer}>
+						<div className={styles.progressBar}>
+							<div
+								className={styles.progressFill}
+								style={{ width: `${progressPercent}%` }}
+							/>
+						</div>
+						<span className={styles.progressText}>
+							{answeredCount} / {totalCount} {t('completed')}
+						</span>
+					</div>
+				)}
+
 				<form onSubmit={handleSubmit}>
 					{/* Group-level questions section */}
 					{groupQuestions.length > 0 && (

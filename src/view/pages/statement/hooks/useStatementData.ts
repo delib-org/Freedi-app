@@ -17,8 +17,11 @@ export const useStatementData = () => {
 		stageId
 	);
 
-	// Get user data
-	const { userDemographicQuestions, userDemographic, showUserDemographicQuestions } = useUserDemographic(statementId || '');
+	// Get user data - pass topParentId for group-level demographic questions
+	const { userDemographicQuestions, userDemographic, showUserDemographicQuestions } = useUserDemographic(
+		statementId || '',
+		statement?.topParentId
+	);
 
 	// Get UI state
 	const uiState = useStatementUIState();
