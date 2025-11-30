@@ -28,12 +28,12 @@ import {
 	selectUserDemographicQuestionsByStatementId,
 } from '@/redux/userDemographic/userDemographicSlice';
 import { getRandomColor } from '@/controllers/general/helpers';
-import CheckIcon from '@/assets/icons/checkIcon.svg?react';
 import BackToMenuArrow from '@/assets/icons/backToMenuArrow.svg?react';
 import X from '@/assets/icons/x.svg?react';
 import RadioButtonEmptyIcon from '@/assets/icons/radioButtonEmpty.svg?react';
 import DeleteIcon from '@/assets/icons/delete.svg?react';
 import CheckboxEmptyIcon from '@/assets/icons/checkboxEmptyIcon.svg?react';
+import Button, { ButtonType } from '@/view/components/buttons/button/Button';
 //mockData
 
 interface Props {
@@ -341,26 +341,28 @@ const UserDataSetting: FC<Props> = ({ statement }) => {
 							)}
 
 							<div className={styles.bottomBar}>
-									<h4>Required</h4>
-									<div
-										className={styles.slideButtonContainer}
-										onClick={switchRequired}
-										style={{
-											backgroundColor: isQuestionRequired
-												? 'var(--text-blue)'
-												: '',
-										}}
-									>
+									<div className={styles.requiredToggle}>
+										<span>{t('Required')}</span>
 										<div
-											className={`${styles.slideButtonHandle} ${isQuestionRequired ? styles.active : styles.inactive}`}
-										></div>
+											className={styles.slideButtonContainer}
+											onClick={switchRequired}
+											style={{
+												backgroundColor: isQuestionRequired
+													? 'var(--btn-primary)'
+													: '',
+											}}
+										>
+											<div
+												className={`${styles.slideButtonHandle} ${isQuestionRequired ? styles.active : styles.inactive}`}
+											></div>
+										</div>
 									</div>
 									<div className={styles.spacer}></div>
-									<button>
-										<CheckIcon
-											className={styles.checkIcon}
-										/>
-									</button>
+									<Button
+										text={t('Add Question')}
+										buttonType={ButtonType.PRIMARY}
+										type="submit"
+									/>
 								</div>
 						</form>
 						{/* Existing Questions */}
