@@ -441,18 +441,129 @@ function calculateEvaluation(
 // ============================================================================
 
 /**
+ * ============================================================================
+ * ALGORITHM: Mean − SEM (with Uncertainty Floor)
+ * ============================================================================
+ *
+ * Title: Confidence-Adjusted Score with Minimum Variance Assumption
+ * Status: Implemented
+ *
+ * ----------------------------------------------------------------------------
+ * 1. THE PROBLEM (Why this is needed)
+ * ----------------------------------------------------------------------------
+ * The standard Mean − SEM formula suffers from a "Zero Variance Loophole."
+ * If a very small group (e.g., n=2 or n=3) has perfect agreement (all ratings
+ * are identical), the sample standard deviation (s) becomes 0. Consequently,
+ * the Standard Error of the Mean (SEM) becomes 0, resulting in a perfect
+ * score (Score = Mean).
+ *
+ * This creates a logic error where a tiny group with 3 votes of 1.0 (Score = 1.0)
+ * mathematically defeats a large group of 100 people with a mean of 0.99
+ * (Score < 0.99 due to natural variance). A sample size of 3 is insufficient
+ * to statistically prove "zero variance" in a larger population.
+ *
+ * ----------------------------------------------------------------------------
+ * 2. THE SOLUTION: The Uncertainty Floor
+ * ----------------------------------------------------------------------------
+ * To correct this, we introduce a Minimum Standard Deviation (s_min).
+ * We assume that no controversial topic has zero variance in the general
+ * population. If a small sample shows perfect agreement, we treat it as an
+ * artifact of the small sample size and impose a "floor" on the variance
+ * calculation.
+ *
+ * This ensures that uncertainty (SEM) can only approach zero as n increases,
+ * not just because the sample happens to be uniform.
+ *
+ * ----------------------------------------------------------------------------
+ * 3. THE FORMULA
+ * ----------------------------------------------------------------------------
+ *
+ *   Score = Mean - (s_adj / √n)
+ *
+ * Where:
+ *   - n       = Number of evaluators
+ *   - s       = Observed Sample Standard Deviation
+ *   - s_min   = The Uncertainty Floor constant (0.5)
+ *   - s_adj   = Adjusted Standard Deviation = max(s, s_min)
+ *
+ * ----------------------------------------------------------------------------
+ * 4. LOGICAL FLOW (Pseudocode)
+ * ----------------------------------------------------------------------------
+ *
+ *   CONSTANTS:
+ *     FLOOR_STD_DEV = 0.5  // Represents a "moderate disagreement" baseline
+ *
+ *   INPUTS:
+ *     ratings = [list of scores from -1 to 1]
+ *
+ *   CALCULATION:
+ *     n = length(ratings)
+ *     mean = average(ratings)
+ *     std_dev = standard_deviation(ratings)
+ *
+ *     // Apply the Uncertainty Floor
+ *     // If the sample is too uniform (or n is too small to show variance),
+ *     // we force the math to assume at least moderate disagreement exists.
+ *     effective_std_dev = MAX(std_dev, FLOOR_STD_DEV)
+ *
+ *     // Calculate SEM using the effective standard deviation
+ *     sem = effective_std_dev / SQRT(n)
+ *
+ *     // Final Score
+ *     final_score = mean - sem
+ *
+ * ----------------------------------------------------------------------------
+ * 5. COMPARISON OF BEHAVIOR
+ * ----------------------------------------------------------------------------
+ *
+ * Scenario A (The Flaw): 3 people vote 1.0
+ *   - Old Formula: s=0 → SEM=0 → Score = 1.0
+ *   - New Formula: s_adj=0.5 → SEM = 0.5/√3 ≈ 0.29 → Score = 0.71
+ *
+ * Scenario B (The Goal): 100 people vote 0.95 (with normal variance)
+ *   - Old Formula: Score ≈ 0.94
+ *   - New Formula: Score ≈ 0.94 (The floor usually doesn't trigger for
+ *                  large, noisy groups)
+ *
+ * Result: The large group (0.94) now correctly defeats the small group (0.71).
+ *
+ * ============================================================================
+ */
+
+/**
+ * The Uncertainty Floor constant.
+ *
+ * This represents a "moderate disagreement" baseline assumption.
+ * When sample variance is lower than this floor, we assume it's due to
+ * insufficient sample size rather than true population consensus.
+ *
+ * Value of 0.5 chosen because:
+ * - On a scale of -1 to 1, 0.5 represents moderate disagreement
+ * - It provides meaningful penalty for small unanimous samples
+ * - Large samples with genuine consensus will exceed this floor naturally
+ */
+const FLOOR_STD_DEV = 0.5;
+
+/**
  * Calculates the standard error of the mean (SEM) for evaluation data
+ * with an Uncertainty Floor to prevent the Zero Variance Loophole.
+ *
+ * The Uncertainty Floor ensures that small samples with artificially low
+ * variance cannot achieve unrealistically high scores. This is critical
+ * because a sample of 3 unanimous votes should not mathematically defeat
+ * a large sample of 100 evaluators with natural variance.
+ *
  * @param sumEvaluations - Sum of all evaluation values
  * @param sumSquaredEvaluations - Sum of squared evaluation values (Σxi²)
  * @param numberOfEvaluators - Number of evaluators
- * @returns Standard Error of the Mean (SEM = σ / √n)
+ * @returns Standard Error of the Mean (SEM = s_adj / √n) where s_adj = max(s, FLOOR_STD_DEV)
  */
 function calcStandardError(
 	sumEvaluations: number,
 	sumSquaredEvaluations: number,
 	numberOfEvaluators: number
 ): number {
-	if (numberOfEvaluators <= 1) return 0;
+	if (numberOfEvaluators <= 1) return FLOOR_STD_DEV; // Return floor for n=1 to ensure penalty
 
 	// Calculate mean (μ)
 	const mean = sumEvaluations / numberOfEvaluators;
@@ -463,32 +574,45 @@ function calcStandardError(
 	// Ensure variance is non-negative (floating point errors can cause small negative values)
 	const safeVariance = Math.max(0, variance);
 
-	// Calculate standard deviation: σ = √Var
-	const standardDeviation = Math.sqrt(safeVariance);
+	// Calculate observed standard deviation: s = √Var
+	const observedStdDev = Math.sqrt(safeVariance);
 
-	// Calculate SEM: SEM = σ / √n
-	const sem = standardDeviation / Math.sqrt(numberOfEvaluators);
+	// Apply the Uncertainty Floor: s_adj = max(s, s_min)
+	// This prevents the Zero Variance Loophole where small unanimous
+	// samples achieve unrealistically perfect scores
+	const adjustedStdDev = Math.max(observedStdDev, FLOOR_STD_DEV);
+
+	// Calculate SEM: SEM = s_adj / √n
+	const sem = adjustedStdDev / Math.sqrt(numberOfEvaluators);
 
 	return sem;
 }
 
 /**
- * Calculates consensus score using Mean - SEM approach
+ * Calculates consensus score using Mean - SEM approach with Uncertainty Floor.
  *
  * This replaces the old heuristic formula (√n × Mean) with a statistically
  * grounded approach that accounts for both the level of support and the
  * confidence in that measurement.
  *
- * Formula: Score = Mean - SEM
- * Where:
- * - Mean = average evaluation score
- * - SEM = Standard Error of the Mean = σ / √n
- * - σ = standard deviation
+ * Formula: Score = Mean - (s_adj / √n)
  *
+ * Where:
+ * - Mean   = average evaluation score
+ * - n      = number of evaluators
+ * - s      = observed sample standard deviation
+ * - s_min  = Uncertainty Floor constant (0.5)
+ * - s_adj  = max(s, s_min) - prevents Zero Variance Loophole
+ *
+ * The Uncertainty Floor prevents small unanimous groups from achieving
+ * artificially perfect scores. A sample of 3 votes of 1.0 now scores ~0.71
+ * instead of 1.0, correctly losing to a larger sample of 100 voters at 0.94.
+ *
+ * @see calcStandardError for the SEM calculation with Uncertainty Floor
  * @param sumEvaluations - Sum of all evaluation values
  * @param sumSquaredEvaluations - Sum of squared evaluation values (Σxi²)
  * @param numberOfEvaluators - Number of evaluators
- * @returns Consensus score (confidence-adjusted agreement)
+ * @returns Consensus score (confidence-adjusted agreement with uncertainty floor)
  */
 function calcAgreement(
 	sumEvaluations: number,
