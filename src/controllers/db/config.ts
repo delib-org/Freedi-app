@@ -187,14 +187,32 @@ export function getFunctionsUrl(): string {
 /**
  * Get the Mass Consensus app base URL based on the environment
  * Returns the appropriate base URL for the mass-consensus Next.js app
+ * Priority: 1) Environment variable 2) Auto-detect from hostname 3) Default
  */
 export function getMassConsensusUrl(): string {
+	// 1. First check environment variable (set via env files)
+	const envUrl = import.meta.env.VITE_APP_MASS_CONSENSUS_URL;
+	if (envUrl) {
+		return envUrl;
+	}
+
+	// 2. Development mode - use local server
 	if (!isProduction) {
 		return 'http://localhost:3001';
 	}
 
-	// Production URL for the mass-consensus app
-	return 'https://mc.wizcol.com';
+	// 3. Auto-detect based on current hostname (fallback for production)
+	const hostname = typeof window !== 'undefined' ? window.location.hostname : '';
+
+	if (hostname.includes('wizcol')) {
+		return 'https://mc.wizcol.app';
+	}
+	if (hostname.includes('freedi-test') || hostname.includes('staging')) {
+		return 'https://mass-consensus-staging.vercel.app';
+	}
+
+	// Default to production
+	return 'https://mc.wizcol.app';
 }
 
 /**
