@@ -74,7 +74,7 @@ const RoomAssignmentBanner: FC<RoomAssignmentBannerProps> = ({ statementId }) =>
 			</div>
 
 			<Snackbar
-				message={t('You have been assigned to Room {{roomNumber}}', { roomNumber: myAssignment.roomNumber })}
+				message={t('You have been assigned to Room {{roomNumber}}').replace('{{roomNumber}}', String(myAssignment.roomNumber))}
 				subMessage={t('Check the banner above for details')}
 				isVisible={showSnackbar}
 				type="success"

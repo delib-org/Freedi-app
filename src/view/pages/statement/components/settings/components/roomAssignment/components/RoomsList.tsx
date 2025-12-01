@@ -50,7 +50,7 @@ const RoomsList: FC<RoomsListProps> = ({
 			if (result?.success) {
 				setSnackbar({
 					visible: true,
-					message: t('Notifications sent to {{count}} participants', { count: result.notified }),
+					message: t('Notifications sent to {{count}} participants').replace('{{count}}', String(result.notified)),
 					type: 'success',
 				});
 			} else if (result?.message) {

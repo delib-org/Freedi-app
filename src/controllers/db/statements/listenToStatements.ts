@@ -10,6 +10,7 @@ import {
 	where,
 } from 'firebase/firestore';
 import { logError } from '@/utils/errorHandling';
+import { convertTimestampsToMillis } from '@/helpers/timestampHelpers';
 
 // Redux Store
 import { FireStore } from '../config';
@@ -546,7 +547,7 @@ export function listenToAllDescendants(statementId: string): Unsubscribe {
 					// Process the initial batch of statements all at once
 					statementsDB.forEach((doc) => {
 						try {
-							const statement = parse(StatementSchema, doc.data());
+							const statement = parse(StatementSchema, convertTimestampsToMillis(doc.data()));
 							statements.push(statement);
 							loadedCount++;
 						} catch (error) {
@@ -574,7 +575,7 @@ export function listenToAllDescendants(statementId: string): Unsubscribe {
 
 					changes.forEach((change) => {
 						try {
-							const statement = parse(StatementSchema, change.doc.data());
+							const statement = parse(StatementSchema, convertTimestampsToMillis(change.doc.data()));
 
 							if (change.type === 'added' || change.type === 'modified') {
 								store.dispatch(setStatement(statement));
