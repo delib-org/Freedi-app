@@ -89,6 +89,9 @@ import {
   deleteRoomAssignments,
 } from "./fn_roomAssignment";
 
+// Discussion Summarization
+import { summarizeDiscussion } from "./fn_summarizeDiscussion";
+
 // Initialize Firebase only if not already initialized
 if (!getApps().length) {
   initializeApp();
@@ -463,3 +466,6 @@ exports.notifyRoomParticipants = wrapHttpFunction(notifyRoomParticipants);
 exports.getRoomAssignments = wrapHttpFunction(getRoomAssignments);
 exports.getMyRoomAssignment = wrapHttpFunction(getMyRoomAssignment);
 exports.deleteRoomAssignments = wrapHttpFunction(deleteRoomAssignments);
+
+// Discussion Summarization
+exports.summarizeDiscussion = summarizeDiscussion;

@@ -680,5 +680,15 @@
   "Request solution at start": "اطلب حلاً في البداية",
   "Ask first": "اسأل أولاً",
   "This helps ensure everyone contributes their ideas to the discussion.": "هذا يساعد على ضمان مساهمة الجميع بأفكارهم في النقاش.",
-  "add more options": "أضف المزيد من الخيارات"
+  "add more options": "أضف المزيد من الخيارات",
+  "Discussion Summary": "ملخص النقاش",
+  "Generate Discussion Summary": "إنشاء ملخص النقاش",
+  "Generate Summary": "إنشاء ملخص",
+  "Generate AI summary of the discussion": "إنشاء ملخص AI للنقاش",
+  "Summarize Discussion": "تلخيص النقاش",
+  "Custom instructions (optional)": "تعليمات مخصصة (اختياري)",
+  "Leave empty for automatic summary of top suggestions": "اتركه فارغاً للحصول على ملخص تلقائي للاقتراحات الأعلى",
+  "Generating...": "جاري الإنشاء...",
+  "Generated": "تم الإنشاء",
+  "Topic description": "وصف الموضوع"
 }

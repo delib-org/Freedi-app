@@ -684,5 +684,15 @@
   "Request solution at start": "Solicitar solución al inicio",
   "Ask first": "Preguntar primero",
   "This helps ensure everyone contributes their ideas to the discussion.": "Esto ayuda a asegurar que todos contribuyan sus ideas a la discusión.",
-  "add more options": "agregar más opciones"
+  "add more options": "agregar más opciones",
+  "Discussion Summary": "Resumen de la discusión",
+  "Generate Discussion Summary": "Generar resumen de la discusión",
+  "Generate Summary": "Generar resumen",
+  "Generate AI summary of the discussion": "Generar resumen de IA de la discusión",
+  "Summarize Discussion": "Resumir discusión",
+  "Custom instructions (optional)": "Instrucciones personalizadas (opcional)",
+  "Leave empty for automatic summary of top suggestions": "Dejar vacío para resumen automático de las mejores sugerencias",
+  "Generating...": "Generando...",
+  "Generated": "Generado",
+  "Topic description": "Descripción del tema"
 }

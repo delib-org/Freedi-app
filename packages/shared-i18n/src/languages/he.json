@@ -800,5 +800,14 @@
   "Strongly disagree": "ממש לא מסכים",
   "Strongly agree": "מסכים מאוד",
   "Achievements Earned": "הישגים שנצברו",
-  "Please enter your email": "אנא הכנס את כתובת האימייל שלך"
+  "Please enter your email": "אנא הכנס את כתובת האימייל שלך",
+  "Discussion Summary": "סיכום הדיון",
+  "Generate Discussion Summary": "יצירת סיכום הדיון",
+  "Generate Summary": "צור סיכום",
+  "Generate AI summary of the discussion": "צור סיכום AI של הדיון",
+  "Summarize Discussion": "סכם דיון",
+  "Custom instructions (optional)": "הוראות מותאמות אישית (אופציונלי)",
+  "Leave empty for automatic summary of top suggestions": "השאר ריק לסיכום אוטומטי של ההצעות המובילות",
+  "Generating...": "מייצר...",
+  "Generated": "נוצר"
 }
