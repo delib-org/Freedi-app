@@ -3,6 +3,12 @@
  * Prevents app crashes from IndexedDB failures, especially on iOS Safari
  */
 
+// Key for tracking recovery attempts in sessionStorage
+const RECOVERY_ATTEMPT_KEY = 'firestore_recovery_attempt';
+const RECOVERY_TIMESTAMP_KEY = 'firestore_recovery_timestamp';
+const MAX_RECOVERY_ATTEMPTS = 2;
+const RECOVERY_COOLDOWN_MS = 60000; // 1 minute cooldown between recovery attempts
+
 export function setupIndexedDBErrorHandler(): void {
 	// Listen for unhandled promise rejections that might be IndexedDB-related
 	window.addEventListener('unhandledrejection', (event) => {
@@ -15,12 +21,52 @@ export function setupIndexedDBErrorHandler(): void {
 			// Prevent the error from crashing the app
 			event.preventDefault();
 
-			// Log user-friendly message
-			logUserFriendlyError();
+			// Check if this is a multi-tab persistence error and attempt recovery
+			if (isMultiTabPersistenceError(error)) {
+				attemptRecovery();
+			} else {
+				// Log user-friendly message for other IndexedDB errors
+				logUserFriendlyError();
+			}
 		}
 	});
 
+	// Clear recovery counter on successful app load (after 5 seconds)
+	setTimeout(() => {
+		sessionStorage.removeItem(RECOVERY_ATTEMPT_KEY);
+	}, 5000);
+
 	console.info('[IndexedDB Error Handler] Initialized');
+}
+
+/**
+ * Attempt to recover from persistence errors with protection against infinite loops
+ */
+function attemptRecovery(): void {
+	const attemptCount = parseInt(sessionStorage.getItem(RECOVERY_ATTEMPT_KEY) || '0', 10);
+	const lastAttempt = parseInt(sessionStorage.getItem(RECOVERY_TIMESTAMP_KEY) || '0', 10);
+	const now = Date.now();
+
+	// Check if we're in cooldown period
+	if (now - lastAttempt < RECOVERY_COOLDOWN_MS && attemptCount >= MAX_RECOVERY_ATTEMPTS) {
+		console.error(
+			'[IndexedDB Recovery] Max recovery attempts reached. Please close other tabs and refresh manually.'
+		);
+		logUserFriendlyError();
+
+		return;
+	}
+
+	// Reset counter if cooldown has passed
+	if (now - lastAttempt >= RECOVERY_COOLDOWN_MS) {
+		sessionStorage.setItem(RECOVERY_ATTEMPT_KEY, '1');
+	} else {
+		sessionStorage.setItem(RECOVERY_ATTEMPT_KEY, String(attemptCount + 1));
+	}
+	sessionStorage.setItem(RECOVERY_TIMESTAMP_KEY, String(now));
+
+	console.info(`[IndexedDB Recovery] Attempt ${attemptCount + 1}/${MAX_RECOVERY_ATTEMPTS}`);
+	handleMultiTabPersistenceError();
 }
 
 /**
@@ -43,6 +89,10 @@ function isIndexedDBError(error: unknown): boolean {
 		'database deleted',
 		'database closed',
 		'unavailable or restricted',
+		// Firestore persistence layer errors (multi-tab conflicts)
+		'exclusive access',
+		'persistence layer',
+		'multi-tab synchronization',
 	];
 
 	// Check for Firestore persistence error codes
@@ -72,4 +122,60 @@ function logUserFriendlyError(): void {
 
 	// TODO: Add toast notification when UI toast system is available
 	// Example: toast.info('App running in limited mode. Offline features temporarily disabled.')
+}
+
+/**
+ * Check if this is a multi-tab persistence conflict error
+ */
+function isMultiTabPersistenceError(error: unknown): boolean {
+	if (!error) return false;
+
+	const errorMessage = error instanceof Error ? error.message : String(error);
+
+	return (
+		errorMessage.includes('exclusive access') ||
+		errorMessage.includes('persistence layer')
+	);
+}
+
+/**
+ * Clear Firestore IndexedDB databases to recover from persistence conflicts
+ * This is a last-resort recovery mechanism
+ */
+async function clearFirestoreIndexedDB(): Promise<void> {
+	const dbsToDelete = [
+		'firestore/[DEFAULT]/freedi-test/main', // Testing env
+		'firestore/[DEFAULT]/delib-5/main',      // Production env
+	];
+
+	for (const dbName of dbsToDelete) {
+		try {
+			await new Promise<void>((resolve, reject) => {
+				const request = indexedDB.deleteDatabase(dbName);
+				request.onsuccess = () => resolve();
+				request.onerror = () => reject(request.error);
+				request.onblocked = () => {
+					console.info(`[IndexedDB Recovery] Database ${dbName} is blocked, will retry after reload`);
+					resolve();
+				};
+			});
+			console.info(`[IndexedDB Recovery] Cleared database: ${dbName}`);
+		} catch {
+			// Ignore errors - database might not exist
+		}
+	}
+}
+
+/**
+ * Handle multi-tab persistence errors with recovery option
+ */
+export async function handleMultiTabPersistenceError(): Promise<void> {
+	console.info('[IndexedDB Recovery] Attempting to recover from multi-tab persistence conflict...');
+
+	// Try to clear the IndexedDB databases
+	await clearFirestoreIndexedDB();
+
+	// Reload the page to reinitialize Firestore
+	console.info('[IndexedDB Recovery] Reloading page to reinitialize Firestore...');
+	window.location.reload();
 }
