@@ -218,14 +218,14 @@ export default function SolutionPromptModal({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} title={flowState.step === 'input' ? title : undefined}>
+    <Modal isOpen={isOpen} onClose={handleClose} title={flowState.step === 'input' && !questionText ? title : undefined}>
       <div className={styles.content}>
         {flowState.step === 'input' && (
           <>
             {/* Question Context Banner */}
             {questionText && (
               <div className={styles.questionContext}>
-                <span className={styles.questionLabel}>{t('Your solution for:')}</span>
+                <span className={styles.questionLabel}>{t('Please add your answer to the following question:')}</span>
                 <p className={`${styles.questionText} ${isQuestionExpanded ? styles.questionTextExpanded : ''}`}>
                   {questionText}
                 </p>
@@ -235,13 +235,11 @@ export default function SolutionPromptModal({
                     className={styles.expandButton}
                     onClick={() => setIsQuestionExpanded(!isQuestionExpanded)}
                   >
-                    {isQuestionExpanded ? 'Show less' : 'Show more'}
+                    {isQuestionExpanded ? t('Show less') : t('Show more')}
                   </button>
                 )}
               </div>
             )}
-
-            <p className={styles.description}>{description}</p>
 
             <textarea
               ref={textareaRef}
