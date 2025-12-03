@@ -53,9 +53,16 @@
 }
 
 @media (max-width: 768px) {
+  .buttons {
+    flex-wrap: nowrap;
+    gap: 4px;
+    width: 100%;
+  }
+
   .button {
-    min-width: 50px;
-    padding: var(--spacing-xs) var(--spacing-sm);
+    flex: 1;
+    min-width: 0;
+    padding: var(--spacing-xs) 4px;
   }
 
   .emoji {
@@ -64,5 +71,24 @@
 
   .score {
     font-size: 0.625rem;
+  }
+}
+
+/* Extra small screens - hide score numbers, show only emojis */
+@media (max-width: 380px) {
+  .buttons {
+    gap: 3px;
+  }
+
+  .button {
+    padding: var(--spacing-xs) 2px;
+  }
+
+  .emoji {
+    font-size: 1.1rem;
+  }
+
+  .score {
+    display: none;
   }
 }
