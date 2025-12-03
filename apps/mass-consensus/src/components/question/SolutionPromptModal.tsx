@@ -19,7 +19,6 @@ interface SolutionPromptModalProps {
   userId: string;
   onSubmitSuccess: () => void;
   title?: string;
-  description?: string;
   questionText?: string;
 }
 
@@ -33,7 +32,6 @@ export default function SolutionPromptModal({
   userId,
   onSubmitSuccess,
   title = 'Add Your Solution',
-  description = 'Share your idea for this question.',
   questionText,
 }: SolutionPromptModalProps) {
   const { t } = useTranslation();

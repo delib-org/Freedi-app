@@ -410,9 +410,6 @@ return newSet;
           onSubmitSuccess={handleSolutionComplete}
           questionText={question.statement}
           title={requiresSolution && !hasCheckedUserSolutions ? t('Add Your Solution First') : t('Add Solution')}
-          description={requiresSolution && !hasCheckedUserSolutions
-            ? t('Please share your idea before seeing and rating others')
-            : t('Share your idea for this question')}
         />
 
         {/* Progress/Completion screen - shown when user clicks "View Progress" */}
