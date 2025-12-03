@@ -89,6 +89,12 @@ import {
   deleteRoomAssignments,
 } from "./fn_roomAssignment";
 
+// Vector Search functions
+import {
+  findSimilarStatementsVector,
+  batchRegenerateEmbeddings,
+} from "./fn_vectorSearch";
+
 // Initialize Firebase only if not already initialized
 if (!getApps().length) {
   initializeApp();
@@ -463,3 +469,9 @@ exports.notifyRoomParticipants = wrapHttpFunction(notifyRoomParticipants);
 exports.getRoomAssignments = wrapHttpFunction(getRoomAssignments);
 exports.getMyRoomAssignment = wrapHttpFunction(getMyRoomAssignment);
 exports.deleteRoomAssignments = wrapHttpFunction(deleteRoomAssignments);
+
+// --------------------------
+// VECTOR SEARCH FUNCTIONS
+// --------------------------
+// Callable function for finding similar statements using vector embeddings
+exports.findSimilarStatementsVector = findSimilarStatementsVector;

@@ -8,6 +8,7 @@ import {
     SimpleStatement,
     statementToSimpleStatement,
 } from 'delib-npm';
+import { generateStatementEmbedding } from './fn_vectorSearch';
 
 /**
  * Updates parent statement when a child statement is created
@@ -82,13 +83,31 @@ return;
             before.description !== after.description ||
             before.consensus !== after.consensus
         );
-        
+
+        // Check if statement or description changed (need to regenerate embedding)
+        const hasEmbeddingChange = (
+            before.statement !== after.statement ||
+            before.description !== after.description
+        );
+
         if (!hasContentChange) {
             logger.info('No significant content changes, skipping parent update');
-            
+
 return;
         }
-        
+
+        // Regenerate embedding if statement or description changed
+        if (hasEmbeddingChange) {
+            logger.info(`Statement or description changed, regenerating embedding for ${after.statementId}`);
+            // Run embedding generation in background (don't block the update)
+            generateStatementEmbedding(after.statementId, after).catch((error) => {
+                logger.error('Failed to regenerate embedding on update', {
+                    statementId: after.statementId,
+                    error
+                });
+            });
+        }
+
         logger.info(`Child statement content changed, updating parent ${after.parentId}`);
         
         // Update parent statement with latest children

@@ -17,6 +17,7 @@ import {
 } from 'delib-npm';
 import { db } from './index';
 import { getDefaultQuestionType } from './model/questionTypeDefaults';
+import { generateStatementEmbedding } from './fn_vectorSearch';
 
 /**
  * Consolidated function that handles all tasks when a new statement is created.
@@ -62,6 +63,10 @@ export async function onStatementCreated(
 		if (statement.parentId !== 'top') {
 			tasks.push(createNotificationsForStatement(statement));
 		}
+
+		// Task 6: Generate vector embedding for semantic search
+		// This runs in the background and won't block statement creation
+		tasks.push(generateStatementEmbedding(statement.statementId, statement));
 
 		// Execute all tasks in parallel
 		await Promise.all(tasks);
