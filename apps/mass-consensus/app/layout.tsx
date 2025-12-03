@@ -1,4 +1,5 @@
 import { Metadata, Viewport } from 'next';
+import Script from 'next/script';
 import { cookies, headers } from 'next/headers';
 import {
   getTranslations,
@@ -7,6 +8,8 @@ import {
 } from '@freedi/shared-i18n/next';
 import { COOKIE_KEY } from '@freedi/shared-i18n';
 import './globals.css';
+
+const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID;
 
 export const metadata: Metadata = {
   title: 'Freedi Discussion',
@@ -41,6 +44,22 @@ export default async function RootLayout({
     <html lang={language} dir={dir}>
       <head>
         <link rel="preconnect" href="https://firebasestorage.googleapis.com" />
+        {GA_MEASUREMENT_ID && (
+          <>
+            <Script
+              src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
+              strategy="afterInteractive"
+            />
+            <Script id="google-analytics" strategy="afterInteractive">
+              {`
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){dataLayer.push(arguments);}
+                gtag('js', new Date());
+                gtag('config', '${GA_MEASUREMENT_ID}');
+              `}
+            </Script>
+          </>
+        )}
       </head>
       <body suppressHydrationWarning>
         <NextTranslationProvider

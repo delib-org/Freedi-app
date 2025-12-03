@@ -11,6 +11,7 @@ import SimilarSolutions from './SimilarSolutions';
 import EnhancedLoader from './EnhancedLoader';
 import SuccessMessage from './SuccessMessage';
 import styles from './SolutionPromptModal.module.css';
+import { trackSolutionSubmitted } from '@/lib/analytics';
 
 interface SolutionPromptModalProps {
   isOpen: boolean;
@@ -19,7 +20,6 @@ interface SolutionPromptModalProps {
   userId: string;
   onSubmitSuccess: () => void;
   title?: string;
-  description?: string;
   questionText?: string;
 }
 
@@ -33,7 +33,6 @@ export default function SolutionPromptModal({
   userId,
   onSubmitSuccess,
   title = 'Add Your Solution',
-  description = 'Share your idea for this question.',
   questionText,
 }: SolutionPromptModalProps) {
   const { t } = useTranslation();
@@ -180,6 +179,9 @@ export default function SolutionPromptModal({
 
       const data = await response.json();
 
+      // Track successful solution submission
+      trackSolutionSubmitted(questionId, userId, data.action === 'created');
+
       setFlowState({
         step: 'success',
         action: data.action,
@@ -218,14 +220,14 @@ export default function SolutionPromptModal({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} title={flowState.step === 'input' ? title : undefined}>
+    <Modal isOpen={isOpen} onClose={handleClose} title={flowState.step === 'input' && !questionText ? title : undefined}>
       <div className={styles.content}>
         {flowState.step === 'input' && (
           <>
             {/* Question Context Banner */}
             {questionText && (
               <div className={styles.questionContext}>
-                <span className={styles.questionLabel}>{t('Your solution for:')}</span>
+                <span className={styles.questionLabel}>{t('Please add your answer to the following question:')}</span>
                 <p className={`${styles.questionText} ${isQuestionExpanded ? styles.questionTextExpanded : ''}`}>
                   {questionText}
                 </p>
@@ -235,13 +237,11 @@ export default function SolutionPromptModal({
                     className={styles.expandButton}
                     onClick={() => setIsQuestionExpanded(!isQuestionExpanded)}
                   >
-                    {isQuestionExpanded ? 'Show less' : 'Show more'}
+                    {isQuestionExpanded ? t('Show less') : t('Show more')}
                   </button>
                 )}
               </div>
             )}
-
-            <p className={styles.description}>{description}</p>
 
             <textarea
               ref={textareaRef}

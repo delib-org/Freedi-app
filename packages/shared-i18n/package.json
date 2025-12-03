@@ -9,7 +9,14 @@
     "./react": "./src/react/index.ts",
     "./next": "./src/next/index.ts"
   },
+  "dependencies": {
+    "@types/react": "^18.0.0"
+  },
   "peerDependencies": {
     "react": "^18.0.0"
+  },
+  "devDependencies": {
+    "react": "^18.0.0",
+    "typescript": "^5.0.0"
   }
 }
