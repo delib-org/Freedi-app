@@ -13,8 +13,12 @@ const Dot: FC<Props> = ({ subStatement, maxEvaluators }) => {
 	const randomX = useRef<number>((Math.random()) * 0.04);
 	const randomY = useRef<number>((Math.random()) * 0.04);
 	const [show, setShow] = useState(false);
-	const { sumCon, sumPro, numberOfEvaluators } = subStatement.evaluation!;
-	if (sumCon === undefined || sumPro === undefined) return null;
+
+	// Early return if evaluation data is missing
+	if (!subStatement.evaluation) return null;
+
+	const { sumCon, sumPro, numberOfEvaluators } = subStatement.evaluation;
+	if (sumCon === undefined || sumPro === undefined || numberOfEvaluators === undefined) return null;
 
 	const agreement = (sumPro - sumCon) / numberOfEvaluators;
 	const bottom = sumCon / maxEvaluators + randomX.current;

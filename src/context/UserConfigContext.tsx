@@ -120,7 +120,9 @@ export const UserConfigProvider: React.FC<UserConfigProviderProps> = ({
     return DEFAULT_CONFIG;
   });
 
-  const [languageData, setLanguageData] = useState<Record<string, string>>({});
+  const [languageData, setLanguageData] = useState<Record<string, string>>(() =>
+    getLanguageData(config.chosenLanguage)
+  );
 
   // Save to localStorage whenever config changes
   useEffect(() => {
