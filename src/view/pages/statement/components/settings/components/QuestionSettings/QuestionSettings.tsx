@@ -14,6 +14,7 @@ import AnchorIcon from '@/assets/icons/anchor.svg?react';
 import UsersIcon from '@/assets/icons/users20px.svg?react';
 import ShareIcon from '@/assets/icons/shareIcon.svg?react';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
+import { getMassConsensusQuestionUrl } from '@/controllers/db/config';
 import MultiSwitch from '@/view/components/switch/multiSwitch/MultiSwitch';
 import { setEvaluationUIType, setAnchoredEvaluationSettings } from '@/controllers/db/evaluation/setEvaluation';
 import VotingSettings from './votingSettings/VotingSettings';
@@ -48,7 +49,7 @@ const QuestionSettings: FC<StatementSettingsProps> = ({
 	const [linkCopied, setLinkCopied] = useState(false);
 	const fileInputRef = useRef<HTMLInputElement>(null);
 
-	const questionLink = `${window.location.origin}/q/${statement.statementId}`;
+	const questionLink = getMassConsensusQuestionUrl(statement.statementId);
 
 	const handleCopyLink = async () => {
 		try {
@@ -58,6 +59,10 @@ const QuestionSettings: FC<StatementSettingsProps> = ({
 		} catch (error) {
 			console.error('Failed to copy link:', error);
 		}
+	};
+
+	const handleOpenLink = () => {
+		window.open(questionLink, '_blank');
 	};
 
 	try {
@@ -289,7 +294,14 @@ const QuestionSettings: FC<StatementSettingsProps> = ({
 							className={styles.questionLink__button}
 						>
 							<ShareIcon />
-							<span>{linkCopied ? t('Copied!') : t('Copy Link')}</span>
+							<span>{linkCopied ? t('Copied!') : t('Copy')}</span>
+						</button>
+						<button
+							type="button"
+							onClick={handleOpenLink}
+							className={styles.questionLink__button}
+						>
+							<span>{t('Open')}</span>
 						</button>
 					</div>
 				</div>

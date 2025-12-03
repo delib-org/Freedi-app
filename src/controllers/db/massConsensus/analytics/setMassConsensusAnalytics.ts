@@ -1,4 +1,4 @@
-import { doc, setDoc, increment, serverTimestamp, FieldValue } from 'firebase/firestore';
+import { doc, setDoc, increment } from 'firebase/firestore';
 import { DB } from '../../config';
 import { MassConsensusStage } from '@/services/analytics/analytics';
 
@@ -19,8 +19,8 @@ interface MassConsensusAnalyticsData {
     votes: number;
     feedback: boolean;
   };
-  createdAt: FieldValue | Date;
-  updatedAt: FieldValue | Date;
+  createdAt: number;
+  updatedAt: number;
 }
 
 /**
@@ -44,8 +44,8 @@ export async function saveMassConsensusSession(
       sessionRef,
       {
         ...data,
-        updatedAt: serverTimestamp(),
-        createdAt: data.createdAt || serverTimestamp(),
+        updatedAt: Date.now(),
+        createdAt: data.createdAt || Date.now(),
       },
       { merge: true }
     );
@@ -77,7 +77,7 @@ export async function updateMassConsensusAggregates(
 
     const updateData: Record<string, unknown> = {
       statementId,
-      lastUpdated: serverTimestamp(),
+      lastUpdated: Date.now(),
     };
 
     if (updates.isNewEntry) {

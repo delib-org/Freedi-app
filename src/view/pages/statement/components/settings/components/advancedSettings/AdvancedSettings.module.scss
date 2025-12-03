@@ -7,6 +7,14 @@
     max-width: 1200px;
     margin: 0 auto;
 
+    // Helper text for descriptions and notes
+    .helperText {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+        margin: 0.25rem 0 0.5rem;
+        line-height: 1.4;
+    }
+
     .title {
         font-size: 1.5rem;
         font-weight: 600;

@@ -80,6 +80,15 @@ import { onVoteUpdate } from "./fn_popperHebbian_onVote";
 import { summarizeLink } from "./fn_popperHebbian_summarizeLink";
 import { improveProposalWithAI } from "./fn_popperHebbian_improveProposal";
 
+// Room Assignment functions
+import {
+  createRoomAssignments,
+  notifyRoomParticipants,
+  getRoomAssignments,
+  getMyRoomAssignment,
+  deleteRoomAssignments,
+} from "./fn_roomAssignment";
+
 // Initialize Firebase only if not already initialized
 if (!getApps().length) {
   initializeApp();
@@ -114,6 +123,7 @@ const corsConfig = isProduction
       "https://freedi-test.web.app",
       "https://delib-5.web.app",
       "https://delib.web.app",
+      "https://wizcol-app.web.app",
     ]
   : [
       "http://localhost:5173",
@@ -446,3 +456,10 @@ exports.onEvidencePostUpdate = onEvidencePostUpdate;
 exports.onVoteUpdate = onVoteUpdate;
 exports.summarizeLink = summarizeLink;
 exports.improveProposalWithAI = improveProposalWithAI;
+
+// Room Assignment functions
+exports.createRoomAssignments = wrapHttpFunction(createRoomAssignments);
+exports.notifyRoomParticipants = wrapHttpFunction(notifyRoomParticipants);
+exports.getRoomAssignments = wrapHttpFunction(getRoomAssignments);
+exports.getMyRoomAssignment = wrapHttpFunction(getMyRoomAssignment);
+exports.deleteRoomAssignments = wrapHttpFunction(deleteRoomAssignments);

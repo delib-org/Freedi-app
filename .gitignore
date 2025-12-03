@@ -51,3 +51,5 @@ yarn.lock
 # Local environment configs
 .runtimeconfig.json
 functions/.runtimeconfig.json
+
+functions/scripts/serviceAccountKey.json

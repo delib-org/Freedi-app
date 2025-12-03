@@ -2,6 +2,9 @@ import { collection, query, where, getDocs, onSnapshot, doc, getDoc } from 'fire
 import { FireStore } from '../config';
 import { Collections, UserDemographicQuestion, UserDemographicQuestionSchema, User, Role } from 'delib-npm';
 import { parse } from 'valibot';
+
+// Use string literal for scope until delib-npm exports the enum value
+const DEMOGRAPHIC_SCOPE_GROUP = 'group' as const;
 import { store } from '@/redux/store';
 import { deleteUserDemographic, deleteUserDemographicQuestion, setUserDemographic, setUserDemographicQuestion, setUserDemographicQuestions } from '@/redux/userDemographic/userDemographicSlice';
 import { MemberReviewData } from '@/view/pages/statement/components/settings/components/memberValidation/MemberValidation';
@@ -239,7 +242,179 @@ export async function getUserDemographicResponses(statementId: string): Promise<
 		return memberReviews;
 	} catch (error) {
 		console.error('Error fetching user demographic responses for review:', error);
-		
-return [];
+
+		return [];
+	}
+}
+
+/**
+ * Listens to group-level demographic questions (scope = 'group') for a topParentId
+ * These questions apply to all child statements within the group
+ * @param topParentId - The top parent ID of the group
+ * @returns Unsubscribe function
+ */
+export function listenToGroupDemographicQuestions(topParentId: string): () => void {
+	try {
+		if (!topParentId) {
+			throw new Error('Top Parent ID is required to listen for group demographic questions');
+		}
+
+		const userQuestionsRef = collection(FireStore, Collections.userDemographicQuestions);
+		const q = query(
+			userQuestionsRef,
+			where('topParentId', '==', topParentId),
+			where('scope', '==', DEMOGRAPHIC_SCOPE_GROUP)
+		);
+
+		return onSnapshot(q, (userQuestionsDB) => {
+			userQuestionsDB.docChanges().forEach((change) => {
+				try {
+					const data = change.doc.data();
+					const validatedQuestion = parse(UserDemographicQuestionSchema, data);
+
+					if (change.type === 'added' || change.type === 'modified') {
+						store.dispatch(setUserDemographicQuestion(validatedQuestion));
+					} else if (change.type === 'removed') {
+						store.dispatch(deleteUserDemographicQuestion(change.doc.id));
+					}
+				} catch (validationError) {
+					console.error(`Invalid group demographic question data for document ${change.doc.id}:`, validationError);
+				}
+			});
+		});
+	} catch (error) {
+		console.error('Error setting up listener for group demographic questions:', error);
+
+		return () => { return; };
+	}
+}
+
+/**
+ * Listens to user's answers for group-level demographic questions
+ * @param topParentId - The top parent ID of the group
+ * @returns Unsubscribe function
+ */
+export function listenToGroupDemographicAnswers(topParentId: string): () => void {
+	try {
+		const user = store.getState().creator.creator;
+		if (!user || !user.uid) {
+			throw new Error('User must be logged in to listen for group demographic answers');
+		}
+		const uid = user.uid;
+
+		const userAnswersRef = collection(FireStore, Collections.usersData);
+		const q = query(
+			userAnswersRef,
+			where('topParentId', '==', topParentId),
+			where('userId', '==', uid),
+			where('scope', '==', DEMOGRAPHIC_SCOPE_GROUP)
+		);
+
+		return onSnapshot(q, (userAnswersDB) => {
+			userAnswersDB.docChanges().forEach((change) => {
+				try {
+					const data = change.doc.data() as UserDemographicQuestion;
+					const validatedAnswer = parse(UserDemographicQuestionSchema, data);
+
+					if (change.type === 'added' || change.type === 'modified') {
+						store.dispatch(setUserDemographic(validatedAnswer));
+					} else if (change.type === 'removed') {
+						store.dispatch(deleteUserDemographic(data.userQuestionId));
+					}
+				} catch (validationError) {
+					console.error(`Invalid group demographic answer data for document ${change.doc.id}:`, validationError);
+				}
+			});
+		});
+	} catch (error) {
+		console.error('Error setting up listener for group demographic answers:', error);
+
+		return () => { return; };
+	}
+}
+
+/**
+ * Fetches group-level demographic questions for a topParentId
+ * @param topParentId - The top parent ID of the group
+ * @returns Promise<UserDemographicQuestion[]> - Array of group-level questions
+ */
+export async function getGroupDemographicQuestions(topParentId: string): Promise<UserDemographicQuestion[]> {
+	try {
+		if (!topParentId) {
+			throw new Error('Top Parent ID is required to get group demographic questions');
+		}
+
+		const userQuestionsRef = collection(FireStore, Collections.userDemographicQuestions);
+		const q = query(
+			userQuestionsRef,
+			where('topParentId', '==', topParentId),
+			where('scope', '==', DEMOGRAPHIC_SCOPE_GROUP)
+		);
+
+		const querySnapshot = await getDocs(q);
+
+		const questions: UserDemographicQuestion[] = querySnapshot.docs
+			.map((docSnap) => {
+				try {
+					const data = docSnap.data();
+
+					return parse(UserDemographicQuestionSchema, data);
+				} catch (validationError) {
+					console.error(`Invalid group demographic question data for document ${docSnap.id}:`, validationError);
+
+					return null;
+				}
+			})
+			.filter((question): question is UserDemographicQuestion => question !== null);
+
+		return questions;
+	} catch (error) {
+		console.error('Error fetching group demographic questions:', error);
+
+		return [];
+	}
+}
+
+/**
+ * Fetches user's answers for group-level demographic questions
+ * @param topParentId - The top parent ID of the group
+ * @param userId - The user ID
+ * @returns Promise<UserDemographicQuestion[]> - Array of user's group-level answers
+ */
+export async function getUserGroupAnswers(topParentId: string, userId: string): Promise<UserDemographicQuestion[]> {
+	try {
+		if (!topParentId || !userId) {
+			throw new Error('Top Parent ID and User ID are required to get group demographic answers');
+		}
+
+		const userAnswersRef = collection(FireStore, Collections.usersData);
+		const q = query(
+			userAnswersRef,
+			where('topParentId', '==', topParentId),
+			where('userId', '==', userId),
+			where('scope', '==', DEMOGRAPHIC_SCOPE_GROUP)
+		);
+
+		const querySnapshot = await getDocs(q);
+
+		const answers: UserDemographicQuestion[] = querySnapshot.docs
+			.map((docSnap) => {
+				try {
+					const data = docSnap.data();
+
+					return parse(UserDemographicQuestionSchema, data);
+				} catch (validationError) {
+					console.error(`Invalid group demographic answer data for document ${docSnap.id}:`, validationError);
+
+					return null;
+				}
+			})
+			.filter((answer): answer is UserDemographicQuestion => answer !== null);
+
+		return answers;
+	} catch (error) {
+		console.error('Error fetching user group demographic answers:', error);
+
+		return [];
 	}
 }

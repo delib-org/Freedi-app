@@ -10,7 +10,7 @@ import {
 	connectFirestoreEmulator,
 	initializeFirestore,
 	persistentLocalCache,
-	persistentSingleTabManager,
+	persistentMultipleTabManager,
 	memoryLocalCache,
 	type Firestore
 } from 'firebase/firestore';
@@ -65,12 +65,12 @@ return initializeFirestore(app, {
 		});
 	}
 
-	// For other browsers, use single-tab manager to avoid sync issues
-	// Multi-tab manager can cause "INTERNAL ASSERTION FAILED" errors
+	// For other browsers, use multi-tab manager to allow multiple tabs
+	// Single-tab manager causes "Failed to obtain exclusive access" errors
 	try {
 		return initializeFirestore(app, {
 			localCache: persistentLocalCache({
-				tabManager: persistentSingleTabManager(undefined),
+				tabManager: persistentMultipleTabManager(),
 			}),
 		});
 	} catch (error) {
@@ -194,7 +194,14 @@ export function getMassConsensusUrl(): string {
 	}
 
 	// Production URL for the mass-consensus app
-	return 'https://mass-consensus.freedi.tech';
+	return 'https://mc.wizcol.com';
+}
+
+/**
+ * Get the question page URL for a specific statement in the mass-consensus app
+ */
+export function getMassConsensusQuestionUrl(statementId: string): string {
+	return `${getMassConsensusUrl()}/q/${statementId}`;
 }
 
 /**

@@ -52,7 +52,7 @@ export class StatementService {
 	 * at scale with millions of concurrent users while ensuring fairness and true randomness.
 	 *
 	 * ### Core Principles
-	 * 1. **Fairness**: Every statement gets exposure opportunity
+	 * 1. **Fairness**: Every statement gets exposure opportunity (Mean − SEM scoring ensures fair ranking)
 	 * 2. **Randomness**: Unpredictable selection patterns at scale
 	 * 3. **Performance**: Efficient database queries without fetching all documents
 	 *
@@ -150,6 +150,38 @@ export class StatementService {
 	 *
 	 * This design scales to millions of statements and users while maintaining
 	 * millisecond query response times.
+	 *
+	 * ### Timing Considerations & Natural Fairness
+	 *
+	 * **Selection Algorithm Recency Behavior**:
+	 * Statements added later start at tier 0 and receive priority exposure until
+	 * their view count catches up with older statements. This ensures new content
+	 * gets discovered.
+	 *
+	 * **Why This Is Fair - Mean − SEM Scoring**:
+	 * The final ranking uses Mean − SEM (Mean minus Standard Error of the Mean),
+	 * which naturally compensates for any exposure imbalance:
+	 *
+	 * | Statement | Evaluations (n) | Mean | SEM      | Score |
+	 * |-----------|-----------------|------|----------|-------|
+	 * | A (early) | 200             | 0.70 | 0.021    | 0.679 |
+	 * | B (late)  | 20              | 0.70 | 0.067    | 0.633 |
+	 *
+	 * Late additions receive a larger uncertainty penalty (higher SEM) until they
+	 * accumulate sufficient evaluations. This is statistically fair - we have less
+	 * confidence in their true community support.
+	 *
+	 * **Key Insight from Research**:
+	 * "The difference in reliability between n=10 and n=100 is not linear; it is dramatic."
+	 * The system self-corrects: exposure priority ≠ scoring advantage.
+	 *
+	 * **Real Requirement**:
+	 * Ensure all proposals receive sufficient evaluations (n ≥ 100) for reliable
+	 * scoring. The selection algorithm facilitates this; the scoring algorithm
+	 * ensures fairness regardless of timing.
+	 *
+	 * @see Mean − SEM Consensus Scoring Paper:
+	 * https://docs.google.com/document/d/1Ry2IwlntQY7LkPghZY9M1oR-H4Ufs8yDv_N1JgUTjKQ
 	 */
 	async getRandomStatements({ parentId, limit = 6, excludeIds = [] }: GetRandomStatementsParams): Promise<Statement[]> {
 		// Validate and cap limit

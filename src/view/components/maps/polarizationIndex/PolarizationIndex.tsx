@@ -217,13 +217,17 @@ function calculatePositions(points: PolarizationIndex[], boardDimensions: { widt
 						question: axis.question,
 						groupsMAD: axis.groupsMAD,
 						groups: axis.groups.map((group: Group) => {
-							const { options } = userQuestions.find(q => q.userQuestionId === axis.axId) || { options: [] };
-							const color = options.find(opt => opt.option === group.option.option)?.color || 'red'; // Default to red if no color is found
+							// Use color from backend data if available, otherwise fall back to userQuestions lookup
+							let color = group.option.color;
+							if (!color) {
+								const { options } = userQuestions.find(q => q.userQuestionId === axis.axId) || { options: [] };
+								color = options.find(opt => opt.option === group.option.option)?.color || '#808080'; // Default to gray if no color is found
+							}
 
 							return {
 								option: {
 									option: group.option.option,
-									color: color, // Use the color from user questions or default to red
+									color: color,
 								},
 								mean: group.mean,
 								n: group.n,

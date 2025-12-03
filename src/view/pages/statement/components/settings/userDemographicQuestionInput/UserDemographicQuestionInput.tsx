@@ -126,9 +126,12 @@ const UserDemographicQuestionInput: FC<UserDemographicQuestionInputProps> = ({
 					>
 						{question.options?.map((option, index) => {
 							const isChecked = Array.isArray(value) && value.includes(option.option);
-							
-return (
-								<label key={index} className={styles.optionLabel}>
+
+							return (
+								<label
+									key={index}
+									className={`${styles.optionLabel} ${isChecked ? styles.optionLabelSelected : ''}`}
+								>
 									<input
 										type='checkbox'
 										name={`checkbox-${question.userQuestionId}`}
@@ -147,7 +150,7 @@ return (
 										}}
 										className={styles.checkboxInput}
 									/>
-									<span className={styles.optionText}>
+									<span className={`${styles.optionText} ${isChecked ? styles.selectedInput : ''}`}>
 										{option.option}
 									</span>
 								</label>
@@ -163,26 +166,33 @@ return (
 						role='radiogroup'
 						aria-required={required}
 					>
-						{question.options?.map((option, index) => (
-							<label key={index} className={styles.optionLabel}>
-								<input
-									type='radio'
-									name={`radio-${question.userQuestionId}`}
-									value={option.option}
-									defaultChecked={value === option.option}
-									onChange={() =>
-										handleRadioChange(option.option, index)
-									}
-									className={styles.radioInput}
-									required={required}
-								/>
-								<span
-									className={`${isChosen !== null && styles.optionText} ${isChosen === index && styles.selectedInput}`}
+						{question.options?.map((option, index) => {
+							const isSelected = value === option.option;
+
+							return (
+								<label
+									key={index}
+									className={`${styles.optionLabel} ${isSelected ? styles.optionLabelSelected : ''}`}
 								>
-									{option.option}
-								</span>
-							</label>
-						))}
+									<input
+										type='radio'
+										name={`radio-${question.userQuestionId}`}
+										value={option.option}
+										checked={isSelected}
+										onChange={() =>
+											handleRadioChange(option.option, index)
+										}
+										className={styles.radioInput}
+										required={required}
+									/>
+									<span
+										className={`${styles.optionText} ${isSelected ? styles.selectedInput : ''}`}
+									>
+										{option.option}
+									</span>
+								</label>
+							);
+						})}
 					</div>
 				);
 

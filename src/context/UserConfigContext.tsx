@@ -8,15 +8,20 @@ import React, {
   useMemo,
 } from "react";
 
-// Types and Enums
-export enum LanguagesEnum {
-  en = "en",
-  ar = "ar",
-  he = "he",
-  de = "de",
-  es = "es",
-  nl = "nl",
-}
+// Import from shared i18n package
+import {
+  LanguagesEnum,
+  DEFAULT_LANGUAGE as SHARED_DEFAULT_LANGUAGE,
+  getDirection,
+  getRowDirection,
+  getLanguageData,
+  type Direction,
+  type RowDirection,
+} from "@freedi/shared-i18n";
+
+// Re-export for backwards compatibility
+export { LanguagesEnum } from "@freedi/shared-i18n";
+export type { Direction, RowDirection } from "@freedi/shared-i18n";
 
 // Learning settings interface
 export interface LearningSettings {
@@ -30,9 +35,6 @@ export interface UserConfig {
   colorContrast: boolean;
   learning: LearningSettings; // Added learning settings
 }
-
-export type Direction = "ltr" | "rtl";
-export type RowDirection = "row" | "row-reverse";
 
 export type UserConfigContextType = {
   currentLanguage: string;
@@ -52,20 +54,11 @@ type UserConfigProviderProps = {
   children: ReactNode;
 };
 
-// Import language files
-import ar from "../assets/Languages/ar.json";
-import de from "../assets/Languages/de.json";
-import en from "../assets/Languages/en.json";
-import es from "../assets/Languages/es.json";
-import he from "../assets/Languages/he.json";
-import nl from "../assets/Languages/nl.json";
 import { LocalStorageObjects } from "@/types/localStorage/LocalStorageObjects";
-
-const languages: Record<string, string>[] = [en, ar, he, de, es, nl];
 
 // Default values
 export const DEFAULT_FONT_SIZE = 16;
-export const DEFAULT_LANGUAGE = LanguagesEnum.he;
+export const DEFAULT_LANGUAGE = SHARED_DEFAULT_LANGUAGE;
 export const DEFAULT_COLOR_CONTRAST = false;
 export const DEFAULT_LEARNING_SETTINGS: LearningSettings = {
   evaluation: 7, // Adjust as needed
@@ -84,15 +77,14 @@ export const UserConfigContext = createContext<
   UserConfigContextType | undefined
 >(undefined);
 
-// Helper to determine directions based on language
+// Helper to determine directions based on language (uses shared package)
 const getDirections = (
   language: string
 ): { dir: Direction; rowDirection: RowDirection } => {
-  const isRTL = language === "ar" || language === "he";
-
+  const lang = language as LanguagesEnum;
   return {
-    dir: isRTL ? "rtl" : "ltr",
-    rowDirection: isRTL ? "row-reverse" : "row",
+    dir: getDirection(lang),
+    rowDirection: getRowDirection(lang),
   };
 };
 
@@ -198,16 +190,10 @@ export const UserConfigProvider: React.FC<UserConfigProviderProps> = ({
     [languageData]
   );
 
-  // Load language data when language changes
+  // Load language data when language changes (uses shared package)
   useEffect(() => {
-    const languageIndex = Object.values(LanguagesEnum).indexOf(
-      config.chosenLanguage
-    );
-    if (languageIndex > -1) {
-      setLanguageData(languages[languageIndex]);
-    } else {
-      console.error(`Language data not found for ${config.chosenLanguage}`);
-    }
+    const data = getLanguageData(config.chosenLanguage);
+    setLanguageData(data);
   }, [config.chosenLanguage]);
 
   // Apply color contrast effect

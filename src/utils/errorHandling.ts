@@ -90,12 +90,11 @@ export function logError(
 	error: unknown,
 	context: ErrorContext
 ): void {
-	const errorMessage = error instanceof Error ? error.message : String(error);
-	const errorStack = error instanceof Error ? error.stack : undefined;
+	// Ensure we have a proper Error object for the logger
+	const errorObj = error instanceof Error ? error : new Error(String(error));
 
-	logger.error(`Error in ${context.operation}`, {
-		error: errorMessage,
-		stack: errorStack,
+	// Pass error object as second param, context as third param
+	logger.error(`Error in ${context.operation}`, errorObj, {
 		...context,
 	});
 }

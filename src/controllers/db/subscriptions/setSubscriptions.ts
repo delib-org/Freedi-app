@@ -12,6 +12,9 @@ import {
 	Creator
 } from 'delib-npm';
 import { parse } from 'valibot';
+import { store } from '@/redux/store';
+import { setShowGroupDemographicModal } from '@/redux/userDemographic/userDemographicSlice';
+import { getGroupDemographicQuestions, getUserGroupAnswers } from '../userDemographic/getUserDemographic';
 
 interface SetSubscriptionProps {
 	statement: Statement,
@@ -87,6 +90,34 @@ export async function setStatementSubscriptionToDB({
 		// Token is stored centrally in pushNotifications collection
 		// Backend should look it up there when sending notifications
 		// No need to duplicate token in each subscription
+
+		// Check for group-level demographic questions when subscribing to a top-level group
+		const isTopParent = statement.parentId === 'top';
+		if (isTopParent) {
+			try {
+				const groupQuestions = await getGroupDemographicQuestions(statement.statementId);
+
+				if (groupQuestions.length > 0) {
+					const userAnswers = await getUserGroupAnswers(statement.statementId, creator.uid);
+
+					// Check for unanswered group questions
+					const hasUnanswered = groupQuestions.some(
+						q => !userAnswers.find(a => a.userQuestionId === q.userQuestionId)
+					);
+
+					if (hasUnanswered) {
+						// Dispatch action to show demographic modal
+						store.dispatch(setShowGroupDemographicModal({
+							show: true,
+							topParentId: statement.statementId
+						}));
+					}
+				}
+			} catch (demographicError) {
+				console.error('Error checking group demographic questions:', demographicError);
+				// Don't fail the subscription if demographic check fails
+			}
+		}
 	} catch (error) {
 		// Only log non-permission errors
 		const err = error as { code?: string };

@@ -15,8 +15,9 @@ import {
   MessageSquare, Navigation, Plus, Settings,
   ChevronDown, ChevronUp, HelpCircle,
   Zap, Database, Lightbulb, Award, Target,
-  Activity, PieChart, Sparkles, Shield, Lock
+  Activity, PieChart, Sparkles, Shield, Lock, Globe
 } from 'lucide-react';
+import LanguageSelector from './LanguageSelector/LanguageSelector';
 
 interface CategoryConfig {
   id: string;
@@ -91,6 +92,14 @@ const EnhancedAdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => 
       priority: 'low',
       defaultExpanded: false,
     },
+    {
+      id: 'localization',
+      title: t('Localization'),
+      icon: Globe,
+      description: t('Set default language for surveys'),
+      priority: 'low',
+      defaultExpanded: false,
+    },
   ];
 
   // Initialize expanded state based on category defaults
@@ -136,6 +145,18 @@ const EnhancedAdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => 
   function handleHideChange(newValue: boolean) {
     const statementRef = doc(FireStore, Collections.statements, statement.statementId);
     setDoc(statementRef, { hide: newValue }, { merge: true });
+  }
+
+  // Handler for defaultLanguage (root-level property for survey language)
+  function handleDefaultLanguageChange(newLanguage: string) {
+    const statementRef = doc(FireStore, Collections.statements, statement.statementId);
+    setDoc(statementRef, { defaultLanguage: newLanguage, lastUpdate: Date.now() }, { merge: true });
+  }
+
+  // Handler for forceLanguage (root-level property for forcing survey language)
+  function handleForceLanguageChange(newValue: boolean) {
+    const statementRef = doc(FireStore, Collections.statements, statement.statementId);
+    setDoc(statementRef, { forceLanguage: newValue, lastUpdate: Date.now() }, { merge: true });
   }
 
   function handleVoteLimitToggle(enabled: boolean) {
@@ -553,6 +574,32 @@ const EnhancedAdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => 
                         label={t('Navigation Elements')}
                         description={t('Display breadcrumbs and navigation aids')}
                         icon={Navigation}
+                      />
+                    </>
+                  )}
+
+                  {/* Localization */}
+                  {category.id === 'localization' && (
+                    <>
+                      <div className={styles.languageSection}>
+                        <h4 className={styles.sectionTitle}>
+                          <Globe size={18} />
+                          {t('Survey Default Language')}
+                        </h4>
+                        <p className={styles.sectionDescription}>
+                          {t('This language will be used for surveys when users have no language preference set')}
+                        </p>
+                        <LanguageSelector
+                          currentLanguage={statement.defaultLanguage}
+                          onChange={handleDefaultLanguageChange}
+                        />
+                      </div>
+                      <ToggleSwitch
+                        isChecked={statement.forceLanguage ?? false}
+                        onChange={handleForceLanguageChange}
+                        label={t('Force survey language (override browser preferences)')}
+                        description={t('When enabled, all participants will see the survey in the default language regardless of their browser settings')}
+                        icon={Lock}
                       />
                     </>
                   )}

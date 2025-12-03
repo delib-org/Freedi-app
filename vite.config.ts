@@ -11,6 +11,7 @@ export default defineConfig(({ mode }) => {
 	const isTestMinified = mode === 'test-minified';
 
 	return {
+		envDir: './env',
 		plugins: [
 			react(),
 			svgr({
@@ -80,6 +81,7 @@ export default defineConfig(({ mode }) => {
 		resolve: {
 			alias: {
 				'@': path.resolve(__dirname, './src'),
+				'@freedi/shared-i18n': path.resolve(__dirname, './packages/shared-i18n/src'),
 			},
 		},
 		define: {

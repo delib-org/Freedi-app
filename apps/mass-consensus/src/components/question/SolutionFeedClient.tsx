@@ -8,6 +8,7 @@ import SolutionCard from './SolutionCard';
 import SolutionPromptModal from './SolutionPromptModal';
 import CompletionScreen from '@/components/completion/CompletionScreen';
 import styles from './SolutionFeed.module.css';
+import { useTranslation } from '@freedi/shared-i18n/next';
 
 interface SolutionFeedClientProps {
   question: Statement;
@@ -23,6 +24,7 @@ export default function SolutionFeedClient({
   question,
   initialSolutions,
 }: SolutionFeedClientProps) {
+  const { t, tWithParams } = useTranslation();
   const [solutions, setSolutions] = useState<Statement[]>(initialSolutions);
   const [userId, setUserId] = useState<string>('');
   const [evaluatedIds, setEvaluatedIds] = useState<Set<string>>(new Set());
@@ -34,9 +36,9 @@ export default function SolutionFeedClient({
   const [showSolutionPrompt, setShowSolutionPrompt] = useState(false);
   const [hasCheckedUserSolutions, setHasCheckedUserSolutions] = useState(false);
   const [showCompletionScreen, setShowCompletionScreen] = useState(false);
-  const [hasShownCompletionScreen, setHasShownCompletionScreen] = useState(false);
   const [hasSubmittedSolution, setHasSubmittedSolution] = useState(false);
   const [participantCount, setParticipantCount] = useState(0);
+  const [showProgressIndicator, setShowProgressIndicator] = useState(true);
 
   const questionId = question.statementId;
   const totalOptionsCount = question.numberOfOptions || 0;
@@ -127,13 +129,31 @@ export default function SolutionFeedClient({
   const evaluatedCount = useMemo(() => evaluatedIds.size, [evaluatedIds]);
   const canGetNewBatch = useMemo(() => evaluatedCount >= solutions.length, [evaluatedCount, solutions.length]);
 
-  // Show completion screen when first batch is completed
+  // Calculate earned badges count for progress indicator
+  const earnedBadgesCount = useMemo(() => {
+    let count = 0;
+    if (participantCount > 0 && participantCount <= 50) count++; // early-contributor
+    if (allEvaluatedIds.size >= 5) count++; // thoughtful-evaluator
+    if (hasSubmittedSolution) count++; // solution-creator
+    if (allEvaluatedIds.size > 0) count++; // consensus-participant (earned after first evaluation)
+    return count;
+  }, [participantCount, allEvaluatedIds.size, hasSubmittedSolution]);
+
+  // Auto-hide progress indicator after 5 seconds, show briefly on new evaluation
   useEffect(() => {
-    if (canGetNewBatch && batchCount === 1 && !hasShownCompletionScreen && evaluatedCount > 0) {
-      setShowCompletionScreen(true);
-      setHasShownCompletionScreen(true);
+    if (allEvaluatedIds.size > 0) {
+      setShowProgressIndicator(true);
+      const timer = setTimeout(() => {
+        setShowProgressIndicator(false);
+      }, 5000);
+      return () => clearTimeout(timer);
     }
-  }, [canGetNewBatch, batchCount, hasShownCompletionScreen, evaluatedCount]);
+  }, [allEvaluatedIds.size]);
+
+  // Handle opening the completion/progress screen manually
+  const handleViewProgress = () => {
+    setShowCompletionScreen(true);
+  };
 
   /**
    * Handle evaluation of a solution
@@ -286,8 +306,8 @@ return newSet;
 
       {/* Instructions */}
       <div className={styles.instructions}>
-        <h3>Please rate the following solutions</h3>
-        <p>Evaluate each solution from -1 (strongly disagree) to +1 (strongly agree)</p>
+        <h3>{t('Please rate the following suggestions')}</h3>
+        <p>{t('Evaluate each suggestion from -1 (strongly disagree) to +1 (strongly agree)')}</p>
       </div>
 
       {/* Solution cards */}
@@ -306,9 +326,9 @@ return newSet;
       <div className={styles.batchControls}>
         {allOptionsEvaluated ? (
           <div className={styles.completionMessage}>
-            <h3>🎉 Thank you!</h3>
-            <p>You have evaluated all {totalOptionsCount} available options.</p>
-            <p>Your feedback helps improve the quality of solutions.</p>
+            <h3>🎉 {t('Thank You')}!</h3>
+            <p>{tWithParams('You have evaluated all {{count}} available options', { count: totalOptionsCount })}</p>
+            <p>{t('Your feedback helps improve the quality of solutions')}</p>
           </div>
         ) : (
           <>
@@ -320,13 +340,13 @@ return newSet;
               }`}
             >
               {isLoadingBatch ? (
-                <span>Loading new solutions...</span>
+                <span>{t('Loading new suggestions...')}</span>
               ) : (
                 <span>
-                  Get New Batch
+                  {t('Get New Suggestions')}
                   {totalOptionsCount > 0 && (
                     <span className={styles.progress}>
-                      {' '}({allEvaluatedIds.size}/{totalOptionsCount} evaluated)
+                      {' '}({allEvaluatedIds.size}/{totalOptionsCount} {t('Evaluated').toLowerCase()})
                     </span>
                   )}
                 </span>
@@ -335,21 +355,50 @@ return newSet;
 
             {!canGetNewBatch && (
               <p className={styles.hint}>
-                Evaluate all solutions to get new ones ({solutions.length - evaluatedCount} left in this batch)
+                {t('Evaluate all suggestions to get new ones')} ({solutions.length - evaluatedCount} {t('left')})
               </p>
             )}
           </>
         )}
       </div>
 
-        {/* Add Solution Button - Fixed at bottom */}
-        <div className={styles.addSolutionContainer}>
-          <button
-            className={styles.addSolutionButton}
-            onClick={() => setShowSolutionPrompt(true)}
-          >
-            Add a Solution
-          </button>
+        {/* Fixed Bottom Container - Progress & Actions */}
+        <div className={styles.bottomContainer}>
+          {/* Progress Indicator - shows briefly after evaluation, auto-hides after 5s */}
+          {allEvaluatedIds.size > 0 && showProgressIndicator && (
+            <div className={styles.progressIndicator}>
+              <div className={styles.progressStat}>
+                <span className={styles.progressIcon}>🏆</span>
+                <span className={styles.progressValue}>{earnedBadgesCount}</span>
+                <span className={styles.progressLabel}>{t('badges')}</span>
+              </div>
+              <div className={styles.progressDivider} />
+              <div className={styles.progressStat}>
+                <span className={styles.progressIcon}>✓</span>
+                <span className={styles.progressValue}>{allEvaluatedIds.size}</span>
+                <span className={styles.progressLabel}>{t('evaluated')}</span>
+              </div>
+            </div>
+          )}
+
+          {/* Action Buttons */}
+          <div className={styles.actionButtons}>
+            {/* View Progress Button - shows after first evaluation */}
+            {allEvaluatedIds.size > 0 && (
+              <button
+                className={styles.viewProgressButton}
+                onClick={handleViewProgress}
+              >
+                {t('View Progress')}
+              </button>
+            )}
+            <button
+              className={styles.addSolutionButton}
+              onClick={() => setShowSolutionPrompt(true)}
+            >
+              {t('Add Solution')}
+            </button>
+          </div>
         </div>
 
         {/* Solution prompt modal - used for both initial prompt and manual add */}
@@ -359,19 +408,20 @@ return newSet;
           questionId={questionId}
           userId={userId}
           onSubmitSuccess={handleSolutionComplete}
-          title={requiresSolution && !hasCheckedUserSolutions ? 'Add Your Solution First' : 'Add a Solution'}
+          questionText={question.statement}
+          title={requiresSolution && !hasCheckedUserSolutions ? t('Add Your Solution First') : t('Add Solution')}
           description={requiresSolution && !hasCheckedUserSolutions
-            ? 'Please share your idea before seeing and rating others.'
-            : 'Share your idea for this question.'}
+            ? t('Please share your idea before seeing and rating others')
+            : t('Share your idea for this question')}
         />
 
-        {/* Completion screen - shown after first batch evaluation */}
+        {/* Progress/Completion screen - shown when user clicks "View Progress" */}
         {showCompletionScreen && (
           <CompletionScreen
             questionId={questionId}
             userId={userId}
             participantCount={participantCount}
-            solutionsEvaluated={evaluatedCount}
+            solutionsEvaluated={allEvaluatedIds.size}
             hasSubmittedSolution={hasSubmittedSolution}
             onClose={handleCompletionClose}
           />
