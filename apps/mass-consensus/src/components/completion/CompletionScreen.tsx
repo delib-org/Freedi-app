@@ -169,9 +169,9 @@ export default function CompletionScreen({
           </div>
         )}
 
-        {/* Close Button */}
+        {/* Continue Evaluating Button */}
         <button className={styles.closeButton} onClick={onClose}>
-          {t('Close')}
+          {t('Continue Evaluating')}
         </button>
       </div>
     </div>

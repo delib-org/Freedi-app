@@ -680,5 +680,9 @@
   "Request solution at start": "اطلب حلاً في البداية",
   "Ask first": "اسأل أولاً",
   "This helps ensure everyone contributes their ideas to the discussion.": "هذا يساعد على ضمان مساهمة الجميع بأفكارهم في النقاش.",
-  "add more options": "أضف المزيد من الخيارات"
+  "add more options": "أضف المزيد من الخيارات",
+  "View Progress": "عرض التقدم",
+  "Continue Evaluating": "متابعة التقييم",
+  "badges": "شارات",
+  "evaluated": "تم تقييمها"
 }

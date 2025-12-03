@@ -27,6 +27,8 @@ return app;
       process.env.FIREBASE_CLIENT_EMAIL &&
       process.env.FIREBASE_PRIVATE_KEY;
 
+    const hasServiceAccountFile = process.env.GOOGLE_APPLICATION_CREDENTIALS;
+
     if (hasExplicitCredentials) {
       // Initialize with explicit service account credentials
       app = initializeApp({
@@ -38,6 +40,16 @@ return app;
         projectId: process.env.FIREBASE_PROJECT_ID,
       });
       console.info('[Firebase Admin] Initialized with explicit credentials');
+    } else if (hasServiceAccountFile) {
+      // Initialize with service account file (GOOGLE_APPLICATION_CREDENTIALS)
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const fs = require('fs');
+      const serviceAccount = JSON.parse(fs.readFileSync(hasServiceAccountFile, 'utf8'));
+      app = initializeApp({
+        credential: cert(serviceAccount),
+        projectId: serviceAccount.project_id,
+      });
+      console.info('[Firebase Admin] Initialized with service account file');
     } else {
       // Use default credentials (works in Firebase Functions, Cloud Run, etc.)
       app = initializeApp({
