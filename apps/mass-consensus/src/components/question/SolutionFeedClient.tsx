@@ -365,8 +365,8 @@ return newSet;
 
         {/* Fixed Bottom Container - Progress & Actions */}
         <div className={styles.bottomContainer}>
-          {/* Progress Indicator - shows after first evaluation */}
-          {allEvaluatedIds.size > 0 && (
+          {/* Progress Indicator - shows briefly after evaluation, auto-hides after 5s */}
+          {allEvaluatedIds.size > 0 && showProgressIndicator && (
             <div className={styles.progressIndicator}>
               <div className={styles.progressStat}>
                 <span className={styles.progressIcon}>🏆</span>
