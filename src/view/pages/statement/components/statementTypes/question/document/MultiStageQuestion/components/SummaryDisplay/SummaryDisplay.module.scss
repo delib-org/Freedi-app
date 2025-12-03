@@ -1,0 +1,46 @@
+.summaryContainer {
+	margin-top: 1.5rem;
+	padding: 1rem;
+	background-color: var(--card-default, #ffffff);
+	border-radius: 8px;
+	border-left: 4px solid var(--agree, #4caf50);
+
+	@media (max-width: 600px) {
+		margin: 1rem;
+	}
+}
+
+.summaryHeader {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 0.75rem;
+	padding-bottom: 0.5rem;
+	border-bottom: 1px solid var(--border-light, #e0e0e0);
+
+	h4 {
+		margin: 0;
+		font-size: 1rem;
+		font-weight: 600;
+		color: var(--text-title);
+	}
+}
+
+.timestamp {
+	font-size: 0.75rem;
+	color: var(--text-muted, #999);
+}
+
+.summaryContent {
+	font-size: 1rem;
+	line-height: 1.6;
+	color: var(--text-body);
+}
+
+// RTL support
+[dir="rtl"] {
+	.summaryContainer {
+		border-left: none;
+		border-right: 4px solid var(--agree, #4caf50);
+	}
+}

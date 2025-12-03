@@ -1,5 +1,5 @@
 import { useNavigate, useParams, useLocation } from "react-router";
-import styles from "./subQuestionNode.module.scss";
+import styles from "./SubQuestionNode.module.scss";
 import React, { FC, useEffect, useRef, useState, memo } from "react";
 import { Statement } from "delib-npm";
 

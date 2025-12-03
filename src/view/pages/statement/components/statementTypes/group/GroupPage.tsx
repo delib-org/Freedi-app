@@ -2,7 +2,7 @@ import { statementSubscriptionSelector, statementSubsSelector } from '@/redux/st
 import { useContext } from 'react';
 import { useSelector } from 'react-redux';
 import { StatementContext } from '../../../StatementCont';
-import styles from './groupPage.module.scss';
+import styles from './GroupPage.module.scss';
 import AddButton from '../../addButton/AddButton';
 import SubGroupCard from '@/view/components/subGroupCard/SubGroupCard';
 import { Role, StatementType } from "delib-npm"

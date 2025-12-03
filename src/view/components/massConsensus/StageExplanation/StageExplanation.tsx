@@ -4,7 +4,7 @@ import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { useExplanations } from '@/contexts/massConsensus/ExplanationProvider';
 import styles from './StageExplanation.module.scss';
 import X from '@/assets/icons/x.svg?react';
-import InfoIcon from '@/assets/icons/infoIcon.svg?react';
+import InfoIcon from '@/assets/icons/InfoIcon.svg?react';
 
 interface StageExplanationProps {
   stageId: string;
