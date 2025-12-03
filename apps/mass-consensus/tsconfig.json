@@ -18,12 +18,20 @@
         "name": "next"
       }
     ],
+    "typeRoots": ["./node_modules/@types", "../../node_modules/@types"],
     "paths": {
       "@/*": ["./src/*"],
       "@freedi/shared-i18n": ["../../packages/shared-i18n/src/index.ts"],
       "@freedi/shared-i18n/*": ["../../packages/shared-i18n/src/*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    "../../packages/shared-i18n/src/**/*.ts",
+    "../../packages/shared-i18n/src/**/*.tsx"
+  ],
   "exclude": ["node_modules"]
 }
