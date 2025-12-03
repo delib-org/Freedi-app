@@ -3,9 +3,8 @@ import React, { FC, useState, useRef } from 'react';
 import { StatementSettingsProps } from '../../settingsTypeHelpers';
 import SectionTitle from '../sectionTitle/SectionTitle';
 import styles from './QuestionSettings.module.scss';
-import { setQuestionTypeToDB, setStatementSettingToDB } from '@/controllers/db/statementSettings/setStatementSettings';
-import { EvaluationUI, QuestionType, StatementType } from 'delib-npm';
-import SimpleIcon from '@/assets/icons/navQuestionsIcon.svg?react';
+import { setStatementSettingToDB } from '@/controllers/db/statementSettings/setStatementSettings';
+import { EvaluationUI, StatementType } from 'delib-npm';
 import ConsentIcon from '@/assets/icons/doubleCheckIcon.svg?react';
 import SuggestionsIcon from '@/assets/icons/smile.svg?react';
 import VotingIcon from '@/assets/icons/votingIcon.svg?react';
@@ -20,7 +19,6 @@ import { setEvaluationUIType, setAnchoredEvaluationSettings } from '@/controller
 import VotingSettings from './votingSettings/VotingSettings';
 import AnchoredBadge from '@/view/components/badges/AnchoredBadge';
 import { uploadAnchorIcon, validateImageFile } from '@/controllers/db/storage/uploadHelpers';
-import AddMassConsensusIcon from '@/assets/icons/massConsensusIcon.svg?react';
 
 const QuestionSettings: FC<StatementSettingsProps> = ({
 	statement,
@@ -69,17 +67,7 @@ const QuestionSettings: FC<StatementSettingsProps> = ({
 		const { questionSettings } = statement;
 		if (statement.statementType !== StatementType.question) return null;
 		const isVoting = statement.evaluationSettings?.evaluationUI === EvaluationUI.voting;
-		const isMassConsensus = questionSettings?.questionType === QuestionType.massConsensus;
 		const isAnchoredEnabled = statement.evaluationSettings?.anchored?.anchored || false;
-
-		function handleQuestionType(isDocument: boolean) {
-			setQuestionTypeToDB({
-				statement,
-				questionType: isDocument
-					? QuestionType.simple
-					: QuestionType.massConsensus,
-			});
-		}
 
 		function handleRequireSolutionToggle(enabled: boolean) {
 			setStatementSettingToDB({
@@ -306,51 +294,40 @@ const QuestionSettings: FC<StatementSettingsProps> = ({
 					</div>
 				</div>
 
+				<SectionTitle title={t('Mass Consensus Settings')} />
+				<p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
+					{t('These settings control the new Mass Consensus app behavior')}
+				</p>
+
+				<h3 className='title'>{t('Require original input before viewing others')}</h3>
 				<CustomSwitchSmall
-					label={t('Question Type')}
-					checked={
-						questionSettings?.questionType ===	QuestionType.simple
-					}
-					setChecked={handleQuestionType}
-					textChecked={t('Simple Question')}
-					imageChecked={<SimpleIcon />}
-					imageUnchecked={<AddMassConsensusIcon />}
-					textUnchecked={t('Mass Consensus')}
+					label={t('Request solution at start')}
+					checked={questionSettings?.askUserForASolutionBeforeEvaluation || false}
+					setChecked={handleRequireSolutionToggle}
+					textChecked={t('Request solution at start')}
+					textUnchecked={t("Don't ask")}
+					imageChecked={<SuggestionsIcon />}
+					imageUnchecked={<SuggestionsIcon />}
 					colorChecked='var(--question)'
 					colorUnchecked='var(--question)'
 				/>
 
-				{isMassConsensus && (
+				<h3 className='title'>{t('Anchored Sampling')}</h3>
+				<p>{t('Anchored sampling allows the admin to insert certain pre-defined options into the evaluation process. These options are prepared in advance and will always appear to participants, no matter what other options are being sampled.')}</p>
+				<CustomSwitchSmall
+					label={t('Enable Anchored Sampling')}
+					checked={isAnchoredEnabled}
+					setChecked={handleAnchoredToggle}
+					textChecked={t('Anchored')}
+					textUnchecked={t('Standard')}
+					imageChecked={<AnchorIcon />}
+					imageUnchecked={<SuggestionsIcon />}
+					colorChecked='var(--question)'
+					colorUnchecked='var(--question)'
+				/>
+
+				{isAnchoredEnabled && (
 					<>
-						<h3 className='title'>{t('Require original input before viewing others')}</h3>
-						<CustomSwitchSmall
-							label={t('Request solution at start')}
-							checked={questionSettings?.askUserForASolutionBeforeEvaluation || false}
-							setChecked={handleRequireSolutionToggle}
-							textChecked={t('Request solution at start')}
-							textUnchecked={t("Don't ask")}
-							imageChecked={<SuggestionsIcon />}
-							imageUnchecked={<SuggestionsIcon />}
-							colorChecked='var(--question)'
-							colorUnchecked='var(--question)'
-						/>
-
-						<h3 className='title'>{t('Anchored Sampling')}</h3>
-						<p>{t('Anchored sampling allows the admin to insert certain pre-defined options into the evaluation process. These options are prepared in advance and will always appear to participants, no matter what other options are being sampled.')}</p>
-						<CustomSwitchSmall
-							label={t('Enable Anchored Sampling')}
-							checked={isAnchoredEnabled}
-							setChecked={handleAnchoredToggle}
-							textChecked={t('Anchored')}
-							textUnchecked={t('Standard')}
-							imageChecked={<AnchorIcon />}
-							imageUnchecked={<SuggestionsIcon />}
-							colorChecked='var(--question)'
-							colorUnchecked='var(--question)'
-						/>
-
-						{isAnchoredEnabled && (
-							<>
 								<div className={styles.anchoredCount}>
 									<label>{t('Number of anchored options in evaluation')}</label>
 									<input
@@ -515,8 +492,6 @@ const QuestionSettings: FC<StatementSettingsProps> = ({
 										</div>
 									</div>
 								</div>
-							</>
-						)}
 					</>
 				)}
 			</div>

@@ -19,8 +19,7 @@ import {
 
 // Custom components
 import Loader from '@/view/components/loaders/Loader';
-import { QuestionType, Statement } from 'delib-npm';
-import MassConsensusSettings from './components/massConsensusSettings/MassConsensusSettings';
+import { Statement } from 'delib-npm';
 import MembersManagement from './components/membership/MembersManagement';
 import { RoomAssignment } from './components/roomAssignment';
 
@@ -108,8 +107,6 @@ const StatementSettings: FC = () => {
 		}
 	}, [statementId]);
 
-	const isMassConsensus = statement?.questionSettings?.questionType === QuestionType.massConsensus;
-
 	return (
 		<div className='test'>
 			{isLoading || !statementToEdit ? (
@@ -127,7 +124,6 @@ const StatementSettings: FC = () => {
 					/>
 					<MembersManagement statement={statementToEdit} />
 					<RoomAssignment statement={statementToEdit} />
-					{isMassConsensus && <MassConsensusSettings />}
 				</>
 			)}
 		</div>

@@ -5,14 +5,12 @@ import { statementMetaData } from './statements/statementsMetaSlice';
 import { statementsSlicer } from './statements/statementsSlice';
 import { votesSlicer } from './vote/votesSlice';
 import { choseBySlice } from './choseBy/choseBySlice';
-import { massConsensusSlice } from './massConsensus/massConsensusSlice';
 import { notificationsSlicer } from './notificationsSlice/notificationsSlice';
 import creatorReducer from './creator/creatorSlice';
 import SubscriptionsReducer from './subscriptions/subscriptionsSlice';
 import userDemographicReducer from './userDemographic/userDemographicSlice';
 import newStatementReducer from './statements/newStatementSlice';
 import pwaReducer from './pwa/pwaSlice';
-import { massConsensusApi } from './massConsensus/massConsensusApi';
 import { roomAssignmentSlice } from './roomAssignment/roomAssignmentSlice';
 
 export const store = configureStore({
@@ -23,7 +21,6 @@ export const store = configureStore({
 		votes: votesSlicer.reducer,
 		results: resultsSlice.reducer,
 		choseBys: choseBySlice.reducer,
-		massConsensus: massConsensusSlice.reducer,
 		notifications: notificationsSlicer.reducer,
 		creator: creatorReducer,
 		subscriptions: SubscriptionsReducer.reducer,
@@ -31,10 +28,7 @@ export const store = configureStore({
 		newStatement: newStatementReducer,
 		pwa: pwaReducer,
 		roomAssignment: roomAssignmentSlice.reducer,
-		[massConsensusApi.reducerPath]: massConsensusApi.reducer,
 	},
-	middleware: (getDefaultMiddleware) =>
-		getDefaultMiddleware().concat(massConsensusApi.middleware),
 });
 
 // Infer the `RootState` and `AppDispatch` types from the store itself
