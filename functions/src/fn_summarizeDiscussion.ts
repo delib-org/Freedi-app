@@ -193,49 +193,50 @@ function buildSummaryPrompt(
 ): string {
 	const languageName = LANGUAGE_NAMES[language] || 'English';
 
-	// Format solutions with their metrics
+	// Format solutions with their content and metrics
 	const solutionsText = solutions.map((s, i) => `
-### Solution ${i + 1}: ${s.title}
-${s.description ? `*${s.description}*` : ''}
-- **Consensus Score**: ${s.consensus.toFixed(2)} (higher = stronger agreement)
-- **Average Rating**: ${s.averageEvaluation.toFixed(2)} (scale: -1 to +1)
-- **Voters**: ${s.numberOfEvaluators} participants evaluated this option
+### Agreement ${i + 1}: ${s.title}
+${s.description ? `**Details**: ${s.description}` : ''}
+- Consensus Score: ${s.consensus.toFixed(2)} | ${s.numberOfEvaluators} voters
 `).join('\n');
 
-	return `You are a professional facilitator summarizing the outcomes of a democratic deliberation process.
+	// Determine agreement strength descriptions
+	const topSolution = solutions[0];
+	const agreementStrength = topSolution.consensus > 0.5 ? 'strong' :
+		topSolution.consensus > 0.2 ? 'moderate' : 'emerging';
 
-## Context
-**Question/Topic**: "${question.statement}"
-${question.description ? `**Description**: ${question.description}` : ''}
+	return `You are writing an informative summary of a group decision for people who want to understand what was agreed upon.
 
-**Participation**: ${totalParticipants} unique participants voted on the proposed solutions
+## The Question Discussed
+"${question.statement}"
+${question.description ? `Context: ${question.description}` : ''}
 
-## Selected Solutions (Ranked by Consensus)
-These solutions passed the cutoff threshold and are ranked by their consensus score:
+## What the Group Agreed On
+${totalParticipants} participants evaluated the proposals. The following ${solutions.length} solution(s) achieved consensus:
 ${solutionsText}
 
-${adminPrompt ? `## Additional Instructions from Administrator\n${adminPrompt}\n` : ''}
+${adminPrompt ? `## Special Focus Requested\n${adminPrompt}\n` : ''}
 
 ## Your Task
-Create a clear, professional summary in ${languageName} that includes:
+Write a clear, informative summary in ${languageName} that helps readers understand:
 
-1. **Overview**: Briefly state what question was addressed and the participation level
-2. **Key Outcomes**: Summarize the top solutions and explain why they achieved consensus
-3. **Consensus Analysis**: Note the strength of agreement using the actual scores
-4. **Conclusion**: Summarize what the group decided
+1. **What was the question/challenge?** - Briefly explain what the group was trying to decide
+2. **What did they agree on?** - Clearly state each agreed solution in plain language. The reader should understand exactly what was decided.
+3. **How strong is the agreement?** - This discussion shows ${agreementStrength} consensus (top score: ${topSolution.consensus.toFixed(2)})
+4. **Key takeaways** - What should someone know about this decision?
 
-**Format Guidelines**:
-- Use markdown formatting for structure (headers, bold, bullets)
-- Be concise but informative (aim for 200-400 words)
-- Use bullet points and headers for clarity
-- Include actual numbers from the evaluation data
-- Maintain a neutral, facilitative tone
-- Do not add opinions or recommendations not supported by the data
+**Writing Style**:
+- Write for someone who wasn't part of the discussion - they should fully understand the decisions
+- Focus on the SUBSTANCE of what was agreed, not the process
+- Use clear, accessible language - avoid jargon
+- Be specific about what the group decided to do/believe/support
+- Keep it concise (150-300 words) but ensure all key agreements are clearly explained
+- Use bullet points for multiple agreements
+- If solutions have descriptions, incorporate that detail into your explanation
 
-**Important Notes about Scores**:
-- Consensus Score uses a Mean-SEM formula: higher scores indicate both positive ratings AND statistical confidence
-- A score above 0 indicates net positive agreement
-- Number of voters shows how representative each solution's score is
+**Example of good summary style**:
+Instead of: "Solution 1 achieved a consensus score of 0.65"
+Write: "The group agreed to implement weekly team meetings, with strong support from participants"
 
 Return ONLY the markdown summary text. Do not wrap in code blocks or JSON.`;
 }
