@@ -3,6 +3,7 @@
 	width: 100%;
 	margin-bottom: 400px;
 	transition: height 0.3s ease-in-out;
+	overflow-x: hidden; // Prevent horizontal overflow on mobile
 
 	&.animating {
 		.suggestion-card {
