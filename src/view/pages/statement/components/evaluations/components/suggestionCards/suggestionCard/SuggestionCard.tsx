@@ -23,7 +23,6 @@ import { StatementType, Statement } from 'delib-npm';
 import { useAuthorization } from '@/controllers/hooks/useAuthorization';
 import { toggleJoining } from '@/controllers/db/joining/setJoining';
 import Joined from '@/view/components/joined/Joined';
-import { Link } from 'react-router';
 import ImprovementModal from '@/view/components/improvementModal/ImprovementModal';
 import { improveSuggestionWithTimeout } from '@/services/suggestionImprovement';
 import Loader from '@/view/components/loaders/Loader';
@@ -87,6 +86,7 @@ const SuggestionCard: FC<Props> = ({
 	const [shouldShowAddSubQuestionModal, setShouldShowAddSubQuestionModal] =
 		useState(false);
 	const [isCardMenuOpen, setIsCardMenuOpen] = useState(false);
+	const [isExpanded, setIsExpanded] = useState(false);
 
 	// Improvement feature states
 	const [showImprovementModal, setShowImprovementModal] = useState(false);
@@ -146,14 +146,20 @@ const SuggestionCard: FC<Props> = ({
 		const checkOverflow = () => {
 			const textContainer = textContainerRef.current;
 			if (textContainer) {
-				const isOverflowing = textContainer.scrollHeight > textContainer.clientHeight;
 				const textElement = textContainer.parentElement;
 
 				if (textElement) {
-					if (isOverflowing) {
+					// Always show button when expanded (to allow collapsing)
+					if (isExpanded) {
 						textElement.classList.add(styles.hasOverflow);
 					} else {
-						textElement.classList.remove(styles.hasOverflow);
+						// Only show when actually overflowing
+						const isOverflowing = textContainer.scrollHeight > textContainer.clientHeight;
+						if (isOverflowing) {
+							textElement.classList.add(styles.hasOverflow);
+						} else {
+							textElement.classList.remove(styles.hasOverflow);
+						}
 					}
 				}
 			}
@@ -161,7 +167,7 @@ const SuggestionCard: FC<Props> = ({
 
 		// Add a small delay to ensure rendering is complete
 		setTimeout(checkOverflow, 50);
-	}, [statement?.statement]);
+	}, [statement?.statement, isExpanded]);
 
 	async function handleSetOption() {
 		try {
@@ -331,7 +337,10 @@ const SuggestionCard: FC<Props> = ({
 			<div className={styles.main}>
 				<div className={styles.info}>
 					<div className={styles.text}>
-						<div className={styles.textContent} ref={textContainerRef}>
+						<div
+							className={`${styles.textContent} ${isExpanded ? styles.textContentExpanded : ''}`}
+							ref={textContainerRef}
+						>
 							<EditableStatement
 								statement={statement}
 								multiline={true}
@@ -352,9 +361,13 @@ const SuggestionCard: FC<Props> = ({
 							/>
 						</div>
 
-						<Link to={`/statement/${statement.statementId}`} className={styles.showMore}>
-							{t('Show more')}
-						</Link>
+						<button
+							type="button"
+							onClick={() => setIsExpanded(!isExpanded)}
+							className={styles.showMore}
+						>
+							{isExpanded ? t('Show less') : t('Show more')}
+						</button>
 						<div className={styles.buttonContainer}>
 							{/* Show Add Image button if no image and user is admin of parent statement */}
 							{!image && isAdmin && (
