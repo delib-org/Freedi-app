@@ -33,8 +33,8 @@ export function sortSubStatements(
 							(a: Statement, b: Statement) => {
 								const aLikes = a.evaluation?.sumPro || a.pro || 0;
 								const bLikes = b.evaluation?.sumPro || b.pro || 0;
-								
-return bLikes - aLikes;
+
+								return bLikes - aLikes;
 							}
 						);
 					} else {
@@ -44,7 +44,7 @@ return bLikes - aLikes;
 						);
 					}
 					break;
-			}
+				}
 				case SortType.newest:
 					_subStatements = subStatements.sort(
 						(a: Statement, b: Statement) => b.createdAt - a.createdAt
@@ -66,8 +66,8 @@ return bLikes - aLikes;
 								(acc, char, index) => acc + char.charCodeAt(0) * (index + 1) * randomSeed % 10000,
 								0
 							);
-							
-return hashA - hashB;
+
+							return hashA - hashB;
 						});
 					} else {
 						_subStatements = subStatements.sort(() => Math.random() - 0.5);
@@ -118,8 +118,8 @@ return hashA - hashB;
 			const statement = currentState.statements.statements.find(
 				(s) => s.statementId === update.statementId
 			);
-			
-return !statement || statement.top !== update.top;
+
+			return !statement || statement.top !== update.top;
 		});
 
 		if (hasChanges) {
