@@ -15,7 +15,7 @@ export const EmptyStateSection: FC<EmptyStateSectionProps> = ({
   const { statement } = useContext(StatementContext);
 
   return (
-    <div className={`${styles.description} description`}>
+    <div className={`${styles.description} description wrapper`}>
       <EditableDescription
         statement={statement}
         placeholder="Add a description..."

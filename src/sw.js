@@ -25,11 +25,11 @@ registerRoute(
   })
 );
 
-// Handle JavaScript and CSS assets
+// Handle JavaScript and CSS assets - ONLY for same-origin requests
 registerRoute(
-  ({ request }) => 
-    request.destination === 'script' || 
-    request.destination === 'style',
+  ({ request, url }) =>
+    (request.destination === 'script' || request.destination === 'style') &&
+    url.origin === self.location.origin,
   new StaleWhileRevalidate({
     cacheName: 'static-resources',
     plugins: [
@@ -41,9 +41,11 @@ registerRoute(
   })
 );
 
-// Handle images with a Cache First strategy
+// Handle images with a Cache First strategy - ONLY for same-origin requests
 registerRoute(
-  ({ request }) => request.destination === 'image',
+  ({ request, url }) =>
+    request.destination === 'image' &&
+    url.origin === self.location.origin,
   new CacheFirst({
     cacheName: 'image-cache',
     plugins: [

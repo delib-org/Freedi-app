@@ -12,6 +12,7 @@
   width: 100%;
   box-sizing: border-box;
   gap: 0.4rem;
+  overflow-x: hidden; // Prevent horizontal overflow on mobile
 
   @media screen and (max-width: 768px) {
     margin: 0rem 2%;
@@ -46,6 +47,7 @@
   .main {
     width: 100%;
     padding: 1rem 1rem 1rem 0rem;
+    box-sizing: border-box;
 
     .info {
       color: var(--text-body);
@@ -74,9 +76,40 @@
           -webkit-box-orient: vertical;
           overflow: hidden;
           line-height: 1.4;
-          // Ensure text wraps properly around floated images
           overflow-wrap: break-word;
           word-wrap: break-word;
+          width: 100%;
+          box-sizing: border-box;
+        }
+
+        // Expanded state - remove clamp and add scroll
+        .textContentExpanded {
+          display: block;
+          -webkit-line-clamp: unset;
+          line-clamp: unset;
+          -webkit-box-orient: unset;
+          max-height: 50vh;
+          overflow-y: auto;
+          overflow-x: hidden;
+
+          // Custom scrollbar styling
+          &::-webkit-scrollbar {
+            width: 6px;
+          }
+
+          &::-webkit-scrollbar-track {
+            background: var(--inputBackground);
+            border-radius: 3px;
+          }
+
+          &::-webkit-scrollbar-thumb {
+            background: var(--shadow);
+            border-radius: 3px;
+
+            &:hover {
+              background: var(--text-body);
+            }
+          }
         }
 
         p {
@@ -105,29 +138,24 @@
         }
 
         .showMore {
-          display: contents;
-          position: absolute;
-          bottom: 0;
-          right: 0;
-          background: linear-gradient(
-            to right,
-            transparent,
-            var(--background-color-info-text) 30%
-          );
-          padding: 0 8px 0 20px;
-          color: var(--link);
-          text-decoration: none;
-          font-size: 0.9rem;
           display: none; // Hidden by default
+          background: none;
+          border: none;
+          color: var(--link);
+          font-size: 0.9rem;
+          padding: 0.25rem 0;
+          margin-top: 0.5rem;
+          cursor: pointer;
+          text-align: left;
 
           &:hover {
             text-decoration: underline;
           }
         }
 
-        // Show the "show more" link only when text has overflow
+        // Show the "show more" button only when text has overflow
         &.hasOverflow .showMore {
-          display: contents;
+          display: block;
         }
       }
     }

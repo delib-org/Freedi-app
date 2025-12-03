@@ -47,6 +47,12 @@
     border: none;
     border-color: var(--inputBackground);
 
+    // Wider message box on mobile for better text readability
+    @media screen and (max-width: 480px) {
+      max-width: 90%;
+      padding: 0.5rem 0.75rem;
+    }
+
     &Statement {
       border: none !important;
     }
@@ -63,30 +69,29 @@
       display: flex;
       position: relative;
       align-items: flex-start;
-      justify-content: space-between;
       width: 100%;
       gap: .5rem;
-     
 
       .infoText {
-        flex: 1;
+        flex: 1 1 auto;
+        min-width: 0; // Allow flex item to shrink below content size
         user-select: text;
         background-color: var(--background-color-info-text);
         word-break: break-word;
+        overflow-wrap: break-word;
         p{
           font-size: .9rem;
         }
       }
     }
-    
+
     .messageActions {
       display: flex;
       align-items: center;
-      gap: 0.5rem;
+      gap: 0.25rem;
       opacity: 0.3;
       transition: opacity 0.2s ease;
       flex-shrink: 0;
-      min-width: 26px;
       
       &:hover {
         opacity: 1;
