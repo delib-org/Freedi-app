@@ -20,14 +20,20 @@ import {
   getCachedSimilarityResponse,
   saveCachedSimilarityResponse,
 } from "./services/cached-ai-service";
+import { findSimilarByVector } from "./services/vector-search-service";
 
 /**
  * Optimized Cloud Function to find or generate similar statements.
  * Features:
+ * - Hybrid search: Vector search first, AI fallback
  * - Parallel database operations
  * - Firestore-based caching for statements
  * - AI response caching
  * - Complete response caching
+ *
+ * The function uses a hybrid approach:
+ * 1. First tries vector search using Firestore embeddings (faster, more accurate)
+ * 2. Falls back to AI-based similarity search if no vector results found
  */
 export async function findSimilarStatements(
   request: Request,
@@ -238,39 +244,65 @@ async function fetchDataAndProcess(
       };
     }
 
-    // Prepare data for parallel processing
+    // Prepare data for validation
     const userStatements = getUserStatements(subStatements, creatorId);
     const maxAllowed =
       parentStatement.statementSettings?.numberOfOptionsPerUser ?? Infinity;
-    const statementSimple = convertToSimpleStatements(subStatements);
 
-    // --- Optimized: Parallel Validation and Cached AI Processing ---
-    // Run validation and AI processing in parallel with AI caching
-    const [validationResult, similarStatementsAI] = await Promise.all([
-      // Validation happens asynchronously
-      Promise.resolve(hasReachedMaxStatements(userStatements, maxAllowed)),
-      // AI processing with caching
-      getCachedSimilarStatements(
-        statementSimple.map((s) => s.statement),
-        userInput,
-        parentStatement.statement,
-        numberOfOptionsToGenerate
-      )
-    ]);
-
-    // Check validation result after parallel processing
-    if (validationResult) {
+    // Check if user has reached max statements
+    if (hasReachedMaxStatements(userStatements, maxAllowed)) {
       return {
         error: "You have reached the maximum number of suggestions allowed.",
         statusCode: 403
       };
     }
 
-    const similarStatements = getStatementsFromTexts(
-      statementSimple,
-      similarStatementsAI,
-      subStatements
-    );
+    // --- Hybrid Search: Vector Search First, AI Fallback ---
+    let similarStatements: ReturnType<typeof getStatementsFromTexts> = [];
+
+    // Try vector search first (faster and more accurate when embeddings exist)
+    try {
+      const vectorResults = await findSimilarByVector(userInput, {
+        parentId: statementId,
+        limit: numberOfOptionsToGenerate,
+        minSimilarity: 0.6,
+      });
+
+      if (vectorResults.length > 0) {
+        // Vector search found results - use them directly
+        logger.info("Using vector search results", {
+          count: vectorResults.length,
+          statementId,
+        });
+
+        similarStatements = vectorResults.map((result) => result.statementData);
+      }
+    } catch (vectorError) {
+      logger.warn("Vector search failed, falling back to AI", {
+        error: vectorError,
+        statementId,
+      });
+    }
+
+    // Fallback to AI-based search if vector search returned no results
+    if (similarStatements.length === 0) {
+      logger.info("Falling back to AI-based similarity search", { statementId });
+
+      const statementSimple = convertToSimpleStatements(subStatements);
+
+      const similarStatementsAI = await getCachedSimilarStatements(
+        statementSimple.map((s) => s.statement),
+        userInput,
+        parentStatement.statement,
+        numberOfOptionsToGenerate
+      );
+
+      similarStatements = getStatementsFromTexts(
+        statementSimple,
+        similarStatementsAI,
+        subStatements
+      );
+    }
 
     const { statements: cleanedStatements, duplicateStatement } =
       removeDuplicateStatement(similarStatements, userInput);
