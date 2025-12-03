@@ -138,30 +138,104 @@
   }
 }
 
-/* Add Solution Button - Fixed at bottom */
-.addSolutionContainer {
+/* Fixed Bottom Container - Progress & Actions */
+.bottomContainer {
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
-  background: linear-gradient(to top, #ffffff 70%, transparent);
-  padding: var(--spacing-lg);
+  background: linear-gradient(to top, #ffffff 80%, transparent);
+  padding: var(--spacing-md) var(--spacing-lg);
   padding-bottom: calc(var(--spacing-lg) + env(safe-area-inset-bottom, 0px));
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-sm);
   z-index: 100;
 }
 
+/* Progress Indicator */
+.progressIndicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-lg);
+  padding: var(--spacing-sm) var(--spacing-lg);
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: var(--radius-full);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  font-size: 0.875rem;
+}
+
+.progressStat {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  color: var(--text-secondary);
+}
+
+.progressIcon {
+  font-size: 1rem;
+}
+
+.progressValue {
+  font-weight: 600;
+  color: var(--agree);
+}
+
+.progressLabel {
+  color: var(--text-secondary);
+}
+
+.progressDivider {
+  width: 1px;
+  height: 20px;
+  background: var(--border-light, #e0e0e0);
+}
+
+/* Action Buttons */
+.actionButtons {
+  display: flex;
+  gap: var(--spacing-md);
+  width: 100%;
+  max-width: 500px;
+  justify-content: center;
+}
+
+.viewProgressButton {
+  flex: 1;
+  background: #E8F5E9;
+  color: var(--agree);
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-radius: var(--radius-full);
+  font-size: 1rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  border: 2px solid var(--agree);
+  box-shadow: var(--shadow-md);
+}
+
+.viewProgressButton:hover {
+  background: var(--agree);
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(76, 175, 80, 0.35);
+}
+
+.viewProgressButton:active {
+  transform: translateY(0);
+}
+
 .addSolutionButton {
+  flex: 1;
   background: var(--btn-primary);
   color: white;
-  padding: var(--spacing-md) var(--spacing-2xl);
+  padding: var(--spacing-md) var(--spacing-lg);
   border-radius: var(--radius-full);
-  font-size: 1.125rem;
+  font-size: 1rem;
   font-weight: 600;
-  min-width: 250px;
   transition: all 0.3s ease;
-  box-shadow: var(--shadow-lg);
+  box-shadow: var(--shadow-md);
 }
 
 .addSolutionButton:hover {
@@ -183,8 +257,20 @@
     width: 100%;
   }
 
+  .actionButtons {
+    flex-direction: column;
+    width: 100%;
+    padding: 0 var(--spacing-sm);
+  }
+
+  .viewProgressButton,
   .addSolutionButton {
     width: 100%;
     min-width: unset;
+  }
+
+  .progressIndicator {
+    width: 100%;
+    justify-content: center;
   }
 }
