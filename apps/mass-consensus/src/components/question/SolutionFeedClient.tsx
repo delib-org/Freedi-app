@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { Statement } from 'delib-npm';
 import { getOrCreateAnonymousUser } from '@/lib/utils/user';
 import { ToastProvider } from '@/components/shared/Toast';
@@ -9,6 +9,12 @@ import SolutionPromptModal from './SolutionPromptModal';
 import CompletionScreen from '@/components/completion/CompletionScreen';
 import styles from './SolutionFeed.module.css';
 import { useTranslation } from '@freedi/shared-i18n/next';
+import {
+  trackPageView,
+  trackEvaluation,
+  trackNewBatchRequest,
+  trackAddSolutionClick,
+} from '@/lib/analytics';
 
 interface SolutionFeedClientProps {
   question: Statement;
@@ -39,6 +45,7 @@ export default function SolutionFeedClient({
   const [hasSubmittedSolution, setHasSubmittedSolution] = useState(false);
   const [participantCount, setParticipantCount] = useState(0);
   const [showProgressIndicator, setShowProgressIndicator] = useState(true);
+  const hasTrackedPageView = useRef(false);
 
   const questionId = question.statementId;
   const totalOptionsCount = question.numberOfOptions || 0;
@@ -91,6 +98,12 @@ export default function SolutionFeedClient({
   useEffect(() => {
     const id = getOrCreateAnonymousUser();
     setUserId(id);
+
+    // Track page view (only once)
+    if (!hasTrackedPageView.current) {
+      trackPageView(questionId, id);
+      hasTrackedPageView.current = true;
+    }
 
     // Load user's evaluation history
     const loadEvaluationHistory = async () => {
@@ -178,6 +191,9 @@ export default function SolutionFeedClient({
         throw new Error('Failed to save evaluation');
       }
 
+      // Track successful evaluation
+      trackEvaluation(questionId, userId, solutionId, score);
+
       // Check if all options have been evaluated
       const newTotalEvaluated = allEvaluatedIds.size + 1;
       if (totalOptionsCount > 0 && newTotalEvaluated >= totalOptionsCount) {
@@ -207,6 +223,9 @@ return newSet;
    */
   const handleGetNewBatch = async () => {
     if (!canGetNewBatch || isLoadingBatch || allOptionsEvaluated) return;
+
+    // Track new batch request
+    trackNewBatchRequest(questionId, userId, batchCount + 1);
 
     setIsLoadingBatch(true);
     setError(null);
@@ -394,7 +413,10 @@ return newSet;
             )}
             <button
               className={styles.addSolutionButton}
-              onClick={() => setShowSolutionPrompt(true)}
+              onClick={() => {
+                trackAddSolutionClick(questionId, userId);
+                setShowSolutionPrompt(true);
+              }}
             >
               {t('Add Solution')}
             </button>

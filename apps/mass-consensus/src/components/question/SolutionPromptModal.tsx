@@ -11,6 +11,7 @@ import SimilarSolutions from './SimilarSolutions';
 import EnhancedLoader from './EnhancedLoader';
 import SuccessMessage from './SuccessMessage';
 import styles from './SolutionPromptModal.module.css';
+import { trackSolutionSubmitted } from '@/lib/analytics';
 
 interface SolutionPromptModalProps {
   isOpen: boolean;
@@ -177,6 +178,9 @@ export default function SolutionPromptModal({
       }
 
       const data = await response.json();
+
+      // Track successful solution submission
+      trackSolutionSubmitted(questionId, userId, data.action === 'created');
 
       setFlowState({
         step: 'success',
