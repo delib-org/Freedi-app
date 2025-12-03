@@ -12,7 +12,6 @@ import { statementMetaData } from '@/redux/statements/statementsMetaSlice';
 import { statementsSlicer, StatementScreen } from '@/redux/statements/statementsSlice';
 import { votesSlicer } from '@/redux/vote/votesSlice';
 import { choseBySlice } from '@/redux/choseBy/choseBySlice';
-import { massConsensusSlice } from '@/redux/massConsensus/massConsensusSlice';
 import { notificationsSlicer } from '@/redux/notificationsSlice/notificationsSlice';
 import creatorReducer from '@/redux/creator/creatorSlice';
 import SubscriptionsReducer from '@/redux/subscriptions/subscriptionsSlice';
@@ -36,14 +35,13 @@ export function renderWithProviders(
             votes: votesSlicer.reducer,
             results: resultsSlice.reducer,
             choseBys: choseBySlice.reducer,
-            massConsensus: massConsensusSlice.reducer,
             notifications: notificationsSlicer.reducer,
             creator: creatorReducer,
             subscriptions: SubscriptionsReducer.reducer,
             userDemographic: userDemographicReducer,
             newStatement: newStatementReducer
         },
-        preloadedState 
+        preloadedState
     }),
     ...renderOptions
   }: ExtendedRenderOptions = {}
@@ -80,36 +78,6 @@ export const getMockRootState = (overrides: Partial<RootState> = {}): RootState 
         choseBys: {
             statements: [],
         },
-        massConsensus: {
-            similarStatements: [],
-            massConsensusProcess: [],
-            randomStatements: [],
-            randomStatementsBatches: [],
-            currentRandomBatch: 0,
-            viewedStatementIds: [],
-            prefetch: {
-                randomBatches: [],
-                randomBatchesTimestamp: 0,
-                randomBatchesParentId: '',
-                topStatements: [],
-                topStatementsTimestamp: 0,
-                topStatementsParentId: '',
-            },
-            loading: {
-                fetchingNewRandom: false,
-                prefetchingRandom: false,
-                prefetchingTop: false,
-            },
-            ui: {
-                evaluationsPerBatch: {},
-                canGetNewSuggestions: false,
-                totalBatchesViewed: 1,
-                cyclesCompleted: 0,
-                allSuggestionsViewed: false,
-                showRecycleMessage: false,
-            },
-            errors: {},
-        },
         notifications: {
             inAppNotifications: [],
         },
@@ -130,23 +98,6 @@ export const getMockRootState = (overrides: Partial<RootState> = {}): RootState 
             isLoading: false,
             error: null,
             showModal: false,
-        },
-        // Add the RTK Query massConsensusApi state
-        massConsensusApi: {
-            queries: {},
-            mutations: {},
-            provided: {},
-            subscriptions: {},
-            config: {
-                online: true,
-                focused: true,
-                middlewareRegistered: true,
-                refetchOnFocus: false,
-                refetchOnReconnect: false,
-                refetchOnMountOrArgChange: false,
-                keepUnusedDataFor: 60,
-                reducerPath: 'massConsensusApi',
-            },
         },
     };
 

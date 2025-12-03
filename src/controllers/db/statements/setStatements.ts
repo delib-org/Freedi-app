@@ -34,7 +34,6 @@ import {
 
 import { number, parse, string } from 'valibot';
 import { isStatementTypeAllowedAsChildren } from '@/controllers/general/helpers';
-import { setNewProcessToDB } from '../massConsensus/setMassConsensus';
 import { LanguagesEnum } from '@/context/UserConfigContext';
 import { analyticsService } from '@/services/analytics';
 import { logger } from '@/services/logger';
@@ -423,9 +422,6 @@ export function createStatement({
 		}
 
 		parse(StatementSchema, newStatement);
-		if (questionType === QuestionType.massConsensus) {
-			setNewProcessToDB(newStatement.statementId);
-		}
 
 		return newStatement;
 
