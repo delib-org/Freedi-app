@@ -1,4 +1,4 @@
-import { useContext, useEffect, useRef } from 'react';
+import { useContext, useEffect, useRef, useState } from 'react';
 import SuggestionCards from '../../evaluations/components/suggestionCards/SuggestionCards';
 import styles from './StagePage.module.scss';
 import StatementBottomNav from '../../nav/bottom/StatementBottomNav';
@@ -7,6 +7,9 @@ import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { StatementContext } from '../../../StatementCont';
 import { Statement, EvaluationUI } from 'delib-npm';
 import Clustering from '../../clustering/Clustering';
+import { useSummarization } from '@/controllers/hooks/useSummarization';
+import SummaryDisplay from '../question/document/MultiStageQuestion/components/SummaryDisplay/SummaryDisplay';
+import SummarizeModal from '../question/document/MultiStageQuestion/components/SummarizeModal/SummarizeModal';
 
 interface Props {
 	showStageTitle?: boolean;
@@ -17,6 +20,8 @@ const StagePage = ({ showStageTitle = true, showBottomNav = true }: Props) => {
 	const { t } = useTranslation();
 	const { statement } = useContext(StatementContext);
 	const stageRef = useRef<HTMLDivElement>(null);
+	const { isGenerating, generateSummary } = useSummarization();
+	const [isModalOpen, setIsModalOpen] = useState(false);
 
 	useEffect(() => {
 		const updateHeight = () => {
@@ -40,6 +45,20 @@ const StagePage = ({ showStageTitle = true, showBottomNav = true }: Props) => {
 		};
 	}, []);
 
+	const handleGenerateSummary = async (customPrompt: string) => {
+		if (!statement) return;
+		const success = await generateSummary(statement.statementId, customPrompt);
+		if (success) {
+			setIsModalOpen(false);
+		}
+	};
+
+	// Type assertion for summary fields
+	const statementWithSummary = statement as Statement & {
+		summary?: string;
+		summaryGeneratedAt?: number;
+	};
+
 	const stageName = statement?.statement ? `: ${t(statement.statement)}` : '';
 	const isClustering =
 		statement?.evaluationSettings?.evaluationUI === EvaluationUI.clustering;
@@ -53,12 +72,44 @@ const StagePage = ({ showStageTitle = true, showBottomNav = true }: Props) => {
 						{statement?.statement && stageName}
 					</h2>
 				)}
+
+				{/* Summary Display */}
+				<SummaryDisplay
+					summary={statementWithSummary?.summary}
+					generatedAt={statementWithSummary?.summaryGeneratedAt}
+				/>
+
+				{/* Summarize Button */}
+				{statement && (
+					<div className={styles.summarizeWrapper}>
+						<button
+							className={`btn btn--secondary ${isGenerating ? 'btn--disabled' : ''}`}
+							onClick={() => setIsModalOpen(true)}
+							disabled={isGenerating}
+							aria-label={t('Generate AI summary of the discussion')}
+						>
+							{isGenerating ? t('Generating...') : t('Summarize Discussion')}
+						</button>
+					</div>
+				)}
+
 				<StagePageSwitch statement={statement} />
 			</div>
 			{showBottomNav && (
 				<div className={styles.bottomNav}>
 					<StatementBottomNav />
 				</div>
+			)}
+
+			{/* Summarize Modal */}
+			{statement && (
+				<SummarizeModal
+					isOpen={isModalOpen}
+					onClose={() => setIsModalOpen(false)}
+					onGenerate={handleGenerateSummary}
+					isLoading={isGenerating}
+					questionTitle={statement.statement}
+				/>
 			)}
 		</>
 	);
