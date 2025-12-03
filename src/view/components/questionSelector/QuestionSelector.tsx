@@ -3,13 +3,13 @@ import styles from './QuestionSelector.module.scss';
 import { StatementContext } from '@/view/pages/statement/StatementCont';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { updateQuestionType } from '@/controllers/db/statementSettings/setStatementSettings';
-import { Link } from 'react-router';
-import { MassConsensusPageUrls, QuestionType } from 'delib-npm';
+import { QuestionType } from 'delib-npm';
 import { getDefaultQuestionType } from '@/model/questionTypeDefaults';
+import { getMassConsensusQuestionUrl } from '@/controllers/db/config';
 
 const QuestionSelector: FC = () => {
 	const { statement } = useContext(StatementContext);
-	const { t, currentLanguage } = useTranslation();
+	const { t } = useTranslation();
 	const handleChangeQuestionType = (
 		ev: React.ChangeEvent<HTMLSelectElement>
 	) => {
@@ -38,12 +38,14 @@ const QuestionSelector: FC = () => {
 				</option>
 			</select>
 			{statement?.questionSettings?.questionType ===
-				QuestionType.massConsensus && (
-					<Link
-						to={`/mass-consensus/${statement.statementId}/${MassConsensusPageUrls.introduction}?lang=${currentLanguage}`}
+				QuestionType.massConsensus && statement && (
+					<a
+						href={getMassConsensusQuestionUrl(statement.statementId)}
+						target="_blank"
+						rel="noopener noreferrer"
 					>
-						{t('Mass Consensus')}
-					</Link>
+						{t('Open Mass Consensus')}
+					</a>
 				)}
 		</>
 	);

@@ -2,10 +2,9 @@ import React from 'react';
 import IconButton from '@/view/components/iconButton/IconButton';
 import PlusIcon from '@/assets/icons/plusIcon.svg?react';
 import AddQuestionIcon from '@/assets/icons/questionIcon.svg?react';
-import AddMassConsensusIcon from '@/assets/icons/massConsensusIcon.svg?react';
 import AddSubGroupIcon from '@/assets/icons/team-group.svg?react';
 import styles from './AddButton.module.scss'
-import { QuestionType, StatementType } from 'delib-npm';
+import { StatementType } from 'delib-npm';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { useDispatch, useSelector } from 'react-redux';
 import { setNewStatementModal, setShowNewStatementModal } from '@/redux/statements/newStatementSlice';
@@ -23,7 +22,7 @@ export default function AddButton() {
 	const radius = 5;
 
 	const handleAction = (
-		action: 'question' | 'mass-consensus' | 'subgroup'
+		action: 'question' | 'subgroup'
 	) => {
 		setActionsOpen(false);
 		switch (action) {
@@ -34,21 +33,6 @@ export default function AddButton() {
 						statementType: StatementType.question,
 						questionSettings: {
 							questionType: getDefaultQuestionType(),
-						},
-					},
-					isLoading: false,
-					error: null,
-					showModal: true,
-				}));
-
-				break;
-			case 'mass-consensus':
-				dispatch(setNewStatementModal({
-					parentStatement: statement,
-					newStatement: {
-						statementType: StatementType.question,
-						questionSettings: {
-							questionType: QuestionType.massConsensus,
 						},
 					},
 					isLoading: false,
@@ -82,11 +66,6 @@ export default function AddButton() {
 			key: 'question',
 			action: 'question' as const,
 			icon: <AddQuestionIcon />,
-		},
-		{
-			key: 'mass-consensus',
-			action: 'mass-consensus' as const,
-			icon: <AddMassConsensusIcon />,
 		},
 		{
 			key: 'subgroup',

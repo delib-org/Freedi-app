@@ -10,7 +10,6 @@ import { evaluationsSlicer } from '@/redux/evaluations/evaluationsSlice';
 import { votesSlicer } from '@/redux/vote/votesSlice';
 import { resultsSlice } from '@/redux/results/resultsSlice';
 import { choseBySlice } from '@/redux/choseBy/choseBySlice';
-import { massConsensusSlice } from '@/redux/massConsensus/massConsensusSlice';
 import { notificationsSlicer } from '@/redux/notificationsSlice/notificationsSlice';
 import creatorReducer from '@/redux/creator/creatorSlice';
 import SubscriptionsReducer from '@/redux/subscriptions/subscriptionsSlice';
@@ -57,7 +56,6 @@ export const createMockStore = (preloadedState: Partial<RootState> = {}) => {
       votes: votesSlicer.reducer,
       results: resultsSlice.reducer,
       choseBys: choseBySlice.reducer,
-      massConsensus: massConsensusSlice.reducer,
       notifications: notificationsSlicer.reducer,
       creator: creatorReducer,
       subscriptions: SubscriptionsReducer.reducer,
