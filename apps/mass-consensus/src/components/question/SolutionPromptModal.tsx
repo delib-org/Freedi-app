@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import Modal from '@/components/shared/Modal';
 import { VALIDATION } from '@/constants/common';
+import { useTranslation } from '@freedi/shared-i18n/next';
 import { logError, NetworkError, ValidationError } from '@/lib/utils/errorHandling';
 import { ERROR_MESSAGES } from '@/constants/common';
 import type { FlowState, SimilarCheckResponse } from '@/types/api';
@@ -19,6 +20,7 @@ interface SolutionPromptModalProps {
   onSubmitSuccess: () => void;
   title?: string;
   description?: string;
+  questionText?: string;
 }
 
 const MAX_ROWS = 8;
@@ -32,11 +34,14 @@ export default function SolutionPromptModal({
   onSubmitSuccess,
   title = 'Add Your Solution',
   description = 'Share your idea for this question.',
+  questionText,
 }: SolutionPromptModalProps) {
+  const { t } = useTranslation();
   const [text, setText] = useState('');
   const [flowState, setFlowState] = useState<FlowState>({ step: 'input' });
   const [error, setError] = useState<string | null>(null);
   const [generatedTitleDesc, setGeneratedTitleDesc] = useState<{ title?: string; description?: string }>({});
+  const [isQuestionExpanded, setIsQuestionExpanded] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const characterCount = text.length;
@@ -217,13 +222,32 @@ export default function SolutionPromptModal({
       <div className={styles.content}>
         {flowState.step === 'input' && (
           <>
+            {/* Question Context Banner */}
+            {questionText && (
+              <div className={styles.questionContext}>
+                <span className={styles.questionLabel}>{t('Your solution for:')}</span>
+                <p className={`${styles.questionText} ${isQuestionExpanded ? styles.questionTextExpanded : ''}`}>
+                  {questionText}
+                </p>
+                {questionText.length > 150 && (
+                  <button
+                    type="button"
+                    className={styles.expandButton}
+                    onClick={() => setIsQuestionExpanded(!isQuestionExpanded)}
+                  >
+                    {isQuestionExpanded ? 'Show less' : 'Show more'}
+                  </button>
+                )}
+              </div>
+            )}
+
             <p className={styles.description}>{description}</p>
 
             <textarea
               ref={textareaRef}
               value={text}
               onChange={(e) => setText(e.target.value)}
-              placeholder="Type your solution here..."
+              placeholder={t('Type your answer here...')}
               className={styles.textarea}
               rows={2}
               maxLength={VALIDATION.MAX_SOLUTION_LENGTH}

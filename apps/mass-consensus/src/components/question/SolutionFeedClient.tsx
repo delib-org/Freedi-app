@@ -36,7 +36,6 @@ export default function SolutionFeedClient({
   const [showSolutionPrompt, setShowSolutionPrompt] = useState(false);
   const [hasCheckedUserSolutions, setHasCheckedUserSolutions] = useState(false);
   const [showCompletionScreen, setShowCompletionScreen] = useState(false);
-  const [hasShownCompletionScreen, setHasShownCompletionScreen] = useState(false);
   const [hasSubmittedSolution, setHasSubmittedSolution] = useState(false);
   const [participantCount, setParticipantCount] = useState(0);
   const [showProgressIndicator, setShowProgressIndicator] = useState(true);
@@ -409,6 +408,7 @@ return newSet;
           questionId={questionId}
           userId={userId}
           onSubmitSuccess={handleSolutionComplete}
+          questionText={question.statement}
           title={requiresSolution && !hasCheckedUserSolutions ? t('Add Your Solution First') : t('Add Solution')}
           description={requiresSolution && !hasCheckedUserSolutions
             ? t('Please share your idea before seeing and rating others')
