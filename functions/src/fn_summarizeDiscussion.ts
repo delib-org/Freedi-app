@@ -82,7 +82,7 @@ export const summarizeDiscussion = onCall<SummarizeDiscussionRequest>(
 		const membersSnapshot = await db
 			.collection(Collections.statementsSubscribe)
 			.where('statementId', '==', topParentId)
-			.where('oderId', '==', userId)
+			.where('userId', '==', userId)
 			.where('role', 'in', ['admin', 'creator'])
 			.limit(1)
 			.get();
