@@ -9,12 +9,18 @@ import { useSummarization } from '@/controllers/hooks/useSummarization'
 import { useTranslation } from '@/controllers/hooks/useTranslation'
 import SummaryDisplay from '../document/MultiStageQuestion/components/SummaryDisplay/SummaryDisplay'
 import SummarizeModal from '../document/MultiStageQuestion/components/SummarizeModal/SummarizeModal'
+import { useAppSelector } from '@/controllers/hooks/reduxHooks'
+import { statementOptionsSelector } from '@/redux/statements/statementsSlice'
+import { exportOptionsToCSV } from '@/utils/csvExport'
+import { useEditPermission } from '@/controllers/hooks/useEditPermission'
 
 const SimpleQuestion = () => {
 	const { statement } = useContext(StatementContext)
 	const { t } = useTranslation()
 	const { isGenerating, generateSummary } = useSummarization()
 	const [isModalOpen, setIsModalOpen] = useState(false)
+	const { isAdmin, isCreator } = useEditPermission(statement)
+	const options = useAppSelector(statementOptionsSelector(statement?.statementId))
 
 	const handleGenerateSummary = async (customPrompt: string) => {
 		if (!statement) return
@@ -23,6 +29,13 @@ const SimpleQuestion = () => {
 			setIsModalOpen(false)
 		}
 	}
+
+	const handleDownloadCSV = () => {
+		if (!statement || options.length === 0) return
+		exportOptionsToCSV(options, statement.statement)
+	}
+
+	const showAdminButtons = isAdmin || isCreator
 
 	// Type assertion for summary fields
 	const statementWithSummary = statement as Statement & {
@@ -41,8 +54,8 @@ const SimpleQuestion = () => {
 					generatedAt={statementWithSummary?.summaryGeneratedAt}
 				/>
 
-				{/* Summarize Button */}
-				{statement && (
+				{/* Admin Buttons: Summarize and Download */}
+				{statement && showAdminButtons && (
 					<div className={styles.summarizeWrapper}>
 						<button
 							className={`btn btn--secondary ${isGenerating ? 'btn--disabled' : ''}`}
@@ -51,6 +64,14 @@ const SimpleQuestion = () => {
 							aria-label={t('Generate AI summary of the discussion')}
 						>
 							{isGenerating ? t('Generating...') : t('Summarize Discussion')}
+						</button>
+						<button
+							className={`btn btn--secondary ${options.length === 0 ? 'btn--disabled' : ''}`}
+							onClick={handleDownloadCSV}
+							disabled={options.length === 0}
+							aria-label={t('Download options as CSV')}
+						>
+							{t('Download')}
 						</button>
 					</div>
 				)}
