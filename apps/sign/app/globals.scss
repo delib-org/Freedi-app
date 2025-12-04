@@ -1,0 +1,219 @@
+/* Global styles for Sign App */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  /* Primary Colors */
+  --btn-primary: #1B2650;
+  --btn-primary-hover: #2A3760;
+  --btn-secondary: #e0e0e0;
+  --text-primary: #1B2650;
+  --text-body: #3d4d71;
+  --text-secondary: #707a93;
+  --text-caption: #9aa3b8;
+  --background: #F8F9FA;
+
+  /* Card Colors */
+  --card-default: #ffffff;
+  --card-blue: #E3F2FD;
+  --card-green: #E8F5E9;
+  --card-orange: #FFF3E0;
+  --card-pink: #FCE4EC;
+
+  /* Feedback Colors */
+  --agree: #4caf50;
+  --agree-light: #81c784;
+  --disagree: #f44336;
+  --disagree-light: #e57373;
+  --approve: #4caf50;
+  --reject: #f44336;
+  --warning: #ff9800;
+
+  /* Heat Map Colors */
+  --heat-low: rgba(87, 198, 178, 0.2);
+  --heat-medium: rgba(231, 208, 128, 0.3);
+  --heat-high: rgba(254, 107, 162, 0.3);
+
+  /* Spacing - 8px grid system */
+  --spacing-xs: 0.5rem;
+  --spacing-sm: 0.75rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2rem;
+  --spacing-2xl: 3rem;
+  --padding: 1rem;
+
+  /* Border Radius */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-full: 9999px;
+
+  /* Shadows */
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+
+  /* Typography */
+  --h1-font-size: 2rem;
+  --h2-font-size: 1.5rem;
+  --h3-font-size: 1.25rem;
+  --h4-font-size: 1.125rem;
+  --h5-font-size: 1rem;
+  --h6-font-size: 0.875rem;
+  --p-font-size: 1rem;
+
+  /* Borders */
+  --border-light: #e5e7eb;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color: var(--text-body);
+  background: var(--background);
+  line-height: 1.6;
+}
+
+/* Page container */
+.page {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: var(--spacing-lg);
+  min-height: 100vh;
+}
+
+/* Typography */
+h1 {
+  font-size: var(--h1-font-size);
+  color: var(--text-primary);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-bottom: var(--spacing-md);
+}
+
+h2 {
+  font-size: var(--h2-font-size);
+  color: var(--text-primary);
+  font-weight: 600;
+  margin-bottom: var(--spacing-md);
+}
+
+h3 {
+  font-size: var(--h3-font-size);
+  color: var(--text-primary);
+  font-weight: 600;
+  margin-bottom: var(--spacing-sm);
+}
+
+h4 {
+  font-size: var(--h4-font-size);
+  color: var(--text-primary);
+  font-weight: 600;
+  margin-bottom: var(--spacing-sm);
+}
+
+h5 {
+  font-size: var(--h5-font-size);
+  color: var(--text-primary);
+  font-weight: 600;
+  margin-bottom: var(--spacing-xs);
+}
+
+h6 {
+  font-size: var(--h6-font-size);
+  color: var(--text-primary);
+  font-weight: 600;
+  margin-bottom: var(--spacing-xs);
+}
+
+p {
+  margin-bottom: var(--spacing-md);
+  line-height: 1.6;
+}
+
+/* Buttons */
+button {
+  cursor: pointer;
+  border: none;
+  font-family: inherit;
+  transition: all 0.2s ease;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Loading skeleton */
+.skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s ease-in-out infinite;
+  border-radius: 4px;
+}
+
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* RTL Support */
+[dir="rtl"] {
+  text-align: right;
+}
+
+/* Utility classes */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Badge styles */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+
+  &--success {
+    background: var(--agree);
+    color: white;
+  }
+
+  &--error {
+    background: var(--disagree);
+    color: white;
+  }
+
+  &--warning {
+    background: var(--warning);
+    color: white;
+  }
+
+  &--neutral {
+    background: #e5e7eb;
+    color: var(--text-body);
+  }
+}

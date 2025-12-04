@@ -1,0 +1,71 @@
+import { Metadata } from 'next';
+import { notFound } from 'next/navigation';
+import { cookies } from 'next/headers';
+import { getDocumentForSigning, getParagraphsByParent, getUserSignature, getUserApprovals } from '@/lib/firebase/queries';
+import { getUserFromCookies } from '@/lib/utils/user';
+import DocumentView from '@/components/document/DocumentView';
+
+interface PageProps {
+  params: Promise<{ statementId: string }>;
+}
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { statementId } = await params;
+  const document = await getDocumentForSigning(statementId);
+
+  if (!document) {
+    return {
+      title: 'Document Not Found - Freedi Sign',
+    };
+  }
+
+  return {
+    title: `${document.statement.substring(0, 50)} - Freedi Sign`,
+    description: document.statement.substring(0, 160),
+  };
+}
+
+export default async function DocumentPage({ params }: PageProps) {
+  const { statementId } = await params;
+
+  // Fetch document and paragraphs in parallel
+  const [document, paragraphs] = await Promise.all([
+    getDocumentForSigning(statementId),
+    getParagraphsByParent(statementId),
+  ]);
+
+  if (!document) {
+    notFound();
+  }
+
+  // Get user info from cookies
+  const cookieStore = await cookies();
+  const user = getUserFromCookies(cookieStore);
+
+  // If user exists, get their signature and approvals
+  let userSignature = null;
+  let userApprovals: Awaited<ReturnType<typeof getUserApprovals>> = [];
+
+  if (user) {
+    [userSignature, userApprovals] = await Promise.all([
+      getUserSignature(statementId, user.uid),
+      getUserApprovals(statementId, user.uid),
+    ]);
+  }
+
+  // Convert approvals array to a map for easier lookup
+  const approvalsMap: Record<string, boolean> = {};
+  userApprovals.forEach((approval) => {
+    approvalsMap[approval.statementId] = approval.approval;
+  });
+
+  return (
+    <DocumentView
+      document={document}
+      paragraphs={paragraphs}
+      user={user}
+      userSignature={userSignature}
+      userApprovals={approvalsMap}
+    />
+  );
+}

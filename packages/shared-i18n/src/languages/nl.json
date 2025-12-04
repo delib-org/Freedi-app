@@ -694,5 +694,22 @@
   "Leave empty for automatic summary of top suggestions": "Leeg laten voor automatische samenvatting van topsuggesties",
   "Generating...": "Genereren...",
   "Generated": "Gegenereerd",
-  "Topic description": "Onderwerp beschrijving"
+  "Topic description": "Onderwerp beschrijving",
+
+  "Just now": "Zojuist",
+  "minutes ago": "minuten geleden",
+  "hours ago": "uur geleden",
+  "days ago": "dagen geleden",
+  "Are you sure you want to delete this comment?": "Weet je zeker dat je deze reactie wilt verwijderen?",
+  "Delete comment": "Reactie verwijderen",
+  "No comments yet": "Nog geen reacties",
+  "Add a comment...": "Voeg een reactie toe...",
+  "Posting...": "Plaatsen...",
+  "Post Comment": "Reactie plaatsen",
+  "Please log in to add comments": "Log in om reacties toe te voegen",
+  "Login failed. Please try again.": "Inloggen mislukt. Probeer het opnieuw.",
+  "Sign in to view and sign documents": "Log in om documenten te bekijken en te ondertekenen",
+  "Signing in...": "Inloggen...",
+  "Sign in with Google": "Inloggen met Google",
+  "Continue as guest": "Doorgaan als gast"
 }

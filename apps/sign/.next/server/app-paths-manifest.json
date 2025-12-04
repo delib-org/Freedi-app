@@ -1,0 +1,17 @@
+{
+  "/_not-found/page": "app/_not-found/page.js",
+  "/api/admin/stats/[docId]/route": "app/api/admin/stats/[docId]/route.js",
+  "/api/admin/users/[docId]/route": "app/api/admin/users/[docId]/route.js",
+  "/api/comments/[paragraphId]/route": "app/api/comments/[paragraphId]/route.js",
+  "/api/auth/session/route": "app/api/auth/session/route.js",
+  "/api/signatures/[docId]/route": "app/api/signatures/[docId]/route.js",
+  "/api/approvals/[paragraphId]/route": "app/api/approvals/[paragraphId]/route.js",
+  "/page": "app/page.js",
+  "/doc/[statementId]/page": "app/doc/[statementId]/page.js",
+  "/api/admin/settings/[docId]/route": "app/api/admin/settings/[docId]/route.js",
+  "/api/admin/export/[docId]/route": "app/api/admin/export/[docId]/route.js",
+  "/login/page": "app/login/page.js",
+  "/doc/[statementId]/admin/users/page": "app/doc/[statementId]/admin/users/page.js",
+  "/doc/[statementId]/admin/page": "app/doc/[statementId]/admin/page.js",
+  "/doc/[statementId]/admin/settings/page": "app/doc/[statementId]/admin/settings/page.js"
+}

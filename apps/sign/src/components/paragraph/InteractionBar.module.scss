@@ -1,0 +1,116 @@
+.bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: var(--spacing-sm);
+  border-top: 1px solid var(--border-light);
+  margin-top: var(--spacing-sm);
+}
+
+.approvalButtons {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+.button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: transparent;
+  border: 1px solid var(--border-light);
+  color: var(--text-secondary);
+
+  &:hover:not(:disabled) {
+    background: var(--background);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.buttonText {
+  @media (max-width: 600px) {
+    display: none;
+  }
+}
+
+.approveButton {
+  &:hover:not(:disabled) {
+    border-color: var(--agree);
+    color: var(--agree);
+  }
+
+  &.active {
+    background: var(--agree);
+    border-color: var(--agree);
+    color: white;
+  }
+}
+
+.rejectButton {
+  &:hover:not(:disabled) {
+    border-color: var(--disagree);
+    color: var(--disagree);
+  }
+
+  &.active {
+    background: var(--disagree);
+    border-color: var(--disagree);
+    color: white;
+  }
+}
+
+.commentButton {
+  position: relative;
+
+  &:hover:not(:disabled) {
+    border-color: var(--btn-primary);
+    color: var(--btn-primary);
+  }
+}
+
+.commentCount {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  background: var(--btn-primary);
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 600;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  [dir="rtl"] & {
+    right: auto;
+    left: -6px;
+  }
+}
+
+/* RTL Support */
+[dir="rtl"] {
+  .bar {
+    flex-direction: row-reverse;
+  }
+
+  .approvalButtons {
+    flex-direction: row-reverse;
+  }
+
+  .button {
+    flex-direction: row-reverse;
+  }
+}

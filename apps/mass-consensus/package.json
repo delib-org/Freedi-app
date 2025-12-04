@@ -10,12 +10,16 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@dnd-kit/core": "^6.3.1",
+    "@dnd-kit/sortable": "^10.0.0",
+    "@dnd-kit/utilities": "^3.2.2",
     "@freedi/shared-i18n": "file:../../packages/shared-i18n",
     "@google/generative-ai": "^0.21.0",
     "clsx": "^2.1.0",
     "delib-npm": "^5.6.71",
     "firebase-admin": "^12.0.0",
     "next": "^14.2.0",
+    "qrcode.react": "^4.2.0",
     "react": "^18.3.0",
     "react-dom": "^18.3.0"
   },

@@ -690,5 +690,22 @@
   "Leave empty for automatic summary of top suggestions": "اتركه فارغاً للحصول على ملخص تلقائي للاقتراحات الأعلى",
   "Generating...": "جاري الإنشاء...",
   "Generated": "تم الإنشاء",
-  "Topic description": "وصف الموضوع"
+  "Topic description": "وصف الموضوع",
+
+  "Just now": "الآن",
+  "minutes ago": "دقائق مضت",
+  "hours ago": "ساعات مضت",
+  "days ago": "أيام مضت",
+  "Are you sure you want to delete this comment?": "هل أنت متأكد أنك تريد حذف هذا التعليق؟",
+  "Delete comment": "حذف التعليق",
+  "No comments yet": "لا توجد تعليقات بعد",
+  "Add a comment...": "أضف تعليقاً...",
+  "Posting...": "جاري النشر...",
+  "Post Comment": "نشر التعليق",
+  "Please log in to add comments": "يرجى تسجيل الدخول لإضافة تعليقات",
+  "Login failed. Please try again.": "فشل تسجيل الدخول. يرجى المحاولة مرة أخرى.",
+  "Sign in to view and sign documents": "سجل الدخول لعرض المستندات والتوقيع عليها",
+  "Signing in...": "جاري تسجيل الدخول...",
+  "Sign in with Google": "تسجيل الدخول باستخدام Google",
+  "Continue as guest": "المتابعة كضيف"
 }
