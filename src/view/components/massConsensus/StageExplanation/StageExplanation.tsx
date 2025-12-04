@@ -1,38 +1,87 @@
-import React, { FC, useState, useEffect } from 'react';
+import React, { FC, useState, useEffect, useCallback } from 'react';
 import { ExplanationConfig } from 'delib-npm';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
-import { useExplanations } from '@/contexts/massConsensus/ExplanationProvider';
 import styles from './StageExplanation.module.scss';
 import X from '@/assets/icons/x.svg?react';
 import InfoIcon from '@/assets/icons/InfoIcon.svg?react';
 
+const STORAGE_KEY_SEEN = 'freedi_explanations_seen';
+const STORAGE_KEY_DISABLED = 'freedi_explanations_disabled';
+
+// Helper functions for localStorage
+const getSeenExplanations = (): string[] => {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY_SEEN);
+
+    return stored ? JSON.parse(stored) : [];
+  } catch {
+    return [];
+  }
+};
+
+const markExplanationAsSeen = (stageId: string): void => {
+  try {
+    const seen = getSeenExplanations();
+    if (!seen.includes(stageId)) {
+      seen.push(stageId);
+      localStorage.setItem(STORAGE_KEY_SEEN, JSON.stringify(seen));
+    }
+  } catch {
+    // Ignore localStorage errors
+  }
+};
+
+const getExplanationsDisabled = (): boolean => {
+  try {
+    return localStorage.getItem(STORAGE_KEY_DISABLED) === 'true';
+  } catch {
+    return false;
+  }
+};
+
+const setExplanationsDisabled = (disabled: boolean): void => {
+  try {
+    localStorage.setItem(STORAGE_KEY_DISABLED, String(disabled));
+  } catch {
+    // Ignore localStorage errors
+  }
+};
+
 interface StageExplanationProps {
   stageId: string;
-  explanation?: ExplanationConfig;
+  explanation: ExplanationConfig;
   onDismiss?: () => void;
   className?: string;
 }
 
 export const StageExplanation: FC<StageExplanationProps> = ({
   stageId,
-  explanation: explicitExplanation,
+  explanation,
   onDismiss,
   className
 }) => {
   const { t, dir } = useTranslation();
-  const { getStageExplanation, markExplanationSeen, setDontShowExplanations } = useExplanations();
 
   const [isVisible, setIsVisible] = useState(true);
   const [isDismissing, setIsDismissing] = useState(false);
 
-  // Get explanation from context or use explicit one
-  const explanation = explicitExplanation || getStageExplanation(stageId);
+  // Check if explanations are disabled or already seen
+  const shouldShow = useCallback(() => {
+    if (getExplanationsDisabled()) return false;
+    if (explanation.showOnlyFirstTime && getSeenExplanations().includes(stageId)) return false;
+
+    return true;
+  }, [stageId, explanation.showOnlyFirstTime]);
 
   useEffect(() => {
-    if (!explanation) return;
+    if (!explanation || !shouldShow()) {
+      setIsVisible(false);
+
+      return;
+    }
 
     // Mark as seen
-    markExplanationSeen(stageId);
+    markExplanationAsSeen(stageId);
 
     // Auto-dismiss if duration is set
     if (explanation.displayDuration && explanation.displayDuration > 0) {
@@ -42,7 +91,7 @@ export const StageExplanation: FC<StageExplanationProps> = ({
 
       return () => clearTimeout(timer);
     }
-  }, [stageId, explanation]);
+  }, [stageId, explanation, shouldShow]);
 
   if (!explanation || !explanation.enabled || !isVisible) {
     return null;
@@ -57,7 +106,7 @@ export const StageExplanation: FC<StageExplanationProps> = ({
   };
 
   const handleDontShowAgain = () => {
-    setDontShowExplanations(true);
+    setExplanationsDisabled(true);
     handleDismiss();
   };
 
