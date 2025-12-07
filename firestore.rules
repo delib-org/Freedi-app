@@ -646,6 +646,24 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
+    // Spectrum Settings - Authenticated users can manage
+    match /spectrumSettings/{settingsId} {
+      allow read: if request.auth != null;
+      allow create, update, delete: if request.auth != null;
+    }
+
+    // Joined Participants - Users can manage their own, admins can read all
+    match /joinedParticipants/{participantId} {
+      function isOwner() {
+        let participant = resource != null ? resource : request.resource;
+        return participant.data.userId == request.auth.uid;
+      }
+
+      allow read: if request.auth != null;
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if request.auth != null && isOwner();
+    }
+
     // Room Assignment Rules
 
     // Room Settings - Admins can manage, members can read

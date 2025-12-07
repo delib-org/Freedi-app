@@ -727,5 +727,7 @@
   "Leave empty for automatic summary of top suggestions": "Leeg laten voor automatische samenvatting van topsuggesties",
   "Generating...": "Genereren...",
   "Generated": "Gegenereerd",
-  "Topic description": "Onderwerp beschrijving"
+  "Topic description": "Onderwerp beschrijving",
+  "Enabled with default settings": "Ingeschakeld met standaardinstellingen",
+  "Disabled": "Uitgeschakeld"
 }

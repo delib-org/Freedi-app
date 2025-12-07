@@ -8,6 +8,8 @@ import {
 	getDefaultSpectrumSettings,
 } from '@/controllers/db/spectrumSettings';
 import { setStatementSettingToDB } from '@/controllers/db/statementSettings/setStatementSettings';
+import { useAppDispatch } from '@/controllers/hooks/reduxHooks';
+import { setStatement } from '@/redux/statements/statementsSlice';
 import Button, { ButtonType } from '@/view/components/buttons/button/Button';
 import SectionTitle from '../sectionTitle/SectionTitle';
 import styles from './SpectrumSettingsForm.module.scss';
@@ -19,6 +21,7 @@ interface SpectrumSettingsFormProps {
 
 const SpectrumSettingsForm: FC<SpectrumSettingsFormProps> = ({ statement, user }) => {
 	const { t } = useTranslation();
+	const dispatch = useAppDispatch();
 
 	const [isLoading, setIsLoading] = useState(true);
 	const [isSaving, setIsSaving] = useState(false);
@@ -50,6 +53,45 @@ const SpectrumSettingsForm: FC<SpectrumSettingsFormProps> = ({ statement, user }
 		setLabels(newLabels);
 	};
 
+	// Auto-save when toggle changes - use current values or defaults
+	const handleToggleChange = async (newEnabled: boolean) => {
+		setEnabled(newEnabled);
+		setIsSaving(true);
+
+		const settings = {
+			statementId: statement.statementId,
+			questionText: questionText || DEFAULT_SPECTRUM_QUESTION,
+			labels: labels.every(l => l) ? labels : [...DEFAULT_SPECTRUM_LABELS] as [string, string, string, string, string],
+			enabled: newEnabled,
+			createdBy: {
+				uid: user.uid,
+				displayName: user.displayName || 'Admin',
+			},
+		};
+
+		console.info('SpectrumSettings: Auto-saving on toggle:', settings);
+		const result = await saveSpectrumSettings(settings);
+
+		if (result) {
+			// Update Redux
+			const updatedStatement: Statement = {
+				...statement,
+				statementSettings: {
+					...(statement.statementSettings || {}),
+					joiningEnabled: newEnabled,
+				},
+			};
+			dispatch(setStatement(updatedStatement));
+			setSaveMessage(newEnabled ? t('Enabled with default settings') : t('Disabled'));
+		} else {
+			setSaveMessage(t('Failed to save'));
+			setEnabled(!newEnabled); // Revert on failure
+		}
+
+		setIsSaving(false);
+		setTimeout(() => setSaveMessage(null), 2000);
+	};
+
 	const handleSave = async () => {
 		setIsSaving(true);
 		setSaveMessage(null);
@@ -65,16 +107,34 @@ const SpectrumSettingsForm: FC<SpectrumSettingsFormProps> = ({ statement, user }
 			},
 		};
 
+		console.info('SpectrumSettings: Saving settings:', settings);
 		const result = await saveSpectrumSettings(settings);
+		console.info('SpectrumSettings: Save result:', result);
 
 		if (result) {
 			// Also enable/disable the join button based on spectrum settings
-			setStatementSettingToDB({
+			// Await the Firestore write to ensure data is persisted before updating Redux
+			const joiningUpdateSuccess = await setStatementSettingToDB({
 				statement,
 				property: 'joiningEnabled',
 				newValue: enabled,
 				settingsSection: 'statementSettings',
 			});
+
+			if (joiningUpdateSuccess) {
+				// Update Redux store with the new joiningEnabled setting
+				const updatedStatement: Statement = {
+					...statement,
+					statementSettings: {
+						...(statement.statementSettings || {}),
+						joiningEnabled: enabled,
+					},
+				};
+
+				console.info('SpectrumSettings: Dispatching updated statement with joiningEnabled:', enabled, 'statementId:', statement.statementId);
+				dispatch(setStatement(updatedStatement));
+			}
+
 			setSaveMessage(t('Settings saved successfully'));
 		} else {
 			setSaveMessage(t('Failed to save settings'));
@@ -117,10 +177,12 @@ const SpectrumSettingsForm: FC<SpectrumSettingsFormProps> = ({ statement, user }
 						<input
 							type="checkbox"
 							checked={enabled}
-							onChange={(e) => setEnabled(e.target.checked)}
+							onChange={(e) => handleToggleChange(e.target.checked)}
+							disabled={isSaving}
 							className={styles.spectrumSettings__checkbox}
 						/>
 						<span>{t('Enable heterogeneous room assignment')}</span>
+						{isSaving && <span className={styles.spectrumSettings__savingIndicator}>{t('Saving...')}</span>}
 					</label>
 					<p className={styles.spectrumSettings__hint}>
 						{t('This will enable the Join button on options and show a spectrum survey when users join')}

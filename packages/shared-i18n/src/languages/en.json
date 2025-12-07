@@ -513,8 +513,6 @@
   "Optional": "Optional",
   "No demographic questions available": "No demographic questions available",
   "Add radio or checkbox questions in User Demographics settings first": "Add radio or checkbox questions in User Demographics settings first",
-  "Preview": "Preview",
-  "Participants": "Participants",
   "Estimated Rooms": "Estimated Rooms",
   "Create Assignments": "Create Assignments",
   "Reassign Rooms": "Reassign Rooms",
@@ -764,7 +762,6 @@
   "Please add your answer to the following question:": "Please add your answer to the following question:",
   "Type your answer here...": "Type your answer here...",
   "Show less": "Show less",
-  "Show more": "Show more",
   "You have evaluated all {{count}} available options": "You have evaluated all {{count}} available options",
   "Please share your idea before seeing and rating others": "Please share your idea before seeing and rating others",
   "Share your idea for this question": "Share your idea for this question",
@@ -784,7 +781,6 @@
   "new": "new",
   "of suggestions": "of suggestions",
   "offer a suggestion": "offer a suggestion",
-  "options": "options",
   "or": "or",
   "please suggest a sentance that will unite Israel": "please suggest a sentance that will unite Israel",
   "premium": "premium",
@@ -810,5 +806,7 @@
   "View Progress": "View Progress",
   "Continue Evaluating": "Continue Evaluating",
   "badges": "badges",
-  "evaluated": "evaluated"
+  "evaluated": "evaluated",
+  "Enabled with default settings": "Enabled with default settings",
+  "Disabled": "Disabled"
 }

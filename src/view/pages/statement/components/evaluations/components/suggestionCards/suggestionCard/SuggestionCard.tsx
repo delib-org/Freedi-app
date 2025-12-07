@@ -21,7 +21,7 @@ import IconButton from '@/view/components/iconButton/IconButton';
 import styles from './SuggestionCard.module.scss';
 import { StatementType, Statement } from 'delib-npm';
 import { useAuthorization } from '@/controllers/hooks/useAuthorization';
-import { toggleJoining, toggleJoiningWithSpectrum } from '@/controllers/db/joining/setJoining';
+import { toggleJoining, toggleJoiningWithSpectrum, getUserSpectrumForParent } from '@/controllers/db/joining/setJoining';
 import Joined from '@/view/components/joined/Joined';
 import ImprovementModal from '@/view/components/improvementModal/ImprovementModal';
 import { improveSuggestionWithTimeout } from '@/services/suggestionImprovement';
@@ -58,7 +58,6 @@ const SuggestionCard: FC<Props> = ({
 	const { t, dir } = useTranslation();
 	// Use parent's authorization instead of individual card authorization
 	const { isAuthorized, isAdmin, creator } = useAuthorization(parentStatement?.statementId);
-	const enableJoining = parentStatement?.statementSettings?.joiningEnabled;
 	const showEvaluation = parentStatement?.statementSettings?.showEvaluation;
 	const enableAIImprovement = parentStatement?.statementSettings?.enableAIImprovement;
 	const showBadges = parentStatement?.evaluationSettings?.anchored?.differentiateBetweenAnchoredAndNot;
@@ -107,16 +106,16 @@ const SuggestionCard: FC<Props> = ({
 		setHasJoinedOptimistic(hasJoinedServer);
 	}, [hasJoinedServer]);
 
-	// Fetch spectrum settings from parent question for the join modal
+	// Fetch spectrum settings from parent question to check if joining is enabled
 	useEffect(() => {
 		const fetchSpectrumSettings = async () => {
-			if (parentStatement?.statementId && enableJoining) {
+			if (parentStatement?.statementId) {
 				const settings = await getSpectrumSettings(parentStatement.statementId);
 				setSpectrumSettings(settings);
 			}
 		};
 		fetchSpectrumSettings();
-	}, [parentStatement?.statementId, enableJoining]);
+	}, [parentStatement?.statementId]);
 
 	// Use States
 	const [isEdit, setIsEdit] = useState(false);
@@ -232,16 +231,23 @@ const SuggestionCard: FC<Props> = ({
 		}
 	}
 
-	function handleJoinClick() {
+	async function handleJoinClick() {
 		if (hasJoinedOptimistic) {
 			// If already joined, directly leave (no spectrum modal needed)
 			handleLeave();
 		} else {
-			// Check if spectrum survey is enabled (default: enabled if no settings exist)
-			const spectrumEnabled = spectrumSettings?.enabled !== false;
-			if (spectrumEnabled) {
-				// Show spectrum modal first
-				setShowSpectrumModal(true);
+			// Check if spectrum survey is enabled
+			const spectrumEnabled = spectrumSettings?.enabled === true;
+			if (spectrumEnabled && parentStatement?.statementId) {
+				// Check if user already has a spectrum value for this parent question
+				const existingSpectrum = await getUserSpectrumForParent(parentStatement.statementId);
+				if (existingSpectrum !== null) {
+					// User already rated themselves - use existing spectrum and join directly
+					handleSpectrumSubmit(existingSpectrum);
+				} else {
+					// First time rating - show spectrum modal
+					setShowSpectrumModal(true);
+				}
 			} else {
 				// Spectrum disabled by admin - join directly without survey
 				handleDirectJoin();
@@ -487,7 +493,7 @@ const SuggestionCard: FC<Props> = ({
 									{t('Undo')}
 								</button>
 							)}
-							{enableJoining && (
+							{spectrumSettings?.enabled && (
 								<>
 									<Joined statement={statement} />
 									<button

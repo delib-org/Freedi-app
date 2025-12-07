@@ -100,6 +100,10 @@ export function listenToRoomSettingsByStatement(
 				snapshot.docChanges().forEach((change) => {
 					try {
 						const data = change.doc.data();
+						// Ensure roomSize is at least 2 to pass validation
+						if (data.roomSize && data.roomSize < 2) {
+							data.roomSize = 2;
+						}
 						const parsedSettings = parse(RoomSettingsSchema, data);
 
 						if (change.type === 'added' || change.type === 'modified') {
@@ -432,7 +436,12 @@ export async function getRoomAssignmentDataForAdmin(
 		}
 
 		const settingsDoc = settingsSnapshot.docs[0];
-		const settings = parse(RoomSettingsSchema, settingsDoc.data());
+		const settingsData = settingsDoc.data();
+		// Ensure roomSize is at least 2 to pass validation
+		if (settingsData.roomSize && settingsData.roomSize < 2) {
+			settingsData.roomSize = 2;
+		}
+		const settings = parse(RoomSettingsSchema, settingsData);
 		dispatch(setRoomSettings(settings));
 
 		const settingsId = settingsDoc.id;

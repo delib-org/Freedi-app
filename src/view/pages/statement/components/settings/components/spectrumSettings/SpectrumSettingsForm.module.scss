@@ -49,6 +49,17 @@
 		width: 20px;
 		height: 20px;
 		cursor: pointer;
+
+		&:disabled {
+			cursor: wait;
+		}
+	}
+
+	&__savingIndicator {
+		font-size: 0.75rem;
+		color: var(--text-muted);
+		font-weight: normal;
+		margin-left: 0.5rem;
 	}
 
 	&__input {

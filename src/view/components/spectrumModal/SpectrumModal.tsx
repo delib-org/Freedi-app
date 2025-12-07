@@ -27,8 +27,9 @@ const SpectrumModal: FC<SpectrumModalProps> = ({
 	const labels = spectrumSettings?.labels || DEFAULT_SPECTRUM_LABELS;
 	const questionText = spectrumSettings?.questionText || DEFAULT_SPECTRUM_QUESTION;
 
-	// Get the current label based on spectrum value
-	const currentLabel = labels[spectrum - 1] || '';
+	// Get the closest label based on continuous spectrum value
+	const closestLabelIndex = Math.round(spectrum) - 1;
+	const currentLabel = labels[Math.max(0, Math.min(4, closestLabelIndex))] || '';
 
 	useEffect(() => {
 		// Update spectrum if initialValue changes
@@ -36,7 +37,8 @@ const SpectrumModal: FC<SpectrumModalProps> = ({
 	}, [initialValue]);
 
 	const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-		setSpectrum(parseInt(e.target.value, 10));
+		// Allow continuous (decimal) values
+		setSpectrum(parseFloat(e.target.value));
 	};
 
 	const handleSubmit = () => {
@@ -63,7 +65,7 @@ const SpectrumModal: FC<SpectrumModalProps> = ({
 							type="range"
 							min={1}
 							max={5}
-							step={1}
+							step={0.1}
 							value={spectrum}
 							onChange={handleSliderChange}
 							className={styles['spectrum-modal__slider']}
@@ -77,7 +79,7 @@ const SpectrumModal: FC<SpectrumModalProps> = ({
 							<span
 								key={index}
 								className={`${styles['spectrum-modal__label']} ${
-									spectrum === index + 1 ? styles['spectrum-modal__label--active'] : ''
+									Math.round(spectrum) === index + 1 ? styles['spectrum-modal__label--active'] : ''
 								}`}
 							>
 								{t(label)}
@@ -87,7 +89,7 @@ const SpectrumModal: FC<SpectrumModalProps> = ({
 				</div>
 
 				<div className={styles['spectrum-modal__value-display']}>
-					<span>{spectrum}</span>
+					<span>{spectrum.toFixed(1)}</span>
 					<p>{t(currentLabel)}</p>
 				</div>
 

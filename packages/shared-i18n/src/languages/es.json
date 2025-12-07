@@ -727,5 +727,7 @@
   "Leave empty for automatic summary of top suggestions": "Dejar vacío para resumen automático de las mejores sugerencias",
   "Generating...": "Generando...",
   "Generated": "Generado",
-  "Topic description": "Descripción del tema"
+  "Topic description": "Descripción del tema",
+  "Enabled with default settings": "Habilitado con configuración predeterminada",
+  "Disabled": "Deshabilitado"
 }

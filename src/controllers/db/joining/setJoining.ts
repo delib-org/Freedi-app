@@ -1,4 +1,4 @@
-import { doc, runTransaction, setDoc, getDoc } from "firebase/firestore";
+import { doc, runTransaction, setDoc, getDoc, collection, query, where, getDocs, limit } from "firebase/firestore";
 import { DB } from "../config";
 import { Collections, Creator, Statement } from "delib-npm";
 import { store } from "@/redux/store";
@@ -62,6 +62,7 @@ export async function toggleJoiningWithSpectrum(
 		const creator = store.getState().creator.creator;
 		if (!creator) throw new Error("Creator not found in user state");
 		if (!statementId) throw new Error("Statement ID is required");
+		// Spectrum can be a continuous value between 1 and 5
 		if (spectrum < 1 || spectrum > 5) throw new Error("Spectrum must be between 1 and 5");
 
 		const statementRef = doc(DB, Collections.statements, statementId);
@@ -173,5 +174,44 @@ export async function updateJoinedParticipantSpectrum(
 			metadata: { spectrum },
 		});
 		throw error;
+	}
+}
+
+/**
+ * Get user's spectrum value for a parent question
+ * This checks if the user has already rated themselves for any option under this parent
+ * @param parentId - The parent question's statement ID
+ * @returns The spectrum value if found, null otherwise
+ */
+export async function getUserSpectrumForParent(parentId: string): Promise<number | null> {
+	try {
+		const creator = store.getState().creator.creator;
+		if (!creator) return null;
+
+		// Query joinedParticipants where parentId matches and userId matches
+		const participantsRef = collection(DB, JOINED_PARTICIPANTS_COLLECTION);
+		const q = query(
+			participantsRef,
+			where('parentId', '==', parentId),
+			where('userId', '==', creator.uid),
+			limit(1)
+		);
+
+		const querySnapshot = await getDocs(q);
+
+		if (!querySnapshot.empty) {
+			const participant = querySnapshot.docs[0].data() as JoinedParticipant;
+
+			return participant.spectrum;
+		}
+
+		return null;
+	} catch (error) {
+		logError(error, {
+			operation: 'joining.getUserSpectrumForParent',
+			metadata: { parentId },
+		});
+
+		return null;
 	}
 }

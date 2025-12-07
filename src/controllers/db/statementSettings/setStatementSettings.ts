@@ -15,19 +15,19 @@ interface SetStatementSettingsProps {
 	settingsSection: keyof Statement;
 }
 
-export function setStatementSettingToDB({
+export async function setStatementSettingToDB({
 	statement,
 	property,
 	newValue,
 	settingsSection,
-}: SetStatementSettingsProps) {
+}: SetStatementSettingsProps): Promise<boolean> {
 	try {
 		const statementSettingsRef = doc(
 			FireStore,
 			Collections.statements,
 			statement.statementId
 		);
-		setDoc(
+		await setDoc(
 			statementSettingsRef,
 			{
 				[settingsSection]: {
@@ -36,8 +36,12 @@ export function setStatementSettingToDB({
 			},
 			{ merge: true }
 		);
+
+		return true;
 	} catch (error) {
 		console.error(error);
+
+		return false;
 	}
 }
 

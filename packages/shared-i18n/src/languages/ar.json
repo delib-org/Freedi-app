@@ -723,5 +723,7 @@
   "Leave empty for automatic summary of top suggestions": "اتركه فارغاً للحصول على ملخص تلقائي للاقتراحات الأعلى",
   "Generating...": "جاري الإنشاء...",
   "Generated": "تم الإنشاء",
-  "Topic description": "وصف الموضوع"
+  "Topic description": "وصف الموضوع",
+  "Enabled with default settings": "مفعّل بالإعدادات الافتراضية",
+  "Disabled": "معطّل"
 }

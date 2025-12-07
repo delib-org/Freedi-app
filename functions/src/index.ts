@@ -87,6 +87,7 @@ import {
   getRoomAssignments,
   getMyRoomAssignment,
   deleteRoomAssignments,
+  createILPRoomAssignments,
 } from "./fn_roomAssignment";
 
 // Discussion Summarization
@@ -466,6 +467,7 @@ exports.notifyRoomParticipants = wrapHttpFunction(notifyRoomParticipants);
 exports.getRoomAssignments = wrapHttpFunction(getRoomAssignments);
 exports.getMyRoomAssignment = wrapHttpFunction(getMyRoomAssignment);
 exports.deleteRoomAssignments = wrapHttpFunction(deleteRoomAssignments);
+exports.createILPRoomAssignments = wrapHttpFunction(createILPRoomAssignments);
 
 // Discussion Summarization
 exports.summarizeDiscussion = summarizeDiscussion;
