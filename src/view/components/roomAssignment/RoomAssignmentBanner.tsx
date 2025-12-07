@@ -3,6 +3,7 @@ import { useSelector } from 'react-redux';
 import { useAppDispatch, useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { selectMyRoomAssignment } from '@/redux/roomAssignment/roomAssignmentSlice';
+import { statementsSelector } from '@/redux/statements/statementsSlice';
 import { listenToMyRoomAssignment } from '@/controllers/db/roomAssignment';
 import RoomIcon from '@/assets/icons/homeIcon.svg?react';
 import Snackbar from '@/view/components/snackbar/Snackbar';
@@ -17,15 +18,25 @@ const RoomAssignmentBanner: FC<RoomAssignmentBannerProps> = ({ statementId }) =>
 	const { t } = useTranslation();
 	const dispatch = useAppDispatch();
 
-	// Get current user ID
+	// Get current user ID - works for both registered and anonymous users
 	const userId = useAppSelector((state: RootState) => state.creator.creator?.uid);
 
 	// Get my room assignment from Redux
 	const myAssignment = useSelector(selectMyRoomAssignment);
 
+	// Get statements to find the topic name
+	const statements = useSelector(statementsSelector);
+
+	// Find the topic (option) statement for this assignment
+	const topicStatement = myAssignment
+		? statements.find((s) => s.statementId === myAssignment.statementId)
+		: null;
+	const topicName = topicStatement?.statement || t('your assigned topic');
+
 	// Track previous assignment to detect new assignments
 	const prevAssignmentRef = useRef<string | null>(null);
 	const [showSnackbar, setShowSnackbar] = useState(false);
+	const [hasShownInitialSnackbar, setHasShownInitialSnackbar] = useState(false);
 
 	// Listen to my room assignment
 	useEffect(() => {
@@ -38,16 +49,17 @@ const RoomAssignmentBanner: FC<RoomAssignmentBannerProps> = ({ statementId }) =>
 		};
 	}, [statementId, userId, dispatch]);
 
-	// Show snackbar when receiving a new room assignment
+	// Show snackbar when receiving a room assignment (including initial load)
 	useEffect(() => {
 		if (myAssignment && prevAssignmentRef.current !== myAssignment.participantId) {
-			// Only show snackbar if this is a new assignment (not initial load)
-			if (prevAssignmentRef.current !== null) {
+			// Show snackbar on initial load or new assignment
+			if (!hasShownInitialSnackbar || prevAssignmentRef.current !== null) {
 				setShowSnackbar(true);
+				setHasShownInitialSnackbar(true);
 			}
 			prevAssignmentRef.current = myAssignment.participantId;
 		}
-	}, [myAssignment]);
+	}, [myAssignment, hasShownInitialSnackbar]);
 
 	// Don't render if no assignment or loading
 	if (!myAssignment) {
@@ -62,7 +74,7 @@ const RoomAssignmentBanner: FC<RoomAssignmentBannerProps> = ({ statementId }) =>
 				</div>
 				<div className={styles.banner__content}>
 					<div className={styles.banner__title}>
-						{t('You are assigned to a room')}
+						{t('Room')} {myAssignment.roomNumber}: {topicName}
 					</div>
 					<div className={styles.banner__subtitle}>
 						{t('Join your designated room for the discussion')}
@@ -74,11 +86,11 @@ const RoomAssignmentBanner: FC<RoomAssignmentBannerProps> = ({ statementId }) =>
 			</div>
 
 			<Snackbar
-				message={t('You have been assigned to Room {{roomNumber}}').replace('{{roomNumber}}', String(myAssignment.roomNumber))}
-				subMessage={t('Check the banner above for details')}
+				message={`${t('Room')} ${myAssignment.roomNumber}: ${topicName}`}
+				subMessage={t('Go to the topic card to join the discussion')}
 				isVisible={showSnackbar}
 				type="success"
-				duration={5000}
+				duration={7000}
 				onClose={() => setShowSnackbar(false)}
 			/>
 		</>

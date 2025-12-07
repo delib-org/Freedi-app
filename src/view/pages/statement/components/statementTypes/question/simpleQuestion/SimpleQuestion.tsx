@@ -9,6 +9,7 @@ import { useSummarization } from '@/controllers/hooks/useSummarization'
 import { useTranslation } from '@/controllers/hooks/useTranslation'
 import SummaryDisplay from '../document/MultiStageQuestion/components/SummaryDisplay/SummaryDisplay'
 import SummarizeModal from '../document/MultiStageQuestion/components/SummarizeModal/SummarizeModal'
+import { RoomAssignmentBanner } from '@/view/components/roomAssignment'
 
 const SimpleQuestion = () => {
 	const { statement } = useContext(StatementContext)
@@ -55,6 +56,7 @@ const SimpleQuestion = () => {
 					</div>
 				)}
 
+				{statement && <RoomAssignmentBanner statementId={statement.statementId} />}
 				<SuggestionCards />
 
 				<div className={styles.bottomNav}>

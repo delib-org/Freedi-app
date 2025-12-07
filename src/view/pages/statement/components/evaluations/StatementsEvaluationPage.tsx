@@ -15,6 +15,7 @@ import Toast from '@/view/components/toast/Toast';
 import { QuestionStep, StatementType, Statement } from 'delib-npm';
 import { useEvaluationGuard } from '@/controllers/hooks/useEvaluationGuard';
 import AddSolutionPrompt from '@/view/components/evaluation/AddSolutionPrompt';
+import { RoomAssignmentBanner } from '@/view/components/roomAssignment';
 
 interface StatementEvaluationPageProps {
 	statement: Statement;
@@ -93,6 +94,7 @@ const StatementEvaluationPage: FC<StatementEvaluationPageProps> = ({
 							</Toast>
 						)}
 						<EditableDescription />
+						<RoomAssignmentBanner statementId={statement.statementId} />
 						<SuggestionCards />
 					</div>
 				</div>
