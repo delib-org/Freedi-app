@@ -165,4 +165,59 @@ $breakpoint-tablet: 768px;
 			border-color: rgba(59, 130, 246, 0.5);
 		}
 	}
+
+	// Room badge - current user's room (teal/agree color)
+	&--room-current {
+		background: var(--agree, #57c6b2);
+		color: white;
+		box-shadow: 0 2px 8px rgba(87, 198, 178, 0.3);
+		border: 1px solid rgba(255, 255, 255, 0.2);
+		animation: room-pulse 2s ease-in-out infinite;
+
+		&:hover {
+			background: var(--agree-contrast, #4db8a4);
+			box-shadow: 0 4px 12px rgba(87, 198, 178, 0.5);
+			transform: translateY(-1px);
+		}
+	}
+
+	// Room badge - other rooms (purple/group color)
+	&--room-other {
+		background: var(--group, #b893e7);
+		color: white;
+		box-shadow: 0 2px 8px rgba(184, 147, 231, 0.3);
+		border: 1px solid rgba(255, 255, 255, 0.2);
+
+		&:hover {
+			background: var(--group-contrast, #a080e0);
+			box-shadow: 0 4px 12px rgba(184, 147, 231, 0.5);
+			transform: translateY(-1px);
+		}
+	}
+
+	// Room number text inside badge
+	&__room-number {
+		font-size: 0.75rem;
+		font-weight: 700;
+		z-index: 2;
+		position: relative;
+
+		@media screen and (max-width: $breakpoint-mobile) {
+			font-size: calc(0.75rem * #{$mobileScale-440});
+		}
+
+		@media screen and (max-width: $breakpoint-tablet) and (min-width: #{$breakpoint-mobile + 1px}) {
+			font-size: calc(0.75rem * #{$mobileScale-768});
+		}
+	}
+}
+
+// Room pulse animation
+@keyframes room-pulse {
+	0%, 100% {
+		box-shadow: 0 2px 8px rgba(87, 198, 178, 0.3);
+	}
+	50% {
+		box-shadow: 0 2px 16px rgba(87, 198, 178, 0.5);
+	}
 }

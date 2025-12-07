@@ -137,6 +137,19 @@
           }
         }
 
+        // Room assignment display
+        .roomDisplay {
+          margin-top: 0.75rem;
+          padding-top: 0.75rem;
+          border-top: 1px dashed var(--shadow);
+          width: 100%;
+
+          @media screen and (max-width: 768px) {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+          }
+        }
+
         .showMore {
           display: none; // Hidden by default
           background: none;

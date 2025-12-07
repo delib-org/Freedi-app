@@ -218,4 +218,37 @@ export const selectParticipantCountBySettingsId = (settingsId: string) =>
 		participants.filter((p) => p.settingsId === settingsId).length
 	);
 
+/**
+ * Select current user's room assignment for a specific statement (option)
+ * Used to show which room the user is assigned to on a suggestion card
+ */
+export const selectMyRoomForStatement = (statementId: string, userId: string) =>
+	createSelector([getParticipants], (participants) =>
+		participants.find((p) => p.statementId === statementId && p.userId === userId)
+	);
+
+/**
+ * Select room by room ID
+ */
+export const selectRoomById = (roomId: string) =>
+	createSelector([getRooms], (rooms) =>
+		rooms.find((r) => r.roomId === roomId)
+	);
+
+/**
+ * Check if rooms exist for a statement
+ */
+export const selectHasRoomsForStatement = (statementId: string) =>
+	createSelector([getRooms], (rooms) =>
+		rooms.some((r) => r.statementId === statementId)
+	);
+
+/**
+ * Select all participants for a specific statement
+ */
+export const selectParticipantsByStatementId = (statementId: string) =>
+	createSelector([getParticipants], (participants) =>
+		participants.filter((p) => p.statementId === statementId)
+	);
+
 export default roomAssignmentSlice;

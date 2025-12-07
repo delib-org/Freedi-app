@@ -18,12 +18,38 @@ interface CreateRoomAssignmentsRequest {
 	adminName?: string;
 }
 
+interface CreateILPRoomAssignmentsRequest {
+	questionId: string;
+	minRoomSize: number;
+	maxRoomSize: number;
+	useILP: boolean;
+	optimizationWeights?: {
+		satisfaction: number;
+		heterogeneity: number;
+		relaxationPenalty: number;
+	};
+	adminId: string;
+	adminName?: string;
+}
+
 interface CreateRoomAssignmentsResponse {
 	success: boolean;
 	settingsId: string;
 	totalRooms: number;
 	totalParticipants: number;
 	balanceScore: number;
+	error?: string;
+}
+
+interface CreateILPRoomAssignmentsResponse {
+	success: boolean;
+	settingsId: string;
+	totalRooms: number;
+	totalParticipants: number;
+	heterogeneityScore: number;
+	satisfactionScore: number;
+	avgRoomSize: number;
+	solverStatus: string;
 	error?: string;
 }
 
@@ -95,6 +121,73 @@ export async function createRoomAssignments(
 			metadata: { roomSize, questionsCount: scrambleByQuestions.length },
 		});
 		dispatch(setError('Failed to create room assignments'));
+		dispatch(setLoading(false));
+
+		return null;
+	}
+}
+
+/**
+ * Create room assignments using ILP optimization
+ * Calls the createILPRoomAssignments cloud function which uses the Python ILP solver
+ */
+export async function createILPRoomAssignments(
+	questionId: string,
+	minRoomSize: number,
+	maxRoomSize: number,
+	useILP: boolean,
+	user: User,
+	dispatch: AppDispatch,
+	optimizationWeights?: {
+		satisfaction: number;
+		heterogeneity: number;
+		relaxationPenalty: number;
+	}
+): Promise<CreateILPRoomAssignmentsResponse | null> {
+	try {
+		dispatch(setLoading(true));
+		dispatch(setError(null));
+
+		const requestData: CreateILPRoomAssignmentsRequest = {
+			questionId,
+			minRoomSize,
+			maxRoomSize,
+			useILP,
+			optimizationWeights,
+			adminId: user.uid,
+			adminName: user.displayName,
+		};
+
+		const endpoint = APIEndPoint('createILPRoomAssignments', {});
+
+		const response = await fetch(endpoint, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify(requestData),
+		});
+
+		if (!response.ok) {
+			const errorData = await response.json();
+			throw new Error(errorData.error || 'Failed to create ILP room assignments');
+		}
+
+		const result = (await response.json()) as CreateILPRoomAssignmentsResponse;
+
+		// Refresh the admin data
+		await getRoomAssignmentDataForAdmin(questionId, dispatch);
+
+		dispatch(setLoading(false));
+
+		return result;
+	} catch (error) {
+		logError(error, {
+			operation: 'roomAssignment.createILPRoomAssignments',
+			statementId: questionId,
+			metadata: { minRoomSize, maxRoomSize, useILP },
+		});
+		dispatch(setError('Failed to create ILP room assignments'));
 		dispatch(setLoading(false));
 
 		return null;

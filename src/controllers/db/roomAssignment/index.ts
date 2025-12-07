@@ -10,6 +10,7 @@ export {
 
 export {
 	createRoomAssignments,
+	createILPRoomAssignments,
 	notifyRoomParticipants,
 	deleteRoomAssignments,
 } from './setRoomAssignment';

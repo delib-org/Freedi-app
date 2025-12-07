@@ -14,14 +14,16 @@ import {
 	setStatement,
 	statementSelector,
 } from '@/redux/statements/statementsSlice';
+import { RootState } from '@/redux/store';
 
 // Hooks & Helpers
 
 // Custom components
 import Loader from '@/view/components/loaders/Loader';
-import { Statement } from 'delib-npm';
+import { Statement, User, StatementType } from 'delib-npm';
 import MembersManagement from './components/membership/MembersManagement';
 import { RoomAssignment } from './components/roomAssignment';
+import { SpectrumSettingsForm } from './components/spectrumSettings';
 
 const StatementSettings: FC = () => {
 	// * Hooks * //
@@ -42,6 +44,7 @@ const StatementSettings: FC = () => {
 	const statement: Statement | undefined = useAppSelector(
 		statementSelector(statementId)
 	);
+	const user = useAppSelector((state: RootState) => state.creator.creator) as User | null;
 
 	useEffect(() => {
 		try {
@@ -116,13 +119,19 @@ const StatementSettings: FC = () => {
 				</div>
 			) : (
 				<>
-
 					<StatementSettingsForm
 						statement={statementToEdit}
 						parentStatement={parentStatement}
 						setStatementToEdit={setStatementToEdit}
 					/>
 					<MembersManagement statement={statementToEdit} />
+					{/* Spectrum Settings - shown for questions that can have options */}
+					{user && statementToEdit.statementType === StatementType.question && (
+						<SpectrumSettingsForm
+							statement={statementToEdit}
+							user={user}
+						/>
+					)}
 					<RoomAssignment statement={statementToEdit} />
 				</>
 			)}

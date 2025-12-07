@@ -10,7 +10,7 @@ import SolutionMenu from '../../solutionMenu/SolutionMenu';
 import AddQuestionIcon from '@/assets/icons/addQuestion.svg?react';
 import { updateStatementText, updateStatementMainImage } from '@/controllers/db/statements/setStatements';
 import { changeStatementType } from '@/controllers/db/statements/changeStatementType';
-import { useAppDispatch } from '@/controllers/hooks/reduxHooks';
+import { useAppDispatch, useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import useStatementColor, {
 	StyleProps,
@@ -21,7 +21,7 @@ import IconButton from '@/view/components/iconButton/IconButton';
 import styles from './SuggestionCard.module.scss';
 import { StatementType, Statement } from 'delib-npm';
 import { useAuthorization } from '@/controllers/hooks/useAuthorization';
-import { toggleJoining } from '@/controllers/db/joining/setJoining';
+import { toggleJoining, toggleJoiningWithSpectrum } from '@/controllers/db/joining/setJoining';
 import Joined from '@/view/components/joined/Joined';
 import ImprovementModal from '@/view/components/improvementModal/ImprovementModal';
 import { improveSuggestionWithTimeout } from '@/services/suggestionImprovement';
@@ -30,6 +30,16 @@ import CommunityBadge from '@/view/components/badges/CommunityBadge';
 import AnchoredBadge from '@/view/components/badges/AnchoredBadge';
 import UploadImage from '@/view/components/uploadImage/UploadImage';
 import StatementImage from './StatementImage';
+import SpectrumModal from '@/view/components/spectrumModal/SpectrumModal';
+import RoomBadge from '@/view/components/badges/RoomBadge';
+import RoomTabs from '@/view/components/roomTabs/RoomTabs';
+import { getSpectrumSettings } from '@/controllers/db/spectrumSettings';
+import { SpectrumSettings } from '@/types/spectrumSettings';
+import {
+	selectRoomsByStatementId,
+	selectMyRoomForStatement,
+	selectParticipantsByStatementId,
+} from '@/redux/roomAssignment/roomAssignmentSlice';
 
 interface Props {
 	statement: Statement | undefined;
@@ -60,6 +70,22 @@ const SuggestionCard: FC<Props> = ({
 	// Redux Store
 	const dispatch = useAppDispatch();
 
+	// Room assignment selectors - only select if statement exists
+	const roomsForThisOption = useAppSelector(
+		statement ? selectRoomsByStatementId(statement.statementId) : () => []
+	);
+	const myRoomAssignment = useAppSelector(
+		statement && creator ? selectMyRoomForStatement(statement.statementId, creator.uid) : () => undefined
+	);
+	const roomParticipants = useAppSelector(
+		statement ? selectParticipantsByStatementId(statement.statementId) : () => []
+	);
+
+	// Find my room from the rooms list
+	const myRoom = myRoomAssignment
+		? roomsForThisOption.find(r => r.roomId === myRoomAssignment.roomId)
+		: undefined;
+
 	// Use Refs
 	const elementRef = useRef<HTMLDivElement>(null);
 	const textContainerRef = useRef<HTMLDivElement>(null);
@@ -81,12 +107,27 @@ const SuggestionCard: FC<Props> = ({
 		setHasJoinedOptimistic(hasJoinedServer);
 	}, [hasJoinedServer]);
 
+	// Fetch spectrum settings from parent question for the join modal
+	useEffect(() => {
+		const fetchSpectrumSettings = async () => {
+			if (parentStatement?.statementId && enableJoining) {
+				const settings = await getSpectrumSettings(parentStatement.statementId);
+				setSpectrumSettings(settings);
+			}
+		};
+		fetchSpectrumSettings();
+	}, [parentStatement?.statementId, enableJoining]);
+
 	// Use States
 	const [isEdit, setIsEdit] = useState(false);
 	const [shouldShowAddSubQuestionModal, setShouldShowAddSubQuestionModal] =
 		useState(false);
 	const [isCardMenuOpen, setIsCardMenuOpen] = useState(false);
 	const [isExpanded, setIsExpanded] = useState(false);
+
+	// Spectrum modal state for joining with demographic data
+	const [showSpectrumModal, setShowSpectrumModal] = useState(false);
+	const [spectrumSettings, setSpectrumSettings] = useState<SpectrumSettings | null>(null);
 
 	// Improvement feature states
 	const [showImprovementModal, setShowImprovementModal] = useState(false);
@@ -191,9 +232,41 @@ const SuggestionCard: FC<Props> = ({
 		}
 	}
 
-	async function handleJoin() {
+	function handleJoinClick() {
+		if (hasJoinedOptimistic) {
+			// If already joined, directly leave (no spectrum modal needed)
+			handleLeave();
+		} else {
+			// Check if spectrum survey is enabled (default: enabled if no settings exist)
+			const spectrumEnabled = spectrumSettings?.enabled !== false;
+			if (spectrumEnabled) {
+				// Show spectrum modal first
+				setShowSpectrumModal(true);
+			} else {
+				// Spectrum disabled by admin - join directly without survey
+				handleDirectJoin();
+			}
+		}
+	}
+
+	async function handleDirectJoin() {
+		// Join directly without spectrum (when admin disabled spectrum survey)
+		setHasJoinedOptimistic(true);
+		setIsJoinLoading(true);
+
+		try {
+			await toggleJoining(statement.statementId);
+		} catch (error) {
+			console.error('Failed to join:', error);
+			setHasJoinedOptimistic(false);
+		} finally {
+			setIsJoinLoading(false);
+		}
+	}
+
+	async function handleLeave() {
 		// Optimistically update the UI immediately
-		setHasJoinedOptimistic(!hasJoinedOptimistic);
+		setHasJoinedOptimistic(false);
 		setIsJoinLoading(true);
 
 		try {
@@ -201,9 +274,26 @@ const SuggestionCard: FC<Props> = ({
 			await toggleJoining(statement.statementId);
 		} catch (error) {
 			// If the API call fails, revert the optimistic update
-			console.error('Failed to toggle joining:', error);
-			setHasJoinedOptimistic(hasJoinedOptimistic); // revert to original state
-			// Optionally show an error message to the user here
+			console.error('Failed to leave:', error);
+			setHasJoinedOptimistic(true); // revert to joined state
+		} finally {
+			setIsJoinLoading(false);
+		}
+	}
+
+	async function handleSpectrumSubmit(spectrum: number) {
+		// Optimistically update the UI immediately
+		setHasJoinedOptimistic(true);
+		setShowSpectrumModal(false);
+		setIsJoinLoading(true);
+
+		try {
+			// Call the API function with spectrum data
+			await toggleJoiningWithSpectrum(statement.statementId, spectrum);
+		} catch (error) {
+			// If the API call fails, revert the optimistic update
+			console.error('Failed to join with spectrum:', error);
+			setHasJoinedOptimistic(false); // revert to not joined state
 		} finally {
 			setIsJoinLoading(false);
 		}
@@ -401,7 +491,7 @@ const SuggestionCard: FC<Props> = ({
 								<>
 									<Joined statement={statement} />
 									<button
-										onClick={handleJoin}
+										onClick={handleJoinClick}
 										disabled={isJoinLoading}
 										className="btn btn--small"
 										style={{
@@ -415,6 +505,24 @@ const SuggestionCard: FC<Props> = ({
 										{hasJoinedOptimistic ? t('Leave') : t('Join')}
 									</button>
 								</>
+							)}
+							{/* Room assignment display */}
+							{roomsForThisOption.length > 0 && (
+								<div className={styles.roomDisplay}>
+									{roomsForThisOption.length === 1 ? (
+										<RoomBadge
+											room={roomsForThisOption[0]}
+											isCurrentUser={myRoom?.roomId === roomsForThisOption[0].roomId}
+										/>
+									) : (
+										<RoomTabs
+											rooms={roomsForThisOption}
+											currentUserRoomId={myRoom?.roomId}
+											participants={roomParticipants}
+											currentUserId={creator?.uid}
+										/>
+									)}
+								</div>
 							)}
 						</div>
 					</div>
@@ -485,6 +593,15 @@ const SuggestionCard: FC<Props> = ({
 				isLoading={isImproving}
 				suggestionTitle={statement.statement}
 			/>
+			{/* Spectrum Modal for joining with demographic data */}
+			{showSpectrumModal && (
+				<SpectrumModal
+					spectrumSettings={spectrumSettings}
+					onSubmit={handleSpectrumSubmit}
+					onClose={() => setShowSpectrumModal(false)}
+					isLoading={isJoinLoading}
+				/>
+			)}
 			{/* Upload area for initial image upload */}
 			{!image && showImageUpload && (
 				<div className={styles.uploadArea}>

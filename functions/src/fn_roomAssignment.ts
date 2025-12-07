@@ -15,6 +15,7 @@ import {
 } from 'delib-npm';
 import { parse } from 'valibot';
 import { db } from '.';
+import { solveWithFallback, ILPParticipant as TSILPParticipant } from './ilpRoomSolver';
 
 interface ParticipantWithDemographics {
 	userId: string;
@@ -655,4 +656,419 @@ export async function deleteRoomAssignments(req: Request, res: Response): Promis
 		logger.error('Error deleting room assignments:', error);
 		res.status(500).json({ error: 'Failed to delete room assignments' });
 	}
+}
+
+// ============================================================================
+// ILP-BASED ROOM ASSIGNMENT
+// ============================================================================
+
+interface JoinedParticipant {
+	participantId: string;
+	statementId: string;
+	parentId: string;
+	userId: string;
+	userName: string;
+	userPhoto?: string;
+	spectrum: number;
+	joinedAt: number;
+}
+
+interface ILPAssignmentRequest {
+	questionId: string;
+	minRoomSize: number;
+	maxRoomSize: number;
+	adminId: string;
+	adminName?: string;
+	useILP: boolean;
+	optimizationWeights?: {
+		satisfaction: number;
+		heterogeneity: number;
+		relaxationPenalty: number;
+	};
+}
+
+interface ILPParticipant {
+	user_id: string;
+	user_name: string;
+	spectrum: number;
+	joined_options: string[];
+}
+
+interface ILPRoomResult {
+	room_number: number;
+	topic_id: string;
+	participants: Array<{
+		user_id: string;
+		user_name: string;
+		spectrum: number;
+	}>;
+	size: number;
+	avg_spectrum: number;
+}
+
+interface ILPResponse {
+	success: boolean;
+	rooms: ILPRoomResult[];
+	statistics: {
+		total_participants: number;
+		total_rooms: number;
+		heterogeneity_score: number;
+		satisfaction_score: number;
+		avg_room_size: number;
+		solver_status: string;
+	};
+	error?: string;
+}
+
+/**
+ * HTTP endpoint to create room assignments using ILP solver
+ * This fetches joined participants from the joinedParticipants collection,
+ * calls the Python ILP service, and writes results to Firestore.
+ */
+export async function createILPRoomAssignments(req: Request, res: Response): Promise<void> {
+	try {
+		const {
+			questionId,
+			minRoomSize,
+			maxRoomSize,
+			adminId,
+			adminName,
+			useILP,
+			optimizationWeights,
+		} = req.body as ILPAssignmentRequest;
+
+		// Validate input
+		if (!questionId || !adminId) {
+			res.status(400).json({ error: 'Missing required fields: questionId, adminId' });
+
+			return;
+		}
+
+		const minSize = minRoomSize || 5;
+		const maxSize = maxRoomSize || 7;
+
+		if (minSize < 2 || minSize > maxSize) {
+			res.status(400).json({ error: 'Invalid room size range' });
+
+			return;
+		}
+
+		logger.info(`Creating ILP room assignments for question ${questionId}`);
+
+		// 1. Get all child options (statements) under this question
+		const optionsSnapshot = await db
+			.collection(Collections.statements)
+			.where('parentId', '==', questionId)
+			.where('statementType', '==', 'option')
+			.get();
+
+		if (optionsSnapshot.empty) {
+			res.status(400).json({ error: 'No options found under this question' });
+
+			return;
+		}
+
+		const optionIds = optionsSnapshot.docs.map(doc => doc.id);
+		const optionNames = new Map<string, string>();
+		optionsSnapshot.docs.forEach(doc => {
+			const data = doc.data();
+			optionNames.set(doc.id, data.statement || 'Unnamed option');
+		});
+
+		// 2. Get joined participants from the joinedParticipants collection
+		// Query for all participants who joined any of these options
+		const joinedParticipants: JoinedParticipant[] = [];
+
+		// Firestore 'in' query limited to 30 items, so we batch
+		for (let i = 0; i < optionIds.length; i += 30) {
+			const batch = optionIds.slice(i, i + 30);
+			const participantsSnapshot = await db
+				.collection('joinedParticipants')
+				.where('statementId', 'in', batch)
+				.get();
+
+			participantsSnapshot.docs.forEach(doc => {
+				joinedParticipants.push(doc.data() as JoinedParticipant);
+			});
+		}
+
+		if (joinedParticipants.length === 0) {
+			res.status(400).json({ error: 'No participants have joined any options' });
+
+			return;
+		}
+
+		// 3. Group participants by user and collect their joined options
+		const userParticipants = new Map<string, {
+			userId: string;
+			userName: string;
+			spectrum: number;
+			joinedOptions: string[];
+		}>();
+
+		for (const jp of joinedParticipants) {
+			const existing = userParticipants.get(jp.userId);
+			if (existing) {
+				// User joined multiple options
+				if (!existing.joinedOptions.includes(jp.statementId)) {
+					existing.joinedOptions.push(jp.statementId);
+				}
+			} else {
+				userParticipants.set(jp.userId, {
+					userId: jp.userId,
+					userName: jp.userName,
+					spectrum: jp.spectrum,
+					joinedOptions: [jp.statementId],
+				});
+			}
+		}
+
+		// Convert to TypeScript ILP format
+		const tsIlpParticipants: TSILPParticipant[] = Array.from(userParticipants.values()).map(p => ({
+			oderId: p.userId,
+			odeName: p.userName,
+			spectrum: p.spectrum,
+			joinedOptions: p.joinedOptions,
+		}));
+
+		// Also keep legacy format for fallback
+		const ilpParticipants: ILPParticipant[] = Array.from(userParticipants.values()).map(p => ({
+			user_id: p.userId,
+			user_name: p.userName,
+			spectrum: p.spectrum,
+			joined_options: p.joinedOptions,
+		}));
+
+		let ilpResult: ILPResponse;
+
+		// 4. Call TypeScript ILP solver or fall back to simple scrambling
+		if (useILP) {
+			try {
+				// Use local TypeScript ILP solver
+				const tsResult = solveWithFallback(tsIlpParticipants, optionIds, {
+					minRoomSize: minSize,
+					maxRoomSize: maxSize,
+					weights: optimizationWeights ? {
+						satisfaction: optimizationWeights.satisfaction,
+						heterogeneity: optimizationWeights.heterogeneity,
+					} : undefined,
+				});
+
+				// Convert TypeScript result to expected format
+				ilpResult = {
+					success: tsResult.success,
+					rooms: tsResult.rooms.map(r => ({
+						room_number: r.roomNumber,
+						topic_id: r.topicId,
+						participants: r.participants.map(p => ({
+							user_id: p.oderId,
+							user_name: p.odeName,
+							spectrum: p.spectrum,
+						})),
+						size: r.size,
+						avg_spectrum: r.avgSpectrum,
+					})),
+					statistics: {
+						total_participants: tsResult.statistics.totalParticipants,
+						total_rooms: tsResult.statistics.totalRooms,
+						heterogeneity_score: tsResult.statistics.heterogeneityScore,
+						satisfaction_score: tsResult.statistics.satisfactionScore,
+						avg_room_size: tsResult.statistics.avgRoomSize,
+						solver_status: tsResult.statistics.solverStatus,
+					},
+					error: tsResult.error,
+				};
+
+				logger.info(`ILP solver completed with status: ${tsResult.statistics.solverStatus}`);
+			} catch (ilpError) {
+				logger.warn('ILP solver failed, falling back to simple scrambling:', ilpError);
+				// Fall back to simple scrambling
+				ilpResult = simpleScrambleAssignment(ilpParticipants, optionIds, minSize, maxSize);
+			}
+		} else {
+			// Use simple scrambling directly
+			ilpResult = simpleScrambleAssignment(ilpParticipants, optionIds, minSize, maxSize);
+		}
+
+		if (!ilpResult.success || ilpResult.rooms.length === 0) {
+			res.status(400).json({
+				error: ilpResult.error || 'Could not create any rooms',
+				statistics: ilpResult.statistics,
+			});
+
+			return;
+		}
+
+		// 5. Save results to Firestore
+		const batch = db.batch();
+		const settingsId = getRandomUID();
+		const now = Date.now();
+
+		// Create room settings document
+		const roomSettings: RoomSettings = {
+			settingsId,
+			statementId: questionId,
+			topParentId: questionId, // Question is top parent for this context
+			roomSize: Math.round(ilpResult.statistics.avg_room_size),
+			scrambleByQuestions: [], // Not using demographic questions, using spectrum
+			createdAt: now,
+			lastUpdate: now,
+			createdBy: { uid: adminId, displayName: adminName || 'Admin' },
+			status: 'active',
+			totalRooms: ilpResult.statistics.total_rooms,
+			totalParticipants: ilpResult.statistics.total_participants,
+			notificationSent: false,
+		};
+
+		batch.set(db.collection(Collections.roomsSettings).doc(settingsId), roomSettings);
+
+		// Create room and participant documents
+		for (const room of ilpResult.rooms) {
+			const roomId = getRandomUID();
+			const roomDoc: Room = {
+				roomId,
+				settingsId,
+				statementId: room.topic_id, // The option this room discusses
+				roomNumber: room.room_number,
+				roomName: optionNames.get(room.topic_id),
+				participants: room.participants.map(p => p.user_id),
+				createdAt: now,
+			};
+
+			batch.set(db.collection(Collections.rooms).doc(roomId), roomDoc);
+
+			// Create participant documents
+			for (const participant of room.participants) {
+				const participantId = `${settingsId}--${participant.user_id}`;
+				const participantDoc: RoomParticipant = {
+					participantId,
+					settingsId,
+					statementId: room.topic_id,
+					roomId,
+					roomNumber: room.room_number,
+					userId: participant.user_id,
+					userName: participant.user_name,
+					demographicTags: [{
+						questionId: 'spectrum',
+						questionText: 'Spectrum Position',
+						answer: String(participant.spectrum),
+					}],
+					assignedAt: now,
+					notified: false,
+				};
+
+				batch.set(db.collection(Collections.roomParticipants).doc(participantId), participantDoc);
+			}
+		}
+
+		await batch.commit();
+
+		logger.info(`Created ${ilpResult.statistics.total_rooms} rooms for ${ilpResult.statistics.total_participants} participants using ${useILP ? 'ILP' : 'simple'} assignment`);
+
+		res.status(200).json({
+			success: true,
+			settingsId,
+			totalRooms: ilpResult.statistics.total_rooms,
+			totalParticipants: ilpResult.statistics.total_participants,
+			heterogeneityScore: ilpResult.statistics.heterogeneity_score,
+			satisfactionScore: ilpResult.statistics.satisfaction_score,
+			solverStatus: ilpResult.statistics.solver_status,
+		});
+	} catch (error) {
+		logger.error('Error creating ILP room assignments:', error);
+		res.status(500).json({ error: 'Failed to create room assignments' });
+	}
+}
+
+/**
+ * Simple scrambling fallback when ILP service is unavailable
+ */
+function simpleScrambleAssignment(
+	participants: ILPParticipant[],
+	options: string[],
+	minSize: number,
+	maxSize: number
+): ILPResponse {
+	if (participants.length === 0 || options.length === 0) {
+		return {
+			success: false,
+			rooms: [],
+			statistics: {
+				total_participants: 0,
+				total_rooms: 0,
+				heterogeneity_score: 0,
+				satisfaction_score: 0,
+				avg_room_size: 0,
+				solver_status: 'EMPTY_INPUT',
+			},
+			error: 'No participants or options',
+		};
+	}
+
+	// Group participants by their first joined option
+	const byOption = new Map<string, ILPParticipant[]>();
+	for (const p of participants) {
+		if (p.joined_options.length > 0) {
+			const firstOption = p.joined_options[0];
+			if (!byOption.has(firstOption)) {
+				byOption.set(firstOption, []);
+			}
+			byOption.get(firstOption)!.push(p);
+		}
+	}
+
+	// Calculate global average spectrum
+	const globalAvg = participants.reduce((sum, p) => sum + p.spectrum, 0) / participants.length;
+
+	// Create rooms for each option
+	const rooms: ILPRoomResult[] = [];
+	let roomNumber = 1;
+
+	for (const [optionId, optParticipants] of byOption) {
+		// Sort by spectrum for alternating distribution
+		const sorted = [...optParticipants].sort((a, b) => a.spectrum - b.spectrum);
+
+		// Calculate target room size
+		const targetSize = Math.floor((minSize + maxSize) / 2);
+
+		// Create rooms
+		for (let i = 0; i < sorted.length; i += targetSize) {
+			const roomParticipants = sorted.slice(i, i + targetSize);
+			if (roomParticipants.length > 0) {
+				const avgSpectrum = roomParticipants.reduce((sum, p) => sum + p.spectrum, 0) / roomParticipants.length;
+
+				rooms.push({
+					room_number: roomNumber++,
+					topic_id: optionId,
+					participants: roomParticipants.map(p => ({
+						user_id: p.user_id,
+						user_name: p.user_name,
+						spectrum: p.spectrum,
+					})),
+					size: roomParticipants.length,
+					avg_spectrum: Math.round(avgSpectrum * 100) / 100,
+				});
+			}
+		}
+	}
+
+	// Calculate heterogeneity score
+	const deviations = rooms.map(r => Math.abs(r.avg_spectrum - globalAvg));
+	const avgDeviation = deviations.length > 0 ? deviations.reduce((a, b) => a + b, 0) / deviations.length : 0;
+	const heterogeneityScore = Math.max(0, 1 - avgDeviation / 2);
+
+	const totalAssigned = rooms.reduce((sum, r) => sum + r.size, 0);
+
+	return {
+		success: rooms.length > 0,
+		rooms,
+		statistics: {
+			total_participants: totalAssigned,
+			total_rooms: rooms.length,
+			heterogeneity_score: Math.round(heterogeneityScore * 100) / 100,
+			satisfaction_score: totalAssigned / participants.length,
+			avg_room_size: rooms.length > 0 ? totalAssigned / rooms.length : 0,
+			solver_status: 'SIMPLE_SCRAMBLE',
+		},
+	};
 }
