@@ -310,3 +310,78 @@ apps/sign/
 5. Add Sign-specific translation keys
 6. Test RTL layout
 7. Test mobile responsiveness
+
+---
+
+## Phase 4: Paragraph Integration (Main App → Sign App)
+
+> **Status**: ✅ Complete
+> **Goal**: Use paragraphs from main app's `Statement.paragraphs[]` array in Sign app
+
+### Background
+
+The main app now stores rich text content as a `paragraphs[]` array on the Statement object:
+
+```typescript
+// Main app paragraph structure (src/types/paragraph.ts)
+interface Paragraph {
+  paragraphId: string;
+  type: ParagraphType; // h1-h6, paragraph, li
+  content: string;
+  order: number;
+  listType?: 'ul' | 'ol';
+}
+
+// Extended Statement
+interface StatementWithParagraphs extends Statement {
+  paragraphs?: Paragraph[];
+}
+```
+
+### Tasks
+
+#### 4.1 Type Definitions
+- [x] Add `Paragraph` interface to Sign app types (`src/types/index.ts`)
+- [x] Add `StatementWithParagraphs` interface
+- [x] Import `ParagraphType` enum from delib-npm (already available)
+
+#### 4.2 Query Updates
+- [x] Update `getDocumentForSigning()` to return `StatementWithParagraphs`
+- [x] Add `getParagraphsFromStatement()` helper function
+- [ ] Update `getDocumentStats()` to work with embedded paragraphs
+
+#### 4.3 Component Updates
+- [x] Update `DocumentView.tsx` to handle `Paragraph[]` instead of `Statement[]`
+- [x] Update `ParagraphCard.tsx` to accept `Paragraph` type
+- [x] Update `InteractionBar.tsx` to use `paragraphId` (already did)
+
+#### 4.4 Approval System Updates
+- [x] Update `Approval` interface to use `paragraphId`
+- [x] Update approval API routes to work with `paragraphId`
+- [x] Update `ProgressBar` to track paragraph approvals (already compatible)
+
+#### 4.5 Comments System Updates
+- [x] Decision: Comments stored as child Statements with `parentId` = `paragraphId`
+- [x] Update comment API to use `documentId` as `topParentId`
+- [x] `CommentThread` component already passes correct params
+
+### Data Flow
+
+```
+Main App                           Sign App
+=========                          ========
+Statement
+  ├─ statement (title)      →      Document Header
+  ├─ description           →      (auto-generated preview)
+  └─ paragraphs[]          →      ParagraphCard list
+       ├─ paragraphId      →      → Approval tracking
+       ├─ type             →      → Heading/paragraph/list rendering
+       ├─ content          →      → Display text
+       └─ order            →      → Sort order
+```
+
+### Migration Notes
+
+- **Backwards Compatibility**: Support both old (child Statements) and new (paragraphs array) approaches
+- **Approval ID Format**: `{userId}--{paragraphId}` (not statementId)
+- **Comment Parent**: Comments reference `paragraphId` in their `parentId` field

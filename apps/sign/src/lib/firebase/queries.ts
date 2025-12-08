@@ -4,6 +4,7 @@
 
 import { getFirestoreAdmin } from './admin';
 import { Collections, Statement, StatementType } from 'delib-npm';
+import { Paragraph, StatementWithParagraphs } from '@/types';
 
 // Types for Sign app
 export interface Signature {
@@ -20,6 +21,7 @@ export interface Signature {
 export interface Approval {
   approvalId: string;
   statementId: string;
+  paragraphId?: string; // New: for embedded paragraphs
   documentId: string;
   topParentId: string;
   userId: string;
@@ -41,8 +43,9 @@ export interface Comment {
 /**
  * Get a document (statement) for signing by ID
  * Accepts questions, options, or documents
+ * Returns StatementWithParagraphs which includes the paragraphs array
  */
-export async function getDocumentForSigning(documentId: string): Promise<Statement | null> {
+export async function getDocumentForSigning(documentId: string): Promise<StatementWithParagraphs | null> {
   try {
     const db = getFirestoreAdmin();
     const doc = await db.collection(Collections.statements).doc(documentId).get();
@@ -53,7 +56,7 @@ export async function getDocumentForSigning(documentId: string): Promise<Stateme
       return null;
     }
 
-    const statement = doc.data() as Statement;
+    const statement = doc.data() as StatementWithParagraphs;
 
     // Accept questions, options, or documents as signable
     const signableTypes: StatementType[] = [
@@ -73,6 +76,19 @@ export async function getDocumentForSigning(documentId: string): Promise<Stateme
     console.error('[Sign Queries] Error getting document:', error);
     throw error;
   }
+}
+
+/**
+ * Extract and sort paragraphs from a statement
+ * Returns the paragraphs array sorted by order
+ */
+export function getParagraphsFromStatement(statement: StatementWithParagraphs): Paragraph[] {
+  if (!statement.paragraphs || statement.paragraphs.length === 0) {
+    return [];
+  }
+
+  // Sort by order and return
+  return [...statement.paragraphs].sort((a, b) => a.order - b.order);
 }
 
 /**
@@ -259,10 +275,24 @@ export interface DocumentStats {
 
 /**
  * Get document statistics (for admin panel)
+ * Updated to work with embedded paragraphs
  */
 export async function getDocumentStats(documentId: string): Promise<DocumentStats> {
   try {
     const db = getFirestoreAdmin();
+
+    // Get the document with embedded paragraphs
+    const documentSnapshot = await db
+      .collection(Collections.statements)
+      .doc(documentId)
+      .get();
+
+    const document = documentSnapshot.exists
+      ? (documentSnapshot.data() as StatementWithParagraphs)
+      : null;
+
+    // Get paragraphs from the document
+    const paragraphs = document?.paragraphs || [];
 
     // Get signatures
     const signaturesSnapshot = await db
@@ -275,19 +305,7 @@ export async function getDocumentStats(documentId: string): Promise<DocumentStat
     const rejectedCount = signatures.filter((s) => s.signed === 'rejected').length;
     const viewedCount = signatures.filter((s) => s.signed === 'viewed').length;
 
-    // Get paragraphs
-    const paragraphsSnapshot = await db
-      .collection(Collections.statements)
-      .where('topParentId', '==', documentId)
-      .where('statementType', '==', StatementType.option)
-      .get();
-
-    const paragraphs = paragraphsSnapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    })) as Array<Statement & { id: string }>;
-
-    // Get comment count
+    // Get comment count (comments reference paragraphId in parentId)
     const commentsSnapshot = await db
       .collection(Collections.statements)
       .where('topParentId', '==', documentId)
@@ -307,16 +325,19 @@ export async function getDocumentStats(documentId: string): Promise<DocumentStat
     const totalApprovalValue = approvals.reduce((sum, a) => sum + (a.approval ? 1 : 0), 0);
     const averageApproval = approvals.length > 0 ? (totalApprovalValue / approvals.length) * 5 : 0;
 
-    // Build top paragraphs with stats
+    // Build top paragraphs with stats using embedded paragraphs
     const topParagraphs = paragraphs.map((p) => {
-      const paragraphApprovals = approvals.filter((a) => a.statementId === p.statementId);
+      // Match approvals by paragraphId (new) or statementId (legacy)
+      const paragraphApprovals = approvals.filter(
+        (a) => a.paragraphId === p.paragraphId || a.statementId === p.paragraphId
+      );
       const approvalCount = paragraphApprovals.length;
       const approvalSum = paragraphApprovals.reduce((sum, a) => sum + (a.approval ? 1 : 0), 0);
       const avgApproval = approvalCount > 0 ? (approvalSum / approvalCount) * 5 : 0;
 
       return {
-        paragraphId: p.statementId,
-        statement: p.statement || '',
+        paragraphId: p.paragraphId,
+        statement: p.content || '',
         approvalCount,
         commentCount: 0, // Would need separate query per paragraph
         avgApproval,

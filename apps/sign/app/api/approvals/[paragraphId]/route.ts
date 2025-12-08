@@ -86,15 +86,14 @@ export async function POST(
     const db = getFirestoreAdmin();
     const approvalId = `${userId}--${paragraphId}`;
 
-    // Get paragraph info for topParentId
-    const paragraphRef = await db.collection(Collections.statements).doc(paragraphId).get();
-    const paragraph = paragraphRef.exists ? paragraphRef.data() : null;
-
+    // For embedded paragraphs, the topParentId is the documentId itself
+    // We no longer look up individual paragraph documents since they're embedded
     const approvalData = {
       approvalId,
-      statementId: paragraphId,
+      statementId: documentId, // Reference to parent document
+      paragraphId, // Reference to embedded paragraph
       documentId,
-      topParentId: paragraph?.topParentId || documentId,
+      topParentId: documentId,
       userId,
       approval,
       createdAt: Date.now(),

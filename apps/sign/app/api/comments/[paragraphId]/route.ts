@@ -84,9 +84,8 @@ export async function POST(
 
     const db = getFirestoreAdmin();
 
-    // Get paragraph info for topParentId
-    const paragraphRef = await db.collection(Collections.statements).doc(paragraphId).get();
-    const paragraph = paragraphRef.exists ? paragraphRef.data() : null;
+    // For embedded paragraphs, the topParentId is the documentId itself
+    // We no longer look up individual paragraph documents since they're embedded
 
     // Get display name
     const displayName = getUserDisplayNameFromCookie(cookieHeader) || getAnonymousDisplayName(userId);
@@ -98,12 +97,14 @@ export async function POST(
       statementId,
       statement: statement.trim(),
       statementType: StatementType.statement,
-      parentId: paragraphId,
-      topParentId: paragraph?.topParentId || documentId,
+      parentId: paragraphId, // Reference to embedded paragraph
+      paragraphId, // Explicit reference for clarity
+      topParentId: documentId,
+      documentId, // Explicit reference for queries
       creatorId: userId,
       creator: {
         displayName,
-        odId: userId,
+        uid: userId,
       },
       createdAt: Date.now(),
       lastUpdate: Date.now(),

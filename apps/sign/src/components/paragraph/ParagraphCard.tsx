@@ -1,12 +1,14 @@
 'use client';
 
-import { Statement, ParagraphType } from 'delib-npm';
+import { ParagraphType } from 'delib-npm';
 import clsx from 'clsx';
+import { Paragraph } from '@/types';
 import InteractionBar from './InteractionBar';
 import styles from './ParagraphCard.module.scss';
 
 interface ParagraphCardProps {
-  paragraph: Statement;
+  paragraph: Paragraph;
+  documentId: string;
   isApproved: boolean | undefined;
   isLoggedIn: boolean;
   heatLevel?: 'low' | 'medium' | 'high';
@@ -16,13 +18,14 @@ interface ParagraphCardProps {
 
 export default function ParagraphCard({
   paragraph,
+  documentId,
   isApproved,
   isLoggedIn,
   heatLevel,
   viewCount,
   isAdmin,
 }: ParagraphCardProps) {
-  const paragraphType = paragraph.paragraphType || ParagraphType.paragraph;
+  const paragraphType = paragraph.type || ParagraphType.paragraph;
 
   // Determine approval state
   const approvalState = isApproved === undefined
@@ -40,7 +43,7 @@ export default function ParagraphCard({
 
   // Render content based on paragraph type
   const renderContent = () => {
-    const content = paragraph.statement;
+    const content = paragraph.content;
 
     switch (paragraphType) {
       case ParagraphType.h1:
@@ -58,7 +61,7 @@ export default function ParagraphCard({
       case ParagraphType.li:
         return (
           <div className={styles.listItem}>
-            <span className={styles.bullet}>&#8226;</span>
+            <span className={styles.bullet}>{paragraph.listType === 'ol' ? '•' : '•'}</span>
             <p className={styles.content}>{content}</p>
           </div>
         );
@@ -69,14 +72,14 @@ export default function ParagraphCard({
 
   return (
     <article
-      id={`paragraph-${paragraph.statementId}`}
+      id={`paragraph-${paragraph.paragraphId}`}
       className={cardClasses}
     >
       {renderContent()}
 
       <InteractionBar
-        paragraphId={paragraph.statementId}
-        documentId={paragraph.topParentId}
+        paragraphId={paragraph.paragraphId}
+        documentId={documentId}
         isApproved={isApproved}
         isLoggedIn={isLoggedIn}
         commentCount={0} // TODO: Add comment count

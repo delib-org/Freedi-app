@@ -1,5 +1,5 @@
-import { Statement } from 'delib-npm';
 import { Signature } from '@/lib/firebase/queries';
+import { Paragraph, StatementWithParagraphs } from '@/types';
 import { SignUser } from '@/lib/utils/user';
 import DocumentClient from './DocumentClient';
 import ParagraphCard from '../paragraph/ParagraphCard';
@@ -8,8 +8,8 @@ import ProgressBar from './ProgressBar';
 import styles from './DocumentView.module.scss';
 
 interface DocumentViewProps {
-  document: Statement;
-  paragraphs: Statement[];
+  document: StatementWithParagraphs;
+  paragraphs: Paragraph[];
   user: SignUser | null;
   userSignature: Signature | null;
   userApprovals: Record<string, boolean>;
@@ -54,9 +54,10 @@ export default function DocumentView({
           ) : (
             paragraphs.map((paragraph) => (
               <ParagraphCard
-                key={paragraph.statementId}
+                key={paragraph.paragraphId}
                 paragraph={paragraph}
-                isApproved={userApprovals[paragraph.statementId]}
+                documentId={document.statementId}
+                isApproved={userApprovals[paragraph.paragraphId]}
                 isLoggedIn={!!user}
               />
             ))

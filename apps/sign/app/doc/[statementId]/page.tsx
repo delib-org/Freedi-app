@@ -1,7 +1,12 @@
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { cookies } from 'next/headers';
-import { getDocumentForSigning, getParagraphsByParent, getUserSignature, getUserApprovals } from '@/lib/firebase/queries';
+import {
+  getDocumentForSigning,
+  getParagraphsFromStatement,
+  getUserSignature,
+  getUserApprovals,
+} from '@/lib/firebase/queries';
 import { getUserFromCookies } from '@/lib/utils/user';
 import DocumentView from '@/components/document/DocumentView';
 
@@ -28,15 +33,15 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export default async function DocumentPage({ params }: PageProps) {
   const { statementId } = await params;
 
-  // Fetch document and paragraphs in parallel
-  const [document, paragraphs] = await Promise.all([
-    getDocumentForSigning(statementId),
-    getParagraphsByParent(statementId),
-  ]);
+  // Fetch document (includes paragraphs array)
+  const document = await getDocumentForSigning(statementId);
 
   if (!document) {
     notFound();
   }
+
+  // Extract paragraphs from document
+  const paragraphs = getParagraphsFromStatement(document);
 
   // Get user info from cookies
   const cookieStore = await cookies();
@@ -54,9 +59,12 @@ export default async function DocumentPage({ params }: PageProps) {
   }
 
   // Convert approvals array to a map for easier lookup
+  // Note: approvals now use paragraphId instead of statementId
   const approvalsMap: Record<string, boolean> = {};
   userApprovals.forEach((approval) => {
-    approvalsMap[approval.statementId] = approval.approval;
+    // Support both old (statementId) and new (paragraphId) formats
+    const id = approval.paragraphId || approval.statementId;
+    approvalsMap[id] = approval.approval;
   });
 
   return (

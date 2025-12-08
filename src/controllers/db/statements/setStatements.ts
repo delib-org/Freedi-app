@@ -606,6 +606,9 @@ export async function updateStatementParagraphs(
 		if (!statement) throw new Error('Statement is undefined');
 		if (!paragraphs) throw new Error('Paragraphs array is undefined');
 
+		// Debug: log paragraphs being saved
+		console.info('Saving paragraphs:', JSON.stringify(paragraphs, null, 2));
+
 		// Auto-generate description preview from paragraphs
 		const sortedParagraphs = [...paragraphs].sort((a, b) => a.order - b.order);
 		const descriptionText = sortedParagraphs

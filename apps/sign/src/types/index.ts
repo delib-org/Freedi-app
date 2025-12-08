@@ -10,7 +10,26 @@ export type { Signature, Approval, Comment } from '@/lib/firebase/queries';
 // Re-export ParagraphType from delib-npm
 export { ParagraphType };
 
-// Statement with paragraphType (already included in Statement from delib-npm)
+/**
+ * Paragraph type - matches main app's paragraph structure
+ * TODO: Import from delib-npm once published with Paragraph types
+ */
+export interface Paragraph {
+  paragraphId: string;
+  type: ParagraphType;
+  content: string;
+  order: number;
+  listType?: 'ul' | 'ol';
+}
+
+/**
+ * Extended Statement type with paragraphs array
+ */
+export interface StatementWithParagraphs extends Statement {
+  paragraphs?: Paragraph[];
+}
+
+// Legacy: Statement with paragraphType (for backwards compatibility)
 export type SignParagraph = Statement;
 
 // User approval state for a paragraph

@@ -86,7 +86,22 @@ function editorToParagraphs(json: Record<string, unknown>): Paragraph[] {
 		} else {
 			const textContent = extractTextFromNode(node);
 			if (textContent || node.type !== 'paragraph') {
-				const type = mapNodeTypeToParagraphType(node.type);
+				let type = mapNodeTypeToParagraphType(node.type);
+
+				// Handle heading levels from attrs
+				if (node.type === 'heading' && node.attrs?.level) {
+					const level = node.attrs.level as number;
+					switch (level) {
+						case 1: type = ParagraphType.h1; break;
+						case 2: type = ParagraphType.h2; break;
+						case 3: type = ParagraphType.h3; break;
+						case 4: type = ParagraphType.h4; break;
+						case 5: type = ParagraphType.h5; break;
+						case 6: type = ParagraphType.h6; break;
+						default: type = ParagraphType.h1;
+					}
+				}
+
 				paragraphs.push({
 					paragraphId: generateParagraphId(),
 					type,
