@@ -1,4 +1,0 @@
-{
-  "/doc/[statementId]/page": "app/doc/[statementId]/page.js",
-  "/api/signatures/[docId]/route": "app/api/signatures/[docId]/route.js"
-}
