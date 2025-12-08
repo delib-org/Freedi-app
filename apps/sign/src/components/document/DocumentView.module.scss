@@ -2,7 +2,12 @@
   max-width: 900px;
   margin: 0 auto;
   padding: var(--spacing-lg);
-  padding-bottom: 120px; // Space for footer
+  padding-bottom: 140px; // Space for footer on desktop
+
+  // On mobile, footer stacks vertically and needs more space
+  @media (max-width: 600px) {
+    padding-bottom: 200px; // Extra space for stacked footer layout
+  }
 }
 
 .header {
@@ -136,10 +141,351 @@
   background: var(--agree);
   border: 2px solid var(--agree);
   color: white;
+  position: relative;
+  overflow: hidden;
+  min-width: 140px;
 
-  &:hover {
+  &:hover:not(.signButtonSigning):not(.signButtonSuccess) {
     background: var(--agree-light);
     border-color: var(--agree-light);
+  }
+
+  // Signing state - button transforms
+  &.signButtonSigning {
+    pointer-events: none;
+    background: var(--agree);
+
+    .buttonText {
+      opacity: 0;
+      transform: scale(0.8);
+    }
+
+    .spinnerIcon {
+      opacity: 1;
+      animation: spin 0.8s linear infinite;
+    }
+  }
+
+  // Success state - celebratory animation
+  &.signButtonSuccess {
+    pointer-events: none;
+    background: var(--agree);
+    animation: successPulse 0.4s ease-out;
+
+    .buttonText {
+      opacity: 0;
+      transform: scale(0.8);
+    }
+
+    .checkmarkIcon {
+      opacity: 1;
+      animation: checkmarkDraw 0.4s ease-out forwards;
+    }
+
+    // Confetti particles burst
+    &::before,
+    &::after {
+      content: '';
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      top: 50%;
+      left: 50%;
+      pointer-events: none;
+    }
+
+    &::before {
+      animation: confettiBurst1 0.6s ease-out forwards;
+    }
+
+    &::after {
+      animation: confettiBurst2 0.6s ease-out 0.1s forwards;
+    }
+  }
+}
+
+// Signed state - persistent checkmark next to text
+.signButtonSigned {
+  background: var(--agree);
+  border-color: var(--agree);
+  pointer-events: none;
+  cursor: default;
+
+  &:hover {
+    background: var(--agree);
+    border-color: var(--agree);
+  }
+}
+
+// Button text wrapper
+.buttonText {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xs);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+// Inline checkmark (next to text, not centered)
+.checkmarkIconInline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  margin-right: var(--spacing-xs);
+
+  svg {
+    width: 100%;
+    height: 100%;
+    stroke: white;
+    stroke-width: 3;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    fill: none;
+  }
+}
+
+// Icon containers within button
+.spinnerIcon,
+.checkmarkIcon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.spinnerIcon {
+  width: 20px;
+  height: 20px;
+
+  svg {
+    width: 100%;
+    height: 100%;
+  }
+}
+
+.checkmarkIcon {
+  width: 28px;
+  height: 28px;
+
+  svg {
+    width: 100%;
+    height: 100%;
+    stroke: white;
+    stroke-width: 3;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    fill: none;
+  }
+}
+
+// Success message that appears after animation
+.successMessage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xs);
+  color: white;
+  font-weight: 600;
+
+  svg {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+// Confetti container for particle effects
+.confettiContainer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1000;
+  overflow: hidden;
+}
+
+.confettiParticle {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  animation: confettiFall 1s ease-out forwards;
+
+  &:nth-child(odd) {
+    border-radius: 50%;
+  }
+
+  @for $i from 1 through 20 {
+    &:nth-child(#{$i}) {
+      left: calc(40% + #{($i - 10) * 3}%);
+      background: nth(
+        (var(--agree) var(--agree-light) #FFD700 #FF6B6B #4ECDC4 #45B7D1 #96CEB4 #FFEAA7),
+        (($i - 1) % 8) + 1
+      );
+      animation-delay: #{$i * 0.02}s;
+      animation-duration: #{0.8 + ($i * 0.05)}s;
+      transform: rotate(#{$i * 45}deg);
+    }
+  }
+}
+
+// Keyframe animations
+@keyframes spin {
+  from {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+@keyframes successPulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.5);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 0 0 10px rgba(76, 175, 80, 0);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(76, 175, 80, 0);
+  }
+}
+
+@keyframes checkmarkDraw {
+  0% {
+    opacity: 0;
+    stroke-dasharray: 50;
+    stroke-dashoffset: 50;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+    stroke-dasharray: 50;
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes confettiBurst1 {
+  0% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(0);
+    background: radial-gradient(
+      circle,
+      var(--agree) 0%,
+      transparent 50%
+    );
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(3);
+    background: radial-gradient(
+      circle,
+      var(--agree) 0%,
+      transparent 50%
+    );
+  }
+}
+
+@keyframes confettiBurst2 {
+  0% {
+    opacity: 0.8;
+    transform: translate(-50%, -50%) scale(0);
+    background: radial-gradient(
+      circle,
+      var(--agree-light) 0%,
+      transparent 60%
+    );
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(2.5);
+    background: radial-gradient(
+      circle,
+      var(--agree-light) 0%,
+      transparent 60%
+    );
+  }
+}
+
+@keyframes confettiFall {
+  0% {
+    opacity: 1;
+    transform: translateY(100vh) scale(1) rotate(0deg);
+  }
+  10% {
+    opacity: 1;
+    transform: translateY(calc(100vh - 100px)) scale(1) rotate(45deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(calc(100vh - 300px)) scale(0.5) rotate(720deg);
+  }
+}
+
+// Shimmer effect for success state
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.signButtonSuccessShimmer {
+  background: linear-gradient(
+    90deg,
+    var(--agree) 0%,
+    var(--agree-light) 50%,
+    var(--agree) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1s ease-in-out;
+}
+
+// Reduced motion support
+@media (prefers-reduced-motion: reduce) {
+  .signButton {
+    &.signButtonSigning {
+      .spinnerIcon {
+        animation: none;
+        opacity: 1;
+      }
+    }
+
+    &.signButtonSuccess {
+      animation: none;
+
+      .checkmarkIcon {
+        animation: none;
+        opacity: 1;
+      }
+
+      &::before,
+      &::after {
+        animation: none;
+        display: none;
+      }
+    }
+  }
+
+  .confettiParticle {
+    animation: none;
+    display: none;
+  }
+
+  .signButtonSuccessShimmer {
+    animation: none;
   }
 }
 

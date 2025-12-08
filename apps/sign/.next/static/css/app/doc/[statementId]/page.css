@@ -280,7 +280,12 @@
   max-width: 900px;
   margin: 0 auto;
   padding: var(--spacing-lg);
-  padding-bottom: 120px;
+  padding-bottom: 140px;
+}
+@media (max-width: 600px) {
+  .DocumentView_container__IlElb {
+    padding-bottom: 200px;
+  }
 }
 
 .DocumentView_header__uPR63 {
@@ -417,12 +422,413 @@
   background: var(--agree);
   border: 2px solid var(--agree);
   color: white;
+  position: relative;
+  overflow: hidden;
+  min-width: 140px;
 }
-.DocumentView_signButton__fOi0z:hover {
+.DocumentView_signButton__fOi0z:hover:not(.DocumentView_signButtonSigning__YRVVp):not(.DocumentView_signButtonSuccess__uTQGT) {
   background: var(--agree-light);
   border-color: var(--agree-light);
 }
+.DocumentView_signButton__fOi0z.DocumentView_signButtonSigning__YRVVp {
+  pointer-events: none;
+  background: var(--agree);
+}
+.DocumentView_signButton__fOi0z.DocumentView_signButtonSigning__YRVVp .DocumentView_buttonText__1SAsG {
+  opacity: 0;
+  transform: scale(0.8);
+}
+.DocumentView_signButton__fOi0z.DocumentView_signButtonSigning__YRVVp .DocumentView_spinnerIcon__ZUfZN {
+  opacity: 1;
+  animation: DocumentView_spin__Br_Mv 0.8s linear infinite;
+}
+.DocumentView_signButton__fOi0z.DocumentView_signButtonSuccess__uTQGT {
+  pointer-events: none;
+  background: var(--agree);
+  animation: DocumentView_successPulse___qe_k 0.4s ease-out;
+}
+.DocumentView_signButton__fOi0z.DocumentView_signButtonSuccess__uTQGT .DocumentView_buttonText__1SAsG {
+  opacity: 0;
+  transform: scale(0.8);
+}
+.DocumentView_signButton__fOi0z.DocumentView_signButtonSuccess__uTQGT .DocumentView_checkmarkIcon__DgITC {
+  opacity: 1;
+  animation: DocumentView_checkmarkDraw__gZeo_ 0.4s ease-out forwards;
+}
+.DocumentView_signButton__fOi0z.DocumentView_signButtonSuccess__uTQGT::before, .DocumentView_signButton__fOi0z.DocumentView_signButtonSuccess__uTQGT::after {
+  content: "";
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 50%;
+  left: 50%;
+  pointer-events: none;
+}
+.DocumentView_signButton__fOi0z.DocumentView_signButtonSuccess__uTQGT::before {
+  animation: DocumentView_confettiBurst1__Di_Nm 0.6s ease-out forwards;
+}
+.DocumentView_signButton__fOi0z.DocumentView_signButtonSuccess__uTQGT::after {
+  animation: DocumentView_confettiBurst2__LJCR_ 0.6s ease-out 0.1s forwards;
+}
 
+.DocumentView_signButtonSigned__cw9gc {
+  background: var(--agree);
+  border-color: var(--agree);
+  pointer-events: none;
+  cursor: default;
+}
+.DocumentView_signButtonSigned__cw9gc:hover {
+  background: var(--agree);
+  border-color: var(--agree);
+}
+
+.DocumentView_buttonText__1SAsG {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xs);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.DocumentView_checkmarkIconInline__HynUq {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  margin-right: var(--spacing-xs);
+}
+.DocumentView_checkmarkIconInline__HynUq svg {
+  width: 100%;
+  height: 100%;
+  stroke: white;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
+}
+
+.DocumentView_spinnerIcon__ZUfZN,
+.DocumentView_checkmarkIcon__DgITC {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.DocumentView_spinnerIcon__ZUfZN {
+  width: 20px;
+  height: 20px;
+}
+.DocumentView_spinnerIcon__ZUfZN svg {
+  width: 100%;
+  height: 100%;
+}
+
+.DocumentView_checkmarkIcon__DgITC {
+  width: 28px;
+  height: 28px;
+}
+.DocumentView_checkmarkIcon__DgITC svg {
+  width: 100%;
+  height: 100%;
+  stroke: white;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
+}
+
+.DocumentView_successMessage__iMNd5 {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xs);
+  color: white;
+  font-weight: 600;
+}
+.DocumentView_successMessage__iMNd5 svg {
+  width: 18px;
+  height: 18px;
+}
+
+.DocumentView_confettiContainer__z_pBE {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1000;
+  overflow: hidden;
+}
+
+.DocumentView_confettiParticle__ZIHPP {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  animation: DocumentView_confettiFall__lrcgB 1s ease-out forwards;
+}
+.DocumentView_confettiParticle__ZIHPP:nth-child(odd) {
+  border-radius: 50%;
+}
+.DocumentView_confettiParticle__ZIHPP:nth-child(1) {
+  left: calc(40% + -27 %);
+  background: var(--agree);
+  animation-delay: 0.02s;
+  animation-duration: 0.85s;
+  transform: rotate(45deg);
+}
+.DocumentView_confettiParticle__ZIHPP:nth-child(2) {
+  left: calc(40% + -24 %);
+  background: var(--agree-light);
+  animation-delay: 0.04s;
+  animation-duration: 0.9s;
+  transform: rotate(90deg);
+}
+.DocumentView_confettiParticle__ZIHPP:nth-child(3) {
+  left: calc(40% + -21 %);
+  background: #FFD700;
+  animation-delay: 0.06s;
+  animation-duration: 0.95s;
+  transform: rotate(135deg);
+}
+.DocumentView_confettiParticle__ZIHPP:nth-child(4) {
+  left: calc(40% + -18 %);
+  background: #FF6B6B;
+  animation-delay: 0.08s;
+  animation-duration: 1s;
+  transform: rotate(180deg);
+}
+.DocumentView_confettiParticle__ZIHPP:nth-child(5) {
+  left: calc(40% + -15 %);
+  background: #4ECDC4;
+  animation-delay: 0.1s;
+  animation-duration: 1.05s;
+  transform: rotate(225deg);
+}
+.DocumentView_confettiParticle__ZIHPP:nth-child(6) {
+  left: calc(40% + -12 %);
+  background: #45B7D1;
+  animation-delay: 0.12s;
+  animation-duration: 1.1s;
+  transform: rotate(270deg);
+}
+.DocumentView_confettiParticle__ZIHPP:nth-child(7) {
+  left: calc(40% + -9 %);
+  background: #96CEB4;
+  animation-delay: 0.14s;
+  animation-duration: 1.15s;
+  transform: rotate(315deg);
+}
+.DocumentView_confettiParticle__ZIHPP:nth-child(8) {
+  left: calc(40% + -6 %);
+  background: #FFEAA7;
+  animation-delay: 0.16s;
+  animation-duration: 1.2s;
+  transform: rotate(360deg);
+}
+.DocumentView_confettiParticle__ZIHPP:nth-child(9) {
+  left: calc(40% + -3 %);
+  background: var(--agree);
+  animation-delay: 0.18s;
+  animation-duration: 1.25s;
+  transform: rotate(405deg);
+}
+.DocumentView_confettiParticle__ZIHPP:nth-child(10) {
+  left: calc(40% + 0 %);
+  background: var(--agree-light);
+  animation-delay: 0.2s;
+  animation-duration: 1.3s;
+  transform: rotate(450deg);
+}
+.DocumentView_confettiParticle__ZIHPP:nth-child(11) {
+  left: calc(40% + 3 %);
+  background: #FFD700;
+  animation-delay: 0.22s;
+  animation-duration: 1.35s;
+  transform: rotate(495deg);
+}
+.DocumentView_confettiParticle__ZIHPP:nth-child(12) {
+  left: calc(40% + 6 %);
+  background: #FF6B6B;
+  animation-delay: 0.24s;
+  animation-duration: 1.4s;
+  transform: rotate(540deg);
+}
+.DocumentView_confettiParticle__ZIHPP:nth-child(13) {
+  left: calc(40% + 9 %);
+  background: #4ECDC4;
+  animation-delay: 0.26s;
+  animation-duration: 1.45s;
+  transform: rotate(585deg);
+}
+.DocumentView_confettiParticle__ZIHPP:nth-child(14) {
+  left: calc(40% + 12 %);
+  background: #45B7D1;
+  animation-delay: 0.28s;
+  animation-duration: 1.5s;
+  transform: rotate(630deg);
+}
+.DocumentView_confettiParticle__ZIHPP:nth-child(15) {
+  left: calc(40% + 15 %);
+  background: #96CEB4;
+  animation-delay: 0.3s;
+  animation-duration: 1.55s;
+  transform: rotate(675deg);
+}
+.DocumentView_confettiParticle__ZIHPP:nth-child(16) {
+  left: calc(40% + 18 %);
+  background: #FFEAA7;
+  animation-delay: 0.32s;
+  animation-duration: 1.6s;
+  transform: rotate(720deg);
+}
+.DocumentView_confettiParticle__ZIHPP:nth-child(17) {
+  left: calc(40% + 21 %);
+  background: var(--agree);
+  animation-delay: 0.34s;
+  animation-duration: 1.65s;
+  transform: rotate(765deg);
+}
+.DocumentView_confettiParticle__ZIHPP:nth-child(18) {
+  left: calc(40% + 24 %);
+  background: var(--agree-light);
+  animation-delay: 0.36s;
+  animation-duration: 1.7s;
+  transform: rotate(810deg);
+}
+.DocumentView_confettiParticle__ZIHPP:nth-child(19) {
+  left: calc(40% + 27 %);
+  background: #FFD700;
+  animation-delay: 0.38s;
+  animation-duration: 1.75s;
+  transform: rotate(855deg);
+}
+.DocumentView_confettiParticle__ZIHPP:nth-child(20) {
+  left: calc(40% + 30 %);
+  background: #FF6B6B;
+  animation-delay: 0.4s;
+  animation-duration: 1.8s;
+  transform: rotate(900deg);
+}
+
+@keyframes DocumentView_spin__Br_Mv {
+  from {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+@keyframes DocumentView_successPulse___qe_k {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.5);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 0 0 10px rgba(76, 175, 80, 0);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(76, 175, 80, 0);
+  }
+}
+@keyframes DocumentView_checkmarkDraw__gZeo_ {
+  0% {
+    opacity: 0;
+    stroke-dasharray: 50;
+    stroke-dashoffset: 50;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+    stroke-dasharray: 50;
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes DocumentView_confettiBurst1__Di_Nm {
+  0% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(0);
+    background: radial-gradient(circle, var(--agree) 0%, transparent 50%);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(3);
+    background: radial-gradient(circle, var(--agree) 0%, transparent 50%);
+  }
+}
+@keyframes DocumentView_confettiBurst2__LJCR_ {
+  0% {
+    opacity: 0.8;
+    transform: translate(-50%, -50%) scale(0);
+    background: radial-gradient(circle, var(--agree-light) 0%, transparent 60%);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(2.5);
+    background: radial-gradient(circle, var(--agree-light) 0%, transparent 60%);
+  }
+}
+@keyframes DocumentView_confettiFall__lrcgB {
+  0% {
+    opacity: 1;
+    transform: translateY(100vh) scale(1) rotate(0deg);
+  }
+  10% {
+    opacity: 1;
+    transform: translateY(calc(100vh - 100px)) scale(1) rotate(45deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(calc(100vh - 300px)) scale(0.5) rotate(720deg);
+  }
+}
+@keyframes DocumentView_shimmer__PhSW1 {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+.DocumentView_signButtonSuccessShimmer__jotF3 {
+  background: linear-gradient(90deg, var(--agree) 0%, var(--agree-light) 50%, var(--agree) 100%);
+  background-size: 200% 100%;
+  animation: DocumentView_shimmer__PhSW1 1s ease-in-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .DocumentView_signButton__fOi0z.DocumentView_signButtonSigning__YRVVp .DocumentView_spinnerIcon__ZUfZN {
+    animation: none;
+    opacity: 1;
+  }
+  .DocumentView_signButton__fOi0z.DocumentView_signButtonSuccess__uTQGT {
+    animation: none;
+  }
+  .DocumentView_signButton__fOi0z.DocumentView_signButtonSuccess__uTQGT .DocumentView_checkmarkIcon__DgITC {
+    animation: none;
+    opacity: 1;
+  }
+  .DocumentView_signButton__fOi0z.DocumentView_signButtonSuccess__uTQGT::before, .DocumentView_signButton__fOi0z.DocumentView_signButtonSuccess__uTQGT::after {
+    animation: none;
+    display: none;
+  }
+  .DocumentView_confettiParticle__ZIHPP {
+    animation: none;
+    display: none;
+  }
+  .DocumentView_signButtonSuccessShimmer__jotF3 {
+    animation: none;
+  }
+}
 /* RTL Support */
 [dir=rtl] .DocumentView_footer__URP48 {
   flex-direction: row-reverse;

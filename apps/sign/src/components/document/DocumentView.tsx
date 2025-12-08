@@ -3,6 +3,7 @@ import { Signature } from '@/lib/firebase/queries';
 import { SignUser } from '@/lib/utils/user';
 import DocumentClient from './DocumentClient';
 import ParagraphCard from '../paragraph/ParagraphCard';
+import SignButton from './SignButton';
 import styles from './DocumentView.module.scss';
 
 interface DocumentViewProps {
@@ -76,10 +77,14 @@ export default function DocumentView({
         </main>
 
         {/* Sign/Reject buttons at bottom */}
-        {user && paragraphs.length > 0 && (
+        {paragraphs.length > 0 && (
           <footer className={styles.footer}>
             <div className={styles.signatureStatus}>
-              {userSignature ? (
+              {!user ? (
+                <p className={styles.unsignedStatus}>
+                  Sign in to review and sign this document
+                </p>
+              ) : userSignature ? (
                 <p className={styles.signedStatus}>
                   {userSignature.signed === 'signed' && 'You have signed this document'}
                   {userSignature.signed === 'rejected' && 'You have rejected this document'}
@@ -93,20 +98,26 @@ export default function DocumentView({
             </div>
 
             <div className={styles.signatureActions}>
-              <button
-                type="button"
-                className={styles.rejectButton}
-                data-action="reject"
-              >
-                Reject Document
-              </button>
-              <button
-                type="button"
-                className={styles.signButton}
-                data-action="sign"
-              >
-                Sign Document
-              </button>
+              {!user ? (
+                <a
+                  href={`/login?redirect=/doc/${document.statementId}`}
+                  className={styles.signButton}
+                  style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
+                >
+                  Sign In to Sign
+                </a>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    className={styles.rejectButton}
+                    data-action="reject"
+                  >
+                    Reject Document
+                  </button>
+                  <SignButton isSigned={userSignature?.signed === 'signed'} />
+                </>
+              )}
             </div>
           </footer>
         )}

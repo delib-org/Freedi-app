@@ -1,11 +1,18 @@
 'use client';
 
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { useUIStore } from '@/store/uiStore';
 import { SignUser } from '@/lib/utils/user';
 import { Signature } from '@/lib/firebase/queries';
 import Modal from '../shared/Modal';
 import CommentThread from '../comments/CommentThread';
+
+// Animation timing constants
+const ANIMATION_DURATION = {
+  SIGNING: 600, // Time to show signing spinner
+  SUCCESS: 1200, // Time to show success state before reload
+  CONFETTI: 800, // Confetti animation duration
+} as const;
 
 interface DocumentClientProps {
   documentId: string;
@@ -20,9 +27,101 @@ export default function DocumentClient({
   userSignature,
   children,
 }: DocumentClientProps) {
-  const { activeModal, modalContext, closeModal, setSubmitting } = useUIStore();
+  const {
+    activeModal,
+    modalContext,
+    closeModal,
+    setSubmitting,
+    setSigningAnimationState,
+    resetSigningAnimation,
+  } = useUIStore();
 
-  // Handle sign/reject button clicks
+  const confettiTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Helper to create confetti particles
+  const triggerConfetti = useCallback(() => {
+    // Create confetti container
+    const container = document.createElement('div');
+    container.className = 'confetti-container';
+    container.setAttribute('aria-hidden', 'true');
+    container.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1000;
+      overflow: hidden;
+    `;
+
+    // Confetti colors matching design system
+    const colors = [
+      'var(--agree)',
+      'var(--agree-light)',
+      '#FFD700',
+      '#FF6B6B',
+      '#4ECDC4',
+      '#45B7D1',
+      '#96CEB4',
+      '#FFEAA7',
+    ];
+
+    // Create 30 confetti particles
+    for (let i = 0; i < 30; i++) {
+      const particle = document.createElement('div');
+      const color = colors[i % colors.length];
+      const startX = 40 + Math.random() * 20; // Center around footer area
+      const size = 6 + Math.random() * 8;
+      const delay = i * 30;
+      const duration = 800 + Math.random() * 400;
+      const rotation = Math.random() * 720;
+      const horizontalDrift = (Math.random() - 0.5) * 100;
+
+      particle.style.cssText = `
+        position: absolute;
+        left: ${startX}%;
+        bottom: 80px;
+        width: ${size}px;
+        height: ${size}px;
+        background: ${color};
+        border-radius: ${Math.random() > 0.5 ? '50%' : '2px'};
+        opacity: 0;
+        animation: confetti-rise ${duration}ms ease-out ${delay}ms forwards;
+      `;
+
+      // Add keyframes if not already added
+      if (!document.getElementById('confetti-keyframes')) {
+        const style = document.createElement('style');
+        style.id = 'confetti-keyframes';
+        style.textContent = `
+          @keyframes confetti-rise {
+            0% {
+              opacity: 1;
+              transform: translateY(0) translateX(0) rotate(0deg) scale(1);
+            }
+            100% {
+              opacity: 0;
+              transform: translateY(-300px) translateX(var(--drift, 0px)) rotate(${rotation}deg) scale(0.5);
+            }
+          }
+        `;
+        document.head.appendChild(style);
+      }
+
+      particle.style.setProperty('--drift', `${horizontalDrift}px`);
+      container.appendChild(particle);
+    }
+
+    document.body.appendChild(container);
+
+    // Clean up after animation
+    confettiTimeoutRef.current = setTimeout(() => {
+      container.remove();
+    }, ANIMATION_DURATION.CONFETTI + 500);
+  }, []);
+
+  // Handle sign/reject button clicks with animation
   const handleSignatureAction = useCallback(
     async (action: 'sign' | 'reject') => {
       if (!user) {
@@ -34,7 +133,19 @@ export default function DocumentClient({
 
       setSubmitting(true);
 
+      // Only animate for signing, not rejecting
+      if (action === 'sign') {
+        setSigningAnimationState('signing');
+      }
+
       try {
+        // Add slight delay for signing animation
+        if (action === 'sign') {
+          await new Promise((resolve) =>
+            setTimeout(resolve, ANIMATION_DURATION.SIGNING)
+          );
+        }
+
         const response = await fetch(`/api/signatures/${documentId}`, {
           method: 'POST',
           headers: {
@@ -46,22 +157,53 @@ export default function DocumentClient({
         });
 
         if (response.ok) {
+          if (action === 'sign') {
+            // Show success animation with confetti
+            setSigningAnimationState('success');
+            triggerConfetti();
+
+            // Wait for success animation before reload
+            await new Promise((resolve) =>
+              setTimeout(resolve, ANIMATION_DURATION.SUCCESS)
+            );
+          }
+
           // Refresh the page to show updated state
           window.location.reload();
         } else {
           const error = await response.json();
           console.error('Failed to submit signature:', error);
+          setSigningAnimationState('error');
           alert('Failed to submit. Please try again.');
+          resetSigningAnimation();
         }
       } catch (error) {
         console.error('Error submitting signature:', error);
+        setSigningAnimationState('error');
         alert('Failed to submit. Please try again.');
+        resetSigningAnimation();
       } finally {
         setSubmitting(false);
       }
     },
-    [documentId, user, setSubmitting]
+    [
+      documentId,
+      user,
+      setSubmitting,
+      setSigningAnimationState,
+      resetSigningAnimation,
+      triggerConfetti,
+    ]
   );
+
+  // Cleanup confetti timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (confettiTimeoutRef.current) {
+        clearTimeout(confettiTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // Set up event listeners for signature buttons
   useEffect(() => {

@@ -7,6 +7,7 @@ import { create } from 'zustand';
 
 export type ModalType = 'comments' | 'signature' | 'settings' | null;
 export type ViewMode = 'default' | 'views' | 'support' | 'importance';
+export type SigningAnimationState = 'idle' | 'signing' | 'success' | 'error';
 
 interface ModalContext {
   paragraphId?: string;
@@ -40,6 +41,11 @@ interface UIState {
   // Loading states
   isSubmitting: boolean;
   setSubmitting: (value: boolean) => void;
+
+  // Signing animation state
+  signingAnimationState: SigningAnimationState;
+  setSigningAnimationState: (state: SigningAnimationState) => void;
+  resetSigningAnimation: () => void;
 }
 
 export const useUIStore = create<UIState>((set) => ({
@@ -70,6 +76,11 @@ export const useUIStore = create<UIState>((set) => ({
   // Loading states
   isSubmitting: false,
   setSubmitting: (value) => set({ isSubmitting: value }),
+
+  // Signing animation state
+  signingAnimationState: 'idle',
+  setSigningAnimationState: (state) => set({ signingAnimationState: state }),
+  resetSigningAnimation: () => set({ signingAnimationState: 'idle' }),
 }));
 
 // Selectors for common patterns
@@ -83,3 +94,6 @@ export const selectIsEditMode = (state: UIState) => state.isEditMode;
 export const selectViewMode = (state: UIState) => state.viewMode;
 
 export const selectIsTocExpanded = (state: UIState) => state.isTocExpanded;
+
+export const selectSigningAnimationState = (state: UIState) =>
+  state.signingAnimationState;

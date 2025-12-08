@@ -1,9 +1,5 @@
 {
-  "/_not-found/page": "app/_not-found/page.js",
-  "/api/signatures/[docId]/route": "app/api/signatures/[docId]/route.js",
-  "/api/approvals/[paragraphId]/route": "app/api/approvals/[paragraphId]/route.js",
-  "/api/comments/[paragraphId]/route": "app/api/comments/[paragraphId]/route.js",
-  "/doc/[statementId]/page": "app/doc/[statementId]/page.js",
   "/login/page": "app/login/page.js",
-  "/doc/[statementId]/admin/page": "app/doc/[statementId]/admin/page.js"
+  "/doc/[statementId]/page": "app/doc/[statementId]/page.js",
+  "/api/signatures/[docId]/route": "app/api/signatures/[docId]/route.js"
 }
