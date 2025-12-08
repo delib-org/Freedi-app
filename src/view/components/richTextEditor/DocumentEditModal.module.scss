@@ -1,0 +1,31 @@
+// DocumentEditModal Component Styles (CSS Module)
+// Full-screen modal for document editing
+
+.modal {
+	composes: document-edit-modal from global;
+}
+
+.header {
+	composes: document-edit-modal__header from global;
+}
+
+.title {
+	composes: document-edit-modal__title from global;
+}
+
+.closeBtn {
+	composes: document-edit-modal__close-btn from global;
+}
+
+.body {
+	composes: document-edit-modal__body from global;
+}
+
+.error {
+	padding: 0.75rem 1rem;
+	margin: 0 1rem 1rem;
+	background-color: var(--error-bg, #fee2e2);
+	color: var(--error-text, #991b1b);
+	border-radius: 4px;
+	font-size: 0.875rem;
+}

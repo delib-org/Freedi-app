@@ -25,6 +25,7 @@ interface Props {
   handleFollowMe: () => void;
   handleInvitePanel: () => void;
   handleLogout: () => void;
+  handleEditDocument?: () => void;
   setIsHeaderMenuOpen: (value: boolean) => void;
   isHeaderMenuOpen: boolean;
 }
@@ -36,6 +37,7 @@ const StatementTopNav: FC<Props> = ({
   handleLogout,
   handleFollowMe,
   handleInvitePanel,
+  handleEditDocument,
   isHeaderMenuOpen,
   handleShare,
 }) => {
@@ -95,6 +97,7 @@ const StatementTopNav: FC<Props> = ({
             onFollowMe={handleFollowMe}
             onInvitePanel={handleInvitePanel}
             onNavigateToSettings={handleNavigateToSettings}
+            onEditDocument={handleEditDocument}
           />
         )}
         <NavButtons

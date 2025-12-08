@@ -84,6 +84,13 @@ export default defineConfig(({ mode }) => {
 				'@freedi/shared-i18n': path.resolve(__dirname, './packages/shared-i18n/src'),
 			},
 		},
+		optimizeDeps: {
+			include: [
+				'@tiptap/react',
+				'@tiptap/starter-kit',
+				'@tiptap/extension-placeholder',
+			],
+		},
 		define: {
 			'process.env.VITE_APP_VERSION': JSON.stringify(pkg.version),
 			// Only expose environment variables that start with VITE_
