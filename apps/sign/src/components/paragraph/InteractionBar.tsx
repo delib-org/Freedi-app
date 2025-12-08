@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useUIStore } from '@/store/uiStore';
 import styles from './InteractionBar.module.scss';
 
@@ -21,7 +21,14 @@ export default function InteractionBar({
 }: InteractionBarProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [localApproval, setLocalApproval] = useState(isApproved);
-  const { openModal } = useUIStore();
+  const { openModal, setApproval } = useUIStore();
+
+  // Sync local approval with store on mount and when isApproved changes
+  useEffect(() => {
+    if (isApproved !== undefined) {
+      setApproval(paragraphId, isApproved);
+    }
+  }, [paragraphId, isApproved, setApproval]);
 
   const handleApproval = useCallback(
     async (approved: boolean) => {
@@ -31,8 +38,9 @@ export default function InteractionBar({
         return;
       }
 
-      // Optimistic update
+      // Optimistic update - both local state and store
       setLocalApproval(approved);
+      setApproval(paragraphId, approved);
       setIsSubmitting(true);
 
       try {
@@ -61,7 +69,7 @@ export default function InteractionBar({
         setIsSubmitting(false);
       }
     },
-    [paragraphId, documentId, isLoggedIn, isApproved]
+    [paragraphId, documentId, isLoggedIn, isApproved, setApproval]
   );
 
   const handleOpenComments = () => {

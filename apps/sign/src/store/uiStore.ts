@@ -46,6 +46,12 @@ interface UIState {
   signingAnimationState: SigningAnimationState;
   setSigningAnimationState: (state: SigningAnimationState) => void;
   resetSigningAnimation: () => void;
+
+  // Paragraph approvals (for real-time progress tracking)
+  approvals: Record<string, boolean>;
+  totalParagraphs: number;
+  initializeApprovals: (approvals: Record<string, boolean>, total: number) => void;
+  setApproval: (paragraphId: string, approved: boolean) => void;
 }
 
 export const useUIStore = create<UIState>((set) => ({
@@ -81,6 +87,15 @@ export const useUIStore = create<UIState>((set) => ({
   signingAnimationState: 'idle',
   setSigningAnimationState: (state) => set({ signingAnimationState: state }),
   resetSigningAnimation: () => set({ signingAnimationState: 'idle' }),
+
+  // Paragraph approvals
+  approvals: {},
+  totalParagraphs: 0,
+  initializeApprovals: (approvals, total) => set({ approvals, totalParagraphs: total }),
+  setApproval: (paragraphId, approved) =>
+    set((state) => ({
+      approvals: { ...state.approvals, [paragraphId]: approved },
+    })),
 }));
 
 // Selectors for common patterns

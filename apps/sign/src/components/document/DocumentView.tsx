@@ -4,6 +4,7 @@ import { SignUser } from '@/lib/utils/user';
 import DocumentClient from './DocumentClient';
 import ParagraphCard from '../paragraph/ParagraphCard';
 import SignButton from './SignButton';
+import ProgressBar from './ProgressBar';
 import styles from './DocumentView.module.scss';
 
 interface DocumentViewProps {
@@ -21,13 +22,6 @@ export default function DocumentView({
   userSignature,
   userApprovals,
 }: DocumentViewProps) {
-  // Calculate progress - count all reviewed paragraphs (approved OR rejected)
-  const totalParagraphs = paragraphs.length;
-  const reviewedCount = Object.keys(userApprovals).length;
-  const progressPercent = totalParagraphs > 0
-    ? Math.round((reviewedCount / totalParagraphs) * 100)
-    : 0;
-
   return (
     <DocumentClient
       documentId={document.statementId}
@@ -43,18 +37,11 @@ export default function DocumentView({
           )}
 
           {/* Progress indicator */}
-          {user && totalParagraphs > 0 && (
-            <div className={styles.progress}>
-              <div className={styles.progressBar}>
-                <div
-                  className={styles.progressFill}
-                  style={{ width: `${progressPercent}%` }}
-                />
-              </div>
-              <span className={styles.progressText}>
-                {reviewedCount} / {totalParagraphs} reviewed ({progressPercent}%)
-              </span>
-            </div>
+          {user && paragraphs.length > 0 && (
+            <ProgressBar
+              initialApprovals={userApprovals}
+              totalParagraphs={paragraphs.length}
+            />
           )}
         </header>
 

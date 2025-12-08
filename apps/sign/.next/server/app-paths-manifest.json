@@ -1,4 +1,5 @@
 {
   "/doc/[statementId]/page": "app/doc/[statementId]/page.js",
+  "/api/approvals/[paragraphId]/route": "app/api/approvals/[paragraphId]/route.js",
   "/login/page": "app/login/page.js"
 }
