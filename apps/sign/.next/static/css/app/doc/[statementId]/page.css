@@ -1,0 +1,685 @@
+/*!***********************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[14].oneOf[9].use[2]!./node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[14].oneOf[9].use[3]!./node_modules/next/dist/build/webpack/loaders/resolve-url-loader/index.js??ruleSet[1].rules[14].oneOf[9].use[4]!./node_modules/next/dist/compiled/sass-loader/cjs.js??ruleSet[1].rules[14].oneOf[9].use[5]!./src/components/shared/Modal.module.scss ***!
+  \***********************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
+.Modal_backdrop__853VI {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-md);
+  z-index: 1000;
+  animation: Modal_fadeIn__3R_gQ 0.2s ease;
+}
+
+@keyframes Modal_fadeIn__3R_gQ {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.Modal_modal__mFu9m {
+  background: var(--card-default);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: Modal_slideUp__r9dAO 0.2s ease;
+}
+.Modal_modal__mFu9m.Modal_small__8MSLb {
+  width: 100%;
+  max-width: 400px;
+}
+.Modal_modal__mFu9m.Modal_medium__taiOz {
+  width: 100%;
+  max-width: 600px;
+}
+.Modal_modal__mFu9m.Modal_large__O7Y_E {
+  width: 100%;
+  max-width: 800px;
+}
+
+@keyframes Modal_slideUp__r9dAO {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+.Modal_header__2oN_U {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-bottom: 1px solid var(--border-light);
+}
+
+.Modal_title__zwXCi {
+  font-size: var(--h3-font-size);
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.Modal_closeButton__mDlnv {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.Modal_closeButton__mDlnv:hover {
+  background: var(--background);
+  color: var(--text-primary);
+}
+
+.Modal_content__bLXKl {
+  padding: var(--spacing-lg);
+  overflow-y: auto;
+  flex: 1 1;
+}
+
+/* RTL Support */
+[dir=rtl] .Modal_header__2oN_U {
+  flex-direction: row-reverse;
+}
+/*!***************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[14].oneOf[9].use[2]!./node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[14].oneOf[9].use[3]!./node_modules/next/dist/build/webpack/loaders/resolve-url-loader/index.js??ruleSet[1].rules[14].oneOf[9].use[4]!./node_modules/next/dist/compiled/sass-loader/cjs.js??ruleSet[1].rules[14].oneOf[9].use[5]!./src/components/comments/Comment.module.scss ***!
+  \***************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
+.Comment_comment__VShlm {
+  padding: var(--spacing-sm);
+  background: var(--background);
+  border-radius: var(--radius-sm);
+}
+
+.Comment_header__8o7XI {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-xs);
+}
+
+.Comment_avatar__L15mg {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--btn-primary);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 0.875rem;
+  flex-shrink: 0;
+}
+
+.Comment_meta__6_bC3 {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1;
+  min-width: 0;
+}
+
+.Comment_author__P_20E {
+  font-weight: 500;
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.Comment_date__8Tvwq {
+  font-size: 0.75rem;
+  color: var(--text-caption);
+}
+
+.Comment_deleteButton___DSFa {
+  padding: var(--spacing-xs);
+  background: transparent;
+  border: none;
+  color: var(--text-caption);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+.Comment_deleteButton___DSFa:hover {
+  background: rgba(244, 67, 54, 0.1);
+  color: var(--disagree);
+}
+
+.Comment_content__b2CfN {
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: var(--text-body);
+  word-wrap: break-word;
+}
+
+/* RTL Support */
+[dir=rtl] .Comment_header__8o7XI {
+  flex-direction: row-reverse;
+}
+[dir=rtl] .Comment_meta__6_bC3 {
+  text-align: right;
+}
+/*!*********************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[14].oneOf[9].use[2]!./node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[14].oneOf[9].use[3]!./node_modules/next/dist/build/webpack/loaders/resolve-url-loader/index.js??ruleSet[1].rules[14].oneOf[9].use[4]!./node_modules/next/dist/compiled/sass-loader/cjs.js??ruleSet[1].rules[14].oneOf[9].use[5]!./src/components/comments/CommentThread.module.scss ***!
+  \*********************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
+.CommentThread_container__Lnd3l {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.CommentThread_list__7acjP {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.CommentThread_loading__K0EYJ {
+  padding: var(--spacing-md);
+}
+
+.CommentThread_empty__DuoEJ {
+  text-align: center;
+  color: var(--text-secondary);
+  padding: var(--spacing-xl);
+}
+
+.CommentThread_form___t0Lp {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  padding-top: var(--spacing-md);
+  border-top: 1px solid var(--border-light);
+}
+
+.CommentThread_textarea__62jSw {
+  width: 100%;
+  padding: var(--spacing-sm);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  font-family: inherit;
+  font-size: 0.9375rem;
+  resize: vertical;
+  min-height: 80px;
+  transition: border-color 0.2s ease;
+}
+.CommentThread_textarea__62jSw:focus {
+  outline: none;
+  border-color: var(--btn-primary);
+}
+.CommentThread_textarea__62jSw:disabled {
+  background: var(--background);
+  cursor: not-allowed;
+}
+
+.CommentThread_error__bkZvt {
+  color: var(--disagree);
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+.CommentThread_submitButton__msIk4 {
+  align-self: flex-end;
+  padding: var(--spacing-xs) var(--spacing-md);
+  background: var(--btn-primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+.CommentThread_submitButton__msIk4:hover:not(:disabled) {
+  background: var(--btn-primary-hover);
+}
+.CommentThread_submitButton__msIk4:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.CommentThread_loginPrompt__CddXZ {
+  text-align: center;
+  color: var(--text-secondary);
+  padding: var(--spacing-md);
+  background: var(--background);
+  border-radius: var(--radius-sm);
+  margin: 0;
+}
+
+/* RTL Support */
+[dir=rtl] .CommentThread_submitButton__msIk4 {
+  align-self: flex-start;
+}
+/*!********************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[14].oneOf[9].use[2]!./node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[14].oneOf[9].use[3]!./node_modules/next/dist/build/webpack/loaders/resolve-url-loader/index.js??ruleSet[1].rules[14].oneOf[9].use[4]!./node_modules/next/dist/compiled/sass-loader/cjs.js??ruleSet[1].rules[14].oneOf[9].use[5]!./src/components/document/DocumentView.module.scss ***!
+  \********************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
+.DocumentView_container__IlElb {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: var(--spacing-lg);
+  padding-bottom: 120px;
+}
+
+.DocumentView_header__uPR63 {
+  margin-bottom: var(--spacing-xl);
+}
+
+.DocumentView_title__La0ys {
+  font-size: var(--h1-font-size);
+  color: var(--text-primary);
+  margin-bottom: var(--spacing-sm);
+  line-height: 1.3;
+}
+
+.DocumentView_description__kC87G {
+  color: var(--text-secondary);
+  font-size: 1.125rem;
+  line-height: 1.6;
+  margin-bottom: var(--spacing-lg);
+}
+
+.DocumentView_progress__Fbzt3 {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.DocumentView_progressBar__evjBa {
+  height: 8px;
+  background: var(--border-light);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.DocumentView_progressFill__mxAGE {
+  height: 100%;
+  background: var(--agree);
+  border-radius: var(--radius-full);
+  transition: width 0.3s ease;
+}
+
+.DocumentView_progressText__nOUx5 {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.DocumentView_content__7StWc {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.DocumentView_empty__BEpXH {
+  text-align: center;
+  padding: var(--spacing-2xl);
+  background: var(--card-default);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+}
+
+.DocumentView_footer__URP48 {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--card-default);
+  border-top: 1px solid var(--border-light);
+  padding: var(--spacing-md) var(--spacing-lg);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-md);
+  box-shadow: var(--shadow-lg);
+  z-index: 100;
+}
+@media (max-width: 600px) {
+  .DocumentView_footer__URP48 {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+.DocumentView_signatureStatus__DNq_u {
+  flex: 1 1;
+}
+
+.DocumentView_signedStatus__T3cV_ {
+  color: var(--agree);
+  font-weight: 500;
+  margin: 0;
+}
+
+.DocumentView_unsignedStatus__eXtCl {
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.DocumentView_signatureActions__sHBfU {
+  display: flex;
+  gap: var(--spacing-md);
+}
+@media (max-width: 600px) {
+  .DocumentView_signatureActions__sHBfU {
+    width: 100%;
+  }
+}
+
+.DocumentView_rejectButton__qgv5O,
+.DocumentView_signButton__fOi0z {
+  padding: var(--spacing-sm) var(--spacing-lg);
+  border-radius: var(--radius-md);
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+@media (max-width: 600px) {
+  .DocumentView_rejectButton__qgv5O,
+  .DocumentView_signButton__fOi0z {
+    flex: 1 1;
+  }
+}
+
+.DocumentView_rejectButton__qgv5O {
+  background: transparent;
+  border: 2px solid var(--disagree);
+  color: var(--disagree);
+}
+.DocumentView_rejectButton__qgv5O:hover {
+  background: var(--disagree);
+  color: white;
+}
+
+.DocumentView_signButton__fOi0z {
+  background: var(--agree);
+  border: 2px solid var(--agree);
+  color: white;
+}
+.DocumentView_signButton__fOi0z:hover {
+  background: var(--agree-light);
+  border-color: var(--agree-light);
+}
+
+/* RTL Support */
+[dir=rtl] .DocumentView_footer__URP48 {
+  flex-direction: row-reverse;
+}
+@media (max-width: 600px) {
+  [dir=rtl] .DocumentView_footer__URP48 {
+    flex-direction: column;
+  }
+}
+[dir=rtl] .DocumentView_signatureActions__sHBfU {
+  flex-direction: row-reverse;
+}
+/*!***********************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[14].oneOf[9].use[2]!./node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[14].oneOf[9].use[3]!./node_modules/next/dist/build/webpack/loaders/resolve-url-loader/index.js??ruleSet[1].rules[14].oneOf[9].use[4]!./node_modules/next/dist/compiled/sass-loader/cjs.js??ruleSet[1].rules[14].oneOf[9].use[5]!./src/components/paragraph/InteractionBar.module.scss ***!
+  \***********************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
+.InteractionBar_bar__uo6HI {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: var(--spacing-sm);
+  border-top: 1px solid var(--border-light);
+  margin-top: var(--spacing-sm);
+}
+
+.InteractionBar_approvalButtons__hZeA6 {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+.InteractionBar_button__NB_5N {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: transparent;
+  border: 1px solid var(--border-light);
+  color: var(--text-secondary);
+}
+.InteractionBar_button__NB_5N:hover:not(:disabled) {
+  background: var(--background);
+}
+.InteractionBar_button__NB_5N:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@media (max-width: 600px) {
+  .InteractionBar_buttonText__bL9WD {
+    display: none;
+  }
+}
+
+.InteractionBar_approveButton__zMz_v:hover:not(:disabled) {
+  border-color: var(--agree);
+  color: var(--agree);
+}
+.InteractionBar_approveButton__zMz_v.InteractionBar_active__BDRRz {
+  background: var(--agree);
+  border-color: var(--agree);
+  color: white;
+}
+
+.InteractionBar_rejectButton__Gi8ll:hover:not(:disabled) {
+  border-color: var(--disagree);
+  color: var(--disagree);
+}
+.InteractionBar_rejectButton__Gi8ll.InteractionBar_active__BDRRz {
+  background: var(--disagree);
+  border-color: var(--disagree);
+  color: white;
+}
+
+.InteractionBar_commentButton__JRQd0 {
+  position: relative;
+}
+.InteractionBar_commentButton__JRQd0:hover:not(:disabled) {
+  border-color: var(--btn-primary);
+  color: var(--btn-primary);
+}
+
+.InteractionBar_commentCount__bCltl {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  background: var(--btn-primary);
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 600;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+[dir=rtl] .InteractionBar_commentCount__bCltl {
+  right: auto;
+  left: -6px;
+}
+
+/* RTL Support */
+[dir=rtl] .InteractionBar_bar__uo6HI {
+  flex-direction: row-reverse;
+}
+[dir=rtl] .InteractionBar_approvalButtons__hZeA6 {
+  flex-direction: row-reverse;
+}
+[dir=rtl] .InteractionBar_button__NB_5N {
+  flex-direction: row-reverse;
+}
+/*!**********************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[14].oneOf[9].use[2]!./node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[14].oneOf[9].use[3]!./node_modules/next/dist/build/webpack/loaders/resolve-url-loader/index.js??ruleSet[1].rules[14].oneOf[9].use[4]!./node_modules/next/dist/compiled/sass-loader/cjs.js??ruleSet[1].rules[14].oneOf[9].use[5]!./src/components/paragraph/ParagraphCard.module.scss ***!
+  \**********************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
+.ParagraphCard_card__uBsup {
+  background: var(--card-default);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-lg);
+  transition: all 0.2s ease;
+  position: relative;
+}
+.ParagraphCard_card__uBsup:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.ParagraphCard_content__eaie7 {
+  line-height: 1.7;
+  color: var(--text-body);
+  margin: 0 0 var(--spacing-md);
+}
+
+.ParagraphCard_type-paragraph__bxFKy .ParagraphCard_content__eaie7 {
+  font-size: var(--p-font-size);
+  color: var(--text-body);
+}
+
+.ParagraphCard_type-h1__9k8_b .ParagraphCard_content__eaie7 {
+  font-size: var(--h1-font-size);
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.ParagraphCard_type-h2__RtjiZ .ParagraphCard_content__eaie7 {
+  font-size: var(--h2-font-size);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.ParagraphCard_type-h3__empY7 .ParagraphCard_content__eaie7 {
+  font-size: var(--h3-font-size);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.ParagraphCard_type-h4__qQCDV .ParagraphCard_content__eaie7 {
+  font-size: var(--h4-font-size);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.ParagraphCard_type-h5__QwuaH .ParagraphCard_content__eaie7 {
+  font-size: var(--h5-font-size);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.ParagraphCard_type-h6__9kcCw .ParagraphCard_content__eaie7 {
+  font-size: var(--h6-font-size);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.ParagraphCard_listItem__3v4w7 {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
+}
+
+.ParagraphCard_bullet__GJHb1 {
+  color: var(--text-secondary);
+  font-size: 1.5em;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.ParagraphCard_type-li__1ytTC .ParagraphCard_content__eaie7 {
+  margin: 0;
+}
+
+.ParagraphCard_approved__Rrcg3 {
+  border-left: 4px solid var(--agree);
+  background: rgba(76, 175, 80, 0.05);
+}
+[dir=rtl] .ParagraphCard_approved__Rrcg3 {
+  border-left: none;
+  border-right: 4px solid var(--agree);
+}
+
+.ParagraphCard_rejected__YhGOW {
+  border-left: 4px solid var(--disagree);
+  background: rgba(244, 67, 54, 0.05);
+}
+[dir=rtl] .ParagraphCard_rejected__YhGOW {
+  border-left: none;
+  border-right: 4px solid var(--disagree);
+}
+
+.ParagraphCard_pending__MRFO7 {
+  border-left: 4px solid transparent;
+}
+[dir=rtl] .ParagraphCard_pending__MRFO7 {
+  border-left: none;
+  border-right: 4px solid transparent;
+}
+
+.ParagraphCard_heat-low__sXzZb {
+  background: var(--heat-low);
+}
+
+.ParagraphCard_heat-medium__TE1i4 {
+  background: var(--heat-medium);
+}
+
+.ParagraphCard_heat-high__F8GRc {
+  background: var(--heat-high);
+}
+
+.ParagraphCard_adminInfo__qovzU {
+  position: absolute;
+  top: var(--spacing-sm);
+  right: var(--spacing-sm);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.75rem;
+  color: var(--text-caption);
+}
+[dir=rtl] .ParagraphCard_adminInfo__qovzU {
+  right: auto;
+  left: var(--spacing-sm);
+}
+
+@media (max-width: 600px) {
+  .ParagraphCard_card__uBsup {
+    padding: var(--spacing-md);
+  }
+  .ParagraphCard_type-h1__9k8_b .ParagraphCard_content__eaie7 {
+    font-size: 1.5rem;
+  }
+  .ParagraphCard_type-h2__RtjiZ .ParagraphCard_content__eaie7 {
+    font-size: 1.25rem;
+  }
+}
