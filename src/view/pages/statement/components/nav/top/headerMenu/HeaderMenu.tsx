@@ -8,7 +8,6 @@ import InvitationIcon from '@/assets/icons/invitation.svg?react';
 import ShareIcon from '@/assets/icons/shareIcon.svg?react';
 import LanguagesIcon from '@/assets/icons/languagesIcon.svg?react';
 import SettingsIcon from '@/assets/icons/settings.svg?react';
-import EditIcon from '@/assets/icons/editIcon.svg?react';
 
 // Components
 import Menu from '@/view/components/menu/Menu';
@@ -32,7 +31,6 @@ interface HeaderMenuProps {
   onFollowMe: () => void;
   onInvitePanel: () => void;
   onNavigateToSettings: () => void;
-  onEditDocument?: () => void;
 }
 
 const HeaderMenu: FC<HeaderMenuProps> = ({
@@ -48,7 +46,6 @@ const HeaderMenu: FC<HeaderMenuProps> = ({
   onFollowMe,
   onInvitePanel,
   onNavigateToSettings,
-  onEditDocument,
 }) => {
   const [showLanguageModal, setShowLanguageModal] = useState(false);
 
@@ -123,13 +120,6 @@ const HeaderMenu: FC<HeaderMenuProps> = ({
               icon={<SettingsIcon style={menuIconStyle} />}
               onOptionClick={onNavigateToSettings}
             />
-            {onEditDocument && (
-              <MenuOption
-                label={t('Edit Document')}
-                icon={<EditIcon style={menuIconStyle} />}
-                onOptionClick={onEditDocument}
-              />
-            )}
           </>
         )}
       </Menu>

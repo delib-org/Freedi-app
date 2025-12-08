@@ -6,7 +6,6 @@ import { logOut } from '@/controllers/db/authenticationUtils';
 import { setFollowMeDB } from '@/controllers/db/statements/setStatements';
 import { Statement } from 'delib-npm';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
-import { DocumentEditModal } from '@/view/components/richTextEditor';
 
 interface Props {
 	statement: Statement | undefined;
@@ -24,7 +23,6 @@ const StatementHeader: FC<Props> = ({
 	const navigate = useNavigate();
 	const [isHeaderMenuOpen, setIsHeaderMenuOpen] = useState(false);
 	const [showInvitationPanel, setShowInvitationPanel] = useState(false);
-	const [showDocumentEditor, setShowDocumentEditor] = useState(false);
 
 	const { t, dir } = useTranslation();
 
@@ -71,11 +69,6 @@ const StatementHeader: FC<Props> = ({
 		}
 	}
 
-	function handleEditDocument() {
-		setIsHeaderMenuOpen(false);
-		setShowDocumentEditor(true);
-	}
-
 	return (
 		<div className={`page__header ${dir}`}>
 			<StatementTopNav
@@ -85,7 +78,6 @@ const StatementHeader: FC<Props> = ({
 				handleFollowMe={handleFollowMe}
 				handleInvitePanel={handleInvitePanel}
 				handleLogout={handleLogout}
-				handleEditDocument={handleEditDocument}
 				setIsHeaderMenuOpen={setIsHeaderMenuOpen}
 				isHeaderMenuOpen={isHeaderMenuOpen}
 			/>
@@ -94,12 +86,6 @@ const StatementHeader: FC<Props> = ({
 					setShowModal={setShowInvitationPanel}
 					statementId={statement?.statementId}
 					pathname={pathname}
-				/>
-			)}
-			{showDocumentEditor && statement && (
-				<DocumentEditModal
-					statement={statement}
-					onClose={() => setShowDocumentEditor(false)}
 				/>
 			)}
 		</div>
