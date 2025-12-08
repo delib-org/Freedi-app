@@ -79,13 +79,19 @@ export default function InteractionBar({
   // Use local state if available, otherwise use prop
   const currentApproval = localApproval !== undefined ? localApproval : isApproved;
 
+  // Stop propagation to prevent toggling the parent card
+  const handleButtonClick = (e: React.MouseEvent, action: () => void) => {
+    e.stopPropagation();
+    action();
+  };
+
   return (
-    <div className={styles.bar}>
+    <div className={styles.bar} onClick={(e) => e.stopPropagation()}>
       <div className={styles.approvalButtons}>
         <button
           type="button"
           className={`${styles.button} ${styles.approveButton} ${currentApproval === true ? styles.active : ''}`}
-          onClick={() => handleApproval(true)}
+          onClick={(e) => handleButtonClick(e, () => handleApproval(true))}
           disabled={isSubmitting}
           aria-pressed={currentApproval === true}
           title="Approve"
@@ -106,7 +112,7 @@ export default function InteractionBar({
         <button
           type="button"
           className={`${styles.button} ${styles.rejectButton} ${currentApproval === false ? styles.active : ''}`}
-          onClick={() => handleApproval(false)}
+          onClick={(e) => handleButtonClick(e, () => handleApproval(false))}
           disabled={isSubmitting}
           aria-pressed={currentApproval === false}
           title="Reject"
@@ -129,7 +135,7 @@ export default function InteractionBar({
       <button
         type="button"
         className={`${styles.button} ${styles.commentButton}`}
-        onClick={handleOpenComments}
+        onClick={(e) => handleButtonClick(e, handleOpenComments)}
         title="Comments"
       >
         <svg

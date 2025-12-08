@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { ParagraphType } from 'delib-npm';
 import clsx from 'clsx';
 import { Paragraph } from '@/types';
@@ -25,6 +26,8 @@ export default function ParagraphCard({
   viewCount,
   isAdmin,
 }: ParagraphCardProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const cardRef = useRef<HTMLElement>(null);
   const paragraphType = paragraph.type || ParagraphType.paragraph;
 
   // Determine approval state
@@ -34,11 +37,36 @@ export default function ParagraphCard({
       ? 'approved'
       : 'rejected';
 
+  // Handle click outside to collapse on mobile
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent | TouchEvent) => {
+      if (cardRef.current && !cardRef.current.contains(event.target as Node)) {
+        setIsExpanded(false);
+      }
+    };
+
+    if (isExpanded) {
+      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('touchstart', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
+  }, [isExpanded]);
+
+  // Toggle expansion on tap (for mobile)
+  const handleTap = useCallback(() => {
+    setIsExpanded(prev => !prev);
+  }, []);
+
   const cardClasses = clsx(
     styles.card,
     styles[`type-${paragraphType}`],
     styles[approvalState],
-    heatLevel && styles[`heat-${heatLevel}`]
+    heatLevel && styles[`heat-${heatLevel}`],
+    isExpanded && styles.expanded
   );
 
   // Render content based on paragraph type
@@ -72,18 +100,36 @@ export default function ParagraphCard({
 
   return (
     <article
+      ref={cardRef}
       id={`paragraph-${paragraph.paragraphId}`}
       className={cardClasses}
+      onClick={handleTap}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          handleTap();
+        }
+      }}
+      aria-expanded={isExpanded}
     >
-      {renderContent()}
+      {/* Visual indicator for approval state */}
+      <div className={styles.stateIndicator} aria-hidden="true" />
 
-      <InteractionBar
-        paragraphId={paragraph.paragraphId}
-        documentId={documentId}
-        isApproved={isApproved}
-        isLoggedIn={isLoggedIn}
-        commentCount={0} // TODO: Add comment count
-      />
+      <div className={styles.contentWrapper}>
+        {renderContent()}
+      </div>
+
+      <div className={styles.interactionWrapper}>
+        <InteractionBar
+          paragraphId={paragraph.paragraphId}
+          documentId={documentId}
+          isApproved={isApproved}
+          isLoggedIn={isLoggedIn}
+          commentCount={0} // TODO: Add comment count
+        />
+      </div>
 
       {isAdmin && viewCount !== undefined && (
         <div className={styles.adminInfo}>

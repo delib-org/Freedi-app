@@ -1,24 +1,89 @@
-// Paragraph card - styled as regular flowing text with subtle interaction
+// Paragraph card - styled as regular flowing text with progressive disclosure
+// Interaction buttons are hidden by default and revealed on hover/tap
+
 .card {
   position: relative;
-  padding: var(--spacing-xs) 0;
+  padding: 0.125rem 0 0.125rem 0.75rem; // Minimal vertical padding, left space for indicator
   transition: background-color 0.2s ease;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
 
-  // Subtle hover effect to indicate interactivity
-  &:hover {
-    background-color: rgba(0, 0, 0, 0.02);
+  // Subtle hover effect to indicate interactivity (desktop)
+  @media (hover: hover) {
+    &:hover {
+      background-color: rgba(95, 136, 229, 0.04);
+
+      .interactionWrapper {
+        opacity: 1;
+        max-height: 50px;
+        margin-top: var(--spacing-xs);
+        pointer-events: auto;
+      }
+
+      .stateIndicator {
+        width: 3px;
+      }
+    }
+  }
+
+  // Focus state for keyboard navigation
+  &:focus-visible {
+    outline: 2px solid var(--btn-primary);
+    outline-offset: 2px;
+  }
+
+  // Expanded state (tap on mobile or click)
+  &.expanded {
+    background-color: rgba(95, 136, 229, 0.06);
 
     .interactionWrapper {
       opacity: 1;
+      max-height: 50px;
+      margin-top: var(--spacing-xs);
+      pointer-events: auto;
+    }
+
+    .stateIndicator {
+      width: 3px;
     }
   }
 }
 
+// Content wrapper for proper layout
+.contentWrapper {
+  position: relative;
+}
+
 .content {
-  line-height: 1.8;
+  line-height: 1.7;
   color: var(--text-body);
   margin: 0;
   font-size: var(--p-font-size);
+}
+
+// Visual state indicator - thin line on the left
+.stateIndicator {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--border-light);
+  border-radius: var(--radius-full);
+  transition: width 0.2s ease, background-color 0.2s ease;
+}
+
+// Interaction wrapper - hidden by default
+.interactionWrapper {
+  opacity: 0;
+  max-height: 0;
+  margin-top: 0;
+  overflow: hidden;
+  transition:
+    opacity 0.2s ease,
+    max-height 0.2s ease,
+    margin-top 0.2s ease;
+  pointer-events: none;
 }
 
 // Default paragraph type
@@ -28,27 +93,35 @@
 }
 
 // Heading types - keep them distinctive
-.type-h1 .content {
-  font-size: var(--h1-font-size);
-  font-weight: 700;
-  color: var(--text-primary);
-  margin-top: var(--spacing-lg);
-  margin-bottom: var(--spacing-sm);
+.type-h1 {
+  padding-top: var(--spacing-md);
+  padding-bottom: var(--spacing-xs);
+
+  .content {
+    font-size: var(--h1-font-size);
+    font-weight: 700;
+    color: var(--text-primary);
+  }
 }
 
-.type-h2 .content {
-  font-size: var(--h2-font-size);
-  font-weight: 600;
-  color: var(--text-primary);
-  margin-top: var(--spacing-md);
-  margin-bottom: var(--spacing-xs);
+.type-h2 {
+  padding-top: var(--spacing-sm);
+
+  .content {
+    font-size: var(--h2-font-size);
+    font-weight: 600;
+    color: var(--text-primary);
+  }
 }
 
-.type-h3 .content {
-  font-size: var(--h3-font-size);
-  font-weight: 600;
-  color: var(--text-primary);
-  margin-top: var(--spacing-sm);
+.type-h3 {
+  padding-top: var(--spacing-xs);
+
+  .content {
+    font-size: var(--h3-font-size);
+    font-weight: 600;
+    color: var(--text-primary);
+  }
 }
 
 .type-h4 .content {
@@ -87,12 +160,25 @@
   margin: 0;
 }
 
-// Approval states - no visual indicator on paragraph itself
-// Only the button state shows approval status
-.approved,
-.rejected,
+// Approval states - shown via state indicator
 .pending {
-  // No border or visual change - approval shown via button state only
+  .stateIndicator {
+    background: var(--border-light);
+  }
+}
+
+.approved {
+  .stateIndicator {
+    background: var(--agree);
+    width: 3px;
+  }
+}
+
+.rejected {
+  .stateIndicator {
+    background: var(--disagree);
+    width: 3px;
+  }
 }
 
 // Heat map backgrounds (admin view)
@@ -121,10 +207,10 @@
   opacity: 0.6;
 }
 
-// Responsive
+// Responsive adjustments
 @media (max-width: 600px) {
   .card {
-    padding-inline-start: var(--spacing-sm);
+    padding-inline-start: 0.625rem; // Slightly less padding on mobile
   }
 
   .type-h1 .content {
@@ -133,5 +219,37 @@
 
   .type-h2 .content {
     font-size: 1.2rem;
+  }
+
+  .stateIndicator {
+    width: 2px;
+  }
+}
+
+// Reduced motion support
+@media (prefers-reduced-motion: reduce) {
+  .card,
+  .interactionWrapper,
+  .stateIndicator {
+    transition: none;
+  }
+}
+
+/* RTL Support */
+[dir="rtl"] {
+  .card {
+    padding-left: 0;
+    padding-right: 0.75rem;
+  }
+
+  .stateIndicator {
+    left: auto;
+    right: 0;
+  }
+
+  @media (max-width: 600px) {
+    .card {
+      padding-inline-end: 0.625rem;
+    }
   }
 }

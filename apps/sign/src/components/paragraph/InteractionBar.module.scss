@@ -1,19 +1,12 @@
-// Interaction bar - subtle inline actions for paragraphs
+// Interaction bar - compact inline actions for paragraphs
+// Appears on hover/tap via parent component
+
 .bar {
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  gap: var(--spacing-sm);
-  padding-top: var(--spacing-xs);
-  margin-top: var(--spacing-xs);
-  opacity: 0.7;
-  transition: opacity 0.2s ease;
-
-  // Show full opacity on hover or when has interaction
-  &:hover,
-  &.hasInteraction {
-    opacity: 1;
-  }
+  gap: var(--spacing-xs);
+  padding-top: 0.25rem;
 }
 
 .approvalButtons {
@@ -26,7 +19,7 @@
   align-items: center;
   justify-content: center;
   gap: 4px;
-  padding: 4px 8px;
+  padding: 4px 10px;
   border-radius: var(--radius-sm);
   font-size: 0.75rem;
   font-weight: 500;
@@ -50,6 +43,11 @@
     opacity: 0.4;
     cursor: not-allowed;
   }
+
+  // Prevent click from bubbling to parent card
+  &:active {
+    transform: scale(0.97);
+  }
 }
 
 .buttonText {
@@ -62,7 +60,7 @@
   &:hover:not(:disabled) {
     color: var(--agree);
     border-color: var(--agree);
-    background: rgba(76, 175, 80, 0.08);
+    background: rgba(87, 198, 178, 0.08);
   }
 
   &.active {
@@ -80,7 +78,7 @@
   &:hover:not(:disabled) {
     color: var(--disagree);
     border-color: var(--disagree);
-    background: rgba(244, 67, 54, 0.08);
+    background: rgba(254, 107, 162, 0.08);
   }
 
   &.active {
@@ -120,6 +118,17 @@
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+// Reduced motion support
+@media (prefers-reduced-motion: reduce) {
+  .button {
+    transition: none;
+
+    &:active {
+      transform: none;
+    }
+  }
 }
 
 /* RTL Support */
