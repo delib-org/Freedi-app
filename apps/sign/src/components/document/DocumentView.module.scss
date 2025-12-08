@@ -33,6 +33,34 @@
   }
 }
 
+.topBarActions {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.adminButton {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background: var(--btn-primary);
+  color: white;
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition: background 0.2s ease;
+
+  &:hover {
+    background: var(--btn-primary-hover);
+  }
+
+  svg {
+    flex-shrink: 0;
+  }
+}
+
 .header {
   margin-bottom: var(--spacing-xl);
 }
