@@ -334,7 +334,7 @@
 .DocumentView_content__7StWc {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-md);
+  gap: var(--spacing-xs);
 }
 
 .DocumentView_empty__BEpXH {
@@ -847,98 +847,116 @@
 .InteractionBar_bar__uo6HI {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding-top: var(--spacing-sm);
-  border-top: 1px solid var(--border-light);
-  margin-top: var(--spacing-sm);
+  justify-content: flex-start;
+  gap: var(--spacing-sm);
+  padding-top: var(--spacing-xs);
+  margin-top: var(--spacing-xs);
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+}
+.InteractionBar_bar__uo6HI:hover, .InteractionBar_bar__uo6HI.InteractionBar_hasInteraction__yES7F {
+  opacity: 1;
 }
 
 .InteractionBar_approvalButtons__hZeA6 {
   display: flex;
-  gap: var(--spacing-sm);
+  gap: 4px;
 }
 
 .InteractionBar_button__NB_5N {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: var(--spacing-xs);
-  padding: var(--spacing-xs) var(--spacing-sm);
+  gap: 4px;
+  padding: 4px 8px;
   border-radius: var(--radius-sm);
-  font-size: 0.875rem;
+  font-size: 0.75rem;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
   background: transparent;
-  border: 1px solid var(--border-light);
-  color: var(--text-secondary);
+  border: 1px solid transparent;
+  color: var(--text-caption);
+}
+.InteractionBar_button__NB_5N svg {
+  width: 14px;
+  height: 14px;
 }
 .InteractionBar_button__NB_5N:hover:not(:disabled) {
   background: var(--background);
+  border-color: var(--border-light);
 }
 .InteractionBar_button__NB_5N:disabled {
-  opacity: 0.5;
+  opacity: 0.4;
   cursor: not-allowed;
 }
 
-@media (max-width: 600px) {
+@media (max-width: 768px) {
   .InteractionBar_buttonText__bL9WD {
     display: none;
   }
 }
 
 .InteractionBar_approveButton__zMz_v:hover:not(:disabled) {
-  border-color: var(--agree);
   color: var(--agree);
+  border-color: var(--agree);
+  background: rgba(76, 175, 80, 0.08);
 }
 .InteractionBar_approveButton__zMz_v.InteractionBar_active__BDRRz {
   background: var(--agree);
   border-color: var(--agree);
   color: white;
 }
+.InteractionBar_approveButton__zMz_v.InteractionBar_active__BDRRz:hover:not(:disabled) {
+  background: var(--agree);
+}
 
 .InteractionBar_rejectButton__Gi8ll:hover:not(:disabled) {
-  border-color: var(--disagree);
   color: var(--disagree);
+  border-color: var(--disagree);
+  background: rgba(244, 67, 54, 0.08);
 }
 .InteractionBar_rejectButton__Gi8ll.InteractionBar_active__BDRRz {
   background: var(--disagree);
   border-color: var(--disagree);
   color: white;
 }
+.InteractionBar_rejectButton__Gi8ll.InteractionBar_active__BDRRz:hover:not(:disabled) {
+  background: var(--disagree);
+}
 
 .InteractionBar_commentButton__JRQd0 {
   position: relative;
+  -webkit-margin-start: auto;
+          margin-inline-start: auto;
 }
 .InteractionBar_commentButton__JRQd0:hover:not(:disabled) {
-  border-color: var(--btn-primary);
   color: var(--btn-primary);
+  border-color: var(--btn-primary);
+  background: rgba(95, 136, 229, 0.08);
 }
 
 .InteractionBar_commentCount__bCltl {
   position: absolute;
-  top: -6px;
-  right: -6px;
-  min-width: 18px;
-  height: 18px;
-  padding: 0 4px;
+  top: -4px;
+  inset-inline-end: -4px;
+  min-width: 14px;
+  height: 14px;
+  padding: 0 3px;
   background: var(--btn-primary);
   color: white;
-  font-size: 0.7rem;
+  font-size: 0.6rem;
   font-weight: 600;
   border-radius: var(--radius-full);
   display: flex;
   align-items: center;
   justify-content: center;
 }
-[dir=rtl] .InteractionBar_commentCount__bCltl {
-  right: auto;
-  left: -6px;
-}
 
 /* RTL Support */
 [dir=rtl] .InteractionBar_bar__uo6HI {
   flex-direction: row-reverse;
+  justify-content: flex-end;
 }
 [dir=rtl] .InteractionBar_approvalButtons__hZeA6 {
   flex-direction: row-reverse;
@@ -946,24 +964,32 @@
 [dir=rtl] .InteractionBar_button__NB_5N {
   flex-direction: row-reverse;
 }
+[dir=rtl] .InteractionBar_commentButton__JRQd0 {
+  -webkit-margin-start: auto;
+          margin-inline-start: auto;
+  -webkit-margin-end: 0;
+          margin-inline-end: 0;
+}
 /*!**********************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
   !*** css ./node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[14].oneOf[9].use[2]!./node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[14].oneOf[9].use[3]!./node_modules/next/dist/build/webpack/loaders/resolve-url-loader/index.js??ruleSet[1].rules[14].oneOf[9].use[4]!./node_modules/next/dist/compiled/sass-loader/cjs.js??ruleSet[1].rules[14].oneOf[9].use[5]!./src/components/paragraph/ParagraphCard.module.scss ***!
   \**********************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
 .ParagraphCard_card__uBsup {
-  background: var(--card-default);
-  border-radius: var(--radius-md);
-  padding: var(--spacing-lg);
-  transition: all 0.2s ease;
   position: relative;
+  padding: var(--spacing-xs) 0;
+  transition: background-color 0.2s ease;
 }
 .ParagraphCard_card__uBsup:hover {
-  box-shadow: var(--shadow-md);
+  background-color: rgba(0, 0, 0, 0.02);
+}
+.ParagraphCard_card__uBsup:hover .ParagraphCard_interactionWrapper__3CkHQ {
+  opacity: 1;
 }
 
 .ParagraphCard_content__eaie7 {
-  line-height: 1.7;
+  line-height: 1.8;
   color: var(--text-body);
-  margin: 0 0 var(--spacing-md);
+  margin: 0;
+  font-size: var(--p-font-size);
 }
 
 .ParagraphCard_type-paragraph__bxFKy .ParagraphCard_content__eaie7 {
@@ -975,18 +1001,23 @@
   font-size: var(--h1-font-size);
   font-weight: 700;
   color: var(--text-primary);
+  margin-top: var(--spacing-lg);
+  margin-bottom: var(--spacing-sm);
 }
 
 .ParagraphCard_type-h2__RtjiZ .ParagraphCard_content__eaie7 {
   font-size: var(--h2-font-size);
   font-weight: 600;
   color: var(--text-primary);
+  margin-top: var(--spacing-md);
+  margin-bottom: var(--spacing-xs);
 }
 
 .ParagraphCard_type-h3__empY7 .ParagraphCard_content__eaie7 {
   font-size: var(--h3-font-size);
   font-weight: 600;
   color: var(--text-primary);
+  margin-top: var(--spacing-sm);
 }
 
 .ParagraphCard_type-h4__qQCDV .ParagraphCard_content__eaie7 {
@@ -1011,44 +1042,17 @@
   display: flex;
   align-items: flex-start;
   gap: var(--spacing-sm);
-  margin-bottom: var(--spacing-md);
 }
 
 .ParagraphCard_bullet__GJHb1 {
   color: var(--text-secondary);
-  font-size: 1.5em;
-  line-height: 1;
+  font-size: 1.2em;
+  line-height: 1.5;
   flex-shrink: 0;
 }
 
 .ParagraphCard_type-li__1ytTC .ParagraphCard_content__eaie7 {
   margin: 0;
-}
-
-.ParagraphCard_approved__Rrcg3 {
-  border-left: 4px solid var(--agree);
-  background: rgba(76, 175, 80, 0.05);
-}
-[dir=rtl] .ParagraphCard_approved__Rrcg3 {
-  border-left: none;
-  border-right: 4px solid var(--agree);
-}
-
-.ParagraphCard_rejected__YhGOW {
-  border-left: 4px solid var(--disagree);
-  background: rgba(244, 67, 54, 0.05);
-}
-[dir=rtl] .ParagraphCard_rejected__YhGOW {
-  border-left: none;
-  border-right: 4px solid var(--disagree);
-}
-
-.ParagraphCard_pending__MRFO7 {
-  border-left: 4px solid transparent;
-}
-[dir=rtl] .ParagraphCard_pending__MRFO7 {
-  border-left: none;
-  border-right: 4px solid transparent;
 }
 
 .ParagraphCard_heat-low__sXzZb {
@@ -1065,27 +1069,25 @@
 
 .ParagraphCard_adminInfo__qovzU {
   position: absolute;
-  top: var(--spacing-sm);
-  right: var(--spacing-sm);
+  top: var(--spacing-xs);
+  inset-inline-end: var(--spacing-xs);
   display: flex;
   align-items: center;
   gap: 4px;
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   color: var(--text-caption);
-}
-[dir=rtl] .ParagraphCard_adminInfo__qovzU {
-  right: auto;
-  left: var(--spacing-sm);
+  opacity: 0.6;
 }
 
 @media (max-width: 600px) {
   .ParagraphCard_card__uBsup {
-    padding: var(--spacing-md);
+    -webkit-padding-start: var(--spacing-sm);
+            padding-inline-start: var(--spacing-sm);
   }
   .ParagraphCard_type-h1__9k8_b .ParagraphCard_content__eaie7 {
-    font-size: 1.5rem;
+    font-size: 1.4rem;
   }
   .ParagraphCard_type-h2__RtjiZ .ParagraphCard_content__eaie7 {
-    font-size: 1.25rem;
+    font-size: 1.2rem;
   }
 }

@@ -1,19 +1,24 @@
+// Paragraph card - styled as regular flowing text with subtle interaction
 .card {
-  background: var(--card-default);
-  border-radius: var(--radius-md);
-  padding: var(--spacing-lg);
-  transition: all 0.2s ease;
   position: relative;
+  padding: var(--spacing-xs) 0;
+  transition: background-color 0.2s ease;
 
+  // Subtle hover effect to indicate interactivity
   &:hover {
-    box-shadow: var(--shadow-md);
+    background-color: rgba(0, 0, 0, 0.02);
+
+    .interactionWrapper {
+      opacity: 1;
+    }
   }
 }
 
 .content {
-  line-height: 1.7;
+  line-height: 1.8;
   color: var(--text-body);
-  margin: 0 0 var(--spacing-md);
+  margin: 0;
+  font-size: var(--p-font-size);
 }
 
 // Default paragraph type
@@ -22,23 +27,28 @@
   color: var(--text-body);
 }
 
-// Heading types
+// Heading types - keep them distinctive
 .type-h1 .content {
   font-size: var(--h1-font-size);
   font-weight: 700;
   color: var(--text-primary);
+  margin-top: var(--spacing-lg);
+  margin-bottom: var(--spacing-sm);
 }
 
 .type-h2 .content {
   font-size: var(--h2-font-size);
   font-weight: 600;
   color: var(--text-primary);
+  margin-top: var(--spacing-md);
+  margin-bottom: var(--spacing-xs);
 }
 
 .type-h3 .content {
   font-size: var(--h3-font-size);
   font-weight: 600;
   color: var(--text-primary);
+  margin-top: var(--spacing-sm);
 }
 
 .type-h4 .content {
@@ -64,13 +74,12 @@
   display: flex;
   align-items: flex-start;
   gap: var(--spacing-sm);
-  margin-bottom: var(--spacing-md);
 }
 
 .bullet {
   color: var(--text-secondary);
-  font-size: 1.5em;
-  line-height: 1;
+  font-size: 1.2em;
+  line-height: 1.5;
   flex-shrink: 0;
 }
 
@@ -78,37 +87,15 @@
   margin: 0;
 }
 
-// Approval states
-.approved {
-  border-left: 4px solid var(--agree);
-  background: rgba(76, 175, 80, 0.05);
-
-  [dir="rtl"] & {
-    border-left: none;
-    border-right: 4px solid var(--agree);
-  }
-}
-
-.rejected {
-  border-left: 4px solid var(--disagree);
-  background: rgba(244, 67, 54, 0.05);
-
-  [dir="rtl"] & {
-    border-left: none;
-    border-right: 4px solid var(--disagree);
-  }
-}
-
+// Approval states - no visual indicator on paragraph itself
+// Only the button state shows approval status
+.approved,
+.rejected,
 .pending {
-  border-left: 4px solid transparent;
-
-  [dir="rtl"] & {
-    border-left: none;
-    border-right: 4px solid transparent;
-  }
+  // No border or visual change - approval shown via button state only
 }
 
-// Heat map backgrounds
+// Heat map backgrounds (admin view)
 .heat-low {
   background: var(--heat-low);
 }
@@ -121,34 +108,30 @@
   background: var(--heat-high);
 }
 
-// Admin info
+// Admin info badge
 .adminInfo {
   position: absolute;
-  top: var(--spacing-sm);
-  right: var(--spacing-sm);
+  top: var(--spacing-xs);
+  inset-inline-end: var(--spacing-xs);
   display: flex;
   align-items: center;
   gap: 4px;
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   color: var(--text-caption);
-
-  [dir="rtl"] & {
-    right: auto;
-    left: var(--spacing-sm);
-  }
+  opacity: 0.6;
 }
 
 // Responsive
 @media (max-width: 600px) {
   .card {
-    padding: var(--spacing-md);
+    padding-inline-start: var(--spacing-sm);
   }
 
   .type-h1 .content {
-    font-size: 1.5rem;
+    font-size: 1.4rem;
   }
 
   .type-h2 .content {
-    font-size: 1.25rem;
+    font-size: 1.2rem;
   }
 }

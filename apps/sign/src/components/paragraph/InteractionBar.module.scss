@@ -1,109 +1,132 @@
+// Interaction bar - subtle inline actions for paragraphs
 .bar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding-top: var(--spacing-sm);
-  border-top: 1px solid var(--border-light);
-  margin-top: var(--spacing-sm);
+  justify-content: flex-start;
+  gap: var(--spacing-sm);
+  padding-top: var(--spacing-xs);
+  margin-top: var(--spacing-xs);
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+
+  // Show full opacity on hover or when has interaction
+  &:hover,
+  &.hasInteraction {
+    opacity: 1;
+  }
 }
 
 .approvalButtons {
   display: flex;
-  gap: var(--spacing-sm);
+  gap: 4px;
 }
 
 .button {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: var(--spacing-xs);
-  padding: var(--spacing-xs) var(--spacing-sm);
+  gap: 4px;
+  padding: 4px 8px;
   border-radius: var(--radius-sm);
-  font-size: 0.875rem;
+  font-size: 0.75rem;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
   background: transparent;
-  border: 1px solid var(--border-light);
-  color: var(--text-secondary);
+  border: 1px solid transparent;
+  color: var(--text-caption);
+
+  svg {
+    width: 14px;
+    height: 14px;
+  }
 
   &:hover:not(:disabled) {
     background: var(--background);
+    border-color: var(--border-light);
   }
 
   &:disabled {
-    opacity: 0.5;
+    opacity: 0.4;
     cursor: not-allowed;
   }
 }
 
 .buttonText {
-  @media (max-width: 600px) {
+  @media (max-width: 768px) {
     display: none;
   }
 }
 
 .approveButton {
   &:hover:not(:disabled) {
-    border-color: var(--agree);
     color: var(--agree);
+    border-color: var(--agree);
+    background: rgba(76, 175, 80, 0.08);
   }
 
   &.active {
     background: var(--agree);
     border-color: var(--agree);
     color: white;
+
+    &:hover:not(:disabled) {
+      background: var(--agree);
+    }
   }
 }
 
 .rejectButton {
   &:hover:not(:disabled) {
-    border-color: var(--disagree);
     color: var(--disagree);
+    border-color: var(--disagree);
+    background: rgba(244, 67, 54, 0.08);
   }
 
   &.active {
     background: var(--disagree);
     border-color: var(--disagree);
     color: white;
+
+    &:hover:not(:disabled) {
+      background: var(--disagree);
+    }
   }
 }
 
 .commentButton {
   position: relative;
+  margin-inline-start: auto;
 
   &:hover:not(:disabled) {
-    border-color: var(--btn-primary);
     color: var(--btn-primary);
+    border-color: var(--btn-primary);
+    background: rgba(95, 136, 229, 0.08);
   }
 }
 
 .commentCount {
   position: absolute;
-  top: -6px;
-  right: -6px;
-  min-width: 18px;
-  height: 18px;
-  padding: 0 4px;
+  top: -4px;
+  inset-inline-end: -4px;
+  min-width: 14px;
+  height: 14px;
+  padding: 0 3px;
   background: var(--btn-primary);
   color: white;
-  font-size: 0.7rem;
+  font-size: 0.6rem;
   font-weight: 600;
   border-radius: var(--radius-full);
   display: flex;
   align-items: center;
   justify-content: center;
-
-  [dir="rtl"] & {
-    right: auto;
-    left: -6px;
-  }
 }
 
 /* RTL Support */
 [dir="rtl"] {
   .bar {
     flex-direction: row-reverse;
+    justify-content: flex-end;
   }
 
   .approvalButtons {
@@ -112,5 +135,10 @@
 
   .button {
     flex-direction: row-reverse;
+  }
+
+  .commentButton {
+    margin-inline-start: auto;
+    margin-inline-end: 0;
   }
 }

@@ -21,11 +21,11 @@ export default function DocumentView({
   userSignature,
   userApprovals,
 }: DocumentViewProps) {
-  // Calculate progress
+  // Calculate progress - count all reviewed paragraphs (approved OR rejected)
   const totalParagraphs = paragraphs.length;
-  const approvedCount = Object.values(userApprovals).filter(Boolean).length;
+  const reviewedCount = Object.keys(userApprovals).length;
   const progressPercent = totalParagraphs > 0
-    ? Math.round((approvedCount / totalParagraphs) * 100)
+    ? Math.round((reviewedCount / totalParagraphs) * 100)
     : 0;
 
   return (
@@ -52,7 +52,7 @@ export default function DocumentView({
                 />
               </div>
               <span className={styles.progressText}>
-                {approvedCount} / {totalParagraphs} reviewed ({progressPercent}%)
+                {reviewedCount} / {totalParagraphs} reviewed ({progressPercent}%)
               </span>
             </div>
           )}
