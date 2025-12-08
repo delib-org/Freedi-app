@@ -1,14 +1,13 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { googleLogin, anonymousLogin } from '@/lib/firebase/client';
 import styles from './login.module.scss';
 
 export default function LoginPage() {
   const { t } = useTranslation();
-  const router = useRouter();
   const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -25,7 +24,8 @@ export default function LoginPage() {
 
         if (user) {
           console.info(`[Login] User signed in via ${method}`, { userId: user.uid });
-          router.push(redirectUrl);
+          // Use window.location for full page reload to send new cookies to server
+          window.location.href = redirectUrl;
         } else {
           setError(t('Login failed. Please try again.'));
         }
@@ -36,7 +36,7 @@ export default function LoginPage() {
         setIsLoading(false);
       }
     },
-    [router, redirectUrl, t]
+    [redirectUrl, t]
   );
 
   const handleGoogleLogin = useCallback(() => {

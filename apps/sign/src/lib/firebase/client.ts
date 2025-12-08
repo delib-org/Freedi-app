@@ -10,6 +10,7 @@ import {
   signInWithPopup,
   signInAnonymously,
   onAuthStateChanged,
+  connectAuthEmulator,
   User,
   Auth,
 } from 'firebase/auth';
@@ -27,6 +28,7 @@ const firebaseConfig = {
 
 let app: FirebaseApp;
 let auth: Auth;
+let authEmulatorConnected = false;
 
 /**
  * Initialize Firebase client SDK
@@ -53,6 +55,17 @@ export function getFirebaseAuth(): Auth {
       initializeFirebaseClient();
     }
     auth = getAuth(app);
+
+    // Connect to auth emulator in development
+    if (process.env.NODE_ENV === 'development' && typeof window !== 'undefined' && !authEmulatorConnected) {
+      try {
+        connectAuthEmulator(auth, 'http://localhost:9099', { disableWarnings: true });
+        authEmulatorConnected = true;
+        console.info('[Firebase Client - Sign] Connected to Auth emulator');
+      } catch {
+        // Already connected or emulator not available
+      }
+    }
   }
 
   return auth;
