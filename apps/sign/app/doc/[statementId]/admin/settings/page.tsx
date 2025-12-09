@@ -3,6 +3,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { useTranslation } from '@freedi/shared-i18n/next';
+import { DemographicSettings } from '@/components/admin/demographics';
+import DemographicResponses from '@/components/admin/demographics/DemographicResponses';
+import { DemographicMode } from '@/types/demographics';
 import styles from '../admin.module.scss';
 
 interface Settings {
@@ -12,6 +15,8 @@ interface Settings {
   showHeatMap: boolean;
   showViewCounts: boolean;
   isPublic: boolean;
+  demographicMode: DemographicMode;
+  demographicRequired: boolean;
 }
 
 export default function AdminSettingsPage() {
@@ -26,6 +31,8 @@ export default function AdminSettingsPage() {
     showHeatMap: true,
     showViewCounts: true,
     isPublic: true,
+    demographicMode: 'disabled',
+    demographicRequired: false,
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -203,6 +210,32 @@ export default function AdminSettingsPage() {
           />
         </div>
       </section>
+
+      {/* Demographics Settings */}
+      <section className={styles.settingsSection}>
+        <h2 className={styles.settingsSectionTitle}>{t('Demographics Survey')}</h2>
+        <DemographicSettings
+          documentId={statementId}
+          mode={settings.demographicMode}
+          required={settings.demographicRequired}
+          onModeChange={(mode) => {
+            setSettings((prev) => ({ ...prev, demographicMode: mode }));
+            setSaved(false);
+          }}
+          onRequiredChange={(required) => {
+            setSettings((prev) => ({ ...prev, demographicRequired: required }));
+            setSaved(false);
+          }}
+        />
+      </section>
+
+      {/* Demographics Responses (shown when demographics enabled) */}
+      {settings.demographicMode !== 'disabled' && (
+        <section className={styles.settingsSection}>
+          <h2 className={styles.settingsSectionTitle}>{t('Survey Responses')}</h2>
+          <DemographicResponses documentId={statementId} />
+        </section>
+      )}
 
       {/* Save Button */}
       <button

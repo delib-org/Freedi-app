@@ -83,6 +83,9 @@ export interface DocumentStats {
 // View mode for heat map visualization
 export type HeatMapMode = 'none' | 'views' | 'support' | 'importance';
 
+// Demographic survey mode
+export type DemographicMode = 'disabled' | 'inherit' | 'custom';
+
 // Admin settings for a document
 export interface DocumentSettings {
   enableComments: boolean;
@@ -93,6 +96,9 @@ export interface DocumentSettings {
   requireLogin: boolean;
   isHidden: boolean;
   heatMapMode: HeatMapMode;
+  // Demographic survey settings
+  demographicMode: DemographicMode;
+  demographicRequired: boolean;
 }
 
 // Default document settings
@@ -105,4 +111,6 @@ export const DEFAULT_DOCUMENT_SETTINGS: DocumentSettings = {
   requireLogin: false,
   isHidden: false,
   heatMapMode: 'none',
+  demographicMode: 'disabled',
+  demographicRequired: false,
 };

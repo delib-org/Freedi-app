@@ -44,6 +44,20 @@
     cursor: not-allowed;
   }
 
+  // Blocked state (demographics survey required)
+  &.blocked {
+    opacity: 0.6;
+    cursor: pointer;
+    position: relative;
+
+    &::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: transparent;
+    }
+  }
+
   // Prevent click from bubbling to parent card
   &:active {
     transform: scale(0.97);

@@ -1,7 +1,9 @@
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
+import { useTranslation } from '@freedi/shared-i18n/next';
 import { useUIStore } from '@/store/uiStore';
+import { useDemographicStore, selectIsInteractionBlocked } from '@/store/demographicStore';
 import styles from './InteractionBar.module.scss';
 
 interface InteractionBarProps {
@@ -19,9 +21,12 @@ export default function InteractionBar({
   isLoggedIn,
   commentCount,
 }: InteractionBarProps) {
+  const { t } = useTranslation();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [localApproval, setLocalApproval] = useState(isApproved);
   const { openModal, setApproval } = useUIStore();
+  const { openSurveyModal } = useDemographicStore();
+  const isInteractionBlocked = useDemographicStore(selectIsInteractionBlocked);
 
   // Sync local approval with store on mount and when isApproved changes
   useEffect(() => {
@@ -32,6 +37,13 @@ export default function InteractionBar({
 
   const handleApproval = useCallback(
     async (approved: boolean) => {
+      // Check if blocked by demographic survey
+      if (isInteractionBlocked) {
+        openSurveyModal();
+
+        return;
+      }
+
       if (!isLoggedIn) {
         window.location.href = `/login?redirect=/doc/${documentId}`;
 
@@ -69,12 +81,24 @@ export default function InteractionBar({
         setIsSubmitting(false);
       }
     },
-    [paragraphId, documentId, isLoggedIn, isApproved, setApproval]
+    [paragraphId, documentId, isLoggedIn, isApproved, setApproval, isInteractionBlocked, openSurveyModal]
   );
 
   const handleOpenComments = () => {
+    // Check if blocked by demographic survey
+    if (isInteractionBlocked) {
+      openSurveyModal();
+
+      return;
+    }
+
     openModal('comments', { paragraphId });
   };
+
+  // Tooltip text when blocked
+  const blockedTitle = isInteractionBlocked
+    ? t('Complete survey to interact')
+    : undefined;
 
   // Use local state if available, otherwise use prop
   const currentApproval = localApproval !== undefined ? localApproval : isApproved;
@@ -90,11 +114,11 @@ export default function InteractionBar({
       <div className={styles.approvalButtons}>
         <button
           type="button"
-          className={`${styles.button} ${styles.approveButton} ${currentApproval === true ? styles.active : ''}`}
+          className={`${styles.button} ${styles.approveButton} ${currentApproval === true ? styles.active : ''} ${isInteractionBlocked ? styles.blocked : ''}`}
           onClick={(e) => handleButtonClick(e, () => handleApproval(true))}
           disabled={isSubmitting}
           aria-pressed={currentApproval === true}
-          title="Approve"
+          title={blockedTitle || t('Approve')}
         >
           <svg
             viewBox="0 0 24 24"
@@ -106,16 +130,16 @@ export default function InteractionBar({
           >
             <polyline points="20 6 9 17 4 12" />
           </svg>
-          <span className={styles.buttonText}>Approve</span>
+          <span className={styles.buttonText}>{t('Approve')}</span>
         </button>
 
         <button
           type="button"
-          className={`${styles.button} ${styles.rejectButton} ${currentApproval === false ? styles.active : ''}`}
+          className={`${styles.button} ${styles.rejectButton} ${currentApproval === false ? styles.active : ''} ${isInteractionBlocked ? styles.blocked : ''}`}
           onClick={(e) => handleButtonClick(e, () => handleApproval(false))}
           disabled={isSubmitting}
           aria-pressed={currentApproval === false}
-          title="Reject"
+          title={blockedTitle || t('Reject')}
         >
           <svg
             viewBox="0 0 24 24"
@@ -128,15 +152,15 @@ export default function InteractionBar({
             <line x1="18" y1="6" x2="6" y2="18" />
             <line x1="6" y1="6" x2="18" y2="18" />
           </svg>
-          <span className={styles.buttonText}>Reject</span>
+          <span className={styles.buttonText}>{t('Reject')}</span>
         </button>
       </div>
 
       <button
         type="button"
-        className={`${styles.button} ${styles.commentButton}`}
+        className={`${styles.button} ${styles.commentButton} ${isInteractionBlocked ? styles.blocked : ''}`}
         onClick={(e) => handleButtonClick(e, handleOpenComments)}
-        title="Comments"
+        title={blockedTitle || t('Comments')}
       >
         <svg
           viewBox="0 0 24 24"

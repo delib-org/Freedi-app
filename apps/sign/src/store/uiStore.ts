@@ -5,7 +5,7 @@
 
 import { create } from 'zustand';
 
-export type ModalType = 'comments' | 'signature' | 'settings' | 'login' | null;
+export type ModalType = 'comments' | 'signature' | 'settings' | 'login' | 'demographics' | null;
 export type ViewMode = 'default' | 'views' | 'support' | 'importance';
 export type SigningAnimationState = 'idle' | 'signing' | 'success' | 'error';
 

@@ -2,12 +2,14 @@
 
 import { useCallback, useEffect, useRef } from 'react';
 import { useUIStore } from '@/store/uiStore';
+import { useDemographicStore, selectIsInteractionBlocked } from '@/store/demographicStore';
 import { SignUser } from '@/lib/utils/user';
 import { Signature } from '@/lib/firebase/queries';
 import Modal from '../shared/Modal';
 import CommentThread from '../comments/CommentThread';
 import LoginModal from '../shared/LoginModal';
 import { HeatMapProvider, HeatMapToolbar, HeatMapLegend } from '../heatMap';
+import { DemographicSurveyModal } from '../demographics';
 
 // Animation timing constants
 const ANIMATION_DURATION = {
@@ -42,6 +44,14 @@ export default function DocumentClient({
     resetSigningAnimation,
     initializeCommentCounts,
   } = useUIStore();
+
+  // Demographics store
+  const {
+    fetchStatus,
+    isSurveyModalOpen,
+    openSurveyModal,
+  } = useDemographicStore();
+  const isInteractionBlocked = useDemographicStore(selectIsInteractionBlocked);
 
   const confettiTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -131,6 +141,13 @@ export default function DocumentClient({
   // Handle sign/reject button clicks with animation
   const handleSignatureAction = useCallback(
     async (action: 'sign' | 'reject') => {
+      // Check if blocked by demographic survey
+      if (isInteractionBlocked) {
+        openSurveyModal();
+
+        return;
+      }
+
       if (!user) {
         // Redirect to login
         window.location.href = `/login?redirect=/doc/${documentId}`;
@@ -200,6 +217,8 @@ export default function DocumentClient({
       setSigningAnimationState,
       resetSigningAnimation,
       triggerConfetti,
+      isInteractionBlocked,
+      openSurveyModal,
     ]
   );
 
@@ -207,6 +226,20 @@ export default function DocumentClient({
   useEffect(() => {
     initializeCommentCounts(commentCounts);
   }, [commentCounts, initializeCommentCounts]);
+
+  // Fetch demographic status on mount
+  useEffect(() => {
+    if (documentId && user) {
+      fetchStatus(documentId);
+    }
+  }, [documentId, user, fetchStatus]);
+
+  // Auto-open survey modal if mandatory and incomplete
+  useEffect(() => {
+    if (isInteractionBlocked && user && !isSurveyModalOpen) {
+      openSurveyModal();
+    }
+  }, [isInteractionBlocked, user, isSurveyModalOpen, openSurveyModal]);
 
   // Cleanup confetti timeout on unmount
   useEffect(() => {
@@ -289,6 +322,9 @@ export default function DocumentClient({
           <LoginModal onClose={closeModal} />
         </Modal>
       )}
+
+      {/* Demographic Survey Modal */}
+      <DemographicSurveyModal documentId={documentId} isAdmin={isAdmin} />
     </HeatMapProvider>
   );
 }

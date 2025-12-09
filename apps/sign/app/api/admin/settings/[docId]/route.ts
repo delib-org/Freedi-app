@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getFirebaseAdmin } from '@/lib/firebase/admin';
 import { getUserIdFromCookie } from '@/lib/utils/user';
 import { Collections } from 'delib-npm';
+import { DemographicMode } from '@/types/demographics';
 
 export interface DocumentSettings {
   allowComments: boolean;
@@ -10,6 +11,8 @@ export interface DocumentSettings {
   showHeatMap: boolean;
   showViewCounts: boolean;
   isPublic: boolean;
+  demographicMode: DemographicMode;
+  demographicRequired: boolean;
 }
 
 const DEFAULT_SETTINGS: DocumentSettings = {
@@ -19,6 +22,8 @@ const DEFAULT_SETTINGS: DocumentSettings = {
   showHeatMap: true,
   showViewCounts: true,
   isPublic: true,
+  demographicMode: 'disabled',
+  demographicRequired: false,
 };
 
 /**
@@ -71,6 +76,8 @@ export async function GET(
       showHeatMap: document?.signSettings?.showHeatMap ?? DEFAULT_SETTINGS.showHeatMap,
       showViewCounts: document?.signSettings?.showViewCounts ?? DEFAULT_SETTINGS.showViewCounts,
       isPublic: document?.signSettings?.isPublic ?? DEFAULT_SETTINGS.isPublic,
+      demographicMode: document?.signSettings?.demographicMode ?? DEFAULT_SETTINGS.demographicMode,
+      demographicRequired: document?.signSettings?.demographicRequired ?? DEFAULT_SETTINGS.demographicRequired,
     };
 
     return NextResponse.json(settings);
@@ -128,13 +135,26 @@ export async function PUT(
 
     // Parse and validate settings
     const body = await request.json();
+
+    // Get existing settings to merge with
+    const existingSettings = document?.signSettings || {};
+
+    // Validate demographicMode
+    const validModes: DemographicMode[] = ['disabled', 'inherit', 'custom'];
+    const demographicMode: DemographicMode = validModes.includes(body.demographicMode)
+      ? body.demographicMode
+      : (existingSettings.demographicMode ?? DEFAULT_SETTINGS.demographicMode);
+
+    // Merge settings - only update fields that are provided
     const settings: DocumentSettings = {
-      allowComments: Boolean(body.allowComments),
-      allowApprovals: Boolean(body.allowApprovals),
-      requireLogin: Boolean(body.requireLogin),
-      showHeatMap: Boolean(body.showHeatMap),
-      showViewCounts: Boolean(body.showViewCounts),
-      isPublic: Boolean(body.isPublic),
+      allowComments: body.allowComments !== undefined ? Boolean(body.allowComments) : (existingSettings.allowComments ?? DEFAULT_SETTINGS.allowComments),
+      allowApprovals: body.allowApprovals !== undefined ? Boolean(body.allowApprovals) : (existingSettings.allowApprovals ?? DEFAULT_SETTINGS.allowApprovals),
+      requireLogin: body.requireLogin !== undefined ? Boolean(body.requireLogin) : (existingSettings.requireLogin ?? DEFAULT_SETTINGS.requireLogin),
+      showHeatMap: body.showHeatMap !== undefined ? Boolean(body.showHeatMap) : (existingSettings.showHeatMap ?? DEFAULT_SETTINGS.showHeatMap),
+      showViewCounts: body.showViewCounts !== undefined ? Boolean(body.showViewCounts) : (existingSettings.showViewCounts ?? DEFAULT_SETTINGS.showViewCounts),
+      isPublic: body.isPublic !== undefined ? Boolean(body.isPublic) : (existingSettings.isPublic ?? DEFAULT_SETTINGS.isPublic),
+      demographicMode,
+      demographicRequired: body.demographicRequired !== undefined ? Boolean(body.demographicRequired) : (existingSettings.demographicRequired ?? DEFAULT_SETTINGS.demographicRequired),
     };
 
     // Update document with new settings

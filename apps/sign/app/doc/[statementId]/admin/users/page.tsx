@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { useTranslation } from '@freedi/shared-i18n/next';
+import DemographicResponses from '@/components/admin/demographics/DemographicResponses';
 import styles from '../admin.module.scss';
 
 interface User {

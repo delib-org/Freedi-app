@@ -1,0 +1,77 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { getFirebaseAdmin } from '@/lib/firebase/admin';
+import { getUserIdFromCookie } from '@/lib/utils/user';
+import { Collections } from 'delib-npm';
+import { checkSurveyCompletion } from '@/lib/firebase/demographicQueries';
+import { DemographicMode, DemographicStatusResponse } from '@/types/demographics';
+
+/**
+ * GET /api/demographics/status/[docId]
+ * Returns survey completion status for the current user
+ */
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ docId: string }> }
+): Promise<NextResponse> {
+  try {
+    const { docId } = await params;
+    const userId = getUserIdFromCookie(request.headers.get('cookie'));
+
+    if (!userId) {
+      // Return complete status for anonymous users (they'll be prompted to login if required)
+      return NextResponse.json({
+        status: {
+          isComplete: true,
+          totalQuestions: 0,
+          answeredQuestions: 0,
+          isRequired: false,
+          missingQuestionIds: [],
+        },
+        mode: 'disabled' as DemographicMode,
+      });
+    }
+
+    const { db } = getFirebaseAdmin();
+
+    // Get the document to check settings
+    const docRef = db.collection(Collections.statements).doc(docId);
+    const docSnap = await docRef.get();
+
+    if (!docSnap.exists) {
+      return NextResponse.json(
+        { error: 'Document not found' },
+        { status: 404 }
+      );
+    }
+
+    const document = docSnap.data();
+    const topParentId = document?.topParentId || docId;
+    const signSettings = document?.signSettings || {};
+
+    const mode: DemographicMode = signSettings.demographicMode || 'disabled';
+    const required = signSettings.demographicRequired || false;
+
+    // Check completion status
+    const status = await checkSurveyCompletion(
+      docId,
+      userId,
+      mode,
+      topParentId,
+      required
+    );
+
+    const response: DemographicStatusResponse = {
+      status,
+      mode,
+    };
+
+    return NextResponse.json(response);
+  } catch (error) {
+    console.error('[API] Demographics status GET failed:', error);
+
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
