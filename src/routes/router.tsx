@@ -1,4 +1,4 @@
-import { createBrowserRouter } from 'react-router';
+import { createBrowserRouter, Navigate } from 'react-router';
 import App from '@/App';
 import Start from '@/view/pages/start/Start';
 import ErrorPage from '@/view/pages/error/ErrorPage';
@@ -113,6 +113,11 @@ const publicRoutes = [
 
 // Combine all routes into a single router
 export const router = createBrowserRouter([
+	{
+		// Redirect /index.html to / to prevent React Router error
+		path: '/index.html',
+		element: <Navigate to="/" replace />,
+	},
 	{
 		path: '/start',
 		element: <Start />,

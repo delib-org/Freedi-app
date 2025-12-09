@@ -20,9 +20,6 @@ const ParagraphsDisplay: FC<ParagraphsDisplayProps> = ({ statement, className })
 	const extendedStatement = statement as StatementWithParagraphsExtended;
 	const paragraphs = extendedStatement.paragraphs;
 
-	// Debug: log paragraphs being displayed
-	console.info('ParagraphsDisplay - paragraphs:', paragraphs);
-
 	// If no paragraphs, fall back to description
 	if (!paragraphs || paragraphs.length === 0) {
 		if (!statement.description) return null;
