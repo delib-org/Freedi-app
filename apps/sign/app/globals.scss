@@ -37,15 +37,15 @@
   --heat-medium: rgba(231, 208, 128, 0.3);
   --heat-high: rgba(254, 107, 162, 0.3);
 
-  /* Heat Map - Approval (pink to green) */
-  --heat-approval-low: rgba(244, 67, 54, 0.12);        /* disagree */
-  --heat-approval-high: rgba(76, 175, 80, 0.15);       /* agree */
-  --heat-approval-border: #4caf50;
-  --heat-approval-1: rgba(244, 67, 54, 0.12);          /* 0-29% */
-  --heat-approval-2: rgba(255, 152, 0, 0.12);          /* 30-49% */
-  --heat-approval-3: rgba(255, 235, 59, 0.15);         /* 50-69% neutral */
-  --heat-approval-4: rgba(139, 195, 74, 0.12);         /* 70-89% */
-  --heat-approval-5: rgba(76, 175, 80, 0.15);          /* 90-100% */
+  /* Heat Map - Approval (red to yellow to green, -1 to +1 scale) */
+  --heat-approval-low: rgba(244, 67, 54, 0.2);         /* rejected (-1) */
+  --heat-approval-high: rgba(76, 175, 80, 0.2);        /* approved (+1) */
+  --heat-approval-border: #607d8b;                     /* neutral border */
+  --heat-approval-1: rgba(244, 67, 54, 0.2);           /* -1 to -0.5: strong rejected (red) */
+  --heat-approval-2: rgba(255, 152, 0, 0.18);          /* -0.5 to -0.1: leaning rejected (orange) */
+  --heat-approval-3: rgba(255, 235, 59, 0.22);         /* -0.1 to +0.1: neutral (yellow) */
+  --heat-approval-4: rgba(139, 195, 74, 0.18);         /* +0.1 to +0.5: leaning approved (light green) */
+  --heat-approval-5: rgba(76, 175, 80, 0.2);           /* +0.5 to +1: strong approved (green) */
 
   /* Heat Map - Comments (light blue to blue) */
   --heat-comments-low: rgba(227, 242, 253, 0.5);       /* card-question-added */

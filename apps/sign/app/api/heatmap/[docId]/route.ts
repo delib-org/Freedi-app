@@ -107,27 +107,30 @@ export async function GET(
       heatMapData.viewership[id] = 0;
     });
 
-    // Calculate approval rates per paragraph
-    const approvalsByParagraph: Record<string, { approved: number; total: number }> = {};
+    // Calculate approval score per paragraph (-1 to 1 scale)
+    // -1 = all rejected, 0 = neutral/mixed, 1 = all approved
+    const approvalsByParagraph: Record<string, { approved: number; rejected: number }> = {};
     approvalsSnapshot.docs.forEach((doc) => {
       const approval = doc.data() as ApprovalDoc;
       const paragraphId = approval.paragraphId || approval.statementId;
 
       if (paragraphId && paragraphIds.includes(paragraphId)) {
         if (!approvalsByParagraph[paragraphId]) {
-          approvalsByParagraph[paragraphId] = { approved: 0, total: 0 };
+          approvalsByParagraph[paragraphId] = { approved: 0, rejected: 0 };
         }
-        approvalsByParagraph[paragraphId].total++;
         if (approval.approval) {
           approvalsByParagraph[paragraphId].approved++;
+        } else {
+          approvalsByParagraph[paragraphId].rejected++;
         }
       }
     });
 
-    // Convert to percentages
+    // Convert to -1 to 1 scale: (approved - rejected) / total
     Object.entries(approvalsByParagraph).forEach(([id, data]) => {
-      heatMapData.approval[id] = data.total > 0
-        ? Math.round((data.approved / data.total) * 100)
+      const total = data.approved + data.rejected;
+      heatMapData.approval[id] = total > 0
+        ? Math.round(((data.approved - data.rejected) / total) * 100) / 100
         : 0;
     });
 

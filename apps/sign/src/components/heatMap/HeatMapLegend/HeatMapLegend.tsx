@@ -11,6 +11,8 @@ interface HeatMapLegendProps {
 
 interface LegendConfig {
   title: string;
+  lowLabel: string;
+  highLabel: string;
   levels: Array<{
     level: HeatLevel;
     label: string;
@@ -19,17 +21,21 @@ interface LegendConfig {
 
 const LEGEND_CONFIGS: Record<Exclude<HeatMapType, 'none'>, LegendConfig> = {
   approval: {
-    title: 'Approval Rate',
+    title: 'Approval Score',
+    lowLabel: 'Rejected',
+    highLabel: 'Approved',
     levels: [
-      { level: 1, label: '0-29%' },
-      { level: 2, label: '30-49%' },
-      { level: 3, label: '50-69%' },
-      { level: 4, label: '70-89%' },
-      { level: 5, label: '90-100%' },
+      { level: 1, label: '-1 to -0.5' },
+      { level: 2, label: '-0.5 to -0.1' },
+      { level: 3, label: '-0.1 to +0.1' },
+      { level: 4, label: '+0.1 to +0.5' },
+      { level: 5, label: '+0.5 to +1' },
     ],
   },
   comments: {
     title: 'Comments',
+    lowLabel: 'Few',
+    highLabel: 'Many',
     levels: [
       { level: 1, label: '1' },
       { level: 2, label: '2-4' },
@@ -40,6 +46,8 @@ const LEGEND_CONFIGS: Record<Exclude<HeatMapType, 'none'>, LegendConfig> = {
   },
   rating: {
     title: 'Average Rating',
+    lowLabel: 'Low',
+    highLabel: 'High',
     levels: [
       { level: 1, label: '0-1.4' },
       { level: 2, label: '1.5-2.4' },
@@ -50,6 +58,8 @@ const LEGEND_CONFIGS: Record<Exclude<HeatMapType, 'none'>, LegendConfig> = {
   },
   viewership: {
     title: 'Viewership',
+    lowLabel: 'Low',
+    highLabel: 'High',
     levels: [
       { level: 1, label: '<20%' },
       { level: 2, label: '20-39%' },
@@ -103,8 +113,8 @@ export default function HeatMapLegend({ className }: HeatMapLegendProps) {
       </div>
 
       <div className={styles.scaleLabels}>
-        <span>Low</span>
-        <span>High</span>
+        <span>{legendConfig.lowLabel}</span>
+        <span>{legendConfig.highLabel}</span>
       </div>
     </div>
   );

@@ -34,7 +34,7 @@ export interface HeatMapValue {
  * Maps paragraphId to their respective values
  */
 export interface HeatMapData {
-  approval: Record<string, number>;    // paragraphId -> percentage (0-100)
+  approval: Record<string, number>;    // paragraphId -> score (-1 to 1)
   comments: Record<string, number>;    // paragraphId -> count
   rating: Record<string, number>;      // paragraphId -> average (0-5)
   viewership: Record<string, number>;  // paragraphId -> percentage (0-100)
@@ -76,8 +76,8 @@ export interface HeatMapThresholds {
  * Default thresholds for heat level calculation
  */
 export const HEAT_MAP_THRESHOLDS: HeatMapThresholds = {
-  // Approval: 0-29% = L1, 30-49% = L2, 50-69% = L3, 70-89% = L4, 90-100% = L5
-  approval: [30, 50, 70, 90],
+  // Approval (-1 to 1 scale): L1=-1 to -0.5 (red), L2=-0.5 to -0.1, L3=-0.1 to 0.1 (yellow), L4=0.1 to 0.5, L5=0.5 to 1 (green)
+  approval: [-0.5, -0.1, 0.1, 0.5],
   // Comments: 1 = L1, 2-4 = L2, 5-9 = L3, 10-19 = L4, 20+ = L5
   comments: [2, 5, 10, 20],
   // Rating: 0-1.4 = L1, 1.5-2.4 = L2, 2.5-3.4 = L3, 3.5-4.4 = L4, 4.5-5.0 = L5
@@ -111,6 +111,9 @@ export function formatHeatValue(
 ): string {
   switch (type) {
     case 'approval':
+      // Show as signed decimal (-1 to +1)
+      const sign = value > 0 ? '+' : '';
+      return `${sign}${value.toFixed(1)}`;
     case 'viewership':
       return `${Math.round(value)}%`;
     case 'comments':
