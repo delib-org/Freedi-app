@@ -31,6 +31,8 @@ import {
 	CutoffBy,
 	ResultsSettings,
 } from 'delib-npm';
+// TODO: Import from delib-npm once published with Paragraph types
+import { Paragraph } from '@/types/paragraph';
 
 import { number, parse, string } from 'valibot';
 import { isStatementTypeAllowedAsChildren } from '@/controllers/general/helpers';
@@ -587,6 +589,53 @@ export async function updateStatementText(
 		await updateDoc(statementRef, updates);
 	} catch (error) {
 		console.error(error);
+	}
+}
+
+/**
+ * Update statement paragraphs array for rich text editing
+ * Also auto-generates description as preview from paragraphs
+ * @param statement - The statement to update
+ * @param paragraphs - Array of paragraphs to save
+ */
+export async function updateStatementParagraphs(
+	statement: Statement | undefined,
+	paragraphs: Paragraph[]
+): Promise<void> {
+	try {
+		if (!statement) throw new Error('Statement is undefined');
+		if (!paragraphs) throw new Error('Paragraphs array is undefined');
+
+		// Debug: log paragraphs being saved
+		console.info('Saving paragraphs:', JSON.stringify(paragraphs, null, 2));
+
+		// Auto-generate description preview from paragraphs
+		const sortedParagraphs = [...paragraphs].sort((a, b) => a.order - b.order);
+		const descriptionText = sortedParagraphs
+			.map((p) => p.content)
+			.join(' ');
+		const description =
+			descriptionText.length > 200
+				? descriptionText.slice(0, 200) + '...'
+				: descriptionText;
+
+		// Use Record type until delib-npm Statement type includes paragraphs
+		const updates: Record<string, unknown> = {
+			paragraphs,
+			description,
+			lastUpdate: Timestamp.now().toMillis(),
+		};
+
+		const statementRef = doc(
+			FireStore,
+			Collections.statements,
+			statement.statementId
+		);
+
+		await updateDoc(statementRef, updates);
+	} catch (error) {
+		console.error('Error updating statement paragraphs:', error);
+		throw error;
 	}
 }
 

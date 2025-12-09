@@ -25,10 +25,6 @@ service cloud.firestore {
   	allow write: if request.auth.uid != null;
 	}
 
-    match /awaitingUsers/{document=**} {
-      allow read, write: if request.auth != null;
-    }
-
     match /councils/{councilId=**} {
       allow read;
       allow write: if request.auth.uid != null;
@@ -325,16 +321,14 @@ service cloud.firestore {
     }
 
     match /awaitingUsers/{documentId} {
-      function isAdminForStatement() {
-        let waitingMember = resource.data;
-        let statementId = waitingMember.statementId;
-        let subId = string(request.auth.uid) + '--' + cleanPath(string(statementId));
-        let subscription = get(/databases/$(database)/documents/statementsSubscribe/$(subId)).data;
-        return subscription != null && subscription.role == 'admin';
+      // User can read/delete if they are in the adminIds array of the document
+      function isAdminForDocument() {
+        return resource.data.adminIds != null &&
+               request.auth.uid in resource.data.adminIds;
       }
 
-      allow read: if request.auth != null && isAdminForStatement();
-      allow delete: if request.auth != null && isAdminForStatement();
+      allow read: if request.auth != null && isAdminForDocument();
+      allow delete: if request.auth != null && isAdminForDocument();
       allow create, update: if false;
     }
 

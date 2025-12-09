@@ -1,0 +1,46 @@
+// RichTextEditor Component Styles (CSS Module)
+// These extend the global .rich-text-editor styles from molecules
+
+.editor {
+	composes: rich-text-editor from global;
+}
+
+.toolbar {
+	composes: rich-text-editor__toolbar from global;
+}
+
+.toolbarGroup {
+	composes: rich-text-editor__toolbar-group from global;
+}
+
+.toolbarButton {
+	composes: rich-text-editor__toolbar-button from global;
+}
+
+.toolbarButtonActive {
+	composes: rich-text-editor__toolbar-button--active from global;
+}
+
+.content {
+	composes: rich-text-editor__content from global;
+}
+
+.actions {
+	composes: rich-text-editor__actions from global;
+}
+
+.saveBtn {
+	composes: rich-text-editor__save-btn from global;
+}
+
+.cancelBtn {
+	composes: rich-text-editor__cancel-btn from global;
+}
+
+// Additional component-specific styles
+.loading {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	min-height: 200px;
+}

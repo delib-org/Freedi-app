@@ -1,0 +1,53 @@
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: var(--spacing-lg);
+}
+
+.header {
+  margin-bottom: var(--spacing-xl);
+}
+
+.titleSkeleton {
+  height: 2.5rem;
+  width: 70%;
+  margin-bottom: var(--spacing-md);
+}
+
+.subtitleSkeleton {
+  height: 1.25rem;
+  width: 40%;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
+.paragraphSkeleton {
+  background: var(--card-default);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-lg);
+}
+
+.textSkeleton {
+  height: 1rem;
+  margin-bottom: var(--spacing-sm);
+
+  &:last-of-type {
+    margin-bottom: var(--spacing-md);
+  }
+}
+
+.actionsSkeleton {
+  display: flex;
+  gap: var(--spacing-md);
+  margin-top: var(--spacing-md);
+}
+
+.buttonSkeleton {
+  height: 2.5rem;
+  width: 100px;
+  border-radius: var(--radius-sm);
+}

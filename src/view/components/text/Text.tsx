@@ -1,13 +1,22 @@
 import { FC } from 'react';
 import ReactMarkdown, { Components } from 'react-markdown';
+import { Statement } from 'delib-npm';
 import UrlParser from '../edit/URLParse';
+import { ParagraphsDisplay } from '@/view/components/richTextEditor';
 import styles from './Text.module.scss';
+// TODO: Import from delib-npm once published with Paragraph types
+import { StatementWithParagraphs } from '@/types/paragraph';
+
+// Extended statement type with paragraphs
+type StatementWithParagraphsExtended = Statement & StatementWithParagraphs;
 
 interface Props {
 	statement?: string;
 	description?: string;
 	fontSize?: string;
 	enableMarkdown?: boolean;
+	/** Pass the full statement object to enable paragraph rendering */
+	statementObj?: Statement;
 }
 
 /**
@@ -81,9 +90,26 @@ const createMarkdownComponents = (fontSize: string): Components => ({
 	),
 });
 
-const Text: FC<Props> = ({ statement, description, fontSize = "inherent", enableMarkdown = true }) => {
+const Text: FC<Props> = ({ statement, description, fontSize = "inherent", enableMarkdown = true, statementObj }) => {
 	try {
-		if (!statement && !description) return null;
+		if (!statement && !description && !statementObj) return null;
+
+		// If statementObj is provided and has paragraphs, use ParagraphsDisplay
+		if (statementObj) {
+			const extendedStatement = statementObj as StatementWithParagraphsExtended;
+			if (extendedStatement.paragraphs && extendedStatement.paragraphs.length > 0) {
+				return (
+					<>
+						{statement && (
+							<span className={styles.statement} style={{ fontSize: fontSize !== 'inherent' ? fontSize : undefined }}>
+								<UrlParser text={statement} />
+							</span>
+						)}
+						<ParagraphsDisplay statement={statementObj} />
+					</>
+				);
+			}
+		}
 
 		const markdownComponents = createMarkdownComponents(fontSize);
 

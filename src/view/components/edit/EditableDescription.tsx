@@ -1,11 +1,14 @@
-import React, { FC } from 'react';
+import React, { FC, useState } from 'react';
 import { Statement } from 'delib-npm';
-import EditText, { EditTextProps } from './EditText';
 import { useEditPermission } from '@/controllers/hooks/useEditPermission';
-import { updateStatementText } from '@/controllers/db/statements/setStatements';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
+import { DocumentEditModal, ParagraphsDisplay } from '@/view/components/richTextEditor';
+import EditIcon from '@/assets/icons/editIcon.svg?react';
+import styles from './EditableDescription.module.scss';
 
-interface EditableDescriptionProps extends Omit<EditTextProps, 'value' | 'secondaryValue' | 'editable' | 'onSave' | 'variant'> {
+interface EditableDescriptionProps {
 	statement: Statement | undefined;
+	placeholder?: string;
 	onSaveSuccess?: () => void;
 	onSaveError?: (error: Error) => void;
 	forceEditable?: boolean;
@@ -13,38 +16,62 @@ interface EditableDescriptionProps extends Omit<EditTextProps, 'value' | 'second
 
 const EditableDescription: FC<EditableDescriptionProps> = ({
 	statement,
-	onSaveSuccess,
-	onSaveError,
+	placeholder = 'Add a description...',
 	forceEditable = false,
-	...editTextProps
 }) => {
+	const { t } = useTranslation();
 	const { canEdit } = useEditPermission(statement);
 	const isEditable = forceEditable || canEdit;
+	const [isEditorOpen, setIsEditorOpen] = useState(false);
 
 	if (!statement) return null;
 
-	const handleSave = async (_primary: string, secondary?: string) => {
-		try {
-			if (!statement) throw new Error('Statement is undefined');
+	// Read-only mode for users without permission
+	if (!isEditable) {
+		if (!statement.description) return null;
 
-			await updateStatementText(statement, statement.statement, secondary || '');
-			onSaveSuccess?.();
-		} catch (error) {
-			console.error('Error updating statement description:', error);
-			onSaveError?.(error as Error);
-		}
-	};
+		return (
+			<div className={styles.description}>
+				<ParagraphsDisplay statement={statement} />
+			</div>
+		);
+	}
 
+	// Editable mode - click to open rich editor
 	return (
-		<EditText
-			value={statement.statement || ''}
-			secondaryValue={statement.description || ''}
-			editable={isEditable}
-			onSave={handleSave}
-			variant="description"
-			multiline={true}
-			{...editTextProps}
-		/>
+		<>
+			<div
+				className={styles.editableDescription}
+				onClick={() => setIsEditorOpen(true)}
+				role="button"
+				tabIndex={0}
+				onKeyDown={(e) => {
+					if (e.key === 'Enter' || e.key === ' ') {
+						setIsEditorOpen(true);
+					}
+				}}
+			>
+				<div className={styles.editButton}>
+					<EditIcon />
+					<span>{t('Edit Description')}</span>
+				</div>
+
+				<div className={styles.descriptionContent}>
+					{statement.description ? (
+						<ParagraphsDisplay statement={statement} />
+					) : (
+						<p className={styles.placeholder}>{t(placeholder)}</p>
+					)}
+				</div>
+			</div>
+
+			{isEditorOpen && (
+				<DocumentEditModal
+					statement={statement}
+					onClose={() => setIsEditorOpen(false)}
+				/>
+			)}
+		</>
 	);
 };
 

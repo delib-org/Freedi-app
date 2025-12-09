@@ -1,0 +1,463 @@
+// Paragraph card - styled as regular flowing text with progressive disclosure
+// Interaction buttons are hidden by default and revealed on hover/tap
+
+.card {
+  position: relative;
+  padding: 0.125rem 0 0.125rem 0.75rem; // Minimal vertical padding, left space for indicator
+  transition: background-color 0.2s ease;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  overflow: visible; // Allow comment badge to overflow
+
+  // Subtle hover effect to indicate interactivity (desktop)
+  @media (hover: hover) {
+    &:hover {
+      background-color: rgba(95, 136, 229, 0.04);
+
+      .interactionWrapper {
+        opacity: 1;
+        max-height: 50px;
+        margin-top: var(--spacing-xs);
+        pointer-events: auto;
+      }
+
+      .stateIndicator {
+        width: 3px;
+      }
+    }
+  }
+
+  // Focus state for keyboard navigation
+  &:focus-visible {
+    outline: 2px solid var(--btn-primary);
+    outline-offset: 2px;
+  }
+
+  // Expanded state (tap on mobile or click)
+  &.expanded {
+    background-color: rgba(95, 136, 229, 0.06);
+
+    .interactionWrapper {
+      opacity: 1;
+      max-height: 50px;
+      margin-top: var(--spacing-xs);
+      pointer-events: auto;
+    }
+
+    .stateIndicator {
+      width: 3px;
+    }
+  }
+}
+
+// Content wrapper for proper layout
+.contentWrapper {
+  position: relative;
+}
+
+.content {
+  line-height: 1.7;
+  color: var(--text-body);
+  margin: 0;
+  font-size: var(--p-font-size);
+}
+
+// Visual state indicator - thin line on the left
+.stateIndicator {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--border-light);
+  border-radius: var(--radius-full);
+  transition: width 0.2s ease, background-color 0.2s ease;
+}
+
+// Interaction wrapper - hidden by default
+.interactionWrapper {
+  opacity: 0;
+  max-height: 0;
+  margin-top: 0;
+  overflow: visible; // Allow badge to overflow
+  padding-inline-end: 8px; // Space for comment count badge
+  padding-top: 4px; // Space for badge overflow at top
+  transition:
+    opacity 0.2s ease,
+    max-height 0.2s ease,
+    margin-top 0.2s ease;
+  pointer-events: none;
+}
+
+// Default paragraph type
+.type-paragraph .content {
+  font-size: var(--p-font-size);
+  color: var(--text-body);
+}
+
+// Heading types - keep them distinctive
+.type-h1 {
+  padding-top: var(--spacing-md);
+  padding-bottom: var(--spacing-xs);
+
+  .content {
+    font-size: var(--h1-font-size);
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+}
+
+.type-h2 {
+  padding-top: var(--spacing-sm);
+
+  .content {
+    font-size: var(--h2-font-size);
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+}
+
+.type-h3 {
+  padding-top: var(--spacing-xs);
+
+  .content {
+    font-size: var(--h3-font-size);
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+}
+
+.type-h4 .content {
+  font-size: var(--h4-font-size);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.type-h5 .content {
+  font-size: var(--h5-font-size);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.type-h6 .content {
+  font-size: var(--h6-font-size);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+// List item type
+.listItem {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-sm);
+}
+
+.bullet {
+  color: var(--text-secondary);
+  font-size: 1.2em;
+  line-height: 1.5;
+  flex-shrink: 0;
+}
+
+.type-li .content {
+  margin: 0;
+}
+
+// Approval states - shown via state indicator
+.pending {
+  .stateIndicator {
+    background: var(--border-light);
+  }
+}
+
+.approved {
+  .stateIndicator {
+    background: var(--agree);
+    width: 3px;
+  }
+}
+
+.rejected {
+  .stateIndicator {
+    background: var(--disagree);
+    width: 3px;
+  }
+}
+
+// Heat map backgrounds (legacy admin view)
+.heat-low {
+  background: var(--heat-low);
+}
+
+.heat-medium {
+  background: var(--heat-medium);
+}
+
+.heat-high {
+  background: var(--heat-high);
+}
+
+// New Heat Map Integration - Background colors by type and level
+// Approval heat map
+.heatmap-approval {
+  &.heatmap-level-1 {
+    background: var(--heat-approval-1);
+    .stateIndicator {
+      background: var(--heat-approval-border);
+      width: 2px;
+    }
+  }
+  &.heatmap-level-2 {
+    background: var(--heat-approval-2);
+    .stateIndicator {
+      background: var(--heat-approval-border);
+      width: 3px;
+    }
+  }
+  &.heatmap-level-3 {
+    background: var(--heat-approval-3);
+    .stateIndicator {
+      background: var(--heat-approval-border);
+      width: 3px;
+    }
+  }
+  &.heatmap-level-4 {
+    background: var(--heat-approval-4);
+    .stateIndicator {
+      background: var(--heat-approval-border);
+      width: 4px;
+    }
+  }
+  &.heatmap-level-5 {
+    background: var(--heat-approval-5);
+    .stateIndicator {
+      background: var(--heat-approval-border);
+      width: 5px;
+    }
+  }
+}
+
+// Comments heat map
+.heatmap-comments {
+  &.heatmap-level-1 {
+    background: var(--heat-comments-1);
+    .stateIndicator {
+      background: var(--heat-comments-border);
+      width: 2px;
+    }
+  }
+  &.heatmap-level-2 {
+    background: var(--heat-comments-2);
+    .stateIndicator {
+      background: var(--heat-comments-border);
+      width: 3px;
+    }
+  }
+  &.heatmap-level-3 {
+    background: var(--heat-comments-3);
+    .stateIndicator {
+      background: var(--heat-comments-border);
+      width: 3px;
+    }
+  }
+  &.heatmap-level-4 {
+    background: var(--heat-comments-4);
+    .stateIndicator {
+      background: var(--heat-comments-border);
+      width: 4px;
+    }
+  }
+  &.heatmap-level-5 {
+    background: var(--heat-comments-5);
+    .stateIndicator {
+      background: var(--heat-comments-border);
+      width: 5px;
+    }
+  }
+}
+
+// Rating heat map
+.heatmap-rating {
+  &.heatmap-level-1 {
+    background: var(--heat-rating-1);
+    .stateIndicator {
+      background: var(--heat-rating-border);
+      width: 2px;
+    }
+  }
+  &.heatmap-level-2 {
+    background: var(--heat-rating-2);
+    .stateIndicator {
+      background: var(--heat-rating-border);
+      width: 3px;
+    }
+  }
+  &.heatmap-level-3 {
+    background: var(--heat-rating-3);
+    .stateIndicator {
+      background: var(--heat-rating-border);
+      width: 3px;
+    }
+  }
+  &.heatmap-level-4 {
+    background: var(--heat-rating-4);
+    .stateIndicator {
+      background: var(--heat-rating-border);
+      width: 4px;
+    }
+  }
+  &.heatmap-level-5 {
+    background: var(--heat-rating-5);
+    .stateIndicator {
+      background: var(--heat-rating-border);
+      width: 5px;
+    }
+  }
+}
+
+// Viewership heat map
+.heatmap-viewership {
+  &.heatmap-level-1 {
+    background: var(--heat-viewership-1);
+    .stateIndicator {
+      background: var(--heat-viewership-border);
+      width: 2px;
+    }
+  }
+  &.heatmap-level-2 {
+    background: var(--heat-viewership-2);
+    .stateIndicator {
+      background: var(--heat-viewership-border);
+      width: 3px;
+    }
+  }
+  &.heatmap-level-3 {
+    background: var(--heat-viewership-3);
+    .stateIndicator {
+      background: var(--heat-viewership-border);
+      width: 3px;
+    }
+  }
+  &.heatmap-level-4 {
+    background: var(--heat-viewership-4);
+    .stateIndicator {
+      background: var(--heat-viewership-border);
+      width: 4px;
+    }
+  }
+  &.heatmap-level-5 {
+    background: var(--heat-viewership-5);
+    .stateIndicator {
+      background: var(--heat-viewership-border);
+      width: 5px;
+    }
+  }
+}
+
+// Heat map value badge
+.heatBadge {
+  position: absolute;
+  top: var(--spacing-xs);
+  inset-inline-end: var(--spacing-xs);
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--text-body);
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: var(--shadow-sm);
+  z-index: 1;
+  animation: fadeIn 0.2s ease-out;
+
+  // Variant colors
+  [data-heat-type="approval"] & {
+    color: var(--heat-approval-border);
+    border: 1px solid var(--heat-approval-border);
+  }
+
+  [data-heat-type="comments"] & {
+    color: var(--heat-comments-border);
+    border: 1px solid var(--heat-comments-border);
+  }
+
+  [data-heat-type="rating"] & {
+    color: var(--heat-rating-border);
+    border: 1px solid var(--heat-rating-border);
+  }
+
+  [data-heat-type="viewership"] & {
+    color: var(--heat-viewership-border);
+    border: 1px solid var(--heat-viewership-border);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Admin info badge
+.adminInfo {
+  position: absolute;
+  top: var(--spacing-xs);
+  inset-inline-end: var(--spacing-xs);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.7rem;
+  color: var(--text-caption);
+  opacity: 0.6;
+}
+
+// Responsive adjustments
+@media (max-width: 600px) {
+  .card {
+    padding-inline-start: 0.625rem; // Slightly less padding on mobile
+  }
+
+  .type-h1 .content {
+    font-size: 1.4rem;
+  }
+
+  .type-h2 .content {
+    font-size: 1.2rem;
+  }
+
+  .stateIndicator {
+    width: 2px;
+  }
+}
+
+// Reduced motion support
+@media (prefers-reduced-motion: reduce) {
+  .card,
+  .interactionWrapper,
+  .stateIndicator {
+    transition: none;
+  }
+}
+
+/* RTL Support */
+[dir="rtl"] {
+  .card {
+    padding-left: 0;
+    padding-right: 0.75rem;
+  }
+
+  .stateIndicator {
+    left: auto;
+    right: 0;
+  }
+
+  @media (max-width: 600px) {
+    .card {
+      padding-inline-end: 0.625rem;
+    }
+  }
+}

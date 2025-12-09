@@ -1,0 +1,372 @@
+// Rich Text Editor Molecule - BEM Methodology
+// Usage: <div class="rich-text-editor">...</div>
+
+@use '../mixins' as *;
+
+// ============================================================================
+// RICH TEXT EDITOR BLOCK
+// ============================================================================
+
+.rich-text-editor {
+	@include card-base;
+	display: flex;
+	flex-direction: column;
+	min-height: 300px;
+	max-height: 80vh;
+
+	// ============================================================================
+	// ELEMENTS (Parts of the editor)
+	// ============================================================================
+
+	&__toolbar {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.25rem;
+		padding: 0.75rem;
+		border-bottom: 1px solid var(--border-light);
+		background-color: var(--card-default);
+		position: sticky;
+		top: 0;
+		z-index: 10;
+	}
+
+	&__toolbar-group {
+		display: flex;
+		gap: 0.125rem;
+		padding-inline-end: 0.5rem;
+		border-inline-end: 1px solid var(--border-light);
+
+		&:last-child {
+			border-inline-end: none;
+			padding-inline-end: 0;
+		}
+	}
+
+	&__toolbar-button {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 2rem;
+		height: 2rem;
+		border: none;
+		border-radius: 4px;
+		background-color: transparent;
+		color: var(--text-body);
+		cursor: pointer;
+		transition: all 0.15s ease;
+		font-size: 0.875rem;
+		font-weight: 500;
+
+		&:hover {
+			background-color: var(--btn-secondary);
+			color: var(--text-title);
+		}
+
+		&--active {
+			background-color: var(--btn-primary);
+			color: white;
+		}
+
+		&:disabled {
+			opacity: 0.5;
+			cursor: not-allowed;
+		}
+
+		svg {
+			width: 1rem;
+			height: 1rem;
+		}
+	}
+
+	&__content {
+		flex: 1;
+		padding: 1rem;
+		overflow-y: auto;
+		min-height: 200px;
+
+		// TipTap editor styles
+		.ProseMirror {
+			outline: none;
+			min-height: 100%;
+
+			> * + * {
+				margin-top: 0.75rem;
+			}
+
+			h1 {
+				font-size: var(--h1-font-size);
+				font-weight: 700;
+				color: var(--text-title);
+				line-height: 1.2;
+			}
+
+			h2 {
+				font-size: var(--h2-font-size);
+				font-weight: 600;
+				color: var(--text-title);
+				line-height: 1.25;
+			}
+
+			h3 {
+				font-size: var(--h3-font-size);
+				font-weight: 600;
+				color: var(--text-title);
+				line-height: 1.3;
+			}
+
+			h4 {
+				font-size: var(--h4-font-size);
+				font-weight: 600;
+				color: var(--text-title);
+				line-height: 1.35;
+			}
+
+			h5 {
+				font-size: var(--h5-font-size);
+				font-weight: 500;
+				color: var(--text-title);
+				line-height: 1.4;
+			}
+
+			h6 {
+				font-size: var(--h6-font-size);
+				font-weight: 500;
+				color: var(--text-title);
+				line-height: 1.4;
+			}
+
+			p {
+				font-size: var(--p-font-size);
+				color: var(--text-body);
+				line-height: 1.6;
+			}
+
+			ul,
+			ol {
+				padding-inline-start: 1.5rem;
+
+				li {
+					margin-top: 0.25rem;
+
+					p {
+						margin: 0;
+					}
+				}
+			}
+
+			ul {
+				list-style-type: disc;
+
+				li::marker {
+					color: var(--text-caption);
+				}
+			}
+
+			ol {
+				list-style-type: decimal;
+
+				li::marker {
+					color: var(--text-caption);
+				}
+			}
+
+			// Placeholder
+			p.is-editor-empty:first-child::before {
+				content: attr(data-placeholder);
+				float: left;
+				color: var(--text-caption);
+				pointer-events: none;
+				height: 0;
+			}
+		}
+	}
+
+	&__block {
+		position: relative;
+		padding: 0.5rem;
+		margin: 0.25rem 0;
+		border-radius: 4px;
+		transition: background-color 0.15s ease;
+
+		&:hover {
+			background-color: var(--bg-hover);
+		}
+
+		&--selected {
+			background-color: var(--bg-selected);
+			outline: 2px solid var(--btn-primary);
+		}
+
+		&--dragging {
+			opacity: 0.5;
+			background-color: var(--bg-selected);
+		}
+	}
+
+	&__block-handle {
+		position: absolute;
+		inset-inline-start: -1.5rem;
+		top: 50%;
+		transform: translateY(-50%);
+		width: 1rem;
+		height: 1.5rem;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		cursor: grab;
+		color: var(--text-caption);
+		opacity: 0;
+		transition: opacity 0.15s ease;
+
+		&:active {
+			cursor: grabbing;
+		}
+	}
+
+	&__block:hover &__block-handle {
+		opacity: 1;
+	}
+
+	&__actions {
+		display: flex;
+		align-items: center;
+		justify-content: flex-end;
+		gap: 0.75rem;
+		padding: 0.75rem 1rem;
+		border-top: 1px solid var(--border-light);
+		background-color: var(--card-default);
+	}
+
+	&__save-btn {
+		@include button-base;
+		background-color: var(--btn-primary);
+		color: white;
+
+		&:hover {
+			background-color: var(--btn-primary-hover);
+		}
+
+		&:disabled {
+			opacity: 0.5;
+			cursor: not-allowed;
+		}
+	}
+
+	&__cancel-btn {
+		@include button-base;
+		background-color: var(--btn-secondary);
+		color: var(--text-body);
+
+		&:hover {
+			background-color: var(--btn-secondary-hover);
+		}
+	}
+
+	// ============================================================================
+	// MODIFIERS (Variants)
+	// ============================================================================
+
+	&--fullscreen {
+		position: fixed;
+		inset: 0;
+		z-index: 1000;
+		max-height: none;
+		border-radius: 0;
+	}
+
+	&--compact {
+		min-height: 150px;
+	}
+
+	&--disabled {
+		pointer-events: none;
+		opacity: 0.6;
+	}
+
+	// ============================================================================
+	// RESPONSIVE
+	// ============================================================================
+
+	@media (max-width: 768px) {
+		&__toolbar {
+			padding: 0.5rem;
+			gap: 0.125rem;
+		}
+
+		&__toolbar-button {
+			width: 2.5rem;
+			height: 2.5rem;
+		}
+
+		&__content {
+			padding: 0.75rem;
+		}
+
+		&__actions {
+			flex-direction: column;
+			gap: 0.5rem;
+
+			button {
+				width: 100%;
+			}
+		}
+	}
+}
+
+// ============================================================================
+// DOCUMENT EDIT MODAL
+// ============================================================================
+
+.document-edit-modal {
+	position: fixed;
+	inset: 0;
+	z-index: 1000;
+	display: flex;
+	flex-direction: column;
+	background-color: var(--bg-main);
+
+	&__header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding: 1rem;
+		border-bottom: 1px solid var(--border-light);
+		background-color: var(--card-default);
+	}
+
+	&__title {
+		@include heading-base;
+		font-size: var(--h4-font-size);
+		margin: 0;
+	}
+
+	&__close-btn {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 2.5rem;
+		height: 2.5rem;
+		border: none;
+		border-radius: 50%;
+		background-color: transparent;
+		color: var(--text-body);
+		cursor: pointer;
+		transition: background-color 0.15s ease;
+
+		&:hover {
+			background-color: var(--btn-secondary);
+		}
+
+		svg {
+			width: 1.25rem;
+			height: 1.25rem;
+		}
+	}
+
+	&__body {
+		flex: 1;
+		overflow: hidden;
+		display: flex;
+		flex-direction: column;
+	}
+}

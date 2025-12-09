@@ -1,0 +1,181 @@
+'use client';
+
+import { useState, useCallback, useEffect } from 'react';
+import { useTranslation } from '@freedi/shared-i18n/next';
+import { useUIStore } from '@/store/uiStore';
+import { useDemographicStore, selectIsInteractionBlocked } from '@/store/demographicStore';
+import styles from './InteractionBar.module.scss';
+
+interface InteractionBarProps {
+  paragraphId: string;
+  documentId: string;
+  isApproved: boolean | undefined;
+  isLoggedIn: boolean;
+  commentCount: number;
+}
+
+export default function InteractionBar({
+  paragraphId,
+  documentId,
+  isApproved,
+  isLoggedIn,
+  commentCount,
+}: InteractionBarProps) {
+  const { t } = useTranslation();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [localApproval, setLocalApproval] = useState(isApproved);
+  const { openModal, setApproval } = useUIStore();
+  const { openSurveyModal } = useDemographicStore();
+  const isInteractionBlocked = useDemographicStore(selectIsInteractionBlocked);
+
+  // Sync local approval with store on mount and when isApproved changes
+  useEffect(() => {
+    if (isApproved !== undefined) {
+      setApproval(paragraphId, isApproved);
+    }
+  }, [paragraphId, isApproved, setApproval]);
+
+  const handleApproval = useCallback(
+    async (approved: boolean) => {
+      // Check if blocked by demographic survey
+      if (isInteractionBlocked) {
+        openSurveyModal();
+
+        return;
+      }
+
+      if (!isLoggedIn) {
+        window.location.href = `/login?redirect=/doc/${documentId}`;
+
+        return;
+      }
+
+      // Optimistic update - both local state and store
+      setLocalApproval(approved);
+      setApproval(paragraphId, approved);
+      setIsSubmitting(true);
+
+      try {
+        const response = await fetch(`/api/approvals/${paragraphId}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            approval: approved,
+            documentId,
+          }),
+        });
+
+        if (!response.ok) {
+          // Revert on failure
+          setLocalApproval(isApproved);
+          const error = await response.json();
+          console.error('Failed to submit approval:', error);
+        }
+      } catch (error) {
+        // Revert on error
+        setLocalApproval(isApproved);
+        console.error('Error submitting approval:', error);
+      } finally {
+        setIsSubmitting(false);
+      }
+    },
+    [paragraphId, documentId, isLoggedIn, isApproved, setApproval, isInteractionBlocked, openSurveyModal]
+  );
+
+  const handleOpenComments = () => {
+    // Check if blocked by demographic survey
+    if (isInteractionBlocked) {
+      openSurveyModal();
+
+      return;
+    }
+
+    openModal('comments', { paragraphId });
+  };
+
+  // Tooltip text when blocked
+  const blockedTitle = isInteractionBlocked
+    ? t('Complete survey to interact')
+    : undefined;
+
+  // Use local state if available, otherwise use prop
+  const currentApproval = localApproval !== undefined ? localApproval : isApproved;
+
+  // Stop propagation to prevent toggling the parent card
+  const handleButtonClick = (e: React.MouseEvent, action: () => void) => {
+    e.stopPropagation();
+    action();
+  };
+
+  return (
+    <div className={styles.bar} onClick={(e) => e.stopPropagation()}>
+      <div className={styles.approvalButtons}>
+        <button
+          type="button"
+          className={`${styles.button} ${styles.approveButton} ${currentApproval === true ? styles.active : ''} ${isInteractionBlocked ? styles.blocked : ''}`}
+          onClick={(e) => handleButtonClick(e, () => handleApproval(true))}
+          disabled={isSubmitting}
+          aria-pressed={currentApproval === true}
+          title={blockedTitle || t('Approve')}
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
+          <span className={styles.buttonText}>{t('Approve')}</span>
+        </button>
+
+        <button
+          type="button"
+          className={`${styles.button} ${styles.rejectButton} ${currentApproval === false ? styles.active : ''} ${isInteractionBlocked ? styles.blocked : ''}`}
+          onClick={(e) => handleButtonClick(e, () => handleApproval(false))}
+          disabled={isSubmitting}
+          aria-pressed={currentApproval === false}
+          title={blockedTitle || t('Reject')}
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+          <span className={styles.buttonText}>{t('Reject')}</span>
+        </button>
+      </div>
+
+      <button
+        type="button"
+        className={`${styles.button} ${styles.commentButton} ${isInteractionBlocked ? styles.blocked : ''}`}
+        onClick={(e) => handleButtonClick(e, handleOpenComments)}
+        title={blockedTitle || t('Comments')}
+      >
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+        </svg>
+        {commentCount > 0 && (
+          <span className={styles.commentCount}>{commentCount}</span>
+        )}
+      </button>
+    </div>
+  );
+}

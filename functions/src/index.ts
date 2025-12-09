@@ -92,6 +92,9 @@ import {
 // Discussion Summarization
 import { summarizeDiscussion } from "./fn_summarizeDiscussion";
 
+// Dynamic OG Tags for social media sharing
+import { serveOgTags } from "./fn_dynamicOgTags";
+
 // Initialize Firebase only if not already initialized
 if (!getApps().length) {
   initializeApp();
@@ -469,3 +472,6 @@ exports.deleteRoomAssignments = wrapHttpFunction(deleteRoomAssignments);
 
 // Discussion Summarization
 exports.summarizeDiscussion = summarizeDiscussion;
+
+// Dynamic OG Tags for social media sharing
+exports.serveOgTags = serveOgTags;

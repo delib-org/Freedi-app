@@ -53,6 +53,7 @@ const EditableStatement: FC<EditableStatementProps> = ({
 			editing={forceEditing}
 			onSave={handleSave}
 			variant={effectiveVariant}
+			statementObj={statement}
 			{...editTextProps}
 		/>
 	);
