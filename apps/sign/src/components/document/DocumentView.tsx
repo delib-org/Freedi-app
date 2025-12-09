@@ -26,13 +26,14 @@ export default function DocumentView({
   commentCounts,
 }: DocumentViewProps) {
   // Check if user is admin (creator of the document)
-  const isAdmin = user && document.creatorId === user.uid;
+  const isAdmin = user ? document.creatorId === user.uid : undefined;
 
   return (
     <DocumentClient
       documentId={document.statementId}
       user={user}
       userSignature={userSignature}
+      commentCounts={commentCounts}
     >
       <div className={styles.container}>
         {/* Top Bar with Logo and User Avatar */}

@@ -70,6 +70,93 @@
   word-wrap: break-word;
 }
 
+/* Evaluation bar */
+.evaluationBar {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  margin-top: var(--spacing-sm);
+  padding-top: var(--spacing-xs);
+  border-top: 1px solid var(--border-color, rgba(0, 0, 0, 0.08));
+}
+
+.evalButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  background: transparent;
+  border: 1px solid var(--border-color, rgba(0, 0, 0, 0.12));
+  border-radius: var(--radius-sm);
+  color: var(--text-caption);
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover:not(:disabled) {
+    transform: scale(1.05);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  &.approve {
+    &:hover:not(:disabled) {
+      background: rgba(76, 175, 80, 0.1);
+      border-color: var(--agree);
+      color: var(--agree);
+    }
+
+    &.active {
+      background: var(--agree);
+      border-color: var(--agree);
+      color: white;
+    }
+  }
+
+  &.reject {
+    &:hover:not(:disabled) {
+      background: rgba(244, 67, 54, 0.1);
+      border-color: var(--disagree);
+      color: var(--disagree);
+    }
+
+    &.active {
+      background: var(--disagree);
+      border-color: var(--disagree);
+      color: white;
+    }
+  }
+}
+
+.consensusScore {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  min-width: 24px;
+  text-align: center;
+  color: var(--text-caption);
+
+  &.positive {
+    color: var(--agree);
+  }
+
+  &.negative {
+    color: var(--disagree);
+  }
+}
+
+.consensusDisplay {
+  margin-top: var(--spacing-sm);
+  padding-top: var(--spacing-xs);
+  border-top: 1px solid var(--border-color, rgba(0, 0, 0, 0.08));
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
 /* RTL Support */
 [dir="rtl"] {
   .header {
@@ -78,5 +165,9 @@
 
   .meta {
     text-align: right;
+  }
+
+  .evaluationBar {
+    flex-direction: row-reverse;
   }
 }

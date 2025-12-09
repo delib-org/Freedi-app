@@ -81,12 +81,35 @@
 }
 
 .loginPrompt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-sm);
   text-align: center;
   color: var(--text-secondary);
   padding: var(--spacing-md);
   background: var(--background);
   border-radius: var(--radius-sm);
-  margin: 0;
+
+  p {
+    margin: 0;
+  }
+}
+
+.loginButton {
+  padding: var(--spacing-xs) var(--spacing-lg);
+  background: var(--btn-primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s ease;
+
+  &:hover {
+    background: var(--btn-primary-hover);
+  }
 }
 
 /* RTL Support */

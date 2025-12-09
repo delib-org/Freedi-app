@@ -5,7 +5,7 @@
 
 import { create } from 'zustand';
 
-export type ModalType = 'comments' | 'signature' | 'settings' | null;
+export type ModalType = 'comments' | 'signature' | 'settings' | 'login' | null;
 export type ViewMode = 'default' | 'views' | 'support' | 'importance';
 export type SigningAnimationState = 'idle' | 'signing' | 'success' | 'error';
 
@@ -52,6 +52,12 @@ interface UIState {
   totalParagraphs: number;
   initializeApprovals: (approvals: Record<string, boolean>, total: number) => void;
   setApproval: (paragraphId: string, approved: boolean) => void;
+
+  // Comment counts (for real-time updates)
+  commentCounts: Record<string, number>;
+  initializeCommentCounts: (counts: Record<string, number>) => void;
+  incrementCommentCount: (paragraphId: string) => void;
+  decrementCommentCount: (paragraphId: string) => void;
 }
 
 export const useUIStore = create<UIState>((set) => ({
@@ -95,6 +101,24 @@ export const useUIStore = create<UIState>((set) => ({
   setApproval: (paragraphId, approved) =>
     set((state) => ({
       approvals: { ...state.approvals, [paragraphId]: approved },
+    })),
+
+  // Comment counts
+  commentCounts: {},
+  initializeCommentCounts: (counts) => set({ commentCounts: counts }),
+  incrementCommentCount: (paragraphId) =>
+    set((state) => ({
+      commentCounts: {
+        ...state.commentCounts,
+        [paragraphId]: (state.commentCounts[paragraphId] || 0) + 1,
+      },
+    })),
+  decrementCommentCount: (paragraphId) =>
+    set((state) => ({
+      commentCounts: {
+        ...state.commentCounts,
+        [paragraphId]: Math.max(0, (state.commentCounts[paragraphId] || 0) - 1),
+      },
     })),
 }));
 

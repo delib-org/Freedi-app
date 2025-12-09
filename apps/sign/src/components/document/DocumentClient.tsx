@@ -6,6 +6,7 @@ import { SignUser } from '@/lib/utils/user';
 import { Signature } from '@/lib/firebase/queries';
 import Modal from '../shared/Modal';
 import CommentThread from '../comments/CommentThread';
+import LoginModal from '../shared/LoginModal';
 
 // Animation timing constants
 const ANIMATION_DURATION = {
@@ -18,6 +19,7 @@ interface DocumentClientProps {
   documentId: string;
   user: SignUser | null;
   userSignature: Signature | null;
+  commentCounts: Record<string, number>;
   children: React.ReactNode;
 }
 
@@ -25,6 +27,7 @@ export default function DocumentClient({
   documentId,
   user,
   userSignature,
+  commentCounts,
   children,
 }: DocumentClientProps) {
   const {
@@ -34,6 +37,7 @@ export default function DocumentClient({
     setSubmitting,
     setSigningAnimationState,
     resetSigningAnimation,
+    initializeCommentCounts,
   } = useUIStore();
 
   const confettiTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -196,6 +200,11 @@ export default function DocumentClient({
     ]
   );
 
+  // Initialize comment counts from server data
+  useEffect(() => {
+    initializeCommentCounts(commentCounts);
+  }, [commentCounts, initializeCommentCounts]);
+
   // Cleanup confetti timeout on unmount
   useEffect(() => {
     return () => {
@@ -250,6 +259,7 @@ export default function DocumentClient({
             paragraphId={modalContext.paragraphId}
             documentId={documentId}
             isLoggedIn={!!user}
+            userId={user?.uid || null}
           />
         </Modal>
       )}
@@ -259,6 +269,13 @@ export default function DocumentClient({
         <Modal title="Confirm Signature" onClose={closeModal}>
           <p>Are you sure you want to sign this document?</p>
           {/* TODO: Add confirmation buttons */}
+        </Modal>
+      )}
+
+      {/* Login Modal */}
+      {activeModal === 'login' && (
+        <Modal title="Sign In" onClose={closeModal}>
+          <LoginModal onClose={closeModal} />
         </Modal>
       )}
     </>

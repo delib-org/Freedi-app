@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { Statement } from 'delib-npm';
+import { useUIStore } from '@/store/uiStore';
 import Comment from './Comment';
 import styles from './CommentThread.module.scss';
 
@@ -10,19 +11,31 @@ interface CommentThreadProps {
   paragraphId: string;
   documentId: string;
   isLoggedIn: boolean;
+  userId: string | null;
 }
 
 export default function CommentThread({
   paragraphId,
   documentId,
   isLoggedIn,
+  userId,
 }: CommentThreadProps) {
   const { t } = useTranslation();
+  const { openModal, closeModal, incrementCommentCount } = useUIStore();
   const [comments, setComments] = useState<Statement[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [newComment, setNewComment] = useState('');
   const [error, setError] = useState<string | null>(null);
+
+  // Handle login button click - close comments modal and open login modal
+  const handleLoginClick = () => {
+    closeModal();
+    // Small delay to allow comments modal to close
+    setTimeout(() => {
+      openModal('login');
+    }, 100);
+  };
 
   // Fetch comments
   const fetchComments = useCallback(async () => {
@@ -72,6 +85,8 @@ export default function CommentThread({
         const data = await response.json();
         setComments((prev) => [...prev, data.comment]);
         setNewComment('');
+        // Update comment count in store
+        incrementCommentCount(paragraphId);
       } else {
         const errorData = await response.json();
         setError(errorData.error || 'Failed to post comment');
@@ -121,6 +136,7 @@ export default function CommentThread({
             <Comment
               key={comment.statementId}
               comment={comment}
+              userId={userId}
               onDelete={handleDelete}
             />
           ))
@@ -148,9 +164,16 @@ export default function CommentThread({
           </button>
         </form>
       ) : (
-        <p className={styles.loginPrompt}>
-          {t('Please log in to add comments')}
-        </p>
+        <div className={styles.loginPrompt}>
+          <p>{t('Please log in to add comments')}</p>
+          <button
+            type="button"
+            className={styles.loginButton}
+            onClick={handleLoginClick}
+          >
+            {t('Sign In')}
+          </button>
+        </div>
       )}
     </div>
   );

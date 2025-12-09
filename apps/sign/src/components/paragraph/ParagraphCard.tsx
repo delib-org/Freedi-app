@@ -27,11 +27,16 @@ export default function ParagraphCard({
   heatLevel,
   viewCount,
   isAdmin,
-  commentCount = 0,
+  commentCount: initialCommentCount = 0,
 }: ParagraphCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const cardRef = useRef<HTMLElement>(null);
   const paragraphType = paragraph.type || ParagraphType.paragraph;
+
+  // Get comment count from store (updates in real-time)
+  const storeCommentCount = useUIStore((state) => state.commentCounts[paragraph.paragraphId]);
+  // Use store value if available, otherwise fall back to initial prop
+  const commentCount = storeCommentCount !== undefined ? storeCommentCount : initialCommentCount;
 
   // Get approval state from store (updates in real-time when user approves/rejects)
   const storeApproval = useUIStore((state) => state.approvals[paragraph.paragraphId]);
