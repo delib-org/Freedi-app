@@ -727,5 +727,6 @@
   "loadingHeatMapData": "جاري تحميل بيانات خريطة الحرارة",
   "turnOff": "إيقاف",
   "copy": "نسخ",
-  "copied": "تم النسخ!"
+  "copied": "تم النسخ!",
+  "Please add your answer to the following question:": "يرجى إضافة إجابتك على السؤال التالي:"
 }

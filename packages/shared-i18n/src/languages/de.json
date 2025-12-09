@@ -731,5 +731,6 @@
   "loadingHeatMapData": "Heatmap-Daten werden geladen",
   "turnOff": "Ausschalten",
   "copy": "Kopieren",
-  "copied": "Kopiert!"
+  "copied": "Kopiert!",
+  "Please add your answer to the following question:": "Bitte fügen Sie Ihre Antwort zur folgenden Frage hinzu:"
 }

@@ -961,5 +961,6 @@
   "openHeatMapMenu": "פתח תפריט מפת חום",
   "closeHeatMapMenu": "סגור תפריט מפת חום",
   "loadingHeatMapData": "טוען נתוני מפת חום",
-  "turnOff": "כבה"
+  "turnOff": "כבה",
+  "Please add your answer to the following question:": "אנא הוסף/י את תשובתך לשאלה הבאה:"
 }

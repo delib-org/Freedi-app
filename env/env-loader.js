@@ -197,10 +197,12 @@ function main() {
     console.info('');
     console.info('Available environments:');
     console.info('  dev   - Development (freedi-test, with emulator)');
-    console.info('  prod  - Production (synthesistalyaron)');
+    console.info('  test  - Testing (freedi-test)');
+    console.info('  prod  - Production (wizcol-app)');
     console.info('');
     console.info('Or use npm scripts:');
     console.info('  npm run env:dev');
+    console.info('  npm run env:test');
     console.info('  npm run env:prod');
     process.exit(0);
   }

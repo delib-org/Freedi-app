@@ -731,5 +731,6 @@
   "loadingHeatMapData": "Cargando datos del mapa de calor",
   "turnOff": "Apagar",
   "copy": "Copiar",
-  "copied": "¡Copiado!"
+  "copied": "¡Copiado!",
+  "Please add your answer to the following question:": "Por favor, añade tu respuesta a la siguiente pregunta:"
 }
