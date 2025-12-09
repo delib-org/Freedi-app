@@ -4,6 +4,7 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { ParagraphType } from 'delib-npm';
 import clsx from 'clsx';
 import { Paragraph } from '@/types';
+import { useUIStore } from '@/store/uiStore';
 import InteractionBar from './InteractionBar';
 import styles from './ParagraphCard.module.scss';
 
@@ -20,7 +21,7 @@ interface ParagraphCardProps {
 export default function ParagraphCard({
   paragraph,
   documentId,
-  isApproved,
+  isApproved: initialApproval,
   isLoggedIn,
   heatLevel,
   viewCount,
@@ -30,7 +31,13 @@ export default function ParagraphCard({
   const cardRef = useRef<HTMLElement>(null);
   const paragraphType = paragraph.type || ParagraphType.paragraph;
 
-  // Determine approval state
+  // Get approval state from store (updates in real-time when user approves/rejects)
+  const storeApproval = useUIStore((state) => state.approvals[paragraph.paragraphId]);
+
+  // Use store value if available, otherwise fall back to initial prop
+  const isApproved = storeApproval !== undefined ? storeApproval : initialApproval;
+
+  // Determine approval state for styling
   const approvalState = isApproved === undefined
     ? 'pending'
     : isApproved
