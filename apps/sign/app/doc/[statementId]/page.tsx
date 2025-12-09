@@ -6,6 +6,7 @@ import {
   getParagraphsFromStatement,
   getUserSignature,
   getUserApprovals,
+  getCommentCountsForDocument,
 } from '@/lib/firebase/queries';
 import { getUserFromCookies } from '@/lib/utils/user';
 import DocumentView from '@/components/document/DocumentView';
@@ -42,10 +43,14 @@ export default async function DocumentPage({ params }: PageProps) {
 
   // Extract paragraphs from document
   const paragraphs = getParagraphsFromStatement(document);
+  const paragraphIds = paragraphs.map((p) => p.paragraphId);
 
   // Get user info from cookies
   const cookieStore = await cookies();
   const user = getUserFromCookies(cookieStore);
+
+  // Fetch comment counts for all paragraphs (for all users, not just logged in)
+  const commentCounts = await getCommentCountsForDocument(statementId, paragraphIds);
 
   // If user exists, get their signature and approvals
   let userSignature = null;
@@ -74,6 +79,7 @@ export default async function DocumentPage({ params }: PageProps) {
       user={user}
       userSignature={userSignature}
       userApprovals={approvalsMap}
+      commentCounts={commentCounts}
     />
   );
 }

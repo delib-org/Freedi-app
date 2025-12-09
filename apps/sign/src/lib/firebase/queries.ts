@@ -257,6 +257,50 @@ export async function getComments(paragraphId: string): Promise<Statement[]> {
   }
 }
 
+/**
+ * Get comment counts for all paragraphs in a document
+ * Returns a map of paragraphId -> commentCount
+ */
+export async function getCommentCountsForDocument(
+  documentId: string,
+  paragraphIds: string[]
+): Promise<Record<string, number>> {
+  try {
+    const db = getFirestoreAdmin();
+    const commentCounts: Record<string, number> = {};
+
+    // Initialize all paragraphs with 0
+    paragraphIds.forEach((id) => {
+      commentCounts[id] = 0;
+    });
+
+    if (paragraphIds.length === 0) {
+      return commentCounts;
+    }
+
+    // Query all comments for this document (using topParentId)
+    const snapshot = await db
+      .collection(Collections.statements)
+      .where('topParentId', '==', documentId)
+      .where('statementType', '==', StatementType.statement)
+      .get();
+
+    // Count non-hidden comments per paragraph
+    snapshot.docs.forEach((doc) => {
+      const comment = doc.data() as Statement;
+      if (!comment.hide && paragraphIds.includes(comment.parentId)) {
+        commentCounts[comment.parentId] = (commentCounts[comment.parentId] || 0) + 1;
+      }
+    });
+
+    return commentCounts;
+  } catch (error) {
+    console.error('[Sign Queries] Error getting comment counts:', error);
+
+    return {};
+  }
+}
+
 export interface DocumentStats {
   totalParticipants: number;
   signedCount: number;

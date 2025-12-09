@@ -7,6 +7,7 @@
   transition: background-color 0.2s ease;
   cursor: pointer;
   border-radius: var(--radius-sm);
+  overflow: visible; // Allow comment badge to overflow
 
   // Subtle hover effect to indicate interactivity (desktop)
   @media (hover: hover) {
@@ -78,7 +79,9 @@
   opacity: 0;
   max-height: 0;
   margin-top: 0;
-  overflow: hidden;
+  overflow: visible; // Allow badge to overflow
+  padding-inline-end: 8px; // Space for comment count badge
+  padding-top: 4px; // Space for badge overflow at top
   transition:
     opacity 0.2s ease,
     max-height 0.2s ease,

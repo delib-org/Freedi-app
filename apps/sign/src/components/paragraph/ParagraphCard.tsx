@@ -16,6 +16,7 @@ interface ParagraphCardProps {
   heatLevel?: 'low' | 'medium' | 'high';
   viewCount?: number;
   isAdmin?: boolean;
+  commentCount?: number;
 }
 
 export default function ParagraphCard({
@@ -26,6 +27,7 @@ export default function ParagraphCard({
   heatLevel,
   viewCount,
   isAdmin,
+  commentCount = 0,
 }: ParagraphCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const cardRef = useRef<HTMLElement>(null);
@@ -134,7 +136,7 @@ export default function ParagraphCard({
           documentId={documentId}
           isApproved={isApproved}
           isLoggedIn={isLoggedIn}
-          commentCount={0} // TODO: Add comment count
+          commentCount={commentCount}
         />
       </div>
 

@@ -14,6 +14,7 @@ interface DocumentViewProps {
   user: SignUser | null;
   userSignature: Signature | null;
   userApprovals: Record<string, boolean>;
+  commentCounts: Record<string, number>;
 }
 
 export default function DocumentView({
@@ -22,6 +23,7 @@ export default function DocumentView({
   user,
   userSignature,
   userApprovals,
+  commentCounts,
 }: DocumentViewProps) {
   // Check if user is admin (creator of the document)
   const isAdmin = user && document.creatorId === user.id;
@@ -93,6 +95,7 @@ export default function DocumentView({
                 documentId={document.statementId}
                 isApproved={userApprovals[paragraph.paragraphId]}
                 isLoggedIn={!!user}
+                commentCount={commentCounts[paragraph.paragraphId] || 0}
               />
             ))
           )}
