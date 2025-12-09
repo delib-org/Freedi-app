@@ -1,11 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { useTranslation } from '@freedi/shared-i18n';
+import { useTranslation } from '@freedi/shared-i18n/next';
 import { Survey } from '@/types/survey';
 import SurveyForm from './SurveyForm';
 import SurveyShare from './SurveyShare';
-import styles from './Admin.module.scss';
 
 interface SurveyEditViewProps {
   survey: Survey;

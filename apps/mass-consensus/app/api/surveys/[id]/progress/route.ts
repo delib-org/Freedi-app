@@ -13,7 +13,7 @@ interface RouteContext {
 export async function GET(request: NextRequest, context: RouteContext) {
   try {
     const surveyId = context.params.id;
-    const userId = getUserIdFromCookie(request.headers);
+    const userId = getUserIdFromCookie(request.headers.get('cookie'));
 
     if (!userId) {
       return NextResponse.json(
@@ -53,7 +53,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
 export async function POST(request: NextRequest, context: RouteContext) {
   try {
     const surveyId = context.params.id;
-    const userId = getUserIdFromCookie(request.headers);
+    const userId = getUserIdFromCookie(request.headers.get('cookie'));
 
     if (!userId) {
       return NextResponse.json(

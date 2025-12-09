@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Statement } from 'delib-npm';
-import { useTranslation } from '@freedi/shared-i18n';
+import { useTranslation } from '@freedi/shared-i18n/next';
 import styles from './Admin.module.scss';
 
 interface QuestionPickerProps {
