@@ -306,6 +306,7 @@
   "Leave empty for automatic improvement": "Laat leeg voor automatische verbetering",
   "Light contrast": "Laag contrast",
   "Limit votes per user": "Beperk stemmen per gebruiker",
+  "Link copied to clipboard": "Link gekopieerd naar klembord",
   "Loading discussion...": "Discussie laden...",
   "Loading new suggestions...": "Nieuwe suggesties laden...",
   "Login with a temporary name": "Inloggen met een tijdelijke naam",
@@ -482,6 +483,7 @@
   "Set up your new statement or question": "Stel uw nieuwe verklaring of vraag in",
   "Settings": "Instellingen",
   "Share": "Delen",
+  "Share this link": "Deel deze link",
   "Share Your Idea": "Deel Je Idee",
   "Share your claim, comment, or evidence...": "Deel je claim, opmerking of bewijs...",
   "Share your thoughts about this process...": "Deel je gedachten over dit proces...",
@@ -727,5 +729,7 @@
   "openHeatMapMenu": "Heatmap-menu openen",
   "closeHeatMapMenu": "Heatmap-menu sluiten",
   "loadingHeatMapData": "Heatmap-gegevens laden",
-  "turnOff": "Uitschakelen"
+  "turnOff": "Uitschakelen",
+  "copy": "Kopiëren",
+  "copied": "Gekopieerd!"
 }

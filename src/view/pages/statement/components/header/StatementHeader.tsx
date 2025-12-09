@@ -2,6 +2,7 @@ import { FC, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import StatementTopNav from '../nav/top/StatementTopNav';
 import InvitePanel from './invitePanel/InvitePanel';
+import ShareModal from '@/view/components/shareModal/ShareModal';
 import { logOut } from '@/controllers/db/authenticationUtils';
 import { setFollowMeDB } from '@/controllers/db/statements/setStatements';
 import { Statement } from 'delib-npm';
@@ -23,18 +24,12 @@ const StatementHeader: FC<Props> = ({
 	const navigate = useNavigate();
 	const [isHeaderMenuOpen, setIsHeaderMenuOpen] = useState(false);
 	const [showInvitationPanel, setShowInvitationPanel] = useState(false);
+	const [showShareModal, setShowShareModal] = useState(false);
 
 	const { t, dir } = useTranslation();
 
 	function handleShare() {
-		const baseUrl = window.location.origin;
-
-		const shareData = {
-			title: t('FreeDi: Empowering Agreements'),
-			text: t('Invited:') + statement?.statement,
-			url: `${baseUrl}${pathname}`,
-		};
-		navigator.share(shareData);
+		setShowShareModal(true);
 		setIsHeaderMenuOpen(false);
 	}
 
@@ -88,6 +83,12 @@ const StatementHeader: FC<Props> = ({
 					pathname={pathname}
 				/>
 			)}
+			<ShareModal
+				isOpen={showShareModal}
+				onClose={() => setShowShareModal(false)}
+				url={pathname}
+				title={t('Share this link')}
+			/>
 		</div>
 	);
 };

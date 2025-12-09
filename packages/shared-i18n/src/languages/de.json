@@ -306,6 +306,7 @@
   "Leave empty for automatic improvement": "Leer lassen für automatische Verbesserung",
   "Light contrast": "Niedriger Kontrast",
   "Limit votes per user": "Stimmen pro Benutzer begrenzen",
+  "Link copied to clipboard": "Link in Zwischenablage kopiert",
   "Loading discussion...": "Diskussion wird geladen...",
   "Loading new suggestions...": "Lade neue Vorschläge...",
   "Login with a temporary name": "Mit einem temporären Namen anmelden",
@@ -482,6 +483,7 @@
   "Set up your new statement or question": "Richten Sie Ihre neue Aussage oder Frage ein",
   "Settings": "Einstellungen",
   "Share": "Teilen",
+  "Share this link": "Diesen Link teilen",
   "Share Your Idea": "Teilen Sie Ihre Idee",
   "Share your claim, comment, or evidence...": "Teilen Sie Ihre Behauptung, Ihren Kommentar oder Ihren Beweis...",
   "Share your thoughts about this process...": "Teilen Sie Ihre Gedanken zu diesem Prozess...",
@@ -727,5 +729,7 @@
   "openHeatMapMenu": "Heatmap-Menü öffnen",
   "closeHeatMapMenu": "Heatmap-Menü schließen",
   "loadingHeatMapData": "Heatmap-Daten werden geladen",
-  "turnOff": "Ausschalten"
+  "turnOff": "Ausschalten",
+  "copy": "Kopieren",
+  "copied": "Kopiert!"
 }

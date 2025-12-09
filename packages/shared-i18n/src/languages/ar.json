@@ -305,6 +305,7 @@
   "Leave empty for automatic improvement": "اترك فارغًا للتحسين التلقائي",
   "Light contrast": "تباين منخفض",
   "Limit votes per user": "حد الأصوات لكل مستخدم",
+  "Link copied to clipboard": "تم نسخ الرابط إلى الحافظة",
   "Loading discussion...": "جاري تحميل النقاش...",
   "Loading new suggestions...": "جاري تحميل اقتراحات جديدة...",
   "Login with a temporary name": "تسجيل الدخول بإسم مؤقت",
@@ -481,6 +482,7 @@
   "Set up your new statement or question": "قم بإعداد بيانك أو سؤالك الجديد",
   "Settings": "الإعدادات",
   "Share": "مشاركة",
+  "Share this link": "شارك هذا الرابط",
   "Share Your Idea": "شارك فكرتك",
   "Share your claim, comment, or evidence...": "شارك ادعاءك أو تعليقك أو دليلك...",
   "Share your thoughts about this process...": "شارك أفكارك حول هذه العملية...",
@@ -723,5 +725,7 @@
   "openHeatMapMenu": "فتح قائمة خريطة الحرارة",
   "closeHeatMapMenu": "إغلاق قائمة خريطة الحرارة",
   "loadingHeatMapData": "جاري تحميل بيانات خريطة الحرارة",
-  "turnOff": "إيقاف"
+  "turnOff": "إيقاف",
+  "copy": "نسخ",
+  "copied": "تم النسخ!"
 }
