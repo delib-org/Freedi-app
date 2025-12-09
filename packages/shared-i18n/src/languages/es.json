@@ -306,6 +306,7 @@
   "Leave empty for automatic improvement": "Dejar vacío para mejora automática",
   "Light contrast": "Bajo contraste",
   "Limit votes per user": "Limitar votos por usuario",
+  "Link copied to clipboard": "Enlace copiado al portapapeles",
   "Loading discussion...": "Cargando discusión...",
   "Loading new suggestions...": "Cargando nuevas sugerencias...",
   "Login with a temporary name": "Iniciar sesión con un nombre temporal",
@@ -482,6 +483,7 @@
   "Set up your new statement or question": "Configure su nueva declaración o pregunta",
   "Settings": "Configuración",
   "Share": "Compartir",
+  "Share this link": "Compartir este enlace",
   "Share Your Idea": "Comparte Tu Idea",
   "Share your claim, comment, or evidence...": "Comparte tu afirmación, comentario o evidencia...",
   "Share your thoughts about this process...": "Comparte tus pensamientos sobre este proceso...",
@@ -727,5 +729,7 @@
   "openHeatMapMenu": "Abrir menú de mapa de calor",
   "closeHeatMapMenu": "Cerrar menú de mapa de calor",
   "loadingHeatMapData": "Cargando datos del mapa de calor",
-  "turnOff": "Apagar"
+  "turnOff": "Apagar",
+  "copy": "Copiar",
+  "copied": "¡Copiado!"
 }
