@@ -8,14 +8,19 @@ import styles from './Comment.module.scss';
 interface CommentProps {
   comment: Statement;
   userId: string | null;
+  paragraphId: string;
   onDelete: (commentId: string) => void;
+  onUpdate: (commentId: string, newStatement: string) => void;
 }
 
-export default function Comment({ comment, userId, onDelete }: CommentProps) {
+export default function Comment({ comment, userId, paragraphId, onDelete, onUpdate }: CommentProps) {
   const { t } = useTranslation();
   const [consensus, setConsensus] = useState(comment.consensus || 0);
   const [userEvaluation, setUserEvaluation] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editText, setEditText] = useState(comment.statement);
+  const [isSaving, setIsSaving] = useState(false);
 
   // Check if current user owns this comment
   const isOwner = userId && comment.creatorId === userId;
@@ -86,6 +91,43 @@ export default function Comment({ comment, userId, onDelete }: CommentProps) {
     }
   };
 
+  // Handle edit save
+  const handleSaveEdit = async () => {
+    if (!editText.trim() || isSaving) return;
+
+    setIsSaving(true);
+    try {
+      const response = await fetch(`/api/comments/${paragraphId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          commentId: comment.statementId,
+          statement: editText.trim(),
+        }),
+      });
+
+      if (response.ok) {
+        onUpdate(comment.statementId, editText.trim());
+        setIsEditing(false);
+      } else {
+        const errorData = await response.json();
+        console.error('Failed to update comment:', errorData.error);
+      }
+    } catch (err) {
+      console.error('Error updating comment:', err);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Handle cancel edit
+  const handleCancelEdit = () => {
+    setEditText(comment.statement);
+    setIsEditing(false);
+  };
+
   // Format date
   const formatDate = (timestamp: number) => {
     const date = new Date(timestamp);
@@ -123,31 +165,85 @@ export default function Comment({ comment, userId, onDelete }: CommentProps) {
             {formatDate(comment.createdAt)}
           </span>
         </div>
-        {isOwner && (
-          <button
-            type="button"
-            className={styles.deleteButton}
-            onClick={handleDelete}
-            aria-label={t('Delete comment')}
-          >
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
+        {isOwner && !isEditing && (
+          <div className={styles.ownerActions}>
+            <button
+              type="button"
+              className={styles.editButton}
+              onClick={() => setIsEditing(true)}
+              aria-label={t('Edit comment')}
+              title={t('Edit')}
             >
-              <polyline points="3 6 5 6 21 6" />
-              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-            </svg>
-          </button>
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+              </svg>
+            </button>
+            <button
+              type="button"
+              className={styles.deleteButton}
+              onClick={handleDelete}
+              aria-label={t('Delete comment')}
+              title={t('Delete')}
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <polyline points="3 6 5 6 21 6" />
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+              </svg>
+            </button>
+          </div>
         )}
       </header>
-      <p className={styles.content}>{comment.statement}</p>
+
+      {isEditing ? (
+        <div className={styles.editForm}>
+          <textarea
+            className={styles.editTextarea}
+            value={editText}
+            onChange={(e) => setEditText(e.target.value)}
+            rows={3}
+            disabled={isSaving}
+            autoFocus
+          />
+          <div className={styles.editActions}>
+            <button
+              type="button"
+              className={styles.cancelButton}
+              onClick={handleCancelEdit}
+              disabled={isSaving}
+            >
+              {t('Cancel')}
+            </button>
+            <button
+              type="button"
+              className={styles.saveButton}
+              onClick={handleSaveEdit}
+              disabled={isSaving || !editText.trim()}
+            >
+              {isSaving ? t('Saving...') : t('Save')}
+            </button>
+          </div>
+        </div>
+      ) : (
+        <p className={styles.content}>{comment.statement}</p>
+      )}
 
       {/* Evaluation section - only show if user is logged in and not the owner */}
-      {userId && !isOwner && (
+      {userId && !isOwner && !isEditing && (
         <div className={styles.evaluationBar}>
           <button
             type="button"
@@ -182,7 +278,7 @@ export default function Comment({ comment, userId, onDelete }: CommentProps) {
       )}
 
       {/* Show consensus for non-logged-in users or comment owners */}
-      {(!userId || isOwner) && consensus !== 0 && (
+      {(!userId || isOwner) && consensus !== 0 && !isEditing && (
         <div className={styles.consensusDisplay}>
           <span className={`${styles.consensusScore} ${consensus > 0 ? styles.positive : styles.negative}`}>
             {consensus > 0 ? '+' : ''}{consensus}

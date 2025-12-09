@@ -1,6 +1,7 @@
 import { cookies } from 'next/headers';
 import { getDocumentStats } from '@/lib/firebase/queries';
 import { getUserIdFromCookie } from '@/lib/utils/user';
+import ParagraphsTable from '@/components/admin/ParagraphsTable';
 import styles from './admin.module.scss';
 
 interface AdminDashboardProps {
@@ -64,9 +65,9 @@ export default async function AdminDashboard({ params }: AdminDashboardProps) {
         <div className={styles.statCard}>
           <p className={styles.statLabel}>Avg. Approval</p>
           <p className={styles.statValue}>
-            {stats?.averageApproval ? stats.averageApproval.toFixed(1) : '0.0'}
+            {stats?.averageApproval ? stats.averageApproval.toFixed(2) : '0.00'}
           </p>
-          <p className={styles.statChange}>out of 5</p>
+          <p className={styles.statChange}>scale: -1 to 1</p>
         </div>
       </div>
 
@@ -74,29 +75,11 @@ export default async function AdminDashboard({ params }: AdminDashboardProps) {
       <section className={styles.section}>
         <h2 className={styles.sectionTitle}>Most Engaged Paragraphs</h2>
         {stats?.topParagraphs && stats.topParagraphs.length > 0 ? (
-          <table className={styles.usersTable}>
-            <thead>
-              <tr>
-                <th>Paragraph</th>
-                <th>Approvals</th>
-                <th>Comments</th>
-                <th>Avg. Rating</th>
-              </tr>
-            </thead>
-            <tbody>
-              {stats.topParagraphs.slice(0, 5).map((paragraph, index) => (
-                <tr key={paragraph.paragraphId || index}>
-                  <td>
-                    {paragraph.statement?.substring(0, 60)}
-                    {paragraph.statement && paragraph.statement.length > 60 ? '...' : ''}
-                  </td>
-                  <td>{paragraph.approvalCount || 0}</td>
-                  <td>{paragraph.commentCount || 0}</td>
-                  <td>{paragraph.avgApproval?.toFixed(1) || '0.0'}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <ParagraphsTable
+            paragraphs={stats.topParagraphs}
+            documentId={statementId}
+            userId={userId}
+          />
         ) : (
           <p style={{ color: 'var(--text-secondary)', textAlign: 'center', padding: 'var(--spacing-lg)' }}>
             No paragraph data available yet

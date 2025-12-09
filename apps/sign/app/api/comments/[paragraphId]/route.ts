@@ -8,6 +8,11 @@ interface CommentInput {
   documentId: string;
 }
 
+interface EditCommentInput {
+  commentId: string;
+  statement: string;
+}
+
 /**
  * GET /api/comments/[paragraphId]
  * Get comments for a paragraph
@@ -46,7 +51,7 @@ export async function GET(
 
 /**
  * POST /api/comments/[paragraphId]
- * Create a new comment on a paragraph
+ * Create a new comment on a paragraph (one per user per paragraph)
  */
 export async function POST(
   request: NextRequest,
@@ -84,8 +89,22 @@ export async function POST(
 
     const db = getFirestoreAdmin();
 
-    // For embedded paragraphs, the topParentId is the documentId itself
-    // We no longer look up individual paragraph documents since they're embedded
+    // Check if user already has a comment on this paragraph
+    const existingCommentSnapshot = await db
+      .collection(Collections.statements)
+      .where('parentId', '==', paragraphId)
+      .where('creatorId', '==', userId)
+      .where('statementType', '==', StatementType.statement)
+      .where('hide', '==', false)
+      .limit(1)
+      .get();
+
+    if (!existingCommentSnapshot.empty) {
+      return NextResponse.json(
+        { error: 'You already have a comment on this paragraph. Please edit your existing comment.' },
+        { status: 409 }
+      );
+    }
 
     // Get display name
     const displayName = getUserDisplayNameFromCookie(cookieHeader) || getAnonymousDisplayName(userId);
@@ -119,6 +138,89 @@ export async function POST(
     return NextResponse.json({ success: true, comment });
   } catch (error) {
     console.error('[Comments API] POST error:', error);
+
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+
+/**
+ * PUT /api/comments/[paragraphId]
+ * Edit an existing comment
+ */
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: Promise<{ paragraphId: string }> }
+) {
+  try {
+    await params; // Consume params
+    const cookieHeader = request.headers.get('cookie');
+    const userId = getUserIdFromCookie(cookieHeader);
+
+    if (!userId) {
+      return NextResponse.json(
+        { error: 'User not authenticated' },
+        { status: 401 }
+      );
+    }
+
+    const body: EditCommentInput = await request.json();
+    const { commentId, statement } = body;
+
+    // Validate input
+    if (!commentId) {
+      return NextResponse.json(
+        { error: 'commentId is required' },
+        { status: 400 }
+      );
+    }
+
+    if (!statement || statement.trim().length === 0) {
+      return NextResponse.json(
+        { error: 'Comment text is required' },
+        { status: 400 }
+      );
+    }
+
+    const db = getFirestoreAdmin();
+
+    // Verify ownership
+    const commentRef = await db.collection(Collections.statements).doc(commentId).get();
+    if (!commentRef.exists) {
+      return NextResponse.json(
+        { error: 'Comment not found' },
+        { status: 404 }
+      );
+    }
+
+    const comment = commentRef.data();
+    if (comment?.creatorId !== userId) {
+      return NextResponse.json(
+        { error: 'Not authorized to edit this comment' },
+        { status: 403 }
+      );
+    }
+
+    // Update the comment
+    await db.collection(Collections.statements).doc(commentId).update({
+      statement: statement.trim(),
+      lastUpdate: Date.now(),
+    });
+
+    console.info(`[Comments API] Updated comment: ${commentId}`);
+
+    // Return updated comment
+    const updatedComment = {
+      ...comment,
+      statement: statement.trim(),
+      lastUpdate: Date.now(),
+    };
+
+    return NextResponse.json({ success: true, comment: updatedComment });
+  } catch (error) {
+    console.error('[Comments API] PUT error:', error);
 
     return NextResponse.json(
       { error: 'Internal server error' },

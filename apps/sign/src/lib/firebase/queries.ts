@@ -349,13 +349,10 @@ export async function getDocumentStats(documentId: string): Promise<DocumentStat
     const rejectedCount = signatures.filter((s) => s.signed === 'rejected').length;
     const viewedCount = signatures.filter((s) => s.signed === 'viewed').length;
 
-    // Get comment count (comments reference paragraphId in parentId)
-    const commentsSnapshot = await db
-      .collection(Collections.statements)
-      .where('topParentId', '==', documentId)
-      .where('statementType', '==', StatementType.statement)
-      .count()
-      .get();
+    // Get comment counts per paragraph
+    const paragraphIds = paragraphs.map((p) => p.paragraphId);
+    const commentCounts = await getCommentCountsForDocument(documentId, paragraphIds);
+    const totalComments = Object.values(commentCounts).reduce((sum, count) => sum + count, 0);
 
     // Get all approvals for the document
     const approvalsSnapshot = await db
@@ -365,9 +362,9 @@ export async function getDocumentStats(documentId: string): Promise<DocumentStat
 
     const approvals = approvalsSnapshot.docs.map((doc) => doc.data() as Approval);
 
-    // Calculate average approval
-    const totalApprovalValue = approvals.reduce((sum, a) => sum + (a.approval ? 1 : 0), 0);
-    const averageApproval = approvals.length > 0 ? (totalApprovalValue / approvals.length) * 5 : 0;
+    // Calculate average approval on -1 to 1 scale (approve = 1, reject = -1)
+    const totalApprovalValue = approvals.reduce((sum, a) => sum + (a.approval ? 1 : -1), 0);
+    const averageApproval = approvals.length > 0 ? totalApprovalValue / approvals.length : 0;
 
     // Build top paragraphs with stats using embedded paragraphs
     const topParagraphs = paragraphs.map((p) => {
@@ -376,14 +373,14 @@ export async function getDocumentStats(documentId: string): Promise<DocumentStat
         (a) => a.paragraphId === p.paragraphId || a.statementId === p.paragraphId
       );
       const approvalCount = paragraphApprovals.length;
-      const approvalSum = paragraphApprovals.reduce((sum, a) => sum + (a.approval ? 1 : 0), 0);
-      const avgApproval = approvalCount > 0 ? (approvalSum / approvalCount) * 5 : 0;
+      const approvalSum = paragraphApprovals.reduce((sum, a) => sum + (a.approval ? 1 : -1), 0);
+      const avgApproval = approvalCount > 0 ? approvalSum / approvalCount : 0;
 
       return {
         paragraphId: p.paragraphId,
         statement: p.content || '',
         approvalCount,
-        commentCount: 0, // Would need separate query per paragraph
+        commentCount: commentCounts[p.paragraphId] || 0,
         avgApproval,
       };
     });
@@ -396,7 +393,7 @@ export async function getDocumentStats(documentId: string): Promise<DocumentStat
       signedCount,
       rejectedCount,
       viewedCount,
-      totalComments: commentsSnapshot.data().count,
+      totalComments,
       averageApproval: Math.round(averageApproval * 100) / 100,
       topParagraphs: topParagraphs.slice(0, 10),
     };

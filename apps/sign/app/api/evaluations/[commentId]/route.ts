@@ -115,10 +115,6 @@ export async function POST(
     // Evaluation ID follows main app pattern: ${userId}--${statementId}
     const evaluationId = `${userId}--${commentId}`;
 
-    // Check if evaluation already exists
-    const existingEvalRef = await db.collection(Collections.evaluations).doc(evaluationId).get();
-    const oldEvaluation = existingEvalRef.exists ? existingEvalRef.data()?.evaluation || 0 : 0;
-
     const evaluationData = {
       evaluationId,
       statementId: commentId,
@@ -134,11 +130,17 @@ export async function POST(
 
     await db.collection(Collections.evaluations).doc(evaluationId).set(evaluationData);
 
-    // Update the comment's consensus field
-    // Calculate the change: new evaluation minus old evaluation
-    const evaluationChange = evaluation - oldEvaluation;
-    const currentConsensus = comment?.consensus || 0;
-    const newConsensus = currentConsensus + evaluationChange;
+    // Recalculate consensus from all evaluations (more reliable than incremental updates)
+    const allEvaluationsSnapshot = await db
+      .collection(Collections.evaluations)
+      .where('statementId', '==', commentId)
+      .get();
+
+    let newConsensus = 0;
+    allEvaluationsSnapshot.docs.forEach((doc) => {
+      const evalData = doc.data();
+      newConsensus += evalData.evaluation || 0;
+    });
 
     await db.collection(Collections.statements).doc(commentId).update({
       consensus: newConsensus,
@@ -195,23 +197,25 @@ export async function DELETE(
       );
     }
 
-    const oldEvaluation = evalRef.data()?.evaluation || 0;
-
     // Delete the evaluation
     await db.collection(Collections.evaluations).doc(evaluationId).delete();
 
-    // Update comment's consensus
-    const commentRef = await db.collection(Collections.statements).doc(commentId).get();
-    if (commentRef.exists) {
-      const comment = commentRef.data();
-      const currentConsensus = comment?.consensus || 0;
-      const newConsensus = currentConsensus - oldEvaluation;
+    // Recalculate consensus from remaining evaluations
+    const remainingEvaluationsSnapshot = await db
+      .collection(Collections.evaluations)
+      .where('statementId', '==', commentId)
+      .get();
 
-      await db.collection(Collections.statements).doc(commentId).update({
-        consensus: newConsensus,
-        lastUpdate: Date.now(),
-      });
-    }
+    let newConsensus = 0;
+    remainingEvaluationsSnapshot.docs.forEach((doc) => {
+      const evalData = doc.data();
+      newConsensus += evalData.evaluation || 0;
+    });
+
+    await db.collection(Collections.statements).doc(commentId).update({
+      consensus: newConsensus,
+      lastUpdate: Date.now(),
+    });
 
     console.info(`[Evaluations API] Deleted evaluation: ${evaluationId}`);
 

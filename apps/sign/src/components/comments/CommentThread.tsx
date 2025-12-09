@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { Statement } from 'delib-npm';
 import { useUIStore } from '@/store/uiStore';
@@ -21,12 +21,18 @@ export default function CommentThread({
   userId,
 }: CommentThreadProps) {
   const { t } = useTranslation();
-  const { openModal, closeModal, incrementCommentCount } = useUIStore();
+  const { openModal, closeModal, incrementCommentCount, decrementCommentCount } = useUIStore();
   const [comments, setComments] = useState<Statement[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [newComment, setNewComment] = useState('');
   const [error, setError] = useState<string | null>(null);
+
+  // Check if the current user already has a comment
+  const userComment = useMemo(() => {
+    if (!userId) return null;
+    return comments.find((c) => c.creatorId === userId) || null;
+  }, [comments, userId]);
 
   // Handle login button click - close comments modal and open login modal
   const handleLoginClick = () => {
@@ -64,7 +70,7 @@ export default function CommentThread({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!newComment.trim() || !isLoggedIn) return;
+    if (!newComment.trim() || !isLoggedIn || userComment) return;
 
     setIsSubmitting(true);
     setError(null);
@@ -99,6 +105,17 @@ export default function CommentThread({
     }
   };
 
+  // Update comment
+  const handleUpdate = (commentId: string, newStatement: string) => {
+    setComments((prev) =>
+      prev.map((c) =>
+        c.statementId === commentId
+          ? { ...c, statement: newStatement, lastUpdate: Date.now() }
+          : c
+      )
+    );
+  };
+
   // Delete comment
   const handleDelete = async (commentId: string) => {
     try {
@@ -112,6 +129,8 @@ export default function CommentThread({
 
       if (response.ok) {
         setComments((prev) => prev.filter((c) => c.statementId !== commentId));
+        // Decrement comment count in store
+        decrementCommentCount(paragraphId);
       } else {
         console.error('Failed to delete comment');
       }
@@ -137,32 +156,40 @@ export default function CommentThread({
               key={comment.statementId}
               comment={comment}
               userId={userId}
+              paragraphId={paragraphId}
               onDelete={handleDelete}
+              onUpdate={handleUpdate}
             />
           ))
         )}
       </div>
 
-      {/* New comment form */}
+      {/* New comment form - only show if user doesn't have a comment yet */}
       {isLoggedIn ? (
-        <form className={styles.form} onSubmit={handleSubmit}>
-          <textarea
-            className={styles.textarea}
-            value={newComment}
-            onChange={(e) => setNewComment(e.target.value)}
-            placeholder={t('Add a comment...')}
-            rows={3}
-            disabled={isSubmitting}
-          />
-          {error && <p className={styles.error}>{error}</p>}
-          <button
-            type="submit"
-            className={styles.submitButton}
-            disabled={isSubmitting || !newComment.trim()}
-          >
-            {isSubmitting ? t('Posting...') : t('Post Comment')}
-          </button>
-        </form>
+        userComment ? (
+          <div className={styles.hasCommentNotice}>
+            <p>{t('You have already commented on this paragraph. You can edit your comment above.')}</p>
+          </div>
+        ) : (
+          <form className={styles.form} onSubmit={handleSubmit}>
+            <textarea
+              className={styles.textarea}
+              value={newComment}
+              onChange={(e) => setNewComment(e.target.value)}
+              placeholder={t('Add a comment...')}
+              rows={3}
+              disabled={isSubmitting}
+            />
+            {error && <p className={styles.error}>{error}</p>}
+            <button
+              type="submit"
+              className={styles.submitButton}
+              disabled={isSubmitting || !newComment.trim()}
+            >
+              {isSubmitting ? t('Posting...') : t('Post Comment')}
+            </button>
+          </form>
+        )
       ) : (
         <div className={styles.loginPrompt}>
           <p>{t('Please log in to add comments')}</p>
