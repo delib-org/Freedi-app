@@ -26,7 +26,7 @@ export default function DocumentView({
   commentCounts,
 }: DocumentViewProps) {
   // Check if user is admin (creator of the document)
-  const isAdmin = user && document.creatorId === user.id;
+  const isAdmin = user && document.creatorId === user.uid;
 
   return (
     <DocumentClient
@@ -48,7 +48,7 @@ export default function DocumentView({
             Freedi Sign
           </a>
           <div className={styles.topBarActions}>
-            {user && (
+            {isAdmin && (
               <a href={`/doc/${document.statementId}/admin`} className={styles.adminButton}>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" />
