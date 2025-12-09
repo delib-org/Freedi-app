@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { DemographicSettings } from '@/components/admin/demographics';
-import DemographicResponses from '@/components/admin/demographics/DemographicResponses';
 import { DemographicMode } from '@/types/demographics';
 import styles from '../admin.module.scss';
 
@@ -228,14 +227,6 @@ export default function AdminSettingsPage() {
           }}
         />
       </section>
-
-      {/* Demographics Responses (shown when demographics enabled) */}
-      {settings.demographicMode !== 'disabled' && (
-        <section className={styles.settingsSection}>
-          <h2 className={styles.settingsSectionTitle}>{t('Survey Responses')}</h2>
-          <DemographicResponses documentId={statementId} />
-        </section>
-      )}
 
       {/* Save Button */}
       <button

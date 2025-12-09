@@ -180,6 +180,12 @@ export default function AdminUsersPage() {
           </table>
         )}
       </section>
+
+      {/* Demographics Survey Responses */}
+      <section className={styles.section}>
+        <h2 className={styles.sectionTitle}>{t('Demographics Survey Responses')}</h2>
+        <DemographicResponses documentId={statementId} />
+      </section>
     </div>
   );
 }
