@@ -714,5 +714,18 @@
   "Sign in to view and sign documents": "Inicia sesión para ver y firmar documentos",
   "Signing in...": "Iniciando sesión...",
   "Sign in with Google": "Iniciar sesión con Google",
-  "Continue as guest": "Continuar como invitado"
+  "Continue as guest": "Continuar como invitado",
+
+  "heatMap": "Mapa de calor",
+  "heatMapToolbar": "Controles del mapa de calor",
+  "approvalRate": "Tasa de aprobación",
+  "rating": "Calificación",
+  "viewership": "Vistas",
+  "views": "Vistas",
+  "heatMapLow": "Bajo",
+  "heatMapHigh": "Alto",
+  "openHeatMapMenu": "Abrir menú de mapa de calor",
+  "closeHeatMapMenu": "Cerrar menú de mapa de calor",
+  "loadingHeatMapData": "Cargando datos del mapa de calor",
+  "turnOff": "Apagar"
 }

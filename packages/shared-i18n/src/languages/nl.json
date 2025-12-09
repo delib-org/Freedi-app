@@ -714,5 +714,18 @@
   "Sign in to view and sign documents": "Log in om documenten te bekijken en te ondertekenen",
   "Signing in...": "Inloggen...",
   "Sign in with Google": "Inloggen met Google",
-  "Continue as guest": "Doorgaan als gast"
+  "Continue as guest": "Doorgaan als gast",
+
+  "heatMap": "Heatmap",
+  "heatMapToolbar": "Heatmap-bediening",
+  "approvalRate": "Goedkeuringspercentage",
+  "rating": "Beoordeling",
+  "viewership": "Weergaven",
+  "views": "Weergaven",
+  "heatMapLow": "Laag",
+  "heatMapHigh": "Hoog",
+  "openHeatMapMenu": "Heatmap-menu openen",
+  "closeHeatMapMenu": "Heatmap-menu sluiten",
+  "loadingHeatMapData": "Heatmap-gegevens laden",
+  "turnOff": "Uitschakelen"
 }

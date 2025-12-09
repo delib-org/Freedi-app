@@ -714,5 +714,18 @@
   "Sign in to view and sign documents": "Melden Sie sich an, um Dokumente anzuzeigen und zu unterschreiben",
   "Signing in...": "Wird angemeldet...",
   "Sign in with Google": "Mit Google anmelden",
-  "Continue as guest": "Als Gast fortfahren"
+  "Continue as guest": "Als Gast fortfahren",
+
+  "heatMap": "Heatmap",
+  "heatMapToolbar": "Heatmap-Steuerung",
+  "approvalRate": "Zustimmungsrate",
+  "rating": "Bewertung",
+  "viewership": "Aufrufe",
+  "views": "Aufrufe",
+  "heatMapLow": "Niedrig",
+  "heatMapHigh": "Hoch",
+  "openHeatMapMenu": "Heatmap-Menü öffnen",
+  "closeHeatMapMenu": "Heatmap-Menü schließen",
+  "loadingHeatMapData": "Heatmap-Daten werden geladen",
+  "turnOff": "Ausschalten"
 }

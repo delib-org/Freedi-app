@@ -5,6 +5,8 @@ import { ParagraphType } from 'delib-npm';
 import clsx from 'clsx';
 import { Paragraph } from '@/types';
 import { useUIStore } from '@/store/uiStore';
+import { useParagraphHeatValue } from '@/hooks/useHeatMap';
+import { useViewportTracking } from '@/hooks/useViewportTracking';
 import InteractionBar from './InteractionBar';
 import styles from './ParagraphCard.module.scss';
 
@@ -32,6 +34,29 @@ export default function ParagraphCard({
   const [isExpanded, setIsExpanded] = useState(false);
   const cardRef = useRef<HTMLElement>(null);
   const paragraphType = paragraph.type || ParagraphType.paragraph;
+
+  // Heat map integration
+  const heatValue = useParagraphHeatValue(paragraph.paragraphId);
+
+  // Viewport tracking for viewership heat map
+  const { ref: viewportRef } = useViewportTracking({
+    paragraphId: paragraph.paragraphId,
+    documentId,
+    minDuration: 5,
+    threshold: 0.5,
+    enabled: true,
+  });
+
+  // Combine refs for the card element
+  const setRefs = useCallback(
+    (element: HTMLElement | null) => {
+      // Set cardRef
+      (cardRef as React.MutableRefObject<HTMLElement | null>).current = element;
+      // Set viewportRef
+      (viewportRef as React.MutableRefObject<HTMLElement | null>).current = element;
+    },
+    [viewportRef]
+  );
 
   // Get comment count from store (updates in real-time)
   const storeCommentCount = useUIStore((state) => state.commentCounts[paragraph.paragraphId]);
@@ -79,7 +104,11 @@ export default function ParagraphCard({
     styles.card,
     styles[`type-${paragraphType}`],
     styles[approvalState],
+    // Legacy heat level prop
     heatLevel && styles[`heat-${heatLevel}`],
+    // New heat map integration
+    heatValue && styles[`heatmap-${heatValue.type}`],
+    heatValue && styles[`heatmap-level-${heatValue.level}`],
     isExpanded && styles.expanded
   );
 
@@ -114,7 +143,7 @@ export default function ParagraphCard({
 
   return (
     <article
-      ref={cardRef}
+      ref={setRefs}
       id={`paragraph-${paragraph.paragraphId}`}
       className={cardClasses}
       onClick={handleTap}
@@ -127,9 +156,21 @@ export default function ParagraphCard({
         }
       }}
       aria-expanded={isExpanded}
+      data-heat-type={heatValue?.type}
+      data-heat-level={heatValue?.level}
     >
       {/* Visual indicator for approval state */}
       <div className={styles.stateIndicator} aria-hidden="true" />
+
+      {/* Heat map value badge */}
+      {heatValue && (
+        <div
+          className={styles.heatBadge}
+          aria-label={`${heatValue.type}: ${heatValue.displayValue}`}
+        >
+          {heatValue.displayValue}
+        </div>
+      )}
 
       <div className={styles.contentWrapper}>
         {renderContent()}

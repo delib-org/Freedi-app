@@ -184,7 +184,7 @@
   }
 }
 
-// Heat map backgrounds (admin view)
+// Heat map backgrounds (legacy admin view)
 .heat-low {
   background: var(--heat-low);
 }
@@ -195,6 +195,211 @@
 
 .heat-high {
   background: var(--heat-high);
+}
+
+// New Heat Map Integration - Background colors by type and level
+// Approval heat map
+.heatmap-approval {
+  &.heatmap-level-1 {
+    background: var(--heat-approval-1);
+    .stateIndicator {
+      background: var(--heat-approval-border);
+      width: 2px;
+    }
+  }
+  &.heatmap-level-2 {
+    background: var(--heat-approval-2);
+    .stateIndicator {
+      background: var(--heat-approval-border);
+      width: 3px;
+    }
+  }
+  &.heatmap-level-3 {
+    background: var(--heat-approval-3);
+    .stateIndicator {
+      background: var(--heat-approval-border);
+      width: 3px;
+    }
+  }
+  &.heatmap-level-4 {
+    background: var(--heat-approval-4);
+    .stateIndicator {
+      background: var(--heat-approval-border);
+      width: 4px;
+    }
+  }
+  &.heatmap-level-5 {
+    background: var(--heat-approval-5);
+    .stateIndicator {
+      background: var(--heat-approval-border);
+      width: 5px;
+    }
+  }
+}
+
+// Comments heat map
+.heatmap-comments {
+  &.heatmap-level-1 {
+    background: var(--heat-comments-1);
+    .stateIndicator {
+      background: var(--heat-comments-border);
+      width: 2px;
+    }
+  }
+  &.heatmap-level-2 {
+    background: var(--heat-comments-2);
+    .stateIndicator {
+      background: var(--heat-comments-border);
+      width: 3px;
+    }
+  }
+  &.heatmap-level-3 {
+    background: var(--heat-comments-3);
+    .stateIndicator {
+      background: var(--heat-comments-border);
+      width: 3px;
+    }
+  }
+  &.heatmap-level-4 {
+    background: var(--heat-comments-4);
+    .stateIndicator {
+      background: var(--heat-comments-border);
+      width: 4px;
+    }
+  }
+  &.heatmap-level-5 {
+    background: var(--heat-comments-5);
+    .stateIndicator {
+      background: var(--heat-comments-border);
+      width: 5px;
+    }
+  }
+}
+
+// Rating heat map
+.heatmap-rating {
+  &.heatmap-level-1 {
+    background: var(--heat-rating-1);
+    .stateIndicator {
+      background: var(--heat-rating-border);
+      width: 2px;
+    }
+  }
+  &.heatmap-level-2 {
+    background: var(--heat-rating-2);
+    .stateIndicator {
+      background: var(--heat-rating-border);
+      width: 3px;
+    }
+  }
+  &.heatmap-level-3 {
+    background: var(--heat-rating-3);
+    .stateIndicator {
+      background: var(--heat-rating-border);
+      width: 3px;
+    }
+  }
+  &.heatmap-level-4 {
+    background: var(--heat-rating-4);
+    .stateIndicator {
+      background: var(--heat-rating-border);
+      width: 4px;
+    }
+  }
+  &.heatmap-level-5 {
+    background: var(--heat-rating-5);
+    .stateIndicator {
+      background: var(--heat-rating-border);
+      width: 5px;
+    }
+  }
+}
+
+// Viewership heat map
+.heatmap-viewership {
+  &.heatmap-level-1 {
+    background: var(--heat-viewership-1);
+    .stateIndicator {
+      background: var(--heat-viewership-border);
+      width: 2px;
+    }
+  }
+  &.heatmap-level-2 {
+    background: var(--heat-viewership-2);
+    .stateIndicator {
+      background: var(--heat-viewership-border);
+      width: 3px;
+    }
+  }
+  &.heatmap-level-3 {
+    background: var(--heat-viewership-3);
+    .stateIndicator {
+      background: var(--heat-viewership-border);
+      width: 3px;
+    }
+  }
+  &.heatmap-level-4 {
+    background: var(--heat-viewership-4);
+    .stateIndicator {
+      background: var(--heat-viewership-border);
+      width: 4px;
+    }
+  }
+  &.heatmap-level-5 {
+    background: var(--heat-viewership-5);
+    .stateIndicator {
+      background: var(--heat-viewership-border);
+      width: 5px;
+    }
+  }
+}
+
+// Heat map value badge
+.heatBadge {
+  position: absolute;
+  top: var(--spacing-xs);
+  inset-inline-end: var(--spacing-xs);
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--text-body);
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: var(--shadow-sm);
+  z-index: 1;
+  animation: fadeIn 0.2s ease-out;
+
+  // Variant colors
+  [data-heat-type="approval"] & {
+    color: var(--heat-approval-border);
+    border: 1px solid var(--heat-approval-border);
+  }
+
+  [data-heat-type="comments"] & {
+    color: var(--heat-comments-border);
+    border: 1px solid var(--heat-comments-border);
+  }
+
+  [data-heat-type="rating"] & {
+    color: var(--heat-rating-border);
+    border: 1px solid var(--heat-rating-border);
+  }
+
+  [data-heat-type="viewership"] & {
+    color: var(--heat-viewership-border);
+    border: 1px solid var(--heat-viewership-border);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 // Admin info badge

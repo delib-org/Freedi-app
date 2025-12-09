@@ -901,5 +901,18 @@
   "copied": "Copied!",
   "scanToParticipate": "Scan to participate",
   "downloadQR": "Download QR Code",
-  "previewSurvey": "Preview Survey"
+  "previewSurvey": "Preview Survey",
+
+  "heatMap": "Heat Map",
+  "heatMapToolbar": "Heat Map Controls",
+  "approvalRate": "Approval Rate",
+  "rating": "Rating",
+  "viewership": "Viewership",
+  "views": "Views",
+  "heatMapLow": "Low",
+  "heatMapHigh": "High",
+  "openHeatMapMenu": "Open heat map menu",
+  "closeHeatMapMenu": "Close heat map menu",
+  "loadingHeatMapData": "Loading heat map data",
+  "turnOff": "Turn off"
 }

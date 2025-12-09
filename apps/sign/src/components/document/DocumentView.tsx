@@ -29,13 +29,14 @@ export default function DocumentView({
   const isAdmin = user ? document.creatorId === user.uid : undefined;
 
   return (
-    <DocumentClient
-      documentId={document.statementId}
-      user={user}
-      userSignature={userSignature}
-      commentCounts={commentCounts}
-    >
-      <div className={styles.container}>
+      <DocumentClient
+        documentId={document.statementId}
+        user={user}
+        userSignature={userSignature}
+        commentCounts={commentCounts}
+        isAdmin={isAdmin}
+      >
+        <div className={styles.container}>
         {/* Top Bar with Logo and User Avatar */}
         <div className={styles.topBar}>
           <a href={`/doc/${document.statementId}`} className={styles.logo}>
@@ -148,6 +149,6 @@ export default function DocumentView({
           </footer>
         )}
       </div>
-    </DocumentClient>
+      </DocumentClient>
   );
 }

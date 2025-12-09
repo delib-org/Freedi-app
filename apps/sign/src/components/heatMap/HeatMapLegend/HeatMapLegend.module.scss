@@ -1,0 +1,206 @@
+// Heat Map Legend Component
+// Shows color scale and value ranges for the active heat map type
+
+.legend {
+  position: fixed;
+  bottom: 160px; // Above toolbar
+  inset-inline-end: var(--spacing-md);
+  background: var(--card-default);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-sm) var(--spacing-md);
+  box-shadow: var(--shadow-md);
+  z-index: 99;
+  min-width: 140px;
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--spacing-xs);
+  gap: var(--spacing-xs);
+}
+
+.title {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.loadingIndicator {
+  font-size: 0.625rem;
+  color: var(--text-caption);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.scale {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.level {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.colorSwatch {
+  width: 24px;
+  height: 12px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.label {
+  font-size: 0.625rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.scaleLabels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: var(--spacing-xs);
+  padding-top: var(--spacing-xs);
+  border-top: 1px solid var(--border-light);
+  font-size: 0.625rem;
+  color: var(--text-caption);
+}
+
+// Approval colors
+.approval {
+  .level-1 .colorSwatch {
+    background: var(--heat-approval-1);
+  }
+  .level-2 .colorSwatch {
+    background: var(--heat-approval-2);
+  }
+  .level-3 .colorSwatch {
+    background: var(--heat-approval-3);
+  }
+  .level-4 .colorSwatch {
+    background: var(--heat-approval-4);
+  }
+  .level-5 .colorSwatch {
+    background: var(--heat-approval-5);
+  }
+}
+
+// Comments colors
+.comments {
+  .level-1 .colorSwatch {
+    background: var(--heat-comments-1);
+  }
+  .level-2 .colorSwatch {
+    background: var(--heat-comments-2);
+  }
+  .level-3 .colorSwatch {
+    background: var(--heat-comments-3);
+  }
+  .level-4 .colorSwatch {
+    background: var(--heat-comments-4);
+  }
+  .level-5 .colorSwatch {
+    background: var(--heat-comments-5);
+  }
+}
+
+// Rating colors
+.rating {
+  .level-1 .colorSwatch {
+    background: var(--heat-rating-1);
+  }
+  .level-2 .colorSwatch {
+    background: var(--heat-rating-2);
+  }
+  .level-3 .colorSwatch {
+    background: var(--heat-rating-3);
+  }
+  .level-4 .colorSwatch {
+    background: var(--heat-rating-4);
+  }
+  .level-5 .colorSwatch {
+    background: var(--heat-rating-5);
+  }
+}
+
+// Viewership colors
+.viewership {
+  .level-1 .colorSwatch {
+    background: var(--heat-viewership-1);
+  }
+  .level-2 .colorSwatch {
+    background: var(--heat-viewership-2);
+  }
+  .level-3 .colorSwatch {
+    background: var(--heat-viewership-3);
+  }
+  .level-4 .colorSwatch {
+    background: var(--heat-viewership-4);
+  }
+  .level-5 .colorSwatch {
+    background: var(--heat-viewership-5);
+  }
+}
+
+// Responsive adjustments
+@media (max-width: 600px) {
+  .legend {
+    bottom: 130px;
+    inset-inline-end: var(--spacing-sm);
+    min-width: 120px;
+    padding: var(--spacing-xs) var(--spacing-sm);
+  }
+
+  .title {
+    font-size: 0.7rem;
+  }
+
+  .colorSwatch {
+    width: 20px;
+    height: 10px;
+  }
+
+  .label {
+    font-size: 0.6rem;
+  }
+}
+
+// RTL Support
+[dir="rtl"] {
+  .legend {
+    inset-inline-start: auto;
+    inset-inline-end: var(--spacing-md);
+  }
+}
+
+// Reduced motion support
+@media (prefers-reduced-motion: reduce) {
+  .legend,
+  .loadingIndicator {
+    animation: none;
+  }
+}

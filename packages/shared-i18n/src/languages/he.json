@@ -931,5 +931,18 @@
   "copied": "הועתק!",
   "scanToParticipate": "סרוק כדי להשתתף",
   "downloadQR": "הורד קוד QR",
-  "previewSurvey": "תצוגה מקדימה של הסקר"
+  "previewSurvey": "תצוגה מקדימה של הסקר",
+
+  "heatMap": "מפת חום",
+  "heatMapToolbar": "פקדי מפת חום",
+  "approvalRate": "שיעור אישור",
+  "rating": "דירוג",
+  "viewership": "צפיות",
+  "views": "צפיות",
+  "heatMapLow": "נמוך",
+  "heatMapHigh": "גבוה",
+  "openHeatMapMenu": "פתח תפריט מפת חום",
+  "closeHeatMapMenu": "סגור תפריט מפת חום",
+  "loadingHeatMapData": "טוען נתוני מפת חום",
+  "turnOff": "כבה"
 }

@@ -32,10 +32,50 @@
   --reject: #f44336;
   --warning: #ff9800;
 
-  /* Heat Map Colors */
+  /* Heat Map Colors - Legacy */
   --heat-low: rgba(87, 198, 178, 0.2);
   --heat-medium: rgba(231, 208, 128, 0.3);
   --heat-high: rgba(254, 107, 162, 0.3);
+
+  /* Heat Map - Approval (pink to green) */
+  --heat-approval-low: rgba(244, 67, 54, 0.12);        /* disagree */
+  --heat-approval-high: rgba(76, 175, 80, 0.15);       /* agree */
+  --heat-approval-border: #4caf50;
+  --heat-approval-1: rgba(244, 67, 54, 0.12);          /* 0-29% */
+  --heat-approval-2: rgba(255, 152, 0, 0.12);          /* 30-49% */
+  --heat-approval-3: rgba(255, 235, 59, 0.15);         /* 50-69% neutral */
+  --heat-approval-4: rgba(139, 195, 74, 0.12);         /* 70-89% */
+  --heat-approval-5: rgba(76, 175, 80, 0.15);          /* 90-100% */
+
+  /* Heat Map - Comments (light blue to blue) */
+  --heat-comments-low: rgba(227, 242, 253, 0.5);       /* card-question-added */
+  --heat-comments-high: rgba(27, 38, 80, 0.2);         /* btn-primary */
+  --heat-comments-border: #1B2650;
+  --heat-comments-1: rgba(227, 242, 253, 0.4);         /* 1 comment */
+  --heat-comments-2: rgba(187, 222, 251, 0.5);         /* 2-4 */
+  --heat-comments-3: rgba(144, 202, 249, 0.4);         /* 5-9 */
+  --heat-comments-4: rgba(100, 181, 246, 0.35);        /* 10-19 */
+  --heat-comments-5: rgba(66, 165, 245, 0.3);          /* 20+ */
+
+  /* Heat Map - Rating (light purple to purple) */
+  --heat-rating-low: rgba(179, 136, 255, 0.1);
+  --heat-rating-high: rgba(103, 58, 183, 0.2);         /* group purple */
+  --heat-rating-border: #673ab7;
+  --heat-rating-1: rgba(179, 136, 255, 0.1);           /* 0-1.4 */
+  --heat-rating-2: rgba(156, 115, 240, 0.12);          /* 1.5-2.4 */
+  --heat-rating-3: rgba(149, 117, 205, 0.15);          /* 2.5-3.4 */
+  --heat-rating-4: rgba(126, 87, 194, 0.18);           /* 3.5-4.4 */
+  --heat-rating-5: rgba(103, 58, 183, 0.2);            /* 4.5-5.0 */
+
+  /* Heat Map - Viewership (cream to gold) */
+  --heat-viewership-low: rgba(255, 253, 245, 0.6);     /* cream */
+  --heat-viewership-high: rgba(255, 193, 7, 0.25);     /* gold/option */
+  --heat-viewership-border: #ffc107;
+  --heat-viewership-1: rgba(255, 253, 245, 0.5);       /* <20% */
+  --heat-viewership-2: rgba(255, 245, 217, 0.5);       /* 20-39% */
+  --heat-viewership-3: rgba(255, 236, 179, 0.4);       /* 40-59% */
+  --heat-viewership-4: rgba(255, 224, 130, 0.35);      /* 60-79% */
+  --heat-viewership-5: rgba(255, 193, 7, 0.25);        /* 80%+ */
 
   /* Spacing - 8px grid system */
   --spacing-xs: 0.5rem;

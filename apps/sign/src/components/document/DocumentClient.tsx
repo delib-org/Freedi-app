@@ -7,6 +7,7 @@ import { Signature } from '@/lib/firebase/queries';
 import Modal from '../shared/Modal';
 import CommentThread from '../comments/CommentThread';
 import LoginModal from '../shared/LoginModal';
+import { HeatMapProvider, HeatMapToolbar, HeatMapLegend } from '../heatMap';
 
 // Animation timing constants
 const ANIMATION_DURATION = {
@@ -20,6 +21,7 @@ interface DocumentClientProps {
   user: SignUser | null;
   userSignature: Signature | null;
   commentCounts: Record<string, number>;
+  isAdmin?: boolean;
   children: React.ReactNode;
 }
 
@@ -28,6 +30,7 @@ export default function DocumentClient({
   user,
   userSignature,
   commentCounts,
+  isAdmin,
   children,
 }: DocumentClientProps) {
   const {
@@ -249,8 +252,16 @@ export default function DocumentClient({
   }, [documentId, user, userSignature]);
 
   return (
-    <>
+    <HeatMapProvider documentId={documentId}>
       {children}
+
+      {/* Heat Map Controls - visible to admins */}
+      {isAdmin && (
+        <>
+          <HeatMapToolbar />
+          <HeatMapLegend />
+        </>
+      )}
 
       {/* Comments Modal */}
       {activeModal === 'comments' && modalContext?.paragraphId && (
@@ -278,6 +289,6 @@ export default function DocumentClient({
           <LoginModal onClose={closeModal} />
         </Modal>
       )}
-    </>
+    </HeatMapProvider>
   );
 }

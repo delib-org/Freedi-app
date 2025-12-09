@@ -710,5 +710,18 @@
   "Sign in to view and sign documents": "سجل الدخول لعرض المستندات والتوقيع عليها",
   "Signing in...": "جاري تسجيل الدخول...",
   "Sign in with Google": "تسجيل الدخول باستخدام Google",
-  "Continue as guest": "المتابعة كضيف"
+  "Continue as guest": "المتابعة كضيف",
+
+  "heatMap": "خريطة الحرارة",
+  "heatMapToolbar": "أدوات خريطة الحرارة",
+  "approvalRate": "نسبة الموافقة",
+  "rating": "التقييم",
+  "viewership": "المشاهدات",
+  "views": "المشاهدات",
+  "heatMapLow": "منخفض",
+  "heatMapHigh": "مرتفع",
+  "openHeatMapMenu": "فتح قائمة خريطة الحرارة",
+  "closeHeatMapMenu": "إغلاق قائمة خريطة الحرارة",
+  "loadingHeatMapData": "جاري تحميل بيانات خريطة الحرارة",
+  "turnOff": "إيقاف"
 }
