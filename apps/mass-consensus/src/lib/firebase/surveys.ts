@@ -1,0 +1,419 @@
+import { Statement, StatementType, Collections, Role } from 'delib-npm';
+import { getFirestoreAdmin } from './admin';
+import {
+  Survey,
+  SurveyProgress,
+  SurveyWithQuestions,
+  CreateSurveyRequest,
+  UpdateSurveyRequest,
+  DEFAULT_SURVEY_SETTINGS,
+} from '@/types/survey';
+
+/** Collection name for surveys */
+const SURVEYS_COLLECTION = 'surveys';
+/** Collection name for survey progress */
+const SURVEY_PROGRESS_COLLECTION = 'surveyProgress';
+
+/**
+ * Generate a unique survey ID
+ */
+function generateSurveyId(): string {
+  return `survey_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+}
+
+/**
+ * Generate progress document ID
+ */
+function generateProgressId(surveyId: string, userId: string): string {
+  return `${surveyId}--${userId}`;
+}
+
+// ============================================
+// SURVEY CRUD OPERATIONS
+// ============================================
+
+/**
+ * Create a new survey
+ */
+export async function createSurvey(
+  creatorId: string,
+  data: CreateSurveyRequest
+): Promise<Survey> {
+  const db = getFirestoreAdmin();
+  const now = Date.now();
+
+  const survey: Survey = {
+    surveyId: generateSurveyId(),
+    title: data.title,
+    description: data.description,
+    creatorId,
+    questionIds: data.questionIds || [],
+    settings: {
+      ...DEFAULT_SURVEY_SETTINGS,
+      ...data.settings,
+    },
+    createdAt: now,
+    lastUpdate: now,
+    isActive: true,
+  };
+
+  await db.collection(SURVEYS_COLLECTION).doc(survey.surveyId).set(survey);
+
+  console.info('[createSurvey] Created survey:', survey.surveyId);
+  return survey;
+}
+
+/**
+ * Get a survey by ID
+ */
+export async function getSurveyById(surveyId: string): Promise<Survey | null> {
+  const db = getFirestoreAdmin();
+
+  const doc = await db.collection(SURVEYS_COLLECTION).doc(surveyId).get();
+
+  if (!doc.exists) {
+    console.info('[getSurveyById] Survey not found:', surveyId);
+    return null;
+  }
+
+  return doc.data() as Survey;
+}
+
+/**
+ * Get a survey with populated question data
+ */
+export async function getSurveyWithQuestions(
+  surveyId: string
+): Promise<SurveyWithQuestions | null> {
+  const db = getFirestoreAdmin();
+
+  const survey = await getSurveyById(surveyId);
+  if (!survey) {
+    return null;
+  }
+
+  // Fetch all questions in parallel
+  const questionPromises = survey.questionIds.map(async (questionId) => {
+    const doc = await db.collection(Collections.statements).doc(questionId).get();
+    return doc.exists ? (doc.data() as Statement) : null;
+  });
+
+  const questionsResults = await Promise.all(questionPromises);
+  const questions = questionsResults.filter((q): q is Statement => q !== null);
+
+  console.info('[getSurveyWithQuestions] Loaded', questions.length, 'questions for survey:', surveyId);
+
+  return {
+    ...survey,
+    questions,
+  };
+}
+
+/**
+ * Update a survey
+ */
+export async function updateSurvey(
+  surveyId: string,
+  data: UpdateSurveyRequest
+): Promise<Survey | null> {
+  const db = getFirestoreAdmin();
+
+  const survey = await getSurveyById(surveyId);
+  if (!survey) {
+    return null;
+  }
+
+  const updates: Partial<Survey> = {
+    lastUpdate: Date.now(),
+  };
+
+  if (data.title !== undefined) updates.title = data.title;
+  if (data.description !== undefined) updates.description = data.description;
+  if (data.questionIds !== undefined) updates.questionIds = data.questionIds;
+  if (data.isActive !== undefined) updates.isActive = data.isActive;
+  if (data.settings !== undefined) {
+    updates.settings = {
+      ...survey.settings,
+      ...data.settings,
+    };
+  }
+
+  await db.collection(SURVEYS_COLLECTION).doc(surveyId).update(updates);
+
+  console.info('[updateSurvey] Updated survey:', surveyId);
+
+  return {
+    ...survey,
+    ...updates,
+  };
+}
+
+/**
+ * Delete a survey
+ */
+export async function deleteSurvey(surveyId: string): Promise<boolean> {
+  const db = getFirestoreAdmin();
+
+  try {
+    await db.collection(SURVEYS_COLLECTION).doc(surveyId).delete();
+    console.info('[deleteSurvey] Deleted survey:', surveyId);
+    return true;
+  } catch (error) {
+    console.error('[deleteSurvey] Error deleting survey:', surveyId, error);
+    return false;
+  }
+}
+
+/**
+ * Get all surveys created by a user
+ */
+export async function getSurveysByCreator(creatorId: string): Promise<Survey[]> {
+  const db = getFirestoreAdmin();
+
+  const snapshot = await db
+    .collection(SURVEYS_COLLECTION)
+    .where('creatorId', '==', creatorId)
+    .orderBy('createdAt', 'desc')
+    .get();
+
+  const surveys = snapshot.docs.map((doc) => doc.data() as Survey);
+  console.info('[getSurveysByCreator] Found', surveys.length, 'surveys for creator:', creatorId);
+
+  return surveys;
+}
+
+/**
+ * Add a question to a survey
+ */
+export async function addQuestionToSurvey(
+  surveyId: string,
+  questionId: string
+): Promise<Survey | null> {
+  const survey = await getSurveyById(surveyId);
+  if (!survey) {
+    return null;
+  }
+
+  // Don't add duplicate
+  if (survey.questionIds.includes(questionId)) {
+    console.info('[addQuestionToSurvey] Question already in survey:', questionId);
+    return survey;
+  }
+
+  const updatedQuestionIds = [...survey.questionIds, questionId];
+  return updateSurvey(surveyId, { questionIds: updatedQuestionIds });
+}
+
+/**
+ * Remove a question from a survey
+ */
+export async function removeQuestionFromSurvey(
+  surveyId: string,
+  questionId: string
+): Promise<Survey | null> {
+  const survey = await getSurveyById(surveyId);
+  if (!survey) {
+    return null;
+  }
+
+  const updatedQuestionIds = survey.questionIds.filter((id) => id !== questionId);
+  return updateSurvey(surveyId, { questionIds: updatedQuestionIds });
+}
+
+/**
+ * Reorder questions in a survey
+ */
+export async function reorderSurveyQuestions(
+  surveyId: string,
+  newOrder: string[]
+): Promise<Survey | null> {
+  return updateSurvey(surveyId, { questionIds: newOrder });
+}
+
+// ============================================
+// SURVEY PROGRESS OPERATIONS
+// ============================================
+
+/**
+ * Get user's progress for a survey
+ */
+export async function getSurveyProgress(
+  surveyId: string,
+  userId: string
+): Promise<SurveyProgress | null> {
+  const db = getFirestoreAdmin();
+  const progressId = generateProgressId(surveyId, userId);
+
+  const doc = await db.collection(SURVEY_PROGRESS_COLLECTION).doc(progressId).get();
+
+  if (!doc.exists) {
+    return null;
+  }
+
+  return doc.data() as SurveyProgress;
+}
+
+/**
+ * Create or update user's survey progress
+ */
+export async function upsertSurveyProgress(
+  surveyId: string,
+  userId: string,
+  updates: {
+    currentQuestionIndex?: number;
+    completedQuestionId?: string;
+    isCompleted?: boolean;
+  }
+): Promise<SurveyProgress> {
+  const db = getFirestoreAdmin();
+  const progressId = generateProgressId(surveyId, userId);
+  const now = Date.now();
+
+  const existingProgress = await getSurveyProgress(surveyId, userId);
+
+  if (existingProgress) {
+    // Update existing progress
+    const progressUpdates: Partial<SurveyProgress> = {
+      lastUpdated: now,
+    };
+
+    if (updates.currentQuestionIndex !== undefined) {
+      progressUpdates.currentQuestionIndex = updates.currentQuestionIndex;
+    }
+
+    if (updates.completedQuestionId) {
+      const completedIds = existingProgress.completedQuestionIds;
+      if (!completedIds.includes(updates.completedQuestionId)) {
+        progressUpdates.completedQuestionIds = [...completedIds, updates.completedQuestionId];
+      }
+    }
+
+    if (updates.isCompleted !== undefined) {
+      progressUpdates.isCompleted = updates.isCompleted;
+    }
+
+    await db.collection(SURVEY_PROGRESS_COLLECTION).doc(progressId).update(progressUpdates);
+
+    console.info('[upsertSurveyProgress] Updated progress:', progressId);
+
+    return {
+      ...existingProgress,
+      ...progressUpdates,
+    };
+  } else {
+    // Create new progress
+    const newProgress: SurveyProgress = {
+      progressId,
+      surveyId,
+      userId,
+      currentQuestionIndex: updates.currentQuestionIndex || 0,
+      completedQuestionIds: updates.completedQuestionId ? [updates.completedQuestionId] : [],
+      startedAt: now,
+      lastUpdated: now,
+      isCompleted: updates.isCompleted || false,
+    };
+
+    await db.collection(SURVEY_PROGRESS_COLLECTION).doc(progressId).set(newProgress);
+
+    console.info('[upsertSurveyProgress] Created new progress:', progressId);
+
+    return newProgress;
+  }
+}
+
+// ============================================
+// QUESTION FETCHING (from main Freedi app)
+// ============================================
+
+/**
+ * Get questions created by an admin
+ */
+export async function getQuestionsByCreator(creatorId: string): Promise<Statement[]> {
+  const db = getFirestoreAdmin();
+
+  const snapshot = await db
+    .collection(Collections.statements)
+    .where('creatorId', '==', creatorId)
+    .where('statementType', '==', StatementType.question)
+    .orderBy('createdAt', 'desc')
+    .get();
+
+  const questions = snapshot.docs.map((doc) => doc.data() as Statement);
+  console.info('[getQuestionsByCreator] Found', questions.length, 'questions for creator:', creatorId);
+
+  return questions;
+}
+
+/**
+ * Get questions where user has admin role (via statementsSubscribe)
+ */
+export async function getQuestionsWithAdminAccess(userId: string): Promise<Statement[]> {
+  const db = getFirestoreAdmin();
+
+  // First get all statement subscriptions where user is admin
+  const subscriptionsSnapshot = await db
+    .collection(Collections.statementsSubscribe)
+    .where('userId', '==', userId)
+    .where('role', '==', Role.admin)
+    .get();
+
+  if (subscriptionsSnapshot.empty) {
+    return [];
+  }
+
+  const statementIds = subscriptionsSnapshot.docs.map(
+    (doc) => doc.data().statementId as string
+  );
+
+  // Fetch the statements in batches (Firestore 'in' query limit is 30)
+  const questions: Statement[] = [];
+  const batchSize = 30;
+
+  for (let i = 0; i < statementIds.length; i += batchSize) {
+    const batch = statementIds.slice(i, i + batchSize);
+    const statementsSnapshot = await db
+      .collection(Collections.statements)
+      .where('statementId', 'in', batch)
+      .where('statementType', '==', StatementType.question)
+      .get();
+
+    const batchQuestions = statementsSnapshot.docs.map((doc) => doc.data() as Statement);
+    questions.push(...batchQuestions);
+  }
+
+  console.info('[getQuestionsWithAdminAccess] Found', questions.length, 'questions for admin:', userId);
+
+  return questions;
+}
+
+/**
+ * Get all questions available to an admin (created + admin access)
+ */
+export async function getAvailableQuestions(adminId: string): Promise<Statement[]> {
+  const [createdQuestions, adminQuestions] = await Promise.all([
+    getQuestionsByCreator(adminId),
+    getQuestionsWithAdminAccess(adminId),
+  ]);
+
+  // Merge and deduplicate
+  const questionMap = new Map<string, Statement>();
+
+  for (const q of createdQuestions) {
+    questionMap.set(q.statementId, q);
+  }
+
+  for (const q of adminQuestions) {
+    if (!questionMap.has(q.statementId)) {
+      questionMap.set(q.statementId, q);
+    }
+  }
+
+  const questions = Array.from(questionMap.values());
+
+  // Sort by creation date descending
+  questions.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+
+  console.info('[getAvailableQuestions] Total available questions:', questions.length);
+
+  return questions;
+}

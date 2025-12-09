@@ -1,0 +1,73 @@
+.paragraphsDisplay {
+	line-height: 1.6;
+	color: var(--text-body);
+
+	h1, h2, h3, h4, h5, h6 {
+		margin-top: 1rem;
+		margin-bottom: 0.5rem;
+		font-weight: 600;
+		line-height: 1.3;
+		color: var(--text-heading, var(--text-body));
+
+		&:first-child {
+			margin-top: 0;
+		}
+	}
+
+	h1 {
+		font-size: 1.75rem;
+	}
+
+	h2 {
+		font-size: 1.5rem;
+	}
+
+	h3 {
+		font-size: 1.25rem;
+	}
+
+	h4 {
+		font-size: 1.125rem;
+	}
+
+	h5 {
+		font-size: 1rem;
+	}
+
+	h6 {
+		font-size: 0.875rem;
+	}
+
+	p {
+		margin: 0.75rem 0;
+
+		&:first-child {
+			margin-top: 0;
+		}
+
+		&:last-child {
+			margin-bottom: 0;
+		}
+	}
+
+	ul, ol {
+		margin: 0.75rem 0;
+		padding-left: 1.5rem !important;
+		padding-inline-start: 1.5rem !important;
+
+		li {
+			margin: 0.25rem 0;
+			display: list-item;
+		}
+	}
+
+	ul {
+		list-style-type: disc !important;
+		list-style-position: inside;
+	}
+
+	ol {
+		list-style-type: decimal !important;
+		list-style-position: inside;
+	}
+}

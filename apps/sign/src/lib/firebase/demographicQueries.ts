@@ -1,0 +1,367 @@
+/**
+ * Server-side Firestore queries for demographics in Sign app
+ */
+
+import { getFirestoreAdmin } from './admin';
+import { Collections, UserDemographicQuestion, UserDemographicQuestionType } from 'delib-npm';
+import {
+  DemographicMode,
+  SignDemographicQuestion,
+  SurveyCompletionStatus,
+  DemographicAnswer,
+  QuestionWithAnswer,
+} from '@/types/demographics';
+
+const SIGN_SCOPE = 'sign';
+
+/**
+ * Get demographic questions for a Sign document
+ * Based on mode: inherit (from main app) or custom (sign-specific)
+ */
+export async function getDemographicQuestions(
+  documentId: string,
+  mode: DemographicMode,
+  topParentId: string
+): Promise<SignDemographicQuestion[]> {
+  if (mode === 'disabled') {
+    return [];
+  }
+
+  const db = getFirestoreAdmin();
+
+  try {
+    if (mode === 'inherit') {
+      // Get questions from main app (group-level and statement-level)
+      const questionsRef = db.collection(Collections.userDemographicQuestions);
+
+      // Query group-level questions
+      const groupSnapshot = await questionsRef
+        .where('topParentId', '==', topParentId)
+        .where('scope', '==', 'group')
+        .get();
+
+      // Query statement-level questions
+      const statementSnapshot = await questionsRef
+        .where('statementId', '==', documentId)
+        .where('scope', '==', 'statement')
+        .get();
+
+      const groupQuestions = groupSnapshot.docs.map((doc) => ({
+        ...doc.data() as UserDemographicQuestion,
+        isInherited: true,
+      }));
+
+      const statementQuestions = statementSnapshot.docs.map((doc) => ({
+        ...doc.data() as UserDemographicQuestion,
+        isInherited: true,
+      }));
+
+      // Merge and sort by order
+      const allQuestions = [...groupQuestions, ...statementQuestions];
+      allQuestions.sort((a, b) => (a.order || 0) - (b.order || 0));
+
+      console.info(`[Demographics] Found ${allQuestions.length} inherited questions for document: ${documentId}`);
+
+      return allQuestions;
+    }
+
+    if (mode === 'custom') {
+      // Get sign-specific questions
+      const snapshot = await db
+        .collection(Collections.userDemographicQuestions)
+        .where('statementId', '==', documentId)
+        .where('scope', '==', SIGN_SCOPE)
+        .orderBy('order', 'asc')
+        .get();
+
+      const questions = snapshot.docs.map((doc) => ({
+        ...doc.data() as UserDemographicQuestion,
+        documentId,
+        isInherited: false,
+      }));
+
+      console.info(`[Demographics] Found ${questions.length} custom questions for document: ${documentId}`);
+
+      return questions;
+    }
+
+    return [];
+  } catch (error) {
+    console.error('[Demographics] Error getting questions:', error);
+    throw error;
+  }
+}
+
+/**
+ * Get user's demographic answers for a document
+ */
+export async function getUserDemographicAnswers(
+  documentId: string,
+  userId: string,
+  topParentId: string,
+  mode: DemographicMode
+): Promise<QuestionWithAnswer[]> {
+  if (mode === 'disabled') {
+    return [];
+  }
+
+  const db = getFirestoreAdmin();
+
+  try {
+    // Get the questions first
+    const questions = await getDemographicQuestions(documentId, mode, topParentId);
+
+    if (questions.length === 0) {
+      return [];
+    }
+
+    // Get user's answers from usersData collection
+    const answersRef = db.collection(Collections.usersData);
+
+    // Query answers for this user
+    const answeredQuestions: QuestionWithAnswer[] = [];
+
+    for (const question of questions) {
+      if (!question.userQuestionId) continue;
+
+      const answerId = `${question.userQuestionId}--${userId}`;
+      const answerDoc = await answersRef.doc(answerId).get();
+
+      if (answerDoc.exists) {
+        const answerData = answerDoc.data() as UserDemographicQuestion;
+        answeredQuestions.push({
+          ...question,
+          userAnswer: answerData.answer,
+          userAnswerOptions: answerData.answerOptions,
+        });
+      } else {
+        answeredQuestions.push({
+          ...question,
+          userAnswer: undefined,
+          userAnswerOptions: undefined,
+        });
+      }
+    }
+
+    console.info(`[Demographics] Found ${answeredQuestions.filter((q) => q.userAnswer || q.userAnswerOptions).length} answers for user: ${userId}`);
+
+    return answeredQuestions;
+  } catch (error) {
+    console.error('[Demographics] Error getting user answers:', error);
+    throw error;
+  }
+}
+
+/**
+ * Check if user has completed the required survey
+ */
+export async function checkSurveyCompletion(
+  documentId: string,
+  userId: string,
+  mode: DemographicMode,
+  topParentId: string,
+  isRequired: boolean
+): Promise<SurveyCompletionStatus> {
+  if (mode === 'disabled') {
+    return {
+      isComplete: true,
+      totalQuestions: 0,
+      answeredQuestions: 0,
+      isRequired: false,
+      missingQuestionIds: [],
+    };
+  }
+
+  try {
+    const questionsWithAnswers = await getUserDemographicAnswers(documentId, userId, topParentId, mode);
+
+    const totalQuestions = questionsWithAnswers.length;
+    const answeredQuestions = questionsWithAnswers.filter(
+      (q) => q.userAnswer !== undefined || (q.userAnswerOptions && q.userAnswerOptions.length > 0)
+    ).length;
+
+    const missingQuestionIds = questionsWithAnswers
+      .filter((q) => q.userAnswer === undefined && (!q.userAnswerOptions || q.userAnswerOptions.length === 0))
+      .map((q) => q.userQuestionId)
+      .filter(Boolean) as string[];
+
+    const isComplete = totalQuestions === 0 || answeredQuestions === totalQuestions;
+
+    return {
+      isComplete,
+      totalQuestions,
+      answeredQuestions,
+      isRequired,
+      missingQuestionIds,
+    };
+  } catch (error) {
+    console.error('[Demographics] Error checking survey completion:', error);
+
+    return {
+      isComplete: false,
+      totalQuestions: 0,
+      answeredQuestions: 0,
+      isRequired,
+      missingQuestionIds: [],
+    };
+  }
+}
+
+/**
+ * Save a demographic question (admin only, for custom mode)
+ */
+export async function saveDemographicQuestion(
+  documentId: string,
+  topParentId: string,
+  question: Partial<SignDemographicQuestion>
+): Promise<SignDemographicQuestion> {
+  const db = getFirestoreAdmin();
+
+  try {
+    const userQuestionId = question.userQuestionId || `sign-${documentId}-${Date.now()}`;
+
+    // Cast the scope as the delib-npm type only accepts 'group' | 'statement' but we use 'sign'
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const questionData: UserDemographicQuestion = {
+      question: question.question || '',
+      type: question.type || UserDemographicQuestionType.text,
+      options: question.options || [],
+      statementId: documentId,
+      topParentId,
+      userQuestionId,
+      scope: SIGN_SCOPE as 'group' | 'statement',
+      order: question.order || 0,
+      required: question.required || false,
+    } as UserDemographicQuestion;
+
+    await db
+      .collection(Collections.userDemographicQuestions)
+      .doc(userQuestionId)
+      .set(questionData, { merge: true });
+
+    console.info(`[Demographics] Saved question: ${userQuestionId} for document: ${documentId}`);
+
+    return {
+      ...questionData,
+      documentId,
+      isInherited: false,
+    };
+  } catch (error) {
+    console.error('[Demographics] Error saving question:', error);
+    throw error;
+  }
+}
+
+/**
+ * Delete a demographic question (admin only)
+ */
+export async function deleteDemographicQuestion(questionId: string): Promise<void> {
+  const db = getFirestoreAdmin();
+
+  try {
+    await db.collection(Collections.userDemographicQuestions).doc(questionId).delete();
+    console.info(`[Demographics] Deleted question: ${questionId}`);
+  } catch (error) {
+    console.error('[Demographics] Error deleting question:', error);
+    throw error;
+  }
+}
+
+/**
+ * Save user's demographic answers
+ */
+export async function saveUserDemographicAnswers(
+  documentId: string,
+  userId: string,
+  topParentId: string,
+  answers: DemographicAnswer[]
+): Promise<void> {
+  const db = getFirestoreAdmin();
+  const batch = db.batch();
+
+  try {
+    for (const answer of answers) {
+      const answerId = `${answer.userQuestionId}--${userId}`;
+      const answerRef = db.collection(Collections.usersData).doc(answerId);
+
+      // Build answer data without undefined values (Firestore doesn't accept undefined)
+      const answerData: Record<string, unknown> = {
+        userQuestionId: answer.userQuestionId,
+        odlUserId: userId,
+        statementId: documentId,
+        topParentId,
+      };
+
+      // Only add answer fields if they are defined
+      if (answer.answer !== undefined) {
+        answerData.answer = answer.answer;
+      }
+      if (answer.answerOptions !== undefined && answer.answerOptions.length > 0) {
+        answerData.answerOptions = answer.answerOptions;
+      }
+
+      batch.set(answerRef, answerData, { merge: true });
+    }
+
+    await batch.commit();
+    console.info(`[Demographics] Saved ${answers.length} answers for user: ${userId}`);
+  } catch (error) {
+    console.error('[Demographics] Error saving answers:', error);
+    throw error;
+  }
+}
+
+/**
+ * Get all questions for a document (for admin viewing)
+ */
+export async function getAllQuestionsForDocument(
+  documentId: string,
+  topParentId: string
+): Promise<SignDemographicQuestion[]> {
+  const db = getFirestoreAdmin();
+
+  try {
+    // Get both inherited and custom questions
+    const questionsRef = db.collection(Collections.userDemographicQuestions);
+
+    // Query all relevant questions
+    const [groupSnapshot, statementSnapshot, signSnapshot] = await Promise.all([
+      questionsRef
+        .where('topParentId', '==', topParentId)
+        .where('scope', '==', 'group')
+        .get(),
+      questionsRef
+        .where('statementId', '==', documentId)
+        .where('scope', '==', 'statement')
+        .get(),
+      questionsRef
+        .where('statementId', '==', documentId)
+        .where('scope', '==', SIGN_SCOPE)
+        .get(),
+    ]);
+
+    const groupQuestions = groupSnapshot.docs.map((doc) => ({
+      ...doc.data() as UserDemographicQuestion,
+      isInherited: true,
+    }));
+
+    const statementQuestions = statementSnapshot.docs.map((doc) => ({
+      ...doc.data() as UserDemographicQuestion,
+      isInherited: true,
+    }));
+
+    const signQuestions = signSnapshot.docs.map((doc) => ({
+      ...doc.data() as UserDemographicQuestion,
+      documentId,
+      isInherited: false,
+    }));
+
+    const allQuestions = [...groupQuestions, ...statementQuestions, ...signQuestions];
+    allQuestions.sort((a, b) => (a.order || 0) - (b.order || 0));
+
+    return allQuestions;
+  } catch (error) {
+    console.error('[Demographics] Error getting all questions:', error);
+    throw error;
+  }
+}

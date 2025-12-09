@@ -1,0 +1,167 @@
+// Interaction bar - compact inline actions for paragraphs
+// Appears on hover/tap via parent component
+
+.bar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: var(--spacing-xs);
+  padding-top: 0.25rem;
+}
+
+.approvalButtons {
+  display: flex;
+  gap: 4px;
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-caption);
+
+  svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  &:hover:not(:disabled) {
+    background: var(--background);
+    border-color: var(--border-light);
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  // Blocked state (demographics survey required)
+  &.blocked {
+    opacity: 0.6;
+    cursor: pointer;
+    position: relative;
+
+    &::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: transparent;
+    }
+  }
+
+  // Prevent click from bubbling to parent card
+  &:active {
+    transform: scale(0.97);
+  }
+}
+
+.buttonText {
+  @media (max-width: 768px) {
+    display: none;
+  }
+}
+
+.approveButton {
+  &:hover:not(:disabled) {
+    color: var(--agree);
+    border-color: var(--agree);
+    background: rgba(87, 198, 178, 0.08);
+  }
+
+  &.active {
+    background: var(--agree);
+    border-color: var(--agree);
+    color: white;
+
+    &:hover:not(:disabled) {
+      background: var(--agree);
+    }
+  }
+}
+
+.rejectButton {
+  &:hover:not(:disabled) {
+    color: var(--disagree);
+    border-color: var(--disagree);
+    background: rgba(254, 107, 162, 0.08);
+  }
+
+  &.active {
+    background: var(--disagree);
+    border-color: var(--disagree);
+    color: white;
+
+    &:hover:not(:disabled) {
+      background: var(--disagree);
+    }
+  }
+}
+
+.commentButton {
+  position: relative;
+  margin-inline-start: auto;
+
+  &:hover:not(:disabled) {
+    color: var(--btn-primary);
+    border-color: var(--btn-primary);
+    background: rgba(95, 136, 229, 0.08);
+  }
+}
+
+.commentCount {
+  position: absolute;
+  top: -4px;
+  inset-inline-end: -4px;
+  min-width: 14px;
+  height: 14px;
+  padding: 0 3px;
+  background: var(--btn-primary);
+  color: white;
+  font-size: 0.6rem;
+  font-weight: 600;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+// Reduced motion support
+@media (prefers-reduced-motion: reduce) {
+  .button {
+    transition: none;
+
+    &:active {
+      transform: none;
+    }
+  }
+}
+
+/* RTL Support */
+[dir="rtl"] {
+  .bar {
+    flex-direction: row-reverse;
+    justify-content: flex-end;
+  }
+
+  .approvalButtons {
+    flex-direction: row-reverse;
+  }
+
+  .button {
+    flex-direction: row-reverse;
+  }
+
+  .commentButton {
+    margin-inline-start: auto;
+    margin-inline-end: 0;
+  }
+}

@@ -1,0 +1,168 @@
+import { NextRequest, NextResponse } from 'next/server';
+import {
+  getSurveyById,
+  getSurveyWithQuestions,
+  updateSurvey,
+  deleteSurvey,
+} from '@/lib/firebase/surveys';
+import { verifyAdmin, extractBearerToken } from '@/lib/auth/verifyAdmin';
+import { UpdateSurveyRequest } from '@/types/survey';
+
+interface RouteContext {
+  params: { id: string };
+}
+
+/**
+ * GET /api/surveys/[id] - Get survey by ID
+ */
+export async function GET(request: NextRequest, context: RouteContext) {
+  try {
+    const surveyId = context.params.id;
+    const includeQuestions = request.nextUrl.searchParams.get('include') === 'questions';
+
+    const survey = includeQuestions
+      ? await getSurveyWithQuestions(surveyId)
+      : await getSurveyById(surveyId);
+
+    if (!survey) {
+      return NextResponse.json(
+        { error: 'Survey not found' },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json(survey);
+  } catch (error) {
+    console.error('[GET /api/surveys/[id]] Error:', error);
+    return NextResponse.json(
+      { error: 'Failed to fetch survey' },
+      { status: 500 }
+    );
+  }
+}
+
+/**
+ * PUT /api/surveys/[id] - Update survey
+ */
+export async function PUT(request: NextRequest, context: RouteContext) {
+  try {
+    const token = extractBearerToken(request.headers.get('Authorization'));
+
+    if (!token) {
+      return NextResponse.json(
+        { error: 'Authorization required' },
+        { status: 401 }
+      );
+    }
+
+    const { isAdmin, userId, error } = await verifyAdmin(token);
+
+    if (!isAdmin) {
+      return NextResponse.json(
+        { error: error || 'Admin access required' },
+        { status: 403 }
+      );
+    }
+
+    const surveyId = context.params.id;
+    const existingSurvey = await getSurveyById(surveyId);
+
+    if (!existingSurvey) {
+      return NextResponse.json(
+        { error: 'Survey not found' },
+        { status: 404 }
+      );
+    }
+
+    // Check ownership
+    if (existingSurvey.creatorId !== userId) {
+      return NextResponse.json(
+        { error: 'You can only update your own surveys' },
+        { status: 403 }
+      );
+    }
+
+    const body: UpdateSurveyRequest = await request.json();
+
+    const updatedSurvey = await updateSurvey(surveyId, body);
+
+    if (!updatedSurvey) {
+      return NextResponse.json(
+        { error: 'Failed to update survey' },
+        { status: 500 }
+      );
+    }
+
+    console.info('[PUT /api/surveys/[id]] Updated survey:', surveyId);
+
+    return NextResponse.json(updatedSurvey);
+  } catch (error) {
+    console.error('[PUT /api/surveys/[id]] Error:', error);
+    return NextResponse.json(
+      { error: 'Failed to update survey' },
+      { status: 500 }
+    );
+  }
+}
+
+/**
+ * DELETE /api/surveys/[id] - Delete survey
+ */
+export async function DELETE(request: NextRequest, context: RouteContext) {
+  try {
+    const token = extractBearerToken(request.headers.get('Authorization'));
+
+    if (!token) {
+      return NextResponse.json(
+        { error: 'Authorization required' },
+        { status: 401 }
+      );
+    }
+
+    const { isAdmin, userId, error } = await verifyAdmin(token);
+
+    if (!isAdmin) {
+      return NextResponse.json(
+        { error: error || 'Admin access required' },
+        { status: 403 }
+      );
+    }
+
+    const surveyId = context.params.id;
+    const existingSurvey = await getSurveyById(surveyId);
+
+    if (!existingSurvey) {
+      return NextResponse.json(
+        { error: 'Survey not found' },
+        { status: 404 }
+      );
+    }
+
+    // Check ownership
+    if (existingSurvey.creatorId !== userId) {
+      return NextResponse.json(
+        { error: 'You can only delete your own surveys' },
+        { status: 403 }
+      );
+    }
+
+    const deleted = await deleteSurvey(surveyId);
+
+    if (!deleted) {
+      return NextResponse.json(
+        { error: 'Failed to delete survey' },
+        { status: 500 }
+      );
+    }
+
+    console.info('[DELETE /api/surveys/[id]] Deleted survey:', surveyId);
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('[DELETE /api/surveys/[id]] Error:', error);
+    return NextResponse.json(
+      { error: 'Failed to delete survey' },
+      { status: 500 }
+    );
+  }
+}

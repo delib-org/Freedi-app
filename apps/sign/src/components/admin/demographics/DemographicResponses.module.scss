@@ -1,0 +1,272 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
+.loadingText,
+.errorText,
+.emptyText {
+  text-align: center;
+  color: var(--text-secondary);
+  padding: var(--spacing-xl);
+}
+
+.errorText {
+  color: var(--disagree);
+}
+
+.retryButton {
+  align-self: center;
+  padding: var(--spacing-sm) var(--spacing-lg);
+  background: var(--btn-primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+
+  &:hover {
+    background: var(--btn-primary-hover);
+  }
+}
+
+// Summary Header
+.summaryHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: var(--spacing-md);
+  border-bottom: 1px solid var(--border-light);
+}
+
+.summaryTitle {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.summaryStats {
+  display: flex;
+  gap: var(--spacing-lg);
+}
+
+.statItem {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+
+  strong {
+    color: var(--btn-primary);
+    font-weight: 600;
+  }
+}
+
+// Questions Summary
+.questionsSummary {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.questionCard {
+  background: var(--card-default);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md);
+}
+
+.questionHeader {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-sm);
+}
+
+.questionNumber {
+  background: var(--btn-primary);
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.questionText {
+  flex: 1;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.responseCount {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  background: var(--background);
+  padding: 2px 8px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+// Option Stats (for choice questions)
+.optionStats {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  margin-top: var(--spacing-sm);
+}
+
+.optionStat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.optionInfo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.optionLabel {
+  font-size: 0.875rem;
+  color: var(--text-primary);
+}
+
+.optionCount {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.optionBar {
+  height: 8px;
+  background: var(--background);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.optionBarFill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+// Responses Table
+.responsesTable {
+  margin-top: var(--spacing-md);
+}
+
+.tableTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 var(--spacing-md) 0;
+}
+
+.tableWrapper {
+  overflow-x: auto;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+
+  th,
+  td {
+    padding: var(--spacing-sm) var(--spacing-md);
+    text-align: left;
+    border-bottom: 1px solid var(--border-light);
+  }
+
+  th {
+    background: var(--background);
+    font-weight: 600;
+    color: var(--text-secondary);
+    white-space: nowrap;
+  }
+
+  td {
+    background: var(--card-default);
+    color: var(--text-primary);
+  }
+
+  tr:last-child td {
+    border-bottom: none;
+  }
+
+  tr:hover td {
+    background: var(--background);
+  }
+}
+
+.userColumn {
+  min-width: 100px;
+}
+
+.questionColumn {
+  min-width: 120px;
+}
+
+.userCell {
+  font-weight: 500;
+}
+
+.answerCell {
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.noResponses {
+  text-align: center;
+  padding: var(--spacing-xl);
+  color: var(--text-secondary);
+  background: var(--background);
+  border-radius: var(--radius-md);
+}
+
+// RTL Support
+[dir="rtl"] {
+  .summaryHeader {
+    flex-direction: row-reverse;
+  }
+
+  .questionHeader {
+    flex-direction: row-reverse;
+  }
+
+  .optionInfo {
+    flex-direction: row-reverse;
+  }
+
+  .table {
+    th,
+    td {
+      text-align: right;
+    }
+  }
+}
+
+// Mobile
+@media (max-width: 640px) {
+  .summaryHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-sm);
+  }
+
+  .questionHeader {
+    flex-wrap: wrap;
+  }
+
+  .responseCount {
+    width: 100%;
+    text-align: right;
+  }
+}

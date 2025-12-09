@@ -1,4 +1,5 @@
 import React, { FC, useState, useEffect, useRef, KeyboardEvent, ChangeEvent } from 'react';
+import { Statement } from 'delib-npm';
 import Save from '@/assets/icons/saveIcon.svg?react';
 import Text from '../text/Text';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
@@ -23,6 +24,8 @@ export interface EditTextProps {
 	fontSize?: string;
 	onEditStart?: () => void;
 	onEditEnd?: () => void;
+	/** Pass the full statement object to enable paragraph rendering */
+	statementObj?: Statement;
 }
 
 const EditText: FC<EditTextProps> = ({
@@ -44,7 +47,8 @@ const EditText: FC<EditTextProps> = ({
 	autoFocus = true,
 	fontSize,
 	onEditStart,
-	onEditEnd
+	onEditEnd,
+	statementObj
 }) => {
 	const [isEditing, setIsEditing] = useState(false);
 	const [primaryText, setPrimaryText] = useState(value);
@@ -182,11 +186,11 @@ const EditText: FC<EditTextProps> = ({
 				onKeyDown={editable && !editing ? (e) => e.key === 'Enter' && handleStartEdit() : undefined}
 			>
 				{variant === 'description' ? (
-					<Text description={secondaryText} fontSize={fontSize} />
+					<Text description={secondaryText} fontSize={fontSize} statementObj={statementObj} />
 				) : variant === 'statement' ? (
-					<Text statement={primaryText} fontSize={fontSize} />
+					<Text statement={primaryText} fontSize={fontSize} statementObj={statementObj} />
 				) : (
-					<Text statement={primaryText} description={secondaryText} fontSize={fontSize} />
+					<Text statement={primaryText} description={secondaryText} fontSize={fontSize} statementObj={statementObj} />
 				)}
 			</div>
 		);

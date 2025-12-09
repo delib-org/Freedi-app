@@ -1,0 +1,264 @@
+.comment {
+  padding: var(--spacing-sm);
+  background: var(--background);
+  border-radius: var(--radius-sm);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-xs);
+}
+
+.avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--btn-primary);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 0.875rem;
+  flex-shrink: 0;
+}
+
+.meta {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.author {
+  font-weight: 500;
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.date {
+  font-size: 0.75rem;
+  color: var(--text-caption);
+}
+
+.ownerActions {
+  display: flex;
+  gap: var(--spacing-xs);
+  flex-shrink: 0;
+}
+
+.editButton,
+.deleteButton {
+  padding: var(--spacing-xs);
+  background: transparent;
+  border: none;
+  color: var(--text-caption);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.editButton:hover {
+  background: rgba(95, 136, 229, 0.1);
+  color: var(--btn-primary);
+}
+
+.deleteButton:hover {
+  background: rgba(244, 67, 54, 0.1);
+  color: var(--disagree);
+}
+
+.content {
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: var(--text-body);
+  word-wrap: break-word;
+}
+
+/* Edit form */
+.editForm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.editTextarea {
+  width: 100%;
+  padding: var(--spacing-sm);
+  border: 1px solid var(--border-color, rgba(0, 0, 0, 0.12));
+  border-radius: var(--radius-sm);
+  font-family: inherit;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  resize: vertical;
+  min-height: 80px;
+
+  &:focus {
+    outline: none;
+    border-color: var(--btn-primary);
+    box-shadow: 0 0 0 2px rgba(95, 136, 229, 0.2);
+  }
+
+  &:disabled {
+    background: var(--background-secondary, #f5f5f5);
+    opacity: 0.7;
+  }
+}
+
+.editActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-xs);
+}
+
+.cancelButton,
+.saveButton {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.cancelButton {
+  background: transparent;
+  border: 1px solid var(--border-color, rgba(0, 0, 0, 0.12));
+  color: var(--text-body);
+
+  &:hover:not(:disabled) {
+    background: var(--background-secondary, #f5f5f5);
+  }
+}
+
+.saveButton {
+  background: var(--btn-primary);
+  border: none;
+  color: white;
+
+  &:hover:not(:disabled) {
+    filter: brightness(1.1);
+  }
+}
+
+/* Evaluation bar */
+.evaluationBar {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  margin-top: var(--spacing-sm);
+  padding-top: var(--spacing-xs);
+  border-top: 1px solid var(--border-color, rgba(0, 0, 0, 0.08));
+}
+
+.evalButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  background: transparent;
+  border: 1px solid var(--border-color, rgba(0, 0, 0, 0.12));
+  border-radius: var(--radius-sm);
+  color: var(--text-caption);
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover:not(:disabled) {
+    transform: scale(1.05);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  &.approve {
+    &:hover:not(:disabled) {
+      background: rgba(76, 175, 80, 0.1);
+      border-color: var(--agree);
+      color: var(--agree);
+    }
+
+    &.active {
+      background: var(--agree);
+      border-color: var(--agree);
+      color: white;
+    }
+  }
+
+  &.reject {
+    &:hover:not(:disabled) {
+      background: rgba(244, 67, 54, 0.1);
+      border-color: var(--disagree);
+      color: var(--disagree);
+    }
+
+    &.active {
+      background: var(--disagree);
+      border-color: var(--disagree);
+      color: white;
+    }
+  }
+}
+
+.consensusScore {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  min-width: 24px;
+  text-align: center;
+  color: var(--text-caption);
+
+  &.positive {
+    color: var(--agree);
+  }
+
+  &.negative {
+    color: var(--disagree);
+  }
+}
+
+.consensusDisplay {
+  margin-top: var(--spacing-sm);
+  padding-top: var(--spacing-xs);
+  border-top: 1px solid var(--border-color, rgba(0, 0, 0, 0.08));
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+/* RTL Support */
+[dir="rtl"] {
+  .header {
+    flex-direction: row-reverse;
+  }
+
+  .meta {
+    text-align: right;
+  }
+
+  .ownerActions {
+    flex-direction: row-reverse;
+  }
+
+  .evaluationBar {
+    flex-direction: row-reverse;
+  }
+
+  .editActions {
+    flex-direction: row-reverse;
+  }
+}

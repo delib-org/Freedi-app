@@ -28,21 +28,80 @@ Our current methodology includes:
 
 ## 🌟 What's Available Now
 
-### **Core Platform Features**
-- **Statement Management**: Create questions and propose options for group discussion with hierarchical organization
-- **Real-time Collaboration**: Live updates, synchronized voting, and instant notifications across all participants
-- **Advanced Group Organization**: Create and manage deliberation groups with role-based access control
-- **Multi-language Support**: Interface available in multiple languages with internationalization support
-- **Progressive Web App (PWA)**: Install on any device, works offline, and provides native-like experience
-- **Accessibility Features**: Full support for users with disabilities, including screen reader compatibility
+### **Unified Statement Model**
+Freedi uses a powerful unified statement model where every piece of content is a "Statement" with semantic types:
+- **Groups**: Top-level containers for organizing deliberations
+- **Questions**: Discussion topics that prompt proposals and options
+- **Options**: Proposed solutions or choices under questions
+- **Statements**: Chat messages and discussions within the hierarchy
 
-### **Deliberation Tools (Beta)**
-- **Structured Discussion Formats**: Templates for organizing group conversations with semantic hierarchy
-- **Consensus Visualization**: Real-time visualization of group agreement evolution with advanced analytics
-- **Integrated Chat System**: In-platform discussions with threading and moderation capabilities
-- **Export & Documentation**: Comprehensive export of decisions, reasoning, and participation metrics
-- **AI-Powered Features**: Intelligent evaluation assistance, pattern recognition, and facilitation support
-- **Notification System**: Smart notifications to keep participants engaged and informed
+This hierarchical model enables unlimited nesting depth with full ancestry tracking, allowing complex discussions to maintain clear relationships and context.
+
+### **Core Platform Features**
+- **Hierarchical Statement Management**: Create, edit, move, and organize statements with semantic relationships and version tracking
+- **Real-time Collaboration**: WebSocket-powered live updates, synchronized voting, and instant notifications across all participants
+- **Advanced Group Organization**: Create deliberation groups with sub-topics, role-based access control, and member approval workflows
+- **Multi-language Support**: Full internationalization with RTL support and locale-specific formatting
+- **Progressive Web App (PWA)**: Install on any device, works offline with IndexedDB caching and smart sync
+- **Accessibility Features**: WCAG AA compliance, screen reader compatibility, keyboard navigation, and proper ARIA labels
+
+### **Evaluation & Consensus Systems**
+- **Multi-Type Evaluation**: Simple voting, single-like, and enhanced evaluation methods with custom scales
+- **Consensus Algorithm**: Proprietary scoring formula `(Average Evaluation) × √(Number of Evaluators)` that balances quality with broad participation
+- **Real-time Results**: Live visualization of consensus strength, vote aggregation, and results analytics
+- **Polarization Tracking**: Measure group consensus divergence and identify opinion clusters
+
+### **Deliberation Tools**
+- **Structured Discussion Formats**: Multi-stage deliberation with drag-and-drop stage ordering and custom configurations
+- **Integrated Chat System**: Real-time messaging with threading, notifications, and new message indicators
+- **Similar Statement Detection**: Semantic search to find and suggest duplicate proposals, preventing redundancy
+- **Popperian Hebbian Evolution**: Evidence-based proposal improvement with version tracking and diff comparison
+- **AI-Powered Features**: Gemini API integration for personalized improvement suggestions, pattern recognition, and facilitation support
+
+### **Mind Map Visualization**
+- **Interactive Mind Maps**: React Flow-based hierarchical visualization with virtual rendering for large datasets
+- **O(n) Optimized Rendering**: Efficient tree building algorithm supporting unlimited statement hierarchies
+- **Export Capabilities**: Export mind maps as JSON, SVG, or PNG formats
+- **Smooth Interactions**: Zoom, pan, drag-and-drop, and context menus for intuitive navigation
+
+### **Notification System**
+- **Push Notifications**: Firebase Cloud Messaging with multi-device support and deep linking
+- **In-App Notifications**: Real-time notification dropdown with unread counts and history
+- **Email Notifications**: Configurable email alerts with granular notification controls
+- **Smart Filtering**: Notification types for chat, suggestions, evaluations, votes, and membership updates
+
+### **Room Assignment & Facilitation**
+- **Heterogeneous Room Assignment**: Demographic-based room scrambling for balanced representation
+- **Admin Configuration**: Room participant management with dynamic size configuration
+- **Participant Notifications**: Automatic notifications when users are assigned to rooms
+
+### **Monorepo Applications**
+Freedi is organized as a monorepo with multiple specialized applications:
+
+| Application | Technology | Description |
+|-------------|------------|-------------|
+| **Main Freedi App** | Vite + React | Core deliberation platform with full feature set |
+| **Mass Consensus** | Next.js | Fast-loading anonymous consensus discussion with SSR/ISR |
+| **Document Signing** | Next.js | Digital signature collection and multi-party signing workflows |
+
+### **User Management & Permissions**
+- **Role-Based Access Control**: Admin, Creator, Member, and Guest roles with fine-grained permissions
+- **Member Management**: Invite, approve, reject, and ban members with bulk operations
+- **User Profiles**: Avatar upload, display names, and user preferences
+- **Authentication**: Firebase Auth with multi-provider support and token management
+
+### **Data Export & Analytics**
+- **Full Data Export**: Export statements, evaluations, votes, and decisions in JSON/CSV formats
+- **Mind Map Export**: Save visualizations as SVG or PNG images
+- **Participation Metrics**: Track engagement patterns, contribution counts, and user activity
+- **Decision Quality Indicators**: Measure consensus strength, stability, and agreement levels
+- **Group Dynamics Analysis**: Understand interaction patterns and influence distribution
+
+### **Administration & Settings**
+- **Statement Configuration**: Configure evaluation methods, voting settings, and result ranges
+- **Question Stages**: Define custom multi-stage deliberation processes
+- **Group Settings**: Member management, permission configuration, and notification preferences
+- **Advanced Settings**: Chose-by tracking, demographic collection, and questionnaire embedding
 
 ## 🚧 Features in Development
 
