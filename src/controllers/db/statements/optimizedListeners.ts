@@ -6,6 +6,7 @@ import {
   query,
   where,
   orderBy,
+  limit,
   DocumentData,
   QuerySnapshot,
 } from 'firebase/firestore';
@@ -26,6 +27,9 @@ import { createManagedCollectionListener, generateListenerKey } from '@/controll
 export function listenToMindMapData(statementId: string): Unsubscribe {
   try {
     const statementsRef = collection(FireStore, Collections.statements);
+
+    // Maximum number of documents to load for performance
+    const MAX_MINDMAP_DOCUMENTS = 200;
 
     // Single comprehensive query that gets everything we need
     const q = query(
@@ -52,7 +56,8 @@ export function listenToMindMapData(statementId: string): Unsubscribe {
           )
         )
       ),
-      orderBy('createdAt', 'desc')
+      orderBy('createdAt', 'desc'),
+      limit(MAX_MINDMAP_DOCUMENTS)
     );
 
     const listenerKey = generateListenerKey(

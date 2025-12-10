@@ -1,6 +1,6 @@
 'use client';
 
-import { useTranslation } from '@freedi/shared-i18n';
+import { useTranslation } from '@freedi/shared-i18n/next';
 import styles from './Survey.module.scss';
 
 interface SurveyProgressProps {
@@ -57,7 +57,9 @@ export default function SurveyProgressBar({
         })}
       </div>
       <div className={styles.progressLabel}>
-        {t('questionProgress', { current: currentIndex + 1, total: totalQuestions })}
+        {t('questionProgress')
+          .replace('{current}', String(currentIndex + 1))
+          .replace('{total}', String(totalQuestions))}
       </div>
     </div>
   );

@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useTranslation } from '@freedi/shared-i18n';
+import { useTranslation } from '@freedi/shared-i18n/next';
 import { SurveyWithQuestions } from '@/types/survey';
 import styles from './Survey.module.scss';
 

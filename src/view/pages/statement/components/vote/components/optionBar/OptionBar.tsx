@@ -1,4 +1,4 @@
-import { FC, useState, useEffect } from 'react';
+import { FC, useState, useEffect, memo, useCallback } from 'react';
 
 // Redux store
 import { useAppDispatch, useAppSelector } from '@/controllers/hooks/reduxHooks';
@@ -11,13 +11,12 @@ import LikeIcon from '@/assets/icons/likeIcon.svg?react';
 import { OptionBarProps } from '../../voteTypesHelper';
 import styles from './OptionBar.module.scss';
 import { getBarWidth } from './OptionBarCont';
-import { getStatementFromDB } from '@/controllers/db/statements/getStatement';
 import { setVoteToDB } from '@/controllers/db/vote/setVote';
 import { statementTitleToDisplay } from '@/controllers/general/helpers';
 import { parentVoteSelector, setVoteToStore } from '@/redux/vote/votesSlice';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 
-export const OptionBar: FC<OptionBarProps> = ({
+const OptionBarComponent: FC<OptionBarProps> = ({
 	option,
 	totalVotes,
 	statement,
@@ -72,26 +71,25 @@ export const OptionBar: FC<OptionBarProps> = ({
 		selections > 0 && totalVotes > 0
 			? Math.round((selections / totalVotes) * 100)
 			: 0;
-	const handleVotePress = async () => {
+	const handleVotePress = useCallback(async () => {
 		// Optimistic update - immediately update UI
-		const newVoteId = optimisticVoteId === option.statementId 
-			? 'none' 
+		const newVoteId = optimisticVoteId === option.statementId
+			? 'none'
 			: option.statementId;
-		
+
 		setOptimisticVoteId(newVoteId);
 		setIsVotePending(true);
-		
+
 		// Update store optimistically
 		dispatch(setVoteToStore(option));
-		
-		// Database operations in background
+
+		// Database operation in background (removed redundant getStatementFromDB - listener handles updates)
 		try {
 			await setVoteToDB(option, creator);
-			await getStatementFromDB(option.statementId);
 		} finally {
 			setIsVotePending(false);
 		}
-	};
+	}, [optimisticVoteId, option, dispatch, creator]);
 	
 	const isOptionSelected = optimisticVoteId === option.statementId;
 
@@ -160,5 +158,20 @@ export const OptionBar: FC<OptionBarProps> = ({
 		</div>
 	);
 };
+
+// Memoize to prevent unnecessary re-renders when parent updates
+export const OptionBar = memo(OptionBarComponent, (prevProps, nextProps) => {
+	// Custom comparison - only re-render when relevant props change
+	return (
+		prevProps.option.statementId === nextProps.option.statementId &&
+		prevProps.option.selections === nextProps.option.selections &&
+		prevProps.option.color === nextProps.option.color &&
+		prevProps.totalVotes === nextProps.totalVotes &&
+		prevProps.order === nextProps.order &&
+		prevProps.isVertical === nextProps.isVertical &&
+		prevProps.optionsCount === nextProps.optionsCount &&
+		prevProps.screenWidth === nextProps.screenWidth
+	);
+});
 
 export default OptionBar;

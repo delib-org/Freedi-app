@@ -1,6 +1,6 @@
-import React, { FC } from 'react';
+import React, { FC, useMemo } from 'react';
 import { useParams } from 'react-router';
-import OptionBar from '../optionBar/OptionBar';
+import { OptionBar } from '../optionBar/OptionBar';
 import styles from './VotingArea.module.scss';
 import { getSortedVotingOptions, isVerticalOptionBar } from './VotingAreaCont';
 import useWindowDimensions from '@/controllers/hooks/useWindowDimentions';
@@ -28,23 +28,37 @@ const VotingArea: FC<VotingAreaProps> = ({
 	const statement = useSelector(statementSelectorById(statementId));
 	const { width } = useWindowDimensions();
 
-	if (!statement) return null;
+	// Memoize filtered options to prevent recalculation on every render
+	const filteredOptions = useMemo(() => {
+		if (!statement) return [];
 
-	const defaultOptions = statement?.statementSettings?.inVotingGetOnlyResults
-		? subStatements.filter((st) => st.isResult)
-		: subStatements.filter(
-			(st) => st.statementType === StatementType.option
-		);
+		const defaultOptions = statement.statementSettings?.inVotingGetOnlyResults
+			? subStatements.filter((st) => st.isResult)
+			: subStatements.filter(
+				(st) => st.statementType === StatementType.option
+			);
 
-	const _options = subStatements || defaultOptions;
-	const options = getSortedVotingOptions({
-		statement,
-		subStatements: _options,
-		sort,
-	});
+		return subStatements || defaultOptions;
+	}, [statement, subStatements]);
+
+	// Memoize sorted options to prevent expensive sort on every render
+	const options = useMemo(() => {
+		if (!statement) return [];
+
+		return getSortedVotingOptions({
+			statement,
+			subStatements: filteredOptions,
+			sort,
+		});
+	}, [statement, filteredOptions, sort]);
+
 	const optionsCount = options.length;
+	const shouldShowVerticalBar = useMemo(
+		() => isVerticalOptionBar(width, optionsCount),
+		[width, optionsCount]
+	);
 
-	const shouldShowVerticalBar = isVerticalOptionBar(width, optionsCount);
+	if (!statement) return null;
 
 	return (
 		<div

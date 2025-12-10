@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useTranslation } from '@freedi/shared-i18n';
+import { useTranslation } from '@freedi/shared-i18n/next';
 import { SurveySettings } from '@/types/survey';
 import styles from './Survey.module.scss';
 
@@ -78,7 +78,7 @@ export default function SurveyNavigation({
 
       {!canProceed && evaluationsNeeded > 0 && (
         <div className={styles.navHint}>
-          {t('evaluationsNeeded', { count: evaluationsNeeded })}
+          {t('evaluationsNeeded').replace('{count}', String(evaluationsNeeded))}
         </div>
       )}
     </div>

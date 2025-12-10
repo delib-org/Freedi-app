@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { QRCodeSVG } from 'qrcode.react';
-import { useTranslation } from '@freedi/shared-i18n';
+import { useTranslation } from '@freedi/shared-i18n/next';
 import { Survey } from '@/types/survey';
 import styles from './Admin.module.scss';
 
