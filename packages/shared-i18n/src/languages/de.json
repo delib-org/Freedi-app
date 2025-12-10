@@ -745,5 +745,6 @@
   "Paste a Google Docs link to import content": "Fügen Sie einen Google Docs-Link ein, um Inhalte zu importieren",
   "Please enter a Google Docs URL": "Bitte geben Sie eine Google Docs URL ein",
   "Share your document with:": "Teilen Sie Ihr Dokument mit:",
+  "To enable importing, share your document with:": "Um den Import zu aktivieren, teilen Sie Ihr Dokument mit:",
   "You must be logged in to import": "Sie müssen angemeldet sein, um zu importieren"
 }

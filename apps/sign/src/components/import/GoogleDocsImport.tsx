@@ -116,9 +116,12 @@ export default function GoogleDocsImport({
         </div>
       )}
 
-      <p className={styles.hint}>
-        {t('Make sure the document is shared with the import service or set to "Anyone with the link"')}
-      </p>
+      <div className={styles.shareInfo}>
+        <p className={styles.shareLabel}>{t('To enable importing, share your document with:')}</p>
+        <code className={styles.shareEmail}>
+          {process.env.NEXT_PUBLIC_GOOGLE_DOCS_SERVICE_ACCOUNT_EMAIL}
+        </code>
+      </div>
     </div>
   );
 }
