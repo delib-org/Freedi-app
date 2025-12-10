@@ -110,7 +110,15 @@ export default async function AdminDashboard({ params }: AdminDashboardProps) {
             className={styles.exportButton}
             style={{ textDecoration: 'none', background: 'var(--agree)' }}
           >
-            Export CSV
+            Export Users
+          </a>
+          <a
+            href={`/api/admin/export-detailed/${statementId}`}
+            className={styles.exportButton}
+            style={{ textDecoration: 'none', background: 'var(--btn-primary)' }}
+            title="Export document with all paragraphs, comments, and demographics"
+          >
+            Export Detailed
           </a>
         </div>
       </section>

@@ -751,5 +751,8 @@
   "Please enter a Google Docs URL": "Bitte geben Sie eine Google Docs URL ein",
   "Share your document with:": "Teilen Sie Ihr Dokument mit:",
   "To enable importing, share your document with:": "Um den Import zu aktivieren, teilen Sie Ihr Dokument mit:",
-  "You must be logged in to import": "Sie müssen angemeldet sein, um zu importieren"
+  "You must be logged in to import": "Sie müssen angemeldet sein, um zu importieren",
+  "Export Users": "Benutzer exportieren",
+  "Export Detailed": "Detailliert exportieren",
+  "Export document with all paragraphs, comments, and demographics": "Dokument mit allen Absätzen, Kommentaren und demografischen Daten exportieren"
 }

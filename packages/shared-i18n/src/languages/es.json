@@ -751,5 +751,8 @@
   "Paste a Google Docs link to import content": "Pega un enlace de Google Docs para importar contenido",
   "Please enter a Google Docs URL": "Por favor, ingresa una URL de Google Docs",
   "Share your document with:": "Comparte tu documento con:",
-  "You must be logged in to import": "Debes iniciar sesión para importar"
+  "You must be logged in to import": "Debes iniciar sesión para importar",
+  "Export Users": "Exportar usuarios",
+  "Export Detailed": "Exportar detallado",
+  "Export document with all paragraphs, comments, and demographics": "Exportar documento con todos los párrafos, comentarios y datos demográficos"
 }
