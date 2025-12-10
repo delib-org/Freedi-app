@@ -1,0 +1,177 @@
+.modal {
+	background: var(--card-default);
+	border-radius: 12px;
+	max-width: 500px;
+	width: 100%;
+	max-height: 90vh;
+	overflow: auto;
+	box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: var(--padding);
+	border-bottom: 1px solid var(--border-light);
+
+	h2 {
+		margin: 0;
+		font-size: 1.25rem;
+		font-weight: 600;
+		color: var(--text-heading);
+	}
+}
+
+.closeButton {
+	background: none;
+	border: none;
+	font-size: 1.5rem;
+	color: var(--text-secondary);
+	cursor: pointer;
+	padding: 0;
+	width: 32px;
+	height: 32px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 50%;
+	transition: background-color 0.2s ease;
+
+	&:hover {
+		background-color: rgba(0, 0, 0, 0.05);
+	}
+}
+
+.content {
+	padding: var(--padding);
+	display: flex;
+	flex-direction: column;
+	gap: var(--padding);
+}
+
+.description {
+	color: var(--text-secondary);
+	font-size: 0.9rem;
+	margin: 0;
+}
+
+.input {
+	width: 100%;
+	padding: 12px 16px;
+	border: 1px solid var(--border-light);
+	border-radius: 8px;
+	font-size: 1rem;
+	background: var(--background);
+	color: var(--text-body);
+	transition: border-color 0.2s ease;
+
+	&:focus {
+		outline: none;
+		border-color: var(--btn-primary);
+	}
+
+	&:disabled {
+		opacity: 0.6;
+		cursor: not-allowed;
+	}
+
+	&::placeholder {
+		color: var(--text-caption);
+	}
+}
+
+.error {
+	background: rgba(229, 95, 95, 0.1);
+	border: 1px solid var(--disagree, #e55f5f);
+	border-radius: 8px;
+	padding: 12px 16px;
+	color: var(--disagree, #e55f5f);
+	font-size: 0.9rem;
+
+	p {
+		margin: 0;
+
+		&:not(:last-child) {
+			margin-bottom: 8px;
+		}
+	}
+}
+
+.shareHint {
+	font-size: 0.85rem;
+
+	code {
+		background: rgba(0, 0, 0, 0.05);
+		padding: 2px 6px;
+		border-radius: 4px;
+		font-family: monospace;
+		word-break: break-all;
+	}
+}
+
+.success {
+	background: rgba(95, 229, 136, 0.1);
+	border: 1px solid var(--agree, #5fe588);
+	border-radius: 8px;
+	padding: 12px 16px;
+	color: var(--agree, #5fe588);
+	font-size: 0.9rem;
+}
+
+.hint {
+	color: var(--text-caption);
+	font-size: 0.8rem;
+	margin: 0;
+	font-style: italic;
+}
+
+.footer {
+	display: flex;
+	gap: 12px;
+	justify-content: flex-end;
+	padding: var(--padding);
+	border-top: 1px solid var(--border-light);
+}
+
+.cancelButton {
+	padding: 10px 20px;
+	background: transparent;
+	color: var(--text-secondary);
+	border: 1px solid var(--border-light);
+	border-radius: 8px;
+	font-size: 0.9rem;
+	font-weight: 500;
+	cursor: pointer;
+	transition: background-color 0.2s ease;
+
+	&:hover:not(:disabled) {
+		background: rgba(0, 0, 0, 0.05);
+	}
+
+	&:disabled {
+		opacity: 0.6;
+		cursor: not-allowed;
+	}
+}
+
+.importButton {
+	padding: 10px 24px;
+	background: var(--btn-primary);
+	color: white;
+	border: none;
+	border-radius: 8px;
+	font-size: 0.9rem;
+	font-weight: 500;
+	cursor: pointer;
+	transition: opacity 0.2s ease;
+
+	&:hover:not(:disabled) {
+		opacity: 0.9;
+	}
+
+	&:disabled {
+		opacity: 0.6;
+		cursor: not-allowed;
+	}
+}

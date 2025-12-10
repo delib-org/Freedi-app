@@ -321,6 +321,10 @@
   "Improvement applied successfully!": "Improvement applied successfully!",
   "Improving suggestion...": "Improving suggestion...",
   "Improving...": "Improving...",
+  "Import": "Import",
+  "Import Content": "Import Content",
+  "Import from Google Docs": "Import from Google Docs",
+  "Importing...": "Importing...",
   "In Voting page, show only the results of the top options": "In Voting page, show only the results of the top options",
   "In Zoom": "In Zoom",
   "In conversation:": "In conversation:",
@@ -949,5 +953,14 @@
   "openHeatMapMenu": "Open heat map menu",
   "closeHeatMapMenu": "Close heat map menu",
   "loadingHeatMapData": "Loading heat map data",
-  "turnOff": "Turn off"
+  "turnOff": "Turn off",
+
+  "Document imported successfully": "Document imported successfully",
+  "Enter Google Docs URL": "Enter Google Docs URL",
+  "Failed to import document": "Failed to import document",
+  "Make sure the document is shared with the import service or set to \"Anyone with the link\"": "Make sure the document is shared with the import service or set to \"Anyone with the link\"",
+  "Paste a Google Docs link to import content": "Paste a Google Docs link to import content",
+  "Please enter a Google Docs URL": "Please enter a Google Docs URL",
+  "Share your document with:": "Share your document with:",
+  "You must be logged in to import": "You must be logged in to import"
 }

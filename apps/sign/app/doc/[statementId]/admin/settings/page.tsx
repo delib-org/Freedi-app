@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { DemographicSettings } from '@/components/admin/demographics';
 import { DemographicMode } from '@/types/demographics';
+import GoogleDocsImport from '@/components/import/GoogleDocsImport';
 import styles from '../admin.module.scss';
 
 interface Settings {
@@ -20,6 +21,7 @@ interface Settings {
 
 export default function AdminSettingsPage() {
   const params = useParams();
+  const router = useRouter();
   const statementId = params.statementId as string;
   const { t } = useTranslation();
 
@@ -104,6 +106,15 @@ export default function AdminSettingsPage() {
           {t('Configure document visibility and interactions')}
         </p>
       </header>
+
+      {/* Import from Google Docs */}
+      <section className={styles.settingsSection}>
+        <h2 className={styles.settingsSectionTitle}>{t('Import Content')}</h2>
+        <GoogleDocsImport
+          statementId={statementId}
+          onImportComplete={() => router.refresh()}
+        />
+      </section>
 
       {/* Visibility Settings */}
       <section className={styles.settingsSection}>

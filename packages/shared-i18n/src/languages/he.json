@@ -962,5 +962,18 @@
   "closeHeatMapMenu": "סגור תפריט מפת חום",
   "loadingHeatMapData": "טוען נתוני מפת חום",
   "turnOff": "כבה",
-  "Please add your answer to the following question:": "אנא הוסף/י את תשובתך לשאלה הבאה:"
+  "Please add your answer to the following question:": "אנא הוסף/י את תשובתך לשאלה הבאה:",
+
+  "Import": "ייבוא",
+  "Import Content": "ייבוא תוכן",
+  "Import from Google Docs": "ייבוא מ-Google Docs",
+  "Importing...": "מייבא...",
+  "Document imported successfully": "המסמך יובא בהצלחה",
+  "Enter Google Docs URL": "הזן כתובת Google Docs",
+  "Failed to import document": "ייבוא המסמך נכשל",
+  "Make sure the document is shared with the import service or set to \"Anyone with the link\"": "ודא שהמסמך משותף עם שירות הייבוא או מוגדר ל\"כל מי שיש לו את הקישור\"",
+  "Paste a Google Docs link to import content": "הדבק קישור ל-Google Docs כדי לייבא תוכן",
+  "Please enter a Google Docs URL": "אנא הזן כתובת Google Docs",
+  "Share your document with:": "שתף את המסמך שלך עם:",
+  "You must be logged in to import": "עליך להתחבר כדי לייבא"
 }

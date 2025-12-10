@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { ParagraphType } from 'delib-npm';
+import { ParagraphType } from '@/types';
 import clsx from 'clsx';
 import { Paragraph } from '@/types';
 import { useUIStore } from '@/store/uiStore';
@@ -142,6 +142,13 @@ export default function ParagraphCard({
             <span className={styles.bullet}>{paragraph.listType === 'ol' ? '•' : '•'}</span>
             <p className={styles.content}>{content}</p>
           </div>
+        );
+      case ParagraphType.table:
+        return (
+          <div
+            className={styles.tableWrapper}
+            dangerouslySetInnerHTML={{ __html: content }}
+          />
         );
       default:
         return <p className={styles.content}>{content}</p>;

@@ -2,13 +2,26 @@
  * Type definitions for Sign app
  */
 
-import { Statement, ParagraphType } from 'delib-npm';
+import { Statement, ParagraphType as DelibParagraphType } from 'delib-npm';
 
 // Re-export from queries for convenience
 export type { Signature, Approval, Comment } from '@/lib/firebase/queries';
 
-// Re-export ParagraphType from delib-npm
-export { ParagraphType };
+// Extended ParagraphType that includes 'table' (until delib-npm is updated)
+export enum ParagraphType {
+  h1 = 'h1',
+  h2 = 'h2',
+  h3 = 'h3',
+  h4 = 'h4',
+  h5 = 'h5',
+  h6 = 'h6',
+  paragraph = 'paragraph',
+  li = 'li',
+  table = 'table',
+}
+
+// Re-export for backwards compatibility
+export { DelibParagraphType };
 
 /**
  * Paragraph type - matches main app's paragraph structure

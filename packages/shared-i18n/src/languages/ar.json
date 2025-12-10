@@ -728,5 +728,18 @@
   "turnOff": "إيقاف",
   "copy": "نسخ",
   "copied": "تم النسخ!",
-  "Please add your answer to the following question:": "يرجى إضافة إجابتك على السؤال التالي:"
+  "Please add your answer to the following question:": "يرجى إضافة إجابتك على السؤال التالي:",
+
+  "Import": "استيراد",
+  "Import Content": "استيراد المحتوى",
+  "Import from Google Docs": "استيراد من Google Docs",
+  "Importing...": "جاري الاستيراد...",
+  "Document imported successfully": "تم استيراد المستند بنجاح",
+  "Enter Google Docs URL": "أدخل رابط Google Docs",
+  "Failed to import document": "فشل استيراد المستند",
+  "Make sure the document is shared with the import service or set to \"Anyone with the link\"": "تأكد من مشاركة المستند مع خدمة الاستيراد أو تعيينه إلى \"أي شخص لديه الرابط\"",
+  "Paste a Google Docs link to import content": "الصق رابط Google Docs لاستيراد المحتوى",
+  "Please enter a Google Docs URL": "يرجى إدخال رابط Google Docs",
+  "Share your document with:": "شارك مستندك مع:",
+  "You must be logged in to import": "يجب تسجيل الدخول للاستيراد"
 }
