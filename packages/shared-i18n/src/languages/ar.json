@@ -747,5 +747,8 @@
   "Please enter a Google Docs URL": "يرجى إدخال رابط Google Docs",
   "Share your document with:": "شارك مستندك مع:",
   "To enable importing, share your document with:": "لتفعيل الاستيراد، شارك مستندك مع:",
-  "You must be logged in to import": "يجب تسجيل الدخول للاستيراد"
+  "You must be logged in to import": "يجب تسجيل الدخول للاستيراد",
+  "Export Users": "تصدير المستخدمين",
+  "Export Detailed": "تصدير مفصل",
+  "Export document with all paragraphs, comments, and demographics": "تصدير المستند مع جميع الفقرات والتعليقات والبيانات الديموغرافية"
 }

@@ -751,5 +751,8 @@
   "Paste a Google Docs link to import content": "Plak een Google Docs-link om inhoud te importeren",
   "Please enter a Google Docs URL": "Voer een Google Docs URL in",
   "Share your document with:": "Deel uw document met:",
-  "You must be logged in to import": "U moet ingelogd zijn om te importeren"
+  "You must be logged in to import": "U moet ingelogd zijn om te importeren",
+  "Export Users": "Gebruikers exporteren",
+  "Export Detailed": "Gedetailleerd exporteren",
+  "Export document with all paragraphs, comments, and demographics": "Document exporteren met alle alinea's, reacties en demografische gegevens"
 }
