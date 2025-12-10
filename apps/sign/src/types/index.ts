@@ -33,6 +33,8 @@ export interface Paragraph {
   content: string;
   order: number;
   listType?: 'ul' | 'ol';
+  /** When true, users cannot interact with this paragraph (no approve/reject/comment) - used for explanatory text */
+  isNonInteractive?: boolean;
 }
 
 /**

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback, useRef, useEffect } from 'react';
+import { useTranslation } from '@freedi/shared-i18n/next';
 import { ParagraphType } from '@/types';
 import clsx from 'clsx';
 import { Paragraph } from '@/types';
@@ -20,6 +21,7 @@ interface ParagraphCardProps {
   isAdmin?: boolean;
   commentCount?: number;
   hasInteracted?: boolean;
+  onNonInteractiveToggle?: (paragraphId: string, isNonInteractive: boolean) => void;
 }
 
 export default function ParagraphCard({
@@ -32,8 +34,12 @@ export default function ParagraphCard({
   isAdmin,
   commentCount: initialCommentCount = 0,
   hasInteracted: initialHasInteracted = false,
+  onNonInteractiveToggle,
 }: ParagraphCardProps) {
+  const { t } = useTranslation();
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isNonInteractive, setIsNonInteractive] = useState(paragraph.isNonInteractive || false);
+  const [isTogglingNonInteractive, setIsTogglingNonInteractive] = useState(false);
   const cardRef = useRef<HTMLElement>(null);
   const paragraphType = paragraph.type || ParagraphType.paragraph;
 
@@ -107,10 +113,43 @@ export default function ParagraphCard({
     setIsExpanded(prev => !prev);
   }, []);
 
+  // Toggle non-interactive mode (admin only)
+  const handleToggleNonInteractive = useCallback(async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!isAdmin || isTogglingNonInteractive) return;
+
+    const newValue = !isNonInteractive;
+    setIsTogglingNonInteractive(true);
+
+    try {
+      const response = await fetch(`/api/admin/paragraphs/${paragraph.paragraphId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          documentId,
+          isNonInteractive: newValue,
+        }),
+      });
+
+      if (response.ok) {
+        setIsNonInteractive(newValue);
+        onNonInteractiveToggle?.(paragraph.paragraphId, newValue);
+      } else {
+        console.error('Failed to toggle non-interactive mode');
+      }
+    } catch (error) {
+      console.error('Error toggling non-interactive mode:', error);
+    } finally {
+      setIsTogglingNonInteractive(false);
+    }
+  }, [isAdmin, isTogglingNonInteractive, isNonInteractive, paragraph.paragraphId, documentId, onNonInteractiveToggle]);
+
   const cardClasses = clsx(
     styles.card,
     styles[`type-${paragraphType}`],
-    styles[approvalState],
+    isNonInteractive ? styles.nonInteractive : styles[approvalState],
     // Legacy heat level prop
     heatLevel && styles[`heat-${heatLevel}`],
     // New heat map integration
@@ -190,30 +229,99 @@ export default function ParagraphCard({
         {renderContent()}
       </div>
 
-      <div className={styles.interactionWrapper}>
-        <InteractionBar
-          paragraphId={paragraph.paragraphId}
-          documentId={documentId}
-          isApproved={isApproved}
-          isLoggedIn={isLoggedIn}
-          commentCount={commentCount}
-        />
-      </div>
+      {/* Show interaction bar only when paragraph is interactive */}
+      {!isNonInteractive && (
+        <div className={styles.interactionWrapper}>
+          <InteractionBar
+            paragraphId={paragraph.paragraphId}
+            documentId={documentId}
+            isApproved={isApproved}
+            isLoggedIn={isLoggedIn}
+            commentCount={commentCount}
+          />
+        </div>
+      )}
 
-      {isAdmin && viewCount !== undefined && (
-        <div className={styles.adminInfo}>
+      {/* Non-interactive label for regular users */}
+      {isNonInteractive && !isAdmin && (
+        <div className={styles.nonInteractiveLabel}>
           <svg
-            width="16"
-            height="16"
+            width="14"
+            height="14"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
             strokeWidth="2"
           >
-            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-            <circle cx="12" cy="12" r="3" />
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="16" x2="12" y2="12" />
+            <line x1="12" y1="8" x2="12.01" y2="8" />
           </svg>
-          <span>{viewCount}</span>
+          <span>{t('Informational')}</span>
+        </div>
+      )}
+
+      {/* Admin controls section */}
+      {isAdmin && (
+        <div className={styles.adminControls}>
+          {/* Non-interactive toggle */}
+          <button
+            type="button"
+            className={clsx(
+              styles.adminToggle,
+              isNonInteractive && styles.active,
+              isTogglingNonInteractive && styles.loading
+            )}
+            onClick={handleToggleNonInteractive}
+            disabled={isTogglingNonInteractive}
+            title={isNonInteractive ? t('Enable interactions') : t('Disable interactions')}
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              {isNonInteractive ? (
+                // Eye-off icon (interactions disabled)
+                <>
+                  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                  <line x1="1" y1="1" x2="23" y2="23" />
+                </>
+              ) : (
+                // Hand/touch icon (interactions enabled)
+                <>
+                  <path d="M18 11V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0" />
+                  <path d="M14 10V4a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v2" />
+                  <path d="M10 10.5V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v8" />
+                  <path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15" />
+                </>
+              )}
+            </svg>
+            <span className={styles.adminToggleText}>
+              {isNonInteractive ? t('Info only') : t('Interactive')}
+            </span>
+          </button>
+
+          {/* View count badge */}
+          {viewCount !== undefined && (
+            <div className={styles.adminInfo}>
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                <circle cx="12" cy="12" r="3" />
+              </svg>
+              <span>{viewCount}</span>
+            </div>
+          )}
         </div>
       )}
     </article>
