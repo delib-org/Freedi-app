@@ -418,8 +418,15 @@
     flex-direction: row-reverse;
   }
 
-  .toggle.active::after {
-    transform: translateX(-24px);
+  .toggle {
+    &::after {
+      left: auto;
+      right: 2px;
+    }
+
+    &.active::after {
+      transform: translateX(-24px);
+    }
   }
 }
 
