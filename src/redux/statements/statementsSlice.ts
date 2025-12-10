@@ -472,27 +472,25 @@ export const topSubscriptionsSelector = createSelector(
 
 const selectStatements = (state: RootState) => state.statements.statements;
 
+// Memoized selector - removed .map() that was breaking memoization
 export const statementSubsSelector = (statementId: string | undefined) =>
 	createSelector([selectStatements], (statements) =>
 		statements
 			.filter((statementSub) => statementSub.parentId === statementId)
 			.sort((a, b) => a.createdAt - b.createdAt)
-			.map((statement) => ({ ...statement }))
 	);
 
+// Memoized selector - removed .map() that was breaking memoization
 export const statementOptionsSelector = (statementId: string | undefined) =>
-	createSelector([statementsSelector], (statements) => {
-		const subStatements = statements
+	createSelector([statementsSelector], (statements) =>
+		statements
 			.filter(
 				(statementSub) =>
 					statementSub.parentId === statementId &&
 					statementSub.statementType === StatementType.option
 			)
 			.sort((a, b) => a.createdAt - b.createdAt)
-			.map((statement) => ({ ...statement }));
-
-		return subStatements;
-	});
+	);
 
 export const questionsSelector =
 	(statementId: string | undefined) => (state: RootState) =>

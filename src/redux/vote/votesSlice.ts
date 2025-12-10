@@ -1,4 +1,4 @@
-import { createSlice } from '@reduxjs/toolkit';
+import { createSlice, createSelector } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
 import { RootState } from '../types';
 import { Statement, StatementSchema, Vote, getVoteId, updateArray } from 'delib-npm';
@@ -58,8 +58,12 @@ export const { setVoteToStore, resetVotes } = votesSlicer.actions;
 
 export const votesSelector = (state: RootState) => state.votes.votes;
 
-export const parentVoteSelector =
-	(parentId: string | undefined) => (state: RootState) =>
-		state.votes.votes.find((vote) => vote.parentId === parentId);
+// Memoized selector factory for finding vote by parentId
+// This prevents O(N) find operations on every render
+export const parentVoteSelector = (parentId: string | undefined) =>
+	createSelector(
+		[votesSelector],
+		(votes) => votes.find((vote) => vote.parentId === parentId)
+	);
 
 export default votesSlicer.reducer;
