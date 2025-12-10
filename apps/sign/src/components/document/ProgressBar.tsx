@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useUIStore } from '@/store/uiStore';
 import styles from './DocumentView.module.scss';
 
@@ -13,7 +13,7 @@ export default function ProgressBar({
   initialApprovals,
   totalParagraphs,
 }: ProgressBarProps) {
-  const { approvals, initializeApprovals } = useUIStore();
+  const { approvals, userInteractions, initializeApprovals } = useUIStore();
 
   // Initialize approvals from server data on mount
   useEffect(() => {
@@ -21,9 +21,21 @@ export default function ProgressBar({
   }, [initialApprovals, totalParagraphs, initializeApprovals]);
 
   // Calculate progress from store (real-time updates)
-  const reviewedCount = Object.keys(approvals).length;
+  // Count paragraphs that have been "dealt with" (approved, rejected, OR interacted)
+  const dealtWithCount = useMemo(() => {
+    const dealtWithSet = new Set<string>();
+
+    // Add all approved/rejected paragraphs
+    Object.keys(approvals).forEach(id => dealtWithSet.add(id));
+
+    // Add all interacted paragraphs
+    userInteractions.forEach(id => dealtWithSet.add(id));
+
+    return dealtWithSet.size;
+  }, [approvals, userInteractions]);
+
   const progressPercent = totalParagraphs > 0
-    ? Math.round((reviewedCount / totalParagraphs) * 100)
+    ? Math.round((dealtWithCount / totalParagraphs) * 100)
     : 0;
 
   if (totalParagraphs === 0) return null;
@@ -37,7 +49,7 @@ export default function ProgressBar({
         />
       </div>
       <span className={styles.progressText}>
-        {reviewedCount} / {totalParagraphs} reviewed ({progressPercent}%)
+        {dealtWithCount} / {totalParagraphs} reviewed ({progressPercent}%)
       </span>
     </div>
   );

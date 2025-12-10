@@ -58,6 +58,11 @@ interface UIState {
   initializeCommentCounts: (counts: Record<string, number>) => void;
   incrementCommentCount: (paragraphId: string) => void;
   decrementCommentCount: (paragraphId: string) => void;
+
+  // User interactions (paragraphs where user has commented or evaluated)
+  userInteractions: Set<string>;
+  initializeUserInteractions: (paragraphIds: string[]) => void;
+  addUserInteraction: (paragraphId: string) => void;
 }
 
 export const useUIStore = create<UIState>((set) => ({
@@ -120,6 +125,18 @@ export const useUIStore = create<UIState>((set) => ({
         [paragraphId]: Math.max(0, (state.commentCounts[paragraphId] || 0) - 1),
       },
     })),
+
+  // User interactions
+  userInteractions: new Set<string>(),
+  initializeUserInteractions: (paragraphIds) =>
+    set({ userInteractions: new Set(paragraphIds) }),
+  addUserInteraction: (paragraphId) =>
+    set((state) => {
+      const newInteractions = new Set(state.userInteractions);
+      newInteractions.add(paragraphId);
+
+      return { userInteractions: newInteractions };
+    }),
 }));
 
 // Selectors for common patterns

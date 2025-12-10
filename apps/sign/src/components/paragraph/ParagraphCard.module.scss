@@ -166,7 +166,15 @@
 // Approval states - shown via state indicator
 .pending {
   .stateIndicator {
-    background: var(--border-light);
+    background: var(--border-light); // Gray for no action
+  }
+}
+
+// User has interacted (commented or evaluated) but not approved/rejected
+.interacted {
+  .stateIndicator {
+    background: var(--warning); // Orange for interacted but not approved/rejected
+    width: 3px;
   }
 }
 

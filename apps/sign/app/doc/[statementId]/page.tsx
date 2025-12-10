@@ -7,6 +7,7 @@ import {
   getUserSignature,
   getUserApprovals,
   getCommentCountsForDocument,
+  getUserInteractionsForDocument,
 } from '@/lib/firebase/queries';
 import { getUserFromCookies } from '@/lib/utils/user';
 import DocumentView from '@/components/document/DocumentView';
@@ -52,14 +53,16 @@ export default async function DocumentPage({ params }: PageProps) {
   // Fetch comment counts for all paragraphs (for all users, not just logged in)
   const commentCounts = await getCommentCountsForDocument(statementId, paragraphIds);
 
-  // If user exists, get their signature and approvals
+  // If user exists, get their signature, approvals, and interactions
   let userSignature = null;
   let userApprovals: Awaited<ReturnType<typeof getUserApprovals>> = [];
+  let userInteractions: Set<string> = new Set();
 
   if (user) {
-    [userSignature, userApprovals] = await Promise.all([
+    [userSignature, userApprovals, userInteractions] = await Promise.all([
       getUserSignature(statementId, user.uid),
       getUserApprovals(statementId, user.uid),
+      getUserInteractionsForDocument(statementId, user.uid, paragraphIds),
     ]);
   }
 
@@ -72,6 +75,9 @@ export default async function DocumentPage({ params }: PageProps) {
     approvalsMap[id] = approval.approval;
   });
 
+  // Convert Set to array for serialization (RSC can't serialize Sets)
+  const userInteractionsArray = Array.from(userInteractions);
+
   return (
     <DocumentView
       document={document}
@@ -80,6 +86,7 @@ export default async function DocumentPage({ params }: PageProps) {
       userSignature={userSignature}
       userApprovals={approvalsMap}
       commentCounts={commentCounts}
+      userInteractions={userInteractionsArray}
     />
   );
 }
