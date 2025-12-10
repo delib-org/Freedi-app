@@ -102,6 +102,7 @@ export default function DocumentView({
                 documentId={document.statementId}
                 isApproved={userApprovals[paragraph.paragraphId]}
                 isLoggedIn={!!user}
+                isAdmin={isAdmin}
                 commentCount={commentCounts[paragraph.paragraphId] || 0}
                 hasInteracted={userInteractionsSet.has(paragraph.paragraphId)}
               />
