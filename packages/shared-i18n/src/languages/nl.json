@@ -566,6 +566,7 @@
   "Time to Evolve This Idea": "Tijd om Dit Idee te Evolueren",
   "Title": "Titel",
   "Title changed by the creator to": "Titel gewijzigd door de maker naar",
+  "To enable importing, share your document with:": "Om importeren mogelijk te maken, deel je document met:",
   "Toggle AI": "AI wisselen",
   "Toggle AI & Automation settings": "AI & automatisering schakelen",
   "Toggle Evaluation & Voting settings": "Evaluatie & stemming schakelen",
@@ -732,5 +733,18 @@
   "turnOff": "Uitschakelen",
   "copy": "Kopiëren",
   "copied": "Gekopieerd!",
-  "Please add your answer to the following question:": "Voeg uw antwoord toe aan de volgende vraag:"
+  "Please add your answer to the following question:": "Voeg uw antwoord toe aan de volgende vraag:",
+
+  "Import": "Importeren",
+  "Import Content": "Inhoud importeren",
+  "Import from Google Docs": "Importeren uit Google Docs",
+  "Importing...": "Importeren...",
+  "Document imported successfully": "Document succesvol geïmporteerd",
+  "Enter Google Docs URL": "Voer Google Docs URL in",
+  "Failed to import document": "Document importeren mislukt",
+  "Make sure the document is shared with the import service or set to \"Anyone with the link\"": "Zorg ervoor dat het document gedeeld is met de importservice of ingesteld op \"Iedereen met de link\"",
+  "Paste a Google Docs link to import content": "Plak een Google Docs-link om inhoud te importeren",
+  "Please enter a Google Docs URL": "Voer een Google Docs URL in",
+  "Share your document with:": "Deel uw document met:",
+  "You must be logged in to import": "U moet ingelogd zijn om te importeren"
 }

@@ -732,5 +732,19 @@
   "turnOff": "Ausschalten",
   "copy": "Kopieren",
   "copied": "Kopiert!",
-  "Please add your answer to the following question:": "Bitte fügen Sie Ihre Antwort zur folgenden Frage hinzu:"
+  "Please add your answer to the following question:": "Bitte fügen Sie Ihre Antwort zur folgenden Frage hinzu:",
+
+  "Import": "Importieren",
+  "Import Content": "Inhalt importieren",
+  "Import from Google Docs": "Aus Google Docs importieren",
+  "Importing...": "Importiere...",
+  "Document imported successfully": "Dokument erfolgreich importiert",
+  "Enter Google Docs URL": "Google Docs URL eingeben",
+  "Failed to import document": "Dokument konnte nicht importiert werden",
+  "Make sure the document is shared with the import service or set to \"Anyone with the link\"": "Stellen Sie sicher, dass das Dokument mit dem Importdienst geteilt oder auf \"Jeder mit dem Link\" eingestellt ist",
+  "Paste a Google Docs link to import content": "Fügen Sie einen Google Docs-Link ein, um Inhalte zu importieren",
+  "Please enter a Google Docs URL": "Bitte geben Sie eine Google Docs URL ein",
+  "Share your document with:": "Teilen Sie Ihr Dokument mit:",
+  "To enable importing, share your document with:": "Um den Import zu aktivieren, teilen Sie Ihr Dokument mit:",
+  "You must be logged in to import": "Sie müssen angemeldet sein, um zu importieren"
 }

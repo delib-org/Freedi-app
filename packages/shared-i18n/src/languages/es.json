@@ -566,6 +566,7 @@
   "Time to Evolve This Idea": "Hora de Evolucionar Esta Idea",
   "Title": "Título",
   "Title changed by the creator to": "Título cambiado por el creador a",
+  "To enable importing, share your document with:": "Para habilitar la importación, comparta su documento con:",
   "Toggle AI": "Alternar IA",
   "Toggle AI & Automation settings": "Alternar configuración de IA y automatización",
   "Toggle Evaluation & Voting settings": "Alternar configuración de evaluación y votación",
@@ -732,5 +733,18 @@
   "turnOff": "Apagar",
   "copy": "Copiar",
   "copied": "¡Copiado!",
-  "Please add your answer to the following question:": "Por favor, añade tu respuesta a la siguiente pregunta:"
+  "Please add your answer to the following question:": "Por favor, añade tu respuesta a la siguiente pregunta:",
+
+  "Import": "Importar",
+  "Import Content": "Importar contenido",
+  "Import from Google Docs": "Importar desde Google Docs",
+  "Importing...": "Importando...",
+  "Document imported successfully": "Documento importado correctamente",
+  "Enter Google Docs URL": "Ingresa la URL de Google Docs",
+  "Failed to import document": "Error al importar el documento",
+  "Make sure the document is shared with the import service or set to \"Anyone with the link\"": "Asegúrate de que el documento esté compartido con el servicio de importación o configurado como \"Cualquier persona con el enlace\"",
+  "Paste a Google Docs link to import content": "Pega un enlace de Google Docs para importar contenido",
+  "Please enter a Google Docs URL": "Por favor, ingresa una URL de Google Docs",
+  "Share your document with:": "Comparte tu documento con:",
+  "You must be logged in to import": "Debes iniciar sesión para importar"
 }

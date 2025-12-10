@@ -10,6 +10,7 @@ export enum ParagraphType {
 	h6 = 'h6',
 	paragraph = 'paragraph',
 	li = 'li',
+	table = 'table',
 }
 
 export interface Paragraph {

@@ -92,6 +92,9 @@ import {
 // Discussion Summarization
 import { summarizeDiscussion } from "./fn_summarizeDiscussion";
 
+// Google Docs Import
+import { importGoogleDoc } from "./fn_importGoogleDocs";
+
 // Dynamic OG Tags for social media sharing
 import { serveOgTags } from "./fn_dynamicOgTags";
 
@@ -475,3 +478,6 @@ exports.summarizeDiscussion = summarizeDiscussion;
 
 // Dynamic OG Tags for social media sharing
 exports.serveOgTags = serveOgTags;
+
+// Google Docs Import
+exports.importGoogleDoc = wrapHttpFunction(importGoogleDoc);
