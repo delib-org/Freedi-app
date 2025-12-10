@@ -1,8 +1,8 @@
 import { FC, useState, useCallback } from 'react';
 import { Statement } from 'delib-npm';
-import { useTranslation } from 'react-i18next';
-import { useAppSelector } from '@/redux/hooks';
-import { selectUser } from '@/redux/users/usersSlice';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
+import { useAppSelector } from '@/controllers/hooks/reduxHooks';
+import { creatorSelector } from '@/redux/creator/creatorSlice';
 import { importGoogleDocToStatement } from '@/controllers/db/statements/importGoogleDoc';
 import Modal from '../modal/Modal';
 import styles from './GoogleDocsImportModal.module.scss';
@@ -23,7 +23,7 @@ const GoogleDocsImportModal: FC<GoogleDocsImportModalProps> = ({
 	onImportComplete,
 }) => {
 	const { t } = useTranslation();
-	const user = useAppSelector(selectUser);
+	const user = useAppSelector(creatorSelector);
 
 	const [url, setUrl] = useState('');
 	const [status, setStatus] = useState<ImportStatus>('idle');
