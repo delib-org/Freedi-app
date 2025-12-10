@@ -23,6 +23,7 @@ interface DocumentClientProps {
   user: SignUser | null;
   userSignature: Signature | null;
   commentCounts: Record<string, number>;
+  userInteractions?: string[];
   isAdmin?: boolean;
   children: React.ReactNode;
 }
@@ -32,6 +33,7 @@ export default function DocumentClient({
   user,
   userSignature,
   commentCounts,
+  userInteractions = [],
   isAdmin,
   children,
 }: DocumentClientProps) {
@@ -43,6 +45,7 @@ export default function DocumentClient({
     setSigningAnimationState,
     resetSigningAnimation,
     initializeCommentCounts,
+    initializeUserInteractions,
   } = useUIStore();
 
   // Demographics store
@@ -226,6 +229,11 @@ export default function DocumentClient({
   useEffect(() => {
     initializeCommentCounts(commentCounts);
   }, [commentCounts, initializeCommentCounts]);
+
+  // Initialize user interactions from server data
+  useEffect(() => {
+    initializeUserInteractions(userInteractions);
+  }, [userInteractions, initializeUserInteractions]);
 
   // Fetch demographic status on mount
   useEffect(() => {

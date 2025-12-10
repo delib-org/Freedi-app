@@ -15,6 +15,7 @@ interface DocumentViewProps {
   userSignature: Signature | null;
   userApprovals: Record<string, boolean>;
   commentCounts: Record<string, number>;
+  userInteractions?: string[];
 }
 
 export default function DocumentView({
@@ -24,7 +25,10 @@ export default function DocumentView({
   userSignature,
   userApprovals,
   commentCounts,
+  userInteractions = [],
 }: DocumentViewProps) {
+  // Convert array to Set for O(1) lookup
+  const userInteractionsSet = new Set(userInteractions);
   // Check if user is admin (creator of the document)
   const isAdmin = user ? document.creatorId === user.uid : undefined;
 
@@ -34,6 +38,7 @@ export default function DocumentView({
         user={user}
         userSignature={userSignature}
         commentCounts={commentCounts}
+        userInteractions={userInteractions}
         isAdmin={isAdmin}
       >
         <div className={styles.container}>
@@ -98,6 +103,7 @@ export default function DocumentView({
                 isApproved={userApprovals[paragraph.paragraphId]}
                 isLoggedIn={!!user}
                 commentCount={commentCounts[paragraph.paragraphId] || 0}
+                hasInteracted={userInteractionsSet.has(paragraph.paragraphId)}
               />
             ))
           )}

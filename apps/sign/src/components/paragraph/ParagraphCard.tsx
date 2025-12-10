@@ -19,6 +19,7 @@ interface ParagraphCardProps {
   viewCount?: number;
   isAdmin?: boolean;
   commentCount?: number;
+  hasInteracted?: boolean;
 }
 
 export default function ParagraphCard({
@@ -30,6 +31,7 @@ export default function ParagraphCard({
   viewCount,
   isAdmin,
   commentCount: initialCommentCount = 0,
+  hasInteracted: initialHasInteracted = false,
 }: ParagraphCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const cardRef = useRef<HTMLElement>(null);
@@ -66,12 +68,17 @@ export default function ParagraphCard({
   // Get approval state from store (updates in real-time when user approves/rejects)
   const storeApproval = useUIStore((state) => state.approvals[paragraph.paragraphId]);
 
+  // Get interaction state from store (updates in real-time when user comments/evaluates)
+  const storeHasInteracted = useUIStore((state) => state.userInteractions.has(paragraph.paragraphId));
+
   // Use store value if available, otherwise fall back to initial prop
   const isApproved = storeApproval !== undefined ? storeApproval : initialApproval;
+  const hasInteracted = storeHasInteracted || initialHasInteracted;
 
   // Determine approval state for styling
+  // Priority: approved/rejected > interacted > pending
   const approvalState = isApproved === undefined
-    ? 'pending'
+    ? (hasInteracted ? 'interacted' : 'pending')
     : isApproved
       ? 'approved'
       : 'rejected';

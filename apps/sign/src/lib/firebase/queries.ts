@@ -301,6 +301,63 @@ export async function getCommentCountsForDocument(
   }
 }
 
+/**
+ * Get user's interactions (comments and evaluations) for paragraphs in a document
+ * Returns a set of paragraphIds where the user has interacted
+ */
+export async function getUserInteractionsForDocument(
+  documentId: string,
+  userId: string,
+  paragraphIds: string[]
+): Promise<Set<string>> {
+  try {
+    const db = getFirestoreAdmin();
+    const interactedParagraphs = new Set<string>();
+
+    if (!userId || paragraphIds.length === 0) {
+      return interactedParagraphs;
+    }
+
+    // Query 1: Get user's comments (statements where creatorId = userId and parentId is a paragraphId)
+    const commentsSnapshot = await db
+      .collection(Collections.statements)
+      .where('topParentId', '==', documentId)
+      .where('creatorId', '==', userId)
+      .where('statementType', '==', StatementType.statement)
+      .get();
+
+    commentsSnapshot.docs.forEach((doc) => {
+      const comment = doc.data() as Statement;
+      if (!comment.hide && paragraphIds.includes(comment.parentId)) {
+        interactedParagraphs.add(comment.parentId);
+      }
+    });
+
+    // Query 2: Get user's evaluations on comments in this document
+    // Evaluations have parentId = paragraphId (the paragraph the comment belongs to)
+    const evaluationsSnapshot = await db
+      .collection(Collections.evaluations)
+      .where('evaluatorId', '==', userId)
+      .get();
+
+    evaluationsSnapshot.docs.forEach((doc) => {
+      const evaluation = doc.data();
+      // Check if the evaluation's parentId is one of our paragraphs
+      if (evaluation.parentId && paragraphIds.includes(evaluation.parentId)) {
+        interactedParagraphs.add(evaluation.parentId);
+      }
+    });
+
+    console.info(`[Sign Queries] User ${userId} has interacted with ${interactedParagraphs.size} paragraphs`);
+
+    return interactedParagraphs;
+  } catch (error) {
+    console.error('[Sign Queries] Error getting user interactions:', error);
+
+    return new Set<string>();
+  }
+}
+
 export interface DocumentStats {
   totalParticipants: number;
   signedCount: number;
