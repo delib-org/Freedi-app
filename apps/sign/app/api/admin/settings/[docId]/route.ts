@@ -3,6 +3,7 @@ import { getFirebaseAdmin } from '@/lib/firebase/admin';
 import { getUserIdFromCookie } from '@/lib/utils/user';
 import { Collections } from 'delib-npm';
 import { DemographicMode } from '@/types/demographics';
+import { TextDirection, DEFAULT_LOGO_URL, DEFAULT_BRAND_NAME } from '@/types';
 
 export interface DocumentSettings {
   allowComments: boolean;
@@ -13,6 +14,9 @@ export interface DocumentSettings {
   isPublic: boolean;
   demographicMode: DemographicMode;
   demographicRequired: boolean;
+  textDirection: TextDirection;
+  logoUrl: string;
+  brandName: string;
 }
 
 const DEFAULT_SETTINGS: DocumentSettings = {
@@ -24,6 +28,9 @@ const DEFAULT_SETTINGS: DocumentSettings = {
   isPublic: true,
   demographicMode: 'disabled',
   demographicRequired: false,
+  textDirection: 'auto',
+  logoUrl: DEFAULT_LOGO_URL,
+  brandName: DEFAULT_BRAND_NAME,
 };
 
 /**
@@ -78,6 +85,9 @@ export async function GET(
       isPublic: document?.signSettings?.isPublic ?? DEFAULT_SETTINGS.isPublic,
       demographicMode: document?.signSettings?.demographicMode ?? DEFAULT_SETTINGS.demographicMode,
       demographicRequired: document?.signSettings?.demographicRequired ?? DEFAULT_SETTINGS.demographicRequired,
+      textDirection: document?.signSettings?.textDirection ?? DEFAULT_SETTINGS.textDirection,
+      logoUrl: document?.signSettings?.logoUrl ?? DEFAULT_SETTINGS.logoUrl,
+      brandName: document?.signSettings?.brandName ?? DEFAULT_SETTINGS.brandName,
     };
 
     return NextResponse.json(settings);
@@ -145,6 +155,12 @@ export async function PUT(
       ? body.demographicMode
       : (existingSettings.demographicMode ?? DEFAULT_SETTINGS.demographicMode);
 
+    // Validate textDirection
+    const validDirections: TextDirection[] = ['auto', 'ltr', 'rtl'];
+    const textDirection: TextDirection = validDirections.includes(body.textDirection)
+      ? body.textDirection
+      : (existingSettings.textDirection ?? DEFAULT_SETTINGS.textDirection);
+
     // Merge settings - only update fields that are provided
     const settings: DocumentSettings = {
       allowComments: body.allowComments !== undefined ? Boolean(body.allowComments) : (existingSettings.allowComments ?? DEFAULT_SETTINGS.allowComments),
@@ -155,6 +171,9 @@ export async function PUT(
       isPublic: body.isPublic !== undefined ? Boolean(body.isPublic) : (existingSettings.isPublic ?? DEFAULT_SETTINGS.isPublic),
       demographicMode,
       demographicRequired: body.demographicRequired !== undefined ? Boolean(body.demographicRequired) : (existingSettings.demographicRequired ?? DEFAULT_SETTINGS.demographicRequired),
+      textDirection,
+      logoUrl: body.logoUrl !== undefined ? String(body.logoUrl) : (existingSettings.logoUrl ?? DEFAULT_SETTINGS.logoUrl),
+      brandName: body.brandName !== undefined ? String(body.brandName) : (existingSettings.brandName ?? DEFAULT_SETTINGS.brandName),
     };
 
     // Update document with new settings

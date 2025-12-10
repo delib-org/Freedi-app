@@ -750,5 +750,14 @@
   "You must be logged in to import": "يجب تسجيل الدخول للاستيراد",
   "Export Users": "تصدير المستخدمين",
   "Export Detailed": "تصدير مفصل",
-  "Export document with all paragraphs, comments, and demographics": "تصدير المستند مع جميع الفقرات والتعليقات والبيانات الديموغرافية"
+  "Export document with all paragraphs, comments, and demographics": "تصدير المستند مع جميع الفقرات والتعليقات والبيانات الديموغرافية",
+
+  "Text Direction": "اتجاه النص",
+  "Control the text direction for this document": "التحكم في اتجاه النص لهذا المستند",
+  "Auto": "تلقائي",
+  "Automatically detect direction based on content": "الكشف التلقائي عن الاتجاه بناءً على المحتوى",
+  "Left to Right (LTR)": "من اليسار إلى اليمين (LTR)",
+  "Force left-to-right direction (English, etc.)": "فرض الاتجاه من اليسار إلى اليمين (الإنجليزية، إلخ)",
+  "Right to Left (RTL)": "من اليمين إلى اليسار (RTL)",
+  "Force right-to-left direction (Hebrew, Arabic, etc.)": "فرض الاتجاه من اليمين إلى اليسار (العبرية، العربية، إلخ)"
 }

@@ -12,6 +12,7 @@ import {
 	persistentLocalCache,
 	persistentMultipleTabManager,
 	memoryLocalCache,
+	clearIndexedDbPersistence,
 	type Firestore
 } from 'firebase/firestore';
 import { getStorage, connectStorageEmulator } from 'firebase/storage';
@@ -19,6 +20,9 @@ import { getAnalytics, isSupported } from 'firebase/analytics';
 import { getFunctions, connectFunctionsEmulator } from 'firebase/functions';
 // Removed import to avoid circular dependency - isProduction is inlined below
 import firebaseConfig from './configKey';
+
+// Storage key to track if we've had IndexedDB issues
+const INDEXEDDB_ERROR_KEY = 'freedi_indexeddb_error';
 
 // Helper to detect iOS devices
 function isIOS(): boolean {

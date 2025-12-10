@@ -1,6 +1,7 @@
 import { Signature } from '@/lib/firebase/queries';
-import { Paragraph, StatementWithParagraphs } from '@/types';
+import { Paragraph, StatementWithParagraphs, TextDirection, DEFAULT_LOGO_URL, DEFAULT_BRAND_NAME, DEVELOPED_BY_URL } from '@/types';
 import { SignUser } from '@/lib/utils/user';
+import { resolveTextDirection } from '@/lib/utils/textDirection';
 import DocumentClient from './DocumentClient';
 import ParagraphCard from '../paragraph/ParagraphCard';
 import SignButton from './SignButton';
@@ -16,6 +17,9 @@ interface DocumentViewProps {
   userApprovals: Record<string, boolean>;
   commentCounts: Record<string, number>;
   userInteractions?: string[];
+  textDirection?: TextDirection;
+  logoUrl?: string;
+  brandName?: string;
 }
 
 export default function DocumentView({
@@ -26,11 +30,18 @@ export default function DocumentView({
   userApprovals,
   commentCounts,
   userInteractions = [],
+  textDirection = 'auto',
+  logoUrl = DEFAULT_LOGO_URL,
+  brandName = DEFAULT_BRAND_NAME,
 }: DocumentViewProps) {
   // Convert array to Set for O(1) lookup
   const userInteractionsSet = new Set(userInteractions);
   // Check if user is admin (creator of the document)
   const isAdmin = user ? document.creatorId === user.uid : undefined;
+
+  // Resolve text direction based on setting and content
+  const paragraphContents = paragraphs.map((p) => p.content);
+  const resolvedDirection = resolveTextDirection(textDirection, paragraphContents);
 
   return (
       <DocumentClient
@@ -41,18 +52,16 @@ export default function DocumentView({
         userInteractions={userInteractions}
         isAdmin={isAdmin}
       >
-        <div className={styles.container}>
+        <div className={styles.container} dir={resolvedDirection} data-text-dir={resolvedDirection}>
         {/* Top Bar with Logo and User Avatar */}
         <div className={styles.topBar}>
           <a href={`/doc/${document.statementId}`} className={styles.logo}>
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-              <polyline points="14 2 14 8 20 8" />
-              <line x1="16" y1="13" x2="8" y2="13" />
-              <line x1="16" y1="17" x2="8" y2="17" />
-              <polyline points="10 9 9 9 8 9" />
-            </svg>
-            Freedi Sign
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={logoUrl}
+              alt={brandName}
+              className={styles.logoImage}
+            />
           </a>
           <div className={styles.topBarActions}>
             {isAdmin && (
@@ -75,9 +84,6 @@ export default function DocumentView({
         {/* Document Header */}
         <header className={styles.header}>
           <h1 className={styles.title}>{document.statement}</h1>
-          {document.description && (
-            <p className={styles.description}>{document.description}</p>
-          )}
 
           {/* Progress indicator */}
           {user && paragraphs.length > 0 && (
@@ -155,6 +161,14 @@ export default function DocumentView({
             </div>
           </footer>
         )}
+
+        {/* Developed by credit */}
+        <div className={styles.developedBy}>
+          Developed by{' '}
+          <a href={DEVELOPED_BY_URL} target="_blank" rel="noopener noreferrer">
+            WizCol
+          </a>
+        </div>
       </div>
       </DocumentClient>
   );

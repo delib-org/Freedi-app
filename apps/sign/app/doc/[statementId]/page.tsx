@@ -11,6 +11,7 @@ import {
 } from '@/lib/firebase/queries';
 import { getUserFromCookies } from '@/lib/utils/user';
 import DocumentView from '@/components/document/DocumentView';
+import { TextDirection, DEFAULT_LOGO_URL, DEFAULT_BRAND_NAME } from '@/types';
 
 interface PageProps {
   params: Promise<{ statementId: string }>;
@@ -22,12 +23,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   if (!document) {
     return {
-      title: 'Document Not Found - Freedi Sign',
+      title: `Document Not Found - ${DEFAULT_BRAND_NAME}`,
     };
   }
 
   return {
-    title: `${document.statement.substring(0, 50)} - Freedi Sign`,
+    title: `${document.statement.substring(0, 50)} - ${DEFAULT_BRAND_NAME}`,
     description: document.statement.substring(0, 160),
   };
 }
@@ -78,6 +79,12 @@ export default async function DocumentPage({ params }: PageProps) {
   // Convert Set to array for serialization (RSC can't serialize Sets)
   const userInteractionsArray = Array.from(userInteractions);
 
+  // Get text direction setting from document (with type assertion for signSettings)
+  const signSettings = (document as { signSettings?: { textDirection?: TextDirection; logoUrl?: string; brandName?: string } }).signSettings;
+  const textDirection: TextDirection = signSettings?.textDirection || 'auto';
+  const logoUrl = signSettings?.logoUrl || DEFAULT_LOGO_URL;
+  const brandName = signSettings?.brandName || DEFAULT_BRAND_NAME;
+
   return (
     <DocumentView
       document={document}
@@ -87,6 +94,9 @@ export default async function DocumentPage({ params }: PageProps) {
       userApprovals={approvalsMap}
       commentCounts={commentCounts}
       userInteractions={userInteractionsArray}
+      textDirection={textDirection}
+      logoUrl={logoUrl}
+      brandName={brandName}
     />
   );
 }

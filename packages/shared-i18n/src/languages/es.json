@@ -754,5 +754,14 @@
   "You must be logged in to import": "Debes iniciar sesión para importar",
   "Export Users": "Exportar usuarios",
   "Export Detailed": "Exportar detallado",
-  "Export document with all paragraphs, comments, and demographics": "Exportar documento con todos los párrafos, comentarios y datos demográficos"
+  "Export document with all paragraphs, comments, and demographics": "Exportar documento con todos los párrafos, comentarios y datos demográficos",
+
+  "Text Direction": "Dirección del texto",
+  "Control the text direction for this document": "Controlar la dirección del texto para este documento",
+  "Auto": "Automático",
+  "Automatically detect direction based on content": "Detectar automáticamente la dirección según el contenido",
+  "Left to Right (LTR)": "Izquierda a derecha (LTR)",
+  "Force left-to-right direction (English, etc.)": "Forzar dirección de izquierda a derecha (inglés, etc.)",
+  "Right to Left (RTL)": "Derecha a izquierda (RTL)",
+  "Force right-to-left direction (Hebrew, Arabic, etc.)": "Forzar dirección de derecha a izquierda (hebreo, árabe, etc.)"
 }

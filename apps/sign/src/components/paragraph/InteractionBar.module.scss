@@ -145,8 +145,8 @@
   }
 }
 
-/* RTL Support */
-[dir="rtl"] {
+/* RTL Support - using data-text-dir attribute for document-specific direction */
+:global([data-text-dir="rtl"]) {
   .bar {
     flex-direction: row-reverse;
     justify-content: flex-end;
@@ -163,5 +163,26 @@
   .commentButton {
     margin-inline-start: auto;
     margin-inline-end: 0;
+  }
+}
+
+/* LTR Support - explicitly set LTR even if root HTML is RTL */
+:global([data-text-dir="ltr"]) {
+  .bar {
+    flex-direction: row;
+    justify-content: flex-start;
+  }
+
+  .approvalButtons {
+    flex-direction: row;
+  }
+
+  .button {
+    flex-direction: row;
+  }
+
+  .commentButton {
+    margin-inline-end: 0;
+    margin-inline-start: auto;
   }
 }

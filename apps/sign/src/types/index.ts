@@ -101,6 +101,9 @@ export type HeatMapMode = 'none' | 'views' | 'support' | 'importance';
 // Demographic survey mode
 export type DemographicMode = 'disabled' | 'inherit' | 'custom';
 
+// Text direction mode
+export type TextDirection = 'auto' | 'ltr' | 'rtl';
+
 // Admin settings for a document
 export interface DocumentSettings {
   enableComments: boolean;
@@ -114,7 +117,17 @@ export interface DocumentSettings {
   // Demographic survey settings
   demographicMode: DemographicMode;
   demographicRequired: boolean;
+  // Text direction setting
+  textDirection: TextDirection;
+  // Branding settings
+  logoUrl?: string;
+  brandName?: string;
 }
+
+// Default branding constants
+export const DEFAULT_LOGO_URL = '/wizcol-logo.svg';
+export const DEFAULT_BRAND_NAME = 'WizCol-Sign';
+export const DEVELOPED_BY_URL = 'https://wizcol.com';
 
 // Default document settings
 export const DEFAULT_DOCUMENT_SETTINGS: DocumentSettings = {
@@ -128,4 +141,7 @@ export const DEFAULT_DOCUMENT_SETTINGS: DocumentSettings = {
   heatMapMode: 'none',
   demographicMode: 'disabled',
   demographicRequired: false,
+  textDirection: 'auto',
+  logoUrl: DEFAULT_LOGO_URL,
+  brandName: DEFAULT_BRAND_NAME,
 };

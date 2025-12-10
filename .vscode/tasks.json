@@ -56,6 +56,42 @@
       "runOptions": {
         "runOn": "folderOpen"
       }
+    },
+    {
+      "label": "Sign",
+      "type": "shell",
+      "command": "cd apps/sign && npm run dev",
+      "icon": {
+        "id": "edit",
+        "color": "terminal.ansiCyan"
+      },
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "panel": "dedicated",
+        "group": "apps"
+      },
+      "runOptions": {
+        "runOn": "folderOpen"
+      }
+    },
+    {
+      "label": "MC",
+      "type": "shell",
+      "command": "cd apps/mass-consensus && npm run dev",
+      "icon": {
+        "id": "organization",
+        "color": "terminal.ansiMagenta"
+      },
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "panel": "dedicated",
+        "group": "apps"
+      },
+      "runOptions": {
+        "runOn": "folderOpen"
+      }
     }
   ]
 }
