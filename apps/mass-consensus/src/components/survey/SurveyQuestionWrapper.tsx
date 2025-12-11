@@ -23,6 +23,7 @@ export default function SurveyQuestionWrapper({
   // Track completed question indices (stored in localStorage for persistence)
   const [completedIndices, setCompletedIndices] = useState<number[]>([]);
   const [evaluatedCount, setEvaluatedCount] = useState(0);
+  const [actualSolutionsCount, setActualSolutionsCount] = useState(0);
 
   // Load progress from localStorage on mount
   useEffect(() => {
@@ -53,9 +54,28 @@ export default function SurveyQuestionWrapper({
     };
   }, []);
 
-  // Reset evaluation count when question changes
+  // Listen for solutions-loaded event to get actual available count
+  useEffect(() => {
+    const currentQuestionId = survey.questions[currentIndex]?.statementId;
+
+    const handleSolutionsLoaded = (event: CustomEvent<{ count: number; questionId: string }>) => {
+      // Only update if the event is for the current question
+      if (event.detail.questionId === currentQuestionId) {
+        setActualSolutionsCount(event.detail.count);
+      }
+    };
+
+    window.addEventListener('solutions-loaded', handleSolutionsLoaded as EventListener);
+
+    return () => {
+      window.removeEventListener('solutions-loaded', handleSolutionsLoaded as EventListener);
+    };
+  }, [survey.questions, currentIndex]);
+
+  // Reset evaluation count and solutions count when question changes
   useEffect(() => {
     setEvaluatedCount(0);
+    setActualSolutionsCount(0);
   }, [currentIndex]);
 
   // Handle navigation - mark current question as completed
@@ -90,6 +110,7 @@ export default function SurveyQuestionWrapper({
         currentIndex={currentIndex}
         totalQuestions={survey.questions.length}
         evaluatedCount={evaluatedCount}
+        availableOptionsCount={actualSolutionsCount || survey.questions[currentIndex]?.numberOfOptions || 0}
         settings={survey.settings}
         onNavigate={handleNavigate}
       />

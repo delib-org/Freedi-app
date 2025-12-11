@@ -10,6 +10,7 @@ interface SurveyNavigationProps {
   currentIndex: number;
   totalQuestions: number;
   evaluatedCount: number;
+  availableOptionsCount: number;
   settings: SurveySettings;
   onNavigate?: (direction: 'back' | 'next') => void;
 }
@@ -22,6 +23,7 @@ export default function SurveyNavigation({
   currentIndex,
   totalQuestions,
   evaluatedCount,
+  availableOptionsCount,
   settings,
   onNavigate,
 }: SurveyNavigationProps) {
@@ -31,9 +33,14 @@ export default function SurveyNavigation({
   const isFirstQuestion = currentIndex === 0;
   const isLastQuestion = currentIndex === totalQuestions - 1;
 
+  // Calculate effective minimum - can't require more evaluations than available options
+  const effectiveMinEvaluations = availableOptionsCount > 0
+    ? Math.min(settings.minEvaluationsPerQuestion, availableOptionsCount)
+    : settings.minEvaluationsPerQuestion;
+
   // Check if user can proceed to next question
-  const canProceed = settings.allowSkipping || evaluatedCount >= settings.minEvaluationsPerQuestion;
-  const evaluationsNeeded = Math.max(0, settings.minEvaluationsPerQuestion - evaluatedCount);
+  const canProceed = settings.allowSkipping || evaluatedCount >= effectiveMinEvaluations;
+  const evaluationsNeeded = Math.max(0, effectiveMinEvaluations - evaluatedCount);
 
   const handleBack = () => {
     if (settings.allowReturning && currentIndex > 0) {

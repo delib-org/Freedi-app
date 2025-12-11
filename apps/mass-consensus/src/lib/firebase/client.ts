@@ -9,7 +9,9 @@ import {
   User,
   browserLocalPersistence,
   setPersistence,
+  connectAuthEmulator,
 } from 'firebase/auth';
+import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
 
 // Firebase client configuration from environment variables
 const firebaseConfig = {
@@ -26,6 +28,33 @@ const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
 
 // Get Auth instance
 const auth = getAuth(app);
+
+// Get Firestore instance for client-side operations
+const db = getFirestore(app);
+
+// Connect to emulators in development
+// Check if we're on localhost (development mode)
+const isLocalhost = typeof window !== 'undefined' && window.location.hostname === 'localhost';
+
+if (isLocalhost) {
+  console.info('[Firebase Client] Development mode - connecting to emulators');
+
+  // Connect to Auth emulator
+  try {
+    connectAuthEmulator(auth, 'http://localhost:9099', { disableWarnings: true });
+    console.info('[Firebase Client] Connected to Auth emulator on localhost:9099');
+  } catch (error) {
+    console.error('[Firebase Client] Auth emulator connection error:', error);
+  }
+
+  // Connect to Firestore emulator
+  try {
+    connectFirestoreEmulator(db, 'localhost', 8081);
+    console.info('[Firebase Client] Connected to Firestore emulator on localhost:8081');
+  } catch (error) {
+    console.error('[Firebase Client] Firestore emulator connection error:', error);
+  }
+}
 
 // Set persistence to local storage
 if (typeof window !== 'undefined') {
@@ -108,5 +137,5 @@ export function onAuthChange(callback: (user: User | null) => void): () => void 
   return onAuthStateChanged(auth, callback);
 }
 
-export { auth, app };
+export { auth, app, db };
 export type { User };

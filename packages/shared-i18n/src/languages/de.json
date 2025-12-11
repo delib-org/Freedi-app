@@ -785,5 +785,9 @@
   "closeWarning": "Geschlossene Umfragen können keine neuen Antworten mehr annehmen. Diese Aktion kann durch Ändern des Status auf Aktiv rückgängig gemacht werden.",
   "closing": "Wird geschlossen...",
   "closeSurvey": "Umfrage schließen",
-  "status": "Status"
+  "status": "Status",
+
+  "activate": "Aktivieren",
+  "activating": "Wird aktiviert...",
+  "surveyNotActiveWarning": "Die Umfrage muss vor dem Teilen aktiviert werden. Gehen Sie zum Status-Tab, um sie zu aktivieren."
 }

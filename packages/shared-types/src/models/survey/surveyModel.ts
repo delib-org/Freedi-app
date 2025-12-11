@@ -34,6 +34,8 @@ export const SurveySettingsSchema = object({
   showQuestionPreview: optional(boolean()),
   /** Randomize question order per participant */
   randomizeQuestions: optional(boolean()),
+  /** Allow participants to add their own suggestions/solutions */
+  allowParticipantsToAddSuggestions: optional(boolean()),
 });
 
 export type SurveySettings = InferOutput<typeof SurveySettingsSchema>;
@@ -92,4 +94,5 @@ export const DEFAULT_SURVEY_SETTINGS: SurveySettings = {
   minEvaluationsPerQuestion: 3,
   showQuestionPreview: false,
   randomizeQuestions: false,
+  allowParticipantsToAddSuggestions: false,
 };

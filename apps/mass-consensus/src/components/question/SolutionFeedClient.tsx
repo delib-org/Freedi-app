@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { Statement } from '@freedi/shared-types';
+import { SurveySettings } from '@/types/survey';
 import { getOrCreateAnonymousUser } from '@/lib/utils/user';
 import { ToastProvider } from '@/components/shared/Toast';
 import SolutionCard from './SolutionCard';
@@ -19,6 +20,7 @@ import {
 interface SolutionFeedClientProps {
   question: Statement;
   initialSolutions: Statement[];
+  surveySettings?: SurveySettings;
 }
 
 /**
@@ -29,6 +31,7 @@ interface SolutionFeedClientProps {
 export default function SolutionFeedClient({
   question,
   initialSolutions,
+  surveySettings,
 }: SolutionFeedClientProps) {
   const { t, tWithParams } = useTranslation();
   const [solutions, setSolutions] = useState<Statement[]>(initialSolutions);
@@ -93,6 +96,15 @@ export default function SolutionFeedClient({
 
     fetchParticipantCount();
   }, [questionId]);
+
+  // Emit solutions count for navigation (when solutions change)
+  useEffect(() => {
+    // Dispatch event with actual solutions count for navigation
+    const event = new CustomEvent('solutions-loaded', {
+      detail: { count: solutions.length, questionId }
+    });
+    window.dispatchEvent(event);
+  }, [solutions.length, questionId]);
 
   // Initialize user ID and load evaluation history on mount
   useEffect(() => {
@@ -411,15 +423,18 @@ return newSet;
                 {t('View Progress')}
               </button>
             )}
-            <button
-              className={styles.addSolutionButton}
-              onClick={() => {
-                trackAddSolutionClick(questionId, userId);
-                setShowSolutionPrompt(true);
-              }}
-            >
-              {t('Add Solution')}
-            </button>
+            {/* Add Solution Button - only show if allowed by survey settings (or if not in survey context) */}
+            {(!surveySettings || surveySettings.allowParticipantsToAddSuggestions) && (
+              <button
+                className={styles.addSolutionButton}
+                onClick={() => {
+                  trackAddSolutionClick(questionId, userId);
+                  setShowSolutionPrompt(true);
+                }}
+              >
+                {t('Add Solution')}
+              </button>
+            )}
           </div>
         </div>
 

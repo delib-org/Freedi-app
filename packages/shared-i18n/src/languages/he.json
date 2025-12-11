@@ -22,7 +22,7 @@
   "Add Options in Voting": "הוסף אפשרויות בהצבעה",
   "Add Question": "הוספת שאלה",
   "add more options": "הוסף אפשרויות נוספות",
-  "Add Solution": "הוספת פתרון",
+  "Add Solution": "הוספת הצעה",
   "Add Step": "הוסף שלב",
   "Add Suggestion": "הוספת הצעה חדשה",
   "Add an answer": "הוספת תשובה",
@@ -31,8 +31,8 @@
   "Add question": "הוסף שאלה",
   "Add question button": "הוסף שאלה",
   "Add sub-question": "הוספת שאלה משנית",
-  "Add suggestion": "הוסף פתרון",
-  "Add suggestion button": "הוסף פתרון",
+  "Add suggestion": "הוסף הצעה",
+  "Add suggestion button": "הוסף הצעה",
   "Add your suggestion": "הוספת הצעה שלך",
   "Admin": "מנהל",
   "Advanced": "מתקדם",
@@ -1038,5 +1038,9 @@
   "Left to Right (LTR)": "משמאל לימין (LTR)",
   "Force left-to-right direction (English, etc.)": "כפה כיוון משמאל לימין (אנגלית וכו׳)",
   "Right to Left (RTL)": "מימין לשמאל (RTL)",
-  "Force right-to-left direction (Hebrew, Arabic, etc.)": "כפה כיוון מימין לשמאל (עברית, ערבית וכו׳)"
+  "Force right-to-left direction (Hebrew, Arabic, etc.)": "כפה כיוון מימין לשמאל (עברית, ערבית וכו׳)",
+
+  "activate": "הפעל",
+  "activating": "מפעיל...",
+  "surveyNotActiveWarning": "יש להפעיל את הסקר לפני השיתוף. עבור ללשונית סטטוס כדי להפעיל."
 }

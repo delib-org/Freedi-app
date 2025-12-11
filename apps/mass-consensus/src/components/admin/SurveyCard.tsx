@@ -9,6 +9,7 @@ import styles from './Admin.module.scss';
 interface SurveyCardProps {
   survey: Survey;
   onDelete: (surveyId: string) => void;
+  onStatusChange?: (surveyId: string, newStatus: SurveyStatus) => void;
 }
 
 interface SurveyStats {
@@ -21,10 +22,11 @@ interface SurveyStats {
  * Enhanced survey card with stats display
  * Shows title, status, question count, response stats, and quick actions
  */
-export default function SurveyCard({ survey, onDelete }: SurveyCardProps) {
+export default function SurveyCard({ survey, onDelete, onStatusChange }: SurveyCardProps) {
   const { t } = useTranslation();
   const [stats, setStats] = useState<SurveyStats | null>(null);
   const [statsLoading, setStatsLoading] = useState(true);
+  const [isActivating, setIsActivating] = useState(false);
 
   useEffect(() => {
     fetchStats();
@@ -70,6 +72,19 @@ export default function SurveyCard({ survey, onDelete }: SurveyCardProps) {
       onDelete(survey.surveyId);
     }
   };
+
+  const handleActivate = async () => {
+    if (!onStatusChange) return;
+    setIsActivating(true);
+    try {
+      await onStatusChange(survey.surveyId, SurveyStatus.active);
+    } finally {
+      setIsActivating(false);
+    }
+  };
+
+  const isDraft = survey.status === SurveyStatus.draft;
+  const isActive = survey.status === SurveyStatus.active;
 
   return (
     <div className={styles.enhancedCard}>
@@ -124,19 +139,36 @@ export default function SurveyCard({ survey, onDelete }: SurveyCardProps) {
 
       {/* Actions */}
       <div className={styles.cardActions}>
+        {isDraft && onStatusChange && (
+          <button
+            onClick={handleActivate}
+            disabled={isActivating}
+            className={`${styles.cardAction} ${styles.activateAction}`}
+            style={{
+              background: 'var(--agree)',
+              color: 'white',
+              border: 'none',
+              cursor: isActivating ? 'not-allowed' : 'pointer',
+            }}
+          >
+            {isActivating ? t('activating') || '...' : t('activate')}
+          </button>
+        )}
         <Link
           href={`/admin/surveys/${survey.surveyId}`}
           className={styles.cardAction}
         >
           {t('edit')}
         </Link>
-        <Link
-          href={`/s/${survey.surveyId}`}
-          className={styles.cardAction}
-          target="_blank"
-        >
-          {t('preview')}
-        </Link>
+        {isActive && (
+          <Link
+            href={`/s/${survey.surveyId}`}
+            className={styles.cardAction}
+            target="_blank"
+          >
+            {t('preview')}
+          </Link>
+        )}
         <button
           onClick={handleDeleteClick}
           className={`${styles.cardAction} ${styles.deleteAction}`}
