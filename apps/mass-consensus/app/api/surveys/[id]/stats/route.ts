@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSurveyStats } from '@/lib/firebase/surveys';
-import { verifyAdmin, extractBearerToken } from '@/lib/auth/verifyAdmin';
+import { getSurveyStats, getSurveyById } from '@/lib/firebase/surveys';
+import { verifyToken, extractBearerToken } from '@/lib/auth/verifyAdmin';
 
 /**
  * GET /api/surveys/[id]/stats
@@ -13,15 +13,25 @@ export async function GET(
   try {
     const { id: surveyId } = await params;
 
-    // Extract and verify admin access
+    // Extract and verify token
     const token = extractBearerToken(request.headers.get('authorization'));
     if (!token) {
       return NextResponse.json({ error: 'Missing authorization token' }, { status: 401 });
     }
 
-    const adminResult = await verifyAdmin(token);
-    if (!adminResult.isAdmin) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const userId = await verifyToken(token);
+    if (!userId) {
+      return NextResponse.json({ error: 'Invalid or expired token' }, { status: 401 });
+    }
+
+    // Verify user owns this survey
+    const survey = await getSurveyById(surveyId);
+    if (!survey) {
+      return NextResponse.json({ error: 'Survey not found' }, { status: 404 });
+    }
+
+    if (survey.creatorId !== userId) {
+      return NextResponse.json({ error: 'You can only view stats for your own surveys' }, { status: 403 });
     }
 
     const stats = await getSurveyStats(surveyId);

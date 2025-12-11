@@ -29,8 +29,8 @@ export default function SurveyWelcome({ survey }: SurveyWelcomeProps) {
   useEffect(() => {
     const fetchProgress = async () => {
       try {
-        // Get or create anonymous user ID
-        const userId = getOrCreateAnonymousUser();
+        // Get or create anonymous user ID (sets cookie for API requests)
+        getOrCreateAnonymousUser();
 
         const response = await fetch(`/api/surveys/${survey.surveyId}/progress`, {
           credentials: 'include',

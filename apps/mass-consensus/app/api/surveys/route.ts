@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createSurvey, getSurveysByCreator } from '@/lib/firebase/surveys';
-import { verifyAdmin, extractBearerToken } from '@/lib/auth/verifyAdmin';
+import { verifyToken, extractBearerToken } from '@/lib/auth/verifyAdmin';
 import { CreateSurveyRequest } from '@/types/survey';
 
 /**
- * GET /api/surveys - List surveys for the authenticated admin
+ * GET /api/surveys - List surveys for the authenticated user
  */
 export async function GET(request: NextRequest) {
   try {
@@ -17,12 +17,12 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const { isAdmin, userId, error } = await verifyAdmin(token);
+    const userId = await verifyToken(token);
 
-    if (!isAdmin) {
+    if (!userId) {
       return NextResponse.json(
-        { error: error || 'Admin access required' },
-        { status: 403 }
+        { error: 'Invalid or expired token' },
+        { status: 401 }
       );
     }
 
@@ -55,12 +55,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { isAdmin, userId, error } = await verifyAdmin(token);
+    const userId = await verifyToken(token);
 
-    if (!isAdmin) {
+    if (!userId) {
       return NextResponse.json(
-        { error: error || 'Admin access required' },
-        { status: 403 }
+        { error: 'Invalid or expired token' },
+        { status: 401 }
       );
     }
 

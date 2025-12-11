@@ -328,6 +328,8 @@ export async function upsertSurveyProgress(
 
 /**
  * Get questions created by an admin
+ * Note: Removed orderBy to avoid requiring a composite index
+ * Sorting is done in getAvailableQuestions after merging results
  */
 export async function getQuestionsByCreator(creatorId: string): Promise<Statement[]> {
   const db = getFirestoreAdmin();
@@ -336,7 +338,6 @@ export async function getQuestionsByCreator(creatorId: string): Promise<Statemen
     .collection(Collections.statements)
     .where('creatorId', '==', creatorId)
     .where('statementType', '==', StatementType.question)
-    .orderBy('createdAt', 'desc')
     .get();
 
   const questions = snapshot.docs.map((doc) => doc.data() as Statement);

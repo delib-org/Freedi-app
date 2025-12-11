@@ -7,7 +7,6 @@ import { Survey, SurveyStatus } from '@/types/survey';
 import SurveyForm from './SurveyForm';
 import SurveyShare from './SurveyShare';
 import SurveyStatusManager from './SurveyStatusManager';
-import styles from './Admin.module.scss';
 
 interface SurveyEditViewProps {
   survey: Survey;

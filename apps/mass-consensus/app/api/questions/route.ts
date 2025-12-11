@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAvailableQuestions } from '@/lib/firebase/surveys';
-import { verifyAdmin, extractBearerToken } from '@/lib/auth/verifyAdmin';
+import { verifyToken, extractBearerToken } from '@/lib/auth/verifyAdmin';
 
 /**
- * GET /api/questions - Fetch admin's available questions from main Freedi app
+ * GET /api/questions - Fetch user's available questions from main Freedi app
  *
- * Returns questions that the admin can add to surveys:
- * 1. Questions created by this admin
- * 2. Questions where admin has admin role (via statementsSubscribe)
+ * Returns questions that the user can add to surveys:
+ * 1. Questions created by this user
+ * 2. Questions where user has admin role (via statementsSubscribe)
  */
 export async function GET(request: NextRequest) {
   try {
@@ -20,12 +20,12 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const { isAdmin, userId, error } = await verifyAdmin(token);
+    const userId = await verifyToken(token);
 
-    if (!isAdmin) {
+    if (!userId) {
       return NextResponse.json(
-        { error: error || 'Admin access required' },
-        { status: 403 }
+        { error: 'Invalid or expired token' },
+        { status: 401 }
       );
     }
 
