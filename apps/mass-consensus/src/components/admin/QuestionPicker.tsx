@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Statement } from '@freedi/shared-types';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import styles from './Admin.module.scss';
@@ -10,53 +10,119 @@ interface QuestionPickerProps {
   onQuestionsChange: (questions: Statement[]) => void;
 }
 
+interface QuestionsResponse {
+  questions: Statement[];
+  nextCursor: string | null;
+  hasMore: boolean;
+}
+
 /**
  * Component for selecting questions to add to a survey
+ * Features server-side search and pagination for large datasets
  */
 export default function QuestionPicker({
   selectedQuestions,
   onQuestionsChange,
 }: QuestionPickerProps) {
   const { t } = useTranslation();
-  const [availableQuestions, setAvailableQuestions] = useState<Statement[]>([]);
+  const [questions, setQuestions] = useState<Statement[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [hasMore, setHasMore] = useState(false);
 
-  useEffect(() => {
-    fetchQuestions();
-  }, []);
+  // Debounce timer ref
+  const debounceRef = useRef<NodeJS.Timeout | null>(null);
+  // Track current search to avoid race conditions
+  const currentSearchRef = useRef<string>('');
 
-  const fetchQuestions = async () => {
+  const fetchQuestions = useCallback(async (
+    search: string = '',
+    cursor?: string,
+    append: boolean = false
+  ) => {
     try {
-      setLoading(true);
+      if (append) {
+        setLoadingMore(true);
+      } else {
+        setLoading(true);
+        setQuestions([]);
+      }
       setError(null);
 
       const token = localStorage.getItem('firebase_token');
 
       if (!token) {
-        setError('Please log in to view questions');
+        setError(t('pleaseLoginToViewQuestions') || 'Please log in to view questions');
         setLoading(false);
+        setLoadingMore(false);
         return;
       }
 
-      const response = await fetch('/api/questions', {
+      // Build query params
+      const params = new URLSearchParams();
+      if (search) params.set('search', search);
+      if (cursor) params.set('cursor', cursor);
+      params.set('limit', '20');
+
+      const response = await fetch(`/api/questions?${params.toString()}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
 
       if (!response.ok) {
-        throw new Error('Failed to fetch questions');
+        throw new Error(t('failedToFetchQuestions') || 'Failed to fetch questions');
       }
 
-      const data = await response.json();
-      setAvailableQuestions(data.questions);
+      const data: QuestionsResponse = await response.json();
+
+      // Only update if this is still the current search
+      if (search === currentSearchRef.current || (!search && !currentSearchRef.current)) {
+        if (append) {
+          setQuestions((prev) => [...prev, ...data.questions]);
+        } else {
+          setQuestions(data.questions);
+        }
+        setNextCursor(data.nextCursor);
+        setHasMore(data.hasMore);
+      }
     } catch (err) {
       console.error('[QuestionPicker] Error:', err);
       setError(err instanceof Error ? err.message : 'Failed to load questions');
     } finally {
       setLoading(false);
+      setLoadingMore(false);
+    }
+  }, [t]);
+
+  // Initial load
+  useEffect(() => {
+    fetchQuestions();
+  }, [fetchQuestions]);
+
+  // Debounced search
+  const handleSearchChange = (value: string) => {
+    setSearchQuery(value);
+    currentSearchRef.current = value;
+
+    // Clear previous debounce
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
+
+    // Debounce search by 300ms
+    debounceRef.current = setTimeout(() => {
+      fetchQuestions(value);
+    }, 300);
+  };
+
+  // Load more handler
+  const handleLoadMore = () => {
+    if (nextCursor && !loadingMore) {
+      fetchQuestions(searchQuery, nextCursor, true);
     }
   };
 
@@ -74,28 +140,22 @@ export default function QuestionPicker({
     }
   };
 
-  const filteredQuestions = availableQuestions.filter((q) =>
-    q.statement.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Cleanup debounce on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
+      }
+    };
+  }, []);
 
-  if (loading) {
-    return (
-      <div className={styles.questionPicker}>
-        <div className={styles.loading}>
-          <div className={styles.spinner} />
-          <p>{t('loadingQuestions')}</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
+  if (error && questions.length === 0) {
     return (
       <div className={styles.questionPicker}>
         <div className={styles.error}>
           <p>{error}</p>
-          <button onClick={fetchQuestions} className={styles.retryButton}>
-            {t('retry')}
+          <button onClick={() => fetchQuestions()} className={styles.retryButton}>
+            {t('retry') || 'Retry'}
           </button>
         </div>
       </div>
@@ -107,43 +167,76 @@ export default function QuestionPicker({
       <input
         type="text"
         className={styles.searchInput}
-        placeholder={t('searchQuestions')}
+        placeholder={t('searchQuestions') || 'Search questions...'}
         value={searchQuery}
-        onChange={(e) => setSearchQuery(e.target.value)}
+        onChange={(e) => handleSearchChange(e.target.value)}
       />
 
-      {filteredQuestions.length === 0 ? (
+      {loading ? (
+        <div className={styles.loading}>
+          <div className={styles.spinner} />
+          <p>{t('searchingQuestions') || 'Searching questions...'}</p>
+        </div>
+      ) : questions.length === 0 ? (
         <p style={{ textAlign: 'center', color: '#666', padding: '2rem' }}>
-          {searchQuery ? t('noMatchingQuestions') : t('noQuestionsAvailable')}
+          {searchQuery
+            ? (t('noMatchingQuestions') || 'No matching questions found')
+            : (t('noQuestionsAvailable') || 'No questions available')}
         </p>
       ) : (
-        <div className={styles.questionList}>
-          {filteredQuestions.map((question) => {
-            const isSelected = selectedQuestions.some(
-              (q) => q.statementId === question.statementId
-            );
+        <>
+          <div className={styles.questionList}>
+            {questions.map((question) => {
+              const isSelected = selectedQuestions.some(
+                (q) => q.statementId === question.statementId
+              );
 
-            return (
-              <div
-                key={question.statementId}
-                className={`${styles.questionItem} ${isSelected ? styles.selected : ''}`}
-                onClick={() => handleToggleQuestion(question)}
-              >
-                <input
-                  type="checkbox"
-                  className={styles.questionCheckbox}
-                  checked={isSelected}
-                  onChange={() => handleToggleQuestion(question)}
-                />
-                <span className={styles.questionText}>{question.statement}</span>
-              </div>
-            );
-          })}
-        </div>
+              return (
+                <div
+                  key={question.statementId}
+                  className={`${styles.questionItem} ${isSelected ? styles.selected : ''}`}
+                  onClick={() => handleToggleQuestion(question)}
+                >
+                  <input
+                    type="checkbox"
+                    className={styles.questionCheckbox}
+                    checked={isSelected}
+                    onChange={() => handleToggleQuestion(question)}
+                  />
+                  <span className={styles.questionText}>{question.statement}</span>
+                </div>
+              );
+            })}
+          </div>
+
+          {hasMore && (
+            <button
+              onClick={handleLoadMore}
+              disabled={loadingMore}
+              className={styles.loadMoreButton}
+              style={{
+                marginTop: '1rem',
+                padding: '0.75rem 1.5rem',
+                background: loadingMore ? 'var(--bg-muted)' : 'var(--btn-secondary)',
+                color: 'var(--text-body)',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: loadingMore ? 'not-allowed' : 'pointer',
+                width: '100%',
+                fontWeight: 500,
+              }}
+            >
+              {loadingMore
+                ? (t('loading') || 'Loading...')
+                : (t('loadMore') || 'Load More')}
+            </button>
+          )}
+        </>
       )}
 
       <div style={{ marginTop: '1rem', fontSize: '0.875rem', color: '#666' }}>
-        {selectedQuestions.length} {t('questionsSelected')}
+        {selectedQuestions.length} {t('questionsSelected') || 'questions selected'}
+        {questions.length > 0 && ` • ${questions.length} ${t('shown') || 'shown'}`}
       </div>
     </div>
   );

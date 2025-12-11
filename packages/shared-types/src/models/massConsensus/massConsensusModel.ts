@@ -4,7 +4,6 @@ import {
       string,
       enum_,
       optional,
-      null_,
       InferOutput,
       number,
       nullable,

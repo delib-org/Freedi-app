@@ -1,8 +1,5 @@
-import { array, object, enum_, string, optional, description, InferOutput, number, record } from "valibot";
-import { StatementSchema } from "../statement/StatementTypes";
-import { QuestionType, SortType } from "../TypeEnums";
+import { array, object, enum_, string, optional, InferOutput, number } from "valibot";
 import { EvaluationUI } from "../evaluation/Evaluation";
-import { CutoffBy } from "../results/Results";
 
 export const QuestionnaireQuestionSchema = object({
     questionnaireId: string(), // unique identifier for the questionnaire

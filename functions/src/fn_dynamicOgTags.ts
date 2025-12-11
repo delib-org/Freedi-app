@@ -1,29 +1,8 @@
 import { onRequest } from "firebase-functions/v2/https";
 import { getFirestore } from "firebase-admin/firestore";
 import { Collections, Statement, functionConfig } from "delib-npm";
-import * as https from "https";
 
 const db = getFirestore();
-
-/**
- * Fetches content from a URL using https
- */
-function fetchUrl(url: string): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const request = https.get(url, (res) => {
-      let data = "";
-      res.on("data", (chunk) => (data += chunk));
-      res.on("end", () => resolve(data));
-      res.on("error", reject);
-    });
-    request.on("error", reject);
-    // Set a timeout to avoid hanging
-    request.setTimeout(5000, () => {
-      request.destroy();
-      reject(new Error("Request timeout"));
-    });
-  });
-}
 
 // Bot user agents that need OG tags
 const BOT_USER_AGENTS = [

@@ -7,8 +7,6 @@ import {
 	nullable,
 	enum_,
 	InferOutput,
-	is,
-	email,
 } from 'valibot';
 import { Access, membersAllowed, StepType } from '../TypeEnums';
 import { AgreementSchema } from '../agreement/Agreement';

@@ -18,6 +18,7 @@
 	},
 	"main": "lib/functions/src/index.js",
 	"dependencies": {
+		"@freedi/shared-types": "file:../packages/shared-types",
 		"@google/generative-ai": "^0.15.0",
 		"@sendgrid/mail": "^8.1.5",
 		"@types/nodemailer": "^7.0.1",

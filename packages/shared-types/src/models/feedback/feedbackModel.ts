@@ -1,5 +1,5 @@
 import { number, object, string, optional, InferOutput } from "valibot";
-import { CreatorSchema, UserSchema } from "../user/User";
+import { CreatorSchema } from "../user/User";
 
 export const FeedbackSchema = object({
     feedbackId: string(),
