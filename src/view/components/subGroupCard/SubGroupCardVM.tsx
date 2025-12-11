@@ -1,7 +1,7 @@
 import { ReactElement } from 'react';
 import useStatementColor from '@/controllers/hooks/useStatementColor';
 
-import { QuestionType, StatementType, Statement } from 'delib-npm';
+import { QuestionType, StatementType, Statement } from '@freedi/shared-types';
 
 import DocumentIcon from '@/assets/icons/document.svg?react';
 import QuestionIcon from '@/assets/icons/navQuestionsIcon.svg?react';

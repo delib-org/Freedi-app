@@ -6,7 +6,7 @@
 
 import { doc, collection, writeBatch, DocumentReference, CollectionReference } from 'firebase/firestore';
 import { FireStore } from '@/controllers/db/config';
-import { Collections } from 'delib-npm';
+import { Collections } from '@freedi/shared-types';
 
 /**
  * Create a document reference

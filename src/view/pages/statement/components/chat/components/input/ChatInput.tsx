@@ -8,7 +8,7 @@ import { handleAddStatement } from './StatementInputCont';
 // Redux Store
 import useStatementColor from '@/controllers/hooks/useStatementColor';
 import SendIcon from '@/view/components/icons/SendIcon';
-import { Statement } from 'delib-npm';
+import { Statement } from '@freedi/shared-types';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import EnhancedEvaluation from '../../../evaluations/components/evaluation/enhancedEvaluation/EnhancedEvaluation';
 

@@ -27,6 +27,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
     if (!progress) {
       // Return empty progress if not started
       return NextResponse.json({
+        hasProgress: false,
         surveyId,
         userId,
         currentQuestionIndex: 0,
@@ -37,7 +38,10 @@ export async function GET(request: NextRequest, context: RouteContext) {
       });
     }
 
-    return NextResponse.json(progress);
+    return NextResponse.json({
+      hasProgress: true,
+      ...progress,
+    });
   } catch (error) {
     console.error('[GET /api/surveys/[id]/progress] Error:', error);
     return NextResponse.json(

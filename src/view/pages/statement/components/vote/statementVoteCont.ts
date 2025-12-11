@@ -1,4 +1,4 @@
-import { DeliberativeElement, SortType, Statement } from 'delib-npm';
+import { DeliberativeElement, SortType, Statement } from '@freedi/shared-types';
 
 // Updates the displayed options with how many votes each option has from the parent statement
 export function setSelectionsToOptions(

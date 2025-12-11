@@ -1,7 +1,7 @@
 import { StatementService } from '../statementService';
 import { db } from '../../../db';
 import * as arrayUtils from '../../../utils/arrayUtils';
-import { StatementType, Statement } from 'delib-npm';
+import { StatementType, Statement } from '@freedi/shared-types';
 
 // Mock Firebase Admin
 jest.mock('../../../db', () => ({

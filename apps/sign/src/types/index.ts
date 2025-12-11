@@ -2,7 +2,7 @@
  * Type definitions for Sign app
  */
 
-import { Statement, ParagraphType as DelibParagraphType } from 'delib-npm';
+import { Statement, ParagraphType as DelibParagraphType } from '@freedi/shared-types';
 
 // Re-export from queries for convenience
 export type { Signature, Approval, Comment } from '@/lib/firebase/queries';

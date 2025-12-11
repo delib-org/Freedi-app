@@ -6,7 +6,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { useParams } from 'react-router';
 import { resultsByParentId } from './mapCont';
-import { Statement, Results } from 'delib-npm';
+import { Statement, Results } from '@freedi/shared-types';
 import { APIEndPoint, isChatMessage } from '@/controllers/general/helpers';
 import { logError } from '@/utils/errorHandling';
 

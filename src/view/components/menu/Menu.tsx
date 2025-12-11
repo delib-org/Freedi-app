@@ -4,7 +4,7 @@ import DefaultAvatar from '@/assets/images/avatar.jpg';
 import useStatementColor from '@/controllers/hooks/useStatementColor';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { RootState } from '@/redux/store';
-import { Statement } from 'delib-npm';
+import { Statement } from '@freedi/shared-types';
 import {
 	ComponentProps,
 	FC,

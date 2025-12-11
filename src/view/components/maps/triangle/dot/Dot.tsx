@@ -1,6 +1,6 @@
 import { FC, useState, useRef } from 'react';
 import styles from './Dot.module.scss';
-import { Statement } from 'delib-npm';
+import { Statement } from '@freedi/shared-types';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 
 interface Props {

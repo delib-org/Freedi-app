@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction, createSelector } from '@reduxjs/toolkit';
-import { PolarizationIndex, updateArray, UserDemographicQuestion } from 'delib-npm';
+import { PolarizationIndex, updateArray, UserDemographicQuestion } from '@freedi/shared-types';
 import { RootState } from '../types';
 
 // Use string literal for scope until delib-npm exports the enum value

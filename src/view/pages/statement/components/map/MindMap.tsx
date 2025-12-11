@@ -13,7 +13,7 @@ import {
 	statementSubscriptionSelector,
 } from '@/redux/statements/statementsSlice';
 import Modal from '@/view/components/modal/Modal';
-import { StatementType, Role } from 'delib-npm';
+import { StatementType, Role } from '@freedi/shared-types';
 import { useParams } from 'react-router';
 import { useMindMap } from './MindMapMV';
 import { MINDMAP_CONFIG } from '@/constants/mindMap';

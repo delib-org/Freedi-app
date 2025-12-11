@@ -763,5 +763,27 @@
   "Left to Right (LTR)": "Links nach Rechts (LTR)",
   "Force left-to-right direction (English, etc.)": "Links-nach-Rechts-Richtung erzwingen (Englisch, usw.)",
   "Right to Left (RTL)": "Rechts nach Links (RTL)",
-  "Force right-to-left direction (Hebrew, Arabic, etc.)": "Rechts-nach-Links-Richtung erzwingen (Hebräisch, Arabisch, usw.)"
+  "Force right-to-left direction (Hebrew, Arabic, etc.)": "Rechts-nach-Links-Richtung erzwingen (Hebräisch, Arabisch, usw.)",
+
+  "welcomeBack": "Willkommen zurück!",
+  "continueFrom": "Fortfahren ab Frage {{num}} von {{total}}",
+  "continue": "Fortfahren",
+  "startOver": "Neu beginnen",
+  "questionsCompleted": "Fragen abgeschlossen",
+  "surveyStatus": "Umfragestatus",
+  "statistics": "Statistiken",
+  "responses": "Antworten",
+  "completions": "Abschlüsse",
+  "completionRate": "Abschlussrate",
+  "changeStatus": "Status ändern",
+  "draft": "Entwurf",
+  "draftDescription": "Umfrage ist für Teilnehmer nicht sichtbar",
+  "activeDescription": "Umfrage nimmt Antworten entgegen",
+  "closed": "Geschlossen",
+  "closedDescription": "Umfrage ist geschlossen, keine neuen Antworten",
+  "confirmClose": "Umfrage schließen?",
+  "closeWarning": "Geschlossene Umfragen können keine neuen Antworten mehr annehmen. Diese Aktion kann durch Ändern des Status auf Aktiv rückgängig gemacht werden.",
+  "closing": "Wird geschlossen...",
+  "closeSurvey": "Umfrage schließen",
+  "status": "Status"
 }

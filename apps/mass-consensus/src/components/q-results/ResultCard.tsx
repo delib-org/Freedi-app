@@ -1,4 +1,4 @@
-import { Statement } from 'delib-npm';
+import { Statement } from '@freedi/shared-types';
 import clsx from 'clsx';
 import { calculateAgreement, getAgreementColor, getFallbackColor } from '@/lib/utils/consensusColors';
 import styles from './ResultCard.module.scss';

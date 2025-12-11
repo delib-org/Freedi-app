@@ -1,4 +1,4 @@
-import { Statement } from 'delib-npm';
+import { Statement } from '@freedi/shared-types';
 import { useAppSelector } from './reduxHooks';
 import { userSuggestionsSelector, statementSelector } from '@/redux/statements/statementsSlice';
 import { useAuthentication } from './useAuthentication';

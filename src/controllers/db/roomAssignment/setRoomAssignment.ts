@@ -1,5 +1,5 @@
 import { AppDispatch } from '@/redux/store';
-import { User } from 'delib-npm';
+import { User } from '@freedi/shared-types';
 import {
 	setLoading,
 	setError,

@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router';
 import ChatIcon from '@/assets/icons/roundedChatDotIcon.svg?react';
 
 // Types and Redux
-import { SimpleStatement, Statement, NotificationType } from 'delib-npm';
+import { SimpleStatement, Statement, NotificationType } from '@freedi/shared-types';
 import { useSelector } from 'react-redux';
 import { inAppNotificationsSelector } from '@/redux/notificationsSlice/notificationsSlice';
 import { creatorSelector } from '@/redux/creator/creatorSlice';

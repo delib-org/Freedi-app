@@ -3,7 +3,7 @@
  */
 
 import { getFirestoreAdmin } from './admin';
-import { Collections, Statement, StatementType } from 'delib-npm';
+import { Collections, Statement, StatementType } from '@freedi/shared-types';
 import { Paragraph, StatementWithParagraphs } from '@/types';
 
 // Types for Sign app

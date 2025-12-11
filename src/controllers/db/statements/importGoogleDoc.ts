@@ -3,7 +3,7 @@
  */
 
 import { getFunctions, httpsCallable } from 'firebase/functions';
-import { Statement } from 'delib-npm';
+import { Statement } from '@freedi/shared-types';
 import { Paragraph } from '@/types/paragraph';
 import { logError } from '@/utils/errorHandling';
 

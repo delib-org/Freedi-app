@@ -14,7 +14,7 @@ import {
 // Custom components
 import Footer from '@/view/components/footer/Footer';
 import PeopleLoader from '@/view/components/loaders/PeopleLoader';
-import { StatementType } from 'delib-npm';
+import { StatementType } from '@freedi/shared-types';
 import MainQuestionCard from './mainQuestionCard/MainQuestionCard';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import NewStatement from '../../statement/components/newStatement/NewStatement';

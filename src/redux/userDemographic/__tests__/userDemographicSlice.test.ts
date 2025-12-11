@@ -9,7 +9,7 @@ import userDataReducer, {
   setPolarizationIndexes,
   deletePolarizationIndex
 } from '../userDemographicSlice';
-import { UserDemographicQuestionType } from 'delib-npm';
+import { UserDemographicQuestionType } from '@freedi/shared-types';
 
 // Test-specific selectors that work with our test store
 type TestState = { userData: ReturnType<typeof userDataReducer> };

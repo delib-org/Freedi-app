@@ -759,5 +759,27 @@
   "Left to Right (LTR)": "من اليسار إلى اليمين (LTR)",
   "Force left-to-right direction (English, etc.)": "فرض الاتجاه من اليسار إلى اليمين (الإنجليزية، إلخ)",
   "Right to Left (RTL)": "من اليمين إلى اليسار (RTL)",
-  "Force right-to-left direction (Hebrew, Arabic, etc.)": "فرض الاتجاه من اليمين إلى اليسار (العبرية، العربية، إلخ)"
+  "Force right-to-left direction (Hebrew, Arabic, etc.)": "فرض الاتجاه من اليمين إلى اليسار (العبرية، العربية، إلخ)",
+
+  "welcomeBack": "مرحباً بعودتك!",
+  "continueFrom": "متابعة من السؤال {{num}} من {{total}}",
+  "continue": "متابعة",
+  "startOver": "البدء من جديد",
+  "questionsCompleted": "أسئلة مكتملة",
+  "surveyStatus": "حالة الاستبيان",
+  "statistics": "الإحصائيات",
+  "responses": "الردود",
+  "completions": "الإكمالات",
+  "completionRate": "معدل الإكمال",
+  "changeStatus": "تغيير الحالة",
+  "draft": "مسودة",
+  "draftDescription": "الاستبيان غير مرئي للمشاركين",
+  "activeDescription": "الاستبيان يقبل الردود",
+  "closed": "مغلق",
+  "closedDescription": "الاستبيان مغلق، لا ردود جديدة",
+  "confirmClose": "إغلاق الاستبيان؟",
+  "closeWarning": "الاستبيانات المغلقة لا يمكنها قبول ردود جديدة. يمكن التراجع عن هذا الإجراء بتغيير الحالة إلى نشط.",
+  "closing": "جاري الإغلاق...",
+  "closeSurvey": "إغلاق الاستبيان",
+  "status": "الحالة"
 }

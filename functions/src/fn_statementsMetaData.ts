@@ -1,7 +1,7 @@
 import { FieldValue, Timestamp } from 'firebase-admin/firestore';
 import { db } from '.';
 import { logger } from 'firebase-functions/v1';
-import { Collections } from 'delib-npm';
+import { Collections } from '@freedi/shared-types';
 
 type MembershipChange = {
 	eventType: 'new' | 'update' | 'delete';

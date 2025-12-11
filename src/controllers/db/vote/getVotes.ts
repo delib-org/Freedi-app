@@ -14,7 +14,7 @@ import {
 	getVoteId,
 	Vote,
 	VoteSchema,
-} from 'delib-npm';
+} from '@freedi/shared-types';
 import { parse } from 'valibot';
 
 // Why get user from firebase when we can pass it as a parameter?

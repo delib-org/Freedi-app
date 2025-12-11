@@ -28,7 +28,7 @@ import {
 	Role,
 	User,
 	Collections,
-} from 'delib-npm';
+} from '@freedi/shared-types';
 import { parse } from 'valibot';
 
 // Helper to check if an error is IndexedDB-related

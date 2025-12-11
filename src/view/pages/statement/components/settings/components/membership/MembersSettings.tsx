@@ -18,7 +18,7 @@ import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { RootState } from '@/redux/store';
 import styles from './MembersSettings.module.scss';
-import { StatementSubscription, Role, Statement, Collections } from 'delib-npm';
+import { StatementSubscription, Role, Statement, Collections } from '@freedi/shared-types';
 
 interface MembersSettingsProps {
 	statement: Statement;

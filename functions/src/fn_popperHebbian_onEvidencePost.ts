@@ -1,6 +1,6 @@
 import { onDocumentCreated, onDocumentUpdated } from 'firebase-functions/v2/firestore';
 import { getFirestore } from 'firebase-admin/firestore';
-import { Statement, Collections } from 'delib-npm';
+import { Statement, Collections } from '@freedi/shared-types';
 import { EvidenceType } from 'delib-npm/dist/models/evidence/evidenceModel';
 import { getGeminiModel, geminiApiKey } from './config/gemini';
 import {

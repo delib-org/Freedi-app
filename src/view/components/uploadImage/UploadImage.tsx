@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import styles from './UploadImage.module.scss';
 import { setImageLocally } from './uploadImageCont';
-import { Statement } from 'delib-npm';
+import { Statement } from '@freedi/shared-types';
 
 type SizeVariant = 'default' | 'compact' | 'inline';
 

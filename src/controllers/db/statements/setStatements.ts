@@ -30,7 +30,7 @@ import {
 	Creator,
 	CutoffBy,
 	ResultsSettings,
-} from 'delib-npm';
+} from '@freedi/shared-types';
 // TODO: Import from delib-npm once published with Paragraph types
 import { Paragraph } from '@/types/paragraph';
 

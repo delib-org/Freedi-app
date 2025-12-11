@@ -2,7 +2,7 @@ import { FC, useContext, useEffect } from 'react';
 import { Link, useLocation } from 'react-router';
 import FollowMeIcon from '../../../../components/icons/FollowMeIcon';
 import { setFollowMeDB } from '@/controllers/db/statements/setStatements';
-import { Role } from 'delib-npm';
+import { Role } from '@freedi/shared-types';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { statementSelector, statementSubscriptionSelector } from '@/redux/statements/statementsSlice';

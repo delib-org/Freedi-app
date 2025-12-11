@@ -3,7 +3,7 @@ import { FC } from 'react';
 import { StatementSettingsProps } from '../../settingsTypeHelpers';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import styles from './ResultsRange.module.scss';
-import { defaultResultsSettings } from 'delib-npm';
+import { defaultResultsSettings } from '@freedi/shared-types';
 
 const ResultsRange: FC<StatementSettingsProps> = ({
 	statement,

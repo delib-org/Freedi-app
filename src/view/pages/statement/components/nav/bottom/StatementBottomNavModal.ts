@@ -1,4 +1,4 @@
-import { SortType } from 'delib-npm';
+import { SortType } from '@freedi/shared-types';
 
 export interface NavItem {
 	link: SortType;

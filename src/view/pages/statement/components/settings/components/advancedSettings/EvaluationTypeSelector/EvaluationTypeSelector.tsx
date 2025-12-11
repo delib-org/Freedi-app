@@ -1,5 +1,5 @@
 import React, { FC } from 'react';
-import { evaluationType } from 'delib-npm';
+import { evaluationType } from '@freedi/shared-types';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import styles from './EvaluationTypeSelector.module.scss';
 

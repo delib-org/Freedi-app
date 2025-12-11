@@ -1,5 +1,5 @@
 // Jest test file
-import { StatementType, Statement, Access, QuestionType } from 'delib-npm';
+import { StatementType, Statement, Access, QuestionType } from '@freedi/shared-types';
 import { createStatement, CreateStatementProps } from '../setStatements';
 import * as helpers from '@/controllers/general/helpers';
 

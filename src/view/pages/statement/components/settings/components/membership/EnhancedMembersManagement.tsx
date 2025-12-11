@@ -1,5 +1,5 @@
 import React, { FC, useState, useMemo } from 'react';
-import { Statement, StatementSubscription, Role } from 'delib-npm';
+import { Statement, StatementSubscription, Role } from '@freedi/shared-types';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import styles from './EnhancedMembersManagement.module.scss';

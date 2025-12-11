@@ -4,7 +4,7 @@ import {
 	Collections,
 	StatementType,
 	Statement,
-} from 'delib-npm';
+} from '@freedi/shared-types';
 import { shuffleArray, getRandomSample } from '../../utils/arrayUtils';
 
 export interface GetUserOptionsParams {

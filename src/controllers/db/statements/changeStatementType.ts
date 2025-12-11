@@ -1,6 +1,6 @@
 import { doc, getDoc, updateDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { FireStore } from '../config';
-import { Collections, Statement, StatementType, QuestionType, EvaluationUI } from 'delib-npm';
+import { Collections, Statement, StatementType, QuestionType, EvaluationUI } from '@freedi/shared-types';
 import { validateStatementTypeHierarchy } from '@/controllers/general/helpers';
 
 export async function changeStatementType(

@@ -19,7 +19,7 @@ import { setStatementElementHight } from '@/redux/statements/statementsSlice';
 import EditableStatement from '@/view/components/edit/EditableStatement';
 import IconButton from '@/view/components/iconButton/IconButton';
 import styles from './SuggestionCard.module.scss';
-import { StatementType, Statement } from 'delib-npm';
+import { StatementType, Statement } from '@freedi/shared-types';
 import { useAuthorization } from '@/controllers/hooks/useAuthorization';
 import { toggleJoining } from '@/controllers/db/joining/setJoining';
 import Joined from '@/view/components/joined/Joined';

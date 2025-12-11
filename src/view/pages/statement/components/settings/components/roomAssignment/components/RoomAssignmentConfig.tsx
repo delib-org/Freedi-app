@@ -5,7 +5,7 @@ import {
 	User,
 	RoomSettings,
 	UserDemographicQuestionType,
-} from 'delib-npm';
+} from '@freedi/shared-types';
 import { useAppDispatch, useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { selectUserDemographicQuestionsByStatementId } from '@/redux/userDemographic/userDemographicSlice';

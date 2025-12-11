@@ -1,6 +1,6 @@
 import { db } from '.';
 import { logger, Request, Response } from 'firebase-functions/v1';
-import { Collections, Statement } from 'delib-npm';
+import { Collections, Statement } from '@freedi/shared-types';
 import * as nodemailer from 'nodemailer';
 import {
 	EmailSubscriber,

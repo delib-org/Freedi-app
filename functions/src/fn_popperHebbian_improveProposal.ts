@@ -1,6 +1,6 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { getFirestore } from 'firebase-admin/firestore';
-import { Statement, Collections } from 'delib-npm';
+import { Statement, Collections } from '@freedi/shared-types';
 import { getGeminiModel, geminiApiKey } from './config/gemini';
 
 interface ImproveProposalRequest {

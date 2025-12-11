@@ -18,7 +18,7 @@ import {
 	RoomSchema,
 	RoomParticipant,
 	RoomParticipantSchema,
-} from 'delib-npm';
+} from '@freedi/shared-types';
 import { parse } from 'valibot';
 import {
 	setRoomSettings,

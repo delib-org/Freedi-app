@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
 import { getUserIdFromCookie, getUserDisplayNameFromCookie, getAnonymousDisplayName } from '@/lib/utils/user';
-import { Collections } from 'delib-npm';
+import { Collections } from '@freedi/shared-types';
 
 interface EvaluationInput {
   evaluation: number; // -1 or 1

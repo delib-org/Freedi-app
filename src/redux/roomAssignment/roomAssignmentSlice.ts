@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction, createSelector } from '@reduxjs/toolkit';
 import { RootState } from '../types';
-import { RoomSettings, Room, RoomParticipant } from 'delib-npm';
+import { RoomSettings, Room, RoomParticipant } from '@freedi/shared-types';
 
 interface RoomAssignmentState {
 	settings: RoomSettings[];

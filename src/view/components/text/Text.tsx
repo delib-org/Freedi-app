@@ -1,6 +1,6 @@
 import { FC } from 'react';
 import ReactMarkdown, { Components } from 'react-markdown';
-import { Statement } from 'delib-npm';
+import { Statement } from '@freedi/shared-types';
 import UrlParser from '../edit/URLParse';
 import { ParagraphsDisplay } from '@/view/components/richTextEditor';
 import styles from './Text.module.scss';

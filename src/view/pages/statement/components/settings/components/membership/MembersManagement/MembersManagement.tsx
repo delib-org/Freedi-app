@@ -2,7 +2,7 @@ import { FC, useState, useMemo, useCallback } from 'react';
 import { createSelector } from '@reduxjs/toolkit';
 import { useParams } from 'react-router';
 import styles from './MembersManagement.module.scss';
-import { StatementSubscription, Role, Statement } from 'delib-npm';
+import { StatementSubscription, Role, Statement } from '@freedi/shared-types';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { RootState } from '@/redux/store';

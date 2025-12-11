@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction, createSelector } from '@reduxjs/toolkit';
 import { RootState } from '../types';
-import { Statement, StatementSubscription, SelectionFunction, StatementType, updateArray, ResultsSettings } from 'delib-npm';
+import { Statement, StatementSubscription, SelectionFunction, StatementType, updateArray, ResultsSettings } from '@freedi/shared-types';
 import { logError } from '@/utils/errorHandling';
 
 export enum StatementScreen {

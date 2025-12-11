@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { DocumentData } from 'firebase-admin/firestore';
 import { getFirebaseAdmin } from '@/lib/firebase/admin';
 import { getUserIdFromCookie } from '@/lib/utils/user';
-import { Collections } from 'delib-npm';
+import { Collections } from '@freedi/shared-types';
 import { Signature } from '@/lib/firebase/queries';
 
 export interface DocumentStats {

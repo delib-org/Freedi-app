@@ -763,5 +763,27 @@
   "Left to Right (LTR)": "Links naar rechts (LTR)",
   "Force left-to-right direction (English, etc.)": "Dwing links-naar-rechts richting af (Engels, enz.)",
   "Right to Left (RTL)": "Rechts naar links (RTL)",
-  "Force right-to-left direction (Hebrew, Arabic, etc.)": "Dwing rechts-naar-links richting af (Hebreeuws, Arabisch, enz.)"
+  "Force right-to-left direction (Hebrew, Arabic, etc.)": "Dwing rechts-naar-links richting af (Hebreeuws, Arabisch, enz.)",
+
+  "welcomeBack": "Welkom terug!",
+  "continueFrom": "Doorgaan vanaf vraag {{num}} van {{total}}",
+  "continue": "Doorgaan",
+  "startOver": "Opnieuw beginnen",
+  "questionsCompleted": "vragen voltooid",
+  "surveyStatus": "Enquêtestatus",
+  "statistics": "Statistieken",
+  "responses": "Reacties",
+  "completions": "Voltooiingen",
+  "completionRate": "Voltooiingspercentage",
+  "changeStatus": "Status wijzigen",
+  "draft": "Concept",
+  "draftDescription": "Enquête is niet zichtbaar voor deelnemers",
+  "activeDescription": "Enquête accepteert reacties",
+  "closed": "Gesloten",
+  "closedDescription": "Enquête is gesloten, geen nieuwe reacties",
+  "confirmClose": "Enquête sluiten?",
+  "closeWarning": "Gesloten enquêtes kunnen geen nieuwe reacties meer accepteren. Deze actie kan ongedaan worden gemaakt door de status te wijzigen naar Actief.",
+  "closing": "Sluiten...",
+  "closeSurvey": "Enquête sluiten",
+  "status": "Status"
 }

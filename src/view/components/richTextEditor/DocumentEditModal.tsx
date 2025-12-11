@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { Statement } from 'delib-npm';
+import { Statement } from '@freedi/shared-types';
 // TODO: Import from delib-npm once published with Paragraph types
 import { Paragraph, StatementWithParagraphs } from '@/types/paragraph';
 import RichTextEditor from './RichTextEditor';

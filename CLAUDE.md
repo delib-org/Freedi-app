@@ -773,3 +773,4 @@ Before submitting PR, verify:
 - If I am writing mc or MC i mean the mass-conesunsus app undeerd apps/
 - when you create a new UI, use useTranslation() hook and the relvent files to translate to all avilable languages
 - to deploy to production run first env:prod. to deploy to testing, run first env:test
+- types are allways saved in delib-npm for cross-apps/functions comitabilty

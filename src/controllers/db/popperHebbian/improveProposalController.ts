@@ -1,7 +1,7 @@
 import { httpsCallable } from 'firebase/functions';
 import { doc, updateDoc, arrayUnion, getDoc } from 'firebase/firestore';
 import { FireStore, functions, auth } from '../config';
-import { Collections, Statement } from 'delib-npm';
+import { Collections, Statement } from '@freedi/shared-types';
 import { logError } from '@/utils/errorHandling';
 import { getCurrentTimestamp } from '@/utils/firebaseUtils';
 import { logger } from '@/services/logger';

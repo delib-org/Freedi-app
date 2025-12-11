@@ -1,6 +1,6 @@
 import { FC, useState, useEffect, useCallback, ChangeEvent } from 'react';
 import styles from './MemberFilters.module.scss';
-import { Role } from 'delib-npm';
+import { Role } from '@freedi/shared-types';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 
 interface MemberFiltersProps {

@@ -13,7 +13,7 @@ import {
 	statementSubscriptionSelector,
 } from '@/redux/statements/statementsSlice';
 import EditableStatement from '@/view/components/edit/EditableStatement';
-import { Statement } from 'delib-npm';
+import { Statement } from '@freedi/shared-types';
 
 interface Props {
 	statement: Statement | null;

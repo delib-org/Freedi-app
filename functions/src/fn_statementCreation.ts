@@ -14,7 +14,7 @@ import {
 	NotificationType,
 	SimpleStatement,
 	statementToSimpleStatement,
-} from 'delib-npm';
+} from '@freedi/shared-types';
 import { db } from './index';
 import { getDefaultQuestionType } from './model/questionTypeDefaults';
 

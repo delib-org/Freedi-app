@@ -1,4 +1,4 @@
-import { Statement, Role } from 'delib-npm';
+import { Statement, Role } from '@freedi/shared-types';
 import { useAuthorization } from './useAuthorization';
 import { useAppSelector } from './reduxHooks';
 import { creatorSelector } from '@/redux/creator/creatorSlice';

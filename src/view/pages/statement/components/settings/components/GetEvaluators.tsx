@@ -1,7 +1,7 @@
 import React, { FC } from 'react';
 import { handleGetEvaluators } from '../statementSettingsCont';
 import MembersChipsList from './membership/membersChipsList/MembersChipList';
-import { Evaluation, User } from 'delib-npm';
+import { Evaluation, User } from '@freedi/shared-types';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 
 interface GetEvaluatorsProps {

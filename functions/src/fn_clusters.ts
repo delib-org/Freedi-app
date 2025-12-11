@@ -1,5 +1,5 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { Collections, getRandomUID, Statement, StatementSchema, StatementSnapShot, StatementType } from 'delib-npm';
+import { Collections, getRandomUID, Statement, StatementSchema, StatementSnapShot, StatementType } from '@freedi/shared-types';
 import { Response, Request, onInit, logger } from 'firebase-functions/v1';
 import { parse } from 'valibot';
 import { db } from '.';

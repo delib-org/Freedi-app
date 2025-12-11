@@ -1,7 +1,7 @@
 import { Change, logger } from 'firebase-functions/v1';
 import { db } from '.';
 import { FieldValue } from 'firebase-admin/firestore';
-import { Importance, Collections, StatementSchema } from 'delib-npm';
+import { Importance, Collections, StatementSchema } from '@freedi/shared-types';
 import { parse } from 'valibot';
 import { FirestoreEvent } from 'firebase-functions/firestore';
 import { DocumentSnapshot } from 'firebase-functions/v1/firestore';

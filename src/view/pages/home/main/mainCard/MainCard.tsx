@@ -6,7 +6,7 @@ import UpdateMainCard from './updateMainCard/UpdateMainCard';
 import ImgThumb from '@/assets/images/ImgThumb.png';
 import Text from '@/view/components/text/Text';
 import StatementChatMore from '@/view/pages/statement/components/chat/components/statementChatMore/StatementChatMore';
-import { SimpleStatement, StatementSubscription } from 'delib-npm';
+import { SimpleStatement, StatementSubscription } from '@freedi/shared-types';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 
 interface Props {

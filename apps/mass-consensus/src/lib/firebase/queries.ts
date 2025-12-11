@@ -1,4 +1,4 @@
-import { Statement, StatementType, Evaluation, Collections } from 'delib-npm';
+import { Statement, StatementType, Evaluation, Collections } from '@freedi/shared-types';
 import { getFirestoreAdmin } from './admin';
 
 /**

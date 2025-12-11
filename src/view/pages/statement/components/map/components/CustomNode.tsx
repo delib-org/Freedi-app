@@ -13,7 +13,7 @@ import { updateStatementText } from '@/controllers/db/statements/setStatements';
 import { statementTitleToDisplay } from '@/controllers/general/helpers';
 import { useMapContext } from '@/controllers/hooks/useMap';
 import useStatementColor from '@/controllers/hooks/useStatementColor';
-import { Statement, StatementType } from 'delib-npm';
+import { Statement, StatementType } from '@freedi/shared-types';
 import NodeMenu from './nodeMenu/NodeMenu';
 // Styles
 import styles from './CustomNode.module.scss';

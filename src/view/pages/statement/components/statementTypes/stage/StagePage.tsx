@@ -5,7 +5,7 @@ import StatementBottomNav from '../../nav/bottom/StatementBottomNav';
 import StatementVote from '../../vote/StatementVote';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { StatementContext } from '../../../StatementCont';
-import { Statement, EvaluationUI } from 'delib-npm';
+import { Statement, EvaluationUI } from '@freedi/shared-types';
 import Clustering from '../../clustering/Clustering';
 import { useSummarization } from '@/controllers/hooks/useSummarization';
 import SummaryDisplay from '../question/document/MultiStageQuestion/components/SummaryDisplay/SummaryDisplay';

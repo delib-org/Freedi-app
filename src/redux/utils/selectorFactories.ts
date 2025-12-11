@@ -5,7 +5,7 @@
  */
 
 import { createSelector } from '@reduxjs/toolkit';
-import { Statement, StatementType } from 'delib-npm';
+import { Statement, StatementType } from '@freedi/shared-types';
 import type { RootState } from '../types';
 
 /**

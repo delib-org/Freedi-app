@@ -1,6 +1,6 @@
 // Jest test file
 import { getDoc, updateDoc, getDocs, doc } from 'firebase/firestore';
-import { StatementType, Statement, QuestionType, EvaluationUI } from 'delib-npm';
+import { StatementType, Statement, QuestionType, EvaluationUI } from '@freedi/shared-types';
 import { changeStatementType } from '../changeStatementType';
 
 // Mock Firebase Firestore

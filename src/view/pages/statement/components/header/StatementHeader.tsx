@@ -5,7 +5,7 @@ import InvitePanel from './invitePanel/InvitePanel';
 import ShareModal from '@/view/components/shareModal/ShareModal';
 import { logOut } from '@/controllers/db/authenticationUtils';
 import { setFollowMeDB } from '@/controllers/db/statements/setStatements';
-import { Statement } from 'delib-npm';
+import { Statement } from '@freedi/shared-types';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 
 interface Props {

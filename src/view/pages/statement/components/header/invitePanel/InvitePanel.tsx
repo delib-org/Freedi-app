@@ -5,7 +5,7 @@ import XIcon from '../../../../../components/icons/XIcon';
 import InviteModal from '../../../../../components/modal/InviteModal';
 import styles from './InvitePanel.module.scss';
 import InvitePanelBox from './InvitePanelBox';
-import { Invitation } from 'delib-npm';
+import { Invitation } from '@freedi/shared-types';
 
 interface Props {
 	setShowModal: (show: boolean) => void;

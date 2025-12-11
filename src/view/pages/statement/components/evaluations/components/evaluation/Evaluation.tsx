@@ -2,7 +2,7 @@ import { FC } from 'react';
 import EnhancedEvaluation from './enhancedEvaluation/EnhancedEvaluation';
 import SimpleEvaluation from './simpleEvaluation/SimpleEvaluation';
 import SingleLikeEvaluation from './singleLikeEvaluation/SingleLikeEvaluation';
-import { Statement } from 'delib-npm';
+import { Statement } from '@freedi/shared-types';
 import { useEvaluation } from './EvalautionMV';
 
 interface EvaluationProps {

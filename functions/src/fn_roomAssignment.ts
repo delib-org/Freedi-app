@@ -12,7 +12,7 @@ import {
 	Room,
 	RoomParticipant,
 	DemographicTag,
-} from 'delib-npm';
+} from '@freedi/shared-types';
 import { parse } from 'valibot';
 import { db } from '.';
 

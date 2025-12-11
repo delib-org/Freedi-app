@@ -1,4 +1,4 @@
-import { Statement } from 'delib-npm';
+import { Statement } from '@freedi/shared-types';
 import SolutionFeedClient from './SolutionFeedClient';
 
 interface SolutionFeedProps {

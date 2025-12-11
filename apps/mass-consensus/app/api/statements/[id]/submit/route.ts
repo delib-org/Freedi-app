@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
-import { Collections, StatementType, Statement } from 'delib-npm';
+import { Collections, StatementType, Statement } from '@freedi/shared-types';
 import { getUserIdFromCookie, getAnonymousDisplayName } from '@/lib/utils/user';
 import { logError, ValidationError } from '@/lib/utils/errorHandling';
 import { VALIDATION, ERROR_MESSAGES } from '@/constants/common';

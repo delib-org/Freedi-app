@@ -1,4 +1,4 @@
-import { QuestionStep } from 'delib-npm';
+import { QuestionStep } from '@freedi/shared-types';
 import { StepInfo, getStepsInfo } from './QuestionStageRadioBtn';
 
 export function getStepInfo(

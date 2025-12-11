@@ -6,7 +6,7 @@ import {
 	Statement,
 	Collections,
 	QuestionType,
-} from 'delib-npm';
+} from '@freedi/shared-types';
 
 interface SetStatementSettingsProps {
 	statement: Statement;

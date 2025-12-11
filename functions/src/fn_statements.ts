@@ -11,7 +11,7 @@ import {
 	Statement,
 	StatementSchema,
 	LastMessage,
-} from 'delib-npm';
+} from '@freedi/shared-types';
 import { FirestoreEvent } from 'firebase-functions/firestore';
 import { parse } from 'valibot';
 import { Response, Request } from 'firebase-functions/v1';

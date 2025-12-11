@@ -1,5 +1,5 @@
 import React, { FC, useState, useEffect } from 'react';
-import { Statement } from 'delib-npm';
+import { Statement } from '@freedi/shared-types';
 import { EvidenceType } from 'delib-npm/dist/models/evidence/evidenceModel';
 import { getCorroborationLabel, getCorroborationColor } from '../../popperHebbianHelpers';
 import { submitVote, removeVote, getUserVote } from '@/controllers/db/popperHebbian/evidenceController';

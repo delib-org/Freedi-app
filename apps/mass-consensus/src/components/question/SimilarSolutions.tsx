@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { Statement } from 'delib-npm';
+import { Statement } from '@freedi/shared-types';
 import { VALIDATION, UI } from '@/constants/common';
 import styles from './SimilarSolutions.module.scss';
 

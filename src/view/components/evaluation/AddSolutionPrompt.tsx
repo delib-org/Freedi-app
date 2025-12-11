@@ -4,7 +4,7 @@ import Modal from '@/view/components/modal/Modal';
 import { Button } from '@/view/components/atomic/atoms/Button';
 import { Card } from '@/view/components/atomic/molecules/Card';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
-import { Statement } from 'delib-npm';
+import { Statement } from '@freedi/shared-types';
 
 interface AddSolutionPromptProps {
 	show: boolean;

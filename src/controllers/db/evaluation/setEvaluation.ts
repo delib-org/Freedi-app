@@ -1,7 +1,7 @@
 import { Timestamp, doc, setDoc, updateDoc } from 'firebase/firestore';
 import { FireStore } from '../config';
 import { number, parse } from 'valibot';
-import { EvaluationSchema, Collections, Statement, User, EvaluationUI } from 'delib-npm';
+import { EvaluationSchema, Collections, Statement, User, EvaluationUI } from '@freedi/shared-types';
 import { analyticsService } from '@/services/analytics';
 import { logger } from '@/services/logger';
 

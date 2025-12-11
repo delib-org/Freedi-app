@@ -1,6 +1,6 @@
 import React, { FC, useState, useEffect, useCallback } from 'react';
 import Modal from '@/view/components/modal/Modal';
-import { Statement } from 'delib-npm';
+import { Statement } from '@freedi/shared-types';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import {

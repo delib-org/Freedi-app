@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { statementSelector, statementSubscriptionSelector } from '@/redux/statements/statementsSlice';
-import { Access, Role, Statement, Creator } from 'delib-npm';
+import { Access, Role, Statement, Creator } from '@freedi/shared-types';
 import { setStatementSubscriptionToDB } from '../db/subscriptions/setSubscriptions';
 import { useSelector } from 'react-redux';
 import { creatorSelector } from '@/redux/creator/creatorSlice';

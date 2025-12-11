@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router';
 import styles from './NotificationCard.module.scss';
-import { NotificationType } from 'delib-npm';
+import { NotificationType } from '@freedi/shared-types';
 import { isChatMessage, isMassConsensus } from '@/controllers/general/helpers';
 import { markNotificationAsReadDB } from '@/controllers/db/inAppNotifications/db_inAppNotifications';
 

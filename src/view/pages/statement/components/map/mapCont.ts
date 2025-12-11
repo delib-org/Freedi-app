@@ -1,5 +1,5 @@
 import { getResultsDB } from '@/controllers/db/results/getResults';
-import { ResultsBy, Results, Statement } from 'delib-npm';
+import { ResultsBy, Results, Statement } from '@freedi/shared-types';
 import { logError } from '@/utils/errorHandling';
 
 export async function getResults(

@@ -1,5 +1,5 @@
 import React, { FC, useState } from 'react';
-import { Statement } from 'delib-npm';
+import { Statement } from '@freedi/shared-types';
 import { MemberReviewData } from '../MemberValidation';
 import MemberReviewCard from '../memberReviewCard/MemberReviewCard';
 import BanConfirmationModal from '../banConfirmationModal/BanConfirmationModal';

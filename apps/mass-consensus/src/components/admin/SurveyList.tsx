@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { Survey } from '@/types/survey';
+import SurveyCard from './SurveyCard';
 import styles from './Admin.module.scss';
 
 /**
@@ -118,45 +119,11 @@ export default function SurveyList() {
       ) : (
         <div className={styles.surveyGrid}>
           {surveys.map((survey) => (
-            <div key={survey.surveyId} className={styles.surveyCard}>
-              <div className={styles.surveyInfo}>
-                <h3 className={styles.surveyTitle}>{survey.title}</h3>
-                {survey.description && (
-                  <p className={styles.surveyDescription}>{survey.description}</p>
-                )}
-                <div className={styles.surveyMeta}>
-                  <span>
-                    {survey.questionIds.length} {t('questions')}
-                  </span>
-                  <span>•</span>
-                  <span className={survey.isActive ? styles.active : styles.inactive}>
-                    {survey.isActive ? t('active') : t('inactive')}
-                  </span>
-                </div>
-              </div>
-
-              <div className={styles.surveyActions}>
-                <Link
-                  href={`/admin/surveys/${survey.surveyId}`}
-                  className={styles.actionButton}
-                >
-                  {t('edit')}
-                </Link>
-                <Link
-                  href={`/s/${survey.surveyId}`}
-                  className={styles.actionButton}
-                  target="_blank"
-                >
-                  {t('preview')}
-                </Link>
-                <button
-                  onClick={() => handleDelete(survey.surveyId)}
-                  className={`${styles.actionButton} ${styles.deleteButton}`}
-                >
-                  {t('delete')}
-                </button>
-              </div>
-            </div>
+            <SurveyCard
+              key={survey.surveyId}
+              survey={survey}
+              onDelete={handleDelete}
+            />
           ))}
         </div>
       )}

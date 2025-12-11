@@ -1,5 +1,5 @@
 import { FC, useState, useCallback } from 'react';
-import { Statement } from 'delib-npm';
+import { Statement } from '@freedi/shared-types';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { creatorSelector } from '@/redux/creator/creatorSlice';

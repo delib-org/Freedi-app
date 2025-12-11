@@ -1,6 +1,6 @@
 import { createSelector } from '@reduxjs/toolkit';
 import { RootState } from '@/redux/store';
-import { Statement, StatementType } from 'delib-npm';
+import { Statement, StatementType } from '@freedi/shared-types';
 import { MINDMAP_CONFIG } from '@/constants/mindMap';
 
 /**

@@ -1,5 +1,5 @@
 import React, { FC, useState, useEffect, useRef, KeyboardEvent, ChangeEvent } from 'react';
-import { Statement } from 'delib-npm';
+import { Statement } from '@freedi/shared-types';
 import Save from '@/assets/icons/saveIcon.svg?react';
 import Text from '../text/Text';
 import { useTranslation } from '@/controllers/hooks/useTranslation';

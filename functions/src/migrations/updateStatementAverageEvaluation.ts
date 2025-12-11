@@ -1,5 +1,5 @@
 import { db } from '../index';
-import { Collections, Statement } from 'delib-npm';
+import { Collections, Statement } from '@freedi/shared-types';
 import { logger } from 'firebase-functions/v1';
 
 /**

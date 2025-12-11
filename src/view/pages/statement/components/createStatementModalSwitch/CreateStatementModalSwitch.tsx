@@ -1,7 +1,7 @@
 import React from 'react';
 import CreateStatementModal from '../createStatementModal/CreateStatementModal';
 import SimilarStatementsSuggestion from '../newStatement/NewStatement';
-import { StatementType, Statement } from 'delib-npm';
+import { StatementType, Statement } from '@freedi/shared-types';
 
 interface CreateStatementModalSwitchProps {
 	useSimilarStatements: boolean;

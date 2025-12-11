@@ -8,7 +8,7 @@ import {
 	setStatement,
 	statementSelectorById,
 } from '@/redux/statements/statementsSlice';
-import { Statement, SimpleStatement } from 'delib-npm';
+import { Statement, SimpleStatement } from '@freedi/shared-types';
 import { useDispatch, useSelector } from 'react-redux';
 
 interface Props {

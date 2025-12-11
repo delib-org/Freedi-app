@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { Statement, StatementType, Collections } from 'delib-npm';
+import { Statement, StatementType, Collections } from '@freedi/shared-types';
 import { getSurveyById, addQuestionToSurvey } from '@/lib/firebase/surveys';
 import { verifyAdmin, extractBearerToken } from '@/lib/auth/verifyAdmin';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';

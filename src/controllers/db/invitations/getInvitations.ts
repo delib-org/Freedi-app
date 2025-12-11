@@ -8,7 +8,7 @@ import {
 } from 'firebase/firestore';
 import { FireStore } from '../config';
 import { getNumberDigits } from '@/controllers/general/helpers';
-import { Collections } from 'delib-npm';
+import { Collections } from '@freedi/shared-types';
 
 export async function getMaxInvitationDigits(): Promise<number | undefined> {
 	try {

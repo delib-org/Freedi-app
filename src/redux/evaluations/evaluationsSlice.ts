@@ -1,7 +1,7 @@
 import { createSlice } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
 import { RootState } from '../types';
-import { Evaluation, EvaluationSchema, updateArray } from 'delib-npm';
+import { Evaluation, EvaluationSchema, updateArray } from '@freedi/shared-types';
 import { parse } from 'valibot';
 
 // Define a type for the slice state

@@ -1,4 +1,4 @@
-import { Statement } from 'delib-npm';
+import { Statement } from '@freedi/shared-types';
 
 /**
  * Request body for checking similar solutions

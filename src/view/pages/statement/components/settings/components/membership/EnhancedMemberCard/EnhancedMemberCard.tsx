@@ -1,6 +1,6 @@
 import { FC, useState, useEffect, useMemo } from 'react';
 import styles from './EnhancedMemberCard.module.scss';
-import { StatementSubscription, Role } from 'delib-npm';
+import { StatementSubscription, Role } from '@freedi/shared-types';
 import { updateMemberRole } from '@/controllers/db/subscriptions/setSubscriptions';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { canBanUser, getBanDisabledReason } from '@/helpers/roleHelpers';

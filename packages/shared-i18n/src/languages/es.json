@@ -763,5 +763,27 @@
   "Left to Right (LTR)": "Izquierda a derecha (LTR)",
   "Force left-to-right direction (English, etc.)": "Forzar dirección de izquierda a derecha (inglés, etc.)",
   "Right to Left (RTL)": "Derecha a izquierda (RTL)",
-  "Force right-to-left direction (Hebrew, Arabic, etc.)": "Forzar dirección de derecha a izquierda (hebreo, árabe, etc.)"
+  "Force right-to-left direction (Hebrew, Arabic, etc.)": "Forzar dirección de derecha a izquierda (hebreo, árabe, etc.)",
+
+  "welcomeBack": "¡Bienvenido de nuevo!",
+  "continueFrom": "Continuar desde la pregunta {{num}} de {{total}}",
+  "continue": "Continuar",
+  "startOver": "Empezar de nuevo",
+  "questionsCompleted": "preguntas completadas",
+  "surveyStatus": "Estado de la encuesta",
+  "statistics": "Estadísticas",
+  "responses": "Respuestas",
+  "completions": "Completados",
+  "completionRate": "Tasa de finalización",
+  "changeStatus": "Cambiar estado",
+  "draft": "Borrador",
+  "draftDescription": "La encuesta no es visible para los participantes",
+  "activeDescription": "La encuesta está aceptando respuestas",
+  "closed": "Cerrado",
+  "closedDescription": "La encuesta está cerrada, no hay nuevas respuestas",
+  "confirmClose": "¿Cerrar encuesta?",
+  "closeWarning": "Las encuestas cerradas no pueden aceptar nuevas respuestas. Esta acción se puede deshacer cambiando el estado a Activo.",
+  "closing": "Cerrando...",
+  "closeSurvey": "Cerrar encuesta",
+  "status": "Estado"
 }

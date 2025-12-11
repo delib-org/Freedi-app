@@ -3,7 +3,7 @@ import { useSelector } from 'react-redux';
 import { useParams } from 'react-router';
 import { listenToPolarizationIndex } from '@/controllers/db/polarizationIndex/getPolarizationIndex';
 import { selectPolarizationIndexByParentId } from '@/redux/userDemographic/userDemographicSlice';
-import { PolarizationIndex } from 'delib-npm';
+import { PolarizationIndex } from '@freedi/shared-types';
 
 export const usePolarizationData = () => {
 	const { statementId } = useParams();

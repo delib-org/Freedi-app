@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { QRCodeSVG } from 'qrcode.react';
 import { useTranslation } from '@freedi/shared-i18n/next';
-import { Survey } from '@/types/survey';
+import { Survey, SurveyStatus } from '@/types/survey';
 import styles from './Admin.module.scss';
 
 interface SurveyShareProps {
@@ -69,8 +69,8 @@ export default function SurveyShare({ survey }: SurveyShareProps) {
       <div style={{ marginBottom: '1rem' }}>
         <span style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>
           {survey.questionIds.length} {t('questions')} •{' '}
-          <span style={{ color: survey.isActive ? 'var(--agree)' : 'var(--text-muted)' }}>
-            {survey.isActive ? t('active') : t('inactive')}
+          <span style={{ color: survey.status === SurveyStatus.active ? 'var(--agree)' : 'var(--text-muted)' }}>
+            {t(survey.status || 'draft')}
           </span>
         </span>
       </div>

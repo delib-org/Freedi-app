@@ -1,7 +1,7 @@
 import ProfileImage from '@/view/components/profileImage/ProfileImage'
 import CreatorEvaluationIcon from '../CreatorEvaluationIcon/CreatorEvaluationIcon'
 import styles from './CommentCard.module.scss'
-import { Statement } from 'delib-npm'
+import { Statement } from '@freedi/shared-types'
 import { FC } from 'react'
 import { useSuggestionComment } from '../SuggestionCommentMV'
 

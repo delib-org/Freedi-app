@@ -1,4 +1,4 @@
-import { StatementType, Statement } from 'delib-npm';
+import { StatementType, Statement } from '@freedi/shared-types';
 
 export function styleSwitch(statement: Statement) {
 	const { statementType } = statement;

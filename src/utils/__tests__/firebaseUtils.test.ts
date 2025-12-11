@@ -14,7 +14,7 @@ import {
 	createTimestamps,
 	updateTimestamp,
 } from '../firebaseUtils';
-import { Collections } from 'delib-npm';
+import { Collections } from '@freedi/shared-types';
 
 // Mock Firebase
 jest.mock('@/controllers/db/config', () => ({

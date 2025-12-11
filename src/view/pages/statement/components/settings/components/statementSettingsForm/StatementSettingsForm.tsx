@@ -25,7 +25,7 @@ import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { createSelector } from '@reduxjs/toolkit';
 import { RootState } from '@/redux/store';
 import Loader from '@/view/components/loaders/Loader';
-import { StatementSubscription, Role, Statement, StatementType } from 'delib-npm';
+import { StatementSubscription, Role, Statement, StatementType } from '@freedi/shared-types';
 import MembershipSettings from '../membershipSettings/MembershipSettings';
 import UserDemographicSetting from '../UserDemographicSettings/UserDemographicSetting';
 import MembersSettings from '../membership/MembersSettings';

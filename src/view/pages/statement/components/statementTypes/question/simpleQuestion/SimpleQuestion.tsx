@@ -1,5 +1,5 @@
 import { useContext, useState } from 'react'
-import { Statement } from 'delib-npm'
+import { Statement } from '@freedi/shared-types'
 import StatementBottomNav from '../../../nav/bottom/StatementBottomNav'
 import styles from './SimpleQuestion.module.scss'
 import SuggestionCards from '../../../evaluations/components/suggestionCards/SuggestionCards'

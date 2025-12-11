@@ -1,5 +1,5 @@
 import React, { FC, DragEvent } from 'react';
-import { Statement } from 'delib-npm';
+import { Statement } from '@freedi/shared-types';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import SubGroupCard from '@/view/components/subGroupCard/SubGroupCard';
 import Research from '@/assets/images/Research.png';

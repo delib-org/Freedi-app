@@ -6,7 +6,7 @@ import {
 	statementOptionsSelector,
 	statementSelector,
 } from '@/redux/statements/statementsSlice';
-import { Statement } from 'delib-npm';
+import { Statement } from '@freedi/shared-types';
 import { useParams } from 'react-router';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 

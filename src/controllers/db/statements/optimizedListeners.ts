@@ -10,10 +10,10 @@ import {
   DocumentData,
   QuerySnapshot,
 } from 'firebase/firestore';
-import { Statement, StatementType, StatementSchema } from 'delib-npm';
+import { Statement, StatementType, StatementSchema } from '@freedi/shared-types';
 import { parse } from 'valibot';
 import { FireStore } from '../config';
-import { Collections } from 'delib-npm';
+import { Collections } from '@freedi/shared-types';
 import { store } from '@/redux/store';
 import { setStatement, setStatements, deleteStatement } from '@/redux/statements/statementsSlice';
 import { logError } from '@/utils/errorHandling';

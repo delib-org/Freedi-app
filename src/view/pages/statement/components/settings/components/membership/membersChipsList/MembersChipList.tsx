@@ -1,7 +1,7 @@
 import { FC } from 'react';
 import Chip from '@/view/components/chip/Chip';
 import styles from './MembersChipList.module.scss';
-import { User } from 'delib-npm';
+import { User } from '@freedi/shared-types';
 
 interface MembersChipsListProps {
 	members: User[];

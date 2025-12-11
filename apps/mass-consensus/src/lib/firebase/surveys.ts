@@ -1,4 +1,4 @@
-import { Statement, StatementType, Collections, Role } from 'delib-npm';
+import { Statement, StatementType, Collections, Role } from '@freedi/shared-types';
 import { getFirestoreAdmin } from './admin';
 import {
   Survey,
@@ -7,6 +7,7 @@ import {
   CreateSurveyRequest,
   UpdateSurveyRequest,
   DEFAULT_SURVEY_SETTINGS,
+  SurveyStatus,
 } from '@/types/survey';
 
 /** Collection name for surveys */
@@ -52,9 +53,9 @@ export async function createSurvey(
       ...DEFAULT_SURVEY_SETTINGS,
       ...data.settings,
     },
+    status: SurveyStatus.draft,
     createdAt: now,
     lastUpdate: now,
-    isActive: true,
   };
 
   await db.collection(SURVEYS_COLLECTION).doc(survey.surveyId).set(survey);
@@ -130,7 +131,7 @@ export async function updateSurvey(
   if (data.title !== undefined) updates.title = data.title;
   if (data.description !== undefined) updates.description = data.description;
   if (data.questionIds !== undefined) updates.questionIds = data.questionIds;
-  if (data.isActive !== undefined) updates.isActive = data.isActive;
+  if (data.status !== undefined) updates.status = data.status as SurveyStatus;
   if (data.settings !== undefined) {
     updates.settings = {
       ...survey.settings,
@@ -416,4 +417,65 @@ export async function getAvailableQuestions(adminId: string): Promise<Statement[
   console.info('[getAvailableQuestions] Total available questions:', questions.length);
 
   return questions;
+}
+
+// ============================================
+// SURVEY STATUS OPERATIONS
+// ============================================
+
+/**
+ * Change survey status (draft -> active -> closed)
+ */
+export async function changeSurveyStatus(
+  surveyId: string,
+  newStatus: SurveyStatus
+): Promise<Survey | null> {
+  return updateSurvey(surveyId, { status: newStatus });
+}
+
+/**
+ * Get survey statistics (response and completion counts)
+ */
+export async function getSurveyStats(surveyId: string): Promise<{
+  responseCount: number;
+  completionCount: number;
+  completionRate: number;
+}> {
+  const db = getFirestoreAdmin();
+
+  const progressSnapshot = await db
+    .collection(SURVEY_PROGRESS_COLLECTION)
+    .where('surveyId', '==', surveyId)
+    .get();
+
+  const responseCount = progressSnapshot.size;
+  const completionCount = progressSnapshot.docs.filter(
+    (doc) => doc.data().isCompleted === true
+  ).length;
+  const completionRate = responseCount > 0 ? (completionCount / responseCount) * 100 : 0;
+
+  return {
+    responseCount,
+    completionCount,
+    completionRate: Math.round(completionRate),
+  };
+}
+
+/**
+ * Get surveys by status
+ */
+export async function getSurveysByStatus(
+  creatorId: string,
+  status: SurveyStatus
+): Promise<Survey[]> {
+  const db = getFirestoreAdmin();
+
+  const snapshot = await db
+    .collection(SURVEYS_COLLECTION)
+    .where('creatorId', '==', creatorId)
+    .where('status', '==', status)
+    .orderBy('createdAt', 'desc')
+    .get();
+
+  return snapshot.docs.map((doc) => doc.data() as Survey);
 }

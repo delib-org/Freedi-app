@@ -31,7 +31,7 @@ import {
 	Statement,
 	StatementSchema,
 	Creator,
-} from 'delib-npm';
+} from '@freedi/shared-types';
 
 import { parse, safeParse, flatten } from 'valibot';
 import React from 'react';

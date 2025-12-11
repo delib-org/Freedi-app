@@ -10,7 +10,7 @@ import {
 	Role,
 	StatementSubscription,
 	Creator
-} from 'delib-npm';
+} from '@freedi/shared-types';
 import { parse } from 'valibot';
 import { store } from '@/redux/store';
 import { setShowGroupDemographicModal } from '@/redux/userDemographic/userDemographicSlice';

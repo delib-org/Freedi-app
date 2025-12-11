@@ -1,5 +1,5 @@
 import React, { FC } from 'react';
-import { Statement } from 'delib-npm';
+import { Statement } from '@freedi/shared-types';
 import EditText, { EditTextProps } from './EditText';
 import { useEditPermission } from '@/controllers/hooks/useEditPermission';
 import { updateStatementText } from '@/controllers/db/statements/setStatements';

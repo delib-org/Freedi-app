@@ -1,7 +1,7 @@
 import { doc, setDoc, getDoc, updateDoc } from 'firebase/firestore';
 import { httpsCallable } from 'firebase/functions';
 import { FireStore, functions } from '../config';
-import { Collections } from 'delib-npm';
+import { Collections } from '@freedi/shared-types';
 import {
 	RefinementSession,
 	IdeaRefinementStatus,

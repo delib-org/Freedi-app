@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import ReactDOM from 'react-dom';
 import { getAuth } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
-import { Collections } from 'delib-npm';
+import { Collections } from '@freedi/shared-types';
 import { notificationService } from '@/services/notificationService';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import useClickOutside from '@/controllers/hooks/useClickOutside';

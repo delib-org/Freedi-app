@@ -2,6 +2,7 @@ import { Suspense } from 'react';
 import { Metadata } from 'next';
 import { notFound, redirect } from 'next/navigation';
 import { getSurveyWithQuestions } from '@/lib/firebase/surveys';
+import { SurveyStatus } from '@/types/survey';
 import { getRandomOptions } from '@/lib/firebase/queries';
 import QuestionHeader from '@/components/question/QuestionHeader';
 import SolutionFeed from '@/components/question/SolutionFeed';
@@ -60,7 +61,11 @@ export default async function SurveyQuestionPage({ params }: PageProps) {
       notFound();
     }
 
-    if (!survey.isActive) {
+    // Check if survey is active (or handle legacy isActive field)
+    const isActive = survey.status === SurveyStatus.active ||
+      (survey.status === undefined && (survey as { isActive?: boolean }).isActive);
+
+    if (!isActive) {
       redirect(`/s/${params.surveyId}`);
     }
 

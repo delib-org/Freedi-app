@@ -2,7 +2,7 @@ import * as v from 'valibot';
 import { isProduction } from '@/controllers/general/helpers';
 import { setCurrentMultiStepOptions } from '@/redux/statements/statementsSlice';
 import { store } from '@/redux/store';
-import { Statement, StatementSchema, functionConfig } from 'delib-npm';
+import { Statement, StatementSchema, functionConfig } from '@freedi/shared-types';
 import firebaseConfig from '../configKey';
 
 export async function getFirstEvaluationOptions(

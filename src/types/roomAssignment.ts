@@ -4,7 +4,7 @@ export {
 	RoomSettingsSchema,
 	RoomParticipantSchema,
 	DemographicTagSchema,
-} from 'delib-npm';
+} from '@freedi/shared-types';
 
 export type {
 	Room,
@@ -12,7 +12,7 @@ export type {
 	RoomParticipant,
 	DemographicTag,
 	Creator,
-} from 'delib-npm';
+} from '@freedi/shared-types';
 
 // Room Settings Status type (derived from schema)
 export type RoomSettingsStatus = 'draft' | 'active' | 'archived';

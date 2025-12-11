@@ -9,7 +9,7 @@ import SmileIcon from '@/assets/icons/smileIcon.svg?react';
 
 // Statement helpers
 import { setEvaluationToDB } from '@/controllers/db/evaluation/setEvaluation';
-import { Statement } from 'delib-npm';
+import { Statement } from '@freedi/shared-types';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { useEvaluationGuard } from '@/controllers/hooks/useEvaluationGuard';
 import { Tooltip } from '@/view/components/tooltip/Tooltip';

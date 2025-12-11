@@ -4,7 +4,7 @@ import { StatementSettingsProps } from '../../settingsTypeHelpers';
 import SectionTitle from '../sectionTitle/SectionTitle';
 import styles from './QuestionSettings.module.scss';
 import { setStatementSettingToDB } from '@/controllers/db/statementSettings/setStatementSettings';
-import { EvaluationUI, StatementType } from 'delib-npm';
+import { EvaluationUI, StatementType } from '@freedi/shared-types';
 import ConsentIcon from '@/assets/icons/doubleCheckIcon.svg?react';
 import SuggestionsIcon from '@/assets/icons/smile.svg?react';
 import VotingIcon from '@/assets/icons/votingIcon.svg?react';

@@ -1,7 +1,7 @@
 import { FC } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { useSelector } from 'react-redux';
-import { Statement, StatementType, QuestionType, Role } from 'delib-npm';
+import { Statement, StatementType, QuestionType, Role } from '@freedi/shared-types';
 import { statementSubscriptionSelector } from '@/redux/statements/statementsSlice';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import useStatementColor from '@/controllers/hooks/useStatementColor';

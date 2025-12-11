@@ -1,4 +1,4 @@
-import { QuestionType } from 'delib-npm';
+import { QuestionType } from '@freedi/shared-types';
 
 /**
  * Returns the default question type for new questions.

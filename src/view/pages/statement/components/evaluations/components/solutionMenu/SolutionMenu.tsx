@@ -11,7 +11,7 @@ import { changeStatementType } from '@/controllers/db/statements/changeStatement
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import Menu from '@/view/components/menu/Menu';
 import MenuOption from '@/view/components/menu/MenuOption';
-import { Statement, StatementType } from 'delib-npm';
+import { Statement, StatementType } from '@freedi/shared-types';
 import { useSelector } from 'react-redux';
 import { creatorSelector } from '@/redux/creator/creatorSlice';
 

@@ -4,7 +4,7 @@ import {
 } from './components/evaluation/enhancedEvaluation/EnhancedEvaluationModel';
 import { updateStatementTop } from '@/redux/statements/statementsSlice';
 import { store } from '@/redux/store';
-import { Statement, SortType } from 'delib-npm';
+import { Statement, SortType } from '@freedi/shared-types';
 
 export function sortSubStatements(
 	subStatements: Statement[],

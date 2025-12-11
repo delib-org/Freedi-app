@@ -5,7 +5,7 @@ import { defaultStatementSettings } from '../../emptyStatementModel';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import styles from './EnhancedAdvancedSettings.module.scss';
 import { setStatementSettingToDB } from '@/controllers/db/statementSettings/setStatementSettings';
-import { StatementSettings, StatementType, evaluationType, Collections } from 'delib-npm';
+import { StatementSettings, StatementType, evaluationType, Collections } from '@freedi/shared-types';
 import { doc, setDoc } from 'firebase/firestore';
 import { FireStore } from '@/controllers/db/config';
 import { setMaxVotesPerUser } from '@/controllers/db/evaluation/setEvaluation';

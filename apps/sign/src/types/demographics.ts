@@ -7,7 +7,7 @@ import {
   UserDemographicQuestion,
   DemographicOption,
   UserDemographicQuestionType,
-} from 'delib-npm';
+} from '@freedi/shared-types';
 
 // Re-export from delib-npm
 export type {

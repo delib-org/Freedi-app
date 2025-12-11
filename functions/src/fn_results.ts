@@ -8,7 +8,7 @@ import {
 	StatementSchema,
 	ResultsSettingsSchema,
 	Collections
-} from 'delib-npm';
+} from '@freedi/shared-types';
 
 export async function updateResultsSettings(
 	ev: FirestoreEvent<

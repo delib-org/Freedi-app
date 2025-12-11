@@ -16,7 +16,7 @@ import {
 	CutoffBy,
 	ResultsBy,
 	Statement,
-} from 'delib-npm';
+} from '@freedi/shared-types';
 import { updateResultSettingsToDB } from '@/controllers/db/statements/setResultSettings';
 import { statementSelector } from '@/redux/statements/statementsSlice';
 import SectionTitle from '../sectionTitle/SectionTitle';

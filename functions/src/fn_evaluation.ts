@@ -16,7 +16,7 @@ import {
 	ResultsSettings,
 	ResultsBy,
 	CutoffBy
-} from 'delib-npm';
+} from '@freedi/shared-types';
 import type { PopperHebbianScore } from 'delib-npm/dist/models/popper/popperTypes';
 
 // Extend Statement type to include popperHebbianScore (it exists but TypeScript doesn't see it during compilation)

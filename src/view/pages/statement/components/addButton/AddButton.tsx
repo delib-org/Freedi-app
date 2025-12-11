@@ -4,7 +4,7 @@ import PlusIcon from '@/assets/icons/plusIcon.svg?react';
 import AddQuestionIcon from '@/assets/icons/questionIcon.svg?react';
 import AddSubGroupIcon from '@/assets/icons/team-group.svg?react';
 import styles from './AddButton.module.scss'
-import { StatementType } from 'delib-npm';
+import { StatementType } from '@freedi/shared-types';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { useDispatch, useSelector } from 'react-redux';
 import { setNewStatementModal, setShowNewStatementModal } from '@/redux/statements/newStatementSlice';

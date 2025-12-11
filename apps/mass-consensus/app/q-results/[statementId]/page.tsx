@@ -1,7 +1,7 @@
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { cookies } from 'next/headers';
-import { Statement } from 'delib-npm';
+import { Statement } from '@freedi/shared-types';
 import { getQuestionFromFirebase, getAllSolutionsSorted, getUserSolutions } from '@/lib/firebase/queries';
 import { getUserIdFromCookies } from '@/lib/utils/user';
 import { LanguageOverrideProvider } from '@/components/providers/LanguageOverrideProvider';

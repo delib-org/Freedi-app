@@ -1,4 +1,4 @@
-import { Statement, StatementType } from 'delib-npm';
+import { Statement, StatementType } from '@freedi/shared-types';
 import { Unsubscribe } from 'firebase/firestore';
 import { store } from '@/redux/store';
 import { listenToAllDescendants, listenToStatement } from '@/controllers/db/statements/listenToStatements';

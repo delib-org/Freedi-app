@@ -1,6 +1,6 @@
 import { logger } from 'firebase-functions/v1';
 import { db } from '.';
-import { Collections, Statement, StatementView } from 'delib-npm';
+import { Collections, Statement, StatementView } from '@freedi/shared-types';
 
 //@ts-ignore
 export async function updateStatementWithViews(ev) {

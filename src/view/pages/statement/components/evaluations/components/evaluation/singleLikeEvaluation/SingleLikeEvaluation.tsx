@@ -1,7 +1,7 @@
 import { FC, useEffect, useState } from 'react';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { evaluationSelector, userVotesInParentSelector } from '@/redux/evaluations/evaluationsSlice';
-import { Statement, User } from 'delib-npm';
+import { Statement, User } from '@freedi/shared-types';
 import { setEvaluationToDB } from '@/controllers/db/evaluation/setEvaluation';
 import { auth } from '@/controllers/db/config';
 import { useTranslation } from '@/controllers/hooks/useTranslation';

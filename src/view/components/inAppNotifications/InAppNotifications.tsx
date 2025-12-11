@@ -2,7 +2,7 @@ import { inAppNotificationsSelector } from '@/redux/notificationsSlice/notificat
 import { useSelector } from 'react-redux';
 import styles from './InAppNotifications.module.scss';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
-import { NotificationType } from 'delib-npm';
+import { NotificationType } from '@freedi/shared-types';
 import { creatorSelector } from '@/redux/creator/creatorSlice';
 import NotificationCard from '../notificationCard/NotificationCard';
 

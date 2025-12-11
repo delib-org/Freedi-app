@@ -5,7 +5,7 @@ import EnhancedEvaluation, { EvaluationThumb } from '@/view/pages/statement/comp
 import { enhancedEvaluationsThumbs, EnhancedEvaluationThumb } from '@/view/pages/statement/components/evaluations/components/evaluation/enhancedEvaluation/EnhancedEvaluationModel'
 import SimpleEvaluation from '@/view/pages/statement/components/evaluations/components/evaluation/simpleEvaluation/SimpleEvaluation'
 import SingleLikeEvaluation from '@/view/pages/statement/components/evaluations/components/evaluation/singleLikeEvaluation/SingleLikeEvaluation'
-import { Statement, evaluationType } from 'delib-npm'
+import { Statement, evaluationType } from '@freedi/shared-types'
 import { FC, useState } from 'react'
 import styles from './EvaluationPopup.module.scss';
 

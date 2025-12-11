@@ -17,7 +17,7 @@ import styles from './StatementVote.module.scss';
 import Toast from '@/view/components/toast/Toast';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { StatementContext } from '../../StatementCont';
-import { Statement, QuestionStep } from 'delib-npm';
+import { Statement, QuestionStep } from '@freedi/shared-types';
 import { statementSubsSelector } from '@/redux/statements/statementsSlice';
 import { useSelector } from 'react-redux';
 import { setVoteToStore } from '@/redux/vote/votesSlice';
