@@ -10,7 +10,7 @@ interface LoginModalProps {
   redirectUrl?: string;
 }
 
-export default function LoginModal({ onClose, redirectUrl }: LoginModalProps) {
+export default function LoginModal({ onClose: _onClose, redirectUrl }: LoginModalProps) {
   const { t } = useTranslation();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

@@ -754,5 +754,14 @@
   "You must be logged in to import": "U moet ingelogd zijn om te importeren",
   "Export Users": "Gebruikers exporteren",
   "Export Detailed": "Gedetailleerd exporteren",
-  "Export document with all paragraphs, comments, and demographics": "Document exporteren met alle alinea's, reacties en demografische gegevens"
+  "Export document with all paragraphs, comments, and demographics": "Document exporteren met alle alinea's, reacties en demografische gegevens",
+
+  "Text Direction": "Tekstrichting",
+  "Control the text direction for this document": "Beheer de tekstrichting voor dit document",
+  "Auto": "Automatisch",
+  "Automatically detect direction based on content": "Richting automatisch detecteren op basis van inhoud",
+  "Left to Right (LTR)": "Links naar rechts (LTR)",
+  "Force left-to-right direction (English, etc.)": "Dwing links-naar-rechts richting af (Engels, enz.)",
+  "Right to Left (RTL)": "Rechts naar links (RTL)",
+  "Force right-to-left direction (Hebrew, Arabic, etc.)": "Dwing rechts-naar-links richting af (Hebreeuws, Arabisch, enz.)"
 }

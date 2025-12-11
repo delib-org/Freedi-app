@@ -486,11 +486,14 @@
   }
 }
 
-/* RTL Support */
-[dir="rtl"] {
+/* RTL Support - using data-text-dir attribute for document-specific direction
+   This is separate from the root HTML dir attribute (which is based on UI language) */
+:global([data-text-dir="rtl"]) {
   .card {
     padding-left: 0;
     padding-right: 0.75rem;
+    direction: rtl;
+    text-align: right;
   }
 
   .stateIndicator {
@@ -498,9 +501,128 @@
     right: 0;
   }
 
+  .content {
+    text-align: right;
+  }
+
+  .listItem {
+    flex-direction: row-reverse;
+  }
+
+  .nonInteractiveLabel {
+    flex-direction: row-reverse;
+  }
+
+  .adminControls {
+    flex-direction: row-reverse;
+  }
+
+  .adminToggle {
+    flex-direction: row-reverse;
+  }
+
+  .adminInfo {
+    left: var(--spacing-xs);
+    right: auto;
+    inset-inline-end: auto;
+    inset-inline-start: var(--spacing-xs);
+    flex-direction: row-reverse;
+  }
+
+  .heatBadge {
+    left: var(--spacing-xs);
+    right: auto;
+    inset-inline-end: auto;
+    inset-inline-start: var(--spacing-xs);
+  }
+
+  .tableWrapper {
+    table {
+      th,
+      td {
+        text-align: right;
+      }
+    }
+  }
+
+  .interactionWrapper {
+    direction: rtl;
+  }
+
   @media (max-width: 600px) {
     .card {
       padding-inline-end: 0.625rem;
+      padding-inline-start: 0;
+    }
+  }
+}
+
+/* LTR Support - explicitly set LTR even if root HTML is RTL */
+:global([data-text-dir="ltr"]) {
+  .card {
+    padding-right: 0;
+    padding-left: 0.75rem;
+    direction: ltr;
+    text-align: left;
+  }
+
+  .stateIndicator {
+    right: auto;
+    left: 0;
+  }
+
+  .content {
+    text-align: left;
+  }
+
+  .listItem {
+    flex-direction: row;
+  }
+
+  .nonInteractiveLabel {
+    flex-direction: row;
+  }
+
+  .adminControls {
+    flex-direction: row;
+  }
+
+  .adminToggle {
+    flex-direction: row;
+  }
+
+  .adminInfo {
+    right: var(--spacing-xs);
+    left: auto;
+    inset-inline-start: auto;
+    inset-inline-end: var(--spacing-xs);
+    flex-direction: row;
+  }
+
+  .heatBadge {
+    right: var(--spacing-xs);
+    left: auto;
+    inset-inline-start: auto;
+    inset-inline-end: var(--spacing-xs);
+  }
+
+  .tableWrapper {
+    table {
+      th,
+      td {
+        text-align: left;
+      }
+    }
+  }
+
+  .interactionWrapper {
+    direction: ltr;
+  }
+
+  @media (max-width: 600px) {
+    .card {
+      padding-inline-start: 0.625rem;
+      padding-inline-end: 0;
     }
   }
 }

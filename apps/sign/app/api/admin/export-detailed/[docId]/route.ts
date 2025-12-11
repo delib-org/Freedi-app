@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { DocumentData } from 'firebase-admin/firestore';
 import { getFirebaseAdmin } from '@/lib/firebase/admin';
 import { getUserIdFromCookie } from '@/lib/utils/user';
 import { Collections, StatementType, Statement } from 'delib-npm';

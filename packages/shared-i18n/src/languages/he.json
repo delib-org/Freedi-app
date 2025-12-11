@@ -984,5 +984,14 @@
   "Please enter a Google Docs URL": "אנא הזן כתובת Google Docs",
   "Share your document with:": "שתף את המסמך שלך עם:",
   "To enable importing, share your document with:": "כדי לאפשר ייבוא, שתף את המסמך שלך עם:",
-  "You must be logged in to import": "עליך להתחבר כדי לייבא"
+  "You must be logged in to import": "עליך להתחבר כדי לייבא",
+
+  "Text Direction": "כיוון טקסט",
+  "Control the text direction for this document": "שליטה בכיוון הטקסט של מסמך זה",
+  "Auto": "אוטומטי",
+  "Automatically detect direction based on content": "זיהוי אוטומטי של כיוון לפי התוכן",
+  "Left to Right (LTR)": "משמאל לימין (LTR)",
+  "Force left-to-right direction (English, etc.)": "כפה כיוון משמאל לימין (אנגלית וכו׳)",
+  "Right to Left (RTL)": "מימין לשמאל (RTL)",
+  "Force right-to-left direction (Hebrew, Arabic, etc.)": "כפה כיוון מימין לשמאל (עברית, ערבית וכו׳)"
 }

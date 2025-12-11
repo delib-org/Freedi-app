@@ -11,7 +11,7 @@ interface UserAvatarProps {
   isAdmin?: boolean;
 }
 
-export default function UserAvatar({ user, documentId, isAdmin }: UserAvatarProps) {
+export default function UserAvatar({ user, documentId, isAdmin: _isAdmin }: UserAvatarProps) {
   const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
