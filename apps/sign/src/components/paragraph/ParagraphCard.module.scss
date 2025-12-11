@@ -163,10 +163,53 @@
   margin: 0;
 }
 
+// Table type
+.tableWrapper {
+  margin: 0.5rem 0;
+  overflow-x: auto;
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--card-default, #fff);
+    font-size: var(--p-font-size);
+
+    th,
+    td {
+      border: 1px solid var(--border-light, #e0e0e0);
+      padding: 0.5rem 0.75rem;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      background: var(--background, #f5f5f5);
+      font-weight: 600;
+    }
+
+    tr:hover {
+      background: rgba(0, 0, 0, 0.02);
+    }
+  }
+}
+
+.type-table {
+  padding-top: var(--spacing-sm);
+  padding-bottom: var(--spacing-sm);
+}
+
 // Approval states - shown via state indicator
 .pending {
   .stateIndicator {
-    background: var(--border-light);
+    background: var(--border-light); // Gray for no action
+  }
+}
+
+// User has interacted (commented or evaluated) but not approved/rejected
+.interacted {
+  .stateIndicator {
+    background: var(--warning); // Orange for interacted but not approved/rejected
+    width: 3px;
   }
 }
 
@@ -443,11 +486,14 @@
   }
 }
 
-/* RTL Support */
-[dir="rtl"] {
+/* RTL Support - using data-text-dir attribute for document-specific direction
+   This is separate from the root HTML dir attribute (which is based on UI language) */
+:global([data-text-dir="rtl"]) {
   .card {
     padding-left: 0;
     padding-right: 0.75rem;
+    direction: rtl;
+    text-align: right;
   }
 
   .stateIndicator {
@@ -455,9 +501,239 @@
     right: 0;
   }
 
+  .content {
+    text-align: right;
+  }
+
+  .listItem {
+    flex-direction: row-reverse;
+  }
+
+  .nonInteractiveLabel {
+    flex-direction: row-reverse;
+  }
+
+  .adminControls {
+    flex-direction: row-reverse;
+  }
+
+  .adminToggle {
+    flex-direction: row-reverse;
+  }
+
+  .adminInfo {
+    left: var(--spacing-xs);
+    right: auto;
+    inset-inline-end: auto;
+    inset-inline-start: var(--spacing-xs);
+    flex-direction: row-reverse;
+  }
+
+  .heatBadge {
+    left: var(--spacing-xs);
+    right: auto;
+    inset-inline-end: auto;
+    inset-inline-start: var(--spacing-xs);
+  }
+
+  .tableWrapper {
+    table {
+      th,
+      td {
+        text-align: right;
+      }
+    }
+  }
+
+  .interactionWrapper {
+    direction: rtl;
+  }
+
   @media (max-width: 600px) {
     .card {
       padding-inline-end: 0.625rem;
+      padding-inline-start: 0;
     }
+  }
+}
+
+/* LTR Support - explicitly set LTR even if root HTML is RTL */
+:global([data-text-dir="ltr"]) {
+  .card {
+    padding-right: 0;
+    padding-left: 0.75rem;
+    direction: ltr;
+    text-align: left;
+  }
+
+  .stateIndicator {
+    right: auto;
+    left: 0;
+  }
+
+  .content {
+    text-align: left;
+  }
+
+  .listItem {
+    flex-direction: row;
+  }
+
+  .nonInteractiveLabel {
+    flex-direction: row;
+  }
+
+  .adminControls {
+    flex-direction: row;
+  }
+
+  .adminToggle {
+    flex-direction: row;
+  }
+
+  .adminInfo {
+    right: var(--spacing-xs);
+    left: auto;
+    inset-inline-start: auto;
+    inset-inline-end: var(--spacing-xs);
+    flex-direction: row;
+  }
+
+  .heatBadge {
+    right: var(--spacing-xs);
+    left: auto;
+    inset-inline-start: auto;
+    inset-inline-end: var(--spacing-xs);
+  }
+
+  .tableWrapper {
+    table {
+      th,
+      td {
+        text-align: left;
+      }
+    }
+  }
+
+  .interactionWrapper {
+    direction: ltr;
+  }
+
+  @media (max-width: 600px) {
+    .card {
+      padding-inline-start: 0.625rem;
+      padding-inline-end: 0;
+    }
+  }
+}
+
+// Non-interactive paragraph styles
+.nonInteractive {
+  cursor: default;
+  opacity: 0.85;
+
+  .stateIndicator {
+    background: var(--text-caption);
+    width: 2px;
+    opacity: 0.4;
+  }
+
+  .content {
+    color: var(--text-secondary);
+  }
+
+  // Disable hover effects
+  @media (hover: hover) {
+    &:hover {
+      background-color: transparent;
+
+      .stateIndicator {
+        width: 2px;
+      }
+    }
+  }
+
+  &.expanded {
+    background-color: transparent;
+  }
+}
+
+// Non-interactive label for regular users
+.nonInteractiveLabel {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: var(--spacing-xs);
+  padding: 4px 8px;
+  font-size: 0.7rem;
+  color: var(--text-caption);
+  background: var(--background-alt, #f5f5f5);
+  border-radius: var(--radius-sm);
+  width: fit-content;
+
+  svg {
+    opacity: 0.6;
+  }
+}
+
+// Admin controls container
+.adminControls {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-xs);
+  padding-top: var(--spacing-xs);
+  border-top: 1px dashed var(--border-light);
+}
+
+// Admin toggle button
+.adminToggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  background: var(--background-alt, #f5f5f5);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  font-size: 0.7rem;
+  color: var(--text-caption);
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: var(--border-light);
+    color: var(--text-body);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--btn-primary);
+    outline-offset: 2px;
+  }
+
+  // Active state (non-interactive mode enabled)
+  &.active {
+    background: var(--warning-light, #fff3e0);
+    border-color: var(--warning);
+    color: var(--warning-dark, #e65100);
+
+    svg {
+      stroke: var(--warning-dark, #e65100);
+    }
+  }
+
+  // Loading state
+  &.loading {
+    opacity: 0.6;
+    cursor: wait;
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+  }
+}
+
+.adminToggleText {
+  @media (max-width: 480px) {
+    display: none;
   }
 }

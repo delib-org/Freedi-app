@@ -104,6 +104,14 @@ function renderParagraph(para: Paragraph): React.ReactNode {
 			return <h5 key={key}>{content}</h5>;
 		case ParagraphType.h6:
 			return <h6 key={key}>{content}</h6>;
+		case ParagraphType.table:
+			return (
+				<div
+					key={key}
+					className={styles.table}
+					dangerouslySetInnerHTML={{ __html: content }}
+				/>
+			);
 		case ParagraphType.paragraph:
 		default:
 			return <p key={key}>{content}</p>;

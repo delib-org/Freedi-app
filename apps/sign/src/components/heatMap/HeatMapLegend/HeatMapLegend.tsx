@@ -2,7 +2,7 @@
 
 import clsx from 'clsx';
 import { useHeatMapStore, selectHeatMapConfig, selectIsHeatMapLoading } from '@/store/heatMapStore';
-import { HeatMapType, HeatLevel, HEAT_MAP_THRESHOLDS } from '@/types/heatMap';
+import { HeatMapType, HeatLevel } from '@/types/heatMap';
 import styles from './HeatMapLegend.module.scss';
 
 interface HeatMapLegendProps {

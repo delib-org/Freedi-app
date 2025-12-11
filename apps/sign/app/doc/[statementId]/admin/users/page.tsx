@@ -25,6 +25,7 @@ export default function AdminUsersPage() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [exporting, setExporting] = useState(false);
+  const [exportingDetailed, setExportingDetailed] = useState(false);
 
   const fetchUsers = useCallback(async () => {
     try {
@@ -68,6 +69,28 @@ export default function AdminUsersPage() {
       console.error('Export failed:', error);
     } finally {
       setExporting(false);
+    }
+  };
+
+  const handleDetailedExport = async () => {
+    try {
+      setExportingDetailed(true);
+      const response = await fetch(`/api/admin/export-detailed/${statementId}`);
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `document-detailed-${statementId}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        a.remove();
+      }
+    } catch (error) {
+      console.error('Detailed export failed:', error);
+    } finally {
+      setExportingDetailed(false);
     }
   };
 
@@ -129,7 +152,23 @@ export default function AdminUsersPage() {
             <polyline points="7 10 12 15 17 10" />
             <line x1="12" y1="15" x2="12" y2="3" />
           </svg>
-          {exporting ? t('Exporting...') : t('Export CSV')}
+          {exporting ? t('Exporting...') : t('Export Users')}
+        </button>
+
+        <button
+          className={styles.exportButton}
+          onClick={handleDetailedExport}
+          disabled={exportingDetailed}
+          title={t('Export document with all paragraphs, comments, and demographics')}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+            <polyline points="14 2 14 8 20 8" />
+            <line x1="16" y1="13" x2="8" y2="13" />
+            <line x1="16" y1="17" x2="8" y2="17" />
+            <polyline points="10 9 9 9 8 9" />
+          </svg>
+          {exportingDetailed ? t('Exporting...') : t('Export Detailed')}
         </button>
       </div>
 

@@ -12,6 +12,7 @@ import {
 	persistentLocalCache,
 	persistentMultipleTabManager,
 	memoryLocalCache,
+	clearIndexedDbPersistence,
 	type Firestore
 } from 'firebase/firestore';
 import { getStorage, connectStorageEmulator } from 'firebase/storage';
@@ -19,6 +20,9 @@ import { getAnalytics, isSupported } from 'firebase/analytics';
 import { getFunctions, connectFunctionsEmulator } from 'firebase/functions';
 // Removed import to avoid circular dependency - isProduction is inlined below
 import firebaseConfig from './configKey';
+
+// Storage key to track if we've had IndexedDB issues
+const INDEXEDDB_ERROR_KEY = 'freedi_indexeddb_error';
 
 // Helper to detect iOS devices
 function isIOS(): boolean {
@@ -52,6 +56,43 @@ return testDB;
 	}
 }
 
+// Check if we should skip IndexedDB due to previous errors
+function shouldSkipIndexedDB(): boolean {
+	try {
+		const errorData = localStorage.getItem(INDEXEDDB_ERROR_KEY);
+		if (errorData) {
+			const { timestamp, count } = JSON.parse(errorData);
+			const hoursSinceError = (Date.now() - timestamp) / (1000 * 60 * 60);
+			// Reset after 24 hours to allow retry
+			if (hoursSinceError > 24) {
+				localStorage.removeItem(INDEXEDDB_ERROR_KEY);
+				
+return false;
+			}
+			// Skip IndexedDB if we've had multiple errors recently
+
+			return count >= 2;
+		}
+	} catch {
+		// Ignore localStorage errors
+	}
+	
+return false;
+}
+
+// Record an IndexedDB error for future reference
+function recordIndexedDBError(): void {
+	try {
+		const existing = localStorage.getItem(INDEXEDDB_ERROR_KEY);
+		const data = existing ? JSON.parse(existing) : { count: 0 };
+		data.timestamp = Date.now();
+		data.count = (data.count || 0) + 1;
+		localStorage.setItem(INDEXEDDB_ERROR_KEY, JSON.stringify(data));
+	} catch {
+		// Ignore localStorage errors
+	}
+}
+
 // Initialize Firestore with appropriate cache settings based on platform
 function initializeFirestoreWithCache(app: ReturnType<typeof initializeApp>): Firestore {
 	const isIOSDevice = isIOS();
@@ -59,6 +100,15 @@ function initializeFirestoreWithCache(app: ReturnType<typeof initializeApp>): Fi
 	// iOS Safari has issues with IndexedDB, use memory-only cache
 	if (isIOSDevice) {
 		console.info('iOS detected: Using memory-only cache for Firestore');
+
+		return initializeFirestore(app, {
+			localCache: memoryLocalCache(),
+		});
+	}
+
+	// Skip IndexedDB if we've had repeated assertion errors
+	if (shouldSkipIndexedDB()) {
+		console.info('Previous IndexedDB errors detected: Using memory-only cache');
 		
 return initializeFirestore(app, {
 			localCache: memoryLocalCache(),
@@ -78,10 +128,36 @@ return initializeFirestore(app, {
 			'Failed to initialize with persistent cache, falling back to memory cache:',
 			error
 		);
-
+		recordIndexedDBError();
+		
 return initializeFirestore(app, {
 			localCache: memoryLocalCache(),
 		});
+	}
+}
+
+/**
+ * Clear Firestore IndexedDB persistence - call this when assertion errors occur
+ * This should be called before re-initializing Firestore
+ */
+export async function clearFirestorePersistence(): Promise<void> {
+	try {
+		await clearIndexedDbPersistence(FireStore);
+		localStorage.removeItem(INDEXEDDB_ERROR_KEY);
+		console.info('Firestore IndexedDB persistence cleared successfully');
+	} catch (error) {
+		console.error('Failed to clear Firestore persistence:', error);
+	}
+}
+
+/**
+ * Handle Firestore assertion errors by recording them
+ * This helps the app fall back to memory cache on next load
+ */
+export function handleFirestoreAssertionError(error: Error): void {
+	if (error.message?.includes('INTERNAL ASSERTION FAILED')) {
+		console.error('Firestore assertion error detected, recording for memory cache fallback');
+		recordIndexedDBError();
 	}
 }
 

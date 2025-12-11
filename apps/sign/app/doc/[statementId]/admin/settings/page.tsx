@@ -1,10 +1,12 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { DemographicSettings } from '@/components/admin/demographics';
 import { DemographicMode } from '@/types/demographics';
+import { TextDirection, DEFAULT_LOGO_URL, DEFAULT_BRAND_NAME } from '@/types';
+import GoogleDocsImport from '@/components/import/GoogleDocsImport';
 import styles from '../admin.module.scss';
 
 interface Settings {
@@ -16,10 +18,14 @@ interface Settings {
   isPublic: boolean;
   demographicMode: DemographicMode;
   demographicRequired: boolean;
+  textDirection: TextDirection;
+  logoUrl: string;
+  brandName: string;
 }
 
 export default function AdminSettingsPage() {
   const params = useParams();
+  const router = useRouter();
   const statementId = params.statementId as string;
   const { t } = useTranslation();
 
@@ -32,6 +38,9 @@ export default function AdminSettingsPage() {
     isPublic: true,
     demographicMode: 'disabled',
     demographicRequired: false,
+    textDirection: 'auto',
+    logoUrl: DEFAULT_LOGO_URL,
+    brandName: DEFAULT_BRAND_NAME,
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -104,6 +113,15 @@ export default function AdminSettingsPage() {
           {t('Configure document visibility and interactions')}
         </p>
       </header>
+
+      {/* Import from Google Docs */}
+      <section className={styles.settingsSection}>
+        <h2 className={styles.settingsSectionTitle}>{t('Import Content')}</h2>
+        <GoogleDocsImport
+          statementId={statementId}
+          onImportComplete={() => router.refresh()}
+        />
+      </section>
 
       {/* Visibility Settings */}
       <section className={styles.settingsSection}>
@@ -210,6 +228,73 @@ export default function AdminSettingsPage() {
         </div>
       </section>
 
+      {/* Text Direction Settings */}
+      <section className={styles.settingsSection}>
+        <h2 className={styles.settingsSectionTitle}>{t('Text Direction')}</h2>
+        <p className={styles.settingDescription} style={{ marginBottom: 'var(--spacing-md)' }}>
+          {t('Control the text direction for this document')}
+        </p>
+
+        <div className={styles.radioGroup}>
+          <label className={styles.radioOption}>
+            <input
+              type="radio"
+              name="textDirection"
+              value="auto"
+              checked={settings.textDirection === 'auto'}
+              onChange={() => {
+                setSettings(prev => ({ ...prev, textDirection: 'auto' }));
+                setSaved(false);
+              }}
+            />
+            <span className={styles.radioLabel}>
+              <strong>{t('Auto')}</strong>
+              <span className={styles.radioDescription}>
+                {t('Automatically detect direction based on content')}
+              </span>
+            </span>
+          </label>
+
+          <label className={styles.radioOption}>
+            <input
+              type="radio"
+              name="textDirection"
+              value="ltr"
+              checked={settings.textDirection === 'ltr'}
+              onChange={() => {
+                setSettings(prev => ({ ...prev, textDirection: 'ltr' }));
+                setSaved(false);
+              }}
+            />
+            <span className={styles.radioLabel}>
+              <strong>{t('Left to Right (LTR)')}</strong>
+              <span className={styles.radioDescription}>
+                {t('Force left-to-right direction (English, etc.)')}
+              </span>
+            </span>
+          </label>
+
+          <label className={styles.radioOption}>
+            <input
+              type="radio"
+              name="textDirection"
+              value="rtl"
+              checked={settings.textDirection === 'rtl'}
+              onChange={() => {
+                setSettings(prev => ({ ...prev, textDirection: 'rtl' }));
+                setSaved(false);
+              }}
+            />
+            <span className={styles.radioLabel}>
+              <strong>{t('Right to Left (RTL)')}</strong>
+              <span className={styles.radioDescription}>
+                {t('Force right-to-left direction (Hebrew, Arabic, etc.)')}
+              </span>
+            </span>
+          </label>
+        </div>
+      </section>
+
       {/* Demographics Settings */}
       <section className={styles.settingsSection}>
         <h2 className={styles.settingsSectionTitle}>{t('Demographics Survey')}</h2>
@@ -226,6 +311,68 @@ export default function AdminSettingsPage() {
             setSaved(false);
           }}
         />
+      </section>
+
+      {/* Branding Settings */}
+      <section className={styles.settingsSection}>
+        <h2 className={styles.settingsSectionTitle}>{t('Branding')}</h2>
+        <p className={styles.settingDescription} style={{ marginBottom: 'var(--spacing-md)' }}>
+          {t('Customize the logo and brand name displayed on your document')}
+        </p>
+
+        <div className={styles.settingRow}>
+          <div className={styles.settingInfo}>
+            <p className={styles.settingLabel}>{t('Brand Name')}</p>
+            <p className={styles.settingDescription}>
+              {t('The name displayed in the header')}
+            </p>
+          </div>
+          <input
+            type="text"
+            className={styles.textInput}
+            value={settings.brandName}
+            onChange={(e) => {
+              setSettings((prev) => ({ ...prev, brandName: e.target.value }));
+              setSaved(false);
+            }}
+            placeholder={DEFAULT_BRAND_NAME}
+          />
+        </div>
+
+        <div className={styles.settingRow}>
+          <div className={styles.settingInfo}>
+            <p className={styles.settingLabel}>{t('Logo URL')}</p>
+            <p className={styles.settingDescription}>
+              {t('URL to your logo image (SVG, PNG, or JPG recommended)')}
+            </p>
+          </div>
+          <input
+            type="text"
+            className={styles.textInput}
+            value={settings.logoUrl}
+            onChange={(e) => {
+              setSettings((prev) => ({ ...prev, logoUrl: e.target.value }));
+              setSaved(false);
+            }}
+            placeholder={DEFAULT_LOGO_URL}
+          />
+        </div>
+
+        {/* Logo Preview */}
+        {settings.logoUrl && (
+          <div className={styles.logoPreview}>
+            <p className={styles.settingLabel}>{t('Preview')}</p>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={settings.logoUrl}
+              alt={t('Logo Preview')}
+              className={styles.logoPreviewImage}
+              onError={(e) => {
+                (e.target as HTMLImageElement).style.display = 'none';
+              }}
+            />
+          </div>
+        )}
       </section>
 
       {/* Save Button */}

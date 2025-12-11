@@ -3,10 +3,10 @@ import { useSelector } from 'react-redux';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import {
 	listenToStatement,
-	listenToAllDescendants,
 	listenToSubStatements,
 	listenToStatementSubscription,
 } from '@/controllers/db/statements/listenToStatements';
+import { listenToMindMapData } from '@/controllers/db/statements/optimizedListeners';
 import {
 	listenToInAppNotifications,
 	clearInAppNotifications,
@@ -94,11 +94,9 @@ export const useStatementListeners = ({
 
 			// Conditional listeners based on screen
 			if (currentScreen === 'mind-map') {
-				// For MindMap, we need BOTH direct children (parentId) AND all descendants (parents array)
-				// This ensures we capture all sub-statements regardless of data structure
+				// Use consolidated listener to avoid dual listener overhead
 				unsubscribersRef.current.push(
-					listenToAllDescendants(statementId),  // Gets descendants via parents array
-					listenToSubStatements(statementId)     // Gets direct children via parentId
+					listenToMindMapData(statementId)
 				);
 			} else {
 				unsubscribersRef.current.push(listenToSubStatements(statementId));

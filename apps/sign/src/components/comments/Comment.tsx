@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Statement } from 'delib-npm';
 import { useTranslation } from '@freedi/shared-i18n/next';
+import { useUIStore } from '@/store/uiStore';
 import styles from './Comment.module.scss';
 
 interface CommentProps {
@@ -15,6 +16,7 @@ interface CommentProps {
 
 export default function Comment({ comment, userId, paragraphId, onDelete, onUpdate }: CommentProps) {
   const { t } = useTranslation();
+  const addUserInteraction = useUIStore((state) => state.addUserInteraction);
   const [consensus, setConsensus] = useState(comment.consensus || 0);
   const [userEvaluation, setUserEvaluation] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -83,6 +85,8 @@ export default function Comment({ comment, userId, paragraphId, onDelete, onUpda
         const data = await response.json();
         setConsensus(data.newConsensus);
         setUserEvaluation(evaluation);
+        // Mark paragraph as interacted
+        addUserInteraction(paragraphId);
       }
     } catch (err) {
       console.error('Error submitting evaluation:', err);

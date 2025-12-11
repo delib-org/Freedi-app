@@ -508,12 +508,15 @@ export const listenToUserSuggestions = (
 	}
 };
 
+// Maximum number of descendants to load at once for performance
+const MAX_DESCENDANTS_LIMIT = 200;
+
 export function listenToAllDescendants(statementId: string): Unsubscribe {
 	try {
 		const statementsRef = collection(FireStore, Collections.statements);
 		// Query ONLY for questions, groups, and options (not any other types)
 		// Wrap in and() as required by Firestore for composite filters
-		// REMOVED LIMIT - now loads all descendants for completeness
+		// Added limit to prevent loading too many documents at once
 		const q = query(
 			statementsRef,
 			and(
@@ -523,9 +526,9 @@ export function listenToAllDescendants(statementId: string): Unsubscribe {
 					where('statementType', '==', StatementType.group),
 					where('statementType', '==', StatementType.option)
 				)
-			)
-			// NOTE: Removed limit(50) to ensure all descendants are loaded
-			// For very large trees, consider implementing pagination in the UI layer
+			),
+			orderBy('createdAt', 'desc'),
+			limit(MAX_DESCENDANTS_LIMIT)
 		);
 
 		const listenerKey = generateListenerKey(

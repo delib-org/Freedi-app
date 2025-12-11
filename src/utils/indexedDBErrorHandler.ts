@@ -9,6 +9,9 @@ const RECOVERY_TIMESTAMP_KEY = 'firestore_recovery_timestamp';
 const MAX_RECOVERY_ATTEMPTS = 2;
 const RECOVERY_COOLDOWN_MS = 60000; // 1 minute cooldown between recovery attempts
 
+// Key for tracking IndexedDB errors to skip persistence on next load
+const INDEXEDDB_ERROR_KEY = 'freedi_indexeddb_error';
+
 export function setupIndexedDBErrorHandler(): void {
 	// Listen for unhandled promise rejections that might be IndexedDB-related
 	window.addEventListener('unhandledrejection', (event) => {
@@ -21,13 +24,29 @@ export function setupIndexedDBErrorHandler(): void {
 			// Prevent the error from crashing the app
 			event.preventDefault();
 
+			// Record Firestore assertion errors for memory cache fallback
+			if (isFirestoreAssertionError(error)) {
+				recordIndexedDBError();
+			}
+
 			// Check if this is a multi-tab persistence error and attempt recovery
-			if (isMultiTabPersistenceError(error)) {
+			if (isMultiTabPersistenceError(error) || isFirestoreAssertionError(error)) {
 				attemptRecovery();
 			} else {
 				// Log user-friendly message for other IndexedDB errors
 				logUserFriendlyError();
 			}
+		}
+	});
+
+	// Also listen for regular errors (Firestore assertion errors come through error events)
+	window.addEventListener('error', (event) => {
+		const error = event.error;
+		if (isFirestoreAssertionError(error)) {
+			console.error('Firestore assertion error detected:', error);
+			event.preventDefault();
+			recordIndexedDBError();
+			attemptRecovery();
 		}
 	});
 
@@ -93,6 +112,9 @@ function isIndexedDBError(error: unknown): boolean {
 		'exclusive access',
 		'persistence layer',
 		'multi-tab synchronization',
+		// Firestore internal assertion errors (known bug with persistentMultipleTabManager)
+		'INTERNAL ASSERTION FAILED',
+		'Unexpected state',
 	];
 
 	// Check for Firestore persistence error codes
@@ -108,6 +130,33 @@ function isIndexedDBError(error: unknown): boolean {
 		) ||
 		(errorCode !== undefined && firestoreErrorCodes.includes(errorCode))
 	);
+}
+
+/**
+ * Check if this is a Firestore internal assertion error
+ * These are known bugs in Firebase SDK related to multi-tab persistence
+ */
+function isFirestoreAssertionError(error: unknown): boolean {
+	if (!error) return false;
+	const errorMessage = error instanceof Error ? error.message : String(error);
+	
+return errorMessage.includes('INTERNAL ASSERTION FAILED');
+}
+
+/**
+ * Record IndexedDB error to localStorage to skip persistence on next load
+ */
+function recordIndexedDBError(): void {
+	try {
+		const existing = localStorage.getItem(INDEXEDDB_ERROR_KEY);
+		const data = existing ? JSON.parse(existing) : { count: 0 };
+		data.timestamp = Date.now();
+		data.count = (data.count || 0) + 1;
+		localStorage.setItem(INDEXEDDB_ERROR_KEY, JSON.stringify(data));
+		console.info('[IndexedDB Recovery] Error recorded, will use memory cache on next load');
+	} catch {
+		// Ignore localStorage errors
+	}
 }
 
 /**

@@ -1,4 +1,4 @@
-import { FC, useEffect, useRef } from 'react';
+import { FC, useEffect, useRef, useState } from 'react';
 
 // Hooks & Helpers
 import { StatementSettingsProps } from '../../settingsTypeHelpers';
@@ -7,6 +7,7 @@ import styles from './TitleAndDescription.module.scss';
 import VisuallyHidden from '@/view/components/accessibility/toScreenReaders/VisuallyHidden';
 import Button, { ButtonType } from '@/view/components/buttons/button/Button';
 import { useNavigate } from 'react-router';
+import { GoogleDocsImportModal } from '@/view/components/googleDocsImport';
 
 const TitleAndDescription: FC<StatementSettingsProps> = ({
 	statement,
@@ -14,6 +15,7 @@ const TitleAndDescription: FC<StatementSettingsProps> = ({
 }) => {
 	const { t } = useTranslation();
 	const navigate = useNavigate();
+	const [showImportModal, setShowImportModal] = useState(false);
 
 	// * Variables * //
 	const arrayOfStatementParagraphs = statement?.statement.split('\n') || [];
@@ -87,7 +89,24 @@ const TitleAndDescription: FC<StatementSettingsProps> = ({
 						navigate('/home');
 					}}
 				/>
+				<Button
+					text={t('Import from Google Docs')}
+					type='button'
+					buttonType={ButtonType.SECONDARY}
+					aria-label='Import from Google Docs'
+					onClick={() => setShowImportModal(true)}
+				/>
 			</div>
+
+			<GoogleDocsImportModal
+				statement={statement}
+				isOpen={showImportModal}
+				onClose={() => setShowImportModal(false)}
+				onImportComplete={() => {
+					// Refresh the page to show imported content
+					window.location.reload();
+				}}
+			/>
 		</div>
 	);
 };

@@ -8,6 +8,107 @@
   @media (max-width: 600px) {
     padding-bottom: 200px; // Extra space for stacked footer layout
   }
+
+  // RTL Support - use data-text-dir attribute for document-specific direction
+  // This is separate from the root HTML dir attribute (which is based on UI language)
+  &[data-text-dir="rtl"] {
+    direction: rtl;
+    text-align: right;
+
+    .topBar {
+      flex-direction: row-reverse;
+    }
+
+    .topBarActions {
+      flex-direction: row-reverse;
+    }
+
+    .logo {
+      flex-direction: row-reverse;
+    }
+
+    .header {
+      text-align: right;
+    }
+
+    .title {
+      text-align: right;
+    }
+
+    .description {
+      text-align: right;
+    }
+
+    .progressText {
+      text-align: right;
+    }
+
+    .footer {
+      flex-direction: row-reverse;
+
+      @media (max-width: 600px) {
+        flex-direction: column;
+      }
+    }
+
+    .signatureActions {
+      flex-direction: row-reverse;
+    }
+
+    .signatureStatus {
+      text-align: right;
+    }
+  }
+
+  // LTR Support - explicitly set LTR even if root HTML is RTL
+  &[data-text-dir="ltr"] {
+    direction: ltr;
+    text-align: left;
+
+    .topBar {
+      flex-direction: row;
+    }
+
+    .topBarActions {
+      flex-direction: row;
+    }
+
+    .logo {
+      flex-direction: row;
+    }
+
+    .header {
+      text-align: left;
+    }
+
+    .title {
+      text-align: left;
+    }
+
+    .description {
+      text-align: left;
+    }
+
+    .progressText {
+      text-align: left;
+    }
+
+    .footer {
+      flex-direction: row;
+
+      @media (max-width: 600px) {
+        flex-direction: column;
+      }
+    }
+
+    .signatureActions {
+      flex-direction: row;
+    }
+
+    .signatureStatus {
+      text-align: left;
+    }
+  }
 }
 
 .topBar {
@@ -31,6 +132,13 @@
   svg {
     color: var(--btn-primary);
   }
+}
+
+.logoImage {
+  height: 36px;
+  width: auto;
+  max-width: 120px;
+  object-fit: contain;
 }
 
 .topBarActions {
@@ -540,17 +648,27 @@
   }
 }
 
-/* RTL Support */
-[dir="rtl"] {
-  .footer {
-    flex-direction: row-reverse;
+/* RTL Support moved into .container using &[dir="rtl"] for CSS modules compatibility */
 
-    @media (max-width: 600px) {
-      flex-direction: column;
+.developedBy {
+  text-align: center;
+  padding: var(--spacing-md);
+  padding-top: var(--spacing-lg);
+  padding-bottom: var(--spacing-xl);
+  margin-top: var(--spacing-lg);
+  border-top: 1px solid var(--border-light);
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  font-family: 'Assistant', sans-serif;
+
+  a {
+    color: var(--btn-primary);
+    text-decoration: none;
+    font-weight: 500;
+    font-family: 'Assistant', sans-serif;
+
+    &:hover {
+      text-decoration: underline;
     }
-  }
-
-  .signatureActions {
-    flex-direction: row-reverse;
   }
 }

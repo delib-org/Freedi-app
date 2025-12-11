@@ -21,7 +21,7 @@ export default function CommentThread({
   userId,
 }: CommentThreadProps) {
   const { t } = useTranslation();
-  const { openModal, closeModal, incrementCommentCount, decrementCommentCount } = useUIStore();
+  const { openModal, closeModal, incrementCommentCount, decrementCommentCount, addUserInteraction } = useUIStore();
   const [comments, setComments] = useState<Statement[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -93,6 +93,8 @@ export default function CommentThread({
         setNewComment('');
         // Update comment count in store
         incrementCommentCount(paragraphId);
+        // Mark paragraph as interacted
+        addUserInteraction(paragraphId);
       } else {
         const errorData = await response.json();
         setError(errorData.error || 'Failed to post comment');
