@@ -45,7 +45,8 @@ import {
   maintainDeliberativeElement,
   maintainStatement,
   maintainSubscriptionToken,
-  updateAverageEvaluation
+  updateAverageEvaluation,
+  recalculateEvaluations
 } from "./fn_httpRequests";
 import { findSimilarStatements } from "./fn_findSimilarStatements";
 import { updateApprovalResults } from "./fn_approval";
@@ -250,6 +251,7 @@ exports.maintainDeliberativeElement = wrapHttpFunction(maintainDeliberativeEleme
 exports.maintainStatement = wrapHttpFunction(maintainStatement);
 exports.maintainSubscriptionToken = wrapHttpFunction(maintainSubscriptionToken);
 exports.updateAverageEvaluation = wrapHttpFunction(updateAverageEvaluation);
+exports.recalculateEvaluations = wrapHttpFunction(recalculateEvaluations);
 
 // --------------------------
 // FIRESTORE TRIGGER FUNCTIONS

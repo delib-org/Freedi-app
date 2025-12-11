@@ -1,8 +1,10 @@
 {
 	"name": "functions",
+	"version": "1.0.0",
 	"scripts": {
 		"clean": "rm -rf node_modules package-lock.json && git rm -r --cache . && git reset && npm install && npm run build",
 		"lint": "eslint --ext .js,.ts . --ignore-pattern 'lib/' --ignore-pattern 'coverage/'",
+		"prebuild": "(cd ../packages/shared-types && npm run build && npm pack && mv freedi-shared-types-*.tgz ../../functions/)",
 		"build": "tsc",
 		"dev": "tsc --watch",
 		"serve": "npm run build && firebase emulators:start --only functions",
@@ -18,7 +20,7 @@
 	},
 	"main": "lib/functions/src/index.js",
 	"dependencies": {
-		"@freedi/shared-types": "file:../packages/shared-types",
+		"@freedi/shared-types": "file:./freedi-shared-types-1.0.0.tgz",
 		"@google/generative-ai": "^0.15.0",
 		"@sendgrid/mail": "^8.1.5",
 		"@types/nodemailer": "^7.0.1",
@@ -39,5 +41,8 @@
 		"jest": "^29.7.0",
 		"ts-jest": "^29.4.2"
 	},
+	"bundledDependencies": [
+		"@freedi/shared-types"
+	],
 	"private": true
 }

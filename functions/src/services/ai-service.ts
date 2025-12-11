@@ -43,7 +43,7 @@ async function getGenerativeAIModel(): Promise<GenerativeModel> {
   logger.info("Initializing new GenerativeModel instance...");
 
   try {
-    const modelName = process.env.AI_MODEL_NAME || "gemini-2.5-flash";
+    const modelName = process.env.AI_MODEL_NAME || "gemini-2.0-flash";
     logger.info(`Using AI model: ${modelName}`);
 
     const genAI = getGenAI();
@@ -69,7 +69,7 @@ async function getGenerativeAIModel(): Promise<GenerativeModel> {
     logger.error("Error initializing GenerativeModel", error);
     const genAI = getGenAI();
     // Use the same model from environment or fall back to a supported model
-    const fallbackModel = process.env.AI_MODEL_NAME || "gemini-2.5-flash";
+    const fallbackModel = process.env.AI_MODEL_NAME || "gemini-2.0-flash";
     logger.info(`Using fallback model: ${fallbackModel}`);
     _generativeModel = genAI.getGenerativeModel({ model: fallbackModel });
 
@@ -428,7 +428,7 @@ Return JSON ONLY:`;
     // Use higher temperature for creative title/description generation
     const genAI = getGenAI();
     const creativeModel = genAI.getGenerativeModel({
-      model: process.env.AI_MODEL_NAME || "gemini-2.5-flash",
+      model: process.env.AI_MODEL_NAME || "gemini-2.0-flash",
       generationConfig: {
         responseMimeType: "application/json",
         temperature: 0.8, // Higher temperature for creative, varied output
