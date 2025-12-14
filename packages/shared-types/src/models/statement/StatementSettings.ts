@@ -40,6 +40,7 @@ export const StatementSettingsSchema = object({
 	enableAIImprovement: optional(boolean()),
 	popperianDiscussionEnabled: optional(boolean()),
 	popperianPreCheckEnabled: optional(boolean()),
+	enableMultiSuggestionDetection: optional(boolean()),
 });
 
 export type StatementSettings = InferOutput<typeof StatementSettingsSchema>;

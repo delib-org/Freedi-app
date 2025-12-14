@@ -1107,5 +1107,17 @@
   "Original suggestions will be hidden": "Original suggestions will be hidden",
   "Total": "Total",
   "Integrating...": "Integrating...",
-  "Confirm Integration": "Confirm Integration"
+  "Confirm Integration": "Confirm Integration",
+  "Multiple Suggestions Detected": "Multiple Suggestions Detected",
+  "We detected multiple ideas in your submission. You can submit them separately for better visibility and voting.": "We detected multiple ideas in your submission. You can submit them separately for better visibility and voting.",
+  "Your original text:": "Your original text:",
+  "Submit Original As-Is": "Submit Original As-Is",
+  "Submit": "Submit",
+  "Suggestions": "Suggestions",
+  "Multi-Suggestion Detection": "Multi-Suggestion Detection",
+  "Detect when users submit multiple ideas and offer to split them": "Detect when users submit multiple ideas and offer to split them",
+  "Remove": "Remove",
+  "Restore": "Restore",
+  "From": "From",
+  "Checking...": "Checking..."
 }

@@ -1122,5 +1122,16 @@
   "Original suggestions will be hidden": "ההצעות המקוריות יוסתרו",
   "Total": "סה״כ",
   "Integrating...": "משלב...",
-  "Confirm Integration": "אשר שילוב"
+  "Confirm Integration": "אשר שילוב",
+  "Multiple Suggestions Detected": "זוהו מספר הצעות",
+  "We detected multiple ideas in your submission. You can submit them separately for better visibility and voting.": "זיהינו מספר רעיונות בהגשה שלך. תוכל להגיש אותם בנפרד לנראות והצבעה טובים יותר.",
+  "Your original text:": "הטקסט המקורי שלך:",
+  "Submit Original As-Is": "הגש את המקור כפי שהוא",
+  "Suggestions": "הצעות",
+  "Multi-Suggestion Detection": "זיהוי ריבוי הצעות",
+  "Detect when users submit multiple ideas and offer to split them": "זהה כאשר משתמשים מגישים מספר רעיונות והצע לפצל אותם",
+  "Remove": "הסר",
+  "Restore": "שחזר",
+  "From": "מ",
+  "Checking...": "בודק..."
 }

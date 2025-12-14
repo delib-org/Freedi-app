@@ -622,6 +622,130 @@ function createFallbackTitleDescription(userInput: string): { title: string; des
 }
 
 /**
+ * Detected suggestion from multi-suggestion detection
+ */
+export interface DetectedSuggestion {
+  title: string;
+  description: string;
+  originalText: string;
+}
+
+/**
+ * Result of multi-suggestion detection
+ */
+export interface MultiSuggestionDetectionResult {
+  isMultiple: boolean;
+  suggestions: DetectedSuggestion[];
+}
+
+/**
+ * Detects if user input contains multiple suggestions and splits them
+ * @param userInput - The user's input text
+ * @param questionContext - The question/topic context for better understanding
+ * @returns Object indicating if multiple suggestions detected and the split suggestions
+ */
+export async function detectAndSplitMultipleSuggestions(
+  userInput: string,
+  questionContext: string
+): Promise<MultiSuggestionDetectionResult> {
+  try {
+    // Detect language for appropriate response
+    const isHebrew = /[\u0590-\u05FF]/.test(userInput);
+
+    const prompt = isHebrew
+      ? `בדוק אם הטקסט הבא מכיל מספר הצעות/רעיונות נפרדים.
+
+קלט המשתמש: "${userInput}"
+${questionContext ? `הקשר/שאלה: "${questionContext}"` : ""}
+
+משימה:
+1. קבע אם הקלט מכיל יותר מהצעה/רעיון אחד
+2. אם יש מספר הצעות, פצל אותן להצעות נפרדות
+3. לכל הצעה, תן כותרת קצרה (2-8 מילים) ותיאור מורחב (10-30 מילים)
+
+כללים:
+- סמן כמרובה רק אם יש רעיונות נפרדים באמת (לא רק פרטים של רעיון אחד)
+- חפש מפרידים כמו: פסיקים, "ו", רשימות ממוספרות, נקודות
+- כל הצעה מפוצלת צריכה להיות עצמאית ומשמעותית
+- שמור על השפה המקורית
+
+החזר JSON בפורמט:
+{
+  "isMultiple": true/false,
+  "suggestions": [
+    {
+      "title": "כותרת קצרה לרעיון הראשון",
+      "description": "תיאור מורחב של הרעיון הראשון",
+      "originalText": "החלק מהטקסט המקורי שממנו נלקח"
+    }
+  ]
+}
+
+אם זו הצעה בודדת, החזר: {"isMultiple": false, "suggestions": []}`
+      : `Analyze if the following text contains multiple separate suggestions/ideas.
+
+USER INPUT: "${userInput}"
+${questionContext ? `CONTEXT/QUESTION: "${questionContext}"` : ""}
+
+TASK:
+1. Determine if the input contains MORE THAN ONE distinct suggestion/idea
+2. If multiple suggestions exist, split them into separate proposals
+3. For each suggestion, provide a concise title (2-8 words) and expanded description (10-30 words)
+
+RULES:
+- Only flag as multiple if there are truly DISTINCT ideas (not just details of one idea)
+- Look for separators like: commas, "and", numbered lists, bullet points
+- Each split suggestion should be self-contained and meaningful
+- Preserve the original language
+
+Return JSON format:
+{
+  "isMultiple": true/false,
+  "suggestions": [
+    {
+      "title": "Short title for first idea",
+      "description": "Expanded description of the first idea",
+      "originalText": "The portion of the original text this came from"
+    }
+  ]
+}
+
+If NOT multiple suggestions (single idea), return: {"isMultiple": false, "suggestions": []}`;
+
+    const model = await getGenerativeAIModel();
+    const result = await model.generateContent(prompt);
+    let responseText = result.response.text();
+
+    // Strip markdown code blocks if present
+    responseText = responseText.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
+
+    logger.info("Multi-suggestion detection response:", { responseText: responseText.substring(0, 300) });
+
+    const parsed = JSON.parse(responseText);
+
+    if (typeof parsed.isMultiple === "boolean" && Array.isArray(parsed.suggestions)) {
+      // Validate suggestions have required fields
+      const validSuggestions = parsed.suggestions.filter(
+        (s: DetectedSuggestion) =>
+          typeof s.title === "string" &&
+          typeof s.description === "string" &&
+          s.title.length > 0
+      );
+
+      return {
+        isMultiple: parsed.isMultiple && validSuggestions.length > 1,
+        suggestions: validSuggestions,
+      };
+    }
+
+    return { isMultiple: false, suggestions: [] };
+  } catch (error) {
+    logger.error("Error in detectAndSplitMultipleSuggestions:", error);
+    return { isMultiple: false, suggestions: [] };
+  }
+}
+
+/**
  * Detects the language of the given text
  * @param text - Text to detect language for
  * @returns Language code (e.g., "en", "he", "es")

@@ -15,7 +15,7 @@ import {
   MessageSquare, Navigation, Plus, Settings,
   ChevronDown, ChevronUp, HelpCircle,
   Zap, Database, Lightbulb, Award, Target,
-  Activity, PieChart, Sparkles, Shield, Lock, Globe
+  Activity, PieChart, Sparkles, Shield, Lock, Globe, Scissors
 } from 'lucide-react';
 import LanguageSelector from './LanguageSelector/LanguageSelector';
 
@@ -522,13 +522,23 @@ const EnhancedAdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => 
                         icon={Search}
                       />
                       {statement.statementType === StatementType.question && (
-                        <ToggleSwitch
-                          isChecked={settings.defaultLookForSimilarities ?? false}
-                          onChange={(checked) => handleSettingChange('defaultLookForSimilarities', checked)}
-                          label={t('Auto-Check Similarities')}
-                          description={t('Check for similar statements by default')}
-                          icon={Database}
-                        />
+                        <>
+                          <ToggleSwitch
+                            isChecked={settings.defaultLookForSimilarities ?? false}
+                            onChange={(checked) => handleSettingChange('defaultLookForSimilarities', checked)}
+                            label={t('Auto-Check Similarities')}
+                            description={t('Check for similar statements by default')}
+                            icon={Database}
+                          />
+                          <ToggleSwitch
+                            isChecked={settings.enableMultiSuggestionDetection ?? false}
+                            onChange={(checked) => handleSettingChange('enableMultiSuggestionDetection', checked)}
+                            label={t('Multi-Suggestion Detection')}
+                            description={t('Detect when users submit multiple ideas and offer to split them')}
+                            icon={Scissors}
+                            badge="new"
+                          />
+                        </>
                       )}
                     </>
                   )}
