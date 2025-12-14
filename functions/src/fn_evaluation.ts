@@ -995,7 +995,8 @@ export async function migrateEvaluationsToNewStatement(
 
 	try {
 		// 1. Fetch all evaluations from source statements
-		const evaluationsByUser = new Map<string, { evaluation: number; evaluator: Evaluation["evaluator"] }>();
+		// Track all evaluations per user so we can average them
+		const evaluationsByUser = new Map<string, { evaluations: number[]; evaluator: Evaluation["evaluator"] }>();
 
 		for (const sourceId of sourceStatementIds) {
 			const evaluationsSnapshot = await db
@@ -1011,10 +1012,13 @@ export async function migrateEvaluationsToNewStatement(
 
 				const existing = evaluationsByUser.get(userId);
 
-				// If user hasn't evaluated yet, or this evaluation has higher absolute value
-				if (!existing || Math.abs(evaluation.evaluation) > Math.abs(existing.evaluation)) {
+				if (existing) {
+					// User already evaluated another source statement - add to their evaluations array
+					existing.evaluations.push(evaluation.evaluation);
+				} else {
+					// First evaluation from this user
 					evaluationsByUser.set(userId, {
-						evaluation: evaluation.evaluation,
+						evaluations: [evaluation.evaluation],
 						evaluator: evaluation.evaluator,
 					});
 				}
@@ -1035,6 +1039,9 @@ export async function migrateEvaluationsToNewStatement(
 		let numberOfEvaluators = 0;
 
 		for (const [userId, data] of evaluationsByUser) {
+			// Calculate average of user's evaluations across source statements
+			const avgEvaluation = data.evaluations.reduce((sum, val) => sum + val, 0) / data.evaluations.length;
+
 			const newEvaluationId = `${userId}--${targetStatementId}`;
 			const evaluationRef = db.collection(Collections.evaluations).doc(newEvaluationId);
 
@@ -1044,23 +1051,28 @@ export async function migrateEvaluationsToNewStatement(
 				parentId: parentId,
 				evaluatorId: userId,
 				evaluator: data.evaluator,
-				evaluation: data.evaluation,
+				evaluation: avgEvaluation,
 				updatedAt: now,
 				migratedAt: now, // Flag to indicate this was created by migration - triggers should skip
 			};
 
 			batch.set(evaluationRef, newEvaluation);
 
-			// Update metrics
-			sumEvaluations += data.evaluation;
-			sumSquaredEvaluations += data.evaluation * data.evaluation;
-			if (data.evaluation > 0) {
-				sumPro += data.evaluation;
+			// Update metrics using the averaged evaluation
+			sumEvaluations += avgEvaluation;
+			sumSquaredEvaluations += avgEvaluation * avgEvaluation;
+			if (avgEvaluation > 0) {
+				sumPro += avgEvaluation;
 			} else {
-				sumCon += Math.abs(data.evaluation);
+				sumCon += Math.abs(avgEvaluation);
 			}
 			numberOfEvaluators++;
 			result.migratedCount++;
+
+			// Log if user had multiple evaluations that were averaged
+			if (data.evaluations.length > 1) {
+				logger.info(`User ${userId} had ${data.evaluations.length} evaluations [${data.evaluations.join(", ")}], averaged to ${avgEvaluation.toFixed(3)}`);
+			}
 		}
 
 		// 3. Commit the batch
