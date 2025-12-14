@@ -1,9 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAvailableQuestions } from '@/lib/firebase/surveys';
+import { searchQuestions } from '@/lib/firebase/surveys';
 import { verifyToken, extractBearerToken } from '@/lib/auth/verifyAdmin';
+
+const DEFAULT_LIMIT = 20;
+const MAX_LIMIT = 100;
 
 /**
  * GET /api/questions - Fetch user's available questions from main Freedi app
+ *
+ * Query params:
+ * - search: text to search for in question statement
+ * - limit: max number of results (default 20, max 100)
+ * - cursor: pagination cursor (statementId of last item)
  *
  * Returns questions that the user can add to surveys:
  * 1. Questions created by this user
@@ -29,14 +37,30 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const questions = await getAvailableQuestions(userId);
+    // Parse query params
+    const searchParams = request.nextUrl.searchParams;
+    const searchQuery = searchParams.get('search') || '';
+    const limit = Math.min(
+      parseInt(searchParams.get('limit') || String(DEFAULT_LIMIT), 10),
+      MAX_LIMIT
+    );
+    const cursor = searchParams.get('cursor') || undefined;
 
-    console.info('[GET /api/questions] Found', questions.length, 'questions for admin:', userId);
-
-    return NextResponse.json({
-      questions,
-      total: questions.length,
+    const result = await searchQuestions(userId, {
+      search: searchQuery,
+      limit,
+      cursor,
     });
+
+    console.info(
+      '[GET /api/questions] Found',
+      result.questions.length,
+      'questions for user:',
+      userId,
+      searchQuery ? `(search: "${searchQuery}")` : ''
+    );
+
+    return NextResponse.json(result);
   } catch (error) {
     console.error('[GET /api/questions] Error:', error);
     return NextResponse.json(

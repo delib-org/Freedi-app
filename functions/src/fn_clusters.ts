@@ -68,7 +68,7 @@ export async function getCluster(req: Request, res: Response) {
 			statementId: descendant.statementId,
 		}));
 
-		const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+		const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
 
 		const prompt = `
         Hi Gemini! I need your help to cluster some statements based on their relevance to a main topic.

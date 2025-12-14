@@ -9,7 +9,7 @@ function getGenAI(): GoogleGenerativeAI {
 
 export async function containsBadLanguage(text: string): Promise<boolean> {
   try {
-    const model = getGenAI().getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = getGenAI().getGenerativeModel({ model: "gemini-2.0-flash" });
 
     const prompt = `
       Detect if the following text contains any offensive, hateful, or inappropriate language. 

@@ -785,5 +785,9 @@
   "closeWarning": "Las encuestas cerradas no pueden aceptar nuevas respuestas. Esta acción se puede deshacer cambiando el estado a Activo.",
   "closing": "Cerrando...",
   "closeSurvey": "Cerrar encuesta",
-  "status": "Estado"
+  "status": "Estado",
+
+  "activate": "Activar",
+  "activating": "Activando...",
+  "surveyNotActiveWarning": "La encuesta debe activarse antes de compartir. Vaya a la pestaña Estado para activarla."
 }

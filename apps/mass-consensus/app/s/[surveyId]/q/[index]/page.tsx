@@ -98,6 +98,7 @@ export default async function SurveyQuestionPage({ params }: PageProps) {
             <SolutionFeed
               question={question}
               initialSolutions={initialBatch}
+              surveySettings={survey.settings}
             />
           </Suspense>
         </SurveyQuestionWrapper>

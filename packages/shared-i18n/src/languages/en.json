@@ -1025,5 +1025,9 @@
   "Left to Right (LTR)": "Left to Right (LTR)",
   "Force left-to-right direction (English, etc.)": "Force left-to-right direction (English, etc.)",
   "Right to Left (RTL)": "Right to Left (RTL)",
-  "Force right-to-left direction (Hebrew, Arabic, etc.)": "Force right-to-left direction (Hebrew, Arabic, etc.)"
+  "Force right-to-left direction (Hebrew, Arabic, etc.)": "Force right-to-left direction (Hebrew, Arabic, etc.)",
+
+  "activate": "Activate",
+  "activating": "Activating...",
+  "surveyNotActiveWarning": "Survey must be activated before sharing. Go to the Status tab to activate."
 }

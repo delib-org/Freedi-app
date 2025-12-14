@@ -31,3 +31,6 @@ export const maintainSubscriptionToken = (req: Request, res: Response) =>
 
 export const updateAverageEvaluation = (req: Request, res: Response) =>
 	maintenanceController.updateAverageEvaluation(req, res);
+
+export const recalculateEvaluations = (req: Request, res: Response) =>
+	maintenanceController.recalculateEvaluations(req, res);

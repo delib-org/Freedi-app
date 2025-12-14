@@ -785,5 +785,9 @@
   "closeWarning": "Gesloten enquêtes kunnen geen nieuwe reacties meer accepteren. Deze actie kan ongedaan worden gemaakt door de status te wijzigen naar Actief.",
   "closing": "Sluiten...",
   "closeSurvey": "Enquête sluiten",
-  "status": "Status"
+  "status": "Status",
+
+  "activate": "Activeren",
+  "activating": "Activeren...",
+  "surveyNotActiveWarning": "De enquête moet worden geactiveerd voordat u deze kunt delen. Ga naar het tabblad Status om te activeren."
 }

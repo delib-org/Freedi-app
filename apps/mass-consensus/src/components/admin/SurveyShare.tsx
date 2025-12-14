@@ -18,11 +18,15 @@ export default function SurveyShare({ survey }: SurveyShareProps) {
   const { t } = useTranslation();
   const [copied, setCopied] = useState(false);
 
+  // Check if survey is active (shareable)
+  const isActive = survey.status === SurveyStatus.active;
+
   // Generate the survey URL
   const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
   const surveyUrl = `${baseUrl}/s/${survey.surveyId}`;
 
   const handleCopy = async () => {
+    if (!isActive) return;
     try {
       await navigator.clipboard.writeText(surveyUrl);
       setCopied(true);
@@ -75,7 +79,22 @@ export default function SurveyShare({ survey }: SurveyShareProps) {
         </span>
       </div>
 
-      <div className={styles.sharePanel}>
+      {/* Warning when survey is not active */}
+      {!isActive && (
+        <div style={{
+          padding: '1rem',
+          background: 'var(--bg-muted)',
+          borderRadius: '8px',
+          marginBottom: '1.5rem',
+          border: '1px solid var(--border)',
+        }}>
+          <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.875rem' }}>
+            ⚠️ {t('surveyNotActiveWarning') || 'Survey must be activated before sharing. Go to the Status tab to activate.'}
+          </p>
+        </div>
+      )}
+
+      <div className={styles.sharePanel} style={{ opacity: isActive ? 1 : 0.5, pointerEvents: isActive ? 'auto' : 'none' }}>
         {/* Survey Link */}
         <div>
           <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>
@@ -87,10 +106,12 @@ export default function SurveyShare({ survey }: SurveyShareProps) {
               className={styles.linkInput}
               value={surveyUrl}
               readOnly
+              disabled={!isActive}
             />
             <button
               className={`${styles.copyButton} ${copied ? styles.copied : ''}`}
               onClick={handleCopy}
+              disabled={!isActive}
             >
               {copied ? t('copied') : t('copy')}
             </button>
@@ -109,13 +130,14 @@ export default function SurveyShare({ survey }: SurveyShareProps) {
           <p className={styles.qrLabel}>{t('scanToParticipate')}</p>
           <button
             onClick={handleDownloadQR}
+            disabled={!isActive}
             style={{
               marginTop: '0.5rem',
               padding: '0.5rem 1rem',
               background: 'var(--bg-muted)',
               border: 'none',
               borderRadius: '6px',
-              cursor: 'pointer',
+              cursor: isActive ? 'pointer' : 'not-allowed',
               fontSize: '0.875rem',
             }}
           >

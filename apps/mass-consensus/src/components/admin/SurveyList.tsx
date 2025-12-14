@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useTranslation } from '@freedi/shared-i18n/next';
-import { Survey } from '@/types/survey';
+import { Survey, SurveyStatus } from '@/types/survey';
 import SurveyCard from './SurveyCard';
 import styles from './Admin.module.scss';
 
@@ -80,6 +80,35 @@ export default function SurveyList() {
     }
   };
 
+  const handleStatusChange = async (surveyId: string, newStatus: SurveyStatus) => {
+    try {
+      const token = localStorage.getItem('firebase_token');
+
+      const response = await fetch(`/api/surveys/${surveyId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ status: newStatus }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update survey status');
+      }
+
+      const updatedSurvey = await response.json();
+
+      // Update the survey in the list
+      setSurveys((prev) =>
+        prev.map((s) => (s.surveyId === surveyId ? { ...s, status: updatedSurvey.status } : s))
+      );
+    } catch (err) {
+      console.error('[SurveyList] Status change error:', err);
+      alert('Failed to update survey status');
+    }
+  };
+
   if (loading) {
     return (
       <div className={styles.loading}>
@@ -123,6 +152,7 @@ export default function SurveyList() {
               key={survey.surveyId}
               survey={survey}
               onDelete={handleDelete}
+              onStatusChange={handleStatusChange}
             />
           ))}
         </div>

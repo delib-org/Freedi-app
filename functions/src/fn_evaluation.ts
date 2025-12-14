@@ -348,6 +348,11 @@ async function updateStatementInTransaction(
 			}
 		}
 
+		// Ensure topParentId exists for legacy data that may not have it
+		if (!statementData.topParentId) {
+			statementData.topParentId = statementData.parentId || statementId;
+		}
+
 		const statement = parse(StatementSchema, statementData) as StatementWithPopper;
 
 		const { agreement, evaluation } = calculateEvaluation(
