@@ -93,11 +93,9 @@ VITE_FIREBASE_MEASUREMENT_ID_DEV=\${VITE_FIREBASE_MEASUREMENT_ID}
     mapping: {
       'GEMINI_API_KEY': 'GOOGLE_API_KEY',
       'ENVIRONMENT': 'ENVIRONMENT',
+      'AI_MODEL_NAME': 'AI_MODEL_NAME',
     },
-    extra: `
-# AI Model Configuration
-AI_MODEL_NAME=gemini-1.5-flash
-`.trim()
+    extra: ''
   }
 };
 

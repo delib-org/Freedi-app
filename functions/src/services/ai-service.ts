@@ -59,6 +59,18 @@ async function getGenerativeAIModel(): Promise<GenerativeModel> {
           category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
           threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
         },
+        {
+          category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+          threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+        },
+        {
+          category: HarmCategory.HARM_CATEGORY_HARASSMENT,
+          threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+        },
+        {
+          category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+          threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+        },
       ],
     };
 
@@ -190,7 +202,21 @@ async function handleError(
 }
 export async function checkForInappropriateContent(userInput: string): Promise<{ isInappropriate: boolean; error?: string }> {
   const prompt = `
-    You are a content moderator. Check if the following text contains any profanity, slurs, hate speech, sexually explicit language, or any other inappropriate content: "${userInput}"
+    You are a strict content moderator for a collaborative discussion platform.
+    Your job is to protect users from harmful content.
+
+    Check if the following text contains ANY of these:
+    - Profanity, curse words, or vulgar language
+    - Slurs or derogatory terms targeting any group
+    - Hate speech or discriminatory language
+    - Personal attacks, insults, or harassment
+    - Sexually explicit or suggestive content
+    - Violence, threats, or harmful content
+    - Trolling or intentionally disruptive content
+
+    Text to analyze: "${userInput}"
+
+    Be STRICT - if in doubt, flag as inappropriate. We prefer false positives over letting harmful content through.
 
     Return ONLY this JSON format (no markdown, no code blocks):
     - If inappropriate: { "inappropriate": true }
@@ -215,6 +241,13 @@ export async function checkForInappropriateContent(userInput: string): Promise<{
   } catch (error) {
     // Log the error for debugging
     logger.error("Error checking for inappropriate content:", error);
+
+    // Check if the error is due to Google's safety filters blocking the content
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    if (errorMessage.includes('SAFETY') || errorMessage.includes('blocked') || errorMessage.includes('harm')) {
+      logger.warn("Content blocked by Google safety filters - treating as inappropriate");
+      return { isInappropriate: true, error: "Content blocked by safety filters" };
+    }
 
     // On error, allow the content through rather than blocking legitimate content
     // The actual content safety is also handled by Google's AI safety filters
