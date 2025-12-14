@@ -1,27 +1,169 @@
+// Menu Option Component Styles
+// Individual menu item with hover effects and modern styling
+
 .menuOption {
-  color: inherit;
-  padding: 1rem 1.5rem;
+  // Reset button defaults
+  all: unset;
+  box-sizing: border-box;
+
+  // Layout
   display: flex;
   align-items: center;
-  gap: 1.5rem;
-  background: none;
-  border-bottom: 0.5px solid #c7d7fb;
+  gap: 0.875rem;
+  width: 100%;
+  padding: 0.75rem 1rem;
+
+  // Typography
   font-family: "Roboto", "Open Sans", sans-serif;
-  font-size: 1rem;
+  font-size: 0.9375rem;
+  font-weight: 400;
+  color: var(--text-body);
+  letter-spacing: 0.01em;
+
+  // Visual
+  background-color: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(199, 215, 247, 0.4);
+  cursor: pointer;
+  position: relative;
   z-index: 5;
 
-  &.selected {
-    background-color: #e5f2ff;
+  // Transitions
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease,
+    transform 0.1s ease;
+
+  // Hover state
+  &:hover {
+    background-color: var(--menu-active);
+    color: var(--text-title);
+
+    svg {
+      color: var(--btn-primary);
+      transform: scale(1.05);
+    }
+
+    .label {
+      color: var(--text-title);
+    }
   }
 
+  // Active/pressed state
+  &:active {
+    background-color: rgba(199, 215, 247, 0.5);
+    transform: scale(0.99);
+  }
+
+  // Focus state for accessibility
+  &:focus-visible {
+    outline: 2px solid var(--btn-primary);
+    outline-offset: -2px;
+    background-color: var(--menu-active);
+  }
+
+  // Selected state
+  &.selected {
+    background-color: var(--menu-active);
+    color: var(--btn-primary);
+    font-weight: 500;
+
+    // Left accent indicator for selected state
+    &::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 3px;
+      height: 60%;
+      background-color: var(--btn-primary);
+      border-radius: 0 2px 2px 0;
+    }
+
+    svg {
+      color: var(--btn-primary);
+    }
+
+    .label {
+      color: var(--btn-primary);
+    }
+  }
+
+  // RTL support for selected indicator
+  [dir="rtl"] &.selected::before {
+    left: auto;
+    right: 0;
+    border-radius: 2px 0 0 2px;
+  }
+
+  // Last item styling
+  &:last-child {
+    border-bottom: none;
+  }
+
+  // Label text styling
   .label {
     flex: 1;
-    width: max-content;
     display: flex;
+    align-items: center;
+    min-width: 0; // Allow text truncation
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition: color 0.15s ease;
   }
 
+  // Icon styling
   svg {
-    width: 24px;
-    height: 24px;
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    color: var(--text-caption);
+    transition:
+      color 0.15s ease,
+      transform 0.15s ease;
+  }
+
+  // Destructive/danger variant (e.g., delete actions)
+  &[data-variant="danger"],
+  &.danger {
+    color: var(--text-error);
+
+    svg {
+      color: var(--text-error);
+    }
+
+    &:hover {
+      background-color: rgba(247, 74, 77, 0.08);
+      color: var(--icons-red);
+
+      svg {
+        color: var(--icons-red);
+      }
+    }
+  }
+
+  // Disabled state
+  &:disabled,
+  &.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+}
+
+// Respect reduced motion preferences
+@media (prefers-reduced-motion: reduce) {
+  .menuOption {
+    transition: none;
+
+    svg {
+      transition: none;
+    }
+
+    .label {
+      transition: none;
+    }
   }
 }

@@ -93,6 +93,9 @@ import {
 // Discussion Summarization
 import { summarizeDiscussion } from "./fn_summarizeDiscussion";
 
+// Integration of Similar Statements
+import { findSimilarForIntegration, executeIntegration } from "./fn_integrateSimilarStatements";
+
 // Google Docs Import
 import { importGoogleDoc } from "./fn_importGoogleDocs";
 
@@ -483,3 +486,7 @@ exports.serveOgTags = serveOgTags;
 
 // Google Docs Import
 exports.importGoogleDoc = wrapHttpFunction(importGoogleDoc);
+
+// Integration of Similar Statements
+exports.findSimilarForIntegration = findSimilarForIntegration;
+exports.executeIntegration = executeIntegration;
