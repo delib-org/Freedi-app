@@ -60,11 +60,27 @@
       overflow-x: hidden;
       z-index: 99999;
 
+      /* Fixed positioning to escape overflow containers */
+      &.fixed {
+        transform: none;
+        left: auto;
+        right: auto;
+        margin: 0;
+      }
+
       /* Chat menu centered horizontally */
       &.chatMenu {
         left: 50%;
         transform: translateX(-50%);
         right: auto;
+
+        /* Fixed positioning to escape overflow containers */
+        &.fixed {
+          transform: none;
+          left: auto;
+          right: auto;
+          margin: 0;
+        }
       }
 
       /* Position above the button when in bottom half of screen */
