@@ -135,6 +135,18 @@ export function getStatementsFromTexts(
 }
 
 /**
+ * Gets statements by their IDs
+ */
+export function getStatementsByIds(
+	statementIds: string[],
+	allStatements: Statement[]
+): Statement[] {
+	return statementIds
+		.map(id => allStatements.find(s => s.statementId === id))
+		.filter((s): s is Statement => s !== undefined);
+}
+
+/**
  * Finds and removes duplicate statement from array
  */
 export function removeDuplicateStatement(

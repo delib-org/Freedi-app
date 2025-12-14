@@ -7,7 +7,7 @@ import {
 import {
   getUserStatements,
   convertToSimpleStatements,
-  getStatementsFromTexts,
+  getStatementsByIds,
   removeDuplicateStatement,
   hasReachedMaxStatements,
 } from "./services/statement-service";
@@ -16,7 +16,7 @@ import {
   getCachedSubStatements,
 } from "./services/cached-statement-service";
 import {
-  getCachedSimilarStatements,
+  getCachedSimilarStatementIds,
   getCachedSimilarityResponse,
   saveCachedSimilarityResponse,
 } from "./services/cached-ai-service";
@@ -242,16 +242,23 @@ async function fetchDataAndProcess(
     const userStatements = getUserStatements(subStatements, creatorId);
     const maxAllowed =
       parentStatement.statementSettings?.numberOfOptionsPerUser ?? Infinity;
-    const statementSimple = convertToSimpleStatements(subStatements);
+
+    // Convert statements to format with IDs for AI
+    const statementsWithIds = convertToSimpleStatements(subStatements).map(s => ({
+      id: s.id,
+      text: s.statement
+    }));
+
+    logger.info(`Processing similarity check with ${statementsWithIds.length} existing statements`);
 
     // --- Optimized: Parallel Validation and Cached AI Processing ---
     // Run validation and AI processing in parallel with AI caching
-    const [validationResult, similarStatementsAI] = await Promise.all([
+    const [validationResult, similarStatementIds] = await Promise.all([
       // Validation happens asynchronously
       Promise.resolve(hasReachedMaxStatements(userStatements, maxAllowed)),
-      // AI processing with caching
-      getCachedSimilarStatements(
-        statementSimple.map((s) => s.statement),
+      // AI processing with caching - now returns IDs directly
+      getCachedSimilarStatementIds(
+        statementsWithIds,
         userInput,
         parentStatement.statement,
         numberOfOptionsToGenerate
@@ -266,11 +273,10 @@ async function fetchDataAndProcess(
       };
     }
 
-    const similarStatements = getStatementsFromTexts(
-      statementSimple,
-      similarStatementsAI,
-      subStatements
-    );
+    logger.info(`AI returned ${similarStatementIds.length} similar statement IDs`);
+
+    // Get full statements by IDs
+    const similarStatements = getStatementsByIds(similarStatementIds, subStatements);
 
     const { statements: cleanedStatements, duplicateStatement } =
       removeDuplicateStatement(similarStatements, userInput);

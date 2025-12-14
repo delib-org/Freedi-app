@@ -1,7 +1,12 @@
 import { Statement } from "delib-npm";
 import { cache } from "./cache-service";
-import { findSimilarStatementsAI } from "./ai-service";
+import { findSimilarStatementsAI, findSimilarStatementsByIds } from "./ai-service";
 import { logger } from "firebase-functions";
+
+interface StatementWithId {
+  id: string;
+  text: string;
+}
 
 /**
  * Finds similar statements with caching to reduce AI API calls
@@ -58,6 +63,66 @@ export async function getCachedSimilarStatements(
     // Fall back to direct AI call on cache error
 
 return findSimilarStatementsAI(
+      statements,
+      userInput,
+      question,
+      numberOfSimilarStatements
+    );
+  }
+}
+
+/**
+ * Finds similar statements by IDs with caching
+ * @param statements - Array of statements with IDs and text
+ * @param userInput - The user's input text
+ * @param question - The parent question/context
+ * @param numberOfSimilarStatements - Number of similar statements to find
+ * @returns Array of similar statement IDs
+ */
+export async function getCachedSimilarStatementIds(
+  statements: StatementWithId[],
+  userInput: string,
+  question: string,
+  numberOfSimilarStatements: number = 6
+): Promise<string[]> {
+  // Create a deterministic cache key
+  const cacheKey = cache.generateKey(
+    "similar_ids",
+    question.substring(0, 30),
+    userInput.substring(0, 50),
+    statements.length.toString(),
+    numberOfSimilarStatements.toString(),
+    // Hash of first few statement IDs for uniqueness
+    statements.slice(0, 3).map(s => s.id).join(",")
+  );
+
+  try {
+    // Try cache first
+    const cached = await cache.get<string[]>(cacheKey);
+    if (cached) {
+      logger.info("Cache hit for similar statement IDs");
+      return cached;
+    }
+
+    // Call AI service
+    const results = await findSimilarStatementsByIds(
+      statements,
+      userInput,
+      question,
+      numberOfSimilarStatements
+    );
+
+    // Cache for 15 minutes
+    if (results && results.length > 0) {
+      await cache.set(cacheKey, results, 15);
+      logger.info(`Cached AI response with ${results.length} similar statement IDs`);
+    }
+
+    return results;
+  } catch (error) {
+    logger.error("Error in getCachedSimilarStatementIds:", error);
+    // Fall back to direct AI call on cache error
+    return findSimilarStatementsByIds(
       statements,
       userInput,
       question,

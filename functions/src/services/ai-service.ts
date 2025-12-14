@@ -258,6 +258,7 @@ export async function checkForInappropriateContent(userInput: string): Promise<{
 }
 /**
  * Finds existing statements that are semantically similar to the user's input.
+ * @deprecated Use findSimilarStatementsByIds instead for more reliable matching
  */
 export async function findSimilarStatementsAI(
   allStatements: string[],
@@ -271,6 +272,76 @@ Consider 60%+ meaning similarity. Context: "${question}"
 Return JSON: {"strings": ["match1", "match2"...]}`;
 
   return getAIResponseAsList(prompt);
+}
+
+interface StatementWithId {
+  id: string;
+  text: string;
+}
+
+/**
+ * Finds existing statements that are semantically similar to the user's input.
+ * Returns statement IDs directly to avoid text matching issues.
+ */
+export async function findSimilarStatementsByIds(
+  statements: StatementWithId[],
+  userInput: string,
+  question: string,
+  numberOfSimilarStatements: number = 6
+): Promise<string[]> {
+  if (statements.length === 0) {
+    logger.info("No existing statements to compare against");
+    return [];
+  }
+
+  // Format statements as numbered list with IDs for the AI
+  const statementsForAI = statements.map((s, i) => `[${s.id}]: "${s.text}"`).join('\n');
+
+  const prompt = `You are helping find similar suggestions in a collaborative platform.
+
+USER'S NEW SUGGESTION: "${userInput}"
+
+CONTEXT/QUESTION: "${question}"
+
+EXISTING SUGGESTIONS (format: [ID]: "text"):
+${statementsForAI}
+
+TASK: Find up to ${numberOfSimilarStatements} existing suggestions that are semantically similar to the user's new suggestion.
+Consider suggestions with 60%+ meaning similarity - they discuss the same topic, propose similar solutions, or express similar ideas.
+
+IMPORTANT: Return ONLY the IDs of similar suggestions, not the text.
+
+Return JSON format: {"ids": ["id1", "id2", ...]}
+If no similar suggestions found, return: {"ids": []}`;
+
+  try {
+    const model = await getGenerativeAIModel();
+    const result = await model.generateContent(prompt);
+    let responseText = result.response.text();
+
+    // Strip markdown code blocks if present
+    responseText = responseText.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
+
+    logger.info("AI similarity response:", { responseText: responseText.substring(0, 200) });
+
+    const parsed = JSON.parse(responseText);
+
+    if (Array.isArray(parsed.ids)) {
+      // Validate that returned IDs exist in our statements
+      const validIds = parsed.ids.filter((id: string) =>
+        statements.some(s => s.id === id)
+      );
+
+      logger.info(`AI found ${parsed.ids.length} similar, ${validIds.length} valid IDs`);
+
+      return validIds;
+    }
+
+    return [];
+  } catch (error) {
+    logger.error("Error in findSimilarStatementsByIds:", error);
+    return [];
+  }
 }
 
 /**
