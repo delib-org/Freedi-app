@@ -6,6 +6,8 @@ import {
 } from "@google/generative-ai";
 import { logger } from "firebase-functions";
 import "dotenv/config";
+import { GEMINI_MODEL } from "../config/gemini";
+import { notifyAIError } from "./error-notification-service";
 
 interface APIError {
   status?: number;
@@ -43,7 +45,7 @@ async function getGenerativeAIModel(): Promise<GenerativeModel> {
   logger.info("Initializing new GenerativeModel instance...");
 
   try {
-    const modelName = process.env.AI_MODEL_NAME || "gemini-2.0-flash";
+    const modelName = GEMINI_MODEL;
     logger.info(`Using AI model: ${modelName}`);
 
     const genAI = getGenAI();
@@ -81,7 +83,7 @@ async function getGenerativeAIModel(): Promise<GenerativeModel> {
     logger.error("Error initializing GenerativeModel", error);
     const genAI = getGenAI();
     // Use the same model from environment or fall back to a supported model
-    const fallbackModel = process.env.AI_MODEL_NAME || "gemini-2.0-flash";
+    const fallbackModel = GEMINI_MODEL;
     logger.info(`Using fallback model: ${fallbackModel}`);
     _generativeModel = genAI.getGenerativeModel({ model: fallbackModel });
 
@@ -184,11 +186,22 @@ async function handleError(
     errorMessage?.includes("fetch");
 
   if (!isRetryableError || attempt === maxRetries) {
-    logger.error("AI request failed permanently", {
-      error: errorMessage,
+    // Log error with full context for Error Reporting
+    logger.error("AI request failed permanently", error instanceof Error ? error : new Error(errorMessage), {
       prompt: prompt.substring(0, 200) + "...",
       attempt,
       isRetryableError,
+      model: GEMINI_MODEL,
+    });
+
+    // Send email notification to admin
+    notifyAIError(errorMessage, {
+      model: GEMINI_MODEL,
+      prompt: prompt,
+      attempt,
+      functionName: "ai-service.handleError",
+    }).catch((notifyError) => {
+      logger.warn("Failed to send AI error notification", { notifyError });
     });
 
     return false;
@@ -532,7 +545,7 @@ Return JSON ONLY:`;
     // Use higher temperature for creative title/description generation
     const genAI = getGenAI();
     const creativeModel = genAI.getGenerativeModel({
-      model: process.env.AI_MODEL_NAME || "gemini-2.0-flash",
+      model: GEMINI_MODEL,
       generationConfig: {
         responseMimeType: "application/json",
         temperature: 0.8, // Higher temperature for creative, varied output
