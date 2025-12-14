@@ -1,5 +1,5 @@
 import { onCall, HttpsError } from "firebase-functions/v2/https";
-import { getFirestore, FieldValue } from "firebase-admin/firestore";
+import { getFirestore } from "firebase-admin/firestore";
 import { Statement, Collections, StatementType, Role } from "@freedi/shared-types";
 import { logger } from "firebase-functions";
 import { geminiApiKey } from "./config/gemini";
@@ -207,10 +207,7 @@ export const executeIntegration = onCall<ExecuteIntegrationRequest>(
 
 		logger.info(`Integrating ${selectedStatements.length} statements`);
 
-		// 4. Get the first selected statement to use as template for metadata
-		const templateStatement = selectedStatements[0];
-
-		// 5. Create new integrated statement
+		// 4. Create new integrated statement
 		const newStatementId = db.collection(Collections.statements).doc().id;
 		const now = Date.now();
 

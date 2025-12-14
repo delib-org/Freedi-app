@@ -62,9 +62,15 @@ interface CalcDiff {
 export async function newEvaluation(event: FirestoreEvent<DocumentSnapshot>): Promise<void> {
 	try {
 
-		const evaluation = event.data.data() as Evaluation;
+		const evaluation = event.data.data() as Evaluation & { migratedAt?: number };
 		const { statementId, parentId } = evaluation;
 		const userId = evaluation.evaluator?.uid;
+
+		// Skip processing for migrated evaluations - the migration function handles the statement update
+		if (evaluation.migratedAt) {
+			logger.info(`Skipping trigger for migrated evaluation ${event.data.id}`);
+			return;
+		}
 
 		if (!statementId) {
 			throw new Error('statementId is required');
@@ -1032,7 +1038,7 @@ export async function migrateEvaluationsToNewStatement(
 			const newEvaluationId = `${userId}--${targetStatementId}`;
 			const evaluationRef = db.collection(Collections.evaluations).doc(newEvaluationId);
 
-			const newEvaluation: Evaluation = {
+			const newEvaluation: Evaluation & { migratedAt?: number } = {
 				evaluationId: newEvaluationId,
 				statementId: targetStatementId,
 				parentId: parentId,
@@ -1040,6 +1046,7 @@ export async function migrateEvaluationsToNewStatement(
 				evaluator: data.evaluator,
 				evaluation: data.evaluation,
 				updatedAt: now,
+				migratedAt: now, // Flag to indicate this was created by migration - triggers should skip
 			};
 
 			batch.set(evaluationRef, newEvaluation);
@@ -1090,6 +1097,9 @@ export async function migrateEvaluationsToNewStatement(
 		});
 
 		logger.info(`Updated target statement ${targetStatementId} with consensus: ${agreement.toFixed(3)}, evaluators: ${numberOfEvaluators}`);
+
+		// Update parent's total evaluator count to reflect the changes
+		await updateParentTotalEvaluators(parentId);
 
 		return result;
 	} catch (error) {
