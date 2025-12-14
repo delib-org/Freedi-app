@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { Statement } from '@freedi/shared-types';
 import { VALIDATION, UI } from '@/constants/common';
+import { useTranslation } from '@freedi/shared-i18n/next';
 import styles from './SimilarSolutions.module.scss';
 
 interface SimilarSolutionsProps {
@@ -18,6 +19,8 @@ export default function SimilarSolutions({
   onSelect,
   onBack,
 }: SimilarSolutionsProps) {
+  const { t } = useTranslation();
+
   // Show max 3 similar solutions
   const topSimilar = similarSolutions.slice(
     0,
@@ -42,20 +45,20 @@ export default function SimilarSolutions({
     <div className={styles.container}>
       {/* Header */}
       <div className={styles.header}>
-        <h2>We found similar solutions! 👥</h2>
-        <p>Choose one to avoid duplicates and strengthen consensus</p>
+        <h2>{t('We found similar solutions!')} 👥</h2>
+        <p>{t('Choose one to avoid duplicates and strengthen consensus')}</p>
       </div>
 
       {/* User's New Solution */}
       <div className={styles.section}>
-        <h3 className={styles.sectionTitle}>Your Solution (New)</h3>
+        <h3 className={styles.sectionTitle}>{t('Your Solution (New)')}</h3>
         <div className={styles.yourSolutionCard}>
           <div className={styles.solutionText}>{userSuggestion}</div>
           <button
             onClick={() => onSelect(null)}
             className={`${styles.chooseButton} ${styles.primary}`}
           >
-            Choose This (New)
+            {t('Choose This (New)')}
           </button>
         </div>
       </div>
@@ -63,17 +66,17 @@ export default function SimilarSolutions({
       {/* Similar Existing Solutions */}
       {topSimilar.length > 0 && (
         <div className={styles.section}>
-          <h3 className={styles.sectionTitle}>Similar Existing Solutions</h3>
+          <h3 className={styles.sectionTitle}>{t('Similar Existing Solutions')}</h3>
           {topSimilar.map((solution, index) => (
             <div key={solution.statementId} className={styles.similarCard}>
               {/* Metadata */}
               <div className={styles.similarMeta}>
                 <span className={styles.similarityScore}>
                   {/* Estimate similarity based on position (first=85%, second=75%, third=65%) */}
-                  {Math.max(85 - index * 10, 60)}% similar
+                  {Math.max(85 - index * 10, 60)}% {t('similar')}
                 </span>
                 <span className={styles.supportCount}>
-                  👥 {solution.evaluation?.numberOfEvaluators || 0} {solution.evaluation?.numberOfEvaluators === 1 ? 'person supports' : 'people support'} this
+                  👥 {solution.evaluation?.numberOfEvaluators || 0} {solution.evaluation?.numberOfEvaluators === 1 ? t('person supports this') : t('people support this')}
                 </span>
               </div>
 
@@ -85,7 +88,7 @@ export default function SimilarSolutions({
                 onClick={() => onSelect(solution.statementId)}
                 className={`${styles.chooseButton} ${styles.secondary}`}
               >
-                Choose This (Add Support)
+                {t('Choose This (Add Support)')}
               </button>
             </div>
           ))}
@@ -96,14 +99,14 @@ export default function SimilarSolutions({
       <div className={styles.helpFooter}>
         <span className={styles.helpIcon}>💡</span>
         <p className={styles.helpText}>
-          Choosing an existing solution adds your support and strengthens it!
-          This helps build stronger consensus.
+          {t('Choosing an existing solution adds your support and strengthens it!')}
+          {' '}{t('This helps build stronger consensus.')}
         </p>
       </div>
 
       {/* Back Button */}
       <button onClick={onBack} className={styles.backButton}>
-        ← Back to Edit
+        ← {t('Back to Edit')}
       </button>
     </div>
   );

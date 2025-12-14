@@ -259,25 +259,25 @@ export default function SolutionPromptModal({
                 {characterCount}/{VALIDATION.MAX_SOLUTION_LENGTH}
               </span>
               {characterCount > 0 && characterCount < VALIDATION.MIN_SOLUTION_LENGTH && (
-                <span className={styles.hint}> (minimum {VALIDATION.MIN_SOLUTION_LENGTH} characters)</span>
+                <span className={styles.hint}> ({t('minimum')} {VALIDATION.MIN_SOLUTION_LENGTH} {t('characters')})</span>
               )}
             </div>
 
-            {error && <p className={styles.error}>{error}</p>}
+            {error && <p className={styles.error}>{t(error)}</p>}
 
             <div className={styles.actions}>
               <button
                 className={styles.cancelButton}
                 onClick={handleClose}
               >
-                Cancel
+                {t('Cancel')}
               </button>
               <button
                 className={styles.primaryButton}
                 onClick={handleCheckSimilar}
                 disabled={!isValid}
               >
-                Submit
+                {t('Submit')}
               </button>
             </div>
           </>

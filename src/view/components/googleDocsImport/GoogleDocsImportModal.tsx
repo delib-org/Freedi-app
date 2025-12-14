@@ -86,7 +86,7 @@ const GoogleDocsImportModal: FC<GoogleDocsImportModalProps> = ({
 	if (!isOpen) return null;
 
 	return (
-		<Modal onClose={handleClose}>
+		<Modal closeModal={handleClose}>
 			<div className={styles.modal}>
 				<header className={styles.header}>
 					<h2>{t('Import from Google Docs')}</h2>

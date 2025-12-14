@@ -486,7 +486,7 @@ export async function searchQuestions(
   const creatorQuestions = creatorSnapshot.docs.map((doc) => doc.data() as Statement);
 
   // Query 2: Questions from admin subscriptions (batch query)
-  let adminQuestions: Statement[] = [];
+  const adminQuestions: Statement[] = [];
   if (adminStatementIds.size > 0) {
     const adminIds = Array.from(adminStatementIds);
     const batchSize = 30; // Firestore 'in' query limit

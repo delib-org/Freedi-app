@@ -1,5 +1,11 @@
-import { useUserConfig } from './useUserConfig';
-import { LanguagesEnum, Direction, RowDirection } from '@/context/UserConfigContext';
+import { useContext, useMemo, useCallback } from 'react';
+import {
+	UserConfigContext,
+	LanguagesEnum,
+	Direction,
+	RowDirection,
+} from '@/context/UserConfigContext';
+import { getDirection, getRowDirection, getLanguageData } from '@freedi/shared-i18n';
 
 export interface UseTranslationReturn {
 	t: (text: string) => string;
@@ -9,40 +15,43 @@ export interface UseTranslationReturn {
 	rowDirection: RowDirection;
 }
 
+// Default English translations for fallback
+const defaultLanguageData = getLanguageData(LanguagesEnum.en);
+
 /**
  * Hook for accessing translation functionality
- *
- * @returns Translation utilities including:
- * - t: Translation function that takes a key and returns the translated text
- * - currentLanguage: Current language code (en, ar, he, de, es, nl)
- * - changeLanguage: Function to change the current language
- * - dir: Text direction ("ltr" or "rtl")
- * - rowDirection: Flex row direction ("row" or "row-reverse")
- *
- * @example
- * ```typescript
- * const MyComponent = () => {
- *   const { t, currentLanguage, changeLanguage } = useTranslation();
- *
- *   return (
- *     <div>
- *       <h1>{t('Welcome')}</h1>
- *       <button onClick={() => changeLanguage(LanguagesEnum.en)}>
- *         English
- *       </button>
- *     </div>
- *   );
- * };
- * ```
+ * Works even outside UserConfigProvider (uses English fallback)
  */
 export function useTranslation(): UseTranslationReturn {
-	const { t, currentLanguage, changeLanguage, dir, rowDirection } = useUserConfig();
+	const context = useContext(UserConfigContext);
+
+	// Fallback translation function
+	const fallbackT = useCallback(
+		(text: string) => defaultLanguageData[text] || text,
+		[]
+	);
+
+	// Fallback when context is not available
+	const fallback = useMemo<UseTranslationReturn>(
+		() => ({
+			t: fallbackT,
+			currentLanguage: LanguagesEnum.en,
+			changeLanguage: () => {},
+			dir: getDirection(LanguagesEnum.en),
+			rowDirection: getRowDirection(LanguagesEnum.en),
+		}),
+		[fallbackT]
+	);
+
+	if (!context) {
+		return fallback;
+	}
 
 	return {
-		t,
-		currentLanguage,
-		changeLanguage,
-		dir,
-		rowDirection,
+		t: context.t,
+		currentLanguage: context.currentLanguage,
+		changeLanguage: context.changeLanguage,
+		dir: context.dir,
+		rowDirection: context.rowDirection,
 	};
 }

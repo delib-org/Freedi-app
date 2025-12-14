@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import type { LoadingStage } from '@/types/api';
-import { UI, LOADER_STAGES, PROGRESS, API } from '@/constants/common';
+import { UI, LOADER_STAGES, PROGRESS } from '@/constants/common';
+import { useTranslation } from '@freedi/shared-i18n/next';
 import styles from './EnhancedLoader.module.scss';
 
 interface EnhancedLoaderProps {
@@ -12,9 +13,9 @@ interface EnhancedLoaderProps {
 interface StageConfig {
   stage: LoadingStage;
   icon: string;
-  message: string;
-  subMessage: string;
-  tip: string;
+  messageKey: string;
+  subMessageKey: string;
+  tipKey: string;
   progressStart: number;
   progressEnd: number;
   duration: number; // seconds
@@ -24,38 +25,39 @@ const STAGES: StageConfig[] = [
   {
     stage: 'content-check',
     icon: '🔍',
-    message: 'Checking for inappropriate content...',
-    subMessage: 'Ensuring safe community standards',
-    tip: 'AI scans for profanity and harmful content',
+    messageKey: 'Checking for inappropriate content...',
+    subMessageKey: 'Ensuring safe community standards',
+    tipKey: 'AI scans for profanity and harmful content',
     ...LOADER_STAGES.CONTENT_CHECK,
   },
   {
     stage: 'similarity-search',
     icon: '👥',
-    message: 'Finding similar solutions...',
-    subMessage: 'Searching through community ideas',
-    tip: 'Similar ideas are grouped to show consensus',
+    messageKey: 'Finding similar solutions...',
+    subMessageKey: 'Searching through community ideas',
+    tipKey: 'Similar ideas are grouped to show consensus',
     ...LOADER_STAGES.SIMILARITY_SEARCH,
   },
   {
     stage: 'comparison',
     icon: '📊',
-    message: 'Comparing with existing solutions...',
-    subMessage: 'Analyzing similarity scores',
-    tip: 'This helps prevent duplicate suggestions',
+    messageKey: 'Comparing with existing solutions...',
+    subMessageKey: 'Analyzing similarity scores',
+    tipKey: 'This helps prevent duplicate suggestions',
     ...LOADER_STAGES.COMPARISON,
   },
   {
     stage: 'finalizing',
     icon: '✨',
-    message: 'Almost ready...',
-    subMessage: 'Preparing your results',
-    tip: 'Great solutions deserve careful review!',
+    messageKey: 'Almost ready...',
+    subMessageKey: 'Preparing your results',
+    tipKey: 'Great solutions deserve careful review!',
     ...LOADER_STAGES.FINALIZING,
   },
 ];
 
 export default function EnhancedLoader({ onCancel }: EnhancedLoaderProps) {
+  const { t } = useTranslation();
   const [currentStageIndex, setCurrentStageIndex] = useState(0);
   const [progress, setProgress] = useState(0);
   const [elapsedTime, setElapsedTime] = useState(0);
@@ -140,19 +142,19 @@ export default function EnhancedLoader({ onCancel }: EnhancedLoaderProps) {
         <div className={styles.progressText}>{Math.round(progress)}%</div>
 
         {/* Main Message */}
-        <h2 className={styles.mainMessage}>{currentStage.message}</h2>
+        <h2 className={styles.mainMessage}>{t(currentStage.messageKey)}</h2>
 
         {/* Sub Message */}
-        <p className={styles.subMessage}>{currentStage.subMessage}</p>
+        <p className={styles.subMessage}>{t(currentStage.subMessageKey)}</p>
 
         {/* Duration Info */}
-        <p className={styles.durationInfo}>{API.MAX_DURATION_MESSAGE}</p>
+        <p className={styles.durationInfo}>{t('This may take up to 30 seconds')}</p>
 
         {/* Educational Tip */}
-        <div className={styles.tipContainer} key={currentStage.tip}>
+        <div className={styles.tipContainer} key={currentStage.tipKey}>
           <span className={styles.tipIcon}>⚡</span>
           <p className={styles.tipText}>
-            <strong>Did you know?</strong> {currentStage.tip}
+            <strong>{t('Did you know?')}</strong> {t(currentStage.tipKey)}
           </p>
         </div>
 
@@ -173,9 +175,9 @@ export default function EnhancedLoader({ onCancel }: EnhancedLoaderProps) {
         {/* Cancel Button (shows after 30s) */}
         {showCancelButton && onCancel && (
           <div className={styles.cancelContainer}>
-            <p className={styles.takingLonger}>Taking a bit longer than usual...</p>
+            <p className={styles.takingLonger}>{t('Taking a bit longer than usual...')}</p>
             <button onClick={onCancel} className={styles.cancelButton}>
-              Cancel
+              {t('Cancel')}
             </button>
           </div>
         )}
