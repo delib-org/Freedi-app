@@ -1,4 +1,4 @@
-# Freedi - Open Source Deliberative Democracy Platform
+# WizCol - Open Source Deliberative Democracy Platform
 
 **Freedi** is an open-source platform exploring solutions to democratic participation at scale. As groups grow larger, coordination becomes exponentially more complex, traditionally forcing decision-making into the hands of small groups. Freedi experiments with consensus algorithms and structured deliberation methods to enable broader participation in group decision-making.
 
