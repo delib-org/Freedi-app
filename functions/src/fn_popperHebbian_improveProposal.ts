@@ -228,9 +228,9 @@ ${neutralSection}
 Create an improved version with a clear TITLE and detailed DESCRIPTION:
 
 **Title Guidelines:**
-- Should be concise (1-2 sentences max)
-- Capture the essence of the solution
-- Be clear and understandable at a glance
+- Do NOT truncate or shorten - preserve the full meaning
+- Capture the complete essence of the solution
+- Be clear and understandable
 
 **Description Guidelines:**
 - Provide detailed explanation of the proposal
