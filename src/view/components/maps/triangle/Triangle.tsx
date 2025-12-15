@@ -5,37 +5,28 @@ import styles from './Triangle.module.scss';
 import {
 	statementOptionsSelector,
 	statementSelector,
-	statementSubscriptionSelector,
 } from '@/redux/statements/statementsSlice';
-import { Statement, Role } from '@freedi/shared-types';
+import { Statement } from '@freedi/shared-types';
 import { useParams } from 'react-router';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
-import { creatorSelector } from '@/redux/creator/creatorSlice';
 
 const Triangle: FC = () => {
 	const { t } = useTranslation();
 	const { statementId } = useParams();
 	const statement = useSelector(statementSelector(statementId));
-	const creator = useSelector(creatorSelector);
-	const parentSubscription = useSelector(statementSubscriptionSelector(statementId));
 
 	const statementsFromStore = useSelector(
 		statementOptionsSelector(statement?.statementId)
 	);
 
-	// Check if user is admin
-	const isAdmin =
-		creator?.uid === parentSubscription?.statement?.creatorId ||
-		parentSubscription?.role === Role.admin;
-
-	// Filter out hidden options (unless user is creator or admin)
+	// Filter out hidden options - agreement map should only show visible options
 	const subStatements: Statement[] = useMemo(() =>
 		statementsFromStore.filter(
 			(s: Statement) =>
 				s.evaluation?.sumCon !== undefined &&
-				(s.hide !== true || s.creatorId === creator?.uid || isAdmin)
+				s.hide !== true
 		),
-		[statementsFromStore, creator?.uid, isAdmin]
+		[statementsFromStore]
 	);
 
 	// Return early if statement is not found
