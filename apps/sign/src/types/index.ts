@@ -2,7 +2,7 @@
  * Type definitions for Sign app
  */
 
-import { Statement, Paragraph as SharedParagraph, ParagraphType } from '@freedi/shared-types';
+import { Statement, Paragraph as SharedParagraph } from '@freedi/shared-types';
 
 // Re-export from shared-types
 export { ParagraphType } from '@freedi/shared-types';
