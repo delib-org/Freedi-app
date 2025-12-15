@@ -3,7 +3,7 @@
   "framework": "nextjs",
   "buildCommand": "cd ../../packages/shared-types && npm run build && cd ../../apps/sign && npm run build",
   "outputDirectory": ".next",
-  "installCommand": "cd ../.. && npm install && cd apps/sign",
+  "installCommand": "cd ../.. && npm install && cd apps/sign && npm install",
   "devCommand": "npm run dev",
   "regions": ["iad1"],
   "headers": [
