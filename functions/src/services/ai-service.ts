@@ -422,7 +422,7 @@ export async function improveSuggestion(
         3. Write the improved version in ${detectedLanguage || "the same language as the original"}
         4. Make the text clearer and more articulate
         5. Ensure proper grammar and structure
-        6. Keep the title concise and impactful
+        6. Preserve the full title without truncation - do not shorten or cut off the title
         7. If there's a description, make it more detailed and explanatory
         8. Ensure the suggestion is relevant to the question/topic provided in the context
 
@@ -448,7 +448,7 @@ export async function improveSuggestion(
         4. Maintain the original meaning and intent
         5. Keep the same tone and style
         6. Write in ${detectedLanguage || "the same language as the original"}
-        7. Keep the title concise and impactful (usually under 100 characters)
+        7. Preserve the full title without truncation - do not shorten or cut off the title
         8. If there's a description, expand it to provide more context and details
         9. Ensure the suggestion directly addresses the question/topic provided in the context
 
@@ -507,8 +507,8 @@ export async function generateTitleAndDescription(
 ${questionContext ? `הקשר: "${questionContext}"` : ""}
 
 כללים חשובים:
-1. כותרת: קצרה (2-5 מילים), נסח מחדש את הרעיון במילים אחרות
-2. תיאור: ארוך יותר (10-25 מילים), התחל עם "הצעה ל" ואז הסבר את היתרונות
+1. כותרת: נסח מחדש את הרעיון במילים אחרות - אל תקצר או תחתוך, שמור על המשמעות המלאה
+2. תיאור: ארוך יותר, התחל עם "הצעה ל" ואז הסבר את היתרונות
 
 דוגמאות:
 - קלט: "נלך לאכול פיצה"
@@ -527,8 +527,8 @@ Proposal: "${userInput}"
 ${questionContext ? `Context: "${questionContext}"` : ""}
 
 IMPORTANT RULES:
-1. TITLE: Short (2-5 words), rephrase the idea in different words
-2. DESCRIPTION: Longer (10-25 words), start with "Proposal to" and explain benefits
+1. TITLE: Rephrase the idea in different words - do NOT truncate or shorten, preserve the full meaning
+2. DESCRIPTION: Longer, start with "Proposal to" and explain benefits
 
 Examples:
 - Input: "Let's go eat pizza"
@@ -601,24 +601,17 @@ Return JSON ONLY:`;
 
 /**
  * Creates fallback title and description that are always different
+ * Note: Does NOT truncate the title - preserves full user input
  */
 function createFallbackTitleDescription(userInput: string): { title: string; description: string } {
-  if (userInput.length > 60) {
-    // Long text: truncate for title, use full text as description base
-    return {
-      title: userInput.substring(0, 57) + "...",
-      description: userInput,
-    };
-  } else {
-    // Short text: use as title, add context-aware description
-    // Try to detect language and create appropriate description
-    const isHebrew = /[\u0590-\u05FF]/.test(userInput);
-    const descriptionPrefix = isHebrew ? "הצעה זו מציעה" : "This suggestion proposes";
-    return {
-      title: userInput,
-      description: `${descriptionPrefix}: ${userInput}`,
-    };
-  }
+  // Always use full user input as title without truncation
+  const isHebrew = /[\u0590-\u05FF]/.test(userInput);
+  const descriptionPrefix = isHebrew ? "הצעה זו מציעה" : "This suggestion proposes";
+
+  return {
+    title: userInput,
+    description: `${descriptionPrefix}: ${userInput}`,
+  };
 }
 
 /**
@@ -661,7 +654,7 @@ ${questionContext ? `הקשר/שאלה: "${questionContext}"` : ""}
 משימה:
 1. קבע אם הקלט מכיל יותר מהצעה/רעיון אחד
 2. אם יש מספר הצעות, פצל אותן להצעות נפרדות
-3. לכל הצעה, תן כותרת קצרה (2-8 מילים) ותיאור מורחב (10-30 מילים)
+3. לכל הצעה, תן כותרת מלאה (ללא קיצור) ותיאור מורחב
 
 כללים:
 - סמן כמרובה רק אם יש רעיונות נפרדים באמת (לא רק פרטים של רעיון אחד)
@@ -690,7 +683,7 @@ ${questionContext ? `CONTEXT/QUESTION: "${questionContext}"` : ""}
 TASK:
 1. Determine if the input contains MORE THAN ONE distinct suggestion/idea
 2. If multiple suggestions exist, split them into separate proposals
-3. For each suggestion, provide a concise title (2-8 words) and expanded description (10-30 words)
+3. For each suggestion, provide a full title (do not truncate) and expanded description
 
 RULES:
 - Only flag as multiple if there are truly DISTINCT ideas (not just details of one idea)

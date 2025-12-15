@@ -1,11 +1,10 @@
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { getFirestore } from "firebase-admin/firestore";
-import { Statement, Collections, StatementType, Role } from "@freedi/shared-types";
+import { Statement, Collections, StatementType, Role, functionConfig } from "@freedi/shared-types";
 import { logger } from "firebase-functions";
 import { geminiApiKey } from "./config/gemini";
 import {
-	findSimilarToStatement,
-	generateIntegratedSuggestion,
+	findSimilarAndGenerateSuggestion,
 	mapStatementToWithEvaluation,
 	StatementWithEvaluation,
 } from "./services/integration-ai-service";
@@ -53,7 +52,13 @@ interface ExecuteIntegrationResponse {
  * Admin only - finds statements similar to the selected one
  */
 export const findSimilarForIntegration = onCall<FindSimilarForIntegrationRequest>(
-	{ secrets: [geminiApiKey] },
+	{
+		secrets: [geminiApiKey],
+		timeoutSeconds: 120,
+		memory: "512MiB",
+		minInstances: 1, // Keep warm to avoid cold starts
+		region: functionConfig.region,
+	},
 	async (request): Promise<FindSimilarForIntegrationResponse> => {
 		const { statementId } = request.data;
 		const userId = request.auth?.uid;
@@ -68,24 +73,29 @@ export const findSimilarForIntegration = onCall<FindSimilarForIntegrationRequest
 
 		const db = getFirestore();
 
-		// 1. Fetch the source statement
+		// 1. Fetch source statement first (needed for subsequent queries)
 		const sourceDoc = await db.collection(Collections.statements).doc(statementId).get();
 		if (!sourceDoc.exists) {
 			throw new HttpsError("not-found", "Statement not found");
 		}
 		const sourceStatement = sourceDoc.data() as Statement;
-
-		// 2. Check admin permissions
 		const parentId = sourceStatement.parentId;
 		const topParentId = sourceStatement.topParentId || parentId;
 
-		const membersSnapshot = await db
-			.collection(Collections.statementsSubscribe)
-			.where("statementId", "==", topParentId)
-			.where("userId", "==", userId)
-			.where("role", "in", [Role.admin, "creator", "admin"])
-			.limit(1)
-			.get();
+		// 2. PARALLEL: Fetch admin check, parent, and siblings simultaneously
+		const [membersSnapshot, parentDoc, siblingsSnapshot] = await Promise.all([
+			db.collection(Collections.statementsSubscribe)
+				.where("statementId", "==", topParentId)
+				.where("userId", "==", userId)
+				.where("role", "in", [Role.admin, "creator", "admin"])
+				.limit(1)
+				.get(),
+			db.collection(Collections.statements).doc(parentId).get(),
+			db.collection(Collections.statements)
+				.where("parentId", "==", parentId)
+				.where("statementType", "==", StatementType.option)
+				.get(),
+		]);
 
 		const isAdmin = !membersSnapshot.empty;
 		const isCreator = sourceStatement.creatorId === userId;
@@ -94,53 +104,24 @@ export const findSimilarForIntegration = onCall<FindSimilarForIntegrationRequest
 			throw new HttpsError("permission-denied", "Only admins can integrate suggestions");
 		}
 
-		// 3. Fetch parent statement for context
-		const parentDoc = await db.collection(Collections.statements).doc(parentId).get();
 		const parentStatement = parentDoc.exists ? (parentDoc.data() as Statement) : null;
 		const questionContext = parentStatement?.statement || "";
-
-		// 4. Fetch all sibling statements (same parent, options only)
-		const siblingsSnapshot = await db
-			.collection(Collections.statements)
-			.where("parentId", "==", parentId)
-			.where("statementType", "==", StatementType.option)
-			.get();
-
 		const allSiblings = siblingsSnapshot.docs.map((doc) => doc.data() as Statement);
 
 		logger.info(`Found ${allSiblings.length} sibling statements for integration check`);
 
-		// 5. Find similar statements using AI
-		const similarStatements = await findSimilarToStatement(
+		// 3. SINGLE AI CALL: Find similar AND generate suggestion in one request
+		const result = await findSimilarAndGenerateSuggestion(
 			sourceStatement,
 			allSiblings,
 			questionContext
 		);
 
-		// 6. Generate suggested integration if we have similar statements
-		let suggestedTitle: string | undefined;
-		let suggestedDescription: string | undefined;
-
-		if (similarStatements.length > 0) {
-			const allToIntegrate = [
-				mapStatementToWithEvaluation(sourceStatement),
-				...similarStatements,
-			];
-
-			try {
-				const suggestion = await generateIntegratedSuggestion(allToIntegrate, questionContext);
-				suggestedTitle = suggestion.title;
-				suggestedDescription = suggestion.description;
-			} catch (error) {
-				logger.warn("Failed to generate suggested integration:", error);
-			}
-		}
-
 		return {
 			sourceStatement: mapStatementToWithEvaluation(sourceStatement),
-			similarStatements,
-			suggestedTitle,
-			suggestedDescription,
+			similarStatements: result.similarStatements,
+			suggestedTitle: result.suggestedTitle,
+			suggestedDescription: result.suggestedDescription,
 		};
 	}
 );
@@ -150,7 +131,12 @@ export const findSimilarForIntegration = onCall<FindSimilarForIntegrationRequest
  * Creates new integrated statement, migrates evaluations, hides originals
  */
 export const executeIntegration = onCall<ExecuteIntegrationRequest>(
-	{ secrets: [geminiApiKey] },
+	{
+		secrets: [geminiApiKey],
+		timeoutSeconds: 120, // May take longer with many evaluations to migrate
+		memory: "512MiB",
+		region: functionConfig.region,
+	},
 	async (request): Promise<ExecuteIntegrationResponse> => {
 		const { parentStatementId, selectedStatementIds, integratedTitle, integratedDescription } =
 			request.data;

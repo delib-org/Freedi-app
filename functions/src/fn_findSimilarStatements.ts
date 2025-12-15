@@ -100,12 +100,11 @@ export async function findSimilarStatements(
           });
         } catch (genError) {
           logger.warn("Failed to generate title/description for cached response", { error: genError });
-          // Use fallback only if we don't already have values
+          // Use fallback only if we don't already have values - no truncation
           if (!generatedTitle || !generatedDescription) {
             const isHebrew = /[\u0590-\u05FF]/.test(userInput);
-            generatedTitle = userInput.length > 60 ? userInput.substring(0, 57) + "..." : userInput;
-            generatedDescription = userInput.length > 60 ? userInput :
-              (isHebrew ? `הצעה זו מציעה: ${userInput}` : `This suggestion proposes: ${userInput}`);
+            generatedTitle = userInput;
+            generatedDescription = isHebrew ? `הצעה זו מציעה: ${userInput}` : `This suggestion proposes: ${userInput}`;
           }
         }
       }
@@ -165,10 +164,8 @@ export async function findSimilarStatements(
       });
     } catch (genError) {
       logger.warn("Failed to generate title/description, using original", { error: genError });
-      // Fallback: truncate for title if too long
-      if (userInput.length > 80) {
-        generatedTitle = userInput.substring(0, 77) + "...";
-      }
+      // Fallback: use full user input without truncation
+      generatedTitle = userInput;
     }
 
     // Step 5: Cache the complete response for future requests

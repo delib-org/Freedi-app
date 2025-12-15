@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import styles from './EvaluationButtons.module.css';
 
 interface EvaluationButtonsProps {
   onEvaluate: (score: number) => void;
-  disabled?: boolean;
+  currentScore?: number | null;
 }
 
 // Evaluation scale: -1, -0.5, 0, 0.5, 1
@@ -24,10 +24,17 @@ const EVALUATION_SCORES = [
  */
 export default function EvaluationButtons({
   onEvaluate,
-  disabled,
+  currentScore,
 }: EvaluationButtonsProps) {
   const { t } = useTranslation();
-  const [selectedScore, setSelectedScore] = useState<number | null>(null);
+  const [selectedScore, setSelectedScore] = useState<number | null>(currentScore ?? null);
+
+  // Sync with currentScore prop when it changes (e.g., loaded from server)
+  useEffect(() => {
+    if (currentScore !== undefined && currentScore !== null) {
+      setSelectedScore(currentScore);
+    }
+  }, [currentScore]);
 
   const evaluationOptions = useMemo(
     () =>
@@ -39,8 +46,6 @@ export default function EvaluationButtons({
   );
 
   const handleClick = (score: number) => {
-    if (disabled) return;
-
     setSelectedScore(score);
     onEvaluate(score);
   };
@@ -51,10 +56,9 @@ export default function EvaluationButtons({
         <button
           key={score}
           onClick={() => handleClick(score)}
-          disabled={disabled}
           className={`${styles.button} ${
             selectedScore === score ? styles.selected : ''
-          } ${disabled ? styles.disabled : ''}`}
+          }`}
           title={label}
           aria-label={label}
         >

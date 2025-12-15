@@ -1,6 +1,6 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { getFirestore } from 'firebase-admin/firestore';
-import { Statement, Collections } from '@freedi/shared-types';
+import { Statement, Collections, functionConfig } from '@freedi/shared-types';
 import { getGeminiModel, geminiApiKey } from './config/gemini';
 
 interface ImproveProposalRequest {
@@ -36,7 +36,7 @@ const LANGUAGE_NAMES: Record<string, string> = {
  * Only accessible by the proposal creator or group admins.
  */
 export const improveProposalWithAI = onCall<ImproveProposalRequest>(
-	{ secrets: [geminiApiKey] },
+	{ secrets: [geminiApiKey], region: functionConfig.region },
 	async (request): Promise<ImproveProposalResponse> => {
 		const { statementId, language = 'en' } = request.data;
 		const userId = request.auth?.uid;
@@ -228,9 +228,9 @@ ${neutralSection}
 Create an improved version with a clear TITLE and detailed DESCRIPTION:
 
 **Title Guidelines:**
-- Should be concise (1-2 sentences max)
-- Capture the essence of the solution
-- Be clear and understandable at a glance
+- Do NOT truncate or shorten - preserve the full meaning
+- Capture the complete essence of the solution
+- Be clear and understandable
 
 **Description Guidelines:**
 - Provide detailed explanation of the proposal

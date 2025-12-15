@@ -98,17 +98,23 @@ async function getIntegrationModel(): Promise<GenerativeModel> {
 }
 
 /**
- * Find statements similar to the target statement for integration
- * @param targetStatement - The statement the admin selected to integrate
- * @param allStatements - All sibling statements under the same parent
- * @param questionContext - The parent question for context
- * @returns Similar statements with their evaluation data
+ * Combined result type for finding similar and generating suggestion
  */
-export async function findSimilarToStatement(
+interface FindAndGenerateResult {
+	similarStatements: StatementWithEvaluation[];
+	suggestedTitle?: string;
+	suggestedDescription?: string;
+}
+
+/**
+ * OPTIMIZED: Single AI call to find similar statements AND generate merged suggestion
+ * This combines what was previously two separate API calls for better performance
+ */
+export async function findSimilarAndGenerateSuggestion(
 	targetStatement: Statement,
 	allStatements: Statement[],
 	questionContext: string
-): Promise<StatementWithEvaluation[]> {
+): Promise<FindAndGenerateResult> {
 	// Filter out the target statement and hidden statements
 	const otherStatements = allStatements.filter(
 		(s) => s.statementId !== targetStatement.statementId && !s.hide
@@ -116,35 +122,37 @@ export async function findSimilarToStatement(
 
 	if (otherStatements.length === 0) {
 		logger.info("No other statements to compare against");
-		return [];
+		return { similarStatements: [] };
 	}
 
-	// Format statements for AI
+	// Format statements compactly for AI
 	const statementsForAI = otherStatements.map((s) => ({
 		id: s.statementId,
-		text: s.statement,
-		description: s.description || "",
+		t: s.statement, // title
+		d: s.description || "", // description
+		e: (s.evaluation as { numberOfEvaluators?: number })?.numberOfEvaluators || s.totalEvaluators || 0, // evaluators
 	}));
 
-	const prompt = `You are helping identify similar suggestions that can be merged together.
+	// Detect language for output
+	const isHebrew = /[\u0590-\u05FF]/.test(targetStatement.statement);
+	const isArabic = /[\u0600-\u06FF]/.test(targetStatement.statement);
+	const langHint = isHebrew ? "Output in Hebrew." : isArabic ? "Output in Arabic." : "";
 
-TARGET SUGGESTION TO FIND MATCHES FOR:
-Title: "${targetStatement.statement}"
-${targetStatement.description ? `Description: "${targetStatement.description}"` : ""}
+	// Single optimized prompt for both tasks
+	const prompt = `Find similar suggestions to merge and generate a merged version.
 
-CONTEXT/QUESTION: "${questionContext}"
+TARGET: "${targetStatement.statement}"${targetStatement.description ? ` - ${targetStatement.description}` : ""}
+CONTEXT: "${questionContext}"
 
-OTHER SUGGESTIONS TO CHECK FOR SIMILARITY:
-${statementsForAI.map((s) => `[${s.id}]: "${s.text}"${s.description ? ` - ${s.description}` : ""}`).join("\n")}
+CANDIDATES (id, title, desc, evaluators):
+${statementsForAI.map((s) => `${s.id}|${s.t}|${s.d}|${s.e}`).join("\n")}
 
-TASK: Find suggestions that are semantically similar to the target suggestion.
-Consider suggestions with 60%+ meaning similarity - they discuss the same topic, propose similar solutions, or express similar ideas.
-These will be merged into a single integrated suggestion.
+TASK:
+1. Find IDs with 60%+ semantic similarity to TARGET
+2. If found, generate merged title (<100 chars) and description (10-50 words) combining TARGET + similar ones. Weight by evaluator count. ${langHint}
 
-IMPORTANT: Return ONLY the IDs of similar suggestions.
-
-Return JSON format: {"ids": ["id1", "id2", ...]}
-If no similar suggestions found, return: {"ids": []}`;
+JSON: {"similarIds":["id1"...],"mergedTitle":"...","mergedDesc":"..."}
+If none similar: {"similarIds":[],"mergedTitle":"","mergedDesc":""}`;
 
 	try {
 		const model = await getIntegrationModel();
@@ -154,30 +162,45 @@ If no similar suggestions found, return: {"ids": []}`;
 		// Strip markdown code blocks if present
 		responseText = responseText.replace(/```json\s*/gi, "").replace(/```\s*/g, "").trim();
 
-		logger.info("AI similar for integration response:", { responseText: responseText.substring(0, 200) });
+		logger.info("AI integration response:", { len: responseText.length });
 
 		const parsed = JSON.parse(responseText);
 
-		if (Array.isArray(parsed.ids)) {
-			// Validate and map IDs to statements with evaluation data
-			const similarStatements: StatementWithEvaluation[] = [];
-
-			for (const id of parsed.ids) {
+		// Map IDs to statement objects
+		const similarStatements: StatementWithEvaluation[] = [];
+		if (Array.isArray(parsed.similarIds)) {
+			for (const id of parsed.similarIds) {
 				const statement = otherStatements.find((s) => s.statementId === id);
 				if (statement) {
 					similarStatements.push(mapStatementToWithEvaluation(statement));
 				}
 			}
-
-			logger.info(`Found ${similarStatements.length} similar statements for integration`);
-			return similarStatements;
 		}
 
-		return [];
+		logger.info(`Found ${similarStatements.length} similar statements`);
+
+		return {
+			similarStatements,
+			suggestedTitle: parsed.mergedTitle || undefined,
+			suggestedDescription: parsed.mergedDesc || undefined,
+		};
 	} catch (error) {
-		logger.error("Error finding similar statements for integration:", error);
-		return [];
+		logger.error("Error in findSimilarAndGenerateSuggestion:", error);
+		return { similarStatements: [] };
 	}
+}
+
+/**
+ * Find statements similar to the target statement for integration
+ * @deprecated Use findSimilarAndGenerateSuggestion for better performance
+ */
+export async function findSimilarToStatement(
+	targetStatement: Statement,
+	allStatements: Statement[],
+	questionContext: string
+): Promise<StatementWithEvaluation[]> {
+	const result = await findSimilarAndGenerateSuggestion(targetStatement, allStatements, questionContext);
+	return result.similarStatements;
 }
 
 /**
@@ -256,8 +279,8 @@ ${languageInstruction}
 
 Return JSON format:
 {
-  "title": "Merged suggestion title (concise, under 100 characters)",
-  "description": "Merged description that captures the combined ideas (10-50 words)"
+  "title": "Merged suggestion title (do NOT truncate - preserve the full meaning)",
+  "description": "Merged description that captures the combined ideas"
 }`;
 
 	try {

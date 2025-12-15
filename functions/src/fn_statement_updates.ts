@@ -7,6 +7,7 @@ import {
     Statement,
     SimpleStatement,
     statementToSimpleStatement,
+    functionConfig,
 } from '@freedi/shared-types';
 
 /**
@@ -14,7 +15,7 @@ import {
  */
 export const updateParentOnChildCreate = onDocumentCreated({
     document: `${Collections.statements}/{statementId}`,
-    region: 'europe-west1'
+    region: functionConfig.region
 }, async (event) => {
     try {
         const newStatement = event.data?.data() as Statement | undefined;
@@ -46,7 +47,7 @@ export const updateParentOnChildCreate = onDocumentCreated({
  */
 export const updateParentOnChildUpdate = onDocumentUpdated({
     document: `${Collections.statements}/{statementId}`,
-    region: 'europe-west1'
+    region: functionConfig.region
 }, async (event) => {
     try {
         const before = event.data?.before.data() as Statement | undefined;
@@ -114,7 +115,7 @@ return;
  */
 export const updateParentStatementOnChildChange = onDocumentWritten({
     document: `${Collections.statements}/{statementId}`,
-    region: 'europe-west1'
+    region: functionConfig.region
 }, async () => {
     // DISABLED: This function is replaced by updateParentOnChildCreate and updateParentOnChildUpdate
     logger.info('DEPRECATED: updateParentStatementOnChildChange called but disabled - using new split functions instead');
@@ -226,7 +227,7 @@ return;
  */
 export const updateParentOnChildDelete = onDocumentDeleted({
     document: `${Collections.statements}/{statementId}`,
-    region: 'europe-west1'
+    region: functionConfig.region
 }, async (event) => {
     try {
         const deletedStatement = event.data?.data() as Statement | undefined;

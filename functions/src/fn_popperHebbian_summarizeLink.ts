@@ -1,5 +1,6 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { getGeminiModel, geminiApiKey } from './config/gemini';
+import { functionConfig } from '@freedi/shared-types';
 
 interface SummarizeLinkRequest {
 	url: string;
@@ -159,7 +160,8 @@ Provide a clear, objective summary in ${languageName}:`;
  */
 export const summarizeLink = onCall<SummarizeLinkRequest>(
 	{
-		secrets: [geminiApiKey]
+		secrets: [geminiApiKey],
+		region: functionConfig.region
 	},
 	async (request): Promise<SummarizeLinkResponse> => {
 		// Require authentication

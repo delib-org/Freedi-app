@@ -55,3 +55,37 @@ export function convertTimestampsToMillis(data: unknown): unknown {
 export function preprocessFirestoreData(data: unknown): unknown {
 	return convertTimestampsToMillis(data);
 }
+
+/**
+ * Normalize statement data before valibot parsing
+ * - Converts timestamps to milliseconds
+ * - Fills in missing topParentId for legacy data
+ *
+ * This handles old Firestore documents that may not have topParentId set
+ */
+export function normalizeStatementData(data: unknown): unknown {
+	// First convert timestamps
+	const converted = convertTimestampsToMillis(data);
+
+	// Handle null/undefined
+	if (converted == null || typeof converted !== 'object') return converted;
+
+	const obj = converted as Record<string, unknown>;
+
+	// Fill in missing topParentId for legacy data
+	if (obj.statementId && !obj.topParentId) {
+		// For top-level statements (where parentId equals statementId or parentId is 'top'),
+		// topParentId should equal statementId
+		if (obj.parentId === obj.statementId || obj.parentId === 'top' || !obj.parentId) {
+			obj.topParentId = obj.statementId;
+		} else {
+			// For child statements, use parentId as a fallback
+			// Note: This may not be accurate for deeply nested statements,
+			// but it's better than failing validation
+			obj.topParentId = obj.parentId;
+			console.info(`[normalizeStatementData] Filled missing topParentId for statement ${obj.statementId} using parentId ${obj.parentId}`);
+		}
+	}
+
+	return obj;
+}

@@ -3,6 +3,7 @@ import type { PayloadAction } from '@reduxjs/toolkit';
 import { RootState } from '../types';
 import { Statement, StatementSchema, Vote, getVoteId, updateArray } from '@freedi/shared-types';
 import { parse } from 'valibot';
+import { normalizeStatementData } from '@/helpers/timestampHelpers';
 
 // Define a type for the slice state
 interface VotesState {
@@ -20,7 +21,7 @@ export const votesSlicer = createSlice({
 	reducers: {
 		setVoteToStore: (state, action: PayloadAction<Statement>) => {
 			try {
-				const statement = parse(StatementSchema, action.payload);
+				const statement = parse(StatementSchema, normalizeStatementData(action.payload));
 
 				const newVote: Vote = {
 					statementId: statement.statementId,

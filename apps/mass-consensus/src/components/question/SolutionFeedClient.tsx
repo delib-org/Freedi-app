@@ -36,7 +36,7 @@ export default function SolutionFeedClient({
   const { t, tWithParams } = useTranslation();
   const [solutions, setSolutions] = useState<Statement[]>(initialSolutions);
   const [userId, setUserId] = useState<string>('');
-  const [evaluatedIds, setEvaluatedIds] = useState<Set<string>>(new Set());
+  const [evaluationScores, setEvaluationScores] = useState<Map<string, number>>(new Map());
   const [allEvaluatedIds, setAllEvaluatedIds] = useState<Set<string>>(new Set());
   const [isLoadingBatch, setIsLoadingBatch] = useState(false);
   const [batchCount, setBatchCount] = useState(1);
@@ -131,14 +131,32 @@ export default function SolutionFeedClient({
             setAllOptionsEvaluated(true);
           }
 
-          // Mark current batch items as evaluated if they were previously evaluated
-          const currentBatchEvaluated = new Set<string>();
-          solutions.forEach(solution => {
-            if (evaluatedSet.has(solution.statementId)) {
-              currentBatchEvaluated.add(solution.statementId);
-            }
-          });
-          setEvaluatedIds(currentBatchEvaluated);
+          // Fetch actual scores for current batch items that were previously evaluated
+          const scoresMap = new Map<string, number>();
+          const evaluatedSolutionsInBatch = solutions.filter(solution =>
+            evaluatedSet.has(solution.statementId)
+          );
+
+          // Fetch scores for each evaluated solution in parallel
+          await Promise.all(
+            evaluatedSolutionsInBatch.map(async (solution) => {
+              try {
+                const evalResponse = await fetch(
+                  `/api/evaluations/${solution.statementId}?userId=${id}`
+                );
+                if (evalResponse.ok) {
+                  const evalData = await evalResponse.json();
+                  if (evalData.evaluation?.evaluation !== undefined) {
+                    scoresMap.set(solution.statementId, evalData.evaluation.evaluation);
+                  }
+                }
+              } catch (err) {
+                console.error(`Failed to fetch evaluation for ${solution.statementId}:`, err);
+              }
+            })
+          );
+
+          setEvaluationScores(scoresMap);
         }
       } catch (error) {
         console.error('Failed to load evaluation history:', error);
@@ -151,7 +169,7 @@ export default function SolutionFeedClient({
   }, [questionId, totalOptionsCount, solutions]);
 
   // Track evaluated solutions count - use useMemo to ensure stable computation during SSR hydration
-  const evaluatedCount = useMemo(() => evaluatedIds.size, [evaluatedIds]);
+  const evaluatedCount = useMemo(() => evaluationScores.size, [evaluationScores]);
   const canGetNewBatch = useMemo(() => evaluatedCount >= solutions.length, [evaluatedCount, solutions.length]);
 
   // Calculate earned badges count for progress indicator
@@ -184,9 +202,17 @@ export default function SolutionFeedClient({
    * Handle evaluation of a solution
    */
   const handleEvaluate = async (solutionId: string, score: number) => {
+    // Store previous score for rollback on error
+    const previousScore = evaluationScores.get(solutionId);
+    const wasAlreadyEvaluated = allEvaluatedIds.has(solutionId);
+
     try {
       // Optimistic update
-      setEvaluatedIds((prev) => new Set(prev).add(solutionId));
+      setEvaluationScores((prev) => {
+        const newMap = new Map(prev);
+        newMap.set(solutionId, score);
+        return newMap;
+      });
       setAllEvaluatedIds((prev) => new Set(prev).add(solutionId));
 
       // Call API
@@ -207,25 +233,29 @@ export default function SolutionFeedClient({
       trackEvaluation(questionId, userId, solutionId, score);
 
       // Check if all options have been evaluated
-      const newTotalEvaluated = allEvaluatedIds.size + 1;
+      const newTotalEvaluated = allEvaluatedIds.size + (wasAlreadyEvaluated ? 0 : 1);
       if (totalOptionsCount > 0 && newTotalEvaluated >= totalOptionsCount) {
         setAllOptionsEvaluated(true);
       }
     } catch (error) {
       console.error('Evaluation error:', error);
       // Revert optimistic update
-      setEvaluatedIds((prev) => {
-        const newSet = new Set(prev);
-        newSet.delete(solutionId);
-        
-return newSet;
+      setEvaluationScores((prev) => {
+        const newMap = new Map(prev);
+        if (previousScore !== undefined) {
+          newMap.set(solutionId, previousScore);
+        } else {
+          newMap.delete(solutionId);
+        }
+        return newMap;
       });
-      setAllEvaluatedIds((prev) => {
-        const newSet = new Set(prev);
-        newSet.delete(solutionId);
-        
-return newSet;
-      });
+      if (!wasAlreadyEvaluated) {
+        setAllEvaluatedIds((prev) => {
+          const newSet = new Set(prev);
+          newSet.delete(solutionId);
+          return newSet;
+        });
+      }
       setError('Failed to save your evaluation. Please try again.');
     }
   };
@@ -260,7 +290,7 @@ return newSet;
 
       if (data.solutions && data.solutions.length > 0) {
         setSolutions(data.solutions);
-        setEvaluatedIds(new Set()); // Reset current batch tracking
+        setEvaluationScores(new Map()); // Reset current batch tracking
         setBatchCount((prev) => prev + 1);
       } else {
         // No more solutions available - all have been evaluated
@@ -298,7 +328,7 @@ return newSet;
         const data = await response.json();
         if (data.solutions && data.solutions.length > 0) {
           setSolutions(data.solutions);
-          setEvaluatedIds(new Set());
+          setEvaluationScores(new Map());
           setBatchCount((prev) => prev + 1);
         }
       }
@@ -348,7 +378,7 @@ return newSet;
             key={solution.statementId}
             solution={solution}
             onEvaluate={handleEvaluate}
-            isEvaluated={evaluatedIds.has(solution.statementId)}
+            currentScore={evaluationScores.get(solution.statementId)}
           />
         ))}
       </div>

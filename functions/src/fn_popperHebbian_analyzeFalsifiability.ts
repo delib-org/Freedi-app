@@ -1,5 +1,6 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { getGeminiModel, geminiApiKey } from './config/gemini';
+import { functionConfig } from '@freedi/shared-types';
 
 interface AnalyzeFalsifiabilityRequest {
 	ideaText: string;
@@ -31,7 +32,7 @@ const LANGUAGE_NAMES: Record<string, string> = {
 };
 
 export const analyzeFalsifiability = onCall<AnalyzeFalsifiabilityRequest>(
-	{ secrets: [geminiApiKey] },
+	{ secrets: [geminiApiKey], region: functionConfig.region },
 	async (request): Promise<AnalyzeFalsifiabilityResponse> => {
 		const { ideaText, context, language = 'en' } = request.data;
 

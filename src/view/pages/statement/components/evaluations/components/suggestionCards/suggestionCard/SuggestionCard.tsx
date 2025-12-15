@@ -29,6 +29,7 @@ import Loader from '@/view/components/loaders/Loader';
 import CommunityBadge from '@/view/components/badges/CommunityBadge';
 import AnchoredBadge from '@/view/components/badges/AnchoredBadge';
 import UploadImage from '@/view/components/uploadImage/UploadImage';
+import EyeCrossIcon from '@/assets/icons/eyeCross.svg?react';
 import StatementImage from './StatementImage';
 import IntegrateSuggestionsModal from '@/view/components/integrateSuggestions/IntegrateSuggestionsModal';
 
@@ -286,19 +287,27 @@ const SuggestionCard: FC<Props> = ({
 				${styles['statement-evaluation-card']}
 				${statementAge < 10000 ? styles['statement-evaluation-card--new'] : ''}
 				${showBadges && !isAnchored ? styles['statement-evaluation-card--community'] : ''}
+				${statement.hide ? styles['statement-evaluation-card--hidden'] : ''}
+				${isCardMenuOpen ? styles['statement-evaluation-card--menu-open'] : ''}
 			`.trim()}
 			style={{
 				top: `${positionAbsolute ? statement.top || 0 : 0}px`,
 				borderLeft: showEvaluation ? selectedOptionIndicator : '12px solid transparent',
 				color: statementColor.color,
 				flexDirection: dir === 'ltr' ? 'row' : 'row-reverse',
-				opacity: statement.hide ? 0.5 : 1,
 				pointerEvents: (statement.hide && !isAuthorized ? 'none' : 'auto'),
 				position: positionAbsolute ? 'absolute' : 'relative',
 			}}
 			ref={elementRef}
 			id={statement.statementId}
 		>
+			{/* Hidden badge for hidden statements */}
+			{statement.hide && (
+				<div className={styles.hiddenBadge}>
+					<EyeCrossIcon />
+					{t('Hidden')}
+				</div>
+			)}
 			{/* Loader overlay when improving */}
 			{isImproving && (
 				<div className={styles.loaderOverlay}>

@@ -1,6 +1,7 @@
-import * as functions from "firebase-functions";
+import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { GEMINI_MODEL } from "./config/gemini";
+import { functionConfig } from "@freedi/shared-types";
 
 function getGenAI(): GoogleGenerativeAI {
   const apiKey = process.env.GOOGLE_API_KEY;
@@ -18,14 +19,14 @@ async function containsBadLanguage(text: string): Promise<boolean> {
     const model = getGenAI().getGenerativeModel({ model: GEMINI_MODEL });
 
     const prompt = `
-      Detect if the following text contains any offensive, hateful, or inappropriate language. 
+      Detect if the following text contains any offensive, hateful, or inappropriate language.
       Return only true or false. Text: "${text}"
     `;
 
     const result = await model.generateContent(prompt);
     const output = (await result.response.text()).trim().toLowerCase();
 
-    console.error("🧠 Gemini response:", output); // helpful debug
+    console.info("🧠 Gemini response:", output);
 
     return output.includes("true");
   } catch (error) {
@@ -35,10 +36,24 @@ async function containsBadLanguage(text: string): Promise<boolean> {
   }
 }
 
-// Firebase Callable Function using Gemini
-export const checkProfanity = functions.https.onCall(
-  async (request: functions.https.CallableRequest) => {
-    const { text } = request.data as { text: string };
+interface CheckProfanityRequest {
+  text: string;
+}
+
+interface CheckProfanityResponse {
+  score: number | null;
+  error?: string;
+}
+
+// Firebase Callable Function using Gemini (v2)
+export const checkProfanity = onCall<CheckProfanityRequest>(
+  { region: functionConfig.region },
+  async (request): Promise<CheckProfanityResponse> => {
+    const { text } = request.data;
+
+    if (!text) {
+      throw new HttpsError("invalid-argument", "Text is required");
+    }
 
     try {
       const isBad = await containsBadLanguage(text);
