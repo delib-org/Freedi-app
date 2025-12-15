@@ -5,7 +5,7 @@ import {
 	Statement,
 	SimpleStatement,
 	EvaluationUI,
-} from 'delib-npm';
+} from '@freedi/shared-types';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import StatementChatMore from '../../../../chat/components/statementChatMore/StatementChatMore';
 import Button, { ButtonType } from '@/view/components/buttons/button/Button';

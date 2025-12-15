@@ -1,6 +1,6 @@
 import { db } from '.';
 import { logger, Request, Response } from 'firebase-functions/v1';
-import { Collections, MassConsensusMember, Statement, StatementType } from 'delib-npm';
+import { Collections, MassConsensusMember, Statement, StatementType } from '@freedi/shared-types';
 import { FieldValue, DocumentSnapshot } from 'firebase-admin/firestore';
 import type { FirestoreEvent, Change } from 'firebase-functions/v2/firestore';
 

@@ -8,6 +8,9 @@ import Button, { ButtonType } from "@/view/components/buttons/button/Button";
 import { StatementType, Statement } from "delib-npm";
 import { validateStatementTypeHierarchy } from "@/controllers/general/helpers";
 import { useAuthentication } from "@/controllers/hooks/useAuthentication";
+import { MultiSuggestionPreviewModal, SplitSuggestion } from "@/view/components/multiSuggestion";
+import { detectMultipleSuggestionsWithTimeout, DetectedSuggestion } from "@/services/multiSuggestionDetection";
+import { logError } from "@/utils/errorHandling";
 
 interface CreateStatementModalProps {
   parentStatement: Statement | "top";
@@ -33,10 +36,17 @@ const CreateStatementModal: FC<CreateStatementModalProps> = ({
   const [isOptionSelected, setIsOptionSelected] = useState(defaultIsOption);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [showMultiPreview, setShowMultiPreview] = useState(false);
+  const [multiSuggestions, setMultiSuggestions] = useState<SplitSuggestion[]>([]);
+  const [isCheckingMulti, setIsCheckingMulti] = useState(false);
   const { t } = useTranslation();
   const { creator } = useAuthentication();
 
   const titleInputRef = useRef<HTMLInputElement>(null);
+
+  // Check if multi-suggestion detection is enabled for this statement
+  const isMultiSuggestionEnabled = parentStatement !== 'top'
+    && parentStatement.statementSettings?.enableMultiSuggestionDetection === true;
 
   useEffect(() => {
     if (titleInputRef.current) {
@@ -44,7 +54,8 @@ const CreateStatementModal: FC<CreateStatementModalProps> = ({
     }
   }, []);
 
-  const onFormSubmit = async () => {
+  // Submit a single statement
+  const submitSingleStatement = async () => {
     setShowModal(false);
 
     await createStatementFromModal({
@@ -61,6 +72,98 @@ const CreateStatementModal: FC<CreateStatementModalProps> = ({
 
     await getSubStatements?.();
   };
+
+  // Handle form submission
+  const onFormSubmit = async () => {
+    // Only check for multi-suggestions when:
+    // 1. The setting is enabled
+    // 2. We're creating an option (not a question)
+    // 3. User has entered text
+    if (isMultiSuggestionEnabled && isOptionSelected && title.trim().length > 0) {
+      setIsCheckingMulti(true);
+
+      try {
+        const userInput = title + (description ? `: ${description}` : '');
+        const parentId = parentStatement !== 'top' ? parentStatement.statementId : '';
+
+        const result = await detectMultipleSuggestionsWithTimeout(
+          userInput,
+          parentId,
+          creator?.uid || ''
+        );
+
+        if (result.ok && result.isMultipleSuggestions && result.suggestions.length > 1) {
+          // Convert to SplitSuggestion format
+          const splitSuggestions: SplitSuggestion[] = result.suggestions.map((s: DetectedSuggestion, i: number) => ({
+            id: `suggestion-${i}-${Date.now()}`,
+            title: s.title,
+            description: s.description,
+            originalText: s.originalText,
+            isRemoved: false,
+          }));
+
+          setMultiSuggestions(splitSuggestions);
+          setShowMultiPreview(true);
+          setIsCheckingMulti(false);
+          return;
+        }
+      } catch (error) {
+        logError(error, {
+          operation: 'CreateStatementModal.checkMultiSuggestion',
+          userId: creator?.uid,
+        });
+      }
+
+      setIsCheckingMulti(false);
+    }
+
+    // Continue with normal submission
+    await submitSingleStatement();
+  };
+
+  // Handle confirming multiple suggestions
+  const handleConfirmMultiSuggestions = async (suggestions: SplitSuggestion[]) => {
+    setShowModal(false);
+
+    for (const suggestion of suggestions) {
+      await createStatementFromModal({
+        creator,
+        title: suggestion.title,
+        description: suggestion.description,
+        isOptionSelected: true,
+        parentStatement,
+        isSendToStoreTemp,
+        statementType: StatementType.option,
+      });
+    }
+
+    await getSubStatements?.();
+  };
+
+  // Handle dismissing multi-suggestion preview (submit original as-is)
+  const handleDismissMulti = () => {
+    setShowMultiPreview(false);
+    submitSingleStatement();
+  };
+
+  // Handle canceling the multi-preview (go back to form)
+  const handleCancelMulti = () => {
+    setShowMultiPreview(false);
+  };
+
+  // Render multi-suggestion preview modal if needed
+  if (showMultiPreview) {
+    return (
+      <MultiSuggestionPreviewModal
+        originalText={title + (description ? `: ${description}` : '')}
+        suggestions={multiSuggestions}
+        onConfirm={handleConfirmMultiSuggestions}
+        onDismiss={handleDismissMulti}
+        onCancel={handleCancelMulti}
+        isSubmitting={false}
+      />
+    );
+  }
 
   return (
     <div className={styles.createStatementModal}>
@@ -103,6 +206,7 @@ const CreateStatementModal: FC<CreateStatementModalProps> = ({
         <CreateStatementButtons
           isOption={isOptionSelected}
           onCancel={() => setShowModal(false)}
+          isLoading={isCheckingMulti}
         />
       </form>
     </div>
@@ -179,27 +283,30 @@ return validation.allowed;
 interface CreateStatementButtonsProps {
   isOption: boolean;
   onCancel: VoidFunction;
+  isLoading?: boolean;
 }
 
 const CreateStatementButtons: FC<CreateStatementButtonsProps> = ({
   isOption,
   onCancel,
+  isLoading = false,
 }) => {
   const { t } = useTranslation();
 
   return (
     <div className={styles.createStatementButtons}>
-    
       <Button
-        text={t(`Add ${isOption ? "Option" : "Question"}`)}
+        text={isLoading ? t("Checking...") : t(`Add ${isOption ? "Option" : "Question"}`)}
         buttonType={ButtonType.PRIMARY}
         data-cy="add-statement-simple"
+        disabled={isLoading}
       />
-	    <Button
+      <Button
         text={t("Cancel")}
         onClick={onCancel}
         buttonType={ButtonType.SECONDARY}
         className={styles.cancelButton}
+        disabled={isLoading}
       />
     </div>
   );

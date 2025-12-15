@@ -6,7 +6,7 @@ import { useTranslation } from '@/controllers/hooks/useTranslation';
 import Button, { ButtonType } from '@/view/components/buttons/button/Button';
 import Input from '@/view/components/input/Input';
 import Textarea from '@/view/components/textarea/Textarea';
-import { StatementType } from 'delib-npm';
+import { StatementType } from '@freedi/shared-types';
 import { useDispatch, useSelector } from 'react-redux';
 import { clearNewStatement, selectNewStatement, selectParentStatementForNewStatement, setShowNewStatementModal } from '@/redux/statements/newStatementSlice';
 import { creatorSelector } from '@/redux/creator/creatorSlice';

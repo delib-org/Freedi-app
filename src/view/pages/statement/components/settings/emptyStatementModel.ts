@@ -1,5 +1,5 @@
 import { resultsSettingsDefault } from '@/controllers/db/statements/setStatements';
-import { Statement, StatementType, evaluationType } from 'delib-npm';
+import { Statement, StatementType, evaluationType } from '@freedi/shared-types';
 
 export const defaultStatementSettings = {
 	hasChat: true,

@@ -1,4 +1,4 @@
-import { Statement } from 'delib-npm'
+import { Statement } from '@freedi/shared-types'
 import { FC } from 'react'
 import styles from './Joined.module.scss'
 import ProfileImage from '../profileImage/ProfileImage'

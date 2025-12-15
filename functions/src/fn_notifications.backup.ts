@@ -4,7 +4,7 @@ import {
 	Statement,
 	StatementSchema,
 	StatementSubscription,
-} from 'delib-npm';
+} from '@freedi/shared-types';
 import { logger } from 'firebase-functions/v1';
 import { parse } from 'valibot';
 import { db } from '.';

@@ -3,7 +3,7 @@
  */
 
 import { getFirestoreAdmin } from './admin';
-import { Collections, UserDemographicQuestion, UserDemographicQuestionType } from 'delib-npm';
+import { Collections, UserDemographicQuestion, UserDemographicQuestionType } from '@freedi/shared-types';
 import {
   DemographicMode,
   SignDemographicQuestion,

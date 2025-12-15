@@ -12,7 +12,7 @@ import { FireStore } from '@/controllers/db/config';
 import { 
     Collections, 
     Statement
-} from 'delib-npm';
+} from '@freedi/shared-types';
 import { store } from '@/redux/store';
 import { setStatement } from '@/redux/statements/statementsSlice';
 

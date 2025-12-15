@@ -6,7 +6,7 @@ import { useTranslation } from '@/controllers/hooks/useTranslation';
 import Checkbox from '@/view/components/checkbox/Checkbox';
 import styles from './AdvancedSettings.module.scss';
 import { setStatementSettingToDB } from '@/controllers/db/statementSettings/setStatementSettings';
-import { StatementSettings, StatementType, evaluationType, Collections } from 'delib-npm';
+import { StatementSettings, StatementType, evaluationType, Collections } from '@freedi/shared-types';
 import { doc, setDoc } from 'firebase/firestore';
 import { FireStore } from '@/controllers/db/config';
 import EvaluationTypeSelector from './EvaluationTypeSelector/EvaluationTypeSelector';

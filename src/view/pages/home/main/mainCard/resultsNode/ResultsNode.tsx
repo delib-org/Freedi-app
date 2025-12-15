@@ -2,7 +2,7 @@ import { FC } from 'react';
 import { Link } from 'react-router';
 import Text from '@/view/components/text/Text';
 import StatementChatMore from '@/view/pages/statement/components/chat/components/statementChatMore/StatementChatMore';
-import { Statement } from 'delib-npm';
+import { Statement } from '@freedi/shared-types';
 import { styleSwitch } from './ResultsNodeCont';
 
 interface Props {

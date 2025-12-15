@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useTranslation } from '@freedi/shared-i18n/next';
-import { Statement } from 'delib-npm';
+import { Statement } from '@freedi/shared-types';
 import { useUIStore } from '@/store/uiStore';
 import Comment from './Comment';
 import styles from './CommentThread.module.scss';

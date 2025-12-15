@@ -7,7 +7,7 @@ import {
     Statement,
     SimpleStatement,
     statementToSimpleStatement,
-} from 'delib-npm';
+} from '@freedi/shared-types';
 
 /**
  * Updates parent statement when a child statement is created

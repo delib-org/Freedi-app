@@ -1,4 +1,4 @@
-import { UserDemographicQuestion, UserDemographicQuestionType } from 'delib-npm';
+import { UserDemographicQuestion, UserDemographicQuestionType } from '@freedi/shared-types';
 import { FC, useEffect, useState } from 'react';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import styles from './UserDemographicQuestionInput.module.scss';

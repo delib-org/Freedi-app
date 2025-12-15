@@ -14,7 +14,7 @@ import ClusterButton from './clusterButton/ClusterButton';
 import { deleteStatementFromDB } from '@/controllers/db/statements/deleteStatements';
 import { useAuthorization } from '@/controllers/hooks/useAuthorization';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
-import { Statement, StatementType } from 'delib-npm';
+import { Statement, StatementType } from '@freedi/shared-types';
 import { changeStatementType } from '@/controllers/db/statements/changeStatementType';
 import Evaluation from '../../../evaluations/components/evaluation/Evaluation';
 

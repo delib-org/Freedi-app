@@ -1,7 +1,7 @@
 import { doc, setDoc, updateDoc, deleteDoc, getDoc, collection, query, where, onSnapshot, increment, Unsubscribe } from 'firebase/firestore';
 import { httpsCallable } from 'firebase/functions';
 import { FireStore, auth, functions } from '../config';
-import { Collections, Statement, StatementType, Creator } from 'delib-npm';
+import { Collections, Statement, StatementType, Creator } from '@freedi/shared-types';
 import { logger } from '@/services/logger';
 import { detectUrls } from '@/utils/urlHelpers';
 import { LocalStorageObjects } from '@/types/localStorage/LocalStorageObjects';

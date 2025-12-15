@@ -1,4 +1,4 @@
-import { Statement } from 'delib-npm';
+import { Statement } from '@freedi/shared-types';
 import AIFeedbackButton from './AIFeedbackButton';
 import styles from './ResultsList.module.css';
 

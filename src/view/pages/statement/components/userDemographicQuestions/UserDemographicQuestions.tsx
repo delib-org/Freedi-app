@@ -1,4 +1,4 @@
-import { UserDemographicQuestion, UserDemographicQuestionType, Role } from 'delib-npm';
+import { UserDemographicQuestion, UserDemographicQuestionType, Role } from '@freedi/shared-types';
 import { FC, useState, FormEvent, useMemo } from 'react';
 
 // Use string literal for scope until delib-npm exports the enum value

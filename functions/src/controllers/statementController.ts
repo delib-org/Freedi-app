@@ -1,5 +1,5 @@
 import { Request, Response } from 'firebase-functions/v1';
-import { Statement, Collections, UserEvaluation } from 'delib-npm';
+import { Statement, Collections, UserEvaluation } from '@freedi/shared-types';
 import { StatementService } from '../services/statements/statementService';
 import { RequestValidator } from '../utils/validation';
 import { cache } from '../services/cache-service';

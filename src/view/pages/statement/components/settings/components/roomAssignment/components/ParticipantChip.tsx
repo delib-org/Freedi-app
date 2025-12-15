@@ -1,5 +1,5 @@
 import { FC } from 'react';
-import { RoomParticipant } from 'delib-npm';
+import { RoomParticipant } from '@freedi/shared-types';
 import styles from '../RoomAssignment.module.scss';
 
 interface ParticipantChipProps {

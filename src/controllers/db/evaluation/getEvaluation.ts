@@ -17,7 +17,7 @@ import {
 	SelectionFunction,
 	Collections,
 	UserSchema,
-} from 'delib-npm';
+} from '@freedi/shared-types';
 import { getStatementSubscriptionId } from '@/controllers/general/helpers';
 import {
 	createManagedCollectionListener,

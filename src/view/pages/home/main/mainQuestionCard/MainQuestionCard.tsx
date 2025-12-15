@@ -4,7 +4,7 @@ import styles from './MainQuestionCard.module.scss';
 import { listenToStatement } from '@/controllers/db/statements/listenToStatements';
 import { statementSelector } from '@/redux/statements/statementsSlice';
 import StatementChatMore from '@/view/pages/statement/components/chat/components/statementChatMore/StatementChatMore';
-import { SimpleStatement, Statement } from 'delib-npm';
+import { SimpleStatement, Statement } from '@freedi/shared-types';
 import { useSelector } from 'react-redux';
 import { getTime } from '@/controllers/general/helpers';
 

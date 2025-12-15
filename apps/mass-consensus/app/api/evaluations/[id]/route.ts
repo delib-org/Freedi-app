@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
-import { Collections, Evaluation } from 'delib-npm';
+import { Collections, Evaluation } from '@freedi/shared-types';
 import { getUserIdFromCookie, getAnonymousDisplayName } from '@/lib/utils/user';
 import { updateStatementConsensus } from '@/lib/firebase/queries';
 import { FieldValue } from 'firebase-admin/firestore';

@@ -1,5 +1,5 @@
 import { getAuth } from 'firebase-admin/auth';
-import { Collections, Role } from 'delib-npm';
+import { Collections, Role } from '@freedi/shared-types';
 import { getFirestoreAdmin } from '../firebase/admin';
 import { initializeFirebaseAdmin } from '../firebase/admin';
 

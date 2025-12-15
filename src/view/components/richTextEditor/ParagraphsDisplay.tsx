@@ -1,5 +1,5 @@
 import React, { FC } from 'react';
-import { Statement } from 'delib-npm';
+import { Statement } from '@freedi/shared-types';
 // TODO: Import from delib-npm once published with Paragraph types
 import { Paragraph, ParagraphType, StatementWithParagraphs } from '@/types/paragraph';
 import { sortParagraphs } from '@/utils/paragraphUtils';

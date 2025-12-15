@@ -1,4 +1,4 @@
-import { Statement, StatementType } from 'delib-npm';
+import { Statement, StatementType } from '@freedi/shared-types';
 import styles from './SuggestionComment.module.scss';
 import { FC, KeyboardEvent, useEffect, useState, useRef, ChangeEvent } from 'react';
 import { saveStatementToDB } from '@/controllers/db/statements/setStatements';

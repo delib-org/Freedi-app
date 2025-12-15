@@ -5,7 +5,7 @@ import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { createSelector } from '@reduxjs/toolkit';
 import { RootState } from '@/redux/store';
-import { StatementSubscription, Role, Statement, StatementType } from 'delib-npm';
+import { StatementSubscription, Role, Statement, StatementType } from '@freedi/shared-types';
 import { setNewStatement } from './../../statementSettingsCont';
 import EnhancedAdvancedSettings from './../advancedSettings/EnhancedAdvancedSettings';
 import styles from './EnhancedStatementSettingsForm.module.scss';

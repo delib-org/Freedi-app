@@ -3,7 +3,7 @@ import { Unsubscribe, doc, onSnapshot } from 'firebase/firestore';
 import { FireStore } from '@/controllers/db/config';
 import { setStatementMetaData } from '@/redux/statements/statementsMetaSlice';
 import { store } from '@/redux/store';
-import { StatementMetaDataSchema, Collections } from 'delib-npm';
+import { StatementMetaDataSchema, Collections } from '@freedi/shared-types';
 import { parse } from 'valibot';
 
 export function listenToStatementMetaData(statementId: string): Unsubscribe {

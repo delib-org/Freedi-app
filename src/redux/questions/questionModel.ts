@@ -3,7 +3,7 @@ import EvaluationsIcon from '@/assets/icons/evaluations2Icon.svg?react';
 import FlagIcon from '@/assets/icons/flagIcon.svg?react';
 import HandIcon from '@/assets/icons/handIcon.svg?react';
 import LightBulbIcon from '@/assets/icons/lightBulbIcon.svg?react';
-import { QuestionStage } from 'delib-npm';
+import { QuestionStage } from '@freedi/shared-types';
 
 export const questionStages = {
 	[QuestionStage.suggestion]: {

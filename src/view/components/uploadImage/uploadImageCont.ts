@@ -1,7 +1,7 @@
 import { compressImage } from './compressImage';
 import { uploadImageToStorage } from '@/controllers/db/images/setImages';
 import { updateStatementMainImage } from '@/controllers/db/statements/setStatements';
-import { Statement } from 'delib-npm';
+import { Statement } from '@freedi/shared-types';
 import React from 'react';
 
 export async function setImageLocally(

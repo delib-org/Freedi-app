@@ -1,6 +1,6 @@
 import { FC, useState, useEffect, useCallback, useMemo } from 'react';
 import styles from './FilteredMembersList.module.scss';
-import { StatementSubscription, Role } from 'delib-npm';
+import { StatementSubscription, Role } from '@freedi/shared-types';
 import MemberCard from '../EnhancedMemberCard/EnhancedMemberCard';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 

@@ -3,7 +3,7 @@ import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { evaluationSelector } from '@/redux/evaluations/evaluationsSlice';
 import Thumb from '@/view/components/thumb/Thumb';
 import styles from './SimpleEvaluation.module.scss';
-import { Statement } from 'delib-npm';
+import { Statement } from '@freedi/shared-types';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 
 interface Props {

@@ -1,7 +1,7 @@
 import React, { FC, useEffect } from 'react';
 import { handleGetVoters } from '../statementSettingsCont';
 import MembersChipsList from './membership/membersChipsList/MembersChipList';
-import { Vote, User } from 'delib-npm';
+import { Vote, User } from '@freedi/shared-types';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 
 interface GetVotersProps {

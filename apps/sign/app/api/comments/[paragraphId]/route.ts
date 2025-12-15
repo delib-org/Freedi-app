@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
 import { getUserIdFromCookie, getUserDisplayNameFromCookie, getAnonymousDisplayName } from '@/lib/utils/user';
-import { Collections, StatementType } from 'delib-npm';
+import { Collections, StatementType } from '@freedi/shared-types';
 
 interface CommentInput {
   statement: string;

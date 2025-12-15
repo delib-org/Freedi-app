@@ -3,7 +3,7 @@ import { useCallback, useState } from 'react'
 import InAppNotifications from '../inAppNotifications/InAppNotifications';
 import { useSelector, useDispatch } from 'react-redux';
 import { creatorSelector } from '@/redux/creator/creatorSlice';
-import { NotificationType } from 'delib-npm';
+import { NotificationType } from '@freedi/shared-types';
 import { inAppNotificationsSelector, markNotificationsAsViewedInList } from '@/redux/notificationsSlice/notificationsSlice';
 import styles from './NotificationBtn.module.scss';
 import useClickOutside from '@/controllers/hooks/useClickOutside';

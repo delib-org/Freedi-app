@@ -1,7 +1,7 @@
 import { Change, logger } from 'firebase-functions/v1';
 import { db } from './index';
 import { DocumentSnapshot, FieldValue } from 'firebase-admin/firestore';
-import { Collections, maxKeyInObject, Statement, statementToSimpleStatement, VoteSchema } from 'delib-npm';
+import { Collections, maxKeyInObject, Statement, statementToSimpleStatement, VoteSchema } from '@freedi/shared-types';
 
 import { FirestoreEvent } from 'firebase-functions/firestore';
 import { parse } from 'valibot';

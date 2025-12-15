@@ -8,7 +8,7 @@ import {
 	where,
 } from 'firebase/firestore';
 import { FireStore } from '../config';
-import { Collections, Invitation } from 'delib-npm';
+import { Collections, Invitation } from '@freedi/shared-types';
 
 interface CreateInvitationProps {
 	pathname: string;

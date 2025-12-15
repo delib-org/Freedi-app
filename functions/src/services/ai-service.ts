@@ -6,6 +6,8 @@ import {
 } from "@google/generative-ai";
 import { logger } from "firebase-functions";
 import "dotenv/config";
+import { GEMINI_MODEL } from "../config/gemini";
+import { notifyAIError } from "./error-notification-service";
 
 interface APIError {
   status?: number;
@@ -43,7 +45,7 @@ async function getGenerativeAIModel(): Promise<GenerativeModel> {
   logger.info("Initializing new GenerativeModel instance...");
 
   try {
-    const modelName = process.env.AI_MODEL_NAME || "gemini-2.5-flash";
+    const modelName = GEMINI_MODEL;
     logger.info(`Using AI model: ${modelName}`);
 
     const genAI = getGenAI();
@@ -59,6 +61,18 @@ async function getGenerativeAIModel(): Promise<GenerativeModel> {
           category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
           threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
         },
+        {
+          category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+          threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+        },
+        {
+          category: HarmCategory.HARM_CATEGORY_HARASSMENT,
+          threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+        },
+        {
+          category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+          threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+        },
       ],
     };
 
@@ -69,7 +83,7 @@ async function getGenerativeAIModel(): Promise<GenerativeModel> {
     logger.error("Error initializing GenerativeModel", error);
     const genAI = getGenAI();
     // Use the same model from environment or fall back to a supported model
-    const fallbackModel = process.env.AI_MODEL_NAME || "gemini-2.5-flash";
+    const fallbackModel = GEMINI_MODEL;
     logger.info(`Using fallback model: ${fallbackModel}`);
     _generativeModel = genAI.getGenerativeModel({ model: fallbackModel });
 
@@ -172,11 +186,22 @@ async function handleError(
     errorMessage?.includes("fetch");
 
   if (!isRetryableError || attempt === maxRetries) {
-    logger.error("AI request failed permanently", {
-      error: errorMessage,
+    // Log error with full context for Error Reporting
+    logger.error("AI request failed permanently", error instanceof Error ? error : new Error(errorMessage), {
       prompt: prompt.substring(0, 200) + "...",
       attempt,
       isRetryableError,
+      model: GEMINI_MODEL,
+    });
+
+    // Send email notification to admin
+    notifyAIError(errorMessage, {
+      model: GEMINI_MODEL,
+      prompt: prompt,
+      attempt,
+      functionName: "ai-service.handleError",
+    }).catch((notifyError) => {
+      logger.warn("Failed to send AI error notification", { notifyError });
     });
 
     return false;
@@ -190,7 +215,21 @@ async function handleError(
 }
 export async function checkForInappropriateContent(userInput: string): Promise<{ isInappropriate: boolean; error?: string }> {
   const prompt = `
-    You are a content moderator. Check if the following text contains any profanity, slurs, hate speech, sexually explicit language, or any other inappropriate content: "${userInput}"
+    You are a strict content moderator for a collaborative discussion platform.
+    Your job is to protect users from harmful content.
+
+    Check if the following text contains ANY of these:
+    - Profanity, curse words, or vulgar language
+    - Slurs or derogatory terms targeting any group
+    - Hate speech or discriminatory language
+    - Personal attacks, insults, or harassment
+    - Sexually explicit or suggestive content
+    - Violence, threats, or harmful content
+    - Trolling or intentionally disruptive content
+
+    Text to analyze: "${userInput}"
+
+    Be STRICT - if in doubt, flag as inappropriate. We prefer false positives over letting harmful content through.
 
     Return ONLY this JSON format (no markdown, no code blocks):
     - If inappropriate: { "inappropriate": true }
@@ -216,6 +255,13 @@ export async function checkForInappropriateContent(userInput: string): Promise<{
     // Log the error for debugging
     logger.error("Error checking for inappropriate content:", error);
 
+    // Check if the error is due to Google's safety filters blocking the content
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    if (errorMessage.includes('SAFETY') || errorMessage.includes('blocked') || errorMessage.includes('harm')) {
+      logger.warn("Content blocked by Google safety filters - treating as inappropriate");
+      return { isInappropriate: true, error: "Content blocked by safety filters" };
+    }
+
     // On error, allow the content through rather than blocking legitimate content
     // The actual content safety is also handled by Google's AI safety filters
     logger.warn("Content moderation failed, allowing content through");
@@ -225,6 +271,7 @@ export async function checkForInappropriateContent(userInput: string): Promise<{
 }
 /**
  * Finds existing statements that are semantically similar to the user's input.
+ * @deprecated Use findSimilarStatementsByIds instead for more reliable matching
  */
 export async function findSimilarStatementsAI(
   allStatements: string[],
@@ -238,6 +285,76 @@ Consider 60%+ meaning similarity. Context: "${question}"
 Return JSON: {"strings": ["match1", "match2"...]}`;
 
   return getAIResponseAsList(prompt);
+}
+
+interface StatementWithId {
+  id: string;
+  text: string;
+}
+
+/**
+ * Finds existing statements that are semantically similar to the user's input.
+ * Returns statement IDs directly to avoid text matching issues.
+ */
+export async function findSimilarStatementsByIds(
+  statements: StatementWithId[],
+  userInput: string,
+  question: string,
+  numberOfSimilarStatements: number = 6
+): Promise<string[]> {
+  if (statements.length === 0) {
+    logger.info("No existing statements to compare against");
+    return [];
+  }
+
+  // Format statements as numbered list with IDs for the AI
+  const statementsForAI = statements.map((s, i) => `[${s.id}]: "${s.text}"`).join('\n');
+
+  const prompt = `You are helping find similar suggestions in a collaborative platform.
+
+USER'S NEW SUGGESTION: "${userInput}"
+
+CONTEXT/QUESTION: "${question}"
+
+EXISTING SUGGESTIONS (format: [ID]: "text"):
+${statementsForAI}
+
+TASK: Find up to ${numberOfSimilarStatements} existing suggestions that are semantically similar to the user's new suggestion.
+Consider suggestions with 60%+ meaning similarity - they discuss the same topic, propose similar solutions, or express similar ideas.
+
+IMPORTANT: Return ONLY the IDs of similar suggestions, not the text.
+
+Return JSON format: {"ids": ["id1", "id2", ...]}
+If no similar suggestions found, return: {"ids": []}`;
+
+  try {
+    const model = await getGenerativeAIModel();
+    const result = await model.generateContent(prompt);
+    let responseText = result.response.text();
+
+    // Strip markdown code blocks if present
+    responseText = responseText.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
+
+    logger.info("AI similarity response:", { responseText: responseText.substring(0, 200) });
+
+    const parsed = JSON.parse(responseText);
+
+    if (Array.isArray(parsed.ids)) {
+      // Validate that returned IDs exist in our statements
+      const validIds = parsed.ids.filter((id: string) =>
+        statements.some(s => s.id === id)
+      );
+
+      logger.info(`AI found ${parsed.ids.length} similar, ${validIds.length} valid IDs`);
+
+      return validIds;
+    }
+
+    return [];
+  } catch (error) {
+    logger.error("Error in findSimilarStatementsByIds:", error);
+    return [];
+  }
 }
 
 /**
@@ -428,7 +545,7 @@ Return JSON ONLY:`;
     // Use higher temperature for creative title/description generation
     const genAI = getGenAI();
     const creativeModel = genAI.getGenerativeModel({
-      model: process.env.AI_MODEL_NAME || "gemini-2.5-flash",
+      model: GEMINI_MODEL,
       generationConfig: {
         responseMimeType: "application/json",
         temperature: 0.8, // Higher temperature for creative, varied output
@@ -501,6 +618,130 @@ function createFallbackTitleDescription(userInput: string): { title: string; des
       title: userInput,
       description: `${descriptionPrefix}: ${userInput}`,
     };
+  }
+}
+
+/**
+ * Detected suggestion from multi-suggestion detection
+ */
+export interface DetectedSuggestion {
+  title: string;
+  description: string;
+  originalText: string;
+}
+
+/**
+ * Result of multi-suggestion detection
+ */
+export interface MultiSuggestionDetectionResult {
+  isMultiple: boolean;
+  suggestions: DetectedSuggestion[];
+}
+
+/**
+ * Detects if user input contains multiple suggestions and splits them
+ * @param userInput - The user's input text
+ * @param questionContext - The question/topic context for better understanding
+ * @returns Object indicating if multiple suggestions detected and the split suggestions
+ */
+export async function detectAndSplitMultipleSuggestions(
+  userInput: string,
+  questionContext: string
+): Promise<MultiSuggestionDetectionResult> {
+  try {
+    // Detect language for appropriate response
+    const isHebrew = /[\u0590-\u05FF]/.test(userInput);
+
+    const prompt = isHebrew
+      ? `בדוק אם הטקסט הבא מכיל מספר הצעות/רעיונות נפרדים.
+
+קלט המשתמש: "${userInput}"
+${questionContext ? `הקשר/שאלה: "${questionContext}"` : ""}
+
+משימה:
+1. קבע אם הקלט מכיל יותר מהצעה/רעיון אחד
+2. אם יש מספר הצעות, פצל אותן להצעות נפרדות
+3. לכל הצעה, תן כותרת קצרה (2-8 מילים) ותיאור מורחב (10-30 מילים)
+
+כללים:
+- סמן כמרובה רק אם יש רעיונות נפרדים באמת (לא רק פרטים של רעיון אחד)
+- חפש מפרידים כמו: פסיקים, "ו", רשימות ממוספרות, נקודות
+- כל הצעה מפוצלת צריכה להיות עצמאית ומשמעותית
+- שמור על השפה המקורית
+
+החזר JSON בפורמט:
+{
+  "isMultiple": true/false,
+  "suggestions": [
+    {
+      "title": "כותרת קצרה לרעיון הראשון",
+      "description": "תיאור מורחב של הרעיון הראשון",
+      "originalText": "החלק מהטקסט המקורי שממנו נלקח"
+    }
+  ]
+}
+
+אם זו הצעה בודדת, החזר: {"isMultiple": false, "suggestions": []}`
+      : `Analyze if the following text contains multiple separate suggestions/ideas.
+
+USER INPUT: "${userInput}"
+${questionContext ? `CONTEXT/QUESTION: "${questionContext}"` : ""}
+
+TASK:
+1. Determine if the input contains MORE THAN ONE distinct suggestion/idea
+2. If multiple suggestions exist, split them into separate proposals
+3. For each suggestion, provide a concise title (2-8 words) and expanded description (10-30 words)
+
+RULES:
+- Only flag as multiple if there are truly DISTINCT ideas (not just details of one idea)
+- Look for separators like: commas, "and", numbered lists, bullet points
+- Each split suggestion should be self-contained and meaningful
+- Preserve the original language
+
+Return JSON format:
+{
+  "isMultiple": true/false,
+  "suggestions": [
+    {
+      "title": "Short title for first idea",
+      "description": "Expanded description of the first idea",
+      "originalText": "The portion of the original text this came from"
+    }
+  ]
+}
+
+If NOT multiple suggestions (single idea), return: {"isMultiple": false, "suggestions": []}`;
+
+    const model = await getGenerativeAIModel();
+    const result = await model.generateContent(prompt);
+    let responseText = result.response.text();
+
+    // Strip markdown code blocks if present
+    responseText = responseText.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
+
+    logger.info("Multi-suggestion detection response:", { responseText: responseText.substring(0, 300) });
+
+    const parsed = JSON.parse(responseText);
+
+    if (typeof parsed.isMultiple === "boolean" && Array.isArray(parsed.suggestions)) {
+      // Validate suggestions have required fields
+      const validSuggestions = parsed.suggestions.filter(
+        (s: DetectedSuggestion) =>
+          typeof s.title === "string" &&
+          typeof s.description === "string" &&
+          s.title.length > 0
+      );
+
+      return {
+        isMultiple: parsed.isMultiple && validSuggestions.length > 1,
+        suggestions: validSuggestions,
+      };
+    }
+
+    return { isMultiple: false, suggestions: [] };
+  } catch (error) {
+    logger.error("Error in detectAndSplitMultipleSuggestions:", error);
+    return { isMultiple: false, suggestions: [] };
   }
 }
 

@@ -1,8 +1,9 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { Collections, getRandomUID, Statement, StatementSchema, StatementSnapShot, StatementType } from 'delib-npm';
+import { Collections, getRandomUID, Statement, StatementSchema, StatementSnapShot, StatementType } from '@freedi/shared-types';
 import { Response, Request, onInit, logger } from 'firebase-functions/v1';
 import { parse } from 'valibot';
 import { db } from '.';
+import { GEMINI_MODEL } from './config/gemini';
 
 interface SimpleDescendants {
 	statement: string;
@@ -68,7 +69,7 @@ export async function getCluster(req: Request, res: Response) {
 			statementId: descendant.statementId,
 		}));
 
-		const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+		const model = genAI.getGenerativeModel({ model: GEMINI_MODEL });
 
 		const prompt = `
         Hi Gemini! I need your help to cluster some statements based on their relevance to a main topic.

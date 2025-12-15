@@ -1,6 +1,6 @@
 import { collection, query, where, getDocs, onSnapshot, doc, getDoc } from 'firebase/firestore';
 import { FireStore } from '../config';
-import { Collections, UserDemographicQuestion, UserDemographicQuestionSchema, User, Role } from 'delib-npm';
+import { Collections, UserDemographicQuestion, UserDemographicQuestionSchema, User, Role } from '@freedi/shared-types';
 import { parse } from 'valibot';
 
 // Use string literal for scope until delib-npm exports the enum value

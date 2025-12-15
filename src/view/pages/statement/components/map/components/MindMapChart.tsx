@@ -30,7 +30,7 @@ import MapHorizontalLayoutIcon from '@/assets/icons/MapHorizontalLayoutIcon.svg'
 import MapRestoreIcon from '@/assets/icons/MapRestoreIcon.svg';
 import MapSaveIcon from '@/assets/icons/MapSaveIcon.svg';
 import MapVerticalLayoutIcon from '@/assets/icons/MapVerticalLayoutIcon.svg';
-import { Results, Statement, StatementType } from 'delib-npm';
+import { Results, Statement, StatementType } from '@freedi/shared-types';
 import { FilterType } from '@/controllers/general/sorting';
 
 const nodeTypes = {

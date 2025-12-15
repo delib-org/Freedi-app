@@ -14,7 +14,7 @@ import {
 	Statement, StatementSchema, Collections,
 	StatementType,
 	DeliberativeElement,
-} from 'delib-npm';
+} from '@freedi/shared-types';
 import { parse } from 'valibot';
 
 export async function getStatementFromDB(

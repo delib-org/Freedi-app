@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { StatementType, QuestionType, User } from 'delib-npm';
+import { StatementType, QuestionType, User } from '@freedi/shared-types';
 import { getDefaultQuestionType } from '@/model/questionTypeDefaults';
 
 export const useStatementUIState = () => {

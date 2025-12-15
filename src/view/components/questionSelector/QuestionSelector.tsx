@@ -3,7 +3,7 @@ import styles from './QuestionSelector.module.scss';
 import { StatementContext } from '@/view/pages/statement/StatementCont';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { updateQuestionType } from '@/controllers/db/statementSettings/setStatementSettings';
-import { QuestionType } from 'delib-npm';
+import { QuestionType } from '@freedi/shared-types';
 import { getDefaultQuestionType } from '@/model/questionTypeDefaults';
 import { getMassConsensusQuestionUrl } from '@/controllers/db/config';
 

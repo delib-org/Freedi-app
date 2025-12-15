@@ -92,6 +92,35 @@ export class MaintenanceController {
 	}
 
 	/**
+	 * Recalculate all evaluation metrics for options under a parent statement
+	 * Recounts from actual evaluations in the database
+	 */
+	async recalculateEvaluations(req: Request, res: Response): Promise<void> {
+		try {
+			const parentId = req.query.parentId as string;
+
+			if (!parentId) {
+				res.status(400).send({
+					error: 'parentId is required',
+					ok: false
+				});
+				return;
+			}
+
+			const { recalculateOptionsEvaluations } = await import('../migrations/recalculateEvaluations');
+			const result = await recalculateOptionsEvaluations(parentId);
+
+			res.send({
+				ok: true,
+				parentId,
+				...result
+			});
+		} catch (error) {
+			this.handleError(res, error);
+		}
+	}
+
+	/**
 	 * Handle errors consistently
 	 */
 	private handleError(res: Response, error: unknown): void {

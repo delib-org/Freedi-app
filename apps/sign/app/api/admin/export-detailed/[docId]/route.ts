@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getFirebaseAdmin } from '@/lib/firebase/admin';
 import { getUserIdFromCookie } from '@/lib/utils/user';
-import { Collections, StatementType, Statement } from 'delib-npm';
+import { Collections, StatementType, Statement } from '@freedi/shared-types';
 import { StatementWithParagraphs, Paragraph, DemographicMode } from '@/types';
 import { getDemographicQuestions } from '@/lib/firebase/demographicQueries';
 import { SignDemographicQuestion } from '@/types/demographics';

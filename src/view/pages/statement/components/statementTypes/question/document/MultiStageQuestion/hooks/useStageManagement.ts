@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Statement, StatementType } from 'delib-npm';
+import { Statement, StatementType } from '@freedi/shared-types';
 import { statementSubsSelector } from '@/redux/statements/statementsSlice';
 import {
   setParentStatement,

@@ -1,5 +1,5 @@
 import { FC, useState, useEffect, useCallback } from 'react';
-import { Statement, StatementType, Screen } from 'delib-npm';
+import { Statement, StatementType, Screen } from '@freedi/shared-types';
 
 // Hooks
 import { useTranslation } from '@/controllers/hooks/useTranslation';

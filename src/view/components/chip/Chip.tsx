@@ -1,6 +1,6 @@
 import styles from './Chip.module.scss';
 import SmileIcon from '@/assets/icons/smileIcon.svg?react';
-import { User } from 'delib-npm';
+import { User } from '@freedi/shared-types';
 
 interface Props {
 	user: User | undefined;

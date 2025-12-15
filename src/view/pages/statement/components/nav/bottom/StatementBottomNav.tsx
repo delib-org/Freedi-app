@@ -14,7 +14,7 @@ import useStatementColor from '@/controllers/hooks/useStatementColor';
 import styles from './StatementBottomNav.module.scss';
 import { StatementContext } from '../../../StatementCont';
 import { sortItems } from './StatementBottomNavModal';
-import { EvaluationUI, Role, SortType, StatementType } from 'delib-npm';
+import { EvaluationUI, Role, SortType, StatementType } from '@freedi/shared-types';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import { useDecreaseLearningRemain } from '@/controllers/hooks/useDecreaseLearningRemain';
 import { useDispatch, useSelector } from 'react-redux';
@@ -24,7 +24,7 @@ import IdeaRefineryModal from '../../popperHebbian/refinery/IdeaRefineryModal';
 import InitialIdeaModal from '../../popperHebbian/refinery/InitialIdeaModal';
 import { createStatementWithSubscription } from '@/controllers/db/statements/createStatementWithSubscription';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
-import { QuestionType } from 'delib-npm';
+import { QuestionType } from '@freedi/shared-types';
 
 interface Props { showNav?: boolean; }
 

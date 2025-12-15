@@ -1,5 +1,5 @@
 import React from 'react';
-import { Statement, UserDemographicQuestion, Role } from 'delib-npm';
+import { Statement, UserDemographicQuestion, Role } from '@freedi/shared-types';
 import StatementHeader from './header/StatementHeader';
 import Switch from './switch/Switch';
 import { MapProvider } from '@/controllers/hooks/useMap';

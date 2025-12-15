@@ -2,7 +2,7 @@ import { FC, useEffect, useState, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useParams, useLocation, useNavigate } from 'react-router';
 
-import { Statement, SortType, SelectionFunction, Role, StatementType } from 'delib-npm';
+import { Statement, SortType, SelectionFunction, Role, StatementType } from '@freedi/shared-types';
 
 import { getStatementFromDB } from '@/controllers/db/statements/getStatement';
 import { listenToEvaluations } from '@/controllers/db/evaluation/getEvaluation';

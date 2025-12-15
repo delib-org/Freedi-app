@@ -1,4 +1,4 @@
-import { Statement, StatementType, Evaluation, Collections } from 'delib-npm';
+import { Statement, StatementType, Evaluation, Collections } from '@freedi/shared-types';
 import { getFirestoreAdmin } from './admin';
 
 /**
@@ -48,7 +48,8 @@ export async function getQuestionFromFirebase(
 
 /**
  * Get random batch of options (solutions) for a question
- * Uses randomSeed field for efficient random sampling
+ * Uses randomSeed field for efficient random sampling at scale
+ * REQUIRES Firestore composite index: parentId + statementType + randomSeed
  *
  * @param questionId - Parent question ID
  * @param options - Batch configuration
@@ -88,7 +89,6 @@ export async function getRandomOptions(
   const randomSeed = Math.random();
 
   // Query 1: Get options with randomSeed >= random value
-  // Note: Not filtering by 'hide' in query because documents without 'hide' field won't match !=
   const query = db
     .collection(Collections.statements)
     .where('parentId', '==', questionId)
@@ -125,12 +125,13 @@ export async function getRandomOptions(
   }
 
   console.info('[getRandomOptions] Final result:', options_results.length, 'options');
-  
-return options_results.slice(0, size);
+
+  return options_results.slice(0, size);
 }
 
 /**
  * Get all solutions sorted by consensus
+ * REQUIRES Firestore composite index: parentId + statementType + consensus
  * @param questionId - Parent question ID
  * @param limit - Maximum number of results
  * @returns Sorted array of statements
@@ -163,6 +164,7 @@ export async function getAllSolutionsSorted(
 
 /**
  * Get user's solutions for a question
+ * REQUIRES Firestore composite index: parentId + statementType + creatorId + consensus
  * @param questionId - Parent question ID
  * @param userId - User ID
  * @returns Array of user's statements

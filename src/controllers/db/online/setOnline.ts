@@ -6,7 +6,7 @@ import {
 	getDoc,
 } from 'firebase/firestore';
 import { FireStore } from '../config';
-import { Collections, Creator, Online, OnlineSchema } from 'delib-npm';
+import { Collections, Creator, Online, OnlineSchema } from '@freedi/shared-types';
 import { parse } from 'valibot';
 
 export async function setUserOnlineToDB(

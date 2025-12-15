@@ -1,4 +1,5 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GEMINI_MODEL } from "./config/gemini";
 
 function getGenAI(): GoogleGenerativeAI {
   const apiKey = process.env.GOOGLE_API_KEY;
@@ -9,7 +10,7 @@ function getGenAI(): GoogleGenerativeAI {
 
 export async function containsBadLanguage(text: string): Promise<boolean> {
   try {
-    const model = getGenAI().getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = getGenAI().getGenerativeModel({ model: GEMINI_MODEL });
 
     const prompt = `
       Detect if the following text contains any offensive, hateful, or inappropriate language. 

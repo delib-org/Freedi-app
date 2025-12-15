@@ -1,5 +1,5 @@
 import React, { FC, useState } from 'react';
-import { Statement, Role } from 'delib-npm';
+import { Statement, Role } from '@freedi/shared-types';
 import { MemberReviewData } from '../MemberValidation';
 import styles from './BanConfirmationModal.module.scss';
 import { useTranslation } from '@/controllers/hooks/useTranslation';

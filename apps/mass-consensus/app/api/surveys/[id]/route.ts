@@ -5,7 +5,7 @@ import {
   updateSurvey,
   deleteSurvey,
 } from '@/lib/firebase/surveys';
-import { verifyAdmin, extractBearerToken } from '@/lib/auth/verifyAdmin';
+import { verifyToken, extractBearerToken } from '@/lib/auth/verifyAdmin';
 import { UpdateSurveyRequest } from '@/types/survey';
 
 interface RouteContext {
@@ -55,12 +55,12 @@ export async function PUT(request: NextRequest, context: RouteContext) {
       );
     }
 
-    const { isAdmin, userId, error } = await verifyAdmin(token);
+    const userId = await verifyToken(token);
 
-    if (!isAdmin) {
+    if (!userId) {
       return NextResponse.json(
-        { error: error || 'Admin access required' },
-        { status: 403 }
+        { error: 'Invalid or expired token' },
+        { status: 401 }
       );
     }
 
@@ -119,12 +119,12 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
       );
     }
 
-    const { isAdmin, userId, error } = await verifyAdmin(token);
+    const userId = await verifyToken(token);
 
-    if (!isAdmin) {
+    if (!userId) {
       return NextResponse.json(
-        { error: error || 'Admin access required' },
-        { status: 403 }
+        { error: 'Invalid or expired token' },
+        { status: 401 }
       );
     }
 

@@ -19,7 +19,7 @@ import { setStatementElementHight } from '@/redux/statements/statementsSlice';
 import EditableStatement from '@/view/components/edit/EditableStatement';
 import IconButton from '@/view/components/iconButton/IconButton';
 import styles from './SuggestionCard.module.scss';
-import { StatementType, Statement } from 'delib-npm';
+import { StatementType, Statement } from '@freedi/shared-types';
 import { useAuthorization } from '@/controllers/hooks/useAuthorization';
 import { toggleJoining } from '@/controllers/db/joining/setJoining';
 import Joined from '@/view/components/joined/Joined';
@@ -30,6 +30,7 @@ import CommunityBadge from '@/view/components/badges/CommunityBadge';
 import AnchoredBadge from '@/view/components/badges/AnchoredBadge';
 import UploadImage from '@/view/components/uploadImage/UploadImage';
 import StatementImage from './StatementImage';
+import IntegrateSuggestionsModal from '@/view/components/integrateSuggestions/IntegrateSuggestionsModal';
 
 interface Props {
 	statement: Statement | undefined;
@@ -99,6 +100,9 @@ const SuggestionCard: FC<Props> = ({
 	const imageUrl = statement?.imagesURL?.main ?? "";
 	const [image, setImage] = useState<string>(imageUrl);
 	const [showImageUpload, setShowImageUpload] = useState(false);
+
+	// Integration modal state
+	const [showIntegrationModal, setShowIntegrationModal] = useState(false);
 
 	// Real-time listener for image changes
 	useEffect(() => {
@@ -428,6 +432,7 @@ const SuggestionCard: FC<Props> = ({
 							isEdit={isEdit}
 							setIsEdit={setIsEdit}
 							handleSetOption={handleSetOption}
+							onIntegrate={() => setShowIntegrationModal(true)}
 						/>
 					</div>
 				</div>
@@ -485,6 +490,17 @@ const SuggestionCard: FC<Props> = ({
 				isLoading={isImproving}
 				suggestionTitle={statement.statement}
 			/>
+			{/* Integration Modal */}
+			{showIntegrationModal && parentStatement && (
+				<IntegrateSuggestionsModal
+					sourceStatementId={statement.statementId}
+					parentStatementId={parentStatement.statementId}
+					onClose={() => setShowIntegrationModal(false)}
+					onSuccess={() => {
+						setShowIntegrationModal(false);
+					}}
+				/>
+			)}
 			{/* Upload area for initial image upload */}
 			{!image && showImageUpload && (
 				<div className={styles.uploadArea}>

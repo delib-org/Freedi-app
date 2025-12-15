@@ -1,5 +1,5 @@
 import { FC, useState } from 'react';
-import { RoomSettings, Room, RoomParticipant } from 'delib-npm';
+import { RoomSettings, Room, RoomParticipant } from '@freedi/shared-types';
 import { useAppDispatch } from '@/controllers/hooks/reduxHooks';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { notifyRoomParticipants, deleteRoomAssignments } from '@/controllers/db/roomAssignment';

@@ -1,4 +1,4 @@
-import { User, Role, Statement, StatementType, QuestionType } from 'delib-npm';
+import { User, Role, Statement, StatementType, QuestionType } from '@freedi/shared-types';
 import { createContext } from 'react';
 import { getDefaultQuestionType } from '@/model/questionTypeDefaults';
 

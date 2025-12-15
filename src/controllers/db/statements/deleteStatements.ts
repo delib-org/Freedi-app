@@ -9,7 +9,7 @@ import {
 	writeBatch,
 } from 'firebase/firestore';
 import { FireStore } from '../config';
-import { Collections, Statement, StatementType } from 'delib-npm';
+import { Collections, Statement, StatementType } from '@freedi/shared-types';
 
 export async function deleteStatementFromDB(
 	statement: Statement,

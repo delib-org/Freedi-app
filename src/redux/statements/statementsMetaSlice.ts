@@ -5,7 +5,7 @@ import {
 	updateArray,
 	StatementMetaData,
 	StatementMetaDataSchema,
-} from 'delib-npm';
+} from '@freedi/shared-types';
 import { parse } from 'valibot';
 
 // Define a type for the slice state

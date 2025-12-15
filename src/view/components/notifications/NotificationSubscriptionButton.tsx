@@ -4,7 +4,7 @@ import { notificationService } from '@/services/notificationService';
 import { getAuth } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { DB } from '@/controllers/db/config';
-import { Collections, StatementSubscription } from 'delib-npm';
+import { Collections, StatementSubscription } from '@freedi/shared-types';
 import { getStatementSubscriptionId } from '@/controllers/general/helpers';
 import { updateNotificationPreferences } from '@/controllers/db/subscriptions/setSubscriptions';
 import BellIcon from '@/assets/icons/bellIcon.svg?react';

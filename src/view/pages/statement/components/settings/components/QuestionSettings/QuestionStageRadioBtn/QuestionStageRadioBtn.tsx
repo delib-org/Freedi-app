@@ -9,7 +9,7 @@ import { setQuestionStage } from '@/controllers/db/statements/statementMetaData/
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { statementMetaDataSelector } from '@/redux/statements/statementsMetaSlice';
-import { QuestionStep, Statement, } from 'delib-npm';
+import { QuestionStep, Statement, } from '@freedi/shared-types';
 import { getStepInfo } from './helpers';
 
 interface Props {

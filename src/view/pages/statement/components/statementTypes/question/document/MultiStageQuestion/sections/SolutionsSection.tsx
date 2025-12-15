@@ -1,6 +1,6 @@
 import React, { FC } from 'react';
 import { Link } from 'react-router';
-import { Statement } from 'delib-npm';
+import { Statement } from '@freedi/shared-types';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import SuggestionCard from '@/view/pages/statement/components/evaluations/components/suggestionCards/suggestionCard/SuggestionCard';
 import manWithIdeaLamp from '@/assets/images/manWithIdeaLamp.png';

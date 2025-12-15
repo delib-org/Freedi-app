@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
-import { Collections, StatementType, Statement } from 'delib-npm';
+import { Collections, StatementType, Statement } from '@freedi/shared-types';
 import { StatementWithParagraphs, Paragraph } from '@/types';
 import { HeatMapData } from '@/types/heatMap';
 

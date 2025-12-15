@@ -16,7 +16,7 @@ import { creatorSelector } from '@/redux/creator/creatorSlice';
 
 // API functions
 import { updateStatementText } from '@/controllers/db/statements/setStatements';
-import { Statement } from 'delib-npm';
+import { Statement } from '@freedi/shared-types';
 import Text from '@/view/components/text/Text';
 
 const SuggestionChat = () => {

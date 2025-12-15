@@ -1,6 +1,6 @@
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import { FireStore } from '../config';
-import { Collections, Online, OnlineSchema } from 'delib-npm';
+import { Collections, Online, OnlineSchema } from '@freedi/shared-types';
 import { parse } from 'valibot';
 
 //listen to online users

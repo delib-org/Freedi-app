@@ -1,5 +1,5 @@
 import React, { FC } from 'react';
-import { Statement } from 'delib-npm';
+import { Statement } from '@freedi/shared-types';
 import UploadImage from '@/view/components/uploadImage/UploadImage';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import styles from './StatementImage.module.scss';

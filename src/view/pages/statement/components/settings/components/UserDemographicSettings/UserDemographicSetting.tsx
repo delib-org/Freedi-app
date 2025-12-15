@@ -11,7 +11,7 @@ import {
 	UserDemographicQuestion,
 	UserDemographicQuestionType,
 	DemographicQuestionScope,
-} from 'delib-npm';
+} from '@freedi/shared-types';
 
 // Use string literals for scope since delib-npm exports DemographicQuestionScope as type-only
 const DEMOGRAPHIC_SCOPE_GROUP: DemographicQuestionScope = 'group' as DemographicQuestionScope;

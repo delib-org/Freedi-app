@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { selectNewStatementShowModal } from '@/redux/statements/newStatementSlice';
-import { QuestionType } from 'delib-npm';
+import { QuestionType } from '@freedi/shared-types';
 import { useStatementParams } from './useStatementSelectors';
 import { useStatementSelectors } from './useStatementSelectors';
 import { useUserDemographic } from './useUserDemographic';

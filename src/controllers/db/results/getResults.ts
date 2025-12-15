@@ -8,7 +8,7 @@ import {
 	onSnapshot,
 } from 'firebase/firestore';
 import { FireStore } from '../config';
-import { Collections, StatementType, Statement, StatementSchema, ResultsBy } from 'delib-npm';
+import { Collections, StatementType, Statement, StatementSchema, ResultsBy } from '@freedi/shared-types';
 import { parse } from 'valibot';
 import { convertTimestampsToMillis } from '@/helpers/timestampHelpers';
 

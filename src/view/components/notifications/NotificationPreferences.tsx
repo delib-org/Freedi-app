@@ -5,7 +5,7 @@ import { getStatementSubscriptionId } from '@/controllers/general/helpers';
 import { getAuth } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { DB } from '@/controllers/db/config';
-import { Collections, StatementSubscription } from 'delib-npm';
+import { Collections, StatementSubscription } from '@freedi/shared-types';
 import { notificationService } from '@/services/notificationService';
 import BellIcon from '@/assets/icons/bellIcon.svg?react';
 import MailIcon from '@/assets/icons/bellIcon.svg?react';

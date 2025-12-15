@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getFirebaseAdmin } from '@/lib/firebase/admin';
 import { getUserIdFromCookie } from '@/lib/utils/user';
-import { Collections } from 'delib-npm';
+import { Collections } from '@freedi/shared-types';
 import {
   getDemographicQuestions,
   saveDemographicQuestion,

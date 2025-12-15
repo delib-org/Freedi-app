@@ -1,5 +1,5 @@
 import { FC, useState } from 'react';
-import { Room, RoomParticipant } from 'delib-npm';
+import { Room, RoomParticipant } from '@freedi/shared-types';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import ParticipantChip from './ParticipantChip';
 import RoomIcon from '@/assets/icons/homeIcon.svg?react';

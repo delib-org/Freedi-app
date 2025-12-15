@@ -7,7 +7,7 @@ import { useContext, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useParams } from 'react-router';
 import { StatementContext } from '../../StatementCont';
-import { StatementType } from 'delib-npm';
+import { StatementType } from '@freedi/shared-types';
 
 export function useSwitchMV() {
 	const dispatch = useDispatch();

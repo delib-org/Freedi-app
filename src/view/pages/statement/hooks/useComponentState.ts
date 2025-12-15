@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Role } from 'delib-npm';
+import { Role } from '@freedi/shared-types';
 import { COMPONENT_STATES, ComponentState } from '../constants';
 
 interface UseComponentStateProps {

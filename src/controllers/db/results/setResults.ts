@@ -1,6 +1,6 @@
 import { doc, setDoc } from 'firebase/firestore';
 import { FireStore } from '../config';
-import { ResultsBy, Collections } from 'delib-npm';
+import { ResultsBy, Collections } from '@freedi/shared-types';
 
 export async function updateResultsSettings(
 	statementId: string,

@@ -1,4 +1,4 @@
-import { Creator } from 'delib-npm';
+import { Creator } from '@freedi/shared-types';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 interface CreatorState {

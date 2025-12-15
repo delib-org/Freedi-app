@@ -1,4 +1,4 @@
-import { DeliberativeElement, Results, Statement } from 'delib-npm';
+import { DeliberativeElement, Results, Statement } from '@freedi/shared-types';
 
 interface ResultLevel {
 	result: Results;

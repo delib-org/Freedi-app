@@ -1,4 +1,4 @@
-import { Role, Statement } from 'delib-npm';
+import { Role, Statement } from '@freedi/shared-types';
 
 /**
  * Determines if a user can be banned based on their role and relationship to the statement

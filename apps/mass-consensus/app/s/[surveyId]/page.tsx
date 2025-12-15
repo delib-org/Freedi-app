@@ -1,6 +1,7 @@
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { getSurveyWithQuestions } from '@/lib/firebase/surveys';
+import { SurveyStatus } from '@/types/survey';
 import SurveyWelcome from '@/components/survey/SurveyWelcome';
 
 interface PageProps {
@@ -50,12 +51,17 @@ export default async function SurveyPage({ params }: PageProps) {
       notFound();
     }
 
-    if (!survey.isActive) {
+    // Check if survey is active (or handle legacy isActive field)
+    const isActive = survey.status === SurveyStatus.active ||
+      (survey.status === undefined && (survey as { isActive?: boolean }).isActive);
+
+    if (!isActive) {
+      const isClosed = survey.status === SurveyStatus.closed;
       return (
         <div className="page">
           <div style={{ textAlign: 'center', padding: '2rem' }}>
-            <h1>Survey Not Available</h1>
-            <p>This survey is currently not active.</p>
+            <h1>{isClosed ? 'Survey Closed' : 'Survey Not Available'}</h1>
+            <p>{isClosed ? 'This survey is no longer accepting responses.' : 'This survey is currently not active.'}</p>
           </div>
         </div>
       );

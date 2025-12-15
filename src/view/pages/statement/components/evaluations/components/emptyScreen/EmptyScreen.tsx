@@ -8,7 +8,7 @@ import useWindowDimensions from '@/controllers/hooks/useWindowDimentions';
 import WhitePlusIcon from '@/view/components/icons/WhitePlusIcon';
 import { useDispatch } from 'react-redux';
 import { setNewStatementModal } from '@/redux/statements/newStatementSlice';
-import { Statement, StatementType } from 'delib-npm';
+import { Statement, StatementType } from '@freedi/shared-types';
 
 interface Props {
 	statement: Statement;

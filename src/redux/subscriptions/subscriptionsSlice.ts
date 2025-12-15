@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction, createSelector } from '@reduxjs/toolkit';
 import { RootState } from '../types';
-import { WaitingMember } from 'delib-npm';
+import { WaitingMember } from '@freedi/shared-types';
 
 interface SubscriptionsState {
 	waitingList: WaitingMember[];

@@ -4,7 +4,7 @@ import DeleteIcon from '@/assets/icons/delete.svg?react';
 import PlusIcon from '@/assets/icons/plusIcon.svg?react';
 import Input from '@/view/components/input/Input';
 import styles from './UserQuestionComp.module.scss';
-import { DemographicOption, UserDemographicQuestion, UserDemographicQuestionType, DemographicQuestionScope } from 'delib-npm';
+import { DemographicOption, UserDemographicQuestion, UserDemographicQuestionType, DemographicQuestionScope } from '@freedi/shared-types';
 import { setDemographicOptionColor } from '@/controllers/db/userDemographic/setUserDemographic';
 import { useDispatch } from 'react-redux';
 import { updateUserDemographicQuestionOptionColor } from '@/redux/userDemographic/userDemographicSlice';

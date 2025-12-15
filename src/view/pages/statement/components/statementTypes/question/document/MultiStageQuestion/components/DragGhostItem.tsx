@@ -1,5 +1,5 @@
 import React, { FC } from 'react';
-import { Statement } from 'delib-npm';
+import { Statement } from '@freedi/shared-types';
 import StageCard from '../../stages/StageCard';
 import styles from '../MultiStageQuestion.module.scss';
 

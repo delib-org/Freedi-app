@@ -1,5 +1,5 @@
 import { FC, useState, useCallback } from 'react';
-import { Statement } from 'delib-npm';
+import { Statement } from '@freedi/shared-types';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { creatorSelector } from '@/redux/creator/creatorSlice';
@@ -86,7 +86,7 @@ const GoogleDocsImportModal: FC<GoogleDocsImportModalProps> = ({
 	if (!isOpen) return null;
 
 	return (
-		<Modal onClose={handleClose}>
+		<Modal closeModal={handleClose}>
 			<div className={styles.modal}>
 				<header className={styles.header}>
 					<h2>{t('Import from Google Docs')}</h2>

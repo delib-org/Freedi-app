@@ -1,5 +1,5 @@
 import React, { FC, useState } from 'react';
-import { Statement } from 'delib-npm';
+import { Statement } from '@freedi/shared-types';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { useSummarization } from '@/controllers/hooks/useSummarization';
 import newOptionGraphic from '@/assets/images/newOptionGraphic.png';

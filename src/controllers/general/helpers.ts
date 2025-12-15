@@ -4,7 +4,7 @@ import {
 	Role,
 	StatementType,
 	QuestionType,
-} from 'delib-npm';
+} from '@freedi/shared-types';
 import { useAuthentication } from '../hooks/useAuthentication';
 import { EnhancedEvaluationThumb } from '@/view/pages/statement/components/evaluations/components/evaluation/enhancedEvaluation/EnhancedEvaluationModel';
 

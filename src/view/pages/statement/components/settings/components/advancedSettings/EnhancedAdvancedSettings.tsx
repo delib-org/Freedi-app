@@ -5,7 +5,7 @@ import { defaultStatementSettings } from '../../emptyStatementModel';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import styles from './EnhancedAdvancedSettings.module.scss';
 import { setStatementSettingToDB } from '@/controllers/db/statementSettings/setStatementSettings';
-import { StatementSettings, StatementType, evaluationType, Collections } from 'delib-npm';
+import { StatementSettings, StatementType, evaluationType, Collections } from '@freedi/shared-types';
 import { doc, setDoc } from 'firebase/firestore';
 import { FireStore } from '@/controllers/db/config';
 import { setMaxVotesPerUser } from '@/controllers/db/evaluation/setEvaluation';
@@ -15,7 +15,7 @@ import {
   MessageSquare, Navigation, Plus, Settings,
   ChevronDown, ChevronUp, HelpCircle,
   Zap, Database, Lightbulb, Award, Target,
-  Activity, PieChart, Sparkles, Shield, Lock, Globe
+  Activity, PieChart, Sparkles, Shield, Lock, Globe, Scissors
 } from 'lucide-react';
 import LanguageSelector from './LanguageSelector/LanguageSelector';
 
@@ -522,13 +522,23 @@ const EnhancedAdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => 
                         icon={Search}
                       />
                       {statement.statementType === StatementType.question && (
-                        <ToggleSwitch
-                          isChecked={settings.defaultLookForSimilarities ?? false}
-                          onChange={(checked) => handleSettingChange('defaultLookForSimilarities', checked)}
-                          label={t('Auto-Check Similarities')}
-                          description={t('Check for similar statements by default')}
-                          icon={Database}
-                        />
+                        <>
+                          <ToggleSwitch
+                            isChecked={settings.defaultLookForSimilarities ?? false}
+                            onChange={(checked) => handleSettingChange('defaultLookForSimilarities', checked)}
+                            label={t('Auto-Check Similarities')}
+                            description={t('Check for similar statements by default')}
+                            icon={Database}
+                          />
+                          <ToggleSwitch
+                            isChecked={settings.enableMultiSuggestionDetection ?? false}
+                            onChange={(checked) => handleSettingChange('enableMultiSuggestionDetection', checked)}
+                            label={t('Multi-Suggestion Detection')}
+                            description={t('Detect when users submit multiple ideas and offer to split them')}
+                            icon={Scissors}
+                            badge="new"
+                          />
+                        </>
                       )}
                     </>
                   )}

@@ -6,7 +6,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router';
 import { useSelector } from 'react-redux';
-import { Access } from 'delib-npm';
+import { Access } from '@freedi/shared-types';
 import { getStatementFromDB } from '@/controllers/db/statements/getStatement';
 import { handlePublicAutoAuth } from '@/controllers/auth/publicAuthHandler';
 import { creatorSelector } from '@/redux/creator/creatorSlice';

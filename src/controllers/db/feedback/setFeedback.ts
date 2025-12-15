@@ -1,5 +1,5 @@
 import { doc, setDoc } from 'firebase/firestore';
-import { Collections, Feedback } from 'delib-npm';
+import { Collections, Feedback } from '@freedi/shared-types';
 import { DB } from '../config';
 
 export async function setFeedbackToDB(feedback: Feedback): Promise<void> {

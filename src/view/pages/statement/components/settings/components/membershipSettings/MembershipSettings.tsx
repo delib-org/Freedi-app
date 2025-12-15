@@ -1,7 +1,7 @@
 import { FC, useState, useEffect } from 'react'
 import SectionTitle from '../sectionTitle/SectionTitle'
 import { useTranslation } from '@/controllers/hooks/useTranslation';
-import { Access, Statement } from 'delib-npm';
+import { Access, Statement } from '@freedi/shared-types';
 import MultiSwitch from '@/view/components/switch/multiSwitch/MultiSwitch';
 import Checkbox from '@/view/components/checkbox/Checkbox';
 import { setStatementMembership } from '@/controllers/db/statements/setStatementMembership';

@@ -1,4 +1,4 @@
-import { Statement, QuestionType, Role, getStatementSubscriptionId, StatementType, Creator } from 'delib-npm';
+import { Statement, QuestionType, Role, getStatementSubscriptionId, StatementType, Creator } from '@freedi/shared-types';
 import { createStatement, setStatementToDB } from './setStatements';
 import { setStatement, setStatementSubscription } from '@/redux/statements/statementsSlice';
 import { Dispatch } from '@reduxjs/toolkit';

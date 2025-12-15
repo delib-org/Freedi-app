@@ -14,7 +14,7 @@ import {
 	NotificationType,
 	SimpleStatement,
 	statementToSimpleStatement,
-} from 'delib-npm';
+} from '@freedi/shared-types';
 import { db } from './index';
 import { getDefaultQuestionType } from './model/questionTypeDefaults';
 
@@ -28,7 +28,14 @@ export async function onStatementCreated(
 	if (!event.data) return;
 
 	try {
-		const statement = parse(StatementSchema, event.data.data());
+		const statementData = event.data.data();
+
+		// Ensure topParentId exists for legacy data that may not have it
+		if (!statementData.topParentId) {
+			statementData.topParentId = statementData.parentId || event.params.statementId;
+		}
+
+		const statement = parse(StatementSchema, statementData);
 
 		// Run all creation tasks in parallel where possible
 		const tasks: Promise<void>[] = [];
@@ -367,7 +374,12 @@ async function createNotificationsForStatement(statement: Statement): Promise<vo
 return;
 		}
 
-		const parentStatement = parse(StatementSchema, parentStatementDB.data());
+		const parentData = parentStatementDB.data();
+		// Ensure topParentId exists for legacy data
+		if (parentData && !parentData.topParentId) {
+			parentData.topParentId = parentData.parentId || statement.parentId;
+		}
+		const parentStatement = parse(StatementSchema, parentData);
 		const subscribers = subscribersDB.docs.map(
 			doc => doc.data() as StatementSubscription
 		);

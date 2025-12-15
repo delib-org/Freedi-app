@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { Statement, StatementType, Collections } from 'delib-npm';
+import { Statement, StatementType, Collections } from '@freedi/shared-types';
 import { getSurveyById, addQuestionToSurvey } from '@/lib/firebase/surveys';
-import { verifyAdmin, extractBearerToken } from '@/lib/auth/verifyAdmin';
+import { verifyToken, extractBearerToken } from '@/lib/auth/verifyAdmin';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
 import { AddQuestionRequest } from '@/types/survey';
 
@@ -23,12 +23,12 @@ export async function POST(request: NextRequest, context: RouteContext) {
       );
     }
 
-    const { isAdmin, userId, error } = await verifyAdmin(token);
+    const userId = await verifyToken(token);
 
-    if (!isAdmin) {
+    if (!userId) {
       return NextResponse.json(
-        { error: error || 'Admin access required' },
-        { status: 403 }
+        { error: 'Invalid or expired token' },
+        { status: 401 }
       );
     }
 
@@ -121,12 +121,12 @@ export async function PUT(request: NextRequest, context: RouteContext) {
       );
     }
 
-    const { isAdmin, userId, error } = await verifyAdmin(token);
+    const userId = await verifyToken(token);
 
-    if (!isAdmin) {
+    if (!userId) {
       return NextResponse.json(
-        { error: error || 'Admin access required' },
-        { status: 403 }
+        { error: 'Invalid or expired token' },
+        { status: 401 }
       );
     }
 

@@ -1,4 +1,4 @@
-import { Creator } from 'delib-npm';
+import { Creator } from '@freedi/shared-types';
 import { User } from 'firebase/auth';
 
 export function convertFirebaseUserToCreator(user: User | Creator): Creator {

@@ -1,6 +1,6 @@
 import React, { FC, useState } from 'react';
 import Modal from '@/view/components/modal/Modal';
-import { Statement } from 'delib-npm';
+import { Statement } from '@freedi/shared-types';
 import { createEvidencePost, updateEvidencePost } from '@/controllers/db/popperHebbian/evidenceController';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { useTranslation } from '@/controllers/hooks/useTranslation';

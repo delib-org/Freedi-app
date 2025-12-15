@@ -1,5 +1,5 @@
 import React, { FC, useState } from 'react';
-import { Statement } from 'delib-npm';
+import { Statement } from '@freedi/shared-types';
 import { useEditPermission } from '@/controllers/hooks/useEditPermission';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { DocumentEditModal, ParagraphsDisplay } from '@/view/components/richTextEditor';

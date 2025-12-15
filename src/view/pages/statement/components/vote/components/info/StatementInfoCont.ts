@@ -1,5 +1,5 @@
 import { updateStatementText } from '@/controllers/db/statements/setStatements';
-import { Statement } from 'delib-npm';
+import { Statement } from '@freedi/shared-types';
 import { FormEvent, Dispatch, SetStateAction } from 'react';
 
 export function handleSubmitInfo(

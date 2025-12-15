@@ -1,5 +1,5 @@
 import { useState, DragEvent } from 'react';
-import { Statement } from 'delib-npm';
+import { Statement } from '@freedi/shared-types';
 import { updateStatementsOrderToDB } from '@/controllers/db/statements/setStatements';
 import { useDispatch } from 'react-redux';
 import { setStatements } from '@/redux/statements/statementsSlice';

@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { QuestionType, Statement, StatementType } from 'delib-npm';
+import { QuestionType, Statement, StatementType } from '@freedi/shared-types';
 import { getDefaultQuestionType } from '@/model/questionTypeDefaults';
 
 interface NewStatementState {

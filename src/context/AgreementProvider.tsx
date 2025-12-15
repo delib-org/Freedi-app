@@ -8,7 +8,7 @@ import {
 } from '@/controllers/db/termsOfUse/termsOfUseService';
 import LoadingPage from '@/view/pages/loadingPage/LoadingPage';
 import { TermsOfUseAcceptance } from '@/types/agreement/Agreement';
-import { User } from 'delib-npm';
+import { User } from '@freedi/shared-types';
 
 interface AgreementProviderProps {
 	children: ReactNode;

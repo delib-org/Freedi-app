@@ -1,5 +1,5 @@
 import { FC, useState, useEffect, useMemo } from 'react';
-import { Statement } from 'delib-npm';
+import { Statement } from '@freedi/shared-types';
 import { PopperHebbianScore, StatementVersion, HEBBIAN_CONFIG } from '@/models/popperHebbian';
 import { listenToEvidencePosts } from '@/controllers/db/popperHebbian/evidenceController';
 import { useTranslation } from '@/controllers/hooks/useTranslation';

@@ -1,5 +1,5 @@
 import { FC, useState } from 'react';
-import { Statement } from 'delib-npm';
+import { Statement } from '@freedi/shared-types';
 
 // Icons
 import DisconnectIcon from '@/assets/icons/disconnectIcon.svg?react';

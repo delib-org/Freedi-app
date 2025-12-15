@@ -3,7 +3,7 @@ import {
 	Collections,
 	DeliberativeElement,
 	StatementType,
-} from 'delib-npm';
+} from '@freedi/shared-types';
 
 export class MaintenanceService {
 	/**

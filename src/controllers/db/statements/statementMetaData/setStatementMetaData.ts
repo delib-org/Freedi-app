@@ -6,7 +6,7 @@ import {
 	QuestionType,
 	QuestionSettings,
 	QuestionStep,
-} from 'delib-npm';
+} from '@freedi/shared-types';
 import { getDefaultQuestionType } from '@/model/questionTypeDefaults';
 
 interface SetStatementStageParams {

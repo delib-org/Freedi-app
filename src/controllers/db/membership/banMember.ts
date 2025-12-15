@@ -1,4 +1,4 @@
-import { Role, Collections } from 'delib-npm';
+import { Role, Collections } from '@freedi/shared-types';
 import { doc, getDoc } from 'firebase/firestore';
 import { updateMemberRole } from '../subscriptions/setSubscriptions';
 import { removeUserEvaluations } from '../evaluation/removeUserEvaluations';

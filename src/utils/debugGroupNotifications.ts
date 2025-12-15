@@ -1,6 +1,6 @@
 import { DB } from '@/controllers/db/config';
 import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
-import { Collections } from 'delib-npm';
+import { Collections } from '@freedi/shared-types';
 import { notificationService } from '@/services/notificationService';
 
 interface NotificationDebugInfo {

@@ -12,7 +12,7 @@ import { useTranslation } from '@/controllers/hooks/useTranslation';
 import Button from '@/view/components/buttons/button/Button';
 import Modal from '@/view/components/modal/Modal';
 import Toast from '@/view/components/toast/Toast';
-import { QuestionStep, StatementType, Statement } from 'delib-npm';
+import { QuestionStep, StatementType, Statement } from '@freedi/shared-types';
 import { useEvaluationGuard } from '@/controllers/hooks/useEvaluationGuard';
 import AddSolutionPrompt from '@/view/components/evaluation/AddSolutionPrompt';
 

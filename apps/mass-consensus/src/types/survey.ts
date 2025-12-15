@@ -1,70 +1,27 @@
-import { Statement } from 'delib-npm';
+import { Statement } from '@freedi/shared-types';
 
-/**
- * Survey settings for controlling user experience
- */
-export interface SurveySettings {
-  /** Can users skip questions without minimum evaluations? */
-  allowSkipping: boolean;
-  /** Can users navigate back to previous questions? */
-  allowReturning: boolean;
-  /** Minimum evaluations required before "Next" is enabled (default: 3) */
-  minEvaluationsPerQuestion: number;
-}
+// Re-export core types from shared-types
+export type {
+  Survey,
+  SurveySettings,
+  SurveyProgress,
+} from '@freedi/shared-types';
 
-/**
- * Survey - A collection of linked MC questions
- * Stored in `surveys` collection
- */
-export interface Survey {
-  surveyId: string;
-  title: string;
-  description?: string;
-  creatorId: string;
-  /** Ordered array of statementIds (questions) */
-  questionIds: string[];
-  settings: SurveySettings;
-  createdAt: number;
-  lastUpdate: number;
-  isActive: boolean;
-}
+export {
+  SurveyStatus,
+  DEFAULT_SURVEY_SETTINGS,
+} from '@freedi/shared-types';
+
+// Import for local use
+import type { Survey, SurveySettings } from '@freedi/shared-types';
 
 /**
  * Survey with populated question data
+ * MC-specific extension that includes resolved questions
  */
 export interface SurveyWithQuestions extends Survey {
   questions: Statement[];
 }
-
-/**
- * Survey progress - Tracks user's progress through a survey
- * Stored in `surveyProgress` collection
- * Document ID format: `${surveyId}--${userId}`
- */
-export interface SurveyProgress {
-  progressId: string;
-  surveyId: string;
-  userId: string;
-  /** 0-based index of current question */
-  currentQuestionIndex: number;
-  /** Array of completed questionIds */
-  completedQuestionIds: string[];
-  /** Timestamp when user started the survey */
-  startedAt: number;
-  /** Timestamp of last update */
-  lastUpdated: number;
-  /** True when user has completed all questions */
-  isCompleted: boolean;
-}
-
-/**
- * Default survey settings
- */
-export const DEFAULT_SURVEY_SETTINGS: SurveySettings = {
-  allowSkipping: false,
-  allowReturning: true,
-  minEvaluationsPerQuestion: 3,
-};
 
 /**
  * Request body for creating a new survey
@@ -84,7 +41,7 @@ export interface UpdateSurveyRequest {
   description?: string;
   questionIds?: string[];
   settings?: Partial<SurveySettings>;
-  isActive?: boolean;
+  status?: 'draft' | 'active' | 'closed';
 }
 
 /**

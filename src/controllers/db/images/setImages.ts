@@ -1,6 +1,6 @@
 import { getDownloadURL, ref, uploadBytesResumable } from 'firebase/storage';
 import { storage } from '../config';
-import { Statement, Collections } from 'delib-npm';
+import { Statement, Collections } from '@freedi/shared-types';
 
 export function uploadImageToStorage(
 	file: File,

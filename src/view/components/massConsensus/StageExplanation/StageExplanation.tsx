@@ -1,5 +1,5 @@
 import React, { FC, useState, useEffect, useCallback } from 'react';
-import { ExplanationConfig } from 'delib-npm';
+import { ExplanationConfig } from '@freedi/shared-types';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import styles from './StageExplanation.module.scss';
 import X from '@/assets/icons/x.svg?react';

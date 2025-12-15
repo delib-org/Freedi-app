@@ -1,6 +1,6 @@
 import { FC } from 'react';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
-import { Statement, User } from 'delib-npm';
+import { Statement, User } from '@freedi/shared-types';
 import { setEvaluationToDB } from '@/controllers/db/evaluation/setEvaluation';
 import { auth } from '@/controllers/db/config';
 import { userVotedStatementsInParentSelector } from '@/redux/evaluations/evaluationsSlice';

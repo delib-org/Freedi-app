@@ -5,13 +5,14 @@ import EyeIcon from '@/assets/icons/eye.svg?react';
 import EyeCrossIcon from '@/assets/icons/eyeCross.svg?react';
 import LightBulbIcon from '@/assets/icons/lightBulbIcon.svg?react';
 import QuestionMarkIcon from '@/assets/icons/questionIcon.svg?react';
+import NetworkIcon from '@/assets/icons/networkIcon.svg?react';
 import { deleteStatementFromDB } from '@/controllers/db/statements/deleteStatements';
 import { toggleStatementHide } from '@/controllers/db/statements/setStatements';
 import { changeStatementType } from '@/controllers/db/statements/changeStatementType';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import Menu from '@/view/components/menu/Menu';
 import MenuOption from '@/view/components/menu/MenuOption';
-import { Statement, StatementType } from 'delib-npm';
+import { Statement, StatementType } from '@freedi/shared-types';
 import { useSelector } from 'react-redux';
 import { creatorSelector } from '@/redux/creator/creatorSlice';
 
@@ -24,6 +25,7 @@ interface Props {
 	isEdit: boolean;
 	setIsEdit: (isEdit: boolean) => void;
 	handleSetOption: () => void;
+	onIntegrate?: () => void;
 }
 
 const SolutionMenu: FC<Props> = ({
@@ -35,6 +37,7 @@ const SolutionMenu: FC<Props> = ({
 	isEdit,
 	setIsEdit,
 	handleSetOption,
+	onIntegrate,
 }) => {
 	const { t } = useTranslation();
 	const user = useSelector(creatorSelector);
@@ -127,6 +130,16 @@ const SolutionMenu: FC<Props> = ({
 					}
 					onOptionClick={() => {
 						handleToggleHideStatement();
+						setIsCardMenuOpen(false);
+					}}
+				/>
+			)}
+			{isAdmin && onIntegrate && (
+				<MenuOption
+					label={t('Integrate Similar')}
+					icon={<NetworkIcon />}
+					onOptionClick={() => {
+						onIntegrate();
 						setIsCardMenuOpen(false);
 					}}
 				/>

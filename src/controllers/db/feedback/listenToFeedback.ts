@@ -1,5 +1,5 @@
 import { collection, onSnapshot, query, where } from 'firebase/firestore';
-import { Collections, Feedback } from 'delib-npm';
+import { Collections, Feedback } from '@freedi/shared-types';
 import { DB } from '../config';
 import { convertTimestampsToMillis } from '@/helpers/timestampHelpers';
 

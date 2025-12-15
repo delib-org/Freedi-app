@@ -45,9 +45,11 @@ import {
   maintainDeliberativeElement,
   maintainStatement,
   maintainSubscriptionToken,
-  updateAverageEvaluation
+  updateAverageEvaluation,
+  recalculateEvaluations
 } from "./fn_httpRequests";
 import { findSimilarStatements } from "./fn_findSimilarStatements";
+import { detectMultipleSuggestions } from "./fn_detectMultipleSuggestions";
 import { updateApprovalResults } from "./fn_approval";
 import { setImportanceToStatement } from "./fn_importance";
 import { updateAgrees } from "./fn_agree";
@@ -91,6 +93,9 @@ import {
 
 // Discussion Summarization
 import { summarizeDiscussion } from "./fn_summarizeDiscussion";
+
+// Integration of Similar Statements
+import { findSimilarForIntegration, executeIntegration } from "./fn_integrateSimilarStatements";
 
 // Google Docs Import
 import { importGoogleDoc } from "./fn_importGoogleDocs";
@@ -240,6 +245,7 @@ exports.getCluster = wrapHttpFunction(getCluster);
 exports.recoverLastSnapshot = wrapHttpFunction(recoverLastSnapshot);
 exports.checkProfanity = checkProfanity;
 exports.improveSuggestion = wrapHttpFunction(handleImproveSuggestion);
+exports.detectMultipleSuggestions = wrapHttpFunction(detectMultipleSuggestions);
 
 // PHASE 4 FIX: Metrics and monitoring functions
 exports.analyzeSubscriptionPatterns = analyzeSubscriptionPatterns;
@@ -250,6 +256,7 @@ exports.maintainDeliberativeElement = wrapHttpFunction(maintainDeliberativeEleme
 exports.maintainStatement = wrapHttpFunction(maintainStatement);
 exports.maintainSubscriptionToken = wrapHttpFunction(maintainSubscriptionToken);
 exports.updateAverageEvaluation = wrapHttpFunction(updateAverageEvaluation);
+exports.recalculateEvaluations = wrapHttpFunction(recalculateEvaluations);
 
 // --------------------------
 // FIRESTORE TRIGGER FUNCTIONS
@@ -481,3 +488,7 @@ exports.serveOgTags = serveOgTags;
 
 // Google Docs Import
 exports.importGoogleDoc = wrapHttpFunction(importGoogleDoc);
+
+// Integration of Similar Statements
+exports.findSimilarForIntegration = findSimilarForIntegration;
+exports.executeIntegration = executeIntegration;

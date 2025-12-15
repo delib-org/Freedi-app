@@ -1,13 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAvailableQuestions } from '@/lib/firebase/surveys';
-import { verifyAdmin, extractBearerToken } from '@/lib/auth/verifyAdmin';
+import { searchQuestions } from '@/lib/firebase/surveys';
+import { verifyToken, extractBearerToken } from '@/lib/auth/verifyAdmin';
+
+const DEFAULT_LIMIT = 20;
+const MAX_LIMIT = 100;
 
 /**
- * GET /api/questions - Fetch admin's available questions from main Freedi app
+ * GET /api/questions - Fetch user's available questions from main Freedi app
  *
- * Returns questions that the admin can add to surveys:
- * 1. Questions created by this admin
- * 2. Questions where admin has admin role (via statementsSubscribe)
+ * Query params:
+ * - search: text to search for in question statement
+ * - limit: max number of results (default 20, max 100)
+ * - cursor: pagination cursor (statementId of last item)
+ *
+ * Returns questions that the user can add to surveys:
+ * 1. Questions created by this user
+ * 2. Questions where user has admin role (via statementsSubscribe)
  */
 export async function GET(request: NextRequest) {
   try {
@@ -20,23 +28,39 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const { isAdmin, userId, error } = await verifyAdmin(token);
+    const userId = await verifyToken(token);
 
-    if (!isAdmin) {
+    if (!userId) {
       return NextResponse.json(
-        { error: error || 'Admin access required' },
-        { status: 403 }
+        { error: 'Invalid or expired token' },
+        { status: 401 }
       );
     }
 
-    const questions = await getAvailableQuestions(userId);
+    // Parse query params
+    const searchParams = request.nextUrl.searchParams;
+    const searchQuery = searchParams.get('search') || '';
+    const limit = Math.min(
+      parseInt(searchParams.get('limit') || String(DEFAULT_LIMIT), 10),
+      MAX_LIMIT
+    );
+    const cursor = searchParams.get('cursor') || undefined;
 
-    console.info('[GET /api/questions] Found', questions.length, 'questions for admin:', userId);
-
-    return NextResponse.json({
-      questions,
-      total: questions.length,
+    const result = await searchQuestions(userId, {
+      search: searchQuery,
+      limit,
+      cursor,
     });
+
+    console.info(
+      '[GET /api/questions] Found',
+      result.questions.length,
+      'questions for user:',
+      userId,
+      searchQuery ? `(search: "${searchQuery}")` : ''
+    );
+
+    return NextResponse.json(result);
   } catch (error) {
     console.error('[GET /api/questions] Error:', error);
     return NextResponse.json(

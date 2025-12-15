@@ -1,6 +1,6 @@
 import { Change, logger } from 'firebase-functions/v1';
 import { db } from '.';
-import { Collections, Statement, DocumentApproval, ApprovalSchema } from 'delib-npm';
+import { Collections, Statement, DocumentApproval, ApprovalSchema } from '@freedi/shared-types';
 import { number, parse } from 'valibot';
 import { DocumentSnapshot } from 'firebase-admin/firestore';
 import { FirestoreEvent } from 'firebase-functions/firestore';

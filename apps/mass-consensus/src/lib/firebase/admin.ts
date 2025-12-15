@@ -1,10 +1,18 @@
 import { initializeApp, getApps, cert, App } from 'firebase-admin/app';
 import { getFirestore, Firestore } from 'firebase-admin/firestore';
 
-// Set emulator host BEFORE any Firebase initialization
-// This allows Firebase Admin to automatically connect to the emulator
-if (process.env.USE_FIREBASE_EMULATOR === 'true' && process.env.FIRESTORE_EMULATOR_HOST) {
-  process.env.FIRESTORE_EMULATOR_HOST = process.env.FIRESTORE_EMULATOR_HOST;
+// Handle emulator configuration BEFORE any Firebase initialization
+// Firebase Admin SDK automatically uses emulators if FIRESTORE_EMULATOR_HOST and FIREBASE_AUTH_EMULATOR_HOST are set
+if (process.env.USE_FIREBASE_EMULATOR === 'true') {
+  // Emulator enabled - keep the host settings
+  console.info('[Firebase Admin] Emulator mode enabled');
+  console.info('[Firebase Admin] Firestore emulator:', process.env.FIRESTORE_EMULATOR_HOST);
+  console.info('[Firebase Admin] Auth emulator:', process.env.FIREBASE_AUTH_EMULATOR_HOST);
+} else {
+  // Emulator disabled - remove the env vars to force cloud connection
+  delete process.env.FIRESTORE_EMULATOR_HOST;
+  delete process.env.FIREBASE_AUTH_EMULATOR_HOST;
+  console.info('[Firebase Admin] Cloud mode enabled, connecting to production Firebase');
 }
 
 let app: App;

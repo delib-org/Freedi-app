@@ -1,6 +1,6 @@
 import { collection, doc, getDocs, query, where, writeBatch } from 'firebase/firestore';
 import { FireStore } from '../config';
-import { Collections, Evaluation } from 'delib-npm';
+import { Collections, Evaluation } from '@freedi/shared-types';
 
 /**
  * Removes all evaluations and votes by a specific user for a statement and its options

@@ -1,7 +1,7 @@
 import { logger } from 'firebase-functions';
 import { onRequest } from 'firebase-functions/v2/https';
 import { db } from '.';
-import { Collections, StatementSubscription } from 'delib-npm';
+import { Collections, StatementSubscription } from '@freedi/shared-types';
 
 /**
  * PHASE 4 FIX: Metrics Analysis Function

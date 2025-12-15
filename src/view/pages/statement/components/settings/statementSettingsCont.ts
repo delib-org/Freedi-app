@@ -16,7 +16,7 @@ import {
 	Statement,
 	Vote,
 	Creator,
-} from 'delib-npm';
+} from '@freedi/shared-types';
 import { Dispatch, SetStateAction } from 'react';
 
 // Get users that voted on options in this statement

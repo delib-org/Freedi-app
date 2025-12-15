@@ -6,7 +6,7 @@ import unBlockImg from '@/assets/icons/Icon-base-46px.png';
 import MemberAdmin from '@/assets/icons/memberAdmin.svg?react';
 import MemberRemove from '@/assets/icons/memberRemove.svg?react';
 import { updateMemberRole } from '@/controllers/db/subscriptions/setSubscriptions';
-import { StatementSubscription, Role } from 'delib-npm';
+import { StatementSubscription, Role } from '@freedi/shared-types';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { canBanUser, getBanDisabledReason } from '@/helpers/roleHelpers';
 

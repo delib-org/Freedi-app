@@ -19,7 +19,7 @@ import {
 
 // Custom components
 import Loader from '@/view/components/loaders/Loader';
-import { Statement } from 'delib-npm';
+import { Statement } from '@freedi/shared-types';
 import MembersManagement from './components/membership/MembersManagement';
 import { RoomAssignment } from './components/roomAssignment';
 

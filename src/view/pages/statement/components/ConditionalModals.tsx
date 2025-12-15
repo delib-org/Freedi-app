@@ -4,7 +4,7 @@ import Modal from '@/view/components/modal/Modal';
 import NewStatement from './newStatement/NewStatement';
 import UserDemographicQuestions from './userDemographicQuestions/UserDemographicQuestions';
 import { setShowNewStatementModal } from '@/redux/statements/newStatementSlice';
-import { UserDemographicQuestion, Role } from 'delib-npm';
+import { UserDemographicQuestion, Role } from '@freedi/shared-types';
 
 interface ConditionalModalsProps {
 	showNewStatement: boolean;

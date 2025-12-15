@@ -1,4 +1,4 @@
-import { ChoseBy, updateArray } from 'delib-npm';
+import { ChoseBy, updateArray } from '@freedi/shared-types';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 interface ChoseByState {

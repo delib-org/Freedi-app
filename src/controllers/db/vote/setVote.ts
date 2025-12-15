@@ -7,7 +7,7 @@ import {
 	Vote,
 	VoteSchema,
 	User,
-} from 'delib-npm';
+} from '@freedi/shared-types';
 import { parse } from 'valibot';
 import { analyticsService } from '@/services/analytics';
 import { logger } from '@/services/logger';

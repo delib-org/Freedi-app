@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import type { FlowState, SimilarCheckResponse } from '@/types/api';
+import type { FlowState, SimilarCheckResponse, MultiSuggestionResponse, SplitSuggestion } from '@/types/api';
 import { logError, NetworkError, ValidationError } from '@/lib/utils/errorHandling';
 import { ERROR_MESSAGES } from '@/constants/common';
 import { useToast } from '@/components/shared/Toast';
@@ -9,6 +9,7 @@ import AddSolutionForm from './AddSolutionForm';
 import EnhancedLoader from './EnhancedLoader';
 import SimilarSolutions from './SimilarSolutions';
 import SuccessMessage from './SuccessMessage';
+import MultiSuggestionPreview from './MultiSuggestionPreview';
 
 interface AddSolutionFlowProps {
   questionId: string;
@@ -18,6 +19,7 @@ interface AddSolutionFlowProps {
 
 /**
  * Manages the complete flow for adding a solution with similar detection
+ * and multi-suggestion detection (running in parallel with Promise.all)
  */
 export default function AddSolutionFlow({
   questionId,
@@ -28,8 +30,10 @@ export default function AddSolutionFlow({
   const [userInput, setUserInput] = useState('');
   const { showToast } = useToast();
 
-  // Step 1: Check for similar solutions via API proxy (avoids CORS)
+  // Step 1: Check for multi-suggestions AND similar solutions in parallel
   const handleCheckSimilar = async (solutionText: string) => {
+    console.info('🔍 handleCheckSimilar called with:', { solutionText, userId, questionId });
+
     // Validate inputs before making request
     if (!solutionText || !userId) {
       showToast({
@@ -41,27 +45,46 @@ export default function AddSolutionFlow({
 
     setUserInput(solutionText);
 
-    // Show submitting state while checking
-    setFlowState({ step: 'submitting' });
+    // Show checking state while processing
+    setFlowState({ step: 'checking' });
 
     try {
-      // Call Next.js API route which proxies to Cloud Function
-      const response = await fetch(`/api/statements/${questionId}/check-similar`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userInput: solutionText,
-          userId,
+      console.info('🚀 Starting parallel API calls...');
+
+      // Run both API calls in parallel with Promise.all for better performance
+      const [multiResponse, similarResponse] = await Promise.all([
+        // Check for multiple suggestions
+        fetch(`/api/statements/${questionId}/detect-multi`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userInput: solutionText,
+            userId,
+          }),
         }),
+        // Check for similar solutions
+        fetch(`/api/statements/${questionId}/check-similar`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userInput: solutionText,
+            userId,
+          }),
+        }),
+      ]);
+
+      console.info('📥 API responses received:', {
+        multiStatus: multiResponse.status,
+        similarStatus: similarResponse.status,
       });
 
-      if (!response.ok) {
-        const data = await response.json();
+      // Handle similar response errors first (they're more critical)
+      if (!similarResponse.ok) {
+        const similarData = await similarResponse.json();
 
         // Handle specific error codes
-        if (response.status === 400) {
-          // Inappropriate content or validation error
-          const errorMessage = data.error || ERROR_MESSAGES.INAPPROPRIATE_CONTENT;
+        if (similarResponse.status === 400) {
+          const errorMessage = similarData.error || ERROR_MESSAGES.INAPPROPRIATE_CONTENT;
           showToast({
             type: 'error',
             title: 'Invalid Content',
@@ -73,14 +96,13 @@ export default function AddSolutionFlow({
             operation: 'AddSolutionFlow.handleCheckSimilar',
             userId,
             questionId,
-            metadata: { status: response.status },
+            metadata: { status: similarResponse.status },
           });
           return;
         }
 
-        if (response.status === 403) {
-          // Limit reached
-          const errorMessage = data.error || ERROR_MESSAGES.LIMIT_REACHED;
+        if (similarResponse.status === 403) {
+          const errorMessage = similarData.error || ERROR_MESSAGES.LIMIT_REACHED;
           showToast({
             type: 'warning',
             title: 'Limit Reached',
@@ -92,25 +114,72 @@ export default function AddSolutionFlow({
             operation: 'AddSolutionFlow.handleCheckSimilar',
             userId,
             questionId,
-            metadata: { status: response.status },
+            metadata: { status: similarResponse.status },
           });
           return;
         }
 
-        throw new NetworkError(data.error || 'Failed to check for similar solutions', {
-          status: response.status,
+        throw new NetworkError(similarData.error || 'Failed to check for similar solutions', {
+          status: similarResponse.status,
           questionId,
         });
       }
 
-      const data: SimilarCheckResponse = await response.json();
+      // Parse both responses
+      const similarData: SimilarCheckResponse = await similarResponse.json();
 
-      // Show results or proceed to submit if no similar found
-      if (data.similarStatements && data.similarStatements.length > 0) {
-        setFlowState({ step: 'similar', data });
+      // Parse multi-response separately to handle errors gracefully
+      let multiData: MultiSuggestionResponse = {
+        ok: false,
+        isMultipleSuggestions: false,
+        suggestions: [],
+        originalText: solutionText,
+      };
+
+      if (multiResponse.ok) {
+        try {
+          multiData = await multiResponse.json();
+          console.info('Multi-suggestion detection result:', {
+            ok: multiData.ok,
+            isMultiple: multiData.isMultipleSuggestions,
+            suggestionsCount: multiData.suggestions?.length,
+          });
+        } catch (parseError) {
+          console.error('Failed to parse multi-suggestion response:', parseError);
+        }
+      } else {
+        console.error('Multi-suggestion detection failed:', {
+          status: multiResponse.status,
+          statusText: multiResponse.statusText,
+        });
+      }
+
+      // Process results: Multi-suggestion check takes priority
+      if (multiData.ok && multiData.isMultipleSuggestions && multiData.suggestions.length > 1) {
+        // Convert to SplitSuggestion format with IDs
+        const splitSuggestions: SplitSuggestion[] = multiData.suggestions.map((s, i) => ({
+          id: `suggestion-${i}-${Date.now()}`,
+          title: s.title,
+          description: s.description,
+          originalText: s.originalText,
+          isRemoved: false,
+        }));
+
+        // Show multi-suggestion preview, store similar data for later
+        setFlowState({
+          step: 'multi-preview',
+          suggestions: splitSuggestions,
+          originalText: solutionText,
+          similarData: similarData.similarStatements?.length > 0 ? similarData : undefined,
+        });
+        return;
+      }
+
+      // No multiple suggestions - check for similar
+      if (similarData.similarStatements && similarData.similarStatements.length > 0) {
+        setFlowState({ step: 'similar', data: similarData });
       } else {
         // No similar solutions, proceed directly to submit
-        // Pass solutionText directly to avoid React state timing issues
         await handleSelectSolution(null, solutionText);
       }
     } catch (error) {
@@ -198,6 +267,45 @@ export default function AddSolutionFlow({
     onComplete();
   };
 
+  // Handle confirming multiple suggestions
+  const handleConfirmMultiSuggestions = async (suggestions: SplitSuggestion[]) => {
+    setFlowState({ step: 'submitting' });
+
+    try {
+      // Submit each suggestion sequentially
+      for (const suggestion of suggestions) {
+        const solutionText = `${suggestion.title}: ${suggestion.description}`;
+        await handleSelectSolution(null, solutionText);
+      }
+    } catch (error) {
+      logError(error, {
+        operation: 'AddSolutionFlow.handleConfirmMultiSuggestions',
+        userId,
+        questionId,
+        metadata: { suggestionCount: suggestions.length },
+      });
+
+      showToast({
+        type: 'error',
+        title: 'Submission Failed',
+        message: ERROR_MESSAGES.SUBMIT_FAILED,
+      });
+      setFlowState({ step: 'input' });
+    }
+  };
+
+  // Handle dismissing multi-suggestion preview (submit original as-is)
+  const handleDismissMulti = async () => {
+    // Check if we have stored similar data
+    if (flowState.step === 'multi-preview' && flowState.similarData) {
+      // Show similar solutions if available
+      setFlowState({ step: 'similar', data: flowState.similarData });
+    } else {
+      // Otherwise submit original directly
+      await handleSelectSolution(null, userInput);
+    }
+  };
+
   // Render based on current flow state
   return (
     <>
@@ -206,6 +314,21 @@ export default function AddSolutionFlow({
           questionId={questionId}
           userId={userId}
           onSubmit={handleCheckSimilar}
+        />
+      )}
+
+      {flowState.step === 'checking' && (
+        <EnhancedLoader />
+      )}
+
+      {flowState.step === 'multi-preview' && (
+        <MultiSuggestionPreview
+          originalText={flowState.originalText}
+          suggestions={flowState.suggestions}
+          onConfirm={handleConfirmMultiSuggestions}
+          onDismiss={handleDismissMulti}
+          onBack={handleBack}
+          isSubmitting={false}
         />
       )}
 

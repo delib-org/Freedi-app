@@ -5,7 +5,7 @@ import {
 	type TermsOfUseAcceptance,
 } from '@/types/agreement/Agreement';
 import { DB } from '../config';
-import { Collections } from 'delib-npm';
+import { Collections } from '@freedi/shared-types';
 import { parse } from 'valibot';
 
 export async function getLatestTermsAcceptance(

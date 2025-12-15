@@ -5,7 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { Collections } from 'delib-npm';
+import { Collections } from '@freedi/shared-types';
 import { getFirebaseAdmin } from '@/lib/firebase/admin';
 import { Paragraph } from '@/types';
 

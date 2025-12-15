@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { notificationService } from '@/services/notificationService';
-import { Statement } from 'delib-npm';
+import { Statement } from '@freedi/shared-types';
 import { APP_CONSTANTS, ERROR_MESSAGES } from '../constants';
 
 interface UseNotificationSetupProps {

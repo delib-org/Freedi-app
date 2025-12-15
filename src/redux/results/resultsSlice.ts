@@ -1,6 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit';
 import { RootState } from '../types';
-import { Results } from 'delib-npm';
+import { Results } from '@freedi/shared-types';
 
 // Define a type for the slice state
 interface ResultsState {

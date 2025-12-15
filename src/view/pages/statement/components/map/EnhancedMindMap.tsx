@@ -2,7 +2,7 @@ import { useState, FC, useEffect, useCallback, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { ReactFlowProvider } from 'reactflow';
 import { useParams } from 'react-router';
-import { StatementType, Role } from 'delib-npm';
+import { StatementType, Role } from '@freedi/shared-types';
 import { RootState } from '@/redux/store';
 
 // Components
@@ -33,7 +33,7 @@ import { MindMapNode, MindMapData } from '@/services/mindMap/types';
 import { MINDMAP_CONFIG } from '@/constants/mindMap';
 import { MindMapLoadingState } from '@/services/mindMap/types';
 import { logError } from '@/utils/errorHandling';
-import { Results } from 'delib-npm';
+import { Results } from '@freedi/shared-types';
 
 // Helper to convert MindMapNode to Results
 function convertMindMapNodeToResults(node: MindMapNode): Results {

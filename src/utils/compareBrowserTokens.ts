@@ -1,7 +1,7 @@
 import { getMessaging, getToken } from 'firebase/messaging';
 import { app, DB } from '@/controllers/db/config';
 import { collection, query, where, getDocs } from 'firebase/firestore';
-import { Collections } from 'delib-npm';
+import { Collections } from '@freedi/shared-types';
 import { vapidKey } from '@/controllers/db/configKey';
 
 export async function compareBrowserTokens() {

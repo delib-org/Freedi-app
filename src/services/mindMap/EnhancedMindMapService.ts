@@ -1,4 +1,4 @@
-import { Statement } from 'delib-npm';
+import { Statement } from '@freedi/shared-types';
 import { Unsubscribe } from 'firebase/firestore';
 import { store } from '@/redux/store';
 import { listenToMindMapData } from '@/controllers/db/statements/optimizedListeners';
