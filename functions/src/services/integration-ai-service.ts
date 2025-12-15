@@ -256,8 +256,8 @@ ${languageInstruction}
 
 Return JSON format:
 {
-  "title": "Merged suggestion title (concise, under 100 characters)",
-  "description": "Merged description that captures the combined ideas (10-50 words)"
+  "title": "Merged suggestion title (do NOT truncate - preserve the full meaning)",
+  "description": "Merged description that captures the combined ideas"
 }`;
 
 	try {
