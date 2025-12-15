@@ -186,7 +186,9 @@ export async function getUserSolutions(
 
     console.info('[getUserSolutions] Found', snapshot.size, 'solutions for user:', userId);
 
-    return snapshot.docs.map((doc) => doc.data() as Statement);
+    return snapshot.docs
+      .map((doc) => doc.data() as Statement)
+      .filter((statement) => !statement.hide);
   } catch (error) {
     logQueryError('getUserSolutions', error, { questionId, userId });
     throw error;
