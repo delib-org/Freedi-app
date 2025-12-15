@@ -2,8 +2,7 @@ import React, { useCallback, useEffect } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
-// TODO: Import from delib-npm once published with Paragraph types
-import { Paragraph, ParagraphType } from '@/types/paragraph';
+import { Paragraph, ParagraphType } from '@freedi/shared-types';
 import {
 	generateParagraphId,
 	sortParagraphs,

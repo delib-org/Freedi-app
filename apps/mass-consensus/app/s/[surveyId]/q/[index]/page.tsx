@@ -9,6 +9,7 @@ import SolutionFeed from '@/components/question/SolutionFeed';
 import SkeletonLoader from '@/components/shared/SkeletonLoader';
 import { LanguageOverrideProvider } from '@/components/providers/LanguageOverrideProvider';
 import SurveyQuestionWrapper from '@/components/survey/SurveyQuestionWrapper';
+import { getParagraphsText } from '@/lib/utils/paragraphUtils';
 
 interface PageProps {
   params: { surveyId: string; index: string };
@@ -32,7 +33,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
     return {
       title: `${question.statement} | ${survey.title}`,
-      description: question.description || `Question ${questionIndex + 1} of ${survey.questions.length}`,
+      description: getParagraphsText(question.paragraphs) || `Question ${questionIndex + 1} of ${survey.questions.length}`,
     };
   } catch {
     return {

@@ -3,7 +3,7 @@
  * Converts Google Docs API response to the app's paragraph format
  */
 
-import { Paragraph, ParagraphType } from '@/types/paragraph';
+import { Paragraph, ParagraphType } from '@freedi/shared-types';
 import { generateParagraphId } from './paragraphUtils';
 
 /**

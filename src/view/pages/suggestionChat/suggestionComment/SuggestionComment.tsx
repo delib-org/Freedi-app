@@ -16,6 +16,7 @@ import { deleteInAppNotificationsByParentId } from '@/redux/notificationsSlice/n
 import Arrow from '@/assets/icons/arrow-down.svg?react';
 import Button, { ButtonType } from '@/view/components/buttons/button/Button';
 import CommentCard, { ClassNameType } from './CommentCard/CommentCard';
+import { getParagraphsText } from '@/utils/paragraphUtils';
 
 interface Props {
 	parentStatement: Statement
@@ -27,7 +28,7 @@ const SuggestionComment: FC<Props> = ({ statement, parentStatement }) => {
 	const dispatch = useDispatch();
 	const subscription = useSelector(statementSubscriptionSelector(statement.statementId));
 	const initialStatement = useRef(parentStatement.statement);
-	const initialDescription = useRef(parentStatement.description);
+	const initialParagraphsText = useRef(getParagraphsText(parentStatement.paragraphs));
 	const { user } = useAuthentication();
 	const comments = useSelector(statementSubsSelector(statement.statementId));
 	const previousEvaluation = useSelector(evaluationSelector(parentStatement.statementId, user?.uid));
@@ -72,6 +73,8 @@ const SuggestionComment: FC<Props> = ({ statement, parentStatement }) => {
 	useEffect(() => {
 		if (user?.uid !== parentStatement?.creator?.uid) return;
 
+		const currentParagraphsText = getParagraphsText(parentStatement.paragraphs);
+
 		if (initialStatement.current !== parentStatement.statement) {
 			saveStatementToDB({
 				text: `${t("Title changed by the creator to")}: ${parentStatement.statement}`,
@@ -80,16 +83,16 @@ const SuggestionComment: FC<Props> = ({ statement, parentStatement }) => {
 			});
 			initialStatement.current = parentStatement.statement;
 		}
-		if (initialDescription.current !== parentStatement.description) {
+		if (initialParagraphsText.current !== currentParagraphsText) {
 			saveStatementToDB({
 				text: `${t("Description changed by the creator to")}: ${parentStatement.statement}`,
 				parentStatement: statement,
 				statementType: StatementType.statement
 			});
-			initialDescription.current = parentStatement.description;
+			initialParagraphsText.current = currentParagraphsText;
 		}
 
-	}, [parentStatement.statement, parentStatement.description]);
+	}, [parentStatement.statement, parentStatement.paragraphs]);
 
 	const toggleAccordion = () => {
 		setIsOpen(!isOpen);

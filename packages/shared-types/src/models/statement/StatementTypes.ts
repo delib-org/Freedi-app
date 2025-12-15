@@ -29,6 +29,7 @@ import { FairDivisionSelectionSchema } from './fairDivision';
 import { VotingSettingsSchema } from '../vote/votingModel';
 import { EvidenceType } from '../evidence/evidenceModel';
 import { PopperHebbianScoreSchema } from '../popper/popperTypes';
+import { ParagraphSchema } from '../paragraph/paragraphModel';
 
 /*
 Statement is everything in this app. It is a statement in a chat, an option in a solution, a group, a stage, etc.
@@ -48,8 +49,8 @@ export type LastMessage = InferOutput<typeof LastMessageSchema>;
 
 export const StatementSchema = object({
 	allowAnonymousLogin: optional(boolean()), // if true, allow anonymous login
-	statement: string(), // the text of the statement
-	description: optional(string()), // the description of the statement
+	statement: string(), // the text of the statement (title - auto-extracted from first paragraph)
+	paragraphs: optional(array(ParagraphSchema)), // the paragraphs of the statement (rich text content)
 	statementId: string(), // the id of the statement
 	creatorId: string(), // the id of the creator of the statement
 	creator: UserSchema, // the creator of the statement

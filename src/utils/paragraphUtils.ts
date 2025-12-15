@@ -1,5 +1,4 @@
-// TODO: Import from delib-npm once published with Paragraph types
-import { Paragraph, ParagraphType } from '@/types/paragraph';
+import { Paragraph, ParagraphType } from '@freedi/shared-types';
 
 /**
  * Generate a unique paragraph ID
@@ -182,4 +181,71 @@ export function insertParagraph(
 		...p,
 		order: index,
 	}));
+}
+
+/**
+ * Extract title and body paragraphs from a full paragraphs array
+ * The first paragraph's content becomes the title (statement field)
+ * Remaining paragraphs become the body content
+ * @param allParagraphs - Full array of paragraphs (title + body)
+ * @returns Object with title string and remaining paragraphs array
+ */
+export function extractTitleAndParagraphs(allParagraphs: Paragraph[]): {
+	title: string;
+	paragraphs: Paragraph[];
+} {
+	if (!allParagraphs?.length) return { title: '', paragraphs: [] };
+
+	const sorted = sortParagraphs(allParagraphs);
+	const title = sorted[0].content;
+	const paragraphs = sorted.slice(1).map((p, i) => ({ ...p, order: i }));
+
+	return { title, paragraphs };
+}
+
+/**
+ * Combine title and paragraphs into a full paragraphs array
+ * Creates a paragraph from the title and prepends it to the body paragraphs
+ * @param title - The title string
+ * @param paragraphs - Body paragraphs array
+ * @returns Full paragraphs array with title as first paragraph
+ */
+export function combineTitleAndParagraphs(
+	title: string,
+	paragraphs: Paragraph[]
+): Paragraph[] {
+	const titleParagraph: Paragraph = {
+		paragraphId: generateParagraphId(),
+		type: ParagraphType.paragraph,
+		content: title,
+		order: 0,
+	};
+
+	const bodyParagraphs = paragraphs.map((p, i) => ({ ...p, order: i + 1 }));
+
+	return [titleParagraph, ...bodyParagraphs];
+}
+
+/**
+ * Get plain text from paragraphs array
+ * Useful for display purposes where rich formatting isn't needed
+ * @param paragraphs - Array of paragraphs
+ * @returns Plain text content, or empty string if no paragraphs
+ */
+export function getParagraphsText(paragraphs: Paragraph[] | undefined): string {
+	if (!paragraphs?.length) return '';
+
+	return paragraphs
+		.sort((a, b) => a.order - b.order)
+		.map((p) => p.content)
+		.join('\n');
+}
+
+/**
+ * Check if a statement has paragraphs content
+ * @param paragraphs - Array of paragraphs
+ * @returns True if paragraphs exist and have content
+ */
+export function hasParagraphsContent(paragraphs: Paragraph[] | undefined): boolean {
+	return Boolean(paragraphs && paragraphs.length > 0);
 }

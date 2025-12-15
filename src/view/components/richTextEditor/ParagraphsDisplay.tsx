@@ -1,7 +1,5 @@
 import React, { FC } from 'react';
-import { Statement } from '@freedi/shared-types';
-// TODO: Import from delib-npm once published with Paragraph types
-import { Paragraph, ParagraphType, StatementWithParagraphs } from '@/types/paragraph';
+import { Statement, Paragraph, ParagraphType } from '@freedi/shared-types';
 import { sortParagraphs } from '@/utils/paragraphUtils';
 import styles from './ParagraphsDisplay.module.scss';
 
@@ -10,25 +8,15 @@ interface ParagraphsDisplayProps {
 	className?: string;
 }
 
-// Extended statement type with paragraphs
-type StatementWithParagraphsExtended = Statement & StatementWithParagraphs;
-
 /**
  * Renders paragraphs with proper HTML formatting (h1-h6, p, ul, ol)
  */
 const ParagraphsDisplay: FC<ParagraphsDisplayProps> = ({ statement, className }) => {
-	const extendedStatement = statement as StatementWithParagraphsExtended;
-	const paragraphs = extendedStatement.paragraphs;
+	const paragraphs = statement.paragraphs;
 
-	// If no paragraphs, fall back to description
+	// If no paragraphs, return null
 	if (!paragraphs || paragraphs.length === 0) {
-		if (!statement.description) return null;
-
-		return (
-			<div className={`${styles.paragraphsDisplay} ${className || ''}`}>
-				<p>{statement.description}</p>
-			</div>
-		);
+		return null;
 	}
 
 	const sorted = sortParagraphs(paragraphs);

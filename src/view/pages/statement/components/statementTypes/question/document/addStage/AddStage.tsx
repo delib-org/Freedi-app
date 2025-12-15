@@ -4,7 +4,8 @@ import styles from './AddStage.module.scss';
 import Button, { ButtonType } from '@/view/components/buttons/button/Button';
 import { saveStatementToDB } from '@/controllers/db/statements/setStatements';
 import { StatementContext } from '@/view/pages/statement/StatementCont';
-import { StageSelectionType, StatementType } from '@freedi/shared-types';
+import { StageSelectionType, StatementType, ParagraphType } from '@freedi/shared-types';
+import { generateParagraphId } from '@/utils/paragraphUtils';
 
 interface AddStageProps {
 	setShowAddStage: (showAddStage: boolean) => void;
@@ -33,12 +34,20 @@ const AddStage: FC<AddStageProps> = ({ setShowAddStage }) => {
 		setIsShaking(false);
 
 		const name = data.get('stageName') as string;
-		const description = (data.get('stageDescription') as string) || '';
+		const descriptionText = (data.get('stageDescription') as string) || '';
+
+		// Convert description text to paragraphs array
+		const paragraphs = descriptionText.trim() ? descriptionText.split('\n').filter(line => line.trim()).map((line, index) => ({
+			paragraphId: generateParagraphId(),
+			type: ParagraphType.paragraph,
+			content: line,
+			order: index,
+		})) : undefined;
 
 		if (!statement || !stageSelectionType) return;
 		await saveStatementToDB({
 			text: name,
-			description,
+			paragraphs,
 			stageSelectionType,
 			parentStatement: statement,
 			statementType: StatementType.question,

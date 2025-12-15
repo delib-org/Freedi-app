@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 import { cookies } from 'next/headers';
 import {
   getDocumentForSigning,
-  getParagraphsFromStatement,
+  getDocumentParagraphs,
   getUserSignature,
   getUserApprovals,
   getCommentCountsForDocument,
@@ -43,8 +43,8 @@ export default async function DocumentPage({ params }: PageProps) {
     notFound();
   }
 
-  // Extract paragraphs from document
-  const paragraphs = getParagraphsFromStatement(document);
+  // Get paragraphs from document (embedded, child options, or description fallback)
+  const paragraphs = await getDocumentParagraphs(document);
   const paragraphIds = paragraphs.map((p) => p.paragraphId);
 
   // Get user info from cookies

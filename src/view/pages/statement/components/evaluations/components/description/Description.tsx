@@ -1,17 +1,18 @@
 import { FC, useContext } from "react";
-import Text from "@/view/components/text/Text";
+import { ParagraphsDisplay } from "@/view/components/richTextEditor";
 import { StatementContext } from "@/view/pages/statement/StatementCont";
+import { hasParagraphsContent } from "@/utils/paragraphUtils";
 
 const Description: FC = () => {
 
 	const { statement } = useContext(StatementContext);
-	if (!statement?.description) {
+	if (!statement || !hasParagraphsContent(statement.paragraphs)) {
 		return null;
 	}
 
 	return (
 		<div className="description">
-			<Text description={statement.description} />
+			<ParagraphsDisplay statement={statement} />
 		</div>
 	);
 };

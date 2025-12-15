@@ -1,15 +1,9 @@
 import React, { useState, useCallback } from 'react';
-import { Statement } from '@freedi/shared-types';
-// TODO: Import from delib-npm once published with Paragraph types
-import { Paragraph, StatementWithParagraphs } from '@/types/paragraph';
+import { Statement, Paragraph } from '@freedi/shared-types';
 import RichTextEditor from './RichTextEditor';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { updateStatementParagraphs } from '@/controllers/db/statements/setStatements';
-import { descriptionToParagraphs } from '@/utils/paragraphUtils';
 import styles from './DocumentEditModal.module.scss';
-
-// Extended statement type with paragraphs until delib-npm is updated
-type StatementWithParagraphsExtended = Statement & StatementWithParagraphs;
 
 interface DocumentEditModalProps {
 	statement: Statement;
@@ -24,22 +18,14 @@ const DocumentEditModal: React.FC<DocumentEditModalProps> = ({
 	const [isLoading, setIsLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 
-	// Cast to extended type for paragraphs access
-	const extendedStatement = statement as StatementWithParagraphsExtended;
-
-	// Get paragraphs from statement, or migrate from description
+	// Get paragraphs from statement
 	const getInitialParagraphs = useCallback((): Paragraph[] => {
-		if (extendedStatement.paragraphs && extendedStatement.paragraphs.length > 0) {
-			return extendedStatement.paragraphs;
-		}
-
-		// Migrate from description if no paragraphs exist
-		if (statement.description) {
-			return descriptionToParagraphs(statement.description);
+		if (statement.paragraphs && statement.paragraphs.length > 0) {
+			return statement.paragraphs;
 		}
 
 		return [];
-	}, [extendedStatement, statement.description]);
+	}, [statement.paragraphs]);
 
 	const handleSave = useCallback(
 		async (paragraphs: Paragraph[]) => {

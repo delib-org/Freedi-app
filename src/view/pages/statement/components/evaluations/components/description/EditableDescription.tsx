@@ -4,6 +4,7 @@ import { useEditPermission } from '@/controllers/hooks/useEditPermission';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import EditIcon from '@/assets/icons/editIcon.svg?react';
 import { DocumentEditModal, ParagraphsDisplay } from '@/view/components/richTextEditor';
+import { hasParagraphsContent } from '@/utils/paragraphUtils';
 import styles from './EditableDescription.module.scss';
 
 const EditableDescription: FC = () => {
@@ -18,8 +19,10 @@ const EditableDescription: FC = () => {
 		return null;
 	}
 
-	// If no description and user can't edit, don't show anything
-	if (!statement.description && !canEdit) {
+	const hasParagraphs = hasParagraphsContent(statement.paragraphs);
+
+	// If no paragraphs and user can't edit, don't show anything
+	if (!hasParagraphs && !canEdit) {
 		return null;
 	}
 
@@ -62,7 +65,7 @@ const EditableDescription: FC = () => {
 				</div>
 
 				<div className={styles.descriptionContent}>
-					{statement.description ? (
+					{hasParagraphs ? (
 						<ParagraphsDisplay statement={statement} />
 					) : (
 						<p className={styles.placeholder}>{t('Add a description...')}</p>

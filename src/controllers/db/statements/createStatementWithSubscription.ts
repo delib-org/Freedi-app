@@ -1,4 +1,4 @@
-import { Statement, QuestionType, Role, getStatementSubscriptionId, StatementType, Creator } from '@freedi/shared-types';
+import { Statement, QuestionType, Role, getStatementSubscriptionId, StatementType, Creator, Paragraph } from '@freedi/shared-types';
 import { createStatement, setStatementToDB } from './setStatements';
 import { setStatement, setStatementSubscription } from '@/redux/statements/statementsSlice';
 import { Dispatch } from '@reduxjs/toolkit';
@@ -8,7 +8,7 @@ import { notificationService } from '@/services/notificationService';
 interface CreateStatementWithSubscriptionParams {
 	newStatementParent: Statement | 'top';
 	title: string;
-	description: string;
+	paragraphs?: Paragraph[];
 	newStatement: Partial<Statement> | null;
 	newStatementQuestionType: QuestionType;
 	currentLanguage: string;
@@ -19,7 +19,7 @@ interface CreateStatementWithSubscriptionParams {
 export async function createStatementWithSubscription({
 	newStatementParent,
 	title,
-	description,
+	paragraphs,
 	newStatement,
 	newStatementQuestionType,
 	currentLanguage,
@@ -34,7 +34,7 @@ export async function createStatementWithSubscription({
 	const _newStatement: Statement | undefined = createStatement({
 		parentStatement: newStatementParent,
 		text: title,
-		description,
+		paragraphs,
 		defaultLanguage: lang,
 		statementType: newStatement?.statementType || StatementType.group,
 		questionType: newStatementQuestionType,

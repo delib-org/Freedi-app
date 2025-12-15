@@ -21,6 +21,7 @@ import { DragGhostItem } from './components/DragGhostItem';
 // Styles
 import styles from "./MultiStageQuestion.module.scss";
 import { StatementType } from "delib-npm";
+import { getParagraphsText, hasParagraphsContent } from "@/utils/paragraphUtils";
 
 const MultiStageQuestion: FC = () => {
   const { statement } = useContext(StatementContext);
@@ -62,7 +63,7 @@ const MultiStageQuestion: FC = () => {
 
       {!hasStages && (
         <EmptyStateSection
-          description={statement?.description}
+          description={hasParagraphsContent(statement?.paragraphs) ? getParagraphsText(statement?.paragraphs) : undefined}
           imageUrl={imageUrl}
         />
       )}

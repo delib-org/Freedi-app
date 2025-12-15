@@ -4,7 +4,8 @@
 
 import { getFirestoreAdmin } from './admin';
 import { Collections, Statement, StatementType } from '@freedi/shared-types';
-import { Paragraph, StatementWithParagraphs } from '@/types';
+import { Paragraph, ParagraphType, StatementWithParagraphs } from '@/types';
+import { descriptionToParagraphs, sortParagraphs } from '@/lib/utils/paragraphUtils';
 
 // Types for Sign app
 export interface Signature {
@@ -79,16 +80,69 @@ export async function getDocumentForSigning(documentId: string): Promise<Stateme
 }
 
 /**
- * Extract and sort paragraphs from a statement
+ * Extract and sort paragraphs from a statement (sync version)
  * Returns the paragraphs array sorted by order
+ * Falls back to converting description to paragraphs if no paragraphs array exists
+ * Note: Use getDocumentParagraphs for async version that also checks child options
  */
 export function getParagraphsFromStatement(statement: StatementWithParagraphs): Paragraph[] {
-  if (!statement.paragraphs || statement.paragraphs.length === 0) {
-    return [];
+  // If paragraphs array exists and has items, use it
+  if (statement.paragraphs && statement.paragraphs.length > 0) {
+    return sortParagraphs(statement.paragraphs);
   }
 
-  // Sort by order and return
-  return [...statement.paragraphs].sort((a, b) => a.order - b.order);
+  // Fallback: Convert description to paragraphs
+  const statementWithDescription = statement as StatementWithParagraphs & { description?: string };
+  if (statementWithDescription.description) {
+    return descriptionToParagraphs(statementWithDescription.description, statement.statementId);
+  }
+
+  return [];
+}
+
+/**
+ * Convert child statements (options) to Paragraph format
+ * Uses the statement's statementId as paragraphId for comment linking
+ */
+function childStatementsToParagraphs(statements: Statement[]): Paragraph[] {
+  return statements.map((s, index) => ({
+    paragraphId: s.statementId, // Use statementId so comments link correctly
+    type: ParagraphType.paragraph,
+    content: s.statement,
+    order: index,
+  }));
+}
+
+/**
+ * Get all paragraphs for a document (async version)
+ * Tries multiple sources in order:
+ * 1. Embedded paragraphs array on statement
+ * 2. Child options (statements with parentId = documentId)
+ * 3. Description field converted to paragraph
+ */
+export async function getDocumentParagraphs(document: StatementWithParagraphs): Promise<Paragraph[]> {
+  // 1. Check for embedded paragraphs array
+  if (document.paragraphs && document.paragraphs.length > 0) {
+    console.info(`[Sign Queries] Using ${document.paragraphs.length} embedded paragraphs`);
+    return sortParagraphs(document.paragraphs);
+  }
+
+  // 2. Query for child options as paragraphs
+  const childOptions = await getParagraphsByParent(document.statementId);
+  if (childOptions.length > 0) {
+    console.info(`[Sign Queries] Using ${childOptions.length} child options as paragraphs`);
+    return childStatementsToParagraphs(childOptions);
+  }
+
+  // 3. Fallback: Convert description to paragraph
+  const statementWithDescription = document as StatementWithParagraphs & { description?: string };
+  if (statementWithDescription.description) {
+    console.info('[Sign Queries] Using description as paragraph fallback');
+    return descriptionToParagraphs(statementWithDescription.description, document.statementId);
+  }
+
+  console.info('[Sign Queries] No paragraphs found');
+  return [];
 }
 
 /**

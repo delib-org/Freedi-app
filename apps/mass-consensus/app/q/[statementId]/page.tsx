@@ -6,6 +6,7 @@ import SolutionFeed from '@/components/question/SolutionFeed';
 import SkeletonLoader from '@/components/shared/SkeletonLoader';
 import { LanguageOverrideProvider } from '@/components/providers/LanguageOverrideProvider';
 import { notFound } from 'next/navigation';
+import { getParagraphsText } from '@/lib/utils/paragraphUtils';
 
 interface PageProps {
   params: { statementId: string };
@@ -20,10 +21,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
     return {
       title: `${question.statement} | Freedi Discussion`,
-      description: question.description || `Participate in this discussion: ${question.statement}`,
+      description: getParagraphsText(question.paragraphs) || `Participate in this discussion: ${question.statement}`,
       openGraph: {
         title: question.statement,
-        description: question.description || 'Join the discussion',
+        description: getParagraphsText(question.paragraphs) || 'Join the discussion',
         type: 'website',
       },
     };

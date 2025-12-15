@@ -1,7 +1,8 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { getFirestore } from 'firebase-admin/firestore';
-import { Statement, Collections, functionConfig } from '@freedi/shared-types';
+import { Statement, Collections, functionConfig, Paragraph } from '@freedi/shared-types';
 import { getGeminiModel, geminiApiKey } from './config/gemini';
+import { getParagraphsText } from './helpers';
 
 interface SummarizeDiscussionRequest {
 	statementId: string;
@@ -118,7 +119,7 @@ export const summarizeDiscussion = onCall<SummarizeDiscussionRequest>(
 
 			return {
 				title: s.statement,
-				description: s.description,
+				description: getParagraphsText(s.paragraphs),
 				consensus: s.consensus || s.evaluation?.agreement || 0,
 				averageEvaluation: s.evaluation?.averageEvaluation || 0,
 				numberOfEvaluators: s.evaluation?.numberOfEvaluators || 0
@@ -209,7 +210,7 @@ ${s.description ? `**Details**: ${s.description}` : ''}
 
 ## The Question Discussed
 "${question.statement}"
-${question.description ? `Context: ${question.description}` : ''}
+${getParagraphsText(question.paragraphs) ? `Context: ${getParagraphsText(question.paragraphs)}` : ''}
 
 ## What the Group Agreed On
 ${totalParticipants} participants evaluated the proposals. The following ${solutions.length} solution(s) achieved consensus:

@@ -1,5 +1,5 @@
 // Jest test file
-import { StatementType, Statement, Access, QuestionType } from '@freedi/shared-types';
+import { StatementType, Statement, Access, QuestionType, ParagraphType } from '@freedi/shared-types';
 import { createStatement, CreateStatementProps } from '../setStatements';
 import * as helpers from '@/controllers/general/helpers';
 
@@ -90,9 +90,18 @@ describe('createStatement with validation', () => {
 
   describe('Basic creation', () => {
     it('should create a statement when validation passes', () => {
+      const testParagraphs = [
+        {
+          paragraphId: 'test-p1',
+          type: ParagraphType.paragraph,
+          content: 'Test Description',
+          order: 0,
+        },
+      ];
+
       const props: CreateStatementProps = {
         text: 'Test Statement',
-        description: 'Test Description',
+        paragraphs: testParagraphs,
         parentStatement: mockParentStatement,
         statementType: StatementType.option,
       };
@@ -101,7 +110,7 @@ describe('createStatement with validation', () => {
 
       expect(result).toBeDefined();
       expect(result?.statement).toBe('Test Statement');
-      expect(result?.description).toBe('Test Description');
+      expect(result?.paragraphs).toEqual(testParagraphs);
       expect(result?.statementType).toBe(StatementType.option);
       expect(result?.parentId).toBe('parent-id');
     });

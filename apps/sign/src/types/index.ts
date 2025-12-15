@@ -2,45 +2,26 @@
  * Type definitions for Sign app
  */
 
-import { Statement } from '@freedi/shared-types';
+import { Statement, Paragraph as SharedParagraph, ParagraphType } from '@freedi/shared-types';
+
+// Re-export from shared-types
+export { ParagraphType } from '@freedi/shared-types';
 
 // Re-export from queries for convenience
 export type { Signature, Approval, Comment } from '@/lib/firebase/queries';
 
-// Extended ParagraphType that includes 'table' (until delib-npm is updated)
-export enum ParagraphType {
-  h1 = 'h1',
-  h2 = 'h2',
-  h3 = 'h3',
-  h4 = 'h4',
-  h5 = 'h5',
-  h6 = 'h6',
-  paragraph = 'paragraph',
-  li = 'li',
-  table = 'table',
-}
-
-
 /**
- * Paragraph type - matches main app's paragraph structure
- * TODO: Import from delib-npm once published with Paragraph types
+ * Sign app extension of Paragraph with isNonInteractive property
+ * Used for explanatory text that users cannot interact with (no approve/reject/comment)
  */
-export interface Paragraph {
-  paragraphId: string;
-  type: ParagraphType;
-  content: string;
-  order: number;
-  listType?: 'ul' | 'ol';
-  /** When true, users cannot interact with this paragraph (no approve/reject/comment) - used for explanatory text */
+export interface Paragraph extends SharedParagraph {
   isNonInteractive?: boolean;
 }
 
 /**
- * Extended Statement type with paragraphs array
+ * Statement type with paragraphs - uses base Statement which now includes paragraphs
  */
-export interface StatementWithParagraphs extends Statement {
-  paragraphs?: Paragraph[];
-}
+export type StatementWithParagraphs = Statement;
 
 // Legacy: Statement with paragraphType (for backwards compatibility)
 export type SignParagraph = Statement;
