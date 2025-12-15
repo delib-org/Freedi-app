@@ -127,6 +127,16 @@ export { ResultsBy, CutoffBy, ResultsSettingsSchema, defaultResultsSettings } fr
 // Stage models
 export { StageSelectionType } from "./models/stage/stageTypes";
 
+// Paragraph models
+export type {
+  Paragraph
+} from "./models/paragraph/paragraphModel";
+
+export {
+  ParagraphSchema,
+  ParagraphType
+} from "./models/paragraph/paragraphModel";
+
 // Statement models
 export type {
   SimpleStatement

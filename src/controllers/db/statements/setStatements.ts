@@ -30,9 +30,8 @@ import {
 	Creator,
 	CutoffBy,
 	ResultsSettings,
+	Paragraph,
 } from '@freedi/shared-types';
-// TODO: Import from delib-npm once published with Paragraph types
-import { Paragraph } from '@/types/paragraph';
 
 import { number, parse, string } from 'valibot';
 import { isStatementTypeAllowedAsChildren } from '@/controllers/general/helpers';
@@ -78,7 +77,7 @@ export const updateStatementParents = async (
 
 export async function saveStatementToDB({
 	text,
-	description,
+	paragraphs,
 	parentStatement,
 	statementType,
 	enableAddEvaluationOption,
@@ -95,7 +94,7 @@ export async function saveStatementToDB({
 	try {
 		const statement = createStatement({
 			text,
-			description,
+			paragraphs,
 			parentStatement,
 			statementType,
 			enableAddEvaluationOption,
@@ -274,7 +273,7 @@ export const setStatementToDB = async ({
 
 export interface CreateStatementProps {
 	text: string;
-	description?: string;
+	paragraphs?: Paragraph[];
 	parentStatement: Statement | 'top';
 	statementType: StatementType;
 	questionType?: QuestionType;
@@ -293,7 +292,7 @@ export interface CreateStatementProps {
 
 export function createStatement({
 	text,
-	description,
+	paragraphs,
 	parentStatement,
 	statementType,
 	questionType,
@@ -352,7 +351,7 @@ export function createStatement({
 
 		const newStatement: Statement = {
 			statement: text,
-			description: description ?? '',
+			paragraphs: paragraphs ?? [],
 			statementType,
 			statementId,
 			parentId,
@@ -441,7 +440,7 @@ export function createStatement({
 
 interface UpdateStatementProps {
 	text: string;
-	description?: string;
+	paragraphs?: Paragraph[];
 	statement: Statement;
 	statementType?: StatementType;
 	enableAddEvaluationOption?: boolean;
@@ -455,7 +454,7 @@ interface UpdateStatementProps {
 }
 export function updateStatement({
 	text,
-	description,
+	paragraphs,
 	statement,
 	statementType,
 	enableAddEvaluationOption,
@@ -471,7 +470,7 @@ export function updateStatement({
 		const newStatement: Statement = JSON.parse(JSON.stringify(statement));
 
 		if (text) newStatement.statement = text;
-		if (description) newStatement.description = description;
+		if (paragraphs) newStatement.paragraphs = paragraphs;
 
 		newStatement.lastUpdate = Timestamp.now().toMillis();
 
@@ -560,7 +559,7 @@ function updateStatementSettings({
 export async function updateStatementText(
 	statement: Statement | undefined,
 	title?: string,
-	description?: string
+	paragraphs?: Paragraph[]
 ) {
 	try {
 		if (!statement) throw new Error('Statement is undefined');
@@ -569,8 +568,8 @@ export async function updateStatementText(
 		if (title !== undefined && statement.statement !== title) {
 			updates.statement = title;
 		}
-		if (description !== undefined && statement.description !== description) {
-			updates.description = description;
+		if (paragraphs !== undefined) {
+			updates.paragraphs = paragraphs;
 		}
 
 		if (Object.keys(updates).length === 0) {
@@ -594,7 +593,6 @@ export async function updateStatementText(
 
 /**
  * Update statement paragraphs array for rich text editing
- * Also auto-generates description as preview from paragraphs
  * @param statement - The statement to update
  * @param paragraphs - Array of paragraphs to save
  */
@@ -606,23 +604,8 @@ export async function updateStatementParagraphs(
 		if (!statement) throw new Error('Statement is undefined');
 		if (!paragraphs) throw new Error('Paragraphs array is undefined');
 
-		// Debug: log paragraphs being saved
-		console.info('Saving paragraphs:', JSON.stringify(paragraphs, null, 2));
-
-		// Auto-generate description preview from paragraphs
-		const sortedParagraphs = [...paragraphs].sort((a, b) => a.order - b.order);
-		const descriptionText = sortedParagraphs
-			.map((p) => p.content)
-			.join(' ');
-		const description =
-			descriptionText.length > 200
-				? descriptionText.slice(0, 200) + '...'
-				: descriptionText;
-
-		// Use Record type until delib-npm Statement type includes paragraphs
-		const updates: Record<string, unknown> = {
+		const updates: Partial<Statement> = {
 			paragraphs,
-			description,
 			lastUpdate: Timestamp.now().toMillis(),
 		};
 

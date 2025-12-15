@@ -16,6 +16,7 @@ import {
 	Statement,
 	Vote,
 	Creator,
+	Paragraph,
 } from '@freedi/shared-types';
 import { Dispatch, SetStateAction } from 'react';
 
@@ -98,7 +99,7 @@ export async function setNewStatement({
 		if (!statementId) {
 			const newStatement = createStatement({
 				text: statement.statement,
-				description: statement.description,
+				paragraphs: statement.paragraphs,
 				statementType,
 				parentStatement: 'top',
 				resultsBy,
@@ -130,7 +131,7 @@ export async function setNewStatement({
 			const newStatement = updateStatement({
 				statement,
 				text: statement.statement,
-				description: statement.description ?? '',
+				paragraphs: statement.paragraphs ?? [],
 				resultsBy,
 				numberOfResults,
 				hasChildren,
@@ -232,7 +233,7 @@ export const toggleSubScreen = ({
 interface CreateStatementFromModalParams {
 	title: string;
 	creator: Creator;
-	description: string;
+	paragraphs?: Paragraph[];
 	isOptionSelected: boolean;
 	parentStatement: Statement | 'top';
 	isSendToStoreTemp?: boolean;
@@ -241,7 +242,7 @@ interface CreateStatementFromModalParams {
 
 export async function createStatementFromModal({
 	title,
-	description,
+	paragraphs,
 	parentStatement,
 	statementType,
 }: CreateStatementFromModalParams) {
@@ -253,7 +254,7 @@ export async function createStatementFromModal({
 			...defaultStatementSettings,
 			hasChildren: true,
 			text: title,
-			description,
+			paragraphs,
 			parentStatement,
 			statementType: statementType || StatementType.group,
 		});

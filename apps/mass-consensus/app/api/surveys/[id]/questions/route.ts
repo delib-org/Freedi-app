@@ -4,6 +4,7 @@ import { getSurveyById, addQuestionToSurvey } from '@/lib/firebase/surveys';
 import { verifyToken, extractBearerToken } from '@/lib/auth/verifyAdmin';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
 import { AddQuestionRequest } from '@/types/survey';
+import { textToParagraphs } from '@/lib/utils/paragraphUtils';
 
 interface RouteContext {
   params: { id: string };
@@ -69,7 +70,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     const newQuestion: Partial<Statement> = {
       statementId,
       statement: body.newQuestion.title.trim(),
-      description: body.newQuestion.description?.trim(),
+      paragraphs: textToParagraphs(body.newQuestion.description?.trim() || ''),
       statementType: StatementType.question,
       parentId: 'top',
       topParentId: statementId,

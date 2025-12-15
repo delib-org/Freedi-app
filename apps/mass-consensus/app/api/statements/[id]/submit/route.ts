@@ -4,6 +4,7 @@ import { Collections, StatementType, Statement } from '@freedi/shared-types';
 import { getUserIdFromCookie, getAnonymousDisplayName } from '@/lib/utils/user';
 import { logError, ValidationError } from '@/lib/utils/errorHandling';
 import { VALIDATION, ERROR_MESSAGES } from '@/constants/common';
+import { textToParagraphs } from '@/lib/utils/paragraphUtils';
 import type { Firestore } from 'firebase-admin/firestore';
 
 /**
@@ -211,7 +212,7 @@ export async function POST(
     const newSolution: Partial<Statement> = {
       statementId: statementRef.id,
       statement: title,
-      description: description,
+      paragraphs: textToParagraphs(description),
       statementType: StatementType.option,
       parentId: questionId,
       creatorId: userId,

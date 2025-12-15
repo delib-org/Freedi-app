@@ -3,6 +3,7 @@ import { Statement } from '@freedi/shared-types';
 import { useEditPermission } from '@/controllers/hooks/useEditPermission';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { DocumentEditModal, ParagraphsDisplay } from '@/view/components/richTextEditor';
+import { hasParagraphsContent } from '@/utils/paragraphUtils';
 import EditIcon from '@/assets/icons/editIcon.svg?react';
 import styles from './EditableDescription.module.scss';
 
@@ -26,9 +27,11 @@ const EditableDescription: FC<EditableDescriptionProps> = ({
 
 	if (!statement) return null;
 
+	const hasParagraphs = hasParagraphsContent(statement.paragraphs);
+
 	// Read-only mode for users without permission
 	if (!isEditable) {
-		if (!statement.description) return null;
+		if (!hasParagraphs) return null;
 
 		return (
 			<div className={styles.description}>
@@ -57,7 +60,7 @@ const EditableDescription: FC<EditableDescriptionProps> = ({
 				</div>
 
 				<div className={styles.descriptionContent}>
-					{statement.description ? (
+					{hasParagraphs ? (
 						<ParagraphsDisplay statement={statement} />
 					) : (
 						<p className={styles.placeholder}>{t(placeholder)}</p>

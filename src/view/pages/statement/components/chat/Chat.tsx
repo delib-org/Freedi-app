@@ -10,6 +10,7 @@ import { useAppSelector } from "@/controllers/hooks/reduxHooks";
 import { statementSubsSelector } from "@/redux/statements/statementsSlice";
 import Description from "../evaluations/components/description/Description";
 import { Statement } from "delib-npm";
+import { hasParagraphsContent } from "@/utils/paragraphUtils";
 import { useAuthentication } from "@/controllers/hooks/useAuthentication";
 import { useNotificationActions } from "@/controllers/hooks/useNotificationActions";
 
@@ -128,7 +129,7 @@ const Chat: FC<ChatProps> = ({
 
   return (
     <div className={`${styles.chat} ${sideChat ? styles.sideChat : ''}`} ref={chatRef}>
-      {statement?.description && !sideChat && (
+      {hasParagraphsContent(statement?.paragraphs) && !sideChat && (
         <div className="wrapper">
           <Description />
         </div>

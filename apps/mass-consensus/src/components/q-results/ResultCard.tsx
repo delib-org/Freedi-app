@@ -1,6 +1,7 @@
 import { Statement } from '@freedi/shared-types';
 import clsx from 'clsx';
 import { calculateAgreement, getAgreementColor, getFallbackColor } from '@/lib/utils/consensusColors';
+import { getParagraphsText } from '@/lib/utils/paragraphUtils';
 import styles from './ResultCard.module.scss';
 
 interface ResultCardProps {
@@ -63,8 +64,8 @@ export default function ResultCard({ statement, isUserStatement, totalParticipan
         )}
         <div className={styles.resultCard__text}>
           <h3 className={styles.resultCard__title}>{statement.statement}</h3>
-          {statement.description && (
-            <p className={styles.resultCard__description}>{statement.description}</p>
+          {getParagraphsText(statement.paragraphs) && (
+            <p className={styles.resultCard__description}>{getParagraphsText(statement.paragraphs)}</p>
           )}
         </div>
       </div>

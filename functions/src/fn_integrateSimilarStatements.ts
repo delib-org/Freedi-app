@@ -9,6 +9,7 @@ import {
 	StatementWithEvaluation,
 } from "./services/integration-ai-service";
 import { migrateEvaluationsToNewStatement } from "./fn_evaluation";
+import { textToParagraphs } from "./helpers";
 
 /**
  * Request type for finding similar statements for integration
@@ -204,7 +205,7 @@ export const executeIntegration = onCall<ExecuteIntegrationRequest>(
 		const newStatement: Statement = {
 			statementId: newStatementId,
 			statement: integratedTitle.trim(),
-			description: integratedDescription?.trim() || "",
+			paragraphs: textToParagraphs(integratedDescription?.trim() || ""),
 			statementType: StatementType.option,
 			parentId: parentStatementId,
 			topParentId: topParentId,

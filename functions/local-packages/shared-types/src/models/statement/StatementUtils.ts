@@ -4,6 +4,7 @@ import { getRandomUID } from '../TypeUtils';
 import { StageSelectionType } from '../stage/stageTypes';
 import { parse } from 'valibot';
 import { User } from '../user/User';
+import { Paragraph } from '../paragraph/paragraphModel';
 
 interface CreateBasicStatementProps {
 	parentStatement: Statement;
@@ -11,7 +12,7 @@ interface CreateBasicStatementProps {
 	stageSelectionType?: StageSelectionType;
 	statementType?: StatementType;
 	statement: string;
-	description?: string;
+	paragraphs?: Paragraph[];
 }
 
 export function createBasicStatement({
@@ -20,12 +21,12 @@ export function createBasicStatement({
 	stageSelectionType,
 	statementType,
 	statement,
-	description,
+	paragraphs,
 }: CreateBasicStatementProps): Statement | undefined {
 	try {
 		const newStatement: Statement = {
 			statement: statement,
-			description: description ?? '',
+			paragraphs: paragraphs ?? [],
 			statementType: statementType ?? StatementType.statement,
 			parentId: parentStatement.statementId,
 			stageSelectionType: stageSelectionType ?? StageSelectionType.consensus,

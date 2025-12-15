@@ -5,7 +5,8 @@ import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { createSelector } from '@reduxjs/toolkit';
 import { RootState } from '@/redux/store';
-import { StatementSubscription, Role, Statement, StatementType } from '@freedi/shared-types';
+import { StatementSubscription, Role, Statement, StatementType, ParagraphType } from '@freedi/shared-types';
+import { getParagraphsText, generateParagraphId } from '@/utils/paragraphUtils';
 import { setNewStatement } from './../../statementSettingsCont';
 import EnhancedAdvancedSettings from './../advancedSettings/EnhancedAdvancedSettings';
 import styles from './EnhancedStatementSettingsForm.module.scss';
@@ -98,9 +99,8 @@ const EnhancedStatementSettingsForm: FC<EnhancedStatementSettingsFormProps> = ({
   const [image, setImage] = useState<string>(statement.imagesURL?.main ?? '');
 
   // Title and Description state
-  const arrayOfStatementParagraphs = statement?.statement.split('\n') || [];
-  const title = arrayOfStatementParagraphs[0];
-  const description = arrayOfStatementParagraphs.slice(1).join('\n');
+  const title = statement?.statement || '';
+  const paragraphsText = getParagraphsText(statement?.paragraphs);
 
   // Selector to get the statement memberships
   const statementMembershipSelector = (statementId: string | undefined) =>
@@ -140,16 +140,23 @@ const EnhancedStatementSettingsForm: FC<EnhancedStatementSettingsFormProps> = ({
     const newTitle = e.target.value;
     setStatementToEdit({
       ...statement,
-      statement: `${newTitle}\n${description}`,
+      statement: newTitle,
     });
     setUnsavedChanges(true);
   };
 
   const handleDescriptionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const newDescription = e.target.value;
+    const newParagraphsText = e.target.value;
+    const lines = newParagraphsText.split('\n').filter(line => line.trim());
+    const newParagraphs = lines.map((line, index) => ({
+      paragraphId: generateParagraphId(),
+      type: ParagraphType.paragraph,
+      content: line,
+      order: index,
+    }));
     setStatementToEdit({
       ...statement,
-      description: newDescription,
+      paragraphs: newParagraphs,
     });
     setUnsavedChanges(true);
   };
@@ -239,12 +246,12 @@ const EnhancedStatementSettingsForm: FC<EnhancedStatementSettingsFormProps> = ({
             <textarea
               className={styles.textarea}
               placeholder={t('Provide context and details about your statement')}
-              value={statement.description}
+              value={paragraphsText}
               onChange={handleDescriptionChange}
               rows={4}
               maxLength={500}
             />
-            <span className={styles.charCount}>{(statement.description || '').length}/500</span>
+            <span className={styles.charCount}>{paragraphsText.length}/500</span>
           </div>
 
           <div className={styles.formGroup}>

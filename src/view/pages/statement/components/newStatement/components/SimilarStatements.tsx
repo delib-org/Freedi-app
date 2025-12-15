@@ -9,6 +9,7 @@ import { createStatementWithSubscription } from '@/controllers/db/statements/cre
 import { creatorSelector } from '@/redux/creator/creatorSlice';
 import { useLocation, useNavigate } from 'react-router';
 import { getDefaultQuestionType } from '@/model/questionTypeDefaults';
+import { getParagraphsText } from '@/utils/paragraphUtils';
 
 export default function SimilarStatements() {
 
@@ -41,7 +42,7 @@ export default function SimilarStatements() {
 			const statementId = await createStatementWithSubscription({
 				newStatementParent,
 				title,
-				description: description || '',
+				paragraphs: undefined, // Paragraphs are handled by the form
 				newStatement,
 				newStatementQuestionType,
 				currentLanguage,
@@ -84,13 +85,13 @@ export default function SimilarStatements() {
 						className={styles.statement}
 						onClick={() => handleViewSimilarStatement({
 							title: statement.statement,
-							description: statement.description || '',
+							description: getParagraphsText(statement.paragraphs),
 							statementId: statement.statementId
 						})}
 					>
 						<p className='suggestion__title'>{statement.statement}</p>
 						<p className='suggestion__description'>
-							{statement.description}
+							{getParagraphsText(statement.paragraphs)}
 						</p>
 
 					</button>

@@ -3,6 +3,7 @@ import Modal from '@/view/components/modal/Modal';
 import { Statement } from '@freedi/shared-types';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
+import { getParagraphsText } from '@/utils/paragraphUtils';
 import {
 	requestProposalImprovement,
 	applyImprovement
@@ -92,10 +93,11 @@ const ImproveProposalModal: FC<ImproveProposalModalProps> = ({
 		setModalState({ status: 'applying' });
 
 		try {
+			const paragraphsText = getParagraphsText(statement.paragraphs);
 			await applyImprovement(
 				statement.statementId,
 				statement.statement,
-				statement.description || '',
+				paragraphsText,
 				modalState.data.improvedTitle,
 				modalState.data.improvedDescription,
 				modalState.data.improvementSummary,

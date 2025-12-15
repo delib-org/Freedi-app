@@ -2,12 +2,13 @@ import { array, BaseSchema, enum_, InferOutput, lazy, number, object, optional, 
 import { Statement } from './StatementTypes';
 import { UserSchema } from '../user/User';
 import { StatementType } from '../TypeEnums';
+import { ParagraphSchema } from '../paragraph/paragraphModel';
 
 export const SimpleStatementSchema: BaseSchema<any, any, any> = object({
 	statementId: string(),
 	statement: string(),
 	statementType: enum_(StatementType),
-	description: optional(string()),
+	paragraphs: optional(array(ParagraphSchema)),
 	creatorId: string(),
 	creator: UserSchema,
 	parentId: string(),
@@ -28,7 +29,7 @@ export function statementToSimpleStatement(
 		statementId: statement.statementId,
 		statement: statement.statement,
 		statementType: statement.statementType,
-		description: statement.description ?? '',
+		paragraphs: statement.paragraphs ?? [],
 		creatorId: statement.creatorId,
 		creator: statement.creator,
 		parentId: statement.parentId,
