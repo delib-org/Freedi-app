@@ -1,14 +1,13 @@
 'use client';
 
 import { Statement } from '@freedi/shared-types';
-import { useTranslation } from '@freedi/shared-i18n/next';
 import EvaluationButtons from './EvaluationButtons';
 import styles from './SolutionCard.module.css';
 
 interface SolutionCardProps {
   solution: Statement;
   onEvaluate: (solutionId: string, score: number) => void;
-  isEvaluated: boolean;
+  currentScore?: number | null;
 }
 
 /**
@@ -18,10 +17,8 @@ interface SolutionCardProps {
 export default function SolutionCard({
   solution,
   onEvaluate,
-  isEvaluated,
+  currentScore,
 }: SolutionCardProps) {
-  const { t } = useTranslation();
-
   const handleEvaluate = (score: number) => {
     onEvaluate(solution.statementId, score);
   };
@@ -34,8 +31,10 @@ export default function SolutionCard({
   // Only show description if it's different from title (avoid duplication)
   const showDescription = description && description !== title;
 
+  const hasEvaluated = currentScore !== undefined && currentScore !== null;
+
   return (
-    <div className={`${styles.card} ${isEvaluated ? styles.evaluated : ''}`}>
+    <div className={`${styles.card} ${hasEvaluated ? styles.evaluated : ''}`}>
       <div className={styles.content}>
         <h3 className={styles.title}>{title}</h3>
         {showDescription && (
@@ -45,14 +44,8 @@ export default function SolutionCard({
 
       <EvaluationButtons
         onEvaluate={handleEvaluate}
-        disabled={isEvaluated}
+        currentScore={currentScore}
       />
-
-      {isEvaluated && (
-        <div className={styles.evaluatedBadge}>
-          ✓ {t('Evaluated')}
-        </div>
-      )}
     </div>
   );
 }

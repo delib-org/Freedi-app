@@ -10,7 +10,7 @@ import {
 import { FireStore } from '../config';
 import { Collections, StatementType, Statement, StatementSchema, ResultsBy } from '@freedi/shared-types';
 import { parse } from 'valibot';
-import { convertTimestampsToMillis } from '@/helpers/timestampHelpers';
+import { normalizeStatementData } from '@/helpers/timestampHelpers';
 
 import { store } from '@/redux/store';
 import { deleteStatement, setStatement } from '@/redux/statements/statementsSlice';
@@ -49,14 +49,13 @@ async function getTopOptionsDB(statement: Statement): Promise<Statement[]> {
 		const topOptionsSnap = await getDocs(q);
 
 		const topOptions = topOptionsSnap.docs.map((doc) => {
-			let data = doc.data();
-
-			// Convert Timestamp objects to milliseconds
-			data = convertTimestampsToMillis(data);
+			// Normalize statement data (converts timestamps and fills missing topParentId)
+			const data = normalizeStatementData(doc.data()) as Record<string, unknown>;
 
 			// Ensure averageEvaluation exists if evaluation is present
-			if (data.evaluation && !('averageEvaluation' in data.evaluation)) {
-				data.evaluation.averageEvaluation = data.evaluation.sumEvaluations / Math.max(data.evaluation.numberOfEvaluators, 1);
+			const evaluation = data.evaluation as Record<string, unknown> | undefined;
+			if (evaluation && !('averageEvaluation' in evaluation)) {
+				evaluation.averageEvaluation = (evaluation.sumEvaluations as number) / Math.max(evaluation.numberOfEvaluators as number, 1);
 			}
 
 			return parse(StatementSchema, data);
@@ -86,14 +85,13 @@ export function listenToDescendants(statementId: string) {
 		return onSnapshot(q, (sts) => {
 			sts.docChanges().forEach(change => {
 				try {
-					let data = change.doc.data();
-
-					// Convert Timestamp objects to milliseconds
-					data = convertTimestampsToMillis(data);
+					// Normalize statement data (converts timestamps and fills missing topParentId)
+					const data = normalizeStatementData(change.doc.data()) as Record<string, unknown>;
 
 					// Ensure averageEvaluation exists if evaluation is present
-					if (data.evaluation && !('averageEvaluation' in data.evaluation)) {
-						data.evaluation.averageEvaluation = data.evaluation.sumEvaluations / Math.max(data.evaluation.numberOfEvaluators, 1);
+					const evaluation = data.evaluation as Record<string, unknown> | undefined;
+					if (evaluation && !('averageEvaluation' in evaluation)) {
+						evaluation.averageEvaluation = (evaluation.sumEvaluations as number) / Math.max(evaluation.numberOfEvaluators as number, 1);
 					}
 					const statement = parse(StatementSchema, data);
 					if (change.type === 'added' || change.type === 'modified') {

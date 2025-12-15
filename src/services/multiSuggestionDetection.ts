@@ -1,4 +1,5 @@
-import { firebaseConfig, functionConfig } from 'delib-npm';
+import firebaseConfig from '@/controllers/db/configKey';
+import { functionConfig } from 'delib-npm';
 import { logError, NetworkError } from '@/utils/errorHandling';
 
 /**
@@ -72,8 +73,7 @@ export async function detectMultipleSuggestions(
     logError(error, {
       operation: 'multiSuggestionDetection.detectMultipleSuggestions',
       userId,
-      questionId,
-      metadata: { userInputLength: userInput.length },
+      metadata: { questionId, userInputLength: userInput.length },
     });
 
     // Return safe default on error

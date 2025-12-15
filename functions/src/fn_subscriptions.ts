@@ -10,6 +10,7 @@ import {
 	createSubscription,
 	getStatementSubscriptionId,
 	statementToSimpleStatement,
+	functionConfig,
 } from '@freedi/shared-types';
 import { parse } from 'valibot';
 import { db } from '.';
@@ -260,7 +261,7 @@ export async function onStatementDeletionDeleteSubscriptions(
 
 export const updateSubscriptionsSimpleStatement = onDocumentUpdated({
 	document: `${Collections.statements}/{statementId}`,
-	region: 'europe-west1'
+	region: functionConfig.region
 }, async (event) => {
 	try {
 		const _statementBefore = event.data?.before.data() as Statement | undefined;

@@ -16,6 +16,7 @@ import {
 	DeliberativeElement,
 } from '@freedi/shared-types';
 import { parse } from 'valibot';
+import { normalizeStatementData } from '@/helpers/timestampHelpers';
 
 export async function getStatementFromDB(
 	statementId: string
@@ -28,19 +29,12 @@ export async function getStatementFromDB(
 			statementId
 		);
 		const statementDB = await getDoc(statementRef);
-		
+
 		const data = statementDB.data();
 		if (!data) return undefined;
 
-		// Convert Firestore timestamps to milliseconds if they are Timestamp objects
-		if (data.lastUpdate && typeof data.lastUpdate === 'object' && typeof data.lastUpdate.toMillis === 'function') {
-			data.lastUpdate = data.lastUpdate.toMillis();
-		}
-		if (data.createdAt && typeof data.createdAt === 'object' && typeof data.createdAt.toMillis === 'function') {
-			data.createdAt = data.createdAt.toMillis();
-		}
-
-		return data as Statement;
+		// Normalize statement data (converts timestamps and fills missing topParentId)
+		return normalizeStatementData(data) as Statement;
 	} catch (error) {
 		console.error(error);
 
@@ -114,7 +108,7 @@ export async function getStatementDepth(
 			const statementsDB = await getDocs(q);
 
 			statementsDB.forEach((doc) => {
-				const statement = parse(StatementSchema, doc.data());
+				const statement = parse(StatementSchema, normalizeStatementData(doc.data()));
 
 				subStatements.push(statement);
 			});
@@ -154,7 +148,7 @@ export async function getChildStatements(
 		const statementsDB = await getDocs(q);
 
 		const subStatements = statementsDB.docs.map((doc) =>
-			parse(StatementSchema, doc.data())
+			parse(StatementSchema, normalizeStatementData(doc.data()))
 		);
 
 		return subStatements;

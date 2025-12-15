@@ -45,8 +45,12 @@ const CreateStatementModal: FC<CreateStatementModalProps> = ({
   const titleInputRef = useRef<HTMLInputElement>(null);
 
   // Check if multi-suggestion detection is enabled for this statement
-  const isMultiSuggestionEnabled = parentStatement !== 'top'
-    && parentStatement.statementSettings?.enableMultiSuggestionDetection === true;
+  // Note: enableMultiSuggestionDetection setting needs to be added to delib-npm StatementSettings
+  // For now, disable in main app - feature is fully implemented in MC app only
+  const isMultiSuggestionEnabled = false;
+  // TODO: Re-enable when delib-npm is updated with enableMultiSuggestionDetection setting
+  // const isMultiSuggestionEnabled = parentStatement !== 'top'
+  //   && parentStatement.statementSettings?.enableMultiSuggestionDetection === true;
 
   useEffect(() => {
     if (titleInputRef.current) {
