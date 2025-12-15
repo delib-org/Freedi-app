@@ -11,11 +11,13 @@
   },
   "dependencies": {
     "@freedi/shared-i18n": "file:../../packages/shared-i18n",
+    "@freedi/shared-types": "file:../../packages/shared-types",
     "@tiptap/extension-placeholder": "^3.13.0",
     "@tiptap/react": "^3.13.0",
     "@tiptap/starter-kit": "^3.13.0",
     "clsx": "^2.1.0",
     "delib-npm": "^5.6.71",
+    "firebase": "^11.0.2",
     "firebase-admin": "^12.0.0",
     "googleapis": "^168.0.0",
     "next": "^14.2.0",
