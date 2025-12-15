@@ -17,7 +17,7 @@ export function generateParagraphId(): string {
 export function getParagraphsText(paragraphs: Paragraph[] | undefined): string {
   if (!paragraphs || paragraphs.length === 0) return '';
 
-  return paragraphs
+  return [...paragraphs]
     .sort((a, b) => a.order - b.order)
     .map((p) => p.content)
     .join('\n');

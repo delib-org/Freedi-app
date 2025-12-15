@@ -1,7 +1,7 @@
 import { GenerativeModel, GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from "@google/generative-ai";
 import { logger } from "firebase-functions";
 import { GEMINI_MODEL } from "../config/gemini";
-import { Statement, StatementEvaluation, Paragraph } from "@freedi/shared-types";
+import { Statement, StatementEvaluation } from "@freedi/shared-types";
 import { getParagraphsText } from "../helpers";
 
 /**

@@ -36,7 +36,7 @@ export function descriptionToParagraphs(description: string): Paragraph[] {
 export function paragraphsToDescription(paragraphs: Paragraph[]): string {
 	if (!paragraphs?.length) return '';
 
-	const text = paragraphs
+	const text = [...paragraphs]
 		.sort((a, b) => a.order - b.order)
 		.map((p) => p.content)
 		.join(' ');
@@ -235,7 +235,7 @@ export function combineTitleAndParagraphs(
 export function getParagraphsText(paragraphs: Paragraph[] | undefined): string {
 	if (!paragraphs?.length) return '';
 
-	return paragraphs
+	return [...paragraphs]
 		.sort((a, b) => a.order - b.order)
 		.map((p) => p.content)
 		.join('\n');

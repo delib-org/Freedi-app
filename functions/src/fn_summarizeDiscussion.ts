@@ -1,6 +1,6 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { getFirestore } from 'firebase-admin/firestore';
-import { Statement, Collections, functionConfig, Paragraph } from '@freedi/shared-types';
+import { Statement, Collections, functionConfig } from '@freedi/shared-types';
 import { getGeminiModel, geminiApiKey } from './config/gemini';
 import { getParagraphsText } from './helpers';
 
