@@ -133,7 +133,10 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const userId = getUserIdFromCookie(request.headers.get('cookie'));
+    const url = new URL(request.url);
+    const queryUserId = url.searchParams.get('userId');
+    const cookieUserId = getUserIdFromCookie(request.headers.get('cookie'));
+    const userId = queryUserId || cookieUserId;
 
     if (!userId) {
       return NextResponse.json({ evaluation: null });

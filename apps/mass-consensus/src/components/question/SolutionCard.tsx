@@ -8,7 +8,7 @@ import styles from './SolutionCard.module.css';
 interface SolutionCardProps {
   solution: Statement;
   onEvaluate: (solutionId: string, score: number) => void;
-  isEvaluated: boolean;
+  currentScore?: number | null;
 }
 
 /**
@@ -18,7 +18,7 @@ interface SolutionCardProps {
 export default function SolutionCard({
   solution,
   onEvaluate,
-  isEvaluated,
+  currentScore,
 }: SolutionCardProps) {
   const { t } = useTranslation();
 
@@ -34,8 +34,10 @@ export default function SolutionCard({
   // Only show description if it's different from title (avoid duplication)
   const showDescription = description && description !== title;
 
+  const hasEvaluated = currentScore !== undefined && currentScore !== null;
+
   return (
-    <div className={`${styles.card} ${isEvaluated ? styles.evaluated : ''}`}>
+    <div className={`${styles.card} ${hasEvaluated ? styles.evaluated : ''}`}>
       <div className={styles.content}>
         <h3 className={styles.title}>{title}</h3>
         {showDescription && (
@@ -45,10 +47,10 @@ export default function SolutionCard({
 
       <EvaluationButtons
         onEvaluate={handleEvaluate}
-        disabled={isEvaluated}
+        currentScore={currentScore}
       />
 
-      {isEvaluated && (
+      {hasEvaluated && (
         <div className={styles.evaluatedBadge}>
           ✓ {t('Evaluated')}
         </div>
