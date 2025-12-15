@@ -1,4 +1,4 @@
-import { FC, memo } from 'react';
+import { FC, memo, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import Dot from './dot/Dot';
 import styles from './Triangle.module.scss';
@@ -15,6 +15,20 @@ const Triangle: FC = () => {
 	const { statementId } = useParams();
 	const statement = useSelector(statementSelector(statementId));
 
+	const statementsFromStore = useSelector(
+		statementOptionsSelector(statement?.statementId)
+	);
+
+	// Filter out hidden options - agreement map should only show visible options
+	const subStatements: Statement[] = useMemo(() =>
+		statementsFromStore.filter(
+			(s: Statement) =>
+				s.evaluation?.sumCon !== undefined &&
+				s.hide !== true
+		),
+		[statementsFromStore]
+	);
+
 	// Return early if statement is not found
 	if (!statement || !statementId) {
 		return (
@@ -25,10 +39,6 @@ const Triangle: FC = () => {
 			</div>
 		);
 	}
-
-	const subStatements: Statement[] = useSelector(
-		statementOptionsSelector(statement.statementId)
-	).filter((s: Statement) => s.evaluation?.sumCon !== undefined);
 
 	let maxEvaluators = 0;
 	subStatements.forEach((subStatement: Statement) => {
