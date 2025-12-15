@@ -4,7 +4,7 @@
 
 ## 🎯 Project Goals
 
-Freedi aims to explore how individual freedom and collective cooperation can work together. Based on research into five foundational pillars—Freedom, Partnerships, Navigation, Grace, and Justice—we're building tools to:
+WizCol aims to explore how individual freedom and collective cooperation can work together. Based on research into five foundational pillars—Freedom, Partnerships, Navigation, Grace, and Justice—we're building tools to:
 
 - Support both **individual autonomy** and **collective decision-making**
 - Give **every participant a voice** while preventing manipulation
