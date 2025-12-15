@@ -1,7 +1,6 @@
 'use client';
 
 import { Statement } from '@freedi/shared-types';
-import { useTranslation } from '@freedi/shared-i18n/next';
 import EvaluationButtons from './EvaluationButtons';
 import styles from './SolutionCard.module.css';
 
@@ -20,8 +19,6 @@ export default function SolutionCard({
   onEvaluate,
   currentScore,
 }: SolutionCardProps) {
-  const { t } = useTranslation();
-
   const handleEvaluate = (score: number) => {
     onEvaluate(solution.statementId, score);
   };
@@ -49,12 +46,6 @@ export default function SolutionCard({
         onEvaluate={handleEvaluate}
         currentScore={currentScore}
       />
-
-      {hasEvaluated && (
-        <div className={styles.evaluatedBadge}>
-          ✓ {t('Evaluated')}
-        </div>
-      )}
     </div>
   );
 }
