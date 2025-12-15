@@ -16,6 +16,7 @@ import {
 	VoteSchema,
 } from '@freedi/shared-types';
 import { parse } from 'valibot';
+import { normalizeStatementData } from '@/helpers/timestampHelpers';
 
 // Why get user from firebase when we can pass it as a parameter?
 export async function getToVoteOnParent(
@@ -42,7 +43,7 @@ export async function getToVoteOnParent(
 			vote.statementId
 		);
 		const statementDB = await getDoc(statementRef);
-		const statement = parse(StatementSchema, statementDB.data());
+		const statement = parse(StatementSchema, normalizeStatementData(statementDB.data()));
 
 		updateStoreWithVoteCB(statement);
 	} catch (error) {

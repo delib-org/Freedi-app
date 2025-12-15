@@ -1,7 +1,7 @@
 import { logger } from 'firebase-functions';
 import { onRequest } from 'firebase-functions/v2/https';
 import { db } from '.';
-import { Collections, StatementSubscription } from '@freedi/shared-types';
+import { Collections, StatementSubscription, functionConfig } from '@freedi/shared-types';
 
 /**
  * PHASE 4 FIX: Metrics Analysis Function
@@ -15,7 +15,7 @@ import { Collections, StatementSubscription } from '@freedi/shared-types';
  * - statementId: Optional - analyze specific statement
  */
 export const analyzeSubscriptionPatterns = onRequest(
-	{ region: 'europe-west1' },
+	{ region: functionConfig.region },
 	async (req, res) => {
 		try {
 			// Parse query parameters

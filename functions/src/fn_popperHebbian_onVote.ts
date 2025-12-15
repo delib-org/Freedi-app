@@ -1,6 +1,6 @@
 import { onDocumentUpdated } from 'firebase-functions/v2/firestore';
 import { getFirestore } from 'firebase-admin/firestore';
-import { Statement, Collections } from '@freedi/shared-types';
+import { Statement, Collections, functionConfig } from '@freedi/shared-types';
 import { EvidenceType } from 'delib-npm/dist/models/evidence/evidenceModel';
 import {
 	calculateConsensusValid,
@@ -141,7 +141,8 @@ async function recalculateScore(statementId: string): Promise<void> {
 
 export const onVoteUpdate = onDocumentUpdated(
 	{
-		document: `${Collections.statements}/{statementId}`
+		document: `${Collections.statements}/{statementId}`,
+		region: functionConfig.region
 	},
 	async (event) => {
 		const before = event.data?.before.data() as Statement;

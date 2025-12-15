@@ -12,6 +12,7 @@ import {
 } from 'firebase/firestore';
 import { Statement, StatementType, StatementSchema } from '@freedi/shared-types';
 import { parse } from 'valibot';
+import { normalizeStatementData } from '@/helpers/timestampHelpers';
 import { FireStore } from '../config';
 import { Collections } from '@freedi/shared-types';
 import { store } from '@/redux/store';
@@ -83,7 +84,7 @@ export function listenToMindMapData(statementId: string): Unsubscribe {
             snapshot.forEach((doc) => {
               try {
                 const data = doc.data();
-                const statement = parse(StatementSchema, data);
+                const statement = parse(StatementSchema, normalizeStatementData(data));
                 validStatements.push(statement);
                 loadedCount++;
               } catch (error) {
@@ -129,7 +130,7 @@ export function listenToMindMapData(statementId: string): Unsubscribe {
             changes.forEach((change) => {
               try {
                 const data = change.doc.data();
-                const statement = parse(StatementSchema, data);
+                const statement = parse(StatementSchema, normalizeStatementData(data));
 
                 switch (change.type) {
                   case 'added':

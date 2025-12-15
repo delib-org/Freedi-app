@@ -1,5 +1,6 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { getGeminiModel, geminiApiKey } from './config/gemini';
+import { functionConfig } from '@freedi/shared-types';
 
 interface RefinementMessage {
 	messageId: string;
@@ -35,7 +36,7 @@ const LANGUAGE_NAMES: Record<string, string> = {
 };
 
 export const refineIdea = onCall<RefineIdeaRequest>(
-	{ secrets: [geminiApiKey] },
+	{ secrets: [geminiApiKey], region: functionConfig.region },
 	async (request): Promise<RefineIdeaResponse> => {
 		const {
 			userResponse,
