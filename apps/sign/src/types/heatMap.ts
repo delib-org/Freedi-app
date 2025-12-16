@@ -171,3 +171,69 @@ export const HEAT_MAP_COLORS = {
     border: 'var(--heat-viewership-border)',
   },
 } as const;
+
+// ============================================
+// Demographic Filter Types (Admin-only feature)
+// ============================================
+
+/**
+ * Demographic filter state for heatmap
+ */
+export interface DemographicFilter {
+  /** ID of the demographic question being filtered on */
+  questionId: string | null;
+  /** Label of the question for display */
+  questionLabel: string | null;
+  /** Value of the selected segment */
+  segmentValue: string | null;
+  /** Label of the segment for display */
+  segmentLabel: string | null;
+}
+
+/**
+ * Initial/empty demographic filter state
+ */
+export const EMPTY_DEMOGRAPHIC_FILTER: DemographicFilter = {
+  questionId: null,
+  questionLabel: null,
+  segmentValue: null,
+  segmentLabel: null,
+};
+
+/**
+ * Segment metadata returned from API
+ */
+export interface SegmentMetadata {
+  questionId: string;
+  questionLabel: string;
+  segmentValue: string;
+  segmentLabel: string;
+  respondentCount: number;
+}
+
+/**
+ * Extended heatmap data with demographic segment info
+ */
+export interface DemographicHeatMapData extends HeatMapData {
+  segment: SegmentMetadata | null;
+}
+
+/**
+ * Available demographic option for filtering
+ */
+export interface DemographicFilterOption {
+  questionId: string;
+  question: string;
+  options: Array<{
+    value: string;
+    label: string;
+    count: number;
+  }>;
+}
+
+/**
+ * Check if a demographic filter is active
+ */
+export function isDemographicFilterActive(filter: DemographicFilter): boolean {
+  return filter.questionId !== null && filter.segmentValue !== null;
+}

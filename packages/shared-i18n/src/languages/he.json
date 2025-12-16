@@ -1150,5 +1150,14 @@
   "Back to edit": "חזרה לעריכה",
   "Restore": "שחזר",
   "From": "מ",
-  "Checking...": "בודק..."
+  "Checking...": "בודק...",
+
+  "filterByDemographic": "סינון לפי דמוגרפיה",
+  "openDemographicFilter": "פתח סינון דמוגרפי",
+  "closeDemographicFilter": "סגור סינון דמוגרפי",
+  "demographicFilterMenu": "תפריט סינון דמוגרפי",
+  "clearFilter": "נקה סינון",
+  "segmentTooSmall": "קבוצה זו מכילה פחות מ-5 משיבים",
+  "filteredBy": "מסונן לפי",
+  "respondents": "משיבים"
 }

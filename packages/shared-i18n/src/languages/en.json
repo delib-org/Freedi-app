@@ -1136,5 +1136,14 @@
   "Back to edit": "Back to edit",
   "Restore": "Restore",
   "From": "From",
-  "Checking...": "Checking..."
+  "Checking...": "Checking...",
+
+  "filterByDemographic": "Filter by Demographic",
+  "openDemographicFilter": "Open demographic filter",
+  "closeDemographicFilter": "Close demographic filter",
+  "demographicFilterMenu": "Demographic filter menu",
+  "clearFilter": "Clear filter",
+  "segmentTooSmall": "This segment has fewer than 5 respondents",
+  "filteredBy": "Filtered by",
+  "respondents": "respondents"
 }

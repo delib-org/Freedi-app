@@ -869,5 +869,14 @@
   "Original suggestions will be hidden": "Originele suggesties worden verborgen",
   "Total": "Totaal",
   "Integrating...": "Integreren...",
-  "Confirm Integration": "Integratie bevestigen"
+  "Confirm Integration": "Integratie bevestigen",
+
+  "filterByDemographic": "Filteren op demografie",
+  "openDemographicFilter": "Demografisch filter openen",
+  "closeDemographicFilter": "Demografisch filter sluiten",
+  "demographicFilterMenu": "Demografisch filtermenu",
+  "clearFilter": "Filter wissen",
+  "segmentTooSmall": "Dit segment heeft minder dan 5 respondenten",
+  "filteredBy": "Gefilterd op",
+  "respondents": "respondenten"
 }
