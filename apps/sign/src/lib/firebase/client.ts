@@ -40,6 +40,14 @@ export function initializeFirebaseClient(): FirebaseApp {
     return app;
   }
 
+  // Debug: Check if env vars are loaded (don't log actual values for security)
+  console.info('[Firebase Client - Sign] Config check:', {
+    hasApiKey: !!firebaseConfig.apiKey,
+    hasAuthDomain: !!firebaseConfig.authDomain,
+    hasProjectId: !!firebaseConfig.projectId,
+    projectId: firebaseConfig.projectId, // Safe to log project ID
+  });
+
   app = initializeApp(firebaseConfig);
   console.info('[Firebase Client - Sign] Initialized');
 
