@@ -4,6 +4,7 @@ import { Collections, Evaluation } from '@freedi/shared-types';
 import { getUserIdFromCookie, getAnonymousDisplayName } from '@/lib/utils/user';
 import { updateStatementConsensus } from '@/lib/firebase/queries';
 import { FieldValue } from 'firebase-admin/firestore';
+import { checkRateLimit, RATE_LIMITS } from '@/lib/utils/rateLimit';
 
 /**
  * POST /api/evaluations/[id]
@@ -14,6 +15,12 @@ export async function POST(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  // Rate limit check - standard for evaluations
+  const rateLimitResponse = checkRateLimit(request, RATE_LIMITS.STANDARD);
+  if (rateLimitResponse) {
+    return rateLimitResponse;
+  }
+
   try {
     const body = await request.json();
     const { evaluation, userId: bodyUserId, userName } = body;
@@ -132,6 +139,12 @@ export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  // Rate limit check - more lenient for reads
+  const rateLimitResponse = checkRateLimit(request, RATE_LIMITS.READ);
+  if (rateLimitResponse) {
+    return rateLimitResponse;
+  }
+
   try {
     const url = new URL(request.url);
     const queryUserId = url.searchParams.get('userId');

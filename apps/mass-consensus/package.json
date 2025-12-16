@@ -17,6 +17,7 @@
     "@freedi/shared-i18n": "file:../../packages/shared-i18n",
     "@freedi/shared-types": "file:../../packages/shared-types",
     "@google/generative-ai": "^0.21.0",
+    "@sentry/nextjs": "^8.0.0",
     "@vercel/analytics": "^1.6.1",
     "clsx": "^2.1.0",
     "delib-npm": "^5.6.71",

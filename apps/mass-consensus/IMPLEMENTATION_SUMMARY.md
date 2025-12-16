@@ -173,11 +173,11 @@ Lines of code: ~2,500
 
 ### High Priority
 
-- [ ] Add `randomSeed` field to existing statements (migration script)
-- [ ] Create Firebase indexes (documented in SETUP_GUIDE.md)
-- [ ] Add rate limiting to API endpoints
+- [x] Add `randomSeed` field to existing statements (migration script) - **DONE**: Call `addRandomSeed` HTTP function
+- [x] Create Firebase indexes (documented in SETUP_GUIDE.md) - **DONE**: Already in firestore.indexes.json
+- [x] Add rate limiting to API endpoints - **DONE**: See `src/lib/utils/rateLimit.ts`
 - [ ] Implement semantic search for duplicate detection
-- [ ] Add error monitoring (Sentry or similar)
+- [x] Add error monitoring (Sentry) - **DONE**: See `src/lib/monitoring/sentry.ts`, add `NEXT_PUBLIC_SENTRY_DSN` to env
 
 ### Medium Priority
 

@@ -1,6 +1,6 @@
 # WizCol - Open Source Deliberative Democracy Platform
 
-**Freedi** is an open-source platform exploring solutions to democratic participation at scale. As groups grow larger, coordination becomes exponentially more complex, traditionally forcing decision-making into the hands of small groups. Freedi experiments with consensus algorithms and structured deliberation methods to enable broader participation in group decision-making.
+**WizCol** is an open-source platform exploring solutions to democratic participation at scale. As groups grow larger, coordination becomes exponentially more complex, traditionally forcing decision-making into the hands of small groups. WizCol experiments with consensus algorithms and structured deliberation methods to enable broader participation in group decision-making.
 
 ## 🎯 Project Goals
 
@@ -16,7 +16,7 @@ WizCol aims to explore how individual freedom and collective cooperation can wor
 ### The Consensus Algorithm
 We've developed a consensus algorithm that attempts to balance proposal quality with broad participation:
 ```
-Consensus Score = (Average Evaluation) × √(Number of Evaluators)
+Consensus Score = (Average Evaluation) - SEM
 ```
 This formula is designed to encourage broad participation while maintaining quality. We're actively researching improvements and welcome feedback from the research community.
 
@@ -29,7 +29,7 @@ Our current methodology includes:
 ## 🌟 What's Available Now
 
 ### **Unified Statement Model**
-Freedi uses a powerful unified statement model where every piece of content is a "Statement" with semantic types:
+WizCol uses a powerful unified statement model where every piece of content is a "Statement" with semantic types:
 - **Groups**: Top-level containers for organizing deliberations
 - **Questions**: Discussion topics that prompt proposals and options
 - **Options**: Proposed solutions or choices under questions
@@ -76,17 +76,17 @@ This hierarchical model enables unlimited nesting depth with full ancestry track
 - **Participant Notifications**: Automatic notifications when users are assigned to rooms
 
 ### **Monorepo Applications**
-Freedi is organized as a monorepo with multiple specialized applications:
+WizCol is organized as a monorepo with multiple specialized applications:
 
 | Application | Technology | Location | Description |
 |-------------|------------|----------|-------------|
-| **Main Freedi App** | Vite + React | `/src` | Core deliberation platform with full feature set |
+| **Main WizCol App** | Vite + React | `/src` | Core deliberation platform with full feature set |
 | **Mass Consensus** | Next.js 14 | `/apps/mass-consensus` | Fast-loading anonymous consensus discussion with SSR/ISR |
-| **Freedi Sign** | Next.js 14 | `/apps/sign` | Document signing platform with paragraph-level engagement |
+| **WizCol Sign** | Next.js 14 | `/apps/sign` | Document signing platform with paragraph-level engagement |
 
 ---
 
-#### 📝 **Freedi Sign** (`/apps/sign`)
+#### 📝 **WizCol Sign** (`/apps/sign`)
 A Next.js application for collaborative document review and digital signatures with granular paragraph-level feedback.
 
 **Key Features:**
@@ -143,8 +143,8 @@ Internal packages shared across all applications:
 
 | Package | Description |
 |---------|-------------|
-| `@freedi/shared-i18n` | Internationalization utilities with React and Next.js integrations |
-| `@freedi/shared-types` | Shared TypeScript types for apps and Firebase functions |
+| `@WizCol/shared-i18n` | Internationalization utilities with React and Next.js integrations |
+| `@WizCol/shared-types` | Shared TypeScript types for apps and Firebase functions |
 
 These packages are used by all sub-applications to ensure consistent types and translations across the platform.
 
@@ -194,7 +194,7 @@ In our initial tests with groups ranging from 35 to 300 participants, we've obse
 
 ## 🚀 Potential Applications
 
-We believe Freedi could be useful for:
+We believe WizCol could be useful for:
 
 - **Community Decision-Making**: Helping neighborhoods and local organizations reach consensus
 - **Organizational Planning**: Supporting teams in collaborative strategy development
@@ -356,8 +356,8 @@ The codebase includes production-ready utilities and patterns for consistent, ma
 Use our automated setup script for the fastest onboarding:
 
 ```bash
-git clone https://github.com/delib-org/Freedi-app.git
-cd Freedi-app
+git clone https://github.com/delib-org/WizCol-app.git
+cd WizCol-app
 npm run setup:all
 ```
 
@@ -394,7 +394,7 @@ This runs:
 
 - **Main App**: http://localhost:5173
 - **Mass Consensus**: http://localhost:3001
-- **Freedi Sign**: http://localhost:3002
+- **WizCol Sign**: http://localhost:3002
 - **Firebase Emulators**: http://localhost:5002
 - **Functions**: http://localhost:5001
 
@@ -409,7 +409,7 @@ npm install
 npm run dev
 # Opens at http://localhost:3001
 
-# Freedi Sign (Document signing platform)
+# WizCol Sign (Document signing platform)
 cd apps/sign
 npm install
 npm run dev
@@ -420,7 +420,7 @@ npm run dev
 
 ### VS Code Setup
 
-1. Open the workspace file: `freediApp.code-workspace`
+1. Open the workspace file: `WizColApp.code-workspace`
 2. Install recommended extensions when prompted
 3. This ensures consistent linting and formatting
 
@@ -478,8 +478,8 @@ npm run deploy <target> [options]
 
 | Target | Firebase Project | Description |
 |--------|-----------------|-------------|
-| `dev` | freedi-test | Local development (with emulator) |
-| `test` | freedi-test | Testing new features before production |
+| `dev` | WizCol-test | Local development (with emulator) |
+| `test` | WizCol-test | Testing new features before production |
 | `prod` | synthesistalyaron | Current production |
 | `wizcol` | wizcol-app | Main production (Wizcol) |
 
@@ -532,8 +532,8 @@ Environments are managed centrally in the `/env` directory:
 
 ```
 env/
-├── .env.dev          # Local development (freedi-test + emulator)
-├── .env.test         # Testing new features (freedi-test deployed)
+├── .env.dev          # Local development (WizCol-test + emulator)
+├── .env.test         # Testing new features (WizCol-test deployed)
 ├── .env.prod         # Current production (synthesistalyaron)
 ├── .env.wizcol       # Main production (wizcol-app)
 ├── .env.example      # Template for new environments
@@ -624,7 +624,7 @@ Branch naming conventions are documented in `Branch-naming-convention.md`. Pleas
 
 ## 🎓 Theoretical Foundation
 
-Freedi draws inspiration from multiple fields:
+WizCol draws inspiration from multiple fields:
 - **Cognitive Science**: How individuals and groups make decisions
 - **Deliberative Democracy Theory**: Principles of inclusive participation  
 - **Complexity Science**: Understanding coordination challenges at scale
@@ -652,7 +652,7 @@ We welcome contributions from developers, researchers, and anyone interested in 
 
 ### Development Guidelines
 - **[Coding Style Guide](./CODING_STYLE_GUIDE.md)** - Comprehensive guide to coding standards and best practices
-- **[Application Architecture](./docs/FREEDI_ARCHITECTURE.md)** - Detailed architecture documentation including the unified statement model and semantic hierarchy
+- **[Application Architecture](./docs/WizCol_ARCHITECTURE.md)** - Detailed architecture documentation including the unified statement model and semantic hierarchy
 - **[Atomic Design System](./ATOMIC-DESIGN-SYSTEM.md)** - Complete guide to SCSS-first atomic design with BEM methodology
 - **[Design Guide](./docs/design-guide.md)** - UI/UX design system, component patterns, and visual language
 - **[CLAUDE.md](./CLAUDE.md)** - Instructions for AI-assisted development
@@ -668,4 +668,4 @@ For research collaborations, please reach out through GitHub issues or discussio
 
 ---
 
-**Freedi** - An open-source experiment in making democratic deliberation more accessible and effective.
+**WizCol** - An open-source experiment in making democratic deliberation more accessible and effective.
