@@ -865,5 +865,14 @@
   "Original suggestions will be hidden": "سيتم إخفاء الاقتراحات الأصلية",
   "Total": "المجموع",
   "Integrating...": "جارٍ الدمج...",
-  "Confirm Integration": "تأكيد الدمج"
+  "Confirm Integration": "تأكيد الدمج",
+
+  "filterByDemographic": "تصفية حسب الديموغرافية",
+  "openDemographicFilter": "فتح فلتر الديموغرافية",
+  "closeDemographicFilter": "إغلاق فلتر الديموغرافية",
+  "demographicFilterMenu": "قائمة فلتر الديموغرافية",
+  "clearFilter": "مسح الفلتر",
+  "segmentTooSmall": "هذه المجموعة تحتوي على أقل من 5 مشاركين",
+  "filteredBy": "مُصفى حسب",
+  "respondents": "مشاركين"
 }

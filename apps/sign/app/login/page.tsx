@@ -90,7 +90,6 @@ export default function LoginPage() {
           <div className={styles.divider}>
             <span>{t('or')}</span>
           </div>
-          test
           <button
             type="button"
             className={styles.anonymousButton}

@@ -8,7 +8,7 @@ import { Signature } from '@/lib/firebase/queries';
 import Modal from '../shared/Modal';
 import CommentThread from '../comments/CommentThread';
 import LoginModal from '../shared/LoginModal';
-import { HeatMapProvider, HeatMapToolbar, HeatMapLegend } from '../heatMap';
+import { HeatMapProvider, HeatMapToolbar, HeatMapLegend, DemographicFilter } from '../heatMap';
 import { DemographicSurveyModal } from '../demographics';
 
 // Animation timing constants
@@ -301,6 +301,7 @@ export default function DocumentClient({
         <>
           <HeatMapToolbar />
           <HeatMapLegend />
+          <DemographicFilter documentId={documentId} />
         </>
       )}
 

@@ -869,5 +869,14 @@
   "Original suggestions will be hidden": "Las sugerencias originales serán ocultadas",
   "Total": "Total",
   "Integrating...": "Integrando...",
-  "Confirm Integration": "Confirmar integración"
+  "Confirm Integration": "Confirmar integración",
+
+  "filterByDemographic": "Filtrar por demografía",
+  "openDemographicFilter": "Abrir filtro demográfico",
+  "closeDemographicFilter": "Cerrar filtro demográfico",
+  "demographicFilterMenu": "Menú de filtro demográfico",
+  "clearFilter": "Limpiar filtro",
+  "segmentTooSmall": "Este segmento tiene menos de 5 encuestados",
+  "filteredBy": "Filtrado por",
+  "respondents": "encuestados"
 }
