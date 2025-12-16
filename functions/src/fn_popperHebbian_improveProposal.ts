@@ -2,6 +2,7 @@ import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { getFirestore } from 'firebase-admin/firestore';
 import { Statement, Collections, functionConfig } from '@freedi/shared-types';
 import { getGeminiModel, geminiApiKey } from './config/gemini';
+import { getParagraphsText } from './helpers';
 
 interface ImproveProposalRequest {
 	statementId: string;
@@ -96,7 +97,7 @@ export const improveProposalWithAI = onCall<ImproveProposalRequest>(
 		// 4. Build synthesis prompt
 		const prompt = buildSynthesisPrompt(
 			statement.statement,
-			statement.description || '',
+			getParagraphsText(statement.paragraphs),
 			comments,
 			language
 		);
@@ -139,7 +140,7 @@ export const improveProposalWithAI = onCall<ImproveProposalRequest>(
 
 			return {
 				originalTitle: statement.statement,
-				originalDescription: statement.description || '',
+				originalDescription: getParagraphsText(statement.paragraphs),
 				improvedTitle: aiResponse.improvedTitle,
 				improvedDescription: aiResponse.improvedDescription,
 				improvementSummary: aiResponse.improvementSummary,

@@ -2,6 +2,7 @@
 
 import { Statement } from '@freedi/shared-types';
 import EvaluationButtons from './EvaluationButtons';
+import { getParagraphsText } from '@/lib/utils/paragraphUtils';
 import styles from './SolutionCard.module.css';
 
 interface SolutionCardProps {
@@ -26,7 +27,7 @@ export default function SolutionCard({
   // Use statement as title, description if available
   const title = solution.statement;
   // For solutions without description, use the statement itself
-  const description = solution.description || solution.statement;
+  const description = getParagraphsText(solution.paragraphs) || solution.statement;
 
   // Only show description if it's different from title (avoid duplication)
   const showDescription = description && description !== title;

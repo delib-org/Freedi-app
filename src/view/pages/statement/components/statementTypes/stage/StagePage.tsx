@@ -8,6 +8,7 @@ import { StatementContext } from '../../../StatementCont';
 import { Statement, EvaluationUI } from '@freedi/shared-types';
 import Clustering from '../../clustering/Clustering';
 import { useSummarization } from '@/controllers/hooks/useSummarization';
+import { useEditPermission } from '@/controllers/hooks/useEditPermission';
 import SummaryDisplay from '../question/document/MultiStageQuestion/components/SummaryDisplay/SummaryDisplay';
 import SummarizeModal from '../question/document/MultiStageQuestion/components/SummarizeModal/SummarizeModal';
 
@@ -21,6 +22,7 @@ const StagePage = ({ showStageTitle = true, showBottomNav = true }: Props) => {
 	const { statement } = useContext(StatementContext);
 	const stageRef = useRef<HTMLDivElement>(null);
 	const { isGenerating, generateSummary } = useSummarization();
+	const { isAdmin } = useEditPermission(statement);
 	const [isModalOpen, setIsModalOpen] = useState(false);
 
 	useEffect(() => {
@@ -79,8 +81,8 @@ const StagePage = ({ showStageTitle = true, showBottomNav = true }: Props) => {
 					generatedAt={statementWithSummary?.summaryGeneratedAt}
 				/>
 
-				{/* Summarize Button */}
-				{statement && (
+				{/* Summarize Button - Only visible to admins */}
+				{statement && isAdmin && (
 					<div className={styles.summarizeWrapper}>
 						<button
 							className={`btn btn--secondary ${isGenerating ? 'btn--disabled' : ''}`}

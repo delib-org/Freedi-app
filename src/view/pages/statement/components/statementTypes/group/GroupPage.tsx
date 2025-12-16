@@ -7,6 +7,7 @@ import AddButton from '../../addButton/AddButton';
 import SubGroupCard from '@/view/components/subGroupCard/SubGroupCard';
 import { Role, StatementType } from "delib-npm"
 import { useTranslation } from '@/controllers/hooks/useTranslation';
+import { hasParagraphsContent, getParagraphsText } from '@/utils/paragraphUtils';
 
 export default function GroupPage() {
 	const { t } = useTranslation();
@@ -25,10 +26,12 @@ export default function GroupPage() {
 		(sub) => sub.statementType === StatementType.question && (!sub.hide || isAdmin)
 	);
 
+	const paragraphsText = hasParagraphsContent(statement?.paragraphs) ? getParagraphsText(statement?.paragraphs) : null;
+
 	return (
 		<div className={styles.groupPage}>
 			<div className={`wrapper`}>
-				<p>{statement?.description}</p>
+				{paragraphsText && <p>{paragraphsText}</p>}
 				{subGroups.length > 0 && <h4>{t("Groups")}</h4>}
 				<div className={styles.wrapper}>
 					{subGroups.map((sub) => (

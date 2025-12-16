@@ -9,6 +9,7 @@ import {
     statementToSimpleStatement,
     functionConfig,
 } from '@freedi/shared-types';
+import { getParagraphsText } from './helpers';
 
 /**
  * Updates parent statement when a child statement is created
@@ -80,7 +81,7 @@ return;
         // Check if this is a significant content change
         const hasContentChange = (
             before.statement !== after.statement ||
-            before.description !== after.description ||
+            getParagraphsText(before.paragraphs) !== getParagraphsText(after.paragraphs) ||
             before.consensus !== after.consensus
         );
         

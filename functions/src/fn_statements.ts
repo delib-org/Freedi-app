@@ -84,7 +84,9 @@ export async function getQuestionOptions(req: Request, res: Response) {
 			.where('parentId', '==', statementId)
 			.where('statementType', '==', StatementType.option);
 		const optionsDB = await query.get();
-		const options = optionsDB.docs.map((doc) => doc.data()) as Statement[];
+		const options = optionsDB.docs
+			.map((doc) => doc.data() as Statement)
+			.filter((statement) => !statement.hide);
 
 		res.status(200).send({ options, ok: true });
 	} catch (error) {

@@ -16,8 +16,9 @@ import { creatorSelector } from '@/redux/creator/creatorSlice';
 
 // API functions
 import { updateStatementText } from '@/controllers/db/statements/setStatements';
-import { Statement } from '@freedi/shared-types';
+import { Statement, ParagraphType } from '@freedi/shared-types';
 import Text from '@/view/components/text/Text';
+import { getParagraphsText, hasParagraphsContent, generateParagraphId } from '@/utils/paragraphUtils';
 
 const SuggestionChat = () => {
 	// Hooks and state
@@ -112,10 +113,22 @@ const StatementDescription: FC<StatementDescriptionProps> = ({
 		}
 	};
 
+	// Helper to convert text to paragraphs
+	const textToParagraphs = (text: string) => {
+		if (!text.trim()) return undefined;
+		const lines = text.split('\n').filter(line => line.trim());
+		return lines.map((line, index) => ({
+			paragraphId: generateParagraphId(),
+			type: ParagraphType.paragraph,
+			content: line,
+			order: index,
+		}));
+	};
+
 	const handleUpdateDescription = (e: KeyboardEvent<HTMLTextAreaElement>): void => {
 		if (e.key === 'Enter' && e.shiftKey === false) {
 			e.preventDefault(); // Prevent new line on Enter
-			updateStatementText(statement, undefined, e.currentTarget.value);
+			updateStatementText(statement, undefined, textToParagraphs(e.currentTarget.value));
 			setEditDescription(false);
 		}
 	};
@@ -123,12 +136,14 @@ const StatementDescription: FC<StatementDescriptionProps> = ({
 	const handleBlur = () => {
 		// Optional: Save on blur
 		if (textareaRef.current) {
-			updateStatementText(statement, undefined, textareaRef.current.value);
+			updateStatementText(statement, undefined, textToParagraphs(textareaRef.current.value));
 		}
 		setEditDescription(false);
 	};
 
-	if (!statement.description && !editDescription) {
+	const paragraphsText = getParagraphsText(statement.paragraphs);
+
+	if (!hasParagraphsContent(statement.paragraphs) && !editDescription) {
 		return isStatementCreator ? (
 			<div className="btns">
 				<button
@@ -144,7 +159,7 @@ const StatementDescription: FC<StatementDescriptionProps> = ({
 	return editDescription ? (
 		<textarea
 			ref={textareaRef}
-			defaultValue={statement.description}
+			defaultValue={paragraphsText}
 			onKeyDown={handleUpdateDescription} // Changed from onKeyUp to onKeyDown for better prevention
 			onInput={handleTextareaChange}
 			onBlur={handleBlur}
@@ -161,7 +176,7 @@ const StatementDescription: FC<StatementDescriptionProps> = ({
 	) : (
 		<button onClick={isStatementCreator ? handleEditDescription : undefined} style={{ cursor: isStatementCreator ? 'pointer' : 'default' }}>
 			<div className={styles["suggestionChat__description-text"]}>
-				<Text description={statement.description} />
+				<Text description={paragraphsText} />
 			</div>
 		</button>
 	);

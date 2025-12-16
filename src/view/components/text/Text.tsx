@@ -4,11 +4,6 @@ import { Statement } from '@freedi/shared-types';
 import UrlParser from '../edit/URLParse';
 import { ParagraphsDisplay } from '@/view/components/richTextEditor';
 import styles from './Text.module.scss';
-// TODO: Import from delib-npm once published with Paragraph types
-import { StatementWithParagraphs } from '@/types/paragraph';
-
-// Extended statement type with paragraphs
-type StatementWithParagraphsExtended = Statement & StatementWithParagraphs;
 
 interface Props {
 	statement?: string;
@@ -96,8 +91,7 @@ const Text: FC<Props> = ({ statement, description, fontSize = "inherent", enable
 
 		// If statementObj is provided and has paragraphs, use ParagraphsDisplay
 		if (statementObj) {
-			const extendedStatement = statementObj as StatementWithParagraphsExtended;
-			if (extendedStatement.paragraphs && extendedStatement.paragraphs.length > 0) {
+			if (statementObj.paragraphs && statementObj.paragraphs.length > 0) {
 				return (
 					<>
 						{statement && (

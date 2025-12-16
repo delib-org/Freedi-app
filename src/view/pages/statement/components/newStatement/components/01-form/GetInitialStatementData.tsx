@@ -2,11 +2,12 @@ import { FormEvent, useContext, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import styles from './GetInitialStatementData.module.scss';
 import { createStatementWithSubscription } from '@/controllers/db/statements/createStatementWithSubscription';
+import { closePanels } from '@/controllers/hooks/panelUtils';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import Button, { ButtonType } from '@/view/components/buttons/button/Button';
 import Input from '@/view/components/input/Input';
 import Textarea from '@/view/components/textarea/Textarea';
-import { StatementType } from '@freedi/shared-types';
+import { StatementType, ParagraphType } from '@freedi/shared-types';
 import { useDispatch, useSelector } from 'react-redux';
 import { clearNewStatement, selectNewStatement, selectParentStatementForNewStatement, setShowNewStatementModal } from '@/redux/statements/newStatementSlice';
 import { creatorSelector } from '@/redux/creator/creatorSlice';
@@ -14,6 +15,7 @@ import Checkbox from '@/view/components/checkbox/Checkbox';
 import { NewStatementContext, SimilaritySteps } from '../../NewStatementCont';
 import { getSimilarOptions } from './GetInitialStatementDataCont';
 import { getDefaultQuestionType } from '@/model/questionTypeDefaults';
+import { generateParagraphId } from '@/utils/paragraphUtils';
 
 export default function GetInitialStatementData() {
 	const { lookingForSimilarStatements, setLookingForSimilarStatements, setSimilarStatements, setCurrentStep, setTitle } = useContext(NewStatementContext);
@@ -68,11 +70,22 @@ return;
 
 			dispatch(setShowNewStatementModal(false));
 			dispatch(clearNewStatement());
-			
+
+			// Close chat panel and map container so user can see the main page
+			closePanels();
+
+			// Convert description text to paragraphs array
+			const paragraphs = description.trim() ? description.split('\n').filter(line => line.trim()).map((line, index) => ({
+				paragraphId: generateParagraphId(),
+				type: ParagraphType.paragraph,
+				content: line,
+				order: index,
+			})) : undefined;
+
 			const statementIdPromise = createStatementWithSubscription({
 				newStatementParent,
 				title,
-				description,
+				paragraphs,
 				newStatement,
 				newStatementQuestionType,
 				currentLanguage,

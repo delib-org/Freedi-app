@@ -20,6 +20,7 @@ import {
 } from 'firebase-functions/v1/firestore';
 import { FirestoreEvent } from 'firebase-functions/firestore';
 import { Change } from 'firebase-functions/v1';
+import { getParagraphsText } from './helpers';
 
 export async function onNewSubscription(
 	event: FirestoreEvent<Change<DocumentSnapshot> | undefined>
@@ -270,9 +271,9 @@ export const updateSubscriptionsSimpleStatement = onDocumentUpdated({
 		if (!_statementBefore || !_statementAfter) return;
 
 		// Skip if this is an update caused by other functions (check for typical function-updated fields)
-		if (_statementBefore.lastUpdate !== _statementAfter.lastUpdate && 
+		if (_statementBefore.lastUpdate !== _statementAfter.lastUpdate &&
 			_statementBefore.statement === _statementAfter.statement &&
-			_statementBefore.description === _statementAfter.description) {
+			getParagraphsText(_statementBefore.paragraphs) === getParagraphsText(_statementAfter.paragraphs)) {
 			logger.info('Skipping subscription update - only metadata changed');
 			
 return;
@@ -283,10 +284,10 @@ return;
 		const simpleStatementAfter =
 			statementToSimpleStatement(_statementAfter);
 
-		//check if statement or description changed
+		//check if statement or paragraphs changed
 		if (
 			simpleStatementBefore.statement === simpleStatementAfter.statement &&
-			simpleStatementBefore.description === simpleStatementAfter.description
+			getParagraphsText(simpleStatementBefore.paragraphs) === getParagraphsText(simpleStatementAfter.paragraphs)
 		) {
 			logger.info('No content changes in statement, skipping subscription update');
 			

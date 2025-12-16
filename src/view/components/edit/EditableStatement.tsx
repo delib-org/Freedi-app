@@ -3,6 +3,7 @@ import { Statement } from '@freedi/shared-types';
 import EditText, { EditTextProps } from './EditText';
 import { useEditPermission } from '@/controllers/hooks/useEditPermission';
 import { updateStatementText } from '@/controllers/db/statements/setStatements';
+import { getParagraphsText } from '@/utils/paragraphUtils';
 
 interface EditableStatementProps extends Omit<EditTextProps, 'value' | 'secondaryValue' | 'editable' | 'editing' | 'onSave'> {
 	statement: Statement | undefined;
@@ -28,14 +29,13 @@ const EditableStatement: FC<EditableStatementProps> = ({
 
 	if (!statement) return null;
 
-	const handleSave = async (primary: string, secondary?: string) => {
+	const handleSave = async (primary: string) => {
 		try {
 			if (!statement) throw new Error('Statement is undefined');
 
 			const title = variant === 'description' ? statement.statement : primary;
-			const description = variant === 'statement' ? statement.description : (secondary || '');
 
-			await updateStatementText(statement, title, description);
+			await updateStatementText(statement, title);
 			onSaveSuccess?.();
 		} catch (error) {
 			console.error('Error updating statement:', error);
@@ -44,11 +44,12 @@ const EditableStatement: FC<EditableStatementProps> = ({
 	};
 
 	const effectiveVariant = showDescription ? variant : 'statement';
+	const paragraphsText = getParagraphsText(statement.paragraphs);
 
 	return (
 		<EditText
 			value={statement.statement || ''}
-			secondaryValue={statement.description || ''}
+			secondaryValue={paragraphsText}
 			editable={isEditable}
 			editing={forceEditing}
 			onSave={handleSave}

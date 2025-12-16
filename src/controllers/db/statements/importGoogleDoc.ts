@@ -3,8 +3,7 @@
  */
 
 import { getFunctions, httpsCallable } from 'firebase/functions';
-import { Statement } from '@freedi/shared-types';
-import { Paragraph } from '@/types/paragraph';
+import { Statement, Paragraph } from '@freedi/shared-types';
 import { logError } from '@/utils/errorHandling';
 
 interface ImportRequest {

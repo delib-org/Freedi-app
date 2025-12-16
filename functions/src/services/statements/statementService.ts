@@ -36,7 +36,9 @@ export class StatementService {
 
 		const userOptionsDB = await userOptionsRef.get();
 
-		return userOptionsDB.docs.map((doc) => doc.data() as Statement);
+		return userOptionsDB.docs
+			.map((doc) => doc.data() as Statement)
+			.filter((statement) => !statement.hide);
 	}
 
 	/**
@@ -252,7 +254,9 @@ export class StatementService {
 
 		const anchoredDocs = await anchoredQuery.get();
 
-		return anchoredDocs.docs.map(doc => doc.data() as Statement);
+		return anchoredDocs.docs
+			.map(doc => doc.data() as Statement)
+			.filter(statement => !statement.hide);
 	}
 
 	/**
@@ -277,7 +281,7 @@ export class StatementService {
 		const nonAnchoredDocs = await nonAnchoredQuery.get();
 		let randomStatements = nonAnchoredDocs.docs
 			.map(doc => doc.data() as Statement)
-			.filter(s => !excludeIds.includes(s.statementId));
+			.filter(s => !s.hide && !excludeIds.includes(s.statementId));
 
 		// Fallback if not enough statements found
 		if (randomStatements.length < remainingSlots) {
@@ -317,7 +321,7 @@ export class StatementService {
 
 		return allOptionsDocs.docs
 			.map(doc => doc.data() as Statement)
-			.filter(statement => statement.anchored !== true && !excludeIds.includes(statement.statementId))
+			.filter(statement => !statement.hide && statement.anchored !== true && !excludeIds.includes(statement.statementId))
 			.slice(0, remainingSlots - currentCount);
 	}
 
@@ -340,7 +344,9 @@ export class StatementService {
 
 		const randomStatementsDB = await q.get();
 
-		let statements = randomStatementsDB.docs.map((doc) => doc.data() as Statement);
+		let statements = randomStatementsDB.docs
+			.map((doc) => doc.data() as Statement)
+			.filter(s => !s.hide);
 
 		// Filter out excluded IDs if any
 		if (excludeIds.length > 0) {
@@ -385,6 +391,8 @@ export class StatementService {
 
 		const topSolutionsDB = await q.get();
 
-		return topSolutionsDB.docs.map((doc) => doc.data() as Statement);
+		return topSolutionsDB.docs
+			.map((doc) => doc.data() as Statement)
+			.filter((statement) => !statement.hide);
 	}
 }

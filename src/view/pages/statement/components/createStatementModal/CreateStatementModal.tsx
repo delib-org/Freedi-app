@@ -5,12 +5,13 @@ import newQuestionGraphic from "@/assets/images/newQuestionGraphic.png";
 import { useTranslation } from "@/controllers/hooks/useTranslation";
 import styles from './CreateStatementModal.module.scss';
 import Button, { ButtonType } from "@/view/components/buttons/button/Button";
-import { StatementType, Statement } from "delib-npm";
+import { StatementType, Statement, ParagraphType } from "@freedi/shared-types";
 import { validateStatementTypeHierarchy } from "@/controllers/general/helpers";
 import { useAuthentication } from "@/controllers/hooks/useAuthentication";
 import { MultiSuggestionPreviewModal, SplitSuggestion } from "@/view/components/multiSuggestion";
 import { detectMultipleSuggestionsWithTimeout, DetectedSuggestion } from "@/services/multiSuggestionDetection";
 import { logError } from "@/utils/errorHandling";
+import { generateParagraphId } from "@/utils/paragraphUtils";
 
 interface CreateStatementModalProps {
   parentStatement: Statement | "top";
@@ -58,6 +59,18 @@ const CreateStatementModal: FC<CreateStatementModalProps> = ({
     }
   }, []);
 
+  // Helper to convert description text to paragraphs array
+  const textToParagraphs = (text: string) => {
+    if (!text.trim()) return undefined;
+    const lines = text.split('\n').filter(line => line.trim());
+    return lines.map((line, index) => ({
+      paragraphId: generateParagraphId(),
+      type: ParagraphType.paragraph,
+      content: line,
+      order: index,
+    }));
+  };
+
   // Submit a single statement
   const submitSingleStatement = async () => {
     setShowModal(false);
@@ -65,7 +78,7 @@ const CreateStatementModal: FC<CreateStatementModalProps> = ({
     await createStatementFromModal({
       creator,
       title,
-      description,
+      paragraphs: textToParagraphs(description),
       isOptionSelected,
       parentStatement,
       isSendToStoreTemp,
@@ -133,7 +146,7 @@ const CreateStatementModal: FC<CreateStatementModalProps> = ({
       await createStatementFromModal({
         creator,
         title: suggestion.title,
-        description: suggestion.description,
+        paragraphs: textToParagraphs(suggestion.description),
         isOptionSelected: true,
         parentStatement,
         isSendToStoreTemp,

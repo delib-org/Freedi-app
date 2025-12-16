@@ -4,6 +4,7 @@ import { useEditPermission } from '@/controllers/hooks/useEditPermission';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import EditIcon from '@/assets/icons/editIcon.svg?react';
 import { DocumentEditModal, ParagraphsDisplay } from '@/view/components/richTextEditor';
+import { hasParagraphsContent } from '@/utils/paragraphUtils';
 import styles from './EditableDescription.module.scss';
 
 const EditableDescription: FC = () => {
@@ -18,8 +19,10 @@ const EditableDescription: FC = () => {
 		return null;
 	}
 
-	// If no description and user can't edit, don't show anything
-	if (!statement.description && !canEdit) {
+	const hasParagraphs = hasParagraphsContent(statement.paragraphs);
+
+	// If no paragraphs and user can't edit, don't show anything
+	if (!hasParagraphs && !canEdit) {
 		return null;
 	}
 
@@ -33,10 +36,15 @@ const EditableDescription: FC = () => {
 	}
 
 	// Editable mode for authorized users - click to open rich editor
+	// Use different class when empty to hide on mobile
+	const containerClass = hasParagraphs
+		? styles.editableDescription
+		: `${styles.editableDescription} ${styles.editableDescriptionEmpty}`;
+
 	return (
 		<>
 			<div
-				className={styles.editableDescription}
+				className={containerClass}
 				onClick={() => setIsEditorOpen(true)}
 				role="button"
 				tabIndex={0}
@@ -61,8 +69,9 @@ const EditableDescription: FC = () => {
 					</button>
 				</div>
 
+				{/* Only render content area if there's content, or hide placeholder on mobile */}
 				<div className={styles.descriptionContent}>
-					{statement.description ? (
+					{hasParagraphs ? (
 						<ParagraphsDisplay statement={statement} />
 					) : (
 						<p className={styles.placeholder}>{t('Add a description...')}</p>

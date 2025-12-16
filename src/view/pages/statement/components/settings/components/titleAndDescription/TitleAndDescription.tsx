@@ -1,4 +1,5 @@
 import { FC, useEffect, useRef, useState } from 'react';
+import { ParagraphType } from '@freedi/shared-types';
 
 // Hooks & Helpers
 import { StatementSettingsProps } from '../../settingsTypeHelpers';
@@ -8,6 +9,7 @@ import VisuallyHidden from '@/view/components/accessibility/toScreenReaders/Visu
 import Button, { ButtonType } from '@/view/components/buttons/button/Button';
 import { useNavigate } from 'react-router';
 import { GoogleDocsImportModal } from '@/view/components/googleDocsImport';
+import { getParagraphsText, generateParagraphId } from '@/utils/paragraphUtils';
 
 const TitleAndDescription: FC<StatementSettingsProps> = ({
 	statement,
@@ -18,10 +20,8 @@ const TitleAndDescription: FC<StatementSettingsProps> = ({
 	const [showImportModal, setShowImportModal] = useState(false);
 
 	// * Variables * //
-	const arrayOfStatementParagraphs = statement?.statement.split('\n') || [];
-	const title = arrayOfStatementParagraphs[0];
-
-	const description = arrayOfStatementParagraphs.slice(1).join('\n');
+	const title = statement?.statement || '';
+	const paragraphsText = getParagraphsText(statement?.paragraphs);
 
 	const titleInputRef = useRef<HTMLInputElement>(null);
 
@@ -47,7 +47,7 @@ const TitleAndDescription: FC<StatementSettingsProps> = ({
 						const newTitle = e.target.value;
 						setStatementToEdit({
 							...statement,
-							statement: `${newTitle}\n${description}`,
+							statement: newTitle,
 						});
 					}}
 					required={true}
@@ -62,12 +62,20 @@ const TitleAndDescription: FC<StatementSettingsProps> = ({
 					name='description'
 					placeholder={t('Group Description')}
 					rows={3}
-					defaultValue={statement.description}
+					defaultValue={paragraphsText}
 					onChange={(e) => {
-						const newDescription = e.target.value;
+						const newParagraphsText = e.target.value;
+						// Convert text to paragraphs array
+						const lines = newParagraphsText.split('\n').filter(line => line.trim());
+						const newParagraphs = lines.map((line, index) => ({
+							paragraphId: generateParagraphId(),
+							type: ParagraphType.paragraph,
+							content: line,
+							order: index,
+						}));
 						setStatementToEdit({
 							...statement,
-							description: newDescription,
+							paragraphs: newParagraphs,
 						});
 					}}
 				/>

@@ -3,6 +3,7 @@ import { Statement } from '@freedi/shared-types';
 import { useEditPermission } from '@/controllers/hooks/useEditPermission';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { DocumentEditModal, ParagraphsDisplay } from '@/view/components/richTextEditor';
+import { hasParagraphsContent } from '@/utils/paragraphUtils';
 import EditIcon from '@/assets/icons/editIcon.svg?react';
 import styles from './EditableDescription.module.scss';
 
@@ -26,9 +27,11 @@ const EditableDescription: FC<EditableDescriptionProps> = ({
 
 	if (!statement) return null;
 
+	const hasParagraphs = hasParagraphsContent(statement.paragraphs);
+
 	// Read-only mode for users without permission
 	if (!isEditable) {
-		if (!statement.description) return null;
+		if (!hasParagraphs) return null;
 
 		return (
 			<div className={styles.description}>
@@ -38,10 +41,15 @@ const EditableDescription: FC<EditableDescriptionProps> = ({
 	}
 
 	// Editable mode - click to open rich editor
+	// Use different class when empty to hide on mobile
+	const containerClass = hasParagraphs
+		? styles.editableDescription
+		: `${styles.editableDescription} ${styles.editableDescriptionEmpty}`;
+
 	return (
 		<>
 			<div
-				className={styles.editableDescription}
+				className={containerClass}
 				onClick={() => setIsEditorOpen(true)}
 				role="button"
 				tabIndex={0}
@@ -57,7 +65,7 @@ const EditableDescription: FC<EditableDescriptionProps> = ({
 				</div>
 
 				<div className={styles.descriptionContent}>
-					{statement.description ? (
+					{hasParagraphs ? (
 						<ParagraphsDisplay statement={statement} />
 					) : (
 						<p className={styles.placeholder}>{t(placeholder)}</p>

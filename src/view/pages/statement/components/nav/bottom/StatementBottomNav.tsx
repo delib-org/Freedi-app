@@ -14,7 +14,7 @@ import useStatementColor from '@/controllers/hooks/useStatementColor';
 import styles from './StatementBottomNav.module.scss';
 import { StatementContext } from '../../../StatementCont';
 import { sortItems } from './StatementBottomNavModal';
-import { EvaluationUI, Role, SortType, StatementType } from '@freedi/shared-types';
+import { EvaluationUI, Role, SortType, StatementType, ParagraphType } from '@freedi/shared-types';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import { useDecreaseLearningRemain } from '@/controllers/hooks/useDecreaseLearningRemain';
 import { useDispatch, useSelector } from 'react-redux';
@@ -25,6 +25,7 @@ import InitialIdeaModal from '../../popperHebbian/refinery/InitialIdeaModal';
 import { createStatementWithSubscription } from '@/controllers/db/statements/createStatementWithSubscription';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { QuestionType } from '@freedi/shared-types';
+import { generateParagraphId } from '@/utils/paragraphUtils';
 
 interface Props { showNav?: boolean; }
 
@@ -136,15 +137,21 @@ const StatementBottomNav: FC<Props> = () => {
 				? StatementType.question
 				: StatementType.option;
 
-			// Extract title (first line or first 100 chars) and use full refined text as description
+			// Extract title (first line or first 100 chars) and convert rest to paragraphs
 			const lines = refinedText.split('\n');
 			const title = lines[0].substring(0, 100);
-			const description = refinedText;
+			const bodyLines = lines.slice(1).filter(line => line.trim());
+			const paragraphs = bodyLines.map((line, index) => ({
+				paragraphId: generateParagraphId(),
+				type: ParagraphType.paragraph,
+				content: line,
+				order: index,
+			}));
 
 			await createStatementWithSubscription({
 				newStatementParent: statement,
 				title,
-				description,
+				paragraphs,
 				newStatement: { statementType: defaultType },
 				newStatementQuestionType: statement.questionSettings?.questionType || QuestionType.simple,
 				currentLanguage,

@@ -1,0 +1,469 @@
+.teamPage {
+  max-width: 1000px;
+}
+
+.header {
+  margin-bottom: var(--spacing-xl);
+}
+
+.title {
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 var(--spacing-xs) 0;
+}
+
+.subtitle {
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.section {
+  background: var(--card-default);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-lg);
+  margin-bottom: var(--spacing-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-md);
+  padding-bottom: var(--spacing-sm);
+  border-bottom: 1px solid var(--border-light);
+}
+
+.sectionTitle {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+/* Invite Form */
+.inviteForm {
+  display: flex;
+  gap: var(--spacing-md);
+  flex-wrap: wrap;
+  align-items: flex-end;
+}
+
+.inputGroup {
+  flex: 1;
+  min-width: 250px;
+}
+
+.inputLabel {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-bottom: var(--spacing-xs);
+}
+
+.emailInput {
+  width: 100%;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  font-size: 0.9375rem;
+  transition: border-color 0.2s ease;
+
+  &:focus {
+    outline: none;
+    border-color: var(--btn-primary);
+  }
+
+  &::placeholder {
+    color: var(--text-caption);
+  }
+}
+
+.inviteButton {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-sm) var(--spacing-lg);
+  background: var(--btn-primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  white-space: nowrap;
+
+  &:hover:not(:disabled) {
+    background: var(--btn-primary-hover);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+/* Invite Link Modal/Success */
+.inviteLinkContainer {
+  margin-top: var(--spacing-md);
+  padding: var(--spacing-md);
+  background: rgba(76, 175, 80, 0.08);
+  border: 1px solid var(--agree);
+  border-radius: var(--radius-md);
+}
+
+.inviteLinkTitle {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--agree);
+  margin: 0 0 var(--spacing-sm) 0;
+}
+
+.inviteLinkWrapper {
+  display: flex;
+  gap: var(--spacing-sm);
+  align-items: center;
+}
+
+.inviteLinkInput {
+  flex: 1;
+  padding: var(--spacing-sm);
+  background: var(--card-default);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  font-family: monospace;
+  font-size: 0.8125rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.copyButton {
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--agree);
+  color: white;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: background 0.2s ease;
+
+  &:hover {
+    background: var(--agree-hover, #45a049);
+  }
+}
+
+/* Invitations List */
+.invitationsList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.invitationCard {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-md);
+  background: var(--background);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-light);
+}
+
+.invitationInfo {
+  flex: 1;
+}
+
+.invitationEmail {
+  font-weight: 500;
+  color: var(--text-primary);
+  margin: 0 0 var(--spacing-xs) 0;
+}
+
+.invitationMeta {
+  font-size: 0.8125rem;
+  color: var(--text-caption);
+  margin: 0;
+}
+
+.invitationActions {
+  display: flex;
+  gap: var(--spacing-sm);
+  align-items: center;
+}
+
+.statusBadge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: capitalize;
+
+  &.pending {
+    background: rgba(255, 193, 7, 0.15);
+    color: #f57c00;
+  }
+
+  &.accepted {
+    background: rgba(76, 175, 80, 0.15);
+    color: var(--agree);
+  }
+
+  &.expired {
+    background: rgba(158, 158, 158, 0.15);
+    color: var(--text-secondary);
+  }
+
+  &.revoked {
+    background: rgba(244, 67, 54, 0.15);
+    color: var(--disagree);
+  }
+}
+
+.revokeButton {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background: transparent;
+  color: var(--disagree);
+  border: 1px solid var(--disagree);
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover:not(:disabled) {
+    background: var(--disagree);
+    color: white;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+/* Collaborators List */
+.collaboratorsList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.collaboratorCard {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-md);
+  background: var(--background);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-light);
+}
+
+.collaboratorInfo {
+  flex: 1;
+}
+
+.collaboratorName {
+  font-weight: 500;
+  color: var(--text-primary);
+  margin: 0 0 var(--spacing-xs) 0;
+}
+
+.collaboratorEmail {
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.collaboratorMeta {
+  font-size: 0.75rem;
+  color: var(--text-caption);
+  margin: var(--spacing-xs) 0 0 0;
+}
+
+.permissionBadge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: capitalize;
+
+  &.owner {
+    background: rgba(91, 136, 229, 0.15);
+    color: var(--btn-primary);
+  }
+
+  &.admin {
+    background: rgba(156, 39, 176, 0.15);
+    color: #9c27b0;
+  }
+
+  &.viewer {
+    background: rgba(158, 158, 158, 0.15);
+    color: var(--text-secondary);
+  }
+}
+
+.removeButton {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background: transparent;
+  color: var(--disagree);
+  border: 1px solid var(--disagree);
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover:not(:disabled) {
+    background: var(--disagree);
+    color: white;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+/* Empty States */
+.emptyState {
+  text-align: center;
+  padding: var(--spacing-xl);
+  color: var(--text-secondary);
+
+  svg {
+    margin-bottom: var(--spacing-sm);
+    opacity: 0.5;
+  }
+
+  p {
+    margin: 0;
+  }
+}
+
+/* Error & Success Messages */
+.errorMessage {
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: rgba(244, 67, 54, 0.08);
+  color: var(--disagree);
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+  margin-top: var(--spacing-sm);
+}
+
+.successMessage {
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: rgba(76, 175, 80, 0.08);
+  color: var(--agree);
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+  margin-top: var(--spacing-sm);
+}
+
+/* Loading State */
+.loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-xl);
+  color: var(--text-secondary);
+}
+
+.spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--border-light);
+  border-top-color: var(--btn-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: var(--spacing-sm);
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Owner Info Card */
+.ownerCard {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-md);
+  background: rgba(91, 136, 229, 0.04);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--btn-primary);
+  margin-bottom: var(--spacing-md);
+}
+
+.ownerLabel {
+  font-size: 0.75rem;
+  color: var(--btn-primary);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* RTL Support */
+[dir="rtl"] {
+  .inviteForm {
+    flex-direction: row-reverse;
+  }
+
+  .invitationCard,
+  .collaboratorCard,
+  .ownerCard {
+    flex-direction: row-reverse;
+  }
+
+  .inviteLinkWrapper {
+    flex-direction: row-reverse;
+  }
+
+  .invitationActions {
+    flex-direction: row-reverse;
+  }
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .inviteForm {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .inputGroup {
+    min-width: 100%;
+  }
+
+  .inviteButton {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .invitationCard,
+  .collaboratorCard {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-sm);
+  }
+
+  .invitationActions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .inviteLinkWrapper {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .copyButton {
+    width: 100%;
+  }
+}

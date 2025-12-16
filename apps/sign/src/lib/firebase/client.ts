@@ -40,6 +40,14 @@ export function initializeFirebaseClient(): FirebaseApp {
     return app;
   }
 
+  // Debug: Check if env vars are loaded (don't log actual values for security)
+  console.info('[Firebase Client - Sign] Config check:', {
+    hasApiKey: !!firebaseConfig.apiKey,
+    hasAuthDomain: !!firebaseConfig.authDomain,
+    hasProjectId: !!firebaseConfig.projectId,
+    projectId: firebaseConfig.projectId, // Safe to log project ID
+  });
+
   app = initializeApp(firebaseConfig);
   console.info('[Firebase Client - Sign] Initialized');
 
@@ -123,6 +131,7 @@ export async function logout(): Promise<void> {
     // Clear cookies
     document.cookie = 'userId=; path=/; max-age=0';
     document.cookie = 'userDisplayName=; path=/; max-age=0';
+    document.cookie = 'userEmail=; path=/; max-age=0';
 
     console.info('[Firebase Auth] User logged out');
   } catch (error) {
@@ -155,6 +164,10 @@ function setCookiesFromUser(user: User): void {
 
   if (user.displayName) {
     document.cookie = `userDisplayName=${encodeURIComponent(user.displayName)}; path=/; max-age=${maxAge}; SameSite=Lax`;
+  }
+
+  if (user.email) {
+    document.cookie = `userEmail=${encodeURIComponent(user.email)}; path=/; max-age=${maxAge}; SameSite=Lax`;
   }
 }
 

@@ -88,6 +88,23 @@ export {
 export type { Invitation } from "./models/invitation/Invitation";
 export { InvitationSchema } from "./models/invitation/Invitation";
 
+// Admin Invitation models
+export type {
+  AdminInvitation,
+  ViewerLink,
+  DocumentCollaborator
+} from "./models/adminInvitation/AdminInvitation";
+
+export {
+  AdminInvitationSchema,
+  ViewerLinkSchema,
+  DocumentCollaboratorSchema,
+  AdminPermissionLevel,
+  AdminInvitationStatus,
+  hasPermissionLevel,
+  INVITATION_EXPIRY
+} from "./models/adminInvitation/AdminInvitation";
+
 // MassConsensus models
 export type {
   MassConsensusMember,
@@ -126,6 +143,16 @@ export { ResultsBy, CutoffBy, ResultsSettingsSchema, defaultResultsSettings } fr
 
 // Stage models
 export { StageSelectionType } from "./models/stage/stageTypes";
+
+// Paragraph models
+export type {
+  Paragraph
+} from "./models/paragraph/paragraphModel";
+
+export {
+  ParagraphSchema,
+  ParagraphType
+} from "./models/paragraph/paragraphModel";
 
 // Statement models
 export type {
@@ -273,3 +300,14 @@ export {
   SurveyStatusSchema,
   DEFAULT_SURVEY_SETTINGS,
 } from "./models/survey/surveyModel";
+
+// MAD Calculation utilities
+export type { MadResult } from "./utils/madCalculation";
+export {
+  calcMadAndMean,
+  calculateDCI,
+  meetsKAnonymity,
+  interpretDivergence,
+  interpretDCI,
+  DEMOGRAPHIC_CONSTANTS,
+} from "./utils/madCalculation";

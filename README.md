@@ -1,10 +1,10 @@
-# Freedi - Open Source Deliberative Democracy Platform
+# WizCol - Open Source Deliberative Democracy Platform
 
 **Freedi** is an open-source platform exploring solutions to democratic participation at scale. As groups grow larger, coordination becomes exponentially more complex, traditionally forcing decision-making into the hands of small groups. Freedi experiments with consensus algorithms and structured deliberation methods to enable broader participation in group decision-making.
 
 ## 🎯 Project Goals
 
-Freedi aims to explore how individual freedom and collective cooperation can work together. Based on research into five foundational pillars—Freedom, Partnerships, Navigation, Grace, and Justice—we're building tools to:
+WizCol aims to explore how individual freedom and collective cooperation can work together. Based on research into five foundational pillars—Freedom, Partnerships, Navigation, Grace, and Justice—we're building tools to:
 
 - Support both **individual autonomy** and **collective decision-making**
 - Give **every participant a voice** while preventing manipulation
@@ -78,11 +78,77 @@ This hierarchical model enables unlimited nesting depth with full ancestry track
 ### **Monorepo Applications**
 Freedi is organized as a monorepo with multiple specialized applications:
 
-| Application | Technology | Description |
-|-------------|------------|-------------|
-| **Main Freedi App** | Vite + React | Core deliberation platform with full feature set |
-| **Mass Consensus** | Next.js | Fast-loading anonymous consensus discussion with SSR/ISR |
-| **Document Signing** | Next.js | Digital signature collection and multi-party signing workflows |
+| Application | Technology | Location | Description |
+|-------------|------------|----------|-------------|
+| **Main Freedi App** | Vite + React | `/src` | Core deliberation platform with full feature set |
+| **Mass Consensus** | Next.js 14 | `/apps/mass-consensus` | Fast-loading anonymous consensus discussion with SSR/ISR |
+| **Freedi Sign** | Next.js 14 | `/apps/sign` | Document signing platform with paragraph-level engagement |
+
+---
+
+#### 📝 **Freedi Sign** (`/apps/sign`)
+A Next.js application for collaborative document review and digital signatures with granular paragraph-level feedback.
+
+**Key Features:**
+- **Document Signing Workflow**: Review, approve/reject, and sign documents with tracked signatures
+- **Paragraph-Level Interactions**:
+  - Approve or reject individual paragraphs
+  - Comment threads on specific paragraphs
+  - Progress tracking showing review completion
+- **Heat Map Visualization**:
+  - View engagement patterns across document sections
+  - Filter by demographic segments
+  - Identify controversial or highly-engaged paragraphs
+- **Admin Dashboard**:
+  - Real-time statistics (total participants, signed, rejected, viewed)
+  - Paragraph engagement analytics
+  - User management and team collaboration
+  - Export capabilities (users, detailed reports, demographic analysis)
+- **Demographic Surveys**: Collect and analyze user demographics
+- **Google Docs Import**: Import documents directly from Google Docs
+- **Customization**: Configurable branding (logo, colors), text direction (LTR/RTL/Auto)
+- **Invite System**: Generate shareable invite links for participants
+
+**Tech Stack:** Next.js 14 (App Router), Firebase, TypeScript, SCSS Modules, Zustand
+
+---
+
+#### ⚡ **Mass Consensus** (`/apps/mass-consensus`)
+A high-performance Next.js application for crowdsourced solution evaluation, optimized for speed and anonymous participation.
+
+**Key Features:**
+- **Server-Side Rendering (SSR)**: Near-instant page loads with pre-rendered content
+- **Incremental Static Regeneration (ISR)**: Cached pages with automatic 60-second updates
+- **Anonymous Participation**: No login required - immediate evaluation and submission
+- **Real-time Evaluations**: Vote on solutions using a 5-point scale (-1 to +1)
+- **Batch Loading**: Get fresh sets of random solutions to evaluate
+- **AI Feedback**: Personalized improvement suggestions powered by Google Gemini API
+- **Results Page**: View all solutions sorted by community consensus score
+- **Responsive Design**: Mobile-first approach with clean, modern UI
+
+**Performance Targets:**
+| Metric | Target |
+|--------|--------|
+| First Contentful Paint (FCP) | < 0.8s |
+| Largest Contentful Paint (LCP) | < 1.2s |
+| Time to Interactive (TTI) | < 2.0s |
+| Initial Bundle Size | < 80KB |
+
+**Tech Stack:** Next.js 14 (App Router), Firebase Admin SDK, TypeScript, Vercel-optimized
+
+---
+
+#### 📦 **Shared Packages** (`/packages`)
+Internal packages shared across all applications:
+
+| Package | Description |
+|---------|-------------|
+| `@freedi/shared-i18n` | Internationalization utilities with React and Next.js integrations |
+| `@freedi/shared-types` | Shared TypeScript types for apps and Firebase functions |
+
+These packages are used by all sub-applications to ensure consistent types and translations across the platform.
+
+---
 
 ### **User Management & Permissions**
 - **Role-Based Access Control**: Admin, Creator, Member, and Guest roles with fine-grained permissions
@@ -326,9 +392,31 @@ This runs:
 
 ### Access Points
 
-- **App**: http://localhost:5173
+- **Main App**: http://localhost:5173
+- **Mass Consensus**: http://localhost:3001
+- **Freedi Sign**: http://localhost:3002
 - **Firebase Emulators**: http://localhost:5002
 - **Functions**: http://localhost:5001
+
+### Running Sub-Applications
+
+Each sub-application can be run independently:
+
+```bash
+# Mass Consensus (Anonymous voting platform)
+cd apps/mass-consensus
+npm install
+npm run dev
+# Opens at http://localhost:3001
+
+# Freedi Sign (Document signing platform)
+cd apps/sign
+npm install
+npm run dev
+# Opens at http://localhost:3002
+```
+
+**Note:** Sub-applications require the Firebase emulator to be running. Start it from the root directory with `firebase emulators:start`.
 
 ### VS Code Setup
 

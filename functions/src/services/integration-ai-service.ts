@@ -2,6 +2,7 @@ import { GenerativeModel, GoogleGenerativeAI, HarmCategory, HarmBlockThreshold }
 import { logger } from "firebase-functions";
 import { GEMINI_MODEL } from "../config/gemini";
 import { Statement, StatementEvaluation } from "@freedi/shared-types";
+import { getParagraphsText } from "../helpers";
 
 /**
  * Statement with evaluation data for integration
@@ -9,7 +10,7 @@ import { Statement, StatementEvaluation } from "@freedi/shared-types";
 export interface StatementWithEvaluation {
 	statementId: string;
 	statement: string;
-	description?: string;
+	paragraphsText?: string;
 	numberOfEvaluators: number;
 	consensus: number;
 	sumEvaluations: number;
@@ -129,7 +130,7 @@ export async function findSimilarAndGenerateSuggestion(
 	const statementsForAI = otherStatements.map((s) => ({
 		id: s.statementId,
 		t: s.statement, // title
-		d: s.description || "", // description
+		d: getParagraphsText(s.paragraphs), // paragraphs text
 		e: (s.evaluation as { numberOfEvaluators?: number })?.numberOfEvaluators || s.totalEvaluators || 0, // evaluators
 	}));
 
@@ -141,7 +142,7 @@ export async function findSimilarAndGenerateSuggestion(
 	// Single optimized prompt for both tasks
 	const prompt = `Find similar suggestions to merge and generate a merged version.
 
-TARGET: "${targetStatement.statement}"${targetStatement.description ? ` - ${targetStatement.description}` : ""}
+TARGET: "${targetStatement.statement}"${getParagraphsText(targetStatement.paragraphs) ? ` - ${getParagraphsText(targetStatement.paragraphs)}` : ""}
 CONTEXT: "${questionContext}"
 
 CANDIDATES (id, title, desc, evaluators):
@@ -222,7 +223,7 @@ export async function generateIntegratedSuggestion(
 		// Just return the single statement
 		return {
 			title: statements[0].statement,
-			description: statements[0].description || "",
+			description: statements[0].paragraphsText || "",
 		};
 	}
 
@@ -246,7 +247,7 @@ export async function generateIntegratedSuggestion(
 			: Math.round(100 / statements.length);
 		return {
 			title: s.statement,
-			description: s.description || "",
+			description: s.paragraphsText || "",
 			evaluators: s.numberOfEvaluators,
 			consensus: s.consensus,
 			weight: weight,
@@ -327,7 +328,7 @@ function createFallbackIntegratedSuggestion(
 	if (statements.length === 1) {
 		return {
 			title: primary.statement,
-			description: primary.description || "",
+			description: primary.paragraphsText || "",
 		};
 	}
 
@@ -352,7 +353,7 @@ export function mapStatementToWithEvaluation(statement: Statement): StatementWit
 	return {
 		statementId: statement.statementId,
 		statement: statement.statement,
-		description: statement.description,
+		paragraphsText: getParagraphsText(statement.paragraphs),
 		numberOfEvaluators: evaluation?.numberOfEvaluators || statement.totalEvaluators || 0,
 		consensus: statement.consensus || evaluation?.agreement || 0,
 		sumEvaluations: evaluation?.sumEvaluations || 0,

@@ -6,6 +6,7 @@ import {
   getAllSolutionsSorted,
 } from '@/lib/firebase/queries';
 import { logError } from '@/lib/utils/errorHandling';
+import { getParagraphsText } from '@/lib/utils/paragraphUtils';
 
 /**
  * POST /api/ai/feedback
@@ -51,7 +52,7 @@ export async function POST(request: NextRequest) {
 You are an expert facilitator helping people improve their solutions to community questions.
 
 Question: "${question.statement}"
-${question.description ? `Context: "${question.description}"` : ''}
+${getParagraphsText(question.paragraphs) ? `Context: "${getParagraphsText(question.paragraphs)}"` : ''}
 
 The user submitted these solutions:
 ${userSolutions

@@ -57,4 +57,7 @@ export enum Collections {
     userEvaluations = 'userEvaluations',
     surveys = 'surveys',
     surveyProgress = 'surveyProgress',
+    adminInvitations = 'adminInvitations',
+    viewerLinks = 'viewerLinks',
+    documentCollaborators = 'documentCollaborators',
 }
