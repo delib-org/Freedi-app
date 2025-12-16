@@ -38,8 +38,15 @@ export default function DemographicFilter({ documentId, className }: Demographic
 
   // Load demographics on mount
   useEffect(() => {
+    console.info('[DemographicFilter] Loading demographics for document:', documentId);
     loadAvailableDemographics(documentId);
   }, [documentId, loadAvailableDemographics]);
+
+  // Debug: Log available demographics
+  useEffect(() => {
+    console.info('[DemographicFilter] Available demographics:', availableDemographics);
+    console.info('[DemographicFilter] Is loading:', isDemographicsLoading);
+  }, [availableDemographics, isDemographicsLoading]);
 
   // Sync selected question with filter state
   useEffect(() => {
@@ -85,10 +92,8 @@ export default function DemographicFilter({ documentId, className }: Demographic
     setSelectedQuestion(null);
   }, []);
 
-  // Don't render if no demographics available
-  if (!isDemographicsLoading && availableDemographics.length === 0) {
-    return null;
-  }
+  // Show message if no demographics available (for debugging)
+  const noDemographicsAvailable = !isDemographicsLoading && availableDemographics.length === 0;
 
   return (
     <div className={clsx(styles.container, isExpanded && styles.expanded, className)}>
@@ -168,7 +173,16 @@ export default function DemographicFilter({ documentId, className }: Demographic
           <div className={styles.menuDivider} />
 
           {/* Question list or segment list */}
-          {selectedQuestion ? (
+          {noDemographicsAvailable ? (
+            // No demographics available message
+            <div className={styles.optionsList}>
+              <div className={styles.emptyMessage}>
+                No demographic questions with 5+ respondents found.
+                <br />
+                <small>Enable demographics in Admin &gt; Settings</small>
+              </div>
+            </div>
+          ) : selectedQuestion ? (
             // Segment options
             <div className={styles.optionsList}>
               {selectedQuestion.options.map((option) => (

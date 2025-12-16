@@ -65,8 +65,9 @@ async function getUsersInSegment(
       }
     });
 
-    // Return null if segment doesn't meet k-anonymity threshold
-    if (userIds.size < DEMOGRAPHIC_CONSTANTS.MIN_SEGMENT_SIZE) {
+    // In development, allow any segment size; in production, enforce k-anonymity (5+ users)
+    const isDev = process.env.NODE_ENV === 'development';
+    if (!isDev && userIds.size < DEMOGRAPHIC_CONSTANTS.MIN_SEGMENT_SIZE) {
       return null;
     }
 

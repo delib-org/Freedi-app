@@ -49,34 +49,46 @@ export async function GET(
     const document = docSnapshot.data();
     const topParentId = document?.topParentId || docId;
 
-    // 2. Get demographic questions (group-level, statement-level, and sign-level)
+    // 2. Get demographic questions (group-level and statement-level)
+    // Note: Questions created in main app might not have scope field, so we query by statementId for all statement-level
     const questionsRef = db.collection(Collections.userDemographicQuestions);
 
-    const [groupSnapshot, statementSnapshot, signSnapshot] = await Promise.all([
+    const [groupSnapshot, statementSnapshot] = await Promise.all([
+      // Group-level questions: have topParentId and scope='group'
       questionsRef
         .where('topParentId', '==', topParentId)
         .where('scope', '==', 'group')
         .get(),
+      // Statement-level questions: have statementId matching docId (may or may not have scope)
       questionsRef
         .where('statementId', '==', docId)
-        .where('scope', '==', 'statement')
-        .get(),
-      questionsRef
-        .where('statementId', '==', docId)
-        .where('scope', '==', 'sign')
         .get(),
     ]);
 
+    // Filter out group-scoped questions from statement query (they were already captured)
+    const statementQuestions = statementSnapshot.docs
+      .map((doc) => doc.data() as DemographicQuestionDoc)
+      .filter((q) => q.scope !== 'group');
+
     const allQuestions: DemographicQuestionDoc[] = [
       ...groupSnapshot.docs.map((doc) => doc.data() as DemographicQuestionDoc),
-      ...statementSnapshot.docs.map((doc) => doc.data() as DemographicQuestionDoc),
-      ...signSnapshot.docs.map((doc) => doc.data() as DemographicQuestionDoc),
+      ...statementQuestions,
     ];
+
+    // Debug logging
+    console.info(`[HeatMap Demographics API] Document ${docId}, topParentId: ${topParentId}`);
+    console.info(`[HeatMap Demographics API] Found questions - group: ${groupSnapshot.docs.length}, statement: ${statementSnapshot.docs.length} (filtered to ${statementQuestions.length})`);
+    console.info(`[HeatMap Demographics API] Total questions: ${allQuestions.length}`);
 
     // Only use questions with options (radio/checkbox types)
     const questionsWithOptions = allQuestions.filter(
       (q) => q.options && q.options.length > 0 && (q.type === 'radio' || q.type === 'checkbox')
     );
+
+    console.info(`[HeatMap Demographics API] Questions with options (radio/checkbox): ${questionsWithOptions.length}`);
+    if (allQuestions.length > 0) {
+      console.info(`[HeatMap Demographics API] Sample question types: ${allQuestions.map(q => q.type).join(', ')}`);
+    }
 
     if (questionsWithOptions.length === 0) {
       return NextResponse.json({ demographics: [] });
@@ -118,6 +130,9 @@ export async function GET(
     });
 
     // 4. Build response with only options meeting k-anonymity threshold
+    // In development, show all segments; in production, enforce k-anonymity
+    const isDev = process.env.NODE_ENV === 'development';
+    const minSegmentSize = isDev ? 0 : DEMOGRAPHIC_CONSTANTS.MIN_SEGMENT_SIZE;
     const demographics: DemographicFilterOption[] = [];
 
     questionsWithOptions.forEach((q) => {
@@ -127,7 +142,7 @@ export async function GET(
           label: opt.option,
           count: countMap[q.userQuestionId]?.[opt.option] || 0,
         }))
-        .filter((opt) => opt.count >= DEMOGRAPHIC_CONSTANTS.MIN_SEGMENT_SIZE);
+        .filter((opt) => opt.count >= minSegmentSize);
 
       // Only include question if it has at least one valid option
       if (optionsWithCounts.length > 0) {
