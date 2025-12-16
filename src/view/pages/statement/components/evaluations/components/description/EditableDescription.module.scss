@@ -4,9 +4,9 @@
 	width: 100%;
 	margin-bottom: 1rem;
 
-	// Mobile: reduce margin
+	// Mobile: very compact
 	@media screen and (max-width: 600px) {
-		margin-bottom: 0.5rem;
+		margin-bottom: 0.25rem;
 	}
 }
 
@@ -30,6 +30,11 @@
 	display: flex;
 	justify-content: flex-end;
 	margin-bottom: 0.5rem;
+
+	// Mobile: compact header
+	@media screen and (max-width: 600px) {
+		margin-bottom: 0.25rem;
+	}
 }
 
 .editButton {
