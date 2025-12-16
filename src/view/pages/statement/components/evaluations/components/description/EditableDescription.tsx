@@ -64,6 +64,7 @@ const EditableDescription: FC = () => {
 					</button>
 				</div>
 
+				{/* Only render content area if there's content, or hide placeholder on mobile */}
 				<div className={styles.descriptionContent}>
 					{hasParagraphs ? (
 						<ParagraphsDisplay statement={statement} />
