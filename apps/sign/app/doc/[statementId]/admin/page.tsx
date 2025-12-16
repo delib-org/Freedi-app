@@ -120,6 +120,14 @@ export default async function AdminDashboard({ params }: AdminDashboardProps) {
           >
             Export Detailed
           </a>
+          <a
+            href={`/api/admin/export-demographic/${statementId}`}
+            className={styles.exportButton}
+            style={{ textDecoration: 'none', background: 'var(--warning, #f59e0b)' }}
+            title="Export demographic comparison data - shows how each segment interacted with each paragraph"
+          >
+            Export Demographic Analysis
+          </a>
         </div>
       </section>
     </div>
