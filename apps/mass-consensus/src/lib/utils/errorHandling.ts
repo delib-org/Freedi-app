@@ -5,7 +5,7 @@
  * Integrates with Sentry for production error tracking
  */
 
-import { captureException as sentryCaptureException } from '@/lib/monitoring/sentry';
+import * as Sentry from '@sentry/nextjs';
 
 /**
  * Custom error types for different failure modes
@@ -71,12 +71,16 @@ export function logError(error: unknown, context: ErrorContext): void {
   });
 
   // Send to Sentry for production monitoring
-  sentryCaptureException(error, {
-    operation: context.operation,
-    userId: context.userId,
-    questionId: context.questionId,
-    statementId: context.statementId,
-    extra: context.metadata,
+  Sentry.captureException(error, {
+    tags: {
+      operation: context.operation,
+    },
+    user: context.userId ? { id: context.userId } : undefined,
+    extra: {
+      questionId: context.questionId,
+      statementId: context.statementId,
+      ...context.metadata,
+    },
   });
 }
 
