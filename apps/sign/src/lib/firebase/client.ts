@@ -131,6 +131,7 @@ export async function logout(): Promise<void> {
     // Clear cookies
     document.cookie = 'userId=; path=/; max-age=0';
     document.cookie = 'userDisplayName=; path=/; max-age=0';
+    document.cookie = 'userEmail=; path=/; max-age=0';
 
     console.info('[Firebase Auth] User logged out');
   } catch (error) {
@@ -163,6 +164,10 @@ function setCookiesFromUser(user: User): void {
 
   if (user.displayName) {
     document.cookie = `userDisplayName=${encodeURIComponent(user.displayName)}; path=/; max-age=${maxAge}; SameSite=Lax`;
+  }
+
+  if (user.email) {
+    document.cookie = `userEmail=${encodeURIComponent(user.email)}; path=/; max-age=${maxAge}; SameSite=Lax`;
   }
 }
 

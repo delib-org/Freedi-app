@@ -76,7 +76,8 @@ export function useHeatMap(options: UseHeatMapOptions = {}): UseHeatMapReturn {
         ? selectParagraphHeatValue(paragraphId)(useHeatMapStore.getState())
         : null;
     };
-  }, [data, config.isEnabled, config.type]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data]);
 
   // Get CSS class for heat level
   const getHeatLevelClass = (level: HeatLevel): string => {

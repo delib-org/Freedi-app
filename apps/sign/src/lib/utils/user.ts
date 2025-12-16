@@ -88,6 +88,18 @@ export function getUserDisplayNameFromCookie(cookieHeader: string | null): strin
 }
 
 /**
+ * Get user email from cookies (server-side)
+ * @param cookieHeader - Cookie header from request
+ */
+export function getUserEmailFromCookie(cookieHeader: string | null): string | null {
+  if (!cookieHeader) return null;
+
+  const match = cookieHeader.match(/userEmail=([^;]+)/);
+
+  return match ? decodeURIComponent(match[1]) : null;
+}
+
+/**
  * Get user ID from Next.js cookies API (server-side)
  * @param cookieStore - Next.js cookies() return value
  */

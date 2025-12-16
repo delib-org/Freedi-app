@@ -31,11 +31,24 @@ export function initializeFirebaseAdmin(): App {
 
     if (hasExplicitCredentials) {
       // Initialize with explicit service account credentials
+      // Handle various newline formats from environment variables
+      let privateKey = process.env.FIREBASE_PRIVATE_KEY || '';
+
+      // Replace escaped newlines with actual newlines
+      // This handles both \\n (double escaped) and \n (single escaped from JSON)
+      privateKey = privateKey.replace(/\\n/g, '\n');
+
+      // If the key still doesn't have actual newlines, try to fix common issues
+      if (!privateKey.includes('\n') && privateKey.includes('-----BEGIN')) {
+        // The key might have been URL encoded or have other escape issues
+        privateKey = privateKey.replace(/\\\\n/g, '\n');
+      }
+
       app = initializeApp({
         credential: cert({
           projectId: process.env.FIREBASE_PROJECT_ID,
           clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-          privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+          privateKey,
         }),
         projectId: process.env.FIREBASE_PROJECT_ID,
       });

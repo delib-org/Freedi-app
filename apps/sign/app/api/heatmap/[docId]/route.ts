@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
-import { Collections, StatementType, Statement } from '@freedi/shared-types';
+import { Collections, StatementType, Statement, DEMOGRAPHIC_CONSTANTS } from '@freedi/shared-types';
 import { StatementWithParagraphs, Paragraph } from '@/types';
-import { HeatMapData } from '@/types/heatMap';
+import { HeatMapData, SegmentMetadata, DemographicHeatMapData } from '@/types/heatMap';
 
 const PARAGRAPH_VIEWS_COLLECTION = 'paragraphViews';
 
@@ -10,7 +10,9 @@ interface ApprovalDoc {
   paragraphId?: string;
   statementId?: string;
   approval: boolean;
-  userId: string;
+  odlUserId?: string;
+  odluserId?: string;
+  userId?: string;
 }
 
 interface ParagraphViewDoc {
@@ -19,10 +21,102 @@ interface ParagraphViewDoc {
   documentId: string;
 }
 
+interface UserDataDoc {
+  userQuestionId: string;
+  odlUserId: string;
+  answer?: string;
+  answerOptions?: string[];
+}
+
+interface DemographicQuestionDoc {
+  userQuestionId: string;
+  question: string;
+  options?: Array<{ option: string }>;
+}
+
+/**
+ * Get users who belong to a specific demographic segment
+ * Returns null if no filter should be applied
+ */
+async function getUsersInSegment(
+  db: FirebaseFirestore.Firestore,
+  topParentId: string,
+  questionId: string,
+  segmentValue: string
+): Promise<{ userIds: Set<string>; count: number } | null> {
+  try {
+    // Query usersData collection for this question
+    const answersSnapshot = await db
+      .collection(Collections.usersData)
+      .where('userQuestionId', '==', questionId)
+      .get();
+
+    const userIds = new Set<string>();
+
+    answersSnapshot.docs.forEach((doc) => {
+      const data = doc.data() as UserDataDoc;
+
+      // Check for match in answer or answerOptions
+      const matchesAnswer = data.answer === segmentValue;
+      const matchesOptions = data.answerOptions?.includes(segmentValue);
+
+      if (matchesAnswer || matchesOptions) {
+        userIds.add(data.odlUserId);
+      }
+    });
+
+    // In development, allow any segment size; in production, enforce k-anonymity (5+ users)
+    const isDev = process.env.NODE_ENV === 'development';
+    if (!isDev && userIds.size < DEMOGRAPHIC_CONSTANTS.MIN_SEGMENT_SIZE) {
+      return null;
+    }
+
+    return { userIds, count: userIds.size };
+  } catch (error) {
+    console.error('[HeatMap API] Error getting users in segment:', error);
+
+    return null;
+  }
+}
+
+/**
+ * Get demographic question metadata for segment info
+ */
+async function getQuestionMetadata(
+  db: FirebaseFirestore.Firestore,
+  questionId: string
+): Promise<{ question: string; options: Array<{ option: string }> } | null> {
+  try {
+    const questionDoc = await db
+      .collection(Collections.userDemographicQuestions)
+      .doc(questionId)
+      .get();
+
+    if (!questionDoc.exists) {
+      return null;
+    }
+
+    const data = questionDoc.data() as DemographicQuestionDoc;
+
+    return {
+      question: data.question,
+      options: data.options || [],
+    };
+  } catch (error) {
+    console.error('[HeatMap API] Error getting question metadata:', error);
+
+    return null;
+  }
+}
+
 /**
  * GET /api/heatmap/[docId]
  * Get aggregated heat map data for a document
  * Returns approval rates, comment counts, ratings, and viewership for all paragraphs
+ *
+ * Query params (admin-only features):
+ * - demographic: questionId to filter by
+ * - segment: segmentValue to filter by
  */
 export async function GET(
   request: NextRequest,
@@ -31,7 +125,52 @@ export async function GET(
   try {
     const { docId } = await params;
 
+    // Parse demographic filter params (admin-only feature)
+    const demographicQuestionId = request.nextUrl.searchParams.get('demographic');
+    const segmentValue = request.nextUrl.searchParams.get('segment');
+    const hasDemographicFilter = demographicQuestionId && segmentValue;
+
     const db = getFirestoreAdmin();
+
+    // Get users in segment if demographic filter is applied
+    let segmentUsers: Set<string> | null = null;
+    let segmentMetadata: SegmentMetadata | null = null;
+
+    if (hasDemographicFilter) {
+      const segmentResult = await getUsersInSegment(
+        db,
+        docId,
+        demographicQuestionId,
+        segmentValue
+      );
+
+      if (!segmentResult) {
+        // Segment doesn't meet k-anonymity threshold or doesn't exist
+        return NextResponse.json({
+          error: 'Segment has fewer than 5 respondents (privacy threshold)',
+          code: 'SEGMENT_TOO_SMALL',
+        }, { status: 400 });
+      }
+
+      segmentUsers = segmentResult.userIds;
+
+      // Get question metadata for response
+      const questionMeta = await getQuestionMetadata(db, demographicQuestionId);
+
+      if (questionMeta) {
+        const optionLabel = questionMeta.options.find(
+          (opt) => opt.option === segmentValue
+        )?.option || segmentValue;
+
+        segmentMetadata = {
+          questionId: demographicQuestionId,
+          questionLabel: questionMeta.question,
+          segmentValue,
+          segmentLabel: optionLabel,
+          respondentCount: segmentResult.count,
+        };
+      }
+    }
 
     // 1. Get the document with embedded paragraphs
     const docSnapshot = await db
@@ -113,6 +252,12 @@ export async function GET(
     approvalsSnapshot.docs.forEach((doc) => {
       const approval = doc.data() as ApprovalDoc;
       const paragraphId = approval.paragraphId || approval.statementId;
+      const userId = approval.odlUserId || approval.odluserId || approval.userId;
+
+      // Skip if filtering by segment and user not in segment
+      if (segmentUsers && userId && !segmentUsers.has(userId)) {
+        return;
+      }
 
       if (paragraphId && paragraphIds.includes(paragraphId)) {
         if (!approvalsByParagraph[paragraphId]) {
@@ -137,6 +282,13 @@ export async function GET(
     // Count comments per paragraph
     commentsSnapshot.docs.forEach((doc) => {
       const comment = doc.data() as Statement;
+      const creatorId = comment.creatorId;
+
+      // Skip if filtering by segment and creator not in segment
+      if (segmentUsers && creatorId && !segmentUsers.has(creatorId)) {
+        return;
+      }
+
       if (!comment.hide && paragraphIds.includes(comment.parentId)) {
         heatMapData.comments[comment.parentId] =
           (heatMapData.comments[comment.parentId] || 0) + 1;
@@ -158,6 +310,13 @@ export async function GET(
     // Then aggregate evaluations
     evaluationsSnapshot.docs.forEach((doc) => {
       const evaluation = doc.data();
+      const evaluatorId = evaluation.odlUserId || evaluation.odluserId || evaluation.evaluatorId;
+
+      // Skip if filtering by segment and evaluator not in segment
+      if (segmentUsers && evaluatorId && !segmentUsers.has(evaluatorId)) {
+        return;
+      }
+
       const paragraphId = commentToParagraph[evaluation.statementId];
 
       if (paragraphId && typeof evaluation.evaluation === 'number') {
@@ -180,8 +339,19 @@ export async function GET(
 
     // Calculate viewership percentages
     const viewsByParagraph: Record<string, Set<string>> = {};
+    const filteredVisitors = new Set<string>();
+
     viewsSnapshot.docs.forEach((doc) => {
       const view = doc.data() as ParagraphViewDoc;
+      const visitorId = view.visitorId;
+
+      // Skip if filtering by segment and visitor not in segment
+      if (segmentUsers && visitorId && !segmentUsers.has(visitorId)) {
+        return;
+      }
+
+      filteredVisitors.add(visitorId);
+
       if (paragraphIds.includes(view.paragraphId)) {
         if (!viewsByParagraph[view.paragraphId]) {
           viewsByParagraph[view.paragraphId] = new Set();
@@ -190,16 +360,28 @@ export async function GET(
       }
     });
 
+    // Use filtered visitor count when filtering by segment
+    const effectiveTotalVisitors = segmentUsers ? filteredVisitors.size : totalVisitors;
+
     // Convert to percentages (of total visitors to document)
     Object.entries(viewsByParagraph).forEach(([id, visitors]) => {
-      heatMapData.viewership[id] = totalVisitors > 0
-        ? Math.round((visitors.size / totalVisitors) * 100)
+      heatMapData.viewership[id] = effectiveTotalVisitors > 0
+        ? Math.round((visitors.size / effectiveTotalVisitors) * 100)
         : 0;
     });
 
-    console.info(`[HeatMap API] Generated heat map data for ${docId}: ${paragraphIds.length} paragraphs`);
+    const filterInfo = segmentMetadata
+      ? ` (filtered by ${segmentMetadata.questionLabel}: ${segmentMetadata.segmentLabel}, ${segmentMetadata.respondentCount} users)`
+      : '';
+    console.info(`[HeatMap API] Generated heat map data for ${docId}: ${paragraphIds.length} paragraphs${filterInfo}`);
 
-    return NextResponse.json({ data: heatMapData });
+    // Return data with segment metadata if filtered
+    const response: DemographicHeatMapData = {
+      ...heatMapData,
+      segment: segmentMetadata,
+    };
+
+    return NextResponse.json({ data: response });
   } catch (error) {
     console.error('[HeatMap API] GET error:', error);
 
