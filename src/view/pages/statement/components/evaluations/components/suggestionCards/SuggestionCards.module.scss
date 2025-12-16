@@ -5,6 +5,27 @@
 	transition: height 0.3s ease-in-out;
 	overflow-x: hidden; // Prevent horizontal overflow on mobile
 
+	// Mobile: reduced bottom margin, tighter card spacing
+	@media screen and (max-width: 600px) {
+		margin-bottom: 120px;
+		padding: 0 0.5rem;
+
+		// Create visual gap between cards using padding on children
+		> div {
+			margin-bottom: 0.625rem;
+		}
+	}
+
+	// Tablet
+	@media screen and (min-width: 601px) and (max-width: 768px) {
+		margin-bottom: 200px;
+		padding: 0 0.75rem;
+
+		> div {
+			margin-bottom: 0.75rem;
+		}
+	}
+
 	&.animating {
 		.suggestion-card {
 			transition: transform 0.3s ease-in-out, opacity 0.2s ease-in-out;

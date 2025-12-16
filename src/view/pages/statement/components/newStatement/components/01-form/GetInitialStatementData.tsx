@@ -2,6 +2,7 @@ import { FormEvent, useContext, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import styles from './GetInitialStatementData.module.scss';
 import { createStatementWithSubscription } from '@/controllers/db/statements/createStatementWithSubscription';
+import { closePanels } from '@/controllers/hooks/panelUtils';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import Button, { ButtonType } from '@/view/components/buttons/button/Button';
 import Input from '@/view/components/input/Input';
@@ -69,6 +70,9 @@ return;
 
 			dispatch(setShowNewStatementModal(false));
 			dispatch(clearNewStatement());
+
+			// Close chat panel and map container so user can see the main page
+			closePanels();
 
 			// Convert description text to paragraphs array
 			const paragraphs = description.trim() ? description.split('\n').filter(line => line.trim()).map((line, index) => ({

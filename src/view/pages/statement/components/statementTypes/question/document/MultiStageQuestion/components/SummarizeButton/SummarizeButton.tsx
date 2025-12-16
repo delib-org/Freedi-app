@@ -15,14 +15,11 @@ const SummarizeButton: FC<SummarizeButtonProps> = ({
 	onOpenModal,
 	isLoading
 }) => {
-	const { isAdmin, isCreator } = useEditPermission(statement);
+	const { isAdmin } = useEditPermission(statement);
 	const { t } = useTranslation();
 
-	// TODO: Uncomment when ready for production
-	// Only show to admins or creators
-	// if (!isAdmin && !isCreator) return null;
-
-	console.info('SummarizeButton render:', { isAdmin, isCreator, statementId: statement?.statementId });
+	// Only show to admins
+	if (!isAdmin) return null;
 
 	return (
 		<div className={styles.summarizeButtonWrapper}>

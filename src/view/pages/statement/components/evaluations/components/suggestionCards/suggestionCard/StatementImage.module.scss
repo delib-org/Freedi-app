@@ -2,6 +2,11 @@
 .imageContainer {
   position: relative;
 
+  // Hide images on mobile to show more content
+  @media screen and (max-width: 600px) {
+    display: none;
+  }
+
   // Above mode - full width image at top of card
   &.above {
     width: 100%;
@@ -12,8 +17,19 @@
     align-items: flex-start;
     order: -1; // Force image to appear first in flex layout
     flex-basis: 100%; // Take full width and force new line
-    padding: 1rem; // Add padding to stay within card bounds
+    padding: 0.75rem; // Reduced padding
     box-sizing: border-box; // Include padding in width calculation
+
+    // Hide on mobile
+    @media screen and (max-width: 600px) {
+      display: none;
+    }
+
+    // Tablet: show smaller image
+    @media screen and (min-width: 601px) and (max-width: 768px) {
+      max-height: 180px;
+      padding: 0.5rem;
+    }
   }
 
   // Inline mode - small image floated next to text
@@ -28,6 +44,17 @@
     [dir="rtl"] & {
       float: right;
       margin: 0 0 1rem 1.5rem; // Left and bottom margins for RTL
+    }
+
+    // Tablet: smaller inline image
+    @media screen and (min-width: 601px) and (max-width: 768px) {
+      max-width: 120px;
+      max-height: 120px;
+      margin: 0 1rem 0.5rem 0;
+
+      [dir="rtl"] & {
+        margin: 0 0 0.5rem 1rem;
+      }
     }
   }
 }
