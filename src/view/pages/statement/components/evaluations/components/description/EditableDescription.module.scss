@@ -3,6 +3,11 @@
 .editableDescription {
 	width: 100%;
 	margin-bottom: 1rem;
+
+	// Mobile: reduce margin
+	@media screen and (max-width: 600px) {
+		margin-bottom: 0.5rem;
+	}
 }
 
 .description {

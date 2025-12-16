@@ -730,6 +730,14 @@ p {
     padding-left: 1rem;
     padding-right: 1rem;
   }
+
+  // Mobile: more compact spacing
+  @media screen and (max-width: 600px) {
+    gap: 0.5rem;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+    padding-bottom: 80px;
+  }
 }
 
 .card {
