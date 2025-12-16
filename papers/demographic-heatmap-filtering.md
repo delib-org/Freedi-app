@@ -8,7 +8,9 @@
 
 ## Abstract
 
-This paper proposes a comprehensive system for demographic-based filtering and analysis in the Freedi Sign application. We introduce mechanisms to segment heatmap visualizations by demographic groups, enhance CSV exports with demographic breakdowns, and adapt the main Freedi app's collaboration index to identify points of agreement and disagreement between different demographic segments. This approach enables administrators to gain deeper insights into how different population segments engage with and respond to documents.
+This paper proposes a comprehensive system for demographic-based filtering and analysis in the Freedi Sign application. We introduce mechanisms to segment heatmap visualizations by demographic groups, enhance CSV exports with demographic breakdowns, and adapt the main Freedi app's **Polarization Index** (also known as "Collaboration Index") to identify points of agreement and disagreement between different demographic segments.
+
+The main Freedi app already implements a sophisticated Polarization Index that uses **MAD (Mean Absolute Deviation)** to measure division within groups and **groupsMAD** to measure divergence between demographic groups. This paper documents how to adapt these proven concepts for Sign documents, enabling administrators to gain deeper insights into how different population segments engage with and respond to documents.
 
 ---
 
@@ -16,9 +18,13 @@ This paper proposes a comprehensive system for demographic-based filtering and a
 
 1. [Introduction](#1-introduction)
 2. [Current System Architecture](#2-current-system-architecture)
+   - 2.1 Demographic Data Collection
+   - 2.2 Current Heatmap System
+   - 2.3 Consensus Scoring in Main Freedi App
+   - 2.4 **Existing Polarization Index (Collaboration Index) in Main Freedi App**
 3. [Proposed Demographic Heatmap Filtering](#3-proposed-demographic-heatmap-filtering)
 4. [Enhanced CSV Export with Demographics](#4-enhanced-csv-export-with-demographics)
-5. [Demographic Collaboration Index](#5-demographic-collaboration-index)
+5. [Adapting Polarization Index for Sign App](#5-adapting-polarization-index-for-sign-app)
 6. [Technical Implementation](#6-technical-implementation)
 7. [User Interface Design](#7-user-interface-design)
 8. [Performance Considerations](#8-performance-considerations)
@@ -106,9 +112,9 @@ interface HeatMapData {
 }
 ```
 
-### 2.3 Collaboration Index in Main Freedi App
+### 2.3 Consensus Scoring in Main Freedi App
 
-The main Freedi app calculates consensus using:
+The main Freedi app calculates individual statement consensus using:
 
 ```
 Score = Mean - SEM
@@ -120,7 +126,223 @@ Where:
 
 **Agreement Range:** -1 (full disagreement) to +1 (full agreement)
 
-**Key Insight:** This formula penalizes high variance and rewards consensus, making it ideal for measuring agreement within and between groups.
+### 2.4 Existing Polarization Index (Collaboration Index) in Main Freedi App
+
+The main Freedi app already includes a sophisticated **Polarization Index** visualization (labeled "Collaboration Index" in the UI) that shows how divided different demographic groups are on various topics. This existing system serves as the foundation for the Sign app implementation.
+
+#### 2.4.1 Component Location
+
+```
+src/view/components/maps/polarizationIndex/
+├── PolarizationIndex.tsx          # Main visualization component
+├── PolarizationIndex.module.scss  # Styling
+├── types/index.ts                 # Type definitions
+├── hooks/                         # Custom hooks
+│   ├── usePolarizationData.ts
+│   ├── useCanvasInteractions.ts
+│   └── useResponsiveDimensions.ts
+├── components/                    # Sub-components
+│   ├── PolarizationChart.tsx      # Canvas-based chart
+│   ├── AllStatementsOverview.tsx  # Summary cards
+│   ├── AxisSelector.tsx           # Demographic axis selector
+│   ├── StatsPanel.tsx             # Metrics display
+│   ├── GroupsList.tsx             # Demographic groups grid
+│   └── GroupDetails.tsx           # Selected group details
+└── utils/canvasUtils.ts           # Coordinate transformations
+```
+
+#### 2.4.2 MAD (Mean Absolute Deviation) - The Core Metric
+
+The Polarization Index uses **MAD** as the primary measure of polarization/division:
+
+```typescript
+// From functions/src/fn_polarizationIndex.ts
+function calcMadAndMean(values: number[]): { mad: number, mean: number, n: number } {
+  if (values.length === 0) return { mad: 0, mean: 0, n: 0 };
+  if (values.length === 1) return { mad: 0, mean: values[0], n: 1 };
+
+  const mean = values.reduce((sum, value) => sum + value, 0) / values.length;
+  const mad = values.reduce((sum, value) => sum + Math.abs(value - mean), 0) / values.length;
+
+  return { mad, mean, n: values.length };
+}
+```
+
+**MAD Formula:**
+```
+MAD = Σ|valueᵢ - mean| / n
+```
+
+**Interpretation:**
+- **MAD = 0**: Complete consensus (all evaluations identical)
+- **MAD = 1**: Maximum polarization (evaluations at opposite extremes)
+- **MAD = 0.5**: Moderate division
+
+#### 2.4.3 2D Triangle Visualization
+
+The component plots data on a 2D coordinate system:
+
+```
+         MAD = 1 (High Polarization)
+              ▲
+              │      • Statement A
+              │         (divided opinions)
+              │
+              │    • Group X
+              │      • Group Y
+              │
+              │         • Statement B
+              │           (broad consensus)
+              │
+         MAD = 0 ──────────────────────────────► Mean
+           Mean = -1              Mean = 0              Mean = +1
+         (Opposition)           (Neutral)            (Support)
+```
+
+**Coordinate Calculation:**
+```typescript
+// From PolarizationIndex.tsx
+function calculatePosition(
+  mad: number,
+  mean: number,
+  boardDimensions: { width: number; height: number }
+): { x: number; y: number } {
+  // Y: Inverted (high MAD at top, low MAD at bottom)
+  const y = (1 - mad) * boardDimensions.height;
+
+  // X: Normalized from [-1, 1] to [0, width]
+  const x = (mean + 1) * boardDimensions.width / 2;
+
+  return { x, y };
+}
+```
+
+#### 2.4.4 Data Structure
+
+```typescript
+// From delib-npm/PolarizationIndex
+interface PolarizationIndex {
+  statementId: string;
+  parentId: string;
+  statement: string;           // Statement text
+
+  // Overall metrics (all users)
+  overallMAD: number;          // Polarization across all evaluators
+  overallMean: number;         // Average agreement (-1 to +1)
+  overallN: number;            // Number of evaluators
+  averageAgreement: number;    // Same as overallMean
+
+  lastUpdated: number;
+  color: string;               // Statement color for visualization
+
+  // Demographic breakdowns
+  axes: AxesItem[];
+}
+
+interface AxesItem {
+  axId: string;                // Demographic question ID
+  question: string;            // e.g., "Age Group", "Location"
+  groupsMAD: number;           // MAD of group MEANS (between-group variance)
+  groups: DemographicGroup[];
+}
+
+interface DemographicGroup {
+  option: {
+    option: string;            // e.g., "18-25", "Urban"
+    color?: string;            // Group color for visualization
+  };
+  mad: number;                 // Within-group polarization
+  mean: number;                // Group average agreement
+  n: number;                   // Group size
+}
+```
+
+#### 2.4.5 Key Metrics Hierarchy
+
+```
+Statement Level
+├── overallMAD: Polarization across ALL users
+├── overallMean: Average agreement across ALL users
+└── overallN: Total evaluators
+
+Demographic Axis Level (e.g., "Age Group")
+├── groupsMAD: Variance BETWEEN group means
+│              High = groups disagree with each other
+│              Low = groups align in their opinions
+│
+└── Groups (e.g., "18-25", "26-35", "36-50")
+    ├── Group 1 (18-25)
+    │   ├── mad: Within-group polarization
+    │   ├── mean: Group average opinion
+    │   └── n: Members in group
+    │
+    ├── Group 2 (26-35)
+    │   ├── mad: Within-group polarization
+    │   ├── mean: Group average opinion
+    │   └── n: Members in group
+    │
+    └── ...
+```
+
+#### 2.4.6 GroupsMAD Calculation
+
+The `groupsMAD` is calculated from the means of each demographic group, measuring **between-group divergence**:
+
+```typescript
+// From fn_polarizationIndex.ts
+axes.forEach((ax: AxesItem) => {
+  const values: number[] = [];
+  ax.groups?.forEach((group: { mean: number; }) => {
+    values.push(group.mean);  // Collect all group means
+  });
+  const { mad: groupMAD } = calcMadAndMean(values);
+  ax.groupsMAD = groupMAD;  // MAD of the group means
+});
+```
+
+**Interpretation of groupsMAD:**
+- **groupsMAD ≈ 0**: All demographic groups have similar average opinions
+- **groupsMAD ≈ 0.5**: Moderate divergence between groups
+- **groupsMAD ≈ 1**: Demographic groups have opposing opinions
+
+#### 2.4.7 Visualization Behavior
+
+1. **Statement Points (Large Dots)**:
+   - Position based on `overallMAD` (Y) and `overallMean` (X)
+   - Click to reveal demographic group breakdown
+
+2. **Group Points (Small Colored Dots)**:
+   - Appear when a statement is selected
+   - Each dot represents one demographic group (e.g., "18-25" age group)
+   - Position based on group's `mad` (Y) and `mean` (X)
+   - Color corresponds to demographic option color
+   - Size can indicate group size (n)
+
+3. **Interactive Features**:
+   - Tooltips show: `{option} MAD: {mad}, Mean: {mean}, N: {n}`
+   - Click statement → expand to show groups
+   - Switch demographic axis to see different groupings
+
+#### 2.4.8 Firebase Function Integration
+
+The Polarization Index is updated automatically when users evaluate statements:
+
+```typescript
+// Trigger: User evaluation creates/updates
+// Function: updateUserDemographicEvaluation()
+// Collection: polarizationIndex
+
+// Data flow:
+1. User submits evaluation
+2. Function fetches user's demographic answers
+3. Function fetches all evaluations for the statement
+4. Calculates overallMAD, overallMean, overallN
+5. For each demographic axis:
+   a. Groups evaluations by demographic option
+   b. Calculates per-group mad, mean, n
+   c. Calculates groupsMAD from group means
+6. Saves to polarizationIndex collection
+```
 
 ---
 
@@ -265,108 +487,239 @@ interface DemographicExportOptions {
 
 ---
 
-## 5. Demographic Collaboration Index
+## 5. Adapting Polarization Index for Sign App
 
-### 5.1 Core Concept
+### 5.1 Foundation: Existing Polarization Index
 
-The **Demographic Collaboration Index (DCI)** measures how much two demographic segments agree or disagree on a specific topic. It adapts the Freedi consensus formula for between-group comparison.
+The Sign app's demographic collaboration features are built upon the **existing Polarization Index** from the main Freedi app (documented in Section 2.4). The key concepts to adapt are:
 
-### 5.2 Mathematical Foundation
+| Main App Concept | Sign App Adaptation |
+|------------------|---------------------|
+| Statement evaluations (-1 to +1) | Paragraph approvals (-1 to +1) |
+| `overallMAD` (statement polarization) | `paragraphMAD` (paragraph polarization) |
+| `groupsMAD` (between-group divergence) | Same - measures demographic divergence |
+| Per-group `mean` and `mad` | Same - per demographic segment metrics |
+| 2D visualization (MAD vs Mean) | Same visualization for Sign documents |
 
-For a given paragraph and metric (e.g., approval), comparing demographic groups A and B:
+### 5.2 MAD-Based Metrics for Sign
 
-**Within-Group Scores:**
+Using the same MAD calculation from the main app:
+
+```typescript
+// Reuse from main app: functions/src/fn_polarizationIndex.ts
+function calcMadAndMean(values: number[]): { mad: number, mean: number, n: number } {
+  if (values.length === 0) return { mad: 0, mean: 0, n: 0 };
+  if (values.length === 1) return { mad: 0, mean: values[0], n: 1 };
+
+  const mean = values.reduce((sum, value) => sum + value, 0) / values.length;
+  const mad = values.reduce((sum, value) => sum + Math.abs(value - mean), 0) / values.length;
+
+  return { mad, mean, n: values.length };
+}
 ```
-ScoreA = MeanA - SEMA
-ScoreB = MeanB - SEMB
+
+**Applied to Sign paragraphs:**
+
+```typescript
+interface ParagraphPolarization {
+  paragraphId: string;
+  content: string;
+
+  // Overall metrics (all users)
+  overallMAD: number;          // How divided are ALL users on this paragraph
+  overallMean: number;         // Average approval (-1 reject, +1 approve)
+  overallN: number;            // Total voters
+
+  // Demographic breakdown
+  axes: Array<{
+    demographicQuestionId: string;
+    question: string;          // e.g., "Age Group"
+    groupsMAD: number;         // How much do demographic groups DIFFER
+    groups: Array<{
+      option: string;          // e.g., "18-25"
+      color: string;
+      mad: number;             // Within-group division
+      mean: number;            // Group average approval
+      n: number;               // Group size
+    }>;
+  }>;
+}
 ```
 
-**Between-Group Agreement:**
-```
-DCI(A,B) = 1 - |ScoreA - ScoreB| / 2
+### 5.3 Key Metrics Explained
 
-Where:
-- DCI = 1.0: Perfect agreement (both groups have identical scores)
-- DCI = 0.5: Moderate divergence
-- DCI = 0.0: Maximum disagreement (one group at -1, other at +1)
+#### 5.3.1 Paragraph-Level Metrics
+
+| Metric | Formula | Meaning |
+|--------|---------|---------|
+| **overallMean** | Σ(approvals) / N | Average approval: -1 to +1 |
+| **overallMAD** | Σ\|approvalᵢ - mean\| / N | Overall division on paragraph |
+
+#### 5.3.2 Demographic Axis Metrics
+
+| Metric | Formula | Meaning |
+|--------|---------|---------|
+| **groupsMAD** | MAD of group means | How much demographics DISAGREE with each other |
+| **group.mean** | Σ(group approvals) / group.n | Group's average position |
+| **group.mad** | MAD within group | Division WITHIN the demographic group |
+
+#### 5.3.3 Interpreting groupsMAD (Between-Group Divergence)
+
+This is the **key metric for demographic collaboration**:
+
+```
+groupsMAD = 0.0  → All demographics agree
+groupsMAD = 0.3  → Minor differences between demographics
+groupsMAD = 0.5  → Moderate divergence - some demographics differ
+groupsMAD = 0.7  → Significant divergence - demographics disagree
+groupsMAD = 1.0  → Maximum polarization - demographics at opposite poles
 ```
 
 **Example:**
-- Group A approval: +0.8 (strong support)
-- Group B approval: -0.6 (strong opposition)
-- Divergence: |0.8 - (-0.6)| / 2 = 0.7
-- DCI: 1 - 0.7 = 0.3 (significant disagreement)
+```
+Paragraph: "Funding allocation should prioritize urban areas"
 
-### 5.3 Extended Metrics
+Age Group Analysis:
+  groupsMAD: 0.72 (HIGH - age groups strongly disagree)
 
-Beyond simple agreement, we calculate:
+  18-25: mean = +0.65, mad = 0.12, n = 45  (strong support, unified)
+  26-35: mean = +0.42, mad = 0.25, n = 78  (moderate support)
+  36-50: mean = -0.15, mad = 0.35, n = 52  (slight opposition, divided)
+  51+:   mean = -0.58, mad = 0.18, n = 31  (strong opposition, unified)
 
-#### 5.3.1 Paragraph Divergence Score
-
-Measures how controversial a paragraph is across demographics:
-
-```typescript
-DivergenceScore = standardDeviation(segmentScores)
-
-// High divergence = controversial content
-// Low divergence = consensus across demographics
+Insight: Clear generational divide - younger groups support, older oppose
 ```
 
-#### 5.3.2 Demographic Polarization Index
+### 5.4 Collaboration Index Calculation
 
-Identifies if demographics cluster into opposing camps:
+For pairwise comparison between demographic groups, we introduce the **Demographic Collaboration Index (DCI)**:
+
+```typescript
+// Collaboration between two groups based on their means
+function calculateDCI(groupA: { mean: number }, groupB: { mean: number }): number {
+  // Difference in means, normalized to 0-1 scale
+  const divergence = Math.abs(groupA.mean - groupB.mean) / 2;
+
+  // DCI: 1 = perfect agreement, 0 = maximum disagreement
+  return 1 - divergence;
+}
+
+// Example:
+// Group A mean: +0.8, Group B mean: -0.6
+// divergence = |0.8 - (-0.6)| / 2 = 0.7
+// DCI = 1 - 0.7 = 0.3 (significant disagreement)
+```
+
+**DCI Matrix:**
+```
+             18-25  26-35  36-50   51+
+18-25        1.00   0.89   0.60   0.39
+26-35        0.89   1.00   0.71   0.50
+36-50        0.60   0.71   1.00   0.79
+51+          0.39   0.50   0.79   1.00
+
+Clusters identified:
+- Young cluster (18-35): High internal DCI (0.89)
+- Older cluster (36+): High internal DCI (0.79)
+- Cross-cluster DCI: 0.39-0.60 (significant divergence)
+```
+
+### 5.5 Visualization: 2D Polarization Map for Sign
+
+Adapt the main app's visualization for Sign documents:
+
+```
+         MAD = 1 (High Polarization)
+              ▲
+              │    ○ Para 3 (controversial)
+              │       • 18-25 (support)
+              │                    • 51+ (oppose)
+              │
+              │
+              │           ○ Para 1 (moderate)
+              │             • All groups clustered
+              │
+              │                      ○ Para 5 (consensus)
+              │                        • Groups aligned
+         MAD = 0 ──────────────────────────────────────► Mean
+           Mean = -1              Mean = 0              Mean = +1
+            (Reject)            (Neutral)             (Approve)
+
+Legend:
+  ○ = Paragraph overall position
+  • = Demographic group position (colored by group)
+```
+
+**Interactive Features:**
+1. Click paragraph → reveal demographic group positions
+2. Select demographic axis → switch between age/location/etc.
+3. Hover group → show `{group}: MAD={mad}, Mean={mean}, N={n}`
+4. Highlight high-divergence paragraphs (groupsMAD > 0.5)
+
+### 5.6 Additional Metrics
+
+#### 5.6.1 Document-Level Divergence Score
+
+Average groupsMAD across all paragraphs:
+
+```typescript
+const documentDivergence = paragraphs.reduce(
+  (sum, p) => sum + p.axes[selectedAxis].groupsMAD, 0
+) / paragraphs.length;
+```
+
+#### 5.6.2 Most Divisive Paragraphs
+
+Paragraphs ranked by groupsMAD:
+
+```typescript
+const mostDivisive = paragraphs
+  .sort((a, b) => b.groupsMAD - a.groupsMAD)
+  .slice(0, 5);
+```
+
+#### 5.6.3 Demographic Polarization Detection
+
+Identify if demographics cluster into opposing camps:
 
 ```typescript
 interface PolarizationAnalysis {
-  isPolarized: boolean;      // True if bimodal distribution
+  isPolarized: boolean;         // True if bimodal distribution
   clusters: Array<{
     position: 'support' | 'oppose';
-    segments: string[];
+    segments: string[];         // Demographics in this cluster
     averageScore: number;
   }>;
-  polarizationStrength: number; // 0-1 scale
+  polarizationStrength: number; // 0-1 scale (groupsMAD)
 }
 ```
 
-#### 5.3.3 Cross-Demographic Correlation Matrix
+### 5.7 Heatmap Integration
 
-Shows which demographic segments tend to agree:
+Combine the Polarization Index with heatmap visualization:
 
-```typescript
-interface CorrelationMatrix {
-  demographics: string[];
-  correlations: number[][]; // Pearson correlation of approval patterns
-}
-```
-
-### 5.4 Visualization Recommendations
-
-**Triangle Map Adaptation:**
-
-The main Freedi app uses a triangle map for consensus visualization. We can adapt this for demographic comparison:
+**Divergence Heatmap Mode:**
+- Instead of showing approval/comments, show **groupsMAD** per paragraph
+- High divergence = red (demographics disagree)
+- Low divergence = green (demographics agree)
 
 ```
-                    ▲ Conflict (High Variance)
-                   /\
-                  /  \
-                 /    \
-                /      \
-               /   •A   \     A = Group A position
-              /          \    B = Group B position
-             /    •B      \
-            /              \
-           /________________\
-    Disagree              Agree
-
-Distance A↔B indicates divergence between groups
+┌────────────────────────────────────────────────────────────────────────┐
+│  Heatmap Mode: [Demographic Divergence ▼]  Axis: [Age Group ▼]         │
+├────────────────────────────────────────────────────────────────────────┤
+│                                                                         │
+│  Paragraph 1: "Introduction..."                                         │
+│  ░░░░░░░░░░░░░░░░░░░░░░  groupsMAD: 0.12 (All ages agree)              │
+│                                                                         │
+│  Paragraph 3: "Funding allocation..."                                   │
+│  ████████████████████████  groupsMAD: 0.72 (Age divide!)               │
+│  18-25: +0.65 | 26-35: +0.42 | 36-50: -0.15 | 51+: -0.58              │
+│                                                                         │
+│  Paragraph 5: "Implementation timeline..."                              │
+│  ▒▒▒▒▒▒▒▒▒▒▒▒▒▒  groupsMAD: 0.35 (Minor differences)                  │
+│                                                                         │
+└────────────────────────────────────────────────────────────────────────┘
 ```
-
-**Heatmap Overlay Mode:**
-
-Allow admin to select two demographic segments and view:
-- **Side-by-side heatmaps** for direct comparison
-- **Difference heatmap** showing divergence intensity
-- **Color coding:** Green = agreement, Red = disagreement
 
 ---
 
@@ -765,21 +1118,27 @@ async function getHeatmapWithDemographic(
 
 ## 10. Conclusion
 
-This paper presents a comprehensive framework for integrating demographic analysis into the Freedi Sign application's heatmap and export features. By adapting the main Freedi app's collaboration index, we enable administrators to:
+This paper presents a comprehensive framework for integrating demographic analysis into the Freedi Sign application's heatmap and export features. By adapting the main Freedi app's **existing Polarization Index** (labeled "Collaboration Index" in the UI), we leverage proven concepts including:
+
+- **MAD (Mean Absolute Deviation)** for measuring polarization/division
+- **groupsMAD** for measuring between-demographic divergence
+- **2D visualization** (MAD vs Mean) for intuitive understanding
+
+The Sign app adaptation enables administrators to:
 
 1. **Understand demographic differences** in document engagement and opinions
-2. **Identify points of consensus and divergence** across population segments
+2. **Identify points of consensus and divergence** across population segments using groupsMAD
 3. **Export detailed demographic breakdowns** for further analysis
-4. **Visualize collaboration patterns** through intuitive interfaces
-
-The proposed implementation builds on existing infrastructure while introducing new capabilities that provide valuable insights for policy makers, organizations, and researchers.
+4. **Visualize collaboration patterns** through the adapted 2D polarization map
 
 ### Key Contributions
 
 1. **Demographic Heatmap Filtering:** Filter any heatmap type by demographic segment
-2. **Demographic Collaboration Index (DCI):** Statistical measure of cross-demographic agreement
-3. **Enhanced CSV Export:** Demographic-segmented exports with collaboration metrics
-4. **Divergence Analysis:** Automatic identification of controversial content across demographics
+2. **Polarization Index Adaptation:** Reuse MAD-based metrics from main app for Sign paragraphs
+3. **groupsMAD Integration:** Show where demographics agree vs. disagree per paragraph
+4. **Demographic Collaboration Index (DCI):** Pairwise measure of cross-demographic agreement
+5. **Enhanced CSV Export:** Demographic-segmented exports with polarization metrics
+6. **Divergence Heatmap Mode:** New heatmap type showing groupsMAD per paragraph
 
 ### Implementation Priority
 
@@ -787,10 +1146,11 @@ The proposed implementation builds on existing infrastructure while introducing 
 |-------|---------|--------|--------|
 | 1 | Single-segment heatmap filter | Medium | High |
 | 2 | Demographic-filtered CSV export | Low | High |
-| 3 | Multi-segment comparison view | High | High |
-| 4 | Collaboration index calculation | Medium | Medium |
-| 5 | Divergence heatmap mode | Medium | Medium |
-| 6 | Full collaboration matrix | High | Medium |
+| 3 | Polarization Index calculation for Sign | Medium | High |
+| 4 | groupsMAD-based divergence heatmap | Medium | High |
+| 5 | 2D Polarization Map visualization | High | Medium |
+| 6 | Multi-segment comparison view | High | Medium |
+| 7 | Full DCI collaboration matrix | High | Medium |
 
 ---
 
@@ -910,6 +1270,52 @@ interface HeatMapComparison {
 | 0.40 - 0.60 | Yellow | Moderate |
 | 0.20 - 0.40 | Orange | Weak collaboration |
 | 0.00 - 0.20 | Red | Opposing views |
+
+---
+
+## Appendix D: Main App Source File References
+
+### D.1 Polarization Index Implementation
+
+| File | Purpose |
+|------|---------|
+| `src/view/components/maps/polarizationIndex/PolarizationIndex.tsx` | Main visualization component |
+| `src/view/components/maps/polarizationIndex/PolarizationIndex.module.scss` | Component styling |
+| `src/view/components/maps/polarizationIndex/types/index.ts` | TypeScript type definitions |
+| `functions/src/fn_polarizationIndex.ts` | Backend calculation engine with `calcMadAndMean()` |
+
+### D.2 Data Models
+
+| File | Purpose |
+|------|---------|
+| `packages/shared-types/src/models/polarizationIndex/` | `PolarizationIndex`, `AxesItem` types |
+| `packages/shared-types/src/models/userDemographic/` | `UserDemographicQuestion` types |
+
+### D.3 State Management
+
+| File | Purpose |
+|------|---------|
+| `src/redux/userDemographic/userDemographicSlice.ts` | Redux state for polarization data |
+| `src/controllers/db/polarizationIndex/getPolarizationIndex.ts` | Firebase listener |
+
+### D.4 Sign App Files to Extend
+
+| File | Purpose |
+|------|---------|
+| `apps/sign/app/api/heatmap/[docId]/route.ts` | Extend with demographic filtering |
+| `apps/sign/app/api/admin/export-detailed/[docId]/route.ts` | Extend with demographic exports |
+| `apps/sign/src/store/heatMapStore.ts` | Add demographic filter state |
+| `apps/sign/src/components/heatMap/HeatMapToolbar/` | Add demographic filter UI |
+
+### D.5 Key Functions to Reuse
+
+```typescript
+// From functions/src/fn_polarizationIndex.ts - Line 281
+function calcMadAndMean(values: number[]): { mad: number, mean: number, n: number }
+
+// From PolarizationIndex.tsx - Line 167
+function calculatePosition(mad: number, mean: number, boardDimensions): { x: number, y: number }
+```
 
 ---
 
