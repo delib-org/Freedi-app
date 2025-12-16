@@ -344,7 +344,7 @@ export async function GET(
       });
 
       // Calculate divergence score (MAD across segment means)
-      const { mad: divergenceScore, mean: overallMean } = calcMAD(segmentMeans);
+      const { mad: divergenceScore } = calcMAD(segmentMeans);
 
       // Calculate totals
       const totalApprovals = Object.values(paragraphApprovals).filter(v => v === true).length;
