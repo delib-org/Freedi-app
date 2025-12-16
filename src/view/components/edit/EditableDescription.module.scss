@@ -1,5 +1,10 @@
 .description {
 	padding: 1rem;
+
+	// Mobile: compact
+	@media screen and (max-width: 600px) {
+		padding: 0.5rem;
+	}
 }
 
 .editableDescription {
@@ -16,6 +21,18 @@
 		outline: 2px solid var(--btn-primary);
 		outline-offset: 2px;
 	}
+
+	// Mobile: compact
+	@media screen and (max-width: 600px) {
+		padding: 0.25rem;
+	}
+}
+
+// Hide entire empty description on mobile
+.editableDescriptionEmpty {
+	@media screen and (max-width: 600px) {
+		display: none !important;
+	}
 }
 
 .editButton {
@@ -30,6 +47,18 @@
 		width: 16px;
 		height: 16px;
 	}
+
+	// Mobile: smaller
+	@media screen and (max-width: 600px) {
+		font-size: 0.75rem;
+		gap: 0.25rem;
+		margin-bottom: 0.25rem;
+
+		svg {
+			width: 12px;
+			height: 12px;
+		}
+	}
 }
 
 .descriptionContent {
@@ -41,4 +70,9 @@
 	color: var(--text-secondary, #888);
 	font-style: italic;
 	margin: 0;
+
+	// Hide placeholder on mobile
+	@media screen and (max-width: 600px) {
+		display: none;
+	}
 }
