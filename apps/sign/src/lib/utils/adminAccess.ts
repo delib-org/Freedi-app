@@ -3,6 +3,7 @@
  * Handles permission checking for document admins and collaborators
  */
 
+import crypto from 'crypto';
 import { Firestore } from 'firebase-admin/firestore';
 import {
 	AdminPermissionLevel,
@@ -221,7 +222,6 @@ export async function getDocumentViewerLinks(
 export function generateSecureToken(): string {
 	// Use crypto.randomBytes in Node.js environment
 	// 32 bytes = 256 bits of entropy
-	const crypto = require('crypto');
 	const bytes = crypto.randomBytes(32);
 
 	return bytes.toString('base64url');

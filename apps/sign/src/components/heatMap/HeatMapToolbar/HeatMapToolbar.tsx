@@ -146,7 +146,7 @@ export default function HeatMapToolbar({ className }: HeatMapToolbarProps) {
             <button
               key={option.type}
               type="button"
-              role="menuitem"
+              role="menuitemradio"
               className={clsx(
                 styles.optionButton,
                 styles[option.colorClass],
@@ -154,7 +154,7 @@ export default function HeatMapToolbar({ className }: HeatMapToolbarProps) {
               )}
               onClick={() => handleSelectType(option.type)}
               onKeyDown={(e) => handleKeyDown(e, () => handleSelectType(option.type))}
-              aria-pressed={currentType === option.type}
+              aria-checked={currentType === option.type}
               title={option.label}
             >
               {option.icon}
@@ -165,11 +165,11 @@ export default function HeatMapToolbar({ className }: HeatMapToolbarProps) {
           {/* Off button */}
           <button
             type="button"
-            role="menuitem"
+            role="menuitemradio"
             className={clsx(styles.optionButton, styles.off, !isEnabled && styles.selected)}
             onClick={handleDisable}
             onKeyDown={(e) => handleKeyDown(e, handleDisable)}
-            aria-pressed={!isEnabled}
+            aria-checked={!isEnabled}
             title="Turn off"
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
