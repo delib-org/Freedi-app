@@ -10,6 +10,13 @@
 	}
 }
 
+// Hide entire empty description on mobile
+.editableDescriptionEmpty {
+	@media screen and (max-width: 600px) {
+		display: none !important;
+	}
+}
+
 .description {
 	padding: var(--padding);
 	background-color: var(--statementBackground);

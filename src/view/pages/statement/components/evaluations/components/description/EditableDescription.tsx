@@ -36,10 +36,15 @@ const EditableDescription: FC = () => {
 	}
 
 	// Editable mode for authorized users - click to open rich editor
+	// Use different class when empty to hide on mobile
+	const containerClass = hasParagraphs
+		? styles.editableDescription
+		: `${styles.editableDescription} ${styles.editableDescriptionEmpty}`;
+
 	return (
 		<>
 			<div
-				className={styles.editableDescription}
+				className={containerClass}
 				onClick={() => setIsEditorOpen(true)}
 				role="button"
 				tabIndex={0}
