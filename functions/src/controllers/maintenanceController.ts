@@ -121,6 +121,41 @@ export class MaintenanceController {
 	}
 
 	/**
+	 * Add randomSeed field to option statements for efficient random sampling
+	 * Query params:
+	 * - parentId (optional): Only update options under this parent
+	 * - stats (optional): If 'true', only return statistics without running migration
+	 */
+	async addRandomSeed(req: Request, res: Response): Promise<void> {
+		try {
+			const parentId = req.query.parentId as string | undefined;
+			const statsOnly = req.query.stats === 'true';
+
+			// Import the migration functions
+			const { migrateAddRandomSeed, getRandomSeedStats } = await import('../migrations/addRandomSeed');
+
+			if (statsOnly) {
+				const stats = await getRandomSeedStats();
+				res.send({
+					ok: true,
+					...stats
+				});
+				return;
+			}
+
+			const result = await migrateAddRandomSeed(parentId);
+
+			res.send({
+				ok: true,
+				parentId: parentId || 'all',
+				...result
+			});
+		} catch (error) {
+			this.handleError(res, error);
+		}
+	}
+
+	/**
 	 * Handle errors consistently
 	 */
 	private handleError(res: Response, error: unknown): void {

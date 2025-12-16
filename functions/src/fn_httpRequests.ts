@@ -34,3 +34,6 @@ export const updateAverageEvaluation = (req: Request, res: Response) =>
 
 export const recalculateEvaluations = (req: Request, res: Response) =>
 	maintenanceController.recalculateEvaluations(req, res);
+
+export const addRandomSeed = (req: Request, res: Response) =>
+	maintenanceController.addRandomSeed(req, res);

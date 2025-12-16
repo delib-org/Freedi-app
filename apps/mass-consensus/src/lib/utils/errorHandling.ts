@@ -2,7 +2,10 @@
  * Error Handling Utilities for Mass Consensus
  *
  * Provides consistent error handling patterns following CLAUDE.md guidelines
+ * Integrates with Sentry for production error tracking
  */
+
+import * as Sentry from '@sentry/nextjs';
 
 /**
  * Custom error types for different failure modes
@@ -54,6 +57,7 @@ interface ErrorContext {
 /**
  * Log an error with context
  * Replaces console.error() with structured logging
+ * Also sends to Sentry if configured
  */
 export function logError(error: unknown, context: ErrorContext): void {
   const errorMessage = error instanceof Error ? error.message : String(error);
@@ -64,6 +68,19 @@ export function logError(error: unknown, context: ErrorContext): void {
     error: errorMessage,
     stack: errorStack,
     ...context,
+  });
+
+  // Send to Sentry for production monitoring
+  Sentry.captureException(error, {
+    tags: {
+      operation: context.operation,
+    },
+    user: context.userId ? { id: context.userId } : undefined,
+    extra: {
+      questionId: context.questionId,
+      statementId: context.statementId,
+      ...context.metadata,
+    },
   });
 }
 

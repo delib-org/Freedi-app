@@ -5,6 +5,7 @@ import { getUserIdFromCookie, getAnonymousDisplayName } from '@/lib/utils/user';
 import { logError, ValidationError } from '@/lib/utils/errorHandling';
 import { VALIDATION, ERROR_MESSAGES } from '@/constants/common';
 import { textToParagraphs } from '@/lib/utils/paragraphUtils';
+import { checkRateLimit, RATE_LIMITS } from '@/lib/utils/rateLimit';
 import type { Firestore } from 'firebase-admin/firestore';
 
 /**
@@ -82,6 +83,12 @@ export async function POST(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  // Rate limit check - stricter for write operations
+  const rateLimitResponse = checkRateLimit(request, RATE_LIMITS.WRITE);
+  if (rateLimitResponse) {
+    return rateLimitResponse;
+  }
+
   try {
     const body = await request.json();
     const { solutionText, userId: bodyUserId, userName, existingStatementId, generatedTitle, generatedDescription } = body;

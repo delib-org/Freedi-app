@@ -46,7 +46,8 @@ import {
   maintainStatement,
   maintainSubscriptionToken,
   updateAverageEvaluation,
-  recalculateEvaluations
+  recalculateEvaluations,
+  addRandomSeed
 } from "./fn_httpRequests";
 import { findSimilarStatements } from "./fn_findSimilarStatements";
 import { detectMultipleSuggestions } from "./fn_detectMultipleSuggestions";
@@ -257,6 +258,7 @@ exports.maintainStatement = wrapHttpFunction(maintainStatement);
 exports.maintainSubscriptionToken = wrapHttpFunction(maintainSubscriptionToken);
 exports.updateAverageEvaluation = wrapHttpFunction(updateAverageEvaluation);
 exports.recalculateEvaluations = wrapHttpFunction(recalculateEvaluations);
+exports.addRandomSeed = wrapHttpFunction(addRandomSeed);
 
 // --------------------------
 // FIRESTORE TRIGGER FUNCTIONS
