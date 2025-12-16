@@ -15,6 +15,7 @@
     "@tiptap/extension-placeholder": "^3.13.0",
     "@tiptap/react": "^3.13.0",
     "@tiptap/starter-kit": "^3.13.0",
+    "@vercel/analytics": "^1.6.1",
     "clsx": "^2.1.0",
     "delib-npm": "^5.6.71",
     "firebase": "^11.0.2",

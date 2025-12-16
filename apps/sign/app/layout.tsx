@@ -1,5 +1,6 @@
 import { Metadata, Viewport } from 'next';
 import Script from 'next/script';
+import { Analytics } from '@vercel/analytics/react';
 import { cookies, headers } from 'next/headers';
 import {
   getTranslations,
@@ -69,6 +70,7 @@ export default async function RootLayout({
           {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
           {children as any}
         </NextTranslationProvider>
+        <Analytics />
       </body>
     </html>
   );
