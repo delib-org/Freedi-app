@@ -45,7 +45,7 @@ const SuggestionCard: FC<Props> = ({
 	statement,
 	positionAbsolute = true,
 }) => {
-	// Hooks
+	// Hooks - ALL hooks must be called before any early returns
 	if (!parentStatement) console.error('parentStatement is not defined');
 
 	const { t, dir } = useTranslation();
@@ -67,9 +67,6 @@ const SuggestionCard: FC<Props> = ({
 	const elementRef = useRef<HTMLDivElement>(null);
 	const textContainerRef = useRef<HTMLDivElement>(null);
 	const fileInputRef = useRef<HTMLInputElement>(null);
-
-	// Early return if statement is not defined
-	if (!statement) return null;
 
 	const hasJoinedServer = statement?.joined?.find(
 		(c) => c?.uid === creator?.uid
@@ -116,10 +113,12 @@ const SuggestionCard: FC<Props> = ({
 	// Removed sortSubStatements call - sorting is handled at parent level in SuggestionCards
 
 	const statementColor: StyleProps = useStatementColor({
-		statement,
+		statement: statement ?? undefined,
 	});
 
 	useEffect(() => {
+		if (!statement) return;
+
 		const element = elementRef.current;
 		if (element) {
 			const updateHeight = () => {
@@ -145,7 +144,7 @@ const SuggestionCard: FC<Props> = ({
 				resizeObserver.disconnect();
 			};
 		}
-	}, [statement.statementId, dispatch]);
+	}, [statement, dispatch]);
 
 	// Check if text is clamped and add overflow class
 	useEffect(() => {
@@ -174,6 +173,9 @@ const SuggestionCard: FC<Props> = ({
 		// Add a small delay to ensure rendering is complete
 		setTimeout(checkOverflow, 50);
 	}, [statement?.statement, isExpanded]);
+
+	// Early return AFTER all hooks are called
+	if (!statement) return null;
 
 	async function handleSetOption() {
 		try {

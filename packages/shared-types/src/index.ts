@@ -88,6 +88,23 @@ export {
 export type { Invitation } from "./models/invitation/Invitation";
 export { InvitationSchema } from "./models/invitation/Invitation";
 
+// Admin Invitation models
+export type {
+  AdminInvitation,
+  ViewerLink,
+  DocumentCollaborator
+} from "./models/adminInvitation/AdminInvitation";
+
+export {
+  AdminInvitationSchema,
+  ViewerLinkSchema,
+  DocumentCollaboratorSchema,
+  AdminPermissionLevel,
+  AdminInvitationStatus,
+  hasPermissionLevel,
+  INVITATION_EXPIRY
+} from "./models/adminInvitation/AdminInvitation";
+
 // MassConsensus models
 export type {
   MassConsensusMember,
