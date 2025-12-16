@@ -763,6 +763,69 @@ Before submitting PR, verify:
 
 ---
 
+## 🌳 GIT WORKTREE SETUP
+
+When creating a new git worktree, follow ALL these steps to ensure it's fully functional:
+
+### Step 1: Create the Worktree
+```bash
+git worktree add /Users/talyaron/Documents/Freedi-app.worktrees/<worktree-name> -b <branch-name> main
+```
+
+### Step 2: Copy Environment Files
+Environment files are in `.gitignore` and must be copied manually:
+```bash
+# Core env files
+cp /Users/talyaron/Documents/Freedi-app/env/.env.dev /Users/talyaron/Documents/Freedi-app.worktrees/<worktree-name>/env/
+cp /Users/talyaron/Documents/Freedi-app/env/.env.prod /Users/talyaron/Documents/Freedi-app.worktrees/<worktree-name>/env/
+cp /Users/talyaron/Documents/Freedi-app/env/.env.test /Users/talyaron/Documents/Freedi-app.worktrees/<worktree-name>/env/
+cp /Users/talyaron/Documents/Freedi-app/env/.env.local /Users/talyaron/Documents/Freedi-app.worktrees/<worktree-name>/env/
+
+# Functions env
+cp /Users/talyaron/Documents/Freedi-app/functions/.env /Users/talyaron/Documents/Freedi-app.worktrees/<worktree-name>/functions/
+
+# Mass Consensus env files
+cp /Users/talyaron/Documents/Freedi-app/apps/mass-consensus/.env.local /Users/talyaron/Documents/Freedi-app.worktrees/<worktree-name>/apps/mass-consensus/
+cp /Users/talyaron/Documents/Freedi-app/apps/mass-consensus/.env /Users/talyaron/Documents/Freedi-app.worktrees/<worktree-name>/apps/mass-consensus/
+cp /Users/talyaron/Documents/Freedi-app/apps/mass-consensus/.env.staging /Users/talyaron/Documents/Freedi-app.worktrees/<worktree-name>/apps/mass-consensus/
+cp /Users/talyaron/Documents/Freedi-app/apps/mass-consensus/.env.vercel /Users/talyaron/Documents/Freedi-app.worktrees/<worktree-name>/apps/mass-consensus/
+
+# Sign env files
+cp /Users/talyaron/Documents/Freedi-app/apps/sign/.env.local /Users/talyaron/Documents/Freedi-app.worktrees/<worktree-name>/apps/sign/
+```
+
+### Step 3: Install Dependencies
+```bash
+# Root dependencies
+cd /Users/talyaron/Documents/Freedi-app.worktrees/<worktree-name>
+npm install
+
+# Functions dependencies
+cd functions
+npm install
+```
+
+### Step 4: Build Shared Packages
+```bash
+# Build shared-types (required for main app and other apps)
+cd /Users/talyaron/Documents/Freedi-app.worktrees/<worktree-name>/packages/shared-types
+npm run build
+```
+
+### Step 5: Verify Setup
+```bash
+cd /Users/talyaron/Documents/Freedi-app.worktrees/<worktree-name>
+npm run dev  # Should start without errors
+```
+
+### Important Notes
+- **Emulators**: Both worktrees share the same `firebase.json` ports. Only run emulators from ONE worktree at a time.
+- **Port conflicts**: If running apps from both worktrees, use different ports for the worktree version.
+- **List worktrees**: `git worktree list`
+- **Remove worktree**: `git worktree remove <path>`
+
+---
+
 ## 💡 TIPS FOR SUCCESS
 
 1. **Read the examples** - Check `CODE_QUALITY_IMPROVEMENTS.md` for detailed examples

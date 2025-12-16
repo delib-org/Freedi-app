@@ -2,11 +2,18 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createSurvey, getSurveysByCreator } from '@/lib/firebase/surveys';
 import { verifyToken, extractBearerToken } from '@/lib/auth/verifyAdmin';
 import { CreateSurveyRequest } from '@/types/survey';
+import { checkRateLimit, RATE_LIMITS } from '@/lib/utils/rateLimit';
 
 /**
  * GET /api/surveys - List surveys for the authenticated user
  */
 export async function GET(request: NextRequest) {
+  // Rate limit check for admin endpoints
+  const rateLimitResponse = checkRateLimit(request, RATE_LIMITS.ADMIN);
+  if (rateLimitResponse) {
+    return rateLimitResponse;
+  }
+
   try {
     const token = extractBearerToken(request.headers.get('Authorization'));
 
@@ -45,6 +52,12 @@ export async function GET(request: NextRequest) {
  * POST /api/surveys - Create a new survey
  */
 export async function POST(request: NextRequest) {
+  // Rate limit check for admin write operations
+  const rateLimitResponse = checkRateLimit(request, RATE_LIMITS.ADMIN);
+  if (rateLimitResponse) {
+    return rateLimitResponse;
+  }
+
   try {
     const token = extractBearerToken(request.headers.get('Authorization'));
 
