@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, Suspense } from 'react';
+import { useEffect, useState, Suspense, useCallback } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { googleLogin, subscribeToAuthState, getCurrentUser } from '@/lib/firebase/client';
@@ -31,31 +31,7 @@ function InvitePageContent() {
   const [redirectUrl, setRedirectUrl] = useState<string | null>(null);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 
-  // Check if user is already logged in
-  useEffect(() => {
-    const unsubscribe = subscribeToAuthState((user) => {
-      if (user && status === 'login-required') {
-        // User just logged in, process the invitation
-        processInvitation();
-      }
-    });
-
-    return () => unsubscribe();
-  }, [status]);
-
-  // Process invitation on mount
-  useEffect(() => {
-    if (!token) {
-      setStatus('error');
-      setMessage(t('invalidInvitationLink'));
-
-      return;
-    }
-
-    processInvitation();
-  }, [token]);
-
-  const processInvitation = async () => {
+  const processInvitation = useCallback(async () => {
     if (!token) return;
 
     setStatus('processing');
@@ -91,11 +67,35 @@ function InvitePageContent() {
       if (data.redirectUrl) {
         setRedirectUrl(data.redirectUrl);
       }
-    } catch (err) {
+    } catch {
       setStatus('error');
       setMessage(t('invitationProcessingError'));
     }
-  };
+  }, [token, t]);
+
+  // Check if user is already logged in
+  useEffect(() => {
+    const unsubscribe = subscribeToAuthState((user) => {
+      if (user && status === 'login-required') {
+        // User just logged in, process the invitation
+        processInvitation();
+      }
+    });
+
+    return () => unsubscribe();
+  }, [status, processInvitation]);
+
+  // Process invitation on mount
+  useEffect(() => {
+    if (!token) {
+      setStatus('error');
+      setMessage(t('invalidInvitationLink'));
+
+      return;
+    }
+
+    processInvitation();
+  }, [token, t, processInvitation]);
 
   const handleLogin = async () => {
     setIsLoggingIn(true);
@@ -103,7 +103,7 @@ function InvitePageContent() {
     try {
       await googleLogin();
       // Auth state change will trigger processInvitation
-    } catch (err) {
+    } catch {
       setStatus('error');
       setMessage(t('loginFailed'));
     } finally {
@@ -131,8 +131,8 @@ function InvitePageContent() {
       setErrorDetails(null);
       setStatus('login-required');
       setMessage(t('pleaseLoginWithCorrectAccount'));
-    } catch (err) {
-      console.error('Failed to sign out', err);
+    } catch (error) {
+      console.error('Failed to sign out', error);
     }
   };
 

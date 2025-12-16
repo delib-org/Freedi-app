@@ -11,10 +11,6 @@ import {
 } from '@freedi/shared-types';
 import styles from './team.module.scss';
 
-interface InvitationWithLink extends AdminInvitation {
-  inviteLink?: string;
-}
-
 export default function TeamPage() {
   const params = useParams();
   const statementId = params?.statementId as string;
@@ -22,7 +18,8 @@ export default function TeamPage() {
 
   // State
   const [invitations, setInvitations] = useState<AdminInvitation[]>([]);
-  const [collaborators, setCollaborators] = useState<DocumentCollaborator[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [collaborators, _setCollaborators] = useState<DocumentCollaborator[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [inviteEmail, setInviteEmail] = useState('');
