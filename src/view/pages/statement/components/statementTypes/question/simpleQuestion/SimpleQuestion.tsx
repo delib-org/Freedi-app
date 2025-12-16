@@ -7,6 +7,7 @@ import Description from '../../../evaluations/components/description/Description
 import { StatementContext } from '@/view/pages/statement/StatementCont'
 import { useSummarization } from '@/controllers/hooks/useSummarization'
 import { useTranslation } from '@/controllers/hooks/useTranslation'
+import { useEditPermission } from '@/controllers/hooks/useEditPermission'
 import SummaryDisplay from '../document/MultiStageQuestion/components/SummaryDisplay/SummaryDisplay'
 import SummarizeModal from '../document/MultiStageQuestion/components/SummarizeModal/SummarizeModal'
 
@@ -14,6 +15,7 @@ const SimpleQuestion = () => {
 	const { statement } = useContext(StatementContext)
 	const { t } = useTranslation()
 	const { isGenerating, generateSummary } = useSummarization()
+	const { isAdmin } = useEditPermission(statement)
 	const [isModalOpen, setIsModalOpen] = useState(false)
 
 	const handleGenerateSummary = async (customPrompt: string) => {
@@ -41,8 +43,8 @@ const SimpleQuestion = () => {
 					generatedAt={statementWithSummary?.summaryGeneratedAt}
 				/>
 
-				{/* Summarize Button */}
-				{statement && (
+				{/* Summarize Button - Only visible to admins */}
+				{statement && isAdmin && (
 					<div className={styles.summarizeWrapper}>
 						<button
 							className={`btn btn--secondary ${isGenerating ? 'btn--disabled' : ''}`}
