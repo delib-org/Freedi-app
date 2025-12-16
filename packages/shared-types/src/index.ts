@@ -283,3 +283,14 @@ export {
   SurveyStatusSchema,
   DEFAULT_SURVEY_SETTINGS,
 } from "./models/survey/surveyModel";
+
+// MAD Calculation utilities
+export type { MadResult } from "./utils/madCalculation";
+export {
+  calcMadAndMean,
+  calculateDCI,
+  meetsKAnonymity,
+  interpretDivergence,
+  interpretDCI,
+  DEMOGRAPHIC_CONSTANTS,
+} from "./utils/madCalculation";
