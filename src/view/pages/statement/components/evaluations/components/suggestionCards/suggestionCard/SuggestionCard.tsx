@@ -19,7 +19,7 @@ import { setStatementElementHight } from '@/redux/statements/statementsSlice';
 import EditableStatement from '@/view/components/edit/EditableStatement';
 import IconButton from '@/view/components/iconButton/IconButton';
 import styles from './SuggestionCard.module.scss';
-import { StatementType, Statement, Paragraph, ParagraphType } from '@freedi/shared-types';
+import { StatementType, Statement } from '@freedi/shared-types';
 import { useAuthorization } from '@/controllers/hooks/useAuthorization';
 import { toggleJoining } from '@/controllers/db/joining/setJoining';
 import Joined from '@/view/components/joined/Joined';
@@ -29,10 +29,7 @@ import Loader from '@/view/components/loaders/Loader';
 import CommunityBadge from '@/view/components/badges/CommunityBadge';
 import AnchoredBadge from '@/view/components/badges/AnchoredBadge';
 import UploadImage from '@/view/components/uploadImage/UploadImage';
-import EyeCrossIcon from '@/assets/icons/eyeCross.svg?react';
 import StatementImage from './StatementImage';
-import IntegrateSuggestionsModal from '@/view/components/integrateSuggestions/IntegrateSuggestionsModal';
-import { getParagraphsText } from '@/utils/paragraphUtils';
 
 interface Props {
 	statement: Statement | undefined;
@@ -45,7 +42,7 @@ const SuggestionCard: FC<Props> = ({
 	statement,
 	positionAbsolute = true,
 }) => {
-	// Hooks - ALL hooks must be called before any early returns
+	// Hooks
 	if (!parentStatement) console.error('parentStatement is not defined');
 
 	const { t, dir } = useTranslation();
@@ -67,6 +64,9 @@ const SuggestionCard: FC<Props> = ({
 	const elementRef = useRef<HTMLDivElement>(null);
 	const textContainerRef = useRef<HTMLDivElement>(null);
 	const fileInputRef = useRef<HTMLInputElement>(null);
+
+	// Early return if statement is not defined
+	if (!statement) return null;
 
 	const hasJoinedServer = statement?.joined?.find(
 		(c) => c?.uid === creator?.uid
@@ -92,16 +92,13 @@ const SuggestionCard: FC<Props> = ({
 	const [showImprovementModal, setShowImprovementModal] = useState(false);
 	const [isImproving, setIsImproving] = useState(false);
 	const [originalTitle, setOriginalTitle] = useState<string | null>(null);
-	const [originalParagraphs, setOriginalParagraphs] = useState<Paragraph[] | null>(null);
+	const [originalDescription, setOriginalDescription] = useState<string | null>(null);
 	const [hasBeenImproved, setHasBeenImproved] = useState(false);
 
 	// Image states
 	const imageUrl = statement?.imagesURL?.main ?? "";
 	const [image, setImage] = useState<string>(imageUrl);
 	const [showImageUpload, setShowImageUpload] = useState(false);
-
-	// Integration modal state
-	const [showIntegrationModal, setShowIntegrationModal] = useState(false);
 
 	// Real-time listener for image changes
 	useEffect(() => {
@@ -113,48 +110,36 @@ const SuggestionCard: FC<Props> = ({
 	// Removed sortSubStatements call - sorting is handled at parent level in SuggestionCards
 
 	const statementColor: StyleProps = useStatementColor({
-		statement: statement ?? undefined,
+		statement,
 	});
 
 	useEffect(() => {
-		if (!statement) return;
-
 		const element = elementRef.current;
-		if (!element) return;
-
-		let timeoutId: ReturnType<typeof setTimeout>;
-		let lastHeight = statement.elementHight || 0;
-
-		const updateHeight = () => {
-			// Debounce to prevent excessive Redux dispatches
-			clearTimeout(timeoutId);
-			timeoutId = setTimeout(() => {
+		if (element) {
+			const updateHeight = () => {
 				const height = element.clientHeight;
-				// Only dispatch if height actually changed
-				if (height > 0 && height !== lastHeight) {
-					lastHeight = height;
-					dispatch(
-						setStatementElementHight({
-							statementId: statement.statementId,
-							height,
-						})
-					);
-				}
-			}, 150);
-		};
+				dispatch(
+					setStatementElementHight({
+						statementId: statement.statementId,
+						height,
+					})
+				);
+			};
 
-		// Update height initially
-		updateHeight();
+			// Update height initially
+			setTimeout(updateHeight, 0);
 
-		// ResizeObserver for dynamic height changes
-		const resizeObserver = new ResizeObserver(updateHeight);
-		resizeObserver.observe(element);
+			// Optionally use ResizeObserver for dynamic height changes
+			const resizeObserver = new ResizeObserver(() => {
+				updateHeight();
+			});
+			resizeObserver.observe(element);
 
-		return () => {
-			clearTimeout(timeoutId);
-			resizeObserver.disconnect();
-		};
-	}, [statement?.statementId, statement?.elementHight, dispatch]);
+			return () => {
+				resizeObserver.disconnect();
+			};
+		}
+	}, [statement.statementId, dispatch]);
 
 	// Check if text is clamped and add overflow class
 	useEffect(() => {
@@ -183,9 +168,6 @@ const SuggestionCard: FC<Props> = ({
 		// Add a small delay to ensure rendering is complete
 		setTimeout(checkOverflow, 50);
 	}, [statement?.statement, isExpanded]);
-
-	// Early return AFTER all hooks are called
-	if (!statement) return null;
 
 	async function handleSetOption() {
 		try {
@@ -232,35 +214,25 @@ const SuggestionCard: FC<Props> = ({
 			setIsImproving(true);
 			setShowImprovementModal(false);
 
-			// Store original title and paragraphs before improvement
+			// Store original title and description before improvement
 			if (!originalTitle) {
 				setOriginalTitle(statement.statement);
-				setOriginalParagraphs(statement.paragraphs || null);
+				setOriginalDescription(statement.description || null);
 			}
-
-			// Get text representation of paragraphs for the AI service
-			const paragraphsText = getParagraphsText(statement.paragraphs);
-			const parentParagraphsText = getParagraphsText(parentStatement?.paragraphs);
 
 			// Call the improvement service with both title and description, including parent context
 			// Increased timeout to 45 seconds to handle longer AI processing times
 			const { improvedTitle, improvedDescription } = await improveSuggestionWithTimeout(
 				statement.statement,
-				paragraphsText || undefined,
+				statement.description,
 				instructions,
 				parentStatement?.statement,  // Parent question/title for context
-				parentParagraphsText || undefined, // Parent paragraphs text for additional context
+				parentStatement?.description, // Parent description for additional context
 				45000 // 45 seconds timeout
 			);
 
-			// Convert improved description to paragraphs and update in the database
-			const improvedParagraphs = improvedDescription ? improvedDescription.split('\n').filter(line => line.trim()).map((line, index) => ({
-				paragraphId: `p-${Date.now()}-${index}`,
-				type: ParagraphType.paragraph as const,
-				content: line,
-				order: index,
-			})) : undefined;
-			await updateStatementText(statement, improvedTitle, improvedParagraphs);
+			// Update both title and description in the database
+			await updateStatementText(statement, improvedTitle, improvedDescription);
 
 			// Mark as improved and enable edit mode
 			setHasBeenImproved(true);
@@ -284,11 +256,11 @@ const SuggestionCard: FC<Props> = ({
 
 	function handleUndo() {
 		if (originalTitle) {
-			// Restore original title and paragraphs
-			updateStatementText(statement, originalTitle, originalParagraphs || undefined);
+			// Restore original title and description
+			updateStatementText(statement, originalTitle, originalDescription || undefined);
 			setHasBeenImproved(false);
 			setOriginalTitle(null);
-			setOriginalParagraphs(null);
+			setOriginalDescription(null);
 			setIsEdit(false);
 		}
 	}
@@ -310,27 +282,19 @@ const SuggestionCard: FC<Props> = ({
 				${styles['statement-evaluation-card']}
 				${statementAge < 10000 ? styles['statement-evaluation-card--new'] : ''}
 				${showBadges && !isAnchored ? styles['statement-evaluation-card--community'] : ''}
-				${statement.hide ? styles['statement-evaluation-card--hidden'] : ''}
-				${isCardMenuOpen ? styles['statement-evaluation-card--menu-open'] : ''}
 			`.trim()}
 			style={{
 				top: `${positionAbsolute ? statement.top || 0 : 0}px`,
 				borderLeft: showEvaluation ? selectedOptionIndicator : '12px solid transparent',
 				color: statementColor.color,
 				flexDirection: dir === 'ltr' ? 'row' : 'row-reverse',
+				opacity: statement.hide ? 0.5 : 1,
 				pointerEvents: (statement.hide && !isAuthorized ? 'none' : 'auto'),
 				position: positionAbsolute ? 'absolute' : 'relative',
 			}}
 			ref={elementRef}
 			id={statement.statementId}
 		>
-			{/* Hidden badge for hidden statements */}
-			{statement.hide && (
-				<div className={styles.hiddenBadge}>
-					<EyeCrossIcon />
-					{t('Hidden')}
-				</div>
-			)}
 			{/* Loader overlay when improving */}
 			{isImproving && (
 				<div className={styles.loaderOverlay}>
@@ -387,7 +351,7 @@ const SuggestionCard: FC<Props> = ({
 									if (hasBeenImproved) {
 										setHasBeenImproved(false);
 										setOriginalTitle(null);
-										setOriginalParagraphs(null);
+										setOriginalDescription(null);
 									}
 								}}
 								onEditEnd={() => setIsEdit(false)}
@@ -464,7 +428,6 @@ const SuggestionCard: FC<Props> = ({
 							isEdit={isEdit}
 							setIsEdit={setIsEdit}
 							handleSetOption={handleSetOption}
-							onIntegrate={() => setShowIntegrationModal(true)}
 						/>
 					</div>
 				</div>
@@ -522,17 +485,6 @@ const SuggestionCard: FC<Props> = ({
 				isLoading={isImproving}
 				suggestionTitle={statement.statement}
 			/>
-			{/* Integration Modal */}
-			{showIntegrationModal && parentStatement && (
-				<IntegrateSuggestionsModal
-					sourceStatementId={statement.statementId}
-					parentStatementId={parentStatement.statementId}
-					onClose={() => setShowIntegrationModal(false)}
-					onSuccess={() => {
-						setShowIntegrationModal(false);
-					}}
-				/>
-			)}
 			{/* Upload area for initial image upload */}
 			{!image && showImageUpload && (
 				<div className={styles.uploadArea}>
