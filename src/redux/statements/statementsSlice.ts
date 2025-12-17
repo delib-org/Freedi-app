@@ -419,6 +419,13 @@ export const statementSelectorById =
 export const statementsSelector = (state: RootState) =>
 	state.statements.statements;
 
+// Memoized selector for statement by ID - use when you need to subscribe to updates
+export const makeStatementByIdSelector = (statementId: string | undefined) =>
+	createSelector(
+		[statementsSelector],
+		(statements) => statements.find((s) => s.statementId === statementId)
+	);
+
 export const subStatementsByTopParentIdMemo = (
 	statementId: string | undefined
 ) =>

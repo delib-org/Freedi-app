@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { statementSelector, statementSubscriptionSelector } from '@/redux/statements/statementsSlice';
-import { Access, Role, Statement, Creator } from '@freedi/shared-types';
+import { Access, Role, Creator } from '@freedi/shared-types';
 import { setStatementSubscriptionToDB } from '../db/subscriptions/setSubscriptions';
 import { useSelector } from 'react-redux';
 import { creatorSelector } from '@/redux/creator/creatorSlice';
@@ -32,71 +32,76 @@ export const useAuthorization = (statementId?: string): AuthorizationState => {
 
 	const [hasSubscription, setHasSubscription] = useState(false);
 
+	// Use refs to track subscription attempts and prevent loops
+	const subscriptionAttemptedRef = useRef(false);
+	const lastStatementIdRef = useRef<string | undefined>(undefined);
+
+	// Reset subscription attempt when statementId changes
+	if (statementId !== lastStatementIdRef.current) {
+		lastStatementIdRef.current = statementId;
+		subscriptionAttemptedRef.current = false;
+	}
+
 	const statement = useAppSelector(statementSelector(statementId));
 	const topParentStatement = useAppSelector(statementSelector(statement?.topParentId));
 	const creator = useSelector(creatorSelector);
 	const topParentId = statement?.topParentId;
-	
-	// SIMPLIFIED: Determine effective access - statement override or topParent
-	const effectiveAccess = statement?.membership?.access || topParentStatement?.membership?.access;
-	
+
+	// Extract primitive values for stable comparisons
+	const statementAccess = statement?.membership?.access;
+	const topParentAccess = topParentStatement?.membership?.access;
+	const effectiveAccess = statementAccess || topParentAccess;
+	const statementCreatorUid = statement?.creator?.uid;
+	const creatorUid = creator?.uid;
+	const creatorIsAnonymous = creator?.isAnonymous;
+
 	// Determine which subscription to use based on access override
-	const subscriptionId = statement?.membership?.access ? statementId : statement?.topParentId;
+	const subscriptionId = statementAccess ? statementId : topParentId;
 	const subscription = useAppSelector(statementSubscriptionSelector(subscriptionId));
 	const role = subscription?.role;
 
-	//set up top parent statement listener
+	// Set up top parent statement listener
 	useEffect(() => {
-
 		if (!statementId || !topParentId) return;
 		if (topParentStatement) return;
 
-		// Fetch the top parent statement if it doesn't exist in the store
 		const unsubscribe = listenToStatement(topParentId);
 
 		return () => {
 			unsubscribe();
 		}
-	}, [statementId, topParentId]);
+	}, [statementId, topParentId, !!topParentStatement]);
 
-	// Set up subscription listener - listen to the correct subscription based on access override
+	// Set up subscription listener
 	useEffect(() => {
-		if (!statementId || !creator?.uid) return;
+		if (!statementId || !creatorUid) return;
 
-		// Listen to statement-specific subscription if it has its own access, otherwise topParent
-		const subscriptionToListenId = statement?.membership?.access ? statementId : topParentId;
+		const subscriptionToListenId = statementAccess ? statementId : topParentId;
 		const unsubscribe = listenToStatementSubscription(subscriptionToListenId, creator, setHasSubscription);
 
 		return () => unsubscribe();
-	}, [statementId, topParentId, creator?.uid, statement?.membership?.access]);
+	}, [statementId, topParentId, creatorUid, statementAccess]);
 
+	// Handle authorization logic
 	useEffect(() => {
-		// Determine which statement to use for subscription based on access override
-		const effectiveStatement = statement?.membership?.access ? statement : topParentStatement;
+		if (!statementId || !creatorUid) return;
 
-		// if it is moderated group and user is not subscribed or not banned, set the subscription to waiting
-		if (!hasSubscription && isModeratedGroup(effectiveStatement, role) && creator && effectiveStatement && role !== Role.banned) {
-			setStatementSubscriptionToDB({
-				statement: effectiveStatement,
-				creator,
-				role: Role.waiting,
-				getInAppNotification: false,
-				getEmailNotification: false,
-				getPushNotification: false,
-			})
-		}
-	}, [hasSubscription, statement, topParentStatement, creator, role]);
+		const effectiveStatement = statementAccess ? statement : topParentStatement;
 
-	// Handle authorization logic with simplified access check
-	useEffect(() => {
-		if (!statement || !creator) return;
-		
-		// Determine which statement to use for authorization
-		const effectiveStatement = statement?.membership?.access ? statement : topParentStatement;
-		
+		// Helper to check if we should update state
+		const shouldUpdate = (newState: Partial<AuthorizationState>) => {
+			return (
+				authState.isAuthorized !== newState.isAuthorized ||
+				authState.loading !== newState.loading ||
+				authState.role !== newState.role ||
+				authState.isWaitingForApproval !== newState.isWaitingForApproval ||
+				authState.error !== newState.error
+			);
+		};
+
 		// Special handling for public access
 		if (effectiveAccess === Access.public) {
-			setAuthState({
+			const newState = {
 				isAuthorized: true,
 				loading: false,
 				error: false,
@@ -105,13 +110,18 @@ export const useAuthorization = (statementId?: string): AuthorizationState => {
 				isWaitingForApproval: false,
 				role: role || Role.member,
 				isAdmin: isAdminRole(role),
-			});
-			
-			// Auto-subscribe if not already subscribed
-			if (!hasSubscription && effectiveStatement && creator) {
-				const pushNotificationsEnabled = notificationService.isInitialized() && 
+			};
+
+			if (shouldUpdate(newState)) {
+				setAuthState(newState);
+			}
+
+			// Auto-subscribe only once
+			if (!hasSubscription && !subscriptionAttemptedRef.current && effectiveStatement && creator) {
+				subscriptionAttemptedRef.current = true;
+				const pushNotificationsEnabled = notificationService.isInitialized() &&
 					notificationService.safeGetPermission() === 'granted';
-					
+
 				setStatementSubscriptionToDB({
 					statement: effectiveStatement,
 					creator,
@@ -121,13 +131,13 @@ export const useAuthorization = (statementId?: string): AuthorizationState => {
 					getPushNotification: pushNotificationsEnabled
 				});
 			}
-			
+
 			return;
 		}
 
 		// Case 1: User is already a member or admin
-		if (isMemberRole(statement, creator.uid, role)) {
-			setAuthState({
+		if (isMemberRole(statementCreatorUid, creatorUid, role)) {
+			const newState = {
 				isAuthorized: true,
 				loading: false,
 				error: false,
@@ -136,14 +146,18 @@ export const useAuthorization = (statementId?: string): AuthorizationState => {
 				isWaitingForApproval: false,
 				role,
 				isAdmin: isAdminRole(role),
-			});
+			};
+
+			if (shouldUpdate(newState)) {
+				setAuthState(newState);
+			}
 
 			return;
 		}
 
 		// Case 2: User is waiting for approval
 		if (role === Role.waiting) {
-			setAuthState({
+			const newState = {
 				isAuthorized: false,
 				loading: false,
 				role,
@@ -152,15 +166,20 @@ export const useAuthorization = (statementId?: string): AuthorizationState => {
 				errorMessage: '',
 				creator,
 				isWaitingForApproval: true
-			});
+			};
+
+			if (shouldUpdate(newState)) {
+				setAuthState(newState);
+			}
 
 			return;
 		}
 
 		// Case 3: Open group - auto-subscribe as member
-		if (isOpenAccess(effectiveStatement, creator, role) && effectiveStatement && creator) {
-			// Check if user has granted push notification permission
-			const pushNotificationsEnabled = notificationService.isInitialized() && 
+		if (isOpenAccess(effectiveAccess, creatorIsAnonymous, role) && effectiveStatement && creator && !subscriptionAttemptedRef.current) {
+			subscriptionAttemptedRef.current = true;
+
+			const pushNotificationsEnabled = notificationService.isInitialized() &&
 				notificationService.safeGetPermission() === 'granted';
 
 			setStatementSubscriptionToDB({
@@ -172,7 +191,7 @@ export const useAuthorization = (statementId?: string): AuthorizationState => {
 				getPushNotification: pushNotificationsEnabled
 			});
 
-			setAuthState({
+			const newState = {
 				isAuthorized: true,
 				loading: false,
 				role: Role.member,
@@ -181,13 +200,19 @@ export const useAuthorization = (statementId?: string): AuthorizationState => {
 				errorMessage: '',
 				creator,
 				isWaitingForApproval: false
-			});
+			};
+
+			if (shouldUpdate(newState)) {
+				setAuthState(newState);
+			}
 
 			return;
 		}
 
 		// Case 4: Moderated group - subscribe as waiting
-		if (isModeratedGroup(effectiveStatement, role) && effectiveStatement && creator) {
+		if (isModeratedGroup(effectiveAccess, role) && effectiveStatement && creator && !subscriptionAttemptedRef.current) {
+			subscriptionAttemptedRef.current = true;
+
 			setStatementSubscriptionToDB({
 				statement: effectiveStatement,
 				creator,
@@ -197,7 +222,7 @@ export const useAuthorization = (statementId?: string): AuthorizationState => {
 				getPushNotification: false,
 			});
 
-			setAuthState({
+			const newState = {
 				isAuthorized: false,
 				role: Role.waiting,
 				isAdmin: false,
@@ -206,13 +231,17 @@ export const useAuthorization = (statementId?: string): AuthorizationState => {
 				errorMessage: '',
 				creator,
 				isWaitingForApproval: true
-			});
+			};
+
+			if (shouldUpdate(newState)) {
+				setAuthState(newState);
+			}
 
 			return;
 		}
 
 		// Case 5: Not authorized
-		setAuthState({
+		const newState = {
 			isAuthorized: false,
 			role: Role.banned,
 			isAdmin: false,
@@ -221,47 +250,51 @@ export const useAuthorization = (statementId?: string): AuthorizationState => {
 			errorMessage: 'You are not authorized to view this statement.',
 			creator,
 			isWaitingForApproval: false
-		});
+		};
 
-	}, [statement, creator, subscription, role, topParentStatement, effectiveAccess, hasSubscription]);
+		if (shouldUpdate(newState)) {
+			setAuthState(newState);
+		}
+
+	}, [statementId, statementAccess, statementCreatorUid, creatorUid, creatorIsAnonymous, role, effectiveAccess, hasSubscription]);
 
 	return authState;
 };
 
 // Helper functions
-function isAdminRole(role: Role): boolean {
+function isAdminRole(role?: Role): boolean {
 	return role === Role.admin || role === Role.creator;
 }
 
 function isMemberRole(
-	statement: Statement,
-	userId: string,
+	statementCreatorUid: string | undefined,
+	userId: string | undefined,
 	role?: Role
 ): boolean {
 	return (
 		role === Role.admin ||
 		role === Role.member ||
-		statement?.creator?.uid === userId
+		(!!statementCreatorUid && !!userId && statementCreatorUid === userId)
 	);
 }
 
 function isOpenAccess(
-	statement: Statement,
-	creator: Creator,
+	access: Access | undefined,
+	creatorIsAnonymous: boolean | undefined,
 	role?: Role
 ): boolean {
 	if (role === Role.banned) return false;
 
 	return (
-		statement?.membership?.access === Access.public ||
-		statement?.membership?.access === Access.openToAll ||
-		(statement?.membership?.access === Access.openForRegistered && creator.isAnonymous === false)
+		access === Access.public ||
+		access === Access.openToAll ||
+		(access === Access.openForRegistered && creatorIsAnonymous === false)
 	);
 }
 
 function isModeratedGroup(
-	statement: Statement,
+	access: Access | undefined,
 	role?: Role
 ): boolean {
-	return role !== Role.banned && statement?.membership?.access === Access.moderated;
+	return role !== Role.banned && access === Access.moderated;
 }
