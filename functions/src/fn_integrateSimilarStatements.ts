@@ -59,6 +59,7 @@ export const findSimilarForIntegration = onCall<FindSimilarForIntegrationRequest
 		memory: "512MiB",
 		minInstances: 1, // Keep warm to avoid cold starts
 		region: functionConfig.region,
+		cors: true, // Allow CORS for development
 	},
 	async (request): Promise<FindSimilarForIntegrationResponse> => {
 		const { statementId } = request.data;
@@ -137,6 +138,7 @@ export const executeIntegration = onCall<ExecuteIntegrationRequest>(
 		timeoutSeconds: 120, // May take longer with many evaluations to migrate
 		memory: "512MiB",
 		region: functionConfig.region,
+		cors: true, // Allow CORS for development
 	},
 	async (request): Promise<ExecuteIntegrationResponse> => {
 		const { parentStatementId, selectedStatementIds, integratedTitle, integratedDescription } =

@@ -166,9 +166,13 @@ export function handleFirestoreAssertionError(error: Error): void {
 const app = initializeApp(firebaseConfig);
 // Firebase app initialized
 
-// Initialize App Check BEFORE any other Firebase services
-// This provides protection against abuse by verifying legitimate app requests
-const appCheck = initializeFirebaseAppCheck(app);
+// Inline isProduction check - needed before App Check decision
+const isProductionForAppCheck = typeof window !== 'undefined' && window.location.hostname !== 'localhost';
+
+// Initialize App Check ONLY in production
+// In development/emulator, App Check debug token exchange fails with Google servers
+// causing CORS errors on callable functions
+const appCheck = isProductionForAppCheck ? initializeFirebaseAppCheck(app) : null;
 
 const FireStore = initializeFirestoreWithCache(app);
 const DB = FireStore;
