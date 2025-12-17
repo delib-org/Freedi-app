@@ -20,6 +20,7 @@ import { getAnalytics, isSupported } from 'firebase/analytics';
 import { getFunctions, connectFunctionsEmulator } from 'firebase/functions';
 // Removed import to avoid circular dependency - isProduction is inlined below
 import firebaseConfig from './configKey';
+import { initializeFirebaseAppCheck } from './appCheck';
 
 // Storage key to track if we've had IndexedDB issues
 const INDEXEDDB_ERROR_KEY = 'freedi_indexeddb_error';
@@ -165,6 +166,10 @@ export function handleFirestoreAssertionError(error: Error): void {
 const app = initializeApp(firebaseConfig);
 // Firebase app initialized
 
+// Initialize App Check BEFORE any other Firebase services
+// This provides protection against abuse by verifying legitimate app requests
+const appCheck = initializeFirebaseAppCheck(app);
+
 const FireStore = initializeFirestoreWithCache(app);
 const DB = FireStore;
 const storage = getStorage(app);
@@ -287,4 +292,4 @@ export function getMassConsensusResultsUrl(statementId: string): string {
 	return `${getMassConsensusUrl()}/q/${statementId}/results`;
 }
 
-export { auth, FireStore, storage, app, DB, analytics, functions };
+export { auth, FireStore, storage, app, DB, analytics, functions, appCheck };
