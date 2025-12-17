@@ -18,8 +18,10 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const { isAuthenticated, isLoading } = useAuth();
 
   useEffect(() => {
+    console.info('[AdminLayout] Auth state:', { isLoading, isAuthenticated });
     // Redirect to login if not authenticated
     if (!isLoading && !isAuthenticated) {
+      console.info('[AdminLayout] Redirecting to login...');
       router.push('/login?redirect=' + encodeURIComponent(window.location.pathname));
     }
   }, [isAuthenticated, isLoading, router]);

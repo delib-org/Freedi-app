@@ -23,7 +23,9 @@ export default function LoginPage() {
 
   // Redirect if already logged in
   useEffect(() => {
+    console.info('[LoginPage] Auth state:', { user: user?.email || null, isLoading, redirectUrl });
     if (user && !isLoading) {
+      console.info('[LoginPage] User logged in, redirecting to:', redirectUrl);
       router.push(redirectUrl);
     }
   }, [user, isLoading, router, redirectUrl]);

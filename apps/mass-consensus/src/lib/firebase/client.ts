@@ -87,15 +87,22 @@ export async function signInWithGoogle(): Promise<void> {
  */
 export async function handleRedirectResult(): Promise<{ user: User; token: string } | null> {
   try {
+    console.info('[Firebase] getRedirectResult called');
     const result = await getRedirectResult(auth);
+    console.info('[Firebase] getRedirectResult returned:', result ? 'credential found' : 'null');
     if (result) {
+      console.info('[Firebase] User from redirect:', result.user.email);
       const token = await result.user.getIdToken();
       localStorage.setItem('firebase_token', token);
       return { user: result.user, token };
     }
+    // Check if there's already a current user (from persistence)
+    if (auth.currentUser) {
+      console.info('[Firebase] No redirect result, but currentUser exists:', auth.currentUser.email);
+    }
     return null;
   } catch (error) {
-    console.error('Redirect result error:', error);
+    console.error('[Firebase] Redirect result error:', error);
     throw error;
   }
 }
