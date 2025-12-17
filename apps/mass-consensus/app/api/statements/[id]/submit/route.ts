@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
-import { Collections, StatementType, Statement } from '@freedi/shared-types';
+import { Collections, StatementType, createStatementObject } from '@freedi/shared-types';
 import { getUserIdFromCookie, getAnonymousDisplayName } from '@/lib/utils/user';
 import { logError, ValidationError } from '@/lib/utils/errorHandling';
 import { VALIDATION, ERROR_MESSAGES } from '@/constants/common';
@@ -216,7 +216,8 @@ export async function POST(
       }
     }
 
-    const newSolution: Partial<Statement> = {
+    // Use shared utility to create properly structured statement
+    const newSolution = createStatementObject({
       statementId: statementRef.id,
       statement: title,
       paragraphs: textToParagraphs(description),
@@ -231,12 +232,14 @@ export async function POST(
         photoURL: '',
         isAnonymous: true,
       },
-      createdAt: Date.now(),
-      lastUpdate: Date.now(),
-      randomSeed: Math.random(), // For random sampling
-      consensus: 0,
-      hide: false,
-    };
+    });
+
+    if (!newSolution) {
+      return NextResponse.json(
+        { error: 'Failed to create solution' },
+        { status: 500 }
+      );
+    }
 
     // Create automatic +1 evaluation for the new solution
     const evaluationRef = db.collection(Collections.evaluations).doc();
