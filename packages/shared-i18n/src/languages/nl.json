@@ -956,5 +956,9 @@
   "expectedEmail": "Verwacht e-mailadres",
   "yourEmail": "Uw e-mailadres",
   "loginWithDifferentAccount": "Inloggen met een ander account",
-  "pleaseLoginWithCorrectAccount": "Log in met het juiste Google-account"
+  "pleaseLoginWithCorrectAccount": "Log in met het juiste Google-account",
+
+  "Show hidden cards": "Verborgen kaarten tonen",
+  "Hide hidden cards": "Verborgen kaarten verbergen",
+  "Toggle visibility of hidden suggestion cards": "Schakel zichtbaarheid van verborgen suggestiekaarten"
 }

@@ -7,6 +7,7 @@ import {
 } from '@/lib/firebase/queries';
 import { logError } from '@/lib/utils/errorHandling';
 import { getParagraphsText } from '@/lib/utils/paragraphUtils';
+import { checkRateLimit, RATE_LIMITS } from '@/lib/utils/rateLimit';
 
 /**
  * POST /api/ai/feedback
@@ -14,6 +15,12 @@ import { getParagraphsText } from '@/lib/utils/paragraphUtils';
  * Uses Gemini API to analyze top-performing solutions
  */
 export async function POST(request: NextRequest) {
+  // Rate limit check - strict for expensive AI operations
+  const rateLimitResponse = checkRateLimit(request, RATE_LIMITS.SENSITIVE);
+  if (rateLimitResponse) {
+    return rateLimitResponse;
+  }
+
   try {
     const { questionId, userId } = await request.json();
 

@@ -952,5 +952,9 @@
   "expectedEmail": "البريد الإلكتروني المتوقع",
   "yourEmail": "بريدك الإلكتروني",
   "loginWithDifferentAccount": "تسجيل الدخول بحساب مختلف",
-  "pleaseLoginWithCorrectAccount": "يرجى تسجيل الدخول بحساب Google الصحيح"
+  "pleaseLoginWithCorrectAccount": "يرجى تسجيل الدخول بحساب Google الصحيح",
+
+  "Show hidden cards": "إظهار البطاقات المخفية",
+  "Hide hidden cards": "إخفاء البطاقات المخفية",
+  "Toggle visibility of hidden suggestion cards": "تبديل رؤية بطاقات الاقتراحات المخفية"
 }

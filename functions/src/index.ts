@@ -46,7 +46,8 @@ import {
   maintainStatement,
   maintainSubscriptionToken,
   updateAverageEvaluation,
-  recalculateEvaluations
+  recalculateEvaluations,
+  addRandomSeed
 } from "./fn_httpRequests";
 import { findSimilarStatements } from "./fn_findSimilarStatements";
 import { detectMultipleSuggestions } from "./fn_detectMultipleSuggestions";
@@ -136,8 +137,8 @@ const corsConfig = isProduction
       "https://delib.web.app",
       "https://freedi-test.web.app",
       "https://delib-5.web.app",
-      "https://delib.web.app",
       "https://wizcol-app.web.app",
+      "https://app.wizcol.com",
     ]
   : [
       "http://localhost:5173",
@@ -257,6 +258,7 @@ exports.maintainStatement = wrapHttpFunction(maintainStatement);
 exports.maintainSubscriptionToken = wrapHttpFunction(maintainSubscriptionToken);
 exports.updateAverageEvaluation = wrapHttpFunction(updateAverageEvaluation);
 exports.recalculateEvaluations = wrapHttpFunction(recalculateEvaluations);
+exports.addRandomSeed = wrapHttpFunction(addRandomSeed);
 
 // --------------------------
 // FIRESTORE TRIGGER FUNCTIONS

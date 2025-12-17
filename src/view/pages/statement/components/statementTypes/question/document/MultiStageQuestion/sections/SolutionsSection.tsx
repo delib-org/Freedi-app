@@ -43,7 +43,6 @@ export const SolutionsSection: FC<SolutionsSectionProps> = ({
               key={suggestion.statementId}
               statement={suggestion}
               parentStatement={statement}
-              positionAbsolute={false}
             />
           ))}
         <div className={`btns ${styles["add-stage"]}`}>

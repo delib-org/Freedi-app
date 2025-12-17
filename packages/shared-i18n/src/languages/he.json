@@ -1237,5 +1237,9 @@
   "expectedEmail": "אימייל צפוי",
   "yourEmail": "האימייל שלך",
   "loginWithDifferentAccount": "התחבר עם חשבון אחר",
-  "pleaseLoginWithCorrectAccount": "אנא התחבר עם חשבון Google הנכון"
+  "pleaseLoginWithCorrectAccount": "אנא התחבר עם חשבון Google הנכון",
+
+  "Show hidden cards": "הצג כרטיסים מוסתרים",
+  "Hide hidden cards": "הסתר כרטיסים מוסתרים",
+  "Toggle visibility of hidden suggestion cards": "החלף תצוגת כרטיסי הצעות מוסתרים"
 }

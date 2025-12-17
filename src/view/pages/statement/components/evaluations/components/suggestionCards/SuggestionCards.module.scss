@@ -1,15 +1,14 @@
 .suggestions-wrapper {
-	position: relative;
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
 	width: 100%;
-	margin-bottom: 400px;
-	transition: height 0.3s ease-in-out;
+	padding-bottom: 100px;
 	overflow-x: hidden; // Prevent horizontal overflow on mobile
+}
 
-	&.animating {
-		.suggestion-card {
-			transition: transform 0.3s ease-in-out, opacity 0.2s ease-in-out;
-		}
-	}
+.card-wrapper {
+	width: 100%;
 }
 
 .submitButtonContainer {

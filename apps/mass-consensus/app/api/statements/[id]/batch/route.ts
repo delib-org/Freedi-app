@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getRandomOptions } from '@/lib/firebase/queries';
 import { getUserIdFromCookie } from '@/lib/utils/user';
 import { logError } from '@/lib/utils/errorHandling';
+import { checkRateLimit, RATE_LIMITS } from '@/lib/utils/rateLimit';
 
 /**
  * POST /api/statements/[id]/batch
@@ -11,6 +12,12 @@ export async function POST(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  // Rate limit check
+  const rateLimitResponse = checkRateLimit(request, RATE_LIMITS.READ);
+  if (rateLimitResponse) {
+    return rateLimitResponse;
+  }
+
   try {
     const body = await request.json();
     const { userId: bodyUserId, excludeIds = [] } = body;

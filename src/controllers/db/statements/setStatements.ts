@@ -533,27 +533,23 @@ function updateStatementSettings({
 	enhancedEvaluation,
 	showEvaluation,
 }: UpdateStatementSettingsParams): UpdateStatementSettingsReturnType {
-	try {
-		if (!statement) throw new Error('Statement is undefined');
-		if (!statement.statementSettings)
-			throw new Error('Statement settings is undefined');
+	const defaultSettings = {
+		showEvaluation: true,
+		enableAddEvaluationOption: true,
+		enableAddVotingOption: true,
+	};
 
-		return {
-			...statement.statementSettings,
-			enhancedEvaluation,
-			showEvaluation,
-			enableAddEvaluationOption,
-			enableAddVotingOption,
-		};
-	} catch (error) {
-		console.error(error);
-
-		return {
-			showEvaluation: true,
-			enableAddEvaluationOption: true,
-			enableAddVotingOption: true,
-		};
+	if (!statement) {
+		return defaultSettings;
 	}
+
+	return {
+		...(statement.statementSettings || defaultSettings),
+		enhancedEvaluation,
+		showEvaluation,
+		enableAddEvaluationOption,
+		enableAddVotingOption,
+	};
 }
 
 export async function updateStatementText(
@@ -572,13 +568,22 @@ export async function updateStatementText(
 			updates.paragraphs = paragraphs;
 		}
 
+		// If statement lacks topParentId, derive it from parent
+		if (!statement.topParentId && statement.parentId) {
+			const parentRef = doc(FireStore, Collections.statements, statement.parentId);
+			const parentDoc = await getDoc(parentRef);
+			if (parentDoc.exists()) {
+				const parentData = parentDoc.data() as Statement;
+				updates.topParentId = parentData.topParentId || parentData.statementId;
+			}
+		}
+
 		if (Object.keys(updates).length === 0) {
 			return;
 		}
 
 		updates.lastUpdate = Timestamp.now().toMillis();
 
-		parse(StatementSchema, { ...statement, ...updates });
 		const statementRef = doc(
 			FireStore,
 			Collections.statements,

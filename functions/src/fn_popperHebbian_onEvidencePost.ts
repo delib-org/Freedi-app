@@ -2,7 +2,7 @@ import { onDocumentCreated, onDocumentUpdated } from 'firebase-functions/v2/fire
 import { getFirestore } from 'firebase-admin/firestore';
 import { Statement, Collections, functionConfig } from '@freedi/shared-types';
 import { EvidenceType } from 'delib-npm/dist/models/evidence/evidenceModel';
-import { getGeminiModel, geminiApiKey } from './config/gemini';
+import { getGeminiModel } from './config/gemini';
 import {
 	calculateConsensusValid,
 	determineStatus,
@@ -200,7 +200,6 @@ async function recalculateScore(statementId: string): Promise<void> {
 export const onEvidencePostCreate = onDocumentCreated(
 	{
 		document: `${Collections.statements}/{statementId}`,
-		secrets: [geminiApiKey],
 		region: functionConfig.region
 	},
 	async (event) => {
@@ -270,7 +269,6 @@ export const onEvidencePostCreate = onDocumentCreated(
 export const onEvidencePostUpdate = onDocumentUpdated(
 	{
 		document: `${Collections.statements}/{statementId}`,
-		secrets: [geminiApiKey],
 		region: functionConfig.region
 	},
 	async (event) => {

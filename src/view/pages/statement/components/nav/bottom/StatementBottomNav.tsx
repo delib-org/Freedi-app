@@ -9,6 +9,8 @@ import RandomIcon from '@/assets/icons/randomIcon.svg?react';
 import SortIcon from '@/assets/icons/sort.svg?react';
 import UpdateIcon from '@/assets/icons/updateIcon.svg?react';
 import XmenuIcon from '@/assets/icons/x-icon.svg?react';
+import EyeIcon from '@/assets/icons/eye.svg?react';
+import EyeCrossIcon from '@/assets/icons/eyeCross.svg?react';
 
 import useStatementColor from '@/controllers/hooks/useStatementColor';
 import styles from './StatementBottomNav.module.scss';
@@ -26,6 +28,7 @@ import { createStatementWithSubscription } from '@/controllers/db/statements/cre
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { QuestionType } from '@freedi/shared-types';
 import { generateParagraphId } from '@/utils/paragraphUtils';
+import { useShowHiddenCards } from '@/controllers/hooks/useShowHiddenCards';
 
 interface Props { showNav?: boolean; }
 
@@ -62,6 +65,9 @@ const StatementBottomNav: FC<Props> = () => {
 		(canAddOptionVoting && evaluatingSettings === EvaluationUI.voting);
 
 	const [showSorting, setShowSorting] = useState(false);
+
+	// Admin toggle for showing/hiding hidden cards
+	const { showHiddenCards, toggleShowHiddenCards } = useShowHiddenCards();
 
 	const isLearningFace = timesRemainToLearnAddOption > 0;
 	const isRTL = dir === 'rtl';
@@ -228,6 +234,28 @@ const StatementBottomNav: FC<Props> = () => {
 								<span className={styles.buttonName}>{navItem.name}</span>
 							</div>
 						))}
+						{/* Admin-only toggle for showing/hiding hidden cards */}
+						{isAdmin && (
+							<div
+								className={`${styles.sortMenu__item} ${styles.sortMenu__item_visibility} ${showSorting ? styles.active : ''}`}
+							>
+								<button
+									className={`${styles.openNavIcon} ${styles.visibilityToggle} ${showSorting ? styles.active : ''} ${showHiddenCards ? styles.visibilityToggle_active : ''}`}
+									aria-label={t('Toggle visibility of hidden suggestion cards')}
+									title={showHiddenCards ? t('Hide hidden cards') : t('Show hidden cards')}
+									onClick={toggleShowHiddenCards}
+								>
+									{showHiddenCards ? (
+										<EyeIcon style={{ color: statementColor.backgroundColor }} />
+									) : (
+										<EyeCrossIcon style={{ color: statementColor.backgroundColor }} />
+									)}
+								</button>
+								<span className={styles.buttonName}>
+									{showHiddenCards ? t('Hide hidden cards') : t('Show hidden cards')}
+								</span>
+							</div>
+						)}
 						<button
 							className={styles.sortButton}
 							onClick={handleSortingClick}

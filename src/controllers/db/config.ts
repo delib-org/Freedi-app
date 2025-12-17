@@ -20,6 +20,7 @@ import { getAnalytics, isSupported } from 'firebase/analytics';
 import { getFunctions, connectFunctionsEmulator } from 'firebase/functions';
 // Removed import to avoid circular dependency - isProduction is inlined below
 import firebaseConfig from './configKey';
+import { initializeFirebaseAppCheck } from './appCheck';
 
 // Storage key to track if we've had IndexedDB issues
 const INDEXEDDB_ERROR_KEY = 'freedi_indexeddb_error';
@@ -165,6 +166,14 @@ export function handleFirestoreAssertionError(error: Error): void {
 const app = initializeApp(firebaseConfig);
 // Firebase app initialized
 
+// Inline isProduction check - needed before App Check decision
+const isProductionForAppCheck = typeof window !== 'undefined' && window.location.hostname !== 'localhost';
+
+// Initialize App Check ONLY in production
+// In development/emulator, App Check debug token exchange fails with Google servers
+// causing CORS errors on callable functions
+const appCheck = isProductionForAppCheck ? initializeFirebaseAppCheck(app) : null;
+
 const FireStore = initializeFirestoreWithCache(app);
 const DB = FireStore;
 const storage = getStorage(app);
@@ -287,4 +296,4 @@ export function getMassConsensusResultsUrl(statementId: string): string {
 	return `${getMassConsensusUrl()}/q/${statementId}/results`;
 }
 
-export { auth, FireStore, storage, app, DB, analytics, functions };
+export { auth, FireStore, storage, app, DB, analytics, functions, appCheck };
