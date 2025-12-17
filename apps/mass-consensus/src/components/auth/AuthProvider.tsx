@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, ReactNode, useRef } from 'react';
 import {
   onAuthChange,
   signInWithGoogle,
@@ -31,31 +31,59 @@ interface AuthProviderProps {
 export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const redirectHandled = useRef(false);
 
   useEffect(() => {
-    // Handle redirect result from Google sign-in
-    handleRedirectResult().catch((error) => {
-      console.error('Error handling redirect result:', error);
-    });
+    let unsubscribe: (() => void) | undefined;
+    let authInitialized = false;
 
-    // Subscribe to auth state changes
-    const unsubscribe = onAuthChange(async (firebaseUser) => {
-      setUser(firebaseUser);
-
-      // Refresh token if user is logged in
-      if (firebaseUser) {
+    const initAuth = async () => {
+      // Handle redirect result from Google sign-in first
+      // This must complete before we trust onAuthStateChanged
+      if (!redirectHandled.current) {
+        redirectHandled.current = true;
         try {
-          const token = await firebaseUser.getIdToken();
-          localStorage.setItem('firebase_token', token);
+          const result = await handleRedirectResult();
+          if (result) {
+            // User successfully signed in via redirect
+            setUser(result.user);
+            authInitialized = true;
+            setIsLoading(false);
+          }
         } catch (error) {
-          console.error('Error refreshing token:', error);
+          console.error('Error handling redirect result:', error);
         }
       }
 
-      setIsLoading(false);
-    });
+      // Subscribe to auth state changes
+      unsubscribe = onAuthChange(async (firebaseUser) => {
+        setUser(firebaseUser);
 
-    return () => unsubscribe();
+        // Refresh token if user is logged in
+        if (firebaseUser) {
+          try {
+            const token = await firebaseUser.getIdToken();
+            localStorage.setItem('firebase_token', token);
+          } catch (error) {
+            console.error('Error refreshing token:', error);
+          }
+        }
+
+        // Only set loading false if we didn't already do it from redirect
+        if (!authInitialized) {
+          setIsLoading(false);
+        }
+        authInitialized = true;
+      });
+    };
+
+    initAuth();
+
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
   }, []);
 
   const signIn = async () => {
