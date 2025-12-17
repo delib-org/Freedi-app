@@ -71,7 +71,6 @@ const MySuggestions: FC = () => {
 									key={suggestion.statementId}
 									statement={suggestion}
 									parentStatement={statement}
-									positionAbsolute={false}
 								/>
 							))
 						)}

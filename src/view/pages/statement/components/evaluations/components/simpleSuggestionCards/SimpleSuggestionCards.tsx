@@ -78,7 +78,6 @@ const SimpleSuggestionCards: FC<Props> = ({
 						key={statementSub.statementId}
 						parentStatement={statement}
 						statement={statementSub}
-						positionAbsolute={false}
 					/>
 				);
 			})}

@@ -26,10 +26,12 @@ const indicatorWidth = 32; // Width of the bar in pixels, used for calculations
 const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({ statement, enableEvaluation = true }) => {
 	const { t, learning, dir } = useUserConfig();
 	const [barWidth, setBarWidth] = useState<number>(0);
+
+	// Get parent statement for settings
 	const parentStatement = useSelector(statementSelectorById(statement.parentId));
 	const evaluationBarRef = useRef<HTMLDivElement>(null);
 	const showEvaluation = parentStatement?.statementSettings?.showEvaluation;
-	const totalEvaluators = parentStatement.evaluation?.asParentTotalEvaluators || 0;
+	const totalEvaluators = parentStatement?.evaluation?.asParentTotalEvaluators || 0;
 
 	const evaluationScore = useAppSelector(
 		evaluationSelector(statement.statementId)
