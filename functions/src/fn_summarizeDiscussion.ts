@@ -1,7 +1,7 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { getFirestore } from 'firebase-admin/firestore';
 import { Statement, Collections, functionConfig } from '@freedi/shared-types';
-import { getGeminiModel, geminiApiKey } from './config/gemini';
+import { getGeminiModel } from './config/gemini';
 import { getParagraphsText } from './helpers';
 
 interface SummarizeDiscussionRequest {
@@ -53,7 +53,7 @@ function detectLanguage(text: string): string {
  * Only accessible by admins or creators of the statement.
  */
 export const summarizeDiscussion = onCall<SummarizeDiscussionRequest>(
-	{ secrets: [geminiApiKey], region: functionConfig.region },
+	{ region: functionConfig.region },
 	async (request): Promise<SummarizeDiscussionResponse> => {
 		const { statementId, adminPrompt, language } = request.data;
 		const userId = request.auth?.uid;

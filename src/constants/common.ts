@@ -112,6 +112,7 @@ export const STORAGE_KEYS = {
 	LAST_VISITED: 'lastVisited',
 	PWA_USER_RESPONDED: 'pwa-user-responded',
 	PWA_INSTALL_TRIGGER_DATA: 'pwa-install-trigger-data',
+	SHOW_HIDDEN_CARDS: 'freedi_showHiddenCards',
 } as const;
 
 /**

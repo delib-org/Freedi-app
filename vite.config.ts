@@ -9,6 +9,7 @@ import { VitePWA } from 'vite-plugin-pwa';
 export default defineConfig(({ mode }) => {
 	const isTestMode = mode === 'testing';
 	const isTestMinified = mode === 'test-minified';
+	const isProdUnminified = mode === 'prod-unminified';
 
 	return {
 		envDir: './env',
@@ -103,8 +104,8 @@ export default defineConfig(({ mode }) => {
 				}, {} as Record<string, string>),
 		},
 		build: {
-			minify: !isTestMode || isTestMinified, // Minify in production and test-minified modes
-			sourcemap: isTestMode && !isTestMinified, // Only include sourcemaps on freedi-test.web.app (non-minified)
+			minify: (!isTestMode && !isProdUnminified) || isTestMinified, // Minify unless test mode or prod-unminified
+			sourcemap: (isTestMode && !isTestMinified) || isProdUnminified, // Sourcemaps for test (non-minified) and prod-unminified
 			cssCodeSplit: false, // Extract all CSS into a single file
 			rollupOptions: {
 				output: {

@@ -2,7 +2,6 @@ import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { getFirestore } from "firebase-admin/firestore";
 import { Statement, Collections, StatementType, Role, functionConfig } from "@freedi/shared-types";
 import { logger } from "firebase-functions";
-import { geminiApiKey } from "./config/gemini";
 import {
 	findSimilarAndGenerateSuggestion,
 	mapStatementToWithEvaluation,
@@ -54,11 +53,10 @@ interface ExecuteIntegrationResponse {
  */
 export const findSimilarForIntegration = onCall<FindSimilarForIntegrationRequest>(
 	{
-		secrets: [geminiApiKey],
 		timeoutSeconds: 120,
 		memory: "512MiB",
-		minInstances: 1, // Keep warm to avoid cold starts
 		region: functionConfig.region,
+		cors: true, // Allow CORS for development
 	},
 	async (request): Promise<FindSimilarForIntegrationResponse> => {
 		const { statementId } = request.data;
@@ -133,10 +131,10 @@ export const findSimilarForIntegration = onCall<FindSimilarForIntegrationRequest
  */
 export const executeIntegration = onCall<ExecuteIntegrationRequest>(
 	{
-		secrets: [geminiApiKey],
 		timeoutSeconds: 120, // May take longer with many evaluations to migrate
 		memory: "512MiB",
 		region: functionConfig.region,
+		cors: true, // Allow CORS for development
 	},
 	async (request): Promise<ExecuteIntegrationResponse> => {
 		const { parentStatementId, selectedStatementIds, integratedTitle, integratedDescription } =

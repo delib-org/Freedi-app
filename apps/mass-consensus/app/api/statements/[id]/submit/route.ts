@@ -222,6 +222,7 @@ export async function POST(
       paragraphs: textToParagraphs(description),
       statementType: StatementType.option,
       parentId: questionId,
+      topParentId: questionData?.topParentId || questionId,
       creatorId: userId,
       creator: {
         uid: userId,

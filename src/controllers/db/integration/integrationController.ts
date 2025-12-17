@@ -1,5 +1,5 @@
-import { httpsCallable } from 'firebase/functions';
-import { functions } from '../config';
+import { httpsCallable, getFunctions, connectFunctionsEmulator } from 'firebase/functions';
+import { app } from '../config';
 import { logError } from '@/utils/errorHandling';
 import { logger } from '@/services/logger';
 import type {
@@ -7,6 +7,19 @@ import type {
 	ExecuteIntegrationParams,
 	ExecuteIntegrationResponse,
 } from '@/types/integration';
+import { functionConfig } from '@freedi/shared-types';
+
+// Get functions instance with correct region (me-west1)
+const functionsWithRegion = getFunctions(app, functionConfig.region);
+
+// Connect to emulator in development
+if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+	try {
+		connectFunctionsEmulator(functionsWithRegion, 'localhost', 5001);
+	} catch {
+		// Already connected
+	}
+}
 
 interface FindSimilarRequest {
 	statementId: string;
@@ -24,7 +37,7 @@ export async function findSimilarForIntegration(
 		const findSimilar = httpsCallable<
 			FindSimilarRequest,
 			FindSimilarForIntegrationResponse
-		>(functions, 'findSimilarForIntegration');
+		>(functionsWithRegion, 'findSimilarForIntegration');
 
 		const result = await findSimilar({ statementId });
 
@@ -56,7 +69,7 @@ export async function executeIntegration(
 		const execute = httpsCallable<
 			ExecuteIntegrationParams,
 			ExecuteIntegrationResponse
-		>(functions, 'executeIntegration');
+		>(functionsWithRegion, 'executeIntegration');
 
 		const result = await execute(params);
 

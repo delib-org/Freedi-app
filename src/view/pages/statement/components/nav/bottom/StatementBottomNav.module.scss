@@ -325,3 +325,39 @@ $addOptionSize: 60px;
   fill: #fff !important;
   stroke: #fff !important;
 }
+
+// Visibility toggle for admin show/hide hidden cards
+.sortMenu__item_visibility {
+  // Position after the last sort item (dynamic based on filteredSortItems length)
+  // The visibility toggle appears after the 4th item (or however many sort items exist)
+  &.active {
+    // Position it after the last sort item
+    // We'll position it at the 5th slot by default (after 4 sort items)
+    left: calc(var(--sort-gap) * 5);
+    @media screen and (max-width: 700px) {
+      left: calc(var(--sort-gap-mobile) * 5);
+    }
+  }
+}
+
+.visibilityToggle {
+  // Base visibility toggle button styles
+  transition:
+    width 200ms ease,
+    height 200ms ease,
+    transform 1s ease,
+    background-color 200ms ease;
+
+  svg {
+    width: var(--nav-icon-svg);
+    height: var(--nav-icon-svg);
+  }
+
+  // When active (showing hidden cards), add a subtle indicator
+  &_active {
+    background-color: rgba(87, 198, 178, 0.15); // Light teal tint
+    box-shadow:
+      2px 2px 5px var(--shadow),
+      inset 0 0 0 2px rgba(87, 198, 178, 0.3);
+  }
+}
