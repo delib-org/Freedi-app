@@ -38,25 +38,31 @@ export function AuthProvider({ children }: AuthProviderProps) {
     let authInitialized = false;
 
     const initAuth = async () => {
+      console.info('[AuthProvider] initAuth started');
+
       // Handle redirect result from Google sign-in first
       // This must complete before we trust onAuthStateChanged
       if (!redirectHandled.current) {
         redirectHandled.current = true;
         try {
+          console.info('[AuthProvider] Calling handleRedirectResult...');
           const result = await handleRedirectResult();
+          console.info('[AuthProvider] handleRedirectResult result:', result ? 'user found' : 'no result');
           if (result) {
             // User successfully signed in via redirect
+            console.info('[AuthProvider] Setting user from redirect result');
             setUser(result.user);
             authInitialized = true;
             setIsLoading(false);
           }
         } catch (error) {
-          console.error('Error handling redirect result:', error);
+          console.error('[AuthProvider] Error handling redirect result:', error);
         }
       }
 
       // Subscribe to auth state changes
       unsubscribe = onAuthChange(async (firebaseUser) => {
+        console.info('[AuthProvider] onAuthChange fired, user:', firebaseUser ? firebaseUser.email : 'null');
         setUser(firebaseUser);
 
         // Refresh token if user is logged in
@@ -64,12 +70,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
           try {
             const token = await firebaseUser.getIdToken();
             localStorage.setItem('firebase_token', token);
+            console.info('[AuthProvider] Token saved to localStorage');
           } catch (error) {
-            console.error('Error refreshing token:', error);
+            console.error('[AuthProvider] Error refreshing token:', error);
           }
         }
 
         // Only set loading false if we didn't already do it from redirect
+        console.info('[AuthProvider] authInitialized:', authInitialized, 'setting isLoading to false:', !authInitialized);
         if (!authInitialized) {
           setIsLoading(false);
         }
