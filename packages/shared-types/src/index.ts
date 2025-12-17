@@ -194,7 +194,12 @@ export {
   StatementSchema,
   StatementMetaDataSchema
 } from "./models/statement/StatementTypes";
-export { createBasicStatement } from "./models/statement/StatementUtils";
+export {
+  createBasicStatement,
+  createStatementObject,
+  defaultStatementSettings
+} from "./models/statement/StatementUtils";
+export type { CreateStatementParams } from "./models/statement/StatementUtils";
 
 // User models
 export type {
