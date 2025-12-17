@@ -956,5 +956,9 @@
   "expectedEmail": "Correo esperado",
   "yourEmail": "Su correo",
   "loginWithDifferentAccount": "Iniciar sesión con otra cuenta",
-  "pleaseLoginWithCorrectAccount": "Por favor inicie sesión con la cuenta de Google correcta"
+  "pleaseLoginWithCorrectAccount": "Por favor inicie sesión con la cuenta de Google correcta",
+
+  "Show hidden cards": "Mostrar tarjetas ocultas",
+  "Hide hidden cards": "Ocultar tarjetas ocultas",
+  "Toggle visibility of hidden suggestion cards": "Alternar visibilidad de tarjetas de sugerencias ocultas"
 }

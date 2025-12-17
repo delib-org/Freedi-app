@@ -956,5 +956,9 @@
   "expectedEmail": "Erwartete E-Mail",
   "yourEmail": "Ihre E-Mail",
   "loginWithDifferentAccount": "Mit einem anderen Konto anmelden",
-  "pleaseLoginWithCorrectAccount": "Bitte melden Sie sich mit dem richtigen Google-Konto an"
+  "pleaseLoginWithCorrectAccount": "Bitte melden Sie sich mit dem richtigen Google-Konto an",
+
+  "Show hidden cards": "Versteckte Karten anzeigen",
+  "Hide hidden cards": "Versteckte Karten ausblenden",
+  "Toggle visibility of hidden suggestion cards": "Sichtbarkeit versteckter Vorschlagskarten umschalten"
 }

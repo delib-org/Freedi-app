@@ -18,6 +18,7 @@ import { creatorSelector } from '@/redux/creator/creatorSlice';
 import SuggestionCard from './suggestionCard/SuggestionCard';
 import EmptyScreen from '../emptyScreen/EmptyScreen';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
+import { useShowHiddenCards } from '@/controllers/hooks/useShowHiddenCards';
 import styles from './SuggestionCards.module.scss';
 
 interface Props {
@@ -110,12 +111,31 @@ const SuggestionCards: FC<Props> = ({
 		creator?.uid === parentSubscription?.statement?.creatorId ||
 		parentSubscription?.role === Role.admin;
 
+	// Admin preference for showing/hiding hidden cards
+	const { showHiddenCards } = useShowHiddenCards();
+
 	// Memoize filtered statements to prevent unnecessary recalculations
+	// Logic:
+	// - Non-hidden cards are always visible
+	// - For admins: hidden cards visibility is controlled by the showHiddenCards toggle
+	// - For non-admins: they can see their own hidden cards only
 	const visibleStatements = useMemo(() =>
-		statementsFromStore.filter(st =>
-			st.hide !== true || st.creatorId === creator?.uid || isAdmin
-		),
-		[statementsFromStore, creator?.uid, isAdmin]
+		statementsFromStore.filter(st => {
+			// Non-hidden cards are always visible
+			if (st.hide !== true) return true;
+
+			// For admins: hidden cards visibility depends entirely on the toggle
+			if (isAdmin) {
+				return showHiddenCards;
+			}
+
+			// For non-admins: they can see their own hidden cards
+			if (st.creatorId === creator?.uid) return true;
+
+			// Otherwise, hidden cards are not visible
+			return false;
+		}),
+		[statementsFromStore, creator?.uid, isAdmin, showHiddenCards]
 	);
 
 	// Memoize subStatements to prevent unnecessary recalculations

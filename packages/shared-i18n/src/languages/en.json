@@ -1223,5 +1223,9 @@
   "expectedEmail": "Expected email",
   "yourEmail": "Your email",
   "loginWithDifferentAccount": "Sign in with a different account",
-  "pleaseLoginWithCorrectAccount": "Please log in with the correct Google account"
+  "pleaseLoginWithCorrectAccount": "Please log in with the correct Google account",
+
+  "Show hidden cards": "Show hidden cards",
+  "Hide hidden cards": "Hide hidden cards",
+  "Toggle visibility of hidden suggestion cards": "Toggle visibility of hidden suggestion cards"
 }
