@@ -3,7 +3,7 @@
   "framework": "nextjs",
   "buildCommand": "cd ../../packages/shared-types && npm run build && cd ../../apps/mass-consensus && npm run build",
   "outputDirectory": ".next",
-  "installCommand": "cd ../.. && npm install && cd apps/mass-consensus",
+  "installCommand": "cd ../.. && npm install && cd apps/mass-consensus && npm install",
   "devCommand": "npm run dev",
   "regions": ["iad1"],
   "headers": [
