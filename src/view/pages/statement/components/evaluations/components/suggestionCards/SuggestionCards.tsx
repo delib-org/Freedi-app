@@ -1,8 +1,7 @@
-import React, { FC, useEffect, useState, useMemo, useRef, useCallback } from 'react';
-import { VariableSizeList as List } from 'react-window';
-import AutoSizer from 'react-virtualized-auto-sizer';
+import { FC, useEffect, useState, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useParams, useLocation, useNavigate } from 'react-router';
+import { Flipper, Flipped } from 'react-flip-toolkit';
 
 import { Statement, SortType, SelectionFunction, Role, StatementType } from '@freedi/shared-types';
 
@@ -16,7 +15,6 @@ import {
 } from '@/redux/statements/statementsSlice';
 import { creatorSelector } from '@/redux/creator/creatorSlice';
 
-import { sortSubStatements } from '../../statementsEvaluationCont';
 import SuggestionCard from './suggestionCard/SuggestionCard';
 import EmptyScreen from '../emptyScreen/EmptyScreen';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
@@ -28,6 +26,59 @@ interface Props {
 	subStatements?: Statement[];
 }
 
+// Helper function to sort statements
+function sortStatements(
+	statements: Statement[],
+	sort: string | undefined,
+	randomSeed: number,
+	parentStatement?: Statement
+): Statement[] {
+	const sorted = [...statements];
+
+	if (sort === 'backend-order') {
+		return sorted;
+	}
+
+	switch (sort) {
+		case SortType.accepted: {
+			const isSingleLike = parentStatement?.statementSettings?.evaluationType === 'single-like';
+			if (isSingleLike) {
+				return sorted.sort((a, b) => {
+					const aLikes = a.evaluation?.sumPro || a.pro || 0;
+					const bLikes = b.evaluation?.sumPro || b.pro || 0;
+
+					return bLikes - aLikes;
+				});
+			}
+
+			return sorted.sort((a, b) => b.consensus - a.consensus);
+		}
+		case SortType.newest:
+			return sorted.sort((a, b) => b.createdAt - a.createdAt);
+		case SortType.random:
+			if (randomSeed) {
+				return sorted.sort((a, b) => {
+					const hashA = `${randomSeed}-${a.statementId}`.split('').reduce(
+						(acc, char, index) => acc + char.charCodeAt(0) * (index + 1) * randomSeed % 10000,
+						0
+					);
+					const hashB = `${randomSeed}-${b.statementId}`.split('').reduce(
+						(acc, char, index) => acc + char.charCodeAt(0) * (index + 1) * randomSeed % 10000,
+						0
+					);
+
+					return hashA - hashB;
+				});
+			}
+
+			return sorted.sort(() => Math.random() - 0.5);
+		case SortType.mostUpdated:
+			return sorted.sort((a, b) => b.lastUpdate - a.lastUpdate);
+		default:
+			return sorted;
+	}
+}
+
 const SuggestionCards: FC<Props> = ({
 	propSort,
 	selectionFunction,
@@ -37,7 +88,7 @@ const SuggestionCards: FC<Props> = ({
 	const location = useLocation();
 	const navigate = useNavigate();
 	const { t } = useTranslation();
-	
+
 	// Memoize statementId to prevent unnecessary effect re-runs
 	const statementId = useMemo(() => params.statementId, [params.statementId]);
 	const sort = propSort || params.sort || SortType.newest;
@@ -49,9 +100,6 @@ const SuggestionCards: FC<Props> = ({
 	const parentSubscription = useSelector(statementSubscriptionSelector(statementId));
 
 	const [randomSeed, setRandomSeed] = useState(Date.now());
-
-	// Virtualization ref
-	const listRef = useRef<List>(null);
 
 	const statementsFromStore = useSelector(
 		statementOptionsSelector(statement?.statementId)
@@ -71,7 +119,7 @@ const SuggestionCards: FC<Props> = ({
 	);
 
 	// Memoize subStatements to prevent unnecessary recalculations
-	const subStatements = useMemo(() =>
+	const filteredStatements = useMemo(() =>
 		propSubStatements ||
 		(selectionFunction
 			? visibleStatements.filter(
@@ -80,6 +128,19 @@ const SuggestionCards: FC<Props> = ({
 			)
 			: visibleStatements),
 		[propSubStatements, selectionFunction, visibleStatements]
+	);
+
+	// Sort statements - memoized to prevent unnecessary re-sorts
+	const sortedStatements = useMemo(() =>
+		sortStatements(filteredStatements, sort, randomSeed, statement),
+		[filteredStatements, sort, randomSeed, statement]
+	);
+
+	// Create a flip key based on the order of statements
+	// This triggers FLIP animation when order changes
+	const flipKey = useMemo(() =>
+		sortedStatements.map(s => s.statementId).join(','),
+		[sortedStatements]
 	);
 
 	useEffect(() => {
@@ -113,89 +174,7 @@ const SuggestionCards: FC<Props> = ({
 		}
 	}, [sort, location.search]);
 
-	// Create a stable key from statement IDs to prevent infinite loops
-	const subStatementsKey = useMemo(() =>
-		subStatements.map(s => s.statementId).sort().join(','),
-		[subStatements]
-	);
-
-	// Create a key that includes heights to trigger re-sort when heights change
-	const heightsKey = useMemo(() =>
-		subStatements.map(s => `${s.statementId}:${s.elementHight || 0}`).sort().join(','),
-		[subStatements]
-	);
-
-	// Get item size for virtualization
-	const getItemSize = useCallback((index: number) => {
-		const stmt = subStatements[index];
-
-		return (stmt?.elementHight || 200) + 30; // height + gap
-	}, [subStatements]);
-
-	// Reset virtualization cache when heights change
-	useEffect(() => {
-		listRef.current?.resetAfterIndex(0);
-	}, [heightsKey]);
-
-	// Row component for virtualization
-	const Row = useCallback(({ index, style }: { index: number; style: React.CSSProperties }) => (
-		<div style={style}>
-			<SuggestionCard
-				key={subStatements[index].statementId}
-				parentStatement={statement}
-				statement={subStatements[index]}
-				positionAbsolute={false}
-			/>
-		</div>
-	), [subStatements, statement]);
-
-	// Create a key that includes consensus values to trigger re-sort when evaluations change
-	const consensusKey = useMemo(() => {
-		if (sort === SortType.accepted) {
-			// Check if using single-like evaluation type
-			const isSingleLike = statement?.statementSettings?.evaluationType === 'single-like';
-
-			if (isSingleLike) {
-				// Track sumPro (likes) for single-like evaluation
-				return subStatements.map(s => `${s.statementId}:${s.evaluation?.sumPro || s.pro || 0}`).sort().join(',');
-			} else {
-				// Track consensus for other evaluation types
-				return subStatements.map(s => `${s.statementId}:${s.consensus || 0}`).sort().join(',');
-			}
-		}
-
-		return ''; // Don't track for other sort types
-	}, [subStatements, sort, statement?.statementSettings?.evaluationType]);
-
-	// Create a key that includes dates to trigger re-sort when statements are updated
-	const datesKey = useMemo(() => {
-		if (sort === SortType.newest) {
-			return subStatements.map(s => `${s.statementId}:${s.createdAt}`).sort().join(',');
-		} else if (sort === SortType.mostUpdated) {
-			return subStatements.map(s => `${s.statementId}:${s.lastUpdate}`).sort().join(',');
-		}
-
-		return ''; // Don't track for other sort types
-	}, [subStatements, sort]);
-
-	// Sort sub-statements when sort criteria changes
-	useEffect(() => {
-		// Only sort if we have subStatements
-		if (!subStatements || subStatements.length === 0) {
-			return;
-		}
-
-		// Sort sub-statements (updates positions in Redux)
-		sortSubStatements(
-			subStatements,
-			sort,
-			30,
-			randomSeed,
-			statement
-		);
-	}, [subStatementsKey, heightsKey, consensusKey, datesKey, sort, randomSeed, statement]);
-
-	if ((!subStatements || subStatements.length === 0) && isQuestion) {
+	if ((!sortedStatements || sortedStatements.length === 0) && isQuestion) {
 		return (
 			<EmptyScreen statement={statement} />
 		);
@@ -211,25 +190,22 @@ const SuggestionCards: FC<Props> = ({
 
 	return (
 		<>
-			<div
+			<Flipper
+				flipKey={flipKey}
+				spring={{ stiffness: 300, damping: 30 }}
 				className={styles['suggestions-wrapper']}
-				style={{ height: '100%', minHeight: '500px' }}
 			>
-				<AutoSizer>
-					{({ height, width }) => (
-						<List
-							ref={listRef}
-							height={height}
-							width={width}
-							itemCount={subStatements.length}
-							itemSize={getItemSize}
-							overscanCount={3}
-						>
-							{Row}
-						</List>
-					)}
-				</AutoSizer>
-			</div>
+				{sortedStatements.map((statementSub: Statement) => (
+					<Flipped key={statementSub.statementId} flipId={statementSub.statementId}>
+						<div className={styles['card-wrapper']}>
+							<SuggestionCard
+								parentStatement={statement}
+								statement={statementSub}
+							/>
+						</div>
+					</Flipped>
+				))}
+			</Flipper>
 			{isSubmitMode && (
 				<div className={styles.submitButtonContainer}>
 					<button

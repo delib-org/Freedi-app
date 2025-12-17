@@ -10,12 +10,10 @@ import SolutionMenu from '../../solutionMenu/SolutionMenu';
 import AddQuestionIcon from '@/assets/icons/addQuestion.svg?react';
 import { updateStatementText, updateStatementMainImage } from '@/controllers/db/statements/setStatements';
 import { changeStatementType } from '@/controllers/db/statements/changeStatementType';
-import { useAppDispatch } from '@/controllers/hooks/reduxHooks';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import useStatementColor, {
 	StyleProps,
 } from '@/controllers/hooks/useStatementColor';
-import { setStatementElementHight } from '@/redux/statements/statementsSlice';
 import EditableStatement from '@/view/components/edit/EditableStatement';
 import IconButton from '@/view/components/iconButton/IconButton';
 import styles from './SuggestionCard.module.scss';
@@ -34,13 +32,11 @@ import StatementImage from './StatementImage';
 interface Props {
 	statement: Statement | undefined;
 	parentStatement?: Statement | undefined;
-	positionAbsolute?: boolean;
 }
 
 const SuggestionCard: FC<Props> = ({
 	parentStatement,
 	statement,
-	positionAbsolute = true,
 }) => {
 	// Hooks
 	if (!parentStatement) console.error('parentStatement is not defined');
@@ -56,9 +52,6 @@ const SuggestionCard: FC<Props> = ({
 	const anchorIcon = parentStatement?.evaluationSettings?.anchored?.anchorIcon;
 	const anchorDescription = parentStatement?.evaluationSettings?.anchored?.anchorDescription;
 	const anchorLabel = parentStatement?.evaluationSettings?.anchored?.anchorLabel;
-
-	// Redux Store
-	const dispatch = useAppDispatch();
 
 	// Use Refs
 	const elementRef = useRef<HTMLDivElement>(null);
@@ -112,34 +105,6 @@ const SuggestionCard: FC<Props> = ({
 	const statementColor: StyleProps = useStatementColor({
 		statement,
 	});
-
-	useEffect(() => {
-		const element = elementRef.current;
-		if (element) {
-			const updateHeight = () => {
-				const height = element.clientHeight;
-				dispatch(
-					setStatementElementHight({
-						statementId: statement.statementId,
-						height,
-					})
-				);
-			};
-
-			// Update height initially
-			setTimeout(updateHeight, 0);
-
-			// Optionally use ResizeObserver for dynamic height changes
-			const resizeObserver = new ResizeObserver(() => {
-				updateHeight();
-			});
-			resizeObserver.observe(element);
-
-			return () => {
-				resizeObserver.disconnect();
-			};
-		}
-	}, [statement.statementId, dispatch]);
 
 	// Check if text is clamped and add overflow class
 	useEffect(() => {
@@ -214,25 +179,25 @@ const SuggestionCard: FC<Props> = ({
 			setIsImproving(true);
 			setShowImprovementModal(false);
 
-			// Store original title and description before improvement
+			// Store original title and summary before improvement
 			if (!originalTitle) {
 				setOriginalTitle(statement.statement);
-				setOriginalDescription(statement.description || null);
+				setOriginalDescription(statement.summary || null);
 			}
 
-			// Call the improvement service with both title and description, including parent context
+			// Call the improvement service with title and summary, including parent context
 			// Increased timeout to 45 seconds to handle longer AI processing times
-			const { improvedTitle, improvedDescription } = await improveSuggestionWithTimeout(
+			const { improvedTitle } = await improveSuggestionWithTimeout(
 				statement.statement,
-				statement.description,
+				statement.summary,
 				instructions,
 				parentStatement?.statement,  // Parent question/title for context
-				parentStatement?.description, // Parent description for additional context
+				parentStatement?.summary, // Parent summary for additional context
 				45000 // 45 seconds timeout
 			);
 
-			// Update both title and description in the database
-			await updateStatementText(statement, improvedTitle, improvedDescription);
+			// Update title in the database (paragraphs not modified by AI improvement)
+			await updateStatementText(statement, improvedTitle);
 
 			// Mark as improved and enable edit mode
 			setHasBeenImproved(true);
@@ -256,8 +221,8 @@ const SuggestionCard: FC<Props> = ({
 
 	function handleUndo() {
 		if (originalTitle) {
-			// Restore original title and description
-			updateStatementText(statement, originalTitle, originalDescription || undefined);
+			// Restore original title
+			updateStatementText(statement, originalTitle);
 			setHasBeenImproved(false);
 			setOriginalTitle(null);
 			setOriginalDescription(null);
@@ -284,13 +249,11 @@ const SuggestionCard: FC<Props> = ({
 				${showBadges && !isAnchored ? styles['statement-evaluation-card--community'] : ''}
 			`.trim()}
 			style={{
-				top: `${positionAbsolute ? statement.top || 0 : 0}px`,
 				borderLeft: showEvaluation ? selectedOptionIndicator : '12px solid transparent',
 				color: statementColor.color,
 				flexDirection: dir === 'ltr' ? 'row' : 'row-reverse',
 				opacity: statement.hide ? 0.5 : 1,
 				pointerEvents: (statement.hide && !isAuthorized ? 'none' : 'auto'),
-				position: positionAbsolute ? 'absolute' : 'relative',
 			}}
 			ref={elementRef}
 			id={statement.statementId}
