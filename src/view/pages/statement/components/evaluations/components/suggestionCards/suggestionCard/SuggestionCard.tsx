@@ -120,31 +120,41 @@ const SuggestionCard: FC<Props> = ({
 		if (!statement) return;
 
 		const element = elementRef.current;
-		if (element) {
-			const updateHeight = () => {
+		if (!element) return;
+
+		let timeoutId: ReturnType<typeof setTimeout>;
+		let lastHeight = statement.elementHight || 0;
+
+		const updateHeight = () => {
+			// Debounce to prevent excessive Redux dispatches
+			clearTimeout(timeoutId);
+			timeoutId = setTimeout(() => {
 				const height = element.clientHeight;
-				dispatch(
-					setStatementElementHight({
-						statementId: statement.statementId,
-						height,
-					})
-				);
-			};
+				// Only dispatch if height actually changed
+				if (height > 0 && height !== lastHeight) {
+					lastHeight = height;
+					dispatch(
+						setStatementElementHight({
+							statementId: statement.statementId,
+							height,
+						})
+					);
+				}
+			}, 150);
+		};
 
-			// Update height initially
-			setTimeout(updateHeight, 0);
+		// Update height initially
+		updateHeight();
 
-			// Optionally use ResizeObserver for dynamic height changes
-			const resizeObserver = new ResizeObserver(() => {
-				updateHeight();
-			});
-			resizeObserver.observe(element);
+		// ResizeObserver for dynamic height changes
+		const resizeObserver = new ResizeObserver(updateHeight);
+		resizeObserver.observe(element);
 
-			return () => {
-				resizeObserver.disconnect();
-			};
-		}
-	}, [statement, dispatch]);
+		return () => {
+			clearTimeout(timeoutId);
+			resizeObserver.disconnect();
+		};
+	}, [statement?.statementId, statement?.elementHight, dispatch]);
 
 	// Check if text is clamped and add overflow class
 	useEffect(() => {

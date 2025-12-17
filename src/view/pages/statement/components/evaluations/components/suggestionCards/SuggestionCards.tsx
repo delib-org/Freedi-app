@@ -1,4 +1,6 @@
-import { FC, useEffect, useState, useMemo } from 'react';
+import React, { FC, useEffect, useState, useMemo, useRef, useCallback } from 'react';
+import { VariableSizeList as List } from 'react-window';
+import AutoSizer from 'react-virtualized-auto-sizer';
 import { useDispatch, useSelector } from 'react-redux';
 import { useParams, useLocation, useNavigate } from 'react-router';
 
@@ -46,8 +48,10 @@ const SuggestionCards: FC<Props> = ({
 	const creator = useSelector(creatorSelector);
 	const parentSubscription = useSelector(statementSubscriptionSelector(statementId));
 
-	const [totalHeight, setTotalHeight] = useState(0);
 	const [randomSeed, setRandomSeed] = useState(Date.now());
+
+	// Virtualization ref
+	const listRef = useRef<List>(null);
 
 	const statementsFromStore = useSelector(
 		statementOptionsSelector(statement?.statementId)
@@ -121,6 +125,30 @@ const SuggestionCards: FC<Props> = ({
 		[subStatements]
 	);
 
+	// Get item size for virtualization
+	const getItemSize = useCallback((index: number) => {
+		const stmt = subStatements[index];
+
+		return (stmt?.elementHight || 200) + 30; // height + gap
+	}, [subStatements]);
+
+	// Reset virtualization cache when heights change
+	useEffect(() => {
+		listRef.current?.resetAfterIndex(0);
+	}, [heightsKey]);
+
+	// Row component for virtualization
+	const Row = useCallback(({ index, style }: { index: number; style: React.CSSProperties }) => (
+		<div style={style}>
+			<SuggestionCard
+				key={subStatements[index].statementId}
+				parentStatement={statement}
+				statement={subStatements[index]}
+				positionAbsolute={false}
+			/>
+		</div>
+	), [subStatements, statement]);
+
 	// Create a key that includes consensus values to trigger re-sort when evaluations change
 	const consensusKey = useMemo(() => {
 		if (sort === SortType.accepted) {
@@ -150,25 +178,22 @@ const SuggestionCards: FC<Props> = ({
 		return ''; // Don't track for other sort types
 	}, [subStatements, sort]);
 
-	// Memoize the sort operation to prevent unnecessary recalculations
+	// Sort sub-statements when sort criteria changes
 	useEffect(() => {
-		// Only calculate if we have subStatements
+		// Only sort if we have subStatements
 		if (!subStatements || subStatements.length === 0) {
-			setTotalHeight(0);
-
 			return;
 		}
 
-		// Calculate heights and sort sub-statements
-		const { totalHeight: _totalHeight } = sortSubStatements(
+		// Sort sub-statements (updates positions in Redux)
+		sortSubStatements(
 			subStatements,
 			sort,
 			30,
 			randomSeed,
 			statement
 		);
-		setTotalHeight(_totalHeight);
-	}, [subStatementsKey, heightsKey, consensusKey, datesKey, sort, randomSeed, statement]); // Use stable keys instead of array reference
+	}, [subStatementsKey, heightsKey, consensusKey, datesKey, sort, randomSeed, statement]);
 
 	if ((!subStatements || subStatements.length === 0) && isQuestion) {
 		return (
@@ -188,17 +213,22 @@ const SuggestionCards: FC<Props> = ({
 		<>
 			<div
 				className={styles['suggestions-wrapper']}
-				style={{ height: `${totalHeight}px` }}
+				style={{ height: '100%', minHeight: '500px' }}
 			>
-				{subStatements?.map((statementSub: Statement) => {
-					return (
-						<SuggestionCard
-							key={statementSub.statementId}
-							parentStatement={statement}
-							statement={statementSub}
-						/>
-					);
-				})}
+				<AutoSizer>
+					{({ height, width }) => (
+						<List
+							ref={listRef}
+							height={height}
+							width={width}
+							itemCount={subStatements.length}
+							itemSize={getItemSize}
+							overscanCount={3}
+						>
+							{Row}
+						</List>
+					)}
+				</AutoSizer>
 			</div>
 			{isSubmitMode && (
 				<div className={styles.submitButtonContainer}>

@@ -5,16 +5,23 @@ import { useEffect } from "react";
 import { useSelector } from "react-redux";
 
 export function useEvaluation(statement: Statement | undefined) {
-	const parentStatement = useSelector(statementSelector(statement?.parentId));
+	const parentId = statement?.parentId;
+	const parentStatement = useSelector(statementSelector(parentId));
 
 	useEffect(() => {
-		const unsubscribe = parentStatement ? () => { return; }
-			:
-			listenToStatement(statement.parentId);
+		// Don't create listener if:
+		// 1. No parentId
+		// 2. Parent already in store
+		if (!parentId || parentStatement) return;
 
-		return () => unsubscribe();
-	}, [parentStatement?.statementId]);
+		const unsubscribe = listenToStatement(parentId);
+
+		return () => {
+			if (unsubscribe) {
+				unsubscribe();
+			}
+		};
+	}, [parentId, parentStatement?.statementId]);
 
 	return { parentStatement };
-
 }
