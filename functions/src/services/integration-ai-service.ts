@@ -41,10 +41,10 @@ let _integrationModel: GenerativeModel | null = null;
  * Get the GoogleGenerativeAI instance
  */
 function getGenAI(): GoogleGenerativeAI {
-	const apiKey = process.env.GOOGLE_API_KEY;
+	const apiKey = process.env.GEMINI_API_KEY;
 
 	if (!apiKey) {
-		throw new Error("Missing GOOGLE_API_KEY environment variable");
+		throw new Error("Missing GEMINI_API_KEY environment variable");
 	}
 
 	return new GoogleGenerativeAI(apiKey);

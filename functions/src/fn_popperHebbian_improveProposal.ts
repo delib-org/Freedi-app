@@ -1,7 +1,7 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { getFirestore } from 'firebase-admin/firestore';
 import { Statement, Collections, functionConfig } from '@freedi/shared-types';
-import { getGeminiModel, geminiApiKey } from './config/gemini';
+import { getGeminiModel } from './config/gemini';
 import { getParagraphsText } from './helpers';
 
 interface ImproveProposalRequest {
@@ -37,7 +37,7 @@ const LANGUAGE_NAMES: Record<string, string> = {
  * Only accessible by the proposal creator or group admins.
  */
 export const improveProposalWithAI = onCall<ImproveProposalRequest>(
-	{ secrets: [geminiApiKey], region: functionConfig.region },
+	{ region: functionConfig.region },
 	async (request): Promise<ImproveProposalResponse> => {
 		const { statementId, language = 'en' } = request.data;
 		const userId = request.auth?.uid;
