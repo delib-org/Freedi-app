@@ -662,42 +662,54 @@ WizCol is built on principles of deliberative democracy, collective decision-mak
 
 ### Getting Started: Clone the Repository
 
-**Step 1: Install Git** (if you don't have it)
-- **Mac**: Open Terminal and type `git --version`. If not installed, you'll be prompted to install it.
-- **Windows**: Download from [git-scm.com](https://git-scm.com/download/win)
-- **Linux**: Run `sudo apt install git` (Ubuntu/Debian) or `sudo dnf install git` (Fedora)
+We recommend **GitHub Desktop** for a friendly, visual experience—no command line needed!
 
-**Step 2: Clone the code to your computer**
+**Option A: GitHub Desktop (Recommended for beginners)**
 
-Open your terminal (Mac/Linux) or Command Prompt (Windows) and run:
+1. Download and install [GitHub Desktop](https://desktop.github.com/)
+2. Open GitHub Desktop and sign in with your GitHub account (create one free at [github.com](https://github.com) if needed)
+3. Click **File → Clone Repository**
+4. Select the **URL** tab and paste: `https://github.com/delib-org/Freedi-app`
+5. Choose where to save it on your computer and click **Clone**
+
+That's it! You now have the complete codebase on your computer.
+
+**Option B: Command Line (for those comfortable with terminals)**
 
 ```bash
 git clone https://github.com/delib-org/Freedi-app.git
 cd Freedi-app
 ```
 
-You now have a complete copy of all the code on your computer.
+### Using AI to Explore the Codebase
 
-### Using Claude Code to Explore the Codebase
+You don't need to read code yourself—AI assistants can explore it for you and explain what they find in plain language.
 
-[Claude Code](https://docs.anthropic.com/en/docs/claude-code) is an AI assistant that can help you understand code without needing to read it yourself. Here's how to use it:
+**Option A: Claude on the Web (Easiest—no installation)**
 
-**Step 1: Install Claude Code**
+The simplest approach requires no installation at all:
+
+1. Go to [claude.ai](https://claude.ai) and create a free account
+2. Start a new conversation and upload the repository (you can zip the folder and upload it, or upload specific files you're curious about)
+3. Ask questions in plain language about what you uploaded
+
+**Option B: Antiverse / Anti-Gravity**
+
+[Anti-Gravity](https://anti-gravity.io) provides a visual interface for AI-assisted code exploration without using a command line.
+
+**Option C: Claude Code CLI (for technical users)**
+
+If you're comfortable with command-line tools:
 
 ```bash
 npm install -g @anthropic-ai/claude-code
-```
-
-**Step 2: Navigate to the project and start Claude Code**
-
-```bash
 cd Freedi-app
 claude
 ```
 
-**Step 3: Ask questions in plain language**
+### Questions to Ask the AI
 
-Once Claude Code is running, you can ask questions like:
+Once you have the code and an AI assistant, ask questions like:
 
 - *"How does the consensus algorithm work? Is it fair to minority opinions?"*
 - *"Show me where user votes are counted and explain the process"*
@@ -750,42 +762,47 @@ Once we've discussed your proposal and agreed on an approach:
 
 **Step 1: Fork the repository**
 
-Visit [github.com/delib-org/Freedi-app](https://github.com/delib-org/Freedi-app) and click the "Fork" button (top right). This creates your own copy.
+Visit [github.com/delib-org/Freedi-app](https://github.com/delib-org/Freedi-app) and click the "Fork" button (top right). This creates your own copy under your GitHub account.
 
-**Step 2: Clone your fork**
+**Step 2: Clone your fork using GitHub Desktop**
 
-```bash
-git clone https://github.com/YOUR_USERNAME/Freedi-app.git
-cd Freedi-app
-```
+1. Open GitHub Desktop
+2. Click **File → Clone Repository**
+3. Find your fork (YOUR_USERNAME/Freedi-app) in the list, or paste the URL
+4. Click **Clone**
 
 **Step 3: Create a branch for your changes**
 
-```bash
-git checkout -b research/your-improvement-name
-```
+In GitHub Desktop:
+1. Click **Current Branch** (top of the window)
+2. Click **New Branch**
+3. Name it something descriptive like `research/minority-voice-protection`
+4. Click **Create Branch**
 
-**Step 4: Use Claude Code to help implement changes**
+**Step 4: Use AI to help implement changes**
 
-You can ask Claude Code to help you make changes:
+Ask your AI assistant (Claude on the web, Anti-Gravity, or Claude Code) to help you make changes:
 
 - *"Help me modify the consensus algorithm to give more weight to minority opinions"*
 - *"Add a feature that shows users how their vote affected the outcome"*
 - *"Implement an accessibility improvement for screen readers"*
 
-Claude Code can write the code for you—just describe what you want in plain language.
+The AI can write the code for you—just describe what you want in plain language. Save the changes to the files on your computer.
 
-**Step 5: Save and upload your changes**
+**Step 5: Commit and push your changes**
 
-```bash
-git add .
-git commit -m "Describe your change here"
-git push origin research/your-improvement-name
-```
+In GitHub Desktop:
+1. You'll see your changed files listed on the left
+2. Write a brief summary of your changes in the "Summary" box
+3. Click **Commit to [your-branch-name]**
+4. Click **Push origin** (or **Publish branch** if it's new)
 
 **Step 6: Create a Pull Request**
 
-Go to your fork on GitHub and click "Compare & pull request". In your description:
+1. GitHub Desktop will show a prompt to create a Pull Request—click it, OR
+2. Go to your fork on GitHub.com and click the green **"Compare & pull request"** button
+
+In your Pull Request description:
 - Reference the issue where we discussed your proposal
 - Summarize the changes made
 - Explain how this improves democratic outcomes
