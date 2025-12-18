@@ -95,6 +95,17 @@ export class ProposalSampler {
     // Sort by priority (highest first)
     scored.sort((a, b) => b.priority - a.priority);
 
+    // Log detailed priority scores for debugging Thompson Sampling
+    logger.info('[ProposalSampler] Thompson Sampling priority scores:');
+    scored.forEach((s, index) => {
+      logger.info(`  #${index + 1}: "${s.proposal.statement?.substring(0, 40)}..." ` +
+        `priority=${s.priority.toFixed(4)}, ` +
+        `evals=${s.stats.evaluationCount}, ` +
+        `mean=${s.stats.mean.toFixed(3)}, ` +
+        `sem=${s.stats.sem.toFixed(3)}, ` +
+        `stable=${s.isStable}`);
+    });
+
     return scored;
   }
 

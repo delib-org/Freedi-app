@@ -161,7 +161,7 @@ export async function getRandomOptions(
  */
 export async function getAdaptiveBatch(
   questionId: string,
-  userId: string,
+  userId?: string,
   options: {
     size?: number;
     config?: Partial<SamplingConfig>;
@@ -171,9 +171,9 @@ export async function getAdaptiveBatch(
   const db = getFirestoreAdmin();
   const sampler = new ProposalSampler(config);
 
-  logger.info('[getAdaptiveBatch] Starting batch fetch:', {
+  logger.info('[getAdaptiveBatch] Starting Thompson Sampling batch fetch:', {
     questionId,
-    userId,
+    userId: userId || '(anonymous/SSR)',
     requestedSize: size,
   });
 
@@ -208,29 +208,34 @@ export async function getAdaptiveBatch(
       };
     }
 
-    // 2. Get user's already-evaluated IDs
-    const evaluatedSnapshot = await db
-      .collection(Collections.evaluations)
-      .where('parentId', '==', questionId)
-      .where('evaluatorId', '==', userId)
-      .get();
+    // 2. Get user's already-evaluated IDs (skip if no userId - SSR case)
+    let evaluatedIds = new Set<string>();
+    if (userId) {
+      const evaluatedSnapshot = await db
+        .collection(Collections.evaluations)
+        .where('parentId', '==', questionId)
+        .where('evaluatorId', '==', userId)
+        .get();
 
-    const evaluatedIds = new Set(
-      evaluatedSnapshot.docs.map((doc) => (doc.data() as Evaluation).statementId)
-    );
+      evaluatedIds = new Set(
+        evaluatedSnapshot.docs.map((doc) => (doc.data() as Evaluation).statementId)
+      );
 
-    logger.info('[getAdaptiveBatch] User evaluation history:', {
-      userId,
-      evaluatedCount: evaluatedIds.size,
-    });
+      logger.info('[getAdaptiveBatch] User evaluation history:', {
+        userId,
+        evaluatedCount: evaluatedIds.size,
+      });
+    } else {
+      logger.info('[getAdaptiveBatch] No userId provided (SSR) - using Thompson Sampling without user history');
+    }
 
-    // 3. Select batch using adaptive priority sampling
+    // 3. Select batch using adaptive priority sampling (Thompson Sampling)
     const selected = sampler.selectForUser(proposals, evaluatedIds, size);
 
     // 4. Calculate statistics
     const stats = sampler.calculateStats(proposals, evaluatedIds, selected.length);
 
-    logger.info('[getAdaptiveBatch] Batch selected:', {
+    logger.info('[getAdaptiveBatch] Thompson Sampling batch selected:', {
       selectedCount: selected.length,
       hasMore: stats.remainingCount > 0,
       stats,
