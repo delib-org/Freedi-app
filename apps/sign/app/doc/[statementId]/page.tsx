@@ -10,6 +10,8 @@ import {
   getUserInteractionsForDocument,
 } from '@/lib/firebase/queries';
 import { getUserFromCookies } from '@/lib/utils/user';
+import { checkAdminAccess } from '@/lib/utils/adminAccess';
+import { getFirebaseAdmin } from '@/lib/firebase/admin';
 import DocumentView from '@/components/document/DocumentView';
 import { TextDirection, DEFAULT_LOGO_URL, DEFAULT_BRAND_NAME } from '@/types';
 
@@ -54,17 +56,24 @@ export default async function DocumentPage({ params }: PageProps) {
   // Fetch comment counts for all paragraphs (for all users, not just logged in)
   const commentCounts = await getCommentCountsForDocument(statementId, paragraphIds);
 
-  // If user exists, get their signature, approvals, and interactions
+  // If user exists, get their signature, approvals, interactions, and admin status
   let userSignature = null;
   let userApprovals: Awaited<ReturnType<typeof getUserApprovals>> = [];
   let userInteractions: Set<string> = new Set();
+  let isAdmin = false;
 
   if (user) {
-    [userSignature, userApprovals, userInteractions] = await Promise.all([
+    const { db } = getFirebaseAdmin();
+    const [signature, approvals, interactions, adminAccess] = await Promise.all([
       getUserSignature(statementId, user.uid),
       getUserApprovals(statementId, user.uid),
       getUserInteractionsForDocument(statementId, user.uid, paragraphIds),
+      checkAdminAccess(db, statementId, user.uid),
     ]);
+    userSignature = signature;
+    userApprovals = approvals;
+    userInteractions = interactions;
+    isAdmin = adminAccess.isAdmin;
   }
 
   // Convert approvals array to a map for easier lookup
@@ -97,6 +106,7 @@ export default async function DocumentPage({ params }: PageProps) {
       textDirection={textDirection}
       logoUrl={logoUrl}
       brandName={brandName}
+      isAdmin={isAdmin}
     />
   );
 }

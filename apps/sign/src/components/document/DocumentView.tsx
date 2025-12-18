@@ -20,6 +20,7 @@ interface DocumentViewProps {
   textDirection?: TextDirection;
   logoUrl?: string;
   brandName?: string;
+  isAdmin?: boolean;
 }
 
 export default function DocumentView({
@@ -33,11 +34,10 @@ export default function DocumentView({
   textDirection = 'auto',
   logoUrl = DEFAULT_LOGO_URL,
   brandName = DEFAULT_BRAND_NAME,
+  isAdmin = false,
 }: DocumentViewProps) {
   // Convert array to Set for O(1) lookup
   const userInteractionsSet = new Set(userInteractions);
-  // Check if user is admin (creator of the document)
-  const isAdmin = user ? document.creatorId === user.uid : undefined;
 
   // Resolve text direction based on setting and content
   const paragraphContents = paragraphs.map((p) => p.content);
