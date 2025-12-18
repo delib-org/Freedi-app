@@ -155,111 +155,187 @@ async function getRandomOptions(questionId: string, params: BatchParams) {
 
 #### 2.2 Adaptive Batch Loading (Thompson Sampling)
 
-Priority-based sampling using Thompson Sampling for logged-in users. This approach:
-- Prioritizes under-evaluated proposals
-- Boosts recent submissions (counteracts temporal bias)
-- Graduates stable proposals (early stopping)
-- Uses Thompson sampling for exploration/exploitation balance
+Based on the paper "Adaptive Sampling Mechanisms for Large-Scale Deliberative Democracy Platforms" (December 2024), this mechanism addresses the fundamental challenge of enabling millions of participants to contribute proposals while ensuring fair evaluation coverage.
 
-**Priority Score Formula:**
+##### 2.2.1 The Consensus Scoring Model
+
+Participants rate proposals on a continuous scale from -1 (strongly dislike) to +1 (strongly like). Each proposal's consensus strength is measured using:
 
 ```
-Priority = (0.4 × Base) + (0.25 × Uncertainty) + (0.2 × Recency) + (0.15 × Threshold)
+Consensus Score = μ - SEM
 ```
 
-| Component | Weight | Description |
-|-----------|--------|-------------|
-| Base Priority | 40% | `1 - (evaluationCount / targetEvaluations)` |
-| Uncertainty Bonus | 25% | `min(1, currentSEM / targetSEM)` |
-| Recency Boost | 20% | Linear decay over 24 hours |
-| Near-Threshold Bonus | 15% | Proposals near consensus threshold (0) |
+Where μ is the mean rating and SEM (Standard Error of Mean) is `σ/√n`. This formulation is deliberately conservative: proposals with fewer evaluations (higher SEM) receive lower consensus scores, reflecting uncertainty about their true population support.
 
-**Architecture:**
+##### 2.2.2 Problems Addressed
+
+| Problem | Description |
+|---------|-------------|
+| **Temporal Bias** | Earlier proposals accumulate more evaluations, achieving statistical reliability while newer proposals languish |
+| **Uniform Treatment** | All under-evaluated proposals treated equally, ignoring that some need more evaluations (high variance) while others have converged |
+| **No Early Stopping** | Proposals that have clearly converged continue consuming evaluation bandwidth |
+| **Semantic Redundancy** | Users may be shown multiple similar proposals, reducing coverage of the idea space |
+
+##### 2.2.3 Priority Score Formula
+
+Each proposal's priority for selection is computed as a weighted combination of five factors:
+
+```
+Priority = (0.4 × Base) + (0.25 × Uncertainty) + (0.2 × Recency) + (0.15 × Threshold) × SkipPenalty
+```
+
+| Component | Weight | Formula | Description |
+|-----------|--------|---------|-------------|
+| **Base Priority** | 40% | `max(0, 1 - evaluationCount/targetEvaluations)` | Under-evaluated proposals get higher priority |
+| **Uncertainty Bonus** | 25% | `min(1, currentSEM/targetSEM)` | High SEM proposals need more data for reliable estimates |
+| **Recency Boost** | 20% | `hoursOld < boostWindow ? (1 - hoursOld/boostWindow) : 0` | Newer proposals get temporary priority boost (counteracts temporal bias) |
+| **Near-Threshold Bonus** | 15% | `|mean - threshold| < SEM × 1.96 ? min(1, CI_width/(distance + 0.1)) : 0` | Proposals with confidence intervals overlapping decision thresholds get priority |
+| **Skip Penalty** | multiplier | `skipRate > maxSkipRate ? 0.5 : 1.0` | Frequently skipped proposals receive reduced priority |
+
+##### 2.2.4 Thompson Sampling Integration
+
+Thompson Sampling is a multi-armed bandit technique that balances exploration (evaluating uncertain proposals) with exploitation (gathering data on promising ones). Each proposal's rating distribution is modeled as a Beta distribution:
+
+```typescript
+// Transform ratings from [-1, 1] to Beta distribution parameters
+const alpha = positiveRatings + neutralRatings * 0.5 + 1;  // +1 prior
+const beta = negativeRatings + neutralRatings * 0.5 + 1;
+
+// Sample from Beta distribution
+const thompsonSample = sampleBeta(alpha, beta);
+
+// Final selection score combines deterministic priority with Thompson sample
+adjustedPriority = priority × (1 - explorationWeight) + thompsonSample × explorationWeight;
+```
+
+This injects principled stochasticity that naturally balances exploration and exploitation.
+
+##### 2.2.5 Early Stopping for Stable Proposals
+
+Proposals achieving both sufficient evaluations and low SEM are marked as "stable" and graduated from active sampling:
+
+```typescript
+isStable = (evaluationCount >= minEvaluations) && (SEM < targetSEM)
+```
+
+This frees evaluation bandwidth for proposals that still need data, improving overall system efficiency.
+
+##### 2.2.6 Semantic Diversity Constraints (Future Enhancement)
+
+When millions of proposals exist, many will express similar ideas. To ensure users see diverse options:
+- Pre-cluster proposals using embedding-based similarity
+- Limit selections to at most K proposals per cluster
+- Reduces redundancy and improves coverage of the idea space
+
+##### 2.2.7 Stratified Time Cohorts (Future Enhancement)
+
+As an additional safeguard against temporal bias, proposals can be grouped into time cohorts (e.g., hourly buckets), with sampling drawing proportionally from each cohort:
+
+```typescript
+// Create time cohorts
+const cohorts = groupProposalsBySubmissionHour(proposals);
+
+// Sample proportionally from each cohort
+const perCohort = Math.ceil(totalSampleSize / cohorts.length);
+for (const cohort of cohorts) {
+  selected.push(...sampler.selectFromCohort(cohort, perCohort));
+}
+```
+
+##### 2.2.8 Configuration Parameters
+
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `targetEvaluations` | 30 | Ideal number of evaluations per proposal |
+| `targetSEM` | 0.15 | SEM threshold for considering a proposal stable |
+| `explorationWeight` | 0.3 | Weight of Thompson sampling vs. deterministic priority |
+| `recencyBoostHours` | 24 | Window during which new proposals receive priority boost |
+| `maxSkipRate` | 0.5 | Skip rate above which proposals get flagged |
+| `diversityClusters` | 2 | Max proposals from same semantic cluster per sample |
+
+##### 2.2.9 Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │  Client: SolutionFeedClient.tsx                                  │
 │  - Requests batch with userId (no excludeIds needed)            │
+│  - Server manages all filtering and prioritization              │
 └─────────────────────────────────────────────────────────────────┘
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │  API: app/api/statements/[id]/batch/route.ts                    │
-│  - Calls getAdaptiveBatch() or getRandomOptions()               │
+│  - Calls getAdaptiveBatch() for logged-in users                 │
+│  - Falls back to getRandomOptions() for anonymous users         │
 └─────────────────────────────────────────────────────────────────┘
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │  Query: src/lib/firebase/queries.ts                             │
 │  - getAdaptiveBatch(): Fetches proposals + user history         │
-│  - Uses ProposalSampler for selection                           │
+│  - Uses ProposalSampler for intelligent selection               │
 └─────────────────────────────────────────────────────────────────┘
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │  Sampler: src/lib/utils/proposalSampler.ts                      │
 │  - ProposalSampler class                                         │
-│  - scoreProposals(), selectForUser(), calculateStats()          │
+│  - scoreProposals(): Calculate priority for all proposals       │
+│  - selectForUser(): Filter evaluated + select by priority       │
+│  - calculateStats(): Return batch statistics                    │
 └─────────────────────────────────────────────────────────────────┘
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │  Utilities: src/lib/utils/sampling.ts                           │
-│  - calculateStatsFromAggregates() - O(1) stats                  │
-│  - calculatePriority() - Multi-factor scoring                   │
-│  - thompsonSample() - Beta distribution sampling                │
-│  - isStable() - Check if proposal has converged                 │
+│  - calculateStatsFromAggregates(): O(1) stats from aggregates   │
+│  - calculatePriority(): Multi-factor priority scoring           │
+│  - thompsonSample(): Beta distribution sampling                 │
+│  - isStable(): Check if proposal has converged                  │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-**Thompson Sampling Implementation:**
-
-```typescript
-// Model ratings as Beta distribution
-const alpha = positiveRatings + neutralRatings * 0.5 + 1;
-const beta = negativeRatings + neutralRatings * 0.5 + 1;
-
-// Sample from Beta distribution
-const thompsonSample = sampleBeta(alpha, beta);
-
-// Combine deterministic priority with exploration (30% exploration weight)
-adjustedPriority = priority * 0.7 + thompsonSample * 0.3;
-```
-
-**Early Stopping (Stability):**
-
-Proposals are considered "stable" when:
-- `evaluationCount >= 30` (target evaluations)
-- `SEM < 0.15` (target standard error)
-
-Stable proposals are excluded from active sampling.
-
-**Response Format:**
+##### 2.2.10 Response Format
 
 ```typescript
 {
-  solutions: Statement[];      // Selected proposals
+  solutions: Statement[];      // Selected proposals (priority-ordered)
   hasMore: boolean;            // More proposals available
   count: number;               // Number returned
   stats: {
-    totalCount: number;        // Total for question
+    totalCount: number;        // Total proposals for question
     evaluatedCount: number;    // User's evaluated count
-    stableCount: number;       // Converged proposals
-    remainingCount: number;    // Still available
+    stableCount: number;       // Converged proposals (graduated)
+    remainingCount: number;    // Still available for evaluation
   };
   method: 'adaptive' | 'random';
 }
 ```
 
-**Benefits over Random Sampling:**
+##### 2.2.11 Advantages Over Baseline Random Sampling
 
-| Aspect | Random (randomSeed) | Adaptive (Thompson) |
-|--------|---------------------|---------------------|
-| Selection | Random with exclusion | Priority-based + exploration |
-| Temporal fairness | None | Recency boost for new proposals |
-| Efficiency | Wastes bandwidth on converged | Early stopping for stable |
-| Uncertainty | Ignored | Prioritizes high-SEM proposals |
-| Server handling | Client sends excludeIds | Server manages history |
+| Aspect | Random (randomSeed) | Adaptive (Thompson Sampling) |
+|--------|---------------------|------------------------------|
+| **Selection Method** | Random with exclusion filter | Priority-based + principled exploration |
+| **Temporal Fairness** | None (earlier = more evaluations) | Recency boost counteracts temporal bias |
+| **Resource Efficiency** | Wastes bandwidth on converged | Early stopping frees bandwidth |
+| **Uncertainty Handling** | Ignored | Prioritizes high-SEM proposals |
+| **Near-Threshold** | Random coverage | Focuses on proposals needing decisive data |
+| **Skip Behavior** | Ignored | Penalizes frequently skipped proposals |
+| **Server Handling** | Client sends excludeIds | Server manages evaluation history |
+
+##### 2.2.12 Computational Complexity
+
+- **Priority Scoring**: O(n) where n is active proposals - acceptable for real-time serving
+- **Proposals can be pre-scored and cached** for performance optimization
+- **Semantic Clustering** (future): O(n × d) offline process where d is embedding dimensionality
+
+##### 2.2.13 References
+
+- Thompson, W.R. (1933). On the Likelihood that One Unknown Probability Exceeds Another in View of the Evidence of Two Samples. *Biometrika*, 25(3/4), 285-294.
+- Russo, D., Van Roy, B., et al. (2018). A Tutorial on Thompson Sampling. *Foundations and Trends in Machine Learning*, 11(1), 1-96.
+- Fishkin, J.S. (2018). Democracy When the People Are Thinking. Oxford University Press.
+- Small, C., et al. (2021). Polis: Scaling Deliberation by Mapping High Dimensional Opinion Spaces. *Recerca*, 26(2).
 
 ### 3. 5-Point Evaluation
 
