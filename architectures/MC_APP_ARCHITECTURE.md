@@ -64,6 +64,8 @@ The Mass Consensus app is a **Next.js 14** application designed for large-scale 
 │   │   └── utils/
 │   │       ├── consensusColors.ts
 │   │       ├── errorHandling.ts
+│   │       ├── proposalSampler.ts  # Thompson Sampling batch selection
+│   │       ├── sampling.ts         # Sampling utilities & priority scoring
 │   │       └── user.ts
 │   │
 │   ├── constants/              # Application constants
@@ -121,7 +123,11 @@ Local State (useState, useEffect)
 
 ### 2. Batch Loading
 
-Random batch loading with smart sampling:
+The app supports two batch loading strategies:
+
+#### 2.1 Random Batch Loading (Fallback)
+
+Basic random batch loading using `randomSeed` field (used for anonymous users):
 
 ```typescript
 async function getRandomOptions(questionId: string, params: BatchParams) {
@@ -146,6 +152,114 @@ async function getRandomOptions(questionId: string, params: BatchParams) {
   return mergeAndShuffle(upperResults, lowerResults, size);
 }
 ```
+
+#### 2.2 Adaptive Batch Loading (Thompson Sampling)
+
+Priority-based sampling using Thompson Sampling for logged-in users. This approach:
+- Prioritizes under-evaluated proposals
+- Boosts recent submissions (counteracts temporal bias)
+- Graduates stable proposals (early stopping)
+- Uses Thompson sampling for exploration/exploitation balance
+
+**Priority Score Formula:**
+
+```
+Priority = (0.4 × Base) + (0.25 × Uncertainty) + (0.2 × Recency) + (0.15 × Threshold)
+```
+
+| Component | Weight | Description |
+|-----------|--------|-------------|
+| Base Priority | 40% | `1 - (evaluationCount / targetEvaluations)` |
+| Uncertainty Bonus | 25% | `min(1, currentSEM / targetSEM)` |
+| Recency Boost | 20% | Linear decay over 24 hours |
+| Near-Threshold Bonus | 15% | Proposals near consensus threshold (0) |
+
+**Architecture:**
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  Client: SolutionFeedClient.tsx                                  │
+│  - Requests batch with userId (no excludeIds needed)            │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  API: app/api/statements/[id]/batch/route.ts                    │
+│  - Calls getAdaptiveBatch() or getRandomOptions()               │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  Query: src/lib/firebase/queries.ts                             │
+│  - getAdaptiveBatch(): Fetches proposals + user history         │
+│  - Uses ProposalSampler for selection                           │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  Sampler: src/lib/utils/proposalSampler.ts                      │
+│  - ProposalSampler class                                         │
+│  - scoreProposals(), selectForUser(), calculateStats()          │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  Utilities: src/lib/utils/sampling.ts                           │
+│  - calculateStatsFromAggregates() - O(1) stats                  │
+│  - calculatePriority() - Multi-factor scoring                   │
+│  - thompsonSample() - Beta distribution sampling                │
+│  - isStable() - Check if proposal has converged                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Thompson Sampling Implementation:**
+
+```typescript
+// Model ratings as Beta distribution
+const alpha = positiveRatings + neutralRatings * 0.5 + 1;
+const beta = negativeRatings + neutralRatings * 0.5 + 1;
+
+// Sample from Beta distribution
+const thompsonSample = sampleBeta(alpha, beta);
+
+// Combine deterministic priority with exploration (30% exploration weight)
+adjustedPriority = priority * 0.7 + thompsonSample * 0.3;
+```
+
+**Early Stopping (Stability):**
+
+Proposals are considered "stable" when:
+- `evaluationCount >= 30` (target evaluations)
+- `SEM < 0.15` (target standard error)
+
+Stable proposals are excluded from active sampling.
+
+**Response Format:**
+
+```typescript
+{
+  solutions: Statement[];      // Selected proposals
+  hasMore: boolean;            // More proposals available
+  count: number;               // Number returned
+  stats: {
+    totalCount: number;        // Total for question
+    evaluatedCount: number;    // User's evaluated count
+    stableCount: number;       // Converged proposals
+    remainingCount: number;    // Still available
+  };
+  method: 'adaptive' | 'random';
+}
+```
+
+**Benefits over Random Sampling:**
+
+| Aspect | Random (randomSeed) | Adaptive (Thompson) |
+|--------|---------------------|---------------------|
+| Selection | Random with exclusion | Priority-based + exploration |
+| Temporal fairness | None | Recency boost for new proposals |
+| Efficiency | Wastes bandwidth on converged | Early stopping for stable |
+| Uncertainty | Ignored | Prioritizes high-SEM proposals |
+| Server handling | Client sends excludeIds | Server manages history |
 
 ### 3. 5-Point Evaluation
 
@@ -490,8 +604,9 @@ FIRESTORE_EMULATOR_HOST=localhost:8081
 2. **Server-First**: SSR for performance and SEO
 3. **Minimal State**: No Redux, just React Context + hooks
 4. **API-Driven**: Client-agnostic API routes
-5. **Random Sampling**: `randomSeed` field for efficient random selection
+5. **Adaptive Sampling**: Thompson Sampling for fair proposal selection (random fallback for anonymous)
 6. **Batch Loading**: 6 solutions at a time for optimal UX
+7. **Early Stopping**: Stable proposals excluded from active sampling to save bandwidth
 
 ## Key Files Reference
 
@@ -499,7 +614,10 @@ FIRESTORE_EMULATOR_HOST=localhost:8081
 |------|---------|
 | `app/layout.tsx` | Root layout with providers |
 | `app/q/[statementId]/page.tsx` | Main question page |
-| `src/lib/firebase/queries.ts` | Firestore queries |
+| `app/api/statements/[id]/batch/route.ts` | Batch loading API endpoint |
+| `src/lib/firebase/queries.ts` | Firestore queries (incl. getAdaptiveBatch) |
+| `src/lib/utils/sampling.ts` | Thompson Sampling utilities & priority scoring |
+| `src/lib/utils/proposalSampler.ts` | ProposalSampler class for batch selection |
 | `src/lib/utils/user.ts` | Anonymous user utilities |
 | `src/components/question/` | Question components |
 | `src/constants/common.ts` | Application constants |
