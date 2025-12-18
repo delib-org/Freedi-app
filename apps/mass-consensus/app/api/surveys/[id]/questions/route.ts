@@ -5,6 +5,7 @@ import { verifyToken, extractBearerToken } from '@/lib/auth/verifyAdmin';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
 import { AddQuestionRequest } from '@/types/survey';
 import { textToParagraphs } from '@/lib/utils/paragraphUtils';
+import { logger } from '@/lib/utils/logger';
 
 interface RouteContext {
   params: { id: string };
@@ -96,14 +97,14 @@ export async function POST(request: NextRequest, context: RouteContext) {
     // Add to survey
     const updatedSurvey = await addQuestionToSurvey(surveyId, statementId);
 
-    console.info('[POST /api/surveys/[id]/questions] Created question:', statementId, 'for survey:', surveyId);
+    logger.info('[POST /api/surveys/[id]/questions] Created question:', statementId, 'for survey:', surveyId);
 
     return NextResponse.json({
       question: newQuestion,
       survey: updatedSurvey,
     }, { status: 201 });
   } catch (error) {
-    console.error('[POST /api/surveys/[id]/questions] Error:', error);
+    logger.error('[POST /api/surveys/[id]/questions] Error:', error);
     return NextResponse.json(
       { error: 'Failed to create question' },
       { status: 500 }
@@ -184,14 +185,14 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     // Add to survey
     const updatedSurvey = await addQuestionToSurvey(surveyId, body.questionId);
 
-    console.info('[PUT /api/surveys/[id]/questions] Added question:', body.questionId, 'to survey:', surveyId);
+    logger.info('[PUT /api/surveys/[id]/questions] Added question:', body.questionId, 'to survey:', surveyId);
 
     return NextResponse.json({
       question,
       survey: updatedSurvey,
     });
   } catch (error) {
-    console.error('[PUT /api/surveys/[id]/questions] Error:', error);
+    logger.error('[PUT /api/surveys/[id]/questions] Error:', error);
     return NextResponse.json(
       { error: 'Failed to add question' },
       { status: 500 }

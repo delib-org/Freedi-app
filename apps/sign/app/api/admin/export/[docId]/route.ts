@@ -3,6 +3,7 @@ import { DocumentData } from 'firebase-admin/firestore';
 import { getFirebaseAdmin } from '@/lib/firebase/admin';
 import { getUserIdFromCookie } from '@/lib/utils/user';
 import { Collections } from '@freedi/shared-types';
+import { logger } from '@/lib/utils/logger';
 
 /**
  * GET /api/admin/export/[docId]
@@ -131,7 +132,7 @@ export async function GET(
       },
     });
   } catch (error) {
-    console.error('[API] Admin export failed:', error);
+    logger.error('[API] Admin export failed:', error);
 
     return NextResponse.json(
       { error: 'Internal server error' },

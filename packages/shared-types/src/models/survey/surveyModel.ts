@@ -6,6 +6,7 @@ import {
   array,
   optional,
   enum_,
+  record,
   InferOutput,
 } from 'valibot';
 
@@ -41,6 +42,24 @@ export const SurveySettingsSchema = object({
 export type SurveySettings = InferOutput<typeof SurveySettingsSchema>;
 
 // ============================================
+// Per-Question Override Settings Schema
+// ============================================
+export const QuestionOverrideSettingsSchema = object({
+  /** Allow participants to add suggestions for THIS question */
+  allowParticipantsToAddSuggestions: optional(boolean()),
+  /** Ask for suggestion BEFORE seeing options for THIS question */
+  askUserForASolutionBeforeEvaluation: optional(boolean()),
+  /** Allow skipping THIS question */
+  allowSkipping: optional(boolean()),
+  /** Minimum evaluations required for THIS question */
+  minEvaluationsPerQuestion: optional(number()),
+  /** Randomize options order for THIS question */
+  randomizeOptions: optional(boolean()),
+});
+
+export type QuestionOverrideSettings = InferOutput<typeof QuestionOverrideSettingsSchema>;
+
+// ============================================
 // Survey Schema (Main Type)
 // ============================================
 export const SurveySchema = object({
@@ -51,6 +70,8 @@ export const SurveySchema = object({
   /** Ordered array of statementIds (questions) */
   questionIds: array(string()),
   settings: SurveySettingsSchema,
+  /** Per-question settings overrides (keyed by questionId) */
+  questionSettings: optional(record(string(), QuestionOverrideSettingsSchema)),
   /** Survey lifecycle status */
   status: SurveyStatusSchema,
   /** Total responses started */
@@ -95,4 +116,12 @@ export const DEFAULT_SURVEY_SETTINGS: SurveySettings = {
   showQuestionPreview: false,
   randomizeQuestions: false,
   allowParticipantsToAddSuggestions: false,
+};
+
+export const DEFAULT_QUESTION_OVERRIDE_SETTINGS: QuestionOverrideSettings = {
+  allowParticipantsToAddSuggestions: undefined,
+  askUserForASolutionBeforeEvaluation: undefined,
+  allowSkipping: undefined,
+  minEvaluationsPerQuestion: undefined,
+  randomizeOptions: undefined,
 };

@@ -3,6 +3,7 @@ import { getFirebaseAdmin } from '@/lib/firebase/admin';
 import { getUserIdFromCookie } from '@/lib/utils/user';
 import { Collections, StatementType, Statement, DEMOGRAPHIC_CONSTANTS } from '@freedi/shared-types';
 import { StatementWithParagraphs, Paragraph } from '@/types';
+import { logger } from '@/lib/utils/logger';
 
 // Thresholds for classification
 const COLLABORATION_THRESHOLDS = {
@@ -398,7 +399,7 @@ export async function GET(
 
     return NextResponse.json(response);
   } catch (error) {
-    console.error('[Collaboration API] Error:', error);
+    logger.error('[Collaboration API] Error:', error);
 
     return NextResponse.json(
       { error: 'Internal server error' },

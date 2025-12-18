@@ -5,6 +5,7 @@ import { Collections, StatementType, Statement } from '@freedi/shared-types';
 import { StatementWithParagraphs, Paragraph, DemographicMode } from '@/types';
 import { getDemographicQuestions } from '@/lib/firebase/demographicQueries';
 import { SignDemographicQuestion } from '@/types/demographics';
+import { logger } from '@/lib/utils/logger';
 
 const PARAGRAPH_VIEWS_COLLECTION = 'paragraphViews';
 
@@ -411,7 +412,7 @@ export async function GET(
       },
     });
   } catch (error) {
-    console.error('[API] Detailed export failed:', error);
+    logger.error('[API] Detailed export failed:', error);
 
     return NextResponse.json(
       { error: 'Internal server error' },

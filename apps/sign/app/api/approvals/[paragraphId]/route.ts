@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
 import { getUserIdFromCookie } from '@/lib/utils/user';
 import { Collections } from '@freedi/shared-types';
+import { logger } from '@/lib/utils/logger';
 
 interface ApprovalInput {
   approval: boolean;
@@ -37,7 +38,7 @@ export async function GET(
 
     return NextResponse.json({ approval: doc.data() });
   } catch (error) {
-    console.error('[Approvals API] GET error:', error);
+    logger.error('[Approvals API] GET error:', error);
 
     return NextResponse.json(
       { error: 'Internal server error' },
@@ -101,11 +102,11 @@ export async function POST(
 
     await db.collection(Collections.approval).doc(approvalId).set(approvalData);
 
-    console.info(`[Approvals API] Created/updated approval: ${approvalId} - ${approval}`);
+    logger.info(`[Approvals API] Created/updated approval: ${approvalId} - ${approval}`);
 
     return NextResponse.json({ success: true, approval: approvalData });
   } catch (error) {
-    console.error('[Approvals API] POST error:', error);
+    logger.error('[Approvals API] POST error:', error);
 
     return NextResponse.json(
       { error: 'Internal server error' },
@@ -138,11 +139,11 @@ export async function DELETE(
 
     await db.collection(Collections.approval).doc(approvalId).delete();
 
-    console.info(`[Approvals API] Deleted approval: ${approvalId}`);
+    logger.info(`[Approvals API] Deleted approval: ${approvalId}`);
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('[Approvals API] DELETE error:', error);
+    logger.error('[Approvals API] DELETE error:', error);
 
     return NextResponse.json(
       { error: 'Internal server error' },

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSurveyProgress, upsertSurveyProgress } from '@/lib/firebase/surveys';
 import { getUserIdFromCookie } from '@/lib/utils/user';
 import { UpdateProgressRequest } from '@/types/survey';
+import { logger } from '@/lib/utils/logger';
 
 interface RouteContext {
   params: { id: string };
@@ -43,7 +44,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
       ...progress,
     });
   } catch (error) {
-    console.error('[GET /api/surveys/[id]/progress] Error:', error);
+    logger.error('[GET /api/surveys/[id]/progress] Error:', error);
     return NextResponse.json(
       { error: 'Failed to fetch progress' },
       { status: 500 }
@@ -74,11 +75,11 @@ export async function POST(request: NextRequest, context: RouteContext) {
       isCompleted: body.isCompleted,
     });
 
-    console.info('[POST /api/surveys/[id]/progress] Updated progress for user:', userId);
+    logger.info('[POST /api/surveys/[id]/progress] Updated progress for user:', userId);
 
     return NextResponse.json(progress);
   } catch (error) {
-    console.error('[POST /api/surveys/[id]/progress] Error:', error);
+    logger.error('[POST /api/surveys/[id]/progress] Error:', error);
     return NextResponse.json(
       { error: 'Failed to update progress' },
       { status: 500 }
