@@ -102,7 +102,7 @@ export function extractAndParseJsonString(input: string): {
     const endIndex = input.lastIndexOf("}");
 
     if (startIndex === -1 || endIndex === -1 || startIndex >= endIndex) {
-      console.error("Invalid JSON format");
+      logger.error("Invalid JSON format", { input: input.substring(0, 100) });
 
       return { strings: [] };
     }
@@ -113,12 +113,12 @@ export function extractAndParseJsonString(input: string): {
     if (parsedObject && Array.isArray(parsedObject.strings)) {
       return parsedObject;
     } else {
-      console.error("Invalid JSON structure");
+      logger.error("Invalid JSON structure", { input: input.substring(0, 100) });
 
       return { strings: [] };
     }
   } catch (error) {
-    console.error("Error parsing JSON", error);
+    logger.error("Error parsing JSON", { error, input: input.substring(0, 100) });
 
     return { strings: [] };
   }
@@ -148,7 +148,7 @@ async function getAIResponseAsList(
 
         return [];
       } catch (parseError) {
-        console.error("Failed to parse AI response:", responseText, parseError);
+        logger.error("Failed to parse AI response", { responseText: responseText.substring(0, 200), parseError });
 
         return [];
       }

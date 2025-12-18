@@ -150,7 +150,7 @@ export async function mergeStatements(
 		const existingParagraphs: ParagraphForMerge[] = (targetStatement.paragraphs || []).map(
 			(p: Paragraph) => ({
 				content: p.content,
-				sourceStatementId: p.sourceStatementId,
+				sourceStatementId: p.sourceStatementId ?? undefined,
 			})
 		);
 
@@ -182,7 +182,7 @@ export async function mergeStatements(
 			type: ParagraphType.paragraph,
 			content: p.content,
 			order: index,
-			sourceStatementId: p.sourceStatementId,
+			sourceStatementId: p.sourceStatementId ?? undefined,
 		}));
 
 		// 6. Check if user already has an evaluation on target
