@@ -4,6 +4,7 @@ import { getUserIdFromCookie } from '@/lib/utils/user';
 import { Collections } from '@freedi/shared-types';
 import { getDemographicQuestions } from '@/lib/firebase/demographicQueries';
 import { DemographicMode, SignDemographicQuestion } from '@/types/demographics';
+import { logger } from '@/lib/utils/logger';
 
 interface UserResponse {
   odlUserId: string;
@@ -131,7 +132,7 @@ export async function GET(
 
     return NextResponse.json(responseData);
   } catch (error) {
-    console.error('[API] Demographics responses GET failed:', error);
+    logger.error('[API] Demographics responses GET failed:', error);
 
     return NextResponse.json(
       { error: 'Internal server error' },

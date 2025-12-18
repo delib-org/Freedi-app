@@ -8,6 +8,7 @@ import { cookies } from 'next/headers';
 import { Collections } from '@freedi/shared-types';
 import { getFirebaseAdmin } from '@/lib/firebase/admin';
 import { Paragraph } from '@/types';
+import { logger } from '@/lib/utils/logger';
 
 interface PatchRequest {
   documentId: string;
@@ -102,7 +103,7 @@ export async function PATCH(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error updating paragraph:', error);
+    logger.error('Error updating paragraph:', error);
 
     return NextResponse.json(
       { success: false, error: 'Failed to update paragraph' },

@@ -7,6 +7,7 @@ import {
 } from '@/lib/firebase/surveys';
 import { verifyToken, extractBearerToken } from '@/lib/auth/verifyAdmin';
 import { UpdateSurveyRequest } from '@/types/survey';
+import { logger } from '@/lib/utils/logger';
 
 interface RouteContext {
   params: { id: string };
@@ -33,7 +34,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
 
     return NextResponse.json(survey);
   } catch (error) {
-    console.error('[GET /api/surveys/[id]] Error:', error);
+    logger.error('[GET /api/surveys/[id]] Error:', error);
     return NextResponse.json(
       { error: 'Failed to fetch survey' },
       { status: 500 }
@@ -93,11 +94,11 @@ export async function PUT(request: NextRequest, context: RouteContext) {
       );
     }
 
-    console.info('[PUT /api/surveys/[id]] Updated survey:', surveyId);
+    logger.info('[PUT /api/surveys/[id]] Updated survey:', surveyId, 'questionSettings:', JSON.stringify(body.questionSettings));
 
     return NextResponse.json(updatedSurvey);
   } catch (error) {
-    console.error('[PUT /api/surveys/[id]] Error:', error);
+    logger.error('[PUT /api/surveys/[id]] Error:', error);
     return NextResponse.json(
       { error: 'Failed to update survey' },
       { status: 500 }
@@ -155,11 +156,11 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
       );
     }
 
-    console.info('[DELETE /api/surveys/[id]] Deleted survey:', surveyId);
+    logger.info('[DELETE /api/surveys/[id]] Deleted survey:', surveyId);
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('[DELETE /api/surveys/[id]] Error:', error);
+    logger.error('[DELETE /api/surveys/[id]] Error:', error);
     return NextResponse.json(
       { error: 'Failed to delete survey' },
       { status: 500 }

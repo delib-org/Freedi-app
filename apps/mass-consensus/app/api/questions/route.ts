@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { searchQuestions } from '@/lib/firebase/surveys';
 import { verifyToken, extractBearerToken } from '@/lib/auth/verifyAdmin';
+import { logger } from '@/lib/utils/logger';
 
 const DEFAULT_LIMIT = 20;
 const MAX_LIMIT = 100;
@@ -62,7 +63,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(result);
   } catch (error) {
-    console.error('[GET /api/questions] Error:', error);
+    logger.error('[GET /api/questions] Error:', error);
     return NextResponse.json(
       { error: 'Failed to fetch questions' },
       { status: 500 }

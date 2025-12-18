@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { Statement } from '@freedi/shared-types';
-import { SurveySettings } from '@/types/survey';
+import { MergedQuestionSettings } from '@/lib/utils/settingsUtils';
 import { getOrCreateAnonymousUser } from '@/lib/utils/user';
 import { ToastProvider } from '@/components/shared/Toast';
 import SolutionCard from './SolutionCard';
@@ -20,7 +20,8 @@ import {
 interface SolutionFeedClientProps {
   question: Statement;
   initialSolutions: Statement[];
-  surveySettings?: SurveySettings;
+  /** Merged settings for this question (survey + per-question overrides) */
+  mergedSettings?: MergedQuestionSettings;
 }
 
 /**
@@ -31,7 +32,7 @@ interface SolutionFeedClientProps {
 export default function SolutionFeedClient({
   question,
   initialSolutions,
-  surveySettings,
+  mergedSettings,
 }: SolutionFeedClientProps) {
   const { t, tWithParams } = useTranslation();
   const [solutions, setSolutions] = useState<Statement[]>(initialSolutions);
@@ -52,9 +53,20 @@ export default function SolutionFeedClient({
 
   const questionId = question.statementId;
   const totalOptionsCount = question.numberOfOptions || 0;
-  // Type assertion needed as this property may not be in older delib-npm types
-  const questionSettings = question.questionSettings as { askUserForASolutionBeforeEvaluation?: boolean } | undefined;
-  const requiresSolution = questionSettings?.askUserForASolutionBeforeEvaluation || false;
+
+  // Use merged settings for "ask for suggestion before evaluation"
+  // Falls back to question-level setting if not in survey context
+  const questionSettingsLegacy = question.questionSettings as { askUserForASolutionBeforeEvaluation?: boolean } | undefined;
+  const requiresSolution = mergedSettings?.askUserForASolutionBeforeEvaluation ??
+    questionSettingsLegacy?.askUserForASolutionBeforeEvaluation ?? false;
+
+  // Check if we're in survey context (to hide bottomContainer)
+  const inSurveyContext = !!mergedSettings;
+
+  // Debug logging
+  console.info('[SolutionFeedClient] mergedSettings:', mergedSettings);
+  console.info('[SolutionFeedClient] requiresSolution:', requiresSolution);
+  console.info('[SolutionFeedClient] inSurveyContext:', inSurveyContext);
 
   // Check if user has submitted solutions (for "require solution first" feature)
   useEffect(() => {
@@ -192,6 +204,38 @@ export default function SolutionFeedClient({
       return () => clearTimeout(timer);
     }
   }, [allEvaluatedIds.size]);
+
+  // Dispatch show-view-progress event when in survey context
+  useEffect(() => {
+    if (inSurveyContext) {
+      const event = new CustomEvent('show-view-progress', {
+        detail: { show: allEvaluatedIds.size > 0 }
+      });
+      window.dispatchEvent(event);
+    }
+  }, [allEvaluatedIds.size, inSurveyContext]);
+
+  // Listen for trigger events from SurveyNavigation (when in survey context)
+  useEffect(() => {
+    if (!inSurveyContext) return;
+
+    const handleTriggerAddSuggestion = () => {
+      trackAddSolutionClick(questionId, userId);
+      setShowSolutionPrompt(true);
+    };
+
+    const handleTriggerViewProgress = () => {
+      setShowCompletionScreen(true);
+    };
+
+    window.addEventListener('trigger-add-suggestion', handleTriggerAddSuggestion);
+    window.addEventListener('trigger-view-progress', handleTriggerViewProgress);
+
+    return () => {
+      window.removeEventListener('trigger-add-suggestion', handleTriggerAddSuggestion);
+      window.removeEventListener('trigger-view-progress', handleTriggerViewProgress);
+    };
+  }, [inSurveyContext, questionId, userId]);
 
   // Handle opening the completion/progress screen manually
   const handleViewProgress = () => {
@@ -423,38 +467,38 @@ export default function SolutionFeedClient({
         )}
       </div>
 
-        {/* Fixed Bottom Container - Progress & Actions */}
-        <div className={styles.bottomContainer}>
-          {/* Progress Indicator - shows briefly after evaluation, auto-hides after 5s */}
-          {allEvaluatedIds.size > 0 && showProgressIndicator && (
-            <div className={styles.progressIndicator}>
-              <div className={styles.progressStat}>
-                <span className={styles.progressIcon}>🏆</span>
-                <span className={styles.progressValue}>{earnedBadgesCount}</span>
-                <span className={styles.progressLabel}>{t('badges')}</span>
+        {/* Fixed Bottom Container - Progress & Actions (only show when NOT in survey context) */}
+        {!inSurveyContext && (
+          <div className={styles.bottomContainer}>
+            {/* Progress Indicator - shows briefly after evaluation, auto-hides after 5s */}
+            {allEvaluatedIds.size > 0 && showProgressIndicator && (
+              <div className={styles.progressIndicator}>
+                <div className={styles.progressStat}>
+                  <span className={styles.progressIcon}>🏆</span>
+                  <span className={styles.progressValue}>{earnedBadgesCount}</span>
+                  <span className={styles.progressLabel}>{t('badges')}</span>
+                </div>
+                <div className={styles.progressDivider} />
+                <div className={styles.progressStat}>
+                  <span className={styles.progressIcon}>✓</span>
+                  <span className={styles.progressValue}>{allEvaluatedIds.size}</span>
+                  <span className={styles.progressLabel}>{t('evaluated')}</span>
+                </div>
               </div>
-              <div className={styles.progressDivider} />
-              <div className={styles.progressStat}>
-                <span className={styles.progressIcon}>✓</span>
-                <span className={styles.progressValue}>{allEvaluatedIds.size}</span>
-                <span className={styles.progressLabel}>{t('evaluated')}</span>
-              </div>
-            </div>
-          )}
-
-          {/* Action Buttons */}
-          <div className={styles.actionButtons}>
-            {/* View Progress Button - shows after first evaluation */}
-            {allEvaluatedIds.size > 0 && (
-              <button
-                className={styles.viewProgressButton}
-                onClick={handleViewProgress}
-              >
-                {t('View Progress')}
-              </button>
             )}
-            {/* Add Solution Button - only show if allowed by survey settings (or if not in survey context) */}
-            {(!surveySettings || surveySettings.allowParticipantsToAddSuggestions) && (
+
+            {/* Action Buttons */}
+            <div className={styles.actionButtons}>
+              {/* View Progress Button - shows after first evaluation */}
+              {allEvaluatedIds.size > 0 && (
+                <button
+                  className={styles.viewProgressButton}
+                  onClick={handleViewProgress}
+                >
+                  {t('View Progress')}
+                </button>
+              )}
+              {/* Add Solution Button - only show if not in survey context */}
               <button
                 className={styles.addSolutionButton}
                 onClick={() => {
@@ -464,9 +508,9 @@ export default function SolutionFeedClient({
               >
                 {t('Add Solution')}
               </button>
-            )}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Solution prompt modal - used for both initial prompt and manual add */}
         <SolutionPromptModal

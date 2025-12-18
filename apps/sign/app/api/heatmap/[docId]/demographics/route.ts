@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
 import { Collections, DEMOGRAPHIC_CONSTANTS } from '@freedi/shared-types';
 import { DemographicFilterOption } from '@/types/heatMap';
+import { logger } from '@/lib/utils/logger';
 
 interface DemographicQuestionDoc {
   userQuestionId: string;
@@ -160,7 +161,7 @@ export async function GET(
 
     return NextResponse.json({ demographics });
   } catch (error) {
-    console.error('[HeatMap Demographics API] GET error:', error);
+    logger.error('[HeatMap Demographics API] GET error:', error);
 
     return NextResponse.json(
       { error: 'Internal server error' },

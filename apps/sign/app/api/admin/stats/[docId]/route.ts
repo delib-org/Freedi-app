@@ -4,6 +4,7 @@ import { getFirebaseAdmin } from '@/lib/firebase/admin';
 import { getUserIdFromCookie } from '@/lib/utils/user';
 import { Collections } from '@freedi/shared-types';
 import { Signature } from '@/lib/firebase/queries';
+import { logger } from '@/lib/utils/logger';
 
 export interface DocumentStats {
   totalParticipants: number;
@@ -162,7 +163,7 @@ export async function GET(
 
     return NextResponse.json(stats);
   } catch (error) {
-    console.error('[API] Admin stats failed:', error);
+    logger.error('[API] Admin stats failed:', error);
 
     return NextResponse.json(
       { error: 'Internal server error' },

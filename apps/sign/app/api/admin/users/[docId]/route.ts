@@ -3,6 +3,7 @@ import { DocumentData } from 'firebase-admin/firestore';
 import { getFirebaseAdmin } from '@/lib/firebase/admin';
 import { getUserIdFromCookie } from '@/lib/utils/user';
 import { Collections } from '@freedi/shared-types';
+import { logger } from '@/lib/utils/logger';
 
 export interface UserData {
   odlUserId: string;
@@ -131,7 +132,7 @@ export async function GET(
       total: filteredUsers.length,
     });
   } catch (error) {
-    console.error('[API] Admin users failed:', error);
+    logger.error('[API] Admin users failed:', error);
 
     return NextResponse.json(
       { error: 'Internal server error' },

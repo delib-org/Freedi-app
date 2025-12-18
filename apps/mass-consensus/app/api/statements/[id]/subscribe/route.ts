@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
 import { logError } from '@/lib/utils/errorHandling';
+import { logger } from '@/lib/utils/logger';
 
 // Use the same collection as the Firebase function for admin notifications
 const EMAIL_SUBSCRIBERS_COLLECTION = 'emailSubscribers';
@@ -89,7 +90,7 @@ export async function POST(
 
     await db.collection(EMAIL_SUBSCRIBERS_COLLECTION).doc(subscriberId).set(subscription);
 
-    console.info('Email subscriber added from mass-consensus', {
+    logger.info('Email subscriber added from mass-consensus', {
       subscriberId,
       statementId,
     });

@@ -6,6 +6,7 @@ import { logError, ValidationError } from '@/lib/utils/errorHandling';
 import { VALIDATION, ERROR_MESSAGES } from '@/constants/common';
 import { textToParagraphs } from '@/lib/utils/paragraphUtils';
 import { checkRateLimit, RATE_LIMITS } from '@/lib/utils/rateLimit';
+import { logger } from '@/lib/utils/logger';
 import type { Firestore } from 'firebase-admin/firestore';
 
 /**
@@ -196,8 +197,8 @@ export async function POST(
     let title: string;
     let description: string;
 
-    console.info('[Submit] AI generated title:', generatedTitle);
-    console.info('[Submit] AI generated description:', generatedDescription);
+    logger.info('[Submit] AI generated title:', generatedTitle);
+    logger.info('[Submit] AI generated description:', generatedDescription);
 
     if (generatedTitle && generatedDescription) {
       // Use AI-generated values

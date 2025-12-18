@@ -4,6 +4,7 @@ import { getUserIdFromCookie } from '@/lib/utils/user';
 import { Collections } from '@freedi/shared-types';
 import { deleteDemographicQuestion, saveDemographicQuestion } from '@/lib/firebase/demographicQueries';
 import { DemographicMode, CreateQuestionRequest } from '@/types/demographics';
+import { logger } from '@/lib/utils/logger';
 
 /**
  * PUT /api/demographics/questions/[docId]/[questionId]
@@ -85,7 +86,7 @@ export async function PUT(
       question: updatedQuestion,
     });
   } catch (error) {
-    console.error('[API] Demographics question PUT failed:', error);
+    logger.error('[API] Demographics question PUT failed:', error);
 
     return NextResponse.json(
       { error: 'Internal server error' },
@@ -164,7 +165,7 @@ export async function DELETE(
       success: true,
     });
   } catch (error) {
-    console.error('[API] Demographics question DELETE failed:', error);
+    logger.error('[API] Demographics question DELETE failed:', error);
 
     return NextResponse.json(
       { error: 'Internal server error' },

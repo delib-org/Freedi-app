@@ -12,6 +12,7 @@ import {
   CreateQuestionRequest,
   DemographicQuestionsResponse,
 } from '@/types/demographics';
+import { logger } from '@/lib/utils/logger';
 
 /**
  * GET /api/demographics/questions/[docId]
@@ -56,7 +57,7 @@ export async function GET(
 
     return NextResponse.json(response);
   } catch (error) {
-    console.error('[API] Demographics questions GET failed:', error);
+    logger.error('[API] Demographics questions GET failed:', error);
 
     return NextResponse.json(
       { error: 'Internal server error' },
@@ -149,7 +150,7 @@ export async function POST(
       question: savedQuestion,
     });
   } catch (error) {
-    console.error('[API] Demographics questions POST failed:', error);
+    logger.error('[API] Demographics questions POST failed:', error);
 
     return NextResponse.json(
       { error: 'Internal server error' },
