@@ -646,6 +646,163 @@ This is an ambitious goal, and we recognize we're just at the beginning of this 
 
 This project is licensed under the terms specified in `LICENSE.md`.
 
+## 🔍 For Researchers: Exploring and Contributing to the Code
+
+**Are you a social scientist, political theorist, or researcher interested in how this platform embodies democratic values?** This section is for you—no programming experience required.
+
+### Why Investigate This Code?
+
+WizCol is built on principles of deliberative democracy, collective decision-making, and inclusive participation. As a researcher, you might want to:
+
+- **Examine how democratic principles are implemented** in the algorithms and user interfaces
+- **Evaluate whether the consensus mechanisms** truly promote fair participation
+- **Identify potential biases** in how voices are weighted or represented
+- **Propose new deliberation mechanisms** based on democratic theory
+- **Assess accessibility and inclusion** in the platform design
+
+### Getting Started: Clone the Repository
+
+**Step 1: Install Git** (if you don't have it)
+- **Mac**: Open Terminal and type `git --version`. If not installed, you'll be prompted to install it.
+- **Windows**: Download from [git-scm.com](https://git-scm.com/download/win)
+- **Linux**: Run `sudo apt install git` (Ubuntu/Debian) or `sudo dnf install git` (Fedora)
+
+**Step 2: Clone the code to your computer**
+
+Open your terminal (Mac/Linux) or Command Prompt (Windows) and run:
+
+```bash
+git clone https://github.com/delib-org/Freedi-app.git
+cd Freedi-app
+```
+
+You now have a complete copy of all the code on your computer.
+
+### Using Claude Code to Explore the Codebase
+
+[Claude Code](https://docs.anthropic.com/en/docs/claude-code) is an AI assistant that can help you understand code without needing to read it yourself. Here's how to use it:
+
+**Step 1: Install Claude Code**
+
+```bash
+npm install -g @anthropic-ai/claude-code
+```
+
+**Step 2: Navigate to the project and start Claude Code**
+
+```bash
+cd Freedi-app
+claude
+```
+
+**Step 3: Ask questions in plain language**
+
+Once Claude Code is running, you can ask questions like:
+
+- *"How does the consensus algorithm work? Is it fair to minority opinions?"*
+- *"Show me where user votes are counted and explain the process"*
+- *"How are participants' voices weighted in the final decision?"*
+- *"Are there any mechanisms that could silence certain groups?"*
+- *"How does the platform handle disagreement and conflict?"*
+- *"Explain the evaluation system—does it promote genuine deliberation?"*
+- *"Where are accessibility features implemented?"*
+
+Claude Code will search through the codebase, read relevant files, and explain what it finds in plain language.
+
+### Investigating Democratic Values
+
+Here are specific areas you might want to explore:
+
+| Democratic Principle | Where to Look | Questions to Ask Claude |
+|---------------------|---------------|------------------------|
+| **Equal Voice** | Consensus algorithm | *"Does every participant's vote carry equal weight?"* |
+| **Transparency** | Evaluation system | *"Can users see how decisions are calculated?"* |
+| **Inclusion** | Accessibility features | *"How does the platform accommodate diverse users?"* |
+| **Deliberation Quality** | Discussion features | *"What encourages thoughtful rather than reactive responses?"* |
+| **Minority Protection** | Scoring mechanisms | *"How are minority viewpoints protected from being drowned out?"* |
+
+### Proposing Changes: The Contribution Process
+
+If your research reveals improvements that could better serve democratic values, here's how to contribute:
+
+#### Before Writing Any Code: Contact Us First
+
+**This step is essential.** Before making changes, please:
+
+1. **Document your findings** in a brief report covering:
+   - What you investigated
+   - What you found (both strengths and concerns)
+   - What changes you believe would improve democratic outcomes
+   - Why these changes align with democratic theory
+
+2. **Contact the maintainer** via:
+   - **GitHub Issues**: [Create a new issue](https://github.com/delib-org/Freedi-app/issues/new) with your report
+   - **Email**: Include "Research Contribution" in your subject line
+
+3. **Discuss implementation approach** — We'll work together to determine:
+   - Whether the proposed change aligns with project goals
+   - The best technical approach to implement it
+   - Any unintended consequences to consider
+
+#### After Approval: Making Your Contribution
+
+Once we've discussed your proposal and agreed on an approach:
+
+**Step 1: Fork the repository**
+
+Visit [github.com/delib-org/Freedi-app](https://github.com/delib-org/Freedi-app) and click the "Fork" button (top right). This creates your own copy.
+
+**Step 2: Clone your fork**
+
+```bash
+git clone https://github.com/YOUR_USERNAME/Freedi-app.git
+cd Freedi-app
+```
+
+**Step 3: Create a branch for your changes**
+
+```bash
+git checkout -b research/your-improvement-name
+```
+
+**Step 4: Use Claude Code to help implement changes**
+
+You can ask Claude Code to help you make changes:
+
+- *"Help me modify the consensus algorithm to give more weight to minority opinions"*
+- *"Add a feature that shows users how their vote affected the outcome"*
+- *"Implement an accessibility improvement for screen readers"*
+
+Claude Code can write the code for you—just describe what you want in plain language.
+
+**Step 5: Save and upload your changes**
+
+```bash
+git add .
+git commit -m "Describe your change here"
+git push origin research/your-improvement-name
+```
+
+**Step 6: Create a Pull Request**
+
+Go to your fork on GitHub and click "Compare & pull request". In your description:
+- Reference the issue where we discussed your proposal
+- Summarize the changes made
+- Explain how this improves democratic outcomes
+
+### We Value Your Perspective
+
+As researchers studying democracy, your insights are invaluable. You bring expertise in:
+
+- Democratic theory and political philosophy
+- Social dynamics and group decision-making
+- Fairness, equity, and representation
+- Human behavior and participation patterns
+
+This technical platform needs your perspective to truly serve democratic ideals. We look forward to collaborating with you.
+
+---
+
 ## 🤝 Contributing
 
 We welcome contributions from developers, researchers, and anyone interested in improving democratic deliberation. See [CONTRIBUTING.md](./CONTRIBUTING.md) for technical details.
