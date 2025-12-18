@@ -40,6 +40,7 @@ export const ParagraphSchema = object({
 	content: string(), // The text content of the paragraph
 	order: number(), // Position in the document (0-based)
 	listType: optional(ListTypeSchema), // For list items: 'ul' (unordered) or 'ol' (ordered)
+	sourceStatementId: optional(string()), // ID of the original statement this paragraph came from (for merged proposals)
 });
 
 export type Paragraph = InferOutput<typeof ParagraphSchema>;

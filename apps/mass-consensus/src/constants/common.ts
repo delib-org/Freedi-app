@@ -91,4 +91,5 @@ export const ERROR_MESSAGES = {
   LIMIT_REACHED: "You've reached the maximum number of solutions for this question.",
   SUBMIT_FAILED: 'Failed to submit solution',
   CHECK_SIMILAR_FAILED: 'Unable to check for similar solutions. Please try again.',
+  MERGE_FAILED: 'Failed to merge with existing solution. Please try again.',
 } as const;

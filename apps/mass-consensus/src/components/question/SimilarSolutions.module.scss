@@ -268,11 +268,194 @@
   }
 }
 
+// Merge target card (primary similar solution)
+.mergeTargetCard {
+  position: relative;
+  background: linear-gradient(
+    135deg,
+    rgba(95, 136, 229, 0.08) 0%,
+    rgba(124, 172, 248, 0.08) 100%
+  );
+  border: 2px solid #5f88e5;
+  border-radius: 12px;
+  padding: 1.5rem;
+  animation: fadeInUp 0.4s ease-out;
+
+  @media (max-width: 768px) {
+    padding: 1.25rem;
+  }
+}
+
+// Your addition preview
+.yourAddition {
+  background: rgba(87, 198, 178, 0.1);
+  border-radius: 8px;
+  padding: 1rem;
+  margin: 1rem 0;
+  border-left: 3px solid #57c6b2;
+}
+
+.yourAdditionLabel {
+  font-size: 0.8rem;
+  color: #57c6b2;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.yourAdditionText {
+  font-size: 0.95rem;
+  color: #3d4d71;
+  line-height: 1.5;
+  margin: 0;
+  font-style: italic;
+}
+
+// Keep separate section
+.keepSeparateSection {
+  text-align: center;
+  margin: 1.5rem 0;
+}
+
+.keepSeparateLink {
+  background: none;
+  border: none;
+  color: #5a6b8c;
+  font-size: 0.9rem;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0.5rem 1rem;
+  transition: color 0.2s ease;
+
+  &:hover {
+    color: #3d4d71;
+  }
+}
+
+// Modal overlay and content
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.modal {
+  background: white;
+  border-radius: 16px;
+  padding: 2rem;
+  max-width: 400px;
+  width: 90%;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  animation: fadeInUp 0.3s ease-out;
+
+  @media (max-width: 768px) {
+    padding: 1.5rem;
+    width: 95%;
+  }
+}
+
+.modalHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+
+  h3 {
+    margin: 0;
+    font-size: 1.25rem;
+    color: #3d4d71;
+  }
+}
+
+.modalIcon {
+  font-size: 1.5rem;
+}
+
+.modalContent {
+  margin-bottom: 1.5rem;
+}
+
+.benefitsList {
+  margin: 0;
+  padding-left: 1.25rem;
+  list-style: disc;
+
+  li {
+    color: #3d4d71;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    margin-bottom: 0.5rem;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+}
+
+.modalActions {
+  display: flex;
+  gap: 1rem;
+  flex-direction: column;
+
+  @media (min-width: 400px) {
+    flex-direction: row;
+  }
+}
+
+.mergeAnywayButton {
+  flex: 1;
+  padding: 0.75rem 1.5rem;
+  background: #57c6b2;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+
+  &:hover {
+    background: #4fab9a;
+    box-shadow: 0 4px 12px rgba(87, 198, 178, 0.3);
+  }
+}
+
+.keepSeparateConfirmButton {
+  flex: 1;
+  padding: 0.75rem 1.5rem;
+  background: transparent;
+  color: #5a6b8c;
+  border: 2px solid #d0d7e2;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+
+  &:hover {
+    border-color: #5a6b8c;
+    background: rgba(90, 107, 140, 0.05);
+  }
+}
+
 // Respect reduced motion
 @media (prefers-reduced-motion: reduce) {
   .container,
   .yourSolutionCard,
-  .similarCard {
+  .similarCard,
+  .mergeTargetCard,
+  .modal,
+  .modalOverlay {
     animation: none !important;
   }
 
