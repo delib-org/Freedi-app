@@ -40,7 +40,7 @@ export function sortSubStatements(
 					} else {
 						// Default: sort by consensus
 						_subStatements = subStatements.sort(
-							(a: Statement, b: Statement) => b.consensus - a.consensus
+							(a: Statement, b: Statement) => (b.consensus || 0) - (a.consensus || 0)
 						);
 					}
 					break;
