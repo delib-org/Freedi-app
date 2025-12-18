@@ -3,13 +3,14 @@ import { Metadata } from 'next';
 import { notFound, redirect } from 'next/navigation';
 import { getSurveyWithQuestions } from '@/lib/firebase/surveys';
 import { SurveyStatus } from '@/types/survey';
-import { getRandomOptions } from '@/lib/firebase/queries';
+import { getAdaptiveBatch } from '@/lib/firebase/queries';
 import QuestionHeader from '@/components/question/QuestionHeader';
 import SolutionFeed from '@/components/question/SolutionFeed';
 import SkeletonLoader from '@/components/shared/SkeletonLoader';
 import { LanguageOverrideProvider } from '@/components/providers/LanguageOverrideProvider';
 import SurveyQuestionWrapper from '@/components/survey/SurveyQuestionWrapper';
 import { getParagraphsText } from '@/lib/utils/paragraphUtils';
+import { getMergedSettings } from '@/lib/utils/settingsUtils';
 
 interface PageProps {
   params: { surveyId: string; index: string };
@@ -76,11 +77,22 @@ export default async function SurveyQuestionPage({ params }: PageProps) {
     }
 
     const question = survey.questions[questionIndex];
+    const questionId = question.statementId;
 
-    // Fetch initial solutions for this question
-    const initialBatch = await getRandomOptions(question.statementId, { size: 6 });
+    // Get per-question settings override (if any)
+    const questionOverrides = survey.questionSettings?.[questionId];
+
+    // Merge survey settings with per-question overrides
+    const mergedSettings = getMergedSettings(survey.settings, questionOverrides);
+
+    // Fetch initial solutions using Thompson Sampling (no userId on SSR)
+    const batchResult = await getAdaptiveBatch(question.statementId, undefined, { size: 6 });
+    const initialBatch = batchResult.solutions;
 
     console.info('[SurveyQuestionPage] Loaded question:', question.statement?.substring(0, 30));
+    console.info('[SurveyQuestionPage] Survey questionSettings:', JSON.stringify(survey.questionSettings));
+    console.info('[SurveyQuestionPage] Question overrides for', questionId, ':', JSON.stringify(questionOverrides));
+    console.info('[SurveyQuestionPage] Merged settings:', JSON.stringify(mergedSettings));
 
     return (
       <LanguageOverrideProvider
@@ -90,6 +102,7 @@ export default async function SurveyQuestionPage({ params }: PageProps) {
         <SurveyQuestionWrapper
           survey={survey}
           currentIndex={questionIndex}
+          mergedSettings={mergedSettings}
         >
           {/* Question Header */}
           <QuestionHeader question={question} />
@@ -99,7 +112,7 @@ export default async function SurveyQuestionPage({ params }: PageProps) {
             <SolutionFeed
               question={question}
               initialSolutions={initialBatch}
-              surveySettings={survey.settings}
+              mergedSettings={mergedSettings}
             />
           </Suspense>
         </SurveyQuestionWrapper>

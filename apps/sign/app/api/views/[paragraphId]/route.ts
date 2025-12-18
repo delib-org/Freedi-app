@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
+import { logger } from '@/lib/utils/logger';
 
 const COLLECTION_NAME = 'paragraphViews';
 
@@ -31,7 +32,7 @@ export async function GET(
 
     return NextResponse.json({ count });
   } catch (error) {
-    console.error('[Views API] GET error:', error);
+    logger.error('[Views API] GET error:', error);
 
     return NextResponse.json(
       { error: 'Internal server error' },
@@ -112,7 +113,7 @@ export async function POST(
 
     return NextResponse.json({ success: true, view: viewData });
   } catch (error) {
-    console.error('[Views API] POST error:', error);
+    logger.error('[Views API] POST error:', error);
 
     return NextResponse.json(
       { error: 'Internal server error' },

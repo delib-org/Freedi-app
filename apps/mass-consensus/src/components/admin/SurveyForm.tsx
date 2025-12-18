@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Statement } from '@freedi/shared-types';
+import { Statement, QuestionOverrideSettings } from '@freedi/shared-types';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { Survey, CreateSurveyRequest, DEFAULT_SURVEY_SETTINGS } from '@/types/survey';
 import QuestionPicker from './QuestionPicker';
@@ -25,10 +25,49 @@ export default function SurveyForm({ existingSurvey }: SurveyFormProps) {
   const [description, setDescription] = useState(existingSurvey?.description || '');
   const [selectedQuestions, setSelectedQuestions] = useState<Statement[]>([]);
   const [settings, setSettings] = useState(existingSurvey?.settings || DEFAULT_SURVEY_SETTINGS);
+  const [questionSettings, setQuestionSettings] = useState<Record<string, QuestionOverrideSettings>>(
+    existingSurvey?.questionSettings || {}
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isLoadingQuestions, setIsLoadingQuestions] = useState(false);
 
   const isEditing = !!existingSurvey;
+
+  // Load existing questions when editing a survey
+  useEffect(() => {
+    if (existingSurvey && existingSurvey.questionIds.length > 0) {
+      const loadExistingQuestions = async () => {
+        setIsLoadingQuestions(true);
+        try {
+          const token = localStorage.getItem('firebase_token');
+          if (!token) return;
+
+          // Fetch each question by ID
+          const questionPromises = existingSurvey.questionIds.map(async (questionId) => {
+            const response = await fetch(`/api/statements/${questionId}`, {
+              headers: { Authorization: `Bearer ${token}` },
+            });
+            if (response.ok) {
+              const data = await response.json();
+              return data.statement as Statement;
+            }
+            return null;
+          });
+
+          const questions = await Promise.all(questionPromises);
+          const validQuestions = questions.filter((q): q is Statement => q !== null);
+          setSelectedQuestions(validQuestions);
+        } catch (err) {
+          console.error('[SurveyForm] Error loading questions:', err);
+        } finally {
+          setIsLoadingQuestions(false);
+        }
+      };
+
+      loadExistingQuestions();
+    }
+  }, [existingSurvey]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,12 +88,25 @@ export default function SurveyForm({ existingSurvey }: SurveyFormProps) {
         return;
       }
 
+      // Clean up questionSettings to only include selected questions
+      const cleanedQuestionSettings: Record<string, QuestionOverrideSettings> = {};
+      const selectedIds = new Set(selectedQuestions.map((q) => q.statementId));
+      for (const [questionId, overrides] of Object.entries(questionSettings)) {
+        if (selectedIds.has(questionId)) {
+          cleanedQuestionSettings[questionId] = overrides;
+        }
+      }
+
       const surveyData: CreateSurveyRequest = {
         title: title.trim(),
         description: description.trim() || undefined,
         questionIds: selectedQuestions.map((q) => q.statementId),
         settings,
+        questionSettings: cleanedQuestionSettings,
       };
+
+      console.info('[SurveyForm] Submitting survey with questionSettings:', JSON.stringify(cleanedQuestionSettings));
+      console.info('[SurveyForm] Full survey data:', JSON.stringify(surveyData));
 
       const response = await fetch(
         isEditing ? `/api/surveys/${existingSurvey.surveyId}` : '/api/surveys',
@@ -95,6 +147,22 @@ export default function SurveyForm({ existingSurvey }: SurveyFormProps) {
     setSelectedQuestions((prev) =>
       prev.filter((q) => q.statementId !== questionId)
     );
+    // Also remove any per-question settings for the removed question
+    setQuestionSettings((prev) => {
+      const updated = { ...prev };
+      delete updated[questionId];
+      return updated;
+    });
+  };
+
+  const handleQuestionSettingsChange = (
+    questionId: string,
+    overrides: QuestionOverrideSettings
+  ) => {
+    setQuestionSettings((prev) => ({
+      ...prev,
+      [questionId]: overrides,
+    }));
   };
 
   return (
@@ -142,25 +210,38 @@ export default function SurveyForm({ existingSurvey }: SurveyFormProps) {
       {/* Step 2: Select Questions */}
       <div className={styles.formSection}>
         <h2 className={styles.sectionTitle}>{t('selectQuestions')}</h2>
-        <QuestionPicker
-          selectedQuestions={selectedQuestions}
-          onQuestionsChange={handleQuestionsChange}
-        />
+        {isLoadingQuestions ? (
+          <div className={styles.loadingQuestions}>
+            <div className={styles.spinner} />
+            <p>{t('loadingQuestions')}</p>
+          </div>
+        ) : (
+          <QuestionPicker
+            selectedQuestions={selectedQuestions}
+            onQuestionsChange={handleQuestionsChange}
+          />
+        )}
       </div>
 
-      {/* Step 3: Reorder Questions */}
-      {selectedQuestions.length > 0 && (
+      {/* Step 3: Reorder Questions & Per-Question Settings */}
+      {!isLoadingQuestions && selectedQuestions.length > 0 && (
         <div className={styles.formSection}>
           <h2 className={styles.sectionTitle}>{t('orderQuestions')}</h2>
+          <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
+            {t('clickGearForQuestionSettings') || 'Click the gear icon to configure settings for each question'}
+          </p>
           <QuestionReorder
             questions={selectedQuestions}
             onReorder={handleReorder}
             onRemove={handleRemoveQuestion}
+            surveySettings={settings}
+            questionSettings={questionSettings}
+            onQuestionSettingsChange={handleQuestionSettingsChange}
           />
         </div>
       )}
 
-      {/* Step 4: Settings */}
+      {/* Step 4: Survey-Level Settings */}
       <div className={styles.formSection}>
         <h2 className={styles.sectionTitle}>{t('surveySettings')}</h2>
 
@@ -175,6 +256,9 @@ export default function SurveyForm({ existingSurvey }: SurveyFormProps) {
             />
             {' '}{t('allowSkipping')}
           </label>
+          <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginLeft: '1.5rem' }}>
+            {t('allowSkippingNote') || 'When enabled, overrides all per-question skip settings'}
+          </p>
         </div>
 
         <div className={styles.formGroup}>
@@ -207,6 +291,25 @@ export default function SurveyForm({ existingSurvey }: SurveyFormProps) {
             max={10}
             style={{ width: '100px' }}
           />
+          <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+            {t('minEvaluationsNote') || 'Default for all questions. Can be overridden per question.'}
+          </p>
+        </div>
+
+        <div className={styles.formGroup}>
+          <label>
+            <input
+              type="checkbox"
+              checked={settings.allowParticipantsToAddSuggestions || false}
+              onChange={(e) =>
+                setSettings({ ...settings, allowParticipantsToAddSuggestions: e.target.checked })
+              }
+            />
+            {' '}{t('allowParticipantsToAddSuggestions') || 'Allow participants to add suggestions'}
+          </label>
+          <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginLeft: '1.5rem' }}>
+            {t('allowSuggestionsNote') || 'When enabled, overrides all per-question suggestion settings'}
+          </p>
         </div>
       </div>
 

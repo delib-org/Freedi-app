@@ -177,7 +177,7 @@ export default function QuestionPicker({
           <div className={styles.spinner} />
           <p>{t('searchingQuestions') || 'Searching questions...'}</p>
         </div>
-      ) : questions.length === 0 ? (
+      ) : questions.length === 0 && selectedQuestions.length === 0 ? (
         <p style={{ textAlign: 'center', color: '#666', padding: '2rem' }}>
           {searchQuery
             ? (t('noMatchingQuestions') || 'No matching questions found')
@@ -186,6 +186,25 @@ export default function QuestionPicker({
       ) : (
         <>
           <div className={styles.questionList}>
+            {/* First show selected questions that aren't in the fetched list */}
+            {selectedQuestions
+              .filter((sq) => !questions.some((q) => q.statementId === sq.statementId))
+              .map((question) => (
+                <div
+                  key={question.statementId}
+                  className={`${styles.questionItem} ${styles.selected}`}
+                  onClick={() => handleToggleQuestion(question)}
+                >
+                  <input
+                    type="checkbox"
+                    className={styles.questionCheckbox}
+                    checked={true}
+                    onChange={() => handleToggleQuestion(question)}
+                  />
+                  <span className={styles.questionText}>{question.statement}</span>
+                </div>
+              ))}
+            {/* Then show fetched questions */}
             {questions.map((question) => {
               const isSelected = selectedQuestions.some(
                 (q) => q.statementId === question.statementId

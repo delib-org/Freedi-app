@@ -4,6 +4,7 @@ import { getUserIdFromCookie } from '@/lib/utils/user';
 import { Collections } from '@freedi/shared-types';
 import { checkSurveyCompletion } from '@/lib/firebase/demographicQueries';
 import { DemographicMode, DemographicStatusResponse } from '@/types/demographics';
+import { logger } from '@/lib/utils/logger';
 
 /**
  * GET /api/demographics/status/[docId]
@@ -67,7 +68,7 @@ export async function GET(
 
     return NextResponse.json(response);
   } catch (error) {
-    console.error('[API] Demographics status GET failed:', error);
+    logger.error('[API] Demographics status GET failed:', error);
 
     return NextResponse.json(
       { error: 'Internal server error' },

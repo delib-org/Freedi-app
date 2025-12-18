@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
 import { getUserIdFromCookie, getUserDisplayNameFromCookie, getAnonymousDisplayName } from '@/lib/utils/user';
 import { Collections } from '@freedi/shared-types';
+import { logger } from '@/lib/utils/logger';
 
 interface EvaluationInput {
   evaluation: number; // -1 or 1
@@ -47,7 +48,7 @@ export async function GET(
       evaluationCount: snapshot.docs.length,
     });
   } catch (error) {
-    console.error('[Evaluations API] GET error:', error);
+    logger.error('[Evaluations API] GET error:', error);
 
     return NextResponse.json(
       { error: 'Internal server error' },
@@ -147,7 +148,7 @@ export async function POST(
       lastUpdate: Date.now(),
     });
 
-    console.info(`[Evaluations API] Created/updated evaluation: ${evaluationId}`);
+    logger.info(`[Evaluations API] Created/updated evaluation: ${evaluationId}`);
 
     return NextResponse.json({
       success: true,
@@ -155,7 +156,7 @@ export async function POST(
       newConsensus,
     });
   } catch (error) {
-    console.error('[Evaluations API] POST error:', error);
+    logger.error('[Evaluations API] POST error:', error);
 
     return NextResponse.json(
       { error: 'Internal server error' },
@@ -217,11 +218,11 @@ export async function DELETE(
       lastUpdate: Date.now(),
     });
 
-    console.info(`[Evaluations API] Deleted evaluation: ${evaluationId}`);
+    logger.info(`[Evaluations API] Deleted evaluation: ${evaluationId}`);
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('[Evaluations API] DELETE error:', error);
+    logger.error('[Evaluations API] DELETE error:', error);
 
     return NextResponse.json(
       { error: 'Internal server error' },

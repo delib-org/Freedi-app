@@ -139,6 +139,7 @@
 }
 
 /* Fixed Bottom Container - Progress & Actions */
+/* Only shown on non-survey pages (survey pages use unified footer) */
 .bottomContainer {
   position: fixed;
   bottom: 0;

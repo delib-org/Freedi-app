@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSurveyStats, getSurveyById } from '@/lib/firebase/surveys';
 import { verifyToken, extractBearerToken } from '@/lib/auth/verifyAdmin';
+import { logger } from '@/lib/utils/logger';
 
 /**
  * GET /api/surveys/[id]/stats
@@ -38,7 +39,7 @@ export async function GET(
 
     return NextResponse.json(stats);
   } catch (error) {
-    console.error('[GET /api/surveys/[id]/stats] Error:', error);
+    logger.error('[GET /api/surveys/[id]/stats] Error:', error);
     return NextResponse.json(
       { error: 'Failed to fetch survey stats' },
       { status: 500 }

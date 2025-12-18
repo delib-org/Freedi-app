@@ -1,11 +1,14 @@
 import { Statement, StatementType, Evaluation, Collections } from '@freedi/shared-types';
 import { getFirestoreAdmin } from './admin';
+import { logger } from '@/lib/utils/logger';
+import { ProposalSampler, BatchResult } from '@/lib/utils/proposalSampler';
+import { SamplingConfig } from '@/lib/utils/sampling';
 
 /**
  * Helper to log query errors with context
  */
 function logQueryError(operation: string, error: unknown, context: Record<string, unknown> = {}): void {
-  console.error(`[${operation}] Query error:`, {
+  logger.error(`[${operation}] Query error:`, {
     error: error instanceof Error ? error.message : error,
     stack: error instanceof Error ? error.stack : undefined,
     ...context,
@@ -22,7 +25,7 @@ export async function getQuestionFromFirebase(
 ): Promise<Statement> {
   const db = getFirestoreAdmin();
 
-  console.info('[getQuestionFromFirebase] Fetching statement:', statementId);
+  logger.info('[getQuestionFromFirebase] Fetching statement:', statementId);
 
   const docSnapshot = await db
     .collection(Collections.statements)
@@ -30,19 +33,19 @@ export async function getQuestionFromFirebase(
     .get();
 
   if (!docSnapshot.exists) {
-    console.error('[getQuestionFromFirebase] Document does not exist:', statementId);
+    logger.error('[getQuestionFromFirebase] Document does not exist:', statementId);
     throw new Error('Question not found');
   }
 
   const statement = docSnapshot.data() as Statement;
-  console.info('[getQuestionFromFirebase] Found statement, type:', statement.statementType);
+  logger.info('[getQuestionFromFirebase] Found statement, type:', statement.statementType);
 
   if (statement.statementType !== StatementType.question) {
-    console.error('[getQuestionFromFirebase] Wrong type:', statement.statementType, 'expected: question');
+    logger.error('[getQuestionFromFirebase] Wrong type:', statement.statementType, 'expected: question');
     throw new Error('Statement is not a question');
   }
 
-  console.info('[getQuestionFromFirebase] Success:', statement.statement?.substring(0, 50));
+  logger.info('[getQuestionFromFirebase] Success:', statement.statement?.substring(0, 50));
   return statement;
 }
 
@@ -66,7 +69,7 @@ export async function getRandomOptions(
   const { size = 6, userId, excludeIds = [] } = options;
   const db = getFirestoreAdmin();
 
-  console.info('[getRandomOptions] Fetching options for question:', questionId);
+  logger.info('[getRandomOptions] Fetching options for question:', questionId);
 
   // Get user's evaluation history if userId provided
   let evaluatedIds: string[] = [];
@@ -80,13 +83,21 @@ export async function getRandomOptions(
     evaluatedIds = evaluationsSnapshot.docs.map(
       (doc) => (doc.data() as Evaluation).statementId
     );
-    console.info('[getRandomOptions] User has evaluated:', evaluatedIds.length, 'options');
+    logger.info('[getRandomOptions] User has evaluated:', evaluatedIds.length, 'options');
   }
 
   const allExcludedIds = [...excludeIds, ...evaluatedIds];
+  const excludedSet = new Set(allExcludedIds);
+
+  logger.info('[getRandomOptions] Total excluded IDs:', allExcludedIds.length);
 
   // Use random seed for sampling - ensures fair distribution at scale
   const randomSeed = Math.random();
+
+  // Fetch more documents than needed to account for filtering
+  // We need to over-fetch because we filter AFTER the query
+  const fetchMultiplier = Math.max(3, Math.ceil(allExcludedIds.length / size) + 1);
+  const fetchSize = size * fetchMultiplier;
 
   // Query 1: Get options with randomSeed >= random value
   const query = db
@@ -94,39 +105,151 @@ export async function getRandomOptions(
     .where('parentId', '==', questionId)
     .where('statementType', '==', StatementType.option)
     .where('randomSeed', '>=', randomSeed)
-    .limit(size);
+    .limit(fetchSize);
 
   const snapshot = await query.get();
-  console.info('[getRandomOptions] First query (randomSeed >=', randomSeed.toFixed(3), ') returned:', snapshot.size, 'docs');
+  logger.info('[getRandomOptions] First query (randomSeed >=', randomSeed.toFixed(3), ') fetched:', snapshot.size, 'docs (requested', fetchSize, ')');
 
   let options_results = snapshot.docs
     .map((doc) => doc.data() as Statement)
-    .filter((opt) => !opt.hide && !allExcludedIds.includes(opt.statementId));
+    .filter((opt) => !opt.hide && !excludedSet.has(opt.statementId));
 
-  console.info('[getRandomOptions] After filtering (hide/excluded):', options_results.length, 'options');
+  logger.info('[getRandomOptions] After filtering (hide/excluded):', options_results.length, 'options');
 
   // If not enough, fetch from other side
   if (options_results.length < size) {
+    const remainingNeeded = size - options_results.length;
+    const moreFetchSize = remainingNeeded * fetchMultiplier;
+
     const moreQuery = db
       .collection(Collections.statements)
       .where('parentId', '==', questionId)
       .where('statementType', '==', StatementType.option)
       .where('randomSeed', '<', randomSeed)
-      .limit(size - options_results.length);
+      .limit(moreFetchSize);
 
     const moreSnapshot = await moreQuery.get();
-    console.info('[getRandomOptions] Second query (randomSeed <', randomSeed.toFixed(3), ') returned:', moreSnapshot.size, 'docs');
+    logger.info('[getRandomOptions] Second query (randomSeed <', randomSeed.toFixed(3), ') fetched:', moreSnapshot.size, 'docs (requested', moreFetchSize, ')');
 
     const moreOptions = moreSnapshot.docs
       .map((doc) => doc.data() as Statement)
-      .filter((opt) => !opt.hide && !allExcludedIds.includes(opt.statementId));
+      .filter((opt) => !opt.hide && !excludedSet.has(opt.statementId));
+
+    logger.info('[getRandomOptions] Additional options after filtering:', moreOptions.length);
 
     options_results = [...options_results, ...moreOptions];
   }
 
-  console.info('[getRandomOptions] Final result:', options_results.length, 'options');
+  logger.info('[getRandomOptions] Final result:', options_results.length, 'options (requested', size, ')');
 
   return options_results.slice(0, size);
+}
+
+/**
+ * Get adaptive batch of options using Thompson Sampling
+ *
+ * This function implements priority-based sampling that:
+ * - Prioritizes under-evaluated proposals
+ * - Boosts recent submissions (counteracts temporal bias)
+ * - Graduates stable proposals (early stopping)
+ * - Uses Thompson sampling for exploration/exploitation balance
+ *
+ * @param questionId - Parent question ID
+ * @param userId - User ID for evaluation history lookup
+ * @param options - Batch configuration
+ * @returns Batch result with solutions, hasMore flag, and statistics
+ */
+export async function getAdaptiveBatch(
+  questionId: string,
+  userId?: string,
+  options: {
+    size?: number;
+    config?: Partial<SamplingConfig>;
+  } = {}
+): Promise<BatchResult> {
+  const { size = 6, config } = options;
+  const db = getFirestoreAdmin();
+  const sampler = new ProposalSampler(config);
+
+  logger.info('[getAdaptiveBatch] Starting Thompson Sampling batch fetch:', {
+    questionId,
+    userId: userId || '(anonymous/SSR)',
+    requestedSize: size,
+  });
+
+  try {
+    // 1. Fetch all options for this question (no random seed needed)
+    const allOptionsSnapshot = await db
+      .collection(Collections.statements)
+      .where('parentId', '==', questionId)
+      .where('statementType', '==', StatementType.option)
+      .get();
+
+    const proposals = allOptionsSnapshot.docs
+      .map((doc) => doc.data() as Statement)
+      .filter((p) => !p.hide);
+
+    logger.info('[getAdaptiveBatch] Fetched proposals:', {
+      total: allOptionsSnapshot.size,
+      afterHideFilter: proposals.length,
+    });
+
+    if (proposals.length === 0) {
+      logger.info('[getAdaptiveBatch] No proposals found');
+      return {
+        solutions: [],
+        hasMore: false,
+        stats: {
+          totalCount: 0,
+          evaluatedCount: 0,
+          stableCount: 0,
+          remainingCount: 0,
+        },
+      };
+    }
+
+    // 2. Get user's already-evaluated IDs (skip if no userId - SSR case)
+    let evaluatedIds = new Set<string>();
+    if (userId) {
+      const evaluatedSnapshot = await db
+        .collection(Collections.evaluations)
+        .where('parentId', '==', questionId)
+        .where('evaluatorId', '==', userId)
+        .get();
+
+      evaluatedIds = new Set(
+        evaluatedSnapshot.docs.map((doc) => (doc.data() as Evaluation).statementId)
+      );
+
+      logger.info('[getAdaptiveBatch] User evaluation history:', {
+        userId,
+        evaluatedCount: evaluatedIds.size,
+      });
+    } else {
+      logger.info('[getAdaptiveBatch] No userId provided (SSR) - using Thompson Sampling without user history');
+    }
+
+    // 3. Select batch using adaptive priority sampling (Thompson Sampling)
+    const selected = sampler.selectForUser(proposals, evaluatedIds, size);
+
+    // 4. Calculate statistics
+    const stats = sampler.calculateStats(proposals, evaluatedIds, selected.length);
+
+    logger.info('[getAdaptiveBatch] Thompson Sampling batch selected:', {
+      selectedCount: selected.length,
+      hasMore: stats.remainingCount > 0,
+      stats,
+    });
+
+    return {
+      solutions: selected,
+      hasMore: stats.remainingCount > 0,
+      stats,
+    };
+  } catch (error) {
+    logQueryError('getAdaptiveBatch', error, { questionId, userId, size });
+    throw error;
+  }
 }
 
 /**
@@ -151,7 +274,7 @@ export async function getAllSolutionsSorted(
       .limit(limit)
       .get();
 
-    console.info('[getAllSolutionsSorted] Found', snapshot.size, 'solutions for question:', questionId);
+    logger.info('[getAllSolutionsSorted] Found', snapshot.size, 'solutions for question:', questionId);
 
     return snapshot.docs
       .map((doc) => doc.data() as Statement)
@@ -184,7 +307,7 @@ export async function getUserSolutions(
       .orderBy('consensus', 'desc')
       .get();
 
-    console.info('[getUserSolutions] Found', snapshot.size, 'solutions for user:', userId);
+    logger.info('[getUserSolutions] Found', snapshot.size, 'solutions for user:', userId);
 
     return snapshot.docs
       .map((doc) => doc.data() as Statement)

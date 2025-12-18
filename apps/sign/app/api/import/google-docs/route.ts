@@ -10,6 +10,7 @@ import { getFirebaseAdmin } from '@/lib/firebase/admin';
 import { fetchGoogleDoc, getServiceAccountEmail } from '@/lib/google-docs/client';
 import { convertGoogleDocsToParagraphs, getDocumentTitle } from '@/lib/google-docs/converter';
 import { Paragraph } from '@/types';
+import { logger } from '@/lib/utils/logger';
 
 interface ImportRequest {
   documentUrl: string;
@@ -142,7 +143,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<ImportRes
         );
       }
 
-      console.error('Google Docs API error:', error);
+      logger.error('Google Docs API error:', error);
       return NextResponse.json(
         {
           success: false,
@@ -187,7 +188,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<ImportRes
       documentTitle,
     });
   } catch (error) {
-    console.error('Import error:', error);
+    logger.error('Import error:', error);
     return NextResponse.json(
       {
         success: false,

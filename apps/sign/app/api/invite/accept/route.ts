@@ -7,6 +7,7 @@ import {
 	AdminInvitationStatus,
 	DocumentCollaborator,
 } from '@freedi/shared-types';
+import { logger } from '@/lib/utils/logger';
 
 /**
  * GET /api/invite/accept?token={token}
@@ -145,7 +146,7 @@ export async function GET(
 
 		await batch.commit();
 
-		console.info(`[API] Invitation accepted: ${userEmail} is now ${invitation.permissionLevel} on document ${invitation.documentId}`);
+		logger.info(`[API] Invitation accepted: ${userEmail} is now ${invitation.permissionLevel} on document ${invitation.documentId}`);
 
 		return NextResponse.json({
 			success: true,
@@ -155,7 +156,7 @@ export async function GET(
 			redirectUrl: `/doc/${invitation.documentId}/admin`,
 		});
 	} catch (error) {
-		console.error('[API] Invite accept failed:', error);
+		logger.error('[API] Invite accept failed:', error);
 
 		return NextResponse.json(
 			{ error: 'Internal server error' },

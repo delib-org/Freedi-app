@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
 import { getUserIdFromCookie } from '@/lib/utils/user';
 import { Collections } from '@freedi/shared-types';
+import { logger } from '@/lib/utils/logger';
 
 interface SignatureInput {
   signed: 'signed' | 'rejected' | 'viewed';
@@ -37,7 +38,7 @@ export async function GET(
 
     return NextResponse.json({ signature: doc.data() });
   } catch (error) {
-    console.error('[Signatures API] GET error:', error);
+    logger.error('[Signatures API] GET error:', error);
 
     return NextResponse.json(
       { error: 'Internal server error' },
@@ -109,11 +110,11 @@ export async function POST(
 
     await db.collection(Collections.signatures).doc(signatureId).set(signature, { merge: true });
 
-    console.info(`[Signatures API] Created/updated signature: ${signatureId} - ${signed}`);
+    logger.info(`[Signatures API] Created/updated signature: ${signatureId} - ${signed}`);
 
     return NextResponse.json({ success: true, signature });
   } catch (error) {
-    console.error('[Signatures API] POST error:', error);
+    logger.error('[Signatures API] POST error:', error);
 
     return NextResponse.json(
       { error: 'Internal server error' },

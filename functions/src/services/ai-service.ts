@@ -215,8 +215,8 @@ async function handleError(
 }
 export async function checkForInappropriateContent(userInput: string): Promise<{ isInappropriate: boolean; error?: string }> {
   const prompt = `
-    You are a strict content moderator for a collaborative discussion platform.
-    Your job is to protect users from harmful content.
+    You are a content moderator for a collaborative discussion platform.
+    Your job is to protect users from genuinely harmful content.
 
     Check if the following text contains ANY of these:
     - Profanity, curse words, or vulgar language
@@ -225,20 +225,29 @@ export async function checkForInappropriateContent(userInput: string): Promise<{
     - Personal attacks, insults, or harassment
     - Sexually explicit or suggestive content
     - Violence, threats, or harmful content
-    - Trolling or intentionally disruptive content
+    - Spam or gibberish text
 
     Text to analyze: "${userInput}"
 
-    Be STRICT - if in doubt, flag as inappropriate. We prefer false positives over letting harmful content through.
+    IMPORTANT: Only flag content that is CLEARLY inappropriate. Normal suggestions, opinions, and ideas should be allowed even if they are unusual or you disagree with them. We want to minimize false positives.
 
     Return ONLY this JSON format (no markdown, no code blocks):
-    - If inappropriate: { "inappropriate": true }
-    - If clean: { "inappropriate": false }
+    - If clearly inappropriate: { "inappropriate": true }
+    - If acceptable or unclear: { "inappropriate": false }
   `;
 
   try {
-    const model = await getGenerativeAIModel();
-    const result = await model.generateContent(prompt);
+    // Use temperature 0 for deterministic, consistent content moderation
+    const genAI = getGenAI();
+    const moderationModel = genAI.getGenerativeModel({
+      model: GEMINI_MODEL,
+      generationConfig: {
+        responseMimeType: "application/json",
+        temperature: 0, // Deterministic for consistent results
+      },
+    });
+
+    const result = await moderationModel.generateContent(prompt);
     let responseText = result.response.text();
 
     // Strip markdown code blocks if present

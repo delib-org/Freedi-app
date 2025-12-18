@@ -3,6 +3,7 @@ import { getFirestoreAdmin } from '@/lib/firebase/admin';
 import { Collections, StatementType, Statement, DEMOGRAPHIC_CONSTANTS } from '@freedi/shared-types';
 import { StatementWithParagraphs, Paragraph } from '@/types';
 import { HeatMapData, SegmentMetadata, DemographicHeatMapData } from '@/types/heatMap';
+import { logger } from '@/lib/utils/logger';
 
 const PARAGRAPH_VIEWS_COLLECTION = 'paragraphViews';
 
@@ -73,7 +74,7 @@ async function getUsersInSegment(
 
     return { userIds, count: userIds.size };
   } catch (error) {
-    console.error('[HeatMap API] Error getting users in segment:', error);
+    logger.error('[HeatMap API] Error getting users in segment:', error);
 
     return null;
   }
@@ -103,7 +104,7 @@ async function getQuestionMetadata(
       options: data.options || [],
     };
   } catch (error) {
-    console.error('[HeatMap API] Error getting question metadata:', error);
+    logger.error('[HeatMap API] Error getting question metadata:', error);
 
     return null;
   }
@@ -383,7 +384,7 @@ export async function GET(
 
     return NextResponse.json({ data: response });
   } catch (error) {
-    console.error('[HeatMap API] GET error:', error);
+    logger.error('[HeatMap API] GET error:', error);
 
     return NextResponse.json(
       { error: 'Internal server error' },

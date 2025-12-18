@@ -296,7 +296,7 @@ export { RoomSchema, RoomSettingsSchema, RoomParticipantSchema, DemographicTagSc
 export type { Room, RoomSettings, RoomParticipant, DemographicTag } from "./models/rooms/roomsModel";
 
 // Survey models
-export type { Survey, SurveySettings, SurveyProgress } from "./models/survey/surveyModel";
+export type { Survey, SurveySettings, SurveyProgress, QuestionOverrideSettings } from "./models/survey/surveyModel";
 export {
   SurveySchema,
   SurveySettingsSchema,
@@ -304,6 +304,8 @@ export {
   SurveyStatus,
   SurveyStatusSchema,
   DEFAULT_SURVEY_SETTINGS,
+  QuestionOverrideSettingsSchema,
+  DEFAULT_QUESTION_OVERRIDE_SETTINGS,
 } from "./models/survey/surveyModel";
 
 // MAD Calculation utilities
