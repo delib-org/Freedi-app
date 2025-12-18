@@ -22,6 +22,14 @@
       rgba(124, 172, 248, 0.95) 100%
     );
   }
+
+  &.merged {
+    background: linear-gradient(
+      135deg,
+      rgba(95, 136, 229, 0.95) 0%,
+      rgba(147, 112, 219, 0.95) 100%
+    );
+  }
 }
 
 .card {
