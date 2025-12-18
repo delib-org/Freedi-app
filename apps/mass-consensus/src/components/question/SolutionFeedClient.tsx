@@ -305,7 +305,8 @@ export default function SolutionFeedClient({
   };
 
   /**
-   * Fetch new batch of solutions
+   * Fetch new batch of solutions using adaptive sampling
+   * Server handles all filtering (evaluation history, stability, etc.)
    */
   const handleGetNewBatch = async () => {
     if (!canGetNewBatch || isLoadingBatch || allOptionsEvaluated) return;
@@ -317,12 +318,13 @@ export default function SolutionFeedClient({
     setError(null);
 
     try {
+      // Server handles filtering - no need to send excludeIds
       const response = await fetch(`/api/statements/${questionId}/batch`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           userId,
-          excludeIds: Array.from(allEvaluatedIds), // Use all evaluated IDs, not just current batch
+          size: 6,
         }),
       });
 
@@ -332,10 +334,21 @@ export default function SolutionFeedClient({
 
       const data = await response.json();
 
+      // Log batch stats for debugging
+      if (data.stats) {
+        console.info('[SolutionFeedClient] Batch stats:', data.stats);
+      }
+
       if (data.solutions && data.solutions.length > 0) {
         setSolutions(data.solutions);
         setEvaluationScores(new Map()); // Reset current batch tracking
         setBatchCount((prev) => prev + 1);
+
+        // Update hasMore from server response
+        if (!data.hasMore) {
+          // This might be the last batch
+          console.info('[SolutionFeedClient] Server indicates no more batches available');
+        }
       } else {
         // No more solutions available - all have been evaluated
         setAllOptionsEvaluated(true);
@@ -357,6 +370,7 @@ export default function SolutionFeedClient({
     setHasSubmittedSolution(true);
 
     // Fetch a new batch to show the latest solutions
+    // Server handles filtering - no need to send excludeIds
     setIsLoadingBatch(true);
     try {
       const response = await fetch(`/api/statements/${questionId}/batch`, {
@@ -364,7 +378,7 @@ export default function SolutionFeedClient({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           userId,
-          excludeIds: Array.from(allEvaluatedIds),
+          size: 6,
         }),
       });
 
