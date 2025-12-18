@@ -4,6 +4,7 @@ import { getUserIdFromCookie } from '@/lib/utils/user';
 import { Collections } from '@freedi/shared-types';
 import { DemographicMode } from '@/types/demographics';
 import { TextDirection, DEFAULT_LOGO_URL, DEFAULT_BRAND_NAME } from '@/types';
+import { logger } from '@/lib/utils/logger';
 
 export interface DocumentSettings {
   allowComments: boolean;
@@ -92,7 +93,7 @@ export async function GET(
 
     return NextResponse.json(settings);
   } catch (error) {
-    console.error('[API] Admin settings GET failed:', error);
+    logger.error('[API] Admin settings GET failed:', error);
 
     return NextResponse.json(
       { error: 'Internal server error' },
@@ -182,14 +183,14 @@ export async function PUT(
       lastUpdate: Date.now(),
     });
 
-    console.info(`[API] Settings updated for document ${docId} by user ${userId}`);
+    logger.info(`[API] Settings updated for document ${docId} by user ${userId}`);
 
     return NextResponse.json({
       success: true,
       settings,
     });
   } catch (error) {
-    console.error('[API] Admin settings PUT failed:', error);
+    logger.error('[API] Admin settings PUT failed:', error);
 
     return NextResponse.json(
       { error: 'Internal server error' },

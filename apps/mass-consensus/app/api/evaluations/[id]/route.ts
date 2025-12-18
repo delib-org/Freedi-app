@@ -5,6 +5,7 @@ import { getUserIdFromCookie, getAnonymousDisplayName } from '@/lib/utils/user';
 import { updateStatementConsensus } from '@/lib/firebase/queries';
 import { FieldValue } from 'firebase-admin/firestore';
 import { checkRateLimit, RATE_LIMITS } from '@/lib/utils/rateLimit';
+import { logger } from '@/lib/utils/logger';
 
 /**
  * POST /api/evaluations/[id]
@@ -111,7 +112,7 @@ export async function POST(
 
     // Update statement consensus (async, don't wait)
     updateStatementConsensus(statementId).catch((error) => {
-      console.error('Failed to update consensus:', error);
+      logger.error('Failed to update consensus:', error);
     });
 
     return NextResponse.json({
@@ -119,7 +120,7 @@ export async function POST(
       evaluationId,
     });
   } catch (error) {
-    console.error('[API] Evaluation error:', error);
+    logger.error('[API] Evaluation error:', error);
     
 return NextResponse.json(
       {
@@ -172,7 +173,7 @@ export async function GET(
       evaluation: evaluationDoc.data(),
     });
   } catch (error) {
-    console.error('[API] Get evaluation error:', error);
+    logger.error('[API] Get evaluation error:', error);
     
 return NextResponse.json(
       { error: 'Failed to get evaluation' },

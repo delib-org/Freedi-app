@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserIdFromCookie, getUserDisplayNameFromCookie } from '@/lib/utils/user';
+import { logger } from '@/lib/utils/logger';
 
 export interface SessionResponse {
   authenticated: boolean;
@@ -35,7 +36,7 @@ export async function GET(request: NextRequest): Promise<NextResponse<SessionRes
       },
     });
   } catch (error) {
-    console.error('[API] Session check failed:', error);
+    logger.error('[API] Session check failed:', error);
 
     return NextResponse.json({
       authenticated: false,

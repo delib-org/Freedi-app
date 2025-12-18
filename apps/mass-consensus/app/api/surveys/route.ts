@@ -3,6 +3,7 @@ import { createSurvey, getSurveysByCreator } from '@/lib/firebase/surveys';
 import { verifyToken, extractBearerToken } from '@/lib/auth/verifyAdmin';
 import { CreateSurveyRequest } from '@/types/survey';
 import { checkRateLimit, RATE_LIMITS } from '@/lib/utils/rateLimit';
+import { logger } from '@/lib/utils/logger';
 
 /**
  * GET /api/surveys - List surveys for the authenticated user
@@ -40,7 +41,7 @@ export async function GET(request: NextRequest) {
       total: surveys.length,
     });
   } catch (error) {
-    console.error('[GET /api/surveys] Error:', error);
+    logger.error('[GET /api/surveys] Error:', error);
     return NextResponse.json(
       { error: 'Failed to fetch surveys' },
       { status: 500 }
@@ -92,13 +93,14 @@ export async function POST(request: NextRequest) {
       description: body.description?.trim(),
       questionIds: body.questionIds || [],
       settings: body.settings,
+      questionSettings: body.questionSettings,
     });
 
-    console.info('[POST /api/surveys] Created survey:', survey.surveyId);
+    logger.info('[POST /api/surveys] Created survey:', survey.surveyId, 'questionSettings:', JSON.stringify(body.questionSettings));
 
     return NextResponse.json(survey, { status: 201 });
   } catch (error) {
-    console.error('[POST /api/surveys] Error:', error);
+    logger.error('[POST /api/surveys] Error:', error);
     return NextResponse.json(
       { error: 'Failed to create survey' },
       { status: 500 }

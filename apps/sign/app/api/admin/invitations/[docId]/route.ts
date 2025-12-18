@@ -9,6 +9,7 @@ import {
 	AdminPermissionLevel,
 	INVITATION_EXPIRY,
 } from '@freedi/shared-types';
+import { logger } from '@/lib/utils/logger';
 
 /**
  * GET /api/admin/invitations/[docId]
@@ -61,7 +62,7 @@ export async function GET(
 
 		return NextResponse.json({ invitations: filteredInvitations });
 	} catch (error) {
-		console.error('[API] Admin invitations GET failed:', error);
+		logger.error('[API] Admin invitations GET failed:', error);
 
 		return NextResponse.json(
 			{ error: 'Internal server error' },
@@ -179,7 +180,7 @@ export async function POST(
 		const baseUrl = request.headers.get('origin') || process.env.NEXT_PUBLIC_BASE_URL || '';
 		const inviteLink = `${baseUrl}/invite?token=${token}`;
 
-		console.info(`[API] Admin invitation created for ${email} by ${userId} on document ${docId}`);
+		logger.info(`[API] Admin invitation created for ${email} by ${userId} on document ${docId}`);
 
 		return NextResponse.json({
 			success: true,
@@ -188,7 +189,7 @@ export async function POST(
 			expiresAt: invitation.expiresAt,
 		});
 	} catch (error) {
-		console.error('[API] Admin invitations POST failed:', error);
+		logger.error('[API] Admin invitations POST failed:', error);
 
 		return NextResponse.json(
 			{ error: 'Internal server error' },

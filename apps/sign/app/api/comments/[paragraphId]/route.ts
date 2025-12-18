@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
 import { getUserIdFromCookie, getUserDisplayNameFromCookie, getAnonymousDisplayName } from '@/lib/utils/user';
 import { Collections, StatementType } from '@freedi/shared-types';
+import { logger } from '@/lib/utils/logger';
 
 interface CommentInput {
   statement: string;
@@ -40,7 +41,7 @@ export async function GET(
 
     return NextResponse.json({ comments });
   } catch (error) {
-    console.error('[Comments API] GET error:', error);
+    logger.error('[Comments API] GET error:', error);
 
     return NextResponse.json(
       { error: 'Internal server error' },
@@ -133,11 +134,11 @@ export async function POST(
 
     await db.collection(Collections.statements).doc(statementId).set(comment);
 
-    console.info(`[Comments API] Created comment: ${statementId}`);
+    logger.info(`[Comments API] Created comment: ${statementId}`);
 
     return NextResponse.json({ success: true, comment });
   } catch (error) {
-    console.error('[Comments API] POST error:', error);
+    logger.error('[Comments API] POST error:', error);
 
     return NextResponse.json(
       { error: 'Internal server error' },
@@ -209,7 +210,7 @@ export async function PUT(
       lastUpdate: Date.now(),
     });
 
-    console.info(`[Comments API] Updated comment: ${commentId}`);
+    logger.info(`[Comments API] Updated comment: ${commentId}`);
 
     // Return updated comment
     const updatedComment = {
@@ -220,7 +221,7 @@ export async function PUT(
 
     return NextResponse.json({ success: true, comment: updatedComment });
   } catch (error) {
-    console.error('[Comments API] PUT error:', error);
+    logger.error('[Comments API] PUT error:', error);
 
     return NextResponse.json(
       { error: 'Internal server error' },
@@ -283,11 +284,11 @@ export async function DELETE(
       lastUpdate: Date.now(),
     });
 
-    console.info(`[Comments API] Deleted comment: ${commentId}`);
+    logger.info(`[Comments API] Deleted comment: ${commentId}`);
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('[Comments API] DELETE error:', error);
+    logger.error('[Comments API] DELETE error:', error);
 
     return NextResponse.json(
       { error: 'Internal server error' },

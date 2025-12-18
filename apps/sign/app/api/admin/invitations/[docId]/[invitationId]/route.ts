@@ -7,6 +7,7 @@ import {
 	AdminInvitation,
 	AdminInvitationStatus,
 } from '@freedi/shared-types';
+import { logger } from '@/lib/utils/logger';
 
 /**
  * DELETE /api/admin/invitations/[docId]/[invitationId]
@@ -73,14 +74,14 @@ export async function DELETE(
 			status: AdminInvitationStatus.revoked,
 		});
 
-		console.info(`[API] Admin invitation ${invitationId} revoked by ${userId}`);
+		logger.info(`[API] Admin invitation ${invitationId} revoked by ${userId}`);
 
 		return NextResponse.json({
 			success: true,
 			message: 'Invitation revoked successfully',
 		});
 	} catch (error) {
-		console.error('[API] Admin invitations DELETE failed:', error);
+		logger.error('[API] Admin invitations DELETE failed:', error);
 
 		return NextResponse.json(
 			{ error: 'Internal server error' },

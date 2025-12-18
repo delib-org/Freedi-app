@@ -6,7 +6,6 @@ import {
   signInWithGoogle,
   signOutUser,
   getCurrentToken,
-  handleRedirectResult,
   User,
 } from '@/lib/firebase/client';
 
@@ -33,13 +32,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Handle redirect result from Google sign-in
-    handleRedirectResult().catch((error) => {
-      console.error('Error handling redirect result:', error);
-    });
-
     // Subscribe to auth state changes
     const unsubscribe = onAuthChange(async (firebaseUser) => {
+      console.info('[AuthProvider] onAuthChange fired, user:', firebaseUser ? firebaseUser.email : 'null');
       setUser(firebaseUser);
 
       // Refresh token if user is logged in
@@ -47,8 +42,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
         try {
           const token = await firebaseUser.getIdToken();
           localStorage.setItem('firebase_token', token);
+          console.info('[AuthProvider] Token saved to localStorage');
         } catch (error) {
-          console.error('Error refreshing token:', error);
+          console.error('[AuthProvider] Error refreshing token:', error);
         }
       }
 

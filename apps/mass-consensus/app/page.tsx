@@ -5,10 +5,11 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { useAuth } from '@/components/auth/AuthProvider';
+import LandingPage from '@/components/landing/LandingPage';
 import styles from './home.module.scss';
 
 /**
- * Home page - Decision point for participants and admins
+ * Home page - Shows landing page for new users, decision point for authenticated users
  */
 export default function HomePage() {
   const { t } = useTranslation();
@@ -16,6 +17,7 @@ export default function HomePage() {
   const { user, isAuthenticated, isLoading } = useAuth();
   const [surveyLink, setSurveyLink] = useState('');
   const [linkError, setLinkError] = useState('');
+  const [showMainPage, setShowMainPage] = useState(false);
 
   const handleSurveyLink = () => {
     if (!surveyLink.trim()) {
@@ -39,6 +41,24 @@ export default function HomePage() {
     // Navigate to survey
     router.push(`/s/${surveyId}`);
   };
+
+  const handleGetStarted = () => {
+    setShowMainPage(true);
+  };
+
+  // Show loading spinner while checking auth
+  if (isLoading) {
+    return (
+      <div className={styles.loadingContainer}>
+        <div className={styles.spinner} />
+      </div>
+    );
+  }
+
+  // Show landing page for non-authenticated users who haven't clicked "Get Started"
+  if (!isAuthenticated && !showMainPage) {
+    return <LandingPage onGetStarted={handleGetStarted} />;
+  }
 
   return (
     <div className={styles.container}>
