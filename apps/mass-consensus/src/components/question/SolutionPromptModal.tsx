@@ -222,7 +222,7 @@ export default function SolutionPromptModal({
     }
   };
 
-  // Step 2: Submit solution (new or existing)
+  // Step 2: Submit solution (new or existing - for backward compatibility)
   const handleSelectSolution = async (
     statementId: string | null,
     solutionText?: string,
@@ -272,6 +272,50 @@ export default function SolutionPromptModal({
         statementId: statementId || undefined,
       });
       setError(err instanceof Error ? err.message : ERROR_MESSAGES.SUBMIT_FAILED);
+      setFlowState({ step: 'input' });
+    }
+  };
+
+  // Step 2b: Merge solution into existing statement (new default behavior)
+  const handleMergeSolution = async (targetStatementId: string) => {
+    setFlowState({ step: 'submitting' });
+
+    try {
+      console.info('🔀 Merging solution into existing statement:', targetStatementId);
+
+      const response = await fetch(`/api/statements/${questionId}/merge`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          targetStatementId,
+          solutionText: text,
+          userId,
+        }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new NetworkError(data.error || ERROR_MESSAGES.MERGE_FAILED);
+      }
+
+      const data = await response.json();
+
+      // Track successful merge
+      trackSolutionSubmitted(questionId, userId, false); // false = merged, not created
+
+      setFlowState({
+        step: 'success',
+        action: 'merged',
+        solutionText: text,
+      });
+    } catch (err) {
+      logError(err, {
+        operation: 'SolutionPromptModal.handleMergeSolution',
+        userId,
+        questionId,
+        targetStatementId,
+      });
+      setError(err instanceof Error ? err.message : (ERROR_MESSAGES.MERGE_FAILED || ERROR_MESSAGES.SUBMIT_FAILED));
       setFlowState({ step: 'input' });
     }
   };
@@ -441,6 +485,7 @@ export default function SolutionPromptModal({
             userSuggestion={text}
             similarSolutions={flowState.data.similarStatements}
             onSelect={handleSelectSolution}
+            onMerge={handleMergeSolution}
             onBack={handleBack}
           />
         )}

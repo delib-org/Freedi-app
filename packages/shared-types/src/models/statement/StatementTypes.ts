@@ -163,6 +163,7 @@ export const StatementSchema = object({
 	statementSettings: optional(StatementSettingsSchema), // the settings of the statement
 	joined: optional(array(CreatorSchema)), // the joined users of the statement
 	hide: optional(boolean()), // if true, the statement is hidden
+	mergedInto: optional(string()), // ID of the statement this was merged into (for tracking merged proposals)
 	questionnaire: optional(QuestionnaireSchema), // if a statement is a questionnaire, it will have this field
 	fairDivision: optional(FairDivisionSelectionSchema), // if true, the statement is a fair division
 	anchored: optional(boolean()), // if true, the statement is anchored to be represented in the evaluation.
