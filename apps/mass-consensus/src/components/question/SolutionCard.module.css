@@ -30,7 +30,9 @@
   background: var(--card-purple);
 }
 
-.card.evaluated {
+/* Evaluated state - higher specificity to override nth-child colors */
+.card.evaluated,
+.card.evaluated:nth-child(n) {
   background: var(--card-green);
   box-shadow: var(--shadow-sm);
 }

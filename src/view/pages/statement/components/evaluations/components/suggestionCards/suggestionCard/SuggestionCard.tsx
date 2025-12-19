@@ -1,4 +1,5 @@
 import React, { FC, useEffect, useRef, useState } from 'react';
+import { useSelector } from 'react-redux';
 
 // Third Party
 
@@ -31,6 +32,7 @@ import AnchoredBadge from '@/view/components/badges/AnchoredBadge';
 import UploadImage from '@/view/components/uploadImage/UploadImage';
 import StatementImage from './StatementImage';
 import IntegrateSuggestionsModal from '@/view/components/integrateSuggestions/IntegrateSuggestionsModal';
+import { evaluationSelector } from '@/redux/evaluations/evaluationsSlice';
 
 interface Props {
 	statement: Statement | undefined;
@@ -55,6 +57,10 @@ const SuggestionCard: FC<Props> = ({
 	const anchorIcon = parentStatement?.evaluationSettings?.anchored?.anchorIcon;
 	const anchorDescription = parentStatement?.evaluationSettings?.anchored?.anchorDescription;
 	const anchorLabel = parentStatement?.evaluationSettings?.anchored?.anchorLabel;
+
+	// Get user's evaluation for this statement (for showing green border when evaluated)
+	const userEvaluation = useSelector(evaluationSelector(statement?.statementId));
+	const hasUserEvaluated = userEvaluation !== undefined;
 
 	// Use Refs
 	const elementRef = useRef<HTMLDivElement>(null);
@@ -244,7 +250,8 @@ const SuggestionCard: FC<Props> = ({
 		setIsCardMenuOpen(!isCardMenuOpen);
 	}
 
-	const selectedOptionIndicator = `8px solid ${statement.isChosen ? 'var(--approve)' : statementColor.backgroundColor || 'white'}`;
+	// Show green border if user has evaluated OR if statement is chosen/voted
+	const selectedOptionIndicator = `8px solid ${(hasUserEvaluated || statement.isChosen || statement.isVoted) ? 'var(--approve)' : statementColor.backgroundColor || 'white'}`;
 
 	function handleToggleHide(e: React.MouseEvent) {
 		e.stopPropagation();

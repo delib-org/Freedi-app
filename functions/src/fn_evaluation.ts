@@ -730,18 +730,31 @@ function getSnapshotFromEvent(event: FirestoreEvent<Change<DocumentSnapshot> | D
 // actual new evaluations vs updates to existing evaluations
 
 async function updateParentStatementWithChosenOptions(parentId: string | undefined): Promise<void> {
-	if (!parentId) return;
+	if (!parentId) {
+		logger.warn('updateParentStatementWithChosenOptions: parentId is undefined');
+		return;
+	}
 
 	try {
+		logger.info(`updateParentStatementWithChosenOptions: Starting for parent ${parentId}`);
+
 		const parentStatement = await getParentStatement(parentId);
+		logger.info(`updateParentStatementWithChosenOptions: Parent statement found, resultsSettings: ${JSON.stringify(parentStatement.resultsSettings)}`);
 
 		// Use defaultResultsSettings if parent has no resultsSettings configured
 		const resultsSettings = parentStatement.resultsSettings || defaultResultsSettings;
+		logger.info(`updateParentStatementWithChosenOptions: Using resultsSettings: ${JSON.stringify(resultsSettings)}`);
 
 		const chosenOptions = await choseTopOptions(parentId, resultsSettings);
+		logger.info(`updateParentStatementWithChosenOptions: Found ${chosenOptions.length} chosen options`);
 
-		if (chosenOptions) {
+		if (chosenOptions.length > 0) {
+			logger.info(`updateParentStatementWithChosenOptions: Updating parent with ${chosenOptions.length} results`);
 			await updateParentWithResults(parentId, chosenOptions);
+			logger.info(`updateParentStatementWithChosenOptions: Parent updated successfully`);
+		} else {
+			logger.info(`updateParentStatementWithChosenOptions: No chosen options, clearing results`);
+			await updateParentWithResults(parentId, []);
 		}
 
 		// Update parent's total evaluator count
@@ -817,33 +830,43 @@ async function getParentStatement(parentId: string): Promise<Statement> {
 		throw new Error('Parent statement not found');
 	}
 
-	if (!parentStatement.resultsSettings) {
-		throw new Error('Results settings not found');
-	}
-
+	// Note: resultsSettings may be undefined - caller should use defaultResultsSettings as fallback
 	return parentStatement;
 }
 
 async function updateParentWithResults(parentId: string, chosenOptions: Statement[]): Promise<void> {
+	logger.info(`updateParentWithResults: Starting update for parent ${parentId} with ${chosenOptions.length} options`);
+
 	const childStatementsSimple = chosenOptions.map(statementToSimpleStatement);
 
-	await db.collection(Collections.statements).doc(parentId).update({
-		totalResults: childStatementsSimple.length,
-		results: childStatementsSimple,
-	});
+	logger.info(`updateParentWithResults: Converted to ${childStatementsSimple.length} simple statements`);
+	logger.info(`updateParentWithResults: Results data: ${JSON.stringify(childStatementsSimple.map(s => ({ id: s.statementId, statement: s.statement?.substring(0, 30) })))}`);
+
+	try {
+		await db.collection(Collections.statements).doc(parentId).update({
+			totalResults: childStatementsSimple.length,
+			results: childStatementsSimple,
+		});
+		logger.info(`updateParentWithResults: Successfully updated parent ${parentId} with results`);
+	} catch (error) {
+		logger.error(`updateParentWithResults: Failed to update parent ${parentId}:`, error);
+		throw error;
+	}
 }
 
 // ============================================================================
 // OPTION SELECTION LOGIC
 // ============================================================================
 
-async function choseTopOptions(parentId: string, resultsSettings: ResultsSettings): Promise<Statement[] | undefined> {
+async function choseTopOptions(parentId: string, resultsSettings: ResultsSettings): Promise<Statement[]> {
 	try {
 		await clearPreviousChosenOptions(parentId);
 
 		const chosenOptions = await getOptionsUsingMethod(parentId, resultsSettings);
 		if (!chosenOptions?.length) {
-			throw new Error("No top options found");
+			// No options found is a valid state, not an error
+			logger.info(`No options found for parent ${parentId}`);
+			return [];
 		}
 
 		const sortedOptions = getSortedOptions(chosenOptions, resultsSettings);
@@ -852,8 +875,7 @@ async function choseTopOptions(parentId: string, resultsSettings: ResultsSetting
 		return sortedOptions;
 	} catch (error) {
 		logger.error('Error choosing top options:', error);
-
-		return undefined;
+		return [];
 	}
 }
 
@@ -902,7 +924,8 @@ function getSortedOptions(statements: Statement[], resultsSettings: ResultsSetti
 
 async function getOptionsUsingMethod(parentId: string, resultsSettings: ResultsSettings): Promise<Statement[] | undefined> {
 	const { numberOfResults, resultsBy, cutoffBy, cutoffNumber } = resultsSettings;
-	const evaluationField = getEvaluationField(resultsBy);
+
+	logger.info(`getOptionsUsingMethod: parentId=${parentId}, numberOfResults=${numberOfResults}, resultsBy=${resultsBy}, cutoffBy=${cutoffBy}, cutoffNumber=${cutoffNumber}`);
 
 	// cutoffNumber serves as the minimum threshold (default to 0, meaning no minimum)
 	const effectiveCutoffNumber = cutoffNumber ?? 0;
@@ -915,41 +938,81 @@ async function getOptionsUsingMethod(parentId: string, resultsSettings: ResultsS
 	// Default to topOptions if cutoffBy is not specified
 	const effectiveCutoffBy = cutoffBy || CutoffBy.topOptions;
 
+	logger.info(`getOptionsUsingMethod: effectiveCutoffBy=${effectiveCutoffBy}, effectiveCutoffNumber=${effectiveCutoffNumber}`);
+
 	if (effectiveCutoffBy === CutoffBy.topOptions) {
 		const effectiveNumberOfResults = numberOfResults || 5; // Default to 5 results
 
-		// Filter by cutoffNumber first (minimum threshold), then select top N
-		const snapshot = await baseQuery
-			.where(evaluationField, '>=', effectiveCutoffNumber)
-			.orderBy(evaluationField, 'desc')
-			.limit(Math.ceil(Number(effectiveNumberOfResults)))
-			.get();
+		// topOptions mode: Get top N results sorted by the chosen metric
+		// NO cutoffNumber filtering - just return top N regardless of their values
+		const snapshot = await baseQuery.get();
 
-		return snapshot.docs.map(doc => doc.data() as Statement);
+		logger.info(`getOptionsUsingMethod (topOptions): Query returned ${snapshot.size} documents`);
+
+		if (snapshot.empty) {
+			logger.info(`getOptionsUsingMethod: No options found for parent ${parentId}`);
+			return [];
+		}
+
+		const options = snapshot.docs.map(doc => {
+			const data = doc.data() as Statement;
+			logger.info(`getOptionsUsingMethod: Option ${doc.id}, statementType=${data.statementType}, consensus=${data.consensus}`);
+			return data;
+		});
+
+		// Sort by the appropriate field, treating undefined as lowest priority
+		const sortedOptions = sortOptionsByResultsBy(options, resultsBy);
+
+		// Return top N results (no cutoff filtering in topOptions mode)
+		const result = sortedOptions.slice(0, Math.ceil(Number(effectiveNumberOfResults)));
+		logger.info(`getOptionsUsingMethod (topOptions): Returning top ${result.length} options (limit: ${effectiveNumberOfResults})`);
+		return result;
 	}
 
 	if (effectiveCutoffBy === CutoffBy.aboveThreshold) {
-		// Select all options above the cutoffNumber threshold
-		const snapshot = await baseQuery
-			.where(evaluationField, '>', effectiveCutoffNumber)
-			.get();
+		// Get all options and filter in memory to handle undefined fields
+		const snapshot = await baseQuery.get();
 
-		return snapshot.docs.map(doc => doc.data() as Statement);
+		logger.info(`getOptionsUsingMethod (aboveThreshold): Query returned ${snapshot.size} documents`);
+
+		if (snapshot.empty) {
+			return [];
+		}
+
+		const options = snapshot.docs.map(doc => doc.data() as Statement);
+
+		// Filter options above the threshold
+		const filtered = options.filter(opt => getEvaluationValue(opt, resultsBy) > effectiveCutoffNumber);
+		logger.info(`getOptionsUsingMethod (aboveThreshold): After filtering, ${filtered.length} options remain`);
+		return filtered;
 	}
 
+	logger.warn(`getOptionsUsingMethod: Unknown cutoffBy value: ${effectiveCutoffBy}`);
 	return undefined;
 }
 
-function getEvaluationField(resultsBy: ResultsBy): string {
-	const fieldMap = {
-		[ResultsBy.consensus]: 'consensus',
-		[ResultsBy.mostLiked]: 'evaluation.sumPro',
-		[ResultsBy.averageLikesDislikes]: 'evaluation.sumEvaluations',
-		[ResultsBy.topOptions]: 'consensus',
-	};
-
-	return fieldMap[resultsBy] || 'consensus';
+function getEvaluationValue(statement: Statement, resultsBy: ResultsBy): number {
+	switch (resultsBy) {
+		case ResultsBy.consensus:
+		case ResultsBy.topOptions:
+			return statement.consensus ?? 0;
+		case ResultsBy.mostLiked:
+			return statement.evaluation?.sumPro ?? 0;
+		case ResultsBy.averageLikesDislikes:
+			return statement.evaluation?.sumEvaluations ?? 0;
+		default:
+			return statement.consensus ?? 0;
+	}
 }
+
+function sortOptionsByResultsBy(options: Statement[], resultsBy: ResultsBy): Statement[] {
+	return [...options].sort((a, b) => {
+		const aValue = getEvaluationValue(a, resultsBy);
+		const bValue = getEvaluationValue(b, resultsBy);
+		return bValue - aValue; // Descending order
+	});
+}
+
 
 // ============================================================================
 // EVALUATION MIGRATION FOR INTEGRATION FEATURE
