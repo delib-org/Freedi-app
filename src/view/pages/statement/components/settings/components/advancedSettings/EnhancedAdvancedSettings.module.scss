@@ -138,30 +138,6 @@
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
     transition: all 0.3s ease;
     overflow: hidden;
-  }
-
-  // HOT RED - TEMPORARY FOR VISIBILITY - Data Export category
-  .categoryDataExport {
-    background: #ff0000 !important;
-    border: 4px solid #ff0000 !important;
-    box-shadow: 0 0 20px rgba(255, 0, 0, 0.5) !important;
-
-    .categoryHeader {
-      background: #ff0000 !important;
-    }
-
-    .categoryTitle,
-    .categoryDescription,
-    .categoryBadge {
-      color: white !important;
-    }
-
-    svg {
-      color: white !important;
-    }
-  }
-
-  .category {
 
     &--high {
       border-color: rgba(var(--accent-rgb), 0.3);
@@ -550,23 +526,19 @@
 
   // Data Export Section
   .dataExportSection {
-    background: #ff0000 !important; // HOT RED - TEMPORARY FOR VISIBILITY
-    padding: 1rem;
-    border-radius: 8px;
-
     .sectionTitle {
       display: flex;
       align-items: center;
       gap: 0.5rem;
       font-size: 1rem;
       font-weight: 600;
-      color: white;
+      color: var(--text-primary);
       margin: 0 0 0.5rem 0;
     }
 
     .sectionDescription {
       font-size: 0.85rem;
-      color: white;
+      color: var(--text-secondary);
       margin: 0 0 1rem 0;
       line-height: 1.4;
     }
@@ -609,7 +581,7 @@
 
     .exportInfo {
       font-size: 0.8rem;
-      color: white;
+      color: var(--text-secondary);
       margin: 0;
       font-style: italic;
     }

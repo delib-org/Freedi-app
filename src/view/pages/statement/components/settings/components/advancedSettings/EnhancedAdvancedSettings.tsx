@@ -370,7 +370,7 @@ const EnhancedAdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => 
           return (
             <div
               key={category.id}
-              className={`${styles.category} ${styles[`category--${category.priority}`]} ${category.id === 'dataExport' ? styles.categoryDataExport : ''}`}
+              className={`${styles.category} ${styles[`category--${category.priority}`]}`}
             >
               <button
                 className={styles.categoryHeader}
