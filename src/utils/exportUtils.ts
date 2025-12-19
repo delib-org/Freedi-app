@@ -111,6 +111,22 @@ export const PROPERTY_DOCUMENTATION: PropertyDocumentation = {
 		type: 'number',
 		description: 'Count of unique users who evaluated this statement',
 	},
+	numberOfProEvaluators: {
+		type: 'number',
+		description: 'Count of evaluators who gave positive evaluations (> 0)',
+	},
+	numberOfConEvaluators: {
+		type: 'number',
+		description: 'Count of evaluators who gave negative evaluations (< 0)',
+	},
+	averagePro: {
+		type: 'number',
+		description: 'Average of positive evaluations (sumPro / numberOfProEvaluators)',
+	},
+	averageCon: {
+		type: 'number',
+		description: 'Average of negative evaluations (sumCon / numberOfConEvaluators)',
+	},
 	isChosen: {
 		type: 'boolean',
 		description: 'Whether this statement was chosen as a final solution',
@@ -126,7 +142,7 @@ export const PROPERTY_DOCUMENTATION: PropertyDocumentation = {
 	evaluation: {
 		type: 'StatementEvaluation',
 		description:
-			'Evaluation metrics: sumEvaluations, agreement, numberOfEvaluators, sumPro, sumCon, averageEvaluation, standardDeviation',
+			'Evaluation metrics: sumEvaluations, agreement, numberOfEvaluators, sumPro, sumCon, numberOfProEvaluators, numberOfConEvaluators, averageEvaluation, standardDeviation',
 	},
 	// NOTE: 'joined' is no longer exported for privacy reasons
 	hide: {

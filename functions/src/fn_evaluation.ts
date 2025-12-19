@@ -10,6 +10,7 @@ import {
 	Evaluation,
 	Statement,
 	StatementSchema,
+	StatementEvaluation,
 	Collections,
 	StatementType,
 	statementToSimpleStatement,
@@ -54,6 +55,8 @@ interface UpdateStatementEvaluationProps {
 interface CalcDiff {
 	proDiff: number;
 	conDiff: number;
+	proEvaluatorsDiff: number; // change in count of pro evaluators
+	conEvaluatorsDiff: number; // change in count of con evaluators
 }
 
 // ============================================================================
@@ -273,12 +276,14 @@ async function ensureAverageEvaluationForAllOptions(parentId: string): Promise<v
 				needsUpdate = true;
 
 				// Calculate the average if we have the data
-				const evaluation = data.evaluation || {
+				const evaluation: StatementEvaluation = data.evaluation || {
 					sumEvaluations: 0,
 					numberOfEvaluators: 0,
 					agreement: 0,
 					sumPro: 0,
 					sumCon: 0,
+					numberOfProEvaluators: 0,
+					numberOfConEvaluators: 0,
 					sumSquaredEvaluations: 0,
 					averageEvaluation: 0,
 					evaluationRandomNumber: Math.random(),
@@ -342,11 +347,13 @@ async function updateStatementInTransaction(
 					agreement: 0,
 					sumPro: 0,
 					sumCon: 0,
+					numberOfProEvaluators: 0,
+					numberOfConEvaluators: 0,
 					sumSquaredEvaluations: 0,
 					averageEvaluation: 0,
 					evaluationRandomNumber: Math.random(),
 					viewed: 0,
-				};
+				} as StatementEvaluation;
 			} else {
 				// Calculate based on existing data
 				statementData.evaluation.averageEvaluation = statementData.evaluation.numberOfEvaluators > 0
@@ -399,12 +406,14 @@ function calculateEvaluation(
 	addEvaluator: number,
 	squaredEvaluationDiff: number
 ) {
-	const evaluation = statement.evaluation || {
+	const evaluation: StatementEvaluation = statement.evaluation || {
 		agreement: statement.consensus || 0,
 		sumEvaluations: 0,
 		numberOfEvaluators: statement.totalEvaluators || 0,
 		sumPro: 0,
 		sumCon: 0,
+		numberOfProEvaluators: 0,
+		numberOfConEvaluators: 0,
 		averageEvaluation: 0,
 		sumSquaredEvaluations: 0,
 		evaluationRandomNumber: Math.random(),
@@ -416,6 +425,9 @@ function calculateEvaluation(
 		evaluation.numberOfEvaluators += addEvaluator;
 		evaluation.sumPro = (evaluation.sumPro || 0) + proConDiff.proDiff;
 		evaluation.sumCon = (evaluation.sumCon || 0) + proConDiff.conDiff;
+		// Track pro/con evaluator counts
+		evaluation.numberOfProEvaluators = (evaluation.numberOfProEvaluators || 0) + proConDiff.proEvaluatorsDiff;
+		evaluation.numberOfConEvaluators = (evaluation.numberOfConEvaluators || 0) + proConDiff.conEvaluatorsDiff;
 		// Track sum of squared evaluations for standard deviation calculation
 		evaluation.sumSquaredEvaluations = (evaluation.sumSquaredEvaluations || 0) + squaredEvaluationDiff;
 		// Ensure averageEvaluation exists even for old data
@@ -426,11 +438,16 @@ function calculateEvaluation(
 		evaluation.numberOfEvaluators = addEvaluator;
 		evaluation.sumPro = proConDiff.proDiff;
 		evaluation.sumCon = proConDiff.conDiff;
+		evaluation.numberOfProEvaluators = proConDiff.proEvaluatorsDiff;
+		evaluation.numberOfConEvaluators = proConDiff.conEvaluatorsDiff;
 		evaluation.sumSquaredEvaluations = squaredEvaluationDiff;
 	}
 
 	// Ensure sumSquaredEvaluations is never negative (guard against data inconsistencies)
 	evaluation.sumSquaredEvaluations = Math.max(0, evaluation.sumSquaredEvaluations || 0);
+	// Ensure pro/con evaluator counts are never negative
+	evaluation.numberOfProEvaluators = Math.max(0, evaluation.numberOfProEvaluators || 0);
+	evaluation.numberOfConEvaluators = Math.max(0, evaluation.numberOfConEvaluators || 0);
 
 	// Calculate average evaluation
 	evaluation.averageEvaluation = evaluation.numberOfEvaluators > 0
@@ -669,29 +686,52 @@ function calcDiffEvaluation({ action, newEvaluation, oldEvaluation }: {
 		const positiveDiff = Math.max(newEvaluation, 0) - Math.max(oldEvaluation, 0);
 		const negativeDiff = Math.min(newEvaluation, 0) - Math.min(oldEvaluation, 0);
 
+		// Calculate evaluator count changes
+		const wasPositive = oldEvaluation > 0;
+		const wasNegative = oldEvaluation < 0;
+		const isPositive = newEvaluation > 0;
+		const isNegative = newEvaluation < 0;
+
 		switch (action) {
 			case ActionTypes.new:
 				return {
 					proDiff: Math.max(newEvaluation, 0),
 					conDiff: Math.max(-newEvaluation, 0),
+					proEvaluatorsDiff: isPositive ? 1 : 0,
+					conEvaluatorsDiff: isNegative ? 1 : 0,
 				};
 			case ActionTypes.delete:
 				return {
 					proDiff: Math.min(-oldEvaluation, 0),
 					conDiff: Math.max(oldEvaluation, 0),
+					proEvaluatorsDiff: wasPositive ? -1 : 0,
+					conEvaluatorsDiff: wasNegative ? -1 : 0,
 				};
-			case ActionTypes.update:
+			case ActionTypes.update: {
+				// Calculate evaluator count changes for updates
+				let proEvaluatorsDiff = 0;
+				let conEvaluatorsDiff = 0;
+
+				// Handle transitions between positive/negative/zero
+				if (wasPositive && !isPositive) proEvaluatorsDiff -= 1;
+				if (!wasPositive && isPositive) proEvaluatorsDiff += 1;
+				if (wasNegative && !isNegative) conEvaluatorsDiff -= 1;
+				if (!wasNegative && isNegative) conEvaluatorsDiff += 1;
+
 				return {
 					proDiff: positiveDiff,
-					conDiff: -negativeDiff
+					conDiff: -negativeDiff,
+					proEvaluatorsDiff,
+					conEvaluatorsDiff,
 				};
+			}
 			default:
 				throw new Error('Invalid action type');
 		}
 	} catch (error) {
 		logger.error('Error calculating evaluation diff:', error);
 
-		return { proDiff: 0, conDiff: 0 };
+		return { proDiff: 0, conDiff: 0, proEvaluatorsDiff: 0, conEvaluatorsDiff: 0 };
 	}
 }
 
@@ -800,12 +840,14 @@ return;
 		}
 
 		const parentData = parentDoc.data() as Statement;
-		const parentEvaluation = parentData.evaluation || {
+		const parentEvaluation: StatementEvaluation = parentData.evaluation || {
 			agreement: 0,
 			sumEvaluations: 0,
 			numberOfEvaluators: 0,
 			sumPro: 0,
 			sumCon: 0,
+			numberOfProEvaluators: 0,
+			numberOfConEvaluators: 0,
 			sumSquaredEvaluations: 0,
 			averageEvaluation: 0,
 			evaluationRandomNumber: Math.random(),
@@ -1035,6 +1077,8 @@ interface MigrationResult {
 		numberOfEvaluators: number;
 		sumPro: number;
 		sumCon: number;
+		numberOfProEvaluators: number;
+		numberOfConEvaluators: number;
 		sumSquaredEvaluations: number;
 		averageEvaluation: number;
 		agreement: number;
@@ -1063,6 +1107,8 @@ export async function migrateEvaluationsToNewStatement(
 			numberOfEvaluators: 0,
 			sumPro: 0,
 			sumCon: 0,
+			numberOfProEvaluators: 0,
+			numberOfConEvaluators: 0,
 			sumSquaredEvaluations: 0,
 			averageEvaluation: 0,
 			agreement: 0,
@@ -1116,6 +1162,8 @@ export async function migrateEvaluationsToNewStatement(
 		let sumSquaredEvaluations = 0;
 		let sumPro = 0;
 		let sumCon = 0;
+		let numberOfProEvaluators = 0;
+		let numberOfConEvaluators = 0;
 		let numberOfEvaluators = 0;
 
 		for (const [userId, data] of evaluationsByUser) {
@@ -1143,8 +1191,10 @@ export async function migrateEvaluationsToNewStatement(
 			sumSquaredEvaluations += avgEvaluation * avgEvaluation;
 			if (avgEvaluation > 0) {
 				sumPro += avgEvaluation;
-			} else {
+				numberOfProEvaluators++;
+			} else if (avgEvaluation < 0) {
 				sumCon += Math.abs(avgEvaluation);
+				numberOfConEvaluators++;
 			}
 			numberOfEvaluators++;
 			result.migratedCount++;
@@ -1168,6 +1218,8 @@ export async function migrateEvaluationsToNewStatement(
 			numberOfEvaluators,
 			sumPro,
 			sumCon,
+			numberOfProEvaluators,
+			numberOfConEvaluators,
 			sumSquaredEvaluations,
 			averageEvaluation,
 			agreement,
@@ -1180,6 +1232,8 @@ export async function migrateEvaluationsToNewStatement(
 			"evaluation.numberOfEvaluators": numberOfEvaluators,
 			"evaluation.sumPro": sumPro,
 			"evaluation.sumCon": sumCon,
+			"evaluation.numberOfProEvaluators": numberOfProEvaluators,
+			"evaluation.numberOfConEvaluators": numberOfConEvaluators,
 			"evaluation.sumSquaredEvaluations": sumSquaredEvaluations,
 			"evaluation.averageEvaluation": averageEvaluation,
 			"evaluation.agreement": agreement,

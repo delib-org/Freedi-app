@@ -65,6 +65,11 @@ export interface ExportableStatementData {
 	isVoted?: boolean;
 	results?: AnonymizedSimpleStatement[];
 	totalEvaluators?: number;
+	// Pro/Con evaluator statistics
+	numberOfProEvaluators?: number; // count of evaluators who gave positive evaluations
+	numberOfConEvaluators?: number; // count of evaluators who gave negative evaluations
+	averagePro?: number; // average of positive evaluations (sumPro / numberOfProEvaluators)
+	averageCon?: number; // average of negative evaluations (sumCon / numberOfConEvaluators)
 	isChosen?: boolean;
 	chosenSolutions?: string[];
 	summary?: string;
@@ -146,6 +151,18 @@ function anonymizeSimpleStatement(
 export function extractExportableData(
 	statement: Statement
 ): ExportableStatementData {
+	// Calculate averages for pro and con evaluations
+	const evaluation = statement.evaluation;
+	const numberOfProEvaluators = evaluation?.numberOfProEvaluators ?? 0;
+	const numberOfConEvaluators = evaluation?.numberOfConEvaluators ?? 0;
+	const sumPro = evaluation?.sumPro ?? 0;
+	const sumCon = evaluation?.sumCon ?? 0;
+
+	// Calculate average pro (only if there are pro evaluators)
+	const averagePro = numberOfProEvaluators > 0 ? sumPro / numberOfProEvaluators : undefined;
+	// Calculate average con (only if there are con evaluators)
+	const averageCon = numberOfConEvaluators > 0 ? sumCon / numberOfConEvaluators : undefined;
+
 	return {
 		statement: statement.statement,
 		description: statement.paragraphs?.[0]?.content,
@@ -172,6 +189,11 @@ export function extractExportableData(
 		// Anonymize results - remove creator info from each
 		results: statement.results?.map(anonymizeSimpleStatement).filter((r): r is AnonymizedSimpleStatement => r !== undefined),
 		totalEvaluators: statement.totalEvaluators,
+		// Pro/Con evaluator statistics
+		numberOfProEvaluators: numberOfProEvaluators || undefined,
+		numberOfConEvaluators: numberOfConEvaluators || undefined,
+		averagePro,
+		averageCon,
 		isChosen: statement.isChosen,
 		chosenSolutions: statement.chosenSolutions,
 		summary: statement.summary,
