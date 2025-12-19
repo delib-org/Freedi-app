@@ -1,5 +1,4 @@
 import React, { FC, useEffect, useRef, useState } from 'react';
-import { useSelector } from 'react-redux';
 
 // Third Party
 
@@ -11,6 +10,7 @@ import SolutionMenu from '../../solutionMenu/SolutionMenu';
 import AddQuestionIcon from '@/assets/icons/addQuestion.svg?react';
 import EyeIcon from '@/assets/icons/eye.svg?react';
 import EyeCrossIcon from '@/assets/icons/eyeCross.svg?react';
+import CheckIcon from '@/assets/icons/checkIcon.svg?react';
 import { updateStatementText, updateStatementMainImage, toggleStatementHide } from '@/controllers/db/statements/setStatements';
 import { changeStatementType } from '@/controllers/db/statements/changeStatementType';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
@@ -32,7 +32,6 @@ import AnchoredBadge from '@/view/components/badges/AnchoredBadge';
 import UploadImage from '@/view/components/uploadImage/UploadImage';
 import StatementImage from './StatementImage';
 import IntegrateSuggestionsModal from '@/view/components/integrateSuggestions/IntegrateSuggestionsModal';
-import { evaluationSelector } from '@/redux/evaluations/evaluationsSlice';
 
 interface Props {
 	statement: Statement | undefined;
@@ -57,10 +56,6 @@ const SuggestionCard: FC<Props> = ({
 	const anchorIcon = parentStatement?.evaluationSettings?.anchored?.anchorIcon;
 	const anchorDescription = parentStatement?.evaluationSettings?.anchored?.anchorDescription;
 	const anchorLabel = parentStatement?.evaluationSettings?.anchored?.anchorLabel;
-
-	// Get user's evaluation for this statement (for showing green border when evaluated)
-	const userEvaluation = useSelector(evaluationSelector(statement?.statementId));
-	const hasUserEvaluated = userEvaluation !== undefined;
 
 	// Use Refs
 	const elementRef = useRef<HTMLDivElement>(null);
@@ -250,8 +245,16 @@ const SuggestionCard: FC<Props> = ({
 		setIsCardMenuOpen(!isCardMenuOpen);
 	}
 
-	// Show green border if user has evaluated OR if statement is chosen/voted
-	const selectedOptionIndicator = `8px solid ${(hasUserEvaluated || statement.isChosen || statement.isVoted) ? 'var(--approve)' : statementColor.backgroundColor || 'white'}`;
+	// Check if statement is in parent's results array (evaluation/consensus winner)
+	const isInResults = parentStatement?.results?.some(
+		(result) => result.statementId === statement.statementId
+	) ?? false;
+
+	// Check if statement is the voting winner (from voting screen)
+	const isVotingWinner = parentStatement?.topVotedOption?.statementId === statement.statementId;
+
+	// Border: Green if in results (evaluation winner), otherwise use statement type color (yellow for options)
+	const selectedOptionIndicator = `8px solid ${isInResults ? 'var(--approve)' : statementColor.backgroundColor || 'white'}`;
 
 	function handleToggleHide(e: React.MouseEvent) {
 		e.stopPropagation();
@@ -266,6 +269,7 @@ const SuggestionCard: FC<Props> = ({
 				${statementAge < 10000 ? styles['statement-evaluation-card--new'] : ''}
 				${showBadges && !isAnchored ? styles['statement-evaluation-card--community'] : ''}
 				${statement.hide ? styles['statement-evaluation-card--hidden'] : ''}
+				${showEvaluation && isVotingWinner ? styles['statement-evaluation-card--hasVotingBadge'] : ''}
 			`.trim()}
 			style={{
 				borderLeft: showEvaluation ? selectedOptionIndicator : '12px solid transparent',
@@ -323,23 +327,17 @@ const SuggestionCard: FC<Props> = ({
 					<p>{t('Improving suggestion...')}</p>
 				</div>
 			)}
-			{showEvaluation && <div
-				className={styles['selected-option']}
-				style={{
-					backgroundColor:
-						statement.isVoted === true ? 'var(--approve)' : '',
-				}}
-			>
+			{/* Voting winner badge - compact pill with checkmark */}
+			{showEvaluation && isVotingWinner && (
 				<div
-					style={{
-						color: statementColor.color,
-						display: statement.isVoted ? 'block' : 'none',
-					}}
+					className={styles.votingWinnerBadge}
+					title={t('Selected as the winning option')}
+					aria-label={t('Selected as the winning option')}
 				>
-					{t('Selected')}
+					<CheckIcon />
+					<span>{t('Selected')}</span>
 				</div>
-			</div>
-			}
+			)}
 			{/* Image - Display image at the top of card */}
 			{image && (
 				<StatementImage
