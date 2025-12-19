@@ -1,0 +1,300 @@
+// ============================================================================
+// FREEDI DESIGN SYSTEM - BUTTON MIXINS
+// ============================================================================
+// Button styling mixins for consistent button components
+// ============================================================================
+
+// ============================================================================
+// BASE BUTTON
+// ============================================================================
+
+/// Base button styles - use this as foundation for all buttons
+@mixin button-base {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-2);
+  padding: var(--spacing-2) var(--spacing-4);
+  min-height: var(--button-height-md);
+  border: 1px solid transparent;
+  border-radius: var(--radius-button);
+  font-family: var(--font-primary);
+  font-size: var(--text-base);
+  font-weight: var(--font-medium);
+  line-height: 1;
+  text-decoration: none;
+  cursor: pointer;
+  user-select: none;
+  box-shadow: var(--shadow-button);
+  transition: all var(--duration-normal) var(--easing-ease);
+
+  &:focus {
+    outline: 2px solid var(--brand-primary);
+    outline-offset: 2px;
+  }
+
+  &:focus:not(:focus-visible) {
+    outline: none;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--brand-primary);
+    outline-offset: 2px;
+  }
+
+  &:active:not(:disabled) {
+    transform: scale(0.98);
+  }
+}
+
+// ============================================================================
+// BUTTON VARIANTS
+// ============================================================================
+
+/// Primary button (filled, main CTA)
+@mixin button-primary {
+  @include button-base;
+  background-color: var(--btn-primary);
+  color: var(--btn-primary-text);
+
+  &:hover:not(:disabled) {
+    background-color: var(--btn-primary-hover);
+  }
+
+  &:active:not(:disabled) {
+    background-color: var(--btn-primary-selected);
+  }
+}
+
+/// Secondary button (outlined)
+@mixin button-secondary {
+  @include button-base;
+  background-color: var(--white);
+  color: var(--btn-secondary);
+  border-color: var(--btn-secondary);
+  box-shadow: none;
+
+  &:hover:not(:disabled) {
+    background-color: var(--bg-primary);
+  }
+
+  &:active:not(:disabled) {
+    background-color: var(--border-light);
+  }
+}
+
+/// Ghost button (text only, no background)
+@mixin button-ghost {
+  @include button-base;
+  background-color: transparent;
+  color: var(--btn-primary);
+  box-shadow: none;
+
+  &:hover:not(:disabled) {
+    background-color: var(--bg-primary);
+  }
+}
+
+/// Agree button (green/teal)
+@mixin button-agree {
+  @include button-base;
+  background-color: var(--btn-agree);
+  color: var(--white);
+
+  &:hover:not(:disabled) {
+    filter: brightness(1.1);
+  }
+}
+
+/// Disagree button (pink)
+@mixin button-disagree {
+  @include button-base;
+  background-color: transparent;
+  color: var(--btn-disagree);
+  border-color: var(--btn-disagree);
+  box-shadow: none;
+
+  &:hover:not(:disabled) {
+    background-color: rgba(254, 107, 162, 0.1);
+  }
+}
+
+/// Danger button (red)
+@mixin button-danger {
+  @include button-base;
+  background-color: var(--color-error);
+  color: var(--white);
+
+  &:hover:not(:disabled) {
+    filter: brightness(1.1);
+  }
+}
+
+/// Warning button (orange)
+@mixin button-warning {
+  @include button-base;
+  background-color: var(--btn-orange-default);
+  color: var(--white);
+
+  &:hover:not(:disabled) {
+    background-color: var(--btn-orange-hover);
+  }
+
+  &:active:not(:disabled) {
+    background-color: var(--btn-orange-selected);
+  }
+}
+
+// ============================================================================
+// BUTTON SIZES
+// ============================================================================
+
+/// Extra small button
+@mixin button-xs {
+  padding: var(--spacing-1) var(--spacing-2);
+  min-height: var(--button-height-xs);
+  font-size: var(--text-xs);
+}
+
+/// Small button
+@mixin button-sm {
+  padding: var(--spacing-1) var(--spacing-3);
+  min-height: var(--button-height-sm);
+  font-size: var(--text-sm);
+}
+
+/// Large button
+@mixin button-lg {
+  padding: var(--spacing-4) var(--spacing-6);
+  min-height: var(--button-height-lg);
+  font-size: var(--text-lg);
+}
+
+/// Extra large button
+@mixin button-xl {
+  padding: var(--spacing-5) var(--spacing-8);
+  min-height: var(--button-height-xl);
+  font-size: var(--text-xl);
+}
+
+// ============================================================================
+// BUTTON STATES
+// ============================================================================
+
+/// Disabled button state
+@mixin button-disabled {
+  background-color: var(--btn-disabled) !important;
+  color: var(--btn-disabled-text) !important;
+  border-color: var(--btn-disabled) !important;
+  cursor: not-allowed;
+  opacity: 0.6;
+  box-shadow: none;
+
+  &:hover,
+  &:active {
+    transform: none;
+    filter: none;
+  }
+}
+
+/// Loading button state
+@mixin button-loading {
+  position: relative;
+  pointer-events: none;
+  color: transparent !important;
+
+  &::after {
+    content: '';
+    position: absolute;
+    width: 1em;
+    height: 1em;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+  }
+}
+
+// ============================================================================
+// BUTTON LAYOUTS
+// ============================================================================
+
+/// Full width button
+@mixin button-full-width {
+  width: 100%;
+}
+
+/// Icon-only button (square/circle)
+@mixin button-icon-only($size: var(--button-height-md)) {
+  @include button-base;
+  width: $size;
+  height: $size;
+  min-height: $size;
+  padding: 0;
+  border-radius: var(--radius-full);
+}
+
+/// Button with icon and text
+@mixin button-with-icon {
+  & > svg,
+  & > img,
+  & > [class*="icon"] {
+    flex-shrink: 0;
+    width: 1.25em;
+    height: 1.25em;
+  }
+}
+
+// ============================================================================
+// BUTTON GROUP
+// ============================================================================
+
+/// Button group container
+@mixin button-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-2);
+}
+
+/// Button group (connected buttons)
+@mixin button-group-connected {
+  display: flex;
+
+  & > * {
+    border-radius: 0;
+
+    &:first-child {
+      border-radius: var(--radius-button) 0 0 var(--radius-button);
+    }
+
+    &:last-child {
+      border-radius: 0 var(--radius-button) var(--radius-button) 0;
+    }
+
+    &:not(:last-child) {
+      border-right: none;
+    }
+  }
+}
+
+// ============================================================================
+// BUTTON RESET
+// ============================================================================
+
+/// Reset button to unstyled
+@mixin button-reset {
+  appearance: none;
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  outline: none;
+
+  &:focus-visible {
+    outline: 2px solid var(--brand-primary);
+    outline-offset: 2px;
+  }
+}

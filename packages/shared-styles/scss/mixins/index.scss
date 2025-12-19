@@ -1,0 +1,20 @@
+// ============================================================================
+// FREEDI DESIGN SYSTEM - MIXINS INDEX
+// ============================================================================
+// Import this file to get all mixins
+//
+// Usage:
+// @use '@freedi/shared-styles/mixins' as mix;
+// or
+// @use '@freedi/shared-styles/mixins' as *;
+// ============================================================================
+
+@forward 'responsive';
+@forward 'typography';
+@forward 'buttons';
+@forward 'cards';
+@forward 'inputs';
+@forward 'layout';
+@forward 'accessibility';
+@forward 'shadows';
+@forward 'rtl';

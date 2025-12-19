@@ -1,0 +1,155 @@
+// ============================================================================
+// FREEDI DESIGN SYSTEM - SHADOW MIXINS
+// ============================================================================
+// Box shadow utility mixins
+// ============================================================================
+
+/// No shadow
+@mixin shadow-none {
+  box-shadow: var(--shadow-none);
+}
+
+/// Extra small shadow
+@mixin shadow-xs {
+  box-shadow: var(--shadow-xs);
+}
+
+/// Small shadow
+@mixin shadow-sm {
+  box-shadow: var(--shadow-sm);
+}
+
+/// Medium shadow (default)
+@mixin shadow-md {
+  box-shadow: var(--shadow-md);
+}
+
+/// Large shadow
+@mixin shadow-lg {
+  box-shadow: var(--shadow-lg);
+}
+
+/// Extra large shadow
+@mixin shadow-xl {
+  box-shadow: var(--shadow-xl);
+}
+
+/// 2XL shadow (modals)
+@mixin shadow-2xl {
+  box-shadow: var(--shadow-2xl);
+}
+
+/// Inner shadow
+@mixin shadow-inner {
+  box-shadow: var(--shadow-inner);
+}
+
+// ============================================================================
+// LEGACY ALIASES
+// ============================================================================
+
+/// Subtle shadow (alias for shadow-sm)
+@mixin shadow-subtle {
+  @include shadow-sm;
+}
+
+/// Card shadow (alias for shadow-md)
+@mixin shadow-card {
+  @include shadow-md;
+}
+
+/// Elevated shadow (alias for shadow-lg)
+@mixin shadow-elevated {
+  @include shadow-lg;
+}
+
+/// Modal shadow (alias for shadow-2xl)
+@mixin shadow-modal {
+  @include shadow-2xl;
+}
+
+// ============================================================================
+// INTERACTIVE SHADOWS
+// ============================================================================
+
+/// Hover lift effect with shadow
+@mixin shadow-hover-lift {
+  transition: transform var(--duration-normal) var(--easing-ease),
+              box-shadow var(--duration-normal) var(--easing-ease);
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+  }
+}
+
+/// Press down effect
+@mixin shadow-press {
+  transition: transform var(--duration-fast) var(--easing-ease),
+              box-shadow var(--duration-fast) var(--easing-ease);
+
+  &:active {
+    transform: translateY(1px);
+    box-shadow: var(--shadow-sm);
+  }
+}
+
+/// Combined hover lift and press
+@mixin shadow-interactive {
+  @include shadow-md;
+  transition: transform var(--duration-normal) var(--easing-ease),
+              box-shadow var(--duration-normal) var(--easing-ease);
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+  }
+
+  &:active {
+    transform: translateY(0);
+    box-shadow: var(--shadow-md);
+  }
+}
+
+// ============================================================================
+// FOCUS SHADOWS
+// ============================================================================
+
+/// Focus ring shadow
+@mixin shadow-focus {
+  box-shadow: var(--shadow-focus);
+}
+
+/// Error focus ring
+@mixin shadow-focus-error {
+  box-shadow: var(--shadow-focus-error);
+}
+
+/// Success focus ring
+@mixin shadow-focus-success {
+  box-shadow: var(--shadow-focus-success);
+}
+
+// ============================================================================
+// COLORED SHADOWS
+// ============================================================================
+
+/// Primary color shadow
+@mixin shadow-primary {
+  box-shadow: 0 4px 14px 0 rgba(95, 136, 229, 0.39);
+}
+
+/// Success color shadow
+@mixin shadow-success {
+  box-shadow: 0 4px 14px 0 rgba(87, 198, 178, 0.39);
+}
+
+/// Error color shadow
+@mixin shadow-error {
+  box-shadow: 0 4px 14px 0 rgba(247, 74, 77, 0.39);
+}
+
+/// Warning color shadow
+@mixin shadow-warning {
+  box-shadow: 0 4px 14px 0 rgba(239, 117, 80, 0.39);
+}

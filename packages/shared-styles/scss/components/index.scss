@@ -1,0 +1,490 @@
+// ============================================================================
+// FREEDI DESIGN SYSTEM - COMPONENT BASE STYLES
+// ============================================================================
+// Ready-to-use component classes using BEM methodology
+// These provide base styles that can be customized per-app
+// ============================================================================
+
+@use '../tokens' as *;
+@use '../mixins' as *;
+
+// ============================================================================
+// BUTTON COMPONENT
+// ============================================================================
+
+.btn {
+  @include button-base;
+
+  // Elements
+  &__text {
+    padding: 0 var(--spacing-2);
+  }
+
+  &__icon {
+    width: 1.25em;
+    height: 1.25em;
+    flex-shrink: 0;
+  }
+
+  &__spinner {
+    width: 1em;
+    height: 1em;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+  }
+
+  // Variants
+  &--primary {
+    @include button-primary;
+  }
+
+  &--secondary {
+    @include button-secondary;
+  }
+
+  &--ghost {
+    @include button-ghost;
+  }
+
+  &--agree {
+    @include button-agree;
+  }
+
+  &--disagree {
+    @include button-disagree;
+  }
+
+  &--danger {
+    @include button-danger;
+  }
+
+  &--warning {
+    @include button-warning;
+  }
+
+  // Sizes
+  &--xs { @include button-xs; }
+  &--sm { @include button-sm; }
+  &--lg { @include button-lg; }
+  &--xl { @include button-xl; }
+
+  // States
+  &--disabled,
+  &:disabled {
+    @include button-disabled;
+  }
+
+  &--loading {
+    @include button-loading;
+  }
+
+  // Layout
+  &--full-width {
+    @include button-full-width;
+  }
+
+  &--icon-only {
+    @include button-icon-only;
+  }
+}
+
+.btn-group {
+  @include button-group;
+
+  &--connected {
+    @include button-group-connected;
+  }
+}
+
+// ============================================================================
+// CARD COMPONENT
+// ============================================================================
+
+.card {
+  @include card-base;
+
+  // Elements
+  &__header {
+    @include card-header;
+  }
+
+  &__title {
+    @include card-title;
+  }
+
+  &__subtitle {
+    @include card-subtitle;
+  }
+
+  &__body {
+    @include card-body;
+  }
+
+  &__footer {
+    @include card-footer;
+  }
+
+  &__actions {
+    @include card-actions;
+  }
+
+  &__media {
+    @include card-media;
+  }
+
+  // Variants
+  &--elevated { @include card-elevated; }
+  &--flat { @include card-flat; }
+  &--outlined { @include card-outlined; }
+  &--interactive { @include card-interactive; }
+  &--selected { @include card-selected; }
+  &--disabled { @include card-disabled; }
+
+  // Type variants
+  &--question { @include card-question; }
+  &--suggestion { @include card-suggestion; }
+  &--message { @include card-message; }
+  &--error { @include card-error; }
+  &--success { @include card-success; }
+  &--warning { @include card-warning; }
+  &--info { @include card-info; }
+
+  // Sizes
+  &--compact { @include card-compact; }
+  &--spacious { @include card-spacious; }
+  &--full-width { @include card-full-width; }
+}
+
+.card-grid {
+  @include card-grid;
+}
+
+.card-list {
+  @include card-list;
+}
+
+// ============================================================================
+// INPUT COMPONENT
+// ============================================================================
+
+.input {
+  @include input-base;
+
+  // States
+  &--error { @include input-error; }
+  &--success { @include input-success; }
+  &--warning { @include input-warning; }
+
+  // Sizes
+  &--sm { @include input-sm; }
+  &--lg { @include input-lg; }
+
+  // Variants
+  &--filled { @include input-filled; }
+  &--underline { @include input-underline; }
+}
+
+.input-container {
+  @include input-container-with-icon;
+
+  &__icon-left { @include input-icon-left; }
+  &__icon-right { @include input-icon-right; }
+}
+
+.textarea {
+  @include textarea;
+
+  &--auto-resize { @include textarea-auto-resize; }
+}
+
+.select {
+  @include select;
+}
+
+// ============================================================================
+// FORM FIELD COMPONENT
+// ============================================================================
+
+.form-field {
+  @include form-field;
+
+  &__label {
+    @include form-label;
+
+    &--required::after {
+      content: ' *';
+      color: var(--color-error);
+    }
+  }
+
+  &__helper {
+    @include form-helper;
+  }
+
+  &__error {
+    @include form-error-text;
+  }
+
+  &__char-count {
+    @include form-character-count;
+  }
+}
+
+// ============================================================================
+// CHECKBOX & RADIO COMPONENTS
+// ============================================================================
+
+.checkbox {
+  @include checkbox;
+}
+
+.radio {
+  @include radio;
+}
+
+.toggle {
+  @include toggle;
+}
+
+// ============================================================================
+// BADGE COMPONENT
+// ============================================================================
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.25rem;
+  height: 1.25rem;
+  padding: 0 var(--spacing-1);
+  font-size: var(--text-2xs);
+  font-weight: var(--font-semibold);
+  line-height: 1;
+  border-radius: var(--radius-full);
+  background-color: var(--brand-primary);
+  color: var(--white);
+
+  // Variants
+  &--notification {
+    background-color: var(--color-error);
+  }
+
+  &--success {
+    background-color: var(--color-success);
+  }
+
+  &--warning {
+    background-color: var(--color-warning);
+  }
+
+  &--info {
+    background-color: var(--color-info);
+  }
+
+  &--neutral {
+    background-color: var(--border-primary);
+    color: var(--text-body);
+  }
+
+  // Sizes
+  &--sm {
+    min-width: 1rem;
+    height: 1rem;
+    font-size: 0.625rem;
+  }
+
+  &--lg {
+    min-width: 1.5rem;
+    height: 1.5rem;
+    font-size: var(--text-xs);
+  }
+
+  // Dot variant (no text)
+  &--dot {
+    min-width: 0.5rem;
+    width: 0.5rem;
+    height: 0.5rem;
+    padding: 0;
+  }
+
+  // Pulse animation
+  &--pulse {
+    animation: badgePulse 1.5s ease-in-out infinite;
+  }
+}
+
+// ============================================================================
+// AVATAR COMPONENT
+// ============================================================================
+
+.avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--avatar-size-md);
+  height: var(--avatar-size-md);
+  border-radius: var(--radius-full);
+  background-color: var(--brand-primary);
+  color: var(--white);
+  font-weight: var(--font-medium);
+  overflow: hidden;
+
+  &__image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  &__initials {
+    font-size: 0.875em;
+    text-transform: uppercase;
+  }
+
+  // Sizes
+  &--xs { width: var(--avatar-size-xs); height: var(--avatar-size-xs); font-size: var(--text-2xs); }
+  &--sm { width: var(--avatar-size-sm); height: var(--avatar-size-sm); font-size: var(--text-xs); }
+  &--lg { width: var(--avatar-size-lg); height: var(--avatar-size-lg); font-size: var(--text-lg); }
+  &--xl { width: var(--avatar-size-xl); height: var(--avatar-size-xl); font-size: var(--text-xl); }
+  &--2xl { width: var(--avatar-size-2xl); height: var(--avatar-size-2xl); font-size: var(--text-2xl); }
+
+  // Status indicator
+  &__status {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 0.75em;
+    height: 0.75em;
+    border-radius: 50%;
+    border: 2px solid var(--white);
+
+    &--online { background-color: var(--color-success); }
+    &--offline { background-color: var(--text-disabled); }
+    &--busy { background-color: var(--color-error); }
+    &--away { background-color: var(--color-warning); }
+  }
+}
+
+.avatar-group {
+  display: flex;
+
+  .avatar {
+    margin-left: -0.5rem;
+    border: 2px solid var(--white);
+
+    &:first-child {
+      margin-left: 0;
+    }
+  }
+}
+
+// ============================================================================
+// DIVIDER COMPONENT
+// ============================================================================
+
+.divider {
+  height: 1px;
+  width: 100%;
+  background-color: var(--border-light);
+  border: none;
+  margin: var(--spacing-4) 0;
+
+  &--vertical {
+    width: 1px;
+    height: 100%;
+    margin: 0 var(--spacing-4);
+  }
+
+  &--thick {
+    height: 2px;
+  }
+}
+
+// ============================================================================
+// SKELETON LOADING COMPONENT
+// ============================================================================
+
+.skeleton {
+  background-color: var(--border-light);
+  border-radius: var(--radius-md);
+  animation: skeleton 1.5s ease-in-out infinite;
+
+  &--text {
+    height: 1em;
+    width: 100%;
+  }
+
+  &--title {
+    height: 1.5em;
+    width: 60%;
+  }
+
+  &--avatar {
+    width: var(--avatar-size-md);
+    height: var(--avatar-size-md);
+    border-radius: var(--radius-full);
+  }
+
+  &--button {
+    height: var(--button-height-md);
+    width: 120px;
+    border-radius: var(--radius-button);
+  }
+
+  &--card {
+    height: 150px;
+    border-radius: var(--radius-card);
+  }
+}
+
+// ============================================================================
+// CONTAINER & WRAPPER COMPONENTS
+// ============================================================================
+
+.container {
+  @include container;
+
+  &--sm { max-width: var(--container-sm); }
+  &--md { max-width: var(--container-md); }
+  &--lg { max-width: var(--container-lg); }
+  &--xl { max-width: var(--container-xl); }
+  &--prose { max-width: var(--container-prose); }
+}
+
+.wrapper {
+  @include container(var(--container-prose));
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+  padding-bottom: 100px;
+
+  @include mobile {
+    padding-left: var(--spacing-2);
+    padding-right: var(--spacing-2);
+    gap: var(--spacing-2);
+    padding-bottom: 80px;
+  }
+}
+
+// ============================================================================
+// STACK & CLUSTER LAYOUTS
+// ============================================================================
+
+.stack {
+  @include stack;
+
+  &--xs { gap: var(--spacing-1); }
+  &--sm { gap: var(--spacing-2); }
+  &--lg { gap: var(--spacing-6); }
+  &--xl { gap: var(--spacing-8); }
+}
+
+.cluster {
+  @include cluster;
+
+  &--xs { gap: var(--spacing-1); }
+  &--sm { gap: var(--spacing-2); }
+  &--lg { gap: var(--spacing-6); }
+  &--xl { gap: var(--spacing-8); }
+}

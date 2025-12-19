@@ -1,0 +1,62 @@
+// ============================================================================
+// FREEDI DESIGN SYSTEM - SHADOW TOKENS
+// ============================================================================
+// Box shadows for elevation and depth
+// ============================================================================
+
+@use 'colors' as colors;
+
+// ============================================================================
+// SHADOW DEFINITIONS
+// ============================================================================
+
+$shadow-none: none;
+$shadow-xs: 0px 1px 2px #{colors.$color-shadow-light};
+$shadow-sm: 0px 2px 4px #{colors.$color-shadow-light};
+$shadow-md: 0px 3px 6px #{colors.$color-shadow-medium};
+$shadow-lg: 0px 3px 6px #{colors.$color-shadow-light},
+            0px 11px 11px rgba(115, 138, 191, 0.09),
+            0px 26px 16px rgba(115, 138, 191, 0.05);
+$shadow-xl: 0px 5px 10px #{colors.$color-shadow-medium},
+            0px 15px 20px rgba(115, 138, 191, 0.15),
+            0px 30px 25px rgba(115, 138, 191, 0.1);
+$shadow-2xl: 0px 20px 50px #{colors.$color-shadow-dark};
+$shadow-inner: inset 0px 2px 4px #{colors.$color-shadow-light};
+
+// Button shadow (special multi-layer)
+$shadow-button: 0px 3px 6px 0px rgba(115, 138, 191, 0.1),
+                0px 11px 11px 0px rgba(115, 138, 191, 0.09),
+                0px 26px 16px 0px rgba(115, 138, 191, 0.05),
+                0px 46px 18px 0px rgba(115, 138, 191, 0.01),
+                0px 72px 20px 0px rgba(115, 138, 191, 0);
+
+// Focus ring shadows
+$shadow-focus: 0 0 0 3px rgba(95, 136, 229, 0.15);
+$shadow-focus-error: 0 0 0 3px rgba(247, 74, 77, 0.15);
+$shadow-focus-success: 0 0 0 3px rgba(87, 198, 178, 0.15);
+
+// Card hover shadow
+$shadow-card-hover: 0px 5px 12px rgba(65, 98, 134, 0.25);
+
+// ============================================================================
+// CSS CUSTOM PROPERTIES
+// ============================================================================
+
+:root {
+  --shadow-none: #{$shadow-none};
+  --shadow-xs: #{$shadow-xs};
+  --shadow-sm: #{$shadow-sm};
+  --shadow-md: #{$shadow-md};
+  --shadow-lg: #{$shadow-lg};
+  --shadow-xl: #{$shadow-xl};
+  --shadow-2xl: #{$shadow-2xl};
+  --shadow-inner: #{$shadow-inner};
+  --shadow-button: #{$shadow-button};
+  --shadow-focus: #{$shadow-focus};
+  --shadow-focus-error: #{$shadow-focus-error};
+  --shadow-focus-success: #{$shadow-focus-success};
+  --shadow-card-hover: #{$shadow-card-hover};
+
+  // Legacy support
+  --shadow: rgba(181, 197, 232, 0.486);
+}

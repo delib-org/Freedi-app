@@ -1,0 +1,26 @@
+{
+  "name": "@freedi/shared-styles",
+  "version": "1.0.0",
+  "description": "Freedi Design System - Shared SCSS styles, tokens, and utilities",
+  "private": true,
+  "main": "./scss/index.scss",
+  "exports": {
+    ".": "./scss/index.scss",
+    "./tokens": "./scss/tokens/index.scss",
+    "./mixins": "./scss/mixins/index.scss",
+    "./utilities": "./scss/utilities/index.scss",
+    "./animations": "./scss/animations/index.scss",
+    "./components": "./scss/components/index.scss",
+    "./scss/*": "./scss/*"
+  },
+  "files": [
+    "scss/**/*.scss"
+  ],
+  "keywords": [
+    "scss",
+    "css",
+    "design-system",
+    "freedi",
+    "styles"
+  ]
+}

@@ -1,0 +1,379 @@
+// ============================================================================
+// FREEDI DESIGN SYSTEM - COLOR TOKENS
+// ============================================================================
+// All color definitions for the Freedi application.
+// Organized by purpose: Brand, Semantic, UI, and State colors.
+//
+// TO RESTYLE: Modify values here, all apps will update automatically.
+// ============================================================================
+
+// ============================================================================
+// BRAND COLORS
+// ============================================================================
+
+$color-brand-primary: #5f88e5;       // Main brand blue
+$color-brand-primary-light: #80a0ea;
+$color-brand-primary-dark: #285edc;
+$color-brand-secondary: #1f5895;     // Deep trust blue
+$color-brand-accent: #7cacf8;        // Bright accent
+
+// ============================================================================
+// SEMANTIC COLORS (Meaning-based)
+// ============================================================================
+
+$color-agree: #57c6b2;               // Consensus/Agreement (teal)
+$color-disagree: #fe6ba2;            // Disagreement (soft pink)
+$color-success: #4fab9a;             // Success/Approve (green)
+$color-error: #f74a4d;               // Error/Reject (red)
+$color-warning: #ef7550;             // Warning (orange)
+$color-info: #47b4ef;                // Information (light blue)
+
+// ============================================================================
+// STATEMENT TYPE COLORS
+// ============================================================================
+
+$color-question: #47b4ef;            // Question statements
+$color-option: #e7d080;              // Option statements
+$color-group: #b893e7;               // Group activities
+$color-result: #a9adf4;              // Result/Outcome
+
+// ============================================================================
+// BACKGROUND COLORS
+// ============================================================================
+
+$color-bg-primary: #f2f6ff;          // Main app background
+$color-bg-secondary: #ffffff;        // Card/Surface background
+$color-bg-tertiary: #f5fcff;         // Input background
+$color-bg-overlay: rgba(1, 17, 55, 0.4);
+
+// ============================================================================
+// TEXT COLORS
+// ============================================================================
+
+$color-text-title: #191e29;          // Headings
+$color-text-subtitle: #2a3346;       // Subtitles
+$color-text-body: #3d4d71;           // Body text
+$color-text-caption: #7484a9;        // Captions, labels
+$color-text-disabled: #909ebc;       // Disabled text
+$color-text-inverse: #ffffff;        // Text on dark backgrounds
+
+// ============================================================================
+// BORDER COLORS
+// ============================================================================
+
+$color-border-light: #e0e8fa;        // Light borders
+$color-border-primary: #C6D8F7;      // Primary borders
+$color-border-focus: #5f88e5;        // Focus state
+
+// ============================================================================
+// SHADOW COLORS
+// ============================================================================
+
+$color-shadow-light: rgba(115, 138, 191, 0.1);
+$color-shadow-medium: rgba(65, 98, 134, 0.17);
+$color-shadow-dark: rgba(33, 37, 54, 0.2);
+
+// ============================================================================
+// CSS CUSTOM PROPERTIES
+// ============================================================================
+
+:root {
+  // Brand Colors
+  --brand-primary: #{$color-brand-primary};
+  --brand-primary-light: #{$color-brand-primary-light};
+  --brand-primary-dark: #{$color-brand-primary-dark};
+  --brand-secondary: #{$color-brand-secondary};
+  --brand-accent: #{$color-brand-accent};
+
+  // Semantic Colors
+  --color-agree: #{$color-agree};
+  --color-disagree: #{$color-disagree};
+  --color-success: #{$color-success};
+  --color-error: #{$color-error};
+  --color-warning: #{$color-warning};
+  --color-info: #{$color-info};
+
+  // Legacy semantic support
+  --agree: #{$color-agree};
+  --disagree: #{$color-disagree};
+  --approve: #{$color-agree};
+  --reject: #{$color-disagree};
+
+  // Statement Types
+  --color-question: #{$color-question};
+  --color-option: #{$color-option};
+  --color-group: #{$color-group};
+  --color-result: #{$color-result};
+
+  // Legacy statement support
+  --question: #{$color-question};
+  --option: #{$color-option};
+  --group: #{$color-group};
+  --result: #{$color-result};
+
+  // Backgrounds
+  --bg-primary: #{$color-bg-primary};
+  --bg-secondary: #{$color-bg-secondary};
+  --bg-tertiary: #{$color-bg-tertiary};
+  --bg-overlay: #{$color-bg-overlay};
+
+  // Legacy background support
+  --mainBackground: #{$color-brand-secondary};
+  --statementBackground: #{$color-bg-primary};
+  --inputBackground: #{$color-bg-tertiary};
+
+  // Text Colors
+  --text-title: #{$color-text-title};
+  --text-subtitle: #{$color-text-subtitle};
+  --text-body: #{$color-text-body};
+  --text-caption: #{$color-text-caption};
+  --text-disabled: #{$color-text-disabled};
+  --text-inverse: #{$color-text-inverse};
+  --text-error: #{$color-error};
+  --text-success: #{$color-success};
+  --text-warning: #{$color-warning};
+  --text-blue: #{$color-brand-primary-dark};
+  --text-label: #{$color-text-caption};
+  --text-negative: #{$color-text-inverse};
+
+  // Border Colors
+  --border-light: #{$color-border-light};
+  --border-primary: #{$color-border-primary};
+  --border-focus: #{$color-border-focus};
+
+  // White (commonly used)
+  --white: #ffffff;
+
+  // Alerts
+  --alert: #dd90b6;
+  --notify: #d98ff3;
+  --tooltip: #6db0f9;
+  --accent: #{$color-brand-accent};
+
+  // ============================================================================
+  // BUTTON COLORS
+  // ============================================================================
+
+  // Primary Button
+  --btn-primary: #{$color-brand-primary};
+  --btn-primary-default: #{$color-brand-primary};
+  --btn-primary-hover: #{$color-brand-primary-light};
+  --btn-primary-selected: #{$color-brand-primary-dark};
+  --btn-primary-disabled: #c6cddc;
+  --btn-primary-text: #{$color-text-inverse};
+
+  // Secondary Button
+  --btn-secondary: #{$color-brand-primary};
+  --btn-secondary-default: #{$color-brand-primary};
+  --btn-secondary-hover: #{$color-brand-primary-light};
+  --btn-secondary-selected-border: #{$color-brand-primary-dark};
+  --btn-secondary-selected-fill: #e5edff;
+  --btn-secondary-disabled: #7484a9;
+  --btn-secondary-bg: #{$color-bg-secondary};
+
+  // White Button
+  --btn-white-default: #ffffff;
+  --btn-white-hover: #{$color-bg-primary};
+  --btn-white-selected: #b4e0f8;
+  --btn-white-disabled: #ffffff;
+
+  // Orange Button
+  --btn-orange-default: #{$color-warning};
+  --btn-orange-hover: #f29173;
+  --btn-orange-selected: #ea4715;
+
+  // Purple Button
+  --btn-purple-default: #a879e1;
+  --btn-purple-hover: #b893e7;
+  --btn-purple-selected: #823fd4;
+  --btn-purple-disable: #dcc9f3;
+
+  // Other Button Variants
+  --btn-agree: #{$color-agree};
+  --btn-disagree: #{$color-disagree};
+  --add-btn: #275ddb;
+  --btn-cancel: #{$color-error};
+  --inactive: rgb(207, 207, 207);
+  --inactive-text: #acacac;
+
+  // Disabled State
+  --btn-disabled: #c6d2de;
+  --btn-disabled-text: #88919b;
+
+  // ============================================================================
+  // CARD COLORS
+  // ============================================================================
+
+  --card-default: #{$color-bg-secondary};
+  --card-question: #d9f0fc;
+  --card-suggestion: #fdffe0;
+  --card-message: #faf6f0;
+  --card-needs-surface: #c7e5e0;
+  --card-needs-top: #93cdc2;
+  --card-error: #fff5f5;
+  --card-success: #f0fdf4;
+  --card-warning: #fffbeb;
+  --card-info: #eff6ff;
+
+  // Legacy card support
+  --card-question-added: #d9f0fc;
+  --card-suggestion-added: #fdffe0;
+  --card-other-message: #faf6f0;
+
+  // ============================================================================
+  // HEADER COLORS
+  // ============================================================================
+
+  --header-home: #{$color-brand-primary};
+  --header-question: #{$color-question};
+  --header-chosen: #76c0b3;
+  --header-not-chosen: #ffe16a;
+  --header-group: #b9a1e8;
+
+  // ============================================================================
+  // ICON COLORS
+  // ============================================================================
+
+  --icons-blue: #{$color-brand-primary};
+  --icons-primary: #3a60d6;
+  --icons-blue-dark: #1b45a7;
+  --icons-white: #{$color-text-inverse};
+  --icons-red: #{$color-error};
+  --icons-green: #{$color-success};
+  --icons-disabled: #adb7cd;
+  --icons-disabled-dark: #909ebc;
+
+  // ============================================================================
+  // TOGGLE COLORS
+  // ============================================================================
+
+  --toggle-background: #{$color-border-light};
+  --toggle-disabled: #{$color-error};
+  --toggle-enabled: #76c0b3;
+
+  // ============================================================================
+  // EMOJI COLORS
+  // ============================================================================
+
+  --emoji-happy: #80a0ea;
+  --emoji-smiley: #93cdc2;
+  --emoji-neutral: #ffd324;
+  --emoji-thinking: #f29173;
+  --emoji-sad: #f86d6f;
+  --emoji-happy-inactive: #909ebc;
+  --emoji-smiley-inactive: #adb7cd;
+  --emoji-neutral-inactive: #c6cddc;
+  --emoji-thinking-inactive: #adb7cd;
+  --emoji-sad-inactive: #909ebc;
+
+  // ============================================================================
+  // DOCUMENT TAB COLORS
+  // ============================================================================
+
+  --doc-tabs-info: #ffd324;
+  --doc-tabs-research: #{$color-brand-primary};
+  --doc-tabs-needs: #{$color-warning};
+  --doc-tabs-suggestions: #76c0b3;
+  --doc-tabs-voting: #e281cd;
+  --doc-tabs-summary: #f86d6f;
+
+  // ============================================================================
+  // RANGE/CONSENSUS COLORS
+  // ============================================================================
+
+  --range-positive-100: #3a7e71;
+  --range-positive-60: #76c0b3;
+  --range-positive-30: #abd8d0;
+  --range-conflict-100: #ff8401;
+  --range-conflict-60: #{$color-warning};
+  --range-conflict-30: #f9c8b9;
+  --range-objections-100: #ae2891;
+  --range-objections-60: #e281cd;
+  --range-objections-30: #f4cdeb;
+
+  // ============================================================================
+  // MEMBER STATUS COLORS
+  // ============================================================================
+
+  --member-awaiting: #b4e0f8;
+  --member-voter: #e7def7;
+  --member-evaluator: #c7e5e0;
+  --member-participant: #8ed1f5;
+  --member-blocked: #{$color-error};
+
+  // ============================================================================
+  // SURFACE COLORS
+  // ============================================================================
+
+  --surface-background: #{$color-bg-primary};
+  --surface-overlay: #01113766;
+  --surface-edit: #{$color-bg-primary};
+
+  // ============================================================================
+  // MENU COLORS
+  // ============================================================================
+
+  --menu-default: #ffffff;
+  --menu-active: #{$color-bg-primary};
+
+  // ============================================================================
+  // CHIPS COLORS
+  // ============================================================================
+
+  --chips-default: #ffffff;
+  --chips-active: #ffe16a;
+
+  // ============================================================================
+  // MAP COLORS
+  // ============================================================================
+
+  --map-statement: #ffffff;
+  --map-question: #6ec4f2;
+  --map-suggestion: #abd8d0;
+  --map-statement-current: #ffe16a;
+  --map-question-current: #149ce6;
+  --map-suggestion-current: #{$color-success};
+
+  // ============================================================================
+  // VOTING PALETTE (19 color pairs)
+  // ============================================================================
+
+  --voting-palette-pair-1-light: #fc8c9b;
+  --voting-palette-pair-1-dark: #f57c8c;
+  --voting-palette-pair-2-light: #f4978d;
+  --voting-palette-pair-2-dark: #ec8b81;
+  --voting-palette-pair-3-light: #feb69f;
+  --voting-palette-pair-3-dark: #efa38a;
+  --voting-palette-pair-4-light: #f1d075;
+  --voting-palette-pair-4-dark: #ebbd3d;
+  --voting-palette-pair-5-light: #85d697;
+  --voting-palette-pair-5-dark: #5fc976;
+  --voting-palette-pair-6-light: #a1d3a5;
+  --voting-palette-pair-6-dark: #97c99b;
+  --voting-palette-pair-7-light: #b4ccb9;
+  --voting-palette-pair-7-dark: #9bbaa2;
+  --voting-palette-pair-8-light: #b6d89c;
+  --voting-palette-pair-8-dark: #9bca78;
+  --voting-palette-pair-9-light: #95d7fe;
+  --voting-palette-pair-9-dark: #73c6f1;
+  --voting-palette-pair-10-light: #75c2fa;
+  --voting-palette-pair-10-dark: #4eb1f9;
+  --voting-palette-pair-11-light: #98bfff;
+  --voting-palette-pair-11-dark: #83adf3;
+  --voting-palette-pair-12-light: #a4dddf;
+  --voting-palette-pair-12-dark: #82c7ca;
+  --voting-palette-pair-13-light: #76d4d0;
+  --voting-palette-pair-13-dark: #64c8c4;
+  --voting-palette-pair-14-light: #bbb0f7;
+  --voting-palette-pair-14-dark: #a89be9;
+  --voting-palette-pair-15-light: #bda3ed;
+  --voting-palette-pair-15-dark: #a992d4;
+  --voting-palette-pair-16-light: #d99fec;
+  --voting-palette-pair-16-dark: #c38fd4;
+  --voting-palette-pair-17-light: #ffb8d1;
+  --voting-palette-pair-17-dark: #fc9cbe;
+  --voting-palette-pair-18-light: #ffa3c4;
+  --voting-palette-pair-18-dark: #fb84ae;
+  --voting-palette-pair-19-light: #dd90b6;
+  --voting-palette-pair-19-dark: #d578a6;
+}

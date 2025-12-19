@@ -1,0 +1,70 @@
+// ============================================================================
+// FREEDI DESIGN SYSTEM - SPACING TOKENS
+// ============================================================================
+// Based on 8-point grid system for consistent spacing
+// ============================================================================
+
+$spacing-base: 8px;
+
+$spacing-0: 0;
+$spacing-px: 1px;
+$spacing-0-5: 0.125rem;  // 2px  - Hairline spacing
+$spacing-1: 0.25rem;     // 4px  - Tight spacing
+$spacing-2: 0.5rem;      // 8px  - Small spacing (base)
+$spacing-3: 0.75rem;     // 12px
+$spacing-4: 1rem;        // 16px - Default spacing
+$spacing-5: 1.25rem;     // 20px
+$spacing-6: 1.5rem;      // 24px - Large spacing
+$spacing-7: 1.75rem;     // 28px
+$spacing-8: 2rem;        // 32px - Extra large
+$spacing-10: 2.5rem;     // 40px
+$spacing-12: 3rem;       // 48px - 2x Extra large
+$spacing-14: 3.5rem;     // 56px
+$spacing-16: 4rem;       // 64px - 3x Extra large
+$spacing-20: 5rem;       // 80px
+$spacing-24: 6rem;       // 96px
+
+// Semantic spacing aliases
+$spacing-2xs: $spacing-0-5;
+$spacing-xs: $spacing-1;
+$spacing-sm: $spacing-2;
+$spacing-md: $spacing-4;
+$spacing-lg: $spacing-6;
+$spacing-xl: $spacing-8;
+$spacing-2xl: $spacing-12;
+$spacing-3xl: $spacing-16;
+
+:root {
+  // Numeric scale
+  --spacing-0: #{$spacing-0};
+  --spacing-px: #{$spacing-px};
+  --spacing-0-5: #{$spacing-0-5};
+  --spacing-1: #{$spacing-1};
+  --spacing-2: #{$spacing-2};
+  --spacing-3: #{$spacing-3};
+  --spacing-4: #{$spacing-4};
+  --spacing-5: #{$spacing-5};
+  --spacing-6: #{$spacing-6};
+  --spacing-7: #{$spacing-7};
+  --spacing-8: #{$spacing-8};
+  --spacing-10: #{$spacing-10};
+  --spacing-12: #{$spacing-12};
+  --spacing-14: #{$spacing-14};
+  --spacing-16: #{$spacing-16};
+  --spacing-20: #{$spacing-20};
+  --spacing-24: #{$spacing-24};
+
+  // Semantic scale
+  --spacing-2xs: #{$spacing-2xs};
+  --spacing-xs: #{$spacing-xs};
+  --spacing-sm: #{$spacing-sm};
+  --spacing-md: #{$spacing-md};
+  --spacing-lg: #{$spacing-lg};
+  --spacing-xl: #{$spacing-xl};
+  --spacing-2xl: #{$spacing-2xl};
+  --spacing-3xl: #{$spacing-3xl};
+
+  // Legacy support
+  --padding: #{$spacing-md};
+  --info-text-padding: 15px;
+}

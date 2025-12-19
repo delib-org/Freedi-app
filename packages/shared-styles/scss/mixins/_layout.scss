@@ -1,0 +1,329 @@
+// ============================================================================
+// FREEDI DESIGN SYSTEM - LAYOUT MIXINS
+// ============================================================================
+// Layout and positioning mixins
+// ============================================================================
+
+// ============================================================================
+// FLEXBOX LAYOUTS
+// ============================================================================
+
+/// Flexbox center (both axes)
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/// Flexbox center vertical only
+@mixin flex-center-y {
+  display: flex;
+  align-items: center;
+}
+
+/// Flexbox center horizontal only
+@mixin flex-center-x {
+  display: flex;
+  justify-content: center;
+}
+
+/// Flexbox space between
+@mixin flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/// Flexbox space around
+@mixin flex-around {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+}
+
+/// Flexbox space evenly
+@mixin flex-evenly {
+  display: flex;
+  align-items: center;
+  justify-content: space-evenly;
+}
+
+/// Flexbox column layout
+@mixin flex-column {
+  display: flex;
+  flex-direction: column;
+}
+
+/// Flexbox row wrap
+@mixin flex-wrap {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+// ============================================================================
+// STACK & CLUSTER (Modern Layout Primitives)
+// ============================================================================
+
+/// Stack layout (vertical with gap)
+/// @param {Length} $gap - Gap between items
+@mixin stack($gap: var(--spacing-4)) {
+  display: flex;
+  flex-direction: column;
+  gap: $gap;
+}
+
+/// Cluster layout (horizontal with wrap and gap)
+/// @param {Length} $gap - Gap between items
+@mixin cluster($gap: var(--spacing-4)) {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $gap;
+}
+
+/// Inline cluster (no wrap)
+/// @param {Length} $gap - Gap between items
+@mixin inline-cluster($gap: var(--spacing-4)) {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: $gap;
+}
+
+// ============================================================================
+// GRID LAYOUTS
+// ============================================================================
+
+/// Auto-fit grid (responsive columns)
+/// @param {Length} $min-width - Minimum column width
+/// @param {Length} $gap - Gap between items
+@mixin grid-auto-fit($min-width: 250px, $gap: var(--spacing-4)) {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax($min-width, 1fr));
+  gap: $gap;
+}
+
+/// Auto-fill grid
+/// @param {Length} $min-width - Minimum column width
+/// @param {Length} $gap - Gap between items
+@mixin grid-auto-fill($min-width: 250px, $gap: var(--spacing-4)) {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax($min-width, 1fr));
+  gap: $gap;
+}
+
+/// Fixed column grid
+/// @param {Number} $columns - Number of columns
+/// @param {Length} $gap - Gap between items
+@mixin grid-columns($columns: 3, $gap: var(--spacing-4)) {
+  display: grid;
+  grid-template-columns: repeat($columns, 1fr);
+  gap: $gap;
+}
+
+/// Sidebar + Main content layout
+/// @param {Length} $sidebar-width - Sidebar width
+/// @param {Length} $gap - Gap between sidebar and main
+@mixin grid-sidebar($sidebar-width: 280px, $gap: var(--spacing-4)) {
+  display: grid;
+  grid-template-columns: $sidebar-width 1fr;
+  gap: $gap;
+}
+
+/// Two-column equal layout
+@mixin grid-halves($gap: var(--spacing-4)) {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: $gap;
+}
+
+/// Three-column equal layout
+@mixin grid-thirds($gap: var(--spacing-4)) {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: $gap;
+}
+
+// ============================================================================
+// CONTAINER & WRAPPER
+// ============================================================================
+
+/// Centered container with max-width
+/// @param {Length} $max-width - Maximum container width
+@mixin container($max-width: var(--container-lg)) {
+  width: 100%;
+  max-width: $max-width;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: var(--spacing-4);
+  padding-right: var(--spacing-4);
+}
+
+/// Full-bleed container (breaks out of parent container)
+@mixin full-bleed {
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+}
+
+/// Prose container (ideal reading width)
+@mixin prose {
+  max-width: var(--container-prose);
+  margin-left: auto;
+  margin-right: auto;
+}
+
+// ============================================================================
+// POSITIONING
+// ============================================================================
+
+/// Absolute fill (cover parent)
+@mixin absolute-fill {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+}
+
+/// Fixed fill (cover viewport)
+@mixin fixed-fill {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+}
+
+/// Absolute center
+@mixin absolute-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+/// Sticky header/footer
+@mixin sticky-top {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-sticky);
+}
+
+@mixin sticky-bottom {
+  position: sticky;
+  bottom: 0;
+  z-index: var(--z-sticky);
+}
+
+// ============================================================================
+// ASPECT RATIO
+// ============================================================================
+
+/// Aspect ratio container
+/// @param {Number} $width - Width ratio
+/// @param {Number} $height - Height ratio
+@mixin aspect-ratio($width, $height) {
+  aspect-ratio: #{$width} / #{$height};
+}
+
+/// Common aspect ratios
+@mixin aspect-square { aspect-ratio: 1 / 1; }
+@mixin aspect-video { aspect-ratio: 16 / 9; }
+@mixin aspect-portrait { aspect-ratio: 3 / 4; }
+@mixin aspect-landscape { aspect-ratio: 4 / 3; }
+
+// ============================================================================
+// SIZING
+// ============================================================================
+
+/// Square element
+/// @param {Length} $size - Size of the square
+@mixin square($size) {
+  width: $size;
+  height: $size;
+}
+
+/// Circle element
+/// @param {Length} $size - Diameter of the circle
+@mixin circle($size) {
+  @include square($size);
+  border-radius: var(--radius-full);
+}
+
+/// Full viewport height
+@mixin full-height {
+  min-height: 100vh;
+  min-height: 100dvh; // Dynamic viewport height for mobile
+}
+
+/// Full viewport width
+@mixin full-width {
+  width: 100vw;
+}
+
+// ============================================================================
+// OVERFLOW
+// ============================================================================
+
+/// Scroll container (vertical)
+@mixin scroll-y {
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+/// Scroll container (horizontal)
+@mixin scroll-x {
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+/// Hide scrollbar but keep functionality
+@mixin hide-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/// Custom scrollbar styles
+/// @param {Length} $width - Scrollbar width
+/// @param {Color} $track-color - Track background color
+/// @param {Color} $thumb-color - Thumb color
+@mixin custom-scrollbar($width: 8px, $track-color: var(--bg-primary), $thumb-color: var(--border-primary)) {
+  scrollbar-width: thin;
+  scrollbar-color: $thumb-color $track-color;
+
+  &::-webkit-scrollbar {
+    width: $width;
+    height: $width;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: $track-color;
+    border-radius: var(--radius-full);
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: $thumb-color;
+    border-radius: var(--radius-full);
+
+    &:hover {
+      background: var(--text-caption);
+    }
+  }
+}
+
+// ============================================================================
+// CLEARFIX
+// ============================================================================
+
+/// Clearfix for floats
+@mixin clearfix {
+  &::after {
+    content: '';
+    display: table;
+    clear: both;
+  }
+}

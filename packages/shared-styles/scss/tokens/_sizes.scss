@@ -1,0 +1,92 @@
+// ============================================================================
+// FREEDI DESIGN SYSTEM - SIZE TOKENS
+// ============================================================================
+// Component sizes and touch targets
+// ============================================================================
+
+// ============================================================================
+// TOUCH TARGETS (Accessibility)
+// ============================================================================
+
+$touch-target-min: 44px;
+$touch-target-comfortable: 48px;
+
+// ============================================================================
+// BUTTON SIZES
+// ============================================================================
+
+$button-height-xs: 28px;
+$button-height-sm: 32px;
+$button-height-md: 40px;
+$button-height-lg: 48px;
+$button-height-xl: 56px;
+
+// ============================================================================
+// INPUT SIZES
+// ============================================================================
+
+$input-height-sm: 36px;
+$input-height-md: 44px;
+$input-height-lg: 52px;
+
+// ============================================================================
+// ICON SIZES
+// ============================================================================
+
+$icon-size-2xs: 12px;
+$icon-size-xs: 16px;
+$icon-size-sm: 20px;
+$icon-size-md: 24px;
+$icon-size-lg: 32px;
+$icon-size-xl: 48px;
+$icon-size-2xl: 64px;
+
+// ============================================================================
+// AVATAR SIZES
+// ============================================================================
+
+$avatar-size-xs: 24px;
+$avatar-size-sm: 32px;
+$avatar-size-md: 40px;
+$avatar-size-lg: 48px;
+$avatar-size-xl: 64px;
+$avatar-size-2xl: 96px;
+
+// ============================================================================
+// CSS CUSTOM PROPERTIES
+// ============================================================================
+
+:root {
+  // Touch targets
+  --touch-target-min: #{$touch-target-min};
+  --touch-target-comfortable: #{$touch-target-comfortable};
+
+  // Button sizes
+  --button-height-xs: #{$button-height-xs};
+  --button-height-sm: #{$button-height-sm};
+  --button-height-md: #{$button-height-md};
+  --button-height-lg: #{$button-height-lg};
+  --button-height-xl: #{$button-height-xl};
+
+  // Input sizes
+  --input-height-sm: #{$input-height-sm};
+  --input-height-md: #{$input-height-md};
+  --input-height-lg: #{$input-height-lg};
+
+  // Icon sizes
+  --icon-size-2xs: #{$icon-size-2xs};
+  --icon-size-xs: #{$icon-size-xs};
+  --icon-size-sm: #{$icon-size-sm};
+  --icon-size-md: #{$icon-size-md};
+  --icon-size-lg: #{$icon-size-lg};
+  --icon-size-xl: #{$icon-size-xl};
+  --icon-size-2xl: #{$icon-size-2xl};
+
+  // Avatar sizes
+  --avatar-size-xs: #{$avatar-size-xs};
+  --avatar-size-sm: #{$avatar-size-sm};
+  --avatar-size-md: #{$avatar-size-md};
+  --avatar-size-lg: #{$avatar-size-lg};
+  --avatar-size-xl: #{$avatar-size-xl};
+  --avatar-size-2xl: #{$avatar-size-2xl};
+}

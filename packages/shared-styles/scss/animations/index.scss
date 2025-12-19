@@ -1,0 +1,496 @@
+// ============================================================================
+// FREEDI DESIGN SYSTEM - ANIMATIONS
+// ============================================================================
+// Keyframe animations and animation classes
+// ============================================================================
+
+@use '../tokens' as *;
+
+// ============================================================================
+// CORE KEYFRAMES
+// ============================================================================
+
+// Fade animations
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+// Slide animations
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideOutUp {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+}
+
+@keyframes slideOutDown {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+}
+
+// Scale animations
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes scaleOut {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+}
+
+@keyframes zoomIn {
+  from {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+  40% {
+    opacity: 0.8;
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes zoomOut {
+  from {
+    opacity: 0;
+    transform: scale(1.15);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+// ============================================================================
+// UTILITY KEYFRAMES
+// ============================================================================
+
+// Spin (for loading)
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// Pulse (attention)
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+// Ping (notification)
+@keyframes ping {
+  75%, 100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+
+// Bounce
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(-25%);
+    animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+  }
+  50% {
+    transform: translateY(0);
+    animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+  }
+}
+
+// Shake (error feedback)
+@keyframes shake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  10%, 30%, 50%, 70%, 90% {
+    transform: translateX(-4px);
+  }
+  20%, 40%, 60%, 80% {
+    transform: translateX(4px);
+  }
+}
+
+// Wobble
+@keyframes wobble {
+  0%, 100% {
+    transform: rotate(-3deg);
+  }
+  50% {
+    transform: rotate(3deg);
+  }
+}
+
+// Float (hover effect)
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+// ============================================================================
+// PAGE TRANSITION KEYFRAMES (from main app)
+// ============================================================================
+
+@keyframes slideIn {
+  0% {
+    opacity: 0.3;
+    transform: translateX(-100%);
+  }
+  30% {
+    opacity: 0.7;
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideOut {
+  0% {
+    opacity: 0.3;
+    transform: translateX(100%);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+// ============================================================================
+// TOAST ANIMATIONS
+// ============================================================================
+
+@keyframes toastSlideIn {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes toastSlideOut {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+}
+
+@keyframes toastProgress {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+
+// Toast jump in (playful)
+@keyframes jumpIn {
+  0% {
+    opacity: 0;
+    transform: translateY(-50px) scale(0.9);
+  }
+  50% {
+    transform: translateY(10px) scale(1.02);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+// ============================================================================
+// MODAL ANIMATIONS
+// ============================================================================
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes modalSlideUp {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -40%);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+  }
+}
+
+@keyframes bottomSheetSlideUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+// ============================================================================
+// LOADING ANIMATIONS
+// ============================================================================
+
+@keyframes dotPulse {
+  0%, 80%, 100% {
+    transform: scale(0);
+    opacity: 0.5;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes progressBar {
+  0% {
+    width: 0%;
+  }
+  100% {
+    width: 100%;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+// ============================================================================
+// BADGE ANIMATIONS
+// ============================================================================
+
+@keyframes badgePulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+@keyframes blinkFab {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(0.9);
+  }
+}
+
+// ============================================================================
+// SKELETON LOADING
+// ============================================================================
+
+@keyframes skeleton {
+  0% {
+    background-color: var(--border-light);
+  }
+  50% {
+    background-color: var(--bg-primary);
+  }
+  100% {
+    background-color: var(--border-light);
+  }
+}
+
+// ============================================================================
+// ANIMATION CLASSES
+// ============================================================================
+
+// Fade
+.animate-fade-in {
+  animation: fadeIn var(--duration-slow) var(--easing-ease-out);
+}
+
+.animate-fade-out {
+  animation: fadeOut var(--duration-slow) var(--easing-ease-out);
+}
+
+// Slide
+.animate-slide-in-up {
+  animation: slideInUp var(--duration-slow) var(--easing-smooth);
+}
+
+.animate-slide-in-down {
+  animation: slideInDown var(--duration-slow) var(--easing-smooth);
+}
+
+.animate-slide-in-left {
+  animation: slideInLeft var(--duration-slow) var(--easing-smooth);
+}
+
+.animate-slide-in-right {
+  animation: slideInRight var(--duration-slow) var(--easing-smooth);
+}
+
+// Scale
+.animate-scale-in {
+  animation: scaleIn var(--duration-normal) var(--easing-spring);
+}
+
+.animate-zoom-in {
+  animation: zoomIn var(--duration-slower) var(--easing-smooth);
+}
+
+// Utility
+.animate-spin {
+  animation: spin 1s var(--easing-linear) infinite;
+}
+
+.animate-pulse {
+  animation: pulse 2s var(--easing-ease-in-out) infinite;
+}
+
+.animate-bounce {
+  animation: bounce 1s infinite;
+}
+
+.animate-shake {
+  animation: shake 0.5s var(--easing-ease);
+}
+
+.animate-float {
+  animation: float 3s var(--easing-ease-in-out) infinite;
+}
+
+// Loading
+.animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--border-light) 25%,
+    var(--bg-primary) 50%,
+    var(--border-light) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+.animate-skeleton {
+  animation: skeleton 1.5s var(--easing-ease-in-out) infinite;
+}
+
+// ============================================================================
+// REDUCED MOTION SUPPORT
+// ============================================================================
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

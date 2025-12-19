@@ -1,0 +1,347 @@
+// ============================================================================
+// FREEDI DESIGN SYSTEM - INPUT MIXINS
+// ============================================================================
+// Form input styling mixins
+// ============================================================================
+
+// ============================================================================
+// BASE INPUT
+// ============================================================================
+
+/// Base input styles (for text inputs, textareas, selects)
+@mixin input-base {
+  width: 100%;
+  min-height: var(--input-height-md);
+  padding: var(--spacing-3) var(--spacing-4);
+  background-color: var(--white);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-input);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  color: var(--text-body);
+  line-height: var(--leading-normal);
+  transition: border-color var(--duration-normal) var(--easing-ease),
+              box-shadow var(--duration-normal) var(--easing-ease);
+
+  &::placeholder {
+    color: var(--text-caption);
+    opacity: 0.7;
+  }
+
+  &:focus {
+    outline: none;
+    border-color: var(--border-focus);
+    box-shadow: var(--shadow-focus);
+  }
+
+  &:disabled {
+    background-color: var(--bg-primary);
+    color: var(--text-disabled);
+    cursor: not-allowed;
+  }
+}
+
+// ============================================================================
+// INPUT STATES
+// ============================================================================
+
+/// Input error state
+@mixin input-error {
+  border-color: var(--color-error);
+
+  &:focus {
+    border-color: var(--color-error);
+    box-shadow: var(--shadow-focus-error);
+  }
+}
+
+/// Input success state
+@mixin input-success {
+  border-color: var(--color-success);
+
+  &:focus {
+    border-color: var(--color-success);
+    box-shadow: var(--shadow-focus-success);
+  }
+}
+
+/// Input warning state
+@mixin input-warning {
+  border-color: var(--color-warning);
+}
+
+// ============================================================================
+// INPUT SIZES
+// ============================================================================
+
+/// Small input
+@mixin input-sm {
+  min-height: var(--input-height-sm);
+  padding: var(--spacing-2) var(--spacing-3);
+  font-size: var(--text-sm);
+}
+
+/// Large input
+@mixin input-lg {
+  min-height: var(--input-height-lg);
+  padding: var(--spacing-4) var(--spacing-5);
+  font-size: var(--text-lg);
+}
+
+// ============================================================================
+// INPUT VARIANTS
+// ============================================================================
+
+/// Filled input (with background)
+@mixin input-filled {
+  background-color: var(--bg-tertiary);
+  border-color: transparent;
+
+  &:focus {
+    background-color: var(--white);
+    border-color: var(--border-focus);
+  }
+}
+
+/// Borderless/underline input
+@mixin input-underline {
+  border-radius: 0;
+  border: none;
+  border-bottom: 2px solid var(--border-light);
+  padding-left: 0;
+  padding-right: 0;
+
+  &:focus {
+    border-bottom-color: var(--border-focus);
+    box-shadow: none;
+  }
+}
+
+// ============================================================================
+// FORM FIELD COMPONENTS
+// ============================================================================
+
+/// Form field wrapper
+@mixin form-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+}
+
+/// Form label
+@mixin form-label {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  color: var(--text-body);
+  line-height: var(--leading-tight);
+}
+
+/// Required indicator
+@mixin form-required {
+  &::after {
+    content: ' *';
+    color: var(--color-error);
+  }
+}
+
+/// Form helper text
+@mixin form-helper {
+  font-size: var(--text-xs);
+  color: var(--text-caption);
+  margin-top: var(--spacing-1);
+}
+
+/// Form error text
+@mixin form-error-text {
+  font-size: var(--text-xs);
+  color: var(--color-error);
+  margin-top: var(--spacing-1);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-1);
+}
+
+/// Character count
+@mixin form-character-count {
+  font-size: var(--text-xs);
+  color: var(--text-caption);
+  text-align: right;
+  margin-top: var(--spacing-1);
+}
+
+// ============================================================================
+// INPUT WITH ICON
+// ============================================================================
+
+/// Input container with icon support
+@mixin input-container-with-icon {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+/// Input with left icon
+@mixin input-with-left-icon {
+  padding-left: calc(var(--spacing-4) + var(--icon-size-md) + var(--spacing-2));
+}
+
+/// Input with right icon
+@mixin input-with-right-icon {
+  padding-right: calc(var(--spacing-4) + var(--icon-size-md) + var(--spacing-2));
+}
+
+/// Icon inside input (left)
+@mixin input-icon-left {
+  position: absolute;
+  left: var(--spacing-4);
+  width: var(--icon-size-md);
+  height: var(--icon-size-md);
+  color: var(--text-caption);
+  pointer-events: none;
+}
+
+/// Icon inside input (right)
+@mixin input-icon-right {
+  position: absolute;
+  right: var(--spacing-4);
+  width: var(--icon-size-md);
+  height: var(--icon-size-md);
+  color: var(--text-caption);
+}
+
+// ============================================================================
+// TEXTAREA
+// ============================================================================
+
+/// Textarea styles
+@mixin textarea {
+  @include input-base;
+  min-height: 120px;
+  resize: vertical;
+}
+
+/// Auto-resizing textarea
+@mixin textarea-auto-resize {
+  @include textarea;
+  resize: none;
+  overflow: hidden;
+}
+
+// ============================================================================
+// SELECT
+// ============================================================================
+
+/// Select dropdown styles
+@mixin select {
+  @include input-base;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%237484a9' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right var(--spacing-3) center;
+  background-size: var(--icon-size-sm);
+  padding-right: calc(var(--spacing-4) + var(--icon-size-md));
+  cursor: pointer;
+}
+
+// ============================================================================
+// CHECKBOX & RADIO
+// ============================================================================
+
+/// Checkbox base
+@mixin checkbox {
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--border-primary);
+  border-radius: var(--radius-sm);
+  background-color: var(--white);
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--easing-ease);
+
+  &:checked {
+    background-color: var(--brand-primary);
+    border-color: var(--brand-primary);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: center;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--brand-primary);
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    background-color: var(--bg-primary);
+    border-color: var(--border-light);
+    cursor: not-allowed;
+  }
+}
+
+/// Radio button base
+@mixin radio {
+  @include checkbox;
+  border-radius: var(--radius-full);
+
+  &:checked {
+    background-image: none;
+
+    &::after {
+      content: '';
+      display: block;
+      width: 8px;
+      height: 8px;
+      margin: 4px;
+      border-radius: var(--radius-full);
+      background-color: var(--white);
+    }
+  }
+}
+
+// ============================================================================
+// SWITCH/TOGGLE
+// ============================================================================
+
+/// Toggle switch
+@mixin toggle {
+  appearance: none;
+  width: 44px;
+  height: 24px;
+  background-color: var(--toggle-background);
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: background-color var(--duration-normal) var(--easing-ease);
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 20px;
+    height: 20px;
+    background-color: var(--white);
+    border-radius: var(--radius-full);
+    box-shadow: var(--shadow-sm);
+    transition: transform var(--duration-normal) var(--easing-spring);
+  }
+
+  &:checked {
+    background-color: var(--toggle-enabled);
+
+    &::before {
+      transform: translateX(20px);
+    }
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--brand-primary);
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}

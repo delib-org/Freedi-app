@@ -1,0 +1,264 @@
+// ============================================================================
+// FREEDI DESIGN SYSTEM - ACCESSIBILITY MIXINS
+// ============================================================================
+// Accessibility-focused mixins for inclusive design
+// ============================================================================
+
+// ============================================================================
+// VISUALLY HIDDEN
+// ============================================================================
+
+/// Visually hidden but accessible to screen readers
+/// Use for skip links, form labels that should be read but not seen
+@mixin visually-hidden {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  margin: -1px !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+/// Undo visually hidden (for skip links on focus)
+@mixin visually-hidden-focusable {
+  @include visually-hidden;
+
+  &:focus,
+  &:focus-visible {
+    position: static !important;
+    width: auto !important;
+    height: auto !important;
+    margin: 0 !important;
+    overflow: visible !important;
+    clip: auto !important;
+    white-space: normal !important;
+  }
+}
+
+// ============================================================================
+// FOCUS STYLES
+// ============================================================================
+
+/// Standard focus visible styles
+@mixin focus-visible {
+  &:focus-visible {
+    outline: 2px solid var(--brand-primary);
+    outline-offset: 2px;
+  }
+}
+
+/// Remove focus outline only when not keyboard navigating
+@mixin focus-not-visible {
+  &:focus:not(:focus-visible) {
+    outline: none;
+  }
+}
+
+/// Custom focus ring
+/// @param {Color} $color - Focus ring color
+/// @param {Length} $width - Focus ring width
+/// @param {Length} $offset - Focus ring offset
+@mixin focus-ring($color: var(--brand-primary), $width: 2px, $offset: 2px) {
+  &:focus-visible {
+    outline: $width solid $color;
+    outline-offset: $offset;
+  }
+}
+
+/// Focus within (for parent elements)
+@mixin focus-within-ring {
+  &:focus-within {
+    outline: 2px solid var(--brand-primary);
+    outline-offset: 2px;
+  }
+}
+
+// ============================================================================
+// SKIP LINKS
+// ============================================================================
+
+/// Skip link styles (visually hidden until focused)
+@mixin skip-link {
+  @include visually-hidden;
+
+  &:focus,
+  &:focus-visible {
+    position: fixed !important;
+    top: var(--spacing-4);
+    left: var(--spacing-4);
+    width: auto !important;
+    height: auto !important;
+    padding: var(--spacing-3) var(--spacing-4);
+    background-color: var(--brand-primary);
+    color: var(--white);
+    font-weight: var(--font-semibold);
+    text-decoration: none;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
+    z-index: var(--z-max);
+    clip: auto !important;
+    overflow: visible !important;
+    white-space: normal !important;
+  }
+}
+
+// ============================================================================
+// MOTION PREFERENCES
+// ============================================================================
+
+/// Respect reduced motion preference - disables animations
+@mixin reduced-motion {
+  @media (prefers-reduced-motion: reduce) {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/// Apply only when motion is OK
+@mixin motion-ok {
+  @media (prefers-reduced-motion: no-preference) {
+    @content;
+  }
+}
+
+/// Apply when reduced motion is preferred
+@mixin motion-reduce {
+  @media (prefers-reduced-motion: reduce) {
+    @content;
+  }
+}
+
+// ============================================================================
+// COLOR CONTRAST
+// ============================================================================
+
+/// High contrast mode support
+@mixin high-contrast {
+  @media (prefers-contrast: more) {
+    @content;
+  }
+}
+
+/// Forced colors mode (Windows High Contrast)
+@mixin forced-colors {
+  @media (forced-colors: active) {
+    @content;
+  }
+}
+
+// ============================================================================
+// TOUCH TARGETS
+// ============================================================================
+
+/// Minimum touch target size (44x44px for accessibility)
+@mixin touch-target {
+  min-width: var(--touch-target-min);
+  min-height: var(--touch-target-min);
+}
+
+/// Comfortable touch target size (48x48px)
+@mixin touch-target-comfortable {
+  min-width: var(--touch-target-comfortable);
+  min-height: var(--touch-target-comfortable);
+}
+
+/// Extend touch target without changing visual size
+/// Use on small elements that need larger hit areas
+@mixin extend-touch-target($size: 44px) {
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: $size;
+    height: $size;
+    min-width: 100%;
+    min-height: 100%;
+  }
+}
+
+// ============================================================================
+// SCREEN READER ONLY TEXT
+// ============================================================================
+
+/// Add screen reader only text
+/// @param {String} $text - Text for screen readers
+@mixin sr-only-text($text) {
+  &::before {
+    @include visually-hidden;
+    content: $text;
+  }
+}
+
+// ============================================================================
+// LINK ACCESSIBILITY
+// ============================================================================
+
+/// Accessible link styles
+@mixin accessible-link {
+  color: var(--brand-primary);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+
+  &:hover {
+    color: var(--brand-primary-dark);
+  }
+
+  @include focus-visible;
+
+  // Indicate external links
+  &[target="_blank"]::after {
+    content: ' (opens in new tab)';
+    @include visually-hidden;
+  }
+}
+
+// ============================================================================
+// FORM ACCESSIBILITY
+// ============================================================================
+
+/// Associate label with input (for CSS-only)
+@mixin label-for-input {
+  cursor: pointer;
+
+  &:has(+ input:focus-visible),
+  &:has(+ select:focus-visible),
+  &:has(+ textarea:focus-visible) {
+    color: var(--brand-primary);
+  }
+}
+
+/// Error state announcement
+@mixin announce-error {
+  // For live regions
+  &[aria-invalid="true"] {
+    border-color: var(--color-error);
+  }
+}
+
+// ============================================================================
+// ICON ACCESSIBILITY
+// ============================================================================
+
+/// Decorative icon (hidden from screen readers)
+@mixin icon-decorative {
+  &[aria-hidden="true"] {
+    pointer-events: none;
+  }
+}
+
+/// Meaningful icon (needs label)
+@mixin icon-meaningful {
+  &:not([aria-label]):not([aria-labelledby]) {
+    // Visual indicator in dev that label is missing
+    outline: 2px dashed red;
+  }
+}

@@ -1,0 +1,208 @@
+// ============================================================================
+// FREEDI DESIGN SYSTEM - RESPONSIVE MIXINS
+// ============================================================================
+// Mobile-first breakpoint mixins for responsive design
+// ============================================================================
+
+@use '../tokens/breakpoints' as bp;
+
+// ============================================================================
+// MOBILE-FIRST BREAKPOINTS (min-width)
+// ============================================================================
+
+/// Extra small screens and up (very small phones)
+/// @example @include xs { padding: 0.5rem; }
+@mixin xs {
+  @media (min-width: bp.$breakpoint-xs) {
+    @content;
+  }
+}
+
+/// Small screens and up (phones)
+/// @example @include sm { padding: 1rem; }
+@mixin sm {
+  @media (min-width: bp.$breakpoint-sm) {
+    @content;
+  }
+}
+
+/// Medium screens and up (tablets)
+/// @example @include md { display: flex; }
+@mixin md {
+  @media (min-width: bp.$breakpoint-md) {
+    @content;
+  }
+}
+
+/// Large screens and up (desktops)
+/// @example @include lg { max-width: 1024px; }
+@mixin lg {
+  @media (min-width: bp.$breakpoint-lg) {
+    @content;
+  }
+}
+
+/// Extra large screens and up
+/// @example @include xl { font-size: 1.25rem; }
+@mixin xl {
+  @media (min-width: bp.$breakpoint-xl) {
+    @content;
+  }
+}
+
+/// 2x Extra large screens
+/// @example @include xxl { padding: 3rem; }
+@mixin xxl {
+  @media (min-width: bp.$breakpoint-2xl) {
+    @content;
+  }
+}
+
+// ============================================================================
+// DESKTOP-FIRST BREAKPOINTS (max-width) - Use sparingly
+// ============================================================================
+
+/// Mobile only (smaller than sm)
+@mixin mobile-only {
+  @media (max-width: #{bp.$breakpoint-sm - 1px}) {
+    @content;
+  }
+}
+
+/// Tablet only (between sm and lg)
+@mixin tablet-only {
+  @media (min-width: bp.$breakpoint-sm) and (max-width: #{bp.$breakpoint-lg - 1px}) {
+    @content;
+  }
+}
+
+/// Desktop only (lg and up)
+@mixin desktop-only {
+  @media (min-width: bp.$breakpoint-lg) {
+    @content;
+  }
+}
+
+// ============================================================================
+// LEGACY MIXINS (for backwards compatibility)
+// ============================================================================
+
+@mixin mobile {
+  @media (max-width: #{bp.$breakpoint-sm - 1px}) {
+    @content;
+  }
+}
+
+@mixin tablet {
+  @media (min-width: bp.$breakpoint-sm) and (max-width: #{bp.$breakpoint-lg - 1px}) {
+    @content;
+  }
+}
+
+@mixin desktop {
+  @media (min-width: bp.$breakpoint-lg) {
+    @content;
+  }
+}
+
+@mixin large-desktop {
+  @media (min-width: bp.$breakpoint-xl) {
+    @content;
+  }
+}
+
+// ============================================================================
+// CUSTOM BREAKPOINTS
+// ============================================================================
+
+/// Custom min-width breakpoint
+/// @param {Length} $min-width - Minimum viewport width
+@mixin breakpoint-up($min-width) {
+  @media (min-width: $min-width) {
+    @content;
+  }
+}
+
+/// Custom max-width breakpoint
+/// @param {Length} $max-width - Maximum viewport width
+@mixin breakpoint-down($max-width) {
+  @media (max-width: $max-width) {
+    @content;
+  }
+}
+
+/// Custom range breakpoint
+/// @param {Length} $min-width - Minimum viewport width
+/// @param {Length} $max-width - Maximum viewport width
+@mixin breakpoint-between($min-width, $max-width) {
+  @media (min-width: $min-width) and (max-width: $max-width) {
+    @content;
+  }
+}
+
+// ============================================================================
+// SPECIAL MEDIA QUERIES
+// ============================================================================
+
+/// High resolution screens (retina)
+@mixin retina {
+  @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+    @content;
+  }
+}
+
+/// Dark mode preference
+@mixin dark-mode {
+  @media (prefers-color-scheme: dark) {
+    @content;
+  }
+}
+
+/// Light mode preference
+@mixin light-mode {
+  @media (prefers-color-scheme: light) {
+    @content;
+  }
+}
+
+/// Reduced motion preference
+@mixin reduced-motion {
+  @media (prefers-reduced-motion: reduce) {
+    @content;
+  }
+}
+
+/// Print styles
+@mixin print {
+  @media print {
+    @content;
+  }
+}
+
+/// Landscape orientation
+@mixin landscape {
+  @media (orientation: landscape) {
+    @content;
+  }
+}
+
+/// Portrait orientation
+@mixin portrait {
+  @media (orientation: portrait) {
+    @content;
+  }
+}
+
+/// Hover-capable devices (non-touch)
+@mixin hover-capable {
+  @media (hover: hover) and (pointer: fine) {
+    @content;
+  }
+}
+
+/// Touch devices
+@mixin touch-device {
+  @media (hover: none) and (pointer: coarse) {
+    @content;
+  }
+}

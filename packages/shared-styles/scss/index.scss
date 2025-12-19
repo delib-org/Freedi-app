@@ -1,0 +1,168 @@
+// ============================================================================
+// FREEDI DESIGN SYSTEM - MAIN ENTRY POINT
+// ============================================================================
+//
+// This is the main entry point for the Freedi Design System.
+// Import this file in your application to get all design tokens,
+// utilities, animations, and component styles.
+//
+// USAGE:
+// In your main SCSS file (e.g., style.scss):
+//   @use '@freedi/shared-styles' as *;
+//
+// Or import specific parts:
+//   @use '@freedi/shared-styles/tokens' as tokens;
+//   @use '@freedi/shared-styles/mixins' as mix;
+//   @use '@freedi/shared-styles/utilities';
+//   @use '@freedi/shared-styles/animations';
+//   @use '@freedi/shared-styles/components';
+//
+// In component SCSS modules, only import what you need:
+//   @use '@freedi/shared-styles/tokens' as *;
+//   @use '@freedi/shared-styles/mixins' as *;
+//
+// ============================================================================
+
+// 1. Tokens - CSS custom properties (must be first)
+@use 'tokens';
+
+// 2. Mixins - SCSS mixins (no CSS output, for @include usage)
+@use 'mixins';
+
+// 3. Utilities - Utility classes (optional - adds CSS output)
+@use 'utilities';
+
+// 4. Animations - Keyframes and animation classes (optional - adds CSS output)
+@use 'animations';
+
+// 5. Components - Base component styles (optional - adds CSS output)
+@use 'components';
+
+// ============================================================================
+// GLOBAL RESETS & BASE STYLES
+// ============================================================================
+
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 17px;
+  -webkit-text-size-adjust: 100%;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  scroll-behavior: smooth;
+
+  @media (prefers-reduced-motion: reduce) {
+    scroll-behavior: auto;
+  }
+}
+
+body {
+  font-family: var(--font-body);
+  font-size: var(--text-md);
+  line-height: var(--leading-normal);
+  color: var(--text-body);
+  background-color: var(--bg-primary);
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+// Default font for all elements
+* {
+  font-family: var(--font-primary);
+}
+
+// ============================================================================
+// TYPOGRAPHY BASE STYLES
+// ============================================================================
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-primary);
+  font-weight: var(--font-semibold);
+  color: var(--text-title);
+  line-height: var(--leading-snug);
+  margin: 0;
+}
+
+h1 { font-size: var(--h1-font-size); }
+h2 { font-size: var(--h2-font-size); }
+h3 { font-size: var(--h3-font-size); }
+h4 { font-size: var(--h4-font-size); }
+h5 { font-size: var(--h5-font-size); }
+h6 { font-size: var(--h6-font-size); }
+
+p {
+  font-size: var(--p-font-size);
+  color: var(--text-body);
+  margin: 0;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+
+  &:focus-visible {
+    outline: 2px solid var(--brand-primary);
+    outline-offset: 2px;
+  }
+}
+
+b, strong {
+  font-weight: var(--font-semibold);
+}
+
+// ============================================================================
+// FOCUS STYLES
+// ============================================================================
+
+:focus {
+  outline: none;
+}
+
+:focus-visible {
+  outline: 2px solid var(--brand-primary);
+  outline-offset: 2px;
+}
+
+// ============================================================================
+// SELECTION STYLES
+// ============================================================================
+
+::selection {
+  background-color: var(--brand-primary);
+  color: var(--white);
+}
+
+// ============================================================================
+// SCROLLBAR STYLES
+// ============================================================================
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+  border-radius: var(--radius-full);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-primary);
+  border-radius: var(--radius-full);
+
+  &:hover {
+    background: var(--text-caption);
+  }
+}
+
+// Firefox
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-primary) var(--bg-primary);
+}

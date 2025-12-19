@@ -1,0 +1,55 @@
+// ============================================================================
+// FREEDI DESIGN SYSTEM - BREAKPOINT TOKENS
+// ============================================================================
+// Mobile-first responsive breakpoints
+// ============================================================================
+
+// ============================================================================
+// BREAKPOINT VALUES
+// ============================================================================
+
+$breakpoint-xs: 360px;   // Very small phones
+$breakpoint-sm: 600px;   // Phones
+$breakpoint-md: 768px;   // Tablets
+$breakpoint-lg: 1024px;  // Small desktops
+$breakpoint-xl: 1440px;  // Large desktops
+$breakpoint-2xl: 1920px; // Extra large screens
+
+// ============================================================================
+// CONTAINER MAX WIDTHS
+// ============================================================================
+
+$container-xs: 100%;
+$container-sm: 640px;
+$container-md: 768px;
+$container-lg: 1024px;
+$container-xl: 1280px;
+$container-2xl: 1536px;
+$container-prose: 75ch;
+
+// ============================================================================
+// CSS CUSTOM PROPERTIES
+// ============================================================================
+
+:root {
+  // Breakpoints (for reference in JS)
+  --breakpoint-xs: #{$breakpoint-xs};
+  --breakpoint-sm: #{$breakpoint-sm};
+  --breakpoint-md: #{$breakpoint-md};
+  --breakpoint-lg: #{$breakpoint-lg};
+  --breakpoint-xl: #{$breakpoint-xl};
+  --breakpoint-2xl: #{$breakpoint-2xl};
+
+  // Containers
+  --container-xs: #{$container-xs};
+  --container-sm: #{$container-sm};
+  --container-md: #{$container-md};
+  --container-lg: #{$container-lg};
+  --container-xl: #{$container-xl};
+  --container-2xl: #{$container-2xl};
+  --container-prose: #{$container-prose};
+
+  // Legacy support
+  --wrapper-max-width: #{$container-prose};
+  --wrapper: #{$container-prose};
+}

@@ -1,0 +1,33 @@
+// ============================================================================
+// FREEDI DESIGN SYSTEM - Z-INDEX TOKENS
+// ============================================================================
+// Layered z-index system for predictable stacking
+// ============================================================================
+
+$z-index-behind: -1;
+$z-index-base: 0;
+$z-index-dropdown: 100;
+$z-index-sticky: 200;
+$z-index-fixed: 300;
+$z-index-drawer: 400;
+$z-index-modal-backdrop: 500;
+$z-index-modal: 600;
+$z-index-popover: 700;
+$z-index-tooltip: 800;
+$z-index-toast: 900;
+$z-index-max: 9999;
+
+:root {
+  --z-behind: #{$z-index-behind};
+  --z-base: #{$z-index-base};
+  --z-dropdown: #{$z-index-dropdown};
+  --z-sticky: #{$z-index-sticky};
+  --z-fixed: #{$z-index-fixed};
+  --z-drawer: #{$z-index-drawer};
+  --z-modal-backdrop: #{$z-index-modal-backdrop};
+  --z-modal: #{$z-index-modal};
+  --z-popover: #{$z-index-popover};
+  --z-tooltip: #{$z-index-tooltip};
+  --z-toast: #{$z-index-toast};
+  --z-max: #{$z-index-max};
+}

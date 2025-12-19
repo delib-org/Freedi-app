@@ -1,0 +1,196 @@
+// ============================================================================
+// FREEDI DESIGN SYSTEM - TYPOGRAPHY MIXINS
+// ============================================================================
+// Text styling mixins for consistent typography
+// ============================================================================
+
+// ============================================================================
+// HEADING STYLES
+// ============================================================================
+
+/// Base heading styles
+@mixin heading-base {
+  font-family: var(--font-primary);
+  font-weight: var(--font-semibold);
+  color: var(--text-title);
+  line-height: var(--leading-snug);
+  margin: 0;
+}
+
+/// H1 style
+@mixin h1 {
+  @include heading-base;
+  font-size: var(--text-4xl);
+}
+
+/// H2 style
+@mixin h2 {
+  @include heading-base;
+  font-size: var(--text-3xl);
+}
+
+/// H3 style
+@mixin h3 {
+  @include heading-base;
+  font-size: var(--text-2xl);
+}
+
+/// H4 style
+@mixin h4 {
+  @include heading-base;
+  font-size: var(--text-xl);
+}
+
+/// H5 style
+@mixin h5 {
+  @include heading-base;
+  font-size: var(--text-lg);
+  font-weight: var(--font-medium);
+}
+
+/// H6 style
+@mixin h6 {
+  @include heading-base;
+  font-size: var(--text-md);
+  font-weight: var(--font-medium);
+}
+
+// ============================================================================
+// BODY TEXT STYLES
+// ============================================================================
+
+/// Body text (default paragraph)
+@mixin body-text {
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  color: var(--text-body);
+  line-height: var(--leading-normal);
+  margin: 0;
+}
+
+/// Large body text
+@mixin body-lg {
+  @include body-text;
+  font-size: var(--text-lg);
+}
+
+/// Small body text
+@mixin body-sm {
+  @include body-text;
+  font-size: var(--text-sm);
+}
+
+/// Extra small body text
+@mixin body-xs {
+  @include body-text;
+  font-size: var(--text-xs);
+}
+
+// ============================================================================
+// SPECIAL TEXT STYLES
+// ============================================================================
+
+/// Caption/label text
+@mixin caption {
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  color: var(--text-caption);
+  line-height: var(--leading-normal);
+}
+
+/// Label text (form labels)
+@mixin label {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  color: var(--text-body);
+  line-height: var(--leading-tight);
+}
+
+/// Link text
+@mixin link {
+  color: var(--brand-primary);
+  text-decoration: none;
+  cursor: pointer;
+  transition: color var(--duration-fast) var(--easing-ease);
+
+  &:hover {
+    color: var(--brand-primary-dark);
+    text-decoration: underline;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--brand-primary);
+    outline-offset: 2px;
+  }
+}
+
+/// Code/monospace text
+@mixin code {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  background-color: var(--bg-primary);
+  padding: 0.125em 0.25em;
+  border-radius: var(--radius-sm);
+}
+
+/// Accent/handwriting text
+@mixin accent-text {
+  font-family: var(--font-accent);
+}
+
+// ============================================================================
+// TEXT UTILITIES
+// ============================================================================
+
+/// Truncate single line with ellipsis
+@mixin truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/// Clamp text to specific number of lines
+/// @param {Number} $lines - Number of lines to show
+@mixin line-clamp($lines: 2) {
+  display: -webkit-box;
+  -webkit-line-clamp: $lines;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/// Word break for long words
+@mixin word-break {
+  word-wrap: break-word;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+
+/// Prevent text selection
+@mixin no-select {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/// Allow text selection
+@mixin selectable {
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+// ============================================================================
+// RESET MIXINS
+// ============================================================================
+
+/// Reset list styles
+@mixin list-reset {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/// Reset heading margin
+@mixin heading-reset {
+  margin: 0;
+}

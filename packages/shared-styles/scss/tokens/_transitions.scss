@@ -1,0 +1,59 @@
+// ============================================================================
+// FREEDI DESIGN SYSTEM - TRANSITION TOKENS
+// ============================================================================
+// Animation durations and timing functions
+// ============================================================================
+
+// ============================================================================
+// DURATIONS
+// ============================================================================
+
+$duration-instant: 0ms;
+$duration-fastest: 50ms;
+$duration-fast: 100ms;
+$duration-normal: 200ms;
+$duration-slow: 300ms;
+$duration-slower: 500ms;
+$duration-slowest: 900ms;
+
+// ============================================================================
+// TIMING FUNCTIONS (Easings)
+// ============================================================================
+
+$easing-linear: linear;
+$easing-ease: ease;
+$easing-ease-in: ease-in;
+$easing-ease-out: ease-out;
+$easing-ease-in-out: ease-in-out;
+
+// Custom easings
+$easing-smooth: cubic-bezier(0.25, 0.46, 0.45, 0.94);      // Natural, smooth
+$easing-spring: cubic-bezier(0.92, -0.02, 0.86, 2.28);     // Playful bounce
+$easing-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);    // Bouncy
+$easing-anticipate: cubic-bezier(0.68, -0.6, 0.32, 1.6);   // Pull back then go
+
+// ============================================================================
+// CSS CUSTOM PROPERTIES
+// ============================================================================
+
+:root {
+  // Durations
+  --duration-instant: #{$duration-instant};
+  --duration-fastest: #{$duration-fastest};
+  --duration-fast: #{$duration-fast};
+  --duration-normal: #{$duration-normal};
+  --duration-slow: #{$duration-slow};
+  --duration-slower: #{$duration-slower};
+  --duration-slowest: #{$duration-slowest};
+
+  // Easings
+  --easing-linear: #{$easing-linear};
+  --easing-ease: #{$easing-ease};
+  --easing-ease-in: #{$easing-ease-in};
+  --easing-ease-out: #{$easing-ease-out};
+  --easing-ease-in-out: #{$easing-ease-in-out};
+  --easing-smooth: #{$easing-smooth};
+  --easing-spring: #{$easing-spring};
+  --easing-bounce: #{$easing-bounce};
+  --easing-anticipate: #{$easing-anticipate};
+}

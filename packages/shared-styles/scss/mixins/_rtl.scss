@@ -1,0 +1,205 @@
+// ============================================================================
+// FREEDI DESIGN SYSTEM - RTL SUPPORT MIXINS
+// ============================================================================
+// Right-to-left language support mixins
+// ============================================================================
+
+// ============================================================================
+// DIRECTION SELECTORS
+// ============================================================================
+
+/// Apply styles only in RTL mode
+/// @example @include rtl { margin-left: 0; margin-right: 1rem; }
+@mixin rtl {
+  [dir='rtl'] & {
+    @content;
+  }
+}
+
+/// Apply styles only in LTR mode
+/// @example @include ltr { margin-right: 0; margin-left: 1rem; }
+@mixin ltr {
+  [dir='ltr'] & {
+    @content;
+  }
+}
+
+// ============================================================================
+// LOGICAL PROPERTIES (Preferred Modern Approach)
+// ============================================================================
+// Use CSS logical properties when possible - they automatically flip for RTL
+
+/// Margin inline (left/right that flips)
+/// @param {Length} $start - Margin at start (left in LTR, right in RTL)
+/// @param {Length} $end - Margin at end (right in LTR, left in RTL)
+@mixin margin-inline($start: 0, $end: 0) {
+  margin-inline-start: $start;
+  margin-inline-end: $end;
+}
+
+/// Padding inline (left/right that flips)
+/// @param {Length} $start - Padding at start
+/// @param {Length} $end - Padding at end
+@mixin padding-inline($start: 0, $end: 0) {
+  padding-inline-start: $start;
+  padding-inline-end: $end;
+}
+
+/// Border inline (left/right that flips)
+/// @param {Length} $width - Border width
+/// @param {String} $style - Border style
+/// @param {Color} $color - Border color
+@mixin border-inline-start($width, $style: solid, $color: var(--border-primary)) {
+  border-inline-start: $width $style $color;
+}
+
+@mixin border-inline-end($width, $style: solid, $color: var(--border-primary)) {
+  border-inline-end: $width $style $color;
+}
+
+/// Border radius logical (flips corners)
+@mixin border-radius-start($radius) {
+  border-start-start-radius: $radius;
+  border-end-start-radius: $radius;
+}
+
+@mixin border-radius-end($radius) {
+  border-start-end-radius: $radius;
+  border-end-end-radius: $radius;
+}
+
+// ============================================================================
+// POSITION HELPERS
+// ============================================================================
+
+/// Position at inline start (left in LTR, right in RTL)
+/// @param {Length} $value - Position value
+@mixin inset-inline-start($value) {
+  inset-inline-start: $value;
+}
+
+/// Position at inline end (right in LTR, left in RTL)
+/// @param {Length} $value - Position value
+@mixin inset-inline-end($value) {
+  inset-inline-end: $value;
+}
+
+// ============================================================================
+// TRANSFORM HELPERS
+// ============================================================================
+
+/// Flip horizontal transform for RTL
+/// Use for icons or elements that should mirror in RTL
+@mixin flip-horizontal-rtl {
+  @include rtl {
+    transform: scaleX(-1);
+  }
+}
+
+/// Rotate icon for RTL (e.g., arrows)
+/// @param {Number} $ltr-deg - Rotation in LTR
+/// @param {Number} $rtl-deg - Rotation in RTL
+@mixin rotate-rtl($ltr-deg: 0, $rtl-deg: 180deg) {
+  transform: rotate($ltr-deg);
+
+  @include rtl {
+    transform: rotate($rtl-deg);
+  }
+}
+
+// ============================================================================
+// TEXT ALIGNMENT
+// ============================================================================
+
+/// Text align start (left in LTR, right in RTL)
+@mixin text-start {
+  text-align: start;
+}
+
+/// Text align end (right in LTR, left in RTL)
+@mixin text-end {
+  text-align: end;
+}
+
+// ============================================================================
+// FLEXBOX RTL
+// ============================================================================
+
+/// Flex direction that reverses in RTL
+@mixin flex-row-rtl {
+  display: flex;
+  flex-direction: row;
+
+  @include rtl {
+    flex-direction: row-reverse;
+  }
+}
+
+/// Keep flex direction same in RTL (for explicit LTR content)
+@mixin flex-row-ltr-only {
+  display: flex;
+  flex-direction: row;
+  // No RTL change - content stays LTR (e.g., code, numbers)
+}
+
+// ============================================================================
+// FLOAT HELPERS (Legacy Support)
+// ============================================================================
+
+/// Float start (left in LTR, right in RTL)
+@mixin float-start {
+  float: inline-start;
+}
+
+/// Float end (right in LTR, left in RTL)
+@mixin float-end {
+  float: inline-end;
+}
+
+// ============================================================================
+// COMMON RTL PATTERNS
+// ============================================================================
+
+/// Icon before text pattern
+@mixin icon-before-text($gap: var(--spacing-2)) {
+  display: inline-flex;
+  align-items: center;
+  gap: $gap;
+
+  & > svg,
+  & > [class*="icon"] {
+    flex-shrink: 0;
+    order: -1; // Icon first
+
+    @include rtl {
+      order: 1; // Icon last in RTL (visually first when reading RTL)
+    }
+  }
+}
+
+/// Icon after text pattern
+@mixin icon-after-text($gap: var(--spacing-2)) {
+  display: inline-flex;
+  align-items: center;
+  gap: $gap;
+
+  & > svg,
+  & > [class*="icon"] {
+    flex-shrink: 0;
+    order: 1; // Icon last
+
+    @include rtl {
+      order: -1; // Icon first in RTL (visually last when reading RTL)
+    }
+  }
+}
+
+/// Sidebar layout (sidebar on start side)
+@mixin layout-with-sidebar($sidebar-width: 280px) {
+  display: grid;
+  grid-template-columns: $sidebar-width 1fr;
+
+  @include rtl {
+    grid-template-columns: 1fr $sidebar-width;
+  }
+}

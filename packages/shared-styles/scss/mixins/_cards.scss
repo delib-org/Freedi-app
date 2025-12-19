@@ -1,0 +1,232 @@
+// ============================================================================
+// FREEDI DESIGN SYSTEM - CARD MIXINS
+// ============================================================================
+// Card and surface styling mixins
+// ============================================================================
+
+// ============================================================================
+// BASE CARD
+// ============================================================================
+
+/// Base card styles
+@mixin card-base {
+  background-color: var(--card-default);
+  border-radius: var(--radius-card);
+  padding: var(--spacing-4);
+  box-shadow: var(--shadow-md);
+  transition: all var(--duration-slow) var(--easing-ease);
+}
+
+// ============================================================================
+// CARD VARIANTS
+// ============================================================================
+
+/// Elevated card with enhanced shadow
+@mixin card-elevated {
+  box-shadow: var(--shadow-lg);
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-xl);
+  }
+}
+
+/// Flat card (no shadow, with border)
+@mixin card-flat {
+  box-shadow: none;
+  border: 1px solid var(--border-light);
+}
+
+/// Outlined card
+@mixin card-outlined {
+  box-shadow: none;
+  border: 2px solid var(--border-primary);
+}
+
+/// Interactive/clickable card
+@mixin card-interactive {
+  cursor: pointer;
+  user-select: none;
+
+  &:hover {
+    box-shadow: var(--shadow-card-hover);
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
+}
+
+/// Selected card state
+@mixin card-selected {
+  border: 2px solid var(--brand-primary);
+  box-shadow: var(--shadow-focus);
+}
+
+/// Disabled card state
+@mixin card-disabled {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+// ============================================================================
+// CARD TYPE VARIANTS (by content type)
+// ============================================================================
+
+/// Question card
+@mixin card-question {
+  background-color: var(--card-question);
+  border-left: 4px solid var(--color-question);
+}
+
+/// Suggestion card
+@mixin card-suggestion {
+  background-color: var(--card-suggestion);
+  border-left: 4px solid var(--color-option);
+}
+
+/// Message card
+@mixin card-message {
+  background-color: var(--card-message);
+}
+
+/// Error card
+@mixin card-error {
+  background-color: var(--card-error);
+  border-left: 4px solid var(--color-error);
+}
+
+/// Success card
+@mixin card-success {
+  background-color: var(--card-success);
+  border-left: 4px solid var(--color-success);
+}
+
+/// Warning card
+@mixin card-warning {
+  background-color: var(--card-warning);
+  border-left: 4px solid var(--color-warning);
+}
+
+/// Info card
+@mixin card-info {
+  background-color: var(--card-info);
+  border-left: 4px solid var(--color-info);
+}
+
+// ============================================================================
+// CARD SIZES
+// ============================================================================
+
+/// Compact card (less padding)
+@mixin card-compact {
+  padding: var(--spacing-3);
+}
+
+/// Spacious card (more padding)
+@mixin card-spacious {
+  padding: var(--spacing-6);
+}
+
+/// Full-width card
+@mixin card-full-width {
+  width: 100%;
+}
+
+// ============================================================================
+// CARD PARTS (BEM-style)
+// ============================================================================
+
+/// Card header
+@mixin card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: var(--spacing-3);
+  border-bottom: 1px solid var(--border-light);
+  margin-bottom: var(--spacing-3);
+}
+
+/// Card title
+@mixin card-title {
+  font-family: var(--font-primary);
+  font-size: var(--text-lg);
+  font-weight: var(--font-semibold);
+  color: var(--text-title);
+  margin: 0;
+}
+
+/// Card subtitle
+@mixin card-subtitle {
+  font-size: var(--text-sm);
+  color: var(--text-caption);
+  margin-top: var(--spacing-1);
+}
+
+/// Card body
+@mixin card-body {
+  flex: 1;
+}
+
+/// Card footer
+@mixin card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: var(--spacing-3);
+  border-top: 1px solid var(--border-light);
+  margin-top: var(--spacing-3);
+}
+
+/// Card actions (button container)
+@mixin card-actions {
+  display: flex;
+  gap: var(--spacing-2);
+}
+
+/// Card media (image/video container)
+@mixin card-media {
+  margin: calc(var(--spacing-4) * -1);
+  margin-bottom: var(--spacing-4);
+  overflow: hidden;
+  border-radius: var(--radius-card) var(--radius-card) 0 0;
+
+  & > img,
+  & > video {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+}
+
+// ============================================================================
+// CARD GRID/LIST
+// ============================================================================
+
+/// Card grid layout
+@mixin card-grid($min-width: 280px, $gap: var(--spacing-4)) {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax($min-width, 1fr));
+  gap: $gap;
+}
+
+/// Card list layout
+@mixin card-list($gap: var(--spacing-4)) {
+  display: flex;
+  flex-direction: column;
+  gap: $gap;
+}
+
+/// Horizontal card (media on side)
+@mixin card-horizontal {
+  display: flex;
+  flex-direction: row;
+
+  & > [class*="media"] {
+    flex-shrink: 0;
+    width: 200px;
+    margin: 0;
+    margin-right: var(--spacing-4);
+    border-radius: var(--radius-card) 0 0 var(--radius-card);
+  }
+}

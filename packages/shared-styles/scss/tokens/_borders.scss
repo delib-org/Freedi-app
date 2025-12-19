@@ -1,0 +1,68 @@
+// ============================================================================
+// FREEDI DESIGN SYSTEM - BORDER TOKENS
+// ============================================================================
+// Border radius, widths, and styles
+// ============================================================================
+
+// ============================================================================
+// BORDER RADIUS
+// ============================================================================
+
+$radius-none: 0;
+$radius-sm: 3px;        // Subtle rounding
+$radius-md: 5px;        // Default
+$radius-lg: 8px;        // Cards
+$radius-xl: 12px;       // Modals
+$radius-2xl: 16px;      // Large elements
+$radius-3xl: 20px;      // Buttons, pills
+$radius-full: 9999px;   // Circles
+
+// Semantic aliases
+$radius-button: $radius-3xl;
+$radius-card: $radius-lg;
+$radius-modal: $radius-xl;
+$radius-input: $radius-md;
+
+// ============================================================================
+// BORDER WIDTHS
+// ============================================================================
+
+$border-width-0: 0;
+$border-width-1: 1px;
+$border-width-2: 2px;
+$border-width-3: 3px;
+$border-width-4: 4px;
+$border-width-8: 8px;
+
+// ============================================================================
+// CSS CUSTOM PROPERTIES
+// ============================================================================
+
+:root {
+  // Border Radius
+  --radius-none: #{$radius-none};
+  --radius-sm: #{$radius-sm};
+  --radius-md: #{$radius-md};
+  --radius-lg: #{$radius-lg};
+  --radius-xl: #{$radius-xl};
+  --radius-2xl: #{$radius-2xl};
+  --radius-3xl: #{$radius-3xl};
+  --radius-full: #{$radius-full};
+
+  // Semantic
+  --radius-button: #{$radius-button};
+  --radius-card: #{$radius-card};
+  --radius-modal: #{$radius-modal};
+  --radius-input: #{$radius-input};
+
+  // Legacy support
+  --radius: #{$radius-md};
+
+  // Border Widths
+  --border-0: #{$border-width-0};
+  --border-1: #{$border-width-1};
+  --border-2: #{$border-width-2};
+  --border-3: #{$border-width-3};
+  --border-4: #{$border-width-4};
+  --border-8: #{$border-width-8};
+}

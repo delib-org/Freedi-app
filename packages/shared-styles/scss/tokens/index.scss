@@ -1,0 +1,20 @@
+// ============================================================================
+// FREEDI DESIGN SYSTEM - TOKENS INDEX
+// ============================================================================
+// Import this file to get all design tokens
+//
+// Usage:
+// @use '@freedi/shared-styles/tokens' as tokens;
+// or
+// @use '@freedi/shared-styles/tokens' as *;
+// ============================================================================
+
+@forward 'colors';
+@forward 'spacing';
+@forward 'typography';
+@forward 'borders';
+@forward 'shadows';
+@forward 'transitions';
+@forward 'z-index';
+@forward 'breakpoints';
+@forward 'sizes';

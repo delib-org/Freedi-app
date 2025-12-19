@@ -42,17 +42,117 @@
   import styles from './MyComponent.module.scss';
   ```
 
+### Shared Design System (CRITICAL)
+The Freedi design system is a shared SCSS package at `packages/shared-styles/`. **All apps MUST use this package** for consistent styling.
+
+#### Installation & Usage
+```scss
+// In your main SCSS file (e.g., style.scss)
+@use '@freedi/shared-styles';
+
+// Or import specific parts in component modules:
+@use '@freedi/shared-styles/tokens' as *;
+@use '@freedi/shared-styles/mixins' as *;
+
+.myComponent {
+  // Use CSS variables from tokens
+  color: var(--text-body);
+  padding: var(--spacing-4);
+
+  // Use mixins for complex patterns
+  @include card-base;
+  @include card-interactive;
+
+  // Use responsive mixins
+  @include mobile {
+    padding: var(--spacing-2);
+  }
+}
+```
+
+#### Key Principles
+- **ALWAYS use design tokens** - Never hardcode colors, spacing, or typography
+- **ALWAYS use mixins** - For buttons, cards, inputs, and common patterns
+- **SCSS-first approach** - No component libraries like MUI
+- **All apps share styles** - Changes in shared-styles update all apps
+
+#### Token Reference (Most Used)
+```scss
+// Colors
+var(--brand-primary)     // Main blue
+var(--color-agree)       // Teal for consensus
+var(--color-disagree)    // Pink for disagreement
+var(--text-body)         // Body text color
+var(--card-default)      // Card background
+
+// Spacing (8-point grid)
+var(--spacing-2)         // 8px
+var(--spacing-4)         // 16px (default)
+var(--spacing-6)         // 24px
+var(--spacing-8)         // 32px
+
+// Typography
+var(--text-sm)           // 15px
+var(--text-base)         // 16px
+var(--text-lg)           // 18px
+var(--font-medium)       // 500
+var(--font-semibold)     // 600
+
+// Borders & Shadows
+var(--radius-lg)         // 8px (cards)
+var(--radius-button)     // 20px (buttons)
+var(--shadow-md)         // Card shadow
+var(--shadow-lg)         // Elevated shadow
+```
+
+#### Mixin Reference (Most Used)
+```scss
+// Buttons
+@include button-primary;   // Filled blue button
+@include button-secondary; // Outlined button
+@include button-sm;        // Small size
+@include button-lg;        // Large size
+
+// Cards
+@include card-base;        // Base card styles
+@include card-elevated;    // Hover lift effect
+@include card-interactive; // Clickable
+@include card-question;    // Blue tint
+
+// Inputs
+@include input-base;       // Text input
+@include input-error;      // Error state
+@include textarea;         // Textarea
+
+// Layout
+@include flex-center;      // Center both axes
+@include flex-between;     // Space between
+@include stack($gap);      // Vertical stack
+@include cluster($gap);    // Horizontal wrap
+@include container;        // Centered container
+
+// Responsive
+@include mobile { }        // < 600px
+@include sm { }            // >= 600px
+@include md { }            // >= 768px
+@include lg { }            // >= 1024px
+```
+
+#### Full Documentation
+See `packages/shared-styles/README.md` for complete token list, all mixins, utility classes, and component classes.
+
 ### Design System Guidelines
-- **ALWAYS follow design system guidelines** from `docs/design-guide.md`
-- **All UI/UX decisions must align** with the design guide
-- **Color palette**: Use only CSS variables from the design system (e.g., `var(--btn-primary)`, `var(--agree)`)
-  - Never hardcode colors: `#5f88e5` ❌, use `var(--btn-primary)` ✅
-- **Typography**: Follow type scale (h1-h6, p) and use design tokens
-- **Spacing**: Use 8-point grid system with spacing tokens (`var(--padding)`)
-- **Component patterns**: Follow established patterns in design guide (buttons, cards, forms, modals)
-- **Animations**: Use standard timing functions and durations from design guide
+- **ALWAYS use shared design system** from `packages/shared-styles/`
+- **Read full docs**: `packages/shared-styles/README.md`
+- **Color palette**: Use only CSS variables (e.g., `var(--btn-primary)`, `var(--color-agree)`)
+  - Never hardcode colors: `#5f88e5` ❌, use `var(--brand-primary)` ✅
+- **Typography**: Use design tokens (`var(--text-lg)`, `var(--font-semibold)`)
+- **Spacing**: Use 8-point grid tokens (`var(--spacing-4)`)
+- **Buttons**: Use `@include button-primary` or component classes
+- **Cards**: Use `@include card-base` or component classes
+- **Animations**: Use standard keyframes from animations module
 - **Accessibility**: All components must meet WCAG AA standards
-- **Responsive**: Mobile-first approach with established breakpoints
+- **Responsive**: Mobile-first with breakpoint mixins
 - Examples:
   ```scss
   // ❌ WRONG - Hardcoded values
@@ -64,9 +164,14 @@
 
   // ✅ CORRECT - Design tokens
   .myButton {
-    background-color: var(--btn-primary);
-    padding: var(--padding);
-    border-radius: 20px; // Specific to button pattern
+    @include button-primary;  // Use mixin!
+  }
+
+  // ✅ CORRECT - If customizing
+  .myCard {
+    @include card-base;
+    padding: var(--spacing-6);
+    background: var(--card-question);
   }
   ```
 
