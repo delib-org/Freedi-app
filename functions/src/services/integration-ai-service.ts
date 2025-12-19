@@ -355,7 +355,7 @@ export function mapStatementToWithEvaluation(statement: Statement): StatementWit
 		statement: statement.statement,
 		paragraphsText: getParagraphsText(statement.paragraphs),
 		numberOfEvaluators: evaluation?.numberOfEvaluators || statement.totalEvaluators || 0,
-		consensus: statement.consensus || evaluation?.agreement || 0,
+		consensus: evaluation?.agreement ?? statement.consensus ?? 0,
 		sumEvaluations: evaluation?.sumEvaluations || 0,
 	};
 }

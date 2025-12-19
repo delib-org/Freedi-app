@@ -100,11 +100,11 @@ export const summarizeDiscussion = onCall<SummarizeDiscussionRequest>(
 		const totalParticipants = question.evaluation?.asParentTotalEvaluators || 0;
 
 		// 4. Get selected solutions (using isChosen flag set by cutoff logic)
+		// Note: Can't orderBy nested field evaluation.agreement in Firestore, so we sort in memory
 		const selectedSnapshot = await db
 			.collection(Collections.statements)
 			.where('parentId', '==', statementId)
 			.where('isChosen', '==', true)
-			.orderBy('consensus', 'desc')
 			.get();
 
 		if (selectedSnapshot.empty) {
@@ -114,13 +114,17 @@ export const summarizeDiscussion = onCall<SummarizeDiscussionRequest>(
 			);
 		}
 
-		const selectedSolutions: SelectedSolution[] = selectedSnapshot.docs.map(doc => {
-			const s = doc.data() as Statement;
+		// Sort by evaluation.agreement (fallback to consensus for legacy data)
+		const sortedDocs = selectedSnapshot.docs
+			.map(doc => doc.data() as Statement)
+			.sort((a, b) => (b.evaluation?.agreement ?? b.consensus ?? 0) - (a.evaluation?.agreement ?? a.consensus ?? 0));
 
+		const selectedSolutions: SelectedSolution[] = sortedDocs.map(s => {
 			return {
 				title: s.statement,
 				description: getParagraphsText(s.paragraphs),
-				consensus: s.consensus || s.evaluation?.agreement || 0,
+				// Use evaluation.agreement when available, fallback to consensus for legacy data
+				consensus: s.evaluation?.agreement ?? s.consensus ?? 0,
 				averageEvaluation: s.evaluation?.averageEvaluation || 0,
 				numberOfEvaluators: s.evaluation?.numberOfEvaluators || 0
 			};

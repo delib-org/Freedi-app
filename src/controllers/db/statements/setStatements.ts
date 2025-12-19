@@ -377,7 +377,7 @@ export function createStatement({
 			resultsSettings: {
 				resultsBy: resultsBy || ResultsBy.consensus,
 				numberOfResults: Number(numberOfResults) || 1,
-				cutoffNumber: 1,
+				cutoffNumber: 0,
 				cutoffBy: CutoffBy.topOptions,
 			},
 			questionSettings: {
