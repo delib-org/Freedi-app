@@ -803,6 +803,14 @@ npm install
 # Functions dependencies
 cd functions
 npm install
+
+# Mass Consensus app dependencies (if working on MC)
+cd /Users/talyaron/Documents/Freedi-app.worktrees/<worktree-name>/apps/mass-consensus
+npm install
+
+# Sign app dependencies (if working on Sign app)
+cd /Users/talyaron/Documents/Freedi-app.worktrees/<worktree-name>/apps/sign
+npm install
 ```
 
 ### Step 4: Build Shared Packages

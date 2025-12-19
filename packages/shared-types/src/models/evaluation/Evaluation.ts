@@ -47,6 +47,8 @@ export const StatementEvaluationSchema = object({
 	numberOfEvaluators: number(),
 	sumPro: optional(number()), //sum of all pro evaluations
 	sumCon: optional(number()), //sum of all con evaluations
+	numberOfProEvaluators: optional(number()), //count of evaluators who evaluated > 0
+	numberOfConEvaluators: optional(number()), //count of evaluators who evaluated < 0
 	averageEvaluation: optional(number()), //average evaluation
 	sumSquaredEvaluations: optional(number()), //sum of squared evaluations
 	standardDeviation: optional(number()), //standard deviation of evaluations

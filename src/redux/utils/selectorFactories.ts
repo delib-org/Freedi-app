@@ -93,7 +93,7 @@ export const sortByLastUpdate = (a: Statement, b: Statement): number =>
 	b.lastUpdate - a.lastUpdate;
 
 export const sortByConsensus = (a: Statement, b: Statement): number =>
-	(b.consensus || 0) - (a.consensus || 0);
+	(b.evaluation?.agreement ?? b.consensus ?? 0) - (a.evaluation?.agreement ?? a.consensus ?? 0);
 
 export const sortByEvaluationCount = (a: Statement, b: Statement): number =>
 	(b.evaluation?.numberOfEvaluators || 0) -

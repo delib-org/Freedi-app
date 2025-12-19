@@ -19,18 +19,15 @@ export default function useStatementColor({
   const [style, setStyle] = useState(initStyle);
 
   // Only run the effect when the `statement` is available
+  // Note: Selection state (isVoted/isChosen) is now determined by parent's results array,
+  // not individual statement flags. This hook only handles type-based styling.
   useEffect(() => {
     if (!statement) return;
-    const { statementType, isChosen, isVoted } = statement;
+    const { statementType } = statement;
     if (statementType === StatementType.group) {
       setStyle({
         backgroundColor: "var(--header-group)", // Purple shade for group type
         color: "var(--group-text, #ffffff)", // Text color for group (white)
-      });
-    } else if (isVoted || isChosen) {
-      setStyle({
-        backgroundColor: "var(--header-chosen, #008000)", // Green for agreement
-        color: "var(--header, #000000)", // Text color for result
       });
     } else if (statementType === StatementType.option) {
       setStyle({
