@@ -48,18 +48,21 @@ export async function updateResultsSettings(
 
 async function resultsByTopOptions(statementId: string): Promise<Statement[]> {
 	try {
-		//get top options
+		// Fetch all options under this parent (can't orderBy nested field in Firestore)
 		const topOptionsDB = await db
 			.collection(Collections.statements)
 			.where('parentId', '==', statementId)
-			.orderBy('consensus', 'desc')
-			.limit(5)
 			.get();
+
 		const topOptions = topOptionsDB.docs.map((doc) =>
 			parse(StatementSchema, doc.data())
 		);
 
-		return topOptions;
+		// Sort by evaluation.agreement (falling back to consensus for legacy data)
+		// and return top 5
+		return topOptions
+			.sort((a, b) => (b.evaluation?.agreement ?? b.consensus ?? 0) - (a.evaluation?.agreement ?? a.consensus ?? 0))
+			.slice(0, 5);
 	} catch (error) {
 		logger.error(error);
 

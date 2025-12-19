@@ -913,10 +913,10 @@ function getSortedOptions(statements: Statement[], resultsSettings: ResultsSetti
 	const { resultsBy } = resultsSettings;
 
 	const sortComparisons = {
-		[ResultsBy.consensus]: (a: Statement, b: Statement) => (b.consensus || 0) - (a.consensus || 0),
+		[ResultsBy.consensus]: (a: Statement, b: Statement) => (b.evaluation?.agreement ?? b.consensus ?? 0) - (a.evaluation?.agreement ?? a.consensus ?? 0),
 		[ResultsBy.mostLiked]: (a: Statement, b: Statement) => (b.evaluation?.sumPro ?? 0) - (a.evaluation?.sumPro ?? 0),
 		[ResultsBy.averageLikesDislikes]: (a: Statement, b: Statement) => (b.evaluation?.sumEvaluations ?? 0) - (a.evaluation?.sumEvaluations ?? 0),
-		[ResultsBy.topOptions]: (a: Statement, b: Statement) => (b.consensus || 0) - (a.consensus || 0),
+		[ResultsBy.topOptions]: (a: Statement, b: Statement) => (b.evaluation?.agreement ?? b.consensus ?? 0) - (a.evaluation?.agreement ?? a.consensus ?? 0),
 	};
 
 	return statements.sort(sortComparisons[resultsBy] || sortComparisons[ResultsBy.consensus]);
@@ -995,13 +995,13 @@ function getEvaluationValue(statement: Statement, resultsBy: ResultsBy): number 
 	switch (resultsBy) {
 		case ResultsBy.consensus:
 		case ResultsBy.topOptions:
-			return statement.consensus ?? 0;
+			return statement.evaluation?.agreement ?? statement.consensus ?? 0;
 		case ResultsBy.mostLiked:
 			return statement.evaluation?.sumPro ?? 0;
 		case ResultsBy.averageLikesDislikes:
 			return statement.evaluation?.sumEvaluations ?? 0;
 		default:
-			return statement.consensus ?? 0;
+			return statement.evaluation?.agreement ?? statement.consensus ?? 0;
 	}
 }
 
