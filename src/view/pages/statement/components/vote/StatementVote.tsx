@@ -38,7 +38,7 @@ const StatementVote: FC = () => {
 		statementSubsSelector(statement?.statementId)
 	);
 
-	const subStatements = inVotingGetOnlyResults ? _subStatements.sort((b, a) => a.consensus - b.consensus).slice(0, topOptionsCount) : _subStatements;
+	const subStatements = inVotingGetOnlyResults ? _subStatements.sort((b, a) => (a.consensus || 0) - (b.consensus || 0)).slice(0, topOptionsCount) : _subStatements;
 
 	const currentStep = statement?.questionSettings?.currentStep;
 	const isCurrentStepVoting = currentStep === QuestionStep.voting;

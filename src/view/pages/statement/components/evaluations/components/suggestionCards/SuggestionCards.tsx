@@ -52,7 +52,7 @@ function sortStatements(
 				});
 			}
 
-			return sorted.sort((a, b) => b.consensus - a.consensus);
+			return sorted.sort((a, b) => (b.consensus || 0) - (a.consensus || 0));
 		}
 		case SortType.newest:
 			return sorted.sort((a, b) => b.createdAt - a.createdAt);

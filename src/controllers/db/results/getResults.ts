@@ -43,7 +43,7 @@ async function getTopOptionsDB(statement: Statement): Promise<Statement[]> {
 		const q = query(
 			topOptionsRef,
 			where('parentId', '==', statement.statementId),
-			orderBy('consensus', 'asc'),
+			orderBy('consensus', 'desc'),
 			limit(numberOfOptions)
 		);
 		const topOptionsSnap = await getDocs(q);
