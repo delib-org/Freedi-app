@@ -110,7 +110,8 @@
 // ============================================================================
 
 /// Respect reduced motion preference - disables animations
-@mixin reduced-motion {
+/// Use this on elements to remove their animations when user prefers reduced motion
+@mixin disable-motion {
   @media (prefers-reduced-motion: reduce) {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;

@@ -1,261 +1,100 @@
-/* Global styles for Sign App */
+// ============================================================================
+// SIGN APP - GLOBAL STYLES
+// ============================================================================
+// Imports the shared Freedi design system and applies app-specific overrides
+// ============================================================================
+
+// Import the shared design system (via includePaths in next.config.js)
+// @use rules MUST come before any other rules
+@use 'index' as shared-styles;
+
+// Import fonts (must come after @use)
 @import url('https://fonts.googleapis.com/css2?family=Assistant:wght@400;500;600;700&display=swap');
 
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
+// ============================================================================
+// APP-SPECIFIC OVERRIDES
+// ============================================================================
+// Sign app uses a navy color scheme with heat map functionality
 
 :root {
-  /* Primary Colors */
+  // Override primary brand colors with navy theme
   --btn-primary: #1B2650;
   --btn-primary-hover: #2A3760;
-  --btn-secondary: #e0e0e0;
   --text-primary: #1B2650;
-  --text-body: #3d4d71;
-  --text-secondary: #707a93;
-  --text-caption: #9aa3b8;
-  --background: #F8F9FA;
+  --brand-primary: #1B2650;
 
-  /* Card Colors */
-  --card-default: #ffffff;
+  // Card Colors (app-specific)
   --card-blue: #E3F2FD;
   --card-green: #E8F5E9;
   --card-orange: #FFF3E0;
   --card-pink: #FCE4EC;
 
-  /* Feedback Colors */
-  --agree: #4caf50;
-  --agree-light: #81c784;
-  --disagree: #f44336;
-  --disagree-light: #e57373;
-  --approve: #4caf50;
-  --reject: #f44336;
-  --warning: #ff9800;
-
-  /* Heat Map Colors - Legacy */
+  // Heat Map Colors - Legacy
   --heat-low: rgba(87, 198, 178, 0.2);
   --heat-medium: rgba(231, 208, 128, 0.3);
   --heat-high: rgba(254, 107, 162, 0.3);
 
-  /* Heat Map - Approval (red to yellow to green, -1 to +1 scale) */
-  --heat-approval-low: rgba(244, 67, 54, 0.2);         /* rejected (-1) */
-  --heat-approval-high: rgba(76, 175, 80, 0.2);        /* approved (+1) */
-  --heat-approval-border: #607d8b;                     /* neutral border */
-  --heat-approval-1: rgba(244, 67, 54, 0.2);           /* -1 to -0.5: strong rejected (red) */
-  --heat-approval-2: rgba(255, 152, 0, 0.18);          /* -0.5 to -0.1: leaning rejected (orange) */
-  --heat-approval-3: rgba(255, 235, 59, 0.22);         /* -0.1 to +0.1: neutral (yellow) */
-  --heat-approval-4: rgba(139, 195, 74, 0.18);         /* +0.1 to +0.5: leaning approved (light green) */
-  --heat-approval-5: rgba(76, 175, 80, 0.2);           /* +0.5 to +1: strong approved (green) */
+  // Heat Map - Approval (red to yellow to green, -1 to +1 scale)
+  --heat-approval-low: rgba(244, 67, 54, 0.2);
+  --heat-approval-high: rgba(76, 175, 80, 0.2);
+  --heat-approval-border: #607d8b;
+  --heat-approval-1: rgba(244, 67, 54, 0.2);
+  --heat-approval-2: rgba(255, 152, 0, 0.18);
+  --heat-approval-3: rgba(255, 235, 59, 0.22);
+  --heat-approval-4: rgba(139, 195, 74, 0.18);
+  --heat-approval-5: rgba(76, 175, 80, 0.2);
 
-  /* Heat Map - Comments (light blue to blue) */
-  --heat-comments-low: rgba(227, 242, 253, 0.5);       /* card-question-added */
-  --heat-comments-high: rgba(27, 38, 80, 0.2);         /* btn-primary */
+  // Heat Map - Comments (light blue to blue)
+  --heat-comments-low: rgba(227, 242, 253, 0.5);
+  --heat-comments-high: rgba(27, 38, 80, 0.2);
   --heat-comments-border: #1B2650;
-  --heat-comments-1: rgba(227, 242, 253, 0.4);         /* 1 comment */
-  --heat-comments-2: rgba(187, 222, 251, 0.5);         /* 2-4 */
-  --heat-comments-3: rgba(144, 202, 249, 0.4);         /* 5-9 */
-  --heat-comments-4: rgba(100, 181, 246, 0.35);        /* 10-19 */
-  --heat-comments-5: rgba(66, 165, 245, 0.3);          /* 20+ */
+  --heat-comments-1: rgba(227, 242, 253, 0.4);
+  --heat-comments-2: rgba(187, 222, 251, 0.5);
+  --heat-comments-3: rgba(144, 202, 249, 0.4);
+  --heat-comments-4: rgba(100, 181, 246, 0.35);
+  --heat-comments-5: rgba(66, 165, 245, 0.3);
 
-  /* Heat Map - Rating (light purple to purple) */
+  // Heat Map - Rating (light purple to purple)
   --heat-rating-low: rgba(179, 136, 255, 0.1);
-  --heat-rating-high: rgba(103, 58, 183, 0.2);         /* group purple */
+  --heat-rating-high: rgba(103, 58, 183, 0.2);
   --heat-rating-border: #673ab7;
-  --heat-rating-1: rgba(179, 136, 255, 0.1);           /* 0-1.4 */
-  --heat-rating-2: rgba(156, 115, 240, 0.12);          /* 1.5-2.4 */
-  --heat-rating-3: rgba(149, 117, 205, 0.15);          /* 2.5-3.4 */
-  --heat-rating-4: rgba(126, 87, 194, 0.18);           /* 3.5-4.4 */
-  --heat-rating-5: rgba(103, 58, 183, 0.2);            /* 4.5-5.0 */
+  --heat-rating-1: rgba(179, 136, 255, 0.1);
+  --heat-rating-2: rgba(156, 115, 240, 0.12);
+  --heat-rating-3: rgba(149, 117, 205, 0.15);
+  --heat-rating-4: rgba(126, 87, 194, 0.18);
+  --heat-rating-5: rgba(103, 58, 183, 0.2);
 
-  /* Heat Map - Viewership (cream to gold) */
-  --heat-viewership-low: rgba(255, 253, 245, 0.6);     /* cream */
-  --heat-viewership-high: rgba(255, 193, 7, 0.25);     /* gold/option */
+  // Heat Map - Viewership (cream to gold)
+  --heat-viewership-low: rgba(255, 253, 245, 0.6);
+  --heat-viewership-high: rgba(255, 193, 7, 0.25);
   --heat-viewership-border: #ffc107;
-  --heat-viewership-1: rgba(255, 253, 245, 0.5);       /* <20% */
-  --heat-viewership-2: rgba(255, 245, 217, 0.5);       /* 20-39% */
-  --heat-viewership-3: rgba(255, 236, 179, 0.4);       /* 40-59% */
-  --heat-viewership-4: rgba(255, 224, 130, 0.35);      /* 60-79% */
-  --heat-viewership-5: rgba(255, 193, 7, 0.25);        /* 80%+ */
-
-  /* Spacing - 8px grid system */
-  --spacing-xs: 0.5rem;
-  --spacing-sm: 0.75rem;
-  --spacing-md: 1rem;
-  --spacing-lg: 1.5rem;
-  --spacing-xl: 2rem;
-  --spacing-2xl: 3rem;
-  --padding: 1rem;
-
-  /* Border Radius */
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
-  --radius-full: 9999px;
-
-  /* Shadows */
-  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.04);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
-  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
-
-  /* Typography */
-  --h1-font-size: 2rem;
-  --h2-font-size: 1.5rem;
-  --h3-font-size: 1.25rem;
-  --h4-font-size: 1.125rem;
-  --h5-font-size: 1rem;
-  --h6-font-size: 0.875rem;
-  --p-font-size: 1rem;
-
-  /* Borders */
-  --border-light: #e5e7eb;
+  --heat-viewership-1: rgba(255, 253, 245, 0.5);
+  --heat-viewership-2: rgba(255, 245, 217, 0.5);
+  --heat-viewership-3: rgba(255, 236, 179, 0.4);
+  --heat-viewership-4: rgba(255, 224, 130, 0.35);
+  --heat-viewership-5: rgba(255, 193, 7, 0.25);
 }
 
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  color: var(--text-body);
-  background: var(--background);
-  line-height: 1.6;
-}
+// ============================================================================
+// APP-SPECIFIC STYLES
+// ============================================================================
 
-/* Page container */
 .page {
   max-width: 900px;
   margin: 0 auto;
-  padding: var(--spacing-lg);
+  padding: var(--spacing-6);
   min-height: 100vh;
 }
 
-/* Typography */
-h1 {
-  font-size: var(--h1-font-size);
-  color: var(--text-primary);
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  margin-bottom: var(--spacing-md);
-}
-
-h2 {
-  font-size: var(--h2-font-size);
-  color: var(--text-primary);
-  font-weight: 600;
-  margin-bottom: var(--spacing-md);
-}
-
-h3 {
-  font-size: var(--h3-font-size);
-  color: var(--text-primary);
-  font-weight: 600;
-  margin-bottom: var(--spacing-sm);
-}
-
-h4 {
-  font-size: var(--h4-font-size);
-  color: var(--text-primary);
-  font-weight: 600;
-  margin-bottom: var(--spacing-sm);
-}
-
-h5 {
-  font-size: var(--h5-font-size);
-  color: var(--text-primary);
-  font-weight: 600;
-  margin-bottom: var(--spacing-xs);
-}
-
-h6 {
-  font-size: var(--h6-font-size);
-  color: var(--text-primary);
-  font-weight: 600;
-  margin-bottom: var(--spacing-xs);
-}
-
-p {
-  margin-bottom: var(--spacing-md);
-  line-height: 1.6;
-}
-
-/* Buttons */
-button {
-  cursor: pointer;
-  border: none;
-  font-family: inherit;
-  transition: all 0.2s ease;
-}
-
-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-/* Loading skeleton */
-.skeleton {
-  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-  background-size: 200% 100%;
-  animation: loading 1.5s ease-in-out infinite;
-  border-radius: 4px;
-}
-
-@keyframes loading {
-  0% {
-    background-position: 200% 0;
-  }
-  100% {
-    background-position: -200% 0;
-  }
-}
-
-/* RTL Support */
+// RTL Support
 [dir="rtl"] {
   text-align: right;
 }
 
-/* Utility classes */
-.visually-hidden {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
-}
-
-/* Badge styles */
+// Badge variants - app-specific
 .badge {
-  display: inline-flex;
-  align-items: center;
-  padding: var(--spacing-xs) var(--spacing-sm);
-  border-radius: var(--radius-full);
-  font-size: 0.75rem;
-  font-weight: 600;
-  line-height: 1;
-  white-space: nowrap;
-
-  &--success {
-    background: var(--agree);
-    color: white;
-  }
-
-  &--error {
-    background: var(--disagree);
-    color: white;
-  }
-
   &--warning {
-    background: var(--warning);
+    background: var(--color-warning, #ff9800);
     color: white;
-  }
-
-  &--neutral {
-    background: #e5e7eb;
-    color: var(--text-body);
   }
 }

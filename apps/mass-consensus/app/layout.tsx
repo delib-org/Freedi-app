@@ -9,7 +9,7 @@ import {
 } from '@freedi/shared-i18n/next';
 import { COOKIE_KEY } from '@freedi/shared-i18n';
 import { AuthProvider } from '@/components/auth/AuthProvider';
-import './globals.css';
+import './globals.scss';
 
 const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID;
 

@@ -1,3 +1,12 @@
+// ============================================================================
+// MAIN APP - GLOBAL STYLES
+// ============================================================================
+// Imports the shared Freedi design system and app-specific styles
+// ============================================================================
+
+// Import the shared design system first (via includePaths in vite config)
+@use 'index' as shared-styles;
+
 // All @use rules must come first
 @use './mixins' as *;
 @use './atoms/index' as *;

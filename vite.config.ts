@@ -83,6 +83,14 @@ export default defineConfig(({ mode }) => {
 			alias: {
 				'@': path.resolve(__dirname, './src'),
 				'@freedi/shared-i18n': path.resolve(__dirname, './packages/shared-i18n/src'),
+				'@freedi/shared-styles': path.resolve(__dirname, './packages/shared-styles/scss'),
+			},
+		},
+		css: {
+			preprocessorOptions: {
+				scss: {
+					includePaths: [path.resolve(__dirname, './packages/shared-styles/scss')],
+				},
 			},
 		},
 		optimizeDeps: {

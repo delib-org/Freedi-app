@@ -1,0 +1,72 @@
+// ============================================================================
+// MASS-CONSENSUS APP - GLOBAL STYLES
+// ============================================================================
+// Imports the shared Freedi design system and applies app-specific overrides
+// ============================================================================
+
+// Import the shared design system (via includePaths in next.config.js)
+@use 'index' as shared-styles;
+
+// ============================================================================
+// APP-SPECIFIC OVERRIDES
+// ============================================================================
+// Mass-consensus uses a navy color scheme instead of the default blue
+
+:root {
+  // Override primary brand colors with navy theme
+  --btn-primary: #1B2650;
+  --btn-primary-hover: #2A3760;
+  --text-primary: #1B2650;
+  --brand-primary: #1B2650;
+
+  // Card Colors - Soft Pastels (app-specific)
+  --card-blue: #E3F2FD;
+  --card-orange: #FFE4D6;
+  --card-pink: #FFE1E9;
+  --card-purple: #F3E5F5;
+  --card-green: #E8F5E9;
+
+  // Priority Badge Colors (app-specific)
+  --priority-high: #4FC3F7;
+  --priority-medium: #FF6B8A;
+  --priority-low: #FFD54F;
+
+  // Consensus Range Colors (app-specific)
+  --range-objections-100: #D32F2F;
+  --range-objections-60: #E57373;
+  --range-objections-30: #FFCDD2;
+  --range-conflict-100: #FFA000;
+  --range-conflict-60: #FFB74D;
+  --range-conflict-30: #FFE0B2;
+  --range-positive-30: #C8E6C9;
+  --range-positive-60: #81C784;
+  --range-positive-100: #388E3C;
+}
+
+// ============================================================================
+// APP-SPECIFIC STYLES
+// ============================================================================
+
+.page {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: var(--spacing-6);
+  padding-bottom: 200px; // Space for fixed input at bottom
+  min-height: 100vh;
+}
+
+// Badge/Pill components - app-specific variants
+.badge-high {
+  background: var(--priority-high);
+  color: white;
+}
+
+.badge-medium {
+  background: var(--priority-medium);
+  color: white;
+}
+
+.badge-low {
+  background: var(--priority-low);
+  color: var(--text-primary);
+}

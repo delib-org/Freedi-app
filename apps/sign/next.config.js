@@ -1,10 +1,17 @@
+const path = require('path');
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
 
   // Transpile shared packages
-  transpilePackages: ['@freedi/shared-i18n'],
+  transpilePackages: ['@freedi/shared-i18n', '@freedi/shared-styles'],
+
+  // SCSS options for shared styles
+  sassOptions: {
+    includePaths: [path.join(__dirname, '../../packages/shared-styles/scss')],
+  },
 
   // Optimize for production
   compiler: {
