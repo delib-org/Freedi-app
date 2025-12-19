@@ -120,7 +120,7 @@ export type ExportFormat = 'json' | 'csv';
  * Anonymize a SimpleStatement by removing personal data (creator info)
  */
 function anonymizeSimpleStatement(
-	simple: { statementId: string; statement: string; paragraphs?: Paragraph[]; parentId: string; consensus: number; lastUpdate?: number; createdAt?: number; voted?: number } | undefined
+	simple: { statementId: string; statement: string; paragraphs?: Paragraph[]; parentId: string; consensus: number; lastUpdate?: number; createdAt?: number; voted?: number; evaluation?: { agreement?: number } } | undefined
 ): AnonymizedSimpleStatement | undefined {
 	if (!simple) return undefined;
 
@@ -129,7 +129,8 @@ function anonymizeSimpleStatement(
 		statement: simple.statement,
 		paragraphs: simple.paragraphs,
 		parentId: simple.parentId,
-		consensus: simple.consensus,
+		// Use evaluation.agreement when available, fallback to consensus for legacy data
+		consensus: simple.evaluation?.agreement ?? simple.consensus,
 		lastUpdate: simple.lastUpdate,
 		createdAt: simple.createdAt,
 		voted: simple.voted,
@@ -156,7 +157,8 @@ export function extractExportableData(
 		lastUpdate: statement.lastUpdate,
 		pro: statement.pro,
 		con: statement.con,
-		consensus: statement.consensus,
+		// Use evaluation.agreement when available, fallback to consensus for legacy data
+		consensus: statement.evaluation?.agreement ?? statement.consensus ?? 0,
 		consensusValid: statement.consensusValid,
 		PopperHebbianScore: statement.PopperHebbianScore,
 		order: statement.order,

@@ -645,9 +645,14 @@ function calcAgreement(
 		// Calculate Standard Error of the Mean (SEM)
 		const sem = calcStandardError(sumEvaluations, sumSquaredEvaluations, numberOfEvaluators);
 
-		// Return confidence-adjusted score: Mean - SEM
-		// This penalizes uncertainty while rewarding reliable consensus
-		return mean - sem;
+		// Return confidence-adjusted score using proportional penalty
+		// The penalty is bounded by the available range to -1, ensuring
+		// the result naturally stays within [-1, 1]
+		const availableRange = mean + 1; // Distance from mean to -1
+		const penalty = Math.min(sem, availableRange);
+		const agreement = mean - penalty;
+
+		return agreement;
 	} catch (error) {
 		logger.error('Error calculating agreement:', error);
 
@@ -954,11 +959,14 @@ async function getOptionsUsingMethod(parentId: string, resultsSettings: ResultsS
 			return [];
 		}
 
-		const options = snapshot.docs.map(doc => {
-			const data = doc.data() as Statement;
-			logger.info(`getOptionsUsingMethod: Option ${doc.id}, statementType=${data.statementType}, consensus=${data.consensus}`);
-			return data;
-		});
+		const options = snapshot.docs
+			.map(doc => {
+				const data = doc.data() as Statement;
+				logger.info(`getOptionsUsingMethod: Option ${doc.id}, statementType=${data.statementType}, consensus=${data.consensus}, hide=${data.hide}`);
+				return data;
+			})
+			// Filter out hidden statements (e.g., merged source statements)
+			.filter(opt => !opt.hide);
 
 		// Sort by the appropriate field, treating undefined as lowest priority
 		const sortedOptions = sortOptionsByResultsBy(options, resultsBy);
@@ -1205,7 +1213,12 @@ function calcMigrationAgreement(
 	const mean = sumEvaluations / numberOfEvaluators;
 	const sem = calcMigrationStandardError(sumEvaluations, sumSquaredEvaluations, numberOfEvaluators);
 
-	return mean - sem;
+	// Proportional penalty bounded by available range to -1
+	const availableRange = mean + 1;
+	const penalty = Math.min(sem, availableRange);
+	const agreement = mean - penalty;
+
+	return agreement;
 }
 
 /**
