@@ -2,15 +2,30 @@
  * Data Export Types
  *
  * Types for exporting statement data in JSON and CSV formats.
+ * IMPORTANT: All exports are anonymized - no personal data (names, user IDs) is included.
  */
 
 import {
 	Statement,
 	StatementEvaluation,
-	SimpleStatement,
 	Paragraph,
-	Creator,
 } from '@freedi/shared-types';
+
+/**
+ * Anonymized version of SimpleStatement - removes all personal data
+ * Used for exports to ensure privacy
+ */
+export interface AnonymizedSimpleStatement {
+	statementId: string;
+	statement: string;
+	paragraphs?: Paragraph[];
+	parentId: string;
+	consensus: number;
+	lastUpdate?: number;
+	createdAt?: number;
+	voted?: number;
+	// NOTE: creator and creatorId are intentionally excluded for privacy
+}
 
 /**
  * PopperHebbianScore type - extracted from Statement since not exported from shared-types
@@ -24,6 +39,8 @@ export interface PopperHebbianScore {
 
 /**
  * Properties included in data export - subset of Statement for export purposes
+ * IMPORTANT: This interface is designed to be privacy-preserving.
+ * No personal data (creator names, user IDs, joined users) is included.
  */
 export interface ExportableStatementData {
 	statement: string;
@@ -41,18 +58,19 @@ export interface ExportableStatementData {
 	PopperHebbianScore?: PopperHebbianScore;
 	order?: number;
 	votes?: number;
-	topVotedOption?: SimpleStatement;
+	topVotedOption?: AnonymizedSimpleStatement;
 	selections?: unknown;
 	isSelected?: boolean;
 	voted?: number;
 	isVoted?: boolean;
-	results?: SimpleStatement[];
+	results?: AnonymizedSimpleStatement[];
 	totalEvaluators?: number;
 	isChosen?: boolean;
 	chosenSolutions?: string[];
 	summary?: string;
 	evaluation?: StatementEvaluation;
-	joined?: Creator[];
+	// NOTE: 'joined' (Creator[]) is intentionally excluded for privacy - it contains user names
+	// NOTE: 'creator' and 'creatorId' are intentionally excluded for privacy
 	hide?: boolean;
 	anchored?: boolean;
 }
@@ -99,7 +117,30 @@ export interface PropertyDocumentation {
 export type ExportFormat = 'json' | 'csv';
 
 /**
+ * Anonymize a SimpleStatement by removing personal data (creator info)
+ */
+function anonymizeSimpleStatement(
+	simple: { statementId: string; statement: string; paragraphs?: Paragraph[]; parentId: string; consensus: number; lastUpdate?: number; createdAt?: number; voted?: number } | undefined
+): AnonymizedSimpleStatement | undefined {
+	if (!simple) return undefined;
+
+	return {
+		statementId: simple.statementId,
+		statement: simple.statement,
+		paragraphs: simple.paragraphs,
+		parentId: simple.parentId,
+		consensus: simple.consensus,
+		lastUpdate: simple.lastUpdate,
+		createdAt: simple.createdAt,
+		voted: simple.voted,
+		// NOTE: creator and creatorId are intentionally excluded
+	};
+}
+
+/**
  * Extract exportable data from a Statement
+ * IMPORTANT: This function anonymizes all data - no personal information is exported.
+ * Creator names, user IDs, and joined users are stripped from the export.
  */
 export function extractExportableData(
 	statement: Statement
@@ -120,18 +161,20 @@ export function extractExportableData(
 		PopperHebbianScore: statement.PopperHebbianScore,
 		order: statement.order,
 		votes: statement.votes,
-		topVotedOption: statement.topVotedOption,
+		// Anonymize topVotedOption - remove creator info
+		topVotedOption: anonymizeSimpleStatement(statement.topVotedOption),
 		selections: statement.selections,
 		isSelected: statement.isSelected,
 		voted: statement.voted,
 		isVoted: statement.isVoted,
-		results: statement.results,
+		// Anonymize results - remove creator info from each
+		results: statement.results?.map(anonymizeSimpleStatement).filter((r): r is AnonymizedSimpleStatement => r !== undefined),
 		totalEvaluators: statement.totalEvaluators,
 		isChosen: statement.isChosen,
 		chosenSolutions: statement.chosenSolutions,
 		summary: statement.summary,
 		evaluation: statement.evaluation,
-		joined: statement.joined,
+		// NOTE: 'joined' is intentionally NOT exported - it contains user names/IDs
 		hide: statement.hide,
 		anchored: statement.anchored,
 	};

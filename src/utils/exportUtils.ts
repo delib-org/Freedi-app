@@ -84,8 +84,8 @@ export const PROPERTY_DOCUMENTATION: PropertyDocumentation = {
 		description: 'Total number of votes cast for this statement',
 	},
 	topVotedOption: {
-		type: 'SimpleStatement',
-		description: 'Reference to the highest-voted child option',
+		type: 'AnonymizedSimpleStatement',
+		description: 'Reference to the highest-voted child option (anonymized - no creator info)',
 	},
 	selections: {
 		type: 'object',
@@ -104,8 +104,8 @@ export const PROPERTY_DOCUMENTATION: PropertyDocumentation = {
 		description: 'True if this is the top-voted option among siblings',
 	},
 	results: {
-		type: 'SimpleStatement[]',
-		description: 'Array of result statements (top performers in evaluation)',
+		type: 'AnonymizedSimpleStatement[]',
+		description: 'Array of result statements (top performers in evaluation, anonymized - no creator info)',
 	},
 	totalEvaluators: {
 		type: 'number',
@@ -128,11 +128,7 @@ export const PROPERTY_DOCUMENTATION: PropertyDocumentation = {
 		description:
 			'Evaluation metrics: sumEvaluations, agreement, numberOfEvaluators, sumPro, sumCon, averageEvaluation, standardDeviation',
 	},
-	joined: {
-		type: 'Creator[]',
-		description:
-			'Array of users who have joined/subscribed to this statement',
-	},
+	// NOTE: 'joined' is no longer exported for privacy reasons
 	hide: {
 		type: 'boolean',
 		description: 'Whether the statement is hidden from public view',
