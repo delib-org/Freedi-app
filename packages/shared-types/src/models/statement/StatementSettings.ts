@@ -41,6 +41,7 @@ export const StatementSettingsSchema = object({
 	popperianDiscussionEnabled: optional(boolean()),
 	popperianPreCheckEnabled: optional(boolean()),
 	enableMultiSuggestionDetection: optional(boolean()),
+	enableAutoMerge: optional(boolean()), // if true (default), similar proposals will be automatically merged; if false, users choose
 });
 
 export type StatementSettings = InferOutput<typeof StatementSettingsSchema>;

@@ -50,6 +50,9 @@ const nextConfig = {
   },
 };
 
+// Check if Sentry credentials are available
+const hasSentryCredentials = process.env.SENTRY_ORG && process.env.SENTRY_PROJECT && process.env.SENTRY_AUTH_TOKEN;
+
 // Sentry configuration options
 const sentryWebpackPluginOptions = {
   // For all available options, see:
@@ -57,6 +60,19 @@ const sentryWebpackPluginOptions = {
 
   org: process.env.SENTRY_ORG,
   project: process.env.SENTRY_PROJECT,
+
+  // Disable source map upload if credentials are missing
+  sourcemaps: {
+    disable: !hasSentryCredentials,
+  },
+
+  // Disable release creation if credentials are missing
+  release: {
+    create: hasSentryCredentials,
+  },
+
+  // Disable telemetry if credentials are missing
+  telemetry: hasSentryCredentials,
 
   // Only print logs for uploading source maps in CI
   silent: !process.env.CI,

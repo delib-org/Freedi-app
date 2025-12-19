@@ -9,6 +9,7 @@ import {
   DEFAULT_SURVEY_SETTINGS,
   SurveyStatus,
 } from '@/types/survey';
+import { logger } from '@/lib/utils/logger';
 
 /** Collection name for surveys */
 const SURVEYS_COLLECTION = 'surveys';
@@ -46,13 +47,14 @@ export async function createSurvey(
   const survey: Survey = {
     surveyId: generateSurveyId(),
     title: data.title,
-    description: data.description,
+    description: data.description || '',
     creatorId,
     questionIds: data.questionIds || [],
     settings: {
       ...DEFAULT_SURVEY_SETTINGS,
       ...data.settings,
     },
+    questionSettings: data.questionSettings || {},
     status: SurveyStatus.draft,
     createdAt: now,
     lastUpdate: now,
@@ -60,7 +62,7 @@ export async function createSurvey(
 
   await db.collection(SURVEYS_COLLECTION).doc(survey.surveyId).set(survey);
 
-  console.info('[createSurvey] Created survey:', survey.surveyId);
+  logger.info('[createSurvey] Created survey:', survey.surveyId, 'with questionSettings:', JSON.stringify(survey.questionSettings));
   return survey;
 }
 
@@ -73,7 +75,7 @@ export async function getSurveyById(surveyId: string): Promise<Survey | null> {
   const doc = await db.collection(SURVEYS_COLLECTION).doc(surveyId).get();
 
   if (!doc.exists) {
-    console.info('[getSurveyById] Survey not found:', surveyId);
+    logger.info('[getSurveyById] Survey not found:', surveyId);
     return null;
   }
 
@@ -102,7 +104,7 @@ export async function getSurveyWithQuestions(
   const questionsResults = await Promise.all(questionPromises);
   const questions = questionsResults.filter((q): q is Statement => q !== null);
 
-  console.info('[getSurveyWithQuestions] Loaded', questions.length, 'questions for survey:', surveyId);
+  logger.info('[getSurveyWithQuestions] Loaded', questions.length, 'questions for survey:', surveyId);
 
   return {
     ...survey,
@@ -138,10 +140,16 @@ export async function updateSurvey(
       ...data.settings,
     };
   }
+  if (data.questionSettings !== undefined) {
+    updates.questionSettings = {
+      ...(survey.questionSettings || {}),
+      ...data.questionSettings,
+    };
+  }
 
   await db.collection(SURVEYS_COLLECTION).doc(surveyId).update(updates);
 
-  console.info('[updateSurvey] Updated survey:', surveyId);
+  logger.info('[updateSurvey] Updated survey:', surveyId, 'with updates:', JSON.stringify(updates));
 
   return {
     ...survey,
@@ -157,10 +165,10 @@ export async function deleteSurvey(surveyId: string): Promise<boolean> {
 
   try {
     await db.collection(SURVEYS_COLLECTION).doc(surveyId).delete();
-    console.info('[deleteSurvey] Deleted survey:', surveyId);
+    logger.info('[deleteSurvey] Deleted survey:', surveyId);
     return true;
   } catch (error) {
-    console.error('[deleteSurvey] Error deleting survey:', surveyId, error);
+    logger.error('[deleteSurvey] Error deleting survey:', surveyId, error);
     return false;
   }
 }
@@ -179,7 +187,7 @@ export async function getSurveysByCreator(creatorId: string): Promise<Survey[]> 
     .get();
 
   const surveys = snapshot.docs.map((doc) => doc.data() as Survey);
-  console.info('[getSurveysByCreator] Found', surveys.length, 'surveys for creator:', creatorId);
+  logger.info('[getSurveysByCreator] Found', surveys.length, 'surveys for creator:', creatorId);
 
   return surveys;
 }
@@ -198,7 +206,7 @@ export async function addQuestionToSurvey(
 
   // Don't add duplicate
   if (survey.questionIds.includes(questionId)) {
-    console.info('[addQuestionToSurvey] Question already in survey:', questionId);
+    logger.info('[addQuestionToSurvey] Question already in survey:', questionId);
     return survey;
   }
 
@@ -296,7 +304,7 @@ export async function upsertSurveyProgress(
 
     await db.collection(SURVEY_PROGRESS_COLLECTION).doc(progressId).update(progressUpdates);
 
-    console.info('[upsertSurveyProgress] Updated progress:', progressId);
+    logger.info('[upsertSurveyProgress] Updated progress:', progressId);
 
     return {
       ...existingProgress,
@@ -317,7 +325,7 @@ export async function upsertSurveyProgress(
 
     await db.collection(SURVEY_PROGRESS_COLLECTION).doc(progressId).set(newProgress);
 
-    console.info('[upsertSurveyProgress] Created new progress:', progressId);
+    logger.info('[upsertSurveyProgress] Created new progress:', progressId);
 
     return newProgress;
   }
@@ -342,7 +350,7 @@ export async function getQuestionsByCreator(creatorId: string): Promise<Statemen
     .get();
 
   const questions = snapshot.docs.map((doc) => doc.data() as Statement);
-  console.info('[getQuestionsByCreator] Found', questions.length, 'questions for creator:', creatorId);
+  logger.info('[getQuestionsByCreator] Found', questions.length, 'questions for creator:', creatorId);
 
   return questions;
 }
@@ -384,7 +392,7 @@ export async function getQuestionsWithAdminAccess(userId: string): Promise<State
     questions.push(...batchQuestions);
   }
 
-  console.info('[getQuestionsWithAdminAccess] Found', questions.length, 'questions for admin:', userId);
+  logger.info('[getQuestionsWithAdminAccess] Found', questions.length, 'questions for admin:', userId);
 
   return questions;
 }
@@ -417,7 +425,7 @@ export async function getAvailableQuestions(adminId: string): Promise<Statement[
   // Sort by creation date descending
   questions.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
 
-  console.info('[getAvailableQuestions] Total available questions:', questions.length);
+  logger.info('[getAvailableQuestions] Total available questions:', questions.length);
 
   return questions;
 }
@@ -542,7 +550,7 @@ export async function searchQuestions(
     ? questions[questions.length - 1].statementId
     : null;
 
-  console.info(
+  logger.info(
     '[searchQuestions] Found',
     questions.length,
     'questions for user:',

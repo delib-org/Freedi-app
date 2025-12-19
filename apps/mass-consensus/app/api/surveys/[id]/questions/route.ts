@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { Statement, StatementType, Collections } from '@freedi/shared-types';
+import { Statement, StatementType, Collections, createStatementObject } from '@freedi/shared-types';
 import { getSurveyById, addQuestionToSurvey } from '@/lib/firebase/surveys';
 import { verifyToken, extractBearerToken } from '@/lib/auth/verifyAdmin';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
 import { AddQuestionRequest } from '@/types/survey';
 import { textToParagraphs } from '@/lib/utils/paragraphUtils';
+import { logger } from '@/lib/utils/logger';
 
 interface RouteContext {
   params: { id: string };
@@ -61,31 +62,34 @@ export async function POST(request: NextRequest, context: RouteContext) {
     }
 
     const db = getFirestoreAdmin();
-    const now = Date.now();
 
     // Generate new statement ID
-    const statementId = `q_${now}_${Math.random().toString(36).substring(2, 9)}`;
+    const statementId = `q_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 
-    // Create the question statement
-    const newQuestion: Partial<Statement> = {
+    // Create the question statement using shared utility
+    const newQuestion = createStatementObject({
       statementId,
       statement: body.newQuestion.title.trim(),
       paragraphs: textToParagraphs(body.newQuestion.description?.trim() || ''),
       statementType: StatementType.question,
       parentId: 'top',
-      topParentId: statementId,
+      topParentId: statementId, // Top-level question is its own topParent
       creatorId: userId,
-      createdAt: now,
-      lastUpdate: now,
-      consensus: 0,
-      randomSeed: Math.random(),
-      evaluation: {
-        numberOfEvaluators: 0,
-        sumEvaluations: 0,
-        agreement: 0,
-        averageEvaluation: 0,
+      creator: {
+        uid: userId,
+        displayName: 'Survey Admin',
+        email: '',
+        photoURL: '',
+        isAnonymous: false,
       },
-    };
+    });
+
+    if (!newQuestion) {
+      return NextResponse.json(
+        { error: 'Failed to create question' },
+        { status: 500 }
+      );
+    }
 
     // Save the question to Firestore
     await db.collection(Collections.statements).doc(statementId).set(newQuestion);
@@ -93,14 +97,14 @@ export async function POST(request: NextRequest, context: RouteContext) {
     // Add to survey
     const updatedSurvey = await addQuestionToSurvey(surveyId, statementId);
 
-    console.info('[POST /api/surveys/[id]/questions] Created question:', statementId, 'for survey:', surveyId);
+    logger.info('[POST /api/surveys/[id]/questions] Created question:', statementId, 'for survey:', surveyId);
 
     return NextResponse.json({
       question: newQuestion,
       survey: updatedSurvey,
     }, { status: 201 });
   } catch (error) {
-    console.error('[POST /api/surveys/[id]/questions] Error:', error);
+    logger.error('[POST /api/surveys/[id]/questions] Error:', error);
     return NextResponse.json(
       { error: 'Failed to create question' },
       { status: 500 }
@@ -181,14 +185,14 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     // Add to survey
     const updatedSurvey = await addQuestionToSurvey(surveyId, body.questionId);
 
-    console.info('[PUT /api/surveys/[id]/questions] Added question:', body.questionId, 'to survey:', surveyId);
+    logger.info('[PUT /api/surveys/[id]/questions] Added question:', body.questionId, 'to survey:', surveyId);
 
     return NextResponse.json({
       question,
       survey: updatedSurvey,
     });
   } catch (error) {
-    console.error('[PUT /api/surveys/[id]/questions] Error:', error);
+    logger.error('[PUT /api/surveys/[id]/questions] Error:', error);
     return NextResponse.json(
       { error: 'Failed to add question' },
       { status: 500 }

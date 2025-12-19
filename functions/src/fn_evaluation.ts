@@ -15,7 +15,8 @@ import {
 	statementToSimpleStatement,
 	ResultsSettings,
 	ResultsBy,
-	CutoffBy
+	CutoffBy,
+	defaultResultsSettings
 } from '@freedi/shared-types';
 import type { PopperHebbianScore } from 'delib-npm/dist/models/popper/popperTypes';
 
@@ -734,13 +735,10 @@ async function updateParentStatementWithChosenOptions(parentId: string | undefin
 	try {
 		const parentStatement = await getParentStatement(parentId);
 
-		if (!parentStatement.resultsSettings) {
-			logger.warn('No results settings found for parent statement');
+		// Use defaultResultsSettings if parent has no resultsSettings configured
+		const resultsSettings = parentStatement.resultsSettings || defaultResultsSettings;
 
-			return;
-		}
-
-		const chosenOptions = await choseTopOptions(parentId, parentStatement.resultsSettings);
+		const chosenOptions = await choseTopOptions(parentId, resultsSettings);
 
 		if (chosenOptions) {
 			await updateParentWithResults(parentId, chosenOptions);
@@ -893,10 +891,10 @@ function getSortedOptions(statements: Statement[], resultsSettings: ResultsSetti
 	const { resultsBy } = resultsSettings;
 
 	const sortComparisons = {
-		[ResultsBy.consensus]: (a: Statement, b: Statement) => b.consensus - a.consensus,
+		[ResultsBy.consensus]: (a: Statement, b: Statement) => (b.consensus || 0) - (a.consensus || 0),
 		[ResultsBy.mostLiked]: (a: Statement, b: Statement) => (b.evaluation?.sumPro ?? 0) - (a.evaluation?.sumPro ?? 0),
 		[ResultsBy.averageLikesDislikes]: (a: Statement, b: Statement) => (b.evaluation?.sumEvaluations ?? 0) - (a.evaluation?.sumEvaluations ?? 0),
-		[ResultsBy.topOptions]: (a: Statement, b: Statement) => b.consensus - a.consensus,
+		[ResultsBy.topOptions]: (a: Statement, b: Statement) => (b.consensus || 0) - (a.consensus || 0),
 	};
 
 	return statements.sort(sortComparisons[resultsBy] || sortComparisons[ResultsBy.consensus]);
@@ -906,23 +904,34 @@ async function getOptionsUsingMethod(parentId: string, resultsSettings: ResultsS
 	const { numberOfResults, resultsBy, cutoffBy, cutoffNumber } = resultsSettings;
 	const evaluationField = getEvaluationField(resultsBy);
 
+	// cutoffNumber serves as the minimum threshold (default to 0, meaning no minimum)
+	const effectiveCutoffNumber = cutoffNumber ?? 0;
+
 	const baseQuery = db
 		.collection(Collections.statements)
 		.where('parentId', '==', parentId)
 		.where('statementType', '==', StatementType.option);
 
-	if (cutoffBy === CutoffBy.topOptions) {
+	// Default to topOptions if cutoffBy is not specified
+	const effectiveCutoffBy = cutoffBy || CutoffBy.topOptions;
+
+	if (effectiveCutoffBy === CutoffBy.topOptions) {
+		const effectiveNumberOfResults = numberOfResults || 5; // Default to 5 results
+
+		// Filter by cutoffNumber first (minimum threshold), then select top N
 		const snapshot = await baseQuery
+			.where(evaluationField, '>=', effectiveCutoffNumber)
 			.orderBy(evaluationField, 'desc')
-			.limit(Math.ceil(Number(numberOfResults)))
+			.limit(Math.ceil(Number(effectiveNumberOfResults)))
 			.get();
 
 		return snapshot.docs.map(doc => doc.data() as Statement);
 	}
 
-	if (cutoffBy === CutoffBy.aboveThreshold) {
+	if (effectiveCutoffBy === CutoffBy.aboveThreshold) {
+		// Select all options above the cutoffNumber threshold
 		const snapshot = await baseQuery
-			.where(evaluationField, '>', cutoffNumber)
+			.where(evaluationField, '>', effectiveCutoffNumber)
 			.get();
 
 		return snapshot.docs.map(doc => doc.data() as Statement);

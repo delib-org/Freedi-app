@@ -3,6 +3,7 @@ import { getFirebaseAdmin } from '@/lib/firebase/admin';
 import { getUserIdFromCookie } from '@/lib/utils/user';
 import { Collections, StatementType, Statement, DEMOGRAPHIC_CONSTANTS } from '@freedi/shared-types';
 import { StatementWithParagraphs, Paragraph } from '@/types';
+import { logger } from '@/lib/utils/logger';
 
 interface ApprovalDoc {
   paragraphId?: string;
@@ -396,7 +397,7 @@ export async function GET(
       },
     });
   } catch (error) {
-    console.error('[API] Demographic export failed:', error);
+    logger.error('[API] Demographic export failed:', error);
 
     return NextResponse.json(
       { error: 'Internal server error' },

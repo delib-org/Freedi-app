@@ -5,15 +5,17 @@ export type {
   Survey,
   SurveySettings,
   SurveyProgress,
+  QuestionOverrideSettings,
 } from '@freedi/shared-types';
 
 export {
   SurveyStatus,
   DEFAULT_SURVEY_SETTINGS,
+  DEFAULT_QUESTION_OVERRIDE_SETTINGS,
 } from '@freedi/shared-types';
 
 // Import for local use
-import type { Survey, SurveySettings } from '@freedi/shared-types';
+import type { Survey, SurveySettings, QuestionOverrideSettings } from '@freedi/shared-types';
 
 /**
  * Survey with populated question data
@@ -31,6 +33,7 @@ export interface CreateSurveyRequest {
   description?: string;
   questionIds?: string[];
   settings?: Partial<SurveySettings>;
+  questionSettings?: Record<string, QuestionOverrideSettings>;
 }
 
 /**
@@ -41,6 +44,7 @@ export interface UpdateSurveyRequest {
   description?: string;
   questionIds?: string[];
   settings?: Partial<SurveySettings>;
+  questionSettings?: Record<string, QuestionOverrideSettings>;
   status?: 'draft' | 'active' | 'closed';
 }
 

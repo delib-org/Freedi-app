@@ -2,8 +2,7 @@ import { initializeApp, getApps, getApp } from 'firebase/app';
 import {
   getAuth,
   GoogleAuthProvider,
-  signInWithRedirect,
-  getRedirectResult,
+  signInWithPopup,
   signOut,
   onAuthStateChanged,
   User,
@@ -70,34 +69,28 @@ googleProvider.setCustomParameters({
 });
 
 /**
- * Sign in with Google using redirect (avoids COOP issues)
+ * Sign in with Google using popup
  */
-export async function signInWithGoogle(): Promise<void> {
+export async function signInWithGoogle(): Promise<User> {
   try {
-    await signInWithRedirect(auth, googleProvider);
+    const result = await signInWithPopup(auth, googleProvider);
+    const token = await result.user.getIdToken();
+    localStorage.setItem('firebase_token', token);
+    console.info('[Firebase] Sign in successful:', result.user.email);
+    return result.user;
   } catch (error) {
-    console.error('Google sign-in error:', error);
+    console.error('[Firebase] Google sign-in error:', error);
     throw error;
   }
 }
 
 /**
- * Handle the redirect result after Google sign-in
- * Call this on app initialization
+ * Handle the redirect result after Google sign-in (legacy - now using popup)
+ * Kept for backwards compatibility
  */
 export async function handleRedirectResult(): Promise<{ user: User; token: string } | null> {
-  try {
-    const result = await getRedirectResult(auth);
-    if (result) {
-      const token = await result.user.getIdToken();
-      localStorage.setItem('firebase_token', token);
-      return { user: result.user, token };
-    }
-    return null;
-  } catch (error) {
-    console.error('Redirect result error:', error);
-    throw error;
-  }
+  // No longer using redirect flow - using popup instead
+  return null;
 }
 
 /**

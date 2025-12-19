@@ -51,6 +51,7 @@ import {
 } from "./fn_httpRequests";
 import { findSimilarStatements } from "./fn_findSimilarStatements";
 import { detectMultipleSuggestions } from "./fn_detectMultipleSuggestions";
+import { mergeStatements } from "./fn_mergeStatements";
 import { updateApprovalResults } from "./fn_approval";
 import { setImportanceToStatement } from "./fn_importance";
 import { updateAgrees } from "./fn_agree";
@@ -247,6 +248,7 @@ exports.recoverLastSnapshot = wrapHttpFunction(recoverLastSnapshot);
 exports.checkProfanity = checkProfanity;
 exports.improveSuggestion = wrapHttpFunction(handleImproveSuggestion);
 exports.detectMultipleSuggestions = wrapHttpFunction(detectMultipleSuggestions);
+exports.mergeStatements = wrapHttpFunction(mergeStatements);
 
 // PHASE 4 FIX: Metrics and monitoring functions
 exports.analyzeSubscriptionPatterns = analyzeSubscriptionPatterns;

@@ -1,11 +1,12 @@
 import { Statement } from '@freedi/shared-types';
-import { SurveySettings } from '@/types/survey';
+import { MergedQuestionSettings } from '@/lib/utils/settingsUtils';
 import SolutionFeedClient from './SolutionFeedClient';
 
 interface SolutionFeedProps {
   question: Statement;
   initialSolutions: Statement[];
-  surveySettings?: SurveySettings;
+  /** Merged settings for this question (survey + per-question overrides) */
+  mergedSettings?: MergedQuestionSettings;
 }
 
 /**
@@ -15,7 +16,7 @@ interface SolutionFeedProps {
 export default function SolutionFeed({
   question,
   initialSolutions,
-  surveySettings
+  mergedSettings
 }: SolutionFeedProps) {
   // Check if we have solutions
   if (!initialSolutions || initialSolutions.length === 0) {
@@ -32,7 +33,7 @@ export default function SolutionFeed({
     <SolutionFeedClient
       question={question}
       initialSolutions={initialSolutions}
-      surveySettings={surveySettings}
+      mergedSettings={mergedSettings}
     />
   );
 }

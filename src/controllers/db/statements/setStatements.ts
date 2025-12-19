@@ -533,27 +533,23 @@ function updateStatementSettings({
 	enhancedEvaluation,
 	showEvaluation,
 }: UpdateStatementSettingsParams): UpdateStatementSettingsReturnType {
-	try {
-		if (!statement) throw new Error('Statement is undefined');
-		if (!statement.statementSettings)
-			throw new Error('Statement settings is undefined');
+	const defaultSettings = {
+		showEvaluation: true,
+		enableAddEvaluationOption: true,
+		enableAddVotingOption: true,
+	};
 
-		return {
-			...statement.statementSettings,
-			enhancedEvaluation,
-			showEvaluation,
-			enableAddEvaluationOption,
-			enableAddVotingOption,
-		};
-	} catch (error) {
-		console.error(error);
-
-		return {
-			showEvaluation: true,
-			enableAddEvaluationOption: true,
-			enableAddVotingOption: true,
-		};
+	if (!statement) {
+		return defaultSettings;
 	}
+
+	return {
+		...(statement.statementSettings || defaultSettings),
+		enhancedEvaluation,
+		showEvaluation,
+		enableAddEvaluationOption,
+		enableAddVotingOption,
+	};
 }
 
 export async function updateStatementText(

@@ -1,7 +1,8 @@
 'use client';
 
-import { ReactNode, useState, useEffect } from 'react';
+import { ReactNode, useState, useEffect, useCallback } from 'react';
 import { SurveyWithQuestions } from '@/types/survey';
+import { MergedQuestionSettings } from '@/lib/utils/settingsUtils';
 import SurveyProgressBar from './SurveyProgress';
 import SurveyNavigation from './SurveyNavigation';
 import styles from './Survey.module.scss';
@@ -10,6 +11,18 @@ interface SurveyQuestionWrapperProps {
   survey: SurveyWithQuestions;
   currentIndex: number;
   children: ReactNode;
+  /** Merged settings for the current question (survey + per-question overrides) */
+  mergedSettings: MergedQuestionSettings;
+}
+
+// Custom event types for communication between components
+declare global {
+  interface WindowEventMap {
+    'show-add-suggestion': CustomEvent<{ show: boolean }>;
+    'show-view-progress': CustomEvent<{ show: boolean }>;
+    'trigger-add-suggestion': CustomEvent;
+    'trigger-view-progress': CustomEvent;
+  }
 }
 
 /**
@@ -19,11 +32,23 @@ export default function SurveyQuestionWrapper({
   survey,
   currentIndex,
   children,
+  mergedSettings,
 }: SurveyQuestionWrapperProps) {
   // Track completed question indices (stored in localStorage for persistence)
   const [completedIndices, setCompletedIndices] = useState<number[]>([]);
   const [evaluatedCount, setEvaluatedCount] = useState(0);
   const [actualSolutionsCount, setActualSolutionsCount] = useState(0);
+
+  // Debug logging for merged settings
+  console.info('[SurveyQuestionWrapper] mergedSettings:', mergedSettings);
+  console.info('[SurveyQuestionWrapper] allowParticipantsToAddSuggestions:', mergedSettings.allowParticipantsToAddSuggestions);
+  console.info('[SurveyQuestionWrapper] askUserForASolutionBeforeEvaluation:', mergedSettings.askUserForASolutionBeforeEvaluation);
+
+  // Action buttons state - use merged settings for current question
+  const [showAddSuggestion, setShowAddSuggestion] = useState(
+    mergedSettings.allowParticipantsToAddSuggestions
+  );
+  const [showViewProgress, setShowViewProgress] = useState(false);
 
   // Load progress from localStorage on mount
   useEffect(() => {
@@ -76,7 +101,31 @@ export default function SurveyQuestionWrapper({
   useEffect(() => {
     setEvaluatedCount(0);
     setActualSolutionsCount(0);
-  }, [currentIndex]);
+    setShowViewProgress(false);
+    // Update showAddSuggestion based on merged settings for the new question
+    setShowAddSuggestion(mergedSettings.allowParticipantsToAddSuggestions);
+  }, [currentIndex, mergedSettings.allowParticipantsToAddSuggestions]);
+
+  // Listen for show-view-progress events from SolutionFeedClient
+  useEffect(() => {
+    const handleShowViewProgress = (event: CustomEvent<{ show: boolean }>) => {
+      setShowViewProgress(event.detail.show);
+    };
+
+    window.addEventListener('show-view-progress', handleShowViewProgress);
+    return () => {
+      window.removeEventListener('show-view-progress', handleShowViewProgress);
+    };
+  }, []);
+
+  // Callbacks to trigger actions in SolutionFeedClient
+  const handleAddSuggestion = useCallback(() => {
+    window.dispatchEvent(new CustomEvent('trigger-add-suggestion'));
+  }, []);
+
+  const handleViewProgress = useCallback(() => {
+    window.dispatchEvent(new CustomEvent('trigger-view-progress'));
+  }, []);
 
   // Handle navigation - mark current question as completed
   const handleNavigate = (direction: 'back' | 'next') => {
@@ -111,8 +160,13 @@ export default function SurveyQuestionWrapper({
         totalQuestions={survey.questions.length}
         evaluatedCount={evaluatedCount}
         availableOptionsCount={actualSolutionsCount || survey.questions[currentIndex]?.numberOfOptions || 0}
-        settings={survey.settings}
+        mergedSettings={mergedSettings}
+        allowReturning={survey.settings.allowReturning}
         onNavigate={handleNavigate}
+        showAddSuggestion={showAddSuggestion}
+        showViewProgress={showViewProgress}
+        onAddSuggestion={handleAddSuggestion}
+        onViewProgress={handleViewProgress}
       />
     </div>
   );

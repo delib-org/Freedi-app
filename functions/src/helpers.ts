@@ -32,6 +32,13 @@ export function getRandomColor() {
 }
 
 /**
+ * Generate a unique paragraph ID
+ */
+export function generateParagraphId(): string {
+	return `p_${Date.now()}_${Math.random().toString(36).substring(2, 10)}`;
+}
+
+/**
  * Get plain text from paragraphs array
  */
 export function getParagraphsText(paragraphs: Paragraph[] | undefined): string {

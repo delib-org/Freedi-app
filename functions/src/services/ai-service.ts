@@ -215,8 +215,8 @@ async function handleError(
 }
 export async function checkForInappropriateContent(userInput: string): Promise<{ isInappropriate: boolean; error?: string }> {
   const prompt = `
-    You are a strict content moderator for a collaborative discussion platform.
-    Your job is to protect users from harmful content.
+    You are a content moderator for a collaborative discussion platform.
+    Your job is to protect users from genuinely harmful content.
 
     Check if the following text contains ANY of these:
     - Profanity, curse words, or vulgar language
@@ -225,20 +225,29 @@ export async function checkForInappropriateContent(userInput: string): Promise<{
     - Personal attacks, insults, or harassment
     - Sexually explicit or suggestive content
     - Violence, threats, or harmful content
-    - Trolling or intentionally disruptive content
+    - Spam or gibberish text
 
     Text to analyze: "${userInput}"
 
-    Be STRICT - if in doubt, flag as inappropriate. We prefer false positives over letting harmful content through.
+    IMPORTANT: Only flag content that is CLEARLY inappropriate. Normal suggestions, opinions, and ideas should be allowed even if they are unusual or you disagree with them. We want to minimize false positives.
 
     Return ONLY this JSON format (no markdown, no code blocks):
-    - If inappropriate: { "inappropriate": true }
-    - If clean: { "inappropriate": false }
+    - If clearly inappropriate: { "inappropriate": true }
+    - If acceptable or unclear: { "inappropriate": false }
   `;
 
   try {
-    const model = await getGenerativeAIModel();
-    const result = await model.generateContent(prompt);
+    // Use temperature 0 for deterministic, consistent content moderation
+    const genAI = getGenAI();
+    const moderationModel = genAI.getGenerativeModel({
+      model: GEMINI_MODEL,
+      generationConfig: {
+        responseMimeType: "application/json",
+        temperature: 0, // Deterministic for consistent results
+      },
+    });
+
+    const result = await moderationModel.generateContent(prompt);
     let responseText = result.response.text();
 
     // Strip markdown code blocks if present
@@ -736,6 +745,184 @@ If NOT multiple suggestions (single idea), return: {"isMultiple": false, "sugges
     logger.error("Error in detectAndSplitMultipleSuggestions:", error);
     return { isMultiple: false, suggestions: [] };
   }
+}
+
+/**
+ * Paragraph with source information for merge operations
+ */
+export interface ParagraphForMerge {
+  content: string;
+  sourceStatementId?: string;
+}
+
+/**
+ * Result of merging paragraphs
+ */
+export interface MergeParagraphsResult {
+  paragraphs: ParagraphForMerge[];
+  newTitle: string;
+}
+
+/**
+ * Merges new content into existing paragraphs and generates a new title
+ * The AI reorganizes all content into a coherent document
+ * @param existingParagraphs - Current paragraphs of the target statement
+ * @param newContent - The new user's suggestion text
+ * @param newStatementId - ID of the source statement being merged
+ * @param questionContext - The question/topic for context
+ * @returns Reorganized paragraphs and new title reflecting all content
+ */
+export async function mergeAndReorganizeParagraphs(
+  existingParagraphs: ParagraphForMerge[],
+  newContent: string,
+  newStatementId: string,
+  questionContext: string
+): Promise<MergeParagraphsResult> {
+  try {
+    const isHebrew = /[\u0590-\u05FF]/.test(newContent) ||
+      existingParagraphs.some(p => /[\u0590-\u05FF]/.test(p.content));
+
+    // Format existing paragraphs for the AI
+    const existingContent = existingParagraphs
+      .map((p, i) => `[${i + 1}] ${p.content}`)
+      .join('\n');
+
+    const prompt = isHebrew
+      ? `אתה עורך תוכן שמאחד הצעות דומות למסמך קוהרנטי אחד.
+
+תוכן קיים (פסקאות):
+${existingContent || "(ריק)"}
+
+תוכן חדש להוספה:
+"${newContent}"
+
+הקשר/שאלה: "${questionContext}"
+
+משימה:
+1. שלב את התוכן החדש עם הפסקאות הקיימות
+2. ארגן מחדש לזרימה הגיונית וקוהרנטית
+3. הסר כפילויות אבל שמור על כל הרעיונות הייחודיים
+4. צור כותרת חדשה שמשקפת את כל התוכן המאוחד
+
+כללים:
+- שמור על כל הרעיונות הייחודיים מכל המקורות
+- ארגן בסדר הגיוני (לא בהכרח לפי סדר ההגעה)
+- התוכן החדש צריך להשתלב בצורה טבעית
+- הכותרת חייבת לשקף את מגוון הרעיונות
+
+החזר JSON בפורמט:
+{
+  "paragraphs": [
+    {"content": "פסקה ראשונה...", "isNew": false},
+    {"content": "פסקה שניה...", "isNew": true},
+    ...
+  ],
+  "newTitle": "כותרת שמשקפת את כל התוכן"
+}`
+      : `You are a content editor merging similar proposals into one coherent document.
+
+EXISTING CONTENT (paragraphs):
+${existingContent || "(empty)"}
+
+NEW CONTENT TO ADD:
+"${newContent}"
+
+CONTEXT/QUESTION: "${questionContext}"
+
+TASK:
+1. Integrate the new content with existing paragraphs
+2. Reorganize into a logical, coherent flow
+3. Remove duplicates but preserve all unique ideas
+4. Generate a new title that reflects ALL merged content
+
+RULES:
+- Preserve all unique ideas from all sources
+- Organize in logical order (not necessarily chronological)
+- New content should integrate naturally
+- Title MUST reflect the variety of ideas
+
+Return JSON format:
+{
+  "paragraphs": [
+    {"content": "First paragraph...", "isNew": false},
+    {"content": "Second paragraph...", "isNew": true},
+    ...
+  ],
+  "newTitle": "Title reflecting all content"
+}`;
+
+    const model = await getGenerativeAIModel();
+    const result = await model.generateContent(prompt);
+    let responseText = result.response.text();
+
+    // Strip markdown code blocks if present
+    responseText = responseText.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
+
+    logger.info("Merge paragraphs response:", { responseText: responseText.substring(0, 300) });
+
+    const parsed = JSON.parse(responseText);
+
+    if (Array.isArray(parsed.paragraphs) && typeof parsed.newTitle === "string") {
+      // Map parsed paragraphs to include sourceStatementId
+      const mergedParagraphs: ParagraphForMerge[] = parsed.paragraphs.map(
+        (p: { content: string; isNew: boolean }) => ({
+          content: p.content,
+          // If it's new content, mark it with the source statement ID
+          sourceStatementId: p.isNew ? newStatementId : undefined,
+        })
+      );
+
+      // Preserve sourceStatementId from existing paragraphs where possible
+      // by matching content (AI might reorder but content should be similar)
+      for (const merged of mergedParagraphs) {
+        if (!merged.sourceStatementId) {
+          const matchingExisting = existingParagraphs.find(
+            ep => ep.content === merged.content || merged.content.includes(ep.content)
+          );
+          if (matchingExisting?.sourceStatementId) {
+            merged.sourceStatementId = matchingExisting.sourceStatementId;
+          }
+        }
+      }
+
+      return {
+        paragraphs: mergedParagraphs,
+        newTitle: parsed.newTitle,
+      };
+    }
+
+    // Fallback: just append the new content
+    logger.warn("AI merge failed, using fallback append");
+
+    return createFallbackMerge(existingParagraphs, newContent, newStatementId);
+  } catch (error) {
+    logger.error("Error in mergeAndReorganizeParagraphs:", error);
+
+    return createFallbackMerge(existingParagraphs, newContent, newStatementId);
+  }
+}
+
+/**
+ * Fallback merge when AI fails - simply appends new content
+ */
+function createFallbackMerge(
+  existingParagraphs: ParagraphForMerge[],
+  newContent: string,
+  newStatementId: string
+): MergeParagraphsResult {
+  const existingTitle = existingParagraphs[0]?.content || "";
+  const isHebrew = /[\u0590-\u05FF]/.test(newContent);
+
+  return {
+    paragraphs: [
+      ...existingParagraphs,
+      {
+        content: newContent,
+        sourceStatementId: newStatementId,
+      },
+    ],
+    newTitle: existingTitle + (isHebrew ? " ועוד" : " and more"),
+  };
 }
 
 /**
