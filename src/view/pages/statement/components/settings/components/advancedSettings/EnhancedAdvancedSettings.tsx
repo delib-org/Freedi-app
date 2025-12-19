@@ -20,6 +20,7 @@ import {
 import LanguageSelector from './LanguageSelector/LanguageSelector';
 import { useSelector } from 'react-redux';
 import { exportStatementData } from '@/utils/exportUtils';
+import { exportPrivacyPreservingData } from '@/utils/privacyExportUtils';
 import { createStatementsByParentSelector } from '@/redux/utils/selectorFactories';
 import type { RootState } from '@/redux/types';
 import { logError } from '@/utils/errorHandling';
@@ -50,6 +51,12 @@ const EnhancedAdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => 
 
   // Export state
   const [isExporting, setIsExporting] = useState<{ json: boolean; csv: boolean }>({
+    json: false,
+    csv: false
+  });
+
+  // User data export state
+  const [isUserDataExporting, setIsUserDataExporting] = useState<{ json: boolean; csv: boolean }>({
     json: false,
     csv: false
   });
@@ -217,6 +224,22 @@ const EnhancedAdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => 
       });
     } finally {
       setIsExporting(prev => ({ ...prev, [format]: false }));
+    }
+  }
+
+  // User data export handler (privacy-preserving)
+  async function handleUserDataExport(format: ExportFormat) {
+    setIsUserDataExporting(prev => ({ ...prev, [format]: true }));
+    try {
+      await exportPrivacyPreservingData(statement, subStatements, format);
+    } catch (error) {
+      logError(error, {
+        operation: 'EnhancedAdvancedSettings.handleUserDataExport',
+        statementId: statement.statementId,
+        metadata: { format }
+      });
+    } finally {
+      setIsUserDataExporting(prev => ({ ...prev, [format]: false }));
     }
   }
 
@@ -686,6 +709,39 @@ const EnhancedAdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => 
                       </div>
                       <p className={styles.exportInfo}>
                         {t('Includes {{count}} sub-statements').replace('{{count}}', String(subStatements.length))}
+                      </p>
+
+                      {/* Divider */}
+                      <div className={styles.exportDivider} />
+
+                      {/* User Data Export */}
+                      <h4 className={styles.sectionTitle}>
+                        <Users size={18} />
+                        {t('Export User Evaluation Data')}
+                      </h4>
+                      <p className={styles.sectionDescription}>
+                        {t('Export evaluation data with demographic breakdowns. Privacy is protected using k-anonymity - demographic details are only shown when 3+ users share the same characteristic.')}
+                      </p>
+                      <div className={styles.exportButtons}>
+                        <button
+                          className={styles.exportButton}
+                          onClick={() => handleUserDataExport('json')}
+                          disabled={isUserDataExporting.json}
+                        >
+                          <Download size={18} />
+                          {isUserDataExporting.json ? t('Exporting...') : t('Export JSON')}
+                        </button>
+                        <button
+                          className={styles.exportButton}
+                          onClick={() => handleUserDataExport('csv')}
+                          disabled={isUserDataExporting.csv}
+                        >
+                          <Download size={18} />
+                          {isUserDataExporting.csv ? t('Exporting...') : t('Export CSV')}
+                        </button>
+                      </div>
+                      <p className={styles.exportInfo}>
+                        {t('Includes evaluation counts, demographic breakdowns, and anonymized data')}
                       </p>
                     </div>
                   )}

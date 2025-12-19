@@ -585,6 +585,12 @@
       margin: 0;
       font-style: italic;
     }
+
+    .exportDivider {
+      height: 1px;
+      background: var(--border-light);
+      margin: 1.5rem 0;
+    }
   }
 
   // Help Section
