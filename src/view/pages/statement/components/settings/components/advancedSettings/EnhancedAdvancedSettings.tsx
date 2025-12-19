@@ -15,9 +15,15 @@ import {
   MessageSquare, Navigation, Plus, Settings,
   ChevronDown, ChevronUp, HelpCircle,
   Zap, Database, Lightbulb, Award, Target,
-  Activity, PieChart, Sparkles, Shield, Lock, Globe, Scissors
+  Activity, PieChart, Sparkles, Shield, Lock, Globe, Scissors, Download
 } from 'lucide-react';
 import LanguageSelector from './LanguageSelector/LanguageSelector';
+import { useSelector } from 'react-redux';
+import { exportStatementData } from '@/utils/exportUtils';
+import { createStatementsByParentSelector } from '@/redux/utils/selectorFactories';
+import type { RootState } from '@/redux/types';
+import { logError } from '@/utils/errorHandling';
+import type { ExportFormat } from '@/types/export';
 
 interface CategoryConfig {
   id: string;
@@ -41,6 +47,18 @@ const EnhancedAdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => 
   const [maxVotes, setMaxVotes] = useState<number>(
     statement.evaluationSettings?.maxVotesPerUser || 3
   );
+
+  // Export state
+  const [isExporting, setIsExporting] = useState<{ json: boolean; csv: boolean }>({
+    json: false,
+    csv: false
+  });
+
+  // Selector for sub-statements
+  const selectSubStatements = createStatementsByParentSelector(
+    (state: RootState) => state.statements.statements
+  );
+  const subStatements = useSelector(selectSubStatements(statement.statementId));
 
   // Category configurations
   const categories: CategoryConfig[] = [
@@ -97,6 +115,14 @@ const EnhancedAdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => 
       title: t('Localization'),
       icon: Globe,
       description: t('Set default language for surveys'),
+      priority: 'low',
+      defaultExpanded: false,
+    },
+    {
+      id: 'dataExport',
+      title: t('Data Export'),
+      icon: Download,
+      description: t('Export statement data in various formats'),
       priority: 'low',
       defaultExpanded: false,
     },
@@ -175,6 +201,22 @@ const EnhancedAdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => 
       if (isVoteLimitEnabled) {
         setMaxVotesPerUser(statement.statementId, value);
       }
+    }
+  }
+
+  // Export handler
+  async function handleExport(format: ExportFormat) {
+    setIsExporting(prev => ({ ...prev, [format]: true }));
+    try {
+      await exportStatementData(statement, subStatements, format);
+    } catch (error) {
+      logError(error, {
+        operation: 'EnhancedAdvancedSettings.handleExport',
+        statementId: statement.statementId,
+        metadata: { format }
+      });
+    } finally {
+      setIsExporting(prev => ({ ...prev, [format]: false }));
     }
   }
 
@@ -328,7 +370,7 @@ const EnhancedAdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => 
           return (
             <div
               key={category.id}
-              className={`${styles.category} ${styles[`category--${category.priority}`]}`}
+              className={`${styles.category} ${styles[`category--${category.priority}`]} ${category.id === 'dataExport' ? styles.categoryDataExport : ''}`}
             >
               <button
                 className={styles.categoryHeader}
@@ -612,6 +654,40 @@ const EnhancedAdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => 
                         icon={Lock}
                       />
                     </>
+                  )}
+
+                  {/* Data Export */}
+                  {category.id === 'dataExport' && (
+                    <div className={styles.dataExportSection}>
+                      <h4 className={styles.sectionTitle}>
+                        <Download size={18} />
+                        {t('Export Statement Data')}
+                      </h4>
+                      <p className={styles.sectionDescription}>
+                        {t('Download this statement and its direct sub-statements with full metadata')}
+                      </p>
+                      <div className={styles.exportButtons}>
+                        <button
+                          className={styles.exportButton}
+                          onClick={() => handleExport('json')}
+                          disabled={isExporting.json}
+                        >
+                          <Download size={18} />
+                          {isExporting.json ? t('Exporting...') : t('Export JSON')}
+                        </button>
+                        <button
+                          className={styles.exportButton}
+                          onClick={() => handleExport('csv')}
+                          disabled={isExporting.csv}
+                        >
+                          <Download size={18} />
+                          {isExporting.csv ? t('Exporting...') : t('Export CSV')}
+                        </button>
+                      </div>
+                      <p className={styles.exportInfo}>
+                        {t('Includes {{count}} sub-statements').replace('{{count}}', String(subStatements.length))}
+                      </p>
+                    </div>
                   )}
                 </div>
               )}
