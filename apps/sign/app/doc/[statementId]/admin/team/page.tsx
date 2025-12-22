@@ -39,8 +39,7 @@ export default function TeamPage() {
   );
   const [isInviting, setIsInviting] = useState(false);
   const [inviteError, setInviteError] = useState<string | null>(null);
-  const [newInviteLink, setNewInviteLink] = useState<string | null>(null);
-  const [copiedLink, setCopiedLink] = useState(false);
+  const [inviteSuccess, setInviteSuccess] = useState<string | null>(null);
   const [revoking, setRevoking] = useState<string | null>(null);
   const [changingRole, setChangingRole] = useState<string | null>(null);
   const [removing, setRemoving] = useState<string | null>(null);
@@ -110,11 +109,12 @@ export default function TeamPage() {
 
     setIsInviting(true);
     setInviteError(null);
-    setNewInviteLink(null);
+    setInviteSuccess(null);
 
     try {
       // Non-owners can only invite viewers
       const permissionToSend = canInviteAdmins ? selectedPermission : AdminPermissionLevel.viewer;
+      const emailToInvite = inviteEmail.trim().toLowerCase();
 
       const response = await fetch(`/api/admin/invitations/${statementId}`, {
         method: 'POST',
@@ -122,7 +122,7 @@ export default function TeamPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          email: inviteEmail.trim().toLowerCase(),
+          email: emailToInvite,
           permissionLevel: permissionToSend,
         }),
       });
@@ -133,9 +133,12 @@ export default function TeamPage() {
         throw new Error(data.error || 'Failed to create invitation');
       }
 
-      setNewInviteLink(data.inviteLink);
+      // Show success message - no link needed, auto-accepts on login
+      setInviteSuccess(tWithParams('invitationSentSuccess', { email: emailToInvite }));
       setInviteEmail('');
       setSelectedPermission(AdminPermissionLevel.admin);
+      // Clear success message after 5 seconds
+      setTimeout(() => setInviteSuccess(null), 5000);
       // Refresh the list
       fetchData();
     } catch (err) {
@@ -222,19 +225,6 @@ export default function TeamPage() {
       setError(err instanceof Error ? err.message : 'Failed to revoke invitation');
     } finally {
       setRevoking(null);
-    }
-  };
-
-  // Copy invite link to clipboard
-  const handleCopyLink = async () => {
-    if (!newInviteLink) return;
-
-    try {
-      await navigator.clipboard.writeText(newInviteLink);
-      setCopiedLink(true);
-      setTimeout(() => setCopiedLink(false), 2000);
-    } catch (err) {
-      console.error('Failed to copy link', err);
     }
   };
 
@@ -375,27 +365,13 @@ export default function TeamPage() {
           <div className={styles.errorMessage}>{inviteError}</div>
         )}
 
-        {newInviteLink && (
-          <div className={styles.inviteLinkContainer}>
-            <p className={styles.inviteLinkTitle}>{t('invitationCreated')}</p>
-            <div className={styles.inviteLinkWrapper}>
-              <input
-                type="text"
-                value={newInviteLink}
-                readOnly
-                className={styles.inviteLinkInput}
-              />
-              <button
-                type="button"
-                onClick={handleCopyLink}
-                className={styles.copyButton}
-              >
-                {copiedLink ? t('copied') : t('copyLink')}
-              </button>
-            </div>
-            <p style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', marginTop: '8px' }}>
-              {t('shareInviteLinkNote')}
-            </p>
+        {inviteSuccess && (
+          <div className={styles.successMessage}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+              <polyline points="22 4 12 14.01 9 11.01" />
+            </svg>
+            <p>{inviteSuccess}</p>
           </div>
         )}
       </section>

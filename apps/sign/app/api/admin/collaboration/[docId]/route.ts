@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getFirebaseAdmin } from '@/lib/firebase/admin';
 import { getUserIdFromCookie } from '@/lib/utils/user';
+import { checkAdminAccess } from '@/lib/utils/adminAccess';
 import { Collections, StatementType, Statement, DEMOGRAPHIC_CONSTANTS } from '@freedi/shared-types';
 import { StatementWithParagraphs, Paragraph } from '@/types';
 import { logger } from '@/lib/utils/logger';
@@ -145,16 +146,17 @@ export async function GET(
       );
     }
 
-    const documentData = docSnap.data();
-    const isAdmin = documentData?.creator?.odlUserId === userId || documentData?.creatorId === userId;
+    // Check admin access (owner or collaborator)
+    const accessResult = await checkAdminAccess(db, docId, userId);
 
-    if (!isAdmin) {
+    if (!accessResult.isAdmin) {
       return NextResponse.json(
         { error: 'Forbidden - Admin access required' },
         { status: 403 }
       );
     }
 
+    const documentData = docSnap.data();
     const document = documentData as StatementWithParagraphs;
     const documentTitle = document.statement || 'Untitled Document';
     const paragraphs: Paragraph[] = (document.paragraphs || []).filter(p => !(p as Paragraph & { isNonInteractive?: boolean }).isNonInteractive);
