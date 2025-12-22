@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getFirebaseAdmin } from '@/lib/firebase/admin';
 import { getUserIdFromCookie } from '@/lib/utils/user';
-import { Collections, StatementType, Statement, DEMOGRAPHIC_CONSTANTS } from '@freedi/shared-types';
+import { checkAdminAccess } from '@/lib/utils/adminAccess';
+import { Collections, StatementType, Statement, DEMOGRAPHIC_CONSTANTS, AdminPermissionLevel } from '@freedi/shared-types';
 import { StatementWithParagraphs, Paragraph } from '@/types';
 import { logger } from '@/lib/utils/logger';
 
@@ -80,7 +81,17 @@ export async function GET(
 
     const { db } = getFirebaseAdmin();
 
-    // 1. Get the document and verify admin access
+    // Check admin access - must be at least admin level (not viewer) to export
+    const accessResult = await checkAdminAccess(db, docId, userId);
+
+    if (!accessResult.isAdmin || accessResult.permissionLevel === AdminPermissionLevel.viewer) {
+      return NextResponse.json(
+        { error: 'Forbidden - Admin access required' },
+        { status: 403 }
+      );
+    }
+
+    // 1. Get the document
     const docRef = db.collection(Collections.statements).doc(docId);
     const docSnap = await docRef.get();
 
@@ -92,15 +103,6 @@ export async function GET(
     }
 
     const documentData = docSnap.data();
-    const isAdmin = documentData?.creator?.odlUserId === userId || documentData?.creatorId === userId;
-
-    if (!isAdmin) {
-      return NextResponse.json(
-        { error: 'Forbidden - Admin access required' },
-        { status: 403 }
-      );
-    }
-
     const document = documentData as StatementWithParagraphs;
     const paragraphs: Paragraph[] = document.paragraphs || [];
     const paragraphIds = paragraphs.map((p) => p.paragraphId);

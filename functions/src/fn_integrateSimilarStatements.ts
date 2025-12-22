@@ -9,6 +9,7 @@ import {
 } from "./services/integration-ai-service";
 import { migrateEvaluationsToNewStatement } from "./fn_evaluation";
 import { textToParagraphs } from "./helpers";
+import { ALLOWED_ORIGINS } from "./config/cors";
 
 /**
  * Request type for finding similar statements for integration
@@ -56,7 +57,7 @@ export const findSimilarForIntegration = onCall<FindSimilarForIntegrationRequest
 		timeoutSeconds: 120,
 		memory: "512MiB",
 		region: functionConfig.region,
-		cors: true, // Allow CORS for development
+		cors: [...ALLOWED_ORIGINS]
 	},
 	async (request): Promise<FindSimilarForIntegrationResponse> => {
 		const { statementId } = request.data;
@@ -134,7 +135,7 @@ export const executeIntegration = onCall<ExecuteIntegrationRequest>(
 		timeoutSeconds: 120, // May take longer with many evaluations to migrate
 		memory: "512MiB",
 		region: functionConfig.region,
-		cors: true, // Allow CORS for development
+		cors: [...ALLOWED_ORIGINS]
 	},
 	async (request): Promise<ExecuteIntegrationResponse> => {
 		const { parentStatementId, selectedStatementIds, integratedTitle, integratedDescription } =

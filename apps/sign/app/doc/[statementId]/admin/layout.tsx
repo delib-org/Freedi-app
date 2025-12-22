@@ -6,6 +6,7 @@ import { getUserIdFromCookie } from '@/lib/utils/user';
 import { checkAdminAccess, AdminAccessResult } from '@/lib/utils/adminAccess';
 import { getFirebaseAdmin } from '@/lib/firebase/admin';
 import { AdminPermissionLevel } from '@freedi/shared-types';
+import { AdminProvider } from './AdminContext';
 import styles from './admin.module.scss';
 
 interface AdminLayoutProps {
@@ -114,7 +115,12 @@ export default async function AdminLayout({
       </aside>
 
       <main className={styles.main}>
-        {children}
+        <AdminProvider
+          permissionLevel={accessResult.permissionLevel!}
+          isOwner={accessResult.isOwner}
+        >
+          {children}
+        </AdminProvider>
       </main>
     </div>
   );

@@ -2,7 +2,8 @@
 // POLARIZATION INDEX HELPERS
 // ============================================================================
 
-import { AxesItem, Collections, PolarizationIndex, Statement, UserDemographicQuestion } from "delib-npm";
+import { Statement } from "@freedi/shared-types";
+import { AxesItem, Collections, PolarizationIndex, UserDemographicQuestion } from "delib-npm";
 import { getRandomColor } from "./helpers";
 import { db } from ".";
 import { logger } from "firebase-functions/v1";

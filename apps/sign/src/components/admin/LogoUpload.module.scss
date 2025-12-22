@@ -1,0 +1,175 @@
+.logoUpload {
+  width: 100%;
+}
+
+.hiddenInput {
+  display: none;
+}
+
+.dropZone {
+  position: relative;
+  border: 2px dashed var(--border-light);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-lg);
+  background: var(--background);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover:not(.uploading) {
+    border-color: var(--btn-primary);
+    background: rgba(91, 136, 229, 0.04);
+  }
+
+  &:focus {
+    outline: none;
+    border-color: var(--btn-primary);
+    box-shadow: 0 0 0 3px rgba(91, 136, 229, 0.2);
+  }
+
+  &.dragging {
+    border-color: var(--btn-primary);
+    background: rgba(91, 136, 229, 0.08);
+    border-style: solid;
+  }
+
+  &.uploading {
+    cursor: default;
+    pointer-events: none;
+  }
+}
+
+.preview {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.previewImage {
+  max-width: 150px;
+  max-height: 100px;
+  object-fit: contain;
+  border-radius: var(--radius-sm);
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.5);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  border-radius: var(--radius-md);
+
+  .dropZone:hover & {
+    opacity: 1;
+  }
+}
+
+.overlayText {
+  color: white;
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-align: center;
+  padding: var(--spacing-sm);
+}
+
+.placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-sm);
+  text-align: center;
+  padding: var(--spacing-md);
+}
+
+.uploadIcon {
+  width: 40px;
+  height: 40px;
+  color: var(--text-caption);
+  transition: color 0.2s ease;
+
+  .dropZone:hover & {
+    color: var(--btn-primary);
+  }
+
+  .dragging & {
+    color: var(--btn-primary);
+  }
+}
+
+.placeholderText {
+  font-size: 0.9375rem;
+  color: var(--text-secondary);
+  margin: 0;
+
+  .dragging & {
+    color: var(--btn-primary);
+    font-weight: 500;
+  }
+}
+
+.hint {
+  font-size: 0.75rem;
+  color: var(--text-caption);
+  margin: 0;
+}
+
+.progressOverlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: var(--radius-md);
+}
+
+.progressBar {
+  width: 80%;
+  max-width: 200px;
+  height: 6px;
+  background: var(--border-light);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: var(--btn-primary);
+  transition: width 0.2s ease;
+}
+
+.progressText {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.error {
+  margin-top: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: rgba(244, 67, 54, 0.1);
+  color: var(--disagree);
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+}
+
+/* RTL Support */
+[dir="rtl"] {
+  .placeholder,
+  .overlay,
+  .progressOverlay {
+    direction: rtl;
+  }
+}

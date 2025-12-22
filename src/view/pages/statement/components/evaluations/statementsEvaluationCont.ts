@@ -38,9 +38,10 @@ export function sortSubStatements(
 							}
 						);
 					} else {
-						// Default: sort by consensus
+						// Default: sort by agreement (evaluation.agreement preferred, fallback to consensus)
 						_subStatements = subStatements.sort(
-							(a: Statement, b: Statement) => b.consensus - a.consensus
+							(a: Statement, b: Statement) =>
+								(b.evaluation?.agreement ?? b.consensus ?? 0) - (a.evaluation?.agreement ?? a.consensus ?? 0)
 						);
 					}
 					break;

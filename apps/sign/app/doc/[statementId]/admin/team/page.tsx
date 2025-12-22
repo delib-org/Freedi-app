@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, FormEvent } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import {
   AdminInvitation,
@@ -9,6 +9,7 @@ import {
   AdminPermissionLevel,
   DocumentCollaborator,
 } from '@freedi/shared-types';
+import { useAdminContext } from '../AdminContext';
 import styles from './team.module.scss';
 
 interface OwnerInfo {
@@ -19,8 +20,10 @@ interface OwnerInfo {
 
 export default function TeamPage() {
   const params = useParams();
+  const router = useRouter();
   const statementId = params?.statementId as string;
   const { t, tWithParams } = useTranslation();
+  const { canInviteViewers, canInviteAdmins, isOwner } = useAdminContext();
 
   // State
   const [invitations, setInvitations] = useState<AdminInvitation[]>([]);
@@ -31,7 +34,9 @@ export default function TeamPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [inviteEmail, setInviteEmail] = useState('');
-  const [invitePermissionLevel, setInvitePermissionLevel] = useState<AdminPermissionLevel>(AdminPermissionLevel.admin);
+  const [selectedPermission, setSelectedPermission] = useState<AdminPermissionLevel>(
+    isOwner ? AdminPermissionLevel.admin : AdminPermissionLevel.viewer
+  );
   const [isInviting, setIsInviting] = useState(false);
   const [inviteError, setInviteError] = useState<string | null>(null);
   const [newInviteLink, setNewInviteLink] = useState<string | null>(null);
@@ -87,6 +92,18 @@ export default function TeamPage() {
     }
   }, [statementId, fetchData]);
 
+  // Redirect viewers - they cannot access team page
+  useEffect(() => {
+    if (!canInviteViewers) {
+      router.replace(`/doc/${statementId}/admin`);
+    }
+  }, [canInviteViewers, router, statementId]);
+
+  // Don't render anything while redirecting
+  if (!canInviteViewers) {
+    return null;
+  }
+
   // Handle invite submission
   const handleInvite = async (e: FormEvent) => {
     e.preventDefault();
@@ -98,6 +115,9 @@ export default function TeamPage() {
     setNewInviteLink(null);
 
     try {
+      // Non-owners can only invite viewers
+      const permissionToSend = canInviteAdmins ? selectedPermission : AdminPermissionLevel.viewer;
+
       const response = await fetch(`/api/admin/invitations/${statementId}`, {
         method: 'POST',
         headers: {
@@ -105,7 +125,7 @@ export default function TeamPage() {
         },
         body: JSON.stringify({
           email: inviteEmail.trim().toLowerCase(),
-          permissionLevel: invitePermissionLevel,
+          permissionLevel: permissionToSend,
         }),
       });
 
@@ -276,18 +296,86 @@ export default function TeamPage() {
 
       {error && <div className={styles.errorMessage}>{error}</div>}
 
-      {/* Invite New Admin Section - Hidden for viewers */}
-      {currentUserPermission !== AdminPermissionLevel.viewer && (
-        <section className={styles.section}>
-          <div className={styles.sectionHeader}>
-            <h2 className={styles.sectionTitle}>{t('inviteNewAdmin')}</h2>
+      {/* Invite Team Member Section */}
+      <section className={styles.section}>
+        <div className={styles.sectionHeader}>
+          <h2 className={styles.sectionTitle}>
+            {canInviteAdmins ? t('inviteTeamMember') : t('inviteViewer')}
+          </h2>
+          {!canInviteAdmins && (
+            <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginTop: '4px' }}>
+              {t('onlyOwnersCanInviteAdmins')}
+            </p>
+          )}
+        </div>
+
+        <form onSubmit={handleInvite} className={styles.inviteForm}>
+          <div className={styles.inputGroup}>
+            <label htmlFor="inviteEmail" className={styles.inputLabel}>
+              {t('emailAddress')}
+            </label>
+            <input
+              id="inviteEmail"
+              type="email"
+              value={inviteEmail}
+              onChange={(e) => setInviteEmail(e.target.value)}
+              placeholder={t('enterEmailAddress')}
+              className={styles.emailInput}
+              disabled={isInviting}
+              required
+            />
           </div>
 
-          <form onSubmit={handleInvite} className={styles.inviteForm}>
+          {canInviteAdmins && (
             <div className={styles.inputGroup}>
-              <label htmlFor="inviteEmail" className={styles.inputLabel}>
-                {t('emailAddress')}
+              <label htmlFor="permissionLevel" className={styles.inputLabel}>
+                {t('permissionLevel')}
               </label>
+              <select
+                id="permissionLevel"
+                value={selectedPermission}
+                onChange={(e) => setSelectedPermission(e.target.value as AdminPermissionLevel)}
+                className={styles.emailInput}
+                disabled={isInviting}
+              >
+                <option value={AdminPermissionLevel.admin}>{t('admin')}</option>
+                <option value={AdminPermissionLevel.viewer}>{t('viewer')}</option>
+              </select>
+            </div>
+          )}
+
+          <button
+            type="submit"
+            className={styles.inviteButton}
+            disabled={isInviting || !inviteEmail.trim()}
+          >
+            {isInviting ? (
+              <>
+                <span className={styles.spinner} style={{ width: 16, height: 16 }} />
+                {t('sending')}
+              </>
+            ) : (
+              <>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
+                  <circle cx="8.5" cy="7" r="4" />
+                  <line x1="20" y1="8" x2="20" y2="14" />
+                  <line x1="23" y1="11" x2="17" y2="11" />
+                </svg>
+                {t('sendInvitation')}
+              </>
+            )}
+          </button>
+        </form>
+
+        {inviteError && (
+          <div className={styles.errorMessage}>{inviteError}</div>
+        )}
+
+        {newInviteLink && (
+          <div className={styles.inviteLinkContainer}>
+            <p className={styles.inviteLinkTitle}>{t('invitationCreated')}</p>
+            <div className={styles.inviteLinkWrapper}>
               <input
                 id="inviteEmail"
                 type="email"

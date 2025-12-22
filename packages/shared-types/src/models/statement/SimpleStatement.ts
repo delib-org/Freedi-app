@@ -33,7 +33,8 @@ export function statementToSimpleStatement(
 		creatorId: statement.creatorId,
 		creator: statement.creator,
 		parentId: statement.parentId,
-		consensus: statement.consensus ?? 0,
+		// Use evaluation.agreement when available, fallback to consensus for legacy data
+		consensus: statement.evaluation?.agreement ?? statement.consensus ?? 0,
 		voted: statement.voted ?? 0,
 		lastUpdate: statement.lastUpdate ?? 0,
 		createdAt: statement.createdAt ?? 0
