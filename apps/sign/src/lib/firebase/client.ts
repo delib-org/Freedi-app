@@ -103,6 +103,14 @@ export async function googleLogin(): Promise<User | null> {
     // Set cookie for server-side access
     setCookiesFromUser(result.user);
 
+    // Auto-accept any pending invitations for this user's email
+    if (result.user.email) {
+      acceptPendingInvitations().catch((error) => {
+        // Don't fail login if invitation acceptance fails
+        console.error('[Firebase Auth] Failed to auto-accept invitations', error);
+      });
+    }
+
     return result.user;
   } catch (error) {
     console.error('[Firebase Auth] Google login failed', error);
@@ -159,6 +167,13 @@ export function subscribeToAuthState(callback: (user: User | null) => void): () 
   return onAuthStateChanged(authInstance, (user) => {
     if (user) {
       setCookiesFromUser(user);
+
+      // Auto-accept pending invitations when user has email (Google login)
+      if (user.email) {
+        acceptPendingInvitations().catch((error) => {
+          console.error('[Firebase Auth] Failed to auto-accept invitations on auth state change', error);
+        });
+      }
     }
     callback(user);
   });
@@ -188,6 +203,45 @@ export function getCurrentUser(): User | null {
   const authInstance = getFirebaseAuth();
 
   return authInstance.currentUser;
+}
+
+/**
+ * Auto-accept pending invitations for the current user's email
+ * Called automatically after Google login
+ */
+export async function acceptPendingInvitations(): Promise<{
+  acceptedCount: number;
+  acceptedInvitations: Array<{ documentId: string; permissionLevel: string }>;
+}> {
+  try {
+    const response = await fetch('/api/auth/accept-pending-invitations', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to accept invitations: ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    if (data.acceptedCount > 0) {
+      console.info('[Firebase Auth] Auto-accepted invitations', {
+        count: data.acceptedCount,
+        documents: data.acceptedInvitations?.map((inv: { documentId: string }) => inv.documentId),
+      });
+    }
+
+    return {
+      acceptedCount: data.acceptedCount || 0,
+      acceptedInvitations: data.acceptedInvitations || [],
+    };
+  } catch (error) {
+    console.error('[Firebase Auth] Failed to auto-accept invitations', error);
+    throw error;
+  }
 }
 
 /**

@@ -960,6 +960,7 @@
   "sendInvitation": "Uitnodiging Verzenden",
   "sending": "Verzenden...",
   "invitationCreated": "Uitnodiging succesvol aangemaakt!",
+  "invitationSentSuccess": "Uitnodiging verzonden naar {{email}}. Toegang wordt verleend bij inloggen.",
   "copyLink": "Link Kopiëren",
   "shareInviteLinkNote": "Deel deze link met de persoon die u wilt uitnodigen. De link verloopt over 7 dagen.",
   "pendingInvitations": "Openstaande Uitnodigingen",

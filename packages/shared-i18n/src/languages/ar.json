@@ -956,6 +956,7 @@
   "sendInvitation": "إرسال الدعوة",
   "sending": "جارٍ الإرسال...",
   "invitationCreated": "تم إنشاء الدعوة بنجاح!",
+  "invitationSentSuccess": "تم إرسال الدعوة إلى {{email}}. سيحصلون على الوصول عند تسجيل الدخول.",
   "copyLink": "نسخ الرابط",
   "shareInviteLinkNote": "شارك هذا الرابط مع الشخص الذي تريد دعوته. ستنتهي صلاحية الرابط خلال 7 أيام.",
   "pendingInvitations": "الدعوات المعلقة",
