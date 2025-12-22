@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getFirebaseAdmin } from '@/lib/firebase/admin';
 import { getUserIdFromCookie } from '@/lib/utils/user';
+import { checkAdminAccess } from '@/lib/utils/adminAccess';
 import { Collections } from '@freedi/shared-types';
 import { deleteDemographicQuestion, saveDemographicQuestion } from '@/lib/firebase/demographicQueries';
 import { DemographicMode, CreateQuestionRequest } from '@/types/demographics';
@@ -38,15 +39,17 @@ export async function PUT(
       );
     }
 
-    const document = docSnap.data();
-    const isAdmin = document?.creator?.odlUserId === userId || document?.creatorId === userId;
+    // Check admin access (owner or collaborator with admin role)
+    const accessResult = await checkAdminAccess(db, docId, userId);
 
-    if (!isAdmin) {
+    if (!accessResult.isAdmin || accessResult.isViewer) {
       return NextResponse.json(
         { error: 'Forbidden - Admin access required' },
         { status: 403 }
       );
     }
+
+    const document = docSnap.data();
 
     // Check that document is in custom mode
     const mode: DemographicMode = document?.signSettings?.demographicMode || 'disabled';
@@ -127,10 +130,10 @@ export async function DELETE(
       );
     }
 
-    const document = docSnap.data();
-    const isAdmin = document?.creator?.odlUserId === userId || document?.creatorId === userId;
+    // Check admin access (owner or collaborator with admin role)
+    const accessResult = await checkAdminAccess(db, docId, userId);
 
-    if (!isAdmin) {
+    if (!accessResult.isAdmin || accessResult.isViewer) {
       return NextResponse.json(
         { error: 'Forbidden - Admin access required' },
         { status: 403 }
