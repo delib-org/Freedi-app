@@ -8,6 +8,7 @@ import LogoUpload from '@/components/admin/LogoUpload';
 import { DemographicMode } from '@/types/demographics';
 import { TextDirection, DEFAULT_LOGO_URL, DEFAULT_BRAND_NAME } from '@/types';
 import GoogleDocsImport from '@/components/import/GoogleDocsImport';
+import { useAdminContext } from '../AdminContext';
 import styles from '../admin.module.scss';
 
 interface Settings {
@@ -29,6 +30,7 @@ export default function AdminSettingsPage() {
   const router = useRouter();
   const statementId = params.statementId as string;
   const { t } = useTranslation();
+  const { canManageSettings } = useAdminContext();
 
   const [settings, setSettings] = useState<Settings>({
     allowComments: true,
@@ -65,6 +67,18 @@ export default function AdminSettingsPage() {
   useEffect(() => {
     fetchSettings();
   }, [fetchSettings]);
+
+  // Redirect viewers to dashboard - they cannot access settings
+  useEffect(() => {
+    if (!canManageSettings) {
+      router.replace(`/doc/${statementId}/admin`);
+    }
+  }, [canManageSettings, router, statementId]);
+
+  // Don't render anything while redirecting
+  if (!canManageSettings) {
+    return null;
+  }
 
   const handleToggle = (key: keyof Settings) => {
     setSettings(prev => ({
