@@ -803,6 +803,14 @@ npm install
 # Functions dependencies
 cd functions
 npm install
+
+# Mass Consensus app dependencies (if working on MC)
+cd /Users/talyaron/Documents/Freedi-app.worktrees/<worktree-name>/apps/mass-consensus
+npm install
+
+# Sign app dependencies (if working on Sign app)
+cd /Users/talyaron/Documents/Freedi-app.worktrees/<worktree-name>/apps/sign
+npm install
 ```
 
 ### Step 4: Build Shared Packages
@@ -833,7 +841,9 @@ npm run dev  # Should start without errors
 3. **Test as you go** - Don't leave testing until the end
 4. **Ask for help** - If patterns are unclear, check documentation or ask
 5. **Follow the checklist** - Use the code review checklist above
-- If I am writing mc or MC i mean the mass-conesunsus app undeerd apps/
-- when you create a new UI, use useTranslation() hook and the relvent files to translate to all avilable languages
-- to deploy to production run first env:prod. to deploy to testing, run first env:test
-- types are allways saved in delib-npm for cross-apps/functions comitabilty
+- If I am writing mc or MC i mean the mass-consensus app under apps/
+- when you create a new UI, use useTranslation() hook and the relevant files to translate to all available languages
+- **Deployment commands** (env setup is included in the scripts):
+  - Deploy functions to production: `npm run deploy:f:prod`
+  - Deploy functions to testing: `npm run deploy:f:test`
+- types are always saved in delib-npm for cross-apps/functions compatibility

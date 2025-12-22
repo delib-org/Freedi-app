@@ -2,6 +2,7 @@ import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { getFirestore } from 'firebase-admin/firestore';
 import { Statement, Collections, functionConfig } from '@freedi/shared-types';
 import { getGeminiModel } from './config/gemini';
+import { ALLOWED_ORIGINS } from './config/cors';
 import { getParagraphsText } from './helpers';
 
 interface SummarizeDiscussionRequest {
@@ -53,7 +54,10 @@ function detectLanguage(text: string): string {
  * Only accessible by admins or creators of the statement.
  */
 export const summarizeDiscussion = onCall<SummarizeDiscussionRequest>(
-	{ region: functionConfig.region },
+	{
+		region: functionConfig.region,
+		cors: [...ALLOWED_ORIGINS]
+	},
 	async (request): Promise<SummarizeDiscussionResponse> => {
 		const { statementId, adminPrompt, language } = request.data;
 		const userId = request.auth?.uid;
@@ -100,11 +104,11 @@ export const summarizeDiscussion = onCall<SummarizeDiscussionRequest>(
 		const totalParticipants = question.evaluation?.asParentTotalEvaluators || 0;
 
 		// 4. Get selected solutions (using isChosen flag set by cutoff logic)
+		// Note: Can't orderBy nested field evaluation.agreement in Firestore, so we sort in memory
 		const selectedSnapshot = await db
 			.collection(Collections.statements)
 			.where('parentId', '==', statementId)
 			.where('isChosen', '==', true)
-			.orderBy('consensus', 'desc')
 			.get();
 
 		if (selectedSnapshot.empty) {
@@ -114,13 +118,17 @@ export const summarizeDiscussion = onCall<SummarizeDiscussionRequest>(
 			);
 		}
 
-		const selectedSolutions: SelectedSolution[] = selectedSnapshot.docs.map(doc => {
-			const s = doc.data() as Statement;
+		// Sort by evaluation.agreement (fallback to consensus for legacy data)
+		const sortedDocs = selectedSnapshot.docs
+			.map(doc => doc.data() as Statement)
+			.sort((a, b) => (b.evaluation?.agreement ?? b.consensus ?? 0) - (a.evaluation?.agreement ?? a.consensus ?? 0));
 
+		const selectedSolutions: SelectedSolution[] = sortedDocs.map(s => {
 			return {
 				title: s.statement,
 				description: getParagraphsText(s.paragraphs),
-				consensus: s.consensus || s.evaluation?.agreement || 0,
+				// Use evaluation.agreement when available, fallback to consensus for legacy data
+				consensus: s.evaluation?.agreement ?? s.consensus ?? 0,
 				averageEvaluation: s.evaluation?.averageEvaluation || 0,
 				numberOfEvaluators: s.evaluation?.numberOfEvaluators || 0
 			};
@@ -136,20 +144,60 @@ export const summarizeDiscussion = onCall<SummarizeDiscussionRequest>(
 			detectedLang
 		);
 
-		// 6. Call Gemini AI
+		// 6. Call Gemini AI with retry logic for truncation
 		try {
 			const model = getGeminiModel();
 
-			const result = await model.generateContent({
-				contents: [{ role: 'user', parts: [{ text: prompt }] }],
-				generationConfig: {
-					temperature: 0.4,
-					maxOutputTokens: 2048,
-				},
-			});
+			// Calculate appropriate token limit based on number of solutions
+			// More solutions = need more tokens for complete summary
+			const baseTokens = 4096;
+			const tokensPerSolution = 100;
+			const maxOutputTokens = Math.min(8192, baseTokens + (selectedSolutions.length * tokensPerSolution));
 
-			const response = result.response;
-			let summaryText = response.text();
+			let summaryText = '';
+			let attempts = 0;
+			const maxAttempts = 2;
+
+			while (attempts < maxAttempts) {
+				attempts++;
+
+				const result = await model.generateContent({
+					contents: [{ role: 'user', parts: [{ text: prompt }] }],
+					generationConfig: {
+						temperature: 0.4,
+						maxOutputTokens,
+					},
+				});
+
+				const response = result.response;
+
+				// Check if response was truncated
+				const finishReason = response.candidates?.[0]?.finishReason;
+				if (finishReason && finishReason !== 'STOP') {
+					console.warn(`Gemini response finished with reason: ${finishReason}`);
+					if (finishReason === 'SAFETY') {
+						throw new HttpsError('failed-precondition', 'Content was filtered by safety settings');
+					}
+					if (finishReason === 'MAX_TOKENS' && attempts < maxAttempts) {
+						console.warn('Summary was truncated, retrying with condensed prompt...');
+						// Continue to retry with higher token count (already at max, so this is best effort)
+						continue;
+					}
+				}
+
+				summaryText = response.text();
+
+				// Check if summary ends mid-sentence (basic truncation detection)
+				const trimmedText = summaryText.trim();
+				const endsWithPunctuation = /[.!?؟。،:\n]$/.test(trimmedText);
+
+				if (!endsWithPunctuation && trimmedText.length > 100 && attempts < maxAttempts) {
+					console.warn('Summary appears truncated (no ending punctuation), retrying...');
+					continue;
+				}
+
+				break; // Success - exit loop
+			}
 
 			// Clean up any markdown code blocks if AI accidentally wrapped the response
 			summaryText = summaryText
@@ -231,9 +279,14 @@ Write a clear, informative summary in ${languageName} that helps readers underst
 - Focus on the SUBSTANCE of what was agreed, not the process
 - Use clear, accessible language - avoid jargon
 - Be specific about what the group decided to do/believe/support
-- Keep it concise (150-300 words) but ensure all key agreements are clearly explained
+${solutions.length > 10
+		? `- Since there are ${solutions.length} agreements, organize them by theme/category using headers
+- For each category, summarize the key agreements briefly
+- Aim for 400-600 words to cover all major decisions`
+		: `- Keep it concise (150-300 words) but ensure all key agreements are clearly explained`}
 - Use bullet points for multiple agreements
 - If solutions have descriptions, incorporate that detail into your explanation
+- **IMPORTANT: Complete the entire summary - do not stop mid-sentence or mid-section**
 
 **Example of good summary style**:
 Instead of: "Solution 1 achieved a consensus score of 0.65"

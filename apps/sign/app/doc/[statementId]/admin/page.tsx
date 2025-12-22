@@ -2,6 +2,7 @@ import { cookies } from 'next/headers';
 import { getDocumentStats } from '@/lib/firebase/queries';
 import { getUserIdFromCookie } from '@/lib/utils/user';
 import ParagraphsTable from '@/components/admin/ParagraphsTable';
+import QuickActions from './QuickActions';
 import styles from './admin.module.scss';
 
 interface AdminDashboardProps {
@@ -88,48 +89,7 @@ export default async function AdminDashboard({ params }: AdminDashboardProps) {
       </section>
 
       {/* Quick Actions */}
-      <section className={styles.section}>
-        <h2 className={styles.sectionTitle}>Quick Actions</h2>
-        <div style={{ display: 'flex', gap: 'var(--spacing-md)', flexWrap: 'wrap' }}>
-          <a
-            href={`/doc/${statementId}/admin/users`}
-            className={styles.exportButton}
-            style={{ textDecoration: 'none' }}
-          >
-            View All Users
-          </a>
-          <a
-            href={`/doc/${statementId}/admin/settings`}
-            className={styles.exportButton}
-            style={{ textDecoration: 'none', background: 'var(--text-secondary)' }}
-          >
-            Document Settings
-          </a>
-          <a
-            href={`/api/admin/export/${statementId}`}
-            className={styles.exportButton}
-            style={{ textDecoration: 'none', background: 'var(--agree)' }}
-          >
-            Export Users
-          </a>
-          <a
-            href={`/api/admin/export-detailed/${statementId}`}
-            className={styles.exportButton}
-            style={{ textDecoration: 'none', background: 'var(--btn-primary)' }}
-            title="Export document with all paragraphs, comments, and demographics"
-          >
-            Export Detailed
-          </a>
-          <a
-            href={`/api/admin/export-demographic/${statementId}`}
-            className={styles.exportButton}
-            style={{ textDecoration: 'none', background: 'var(--warning, #f59e0b)' }}
-            title="Export demographic comparison data - shows how each segment interacted with each paragraph"
-          >
-            Export Demographic Analysis
-          </a>
-        </div>
-      </section>
+      <QuickActions statementId={statementId} />
     </div>
   );
 }

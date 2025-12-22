@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { listenToPolarizationIndex } from '@/controllers/db/polarizationIndex/getPolarizationIndex';
-import { selectPolarizationIndexByParentId, selectUserDemographicQuestionsByStatementId } from '@/redux/userDemographic/userDemographicSlice';
+import { selectPolarizationIndexByParentId, selectEffectiveQuestions } from '@/redux/userDemographic/userDemographicSlice';
+import { statementSelector } from '@/redux/statements/statementsSlice';
 import { useSelector } from 'react-redux';
 import { useParams } from 'react-router';
 import styles from './PolarizationIndex.module.scss';
 import { Tooltip } from '../../tooltip/Tooltip';
 import { PolarizationIndex, UserDemographicQuestion } from '@freedi/shared-types';
-import { listenToUserDemographicQuestions } from '@/controllers/db/userDemographic/getUserDemographic';
+import { listenToUserDemographicQuestions, listenToGroupDemographicQuestions } from '@/controllers/db/userDemographic/getUserDemographic';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 
 interface Group {
@@ -46,8 +47,11 @@ interface Point {
 const PolarizationIndexComp = () => {
 	const { statementId } = useParams();
 	const {t} = useTranslation();
+	const statement = useSelector(statementSelector(statementId));
+	const topParentId = statement?.topParentId || statementId;
 	const polarizationIndexes = useSelector(selectPolarizationIndexByParentId(statementId));
-	const userQuestions: UserDemographicQuestion[] = useSelector(selectUserDemographicQuestionsByStatementId(statementId));
+	// Use selectEffectiveQuestions to include both group-level and statement-level demographics
+	const userQuestions: UserDemographicQuestion[] = useSelector(selectEffectiveQuestions(statementId || '', topParentId || ''));
 
 	const [boardDimensions, setBoardDimensions] = useState({ width: 0, height: 0 });
 	const [showGroups, setShowGroups] = useState<string | null>(null);
@@ -59,10 +63,17 @@ const PolarizationIndexComp = () => {
 
 		let unsubscribe: () => void;
 		let userDataQuestionsUnsubscribe: () => void;
+		let groupDemographicsUnsubscribe: () => void;
 
 		if (statementId) {
 			unsubscribe = listenToPolarizationIndex(statementId);
 			userDataQuestionsUnsubscribe = listenToUserDemographicQuestions(statementId);
+		}
+
+		// Listen to group-level demographics (scope='group') for the topParentId
+		// This captures group demographics whether the current statement is the top parent or a child
+		if (topParentId) {
+			groupDemographicsUnsubscribe = listenToGroupDemographicQuestions(topParentId);
 		}
 
 		return () => {
@@ -72,8 +83,11 @@ const PolarizationIndexComp = () => {
 			if (userDataQuestionsUnsubscribe) {
 				userDataQuestionsUnsubscribe();
 			}
+			if (groupDemographicsUnsubscribe) {
+				groupDemographicsUnsubscribe();
+			}
 		};
-	}, [statementId]);
+	}, [statementId, topParentId]);
 
 	useEffect(() => {
 		const boardElement = document.querySelector(`.${styles.board}`);

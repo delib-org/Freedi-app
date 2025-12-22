@@ -116,7 +116,9 @@ function extractStatementId(path: string): string | null {
 export const serveOgTags = onRequest(
   {
     ...functionConfig,
-    cors: true,
+    // Note: CORS only affects browser-based requests.
+    // Social media bots (Facebook, WhatsApp, etc.) don't use CORS.
+    cors: true
   },
   async (req, res) => {
     const userAgent = req.headers["user-agent"] || "";

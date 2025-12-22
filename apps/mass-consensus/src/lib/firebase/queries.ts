@@ -266,19 +266,21 @@ export async function getAllSolutionsSorted(
   try {
     const db = getFirestoreAdmin();
 
+    // Fetch all options (can't orderBy nested field evaluation.agreement in Firestore)
     const snapshot = await db
       .collection(Collections.statements)
       .where('parentId', '==', questionId)
       .where('statementType', '==', StatementType.option)
-      .orderBy('consensus', 'desc')
-      .limit(limit)
       .get();
 
     logger.info('[getAllSolutionsSorted] Found', snapshot.size, 'solutions for question:', questionId);
 
+    // Sort by evaluation.agreement (fallback to consensus for legacy data) and apply limit
     return snapshot.docs
       .map((doc) => doc.data() as Statement)
-      .filter((statement) => !statement.hide);
+      .filter((statement) => !statement.hide)
+      .sort((a, b) => (b.evaluation?.agreement ?? b.consensus ?? 0) - (a.evaluation?.agreement ?? a.consensus ?? 0))
+      .slice(0, limit);
   } catch (error) {
     logQueryError('getAllSolutionsSorted', error, { questionId, limit });
     throw error;
@@ -299,19 +301,21 @@ export async function getUserSolutions(
   try {
     const db = getFirestoreAdmin();
 
+    // Fetch user's options (can't orderBy nested field evaluation.agreement in Firestore)
     const snapshot = await db
       .collection(Collections.statements)
       .where('parentId', '==', questionId)
       .where('statementType', '==', StatementType.option)
       .where('creatorId', '==', userId)
-      .orderBy('consensus', 'desc')
       .get();
 
     logger.info('[getUserSolutions] Found', snapshot.size, 'solutions for user:', userId);
 
+    // Sort by evaluation.agreement (fallback to consensus for legacy data)
     return snapshot.docs
       .map((doc) => doc.data() as Statement)
-      .filter((statement) => !statement.hide);
+      .filter((statement) => !statement.hide)
+      .sort((a, b) => (b.evaluation?.agreement ?? b.consensus ?? 0) - (a.evaluation?.agreement ?? a.consensus ?? 0));
   } catch (error) {
     logQueryError('getUserSolutions', error, { questionId, userId });
     throw error;

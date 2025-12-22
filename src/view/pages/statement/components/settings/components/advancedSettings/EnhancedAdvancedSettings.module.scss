@@ -524,6 +524,75 @@
     }
   }
 
+  // Data Export Section
+  .dataExportSection {
+    .sectionTitle {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin: 0 0 0.5rem 0;
+    }
+
+    .sectionDescription {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      margin: 0 0 1rem 0;
+      line-height: 1.4;
+    }
+
+    .exportButtons {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-bottom: 0.75rem;
+    }
+
+    .exportButton {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1.25rem;
+      background: var(--btn-primary);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+
+      &:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(var(--accent-rgb), 0.3);
+      }
+
+      &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+
+      svg {
+        flex-shrink: 0;
+      }
+    }
+
+    .exportInfo {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      margin: 0;
+      font-style: italic;
+    }
+
+    .exportDivider {
+      height: 1px;
+      background: var(--border-light);
+      margin: 1.5rem 0;
+    }
+  }
+
   // Help Section
   .helpSection {
     display: flex;

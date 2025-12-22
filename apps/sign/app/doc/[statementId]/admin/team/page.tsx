@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, FormEvent } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import {
   AdminInvitation,
@@ -9,25 +9,44 @@ import {
   AdminPermissionLevel,
   DocumentCollaborator,
 } from '@freedi/shared-types';
+import { useAdminContext } from '../AdminContext';
 import styles from './team.module.scss';
+
+interface OwnerInfo {
+  userId: string;
+  displayName: string;
+  email: string;
+}
 
 export default function TeamPage() {
   const params = useParams();
+  const router = useRouter();
   const statementId = params?.statementId as string;
   const { t, tWithParams } = useTranslation();
+  const { canInviteViewers, canInviteAdmins, isOwner: isOwnerFromContext } = useAdminContext();
 
   // State
   const [invitations, setInvitations] = useState<AdminInvitation[]>([]);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [collaborators, _setCollaborators] = useState<DocumentCollaborator[]>([]);
+  const [collaborators, setCollaborators] = useState<DocumentCollaborator[]>([]);
+  const [ownerInfo, setOwnerInfo] = useState<OwnerInfo | null>(null);
+  const [currentUserPermission, setCurrentUserPermission] = useState<AdminPermissionLevel | null>(null);
+  const [isOwnerState, setIsOwnerState] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [inviteEmail, setInviteEmail] = useState('');
+  const [selectedPermission, setSelectedPermission] = useState<AdminPermissionLevel>(
+    isOwnerFromContext ? AdminPermissionLevel.admin : AdminPermissionLevel.viewer
+  );
   const [isInviting, setIsInviting] = useState(false);
   const [inviteError, setInviteError] = useState<string | null>(null);
   const [newInviteLink, setNewInviteLink] = useState<string | null>(null);
   const [copiedLink, setCopiedLink] = useState(false);
   const [revoking, setRevoking] = useState<string | null>(null);
+  const [changingRole, setChangingRole] = useState<string | null>(null);
+  const [removing, setRemoving] = useState<string | null>(null);
+
+  // Use either context isOwner or state isOwner
+  const isOwner = isOwnerFromContext || isOwnerState;
 
   // Fetch invitations and collaborators
   const fetchData = useCallback(async () => {
@@ -35,11 +54,12 @@ export default function TeamPage() {
       setLoading(true);
       setError(null);
 
-      const response = await fetch(`/api/admin/invitations/${statementId}`);
+      // Fetch collaborators first to get permission info
+      const collaboratorsResponse = await fetch(`/api/admin/collaborators/${statementId}`);
 
-      if (!response.ok) {
-        if (response.status === 403) {
-          setError(t('ownerAccessRequired'));
+      if (!collaboratorsResponse.ok) {
+        if (collaboratorsResponse.status === 403) {
+          setError(t('viewOnlyAccess'));
         } else {
           throw new Error('Failed to fetch team data');
         }
@@ -47,10 +67,21 @@ export default function TeamPage() {
         return;
       }
 
-      const data = await response.json();
-      setInvitations(data.invitations || []);
-      // TODO: Fetch collaborators when API is ready
-      // setCollaborators(data.collaborators || []);
+      const collaboratorsData = await collaboratorsResponse.json();
+      setCollaborators(collaboratorsData.collaborators || []);
+      setOwnerInfo(collaboratorsData.owner || null);
+      setCurrentUserPermission(collaboratorsData.currentUserPermission);
+      setIsOwnerState(collaboratorsData.isOwner);
+
+      // Only fetch invitations if user is owner or admin (not viewer)
+      if (collaboratorsData.currentUserPermission !== AdminPermissionLevel.viewer) {
+        const invitationsResponse = await fetch(`/api/admin/invitations/${statementId}`);
+
+        if (invitationsResponse.ok) {
+          const invitationsData = await invitationsResponse.json();
+          setInvitations(invitationsData.invitations || []);
+        }
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
@@ -64,6 +95,13 @@ export default function TeamPage() {
     }
   }, [statementId, fetchData]);
 
+  // Redirect viewers - they cannot access team page
+  useEffect(() => {
+    if (!canInviteViewers) {
+      router.replace(`/doc/${statementId}/admin`);
+    }
+  }, [canInviteViewers, router, statementId]);
+
   // Handle invite submission
   const handleInvite = async (e: FormEvent) => {
     e.preventDefault();
@@ -75,6 +113,9 @@ export default function TeamPage() {
     setNewInviteLink(null);
 
     try {
+      // Non-owners can only invite viewers
+      const permissionToSend = canInviteAdmins ? selectedPermission : AdminPermissionLevel.viewer;
+
       const response = await fetch(`/api/admin/invitations/${statementId}`, {
         method: 'POST',
         headers: {
@@ -82,7 +123,7 @@ export default function TeamPage() {
         },
         body: JSON.stringify({
           email: inviteEmail.trim().toLowerCase(),
-          permissionLevel: AdminPermissionLevel.admin,
+          permissionLevel: permissionToSend,
         }),
       });
 
@@ -94,12 +135,65 @@ export default function TeamPage() {
 
       setNewInviteLink(data.inviteLink);
       setInviteEmail('');
+      setSelectedPermission(AdminPermissionLevel.admin);
       // Refresh the list
       fetchData();
     } catch (err) {
       setInviteError(err instanceof Error ? err.message : 'Failed to send invitation');
     } finally {
       setIsInviting(false);
+    }
+  };
+
+  // Handle role change
+  const handleChangeRole = async (userId: string, newRole: AdminPermissionLevel) => {
+    setChangingRole(userId);
+
+    try {
+      const response = await fetch(`/api/admin/collaborators/${statementId}/${userId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ permissionLevel: newRole }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to change role');
+      }
+
+      // Refresh the list
+      fetchData();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to change role');
+    } finally {
+      setChangingRole(null);
+    }
+  };
+
+  // Handle remove collaborator
+  const handleRemoveCollaborator = async (userId: string) => {
+    if (!confirm(t('confirmRemoveCollaborator'))) return;
+
+    setRemoving(userId);
+
+    try {
+      const response = await fetch(`/api/admin/collaborators/${statementId}/${userId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to remove collaborator');
+      }
+
+      // Refresh the list
+      fetchData();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to remove collaborator');
+    } finally {
+      setRemoving(null);
     }
   };
 
@@ -170,6 +264,11 @@ export default function TeamPage() {
     return tWithParams('expiresInHours', { hours });
   };
 
+  // Don't render anything while redirecting
+  if (!canInviteViewers) {
+    return null;
+  }
+
   if (loading) {
     return (
       <div className={styles.teamPage}>
@@ -188,6 +287,9 @@ export default function TeamPage() {
     (inv) => inv.status !== AdminInvitationStatus.pending
   );
 
+  // Check if user can manage (owner or admin)
+  const canManage = isOwner || currentUserPermission === AdminPermissionLevel.admin;
+
   return (
     <div className={styles.teamPage}>
       <header className={styles.header}>
@@ -197,10 +299,17 @@ export default function TeamPage() {
 
       {error && <div className={styles.errorMessage}>{error}</div>}
 
-      {/* Invite New Admin Section */}
+      {/* Invite Team Member Section */}
       <section className={styles.section}>
         <div className={styles.sectionHeader}>
-          <h2 className={styles.sectionTitle}>{t('inviteNewAdmin')}</h2>
+          <h2 className={styles.sectionTitle}>
+            {canInviteAdmins ? t('inviteTeamMember') : t('inviteViewer')}
+          </h2>
+          {!canInviteAdmins && (
+            <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginTop: '4px' }}>
+              {t('onlyOwnersCanInviteAdmins')}
+            </p>
+          )}
         </div>
 
         <form onSubmit={handleInvite} className={styles.inviteForm}>
@@ -219,6 +328,24 @@ export default function TeamPage() {
               required
             />
           </div>
+
+          {canInviteAdmins && (
+            <div className={styles.inputGroup}>
+              <label htmlFor="permissionLevel" className={styles.inputLabel}>
+                {t('permissionLevel')}
+              </label>
+              <select
+                id="permissionLevel"
+                value={selectedPermission}
+                onChange={(e) => setSelectedPermission(e.target.value as AdminPermissionLevel)}
+                className={styles.emailInput}
+                disabled={isInviting}
+              >
+                <option value={AdminPermissionLevel.admin}>{t('admin')}</option>
+                <option value={AdminPermissionLevel.viewer}>{t('viewer')}</option>
+              </select>
+            </div>
+          )}
 
           <button
             type="submit"
@@ -273,100 +400,124 @@ export default function TeamPage() {
         )}
       </section>
 
-      {/* Pending Invitations Section */}
-      <section className={styles.section}>
-        <div className={styles.sectionHeader}>
-          <h2 className={styles.sectionTitle}>{t('pendingInvitations')}</h2>
-        </div>
+      {/* Pending Invitations Section - Hidden for viewers */}
+      {currentUserPermission !== AdminPermissionLevel.viewer && (
+        <>
+          <section className={styles.section}>
+            <div className={styles.sectionHeader}>
+              <h2 className={styles.sectionTitle}>{t('pendingInvitations')}</h2>
+            </div>
 
-        {pendingInvitations.length === 0 ? (
-          <div className={styles.emptyState}>
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
-              <polyline points="22,6 12,13 2,6" />
-            </svg>
-            <p>{t('noPendingInvitations')}</p>
-          </div>
-        ) : (
-          <div className={styles.invitationsList}>
-            {pendingInvitations.map((invitation) => (
-              <div key={invitation.invitationId} className={styles.invitationCard}>
-                <div className={styles.invitationInfo}>
-                  <p className={styles.invitationEmail}>{invitation.invitedEmail}</p>
-                  <p className={styles.invitationMeta}>
-                    {t('invitedBy')} {invitation.invitedByDisplayName} {' | '}
-                    {getTimeRemaining(invitation.expiresAt)}
-                  </p>
-                </div>
-                <div className={styles.invitationActions}>
-                  <span className={`${styles.statusBadge} ${styles.pending}`}>
-                    {t('pending')}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => handleRevoke(invitation.invitationId)}
-                    disabled={revoking === invitation.invitationId}
-                    className={styles.revokeButton}
-                  >
-                    {revoking === invitation.invitationId ? t('revoking') : t('revoke')}
-                  </button>
-                </div>
+            {pendingInvitations.length === 0 ? (
+              <div className={styles.emptyState}>
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                  <polyline points="22,6 12,13 2,6" />
+                </svg>
+                <p>{t('noPendingInvitations')}</p>
               </div>
-            ))}
-          </div>
-        )}
-      </section>
-
-      {/* Recent Invitation History */}
-      {otherInvitations.length > 0 && (
-        <section className={styles.section}>
-          <div className={styles.sectionHeader}>
-            <h2 className={styles.sectionTitle}>{t('invitationHistory')}</h2>
-          </div>
-
-          <div className={styles.invitationsList}>
-            {otherInvitations.map((invitation) => (
-              <div key={invitation.invitationId} className={styles.invitationCard}>
-                <div className={styles.invitationInfo}>
-                  <p className={styles.invitationEmail}>{invitation.invitedEmail}</p>
-                  <p className={styles.invitationMeta}>
-                    {t('invitedBy')} {invitation.invitedByDisplayName} {' | '}
-                    {formatDate(invitation.createdAt)}
-                    {invitation.status === AdminInvitationStatus.accepted && invitation.acceptedAt && (
-                      <> | {t('acceptedOn')} {formatDate(invitation.acceptedAt)}</>
-                    )}
-                  </p>
-                </div>
-                <div className={styles.invitationActions}>
-                  <span className={`${styles.statusBadge} ${styles[invitation.status]}`}>
-                    {t(invitation.status)}
-                  </span>
-                </div>
+            ) : (
+              <div className={styles.invitationsList}>
+                {pendingInvitations.map((invitation) => (
+                  <div key={invitation.invitationId} className={styles.invitationCard}>
+                    <div className={styles.invitationInfo}>
+                      <p className={styles.invitationEmail}>{invitation.invitedEmail}</p>
+                      <p className={styles.invitationMeta}>
+                        {t('invitedBy')} {invitation.invitedByDisplayName} {' | '}
+                        {getTimeRemaining(invitation.expiresAt)}
+                      </p>
+                    </div>
+                    <div className={styles.invitationActions}>
+                      <span className={`${styles.statusBadge} ${styles.pending}`}>
+                        {t('pending')}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleRevoke(invitation.invitationId)}
+                        disabled={revoking === invitation.invitationId}
+                        className={styles.revokeButton}
+                      >
+                        {revoking === invitation.invitationId ? t('revoking') : t('revoke')}
+                      </button>
+                    </div>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-        </section>
+            )}
+          </section>
+
+          {/* Recent Invitation History */}
+          {otherInvitations.length > 0 && (
+            <section className={styles.section}>
+              <div className={styles.sectionHeader}>
+                <h2 className={styles.sectionTitle}>{t('invitationHistory')}</h2>
+              </div>
+
+              <div className={styles.invitationsList}>
+                {otherInvitations.map((invitation) => (
+                  <div key={invitation.invitationId} className={styles.invitationCard}>
+                    <div className={styles.invitationInfo}>
+                      <p className={styles.invitationEmail}>{invitation.invitedEmail}</p>
+                      <p className={styles.invitationMeta}>
+                        {t('invitedBy')} {invitation.invitedByDisplayName} {' | '}
+                        {formatDate(invitation.createdAt)}
+                        {invitation.status === AdminInvitationStatus.accepted && invitation.acceptedAt && (
+                          <> | {t('acceptedOn')} {formatDate(invitation.acceptedAt)}</>
+                        )}
+                      </p>
+                    </div>
+                    <div className={styles.invitationActions}>
+                      <span className={`${styles.statusBadge} ${styles[invitation.status]}`}>
+                        {t(invitation.status)}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+        </>
       )}
 
-      {/* Current Collaborators Section */}
+      {/* Current Collaborators Section - Shows owner and collaborators */}
       <section className={styles.section}>
         <div className={styles.sectionHeader}>
           <h2 className={styles.sectionTitle}>{t('currentCollaborators')}</h2>
         </div>
 
-        {collaborators.length === 0 ? (
-          <div className={styles.emptyState}>
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
-              <circle cx="9" cy="7" r="4" />
-              <path d="M23 21v-2a4 4 0 00-3-3.87" />
-              <path d="M16 3.13a4 4 0 010 7.75" />
-            </svg>
-            <p>{t('noCollaboratorsYet')}</p>
-          </div>
-        ) : (
-          <div className={styles.collaboratorsList}>
-            {collaborators.map((collaborator) => (
+        <div className={styles.collaboratorsList}>
+          {/* Owner Card */}
+          {ownerInfo && (
+            <div className={`${styles.collaboratorCard} ${styles.ownerCard}`}>
+              <div className={styles.collaboratorInfo}>
+                <p className={styles.collaboratorName}>
+                  {ownerInfo.displayName}
+                  <span className={styles.ownerBadge}>{t('documentOwner')}</span>
+                </p>
+                <p className={styles.collaboratorEmail}>{ownerInfo.email}</p>
+                <p className={styles.collaboratorMeta}>{t('canManageEverything')}</p>
+              </div>
+              <div className={styles.invitationActions}>
+                <span className={`${styles.permissionBadge} ${styles.owner}`}>
+                  {t('owner')}
+                </span>
+              </div>
+            </div>
+          )}
+
+          {/* Collaborator Cards */}
+          {collaborators.length === 0 && !ownerInfo ? (
+            <div className={styles.emptyState}>
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
+                <circle cx="9" cy="7" r="4" />
+                <path d="M23 21v-2a4 4 0 00-3-3.87" />
+                <path d="M16 3.13a4 4 0 010 7.75" />
+              </svg>
+              <p>{t('noCollaboratorsYet')}</p>
+            </div>
+          ) : (
+            collaborators.map((collaborator) => (
               <div key={collaborator.userId} className={styles.collaboratorCard}>
                 <div className={styles.collaboratorInfo}>
                   <p className={styles.collaboratorName}>{collaborator.displayName}</p>
@@ -376,19 +527,39 @@ export default function TeamPage() {
                   </p>
                 </div>
                 <div className={styles.invitationActions}>
-                  <span className={`${styles.permissionBadge} ${styles[collaborator.permissionLevel]}`}>
-                    {t(collaborator.permissionLevel)}
-                  </span>
-                  {collaborator.permissionLevel !== AdminPermissionLevel.owner && (
-                    <button type="button" className={styles.removeButton}>
-                      {t('remove')}
+                  {/* Role change dropdown - only for owner or admin */}
+                  {canManage ? (
+                    <select
+                      value={collaborator.permissionLevel}
+                      onChange={(e) => handleChangeRole(collaborator.userId, e.target.value as AdminPermissionLevel)}
+                      disabled={changingRole === collaborator.userId}
+                      className={styles.roleDropdown}
+                    >
+                      <option value={AdminPermissionLevel.admin}>{t('admin')}</option>
+                      <option value={AdminPermissionLevel.viewer}>{t('viewer')}</option>
+                    </select>
+                  ) : (
+                    <span className={`${styles.permissionBadge} ${styles[collaborator.permissionLevel]}`}>
+                      {t(collaborator.permissionLevel)}
+                    </span>
+                  )}
+
+                  {/* Remove button - only for owner or admin */}
+                  {canManage && (
+                    <button
+                      type="button"
+                      className={styles.removeButton}
+                      onClick={() => handleRemoveCollaborator(collaborator.userId)}
+                      disabled={removing === collaborator.userId}
+                    >
+                      {removing === collaborator.userId ? t('removing') : t('remove')}
                     </button>
                   )}
                 </div>
               </div>
-            ))}
-          </div>
-        )}
+            ))
+          )}
+        </div>
       </section>
     </div>
   );

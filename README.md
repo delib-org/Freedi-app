@@ -646,6 +646,180 @@ This is an ambitious goal, and we recognize we're just at the beginning of this 
 
 This project is licensed under the terms specified in `LICENSE.md`.
 
+## 🔍 For Researchers: Exploring and Contributing to the Code
+
+**Are you a social scientist, political theorist, or researcher interested in how this platform embodies democratic values?** This section is for you—no programming experience required.
+
+### Why Investigate This Code?
+
+WizCol is built on principles of deliberative democracy, collective decision-making, and inclusive participation. As a researcher, you might want to:
+
+- **Examine how democratic principles are implemented** in the algorithms and user interfaces
+- **Evaluate whether the consensus mechanisms** truly promote fair participation
+- **Identify potential biases** in how voices are weighted or represented
+- **Propose new deliberation mechanisms** based on democratic theory
+- **Assess accessibility and inclusion** in the platform design
+
+### Getting Started: Clone the Repository
+
+We recommend **GitHub Desktop** for a friendly, visual experience—no command line needed!
+
+**Option A: GitHub Desktop (Recommended for beginners)**
+
+1. Download and install [GitHub Desktop](https://desktop.github.com/)
+2. Open GitHub Desktop and sign in with your GitHub account (create one free at [github.com](https://github.com) if needed)
+3. Click **File → Clone Repository**
+4. Select the **URL** tab and paste: `https://github.com/delib-org/Freedi-app`
+5. Choose where to save it on your computer and click **Clone**
+
+That's it! You now have the complete codebase on your computer.
+
+**Option B: Command Line (for those comfortable with terminals)**
+
+```bash
+git clone https://github.com/delib-org/Freedi-app.git
+cd Freedi-app
+```
+
+### Using AI to Explore the Codebase
+
+You don't need to read code yourself—AI assistants can explore it for you and explain what they find in plain language.
+
+**Option A: Claude on the Web (Easiest—no installation)**
+
+The simplest approach requires no installation at all:
+
+1. Go to [claude.ai](https://claude.ai) and create a free account
+2. Start a new conversation and upload the repository (you can zip the folder and upload it, or upload specific files you're curious about)
+3. Ask questions in plain language about what you uploaded
+
+**Option B: Antiverse / Anti-Gravity**
+
+[Anti-Gravity](https://anti-gravity.io) provides a visual interface for AI-assisted code exploration without using a command line.
+
+**Option C: Claude Code CLI (for technical users)**
+
+If you're comfortable with command-line tools:
+
+```bash
+npm install -g @anthropic-ai/claude-code
+cd Freedi-app
+claude
+```
+
+### Questions to Ask the AI
+
+Once you have the code and an AI assistant, ask questions like:
+
+- *"How does the consensus algorithm work? Is it fair to minority opinions?"*
+- *"Show me where user votes are counted and explain the process"*
+- *"How are participants' voices weighted in the final decision?"*
+- *"Are there any mechanisms that could silence certain groups?"*
+- *"How does the platform handle disagreement and conflict?"*
+- *"Explain the evaluation system—does it promote genuine deliberation?"*
+- *"Where are accessibility features implemented?"*
+
+Claude Code will search through the codebase, read relevant files, and explain what it finds in plain language.
+
+### Investigating Democratic Values
+
+Here are specific areas you might want to explore:
+
+| Democratic Principle | Where to Look | Questions to Ask Claude |
+|---------------------|---------------|------------------------|
+| **Equal Voice** | Consensus algorithm | *"Does every participant's vote carry equal weight?"* |
+| **Transparency** | Evaluation system | *"Can users see how decisions are calculated?"* |
+| **Inclusion** | Accessibility features | *"How does the platform accommodate diverse users?"* |
+| **Deliberation Quality** | Discussion features | *"What encourages thoughtful rather than reactive responses?"* |
+| **Minority Protection** | Scoring mechanisms | *"How are minority viewpoints protected from being drowned out?"* |
+
+### Proposing Changes: The Contribution Process
+
+If your research reveals improvements that could better serve democratic values, here's how to contribute:
+
+#### Before Writing Any Code: Contact Us First
+
+**This step is essential.** Before making changes, please:
+
+1. **Document your findings** in a brief report covering:
+   - What you investigated
+   - What you found (both strengths and concerns)
+   - What changes you believe would improve democratic outcomes
+   - Why these changes align with democratic theory
+
+2. **Contact the maintainer** via:
+   - **GitHub Issues**: [Create a new issue](https://github.com/delib-org/Freedi-app/issues/new) with your report
+   - **Email**: Include "Research Contribution" in your subject line
+
+3. **Discuss implementation approach** — We'll work together to determine:
+   - Whether the proposed change aligns with project goals
+   - The best technical approach to implement it
+   - Any unintended consequences to consider
+
+#### After Approval: Making Your Contribution
+
+Once we've discussed your proposal and agreed on an approach:
+
+**Step 1: Fork the repository**
+
+Visit [github.com/delib-org/Freedi-app](https://github.com/delib-org/Freedi-app) and click the "Fork" button (top right). This creates your own copy under your GitHub account.
+
+**Step 2: Clone your fork using GitHub Desktop**
+
+1. Open GitHub Desktop
+2. Click **File → Clone Repository**
+3. Find your fork (YOUR_USERNAME/Freedi-app) in the list, or paste the URL
+4. Click **Clone**
+
+**Step 3: Create a branch for your changes**
+
+In GitHub Desktop:
+1. Click **Current Branch** (top of the window)
+2. Click **New Branch**
+3. Name it something descriptive like `research/minority-voice-protection`
+4. Click **Create Branch**
+
+**Step 4: Use AI to help implement changes**
+
+Ask your AI assistant (Claude on the web, Anti-Gravity, or Claude Code) to help you make changes:
+
+- *"Help me modify the consensus algorithm to give more weight to minority opinions"*
+- *"Add a feature that shows users how their vote affected the outcome"*
+- *"Implement an accessibility improvement for screen readers"*
+
+The AI can write the code for you—just describe what you want in plain language. Save the changes to the files on your computer.
+
+**Step 5: Commit and push your changes**
+
+In GitHub Desktop:
+1. You'll see your changed files listed on the left
+2. Write a brief summary of your changes in the "Summary" box
+3. Click **Commit to [your-branch-name]**
+4. Click **Push origin** (or **Publish branch** if it's new)
+
+**Step 6: Create a Pull Request**
+
+1. GitHub Desktop will show a prompt to create a Pull Request—click it, OR
+2. Go to your fork on GitHub.com and click the green **"Compare & pull request"** button
+
+In your Pull Request description:
+- Reference the issue where we discussed your proposal
+- Summarize the changes made
+- Explain how this improves democratic outcomes
+
+### We Value Your Perspective
+
+As researchers studying democracy, your insights are invaluable. You bring expertise in:
+
+- Democratic theory and political philosophy
+- Social dynamics and group decision-making
+- Fairness, equity, and representation
+- Human behavior and participation patterns
+
+This technical platform needs your perspective to truly serve democratic ideals. We look forward to collaborating with you.
+
+---
+
 ## 🤝 Contributing
 
 We welcome contributions from developers, researchers, and anyone interested in improving democratic deliberation. See [CONTRIBUTING.md](./CONTRIBUTING.md) for technical details.

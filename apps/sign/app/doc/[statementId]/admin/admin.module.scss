@@ -462,22 +462,17 @@
   }
 }
 
-/* Logo Preview */
-.logoPreview {
-  margin-top: var(--spacing-md);
-  padding: var(--spacing-md);
-  background: var(--background);
-  border-radius: var(--radius-md);
+/* Logo Upload Row */
+.logoUploadRow {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: var(--spacing-sm);
-}
+  gap: var(--spacing-md);
+  padding: var(--spacing-md) 0;
+  border-bottom: 1px solid var(--border-light);
 
-.logoPreviewImage {
-  max-width: 120px;
-  max-height: 80px;
-  object-fit: contain;
+  &:last-child {
+    border-bottom: none;
+  }
 }
 
 /* RTL Support */

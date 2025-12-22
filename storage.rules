@@ -16,5 +16,13 @@ service firebase.storage {
       // In production, you may want to check if user is admin of the statement
       allow write: if request.auth != null;
     }
+
+    // Rules for logos (Sign app branding)
+    match /logos/{documentId}/{imagePath=**} {
+      allow read;
+      // Allow write if user is authenticated
+      // In production, you may want to check if user is admin of the document
+      allow write: if request.auth != null;
+    }
   }
 }

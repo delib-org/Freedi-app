@@ -39,12 +39,11 @@ async function getTopOptionsDB(statement: Statement): Promise<Statement[]> {
 		const { resultsSettings } = statement;
 		const numberOfOptions = resultsSettings?.numberOfResults || 1;
 
+		// Fetch all options under this parent (can't orderBy nested field in Firestore)
 		const topOptionsRef = collection(FireStore, Collections.statements);
 		const q = query(
 			topOptionsRef,
-			where('parentId', '==', statement.statementId),
-			orderBy('consensus', 'asc'),
-			limit(numberOfOptions)
+			where('parentId', '==', statement.statementId)
 		);
 		const topOptionsSnap = await getDocs(q);
 
@@ -61,7 +60,11 @@ async function getTopOptionsDB(statement: Statement): Promise<Statement[]> {
 			return parse(StatementSchema, data);
 		});
 
-		return topOptions;
+		// Sort by evaluation.agreement (falling back to consensus for legacy data)
+		// and return top N options
+		return topOptions
+			.sort((a, b) => (b.evaluation?.agreement ?? b.consensus ?? 0) - (a.evaluation?.agreement ?? a.consensus ?? 0))
+			.slice(0, numberOfOptions);
 	} catch (error) {
 		console.error(error);
 
