@@ -960,6 +960,7 @@
   "sendInvitation": "Einladung senden",
   "sending": "Wird gesendet...",
   "invitationCreated": "Einladung erfolgreich erstellt!",
+  "invitationSentSuccess": "Einladung an {{email}} gesendet. Zugriff wird beim Anmelden gewährt.",
   "copyLink": "Link kopieren",
   "shareInviteLinkNote": "Teilen Sie diesen Link mit der Person, die Sie einladen möchten. Der Link läuft in 7 Tagen ab.",
   "pendingInvitations": "Ausstehende Einladungen",

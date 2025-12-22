@@ -12,11 +12,18 @@ export async function POST(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  try {
-    const body = await request.json();
-    const { targetStatementId, solutionText, userId, userName } = body;
+  // Parse body at top level to avoid double parsing in catch block
+  let parsedBody: {
+    targetStatementId?: string;
+    solutionText?: string;
+    userId?: string;
+    userName?: string;
+  } = {};
+  const questionId = params.id;
 
-    const questionId = params.id;
+  try {
+    parsedBody = await request.json();
+    const { targetStatementId, solutionText, userId, userName } = parsedBody;
 
     // Validate required fields
     if (!targetStatementId) {
@@ -64,8 +71,7 @@ export async function POST(
       logError(error, {
         operation: 'api.merge',
         userId,
-        questionId,
-        targetStatementId,
+        metadata: { questionId, targetStatementId },
       });
 
       return NextResponse.json(
@@ -119,16 +125,13 @@ export async function POST(
       newTitle: data.newTitle,
     });
   } catch (error) {
-    const body = await request.json().catch(() => ({}));
-    const { userId, targetStatementId } = body;
-    const questionId = params.id;
+    // Use parsedBody from top level (already parsed before try block might fail)
+    const { userId, targetStatementId } = parsedBody;
 
     logError(error, {
       operation: 'api.merge',
       userId,
-      questionId,
-      targetStatementId,
-      metadata: { endpoint: process.env.MERGE_STATEMENTS_ENDPOINT },
+      metadata: { questionId, targetStatementId, endpoint: process.env.MERGE_STATEMENTS_ENDPOINT },
     });
 
     return NextResponse.json(

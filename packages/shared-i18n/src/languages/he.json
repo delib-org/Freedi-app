@@ -1253,6 +1253,7 @@
   "sendInvitation": "שלח הזמנה",
   "sending": "שולח...",
   "invitationCreated": "ההזמנה נוצרה בהצלחה!",
+  "invitationSentSuccess": "הזמנה נשלחה ל-{{email}}. הם יקבלו גישה כשיתחברו.",
   "copyLink": "העתק קישור",
   "shareInviteLinkNote": "שתף קישור זה עם האדם שברצונך להזמין. הקישור יפוג תוך 7 ימים.",
   "pendingInvitations": "הזמנות ממתינות",
