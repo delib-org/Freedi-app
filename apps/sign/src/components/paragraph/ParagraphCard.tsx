@@ -159,27 +159,28 @@ export default function ParagraphCard({
   );
 
   // Render content based on paragraph type
+  // Content may contain HTML formatting tags (bold, italic, etc.)
   const renderContent = () => {
     const content = paragraph.content;
 
     switch (paragraphType) {
       case ParagraphType.h1:
-        return <h1 className={styles.content}>{content}</h1>;
+        return <h1 className={styles.content} dangerouslySetInnerHTML={{ __html: content }} />;
       case ParagraphType.h2:
-        return <h2 className={styles.content}>{content}</h2>;
+        return <h2 className={styles.content} dangerouslySetInnerHTML={{ __html: content }} />;
       case ParagraphType.h3:
-        return <h3 className={styles.content}>{content}</h3>;
+        return <h3 className={styles.content} dangerouslySetInnerHTML={{ __html: content }} />;
       case ParagraphType.h4:
-        return <h4 className={styles.content}>{content}</h4>;
+        return <h4 className={styles.content} dangerouslySetInnerHTML={{ __html: content }} />;
       case ParagraphType.h5:
-        return <h5 className={styles.content}>{content}</h5>;
+        return <h5 className={styles.content} dangerouslySetInnerHTML={{ __html: content }} />;
       case ParagraphType.h6:
-        return <h6 className={styles.content}>{content}</h6>;
+        return <h6 className={styles.content} dangerouslySetInnerHTML={{ __html: content }} />;
       case ParagraphType.li:
         return (
           <div className={styles.listItem}>
-            <span className={styles.bullet}>{paragraph.listType === 'ol' ? '•' : '•'}</span>
-            <p className={styles.content}>{content}</p>
+            <span className={styles.bullet} aria-hidden="true">•</span>
+            <p className={styles.content} dangerouslySetInnerHTML={{ __html: content }} />
           </div>
         );
       case ParagraphType.table:
@@ -190,7 +191,7 @@ export default function ParagraphCard({
           />
         );
       default:
-        return <p className={styles.content}>{content}</p>;
+        return <p className={styles.content} dangerouslySetInnerHTML={{ __html: content }} />;
     }
   };
 

@@ -60,6 +60,23 @@
   color: var(--text-body);
   margin: 0;
   font-size: var(--p-font-size);
+
+  // Inline formatting styles from Google Docs import
+  strong {
+    font-weight: 700;
+  }
+
+  em {
+    font-style: italic;
+  }
+
+  u {
+    text-decoration: underline;
+  }
+
+  s {
+    text-decoration: line-through;
+  }
 }
 
 // Visual state indicator - thin line on the left
@@ -150,6 +167,7 @@
   display: flex;
   align-items: flex-start;
   gap: var(--spacing-sm);
+  width: 100%;
 }
 
 .bullet {
@@ -161,6 +179,7 @@
 
 .type-li .content {
   margin: 0;
+  flex: 1; // Take remaining space after bullet
 }
 
 // Table type
@@ -507,6 +526,16 @@
 
   .listItem {
     flex-direction: row-reverse;
+    justify-content: flex-end; // Push content to the right
+    direction: rtl;
+    text-align: right;
+  }
+
+  // RTL list item content - needs separate selector to avoid nesting issues
+  .type-li .content {
+    direction: rtl;
+    text-align: right;
+    unicode-bidi: plaintext; // Allows mixed LTR/RTL content to display correctly
   }
 
   .nonInteractiveLabel {
@@ -577,6 +606,15 @@
 
   .listItem {
     flex-direction: row;
+    direction: ltr;
+    text-align: left;
+  }
+
+  // LTR list item content
+  .type-li .content {
+    direction: ltr;
+    text-align: left;
+    unicode-bidi: plaintext;
   }
 
   .nonInteractiveLabel {
