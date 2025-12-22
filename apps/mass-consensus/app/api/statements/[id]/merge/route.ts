@@ -71,8 +71,7 @@ export async function POST(
       logError(error, {
         operation: 'api.merge',
         userId,
-        questionId,
-        targetStatementId,
+        metadata: { questionId, targetStatementId },
       });
 
       return NextResponse.json(
@@ -132,9 +131,7 @@ export async function POST(
     logError(error, {
       operation: 'api.merge',
       userId,
-      questionId,
-      targetStatementId,
-      metadata: { endpoint: process.env.MERGE_STATEMENTS_ENDPOINT },
+      metadata: { questionId, targetStatementId, endpoint: process.env.MERGE_STATEMENTS_ENDPOINT },
     });
 
     return NextResponse.json(

@@ -298,7 +298,7 @@ export default function SolutionPromptModal({
         throw new NetworkError(data.error || ERROR_MESSAGES.MERGE_FAILED);
       }
 
-      const data = await response.json();
+      await response.json();
 
       // Track successful merge
       trackSolutionSubmitted(questionId, userId, false); // false = merged, not created
@@ -312,8 +312,7 @@ export default function SolutionPromptModal({
       logError(err, {
         operation: 'SolutionPromptModal.handleMergeSolution',
         userId,
-        questionId,
-        targetStatementId,
+        metadata: { questionId, targetStatementId },
       });
       setError(err instanceof Error ? err.message : (ERROR_MESSAGES.MERGE_FAILED || ERROR_MESSAGES.SUBMIT_FAILED));
       setFlowState({ step: 'input' });

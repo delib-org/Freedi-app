@@ -93,5 +93,5 @@ export type FlowState =
   | { step: 'multi-preview'; suggestions: SplitSuggestion[]; originalText: string; similarData?: SimilarCheckResponse }
   | { step: 'similar'; data: SimilarCheckResponse }
   | { step: 'submitting' }
-  | { step: 'success'; action: 'created' | 'evaluated'; solutionText: string }
+  | { step: 'success'; action: 'created' | 'evaluated' | 'merged'; solutionText: string }
   | { step: 'evaluate' };
