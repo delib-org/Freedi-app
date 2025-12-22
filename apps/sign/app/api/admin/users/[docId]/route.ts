@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { DocumentData } from 'firebase-admin/firestore';
 import { getFirebaseAdmin } from '@/lib/firebase/admin';
 import { getUserIdFromCookie } from '@/lib/utils/user';
+import { checkAdminAccess } from '@/lib/utils/adminAccess';
 import { Collections } from '@freedi/shared-types';
 import { logger } from '@/lib/utils/logger';
 
@@ -35,21 +36,10 @@ export async function GET(
 
     const { db } = getFirebaseAdmin();
 
-    // Get the document to verify ownership
-    const docRef = db.collection(Collections.statements).doc(docId);
-    const docSnap = await docRef.get();
+    // Check admin access (owner or collaborator)
+    const accessResult = await checkAdminAccess(db, docId, userId);
 
-    if (!docSnap.exists) {
-      return NextResponse.json(
-        { error: 'Document not found' },
-        { status: 404 }
-      );
-    }
-
-    const document = docSnap.data();
-    const isAdmin = document?.creator?.odlUserId === userId || document?.creatorId === userId;
-
-    if (!isAdmin) {
+    if (!accessResult.isAdmin) {
       return NextResponse.json(
         { error: 'Forbidden - Admin access required' },
         { status: 403 }

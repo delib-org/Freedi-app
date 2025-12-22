@@ -81,6 +81,27 @@
   }
 }
 
+.permissionSelect {
+  width: 100%;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  font-size: 0.9375rem;
+  background: var(--card-default);
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+
+  &:focus {
+    outline: none;
+    border-color: var(--btn-primary);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
 .inviteButton {
   display: flex;
   align-items: center;
@@ -355,12 +376,23 @@
 }
 
 .successMessage {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
   padding: var(--spacing-sm) var(--spacing-md);
   background: rgba(76, 175, 80, 0.08);
   color: var(--agree);
   border-radius: var(--radius-sm);
   font-size: 0.875rem;
   margin-top: var(--spacing-sm);
+
+  p {
+    margin: 0;
+  }
+
+  svg {
+    flex-shrink: 0;
+  }
 }
 
 /* Loading State */
@@ -409,6 +441,39 @@
   letter-spacing: 0.05em;
 }
 
+.ownerBadge {
+  display: inline-block;
+  margin-left: var(--spacing-sm);
+  padding: 2px 8px;
+  background: rgba(91, 136, 229, 0.15);
+  color: var(--btn-primary);
+  border-radius: 10px;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.roleDropdown {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  font-size: 0.8125rem;
+  background: var(--card-default);
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+
+  &:focus {
+    outline: none;
+    border-color: var(--btn-primary);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
 /* RTL Support */
 [dir="rtl"] {
   .inviteForm {
@@ -427,6 +492,11 @@
 
   .invitationActions {
     flex-direction: row-reverse;
+  }
+
+  .ownerBadge {
+    margin-left: 0;
+    margin-right: var(--spacing-sm);
   }
 }
 

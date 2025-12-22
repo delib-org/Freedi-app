@@ -178,7 +178,7 @@ const FireStore = initializeFirestoreWithCache(app);
 const DB = FireStore;
 const storage = getStorage(app);
 const auth = getAuth();
-const functions = getFunctions(app);
+const functions = getFunctions(app, 'me-west1');
 
 // Initialize Analytics only in production and if supported
 let analytics: ReturnType<typeof getAnalytics> | null = null;

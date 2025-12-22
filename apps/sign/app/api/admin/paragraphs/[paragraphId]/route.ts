@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { Collections } from '@freedi/shared-types';
 import { getFirebaseAdmin } from '@/lib/firebase/admin';
+import { checkAdminAccess } from '@/lib/utils/adminAccess';
 import { Paragraph } from '@/types';
 import { logger } from '@/lib/utils/logger';
 
@@ -68,15 +69,17 @@ export async function PATCH(
       );
     }
 
-    const docData = docSnap.data();
-    const isAdmin = docData?.creatorId === userId || docData?.creator?.uid === userId;
+    // Check admin access (owner or collaborator)
+    const accessResult = await checkAdminAccess(db, documentId, userId);
 
-    if (!isAdmin) {
+    if (!accessResult.isAdmin) {
       return NextResponse.json(
         { success: false, error: 'You do not have permission to modify this document' },
         { status: 403 }
       );
     }
+
+    const docData = docSnap.data();
 
     // Get paragraphs and update the specific one
     const paragraphs: Paragraph[] = docData?.paragraphs || [];

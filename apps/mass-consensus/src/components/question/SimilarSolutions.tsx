@@ -27,11 +27,10 @@ export default function SimilarSolutions({
   onSelect,
   onMerge,
   onBack,
-  enableAutoMerge = true,
+  enableAutoMerge: _enableAutoMerge = true,
 }: SimilarSolutionsProps) {
   const { t } = useTranslation();
   const [showKeepSeparateModal, setShowKeepSeparateModal] = useState(false);
-  const [selectedForMerge, setSelectedForMerge] = useState<string | null>(null);
 
   // Show max 3 similar solutions
   const topSimilar = similarSolutions.slice(

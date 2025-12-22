@@ -32,12 +32,12 @@ export async function GET(
 
 		const { db } = getFirebaseAdmin();
 
-		// Check admin access - must be owner to view invitations
+		// Check admin access - must be at least admin level (not viewer) to view invitations
 		const accessResult = await checkAdminAccess(db, docId, userId);
 
-		if (!accessResult.isOwner) {
+		if (!accessResult.isAdmin || accessResult.permissionLevel === AdminPermissionLevel.viewer) {
 			return NextResponse.json(
-				{ error: 'Forbidden - Owner access required to manage invitations' },
+				{ error: 'Forbidden - Admin access required to manage invitations' },
 				{ status: 403 }
 			);
 		}
@@ -93,19 +93,19 @@ export async function POST(
 
 		const { db } = getFirebaseAdmin();
 
-		// Check admin access - must be owner to create admin invitations
+		// Check admin access - must be at least admin level (not viewer) to create invitations
 		const accessResult = await checkAdminAccess(db, docId, userId);
 
-		if (!accessResult.isOwner) {
+		if (!accessResult.isAdmin || accessResult.permissionLevel === AdminPermissionLevel.viewer) {
 			return NextResponse.json(
-				{ error: 'Forbidden - Only document owner can invite admins' },
+				{ error: 'Forbidden - Admin access required to send invitations' },
 				{ status: 403 }
 			);
 		}
 
 		// Parse request body
 		const body = await request.json();
-		const { email, permissionLevel } = body;
+		const { email, permissionLevel: requestedPermission } = body;
 
 		// Validate email
 		if (!email || typeof email !== 'string' || !email.includes('@')) {
@@ -115,12 +115,23 @@ export async function POST(
 			);
 		}
 
-		// Validate permission level - only admin can be invited, not owner
-		if (permissionLevel !== AdminPermissionLevel.admin) {
-			return NextResponse.json(
-				{ error: 'Invalid permission level. Only admin invitations are allowed.' },
-				{ status: 400 }
-			);
+		// Determine the effective permission level:
+		// - Owners can invite admins or viewers
+		// - Non-owner admins can only invite viewers
+		let effectivePermission: AdminPermissionLevel;
+		if (accessResult.isOwner) {
+			// Owners can invite admin or viewer
+			if (requestedPermission === AdminPermissionLevel.admin || requestedPermission === AdminPermissionLevel.viewer) {
+				effectivePermission = requestedPermission;
+			} else {
+				return NextResponse.json(
+					{ error: 'Invalid permission level. Only admin or viewer invitations are allowed.' },
+					{ status: 400 }
+				);
+			}
+		} else {
+			// Non-owner admins can only invite viewers
+			effectivePermission = AdminPermissionLevel.viewer;
 		}
 
 		// Check if there's already a pending invitation for this email
@@ -163,7 +174,7 @@ export async function POST(
 			invitedEmail: email.toLowerCase(),
 			invitedBy: userId,
 			invitedByDisplayName: userDisplayName,
-			permissionLevel: AdminPermissionLevel.admin,
+			permissionLevel: effectivePermission,
 			token,
 			status: AdminInvitationStatus.pending,
 			createdAt: now,
