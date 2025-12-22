@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { DemographicSettings } from '@/components/admin/demographics';
+import LogoUpload from '@/components/admin/LogoUpload';
 import { DemographicMode } from '@/types/demographics';
 import { TextDirection, DEFAULT_LOGO_URL, DEFAULT_BRAND_NAME } from '@/types';
 import GoogleDocsImport from '@/components/import/GoogleDocsImport';
@@ -339,40 +340,22 @@ export default function AdminSettingsPage() {
           />
         </div>
 
-        <div className={styles.settingRow}>
+        <div className={styles.logoUploadRow}>
           <div className={styles.settingInfo}>
-            <p className={styles.settingLabel}>{t('Logo URL')}</p>
+            <p className={styles.settingLabel}>{t('Logo')}</p>
             <p className={styles.settingDescription}>
-              {t('URL to your logo image (SVG, PNG, or JPG recommended)')}
+              {t('Upload your organization logo (SVG, PNG, JPG, or WebP)')}
             </p>
           </div>
-          <input
-            type="text"
-            className={styles.textInput}
-            value={settings.logoUrl}
-            onChange={(e) => {
-              setSettings((prev) => ({ ...prev, logoUrl: e.target.value }));
+          <LogoUpload
+            documentId={statementId}
+            currentLogoUrl={settings.logoUrl}
+            onLogoChange={(url) => {
+              setSettings((prev) => ({ ...prev, logoUrl: url }));
               setSaved(false);
             }}
-            placeholder={DEFAULT_LOGO_URL}
           />
         </div>
-
-        {/* Logo Preview */}
-        {settings.logoUrl && (
-          <div className={styles.logoPreview}>
-            <p className={styles.settingLabel}>{t('Preview')}</p>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={settings.logoUrl}
-              alt={t('Logo Preview')}
-              className={styles.logoPreviewImage}
-              onError={(e) => {
-                (e.target as HTMLImageElement).style.display = 'none';
-              }}
-            />
-          </div>
-        )}
       </section>
 
       {/* Save Button */}
