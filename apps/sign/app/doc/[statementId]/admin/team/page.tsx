@@ -23,19 +23,19 @@ export default function TeamPage() {
   const router = useRouter();
   const statementId = params?.statementId as string;
   const { t, tWithParams } = useTranslation();
-  const { canInviteViewers, canInviteAdmins, isOwner } = useAdminContext();
+  const { canInviteViewers, canInviteAdmins, isOwner: isOwnerFromContext } = useAdminContext();
 
   // State
   const [invitations, setInvitations] = useState<AdminInvitation[]>([]);
   const [collaborators, setCollaborators] = useState<DocumentCollaborator[]>([]);
   const [ownerInfo, setOwnerInfo] = useState<OwnerInfo | null>(null);
   const [currentUserPermission, setCurrentUserPermission] = useState<AdminPermissionLevel | null>(null);
-  const [isOwner, setIsOwner] = useState(false);
+  const [isOwnerState, setIsOwnerState] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [inviteEmail, setInviteEmail] = useState('');
   const [selectedPermission, setSelectedPermission] = useState<AdminPermissionLevel>(
-    isOwner ? AdminPermissionLevel.admin : AdminPermissionLevel.viewer
+    isOwnerFromContext ? AdminPermissionLevel.admin : AdminPermissionLevel.viewer
   );
   const [isInviting, setIsInviting] = useState(false);
   const [inviteError, setInviteError] = useState<string | null>(null);
@@ -44,6 +44,9 @@ export default function TeamPage() {
   const [revoking, setRevoking] = useState<string | null>(null);
   const [changingRole, setChangingRole] = useState<string | null>(null);
   const [removing, setRemoving] = useState<string | null>(null);
+
+  // Use either context isOwner or state isOwner
+  const isOwner = isOwnerFromContext || isOwnerState;
 
   // Fetch invitations and collaborators
   const fetchData = useCallback(async () => {
@@ -68,7 +71,7 @@ export default function TeamPage() {
       setCollaborators(collaboratorsData.collaborators || []);
       setOwnerInfo(collaboratorsData.owner || null);
       setCurrentUserPermission(collaboratorsData.currentUserPermission);
-      setIsOwner(collaboratorsData.isOwner);
+      setIsOwnerState(collaboratorsData.isOwner);
 
       // Only fetch invitations if user is owner or admin (not viewer)
       if (collaboratorsData.currentUserPermission !== AdminPermissionLevel.viewer) {
@@ -98,11 +101,6 @@ export default function TeamPage() {
       router.replace(`/doc/${statementId}/admin`);
     }
   }, [canInviteViewers, router, statementId]);
-
-  // Don't render anything while redirecting
-  if (!canInviteViewers) {
-    return null;
-  }
 
   // Handle invite submission
   const handleInvite = async (e: FormEvent) => {
@@ -137,7 +135,7 @@ export default function TeamPage() {
 
       setNewInviteLink(data.inviteLink);
       setInviteEmail('');
-      setInvitePermissionLevel(AdminPermissionLevel.admin);
+      setSelectedPermission(AdminPermissionLevel.admin);
       // Refresh the list
       fetchData();
     } catch (err) {
@@ -266,6 +264,11 @@ export default function TeamPage() {
     return tWithParams('expiresInHours', { hours });
   };
 
+  // Don't render anything while redirecting
+  if (!canInviteViewers) {
+    return null;
+  }
+
   if (loading) {
     return (
       <div className={styles.teamPage}>
@@ -377,86 +380,25 @@ export default function TeamPage() {
             <p className={styles.inviteLinkTitle}>{t('invitationCreated')}</p>
             <div className={styles.inviteLinkWrapper}>
               <input
-                id="inviteEmail"
-                type="email"
-                value={inviteEmail}
-                onChange={(e) => setInviteEmail(e.target.value)}
-                placeholder={t('enterEmailAddress')}
-                className={styles.emailInput}
-                disabled={isInviting}
-                required
+                type="text"
+                value={newInviteLink}
+                readOnly
+                className={styles.inviteLinkInput}
               />
-            </div>
-
-            <div className={styles.inputGroup}>
-              <label htmlFor="permissionLevel" className={styles.inputLabel}>
-                {t('selectPermissionLevel')}
-              </label>
-              <select
-                id="permissionLevel"
-                value={invitePermissionLevel}
-                onChange={(e) => setInvitePermissionLevel(e.target.value as AdminPermissionLevel)}
-                className={styles.permissionSelect}
-                disabled={isInviting}
+              <button
+                type="button"
+                onClick={handleCopyLink}
+                className={styles.copyButton}
               >
-                <option value={AdminPermissionLevel.admin}>{t('admin')} - {t('canEditAndInviteViewers')}</option>
-                <option value={AdminPermissionLevel.viewer}>{t('viewer')} - {t('canViewAnalyticsOnly')}</option>
-              </select>
+                {copiedLink ? t('copied') : t('copyLink')}
+              </button>
             </div>
-
-            <button
-              type="submit"
-              className={styles.inviteButton}
-              disabled={isInviting || !inviteEmail.trim()}
-            >
-              {isInviting ? (
-                <>
-                  <span className={styles.spinner} style={{ width: 16, height: 16 }} />
-                  {t('sending')}
-                </>
-              ) : (
-                <>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
-                    <circle cx="8.5" cy="7" r="4" />
-                    <line x1="20" y1="8" x2="20" y2="14" />
-                    <line x1="23" y1="11" x2="17" y2="11" />
-                  </svg>
-                  {t('sendInvitation')}
-                </>
-              )}
-            </button>
-          </form>
-
-          {inviteError && (
-            <div className={styles.errorMessage}>{inviteError}</div>
-          )}
-
-          {newInviteLink && (
-            <div className={styles.inviteLinkContainer}>
-              <p className={styles.inviteLinkTitle}>{t('invitationCreated')}</p>
-              <div className={styles.inviteLinkWrapper}>
-                <input
-                  type="text"
-                  value={newInviteLink}
-                  readOnly
-                  className={styles.inviteLinkInput}
-                />
-                <button
-                  type="button"
-                  onClick={handleCopyLink}
-                  className={styles.copyButton}
-                >
-                  {copiedLink ? t('copied') : t('copyLink')}
-                </button>
-              </div>
-              <p style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', marginTop: '8px' }}>
-                {t('shareInviteLinkNote')}
-              </p>
-            </div>
-          )}
-        </section>
-      )}
+            <p style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', marginTop: '8px' }}>
+              {t('shareInviteLinkNote')}
+            </p>
+          </div>
+        )}
+      </section>
 
       {/* Pending Invitations Section - Hidden for viewers */}
       {currentUserPermission !== AdminPermissionLevel.viewer && (

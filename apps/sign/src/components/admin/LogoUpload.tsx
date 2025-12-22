@@ -24,13 +24,11 @@ export default function LogoUpload({ documentId, currentLogoUrl, onLogoChange }:
   const [error, setError] = useState<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string>(currentLogoUrl);
   const [authUser, setAuthUser] = useState<User | null>(null);
-  const [authLoading, setAuthLoading] = useState(true);
 
   // Subscribe to Firebase Auth state
   useEffect(() => {
     const unsubscribe = subscribeToAuthState((user) => {
       setAuthUser(user);
-      setAuthLoading(false);
     });
 
     return () => unsubscribe();
