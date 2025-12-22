@@ -525,13 +525,11 @@
   }
 
   .listItem {
-    flex-direction: row-reverse;
-    justify-content: flex-end; // Push content to the right
-    direction: rtl;
+    direction: rtl; // This naturally reverses flex order and aligns to right
     text-align: right;
   }
 
-  // RTL list item content - needs separate selector to avoid nesting issues
+  // RTL list item content
   .type-li .content {
     direction: rtl;
     text-align: right;
