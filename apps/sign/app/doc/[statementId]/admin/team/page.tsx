@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, FormEvent } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import {
   AdminInvitation,
@@ -9,12 +9,15 @@ import {
   AdminPermissionLevel,
   DocumentCollaborator,
 } from '@freedi/shared-types';
+import { useAdminContext } from '../AdminContext';
 import styles from './team.module.scss';
 
 export default function TeamPage() {
   const params = useParams();
+  const router = useRouter();
   const statementId = params?.statementId as string;
   const { t, tWithParams } = useTranslation();
+  const { canInviteViewers, canInviteAdmins, isOwner } = useAdminContext();
 
   // State
   const [invitations, setInvitations] = useState<AdminInvitation[]>([]);
@@ -23,6 +26,9 @@ export default function TeamPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [inviteEmail, setInviteEmail] = useState('');
+  const [selectedPermission, setSelectedPermission] = useState<AdminPermissionLevel>(
+    isOwner ? AdminPermissionLevel.admin : AdminPermissionLevel.viewer
+  );
   const [isInviting, setIsInviting] = useState(false);
   const [inviteError, setInviteError] = useState<string | null>(null);
   const [newInviteLink, setNewInviteLink] = useState<string | null>(null);
@@ -64,6 +70,18 @@ export default function TeamPage() {
     }
   }, [statementId, fetchData]);
 
+  // Redirect viewers - they cannot access team page
+  useEffect(() => {
+    if (!canInviteViewers) {
+      router.replace(`/doc/${statementId}/admin`);
+    }
+  }, [canInviteViewers, router, statementId]);
+
+  // Don't render anything while redirecting
+  if (!canInviteViewers) {
+    return null;
+  }
+
   // Handle invite submission
   const handleInvite = async (e: FormEvent) => {
     e.preventDefault();
@@ -75,6 +93,9 @@ export default function TeamPage() {
     setNewInviteLink(null);
 
     try {
+      // Non-owners can only invite viewers
+      const permissionToSend = canInviteAdmins ? selectedPermission : AdminPermissionLevel.viewer;
+
       const response = await fetch(`/api/admin/invitations/${statementId}`, {
         method: 'POST',
         headers: {
@@ -82,7 +103,7 @@ export default function TeamPage() {
         },
         body: JSON.stringify({
           email: inviteEmail.trim().toLowerCase(),
-          permissionLevel: AdminPermissionLevel.admin,
+          permissionLevel: permissionToSend,
         }),
       });
 
@@ -197,10 +218,17 @@ export default function TeamPage() {
 
       {error && <div className={styles.errorMessage}>{error}</div>}
 
-      {/* Invite New Admin Section */}
+      {/* Invite Team Member Section */}
       <section className={styles.section}>
         <div className={styles.sectionHeader}>
-          <h2 className={styles.sectionTitle}>{t('inviteNewAdmin')}</h2>
+          <h2 className={styles.sectionTitle}>
+            {canInviteAdmins ? t('inviteTeamMember') : t('inviteViewer')}
+          </h2>
+          {!canInviteAdmins && (
+            <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginTop: '4px' }}>
+              {t('onlyOwnersCanInviteAdmins')}
+            </p>
+          )}
         </div>
 
         <form onSubmit={handleInvite} className={styles.inviteForm}>
@@ -219,6 +247,24 @@ export default function TeamPage() {
               required
             />
           </div>
+
+          {canInviteAdmins && (
+            <div className={styles.inputGroup}>
+              <label htmlFor="permissionLevel" className={styles.inputLabel}>
+                {t('permissionLevel')}
+              </label>
+              <select
+                id="permissionLevel"
+                value={selectedPermission}
+                onChange={(e) => setSelectedPermission(e.target.value as AdminPermissionLevel)}
+                className={styles.emailInput}
+                disabled={isInviting}
+              >
+                <option value={AdminPermissionLevel.admin}>{t('admin')}</option>
+                <option value={AdminPermissionLevel.viewer}>{t('viewer')}</option>
+              </select>
+            </div>
+          )}
 
           <button
             type="submit"

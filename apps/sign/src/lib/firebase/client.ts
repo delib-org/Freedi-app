@@ -14,6 +14,14 @@ import {
   User,
   Auth,
 } from 'firebase/auth';
+import {
+  getStorage,
+  ref,
+  uploadBytesResumable,
+  getDownloadURL,
+  FirebaseStorage,
+  connectStorageEmulator,
+} from 'firebase/storage';
 
 // Firebase config - should match main app
 const firebaseConfig = {
@@ -28,7 +36,9 @@ const firebaseConfig = {
 
 let app: FirebaseApp;
 let auth: Auth;
+let storage: FirebaseStorage;
 let authEmulatorConnected = false;
+let storageEmulatorConnected = false;
 
 /**
  * Initialize Firebase client SDK
@@ -178,4 +188,70 @@ export function getCurrentUser(): User | null {
   const authInstance = getFirebaseAuth();
 
   return authInstance.currentUser;
+}
+
+/**
+ * Get Firebase Storage instance
+ */
+export function getFirebaseStorage(): FirebaseStorage {
+  if (!storage) {
+    if (!app) {
+      initializeFirebaseClient();
+    }
+    storage = getStorage(app);
+
+    // Connect to storage emulator in development
+    if (process.env.NODE_ENV === 'development' && typeof window !== 'undefined' && !storageEmulatorConnected) {
+      try {
+        connectStorageEmulator(storage, 'localhost', 9199);
+        storageEmulatorConnected = true;
+        console.info('[Firebase Client - Sign] Connected to Storage emulator');
+      } catch {
+        // Already connected or emulator not available
+      }
+    }
+  }
+
+  return storage;
+}
+
+/**
+ * Upload a file to Firebase Storage
+ * @param file - The file to upload
+ * @param path - The storage path (e.g., 'logos/document-id/logo.png')
+ * @param onProgress - Optional callback for upload progress (0-100)
+ * @returns The download URL of the uploaded file
+ */
+export async function uploadFile(
+  file: File,
+  path: string,
+  onProgress?: (progress: number) => void
+): Promise<string> {
+  const storageInstance = getFirebaseStorage();
+  const storageRef = ref(storageInstance, path);
+  const uploadTask = uploadBytesResumable(storageRef, file);
+
+  return new Promise((resolve, reject) => {
+    uploadTask.on(
+      'state_changed',
+      (snapshot) => {
+        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+        onProgress?.(progress);
+      },
+      (error) => {
+        console.error('[Firebase Storage] Upload failed', error);
+        reject(error);
+      },
+      async () => {
+        try {
+          const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+          console.info('[Firebase Storage] Upload complete', { path });
+          resolve(downloadURL);
+        } catch (error) {
+          console.error('[Firebase Storage] Failed to get download URL', error);
+          reject(error);
+        }
+      }
+    );
+  });
 }

@@ -128,7 +128,8 @@ function convertParagraphElement(
 }
 
 /**
- * Extract plain text content from paragraph elements
+ * Extract text content from paragraph elements with formatting (bold, italic)
+ * Returns HTML string with appropriate formatting tags
  */
 function extractTextContent(elements?: docs_v1.Schema$ParagraphElement[]): string {
   if (!elements) return '';
@@ -136,12 +137,45 @@ function extractTextContent(elements?: docs_v1.Schema$ParagraphElement[]): strin
   return elements
     .map((element) => {
       if (element.textRun?.content) {
-        return element.textRun.content;
+        let text = element.textRun.content;
+        const textStyle = element.textRun.textStyle;
+
+        // Escape HTML entities in the text content first
+        text = escapeHtml(text);
+
+        // Apply formatting based on textStyle
+        if (textStyle) {
+          // Wrap with italic if needed
+          if (textStyle.italic) {
+            text = `<em>${text}</em>`;
+          }
+          // Wrap with bold if needed
+          if (textStyle.bold) {
+            text = `<strong>${text}</strong>`;
+          }
+          // Wrap with underline if needed
+          if (textStyle.underline) {
+            text = `<u>${text}</u>`;
+          }
+          // Wrap with strikethrough if needed
+          if (textStyle.strikethrough) {
+            text = `<s>${text}</s>`;
+          }
+        }
+
+        return text;
       }
       return '';
     })
     .join('')
     .replace(/\n$/, '');
+}
+
+/**
+ * Check if content contains HTML formatting tags
+ */
+export function hasHtmlFormatting(content: string): boolean {
+  return /<(strong|em|u|s|table|tr|td|th)>/i.test(content);
 }
 
 /**
@@ -163,7 +197,8 @@ function convertTableElement(
     row.tableCells?.forEach((cell) => {
       const cellContent = extractCellContent(cell);
       const tag = rowIndex === 0 ? 'th' : 'td';
-      html += `<${tag}>${escapeHtml(cellContent)}</${tag}>`;
+      // cellContent is already HTML-safe (escaping done in extractTextContent)
+      html += `<${tag}>${cellContent}</${tag}>`;
     });
 
     html += '</tr>';
