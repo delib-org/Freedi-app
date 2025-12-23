@@ -20,7 +20,7 @@
 	},
 	"main": "lib/functions/src/index.js",
 	"dependencies": {
-		"@freedi/shared-types": "file:./freedi-shared-types-1.0.0.tgz",
+		"@freedi/shared-types": "file:freedi-shared-types-1.0.0.tgz",
 		"@google/generative-ai": "^0.15.0",
 		"@sendgrid/mail": "^8.1.5",
 		"@types/nodemailer": "^7.0.1",
@@ -44,5 +44,8 @@
 	"bundledDependencies": [
 		"@freedi/shared-types"
 	],
-	"private": true
+	"private": true,
+	"bundleDependencies": [
+		"@freedi/shared-types"
+	]
 }

@@ -318,3 +318,27 @@ export {
   interpretDCI,
   DEMOGRAPHIC_CONSTANTS,
 } from "./utils/madCalculation";
+
+// Framing models
+export type {
+  Framing,
+  ClusterAggregatedEvaluation,
+  FramingRequest,
+  ClusterSnapshot,
+  FramingSnapshot,
+  FramingCreatorType,
+  FramingRequestStatus,
+} from "./models/framing/framingModel";
+
+export {
+  FramingSchema,
+  ClusterAggregatedEvaluationSchema,
+  FramingRequestSchema,
+  ClusterSnapshotSchema,
+  FramingSnapshotSchema,
+  FramingCreatorTypeSchema,
+  FramingRequestStatusSchema,
+  CLUSTER_AGGREGATION_CACHE,
+  getClusterAggregationId,
+  isClusterAggregationValid,
+} from "./models/framing/framingModel";

@@ -71,6 +71,19 @@ import {
   unsubscribeEmail,
 } from "./fn_emailNotifications";
 import { getCluster, recoverLastSnapshot } from "./fn_clusters";
+import {
+  generateMultipleFramings,
+  requestCustomFraming,
+  getFramingsForStatement,
+  getFramingClusters,
+  deleteFraming,
+} from "./fn_multiFramingClusters";
+import {
+  getClusterAggregations,
+  recalculateClusterAggregation,
+  getFramingAggregationSummary,
+  onEvaluationChangeInvalidateCache,
+} from "./fn_clusterAggregation";
 import { checkProfanity } from "./fn_profanityChecker";
 import { handleImproveSuggestion } from "./fn_improveSuggestion";
 import { onStatementCreated } from "./fn_statementCreation";
@@ -496,3 +509,16 @@ exports.importGoogleDoc = wrapHttpFunction(importGoogleDoc);
 // Integration of Similar Statements
 exports.findSimilarForIntegration = findSimilarForIntegration;
 exports.executeIntegration = executeIntegration;
+
+// Multi-Framing Clustering
+exports.generateMultipleFramings = wrapHttpFunction(generateMultipleFramings);
+exports.requestCustomFraming = wrapHttpFunction(requestCustomFraming);
+exports.getFramingsForStatement = wrapHttpFunction(getFramingsForStatement);
+exports.getFramingClusters = wrapHttpFunction(getFramingClusters);
+exports.deleteFraming = wrapHttpFunction(deleteFraming);
+
+// Cluster Aggregation
+exports.getClusterAggregations = wrapHttpFunction(getClusterAggregations);
+exports.recalculateClusterAggregation = wrapHttpFunction(recalculateClusterAggregation);
+exports.getFramingAggregationSummary = wrapHttpFunction(getFramingAggregationSummary);
+exports.onEvaluationChangeInvalidateCache = onEvaluationChangeInvalidateCache;
