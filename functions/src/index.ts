@@ -122,6 +122,7 @@ import {
   getEmbeddingStatus,
   regenerateEmbedding,
   deleteEmbedding,
+  testEmbeddingGeneration,
 } from "./fn_embeddingOperations";
 
 // Initialize Firebase only if not already initialized
@@ -251,7 +252,7 @@ const createFirestoreFunction = <T>(
 exports.getRandomStatements = wrapHttpFunction(getRandomStatements);
 exports.getTopStatements = wrapHttpFunction(getTopStatements);
 exports.getUserOptions = wrapHttpFunction(getUserOptions);
-exports.checkForSimilarStatements = wrapHttpFunction(findSimilarStatements);
+exports.findSimilarStatements = wrapHttpFunction(findSimilarStatements);
 exports.massConsensusGetInitialData = wrapHttpFunction(getInitialMCData);
 exports.getQuestionOptions = wrapHttpFunction(getQuestionOptions);
 exports.massConsensusAddMember = wrapHttpFunction(addMassConsensusMember);
@@ -534,3 +535,4 @@ exports.generateBulkEmbeddings = wrapHttpFunction(generateBulkEmbeddings);
 exports.getEmbeddingStatus = wrapHttpFunction(getEmbeddingStatus);
 exports.regenerateEmbedding = wrapHttpFunction(regenerateEmbedding);
 exports.deleteEmbedding = wrapHttpFunction(deleteEmbedding);
+exports.testEmbeddingGeneration = wrapHttpFunction(testEmbeddingGeneration);

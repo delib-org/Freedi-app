@@ -350,3 +350,87 @@ export async function deleteEmbedding(
     });
   }
 }
+
+/**
+ * Test embedding generation - DEBUG ENDPOINT
+ * Tests if two different texts produce different embeddings
+ */
+export async function testEmbeddingGeneration(
+  request: Request,
+  response: Response
+): Promise<void> {
+  try {
+    const { text1, text2, context } = request.body;
+
+    if (!text1 || !text2) {
+      response.status(400).send({
+        ok: false,
+        error: "text1 and text2 are required",
+      });
+      return;
+    }
+
+    logger.info("=== EMBEDDING TEST START ===", { text1, text2, context });
+
+    // Generate embedding for first text
+    logger.info("Generating embedding for text1...");
+    const result1 = await embeddingService.generateEmbedding(text1, context);
+
+    // Small delay to ensure no race conditions
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    // Generate embedding for second text
+    logger.info("Generating embedding for text2...");
+    const result2 = await embeddingService.generateEmbedding(text2, context);
+
+    // Compare the embeddings
+    const firstValues1 = result1.embedding.slice(0, 10);
+    const firstValues2 = result2.embedding.slice(0, 10);
+
+    // Check if they're identical
+    let identical = true;
+    for (let i = 0; i < firstValues1.length; i++) {
+      if (Math.abs(firstValues1[i] - firstValues2[i]) > 0.000001) {
+        identical = false;
+        break;
+      }
+    }
+
+    // Calculate cosine similarity
+    const similarity = embeddingService.cosineSimilarity(
+      result1.embedding,
+      result2.embedding
+    );
+
+    logger.info("=== EMBEDDING TEST RESULTS ===", {
+      text1: text1.substring(0, 30),
+      text2: text2.substring(0, 30),
+      firstValues1: firstValues1.map(v => v.toFixed(6)),
+      firstValues2: firstValues2.map(v => v.toFixed(6)),
+      areIdentical: identical,
+      cosineSimilarity: similarity.toFixed(4)
+    });
+
+    response.status(200).send({
+      ok: true,
+      result: {
+        text1Preview: text1.substring(0, 50),
+        text2Preview: text2.substring(0, 50),
+        embedding1FirstValues: firstValues1.map(v => v.toFixed(6)),
+        embedding2FirstValues: firstValues2.map(v => v.toFixed(6)),
+        areEmbeddingsIdentical: identical,
+        cosineSimilarity: similarity.toFixed(4),
+        dimensions1: result1.embedding.length,
+        dimensions2: result2.embedding.length,
+        model: result1.model,
+      },
+    });
+
+  } catch (error) {
+    logger.error("Error in testEmbeddingGeneration:", error);
+    response.status(500).send({
+      ok: false,
+      error: error instanceof Error ? error.message : "Failed to test embeddings",
+    });
+  }
+}

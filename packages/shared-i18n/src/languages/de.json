@@ -549,6 +549,8 @@
   "Sign up with": "Anmelden mit",
   "Similar suggestions": "Ähnliche Vorschläge",
   "Similarity Detection": "Ähnlichkeitserkennung",
+  "Similarity Threshold": "Ähnlichkeitsschwelle",
+  "Higher values require stronger similarity (recommended: 75-85%)": "Höhere Werte erfordern stärkere Ähnlichkeit (empfohlen: 75-85%)",
   "Simple Question": "Einfache Frage",
   "Since": "Seit",
   "Single Choice": "Einzelauswahl",

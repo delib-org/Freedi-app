@@ -30,6 +30,7 @@
 		"firebase-functions": "^6.3.2",
 		"googleapis": "^168.0.0",
 		"nodemailer": "^7.0.6",
+		"openai": "^6.15.0",
 		"typescript": "^5.6.3",
 		"valibot": "^1.0.0-rc.1"
 	},

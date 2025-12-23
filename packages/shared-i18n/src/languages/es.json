@@ -549,6 +549,8 @@
   "Sign up with": "Registrarte con",
   "Similar suggestions": "Sugerencias similares",
   "Similarity Detection": "Detección de Similitud",
+  "Similarity Threshold": "Umbral de Similitud",
+  "Higher values require stronger similarity (recommended: 75-85%)": "Valores más altos requieren mayor similitud (recomendado: 75-85%)",
   "Simple Question": "Pregunta Simple",
   "Since": "Desde",
   "Single Choice": "Elección Única",

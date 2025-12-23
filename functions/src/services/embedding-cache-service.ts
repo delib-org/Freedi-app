@@ -1,6 +1,6 @@
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import { logger } from "firebase-functions";
-import { EMBEDDING_MODEL, EMBEDDING_DIMENSIONS } from "../config/gemini";
+import { EMBEDDING_DIMENSIONS, OPENAI_EMBEDDING_MODEL } from "./embedding-service";
 
 // Helper to extract array from VectorValue or return as-is if already an array
 function extractEmbeddingArray(embedding: unknown): number[] | null {
@@ -132,7 +132,7 @@ class EmbeddingCacheService {
         .doc(statementId)
         .update({
           embedding: vectorValue,
-          embeddingModel: EMBEDDING_MODEL,
+          embeddingModel: OPENAI_EMBEDDING_MODEL,
           embeddingContext: context || null,
           embeddingCreatedAt: Date.now(),
         });
@@ -178,7 +178,7 @@ class EmbeddingCacheService {
 
           batch.update(docRef, {
             embedding: vectorValue,
-            embeddingModel: EMBEDDING_MODEL,
+            embeddingModel: OPENAI_EMBEDDING_MODEL,
             embeddingContext: item.context || null,
             embeddingCreatedAt: Date.now(),
           });

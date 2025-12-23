@@ -52,6 +52,13 @@ class VectorSearchService {
         questionContext
       );
 
+      // Debug: log first 5 values of query embedding to verify it's unique
+      logger.info("Query embedding generated", {
+        userInput: userInput.substring(0, 50),
+        embeddingLength: queryEmbedding.length,
+        firstValues: queryEmbedding.slice(0, 5).map(v => v.toFixed(4))
+      });
+
       // Perform vector search
       const results = await this.findSimilarByEmbedding(
         queryEmbedding,
@@ -102,11 +109,13 @@ class VectorSearchService {
 
       // Create vector query using Firestore's findNearest
       // Note: Firestore returns distance (0 = identical), we convert to similarity
+      // Use distanceResultField to get the distance value in results
       const vectorQuery = query.findNearest({
         vectorField: "embedding",
         queryVector: FieldValue.vector(queryEmbedding),
         limit: limit * 3, // Get more results to account for hidden filtering
         distanceMeasure: "COSINE",
+        distanceResultField: "vectorDistance", // This field will contain the distance
       });
 
       const snapshot = await vectorQuery.get();
@@ -121,11 +130,39 @@ class VectorSearchService {
           continue;
         }
 
-        // Get the distance from the document (Firestore adds this)
-        // For cosine distance: similarity = 1 - distance
-        // Firestore returns distance in [0, 2] for cosine, where 0 = identical
-        const distance = (doc as unknown as { distance?: number }).distance ?? 0;
+        // Get the distance from the vectorDistance field (set via distanceResultField option)
+        // For cosine distance: Firestore returns distance in [0, 2], where 0 = identical
+        // We convert to similarity: similarity = 1 - (distance / 2), giving [0, 1] range
+        const rawData = doc.data() as Record<string, unknown>;
+
+        // Debug: log all fields to see what Firestore returns
+        logger.info("Raw document data keys", {
+          statementId: data.statementId,
+          keys: Object.keys(rawData),
+          hasVectorDistance: "vectorDistance" in rawData,
+          vectorDistanceValue: rawData.vectorDistance,
+          hasEmbedding: "embedding" in rawData,
+          embeddingLength: Array.isArray(rawData.embedding) ? rawData.embedding.length : "not array"
+        });
+
+        const distance = typeof rawData.vectorDistance === "number" ? rawData.vectorDistance : null;
+
+        // If distance is not available, skip this document (shouldn't happen with distanceResultField)
+        if (distance === null) {
+          logger.warn("Vector search result missing distance", { statementId: data.statementId });
+          continue;
+        }
+
         const similarity = 1 - (distance / 2); // Normalize to [0, 1]
+
+        logger.info("Vector search result", {
+          statementId: data.statementId,
+          statement: data.statement?.substring(0, 50),
+          distance,
+          similarity: similarity.toFixed(3),
+          threshold,
+          passesThreshold: similarity >= threshold
+        });
 
         if (similarity >= threshold) {
           results.push({

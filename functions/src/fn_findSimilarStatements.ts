@@ -70,11 +70,29 @@ export async function findSimilarStatements(
       });
     }
 
-    // Step 2: Try to get complete cached response
+    // Step 2: Get parent statement first to determine threshold for cache key
+    const parentStatement = await getCachedParentStatement(statementId);
+    if (!parentStatement) {
+      logger.error("Parent statement not found", { statementId });
+      response.status(404).send({
+        ok: false,
+        error: "Parent statement not found",
+      });
+      return;
+    }
+
+    // Get threshold from settings (default 0.75)
+    const settings = parentStatement.statementSettings as Record<string, unknown> | undefined;
+    const threshold = (settings?.similarityThreshold as number | undefined) ?? 0.75;
+
+    logger.info("Using similarity threshold for cache", { threshold, statementId });
+
+    // Step 3: Try to get complete cached response (with threshold in cache key)
     const cachedResponse = await getCachedSimilarityResponse(
       statementId,
       userInput,
-      creatorId
+      creatorId,
+      threshold
     );
 
     if (cachedResponse) {
@@ -129,12 +147,14 @@ export async function findSimilarStatements(
       return;
     }
 
-    // Step 3: Process with optimized parallel operations
+    // Step 4: Process with optimized parallel operations
     const result = await fetchDataAndProcess(
       statementId,
       userInput,
       creatorId,
-      numberOfOptionsToGenerate
+      numberOfOptionsToGenerate,
+      parentStatement,
+      threshold
     );
 
     if (result.error) {
@@ -184,7 +204,8 @@ export async function findSimilarStatements(
       statementId,
       userInput,
       creatorId,
-      responseData
+      responseData,
+      threshold
     );
 
     const totalTime = Date.now() - startTime;
@@ -222,28 +243,18 @@ async function fetchDataAndProcess(
   statementId: string,
   userInput: string,
   creatorId: string,
-  numberOfOptionsToGenerate: number
+  numberOfOptionsToGenerate: number,
+  parentStatement: { statement: string; statementSettings?: Record<string, unknown> },
+  threshold: number
 ) {
   try {
-    // --- Optimized: Parallel Database Operations with Caching ---
-    // Fetch parent statement and sub-statements in parallel with caching
-    const [parentStatement, subStatements] = await Promise.all([
-      getCachedParentStatement(statementId),
-      getCachedSubStatements(statementId)
-    ]);
-
-    // Validate parent statement
-    if (!parentStatement) {
-      return {
-        error: "Parent statement not found",
-        statusCode: 404
-      };
-    }
+    // Fetch sub-statements (parent already fetched by caller)
+    const subStatements = await getCachedSubStatements(statementId);
 
     // Prepare data for parallel processing
     const userStatements = getUserStatements(subStatements, creatorId);
     const maxAllowed =
-      parentStatement.statementSettings?.numberOfOptionsPerUser ?? Infinity;
+      (parentStatement.statementSettings?.numberOfOptionsPerUser as number | undefined) ?? Infinity;
 
     // Check validation first
     if (hasReachedMaxStatements(userStatements, maxAllowed)) {
@@ -253,7 +264,7 @@ async function fetchDataAndProcess(
       };
     }
 
-    logger.info(`Processing similarity check with ${subStatements.length} existing statements`);
+    logger.info(`Processing similarity check with ${subStatements.length} existing statements, threshold: ${threshold}`);
 
     // --- Embeddings-First Approach with LLM Fallback ---
     let similarStatementIds: string[] = [];
@@ -265,10 +276,8 @@ async function fetchDataAndProcess(
       const coverage = await embeddingCache.getEmbeddingCoverage(statementId);
 
       if (coverage.coveragePercent >= 50) {
-        // Use vector search with configurable threshold (default 0.75)
-        // Cast to access similarityThreshold which may not exist in older types
-        const settings = parentStatement.statementSettings as Record<string, unknown> | undefined;
-        const threshold = (settings?.similarityThreshold as number | undefined) ?? 0.75;
+        // Use passed threshold (already extracted from settings by caller)
+        logger.info("Using similarity threshold for vector search", { threshold });
         const vectorResults = await vectorSearchService.findSimilarToText(
           userInput,
           statementId,

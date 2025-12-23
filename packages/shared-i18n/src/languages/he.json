@@ -632,6 +632,8 @@
   "Sign up with": "הרשם עם",
   "Similar suggestions": "הצעות דומות",
   "Similarity Detection": "זיהוי דמיון",
+  "Similarity Threshold": "סף דמיון",
+  "Higher values require stronger similarity (recommended: 75-85%)": "ערכים גבוהים יותר דורשים דמיון חזק יותר (מומלץ: 75-85%)",
   "Simple Question": "שאלה פשוטה",
   "Since": "מאז",
   "Single Choice": "בחירה יחידה",

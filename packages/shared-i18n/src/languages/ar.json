@@ -548,6 +548,8 @@
   "Sign up with": "سجل مع",
   "Similar suggestions": "اقتراحات مماثلة",
   "Similarity Detection": "كشف التشابه",
+  "Similarity Threshold": "عتبة التشابه",
+  "Higher values require stronger similarity (recommended: 75-85%)": "القيم الأعلى تتطلب تشابهًا أقوى (موصى به: 75-85%)",
   "Simple Question": "سؤال بسيط",
   "Since": "منذ",
   "Single Choice": "اختيار واحد",

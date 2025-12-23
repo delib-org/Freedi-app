@@ -647,6 +647,8 @@
   "Sign up with": "Sign up with",
   "Similar suggestions": "Similar suggestions",
   "Similarity Detection": "Similarity Detection",
+  "Similarity Threshold": "Similarity Threshold",
+  "Higher values require stronger similarity (recommended: 75-85%)": "Higher values require stronger similarity (recommended: 75-85%)",
   "Simple Question": "Simple Question",
   "Since": "Since",
   "Single Choice": "Single Choice",
