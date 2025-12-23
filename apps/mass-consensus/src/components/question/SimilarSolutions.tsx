@@ -124,7 +124,7 @@ export default function SimilarSolutions({
           {/* Metadata */}
           <div className={styles.similarMeta}>
             <span className={styles.similarityScore}>
-              85% {t('similar')}
+              {Math.round(((bestSimilar as Statement & { similarity?: number }).similarity ?? 0.85) * 100)}% {t('similar')}
             </span>
             <span className={styles.supportCount}>
               👥 {bestSimilar.evaluation?.numberOfEvaluators || 0} {bestSimilar.evaluation?.numberOfEvaluators === 1 ? t('supporter') : t('supporters')}
@@ -154,11 +154,11 @@ export default function SimilarSolutions({
       {topSimilar.length > 1 && (
         <div className={styles.section}>
           <h3 className={styles.sectionTitle}>{t('Other similar proposals')}</h3>
-          {topSimilar.slice(1).map((solution, index) => (
+          {topSimilar.slice(1).map((solution) => (
             <div key={solution.statementId} className={styles.similarCard}>
               <div className={styles.similarMeta}>
                 <span className={styles.similarityScore}>
-                  {Math.max(75 - index * 10, 60)}% {t('similar')}
+                  {Math.round(((solution as Statement & { similarity?: number }).similarity ?? 0.75) * 100)}% {t('similar')}
                 </span>
                 <span className={styles.supportCount}>
                   👥 {solution.evaluation?.numberOfEvaluators || 0}
