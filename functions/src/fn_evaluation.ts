@@ -27,6 +27,10 @@ type StatementWithPopper = Statement & { popperHebbianScore?: PopperHebbianScore
 import { number, parse } from 'valibot';
 import { updateUserDemographicEvaluation } from './fn_polarizationIndex';
 import { calculateConsensusValid } from './helpers/consensusValidCalculator';
+import {
+	calcSquaredDiff,
+	calcAgreement,
+} from './utils/evaluationAlgorithm';
 
 // import { getRandomColor } from './helpers';
 // import { user } from 'firebase-functions/v1/auth';
@@ -391,14 +395,6 @@ async function updateStatementInTransaction(
 	});
 }
 
-/**
- * Calculates the squared difference for sum of squares tracking
- * This is used to efficiently track Σxi² for standard deviation calculation
- */
-function calcSquaredDiff(newEvaluation: number, oldEvaluation: number): number {
-	return (newEvaluation * newEvaluation) - (oldEvaluation * oldEvaluation);
-}
-
 function calculateEvaluation(
 	statement: Statement,
 	proConDiff: CalcDiff,
@@ -468,214 +464,10 @@ function calculateEvaluation(
 // ============================================================================
 // AGREEMENT CALCULATION LOGIC
 // ============================================================================
-
-/**
- * ============================================================================
- * ALGORITHM: Mean − SEM (with Uncertainty Floor)
- * ============================================================================
- *
- * Title: Confidence-Adjusted Score with Minimum Variance Assumption
- * Status: Implemented
- *
- * ----------------------------------------------------------------------------
- * 1. THE PROBLEM (Why this is needed)
- * ----------------------------------------------------------------------------
- * The standard Mean − SEM formula suffers from a "Zero Variance Loophole."
- * If a very small group (e.g., n=2 or n=3) has perfect agreement (all ratings
- * are identical), the sample standard deviation (s) becomes 0. Consequently,
- * the Standard Error of the Mean (SEM) becomes 0, resulting in a perfect
- * score (Score = Mean).
- *
- * This creates a logic error where a tiny group with 3 votes of 1.0 (Score = 1.0)
- * mathematically defeats a large group of 100 people with a mean of 0.99
- * (Score < 0.99 due to natural variance). A sample size of 3 is insufficient
- * to statistically prove "zero variance" in a larger population.
- *
- * ----------------------------------------------------------------------------
- * 2. THE SOLUTION: The Uncertainty Floor
- * ----------------------------------------------------------------------------
- * To correct this, we introduce a Minimum Standard Deviation (s_min).
- * We assume that no controversial topic has zero variance in the general
- * population. If a small sample shows perfect agreement, we treat it as an
- * artifact of the small sample size and impose a "floor" on the variance
- * calculation.
- *
- * This ensures that uncertainty (SEM) can only approach zero as n increases,
- * not just because the sample happens to be uniform.
- *
- * ----------------------------------------------------------------------------
- * 3. THE FORMULA
- * ----------------------------------------------------------------------------
- *
- *   Score = Mean - (s_adj / √n)
- *
- * Where:
- *   - n       = Number of evaluators
- *   - s       = Observed Sample Standard Deviation
- *   - s_min   = The Uncertainty Floor constant (0.5)
- *   - s_adj   = Adjusted Standard Deviation = max(s, s_min)
- *
- * ----------------------------------------------------------------------------
- * 4. LOGICAL FLOW (Pseudocode)
- * ----------------------------------------------------------------------------
- *
- *   CONSTANTS:
- *     FLOOR_STD_DEV = 0.5  // Represents a "moderate disagreement" baseline
- *
- *   INPUTS:
- *     ratings = [list of scores from -1 to 1]
- *
- *   CALCULATION:
- *     n = length(ratings)
- *     mean = average(ratings)
- *     std_dev = standard_deviation(ratings)
- *
- *     // Apply the Uncertainty Floor
- *     // If the sample is too uniform (or n is too small to show variance),
- *     // we force the math to assume at least moderate disagreement exists.
- *     effective_std_dev = MAX(std_dev, FLOOR_STD_DEV)
- *
- *     // Calculate SEM using the effective standard deviation
- *     sem = effective_std_dev / SQRT(n)
- *
- *     // Final Score
- *     final_score = mean - sem
- *
- * ----------------------------------------------------------------------------
- * 5. COMPARISON OF BEHAVIOR
- * ----------------------------------------------------------------------------
- *
- * Scenario A (The Flaw): 3 people vote 1.0
- *   - Old Formula: s=0 → SEM=0 → Score = 1.0
- *   - New Formula: s_adj=0.5 → SEM = 0.5/√3 ≈ 0.29 → Score = 0.71
- *
- * Scenario B (The Goal): 100 people vote 0.95 (with normal variance)
- *   - Old Formula: Score ≈ 0.94
- *   - New Formula: Score ≈ 0.94 (The floor usually doesn't trigger for
- *                  large, noisy groups)
- *
- * Result: The large group (0.94) now correctly defeats the small group (0.71).
- *
- * ============================================================================
- */
-
-/**
- * The Uncertainty Floor constant.
- *
- * This represents a "moderate disagreement" baseline assumption.
- * When sample variance is lower than this floor, we assume it's due to
- * insufficient sample size rather than true population consensus.
- *
- * Value of 0.5 chosen because:
- * - On a scale of -1 to 1, 0.5 represents moderate disagreement
- * - It provides meaningful penalty for small unanimous samples
- * - Large samples with genuine consensus will exceed this floor naturally
- */
-const FLOOR_STD_DEV = 0.5;
-
-/**
- * Calculates the standard error of the mean (SEM) for evaluation data
- * with an Uncertainty Floor to prevent the Zero Variance Loophole.
- *
- * The Uncertainty Floor ensures that small samples with artificially low
- * variance cannot achieve unrealistically high scores. This is critical
- * because a sample of 3 unanimous votes should not mathematically defeat
- * a large sample of 100 evaluators with natural variance.
- *
- * @param sumEvaluations - Sum of all evaluation values
- * @param sumSquaredEvaluations - Sum of squared evaluation values (Σxi²)
- * @param numberOfEvaluators - Number of evaluators
- * @returns Standard Error of the Mean (SEM = s_adj / √n) where s_adj = max(s, FLOOR_STD_DEV)
- */
-function calcStandardError(
-	sumEvaluations: number,
-	sumSquaredEvaluations: number,
-	numberOfEvaluators: number
-): number {
-	if (numberOfEvaluators <= 1) return FLOOR_STD_DEV; // Return floor for n=1 to ensure penalty
-
-	// Calculate mean (μ)
-	const mean = sumEvaluations / numberOfEvaluators;
-
-	// Calculate variance using: Var = (Σxi² / n) - μ²
-	const variance = (sumSquaredEvaluations / numberOfEvaluators) - (mean * mean);
-
-	// Ensure variance is non-negative (floating point errors can cause small negative values)
-	const safeVariance = Math.max(0, variance);
-
-	// Calculate observed standard deviation: s = √Var
-	const observedStdDev = Math.sqrt(safeVariance);
-
-	// Apply the Uncertainty Floor: s_adj = max(s, s_min)
-	// This prevents the Zero Variance Loophole where small unanimous
-	// samples achieve unrealistically perfect scores
-	const adjustedStdDev = Math.max(observedStdDev, FLOOR_STD_DEV);
-
-	// Calculate SEM: SEM = s_adj / √n
-	const sem = adjustedStdDev / Math.sqrt(numberOfEvaluators);
-
-	return sem;
-}
-
-/**
- * Calculates consensus score using Mean - SEM approach with Uncertainty Floor.
- *
- * This replaces the old heuristic formula (√n × Mean) with a statistically
- * grounded approach that accounts for both the level of support and the
- * confidence in that measurement.
- *
- * Formula: Score = Mean - (s_adj / √n)
- *
- * Where:
- * - Mean   = average evaluation score
- * - n      = number of evaluators
- * - s      = observed sample standard deviation
- * - s_min  = Uncertainty Floor constant (0.5)
- * - s_adj  = max(s, s_min) - prevents Zero Variance Loophole
- *
- * The Uncertainty Floor prevents small unanimous groups from achieving
- * artificially perfect scores. A sample of 3 votes of 1.0 now scores ~0.71
- * instead of 1.0, correctly losing to a larger sample of 100 voters at 0.94.
- *
- * @see calcStandardError for the SEM calculation with Uncertainty Floor
- * @param sumEvaluations - Sum of all evaluation values
- * @param sumSquaredEvaluations - Sum of squared evaluation values (Σxi²)
- * @param numberOfEvaluators - Number of evaluators
- * @returns Consensus score (confidence-adjusted agreement with uncertainty floor)
- */
-function calcAgreement(
-	sumEvaluations: number,
-	sumSquaredEvaluations: number,
-	numberOfEvaluators: number
-): number {
-	try {
-		parse(number(), sumEvaluations);
-		parse(number(), sumSquaredEvaluations);
-		parse(number(), numberOfEvaluators);
-
-		// Handle edge case: no evaluators
-		if (numberOfEvaluators === 0) return 0;
-
-		// Calculate mean evaluation
-		const mean = sumEvaluations / numberOfEvaluators;
-
-		// Calculate Standard Error of the Mean (SEM)
-		const sem = calcStandardError(sumEvaluations, sumSquaredEvaluations, numberOfEvaluators);
-
-		// Return confidence-adjusted score using proportional penalty
-		// The penalty is bounded by the available range to -1, ensuring
-		// the result naturally stays within [-1, 1]
-		const availableRange = mean + 1; // Distance from mean to -1
-		const penalty = Math.min(sem, availableRange);
-		const agreement = mean - penalty;
-
-		return agreement;
-	} catch (error) {
-		logger.error('Error calculating agreement:', error);
-
-		return 0;
-	}
-}
+// The core algorithm functions (calcAgreement, calcStandardError, calcSquaredDiff)
+// are now exported from ./utils/evaluationAlgorithm.ts for testing and reusability.
+// See that file for detailed documentation on the Mean-SEM algorithm.
+// ============================================================================
 
 function calcDiffEvaluation({ action, newEvaluation, oldEvaluation }: {
 	action: ActionTypes;
@@ -1068,7 +860,7 @@ function sortOptionsByResultsBy(options: Statement[], resultsBy: ResultsBy): Sta
 // EVALUATION MIGRATION FOR INTEGRATION FEATURE
 // ============================================================================
 
-// Note: FLOOR_STD_DEV is already defined earlier in this file
+// Note: FLOOR_STD_DEV and algorithm functions are imported from ./utils/evaluationAlgorithm.ts
 
 interface MigrationResult {
 	migratedCount: number;
@@ -1211,7 +1003,7 @@ export async function migrateEvaluationsToNewStatement(
 
 		// 4. Calculate agreement (consensus) using Mean - SEM with floor
 		const averageEvaluation = numberOfEvaluators > 0 ? sumEvaluations / numberOfEvaluators : 0;
-		const agreement = calcMigrationAgreement(sumEvaluations, sumSquaredEvaluations, numberOfEvaluators);
+		const agreement = calcAgreement(sumEvaluations, sumSquaredEvaluations, numberOfEvaluators);
 
 		result.newEvaluationMetrics = {
 			sumEvaluations,
@@ -1254,42 +1046,5 @@ export async function migrateEvaluationsToNewStatement(
 	}
 }
 
-/**
- * Calculate consensus score for migration using Mean - SEM with uncertainty floor
- */
-function calcMigrationAgreement(
-	sumEvaluations: number,
-	sumSquaredEvaluations: number,
-	numberOfEvaluators: number
-): number {
-	if (numberOfEvaluators === 0) return 0;
-
-	const mean = sumEvaluations / numberOfEvaluators;
-	const sem = calcMigrationStandardError(sumEvaluations, sumSquaredEvaluations, numberOfEvaluators);
-
-	// Proportional penalty bounded by available range to -1
-	const availableRange = mean + 1;
-	const penalty = Math.min(sem, availableRange);
-	const agreement = mean - penalty;
-
-	return agreement;
-}
-
-/**
- * Calculate Standard Error of the Mean with uncertainty floor for migration
- */
-function calcMigrationStandardError(
-	sumEvaluations: number,
-	sumSquaredEvaluations: number,
-	numberOfEvaluators: number
-): number {
-	if (numberOfEvaluators <= 1) return FLOOR_STD_DEV;
-
-	const mean = sumEvaluations / numberOfEvaluators;
-	const variance = sumSquaredEvaluations / numberOfEvaluators - mean * mean;
-	const safeVariance = Math.max(0, variance);
-	const observedStdDev = Math.sqrt(safeVariance);
-	const adjustedStdDev = Math.max(observedStdDev, FLOOR_STD_DEV);
-
-	return adjustedStdDev / Math.sqrt(numberOfEvaluators);
-}
+// Note: Migration functions now use the shared calcAgreement and calcStandardError
+// from ./utils/evaluationAlgorithm.ts for consistency and testability.
