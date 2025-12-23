@@ -158,7 +158,8 @@ export const listenToStatement = (
 							setIsStatementNotFound(true);
 						throw new Error('Statement does not exist');
 					}
-					const statement = statementDB.data() as Statement;
+					// Normalize data to remove non-serializable values (like VectorValue embeddings)
+					const statement = normalizeStatementData(statementDB.data()) as Statement;
 
 					dispatch(setStatement(statement));
 				} catch (error) {
@@ -223,7 +224,8 @@ export const listenToSubStatements = (
 					const startStatements: Statement[] = [];
 
 					statementsDB.forEach((doc) => {
-						const statement = doc.data() as Statement;
+						// Normalize data to remove non-serializable values (like VectorValue embeddings)
+						const statement = normalizeStatementData(doc.data()) as Statement;
 						startStatements.push(statement);
 					});
 
@@ -238,7 +240,8 @@ export const listenToSubStatements = (
 					const changes = statementsDB.docChanges();
 
 					changes.forEach((change) => {
-						const statement = change.doc.data() as Statement;
+						// Normalize data to remove non-serializable values (like VectorValue embeddings)
+						const statement = normalizeStatementData(change.doc.data()) as Statement;
 
 						if (change.type === 'added') {
 							dispatch(setStatement(statement));
@@ -475,7 +478,8 @@ export const listenToUserSuggestions = (
 					const userOptions: Statement[] = [];
 
 					statementsDB.forEach((doc) => {
-						const statement = doc.data() as Statement;
+						// Normalize data to remove non-serializable values (like VectorValue embeddings)
+						const statement = normalizeStatementData(doc.data()) as Statement;
 						userOptions.push(statement);
 					});
 
@@ -488,7 +492,8 @@ export const listenToUserSuggestions = (
 				} else {
 					// Handle individual changes after initial load
 					statementsDB.docChanges().forEach((change) => {
-						const statement = change.doc.data() as Statement;
+						// Normalize data to remove non-serializable values (like VectorValue embeddings)
+						const statement = normalizeStatementData(change.doc.data()) as Statement;
 
 						if (change.type === 'added' || change.type === 'modified') {
 							dispatch(setStatement(statement));

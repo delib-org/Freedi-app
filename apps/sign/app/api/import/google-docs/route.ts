@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { Collections } from '@freedi/shared-types';
 import { getFirebaseAdmin } from '@/lib/firebase/admin';
+import { checkAdminAccess } from '@/lib/utils/adminAccess';
 import { fetchGoogleDoc, getServiceAccountEmail } from '@/lib/google-docs/client';
 import { convertGoogleDocsToParagraphs, getDocumentTitle } from '@/lib/google-docs/converter';
 import { Paragraph } from '@/types';
@@ -101,10 +102,10 @@ export async function POST(request: NextRequest): Promise<NextResponse<ImportRes
       );
     }
 
-    const docData = docSnap.data();
-    const isAdmin = docData?.creatorId === userId || docData?.creator?.uid === userId;
+    // Check admin access (owner or collaborator with admin role)
+    const accessResult = await checkAdminAccess(db, statementId, userId);
 
-    if (!isAdmin) {
+    if (!accessResult.isAdmin || accessResult.isViewer) {
       return NextResponse.json(
         { success: false, error: 'You do not have permission to import to this document', errorCode: 'UNAUTHORIZED' },
         { status: 403 }
