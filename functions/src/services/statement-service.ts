@@ -147,20 +147,27 @@ export function getStatementsByIds(
 }
 
 /**
- * Finds and removes duplicate statement from array
+ * Finds duplicate statement and moves it to the front of the array
+ * Instead of removing duplicates, we keep them at the top so users
+ * can see their exact match exists
  */
 export function removeDuplicateStatement(
 	statements: Statement[],
 	userInput: string
 ): { statements: Statement[]; duplicateStatement: Statement | undefined } {
+	// Find exact match (case-insensitive)
+	const normalizedInput = userInput.toLowerCase().trim();
 	const duplicateStatement = statements.find(
-		(stat) => stat.statement === userInput
+		(stat) => stat.statement.toLowerCase().trim() === normalizedInput
 	);
 
 	if (duplicateStatement) {
+		// Move duplicate to the FRONT of the array instead of removing it
+		// This way users see their exact match at the top
 		const index = statements.indexOf(duplicateStatement);
-		if (index !== -1) {
+		if (index > 0) {
 			statements.splice(index, 1);
+			statements.unshift(duplicateStatement);
 		}
 	}
 
