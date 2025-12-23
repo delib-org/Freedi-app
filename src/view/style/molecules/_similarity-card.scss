@@ -1,0 +1,250 @@
+// Similarity Card Molecule
+// Used for displaying similar statements in the "add new option" flow
+
+.similarity-card {
+  position: relative;
+  background: var(--white);
+  border-radius: 12px;
+  padding: 1.25rem;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 2px solid transparent;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  width: 100%;
+  text-align: start;
+
+  &:hover {
+    border-color: var(--btn-primary);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(95, 136, 229, 0.15);
+  }
+
+  &:focus {
+    outline: 2px solid var(--btn-primary);
+    outline-offset: 2px;
+  }
+
+  // Elements
+  &__badge {
+    position: absolute;
+    top: -10px;
+    inset-inline-end: 20px;
+    background: var(--agree);
+    color: var(--white);
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  &__meta {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  &__score {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.85rem;
+    color: var(--agree);
+    font-weight: 600;
+
+    &::before {
+      content: '';
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: currentColor;
+    }
+  }
+
+  &__supporters {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.85rem;
+    color: var(--text-caption);
+
+    svg {
+      width: 14px;
+      height: 14px;
+    }
+  }
+
+  &__title {
+    font-size: 1.1rem;
+    color: var(--text-title);
+    line-height: 1.5;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+  }
+
+  &__description {
+    font-size: 0.9rem;
+    color: var(--text-body);
+    line-height: 1.6;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  &__action {
+    margin-top: 1rem;
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  // Modifiers
+  &--user-own {
+    background: linear-gradient(
+      135deg,
+      rgba(87, 198, 178, 0.08) 0%,
+      rgba(124, 172, 248, 0.08) 100%
+    );
+    border: 2px solid var(--agree);
+
+    .similarity-card__badge {
+      display: block;
+    }
+
+    &:hover {
+      border-color: var(--agree);
+      box-shadow: 0 4px 20px rgba(87, 198, 178, 0.2);
+    }
+  }
+
+  &--best-match {
+    border-color: var(--btn-primary);
+    box-shadow: 0 4px 20px rgba(95, 136, 229, 0.12);
+
+    .similarity-card__badge {
+      background: var(--btn-primary);
+    }
+  }
+
+  // Animation for entrance
+  &--animate {
+    animation: similarityCardEnter 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    opacity: 0;
+    transform: translateY(20px);
+
+    @for $i from 1 through 10 {
+      &:nth-child(#{$i}) {
+        animation-delay: #{$i * 0.1}s;
+      }
+    }
+  }
+}
+
+@keyframes similarityCardEnter {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Container for similarity cards
+.similarity-cards-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: 100%;
+  max-width: 500px;
+  margin: 0 auto;
+
+  &__section {
+    margin-bottom: 1.5rem;
+  }
+
+  &__section-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border);
+
+    h4 {
+      margin: 0;
+      font-size: 1rem;
+      color: var(--text-title);
+      font-weight: 600;
+    }
+  }
+
+  &__section-subtitle {
+    font-size: 0.9rem;
+    color: var(--text-caption);
+    margin-bottom: 1rem;
+    line-height: 1.5;
+  }
+
+  &__divider {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin: 1.5rem 0;
+    color: var(--text-caption);
+    font-size: 0.85rem;
+
+    &::before,
+    &::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+  }
+}
+
+// Responsive
+@media (max-width: 768px) {
+  .similarity-card {
+    padding: 1rem;
+
+    &__badge {
+      font-size: 0.65rem;
+      padding: 0.2rem 0.5rem;
+    }
+
+    &__title {
+      font-size: 1rem;
+    }
+
+    &__meta {
+      gap: 0.75rem;
+    }
+  }
+}
+
+// Reduced motion
+@media (prefers-reduced-motion: reduce) {
+  .similarity-card {
+    transition: none;
+
+    &--animate {
+      animation: none;
+      opacity: 1;
+      transform: none;
+    }
+
+    &:hover {
+      transform: none;
+    }
+  }
+}
