@@ -71,6 +71,19 @@ import {
   unsubscribeEmail,
 } from "./fn_emailNotifications";
 import { getCluster, recoverLastSnapshot } from "./fn_clusters";
+import {
+  generateMultipleFramings,
+  requestCustomFraming,
+  getFramingsForStatement,
+  getFramingClusters,
+  deleteFraming,
+} from "./fn_multiFramingClusters";
+import {
+  getClusterAggregations,
+  recalculateClusterAggregation,
+  getFramingAggregationSummary,
+  onEvaluationChangeInvalidateCache,
+} from "./fn_clusterAggregation";
 import { checkProfanity } from "./fn_profanityChecker";
 import { handleImproveSuggestion } from "./fn_improveSuggestion";
 import { onStatementCreated } from "./fn_statementCreation";
@@ -104,6 +117,13 @@ import { importGoogleDoc } from "./fn_importGoogleDocs";
 
 // Dynamic OG Tags for social media sharing
 import { serveOgTags } from "./fn_dynamicOgTags";
+import {
+  generateBulkEmbeddings,
+  getEmbeddingStatus,
+  regenerateEmbedding,
+  deleteEmbedding,
+  testEmbeddingGeneration,
+} from "./fn_embeddingOperations";
 
 // Initialize Firebase only if not already initialized
 if (!getApps().length) {
@@ -232,7 +252,7 @@ const createFirestoreFunction = <T>(
 exports.getRandomStatements = wrapHttpFunction(getRandomStatements);
 exports.getTopStatements = wrapHttpFunction(getTopStatements);
 exports.getUserOptions = wrapHttpFunction(getUserOptions);
-exports.checkForSimilarStatements = wrapHttpFunction(findSimilarStatements);
+exports.findSimilarStatements = wrapHttpFunction(findSimilarStatements);
 exports.massConsensusGetInitialData = wrapHttpFunction(getInitialMCData);
 exports.getQuestionOptions = wrapHttpFunction(getQuestionOptions);
 exports.massConsensusAddMember = wrapHttpFunction(addMassConsensusMember);
@@ -496,3 +516,23 @@ exports.importGoogleDoc = wrapHttpFunction(importGoogleDoc);
 // Integration of Similar Statements
 exports.findSimilarForIntegration = findSimilarForIntegration;
 exports.executeIntegration = executeIntegration;
+
+// Multi-Framing Clustering
+exports.generateMultipleFramings = wrapHttpFunction(generateMultipleFramings);
+exports.requestCustomFraming = wrapHttpFunction(requestCustomFraming);
+exports.getFramingsForStatement = wrapHttpFunction(getFramingsForStatement);
+exports.getFramingClusters = wrapHttpFunction(getFramingClusters);
+exports.deleteFraming = wrapHttpFunction(deleteFraming);
+
+// Cluster Aggregation
+exports.getClusterAggregations = wrapHttpFunction(getClusterAggregations);
+exports.recalculateClusterAggregation = wrapHttpFunction(recalculateClusterAggregation);
+exports.getFramingAggregationSummary = wrapHttpFunction(getFramingAggregationSummary);
+exports.onEvaluationChangeInvalidateCache = onEvaluationChangeInvalidateCache;
+
+// Embedding Operations (for vector-based similarity search)
+exports.generateBulkEmbeddings = wrapHttpFunction(generateBulkEmbeddings);
+exports.getEmbeddingStatus = wrapHttpFunction(getEmbeddingStatus);
+exports.regenerateEmbedding = wrapHttpFunction(regenerateEmbedding);
+exports.deleteEmbedding = wrapHttpFunction(deleteEmbedding);
+exports.testEmbeddingGeneration = wrapHttpFunction(testEmbeddingGeneration);

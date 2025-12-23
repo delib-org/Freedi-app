@@ -60,4 +60,8 @@ export enum Collections {
     adminInvitations = 'adminInvitations',
     viewerLinks = 'viewerLinks',
     documentCollaborators = 'documentCollaborators',
+    framings = 'framings',
+    framingRequests = 'framingRequests',
+    clusterAggregations = 'clusterAggregations',
+    framingSnapshots = 'framingSnapshots',
 }

@@ -17,6 +17,8 @@ import {
 } from '@freedi/shared-types';
 import { db } from './index';
 import { getDefaultQuestionType } from './model/questionTypeDefaults';
+import { embeddingService } from './services/embedding-service';
+import { embeddingCache } from './services/embedding-cache-service';
 
 /**
  * Consolidated function that handles all tasks when a new statement is created.
@@ -68,6 +70,11 @@ export async function onStatementCreated(
 		// Task 5: Create notifications (if not top-level)
 		if (statement.parentId !== 'top') {
 			tasks.push(createNotificationsForStatement(statement));
+		}
+
+		// Task 6: Generate embedding for option statements (async, non-blocking)
+		if (statement.statementType === 'option') {
+			tasks.push(generateEmbeddingForStatement(statement));
 		}
 
 		// Execute all tasks in parallel
@@ -505,5 +512,64 @@ return;
 
 	} catch (error) {
 		logger.error(`Error updating top-level subscriptions for statement ${topParentId}:`, error);
+	}
+}
+
+/**
+ * Generates an embedding for a new option statement
+ * This enables fast vector-based similarity search
+ */
+async function generateEmbeddingForStatement(statement: Statement): Promise<void> {
+	try {
+		// Only generate embeddings for options with valid text
+		if (!statement.statement || statement.statement.trim().length < 3) {
+			logger.info(`Skipping embedding for statement ${statement.statementId} - text too short`);
+			return;
+		}
+
+		// Get parent statement for context
+		const parentId = statement.parentId;
+		if (!parentId || parentId === 'top') {
+			logger.info(`Skipping embedding for statement ${statement.statementId} - no parent context`);
+			return;
+		}
+
+		const parentDoc = await db
+			.collection(Collections.statements)
+			.doc(parentId)
+			.get();
+
+		if (!parentDoc.exists) {
+			logger.warn(`Parent statement ${parentId} not found for embedding context`);
+			return;
+		}
+
+		const parentStatement = parentDoc.data() as Statement;
+		const context = parentStatement.statement || '';
+
+		// Generate context-aware embedding
+		const startTime = Date.now();
+		const result = await embeddingService.generateEmbeddingWithRetry(
+			statement.statement,
+			context
+		);
+
+		// Save embedding to the statement document
+		await embeddingCache.saveEmbedding(
+			statement.statementId,
+			result.embedding,
+			context
+		);
+
+		const duration = Date.now() - startTime;
+		logger.info(`Generated embedding for statement ${statement.statementId}`, {
+			durationMs: duration,
+			dimensions: result.dimensions,
+			hasContext: Boolean(context),
+		});
+
+	} catch (error) {
+		// Log but don't fail the trigger - embedding generation is non-critical
+		logger.error(`Failed to generate embedding for statement ${statement.statementId}:`, error);
 	}
 }

@@ -42,6 +42,7 @@ export const StatementSettingsSchema = object({
 	popperianPreCheckEnabled: optional(boolean()),
 	enableMultiSuggestionDetection: optional(boolean()),
 	enableAutoMerge: optional(boolean()), // if true (default), similar proposals will be automatically merged; if false, users choose
+	similarityThreshold: optional(number()), // 0-1, default 0.75 - threshold for finding similar options
 });
 
 export type StatementSettings = InferOutput<typeof StatementSettingsSchema>;

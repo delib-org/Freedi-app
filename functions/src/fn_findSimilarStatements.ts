@@ -20,6 +20,9 @@ import {
   getCachedSimilarityResponse,
   saveCachedSimilarityResponse,
 } from "./services/cached-ai-service";
+import { vectorSearchService } from "./services/vector-search-service";
+import { embeddingCache } from "./services/embedding-cache-service";
+import { SimilaritySearchMethod } from "@freedi/shared-types";
 
 /**
  * Optimized Cloud Function to find or generate similar statements.
@@ -67,11 +70,29 @@ export async function findSimilarStatements(
       });
     }
 
-    // Step 2: Try to get complete cached response
+    // Step 2: Get parent statement first to determine threshold for cache key
+    const parentStatement = await getCachedParentStatement(statementId);
+    if (!parentStatement) {
+      logger.error("Parent statement not found", { statementId });
+      response.status(404).send({
+        ok: false,
+        error: "Parent statement not found",
+      });
+      return;
+    }
+
+    // Get threshold from settings (default 0.75)
+    const settings = parentStatement.statementSettings as Record<string, unknown> | undefined;
+    const threshold = (settings?.similarityThreshold as number | undefined) ?? 0.75;
+
+    logger.info("Using similarity threshold for cache", { threshold, statementId });
+
+    // Step 3: Try to get complete cached response (with threshold in cache key)
     const cachedResponse = await getCachedSimilarityResponse(
       statementId,
       userInput,
-      creatorId
+      creatorId,
+      threshold
     );
 
     if (cachedResponse) {
@@ -126,12 +147,14 @@ export async function findSimilarStatements(
       return;
     }
 
-    // Step 3: Process with optimized parallel operations
+    // Step 4: Process with optimized parallel operations
     const result = await fetchDataAndProcess(
       statementId,
       userInput,
       creatorId,
-      numberOfOptionsToGenerate
+      numberOfOptionsToGenerate,
+      parentStatement,
+      threshold
     );
 
     if (result.error) {
@@ -174,13 +197,15 @@ export async function findSimilarStatements(
       userText: result.userText || userInput,
       generatedTitle,
       generatedDescription,
+      method: result.searchMethod || "llm",
     };
 
     await saveCachedSimilarityResponse(
       statementId,
       userInput,
       creatorId,
-      responseData
+      responseData,
+      threshold
     );
 
     const totalTime = Date.now() - startTime;
@@ -188,6 +213,7 @@ export async function findSimilarStatements(
       responseTime: totalTime,
       type: "computed",
       similarStatementsCount: result.cleanedStatements?.length || 0,
+      searchMethod: result.searchMethod || "llm",
     });
 
     response.status(200).send({
@@ -217,60 +243,111 @@ async function fetchDataAndProcess(
   statementId: string,
   userInput: string,
   creatorId: string,
-  numberOfOptionsToGenerate: number
+  numberOfOptionsToGenerate: number,
+  parentStatement: { statement: string; statementSettings?: Record<string, unknown> },
+  threshold: number
 ) {
   try {
-    // --- Optimized: Parallel Database Operations with Caching ---
-    // Fetch parent statement and sub-statements in parallel with caching
-    const [parentStatement, subStatements] = await Promise.all([
-      getCachedParentStatement(statementId),
-      getCachedSubStatements(statementId)
-    ]);
-
-    // Validate parent statement
-    if (!parentStatement) {
-      return {
-        error: "Parent statement not found",
-        statusCode: 404
-      };
-    }
+    // Fetch sub-statements (parent already fetched by caller)
+    const subStatements = await getCachedSubStatements(statementId);
 
     // Prepare data for parallel processing
     const userStatements = getUserStatements(subStatements, creatorId);
     const maxAllowed =
-      parentStatement.statementSettings?.numberOfOptionsPerUser ?? Infinity;
+      (parentStatement.statementSettings?.numberOfOptionsPerUser as number | undefined) ?? Infinity;
 
-    // Convert statements to format with IDs for AI
-    const statementsWithIds = convertToSimpleStatements(subStatements).map(s => ({
-      id: s.id,
-      text: s.statement
-    }));
-
-    logger.info(`Processing similarity check with ${statementsWithIds.length} existing statements`);
-
-    // --- Optimized: Parallel Validation and Cached AI Processing ---
-    // Run validation and AI processing in parallel with AI caching
-    const [validationResult, similarStatementIds] = await Promise.all([
-      // Validation happens asynchronously
-      Promise.resolve(hasReachedMaxStatements(userStatements, maxAllowed)),
-      // AI processing with caching - now returns IDs directly
-      getCachedSimilarStatementIds(
-        statementsWithIds,
-        userInput,
-        parentStatement.statement,
-        numberOfOptionsToGenerate
-      )
-    ]);
-
-    // Check validation result after parallel processing
-    if (validationResult) {
+    // Check validation first
+    if (hasReachedMaxStatements(userStatements, maxAllowed)) {
       return {
         error: "You have reached the maximum number of suggestions allowed.",
         statusCode: 403
       };
     }
 
-    logger.info(`AI returned ${similarStatementIds.length} similar statement IDs`);
+    logger.info(`Processing similarity check with ${subStatements.length} existing statements, threshold: ${threshold}`);
+
+    // --- Embeddings-First Approach with LLM Fallback ---
+    let similarStatementIds: string[] = [];
+    let searchMethod: SimilaritySearchMethod = "embedding";
+
+    // Try embedding-based search first
+    try {
+      // Check embedding coverage
+      const coverage = await embeddingCache.getEmbeddingCoverage(statementId);
+
+      if (coverage.coveragePercent >= 50) {
+        // Use passed threshold (already extracted from settings by caller)
+        logger.info("Using similarity threshold for vector search", { threshold });
+        const vectorResults = await vectorSearchService.findSimilarToText(
+          userInput,
+          statementId,
+          parentStatement.statement,
+          { limit: numberOfOptionsToGenerate, threshold }
+        );
+
+        similarStatementIds = vectorResults.map(r => r.statement.statementId);
+        searchMethod = "embedding";
+
+        logger.info("Embedding search completed", {
+          resultsFound: similarStatementIds.length,
+          coveragePercent: coverage.coveragePercent,
+        });
+
+        // If embedding search returns too few results, supplement with LLM
+        if (similarStatementIds.length < 3 && subStatements.length > 10) {
+          logger.info("Supplementing with LLM search due to few embedding results");
+          searchMethod = "hybrid";
+
+          // Convert statements to format with IDs for AI
+          const statementsWithIds = convertToSimpleStatements(subStatements).map(s => ({
+            id: s.id,
+            text: s.statement
+          }));
+
+          const llmResults = await getCachedSimilarStatementIds(
+            statementsWithIds,
+            userInput,
+            parentStatement.statement,
+            numberOfOptionsToGenerate - similarStatementIds.length
+          );
+
+          // Merge results, avoiding duplicates
+          const existingIds = new Set(similarStatementIds);
+          for (const id of llmResults) {
+            if (!existingIds.has(id)) {
+              similarStatementIds.push(id);
+            }
+          }
+        }
+      } else {
+        // Low embedding coverage, fall back to LLM
+        logger.info("Low embedding coverage, using LLM search", {
+          coveragePercent: coverage.coveragePercent,
+        });
+        throw new Error("Low embedding coverage");
+      }
+    } catch (embeddingError) {
+      // Fall back to LLM-based search
+      searchMethod = "llm";
+      logger.info("Falling back to LLM search", {
+        reason: embeddingError instanceof Error ? embeddingError.message : "unknown",
+      });
+
+      // Convert statements to format with IDs for AI
+      const statementsWithIds = convertToSimpleStatements(subStatements).map(s => ({
+        id: s.id,
+        text: s.statement
+      }));
+
+      similarStatementIds = await getCachedSimilarStatementIds(
+        statementsWithIds,
+        userInput,
+        parentStatement.statement,
+        numberOfOptionsToGenerate
+      );
+    }
+
+    logger.info(`Similarity search complete: ${similarStatementIds.length} results via ${searchMethod}`);
 
     // Get full statements by IDs
     const similarStatements = getStatementsByIds(similarStatementIds, subStatements);
@@ -282,6 +359,7 @@ async function fetchDataAndProcess(
       cleanedStatements,
       userText: duplicateStatement?.statement || userInput,
       parentStatementText: parentStatement.statement,
+      searchMethod,
     };
   } catch (processingError) {
     logger.error("Error in fetchDataAndProcess:", processingError);

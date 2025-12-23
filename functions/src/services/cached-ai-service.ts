@@ -145,13 +145,17 @@ interface CachedSimilarityResponse {
 export async function getCachedSimilarityResponse(
   statementId: string,
   userInput: string,
-  creatorId: string
+  creatorId: string,
+  threshold?: number
 ): Promise<CachedSimilarityResponse | null> {
+  // Include threshold in cache key so different thresholds get different cache entries
+  const thresholdKey = threshold !== undefined ? threshold.toFixed(2) : "default";
   const cacheKey = cache.generateKey(
     "full_response",
     statementId,
     userInput.substring(0, 50),
-    creatorId
+    creatorId,
+    thresholdKey
   );
 
   try {
@@ -178,13 +182,17 @@ export async function saveCachedSimilarityResponse(
   statementId: string,
   userInput: string,
   creatorId: string,
-  response: CachedSimilarityResponse
+  response: CachedSimilarityResponse,
+  threshold?: number
 ): Promise<void> {
+  // Include threshold in cache key so different thresholds get different cache entries
+  const thresholdKey = threshold !== undefined ? threshold.toFixed(2) : "default";
   const cacheKey = cache.generateKey(
     "full_response",
     statementId,
     userInput.substring(0, 50),
-    creatorId
+    creatorId,
+    thresholdKey
   );
 
   try {

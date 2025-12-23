@@ -20,7 +20,7 @@
 	},
 	"main": "lib/functions/src/index.js",
 	"dependencies": {
-		"@freedi/shared-types": "file:./freedi-shared-types-1.0.0.tgz",
+		"@freedi/shared-types": "file:freedi-shared-types-1.0.0.tgz",
 		"@google/generative-ai": "^0.15.0",
 		"@sendgrid/mail": "^8.1.5",
 		"@types/nodemailer": "^7.0.1",
@@ -30,6 +30,7 @@
 		"firebase-functions": "^6.3.2",
 		"googleapis": "^168.0.0",
 		"nodemailer": "^7.0.6",
+		"openai": "^6.15.0",
 		"typescript": "^5.6.3",
 		"valibot": "^1.0.0-rc.1"
 	},
@@ -44,5 +45,8 @@
 	"bundledDependencies": [
 		"@freedi/shared-types"
 	],
-	"private": true
+	"private": true,
+	"bundleDependencies": [
+		"@freedi/shared-types"
+	]
 }

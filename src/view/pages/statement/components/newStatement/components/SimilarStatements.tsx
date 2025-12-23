@@ -1,5 +1,4 @@
-import React, { useContext } from 'react';
-import { DisplayStatement } from '../NewStatement';
+import { useContext } from 'react';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { NewStatementContext, SimilaritySteps } from '../NewStatementCont';
 import styles from './SimilarStatements.module.scss';
@@ -10,9 +9,12 @@ import { creatorSelector } from '@/redux/creator/creatorSlice';
 import { useLocation, useNavigate } from 'react-router';
 import { getDefaultQuestionType } from '@/model/questionTypeDefaults';
 import { getParagraphsText } from '@/utils/paragraphUtils';
+import Button, { ButtonType } from '@/view/components/buttons/button/Button';
+import { closePanels } from '@/controllers/hooks/panelUtils';
+import { setEvaluationToDB } from '@/controllers/db/evaluation/setEvaluation';
+import { Statement } from '@freedi/shared-types';
 
 export default function SimilarStatements() {
-
 	const dispatch = useDispatch();
 	const { t, currentLanguage } = useTranslation();
 	const { similarStatements, setCurrentStep, title, description } = useContext(NewStatementContext);
@@ -25,15 +27,39 @@ export default function SimilarStatements() {
 	const navigate = useNavigate();
 	const isHomePage = location.pathname === '/home';
 
-	const handleViewSimilarStatement = (statement: DisplayStatement) => {
-		const anchor = document.getElementById(statement.statementId);
+	const handleSelectSimilarStatement = async (statement: Statement) => {
+		try {
+			// Add evaluation of 1 for the selected statement
+			if (user) {
+				await setEvaluationToDB(statement, user, 1);
+			}
 
-		if (anchor) anchor.scrollIntoView({ behavior: 'smooth' });
+			// Delay scroll to allow modal to close first
+			setTimeout(() => {
+				const anchor = document.getElementById(statement.statementId);
 
-		dispatch(setShowNewStatementModal(false));
+				if (anchor) {
+					// Get the element's position and scroll with offset to show title
+					const headerOffset = 100; // Account for fixed headers
+					const elementPosition = anchor.getBoundingClientRect().top;
+					const offsetPosition = elementPosition + window.scrollY - headerOffset;
+
+					window.scrollTo({
+						top: offsetPosition,
+						behavior: 'smooth'
+					});
+				}
+			}, 100);
+
+			dispatch(setShowNewStatementModal(false));
+			dispatch(clearNewStatement());
+			closePanels();
+		} catch (error) {
+			console.error('Failed to set evaluation:', error);
+		}
 	};
 
-	const handleSubmit = async () => {
+	const handleCreateNewStatement = async () => {
 		try {
 			if (!user) throw new Error('User is not defined');
 			if (!newStatementParent) throw new Error('Statement is not defined');
@@ -42,7 +68,7 @@ export default function SimilarStatements() {
 			const statementId = await createStatementWithSubscription({
 				newStatementParent,
 				title,
-				paragraphs: undefined, // Paragraphs are handled by the form
+				paragraphs: undefined,
 				newStatement,
 				newStatementQuestionType,
 				currentLanguage,
@@ -52,6 +78,8 @@ export default function SimilarStatements() {
 
 			dispatch(setShowNewStatementModal(false));
 			dispatch(clearNewStatement());
+			closePanels();
+
 			if (isHomePage) {
 				navigate(`/statement/${statementId}`);
 			}
@@ -60,61 +88,115 @@ export default function SimilarStatements() {
 		}
 	};
 
-	function handleClose() {
+	const handleClose = () => {
 		dispatch(setShowNewStatementModal(false));
 		dispatch(clearNewStatement());
 		setCurrentStep(SimilaritySteps.FORM);
-	}
+	};
+
+	const handleBack = () => {
+		setCurrentStep(SimilaritySteps.FORM);
+	};
 
 	return (
-		<>
-			<h1 className='similarities__title'>{t('Similar suggestions')}</h1>
-			<h4>{t("Your suggestion")}</h4>
-			<div className={styles.similarStatements}>
-				<button className={styles.statement} onClick={handleSubmit}>
-					{title}
-				</button>
+		<div className={styles.container}>
+			<div className={styles.header}>
+				<h2 className={styles.title}>{t('Similar ideas found!')}</h2>
+				<p className={styles.subtitle}>
+					{t('We found existing ideas similar to yours. Consider joining an existing discussion for greater impact.')}
+				</p>
 			</div>
-			<h4 className='alertText'>
-				{t('Here are several results that were found in the following topic')}
-			</h4>
-			<div className={styles.similarStatements}>
-				{similarStatements.map((statement, index) => (
-					<button
-						key={index}
-						className={styles.statement}
-						onClick={() => handleViewSimilarStatement({
-							title: statement.statement,
-							description: getParagraphsText(statement.paragraphs),
-							statementId: statement.statementId
+
+			<div className={styles.cardsContainer}>
+				{/* User's own suggestion */}
+				<div className={styles.section}>
+					<div className={styles.sectionHeader}>
+						<span className={styles.sectionIcon}>💡</span>
+						<h4>{t('Your suggestion')}</h4>
+					</div>
+					<div
+						className={`similarity-card similarity-card--user-own similarity-card--animate`}
+						onClick={handleCreateNewStatement}
+					>
+						<div className="similarity-card__badge similarity-card__badge--user">
+							{t('Your idea')}
+						</div>
+						<h3 className="similarity-card__title">{title}</h3>
+						{description && (
+							<p className="similarity-card__description">{description}</p>
+						)}
+						<button className="similarity-card__action">
+							{t('Create as new')}
+						</button>
+					</div>
+				</div>
+
+				{/* Divider */}
+				<div className={styles.divider}>
+					<span>{t('or join an existing idea')}</span>
+				</div>
+
+				{/* Similar suggestions */}
+				<div className={styles.section}>
+					<div className={styles.sectionHeader}>
+						<span className={styles.sectionIcon}>👥</span>
+						<h4>{t('Similar from the community')}</h4>
+					</div>
+					<p className={styles.sectionSubtitle}>
+						{t('Join forces with others for a stronger voice')}
+					</p>
+
+					<div className={styles.similarCards}>
+						{similarStatements.map((statement, index) => {
+							const descriptionText = getParagraphsText(statement.paragraphs);
+							const isBestMatch = index === 0;
+							const supportersCount = statement.totalEvaluators || 0;
+
+							return (
+								<div
+									key={statement.statementId}
+									className={`similarity-card similarity-card--animate ${isBestMatch ? 'similarity-card--best-match' : ''}`}
+									onClick={() => handleSelectSimilarStatement(statement)}
+								>
+									{isBestMatch && (
+										<div className="similarity-card__badge similarity-card__badge--best">
+											{t('Best match')}
+										</div>
+									)}
+									<h3 className="similarity-card__title">{statement.statement}</h3>
+									{descriptionText && (
+										<p className="similarity-card__description">{descriptionText}</p>
+									)}
+									<div className="similarity-card__meta">
+										{supportersCount > 0 && (
+											<span className="similarity-card__supporters">
+												👥 {supportersCount} {t('supporters')}
+											</span>
+										)}
+									</div>
+									<button className="similarity-card__action">
+										{t('View & join')}
+									</button>
+								</div>
+							);
 						})}
-					>
-						<p className='suggestion__title'>{statement.statement}</p>
-						<p className='suggestion__description'>
-							{getParagraphsText(statement.paragraphs)}
-						</p>
-
-					</button>
-				))}
-				<div className={styles.instructions}>
-					{t("Choose one of the suggestions above or select your own suggestion")}
-				</div>
-				<div className='btns'>
-					<button
-						onClick={() => setCurrentStep(SimilaritySteps.FORM)}
-						className='btn'
-
-					>
-						{t('Back')}
-					</button>
-					<button
-						className='btn btn--cancel'
-						onClick={handleClose}
-					>
-						{t('Close')}
-					</button>
+					</div>
 				</div>
 			</div>
-		</>
+
+			{/* Actions */}
+			<div className={styles.actions}>
+				<Button
+					text={t('Back to edit')}
+					buttonType={ButtonType.SECONDARY}
+					onClick={handleBack}
+				/>
+				<Button
+					text={t('Close')}
+					buttonType={ButtonType.SECONDARY}
+					onClick={handleClose}
+				/>
+			</div>
+		</div>
 	);
 }
