@@ -11,6 +11,8 @@ import { getDefaultQuestionType } from '@/model/questionTypeDefaults';
 import { getParagraphsText } from '@/utils/paragraphUtils';
 import Button, { ButtonType } from '@/view/components/buttons/button/Button';
 import { closePanels } from '@/controllers/hooks/panelUtils';
+import { setEvaluationToDB } from '@/controllers/db/evaluation/setEvaluation';
+import { Statement } from '@freedi/shared-types';
 
 export default function SimilarStatements() {
 	const dispatch = useDispatch();
@@ -25,16 +27,36 @@ export default function SimilarStatements() {
 	const navigate = useNavigate();
 	const isHomePage = location.pathname === '/home';
 
-	const handleSelectSimilarStatement = (statementId: string) => {
-		const anchor = document.getElementById(statementId);
+	const handleSelectSimilarStatement = async (statement: Statement) => {
+		try {
+			// Add evaluation of 1 for the selected statement
+			if (user) {
+				await setEvaluationToDB(statement, user, 1);
+			}
 
-		if (anchor) {
-			anchor.scrollIntoView({ behavior: 'smooth' });
+			// Delay scroll to allow modal to close first
+			setTimeout(() => {
+				const anchor = document.getElementById(statement.statementId);
+
+				if (anchor) {
+					// Get the element's position and scroll with offset to show title
+					const headerOffset = 100; // Account for fixed headers
+					const elementPosition = anchor.getBoundingClientRect().top;
+					const offsetPosition = elementPosition + window.scrollY - headerOffset;
+
+					window.scrollTo({
+						top: offsetPosition,
+						behavior: 'smooth'
+					});
+				}
+			}, 100);
+
+			dispatch(setShowNewStatementModal(false));
+			dispatch(clearNewStatement());
+			closePanels();
+		} catch (error) {
+			console.error('Failed to set evaluation:', error);
 		}
-
-		dispatch(setShowNewStatementModal(false));
-		dispatch(clearNewStatement());
-		closePanels();
 	};
 
 	const handleCreateNewStatement = async () => {
@@ -134,7 +156,7 @@ export default function SimilarStatements() {
 								<div
 									key={statement.statementId}
 									className={`similarity-card similarity-card--animate ${isBestMatch ? 'similarity-card--best-match' : ''}`}
-									onClick={() => handleSelectSimilarStatement(statement.statementId)}
+									onClick={() => handleSelectSimilarStatement(statement)}
 								>
 									{isBestMatch && (
 										<div className="similarity-card__badge similarity-card__badge--best">
