@@ -16,6 +16,17 @@ function logQueryError(operation: string, error: unknown, context: Record<string
 }
 
 /**
+ * Sanitize statement for client components
+ * Removes non-serializable fields like VectorValue (embedding)
+ */
+function sanitizeStatement(statement: Statement): Statement {
+  // Create a shallow copy and remove embedding field
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { embedding, ...rest } = statement as Statement & { embedding?: unknown };
+  return rest as Statement;
+}
+
+/**
  * Get a question statement by ID
  * @param statementId - The statement ID
  * @returns The statement if it's a question, throws error otherwise
@@ -46,7 +57,7 @@ export async function getQuestionFromFirebase(
   }
 
   logger.info('[getQuestionFromFirebase] Success:', statement.statement?.substring(0, 50));
-  return statement;
+  return sanitizeStatement(statement);
 }
 
 /**
@@ -111,7 +122,7 @@ export async function getRandomOptions(
   logger.info('[getRandomOptions] First query (randomSeed >=', randomSeed.toFixed(3), ') fetched:', snapshot.size, 'docs (requested', fetchSize, ')');
 
   let options_results = snapshot.docs
-    .map((doc) => doc.data() as Statement)
+    .map((doc) => sanitizeStatement(doc.data() as Statement))
     .filter((opt) => !opt.hide && !excludedSet.has(opt.statementId));
 
   logger.info('[getRandomOptions] After filtering (hide/excluded):', options_results.length, 'options');
@@ -132,7 +143,7 @@ export async function getRandomOptions(
     logger.info('[getRandomOptions] Second query (randomSeed <', randomSeed.toFixed(3), ') fetched:', moreSnapshot.size, 'docs (requested', moreFetchSize, ')');
 
     const moreOptions = moreSnapshot.docs
-      .map((doc) => doc.data() as Statement)
+      .map((doc) => sanitizeStatement(doc.data() as Statement))
       .filter((opt) => !opt.hide && !excludedSet.has(opt.statementId));
 
     logger.info('[getRandomOptions] Additional options after filtering:', moreOptions.length);
@@ -186,7 +197,7 @@ export async function getAdaptiveBatch(
       .get();
 
     const proposals = allOptionsSnapshot.docs
-      .map((doc) => doc.data() as Statement)
+      .map((doc) => sanitizeStatement(doc.data() as Statement))
       .filter((p) => !p.hide);
 
     logger.info('[getAdaptiveBatch] Fetched proposals:', {
@@ -277,7 +288,7 @@ export async function getAllSolutionsSorted(
 
     // Sort by evaluation.agreement (fallback to consensus for legacy data) and apply limit
     return snapshot.docs
-      .map((doc) => doc.data() as Statement)
+      .map((doc) => sanitizeStatement(doc.data() as Statement))
       .filter((statement) => !statement.hide)
       .sort((a, b) => (b.evaluation?.agreement ?? b.consensus ?? 0) - (a.evaluation?.agreement ?? a.consensus ?? 0))
       .slice(0, limit);
@@ -313,7 +324,7 @@ export async function getUserSolutions(
 
     // Sort by evaluation.agreement (fallback to consensus for legacy data)
     return snapshot.docs
-      .map((doc) => doc.data() as Statement)
+      .map((doc) => sanitizeStatement(doc.data() as Statement))
       .filter((statement) => !statement.hide)
       .sort((a, b) => (b.evaluation?.agreement ?? b.consensus ?? 0) - (a.evaluation?.agreement ?? a.consensus ?? 0));
   } catch (error) {
