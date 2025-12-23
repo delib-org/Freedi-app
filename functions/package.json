@@ -13,7 +13,14 @@
 		"deploy": "tsc && firebase deploy --only functions",
 		"logs": "firebase functions:log",
 		"test": "jest",
-		"test:watch": "jest --watch"
+		"test:watch": "jest --watch",
+		"test:coverage": "jest --coverage",
+		"test:verbose": "jest --verbose",
+		"test:algorithm": "jest --testPathPattern=evaluationAlgorithm --verbose",
+		"test:algorithm:unit": "jest --testPathPattern='evaluationAlgorithm\\.test\\.ts$' --verbose",
+		"test:algorithm:integration": "jest --testPathPattern='evaluationAlgorithm\\.integration\\.test\\.ts$' --verbose",
+		"test:consensus": "jest --testPathPattern='consensus-scoring|evaluationAlgorithm' --verbose",
+		"test:file": "jest --testPathPattern"
 	},
 	"engines": {
 		"node": "20"
