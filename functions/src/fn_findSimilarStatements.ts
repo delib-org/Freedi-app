@@ -265,12 +265,15 @@ async function fetchDataAndProcess(
       const coverage = await embeddingCache.getEmbeddingCoverage(statementId);
 
       if (coverage.coveragePercent >= 50) {
-        // Use vector search
+        // Use vector search with configurable threshold (default 0.75)
+        // Cast to access similarityThreshold which may not exist in older types
+        const settings = parentStatement.statementSettings as Record<string, unknown> | undefined;
+        const threshold = (settings?.similarityThreshold as number | undefined) ?? 0.75;
         const vectorResults = await vectorSearchService.findSimilarToText(
           userInput,
           statementId,
           parentStatement.statement,
-          { limit: numberOfOptionsToGenerate, threshold: 0.65 }
+          { limit: numberOfOptionsToGenerate, threshold }
         );
 
         similarStatementIds = vectorResults.map(r => r.statement.statementId);
