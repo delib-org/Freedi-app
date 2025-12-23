@@ -269,6 +269,8 @@ async function fetchDataAndProcess(
     // --- Embeddings-First Approach with LLM Fallback ---
     let similarStatementIds: string[] = [];
     let searchMethod: SimilaritySearchMethod = "embedding";
+    // Map to store similarity scores by statement ID
+    const similarityScores = new Map<string, number>();
 
     // Try embedding-based search first
     try {
@@ -285,7 +287,11 @@ async function fetchDataAndProcess(
           { limit: numberOfOptionsToGenerate, threshold }
         );
 
+        // Store both IDs and similarity scores
         similarStatementIds = vectorResults.map(r => r.statement.statementId);
+        vectorResults.forEach(r => {
+          similarityScores.set(r.statement.statementId, r.similarity);
+        });
         searchMethod = "embedding";
 
         logger.info("Embedding search completed", {
@@ -355,8 +361,14 @@ async function fetchDataAndProcess(
     const { statements: cleanedStatements, duplicateStatement } =
       removeDuplicateStatement(similarStatements, userInput);
 
+    // Add similarity scores to the statements
+    const statementsWithSimilarity = cleanedStatements.map(statement => ({
+      ...statement,
+      similarity: similarityScores.get(statement.statementId) ?? null,
+    }));
+
     return {
-      cleanedStatements,
+      cleanedStatements: statementsWithSimilarity,
       userText: duplicateStatement?.statement || userInput,
       parentStatementText: parentStatement.statement,
       searchMethod,
