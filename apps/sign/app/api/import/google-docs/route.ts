@@ -112,8 +112,6 @@ export async function POST(request: NextRequest): Promise<NextResponse<ImportRes
       );
     }
 
-    const docData = docSnap.data();
-
     // Fetch Google Doc
     let googleDoc;
     try {

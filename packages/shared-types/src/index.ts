@@ -318,3 +318,53 @@ export {
   interpretDCI,
   DEMOGRAPHIC_CONSTANTS,
 } from "./utils/madCalculation";
+
+// Framing models
+export type {
+  Framing,
+  ClusterAggregatedEvaluation,
+  FramingRequest,
+  ClusterSnapshot,
+  FramingSnapshot,
+  FramingCreatorType,
+  FramingRequestStatus,
+} from "./models/framing/framingModel";
+
+export {
+  FramingSchema,
+  ClusterAggregatedEvaluationSchema,
+  FramingRequestSchema,
+  ClusterSnapshotSchema,
+  FramingSnapshotSchema,
+  FramingCreatorTypeSchema,
+  FramingRequestStatusSchema,
+  CLUSTER_AGGREGATION_CACHE,
+  getClusterAggregationId,
+  isClusterAggregationValid,
+} from "./models/framing/framingModel";
+
+// Embedding models
+export type {
+  StatementEmbedding,
+  SimilarityResult,
+  EmbeddingBatchRequest,
+  EmbeddingBatchResult,
+  EmbeddingStatusReport,
+  FindSimilarResponse,
+  EmbeddingStatus,
+} from "./models/embedding/embeddingModel";
+
+export {
+  StatementEmbeddingSchema,
+  SimilarityResultSchema,
+  EmbeddingBatchRequestSchema,
+  EmbeddingBatchResultSchema,
+  EmbeddingStatusReportSchema,
+  FindSimilarResponseSchema,
+  EmbeddingStatusSchema,
+  SimilaritySearchMethodSchema,
+  SimilaritySearchMethod,
+  EMBEDDING_CONFIG,
+  hasValidEmbedding,
+  validateEmbeddingDimensions,
+} from "./models/embedding/embeddingModel";

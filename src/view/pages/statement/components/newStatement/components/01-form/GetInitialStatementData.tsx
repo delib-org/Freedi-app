@@ -16,6 +16,7 @@ import { NewStatementContext, SimilaritySteps } from '../../NewStatementCont';
 import { getSimilarOptions } from './GetInitialStatementDataCont';
 import { getDefaultQuestionType } from '@/model/questionTypeDefaults';
 import { generateParagraphId } from '@/utils/paragraphUtils';
+import SuggestionLoader from '@/view/components/loaders/SuggestionLoader';
 
 export default function GetInitialStatementData() {
 	const { lookingForSimilarStatements, setLookingForSimilarStatements, setSimilarStatements, setCurrentStep, setTitle } = useContext(NewStatementContext);
@@ -106,33 +107,46 @@ return;
 	const { header, title: titleLabel, description: descriptionLabel } =
 		getTexts(newStatementType);
 
+	if (loading) {
+		return (
+			<SuggestionLoader
+				show={loading}
+				variant="modern"
+			/>
+		);
+	}
+
 	return (
 		<>
 			<h4>{t(header)}</h4>
 			<form className={styles.form} onSubmit={handleSubmit}>
-				{!loading ?
-					<><Input
-						label={t(titleLabel)}
-						name='title'
-						autoFocus={true}
+				<Input
+					label={t(titleLabel)}
+					name='title'
+					autoFocus={true}
+				/>
+				<Textarea
+					label={t(descriptionLabel)}
+					name='description'
+				/>
+				<div className={styles.similarityToggle}>
+					<Checkbox
+						label={t('Search for similar statements')}
+						isChecked={lookingForSimilarStatements}
+						onChange={setLookingForSimilarStatements}
 					/>
-						<Textarea
-							label={t(descriptionLabel)}
-							name='description'
-						/>
-						<Checkbox
-							label={t('Search for similar statements')}
-							isChecked={lookingForSimilarStatements}
-							onChange={setLookingForSimilarStatements}
-						/>
-					</>
-					: <p>{t('Searching for similar statements')}...</p>}
+					{lookingForSimilarStatements && (
+						<p className={styles.similarityHint}>
+							{t("We'll help you find similar ideas from the community")}
+						</p>
+					)}
+				</div>
 
 				{error && <p className={styles.error}>{t(error)}</p>}
 				<div className='btns'>
 					<Button
 						type='submit'
-						text={t('Create')}
+						text={lookingForSimilarStatements ? t('Continue') : t('Create')}
 						buttonType={ButtonType.PRIMARY}
 					/>
 					<Button

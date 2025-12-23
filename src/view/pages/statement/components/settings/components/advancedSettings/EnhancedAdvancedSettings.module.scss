@@ -504,6 +504,98 @@
     }
   }
 
+  // Slider Section (for threshold controls)
+  .sliderSection {
+    padding: 1rem;
+    background: rgba(var(--accent-rgb), 0.03);
+    border-radius: 12px;
+    border: 1px solid rgba(var(--accent-rgb), 0.1);
+    margin-left: 3rem;
+
+    .sliderHeader {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.25rem;
+
+      svg {
+        color: var(--accent);
+      }
+
+      .sliderLabel {
+        font-size: 0.95rem;
+        font-weight: 500;
+        color: var(--text-primary);
+      }
+    }
+
+    .sliderDescription {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      margin: 0 0 0.75rem 0;
+      line-height: 1.4;
+    }
+
+    .sliderContainer {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+
+      .slider {
+        flex: 1;
+        height: 6px;
+        -webkit-appearance: none;
+        appearance: none;
+        background: var(--border-color);
+        border-radius: 4px;
+        outline: none;
+        cursor: pointer;
+
+        &::-webkit-slider-thumb {
+          -webkit-appearance: none;
+          appearance: none;
+          width: 20px;
+          height: 20px;
+          background: var(--accent);
+          border-radius: 50%;
+          cursor: pointer;
+          transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+          &:hover {
+            transform: scale(1.1);
+            box-shadow: 0 2px 8px rgba(var(--accent-rgb), 0.4);
+          }
+        }
+
+        &::-moz-range-thumb {
+          width: 20px;
+          height: 20px;
+          background: var(--accent);
+          border-radius: 50%;
+          cursor: pointer;
+          border: none;
+        }
+
+        &:focus {
+          &::-webkit-slider-thumb {
+            box-shadow: 0 0 0 4px rgba(var(--accent-rgb), 0.2);
+          }
+        }
+      }
+
+      .sliderValue {
+        min-width: 50px;
+        padding: 0.4rem 0.75rem;
+        background: var(--accent);
+        color: white;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        text-align: center;
+      }
+    }
+  }
+
   // Language Section
   .languageSection {
     .sectionTitle {
