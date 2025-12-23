@@ -10,6 +10,7 @@ This folder contains comprehensive architecture documentation for all components
 | [FUNCTIONS_ARCHITECTURE.md](./FUNCTIONS_ARCHITECTURE.md) | Firebase Cloud Functions - serverless backend |
 | [MC_APP_ARCHITECTURE.md](./MC_APP_ARCHITECTURE.md) | Mass Consensus - crowdsourced evaluation |
 | [SIGN_APP_ARCHITECTURE.md](./SIGN_APP_ARCHITECTURE.md) | Sign - document signing & deliberation |
+| [EMBEDDINGS_CLUSTERING_ARCHITECTURE.md](./EMBEDDINGS_CLUSTERING_ARCHITECTURE.md) | Hybrid embeddings/LLM for similarity & clustering |
 
 ## Platform Overview
 
