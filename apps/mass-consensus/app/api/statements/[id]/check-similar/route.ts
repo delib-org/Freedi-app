@@ -68,7 +68,12 @@ export async function POST(
       return NextResponse.json(data, { status: response.status });
     }
 
-    return NextResponse.json(data);
+    // Ensure no caching of similarity results
+    return NextResponse.json(data, {
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate',
+      },
+    });
   } catch (error) {
     const body = await request.json().catch(() => ({}));
     const { userId } = body;
