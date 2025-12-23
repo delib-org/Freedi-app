@@ -46,6 +46,7 @@ const APPS = {
       'ENVIRONMENT': 'VITE_ENVIRONMENT',
       'APP_VERSION': 'VITE_APP_VERSION',
       'APP_AGREE_ENDPOINT': 'VITE_APP_AGREE_ENDPOINT',
+      'CHECK_SIMILARITIES_ENDPOINT': 'VITE_APP_CHECK_SIMILARITIES_ENDPOINT',
     },
     // Additional static content to append
     extra: `

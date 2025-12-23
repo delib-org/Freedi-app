@@ -20,6 +20,9 @@ import {
   getCachedSimilarityResponse,
   saveCachedSimilarityResponse,
 } from "./services/cached-ai-service";
+import { vectorSearchService } from "./services/vector-search-service";
+import { embeddingCache } from "./services/embedding-cache-service";
+import { SimilaritySearchMethod } from "@freedi/shared-types";
 
 /**
  * Optimized Cloud Function to find or generate similar statements.
@@ -174,6 +177,7 @@ export async function findSimilarStatements(
       userText: result.userText || userInput,
       generatedTitle,
       generatedDescription,
+      method: result.searchMethod || "llm",
     };
 
     await saveCachedSimilarityResponse(
@@ -188,6 +192,7 @@ export async function findSimilarStatements(
       responseTime: totalTime,
       type: "computed",
       similarStatementsCount: result.cleanedStatements?.length || 0,
+      searchMethod: result.searchMethod || "llm",
     });
 
     response.status(200).send({
@@ -240,37 +245,97 @@ async function fetchDataAndProcess(
     const maxAllowed =
       parentStatement.statementSettings?.numberOfOptionsPerUser ?? Infinity;
 
-    // Convert statements to format with IDs for AI
-    const statementsWithIds = convertToSimpleStatements(subStatements).map(s => ({
-      id: s.id,
-      text: s.statement
-    }));
-
-    logger.info(`Processing similarity check with ${statementsWithIds.length} existing statements`);
-
-    // --- Optimized: Parallel Validation and Cached AI Processing ---
-    // Run validation and AI processing in parallel with AI caching
-    const [validationResult, similarStatementIds] = await Promise.all([
-      // Validation happens asynchronously
-      Promise.resolve(hasReachedMaxStatements(userStatements, maxAllowed)),
-      // AI processing with caching - now returns IDs directly
-      getCachedSimilarStatementIds(
-        statementsWithIds,
-        userInput,
-        parentStatement.statement,
-        numberOfOptionsToGenerate
-      )
-    ]);
-
-    // Check validation result after parallel processing
-    if (validationResult) {
+    // Check validation first
+    if (hasReachedMaxStatements(userStatements, maxAllowed)) {
       return {
         error: "You have reached the maximum number of suggestions allowed.",
         statusCode: 403
       };
     }
 
-    logger.info(`AI returned ${similarStatementIds.length} similar statement IDs`);
+    logger.info(`Processing similarity check with ${subStatements.length} existing statements`);
+
+    // --- Embeddings-First Approach with LLM Fallback ---
+    let similarStatementIds: string[] = [];
+    let searchMethod: SimilaritySearchMethod = "embedding";
+
+    // Try embedding-based search first
+    try {
+      // Check embedding coverage
+      const coverage = await embeddingCache.getEmbeddingCoverage(statementId);
+
+      if (coverage.coveragePercent >= 50) {
+        // Use vector search
+        const vectorResults = await vectorSearchService.findSimilarToText(
+          userInput,
+          statementId,
+          parentStatement.statement,
+          { limit: numberOfOptionsToGenerate, threshold: 0.65 }
+        );
+
+        similarStatementIds = vectorResults.map(r => r.statement.statementId);
+        searchMethod = "embedding";
+
+        logger.info("Embedding search completed", {
+          resultsFound: similarStatementIds.length,
+          coveragePercent: coverage.coveragePercent,
+        });
+
+        // If embedding search returns too few results, supplement with LLM
+        if (similarStatementIds.length < 3 && subStatements.length > 10) {
+          logger.info("Supplementing with LLM search due to few embedding results");
+          searchMethod = "hybrid";
+
+          // Convert statements to format with IDs for AI
+          const statementsWithIds = convertToSimpleStatements(subStatements).map(s => ({
+            id: s.id,
+            text: s.statement
+          }));
+
+          const llmResults = await getCachedSimilarStatementIds(
+            statementsWithIds,
+            userInput,
+            parentStatement.statement,
+            numberOfOptionsToGenerate - similarStatementIds.length
+          );
+
+          // Merge results, avoiding duplicates
+          const existingIds = new Set(similarStatementIds);
+          for (const id of llmResults) {
+            if (!existingIds.has(id)) {
+              similarStatementIds.push(id);
+            }
+          }
+        }
+      } else {
+        // Low embedding coverage, fall back to LLM
+        logger.info("Low embedding coverage, using LLM search", {
+          coveragePercent: coverage.coveragePercent,
+        });
+        throw new Error("Low embedding coverage");
+      }
+    } catch (embeddingError) {
+      // Fall back to LLM-based search
+      searchMethod = "llm";
+      logger.info("Falling back to LLM search", {
+        reason: embeddingError instanceof Error ? embeddingError.message : "unknown",
+      });
+
+      // Convert statements to format with IDs for AI
+      const statementsWithIds = convertToSimpleStatements(subStatements).map(s => ({
+        id: s.id,
+        text: s.statement
+      }));
+
+      similarStatementIds = await getCachedSimilarStatementIds(
+        statementsWithIds,
+        userInput,
+        parentStatement.statement,
+        numberOfOptionsToGenerate
+      );
+    }
+
+    logger.info(`Similarity search complete: ${similarStatementIds.length} results via ${searchMethod}`);
 
     // Get full statements by IDs
     const similarStatements = getStatementsByIds(similarStatementIds, subStatements);
@@ -282,6 +347,7 @@ async function fetchDataAndProcess(
       cleanedStatements,
       userText: duplicateStatement?.statement || userInput,
       parentStatementText: parentStatement.statement,
+      searchMethod,
     };
   } catch (processingError) {
     logger.error("Error in fetchDataAndProcess:", processingError);

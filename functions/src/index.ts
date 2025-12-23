@@ -117,6 +117,12 @@ import { importGoogleDoc } from "./fn_importGoogleDocs";
 
 // Dynamic OG Tags for social media sharing
 import { serveOgTags } from "./fn_dynamicOgTags";
+import {
+  generateBulkEmbeddings,
+  getEmbeddingStatus,
+  regenerateEmbedding,
+  deleteEmbedding,
+} from "./fn_embeddingOperations";
 
 // Initialize Firebase only if not already initialized
 if (!getApps().length) {
@@ -522,3 +528,9 @@ exports.getClusterAggregations = wrapHttpFunction(getClusterAggregations);
 exports.recalculateClusterAggregation = wrapHttpFunction(recalculateClusterAggregation);
 exports.getFramingAggregationSummary = wrapHttpFunction(getFramingAggregationSummary);
 exports.onEvaluationChangeInvalidateCache = onEvaluationChangeInvalidateCache;
+
+// Embedding Operations (for vector-based similarity search)
+exports.generateBulkEmbeddings = wrapHttpFunction(generateBulkEmbeddings);
+exports.getEmbeddingStatus = wrapHttpFunction(getEmbeddingStatus);
+exports.regenerateEmbedding = wrapHttpFunction(regenerateEmbedding);
+exports.deleteEmbedding = wrapHttpFunction(deleteEmbedding);
