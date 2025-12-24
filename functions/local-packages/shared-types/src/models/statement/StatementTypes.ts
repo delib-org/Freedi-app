@@ -104,6 +104,7 @@ export const StatementSchema = object({
 	selections: optional(any()), // the top-options of the statement
 	isSelected: optional(boolean()), // if true, the statement is selected
 	isCluster: optional(boolean()),
+	integratedOptions: optional(array(string())), // source statement IDs merged into this cluster-option (many-to-many)
 	voted: optional(number()), // the number of votes for the statement
 	totalSubStatements: optional(number()), // the total number of sub statements of the statement
 	membership: optional(MembershipSchema), // the membership of the statement
