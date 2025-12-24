@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslation } from '@freedi/shared-i18n/next';
 import { useAdminContext } from './AdminContext';
 import styles from './admin.module.scss';
 
@@ -8,18 +9,19 @@ interface QuickActionsProps {
 }
 
 export default function QuickActions({ statementId }: QuickActionsProps) {
+  const { t } = useTranslation();
   const { canManageSettings, canExport } = useAdminContext();
 
   return (
     <section className={styles.section}>
-      <h2 className={styles.sectionTitle}>Quick Actions</h2>
+      <h2 className={styles.sectionTitle}>{t('quickActions')}</h2>
       <div style={{ display: 'flex', gap: 'var(--spacing-md)', flexWrap: 'wrap' }}>
         <a
           href={`/doc/${statementId}/admin/users`}
           className={styles.exportButton}
           style={{ textDecoration: 'none' }}
         >
-          View All Users
+          {t('viewAllUsers')}
         </a>
 
         {canManageSettings && (
@@ -28,7 +30,7 @@ export default function QuickActions({ statementId }: QuickActionsProps) {
             className={styles.exportButton}
             style={{ textDecoration: 'none', background: 'var(--text-secondary)' }}
           >
-            Document Settings
+            {t('documentSettings')}
           </a>
         )}
 
@@ -39,23 +41,23 @@ export default function QuickActions({ statementId }: QuickActionsProps) {
               className={styles.exportButton}
               style={{ textDecoration: 'none', background: 'var(--agree)' }}
             >
-              Export Users
+              {t('exportUsers')}
             </a>
             <a
               href={`/api/admin/export-detailed/${statementId}`}
               className={styles.exportButton}
               style={{ textDecoration: 'none', background: 'var(--btn-primary)' }}
-              title="Export document with all paragraphs, comments, and demographics"
+              title={t('exportDetailedTitle')}
             >
-              Export Detailed
+              {t('exportDetailed')}
             </a>
             <a
               href={`/api/admin/export-demographic/${statementId}`}
               className={styles.exportButton}
               style={{ textDecoration: 'none', background: 'var(--warning, #f59e0b)' }}
-              title="Export demographic comparison data - shows how each segment interacted with each paragraph"
+              title={t('exportDemographicTitle')}
             >
-              Export Demographic Analysis
+              {t('exportDemographicAnalysis')}
             </a>
           </>
         )}
