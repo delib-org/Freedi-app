@@ -669,6 +669,28 @@
       svg {
         flex-shrink: 0;
       }
+
+      &--warning {
+        background: #f59e0b;
+
+        &:hover:not(:disabled) {
+          background: #d97706;
+          box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+        }
+      }
+    }
+
+    .spinning {
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      from {
+        transform: rotate(0deg);
+      }
+      to {
+        transform: rotate(360deg);
+      }
     }
 
     .exportInfo {
@@ -676,6 +698,16 @@
       color: var(--text-secondary);
       margin: 0;
       font-style: italic;
+
+      &--success {
+        color: #16a34a;
+        font-weight: 500;
+      }
+
+      &--error {
+        color: #dc2626;
+        font-weight: 500;
+      }
     }
 
     .exportDivider {

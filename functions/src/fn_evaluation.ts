@@ -60,11 +60,55 @@ interface CalcDiff {
 }
 
 // ============================================================================
+// IDEMPOTENCY TRACKING
+// ============================================================================
+
+// In-memory cache to track recently processed events (helps with immediate retries)
+// This is per-instance, so it's not perfect but catches most duplicates
+const processedEvents = new Map<string, number>();
+const EVENT_CACHE_TTL_MS = 60000; // 1 minute
+
+function isEventAlreadyProcessed(eventId: string): boolean {
+	const processedAt = processedEvents.get(eventId);
+	if (processedAt) {
+		// Check if it's still within TTL
+		if (Date.now() - processedAt < EVENT_CACHE_TTL_MS) {
+			return true;
+		}
+		// Clean up expired entry
+		processedEvents.delete(eventId);
+	}
+	return false;
+}
+
+function markEventAsProcessed(eventId: string): void {
+	processedEvents.set(eventId, Date.now());
+
+	// Periodic cleanup of old entries (every 100 entries)
+	if (processedEvents.size > 100) {
+		const now = Date.now();
+		for (const [key, timestamp] of processedEvents.entries()) {
+			if (now - timestamp > EVENT_CACHE_TTL_MS) {
+				processedEvents.delete(key);
+			}
+		}
+	}
+}
+
+// ============================================================================
 // MAIN EVENT HANDLERS
 // ============================================================================
 
 export async function newEvaluation(event: FirestoreEvent<DocumentSnapshot>): Promise<void> {
 	try {
+		const eventId = event.id;
+
+		// Check for duplicate event processing
+		if (isEventAlreadyProcessed(eventId)) {
+			logger.info(`Skipping duplicate event ${eventId} for evaluation ${event.data.id}`);
+			return;
+		}
+		markEventAsProcessed(eventId);
 
 		const evaluation = event.data.data() as Evaluation & { migratedAt?: number };
 		const { statementId, parentId } = evaluation;
@@ -117,6 +161,15 @@ export async function newEvaluation(event: FirestoreEvent<DocumentSnapshot>): Pr
 
 export async function deleteEvaluation(event: FirestoreEvent<DocumentSnapshot>): Promise<void> {
 	try {
+		const eventId = event.id;
+
+		// Check for duplicate event processing
+		if (isEventAlreadyProcessed(eventId)) {
+			logger.info(`Skipping duplicate delete event ${eventId}`);
+			return;
+		}
+		markEventAsProcessed(eventId);
+
 		const evaluation = event.data.data() as Evaluation;
 		const { statementId, evaluation: evaluationValue } = evaluation;
 		const userId = evaluation.evaluator?.uid;
@@ -149,6 +202,15 @@ export async function deleteEvaluation(event: FirestoreEvent<DocumentSnapshot>):
 
 export async function updateEvaluation(event: FirestoreEvent<Change<DocumentSnapshot>>): Promise<void> {
 	try {
+		const eventId = event.id;
+
+		// Check for duplicate event processing
+		if (isEventAlreadyProcessed(eventId)) {
+			logger.info(`Skipping duplicate update event ${eventId}`);
+			return;
+		}
+		markEventAsProcessed(eventId);
+
 		const before = event.data.before.data() as Evaluation;
 		const after = event.data.after.data() as Evaluation;
 
@@ -380,11 +442,25 @@ async function updateStatementInTransaction(
 		// Calculate consensusValid by combining consensus with corroborationLevel
 		const consensusValid = calculateConsensusValid(agreement, statement.popperHebbianScore ?? undefined);
 
+		// Use atomic increments for ALL counting fields to prevent race conditions
+		// when Firebase triggers fire multiple times for the same event
 		transaction.update(statementRef, {
 			totalEvaluators: FieldValue.increment(addEvaluator),
 			consensus: agreement,
 			consensusValid,
-			evaluation,
+			// Use dot notation with FieldValue.increment for atomic updates
+			'evaluation.sumEvaluations': FieldValue.increment(evaluationDiff),
+			'evaluation.numberOfEvaluators': FieldValue.increment(addEvaluator),
+			'evaluation.sumPro': FieldValue.increment(proConDiff.proDiff),
+			'evaluation.sumCon': FieldValue.increment(proConDiff.conDiff),
+			'evaluation.numberOfProEvaluators': FieldValue.increment(proConDiff.proEvaluatorsDiff),
+			'evaluation.numberOfConEvaluators': FieldValue.increment(proConDiff.conEvaluatorsDiff),
+			'evaluation.sumSquaredEvaluations': FieldValue.increment(squaredEvaluationDiff),
+			// Derived values (calculated from sums) - these are fine to overwrite
+			'evaluation.averageEvaluation': evaluation.averageEvaluation,
+			'evaluation.agreement': agreement,
+			'evaluation.evaluationRandomNumber': evaluation.evaluationRandomNumber,
+			'evaluation.viewed': evaluation.viewed,
 			proSum: FieldValue.increment(proConDiff.proDiff),
 			conSum: FieldValue.increment(proConDiff.conDiff),
 		});
