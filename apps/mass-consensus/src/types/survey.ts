@@ -34,6 +34,10 @@ export interface CreateSurveyRequest {
   questionIds?: string[];
   settings?: Partial<SurveySettings>;
   questionSettings?: Record<string, QuestionOverrideSettings>;
+  /** Default language for the survey (e.g., 'en', 'he', 'ar') */
+  defaultLanguage?: string;
+  /** When true, forces all participants to use defaultLanguage regardless of preferences */
+  forceLanguage?: boolean;
 }
 
 /**
@@ -46,6 +50,10 @@ export interface UpdateSurveyRequest {
   settings?: Partial<SurveySettings>;
   questionSettings?: Record<string, QuestionOverrideSettings>;
   status?: 'draft' | 'active' | 'closed';
+  /** Default language for the survey (e.g., 'en', 'he', 'ar') */
+  defaultLanguage?: string;
+  /** When true, forces all participants to use defaultLanguage regardless of preferences */
+  forceLanguage?: boolean;
 }
 
 /**

@@ -8,6 +8,7 @@ import { useTranslation } from '@freedi/shared-i18n/next';
 import { Survey, CreateSurveyRequest, DEFAULT_SURVEY_SETTINGS } from '@/types/survey';
 import QuestionPicker from './QuestionPicker';
 import QuestionReorder from './QuestionReorder';
+import LanguageSelector from './LanguageSelector';
 import styles from './Admin.module.scss';
 
 interface SurveyFormProps {
@@ -28,6 +29,8 @@ export default function SurveyForm({ existingSurvey }: SurveyFormProps) {
   const [questionSettings, setQuestionSettings] = useState<Record<string, QuestionOverrideSettings>>(
     existingSurvey?.questionSettings || {}
   );
+  const [defaultLanguage, setDefaultLanguage] = useState(existingSurvey?.defaultLanguage || '');
+  const [forceLanguage, setForceLanguage] = useState(existingSurvey?.forceLanguage ?? true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoadingQuestions, setIsLoadingQuestions] = useState(false);
@@ -103,6 +106,8 @@ export default function SurveyForm({ existingSurvey }: SurveyFormProps) {
         questionIds: selectedQuestions.map((q) => q.statementId),
         settings,
         questionSettings: cleanedQuestionSettings,
+        defaultLanguage: defaultLanguage || undefined,
+        forceLanguage: forceLanguage || undefined,
       };
 
       console.info('[SurveyForm] Submitting survey with questionSettings:', JSON.stringify(cleanedQuestionSettings));
@@ -310,6 +315,43 @@ export default function SurveyForm({ existingSurvey }: SurveyFormProps) {
           <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginLeft: '1.5rem' }}>
             {t('allowSuggestionsNote') || 'When enabled, overrides all per-question suggestion settings'}
           </p>
+        </div>
+      </div>
+
+      {/* Step 5: Language Settings */}
+      <div className={styles.formSection}>
+        <h2 className={styles.sectionTitle}>{t('languageSettings') || 'Language Settings'}</h2>
+        <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
+          {t('languageSettingsDescription') || 'Set the default language for this survey. RTL languages (Hebrew, Arabic) will automatically use right-to-left layout.'}
+        </p>
+
+        <div className={styles.languageSettings}>
+          <div className={styles.formGroup}>
+            <label>{t('defaultLanguage') || 'Default Language'}</label>
+            <LanguageSelector
+              currentLanguage={defaultLanguage}
+              onChange={setDefaultLanguage}
+            />
+          </div>
+
+          {defaultLanguage && (
+            <div className={styles.forceLanguageRow}>
+              <input
+                id="forceLanguage"
+                type="checkbox"
+                checked={forceLanguage}
+                onChange={(e) => setForceLanguage(e.target.checked)}
+              />
+              <label htmlFor="forceLanguage" className={styles.forceLanguageLabel}>
+                <span className={styles.forceLanguageTitle}>
+                  {t('forceSurveyLanguage') || 'Force survey language'}
+                </span>
+                <span className={styles.forceLanguageDescription}>
+                  {t('forceSurveyLanguageDescription') || 'When enabled, all participants will see the survey in the selected language, overriding their browser preferences.'}
+                </span>
+              </label>
+            </div>
+          )}
         </div>
       </div>
 

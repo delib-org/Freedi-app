@@ -1,0 +1,74 @@
+.languageSelector {
+  width: 100%;
+}
+
+.languageGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: var(--spacing-sm);
+}
+
+.languageOption {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--card-default);
+  border: 2px solid var(--border-light);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+
+  &:hover {
+    border-color: var(--btn-primary);
+    background: rgba(91, 136, 229, 0.04);
+  }
+
+  &.selected {
+    border-color: var(--btn-primary);
+    background: rgba(91, 136, 229, 0.1);
+  }
+}
+
+.flag {
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.name {
+  flex: 1;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  text-align: left;
+}
+
+.rtlBadge {
+  font-size: 0.625rem;
+  font-weight: 600;
+  padding: 2px 4px;
+  background: var(--text-secondary);
+  color: white;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.checkIcon {
+  color: var(--btn-primary);
+  flex-shrink: 0;
+}
+
+.hint {
+  margin-top: var(--spacing-sm);
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+/* RTL Support */
+[dir="rtl"] {
+  .name {
+    text-align: right;
+  }
+}

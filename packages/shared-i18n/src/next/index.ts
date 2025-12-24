@@ -15,3 +15,6 @@ export {
 } from './TranslationProvider';
 
 export { useTranslation } from './useTranslation';
+
+// Re-export constants
+export { COOKIE_KEY } from '../core/constants';

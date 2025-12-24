@@ -16,6 +16,8 @@ const ANIMATION_DURATION = {
   SIGNING: 600, // Time to show signing spinner
   SUCCESS: 1200, // Time to show success state before reload
   CONFETTI: 800, // Confetti animation duration
+  REJECTING: 500, // Time to show rejecting spinner
+  REJECTED: 1000, // Time to show rejected state before reload
 } as const;
 
 interface DocumentClientProps {
@@ -160,16 +162,22 @@ export default function DocumentClient({
 
       setSubmitting(true);
 
-      // Only animate for signing, not rejecting
+      // Animate both signing and rejecting with appropriate states
       if (action === 'sign') {
         setSigningAnimationState('signing');
+      } else {
+        setSigningAnimationState('rejecting');
       }
 
       try {
-        // Add slight delay for signing animation
+        // Add slight delay for animation
         if (action === 'sign') {
           await new Promise((resolve) =>
             setTimeout(resolve, ANIMATION_DURATION.SIGNING)
+          );
+        } else {
+          await new Promise((resolve) =>
+            setTimeout(resolve, ANIMATION_DURATION.REJECTING)
           );
         }
 
@@ -192,6 +200,14 @@ export default function DocumentClient({
             // Wait for success animation before reload
             await new Promise((resolve) =>
               setTimeout(resolve, ANIMATION_DURATION.SUCCESS)
+            );
+          } else {
+            // Show rejected confirmation animation
+            setSigningAnimationState('rejected');
+
+            // Wait for rejected animation before reload
+            await new Promise((resolve) =>
+              setTimeout(resolve, ANIMATION_DURATION.REJECTED)
             );
           }
 
