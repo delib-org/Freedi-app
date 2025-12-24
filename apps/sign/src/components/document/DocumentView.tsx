@@ -8,6 +8,7 @@ import { resolveTextDirection } from '@/lib/utils/textDirection';
 import DocumentClient from './DocumentClient';
 import ParagraphCard from '../paragraph/ParagraphCard';
 import SignButton from './SignButton';
+import RejectButton from './RejectButton';
 import ProgressBar from './ProgressBar';
 import UserAvatar from '../shared/UserAvatar';
 import styles from './DocumentView.module.scss';
@@ -153,13 +154,7 @@ export default function DocumentView({
                 </a>
               ) : (
                 <>
-                  <button
-                    type="button"
-                    className={styles.rejectButton}
-                    data-action="reject"
-                  >
-                    {t('rejectDocument') || 'Reject Document'}
-                  </button>
+                  <RejectButton isRejected={userSignature?.signed === 'rejected'} />
                   <SignButton isSigned={userSignature?.signed === 'signed'} />
                 </>
               )}
