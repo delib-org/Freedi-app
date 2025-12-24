@@ -29,8 +29,8 @@ return cached;
     const statement = await getParentStatement(statementId);
 
     if (statement) {
-      // Cache for 10 minutes (parent statements rarely change)
-      await cache.set(cacheKey, statement, 10);
+      // Cache for 2 minutes (settings may change frequently)
+      await cache.set(cacheKey, statement, 2);
       logger.info(`Cached parent statement: ${statementId}`);
     }
 

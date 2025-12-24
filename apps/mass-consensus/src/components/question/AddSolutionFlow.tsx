@@ -52,6 +52,7 @@ export default function AddSolutionFlow({
       console.info('🚀 Starting parallel API calls...');
 
       // Run both API calls in parallel with Promise.all for better performance
+      // Use cache: 'no-store' to prevent Next.js from caching these dynamic API calls
       const [multiResponse, similarResponse] = await Promise.all([
         // Check for multiple suggestions
         fetch(`/api/statements/${questionId}/detect-multi`, {
@@ -61,6 +62,7 @@ export default function AddSolutionFlow({
             userInput: solutionText,
             userId,
           }),
+          cache: 'no-store',
         }),
         // Check for similar solutions
         fetch(`/api/statements/${questionId}/check-similar`, {
@@ -70,6 +72,7 @@ export default function AddSolutionFlow({
             userInput: solutionText,
             userId,
           }),
+          cache: 'no-store',
         }),
       ]);
 

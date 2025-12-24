@@ -77,7 +77,7 @@ export default async function QResultsPage({ params }: PageProps) {
   return (
     <LanguageOverrideProvider
       adminLanguage={question.defaultLanguage}
-      forceLanguage={(question as { forceLanguage?: boolean }).forceLanguage}
+      forceLanguage={(question as { forceLanguage?: boolean }).forceLanguage ?? true}
     >
       <div className={styles.resultsPage}>
         <header className={styles.resultsPage__header}>

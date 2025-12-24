@@ -1,6 +1,18 @@
 /**
+ * Check if a value is a Firestore VectorValue (embedding)
+ * VectorValue objects have a _values property containing the embedding array
+ */
+function isVectorValue(value: unknown): boolean {
+	if (value == null || typeof value !== 'object') return false;
+	const obj = value as Record<string, unknown>;
+
+	return '_values' in obj && Array.isArray(obj._values);
+}
+
+/**
  * Convert Firebase Timestamp objects to milliseconds recursively
- * This helper ensures all timestamp fields are numbers for valibot validation
+ * Also removes non-serializable Firestore types like VectorValue (embeddings)
+ * This helper ensures all values are serializable for Redux and valibot validation
  */
 export function convertTimestampsToMillis(data: unknown): unknown {
 	// Handle null/undefined
@@ -27,6 +39,12 @@ export function convertTimestampsToMillis(data: unknown): unknown {
 	for (const key in obj) {
 		if (Object.prototype.hasOwnProperty.call(obj, key)) {
 			const value = obj[key];
+
+			// Skip VectorValue (embedding) fields - they are non-serializable
+			// and only used server-side for similarity search
+			if (isVectorValue(value)) {
+				continue;
+			}
 
 			// Check if value is a Timestamp
 			const valueObj = value as Record<string, unknown> & { toMillis?: () => number };
@@ -83,7 +101,7 @@ export function normalizeStatementData(data: unknown): unknown {
 			// Note: This may not be accurate for deeply nested statements,
 			// but it's better than failing validation
 			obj.topParentId = obj.parentId;
-			console.info(`[normalizeStatementData] Filled missing topParentId for statement ${obj.statementId} using parentId ${obj.parentId}`);
+			console.warn(`[normalizeStatementData] Filled missing topParentId for statement ${obj.statementId} using parentId ${obj.parentId}`);
 		}
 	}
 

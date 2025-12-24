@@ -31,6 +31,7 @@ import UserDemographicSetting from '../UserDemographicSettings/UserDemographicSe
 import MembersSettings from '../membership/MembersSettings';
 import MemberValidation from '../memberValidation/MemberValidation';
 import EmailNotifications from '../emailNotifications/EmailNotifications';
+import { ClusteringAdmin } from '../ClusteringAdmin';
 
 interface StatementSettingsFormProps {
 	statement: Statement;
@@ -149,6 +150,12 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 						<UserDemographicSetting statement={statement} />
 						{isQuestion && <MemberValidation statement={statement} />}
 						<EmailNotifications statement={statement} />
+						{isQuestion && (
+							<>
+								<SectionTitle title={t('Clustering & Framings')} />
+								<ClusteringAdmin statement={statement} />
+							</>
+						)}
 						<SectionTitle title={t('Members')} />
 						<section className={styles.getMembersArea}>
 							<GetVoters

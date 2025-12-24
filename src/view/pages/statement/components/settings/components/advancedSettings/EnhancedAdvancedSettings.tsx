@@ -122,8 +122,8 @@ const EnhancedAdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => 
       title: t('Localization'),
       icon: Globe,
       description: t('Set default language for surveys'),
-      priority: 'low',
-      defaultExpanded: false,
+      priority: 'medium',
+      defaultExpanded: true,
     },
     {
       id: 'dataExport',
@@ -164,7 +164,7 @@ const EnhancedAdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => 
   // Unified handler for all statement settings
   function handleSettingChange(
     property: keyof StatementSettings,
-    newValue: boolean | string
+    newValue: boolean | string | number
   ) {
     setStatementSettingToDB({
       statement,
@@ -586,6 +586,31 @@ const EnhancedAdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => 
                         description={t('Automatically detect and group similar suggestions')}
                         icon={Search}
                       />
+                      {settings.enableSimilaritiesSearch && (
+                        <div className={styles.sliderSection}>
+                          <div className={styles.sliderHeader}>
+                            <Target size={18} />
+                            <span className={styles.sliderLabel}>{t('Similarity Threshold')}</span>
+                          </div>
+                          <p className={styles.sliderDescription}>
+                            {t('Higher values require stronger similarity (recommended: 75-85%)')}
+                          </p>
+                          <div className={styles.sliderContainer}>
+                            <input
+                              type="range"
+                              min="50"
+                              max="95"
+                              step="5"
+                              value={Math.round((settings.similarityThreshold ?? 0.75) * 100)}
+                              onChange={(e) => handleSettingChange('similarityThreshold', Number(e.target.value) / 100)}
+                              className={styles.slider}
+                            />
+                            <span className={styles.sliderValue}>
+                              {Math.round((settings.similarityThreshold ?? 0.75) * 100)}%
+                            </span>
+                          </div>
+                        </div>
+                      )}
                       {statement.statementType === StatementType.question && (
                         <>
                           <ToggleSwitch

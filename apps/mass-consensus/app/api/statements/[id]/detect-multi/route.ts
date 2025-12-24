@@ -51,9 +51,11 @@ export async function POST(
     }
 
     // Build the endpoint by replacing the function name
-    // e.g., https://region-project.cloudfunctions.net/checkForSimilarStatements
+    // e.g., https://region-project.cloudfunctions.net/findSimilarStatements
     // becomes https://region-project.cloudfunctions.net/detectMultipleSuggestions
-    const endpoint = similarEndpoint.replace('checkForSimilarStatements', 'detectMultipleSuggestions');
+    const endpoint = similarEndpoint
+      .replace('findSimilarStatements', 'detectMultipleSuggestions')
+      .replace('checkForSimilarStatements', 'detectMultipleSuggestions'); // Legacy fallback
 
     // Call Cloud Function
     const response = await fetch(endpoint, {

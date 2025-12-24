@@ -17,6 +17,8 @@ export interface DocumentSettings {
   demographicMode: DemographicMode;
   demographicRequired: boolean;
   textDirection: TextDirection;
+  defaultLanguage: string;
+  forceLanguage: boolean;
   logoUrl: string;
   brandName: string;
 }
@@ -31,6 +33,8 @@ const DEFAULT_SETTINGS: DocumentSettings = {
   demographicMode: 'disabled',
   demographicRequired: false,
   textDirection: 'auto',
+  defaultLanguage: '',
+  forceLanguage: true,
   logoUrl: DEFAULT_LOGO_URL,
   brandName: DEFAULT_BRAND_NAME,
 };
@@ -90,6 +94,8 @@ export async function GET(
       demographicMode: document?.signSettings?.demographicMode ?? DEFAULT_SETTINGS.demographicMode,
       demographicRequired: document?.signSettings?.demographicRequired ?? DEFAULT_SETTINGS.demographicRequired,
       textDirection: document?.signSettings?.textDirection ?? DEFAULT_SETTINGS.textDirection,
+      defaultLanguage: document?.signSettings?.defaultLanguage ?? DEFAULT_SETTINGS.defaultLanguage,
+      forceLanguage: document?.signSettings?.forceLanguage ?? DEFAULT_SETTINGS.forceLanguage,
       logoUrl: document?.signSettings?.logoUrl ?? DEFAULT_SETTINGS.logoUrl,
       brandName: document?.signSettings?.brandName ?? DEFAULT_SETTINGS.brandName,
     };
@@ -178,6 +184,8 @@ export async function PUT(
       demographicMode,
       demographicRequired: body.demographicRequired !== undefined ? Boolean(body.demographicRequired) : (existingSettings.demographicRequired ?? DEFAULT_SETTINGS.demographicRequired),
       textDirection,
+      defaultLanguage: body.defaultLanguage !== undefined ? String(body.defaultLanguage) : (existingSettings.defaultLanguage ?? DEFAULT_SETTINGS.defaultLanguage),
+      forceLanguage: body.forceLanguage !== undefined ? Boolean(body.forceLanguage) : (existingSettings.forceLanguage ?? DEFAULT_SETTINGS.forceLanguage),
       logoUrl: body.logoUrl !== undefined ? String(body.logoUrl) : (existingSettings.logoUrl ?? DEFAULT_SETTINGS.logoUrl),
       brandName: body.brandName !== undefined ? String(body.brandName) : (existingSettings.brandName ?? DEFAULT_SETTINGS.brandName),
     };

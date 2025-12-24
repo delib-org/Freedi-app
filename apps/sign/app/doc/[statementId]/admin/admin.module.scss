@@ -20,11 +20,18 @@
   border-bottom: 1px solid var(--border-light);
 }
 
+.sidebarHeaderTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-xs);
+}
+
 .sidebarTitle {
   font-size: 1.25rem;
   font-weight: 600;
   color: var(--text-primary);
-  margin: 0 0 var(--spacing-xs) 0;
+  margin: 0;
 }
 
 .documentTitle {
