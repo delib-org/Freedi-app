@@ -5,12 +5,33 @@ import { logger } from '@/services/logger';
 
 interface RecalculateRequest {
 	statementId: string;
+	dryRun?: boolean;
+}
+
+interface StatementFix {
+	statementId: string;
+	statementText?: string;
+	isClusterOption?: boolean;
+	before: {
+		numberOfEvaluators: number;
+		numberOfProEvaluators: number;
+		numberOfConEvaluators: number;
+		consensus?: number;
+	};
+	after: {
+		numberOfEvaluators: number;
+		numberOfProEvaluators: number;
+		numberOfConEvaluators: number;
+		consensus?: number;
+	};
 }
 
 interface RecalculateResult {
 	success: boolean;
+	dryRun: boolean;
 	statementsProcessed: number;
 	statementsFixed: number;
+	fixes: StatementFix[];
 	errors: string[];
 }
 
@@ -20,10 +41,12 @@ interface RecalculateResult {
  * inconsistencies caused by race conditions or duplicate trigger processing.
  *
  * @param statementId - The ID of the parent statement (question) to recalculate
- * @returns Result with counts of processed and fixed statements
+ * @param dryRun - If true, only report what would change without applying
+ * @returns Result with counts of processed and fixed statements, and detailed fixes
  */
 export async function requestRecalculateEvaluations(
-	statementId: string
+	statementId: string,
+	dryRun: boolean = false
 ): Promise<RecalculateResult> {
 	try {
 		const recalculateEvaluations = httpsCallable<
@@ -31,12 +54,15 @@ export async function requestRecalculateEvaluations(
 			RecalculateResult
 		>(functions, 'recalculateStatementEvaluations');
 
-		const result = await recalculateEvaluations({ statementId });
+		const result = await recalculateEvaluations({ statementId, dryRun });
 
-		logger.info('Evaluation recalculation completed', {
+		const modeLabel = dryRun ? '[DRY RUN] ' : '';
+		logger.info(`${modeLabel}Evaluation recalculation completed`, {
 			statementId,
+			dryRun,
 			statementsProcessed: result.data.statementsProcessed,
-			statementsFixed: result.data.statementsFixed
+			statementsFixed: result.data.statementsFixed,
+			fixesCount: result.data.fixes.length
 		});
 
 		return result.data;
@@ -44,6 +70,7 @@ export async function requestRecalculateEvaluations(
 		logError(error, {
 			operation: 'recalculateEvaluations.requestRecalculateEvaluations',
 			statementId,
+			dryRun,
 		});
 		throw error;
 	}
