@@ -165,14 +165,19 @@
   color: var(--text-primary);
 }
 
-// RTL Support
+// RTL Support - flexbox naturally respects dir="rtl"
+// No need to manually reverse - just ensure text-align is correct
 [dir="rtl"] {
-  .optionLabel {
-    flex-direction: row-reverse;
+  .questionInput {
+    text-align: right;
   }
 
   .questionLabel {
-    flex-direction: row-reverse;
+    justify-content: flex-start;
+  }
+
+  .optionText {
+    text-align: right;
   }
 }
 

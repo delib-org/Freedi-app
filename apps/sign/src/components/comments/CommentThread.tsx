@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { Statement } from '@freedi/shared-types';
 import { useUIStore } from '@/store/uiStore';
+import { getOrCreateAnonymousUser } from '@/lib/utils/user';
 import Comment from './Comment';
 import styles from './CommentThread.module.scss';
 
@@ -21,27 +22,29 @@ export default function CommentThread({
   userId,
 }: CommentThreadProps) {
   const { t } = useTranslation();
-  const { openModal, closeModal, incrementCommentCount, decrementCommentCount, addUserInteraction } = useUIStore();
+  const { incrementCommentCount, decrementCommentCount, addUserInteraction } = useUIStore();
   const [comments, setComments] = useState<Statement[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [newComment, setNewComment] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [effectiveUserId, setEffectiveUserId] = useState<string | null>(userId);
+
+  // Ensure anonymous user is created if not logged in
+  useEffect(() => {
+    if (!isLoggedIn && !effectiveUserId) {
+      const anonUserId = getOrCreateAnonymousUser();
+      setEffectiveUserId(anonUserId);
+    }
+  }, [isLoggedIn, effectiveUserId]);
 
   // Check if the current user already has a comment
   const userComment = useMemo(() => {
-    if (!userId) return null;
-    return comments.find((c) => c.creatorId === userId) || null;
-  }, [comments, userId]);
+    const currentUserId = effectiveUserId || userId;
+    if (!currentUserId) return null;
 
-  // Handle login button click - close comments modal and open login modal
-  const handleLoginClick = () => {
-    closeModal();
-    // Small delay to allow comments modal to close
-    setTimeout(() => {
-      openModal('login');
-    }, 100);
-  };
+    return comments.find((c) => c.creatorId === currentUserId) || null;
+  }, [comments, userId, effectiveUserId]);
 
   // Fetch comments
   const fetchComments = useCallback(async () => {
@@ -70,7 +73,13 @@ export default function CommentThread({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!newComment.trim() || !isLoggedIn || userComment) return;
+    // Ensure we have a user ID (create anonymous if needed)
+    if (!effectiveUserId && !userId) {
+      const anonUserId = getOrCreateAnonymousUser();
+      setEffectiveUserId(anonUserId);
+    }
+
+    if (!newComment.trim() || userComment) return;
 
     setIsSubmitting(true);
     setError(null);
@@ -167,42 +176,29 @@ export default function CommentThread({
       </div>
 
       {/* New comment form - only show if user doesn't have a comment yet */}
-      {isLoggedIn ? (
-        userComment ? (
-          <div className={styles.hasCommentNotice}>
-            <p>{t('You have already commented on this paragraph. You can edit your comment above.')}</p>
-          </div>
-        ) : (
-          <form className={styles.form} onSubmit={handleSubmit}>
-            <textarea
-              className={styles.textarea}
-              value={newComment}
-              onChange={(e) => setNewComment(e.target.value)}
-              placeholder={t('Add a comment...')}
-              rows={3}
-              disabled={isSubmitting}
-            />
-            {error && <p className={styles.error}>{error}</p>}
-            <button
-              type="submit"
-              className={styles.submitButton}
-              disabled={isSubmitting || !newComment.trim()}
-            >
-              {isSubmitting ? t('Posting...') : t('Post Comment')}
-            </button>
-          </form>
-        )
-      ) : (
-        <div className={styles.loginPrompt}>
-          <p>{t('Please log in to add comments')}</p>
-          <button
-            type="button"
-            className={styles.loginButton}
-            onClick={handleLoginClick}
-          >
-            {t('Sign In')}
-          </button>
+      {userComment ? (
+        <div className={styles.hasCommentNotice}>
+          <p>{t('You have already commented on this paragraph. You can edit your comment above.')}</p>
         </div>
+      ) : (
+        <form className={styles.form} onSubmit={handleSubmit}>
+          <textarea
+            className={styles.textarea}
+            value={newComment}
+            onChange={(e) => setNewComment(e.target.value)}
+            placeholder={t('Add a comment...')}
+            rows={3}
+            disabled={isSubmitting}
+          />
+          {error && <p className={styles.error}>{error}</p>}
+          <button
+            type="submit"
+            className={styles.submitButton}
+            disabled={isSubmitting || !newComment.trim()}
+          >
+            {isSubmitting ? t('Posting...') : t('Post Comment')}
+          </button>
+        </form>
       )}
     </div>
   );
