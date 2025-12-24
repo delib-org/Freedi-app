@@ -181,14 +181,17 @@
   margin: 0;
 }
 
-// RTL Support
+// RTL Support - flexbox naturally respects dir="rtl"
+// No need to manually reverse - just ensure text alignment is correct
 [dir="rtl"] {
-  .header {
-    flex-direction: row-reverse;
+  .title,
+  .subtitle,
+  .sectionTitle {
+    text-align: right;
   }
 
-  .progressContainer {
-    flex-direction: row-reverse;
+  .formHint {
+    text-align: right;
   }
 }
 
