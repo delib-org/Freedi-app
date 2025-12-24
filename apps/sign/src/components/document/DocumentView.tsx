@@ -1,3 +1,6 @@
+'use client';
+
+import { useTranslation } from '@freedi/shared-i18n/next';
 import { Signature } from '@/lib/firebase/queries';
 import { Paragraph, StatementWithParagraphs, TextDirection, DEFAULT_LOGO_URL, DEFAULT_BRAND_NAME, DEVELOPED_BY_URL } from '@/types';
 import { SignUser } from '@/lib/utils/user';
@@ -36,6 +39,8 @@ export default function DocumentView({
   brandName = DEFAULT_BRAND_NAME,
   isAdmin = false,
 }: DocumentViewProps) {
+  const { t } = useTranslation();
+
   // Convert array to Set for O(1) lookup
   const userInteractionsSet = new Set(userInteractions);
 
@@ -70,7 +75,7 @@ export default function DocumentView({
                   <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" />
                   <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1Z" />
                 </svg>
-                Admin
+                {t('admin') || 'Admin'}
               </a>
             )}
             <UserAvatar
@@ -98,7 +103,7 @@ export default function DocumentView({
         <main className={styles.content}>
           {paragraphs.length === 0 ? (
             <div className={styles.empty}>
-              <p>No paragraphs in this document yet.</p>
+              <p>{t('noParagraphsYet') || 'No paragraphs in this document yet.'}</p>
             </div>
           ) : (
             paragraphs.map((paragraph) => (
@@ -122,17 +127,17 @@ export default function DocumentView({
             <div className={styles.signatureStatus}>
               {!user ? (
                 <p className={styles.unsignedStatus}>
-                  Sign in to review and sign this document
+                  {t('signInToReview') || 'Sign in to review and sign this document'}
                 </p>
               ) : userSignature ? (
                 <p className={styles.signedStatus}>
-                  {userSignature.signed === 'signed' && 'You have signed this document'}
-                  {userSignature.signed === 'rejected' && 'You have rejected this document'}
-                  {userSignature.signed === 'viewed' && 'You have viewed this document'}
+                  {userSignature.signed === 'signed' && (t('youHaveSigned') || 'You have signed this document')}
+                  {userSignature.signed === 'rejected' && (t('youHaveRejected') || 'You have rejected this document')}
+                  {userSignature.signed === 'viewed' && (t('youHaveViewed') || 'You have viewed this document')}
                 </p>
               ) : (
                 <p className={styles.unsignedStatus}>
-                  Review all paragraphs and sign or reject the document
+                  {t('reviewAndSign') || 'Review all paragraphs and sign or reject the document'}
                 </p>
               )}
             </div>
@@ -144,7 +149,7 @@ export default function DocumentView({
                   className={styles.signButton}
                   style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
                 >
-                  Sign In to Sign
+                  {t('signInToSign') || 'Sign In to Sign'}
                 </a>
               ) : (
                 <>
@@ -153,7 +158,7 @@ export default function DocumentView({
                     className={styles.rejectButton}
                     data-action="reject"
                   >
-                    Reject Document
+                    {t('rejectDocument') || 'Reject Document'}
                   </button>
                   <SignButton isSigned={userSignature?.signed === 'signed'} />
                 </>
@@ -164,7 +169,7 @@ export default function DocumentView({
 
         {/* Developed by credit */}
         <div className={styles.developedBy}>
-          Developed by{' '}
+          {t('developedBy') || 'Developed by'}{' '}
           <a href={DEVELOPED_BY_URL} target="_blank" rel="noopener noreferrer">
             WizCol
           </a>

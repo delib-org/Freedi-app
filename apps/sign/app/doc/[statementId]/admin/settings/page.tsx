@@ -268,9 +268,11 @@ export default function AdminSettingsPage() {
             }));
             setSaved(false);
 
-            // Also change the admin interface language
+            // Also change the admin interface language and refresh server components
             if (language) {
               changeLanguage(language as LanguagesEnum);
+              // Refresh to update server components (sidebar) with new language
+              router.refresh();
             }
           }}
         />

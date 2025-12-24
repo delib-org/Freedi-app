@@ -103,16 +103,22 @@ export default async function DocumentPage({ params }: PageProps) {
   const logoUrl = signSettings?.logoUrl || DEFAULT_LOGO_URL;
   const brandName = signSettings?.brandName || DEFAULT_BRAND_NAME;
 
+  // Serialize data to ensure it's JSON-compatible (removes Firebase Timestamps, etc.)
+  const serializedDocument = JSON.parse(JSON.stringify(document));
+  const serializedParagraphs = JSON.parse(JSON.stringify(paragraphs));
+  const serializedUser = user ? JSON.parse(JSON.stringify(user)) : null;
+  const serializedSignature = userSignature ? JSON.parse(JSON.stringify(userSignature)) : null;
+
   return (
     <LanguageOverrideProvider
       adminLanguage={defaultLanguage}
       forceLanguage={forceLanguage}
     >
       <DocumentView
-        document={document}
-        paragraphs={paragraphs}
-        user={user}
-        userSignature={userSignature}
+        document={serializedDocument}
+        paragraphs={serializedParagraphs}
+        user={serializedUser}
+        userSignature={serializedSignature}
         userApprovals={approvalsMap}
         commentCounts={commentCounts}
         userInteractions={userInteractionsArray}

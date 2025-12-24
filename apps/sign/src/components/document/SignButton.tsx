@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslation } from '@freedi/shared-i18n/next';
 import { useUIStore } from '@/store/uiStore';
 import styles from './DocumentView.module.scss';
 
@@ -13,6 +14,7 @@ interface SignButtonProps {
  * Shows spinner during signing and checkmark on success or when already signed
  */
 export default function SignButton({ disabled = false, isSigned = false }: SignButtonProps) {
+  const { t } = useTranslation();
   const { signingAnimationState, isSubmitting } = useUIStore();
 
   // Determine button classes based on animation state and signed status
@@ -34,13 +36,13 @@ export default function SignButton({ disabled = false, isSigned = false }: SignB
     if (signingAnimationState === 'success') {
       return (
         <>
-          <span className={styles.checkmarkIconInline} aria-label="Success">
+          <span className={styles.checkmarkIconInline} aria-label={t('success') || 'Success'}>
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <polyline points="20 6 9 17 4 12" />
             </svg>
           </span>
-          <span className={styles.buttonText}>Signed</span>
-          <span className="visually-hidden">Document signed successfully</span>
+          <span className={styles.buttonText}>{t('signed') || 'Signed'}</span>
+          <span className="visually-hidden">{t('documentSignedSuccessfully') || 'Document signed successfully'}</span>
         </>
       );
     }
@@ -49,7 +51,7 @@ export default function SignButton({ disabled = false, isSigned = false }: SignB
     if (signingAnimationState === 'signing') {
       return (
         <>
-          <span className={styles.spinnerIcon} aria-label="Signing">
+          <span className={styles.spinnerIcon} aria-label={t('signing') || 'Signing'}>
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <circle
                 cx="12"
@@ -63,8 +65,8 @@ export default function SignButton({ disabled = false, isSigned = false }: SignB
               />
             </svg>
           </span>
-          <span className={styles.buttonText}>Signing...</span>
-          <span className="visually-hidden">Signing document...</span>
+          <span className={styles.buttonText}>{t('signingEllipsis') || 'Signing...'}</span>
+          <span className="visually-hidden">{t('signingDocument') || 'Signing document...'}</span>
         </>
       );
     }
@@ -73,19 +75,19 @@ export default function SignButton({ disabled = false, isSigned = false }: SignB
     if (isSigned) {
       return (
         <>
-          <span className={styles.checkmarkIconInline} aria-label="Signed">
+          <span className={styles.checkmarkIconInline} aria-label={t('signed') || 'Signed'}>
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <polyline points="20 6 9 17 4 12" />
             </svg>
           </span>
-          <span className={styles.buttonText}>Signed</span>
-          <span className="visually-hidden">Document is signed</span>
+          <span className={styles.buttonText}>{t('signed') || 'Signed'}</span>
+          <span className="visually-hidden">{t('documentIsSigned') || 'Document is signed'}</span>
         </>
       );
     }
 
     // Default idle state
-    return <span className={styles.buttonText}>Sign Document</span>;
+    return <span className={styles.buttonText}>{t('signDocument') || 'Sign Document'}</span>;
   };
 
   return (
