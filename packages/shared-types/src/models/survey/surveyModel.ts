@@ -78,6 +78,10 @@ export const SurveySchema = object({
   responseCount: optional(number()),
   /** Total completions */
   completionCount: optional(number()),
+  /** Default language for the survey (e.g., 'en', 'he', 'ar') */
+  defaultLanguage: optional(string()),
+  /** When true, forces all participants to use defaultLanguage regardless of preferences */
+  forceLanguage: optional(boolean()),
   createdAt: number(),
   lastUpdate: number(),
 });

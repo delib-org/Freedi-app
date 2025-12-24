@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { getSurveyWithQuestions } from '@/lib/firebase/surveys';
 import { SurveyStatus } from '@/types/survey';
 import SurveyWelcome from '@/components/survey/SurveyWelcome';
+import { LanguageOverrideProvider } from '@/components/providers/LanguageOverrideProvider';
 
 interface PageProps {
   params: { surveyId: string };
@@ -81,9 +82,14 @@ export default async function SurveyPage({ params }: PageProps) {
     console.info('[SurveyPage] Survey loaded:', survey.title, 'with', survey.questions.length, 'questions');
 
     return (
-      <div className="page">
-        <SurveyWelcome survey={survey} />
-      </div>
+      <LanguageOverrideProvider
+        adminLanguage={survey.defaultLanguage}
+        forceLanguage={survey.forceLanguage}
+      >
+        <div className="page">
+          <SurveyWelcome survey={survey} />
+        </div>
+      </LanguageOverrideProvider>
     );
   } catch (error) {
     console.error('[SurveyPage] Error loading survey:', error);

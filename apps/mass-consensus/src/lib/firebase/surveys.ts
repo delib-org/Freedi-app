@@ -56,6 +56,8 @@ export async function createSurvey(
     },
     questionSettings: data.questionSettings || {},
     status: SurveyStatus.draft,
+    defaultLanguage: data.defaultLanguage,
+    forceLanguage: data.forceLanguage,
     createdAt: now,
     lastUpdate: now,
   };
@@ -145,6 +147,12 @@ export async function updateSurvey(
       ...(survey.questionSettings || {}),
       ...data.questionSettings,
     };
+  }
+  if (data.defaultLanguage !== undefined) {
+    updates.defaultLanguage = data.defaultLanguage;
+  }
+  if (data.forceLanguage !== undefined) {
+    updates.forceLanguage = data.forceLanguage;
   }
 
   await db.collection(SURVEYS_COLLECTION).doc(surveyId).update(updates);

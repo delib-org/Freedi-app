@@ -13,6 +13,7 @@ import { getUserFromCookies } from '@/lib/utils/user';
 import { checkAdminAccess } from '@/lib/utils/adminAccess';
 import { getFirebaseAdmin } from '@/lib/firebase/admin';
 import DocumentView from '@/components/document/DocumentView';
+import { LanguageOverrideProvider } from '@/components/providers/LanguageOverrideProvider';
 import { TextDirection, DEFAULT_LOGO_URL, DEFAULT_BRAND_NAME } from '@/types';
 
 interface PageProps {
@@ -88,25 +89,38 @@ export default async function DocumentPage({ params }: PageProps) {
   // Convert Set to array for serialization (RSC can't serialize Sets)
   const userInteractionsArray = Array.from(userInteractions);
 
-  // Get text direction setting from document (with type assertion for signSettings)
-  const signSettings = (document as { signSettings?: { textDirection?: TextDirection; logoUrl?: string; brandName?: string } }).signSettings;
+  // Get settings from document (with type assertion for signSettings)
+  const signSettings = (document as { signSettings?: {
+    textDirection?: TextDirection;
+    defaultLanguage?: string;
+    forceLanguage?: boolean;
+    logoUrl?: string;
+    brandName?: string;
+  } }).signSettings;
   const textDirection: TextDirection = signSettings?.textDirection || 'auto';
+  const defaultLanguage = signSettings?.defaultLanguage || '';
+  const forceLanguage = signSettings?.forceLanguage || false;
   const logoUrl = signSettings?.logoUrl || DEFAULT_LOGO_URL;
   const brandName = signSettings?.brandName || DEFAULT_BRAND_NAME;
 
   return (
-    <DocumentView
-      document={document}
-      paragraphs={paragraphs}
-      user={user}
-      userSignature={userSignature}
-      userApprovals={approvalsMap}
-      commentCounts={commentCounts}
-      userInteractions={userInteractionsArray}
-      textDirection={textDirection}
-      logoUrl={logoUrl}
-      brandName={brandName}
-      isAdmin={isAdmin}
-    />
+    <LanguageOverrideProvider
+      adminLanguage={defaultLanguage}
+      forceLanguage={forceLanguage}
+    >
+      <DocumentView
+        document={document}
+        paragraphs={paragraphs}
+        user={user}
+        userSignature={userSignature}
+        userApprovals={approvalsMap}
+        commentCounts={commentCounts}
+        userInteractions={userInteractionsArray}
+        textDirection={textDirection}
+        logoUrl={logoUrl}
+        brandName={brandName}
+        isAdmin={isAdmin}
+      />
+    </LanguageOverrideProvider>
   );
 }

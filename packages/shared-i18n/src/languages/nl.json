@@ -1072,5 +1072,17 @@
   "landingCtaSubtitle": "Sluit je aan bij duizenden mensen die samen oplossingen creëren",
   "landingTerms": "Door in te loggen ga je akkoord met onze Servicevoorwaarden",
   "landingPoweredBy": "Aangedreven door Freedi",
-  "landingInstitute": "Van het Instituut voor Deliberatieve Democratie"
+  "landingInstitute": "Van het Instituut voor Deliberatieve Democratie",
+  "languageSettings": "Taalinstellingen",
+  "languageSettingsDescription": "Stel de standaardtaal voor deze enquête in. RTL-talen (Hebreeuws, Arabisch) gebruiken automatisch een rechts-naar-links lay-out.",
+  "defaultLanguage": "Standaardtaal",
+  "forceSurveyLanguage": "Enquêtetaal afdwingen",
+  "forceSurveyLanguageDescription": "Indien ingeschakeld, zien alle deelnemers de enquête in de geselecteerde taal, ongeacht hun browserinstellingen.",
+  "Select": "Selecteer",
+  "Active": "Actief",
+  "Language": "Taal",
+  "forceDocumentLanguage": "Documenttaal afdwingen",
+  "forceDocumentLanguageDescription": "Indien ingeschakeld, zien alle kijkers het document in de standaardtaal, ongeacht hun browserinstellingen",
+  "noLanguageSelectedBrowserPreference": "Geen taal geselecteerd - browservoorkeuren worden gebruikt",
+  "setDefaultLanguageDocument": "Stel de standaardtaal in voor dit document. RTL-talen (Hebreeuws, Arabisch) schakelen automatisch de tekstrichting om."
 }

@@ -3,8 +3,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useTranslation } from '@freedi/shared-i18n/next';
+import { isRTL, LanguagesEnum } from '@freedi/shared-i18n';
 import { DemographicSettings } from '@/components/admin/demographics';
 import LogoUpload from '@/components/admin/LogoUpload';
+import LanguageSelector from '@/components/admin/LanguageSelector';
 import { DemographicMode } from '@/types/demographics';
 import { TextDirection, DEFAULT_LOGO_URL, DEFAULT_BRAND_NAME } from '@/types';
 import GoogleDocsImport from '@/components/import/GoogleDocsImport';
@@ -21,6 +23,8 @@ interface Settings {
   demographicMode: DemographicMode;
   demographicRequired: boolean;
   textDirection: TextDirection;
+  defaultLanguage: string;
+  forceLanguage: boolean;
   logoUrl: string;
   brandName: string;
 }
@@ -29,7 +33,7 @@ export default function AdminSettingsPage() {
   const params = useParams();
   const router = useRouter();
   const statementId = params.statementId as string;
-  const { t } = useTranslation();
+  const { t, changeLanguage } = useTranslation();
   const { canManageSettings } = useAdminContext();
 
   const [settings, setSettings] = useState<Settings>({
@@ -42,6 +46,8 @@ export default function AdminSettingsPage() {
     demographicMode: 'disabled',
     demographicRequired: false,
     textDirection: 'auto',
+    defaultLanguage: '',
+    forceLanguage: false,
     logoUrl: DEFAULT_LOGO_URL,
     brandName: DEFAULT_BRAND_NAME,
   });
@@ -243,70 +249,49 @@ export default function AdminSettingsPage() {
         </div>
       </section>
 
-      {/* Text Direction Settings */}
+      {/* Language Settings */}
       <section className={styles.settingsSection}>
-        <h2 className={styles.settingsSectionTitle}>{t('Text Direction')}</h2>
+        <h2 className={styles.settingsSectionTitle}>{t('Language')}</h2>
         <p className={styles.settingDescription} style={{ marginBottom: 'var(--spacing-md)' }}>
-          {t('Control the text direction for this document')}
+          {t('Set the default language for this document. RTL languages (Hebrew, Arabic) will automatically switch text direction.')}
         </p>
 
-        <div className={styles.radioGroup}>
-          <label className={styles.radioOption}>
-            <input
-              type="radio"
-              name="textDirection"
-              value="auto"
-              checked={settings.textDirection === 'auto'}
-              onChange={() => {
-                setSettings(prev => ({ ...prev, textDirection: 'auto' }));
-                setSaved(false);
-              }}
-            />
-            <span className={styles.radioLabel}>
-              <strong>{t('Auto')}</strong>
-              <span className={styles.radioDescription}>
-                {t('Automatically detect direction based on content')}
-              </span>
-            </span>
-          </label>
+        <LanguageSelector
+          selectedLanguage={settings.defaultLanguage}
+          onChange={(language) => {
+            // When language changes, also update textDirection based on RTL
+            const newDirection = language ? (isRTL(language as LanguagesEnum) ? 'rtl' : 'ltr') : 'auto';
+            setSettings(prev => ({
+              ...prev,
+              defaultLanguage: language,
+              textDirection: newDirection
+            }));
+            setSaved(false);
 
-          <label className={styles.radioOption}>
-            <input
-              type="radio"
-              name="textDirection"
-              value="ltr"
-              checked={settings.textDirection === 'ltr'}
-              onChange={() => {
-                setSettings(prev => ({ ...prev, textDirection: 'ltr' }));
-                setSaved(false);
-              }}
-            />
-            <span className={styles.radioLabel}>
-              <strong>{t('Left to Right (LTR)')}</strong>
-              <span className={styles.radioDescription}>
-                {t('Force left-to-right direction (English, etc.)')}
-              </span>
-            </span>
-          </label>
+            // Also change the admin interface language
+            if (language) {
+              changeLanguage(language as LanguagesEnum);
+            }
+          }}
+        />
 
-          <label className={styles.radioOption}>
-            <input
-              type="radio"
-              name="textDirection"
-              value="rtl"
-              checked={settings.textDirection === 'rtl'}
-              onChange={() => {
-                setSettings(prev => ({ ...prev, textDirection: 'rtl' }));
-                setSaved(false);
-              }}
-            />
-            <span className={styles.radioLabel}>
-              <strong>{t('Right to Left (RTL)')}</strong>
-              <span className={styles.radioDescription}>
-                {t('Force right-to-left direction (Hebrew, Arabic, etc.)')}
-              </span>
-            </span>
-          </label>
+        <div className={styles.settingRow} style={{ marginTop: 'var(--spacing-md)' }}>
+          <div className={styles.settingInfo}>
+            <p className={styles.settingLabel}>{t('Force Document Language')}</p>
+            <p className={styles.settingDescription}>
+              {t('When enabled, all viewers will see the document in the default language regardless of their browser settings')}
+            </p>
+          </div>
+          <button
+            type="button"
+            className={`${styles.toggle} ${settings.forceLanguage ? styles.active : ''}`}
+            onClick={() => {
+              setSettings(prev => ({ ...prev, forceLanguage: !prev.forceLanguage }));
+              setSaved(false);
+            }}
+            aria-pressed={settings.forceLanguage}
+            disabled={!settings.defaultLanguage}
+          />
         </div>
       </section>
 

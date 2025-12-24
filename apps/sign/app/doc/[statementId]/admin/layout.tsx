@@ -7,6 +7,7 @@ import { checkAdminAccess, AdminAccessResult } from '@/lib/utils/adminAccess';
 import { getFirebaseAdmin } from '@/lib/firebase/admin';
 import { AdminPermissionLevel } from '@freedi/shared-types';
 import { AdminProvider } from './AdminContext';
+import LanguageSwitcher from '@/components/admin/LanguageSwitcher';
 import styles from './admin.module.scss';
 
 interface AdminLayoutProps {
@@ -50,7 +51,10 @@ export default async function AdminLayout({
     <div className={styles.adminLayout}>
       <aside className={styles.sidebar}>
         <div className={styles.sidebarHeader}>
-          <h2 className={styles.sidebarTitle}>Admin Panel</h2>
+          <div className={styles.sidebarHeaderTop}>
+            <h2 className={styles.sidebarTitle}>Admin Panel</h2>
+            <LanguageSwitcher />
+          </div>
           <p className={styles.documentTitle}>{document.statement}</p>
         </div>
 

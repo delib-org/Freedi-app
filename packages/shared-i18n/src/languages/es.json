@@ -1072,5 +1072,17 @@
   "landingCtaSubtitle": "Únete a miles de personas creando soluciones juntas",
   "landingTerms": "Al iniciar sesión, aceptas nuestros Términos de Servicio",
   "landingPoweredBy": "Impulsado por Freedi",
-  "landingInstitute": "Del Instituto para la Democracia Deliberativa"
+  "landingInstitute": "Del Instituto para la Democracia Deliberativa",
+  "languageSettings": "Configuración de idioma",
+  "languageSettingsDescription": "Establece el idioma predeterminado para esta encuesta. Los idiomas RTL (hebreo, árabe) usarán automáticamente un diseño de derecha a izquierda.",
+  "defaultLanguage": "Idioma predeterminado",
+  "forceSurveyLanguage": "Forzar idioma de encuesta",
+  "forceSurveyLanguageDescription": "Cuando está habilitado, todos los participantes verán la encuesta en el idioma seleccionado, ignorando las preferencias de su navegador.",
+  "Select": "Seleccionar",
+  "Active": "Activo",
+  "Language": "Idioma",
+  "forceDocumentLanguage": "Forzar idioma del documento",
+  "forceDocumentLanguageDescription": "Cuando está habilitado, todos los espectadores verán el documento en el idioma predeterminado, independientemente de la configuración de su navegador",
+  "noLanguageSelectedBrowserPreference": "No se ha seleccionado idioma - se usarán las preferencias del navegador",
+  "setDefaultLanguageDocument": "Establece el idioma predeterminado para este documento. Los idiomas RTL (hebreo, árabe) cambiarán automáticamente la dirección del texto."
 }

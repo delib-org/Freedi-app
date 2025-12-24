@@ -122,8 +122,8 @@ const EnhancedAdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => 
       title: t('Localization'),
       icon: Globe,
       description: t('Set default language for surveys'),
-      priority: 'low',
-      defaultExpanded: false,
+      priority: 'medium',
+      defaultExpanded: true,
     },
     {
       id: 'dataExport',

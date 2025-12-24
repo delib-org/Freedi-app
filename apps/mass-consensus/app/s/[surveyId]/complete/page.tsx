@@ -2,6 +2,7 @@ import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { getSurveyWithQuestions } from '@/lib/firebase/surveys';
 import SurveyComplete from '@/components/survey/SurveyComplete';
+import { LanguageOverrideProvider } from '@/components/providers/LanguageOverrideProvider';
 
 interface PageProps {
   params: { surveyId: string };
@@ -48,9 +49,14 @@ export default async function SurveyCompletePage({ params }: PageProps) {
     console.info('[SurveyCompletePage] Survey loaded:', survey.title);
 
     return (
-      <div className="page">
-        <SurveyComplete survey={survey} />
-      </div>
+      <LanguageOverrideProvider
+        adminLanguage={survey.defaultLanguage}
+        forceLanguage={survey.forceLanguage}
+      >
+        <div className="page">
+          <SurveyComplete survey={survey} />
+        </div>
+      </LanguageOverrideProvider>
     );
   } catch (error) {
     console.error('[SurveyCompletePage] Error loading page:', error);

@@ -1068,5 +1068,17 @@
   "landingCtaSubtitle": "انضم لآلاف الأشخاص الذين يبتكرون حلولًا معًا",
   "landingTerms": "بتسجيل الدخول، أنت توافق على شروط الخدمة",
   "landingPoweredBy": "مدعوم من فريدي",
-  "landingInstitute": "من معهد الديمقراطية التداولية"
+  "landingInstitute": "من معهد الديمقراطية التداولية",
+  "languageSettings": "إعدادات اللغة",
+  "languageSettingsDescription": "حدد اللغة الافتراضية لهذا الاستبيان. ستستخدم لغات RTL (العربية، العبرية) تخطيطاً من اليمين لليسار تلقائياً.",
+  "defaultLanguage": "اللغة الافتراضية",
+  "forceSurveyLanguage": "إجبار لغة الاستبيان",
+  "forceSurveyLanguageDescription": "عند التفعيل، سيرى جميع المشاركين الاستبيان باللغة المحددة، بغض النظر عن إعدادات متصفحهم.",
+  "Select": "اختر",
+  "Active": "نشط",
+  "Language": "اللغة",
+  "forceDocumentLanguage": "إجبار لغة المستند",
+  "forceDocumentLanguageDescription": "عند التفعيل، سيرى جميع المشاهدين المستند باللغة الافتراضية بغض النظر عن إعدادات متصفحهم",
+  "noLanguageSelectedBrowserPreference": "لم يتم تحديد لغة - سيتم استخدام تفضيلات المتصفح",
+  "setDefaultLanguageDocument": "تعيين اللغة الافتراضية لهذا المستند. اللغات من اليمين لليسار (العبرية، العربية) ستقوم تلقائياً بتبديل اتجاه النص."
 }
