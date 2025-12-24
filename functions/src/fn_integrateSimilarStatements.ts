@@ -229,6 +229,8 @@ export const executeIntegration = onCall<ExecuteIntegrationRequest>(
 			},
 			hide: false,
 			randomSeed: Math.random(),
+			isCluster: true,
+			integratedOptions: selectedStatementIds, // Source statement IDs that were merged
 		};
 
 		// 6. Create the new statement in Firestore
