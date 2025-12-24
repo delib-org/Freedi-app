@@ -97,7 +97,7 @@ export default async function SurveyQuestionPage({ params }: PageProps) {
     return (
       <LanguageOverrideProvider
         adminLanguage={survey.defaultLanguage}
-        forceLanguage={survey.forceLanguage}
+        forceLanguage={survey.forceLanguage ?? true}
       >
         <SurveyQuestionWrapper
           survey={survey}

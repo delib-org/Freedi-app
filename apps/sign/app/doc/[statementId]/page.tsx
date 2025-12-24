@@ -99,7 +99,7 @@ export default async function DocumentPage({ params }: PageProps) {
   } }).signSettings;
   const textDirection: TextDirection = signSettings?.textDirection || 'auto';
   const defaultLanguage = signSettings?.defaultLanguage || '';
-  const forceLanguage = signSettings?.forceLanguage || false;
+  const forceLanguage = signSettings?.forceLanguage ?? true;
   const logoUrl = signSettings?.logoUrl || DEFAULT_LOGO_URL;
   const brandName = signSettings?.brandName || DEFAULT_BRAND_NAME;
 

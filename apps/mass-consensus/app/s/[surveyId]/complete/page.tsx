@@ -51,7 +51,7 @@ export default async function SurveyCompletePage({ params }: PageProps) {
     return (
       <LanguageOverrideProvider
         adminLanguage={survey.defaultLanguage}
-        forceLanguage={survey.forceLanguage}
+        forceLanguage={survey.forceLanguage ?? true}
       >
         <div className="page">
           <SurveyComplete survey={survey} />

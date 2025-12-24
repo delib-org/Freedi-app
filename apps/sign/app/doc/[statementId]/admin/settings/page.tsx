@@ -47,7 +47,7 @@ export default function AdminSettingsPage() {
     demographicRequired: false,
     textDirection: 'auto',
     defaultLanguage: '',
-    forceLanguage: false,
+    forceLanguage: true,
     logoUrl: DEFAULT_LOGO_URL,
     brandName: DEFAULT_BRAND_NAME,
   });

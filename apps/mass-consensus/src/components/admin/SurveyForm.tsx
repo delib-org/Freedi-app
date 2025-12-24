@@ -30,7 +30,7 @@ export default function SurveyForm({ existingSurvey }: SurveyFormProps) {
     existingSurvey?.questionSettings || {}
   );
   const [defaultLanguage, setDefaultLanguage] = useState(existingSurvey?.defaultLanguage || '');
-  const [forceLanguage, setForceLanguage] = useState(existingSurvey?.forceLanguage || false);
+  const [forceLanguage, setForceLanguage] = useState(existingSurvey?.forceLanguage ?? true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoadingQuestions, setIsLoadingQuestions] = useState(false);
