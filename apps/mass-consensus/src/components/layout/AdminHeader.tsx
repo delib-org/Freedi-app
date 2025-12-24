@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { useAuth } from '@/components/auth/AuthProvider';
+import LanguageSwitcher from './LanguageSwitcher';
 import styles from './Layout.module.scss';
 
 /**
@@ -56,6 +57,7 @@ export default function AdminHeader() {
       </div>
 
       <div className={styles.headerRight}>
+        <LanguageSwitcher />
         <div className={styles.userMenu}>
           <button
             className={styles.userButton}

@@ -80,7 +80,7 @@ export type HeatMapMode = 'none' | 'views' | 'support' | 'importance';
 // Demographic survey mode
 export type DemographicMode = 'disabled' | 'inherit' | 'custom';
 
-// Text direction mode
+// Text direction mode (legacy - kept for backwards compatibility)
 export type TextDirection = 'auto' | 'ltr' | 'rtl';
 
 // Admin settings for a document
@@ -96,8 +96,11 @@ export interface DocumentSettings {
   // Demographic survey settings
   demographicMode: DemographicMode;
   demographicRequired: boolean;
-  // Text direction setting
+  // Text direction setting (legacy - direction is now derived from language)
   textDirection: TextDirection;
+  // Language settings
+  defaultLanguage?: string;
+  forceLanguage?: boolean;
   // Branding settings
   logoUrl?: string;
   brandName?: string;
