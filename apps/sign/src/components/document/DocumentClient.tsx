@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef } from 'react';
 import { useUIStore } from '@/store/uiStore';
 import { useDemographicStore, selectIsInteractionBlocked } from '@/store/demographicStore';
-import { SignUser } from '@/lib/utils/user';
+import { SignUser, getOrCreateAnonymousUser } from '@/lib/utils/user';
 import { Signature } from '@/lib/firebase/queries';
 import Modal from '../shared/Modal';
 import CommentThread from '../comments/CommentThread';
@@ -153,11 +153,9 @@ export default function DocumentClient({
         return;
       }
 
+      // Ensure user has an ID (create anonymous user if needed)
       if (!user) {
-        // Redirect to login
-        window.location.href = `/login?redirect=/doc/${documentId}`;
-
-        return;
+        getOrCreateAnonymousUser();
       }
 
       setSubmitting(true);
