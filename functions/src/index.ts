@@ -86,6 +86,7 @@ import {
 } from "./fn_clusterAggregation";
 import { checkProfanity } from "./fn_profanityChecker";
 import { recalculateStatementEvaluations } from "./fn_recalculateEvaluations";
+import { fixClusterIntegration } from "./fn_fixClusterIntegration";
 import { handleImproveSuggestion } from "./fn_improveSuggestion";
 import { onStatementCreated } from "./fn_statementCreation";
 import { analyzeSubscriptionPatterns } from "./fn_metrics";
@@ -268,6 +269,7 @@ exports.getCluster = wrapHttpFunction(getCluster);
 exports.recoverLastSnapshot = wrapHttpFunction(recoverLastSnapshot);
 exports.checkProfanity = checkProfanity;
 exports.recalculateStatementEvaluations = recalculateStatementEvaluations;
+exports.fixClusterIntegration = fixClusterIntegration;
 exports.improveSuggestion = wrapHttpFunction(handleImproveSuggestion);
 exports.detectMultipleSuggestions = wrapHttpFunction(detectMultipleSuggestions);
 exports.mergeStatements = wrapHttpFunction(mergeStatements);
