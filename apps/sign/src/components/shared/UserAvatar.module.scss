@@ -46,6 +46,8 @@
 .dropdown {
   position: absolute;
   top: calc(100% + 8px);
+  // Use physical right positioning - avatar is always on right side of topBar
+  // regardless of text direction, so menu should always extend left
   right: 0;
   min-width: 200px;
   background: white;
@@ -56,9 +58,10 @@
   overflow: hidden;
   animation: dropdownFadeIn 0.15s ease;
 
-  [dir="rtl"] & {
-    right: auto;
-    left: 0;
+  // Mobile: limit width to prevent overflow
+  @media (max-width: 600px) {
+    min-width: 180px;
+    max-width: calc(100vw - 32px);
   }
 }
 
