@@ -4,6 +4,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { useUIStore } from '@/store/uiStore';
 import { useDemographicStore, selectIsInteractionBlocked } from '@/store/demographicStore';
+import { getOrCreateAnonymousUser } from '@/lib/utils/user';
 import styles from './InteractionBar.module.scss';
 
 interface InteractionBarProps {
@@ -44,10 +45,9 @@ export default function InteractionBar({
         return;
       }
 
+      // Ensure user has an ID (create anonymous user if needed)
       if (!isLoggedIn) {
-        window.location.href = `/login?redirect=/doc/${documentId}`;
-
-        return;
+        getOrCreateAnonymousUser();
       }
 
       // Optimistic update - both local state and store
