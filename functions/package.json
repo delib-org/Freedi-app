@@ -16,7 +16,7 @@
 		"test:watch": "jest --watch"
 	},
 	"engines": {
-		"node": "20"
+		"node": ">=20"
 	},
 	"main": "lib/functions/src/index.js",
 	"dependencies": {
@@ -35,7 +35,6 @@
 		"valibot": "^1.0.0-rc.1"
 	},
 	"devDependencies": {
-		"@firebase/testing": "^0.20.11",
 		"@types/jest": "^29.5.14",
 		"@types/parse5": "^6.0.3",
 		"firebase-functions-test": "^3.4.1",

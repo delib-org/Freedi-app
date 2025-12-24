@@ -70,7 +70,7 @@ export async function requestRecalculateEvaluations(
 		logError(error, {
 			operation: 'recalculateEvaluations.requestRecalculateEvaluations',
 			statementId,
-			dryRun,
+			metadata: { dryRun },
 		});
 		throw error;
 	}

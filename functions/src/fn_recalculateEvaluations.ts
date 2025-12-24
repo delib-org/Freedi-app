@@ -85,14 +85,36 @@ interface UserEvaluationData {
 /**
  * Recalculate evaluation metrics for a cluster-option based on source statements and direct evaluations.
  * Direct evaluations (no migratedAt) take priority over source evaluations.
+ *
+ * Source statements are found via:
+ * 1. integratedOptions array on the cluster statement
+ * 2. Statements with integratedInto pointing to this cluster (fallback)
  */
 async function recalculateClusterOptionEvaluations(
 	statementId: string,
 	statement: Statement & { integratedOptions?: string[]; popperHebbianScore?: PopperHebbianScore },
 	dryRun: boolean = false
 ): Promise<StatementFix | null> {
-	const sourceIds = statement.integratedOptions || [];
-	if (sourceIds.length === 0) return null;
+	let sourceIds = statement.integratedOptions || [];
+
+	// If integratedOptions is empty, try to find sources via integratedInto field
+	if (sourceIds.length === 0) {
+		const sourcesSnapshot = await db
+			.collection(Collections.statements)
+			.where("integratedInto", "==", statementId)
+			.get();
+
+		sourceIds = sourcesSnapshot.docs.map(doc => doc.id);
+
+		if (sourceIds.length > 0) {
+			logger.info(`Found ${sourceIds.length} sources via integratedInto for cluster ${statementId}`);
+		}
+	}
+
+	if (sourceIds.length === 0) {
+		logger.info(`No sources found for cluster ${statementId} - skipping recalculation`);
+		return null;
+	}
 
 	const userEvaluations = new Map<string, UserEvaluationData>();
 
@@ -275,10 +297,15 @@ async function recalculateSingleStatementEvaluations(
 	const statement = statementDoc.data() as Statement & {
 		popperHebbianScore?: PopperHebbianScore;
 		integratedOptions?: string[];
+		isCluster?: boolean;
 	};
 
-	// If this is a cluster-option (has integratedOptions), use special logic
-	if (statement.integratedOptions && statement.integratedOptions.length > 0) {
+	// If this is a cluster-option (has integratedOptions or isCluster flag), use special logic
+	// The recalculateClusterOptionEvaluations function will find sources via integratedInto if needed
+	if (
+		(statement.integratedOptions && statement.integratedOptions.length > 0) ||
+		statement.isCluster === true
+	) {
 		return recalculateClusterOptionEvaluations(statementId, statement, dryRun);
 	}
 
