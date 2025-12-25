@@ -110,10 +110,13 @@ export default defineConfig(({ mode }) => {
 			rollupOptions: {
 				output: {
 					manualChunks: (id) => {
-						// React core libraries
+						// React core libraries and essential React dependencies
+						// use-sync-external-store MUST be bundled with React to avoid initialization errors
 						if (id.includes('node_modules/react/') ||
 							id.includes('node_modules/react-dom/') ||
-							id.includes('node_modules/react-router')) {
+							id.includes('node_modules/react-router') ||
+							id.includes('node_modules/use-sync-external-store') ||
+							id.includes('node_modules/scheduler')) {
 							return 'vendor-react';
 						}
 						// Firebase - large, only needed after auth
