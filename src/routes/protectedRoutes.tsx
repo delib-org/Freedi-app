@@ -1,7 +1,7 @@
-import { lazy, Suspense } from 'react';
+import { lazy } from 'react';
 import { RouteObject } from 'react-router';
 import { StatementSkeleton } from '@/view/components/atomic/molecules/StatementSkeleton';
-import LoadingPage from '@/view/pages/loadingPage/LoadingPage';
+import withSuspense, { withCustomSuspense } from './withSuspense';
 
 // Lazy load protected route components
 const StatementMain = lazy(
@@ -18,19 +18,13 @@ const CheckNotifications = lazy(
 	() => import('@/view/pages/settings/ChecNotifications')
 );
 
-// Helper to wrap with skeleton suspense
-const withStatementSuspense = (Component: React.LazyExoticComponent<React.ComponentType>) => (
-	<Suspense fallback={<StatementSkeleton />}>
-		<Component />
-	</Suspense>
-);
+// Helper to wrap with skeleton suspense (first load only)
+const withStatementSuspense = (Component: React.LazyExoticComponent<React.ComponentType>) =>
+	withCustomSuspense(Component, <StatementSkeleton />);
 
-// Helper to wrap with loading page suspense
-const withLoadingSuspense = (Component: React.LazyExoticComponent<React.ComponentType>) => (
-	<Suspense fallback={<LoadingPage />}>
-		<Component />
-	</Suspense>
-);
+// Helper to wrap with loading page suspense (first load only)
+const withLoadingSuspense = (Component: React.LazyExoticComponent<React.ComponentType>) =>
+	withSuspense(Component);
 
 // Define protectedRoutes with lazy loading and skeleton
 export const protectedRoutes: RouteObject[] = [
