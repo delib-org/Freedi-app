@@ -1,29 +1,336 @@
-.wait {
+.waiting-page {
 	display: flex;
 	justify-content: center;
 	align-items: center;
-	height: 100vh;
-	width: 100vw;
+	min-height: 100vh;
+	width: 100%;
+	background: var(--statementBackground);
+	padding: 1.5rem;
 
-	.wrapper {
+	&__wrapper {
 		display: flex;
 		flex-direction: column;
 		align-items: center;
 		justify-content: center;
 		width: 100%;
-		height: 100%;
-		max-width: var(--wrapper);
-		padding: 20px;
-
+		max-width: 420px;
+		text-align: center;
+		animation: fadeSlideUp 0.5s ease-out;
 	}
 
-	img {
+	&__card {
+		background: white;
+		border-radius: 16px;
+		padding: 2.5rem 2rem;
+		box-shadow: 0 4px 20px rgba(31, 88, 149, 0.08);
 		width: 100%;
-		max-width: 300px;
-		margin-bottom: 20px;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 1.5rem;
+	}
+}
+
+// Portal Animation - suggests "waiting to enter"
+.portal-loader {
+	position: relative;
+	width: 120px;
+	height: 120px;
+	margin: 0.5rem 0;
+
+	&__outer-ring {
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		width: 100%;
+		height: 100%;
+		border: 3px solid var(--btn-primary);
+		border-radius: 50%;
+		transform: translate(-50%, -50%);
+		opacity: 0.3;
+		animation: portalPulse 2.5s ease-in-out infinite;
 	}
 
-	.btns {
-		margin-top: 2rem;
+	&__middle-ring {
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		width: 80%;
+		height: 80%;
+		border: 2px solid var(--accent);
+		border-radius: 50%;
+		transform: translate(-50%, -50%);
+		opacity: 0.5;
+		animation: portalPulse 2.5s ease-in-out infinite 0.3s;
+	}
+
+	&__inner-ring {
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		width: 60%;
+		height: 60%;
+		border: 2px solid var(--agree);
+		border-radius: 50%;
+		transform: translate(-50%, -50%);
+		opacity: 0.7;
+		animation: portalPulse 2.5s ease-in-out infinite 0.6s;
+	}
+
+	&__center {
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		width: 40%;
+		height: 40%;
+		background: linear-gradient(135deg, var(--btn-primary), var(--agree));
+		border-radius: 50%;
+		transform: translate(-50%, -50%);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		box-shadow: 0 0 30px rgba(95, 136, 229, 0.4);
+		animation: centerGlow 3s ease-in-out infinite;
+	}
+
+	&__icon {
+		width: 24px;
+		height: 24px;
+		color: white;
+	}
+
+	// Particles floating toward center
+	&__particle {
+		position: absolute;
+		width: 6px;
+		height: 6px;
+		background: var(--accent);
+		border-radius: 50%;
+		opacity: 0;
+
+		&:nth-child(6) {
+			top: 0;
+			left: 50%;
+			animation: particleToCenter 2s ease-in infinite 0s;
+		}
+
+		&:nth-child(7) {
+			top: 50%;
+			right: 0;
+			animation: particleToCenter 2s ease-in infinite 0.4s;
+		}
+
+		&:nth-child(8) {
+			bottom: 0;
+			left: 50%;
+			animation: particleToCenter 2s ease-in infinite 0.8s;
+		}
+
+		&:nth-child(9) {
+			top: 50%;
+			left: 0;
+			animation: particleToCenter 2s ease-in infinite 1.2s;
+		}
+	}
+}
+
+// Status Section
+.waiting-status {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+	width: 100%;
+
+	&__title {
+		font-size: 1.25rem;
+		font-weight: 600;
+		color: var(--text-title);
+		margin: 0;
+	}
+
+	&__message {
+		font-size: 0.95rem;
+		color: var(--text-body);
+		margin: 0;
+		line-height: 1.5;
+	}
+}
+
+// Status indicator
+.status-indicator {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.5rem;
+	padding: 0.5rem 1rem;
+	background: rgba(87, 198, 178, 0.1);
+	border-radius: 20px;
+	margin-top: 0.5rem;
+
+	&__dot {
+		width: 8px;
+		height: 8px;
+		background: var(--agree);
+		border-radius: 50%;
+		animation: dotPulse 1.5s ease-in-out infinite;
+	}
+
+	&__text {
+		font-size: 0.85rem;
+		color: var(--agree);
+		font-weight: 500;
+	}
+}
+
+// Info section with tips
+.waiting-info {
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+	width: 100%;
+	margin-top: 0.5rem;
+	padding-top: 1.5rem;
+	border-top: 1px solid rgba(0, 0, 0, 0.06);
+
+	&__title {
+		font-size: 0.9rem;
+		font-weight: 500;
+		color: var(--text-caption);
+		margin: 0;
+		text-align: left;
+	}
+
+	&__list {
+		display: flex;
+		flex-direction: column;
+		gap: 0.75rem;
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	&__item {
+		display: flex;
+		align-items: flex-start;
+		gap: 0.75rem;
+		text-align: left;
+	}
+
+	&__icon {
+		width: 20px;
+		height: 20px;
+		color: var(--btn-primary);
+		flex-shrink: 0;
+		margin-top: 2px;
+	}
+
+	&__text {
+		font-size: 0.9rem;
+		color: var(--text-body);
+		line-height: 1.4;
+	}
+}
+
+// Actions
+.waiting-actions {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+	width: 100%;
+	margin-top: 0.5rem;
+}
+
+// Keyframe Animations
+@keyframes fadeSlideUp {
+	from {
+		opacity: 0;
+		transform: translateY(20px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+@keyframes portalPulse {
+	0%, 100% {
+		transform: translate(-50%, -50%) scale(1);
+		opacity: 0.3;
+	}
+	50% {
+		transform: translate(-50%, -50%) scale(1.05);
+		opacity: 0.6;
+	}
+}
+
+@keyframes centerGlow {
+	0%, 100% {
+		box-shadow: 0 0 20px rgba(95, 136, 229, 0.3);
+	}
+	50% {
+		box-shadow: 0 0 40px rgba(95, 136, 229, 0.5);
+	}
+}
+
+@keyframes particleToCenter {
+	0% {
+		opacity: 1;
+		transform: translate(0, 0) scale(1);
+	}
+	100% {
+		opacity: 0;
+		transform: translate(
+			calc(50% - 3px),
+			calc(50% - 3px)
+		) scale(0);
+	}
+}
+
+@keyframes dotPulse {
+	0%, 100% {
+		opacity: 1;
+		transform: scale(1);
+	}
+	50% {
+		opacity: 0.6;
+		transform: scale(0.8);
+	}
+}
+
+// Reduced motion support
+@media (prefers-reduced-motion: reduce) {
+	.portal-loader__outer-ring,
+	.portal-loader__middle-ring,
+	.portal-loader__inner-ring,
+	.portal-loader__center,
+	.portal-loader__particle,
+	.status-indicator__dot {
+		animation: none;
+	}
+
+	.portal-loader__outer-ring { opacity: 0.3; }
+	.portal-loader__middle-ring { opacity: 0.5; }
+	.portal-loader__inner-ring { opacity: 0.7; }
+	.portal-loader__center { box-shadow: 0 0 30px rgba(95, 136, 229, 0.4); }
+	.status-indicator__dot { opacity: 1; }
+
+	.waiting-page__wrapper {
+		animation: none;
+	}
+}
+
+// Mobile adjustments
+@media screen and (max-width: 480px) {
+	.waiting-page {
+		padding: 1rem;
+
+		&__card {
+			padding: 2rem 1.5rem;
+		}
+	}
+
+	.portal-loader {
+		width: 100px;
+		height: 100px;
 	}
 }
