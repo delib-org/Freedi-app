@@ -1,18 +1,21 @@
 import { Statement, Role, StatementType, Screen } from "delib-npm";
-import { ReactNode, useEffect } from "react";
+import { ReactNode, useEffect, lazy, Suspense } from "react";
 import GroupPage from "../statementTypes/group/GroupPage";
 import QuestionPage from "../statementTypes/question/QuestionPage";
 import { useParams } from "react-router";
-import Triangle from "@/view/components/maps/triangle/Triangle";
-import MindMap from "../map/MindMap";
-import Chat from "../chat/Chat";
-import StatementSettings from "../settings/StatementSettings";
-import PolarizationIndexComp from "@/view/components/maps/polarizationIndex/PolarizationIndex";
-import PopperHebbianDiscussion from "../popperHebbian/PopperHebbianDiscussion";
 import { useSelector, useDispatch } from "react-redux";
 import { statementSelectorById, setStatement } from "@/redux/statements/statementsSlice";
 import { getStatementFromDB } from "@/controllers/db/statements/getStatement";
 import { logError } from "@/utils/errorHandling";
+import LoadingPage from "@/view/pages/loadingPage/LoadingPage";
+
+// Lazy load heavy screen components
+const Triangle = lazy(() => import("@/view/components/maps/triangle/Triangle"));
+const MindMap = lazy(() => import("../map/MindMap"));
+const Chat = lazy(() => import("../chat/Chat"));
+const StatementSettings = lazy(() => import("../settings/StatementSettings"));
+const PolarizationIndexComp = lazy(() => import("@/view/components/maps/polarizationIndex/PolarizationIndex"));
+const PopperHebbianDiscussion = lazy(() => import("../popperHebbian/PopperHebbianDiscussion"));
 
 interface SwitchScreenProps {
 	statement: Statement | undefined;
@@ -81,16 +84,28 @@ function SwitchScreen({
 
 	switch (screen) {
 		case Screen.polarizationIndex:
-			return <PolarizationIndexComp />
+			return (
+				<Suspense fallback={<LoadingPage />}>
+					<PolarizationIndexComp />
+				</Suspense>
+			);
 		case Screen.agreementMap:
-			return <Triangle />;
+			return (
+				<Suspense fallback={<LoadingPage />}>
+					<Triangle />
+				</Suspense>
+			);
 		case Screen.mindMap:
-			return <MindMap />;
+			return (
+				<Suspense fallback={<LoadingPage />}>
+					<MindMap />
+				</Suspense>
+			);
 		case Screen.chat:
 			// For chat screen with Popperian-Hegelian enabled, show both components
 			if (isPopperHebbianEnabled && statement) {
 				return (
-					<>
+					<Suspense fallback={<LoadingPage />}>
 						<PopperHebbianDiscussion
 							statement={statement}
 							onCreateImprovedVersion={() => {
@@ -98,13 +113,21 @@ function SwitchScreen({
 							}}
 						/>
 						<Chat />
-					</>
+					</Suspense>
 				);
 			}
 
-			return <Chat />;
+			return (
+				<Suspense fallback={<LoadingPage />}>
+					<Chat />
+				</Suspense>
+			);
 		case Screen.settings:
-			return <StatementSettings />;
+			return (
+				<Suspense fallback={<LoadingPage />}>
+					<StatementSettings />
+				</Suspense>
+			);
 		case "main":
 			return <SwitchStatementType statement={statement} />;
 		default:
