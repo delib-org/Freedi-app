@@ -1,12 +1,26 @@
+// =============================================================================
+// SUMMARY DISPLAY COMPONENT
+// Container for AI-generated markdown summaries with enhanced readability
+// =============================================================================
+
 .summaryContainer {
 	margin-top: 1.5rem;
-	padding: 1rem;
+	padding: 1.25rem 1.5rem;
 	background-color: var(--card-default, #ffffff);
-	border-radius: 8px;
-	border-left: 4px solid var(--agree, #4caf50);
+	border-radius: 12px;
+	border-inline-start: 4px solid var(--agree, #57c6b2);
+	box-shadow: 0px 2px 8px rgba(115, 138, 191, 0.08);
+	transition: box-shadow 0.2s ease;
+
+	// Subtle hover effect for interactivity feedback
+	&:hover {
+		box-shadow: 0px 4px 12px rgba(115, 138, 191, 0.12);
+	}
 
 	@media (max-width: 600px) {
-		margin: 1rem;
+		margin: 1rem 0.5rem;
+		padding: 1rem 1.25rem;
+		border-radius: 10px;
 	}
 }
 
@@ -14,33 +28,100 @@
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
-	margin-bottom: 0.75rem;
-	padding-bottom: 0.5rem;
-	border-bottom: 1px solid var(--border-light, #e0e0e0);
+	flex-wrap: wrap;
+	gap: 0.5rem;
+	margin-bottom: 1rem;
+	padding-bottom: 0.75rem;
+	border-bottom: 1px solid var(--border-primary, #c6d8f7);
 
 	h4 {
 		margin: 0;
-		font-size: 1rem;
+		font-size: 1.1rem;
 		font-weight: 600;
 		color: var(--text-title);
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+
+		// Optional: Add a subtle icon indicator
+		&::before {
+			content: "";
+			display: inline-block;
+			width: 8px;
+			height: 8px;
+			background-color: var(--agree, #57c6b2);
+			border-radius: 50%;
+			flex-shrink: 0;
+		}
+	}
+
+	@media (max-width: 600px) {
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 0.25rem;
+
+		h4 {
+			font-size: 1rem;
+		}
 	}
 }
 
 .timestamp {
-	font-size: 0.75rem;
-	color: var(--text-muted, #999);
+	font-size: 0.8rem;
+	color: var(--text-caption, #7484a9);
+	font-weight: 400;
+	white-space: nowrap;
 }
 
 .summaryContent {
-	font-size: 1rem;
-	line-height: 1.6;
+	font-size: 0.95rem;
+	line-height: 1.7;
 	color: var(--text-body);
+
+	// Ensure markdown content has proper spacing
+	// The Text component applies its own styles, but we provide context
+	> div {
+		// This targets the markdown container from Text component
+		// Adds comfortable reading width
+		max-width: 100%;
+	}
 }
 
-// RTL support
+// =============================================================================
+// RTL SUPPORT
+// =============================================================================
+
+// Using logical properties (border-inline-start) handles most RTL cases
+// This is a fallback for older browsers
 [dir="rtl"] {
 	.summaryContainer {
 		border-left: none;
-		border-right: 4px solid var(--agree, #4caf50);
+		border-right: 4px solid var(--agree, #57c6b2);
+	}
+
+	.summaryHeader h4::before {
+		// Maintain proper spacing in RTL
+		margin-left: 0;
+		margin-right: 0;
+	}
+}
+
+// =============================================================================
+// ACCESSIBILITY
+// =============================================================================
+
+@media (prefers-reduced-motion: reduce) {
+	.summaryContainer {
+		transition: none;
+	}
+}
+
+// High contrast mode adjustments
+@media (prefers-contrast: high) {
+	.summaryContainer {
+		border-inline-start-width: 5px;
+		box-shadow: none;
+		border: 1px solid var(--border-primary, #c6d8f7);
+		border-inline-start: 5px solid var(--agree, #57c6b2);
 	}
 }

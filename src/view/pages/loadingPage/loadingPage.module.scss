@@ -1,24 +1,365 @@
-.loader{
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    width: 100vw;
-    background-color: var(--mainBackground);
-    color:white;
+.loading-page {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	height: 100vh;
+	width: 100vw;
+	background: linear-gradient(135deg, var(--mainBackground) 0%, #163d6b 100%);
+	color: white;
+	position: relative;
+	overflow: hidden;
+
+	// Subtle background pattern
+	&::before {
+		content: '';
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		background: radial-gradient(circle at 20% 80%, rgba(124, 172, 248, 0.1) 0%, transparent 50%),
+					radial-gradient(circle at 80% 20%, rgba(87, 198, 178, 0.1) 0%, transparent 50%);
+		pointer-events: none;
+	}
+
+	&__content {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 1.5rem;
+		z-index: 1;
+		padding: 2rem;
+		text-align: center;
+		animation: fadeIn 0.4s ease-out;
+	}
+
+	&__brand {
+		font-size: 2rem;
+		font-weight: 600;
+		letter-spacing: -0.02em;
+		margin: 0;
+		color: white;
+	}
+
+	&__tagline {
+		font-size: 1rem;
+		font-weight: 400;
+		color: rgba(255, 255, 255, 0.85);
+		margin: 0;
+	}
+
+	&__status {
+		font-size: 0.95rem;
+		color: rgba(255, 255, 255, 0.7);
+		margin: 0;
+		animation: statusPulse 3s ease-in-out infinite;
+	}
 }
-.box{
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-   gap:3rem;
-    background-color: var(--mainBackground);
-    border-radius: 50%;
-    box-shadow: 0 0 10px 0 var(--mainBackground);
-    animation: spin 1s infinite linear;
-    h2{
-        color:white;
-    }
+
+// Constellation Loader - more sophisticated than inline loader
+.constellation-loader {
+	position: relative;
+	width: 140px;
+	height: 140px;
+	margin: 1rem 0;
+
+	&__center {
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		width: 20px;
+		height: 20px;
+		background: white;
+		border-radius: 50%;
+		transform: translate(-50%, -50%);
+		box-shadow: 0 0 25px rgba(255, 255, 255, 0.5);
+		animation: centerPulse 2s ease-in-out infinite;
+	}
+
+	&__node {
+		position: absolute;
+		width: 12px;
+		height: 12px;
+		border-radius: 50%;
+		top: 50%;
+		left: 50%;
+		margin: -6px 0 0 -6px;
+
+		&::before {
+			content: '';
+			position: absolute;
+			width: 100%;
+			height: 100%;
+			border-radius: 50%;
+			background: currentColor;
+			box-shadow: 0 0 12px currentColor;
+		}
+
+		// Node 1 - Blue accent
+		&:nth-child(2) {
+			color: var(--accent);
+			animation: orbit1 4s linear infinite, nodeGlow 2s ease-in-out infinite;
+		}
+
+		// Node 2 - Teal (agree)
+		&:nth-child(3) {
+			color: var(--agree);
+			animation: orbit2 5s linear infinite, nodeGlow 2.5s ease-in-out infinite 0.4s;
+		}
+
+		// Node 3 - Question blue
+		&:nth-child(4) {
+			color: var(--question);
+			animation: orbit3 6s linear infinite, nodeGlow 3s ease-in-out infinite 0.8s;
+		}
+
+		// Node 4 - White
+		&:nth-child(5) {
+			color: rgba(255, 255, 255, 0.95);
+			animation: orbit4 4.5s linear infinite, nodeGlow 2.2s ease-in-out infinite 1.2s;
+		}
+
+		// Node 5 - Group purple
+		&:nth-child(6) {
+			color: var(--group);
+			animation: orbit5 5.5s linear infinite, nodeGlow 2.8s ease-in-out infinite 1.6s;
+		}
+
+		// Node 6 - Option yellow
+		&:nth-child(7) {
+			color: var(--option);
+			animation: orbit6 7s linear infinite, nodeGlow 3.2s ease-in-out infinite 2s;
+		}
+	}
+
+	&__connections {
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		width: 100%;
+		height: 100%;
+		transform: translate(-50%, -50%);
+		pointer-events: none;
+
+		&::before,
+		&::after {
+			content: '';
+			position: absolute;
+			top: 50%;
+			left: 50%;
+			height: 1px;
+			background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.25), transparent);
+			transform-origin: left center;
+		}
+
+		&::before {
+			width: 90px;
+			animation: connectionRotate 8s linear infinite;
+		}
+
+		&::after {
+			width: 70px;
+			animation: connectionRotate 10s linear infinite reverse;
+		}
+	}
+
+	// Inner ring for visual depth
+	&__ring {
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		width: 80px;
+		height: 80px;
+		border: 1px solid rgba(255, 255, 255, 0.1);
+		border-radius: 50%;
+		transform: translate(-50%, -50%);
+		animation: ringPulse 4s ease-in-out infinite;
+	}
+}
+
+// Progress indicator with stages
+.loading-progress {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 0.75rem;
+	width: 100%;
+	max-width: 240px;
+
+	&__bar-container {
+		width: 100%;
+		height: 4px;
+		background: rgba(255, 255, 255, 0.15);
+		border-radius: 4px;
+		overflow: hidden;
+	}
+
+	&__bar {
+		height: 100%;
+		width: 30%;
+		background: linear-gradient(90deg, var(--accent), var(--agree), var(--accent));
+		background-size: 200% 100%;
+		border-radius: 4px;
+		animation: progressShimmer 2s ease-in-out infinite, progressIndeterminate 2.5s ease-in-out infinite;
+	}
+
+	&__stages {
+		display: flex;
+		gap: 0.5rem;
+		justify-content: center;
+	}
+
+	&__dot {
+		width: 6px;
+		height: 6px;
+		border-radius: 50%;
+		background: rgba(255, 255, 255, 0.3);
+		transition: all 0.3s ease;
+
+		&--active {
+			background: var(--agree);
+			box-shadow: 0 0 8px var(--agree);
+		}
+
+		&--completed {
+			background: white;
+		}
+	}
+}
+
+// Keyframe Animations
+@keyframes fadeIn {
+	from {
+		opacity: 0;
+		transform: translateY(10px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+@keyframes centerPulse {
+	0%, 100% {
+		transform: translate(-50%, -50%) scale(1);
+		box-shadow: 0 0 25px rgba(255, 255, 255, 0.5);
+	}
+	50% {
+		transform: translate(-50%, -50%) scale(1.15);
+		box-shadow: 0 0 40px rgba(255, 255, 255, 0.7);
+	}
+}
+
+@keyframes nodeGlow {
+	0%, 100% {
+		opacity: 0.8;
+		transform: scale(1);
+	}
+	50% {
+		opacity: 1;
+		transform: scale(1.2);
+	}
+}
+
+@keyframes orbit1 {
+	0% { transform: rotate(0deg) translateX(40px) rotate(0deg); }
+	100% { transform: rotate(360deg) translateX(40px) rotate(-360deg); }
+}
+
+@keyframes orbit2 {
+	0% { transform: rotate(60deg) translateX(48px) rotate(-60deg); }
+	100% { transform: rotate(420deg) translateX(48px) rotate(-420deg); }
+}
+
+@keyframes orbit3 {
+	0% { transform: rotate(120deg) translateX(56px) rotate(-120deg); }
+	100% { transform: rotate(480deg) translateX(56px) rotate(-480deg); }
+}
+
+@keyframes orbit4 {
+	0% { transform: rotate(180deg) translateX(44px) rotate(-180deg); }
+	100% { transform: rotate(540deg) translateX(44px) rotate(-540deg); }
+}
+
+@keyframes orbit5 {
+	0% { transform: rotate(240deg) translateX(60px) rotate(-240deg); }
+	100% { transform: rotate(600deg) translateX(60px) rotate(-600deg); }
+}
+
+@keyframes orbit6 {
+	0% { transform: rotate(300deg) translateX(52px) rotate(-300deg); }
+	100% { transform: rotate(660deg) translateX(52px) rotate(-660deg); }
+}
+
+@keyframes connectionRotate {
+	0% { transform: rotate(0deg); opacity: 0; }
+	25% { opacity: 0.4; }
+	50% { opacity: 0; }
+	75% { opacity: 0.4; }
+	100% { transform: rotate(360deg); opacity: 0; }
+}
+
+@keyframes ringPulse {
+	0%, 100% {
+		transform: translate(-50%, -50%) scale(1);
+		opacity: 0.2;
+	}
+	50% {
+		transform: translate(-50%, -50%) scale(1.1);
+		opacity: 0.4;
+	}
+}
+
+@keyframes statusPulse {
+	0%, 100% { opacity: 0.7; }
+	50% { opacity: 1; }
+}
+
+@keyframes progressShimmer {
+	0% { background-position: 200% 0; }
+	100% { background-position: -200% 0; }
+}
+
+@keyframes progressIndeterminate {
+	0% {
+		width: 0%;
+		margin-left: 0%;
+	}
+	50% {
+		width: 60%;
+		margin-left: 20%;
+	}
+	100% {
+		width: 0%;
+		margin-left: 100%;
+	}
+}
+
+// Reduced motion support
+@media (prefers-reduced-motion: reduce) {
+	.constellation-loader__node,
+	.constellation-loader__center,
+	.constellation-loader__connections::before,
+	.constellation-loader__connections::after,
+	.constellation-loader__ring,
+	.loading-progress__bar {
+		animation: none;
+	}
+
+	.constellation-loader__node:nth-child(2) { transform: translateX(40px); }
+	.constellation-loader__node:nth-child(3) { transform: translateY(-48px); }
+	.constellation-loader__node:nth-child(4) { transform: translateX(-56px); }
+	.constellation-loader__node:nth-child(5) { transform: translateY(44px); }
+	.constellation-loader__node:nth-child(6) { transform: translate(42px, -42px); }
+	.constellation-loader__node:nth-child(7) { transform: translate(-37px, 37px); }
+
+	.loading-progress__bar {
+		width: 50%;
+	}
+
+	.loading-page__status {
+		animation: none;
+		opacity: 0.85;
+	}
 }

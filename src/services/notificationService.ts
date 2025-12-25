@@ -1,71 +1,63 @@
-import type { Messaging, MessagePayload } from "firebase/messaging";
-import { app, DB } from "@/controllers/db/config";
-import { vapidKey } from "@/controllers/db/configKey";
-import { setDoc, doc, deleteDoc, getDoc, Timestamp, getDocs, query, where, collection, writeBatch } from "firebase/firestore";
-import { Collections } from "delib-npm";
-import { removeTokenFromSubscription } from "@/controllers/db/subscriptions/setSubscriptions";
+/**
+ * Notification Service - Orchestrates notification functionality.
+ *
+ * This service acts as a facade that coordinates:
+ * - PlatformService: Platform detection and capability checking
+ * - PushService: Firebase Cloud Messaging operations
+ * - NotificationRepository: Firestore persistence for tokens and subscriptions
+ *
+ * The service follows the Facade pattern, providing a unified interface
+ * while delegating to specialized services that each follow SRP.
+ */
 
-// Helper function to check if service workers are supported
-const isServiceWorkerSupported = () => 'serviceWorker' in navigator;
-// Helper function to check if notifications are supported
-const isNotificationSupported = () => 'Notification' in window;
+import type { MessagePayload } from 'firebase/messaging';
+import {
+	PlatformService,
+	isBrowserNotificationsSupported,
+} from './platformService';
+import {
+	PushService,
+	waitForServiceWorker,
+	initializeMessaging,
+	getOrRefreshToken,
+	setupForegroundListener,
+	deleteCurrentToken,
+	setNotificationHandler as setPushNotificationHandler,
+} from './pushService';
+import {
+	NotificationRepository,
+	storeToken,
+	deleteToken as deleteTokenFromDb,
+	getTokenLastRefresh,
+	registerForStatementNotifications as registerInDb,
+	unregisterFromStatementNotifications as unregisterInDb,
+	syncTokenWithSubscriptions as syncTokenInDb,
+	removeTokenFromAllSubscriptions as removeTokenFromAllSubs,
+	TokenMetadata,
+} from './notificationRepository';
+import { DB } from '@/controllers/db/config';
+import { doc, getDoc } from 'firebase/firestore';
 
-// Helper function to check if we're on iOS (where Firebase Messaging has limited/no support)
-const isIOS = (): boolean => {
-	const userAgent = navigator.userAgent.toLowerCase();
-	
-return /iphone|ipad|ipod/.test(userAgent) ||
-		   (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-};
-
-// Helper to check if Firebase Messaging is supported (not on iOS)
-const isMessagingSupported = (): boolean => {
-	// Firebase Messaging is not supported on iOS browsers
-	if (isIOS()) {
-		return false;
-	}
-	
-return isServiceWorkerSupported() && isNotificationSupported();
-};
-
-// Use the singleton DB instance from config
-const db = DB;
-
-// Token refresh interval (30 days in milliseconds)
-const TOKEN_REFRESH_INTERVAL = 30 * 24 * 60 * 60 * 1000;
-
-interface TokenMetadata {
-	token: string;
-	userId: string;
-	lastUpdate: Date | Timestamp;
-	lastRefresh: Date | Timestamp;
-	platform: string;
-	deviceInfo: {
-		userAgent: string;
-		language: string;
-	};
-}
+// Re-export TokenMetadata for backward compatibility
+export type { TokenMetadata };
 
 /**
- * Service for handling push notifications using Firebase Cloud Messaging
+ * Notification Service singleton class.
+ * Orchestrates platform, push, and repository services.
  */
 export class NotificationService {
 	private static instance: NotificationService;
 	private token: string | null = null;
 	private isTokenSentToServer = false;
-	private notificationHandler: ((payload: MessagePayload) => void) | null = null;
-	private messaging: Messaging | null = null; // Initialized lazily when needed
-	private browserSupportsNotifications: boolean;
 	private tokenRefreshTimer: ReturnType<typeof setInterval> | null = null;
 	private userId: string | null = null;
 
 	private constructor() {
 		// Singleton pattern
-		this.browserSupportsNotifications = this.isSupported();
 	}
 
 	/**
-	 * Get the singleton instance of NotificationService
+	 * Get the singleton instance of NotificationService.
 	 */
 	public static getInstance(): NotificationService {
 		if (!NotificationService.instance) {
@@ -76,162 +68,76 @@ export class NotificationService {
 	}
 
 	/**
-	 * Check if the browser supports notifications and service workers
+	 * Check if the browser supports notifications.
 	 */
 	public isSupported(): boolean {
-		return isServiceWorkerSupported() && isNotificationSupported();
+		return isBrowserNotificationsSupported();
 	}
 
 	/**
-	 * Safe way to check notification permission that works on all browsers
-	 * including iOS where Notification API might exist but not be fully supported
+	 * Safe way to check notification permission.
 	 */
 	public safeGetPermission(): NotificationPermission | 'unsupported' {
-		if (!this.isSupported()) {
-			return 'unsupported';
-		}
-
-		try {
-			return Notification.permission;
-		} catch (error) {
-			console.error('Error accessing Notification.permission:', error);
-
-			return 'unsupported';
-		}
+		return PushService.safeGetPermission();
 	}
 
 	/**
-	 * Initialize Firebase Messaging safely
-	 */
-	private async initializeMessaging(): Promise<boolean> {
-		// Don't attempt to initialize Firebase Messaging on iOS
-		if (!isMessagingSupported()) {
-			console.info('[NotificationService] Firebase Messaging not supported on this platform (iOS or missing features)');
-
-			return false;
-		}
-
-		if (!this.isSupported()) {
-			// Browser does not support notifications
-			return false;
-		}
-
-		try {
-			if (!this.messaging) {
-				// Dynamically import getMessaging to avoid loading on iOS
-				const { getMessaging } = await import('firebase/messaging');
-				// Create Firebase Messaging instance
-				this.messaging = getMessaging(app);
-			}
-
-			return true;
-		} catch (error) {
-			console.error('[NotificationService] Failed to initialize Firebase Messaging:', error);
-			const err = error as Error;
-			if (err.name && err.message) {
-				console.error('[NotificationService] Error details:', {
-					name: err.name,
-					message: err.message
-				});
-			}
-
-			return false;
-		}
-	}
-
-	/**
-	 * Request permission to show notifications
-	 * @returns A promise that resolves with a boolean indicating if permission was granted
+	 * Request permission to show notifications.
 	 */
 	public async requestPermission(): Promise<boolean> {
-		if (!this.isSupported()) {
-			// Browser does not support notifications
-
-			return false;
-		}
-
-		try {
-			const permission = await Notification.requestPermission();
-
-			return permission === 'granted';
-		} catch (error) {
-			console.error('Failed to request notification permission:', error);
-
-			return false;
-		}
+		return PushService.requestPermission();
 	}
 
 	/**
-	 * Initialize the notification service and request FCM token
-	 * @param userId The user ID to associate with the token
-	 * @returns A promise that resolves when initialization is complete
+	 * Initialize the notification service.
 	 */
 	public async initialize(userId: string): Promise<void> {
-		// Start initialization for user
-		
 		if (!this.isSupported()) {
-			// Browser does not support required features
-			
-return;
+			return;
 		}
 
 		try {
 			this.userId = userId;
 
-			// Wait for service worker to be ready first
 			// Wait for service worker
-			await this.waitForServiceWorker();
+			await waitForServiceWorker();
 
-			// Initialize messaging first
 			// Initialize Firebase Messaging
-			if (!await this.initializeMessaging()) {
+			if (!(await initializeMessaging())) {
 				console.error('[NotificationService] Failed to initialize messaging');
 
-return;
+				return;
 			}
 
 			// Check notification permission
 			const permission = await this.requestPermission();
-
 			if (!permission) {
-				// Permission not granted
-				
-return;
+				return;
 			}
 
-			// Permission granted, set up listeners
-			// Listen for foreground messages
-			this.setupForegroundListener();
+			// Set up foreground message listener
+			await setupForegroundListener();
 
 			// Get FCM token
 			const token = await this.getOrRefreshToken(userId);
-			// Token result processed
 
-			// Only proceed with token-dependent operations if we have a valid token
 			if (token) {
-				// Token is already stored centrally in pushNotifications collection
-				// No need to sync with individual subscriptions - backend should look it up there
 				console.info('[NotificationService] Token registered in pushNotifications collection');
-
-				// Set up automatic token refresh
 				this.setupTokenRefresh(userId);
 			} else {
-				// No token available (e.g., VAPID key not configured)
-				// Notifications will work in foreground only (browser notifications)
-				console.info('[NotificationService] Initialized without FCM token - browser notifications only');
+				console.info(
+					'[NotificationService] Initialized without FCM token - browser notifications only'
+				);
 			}
-			
-			// Initialization complete
 		} catch (error) {
 			console.error('[NotificationService] Error during initialization:', error);
 		}
 	}
 
 	/**
-	 * Set up automatic token refresh
+	 * Set up automatic token refresh.
 	 */
 	private setupTokenRefresh(userId: string): void {
-		// Clear any existing timer
 		if (this.tokenRefreshTimer) {
 			clearInterval(this.tokenRefreshTimer);
 		}
@@ -246,36 +152,24 @@ return;
 	}
 
 	/**
-	 * Check if token needs refresh and refresh if necessary
+	 * Check if token needs refresh and refresh if necessary.
 	 */
 	private async checkTokenFreshness(userId: string): Promise<void> {
 		if (!this.token) return;
 
 		try {
-			// Get token metadata from Firestore
-			const tokenDoc = await getDoc(doc(db, 'pushNotifications', this.token));
-			
-			if (!tokenDoc.exists()) {
-				// Token not in database, refresh it
-				await this.getOrRefreshToken(userId, true);
-				
-return;
-			}
+			const lastRefresh = await getTokenLastRefresh(this.token);
 
-			const metadata = tokenDoc.data() as TokenMetadata;
-			const lastRefresh = this.convertToDate(metadata.lastRefresh) || this.convertToDate(metadata.lastUpdate);
-			
 			if (!lastRefresh) {
-				// No refresh date, refresh token
 				await this.getOrRefreshToken(userId, true);
-				
-return;
+
+				return;
 			}
 
 			const timeSinceRefresh = Date.now() - lastRefresh.getTime();
-			
-			if (timeSinceRefresh > TOKEN_REFRESH_INTERVAL) {
-				// Token needs refresh, refreshing
+			const refreshInterval = PushService.getTokenRefreshInterval();
+
+			if (timeSinceRefresh > refreshInterval) {
 				await this.getOrRefreshToken(userId, true);
 			}
 		} catch (error) {
@@ -284,95 +178,27 @@ return;
 	}
 
 	/**
-	 * Get a new FCM token or refresh an existing one
-	 * @param userId The user ID to associate with the token
-	 * @param forceRefresh Force a new token even if one exists
-	 * @returns The FCM token
+	 * Get a new FCM token or refresh an existing one.
 	 */
-	public async getOrRefreshToken(userId: string, forceRefresh: boolean = false): Promise<string | null> {
-		// Get or refresh token
-		
-		if (!this.isSupported()) {
-			// Browser not supported
-			
-return null;
-		}
-
+	public async getOrRefreshToken(
+		userId: string,
+		forceRefresh: boolean = false
+	): Promise<string | null> {
 		try {
-			// Initialize messaging if not already done
-			if (!await this.initializeMessaging()) {
-				console.error('[NotificationService] Failed to initialize messaging in getOrRefreshToken');
-
-return null;
-			}
-
-			// Request permission first if not granted
-			if (Notification.permission !== 'granted') {
-				// Permission not granted, requesting
-				const permissionGranted = await this.requestPermission();
-				if (!permissionGranted) {
-					// Permission denied by user
-					
-return null;
-				}
-			}
-
-			// Delete old token if force refresh
-			if (forceRefresh && this.token) {
-				try {
-					const { deleteToken } = await import('firebase/messaging');
-					await deleteToken(this.messaging);
-					// Old token deleted
-				} catch (error) {
-					console.error('[NotificationService] Error deleting old token:', error);
-				}
-			}
-
-			// Check service worker registration
-			// Get service worker registration
-			const swRegistration = await navigator.serviceWorker.getRegistration();
-			// Check service worker registration
-
-			if (!swRegistration) {
-				console.error('[NotificationService] No service worker registration found!');
-
-				return null;
-			}
-
-			// Get token
-			// Request FCM token with VAPID key
-
-			// Check for invalid/placeholder VAPID keys
-			const invalidKeys = ['your-vapid-key', 'undefined', 'null', ''];
-			if (!vapidKey || invalidKeys.includes(vapidKey) || vapidKey.length < 65) {
-				// Valid VAPID keys are typically 65+ characters
-				console.info('[NotificationService] FCM notifications disabled - VAPID key not configured');
-				console.info('[NotificationService] To enable push notifications, add a valid VAPID key to VITE_FIREBASE_VAPID_KEY in .env');
-
-				return null;
-			}
-
-			const { getToken } = await import('firebase/messaging');
-			const currentToken = await getToken(this.messaging, {
-				vapidKey,
-				serviceWorkerRegistration: swRegistration
-			});
+			const currentToken = await getOrRefreshToken(forceRefresh);
 
 			if (currentToken) {
-				// Token received successfully
-				// Check if token changed
 				const tokenChanged = this.token !== currentToken;
 				this.token = currentToken;
 
 				// Send token to server if new or changed
 				if (!this.isTokenSentToServer || tokenChanged || forceRefresh) {
-					await this.sendTokenToServer(userId, currentToken);
+					await storeToken(userId, currentToken);
 					this.isTokenSentToServer = true;
 				}
 
 				return currentToken;
 			} else {
-				console.error('[NotificationService] No token received from getToken()');
 				this.token = null;
 				this.isTokenSentToServer = false;
 
@@ -380,53 +206,13 @@ return null;
 			}
 		} catch (error) {
 			console.error('[NotificationService] Error getting FCM token:', error);
-			const err = error as Error;
-			if (err.name && err.message) {
-				console.error('[NotificationService] Error details:', {
-					name: err.name,
-					message: err.message
-				});
-			}
 
 			return null;
 		}
 	}
 
 	/**
-	 * Send the FCM token to the server to associate with the user
-	 * @param userId The user ID to associate with the token
-	 * @param token The FCM token
-	 */
-	private async sendTokenToServer(userId: string, token: string): Promise<void> {
-		try {
-			const tokenMetadata: TokenMetadata = {
-				token,
-				userId,
-				lastUpdate: new Date(),
-				lastRefresh: new Date(),
-				platform: 'web',
-				deviceInfo: {
-					userAgent: navigator.userAgent,
-					language: navigator.language
-				}
-			};
-
-			// Store token in pushNotifications collection
-			await setDoc(doc(db, 'pushNotifications', token), tokenMetadata, { merge: true });
-
-			// FCM token stored in database
-			this.isTokenSentToServer = true;
-		} catch (error) {
-			console.error('Error sending token to server:', error);
-			this.isTokenSentToServer = false;
-		}
-	}
-
-	/**
-	 * Register user's interest in receiving notifications for a specific statement
-	 * @param userId User's ID
-	 * @param token FCM token
-	 * @param statementId Statement ID to subscribe to
+	 * Register for statement notifications.
 	 */
 	public async registerForStatementNotifications(
 		userId: string,
@@ -434,43 +220,23 @@ return null;
 		statementId: string
 	): Promise<boolean> {
 		if (!this.isSupported()) {
-			// Browser does not support notifications
-
 			return false;
 		}
 
 		try {
-			if (!token) {
-				// If no token is provided, try to get one
-				token = this.token;
+			let tokenToUse = token || this.token;
 
-				// If still no token, try to refresh
-				if (!token) {
-					token = await this.getOrRefreshToken(userId);
-				}
-
-				// If still no token, fail
-				if (!token) {
-					console.error('No FCM token available to register for notifications');
-
-					return false;
-				}
+			if (!tokenToUse) {
+				tokenToUse = await this.getOrRefreshToken(userId);
 			}
 
-			// Store in askedToBeNotified collection (for backward compatibility)
-			const notificationRef = doc(DB, Collections.askedToBeNotified, `${token}_${statementId}`);
-			await setDoc(notificationRef, {
-				token,
-				userId,
-				statementId,
-				lastUpdate: new Date(),
-				subscribed: true
-			}, { merge: true });
+			if (!tokenToUse) {
+				console.error('No FCM token available to register for notifications');
 
-			// Token is already stored in pushNotifications collection
-			// Backend should look it up there - no need to duplicate in subscription
+				return false;
+			}
 
-			// Registered for notifications
+			await registerInDb(userId, tokenToUse, statementId);
 
 			return true;
 		} catch (error) {
@@ -481,38 +247,28 @@ return null;
 	}
 
 	/**
-	 * Unregister from statement notifications
+	 * Unregister from statement notifications.
 	 */
-	public async unregisterFromStatementNotifications(
-		statementId: string
-	): Promise<boolean> {
+	public async unregisterFromStatementNotifications(statementId: string): Promise<boolean> {
 		try {
-			if (!this.token) {
-				console.error('No token available to unregister');
-				
-return false;
+			if (!this.token || !this.userId) {
+				console.error('No token or user available to unregister');
+
+				return false;
 			}
 
-			const notificationRef = doc(DB, Collections.askedToBeNotified, `${this.token}_${statementId}`);
-			await deleteDoc(notificationRef);
+			await unregisterInDb(this.token, statementId, this.userId);
 
-			// Also remove token from statement subscription
-			if (this.userId) {
-				await removeTokenFromSubscription(statementId, this.userId, this.token);
-			}
-
-			// Unregistered from notifications
-			
-return true;
+			return true;
 		} catch (error) {
 			console.error('Error unregistering from statement notifications:', error);
-			
-return false;
+
+			return false;
 		}
 	}
 
 	/**
-	 * Clean up on user logout
+	 * Clean up on user logout.
 	 */
 	public async cleanup(): Promise<void> {
 		try {
@@ -531,54 +287,26 @@ return false;
 			this.isTokenSentToServer = false;
 			this.userId = null;
 
-			// Perform cleanup operations in parallel with error handling
+			// Perform cleanup operations in parallel
 			const cleanupPromises: Promise<void>[] = [];
 
-			// Delete token from server
 			if (tokenToClean && userIdToClean) {
-				// Remove from pushNotifications collection - check if document exists first
-				cleanupPromises.push(
-					(async () => {
-						try {
-							const docRef = doc(db, 'pushNotifications', tokenToClean);
-							await deleteDoc(docRef);
-						} catch (error) {
-							// Silently handle if document doesn't exist
-							const err = error as { code?: string };
-							if (err?.code !== 'permission-denied' && err?.code !== 'not-found') {
-								console.error('Error deleting push notification doc:', error);
-							}
-						}
-					})()
-				);
+				// Remove from database
+				cleanupPromises.push(deleteTokenFromDb(tokenToClean));
 
-				// Remove token from all user's subscriptions
+				// Remove token from all subscriptions
 				cleanupPromises.push(
-					this.removeTokenFromAllSubscriptions(userIdToClean, tokenToClean)
-						.catch(error => {
-							// Silently handle null value errors
-							if (!error?.message?.includes('Null value error')) {
-								console.error('Error removing token from subscriptions:', error);
-							}
-						})
+					removeTokenFromAllSubs(userIdToClean, tokenToClean).catch((error) => {
+						if (!error?.message?.includes('Null value error')) {
+							console.error('Error removing token from subscriptions:', error);
+						}
+					})
 				);
 			}
 
 			// Delete local FCM token
-			if (this.messaging && tokenToClean) {
-				cleanupPromises.push(
-					(async () => {
-						try {
-							const { deleteToken } = await import('firebase/messaging');
-							await deleteToken(this.messaging);
-						} catch (error) {
-							console.error('Error deleting FCM token:', error);
-						}
-					})()
-				);
-			}
+			cleanupPromises.push(deleteCurrentToken());
 
-			// Wait for all cleanup operations to complete (with error handling)
 			await Promise.allSettled(cleanupPromises);
 		} catch (error) {
 			console.error('Error during cleanup:', error);
@@ -586,301 +314,64 @@ return false;
 	}
 
 	/**
-	 * Set up a listener for foreground messages
-	 */
-	private async setupForegroundListener(): Promise<void> {
-		if (!this.isSupported() || !this.messaging) {
-			return;
-		}
-
-		try {
-			const { onMessage } = await import('firebase/messaging');
-			onMessage(this.messaging, (payload) => {
-				// Message received in foreground
-
-				// If we have a notification payload, show it
-				if (payload.notification) {
-					this.showForegroundNotification(payload);
-				}
-
-				// Call the registered handler if one exists
-				if (this.notificationHandler) {
-					this.notificationHandler(payload);
-				}
-			});
-		} catch (error) {
-			console.error('[NotificationService] Error setting up foreground listener:', error);
-		}
-	}
-
-	/**
-	 * Display a notification when the app is in the foreground
-	 * @param payload The FCM message payload
-	 */
-	private showForegroundNotification(payload: MessagePayload): void {
-		if (!this.isSupported()) {
-			return;
-		}
-
-		const notificationTitle = payload.notification?.title || 'FreeDi App';
-		const notificationOptions = {
-			body: payload.notification?.body || '',
-			icon: '/icons/logo-192px.png',
-			badge: '/icons/logo-48px.png',
-			vibrate: [100, 50, 100],
-			tag: payload.data?.tag || 'default',
-			data: payload.data,
-			requireInteraction: true,
-			actions: [
-				{
-					action: 'open',
-					title: 'Open'
-				}
-			]
-		};
-
-		// Play notification sound
-		this.playNotificationSound();
-
-		// Show notification if permission is granted
-		if (Notification.permission === 'granted') {
-			navigator.serviceWorker.ready.then(registration => {
-				registration.showNotification(notificationTitle, notificationOptions);
-			});
-		}
-	}
-
-	/**
-	 * Play a notification sound
-	 */
-	private playNotificationSound(): void {
-		try {
-			const audio = new Audio('/assets/sounds/bell.mp3');
-			audio.play().catch(error => console.error('Error playing notification sound:', error));
-		} catch (error) {
-			console.error('Error playing notification sound:', error);
-		}
-	}
-
-	/**
-	 * Register a handler for receiving notifications
-	 * @param handler A function that will be called with the notification payload
+	 * Register a handler for receiving notifications.
 	 */
 	public setNotificationHandler(handler: (payload: MessagePayload) => void): void {
-		this.notificationHandler = handler;
+		setPushNotificationHandler(handler);
 	}
 
 	/**
-	 * Check if the user has granted notification permission
-	 * @returns True if notification permission is granted
+	 * Check if the user has granted notification permission.
 	 */
 	public hasPermission(): boolean {
-		return isNotificationSupported() && Notification.permission === 'granted';
+		return PushService.hasPermission();
 	}
 
 	/**
-	 * Get the current FCM token
-	 * @returns The current FCM token or null if not available
+	 * Get the current FCM token.
 	 */
 	public getToken(): string | null {
 		return this.token;
 	}
 
 	/**
-	 * Get the current user ID
-	 * @returns The current user ID or null if not set
+	 * Get the current user ID.
 	 */
 	public getCurrentUserId(): string | null {
 		return this.userId;
 	}
 
 	/**
-	 * Check if the service is initialized
-	 * @returns True if the service has been initialized
+	 * Check if the service is initialized.
 	 */
 	public isInitialized(): boolean {
-		return !!this.messaging && !!this.token;
+		return PushService.isInitialized() && !!this.token;
 	}
 
 	/**
-	 * Convert Firestore Timestamp or Date to JavaScript Date
-	 */
-	private convertToDate(dateOrTimestamp: Date | Timestamp | undefined): Date | null {
-		if (!dateOrTimestamp) return null;
-		
-		if (dateOrTimestamp instanceof Date) {
-			return dateOrTimestamp;
-		}
-		
-		// Check if it's a Firestore Timestamp (has toDate method)
-		if (typeof dateOrTimestamp === 'object' && 'toDate' in dateOrTimestamp) {
-			return dateOrTimestamp.toDate();
-		}
-		
-		return null;
-	}
-
-	/**
-	 * Wait for service worker to be ready
-	 */
-	private async waitForServiceWorker(): Promise<void> {
-		if (!('serviceWorker' in navigator)) {
-			throw new Error('Service workers not supported');
-		}
-
-		try {
-			// First, list all registrations
-			const allRegistrations = await navigator.serviceWorker.getRegistrations();
-			// Check all service worker registrations
-
-			// Check if firebase-messaging-sw.js is already registered
-			let registration = await navigator.serviceWorker.getRegistration('/firebase-messaging-sw.js');
-			
-			if (!registration) {
-				// Try to find it in all registrations
-				registration = allRegistrations.find(r => r.active?.scriptURL.includes('firebase-messaging-sw.js'));
-				if (registration) {
-					// Found Firebase messaging SW in registrations
-				}
-			}
-			
-			if (!registration) {
-				// Firebase messaging SW not found, waiting for registration
-				// Wait for the service worker to be registered by PWAWrapper
-				await new Promise<void>((resolve) => {
-					const checkInterval = setInterval(async () => {
-						const regs = await navigator.serviceWorker.getRegistrations();
-						registration = regs.find(r => r.active?.scriptURL.includes('firebase-messaging-sw.js'));
-						if (registration && registration.active) {
-							clearInterval(checkInterval);
-							// Firebase messaging SW is now active
-							resolve();
-						}
-					}, 500);
-
-					// Timeout after 10 seconds
-					setTimeout(() => {
-						clearInterval(checkInterval);
-						console.error('[NotificationService] Timeout waiting for service worker');
-						resolve(); // Resolve anyway to continue
-					}, 10000);
-				});
-			} else if (!registration.active) {
-				// Service worker found but not active, waiting...
-				await navigator.serviceWorker.ready;
-				// Service worker is now ready
-			} else {
-				// Firebase messaging SW already active
-			}
-		} catch (error) {
-			console.error('[NotificationService] Error waiting for service worker:', error);
-		}
-	}
-
-	/**
-	 * Sync current token with all user's statement subscriptions
-	 * This ensures all subscriptions have the current device token
+	 * Sync current token with all user's statement subscriptions.
 	 */
 	public async syncTokenWithSubscriptions(userId: string): Promise<void> {
 		if (!this.token) {
 			console.error('No token available to sync');
 
-return;
+			return;
 		}
 
 		try {
-			// Get all user's subscriptions
-			const subscriptionsQuery = query(
-				collection(db, Collections.statementsSubscribe),
-				where('userId', '==', userId),
-				where('getPushNotification', '==', true)
-			);
-
-			const subscriptionsSnapshot = await getDocs(subscriptionsQuery);
-
-			// Batch updates for efficiency (Firestore allows max 500 per batch)
-			const BATCH_SIZE = 500;
-			const batches = [];
-			let currentBatch = writeBatch(db);
-			let operationCount = 0;
-
-			for (const doc of subscriptionsSnapshot.docs) {
-				const subscription = doc.data();
-				const statementId = subscription.statementId || subscription.statement?.statementId;
-
-				if (!statementId) {
-					console.error('No statementId found in subscription:', doc.id);
-					continue;
-				}
-
-				// Update the subscription with the token
-				const subscriptionRef = doc.ref;
-				currentBatch.update(subscriptionRef, {
-					token: this.token,
-					lastTokenUpdate: new Date()
-				});
-
-				operationCount++;
-
-				// If we've hit the batch limit, start a new batch
-				if (operationCount % BATCH_SIZE === 0) {
-					batches.push(currentBatch.commit());
-					currentBatch = writeBatch(db);
-				}
-			}
-
-			// Commit the last batch if it has operations
-			if (operationCount % BATCH_SIZE !== 0) {
-				batches.push(currentBatch.commit());
-			}
-
-			// Execute all batches
-			await Promise.all(batches);
-			console.info(`Synced token with ${operationCount} subscriptions in ${batches.length} batch(es)`);
+			await syncTokenInDb(userId, this.token);
 		} catch (error) {
 			console.error('Error syncing token with subscriptions:', error);
 		}
 	}
 
 	/**
-	 * Remove token from all user's subscriptions (used on logout or token refresh)
+	 * Remove token from all user's subscriptions.
 	 */
 	public async removeTokenFromAllSubscriptions(userId: string, token: string): Promise<void> {
 		try {
-			// Validate inputs
-			if (!userId || !token) {
-				return;
-			}
-			
-			// Get all user's subscriptions
-			const subscriptionsQuery = query(
-				collection(db, Collections.statementsSubscribe),
-				where('userId', '==', userId)
-			);
-			
-			const subscriptionsSnapshot = await getDocs(subscriptionsQuery);
-			
-			// Remove token from all subscriptions
-			const removePromises = subscriptionsSnapshot.docs.map(doc => {
-				const subscription = doc.data();
-				const statementId = subscription.statementId || subscription.statement?.statementId;
-				
-				if (!statementId) {
-					return Promise.resolve();
-				}
-				
-				return removeTokenFromSubscription(statementId, userId, token)
-					.catch(err => {
-						// Silently handle individual subscription errors
-						if (!err?.message?.includes('Null value error')) {
-							console.error(`Error removing token from subscription ${statementId}:`, err);
-						}
-					});
-			});
-			
-			await Promise.allSettled(removePromises);
+			await removeTokenFromAllSubs(userId, token);
 		} catch (error) {
-			// Only log non-null value errors
 			const err = error as { message?: string };
 			if (err?.message && !err.message.includes('Null value error')) {
 				console.error('Error removing token from subscriptions:', error);
@@ -889,7 +380,7 @@ return;
 	}
 
 	/**
-	 * Get diagnostic information for troubleshooting
+	 * Get diagnostic information for troubleshooting.
 	 */
 	public async getDiagnostics(): Promise<{
 		supported: boolean;
@@ -901,6 +392,7 @@ return;
 		userId: string | null;
 		isInitialized: boolean;
 		lastTokenUpdate: Date | null;
+		platform: string;
 	}> {
 		const diagnostics = {
 			supported: this.isSupported(),
@@ -910,12 +402,13 @@ return;
 			tokenAge: null as number | null,
 			serviceWorkerReady: false,
 			userId: this.userId,
-			isInitialized: !!this.messaging,
-			lastTokenUpdate: null as Date | null
+			isInitialized: this.isInitialized(),
+			lastTokenUpdate: null as Date | null,
+			platform: PlatformService.getPlatformName(),
 		};
 
 		// Check service worker
-		if (isServiceWorkerSupported()) {
+		if (PlatformService.isServiceWorkerSupported()) {
 			try {
 				const registration = await navigator.serviceWorker.getRegistration();
 				diagnostics.serviceWorkerReady = !!registration?.active;
@@ -924,24 +417,18 @@ return;
 			}
 		}
 
-		// Check token age and get last update
+		// Check token age
 		if (this.token) {
 			try {
-				const tokenDoc = await getDoc(doc(db, 'pushNotifications', this.token));
-				if (tokenDoc.exists()) {
-					const metadata = tokenDoc.data() as TokenMetadata;
-					const lastRefresh = this.convertToDate(metadata.lastRefresh) || this.convertToDate(metadata.lastUpdate);
-					if (lastRefresh) {
-						diagnostics.tokenAge = Date.now() - lastRefresh.getTime();
-						diagnostics.lastTokenUpdate = lastRefresh;
-					}
+				const lastRefresh = await getTokenLastRefresh(this.token);
+				if (lastRefresh) {
+					diagnostics.tokenAge = Date.now() - lastRefresh.getTime();
+					diagnostics.lastTokenUpdate = lastRefresh;
 				}
 			} catch (error) {
 				console.error('Error getting token age:', error);
 			}
 		}
-
-		// Return diagnostics data
 
 		return diagnostics;
 	}
