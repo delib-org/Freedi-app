@@ -91,6 +91,13 @@ import { handleImproveSuggestion } from "./fn_improveSuggestion";
 import { onStatementCreated } from "./fn_statementCreation";
 import { analyzeSubscriptionPatterns } from "./fn_metrics";
 
+// Polarization Index Migration
+import {
+  recalculatePolarizationIndexForStatement,
+  recalculatePolarizationIndexForParent,
+  recalculatePolarizationIndexForGroup,
+} from "./migrations/recalculatePolarizationIndex";
+
 // Popper-Hebbian functions
 import { analyzeFalsifiability } from "./fn_popperHebbian_analyzeFalsifiability";
 import { refineIdea } from "./fn_popperHebbian_refineIdea";
@@ -540,3 +547,40 @@ exports.getEmbeddingStatus = wrapHttpFunction(getEmbeddingStatus);
 exports.regenerateEmbedding = wrapHttpFunction(regenerateEmbedding);
 exports.deleteEmbedding = wrapHttpFunction(deleteEmbedding);
 exports.testEmbeddingGeneration = wrapHttpFunction(testEmbeddingGeneration);
+
+// Polarization Index Migration (for recalculating with demographic data)
+exports.recalculatePolarizationIndexForStatement = wrapHttpFunction(
+  async (req: Request, res: Response) => {
+    const { statementId } = req.body;
+    if (!statementId) {
+      res.status(400).json({ error: "statementId is required" });
+      return;
+    }
+    const result = await recalculatePolarizationIndexForStatement(statementId);
+    res.json(result);
+  }
+);
+
+exports.recalculatePolarizationIndexForParent = wrapHttpFunction(
+  async (req: Request, res: Response) => {
+    const { parentId } = req.body;
+    if (!parentId) {
+      res.status(400).json({ error: "parentId is required" });
+      return;
+    }
+    const result = await recalculatePolarizationIndexForParent(parentId);
+    res.json(result);
+  }
+);
+
+exports.recalculatePolarizationIndexForGroup = wrapHttpFunction(
+  async (req: Request, res: Response) => {
+    const { topParentId } = req.body;
+    if (!topParentId) {
+      res.status(400).json({ error: "topParentId is required" });
+      return;
+    }
+    const result = await recalculatePolarizationIndexForGroup(topParentId);
+    res.json(result);
+  }
+);
