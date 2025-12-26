@@ -13,7 +13,7 @@ import { useTranslation } from '@/controllers/hooks/useTranslation';
 interface Group {
 	option: {
 		option: string;
-		color?: string; // Optional color property for group options
+		color?: string;
 	};
 	mean: number;
 	n: number;
@@ -23,6 +23,7 @@ interface Group {
 		y: number;
 	}
 }
+
 interface Axis {
 	questionId: string;
 	question: string;
@@ -46,11 +47,10 @@ interface Point {
 
 const PolarizationIndexComp = () => {
 	const { statementId } = useParams();
-	const {t} = useTranslation();
+	const { t } = useTranslation();
 	const statement = useSelector(statementSelector(statementId));
 	const topParentId = statement?.topParentId || statementId;
 	const polarizationIndexes = useSelector(selectPolarizationIndexByParentId(statementId));
-	// Use selectEffectiveQuestions to include both group-level and statement-level demographics
 	const userQuestions: UserDemographicQuestion[] = useSelector(selectEffectiveQuestions(statementId || '', topParentId || ''));
 
 	const [boardDimensions, setBoardDimensions] = useState({ width: 0, height: 0 });
@@ -58,9 +58,7 @@ const PolarizationIndexComp = () => {
 	const [currentStatementId, setCurrentStatementId] = useState<string | null>(null);
 	const points = calculatePositions(polarizationIndexes, boardDimensions, userQuestions);
 
-	//calculate points on the screen
 	useEffect(() => {
-
 		let unsubscribe: () => void;
 		let userDataQuestionsUnsubscribe: () => void;
 		let groupDemographicsUnsubscribe: () => void;
@@ -70,8 +68,6 @@ const PolarizationIndexComp = () => {
 			userDataQuestionsUnsubscribe = listenToUserDemographicQuestions(statementId);
 		}
 
-		// Listen to group-level demographics (scope='group') for the topParentId
-		// This captures group demographics whether the current statement is the top parent or a child
 		if (topParentId) {
 			groupDemographicsUnsubscribe = listenToGroupDemographicQuestions(topParentId);
 		}
@@ -132,47 +128,161 @@ const PolarizationIndexComp = () => {
 			return "bottom";
 		}
 
+		return "top";
 	}
 
 	return (
-		<div>
-			<div className={styles.board}>
-				<div className={styles["board-inner"]}>{t("Collaboration Index")}</div>
-				{points.filter(point => point.position).map((point: Point) => (
-					<div className={styles.pointDiv} key={point.statementId} style={{ left: point.position?.x ? point.position.x + 'px' : '0px', top: point.position?.y ? point.position.y + 'px' : '0px' }}>
-						<Tooltip content={`${point.statement} MAD: ${point.overallMAD.toFixed(2)}, Mean: ${point.overallMean.toFixed(2)}, N: ${point.overallN}`} position={tooltipPosition(point.overallMAD, point.overallMean)}>
-							<div
-								onClick={() => handleShowGroups(point.statementId)}
-								className={styles.point}
-								style={{ backgroundColor: currentStatementId === point.statementId ? "blue" : "teal", transform: currentStatementId === point.statementId ? "scale(1.2)" : "scale(1)" }} />
-						</Tooltip>
+		<div className={styles.collaborationIndex}>
+			{/* Header */}
+			<div className={styles.header}>
+				<h2 className={styles.header__title}>{t("Collaboration Index")}</h2>
+				<p className={styles.header__subtitle}>{t("How people feel about each topic")}</p>
+			</div>
 
+			{/* Chart Container with Axes */}
+			<div className={styles.chartContainer}>
+				{/* Y-Axis */}
+				<div className={styles.yAxis}>
+					<span className={styles.yAxis__label}>{t("Polarization")}</span>
+					<div className={styles.yAxis__markers}>
+						<span className={`${styles.yAxis__marker} ${styles['yAxis__marker--high']}`}>
+							{t("Divided")}
+						</span>
+						<span className={styles.yAxis__marker}>|</span>
+						<span className={`${styles.yAxis__marker} ${styles['yAxis__marker--low']}`}>
+							{t("United")}
+						</span>
 					</div>
-				))}
-				{points.map((point: Point) => (
-					<React.Fragment key={point.statementId}>
-						{point.axes.map((axis: Axis) => (
-							<React.Fragment key={axis.questionId}>
-								{axis.groups.map((group: Group, i: number) => (
-									<div
-										key={`${point.statementId}-${axis.questionId}-${group.option.option}-${i}`}
-										className={styles.axisGroup}
-										style={{
-											left: showGroups === point.statementId && group.position ? group.position.x + 'px' : point.position ? point.position.x + 10 + 'px' : '10px',
-											top: showGroups === point.statementId && group.position ? group.position.y + 'px' : point.position ? point.position.y + 10 + 'px' : '10px',
-											opacity: showGroups === point.statementId ? 1 : 0
-										}}>
-										<Tooltip content={`${group.option.option} MAD: ${group.mad.toFixed(2)}, Mean: ${group.mean.toFixed(2)}, N: ${group.n}`} position={tooltipPosition(group.mad, group.mean)}>
-											<div className={styles.axisGroupPoint} style={{ backgroundColor: group.option.color }} />
-										</Tooltip>
-									</div>
+				</div>
+
+				{/* Main Board */}
+				<div className={styles.boardWrapper}>
+					<div className={styles.board}>
+						{/* Background with gradient zones */}
+						<div className={styles.boardBackground} />
+
+						{/* Center line */}
+						<div className={styles.centerLine} />
+
+						{/* Zone indicators */}
+						<div className={styles.zones}>
+							{/* Consensus zone - bottom right */}
+							<div className={`${styles.zone} ${styles['zone--consensus']}`}>
+								<span className={styles.zone__icon} role="img" aria-label="consensus">&#10004;</span>
+								<span className={styles.zone__label}>{t("Consensus")}</span>
+							</div>
+
+							{/* Rejection zone - bottom left */}
+							<div className={`${styles.zone} ${styles['zone--rejection']}`}>
+								<span className={styles.zone__icon} role="img" aria-label="rejection">&#10006;</span>
+								<span className={styles.zone__label}>{t("Rejection")}</span>
+							</div>
+
+							{/* Polarized zone - top center */}
+							<div className={`${styles.zone} ${styles['zone--polarized']}`}>
+								<span className={styles.zone__icon} role="img" aria-label="polarized">&#8646;</span>
+								<span className={styles.zone__label}>{t("Polarized")}</span>
+							</div>
+
+							{/* Neutral zone - bottom center */}
+							<div className={`${styles.zone} ${styles['zone--neutral']}`}>
+								<span className={styles.zone__icon} role="img" aria-label="neutral">&#8596;</span>
+								<span className={styles.zone__label}>{t("Neutral")}</span>
+							</div>
+						</div>
+
+						{/* Data points */}
+						{points.filter(point => point.position).map((point: Point) => {
+							const isSelected = currentStatementId === point.statementId;
+
+							return (
+								<div
+									className={styles.pointDiv}
+									key={point.statementId}
+									style={{
+										left: point.position?.x ? point.position.x + 'px' : '0px',
+										top: point.position?.y ? point.position.y + 'px' : '0px'
+									}}
+								>
+									<Tooltip
+										content={`${point.statement} MAD: ${point.overallMAD.toFixed(2)}, Mean: ${point.overallMean.toFixed(2)}, N: ${point.overallN}`}
+										position={tooltipPosition(point.overallMAD, point.overallMean)}
+									>
+										<div
+											onClick={() => handleShowGroups(point.statementId)}
+											className={`${styles.point} ${isSelected ? styles['point--selected'] : ''}`}
+											style={{
+												backgroundColor: isSelected ? 'var(--btn-primary)' : 'var(--agree)',
+											}}
+										/>
+									</Tooltip>
+								</div>
+							);
+						})}
+
+						{/* Demographic group points */}
+						{points.map((point: Point) => (
+							<React.Fragment key={point.statementId}>
+								{point.axes.map((axis: Axis) => (
+									<React.Fragment key={axis.questionId}>
+										{axis.groups.map((group: Group, i: number) => (
+											<div
+												key={`${point.statementId}-${axis.questionId}-${group.option.option}-${i}`}
+												className={styles.axisGroup}
+												style={{
+													left: showGroups === point.statementId && group.position ? group.position.x + 'px' : point.position ? point.position.x + 10 + 'px' : '10px',
+													top: showGroups === point.statementId && group.position ? group.position.y + 'px' : point.position ? point.position.y + 10 + 'px' : '10px',
+													opacity: showGroups === point.statementId ? 1 : 0
+												}}>
+												<Tooltip content={`${group.option.option} MAD: ${group.mad.toFixed(2)}, Mean: ${group.mean.toFixed(2)}, N: ${group.n}`} position={tooltipPosition(group.mad, group.mean)}>
+													<div className={styles.axisGroupPoint} style={{ backgroundColor: group.option.color }} />
+												</Tooltip>
+											</div>
+										))}
+									</React.Fragment>
 								))}
 							</React.Fragment>
 						))}
-					</React.Fragment>
-				))}
+					</div>
+
+					{/* X-Axis */}
+					<div className={styles.xAxis}>
+						<div className={styles.xAxis__markers}>
+							<span className={`${styles.xAxis__marker} ${styles['xAxis__marker--left']}`}>
+								{t("Disagree")}
+							</span>
+							<span className={`${styles.xAxis__marker} ${styles['xAxis__marker--center']}`}>
+								{t("Neutral")}
+							</span>
+							<span className={`${styles.xAxis__marker} ${styles['xAxis__marker--right']}`}>
+								{t("Agree")}
+							</span>
+						</div>
+						<span className={styles.xAxis__label}>{t("Agreement")}</span>
+					</div>
+				</div>
 			</div>
-		</div >
+
+			{/* Legend */}
+			<div className={styles.legend}>
+				<div className={styles.legend__item}>
+					<span className={`${styles.legend__dot} ${styles['legend__dot--consensus']}`} />
+					<span className={styles.legend__text}>{t("Consensus")}: {t("Everyone agrees")}</span>
+				</div>
+				<div className={styles.legend__item}>
+					<span className={`${styles.legend__dot} ${styles['legend__dot--rejection']}`} />
+					<span className={styles.legend__text}>{t("Rejection")}: {t("Everyone disagrees")}</span>
+				</div>
+				<div className={styles.legend__item}>
+					<span className={`${styles.legend__dot} ${styles['legend__dot--polarized']}`} />
+					<span className={styles.legend__text}>{t("Polarized")}: {t("People are divided")}</span>
+				</div>
+				<div className={styles.legend__item}>
+					<span className={`${styles.legend__dot} ${styles['legend__dot--neutral']}`} />
+					<span className={styles.legend__text}>{t("Neutral")}: {t("Indifferent")}</span>
+				</div>
+			</div>
+		</div>
 	);
 }
 
@@ -231,11 +341,10 @@ function calculatePositions(points: PolarizationIndex[], boardDimensions: { widt
 						question: axis.question,
 						groupsMAD: axis.groupsMAD,
 						groups: axis.groups.map((group: Group) => {
-							// Use color from backend data if available, otherwise fall back to userQuestions lookup
 							let color = group.option.color;
 							if (!color) {
 								const { options } = userQuestions.find(q => q.userQuestionId === axis.axId) || { options: [] };
-								color = options.find(opt => opt.option === group.option.option)?.color || '#808080'; // Default to gray if no color is found
+								color = options.find(opt => opt.option === group.option.option)?.color || '#808080';
 							}
 
 							return {
@@ -260,7 +369,5 @@ function calculatePositions(points: PolarizationIndex[], boardDimensions: { widt
 		console.error("Error calculating positions:", error);
 
 		return [];
-
 	}
-
 }

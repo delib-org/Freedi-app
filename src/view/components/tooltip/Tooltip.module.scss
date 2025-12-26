@@ -12,7 +12,7 @@
 	word-wrap: break-word;
 	word-break: break-word;
 	hyphens: auto; // Add hyphenation for long words
-	z-index: 10;
+	z-index: 9999; // High z-index to always appear above all dots and elements
 	padding: 0.4rem 0.6rem; // Smaller padding
 	border-radius: 4px;
 	font-size: 0.75rem; // Smaller font
