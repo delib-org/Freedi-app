@@ -1233,5 +1233,15 @@
   "permissionLevel": "Toestemmingsniveau",
   "removing": "Verwijderen...",
   "viewOnlyAccess": "U heeft alleen-lezen toegang tot deze pagina",
-  "remove": "Verwijderen"
+  "remove": "Verwijderen",
+  "Polarization": "Polarisatie",
+  "Divided": "Verdeeld",
+  "United": "Verenigd",
+  "Rejection": "Afwijzing",
+  "Polarized": "Gepolariseerd",
+  "How people feel about each topic": "Hoe mensen over elk onderwerp denken",
+  "Everyone agrees": "Iedereen is het eens",
+  "Everyone disagrees": "Iedereen is het oneens",
+  "People are divided": "Mensen zijn verdeeld",
+  "Indifferent": "Onverschillig"
 }

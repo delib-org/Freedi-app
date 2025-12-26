@@ -1229,5 +1229,15 @@
   "permissionLevel": "مستوى الإذن",
   "removing": "جاري الإزالة...",
   "viewOnlyAccess": "لديك حق الوصول للعرض فقط لهذه الصفحة",
-  "remove": "إزالة"
+  "remove": "إزالة",
+  "Polarization": "الاستقطاب",
+  "Divided": "منقسمون",
+  "United": "متحدون",
+  "Rejection": "رفض",
+  "Polarized": "مستقطب",
+  "How people feel about each topic": "كيف يشعر الناس تجاه كل موضوع",
+  "Everyone agrees": "الجميع يوافق",
+  "Everyone disagrees": "الجميع يعترض",
+  "People are divided": "الناس منقسمون",
+  "Indifferent": "غير مبالين"
 }

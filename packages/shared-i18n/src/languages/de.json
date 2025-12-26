@@ -1233,5 +1233,15 @@
   "permissionLevel": "Berechtigungsstufe",
   "removing": "Entfernen...",
   "viewOnlyAccess": "Sie haben nur Lesezugriff auf diese Seite",
-  "remove": "Entfernen"
+  "remove": "Entfernen",
+  "Polarization": "Polarisierung",
+  "Divided": "Geteilt",
+  "United": "Vereint",
+  "Rejection": "Ablehnung",
+  "Polarized": "Polarisiert",
+  "How people feel about each topic": "Wie die Menschen zu jedem Thema stehen",
+  "Everyone agrees": "Alle stimmen zu",
+  "Everyone disagrees": "Alle lehnen ab",
+  "People are divided": "Die Menschen sind gespalten",
+  "Indifferent": "Gleichgültig"
 }

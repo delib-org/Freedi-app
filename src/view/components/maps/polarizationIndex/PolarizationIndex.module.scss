@@ -126,6 +126,7 @@
 	position: absolute;
 	top: 0;
 	left: 0;
+	pointer-events: none; // Allow clicks to pass through to dots
 
 	// Base gradient from agreement to disagreement
 	background:
@@ -179,6 +180,7 @@
 	backdrop-filter: blur(4px);
 	text-align: center;
 	z-index: 5;
+	pointer-events: none; // Allow clicks to pass through to dots
 
 	@media (max-width: 600px) {
 		padding: 0.35rem;
@@ -251,6 +253,7 @@
 		rgba(0, 0, 0, 0.05)
 	);
 	z-index: 2;
+	pointer-events: none; // Allow clicks to pass through to dots
 
 	&::before {
 		content: '';
