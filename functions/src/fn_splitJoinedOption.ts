@@ -631,6 +631,103 @@ export async function getAllOptionsWithMembers(req: Request, res: Response): Pro
 }
 
 /**
+ * HTTP endpoint to clear all rooms for a parent statement
+ * Deletes all rooms, participants, and archives settings
+ * Used before reassigning all rooms to start fresh with Room 1
+ */
+export async function clearAllRoomsForParent(req: Request, res: Response): Promise<void> {
+	try {
+		const { parentStatementId } = req.body as { parentStatementId: string };
+
+		if (!parentStatementId) {
+			res.status(400).json({ error: 'Missing parentStatementId' });
+
+			return;
+		}
+
+		logger.info(`Clearing all rooms for parent: ${parentStatementId}`);
+
+		// 1. Get all room settings for this parent
+		const settingsSnapshot = await db
+			.collection(Collections.roomsSettings)
+			.where('topParentId', '==', parentStatementId)
+			.get();
+
+		if (settingsSnapshot.empty) {
+			res.status(200).json({
+				success: true,
+				message: 'No rooms to clear',
+				deletedSettings: 0,
+				deletedRooms: 0,
+				deletedParticipants: 0,
+			});
+
+			return;
+		}
+
+		const settingsIds = settingsSnapshot.docs.map(doc => doc.id);
+		logger.info(`Found ${settingsIds.length} room settings to clear`);
+
+		// 2. Delete all rooms for these settings
+		let deletedRooms = 0;
+		for (const settingsId of settingsIds) {
+			const roomsSnapshot = await db
+				.collection(Collections.rooms)
+				.where('settingsId', '==', settingsId)
+				.get();
+
+			const batch = db.batch();
+			roomsSnapshot.docs.forEach(doc => {
+				batch.delete(doc.ref);
+				deletedRooms++;
+			});
+
+			if (!roomsSnapshot.empty) {
+				await batch.commit();
+			}
+		}
+
+		// 3. Delete all participants for these settings
+		let deletedParticipants = 0;
+		for (const settingsId of settingsIds) {
+			const participantsSnapshot = await db
+				.collection(Collections.roomParticipants)
+				.where('settingsId', '==', settingsId)
+				.get();
+
+			const batch = db.batch();
+			participantsSnapshot.docs.forEach(doc => {
+				batch.delete(doc.ref);
+				deletedParticipants++;
+			});
+
+			if (!participantsSnapshot.empty) {
+				await batch.commit();
+			}
+		}
+
+		// 4. Delete all room settings
+		const settingsBatch = db.batch();
+		settingsSnapshot.docs.forEach(doc => {
+			settingsBatch.delete(doc.ref);
+		});
+		await settingsBatch.commit();
+
+		logger.info(`Cleared: ${settingsSnapshot.size} settings, ${deletedRooms} rooms, ${deletedParticipants} participants`);
+
+		res.status(200).json({
+			success: true,
+			deletedSettings: settingsSnapshot.size,
+			deletedRooms,
+			deletedParticipants,
+		});
+	} catch (error) {
+		logger.error('Error clearing rooms for parent:', error);
+		res.status(500).json({ error: 'Failed to clear rooms' });
+	}
+}
+
+/**
  * HTTP endpoint to clean up duplicate room settings
  * Keeps only the most recent active setting per option, archives the rest
  */

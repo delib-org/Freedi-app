@@ -3,7 +3,7 @@ import { Users } from 'lucide-react';
 import { Statement, StatementSettings } from '@freedi/shared-types';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { setStatementSettingToDB } from '@/controllers/db/statementSettings/setStatementSettings';
-import { getAllOptionsWithMembers, splitJoinedOption, SplitResult, OptionWithMembers } from '@/controllers/db/joining/splitJoinedOption';
+import { getAllOptionsWithMembers, splitJoinedOption, clearAllRoomsForParent, SplitResult, OptionWithMembers } from '@/controllers/db/joining/splitJoinedOption';
 import { logError } from '@/utils/errorHandling';
 import { JOINING } from '@/constants/common';
 import { SettingsSection } from '../settingsSection';
@@ -131,6 +131,9 @@ const OptionRooms: FC<OptionRoomsProps> = ({ statement }) => {
 			setSplitResult(null);
 
 			try {
+				// First, clear all existing rooms to start fresh with Room 1
+				await clearAllRoomsForParent(statement.statementId);
+
 				let totalRoomsCreated = 0;
 				let totalParticipantsAssigned = 0;
 

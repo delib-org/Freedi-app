@@ -61,6 +61,15 @@ interface GetAllOptionsWithMembersResponse {
 	error?: string;
 }
 
+interface ClearAllRoomsResponse {
+	success: boolean;
+	deletedSettings: number;
+	deletedRooms: number;
+	deletedParticipants: number;
+	message?: string;
+	error?: string;
+}
+
 export interface SplitJoinedOptionParams {
 	optionStatementId: string;
 	parentStatementId: string;
@@ -226,6 +235,50 @@ export async function getAllOptionsWithMembers(
 	} catch (error) {
 		logError(error, {
 			operation: 'splitJoinedOption.getAllOptionsWithMembers',
+			statementId: parentStatementId,
+		});
+		throw error;
+	}
+}
+
+/**
+ * Clear all rooms for a parent statement
+ * Deletes all rooms, participants, and settings before reassigning
+ * @param parentStatementId - The parent statement to clear rooms for
+ * @returns Clear result with counts of deleted items
+ */
+export async function clearAllRoomsForParent(
+	parentStatementId: string
+): Promise<ClearAllRoomsResponse> {
+	try {
+		const baseUrl = getFunctionsUrl();
+		const response = await fetch(`${baseUrl}/clearAllRoomsForParent`, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify({
+				parentStatementId,
+			}),
+		});
+
+		const data: ClearAllRoomsResponse = await response.json();
+
+		if (data.error) {
+			throw new Error(data.error);
+		}
+
+		logger.info('Cleared all rooms for parent', {
+			parentStatementId,
+			deletedSettings: data.deletedSettings,
+			deletedRooms: data.deletedRooms,
+			deletedParticipants: data.deletedParticipants,
+		});
+
+		return data;
+	} catch (error) {
+		logError(error, {
+			operation: 'splitJoinedOption.clearAllRoomsForParent',
 			statementId: parentStatementId,
 		});
 		throw error;
