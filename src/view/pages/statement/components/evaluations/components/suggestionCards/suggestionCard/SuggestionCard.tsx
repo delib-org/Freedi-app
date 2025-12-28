@@ -22,7 +22,7 @@ import IconButton from '@/view/components/iconButton/IconButton';
 import styles from './SuggestionCard.module.scss';
 import { StatementType, Statement } from '@freedi/shared-types';
 import { useAuthorization } from '@/controllers/hooks/useAuthorization';
-import { toggleJoining } from '@/controllers/db/joining/setJoining';
+import { toggleJoining, ToggleJoiningResult } from '@/controllers/db/joining/setJoining';
 import Joined from '@/view/components/joined/Joined';
 import ImprovementModal from '@/view/components/improvementModal/ImprovementModal';
 import { improveSuggestionWithTimeout } from '@/services/suggestionImprovement';
@@ -49,6 +49,9 @@ const SuggestionCard: FC<Props> = ({
 	// Use parent's authorization instead of individual card authorization
 	const { isAuthorized, isAdmin, creator } = useAuthorization(parentStatement?.statementId);
 	const enableJoining = parentStatement?.statementSettings?.joiningEnabled;
+	const singleJoinOnly = parentStatement?.statementSettings?.singleJoinOnly;
+	const minJoinMembers = parentStatement?.statementSettings?.minJoinMembers;
+	const maxJoinMembers = parentStatement?.statementSettings?.maxJoinMembers;
 	const showEvaluation = parentStatement?.statementSettings?.showEvaluation;
 	const enableAIImprovement = parentStatement?.statementSettings?.enableAIImprovement;
 	const showBadges = parentStatement?.evaluationSettings?.anchored?.differentiateBetweenAnchoredAndNot;
@@ -68,6 +71,13 @@ const SuggestionCard: FC<Props> = ({
 	const hasJoinedServer = statement?.joined?.find(
 		(c) => c?.uid === creator?.uid
 	) ? true : false;
+
+	// Join count and status for visual indicators
+	const joinedCount = statement?.joined?.length ?? 0;
+	const isBelowMinimum = enableJoining && minJoinMembers !== undefined && joinedCount < minJoinMembers;
+	const isAboveMinimum = enableJoining && minJoinMembers !== undefined && joinedCount >= minJoinMembers;
+	// Note: exceeding max is handled by admin splitting into rooms, not by blocking joining
+	const exceedsMaximum = enableJoining && maxJoinMembers !== undefined && joinedCount > maxJoinMembers;
 
 	// Optimistic state for instant UI updates
 	const [hasJoinedOptimistic, setHasJoinedOptimistic] = useState(hasJoinedServer);
@@ -169,13 +179,24 @@ const SuggestionCard: FC<Props> = ({
 		setIsJoinLoading(true);
 
 		try {
-			// Call the API function in the background
-			await toggleJoining(statement.statementId);
+			// Call the API function with parentStatementId for single-join logic
+			const result: ToggleJoiningResult = await toggleJoining({
+				statementId: statement.statementId,
+				parentStatementId: parentStatement?.statementId,
+			});
+
+			if (!result.success) {
+				// If the API call fails, revert the optimistic update
+				setHasJoinedOptimistic(hasJoinedOptimistic);
+				console.error(result.error ?? t('Failed to toggle joining'));
+			} else if (result.leftStatementTitle && singleJoinOnly) {
+				// Show notification that user left another option
+				console.info(t('You left') + ` "${result.leftStatementTitle}" ` + t('to join this option'));
+			}
 		} catch (error) {
 			// If the API call fails, revert the optimistic update
 			console.error('Failed to toggle joining:', error);
-			setHasJoinedOptimistic(hasJoinedOptimistic); // revert to original state
-			// Optionally show an error message to the user here
+			setHasJoinedOptimistic(hasJoinedOptimistic);
 		} finally {
 			setIsJoinLoading(false);
 		}
@@ -270,6 +291,9 @@ const SuggestionCard: FC<Props> = ({
 				${showBadges && !isAnchored ? styles['statement-evaluation-card--community'] : ''}
 				${statement.hide ? styles['statement-evaluation-card--hidden'] : ''}
 				${showEvaluation && isVotingWinner ? styles['statement-evaluation-card--hasVotingBadge'] : ''}
+				${isBelowMinimum ? styles['statement-evaluation-card--below-minimum'] : ''}
+				${isAboveMinimum ? styles['statement-evaluation-card--above-minimum'] : ''}
+				${exceedsMaximum ? styles['statement-evaluation-card--exceeds-maximum'] : ''}
 			`.trim()}
 			style={{
 				borderLeft: showEvaluation ? selectedOptionIndicator : '12px solid transparent',
@@ -419,6 +443,21 @@ const SuggestionCard: FC<Props> = ({
 							{enableJoining && (
 								<>
 									<Joined statement={statement} />
+									{/* Join count indicator */}
+									{(minJoinMembers !== undefined || maxJoinMembers !== undefined) && (
+										<span
+											className={`
+												${styles.joinIndicator}
+												${isBelowMinimum ? styles['joinIndicator--warning'] : ''}
+												${isAboveMinimum ? styles['joinIndicator--success'] : ''}
+												${exceedsMaximum ? styles['joinIndicator--exceeds'] : ''}
+											`.trim()}
+										>
+											{joinedCount}
+											{maxJoinMembers !== undefined && `/${maxJoinMembers}`}
+											{' '}{t('members')}
+										</span>
+									)}
 									<button
 										onClick={handleJoin}
 										disabled={isJoinLoading}

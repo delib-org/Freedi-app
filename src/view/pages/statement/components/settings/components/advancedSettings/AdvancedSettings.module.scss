@@ -132,6 +132,213 @@
                     }
                 }
             }
+
+            // Smart Join section styles
+            .smartJoinSection {
+                grid-column: 1 / -1; // Span full width in grid
+                display: flex;
+                flex-direction: column;
+                gap: 0.75rem;
+                padding: 1rem;
+                margin-left: 1.5rem;
+                background: rgba(79, 171, 154, 0.05);
+                border-radius: 8px;
+                border: 1px solid rgba(79, 171, 154, 0.2);
+                border-left: 3px solid var(--approve);
+            }
+
+            // Split Rooms section styles
+            .splitRoomsSection {
+                display: flex;
+                flex-direction: column;
+                gap: 0.75rem;
+                padding: 1rem;
+                margin-top: 0.5rem;
+                background: rgba(95, 136, 229, 0.05);
+                border-radius: 8px;
+                border: 1px solid rgba(95, 136, 229, 0.2);
+
+                .splitRoomsTitle {
+                    font-size: 1rem;
+                    font-weight: 600;
+                    color: var(--text-primary);
+                    margin: 0 0 0.5rem 0;
+                }
+
+                .loadingText,
+                .noExceedingText {
+                    font-size: 0.9rem;
+                    color: var(--text-secondary);
+                    font-style: italic;
+                }
+
+                .exceedingOptionsList {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 0.5rem;
+
+                    .exceedingCount {
+                        font-size: 0.9rem;
+                        font-weight: 500;
+                        color: var(--warning, #f59e0b);
+                        margin-bottom: 0.25rem;
+                    }
+
+                    .exceedingOption {
+                        display: flex;
+                        align-items: center;
+                        justify-content: space-between;
+                        padding: 0.75rem;
+                        background: white;
+                        border-radius: 6px;
+                        border: 1px solid rgba(0, 0, 0, 0.1);
+                        gap: 1rem;
+
+                        .optionInfo {
+                            display: flex;
+                            flex-direction: column;
+                            gap: 0.25rem;
+                            flex: 1;
+                            min-width: 0;
+
+                            .optionTitle {
+                                font-size: 0.9rem;
+                                font-weight: 500;
+                                color: var(--text-primary);
+                                white-space: nowrap;
+                                overflow: hidden;
+                                text-overflow: ellipsis;
+                            }
+
+                            .optionCount {
+                                font-size: 0.85rem;
+                                color: var(--text-secondary);
+                                display: flex;
+                                align-items: center;
+                                gap: 0.5rem;
+
+                                .excessBadge {
+                                    background: var(--warning, #f59e0b);
+                                    color: white;
+                                    padding: 0.125rem 0.375rem;
+                                    border-radius: 4px;
+                                    font-size: 0.75rem;
+                                    font-weight: 600;
+                                }
+                            }
+                        }
+
+                        .splitButton {
+                            flex-shrink: 0;
+                            padding: 0.5rem 1rem;
+                            background: var(--btn-primary, #5f88e5);
+                            color: white;
+                            border: none;
+                            border-radius: 6px;
+                            font-size: 0.85rem;
+                            font-weight: 500;
+                            cursor: pointer;
+                            transition: background 0.2s ease;
+
+                            &:hover:not(:disabled) {
+                                background: var(--btn-primary-hover, #4a6fc4);
+                            }
+
+                            &:disabled {
+                                opacity: 0.6;
+                                cursor: not-allowed;
+                            }
+                        }
+                    }
+                }
+
+                .splitSuccess {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    padding: 0.75rem;
+                    background: rgba(79, 171, 154, 0.1);
+                    border-radius: 6px;
+                    border: 1px solid var(--approve, #4fab9a);
+
+                    p {
+                        margin: 0;
+                        font-size: 0.9rem;
+                        color: var(--approve, #4fab9a);
+                        font-weight: 500;
+                    }
+
+                    .dismissButton {
+                        padding: 0.25rem 0.75rem;
+                        background: transparent;
+                        color: var(--text-secondary);
+                        border: 1px solid var(--border-color, #ddd);
+                        border-radius: 4px;
+                        font-size: 0.8rem;
+                        cursor: pointer;
+
+                        &:hover {
+                            background: rgba(0, 0, 0, 0.05);
+                        }
+                    }
+                }
+
+                .refreshButton {
+                    align-self: flex-start;
+                    padding: 0.5rem 1rem;
+                    background: transparent;
+                    color: var(--text-secondary);
+                    border: 1px solid var(--border-color, #ddd);
+                    border-radius: 6px;
+                    font-size: 0.85rem;
+                    cursor: pointer;
+                    transition: all 0.2s ease;
+
+                    &:hover:not(:disabled) {
+                        background: rgba(0, 0, 0, 0.05);
+                        border-color: var(--accent);
+                        color: var(--text-primary);
+                    }
+
+                    &:disabled {
+                        opacity: 0.6;
+                        cursor: not-allowed;
+                    }
+                }
+            }
+
+            // Number input group for min/max settings
+            .numberInputGroup {
+                display: flex;
+                flex-direction: column;
+                gap: 0.25rem;
+
+                label {
+                    font-size: 0.9rem;
+                    color: var(--text-primary);
+                    font-weight: 500;
+                }
+
+                .numberInput {
+                    width: 120px;
+                    padding: 0.5rem;
+                    border: 1px solid var(--border-color, #ddd);
+                    border-radius: 4px;
+                    font-size: 1rem;
+                    background: white;
+
+                    &:focus {
+                        outline: none;
+                        border-color: var(--accent);
+                        box-shadow: 0 0 0 2px rgba(var(--accent-rgb), 0.1);
+                    }
+
+                    &::placeholder {
+                        color: var(--text-secondary);
+                        font-size: 0.85rem;
+                    }
+                }
+            }
         }
     }
 
