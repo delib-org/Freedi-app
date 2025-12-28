@@ -2,8 +2,17 @@ import { Dispatch, FC, FormEvent, useState } from 'react';
 
 // Third party imports
 import { useNavigate, useParams } from 'react-router';
-
-// Firestore functions
+import {
+	Settings,
+	Users,
+	Vote,
+	HelpCircle,
+	UserCheck,
+	Shield,
+	Bell,
+	Network,
+	BarChart3,
+} from 'lucide-react';
 
 // Custom components
 import QuestionSettings from '../QuestionSettings/QuestionSettings';
@@ -11,8 +20,8 @@ import EnhancedAdvancedSettings from './../../components/advancedSettings/Enhanc
 import ChoseBySettings from '../choseBy/ChoseBySettings';
 import GetEvaluators from './../../components/GetEvaluators';
 import GetVoters from './../../components/GetVoters';
-import SectionTitle from './../../components/sectionTitle/SectionTitle';
 import TitleAndDescription from './../../components/titleAndDescription/TitleAndDescription';
+import { SettingsSection } from './../../components/settingsSection';
 import { setNewStatement } from './../../statementSettingsCont';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import UploadImage from '@/view/components/uploadImage/UploadImage';
@@ -20,7 +29,7 @@ import UploadImage from '@/view/components/uploadImage/UploadImage';
 // Hooks & Helpers
 import styles from './StatementSettingsForm.module.scss';
 
-// icons
+// Redux & Types
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { createSelector } from '@reduxjs/toolkit';
 import { RootState } from '@/redux/store';
@@ -108,7 +117,6 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 			);
 
 		return (
-
 			<div className="wrapper">
 				<form
 					onSubmit={handleSubmit}
@@ -120,17 +128,23 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 						setStatementToEdit={setStatementToEdit}
 					/>
 					<UploadImage
-							statement={statementSettingsProps.statement}
-							image={image}
-							setImage={setImage}
-						/>
+						statement={statementSettingsProps.statement}
+						image={image}
+						setImage={setImage}
+					/>
 					{!isNewStatement && (
-						<>
-							<SectionTitle title={t('General Settings')} />
+						<SettingsSection
+							title={t('General Settings')}
+							description={t('Configure the behavior and appearance of your discussion')}
+							icon={Settings}
+							priority="high"
+							defaultExpanded={true}
+							tooltip={t('These settings control how participants interact with your discussion')}
+						>
 							<section className={styles.switchesArea}>
 								<EnhancedAdvancedSettings {...statementSettingsProps} />
 							</section>
-						</>
+						</SettingsSection>
 					)}
 					<button
 						type='submit'
@@ -143,33 +157,119 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 				</form>
 				{!isNewStatement && (
 					<>
-						<MembershipSettings statement={statement} setStatementToEdit={setStatementToEdit} />
-						<MembersSettings statement={statement} />
-						{statement.statementType === StatementType.question && <ChoseBySettings {...statementSettingsProps} />}
-						<QuestionSettings {...statementSettingsProps} />
-						<UserDemographicSetting statement={statement} />
-						{isQuestion && <MemberValidation statement={statement} />}
-						<EmailNotifications statement={statement} />
-						{isQuestion && (
-							<>
-								<SectionTitle title={t('Clustering & Framings')} />
-								<ClusteringAdmin statement={statement} />
-							</>
+						{/* Membership & Access Section */}
+						<SettingsSection
+							title={t('Membership & Access')}
+							description={t('Control who can access and participate in this discussion')}
+							icon={Users}
+							priority="high"
+							defaultExpanded={false}
+							tooltip={t('Manage membership types and access permissions')}
+						>
+							<MembershipSettings statement={statement} setStatementToEdit={setStatementToEdit} />
+							<MembersSettings statement={statement} />
+						</SettingsSection>
+
+						{/* Decision Making Section - only for questions */}
+						{statement.statementType === StatementType.question && (
+							<SettingsSection
+								title={t('Decision Making')}
+								description={t('Configure how decisions are made')}
+								icon={Vote}
+								priority="medium"
+								defaultExpanded={false}
+								tooltip={t('Set up voting and selection methods')}
+							>
+								<ChoseBySettings {...statementSettingsProps} />
+							</SettingsSection>
 						)}
-						<SectionTitle title={t('Members')} />
-						<section className={styles.getMembersArea}>
-							<GetVoters
-								statementId={statementId}
-								joinedMembers={joinedMembers}
-							/>
-						</section>
-						<section className={styles.getMembersArea}>
-							<GetEvaluators statementId={statementId} />
-						</section>
+
+						{/* Question Structure Section */}
+						<SettingsSection
+							title={t('Question Structure')}
+							description={t('Configure question types and sub-questions')}
+							icon={HelpCircle}
+							priority="medium"
+							defaultExpanded={false}
+							tooltip={t('Organize your discussion structure')}
+						>
+							<QuestionSettings {...statementSettingsProps} />
+						</SettingsSection>
+
+						{/* User Demographics Section */}
+						<SettingsSection
+							title={t('User Demographics')}
+							description={t('Collect demographic information from participants')}
+							icon={UserCheck}
+							priority="low"
+							defaultExpanded={false}
+							tooltip={t('Gather optional demographic data for analysis')}
+						>
+							<UserDemographicSetting statement={statement} />
+						</SettingsSection>
+
+						{/* Validation Section - only for questions */}
+						{isQuestion && (
+							<SettingsSection
+								title={t('Member Validation')}
+								description={t('Verify participant eligibility')}
+								icon={Shield}
+								priority="low"
+								defaultExpanded={false}
+								tooltip={t('Set up validation rules for participants')}
+							>
+								<MemberValidation statement={statement} />
+							</SettingsSection>
+						)}
+
+						{/* Notifications Section */}
+						<SettingsSection
+							title={t('Email Notifications')}
+							description={t('Configure email alerts and notifications')}
+							icon={Bell}
+							priority="low"
+							defaultExpanded={false}
+							tooltip={t('Set up email notifications for participants')}
+						>
+							<EmailNotifications statement={statement} />
+						</SettingsSection>
+
+						{/* Clustering & Analysis - only for questions */}
+						{isQuestion && (
+							<SettingsSection
+								title={t('Clustering & Framings')}
+								description={t('AI-powered grouping and analysis of responses')}
+								icon={Network}
+								priority="low"
+								defaultExpanded={false}
+								tooltip={t('Use AI to cluster similar responses and identify patterns')}
+							>
+								<ClusteringAdmin statement={statement} />
+							</SettingsSection>
+						)}
+
+						{/* Participants Data Section */}
+						<SettingsSection
+							title={t('Participants Data')}
+							description={t('View and export participant information')}
+							icon={BarChart3}
+							priority="low"
+							defaultExpanded={false}
+							tooltip={t('Access voter and evaluator data')}
+						>
+							<section className={styles.getMembersArea}>
+								<GetVoters
+									statementId={statementId}
+									joinedMembers={joinedMembers}
+								/>
+							</section>
+							<section className={styles.getMembersArea}>
+								<GetEvaluators statementId={statementId} />
+							</section>
+						</SettingsSection>
 					</>
 				)}
 			</div>
-
 		);
 	} catch (error) {
 		console.error(error);

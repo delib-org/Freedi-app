@@ -151,28 +151,28 @@
       border-color: rgba(158, 158, 158, 0.3);
     }
 
-    // Smart Join category - RED border for high visibility
-    &--smartJoin {
-      border: 3px solid #e53935;
-      background: linear-gradient(135deg, rgba(229, 57, 53, 0.03) 0%, #ffffff 100%);
-      box-shadow: 0 4px 16px rgba(229, 57, 53, 0.15);
+    // Team Formation category - prominent styling for high visibility
+    &--teamFormation {
+      border: 3px solid #5f88e5;
+      background: linear-gradient(135deg, rgba(95, 136, 229, 0.03) 0%, #ffffff 100%);
+      box-shadow: 0 4px 16px rgba(95, 136, 229, 0.15);
 
       .categoryHeader {
-        background: linear-gradient(135deg, rgba(229, 57, 53, 0.08) 0%, rgba(229, 57, 53, 0.02) 100%);
-        border-bottom: 1px solid rgba(229, 57, 53, 0.2);
+        background: linear-gradient(135deg, rgba(95, 136, 229, 0.08) 0%, rgba(95, 136, 229, 0.02) 100%);
+        border-bottom: 1px solid rgba(95, 136, 229, 0.2);
 
         .categoryHeaderLeft svg {
-          color: #e53935;
+          color: #5f88e5;
         }
       }
 
       &:hover {
-        border-color: #e53935;
-        box-shadow: 0 6px 24px rgba(229, 57, 53, 0.25);
+        border-color: #5f88e5;
+        box-shadow: 0 6px 24px rgba(95, 136, 229, 0.25);
       }
 
       .categoryBadge {
-        background: #e53935 !important;
+        background: #5f88e5 !important;
         color: white !important;
       }
     }
@@ -622,8 +622,8 @@
     }
   }
 
-  // Smart Join Section
-  .smartJoinSection {
+  // Team Formation Section
+  .teamFormationSection {
     .sectionTitle {
       display: flex;
       align-items: center;
@@ -689,15 +689,15 @@
     }
   }
 
-  // Split rooms section
-  .splitRoomsSection {
+  // Oversized Team Management section
+  .oversizedTeamSection {
     padding: 1rem;
-    background: rgba(95, 136, 229, 0.05);
+    background: rgba(245, 158, 11, 0.05);
     border-radius: 8px;
-    border: 1px solid rgba(95, 136, 229, 0.2);
+    border: 1px solid rgba(245, 158, 11, 0.2);
     margin-top: 0.5rem;
 
-    .splitRoomsTitle {
+    .oversizedTeamTitle {
       display: flex;
       align-items: center;
       gap: 0.5rem;

@@ -32,6 +32,7 @@ import AnchoredBadge from '@/view/components/badges/AnchoredBadge';
 import UploadImage from '@/view/components/uploadImage/UploadImage';
 import StatementImage from './StatementImage';
 import IntegrateSuggestionsModal from '@/view/components/integrateSuggestions/IntegrateSuggestionsModal';
+import RoomBadge from '@/view/components/roomBadge/RoomBadge';
 
 interface Props {
 	statement: Statement | undefined;
@@ -443,6 +444,8 @@ const SuggestionCard: FC<Props> = ({
 							{enableJoining && (
 								<>
 									<Joined statement={statement} />
+									{/* Room Badge - shows user's assigned room (uses parent statement ID) */}
+									<RoomBadge statementId={parentStatement?.statementId || statement.parentId} />
 									{/* Join count indicator */}
 									{(minJoinMembers !== undefined || maxJoinMembers !== undefined) && (
 										<span

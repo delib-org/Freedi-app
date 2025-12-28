@@ -182,7 +182,7 @@ const RoomAssignmentConfig: FC<RoomAssignmentConfigProps> = ({
 			{/* Actions */}
 			<div className={styles.configForm__actions}>
 				<Button
-					text={isCreating ? t('Creating...') : existingSettings ? t('Reassign Rooms') : t('Create Assignments')}
+					text={isCreating ? t('Creating...') : existingSettings ? t('Reassign Rooms') : t('Create Breakout Rooms')}
 					buttonType={ButtonType.PRIMARY}
 					onClick={handleCreateClick}
 					disabled={!canCreate || isCreating}

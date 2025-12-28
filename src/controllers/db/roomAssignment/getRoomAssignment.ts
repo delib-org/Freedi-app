@@ -1,489 +1,290 @@
-import {
-	collection,
-	doc,
-	getDoc,
-	getDocs,
-	onSnapshot,
-	query,
-	where,
-	Unsubscribe,
-} from 'firebase/firestore';
+import { collection, query, where, onSnapshot, getDocs } from 'firebase/firestore';
 import { FireStore } from '../config';
+import { RoomParticipant, RoomSettings, Room } from '@freedi/shared-types';
 import { AppDispatch } from '@/redux/store';
 import {
-	Collections,
-	RoomSettings,
-	RoomSettingsSchema,
-	Room,
-	RoomSchema,
-	RoomParticipant,
-	RoomParticipantSchema,
-} from '@freedi/shared-types';
-import { parse } from 'valibot';
-import {
-	setRoomSettings,
 	setRoomSettingsArray,
-	setRoom,
 	setRoomsArray,
-	setParticipant,
 	setParticipantsArray,
 	setMyAssignment,
 	setLoading,
-	setError,
 } from '@/redux/roomAssignment/roomAssignmentSlice';
 import { logError } from '@/utils/errorHandling';
 
 /**
- * Helper to extract a meaningful error message from Firebase errors
- * Firebase errors are often objects that don't serialize well
+ * Get user's room assignment for a specific option/statement
+ * @param statementId - The option statement ID
+ * @param userId - The user's ID
+ * @returns RoomParticipant or null if not assigned
  */
-function getFirebaseErrorMessage(error: unknown): string {
-	if (error instanceof Error) {
-		return error.message;
-	}
-
-	if (typeof error === 'object' && error !== null) {
-		// Firebase errors often have a 'code' and 'message' property
-		const firebaseError = error as Record<string, unknown>;
-
-		// Try to extract code and message
-		const code = firebaseError.code as string | undefined;
-		const message = firebaseError.message as string | undefined;
-
-		if (message) {
-			return code ? `${code}: ${message}` : message;
-		}
-
-		// Try to stringify, but handle circular references
-		try {
-			const str = JSON.stringify(error, null, 2);
-			if (str && str !== '{}') {
-				return str;
-			}
-		} catch {
-			// Circular reference or other JSON error
-		}
-
-		// Last resort: try to get keys and values
-		const keys = Object.keys(firebaseError);
-		if (keys.length > 0) {
-			return `Firebase error with keys: ${keys.join(', ')}`;
-		}
-
-		return 'Unknown Firebase error (empty object)';
-	}
-
-	return String(error);
-}
-
-/**
- * Listen to room settings for a specific statement
- */
-export function listenToRoomSettingsByStatement(
+export async function getUserRoomAssignment(
 	statementId: string,
-	dispatch: AppDispatch
-): Unsubscribe {
-	try {
-		dispatch(setLoading(true));
-
-		const settingsRef = collection(FireStore, Collections.roomsSettings);
-		const q = query(
-			settingsRef,
-			where('statementId', '==', statementId),
-			where('status', '==', 'active')
-		);
-
-		return onSnapshot(
-			q,
-			(snapshot) => {
-				const settings: RoomSettings[] = [];
-				snapshot.docChanges().forEach((change) => {
-					try {
-						const data = change.doc.data();
-						const parsedSettings = parse(RoomSettingsSchema, data);
-
-						if (change.type === 'added' || change.type === 'modified') {
-							settings.push(parsedSettings);
-							dispatch(setRoomSettings(parsedSettings));
-						}
-					} catch (parseError) {
-						logError(parseError, {
-							operation: 'roomAssignment.listenToRoomSettings.parse',
-							statementId,
-							metadata: { docId: change.doc.id },
-						});
-					}
-				});
-
-				if (snapshot.docChanges().length === 0 || snapshot.metadata.hasPendingWrites === false) {
-					dispatch(setLoading(false));
-				}
-			},
-			(error) => {
-				const errorMessage = getFirebaseErrorMessage(error);
-				logError(new Error(errorMessage), {
-					operation: 'roomAssignment.listenToRoomSettings',
-					statementId,
-				});
-				dispatch(setError('Failed to load room settings'));
-				dispatch(setLoading(false));
-			}
-		);
-	} catch (error) {
-		logError(error, {
-			operation: 'roomAssignment.listenToRoomSettings.setup',
-			statementId,
-		});
-		dispatch(setError('Failed to setup room settings listener'));
-		dispatch(setLoading(false));
-
-		return () => {};
-	}
-}
-
-/**
- * Listen to rooms for a specific settings ID
- */
-export function listenToRoomsBySettingsId(
-	settingsId: string,
-	dispatch: AppDispatch
-): Unsubscribe {
-	try {
-		const roomsRef = collection(FireStore, Collections.rooms);
-		const q = query(roomsRef, where('settingsId', '==', settingsId));
-
-		return onSnapshot(
-			q,
-			(snapshot) => {
-				const rooms: Room[] = [];
-				snapshot.docChanges().forEach((change) => {
-					try {
-						const data = change.doc.data();
-						const parsedRoom = parse(RoomSchema, data);
-
-						if (change.type === 'added' || change.type === 'modified') {
-							rooms.push(parsedRoom);
-							dispatch(setRoom(parsedRoom));
-						}
-					} catch (parseError) {
-						logError(parseError, {
-							operation: 'roomAssignment.listenToRooms.parse',
-							metadata: { settingsId, docId: change.doc.id },
-						});
-					}
-				});
-			},
-			(error) => {
-				const errorMessage = getFirebaseErrorMessage(error);
-				logError(new Error(errorMessage), {
-					operation: 'roomAssignment.listenToRooms',
-					metadata: { settingsId },
-				});
-				dispatch(setError('Failed to load rooms'));
-			}
-		);
-	} catch (error) {
-		logError(error, {
-			operation: 'roomAssignment.listenToRooms.setup',
-			metadata: { settingsId },
-		});
-
-		return () => {};
-	}
-}
-
-/**
- * Listen to participants for a specific settings ID
- */
-export function listenToParticipantsBySettingsId(
-	settingsId: string,
-	dispatch: AppDispatch
-): Unsubscribe {
-	try {
-		const participantsRef = collection(FireStore, Collections.roomParticipants);
-		const q = query(participantsRef, where('settingsId', '==', settingsId));
-
-		return onSnapshot(
-			q,
-			(snapshot) => {
-				const participants: RoomParticipant[] = [];
-				snapshot.docChanges().forEach((change) => {
-					try {
-						const data = change.doc.data();
-						const parsedParticipant = parse(RoomParticipantSchema, data);
-
-						if (change.type === 'added' || change.type === 'modified') {
-							participants.push(parsedParticipant);
-							dispatch(setParticipant(parsedParticipant));
-						}
-					} catch (parseError) {
-						logError(parseError, {
-							operation: 'roomAssignment.listenToParticipants.parse',
-							metadata: { settingsId, docId: change.doc.id },
-						});
-					}
-				});
-			},
-			(error) => {
-				const errorMessage = getFirebaseErrorMessage(error);
-				console.info('Room participant listener error:', errorMessage);
-				logError(new Error(errorMessage), {
-					operation: 'roomAssignment.listenToParticipants',
-					metadata: { settingsId },
-				});
-				dispatch(setError('Failed to load participants'));
-			}
-		);
-	} catch (error) {
-		logError(error, {
-			operation: 'roomAssignment.listenToParticipants.setup',
-			metadata: { settingsId },
-		});
-
-		return () => {};
-	}
-}
-
-/**
- * Get current user's room assignment for a statement
- */
-export async function getMyRoomAssignmentFromDB(
-	statementId: string,
-	userId: string,
-	dispatch: AppDispatch
+	userId: string
 ): Promise<RoomParticipant | null> {
 	try {
-		dispatch(setLoading(true));
-
-		// First, get the active settings for this statement
-		const settingsRef = collection(FireStore, Collections.roomsSettings);
-		const settingsQuery = query(
-			settingsRef,
+		const participantsRef = collection(FireStore, 'roomParticipants');
+		const q = query(
+			participantsRef,
 			where('statementId', '==', statementId),
-			where('status', '==', 'active')
+			where('userId', '==', userId)
 		);
 
-		const settingsSnapshot = await getDocs(settingsQuery);
-		if (settingsSnapshot.empty) {
-			dispatch(setMyAssignment(null));
-			dispatch(setLoading(false));
+		const snapshot = await getDocs(q);
 
+		if (snapshot.empty) {
 			return null;
 		}
 
-		const settingsDoc = settingsSnapshot.docs[0];
-		const settingsId = settingsDoc.id;
+		// Return the first (and should be only) assignment
+		const doc = snapshot.docs[0];
 
-		// Get participant document using composite ID
-		const participantId = `${settingsId}--${userId}`;
-		const participantRef = doc(FireStore, Collections.roomParticipants, participantId);
-		const participantDoc = await getDoc(participantRef);
-
-		if (!participantDoc.exists()) {
-			dispatch(setMyAssignment(null));
-			dispatch(setLoading(false));
-
-			return null;
-		}
-
-		const data = participantDoc.data();
-		const parsedParticipant = parse(RoomParticipantSchema, data);
-		dispatch(setMyAssignment(parsedParticipant));
-		dispatch(setLoading(false));
-
-		return parsedParticipant;
+		return doc.data() as RoomParticipant;
 	} catch (error) {
-		logError(error, {
-			operation: 'roomAssignment.getMyRoomAssignment',
-			statementId,
-			userId,
-		});
-		dispatch(setError('Failed to get your room assignment'));
-		dispatch(setLoading(false));
+		console.error('Error fetching room assignment:', error);
 
 		return null;
 	}
 }
 
 /**
- * Listen to current user's room assignment
+ * Listen to user's room assignment for a specific option/statement
+ * @param statementId - The option statement ID
+ * @param userId - The user's ID
+ * @param callback - Callback when assignment changes
+ * @returns Unsubscribe function
  */
-export function listenToMyRoomAssignment(
+export function listenToUserRoomAssignment(
 	statementId: string,
 	userId: string,
-	dispatch: AppDispatch
-): Unsubscribe {
+	callback: (assignment: RoomParticipant | null) => void
+): () => void {
 	try {
-		// First we need to find the active settings ID
-		const settingsRef = collection(FireStore, Collections.roomsSettings);
-		const settingsQuery = query(
-			settingsRef,
+		const participantsRef = collection(FireStore, 'roomParticipants');
+		const q = query(
+			participantsRef,
 			where('statementId', '==', statementId),
-			where('status', '==', 'active')
+			where('userId', '==', userId)
 		);
 
-		// This is a nested listener - first listen to settings, then to participant
-		let participantUnsubscribe: Unsubscribe | null = null;
+		return onSnapshot(q, (snapshot) => {
+			if (snapshot.empty) {
+				callback(null);
 
-		const settingsUnsubscribe = onSnapshot(
-			settingsQuery,
-			(settingsSnapshot) => {
-				// Clean up previous participant listener
-				if (participantUnsubscribe) {
-					participantUnsubscribe();
-					participantUnsubscribe = null;
-				}
-
-				if (settingsSnapshot.empty) {
-					dispatch(setMyAssignment(null));
-
-					return;
-				}
-
-				const settingsDoc = settingsSnapshot.docs[0];
-				const settingsId = settingsDoc.id;
-				const participantId = `${settingsId}--${userId}`;
-
-				const participantRef = doc(FireStore, Collections.roomParticipants, participantId);
-				participantUnsubscribe = onSnapshot(
-					participantRef,
-					(participantDoc) => {
-						if (!participantDoc.exists()) {
-							dispatch(setMyAssignment(null));
-
-							return;
-						}
-
-						try {
-							const data = participantDoc.data();
-							const parsedParticipant = parse(RoomParticipantSchema, data);
-							dispatch(setMyAssignment(parsedParticipant));
-						} catch (parseError) {
-							logError(parseError, {
-								operation: 'roomAssignment.listenToMyAssignment.parse',
-								statementId,
-								userId,
-							});
-						}
-					},
-					(error) => {
-						logError(error, {
-							operation: 'roomAssignment.listenToMyAssignment.participant',
-							statementId,
-							userId,
-						});
-					}
-				);
-			},
-			(error) => {
-				logError(error, {
-					operation: 'roomAssignment.listenToMyAssignment.settings',
-					statementId,
-					userId,
-				});
+				return;
 			}
-		);
 
-		// Return cleanup function
-		return () => {
-			settingsUnsubscribe();
-			if (participantUnsubscribe) {
-				participantUnsubscribe();
-			}
-		};
-	} catch (error) {
-		logError(error, {
-			operation: 'roomAssignment.listenToMyAssignment.setup',
-			statementId,
-			userId,
+			const doc = snapshot.docs[0];
+			callback(doc.data() as RoomParticipant);
+		}, (error) => {
+			console.error('Error listening to room assignment:', error);
+			callback(null);
 		});
+	} catch (error) {
+		console.error('Error setting up room assignment listener:', error);
 
 		return () => {};
 	}
 }
 
 /**
- * Get all room data for admin view (settings, rooms, participants)
+ * Alias for listenToUserRoomAssignment (for backwards compatibility)
+ */
+export const listenToMyRoomAssignment = listenToUserRoomAssignment;
+
+/**
+ * Alias for getUserRoomAssignment (for backwards compatibility)
+ */
+export const getMyRoomAssignmentFromDB = getUserRoomAssignment;
+
+/**
+ * Listen to room settings for a specific statement (with Redux dispatch)
+ * @param statementId - The statement ID
+ * @param dispatch - Redux dispatch function
+ * @returns Unsubscribe function
+ */
+export function listenToRoomSettingsByStatement(
+	statementId: string,
+	dispatch: AppDispatch
+): () => void {
+	try {
+		const settingsRef = collection(FireStore, 'roomsSettings');
+		const q = query(
+			settingsRef,
+			where('statementId', '==', statementId)
+		);
+
+		return onSnapshot(q, (snapshot) => {
+			const settings: RoomSettings[] = [];
+			snapshot.forEach((doc) => {
+				settings.push(doc.data() as RoomSettings);
+			});
+			dispatch(setRoomSettingsArray(settings));
+		}, (error) => {
+			console.error('Error listening to room settings:', error);
+			dispatch(setRoomSettingsArray([]));
+		});
+	} catch (error) {
+		console.error('Error setting up room settings listener:', error);
+
+		return () => {};
+	}
+}
+
+/**
+ * Listen to rooms for a specific settings ID (with Redux dispatch)
+ * @param settingsId - The settings ID
+ * @param dispatch - Redux dispatch function
+ * @returns Unsubscribe function
+ */
+export function listenToRoomsBySettingsId(
+	settingsId: string,
+	dispatch: AppDispatch
+): () => void {
+	try {
+		const roomsRef = collection(FireStore, 'rooms');
+		const q = query(
+			roomsRef,
+			where('settingsId', '==', settingsId)
+		);
+
+		return onSnapshot(q, (snapshot) => {
+			const rooms: Room[] = [];
+			snapshot.forEach((doc) => {
+				rooms.push(doc.data() as Room);
+			});
+			// Sort by room number
+			rooms.sort((a, b) => a.roomNumber - b.roomNumber);
+			dispatch(setRoomsArray(rooms));
+		}, (error) => {
+			console.error('Error listening to rooms:', error);
+			dispatch(setRoomsArray([]));
+		});
+	} catch (error) {
+		console.error('Error setting up rooms listener:', error);
+
+		return () => {};
+	}
+}
+
+/**
+ * Listen to participants for a specific settings ID (with Redux dispatch)
+ * @param settingsId - The settings ID
+ * @param dispatch - Redux dispatch function
+ * @returns Unsubscribe function
+ */
+export function listenToParticipantsBySettingsId(
+	settingsId: string,
+	dispatch: AppDispatch
+): () => void {
+	try {
+		const participantsRef = collection(FireStore, 'roomParticipants');
+		const q = query(
+			participantsRef,
+			where('settingsId', '==', settingsId)
+		);
+
+		return onSnapshot(q, (snapshot) => {
+			const participants: RoomParticipant[] = [];
+			snapshot.forEach((doc) => {
+				participants.push(doc.data() as RoomParticipant);
+			});
+			dispatch(setParticipantsArray(participants));
+		}, (error) => {
+			console.error('Error listening to participants:', error);
+			dispatch(setParticipantsArray([]));
+		});
+	} catch (error) {
+		console.error('Error setting up participants listener:', error);
+
+		return () => {};
+	}
+}
+
+/**
+ * Get all room assignment data for admin view
+ * Fetches settings, rooms, and participants for a statement
+ * @param statementId - The statement ID
+ * @param dispatch - Redux dispatch function
  */
 export async function getRoomAssignmentDataForAdmin(
 	statementId: string,
 	dispatch: AppDispatch
-): Promise<{
-	settings: RoomSettings | null;
-	rooms: Room[];
-	participants: RoomParticipant[];
-}> {
+): Promise<void> {
 	try {
 		dispatch(setLoading(true));
 
-		// Get active settings
-		const settingsRef = collection(FireStore, Collections.roomsSettings);
+		// Fetch room settings for the statement
+		const settingsRef = collection(FireStore, 'roomsSettings');
 		const settingsQuery = query(
 			settingsRef,
-			where('statementId', '==', statementId),
-			where('status', '==', 'active')
+			where('statementId', '==', statementId)
 		);
-
 		const settingsSnapshot = await getDocs(settingsQuery);
-		if (settingsSnapshot.empty) {
-			dispatch(setLoading(false));
+		const settings: RoomSettings[] = [];
+		settingsSnapshot.forEach((doc) => {
+			settings.push(doc.data() as RoomSettings);
+		});
+		dispatch(setRoomSettingsArray(settings));
 
-			return { settings: null, rooms: [], participants: [] };
+		// If we have settings, fetch rooms and participants
+		if (settings.length > 0) {
+			const activeSettings = settings.find((s) => s.status === 'active');
+			const settingsId = activeSettings?.settingsId || settings[0].settingsId;
+
+			// Fetch rooms
+			const roomsRef = collection(FireStore, 'rooms');
+			const roomsQuery = query(
+				roomsRef,
+				where('settingsId', '==', settingsId)
+			);
+			const roomsSnapshot = await getDocs(roomsQuery);
+			const rooms: Room[] = [];
+			roomsSnapshot.forEach((doc) => {
+				rooms.push(doc.data() as Room);
+			});
+			rooms.sort((a, b) => a.roomNumber - b.roomNumber);
+			dispatch(setRoomsArray(rooms));
+
+			// Fetch participants
+			const participantsRef = collection(FireStore, 'roomParticipants');
+			const participantsQuery = query(
+				participantsRef,
+				where('settingsId', '==', settingsId)
+			);
+			const participantsSnapshot = await getDocs(participantsQuery);
+			const participants: RoomParticipant[] = [];
+			participantsSnapshot.forEach((doc) => {
+				participants.push(doc.data() as RoomParticipant);
+			});
+			dispatch(setParticipantsArray(participants));
+		} else {
+			dispatch(setRoomsArray([]));
+			dispatch(setParticipantsArray([]));
 		}
 
-		const settingsDoc = settingsSnapshot.docs[0];
-		const settings = parse(RoomSettingsSchema, settingsDoc.data());
-		dispatch(setRoomSettings(settings));
-
-		const settingsId = settingsDoc.id;
-
-		// Get rooms
-		const roomsRef = collection(FireStore, Collections.rooms);
-		const roomsQuery = query(roomsRef, where('settingsId', '==', settingsId));
-		const roomsSnapshot = await getDocs(roomsQuery);
-		const rooms: Room[] = [];
-		roomsSnapshot.forEach((doc) => {
-			try {
-				const room = parse(RoomSchema, doc.data());
-				rooms.push(room);
-			} catch (parseError) {
-				logError(parseError, {
-					operation: 'roomAssignment.getAdminData.parseRoom',
-					metadata: { docId: doc.id },
-				});
-			}
-		});
-		dispatch(setRoomsArray(rooms));
-
-		// Get participants
-		const participantsRef = collection(FireStore, Collections.roomParticipants);
-		const participantsQuery = query(participantsRef, where('settingsId', '==', settingsId));
-		const participantsSnapshot = await getDocs(participantsQuery);
-		const participants: RoomParticipant[] = [];
-		participantsSnapshot.forEach((doc) => {
-			try {
-				const participant = parse(RoomParticipantSchema, doc.data());
-				participants.push(participant);
-			} catch (parseError) {
-				logError(parseError, {
-					operation: 'roomAssignment.getAdminData.parseParticipant',
-					metadata: { docId: doc.id },
-				});
-			}
-		});
-		dispatch(setParticipantsArray(participants));
-
 		dispatch(setLoading(false));
-
-		return { settings, rooms, participants };
 	} catch (error) {
 		logError(error, {
-			operation: 'roomAssignment.getAdminData',
+			operation: 'roomAssignment.getRoomAssignmentDataForAdmin',
 			statementId,
 		});
-		dispatch(setError('Failed to load room assignment data'));
 		dispatch(setLoading(false));
-
-		return { settings: null, rooms: [], participants: [] };
 	}
+}
+
+/**
+ * Set up listeners for current user's room assignment
+ * @param statementId - The statement ID
+ * @param userId - The user's ID
+ * @param dispatch - Redux dispatch function
+ * @returns Unsubscribe function
+ */
+export function listenToMyRoomAssignmentWithDispatch(
+	statementId: string,
+	userId: string,
+	dispatch: AppDispatch
+): () => void {
+	return listenToUserRoomAssignment(statementId, userId, (assignment) => {
+		dispatch(setMyAssignment(assignment));
+	});
 }

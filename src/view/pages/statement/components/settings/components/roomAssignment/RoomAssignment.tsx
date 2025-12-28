@@ -95,7 +95,7 @@ const RoomAssignment: FC<RoomAssignmentProps> = ({ statement }) => {
 
 	return (
 		<div className={styles.roomAssignment}>
-			<SectionTitle title={t('Room Assignment')} />
+			<SectionTitle title={t('Breakout Rooms')} />
 
 			<div className={styles.roomAssignment__content}>
 				{isLoading ? (

@@ -73,7 +73,7 @@ const EnhancedAdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => 
     statementsFixed: number;
   } | null>(null);
 
-  // Smart Join state
+  // Team Formation state (formerly "Smart Join")
   const [minMembers, setMinMembers] = useState<number>(
     settings.minJoinMembers ?? JOINING.DEFAULT_MIN_MEMBERS
   );
@@ -99,12 +99,12 @@ const EnhancedAdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => 
 
   // Category configurations
   const categories: CategoryConfig[] = [
-    // Smart Join - only shown for questions with joining enabled
+    // Team Formation - only shown for questions with joining enabled
     ...(statement.statementType === StatementType.question && settings.joiningEnabled ? [{
-      id: 'smartJoin',
-      title: t('Smart Join'),
+      id: 'teamFormation',
+      title: t('Team Formation'),
       icon: UserPlus,
-      description: t('Configure team formation and room splitting'),
+      description: t('Configure how participants form teams around options'),
       priority: 'high' as const,
       defaultExpanded: true,
     }] : []),
@@ -305,12 +305,12 @@ const EnhancedAdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => 
     }
   }
 
-  // Load exceeding options when Smart Join category is expanded
+  // Load exceeding options when Team Formation category is expanded
   useEffect(() => {
-    if (expandedCategories['smartJoin'] && settings.maxJoinMembers) {
+    if (expandedCategories['teamFormation'] && settings.maxJoinMembers) {
       loadExceedingOptions();
     }
-  }, [expandedCategories['smartJoin'], settings.maxJoinMembers]);
+  }, [expandedCategories['teamFormation'], settings.maxJoinMembers]);
 
   // Export handler
   async function handleExport(format: ExportFormat) {
@@ -520,7 +520,7 @@ const EnhancedAdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => 
           return (
             <div
               key={category.id}
-              className={`${styles.category} ${category.id === 'smartJoin' ? styles['category--smartJoin'] : styles[`category--${category.priority}`]}`}
+              className={`${styles.category} ${category.id === 'teamFormation' ? styles['category--teamFormation'] : styles[`category--${category.priority}`]}`}
             >
               <button
                 className={styles.categoryHeader}
@@ -536,8 +536,8 @@ const EnhancedAdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => 
                 </div>
                 <div className={styles.categoryHeaderRight}>
                   <span className={styles.categoryBadge}>
-                    {category.id === 'smartJoin' && t('Team Formation')}
-                    {category.id !== 'smartJoin' && category.priority === 'high' && t('Essential')}
+                    {category.id === 'teamFormation' && t('Teams')}
+                    {category.id !== 'teamFormation' && category.priority === 'high' && t('Essential')}
                     {category.priority === 'medium' && t('Recommended')}
                     {category.priority === 'low' && t('Advanced')}
                   </span>
@@ -547,10 +547,10 @@ const EnhancedAdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => 
 
               {isExpanded && (
                 <div className={styles.categoryContent}>
-                  {/* Smart Join */}
-                  {category.id === 'smartJoin' && (
+                  {/* Team Formation */}
+                  {category.id === 'teamFormation' && (
                     <>
-                      <div className={styles.smartJoinSection}>
+                      <div className={styles.teamFormationSection}>
                         <h4 className={styles.sectionTitle}>
                           <Users size={18} />
                           {t('Join Behavior')}
@@ -564,7 +564,7 @@ const EnhancedAdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => 
                         />
                       </div>
 
-                      <div className={styles.smartJoinSection}>
+                      <div className={styles.teamFormationSection}>
                         <h4 className={styles.sectionTitle}>
                           <Target size={18} />
                           {t('Team Size Limits')}
@@ -599,12 +599,12 @@ const EnhancedAdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => 
                         </div>
                       </div>
 
-                      {/* Split Rooms Section */}
+                      {/* Oversized Team Management Section */}
                       {settings.maxJoinMembers && (
-                        <div className={styles.splitRoomsSection}>
-                          <h4 className={styles.splitRoomsTitle}>
+                        <div className={styles.oversizedTeamSection}>
+                          <h4 className={styles.oversizedTeamTitle}>
                             <Scissors size={18} />
-                            {t('Room Splitting')}
+                            {t('Oversized Team Management')}
                           </h4>
                           {isLoadingExceeding ? (
                             <p className={styles.loadingText}>{t('Loading...')}</p>

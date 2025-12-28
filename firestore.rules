@@ -355,6 +355,11 @@ service cloud.firestore {
       allow write: if request.auth.uid != null;
     }
 
+    match /roomParticipants/{participantId=**} {
+      allow read: if request.auth.uid != null;
+      allow write: if request.auth.uid != null;
+    }
+
     match /timers-rooms/{timerIdx=**} {
       allow read: if request.auth.uid != null;
       allow write: if request.auth.uid != null;
@@ -640,62 +645,8 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
-    // Room Assignment Rules
-
-    // Room Settings - Admins can manage, members can read
-    match /roomsSettings/{settingsId} {
-      function isStatementAdmin() {
-        let settings = resource != null ? resource : request.resource;
-        let statementId = settings.data.statementId;
-        let subId = string(request.auth.uid) + '--' + cleanPath(string(statementId));
-        let subscription = get(/databases/$(database)/documents/statementsSubscribe/$(subId)).data;
-        return subscription != null && (subscription.role == 'admin' || subscription.role == 'statement-creator');
-      }
-
-      function isStatementMember() {
-        let settings = resource != null ? resource : request.resource;
-        let statementId = settings.data.statementId;
-        let subId = string(request.auth.uid) + '--' + cleanPath(string(statementId));
-        return exists(/databases/$(database)/documents/statementsSubscribe/$(subId));
-      }
-
-      allow read: if request.auth != null && isStatementMember();
-      allow create, update, delete: if request.auth != null && isStatementAdmin();
-    }
-
-    // Rooms - Admins can manage, members can read
-    match /rooms/{roomId} {
-      function isStatementAdmin() {
-        let room = resource != null ? resource : request.resource;
-        let statementId = room.data.statementId;
-        let subId = string(request.auth.uid) + '--' + cleanPath(string(statementId));
-        let subscription = get(/databases/$(database)/documents/statementsSubscribe/$(subId)).data;
-        return subscription != null && (subscription.role == 'admin' || subscription.role == 'statement-creator');
-      }
-
-      function isStatementMember() {
-        let room = resource != null ? resource : request.resource;
-        let statementId = room.data.statementId;
-        let subId = string(request.auth.uid) + '--' + cleanPath(string(statementId));
-        return exists(/databases/$(database)/documents/statementsSubscribe/$(subId));
-      }
-
-      allow read: if request.auth != null && isStatementMember();
-      allow create, update, delete: if request.auth != null && isStatementAdmin();
-    }
-
-    // Room Participants - Authenticated users can read, admins can manage
-    // Note: Using simple auth check for reads because collection list queries
-    // cannot evaluate document-level fields before returning results.
-    // The data is not sensitive (room numbers, participant names) and access
-    // is already limited by knowing the settingsId.
-    match /roomParticipants/{participantId} {
-      // Allow read for any authenticated user (room data is not sensitive)
-      allow read: if request.auth != null;
-      // Allow writes for any authenticated user (cloud functions handle authorization)
-      // Note: Proper validation would require multiple chained gets which is complex
-      // The cloud function already validates admin status before writing
-      allow create, update, delete: if request.auth != null;
-    }
+    // Room Assignment Rules are defined above in the simple rules section
+    // (rooms, roomsSettings, roomParticipants at lines 343-356)
+    // Cloud functions handle authorization for writes
   }
 }
