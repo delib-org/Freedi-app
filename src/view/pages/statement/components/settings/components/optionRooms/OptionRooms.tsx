@@ -3,14 +3,15 @@ import { Users } from 'lucide-react';
 import { Statement, StatementSettings } from '@freedi/shared-types';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { setStatementSettingToDB } from '@/controllers/db/statementSettings/setStatementSettings';
-import { getOptionsExceedingMax, splitJoinedOption, SplitResult } from '@/controllers/db/joining/splitJoinedOption';
+import { getAllOptionsWithMembers, splitJoinedOption, SplitResult, OptionWithMembers } from '@/controllers/db/joining/splitJoinedOption';
 import { logError } from '@/utils/errorHandling';
 import { JOINING } from '@/constants/common';
 import { SettingsSection } from '../settingsSection';
 import JoinBehaviorSettings from './JoinBehaviorSettings';
 import RoomSizeSettings from './RoomSizeSettings';
 import RoomDiversitySettings from './RoomDiversitySettings';
-import OptionsStatusList, { OptionStatus } from './OptionsStatusList';
+import OptionsStatusList from './OptionsStatusList';
+import CreatedRoomsDisplay from './CreatedRoomsDisplay';
 import styles from './OptionRooms.module.scss';
 
 interface OptionRoomsProps {
@@ -27,10 +28,9 @@ const OptionRooms: FC<OptionRoomsProps> = ({ statement }) => {
 	const [minMembers, setMinMembers] = useState(settings.minJoinMembers ?? JOINING.DEFAULT_MIN_MEMBERS);
 	const [maxMembers, setMaxMembers] = useState(settings.maxJoinMembers ?? 7); // Default to 7 for optimal group size
 	const [scrambleByQuestions, setScrambleByQuestions] = useState<string[]>([]);
-	const [options, setOptions] = useState<OptionStatus[]>([]);
+	const [options, setOptions] = useState<OptionWithMembers[]>([]);
 	const [isLoadingOptions, setIsLoadingOptions] = useState(false);
 	const [isSplitting, setIsSplitting] = useState(false);
-	const [splittingOptionId, setSplittingOptionId] = useState<string | undefined>();
 	const [splitResult, setSplitResult] = useState<SplitResult | null>(null);
 
 	const topParentId = statement.topParentId || statement.statementId;
@@ -93,7 +93,7 @@ const OptionRooms: FC<OptionRoomsProps> = ({ statement }) => {
 		});
 	}, []);
 
-	// Load options that need attention
+	// Load all options with members
 	const loadOptions = useCallback(async () => {
 		if (!joiningEnabled) {
 			setOptions([]);
@@ -103,18 +103,8 @@ const OptionRooms: FC<OptionRoomsProps> = ({ statement }) => {
 
 		setIsLoadingOptions(true);
 		try {
-			const result = await getOptionsExceedingMax(statement.statementId);
-
-			// Transform to OptionStatus format with local minMembers/maxMembers
-			const optionStatuses: OptionStatus[] = result.options.map((opt) => ({
-				statementId: opt.statementId,
-				statement: opt.statement,
-				joinedCount: opt.joinedCount,
-				minMembers,
-				maxMembers,
-			}));
-
-			setOptions(optionStatuses);
+			const result = await getAllOptionsWithMembers(statement.statementId);
+			setOptions(result.options);
 		} catch (error) {
 			logError(error, {
 				operation: 'OptionRooms.loadOptions',
@@ -123,7 +113,7 @@ const OptionRooms: FC<OptionRoomsProps> = ({ statement }) => {
 		} finally {
 			setIsLoadingOptions(false);
 		}
-	}, [statement.statementId, joiningEnabled, minMembers, maxMembers]);
+	}, [statement.statementId, joiningEnabled]);
 
 	// Load options when joining is enabled
 	useEffect(() => {
@@ -132,36 +122,54 @@ const OptionRooms: FC<OptionRoomsProps> = ({ statement }) => {
 		}
 	}, [joiningEnabled, loadOptions]);
 
-	// Handler for splitting an option
-	const handleSplitOption = useCallback(
-		async (optionStatementId: string) => {
+	// Handler for assigning rooms to ALL options at once
+	const handleAssignAllRooms = useCallback(
+		async () => {
+			if (options.length === 0) return;
+
 			setIsSplitting(true);
-			setSplittingOptionId(optionStatementId);
 			setSplitResult(null);
 
 			try {
-				const result = await splitJoinedOption({
-					optionStatementId,
-					parentStatementId: statement.statementId,
-					roomSize: maxMembers,
-					scrambleByQuestions,
+				let totalRoomsCreated = 0;
+				let totalParticipantsAssigned = 0;
+
+				// Process each option sequentially to ensure proper global room numbering
+				for (const option of options) {
+					const result = await splitJoinedOption({
+						optionStatementId: option.statementId,
+						parentStatementId: statement.statementId,
+						roomSize: maxMembers,
+						scrambleByQuestions,
+					});
+
+					totalRoomsCreated += result.totalRooms;
+					totalParticipantsAssigned += result.totalParticipants;
+				}
+
+				// Set a summary result
+				setSplitResult({
+					success: true,
+					settingsId: '',
+					optionTitle: `${options.length} options`,
+					totalRooms: totalRoomsCreated,
+					totalParticipants: totalParticipantsAssigned,
+					balanceScore: 0,
+					rooms: [],
 				});
 
-				setSplitResult(result);
 				// Refresh options list
 				await loadOptions();
 			} catch (error) {
 				logError(error, {
-					operation: 'OptionRooms.handleSplitOption',
+					operation: 'OptionRooms.handleAssignAllRooms',
 					statementId: statement.statementId,
-					metadata: { optionStatementId },
 				});
 			} finally {
 				setIsSplitting(false);
-				setSplittingOptionId(undefined);
 			}
 		},
-		[statement.statementId, maxMembers, scrambleByQuestions, loadOptions]
+		[options, statement.statementId, maxMembers, scrambleByQuestions, loadOptions]
 	);
 
 	return (
@@ -199,17 +207,17 @@ const OptionRooms: FC<OptionRoomsProps> = ({ statement }) => {
 
 						<OptionsStatusList
 							options={options}
-							onSplitOption={handleSplitOption}
-							isSplitting={isSplitting}
-							splittingOptionId={splittingOptionId}
+							onAssignAllRooms={handleAssignAllRooms}
+							isAssigning={isSplitting}
 						/>
+
+						<CreatedRoomsDisplay statementId={statement.statementId} options={options} />
 
 						{splitResult && (
 							<div className={styles.optionRooms__splitResult}>
 								<p className={styles.optionRooms__splitResultText}>
-									{t('Successfully split')} "{splitResult.optionTitle}" {t('into')}{' '}
-									{splitResult.totalRooms} {t('rooms')} {t('with')}{' '}
-									{splitResult.totalParticipants} {t('participants')}.
+									{t('Successfully assigned')} {splitResult.totalParticipants} {t('participants')} {t('into')}{' '}
+									{splitResult.totalRooms} {t('rooms')}.
 								</p>
 							</div>
 						)}

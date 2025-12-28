@@ -444,8 +444,8 @@ const SuggestionCard: FC<Props> = ({
 							{enableJoining && (
 								<>
 									<Joined statement={statement} />
-									{/* Room Badge - shows user's assigned room (uses parent statement ID) */}
-									<RoomBadge statementId={parentStatement?.statementId || statement.parentId} />
+									{/* Room Badge - shows user's assigned room for this option */}
+									<RoomBadge statementId={statement.statementId} />
 									{/* Join count indicator */}
 									{(minJoinMembers !== undefined || maxJoinMembers !== undefined) && (
 										<span

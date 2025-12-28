@@ -66,6 +66,24 @@ function createDemographicKey(tags: DemographicTag[], questionIds: string[]): st
 }
 
 /**
+ * Get all active room settings IDs for a parent statement
+ * Used to find the highest room number across all options
+ */
+async function getActiveSettingsIdsForParent(parentStatementId: string): Promise<string[]> {
+	const settingsSnapshot = await db
+		.collection(Collections.roomsSettings)
+		.where('topParentId', '==', parentStatementId)
+		.where('status', '==', 'active')
+		.get();
+
+	if (settingsSnapshot.empty) {
+		return ['__none__']; // Return dummy value for 'in' query (Firestore requires non-empty array)
+	}
+
+	return settingsSnapshot.docs.map(doc => doc.id);
+}
+
+/**
  * Stratified Round-Robin Scrambling Algorithm
  * Distributes participants across rooms to maximize demographic diversity
  */
@@ -331,10 +349,40 @@ export async function splitJoinedOption(req: Request, res: Response): Promise<vo
 			return;
 		}
 
-		// 6. Save to Firestore using batch
+		// 6. Archive any existing active room settings for this option
+		const existingSettingsSnapshot = await db
+			.collection(Collections.roomsSettings)
+			.where('statementId', '==', optionStatementId)
+			.where('status', '==', 'active')
+			.get();
+
+		// 7. Find the highest room number used across all options for this parent
+		// This ensures global room numbering (Room 1, 2 for Topic A, Room 3 for Topic B, etc.)
+		const allRoomsSnapshot = await db
+			.collection(Collections.rooms)
+			.where('settingsId', 'in', await getActiveSettingsIdsForParent(parentStatementId))
+			.get();
+
+		let maxRoomNumber = 0;
+		allRoomsSnapshot.docs.forEach(doc => {
+			const roomNum = doc.data().roomNumber || 0;
+			if (roomNum > maxRoomNumber) {
+				maxRoomNumber = roomNum;
+			}
+		});
+
+		logger.info(`Highest existing room number for parent ${parentStatementId}: ${maxRoomNumber}`);
+
+		// 8. Save to Firestore using batch
 		const batch = db.batch();
 		const settingsId = getRandomUID();
 		const now = Date.now();
+
+		// Archive existing settings
+		for (const doc of existingSettingsSnapshot.docs) {
+			batch.update(doc.ref, { status: 'archived', lastUpdate: now });
+			logger.info(`Archiving old room settings: ${doc.id}`);
+		}
 
 		// Create room settings document
 		const roomSettings: RoomSettings = {
@@ -355,15 +403,17 @@ export async function splitJoinedOption(req: Request, res: Response): Promise<vo
 		batch.set(db.collection(Collections.roomsSettings).doc(settingsId), roomSettings);
 
 		// Create room documents and participant documents
+		// Apply global room number offset so room numbers continue across all options
 		const roomsCreated: Array<{ roomId: string; roomNumber: number; participantCount: number }> = [];
 
 		for (const room of scrambleResult.rooms) {
+			const globalRoomNumber = room.roomNumber + maxRoomNumber; // Apply offset for global numbering
 			const roomId = getRandomUID();
 			const roomDoc: Room = {
 				roomId,
 				settingsId,
 				statementId: optionStatementId,
-				roomNumber: room.roomNumber,
+				roomNumber: globalRoomNumber,
 				participants: room.participants.map(p => p.userId),
 				createdAt: now,
 			};
@@ -372,7 +422,7 @@ export async function splitJoinedOption(req: Request, res: Response): Promise<vo
 
 			roomsCreated.push({
 				roomId,
-				roomNumber: room.roomNumber,
+				roomNumber: globalRoomNumber,
 				participantCount: room.participants.length,
 			});
 
@@ -384,7 +434,7 @@ export async function splitJoinedOption(req: Request, res: Response): Promise<vo
 					settingsId,
 					statementId: optionStatementId,
 					roomId,
-					roomNumber: room.roomNumber,
+					roomNumber: globalRoomNumber,
 					userId: participant.userId,
 					userName: participant.userName,
 					demographicTags: participant.demographicTags,
@@ -492,5 +542,172 @@ export async function getOptionsExceedingMax(req: Request, res: Response): Promi
 	} catch (error) {
 		logger.error('Error getting options exceeding max:', error);
 		res.status(500).json({ error: 'Failed to get options exceeding max' });
+	}
+}
+
+/**
+ * HTTP endpoint to get all options with at least one joined member
+ * Used by admin to see all options that can have rooms assigned
+ */
+export async function getAllOptionsWithMembers(req: Request, res: Response): Promise<void> {
+	try {
+		const { parentStatementId } = req.query as { parentStatementId: string };
+
+		if (!parentStatementId) {
+			res.status(400).json({ error: 'Missing parentStatementId' });
+
+			return;
+		}
+
+		// Get parent statement to check settings
+		const parentDoc = await db.collection(Collections.statements).doc(parentStatementId).get();
+
+		if (!parentDoc.exists) {
+			res.status(404).json({ error: 'Parent statement not found' });
+
+			return;
+		}
+
+		const parentData = parentDoc.data();
+		const maxJoinMembers = parentData?.statementSettings?.maxJoinMembers || 7;
+		const minJoinMembers = parentData?.statementSettings?.minJoinMembers || 3;
+
+		// Get all option statements under this parent
+		const optionsSnapshot = await db
+			.collection(Collections.statements)
+			.where('parentId', '==', parentStatementId)
+			.where('statementType', '==', 'option')
+			.get();
+
+		// Get existing room settings to check which options already have rooms
+		const settingsSnapshot = await db
+			.collection(Collections.roomsSettings)
+			.where('topParentId', '==', parentStatementId)
+			.where('status', '==', 'active')
+			.get();
+
+		const optionsWithActiveRooms = new Set<string>();
+		settingsSnapshot.docs.forEach(doc => {
+			optionsWithActiveRooms.add(doc.data().statementId);
+		});
+
+		const optionsWithMembers: Array<{
+			statementId: string;
+			statement: string;
+			joinedCount: number;
+			maxMembers: number;
+			minMembers: number;
+			hasActiveRooms: boolean;
+		}> = [];
+
+		for (const doc of optionsSnapshot.docs) {
+			const option = doc.data();
+			const joinedCount = option.joined?.length || 0;
+
+			// Only include options with at least 1 member
+			if (joinedCount > 0) {
+				optionsWithMembers.push({
+					statementId: option.statementId,
+					statement: option.statement,
+					joinedCount,
+					maxMembers: maxJoinMembers,
+					minMembers: minJoinMembers,
+					hasActiveRooms: optionsWithActiveRooms.has(option.statementId),
+				});
+			}
+		}
+
+		res.status(200).json({
+			maxJoinMembers,
+			minJoinMembers,
+			totalOptions: optionsSnapshot.size,
+			optionsWithMembersCount: optionsWithMembers.length,
+			options: optionsWithMembers.sort((a, b) => b.joinedCount - a.joinedCount),
+		});
+	} catch (error) {
+		logger.error('Error getting all options with members:', error);
+		res.status(500).json({ error: 'Failed to get options with members' });
+	}
+}
+
+/**
+ * HTTP endpoint to clean up duplicate room settings
+ * Keeps only the most recent active setting per option, archives the rest
+ */
+export async function cleanupDuplicateRoomSettings(req: Request, res: Response): Promise<void> {
+	try {
+		const { topParentId } = req.query as { topParentId: string };
+
+		if (!topParentId) {
+			res.status(400).json({ error: 'Missing topParentId' });
+			return;
+		}
+
+		logger.info(`Cleaning up duplicate room settings for topParentId: ${topParentId}`);
+
+		// Get all room settings for this parent
+		const settingsSnapshot = await db
+			.collection(Collections.roomsSettings)
+			.where('topParentId', '==', topParentId)
+			.get();
+
+		if (settingsSnapshot.empty) {
+			res.status(200).json({ message: 'No room settings found', cleaned: 0 });
+			return;
+		}
+
+		// Group by option (statementId) and find duplicates
+		const settingsByOption = new Map<string, Array<{ id: string; createdAt: number; status: string }>>();
+
+		for (const doc of settingsSnapshot.docs) {
+			const data = doc.data();
+			const optionId = data.statementId;
+
+			if (!settingsByOption.has(optionId)) {
+				settingsByOption.set(optionId, []);
+			}
+			settingsByOption.get(optionId)!.push({
+				id: doc.id,
+				createdAt: data.createdAt || 0,
+				status: data.status || 'active',
+			});
+		}
+
+		// Archive duplicates (keep only the most recent per option)
+		const batch = db.batch();
+		let archivedCount = 0;
+		const now = Date.now();
+
+		for (const [optionId, settings] of settingsByOption) {
+			// Sort by createdAt descending (most recent first)
+			settings.sort((a, b) => b.createdAt - a.createdAt);
+
+			// Archive all except the most recent
+			for (let i = 1; i < settings.length; i++) {
+				const setting = settings[i];
+				if (setting.status === 'active') {
+					batch.update(db.collection(Collections.roomsSettings).doc(setting.id), {
+						status: 'archived',
+						lastUpdate: now,
+					});
+					archivedCount++;
+					logger.info(`Archiving duplicate setting ${setting.id} for option ${optionId}`);
+				}
+			}
+		}
+
+		if (archivedCount > 0) {
+			await batch.commit();
+		}
+
+		res.status(200).json({
+			message: `Cleanup complete`,
+			totalSettings: settingsSnapshot.size,
+			optionsWithSettings: settingsByOption.size,
+			archivedCount,
+		});
+	} catch (error) {
+		logger.error('Error cleaning up room settings:', error);
+		res.status(500).json({ error: 'Failed to cleanup room settings' });
 	}
 }

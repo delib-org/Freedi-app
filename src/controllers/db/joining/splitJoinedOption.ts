@@ -43,6 +43,24 @@ interface GetOptionsExceedingMaxResponse {
 	error?: string;
 }
 
+export interface OptionWithMembers {
+	statementId: string;
+	statement: string;
+	joinedCount: number;
+	maxMembers: number;
+	minMembers: number;
+	hasActiveRooms: boolean;
+}
+
+interface GetAllOptionsWithMembersResponse {
+	maxJoinMembers: number;
+	minJoinMembers: number;
+	totalOptions: number;
+	optionsWithMembersCount: number;
+	options: OptionWithMembers[];
+	error?: string;
+}
+
 export interface SplitJoinedOptionParams {
 	optionStatementId: string;
 	parentStatementId: string;
@@ -166,6 +184,48 @@ export async function getOptionsExceedingMax(
 	} catch (error) {
 		logError(error, {
 			operation: 'splitJoinedOption.getOptionsExceedingMax',
+			statementId: parentStatementId,
+		});
+		throw error;
+	}
+}
+
+/**
+ * Get all options with at least one joined member
+ * Used by admin to see all options that can have rooms assigned
+ * @param parentStatementId - The parent statement to check options for
+ * @returns List of all options with members
+ */
+export async function getAllOptionsWithMembers(
+	parentStatementId: string
+): Promise<GetAllOptionsWithMembersResponse> {
+	try {
+		const baseUrl = getFunctionsUrl();
+		const response = await fetch(
+			`${baseUrl}/getAllOptionsWithMembers?parentStatementId=${encodeURIComponent(parentStatementId)}`,
+			{
+				method: 'GET',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+			}
+		);
+
+		const data: GetAllOptionsWithMembersResponse = await response.json();
+
+		if (data.error) {
+			throw new Error(data.error);
+		}
+
+		logger.info('Got all options with members', {
+			parentStatementId,
+			optionsWithMembersCount: data.optionsWithMembersCount,
+		});
+
+		return data;
+	} catch (error) {
+		logError(error, {
+			operation: 'splitJoinedOption.getAllOptionsWithMembers',
 			statementId: parentStatementId,
 		});
 		throw error;

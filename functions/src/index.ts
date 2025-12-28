@@ -119,6 +119,8 @@ import {
 import {
   splitJoinedOption,
   getOptionsExceedingMax,
+  getAllOptionsWithMembers,
+  cleanupDuplicateRoomSettings,
 } from "./fn_splitJoinedOption";
 
 // Discussion Summarization
@@ -524,6 +526,8 @@ exports.deleteRoomAssignments = wrapHttpFunction(deleteRoomAssignments);
 // Split Joined Option functions
 exports.splitJoinedOption = wrapHttpFunction(splitJoinedOption);
 exports.getOptionsExceedingMax = wrapHttpFunction(getOptionsExceedingMax);
+exports.getAllOptionsWithMembers = wrapHttpFunction(getAllOptionsWithMembers);
+exports.cleanupDuplicateRoomSettings = wrapHttpFunction(cleanupDuplicateRoomSettings);
 
 // Discussion Summarization
 exports.summarizeDiscussion = summarizeDiscussion;

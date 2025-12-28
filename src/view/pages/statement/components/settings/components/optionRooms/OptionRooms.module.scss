@@ -161,6 +161,11 @@
 		border-radius: 6px;
 		border: 1px solid var(--gray-border);
 
+		&--assigned {
+			border-left: 3px solid var(--btn-primary);
+			background: rgba(95, 136, 229, 0.05);
+		}
+
 		&--ok {
 			border-left: 3px solid var(--agree);
 		}
@@ -196,6 +201,10 @@
 	}
 
 	&__statusIcon {
+		&--assigned {
+			color: var(--btn-primary);
+		}
+
 		&--ok {
 			color: var(--agree);
 		}
@@ -245,6 +254,16 @@
 		}
 	}
 
+	&__assignAllButton {
+		margin-top: 1rem;
+		display: flex;
+		justify-content: center;
+
+		button {
+			min-width: 200px;
+		}
+	}
+
 	// Split result
 	&__splitResult {
 		padding: 1rem;
@@ -257,5 +276,126 @@
 		margin: 0;
 		color: var(--agree);
 		font-size: 0.9rem;
+	}
+}
+
+// Rooms Display Styles
+.roomsDisplay {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+
+	&__room {
+		border: 1px solid var(--gray-border);
+		border-radius: 8px;
+		overflow: hidden;
+		background: var(--card-default);
+	}
+
+	&__roomHeader {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		width: 100%;
+		padding: 0.75rem 1rem;
+		background: none;
+		border: none;
+		cursor: pointer;
+		color: var(--text-body);
+		transition: background 0.15s ease;
+
+		&:hover {
+			background: rgba(0, 0, 0, 0.03);
+		}
+	}
+
+	&__roomInfo {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+
+		svg {
+			color: var(--btn-primary);
+		}
+	}
+
+	&__roomName {
+		font-weight: 500;
+		color: var(--text-heading);
+	}
+
+	&__roomCount {
+		display: flex;
+		align-items: center;
+		gap: 0.25rem;
+		font-size: 0.85rem;
+		color: var(--text-muted);
+		background: rgba(0, 0, 0, 0.05);
+		padding: 0.15rem 0.5rem;
+		border-radius: 12px;
+	}
+
+	&__topicBadge {
+		display: flex;
+		align-items: center;
+		gap: 0.25rem;
+		font-size: 0.8rem;
+		color: var(--btn-primary);
+		background: rgba(95, 136, 229, 0.1);
+		padding: 0.15rem 0.5rem;
+		border-radius: 12px;
+		max-width: 150px;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	&__participants {
+		padding: 0.75rem 1rem;
+		border-top: 1px solid var(--gray-border);
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+	}
+
+	&__emptyRoom {
+		margin: 0;
+		color: var(--text-muted);
+		font-size: 0.85rem;
+		font-style: italic;
+	}
+
+	&__participant {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.5rem;
+		padding: 0.5rem 0.75rem;
+		background: rgba(0, 0, 0, 0.02);
+		border-radius: 6px;
+
+		@include mobile {
+			flex-direction: column;
+			align-items: flex-start;
+		}
+	}
+
+	&__participantName {
+		font-size: 0.9rem;
+		color: var(--text-body);
+	}
+
+	&__demographicTags {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.25rem;
+	}
+
+	&__tag {
+		display: inline-block;
+		padding: 0.15rem 0.5rem;
+		font-size: 0.75rem;
+		border-radius: 10px;
+		white-space: nowrap;
 	}
 }

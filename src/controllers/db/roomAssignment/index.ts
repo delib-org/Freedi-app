@@ -5,8 +5,11 @@ export {
 	listenToUserRoomAssignment,
 	// Admin functions
 	listenToRoomSettingsByStatement,
+	listenToRoomSettingsByTopParent,
 	listenToRoomsBySettingsId,
+	listenToRoomsBySettingsIdMerge,
 	listenToParticipantsBySettingsId,
+	listenToParticipantsBySettingsIdMerge,
 	getRoomAssignmentDataForAdmin,
 	listenToMyRoomAssignmentWithDispatch,
 	// Backwards compatibility aliases

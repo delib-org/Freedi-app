@@ -1,29 +1,20 @@
 import { FC } from 'react';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
-import { AlertTriangle, Check, Users } from 'lucide-react';
+import { AlertTriangle, Check, Users, CheckCircle } from 'lucide-react';
 import Button, { ButtonType } from '@/view/components/buttons/button/Button';
+import { OptionWithMembers } from '@/controllers/db/joining/splitJoinedOption';
 import styles from './OptionRooms.module.scss';
 
-export interface OptionStatus {
-	statementId: string;
-	statement: string;
-	joinedCount: number;
-	minMembers: number;
-	maxMembers: number;
-}
-
 interface OptionsStatusListProps {
-	options: OptionStatus[];
-	onSplitOption: (statementId: string) => void;
-	isSplitting?: boolean;
-	splittingOptionId?: string;
+	options: OptionWithMembers[];
+	onAssignAllRooms: () => void;
+	isAssigning?: boolean;
 }
 
 const OptionsStatusList: FC<OptionsStatusListProps> = ({
 	options,
-	onSplitOption,
-	isSplitting = false,
-	splittingOptionId,
+	onAssignAllRooms,
+	isAssigning = false,
 }) => {
 	const { t } = useTranslation();
 
@@ -36,15 +27,18 @@ const OptionsStatusList: FC<OptionsStatusListProps> = ({
 		);
 	}
 
-	const getStatusType = (option: OptionStatus): 'ok' | 'warning' | 'exceeds' => {
+	const getStatusType = (option: OptionWithMembers): 'assigned' | 'ok' | 'warning' | 'exceeds' => {
+		if (option.hasActiveRooms) return 'assigned';
 		if (option.joinedCount > option.maxMembers) return 'exceeds';
 		if (option.joinedCount < option.minMembers) return 'warning';
 
 		return 'ok';
 	};
 
-	const getStatusIcon = (status: 'ok' | 'warning' | 'exceeds') => {
+	const getStatusIcon = (status: 'assigned' | 'ok' | 'warning' | 'exceeds') => {
 		switch (status) {
+			case 'assigned':
+				return <CheckCircle size={16} className={styles['optionRooms__statusIcon--assigned']} />;
 			case 'ok':
 				return <Check size={16} className={styles['optionRooms__statusIcon--ok']} />;
 			case 'warning':
@@ -54,10 +48,12 @@ const OptionsStatusList: FC<OptionsStatusListProps> = ({
 		}
 	};
 
-	const getStatusText = (option: OptionStatus, status: 'ok' | 'warning' | 'exceeds') => {
+	const getStatusText = (option: OptionWithMembers, status: 'assigned' | 'ok' | 'warning' | 'exceeds') => {
 		switch (status) {
+			case 'assigned':
+				return t('Rooms assigned');
 			case 'ok':
-				return t('OK');
+				return t('Ready to assign');
 			case 'warning':
 				return t('Below minimum') + ` (${option.minMembers})`;
 			case 'exceeds':
@@ -65,20 +61,22 @@ const OptionsStatusList: FC<OptionsStatusListProps> = ({
 		}
 	};
 
+	// Check if any rooms are already assigned
+	const hasExistingRooms = options.some(opt => opt.hasActiveRooms);
+	const totalParticipants = options.reduce((sum, opt) => sum + opt.joinedCount, 0);
+
 	return (
 		<div className={styles.optionRooms__subsection}>
 			<h3 className={styles.optionRooms__subsectionTitle}>
-				{t('Options Needing Rooms')}
+				{t('Options with Participants')}
 			</h3>
 			<p className={styles.optionRooms__subsectionDescription}>
-				{t('Options that exceed the maximum will need to be split into rooms')}
+				{options.length} {t('options')} {t('with')} {totalParticipants} {t('participants')}
 			</p>
 
 			<div className={styles.optionRooms__statusList}>
 				{options.map((option) => {
 					const status = getStatusType(option);
-					const needsSplit = status === 'exceeds';
-					const roomsNeeded = Math.ceil(option.joinedCount / option.maxMembers);
 
 					return (
 						<div
@@ -101,23 +99,18 @@ const OptionsStatusList: FC<OptionsStatusListProps> = ({
 									</span>
 								</div>
 							</div>
-							{needsSplit && (
-								<div className={styles.optionRooms__statusActions}>
-									<Button
-										text={
-											isSplitting && splittingOptionId === option.statementId
-												? t('Splitting...')
-												: t('Split into') + ` ${roomsNeeded} ` + t('rooms')
-										}
-										buttonType={ButtonType.PRIMARY}
-										onClick={() => onSplitOption(option.statementId)}
-										disabled={isSplitting}
-									/>
-								</div>
-							)}
 						</div>
 					);
 				})}
+			</div>
+
+			<div className={styles.optionRooms__assignAllButton}>
+				<Button
+					text={isAssigning ? t('Assigning...') : (hasExistingRooms ? t('Reassign all rooms') : t('Assign all rooms'))}
+					buttonType={ButtonType.PRIMARY}
+					onClick={onAssignAllRooms}
+					disabled={isAssigning}
+				/>
 			</div>
 		</div>
 	);

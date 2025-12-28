@@ -6,6 +6,8 @@ import {
 	setRoomSettingsArray,
 	setRoomsArray,
 	setParticipantsArray,
+	mergeRoomsBySettingsId,
+	mergeParticipantsBySettingsId,
 	setMyAssignment,
 	setLoading,
 } from '@/redux/roomAssignment/roomAssignmentSlice';
@@ -131,7 +133,43 @@ export function listenToRoomSettingsByStatement(
 }
 
 /**
+ * Listen to room settings for all options under a parent statement (with Redux dispatch)
+ * This queries by topParentId to find rooms for all options under the parent
+ * @param topParentId - The top parent statement ID
+ * @param dispatch - Redux dispatch function
+ * @returns Unsubscribe function
+ */
+export function listenToRoomSettingsByTopParent(
+	topParentId: string,
+	dispatch: AppDispatch
+): () => void {
+	try {
+		const settingsRef = collection(FireStore, 'roomsSettings');
+		const q = query(
+			settingsRef,
+			where('topParentId', '==', topParentId)
+		);
+
+		return onSnapshot(q, (snapshot) => {
+			const settings: RoomSettings[] = [];
+			snapshot.forEach((doc) => {
+				settings.push(doc.data() as RoomSettings);
+			});
+			dispatch(setRoomSettingsArray(settings));
+		}, (error) => {
+			console.error('Error listening to room settings by top parent:', error);
+			dispatch(setRoomSettingsArray([]));
+		});
+	} catch (error) {
+		console.error('Error setting up room settings listener:', error);
+
+		return () => {};
+	}
+}
+
+/**
  * Listen to rooms for a specific settings ID (with Redux dispatch)
+ * Note: This REPLACES all rooms in Redux. Use listenToRoomsBySettingsIdMerge for multi-settings scenarios.
  * @param settingsId - The settings ID
  * @param dispatch - Redux dispatch function
  * @returns Unsubscribe function
@@ -167,7 +205,45 @@ export function listenToRoomsBySettingsId(
 }
 
 /**
+ * Listen to rooms for a specific settings ID and MERGE with existing rooms
+ * Use this when loading rooms from multiple settings simultaneously
+ * @param settingsId - The settings ID
+ * @param dispatch - Redux dispatch function
+ * @returns Unsubscribe function
+ */
+export function listenToRoomsBySettingsIdMerge(
+	settingsId: string,
+	dispatch: AppDispatch
+): () => void {
+	try {
+		const roomsRef = collection(FireStore, 'rooms');
+		const q = query(
+			roomsRef,
+			where('settingsId', '==', settingsId)
+		);
+
+		return onSnapshot(q, (snapshot) => {
+			const rooms: Room[] = [];
+			snapshot.forEach((doc) => {
+				rooms.push(doc.data() as Room);
+			});
+			// Sort by room number
+			rooms.sort((a, b) => a.roomNumber - b.roomNumber);
+			dispatch(mergeRoomsBySettingsId({ settingsId, rooms }));
+		}, (error) => {
+			console.error('Error listening to rooms:', error);
+			dispatch(mergeRoomsBySettingsId({ settingsId, rooms: [] }));
+		});
+	} catch (error) {
+		console.error('Error setting up rooms listener:', error);
+
+		return () => {};
+	}
+}
+
+/**
  * Listen to participants for a specific settings ID (with Redux dispatch)
+ * Note: This REPLACES all participants in Redux. Use listenToParticipantsBySettingsIdMerge for multi-settings scenarios.
  * @param settingsId - The settings ID
  * @param dispatch - Redux dispatch function
  * @returns Unsubscribe function
@@ -192,6 +268,41 @@ export function listenToParticipantsBySettingsId(
 		}, (error) => {
 			console.error('Error listening to participants:', error);
 			dispatch(setParticipantsArray([]));
+		});
+	} catch (error) {
+		console.error('Error setting up participants listener:', error);
+
+		return () => {};
+	}
+}
+
+/**
+ * Listen to participants for a specific settings ID and MERGE with existing participants
+ * Use this when loading participants from multiple settings simultaneously
+ * @param settingsId - The settings ID
+ * @param dispatch - Redux dispatch function
+ * @returns Unsubscribe function
+ */
+export function listenToParticipantsBySettingsIdMerge(
+	settingsId: string,
+	dispatch: AppDispatch
+): () => void {
+	try {
+		const participantsRef = collection(FireStore, 'roomParticipants');
+		const q = query(
+			participantsRef,
+			where('settingsId', '==', settingsId)
+		);
+
+		return onSnapshot(q, (snapshot) => {
+			const participants: RoomParticipant[] = [];
+			snapshot.forEach((doc) => {
+				participants.push(doc.data() as RoomParticipant);
+			});
+			dispatch(mergeParticipantsBySettingsId({ settingsId, participants }));
+		}, (error) => {
+			console.error('Error listening to participants:', error);
+			dispatch(mergeParticipantsBySettingsId({ settingsId, participants: [] }));
 		});
 	} catch (error) {
 		console.error('Error setting up participants listener:', error);
