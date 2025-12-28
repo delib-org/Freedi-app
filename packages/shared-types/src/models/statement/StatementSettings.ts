@@ -28,6 +28,9 @@ export const StatementSettingsSchema = object({
 	enhancedEvaluation: optional(boolean()),
 	evaluationType: optional(enum_(evaluationType)),
 	joiningEnabled: optional(boolean()),
+	singleJoinOnly: optional(boolean()), // If true, user can only join ONE option under this parent
+	minJoinMembers: optional(number()), // Minimum members per option (for visual indicator)
+	maxJoinMembers: optional(number()), // Maximum members per option (for visual indicator + split trigger)
 	showEvaluation: optional(boolean()),
 	inVotingGetOnlyResults: optional(boolean()),
 	enableSimilaritiesSearch: optional(boolean()),

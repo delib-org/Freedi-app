@@ -1,0 +1,50 @@
+// Room Badge Component
+// Displays user's assigned room number on suggestion cards
+
+.roomBadge {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.25rem;
+	padding: 0.25rem 0.625rem;
+	border-radius: 12px;
+	font-size: 0.8rem;
+	font-weight: 600;
+	line-height: 1;
+	white-space: nowrap;
+	background: linear-gradient(135deg, var(--btn-primary) 0%, #4a70c7 100%);
+	color: white;
+	box-shadow: 0 2px 4px rgba(95, 136, 229, 0.25);
+	transition: all 0.2s ease;
+	cursor: default;
+
+	// Hover effect - subtle elevation
+	&:hover {
+		transform: translateY(-1px);
+		box-shadow: 0 3px 8px rgba(95, 136, 229, 0.35);
+	}
+
+	// Text element
+	&__text {
+		letter-spacing: 0.02em;
+	}
+
+	// Mobile: slightly larger for touch
+	@media screen and (max-width: 600px) {
+		padding: 0.3rem 0.75rem;
+		font-size: 0.85rem;
+	}
+
+	// RTL Support
+	[dir='rtl'] & {
+		flex-direction: row-reverse;
+	}
+
+	// Reduced motion
+	@media (prefers-reduced-motion: reduce) {
+		transition: none;
+
+		&:hover {
+			transform: none;
+		}
+	}
+}

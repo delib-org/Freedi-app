@@ -115,6 +115,15 @@ import {
   deleteRoomAssignments,
 } from "./fn_roomAssignment";
 
+// Split Joined Option functions
+import {
+  splitJoinedOption,
+  getOptionsExceedingMax,
+  getAllOptionsWithMembers,
+  clearAllRoomsForParent,
+  cleanupDuplicateRoomSettings,
+} from "./fn_splitJoinedOption";
+
 // Discussion Summarization
 import { summarizeDiscussion } from "./fn_summarizeDiscussion";
 
@@ -514,6 +523,13 @@ exports.notifyRoomParticipants = wrapHttpFunction(notifyRoomParticipants);
 exports.getRoomAssignments = wrapHttpFunction(getRoomAssignments);
 exports.getMyRoomAssignment = wrapHttpFunction(getMyRoomAssignment);
 exports.deleteRoomAssignments = wrapHttpFunction(deleteRoomAssignments);
+
+// Split Joined Option functions
+exports.splitJoinedOption = wrapHttpFunction(splitJoinedOption);
+exports.getOptionsExceedingMax = wrapHttpFunction(getOptionsExceedingMax);
+exports.getAllOptionsWithMembers = wrapHttpFunction(getAllOptionsWithMembers);
+exports.clearAllRoomsForParent = wrapHttpFunction(clearAllRoomsForParent);
+exports.cleanupDuplicateRoomSettings = wrapHttpFunction(cleanupDuplicateRoomSettings);
 
 // Discussion Summarization
 exports.summarizeDiscussion = summarizeDiscussion;

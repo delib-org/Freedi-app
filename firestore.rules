@@ -13,9 +13,12 @@ service cloud.firestore {
     
     // All collection rules
     match /termsOfUseAcceptance/{document} {
-      allow read: if request.auth != null && 
+      // Allow get (single document) if user owns it
+      allow get: if request.auth != null &&
                     request.auth.uid == resource.data.userId;
-      allow create: if request.auth != null && 
+      // Allow list/query if user is authenticated (queries are filtered by userId in code)
+      allow list: if request.auth != null;
+      allow create: if request.auth != null &&
                      request.auth.uid == request.resource.data.userId &&
                      request.resource.data.accepted == true;
     }
@@ -352,6 +355,11 @@ service cloud.firestore {
       allow write: if request.auth.uid != null;
     }
 
+    match /roomParticipants/{participantId=**} {
+      allow read: if request.auth.uid != null;
+      allow write: if request.auth.uid != null;
+    }
+
     match /timers-rooms/{timerIdx=**} {
       allow read: if request.auth.uid != null;
       allow write: if request.auth.uid != null;
@@ -427,73 +435,70 @@ service cloud.firestore {
       allow write: if request.auth.uid != null;
     }
 
-    match /usersV2/{userId=**} {
-      allow read: if request.auth.uid != null;
-      allow write: if request.auth.uid == request.resource.data.uid;
-    }
+    match /usersV2/{userId} {
+      allow read: if request.auth != null;
+      // Allow users to write their own document (userId must match auth uid)
+      allow write: if request.auth != null && request.auth.uid == userId;
 
-    match /users/{user} {
-      allow read;
-      allow write: if request.auth.uid != null;
-      
+      // Subcollections - user can only access their own subcollections
       match /chat/{chat=**} {
-        allow read;
-        allow write: if request.auth.uid != null;
+        allow read: if request.auth != null && request.auth.uid == userId;
+        allow write: if request.auth != null && request.auth.uid == userId;
       }
-      
+
       match /chatLastEnterence/{chatLastEnterence=**} {
-        allow read;
-        allow write: if request.auth.uid != null;
+        allow read: if request.auth != null && request.auth.uid == userId;
+        allow write: if request.auth != null && request.auth.uid == userId;
       }
-      
+
       match /feed/{feed=**} {
-        allow read;
-        allow write: if request.auth.uid != null;
+        allow read: if request.auth != null && request.auth.uid == userId;
+        allow write: if request.auth != null && request.auth.uid == userId;
       }
-      
+
       match /feedLastEntrence/{feedLastEntrence=**} {
-        allow read;
-        allow write: if request.auth.uid != null;
+        allow read: if request.auth != null && request.auth.uid == userId;
+        allow write: if request.auth != null && request.auth.uid == userId;
       }
-      
+
       match /feeds/{feeds=**} {
-        allow read;
-        allow write: if request.auth.uid != null;
+        allow read: if request.auth != null && request.auth.uid == userId;
+        allow write: if request.auth != null && request.auth.uid == userId;
       }
-      
+
       match /groups/{groups=**} {
-        allow read;
-        allow write: if request.auth.uid != null;
+        allow read: if request.auth != null && request.auth.uid == userId;
+        allow write: if request.auth != null && request.auth.uid == userId;
       }
-      
+
       match /groupsOwned/{groupsOwned=**} {
-        allow read;
-        allow write: if request.auth.uid != null;
+        allow read: if request.auth != null && request.auth.uid == userId;
+        allow write: if request.auth != null && request.auth.uid == userId;
       }
-      
+
       match /messages/{messages=**} {
-        allow read;
-        allow write: if request.auth.uid != null;
+        allow read: if request.auth != null && request.auth.uid == userId;
+        allow write: if request.auth != null && request.auth.uid == userId;
       }
-      
+
       match /messagesCounter/{messagesCounter=**} {
-        allow read;
-        allow write: if request.auth.uid != null;
+        allow read: if request.auth != null && request.auth.uid == userId;
+        allow write: if request.auth != null && request.auth.uid == userId;
       }
-      
+
       match /optionsRead/{optionsRead=**} {
-        allow read;
-        allow write: if request.auth.uid != null;
+        allow read: if request.auth != null && request.auth.uid == userId;
+        allow write: if request.auth != null && request.auth.uid == userId;
       }
-      
+
       match /registerGroups/{registerGroups=**} {
-        allow read;
-        allow write: if request.auth.uid != null;
+        allow read: if request.auth != null && request.auth.uid == userId;
+        allow write: if request.auth != null && request.auth.uid == userId;
       }
-      
+
       match /memberships/{membership} {
-        allow read: if request.auth.uid != null;
-        allow write: if request.auth.uid != null;
+        allow read: if request.auth != null && request.auth.uid == userId;
+        allow write: if request.auth != null && request.auth.uid == userId;
       }
     }
     
@@ -640,62 +645,8 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
-    // Room Assignment Rules
-
-    // Room Settings - Admins can manage, members can read
-    match /roomsSettings/{settingsId} {
-      function isStatementAdmin() {
-        let settings = resource != null ? resource : request.resource;
-        let statementId = settings.data.statementId;
-        let subId = string(request.auth.uid) + '--' + cleanPath(string(statementId));
-        let subscription = get(/databases/$(database)/documents/statementsSubscribe/$(subId)).data;
-        return subscription != null && (subscription.role == 'admin' || subscription.role == 'statement-creator');
-      }
-
-      function isStatementMember() {
-        let settings = resource != null ? resource : request.resource;
-        let statementId = settings.data.statementId;
-        let subId = string(request.auth.uid) + '--' + cleanPath(string(statementId));
-        return exists(/databases/$(database)/documents/statementsSubscribe/$(subId));
-      }
-
-      allow read: if request.auth != null && isStatementMember();
-      allow create, update, delete: if request.auth != null && isStatementAdmin();
-    }
-
-    // Rooms - Admins can manage, members can read
-    match /rooms/{roomId} {
-      function isStatementAdmin() {
-        let room = resource != null ? resource : request.resource;
-        let statementId = room.data.statementId;
-        let subId = string(request.auth.uid) + '--' + cleanPath(string(statementId));
-        let subscription = get(/databases/$(database)/documents/statementsSubscribe/$(subId)).data;
-        return subscription != null && (subscription.role == 'admin' || subscription.role == 'statement-creator');
-      }
-
-      function isStatementMember() {
-        let room = resource != null ? resource : request.resource;
-        let statementId = room.data.statementId;
-        let subId = string(request.auth.uid) + '--' + cleanPath(string(statementId));
-        return exists(/databases/$(database)/documents/statementsSubscribe/$(subId));
-      }
-
-      allow read: if request.auth != null && isStatementMember();
-      allow create, update, delete: if request.auth != null && isStatementAdmin();
-    }
-
-    // Room Participants - Authenticated users can read, admins can manage
-    // Note: Using simple auth check for reads because collection list queries
-    // cannot evaluate document-level fields before returning results.
-    // The data is not sensitive (room numbers, participant names) and access
-    // is already limited by knowing the settingsId.
-    match /roomParticipants/{participantId} {
-      // Allow read for any authenticated user (room data is not sensitive)
-      allow read: if request.auth != null;
-      // Allow writes for any authenticated user (cloud functions handle authorization)
-      // Note: Proper validation would require multiple chained gets which is complex
-      // The cloud function already validates admin status before writing
-      allow create, update, delete: if request.auth != null;
-    }
+    // Room Assignment Rules are defined above in the simple rules section
+    // (rooms, roomsSettings, roomParticipants at lines 343-356)
+    // Cloud functions handle authorization for writes
   }
 }

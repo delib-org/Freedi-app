@@ -46,7 +46,6 @@ export const LastMessageSchema = object({
 
 export type LastMessage = InferOutput<typeof LastMessageSchema>;
 
-
 export const StatementSchema = object({
 	allowAnonymousLogin: optional(boolean()), // if true, allow anonymous login
 	statement: string(), // the text of the statement (title - auto-extracted from first paragraph)
@@ -185,5 +184,3 @@ export const StatementMetaDataSchema = object({
 });
 
 export type StatementMetaData = InferOutput<typeof StatementMetaDataSchema>;
-
-

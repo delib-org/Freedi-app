@@ -1,6 +1,6 @@
 {
   "name": "@freedi/shared-types",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Shared TypeScript types for Freedi apps and functions",
   "main": "./dist/cjs/index.js",
   "module": "./dist/esm/index.js",

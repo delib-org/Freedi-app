@@ -97,6 +97,16 @@ function recordIndexedDBError(): void {
 // Initialize Firestore with appropriate cache settings based on platform
 function initializeFirestoreWithCache(app: ReturnType<typeof initializeApp>): Firestore {
 	const isIOSDevice = isIOS();
+	const isLocalDev = typeof window !== 'undefined' && window.location.hostname === 'localhost';
+
+	// In local development, use memory cache to avoid stale data from emulator restarts
+	if (isLocalDev) {
+		console.info('Localhost detected: Using memory-only cache for Firestore (fresh data on refresh)');
+
+		return initializeFirestore(app, {
+			localCache: memoryLocalCache(),
+		});
+	}
 
 	// iOS Safari has issues with IndexedDB, use memory-only cache
 	if (isIOSDevice) {
@@ -110,7 +120,7 @@ function initializeFirestoreWithCache(app: ReturnType<typeof initializeApp>): Fi
 	// Skip IndexedDB if we've had repeated assertion errors
 	if (shouldSkipIndexedDB()) {
 		console.info('Previous IndexedDB errors detected: Using memory-only cache');
-		
+
 return initializeFirestore(app, {
 			localCache: memoryLocalCache(),
 		});
