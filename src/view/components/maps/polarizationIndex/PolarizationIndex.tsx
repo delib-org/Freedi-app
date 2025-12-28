@@ -10,6 +10,37 @@ import { PolarizationIndex, UserDemographicQuestion } from '@freedi/shared-types
 import { listenToUserDemographicQuestions, listenToGroupDemographicQuestions } from '@/controllers/db/userDemographic/getUserDemographic';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 
+/**
+ * Converts agreement level (-1 to +1) to a color on red-yellow-green gradient
+ * -1 = red (disagree), 0 = yellow (neutral), +1 = green (agree)
+ */
+function getAgreementColor(mean: number): string {
+	// Clamp mean to [-1, 1]
+	const clampedMean = Math.max(-1, Math.min(1, mean));
+
+	// Red: rgb(220, 53, 69) - #dc3545
+	// Yellow: rgb(255, 193, 7) - #ffc107
+	// Green: rgb(40, 167, 69) - #28a745
+
+	if (clampedMean <= 0) {
+		// Interpolate from red (-1) to yellow (0)
+		const t = (clampedMean + 1); // 0 to 1
+		const r = Math.round(220 + (255 - 220) * t);
+		const g = Math.round(53 + (193 - 53) * t);
+		const b = Math.round(69 + (7 - 69) * t);
+
+		return `rgb(${r}, ${g}, ${b})`;
+	} else {
+		// Interpolate from yellow (0) to green (1)
+		const t = clampedMean; // 0 to 1
+		const r = Math.round(255 + (40 - 255) * t);
+		const g = Math.round(193 + (167 - 193) * t);
+		const b = Math.round(7 + (69 - 7) * t);
+
+		return `rgb(${r}, ${g}, ${b})`;
+	}
+}
+
 interface Group {
 	option: {
 		option: string;
@@ -212,7 +243,7 @@ const PolarizationIndexComp = () => {
 											onClick={() => handleShowGroups(point.statementId)}
 											className={`${styles.point} ${isSelected ? styles['point--selected'] : ''}`}
 											style={{
-												backgroundColor: isSelected ? 'var(--btn-primary)' : 'var(--agree)',
+												backgroundColor: getAgreementColor(point.overallMean),
 											}}
 										/>
 									</Tooltip>
