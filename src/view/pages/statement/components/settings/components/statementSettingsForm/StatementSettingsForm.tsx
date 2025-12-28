@@ -41,6 +41,7 @@ import MembersSettings from '../membership/MembersSettings';
 import MemberValidation from '../memberValidation/MemberValidation';
 import EmailNotifications from '../emailNotifications/EmailNotifications';
 import { ClusteringAdmin } from '../ClusteringAdmin';
+import { OptionRooms } from '../optionRooms';
 
 interface StatementSettingsFormProps {
 	statement: Statement;
@@ -207,6 +208,9 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 						>
 							<UserDemographicSetting statement={statement} />
 						</SettingsSection>
+
+						{/* Option Rooms Section - for grouping participants */}
+						<OptionRooms statement={statement} />
 
 						{/* Validation Section - only for questions */}
 						{isQuestion && (

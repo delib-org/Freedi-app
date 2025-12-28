@@ -21,7 +21,6 @@ import {
 import Loader from '@/view/components/loaders/Loader';
 import { Statement } from '@freedi/shared-types';
 import MembersManagement from './components/membership/MembersManagement';
-import { RoomAssignment } from './components/roomAssignment';
 
 const StatementSettings: FC = () => {
 	// * Hooks * //
@@ -123,7 +122,6 @@ const StatementSettings: FC = () => {
 						setStatementToEdit={setStatementToEdit}
 					/>
 					<MembersManagement statement={statementToEdit} />
-					<RoomAssignment statement={statementToEdit} />
 				</>
 			)}
 		</div>

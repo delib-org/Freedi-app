@@ -1,0 +1,261 @@
+@import '@/view/style/mixins';
+
+.optionRooms {
+	display: flex;
+	flex-direction: column;
+	gap: 1.5rem;
+
+	&__subsection {
+		display: flex;
+		flex-direction: column;
+		gap: 0.75rem;
+		padding: 1rem;
+		background: var(--card-default);
+		border-radius: 8px;
+		border: 1px solid var(--gray-border);
+	}
+
+	&__subsectionTitle {
+		font-size: 0.95rem;
+		font-weight: 600;
+		color: var(--text-heading);
+		margin: 0;
+	}
+
+	&__subsectionDescription {
+		font-size: 0.85rem;
+		color: var(--text-muted);
+		margin: 0 0 0.5rem 0;
+	}
+
+	// Toggle and checkbox styles
+	&__toggleRow {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+	}
+
+	&__toggleLabel {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		cursor: pointer;
+		font-size: 0.9rem;
+		color: var(--text-body);
+	}
+
+	&__checkbox {
+		width: 18px;
+		height: 18px;
+		cursor: pointer;
+		accent-color: var(--btn-primary);
+	}
+
+	// Radio group styles
+	&__radioGroup {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+		margin-top: 0.5rem;
+		padding-left: 1.5rem;
+	}
+
+	&__radioLabel {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		cursor: pointer;
+		font-size: 0.9rem;
+		color: var(--text-body);
+	}
+
+	&__radio {
+		width: 16px;
+		height: 16px;
+		cursor: pointer;
+		accent-color: var(--btn-primary);
+	}
+
+	// Size inputs
+	&__sizeInputs {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 1rem;
+
+		@include mobile {
+			grid-template-columns: 1fr;
+		}
+	}
+
+	&__sizeInput {
+		display: flex;
+		flex-direction: column;
+		gap: 0.25rem;
+	}
+
+	&__inputLabel {
+		font-size: 0.85rem;
+		color: var(--text-muted);
+	}
+
+	&__numberInput {
+		width: 100%;
+		padding: 0.5rem 0.75rem;
+		font-size: 1rem;
+		border: 1px solid var(--gray-border);
+		border-radius: 6px;
+		background: var(--card-default);
+		color: var(--text-body);
+
+		&:focus {
+			outline: none;
+			border-color: var(--btn-primary);
+			box-shadow: 0 0 0 2px rgba(95, 136, 229, 0.15);
+		}
+
+		&:disabled {
+			opacity: 0.6;
+			cursor: not-allowed;
+		}
+	}
+
+	// Disabled state
+	&__disabled {
+		opacity: 0.6;
+		pointer-events: none;
+	}
+
+	// Status list styles
+	&__emptyStatus {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 2rem;
+		color: var(--text-muted);
+		text-align: center;
+
+		svg {
+			opacity: 0.5;
+		}
+
+		p {
+			margin: 0;
+			font-size: 0.9rem;
+		}
+	}
+
+	&__statusList {
+		display: flex;
+		flex-direction: column;
+		gap: 0.75rem;
+	}
+
+	&__statusItem {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		gap: 1rem;
+		padding: 0.75rem 1rem;
+		background: var(--card-default);
+		border-radius: 6px;
+		border: 1px solid var(--gray-border);
+
+		&--ok {
+			border-left: 3px solid var(--agree);
+		}
+
+		&--warning {
+			border-left: 3px solid var(--caution);
+			background: rgba(255, 193, 7, 0.05);
+		}
+
+		&--exceeds {
+			border-left: 3px solid var(--disagree);
+			background: rgba(244, 67, 54, 0.05);
+		}
+
+		@include mobile {
+			flex-direction: column;
+			align-items: flex-start;
+		}
+	}
+
+	&__statusInfo {
+		display: flex;
+		flex-direction: column;
+		gap: 0.25rem;
+		flex: 1;
+		min-width: 0;
+	}
+
+	&__statusHeader {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+	}
+
+	&__statusIcon {
+		&--ok {
+			color: var(--agree);
+		}
+
+		&--warning {
+			color: var(--caution);
+		}
+
+		&--exceeds {
+			color: var(--disagree);
+		}
+	}
+
+	&__optionTitle {
+		font-weight: 500;
+		color: var(--text-heading);
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	&__statusDetails {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+		font-size: 0.85rem;
+	}
+
+	&__memberCount {
+		color: var(--text-body);
+	}
+
+	&__statusBadge {
+		color: var(--text-muted);
+		font-size: 0.8rem;
+	}
+
+	&__statusActions {
+		flex-shrink: 0;
+
+		@include mobile {
+			width: 100%;
+
+			button {
+				width: 100%;
+			}
+		}
+	}
+
+	// Split result
+	&__splitResult {
+		padding: 1rem;
+		background: rgba(76, 175, 80, 0.1);
+		border: 1px solid var(--agree);
+		border-radius: 6px;
+	}
+
+	&__splitResultText {
+		margin: 0;
+		color: var(--agree);
+		font-size: 0.9rem;
+	}
+}
