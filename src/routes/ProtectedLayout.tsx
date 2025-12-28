@@ -19,8 +19,9 @@ export default function ProtectedLayout() {
 	const statement = useSelector(statementSelector(statementId));
 
 	// First, fetch the statement if we don't have it
+	// Wait until auth check is complete before fetching
 	useEffect(() => {
-		if (!statement && statementId) {
+		if (!statement && statementId && !isCheckingAccess) {
 			getStatementFromDB(statementId).then((fetchedStatement) => {
 				if (fetchedStatement) {
 					dispatch(setStatement(fetchedStatement));
@@ -28,7 +29,7 @@ export default function ProtectedLayout() {
 				else navigate("/404")
 			});
 		}
-	}, [statementId, statement, dispatch, navigate]);
+	}, [statementId, statement, dispatch, navigate, isCheckingAccess]);
 
 	useEffect(() => {
 		// Don't redirect to 401 if we're still checking access
