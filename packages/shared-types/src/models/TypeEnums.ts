@@ -126,6 +126,7 @@ export enum SortType {
 	random = 'random',
 	accepted = 'accepted',
 	backendOrder = 'backend-order',
+	mostJoined = 'mostJoined',
 }
 
 

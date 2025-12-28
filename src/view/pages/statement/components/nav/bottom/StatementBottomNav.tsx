@@ -11,6 +11,7 @@ import UpdateIcon from '@/assets/icons/updateIcon.svg?react';
 import XmenuIcon from '@/assets/icons/x-icon.svg?react';
 import EyeIcon from '@/assets/icons/eye.svg?react';
 import EyeCrossIcon from '@/assets/icons/eyeCross.svg?react';
+import { Users } from 'lucide-react';
 
 import useStatementColor from '@/controllers/hooks/useStatementColor';
 import styles from './StatementBottomNav.module.scss';
@@ -85,11 +86,18 @@ const StatementBottomNav: FC<Props> = () => {
 
 	const statementColor = useStatementColor({ statement });
 
-	// Filter out the Agreement sort option if showEvaluation is false
+	// Filter out sort options based on settings
 	const showEvaluation = statement?.statementSettings?.showEvaluation ?? true;
-	const filteredSortItems = showEvaluation
-		? sortItems
-		: sortItems.filter(item => item.id !== SortType.accepted);
+	const joiningEnabled = statement?.statementSettings?.joiningEnabled ?? false;
+	const filteredSortItems = sortItems.filter(item => {
+		// Filter out Agreement if evaluation is disabled
+		if (item.id === SortType.accepted && !showEvaluation) return false;
+		// When joining is enabled, show Joined instead of Update
+		if (item.id === SortType.mostJoined && !joiningEnabled) return false;
+		if (item.id === SortType.mostUpdated && joiningEnabled) return false;
+
+		return true;
+	});
 
 	function handleCreateNewOption() {
 		if (!statement) return;
@@ -302,6 +310,7 @@ const NavIcon: FC<NavIconProps> = ({ name, color }) => {
 		case SortType.mostUpdated: return <UpdateIcon {...props} />;
 		case SortType.random: return <RandomIcon {...props} />;
 		case SortType.accepted: return <AgreementIcon {...props} />;
+		case SortType.mostJoined: return <Users size={24} color={color} />;
 		default: return null;
 	}
 };

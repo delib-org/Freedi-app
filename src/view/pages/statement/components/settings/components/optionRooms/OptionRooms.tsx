@@ -137,8 +137,11 @@ const OptionRooms: FC<OptionRoomsProps> = ({ statement }) => {
 				let totalRoomsCreated = 0;
 				let totalParticipantsAssigned = 0;
 
+				// Sort options by joined count (descending) so topics with most participants get lower room numbers
+				const sortedOptions = [...options].sort((a, b) => b.joinedCount - a.joinedCount);
+
 				// Process each option sequentially to ensure proper global room numbering
-				for (const option of options) {
+				for (const option of sortedOptions) {
 					const result = await splitJoinedOption({
 						optionStatementId: option.statementId,
 						parentStatementId: statement.statementId,
