@@ -1,62 +1,618 @@
-.board {
-	width: 90vw;
-	height: 70vh;
+// Collaboration Index Visualization
+// A clear, intuitive chart showing agreement vs polarization
+
+.collaborationIndex {
+	display: flex;
+	flex-direction: column;
+	width: 100%;
+	max-width: 900px;
+	margin: 1.5rem auto;
+	padding: 0 1rem;
+
+	@media (max-width: 600px) {
+		padding: 0 0.5rem;
+		margin: 1rem auto;
+	}
+}
+
+.header {
+	text-align: center;
+	margin-bottom: 1rem;
+
+	&__title {
+		font-size: var(--h3-font-size);
+		color: var(--text-title);
+		font-weight: 500;
+		margin-bottom: 0.25rem;
+	}
+
+	&__subtitle {
+		font-size: 0.875rem;
+		color: var(--text-caption);
+	}
+}
+
+// Main chart area with axes
+.chartContainer {
+	display: flex;
+	gap: 0;
 	position: relative;
-	margin: 3rem auto;
+}
 
-	&-inner {
-		width: 100%;
+// Y-Axis (Polarization)
+.yAxis {
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+	align-items: flex-end;
+	padding-right: 0.5rem;
+	width: 5.5rem;
+	flex-shrink: 0;
+
+	@media (max-width: 600px) {
+		width: 4rem;
+		padding-right: 0.25rem;
+	}
+
+	&__label {
+		writing-mode: vertical-rl;
+		transform: rotate(180deg);
+		font-size: 0.75rem;
+		font-weight: 500;
+		color: var(--text-body);
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		position: absolute;
+		left: 0;
+		top: 50%;
+		transform: rotate(180deg) translateY(50%);
+
+		@media (max-width: 600px) {
+			font-size: 0.65rem;
+		}
+	}
+
+	&__markers {
+		display: flex;
+		flex-direction: column;
+		justify-content: space-between;
 		height: 100%;
-		position: absolute;
-		display: flex;
-		justify-content: center;
-		align-items: center;
-		clip-path: ellipse(50% 100% at 50% 100%);
-		background: #57c760;
-		background: linear-gradient(0deg, var(--approve), rgb(240, 240, 102), var(--reject) 99%);
+		padding: 0.5rem 0;
 	}
 
-	.pointDiv {
-		position: absolute;
-		transition: all 0.3s ease-in-out;
-		width: 30px;
-		height: 30px;
-		transform: translate(-50%, -50%);
-		display: flex;
-		justify-content: center;
-		align-items: center;
+	&__marker {
+		font-size: 0.7rem;
+		color: var(--text-caption);
+		text-align: right;
+		line-height: 1.2;
+
+		&--high {
+			color: var(--reject);
+		}
+
+		&--low {
+			color: var(--approve);
+		}
+	}
+}
+
+// Main board container
+.boardWrapper {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+}
+
+.board {
+	width: 100%;
+	height: 60vh;
+	min-height: 300px;
+	max-height: 500px;
+	position: relative;
+	border-radius: 0.5rem;
+	overflow: hidden;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+
+	@media (max-width: 600px) {
+		height: 50vh;
+		min-height: 250px;
+	}
+}
+
+// The main visualization background with zones
+.boardBackground {
+	width: 100%;
+	height: 100%;
+	position: absolute;
+	top: 0;
+	left: 0;
+	pointer-events: none; // Allow clicks to pass through to dots
+
+	// Base gradient from agreement to disagreement
+	background:
+		// Subtle grid pattern for reference
+		linear-gradient(
+			to right,
+			rgba(0, 0, 0, 0.03) 1px,
+			transparent 1px
+		),
+		linear-gradient(
+			to bottom,
+			rgba(0, 0, 0, 0.03) 1px,
+			transparent 1px
+		),
+		// Main color zones
+		linear-gradient(
+			to top,
+			var(--approve) 0%,
+			rgba(87, 198, 178, 0.6) 25%,
+			rgba(240, 230, 140, 0.5) 50%,
+			rgba(254, 107, 162, 0.6) 75%,
+			var(--reject) 100%
+		);
+	background-size:
+		20% 100%,
+		100% 20%,
+		100% 100%;
+}
+
+// Zone overlay with semantic regions
+.zones {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	pointer-events: none;
+}
+
+// Individual zone indicators
+.zone {
+	position: absolute;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	padding: 0.5rem;
+	border-radius: 0.5rem;
+	background: rgba(255, 255, 255, 0.85);
+	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+	backdrop-filter: blur(4px);
+	text-align: center;
+	z-index: 5;
+	pointer-events: none; // Allow clicks to pass through to dots
+
+	@media (max-width: 600px) {
+		padding: 0.35rem;
+		border-radius: 0.35rem;
 	}
 
-	.point {
-		width: 30px;
-		height: 30px;
-		background-color: red;
+	&__icon {
+		font-size: 1.25rem;
+		margin-bottom: 0.15rem;
+
+		@media (max-width: 600px) {
+			font-size: 1rem;
+			margin-bottom: 0;
+		}
+	}
+
+	&__label {
+		font-size: 0.65rem;
+		font-weight: 500;
+		color: var(--text-body);
+		line-height: 1.2;
+		white-space: nowrap;
+
+		@media (max-width: 600px) {
+			font-size: 0.55rem;
+		}
+	}
+
+	// Consensus zone - bottom right
+	&--consensus {
+		bottom: 8%;
+		right: 8%;
+		border: 2px solid var(--approve);
+	}
+
+	// Rejection zone - bottom left
+	&--rejection {
+		bottom: 8%;
+		left: 8%;
+		border: 2px solid var(--disagree);
+	}
+
+	// Polarized zone - top center
+	&--polarized {
+		top: 8%;
+		left: 50%;
+		transform: translateX(-50%);
+		border: 2px solid var(--range-conflict-100);
+	}
+
+	// Neutral zone - bottom center
+	&--neutral {
+		bottom: 8%;
+		left: 50%;
+		transform: translateX(-50%);
+		border: 2px solid var(--option);
+	}
+}
+
+// Center line indicator
+.centerLine {
+	position: absolute;
+	left: 50%;
+	top: 0;
+	bottom: 0;
+	width: 1px;
+	background: linear-gradient(
+		to bottom,
+		rgba(0, 0, 0, 0.15),
+		rgba(0, 0, 0, 0.05)
+	);
+	z-index: 2;
+	pointer-events: none; // Allow clicks to pass through to dots
+
+	&::before {
+		content: '';
+		position: absolute;
+		top: 0;
+		left: -3px;
+		width: 7px;
+		height: 7px;
+		background: var(--text-caption);
 		border-radius: 50%;
+	}
+}
+
+// X-Axis (Agreement)
+.xAxis {
+	display: flex;
+	justify-content: space-between;
+	align-items: flex-start;
+	padding: 0.5rem 0;
+	position: relative;
+
+	&__label {
+		position: absolute;
+		left: 50%;
+		transform: translateX(-50%);
+		bottom: -1.5rem;
+		font-size: 0.75rem;
+		font-weight: 500;
+		color: var(--text-body);
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+
+		@media (max-width: 600px) {
+			font-size: 0.65rem;
+			bottom: -1.25rem;
+		}
+	}
+
+	&__markers {
+		display: flex;
+		justify-content: space-between;
+		width: 100%;
+	}
+
+	&__marker {
+		font-size: 0.7rem;
+		color: var(--text-caption);
+		text-align: center;
+		flex: 1;
+
+		&--left {
+			text-align: left;
+			color: var(--disagree);
+		}
+
+		&--center {
+			text-align: center;
+		}
+
+		&--right {
+			text-align: right;
+			color: var(--approve);
+		}
+	}
+}
+
+// Legend component
+.legend {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	gap: 1rem;
+	margin-top: 1.5rem;
+	padding: 1rem;
+	background: var(--card-default);
+	border-radius: 0.5rem;
+	box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+
+	@media (max-width: 600px) {
+		gap: 0.5rem;
+		padding: 0.75rem;
+		margin-top: 1rem;
+	}
+
+	&__item {
+		display: flex;
+		align-items: center;
+		gap: 0.35rem;
+	}
+
+	&__dot {
+		width: 10px;
+		height: 10px;
+		border-radius: 50%;
+		flex-shrink: 0;
+
+		&--consensus {
+			background: var(--approve);
+		}
+
+		&--rejection {
+			background: var(--disagree);
+		}
+
+		&--polarized {
+			background: var(--range-conflict-100);
+		}
+
+		&--neutral {
+			background: var(--option);
+		}
+	}
+
+	&__text {
+		font-size: 0.75rem;
+		color: var(--text-body);
+
+		@media (max-width: 600px) {
+			font-size: 0.65rem;
+		}
+	}
+}
+
+// Container for main statement dots
+.pointDiv {
+	position: absolute;
+	transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+	width: 36px;
+	height: 36px;
+	transform: translate(-50%, -50%);
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	z-index: 10;
+
+	// Lift higher when hovered/active (but still below subgroups)
+	&:hover {
+		z-index: 50;
+	}
+}
+
+// Main statement dot - beautiful glassy style
+.point {
+	width: 32px;
+	height: 32px;
+	border-radius: 50%;
+	cursor: pointer;
+	transition: all 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+	position: relative;
+
+	// Glassy effect with gradient overlay
+	background: linear-gradient(
+		145deg,
+		rgba(255, 255, 255, 0.4) 0%,
+		rgba(255, 255, 255, 0.1) 50%,
+		rgba(0, 0, 0, 0.05) 100%
+	);
+
+	// Soft outer shadow for depth
+	box-shadow:
+		0 4px 12px rgba(0, 0, 0, 0.15),
+		0 2px 4px rgba(0, 0, 0, 0.1),
+		inset 0 1px 2px rgba(255, 255, 255, 0.4);
+
+	// Subtle border for definition
+	border: 1.5px solid rgba(255, 255, 255, 0.3);
+
+	// Inner glow effect using pseudo-element
+	&::before {
+		content: '';
+		position: absolute;
+		top: 3px;
+		left: 3px;
+		right: 3px;
+		bottom: 3px;
+		border-radius: 50%;
+		background: inherit;
+		filter: blur(1px);
+		opacity: 0.6;
+		z-index: -1;
+	}
+
+	// Highlight shine on top
+	&::after {
+		content: '';
+		position: absolute;
+		top: 4px;
+		left: 6px;
+		width: 10px;
+		height: 6px;
+		background: linear-gradient(
+			180deg,
+			rgba(255, 255, 255, 0.7) 0%,
+			rgba(255, 255, 255, 0) 100%
+		);
+		border-radius: 50%;
+	}
+
+	// Hover state - scale up with enhanced glow
+	&:hover {
+		transform: scale(1.15);
+		box-shadow:
+			0 6px 20px rgba(0, 0, 0, 0.2),
+			0 3px 8px rgba(0, 0, 0, 0.15),
+			inset 0 1px 3px rgba(255, 255, 255, 0.5),
+			0 0 20px rgba(255, 255, 255, 0.2);
+		border-color: rgba(255, 255, 255, 0.5);
+	}
+
+	// Active/pressed state
+	&:active {
+		transform: scale(1.05);
+		box-shadow:
+			0 2px 8px rgba(0, 0, 0, 0.2),
+			inset 0 1px 2px rgba(255, 255, 255, 0.3);
+	}
+}
+
+// Selected state - applied via inline style, enhanced here
+.point--selected {
+	animation: pulse 2s ease-in-out infinite;
+	box-shadow:
+		0 6px 24px rgba(0, 0, 0, 0.25),
+		0 0 30px rgba(100, 149, 237, 0.4),
+		inset 0 1px 3px rgba(255, 255, 255, 0.5);
+}
+
+// Container for demographic group dots - always above main dots when visible
+.axisGroup {
+	width: 15px;
+	height: 15px;
+	border-radius: 50%;
+	transform: translate(-50%, -50%);
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	position: absolute;
+	transition: opacity 150ms ease-in-out, all 800ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+	z-index: 100; // Above main dots (z-index 10-50)
+
+	&:hover {
+		z-index: 150; // Even higher when hovered
+	}
+
+	// Demographic group point - smaller, elegant style
+	.axisGroupPoint {
+		width: 22px;
+		height: 22px;
+		border-radius: 50%;
+		position: absolute;
+		transform: translate(-50%, -50%);
+		top: 50%;
+		left: 50%;
 		cursor: pointer;
-		transition: all 0.3s ease-in-out;
+		transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+
+		// Glassy effect
+		background: linear-gradient(
+			145deg,
+			rgba(255, 255, 255, 0.35) 0%,
+			rgba(255, 255, 255, 0.1) 50%,
+			rgba(0, 0, 0, 0.05) 100%
+		);
+
+		// Refined shadow and border
+		box-shadow:
+			0 3px 10px rgba(0, 0, 0, 0.12),
+			0 1px 3px rgba(0, 0, 0, 0.08),
+			inset 0 1px 2px rgba(255, 255, 255, 0.35);
+		border: 1.5px solid rgba(255, 255, 255, 0.25);
+
+		// Inner shine highlight
+		&::after {
+			content: '';
+			position: absolute;
+			top: 3px;
+			left: 4px;
+			width: 7px;
+			height: 4px;
+			background: linear-gradient(
+				180deg,
+				rgba(255, 255, 255, 0.6) 0%,
+				rgba(255, 255, 255, 0) 100%
+			);
+			border-radius: 50%;
+		}
+
+		// Hover state
+		&:hover {
+			transform: translate(-50%, -50%) scale(1.2);
+			box-shadow:
+				0 5px 16px rgba(0, 0, 0, 0.18),
+				0 2px 6px rgba(0, 0, 0, 0.12),
+				inset 0 1px 3px rgba(255, 255, 255, 0.45),
+				0 0 15px rgba(255, 255, 255, 0.15);
+			border-color: rgba(255, 255, 255, 0.4);
+		}
+
+		// Active state
+		&:active {
+			transform: translate(-50%, -50%) scale(1.1);
+		}
+	}
+}
+
+// Pulse animation for selected dots
+@keyframes pulse {
+	0%, 100% {
+		box-shadow:
+			0 6px 24px rgba(0, 0, 0, 0.25),
+			0 0 30px rgba(100, 149, 237, 0.3),
+			inset 0 1px 3px rgba(255, 255, 255, 0.5);
+	}
+	50% {
+		box-shadow:
+			0 6px 24px rgba(0, 0, 0, 0.25),
+			0 0 45px rgba(100, 149, 237, 0.5),
+			inset 0 1px 3px rgba(255, 255, 255, 0.5);
+	}
+}
+
+// Reduced motion preference
+@media (prefers-reduced-motion: reduce) {
+	.point,
+	.axisGroupPoint {
+		transition: none;
 	}
 
-	.axisGroup {
-		width: 15px;
-		height: 15px;
-		border-radius: 50%;
-		transform: translate(-50%, -50%);
-		display: flex;
-		justify-content: center;
-		align-items: center;
-		position: absolute;
-		transition: opacity 1ms ease-in-out, all 1200ms ease-in-out;
+	.point--selected {
+		animation: none;
+	}
+}
 
-		.axisGroupPoint {
-			width: 20px;
-			height: 20px;
-			border-radius: 50%;
-			background-color: blue;
-			position: absolute;
-			transform: translate(-50%, -50%);
-			top: 50%;
-			left: 50%;
-			border: 1px solid black;
+// RTL Support
+[dir="rtl"] {
+	.yAxis {
+		padding-right: 0;
+		padding-left: 0.5rem;
+		align-items: flex-start;
+
+		&__label {
+			left: auto;
+			right: 0;
+		}
+
+		&__marker {
+			text-align: left;
+		}
+	}
+
+	.zone {
+		&--consensus {
+			right: auto;
+			left: 8%;
+		}
+
+		&--rejection {
+			left: auto;
+			right: 8%;
 		}
 	}
 }

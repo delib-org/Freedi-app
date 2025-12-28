@@ -1,4 +1,4 @@
-import React, { FC, useState } from 'react';
+import React, { FC, useState, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import SectionTitle from '../sectionTitle/SectionTitle';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
@@ -34,7 +34,10 @@ import RadioButtonEmptyIcon from '@/assets/icons/radioButtonEmpty.svg?react';
 import DeleteIcon from '@/assets/icons/delete.svg?react';
 import CheckboxEmptyIcon from '@/assets/icons/checkboxEmptyIcon.svg?react';
 import Button, { ButtonType } from '@/view/components/buttons/button/Button';
-//mockData
+import { InheritedDemographics } from '@/view/components/atomic/molecules/InheritedDemographics';
+import { useInheritedDemographics } from '@/controllers/hooks/userDemographic/useInheritedDemographics';
+import { setExcludedInheritedDemographics } from '@/controllers/db/userDemographic/excludedInheritedDemographics';
+import { logError } from '@/utils/errorHandling';
 
 interface Props {
 	statement: Statement;
@@ -62,6 +65,34 @@ const UserDataSetting: FC<Props> = ({ statement }) => {
 
 	// Check if this is the top parent (group level)
 	const isTopParent = statement.parentId === 'top';
+
+	// Get initial excluded IDs from statement settings
+	const initialExcludedIds = statement.statementSettings?.excludedInheritedDemographicIds || [];
+
+	// Handle inherited demographics exclusion changes - persist to Firestore
+	const handleExcludedIdsChange = useCallback(async (excludedIds: string[]) => {
+		try {
+			await setExcludedInheritedDemographics(statement.statementId, excludedIds);
+			console.info('Excluded inherited demographics saved:', excludedIds.length, 'questions excluded');
+		} catch (error) {
+			logError(error, {
+				operation: 'UserDemographicSetting.handleExcludedIdsChange',
+				statementId: statement.statementId,
+			});
+		}
+	}, [statement.statementId]);
+
+	// Use the inherited demographics hook
+	const {
+		inheritedQuestions,
+		loading: inheritedLoading,
+		toggleQuestion: toggleInheritedQuestion,
+	} = useInheritedDemographics({
+		statement,
+		initialExcludedIds,
+		onExcludedIdsChange: handleExcludedIdsChange,
+	});
+
 	function closeModal() {
 		setShowModal(false);
 	}
@@ -83,8 +114,8 @@ const UserDataSetting: FC<Props> = ({ statement }) => {
 
 		if (!newQuestion.trim()) return;
 
-		// Determine the scope based on whether this is a top parent and user selection
-		const isGroupLevel = isTopParent && applyToGroup;
+		// Determine the scope based on user selection
+		const isGroupLevel = applyToGroup;
 
 		const newQuestionObj: UserDemographicQuestion = {
 			userQuestionId: getRandomUID(),
@@ -235,6 +266,17 @@ const UserDataSetting: FC<Props> = ({ statement }) => {
 							<X className={styles.XBtn} onClick={closeModal} />
 						</div>
 						<h3>{t('Survey setting')}</h3>
+
+						{/* Inherited Demographics Section - Only show for non-top-parent statements */}
+						{!isTopParent && inheritedQuestions.length > 0 && (
+							<InheritedDemographics
+								inheritedQuestions={inheritedQuestions}
+								onToggleQuestion={toggleInheritedQuestion}
+								loading={inheritedLoading}
+								defaultExpanded={false}
+							/>
+						)}
+
 						{/* New Question Form */}
 						<form
 							className={styles.newQuestionForm}
@@ -268,24 +310,22 @@ const UserDataSetting: FC<Props> = ({ statement }) => {
 									</option>
 								</select>
 							</div>
-							{isTopParent && (
-								<div className={styles.scopeToggle}>
-									<label className={styles.scopeLabel}>
-										<input
-											type='checkbox'
-											checked={applyToGroup}
-											onChange={(e) => setApplyToGroup(e.target.checked)}
-										/>
-										<span>{t('Apply to all sub-discussions')}</span>
-									</label>
-									<p className={styles.scopeHint}>
-										{applyToGroup
-											? t('Members will answer these questions once when joining the group')
-											: t('Members will answer these questions only for this discussion')
-										}
-									</p>
-								</div>
-							)}
+							<div className={styles.scopeToggle}>
+								<label className={styles.scopeLabel}>
+									<input
+										type='checkbox'
+										checked={applyToGroup}
+										onChange={(e) => setApplyToGroup(e.target.checked)}
+									/>
+									<span>{t('Apply to all sub-discussions')}</span>
+								</label>
+								<p className={styles.scopeHint}>
+									{applyToGroup
+										? t('Members will answer these questions once when joining the group')
+										: t('Members will answer these questions only for this discussion')
+									}
+								</p>
+							</div>
 							{(selectedQuestionType === UserDemographicQuestionType.radio ||
 							  selectedQuestionType === UserDemographicQuestionType.checkbox) && (
 								<div className={styles.addOptionContainer}>

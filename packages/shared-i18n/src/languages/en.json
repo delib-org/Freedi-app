@@ -1534,5 +1534,15 @@
   "onlyOwnersCanInviteAdmins": "Only owners can invite admins",
   "permissionLevel": "Permission Level",
   "removing": "Removing...",
-  "viewOnlyAccess": "You have view-only access to this page"
+  "viewOnlyAccess": "You have view-only access to this page",
+  "Polarization": "Polarization",
+  "Divided": "Divided",
+  "United": "United",
+  "Rejection": "Rejection",
+  "Polarized": "Polarized",
+  "How people feel about each topic": "How people feel about each topic",
+  "Everyone agrees": "Everyone agrees",
+  "Everyone disagrees": "Everyone disagrees",
+  "People are divided": "People are divided",
+  "Indifferent": "Indifferent"
 }
