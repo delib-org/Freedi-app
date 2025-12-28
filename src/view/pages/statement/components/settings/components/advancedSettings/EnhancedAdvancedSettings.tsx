@@ -15,8 +15,10 @@ import {
   MessageSquare, Navigation, Plus, Settings,
   ChevronDown, ChevronUp, HelpCircle,
   Zap, Database, Lightbulb, Award, Target,
-  Activity, PieChart, Sparkles, Shield, Lock, Globe, Scissors, Download
+  Activity, PieChart, Sparkles, Shield, Lock, Globe, Scissors, Download, RefreshCcw
 } from 'lucide-react';
+import { getOptionsExceedingMax, splitJoinedOption, SplitResult } from '@/controllers/db/joining/splitJoinedOption';
+import { JOINING } from '@/constants/common';
 import LanguageSelector from './LanguageSelector/LanguageSelector';
 import { useSelector } from 'react-redux';
 import { exportStatementData } from '@/utils/exportUtils';
@@ -71,6 +73,24 @@ const EnhancedAdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => 
     statementsFixed: number;
   } | null>(null);
 
+  // Smart Join state
+  const [minMembers, setMinMembers] = useState<number>(
+    settings.minJoinMembers ?? JOINING.DEFAULT_MIN_MEMBERS
+  );
+  const [maxMembers, setMaxMembers] = useState<number>(
+    settings.maxJoinMembers ?? JOINING.DEFAULT_MAX_MEMBERS
+  );
+  const [exceedingOptions, setExceedingOptions] = useState<Array<{
+    statementId: string;
+    statement: string;
+    joinedCount: number;
+    maxMembers: number;
+    excessCount: number;
+  }>>([]);
+  const [isLoadingExceeding, setIsLoadingExceeding] = useState(false);
+  const [isSplitting, setIsSplitting] = useState<string | null>(null);
+  const [splitResult, setSplitResult] = useState<SplitResult | null>(null);
+
   // Selector for sub-statements
   const selectSubStatements = createStatementsByParentSelector(
     (state: RootState) => state.statements.statements
@@ -79,6 +99,15 @@ const EnhancedAdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => 
 
   // Category configurations
   const categories: CategoryConfig[] = [
+    // Smart Join - only shown for questions with joining enabled
+    ...(statement.statementType === StatementType.question && settings.joiningEnabled ? [{
+      id: 'smartJoin',
+      title: t('Smart Join'),
+      icon: UserPlus,
+      description: t('Configure team formation and room splitting'),
+      priority: 'high' as const,
+      defaultExpanded: true,
+    }] : []),
     {
       id: 'visibility',
       title: t('Visibility & Access'),
@@ -220,6 +249,68 @@ const EnhancedAdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => 
       }
     }
   }
+
+  // Smart Join handlers
+  function handleMinMembersChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const value = Number(e.target.value);
+    if (value >= 1) {
+      setMinMembers(value);
+      handleSettingChange('minJoinMembers', value);
+    }
+  }
+
+  function handleMaxMembersChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const value = Number(e.target.value);
+    if (value >= 1) {
+      setMaxMembers(value);
+      handleSettingChange('maxJoinMembers', value);
+    }
+  }
+
+  async function loadExceedingOptions() {
+    setIsLoadingExceeding(true);
+    try {
+      const result = await getOptionsExceedingMax(statement.statementId);
+      setExceedingOptions(result.options);
+    } catch (error) {
+      logError(error, {
+        operation: 'EnhancedAdvancedSettings.loadExceedingOptions',
+        statementId: statement.statementId
+      });
+    } finally {
+      setIsLoadingExceeding(false);
+    }
+  }
+
+  async function handleSplitOption(optionStatementId: string) {
+    setIsSplitting(optionStatementId);
+    setSplitResult(null);
+    try {
+      const result = await splitJoinedOption({
+        optionStatementId,
+        parentStatementId: statement.statementId,
+        roomSize: maxMembers,
+      });
+      setSplitResult(result);
+      // Refresh the exceeding options list
+      await loadExceedingOptions();
+    } catch (error) {
+      logError(error, {
+        operation: 'EnhancedAdvancedSettings.handleSplitOption',
+        statementId: statement.statementId,
+        metadata: { optionStatementId }
+      });
+    } finally {
+      setIsSplitting(null);
+    }
+  }
+
+  // Load exceeding options when Smart Join category is expanded
+  useEffect(() => {
+    if (expandedCategories['smartJoin'] && settings.maxJoinMembers) {
+      loadExceedingOptions();
+    }
+  }, [expandedCategories['smartJoin'], settings.maxJoinMembers]);
 
   // Export handler
   async function handleExport(format: ExportFormat) {
@@ -429,7 +520,7 @@ const EnhancedAdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => 
           return (
             <div
               key={category.id}
-              className={`${styles.category} ${styles[`category--${category.priority}`]}`}
+              className={`${styles.category} ${category.id === 'smartJoin' ? styles['category--smartJoin'] : styles[`category--${category.priority}`]}`}
             >
               <button
                 className={styles.categoryHeader}
@@ -445,7 +536,8 @@ const EnhancedAdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => 
                 </div>
                 <div className={styles.categoryHeaderRight}>
                   <span className={styles.categoryBadge}>
-                    {category.priority === 'high' && t('Essential')}
+                    {category.id === 'smartJoin' && t('Team Formation')}
+                    {category.id !== 'smartJoin' && category.priority === 'high' && t('Essential')}
                     {category.priority === 'medium' && t('Recommended')}
                     {category.priority === 'low' && t('Advanced')}
                   </span>
@@ -455,6 +547,128 @@ const EnhancedAdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => 
 
               {isExpanded && (
                 <div className={styles.categoryContent}>
+                  {/* Smart Join */}
+                  {category.id === 'smartJoin' && (
+                    <>
+                      <div className={styles.smartJoinSection}>
+                        <h4 className={styles.sectionTitle}>
+                          <Users size={18} />
+                          {t('Join Behavior')}
+                        </h4>
+                        <ToggleSwitch
+                          isChecked={settings.singleJoinOnly ?? false}
+                          onChange={(checked) => handleSettingChange('singleJoinOnly', checked)}
+                          label={t('Single option join only')}
+                          description={t('Users can only join one option at a time')}
+                          icon={UserPlus}
+                        />
+                      </div>
+
+                      <div className={styles.smartJoinSection}>
+                        <h4 className={styles.sectionTitle}>
+                          <Target size={18} />
+                          {t('Team Size Limits')}
+                        </h4>
+                        <p className={styles.sectionDescription}>
+                          {t('Set the minimum and maximum number of members per option')}
+                        </p>
+                        <div className={styles.memberLimitsRow}>
+                          <div className={styles.limitInputGroup}>
+                            <label>{t('Minimum')}</label>
+                            <input
+                              type="number"
+                              min="1"
+                              value={minMembers}
+                              onChange={handleMinMembersChange}
+                              className={styles.limitInput}
+                              placeholder={String(JOINING.DEFAULT_MIN_MEMBERS)}
+                            />
+                          </div>
+                          <span className={styles.limitSeparator}>–</span>
+                          <div className={styles.limitInputGroup}>
+                            <label>{t('Maximum')}</label>
+                            <input
+                              type="number"
+                              min="1"
+                              value={maxMembers}
+                              onChange={handleMaxMembersChange}
+                              className={styles.limitInput}
+                              placeholder={String(JOINING.DEFAULT_MAX_MEMBERS)}
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Split Rooms Section */}
+                      {settings.maxJoinMembers && (
+                        <div className={styles.splitRoomsSection}>
+                          <h4 className={styles.splitRoomsTitle}>
+                            <Scissors size={18} />
+                            {t('Room Splitting')}
+                          </h4>
+                          {isLoadingExceeding ? (
+                            <p className={styles.loadingText}>{t('Loading...')}</p>
+                          ) : exceedingOptions.length === 0 ? (
+                            <p className={styles.noExceedingText}>
+                              {t('No options exceed the maximum member limit')}
+                            </p>
+                          ) : (
+                            <>
+                              <p className={styles.exceedingCount}>
+                                {t('{{count}} options exceed the limit').replace('{{count}}', String(exceedingOptions.length))}
+                              </p>
+                              <div className={styles.exceedingOptionsList}>
+                                {exceedingOptions.map((option) => (
+                                  <div key={option.statementId} className={styles.exceedingOption}>
+                                    <div className={styles.optionInfo}>
+                                      <span className={styles.optionTitle}>{option.statement}</span>
+                                      <span className={styles.optionCount}>
+                                        {option.joinedCount} {t('members')}
+                                        <span className={styles.excessBadge}>
+                                          +{option.excessCount} {t('excess')}
+                                        </span>
+                                      </span>
+                                    </div>
+                                    <button
+                                      className={styles.splitButton}
+                                      onClick={() => handleSplitOption(option.statementId)}
+                                      disabled={isSplitting === option.statementId}
+                                    >
+                                      {isSplitting === option.statementId ? t('Splitting...') : t('Split')}
+                                    </button>
+                                  </div>
+                                ))}
+                              </div>
+                            </>
+                          )}
+                          <button
+                            className={styles.refreshButton}
+                            onClick={loadExceedingOptions}
+                            disabled={isLoadingExceeding}
+                          >
+                            <RefreshCcw size={16} />
+                            {t('Refresh')}
+                          </button>
+                          {splitResult && (
+                            <div className={styles.splitSuccess}>
+                              <p>
+                                {t('Created {{rooms}} rooms for {{participants}} participants')
+                                  .replace('{{rooms}}', String(splitResult.totalRooms))
+                                  .replace('{{participants}}', String(splitResult.totalParticipants))}
+                              </p>
+                              <button
+                                className={styles.dismissButton}
+                                onClick={() => setSplitResult(null)}
+                              >
+                                {t('Dismiss')}
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </>
+                  )}
+
                   {/* Visibility & Access */}
                   {category.id === 'visibility' && (
                     <>

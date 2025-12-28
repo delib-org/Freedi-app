@@ -199,26 +199,40 @@ const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 				</div>
 			</div>
 
-			{/* Participation & Collaboration Category */}
-			<div className={styles.category}>
-				<div className={styles.categoryHeader}>
-					<span className={styles.categoryTitle}>
-						{t('Participation & Collaboration')}
-					</span>
-				</div>
-				<div className={styles.categoryContent}>
-					{statement.statementType === StatementType.question && (
-						<>
+			{/* Smart Join Category - Standalone prominent section for question statements */}
+			{statement.statementType === StatementType.question && (
+				<div className={`${styles.category} ${styles.smartJoinCategory}`}>
+					<div className={styles.categoryHeader}>
+						<span className={styles.categoryTitle}>
+							{t('Smart Join')}
+						</span>
+						<span className={styles.categoryBadge}>
+							{t('Team Formation')}
+						</span>
+					</div>
+					<div className={styles.categoryContent}>
+						{/* Master toggle */}
+						<div className={styles.masterToggle}>
 							<Checkbox
-								label={'Enable Joining an option'}
+								label={t('Enable Smart Join')}
 								isChecked={settings.joiningEnabled ?? false}
 								onChange={(checked) =>
 									handleSettingChange('joiningEnabled', checked)
 								}
 							/>
-							{/* Smart Join Settings - only show when joiningEnabled is true */}
-							{settings.joiningEnabled && (
-								<div className={styles.smartJoinSection}>
+							<p className={styles.featureDescription}>
+								{t('Allow participants to join options and form teams with size limits')}
+							</p>
+						</div>
+
+						{/* Settings revealed when enabled */}
+						{settings.joiningEnabled && (
+							<div className={styles.settingsGrid}>
+								{/* Join Behavior Card */}
+								<div className={styles.settingCard}>
+									<h4 className={styles.settingCardTitle}>
+										{t('Join Behavior')}
+									</h4>
 									<Checkbox
 										label={t('Single option join only')}
 										isChecked={settings.singleJoinOnly ?? false}
@@ -229,46 +243,58 @@ const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 									<p className={styles.helperText}>
 										{t('Users can only join one option at a time')}
 									</p>
+								</div>
 
-									<div className={styles.numberInputGroup}>
-										<label>{t('Minimum members per option')}</label>
-										<input
-											type="number"
-											min="1"
-											max="1000"
-											placeholder={t('No minimum')}
-											value={settings.minJoinMembers ?? ''}
-											onChange={(e) => handleNumberSettingChange('minJoinMembers', e.target.value)}
-											className={styles.numberInput}
-										/>
-										<span className={styles.helperText}>
-											{t('Options with fewer members will be highlighted')}
-										</span>
+								{/* Team Size Limits Card */}
+								<div className={styles.settingCard}>
+									<h4 className={styles.settingCardTitle}>
+										{t('Team Size Limits')}
+									</h4>
+									<div className={styles.numberInputRow}>
+										<div className={styles.numberInputGroup}>
+											<label>{t('Minimum')}</label>
+											<input
+												type="number"
+												min="1"
+												max="1000"
+												placeholder={t('None')}
+												value={settings.minJoinMembers ?? ''}
+												onChange={(e) => handleNumberSettingChange('minJoinMembers', e.target.value)}
+												className={styles.numberInput}
+											/>
+										</div>
+										<span className={styles.rangeSeparator}>—</span>
+										<div className={styles.numberInputGroup}>
+											<label>{t('Maximum')}</label>
+											<input
+												type="number"
+												min="1"
+												max="1000"
+												placeholder={t('None')}
+												value={settings.maxJoinMembers ?? ''}
+												onChange={(e) => handleNumberSettingChange('maxJoinMembers', e.target.value)}
+												className={styles.numberInput}
+											/>
+										</div>
 									</div>
+									<p className={styles.helperText}>
+										{t('Set team size constraints for each option')}
+									</p>
+								</div>
 
-									<div className={styles.numberInputGroup}>
-										<label>{t('Maximum members per option')}</label>
-										<input
-											type="number"
-											min="1"
-											max="1000"
-											placeholder={t('No maximum')}
-											value={settings.maxJoinMembers ?? ''}
-											onChange={(e) => handleNumberSettingChange('maxJoinMembers', e.target.value)}
-											className={styles.numberInput}
-										/>
-										<span className={styles.helperText}>
-											{t('Options exceeding maximum can be split into rooms')}
-										</span>
-									</div>
+								{/* Split Rooms Card - Always visible with hint if max not set */}
+								<div className={`${styles.settingCard} ${styles.settingCardFull}`}>
+									<h4 className={styles.settingCardTitle}>
+										{t('Room Splitting')}
+										{!settings.maxJoinMembers && (
+											<span className={styles.requiresTag}>
+												{t('Set maximum first')}
+											</span>
+										)}
+									</h4>
 
-									{/* Split Rooms Section */}
-									{settings.maxJoinMembers && (
-										<div className={styles.splitRoomsSection}>
-											<h4 className={styles.splitRoomsTitle}>
-												{t('Split Rooms')}
-											</h4>
-
+									{settings.maxJoinMembers ? (
+										<div className={styles.splitRoomsContent}>
 											<div className={styles.numberInputGroup}>
 												<label>{t('Room size for splitting')}</label>
 												<input
@@ -342,11 +368,26 @@ const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 												{t('Refresh list')}
 											</button>
 										</div>
+									) : (
+										<p className={styles.helperText}>
+											{t('Set a maximum team size above to enable room splitting for oversized teams')}
+										</p>
 									)}
 								</div>
-							)}
-						</>
-					)}
+							</div>
+						)}
+					</div>
+				</div>
+			)}
+
+			{/* Participation & Collaboration Category */}
+			<div className={styles.category}>
+				<div className={styles.categoryHeader}>
+					<span className={styles.categoryTitle}>
+						{t('Participation & Collaboration')}
+					</span>
+				</div>
+				<div className={styles.categoryContent}>
 					<Checkbox
 						label={'Allow participants to contribute options to the voting page'}
 						isChecked={settings.enableAddVotingOption ?? false}
