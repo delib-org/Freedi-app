@@ -18,12 +18,18 @@ export default function SolutionFeed({
   initialSolutions,
   mergedSettings
 }: SolutionFeedProps) {
+  const canAddSuggestions = mergedSettings?.allowParticipantsToAddSuggestions ?? false;
+
   // Check if we have solutions
   if (!initialSolutions || initialSolutions.length === 0) {
     return (
       <div style={{ textAlign: 'center', padding: '2rem' }}>
         <h3>No solutions yet</h3>
-        <p>Be the first to submit a solution!</p>
+        {canAddSuggestions ? (
+          <p>Be the first to submit a solution!</p>
+        ) : (
+          <p>Solutions will appear here once they are added.</p>
+        )}
       </div>
     );
   }
