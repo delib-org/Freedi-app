@@ -1,8 +1,10 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { Statement } from '@freedi/shared-types';
 import { useTranslation } from '@freedi/shared-i18n/next';
+import { useAuth } from '@/components/auth/AuthProvider';
 import styles from './Admin.module.scss';
 
 interface QuestionPickerProps {
@@ -25,6 +27,8 @@ export default function QuestionPicker({
   onQuestionsChange,
 }: QuestionPickerProps) {
   const { t } = useTranslation();
+  const router = useRouter();
+  const { refreshToken } = useAuth();
   const [questions, setQuestions] = useState<Statement[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -52,12 +56,12 @@ export default function QuestionPicker({
       }
       setError(null);
 
-      const token = localStorage.getItem('firebase_token');
+      // Get fresh token (refreshes if expired)
+      const token = await refreshToken();
 
       if (!token) {
-        setError(t('pleaseLoginToViewQuestions') || 'Please log in to view questions');
-        setLoading(false);
-        setLoadingMore(false);
+        // Redirect to login if no valid token
+        router.push('/login?redirect=' + encodeURIComponent(window.location.pathname));
         return;
       }
 
@@ -96,7 +100,7 @@ export default function QuestionPicker({
       setLoading(false);
       setLoadingMore(false);
     }
-  }, [t]);
+  }, [t, refreshToken, router]);
 
   // Initial load
   useEffect(() => {

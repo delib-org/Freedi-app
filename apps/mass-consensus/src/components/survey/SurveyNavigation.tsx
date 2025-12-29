@@ -41,18 +41,22 @@ export default function SurveyNavigation({
   onViewProgress,
 }: SurveyNavigationProps) {
   const router = useRouter();
-  const { t } = useTranslation();
+  const { t, tWithParams } = useTranslation();
 
   const isFirstQuestion = currentIndex === 0;
   const isLastQuestion = currentIndex === totalQuestions - 1;
 
   // Calculate effective minimum - can't require more evaluations than available options
-  const effectiveMinEvaluations = availableOptionsCount > 0
-    ? Math.min(mergedSettings.minEvaluationsPerQuestion, availableOptionsCount)
+  // If availableOptionsCount is 0 but user has evaluated some, use evaluatedCount as the known minimum
+  const knownOptionsCount = availableOptionsCount > 0 ? availableOptionsCount : evaluatedCount;
+  const effectiveMinEvaluations = knownOptionsCount > 0
+    ? Math.min(mergedSettings.minEvaluationsPerQuestion, knownOptionsCount)
     : mergedSettings.minEvaluationsPerQuestion;
 
   // Check if user can proceed to next question
-  const canProceed = mergedSettings.allowSkipping || evaluatedCount >= effectiveMinEvaluations;
+  // Also allow proceeding if user has evaluated all visible options (evaluatedCount > 0 and matches availableOptionsCount)
+  const hasEvaluatedAllVisible = availableOptionsCount > 0 && evaluatedCount >= availableOptionsCount;
+  const canProceed = mergedSettings.allowSkipping || evaluatedCount >= effectiveMinEvaluations || hasEvaluatedAllVisible;
   const evaluationsNeeded = Math.max(0, effectiveMinEvaluations - evaluatedCount);
 
   const handleBack = () => {
@@ -120,7 +124,7 @@ export default function SurveyNavigation({
 
       {!canProceed && evaluationsNeeded > 0 && (
         <div className={styles.navHint}>
-          {t('evaluationsNeeded').replace('{count}', String(evaluationsNeeded))}
+          {tWithParams('evaluationsNeeded', { count: evaluationsNeeded })}
         </div>
       )}
     </div>
